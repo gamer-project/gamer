@@ -84,7 +84,7 @@ void ELBDM_RemoveMotionCM()
 #     endif // # if ( ELBDM_SCHEME == HYBRID )
       Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _REAL|_IMAG, _NONE, Flu_ParaBuf, USELB_YES );
 #     if ( ELBDM_SCHEME == HYBRID )
-      } else {      
+      } else { // if ( amr->use_wave_flag[lv] ) {   
       Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _DENS|_PHAS, _NONE, Flu_ParaBuf, USELB_YES );
       }
 #     endif // # if ( ELBDM_SCHEME == HYBRID ) 

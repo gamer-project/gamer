@@ -2260,7 +2260,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
          Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                        "FlagTable_Interference", lv, t, RS.FlagTable_Interference[lv][t],  RT.FlagTable_Interference[lv][t] );
    }}
-#  endif 
+#  endif // #  if ( ELBDM_SCHEME == HYBRID )
 #  endif
 
 #  ifdef PARTICLE

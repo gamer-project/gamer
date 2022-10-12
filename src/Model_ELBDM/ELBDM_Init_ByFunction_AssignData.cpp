@@ -129,7 +129,7 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
       }}}
 
 #     if   (ELBDM_SCHEME == HYBRID)
-      if ( amr->use_wave_flag[lv] == true ) {
+      if ( amr->use_wave_flag[lv] ) {
 #     endif 
 //    ensure density = real_part^2 + imaginary_part^2
       fluid[REAL] *= _NSub3;
@@ -146,7 +146,7 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
          fluid[DENS]  = (real)MIN_DENS;
       }
 #     if (ELBDM_SCHEME == HYBRID)
-      } else { // if ( amr->use_wave_flag[lv] == true )
+      } else { // if ( amr->use_wave_flag[lv] )
 
       //Rescale density for subsampling
       fluid[DENS]  *= SQR(_NSub3);

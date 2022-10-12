@@ -106,8 +106,6 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
             FABS(Temp[1][kk ][jj ][ii ] - Temp[1][kk ][jjm][ii ])),
             FABS(Temp[1][kkp][jj ][ii ] - Temp[1][kk ][jj ][ii ])),
             FABS(Temp[1][kk ][jj ][ii ] - Temp[1][kkm][jj ][ii ]));
-         if ( Cond[2][k][j][i] > M_PI )
-            Aux_Message( stdout, "Magnitude of phase jump at k %d j %d i %d is %f\n", k, j, i, Cond[2][k][j][i]);
 
       }
    }}} // k,j,i

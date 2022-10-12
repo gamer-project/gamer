@@ -211,12 +211,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 #     if ( MODEL == ELBDM )
 #     if ( ELBDM_SCHEME == HYBRID)
-      if ( ( ( TVarCC & _REAL )  ||  ( TVarCC & _IMAG ) )  && amr->use_wave_flag[lv] )
-#     else // # if ( ELBDM_SCHEME == HYBRID)
+      if ( amr->use_wave_flag[lv] )
+#     endif // # if ( ELBDM_SCHEME == HYBRID)
       if (  ( TVarCC & _REAL )  ||  ( TVarCC & _IMAG )  )
-#     endif // # if ( ELBDM_SCHEME == HYBRID) ... #else
          Aux_Message( stderr, "WARNING : real and imaginary parts are NOT rescaled after applying the minimum density check !!\n" );
-#     endif
+#     endif // # if ( MODEL == ELBDM )
    }
 
    if ( MinPres >= (real)0.0  &&  MPI_Rank == 0 )
@@ -252,16 +251,15 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
    if (((  (TVarCC & _REAL)  &&  !(TVarCC & _IMAG) )  || ( !(TVarCC & _REAL)  &&  (TVarCC & _IMAG) )) && amr->use_wave_flag[lv])
       Aux_Error( ERROR_INFO, "Prepare_PatchData() for hybrid scheme currently requires that we request real and imaginary parts of the wave function together !!\n" );
-#  endif 
+#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
    if ( IntPhase )
    {
 #  if   ( MODEL == ELBDM)
 #     if ( ELBDM_SCHEME == HYBRID)
-      if (  (!(TVarCC & _REAL)  ||  !(TVarCC & _IMAG)) && amr->use_wave_flag[lv] )
-#     else // # if ( ELBDM_SCHEME == HYBRID)
+      if ( amr->use_wave_flag[lv] )
+#     endif // # if ( ELBDM_SCHEME == HYBRID)
       if (  (!(TVarCC & _REAL)  ||  !(TVarCC & _IMAG)) )
-#     endif // # if ( ELBDM_SCHEME == HYBRID) ... # else 
       Aux_Error( ERROR_INFO, "real and/or imag parts are not found for phase interpolation in ELBDM !!\n" );
 
 //    we have assumed in InterpolateGhostZone() that when adopting IntPhase this function will NOT prepare
@@ -1605,7 +1603,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 #              if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 //             set target variables correctly convert density and phase to real and imaginary parts
-               if ( amr->use_wave_flag[lv] && !amr->use_wave_flag[lv - 1]  && (TVarCC & (_REAL | _IMAG)) ) {
+               if ( amr->use_wave_flag[lv] && !amr->use_wave_flag[lv - 1]  && (TVarCC & _REAL) && (TVarCC & _IMAG) ) {
 //                density and phase --> real and imaginary parts
                   real Dens, Phase, Amp;
                   int FSize3D_CC = FSize[0]*FSize[1]*FSize[2];

@@ -102,6 +102,8 @@ void Aux_Check_Restrict( const int lv, const char *comment )
                   u = amr->patch[CSg][lv][PID]->fluid[v][k][j][i];
 
 #                 if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+//                we only require 2 components if we convert from wave to fluid
+//                we therefore store the phase in the REAL component of the wave and ignore the imaginary part
                   if ( convertWaveToFluid && v == REAL && v == PHAS) {
                      ResData[v][k][j][i] = ELBDM_UnwrapPhase(u, SATAN2(ResData[IMAG][k][j][i], ResData[REAL][k][j][i]));
                   } else if ( convertWaveToFluid && v == IMAG && v == STUB ) {

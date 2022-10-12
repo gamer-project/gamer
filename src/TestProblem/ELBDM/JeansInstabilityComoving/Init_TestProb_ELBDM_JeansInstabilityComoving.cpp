@@ -243,8 +243,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #  if ( ELBDM_SCHEME == HYBRID )
    } else { // if ( amr->use_wave_flag[lv] == true )
    fluid[PHAS] = SATAN2(Im, Re);
-   if (fluid[PHAS] > M_PI / 2)
-      printf("Coords %f %f %f Phase %f", x, y, z, fluid[PHAS]);
    fluid[STUB] = 0.0;
    } // if ( amr->use_wave_flag[lv] == true ) ... else
 #  endif // if ( ELBDM_SCHEME == HYBRID )

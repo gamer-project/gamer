@@ -144,9 +144,12 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       const int SaveSg_Mag = NULL_INT;
 #     endif
 
-      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 ) {
          Aux_Message( stdout, "   Lv %2d: Flu_AdvanceDt, counter = %8ld ... ", lv, AdvanceCounter[lv] );
-
+#        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+         Aux_Message( stdout, " Use Wave = %d ... ", amr->use_wave_flag[lv] );
+#        endif 
+      }
       if ( false ) {}
       /*
       if ( OPT__OVERLAP_MPI )

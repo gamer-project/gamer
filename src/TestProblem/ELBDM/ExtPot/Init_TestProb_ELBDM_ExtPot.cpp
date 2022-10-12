@@ -180,7 +180,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 #  if ( ELBDM_SCHEME == HYBRID )
    if ( amr->use_wave_flag[lv] ) {
-#  endif 
+#  endif // # if ( ELBDM_SCHEME == HYBRID )
    fluid[REAL] = Re;
    fluid[IMAG] = 0.0;           
 #  if ( ELBDM_SCHEME == HYBRID )
@@ -188,7 +188,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[PHAS] = 0.0;
    fluid[STUB] = 0.0;
    } // if ( amr->use_wave_flag[lv] ) ... else
-#  endif 
+#  endif // #  if ( ELBDM_SCHEME == HYBRID )
 } // FUNCTION : SetGridIC
 
 

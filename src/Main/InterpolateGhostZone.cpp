@@ -311,6 +311,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //       --> for IntPhase, apply temporal interpolation to density/phase instead of real/imaginary parts for better accuracy
 #        if ( MODEL == ELBDM )
 #        if ( ELBDM_SCHEME == HYBRID )
+         // for fluid patches, we do not require the IntPhase flag and therefore only check whether FluIntTime is set
          if (   (amr->use_wave_flag[lv] == true  && FluIntTime  &&  !IntPhase ) \
              || (amr->use_wave_flag[lv] == false && FluIntTime) )
 #        else // #if ( ELBDM_SCHEME == HYBRID )

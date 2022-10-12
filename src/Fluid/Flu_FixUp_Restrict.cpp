@@ -188,7 +188,10 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                   real (*StubFaPtr)[PS1][PS1]     = amr->patch[  FaFluSg][ FaLv][ FaPID]->fluid[STUB];
 
                   //Handle that we do not have data of previous time step during initialisation corresponding to a negative time
-                  if ( amr->FluSgTime[FaLv][ 1-FaFluSg ] < 0 ) OldPhasFaPtr = NewPhasFaPtr;
+                  if ( amr->FluSgTime[FaLv][ 1-FaFluSg ] < 0 ) {
+                     Aux_Message(stderr, "WARNING: We access 1-FaFluSg in fixup!\n");
+                     OldPhasFaPtr = NewPhasFaPtr;
+                  }
             
             int ii, jj, kk, I, J, K, Ip, Jp, Kp;
             real re, im;

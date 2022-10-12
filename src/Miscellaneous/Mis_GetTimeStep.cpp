@@ -95,7 +95,15 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    sprintf( dTime_Name[NdTime++], "%s", "Hydro_Acc" );
 
 #  elif ( MODEL == ELBDM )
+#  if ( ELBDM_SCHEME == HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif // #  if ( ELBDM_SCHEME == HYBRID )
    dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv  );
+#  if ( ELBDM_SCHEME == HYBRID )
+   } else { // if ( amr->use_wave_flag[lv] )
+   dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv  );
+   } // if ( amr->use_wave_flag[lv] ) ... else 
+#  endif // #  if ( ELBDM_SCHEME == HYBRID )
    sprintf( dTime_Name[NdTime++], "%s", "ELBDM_Pot" );
 
 #  else

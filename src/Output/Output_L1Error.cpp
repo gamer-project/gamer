@@ -378,7 +378,7 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
       Anal[STUB] = 0;
       Nume[STUB] = 0;
    }
-#  endif 
+#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 // record the physical coordinate
    double r;
