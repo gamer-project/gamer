@@ -182,7 +182,7 @@ void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const dou
       //real sn_energy     = 0.0;                    // energy emitted by supernova
       int idx[3];    // define the coordinate of a particle_consisting cell
       for ( int d = 0; d < 3; d++ ) {
-	idx[d] = (int)FLOOR( ( par_pos[d] - EdgeL[d] )*_dh );
+	idx[d] = (int)FLOOR( ( par_pos[d] - EdgeL[d] )*_dh ) + FB_GHOST_SIZE;
       } // for ( int d = 0; d < 3; d++ )
 
 
@@ -435,37 +435,6 @@ void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const dou
 
           sn_energy = explosionFlag[n] * ( 1.0e51 / UNIT_M / UNIT_V / UNIT_V );} 
 */
-/*      FOUt=fopen("time.txt","a");
-      if(FOUt==NULL) {
-	printf("Fail To Open File time.txt!!");
-                     }
-      fprintf(FOUt, "%f\n", TimeOld);
-      fclose(FOUt);
-
-     FOUT=fopen("timestep.txt","a");
-      if(FOUT==NULL) {
-        printf("Fail To Open File timestep.txt!!");
-                     }
-      fprintf(FOUT, "%f\n", dt);
-      fclose(FOUT);
-
-      if(SNe_dens != 0){
-      	Fout=fopen("mass.txt","a");
-      	if(Fout==NULL) {
-        	printf("Fail To Open File mass.txt!!");
-                       }
-      	fprintf(Fout, "%f\n", SNe_dens);
-      	fclose(Fout);}
-
-      	FOUt=fopen("timestamp.txt","a");
-      	if(FOUt==NULL) {
-        	printf("Fail To Open File timestamp.txt!!");
-                       }
-      	fprintf(FOUt, "%f\n", TimeOld);
-      	fclose(FOUt);
-			   }//if(SNe_dens != 0)
-*/
-
 
     if ( idx[0] >= FB_GHOST_SIZE && idx[0] < (PS2 + FB_GHOST_SIZE) && idx[1] >= FB_GHOST_SIZE && idx[1] < (PS2 + FB_GHOST_SIZE) && idx[2] >= FB_GHOST_SIZE && idx[2] < (PS2 + FB_GHOST_SIZE) ) {
       if ( ((SNe_dens + wind_dens) * CUBE(dh)) > par_mass )
@@ -488,8 +457,12 @@ void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const dou
       // convert energy into solar mass result to compare with enzo
       fb_energy = fb_energy / CUBE( dh ); // (flu_dens + wind_dens + SNe_dens) / CUBE( dh );
 
+      if (explosionFlag[n] > 0) {
+	printf("SN density = %f\n", SNe_dens);
+	printf("explosion time = %f\n", TimeOld);
+	printf("SN energy = %f\n", fb_energy);} // if (explosionFlag[n] > 0), record feedback amount
+
       // add energy into fluid
-      printf("feedback energy = %e\n", fb_energy);
       // Fluid[ENGY][idx[0]][idx[1]][idx[2]] += fb_energy;
 
       // 4: SN Metal feedback (in metal fraction)
@@ -509,10 +482,9 @@ void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const dou
       //printf("density of local cell = %e\n", Fluid[DENS][idx[0]][idx[1]][idx[2]]);
 
       #ifdef DUAL_ENERGY
-      //Fluid[ENPY][idx[0]][idx[1]][idx[2]] += fb_energy;
+      // Fluid[ENPY][idx[0]][idx[1]][idx[2]] += fb_energy;
       #endif // #ifdef DUAL_ENERGY
       //printf("local feedback finished\n");
-      //} // if particle inside patch
 
       // 5: SN Momentum feedback
 //	printf("non-local feedback on, sn_energy = %f\n", sn_energy);
@@ -521,14 +493,14 @@ void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const dou
 
       } // if particle inside patch
 
-      for ( int d = 0; d < 3; d++ ) {
-	if (FB_GHOST_SIZE > 0)      {
-        if ( idx[d] == (FB_GHOST_SIZE - 1) || idx[d] == (PS2 + FB_GHOST_SIZE) ) {
-	  FB_distSNeFeedback( Fluid, explosionFlag[n], idx, sn_energy, Msun, dh, EdgeL,
-                              distcells, distrad, diststep );
-        } //if (particle is on the edge), let nearby cells do their non-local feedback
-	} //if (FB_GHOST_SIZE > 0)
-      } //for ( int d = 0; d < 3; d++ )
+      // for ( int d = 0; d < 3; d++ ) {
+	// if (FB_GHOST_SIZE > 0)      {
+         // if ( idx[d] == (FB_GHOST_SIZE - 1) || idx[d] == (PS2 + FB_GHOST_SIZE) ) {
+	// FB_distSNeFeedback( Fluid, explosionFlag[n], idx, sn_energy, Msun, dh, EdgeL,
+        //                     distcells, distrad, diststep );
+         // } //if (particle is on the edge), let nearby cells do their non-local feedback
+	// } //if (FB_GHOST_SIZE > 0)
+      // } //for ( int d = 0; d < 3; d++ )
 
    } // for (n = 0; n < NPar; n++ )
 
@@ -1100,7 +1072,7 @@ void FB_distSNeFeedback( real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int explos
 	      } // if ( (POW(p_sn, 2) / (2 * mc)) > (sn_energy / distcells) )
 	    else 
 	     {pcell = p_sn;
-	      //printf("cell momentum = %lf\n", pcell);
+	      // printf("cell momentum = %lf\n", pcell);
 	     }
 
 	    // Limit maximum velocity boost to 1000 km/s
