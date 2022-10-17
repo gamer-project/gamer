@@ -317,16 +317,24 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                      UnwrapPhase, Monotonic, IntMonoCoeff, OppSign0thOrder );
 
 
-//    5. check unphysical results
       Fail_AnyCell = false;
 
       for (int i=0; i<FSize3D; i++)
       {
+//       skip masked cells
+#        ifdef MASK_GOOD_CELLS
+         if ( Mask[i] == MASKED )   continue;
+#        endif
+
+
+//       Temp[] can store either conserved or primitive variables
          for (int v=0; v<NCOMP_TOTAL; v++)   Temp[v] = FData_tmp[ FSize3D*v + i ];
 #        ifdef MHD
          for (int v=0; v<NCOMP_MAG;   v++)   Temp[ MAG_OFFSET + v ] = FMag[i][v];
 #        endif
 
+
+//       5. check unphysical results
 //       5-1. check the interpolation results without EoS conversion
          bool Fail_ThisCell
             = Hydro_CheckUnphysical( (FData_is_Prim)?UNPHY_MODE_PRIM:UNPHY_MODE_CONS, Temp, NULL, ERROR_INFO, UNPHY_SILENCE );
@@ -385,7 +393,8 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
          Fail_AnyCell |= Fail_ThisCell;
 
 
-//       5-3. skip failed cells
+//       6. store results
+//       6-1. skip failed cells
          if ( Fail_ThisCell )
          {
             if ( Iteration == MaxIter )
@@ -420,35 +429,30 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
          } // if ( Fail_ThisCell )
 
 
-//       5-4. store the correct results
+//       6-2. store the correct results
          else
          {
+//          primitive --> conserved
+            if ( FData_is_Prim ) {
+               Hydro_Pri2Con( Temp, Cons, OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
+                              EoS_DensPres2Eint_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+            }
+
+            else {
+               for (int v=0; v<NCOMP_TOTAL; v++)   Cons[v] = Temp[v];
+            }
+
+//          no need to copy the magnetic field here
+            for (int v=0; v<NCOMP_TOTAL; v++)   FData[ FSize3D*v + i ] = Cons[v];
+
 #           ifdef MASK_GOOD_CELLS
-            if ( Mask[i] == UNMASKED )
+            Mask[i] = MASKED;
 #           endif
-            {
-//             primitive --> conserved
-               if ( FData_is_Prim ) {
-                  Hydro_Pri2Con( Temp, Cons, OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
-                                 EoS_DensPres2Eint_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-               }
-
-               else {
-                  for (int v=0; v<NCOMP_TOTAL; v++)   Cons[v] = Temp[v];
-               }
-
-//             no need to copy the magnetic field here
-               for (int v=0; v<NCOMP_TOTAL; v++)   FData[ FSize3D*v + i ] = Cons[v];
-
-#              ifdef MASK_GOOD_CELLS
-               Mask[i] = MASKED;
-#              endif
-            } // if ( Mask[i] == UNMASKED )
          } // if ( Fail_ThisCell ) ... else ...
       } // for (int i=0; i<FSize3D; i++)
 
 
-//    6. decide whether to abort the iteration
+//    7. decide whether to abort the iteration
       if ( Fail_AnyCell  &&  Iteration < MaxIter ) {
 
 //       if any fine cell remains failed, unmask all eight fine cells with the same parent cell
@@ -490,7 +494,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
       } // if ( Fail_AnyCell  &&  Iteration < MaxIter ) ... else ...
 
 
-//    7. counter increment
+//    8. counter increment
       Iteration ++;
 
    } while ( ContinueIteration );
@@ -503,7 +507,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 #  endif
 
 
-// free resource
+// 9. free resource
    delete [] FData_tmp;
 #  ifdef MASK_GOOD_CELLS
    delete [] Mask;
