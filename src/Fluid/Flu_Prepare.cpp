@@ -102,11 +102,13 @@ void Flu_Prepare( const int lv, const double PrepTime,
 // validate input arrays for debugging purposes
    if ( OPT__CK_INPUT_FLUID )
    {
-      bool CheckPassed = true;
-      real fluid[FLU_NIN];
+      bool CheckFailed = false;
 
+#     pragma omp parallel for reduction ( ||:CheckFailed ) schedule( runtime )
       for (int TID=0; TID<NPG; TID++)
       {
+         real fluid[FLU_NIN];
+
 //       a. fluid
          for (int k=0; k<FLU_NXT; k++)
          for (int j=0; j<FLU_NXT; j++)
@@ -149,7 +151,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
 #              endif
                Aux_Message( stderr, "\n" );
 
-               CheckPassed = false;
+               CheckFailed = true;
             }
 
 //          generic
@@ -164,7 +166,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
                   for (int v=0; v<FLU_NIN; v++)    Aux_Message( stderr, " [%d]=%14.7e", v, fluid[v] );
                   Aux_Message( stderr, "\n" );
 
-                  CheckPassed = false;
+                  CheckFailed = true;
                }
             }
 #           endif // MODEL
@@ -181,7 +183,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
             if ( !Aux_IsFinite(B) )
             {
                Aux_Message( stderr, "Invalid input magnetic field: B[%d] = %14.7e\n", v, B );
-               CheckPassed = false;
+               CheckFailed = true;
             }
          }
 #        endif
@@ -197,13 +199,13 @@ void Flu_Prepare( const int lv, const double PrepTime,
             if ( !Aux_IsFinite(pot) )
             {
                Aux_Message( stderr, "Invalid input gravitational potential: %14.7e\n", pot );
-               CheckPassed = false;
+               CheckFailed = true;
             }
          }
 #        endif
       } // for (int TID=0; TID<NPG; TID++)
 
-      if ( ! CheckPassed )
+      if ( CheckFailed )
          Aux_Error( ERROR_INFO, "OPT__CK_INPUT_FLUID failed (lv %d, Time %20.14e) !!\n", lv, PrepTime  );
 
    } // if ( OPT__CK_INPUT_FLUID )
