@@ -477,6 +477,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__CK_INTERFACE_B",        &OPT__CK_INTERFACE_B,             false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_DIVERGENCE_B",       &OPT__CK_DIVERGENCE_B,            0,               0,             2              );
 #  endif
+   ReadPara->Add( "OPT__CK_INPUT_FLUID",        &OPT__CK_INPUT_FLUID,             false,           Useless_bool,  Useless_bool   );
 
 
 

@@ -1347,6 +1347,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__CK_INTERFACE_B             %d\n",      OPT__CK_INTERFACE_B       );
       fprintf( Note, "OPT__CK_DIVERGENCE_B            %d\n",      OPT__CK_DIVERGENCE_B      );
 #     endif
+      fprintf( Note, "OPT__CK_INPUT_FLUID             %d\n",      OPT__CK_INPUT_FLUID       );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
