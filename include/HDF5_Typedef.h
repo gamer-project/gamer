@@ -251,6 +251,8 @@ struct SymConst_t
    int    BitRep_Electric;
 #  endif
 
+   int    InterpMask;
+
 
 #  if   ( MODEL == HYDRO )
    int    Flu_BlockSize_x;

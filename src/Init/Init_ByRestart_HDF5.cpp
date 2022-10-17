@@ -1632,6 +1632,7 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
 #  ifdef MHD
    LoadField( "BitRep_Electric",      &RS.BitRep_Electric,      SID, TID, NonFatal, &RT.BitRep_Electric,       1, NonFatal );
 #  endif
+   LoadField( "InterpMask",           &RS.InterpMask,           SID, TID, NonFatal, &RT.InterpMask,            1, NonFatal );
 
 #  if   ( MODEL == HYDRO )
    LoadField( "Flu_BlockSize_x",      &RS.Flu_BlockSize_x,      SID, TID, NonFatal, &RT.Flu_BlockSize_x,       1, NonFatal );

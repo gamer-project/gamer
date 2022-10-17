@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2451)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2452)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -222,6 +222,7 @@ Procedure for outputting new variables:
 //                2449 : 2022/07/08 --> output OPT__OUTPUT_RESTART
 //                2450 : 2022/07/13 --> output OPT__INT_PRIM
 //                2451 : 2022/10/10 --> output OPT__SAME_INTERFACE_B
+//                2452 : 2022/10/17 --> output INTERP_MASK
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1727,7 +1728,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2451;
+   KeyInfo.FormatVersion        = 2452;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2178,6 +2179,12 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.BitRep_Electric      = 0;
 #  endif
 #  endif // #ifdef MHD
+
+#  ifdef INTERP_MASK
+   SymConst.InterpMask           = 1;
+#  else
+   SymConst.InterpMask           = 0;
+#  endif
 
 
 #  if   ( MODEL == HYDRO )
@@ -3019,6 +3026,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 #  ifdef MHD
    H5Tinsert( H5_TypeID, "BitRep_Electric",      HOFFSET(SymConst_t,BitRep_Electric     ), H5T_NATIVE_INT    );
 #  endif
+   H5Tinsert( H5_TypeID, "InterpMask",           HOFFSET(SymConst_t,InterpMask          ), H5T_NATIVE_INT    );
 
 #  if   ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Flu_BlockSize_x",      HOFFSET(SymConst_t,Flu_BlockSize_x     ), H5T_NATIVE_INT    );
