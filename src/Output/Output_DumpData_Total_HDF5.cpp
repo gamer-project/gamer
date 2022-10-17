@@ -222,7 +222,7 @@ Procedure for outputting new variables:
 //                2449 : 2022/07/08 --> output OPT__OUTPUT_RESTART
 //                2450 : 2022/07/13 --> output OPT__INT_PRIM
 //                2451 : 2022/10/10 --> output OPT__SAME_INTERFACE_B
-//                2452 : 2022/10/17 --> output INTERP_MASK
+//                2452 : 2022/10/17 --> output INTERP_MASK, OPT__CK_INPUT_FLUID
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -2716,6 +2716,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Ck_InterfaceB      = OPT__CK_INTERFACE_B;
    InputPara.Opt__Ck_DivergenceB     = OPT__CK_DIVERGENCE_B;
 #  endif
+   InputPara.Opt__Ck_InputFluid      = OPT__CK_INPUT_FLUID;
 
 // flag tables
 #  if   ( MODEL == HYDRO )
@@ -3564,6 +3565,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Ck_InterfaceB",      HOFFSET(InputPara_t,Opt__Ck_InterfaceB     ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Ck_DivergenceB",     HOFFSET(InputPara_t,Opt__Ck_DivergenceB    ), H5T_NATIVE_INT              );
 #  endif
+   H5Tinsert( H5_TypeID, "Opt__Ck_InputFluid",      HOFFSET(InputPara_t,Opt__Ck_InputFluid     ), H5T_NATIVE_INT              );
 
 // flag tables
 #  if ( NLEVEL > 1 )

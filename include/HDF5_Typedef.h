@@ -706,6 +706,7 @@ struct InputPara_t
    int    Opt__Ck_InterfaceB;
    int    Opt__Ck_DivergenceB;
 #  endif
+   int    Opt__Ck_InputFluid;
 
 // flag tables
    double FlagTable_Rho         [NLEVEL-1];

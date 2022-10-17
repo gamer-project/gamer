@@ -2128,6 +2128,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Ck_InterfaceB",      &RS.Opt__Ck_InterfaceB,      SID, TID, NonFatal, &RT.Opt__Ck_InterfaceB,       1, NonFatal );
    LoadField( "Opt__Ck_DivergenceB",     &RS.Opt__Ck_DivergenceB,     SID, TID, NonFatal, &RT.Opt__Ck_DivergenceB,      1, NonFatal );
 #  endif
+   LoadField( "Opt__Ck_InputFluid",      &RS.Opt__Ck_InputFluid,      SID, TID, NonFatal, &RT.Opt__Ck_InputFluid,       1, NonFatal );
 
 
 // flag tables
