@@ -400,6 +400,12 @@ void Aux_TakeNote()
 #     endif
 #     endif
 
+#     ifdef INTERP_MASK
+      fprintf( Note, "INTERP_MASK                     ON\n" );
+#     else
+      fprintf( Note, "INTERP_MASK                     OFF\n" );
+#     endif
+
 #     if   ( MODEL == HYDRO )
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
       fprintf( Note, "CHECK_UNPHYSICAL_IN_FLUID       ON\n" );

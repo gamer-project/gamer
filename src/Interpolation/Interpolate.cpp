@@ -170,10 +170,8 @@ void Interpolate( real CData[], const int CSize[3], const int CStart[3], const i
 #if ( MODEL == HYDRO )
 
 
-// [experimental] only apply iterations to broken cells
-#define MASK_GOOD_CELLS
-
-#ifdef MASK_GOOD_CELLS
+// INTERP_MASK is defined in Macro.h
+#ifdef INTERP_MASK
 #  define MASKED    true
 #  define UNMASKED  false
 #endif
@@ -205,7 +203,7 @@ void Interpolate( real CData[], const int CSize[3], const int CStart[3], const i
 //                      until either interpolation succeeds or the monotonic coefficient becomes zero
 //                5. CData[] may be overwritten
 //                6. Only applicable for HYDRO
-//                7. When enabling MASK_GOOD_CELLS (experimental), only iterate on cells with unphysical results
+//                7. When enabling INTERP_MASK (in Macro.h), only iterate on cells with unphysical results
 //
 // Parameter   :  See Interpolate()
 //
@@ -246,7 +244,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
    real *FData_tmp = new real [NCOMP_TOTAL*FSize3D];
 
-#  ifdef MASK_GOOD_CELLS
+#  ifdef INTERP_MASK
    bool *Mask      = new bool [FSize3D];
    for (int i=0; i<FSize3D; i++)    Mask[i] = UNMASKED;
 #  endif
@@ -322,7 +320,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
       for (int i=0; i<FSize3D; i++)
       {
 //       skip masked cells
-#        ifdef MASK_GOOD_CELLS
+#        ifdef INTERP_MASK
          if ( Mask[i] == MASKED )   continue;
 #        endif
 
@@ -423,7 +421,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                MPI_Exit();    // abort the simulation if interpolation fails
             } // if ( Iteration == MaxIter )
 
-#           ifndef MASK_GOOD_CELLS
+#           ifndef INTERP_MASK
             break;   // no need to check remaining cells if not using mask
 #           endif
          } // if ( Fail_ThisCell )
@@ -445,7 +443,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 //          no need to copy the magnetic field here
             for (int v=0; v<NCOMP_TOTAL; v++)   FData[ FSize3D*v + i ] = Cons[v];
 
-#           ifdef MASK_GOOD_CELLS
+#           ifdef INTERP_MASK
             Mask[i] = MASKED;
 #           endif
          } // if ( Fail_ThisCell ) ... else ...
@@ -457,7 +455,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
 //       if any fine cell remains failed, unmask all eight fine cells with the same parent cell
 //       --> ensure conservation when disabling IntPrim
-#        ifdef MASK_GOOD_CELLS
+#        ifdef INTERP_MASK
          typedef bool (*vla)[ FSize[1] ][ FSize[0] ];
          vla Mask3D = ( vla )Mask;
 
@@ -484,7 +482,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                Mask3D[kp][jp][ip] = UNMASKED;
             }
          }}}
-#        endif // #ifdef MASK_GOOD_CELLS
+#        endif // #ifdef INTERP_MASK
 
          ContinueIteration = true;
       } // if ( Fail_AnyCell  &&  Iteration < MaxIter )
@@ -501,7 +499,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
 
 // check if there is any missing cell
-#  if ( defined GAMER_DEBUG  &&  defined MASK_GOOD_CELLS )
+#  if ( defined GAMER_DEBUG  &&  defined INTERP_MASK )
    for (int i=0; i<FSize3D; i++)
      if ( Mask[i] == UNMASKED )  Aux_Error( ERROR_INFO, "Mask[%d] == UNMASKED !!\n", i );
 #  endif
@@ -509,7 +507,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
 // 9. free resource
    delete [] FData_tmp;
-#  ifdef MASK_GOOD_CELLS
+#  ifdef INTERP_MASK
    delete [] Mask;
 #  endif
 

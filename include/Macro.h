@@ -729,6 +729,10 @@
 # endif // MHD
 
 
+// only apply iterations to broken cells in Interpolate_Iterate()
+#define INTERP_MASK
+
+
 // extreme values
 #ifndef __INT_MAX__
 #  define __INT_MAX__            2147483647
