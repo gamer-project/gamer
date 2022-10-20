@@ -439,6 +439,20 @@ void Aux_TakeNote()
       fprintf( Note, "CHECK_INTERMEDIATE              UNKNOWN\n" );
 #     endif
 
+#     if   ( RSOLVER_RESCUE == EXACT )
+      fprintf( Note, "RSOLVER_RESCUE                  EXACT\n" );
+#     elif ( RSOLVER_RESCUE == HLLE )
+      fprintf( Note, "RSOLVER_RESCUE                  HLLE\n" );
+#     elif ( RSOLVER_RESCUE == HLLC )
+      fprintf( Note, "RSOLVER_RESCUE                  HLLC\n" );
+#     elif ( RSOLVER_RESCUE == HLLD )
+      fprintf( Note, "RSOLVER_RESCUE                  HLLD\n" );
+#     elif ( RSOLVER_RESCUE == NONE )
+      fprintf( Note, "RSOLVER_RESCUE                  OFF\n" );
+#     else
+      fprintf( Note, "RSOLVER_RESCUE                  UNKNOWN\n" );
+#     endif
+
 #     ifdef HLL_NO_REF_STATE
       fprintf( Note, "HLL_NO_REF_STATE                ON\n" );
 #     else

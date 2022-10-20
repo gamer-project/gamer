@@ -173,6 +173,17 @@
 #endif
 
 
+// switch to a different Riemann solver if the default one fails
+// --> to disable it, either comment out this line or set RSOLVER_RESCUE to NONE
+// --> used by Hydro_ComputeFlux() and Hydro_RiemannPredict_Flux()
+#  define RSOLVER_RESCUE   HLLE
+
+#if ( RSOLVER_RESCUE == RSOLVER )
+#  undef  RSOLVER_RESCUE
+#  define RSOLVER_RESCUE   NONE
+#endif
+
+
 // use Eulerian with Y factor for Roe Solver in MHD
 #if (  defined MHD  &&  ( RSOLVER == ROE || RSOLVER == HLLE )  )
 #  define EULERY
