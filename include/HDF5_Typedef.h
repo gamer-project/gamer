@@ -261,6 +261,7 @@ struct SymConst_t
    int    CharReconstruction;
    int    LR_Eint;
    int    CheckIntermediate;
+   int    RSolverRescue;
    int    HLL_NoRefState;
    int    HLL_IncludeAllWaves;
    int    HLLC_WaveSpeed;

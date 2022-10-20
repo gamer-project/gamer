@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2452)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2453)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -223,6 +223,7 @@ Procedure for outputting new variables:
 //                2450 : 2022/07/13 --> output OPT__INT_PRIM
 //                2451 : 2022/10/10 --> output OPT__SAME_INTERFACE_B
 //                2452 : 2022/10/17 --> output INTERP_MASK, OPT__CK_INPUT_FLUID
+//                2453 : 2022/10/20 --> output RSOLVER_RESCUE
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1728,7 +1729,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2452;
+   KeyInfo.FormatVersion        = 2453;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2209,6 +2210,11 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.CheckIntermediate    = CHECK_INTERMEDIATE;
 #  else
    SymConst.CheckIntermediate    = 0;
+#  endif
+#  ifdef RSOLVER_RESCUE
+   SymConst.RSolverRescue        = RSOLVER_RESCUE;
+#  else
+   SymConst.RSolverRescue        = 0;
 #  endif
 #  ifdef HLL_NO_REF_STATE
    SymConst.HLL_NoRefState       = 1;
@@ -3036,6 +3042,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "CharReconstruction",   HOFFSET(SymConst_t,CharReconstruction  ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "LR_Eint",              HOFFSET(SymConst_t,LR_Eint             ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "CheckIntermediate",    HOFFSET(SymConst_t,CheckIntermediate   ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "RSolverRescue",        HOFFSET(SymConst_t,RSolverRescue       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "HLL_NoRefState",       HOFFSET(SymConst_t,HLL_NoRefState      ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "HLL_IncludeAllWaves",  HOFFSET(SymConst_t,HLL_IncludeAllWaves ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "HLLC_WaveSpeed",       HOFFSET(SymConst_t,HLLC_WaveSpeed      ), H5T_NATIVE_INT    );
