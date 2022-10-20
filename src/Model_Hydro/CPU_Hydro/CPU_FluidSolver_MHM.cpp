@@ -693,8 +693,8 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
 //             check again
 #              ifdef CHECK_UNPHYSICAL_IN_FLUID
-               for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++) {
-                  if ( Flux_1Face[v] != Flux_1Face[v] ) {
+               for (int w=0; w<NCOMP_TOTAL_PLUS_MAG; w++) {
+                  if ( Flux_1Face[w] != Flux_1Face[w] ) {
                      printf( "ERROR : RSOLVER_RESCUE still failed !!\n" );
                      break;
                   }
