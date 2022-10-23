@@ -37,8 +37,7 @@ void FB_WindFeedback( const double particleAge, real &windEjectMass, real &windE
 
 void FB_distSNeFeedback( real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int explosionFlag,
 			 const int idx[], double sn_energy,  const double Msun,  const double dh,
-			 const double EdgeL[], const int distcells, const int distrad,
-			 const int diststep );
+			 const int distcells, const int distrad, const int diststep );
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -487,21 +486,17 @@ void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const dou
       //printf("local feedback finished\n");
 
       // 5: SN Momentum feedback
-//	printf("non-local feedback on, sn_energy = %f\n", sn_energy);
-	FB_distSNeFeedback( Fluid, explosionFlag[n], idx, sn_energy, Msun, dh, EdgeL,
-			    distcells, distrad, diststep );
+      // FB_distSNeFeedback( Fluid, explosionFlag[n], idx, sn_energy, Msun, dh,
+	// 		  distcells, distrad, diststep );
 
       } // if particle inside patch
-
-      // for ( int d = 0; d < 3; d++ ) {
-	// if (FB_GHOST_SIZE > 0)      {
-         // if ( idx[d] == (FB_GHOST_SIZE - 1) || idx[d] == (PS2 + FB_GHOST_SIZE) ) {
-	// FB_distSNeFeedback( Fluid, explosionFlag[n], idx, sn_energy, Msun, dh, EdgeL,
-        //                     distcells, distrad, diststep );
-         // } //if (particle is on the edge), let nearby cells do their non-local feedback
-	// } //if (FB_GHOST_SIZE > 0)
-      // } //for ( int d = 0; d < 3; d++ )
-
+    else { 
+      // 5: SN Momentum feedback
+	if ( idx[0] == PS2 + FB_GHOST_SIZE || idx[1] == PS2 + FB_GHOST_SIZE || idx[2] == PS2 + FB_GHOST_SIZE ) {
+	FB_distSNeFeedback( Fluid, explosionFlag[n], idx, sn_energy, Msun, dh,
+		            distcells, distrad, diststep );
+	} // if ( idx[d] >= 0 && idx[d] <= PS2 + FB_GHOST_SIZE ) {
+      } // for outside SNe, if they're on edge of nearby patch, do their non-local feedback
    } // for (n = 0; n < NPar; n++ )
 
   // free memory space
@@ -991,7 +986,7 @@ void FB_WindFeedback( const double particleAge, real &windEjectMass, real &windE
 ////-------------------------------------------------------------------------------------------------------
 void FB_distSNeFeedback( real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int explosionFlag,
                          const int idx[], const double sn_energy, const double Msun,
-			 const double dh, const double EdgeL[], const int distcells, 
+			 const double dh, const int distcells, 
 			 const int distrad, const int diststep )
 {
   double kms      = Const_km / Const_s;
@@ -1059,8 +1054,6 @@ void FB_distSNeFeedback( real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int explos
 
 	    printf("cell mass at (%d, %d, %d) = %e\n", i, j, k, mc);
 
-	    if ( mc <= 0 ) continue;
-
 	    // Limit momentum feedback such that each cell can do
 	    // no more than its fair share of the thermal energy
 	    // from the SNe
@@ -1081,9 +1074,7 @@ void FB_distSNeFeedback( real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int explos
 	    printf("cell momentum = %lf\n", pcell);
 
             // Record kinetic energy deposited in this cell
-            if ( idx[0] >= FB_GHOST_SIZE && idx[0] < (PS2 + FB_GHOST_SIZE) && idx[1] >= FB_GHOST_SIZE && idx[1] < (PS2 + FB_GHOST_SIZE) && idx[2] >= FB_GHOST_SIZE && idx[2] < (PS2 + FB_GHOST_SIZE) ) kesum += POW( pcell, 2 ) / mc / 2;
-
-	    if ( i < FB_GHOST_SIZE || i >= (PS2 + FB_GHOST_SIZE) || j <= FB_GHOST_SIZE || j > (PS2 + FB_GHOST_SIZE) || k <= FB_GHOST_SIZE || k > (PS2 + FB_GHOST_SIZE) ) continue;
+	    kesum += POW( pcell, 2 ) / mc / 2;
 
             Eint = Hydro_Con2Eint( Fluid[DENS][i][j][k],
                                    Fluid[MOMX][i][j][k],
@@ -1097,19 +1088,6 @@ void FB_distSNeFeedback( real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int explos
             Fluid[MOMZ][i][j][k] += rz * pcell / CUBE(dh);
 
 	    Fluid[ENGY][i][j][k] = Eint + ( POW( Fluid[MOMX][i][j][k], 2 ) + POW( Fluid[MOMY][i][j][k], 2 ) + POW( Fluid[MOMZ][i][j][k], 2 ) ) / Fluid[DENS][i][j][k] / 2;
-
-      	    #ifdef DUAL_ENERGY
- 	    //Fluid[ENPY][i][j][k] += ( POW( Fluid[MOMX][i][j][k], 2 ) + POW( Fluid[MOMY][i][j][k], 2 ) + POW( Fluid[MOMZ][i][j][k], 2 ) ) / Fluid[DENS][i][j][k] / 2;
-	    #endif // #ifdef DUAL_ENERGY
-
-	    // Record kinetic energy deposited in this cell
-	    //if ( idx[0] > 0 && idx[0] <= PS2 && idx[1] > 0 && idx[1] <= PS2 && idx[2] > 0 && idx[2] <= PS2 ) kesum += POW( pcell, 2 ) / mc / 2;
-
-	    /*Fout=fopen("Eint.txt","a");
-            if(Fout==NULL) {printf("Fail To Open File Eint.txt!!");}
-            fprintf(Fout, "in cell (%d, %d, %d), Eint = %f\n", i, j, k, Eint);
-            fclose(Fout);*/ 
-
 	    } // else if (k = idx[2] && j = idx[1] && i = idx[0] )
 	  } // if ( cellstep <= diststep )
 	} // for ( int i = idx[0] - distrad; i <= idx[0] + distrad; i++ )

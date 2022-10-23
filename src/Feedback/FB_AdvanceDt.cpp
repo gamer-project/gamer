@@ -377,9 +377,9 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
          for (int v=0; v<NCOMP_TOTAL; v++)   {
 
             if ( FluidBitIdx & BIDX(v) )
-            for (int k_o=0; k_o<NCellIn/2; k_o++)  {  const int k_i = Disp_k + k_o;
-            for (int j_o=0; j_o<NCellIn/2; j_o++)  {  const int j_i = Disp_j + j_o;
-            for (int i_o=0; i_o<NCellIn/2; i_o++)  {  const int i_i = Disp_i + i_o;
+            for (int k_o=0; k_o<PS1; k_o++)  {  const int k_i = Disp_k + k_o;
+            for (int j_o=0; j_o<PS1; j_o++)  {  const int j_i = Disp_j + j_o;
+            for (int i_o=0; i_o<PS1; i_o++)  {  const int i_i = Disp_i + i_o;
 
                amr->patch[SaveSg_Flu][lv][PID]->fluid[v][k_o][j_o][i_o] = fluid_PG[v][k_i][j_i][i_i];
 
