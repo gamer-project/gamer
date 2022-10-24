@@ -1251,6 +1251,9 @@ void Aux_TakeNote()
                                                                                                              "UNKNOWN" );
 #     endif
       fprintf( Note, "INT_MONO_COEFF                  %13.7e\n",  INT_MONO_COEFF          );
+#     ifdef MHD
+      fprintf( Note, "INT_MONO_COEFF_B                %13.7e\n",  INT_MONO_COEFF_B        );
+#     endif
       fprintf( Note, "MONO_MAX_ITER                   %d\n",      MONO_MAX_ITER           );
       fprintf( Note, "INT_OPP_SIGN_0TH_ORDER          %d\n",      INT_OPP_SIGN_0TH_ORDER  );
       fprintf( Note, "***********************************************************************************\n" );

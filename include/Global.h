@@ -107,7 +107,7 @@ extern double           MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP, MIN_ENTR;
 extern double           DUAL_ENERGY_SWITCH;
 #endif
 #ifdef MHD
-extern double           FlagTable_Current[NLEVEL-1];
+extern double           FlagTable_Current[NLEVEL-1], INT_MONO_COEFF_B;
 extern IntScheme_t      OPT__MAG_INT_SCHEME, OPT__REF_MAG_INT_SCHEME;
 extern bool             OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC_MAG, OPT__FLAG_CURRENT;
 extern bool             OPT__OUTPUT_DIVMAG;

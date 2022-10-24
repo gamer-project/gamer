@@ -471,7 +471,7 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
 //
 //                      if ( still_found_unphysical )
 //                         if ( AUTO_REDUCE_DT )
-//                            Invoke the fluid solver again on the same level but with smaller dt/MINMOD_COEFF/INT_MONO_COEFF
+//                            Invoke the fluid solver again on the same level but with smaller dt/MINMOD_COEFF/INT_MONO_COEFF(_B)
 //                         else
 //                            Print debug messages and abort
 //                      else

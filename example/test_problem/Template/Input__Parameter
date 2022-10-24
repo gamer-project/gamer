@@ -110,8 +110,8 @@ AUTO_REDUCE_DT_FACTOR         0.8         # reduce dt by a factor of AUTO_REDUCE
 AUTO_REDUCE_DT_FACTOR_MIN     0.1         # minimum allowed AUTO_REDUCE_DT_FACTOR after consecutive failures [0.1]
 AUTO_REDUCE_MINMOD_FACTOR     0.8         # reduce MINMOD_COEFF by this factor together with AUTO_REDUCE_DT (1.0=off) [0.8] ##HYDRO ONLY##
 AUTO_REDUCE_MINMOD_MIN        1.0e-2      # minimum allowed MINMOD_COEFF after consecutive failures [1.0e-2] ##HYDRO ONLY##
-AUTO_REDUCE_INT_MONO_FACTOR   0.8         # reduce INT_MONO_COEFF by this factor together with AUTO_REDUCE_DT (1.0=off) [0.8]
-AUTO_REDUCE_INT_MONO_MIN      1.0e-2      # minimum allowed INT_MONO_COEFF after consecutive failures [1.0e-2]
+AUTO_REDUCE_INT_MONO_FACTOR   0.8         # reduce INT_MONO_COEFF(_B) by this factor together with AUTO_REDUCE_DT (1.0=off) [0.8]
+AUTO_REDUCE_INT_MONO_MIN      1.0e-2      # minimum allowed INT_MONO_COEFF(_B) after consecutive failures [1.0e-2]
 
 
 # grid refinement (examples of Input__Flag_XXX tables are put at "example/input/")
@@ -303,6 +303,7 @@ OPT__RHO_INT_SCHEME           4           # ghost-zone mass density for the Pois
 OPT__GRA_INT_SCHEME           4           # ghost-zone potential for the gravity solver (for UNSPLIT_GRAVITY as well) [4]
 OPT__REF_POT_INT_SCHEME       4           # newly allocated potential during grid refinement [4]
 INT_MONO_COEFF                2.0         # coefficient for ensuring the interpolation monotonicity (1.0~4.0) [2.0]
+INT_MONO_COEFF_B              2.0         # coefficient for ensuring the interpolation monotonicity of B field (1.0~4.0) [2.0] ##MHD ONLY##
 MONO_MAX_ITER                 10          # maximum number of iterations to reduce INT_MONO_COEFF when interpolation fails (0=off) [10]
 INT_OPP_SIGN_0TH_ORDER        1           # switch to 0th-order interpolation if adjacent values change signs [HYDRO:1; ELBDM:0]
 

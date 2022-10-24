@@ -199,6 +199,11 @@ void Aux_Check_Parameter()
    if ( INT_MONO_COEFF < 1.0  ||  INT_MONO_COEFF > 4.0 )
       Aux_Error( ERROR_INFO, "INT_MONO_COEFF (%14.7e) is not within the correct range [1.0, 4.0] !!\n", INT_MONO_COEFF );
 
+#  ifdef MHD
+   if ( INT_MONO_COEFF_B < 1.0  ||  INT_MONO_COEFF_B > 4.0 )
+      Aux_Error( ERROR_INFO, "INT_MONO_COEFF_B (%14.7e) is not within the correct range [1.0, 4.0] !!\n", INT_MONO_COEFF_B );
+#  endif
+
    if ( OPT__MEMORY_POOL  &&  !OPT__REUSE_MEMORY )
       Aux_Error( ERROR_INFO, "please turn on OPT__REUSE_MEMORY for OPT__MEMORY_POOL !!\n" );
 
