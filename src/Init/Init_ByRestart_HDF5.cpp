@@ -1830,6 +1830,12 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "AutoReduceDt",            &RS.AutoReduceDt,            SID, TID, NonFatal, &RT.AutoReduceDt,             1, NonFatal );
    LoadField( "AutoReduceDtFactor",      &RS.AutoReduceDtFactor,      SID, TID, NonFatal, &RT.AutoReduceDtFactor,       1, NonFatal );
    LoadField( "AutoReduceDtFactorMin",   &RS.AutoReduceDtFactorMin,   SID, TID, NonFatal, &RT.AutoReduceDtFactorMin,    1, NonFatal );
+#  if ( MODEL == HYDRO )
+   LoadField( "AutoReduceMinModFactor",  &RS.AutoReduceMinModFactor,  SID, TID, NonFatal, &RT.AutoReduceMinModFactor,   1, NonFatal );
+   LoadField( "AutoReduceMinModMin",     &RS.AutoReduceMinModMin,     SID, TID, NonFatal, &RT.AutoReduceMinModMin,      1, NonFatal );
+#  endif
+   LoadField( "AutoReduceIntMonoFactor", &RS.AutoReduceIntMonoFactor, SID, TID, NonFatal, &RT.AutoReduceIntMonoFactor,  1, NonFatal );
+   LoadField( "AutoReduceIntMonoMin",    &RS.AutoReduceIntMonoMin,    SID, TID, NonFatal, &RT.AutoReduceIntMonoMin,     1, NonFatal );
 
 
 // domain refinement
@@ -2045,6 +2051,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__RefPot_IntScheme",   &RS.Opt__RefPot_IntScheme,   SID, TID, NonFatal, &RT.Opt__RefPot_IntScheme,    1, NonFatal );
 #  endif
    LoadField( "IntMonoCoeff",            &RS.IntMonoCoeff,            SID, TID, NonFatal, &RT.IntMonoCoeff,             1, NonFatal );
+#  ifdef MHD
+   LoadField( "IntMonoCoeffB",           &RS.IntMonoCoeffB,           SID, TID, NonFatal, &RT.IntMonoCoeffB,            1, NonFatal );
+#  endif
    LoadField( "Mono_MaxIter",            &RS.Mono_MaxIter,            SID, TID, NonFatal, &RT.Mono_MaxIter,             1, NonFatal );
    LoadField( "IntOppSign0thOrder",      &RS.IntOppSign0thOrder,      SID, TID, NonFatal, &RT.IntOppSign0thOrder,       1, NonFatal );
 

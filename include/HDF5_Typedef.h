@@ -410,6 +410,12 @@ struct InputPara_t
    int    AutoReduceDt;
    double AutoReduceDtFactor;
    double AutoReduceDtFactorMin;
+#  if ( MODEL == HYDRO )
+   double AutoReduceMinModFactor;
+   double AutoReduceMinModMin;
+#  endif
+   double AutoReduceIntMonoFactor;
+   double AutoReduceIntMonoMin;
 
 // domain refinement
    int    RegridCount;
@@ -632,6 +638,9 @@ struct InputPara_t
    int    Opt__RefPot_IntScheme;
 #  endif
    double IntMonoCoeff;
+#  ifdef MHD
+   double IntMonoCoeffB;
+#  endif
    int    Mono_MaxIter;
    int    IntOppSign0thOrder;
 
