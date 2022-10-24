@@ -990,6 +990,10 @@ void Aux_Check_Parameter()
    if ( !OPT__OUTPUT_CC_MAG )
       Aux_Message( stderr, "WARNING : yt requires \"OPT__OUTPUT_CC_MAG\" for analyzing magnetic field !!\n" );
 
+   if ( MINMOD_MAX_ITER != 0 )
+      Aux_Message( stderr, "WARNING : MINMOD_MAX_ITER (%d) can break B field consistency --> use AUTO_REDUCE_MINMOD_FACTOR instead !!\n",
+                   MINMOD_MAX_ITER );
+
 #  endif // #ifdef MHD
 
 
