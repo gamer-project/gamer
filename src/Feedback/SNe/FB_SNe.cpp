@@ -195,8 +195,8 @@ void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const dou
       printf("y index = %d\n", idx[1]);
       printf("z index = %d\n", idx[2]);
 
-      double flu_dens      = Fluid[DENS][idx[0]][idx[1]][idx[2]];      // density of this cell
-      double flu_energy    = Fluid[ENGY][idx[0]][idx[1]][idx[2]];      // energy of this cell
+      double flu_dens      = Fluid[DENS][idx[2]][idx[1]][idx[0]];      // density of this cell
+      double flu_energy    = Fluid[ENGY][idx[2]][idx[1]][idx[0]];      // energy of this cell
 
       // printf("mass density of this cell (%d, %d, %d) = %f\n", idx[0], idx[1], idx[2], flu_dens);
 
@@ -473,29 +473,24 @@ void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const dou
       //
       // Mass and momentum feedback from winds and SN ejecta (NOT from SN blastwaves)
 
-      // Fluid[MOMX][idx[0]][idx[1]][idx[2]] += (wind_dens + SNe_dens) * par_vel[0];
-      // Fluid[MOMY][idx[0]][idx[1]][idx[2]] += (wind_dens + SNe_dens) * par_vel[1];
-      // Fluid[MOMZ][idx[0]][idx[1]][idx[2]] += (wind_dens + SNe_dens) * par_vel[2];
-      // Fluid[DENS][idx[0]][idx[1]][idx[2]] += (wind_dens + SNe_dens);
+      // Fluid[MOMX][idx[2]][idx[1]][idx[0]] += (wind_dens + SNe_dens) * par_vel[0];
+      // Fluid[MOMY][idx[2]][idx[1]][idx[0]] += (wind_dens + SNe_dens) * par_vel[1];
+      // Fluid[MOMZ][idx[2]][idx[1]][idx[0]] += (wind_dens + SNe_dens) * par_vel[2];
+      // Fluid[DENS][idx[2]][idx[1]][idx[0]] += (wind_dens + SNe_dens);
 
       //printf("density of local cell = %e\n", Fluid[DENS][idx[0]][idx[1]][idx[2]]);
 
-      #ifdef DUAL_ENERGY
-      // Fluid[ENPY][idx[0]][idx[1]][idx[2]] += fb_energy;
-      #endif // #ifdef DUAL_ENERGY
-      //printf("local feedback finished\n");
-
       // 5: SN Momentum feedback
-      // FB_distSNeFeedback( Fluid, explosionFlag[n], idx, sn_energy, Msun, dh,
-	// 		  distcells, distrad, diststep );
+      FB_distSNeFeedback( Fluid, explosionFlag[n], idx, sn_energy, Msun, dh,
+			  distcells, distrad, diststep );
 
       } // if particle inside patch
     else { 
       // 5: SN Momentum feedback
-	if ( idx[0] == PS2 + FB_GHOST_SIZE || idx[1] == PS2 + FB_GHOST_SIZE || idx[2] == PS2 + FB_GHOST_SIZE ) {
+	// if ( idx[0] == PS2 + FB_GHOST_SIZE || idx[1] == PS2 + FB_GHOST_SIZE || idx[2] == PS2 + FB_GHOST_SIZE ) {
 	FB_distSNeFeedback( Fluid, explosionFlag[n], idx, sn_energy, Msun, dh,
 		            distcells, distrad, diststep );
-	} // if ( idx[d] >= 0 && idx[d] <= PS2 + FB_GHOST_SIZE ) {
+	// } // if ( idx[d] >= 0 && idx[d] <= PS2 + FB_GHOST_SIZE ) {
       } // for outside SNe, if they're on edge of nearby patch, do their non-local feedback
    } // for (n = 0; n < NPar; n++ )
 
@@ -1026,17 +1021,19 @@ void FB_distSNeFeedback( real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int explos
 
   // do momentum feedback over a distributed region 
   // distribute equally among zones participating in feedback
-  for ( int k = idx[2] - distrad; k <= idx[2] + distrad; k++ )
-    { stepk = abs( k - idx[2] );
+  for ( int i = idx[0] - distrad; i <= idx[0] + distrad; i++ )
+    { stepk = abs( i - idx[0] );
     for ( int j = idx[1] - distrad; j <= idx[1] + distrad; j++ )
       { stepj = stepk + abs( j - idx[1] );
-      for ( int i = idx[0] - distrad; i <= idx[0] + distrad; i++ )
-	{ cellstep = stepj + abs( i - idx[0] );
+      for ( int k = idx[2] - distrad; k <= idx[2] + distrad; k++ )
+	{ cellstep = stepj + abs( k - idx[2] );
 	if ( cellstep <= diststep )
 	  {
 	  if (k == idx[2] && j == idx[1] && i == idx[0] ) continue;
+	  else if ( k > PS2 + FB_GHOST_SIZE || j > PS2 + FB_GHOST_SIZE || i > PS2 + FB_GHOST_SIZE || k < 0 || j < 0 || i < 0 ) continue;
 	  else
-	   {distributedcenter[0] = ( i + 0.5 ) * dh;
+	   {
+	    distributedcenter[0] = ( i + 0.5 ) * dh;
 	    distributedcenter[1] = ( j + 0.5 ) * dh;
             distributedcenter[2] = ( k + 0.5 ) * dh;
 
@@ -1050,7 +1047,7 @@ void FB_distSNeFeedback( real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int explos
 	    ry = (distributedcenter[1]-explosioncenter[1])/radius;
             rz = (distributedcenter[2]-explosioncenter[2])/radius;
 
-	    mc = Fluid[DENS][i][j][k]*CUBE(dh);
+	    mc = Fluid[DENS][k][j][i]*CUBE(dh);
 
 	    printf("cell mass at (%d, %d, %d) = %e\n", i, j, k, mc);
 
@@ -1076,18 +1073,18 @@ void FB_distSNeFeedback( real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int explos
             // Record kinetic energy deposited in this cell
 	    kesum += POW( pcell, 2 ) / mc / 2;
 
-            Eint = Hydro_Con2Eint( Fluid[DENS][i][j][k],
-                                   Fluid[MOMX][i][j][k],
-                                   Fluid[MOMY][i][j][k],
-                                   Fluid[MOMZ][i][j][k],
-                                   Fluid[ENGY][i][j][k], NoFloor, NULL_REAL, 0 );
+            Eint = Hydro_Con2Eint( Fluid[DENS][k][j][i],
+                                   Fluid[MOMX][k][j][i],
+                                   Fluid[MOMY][k][j][i],
+                                   Fluid[MOMZ][k][j][i],
+                                   Fluid[ENGY][k][j][i], NoFloor, NULL_REAL, 0 );
 
 	    // Add momentum feedback
-	    Fluid[MOMX][i][j][k] += rx * pcell / CUBE(dh);
-            Fluid[MOMY][i][j][k] += ry * pcell / CUBE(dh);
-            Fluid[MOMZ][i][j][k] += rz * pcell / CUBE(dh);
+	    Fluid[MOMX][k][j][i] += rx * pcell / CUBE(dh);
+            Fluid[MOMY][k][j][i] += ry * pcell / CUBE(dh);
+            Fluid[MOMZ][k][j][i] += rz * pcell / CUBE(dh);
 
-	    Fluid[ENGY][i][j][k] = Eint + ( POW( Fluid[MOMX][i][j][k], 2 ) + POW( Fluid[MOMY][i][j][k], 2 ) + POW( Fluid[MOMZ][i][j][k], 2 ) ) / Fluid[DENS][i][j][k] / 2;
+	    Fluid[ENGY][k][j][i] = Eint + ( POW( Fluid[MOMX][k][j][i], 2 ) + POW( Fluid[MOMY][k][j][i], 2 ) + POW( Fluid[MOMZ][k][j][i], 2 ) ) / Fluid[DENS][k][j][i] / 2;
 	    } // else if (k = idx[2] && j = idx[1] && i = idx[0] )
 	  } // if ( cellstep <= diststep )
 	} // for ( int i = idx[0] - distrad; i <= idx[0] + distrad; i++ )
@@ -1099,11 +1096,11 @@ void FB_distSNeFeedback( real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int explos
     kesum = sn_energy;
     } //if (kesum > sn_energy)
 
-  //if ( kesum / CUBE(dh) > Fluid[ENGY][idx[0]][idx[1]][idx[2]]) Aux_Error( ERROR_INFO, "Kinetic energy from momentum feedback exceeds thermal energy");
+  //if ( kesum / CUBE(dh) > Fluid[ENGY][idx[2]][idx[1]][idx[0]]) Aux_Error( ERROR_INFO, "Kinetic energy from momentum feedback exceeds thermal energy");
 
 /*  if ( kesum > 0 ){
     FOut=fopen("totalkineticenergy.txt","a");
-    if(FOut==NULL) {
+    if(FOut==nULL) {
       printf("Fail To Open File totalkineticenergy.txt!!");
       }
     fprintf(FOut, "%e\n", kesum);
@@ -1111,11 +1108,8 @@ void FB_distSNeFeedback( real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int explos
 
 // Assume kinetic energy from momentum feedback is extracted from
 // thermal energy in the host zone
-//  Fluid[ENGY][idx[0]][idx[1]][idx[2]] -= kesum / CUBE(dh);
+//  Fluid[ENGY][idx[2]][idx[1]][idx[0]] -= kesum / CUBE(dh);
 
-//  #ifdef DUAL_ENERGY
-//  Fluid[ENPY][idx[0]][idx[1]][idx[2]] -= kesum / CUBE(dh);
-//  #endif // #ifdef DUAL_ENERGY 
   } //if (particle inside patch)
 
 } // FUNCTION : FB_distSNeFeedback
