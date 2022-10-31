@@ -628,9 +628,15 @@ void Aux_Check_Parameter()
 #   if ( defined RSOLVER  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLD )
 #     error : ERROR : unsupported Riemann solver for MHD (ROE/HLLE/HLLD) !!
 #   endif
+#   if ( RSOLVER_RESCUE != NONE  &&  RSOLVER_RESCUE != ROE  &&  RSOLVER_RESCUE != HLLE  &&  RSOLVER_RESCUE != HLLD )
+#     error : ERROR : unsupported RSOLVER_RESCUE for MHD (ROE/HLLE/HLLD) !!
+#   endif
 #  else
 #   if ( defined RSOLVER  &&  RSOLVER != EXACT  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLC )
 #     error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC) !!
+#   endif
+#   if ( RSOLVER_RESCUE != NONE  &&  RSOLVER_RESCUE != EXACT  &&  RSOLVER_RESCUE != ROE  &&  RSOLVER_RESCUE != HLLE  &&  RSOLVER_RESCUE != HLLC )
+#     error : ERROR : unsupported RSOLVER_RESCUE (EXACT/ROE/HLLE/HLLC) !!
 #   endif
 #  endif // MHD
 
@@ -682,6 +688,10 @@ void Aux_Check_Parameter()
 
 #     if (  defined RSOLVER  &&  ( RSOLVER == ROE || RSOLVER == EXACT )  )
 #        error : ERROR : unsupported Riemann solver for EOS != EOS_GAMMA (HLLE/HLLC/HLLD) !!
+#     endif
+
+#     if (  RSOLVER_RESCUE != NONE  &&  ( RSOLVER_RESCUE == ROE || RSOLVER_RESCUE == EXACT )  )
+#        error : ERROR : unsupported RSOLVER_RESCUE for EOS != EOS_GAMMA (HLLE/HLLC/HLLD) !!
 #     endif
 
 #     if ( defined LR_SCHEME  &&  defined CHAR_RECONSTRUCTION )
@@ -757,7 +767,7 @@ void Aux_Check_Parameter()
 // ------------------------------
    if ( MPI_Rank == 0 ) {
 
-#  if ( defined RSOLVER  &&  RSOLVER == EXACT )
+#  if (  ( defined RSOLVER && RSOLVER == EXACT )  ||  ( RSOLVER_RESCUE == EXACT )  )
 #     warning : WARNING : exact Riemann solver is not recommended since the vacuum solution has not been implemented
       Aux_Message( stderr, "WARNING : exact Riemann solver is not recommended since the vacuum solution " );
       Aux_Message( stderr,           "has not been implemented !!\n" );

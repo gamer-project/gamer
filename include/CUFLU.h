@@ -176,11 +176,19 @@
 // switch to a different Riemann solver if the default one fails
 // --> to disable it, either comment out this line or set RSOLVER_RESCUE to NONE
 // --> used by Hydro_ComputeFlux() and Hydro_RiemannPredict_Flux()
-// --> doesn't support either RSOLVER==ROE or RSOLVER_RESCUE==ROE for now due to HLL_NO_REF_STATE/HLL_INCLUDE_ALL_WAVES
+// --> doesn't support either RSOLVER==ROE or RSOLVER_RESCUE==ROE/EXACT for now due to HLL_NO_REF_STATE/HLL_INCLUDE_ALL_WAVES
 #  define RSOLVER_RESCUE   HLLE
 
-#if ( RSOLVER_RESCUE == ROE )
-#  error : ERROR : does not support RSOLVER_RESCUE == ROE !!
+#if ( RSOLVER_RESCUE == ROE  ||  RSOLVER_RESCUE == EXACT )
+#  error : ERROR : does not support RSOLVER_RESCUE == ROE/EXACT !!
+#endif
+
+#if ( defined MHD  &&  RSOLVER_RESCUE == HLLC )
+#  error : ERROR : RSOLVER_RESCUE == HLLC for MHD simulations !!
+#endif
+
+#if ( !defined MHD  &&  RSOLVER_RESCUE == HLLD )
+#  error : ERROR : RSOLVER_RESCUE == HLLD for non-MHD simulations !!
 #endif
 
 #if ( RSOLVER_RESCUE == RSOLVER  ||  RSOLVER == ROE  ||  !defined RSOLVER )
