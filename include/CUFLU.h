@@ -162,7 +162,7 @@
 
 // verify that the density and pressure in the intermediate states of Roe's Riemann solver are positive.
 // --> if either is negative, we switch to other Riemann solvers (EXACT/HLLE/HLLC/HLLD)
-#if (  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  &&  RSOLVER == ROE  )
+#if (  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  &&  ( RSOLVER == ROE || RSOLVER_RESCUE == ROE )  )
 #  ifdef MHD
 //#     define CHECK_INTERMEDIATE    HLLD
 #     define CHECK_INTERMEDIATE    HLLE
@@ -176,16 +176,21 @@
 // switch to a different Riemann solver if the default one fails
 // --> to disable it, either comment out this line or set RSOLVER_RESCUE to NONE
 // --> used by Hydro_ComputeFlux() and Hydro_RiemannPredict_Flux()
+// --> doesn't support either RSOLVER==ROE or RSOLVER_RESCUE==ROE for now due to HLL_NO_REF_STATE/HLL_INCLUDE_ALL_WAVES
 #  define RSOLVER_RESCUE   HLLE
 
-#if ( RSOLVER_RESCUE == RSOLVER )
+#if ( RSOLVER_RESCUE == ROE )
+#  error : ERROR : does not support RSOLVER_RESCUE == ROE !!
+#endif
+
+#if ( RSOLVER_RESCUE == RSOLVER  ||  RSOLVER == ROE  ||  !defined RSOLVER )
 #  undef  RSOLVER_RESCUE
 #  define RSOLVER_RESCUE   NONE
 #endif
 
 
-// use Eulerian with Y factor for Roe Solver in MHD
-#if (  defined MHD  &&  ( RSOLVER == ROE || RSOLVER == HLLE )  )
+// use Eulerian with Y factor for the Roe Solver in MHD
+#ifdef MHD
 #  define EULERY
 #endif
 
