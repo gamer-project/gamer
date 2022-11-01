@@ -212,7 +212,9 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
 
    real Fm[N_TIME_LEVELS + 1][FLU_NXT];  // one column of the density flux at all time levels
    real *Fm_target = NULL; // pointer to set phase   array in update loop
-
+   //change of density and phase in time step
+   real ddensity, dphase;
+   real ql_ratios [FLU_NXT], backward_velocities[FLU_NXT], log_density[FLU_NXT];  // one column of the gradient ratios for phase, velocities dS/dx and log(rho)
 
 
 #  ifdef CONSERVE_MASS

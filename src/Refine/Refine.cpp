@@ -1159,12 +1159,14 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
       //Set corresponding flag
       for (int level = lv + 1; level <= MAX_LEVEL; ++level) {
+
          printf("Converting level %i to wave scheme\n\n", level);
          //int counter = 0;
+
          amr->use_wave_flag[level] = true; 
          int fluSg = amr->FluSg[level];
 
-         printf("PID count = %d\n", amr->NPatchComma[level][1]);
+         //printf("PID count = %d\n", amr->NPatchComma[level][1]);
 
          real dens, amp, phase;
          for (int PID=0; PID<amr->NPatchComma[level][1]; PID++)
@@ -1213,9 +1215,9 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                                 amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jj ][iim]
                               );
                }
+            }}} 
 
 #           endif // # ifdef GAMER_DEBUG
-            }}}
 
 //          fluid data
             for (int k=0; k<PS1; k++)  {
