@@ -82,6 +82,14 @@ __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ]
                                    const real Taylor3_Coeff, const bool XYZ, const real MinDens );
 real ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 
+#if ( ELBDM_SCHEME == HYBRID )
+__global__ void CUFLU_ELBDMSolver_PhaseForm_MUSCL( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                                   real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
+                                   real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                   const real dt, const real _dh, const real Eta, const bool StoreFlux,
+                                   const bool XYZ, const real MinDens );
+#endif // #if ( ELBDM_SCHEME == HYBRID )
+
 #else
 #error : ERROR : unsupported MODEL !!
 #endif // MODEL
@@ -440,12 +448,22 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #        endif // FLU_SCHEME
 
 #     elif ( MODEL == ELBDM )
-
+#     if ( ELBDM_SCHEME == HYBRID )
+      if ( amr->use_wave_flag[lv] )
+#     endif // #     if ( ELBDM_SCHEME == HYBRID )
          CUFLU_ELBDMSolver <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
             ( d_Flu_Array_F_In  + UsedPatch[s],
               d_Flu_Array_F_Out + UsedPatch[s],
               d_Flux_Array      + UsedPatch[s],
               dt, 1.0/dh, ELBDM_Eta, StoreFlux, ELBDM_Taylor3_Coeff, XYZ, MinDens );
+#     if ( ELBDM_SCHEME == HYBRID )
+      else // if ( amr->use_wave_flag[lv] )
+         CUFLU_ELBDMSolver_PhaseForm_MUSCL <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
+            ( d_Flu_Array_F_In  + UsedPatch[s],
+              d_Flu_Array_F_Out + UsedPatch[s],
+              d_Flux_Array      + UsedPatch[s],
+              dt, 1.0/dh, ELBDM_Eta, StoreFlux, ELBDM_Taylor3_Coeff, XYZ, MinDens );
+#     endif // #     if ( ELBDM_SCHEME == HYBRID )
 
 #     else
 

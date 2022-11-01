@@ -24,6 +24,8 @@
 //# define LIMITER(r) MAX(0, MIN(MIN((1. + r) / 2., 2.), 2. * r))
 // VAN LEER
 //# define LIMITER(r) ((r + FABS(r))/(1.0 + FABS(r)))
+// SUPERBEE
+//# define LIMITER(r) MAX(MAX(0, MIN(2*r, 1)), MIN(r, 2))
 
 # define UPWIND_GRADIENT_RATIO(Rc, Vb, t) ( ((Rc[t-1] - Rc[t-2]) * GTR(Vb[t], 0)  \
                                            + (Rc[t+1] - Rc[t  ]) * LSS(Vb[t], 0)) \
@@ -203,7 +205,7 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
    real *Pc_N = NULL;    // pointer to store the full-step phase  
    int Idx;
 
-   //slope-limite
+   //slope-limiter
    real ql, qc, Qc, Qr;
    //velocities dS/dx = v and density fluxes f at i - 1/2, i + 1/2 
    real vm, vp;
@@ -211,13 +213,10 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
    real Fm[N_TIME_LEVELS + 1][FLU_NXT];  // one column of the density flux at all time levels
    real *Fm_target = NULL; // pointer to set phase   array in update loop
 
-   //change of density and phase in time step
-   real ddensity, dphase;
-   real ql_ratios [FLU_NXT], backward_velocities[FLU_NXT], log_density[FLU_NXT];  // one column of the gradient ratios for phase, velocities dS/dx and log(rho)
 
 
 #  ifdef CONSERVE_MASS
-   int   Idx3;
+   int Idx3;
    int Idx2;
    //real   R, I, dR, dI, Flux[PS2+1], R1, R2, I1, I2, dR1, dR2, dI1, dI2;
 #  endif
@@ -238,27 +237,15 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
       memcpy( Rc[0], Rc_N, FLU_NXT*sizeof(real) );
       memcpy( Pc[0], Pc_N, FLU_NXT*sizeof(real) );
 
-      //Unwrap phase for debugging
-      //for (int i=1; i<FLU_NXT; i++)
-      //{
-      //   Pc[0][i] = ELBDM_UnwrapPhase(Pc[0][i-1], Pc[0][i]);
-      //}
-
       for (int time_level = 0; time_level < N_TIME_LEVELS; ++time_level) 
       {
-         
-         //for (int i=2*(time_level + 1); i<FLU_NXT-2*(time_level + 1); i++)
-         //   std::cout<<"time level :" << time_level << "i: " << i << " Rho : " << Rc[time_level][i] << " Phase: "<< Pc[time_level][i] << "\n";
-         
          //Compute second-order backward velocities and backward density fluxes
          for (int i=2*(time_level + 1); i<FLU_NXT-time_level*2; i++)
          {
             ql_ratios[i]            =       BACKWARD_GRADIENT_RATIO(Pc[time_level], i);
             backward_velocities[i]  = _dh * BACKWARD_GRADIENT      (Pc[time_level], i);
             Fm[time_level][i]       = MUSCL_FLUX(Rc[time_level], backward_velocities, i    , dh, dt);
-            //if (i == FLU_GHOST_SIZE ) {
-            //   printf("time level %i fm at ghost size %f vel %f rc %f pcm1 %f pcc %f \n", time_level, Fm[time_level][i], backward_velocities[i], Rc[time_level][i], Pc[time_level][i-1], Pc[time_level][i]);
-            //}
+
          }
 
          //Compute density logarithms
@@ -313,20 +300,6 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
          Fm[N_TIME_LEVELS][i] += FLUX_COEFFS[time_level] * Fm[time_level][i];
          }
       }
-
-      //Idx2 = 0;
-      //for (int i=FLU_GHOST_SIZE-1; i<FLU_NXT-FLU_GHOST_SIZE; i++)
-      //{
-      //   R1 = SQRT(Rc_N[i]  ) * COS(Pc_N[i]);
-      //   R2 = SQRT(Rc_N[i+1]) * COS(Pc_N[i+1]);
-      //   I1 = SQRT(Rc_N[i]  ) * SIN(Pc_N[i]);
-      //   I2 = SQRT(Rc_N[i+1]) * SIN(Pc_N[i+1]);
-      //   R  = real(0.5)*( + R1 + R2 );
-      //   I  = real(0.5)*( + I1 + I2 );
-      //   dR =           ( - R1 + R2 );
-      //   dI =           ( - I1 + I2 );
-      //   Flux[ Idx2 ++ ] = (real)2.0*( R*dI - I*dR );
-      //}
       
 
 //    4 save the fluxes across all patch boundaries
@@ -336,11 +309,6 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
       if (  ( j>=FLU_GHOST_SIZE && j<FLU_NXT-FLU_GHOST_SIZE )  &&  ( k>=FLU_GHOST_SIZE && k<FLU_NXT-FLU_GHOST_SIZE )  )
       {
          Idx3 = (k-FLU_GHOST_SIZE)*PS2 + (j-FLU_GHOST_SIZE);
-
-         //printf("f1 %f myf1 %f \n f2 %f myf2 %f \n f3 %f myf3 %f \n" \
-         //      , Flux[  0]*_Eta2_dh, Fm[N_TIME_LEVELS][      FLU_GHOST_SIZE] \
-         //      , Flux[PS1]*_Eta2_dh, Fm[N_TIME_LEVELS][PS1 + FLU_GHOST_SIZE] \
-         //      , Flux[PS2]*_Eta2_dh, Fm[N_TIME_LEVELS][PS2 + FLU_GHOST_SIZE] );
 
          Flux_Array[Flux_XYZ+0][0][Idx3] = Fm[N_TIME_LEVELS][      FLU_GHOST_SIZE] / Eta;//Fm[0][      FLU_GHOST_SIZE];
          Flux_Array[Flux_XYZ+1][0][Idx3] = Fm[N_TIME_LEVELS][PS1 + FLU_GHOST_SIZE] / Eta;//Fm[0][PS1 + FLU_GHOST_SIZE];
