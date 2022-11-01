@@ -168,15 +168,6 @@ void Interpolate( real CData[], const int CSize[3], const int CStart[3], const i
 
 
 #if ( MODEL == HYDRO )
-
-
-// INTERP_MASK is defined in Macro.h
-#ifdef INTERP_MASK
-#  define MASKED    true
-#  define UNMASKED  false
-#endif
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Interpolate_Iterate
 // Description :  Perform spatial interpolation with iterations when the interpolation fails
