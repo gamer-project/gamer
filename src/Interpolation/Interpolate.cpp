@@ -330,7 +330,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
 
 //       5-2. check the interpolation results with EoS conversion
-//            --> only check either pressure of internal energy for now
+//            --> only check either pressure or internal energy for now
          const bool FailBeforeEoS = Fail_ThisCell;
          real Eint=NULL_REAL, Pres=NULL_REAL;
 
@@ -492,7 +492,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 // check if there is any missing cell
 #  if ( defined GAMER_DEBUG  &&  defined INTERP_MASK )
    for (int i=0; i<FSize3D; i++)
-     if ( Mask[i] == UNMASKED )  Aux_Error( ERROR_INFO, "Mask[%d] == UNMASKED !!\n", i );
+      if ( Mask[i] == UNMASKED )    Aux_Error( ERROR_INFO, "Mask[%d] == UNMASKED !!\n", i );
 #  endif
 
 
