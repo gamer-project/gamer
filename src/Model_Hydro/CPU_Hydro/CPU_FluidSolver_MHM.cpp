@@ -667,23 +667,23 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                printf( "WARNING : default Riemann solver failed in Hydro_RiemannPredict_Flux() --> switch to RSOLVER_RESCUE (%d) !!\n", RSOLVER_RESCUE );
 #              endif
 
-#              if   ( RSOLVER == EXACT  &&  !defined MHD )
+#              if   ( RSOLVER_RESCUE == EXACT  &&  !defined MHD )
                Hydro_RiemannSolver_Exact( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
                                           EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
                                           EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
-#              elif ( RSOLVER == ROE )
+#              elif ( RSOLVER_RESCUE == ROE )
                Hydro_RiemannSolver_Roe  ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
                                           EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
                                           EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
-#              elif ( RSOLVER == HLLE )
+#              elif ( RSOLVER_RESCUE == HLLE )
                Hydro_RiemannSolver_HLLE ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
                                           EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
                                           EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
-#              elif ( RSOLVER == HLLC  &&  !defined MHD )
+#              elif ( RSOLVER_RESCUE == HLLC  &&  !defined MHD )
                Hydro_RiemannSolver_HLLC ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
                                           EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
                                           EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
-#              elif ( RSOLVER == HLLD  &&  defined MHD )
+#              elif ( RSOLVER_RESCUE == HLLD  &&  defined MHD )
                Hydro_RiemannSolver_HLLD ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
                                           EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
                                           EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
