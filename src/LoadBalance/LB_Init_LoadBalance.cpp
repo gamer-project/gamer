@@ -166,7 +166,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, cons
 
    for (int lv=lv_min; lv<=lv_max; lv++)
    {
-      if ( OPT__VERBOSE  &&  MPI_Rank == 0 ) Aux_Message( stdout, "      Constructing patch relation at Lv %2d ... ", lv );
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "      Constructing patch relation at Lv %2d ... ", lv );
 
 //    4.1 sibling relation at lv
       LB_SiblingSearch( lv, true, NULL_INT, NULL );
@@ -255,7 +255,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, cons
 // 6. get the buffer data
    for (int lv=lv_min_mpi; lv<=lv_max_mpi; lv++)
    {
-      if ( OPT__VERBOSE  &&  MPI_Rank == 0 ) Aux_Message( stdout, "      Transferring buffer data at Lv %2d ... ", lv );
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "      Transferring buffer data at Lv %2d ... ", lv );
 
       Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 

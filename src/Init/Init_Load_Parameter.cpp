@@ -126,6 +126,12 @@ void Init_Load_Parameter()
    ReadPara->Add( "AUTO_REDUCE_DT",             &AUTO_REDUCE_DT,                  true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "AUTO_REDUCE_DT_FACTOR",      &AUTO_REDUCE_DT_FACTOR,           0.8,             Eps_double,    1.0            );
    ReadPara->Add( "AUTO_REDUCE_DT_FACTOR_MIN",  &AUTO_REDUCE_DT_FACTOR_MIN,       0.1,             0.0,           1.0            );
+#  if ( MODEL == HYDRO )
+   ReadPara->Add( "AUTO_REDUCE_MINMOD_FACTOR",  &AUTO_REDUCE_MINMOD_FACTOR,       0.8,             Eps_double,    1.0            );
+   ReadPara->Add( "AUTO_REDUCE_MINMOD_MIN",     &AUTO_REDUCE_MINMOD_MIN,          1.0e-2,          0.0,           NoMax_double   );
+#  endif
+   ReadPara->Add( "AUTO_REDUCE_INT_MONO_FACTOR",&AUTO_REDUCE_INT_MONO_FACTOR,     0.8,             Eps_double,    1.0            );
+   ReadPara->Add( "AUTO_REDUCE_INT_MONO_MIN",   &AUTO_REDUCE_INT_MONO_MIN,        1.0e-2,          0.0,           NoMax_double   );
 
 
 // grid refinement
@@ -237,7 +243,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "MINMOD_COEFF",               &MINMOD_COEFF,                    1.5,             1.0,           2.0            );
    ReadPara->Add( "MINMOD_MAX_ITER",            &MINMOD_MAX_ITER,                   0,               0,           NoMax_int      );
    ReadPara->Add( "OPT__LR_LIMITER",            &OPT__LR_LIMITER,             LR_LIMITER_DEFAULT, -1,             6              );
-   ReadPara->Add( "OPT__1ST_FLUX_CORR",         &OPT__1ST_FLUX_CORR,             -1,               NoMin_int,     2              );
+   ReadPara->Add( "OPT__1ST_FLUX_CORR",         &OPT__1ST_FLUX_CORR,               -1,             NoMin_int,     2              );
 #  ifdef MHD
    ReadPara->Add( "OPT__1ST_FLUX_CORR_SCHEME",  &OPT__1ST_FLUX_CORR_SCHEME,   RSOLVER_1ST_DEFAULT, NoMin_int,     4              );
 #  else
@@ -245,6 +251,9 @@ void Init_Load_Parameter()
 #  endif
 #  ifdef DUAL_ENERGY
    ReadPara->Add( "DUAL_ENERGY_SWITCH",         &DUAL_ENERGY_SWITCH,              2.0e-2,          0.0,           NoMax_double   );
+#  endif
+#  ifdef MHD
+   ReadPara->Add( "OPT__SAME_INTERFACE_B",      &OPT__SAME_INTERFACE_B,           false,           Useless_bool,  Useless_bool   );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 
@@ -380,6 +389,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__REF_POT_INT_SCHEME",    &OPT__REF_POT_INT_SCHEME,         INT_CQUAD,       1,             7              );
 #  endif
    ReadPara->Add( "INT_MONO_COEFF",             &INT_MONO_COEFF,                  2.0,             1.0,           4.0            );
+#  ifdef MHD
+   ReadPara->Add( "INT_MONO_COEFF_B",           &INT_MONO_COEFF_B,                2.0,             1.0,           4.0            );
+#  endif
    ReadPara->Add( "MONO_MAX_ITER",              &MONO_MAX_ITER,                   10,              0,             NoMax_int      );
 #  if   ( MODEL == HYDRO )
    ReadPara->Add( "INT_OPP_SIGN_0TH_ORDER",     &INT_OPP_SIGN_0TH_ORDER,          true,            Useless_bool,  Useless_bool   );
@@ -475,6 +487,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__CK_INTERFACE_B",        &OPT__CK_INTERFACE_B,             false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_DIVERGENCE_B",       &OPT__CK_DIVERGENCE_B,            0,               0,             2              );
 #  endif
+   ReadPara->Add( "OPT__CK_INPUT_FLUID",        &OPT__CK_INPUT_FLUID,             false,           Useless_bool,  Useless_bool   );
 
 
 
