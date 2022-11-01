@@ -136,21 +136,21 @@ void Aux_Check_Conservation( const char *comment )
          const real MinPres_No = -1.0;
          const real MinTemp_No = -1.0;
          const real MinEntr_No = -1.0;
+         long  TVar = -1.0; 
 
 #        if ( ELBDM_SCHEME == HYBRID )
          if ( amr->use_wave_flag[lv] ) {
 #        endif // # if ( ELBDM_SCHEME == HYBRID )
-         Prepare_PatchData( lv, Time[lv], Flu_ELBDM[0][0][0][0], NULL, NGhost, NPG, &PID0, _REAL|_IMAG, _NONE,
-                            IntScheme, INT_NONE, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                            MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
-
+         TVar = _REAL|_IMAG;
 #        if ( ELBDM_SCHEME == HYBRID )
          } else { // if ( amr->use_wave_flag[lv] )
-         Prepare_PatchData( lv, Time[lv], Flu_ELBDM[0][0][0][0], NULL, NGhost, NPG, &PID0, _DENS|_PHAS, _NONE,
-                            IntScheme, INT_NONE, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                            MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+         TVar = _DENS|_PHAS;
          } // if ( amr->use_wave_flag[lv] == true ) ... else 
 #        endif // # if ( ELBDM_SCHEME == HYBRID )
+
+         Prepare_PatchData( lv, Time[lv], Flu_ELBDM[0][0][0][0], NULL, NGhost, NPG, &PID0, TVar, _NONE,
+                            IntScheme, INT_NONE, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
+                            MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
 #        endif
 
@@ -239,7 +239,7 @@ void Aux_Check_Conservation( const char *comment )
 
 //             Convert density to log(density) for computing kinetic energy in fluid patches
 #              if ( ELBDM_SCHEME == HYBRID )
-               if ( amr->use_wave_flag[lv] == false ) {
+               if ( !amr->use_wave_flag[lv] ) {
                   for (int k=0; k<Size_Flu; k++)   {
                   for (int j=0; j<Size_Flu; j++)   {
                   for (int i=0; i<Size_Flu; i++)   {

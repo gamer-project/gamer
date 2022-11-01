@@ -3,9 +3,9 @@
 void Flag_Grandson( const int lv, const int PID, const int LocalID );
 void Prepare_for_Lohner( const OptLohnerForm_t Form, const real *Var1D, real *Ave1D, real *Slope1D, const int NVar );
 
-#if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#if ( MODEL == ELBDM )
 void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *Cond1D, bool convertWaveToFluid);
-#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#endif // #if ( MODEL == ELBDM )
 
 
 
@@ -56,13 +56,13 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const int  Lohner_NSlope           = Lohner_NAve;           // size of the slope array for Lohner
    const IntScheme_t Lohner_IntScheme = INT_MINMOD1D;          // interpolation scheme for Lohner
    
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  if ( MODEL == ELBDM )
    //Interference criterion
    const int  Interf_NGhost           = 1;                     // number of ghost cells for the interference criterion
    const int  Interf_NCell            = PS1 + 2*Interf_NGhost; // size of the variable array for interference criterion
    const int  Interf_NCond            = PS1;                   // size of the array for interference criterion
    const IntScheme_t Interf_IntScheme = INT_MINMOD1D;          // interpolation scheme for interference criterion
-#  endif 
+#  endif // # if ( MODEL == ELBDM )
 
 #  if ( MODEL == HYDRO  &&  defined GRAVITY )
    const real JeansCoeff              = M_PI*GAMMA/( SQR(FlagTable_Jeans[lv])*NEWTON_G ); // flag if dh^2 > JeansCoeff*Pres/Dens^2
@@ -122,19 +122,21 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #     endif 
    }
 
-#  if ( ELBDM_SCHEME == HYBRID )
    if ( OPT__FLAG_INTERFERENCE )
    {
+#     if ( ELBDM_SCHEME == HYBRID )
       if (  amr->use_wave_flag[lv] ) {
+#     endif // # if ( ELBDM_SCHEME == HYBRID )
          Interf_NVar = 3;
          Interf_TVar = _DENS | _REAL | _IMAG;   
+#     if ( ELBDM_SCHEME == HYBRID )
       } else {
          Interf_NVar = 2;
          Interf_TVar = _DENS | _PHAS;   
       }
+#     endif // # if ( ELBDM_SCHEME == HYBRID )
       Interf_Stride = Interf_NVar*Interf_NCell*Interf_NCell*Interf_NCell; // stride of array for one interference criterion patch
    }
-#  endif
    
 
 #  else
@@ -197,7 +199,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       if ( OPT__FLAG_PAR_MASS_CELL )         ParDens  = new real    [PS1][PS1][PS1];
 #     endif
 
-#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#     if ( MODEL == ELBDM )
       if ( Interf_NVar > 0 ) {
          Interf_Var       = new real [ 8 * Interf_NVar*Interf_NCell *Interf_NCell *Interf_NCell  ]; // 8: number of local patches;
          Interf_Temp      = new real [ 2 *             Interf_NCell *Interf_NCell *Interf_NCell  ];
@@ -225,12 +227,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
 
 //       prepare the ghost-zone data for interference criterion
-#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#     if ( MODEL == ELBDM )
          if ( Interf_NVar > 0 )
             Prepare_PatchData( lv, Time[lv], Interf_Var, NULL, Interf_NGhost, NPG, &PID0, Interf_TVar, _NONE,
                                Interf_IntScheme, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
-#     endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#     endif // # if ( MODEL == ELBDM )
 
 //       loop over all local patches within the same patch group
          for (int LocalID=0; LocalID<8; LocalID++)
@@ -367,10 +369,10 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //             evaluate the quantum pressure for interference criterion
-#              if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#              if ( MODEL == ELBDM )
                if ( Interf_NVar > 0 )
                   Prepare_for_Interference_Criterion(Interf_Var+LocalID*Interf_Stride, Interf_Temp, Interf_Cond, Interf_NVar == 3);
-#              endif 
+#              endif // # if ( MODEL == ELBDM )
 
 //             count the number of particles and/or particle mass density on each cell
 #              ifdef PARTICLE

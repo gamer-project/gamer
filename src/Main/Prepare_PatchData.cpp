@@ -1607,7 +1607,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 //                density and phase --> real and imaginary parts
                   real Dens, Phase, Amp;
                   int FSize3D_CC = FSize[0]*FSize[1]*FSize[2];
-                  const int NVarConvert = 2;
 
                   for (int k=0; k<loop[2]; k++) {  K2 = k + disp2[2];
                   for (int j=0; j<loop[1]; j++) {  J2 = j + disp2[1];

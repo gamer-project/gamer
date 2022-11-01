@@ -60,7 +60,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 // if FlagTable_Interference[lv][2] > 0 we set use wave flag if interference > FlagTable_Interference[lv][0],[1]
 // if FlagTable_Interference[lv][2] < 0 we just use it as refinement criterion for fluid patches
 // ===========================================================================================
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  if ( MODEL == ELBDM )
    if ( OPT__FLAG_INTERFERENCE )
    {
       real (*Var)  [PS1 ][PS1 ][PS1 ] = ( real(*) [PS1 ][PS1 ][PS1 ] )  Interf_Cond;
@@ -101,7 +101,9 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
             Aux_Message( stdout, "Information: Interference but phase difference at lv %d i %d j %d k %d = %4.2f\n", lv, coordinates[0], coordinates[1], coordinates[2], PhaseDifference);
          }
 
+#        if ( ELBDM_SCHEME == HYBRID )
          amr->patch[0][lv][PID]->use_wave_flag =  true;
+#        endif // # if ( ELBDM_SCHEME == HYBRID )
       }
 
       if ( Flag )
@@ -133,10 +135,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #  ifdef DENS
 // check density magnitude
 // ===========================================================================================
-#  if ( ELBDM_SCHEME == HYBRID )
-   if ( amr->use_wave_flag[lv] )
-#  endif 
-   if ( OPT__FLAG_RHO )
+if ( OPT__FLAG_RHO )
    {
       Flag |= ( Fluid[DENS][k][j][i] > FlagTable_Rho[lv] );
       if ( Flag )    return Flag;

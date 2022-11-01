@@ -2501,9 +2501,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  endif
 #  if ( MODEL == ELBDM )
    InputPara.Opt__Flag_EngyDensity   = OPT__FLAG_ENGY_DENSITY;
-#  if ( ELBDM_SCHEME == HYBRID )
    InputPara.Opt__Flag_Interference  = OPT__FLAG_INTERFERENCE;
-#  endif 
 #  endif
    InputPara.Opt__Flag_LohnerDens    = OPT__FLAG_LOHNER_DENS;
 #  if ( MODEL == HYDRO )
@@ -2844,11 +2842,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
       for (int t=0; t<2; t++) {
       InputPara.FlagTable_EngyDensity [lv][t] = FlagTable_EngyDensity [lv][t];
       }
-#     if ( ELBDM_SCHEME == HYBRID )
       for (int t=0; t<3; t++) {
       InputPara.FlagTable_Interference [lv][t] = FlagTable_Interference [lv][t];
       }
-#     endif // #  if ( ELBDM_SCHEME == HYBRID )
 
 #     endif // ... # elif ( MODEL == ELBDM )
 
@@ -3683,9 +3679,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  endif
 #  elif ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "FlagTable_EngyDensity",  HOFFSET(InputPara_t,FlagTable_EngyDensity   ), H5_TypeID_Arr_NLvM1_2Double );
-#  if ( ELBDM_SCHEME == HYBRID )
    H5Tinsert( H5_TypeID, "FlagTable_Interference",  HOFFSET(InputPara_t,FlagTable_Interference   ), H5_TypeID_Arr_NLvM1_3Double );
-#  endif // # if ( ELBDM_SCHEME == HYBRID )
 #  endif
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "FlagTable_NParPatch",    HOFFSET(InputPara_t,FlagTable_NParPatch     ), H5_TypeID_Arr_NLvM1Int      );
