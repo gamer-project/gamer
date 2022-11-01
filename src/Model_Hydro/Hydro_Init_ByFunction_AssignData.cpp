@@ -179,11 +179,9 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
 
 #  ifdef MHD
-
-   if ( OPT__INIT_BFIELD_BYFILE )
-     MHD_Init_BField_ByFile(lv);
-
+   if ( OPT__INIT_BFIELD_BYFILE )   MHD_Init_BField_ByFile( lv );
 #  endif
+
 
 #  pragma omp parallel for schedule( runtime ) num_threads( OMP_NThread )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -228,7 +226,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
                amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[v][ idx ++ ] = magnetic_1v*_NSub2;
             }}} // i,j,k
          } // for (int v=0; v<NCOMP_MAG; v++)
-      } // if ( !OPT__INIT_BFIELD_BY_FILE )
+      } // if ( !OPT__INIT_BFIELD_BYFILE )
 
 #     endif // #ifdef MHD
 

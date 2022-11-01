@@ -45,15 +45,22 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
 
 #  ifdef GRAVITY
-   const bool UsePot            = ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT );
+   const bool   UsePot            = ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT );
 #  endif
 #  ifdef PARTICLE
-   const bool StoreAcc_Yes      = true;
-   const bool StoreAcc_No       = false;
-   const bool UseStoredAcc_Yes  = true;
-   const bool UseStoredAcc_No   = false;
-   const bool TimingSendPar_Yes = true;
+   const bool   StoreAcc_Yes      = true;
+   const bool   StoreAcc_No       = false;
+   const bool   UseStoredAcc_Yes  = true;
+   const bool   UseStoredAcc_No   = false;
+   const bool   TimingSendPar_Yes = true;
 #  endif
+#  if ( MODEL == HYDRO )
+   const double MinModCoeff_Ori   = MINMOD_COEFF;     // back up the original MINMOD_COEFF/INT_MONO_COEFF(_B)
+#  ifdef MHD
+   const double IntMonoCoeffB_Ori = INT_MONO_COEFF_B;
+#  endif
+#  endif // HYDRO
+   const double IntMonoCoeff_Ori  = INT_MONO_COEFF;
 
    double dTime_SoFar, dTime_SubStep, dt_SubStep, TimeOld, TimeNew, AutoReduceDtCoeff;
 
@@ -207,39 +214,88 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //             restore the original parameters
                AutoReduceDtCoeff     = 1.0;
                AutoReduceDt_Continue = true;
+#              if ( MODEL == HYDRO )
+               MINMOD_COEFF          = MinModCoeff_Ori;
+#              ifdef MHD
+               INT_MONO_COEFF_B      = IntMonoCoeffB_Ori;
+#              endif
+#              endif // HYDRO
+               INT_MONO_COEFF        = IntMonoCoeff_Ori;
             }
 
             else
             {
-//             reduce the time-step coefficient if allowed
-               if ( AutoReduceDtCoeff >= AUTO_REDUCE_DT_FACTOR_MIN )
+//             reduce the time-step and interpolation coefficients if allowed
+               if ( AutoReduceDtCoeff >= AUTO_REDUCE_DT_FACTOR_MIN  &&
+#                   if ( MODEL == HYDRO )
+                    MINMOD_COEFF      >= AUTO_REDUCE_MINMOD_MIN     &&
+#                   ifdef MHD
+                    INT_MONO_COEFF_B  >= AUTO_REDUCE_INT_MONO_MIN   &&
+#                   endif
+#                   endif // HYDRO
+                    INT_MONO_COEFF    >= AUTO_REDUCE_INT_MONO_MIN    )
                {
                   AutoReduceDtCoeff    *= AUTO_REDUCE_DT_FACTOR;
                   AutoReduceDt_Continue = true;
+#                 if ( MODEL == HYDRO )
+                  MINMOD_COEFF         *= AUTO_REDUCE_MINMOD_FACTOR;
+#                 ifdef MHD
+                  INT_MONO_COEFF_B     *= AUTO_REDUCE_INT_MONO_FACTOR;
+#                 endif
+#                 endif // HYDRO
+                  INT_MONO_COEFF       *= AUTO_REDUCE_INT_MONO_FACTOR;
 
                   if ( MPI_Rank == 0 )
                   {
-                     Aux_Message( stderr, "WARNING : fluid solver failed (Lv %2d, counter %8ld) --> ", lv, AdvanceCounter[lv] );
-                     Aux_Message( stderr, "reduce dt by %13.7e\n", AutoReduceDtCoeff );
+                     Aux_Message( stderr, "WARNING : fluid solver failed (Lv %2d, counter %8ld)\n", lv, AdvanceCounter[lv] );
+                     Aux_Message( stderr, "   --> reduce dt by %13.7e", AutoReduceDtCoeff );
+#                    if ( MODEL == HYDRO )
+                     Aux_Message( stderr, ", MINMOD_COEFF to %13.7e", MINMOD_COEFF );
+#                    ifdef MHD
+                     Aux_Message( stderr, ", INT_MONO_COEFF_B to %13.7e", INT_MONO_COEFF_B );
+#                    endif
+#                    endif // HYDRO
+                     Aux_Message( stderr, ", INT_MONO_COEFF to %13.7e\n", INT_MONO_COEFF );
                   }
                }
 
-//             if the time-step coefficient becomes smaller than the given threshold, restore the original time-step
-//             and apply floor values in Flu_Close()
+//             if the time-step and interpolation coefficients become smaller than the given thresholds,
+//             restore the original coefficients and apply floor values in Flu_Close()
                else
                {
                   const double AutoReduceDtCoeff_Failed = AutoReduceDtCoeff;
+#                 if ( MODEL == HYDRO )
+                  const double MinModCoeff_Failed       = MINMOD_COEFF;
+#                 ifdef MHD
+                  const double IntMonoCoeffB_Failed     = INT_MONO_COEFF_B;
+#                 endif
+#                 endif // HYDRO
+                  const double IntMonoCoeff_Failed      = INT_MONO_COEFF;
 
                   AutoReduceDtCoeff     = 1.0;     // restore the original dt
                   AutoReduceDt_Continue = false;   // trigger density/energy floors in Flu_Close()
+#                 if ( MODEL == HYDRO )
+                  MINMOD_COEFF          = MinModCoeff_Ori;
+#                 ifdef MHD
+                  INT_MONO_COEFF_B      = IntMonoCoeffB_Ori;
+#                 endif
+#                 endif // HYDRO
+                  INT_MONO_COEFF        = IntMonoCoeff_Ori;
 
                   if ( MPI_Rank == 0 )
                   {
-                     Aux_Message( stderr, "WARNING : AUTO_REDUCE_DT failed (Lv %2d, counter %8ld, dt-coeff=%13.7e < min=%13.7e) !!\n",
-                                  lv, AdvanceCounter[lv], AutoReduceDtCoeff_Failed, AUTO_REDUCE_DT_FACTOR_MIN );
-                     Aux_Message( stderr, "          --> Apply floor values with the original dt as the last resort ...\n" );
+                     Aux_Message( stderr, "WARNING : AUTO_REDUCE_DT failed (Lv %2d, counter %8ld) !!\n", lv, AdvanceCounter[lv] );
+                     Aux_Message( stderr, "   --> dt-coeff %13.7e (min %13.7e)", AutoReduceDtCoeff_Failed, AUTO_REDUCE_DT_FACTOR_MIN );
+#                    if ( MODEL == HYDRO )
+                     Aux_Message( stderr, ", MINMOD_COEFF %13.7e (min %13.7e)", MinModCoeff_Failed, AUTO_REDUCE_MINMOD_MIN );
+#                    ifdef MHD
+                     Aux_Message( stderr, ", INT_MONO_COEFF_B %13.7e (min %13.7e)", IntMonoCoeffB_Failed, AUTO_REDUCE_INT_MONO_MIN );
+#                    endif
+#                    endif // HYDRO
+                     Aux_Message( stderr, ", INT_MONO_COEFF %13.7e (min %13.7e)\n", IntMonoCoeff_Failed, AUTO_REDUCE_INT_MONO_MIN );
+                     Aux_Message( stderr, "   --> Apply floor values with the original dt and interpolation coefficients as the last resort ...\n" );
                   }
-               } // if ( AutoReduceDtCoeff >= AUTO_REDUCE_DT_FACTOR_MIN ) ... else ...
+               } // if ( AutoReduceDtCoeff >= AUTO_REDUCE_DT_FACTOR_MIN  && ... ) ... else ...
 
 //             restart the sub-step while loop
                continue;
