@@ -162,8 +162,6 @@ real GetMaxVelocity( const int lv )
             dS_dx      = _dh * (FABS(GradS[0]) + FABS(GradS[1]) + FABS(GradS[2]));
             MaxdS_dx   = MAX( MaxdS_dx, dS_dx );
 
-         } else {
-            printf("No computation of phase velocity for K %d J %d I %d\n", coordinates[0], coordinates[1], coordinates[2]);
          }
 
          }}} // i,j,k

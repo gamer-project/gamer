@@ -132,14 +132,15 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //       B: lv & lv+1 phase scheme & use_wave_flag:    
 //       1. switch to wave scheme on level lv+1
 //       2. no modification for interpolation
-//       3. convert DENS/PHAS to IM/RE after refinement for all patches on level lv +1
+//       3. convert DENS/PHAS to IM/RE after refinement for all patches on levels greater than lv
 //
 //       C: lv phase scheme & lv+1 wave scheme
-//       1. in interpolation, we provide boundary information from lv+1 -> convert to DENS/PHAS
+//       1. in interpolation, we provide information from neighbouring patches on lv that is already present as DENS/PHAS, same for boundary conditions
 //       2. convert refined patch to IM/RE after interpolation 
 //
 
    bool switchNextLevelsToWaveScheme = false;
+   
 #  endif
 
 // determine the priority of different boundary faces (z>y>x) to set the corner cells properly for the non-periodic B.C.
@@ -760,21 +761,12 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 #        if ( ELBDM_SCHEME == HYBRID )
          } else { // if ( amr->use_wave_flag[lv] )
-//          interpolate density
-            Interpolate( &Flu_CData[DENS][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[DENS][0][0][0],
-                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes,
-                         IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
 
-//          interpolate phase
-            Interpolate( &Flu_CData[PHAS][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[PHAS][0][0][0],
-                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No,
-                         IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
-         
-
-//          interpolate stub
-            Interpolate( &Flu_CData[STUB][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[STUB][0][0][0],
-                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No,
-                         IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
+//          adopt INT_PRIM_NO to ensure conservation
+            Interpolate( &Flu_CData[0][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[0][0][0][0],
+                        FSize_CC3, FStart_CC, NCOMP_TOTAL, OPT__REF_FLU_INT_SCHEME,
+                        PhaseUnwrapping_No, Monotonicity,
+                        INT_OPP_SIGN_0TH_ORDER, ALL_CONS_YES, INT_PRIM_NO, INT_REDUCE_MONO_COEFF );
          }
 #        endif // #if ( ELBDM_SCHEME == HYBRID )
 
@@ -816,15 +808,12 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
          if ( Pedigree->flag && !amr->use_wave_flag[lv] && amr->use_wave_flag[lv+1] ) {
             real amp, phase, stub, Re, Im ;
+
+#           ifdef GAMER_DEBUG
+//          Check whether dB wavelength is resolved
             for (int k=0; k<FSize_CC; k++) {
             for (int j=0; j<FSize_CC; j++) {
             for (int i=0; i<FSize_CC; i++) {
-                  amp   = SQRT( Flu_FData[DENS][k][j][i] );
-                  phase =       Flu_FData[PHAS][k][j][i] ;
-                  stub  =       Flu_FData[STUB][k][j][i] ;
-
-#                 ifdef GAMER_DEBUG
-
                   int kk  =  k; 
                   int kkp = (kk + 1) < FSize_CC  ? kk + 1 : kk    ; 
                   int kkm = (kk - 1) < 0         ? kk     : kk - 1;
@@ -847,12 +836,17 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                   if ( maxphase > M_PI ) {
                      Aux_Message ( stderr, "WARNING: When converting patch to wave scheme, phase jump ii %d iim %d iip %d jj %d jjm %d jjp %d kk %d kkm %d kkp %d %f \n", ii, iim, iip, jj, jjm, jjp, kk, kkm, kkp, maxphase);
                   }
-#                 endif                   
-                  Re    = amp * COS( phase );
-                  Im    = amp * SIN( phase );
-                  //printf("For interpolation at PID = %i convert k %i j %i i %i with amp %f phase %f stub %f to re %f and im %f\n", PID, k, j, i, amp, phase, stub, Re, Im);
-                  Flu_FData[REAL][k][j][i] = Re;
-                  Flu_FData[IMAG][k][j][i] = Im;
+            }}}
+#           endif   // # ifdef GAMER_DEBUG       
+
+            for (int k=0; k<FSize_CC; k++) {
+            for (int j=0; j<FSize_CC; j++) {
+            for (int i=0; i<FSize_CC; i++) {
+                  amp   = SQRT( Flu_FData[DENS][k][j][i] );
+                  phase =       Flu_FData[PHAS][k][j][i] ;
+                  stub  =       Flu_FData[STUB][k][j][i] ;
+                  Flu_FData[REAL][k][j][i] = amp * COS( phase );
+                  Flu_FData[IMAG][k][j][i] = amp * SIN( phase );
             }}}
          }
 #        endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
@@ -1165,25 +1159,22 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
       //Set corresponding flag
       for (int level = lv + 1; level <= MAX_LEVEL; ++level) {
-         //printf("Converting level %i to wave scheme\n\n", level);
+         printf("Converting level %i to wave scheme\n\n", level);
          //int counter = 0;
          amr->use_wave_flag[level] = true; 
          int fluSg = amr->FluSg[level];
 
-         //printf("PID count = %d\n", amr->NPatchComma[level][1]);
+         printf("PID count = %d\n", amr->NPatchComma[level][1]);
 
          real dens, amp, phase;
          for (int PID=0; PID<amr->NPatchComma[level][1]; PID++)
          {
-//          fluid data
+
+#           ifdef GAMER_DEBUG
+//          check for phase jumps!
             for (int k=0; k<PS1; k++)  {
             for (int j=0; j<PS1; j++)  {
             for (int i=0; i<PS1; i++)  {
-               dens  = amr->patch[fluSg][level][PID]->fluid[DENS][k][j][i];
-               amp   = SQRT(dens);
-               phase = amr->patch[fluSg][level][PID]->fluid[PHAS][k][j][i];
-
-#              ifdef GAMER_DEBUG
                int kk  =  k; 
                int kkp = (kk + 1) < PS1  ? kk + 1 : kk    ; 
                int kkm = (kk - 1) < 0         ? kk     : kk - 1;
@@ -1203,14 +1194,39 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kkp][jj ][ii ] - amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ])),
                FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ] - amr->patch[fluSg][level][PID]->fluid[PHAS][kkm][jj ][ii ]));
 
-               if ( maxphase > M_PI )
+               if ( maxphase > M_PI * 2) {
                   Aux_Message ( stderr, "WARNING: When converting level to wave scheme, phase jump %f at PID %d for k %d i %d j %d\n", maxphase, PID, k, i, j);
-#              endif 
+                  Aux_Message ( stderr, "k %d kp %d km %d i %d ip %d im %d j %d jp %d jm %d\n k j ip %f k j i %f\n k j i %f k j im %f\n k jp i %f k j i %f\n k j i %f k jm i %f\n kp j i %f k j i %f\n k j i %f km j i %f\n stub %f %f %f %f %f %f %f\n",
+                                kk, kkp, kkm, ii, iip, iim, jj, jjp, jjm,
+                                amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][iip], amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ],
+                                amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][iim],
+                                amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jjp][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ],
+                                amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jjm][ii ],
+                                amr->patch[fluSg][level][PID]->fluid[PHAS][kkp][jj ][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ],
+                                amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kkm][jj ][ii ],
+                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jj ][ii ], 
+                                amr->patch[fluSg][level][PID]->fluid[STUB][kkp][jj ][ii ],
+                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jjp][ii ], 
+                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jj ][iip],
+                                amr->patch[fluSg][level][PID]->fluid[STUB][kkm][jj ][ii ], 
+                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jjm][ii ],
+                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jj ][iim]
+                              );
+               }
 
+#           endif // # ifdef GAMER_DEBUG
+            }}}
+
+//          fluid data
+            for (int k=0; k<PS1; k++)  {
+            for (int j=0; j<PS1; j++)  {
+            for (int i=0; i<PS1; i++)  {
+               dens  = amr->patch[fluSg][level][PID]->fluid[DENS][k][j][i];
+               amp   = SQRT(dens);
+               phase = amr->patch[fluSg][level][PID]->fluid[PHAS][k][j][i];
                amr->patch[fluSg][level][PID]->fluid[REAL][k][j][i] = amp * COS(phase);
                amr->patch[fluSg][level][PID]->fluid[IMAG][k][j][i] = amp * SIN(phase);
                amr->patch[fluSg][level][PID]->fluid[DENS][k][j][i] = dens;
-               //printf("Counter %d PID %d Sg %d k %d j %d i %d amp %f phase %f real %f imag %f\n", counter++, PID, amr->FluSg[level], k, j, i, amp, phase, amp * COS(phase), amp * SIN(phase));
             }}}
          } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       } // for (int level = lv + 1; level < NLEVEL; ++level)

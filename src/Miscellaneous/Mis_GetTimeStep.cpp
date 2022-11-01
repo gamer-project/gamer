@@ -71,10 +71,8 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    sprintf( dTime_Name[NdTime++], "%s", "ELBDM_CFL" );
 #  if ( ELBDM_SCHEME == HYBRID )
    } else { // if ( amr->use_wave_flag[lv] )
-
    dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Hybrid( lv );
    sprintf( dTime_Name[NdTime++], "%s", "Hybrid_CFL" );
-
    } // if ( amr->use_wave_flag[lv] ) ... else 
 #  endif // # if ( ELBDM_SCHEME == HYBRID ) ... else
 
