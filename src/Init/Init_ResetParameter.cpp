@@ -100,7 +100,7 @@ void Init_ResetParameter()
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
    if ( DT__VELOCITY < 0.0 )
    {
-      DT__VELOCITY = 1.00;
+      DT__VELOCITY = 0.90;
 
       PRINT_WARNING( DT__VELOCITY, FORMAT_FLT, "" );
    } // if ( DT__VELOCITY < 0.0 )
