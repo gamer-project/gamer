@@ -471,7 +471,7 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
 //
 //                      if ( still_found_unphysical )
 //                         if ( AUTO_REDUCE_DT )
-//                            Invoke the fluid solver again on the same level but with a smaller dt
+//                            Invoke the fluid solver again on the same level but with smaller dt/MINMOD_COEFF/INT_MONO_COEFF(_B)
 //                         else
 //                            Print debug messages and abort
 //                      else
@@ -966,7 +966,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   fprintf( File, ", %14s", FieldLabel[DUAL] );
 #                 endif
 #                 ifdef MHD
-                  fprintf( File, ", %14s", "Emag" );
+                  fprintf( File, ", %14s, %14s, %14s, %14s, %14s, %14s, %14s", "Emag", "BxL", "BxR", "ByL", "ByR", "BzL", "BzR" );
 #                 endif
                   fprintf( File, ")\n" );
 
@@ -991,6 +991,12 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                 endif
 #                 ifdef MHD
                   fprintf( File, ", %14.7e", Emag_Out );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGX][ IDX321_BX(ijk_out[0]  ,ijk_out[1]  ,ijk_out[2]  ,PS2,PS2) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGX][ IDX321_BX(ijk_out[0]+1,ijk_out[1]  ,ijk_out[2]  ,PS2,PS2) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGY][ IDX321_BY(ijk_out[0]  ,ijk_out[1]  ,ijk_out[2]  ,PS2,PS2) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGY][ IDX321_BY(ijk_out[0]  ,ijk_out[1]+1,ijk_out[2]  ,PS2,PS2) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGZ][ IDX321_BZ(ijk_out[0]  ,ijk_out[1]  ,ijk_out[2]  ,PS2,PS2) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGZ][ IDX321_BZ(ijk_out[0]  ,ijk_out[1]  ,ijk_out[2]+1,PS2,PS2) ] );
 #                 endif
                   fprintf( File, ")\n" );
 

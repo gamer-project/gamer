@@ -343,13 +343,13 @@ void SetParameter()
 
       // check file existence
       if ( !Aux_CheckFileExist(Merger_File_Par1) )
- 	 Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par1 );
+         Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par1 );
 
       if ( Merger_Coll_NumHalos > 1  &&  !Aux_CheckFileExist(Merger_File_Par2) )
-	 Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par2 );
+         Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par2 );
 
       if ( Merger_Coll_NumHalos > 2  &&  !Aux_CheckFileExist(Merger_File_Par3) )
-	 Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par3 );
+         Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par3 );
 
       const std::string pfilename1(Merger_File_Par1);
       const std::string pfilename2(Merger_File_Par2);
@@ -357,24 +357,24 @@ void SetParameter()
 
       if ( MPI_Rank == 0 ) {
 
-	 NPar_EachCluster[0] = Read_Particle_Number_ClusterMerger(pfilename1);
+         NPar_EachCluster[0] = Read_Particle_Number_ClusterMerger(pfilename1);
 
-	 Aux_Message( stdout, "   Number of particles in cluster 1 = %ld\n",
-		      NPar_EachCluster[0] );
+         Aux_Message( stdout, "   Number of particles in cluster 1 = %ld\n",
+                      NPar_EachCluster[0] );
 
-	 if ( Merger_Coll_NumHalos > 1 ) {
-	    NPar_EachCluster[1] = Read_Particle_Number_ClusterMerger(pfilename2);
-	    Aux_Message( stdout, "   Number of particles in cluster 2 = %ld\n", NPar_EachCluster[1] );
-	 } else {
-	    NPar_EachCluster[1] = 0;
-	 }
+         if ( Merger_Coll_NumHalos > 1 ) {
+            NPar_EachCluster[1] = Read_Particle_Number_ClusterMerger(pfilename2);
+            Aux_Message( stdout, "   Number of particles in cluster 2 = %ld\n", NPar_EachCluster[1] );
+         } else {
+            NPar_EachCluster[1] = 0;
+         }
 
-	 if ( Merger_Coll_NumHalos > 2 ) {
-	    NPar_EachCluster[2] = Read_Particle_Number_ClusterMerger(pfilename3);
-	    Aux_Message( stdout, "   Number of particles in cluster 3 = %ld\n", NPar_EachCluster[2] );
-	 } else {
-	    NPar_EachCluster[2] = 0;
-	 }
+         if ( Merger_Coll_NumHalos > 2 ) {
+            NPar_EachCluster[2] = Read_Particle_Number_ClusterMerger(pfilename3);
+            Aux_Message( stdout, "   Number of particles in cluster 3 = %ld\n", NPar_EachCluster[2] );
+         } else {
+            NPar_EachCluster[2] = 0;
+         }
 
       }
 

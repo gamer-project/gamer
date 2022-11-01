@@ -251,6 +251,8 @@ struct SymConst_t
    int    BitRep_Electric;
 #  endif
 
+   int    InterpMask;
+
 
 #  if   ( MODEL == HYDRO )
    int    Flu_BlockSize_x;
@@ -259,6 +261,7 @@ struct SymConst_t
    int    CharReconstruction;
    int    LR_Eint;
    int    CheckIntermediate;
+   int    RSolverRescue;
    int    HLL_NoRefState;
    int    HLL_IncludeAllWaves;
    int    HLLC_WaveSpeed;
@@ -407,6 +410,12 @@ struct InputPara_t
    int    AutoReduceDt;
    double AutoReduceDtFactor;
    double AutoReduceDtFactorMin;
+#  if ( MODEL == HYDRO )
+   double AutoReduceMinModFactor;
+   double AutoReduceMinModMin;
+#  endif
+   double AutoReduceIntMonoFactor;
+   double AutoReduceIntMonoMin;
 
 // domain refinement
    int    RegridCount;
@@ -629,6 +638,9 @@ struct InputPara_t
    int    Opt__RefPot_IntScheme;
 #  endif
    double IntMonoCoeff;
+#  ifdef MHD
+   double IntMonoCoeffB;
+#  endif
    int    Mono_MaxIter;
    int    IntOppSign0thOrder;
 
@@ -704,6 +716,7 @@ struct InputPara_t
    int    Opt__Ck_InterfaceB;
    int    Opt__Ck_DivergenceB;
 #  endif
+   int    Opt__Ck_InputFluid;
 
 // flag tables
    double FlagTable_Rho         [NLEVEL-1];

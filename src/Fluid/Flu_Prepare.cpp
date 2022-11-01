@@ -98,4 +98,116 @@ void Flu_Prepare( const int lv, const double PrepTime,
    }
 #  endif // #ifdef UNSPLIT_GRAVITY
 
+
+// validate input arrays for debugging purposes
+   if ( OPT__CK_INPUT_FLUID )
+   {
+      bool CheckFailed = false;
+
+#     pragma omp parallel for reduction ( ||:CheckFailed ) schedule( runtime )
+      for (int TID=0; TID<NPG; TID++)
+      {
+         real fluid[FLU_NIN];
+
+//       a. fluid
+         for (int k=0; k<FLU_NXT; k++)
+         for (int j=0; j<FLU_NXT; j++)
+         for (int i=0; i<FLU_NXT; i++)
+         {
+            const int t = IDX321( i, j, k, FLU_NXT, FLU_NXT );
+
+            for (int v=0; v<FLU_NIN; v++)    fluid[v] = h_Flu_Array_F_In[TID][v][t];
+
+//          HYDRO
+#           if ( MODEL == HYDRO )
+            const bool CheckMinPres_No = false;
+            real Pres, Cs2, Emag=NULL_REAL;
+
+#           if ( FLU_NIN != NCOMP_TOTAL )
+#           error : ERROR : FLU_NIN != NCOMP_TOTAL for HYDRO !!
+#           endif
+
+#           ifdef MHD
+            Emag = MHD_GetCellCenteredBEnergy( h_Mag_Array_F_In[TID][MAGX],
+                                               h_Mag_Array_F_In[TID][MAGY],
+                                               h_Mag_Array_F_In[TID][MAGZ],
+                                               FLU_NXT, FLU_NXT, FLU_NXT, i, j, k );
+#           endif
+            Pres = Hydro_Con2Pres( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                   fluid+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, Emag,
+                                   EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+            Cs2  = EoS_DensPres2CSqr_CPUPtr( fluid[DENS], Pres, fluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+            if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, fluid, NULL, ERROR_INFO, UNPHY_VERBOSE )  ||
+                  !Aux_IsFinite( Pres )  ||  Pres < (real)0.0  ||
+                  !Aux_IsFinite( Cs2 )   ||  Cs2  < (real)0.0  )
+            {
+               Aux_Message( stderr, "Invalid input fluid data:\n" );
+               Aux_Message( stderr, "Fluid: " );
+               for (int v=0; v<FLU_NIN; v++)    Aux_Message( stderr, " [%d]=%14.7e", v, fluid[v] );
+               Aux_Message( stderr, " Pres=%14.7e Cs2=%14.7e", Pres, Cs2 );
+#              ifdef MHD
+               Aux_Message( stderr, " Emag=%14.7e", Emag );
+#              endif
+               Aux_Message( stderr, "\n" );
+
+               CheckFailed = true;
+            }
+
+//          generic
+#           else // #if ( MODEL == HYDRO )
+
+            for (int v=0; v<FLU_NIN; v++)
+            {
+               if (  !Aux_IsFinite( fluid[v] )  )
+               {
+                  Aux_Message( stderr, "Invalid input fluid data:\n" );
+                  Aux_Message( stderr, "Fluid: " );
+                  for (int v=0; v<FLU_NIN; v++)    Aux_Message( stderr, " [%d]=%14.7e", v, fluid[v] );
+                  Aux_Message( stderr, "\n" );
+
+                  CheckFailed = true;
+               }
+            }
+#           endif // MODEL
+         } // k, j, i
+
+
+//       b. magnetic field
+#        if ( MODEL == HYDRO  &&  defined MHD )
+         for (int v=0; v<NCOMP_MAG; v++)
+         for (int t=0; t<FLU_NXT_P1*SQR(FLU_NXT); t++)
+         {
+            const real B = h_Mag_Array_F_In[TID][v][t];
+
+            if ( !Aux_IsFinite(B) )
+            {
+               Aux_Message( stderr, "Invalid input magnetic field: B[%d] = %14.7e\n", v, B );
+               CheckFailed = true;
+            }
+         }
+#        endif
+
+
+//       c. gravitational potential
+#        ifdef UNSPLIT_GRAVITY
+         if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
+         for (int t=0; t<CUBE(USG_NXT_F); t++)
+         {
+            const real pot = h_Pot_Array_USG_F[TID][t];
+
+            if ( !Aux_IsFinite(pot) )
+            {
+               Aux_Message( stderr, "Invalid input gravitational potential: %14.7e\n", pot );
+               CheckFailed = true;
+            }
+         }
+#        endif
+      } // for (int TID=0; TID<NPG; TID++)
+
+      if ( CheckFailed )
+         Aux_Error( ERROR_INFO, "OPT__CK_INPUT_FLUID failed (lv %d, Time %20.14e) !!\n", lv, PrepTime  );
+
+   } // if ( OPT__CK_INPUT_FLUID )
+
 } // FUNCTION : Flu_Prepare
