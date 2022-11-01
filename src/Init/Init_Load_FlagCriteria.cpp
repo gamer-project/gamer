@@ -147,7 +147,7 @@ void Init_Load_FlagCriteria()
                           lv, TargetName );
             }
 
-//          OPT__FLAG_ENGY_DENSITY and OPT__FLAG_LOHNER have two and three columns to be loaded, respectively
+//          OPT__FLAG_ENGY_DENSITY and OPT__FLAG_LOHNER have two and five columns to be loaded, respectively
             if      ( FlagMode == 3 )  sscanf( input_line, "%d%lf%lf", &Trash, &FlagTable_EngyDensity[lv][0],
                                                                                &FlagTable_EngyDensity[lv][1] );
             else if ( FlagMode == 4 )  sscanf( input_line, "%d%lf%lf%lf%lf%lf", &Trash, &FlagTable_Lohner[lv][0],

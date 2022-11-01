@@ -8,7 +8,15 @@ static void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const
                        double L1_Err[], const OptOutputPart_t Part );
 
 
-#define NERR   ( NCOMP_TOTAL + NCOMP_MAG )
+// NEXTRA: number of extra fields for computing errors
+#if ( MODEL == HYDRO )
+#define NEXTRA       1     // temperature
+#else
+#define NEXTRA       0     // none
+#endif
+
+#define NBASIC    ( NCOMP_TOTAL + NCOMP_MAG )
+#define NERR      ( NBASIC + NEXTRA )
 
 
 
@@ -21,7 +29,6 @@ static void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const
 //                2. Similar to Output_DumpData_Part()
 //                3. L1 errors are recorded in "Record__L1Err"
 //                4. For MHD, this function uses the average **cell-centered** magnetic field to compute errors
-//                5. Errors of passive scalars are NOT computed
 //
 // Parameter   :  AnalFunc_Flu : Function pointer to return the analytical solution of the fluid variables
 //                               --> Usually set to the same function pointer for initializing grids
@@ -81,6 +88,8 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
    sprintf( FileName[NCOMP_TOTAL+1], "%s_MagY_%06d", Prefix, DumpID );
    sprintf( FileName[NCOMP_TOTAL+2], "%s_MagZ_%06d", Prefix, DumpID );
 #  endif
+
+   sprintf( FileName[     NBASIC+0], "%s_Temp_%06d", Prefix, DumpID );
 
 #  elif ( MODEL == ELBDM )
    sprintf( FileName[            0], "%s_Dens_%06d", Prefix, DumpID );
@@ -247,6 +256,9 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
                   "Error(MagX)", "Error(MagY)", "Error(MagZ)" );
 #        endif
 
+         fprintf( File_L1, " %19s",
+                  "Error(Temp)" );
+
          fprintf( File_L1, "\n" );
 
 #        elif ( MODEL == ELBDM )
@@ -319,10 +331,10 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
    MHD_GetCellCenteredBFieldInPatch( Nume+NCOMP_TOTAL, lv, PID, i, j, k, amr->MagSg[lv] );
 #  endif
 
-
-// convert total energy to pressure
+// get pressure and temperature
 #  if ( MODEL == HYDRO )
    const bool  CheckMinPres_No = false;
+   const bool  CheckMinTemp_No = false;
 #  ifdef MHD
    const real *B_Nume          = Nume + NCOMP_TOTAL;
    const real  Emag_Nume       = (real)0.5*( SQR(B_Nume[MAGX]) + SQR(B_Nume[MAGY]) + SQR(B_Nume[MAGZ]) );
@@ -330,9 +342,14 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
    const real  Emag_Nume       = NULL_REAL;
 #  endif
 
-   Nume[ENGY] = Hydro_Con2Pres( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ], Nume[ENGY], Nume+NCOMP_FLUID,
-                                CheckMinPres_No, NULL_REAL, Emag_Nume,
-                                EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+   const real  Pres_Nume       = Hydro_Con2Pres( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ], Nume[ENGY], Nume+NCOMP_FLUID,
+                                                 CheckMinPres_No, NULL_REAL, Emag_Nume,
+                                                 EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+   const real  Temp_Nume       = Hydro_Con2Temp( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ], Nume[ENGY], Nume+NCOMP_FLUID,
+                                                 CheckMinTemp_No, NULL_REAL, Emag_Nume,
+                                                 EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+   Nume[ENGY    ] = Pres_Nume;
+   Nume[NBASIC+0] = Temp_Nume;
 #  endif // #if ( MODEL == HYDRO )
 
 
@@ -347,14 +364,18 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
    AnalFunc_Mag( Anal+NCOMP_TOTAL, x, y, z, Time[0], lv, NULL );
 #  endif
 
-
-// convert total energy to pressure
+// get pressure and temperature
 #  if ( MODEL == HYDRO )
    const real Emag_Zero = 0.0;   // Anal[ENGY] set by AnalFunc_Flu() does NOT include magentic energy
 
-   Anal[ENGY] = Hydro_Con2Pres( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY], Anal+NCOMP_FLUID,
-                                CheckMinPres_No, NULL_REAL, Emag_Zero,
-                                EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+   const real Pres_Anal = Hydro_Con2Pres( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY], Anal+NCOMP_FLUID,
+                                          CheckMinPres_No, NULL_REAL, Emag_Zero,
+                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+   const real Temp_Anal = Hydro_Con2Temp( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY], Anal+NCOMP_FLUID,
+                                          CheckMinTemp_No, NULL_REAL, Emag_Zero,
+                                          EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+   Anal[ENGY    ] = Pres_Anal;
+   Anal[NBASIC+0] = Temp_Anal;
 #  endif
 
 
