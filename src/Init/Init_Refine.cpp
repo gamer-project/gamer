@@ -80,7 +80,7 @@ void Init_Refine( const int lv )
                amr->use_wave_flag[lv + 1] = true;
             }
             
-//          If previous level uses wave flag, we also need to use wave solver on the following levels
+//          If coarse level uses wave flag, we also need to use wave solver on the refined levels
             if ( lv > 0)
                if ( amr->use_wave_flag[lv - 1] ) 
                   amr->use_wave_flag[lv] = true; 

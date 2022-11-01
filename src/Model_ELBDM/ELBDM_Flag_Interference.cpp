@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#if ( MODEL == ELBDM )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_Flag_Interference
@@ -68,13 +68,13 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
    for (int j=0; j<NCell; j++)    {
    for (int i=0; i<NCell; i++)    {
       //Compute square root of density field
-      Temp[0][k][j][i] = SQRT(Var[DENS][k][j][i]);
+      Temp[0][k][j][i] = SQRT(Var[0][k][j][i]);
 
       //Check whether we are on fluid level and convert imaginary and real parts to phase accordingly
       if ( convertWaveToFluid ) {
          Temp[1][k][j][i] = 0;//SATAN2(Var[IMAG][k][j][i], Var[REAL][k][j][i]);
       } else {
-         Temp[1][k][j][i] = Var[PHAS][k][j][i];
+         Temp[1][k][j][i] = Var[1][k][j][i];
       }
    }}} // k,j,i
 

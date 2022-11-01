@@ -1104,8 +1104,6 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : DT__VELOCITY (%14.7e) is not within the normal range [0...1] !!\n",
                    DT__VELOCITY );
 
-   if ( !OPT__FLAG_INTERFERENCE )
-      Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme requires the interference flag to work properly !!\n");
       
    if ( !OPT__FIXUP_RESTRICT )
       Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme requires the restrict operation OPT__FIXUP_RESTRICT !! !!\n");

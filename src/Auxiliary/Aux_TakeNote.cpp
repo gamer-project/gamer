@@ -791,9 +791,7 @@ void Aux_TakeNote()
 #     endif
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__FLAG_ENGY_DENSITY          %d\n",      OPT__FLAG_ENGY_DENSITY    );
-#     if (ELBDM_SCHEME == HYBRID )       
       fprintf( Note, "OPT__FLAG_INTERFERENCE          %d\n",      OPT__FLAG_INTERFERENCE    );
-#     endif // # if (ELBDM_SCHEME == HYBRID )
 #     endif
       fprintf( Note, "OPT__FLAG_LOHNER_DENS           %d\n",      OPT__FLAG_LOHNER_DENS     );
 #     if ( MODEL == HYDRO )
@@ -1399,10 +1397,11 @@ void Aux_TakeNote()
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }
-#     if (ELBDM_SCHEME == HYBRID)
+
+//    # if ( ELBDM_SCHEME == HYBRID )
       if ( OPT__FLAG_INTERFERENCE )
       {
-         fprintf( Note, "Flag Criterion (Interference Threshold in hybrid ELBDM)\n" );
+         fprintf( Note, "Flag Criterion (Interference Threshold)\n" );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level     CurvThreshold      PhaJumpThreshold        FlagForWaveSolver\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)
@@ -1410,7 +1409,7 @@ void Aux_TakeNote()
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }
-#     endif // # if (ELBDM_SCHEME == HYBRID)
+//    # endif ( ELBDM_SCHEME == HYBRID )
 #     endif
 
 #     if   ( MODEL == HYDRO )

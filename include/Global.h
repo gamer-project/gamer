@@ -122,9 +122,9 @@ extern double           ELBDM_TAYLOR3_COEFF, ELBDM_MASS, ELBDM_PLANCK_CONST, ELB
 #ifdef QUARTIC_SELF_INTERACTION
 extern double           ELBDM_LAMBDA;
 #endif
-#if  ( ELBDM_SCHEME == HYBRID )
 extern bool             OPT__FLAG_INTERFERENCE;
 extern double           FlagTable_Interference[NLEVEL-1][3];
+# if ( ELBDM_SCHEME == HYBRID )
 extern double           DT__HYBRID, DT__VELOCITY;
 #endif //  # if ( ELBDM_SCHEME == HYBRID )
 

@@ -36,7 +36,7 @@ void Init_Load_FlagCriteria()
    double FlagTable_EngyDensity[NLEVEL-1][2];
 #  endif
 
-#  if (  MODEL != ELBDM || ELBDM_SCHEME != HYBRID )
+#  if (  MODEL != ELBDM )
    const bool OPT__FLAG_INTERFERENCE  = false;
    double FlagTable_Interference[NLEVEL-1][3];
 #  endif 
@@ -114,11 +114,9 @@ void Init_Load_FlagCriteria()
       FlagTable_EngyDensity [lv][t] = -1.0;
       }
 
-#     if ( ELBDM_SCHEME == HYBRID )
       for (int t=0; t<3; t++) {
       FlagTable_Interference [lv][t] = -1.0;
       }
-#     endif 
 #     endif
 
 #     ifdef PARTICLE

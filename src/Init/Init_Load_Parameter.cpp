@@ -151,9 +151,7 @@ void Init_Load_Parameter()
 #  endif
 #  if ( MODEL == ELBDM )
    ReadPara->Add( "OPT__FLAG_ENGY_DENSITY",     &OPT__FLAG_ENGY_DENSITY,          false,           Useless_bool,  Useless_bool   );
-#  if ( ELBDM_SCHEME == HYBRID )
    ReadPara->Add( "OPT__FLAG_INTERFERENCE",     &OPT__FLAG_INTERFERENCE,          false,           Useless_bool,  Useless_bool   );
-#  endif 
 #  endif
    ReadPara->Add( "OPT__FLAG_LOHNER_FORM",      &OPT__FLAG_LOHNER_FORM,           LOHNER_FLASH2,   1,             4              );
    ReadPara->Add( "OPT__FLAG_USER",             &OPT__FLAG_USER,                  false,           Useless_bool,  Useless_bool   );

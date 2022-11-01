@@ -218,7 +218,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  endif
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )   
-   LoadField( "UseWaveScheme",         &KeyInfo.UseWaveScheme,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "UseWaveScheme",        &KeyInfo.UseWaveScheme,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 #  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID ) 
 
 // must initialize all char* pointers as NULL so that we can safely free them later
@@ -2177,11 +2177,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
       for (int t=0; t<2; t++) {
       RS.FlagTable_EngyDensity [lv][t] = -1.0;
       }
-#     if ( ELBDM_SCHEME == HYBRID )
       for (int t=0; t<3; t++) {
       RS.FlagTable_Interference [lv][t] = -1.0;
       }
-#     endif // # if ( ELBDM_SCHEME == HYBRID )
 #     endif
 
 #     ifdef PARTICLE
@@ -2249,7 +2247,6 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
                        "FlagTable_EngyDensity", lv, t, RS.FlagTable_EngyDensity[lv][t],  RT.FlagTable_EngyDensity[lv][t] );
    }}
 
-#  if ( ELBDM_SCHEME == HYBRID )
    if ( OPT__FLAG_INTERFERENCE ) {
    LoadField( "FlagTable_Interference",    RS.FlagTable_Interference,   SID, TID, NonFatal,  NullPtr,                    -1, NonFatal );
 
@@ -2260,7 +2257,6 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
          Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                        "FlagTable_Interference", lv, t, RS.FlagTable_Interference[lv][t],  RT.FlagTable_Interference[lv][t] );
    }}
-#  endif // #  if ( ELBDM_SCHEME == HYBRID )
 #  endif
 
 #  ifdef PARTICLE
