@@ -36,7 +36,7 @@ extern Timer_t *Timer_Par_MPI[NLEVEL][6];
 //
 // Parameter   :  FaLv          : Target father level
 //                Mode          : PAR_PASS2SON_GENERAL
-//                                --> Check patches in PIDList[], whose sons can be either home or living abroad
+//                                --> Check patches in FaPIDList[], whose sons can be either home or living abroad
 //                                PAR_PASS2SON_EVOLVE
 //                                --> For non-leaf real patches at FaLv **with sons at home**
 //                                    --> Check all of them

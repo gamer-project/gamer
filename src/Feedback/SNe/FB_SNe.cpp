@@ -485,13 +485,11 @@ void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const dou
 			  distcells, distrad, diststep );
 
       } // if particle inside patch
-    else { 
+      else {
       // 5: SN Momentum feedback
-	// if ( idx[0] == PS2 + FB_GHOST_SIZE || idx[1] == PS2 + FB_GHOST_SIZE || idx[2] == PS2 + FB_GHOST_SIZE ) {
 	FB_distSNeFeedback( Fluid, explosionFlag[n], idx, sn_energy, Msun, dh,
 		            distcells, distrad, diststep );
-	// } // if ( idx[d] >= 0 && idx[d] <= PS2 + FB_GHOST_SIZE ) {
-      } // for outside SNe, if they're on edge of nearby patch, do their non-local feedback
+	} // let outer patch do their part of non-local feedback
    } // for (n = 0; n < NPar; n++ )
 
   // free memory space

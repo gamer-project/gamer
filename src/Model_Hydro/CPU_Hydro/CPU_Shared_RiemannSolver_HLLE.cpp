@@ -77,7 +77,9 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
 // 2-1. compute the left/right states
    const real ZERO             = (real)0.0;
    const real ONE              = (real)1.0;
+#  if ( defined MHD  ||  HLLE_WAVESPEED != HLL_WAVESPEED_DAVIS )
    const real _TWO             = (real)0.5;
+#  endif
    const bool CheckMinPres_Yes = true;
 
    real _RhoL, _RhoR, u_L, u_R, Emag_L, Emag_R, P_L, P_R, a2_L, a2_R, Cf_L, Cf_R, MaxV_L, MaxV_R;

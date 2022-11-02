@@ -2,28 +2,34 @@
 
 #ifdef SUPPORT_LIBYT
 
-
-
+// call libyt API
 void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalLv);
-void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL], int NField, yt_field *FieldList);
+void YT_AddLocalGrid( const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL], int NField, yt_field *FieldList);
+
+#ifdef LIBYT_USE_PATCH_GROUP
+
+void DerivedFuncWithName_PatchGroup(int list_len, long *list_gid, char *field, yt_array *data_array);
+
+#else  // #ifdef LIBYT_USE_PATCH_GROUP
 
 #ifdef MHD
 // derived function for Mag to CCMag
-void MagX_DerivedFunc(long gid, double *Converted_MagX);
-void MagY_DerivedFunc(long gid, double *Converted_MagY);
-void MagZ_DerivedFunc(long gid, double *Converted_MagZ);
+void MagX_DerivedFunc(int list_len, long *list_gid, yt_array *data_array);
+void MagY_DerivedFunc(int list_len, long *list_gid, yt_array *data_array);
+void MagZ_DerivedFunc(int list_len, long *list_gid, yt_array *data_array);
 #endif
 
 #if ( MODEL == HYDRO )
-void Temperature_DerivedFunc(long gid, double *TempData);
+void Temperature_DerivedFunc(int list_len, long *list_gid, yt_array *data_array);
 #endif
+
+#endif  // #ifdef LIBYT_USE_PATCH_GROUP
 
 #ifdef PARTICLE
 // get the particle attribute, since we only have one type of particle "io"
 // we only need one function.
-void Get_ParticleAttribute(long gid, char *attr, void *raw_data);
+void Get_ParticleAttribute(int list_len, long *list_gid, char *attr, yt_array *data_array);
 #endif
-
 
 
 
@@ -53,7 +59,7 @@ void YT_Inline()
 // 1. gather the number of patches at different MPI ranks, calculate number of local patches
 //    and set the corresponding GID offset
    int (*NPatchAllRank)[NLEVEL] = new int [MPI_NRank][NLEVEL];
-   int NPatchLocal[NLEVEL], NPatchAllLv=0, NPatchLocalLv=0, GID_Offset[NLEVEL], GID_LvStart[NLEVEL];
+   int NPatchLocal[NLEVEL], NPatchAllLv=0, NPatchLocalLv=0, GID_LvStart[NLEVEL];
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
@@ -65,11 +71,12 @@ void YT_Inline()
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
-      GID_Offset[lv] = 0;
+      // set YT_GID_Offset for searching GID in derived function and particle get attribute function.
+      YT_GID_Offset[lv] = 0;
 
-      for (int r=0; r<MPI_Rank; r++)      GID_Offset[lv] += NPatchAllRank[r][lv];
+      for (int r=0; r<MPI_Rank; r++)      YT_GID_Offset[lv] += NPatchAllRank[r][lv];
 
-      for (int FaLv=0; FaLv<lv; FaLv++)   GID_Offset[lv] += NPatchTotal[FaLv];
+      for (int FaLv=0; FaLv<lv; FaLv++)   YT_GID_Offset[lv] += NPatchTotal[FaLv];
 
       NPatchAllLv += NPatchTotal[lv];
 
@@ -91,8 +98,14 @@ void YT_Inline()
 #  endif
 
 #  if ( MODEL == HYDRO )
-   int EoSTempIdx = NField;
+   int EoSIdx = NField;
+#  ifdef LIBYT_USE_PATCH_GROUP
+   // Add field : _TEMP, _PRES, _ENTR
+   NField = NField + 3;
+#  else
+   // Add field : _TEMP
    NField = NField + 1;
+#  endif // #ifdef LIBYT_USE_PATCH_GROUP
 #  endif
 
 // 2-2. Call YT_SetParameter and set particle info if need.
@@ -101,18 +114,75 @@ void YT_Inline()
 // 3.   Get FieldList and ParticleList, fill the info if needed
 // 3-1. get yt_field array FieldList, and filled in field info
 //      FieldList :
-//      +----------------------------------------
-//      +       0            |                  +
-//      +       :            |   cell-centered  +
-//      + (NCOMP_TOTAL - 1)  |                  +
-//      +  GRAVITY (PotIdx)  |   cell-centered  +
-//      +  MHD     (MHDIdx)  |   face-centered  +
-//      +.......................................+
-//      +         Other Derived Fields          +
-//      +---------------------------------------+
+//      |                    |                  |   LIBYT_USE_PATCH_GROUP  |
+//      +-------------------------------------------------------------------
+//      +       0            |                  +                          +
+//      +       :            |   cell-centered  +                          +
+//      + (NCOMP_TOTAL - 1)  |                  +       derived_func       +
+//      +  GRAVITY (PotIdx)  |   cell-centered  +                          +
+//      +  MHD     (MHDIdx)  |   face-centered  +                          +
+//      +.......................................+..........................+
+//      +                      Other Derived Fields                        +
+//      +---------------------------------------+--------------------------+
    yt_field *FieldList;
    yt_get_fieldsPtr( &FieldList );
 
+#  ifdef LIBYT_USE_PATCH_GROUP
+   for (int v=0; v<NCOMP_TOTAL; v++){
+       FieldList[v].field_name             = FieldLabel[v];
+       FieldList[v].field_define_type      = "derived_func";
+       FieldList[v].derived_func_with_name = DerivedFuncWithName_PatchGroup;
+   }
+
+#  ifdef GRAVITY
+   FieldList[PotIdx].field_name             = const_cast<char*> (PotLabel);
+   FieldList[PotIdx].field_define_type      = "derived_func";
+   FieldList[PotIdx].derived_func_with_name = DerivedFuncWithName_PatchGroup;
+#  endif
+
+#  ifdef MHD
+   char *CCMagLabel[] = {"CCMagX", "CCMagY", "CCMagZ"};
+   for (int v=0; v<NCOMP_MAG; v++){
+       FieldList[v + MHDIdx].field_name             = CCMagLabel[v];
+       FieldList[v + MHDIdx].field_define_type      = "derived_func";
+       FieldList[v + MHDIdx].field_unit             = "code_magnetic";
+       FieldList[v + MHDIdx].derived_func_with_name = DerivedFuncWithName_PatchGroup;
+   }
+
+   // Add field display name
+   FieldList[ MHDIdx     ].field_display_name = "B_x";
+   FieldList[ MHDIdx + 1 ].field_display_name = "B_y";
+   FieldList[ MHDIdx + 2 ].field_display_name = "B_z";
+#  endif
+
+#  if ( MODEL == HYDRO )
+   char *AddFieldLabel[] = {"Temp", "Pres", "Entr"};
+   for (int v=0; v<3; v++){
+       FieldList[v + EoSIdx].field_name             = AddFieldLabel[v];
+       FieldList[v + EoSIdx].field_define_type      = "derived_func";
+       FieldList[v + EoSIdx].derived_func_with_name = DerivedFuncWithName_PatchGroup;
+   }
+
+   FieldList[EoSIdx].field_unit             = "code_temperature";
+   FieldList[EoSIdx].field_display_name     = "Temperature";
+
+   FieldList[EoSIdx + 1].field_unit         = "code_mass / (code_length*code_time**2)";
+   FieldList[EoSIdx + 1].field_display_name = "Pressure";
+
+#  if ( EOS == EOS_NUCLEAR )
+   FieldList[EoSIdx + 2].field_unit         = "code_mass*code_length**(2) / (code_temperature*code_time**(2))";
+#  endif // #if ( EOS == EOS_NUCLEAR )
+#  if ( EOS == EOS_GAMMA )
+   char EntropyUnit[100];
+   real gamma_m1 = (real) GAMMA - 1.0;
+   sprintf(EntropyUnit, "code_mass**(1-%.2f) / (code_length**(1-3*%.2f)*code_time**2)", gamma_m1, gamma_m1);
+   FieldList[EoSIdx + 2].field_unit         = EntropyUnit;
+#  endif // #if ( EOS == EOS_GAMMA )
+   FieldList[EoSIdx + 2].field_display_name = "Entropy";
+
+#  endif // #if ( MODEL == HYDRO )
+
+#  else  // #ifdef LIBYT_USE_PATCH_GROUP
    for (int v=0; v<NCOMP_TOTAL; v++){
        FieldList[v].field_name = FieldLabel[v];
    }
@@ -135,18 +205,21 @@ void YT_Inline()
    FieldList[ MHDIdx + 2 ].field_display_name = "B_z";
 
    // Add field derived function pointer
+   // if you wish to use, set field_define_type = "derived_field"
    FieldList[ MHDIdx     ].derived_func = MagX_DerivedFunc;
    FieldList[ MHDIdx + 1 ].derived_func = MagY_DerivedFunc;
    FieldList[ MHDIdx + 2 ].derived_func = MagZ_DerivedFunc;
 #  endif
 
 #  if ( MODEL == HYDRO )
-   FieldList[EoSTempIdx].field_name = "Temp";
-   FieldList[EoSTempIdx].field_define_type = "derived_func";
-   FieldList[EoSTempIdx].field_unit = "code_temperature";
-   FieldList[EoSTempIdx].field_display_name = "Temperature";
-   FieldList[EoSTempIdx].derived_func = Temperature_DerivedFunc;
+   FieldList[EoSIdx].field_name = "Temp";
+   FieldList[EoSIdx].field_define_type = "derived_func";
+   FieldList[EoSIdx].field_unit = "code_temperature";
+   FieldList[EoSIdx].field_display_name = "Temperature";
+   FieldList[EoSIdx].derived_func = Temperature_DerivedFunc;
 #  endif
+
+#  endif // #ifdef LIBYT_USE_PATCH_GROUP
 
    // Set field's data type
    for (int v=0; v<NField; v++){
@@ -182,10 +255,11 @@ void YT_Inline()
 
    // Set get attribute function
    ParticleList[0].get_attr = Get_ParticleAttribute;
+
 #  endif // #ifdef PARTICLE
 
 // 4. prepare local patches for libyt
-   YT_AddLocalGrid( GID_Offset, GID_LvStart, NPatchAllRank, NField, FieldList);
+   YT_AddLocalGrid( GID_LvStart, NPatchAllRank, NField, FieldList);
 
 // 5. perform yt inline analysis
    if ( yt_inline_argument( "yt_inline_inputArg", 1, "\'Dens\'" ) != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_inline_inputArg() failed !!\n" );

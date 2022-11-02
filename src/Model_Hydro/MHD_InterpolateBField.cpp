@@ -169,7 +169,7 @@ void MHD_InterpolateBField( const real **CData, const int CSize[3][3], const int
             const int Stride[2] = { dC[d][1], dC[d][2] };
             const int Offset    = IDX321( i_C[d], j_C[d], k_C[d], CSize[d][0], CSize[d][1] ) + (f&1)*dC[d][0];
 
-            GetFaceCoeff_C( FaceCoeff[f], CData[d], Offset, Stride, IntScheme, Monotonic, INT_MONO_COEFF );
+            GetFaceCoeff_C( FaceCoeff[f], CData[d], Offset, Stride, IntScheme, Monotonic, INT_MONO_COEFF_B );
          } // if ( IJK[d] == IdxLimit[f]  &&  FInterface[f] != NULL ) ... else ...
       } // for (int f=0; f<6; f++)
 

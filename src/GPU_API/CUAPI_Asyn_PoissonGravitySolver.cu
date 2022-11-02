@@ -7,19 +7,11 @@
 
 // Poisson solver prototypes
 #if   ( POT_SCHEME == SOR )
-#ifdef USE_PSOLVER_10TO14
-__global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
-                                                    const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
-                                                          real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
-                                                    const int Min_Iter, const int Max_Iter, const real Omega_6,
-                                                    const real Const, const IntScheme_t IntScheme );
-#else
-__global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
-                                                    const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
-                                                          real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
-                                                    const int Min_Iter, const int Max_Iter, const real Omega_6,
-                                                    const real Const, const IntScheme_t IntScheme );
-#endif // #ifdef USE_PSOLVER_10TO14 ... else ...
+__global__ void CUPOT_PoissonSolver_SOR( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
+                                         const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
+                                               real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
+                                         const int Min_Iter, const int Max_Iter, const real Omega_6,
+                                         const real Const, const IntScheme_t IntScheme );
 
 #elif ( POT_SCHEME == MG  )
 __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
@@ -219,17 +211,10 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
             Aux_Error( ERROR_INFO, "Poi_NThread (%d) < (POT_NXT-2)*(POT_NXT-2) (%d) !!\n",
                        Poi_NThread, (POT_NXT-2)*(POT_NXT-2) );
 
-//       constraint due to the reduction operation in "CUPOT_Poisson_10to14cube" and "CUPOT_PoissonSolver_MG"
-#        if (  ( POT_SCHEME == SOR && defined USE_PSOLVER_10TO14 )  ||  POT_SCHEME == MG  )
+//       constraint due to the reduction operation in CUPOT_PoissonSolver_SOR() and CUPOT_PoissonSolver_MG()
+#        if ( POT_SCHEME == SOR  ||  POT_SCHEME == MG )
          if ( Poi_NThread < 64 )
             Aux_Error( ERROR_INFO, "incorrect parameter %s = %d (must >= 64) !!\n", "Poi_NThread", Poi_NThread );
-#        endif
-
-//       constraint in "CUPOT_PoissonSolver_SOR_16to18cube"
-#        if ( POT_SCHEME == SOR  &&  !defined USE_PSOLVER_10TO14 )
-         if ( Poi_NThread != RHO_NXT*RHO_NXT/2 )
-            Aux_Error( ERROR_INFO, "incorrect parameter %s = %d (must == %d) !!\n", "Poi_NThread", Poi_NThread,
-                       RHO_NXT*RHO_NXT/2 );
 #        endif
 
          if ( IntScheme != INT_CQUAD  &&  IntScheme != INT_QUAD )
@@ -408,28 +393,20 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
          {
 #           if ( POT_SCHEME == SOR )
 
-#           ifdef USE_PSOLVER_10TO14
-            CUPOT_PoissonSolver_SOR_10to14cube <<< NPatch_per_Stream[s], Poi_Block_Dim, 0, Stream[s] >>>
-                                               ( d_Rho_Array_P     + UsedPatch[s],
-                                                 d_Pot_Array_P_In  + UsedPatch[s],
-                                                 d_Pot_Array_P_Out + UsedPatch[s],
-                                                 SOR_Min_Iter, SOR_Max_Iter, SOR_Omega_6, Poi_Const, IntScheme );
-#           else
-            CUPOT_PoissonSolver_SOR_16to18cube <<< NPatch_per_Stream[s], Poi_Block_Dim, 0, Stream[s] >>>
-                                               ( d_Rho_Array_P     + UsedPatch[s],
-                                                 d_Pot_Array_P_In  + UsedPatch[s],
-                                                 d_Pot_Array_P_Out + UsedPatch[s],
-                                                 SOR_Min_Iter, SOR_Max_Iter, SOR_Omega_6, Poi_Const, IntScheme );
-#           endif // #ifdef USE_PSOLVER_10TO14 ... else ...
+            CUPOT_PoissonSolver_SOR <<< NPatch_per_Stream[s], Poi_Block_Dim, 0, Stream[s] >>>
+                                    ( d_Rho_Array_P     + UsedPatch[s],
+                                      d_Pot_Array_P_In  + UsedPatch[s],
+                                      d_Pot_Array_P_Out + UsedPatch[s],
+                                      SOR_Min_Iter, SOR_Max_Iter, SOR_Omega_6, Poi_Const, IntScheme );
 
 #           elif ( POT_SCHEME == MG  )
 
-            CUPOT_PoissonSolver_MG             <<< NPatch_per_Stream[s], Poi_Block_Dim, 0, Stream[s] >>>
-                                               ( d_Rho_Array_P     + UsedPatch[s],
-                                                 d_Pot_Array_P_In  + UsedPatch[s],
-                                                 d_Pot_Array_P_Out + UsedPatch[s],
-                                                 dh, MG_Max_Iter, MG_NPre_Smooth, MG_NPost_Smooth, MG_Tolerated_Error,
-                                                 Poi_Coeff, IntScheme );
+            CUPOT_PoissonSolver_MG  <<< NPatch_per_Stream[s], Poi_Block_Dim, 0, Stream[s] >>>
+                                    ( d_Rho_Array_P     + UsedPatch[s],
+                                      d_Pot_Array_P_In  + UsedPatch[s],
+                                      d_Pot_Array_P_Out + UsedPatch[s],
+                                      dh, MG_Max_Iter, MG_NPre_Smooth, MG_NPost_Smooth, MG_Tolerated_Error,
+                                      Poi_Coeff, IntScheme );
 
 #           else
 

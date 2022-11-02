@@ -157,7 +157,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //    Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
 
       Hydro_DualEnergyFix( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
-                           Output_1Cell[ENGY], Output_1Cell[ENPY], g_DE_Status[idx_out],
+                           Output_1Cell[ENGY], Output_1Cell[DUAL], g_DE_Status[idx_out],
                            EoS->AuxArrayDevPtr_Flt[1], EoS->AuxArrayDevPtr_Flt[2], CheckMinPres_No, NULL_REAL,
                            DualEnergySwitch, Emag );
 #     endif // #ifdef DUAL_ENERGY
@@ -170,7 +170,9 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //    5. check unphysical cells within a patch group
       if ( s_FullStepFailure != NULL )
       {
-         bool FullStepFailure = false;
+#        ifdef CHECK_UNPHYSICAL_IN_FLUID
+         bool FullStepFailure = false; // per-thread status
+#        endif
 
 //       get pressure
          Pres = Hydro_Con2Pres( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
@@ -195,17 +197,12 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 #           else              // CPU
             *s_FullStepFailure = 1;
 #           endif
+#           ifdef CHECK_UNPHYSICAL_IN_FLUID
             FullStepFailure    = true;
+#           endif
          }
 
-
-//       5-2. synchronize all threads within a GPU thread block
-#        ifdef __CUDACC__
-         __syncthreads();
-#        endif
-
-
-//       5-3. print out unphysical results after iterations for debugging
+//       5-2. print out unphysical results after iterations for debugging
 #        ifdef CHECK_UNPHYSICAL_IN_FLUID
          if ( FullStepFailure  &&  Iteration == MinMod_MaxIter )
          {
@@ -220,6 +217,12 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 #        endif
       } // if ( s_FullStepFailure != NULL )
    } // CGPU_LOOP( idx_out, CUBE(PS2) )
+
+
+// 6. synchronize s_FullStepFailure for all threads within a GPU thread block
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
 
 } // FUNCTION : Hydro_FullStepUpdate
 

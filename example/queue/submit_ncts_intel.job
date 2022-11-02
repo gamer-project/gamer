@@ -1,0 +1,55 @@
+#!/bin/sh
+
+###############################################
+#       Intel MPI job script example          #
+###############################################
+
+#PBS -N gamer                         # Job name
+#PBS -M PUT_YOUR_EMAIL_HERE           # Mail address
+#PBS -m abe                           # Mail notification type (Abort, Begin, End)
+#PBS -l walltime=24:00:00             # Wall time limit (days-hrs:min:sec)
+#PBS -l nodes=gpuserver01:ppn=32
+#PBS -l gres=2                        # Number of requested GPUs per node
+##PBS -o stdout
+##PBS -e stderr
+
+
+if [ "$PBS_ENVIRONMENT" == "PBS_BATCH" ]; then
+   cd $PBS_O_WORKDIR
+fi
+
+
+### Load modules
+module purge
+module load intel-2022.1/compiler
+module load intel-2022.1/openmpi-4.1.2
+module load cuda/11.6
+module load intel-2022.1/fftw-2.1.5_openmpi4
+module load intel-2022.1/hdf5-1.10.8_openmpi4
+
+
+### Specify the GPUs
+#export CUDA_VISIBLE_DEVICES=0,1       # Quadro RTX A6000 (Ampere, sm_86)
+export CUDA_VISIBLE_DEVICES=2,3       # Quadro RTX 6000 (Turing, sm_75)
+
+
+# Using 64 CPUs and 2 GPUs per node, 1 node
+# 2 MPI processes, 32 threads per process (OMP_NTHREAD = 32)
+mpirun -map-by ppr:1:socket:pe=16 --report-bindings ./gamer  1>>log 2>&1
+
+
+### Supplements
+# 1. for 64 CPUs and 2 GPUs per node, 2 nodes
+#    - set `PBS -l nodes=gpuserver01:ppn=32+gpuserver02:ppn=32`
+#
+# 2. for 4 GPUs per node, 1 nodes
+#    - In Makefile
+#       - set `SIMU_OPTION += -DGPU_ARCH=AMPERE`
+#       - add `NVCCFLAG_ARCH += -gencode arch=compute_75,code=\"compute_75,sm_75\"`
+#         to the NVCC flags of the AMPERE option
+#    - comment out the sanity check of computing capability for the Ampere architecture
+#      in src/GPU_API/CUAPI_SetDevice.cu
+#    - In job script
+#       - set `PBS -l gres=4`
+#       - comment out `export CUDA_VISIBLE_DEVICES=*`
+#       - set `-map-by ppr:2:socket:pe=8`

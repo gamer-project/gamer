@@ -22,16 +22,23 @@
 //                6. The data format of the PAR_IC file is controlled by the runtime parameter "PAR_IC_FORMAT"
 //                   --> PAR_IC_FORMAT_ATT_ID: [particle attribute][particle id] in a row-major order
 //                       PAR_IC_FORMAT_ID_ATT: [particle id][particle attribute] in a row-major order
-//                7  Currently it only loads particle mass, position x/y/z, and velocity x/y/z
-//                   (and must be in the same order of PAR_MASS, PAR_POSX/Y/Z, and PAR_VELX/Y/Z)
-//                   --> The mass of all particles can be set to PAR_IC_MASS instead (by having PAR_IC_MASS>=0.0)
-//                       --> In this case, the PAR_IC file should exclude the partice mass data
+//                7  Load the following attributes with the specified order:
+//
+//                      mass, position x/y/z, velocity x/y/z, type,
+//                      [, creation time (when enabling STAR_FORMATION)]
+//                      [, user-specified attributes (when PAR_NATT_USER>0)]
+//
+//                   --> The mass of all particles can be set to PAR_IC_MASS instead (by having PAR_IC_MASS>=0.0),
+//                       in which case PAR_IC should exclude partice mass
+//                   --> The type of all particles can be set to PAR_IC_TYPE instead (by having PAR_IC_TYPE>=0),
+//                       in which case PAR_IC should exclude partice type
+//                   --> No need to provide particle acceleration and time
 //                8. For LOAD_BALANCE, the number of particles in each rank must be set in advance
 //                   --> Currently it's set by Init_Parallelization()
 //
 // Parameter   :  None
 //
-// Return      :  amr->Par->Time,Mass,PosX/Y/Z,VelX/Y/Z
+// Return      :  amr->Par->Attribute[]
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFile()
 {
@@ -44,12 +51,21 @@ void Par_Init_ByFile()
       Aux_Error( ERROR_INFO, "unknown data format in PAR_IC (%d) !!\n", amr->Par->ParICFormat );
 
 
-   const char FileName[]     = "PAR_IC";
-   const long NParAllRank    = amr->Par->NPar_Active_AllRank;
-         long NParThisRank   = amr->Par->NPar_AcPlusInac;            // cannot be "const" due to MPI_Allgather()
-   const bool SingleParMass  = amr->Par->ParICMass >= 0.0;
-   const int  NParAtt        = ( SingleParMass ) ? 6 : 7;            // [mass], pos*3, vel*3
-   const int  NParAttPerLoad = ( amr->Par->ParICFormat == PAR_IC_FORMAT_ID_ATT ) ? NParAtt : 1;
+   const char FileName[]    = "PAR_IC";
+   const long NParAllRank   = amr->Par->NPar_Active_AllRank;
+         long NParThisRank  = amr->Par->NPar_AcPlusInac;       // cannot be "const" due to MPI_Allgather()
+   const bool SingleParMass = amr->Par->ParICMass >= 0.0;
+   const bool SingleParType = amr->Par->ParICType >= 0;
+
+// determine the number of attributes to be loaded
+   int NParAtt = PAR_NATT_TOTAL - 1;   // exclude time
+#  ifdef STORE_PAR_ACC
+   NParAtt -= 3;                       // exclude acceleration
+#  endif
+   if ( SingleParMass )    NParAtt --; // exclude mass
+   if ( SingleParType )    NParAtt --; // exclude type
+
+   const int NParAttPerLoad = ( amr->Par->ParICFormat == PAR_IC_FORMAT_ID_ATT ) ? NParAtt : 1;
 
 
 // check
@@ -123,25 +139,17 @@ void Par_Init_ByFile()
       }
 
 //    assuming that the orders of the particle attributes stored on the disk and in Par->Attribute[] are the same
-      if ( SingleParMass )
+//    --> no need to skip acceleration and time since they are always put at the end of the attribute list
+      for (int v_in=0, v_out=0; v_in<NParAtt; v_in++, v_out++)
       {
-//       assign the same mass to all particles
-         amr->Par->Attribute[PAR_MASS][p] = amr->Par->ParICMass;
+         if ( SingleParMass  &&  v_out == PAR_MASS )  v_out ++;
+         if ( SingleParType  &&  v_out == PAR_TYPE )  v_out ++;
 
-         for (int v_in=0, v_out=0; v_in<NParAtt; v_in++, v_out++)
-         {
-//          skip the particle mass
-            if ( v_out == PAR_MASS )    v_out ++;
-
-            amr->Par->Attribute[v_out][p] = ParData1[v_in];
-         }
+         amr->Par->Attribute[v_out][p] = ParData1[v_in];
       }
 
-      else
-      {
-         for (int v=0; v<NParAtt; v++)
-            amr->Par->Attribute[v][p] = ParData1[v];
-      }
+      if ( SingleParMass )    amr->Par->Mass[p] = amr->Par->ParICMass;
+      if ( SingleParType )    amr->Par->Type[p] = amr->Par->ParICType;
 
 //    synchronize all particles to the physical time at the base level
       amr->Par->Time[p] = Time[0];

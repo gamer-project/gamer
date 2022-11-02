@@ -64,6 +64,7 @@ void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly,
    const long  NewParID0 = NOldPar;
    const long  NTarPar   = amr->Par->NPar_AcPlusInac - NOldPar;
    const real *Pos[3]    = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   const real *PType     = amr->Par->Type;
    const int   NReal     = amr->NPatchComma[lv][1];
 
    real TParPos[3];
@@ -153,10 +154,10 @@ void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly,
       const int  PID   = HomePID[t];
 
 #     ifdef DEBUG_PARTICLE
-      amr->patch[0][lv][PID]->AddParticle( 1, &ParID, &amr->Par->NPar_Lv[lv],
+      amr->patch[0][lv][PID]->AddParticle( 1, &ParID, &amr->Par->NPar_Lv[lv], PType,
                                            Pos, amr->Par->NPar_AcPlusInac, __FUNCTION__ );
 #     else
-      amr->patch[0][lv][PID]->AddParticle( 1, &ParID, &amr->Par->NPar_Lv[lv] );
+      amr->patch[0][lv][PID]->AddParticle( 1, &ParID, &amr->Par->NPar_Lv[lv], PType);
 #     endif
    }
 
@@ -357,6 +358,7 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly,
    amr->Par->VelY = amr->Par->Attribute[PAR_VELY];
    amr->Par->VelZ = amr->Par->Attribute[PAR_VELZ];
    amr->Par->Time = amr->Par->Attribute[PAR_TIME];
+   amr->Par->Type = amr->Par->Attribute[PAR_TYPE];
 #  ifdef STORE_PAR_ACC
    amr->Par->AccX = amr->Par->Attribute[PAR_ACCX];
    amr->Par->AccY = amr->Par->Attribute[PAR_ACCY];

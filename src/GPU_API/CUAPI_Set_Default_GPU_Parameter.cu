@@ -105,19 +105,11 @@ __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ FLU_NXT*FLU_NXT
 
 // Poisson solver prototypes
 #if   ( POT_SCHEME == SOR )
-#ifdef USE_PSOLVER_10TO14
-__global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
-                                                    const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
-                                                          real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
-                                                    const int Min_Iter, const int Max_Iter, const real Omega_6,
-                                                    const real Const, const IntScheme_t IntScheme );
-#else
-__global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
-                                                    const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
-                                                          real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
-                                                    const int Min_Iter, const int Max_Iter, const real Omega_6,
-                                                    const real Const, const IntScheme_t IntScheme );
-#endif // #ifdef USE_PSOLVER_10TO14 ... else ...
+__global__ void CUPOT_PoissonSolver_SOR( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
+                                         const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
+                                               real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
+                                         const int Min_Iter, const int Max_Iter, const real Omega_6,
+                                         const real Const, const IntScheme_t IntScheme );
 #elif ( POT_SCHEME == MG )
 __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
                                         const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
@@ -417,11 +409,7 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 
 // (3-2) Poisson solver
 #  if   ( POT_SCHEME == SOR )
-#  ifdef USE_PSOLVER_10TO14
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUPOT_PoissonSolver_SOR_10to14cube, cudaFuncCachePreferShared )  );
-#  else
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUPOT_PoissonSolver_SOR_16to18cube, cudaFuncCachePreferShared )  );
-#  endif
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUPOT_PoissonSolver_SOR,            cudaFuncCachePreferShared )  );
 #  elif ( POT_SCHEME == MG )
    CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUPOT_PoissonSolver_MG,             cudaFuncCachePreferShared )  );
 #  endif // POT_SCHEME

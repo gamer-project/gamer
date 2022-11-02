@@ -373,6 +373,20 @@ void Init_ResetParameter()
 
       PRINT_WARNING( amr->Par->GhostSize, FORMAT_INT, "for the adopted PAR_INTERP scheme" );
    }
+
+   if ( amr->Par->GhostSizeTracer < 0 )
+   {
+      switch ( amr->Par->InterpTracer )
+      {
+         case ( PAR_INTERP_NGP ): amr->Par->GhostSizeTracer = 1;  break;
+         case ( PAR_INTERP_CIC ): amr->Par->GhostSizeTracer = 2;  break;
+         case ( PAR_INTERP_TSC ): amr->Par->GhostSizeTracer = 2;  break;
+         default: Aux_Error( ERROR_INFO, "unsupported particle interpolation scheme !!\n" );
+      }
+
+      PRINT_WARNING( amr->Par->GhostSizeTracer, FORMAT_INT, "for the adopted PAR_TR_INTERP scheme" );
+   }
+
 #  endif // #ifdef PARTICLE
 
 
@@ -878,14 +892,24 @@ void Init_ResetParameter()
    }
 
 
-// FLAG_BUFFER_SIZE at the level MAX_LEVEL-1 and MAX_LEVEL-2
-   if ( FLAG_BUFFER_SIZE_MAXM1_LV < 0 )
+// FLAG_BUFFER_SIZE on different levels
+// levels other than MAX_LEVEL-1 and MAX_LEVEL-2
+   if ( FLAG_BUFFER_SIZE < 0 )
    {
-      FLAG_BUFFER_SIZE_MAXM1_LV = FLAG_BUFFER_SIZE;
+      FLAG_BUFFER_SIZE = PS1;
 
-      PRINT_WARNING( FLAG_BUFFER_SIZE_MAXM1_LV, FORMAT_INT, "" );
+      PRINT_WARNING( FLAG_BUFFER_SIZE, FORMAT_INT, "to match PATCH_SIZE" );
    }
 
+// level MAX_LEVEL-1
+   if ( FLAG_BUFFER_SIZE_MAXM1_LV < 0 )
+   {
+      FLAG_BUFFER_SIZE_MAXM1_LV = REGRID_COUNT;
+
+      PRINT_WARNING( FLAG_BUFFER_SIZE_MAXM1_LV, FORMAT_INT, "to match REGRID_COUNT" );
+   }
+
+// level MAX_LEVEL-2
 // must set FLAG_BUFFER_SIZE_MAXM1_LV in advance
    if ( FLAG_BUFFER_SIZE_MAXM2_LV < 0 )
    {

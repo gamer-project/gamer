@@ -22,7 +22,7 @@ bool Flag_CMZ( const int i, const int j, const int k, const int lv, const int PI
 void Par_Init_ByFunction_BarredPot( const long NPar_ThisRank, const long NPar_AllRank,
                                     real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                     real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                    real *AllAttribute[PAR_NATT_TOTAL] );
+                                    real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
 #endif
 static void IsolatedBC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] );

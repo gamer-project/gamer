@@ -6,7 +6,7 @@ extern void (*Init_DerivedField_User_Ptr)();
 extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
                                         real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                         real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                        real *AllAttribute[PAR_NATT_TOTAL] );
+                                        real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
 #endif
 
 
@@ -88,10 +88,6 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
-// initialize parameters for the parallelization (rectangular domain decomposition)
-   Init_Parallelization();
-
-
 #  ifdef GRAVITY
 // initialize FFTW
    Init_FFTW();
@@ -100,6 +96,11 @@ void Init_GAMER( int *argc, char ***argv )
 
 // initialize the test problem parameters
    Init_TestProb();
+
+
+// initialize parameters for the parallelization
+// --> call it after Init_TestProb() since Init_TestProb() may overwrite the total number of particles
+   Init_Parallelization();
 
 
 // initialize all fields and particle attributes
@@ -203,7 +204,7 @@ void Init_GAMER( int *argc, char ***argv )
             Par_Init_ByFunction_Ptr( amr->Par->NPar_Active, amr->Par->NPar_Active_AllRank,
                                      amr->Par->Mass, amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ,
                                      amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ, amr->Par->Time,
-                                     amr->Par->Attribute );
+                                     amr->Par->Type, amr->Par->Attribute );
          else
             Aux_Error( ERROR_INFO, "Par_Init_ByFunction_Ptr == NULL for PAR_INIT = 1 !!\n" );
          break;
@@ -235,6 +236,13 @@ void Init_GAMER( int *argc, char ***argv )
 
       default : Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "OPT__INIT", OPT__INIT );
    }
+
+
+// ensure B field consistency on the shared interfaces between sibling patches
+#  if ( MODEL == HYDRO  &&  defined MHD )
+   if ( OPT__SAME_INTERFACE_B )
+   for (int lv=0; lv<NLEVEL; lv++)  MHD_SameInterfaceB( lv );
+#  endif
 
 
 // user-defined initialization
@@ -280,17 +288,34 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif // #ifdef GARVITY
 
 
+#  ifdef PARTICLE
+
 // initialize particle acceleration
-#  if ( defined PARTICLE  &&  defined STORE_PAR_ACC )
+#  if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_ACC )
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Calculating particle acceleration" );
 
    const bool StoreAcc_Yes    = true;
    const bool UseStoredAcc_No = false;
 
    for (int lv=0; lv<NLEVEL; lv++)
-   Par_UpdateParticle( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], NULL_REAL, PAR_UPSTEP_ACC_ONLY, StoreAcc_Yes, UseStoredAcc_No );
+      Par_UpdateParticle( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], NULL_REAL, PAR_UPSTEP_ACC_ONLY, StoreAcc_Yes, UseStoredAcc_No );
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating particle acceleration" );
-#  endif
+#  endif // #if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_ACC )
+
+#  ifdef TRACER
+// initialize tracer particles
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Initializing tracer particles" );
+
+   const bool MapOnly_Yes = true;
+
+   for (int lv=0; lv<NLEVEL; lv++)
+      Par_UpdateTracerParticle( lv, Time[lv], NULL_REAL, MapOnly_Yes );
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Initializing tracer particles" );
+#  endif // #ifdef TRACER
+
+#  endif // #ifdef PARTICLE
+
 
 } // FUNCTION : Init_GAMER

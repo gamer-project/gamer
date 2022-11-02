@@ -1,6 +1,6 @@
 #include "CUPOT.h"
 #ifdef __CUDACC__
-#include "CUAPI.h"
+#include "CUDA_CheckError.h"
 #endif
 
 #ifdef GRAVITY
@@ -27,11 +27,11 @@ extern double BarredPot_MeshCenter[3];
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  AuxArray : Arrays to be filled up
+//                Time     : Target physical time
 //
 // Return      :  AuxArray[]
 //-------------------------------------------------------------------------------------------------------
-
-void SetExtAccAuxArray_BarredPot( double AuxArray[] )
+void SetExtAccAuxArray_BarredPot( double AuxArray[], const double Time )
 {
 
    AuxArray[0] = SQR(BarredPot_V0);    // amplitude^2
@@ -63,16 +63,14 @@ void SetExtAccAuxArray_BarredPot( double AuxArray[] )
 // Note        :  1. This function is shared by CPU and GPU
 //                2. Auxiliary arrays UserArray_Flt/Int[] are set by SetExtAccAuxArray_BarredPot()
 //
-// Parameter   :  Acc               : Array to store the output external acceleration
-//                x/y/z             : Target spatial coordinates
-//                Time              : Target physical time
+// Parameter   :  Acc       : Array to store the output external acceleration
+//                x/y/z     : Target spatial coordinates
+//                Time      : Target physical time
 //                UserArray : User-provided auxiliary array
 //
 // Return      :  External acceleration Acc[] at (x,y,z,Time)
 //-----------------------------------------------------------------------------------------
-
 GPU_DEVICE_NOINLINE
-
 static void ExtAcc_BarredPot( real Acc[], const double x, const double y, const double z, const double Time,
                               const double UserArray[] )
 
@@ -170,7 +168,7 @@ void SetCPUExtAcc_BarredPot( ExtAcc_t &CPUExtAcc_Ptr )
 #ifndef __CUDACC__
 
 // local function prototypes
-void SetExtAccAuxArray_BarredPot( double [] );
+void SetExtAccAuxArray_BarredPot( double [], const double );
 void SetCPUExtAcc_BarredPot( ExtAcc_t & );
 #ifdef GPU
 void SetGPUExtAcc_BarredPot( ExtAcc_t & );
@@ -191,11 +189,10 @@ void SetGPUExtAcc_BarredPot( ExtAcc_t & );
 //
 // Return      :  None
 //-----------------------------------------------------------------------------------------
-
 void Init_ExtAcc_BarredPot()
 {
 
-   SetExtAccAuxArray_BarredPot( ExtAcc_AuxArray);
+   SetExtAccAuxArray_BarredPot( ExtAcc_AuxArray, Time[0] );
 
    SetCPUExtAcc_BarredPot( CPUExtAcc_Ptr );
 #  ifdef GPU
@@ -205,6 +202,7 @@ void Init_ExtAcc_BarredPot()
 } // FUNCTION : Init_ExtAcc_BarredPot
 
 #endif // #ifndef __CUDACC__
+
 
 
 #endif // #ifdef GRAVITY

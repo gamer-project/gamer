@@ -704,8 +704,14 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
                                                    FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End );
             break;
 
-           case BC_FLU_REFLECTING:
+            case BC_FLU_REFLECTING:
                Hydro_BoundaryCondition_Reflecting( FaData_Flu, BC_Face[BC_Sibling], NCOMP_TOTAL, FaGhost_Flu,
+                                                   FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End,
+                                                   FluVarIdxList, NDer, DerVarList );
+            break;
+
+            case BC_FLU_DIODE:
+               Hydro_BoundaryCondition_Diode(      FaData_Flu, BC_Face[BC_Sibling], NCOMP_TOTAL, FaGhost_Flu,
                                                    FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End,
                                                    FluVarIdxList, NDer, DerVarList );
             break;
@@ -909,6 +915,12 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 
                case BC_FLU_REFLECTING:
                   MHD_BoundaryCondition_Reflecting( FaData_Mag3v, BC_Face[BC_Sibling], 1, FaGhost_Mag,
+                                                    FC_BC_Size[0], FC_BC_Size[1], FC_BC_Size[2], FC_BC_Idx_Start, FC_BC_Idx_End,
+                                                    &v );
+               break;
+
+               case BC_FLU_DIODE:
+                  MHD_BoundaryCondition_Diode     ( FaData_Mag3v, BC_Face[BC_Sibling], 1, FaGhost_Mag,
                                                     FC_BC_Size[0], FC_BC_Size[1], FC_BC_Size[2], FC_BC_Idx_Start, FC_BC_Idx_End,
                                                     &v );
                break;

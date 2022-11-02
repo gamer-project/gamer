@@ -173,7 +173,7 @@ void BC_Reflecting_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // derived variables
    for (int v2=0, v=NVar_Flu; v2<NVar_Der; v2++, v++)
    {
-      if ( TDerVarList[v2] == _VELX )
+      if ( TDerVarList[v2] == _VELX  ||  TDerVarList[v2] == _MAGX_CC )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
@@ -256,7 +256,7 @@ void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // derived variables
    for (int v2=0, v=NVar_Flu; v2<NVar_Der; v2++, v++)
    {
-      if ( TDerVarList[v2] == _VELX )
+      if ( TDerVarList[v2] == _VELX  ||  TDerVarList[v2] == _MAGX_CC )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
@@ -339,7 +339,7 @@ void BC_Reflecting_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // derived variables
    for (int v2=0, v=NVar_Flu; v2<NVar_Der; v2++, v++)
    {
-      if ( TDerVarList[v2] == _VELY )
+      if ( TDerVarList[v2] == _VELY  ||  TDerVarList[v2] == _MAGY_CC )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {  jj = j_ref - j;
@@ -422,7 +422,7 @@ void BC_Reflecting_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // derived variables
    for (int v2=0, v=NVar_Flu; v2<NVar_Der; v2++, v++)
    {
-      if ( TDerVarList[v2] == _VELY )
+      if ( TDerVarList[v2] == _VELY  ||  TDerVarList[v2] == _MAGY_CC )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {  jj = j_ref - j;
@@ -505,7 +505,7 @@ void BC_Reflecting_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // derived variables
    for (int v2=0, v=NVar_Flu; v2<NVar_Der; v2++, v++)
    {
-      if ( TDerVarList[v2] == _VELZ )
+      if ( TDerVarList[v2] == _VELZ  ||  TDerVarList[v2] == _MAGZ_CC )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {  kk = k_ref - k;
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
@@ -588,7 +588,7 @@ void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // derived variables
    for (int v2=0, v=NVar_Flu; v2<NVar_Der; v2++, v++)
    {
-      if ( TDerVarList[v2] == _VELZ )
+      if ( TDerVarList[v2] == _VELZ  ||  TDerVarList[v2] == _MAGZ_CC )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {  kk = k_ref - k;
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {

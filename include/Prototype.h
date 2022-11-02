@@ -89,6 +89,8 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const bool NormPassive, const int NNorm, const int NormIdx[],
                       const bool FracPassive, const int NFrac, const int FracIdx[],
                       const bool JeansMinPres, const real JeansMinPres_Coeff );
+void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
+#if ( MODEL == HYDRO )
 real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
                      const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
@@ -100,27 +102,29 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
                      const real Passive[], const bool CheckMinTemp, const real MinTemp, const real Emag,
                      const EoS_DE2T_t EoS_DensEint2Temp, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX] );
+real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                     const real Passive[], const bool CheckMinEntr, const real MinEntr, const real Emag,
+                     const EoS_DE2S_t EoS_DensEint2Entr, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real *const EoS_Table[EOS_NTABLE_MAX] );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
 real Hydro_CheckMinEint( const real InEint, const real MinEint );
-bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], const char SingleFieldName[],
-                            const char File[], const int Line, const char Function[], const CheckUnphysical_t Verbose );
-void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
-#ifdef DUAL_ENERGY
-void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
-                          real &Etot, real &Enpy, char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
-                          const bool CheckMinPres, const real MinPres, const real DualEnergySwitch,
-                          const real Emag );
-#if ( DUAL_ENERGY == DE_ENPY )
-real Hydro_Con2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                        const real Emag, const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[],
-                        const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX] );
-real Hydro_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 );
-real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1,
-                             const bool CheckMinPres, const real MinPres );
-#endif
-#endif
 real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real InEngy,
                                const real MinEint, const real Emag );
+bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], const char SingleFieldName[],
+                            const char File[], const int Line, const char Function[], const CheckUnphysical_t Verbose );
+#ifdef DUAL_ENERGY
+void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
+                          real &Etot, real &Dual, char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
+                          const bool CheckMinPres, const real MinPres, const real DualEnergySwitch,
+                          const real Emag );
+real Hydro_Con2Dual( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                     const real Emag, const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[],
+                     const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX] );
+real Hydro_DensPres2Dual( const real Dens, const real Pres, const real Gamma_m1 );
+real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Gamma_m1,
+                          const bool CheckMinPres, const real MinPres );
+#endif // #ifdef DUAL_ENERGY
+#endif // #if ( MODEL == HYDRO )
 int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
                    const int SaveSg_Flu, const int SaveSg_Mag, const bool OverlapMPI, const bool Overlap_Sync );
 void Flu_AllocateFluxArray( const int lv );
@@ -172,7 +176,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         const int GhostSize, const int NPG, const int *PID0_List, long TVarCC, long TVarFC,
                         const IntScheme_t IntScheme_CC, const IntScheme_t IntScheme_FC, const PrepUnit_t PrepUnit,
                         const NSide_t NSide, const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
-                        const real MinDens, const real MinPres, const real MinTemp, const bool DE_Consistency );
+                        const real MinDens, const real MinPres, const real MinTemp, const real MinEntr, const bool DE_Consistency );
 
 
 // Init
@@ -215,7 +219,8 @@ void Interpolate( real CData[], const int CSize[3], const int CStart[3], const i
                   real FData[], const int FSize[3], const int FStart[3],
                   const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase,
                   const bool Monotonic[], const bool OppSign0thOrder, const bool AllCons,
-                  const IntPrim_t IntPrim, const ReduceOrFixMonoCoeff_t ReduceMonoCoeff );
+                  const IntPrim_t IntPrim, const ReduceOrFixMonoCoeff_t ReduceMonoCoeff,
+                  const real CMag_IntIter[], const real FMag_IntIter[][NCOMP_MAG] );
 void Int_Table( const IntScheme_t IntScheme, int &NSide, int &NGhost );
 
 
@@ -450,6 +455,10 @@ void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const i
                                          const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                          const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
                                          const int NVar_Der, const long TDerVarList[] );
+void Hydro_BoundaryCondition_Diode( real *Array, const int BC_Face, const int NVar_Flu, const int GhostSize,
+                                    const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
+                                    const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
+                                    const int NVar_Der, const long TDerVarList[] );
 void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool FracPassive, const int NFrac, const int FracIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -477,6 +486,7 @@ void MHD_AllocateElectricArray( const int lv );
 void MHD_Aux_Check_InterfaceB( const char *comment );
 void MHD_Aux_Check_DivergenceB( const bool Verbose, const char *comment );
 void MHD_FixUp_Electric( const int lv );
+void MHD_SameInterfaceB( const int lv );
 void MHD_CopyPatchInterfaceBField( const int lv, const int PID, const int SibID, const int MagSg );
 void MHD_BoundaryCondition_Outflow( real **Array, const int BC_Face, const int NVar, const int GhostSize,
                                     const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
@@ -484,6 +494,9 @@ void MHD_BoundaryCondition_Outflow( real **Array, const int BC_Face, const int N
 void MHD_BoundaryCondition_Reflecting( real **Array, const int BC_Face, const int NVar, const int GhostSize,
                                        const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                        const int Idx_Start[], const int Idx_End[], const int TVarIdxList[] );
+void MHD_BoundaryCondition_Diode( real **Array, const int BC_Face, const int NVar, const int GhostSize,
+                                  const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
+                                  const int Idx_Start[], const int Idx_End[], const int TVarIdxList[] );
 void MHD_BoundaryCondition_User( real **Array, const int BC_Face, const int NVar,
                                  const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                  const int Idx_Start[], const int Idx_End[], const int TVarIdxList[],
@@ -500,7 +513,6 @@ void MHD_LB_ResetBufferElectric( const int lv );
 // ELBDM model
 #elif ( MODEL == ELBDM )
 void   ELBDM_Init_ByFunction_AssignData( const int lv );
-void   ELBDM_Init_ByFile_AssignData( const int lv, real *UM_Data, const int NVar );
 double ELBDM_GetTimeStep_Fluid( const int lv );
 double ELBDM_GetTimeStep_Gravity( const int lv );
 double ELBDM_GetTimeStep_Phase( const int lv );
@@ -508,6 +520,7 @@ bool   ELBDM_Flag_EngyDensity( const int i, const int j, const int k, const real
                                const real Imag_Array[], const double Angle_2pi, const double Eps );
 real   ELBDM_UnwrapPhase( const real Phase_Ref, const real Phase_Wrapped );
 real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
+void   ELBDM_RemoveMotionCM();
 
 
 #else
@@ -605,6 +618,8 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 void Par_SortByPos( const long NPar, const real *PosX, const real *PosY, const real *PosZ, int *IdxTable );
 void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOld, const ParUpStep_t UpdateStep,
                          const bool StoreAcc, const bool UseStoredAcc );
+void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double TimeOld,
+                               const bool MapOnly );
 void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv );
 void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar );
 bool Par_WithinActiveRegion( const real x, const real y, const real z );
@@ -626,6 +641,11 @@ void Par_Init_Attribute();
 void Par_AddParticleAfterInit( const long NNewPar, real *NewParAtt[PAR_NATT_TOTAL] );
 void Par_ScatterParticleData( const long NPar_ThisRank, const long NPar_AllRank, const long AttBitIdx,
                               real *Data_Send[PAR_NATT_TOTAL], real *Data_Recv[PAR_NATT_TOTAL] );
+void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
+                            const double _dh, const int AttrSize3D, const real *Attr,
+                            const int NPar, real *InterpParPos[3],
+                            const real ParType[], const long ParList[],
+                            const bool UseTracers, real ParAttr[], const bool CorrectVelocity );
 FieldIdx_t AddParticleAttribute( const char *InputLabel );
 FieldIdx_t GetParticleAttributeIndex( const char *InputLabel, const Check_t Check );
 #ifdef LOAD_BALANCE

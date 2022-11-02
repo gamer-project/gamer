@@ -653,13 +653,15 @@ void Init_ByRestart()
                } // for (int p=0; p<NParThisPatch )
 
 //             link particles to this patch
+               const real *PType = amr->Par->Type;
 #              ifdef DEBUG_PARTICLE
                char Comment[100];
                sprintf( Comment, "%s, PID %d, NPar %d", __FUNCTION__, PID, NParThisPatch );
                amr->patch[0][lv][PID]->AddParticle( NParThisPatch, NewParList, &amr->Par->NPar_Lv[lv],
-                                                    ParPos, amr->Par->NPar_AcPlusInac, Comment );
+                                                    PType, ParPos, amr->Par->NPar_AcPlusInac, Comment );
 #              else
-               amr->patch[0][lv][PID]->AddParticle( NParThisPatch, NewParList, &amr->Par->NPar_Lv[lv] );
+               amr->patch[0][lv][PID]->AddParticle( NParThisPatch, NewParList, &amr->Par->NPar_Lv[lv],
+                                                    PType );
 #              endif
             } // if ( amr->patch[0][lv][PID]->NPar > 0 )
          } // for PID, lv
@@ -1224,18 +1226,6 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 #     ifdef GRA_BLOCK_SIZE
       CompareVar( "GRA_BLOCK_SIZE",          gra_block_size,         GRA_BLOCK_SIZE,            NonFatal );
 #     endif
-
-#     if ( POT_SCHEME == SOR )
-#     ifdef USE_PSOLVER_10TO14
-      if ( !use_psolver_10to14 )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
-                      "USE_PSOLVER_10TO14", "OFF", "ON" );
-#     else
-      if (  use_psolver_10to14 )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
-                      "USE_PSOLVER_10TO14", "ON", "OFF" );
-#     endif
-#     endif // if ( POT_SCHEME == SOR )
 
 #     ifdef STORE_POT_GHOST
       if ( !store_pot_ghost )

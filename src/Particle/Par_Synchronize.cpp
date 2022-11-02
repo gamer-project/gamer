@@ -43,7 +43,7 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
    if ( SyncOption != PAR_SYNC_TEMP  &&  SyncOption != PAR_SYNC_FORCE )
       Aux_Error( ERROR_INFO, "unsupported SyncOption = %d !!\n", SyncOption );
 
-#  ifndef STORE_PAR_ACC
+#  if ( defined MASSIVE_PARTICLES  &&  !defined STORE_PAR_ACC )
    if ( SyncOption == PAR_SYNC_TEMP  ||  SyncOption == PAR_SYNC_FORCE )
       Aux_Error( ERROR_INFO, "please turn on STORE_PAR_ACC in the makefile for particle synchronization !!\n" );
 #  endif
@@ -70,6 +70,7 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
 
 // synchronize all active particles
          real *ParTime   =   amr->Par->Time;
+         real *ParType   =   amr->Par->Type;
          real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
          real *ParVel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
 #  ifdef STORE_PAR_ACC
@@ -82,13 +83,20 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
    const real SyncTime_Real = (real)SyncTime;
 
    real dt;
+#  ifdef COMOVING
+   bool dTime2dt, Initialized=false;
+   real ParTime_Prev=NULL_REAL, dt_Prev=NULL_REAL;
+#  endif
 
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
 //    skip inactive particles
       if ( amr->Par->Mass[p] < 0.0 )   continue;
 
-      if (  ! Mis_CompareRealValue( SyncTime_Real, amr->Par->Time[p], NULL, false )  )
+//    skip massive particles when enabling OPT__FREEZE_PAR
+      if ( OPT__FREEZE_PAR  &&  ParType[p] != PTYPE_TRACER )   continue;
+
+      if (  ! Mis_CompareRealValue( SyncTime_Real, ParTime[p], NULL, false )  )
       {
 //       backup data before synchronization
          if ( SyncOption == PAR_SYNC_TEMP )
@@ -115,16 +123,41 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
 
 
 //       synchronize particles
-         dt = SyncTime_Real - amr->Par->Time[p];
+         dt = SyncTime_Real - ParTime[p];
+
+//       convert time-step for comoving
+#        ifdef COMOVING
+         if ( Initialized )
+            dTime2dt    = ( ParTime[p] != ParTime_Prev );
+
+         else
+         {
+            dTime2dt    = true;
+            Initialized = true;
+         }
+
+//       avoid redundant calculations
+         if ( dTime2dt )
+         {
+            dt           = Mis_dTime2dt( ParTime[p], dt );
+            dt_Prev      = dt;
+            ParTime_Prev = ParTime[p];
+         }
+
+         else
+            dt = dt_Prev;
+#        endif // #ifdef COMOVING
 
          for (int d=0; d<3; d++)
          {
             ParPos[d][p] += ParVel[d][p]*dt;
-            ParVel[d][p] += ParAcc[d][p]*dt;
+//          only accelerate massive particles
+            if ( ParType[p] != PTYPE_TRACER )
+               ParVel[d][p] += ParAcc[d][p]*dt;
          }
 
          ParTime[p] = SyncTime_Real;
-      } // if (  ! Mis_CompareRealValue( SyncTime_Real, amr->Par->Time[p], NULL, false )  )
+      } // if (  ! Mis_CompareRealValue( SyncTime_Real, ParTime[p], NULL, false )  )
    } // for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
 
 

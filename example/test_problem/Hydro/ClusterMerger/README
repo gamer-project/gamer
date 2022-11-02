@@ -1,7 +1,7 @@
 Compilation flags:
 ========================================
 Enable  : MODEL=HYDRO, GRAVITY, PARTICLE, MHD (optional),
-          SUPPORT_HDF5, NPAR_ATT_USER=1,
+          SUPPORT_HDF5, NPAR_ATT_USER=0,
           NCOMP_PASSIVE_USER >= Merger_Coll_NumHalos + Merger_Coll_UseMetals
           (these are parameters in Input__TestProb)
 Disable : COMOVING
@@ -39,7 +39,8 @@ Note:
        (2) cd cluster_generator
        (3) python -m pip install .
        (4) Go back to the gamer_cluster_ics.py script and run with python "gamer_cluster_ics.py"
-4. Some handy yt analysis scripts and a notebook are put in "yt_script"
+4. No need to set PAR_NPAR in Input__Parameter since it will be reset automatically.
+5. Some handy yt analysis scripts and a notebook are put in "yt_script"
    --> For example, to generate the slice plots, one can
        (1) cd yt_script
        (2) Edit "idx_start" and "idx_end" in plot_slice-z.py
