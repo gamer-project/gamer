@@ -82,7 +82,7 @@ static double Bondi_HSE_Beta_P2;          // P1=G*MassBH*Rho0/Rcore, and P2 curr
 void Init_ExtAcc_Bondi();
 void Record_Bondi();
 bool Flag_Bondi( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
-bool Flu_ResetByUser_Func_Bondi( real fluid[], const double x, const double y, const double z, const double Time,
+bool Flu_ResetByUser_Func_Bondi( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
                                  const double dt, const int lv, double AuxArray[] );
 void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TimeNew, const double dt );
 static void HSE_SetDensProfileTable();
