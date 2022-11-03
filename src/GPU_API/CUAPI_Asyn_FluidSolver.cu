@@ -210,6 +210,7 @@ extern cudaStream_t *Stream;
 //                JeansMinPres        : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff  : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //                GPU_NStream         : Number of CUDA streams for the asynchronous memory copy
+//                useWaveSolver       : Determine whether to use wave or phase scheme
 //-------------------------------------------------------------------------------------------------------
 void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
@@ -230,7 +231,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              const bool NormPassive, const int NNorm,
                              const bool FracPassive, const int NFrac,
                              const bool JeansMinPres, const real JeansMinPres_Coeff,
-                             const int GPU_NStream )
+                             const int GPU_NStream, const bool useWaveSolver )
 {
 
 // check
@@ -449,7 +450,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 #     elif ( MODEL == ELBDM )
 #     if ( ELBDM_SCHEME == HYBRID )
-      if ( amr->use_wave_flag[lv] )
+      if ( useWaveSolver )
 #     endif // #     if ( ELBDM_SCHEME == HYBRID )
          CUFLU_ELBDMSolver <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
             ( d_Flu_Array_F_In  + UsedPatch[s],
@@ -457,12 +458,12 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_Flux_Array      + UsedPatch[s],
               dt, 1.0/dh, ELBDM_Eta, StoreFlux, ELBDM_Taylor3_Coeff, XYZ, MinDens );
 #     if ( ELBDM_SCHEME == HYBRID )
-      else // if ( amr->use_wave_flag[lv] )
+      else // if ( useWaveSolver )
          CUFLU_ELBDMSolver_PhaseForm_MUSCL <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
             ( d_Flu_Array_F_In  + UsedPatch[s],
               d_Flu_Array_F_Out + UsedPatch[s],
               d_Flux_Array      + UsedPatch[s],
-              dt, 1.0/dh, ELBDM_Eta, StoreFlux, ELBDM_Taylor3_Coeff, XYZ, MinDens );
+              dt, 1.0/dh, ELBDM_Eta, StoreFlux, XYZ, MinDens );
 #     endif // #     if ( ELBDM_SCHEME == HYBRID )
 
 #     else

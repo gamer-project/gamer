@@ -552,7 +552,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar,
                                  OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar,
                                  JEANS_MIN_PRES, JeansMinPres_Coeff,
-                                 GPU_NSTREAM );
+                                 GPU_NSTREAM, useWaveSolver );
 #        else
          CPU_FluidSolver       ( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID],
                                  h_Mag_Array_F_In[ArrayID], h_Mag_Array_F_Out[ArrayID],
@@ -583,7 +583,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           NULL_BOOL, ELBDM_ETA, NULL_REAL, POISSON_ON, GRAVITY_OFF,
                                           OPT__SELF_GRAVITY, OPT__EXT_POT, OPT__EXT_ACC,
                                           TimeNew, TimeOld, NULL_REAL,
-                                          GPU_NSTREAM );
+                                          GPU_NSTREAM, useWaveSolver );
 #        else
          CPU_PoissonGravitySolver       ( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID],
                                           h_Pot_Array_P_Out[ArrayID], NULL, h_Corner_Array_PGT[ArrayID],
@@ -611,7 +611,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_OFF, GRAVITY_ON,
                                           OPT__SELF_GRAVITY, OPT__EXT_POT, OPT__EXT_ACC,
                                           TimeNew, TimeOld, MIN_EINT,
-                                          GPU_NSTREAM );
+                                          GPU_NSTREAM, useWaveSolver );
 #        else
          CPU_PoissonGravitySolver       ( NULL, NULL,
                                           h_Pot_Array_P_Out[ArrayID], h_Flu_Array_G[ArrayID], h_Corner_Array_PGT[ArrayID],
@@ -640,7 +640,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_ON, GRAVITY_ON,
                                           OPT__SELF_GRAVITY, OPT__EXT_POT, OPT__EXT_ACC,
                                           TimeNew, TimeOld, MIN_EINT,
-                                          GPU_NSTREAM );
+                                          GPU_NSTREAM, useWaveSolver );
 #        else
          CPU_PoissonGravitySolver       ( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID],
                                           h_Pot_Array_P_Out[ArrayID], h_Flu_Array_G[ArrayID], h_Corner_Array_PGT[ArrayID],

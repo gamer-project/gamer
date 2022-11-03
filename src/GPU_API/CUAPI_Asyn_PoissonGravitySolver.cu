@@ -59,6 +59,13 @@ __global__
 void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
                                const real g_Pot_Array[][ CUBE(GRA_NXT) ],
                                const real EtaDt, const real dh, const real Lambda );
+                               
+#if ( ELBDM_SCHEME == HYBRID )
+__global__
+void CUPOT_ELBDMGravitySolver_PhaseForm(       real g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
+                               const real g_Pot_Array[][ CUBE(GRA_NXT) ],
+                               const real EtaDt, const real dh, const real Lambda );
+#endif
 #else
 #error : ERROR : unsupported MODEL !!
 #endif // MODEL
@@ -172,7 +179,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                       const real ELBDM_Lambda, const bool Poisson, const bool GraAcc,
                                       const bool SelfGravity, const OptExtPot_t ExtPot, const OptExtAcc_t ExtAcc,
                                       const double TimeNew, const double TimeOld, const real MinEint,
-                                      const int GPU_NStream )
+                                      const int GPU_NStream, bool useWaveSolver )
 {
 
 // model-independent constants
@@ -465,10 +472,20 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                     TimeNew, TimeOld, MinEint );
 
 #        elif ( MODEL == ELBDM )
+#        if ( ELBDM_SCHEME == HYBRID )
+         if ( useWaveSolver )
+#        endif 
          CUPOT_ELBDMGravitySolver <<< NPatch_per_Stream[s], Gra_Block_Dim, 0, Stream[s] >>>
                                   ( d_Flu_Array_G      + UsedPatch[s],
                                     d_Pot_Array_P_Out  + UsedPatch[s],
                                     ELBDM_EtaDt, dh, ELBDM_Lambda );
+#        if ( ELBDM_SCHEME == HYBRID )
+         else 
+         CUPOT_ELBDMGravitySolver_PhaseForm <<< NPatch_per_Stream[s], Gra_Block_Dim, 0, Stream[s] >>>
+                                  ( d_Flu_Array_G      + UsedPatch[s],
+                                    d_Pot_Array_P_Out  + UsedPatch[s],
+                                    ELBDM_EtaDt, dh, ELBDM_Lambda );
+#        endif 
 
 #        else
 #        error : ERROR : unsupported MODEL !!
