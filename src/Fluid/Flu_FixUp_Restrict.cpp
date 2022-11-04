@@ -166,9 +166,52 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #        endif
 #        endif // #ifdef GAMER_DEBUG
 
+#        if ( MODEL == ELBDM )
+//       average densities and phases instead of real and imaginary parts if option OPT__RES_PHASE is on
+         if ( ResFlu && OPT__RES_PHASE && NFluVar == NCOMP_TOTAL ) {
 
+//          D = DENS, R = REAL, I = IMAG
+            const real (*DSonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[DENS];
+            const real (*RSonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[REAL];
+            const real (*ISonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[IMAG];
+                  real (*DFaPtr)[PS1][PS1]  = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[DENS];
+                  real (*RFaPtr)[PS1][PS1]  = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[REAL];
+                  real (*IFaPtr)[PS1][PS1]  = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[IMAG];
+
+            int ii, jj, kk, I, J, K, Ip, Jp, Kp;
+            real refphase, avgphase, avgdens;
+
+            for (int k=0; k<PS1_half; k++)  {  K = k*2;  Kp = K+1;  kk = k + Disp_k;
+            for (int j=0; j<PS1_half; j++)  {  J = j*2;  Jp = J+1;  jj = j + Disp_j;
+            for (int i=0; i<PS1_half; i++)  {  I = i*2;  Ip = I+1;  ii = i + Disp_i;
+
+//             take care to match the child phases before averaging
+               refphase   = SATAN2(ISonPtr[K ][J ][I ], RSonPtr[K ][J ][I ]);
+               avgphase   = 0.125*(                   refphase                                                    +
+                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[K ][J ][Ip], RSonPtr[K ][J ][Ip])) +
+                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[K ][Jp][I ], RSonPtr[K ][Jp][I ])) + 
+                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][J ][I ], RSonPtr[Kp][J ][I ])) +
+                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[K ][Jp][Ip], RSonPtr[K ][Jp][Ip])) + 
+                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][Jp][I ], RSonPtr[Kp][Jp][I ])) +
+                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][J ][Ip], RSonPtr[Kp][J ][Ip])) + 
+                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][Jp][Ip], RSonPtr[Kp][Jp][Ip])) );
+               avgdens    = 0.125* ( DSonPtr[K ][J ][I ] + DSonPtr[K ][J ][Ip] +
+                                     DSonPtr[K ][Jp][I ] + DSonPtr[Kp][J ][I ] +
+                                     DSonPtr[K ][Jp][Ip] + DSonPtr[Kp][Jp][I ] +
+                                     DSonPtr[Kp][J ][Ip] + DSonPtr[Kp][Jp][Ip] );
+
+
+               DFaPtr[kk][jj][ii] = avgdens;
+               RFaPtr[kk][jj][ii] = SQRT(avgdens) * COS(avgphase);
+               IFaPtr[kk][jj][ii] = SQRT(avgdens) * SIN(avgphase);
+
+            }}}
+         }
+         else
+#        endif 
 //       restrict the fluid data
-         if ( ResFlu )
+         if ( ResFlu ) {
+
          for (int v=0; v<NFluVar; v++)
          {
             const int TFluVarIdx = TFluVarIdxList[v];
@@ -187,6 +230,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                                            SonPtr[Kp][J ][Ip] + SonPtr[Kp][Jp][Ip] );
             }}}
          } // if ( ResFlu )
+         }
 
 
 //       restrict the potential data

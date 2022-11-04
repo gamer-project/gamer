@@ -946,7 +946,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
    bool   dummy_bool, opt__dt_user, opt__flag_rho, opt__flag_rho_gradient, opt__flag_pres_gradient;
    bool   opt__flag_engy_density, opt__flag_user, opt__fixup_flux, opt__fixup_restrict, opt__overlap_mpi;
    bool   opt__gra_p5_gradient, opt__int_time, opt__output_user, opt__output_base, opt__output_pot;
-   bool   opt__output_baseps, opt__timing_balance, opt__int_phase;
+   bool   opt__output_baseps, opt__timing_balance, opt__int_phase, opt__res_phase;
    int    nx0_tot[3], mpi_nrank, mpi_nrank_x[3], omp_nthread, ooc_nrank, ooc_nrank_x[3], regrid_count;
    int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter_useless, flu_gpu_npgroup, gpu_nstream;
    int    sor_max_iter, sor_min_iter, mg_max_iter, mg_npre_smooth, mg_npost_smooth, pot_gpu_npgroup;
@@ -1007,6 +1007,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &opt__gra_p5_gradient,       sizeof(bool),                    1,             File );
    fread( &opt__int_time,              sizeof(bool),                    1,             File );
    fread( &opt__int_phase,             sizeof(bool),                    1,             File );
+   fread( &opt__res_phase,             sizeof(bool),                    1,             File );
    fread( &opt__flu_int_scheme,        sizeof(int),                     1,             File );
    fread( &opt__pot_int_scheme,        sizeof(int),                     1,             File );
    fread( &opt__rho_int_scheme,        sizeof(int),                     1,             File );
@@ -1402,6 +1403,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "DT__PHASE",               dt__phase,                    DT__PHASE,                 NonFatal );
       CompareVar( "OPT__FLAG_ENGY_DENSITY",  opt__flag_engy_density,       OPT__FLAG_ENGY_DENSITY,    NonFatal );
       CompareVar( "OPT__INT_PHASE",          opt__int_phase,               OPT__INT_PHASE,            NonFatal );
+      CompareVar( "OPT__RES_PHASE",          opt__res_phase,               OPT__RES_PHASE,            NonFatal );
       CompareVar( "ELBDM_MASS",              elbdm_mass,             (real)ELBDM_MASS,                NonFatal );
       CompareVar( "ELBDM_PLANCK_CONST",      elbdm_planck_const,     (real)ELBDM_PLANCK_CONST,        NonFatal );
 

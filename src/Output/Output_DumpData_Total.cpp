@@ -602,6 +602,7 @@ void Output_DumpData_Total( const char *FileName )
       const double DT__PHASE                 = NULL_REAL;
       const bool   OPT__FLAG_ENGY_DENSITY    = NULL_BOOL;
       const bool   OPT__INT_PHASE            = NULL_BOOL;
+      const bool   OPT__RES_PHASE            = NULL_BOOL;
       const double ELBDM_MASS                = NULL_REAL;
       const double ELBDM_PLANCK_CONST        = NULL_REAL;
 #     endif
@@ -666,6 +667,7 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &OPT__GRA_P5_GRADIENT,      sizeof(bool),                    1,             File );
       fwrite( &OPT__INT_TIME,             sizeof(bool),                    1,             File );
       fwrite( &OPT__INT_PHASE,            sizeof(bool),                    1,             File );
+      fwrite( &OPT__RES_PHASE,            sizeof(bool),                    1,             File );
       fwrite( &opt__flu_int_scheme,       sizeof(int),                     1,             File );
       fwrite( &opt__pot_int_scheme,       sizeof(int),                     1,             File );
       fwrite( &opt__rho_int_scheme,       sizeof(int),                     1,             File );
