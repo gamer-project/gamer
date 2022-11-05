@@ -757,7 +757,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
          for (int lv_refine=lv; lv_refine<=lv_refine_max; lv_refine++)
          {
-            if ( NPatchTotal[lv] == 0 )   break;
+            if ( NPatchTotal[lv_refine] == 0 )  break;
 
 //          13-1. flag
             if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d: Flag %29s... ", lv_refine, "" );
