@@ -335,7 +335,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //       7-1. set the random seed
 //            --> to get deterministic and different random numbers for all patches, reset the random seed of
 //                each patch according to its location and counter
-//            --> factors 1e2 and  1e8 are to make random seeds more different
+//            --> factors 1e2 and 1e8 are to make random seeds more different
          const long RSeed = FB_RSEED + amr->patch[0][lv][PID]->LB_Idx*100L + AdvanceCounter[lv]*100000000L;
          FB_RNG->SetSeed( TID, RSeed );
 
