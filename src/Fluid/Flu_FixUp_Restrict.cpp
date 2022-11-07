@@ -167,16 +167,16 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #        endif // #ifdef GAMER_DEBUG
 
 #        if ( MODEL == ELBDM )
-//       average densities and phases instead of real and imaginary parts if option OPT__RES_PHASE is on
-         if ( ResFlu && OPT__RES_PHASE && NFluVar == NCOMP_TOTAL ) {
+//       average phase instead of real and imaginary part if option OPT__RES_PHASE is on
+         if ( ResFlu && OPT__RES_PHASE && (TVarCC & (_REAL) || TVarCC & (_IMAG)) ) {
 
 //          D = DENS, R = REAL, I = IMAG
             const real (*DSonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[DENS];
             const real (*RSonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[REAL];
             const real (*ISonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[IMAG];
-                  real (*DFaPtr)[PS1][PS1]  = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[DENS];
-                  real (*RFaPtr)[PS1][PS1]  = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[REAL];
-                  real (*IFaPtr)[PS1][PS1]  = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[IMAG];
+                  real (*DFaPtr) [PS1][PS1] = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[DENS];
+                  real (*RFaPtr) [PS1][PS1] = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[REAL];
+                  real (*IFaPtr) [PS1][PS1] = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[IMAG];
 
             int ii, jj, kk, I, J, K, Ip, Jp, Kp;
             real refphase, avgphase, avgdens;
@@ -200,10 +200,9 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                                      DSonPtr[K ][Jp][Ip] + DSonPtr[Kp][Jp][I ] +
                                      DSonPtr[Kp][J ][Ip] + DSonPtr[Kp][Jp][Ip] );
 
-
-               DFaPtr[kk][jj][ii] = avgdens;
-               RFaPtr[kk][jj][ii] = SQRT(avgdens) * COS(avgphase);
-               IFaPtr[kk][jj][ii] = SQRT(avgdens) * SIN(avgphase);
+               if (TVarCC & _DENS) DFaPtr[kk][jj][ii] = avgdens;
+               if (TVarCC & _REAL) RFaPtr[kk][jj][ii] = SQRT(avgdens) * COS(avgphase);
+               if (TVarCC & _IMAG) IFaPtr[kk][jj][ii] = SQRT(avgdens) * SIN(avgphase);
 
             }}}
          }

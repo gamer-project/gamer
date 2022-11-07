@@ -15,9 +15,7 @@ cp Data_000001 Data_000001_NewRestriction
 cp Data_000002 Data_000002_NewRestriction
 python plot_comparison.py
 python plot_slice.py -s 0 -e 2
-rm Data_000000_Slice_z_density_gradient_magnitude.png
-rm Data_000000_Slice_z_Phase.png
-rm Data_000001_Slice_z_density_gradient_magnitude.png
-rm Data_000001_Slice_z_Phase.png
-rm Data_000002_Slice_z_density_gradient_magnitude.png
-rm Data_000002_Slice_z_Phase.png
+cp Input__Parameter_PhaseResOnLongRun Input__Parameter
+./gamer
+cp Data_000001 Data_000003
+python plot_slice.py -s 3 -e 3

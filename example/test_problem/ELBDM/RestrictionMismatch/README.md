@@ -10,9 +10,8 @@ To run it, compile a version of GAMER with MODEL = ELBDM and put the executable 
 Execute `./compare_restriction.sh` (possibly after making it executable via `chmod +x compare_restriction.sh`).
 
 ## Output
-The script executes `3` runs for `2` time steps respectively and generates `5` plots.
-Three plots titled `Data_%06d_Slice_z_density.png` are created from a run with the new option `OPT__RES_PHASE` turned on.
-The grid is unrefined in timestep `0`, refinement and restriction are performed at the end of timestep `1` and the refined fields are evolved during timestep `2`.
+The script first executes `4` runs in total: `3` runs for `2` time steps that contrast the cases without restriction, the old restriction and the new restriction option;
+`1` run that underscores that the artifacts still appear at later times. In total, the script generates `6` plots.
 The plot named `ComparisonOfRestrictionMethodsBeforeEvolution.png` compares the phase fields on level `0` immediately after refinement and restriction.
 The refined fields are not evolved before creating this plot. 
 The plots show the phase field on level `0`, their laplacian and the mismatch between the fields from a run with refinement and a run without refinement. 
@@ -21,3 +20,6 @@ In other words, refinement and restriction alter the values of the phase field o
 The new restriction method does cause a similar mismatch of the phase field on level `0`. 
 However, as the plot named `ComparisonOfRestrictionMethodsBeforeEvolution.png` shows, the phase fields on levels `0` and `1` still evolve differently.
 The resulting mismatch is bigger than the one caused by the old restriction method.
+This is also shown in a series of four plots titled `Data_%06d_Slice_z_density.png` that are created from a run with the new option `OPT__RES_PHASE` turned on.
+The grid is unrefined in timestep `0`, refinement and restriction are performed at the end of timestep `1` and the refined fields are evolved during timestep `2`.
+Plot `3` that is created later during the run highlights that the artifacts are not remedied by the new restriction option. 

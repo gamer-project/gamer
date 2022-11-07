@@ -180,6 +180,5 @@ for idx in range(idx_start, idx_end+1, didx):
                      # Finally, redraw the plot on the AxesGrid axes.
                      pz._setup_plots()
                      pz2._setup_plots()
-                     pz.save()
-
+                     plt.savefig(f"Data_{idx:06}_Slice_{myax}_density.png")
                      plt.close()
