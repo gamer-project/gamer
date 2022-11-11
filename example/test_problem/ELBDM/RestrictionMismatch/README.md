@@ -6,7 +6,7 @@ Further, it shows that the new option `OPT__RES_PHASE` remedies the mismatch imm
 It uses the `GaussianWavePacket` test with suitable initial parameters and refines a region at the center of the Gaussian wave packet. 
 
 ## Execution
-To run it, compile a version of GAMER with MODEL = ELBDM and put the executable in the test problem directory.
+To run it, compile a version of GAMER with `MODEL = ELBDM` in `SERIAL` mode and put the executable in the test problem directory.
 Execute `./compare_restriction.sh` (possibly after making it executable via `chmod +x compare_restriction.sh`).
 
 ## Output

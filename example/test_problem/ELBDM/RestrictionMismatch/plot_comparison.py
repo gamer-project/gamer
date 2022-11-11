@@ -62,7 +62,7 @@ phase3 = make_2d_continuous(phase3)
 
 fig, axes = plt.subplots(2, 3, dpi = 200, figsize=(18, 12))
 ax = axes.reshape(6)
-fig.suptitle(f"Comparison of restriction methods (old/new) at timestep {index} on level {level}")
+fig.suptitle("Comparison of restriction methods (old/new) at timestep %d on level %d" % (index, level))
 
 ax[0].set_title(f"Phase (old)")
 im1 = ax[0].imshow(phase2)
@@ -143,7 +143,7 @@ phase3 = make_2d_continuous(phase3)
 
 fig, axes = plt.subplots(2, 3, dpi = 200, figsize=(18, 12))
 ax = axes.reshape(6)
-fig.suptitle(f"Comparison of restriction methods (old/new) at timestep {index} on level {level}")
+fig.suptitle("Comparison of restriction methods (old/new) at timestep %d on level %d" % (index, level))
 
 ax[0].set_title(f"Phase (old)")
 im1 = ax[0].imshow(phase2)

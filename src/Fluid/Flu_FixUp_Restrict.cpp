@@ -205,8 +205,8 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                if (TVarCC & _IMAG) IFaPtr[kk][jj][ii] = SQRT(avgdens) * SIN(avgphase);
 
             }}}
-         }
-         else
+         } 
+         else // if ( ResFlu && OPT__RES_PHASE && (TVarCC & (_REAL) || TVarCC & (_IMAG)) )
 #        endif 
 //       restrict the fluid data
          if ( ResFlu ) {
@@ -228,8 +228,8 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                                            SonPtr[K ][Jp][Ip] + SonPtr[Kp][Jp][I ] +
                                            SonPtr[Kp][J ][Ip] + SonPtr[Kp][Jp][Ip] );
             }}}
+         } 
          } // if ( ResFlu )
-         }
 
 
 //       restrict the potential data
