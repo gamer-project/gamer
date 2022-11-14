@@ -1,6 +1,9 @@
 import argparse
 import sys
 import yt
+import matplotlib
+matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -93,7 +96,10 @@ else:
 
 for idx in range(idx_start, idx_end+1, didx):
           ds = yt.load("Data_%06d"%idx)# ds = yt.load('t_%06d'%idx)
-          ds.force_periodicity()
+          try:
+            ds.force_periodicity()
+          except:
+            ds.periodicity = (True, True, True)
           grad_fields = ds.add_gradient_fields(("gas", "density"))
           grad_fields = ds.add_gradient_fields(("gamer", "Real"))
           grad_fields = ds.add_gradient_fields(("gamer", "Imag"))

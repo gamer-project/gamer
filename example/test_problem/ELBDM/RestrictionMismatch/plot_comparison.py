@@ -1,4 +1,7 @@
 import yt
+import matplotlib
+matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -64,14 +67,14 @@ fig, axes = plt.subplots(2, 3, dpi = 200, figsize=(18, 12))
 ax = axes.reshape(6)
 fig.suptitle("Comparison of restriction methods (old/new) at timestep %d on level %d" % (index, level))
 
-ax[0].set_title(f"Phase (old)")
+ax[0].set_title("Phase (old)")
 im1 = ax[0].imshow(phase2)
 
 divider = make_axes_locatable(ax[0])
 cax = divider.append_axes('right', size='5%', pad=0.05)
 fig.colorbar(im1, cax=cax, orientation='vertical')
 
-ax[1].set_title(f"Laplacian of phase (old)")
+ax[1].set_title("Laplacian of phase (old)")
 im2 = ax[1].imshow(getLaplacian(phase2))
 
 divider = make_axes_locatable(ax[1])
@@ -79,21 +82,21 @@ cax = divider.append_axes('right', size='5%', pad=0.05)
 fig.colorbar(im2, cax=cax, orientation='vertical')
 
 
-ax[2].set_title(f"Difference (With/Without refinement)")
+ax[2].set_title("Difference (With/Without refinement)")
 im3 = ax[2].imshow(np.abs(phase1-phase2))
 
 divider = make_axes_locatable(ax[2])
 cax = divider.append_axes('right', size='5%', pad=0.05)
 fig.colorbar(im3, cax=cax, orientation='vertical')
 
-ax[3].set_title(f"Phase (new)")
+ax[3].set_title("Phase (new)")
 im4 = ax[3].imshow(phase3)
 
 divider = make_axes_locatable(ax[3])
 cax = divider.append_axes('right', size='5%', pad=0.05)
 fig.colorbar(im4, cax=cax, orientation='vertical')
 
-ax[4].set_title(f"Laplacian of phase (new)")
+ax[4].set_title("Laplacian of phase (new)")
 im5 = ax[4].imshow(getLaplacian(phase3))
 
 divider = make_axes_locatable(ax[4])
@@ -101,7 +104,7 @@ cax = divider.append_axes('right', size='5%', pad=0.05)
 fig.colorbar(im5, cax=cax, orientation='vertical')
 
 
-ax[5].set_title(f"Difference (With/Without refinement)")
+ax[5].set_title("Difference (With/Without refinement)")
 im6 = ax[5].imshow(np.abs(phase1-phase3))
 
 divider = make_axes_locatable(ax[5])
@@ -109,7 +112,7 @@ cax = divider.append_axes('right', size='5%', pad=0.05)
 fig.colorbar(im6, cax=cax, orientation='vertical')
 
 
-plt.savefig(f"ComparisonOfRestrictionMethodsBeforeEvolution.png")
+plt.savefig("ComparisonOfRestrictionMethodsBeforeEvolution.png")
 plt.close()
  
 ds1  = yt.load("Data_000002_NoRefinement")
@@ -145,14 +148,14 @@ fig, axes = plt.subplots(2, 3, dpi = 200, figsize=(18, 12))
 ax = axes.reshape(6)
 fig.suptitle("Comparison of restriction methods (old/new) at timestep %d on level %d" % (index, level))
 
-ax[0].set_title(f"Phase (old)")
+ax[0].set_title("Phase (old)")
 im1 = ax[0].imshow(phase2)
 
 divider = make_axes_locatable(ax[0])
 cax = divider.append_axes('right', size='5%', pad=0.05)
 fig.colorbar(im1, cax=cax, orientation='vertical')
 
-ax[1].set_title(f"Laplacian of phase (old)")
+ax[1].set_title("Laplacian of phase (old)")
 im2 = ax[1].imshow(getLaplacian(phase2))
 
 divider = make_axes_locatable(ax[1])
@@ -160,21 +163,21 @@ cax = divider.append_axes('right', size='5%', pad=0.05)
 fig.colorbar(im2, cax=cax, orientation='vertical')
 
 
-ax[2].set_title(f"Difference (With/Without refinement)")
+ax[2].set_title("Difference (With/Without refinement)")
 im3 = ax[2].imshow(np.abs(phase1-phase2))
 
 divider = make_axes_locatable(ax[2])
 cax = divider.append_axes('right', size='5%', pad=0.05)
 fig.colorbar(im3, cax=cax, orientation='vertical')
 
-ax[3].set_title(f"Phase (new)")
+ax[3].set_title("Phase (new)")
 im4 = ax[3].imshow(phase3)
 
 divider = make_axes_locatable(ax[3])
 cax = divider.append_axes('right', size='5%', pad=0.05)
 fig.colorbar(im4, cax=cax, orientation='vertical')
 
-ax[4].set_title(f"Laplacian of phase (new)")
+ax[4].set_title("Laplacian of phase (new)")
 im5 = ax[4].imshow(getLaplacian(phase3))
 
 divider = make_axes_locatable(ax[4])
@@ -182,7 +185,7 @@ cax = divider.append_axes('right', size='5%', pad=0.05)
 fig.colorbar(im5, cax=cax, orientation='vertical')
 
 
-ax[5].set_title(f"Difference (With/Without refinement)")
+ax[5].set_title("Difference (With/Without refinement)")
 im6 = ax[5].imshow(np.abs(phase1-phase3))
 
 divider = make_axes_locatable(ax[5])
@@ -190,6 +193,6 @@ cax = divider.append_axes('right', size='5%', pad=0.05)
 fig.colorbar(im6, cax=cax, orientation='vertical')
 
 
-plt.savefig(f"ComparisonOfRestrictionMethodsAfterEvolution.png")
+plt.savefig("ComparisonOfRestrictionMethodsAfterEvolution.png")
 plt.close()
   
