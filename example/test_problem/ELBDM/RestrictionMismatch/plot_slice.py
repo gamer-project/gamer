@@ -160,7 +160,7 @@ for idx in range(idx_start, idx_end+1, didx):
 
                      pz.annotate_grids( periodic=False )
 
-                     pz.set_cmap( fields, "viridis" )
+                     #pz.set_cmap( fields, "viridis" )
                      # For each plotted field, force the SlicePlot to redraw itself onto the AxesGrid
                      # axes.
                      for i, field in enumerate(fields):
@@ -175,7 +175,7 @@ for idx in range(idx_start, idx_end+1, didx):
                      #    pz2.set_zlim(("gas", "density"), 7e-1, 3)
                      #    pz2.set_zlim(("gas", "density_gradient_magnitude"), 5e-2, 5e-1)
 
-                     pz2.set_cmap( fields, "viridis" )
+                     #pz2.set_cmap( fields, "viridis" )
                      # For each plotted field, force the SlicePlot to redraw itself onto the AxesGrid
                      # axes.
                      for i, field in enumerate(fields):
