@@ -145,22 +145,18 @@ for idx in range(idx_start, idx_end+1, didx):
                               ("gas", "density"),
                               ("gas", "density_gradient_magnitude"),
                               ("gamer", "Phase"),
-                              #("gamer", "Real"),
-                              #("gamer", "Real_gradient_magnitude"),
-                              #("gamer", "Imag"),
-                              #("gamer", "Imag_gradient_magnitude"),
                          ]
                      
 
                      pz = yt.SlicePlot( ds, myax, fields)
                      if not make_reim_plot:
                          pz.set_log(("gamer", "Phase"), False)
-                         #pz.set_zlim(("gas", "density"), 7e-1, 3)
-                         #pz.set_zlim(("gas", "density_gradient_magnitude"), 5e-2, 5e-1)
 
                      pz.annotate_grids( periodic=False )
 
-                     #pz.set_cmap( fields, "viridis" )
+                     for field in fields:
+                        pz.set_cmap( field, "viridis" )
+
                      # For each plotted field, force the SlicePlot to redraw itself onto the AxesGrid
                      # axes.
                      for i, field in enumerate(fields):
@@ -172,10 +168,9 @@ for idx in range(idx_start, idx_end+1, didx):
                      pz2 = yt.SlicePlot( ds, myax, fields)
                      if not make_reim_plot:
                          pz2.set_log(("gamer", "Phase"), False)
-                     #    pz2.set_zlim(("gas", "density"), 7e-1, 3)
-                     #    pz2.set_zlim(("gas", "density_gradient_magnitude"), 5e-2, 5e-1)
 
-                     #pz2.set_cmap( fields, "viridis" )
+                     for field in fields:
+                        pz2.set_cmap( field, "viridis" )
                      # For each plotted field, force the SlicePlot to redraw itself onto the AxesGrid
                      # axes.
                      for i, field in enumerate(fields):
