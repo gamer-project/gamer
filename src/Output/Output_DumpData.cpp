@@ -182,31 +182,36 @@ void Output_DumpData( const int Stage )
 
 
 // dump data if the elapsed walltime exceeds the user-defined walltime
-   Timer_OutputWalltime.Stop();
+   int OutputData_Walltime = false;
 
-   int    OutputData_Walltime = false;
-   double ElapsedWalltime     = Timer_OutputWalltime.GetValue();
-
-   switch ( OUTPUT_WALLTIME_UNIT )
+   if ( OUTPUT_WALLTIME > 0.0 )
    {
-      case 0 :                               break;
-      case 1 : ElapsedWalltime /=    60.0;   break;
-      case 2 : ElapsedWalltime /=  3600.0;   break;
-      case 3 : ElapsedWalltime /= 86400.0;   break;
-      default: Aux_Error( ERROR_INFO, "unsupported unit for output walltime !!\n" );
-   }
+      Timer_OutputWalltime.Stop();
 
-#  ifndef SERIAL
-   MPI_Allreduce( MPI_IN_PLACE, &ElapsedWalltime, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
-#  endif
+      double ElapsedWalltime = Timer_OutputWalltime.GetValue();
 
-   if (  ( OUTPUT_WALLTIME > 0.0 )  &&  ( ElapsedWalltime >= OUTPUT_WALLTIME )  )
-   {
-      OutputData_Walltime = true;
-      Timer_OutputWalltime.Reset();
-   }
+#     ifndef SERIAL
+      MPI_Allreduce( MPI_IN_PLACE, &ElapsedWalltime, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
+#     endif
 
-   Timer_OutputWalltime.Start();
+      switch ( OUTPUT_WALLTIME_UNIT )
+      {
+         case 0 :                               break;
+         case 1 : ElapsedWalltime /=    60.0;   break;
+         case 2 : ElapsedWalltime /=  3600.0;   break;
+         case 3 : ElapsedWalltime /= 86400.0;   break;
+         default: Aux_Error( ERROR_INFO, "unsupported unit for output walltime !!\n" );
+      }
+
+
+      if ( ElapsedWalltime >= OUTPUT_WALLTIME )
+      {
+         OutputData_Walltime = true;
+         Timer_OutputWalltime.Reset();
+      }
+
+      Timer_OutputWalltime.Start();
+   } // if ( OUTPUT_WALLTIME > 0.0 )
 
 
 // set the acceleration of tracer particles to zero to make the output deterministic
