@@ -149,6 +149,12 @@ void CPU_ELBDMSolver_PhaseForm_MUSCL( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_N
          }
       }
 
+//    evaluate the new density (and apply the minimum density check)
+      for (int t=0; t<CUBE(PS2); t++)
+      {
+         if ( Flu_Array_Out[P][0][t] < MinDens )
+            Flu_Array_Out[P][0][t] = MinDens;
+      }
    } // for (int P=0; P<NPatchGroup; P++)
 
 } // FUNCTION : CPU_ELBDMSolver_PhaseForm_MUSCL
@@ -208,14 +214,22 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
    //slope-limiter
    real ql, qc, Qc, Qr;
    //velocities dS/dx = v and density fluxes f at i - 1/2, i + 1/2 
-   real vm, vp;
+   real vm, vp, v;
+   //minimum timestep for switching to first-order RK when velocity CFL condition is not met
+   real dt_min; 
 
    real Fm[N_TIME_LEVELS + 1][FLU_NXT];  // one column of the density flux at all time levels
+   
    real *Fm_target = NULL; // pointer to set phase   array in update loop
    //change of density and phase in time step
    real ddensity, dphase;
-   real ql_ratios [FLU_NXT], backward_velocities[FLU_NXT], log_density[FLU_NXT];  // one column of the gradient ratios for phase, velocities dS/dx and log(rho)
+   real ql_ratios [FLU_NXT], backward_velocities[FLU_NXT], log_density[FLU_NXT], cfl_velocities[FLU_NXT];  // one column of the gradient ratios for phase, velocities dS/dx and log(rho)
+   bool use_rk1[FLU_NXT]; 
+   real rk1_ddensity[FLU_NXT], rk1_dphase[FLU_NXT]; 
+   real dens; 
 
+   //indices to determine how far wrong information from evolving velocity field with wrong timestep can propagate
+   int l_min, l_max; 
 
 #  ifdef CONSERVE_MASS
    int Idx3;
@@ -239,8 +253,16 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
       memcpy( Rc[0], Rc_N, FLU_NXT*sizeof(real) );
       memcpy( Pc[0], Pc_N, FLU_NXT*sizeof(real) );
 
+      for (int i=0; i<FLU_NXT; i++) {
+         use_rk1[i] = false;
+
+         if ( Rc[0][i] != Rc[0][i] || Pc[0][i] != Pc[0][i] || Rc[0][i] < 0)
+            printf("Nan in input array of fluid solver k %d j %d i %d Rho %f Pha %f\n", k, j, i, Rc[0][i], Pc[0][i]); 
+      }
+
       for (int time_level = 0; time_level < N_TIME_LEVELS; ++time_level) 
       {
+
          //Compute second-order backward velocities and backward density fluxes
          for (int i=2*(time_level + 1); i<FLU_NXT-time_level*2; i++)
          {
@@ -248,12 +270,30 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
             backward_velocities[i]  = _dh * BACKWARD_GRADIENT      (Pc[time_level], i);
             Fm[time_level][i]       = MUSCL_FLUX(Rc[time_level], backward_velocities, i    , dh, dt);
 
+//          check the velocity-dependent CFL-condition and switch to forward-Euler for updating the density wherever the CFL-condition is not met
+//          dt = 1 / MaxdS_dx * 0.5 * ELBDM_ETA * DT__VELOCITY;
+//          compute CFL condition timestep
+            v      = FABS(backward_velocities[i]); 
+            dt_min = dh / v * 0.5 * Eta * DT__VELOCITY ;
+
+//          if the time step adopted in solver is larger than what velocity-dependent CFL condition allows, we switch to first-order RK
+            if ( dt > dt_min ) {
+//             compute how far wrong information can propagate to determine where we need to switch to forward Euler
+               l_min = i - (N_TIME_LEVELS - time_level) * 2;
+               l_max = i + (N_TIME_LEVELS - time_level) * 2 + 1;
+               if (l_min < 0)        l_min = 0;
+               if (l_max > FLU_NXT ) l_max = FLU_NXT; 
+               for (int l = l_min; l < l_max; ++l) use_rk1[l] = true;
+            }
+
          }
 
          //Compute density logarithms
          for (int i=2*time_level; i<FLU_NXT-2*time_level; i++)
          {
-            log_density[i] = log(Rc[time_level][i]);
+            dens = Rc[time_level][i];
+            dens = (dens < 1e-8) ? 1e-8 : dens;
+            log_density[i] = log(dens);
          }
                
          //Update density and phase fields
@@ -267,13 +307,17 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
 
             vm = _dh * BACKWARD_GRADIENT(Pc[time_level], i) * ( (real) 1. + (real) 0.5 * LIMITER(qc) - (real) 0.5 * LIMITER(ql)/(ql + ((ql==0) ? 1e-8 : 0)));
             vp = _dh * FORWARD_GRADIENT (Pc[time_level], i) * ( (real) 1. + (real) 0.5 * LIMITER(Qc) - (real) 0.5 * LIMITER(Qr)/(Qr + ((Qr==0) ? 1e-8 : 0)));
-   
+
+
             ddensity = _dh * (Fm[time_level][i+1] - Fm[time_level][i]);
             dphase   = (SQR(MIN(vp, 0)) + SQR(MAX(vm, 0)))/2;
             dphase  += -_dh2/4 * LAPLACIAN(log_density, i) - _dh2/8 * SQR(CENTERED_GRADIENT(log_density, i));
 
-            //printf("fm %f fp %f ql %f qc %f Qc %f Qr %f vm %f vp %f drho %f dpha %f\n", fm, fp, ql, qc, Qc, Qr, vm, vp, ddensity, dphase);
-         
+            if (time_level == 0) {
+               rk1_ddensity[i] = ddensity; 
+               rk1_dphase[i]   = dphase; 
+            }
+
             if (time_level + 1 < N_TIME_LEVELS)
             {
                Rc_target = &Rc[time_level + 1][i];
@@ -291,6 +335,45 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
                *Rc_target += RK_COEFFS[time_level][tx] * Rc[tx][i];
                *Pc_target += RK_COEFFS[time_level][tx] * Pc[tx][i];
             }
+
+
+//          check the velocity-dependent CFL-condition and switch to forward-Euler for updating the density wherever the CFL-condition is not met
+//          dt = 1 / MaxdS_dx * 0.5 * ELBDM_ETA * DT__VELOCITY;
+            if ( time_level + 1 ==  N_TIME_LEVELS ) {
+               if ( Rc_N[i] < 0 ) {             
+                  real newdens = Rc[0][i] - dt / Eta * rk1_ddensity[i];
+                  real newphas = Pc[0][i] - dt / Eta * rk1_dphase[i];                     
+                  
+                  Rc_N[i] = newdens;
+                  Pc_N[i] = newphas; 
+
+                  if ( newdens < 0)
+                     Rc_N[i] = 1e-8;
+               } else if ( use_rk1[i]) {
+                  real newdens = Rc[0][i] - dt / Eta * rk1_ddensity[i];
+                  real newphas = Pc[0][i] - dt / Eta * rk1_dphase[i];
+                  //printf("FE for dt = %f and dt_min = %f old dens = %f new dens = %f old phas = %f new phas = %f!\n", dt, dt_min, Rc_N[i], newdens, Pc_N[i], newphas); 
+                  Rc_N[i] = newdens;
+                  Pc_N[i] = newphas;
+
+                  if (newdens < 0) {
+                     //printf("ND after RK1 for dt = %f and dt_min = %f org. dens %f org. phas %f ld dens = %f new dens = %f old phas = %f new phas = %f!\n", dt, dt_min, Rc[0][i], Pc[0][i], Rc_N[i], newdens, Pc_N[i], newphas); 
+                  }
+                  if ( newdens < 0)
+                     Rc_N[i] = 1e-8;
+               }
+
+               if (Rc_N[i] != Rc_N[i]) {
+                  real newdens = Rc[0][i] - dt / Eta * rk1_ddensity[i];
+                  real newphas = Pc[0][i] - dt / Eta * rk1_dphase[i];
+                  printf("FE after nan for dt = %f and dt_min = %f org. dens %f org. phas %f ld dens = %f new dens = %f old phas = %f new phas = %f!\n", dt, dt_min, Rc[0][i], Pc[0][i], Rc_N[i], newdens, Pc_N[i], newphas); 
+                  if ( newdens != newdens || newdens < 0 )
+                     Rc_N[i] = 1e-8;
+                  if ( newphas != newphas || newphas < 0 )
+                     Pc_N[i] = 0;
+               }
+            }
+
          }
       }
 
@@ -301,6 +384,9 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
          {
          Fm[N_TIME_LEVELS][i] += FLUX_COEFFS[time_level] * Fm[time_level][i];
          }
+
+         if ( use_rk1[i] )
+            Fm[N_TIME_LEVELS][i] = Fm[0][i];
       }
       
 
