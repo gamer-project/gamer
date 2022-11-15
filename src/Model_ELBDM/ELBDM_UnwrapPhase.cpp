@@ -23,8 +23,10 @@ real ELBDM_UnwrapPhase( const real Phase_Ref, const real Phase_Wrapped )
 
    real Phase_Unwrapped = Phase_Wrapped;
 
-   while ( Phase_Unwrapped - Phase_Ref > +M_PI )   {  Phase_Unwrapped -= TwoPi;  };
-   while ( Phase_Unwrapped - Phase_Ref < -M_PI )   {  Phase_Unwrapped += TwoPi;  };
+   Phase_Unwrapped -= round((Phase_Unwrapped - Phase_Ref) / TwoPi) * TwoPi;
+
+   //while ( Phase_Unwrapped - Phase_Ref > +M_PI )   {  Phase_Unwrapped -= TwoPi;  };
+   //while ( Phase_Unwrapped - Phase_Ref < -M_PI )   {  Phase_Unwrapped += TwoPi;  };
 
    return Phase_Unwrapped;
 

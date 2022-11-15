@@ -1354,6 +1354,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //                convert real/imag to density/phase in hybrid scheme
 #                 if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
                   if ( amr->use_wave_flag[lv] && (v == REAL || v == IMAG) ) {
+#                 ifdef SERIAL
                      real Re, Im, Phase;
                      int FaPID, FaLv, Success;
 
@@ -1361,70 +1362,87 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
                      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++) 
                      {
-                     Phase = 0;
-                     Success = 0;
-                     FaLv  = lv;
-                     FaPID = PID;
-                     if (amr->patch[0][lv][PID]->father == -1 && lv > 0 && v == REAL) {
-                        Aux_Error( ERROR_INFO, "WARNING: NO FATHER PATCH FOR WAVE PATCH! PID %d Lv %d\n", PID, lv);
-                        
-                        for (int k=0; k<PS1; k++)
-                        for (int j=0; j<PS1; j++)
-                        for (int i=0; i<PS1; i++) {
-                           Re = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[REAL][k][j][i];
-                           Im = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[IMAG][k][j][i];
-                           printf("%6d %6d %6d %6d %6.6f\n", PID, k, j, i, SQR(Re) + SQR(Im));
-                        }
-
-               
-                     }
-                     while (FaLv > 0  && !(FaPID < 0) && v == REAL) {
-                        FaPID = amr->patch[0][FaLv][FaPID]->father;
-                        FaLv -= 1; 
-                        //printf("FaPID %d FaLv %d FaUseWave %d\n", FaPID, FaLv, amr->use_wave_flag[FaLv]);
-                        if ( !amr->use_wave_flag[FaLv] && !(FaPID < 0)) {
-                           Success = 1;
-                           //printf("Lv %d UseWave %d FaLV %d FaUseWave %d LvScale %d FaLvScale %d ", lv, amr->use_wave_flag[lv], FaLv, amr->use_wave_flag[FaLv], amr->scale[lv], amr->scale[FaLv]);
-                           //printf("LvCorner x %d y %d z %d FaLvCorner x %d y %d z %d\n", \
-                           amr->patch[ amr->FluSg[  lv] ][  lv][  PID]->corner[0], amr->patch[ amr->FluSg[  lv] ][  lv][  PID]->corner[1], amr->patch[ amr->FluSg[  lv] ][  lv][  PID]->corner[2] , \
-                           amr->patch[ amr->FluSg[FaLv] ][FaLv][FaPID]->corner[0], amr->patch[ amr->FluSg[FaLv] ][FaLv][FaPID]->corner[1], amr->patch[ amr->FluSg[FaLv] ][FaLv][FaPID]->corner[2] );
-                           break;
-                        }
-                     }
-                     for (int k=0; k<PS1; k++)
-                     for (int j=0; j<PS1; j++)
-                     for (int i=0; i<PS1; i++)
-                     {
-                        if ( v == REAL ) {
-                           int childCoordinates[3], fatherCoordinates[3];
-                           if ( Success ) {
-                              childCoordinates[0] = i;
-                              childCoordinates[1] = j;
-                              childCoordinates[2] = k;
-                              for (int h = 0; h < 3; h++) {
-                                 fatherCoordinates[h] =  ( amr->patch[0][lv][PID]->corner[h] + childCoordinates[h] * amr->scale[lv] - amr->patch[0][FaLv][FaPID]->corner[h] ) / amr->scale[FaLv];
-                              }
-                              Phase = amr->patch[ amr->FluSg[FaLv] ][FaLv][FaPID]->fluid[PHAS][fatherCoordinates[2]][fatherCoordinates[1]][fatherCoordinates[0]];
-                           } else {
-                              Aux_Error( ERROR_INFO, "ERROR: NO FATHER PATCH FOR WAVE PATCH! PID %d FaPID %d Lv %d UseWave %d FaLV %d FaUseWave %d \n", PID, FaPID, lv, amr->use_wave_flag[lv], FaLv, amr->use_wave_flag[FaLv]);
-                              Phase = 0;
+                        Phase = 0;
+                        Success = 0;
+                        FaLv  = lv;
+                        FaPID = PID;
+                        if (amr->patch[0][lv][PID]->father == -1 && lv > 0 && v == REAL) {
+                           Aux_Error( ERROR_INFO, "WARNING: NO FATHER PATCH FOR WAVE PATCH! PID %d Lv %d\n", PID, lv);
+                           
+                           for (int k=0; k<PS1; k++)
+                           for (int j=0; j<PS1; j++)
+                           for (int i=0; i<PS1; i++) {
+                              Re = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[REAL][k][j][i];
+                              Im = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[IMAG][k][j][i];
+                              printf("%6d %6d %6d %6d %6.6f\n", PID, k, j, i, SQR(Re) + SQR(Im));
                            }
 
+                  
+                        }
+                        while (FaLv > 0  && !(FaPID < 0) && v == REAL) {
+                           FaPID = amr->patch[0][FaLv][FaPID]->father;
+                           FaLv -= 1; 
+                           //printf("FaPID %d FaLv %d FaUseWave %d\n", FaPID, FaLv, amr->use_wave_flag[FaLv]);
+                           if ( !amr->use_wave_flag[FaLv] && !(FaPID < 0)) {
+                              Success = 1;
+                              //printf("Lv %d UseWave %d FaLV %d FaUseWave %d LvScale %d FaLvScale %d ", lv, amr->use_wave_flag[lv], FaLv, amr->use_wave_flag[FaLv], amr->scale[lv], amr->scale[FaLv]);
+                              //printf("LvCorner x %d y %d z %d FaLvCorner x %d y %d z %d\n", \
+                              amr->patch[ amr->FluSg[  lv] ][  lv][  PID]->corner[0], amr->patch[ amr->FluSg[  lv] ][  lv][  PID]->corner[1], amr->patch[ amr->FluSg[  lv] ][  lv][  PID]->corner[2] , \
+                              amr->patch[ amr->FluSg[FaLv] ][FaLv][FaPID]->corner[0], amr->patch[ amr->FluSg[FaLv] ][FaLv][FaPID]->corner[1], amr->patch[ amr->FluSg[FaLv] ][FaLv][FaPID]->corner[2] );
+                              break;
+                           }
+                        }
+                        for (int k=0; k<PS1; k++)
+                        for (int j=0; j<PS1; j++)
+                        for (int i=0; i<PS1; i++)
+                        {
+                           if ( v == REAL ) {
+                              int childCoordinates[3], fatherCoordinates[3];
+                              if ( Success ) {
+                                 childCoordinates[0] = i;
+                                 childCoordinates[1] = j;
+                                 childCoordinates[2] = k;
+                                 for (int h = 0; h < 3; h++) {
+                                    fatherCoordinates[h] =  ( amr->patch[0][lv][PID]->corner[h] + childCoordinates[h] * amr->scale[lv] - amr->patch[0][FaLv][FaPID]->corner[h] ) / amr->scale[FaLv];
+                                 }
+                                 Phase = amr->patch[ amr->FluSg[FaLv] ][FaLv][FaPID]->fluid[PHAS][fatherCoordinates[2]][fatherCoordinates[1]][fatherCoordinates[0]];
+                              } else {
+                                 Aux_Error( ERROR_INFO, "ERROR: NO FATHER PATCH FOR WAVE PATCH! PID %d FaPID %d Lv %d UseWave %d FaLV %d FaUseWave %d \n", PID, FaPID, lv, amr->use_wave_flag[lv], FaLv, amr->use_wave_flag[FaLv]);
+                                 Phase = 0;
+                              }
+                              
+                              Re = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[REAL][k][j][i];
+                              Im = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[IMAG][k][j][i];
+
+
+                              FieldData[PID][k][j][i] = ELBDM_UnwrapPhase( Phase, SATAN2(Im, Re) );
+                           }
+                           else if ( v == IMAG ) {
+                              FieldData[PID][k][j][i] = 0;
+                           }
+                        }
+                     }
+                  } else
+#                 else // #ifdef SERIAL
+                     real Re, Im;
+                     for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++) 
+                     {
+                        for (int k=0; k<PS1; k++)
+                        for (int j=0; j<PS1; j++)
+                        for (int i=0; i<PS1; i++)
+                        {
                            Re = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[REAL][k][j][i];
                            Im = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[IMAG][k][j][i];
 
-                           //float unwrapped_phase = ELBDM_UnwrapPhase(Phase, SATAN2(Im, Re));
-                           //if ( FABS(unwrapped_phase - Phase) > 1.5)
-                           //   Aux_Message(stderr, "WARNING: Hybrid scheme mismatch between unwrapped phase at fine and phase at coarse levels when saving HDF5: k %d j %d i %d K %d J %d I %d Phase %f SATAN %f Unwrapped %f\n", k, j, i, fatherCoordinates[0], fatherCoordinates[1], fatherCoordinates[2], Phase, SATAN2(Im, Re), ELBDM_UnwrapPhase(Phase, SATAN2(Im, Re)));
-
-                           FieldData[PID][k][j][i] = ELBDM_UnwrapPhase( Phase, SATAN2(Im, Re) );
+                           if ( v == REAL ) {
+                              FieldData[PID][k][j][i] = SATAN2(Im, Re);
+                           } else if ( v == IMAG ) {
+                              FieldData[PID][k][j][i] = 0;
+                           }
                         }
-                        else if ( v == IMAG ) {
-                           FieldData[PID][k][j][i] = 0;
-                        }
-                     }
                      }
                   } else 
+#                 endif // # ifdef SERIAL ... #else 
 #                 endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                      memcpy( FieldData[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );

@@ -320,6 +320,9 @@ void Flag_Buffer( const int lv );
 void Refine_Buffer( const int lv, const int *SonTable, const int *GrandTable );
 #endif
 
+#if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+void Flag_Sync( const int lv );
+#endif
 
 // SelfGravity
 #ifdef GRAVITY
@@ -412,6 +415,7 @@ void TABLE_GetSibPID_Based( const int lv, const int PID0, int SibPID_Based[] );
 
 // LoadBalance
 long LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
+global_patch_t * LB_GetGlobalTree (long& NPatchAllLv, int GID_Offset[]);
 #ifdef LOAD_BALANCE
 void LB_AllocateBufferPatch_Father( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0,
                                     const bool RecordFaPID, int* NNewFaBuf0, int** NewFaBufPID0 );

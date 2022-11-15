@@ -1465,7 +1465,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    Makefile_t RS;    // RS = ReStart
 
    LoadField( "Model",                  &RS.Model,                  SID, TID, NonFatal, &RT.Model,                  1,    Fatal );
-   LoadField( "Gravity",                &RS.Gravity,                SID, TID, NonFatal, &RT.Gravity,                1,    Fatal );
+   LoadField( "Gravity",                &RS.Gravity,                SID, TID, NonFatal, &RT.Gravity,                1, NonFatal );
    LoadField( "Comoving",               &RS.Comoving,               SID, TID, NonFatal, &RT.Comoving,               1,    Fatal );
    LoadField( "Particle",               &RS.Particle,               SID, TID, NonFatal, &RT.Particle,               1, NonFatal );
 
@@ -1827,7 +1827,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Dt__Phase",               &RS.Dt__Phase,               SID, TID, NonFatal, &RT.Dt__Phase,                1, NonFatal );
 #  if ( ELBDM_SCHEME == HYBRID )
    LoadField( "Dt__Velocity",            &RS.Dt__Velocity,            SID, TID, NonFatal, &RT.Dt__Velocity,             1, NonFatal );
-   LoadField( "Dt__Hybrid",              &RS.Dt__Hybrid,              SID, TID, NonFatal, &RT.Dt__Hybrid,              .4, NonFatal );
+   LoadField( "Dt__Hybrid",              &RS.Dt__Hybrid,              SID, TID, NonFatal, &RT.Dt__Hybrid,               1, NonFatal );
 #  endif // # if ( ELBDM_SCHEME == HYBRID )
 #  endif
 #  ifdef PARTICLE

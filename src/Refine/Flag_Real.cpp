@@ -125,7 +125,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    if ( OPT__FLAG_INTERFERENCE )
    {
 #     if ( ELBDM_SCHEME == HYBRID )
-      if (  amr->use_wave_flag[lv] ) {
+      if ( amr->use_wave_flag[lv] ) {
 #     endif // # if ( ELBDM_SCHEME == HYBRID )
          Interf_NVar = 3;
          Interf_TVar = _DENS | _REAL | _IMAG;   

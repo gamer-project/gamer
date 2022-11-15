@@ -18,6 +18,18 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 
 
 
+struct global_patch_t
+{
+   int    corner[3];
+   int    sibling[26];
+   int    father;
+   int    son;
+   long   LB_Idx;
+   int    level; 
+#  ifdef PARTICLE
+   int    NPar;
+#  endif 
+};
 
 //-------------------------------------------------------------------------------------------------------
 // Structure   :  patch_t

@@ -111,6 +111,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 // convert between phase/dens and re/im 
    const bool convertWaveToFluid = (amr->use_wave_flag[FaLv] == false && amr->use_wave_flag[SonLv] == true );
+   //printf("rank = %d, wave to fluid from lv %d to lv %d = %d with %d sons\n", MPI_Rank, FaLv, SonLv, convertWaveToFluid, amr->NPatchComma[SonLv][1]); 
 #  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 // restrict
@@ -177,6 +178,8 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
          {
             const int TFluVarIdx = TFluVarIdxList[v];
 
+            //if ( MPI_Rank == 1) printf("Rank 1: Start converting v = %d\n", v);
+
 #           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
             if (convertWaveToFluid && (TFluVarIdx == REAL || TFluVarIdx == IMAG)) {
 
@@ -185,11 +188,11 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
                   real (*NewPhasFaPtr)[PS1][PS1]  = amr->patch[  FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
                   real (*OldPhasFaPtr)[PS1][PS1]  = amr->patch[1-FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
+                  real (*OldDensFaPtr)[PS1][PS1]  = amr->patch[1-FaFluSg][ FaLv][ FaPID]->fluid[DENS];
                   real (*StubFaPtr)[PS1][PS1]     = amr->patch[  FaFluSg][ FaLv][ FaPID]->fluid[STUB];
 
-                  //Handle that we do not have data of previous time step during initialisation corresponding to a negative time
-                  if ( amr->FluSgTime[FaLv][ 1-FaFluSg ] < 0 ) {
-                     Aux_Message(stderr, "WARNING: We access 1-FaFluSg in fixup!\n");
+//                handle that we do not have data of previous time step during initialisation corresponding to a negative time
+                  if ( amr->FluSgTime[FaLv][ 1 - FaFluSg ] < 0 ) {
                      OldPhasFaPtr = NewPhasFaPtr;
                   }
             
@@ -199,6 +202,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
             for (int k=0; k<PS1_half; k++)  {  K = k*2;  Kp = K+1;  kk = k + Disp_k;
             for (int j=0; j<PS1_half; j++)  {  J = j*2;  Jp = J+1;  jj = j + Disp_j;
             for (int i=0; i<PS1_half; i++)  {  I = i*2;  Ip = I+1;  ii = i + Disp_i;
+
 
                if (TFluVarIdx == REAL) {
                   re = 0.125*( RealSonPtr[K ][J ][I ] + RealSonPtr[K ][J ][Ip] +
@@ -210,7 +214,9 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                                ImagSonPtr[K ][Jp][Ip] + ImagSonPtr[Kp][Jp][I ] +
                                ImagSonPtr[Kp][J ][Ip] + ImagSonPtr[Kp][Jp][Ip] );
 
-                  NewPhasFaPtr[kk][jj][ii] = ELBDM_UnwrapPhase(OldPhasFaPtr[kk][jj][ii], SATAN2(im, re));
+                  //if ( MPI_Rank == 1) printf("k %d j %d i %d old phase %f new phase %f after: %f old stub %f old dens %f\n", k, j, i, OldPhasFaPtr[kk][jj][ii], SATAN2(im, re), ELBDM_UnwrapPhase(OldPhasFaPtr[kk][jj][ii], SATAN2(im, re)), StubFaPtr[kk][jj][ii], OldDensFaPtr[kk][jj][ii]);
+
+                  NewPhasFaPtr[kk][jj][ii] =  ELBDM_UnwrapPhase(OldPhasFaPtr[kk][jj][ii], SATAN2(im, re));
                }
 
                if (TFluVarIdx == IMAG) {
@@ -242,7 +248,10 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
             } // if (convertWaveToFluid && (TFluVarIdx == REAL || TFluVarIdx == IMAG)) ... else 
 #           endif 
+
+            //if ( MPI_Rank == 1) printf("Rank 1: Done with patch v = %d\n", v);
          } // if ( ResFlu )
+
 
 
 //       restrict the potential data
@@ -330,6 +339,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #        endif // ifdef MHD
       } // for (int LocalID=0; LocalID<8; LocalID++)
 
+      //printf("rank = %d, done converting 8 sons!\n", MPI_Rank); 
 
 //    apply the same B field restriction to the data of father-sibling patches on the coarse-fine boundaries
 #     ifdef MHD
@@ -434,6 +444,9 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
       }
 
 #     if ( ELBDM_SCHEME == HYBRID )
+
+
+      //printf("rank = %d, done rescaling 8 sons!\n", MPI_Rank); 
       } // if ( amr->use_wave_flag[FaLv] )
 #     endif // # if ( ELBDM_SCHEME == HYBRID )
 #     endif

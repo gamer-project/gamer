@@ -72,9 +72,9 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       //if (FlagInterferenceOne) {
       //   Aux_Message( stdout, "Information: QP Interfence on level %d at i %d j %d k %d\n", lv, i, j, k);
       //}      
-      if (FlagInterferenceTwo) {
-         Aux_Message( stdout, "Information: Phase Interfence on lv %d PID %d i %d j %d k %d\n", lv, PID,  i, j, k);
-      }
+      //if (FlagInterferenceTwo) {
+      //   Aux_Message( stdout, "Information: Phase Interfence on lv %d PID %d i %d j %d k %d\n", lv, PID,  i, j, k);
+      //}
 #     endif 
 
       Flag |= FlagInterferenceOne;
@@ -98,7 +98,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
                coordinates[l] += amr->patch[0][lv][PID]->corner[l];
             }
 
-            Aux_Message( stdout, "Information: Interference but phase difference at lv %d i %d j %d k %d = %4.2f\n", lv, coordinates[0], coordinates[1], coordinates[2], PhaseDifference);
+            //Aux_Message( stdout, "Information: Interference but phase difference at lv %d i %d j %d k %d = %4.2f\n", lv, coordinates[0], coordinates[1], coordinates[2], PhaseDifference);
          }
 
 #        if ( ELBDM_SCHEME == HYBRID )

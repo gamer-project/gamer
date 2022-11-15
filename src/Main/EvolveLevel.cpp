@@ -1,5 +1,8 @@
 #include "GAMER.h"
 
+#include <sstream>
+#include <string>
+
 #ifdef TIMING
 extern Timer_t *Timer_dt         [NLEVEL];
 extern Timer_t *Timer_Flu_Advance[NLEVEL];
@@ -20,6 +23,10 @@ extern Timer_t *Timer_Par_2Son   [NLEVEL];
 bool AutoReduceDt_Continue;
 
 extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TimeNew, const double dt );
+
+int master_counter = 0;
+
+const bool OPT__OUTPUT_DEBUG = false;
 
 
 
@@ -291,6 +298,17 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 // ===============================================================================================
 
 
+      std::stringstream ss;
+      std::string fname;
+
+      if ( OPT__OUTPUT_DEBUG ) {
+         ss.str("");
+         printf("master counter %d level %d and before advancing gravity\n", master_counter,lv);
+         ss<<"t_"<<master_counter++;
+         fname = ss.str();
+         Output_DumpData_Total_HDF5(fname.c_str());
+      }
+
 //    4. Poisson + gravity solver
 // ===============================================================================================
 #     ifdef GRAVITY
@@ -382,6 +400,14 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 #     endif // #ifdef GRAVITY
 // ===============================================================================================
+
+      if ( OPT__OUTPUT_DEBUG ) {
+         ss.str("");
+         printf("master counter %d level %d and after advancing gravity\n", master_counter,lv);
+         ss<<"t_"<<master_counter++;
+         fname = ss.str();
+         Output_DumpData_Total_HDF5(fname.c_str());
+      }
 
 
 //    5. correct particles velocity and send particles to lv+1
@@ -580,15 +606,27 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //       8-1. use the average data on fine grids to correct the coarse-grid data
          if ( OPT__FIXUP_RESTRICT )
          {
+//#           ifdef LOAD_BALANCE
+//            LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], amr->PotSg[lv], DATA_GENERAL,
+//                                             _TOTAL, _MAG, PATCH_SIZE );
+//            LB_GetBufferData( lv, 1-amr->FluSg[lv], 1-amr->MagSg[lv], 1-amr->PotSg[lv], DATA_GENERAL,
+//                                             _TOTAL, _MAG, PATCH_SIZE );
+//#           endif
+
             TIMING_FUNC(   Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv],
                                                NULL_INT, NULL_INT, _TOTAL, _MAG ),
                            Timer_FixUp[lv],   TIMER_ON   );
 
+//            if ( OPT__VERBOSE && MPI_Rank == 0 )    Aux_Message( stdout, "Restriction done on rank %d ... \n", MPI_Rank);
+//
+//            MPI_Barrier( MPI_COMM_WORLD );
+//
 #           ifdef LOAD_BALANCE
             TIMING_FUNC(   LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT,
                                              _TOTAL, _MAG, NULL_INT ),
                            Timer_GetBuf[lv][7],   TIMER_ON   );
 #           endif
+//            if ( OPT__VERBOSE && MPI_Rank == 0 )    Aux_Message( stdout, "LB_GetBufferData done on rank %d... \n" , MPI_Rank);
          }
 
 //       8-2. use the fine-grid electric field on the coarse-fine boundaries to correct the coarse-grid magnetic field
@@ -621,6 +659,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                            Timer_FixUp[lv],   TIMER_ON   );
          }
 
+         //if ( OPT__VERBOSE && MPI_Rank == 0)    Aux_Message( stdout, "Exchanging updated data on rank %d... " , MPI_Rank);
 //       8-4. exchange the updated data
 #        ifdef MHD
          if ( OPT__FIXUP_FLUX  ||  OPT__FIXUP_RESTRICT  ||  OPT__FIXUP_ELECTRIC )
@@ -631,7 +670,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                                            _TOTAL, _MAG, Flu_ParaBuf, USELB_YES  ),
                         Timer_GetBuf[lv][3],   TIMER_ON   );
 
-         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+         if ( OPT__VERBOSE && MPI_Rank == 0)    Aux_Message( stdout, "done\n");
 // ===============================================================================================
 
       } // if ( lv != TOP_LEVEL  &&  NPatchTotal[lv+1] != 0 )
@@ -674,8 +713,11 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #        endif
 
 #        ifdef LOAD_BALANCE
-         TIMING_FUNC(   Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_AFTER_REFINE,
-                                           _TOTAL, _MAG, Flu_ParaBuf, USELB_YES ),
+         TIMING_FUNC(   Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL,
+                                           _TOTAL, _MAG, PATCH_SIZE, USELB_YES ),
+                        Timer_GetBuf[lv][4],   TIMER_ON   );
+         TIMING_FUNC(   Buf_GetBufferData( lv,1-amr->FluSg[lv], 1-amr->MagSg[lv], NULL_INT, DATA_GENERAL,
+                                           _TOTAL, _MAG, PATCH_SIZE, USELB_YES ),
                         Timer_GetBuf[lv][4],   TIMER_ON   );
 #        ifdef GRAVITY
          if ( UsePot )
@@ -683,10 +725,13 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                                            _POTE, _NONE, Pot_ParaBuf, USELB_YES ),
                         Timer_GetBuf[lv][5],   TIMER_ON   );
 #        endif
-#        endif // #ifdef LOAD_BALANCE
+#        endif // #ifdef LOAD_BALANCEs
 
-         TIMING_FUNC(   Buf_GetBufferData( lv+1, amr->FluSg[lv+1], amr->MagSg[lv+1], NULL_INT, DATA_AFTER_REFINE,
-                                           _TOTAL, _MAG, Flu_ParaBuf, USELB_YES ),
+         TIMING_FUNC(   Buf_GetBufferData( lv+1, amr->FluSg[lv+1], amr->MagSg[lv+1], NULL_INT, DATA_GENERAL,
+                                           _TOTAL, _MAG, PATCH_SIZE, USELB_YES ),
+                        Timer_GetBuf[lv][4],   TIMER_ON   );
+         TIMING_FUNC(   Buf_GetBufferData( lv+1, 1-amr->FluSg[lv+1], 1-amr->MagSg[lv+1], NULL_INT, DATA_GENERAL,
+                                           _TOTAL, _MAG, PATCH_SIZE, USELB_YES ),
                         Timer_GetBuf[lv][4],   TIMER_ON   );
 #        ifdef GRAVITY
          if ( UsePot )
@@ -708,6 +753,32 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #        ifdef PARTICLE
          if ( OPT__PARTICLE_COUNT == 2 )  Par_Aux_Record_ParticleCount();
 #        endif
+
+
+//         if ( amr->use_wave_flag[lv + 1] && lv + 1 == 1) {
+//            int fluSg = amr->FluSg[lv + 1];
+//            int level = lv + 1; 
+//            for (int PID=0; PID<amr->NPatchComma[level][27]; PID++)
+//            { 
+//               if (amr->patch[fluSg][level][PID]->fluid == NULL || !amr->patch[fluSg][level][PID]->Active ) {
+//                  //printf("Encountered NULL FLUID at PID %d where the number of real patches is %d and the total number of patches is %d \n", PID, amr->NPatchComma[level][1], amr->NPatchComma[level][27]);
+//                  continue;
+//               }
+//
+////             fluid data
+//               for (int k=0; k<PS1; k++)  {
+//               for (int j=0; j<PS1; j++)  {
+//               for (int i=0; i<PS1; i++)  {
+//                  float stub = amr->patch[fluSg][level][PID]->fluid[STUB][k][j][i];
+//                  float phas = amr->patch[fluSg][level][PID]->fluid[PHAS][k][j][i];
+//                  if ( (FABS(stub) < 1e-6) && (FABS(phas)) > 1e-6 ) {
+//                     printf("Printing PID %d on rank %d where PID is Buffer = %d and value of PHAS is %f and STUB is %f\n", PID, MPI_Rank, PID >= amr->NPatchComma[level][1], phas, stub);
+//                  }
+//               }}}
+//            } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+//
+//         } 
+      
 
       } // if ( lv != TOP_LEVEL  &&  AdvanceCounter[lv] % REGRID_COUNT == 0 )
 // ===============================================================================================
