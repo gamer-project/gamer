@@ -187,6 +187,15 @@ void Output_DumpData( const int Stage )
    int    OutputData_Walltime = false;
    double ElapsedWalltime     = Timer_OutputWalltime.GetValue();
 
+   switch ( OUTPUT_WALLTIME_UNIT )
+   {
+      case 0 :                               break;
+      case 1 : ElapsedWalltime /=    60.0;   break;
+      case 2 : ElapsedWalltime /=  3600.0;   break;
+      case 3 : ElapsedWalltime /= 86400.0;   break;
+      default: Aux_Error( ERROR_INFO, "unsupported unit for output walltime !!\n" );
+   }
+
 #  ifndef SERIAL
    MPI_Allreduce( MPI_IN_PLACE, &ElapsedWalltime, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
 #  endif

@@ -720,16 +720,6 @@ void Init_ResetParameter()
 #  endif
 
 
-   switch ( OUTPUT_WALLTIME_UNIT )
-   {
-      case ( 0 ):                                 break;
-      case ( 1 ):   OUTPUT_WALLTIME *=    60.0;   break;
-      case ( 2 ):   OUTPUT_WALLTIME *=  3600.0;   break;
-      case ( 3 ):   OUTPUT_WALLTIME *= 86400.0;   break;
-      default: Aux_Error( ERROR_INFO, "unsupported unit for output walltime !!\n" );
-   }
-
-
 // reset MPI_NRank_X
 #  ifdef SERIAL
    for (int d=0; d<3; d++)
