@@ -826,6 +826,7 @@ void Aux_TakeNote()
       fprintf( Note, "Parameters of Domain Refinement\n" );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "REGRID_COUNT                    %d\n",      REGRID_COUNT              );
+      fprintf( Note, "REFINE_NLEVEL                   %d\n",      REFINE_NLEVEL             );
       fprintf( Note, "FLAG_BUFFER_SIZE                %d\n",      FLAG_BUFFER_SIZE          );
       fprintf( Note, "FLAG_BUFFER_SIZE_MAXM1_LV       %d\n",      FLAG_BUFFER_SIZE_MAXM1_LV );
       fprintf( Note, "FLAG_BUFFER_SIZE_MAXM2_LV       %d\n",      FLAG_BUFFER_SIZE_MAXM2_LV );
