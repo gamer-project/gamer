@@ -216,7 +216,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
                   //if ( MPI_Rank == 1) printf("k %d j %d i %d old phase %f new phase %f after: %f old stub %f old dens %f\n", k, j, i, OldPhasFaPtr[kk][jj][ii], SATAN2(im, re), ELBDM_UnwrapPhase(OldPhasFaPtr[kk][jj][ii], SATAN2(im, re)), StubFaPtr[kk][jj][ii], OldDensFaPtr[kk][jj][ii]);
 
-                  NewPhasFaPtr[kk][jj][ii] =  ELBDM_UnwrapPhase(OldPhasFaPtr[kk][jj][ii], SATAN2(im, re));
+                  NewPhasFaPtr[kk][jj][ii] =  SATAN2(im, re);//ELBDM_UnwrapPhase(OldPhasFaPtr[kk][jj][ii], SATAN2(im, re));
                }
 
                if (TFluVarIdx == IMAG) {
