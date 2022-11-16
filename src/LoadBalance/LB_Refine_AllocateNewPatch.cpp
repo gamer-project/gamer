@@ -966,9 +966,9 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 //    adopt INT_PRIM_NO to ensure conservation
 //    use NCOMP_TOTAL - 1 because there is no need to interpolate the stub field
       Interpolate( CData_Flu, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[0][0][0][0],
-                  FSize_CC3, FStart_CC, NCOMP_TOTAL, OPT__REF_FLU_INT_SCHEME,
+                  FSize_CC3, FStart_CC, NCOMP_TOTAL - 1, OPT__REF_FLU_INT_SCHEME,
                   PhaseUnwrapping_No, Monotonicity,
-                  INT_OPP_SIGN_0TH_ORDER, ALL_CONS_YES, INT_PRIM_NO, INT_REDUCE_MONO_COEFF );
+                  INT_OPP_SIGN_0TH_ORDER, ALL_CONS_YES, INT_PRIM_NO, INT_REDUCE_MONO_COEFF, NULL, NULL );
    }
 #  endif // #if ( ELBDM_SCHEME == HYBRID )
 
