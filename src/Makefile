@@ -40,7 +40,6 @@ SIMU_OPTION += -DMODEL=ELBDM
 SIMU_OPTION += -DGRAVITY
 
 # enable particles
-# --> must enable GRAVITY
 #SIMU_OPTION += -DPARTICLE
 
 # support Grackle, a chemistry and radiative cooling library
@@ -135,7 +134,6 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 #SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # comoving frame for cosmological simulations
-# --> not supported for PARTICLE
 #SIMU_OPTION += -DCOMOVING
 endif # GRAVITY
 
@@ -143,6 +141,9 @@ endif # GRAVITY
 # (b-4) particle options
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DPARTICLE, $(SIMU_OPTION))" "-DPARTICLE"
+# enable tracer particles
+#SIMU_OPTION += -DTRACER
+
 # store particle acceleration (recommended)
 SIMU_OPTION += -DSTORE_PAR_ACC
 
@@ -165,6 +166,10 @@ SIMU_OPTION += -DNLEVEL=10
 # maximum number of patches on each AMR level
 # --> must be set in any cases
 SIMU_OPTION += -DMAX_PATCH=1000000
+
+# number of cells along each direction in a single patch
+# --> must be an even number greater than or equal to 8
+SIMU_OPTION += -DPATCH_SIZE=8
 
 # GPU acceleration
 # --> must set GPU_ARCH as well
@@ -216,7 +221,7 @@ SIMU_OPTION += -DSUPPORT_HDF5
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT
 
-# use patch group as unit in libyt, this will speed up inline-analysis, but will increase memory consumption
+# use patch group as the unit in libyt; this will speed up inline-analysis but increase memory consumption
 # --> must enable SUPPORT_LIBYT
 #SIMU_OPTION += -DLIBYT_USE_PATCH_GROUP
 
@@ -240,9 +245,10 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #CXXFLAG     = -g -O3 -std=c++11                          # general flags
 ##CXXFLAG     = -g -O3 -std=c++11 #-gxx-name=YOUR_G++
 ##CXXFLAG     = -g -fast
-#CXXFLAG    += -w1                                       # warning flags
-#OPENMPFLAG  = -fopenmp                                  # openmp flag
-#LIB         = -limf                                     # libraries and linker flags
+# CXXFLAG    += -w1                                       # warning flags
+# CXXFLAG    += -fp-model precise                         # disable optimizations that are not value-safe
+# OPENMPFLAG  = -fopenmp                                  # openmp flag
+# LIB         = -limf                                     # libraries and linker flags
 #
 ## for debug only
 #ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
@@ -265,12 +271,13 @@ CXX         = mpicxx                    # MPI compiler
 #CXXFLAG      = -g -O3                                         # general flags
 CXXFLAG     = -std=c++11 -O3 -DOMPI_SKIP_MPICXX
 #CXXFLAG     = -g -Ofast
-#CXXFLAG    += -Wall -Wextra                             # warning flags
-#CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
-              -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
-              -Wno-unused-result -Wno-unused-function
-OPENMPFLAG  = -fopenmp                                  # openmp flag
-LIB         =                                           # libraries and linker flags
+ CXXFLAG    += -Wall -Wextra                             # warning flags
+ CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
+               -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
+               -Wno-unused-result -Wno-unused-function \
+	       -Wno-implicit-fallthrough -Wno-parentheses
+ OPENMPFLAG  = -fopenmp                                  # openmp flag
+ LIB         =                                           # libraries and linker flags
 
 # for debug only
 ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
@@ -415,7 +422,7 @@ LIBYT_PATH   :=
 #MPI_PATH     := /cluster/intel-2022.1/openmpi-4.1.2
 #HDF5_PATH    := /cluster/intel-2022.1/hdf5-1.10.8_openmpi4
 #GRACKLE_PATH :=
-#GSL_PATH     :=
+#GSL_PATH     := /usr
 #LIBYT_PATH   :=
 
 
@@ -463,7 +470,8 @@ CPU_FILE    += Interpolate.cpp  Int_CQuadratic.cpp  Int_MinMod1D.cpp  Int_MinMod
 CPU_FILE    += Mis_CompareRealValue.cpp  Mis_GetTotalPatchNumber.cpp  Mis_GetTimeStep.cpp  Mis_Heapsort.cpp \
                Mis_BinarySearch.cpp  Mis_1D3DIdx.cpp  Mis_Matching.cpp  Mis_GetTimeStep_User.cpp \
                Mis_dTime2dt.cpp  Mis_CoordinateTransform.cpp  Mis_BinarySearch_Real.cpp  Mis_InterpolateFromTable.cpp \
-               CPU_dtSolver.cpp  dt_Prepare_Flu.cpp  dt_Prepare_Pot.cpp  dt_Close.cpp  dt_InvokeSolver.cpp
+               CPU_dtSolver.cpp  dt_Prepare_Flu.cpp  dt_Prepare_Pot.cpp  dt_Close.cpp  dt_InvokeSolver.cpp \
+               Mis_UserWorkBeforeNextLevel.cpp  Mis_UserWorkBeforeNextSubstep.cpp
 
 CPU_FILE    += Output_DumpData_Total.cpp  Output_DumpData.cpp  Output_DumpManually.cpp  Output_PatchMap.cpp \
                Output_DumpData_Part.cpp  Output_FlagMap.cpp  Output_Patch.cpp  Output_PreparedPatch_Fluid.cpp \
@@ -494,7 +502,7 @@ CPU_FILE    += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_MHM.cpp  CPU_FluidSolve
 
 CPU_FILE    += Hydro_Init_ByFunction_AssignData.cpp  Hydro_Aux_Check_Negative.cpp \
                Hydro_BoundaryCondition_Reflecting.cpp  Hydro_BoundaryCondition_Outflow.cpp \
-               EoS_Init.cpp  EoS_End.cpp
+               Hydro_BoundaryCondition_Diode.cpp  EoS_Init.cpp  EoS_End.cpp
 
 vpath %.cu     Model_Hydro/GPU_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal
 vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal
@@ -512,7 +520,8 @@ ifeq "$(filter -DMHD, $(SIMU_OPTION))" "-DMHD"
 CPU_FILE    += MHD_GetCellCenteredBInPatch.cpp  MHD_InterpolateBField.cpp  MHD_AllocateElectricArray.cpp \
                MHD_Aux_Check_InterfaceB.cpp  MHD_FixUp_Electric.cpp  MHD_Aux_Check_DivergenceB.cpp \
                MHD_BoundaryCondition_Outflow.cpp  MHD_BoundaryCondition_Reflecting.cpp  MHD_BoundaryCondition_User.cpp \
-               MHD_CopyPatchInterfaceBField.cpp MHD_Init_BField_ByFile.cpp
+               MHD_BoundaryCondition_Diode.cpp  MHD_CopyPatchInterfaceBField.cpp  MHD_Init_BField_ByFile.cpp \
+               MHD_SameInterfaceB.cpp
 
 CPU_FILE    += CPU_Shared_ConstrainedTransport.cpp  CPU_Shared_RiemannSolver_HLLD.cpp
 
@@ -553,7 +562,7 @@ GPU_FILE    += CUAPI_MemAllocate_PoissonGravity.cu  CUAPI_MemFree_PoissonGravity
                CUAPI_Asyn_PoissonGravitySolver.cu  CUAPI_SetConstMemory_ExtAccPot.cu \
                CUAPI_SendExtPotTable2GPU.cu
 
-GPU_FILE    += CUPOT_PoissonSolver_SOR_10to14cube.cu  CUPOT_PoissonSolver_SOR_16to18cube.cu \
+GPU_FILE    += CUPOT_PoissonSolver_SOR.cu \
                CUPOT_PoissonSolver_MG.cu  CUPOT_ExtAcc_PointMass.cu  CUPOT_ExtPot_PointMass.cu \
                CUPOT_ExtPotSolver.cu  CUPOT_ExtPot_Tabular.cu
 
@@ -586,7 +595,7 @@ CPU_FILE    += Par_Init_ByFunction.cpp  Par_Output_TextFile.cpp  Par_Output_Bina
                Par_Aux_InitCheck.cpp  Par_Aux_Record_ParticleCount.cpp  Par_PassParticle2Son_MultiPatch.cpp \
                Par_Synchronize.cpp  Par_PredictPos.cpp  Par_Init_ByFile.cpp  Par_Init_Attribute.cpp \
                Par_AddParticleAfterInit.cpp  Par_PassParticle2Son_SinglePatch.cpp  Par_EquilibriumIC.cpp \
-               Par_ScatterParticleData.cpp
+               Par_ScatterParticleData.cpp  Par_UpdateTracerParticle.cpp  Par_MapMesh2Particles.cpp
 
 vpath %.cu     Particle/GPU
 vpath %.cpp    Particle/CPU  Particle
@@ -922,6 +931,13 @@ NVCCFLAG_COM := $(strip $(NVCCFLAG_COM))
 NVCCFLAG_FLU := $(strip $(NVCCFLAG_FLU))
 NVCCFLAG_POT := $(strip $(NVCCFLAG_POT))
 GIT_INFO     := $(strip $(GIT_INFO))
+CUDA_PATH    := $(strip $(CUDA_PATH))
+FFTW_PATH    := $(strip $(FFTW_PATH))
+MPI_PATH     := $(strip $(MPI_PATH))
+HDF5_PATH    := $(strip $(HDF5_PATH))
+GRACKLE_PATH := $(strip $(GRACKLE_PATH))
+GSL_PATH     := $(strip $(GSL_PATH))
+LIBYT_PATH   := $(strip $(LIBYT_PATH))
 
 
 # implicit rules (do NOT modify the order of the following rules)

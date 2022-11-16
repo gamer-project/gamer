@@ -62,11 +62,12 @@ real GetMaxPot( const int lv )
    real   Pot, MaxPot=0.0;       // Pot = PotG + PotS
    double x0, y0, z0, x, y, z;
    int    SibPID;
-   bool   Skip;
+   bool   Skip, AnyCell=false;
 
 
 // get the maximum potential in this rank
-#  pragma omp parallel for private( PotG, PotS, Pot, x0, y0, z0, x, y, z, SibPID, Skip ) reduction( max:MaxPot ) schedule( runtime )
+#  pragma omp parallel for private( PotG, PotS, Pot, x0, y0, z0, x, y, z, SibPID, Skip ) \
+                           reduction( max:MaxPot ) reduction( ||:AnyCell ) schedule( runtime )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
 //    skip all non-leaf patches not adjacent to any coarse-fine boundaries (since their data are useless)
@@ -97,6 +98,7 @@ real GetMaxPot( const int lv )
       } // if ( amr->patch[0][lv][PID]->son == -1 ) ... else ...
 
       if ( Skip )    continue;
+      else           AnyCell = true;
 
 
 //    calculate the potential
@@ -125,16 +127,18 @@ real GetMaxPot( const int lv )
 
 // get the maximum potential in all ranks
    real MaxPot_AllRank;
+   bool AnyCell_AllRank;
 #  ifdef FLOAT8
    MPI_Allreduce( &MaxPot, &MaxPot_AllRank, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
 #  else
    MPI_Allreduce( &MaxPot, &MaxPot_AllRank, 1, MPI_FLOAT,  MPI_MAX, MPI_COMM_WORLD );
 #  endif
+   MPI_Reduce( &AnyCell, &AnyCell_AllRank, 1, MPI_C_BOOL, MPI_LOR, 0, MPI_COMM_WORLD );
 
 
 // check
-   if ( MaxPot_AllRank == 0.0  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MaxPot == 0.0 at lv %d !!\n", lv );
+   if ( MaxPot_AllRank == 0.0  &&  AnyCell  &&  MPI_Rank == 0 )
+      Aux_Error( ERROR_INFO, "MaxPot == 0.0 at lv %d !!\n", lv );
 
 
    return MaxPot_AllRank;

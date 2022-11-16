@@ -1382,14 +1382,16 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       } // for (int p=0; p<NParThisPatch )
 
 //    link particles to this patch
+      const real *PType = amr->Par->Type;
 #     ifdef DEBUG_PARTICLE
       const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
       char Comment[MAX_STRING];
       sprintf( Comment, "%s, lv %d, PID %d, GID %d, NPar %d", __FUNCTION__, lv, PID, GID, NParThisPatch );
       amr->patch[0][lv][PID]->AddParticle( NParThisPatch, NewParList, &amr->Par->NPar_Lv[lv],
-                                           ParPos, amr->Par->NPar_AcPlusInac, Comment );
+                                           PType, ParPos, amr->Par->NPar_AcPlusInac, Comment );
 #     else
-      amr->patch[0][lv][PID]->AddParticle( NParThisPatch, NewParList, &amr->Par->NPar_Lv[lv] );
+      amr->patch[0][lv][PID]->AddParticle( NParThisPatch, NewParList, &amr->Par->NPar_Lv[lv],
+                                           PType );
 #     endif
 
 //    free resource
@@ -1483,6 +1485,10 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "Laohu",                  &RS.Laohu,                  SID, TID, NonFatal, &RT.Laohu,                  1, NonFatal );
    LoadField( "SupportHDF5",            &RS.SupportHDF5,            SID, TID, NonFatal, &RT.SupportHDF5,            1, NonFatal );
    LoadField( "SupportGSL",             &RS.SupportGSL,             SID, TID, NonFatal, &RT.SupportGSL,             1, NonFatal );
+   LoadField( "SupportLibYT",           &RS.SupportLibYT,           SID, TID, NonFatal, &RT.SupportLibYT,           1, NonFatal );
+#  ifdef SUPPORT_LIBYT
+   LoadField( "LibYTUsePatchGroup",     &RS.LibYTUsePatchGroup,     SID, TID, NonFatal, &RT.LibYTUsePatchGroup,     1, NonFatal );
+#  endif
    LoadField( "SupportGrackle",         &RS.SupportGrackle,         SID, TID, NonFatal, &RT.SupportGrackle,         1, NonFatal );
    LoadField( "RandomNumber",           &RS.RandomNumber,           SID, TID, NonFatal, &RT.RandomNumber,           1, NonFatal );
 
@@ -1519,6 +1525,8 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
 #  endif // MODEL
 
 #  ifdef PARTICLE
+   LoadField( "MassiveParticles",       &RS.MassiveParticles,       SID, TID, NonFatal, &RT.MassiveParticles,       1, NonFatal );
+   LoadField( "Tracer",                 &RS.Tracer,                 SID, TID, NonFatal, &RT.Tracer,                 1, NonFatal );
    LoadField( "StoreParAcc",            &RS.StoreParAcc,            SID, TID, NonFatal, &RT.StoreParAcc,            1, NonFatal );
    LoadField( "StarFormation",          &RS.StarFormation,          SID, TID, NonFatal, &RT.StarFormation,          1, NonFatal );
    if ( FormatVersion >= 2300 )
@@ -1623,7 +1631,6 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "ExtPotNGeneMax",       &RS.ExtPotNGeneMax,       SID, TID, NonFatal, &RT.ExtPotNGeneMax,        1, NonFatal );
 #  if   ( POT_SCHEME == SOR )
    LoadField( "Pot_BlockSize_z",      &RS.Pot_BlockSize_z,      SID, TID, NonFatal, &RT.Pot_BlockSize_z,       1, NonFatal );
-   LoadField( "UsePSolver_10to14",    &RS.UsePSolver_10to14,    SID, TID, NonFatal, &RT.UsePSolver_10to14,     1, NonFatal );
    LoadField( "SOR_RhoShared",        &RS.SOR_RhoShared,        SID, TID, NonFatal, &RT.SOR_RhoShared,         1, NonFatal );
    LoadField( "SOR_CPotShared",       &RS.SOR_CPotShared,       SID, TID, NonFatal, &RT.SOR_CPotShared,        1, NonFatal );
    LoadField( "SOR_UseShuffle",       &RS.SOR_UseShuffle,       SID, TID, NonFatal, &RT.SOR_UseShuffle,        1, NonFatal );
@@ -1639,16 +1646,20 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Par_NAttStored",       &RS.Par_NAttStored,       SID, TID, NonFatal, &RT.Par_NAttStored,        1,    Fatal );
    else
    LoadField( "Par_NAttStored",       &RS.Par_NAttStored,       SID, TID, NonFatal, &RT.Par_NAttStored,        1, NonFatal );
+   LoadField( "Par_NType",            &RS.Par_NType,            SID, TID, NonFatal, &RT.Par_NType,             1, NonFatal );
+#  ifdef GRAVITY
    LoadField( "RhoExt_GhostSize",     &RS.RhoExt_GhostSize,     SID, TID, NonFatal, &RT.RhoExt_GhostSize,      1, NonFatal );
+#  endif
    LoadField( "Debug_Particle",       &RS.Debug_Particle,       SID, TID, NonFatal, &RT.Debug_Particle,        1, NonFatal );
    LoadField( "ParList_GrowthFactor", &RS.ParList_GrowthFactor, SID, TID, NonFatal, &RT.ParList_GrowthFactor,  1, NonFatal );
    LoadField( "ParList_ReduceFactor", &RS.ParList_ReduceFactor, SID, TID, NonFatal, &RT.ParList_ReduceFactor,  1, NonFatal );
-#  endif
+#  endif // #ifdef PARTICLE
 
    LoadField( "BitRep_Flux",          &RS.BitRep_Flux,          SID, TID, NonFatal, &RT.BitRep_Flux,           1, NonFatal );
 #  ifdef MHD
    LoadField( "BitRep_Electric",      &RS.BitRep_Electric,      SID, TID, NonFatal, &RT.BitRep_Electric,       1, NonFatal );
 #  endif
+   LoadField( "InterpMask",           &RS.InterpMask,           SID, TID, NonFatal, &RT.InterpMask,            1, NonFatal );
 
 #  if   ( MODEL == HYDRO )
    LoadField( "Flu_BlockSize_x",      &RS.Flu_BlockSize_x,      SID, TID, NonFatal, &RT.Flu_BlockSize_x,       1, NonFatal );
@@ -1657,6 +1668,7 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "CharReconstruction",   &RS.CharReconstruction,   SID, TID, NonFatal, &RT.CharReconstruction,    1, NonFatal );
    LoadField( "LR_Eint",              &RS.LR_Eint,              SID, TID, NonFatal, &RT.LR_Eint,               1, NonFatal );
    LoadField( "CheckIntermediate",    &RS.CheckIntermediate,    SID, TID, NonFatal, &RT.CheckIntermediate,     1, NonFatal );
+   LoadField( "RSolverRescue",        &RS.RSolverRescue,        SID, TID, NonFatal, &RT.RSolverRescue,         1, NonFatal );
    LoadField( "HLL_NoRefState",       &RS.HLL_NoRefState,       SID, TID, NonFatal, &RT.HLL_NoRefState,        1, NonFatal );
    LoadField( "HLL_IncludeAllWaves",  &RS.HLL_IncludeAllWaves,  SID, TID, NonFatal, &RT.HLL_IncludeAllWaves,   1, NonFatal );
    LoadField( "HLLC_WaveSpeed",       &RS.HLLC_WaveSpeed,       SID, TID, NonFatal, &RT.HLLC_WaveSpeed,        1, NonFatal );
@@ -1800,13 +1812,18 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Par_Init",                &RS.Par_Init,                SID, TID, NonFatal, &RT.Par_Init,                 1, NonFatal );
    LoadField( "Par_ICFormat",            &RS.Par_ICFormat,            SID, TID, NonFatal, &RT.Par_ICFormat,             1, NonFatal );
    LoadField( "Par_ICMass",              &RS.Par_ICMass,              SID, TID, NonFatal, &RT.Par_ICMass,               1, NonFatal );
+   LoadField( "Par_ICType",              &RS.Par_ICType,              SID, TID, NonFatal, &RT.Par_ICType,               1, NonFatal );
    LoadField( "Par_Interp",              &RS.Par_Interp,              SID, TID, NonFatal, &RT.Par_Interp,               1, NonFatal );
+   LoadField( "Par_InterpTracer",        &RS.Par_InterpTracer,        SID, TID, NonFatal, &RT.Par_InterpTracer,         1, NonFatal );
    LoadField( "Par_Integ",               &RS.Par_Integ,               SID, TID, NonFatal, &RT.Par_Integ,                1, NonFatal );
+   LoadField( "Par_IntegTracer",         &RS.Par_IntegTracer,         SID, TID, NonFatal, &RT.Par_IntegTracer,          1, NonFatal );
    LoadField( "Par_ImproveAcc",          &RS.Par_ImproveAcc,          SID, TID, NonFatal, &RT.Par_ImproveAcc,           1, NonFatal );
    LoadField( "Par_PredictPos",          &RS.Par_PredictPos,          SID, TID, NonFatal, &RT.Par_PredictPos,           1, NonFatal );
    LoadField( "Par_RemoveCell",          &RS.Par_RemoveCell,          SID, TID, NonFatal, &RT.Par_RemoveCell,           1, NonFatal );
    LoadField( "Opt__FreezePar",          &RS.Opt__FreezePar,          SID, TID, NonFatal, &RT.Opt__FreezePar,           1, NonFatal );
    LoadField( "Par_GhostSize",           &RS.Par_GhostSize,           SID, TID, NonFatal, &RT.Par_GhostSize,            1, NonFatal );
+   LoadField( "Par_GhostSizeTracer",     &RS.Par_GhostSizeTracer,     SID, TID, NonFatal, &RT.Par_GhostSizeTracer,      1, NonFatal );
+   LoadField( "Par_TracerVelCorr",       &RS.Par_TracerVelCorr,       SID, TID, NonFatal, &RT.Par_TracerVelCorr,        1, NonFatal );
 #  endif
 
 // cosmology
@@ -1846,6 +1863,12 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "AutoReduceDt",            &RS.AutoReduceDt,            SID, TID, NonFatal, &RT.AutoReduceDt,             1, NonFatal );
    LoadField( "AutoReduceDtFactor",      &RS.AutoReduceDtFactor,      SID, TID, NonFatal, &RT.AutoReduceDtFactor,       1, NonFatal );
    LoadField( "AutoReduceDtFactorMin",   &RS.AutoReduceDtFactorMin,   SID, TID, NonFatal, &RT.AutoReduceDtFactorMin,    1, NonFatal );
+#  if ( MODEL == HYDRO )
+   LoadField( "AutoReduceMinModFactor",  &RS.AutoReduceMinModFactor,  SID, TID, NonFatal, &RT.AutoReduceMinModFactor,   1, NonFatal );
+   LoadField( "AutoReduceMinModMin",     &RS.AutoReduceMinModMin,     SID, TID, NonFatal, &RT.AutoReduceMinModMin,      1, NonFatal );
+#  endif
+   LoadField( "AutoReduceIntMonoFactor", &RS.AutoReduceIntMonoFactor, SID, TID, NonFatal, &RT.AutoReduceIntMonoFactor,  1, NonFatal );
+   LoadField( "AutoReduceIntMonoMin",    &RS.AutoReduceIntMonoMin,    SID, TID, NonFatal, &RT.AutoReduceIntMonoMin,     1, NonFatal );
 
 
 // domain refinement
@@ -1911,7 +1934,13 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__LR_Limiter",         &RS.Opt__LR_Limiter,         SID, TID, NonFatal, &RT.Opt__LR_Limiter,          1, NonFatal );
    LoadField( "Opt__1stFluxCorr",        &RS.Opt__1stFluxCorr,        SID, TID, NonFatal, &RT.Opt__1stFluxCorr,         1, NonFatal );
    LoadField( "Opt__1stFluxCorrScheme",  &RS.Opt__1stFluxCorrScheme,  SID, TID, NonFatal, &RT.Opt__1stFluxCorrScheme,   1, NonFatal );
+#  ifdef DUAL_ENERGY
+   LoadField( "DualEnergySwitch",        &RS.DualEnergySwitch,        SID, TID, NonFatal, &RT.DualEnergySwitch,         1, NonFatal );
 #  endif
+#  ifdef MHD
+   LoadField( "Opt__SameInterfaceB",     &RS.Opt__SameInterfaceB,     SID, TID, NonFatal, &RT.Opt__SameInterfaceB,      1, NonFatal );
+#  endif
+#  endif // HYDRO
 
 // ELBDM solvers
 #  if ( MODEL == ELBDM )
@@ -1923,7 +1952,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "ELBDM_Taylor3_Coeff",     &RS.ELBDM_Taylor3_Coeff,     SID, TID, NonFatal, &RT.ELBDM_Taylor3_Coeff,      1, NonFatal );
    LoadField( "ELBDM_Taylor3_Auto",      &RS.ELBDM_Taylor3_Auto,      SID, TID, NonFatal, &RT.ELBDM_Taylor3_Auto,       1, NonFatal );
    LoadField( "ELBDM_RemoveMotionCM",    &RS.ELBDM_RemoveMotionCM,    SID, TID, NonFatal, &RT.ELBDM_RemoveMotionCM,     1, NonFatal );
-#  endif
+#  endif // ELBDM
 
 // fluid solvers in both HYDRO/ELBDM
    LoadField( "Flu_GPU_NPGroup",         &RS.Flu_GPU_NPGroup,         SID, TID, NonFatal, &RT.Flu_GPU_NPGroup,          1, NonFatal );
@@ -1956,9 +1985,6 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "JeansMinPres",            &RS.JeansMinPres,            SID, TID, NonFatal, &RT.JeansMinPres,             1, NonFatal );
    LoadField( "JeansMinPres_Level",      &RS.JeansMinPres_Level,      SID, TID, NonFatal, &RT.JeansMinPres_Level,       1, NonFatal );
    LoadField( "JeansMinPres_NCell",      &RS.JeansMinPres_NCell,      SID, TID, NonFatal, &RT.JeansMinPres_NCell,       1, NonFatal );
-#  endif
-#  ifdef DUAL_ENERGY
-   LoadField( "DualEnergySwitch",        &RS.DualEnergySwitch,        SID, TID, NonFatal, &RT.DualEnergySwitch,         1, NonFatal );
 #  endif
 
 // self-gravity
@@ -2040,6 +2066,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 // interpolation schemes
    LoadField( "Opt__Int_Time",           &RS.Opt__Int_Time,           SID, TID, NonFatal, &RT.Opt__Int_Time,            1, NonFatal );
+#  if ( MODEL == HYDRO )
+   LoadField( "Opt__Int_Prim",           &RS.Opt__Int_Prim,           SID, TID, NonFatal, &RT.Opt__Int_Prim,            1, NonFatal );
+#  endif
 #  if ( MODEL == ELBDM )
    LoadField( "Opt__Int_Phase",          &RS.Opt__Int_Phase,          SID, TID, NonFatal, &RT.Opt__Int_Phase,           1, NonFatal );
 #  endif
@@ -2056,6 +2085,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__RefPot_IntScheme",   &RS.Opt__RefPot_IntScheme,   SID, TID, NonFatal, &RT.Opt__RefPot_IntScheme,    1, NonFatal );
 #  endif
    LoadField( "IntMonoCoeff",            &RS.IntMonoCoeff,            SID, TID, NonFatal, &RT.IntMonoCoeff,             1, NonFatal );
+#  ifdef MHD
+   LoadField( "IntMonoCoeffB",           &RS.IntMonoCoeffB,           SID, TID, NonFatal, &RT.IntMonoCoeffB,            1, NonFatal );
+#  endif
    LoadField( "Mono_MaxIter",            &RS.Mono_MaxIter,            SID, TID, NonFatal, &RT.Mono_MaxIter,             1, NonFatal );
    LoadField( "IntOppSign0thOrder",      &RS.IntOppSign0thOrder,      SID, TID, NonFatal, &RT.IntOppSign0thOrder,       1, NonFatal );
 
@@ -2096,6 +2128,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS ) {
 #  endif
    LoadField( "Opt__Output_Mode",        &RS.Opt__Output_Mode,        SID, TID, NonFatal, &RT.Opt__Output_Mode,         1, NonFatal );
+   LoadField( "Opt__Output_Restart",     &RS.Opt__Output_Restart,     SID, TID, NonFatal, &RT.Opt__Output_Restart,      1, NonFatal );
    LoadField( "Opt__Output_Step",        &RS.Opt__Output_Step,        SID, TID, NonFatal, &RT.Opt__Output_Step,         1, NonFatal );
    LoadField( "Opt__Output_Dt",          &RS.Opt__Output_Dt,          SID, TID, NonFatal, &RT.Opt__Output_Dt,           1, NonFatal );
    }
@@ -2139,6 +2172,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Ck_InterfaceB",      &RS.Opt__Ck_InterfaceB,      SID, TID, NonFatal, &RT.Opt__Ck_InterfaceB,       1, NonFatal );
    LoadField( "Opt__Ck_DivergenceB",     &RS.Opt__Ck_DivergenceB,     SID, TID, NonFatal, &RT.Opt__Ck_DivergenceB,      1, NonFatal );
 #  endif
+   LoadField( "Opt__Ck_InputFluid",      &RS.Opt__Ck_InputFluid,      SID, TID, NonFatal, &RT.Opt__Ck_InputFluid,       1, NonFatal );
 
 
 // flag tables
@@ -2157,7 +2191,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
       RS.FlagTable_Rho         [lv]    = -1.0;
       RS.FlagTable_RhoGradient [lv]    = -1.0;
 
-      for (int t=0; t<4; t++)
+      for (int t=0; t<5; t++)
       RS.FlagTable_Lohner      [lv][t] = -1.0;
 
       RS.FlagTable_User        [lv].p   = malloc( OPT__FLAG_USER_NUM*sizeof(double) );
@@ -2199,7 +2233,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "FlagTable_Lohner",         RS.FlagTable_Lohner,        SID, TID, NonFatal,  NullPtr,                    -1, NonFatal );
 
    for (int lv=0; lv<MAX_LEVEL; lv++)
-   for (int t=0; t<4; t++)
+   for (int t=0; t<5; t++)
    {
       if ( RS.FlagTable_Lohner[lv][t] != RT.FlagTable_Lohner[lv][t] )
          Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",

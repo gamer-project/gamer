@@ -1,6 +1,6 @@
 #include "CUPOT.h"
 #ifdef __CUDACC__
-#include "CUAPI.h"
+#include "CUDA_CheckError.h"
 #endif
 
 #ifdef GRAVITY
@@ -52,14 +52,15 @@ extern double BarredPot_Omegabar;
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  AuxArray_Flt/Int : Floating-point/Integer arrays to be filled up
+//                Time             : Target physical time
 //
 // Return      :  AuxArray_Flt/Int[]
 //-------------------------------------------------------------------------------------------------------
-void SetExtPotAuxArray_TabularP17( double AuxArray_Flt[], int AuxArray_Int[] )
+void SetExtPotAuxArray_TabularP17( double AuxArray_Flt[], int AuxArray_Int[], const double Time )
 {
 
 // floating-point parameters
-   AuxArray_Flt[0] = EXT_POT_TABLE_EDGEL[0];    // left-edge x/y/z coordinates of the table
+   AuxArray_Flt[0] = EXT_POT_TABLE_EDGEL[0];       // left-edge x/y/z coordinates of the table
    AuxArray_Flt[1] = EXT_POT_TABLE_EDGEL[1];
    AuxArray_Flt[2] = EXT_POT_TABLE_EDGEL[2];
    AuxArray_Flt[3] = 1.0 / EXT_POT_TABLE_DH[0];    // 1/dh
@@ -69,7 +70,7 @@ void SetExtPotAuxArray_TabularP17( double AuxArray_Flt[], int AuxArray_Int[] )
 
 
 // integer parameters
-   AuxArray_Int[0] = EXT_POT_TABLE_NPOINT[0];   // table sizes along x/y/z
+   AuxArray_Int[0] = EXT_POT_TABLE_NPOINT[0];      // table sizes along x/y/z
    AuxArray_Int[1] = EXT_POT_TABLE_NPOINT[1];
    AuxArray_Int[2] = EXT_POT_TABLE_NPOINT[2];
 
@@ -118,7 +119,6 @@ static real ExtPot_TabularP17( const double x, const double y, const double z, c
 
    const int    NPoint_x = UserArray_Int[0];
    const int    NPoint_y = UserArray_Int[1];
-   const int    NPoint_z = UserArray_Int[2];
    const int    didx_x   = 1;
    const int    didx_y   = NPoint_x;
    const int    didx_z   = NPoint_x*NPoint_y;
@@ -134,15 +134,13 @@ static real ExtPot_TabularP17( const double x, const double y, const double z, c
    real dx, dy, dz;
    real xp, yp, rad, dxrot, dyrot, angle;
 
-   xp     = (real)(x - cx);
-   yp     = (real)(y - cy);
-   rad    = (real)sqrt(SQR(xp) + SQR(yp));
+   xp  = (real)(x - cx);
+   yp  = (real)(y - cy);
+   rad = (real)sqrt(SQR(xp) + SQR(yp));
 
-   if (rad <= cx-0.1)
-
+   if ( rad <= cx-0.1 )
    {
 // 1. rotate x,y,z
-
      angle  =  -1.*Time*Omegab;
      dxrot  =  xp*cos(angle) - yp*sin(angle);
      dyrot  =  xp*sin(angle) + yp*cos(angle);
@@ -150,17 +148,16 @@ static real ExtPot_TabularP17( const double x, const double y, const double z, c
      dxrot += (real)cx;
      dyrot += (real)cy;
 
-   } else
+   }
+
+   else
    {
-
-     dxrot  =  (real)x;
-     dyrot  =  (real)y;
-
+     dxrot  = (real)x;
+     dyrot  = (real)y;
    }
 
 
 // 2. compute potential by trilinear interpolation
-
    dx    = real( ( dxrot - EdgeL_x )*_dhx );
    dy    = real( ( dyrot - EdgeL_y )*_dhy );
    dz    = real( (     z - EdgeL_z )*_dhz );
@@ -171,7 +168,6 @@ static real ExtPot_TabularP17( const double x, const double y, const double z, c
 
 // it should never happen even considering round-off errors!
 #  if ( defined GAMER_DEBUG  &&  !defined __CUDACC__ )
-
    if ( idx_x < 0  ||  idx_x+1 >= NPoint_x )
       Aux_Error( ERROR_INFO, "x index outside the table range (x %14.7e, EdgeL %14.7e, _dhx %13.7e, idx %d) !!\n",
                  x, EdgeL_x, _dhx, idx_x );
@@ -180,6 +176,7 @@ static real ExtPot_TabularP17( const double x, const double y, const double z, c
       Aux_Error( ERROR_INFO, "y index outside the table range (y %14.7e, EdgeL %14.7e, _dhy %13.7e, idx %d) !!\n",
                  y, EdgeL_y, _dhy, idx_y );
 
+   const int NPoint_z = UserArray_Int[2];
    if ( idx_z < 0  ||  idx_z+1 >= NPoint_z )
       Aux_Error( ERROR_INFO, "z index outside the table range (z %14.7e, EdgeL %14.7e, _dhz %13.7e, idx %d) !!\n",
                  z, EdgeL_z, _dhy, idx_z );
@@ -206,7 +203,6 @@ static real ExtPot_TabularP17( const double x, const double y, const double z, c
             PotTable[ idx0 + didx_x + didx_y + didx_z ] * weight_xR * weight_yR * weight_zR;
 
    return ExtPot;
-
 
 } // FUNCTION : ExtPot_Tabular
 
@@ -260,7 +256,7 @@ void SetCPUExtPot_TabularP17( ExtPot_t &CPUExtPot_Ptr )
 #ifndef __CUDACC__
 
 // local function prototypes
-void SetExtPotAuxArray_TabularP17( double [], int [] );
+void SetExtPotAuxArray_TabularP17( double [], int [], const double );
 void SetCPUExtPot_TabularP17( ExtPot_t & );
 #ifdef GPU
 void SetGPUExtPot_TabularP17( ExtPot_t & );
@@ -284,7 +280,7 @@ void SetGPUExtPot_TabularP17( ExtPot_t & );
 void Init_ExtPot_TabularP17()
 {
 
-   SetExtPotAuxArray_TabularP17( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int );
+   SetExtPotAuxArray_TabularP17( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int, Time[0] );
    SetCPUExtPot_TabularP17( CPUExtPot_Ptr );
 #  ifdef GPU
    SetGPUExtPot_TabularP17( GPUExtPot_Ptr );

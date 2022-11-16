@@ -128,8 +128,10 @@ void Aux_Check_PatchAllocate( const int lv, const char *comment )
                {
                   for (int d=0; d<3; d++)
                   {
-                     if (    amr->patch[0][lv][   PID]->corner[d] + TABLE_01( s, 'x'+d, -PScale, 0, PScale )
-                          != amr->patch[0][lv][SibPID]->corner[d]  )
+                     int corner_ck = amr->patch[0][lv][PID]->corner[d] + TABLE_01( s, 'x'+d, -PScale, 0, PScale );
+                         corner_ck = ( corner_ck + amr->BoxScale[d] ) % amr->BoxScale[d];    // take care of periodic BC
+
+                     if ( corner_ck != amr->patch[0][lv][SibPID]->corner[d] )
                      {
                         if ( Pass )
                         {

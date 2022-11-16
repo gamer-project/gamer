@@ -192,10 +192,10 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    {
       dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Phase( lv );
       sprintf( dTime_Name[NdTime++], "%s", "ELBDM_Phase" );
-   }
 
-// when fluid is freezed, disable this criterion by resetting it to a huge value
-   if ( OPT__FREEZE_FLUID )   dTime[NdTime-1] = HUGE_NUMBER;
+//    when fluid is freezed, disable this criterion by resetting it to a huge value
+      if ( OPT__FREEZE_FLUID )   dTime[NdTime-1] = HUGE_NUMBER;
+   }
 #  endif
 
 
@@ -207,7 +207,13 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    dTime[NdTime] *= dTime_dt;
    sprintf( dTime_Name[NdTime++], "%s", "Par_Vel" );
 
-   if ( DT__PARACC > 0.0 ) {
+#  ifdef MASSIVE_PARTICLES
+   const bool  UseAcc = ( DT__PARACC > 0.0 );
+#  else
+   const bool  UseAcc = false;
+#  endif
+
+   if ( UseAcc ) {
    dTime[NdTime] *= dTime_dt;
    sprintf( dTime_Name[NdTime++], "%s", "Par_Acc" ); }
 #  endif

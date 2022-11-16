@@ -149,14 +149,16 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 // collect particles to **real** patches at lv
 #  ifdef PARTICLE
    if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL )
-      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, PredictPos_No, NULL_REAL,
-                                    SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_No, TimingSendPar_No );
+      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos_No,
+                                    NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_No,
+                                    TimingSendPar_No );
 
 // Par_CollectParticle2OneLevel() with JustCountNPar_No will set NPar_Copy for each patch as well
 // --> so call Par_CollectParticle2OneLevel() with JustCountNPar_Yes only when OPT__FLAG_NPAR_CELL == false
    else if ( OPT__FLAG_NPAR_PATCH != 0 )
-      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, PredictPos_No, NULL_REAL,
-                                    SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_Yes, TimingSendPar_No );
+      Par_CollectParticle2OneLevel( lv, _NONE, PredictPos_No,
+                                    NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_Yes,
+                                    TimingSendPar_No );
 #  endif
 
 
@@ -428,7 +430,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                      if ( UseInputMassPos )
                      {
                         if ( InputMassPos[PAR_MASS] == NULL  ||  InputMassPos[PAR_POSX] == NULL  ||
-                             InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  )
+                             InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  ||
+                             InputMassPos[PAR_TYPE] == NULL )
                            Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
                                       NParThisPatch, lv, PID );
                      }
@@ -563,6 +566,38 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                   } // if ( NParThisPatch > NParFlag )
                } // if ( OPT__FLAG_NPAR_PATCH != 0 )
 #              endif // #ifdef PARTICLE
+
+
+//             check the derefinement criterion of Lohner if required
+//             --> do it separately from all other refinement criteria since it
+//                 (a) does not flag sibling patches and
+//                 (b) only applies to patches with sons but have been marked for derefinement
+//             --> it can suppress derefinement (by having derefinement thresholds lower than refinement thresholds)
+               if ( Lohner_NVar > 0  &&  FlagTable_Lohner[lv][1] < FlagTable_Lohner[lv][0]  &&
+                    !amr->patch[0][lv][PID]->flag  &&  amr->patch[0][lv][PID]->son != -1 )
+               {
+                  bool Skip = false;
+
+                  for (int k=0; k<PS1; k++)  {  if ( Skip )  break;
+                  for (int j=0; j<PS1; j++)  {  if ( Skip )  break;
+                  for (int i=0; i<PS1; i++)  {  if ( Skip )  break;
+
+//                   check Lohner only if density is greater than the minimum threshold
+#                    ifdef DENS
+                     if ( Fluid[DENS][k][j][i] >= FlagTable_Lohner[lv][4] )
+#                    endif
+                     if (  Flag_Lohner( i, j, k, OPT__FLAG_LOHNER_FORM,
+                                        Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope, Lohner_NVar,
+                                        FlagTable_Lohner[lv][1], FlagTable_Lohner[lv][2], FlagTable_Lohner[lv][3] )  )
+                     {
+//                      flag itself
+                        amr->patch[0][lv][PID]->flag = true;
+
+//                      skip all remaining cells
+                        Skip = true;
+                     }
+                  }}} // i,j,k
+               } // if ( ... )
 
             } // if ( ProperNesting )
          } // for (int LocalID=0; LocalID<8; LocalID++)

@@ -38,6 +38,7 @@ extern int    Bondi_SinkNCell;
 //
 // Parameter   :  fluid    : Fluid array storing both the input (origial) and reset values
 //                           --> Including both active and passive variables
+//                Emag     : Magnetic energy (MHD only)
 //                x/y/z    : Target physical coordinates
 //                Time     : Target physical time
 //                dt       : Time interval to advance solution
@@ -47,7 +48,7 @@ extern int    Bondi_SinkNCell;
 // Return      :  true  : This cell has been reset
 //                false : This cell has not been reset
 //-------------------------------------------------------------------------------------------------------
-bool Flu_ResetByUser_Func_Bondi( real fluid[], const double x, const double y, const double z, const double Time,
+bool Flu_ResetByUser_Func_Bondi( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
                                  const double dt, const int lv, double AuxArray[] )
 {
 
@@ -103,7 +104,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double Time
 
    const double dh       = amr->dh[lv];
    const real   dv       = CUBE(dh);
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
    const real   Gamma_m1 = GAMMA - (real)1.0;
    const real  _Gamma_m1 = (real)1.0 / Gamma_m1;
 #  endif
@@ -137,19 +138,20 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double Time
             fluid_bk[v] = fluid[v];
          }
 
+#        ifdef MHD
+         const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#        else
+         const real Emag = (real)0.0;
+#        endif
+
 //       reset this cell
-         Reset = Flu_ResetByUser_Func_Bondi( fluid, x, y, z, TimeNew, dt, lv, NULL );
+         Reset = Flu_ResetByUser_Func_Bondi( fluid, Emag, x, y, z, TimeNew, dt, lv, NULL );
 
 //       operations necessary only when this cell has been reset
          if ( Reset )
          {
 //          apply density and energy floors
-#           if ( MODEL == HYDRO  ||  MODEL == MHD )
-#           ifdef MHD
-            const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
-#           else
-            const real Emag = NULL_REAL;
-#           endif
+#           if ( MODEL == HYDRO )
 
             fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
             fluid[ENGY] = Hydro_CheckMinEintInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
@@ -168,7 +170,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double Time
             if ( OPT__NORMALIZE_PASSIVE )
                Hydro_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
 #           endif
-#           endif // if ( MODEL == HYDRO  ||  MODEL == MHD )
+#           endif // if ( MODEL == HYDRO )
 
 //          store the reset values
             for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[FluSg][lv][PID]->fluid[v][k][j][i] = fluid[v];
@@ -178,7 +180,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double Time
             if ( lv == MAX_LEVEL )
             {
                real Ek = (real)0.5*( SQR(fluid_bk[MOMX]) + SQR(fluid_bk[MOMY]) + SQR(fluid_bk[MOMZ]) ) / fluid_bk[DENS];
-               real Et = fluid_bk[ENGY] - Ek;
+               real Et = fluid_bk[ENGY] - Ek - Emag;
 
                Bondi_SinkMass    += dv*fluid_bk[DENS];
                Bondi_SinkMomX    += dv*fluid_bk[MOMX];

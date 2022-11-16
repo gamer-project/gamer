@@ -1,6 +1,6 @@
 #include "CUPOT.h"
 #ifdef __CUDACC__
-#include "CUAPI.h"
+#include "CUDA_CheckError.h"
 #endif
 
 #ifdef GRAVITY
@@ -57,10 +57,11 @@
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  AuxArray : Array to be filled up
+//                Time     : Target physical time
 //
 // Return      :  AuxArray[]
 //-------------------------------------------------------------------------------------------------------
-void SetExtAccAuxArray_PointMass( double AuxArray[] )
+void SetExtAccAuxArray_PointMass( double AuxArray[], const double Time )
 {
 
 // example parameters
@@ -186,7 +187,7 @@ void SetCPUExtAcc_PointMass( ExtAcc_t &CPUExtAcc_Ptr )
 #ifndef __CUDACC__
 
 // local function prototypes
-void SetExtAccAuxArray_PointMass( double [] );
+void SetExtAccAuxArray_PointMass( double [], const double );
 void SetCPUExtAcc_PointMass( ExtAcc_t & );
 #ifdef GPU
 void SetGPUExtAcc_PointMass( ExtAcc_t & );
@@ -210,7 +211,7 @@ void SetGPUExtAcc_PointMass( ExtAcc_t & );
 void Init_ExtAcc_PointMass()
 {
 
-   SetExtAccAuxArray_PointMass( ExtAcc_AuxArray );
+   SetExtAccAuxArray_PointMass( ExtAcc_AuxArray, Time[0] );
 
    SetCPUExtAcc_PointMass( CPUExtAcc_Ptr );
 #  ifdef GPU

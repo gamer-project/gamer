@@ -220,7 +220,8 @@ void Interpolate( real CData[], const int CSize[3], const int CStart[3], const i
                   real FData[], const int FSize[3], const int FStart[3],
                   const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase,
                   const bool Monotonic[], const bool OppSign0thOrder, const bool AllCons,
-                  const IntPrim_t IntPrim, const ReduceOrFixMonoCoeff_t ReduceMonoCoeff );
+                  const IntPrim_t IntPrim, const ReduceOrFixMonoCoeff_t ReduceMonoCoeff,
+                  const real CMag_IntIter[], const real FMag_IntIter[][NCOMP_MAG] );
 void Int_Table( const IntScheme_t IntScheme, int &NSide, int &NGhost );
 
 
@@ -461,6 +462,10 @@ void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const i
                                          const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                          const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
                                          const int NVar_Der, const long TDerVarList[] );
+void Hydro_BoundaryCondition_Diode( real *Array, const int BC_Face, const int NVar_Flu, const int GhostSize,
+                                    const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
+                                    const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
+                                    const int NVar_Der, const long TDerVarList[] );
 void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool FracPassive, const int NFrac, const int FracIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -488,6 +493,7 @@ void MHD_AllocateElectricArray( const int lv );
 void MHD_Aux_Check_InterfaceB( const char *comment );
 void MHD_Aux_Check_DivergenceB( const bool Verbose, const char *comment );
 void MHD_FixUp_Electric( const int lv );
+void MHD_SameInterfaceB( const int lv );
 void MHD_CopyPatchInterfaceBField( const int lv, const int PID, const int SibID, const int MagSg );
 void MHD_BoundaryCondition_Outflow( real **Array, const int BC_Face, const int NVar, const int GhostSize,
                                     const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
@@ -495,6 +501,9 @@ void MHD_BoundaryCondition_Outflow( real **Array, const int BC_Face, const int N
 void MHD_BoundaryCondition_Reflecting( real **Array, const int BC_Face, const int NVar, const int GhostSize,
                                        const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                        const int Idx_Start[], const int Idx_End[], const int TVarIdxList[] );
+void MHD_BoundaryCondition_Diode( real **Array, const int BC_Face, const int NVar, const int GhostSize,
+                                  const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
+                                  const int Idx_Start[], const int Idx_End[], const int TVarIdxList[] );
 void MHD_BoundaryCondition_User( real **Array, const int BC_Face, const int NVar,
                                  const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                  const int Idx_Start[], const int Idx_End[], const int TVarIdxList[],
@@ -623,6 +632,8 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
                          const bool UnitDens, const bool CheckFarAway, const bool UseInputMassPos, real **InputMassPos );
 void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOld, const ParUpStep_t UpdateStep,
                          const bool StoreAcc, const bool UseStoredAcc );
+void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double TimeOld,
+                               const bool MapOnly );
 void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv );
 void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar );
 bool Par_WithinActiveRegion( const real x, const real y, const real z );
@@ -644,6 +655,11 @@ void Par_Init_Attribute();
 void Par_AddParticleAfterInit( const long NNewPar, real *NewParAtt[PAR_NATT_TOTAL] );
 void Par_ScatterParticleData( const long NPar_ThisRank, const long NPar_AllRank, const long AttBitIdx,
                               real *Data_Send[PAR_NATT_TOTAL], real *Data_Recv[PAR_NATT_TOTAL] );
+void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
+                            const double _dh, const int AttrSize3D, const real *Attr,
+                            const int NPar, real *InterpParPos[3],
+                            const real ParType[], const long ParList[],
+                            const bool UseTracers, real ParAttr[], const bool CorrectVelocity );
 FieldIdx_t AddParticleAttribute( const char *InputLabel );
 FieldIdx_t GetParticleAttributeIndex( const char *InputLabel, const Check_t Check );
 #ifdef LOAD_BALANCE

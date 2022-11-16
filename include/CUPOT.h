@@ -43,10 +43,6 @@
 // ####################
 #if   ( POT_SCHEME == SOR )
 
-// determine the version of the GPU Poisson solver (10to14cube vs. 16to18cube)
-#define USE_PSOLVER_10TO14
-
-
 // blockDim.z for the GPU Poisson solver
 #if   ( POT_GHOST_SIZE == 1 )
 #        define POT_BLOCK_SIZE_Z      4
@@ -55,70 +51,60 @@
 #elif ( POT_GHOST_SIZE == 3 )
 #        define POT_BLOCK_SIZE_Z      2
 #elif ( POT_GHOST_SIZE == 4 )
-#  ifdef USE_PSOLVER_10TO14
 #        define POT_BLOCK_SIZE_Z      5
-#  else
-#        define POT_BLOCK_SIZE_Z      1
-#  endif
 #elif ( POT_GHOST_SIZE == 5 )
-#  ifdef USE_PSOLVER_10TO14
-#     if   ( GPU_ARCH == FERMI )
-#        ifdef FLOAT8
+#  if   ( GPU_ARCH == FERMI )
+#     ifdef FLOAT8
 #        define POT_BLOCK_SIZE_Z      2
-#        else
-#        define POT_BLOCK_SIZE_Z      4
-#        endif
-#     elif ( GPU_ARCH == KEPLER )
-#        ifdef FLOAT8
-#        define POT_BLOCK_SIZE_Z      2
-#        else
-#        define POT_BLOCK_SIZE_Z      8
-#        endif
-#     elif ( GPU_ARCH == MAXWELL )
-#        ifdef FLOAT8
-#        define POT_BLOCK_SIZE_Z      2      // not optimized yet
-#        else
-#        define POT_BLOCK_SIZE_Z      4      // not optimized yet
-#        endif
-#     elif ( GPU_ARCH == PASCAL )
-#        ifdef FLOAT8
-#        define POT_BLOCK_SIZE_Z      2      // not optimized yet
-#        else
-#        define POT_BLOCK_SIZE_Z      4      // not optimized yet
-#        endif
-#     elif ( GPU_ARCH == VOLTA )
-#        ifdef FLOAT8
-#        define POT_BLOCK_SIZE_Z      2      // not optimized yet
-#        else
-#        define POT_BLOCK_SIZE_Z      4      // not optimized yet
-#        endif
-#     elif ( GPU_ARCH == TURING )
-#        ifdef FLOAT8
-#        define POT_BLOCK_SIZE_Z      2      // not optimized yet
-#        else
-#        define POT_BLOCK_SIZE_Z      4      // not optimized yet
-#        endif
-#     elif ( GPU_ARCH == AMPERE )
-#        ifdef FLOAT8
-#        define POT_BLOCK_SIZE_Z      2      // not optimized yet
-#        else
-#        define POT_BLOCK_SIZE_Z      4      // not optimized yet
-#        endif
 #     else
-#        define POT_BLOCK_SIZE_Z      NULL_INT
-#        ifdef GPU
-#        error : UNKNOWN GPU_ARCH !!
-#        endif
-#     endif // GPU_ARCH
+#        define POT_BLOCK_SIZE_Z      4
+#     endif
+#  elif ( GPU_ARCH == KEPLER )
+#     ifdef FLOAT8
+#        define POT_BLOCK_SIZE_Z      2
+#     else
+#        define POT_BLOCK_SIZE_Z      8
+#     endif
+#  elif ( GPU_ARCH == MAXWELL )
+#     ifdef FLOAT8
+#        define POT_BLOCK_SIZE_Z      2      // not optimized yet
+#     else
+#        define POT_BLOCK_SIZE_Z      4      // not optimized yet
+#     endif
+#  elif ( GPU_ARCH == PASCAL )
+#     ifdef FLOAT8
+#        define POT_BLOCK_SIZE_Z      2      // not optimized yet
+#     else
+#        define POT_BLOCK_SIZE_Z      4      // not optimized yet
+#     endif
+#  elif ( GPU_ARCH == VOLTA )
+#     ifdef FLOAT8
+#        define POT_BLOCK_SIZE_Z      2      // not optimized yet
+#     else
+#        define POT_BLOCK_SIZE_Z      4      // not optimized yet
+#     endif
+#  elif ( GPU_ARCH == TURING )
+#     ifdef FLOAT8
+#        define POT_BLOCK_SIZE_Z      2      // not optimized yet
+#     else
+#        define POT_BLOCK_SIZE_Z      4      // not optimized yet
+#     endif
+#  elif ( GPU_ARCH == AMPERE )
+#     ifdef FLOAT8
+#        define POT_BLOCK_SIZE_Z      2      // not optimized yet
+#     else
+#        define POT_BLOCK_SIZE_Z      4      // not optimized yet
+#     endif
 #  else
-#        define POT_BLOCK_SIZE_Z      1
-#  endif // #ifdef USE_PSOLVER_10TO14 ... else ...
+#        define POT_BLOCK_SIZE_Z      NULL_INT
+#     ifdef GPU
+#        error : UNKNOWN GPU_ARCH !!
+#     endif
+#  endif // GPU_ARCH
 #endif // POT_GHOST_SIZE
 
 
-// optimization options for CUPOT_PoissonSolver_SOR_10to14cube.cu
-#ifdef USE_PSOLVER_10TO14
-
+// optimization options for CUPOT_PoissonSolver_SOR.cu
 // load density into shared memory for higher performance
 #  ifndef FLOAT8
 #     define SOR_RHO_SHARED
@@ -149,8 +135,6 @@
 #  if ( !defined FLOAT8  &&  !defined SOR_USE_PADDING  &&  GPU_ARCH != KEPLER )
 #     define SOR_CPOT_SHARED
 #  endif
-
-#endif // #ifdef USE_PSOLVER_10TO14
 
 
 

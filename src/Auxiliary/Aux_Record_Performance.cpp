@@ -85,7 +85,7 @@ void Aux_Record_Performance( const double ElapsedTime )
 #     ifdef GPU
       const double NUpdateCell_PerSec_PerRank = NUpdateCell_PerSec/MPI_NRank;
 #     else
-      const double NUpdateCell_PerSec_PerRank = NUpdateCell_PerSec/MPI_NRank/OMP_NTHREAD;
+      const double NUpdateCell_PerSec_PerRank = NUpdateCell_PerSec/MPI_NRank;
 #     endif
 
 #     ifdef PARTICLE
@@ -93,7 +93,7 @@ void Aux_Record_Performance( const double ElapsedTime )
 #     ifdef GPU
       const double NUpdatePar_PerSec_PerRank  = NUpdatePar_PerSec/MPI_NRank;
 #     else
-      const double NUpdatePar_PerSec_PerRank  = NUpdatePar_PerSec/MPI_NRank/OMP_NTHREAD;
+      const double NUpdatePar_PerSec_PerRank  = NUpdatePar_PerSec/MPI_NRank;
 #     endif
 #     endif
 

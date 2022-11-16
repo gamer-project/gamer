@@ -151,7 +151,7 @@ struct ReadPara_t
 
 
 //    parameter name
-      strcpy( Key[NPara], NewKey );
+      strncpy( Key[NPara], NewKey, MAX_STRING );
 
 //    parameter address
       Ptr[NPara] = NewPtr;
@@ -197,7 +197,7 @@ struct ReadPara_t
 
 
 //    parameter name
-      strcpy( Key[NPara], NewKey );
+      strncpy( Key[NPara], NewKey, MAX_STRING );
 
 //    parameter address
       Ptr[NPara] = NewPtr;
@@ -208,11 +208,11 @@ struct ReadPara_t
 //    set the default value
 //    --> use malloc() and free() since they are more appropriate for the void* pointers
 //    --> string parameter doesn't need range
-      Def[NPara] = (char*)malloc( (MAX_STRING+1)*sizeof(char) );
+      Def[NPara] = (char*)malloc( MAX_STRING*sizeof(char) );
       Min[NPara] = NULL;
       Max[NPara] = NULL;
 
-      strcpy( (char*)Def[NPara], NewDef );
+      strncpy( (char*)Def[NPara], NewDef, MAX_STRING );
 
       NPara ++;
 
@@ -249,8 +249,8 @@ struct ReadPara_t
 //       load the key and value at the target line
          NLoad = sscanf( Line, "%s%s", LoadKey, LoadValue );
 
-//       skip lines with incorrect format (e.g., empyt lines)
-         if ( NLoad < 2  &&  MPI_Rank == 0 )
+//       skip lines with incorrect format (e.g., empty lines)
+         if ( NLoad < 2 )
          {
             if ( NLoad == 1  &&  LoadKey[0] != COMMENT_SYM )
                Aux_Error( ERROR_INFO, "cannot find the value to assign to the key \"%s\" at line %d !!\n",
@@ -287,7 +287,7 @@ struct ReadPara_t
                case TYPE_BOOL   :   GET_VOID( bool,   Ptr[MatchIdx] ) = (bool  )atol( LoadValue );    break;
                case TYPE_FLOAT  :   GET_VOID( float,  Ptr[MatchIdx] ) = (float )atof( LoadValue );    break;
                case TYPE_DOUBLE :   GET_VOID( double, Ptr[MatchIdx] ) = (double)atof( LoadValue );    break;
-               case TYPE_STRING :   strcpy( (char*)Ptr[MatchIdx], LoadValue );                        break;
+               case TYPE_STRING :   strncpy( (char*)Ptr[MatchIdx], LoadValue, MAX_STRING );           break;
 
                default: Aux_Error( ERROR_INFO, "unsupported data type (char*, float*, double*, int*, long*, unit*, ulong*, bool* only) !!\n" );
             }
@@ -338,7 +338,7 @@ struct ReadPara_t
                case TYPE_BOOL   :   def_int = GET_VOID( bool,   Ptr[t] ) = GET_VOID( bool,   Def[t] );   break;
                case TYPE_FLOAT  :   def_flt = GET_VOID( float,  Ptr[t] ) = GET_VOID( float,  Def[t] );   break;
                case TYPE_DOUBLE :   def_flt = GET_VOID( double, Ptr[t] ) = GET_VOID( double, Def[t] );   break;
-               case TYPE_STRING :   strcpy( (char*)Ptr[t], (char*)Def[t] );                              break;
+               case TYPE_STRING :   strncpy( (char*)Ptr[t], (char*)Def[t], MAX_STRING );                 break;
 
                default: Aux_Error( ERROR_INFO, "no default value for this data type (char*, float*, double*, int*, long*, unit*, ulong*, bool* only) !!\n" );
             }

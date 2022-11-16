@@ -42,6 +42,10 @@ void Validate()
    Aux_Error( ERROR_INFO, "MODEL != HYDRO !!\n" );
 #  endif
 
+#  ifdef MHD
+   Aux_Error( ERROR_INFO, "MHD must be disabled !!\n" );
+#  endif
+
 #  ifndef GRAVITY
    Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
 #  endif

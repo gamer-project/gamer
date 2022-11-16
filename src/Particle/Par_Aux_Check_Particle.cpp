@@ -7,16 +7,17 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Aux_Check_Particle
-// Description :  Verify that
-//                1.   particles reside in their home patches
-//                2.   particles always reside in the leaf patches
-//                3.   there are no missing or redundant particles
-//                4.   no active particles have mass=-1.0
-//                5/6. each particle has one and only one home patch
+// Description :  Verify the following.
+//                1.   Particles reside in their home patches
+//                2.   Particles always reside in the leaf patches
+//                3.   There are no missing or redundant particles
+//                4.   No active particles have mass=-1.0
+//                5/6. Each particle has one and only one home patch
 //                7.   NPar_AcPlusInac == NPar_Active + NPar_Inactive
 //                8.   NPar_Active_AllRank = sum(NPar_Active, All ranks)
 //                9.   NPar_Active = sum(NPar_Lv, all levels)
 //                10.  All patches have NPar_Copy == -1
+//                11.  Particle types are recognizable
 //
 // Note        :  None
 //
@@ -25,7 +26,7 @@
 void Par_Aux_Check_Particle( const char *comment )
 {
 
-   const int   NCheck    = 10;
+   const int   NCheck    = 11;
    const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
 
    int     PassAll    = true;
@@ -64,7 +65,6 @@ void Par_Aux_Check_Particle( const char *comment )
                NParInLeaf += NParThisPatch;
 
 
-//             Check 1: check whether or not all particles find their home patches
                EdgeL = amr->patch[0][lv][PID]->EdgeL;
                EdgeR = amr->patch[0][lv][PID]->EdgeR;
 
@@ -95,6 +95,7 @@ void Par_Aux_Check_Particle( const char *comment )
                      ParHome[ParID] = true;
 
 
+//                Check 1: check whether or not all particles find their home patches
                   for (int d=0; d<3; d++)
                   {
                      if ( ParPos[d][ParID] < EdgeL[d]  ||  ParPos[d][ParID] >= EdgeR[d] )
@@ -118,6 +119,7 @@ void Par_Aux_Check_Particle( const char *comment )
                      }
                   } // for (int d=0; d<3; d++)
 
+
 //                Check 4: no active particles should have mass < 0.0
                   if ( amr->Par->Mass[ParID] < 0.0 )
                   {
@@ -139,8 +141,56 @@ void Par_Aux_Check_Particle( const char *comment )
                                   MPI_Rank, lv, PID, ParID, ParPos[0][ParID], ParPos[1][ParID], ParPos[2][ParID],
                                   amr->Par->Mass[ParID] );
                   }
+
+
+//                Check 11: particle types
+                  bool CheckTypePass = true;
+
+//                particle types must be recognizable
+                  if ( amr->Par->Type[ParID] < (real)0  ||  amr->Par->Type[ParID] >= (real)PAR_NTYPE )
+                     CheckTypePass = false;
+
+//                only support tracer particles when disabling GRAVITY
+#                 ifndef GRAVITY
+                  if ( amr->Par->Type[ParID] != PTYPE_TRACER )
+                     CheckTypePass = false;
+#                 endif
+
+//                must enable TRACER for tracer particles
+#                 ifndef TRACER
+                  if ( amr->Par->Type[ParID] == PTYPE_TRACER )
+                     CheckTypePass = false;
+#                 endif
+
+//                tracer particles must be massless
+#                 ifdef TRACER
+                  if ( amr->Par->Type[ParID] == PTYPE_TRACER  &&  amr->Par->Mass[ParID] != (real)0.0 )
+                     CheckTypePass = false;
+#                 endif
+
+                  if ( !CheckTypePass )
+                  {
+                     if ( PassAll )
+                     {
+                        Aux_Message( stderr, "\"%s\" : <%s> FAILED at Time = %13.7e, Step = %ld !!\n",
+                                     comment, __FUNCTION__, Time[lv], Step );
+                        PassAll = false;
+                     }
+
+                     if ( PassCheck[10] )
+                     {
+                        Aux_Message( stderr, "Check 11: %4s  %2s  %7s  %10s  %10s  %20s\n",
+                                     "Rank", "Lv", "PID", "ParID", "Type", "Mass" );
+                        PassCheck[10] = false;
+                     }
+
+                     Aux_Message( stderr, "Check 11: %4d  %2d  %7d  %10ld  %10d  %20.13e\n",
+                                  MPI_Rank, lv, PID, ParID, (int)amr->Par->Type[ParID], amr->Par->Mass[ParID] );
+                  } // if ( !CheckTypePass )
+
                } // for (int p=0; p<NParThisPatch; p++)
             } // if ( amr->patch[0][lv][PID]->son == -1 )
+
 
 //          Check 2: particles should only reside in the leaf patches
             else if ( NParThisPatch != 0 )

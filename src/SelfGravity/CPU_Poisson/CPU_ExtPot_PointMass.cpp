@@ -1,6 +1,6 @@
 #include "CUPOT.h"
 #ifdef __CUDACC__
-#include "CUAPI.h"
+#include "CUDA_CheckError.h"
 #endif
 
 #ifdef GRAVITY
@@ -51,10 +51,11 @@
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  AuxArray_Flt/Int : Floating-point/Integer arrays to be filled up
+//                Time             : Target physical time
 //
 // Return      :  AuxArray_Flt/Int[]
 //-------------------------------------------------------------------------------------------------------
-void SetExtPotAuxArray_PointMass( double AuxArray_Flt[], int AuxArray_Int[] )
+void SetExtPotAuxArray_PointMass( double AuxArray_Flt[], int AuxArray_Int[], const double Time )
 {
 
 // example parameters
@@ -168,7 +169,7 @@ void SetCPUExtPot_PointMass( ExtPot_t &CPUExtPot_Ptr )
 #ifndef __CUDACC__
 
 // local function prototypes
-void SetExtPotAuxArray_PointMass( double [], int [] );
+void SetExtPotAuxArray_PointMass( double [], int [], const double );
 void SetCPUExtPot_PointMass( ExtPot_t & );
 #ifdef GPU
 void SetGPUExtPot_PointMass( ExtPot_t & );
@@ -192,7 +193,7 @@ void SetGPUExtPot_PointMass( ExtPot_t & );
 void Init_ExtPot_PointMass()
 {
 
-   SetExtPotAuxArray_PointMass( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int );
+   SetExtPotAuxArray_PointMass( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int, Time[0] );
    SetCPUExtPot_PointMass( CPUExtPot_Ptr );
 #  ifdef GPU
    SetGPUExtPot_PointMass( GPUExtPot_Ptr );

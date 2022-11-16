@@ -33,6 +33,8 @@ extern void (*Init_User_Ptr)();
 extern void (*Output_User_Ptr)();
 extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 extern double (*Mis_GetTimeStep_User_Ptr)( const int lv, const double dTime_dt );
+extern void (*Mis_UserWorkBeforeNextLevel_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt );
+extern void (*Mis_UserWorkBeforeNextSubstep_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt );
 extern void (*Aux_Record_User_Ptr)();
 extern void (*BC_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                             const int lv, double AuxArray[] );
@@ -40,7 +42,7 @@ extern void (*BC_User_Ptr)( real fluid[], const double x, const double y, const 
 extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
                                    const int lv, double AuxArray[] );
 #endif
-extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
+extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
                                          const double dt, const int lv, double AuxArray[] );
 extern void (*End_User_Ptr)();
 #ifdef GRAVITY
@@ -56,7 +58,7 @@ extern void (*End_ExtPot_Ptr)();
 extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
                                         real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                         real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                        real *AllAttribute[PAR_NATT_TOTAL] );
+                                        real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
 extern void (*Par_Init_Attribute_User_Ptr)();
 #endif
 #if ( MODEL == HYDRO )

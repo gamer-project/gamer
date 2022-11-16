@@ -82,6 +82,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 // --> PosSendIdx[] is used by Par_PredictPos()
    int NAtt=0, AttIntIdx[PAR_NATT_TOTAL], PosSendIdx[3]={-1, -1, -1};
 
+   if ( !JustCountNPar )
    for (int v=0; v<PAR_NATT_TOTAL; v++)
       if ( AttBitIdx & (1L<<v) )    AttIntIdx[ NAtt ++ ] = v;
 
@@ -116,7 +117,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
 // check
 #  ifdef DEBUG_PARTICLE
-   if ( NAtt == 0  &&  MPI_Rank == 0 )    Aux_Message( stderr, "WARNING : NAtt == 0 !!\n" );
+   if ( NAtt == 0  &&  !JustCountNPar  &&  MPI_Rank == 0 )  Aux_Message( stderr, "WARNING : NAtt == 0 !!\n" );
 
    if ( JustCountNPar )
    {
@@ -561,9 +562,9 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
 //          4-1. check if this particle is indeed waiting for the velocity correction (i.e., ParTime = -dt_half < 0.0 for KDK)
 #           ifdef DEBUG_PARTICLE
-            if ( amr->Par->Integ == PAR_INTEG_KDK  &&  amr->Par->Time[ParID] >= (real)0.0 )
-               Aux_Error( ERROR_INFO, "This particle shouldn't be here (FaLv %d, FaPID %d, ParID %ld, ParTime %21.14e) !!\n",
-                          FaLv, FaPID, ParID, amr->Par->Time[ParID] );
+            if ( amr->Par->Integ == PAR_INTEG_KDK  &&  amr->Par->Time[ParID] >= (real)0.0  &&  amr->Par->Type[ParID] != PTYPE_TRACER )
+               Aux_Error( ERROR_INFO, "This particle shouldn't be here (FaLv %d, FaPID %d, ParID %ld, ParTime %21.14e, ParType %d ) !!\n",
+                          FaLv, FaPID, ParID, amr->Par->Time[ParID], (int)amr->Par->Type[ParID] );
 #           endif
 
 //          4-2. add particle data

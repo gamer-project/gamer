@@ -1,7 +1,7 @@
 #include "Macro.h"
 #include "CUPOT.h"
 
-#if ( defined GRAVITY  &&  defined GPU  &&  POT_SCHEME == SOR  &&  defined USE_PSOLVER_10TO14 )
+#if ( defined GRAVITY  &&  defined GPU  &&  POT_SCHEME == SOR )
 
 
 
@@ -42,20 +42,19 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CUPOT_PoissonSolver_SOR_10to14cube
+// Function    :  CUPOT_PoissonSolver_SOR
 // Description :  GPU Poisson solver using the SOR scheme
 //
-// Note        :  1. Work for POT_GHOST_SIZE = 1, 2, 3 <--> POT_NXT_F = 10, 12, 14
-//                   --> For compute capabilities >= 2.0 (which as 48 KB shared memory), it also works
-//                       with POT_GHOST_SIZE = 4, 5
+// Note        :  1. Take advantage of shared memory
 //                2. Prefix "g" for pointers pointing to the "Global" memory space
 //                   Prefix "s" for pointers pointing to the "Shared" memory space
-//                3. Each patch requires about 3.1*10^6 FLOPS (include the gravity solver)
+//                3. Each patch requires about 3.1*10^6 FLOPS (including the gravity solver)
 //                   --> 133 GFLOPS is achieved in one C2050 GPU
-//                4. Reference : Numerical Recipes, Chapter 20.5
+//                4. Reference: Numerical Recipes, Chapter 20.5
 //                5. Chester Cheng has implemented the SOR_USE_SHUFFLE and SOR_USE_PADDING optimizations, which
-//                   greatly improve performance for the case POT_GHOST_SIZE == 5
+//                   greatly improve performance for PATCH_SIZE=8 && POT_GHOST_SIZE=5
 //                6. Typically, the number of iterations required to reach round-off errors is 20 ~ 25 (single precision)
+//                   for PATCH_SIZE=8 && POT_GHOST_SIZE=5
 //
 // Padding     :  Below shows how bank conflict is eliminated by padding.
 //
@@ -89,24 +88,24 @@
 //                         on it, so for each xy plane we need to pad #4*PAD_POT floating point elements.
 //
 //
-// Parameter   :  g_Rho_Array       : Global memory array to store the input density
-//                g_Pot_Array_In    : Global memory array storing the input "coarse-grid" potential for
-//                                    interpolation
-//                g_Pot_Array_Out   : Global memory array to store the output potential
-//                Min_Iter          : Minimum # of iterations for SOR
-//                Max_Iter          : Maximum # of iterations for SOR
-//                Omega_6           : Omega / 6
-//                Const             : (Coefficient in front of the RHS in the Poisson eq.) / dh^2
-//                IntScheme         : Interpolation scheme for potential
-//                                    --> currently supported schemes include
-//                                        INT_CQUAD : conservative quadratic interpolation
-//                                        INT_QUAD  : quadratic interpolation
+// Parameter   :  g_Rho_Array     : Global memory array to store the input density
+//                g_Pot_Array_In  : Global memory array storing the input "coarse-grid" potential for
+//                                  interpolation
+//                g_Pot_Array_Out : Global memory array to store the output potential
+//                Min_Iter        : Minimum # of iterations for SOR
+//                Max_Iter        : Maximum # of iterations for SOR
+//                Omega_6         : Omega / 6
+//                Const           : (Coefficient in front of the RHS in the Poisson eq.) / dh^2
+//                IntScheme       : Interpolation scheme for potential
+//                                  --> currently supported schemes include
+//                                      INT_CQUAD : conservative quadratic interpolation
+//                                      INT_QUAD  : quadratic interpolation
 //---------------------------------------------------------------------------------------------------
-__global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
-                                                    const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
-                                                          real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
-                                                    const int Min_Iter, const int Max_Iter, const real Omega_6,
-                                                    const real Const, const IntScheme_t IntScheme )
+__global__ void CUPOT_PoissonSolver_SOR( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
+                                         const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
+                                               real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
+                                         const int Min_Iter, const int Max_Iter, const real Omega_6,
+                                         const real Const, const IntScheme_t IntScheme )
 {
 
    const uint bid       = blockIdx.x;
@@ -452,8 +451,8 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
    }
    while ( t < GRA_NXT*GRA_NXT*GRA_NXT );
 
-} // FUNCTION : CUPOT_PoissonSolver_SOR_10to14cube
+} // FUNCTION : CUPOT_PoissonSolver_SOR
 
 
 
-#endif // #if ( defined GRAVITY  &&  defined GPU  &&  POT_SCHEME == SOR  &&  defined USE_PSOLVER_10TO14 )
+#endif // #if ( defined GRAVITY  &&  defined GPU  &&  POT_SCHEME == SOR )

@@ -177,6 +177,10 @@ void Aux_Check_Parameter()
    for (int f=0; f<6; f++)
       if ( OPT__BC_FLU[f] == BC_FLU_REFLECTING )
          Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO !!\n" );
+
+   for (int f=0; f<6; f++)
+      if ( OPT__BC_FLU[f] == BC_FLU_DIODE )
+         Aux_Error( ERROR_INFO, "diode boundary condition (OPT__BC_FLU=5) only works with HYDRO !!\n" );
 #  endif
 
    for (int f=0; f<6; f+=2)
@@ -194,6 +198,11 @@ void Aux_Check_Parameter()
 
    if ( INT_MONO_COEFF < 1.0  ||  INT_MONO_COEFF > 4.0 )
       Aux_Error( ERROR_INFO, "INT_MONO_COEFF (%14.7e) is not within the correct range [1.0, 4.0] !!\n", INT_MONO_COEFF );
+
+#  ifdef MHD
+   if ( INT_MONO_COEFF_B < 1.0  ||  INT_MONO_COEFF_B > 4.0 )
+      Aux_Error( ERROR_INFO, "INT_MONO_COEFF_B (%14.7e) is not within the correct range [1.0, 4.0] !!\n", INT_MONO_COEFF_B );
+#  endif
 
    if ( OPT__MEMORY_POOL  &&  !OPT__REUSE_MEMORY )
       Aux_Error( ERROR_INFO, "please turn on OPT__REUSE_MEMORY for OPT__MEMORY_POOL !!\n" );
@@ -561,6 +570,15 @@ void Aux_Check_Parameter()
    if ( OPT__RESET_FLUID  &&   OPT__OVERLAP_MPI )
       Aux_Error( ERROR_INFO, "\"%s\" is NOT supported for \"%s\" !!\n", "OPT__OVERLAP_MPI", "OPT__RESET_FLUID" );
 
+   if ( MONO_MAX_ITER > 0 )
+   {
+      if ( OPT__FLU_INT_SCHEME == INT_VANLEER  ||  OPT__FLU_INT_SCHEME == INT_MINMOD3D  ||  OPT__FLU_INT_SCHEME == INT_MINMOD1D )
+         Aux_Error( ERROR_INFO, "OPT__FLU_INT_SCHEME=INT_VANLEER/INT_MINMOD3D/INT_MINMOD1D do not support MONO_MAX_ITER != 0 !!\n" );
+
+      if ( OPT__REF_FLU_INT_SCHEME == INT_VANLEER  ||  OPT__REF_FLU_INT_SCHEME == INT_MINMOD3D  ||  OPT__REF_FLU_INT_SCHEME == INT_MINMOD1D )
+         Aux_Error( ERROR_INFO, "OPT__REF_FLU_INT_SCHEME=INT_VANLEER/INT_MINMOD3D/INT_MINMOD1D do not support MONO_MAX_ITER != 0 !!\n" );
+   }
+
 
 // warnings
 // ------------------------------
@@ -619,12 +637,18 @@ void Aux_Check_Parameter()
 #  endif
 
 #  ifdef MHD
-#   if ( defined RSOLVER  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLD )
+#   if ( RSOLVER != NONE  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLD )
 #     error : ERROR : unsupported Riemann solver for MHD (ROE/HLLE/HLLD) !!
 #   endif
+#   if ( RSOLVER_RESCUE != NONE  &&  RSOLVER_RESCUE != ROE  &&  RSOLVER_RESCUE != HLLE  &&  RSOLVER_RESCUE != HLLD )
+#     error : ERROR : unsupported RSOLVER_RESCUE for MHD (ROE/HLLE/HLLD) !!
+#   endif
 #  else
-#   if ( defined RSOLVER  &&  RSOLVER != EXACT  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLC )
+#   if ( RSOLVER != NONE  &&  RSOLVER != EXACT  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLC )
 #     error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC) !!
+#   endif
+#   if ( RSOLVER_RESCUE != NONE  &&  RSOLVER_RESCUE != EXACT  &&  RSOLVER_RESCUE != ROE  &&  RSOLVER_RESCUE != HLLE  &&  RSOLVER_RESCUE != HLLC )
+#     error : ERROR : unsupported RSOLVER_RESCUE (EXACT/ROE/HLLE/HLLC) !!
 #   endif
 #  endif // MHD
 
@@ -674,8 +698,12 @@ void Aux_Check_Parameter()
 #        error : ERROR : HLL_WAVESPEED_ROE only works with EOS_GAMMA !!
 #     endif
 
-#     if (  defined RSOLVER  &&  ( RSOLVER == ROE || RSOLVER == EXACT )  )
+#     if ( RSOLVER == ROE  ||  RSOLVER == EXACT )
 #        error : ERROR : unsupported Riemann solver for EOS != EOS_GAMMA (HLLE/HLLC/HLLD) !!
+#     endif
+
+#     if ( RSOLVER_RESCUE == ROE  ||  RSOLVER_RESCUE == EXACT )
+#        error : ERROR : unsupported RSOLVER_RESCUE for EOS != EOS_GAMMA (HLLE/HLLC/HLLD) !!
 #     endif
 
 #     if ( defined LR_SCHEME  &&  defined CHAR_RECONSTRUCTION )
@@ -751,7 +779,7 @@ void Aux_Check_Parameter()
 // ------------------------------
    if ( MPI_Rank == 0 ) {
 
-#  if ( defined RSOLVER  &&  RSOLVER == EXACT )
+#  if ( RSOLVER == EXACT  ||  RSOLVER_RESCUE == EXACT )
 #     warning : WARNING : exact Riemann solver is not recommended since the vacuum solution has not been implemented
       Aux_Message( stderr, "WARNING : exact Riemann solver is not recommended since the vacuum solution " );
       Aux_Message( stderr,           "has not been implemented !!\n" );
@@ -984,6 +1012,10 @@ void Aux_Check_Parameter()
    if ( !OPT__OUTPUT_CC_MAG )
       Aux_Message( stderr, "WARNING : yt requires \"OPT__OUTPUT_CC_MAG\" for analyzing magnetic field !!\n" );
 
+   if ( MINMOD_MAX_ITER != 0 )
+      Aux_Message( stderr, "WARNING : MINMOD_MAX_ITER (%d) can break B field consistency --> use AUTO_REDUCE_MINMOD_FACTOR instead !!\n",
+                   MINMOD_MAX_ITER );
+
 #  endif // #ifdef MHD
 
 
@@ -1019,6 +1051,10 @@ void Aux_Check_Parameter()
 #     error : ERROR : QUARTIC_SELF_INTERACTION does not work with COMOVING yet !!
 #  endif
 #  endif // ifdef QUARTIC_SELF_INTERACTION
+
+#  ifdef TRACER
+#     error : ERROR : ELBDM does not support TRACER yet !!
+#  endif
 
    if ( ELBDM_PLANCK_CONST <= 0.0 )
       Aux_Error( ERROR_INFO, "%s (%14.7e) <= 0.0 !!\n", "ELBDM_PLANCK_CONST", ELBDM_PLANCK_CONST );
@@ -1305,12 +1341,8 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-#  ifndef GRAVITY
-#     error : ERROR : currently PARTICLE must work with GRAVITY !!
-#  endif
-
-#  ifdef COMOVING
-#     error : ERROR : currently PARTICLE dost NOT support COMOVING !!
+#  if ( ! defined MASSIVE_PARTICLES  &&  ! defined TRACER )
+#     error : ERROR : both MASSIVE_PARTICLES (GRAVITY) and TRACER are disabled for PARTICLE !!
 #  endif
 
 #  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
@@ -1330,6 +1362,7 @@ void Aux_Check_Parameter()
                     amr->Par->NPar_AcPlusInac, MPI_Rank );
    }
 
+#  ifdef GRAVITY
 #  ifndef STORE_POT_GHOST
    if ( amr->Par->ImproveAcc )
       Aux_Error( ERROR_INFO, "PAR_IMPROVE_ACC must work with STORE_POT_GHOST !!\n" );
@@ -1337,6 +1370,9 @@ void Aux_Check_Parameter()
 
    if ( amr->Par->ImproveAcc  &&  amr->Par->Interp == 1 )
       Aux_Error( ERROR_INFO, "PAR_IMPROVE_ACC does NOT work with PAR_INTERP == 1 (NGP) !!\n" );
+
+   if ( amr->Par->TracerVelCorr  &&  amr->Par->InterpTracer == 1 )
+      Aux_Error( ERROR_INFO, "PAR_TR_VEL_CORR does NOT work with PAR_TR_INTERP == 1 (NGP) !!\n" );
 
 #  ifndef STORE_PAR_ACC
    if ( DT__PARACC != 0.0 )
@@ -1350,6 +1386,7 @@ void Aux_Check_Parameter()
          Aux_Error( ERROR_INFO, "\"%s\" does NOT work for NX0_TOT[%d] = 2*PATCH_SIZE when periodic BC is adopted !!\n",
                     "Par_MassAssignment()", d );
    }
+#  endif // #ifdef GRAVITY
 
 
 // warning
@@ -1370,8 +1407,18 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : STORE_POT_GHOST is useless when PAR_IMPROVE_ACC is disabled !!\n" );
 #  endif
 
+#  ifdef GRAVITY
    if ( OPT__GRA_P5_GRADIENT )
       Aux_Message( stderr, "WARNING : currently \"%s\" is not applied to particle update !!\n", "OPT__GRA_P5_GRADIENT" );
+#  endif
+
+#  ifdef TRACER
+   if ( OPT__FLAG_NPAR_PATCH )
+      Aux_Message( stderr, "WARNING : OPT__FLAG_NPAR_PATCH includes tracers and thus may affect the results of grid refinement !!\n" );
+
+   if ( OPT__FLAG_NPAR_CELL )
+      Aux_Message( stderr, "WARNING : OPT__FLAG_NPAR_CELL excludes tracers !!\n" );
+#  endif
 
    if ( OPT__FREEZE_PAR )
       Aux_Message( stderr, "REMINDER : \"%s\" will prevent particles from being updated\n", "OPT__FREEZE_PAR" );

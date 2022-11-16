@@ -1,6 +1,6 @@
 #include "CUPOT.h"
 #ifdef __CUDACC__
-#include "CUAPI.h"
+#include "CUDA_CheckError.h"
 #endif
 
 #ifdef GRAVITY
@@ -31,10 +31,11 @@ extern double Bondi_Soften_R;
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  AuxArray : Array to be filled up
+//                Time     : Target physical time
 //
 // Return      :  AuxArray[]
 //-------------------------------------------------------------------------------------------------------
-void SetExtAccAuxArray_Bondi( double AuxArray[] )
+void SetExtAccAuxArray_Bondi( double AuxArray[], const double Time )
 {
 
    AuxArray[0] = amr->BoxCenter[0];
@@ -143,7 +144,7 @@ void SetCPUExtAcc_Bondi( ExtAcc_t &CPUExtAcc_Ptr )
 #ifndef __CUDACC__
 
 // local function prototypes
-void SetExtAccAuxArray_Bondi( double [] );
+void SetExtAccAuxArray_Bondi( double [], const double );
 void SetCPUExtAcc_Bondi( ExtAcc_t & );
 #ifdef GPU
 void SetGPUExtAcc_Bondi( ExtAcc_t & );
@@ -167,7 +168,7 @@ void SetGPUExtAcc_Bondi( ExtAcc_t & );
 void Init_ExtAcc_Bondi()
 {
 
-   SetExtAccAuxArray_Bondi( ExtAcc_AuxArray );
+   SetExtAccAuxArray_Bondi( ExtAcc_AuxArray, Time[0] );
 
    SetCPUExtAcc_Bondi( CPUExtAcc_Ptr );
 #  ifdef GPU

@@ -385,7 +385,7 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
    const bool NoFloor         = false;
 
 
-// if any checks below fail, return true
+// if any check below fails, return true
 // =================================================
 // note that since MIN_DENS and MIN_PRES are declared as double, they must be converted to **real** before the comparison
 // --> otherwise LHS in the comparison will be converted from real to double, which is inconsistent with the assignment
@@ -395,30 +395,36 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
          Fluid[DENS] < (real)MIN_DENS  )
       return true;
 
+#  ifdef MHD
+   if ( !Aux_IsFinite(Emag) )
+      return true;
+#  endif
+
 #  ifndef BAROTROPIC_EOS
-   if ( CheckMode == CheckMinEtot  &&  Fluid[ENGY] < (real)MIN_EINT )
+   if ( CheckMode == CheckMinEtot  &&  ( Fluid[ENGY] < (real)MIN_EINT || Fluid[ENGY] != Fluid[ENGY] )  )
       return true;
 
-   if ( CheckMode == CheckMinEint  &&
-         (
-//          when adopting the dual-energy formalism, do NOT calculate pressure from "Etot-Ekin" since it would suffer
-//          from large round-off errors
-//          --> currently we use TINY_NUMBER as the dual-energy floor and hence here we use 2.0*TINY_NUMBER to
-//              validate the dual-energy variable
-//          --> in general, MIN_PRES > 0.0 should be sufficient for detecting unphysical dual-energy variable
-//          --> however, the additional check "Fluid[DUAL] < (real)2.0*TINY_NUMBER" is necessary when MIN_PRES == 0.0
-#           ifdef DUAL_ENERGY
-            Hydro_DensDual2Pres( Fluid[DENS], Fluid[DUAL], EoS_AuxArray_Flt[1], NoFloor, NULL_REAL ) < (real)MIN_PRES  ||
-            Fluid[DUAL] < (real)2.0*TINY_NUMBER
+   if ( CheckMode == CheckMinEint )
+   {
+//    when adopting the dual-energy formalism, do NOT calculate pressure from "Etot-Ekin" since it would suffer
+//    from large round-off errors
+//    --> currently we use TINY_NUMBER as the dual-energy floor and hence here we use 2.0*TINY_NUMBER to
+//        validate the dual-energy variable
+//    --> in general, MIN_PRES > 0.0 should be sufficient for detecting unphysical dual-energy variable
+//    --> however, the additional check "Fluid[DUAL] < (real)2.0*TINY_NUMBER" is necessary when MIN_PRES == 0.0
+#     ifdef DUAL_ENERGY
+      const real Pres = Hydro_DensDual2Pres( Fluid[DENS], Fluid[DUAL], EoS_AuxArray_Flt[1], NoFloor, NULL_REAL );
+      if ( Pres < (real)MIN_PRES  ||  !Aux_IsFinite(Pres)  ||
+           Fluid[DUAL] < (real)2.0*TINY_NUMBER  ||  !Aux_IsFinite(Fluid[DUAL]) )
+         return true;
 
-#           else // without DUAL_ENERGY
-            Hydro_Con2Eint( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                            NoFloor, NULL_REAL, Emag ) < (real)MIN_EINT
-
-#           endif // DUAL_ENERGY
-         )
-      )
-      return true;
+#     else // without DUAL_ENERGY
+      const real Eint = Hydro_Con2Eint( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                        NoFloor, NULL_REAL, Emag );
+      if ( Eint < (real)MIN_EINT  ||  !Aux_IsFinite(Eint) )
+         return true;
+#     endif // DUAL_ENERGY
+   } // f ( CheckMode == CheckMinEint )
 
    if ( OPT__CHECK_PRES_AFTER_FLU )
    {
@@ -428,7 +434,7 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
                                         EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt,
                                         EoS_AuxArray_Int, h_EoS_Table, NULL );
 
-      if ( !Aux_IsFinite(Pres)  ||  Pres < (real)0.0 )
+      if ( !Aux_IsFinite(Pres)  ||  Pres < (real)MIN_PRES )
          return true;
    }
 #  endif // #ifndef BAROTROPIC_EOS
@@ -465,7 +471,7 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
 //
 //                      if ( still_found_unphysical )
 //                         if ( AUTO_REDUCE_DT )
-//                            Invoke the fluid solver again on the same level but with a smaller dt
+//                            Invoke the fluid solver again on the same level but with smaller dt/MINMOD_COEFF/INT_MONO_COEFF(_B)
 //                         else
 //                            Print debug messages and abort
 //                      else
@@ -959,6 +965,9 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14s", FieldLabel[DUAL] );
 #                 endif
+#                 ifdef MHD
+                  fprintf( File, ", %14s, %14s, %14s, %14s, %14s, %14s, %14s", "Emag", "BxL", "BxR", "ByL", "ByR", "BzL", "BzR" );
+#                 endif
                   fprintf( File, ")\n" );
 
                   fprintf( File, "input        = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
@@ -968,14 +977,26 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", In[DUAL] );
 #                 endif
+#                 ifdef MHD
+                  fprintf( File, ", %14.7e", Emag_In );
+#                 endif
                   fprintf( File, ")\n" );
 
-                  fprintf( File, "ouptut (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
+                  fprintf( File, "output (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
                            Hydro_Con2Eint(Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
                                           CheckMinEint_No, NULL_REAL, Emag_Out) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Out[DUAL] );
+#                 endif
+#                 ifdef MHD
+                  fprintf( File, ", %14.7e", Emag_Out );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGX][ IDX321_BX(ijk_out[0]  ,ijk_out[1]  ,ijk_out[2]  ,PS2,PS2) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGX][ IDX321_BX(ijk_out[0]+1,ijk_out[1]  ,ijk_out[2]  ,PS2,PS2) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGY][ IDX321_BY(ijk_out[0]  ,ijk_out[1]  ,ijk_out[2]  ,PS2,PS2) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGY][ IDX321_BY(ijk_out[0]  ,ijk_out[1]+1,ijk_out[2]  ,PS2,PS2) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGZ][ IDX321_BZ(ijk_out[0]  ,ijk_out[1]  ,ijk_out[2]  ,PS2,PS2) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGZ][ IDX321_BZ(ijk_out[0]  ,ijk_out[1]  ,ijk_out[2]+1,PS2,PS2) ] );
 #                 endif
                   fprintf( File, ")\n" );
 
@@ -986,14 +1007,20 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Update[DUAL] );
 #                 endif
+#                 ifdef MHD
+                  fprintf( File, ", %14.7e", Emag_Update );
+#                 endif
                   fprintf( File, ")\n" );
 
 //                output all data in the input fluid array (including ghost zones)
-                  fprintf( File, "\nFull input array including ghost zones\n" );
+                  fprintf( File, "\nFull input fluid array including ghost zones\n" );
                   fprintf( File, "===============================================================================================\n" );
                   fprintf( File, "(%2s,%2s,%2s)", "i", "j", "k" );
                   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %14s", FieldLabel[v] );
                   fprintf( File, " %14s", "Eint" );
+#                 ifdef MHD
+                  fprintf( File, " %14s", "Emag" );
+#                 endif
                   fprintf( File, "\n" );
 
                   for (int k=0; k<FLU_NXT; k++)
@@ -1017,9 +1044,41 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                      const real Emag_tmp = NULL_REAL;
 #                    endif
 
-                     fprintf( File, " %14.7e\n", Hydro_Con2Eint(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4],
-                                                                CheckMinEint_No, NULL_REAL, Emag_tmp) );
-                  }
+                     fprintf( File, " %14.7e", Hydro_Con2Eint(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4],
+                                                              CheckMinEint_No, NULL_REAL, Emag_tmp) );
+#                    ifdef MHD
+                     fprintf( File, " %14.7e", Emag_tmp );
+#                    endif
+                     fprintf( File, "\n" );
+                  } // i,j,k
+
+//                output all data in the input B field array (including ghost zones)
+#                 ifdef MHD
+                  fprintf( File, "\nFull input B field array including ghost zones\n" );
+                  fprintf( File, "===============================================================================================\n" );
+                  fprintf( File, "(%2s,%2s,%2s) %14s %14s %14s\n", "i", "j", "k", MagLabel[MAGX], MagLabel[MAGY], MagLabel[MAGZ] );
+
+                  for (int k=0; k<FLU_NXT_P1; k++)
+                  for (int j=0; j<FLU_NXT_P1; j++)
+                  for (int i=0; i<FLU_NXT_P1; i++)
+                  {
+                     fprintf( File, "(%2d,%2d,%2d)", i-FLU_GHOST_SIZE, j-FLU_GHOST_SIZE, k-FLU_GHOST_SIZE );
+
+//                   Bx
+                     if ( j < FLU_NXT  &&  k < FLU_NXT ) fprintf( File, " %14.7e", h_Mag_Array_F_In[TID][MAGX][ IDX321_BX(i,j,k,FLU_NXT,FLU_NXT) ] );
+                     else                                fprintf( File, " %14s", "" );
+
+//                   By
+                     if ( i < FLU_NXT  &&  k < FLU_NXT ) fprintf( File, " %14.7e", h_Mag_Array_F_In[TID][MAGY][ IDX321_BY(i,j,k,FLU_NXT,FLU_NXT) ] );
+                     else                                fprintf( File, " %14s", "" );
+
+//                   Bz
+                     if ( i < FLU_NXT  &&  j < FLU_NXT ) fprintf( File, " %14.7e", h_Mag_Array_F_In[TID][MAGZ][ IDX321_BZ(i,j,k,FLU_NXT,FLU_NXT) ] );
+                     else                                fprintf( File, " %14s", "" );
+
+                     fprintf( File, "\n" );
+                  } // i,j,k
+#                 endif // #ifdef MHD
 
                   fclose( File );
 
@@ -1401,7 +1460,7 @@ void CorrectElectric( const int SonLv, const real h_Ele_Array[][9][NCOMP_ELE][ P
             const int face_idx    = ( 3 + xyz*3 )%9 + 2*face_offset;
 
             int  SibID[3], SibSibID[3];
-            real AveFineEle[PS1];
+            real AveFineEle[PS1] = { (real)0.0 };
 
             TABLE_SiblingSharingSameEdge( s, SibID, SibSibID );
 
