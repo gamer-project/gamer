@@ -37,7 +37,7 @@ SIMU_OPTION += -DMODEL=ELBDM
 
 
 # enable gravity
-#SIMU_OPTION += -DGRAVITY
+SIMU_OPTION += -DGRAVITY
 
 # enable particles
 # --> must enable GRAVITY
@@ -136,7 +136,7 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 
 # comoving frame for cosmological simulations
 # --> not supported for PARTICLE
-SIMU_OPTION += -DCOMOVING
+#SIMU_OPTION += -DCOMOVING
 endif # GRAVITY
 
 
@@ -168,13 +168,13 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 
 # GPU acceleration
 # --> must set GPU_ARCH as well
-#SIMU_OPTION += -DGPU
+SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING/AMPERE
-SIMU_OPTION += -DGPU_ARCH=KEPLER
+SIMU_OPTION += -DGPU_ARCH=TURING
 
 # debug mode
-SIMU_OPTION += -DGAMER_DEBUG
+#SIMU_OPTION += -DGAMER_DEBUG
 
 # bitwise reproducibility
 #SIMU_OPTION += -DBITWISE_REPRODUCIBILITY
@@ -187,7 +187,7 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # double precision
-SIMU_OPTION += -DFLOAT8
+#SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
@@ -235,14 +235,14 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 # intel
 # -------------------------------------------------------------------------------
 # CXX         = icpc                                      # serial compiler
-##CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
+#CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 ##CXX         = CC                                        # cray wrapper script
-# CXXFLAG     = -g -O3                                    # general flags
+#CXXFLAG     = -g -O3 -std=c++11                          # general flags
 ##CXXFLAG     = -g -O3 -std=c++11 #-gxx-name=YOUR_G++
 ##CXXFLAG     = -g -fast
-# CXXFLAG    += -w1                                       # warning flags
-# OPENMPFLAG  = -fopenmp                                  # openmp flag
-# LIB         = -limf                                     # libraries and linker flags
+#CXXFLAG    += -w1                                       # warning flags
+#OPENMPFLAG  = -fopenmp                                  # openmp flag
+#LIB         = -limf                                     # libraries and linker flags
 #
 ## for debug only
 #ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
@@ -258,19 +258,19 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 
 # gnu
 # -------------------------------------------------------------------------------
- CXX         = g++                                       # serial compiler
-#CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
+#CXX         = g++                                       # serial compiler
+CXX         = mpicxx                    # MPI compiler
 #CXX         = CC                                        # cray wrapper script
 #CXXFLAG     = -g -O3                                    # general flags
-CXXFLAG      = -g -O3                                      # general flags
-#CXXFLAG     = -g -O3 -std=c++11
+#CXXFLAG      = -g -O3                                         # general flags
+CXXFLAG     = -std=c++11 -O3 -DOMPI_SKIP_MPICXX
 #CXXFLAG     = -g -Ofast
- CXXFLAG    += -Wall -Wextra                             # warning flags
- CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
-               -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
-               -Wno-unused-result -Wno-unused-function
- OPENMPFLAG  = -fopenmp                                  # openmp flag
- LIB         =                                           # libraries and linker flags
+#CXXFLAG    += -Wall -Wextra                             # warning flags
+#CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
+              -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
+              -Wno-unused-result -Wno-unused-function
+OPENMPFLAG  = -fopenmp                                  # openmp flag
+LIB         =                                           # libraries and linker flags
 
 # for debug only
 ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
@@ -285,10 +285,9 @@ endif
 
 # CUDA
 # -------------------------------------------------------------------------------
- NVCC = $(CUDA_PATH)/bin/nvcc                            # CUDA compiler
-#NVCC = $(CUDA_PATH)/bin/nvcc -ccbin YOUR_G++            # with a specified host compiler
+#NVCC = $(CUDA_PATH)/bin/nvcc                            # CUDA compiler
+NVCC = $(CUDA_PATH)/bin/nvcc -ccbin mpicxx -DOMPI_SKIP_MPICXX            # with a specified host compiler
 #NVCC = nvcc -ccbin CC                                   # for the Cray environment
-
 
 
 
@@ -297,9 +296,9 @@ endif
 #######################################################################################################
 
 # template
-CUDA_PATH    :=
-FFTW_PATH    :=
-MPI_PATH     :=
+CUDA_PATH    := /usr/local/cuda/
+FFTW_PATH    := ~/Downloads/fftw-2.1.5/rfftw
+MPI_PATH     := /usr/lib/x86_64-linux-gnu/mpich
 HDF5_PATH    := /usr/lib/x86_64-linux-gnu/hdf5/serial
 GRACKLE_PATH :=
 GSL_PATH     :=
@@ -350,7 +349,7 @@ LIBYT_PATH   :=
 #CUDA_PATH    := /software/cuda/default
 #FFTW_PATH    := /software/fftw/default
 #MPI_PATH     := /software/openmpi/default
-#HDF5_PATH    := /software/hdf5/default
+#HDF5_PATH    := /usr/include/hdf5/serial
 #GRACKLE_PATH :=
 #GSL_PATH     := /software/gsl/default
 #LIBYT_PATH   :=
@@ -472,7 +471,7 @@ CPU_FILE    += Output_DumpData_Total.cpp  Output_DumpData.cpp  Output_DumpManual
                Output_DumpData_Total_HDF5.cpp  Output_L1Error.cpp
 
 CPU_FILE    += Flag_Real.cpp  Refine.cpp   SiblingSearch.cpp  SiblingSearch_Base.cpp  FindFather.cpp \
-               Flag_User.cpp  Flag_Check.cpp  Flag_Lohner.cpp  Flag_Region.cpp
+               Flag_User.cpp  Flag_Check.cpp  Flag_Lohner.cpp  Flag_Region.cpp  Flag_Sync.cpp
 
 CPU_FILE    += Table_01.cpp  Table_02.cpp  Table_03.cpp  Table_04.cpp  Table_05.cpp  Table_06.cpp \
                Table_07.cpp  Table_SiblingSharingSameEdge.cpp  Table_SiblingPatch.cpp
@@ -527,8 +526,7 @@ endif # MHD
 # ELBDM source files (included only inf "MODEL=ELBDM")
 # -------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
-GPU_FILE    += CUFLU_ELBDMSolver.cu
-
+GPU_FILE    += CUFLU_ELBDMSolver.cu CUFLU_ELBDMSolver_PhaseForm_MUSCL.cu
 CPU_FILE    += CPU_ELBDMSolver.cpp  CPU_ELBDMSolver_PhaseForm_MUSCL.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
                ELBDM_GetTimeStep_Fluid.cpp  ELBDM_GetTimeStep_Hybrid.cpp  ELBDM_Flag_EngyDensity.cpp ELBDM_Flag_Interference.cpp ELBDM_UnwrapPhase.cpp \
                ELBDM_GetTimeStep_Phase.cpp  ELBDM_GetTimeStep_Velocity.cpp  ELBDM_SetTaylor3Coeff.cpp  ELBDM_RemoveMotionCM.cpp
@@ -537,7 +535,7 @@ vpath %.cu     Model_ELBDM/GPU_ELBDM
 vpath %.cpp    Model_ELBDM/CPU_ELBDM  Model_ELBDM
 
 ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
-GPU_FILE    += CUPOT_ELBDMGravitySolver.cu
+GPU_FILE    += CUPOT_ELBDMGravitySolver.cu CUPOT_ELBDMGravitySolver_PhaseForm.cu
 
 CPU_FILE    += CPU_ELBDMGravitySolver.cpp CPU_ELBDMGravitySolver_PhaseForm.cpp ELBDM_GetTimeStep_Gravity.cpp
 
@@ -631,7 +629,7 @@ endif # !SERIAL
 
 # load-balance source files (included only if "LOAD_BALANCE" is turned on)
 # ------------------------------------------------------------------------------------
-CPU_FILE    += LB_HilbertCurve.cpp  LB_Utility.cpp
+CPU_FILE    += LB_HilbertCurve.cpp  LB_Utility.cpp LB_GetGlobalTree.cpp
 
 ifeq "$(findstring -DLOAD_BALANCE, $(SIMU_OPTION))" "-DLOAD_BALANCE"
 CPU_FILE    += LB_Init_LoadBalance.cpp  LB_AllocateBufferPatch_Sibling.cpp  LB_RecordOvelapMPIPatchID.cpp \
@@ -643,7 +641,6 @@ CPU_FILE    += LB_Init_LoadBalance.cpp  LB_AllocateBufferPatch_Sibling.cpp  LB_R
                LB_AllocateBufferPatch_Sibling_Base.cpp  LB_RecordExchangeFixUpDataPatchID.cpp \
                LB_EstimateWorkload_AllPatchGroup.cpp  LB_EstimateLoadImbalance.cpp  LB_SetCutPoint.cpp \
                LB_Init_ByFunction.cpp  LB_Init_Refine.cpp
-
 endif # LOAD_BALANCE
 
 vpath %.cpp    LoadBalance
@@ -861,7 +858,7 @@ ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
    NVCCFLAG_COM += -g -Xptxas -v   # "-G" may cause the GPU Poisson solver to fail
 endif
 
-#NVCCFLAG_COM += -use_fast_math
+NVCCFLAG_COM += --expt-relaxed-constexpr
 
 # fluid solver flags
 NVCCFLAG_FLU += -Xptxas -dlcm=ca -prec-div=false -ftz=true
