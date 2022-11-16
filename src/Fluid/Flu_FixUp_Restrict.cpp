@@ -108,12 +108,6 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
       return;
    }
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-// convert between phase/dens and re/im 
-   const bool convertWaveToFluid = (amr->use_wave_flag[FaLv] == false && amr->use_wave_flag[SonLv] == true );
-   //printf("rank = %d, wave to fluid from lv %d to lv %d = %d with %d sons\n", MPI_Rank, FaLv, SonLv, convertWaveToFluid, amr->NPatchComma[SonLv][1]); 
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-
 // restrict
 #  pragma omp parallel for schedule( runtime )
    for (int SonPID0=0; SonPID0<amr->NPatchComma[SonLv][1]; SonPID0+=8)
@@ -171,63 +165,81 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #        endif
 #        endif // #ifdef GAMER_DEBUG
 
+#        if ( MODEL == ELBDM )
+#        if ( ELBDM_SCHEME == HYBRID )
+         if ( ResFlu \
+               && ( TVarCC & (_REAL) || TVarCC & (_IMAG)) \
+               && (     (OPT__RES_PHASE && amr->use_wave_flag[FaLv] && amr->use_wave_flag[SonLv]) \
+                    ||  (!amr->use_wave_flag[FaLv] && amr->use_wave_flag[SonLv]))
+            ) {
+#        else // # if ( ELBDM_SCHEME == HYBRID )
+//       average phase instead of real and imaginary part if option OPT__RES_PHASE is on
+         if ( ResFlu && (TVarCC & (_REAL) || TVarCC & (_IMAG)) && OPT__RES_PHASE  ) {
+#        endif // # if ( ELBDM_SCHEME == HYBRID )
+//          D = DENS, R = REAL, I = IMAG, P = PHAS, S = STUB
+            const real (*DSonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[DENS];
+            const real (*RSonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[REAL];
+            const real (*ISonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[IMAG];
 
-//       restrict the fluid data
-         if ( ResFlu )
-         for (int v=0; v<NFluVar; v++)
-         {
-            const int TFluVarIdx = TFluVarIdxList[v];
+                  real (*DFaPtr) [PS1][PS1] = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[DENS];
+                  real (*RFaPtr) [PS1][PS1] = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[REAL];
+                  real (*IFaPtr) [PS1][PS1] = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[IMAG];
 
-            //if ( MPI_Rank == 1) printf("Rank 1: Start converting v = %d\n", v);
+#           if ( ELBDM_SCHEME == HYBRID )
+                  real (*PFaPtr)[PS1][PS1]  = amr->patch[  FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
+                  real (*SFaPtr)[PS1][PS1]  = amr->patch[  FaFluSg][ FaLv][ FaPID]->fluid[STUB];
 
-#           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-            if (convertWaveToFluid && (TFluVarIdx == REAL || TFluVarIdx == IMAG)) {
-
-            const real (*RealSonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[REAL];
-            const real (*ImagSonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[IMAG];
-
-                  real (*NewPhasFaPtr)[PS1][PS1]  = amr->patch[  FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
-                  real (*OldPhasFaPtr)[PS1][PS1]  = amr->patch[1-FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
-                  real (*OldDensFaPtr)[PS1][PS1]  = amr->patch[1-FaFluSg][ FaLv][ FaPID]->fluid[DENS];
-                  real (*StubFaPtr)[PS1][PS1]     = amr->patch[  FaFluSg][ FaLv][ FaPID]->fluid[STUB];
-
+                  real (*OldPFaPtr)[PS1][PS1]  = amr->patch[1-FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
 //                handle that we do not have data of previous time step during initialisation corresponding to a negative time
-                  if ( amr->FluSgTime[FaLv][ 1 - FaFluSg ] < 0 ) {
-                     OldPhasFaPtr = NewPhasFaPtr;
+                  if ( amr->FluSgTime[FaLv][1-FaFluSg ] < 0 ) {
+                     OldPFaPtr = PFaPtr;
                   }
-            
+#           endif 
+
+
             int ii, jj, kk, I, J, K, Ip, Jp, Kp;
-            real re, im;
+            real refphase, avgphase, avgdens;
 
             for (int k=0; k<PS1_half; k++)  {  K = k*2;  Kp = K+1;  kk = k + Disp_k;
             for (int j=0; j<PS1_half; j++)  {  J = j*2;  Jp = J+1;  jj = j + Disp_j;
             for (int i=0; i<PS1_half; i++)  {  I = i*2;  Ip = I+1;  ii = i + Disp_i;
 
+//             take care to match the child phases before averaging
+               refphase   = SATAN2(ISonPtr[K ][J ][I ], RSonPtr[K ][J ][I ]);
+               avgphase   = 0.125*(                   refphase                                                    +
+                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[K ][J ][Ip], RSonPtr[K ][J ][Ip])) +
+                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[K ][Jp][I ], RSonPtr[K ][Jp][I ])) + 
+                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][J ][I ], RSonPtr[Kp][J ][I ])) +
+                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[K ][Jp][Ip], RSonPtr[K ][Jp][Ip])) + 
+                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][Jp][I ], RSonPtr[Kp][Jp][I ])) +
+                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][J ][Ip], RSonPtr[Kp][J ][Ip])) + 
+                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][Jp][Ip], RSonPtr[Kp][Jp][Ip])) );
+               avgdens    = 0.125* ( DSonPtr[K ][J ][I ] + DSonPtr[K ][J ][Ip] +
+                                     DSonPtr[K ][Jp][I ] + DSonPtr[Kp][J ][I ] +
+                                     DSonPtr[K ][Jp][Ip] + DSonPtr[Kp][Jp][I ] +
+                                     DSonPtr[Kp][J ][Ip] + DSonPtr[Kp][Jp][Ip] );
 
-               if (TFluVarIdx == REAL) {
-                  re = 0.125*( RealSonPtr[K ][J ][I ] + RealSonPtr[K ][J ][Ip] +
-                               RealSonPtr[K ][Jp][I ] + RealSonPtr[Kp][J ][I ] +
-                               RealSonPtr[K ][Jp][Ip] + RealSonPtr[Kp][Jp][I ] +
-                               RealSonPtr[Kp][J ][Ip] + RealSonPtr[Kp][Jp][Ip] );
-                  im = 0.125*( ImagSonPtr[K ][J ][I ] + ImagSonPtr[K ][J ][Ip] +
-                               ImagSonPtr[K ][Jp][I ] + ImagSonPtr[Kp][J ][I ] +
-                               ImagSonPtr[K ][Jp][Ip] + ImagSonPtr[Kp][Jp][I ] +
-                               ImagSonPtr[Kp][J ][Ip] + ImagSonPtr[Kp][Jp][Ip] );
+               if (TVarCC & _DENS) DFaPtr[kk][jj][ii] = avgdens;
 
-                  //if ( MPI_Rank == 1) printf("k %d j %d i %d old phase %f new phase %f after: %f old stub %f old dens %f\n", k, j, i, OldPhasFaPtr[kk][jj][ii], SATAN2(im, re), ELBDM_UnwrapPhase(OldPhasFaPtr[kk][jj][ii], SATAN2(im, re)), StubFaPtr[kk][jj][ii], OldDensFaPtr[kk][jj][ii]);
-
-                  NewPhasFaPtr[kk][jj][ii] =  SATAN2(im, re);//ELBDM_UnwrapPhase(OldPhasFaPtr[kk][jj][ii], SATAN2(im, re));
+#              if ( ELBDM_SCHEME == HYBRID )
+               if ( !amr->use_wave_flag[FaLv] ) {
+                  if (TVarCC & _PHAS) PFaPtr[kk][jj][ii] = ELBDM_UnwrapPhase(OldPFaPtr[kk][jj][ii], avgphase);
+                  if (TVarCC & _STUB) SFaPtr[kk][jj][ii] = 0;
+               } else 
+#              endif
+               {
+                  if (TVarCC & _REAL) RFaPtr[kk][jj][ii] = SQRT(avgdens) * COS(avgphase);
+                  if (TVarCC & _IMAG) IFaPtr[kk][jj][ii] = SQRT(avgdens) * SIN(avgphase);
                }
-
-               if (TFluVarIdx == IMAG) {
-                  StubFaPtr[kk][jj][ii] = 0;
-               }
-               
             }}}
+         }  else // if ( ResFlu && (TVarCC & (_REAL) || TVarCC & (_IMAG)) && ... )
+#        endif // #if ( MODEL == ELBDM )
+//       restrict the fluid data
+         if ( ResFlu ) {
 
-            } else { // if (convertWaveToFluid && (TFluVarIdx == REAL || TFluVarIdx == IMAG))
-#           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID ) 
-
+         for (int v=0; v<NFluVar; v++)
+         {
+            const int TFluVarIdx = TFluVarIdxList[v];
             const real (*SonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[TFluVarIdx];
                   real (* FaPtr)[PS1][PS1] = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[TFluVarIdx];
 
@@ -244,15 +256,8 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                                            SonPtr[K ][Jp][Ip] + SonPtr[Kp][Jp][I ] +
                                            SonPtr[Kp][J ][Ip] + SonPtr[Kp][Jp][Ip] );
             }}}
-
-#           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-            } // if (convertWaveToFluid && (TFluVarIdx == REAL || TFluVarIdx == IMAG)) ... else 
-#           endif 
-
-            //if ( MPI_Rank == 1) printf("Rank 1: Done with patch v = %d\n", v);
+         }
          } // if ( ResFlu )
-
-
 
 //       restrict the potential data
 #        ifdef GRAVITY

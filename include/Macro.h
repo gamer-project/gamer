@@ -402,6 +402,7 @@
 #  define _DENS               ( 1L << DENS )
 # endif 
 #  define  _PHAS              ( 1L << PHAS )
+#  define  _STUB              ( 1L << STUB )
 #endif // #if ( ELBDM_SCHEME == HYBRID )
 
 
@@ -957,9 +958,6 @@
 #  define ATAN2( a, b )    atan2f( a, b )
 #endif
 
-// safe ATAN2 that does not return nan when a = b = 0
-#define SATAN2( a, b )   ( ( (a) == (real)0.0 ) ? (real) 0.0 : ATAN2( a, b ) )
-
 // sign function
 #define SIGN( a )       (  ( (a) < (real)0.0 ) ? (real)-1.0 : (real)+1.0  )
 
@@ -968,6 +966,9 @@
 #define MAX( a, b )     (  ( (a) > (b) ) ? (a) : (b)  )
 #define MIN( a, b )     (  ( (a) < (b) ) ? (a) : (b)  )
 
+
+// safe ATAN2 that does not return nan when a = b = 0
+#define SATAN2( a, b )   ( ( (a) == (real)0.0 ) ? (real) 0.0 : ATAN2( a, b ) )
 
 // power functions
 #define SQR(  a )       ( (a)*(a)         )

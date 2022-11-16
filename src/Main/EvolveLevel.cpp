@@ -841,7 +841,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
 //          LOAD_BALANCE requires exchanging buffer data on the level being refined
 #           ifdef LOAD_BALANCE
-            TIMING_FUNC(   Buf_GetBufferData( lv_refine, amr->FluSg[lv_refine], amr->MagSg[lv_refine], NULL_INT, DATA_AFTER_REFINE,
+            TIMING_FUNC(   Buf_GetBufferData( lv_refine, amr->FluSg[lv_refine], amr->MagSg[lv_refine], NULL_INT, DATA_GENERAL,
                                               _TOTAL, _MAG, Flu_ParaBuf, USELB_YES ),
                            Timer_GetBuf[lv_refine][4],   TIMER_ON   );
 #           ifdef GRAVITY
@@ -852,7 +852,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #           endif
 #           endif // #ifdef LOAD_BALANCE
 
-            TIMING_FUNC(   Buf_GetBufferData( lv_refine+1, amr->FluSg[lv_refine+1], amr->MagSg[lv_refine+1], NULL_INT, DATA_AFTER_REFINE,
+            TIMING_FUNC(   Buf_GetBufferData( lv_refine+1, amr->FluSg[lv_refine+1], amr->MagSg[lv_refine+1], NULL_INT, DATA_GENERAL,
                                               _TOTAL, _MAG, Flu_ParaBuf, USELB_YES ),
                            Timer_GetBuf[lv_refine][4],   TIMER_ON   );
 #           ifdef GRAVITY
