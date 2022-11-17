@@ -212,6 +212,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
    //change of density and phase in time step
    real De_New, Ph_New;
    real ddensity, dphase;
+   real FluidMinDens = FMAX(1e-10, MinDens); 
 
    uint   Idx;
    uint   si, sj;                                           // array indices used in the shared memory array
@@ -324,7 +325,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
             sj = Idx / NStep;
 
             //Compute density logarithms
-            s_LogRho[sj][si] = log(FMAX(s_In[time_level][0][sj][si], MinDens));
+            s_LogRho[sj][si] = log(FMAX(s_In[time_level][0][sj][si], FluidMinDens));
 
             Idx += NThread;
          } // while ( Idx < NColumnOnce*NStep )
@@ -383,7 +384,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //          Write density and phase change as well as density fluxes after RK1 update to buffer
             if ( time_level == 0 ) {
                //s_Fm[1][sj][si] = s_Fm[0][sj][si];
-               s_In[N_TIME_LEVELS][0][sj][si] = FMAX(s_In[0][0][sj][si] - dt / Eta * ddensity, MinDens);
+               s_In[N_TIME_LEVELS][0][sj][si] = FMAX(s_In[0][0][sj][si] - dt / Eta * ddensity, FluidMinDens);
                s_In[N_TIME_LEVELS][1][sj][si] =      s_In[0][1][sj][si] - dt / Eta * dphase;   
             }
 
@@ -398,7 +399,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 
 //             handle the case that we have negative densities or if the velocity timestep criterion is not met -> switch to RK1
-               if ( De_New < 0 || De_New != De_New ) {             
+               if (( De_New < 0 || De_New != De_New || Ph_New != Ph_New ) && s_RK1[sj][si] ) {             
                   De_New = s_In[N_TIME_LEVELS][0][sj][si];
                   Ph_New = s_In[N_TIME_LEVELS][1][sj][si];
                   //s_Flux[sj][si - FLU_GHOST_SIZE] = s_Fm[1][sj][si];
