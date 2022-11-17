@@ -826,6 +826,12 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //          13-2. refine
             if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d: Refine %27s... ", lv_refine, "" );
 
+#           ifdef LOAD_BALANCE
+#           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+            bool old_wave_flag = amr->use_wave_flag[lv_refine+1]; 
+#           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#           endif // # ifdef LOAD_BALANCE
+
             TIMING_FUNC(   Refine( lv_refine, USELB_YES ),
                            Timer_Refine[lv_refine],   TIMER_ON   );
 
@@ -840,9 +846,34 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #           endif
 
 //          LOAD_BALANCE requires exchanging buffer data on the level being refined
+//#           ifdef LOAD_BALANCE
+//            TIMING_FUNC(   Buf_GetBufferData( lv_refine, amr->FluSg[lv_refine], amr->MagSg[lv_refine], NULL_INT, DATA_AFTER_REFINE,
+//                                              _TOTAL, _MAG, PATCH_SIZE, USELB_YES ),
+//                           Timer_GetBuf[lv_refine][4],   TIMER_ON   );
+//#           ifdef GRAVITY
+//            if ( UsePot )
+//            TIMING_FUNC(   Buf_GetBufferData( lv_refine, NULL_INT, NULL_INT, amr->PotSg[lv_refine], POT_AFTER_REFINE,
+//                                              _POTE, _NONE, Pot_ParaBuf, USELB_YES ),
+//                           Timer_GetBuf[lv_refine][5],   TIMER_ON   );
+//#           endif
+//#           endif // #ifdef LOAD_BALANCE
+//
+//            TIMING_FUNC(   Buf_GetBufferData( lv_refine+1, amr->FluSg[lv_refine+1], amr->MagSg[lv_refine+1], NULL_INT, DATA_AFTER_REFINE,
+//                                              _TOTAL, _MAG, PATCH_SIZE, USELB_YES ),
+//                           Timer_GetBuf[lv_refine][4],   TIMER_ON   );
+//#           ifdef GRAVITY
+//            if ( UsePot )
+//            TIMING_FUNC(   Buf_GetBufferData( lv_refine+1, NULL_INT, NULL_INT, amr->PotSg[lv_refine+1], POT_AFTER_REFINE,
+//                                              _POTE, _NONE, Pot_ParaBuf, USELB_YES ),
+//                           Timer_GetBuf[lv_refine][5],   TIMER_ON   );
+//#           endif
+
 #           ifdef LOAD_BALANCE
-            TIMING_FUNC(   Buf_GetBufferData( lv_refine, amr->FluSg[lv_refine], amr->MagSg[lv_refine], NULL_INT, DATA_GENERAL,
-                                              _TOTAL, _MAG, Flu_ParaBuf, USELB_YES ),
+            TIMING_FUNC(   Buf_GetBufferData( lv_refine,     amr->FluSg[lv_refine],     amr->MagSg[lv_refine], NULL_INT, DATA_GENERAL,
+                                              _TOTAL, _MAG, PATCH_SIZE, USELB_YES ),
+                           Timer_GetBuf[lv_refine][4],   TIMER_ON   );
+            TIMING_FUNC(   Buf_GetBufferData( lv_refine, 1 - amr->FluSg[lv_refine], 1 - amr->MagSg[lv_refine], NULL_INT, DATA_GENERAL,
+                                              _TOTAL, _MAG, PATCH_SIZE, USELB_YES ),
                            Timer_GetBuf[lv_refine][4],   TIMER_ON   );
 #           ifdef GRAVITY
             if ( UsePot )
@@ -852,8 +883,12 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #           endif
 #           endif // #ifdef LOAD_BALANCE
 
-            TIMING_FUNC(   Buf_GetBufferData( lv_refine+1, amr->FluSg[lv_refine+1], amr->MagSg[lv_refine+1], NULL_INT, DATA_GENERAL,
-                                              _TOTAL, _MAG, Flu_ParaBuf, USELB_YES ),
+            TIMING_FUNC(   Buf_GetBufferData( lv_refine+1,   amr->FluSg[lv_refine+1],   amr->MagSg[lv_refine+1], NULL_INT, DATA_GENERAL,
+                                              _TOTAL, _MAG, PATCH_SIZE, USELB_YES ),
+                           Timer_GetBuf[lv_refine][4],   TIMER_ON   );
+
+            TIMING_FUNC(   Buf_GetBufferData( lv_refine+1, 1-amr->FluSg[lv_refine+1], 1-amr->MagSg[lv_refine+1], NULL_INT, DATA_GENERAL,
+                                              _TOTAL, _MAG, PATCH_SIZE, USELB_YES ),
                            Timer_GetBuf[lv_refine][4],   TIMER_ON   );
 #           ifdef GRAVITY
             if ( UsePot )
@@ -862,12 +897,30 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                            Timer_GetBuf[lv_refine][5],   TIMER_ON   );
 #           endif
 
+
+
 //          must call Poi_StorePotWithGhostZone() AFTER collecting potential for buffer patches
 #           ifdef STORE_POT_GHOST
             if ( UsePot )
             TIMING_FUNC(   Poi_StorePotWithGhostZone( lv_refine+1, amr->PotSg[lv_refine+1], false ),
                            Timer_Refine[lv_refine],   TIMER_ON   );
 #           endif
+
+//          exchange all data on refined wave levels after switching to wave scheme
+//#           ifdef LOAD_BALANCE
+//#           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+//            if ( old_wave_flag != amr->use_wave_flag[lv_refine+1] ) {
+//               for (int i = lv_refine + 1; i <= TOP_LEVEL; ++i) {
+//                  TIMING_FUNC(   Buf_GetBufferData( lv_refine,  amr->FluSg[lv_refine],  amr->MagSg[lv_refine], NULL_INT, DATA_GENERAL,
+//                                                    _TOTAL, _MAG, PATCH_SIZE, USELB_YES ),
+//                                 Timer_GetBuf[lv_refine][4],   TIMER_ON   );
+//                  TIMING_FUNC(   Buf_GetBufferData( lv_refine,1-amr->FluSg[lv_refine],1-amr->MagSg[lv_refine], NULL_INT, DATA_GENERAL,
+//                                                    _TOTAL, _MAG, PATCH_SIZE, USELB_YES ),
+//                                 Timer_GetBuf[lv_refine][4],   TIMER_ON   );
+//               }
+//            }
+//#           endif // # ifdef LOAD_BALANCE
+//#           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
             if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 

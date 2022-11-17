@@ -200,7 +200,7 @@ void LB_Refine( const int FaLv )
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
    if ( switchNextLevelsToWaveScheme ) {
       //Set corresponding flag
-      for (int level = SonLv; level <= MAX_LEVEL; ++level) {
+      for (int level = SonLv; level <= TOP_LEVEL; ++level) {
          int n_total = amr->NPatchComma[level][27];
          int n_real = amr->NPatchComma[level][1];
          int n_buffer = n_total - n_real;
@@ -290,15 +290,11 @@ void LB_Refine( const int FaLv )
 
       } // for (int level = lv + 1; level < NLEVEL; ++level)
 
+//    sync flags across all MPI ranks after conversion
+      for (int i = SonLv; i <= TOP_LEVEL; ++i) {
+         Flag_Sync( i ); 
+      }
    } // if ( switchNextLevelToWaveScheme )
-
-   //if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "\n Syncing use wave flags after converting levels ... ");
-//
-   //for (int level = 0; level <= MAX_LEVEL; ++level) {
-   //   Flag_Sync( level ); 
-   //}
-//
-   //if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   done \n");
 
 #   endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
 
