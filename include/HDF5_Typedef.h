@@ -467,6 +467,7 @@ struct InputPara_t
    double LB_Par_Weight;
 #  endif
    int    Opt__RecordLoadBalance;
+   int    Opt__LB_ExchangeFather;
 #  endif
    int    Opt__MinimizeMPIBarrier;
 

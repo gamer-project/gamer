@@ -1888,6 +1888,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "LB_Par_Weight",           &RS.LB_Par_Weight,           SID, TID, NonFatal, &RT.LB_Par_Weight,            1, NonFatal );
 #  endif
    LoadField( "Opt__RecordLoadBalance",  &RS.Opt__RecordLoadBalance,  SID, TID, NonFatal, &RT.Opt__RecordLoadBalance,   1, NonFatal );
+   LoadField( "Opt__LB_ExchangeFather",  &RS.Opt__LB_ExchangeFather,  SID, TID, NonFatal, &RT.Opt__LB_ExchangeFather,   1, NonFatal );
 #  endif
    LoadField( "Opt__MinimizeMPIBarrier", &RS.Opt__MinimizeMPIBarrier, SID, TID, NonFatal, &RT.Opt__MinimizeMPIBarrier,  1, NonFatal );
 
