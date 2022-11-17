@@ -879,7 +879,7 @@ void Aux_TakeNote()
       fprintf( Note, "LB_PAR_WEIGHT                   %13.7e\n",  amr->LB->Par_Weight       );
 #     endif
       fprintf( Note, "OPT__RECORD_LOAD_BALANCE        %d\n",      OPT__RECORD_LOAD_BALANCE  );
-      fprintf( Note, "OPT__LB_EXCHANGE_FATHER            %d\n",      OPT__LB_EXCHANGE_FATHER      );
+      fprintf( Note, "OPT__LB_EXCHANGE_FATHER         %d\n",      OPT__LB_EXCHANGE_FATHER   );
 #     endif // #ifdef LOAD_BALANCE
       fprintf( Note, "OPT__MINIMIZE_MPI_BARRIER       %d\n",      OPT__MINIMIZE_MPI_BARRIER );
       fprintf( Note, "***********************************************************************************\n" );

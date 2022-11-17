@@ -189,11 +189,11 @@ SIMU_OPTION += -DTIMING
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
-#SIMU_OPTION += -DSERIAL
+SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization: HILBERT
 # --> must disable SERIAL
-SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation
 # --> NOT supported yet; must enable LOAD_BALANCE
@@ -257,8 +257,8 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 
 # gnu
 # -------------------------------------------------------------------------------
-#CXX         = g++                                       # serial compiler
-CXX         = mpicxx                    # MPI compiler
+ CXX         = g++                                       # serial compiler
+#CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 #CXX         = CC                                        # cray wrapper script
  CXXFLAG     = -g -O3                                    # general flags
 #CXXFLAG     = -g -O3 -std=c++11
