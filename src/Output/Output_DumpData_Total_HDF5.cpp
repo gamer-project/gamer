@@ -229,9 +229,10 @@ Procedure for outputting new variables:
 //                                             AUTO_REDUCE_INT_MONO_FACTOR, AUTO_REDUCE_INT_MONO_MIN,
 //                                             INT_MONO_COEFF_B
 //                2455 : 2022/11/04 --> output REFINE_NLEVEL
-//                2455 : 2022/11/14 --> output OPT__FLAG_INTERFERENCE, FlagTable_Interference
+//                2456 : 2022/11/14 --> output OPT__FLAG_INTERFERENCE, FlagTable_Interference
 //                                      output DENS and PHAS for hybrid scheme,
 //                                      output use_wave_flag[lv] for AMR structure
+//                2457 : 2022/11/17 --> output OPT__LB_EXCHANGE_FATHER
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -2608,6 +2609,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.LB_Par_Weight           = amr->LB->Par_Weight;
 #  endif
    InputPara.Opt__RecordLoadBalance  = OPT__RECORD_LOAD_BALANCE;
+   InputPara.Opt__LB_ExchangeFather  = OPT__LB_EXCHANGE_FATHER;
 #  endif
    InputPara.Opt__MinimizeMPIBarrier = OPT__MINIMIZE_MPI_BARRIER;
 
@@ -3502,6 +3504,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "LB_Par_Weight",           HOFFSET(InputPara_t,LB_Par_Weight          ), H5T_NATIVE_DOUBLE  );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__RecordLoadBalance",  HOFFSET(InputPara_t,Opt__RecordLoadBalance ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__LB_ExchangeFather",  HOFFSET(InputPara_t,Opt__LB_ExchangeFather ), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__MinimizeMPIBarrier", HOFFSET(InputPara_t,Opt__MinimizeMPIBarrier), H5T_NATIVE_INT     );
 

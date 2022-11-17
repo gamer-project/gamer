@@ -189,6 +189,7 @@ extern double     LB_INPUT__WLI_MAX;                  // LB->WLI_Max loaded from
 extern double     LB_INPUT__PAR_WEIGHT;               // LB->Par_Weight loaded from "Input__Parameter"
 #endif
 extern bool       OPT__RECORD_LOAD_BALANCE;
+extern bool       OPT__LB_EXCHANGE_FATHER;
 #endif
 extern bool       OPT__MINIMIZE_MPI_BARRIER;
 

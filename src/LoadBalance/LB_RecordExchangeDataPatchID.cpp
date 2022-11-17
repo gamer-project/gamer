@@ -199,34 +199,34 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
       if ( FaPID == -1 )   Aux_Error( ERROR_INFO, "SonLv %d, SonPID0 %d has no father patch !!\n", SonLv, SonPID0 );
 #     endif
 
-/*    START: MY OWN MODIFICATION TO EXPLICITLY INCLUDE FATHER PATCH */      
-      TPID = FaPID; 
+//    exchange complete father patch if option OPT__LB_EXCHANGE_FATHER is set
+      if ( OPT__LB_EXCHANGE_FATHER ) {
 
-      if ( TPID >= NReal ) // work for both periodic and non-periodic boundary conditions
-      {
-         RSib = 26;
-         SibIdx = TPID - NReal;
+         TPID = FaPID; 
 
-         if (  ( SibList_H[SibIdx] & SibMask_Check[RSib] ) == false  )
+         if ( TPID >= NReal ) // work for both periodic and non-periodic boundary conditions
          {
-            SibList_H[SibIdx] |= ( 1 << RSib );
-            SibList_H[SibIdx] &= SibMask_Clear[RSib];
-         }
+            RSib = 26;
+            SibIdx = TPID - NReal;
 
-//       allocate memory for the buffer patches that will receive data
-         for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->hnew();
+            if (  ( SibList_H[SibIdx] & SibMask_Check[RSib] ) == false  )
+            {
+               SibList_H[SibIdx] |= ( 1 << RSib );
+               SibList_H[SibIdx] &= SibMask_Clear[RSib];
+            }
 
-#        ifdef MHD
-         for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->mnew();
-#        endif
+//          allocate memory for the buffer patches that will receive data
+            for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->hnew();
 
-#        ifdef GRAVITY // so that the XXX_H lists can also be applied to the potential data
-         for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->gnew();
-#        endif
-      } // if ( TPID >= NReal )
+#           ifdef MHD
+            for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->mnew();
+#           endif
 
-/*    END: MY OWN MODIFICATION TO EXPLICITLY INCLUDE FATHER PATCH */    
-
+#           ifdef GRAVITY // so that the XXX_H lists can also be applied to the potential data
+            for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->gnew();
+#           endif
+         } // if ( TPID >= NReal )
+      } // if ( OPT__LB_EXCHANGE_FATHER )
 
       TABLE_GetSibPID_Based( SonLv, SonPID0, SibPID0_List );
 

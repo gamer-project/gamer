@@ -181,6 +181,7 @@ double               LB_INPUT__WLI_MAX;
 double               LB_INPUT__PAR_WEIGHT;
 #endif
 bool                 OPT__RECORD_LOAD_BALANCE;
+bool                 OPT__LB_EXCHANGE_FATHER;
 #endif
 bool                 OPT__MINIMIZE_MPI_BARRIER;
 
