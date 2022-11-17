@@ -2801,6 +2801,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  if ( MODEL == ELBDM )
    InputPara.Opt__Int_Phase          = OPT__INT_PHASE;
    InputPara.Opt__Res_Phase          = OPT__RES_PHASE;
+#  if ( ELBDM_SCHEME == HYBRID )
+   InputPara.Opt__Match_Phase        = OPT__MATCH_PHASE;
+#  endif //#  if ( ELBDM_SCHEME == HYBRID )
 #  endif
    InputPara.Opt__Flu_IntScheme      = OPT__FLU_INT_SCHEME;
    InputPara.Opt__RefFlu_IntScheme   = OPT__REF_FLU_INT_SCHEME;

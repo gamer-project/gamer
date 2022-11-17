@@ -118,6 +118,7 @@ double               ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
 bool                 OPT__FLAG_INTERFERENCE;
 double               FlagTable_Interference[NLEVEL-1][3];
 #if ( ELBDM_SCHEME == HYBRID )
+bool                 OPT__MATCH_PHASE; 
 double               DT__HYBRID, DT__VELOCITY;
 #endif // # if ( ELBDM_SCHEME == HYBRID )
 

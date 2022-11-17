@@ -50,6 +50,10 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
+#  if ( ELBDM_SCHEME == HYBRID )
+   if ( OPT__MATCH_PHASE ) 
+      Aux_Error( ERROR_INFO, "OPT__MATCH_PHASE must be disabled !!\n" );
+#  endif // #  if ( ELBDM_SCHEME == HYBRID )
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
 

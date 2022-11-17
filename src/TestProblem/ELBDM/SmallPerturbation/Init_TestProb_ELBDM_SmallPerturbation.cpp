@@ -40,11 +40,14 @@ void Validate()
    Aux_Error( ERROR_INFO, "MODEL != ELBDM !!\n" );
 #  endif
 
+#  if ( ELBDM_SCHEME == HYBRID )
+   if ( !OPT__MATCH_PHASE ) 
+      Aux_Error( ERROR_INFO, "OPT__MATCH_PHASE must be enabled !!\n" );
+#  endif // #  if ( ELBDM_SCHEME == HYBRID )
+
 // warnings
    if ( MPI_Rank == 0 )
    {
-      if ( !OPT__INIT_RESTRICT )
-         Aux_Message( stderr, "WARNING : it's recommended to enable OPT__INIT_RESTRICT !!\n" );
    }
 
 

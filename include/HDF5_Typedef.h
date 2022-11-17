@@ -638,6 +638,9 @@ struct InputPara_t
 #  if ( MODEL == ELBDM )
    int    Opt__Int_Phase;
    int    Opt__Res_Phase;
+#  if ( ELBDM_SCHEME == HYBRID )
+   int    Opt__Match_Phase;
+#  endif // # if ( ELBDM_SCHEME == HYBRID )
 #  endif
    int    Opt__Flu_IntScheme;
    int    Opt__RefFlu_IntScheme;
