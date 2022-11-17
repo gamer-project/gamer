@@ -223,14 +223,18 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
 #              if ( ELBDM_SCHEME == HYBRID )
                if ( !amr->use_wave_flag[FaLv] ) {
-                  if (TVarCC & _PHAS) PFaPtr[kk][jj][ii] = ELBDM_UnwrapPhase(OldPFaPtr[kk][jj][ii], avgphase);
-                  if (TVarCC & _STUB) SFaPtr[kk][jj][ii] = 0;
-               } else 
-#              endif
-               {
+                  if (TVarCC & _PHAS) {
+                     if ( OPT__MATCH_PHASE ) PFaPtr[kk][jj][ii] = ELBDM_UnwrapPhase(OldPFaPtr[kk][jj][ii], avgphase);
+                     else                    PFaPtr[kk][jj][ii] = avgphase;
+                  }
+                  if (TVarCC & _STUB)        SFaPtr[kk][jj][ii] = 0;
+               } else {
+#              endif // # if ( ELBDM_SCHEME == HYBRID )
                   if (TVarCC & _REAL) RFaPtr[kk][jj][ii] = SQRT(avgdens) * COS(avgphase);
                   if (TVarCC & _IMAG) IFaPtr[kk][jj][ii] = SQRT(avgdens) * SIN(avgphase);
+#              if ( ELBDM_SCHEME == HYBRID )
                }
+#              endif // # if ( ELBDM_SCHEME == HYBRID )
             }}}
          }  else // if ( ResFlu && (TVarCC & (_REAL) || TVarCC & (_IMAG)) && ... )
 #        endif // #if ( MODEL == ELBDM )
