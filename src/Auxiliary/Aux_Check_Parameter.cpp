@@ -1142,7 +1142,12 @@ void Aux_Check_Parameter()
 
       
    if ( !OPT__FIXUP_RESTRICT )
-      Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme requires the restrict operation OPT__FIXUP_RESTRICT !! !!\n");
+      Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme requires the restrict operation OPT__FIXUP_RESTRICT !!\n");
+
+#  ifdef LOAD_BALANCE
+   if ( !OPT__LB_EXCHANGE_FATHER )
+      Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme requires the option OPT__LB_EXCHANGE_FATHER for load balancing !!\n");
+#  endif 
 
 #  endif // # if ( ELBDM_SCHEME == HYBRID )
 
