@@ -50,7 +50,7 @@ double ELBDM_GetTimeStep_Velocity( const int lv )
 
 
 
-bool hasWaveCounterpart(int I, int J, int K, long GID0, global_patch_t* tree) {
+bool hasWaveCounterpart(int I, int J, int K, long GID0, LB_GlobalPatch* tree) {
    int lv = tree[GID0].level; 
 
    //printf("Checking I %d J %d K %d on lv %d with GID %ld\n", I, J, K, lv, GID0);
@@ -142,11 +142,10 @@ real GetMaxVelocity( const int lv, bool excludeWave )
    _dh      = (real)1.0/amr->dh[lv];
    _dh2     = (real)0.5*_dh;
 
-// construct global tree structure 
-   long NPatchAllLv;
-   int GID_Offset[NLEVEL];
+   LB_PatchCount pc;
 
-   global_patch_t* global_tree = LB_GetGlobalTree(NPatchAllLv, GID_Offset);
+// construct global tree structure 
+   LB_GlobalPatch* global_tree = LB_AllgatherTree(pc);
 
 /*
    for(int i = 0; i < MPI_NRank; i++) {
@@ -188,7 +187,7 @@ real GetMaxVelocity( const int lv, bool excludeWave )
                             MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
 
-         long GID0 = PID0 + GID_Offset[lv]; 
+         long GID0 = PID0 + pc.GID_Offset[lv]; 
 
 //       evaluate dS_dt
          for (int k=NGhost; k<Size_Flu-NGhost; k++)    {  km = k - 1;    kp = k + 1;   K = k - NGhost;
@@ -218,6 +217,7 @@ real GetMaxVelocity( const int lv, bool excludeWave )
       delete [] Flu_Array;
    } // OpenMP parallel region
 
+// clean up global tree
    delete [] global_tree;
 
 
