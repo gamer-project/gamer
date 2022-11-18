@@ -211,7 +211,7 @@ extern ParOutputDens_t OPT__OUTPUT_PAR_DENS;
 extern char            YT_SCRIPT[MAX_STRING];
 extern yt_verbose      YT_VERBOSE;
 extern char            YT_FIG_BASENAME[MAX_STRING];
-extern int             YT_GID_Offset[NLEVEL];
+extern LB_PatchCount   YT_PatchCount;
 #endif
 
 

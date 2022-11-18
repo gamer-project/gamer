@@ -416,7 +416,16 @@ void TABLE_GetSibPID_Based( const int lv, const int PID0, int SibPID_Based[] );
 
 // LoadBalance
 long LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
-global_patch_t * LB_GetGlobalTree (long& NPatchAllLv, int GID_Offset[]);
+
+void LB_GetPID(long GID, int& level, int& PID, LB_PatchCount& pc);
+void LB_AllgatherPatchCount(LB_PatchCount& pc);
+void LB_AllgatherLBIdx(LB_PatchCount& pc, LB_LocalPatchExchangeList& lel, LB_GlobalPatchExchangeList* gel);
+void LB_FillLocalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList& lel);
+void LB_FillGlobalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList& lel, LB_GlobalPatchExchangeList& gel, int root);
+LB_GlobalPatch* LB_ConstructGlobalTree(LB_PatchCount& pc, LB_GlobalPatchExchangeList& gel, int root);
+LB_GlobalPatch* LB_GatherTree(LB_PatchCount& pc, int root);
+LB_GlobalPatch* LB_AllgatherTree(LB_PatchCount& pc);
+
 #ifdef LOAD_BALANCE
 void LB_AllocateBufferPatch_Father( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0,
                                     const bool RecordFaPID, int* NNewFaBuf0, int** NewFaBufPID0 );
@@ -662,6 +671,7 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
                             const bool UseTracers, real ParAttr[], const bool CorrectVelocity );
 FieldIdx_t AddParticleAttribute( const char *InputLabel );
 FieldIdx_t GetParticleAttributeIndex( const char *InputLabel, const Check_t Check );
+
 #ifdef LOAD_BALANCE
 void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, const bool PredictPos, const double TargetTime,
                                       const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
@@ -687,6 +697,7 @@ void Par_LB_MapBuffer2RealPatch( const int lv, const int  Buff_NPatchTotal, int 
                                                      int &Real_NPatchTotal, int *&Real_PIDList, int *Real_NPatchEachRank,
                                  const bool UseInputLBIdx, long *Buff_LBIdxList_Input );
 #endif
+
 #endif // #ifdef PARTICLE
 
 
