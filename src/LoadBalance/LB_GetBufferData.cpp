@@ -1816,7 +1816,13 @@ real *LB_GetBufferData_MemAllocate_Send( const int NSend )
       if ( MPI_SendBuf_Shared != NULL )   delete [] MPI_SendBuf_Shared;
 
 //    allocate BufSizeFactor more memory to sustain longer
-      SendBufSize        = int(NSend*BufSizeFactor);
+      SendBufSize = int(NSend*BufSizeFactor);
+
+//    check integer overflow
+      if ( SendBufSize < 0 )
+         Aux_Error( ERROR_INFO, "NSend %d, BufSizeFactor %13.7e, SendBufSize %d < 0 !!\n",
+                    NSend, BufSizeFactor, SendBufSize );
+
       MPI_SendBuf_Shared = new real [SendBufSize];
    }
 
@@ -1847,7 +1853,13 @@ real *LB_GetBufferData_MemAllocate_Recv( const int NRecv )
       if ( MPI_RecvBuf_Shared != NULL )   delete [] MPI_RecvBuf_Shared;
 
 //    allocate BufSizeFactor more memory to sustain longer
-      RecvBufSize        = int(NRecv*BufSizeFactor);
+      RecvBufSize = int(NRecv*BufSizeFactor);
+
+//    check integer overflow
+      if ( RecvBufSize < 0 )
+         Aux_Error( ERROR_INFO, "NRecv %d, BufSizeFactor %13.7e, RecvBufSize %d < 0 !!\n",
+                    NRecv, BufSizeFactor, RecvBufSize );
+
       MPI_RecvBuf_Shared = new real [RecvBufSize];
    }
 
