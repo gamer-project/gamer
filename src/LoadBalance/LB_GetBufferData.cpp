@@ -1796,9 +1796,10 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_GetBufferData_MemAllocate_Send
-// Description :  Allocate the MPI send buffer used by LG_GetBufferData (and Par_LB_SendParticleData)
+// Description :  Allocate the MPI send buffer used by LG_GetBufferData(), Par_LB_CollectParticle2OneLevel(),
+//                Par_LB_ExchangeParticleBetweenPatch() and Par_LB_CollectParticleFromRealPatch()
 //
-// Note        :  1. Call LB_GetBufferData_MemFree to free memory
+// Note        :  1. Call LB_GetBufferData_MemFree() to free memory
 //                2. This function is used by some particle routines as well
 //                3. We reallocate send/recv buffers only when the current buffer size is not large enough
 //                   --> It greatly improves MPI performance
@@ -1827,7 +1828,7 @@ real *LB_GetBufferData_MemAllocate_Send( const int NSend )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_GetBufferData_MemAllocate_Recv
-// Description :  Allocate the MPI recv buffer used by LG_GetBufferData (and Par_LB_SendParticleData)
+// Description :  Allocate the MPI recv buffer used by LG_GetBufferData() and Par_LB_SendParticleData()
 //
 // Note        :  1. Call LB_GetBufferData_MemFree to free memory
 //                2. This function is used by some particle routines as well
