@@ -3,7 +3,7 @@
 #ifdef LOAD_BALANCE
 
 
-const real BufSizeFactor = 1.2;  // Send/RecvBufSize = int(NSend/NRecv*BufSizeFactor) --> must be >= 1.0
+const real BufSizeFactor = 1.05;    // Send/RecvBufSize = int(NSend/NRecv*BufSizeFactor) --> must be >= 1.0
 
 // MPI buffers are shared by some particle routines
 static real *MPI_SendBuf_Shared = NULL;
