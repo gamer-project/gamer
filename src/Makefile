@@ -274,6 +274,8 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 # for debug only
 ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
 #CXXFLAG    += -fstack-protector-all
+#CXXFLAG    += -fsanitize=undefined -fsanitize=address
+#LIB        += -fsanitize=undefined -fsanitize=address
 endif
 
 # suppress warning when OpenMP is disabled

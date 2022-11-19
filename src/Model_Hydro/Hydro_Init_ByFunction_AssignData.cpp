@@ -10,7 +10,7 @@ static void Init_Function_User_Template( real fluid[], const double x, const dou
 void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                                 const int lv, double AuxArray[] ) = NULL;
 
-extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
+extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
                                          const double dt, const int lv, double AuxArray[] );
 
 #ifdef MHD
@@ -248,8 +248,9 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
             Init_Function_User_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
 
 //          modify the initial condition if required
+//          --> always set the magnetic energy to zero since fluid_sub[ENGY] doesn't include that
             if ( OPT__RESET_FLUID )
-               Flu_ResetByUser_Func_Ptr( fluid_sub, x, y, z, Time[lv], 0.0, lv, NULL );
+               Flu_ResetByUser_Func_Ptr( fluid_sub, (real)0.0, x, y, z, Time[lv], 0.0, lv, NULL );
 
             for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] += fluid_sub[v];
 
