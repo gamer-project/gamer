@@ -200,7 +200,7 @@ void Output_DumpData( const int Stage )
          case 1 : ElapsedWalltime /=    60.0;   break;
          case 2 : ElapsedWalltime /=  3600.0;   break;
          case 3 : ElapsedWalltime /= 86400.0;   break;
-         default: Aux_Error( ERROR_INFO, "unsupported unit for output walltime !!\n" );
+         default: Aux_Error( ERROR_INFO, "unsupported unit (%d) for output walltime !!\n", OUTPUT_WALLTIME_UNIT );
       }
 
 
