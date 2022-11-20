@@ -136,6 +136,7 @@ void Init_Load_Parameter()
 
 // grid refinement
    ReadPara->Add( "REGRID_COUNT",               &REGRID_COUNT,                    4,               1,             NoMax_int      );
+   ReadPara->Add( "REFINE_NLEVEL",              &REFINE_NLEVEL,                   1,               1,             NoMax_int      );
    ReadPara->Add( "FLAG_BUFFER_SIZE",           &FLAG_BUFFER_SIZE,               -1,               NoMin_int,     PS1            );
    ReadPara->Add( "FLAG_BUFFER_SIZE_MAXM1_LV",  &FLAG_BUFFER_SIZE_MAXM1_LV,      -1,               NoMin_int,     PS1            );
    ReadPara->Add( "FLAG_BUFFER_SIZE_MAXM2_LV",  &FLAG_BUFFER_SIZE_MAXM2_LV,      -1,               NoMin_int,     PS1            );
