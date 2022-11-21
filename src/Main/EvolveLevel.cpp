@@ -355,17 +355,6 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 // ===============================================================================================
 
 
-      std::stringstream ss;
-      std::string fname;
-
-      if ( OPT__OUTPUT_DEBUG ) {
-         ss.str("");
-         printf("master counter %d level %d and before advancing gravity\n", master_counter,lv);
-         ss<<"t_"<<master_counter++;
-         fname = ss.str();
-         Output_DumpData_Total_HDF5(fname.c_str());
-      }
-
 //    4. Poisson + gravity solver
 // ===============================================================================================
 #     ifdef GRAVITY
@@ -457,15 +446,6 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 #     endif // #ifdef GRAVITY
 // ===============================================================================================
-
-      if ( OPT__OUTPUT_DEBUG ) {
-         ss.str("");
-         printf("master counter %d level %d and after advancing gravity\n", master_counter,lv);
-         ss<<"t_"<<master_counter++;
-         fname = ss.str();
-         Output_DumpData_Total_HDF5(fname.c_str());
-      }
-
 
 //    5. correct particles velocity and send particles to lv+1
 // ===============================================================================================

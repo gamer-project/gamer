@@ -12,14 +12,17 @@ Instructions for adding new patch_t members to GatherTree:
 */
 
 
-LB_PatchCount::LB_PatchCount() : NPatchAllLv(0), isInitialised(false) {
+LB_PatchCount::LB_PatchCount() : NPatchAllLv(0), NPatchLocalLv(0), isInitialised(false) {
    NPatchAllRank = new int [MPI_NRank][NLEVEL];
    for (int lv=0; lv<NLEVEL; lv++)
    {
+      for (int r=0; r<MPI_Rank; r++) NPatchAllRank[r][lv] = 0; 
+      NPatchLocal[lv] = 0; 
       GID_Offset[lv] = 0; 
       GID_LvStart[lv] = 0;
-   } 
+   }
 }
+
 
 LB_PatchCount::~LB_PatchCount() {
    delete [] NPatchAllRank;
@@ -100,35 +103,6 @@ LB_GlobalPatchExchangeList::~LB_GlobalPatchExchangeList() {
    }
 }
 
-//-------------------------------------------------------------------------------------------------------
-// Function    :  LB_GetPID
-// Description :  Convert GID to local PID
-//
-// Note        :  1. Calculate PID and level from PID.
-//
-// Parameter   :  GID      : GID to convert
-//                level    : fill in level of GID.
-//                PID      : fill in PID of GID
-//                rank     : fill in rank of GID
-//
-// Return      :  *level, *PID
-//-------------------------------------------------------------------------------------------------------
-void LB_GetPID(long GID, int& level, int& PID, LB_PatchCount& pc) {
-#  ifdef GAMER_DEBUG
-   if ( GID < 0  ||  GID >= pc.NPatchAllLv )  
-      Aux_Error( ERROR_INFO, "incorrect GID %ld (max = %ld) !!\n", GID, pc.NPatchAllLv-1 );
-#  endif
-
-   level = 0;
-
-   for(int lv = 1; lv < NLEVEL; lv++) {
-      if ( GID < pc.GID_Offset[lv] )      
-        break;
-      level = lv;
-   }
-
-   PID = GID - pc.GID_Offset[level];
-}
 
 
 
@@ -141,6 +115,8 @@ void LB_GetPID(long GID, int& level, int& PID, LB_PatchCount& pc) {
 // Parameter   :  pc   : reference to LB_PatchCount object
 //-------------------------------------------------------------------------------------------------------
 void LB_AllgatherPatchCount(LB_PatchCount& pc) {
+
+   Aux_Message( stdout, "%s on rank %d...\n", __FUNCTION__ , MPI_Rank );
 
    pc.NPatchLocalLv = 0; 
    pc.NPatchAllLv   = 0;
@@ -164,6 +140,8 @@ void LB_AllgatherPatchCount(LB_PatchCount& pc) {
 
       pc.GID_LvStart[lv] = ( lv == 0 ) ? 0 : pc.GID_LvStart[lv-1] + NPatchTotal[lv-1];
    }
+
+   Aux_Message( stdout, "%s done! on rank %d...\n", __FUNCTION__ , MPI_Rank );
 
    pc.isInitialised = true; 
 }

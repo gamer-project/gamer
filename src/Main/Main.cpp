@@ -199,7 +199,7 @@ ParOutputDens_t      OPT__OUTPUT_PAR_DENS;
 char                 YT_SCRIPT[MAX_STRING];
 yt_verbose           YT_VERBOSE;
 char                 YT_FIG_BASENAME[MAX_STRING];
-LB_PatchCount        YT_PatchCount;
+int                  YT_GID_Offset[NLEVEL];
 #endif
 
 // (2-7) Grackle

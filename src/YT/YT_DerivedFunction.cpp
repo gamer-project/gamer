@@ -73,7 +73,7 @@ void DerivedFuncWithName_PatchGroup(int list_len, long *list_gid, char *field, y
 
         // generate data in patch.
         Prepare_PatchData(level, Time[0], (real*) data_array[lid].data_ptr, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
-                          UNIT_PATCHGROUP, NSIDE_00, false, FluBC, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false);
+                          UNIT_PATCHGROUP, NSIDE_00, false, OPT__BC_FLU, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false);
     }
 }
 

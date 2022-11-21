@@ -4,7 +4,7 @@
 
 // call libyt API
 void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalLv);
-void YT_AddLocalGrid( int NField, yt_field *FieldList);
+void YT_AddLocalGrid( int NField, yt_field *FieldList, LB_PatchCount& pc);
 
 #ifdef LIBYT_USE_PATCH_GROUP
 
@@ -55,9 +55,17 @@ void YT_Inline()
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
-
+   LB_PatchCount pc;
+   
 // 1. get patch counts per level and per rank from all ranks
-   LB_AllgatherPatchCount(YT_PatchCount); 
+   LB_AllgatherPatchCount(pc); 
+   
+
+// set YT_GID_Offset for searching GID in derived function and particle get attribute function.
+   for (int lv=0; lv<NLEVEL; lv++)
+   {
+      YT_GID_Offset[lv] = pc.GID_Offset[lv];
+   }
 
 // 2. prepare YT-specific parameters
 // 2-1. determine the number of fields
@@ -84,7 +92,7 @@ void YT_Inline()
 #  endif
 
 // 2-2. Call YT_SetParameter and set particle info if need.
-   YT_SetParameter( YT_PatchCount.NPatchAllLv, NField, YT_PatchCount.NPatchLocalLv);
+   YT_SetParameter( pc.NPatchAllLv, NField, pc.NPatchLocalLv);
 
 // 3.   Get FieldList and ParticleList, fill the info if needed
 // 3-1. get yt_field array FieldList, and filled in field info
@@ -234,7 +242,7 @@ void YT_Inline()
 #  endif // #ifdef PARTICLE
 
 // 4. prepare local patches for libyt
-   YT_AddLocalGrid( NField, FieldList);
+   YT_AddLocalGrid( NField, FieldList, pc);
 
 // 5. perform yt inline analysis
    //if ( yt_inline_argument( "yt_inline_inputArg", 1, "\'density\'" ) != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_inline_inputArg() failed !!\n" );

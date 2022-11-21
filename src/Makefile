@@ -173,13 +173,13 @@ SIMU_OPTION += -DPATCH_SIZE=8
 
 # GPU acceleration
 # --> must set GPU_ARCH as well
-SIMU_OPTION += -DGPU
+#SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING/AMPERE
-SIMU_OPTION += -DGPU_ARCH=TURING
+#SIMU_OPTION += -DGPU_ARCH=TURING
 
 # debug mode
-#SIMU_OPTION += -DGAMER_DEBUG
+SIMU_OPTION += -DGAMER_DEBUG
 
 # bitwise reproducibility
 #SIMU_OPTION += -DBITWISE_REPRODUCIBILITY
@@ -223,7 +223,7 @@ SIMU_OPTION += -DSUPPORT_LIBYT
 
 # use patch group as the unit in libyt; this will speed up inline-analysis but increase memory consumption
 # --> must enable SUPPORT_LIBYT
-SIMU_OPTION += -DLIBYT_USE_PATCH_GROUP
+#SIMU_OPTION += -DLIBYT_USE_PATCH_GROUP
 
 # random number implementation: RNG_GNU_EXT/RNG_CPP11 (GNU extension drand48_r/c++11 <random>)
 # --> use RNG_GNU_EXT for compilers supporting GNU extensions (**not supported on some macOS**)
