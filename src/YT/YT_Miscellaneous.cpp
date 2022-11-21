@@ -16,9 +16,10 @@
 // Return      :  *level, *PID
 //-------------------------------------------------------------------------------------------------------
 void YT_GetPID(const long gid, int *level, int *PID) {
-#ifdef  LIBYT_USE_PATCH_GROUP
+#   ifdef  LIBYT_USE_PATCH_GROUP
     LB_GetPID( 8 * gid, *level, *PID, YT_PatchCount ); 
-#else
+#   else
     LB_GetPID(     gid, *level, *PID, YT_PatchCount );
+#   endif // # ifdef  LIBYT_USE_PATCH_GROUP
 }
 #endif // #ifdef SUPPORT_LIBYT

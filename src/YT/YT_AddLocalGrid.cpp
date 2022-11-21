@@ -50,7 +50,7 @@ void YT_AddLocalGrid( int NField, yt_field *FieldList)
       for (int PID=0; PID<(amr->NPatchComma[lv][1]); PID++)
 #     endif // #ifdef LIBYT_USE_PATCH_GROUP
       {
-         const int GID = PID + YT_PatchCount.GID_Offset[lv];
+         const long GID = PID + YT_PatchCount.GID_Offset[lv];
 
          for (int d=0; d<3; d++)
          {

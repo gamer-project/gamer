@@ -4,7 +4,7 @@
 
 // call libyt API
 void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalLv);
-void YT_AddLocalGrid( const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL], int NField, yt_field *FieldList);
+void YT_AddLocalGrid( int NField, yt_field *FieldList);
 
 #ifdef LIBYT_USE_PATCH_GROUP
 
@@ -233,15 +233,14 @@ void YT_Inline()
 #  endif // #ifdef PARTICLE
 
 // 4. prepare local patches for libyt
-   YT_AddLocalGrid( GID_LvStart, NPatchAllRank, NField, FieldList);
+   YT_AddLocalGrid( NField, FieldList);
 
 // 5. perform yt inline analysis
-   if ( yt_inline_argument( "yt_inline_inputArg", 1, "\'Dens\'" ) != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_inline_inputArg() failed !!\n" );
+   //if ( yt_inline_argument( "yt_inline_inputArg", 1, "\'density\'" ) != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_inline_inputArg() failed !!\n" );
    if ( yt_inline( "yt_inline" ) != YT_SUCCESS )     Aux_Error( ERROR_INFO, "yt_inline() failed !!\n" );
 
 // 6. free resource
    if ( yt_free_gridsPtr() != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_free_gridsPtr() failed !!\n" );
-   delete [] NPatchAllRank;
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 

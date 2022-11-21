@@ -419,7 +419,7 @@ long LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 
 void LB_GetPID(long GID, int& level, int& PID, LB_PatchCount& pc);
 void LB_AllgatherPatchCount(LB_PatchCount& pc);
-void LB_AllgatherLBIdx(LB_PatchCount& pc, LB_LocalPatchExchangeList& lel, LB_GlobalPatchExchangeList* gel);
+void LB_AllgatherLBIdx(LB_PatchCount& pc, LB_LocalPatchExchangeList& lel, LB_GlobalPatchExchangeList* gel = NULL);
 void LB_FillLocalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList& lel);
 void LB_FillGlobalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList& lel, LB_GlobalPatchExchangeList& gel, int root);
 LB_GlobalPatch* LB_ConstructGlobalTree(LB_PatchCount& pc, LB_GlobalPatchExchangeList& gel, int root);

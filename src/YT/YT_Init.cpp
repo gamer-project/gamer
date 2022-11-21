@@ -3,9 +3,6 @@
 #ifdef SUPPORT_LIBYT
 
 
-LB_PatchCount YT_PatchCount;
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  YT_Init
 // Description :  Initialize the yt inline analysis
