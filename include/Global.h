@@ -124,7 +124,7 @@ extern double           ELBDM_TAYLOR3_COEFF, ELBDM_MASS, ELBDM_PLANCK_CONST, ELB
 extern double           ELBDM_LAMBDA;
 #endif
 extern bool             OPT__FLAG_INTERFERENCE;
-extern double           FlagTable_Interference[NLEVEL-1][3];
+extern double           FlagTable_Interference[NLEVEL-1][4];
 # if ( ELBDM_SCHEME == HYBRID )
 extern double           DT__HYBRID, DT__VELOCITY;
 extern bool             OPT__MATCH_PHASE;

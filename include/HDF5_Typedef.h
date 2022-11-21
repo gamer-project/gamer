@@ -751,7 +751,7 @@ struct InputPara_t
 #  elif ( MODEL == ELBDM )
    double FlagTable_EngyDensity  [NLEVEL-1][2];
 // # if ( ELBDM_SCHEME == HYBRID )
-   double FlagTable_Interference [NLEVEL-1][3];
+   double FlagTable_Interference [NLEVEL-1][4];
 // # endif 
 #  endif
 #  ifdef PARTICLE

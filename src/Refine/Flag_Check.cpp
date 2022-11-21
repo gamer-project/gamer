@@ -4,6 +4,7 @@ static bool Check_Gradient( const int i, const int j, const int k, const real In
 static bool Check_Curl( const int i, const int j, const int k,
                         const real vx[][PS1][PS1], const real vy[][PS1][PS1], const real vz[][PS1][PS1],
                         const double Threshold );
+static bool ELBDM_Flag_VolumeFracQP( const real Cond[], const double Threshold_QP, const double Threshold_VolumeFraction );
 extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 
 
@@ -65,8 +66,10 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    {
       real (*Var)  [PS1 ][PS1 ][PS1 ] = ( real(*) [PS1 ][PS1 ][PS1 ] )  Interf_Cond;
       
-      bool FlagInterferenceOne  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond,             FlagTable_Interference[lv][0]);
-      bool FlagInterferenceTwo  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond + CUBE(PS1), FlagTable_Interference[lv][1]);
+      bool FlagInterferenceOne    =  ELBDM_Flag_Interference( i, j, k, Interf_Cond,             FlagTable_Interference[lv][0]);
+      bool FlagInterferenceTwo    =  ELBDM_Flag_VolumeFracQP( Interf_Cond,                      FlagTable_Interference[lv][0], FlagTable_Interference[lv][1]);
+      bool FlagInterferenceThree  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond + CUBE(PS1), FlagTable_Interference[lv][2]);
+      //bool FlagInterferenceFour   =  ELBDM_Flag_VolumeFracQP( Interf_Cond +  CUBE(PS1),         FlagTable_Interference[lv][2], FlagTable_Interference[lv][1]);
 
 #     ifdef GAMER_DEBUG
       //if (FlagInterferenceOne) {
@@ -77,11 +80,12 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       //}
 #     endif 
 
-      Flag |= FlagInterferenceOne;
+      //Flag |= FlagInterferenceOne;
       Flag |= FlagInterferenceTwo;
+      Flag |= FlagInterferenceThree;
 
 #     if ( ELBDM_SCHEME == HYBRID )
-      if ( Flag &&  FlagTable_Interference[lv][2] >= 0.0 ) {
+      if ( Flag &&  FlagTable_Interference[lv][3] >= 0.0 ) {
 
 #        ifdef GAMER_DEBUG
 //       we distinguish two cases:
@@ -89,11 +93,11 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 //       if the slope is bigger, this may be due to a real phase discontinuity because of a 2 pi winding of the phase at a point of zero density
 //       we check for the latter with FlagInterferenceTwo
 //       if the curvature of the phase is high at a point where the phase jump is bigger than pi, we assume that it is a real jump and still switch to the wave scheme
-         bool dBResolvedAfterRefine = ! ELBDM_Flag_Interference( i, j, k, Interf_Cond + 2 * CUBE(PS1), M_PI ) || FlagInterferenceTwo;
+         bool dBResolvedAfterRefine = ! ELBDM_Flag_Interference( i, j, k, Interf_Cond + 2 * CUBE(PS1), M_PI ) || FlagInterferenceOne;
          if ( !dBResolvedAfterRefine ) {
             const int    Idx               = 2 * PS1*PS1*PS1 + k*PS1*PS1 + j*PS1 + i;
             const real   PhaseDifference   = Interf_Cond[Idx];
-            convert coordinates of cell to global integer coordinate system 
+//            convert coordinates of cell to global integer coordinate system 
             int coordinates[3] = {i, j, k};
        
             for ( int l = 0; l < 3; ++l ) {
@@ -386,3 +390,32 @@ bool Check_Curl( const int i, const int j, const int k,
    return Flag;
 
 } // FUNCTION : Check_Curl
+
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Check_VolumeFracQP
+// Description :  Check if the quantum pressure of more than Threshold_VolumeFraction of the cells in the input patch exceed Threshold_QP
+//
+// Note        :  1, Size of the input array "Cond" should be PATCH_SIZE^3
+//
+// Parameter   :  Cond      : Input vector
+//                Threshold_QP : QP threshold
+//                Threshold_VolumeFraction : Volume Fraction Threshold ( 0.0 - 1.0)
+//
+// Return      :  "true"  if sum | cell > Threshold_QP | / NCell > Theshold_VolumeFraction
+//                "false" otherwise
+//-------------------------------------------------------------------------------------------------------
+bool ELBDM_Flag_VolumeFracQP( const real Cond[], const double Threshold_QP, const double Threshold_VolumeFraction )
+{
+   int NExceedThreshold = 0, Idx = 0, NTotal = PS1 * PS1 * PS1;
+
+   for (int Idx = 0; Idx < NTotal; ++Idx) 
+         if ( Cond[Idx] > Threshold_QP ) ++NExceedThreshold;
+
+   float ratio =  NExceedThreshold / (float) NTotal; 
+
+   return ratio > Threshold_VolumeFraction;
+
+} // FUNCTION : Check_VolumeFracQP

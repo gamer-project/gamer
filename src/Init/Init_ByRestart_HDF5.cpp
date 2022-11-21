@@ -2217,7 +2217,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
       for (int t=0; t<2; t++) {
       RS.FlagTable_EngyDensity [lv][t] = -1.0;
       }
-      for (int t=0; t<3; t++) {
+      for (int t=0; t<4; t++) {
       RS.FlagTable_Interference [lv][t] = -1.0;
       }
 #     endif
@@ -2291,7 +2291,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "FlagTable_Interference",    RS.FlagTable_Interference,   SID, TID, NonFatal,  NullPtr,                    -1, NonFatal );
 
    for (int lv=0; lv<MAX_LEVEL; lv++)
-   for (int t=0; t<3; t++)
+   for (int t=0; t<4; t++)
    {
       if ( RS.FlagTable_Interference[lv][t] != RT.FlagTable_Interference[lv][t] )
          Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",

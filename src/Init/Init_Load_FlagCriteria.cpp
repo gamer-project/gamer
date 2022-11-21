@@ -38,7 +38,7 @@ void Init_Load_FlagCriteria()
 
 #  if (  MODEL != ELBDM )
    const bool OPT__FLAG_INTERFERENCE  = false;
-   double FlagTable_Interference[NLEVEL-1][3];
+   double FlagTable_Interference[NLEVEL-1][4];
 #  endif 
 
 #  ifndef PARTICLE
@@ -114,7 +114,7 @@ void Init_Load_FlagCriteria()
       FlagTable_EngyDensity [lv][t] = -1.0;
       }
 
-      for (int t=0; t<3; t++) {
+      for (int t=0; t<4; t++) {
       FlagTable_Interference [lv][t] = -1.0;
       }
 #     endif
@@ -191,9 +191,11 @@ void Init_Load_FlagCriteria()
             else if ( FlagMode == 7 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParCell [lv] );
 
 //          OPT__FLAG_INTERFERENCE loads three columns
-            else if ( FlagMode == 12 )  sscanf( input_line, "%d%lf%lf%lf", &Trash, &FlagTable_Interference[lv][0],
-                                                                                   &FlagTable_Interference[lv][1],
-                                                                                   &FlagTable_Interference[lv][2]);
+            else if ( FlagMode == 12 )  sscanf( input_line, "%d%lf%lf%lf%lf", &Trash, &FlagTable_Interference[lv][0],
+                                                                                      &FlagTable_Interference[lv][1],
+                                                                                      &FlagTable_Interference[lv][2],
+                                                                                      &FlagTable_Interference[lv][3]
+                                                                                      );
 //          others use the default format: (integer, double)
             else                       sscanf( input_line, "%d%lf", &Trash, &FlagTable[FlagMode][lv] );
          }

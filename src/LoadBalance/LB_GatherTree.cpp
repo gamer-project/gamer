@@ -116,8 +116,6 @@ LB_GlobalPatchExchangeList::~LB_GlobalPatchExchangeList() {
 //-------------------------------------------------------------------------------------------------------
 void LB_AllgatherPatchCount(LB_PatchCount& pc) {
 
-   Aux_Message( stdout, "%s on rank %d...\n", __FUNCTION__ , MPI_Rank );
-
    pc.NPatchLocalLv = 0; 
    pc.NPatchAllLv   = 0;
 
@@ -140,8 +138,6 @@ void LB_AllgatherPatchCount(LB_PatchCount& pc) {
 
       pc.GID_LvStart[lv] = ( lv == 0 ) ? 0 : pc.GID_LvStart[lv-1] + NPatchTotal[lv-1];
    }
-
-   Aux_Message( stdout, "%s done! on rank %d...\n", __FUNCTION__ , MPI_Rank );
 
    pc.isInitialised = true; 
 }
