@@ -55,6 +55,7 @@ void YT_Inline()
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
+
 // 1. get patch counts per level and per rank from all ranks
    LB_AllgatherPatchCount(YT_PatchCount); 
 

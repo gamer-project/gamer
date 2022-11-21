@@ -92,8 +92,8 @@ void YT_AddLocalGrid( int NField, yt_field *FieldList)
 
 #        ifdef LIBYT_USE_PATCH_GROUP
          if ( FaGID != -1 ) FaGID = (long) FaGID / 8; 
-
 #        endif // #ifdef LIBYT_USE_PATCH_GROUP
+
          YT_Grids[LID].parent_id = FaGID;
 
 #        ifndef LIBYT_USE_PATCH_GROUP

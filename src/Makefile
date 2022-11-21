@@ -37,7 +37,7 @@ SIMU_OPTION += -DMODEL=ELBDM
 
 
 # enable gravity
-SIMU_OPTION += -DGRAVITY
+#SIMU_OPTION += -DGRAVITY
 
 # enable particles
 #SIMU_OPTION += -DPARTICLE
@@ -98,7 +98,7 @@ else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
 # ELBDM scheme: WAVE/HYBRID
 # --> need not be set even when MODEL=ELBDM
 # --> defaults to ELBDM_SCHEME=WAVE
-SIMU_OPTION += -DELBDM_SCHEME=HYBRID
+#SIMU_OPTION += -DELBDM_SCHEME=HYBRID
 
 # enforce the mass conservation
 SIMU_OPTION += -DCONSERVE_MASS
@@ -219,11 +219,11 @@ SIMU_OPTION += -DSUPPORT_HDF5
 #SIMU_OPTION += -DSUPPORT_GSL
 
 # support yt inline analysis
-#SIMU_OPTION += -DSUPPORT_LIBYT
+SIMU_OPTION += -DSUPPORT_LIBYT
 
 # use patch group as the unit in libyt; this will speed up inline-analysis but increase memory consumption
 # --> must enable SUPPORT_LIBYT
-#SIMU_OPTION += -DLIBYT_USE_PATCH_GROUP
+SIMU_OPTION += -DLIBYT_USE_PATCH_GROUP
 
 # random number implementation: RNG_GNU_EXT/RNG_CPP11 (GNU extension drand48_r/c++11 <random>)
 # --> use RNG_GNU_EXT for compilers supporting GNU extensions (**not supported on some macOS**)
@@ -309,7 +309,7 @@ MPI_PATH     := /usr/lib/x86_64-linux-gnu/mpich
 HDF5_PATH    := /usr/lib/x86_64-linux-gnu/hdf5/serial
 GRACKLE_PATH :=
 GSL_PATH     :=
-LIBYT_PATH   :=
+LIBYT_PATH   := /home/calab912/Documents/libyt/
 
 # NCSA-bluewaters (only need to specify the path of user-installed packages)
 #GRACKLE_PATH :=
@@ -638,7 +638,7 @@ endif # !SERIAL
 
 # load-balance source files (included only if "LOAD_BALANCE" is turned on)
 # ------------------------------------------------------------------------------------
-CPU_FILE    += LB_HilbertCurve.cpp  LB_Utility.cpp LB_GetGlobalTree.cpp
+CPU_FILE    += LB_HilbertCurve.cpp  LB_Utility.cpp LB_GatherTree.cpp
 
 ifeq "$(findstring -DLOAD_BALANCE, $(SIMU_OPTION))" "-DLOAD_BALANCE"
 CPU_FILE    += LB_Init_LoadBalance.cpp  LB_AllocateBufferPatch_Sibling.cpp  LB_RecordOvelapMPIPatchID.cpp \
