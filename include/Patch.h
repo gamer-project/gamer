@@ -1114,9 +1114,9 @@ class NonCopyable
 struct LB_GlobalPatch
 {
    int    corner[3];
-   int    sibling[26];
-   int    father;
-   int    son;
+   long   sibling[26];
+   long   father;
+   long   son;
    long   LB_Idx;
    int    level; 
 #  ifdef PARTICLE
