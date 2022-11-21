@@ -410,6 +410,16 @@ void TABLE_GetSibPID_Based( const int lv, const int PID0, int SibPID_Based[] );
 
 // LoadBalance
 long LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
+
+void LB_GetPID(long GID, int& level, int& PID, int* GID_Offset);
+void LB_AllgatherPatchCount(LB_PatchCount& pc);
+void LB_AllgatherLBIdx(LB_PatchCount& pc, LB_LocalPatchExchangeList& lel, LB_GlobalPatchExchangeList* gel = NULL);
+void LB_FillLocalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList& lel);
+void LB_FillGlobalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList& lel, LB_GlobalPatchExchangeList& gel, int root);
+LB_GlobalPatch* LB_ConstructGlobalTree(LB_PatchCount& pc, LB_GlobalPatchExchangeList& gel, int root);
+LB_GlobalPatch* LB_GatherTree(LB_PatchCount& pc, int root);
+LB_GlobalPatch* LB_AllgatherTree(LB_PatchCount& pc);
+
 #ifdef LOAD_BALANCE
 void LB_AllocateBufferPatch_Father( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0,
                                     const bool RecordFaPID, int* NNewFaBuf0, int** NewFaBufPID0 );

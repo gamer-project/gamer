@@ -1101,5 +1101,83 @@ struct patch_t
 }; // struct patch_t
 
 
+class NonCopyable
+{
+  protected:
+    NonCopyable() {}
+    ~NonCopyable() {}
+  private: 
+    NonCopyable(const NonCopyable &);
+    NonCopyable& operator=(const NonCopyable &);
+}; // class NonCopyable
+
+struct LB_GlobalPatch
+{
+   int    corner[3];
+   int    sibling[26];
+   int    father;
+   int    son;
+   long   LB_Idx;
+   int    level; 
+#  ifdef PARTICLE
+   int    NPar;
+#  endif 
+}; // struct LB_GlobalPatch
+
+struct LB_PatchCount : private NonCopyable
+{
+   LB_PatchCount();
+   ~LB_PatchCount();
+
+   long NPatchAllLv;
+   int NPatchLocalLv;
+   int NPatchLocal[NLEVEL]; // number of patches per level on MPI_Rank
+   int (*NPatchAllRank)[NLEVEL]; // number of patches in [MPI rank][level]
+   int GID_Offset[NLEVEL]; // offsets that can be used to convert local PID at level lv to GID via GID = PID + GID_Offset[lv]
+   int GID_LvStart[NLEVEL]; // global patch index at which level starts 
+   bool isInitialised;
+}; // struct LB_PatchCount
+
+
+// allocate memory and store pointers to lists with local patch information
+struct LB_LocalPatchExchangeList : private NonCopyable
+{
+   LB_LocalPatchExchangeList();
+   ~LB_LocalPatchExchangeList();
+
+   long *LBIdxList_Local[NLEVEL];         // load balance ids 
+   int  (*CrList_Local   [NLEVEL])[3];    // patch corners
+   int   *FaList_Local   [NLEVEL];        // father GIDs
+   int   *SonList_Local  [NLEVEL];        // son GIDs
+   int  (*SibList_Local  [NLEVEL])[26];   // sibling GIDs
+#  ifdef PARTICLE
+   int   *NParList_Local [NLEVEL]         // particle GIDs
+#  endif
+   bool  isInitialised;
+
+   long *LBIdxList_Sort         [NLEVEL];
+   int  *LBIdxList_Sort_IdxTable[NLEVEL];
+   bool  LBIdxisInitialised; 
+}; // struct LB_LocalPatchExchangeList
+
+
+// allocate memory and store pointers to lists with global patch information
+struct LB_GlobalPatchExchangeList : private NonCopyable
+{
+   LB_GlobalPatchExchangeList(LB_PatchCount& pc, int root);
+   ~LB_GlobalPatchExchangeList();
+
+   long *LBIdxList_AllLv;     // load balance ids
+   int  (*CrList_AllLv)[3];   // patch corners 
+   int  *FaList_AllLv;        // father GIDs
+   int  *SonList_AllLv;       // son GIDs
+   int  (*SibList_AllLv)[26]; // sibling GIDs
+#  ifdef PARTICLE
+   int  *NParList_AllLv;      // particle numbers
+#  endif
+   bool isAllocated;
+   bool isInitialised;
+}; // struct LB_GlobalPatchExchangeList
+
 
 #endif // #ifndef __PATCH_H__
