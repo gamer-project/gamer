@@ -119,9 +119,9 @@ void LB_GetPID(long GID, int& level, int& PID, LB_PatchCount& pc) {
       Aux_Error( ERROR_INFO, "incorrect GID %ld (max = %ld) !!\n", GID, pc.NPatchAllLv-1 );
 #  endif
 
-   int lv = 0;
+   level = 0;
 
-   for(lv = 1; lv < NLEVEL; lv++) {
+   for(int lv = 1; lv < NLEVEL; lv++) {
       if ( GID < pc.GID_Offset[lv] )      
         break;
       level = lv;
