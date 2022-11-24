@@ -124,6 +124,7 @@ AUTO_REDUCE_INT_MONO_MIN      1.0e-2      # minimum allowed INT_MONO_COEFF(_B) a
 
 # grid refinement (examples of Input__Flag_XXX tables are put at "example/input/")
 REGRID_COUNT                  4           # refine every REGRID_COUNT sub-step [4]
+REFINE_NLEVEL                 1           # number of new AMR levels to be created at once during refinement [1]
 FLAG_BUFFER_SIZE             -1           # number of buffer cells for the flag operation (0~PATCH_SIZE; <0=auto -> PATCH_SIZE) [-1]
 FLAG_BUFFER_SIZE_MAXM1_LV    -1           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-1 (<0=auto -> REGRID_COUNT) [-1]
 FLAG_BUFFER_SIZE_MAXM2_LV    -1           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-2 (<0=auto) [-1]
@@ -341,6 +342,8 @@ OPT__OUTPUT_MODE              1           # (1=const step, 2=const dt, 3=dump ta
 OPT__OUTPUT_RESTART           0           # output data immediately after restart [0]
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
 OUTPUT_DT                     1.0         # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
+OUTPUT_WALLTIME              -1.0         # output data every OUTPUT_WALLTIME walltime (<=0.0=off) [-1.0]
+OUTPUT_WALLTIME_UNIT          0           # unit of OUTPUT_WALLTIME (0=second, 1=minute, 2=hour, 3=day) [0]
 OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Y                -1.0         # y coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Z                -1.0         # z coordinate for OPT__OUTPUT_PART [-1.0]

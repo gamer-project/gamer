@@ -136,6 +136,7 @@ void Init_Load_Parameter()
 
 // grid refinement
    ReadPara->Add( "REGRID_COUNT",               &REGRID_COUNT,                    4,               1,             NoMax_int      );
+   ReadPara->Add( "REFINE_NLEVEL",              &REFINE_NLEVEL,                   1,               1,             NoMax_int      );
    ReadPara->Add( "FLAG_BUFFER_SIZE",           &FLAG_BUFFER_SIZE,               -1,               NoMin_int,     PS1            );
    ReadPara->Add( "FLAG_BUFFER_SIZE_MAXM1_LV",  &FLAG_BUFFER_SIZE_MAXM1_LV,      -1,               NoMin_int,     PS1            );
    ReadPara->Add( "FLAG_BUFFER_SIZE_MAXM2_LV",  &FLAG_BUFFER_SIZE_MAXM2_LV,      -1,               NoMin_int,     PS1            );
@@ -437,6 +438,8 @@ void Init_Load_Parameter()
 // do not check OUTPUT_STEP and OUTPUT_DT since they depend on OPT__OUTPUT_MODE
    ReadPara->Add( "OUTPUT_STEP",                &OUTPUT_STEP,                    -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "OUTPUT_DT",                  &OUTPUT_DT,                      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "OUTPUT_WALLTIME",            &OUTPUT_WALLTIME,                -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "OUTPUT_WALLTIME_UNIT",       &OUTPUT_WALLTIME_UNIT,            0,               0,             3              );
 // do not check OUTPUT_PART_X/Y/Z since they depend on OPT__OUTPUT_PART
    ReadPara->Add( "OUTPUT_PART_X",              &OUTPUT_PART_X,                  -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "OUTPUT_PART_Y",              &OUTPUT_PART_Y,                  -1.0,             NoMin_double,  NoMax_double   );
