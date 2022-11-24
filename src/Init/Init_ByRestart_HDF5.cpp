@@ -1841,6 +1841,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 // domain refinement
    LoadField( "RegridCount",             &RS.RegridCount,             SID, TID, NonFatal, &RT.RegridCount,              1, NonFatal );
+   LoadField( "RefineNLevel",            &RS.RefineNLevel,            SID, TID, NonFatal, &RT.RefineNLevel,             1, NonFatal );
    LoadField( "FlagBufferSize",          &RS.FlagBufferSize,          SID, TID, NonFatal, &RT.FlagBufferSize,           1, NonFatal );
    LoadField( "FlagBufferSizeMaxM1Lv",   &RS.FlagBufferSizeMaxM1Lv,   SID, TID, NonFatal, &RT.FlagBufferSizeMaxM1Lv,    1, NonFatal );
    LoadField( "FlagBufferSizeMaxM2Lv",   &RS.FlagBufferSizeMaxM2Lv,   SID, TID, NonFatal, &RT.FlagBufferSizeMaxM2Lv,    1, NonFatal );
