@@ -421,6 +421,7 @@ struct InputPara_t
 
 // domain refinement
    int    RegridCount;
+   int    RefineNLevel;
    int    FlagBufferSize;
    int    FlagBufferSizeMaxM1Lv;
    int    FlagBufferSizeMaxM2Lv;
