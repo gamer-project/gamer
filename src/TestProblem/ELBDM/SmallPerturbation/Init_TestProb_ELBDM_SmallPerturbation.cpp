@@ -232,6 +232,28 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  OutputError
+// Description :  Output the L1 error
+//
+// Note        :  1. Invoke Output_L1Error()
+//                2. Use SetGridIC() to provide the analytical solution at any given time
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void OutputError()
+{
+
+   const char Prefix[100]     = "SmallPerturbation";
+   const OptOutputPart_t Part = OUTPUT_X;
+
+   Output_L1Error( SetGridIC, NULL, Prefix, Part, 0.0, 0.0, 0.0 );
+
+} // FUNCTION : OutputError
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_ELBDM_Soliton
 // Description :  Test problem initializer
 //
@@ -257,6 +279,7 @@ void Init_TestProb_ELBDM_SmallPerturbation()
 
 
    Init_Function_User_Ptr = SetGridIC;
+   Output_User_Ptr        = OutputError;
 #  endif // #if ( MODEL == ELBDM )
 
 

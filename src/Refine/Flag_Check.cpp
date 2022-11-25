@@ -97,7 +97,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
          if ( !dBResolvedAfterRefine ) {
             const int    Idx               = 2 * PS1*PS1*PS1 + k*PS1*PS1 + j*PS1 + i;
             const real   PhaseDifference   = Interf_Cond[Idx];
-//            convert coordinates of cell to global integer coordinate system 
+//          convert coordinates of cell to global integer coordinate system 
             int coordinates[3] = {i, j, k};
        
             for ( int l = 0; l < 3; ++l ) {
@@ -409,12 +409,15 @@ bool Check_Curl( const int i, const int j, const int k,
 //-------------------------------------------------------------------------------------------------------
 bool ELBDM_Flag_VolumeFracQP( const real Cond[], const double Threshold_QP, const double Threshold_VolumeFraction )
 {
-   int NExceedThreshold = 0, Idx = 0, NTotal = PS1 * PS1 * PS1;
+   const int NTotal = PS1 * PS1 * PS1;
+   int NExceedThreshold = 0;
 
    for (int Idx = 0; Idx < NTotal; ++Idx) 
          if ( Cond[Idx] > Threshold_QP ) ++NExceedThreshold;
 
    float ratio =  NExceedThreshold / (float) NTotal; 
+   if (ratio > Threshold_VolumeFraction)
+      printf("Ratio: %f Threshold: %f\n", ratio, Threshold_VolumeFraction);
 
    return ratio > Threshold_VolumeFraction;
 
