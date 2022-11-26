@@ -52,6 +52,8 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 // ===========================================================================================
    if ( OPT__FLAG_REGION )
    {
+      if ( Flag_Region_Ptr == NULL )   Aux_Error( ERROR_INFO, "Flag_Region_Ptr == NULL for OPT__FLAG_REGION !!\n" );
+
       if (  !Flag_Region_Ptr( i, j, k, lv, PID )  )    return false;
    }
 
