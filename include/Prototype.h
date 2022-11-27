@@ -308,7 +308,6 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
                  const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1],
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
                  const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff );
-bool Flag_Region( const int i, const int j, const int k, const int lv, const int PID );
 bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t Form, const real *Var1D, const real *Ave1D,
                   const real *Slope1D, const int NVar, const double Threshold, const double Filter, const double Soften );
 void Refine( const int lv, const UseLBFunc_t UseLBFunc );

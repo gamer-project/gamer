@@ -1,14 +1,22 @@
 #include "GAMER.h"
 
+// declare as static so that other functions cannot invoke it directly and must use the function pointer
+static bool Flag_Region_Template( const int i, const int j, const int k, const int lv, const int PID );
+
+// this function pointer must be set by a test problem initializer
+bool (*Flag_Region_Ptr)( const int i, const int j, const int k, const int lv, const int PID ) = NULL;
+
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Flag_Region
-// Description :  Check if the element (i,j,k) of the input patch is within the regions allowed to be refined
+// Function    :  Flag_Region_Template
+// Description :  Template for checking if the element (i,j,k) of the input patch is within
+//                the regions allowed to be refined
 //
-// Note        :  To use this functionality, please turn on the option "OPT__FLAG_REGION" and then specify the
-//                target regions in this file
+// Note        :  1. Invoked by Flag_Check() using the function pointer "Flag_Region_Ptr",
+//                   which must be set by a test problem initializer
+//                2. Enabled by the runtime option "OPT__FLAG_REGION"
 //
 // Parameter   :  i,j,k       : Indices of the target element in the patch ptr[0][lv][PID]
 //                lv          : Refinement level of the target patch
@@ -16,7 +24,7 @@
 //
 // Return      :  "true/false"  if the input cell "is/is not" within the region allowed for refinement
 //-------------------------------------------------------------------------------------------------------
-bool Flag_Region( const int i, const int j, const int k, const int lv, const int PID )
+bool Flag_Region_Template( const int i, const int j, const int k, const int lv, const int PID )
 {
 
    const double dh     = amr->dh[lv];                                         // cell size
@@ -43,5 +51,4 @@ bool Flag_Region( const int i, const int j, const int k, const int lv, const int
 
    return Within;
 
-} // FUNCTION : Flag_Region
-
+} // FUNCTION : Flag_Region_Template
