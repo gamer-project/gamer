@@ -34,9 +34,9 @@
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, AllAttribute
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFunction_Feedback( const long NPar_ThisRank, const long NPar_AllRank,
- 	                           real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-          	                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                  	           real *AllAttribute[PAR_NATT_TOTAL] )
+                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
+                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
+                                   real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -45,7 +45,11 @@ void Par_Init_ByFunction_Feedback( const long NPar_ThisRank, const long NPar_All
    for (int v=0; v<PAR_NATT_TOTAL; v++)   ParData_AllRank[v] = NULL;
 
 // synchronize all particles to the physical time on the base level
-   for (long p=0; p<NPar_ThisRank; p++)   ParTime[p] = Time[0];
+   for (long p=0; p<NPar_ThisRank; p++)   
+   {
+   ParTime[p] = Time[0];
+   ParType[p] = PTYPE_GENERIC_MASSIVE;
+   }
 
 
 // only the master rank will construct the initial condition
@@ -75,27 +79,14 @@ void Par_Init_ByFunction_Feedback( const long NPar_ThisRank, const long NPar_All
       ParData_AllRank[PAR_MASS][p] = MassMax * Const_Msun / UNIT_M;
    }
 
-
-// example : randomly initialize
-   /*
-   const uint RSeed     = 2;                                         // random seed
-   const real MassMin   = 1.0e-2;                                    // minimum value of particle mass
-   const real MassMax   = 1.0;                                       // maximum value of particle mass
-   const real PosMin[3] = { 0.0, 0.0, 0.0 };                         // minimum value of particle position
-   const real PosMax[3] = { real( amr->BoxSize[0]*(1.0-1.0e-5) ),    // maximum value of particle position
-                            real( amr->BoxSize[1]*(1.0-1.0e-5) ),
-                            real( amr->BoxSize[2]*(1.0-1.0e-5) ) };
-   const real VelMin[3] = { -1.0, -1.0, -1.0 };                      // minimum value of particle velocity
-   const real VelMax[3] = { +1.0, +1.0, +1.0 };                      // maximum value of particle velocity
-
    srand( RSeed );
-*/
+
    for (long p=0; p<NPar_AllRank; p++)
    {
       for (int d=0; d<3; d++)
       {
-	 ParData_AllRank[PAR_POSX+d][p] = 0.5078125 * boxsize; 
-         ParData_AllRank[PAR_VELX+d][p] = 0.0;
+	 ParData_AllRank[PAR_POSX+d][p] = 0.50390625 * boxsize; 
+         ParData_AllRank[PAR_VELX+d][p] = 0.0005;
       }
    }
 

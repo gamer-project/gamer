@@ -356,7 +356,7 @@ void FB_User_Template( const int lv, const double TimeNew, const double TimeOld,
       // ============================================================
       // 0: Presetting
       real (*fluid_PG)[PS2][PS2][PS2] = new real [NCOMP_TOTAL][PS2][PS2][PS2];
-      memcpy( fluid_PG, Fluid, sizeof(Fluid) );
+      // memcpy( fluid_PG, Fluid, sizeof(Fluid) );
       
       // 1: UV feedback
 //      FB_UVFeedback( fluid_PG, ionizeLuminosity[n], willExplode[n], idx, dh);

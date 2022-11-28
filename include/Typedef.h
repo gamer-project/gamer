@@ -50,13 +50,8 @@ const TestProbID_t
    TESTPROB_HYDRO_MHD_ORSZAG_TANG_VORTEX       =   14,
    TESTPROB_HYDRO_MHD_LINEAR_WAVE              =   15,
    TESTPROB_HYDRO_JEANS_INSTABILITY            =   16,
-<<<<<<< HEAD
    TESTPROB_HYDRO_FEEDBACK		       =   17,
    TESTPROB_HYDRO_PARTICLE_EQUILIBRIUM_IC      =   18,
-=======
-   TESTPROB_HYDRO_PARTICLE_EQUILIBRIUM_IC      =   17,
-   TESTPROB_HYDRO_PARTICLE_TEST                =   18,
->>>>>>> cba20e2c271c48b6c761706002a8e2f608973477
    TESTPROB_HYDRO_BARRED_POT                   =   51,
    TESTPROB_HYDRO_CDM_LSS                      =  100,
    TESTPROB_ELBDM_EXTPOT                       = 1000;
