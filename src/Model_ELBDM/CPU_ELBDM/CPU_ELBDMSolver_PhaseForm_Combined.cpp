@@ -15,8 +15,8 @@
 # define SGN( a )        (  ( (a) > (0) ) ? (1) : ( (a) < (0) ) ? (-1) : (0) )
             
 // First-order forward and backward gradient
-# define GRADB1(In, t) ( In[t + 1] - In[t    ] )
-# define GRADF1(In, t) ( In[t    ] - In[t - 1] )
+# define GRADF1(In, t) ( In[t + 1] - In[t    ] )
+# define GRADB1(In, t) ( In[t    ] - In[t - 1] )
 
 // Second-order forward and backward gradient
 # define GRADF2(In, t) ( real(1.0/2.0) * ( -3*In[t] + 4*In[t+1] - In[t+2]))
@@ -27,22 +27,23 @@
 # define GRADB3(In, t) ( real(1.0/6.0) * (  2*In[t+1] + 3*In[t] - 6*In[t-1] + In[t-2]))
 
 // Second- and fourth-order laplacian
-# define LAP2(In, t)   (                            +                 In[t-1] - real(2.0/1.0) * In[t  ] +                 In[t+1]                            )
-# define LAP4(In, t)   ( - real(1.0/12.0) * In[t-2] + real(4.0/3.0) * In[t-1] - real(5.0/2.0) * In[t  ] + real(4.0/3.0) * In[t+1] - real(1.0/12.0) * In[t+2] )
+# define LAP2(In, t)   ( real(1.0/1.0 ) * (            + 1 *In[t-1] - 2 *In[t] + 1 *In[t+1]             ))
+# define LAP4(In, t)   ( real(1.0/12.0) * ( -1*In[t-2] + 16*In[t-1] - 30*In[t] + 16*In[t+1] - 1*In[t+2] ))
 
 // Second- and fourth-order centered gradient
-# define GRADC2(In, t) (                            - real(1.0/2.0) * In[t-1]                           + real(1.0/2.0) * In[t+1]                            )
-# define GRADC4(In, t) ( + real(1.0/12.0) * In[t-2] - real(2.0/3.0) * In[t-1]                           + real(2.0/3.0) * In[t+1] - real(1.0/12.0) * In[t+2] )
+# define GRADC2(In, t) ( real(1.0/2.0 ) * (            - 1*In[t-1] + 1*In[t+1]             ))
+# define GRADC4(In, t) ( real(1.0/12.0) * (  1*In[t-2] - 8*In[t-1] + 8*In[t+1] - 1*In[t+2] ))
 
 //First-order upwind flux reconstruction
-#if ( HYBRID_SCHEME == UPWIND )
+# if ( HYBRID_SCHEME == UPWIND )
+
 # define UPWIND_FM(Rc, Vb, t)        (   FMAX(Vb, 0) * Rc[t-1] \
                                        + FMIN(Vb, 0) * Rc[t  ] )
-#endif 
+
+# endif // #if ( HYBRID_SCHEME == UPWIND )
 
 //Second-order MUSCL flux reconstruction
 #if ( HYBRID_SCHEME == MUSCL )
-
 
 // VAN ALBADA LIMITER
 # define LIMITER(In) ( (SQR(In) + In)/((real)1. + SQR(In)) )
@@ -60,28 +61,28 @@
 # define MUSCL_FM(Rc, Vb, t, dx, dt) (   FMAX(Vb, 0) * Rc[t-1] \
                                        + FMIN(Vb, 0) * Rc[t  ] \
                                        +  real(0.5) * FABS(Vb) * (1. - FABS(Vb * dt/dx)) * LIMITER(UPWIND_GRADIENT_RATIO(Rc, Vb, t)) * (Rc[t] - Rc[t - 1]) )
-#endif 
+# endif // #if ( HYBRID_SCHEME == MUSCL )
 
 //Third-order PPM flux reconstruction
 # if ( HYBRID_SCHEME == TOS )
 void PPM_INTERPOLATION(real* a_array, real* a_L_array, real* a_R_array, int i, int densityLimiter);
 void PPM_LIMITER      (real* a_array, real* a_L_array, real* a_R_array, int i, int densityLimiter);
 real PPM_FM           (real* a_array, real* a_L_array, real* a_R_array, real* v_L_array, int i, real dh, real dt);
-# endif 
+# endif // # if ( HYBRID_SCHEME == TOS )
 
 //Second- and fourth-order quantum pressure depending on the scheme used
-# if (HYBRID_SCHEME == MUSCL || HYBRID_SCHEME == UPWIND)
+# if (0)//HYBRID_SCHEME == MUSCL || HYBRID_SCHEME == UPWIND)
 # define QUANTUM_PRESSURE(Sr, t)  ((real) 0.5 * (pow(GRADC2(Sr, t), 2) + LAP2(Sr, t)))
 # else 
 # define QUANTUM_PRESSURE(Sr, t)  ((real) 0.5 * (pow(GRADC4(Sr, t), 2) + LAP4(Sr, t)))
-# endif
+# endif // # if (HYBRID_SCHEME == MUSCL || HYBRID_SCHEME == UPWIND)
 
 //Osher-Sethian flux for Hamilton-Jacobi equation
 # define OSHER_SETHIAN_FLUX(vp, vm) ((real) 0.5 * (pow(MIN(vp, 0), 2) + pow(MAX(vm, 0), 2)))
 
 
 static void CPU_AdvanceX( real u[][ CUBE(FLU_NXT)], real Flux_Array[][NFLUX_TOTAL][ SQR(PS2) ], 
-                          const real dt, const real dh, const real Eta, const bool StoreFlux, const real Taylor3_Coeff, 
+                          const real dt, const real dh, const real Eta, const bool StoreFlux, const real MinDens, 
                           const int j_gap, const int k_gap, const int Flux_XYZ );
 static void TransposeXY( real u[][ CUBE(FLU_NXT)] );
 static void TransposeXZ( real u[][ CUBE(FLU_NXT)] );
@@ -121,22 +122,24 @@ void CPU_ELBDMSolver_PhaseForm( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT)],
                       const real Taylor3_Coeff, const bool XYZ, const real MinDens )
 {
 
+   const real FluidMinDens = FMAX(1e-10, MinDens); 
+
    if ( XYZ )
    {
 #     pragma omp parallel for schedule( runtime )
       for (int P=0; P<NPatchGroup; P++)
       {
-         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, Taylor3_Coeff,
+         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, FluidMinDens,
                                     0,              0, 0 );                    
                                                                                
          TransposeXY ( Flu_Array_In[P] );                                      
                                                                                
-         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, Taylor3_Coeff,
+         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, FluidMinDens,
                        FLU_GHOST_SIZE,              0, 3 );                    
                                                                                
          TransposeXZ ( Flu_Array_In[P] );                                      
                                                                                
-         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, Taylor3_Coeff,
+         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, FluidMinDens,
                        FLU_GHOST_SIZE, FLU_GHOST_SIZE, 6 );
    
          TransposeXZ ( Flu_Array_In[P] );
@@ -152,17 +155,17 @@ void CPU_ELBDMSolver_PhaseForm( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT)],
          TransposeXY ( Flu_Array_In[P] );
          TransposeXZ ( Flu_Array_In[P] );
 
-         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, Taylor3_Coeff,
+         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, FluidMinDens,
                                     0,              0, 6 );         
                                                                     
          TransposeXZ ( Flu_Array_In[P] );                           
                                                                     
-         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, Taylor3_Coeff,
+         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, FluidMinDens,
                                     0, FLU_GHOST_SIZE, 3 );         
                                                                     
          TransposeXY ( Flu_Array_In[P] );                           
                                                                     
-         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, Taylor3_Coeff,
+         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, FluidMinDens,
                        FLU_GHOST_SIZE, FLU_GHOST_SIZE, 0 );
       }
    }
@@ -233,7 +236,7 @@ const real RK_COEFFS  [N_TIME_LEVELS][N_TIME_LEVELS] = {{1.0, 0.0, 0.0}, {3.0/4.
 //                                 --> useful only if CONSERVE_MASS is defined
 //-------------------------------------------------------------------------------------------------------
 void CPU_AdvanceX( real u[][ CUBE(FLU_NXT)], real Flux_Array[][NFLUX_TOTAL][ SQR(PS2) ], 
-                   const real dt, const real dh, const real Eta, const bool StoreFlux, const real Taylor3_Coeff, 
+                   const real dt, const real dh, const real Eta, const bool StoreFlux, const real MinDens, 
                    const int j_gap, const int k_gap, const int Flux_XYZ )
 {
    const real Coeff1 = dt/(dh * Eta);
@@ -249,15 +252,12 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT)], real Flux_Array[][NFLUX_TOTAL][ SQR
 
    real Rc[N_TIME_LEVELS][FLU_NXT];  // one column of the density in the input array "u" at all time levels
    real Pc[N_TIME_LEVELS][FLU_NXT];  // one column of the phase   in the input array "u" at all time levels
-   real *Rc_target = NULL; // pointer to set density array in update loop
-   real *Pc_target = NULL; // pointer to set phase   array in update loop
-   real *Rc_N = NULL;    // pointer to store the full-step density
-   real *Pc_N = NULL;    // pointer to store the full-step phase  
+   real *Rc_target = NULL;           // pointer to set density array in update loop
+   real *Pc_target = NULL;           // pointer to set phase   array in update loop
+   real *Rc_N = NULL;                // pointer to store the full-step density
+   real *Pc_N = NULL;                // pointer to store the full-step phase  
 
-   real Fm[N_TIME_LEVELS][FLU_NXT];  // one column of the density flux at all time levels
-   real *Fm_target = NULL; // pointer to set phase   array in update loop
-
-   real Sr[FLU_NXT];
+   real Fm[FLU_NXT], Sr[FLU_NXT], Fm_avg[FLU_NXT], Rc_RK1[FLU_NXT], Pc_RK1[FLU_NXT];
   
 #  if ( HYBRID_SCHEME == MUSCL || HYBRID_SCHEME == UPWIND)
    const int ghostZonePerStage = 2; 
@@ -275,12 +275,18 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT)], real Flux_Array[][NFLUX_TOTAL][ SQR
 //    ------------------------------------------------------------------------------------------------------------
       Idx    = to1D(k,j,0);
 
-      //Set pointers to output arrays
+//    set pointers to output arrays
       Rc_N = &u[DENS][Idx];
       Pc_N = &u[PHAS][Idx];
       
       memcpy( Rc[0], Rc_N, FLU_NXT*sizeof(real) );
       memcpy( Pc[0], Pc_N, FLU_NXT*sizeof(real) );
+      memset( Fm_avg,   0, FLU_NXT*sizeof(real) );
+
+#     ifdef GAMER_DEBUG
+      if ( Rc[0][i] != Rc[0][i] || Pc[0][i] != Pc[0][i] || Rc[0][i] < 0)
+          Aux_Error( ERROR_INFO, "nan in input array of fluid solver k %d j %d i %d Rho %f Pha %f !\n\n", k, j, i, Rc[0][i], Pc[0][i]); 
+#     endif
 
 
       for (int time_level = 0; time_level < N_TIME_LEVELS; ++time_level) 
@@ -288,54 +294,58 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT)], real Flux_Array[][NFLUX_TOTAL][ SQR
          int g1 = ghostZonePerStage *   time_level       ;
          int g2 = ghostZonePerStage * ( time_level + 1 ) ;
 
+//       exclude ghost zones from previous stages from computation of quantum pressure
          for (int i = g1; i < FLU_NXT - g1; i++) {
-            Sr[i] = real(0.5) * log(Rc[time_level][i]);
+            Sr[i] = real(0.5) * log(FMAX(Rc[time_level][i], MinDens));
          }
 
-//       Prepare arrays of velocity and density interpolated to cell-face for PPM scheme
+//       prepare arrays of velocity and density interpolated to cell-face for PPM scheme
 #        if ( HYBRID_SCHEME == TOS )
 
 //       GRADC4 requires ghost boundary of size 2 in each direction
-         for (int i = g1 + 2; i < FLU_NXT - g1 - 2; i++) {
-            v_C[i] = _dh * GRADC4(Pc[time_level], i);
-         }
 //       Respect ghost boundary of size 2 from GRADC4 since PPM_INTERPOLATION accesses v_C[i-1, i, i+1, i+2]
 //       PPM interpolation fills v_R from [i_begin to i_end] v_L from [i_begin + 1 to i_end + 1]
 //       Therefore, it fills v_L[g1 + 4 to FLU_NXT - g1 - 3 ] and v_R[g1 + 3 to FLU_NXT - g1 - 4 ]
-         for (int i = g2 - 1; i < FLU_NXT - g2    ; i++) {
+         for (int i = g1 + 2; i < FLU_NXT - g1 - 2; i++) {
+            v_C[i] = _dh * GRADC4(Pc[time_level], i);
+         }
+         for (int i = g1 - 3; i < FLU_NXT - g1 - 4; i++) {
             PPM_INTERPOLATION(v_C, v_L, v_R, i, NO_LIMITER);
          }
-         //for (int i = g2    ; i < FLU_NXT - g2 - 1; i++) {
-         //   PPM_LIMITER(v_C, v_L, v_R, i, NO_LIMITER);
-         //}
 
-         for (int i = g2 - 2; i < FLU_NXT - g2 + 3; i++) {
-            PPM_INTERPOLATION(Rc[time_level], rho_L, rho_R, i, FULL_LIMITER);
-         }
+         //Fill rho_L[g2 - 1] as PPM_INTERPOATION only fills a_L[i+1]
+         PPM_INTERPOLATION(Rc[time_level], rho_L, rho_R, g2 - 2, FULL_LIMITER);
+
          for (int i = g2 - 1; i < FLU_NXT - g2 + 2; i++) {
-            PPM_LIMITER(      Rc[time_level], rho_L, rho_R, i, FULL_LIMITER);
+            PPM_INTERPOLATION(Rc[time_level], rho_L, rho_R, i, FULL_LIMITER);
+            PPM_LIMITER      (Rc[time_level], rho_L, rho_R, i, FULL_LIMITER);
          } 
-#        endif 
+#        endif // #        if ( HYBRID_SCHEME == TOS )
 
-//       Compute density fluxes at all cell faces of real cells
+//       compute backward density fluxes at all cell faces of real cells
          for (int i = g2; i < FLU_NXT - g2 + 1; i++)
          {
 #        if ( HYBRID_SCHEME == UPWIND )
 //          Access Rc[time_level][i, i-1], Pc[time_level][i, i-1]
-            Fm[time_level][i] = UPWIND_FM(Rc[time_level], _dh * GRADB1 (Pc[time_level], i), i); 
+            Fm[i] = UPWIND_FM(Rc[time_level], _dh * GRADB1 (Pc[time_level], i), i); 
 #        elif ( HYBRID_SCHEME == MUSCL )
 //          Access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
-            Fm[time_level][i] = MUSCL_FM (Rc[time_level], _dh * GRADB1 (Pc[time_level], i), i, dh, dt); 
+            Fm[i] = MUSCL_FM (Rc[time_level], _dh * GRADB1 (Pc[time_level], i), i, dh, dt); 
 #        elif ( HYBRID_SCHEME == TOS ) 
 //          Access rho_L[i, i-1], rho_R[i, i-1], v_L[i]
-            Fm[time_level][i] = PPM_FM   (Rc[time_level], rho_L, rho_R, v_L, i, dh, dt);
+            Fm[i] = PPM_FM   (Rc[time_level], rho_L, rho_R, v_L, i, dh, dt);
 #        endif
+
+#        ifdef CONSERVE_MASS
+            Fm_avg[i] += FLUX_COEFFS[time_level] * Fm[i];
+#        endif 
          }
 
+//       update density and phase of real cells
          for (int i = g2; i < FLU_NXT - g2; i++)
          {
-            fp  = Fm[time_level][i+1];
-            fm  = Fm[time_level][i  ];
+            fp  = Fm[i+1];
+            fm  = Fm[i  ];
             qp  = QUANTUM_PRESSURE  (Sr, i);
             vp  = GRADF3(Pc[time_level], i);
             vm  = GRADB3(Pc[time_level], i);
@@ -358,9 +368,48 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT)], real Flux_Array[][NFLUX_TOTAL][ SQR
                *Rc_target += RK_COEFFS[time_level][tx] * Rc[tx][i];
                *Pc_target += RK_COEFFS[time_level][tx] * Pc[tx][i];
             }
+
+//          overwrite nans and negative densities with RK1 solution
+            if ( time_level + 1 ==  N_TIME_LEVELS ) {
+               if ( *Rc_target < 0 || *Rc_target  != *Rc_target || *Pc_target != *Pc_target ) {             
+                  *Rc_target = FMIN(Rc_RK1[i], MinDens);
+                  *Pc_target =      Pc_RK1[i];               
+               }
+#              ifdef GAMER_DEBUG
+               if (*Rc_target != *Rc_target || *Pc_target != *Pc_target) {
+                  Aux_Error( ERROR_INFO, "nan for dt = %f input dens %f input phas %f rk1 dens = %f rk1 phas = %f!\n\n", dt, Rc[0][i], Pc[0][i], Rc_N[i], Pc_N[i]); 
+               }
+#              endif
+            }
+         }
+
+
+//       store RK1 solutions until end of RKN iterations
+         if (time_level == 0) {
+            memcpy( Rc_RK1, Rc_target, FLU_NXT*sizeof(real));
+            memcpy( Pc_RK1, Pc_target, FLU_NXT*sizeof(real));
          }
       }
+
+//    4 save the fluxes across all patch boundaries
+//    ------------------------------------------------------------------------------------------------------------
+#     ifdef CONSERVE_MASS
+      if ( StoreFlux )
+      if (  ( j>=FLU_GHOST_SIZE && j<FLU_NXT-FLU_GHOST_SIZE )  &&  ( k>=FLU_GHOST_SIZE && k<FLU_NXT-FLU_GHOST_SIZE )  )
+      {
+         Idx3 = (k-FLU_GHOST_SIZE)*PS2 + (j-FLU_GHOST_SIZE);
+
+         Flux_Array[Flux_XYZ+0][0][Idx3] = Fm_avg[      FLU_GHOST_SIZE] / Eta;
+         Flux_Array[Flux_XYZ+1][0][Idx3] = Fm_avg[PS1 + FLU_GHOST_SIZE] / Eta;
+         Flux_Array[Flux_XYZ+2][0][Idx3] = Fm_avg[PS2 + FLU_GHOST_SIZE] / Eta;
+      }
+#     endif // #ifdef CONSERVE_MASS
+
    } // for j,k
+
+
+
+
 
 } // FUNCTION : CPU_AdvanceX
 

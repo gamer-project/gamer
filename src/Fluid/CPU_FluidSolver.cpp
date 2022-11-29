@@ -88,27 +88,11 @@ void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                       const real Taylor3_Coeff, const bool XYZ, const real MinDens );
 #if ( ELBDM_SCHEME == HYBRID )
-#if ( HYBRID_SCHEME == MUSCL)
-void CPU_ELBDMSolver_PhaseForm_MUSCL( real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
-                      real Flu_Array_Out[][FLU_NOUT   ][ CUBE(PS2) ],
-                      real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
+void CPU_ELBDMSolver_PhaseForm(  real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT)], 
+                      real Flu_Array_Out[][FLU_NOUT][ SQR(PS2)*PS2 ], 
+                      real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ], 
                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                       const real Taylor3_Coeff, const bool XYZ, const real MinDens );
-#elif ( HYBRID_SCHEME == UPWIND )
-void CPU_ELBDMSolver_PhaseForm_Upwind( real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
-                      real Flu_Array_Out[][FLU_NOUT   ][ CUBE(PS2) ],
-                      real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
-                      const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
-                      const real Taylor3_Coeff, const bool XYZ, const real MinDens );
-#elif ( HYBRID_SCHEME == TOS )
-void CPU_ELBDMSolver_PhaseForm_PPM( real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
-                      real Flu_Array_Out[][FLU_NOUT   ][ CUBE(PS2) ],
-                      real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
-                      const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
-                      const real Taylor3_Coeff, const bool XYZ, const real MinDens );
-#else 
-#error : ERROR : unsupported HYBRID_SCHEME !!
-#endif // # if ( HYBRID_SCHEME == MUSCL )
 #endif // # if ( ELBDM_SCHEME == HYBRID )
 
 #else
@@ -278,18 +262,8 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
    
 #  if ( ELBDM_SCHEME == HYBRID )
    } else { 
-#     if ( HYBRID_SCHEME == MUSCL )
-      CPU_ELBDMSolver_PhaseForm_MUSCL( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
+      CPU_ELBDMSolver_PhaseForm( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
             ELBDM_Taylor3_Coeff, XYZ, MinDens );
-#     elif ( HYBRID_SCHEME == UPWIND )
-      CPU_ELBDMSolver_PhaseForm_Upwind( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
-            ELBDM_Taylor3_Coeff, XYZ, MinDens );
-#     elif ( HYBRID_SCHEME == TOS )
-      CPU_ELBDMSolver_PhaseForm_PPM( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
-            ELBDM_Taylor3_Coeff, XYZ, MinDens );
-#     else 
-#     error : ERROR : unsupported hybrid scheme !!
-#     endif 
    }
 #  endif // # if ( ELBDM_SCHEME == HYBRID )
 #  else
