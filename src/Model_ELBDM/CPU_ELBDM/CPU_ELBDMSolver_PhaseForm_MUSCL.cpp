@@ -18,6 +18,9 @@
 # define FORWARD_GRADIENT(In, t)  ( In[t + 1] - In[t    ] )
 # define LAPLACIAN(In, t)         ( In[t - 1] - (real)2.0*In[t] + In[t + 1] )
 
+# define F3_GRADIENT(In, t) ( real(1.0/6.0 ) * ( -2*In[t-1] - 3*In[t] + 6*In[t+1] - In[t+2]))
+# define B3_GRADIENT(In, t) ( real(1.0/6.0 ) * (  2*In[t+1] + 3*In[t] - 6*In[t-1] + In[t-2]))
+
 // VAN ALBADA LIMITER
 # define LIMITER(In) ( (SQR(In) + In)/((real)1. + SQR(In)) )
 // MC
@@ -299,17 +302,20 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
          //Update density and phase fields
          for (int i=2*(time_level + 1); i<FLU_NXT-2*(time_level + 1); i++)
          {
+            /* OLD SOLUTION WITH SLOPE_LIMITED GRADIENTS FOR HAMILTON_JACOBI EQUATION*/
             //Slope-limited second order gradients (useful if phase develops discontinuities, could happen in hybrid scheme with 2 pi jump)
-            ql = ql_ratios[i  ];
-            qc = ql_ratios[i+1];
-            Qc = 1./(ql_ratios[i+1] + ((ql_ratios[i+1] == 0) ? 1e-8 : 0));
-            Qr = 1./(ql_ratios[i+2] + ((ql_ratios[i+2] == 0) ? 1e-8 : 0));
+            //ql = ql_ratios[i  ];
+            //qc = ql_ratios[i+1];
+            //Qc = 1./(ql_ratios[i+1] + ((ql_ratios[i+1] == 0) ? 1e-8 : 0));
+            //Qr = 1./(ql_ratios[i+2] + ((ql_ratios[i+2] == 0) ? 1e-8 : 0));
 
-            vm = _dh * BACKWARD_GRADIENT(Pc[time_level], i) * ( (real) 1. + (real) 0.5 * LIMITER(qc) - (real) 0.5 * LIMITER(ql)/(ql + ((ql==0) ? 1e-8 : 0)));
-            vp = _dh * FORWARD_GRADIENT (Pc[time_level], i) * ( (real) 1. + (real) 0.5 * LIMITER(Qc) - (real) 0.5 * LIMITER(Qr)/(Qr + ((Qr==0) ? 1e-8 : 0)));
+            //vm = _dh * BACKWARD_GRADIENT(Pc[time_level], i) * ( (real) 1. + (real) 0.5 * LIMITER(qc) - (real) 0.5 * LIMITER(ql)/(ql + ((ql==0) ? 1e-8 : 0)));
+            //vp = _dh * FORWARD_GRADIENT (Pc[time_level], i) * ( (real) 1. + (real) 0.5 * LIMITER(Qc) - (real) 0.5 * LIMITER(Qr)/(Qr + ((Qr==0) ? 1e-8 : 0)));
 
 
             ddensity = _dh * (Fm[time_level][i+1] - Fm[time_level][i]);
+            vm  = _dh * B3_GRADIENT(Pc[time_level], i);
+            vp  = _dh * F3_GRADIENT(Pc[time_level], i);
             dphase   = (SQR(MIN(vp, 0)) + SQR(MAX(vm, 0)))/2;
             dphase  += -_dh2/4 * LAPLACIAN(log_density, i) - _dh2/8 * SQR(CENTERED_GRADIENT(log_density, i));
 
