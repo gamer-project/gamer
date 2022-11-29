@@ -10,12 +10,12 @@
 // useful macros
 #define to1D(z,y,x)     ( z*FLU_NXT*FLU_NXT + y*FLU_NXT + x )
 
-#  define LAP1(In,t)    ( In[t-1] - (real)2.0*In[t] + In[t+1] )
-#  define LAP2(In,t)    ( - (real)1./12 * In[t-2] + (real)4./3*In[t-1] - (real)5./2*In[t] - (real)4./3*In[t+1] - (real)1./12*In[t+2] )
-#  define GRADF(In, t)  ( In[t+1] - In[t]   )
-#  define GRADB(In, t)  ( In[t]   - In[t-1] )
-#  define GRAD1(In, t)  ( In[t+1] - In[t-1] )
-#  define GRAD2(In, t)  ( -1./6 * In[t+2] + 4./3 * In[t+1] - 4./3 * In[t-1] + 1./6 * In[t-2] )
+#  define LAP2(In,t)    ( In[t-1] - (real)2.0*In[t] + In[t+1] )
+#  define GRADF1(In, t) (   In[t+1] - In[t]  )
+#  define GRADB1(In, t) ( - In[t-1] + In[t]  )
+#  define GRADC2(In, t) ( real(1.0/2.0) * ( In[t+1] - In[t-1] ) )
+#  define GRADF3(In, t) ( real(1.0/6.0) * ( -2*In[t-1] - 3*In[t] + 6*In[t+1] - In[t+2]))
+#  define GRADB3(In, t) ( real(1.0/6.0) * (  2*In[t+1] + 3*In[t] - 6*In[t-1] + In[t-2]))
 
 static void CPU_AdvanceX( real u[][ CUBE(FLU_NXT)], real Flux_Array[][NFLUX_TOTAL][ SQR(PS2) ], 
                           const real dt, const real dh, const real Eta, const bool StoreFlux, const real Taylor3_Coeff, 
@@ -129,6 +129,14 @@ void CPU_ELBDMSolver_PhaseForm_Upwind( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_
 
 } // FUNCTION : CPU_ELBDMSolver
 
+#define N_TIME_LEVELS 3
+const real TIME_COEFFS[N_TIME_LEVELS] = {1.0, 1.0/4.0, 2.0/3.0};
+const real FLUX_COEFFS[N_TIME_LEVELS] = {1./6, 1./6, 2./3};
+const real RK_COEFFS  [N_TIME_LEVELS][N_TIME_LEVELS] = {{1.0, 0.0, 0.0}, {3.0/4.0, 1.0/4.0, 0.0}, {1.0/3.0, 0.0, 2.0/3.0}};
+
+//#define N_TIME_LEVELS 2
+//const real TIME_COEFFS[N_TIME_LEVELS] = {1.0/2.0, 1.0};
+//const real RK_COEFFS [N_TIME_LEVELS][N_TIME_LEVELS] = {{1.0, 0.0}, {1.0, 0.0}};
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -161,19 +169,22 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT)], real Flux_Array[][NFLUX_TOTAL][ SQR
    const int k_start   = k_gap;
    const int j_end     = FLU_NXT - j_gap;
    const int k_end     = FLU_NXT - k_gap;
-
-   real Rh_Old [FLU_NXT];  // one column of the real      part in the input array "u" 
-   real Ph_Old [FLU_NXT];  // one column of the imaginary part in the input array "u"
-   real Sr_Old [FLU_NXT];  // one column of the imaginary part in the input array "u"
-   real Rh_Half[FLU_NXT];  // one column of the real      part at the half time-step 
-   real Ph_Half[FLU_NXT];  // one column of the imaginary part at the half time-step 
-   real Sr_Half[FLU_NXT];  // one column of the imaginary part at the half time-step 
-   real *Rh_New = NULL;    // pointer to store the full-step real      part
-   real *Ph_New = NULL;    // pointer to store the full-step imaginary part
    int Idx;
 
-   real vp, vm, fp, fm, qp, osf;
-   
+   real vp, vm, fp, fm, qp, osf, ddensity, dphase;
+
+   real Rc[N_TIME_LEVELS][FLU_NXT];  // one column of the density in the input array "u" at all time levels
+   real Pc[N_TIME_LEVELS][FLU_NXT];  // one column of the phase   in the input array "u" at all time levels
+   real *Rc_target = NULL; // pointer to set density array in update loop
+   real *Pc_target = NULL; // pointer to set phase   array in update loop
+   real *Rc_N = NULL;    // pointer to store the full-step density
+   real *Pc_N = NULL;    // pointer to store the full-step phase  
+
+   real Fm[N_TIME_LEVELS + 1][FLU_NXT];  // one column of the density flux at all time levels
+   real *Fm_target = NULL; // pointer to set phase   array in update loop
+
+   real Sr[FLU_NXT];
+  
 
 // loop over all targeted columns
    for (int k=k_start; k<k_end; k++)
@@ -183,51 +194,59 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT)], real Flux_Array[][NFLUX_TOTAL][ SQR
 //    1. backup one column of data
 //    ------------------------------------------------------------------------------------------------------------
       Idx    = to1D(k,j,0);
-      Rh_New = &u[0][Idx];
-      Ph_New = &u[1][Idx];
 
-      memcpy( Rh_Old, Rh_New, FLU_NXT*sizeof(real) );
-      memcpy( Ph_Old, Ph_New, FLU_NXT*sizeof(real) );
-
-      for (int i=0; i<FLU_NXT; i++) {
-         Sr_Old[i] = 0.5 * log(Rh_Old[i]);
-      }
+      //Set pointers to output arrays
+      Rc_N = &u[DENS][Idx];
+      Pc_N = &u[PHAS][Idx];
+      
+      memcpy( Rc[0], Rc_N, FLU_NXT*sizeof(real) );
+      memcpy( Pc[0], Pc_N, FLU_NXT*sizeof(real) );
 
 
-//    2. half-step solution
-//    ------------------------------------------------------------------------------------------------------------
-      for (int i=2; i<FLU_NXT-2; i++)
+      for (int time_level = 0; time_level < N_TIME_LEVELS; ++time_level) 
       {
-         vp  = GRADF(Ph_Old, i);
-         vm  = GRADB(Ph_Old, i);
-         fp  = MAX(vp, 0) * Rh_Old[i    ] + MIN(vp, 0) * Rh_Old[i + 1];
-         fm  = MAX(vm, 0) * Rh_Old[i - 1] + MIN(vm, 0) * Rh_Old[i    ];
-         qp  = (real) 0.5 * ((real) 0.25 * pow(GRAD1(Sr_Old, i), 2) + LAP1(Sr_Old, i));
-         osf = (real) 0.5 * (pow(MIN(vp, 0), 2) + pow(MAX(vm, 0), 2));
-         
-         Rh_Half[i] = Rh_Old[i] - (real) 0.5 * Coeff1 * (fp - fm);
-         Ph_Half[i] = Ph_Old[i] - (real) 0.5 * Coeff1 * (osf - qp);
-         Sr_Half[i] = 0.5 * log(Rh_Half[i]);
-      }
+         int g1 = 2 *   time_level       ;
+         int g2 = 2 * ( time_level + 1 ) ;
 
+         for (int i = g1; i<FLU_NXT - g1; i++) {
+            Sr[i] = real(0.5) * log(Rc[time_level][i]);
+         }
 
-//    3. full-step solution (equivalent to the 3rd-order Taylor expansion)
-//    ------------------------------------------------------------------------------------------------------------
-      for (int i=FLU_GHOST_SIZE; i<FLU_NXT-FLU_GHOST_SIZE; i++)
-      {
-         vp  = GRADF(Ph_Half, i);
-         vm  = GRADB(Ph_Half, i);
-         fp  = MAX(vp, 0) * Rh_Half[i    ] + MIN(vp, 0) * Rh_Half[i + 1];
-         fm  = MAX(vm, 0) * Rh_Half[i - 1] + MIN(vm, 0) * Rh_Half[i    ];
-         qp  = (real) 0.5 * ((real) 0.25 * pow(GRAD1(Sr_Half, i), 2) + LAP1(Sr_Half, i));
-         osf = (real) 0.5 * (pow(MIN(vp, 0), 2) + pow(MAX(vm, 0), 2));
-         
-         Rh_New[i] = Rh_Old[i] - (real) 1.0 * Coeff1 * (fp - fm);
-         Ph_New[i] = Ph_Old[i] - (real) 1.0 * Coeff1 * (osf - qp);
+         for (int i = g2; i<FLU_NXT - g2; i++)
+         {
+            vp  = GRADF1(Pc[time_level], i);
+            vm  = GRADB1(Pc[time_level], i);
+            fp  = MAX(vp, 0) * Rc[time_level][i    ] + MIN(vp, 0) * Rc[time_level][i + 1];
+            fm  = MAX(vm, 0) * Rc[time_level][i - 1] + MIN(vm, 0) * Rc[time_level][i    ];
+            vp  = GRADF3(Pc[time_level], i);
+            vm  = GRADB3(Pc[time_level], i);
+            qp  = (real) 0.5 * (pow(GRADC2(Sr, i), 2) + LAP2(Sr, i));
+            osf = (real) 0.5 * (pow(MIN(vp, 0), 2) + pow(MAX(vm, 0), 2));
+            
+
+            if (time_level + 1 < N_TIME_LEVELS)
+            {
+               Rc_target = &Rc[time_level + 1][i];
+               Pc_target = &Pc[time_level + 1][i];
+            }
+            else 
+            {
+               Rc_target = &Rc_N[i];
+               Pc_target = &Pc_N[i];
+            }
+
+            *Rc_target = TIME_COEFFS[time_level] * Coeff1 * (fm - fp);
+            *Pc_target = TIME_COEFFS[time_level] * Coeff1 * (qp - osf);
+            for (int tx = 0; tx < time_level + 1; ++tx) {
+               *Rc_target += RK_COEFFS[time_level][tx] * Rc[tx][i];
+               *Pc_target += RK_COEFFS[time_level][tx] * Pc[tx][i];
+            }
+         }
       }
    } // for j,k
 
 } // FUNCTION : CPU_AdvanceX
+
 
 
 
