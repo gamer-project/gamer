@@ -20,11 +20,11 @@
 # define F3_GRADIENT(In, t) ( real(1.0/6.0 ) * ( -2*In[t-1] - 3*In[t] + 6*In[t+1] - In[t+2]))
 # define B3_GRADIENT(In, t) ( real(1.0/6.0 ) * (  2*In[t+1] + 3*In[t] - 6*In[t-1] + In[t-2]))
 
-# define LAP1(In, t)   (                                              In[t-1] - real(2.0/1.0) * In[t  ] +                 In[t+1]                            )
+# define LAP1(In, t)   (                            +                 In[t-1] - real(2.0/1.0) * In[t  ] +                 In[t+1]                            )
 # define LAP2(In, t)   ( - real(1.0/12.0) * In[t-2] + real(4.0/3.0) * In[t-1] - real(5.0/2.0) * In[t  ] + real(4.0/3.0) * In[t+1] - real(1.0/12.0) * In[t+2] )
 
-# define GRAD1(In, t)  ( - real(1.0/2.0) * In[t-1]                                                                                   real(1.0/2.0) * In[t+1]  )
-# define GRAD2(In, t)  ( - real(2.0/3.0) * In[t-1] + real(1.0/12.0) * In[t-2]                           - real(1.0/12.0) * In[t+2] + real(2.0/3.0) * In[t+1]  )
+# define GRAD1(In, t)  (                            - real(1.0/2.0) * In[t-1]                           + real(1.0/2.0) * In[t+1]                            )
+# define GRAD2(In, t)  ( + real(1.0/12.0) * In[t-2] - real(2.0/3.0) * In[t-1]                           + real(2.0/3.0) * In[t+1] - real(1.0/12.0) * In[t+2] )
 
 
 static void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], real Flux_Array[][NFLUX_TOTAL][ SQR(PS2) ],
@@ -247,19 +247,18 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
       {
          int ghostBoundary = 4*time_level;
 
-         for (int i = ghostBoundary    ; i < FLU_NXT - ghostBoundary    ; i++)
+         for (int i = ghostBoundary    ; i < FLU_NXT - ghostBoundary    ; i++) {
             log_density[i] = 0.5 * log(FMAX(Rc[time_level][i], MinDens));
-         for (int i = ghostBoundary + 2; i < FLU_NXT - ghostBoundary - 2; i++) 
+         }
+
+         
+         for (int i = ghostBoundary + 2; i < FLU_NXT - ghostBoundary - 2; i++) { 
             v_C[i]         = _dh * GRAD2(Pc[time_level], i);
+         }
          
          
-//       Fills v_R[1 : -2], v_L[2 : -1]
          computePPMInterpolation(v_C,             v_L,    v_R, false, true, ghostBoundary + 2);
-         //for (int i = ghostBoundary + 4; i < FLU_NXT - ghostBoundary - 4; i++) {
-         //   printf("timstep = %d i = %d v_C = %f v_L = %f v_R = %f\n", time_level, i, v_C[i], v_L[i], v_R[i]); 
-         //}
-//       Fills rho_R[1 : -2], rho_L[2 : -1]
-         computePPMInterpolation(Rc[time_level], rho_L, rho_R, false, true, ghostBoundary);
+         computePPMInterpolation(Rc[time_level], rho_L, rho_R, true, false, ghostBoundary);
 
 
 //       computePPMFlux
@@ -305,7 +304,6 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
             fm_R[i] = a_L  + x/2.0 * (d_a   + ( 1.0 - 2.0/3.0 * x) * a_6 );
 
 
-            //printf("vp2 = %f vm2 = %f fp_L[i] = %f fp_R[i] = %f fm_L[i] = %f fm_R[i] = %f \n", vp2, vm2, fp_L[i], fp_R[i], fm_L[i], fm_R[i]); 
 
 //          Enforce upwinding for density fluxes abar
             real a_bar_p2 = fp_L[i] * FMAX( vp2, 0.0 ) + fp_R[i] * FMIN( vp2, 0.0 );
