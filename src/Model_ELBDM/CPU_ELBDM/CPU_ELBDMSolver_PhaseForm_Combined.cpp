@@ -71,7 +71,7 @@ real PPM_FM           (real* a_array, real* a_L_array, real* a_R_array, real* v_
 # endif // # if ( HYBRID_SCHEME == TOS )
 
 //Second- and fourth-order quantum pressure depending on the scheme used
-# if (0)//HYBRID_SCHEME == MUSCL || HYBRID_SCHEME == UPWIND)
+# if (HYBRID_SCHEME == MUSCL || HYBRID_SCHEME == UPWIND)
 # define QUANTUM_PRESSURE(Sr, t)  ((real) 0.5 * (pow(GRADC2(Sr, t), 2) + LAP2(Sr, t)))
 # else 
 # define QUANTUM_PRESSURE(Sr, t)  ((real) 0.5 * (pow(GRADC4(Sr, t), 2) + LAP4(Sr, t)))
@@ -119,7 +119,7 @@ void CPU_ELBDMSolver_PhaseForm( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT)],
                       real Flu_Array_Out[][FLU_NOUT][ SQR(PS2)*PS2 ], 
                       real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ], 
                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
-                      const real Taylor3_Coeff, const bool XYZ, const real MinDens )
+                      const bool XYZ, const real MinDens )
 {
 
    const real FluidMinDens = FMAX(1e-10, MinDens); 
@@ -206,9 +206,9 @@ void CPU_ELBDMSolver_PhaseForm( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT)],
 //const real RK_COEFFS  [N_TIME_LEVELS][N_TIME_LEVELS] = {{1.0, 0.0}, {1.0, 0.0}};
 
 #define N_TIME_LEVELS 3
-const real TIME_COEFFS[N_TIME_LEVELS]                = {1.0, 1.0/4.0, 2.0/3.0};
-const real FLUX_COEFFS[N_TIME_LEVELS]                = {1.0/6.0, 1.0/6.0, 2.0/3.0};
-const real RK_COEFFS  [N_TIME_LEVELS][N_TIME_LEVELS] = {{1.0, 0.0, 0.0}, {3.0/4.0, 1.0/4.0, 0.0}, {1.0/3.0, 0.0, 2.0/3.0}};
+const double TIME_COEFFS[N_TIME_LEVELS]                = {1.0, 1.0/4.0, 2.0/3.0};
+const double FLUX_COEFFS[N_TIME_LEVELS]                = {1.0/6.0, 1.0/6.0, 2.0/3.0};
+const double RK_COEFFS  [N_TIME_LEVELS][N_TIME_LEVELS] = {{1.0, 0.0, 0.0}, {3.0/4.0, 1.0/4.0, 0.0}, {1.0/3.0, 0.0, 2.0/3.0}};
 
 #define NO_LIMITER    0
 #define SOME_LIMITER  1
