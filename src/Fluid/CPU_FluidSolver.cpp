@@ -92,7 +92,7 @@ void CPU_ELBDMSolver_PhaseForm(  real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT)],
                       real Flu_Array_Out[][FLU_NOUT][ SQR(PS2)*PS2 ], 
                       real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ], 
                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
-                      const real Taylor3_Coeff, const bool XYZ, const real MinDens );
+                      const bool XYZ, const real MinDens );
 #endif // # if ( ELBDM_SCHEME == HYBRID )
 
 #else
@@ -263,7 +263,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 #  if ( ELBDM_SCHEME == HYBRID )
    } else { 
       CPU_ELBDMSolver_PhaseForm( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
-            ELBDM_Taylor3_Coeff, XYZ, MinDens );
+            XYZ, MinDens );
    }
 #  endif // # if ( ELBDM_SCHEME == HYBRID )
 #  else

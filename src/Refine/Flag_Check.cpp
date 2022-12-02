@@ -415,9 +415,7 @@ bool ELBDM_Flag_VolumeFracQP( const real Cond[], const double Threshold_QP, cons
    for (int Idx = 0; Idx < NTotal; ++Idx) 
          if ( Cond[Idx] > Threshold_QP ) ++NExceedThreshold;
 
-   float ratio =  NExceedThreshold / (float) NTotal; 
-   if (ratio > Threshold_VolumeFraction)
-      printf("Ratio: %f Threshold: %f\n", ratio, Threshold_VolumeFraction);
+   float ratio =  NExceedThreshold / (float) NTotal;
 
    return ratio > Threshold_VolumeFraction;
 
