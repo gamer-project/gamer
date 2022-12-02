@@ -36,6 +36,10 @@
 //Ratio of subsequent backward gradients
 # define BACKWARD_GRADIENT_RATIO(Pc, t) ((Pc[t] - Pc[t-1]) / (Pc[t-1] - Pc[t-2] + (((Pc[t-1] - Pc[t-2]) == 0) ?  1e-8 : 0)))
 
+// Third-order forward and backward gradient
+# define GRADF3(In, t) ( real(1.0/6.0) * ( -2*In[t-1] - 3*In[t] + 6*In[t+1] - In[t+2]))
+# define GRADB3(In, t) ( real(1.0/6.0) * (  2*In[t+1] + 3*In[t] - 6*In[t-1] + In[t-2]))
+
 #define N_TIME_LEVELS 3
 static const __device__ real TIME_COEFFS[N_TIME_LEVELS] = {1., 1./4, 2./3};
 static const __device__ real RK_COEFFS [N_TIME_LEVELS][N_TIME_LEVELS] = {{1., 0., 0.}, {3./4, 1./4, 0.}, {1./3, 0, 2./3}};
@@ -50,7 +54,6 @@ static __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT
                                       const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                       const uint j_gap, const uint k_gap,         
                                       real s_In[][FLU_NIN][FLU_BLOCK_SIZE_Y][FLU_NXT],
-                                      real s_Ql[][FLU_NXT],
                                       real s_LogRho[][FLU_NXT], 
                                       real s_Fm[][FLU_NXT],
                                       bool s_RK1[][FLU_NXT],
@@ -89,7 +92,7 @@ static __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT
 
 
 
-__global__ void CUFLU_ELBDMSolver_PhaseForm_MUSCL( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+__global__ void CUFLU_ELBDMSolver_PhaseForm( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                                    real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
                                    real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
                                    const real dt, const real _dh, const real Eta, const bool StoreFlux,
@@ -98,7 +101,6 @@ __global__ void CUFLU_ELBDMSolver_PhaseForm_MUSCL( real g_Fluid_In [][FLU_NIN ][
 
    __shared__ real s_In  [N_TIME_LEVELS+1][FLU_NIN][FLU_BLOCK_SIZE_Y][FLU_NXT];
 
-   __shared__ real s_Ql                          [FLU_BLOCK_SIZE_Y][FLU_NXT]; // one column of the gradient ratios for phase for every thread block
    __shared__ real s_LogRho                      [FLU_BLOCK_SIZE_Y][FLU_NXT]; // one column of the log(rho) for every thread block
    __shared__ real s_Fm                          [FLU_BLOCK_SIZE_Y][FLU_NXT]; // one column of the fluxes for every thread block
    __shared__ bool s_RK1                         [FLU_BLOCK_SIZE_Y][FLU_NXT]; // one column of the flags with control RK1 vs RK3 for every thread block
@@ -112,21 +114,21 @@ __global__ void CUFLU_ELBDMSolver_PhaseForm_MUSCL( real g_Fluid_In [][FLU_NIN ][
    if ( XYZ )
    {
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, Eta, StoreFlux,
-                                  0,              0, s_In, s_Ql, s_LogRho, s_Fm, s_RK1, s_Flux, false, 0, MinDens );
+                                  0,              0, s_In, s_LogRho, s_Fm, s_RK1, s_Flux, false, 0, MinDens );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, Eta, StoreFlux,
-                     FLU_GHOST_SIZE,              0, s_In, s_Ql, s_LogRho, s_Fm, s_RK1, s_Flux, false, 3, MinDens );
+                     FLU_GHOST_SIZE,              0, s_In, s_LogRho, s_Fm, s_RK1, s_Flux, false, 3, MinDens );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, Eta, StoreFlux,
-                     FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_Ql, s_LogRho, s_Fm, s_RK1, s_Flux,  true, 6, MinDens );
+                     FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_LogRho, s_Fm, s_RK1, s_Flux,  true, 6, MinDens );
    }
 
    else
    {
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, Eta, StoreFlux,
-                                  0,              0, s_In, s_Ql, s_LogRho, s_Fm, s_RK1, s_Flux, false, 6, MinDens );
+                                  0,              0, s_In, s_LogRho, s_Fm, s_RK1, s_Flux, false, 6, MinDens );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, Eta, StoreFlux,
-                                  0, FLU_GHOST_SIZE, s_In, s_Ql, s_LogRho, s_Fm, s_RK1, s_Flux, false, 3, MinDens );
+                                  0, FLU_GHOST_SIZE, s_In, s_LogRho, s_Fm, s_RK1, s_Flux, false, 3, MinDens );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, Eta, StoreFlux,
-                     FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_Ql, s_LogRho, s_Fm,s_RK1,  s_Flux,  true, 0, MinDens );
+                     FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_LogRho, s_Fm,s_RK1,  s_Flux,  true, 0, MinDens );
    }
 
 } // FUNCTION : CUFLU_ELBDMSolver_PhaseForm_MUSCL
@@ -172,7 +174,6 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                                const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                const uint j_gap, const uint k_gap, 
                                real s_In    [][FLU_NIN][FLU_BLOCK_SIZE_Y][FLU_NXT],
-                               real s_Ql    [][FLU_NXT],
                                real s_LogRho[][FLU_NXT], 
                                real s_Fm    [][FLU_NXT],
                                bool s_RK1   [][FLU_NXT],
@@ -197,12 +198,10 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          uint Column0      = 0;                              // the total number of columns that have been updated
          uint NColumnOnce  = MIN( NColumnTotal, FLU_BLOCK_SIZE_Y );
 
-   uint   Idx1, Idx2, Idx3, delta_k;
+   uint   Idx1, Idx2, delta_k;
 
    const uint NThread     = FLU_BLOCK_SIZE_X*FLU_BLOCK_SIZE_Y;
-
-   //slope-limiter
-   real ql, qc, Qc, Qr;
+   
    //velocities dS/dx = v and density fluxes f at i - 1/2, i + 1/2 
    real vm, vp;
 
@@ -218,7 +217,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
    uint   si, sj;                                           // array indices used in the shared memory array
 
 #  ifdef CONSERVE_MASS
-   uint   f;                                           // array indices used in the s_Flux array
+   uint   f, Idx3;                                           // array indices used in the s_Flux array
 #  endif 
 
    uint NStep;
@@ -227,6 +226,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
    bool LoadGhost = false;                                  // true --> load the ghost-zone data
    uint LoadGhost_i;
    int  LoadGhost_di, LoadGhost_dIdx1;
+
 
 // use the first 2*FLU_GHOST_SIZE threads to load the ghost zones in addition to their regular cells 
    if ( tx < 2*FLU_GHOST_SIZE )
@@ -292,25 +292,8 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          {
             si = Idx % NStep + 2*(time_level + 1);
             sj = Idx / NStep;
+            s_Fm  [sj][si]  = MUSCL_FLUX( s_In[time_level][0][sj], _dh * BACKWARD_GRADIENT        (s_In[time_level][1][sj], si), si, dh, dt);    
 
-            s_Ql  [sj][si]  =       BACKWARD_GRADIENT_RATIO  (s_In[time_level][1][sj], si);
-            vm              = _dh * BACKWARD_GRADIENT        (s_In[time_level][1][sj], si);
-            s_Fm  [sj][si]  =       MUSCL_FLUX               (s_In[time_level][0][sj], vm, si, dh, dt);    
-
-//          check the velocity-dependent CFL-condition and switch to forward-Euler for updating the density wherever the CFL-condition is not met
-//          dt = 1 / MaxdS_dx * 0.5 * ELBDM_ETA * DT__VELOCITY;
-//          compute CFL condition timestep
-            dt_min = dh / FABS(vm) * 0.5 * Eta * 2.0 ;
-
-//          if the time step adopted in solver is larger than what velocity-dependent CFL condition allows, we switch to first-order RK
-            if ( dt > dt_min ) {
-//             compute how far wrong information can propagate to determine where we need to switch to forward Euler
-               int l_min = i - 2;
-               int l_max = i + 2 + 1;
-               if (l_min < 0)        l_min = 0;
-               if (l_max > FLU_NXT ) l_max = FLU_NXT; 
-               for (int l = l_min; l < l_max; ++l) s_RK1[sj][l] = true;  
-            }
             Idx += NThread;
          } // while ( Idx < NColumnOnce*NStep )
          
@@ -360,13 +343,8 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 
             //Slope-limited second order gradients
-            ql = s_Ql[sj][si  ];
-            qc = s_Ql[sj][si+1];
-            Qc = 1./(s_Ql[sj][si+1] + ((s_Ql[sj][si+1] == 0) ? 1e-8 : 0));
-            Qr = 1./(s_Ql[sj][si+2] + ((s_Ql[sj][si+2] == 0) ? 1e-8 : 0));
-
-            vm = _dh * BACKWARD_GRADIENT(s_In[time_level][1][sj], si) * ( (real) 1. + (real) 0.5 * LIMITER(qc) - (real) 0.5 * LIMITER(ql)/(ql + ((ql==0) ? 1e-8 : 0)));
-            vp = _dh * FORWARD_GRADIENT (s_In[time_level][1][sj], si) * ( (real) 1. + (real) 0.5 * LIMITER(Qc) - (real) 0.5 * LIMITER(Qr)/(Qr + ((Qr==0) ? 1e-8 : 0)));
+            vm = _dh * GRADB3(s_In[time_level][1][sj], si);
+            vp = _dh * GRADF3(s_In[time_level][1][sj], si);
    
             ddensity = _dh * (s_Fm[sj][si+1] - s_Fm[sj][si]);
 
