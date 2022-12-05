@@ -84,7 +84,7 @@ real ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 
 #if ( ELBDM_SCHEME == HYBRID )
 __global__ void CUFLU_ELBDMSolver_PhaseForm( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                                   real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
+                                   real g_Fluid_Out[][FLU_NIN][ CUBE(PS2) ],
                                    real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
                                    const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                    const bool XYZ, const real MinDens );
@@ -349,6 +349,13 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #     ifdef DUAL_ENERGY
       DE_MemSize_Out [s] = sizeof(char  )*NPatch_per_Stream[s]*CUBE(PS2);
 #     endif
+
+//    optimisation for phase scheme, only transfer density and phase instead of re/im/dens back from GPU
+#     if ( ELBDM_SCHEME == HYBRID )
+      if ( !useWaveSolver ) {
+         Flu_MemSize_Out[s] = sizeof(real  )*NPatch_per_Stream[s]*FLU_NIN*CUBE(PS2);
+      }
+#     endif // # if ( ELBDM_SCHEME == HYBRID )
    }
 
 
@@ -450,7 +457,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 #     elif ( MODEL == ELBDM )
 #     if ( ELBDM_SCHEME == HYBRID )
-      if ( useWaveSolver )
+      if ( useWaveSolver ) {
 #     endif // #     if ( ELBDM_SCHEME == HYBRID )
          CUFLU_ELBDMSolver <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
             ( d_Flu_Array_F_In  + UsedPatch[s],
@@ -458,12 +465,14 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_Flux_Array      + UsedPatch[s],
               dt, 1.0/dh, ELBDM_Eta, StoreFlux, ELBDM_Taylor3_Coeff, XYZ, MinDens );
 #     if ( ELBDM_SCHEME == HYBRID )
-      else // if ( useWaveSolver )
+      } else { // if ( useWaveSolver ) {
+         real (*smaller_d_Flu_Array_F_Out)[FLU_NIN][CUBE(PS2)] = (real (*)[FLU_NIN][CUBE(PS2)]) d_Flu_Array_F_Out;
          CUFLU_ELBDMSolver_PhaseForm <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
-            ( d_Flu_Array_F_In  + UsedPatch[s],
-              d_Flu_Array_F_Out + UsedPatch[s],
-              d_Flux_Array      + UsedPatch[s],
-              dt, 1.0/dh, ELBDM_Eta, StoreFlux, XYZ, MinDens );
+            (  d_Flu_Array_F_In          + UsedPatch[s],
+               smaller_d_Flu_Array_F_Out + UsedPatch[s],
+               d_Flux_Array              + UsedPatch[s],
+               dt, 1.0/dh, ELBDM_Eta, StoreFlux, XYZ, MinDens );
+      } // if ( useWaveSolver ) { ... else 
 #     endif // #     if ( ELBDM_SCHEME == HYBRID )
 
 #     else
@@ -483,8 +492,19 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
    {
       if ( NPatch_per_Stream[s] == 0 )    continue;
 
+#     if ( ELBDM_SCHEME == HYBRID )
+      if ( useWaveSolver ) {
+#     endif // #     if ( ELBDM_SCHEME == HYBRID )
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_Flu_Array_Out + UsedPatch[s], d_Flu_Array_F_Out + UsedPatch[s],
                          Flu_MemSize_Out[s], cudaMemcpyDeviceToHost, Stream[s] )  );
+#     if ( ELBDM_SCHEME == HYBRID )
+      } else { // if ( useWaveSolver ) {
+      real (*smaller_h_Flu_Array_Out  )[FLU_NIN][CUBE(PS2)] = (real (*)[FLU_NIN][CUBE(PS2)]) h_Flu_Array_Out;
+      real (*smaller_d_Flu_Array_F_Out)[FLU_NIN][CUBE(PS2)] = (real (*)[FLU_NIN][CUBE(PS2)]) d_Flu_Array_F_Out;
+      CUDA_CHECK_ERROR(  cudaMemcpyAsync( smaller_h_Flu_Array_Out + UsedPatch[s], smaller_d_Flu_Array_F_Out + UsedPatch[s],
+                         Flu_MemSize_Out[s], cudaMemcpyDeviceToHost, Stream[s] )  );
+      } // if ( useWaveSolver ) { ... else 
+#     endif // #     if ( ELBDM_SCHEME == HYBRID )
 
       if ( StoreFlux )
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_Flux_Array    + UsedPatch[s], d_Flux_Array      + UsedPatch[s],

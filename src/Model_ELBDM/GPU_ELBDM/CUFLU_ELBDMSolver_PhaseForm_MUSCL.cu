@@ -49,7 +49,7 @@ static const __device__ real FLUX_COEFFS[N_TIME_LEVELS] = {1./6, 1./6, 2./3};
 #endif 
 
 static __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                                      real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
+                                      real g_Fluid_Out[][FLU_NIN][ CUBE(PS2) ],
                                       real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
                                       const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                       const uint j_gap, const uint k_gap,         
@@ -93,7 +93,7 @@ static __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT
 
 
 __global__ void CUFLU_ELBDMSolver_PhaseForm( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                                   real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
+                                   real g_Fluid_Out[][FLU_NIN][ CUBE(PS2) ],
                                    real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
                                    const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                    const bool XYZ, const real MinDens )
@@ -169,7 +169,7 @@ __global__ void CUFLU_ELBDMSolver_PhaseForm( real g_Fluid_In [][FLU_NIN ][ CUBE(
 //-------------------------------------------------------------------------------------------------------
 
 __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                               real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
+                               real g_Fluid_Out[][FLU_NIN][ CUBE(PS2) ],
                                real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
                                const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                const uint j_gap, const uint k_gap, 
