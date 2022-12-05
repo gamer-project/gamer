@@ -399,7 +399,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
                   g_Fluid_Out[bx][0][Idx2] = De_New;
                   g_Fluid_Out[bx][1][Idx2] = Ph_New;
-                  g_Fluid_Out[bx][2][Idx2] = 0;
+                  //g_Fluid_Out[bx][2][Idx2] = 0;
                }
                else
                {
@@ -421,15 +421,6 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                }
 #              endif 
 
-//             5.3 reset the target array indices
-               j += NColumnOnce;
-
-               if ( j >= j_end )
-               {
-                  delta_k  = ( j - j_end )/size_j + 1;
-                  k       += delta_k;
-                  j       -= __umul24( size_j, delta_k );
-               }  
                Idx += NThread;
             }                  
          }
@@ -437,6 +428,15 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          
       }
       
+//    5.3 reset the target array indices
+      j += NColumnOnce;
+
+      if ( j >= j_end )
+      {
+         delta_k  = ( j - j_end )/size_j + 1;
+         k       += delta_k;
+         j       -= __umul24( size_j, delta_k );
+      }  
 
       Column0     += NColumnOnce;
       NColumnOnce  = MIN( NColumnTotal - Column0, FLU_BLOCK_SIZE_Y );
