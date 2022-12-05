@@ -570,9 +570,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                         g_Flux[bx][XYZ+2][0][Idx3] = s_Flux[ty][PS2 + FLU_GHOST_SIZE] / Eta;
                      }
 #                    endif 
-                  } // if ( time_level == 0 ) ... else if ( time_level == N_TIME_LEVELS - 1 )    
+                  } // if ( time_level < N_TIME_LEVELS - 1 ) {
                } // CELL_LOOP(FLU_NXT, g2, g2)
-
 #              ifdef __CUDACC__ 
                __syncthreads();
 #              endif 
