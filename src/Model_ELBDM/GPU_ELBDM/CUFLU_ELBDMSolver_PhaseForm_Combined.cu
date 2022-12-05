@@ -158,7 +158,7 @@ static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                            const real dt, const real _dh, const real Eta, const bool StoreFlux,
                            const uint j_gap, const uint k_gap,         
                            real s_In[][N_TIME_LEVELS + 1][FLU_NIN][FLU_NXT],
-                           real s_Sr[][FLU_NXT],
+                           real s_LogRho[][FLU_NXT],
                            real s_Fm[][FLU_NXT],
                            real s_Flux[][FLU_NXT], 
                            const bool FinalOut, const int XYZ, const real MinDens );
@@ -218,7 +218,7 @@ void CPU_ELBDMSolver_PhaseForm(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT)],
 #  ifdef __CUDACC__
 // create memories for columns of various intermediate fields in shared GPU memory
    __shared__ real s_In  [CGPU_FLU_BLOCK_SIZE_Y][N_TIME_LEVELS + 1][FLU_NIN][FLU_NXT];
-   __shared__ real s_Sr  [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT]; // one column of the 0.5 * log(rho) for every thread block
+   __shared__ real s_LogRho  [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT]; // one column of the 0.5 * log(rho) for every thread block
    __shared__ real s_Fm  [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT]; // one column of the fluxes for every thread block
 
 #  ifdef CONSERVE_MASS
@@ -231,7 +231,7 @@ void CPU_ELBDMSolver_PhaseForm(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT)],
 #  else // #  ifdef __CUDACC__
 // allocate memory on stack within loop for CPU run
    real (*s_In) [N_TIME_LEVELS + 1][FLU_NIN][FLU_NXT]  = NULL;
-   real (*s_Sr) [FLU_NXT]                              = NULL;
+   real (*s_LogRho) [FLU_NXT]                          = NULL;
    real (*s_Fm) [FLU_NXT]                              = NULL;
    real (*s_Flux)[FLU_NXT]                             = NULL;
    const real _dh                                      = 1.0/dh; 
@@ -240,21 +240,21 @@ void CPU_ELBDMSolver_PhaseForm(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT)],
    if ( XYZ )
    {
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                                  0,              0, s_In, s_Sr, s_Fm, s_Flux, false, 0, MinDens );
+                                  0,              0, s_In, s_LogRho, s_Fm, s_Flux, false, 0, MinDens );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                     FLU_GHOST_SIZE,              0, s_In, s_Sr, s_Fm, s_Flux, false, 3, MinDens );
+                     FLU_GHOST_SIZE,              0, s_In, s_LogRho, s_Fm, s_Flux, false, 3, MinDens );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                     FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_Sr, s_Fm, s_Flux,  true, 6, MinDens );
+                     FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_LogRho, s_Fm, s_Flux,  true, 6, MinDens );
    }
 
    else
    {
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                                  0,              0, s_In, s_Sr, s_Fm, s_Flux, false, 6, MinDens );
+                                  0,              0, s_In, s_LogRho, s_Fm, s_Flux, false, 6, MinDens );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                                  0, FLU_GHOST_SIZE, s_In, s_Sr, s_Fm, s_Flux, false, 3, MinDens );
+                                  0, FLU_GHOST_SIZE, s_In, s_LogRho, s_Fm, s_Flux, false, 3, MinDens );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                     FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_Sr, s_Fm, s_Flux,  true, 0, MinDens );
+                     FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_LogRho, s_Fm, s_Flux,  true, 0, MinDens );
    }
 
 } // FUNCTION : CUFLU_ELBDMSolver_PhaseForm_MUSCL
@@ -281,7 +281,7 @@ void CPU_ELBDMSolver_PhaseForm(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT)],
 //                j_gap          : Number of useless grids on each side in the j direction (j may not be equal to y)
 //                k_gap          : Number of useless grids on each side in the k direction (k mya not be equal to z)
 //                s_In           : Shared memory array to store the input data and the solutions at different times
-//                s_Sr           : Shared memory array to store the density logarithms
+//                s_LogRho           : Shared memory array to store the density logarithms
 //                s_Fm           : Shared memory array to store the boundary density fluxes during the computation
 //                s_Flux         : Shared memory array to store the boundary fluxes
 //                FinalOut       : true --> store the updated data to g_Fluid_Out
@@ -291,7 +291,7 @@ void CPU_ELBDMSolver_PhaseForm(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT)],
 //                                 --> This parameter is also used to determine the place to store the output fluxes
 //                MinDens        : Minimum allowed density
 //-------------------------------------------------------------------------------------------------------
-__device__
+GPU_DEVICE
 void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      real g_Fluid_Out[][FLU_NIN][ CUBE(PS2) ],
                      real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
@@ -299,16 +299,16 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      const real dt, const real _dh, const real Eta, const bool StoreFlux,
                      const uint j_gap, const uint k_gap, 
                      real s_In    [][N_TIME_LEVELS + 1][FLU_NIN][FLU_NXT],
-                     real s_Sr    [][FLU_NXT],
+                     real s_LogRho    [][FLU_NXT],
                      real s_Fm    [][FLU_NXT],
                      real s_Flux  [][FLU_NXT], 
                      const bool FinalOut,
                      const int XYZ, const real MinDens )
 {
 
-   const real dh            = 1.0/_dh;                      // grid spacing
-   const real Coeff1       = dt/(dh * Eta);                 // coefficient for continuity equation
-   const real Coeff2       = dt/(dh * dh * Eta);            // coefficient for HJ-equation
+   const real dh           = 1.0/_dh;                      // grid spacing
+   const real Coeff1       =       dt/(dh * Eta);           // coefficient for continuity equation
+   const real Coeff2       = 0.5 * dt/(dh * dh * Eta);      // coefficient for HJ-equation
    const real FluidMinDens = FMAX(1e-10, MinDens);          // minimum density while computing quantum pressure and when correcting negative density 
 
 
@@ -324,11 +324,11 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  endif
    {
 #     ifdef __CUDACC__
-      const uint bx = blockIdx.x;
+      const int bx = blockIdx.x;
 #     else
 //    in CPU mode, every thread works on one patch group at a time and corresponds to one block in the grid of the GPU solver
-#     pragma omp for schedule( runtime ) private ( s_In, s_Sr, s_Fm, s_Flux )
-      for (uint bx=0; bx<NPatchGroup; bx++)
+#     pragma omp for schedule( runtime ) private ( s_In, s_LogRho, s_Fm, s_Flux )
+      for (int bx=0; bx<NPatchGroup; bx++)
 #     endif
       {
 
@@ -342,9 +342,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          uint g1, g2;                     // left and right ghost zones while updating each column
 
          uint NStep;                      // number of iterations for updating each column
-
-
-         real vp, vm, fp, fm, qp, osf;
          real De_New, Ph_New;
 
          uint time_level; 
@@ -359,18 +356,18 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          const uint ty            = 0;
 
 //       create arrays for columns of various intermediate fields on the stack
-         real s_In_1PG   [CGPU_FLU_BLOCK_SIZE_Y][N_TIME_LEVELS + 1][FLU_NIN][FLU_NXT];   // density and phase fields at all RK stages + RK 1 result
-         real s_Sr_1PG   [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];                               // 1/2 * density logarithm 
-         real s_Fm_1PG   [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];                               // density flux
+         real s_In_1PG       [CGPU_FLU_BLOCK_SIZE_Y][N_TIME_LEVELS + 1][FLU_NIN][FLU_NXT];   // density and phase fields at all RK stages + RK 1 result
+         real s_LogRho_1PG   [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];                               // 1/2 * density logarithm 
+         real s_Fm_1PG       [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];                               // density flux
 #        ifdef CONSERVE_MASS
-         real s_Flux_1PG [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];
+         real s_Flux_1PG     [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];
 #        endif // #  ifdef CONSERVE_MASS
 
-         s_In   = s_In_1PG;
-         s_Sr   = s_Sr_1PG; 
-         s_Fm   = s_Fm_1PG;
+         s_In       = s_In_1PG;
+         s_LogRho   = s_LogRho_1PG; 
+         s_Fm       = s_Fm_1PG;
 #        ifdef CONSERVE_MASS
-         s_Flux = s_Flux_1PG;
+         s_Flux     = s_Flux_1PG;
 #        endif // #  ifdef CONSERVE_MASS
 
 #        endif // # ifdef __CUDACC__ ... # else 
@@ -426,12 +423,18 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //             1.2 load the interior data into shared memory at time_level 0
                s_In[ty][time_level][DENS][i] = g_Fluid_In[bx][DENS][Idx1];
                s_In[ty][time_level][PHAS][i] = g_Fluid_In[bx][PHAS][Idx1];
+#              ifdef CONSERVE_MASS
+               s_Flux[ty][si] = 0;
+#              endif 
 
 //             1.3 load the ghost-zone data into shared memory
                if ( LoadGhost )
                {
                   s_In[ty][time_level][DENS][LoadGhost_i] = g_Fluid_In[bx][DENS][ (int)Idx1 + LoadGhost_dIdx1 ];
                   s_In[ty][time_level][PHAS][LoadGhost_i] = g_Fluid_In[bx][PHAS][ (int)Idx1 + LoadGhost_dIdx1 ];
+#                 ifdef CONSERVE_MASS
+                  s_Flux[ty][LoadGhost_i] = 0;
+#                 endif 
                }
 #              else // # ifdef __CUDACC__
 
@@ -441,9 +444,13 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   s_In[ty][time_level][DENS][si] = g_Fluid_In[bx][DENS][Idx1];
                   s_In[ty][time_level][PHAS][si] = g_Fluid_In[bx][PHAS][Idx1];
 
+#                 ifdef CONSERVE_MASS
+                  s_Flux[ty][si] = 0; 
+#                 endif            
+
 #                 ifdef GAMER_DEBUG
                   if ( s_In[ty][time_level][DENS][si] != s_In[ty][time_level][DENS][si] || s_In[ty][time_level][PHAS][si] != s_In[ty][time_level][PHAS][si] || s_In[ty][time_level][DENS][si] < 0)
-                      Aux_Error( ERROR_INFO, "nan in input array of fluid solver k %d j %d i %d Rho %f Pha %f !\n\n", k, j, si, Rc[0][si], Pc[0][si]); 
+                      Aux_Error( ERROR_INFO, "nan in input array of fluid solver k %d j %d i %d Rho %f Pha %f !\n\n", k, j, si, s_In[ty][time_level][0][si], s_In[ty][time_level][1][si]); 
 #                 endif
                }
 #              endif // # ifdef __CUDACC__  ... else
@@ -461,13 +468,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                g1 = GHOST_ZONE_PER_STAGE *   time_level       ;
                g2 = GHOST_ZONE_PER_STAGE * ( time_level + 1 ) ;         
 
-//             2.1 compute density logarithms
-               CELL_LOOP(FLU_NXT, g1, g1)
-               { 
-                  s_Sr[sj][si] = real(0.5) * log(FMAX(s_In[sj][time_level][DENS][si], FluidMinDens));
-               } 
 
-//             2.2 compute backward density fluxes at all cell faces of real cells
+//             2.1 compute backward density fluxes at all cell faces of real cells
                CELL_LOOP(FLU_NXT, g2, g2 - 1)
                {
 #                 if ( HYBRID_SCHEME == HYBRID_UPWIND )
@@ -483,12 +485,17 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 #                 ifdef CONSERVE_MASS
 //                   2.2.1 update density fluxes
-                     if ( time_level == 0 ) s_Flux[sj][si] = 0;
                      s_Flux[sj][si] += FLUX_COEFFS[time_level] * s_Fm[sj][si];
 #                 endif            
                }
 
-//             2.3 sync s_Fm, s_Sr and s_Flux
+//             2.2 compute density logarithms
+               CELL_LOOP(FLU_NXT, g1 + 1, g1 + 1)
+               { 
+                  s_LogRho[sj][si] = log(FMAX(s_In[sj][time_level][DENS][si], FluidMinDens));
+               } 
+
+//             2.3 sync s_Fm, s_LogRho and s_Flux
 #              ifdef __CUDACC__ 
                __syncthreads();
 #              endif 
@@ -498,18 +505,24 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                CELL_LOOP(FLU_NXT, g2, g2)
                {
 //                3.1 evolve continutiy equation with density fluxes
-                  fp  = s_Fm[sj][si+1];
-                  fm  = s_Fm[sj][si  ];
+//                  fp  = s_Fm[sj][si+1];
+//                  fm  = s_Fm[sj][si  ];
 
 //                3.2 evolve Hamilton-Jacobi equation with Osher-Sethian flux and quantum pressure discretisation
-                  qp  = QUANTUM_PRESSURE  (s_Sr[sj], si);
-                  vp  = GRADF3(s_In[sj][time_level][PHAS], si);
-                  vm  = GRADB3(s_In[sj][time_level][PHAS], si);
-                  osf = OSHER_SETHIAN_FLUX(vp, vm); 
+//                  qp  = QUANTUM_PRESSURE  (s_LogRho[sj], si);
+//                  vp  = GRADF3(s_In[sj][time_level][PHAS], si);
+//                  vm  = GRADB3(s_In[sj][time_level][PHAS], si);
+//                  osf = OSHER_SETHIAN_FLUX(vp, vm); 
 
+//                3.1 && 3.2 as one-liners for performance reasons (2.5 times faster execution of the whole solver and I do not understand why)
+                  De_New = TIME_COEFFS[time_level] * Coeff1 * ( s_Fm[sj][si] - s_Fm[sj][si+1] );
+                  Ph_New = TIME_COEFFS[time_level] * Coeff2 * ( \
+                           - SQR(FMIN(GRADF2(s_In[sj][time_level][PHAS], si), 0)) \
+                           - SQR(FMAX(GRADB2(s_In[sj][time_level][PHAS], si), 0)) \
+                           + 1.0/2.0 * LAP2(s_LogRho[sj], si) \
+                           + 1.0/4.0 * SQR(GRADC2(s_LogRho[sj], si)));
+            
 //                3.3 use N_TIME_LEVELS-stages RK-algorithm
-                  De_New = TIME_COEFFS[time_level] * Coeff1 * (fm - fp);
-                  Ph_New = TIME_COEFFS[time_level] * Coeff2 * (qp - osf);
                   for (uint tl = 0; tl < time_level + 1; ++tl) {
                      De_New += RK_COEFFS[time_level][tl] * s_In[sj][tl][DENS][si];
                      Ph_New += RK_COEFFS[time_level][tl] * s_In[sj][tl][PHAS][si];
@@ -542,11 +555,11 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //                      apply the the minimum density check
                         De_New = (De_New < MinDens) ? MinDens : De_New;
 
-                        #ifndef __CUDACC__ 
+#                       ifndef __CUDACC__ 
                         Idx2 = get1D2( k, j, si, XYZ);
-                        #else // #ifndef __CUDACC_
+#                       else // #ifndef __CUDACC_
                         Idx2 = get1D2( k, j,  i, XYZ);
-                        #endif // #ifndef __CUDACC_ ... else
+#                       endif // #ifndef __CUDACC_ ... else
 
                         g_Fluid_Out[bx][DENS][Idx2] = De_New;
                         g_Fluid_Out[bx][PHAS][Idx2] = Ph_New;
@@ -554,9 +567,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
                      } else { // if ( FinalOut )           
 
-                        #ifndef __CUDACC__ 
+#                       ifndef __CUDACC__ 
                         Idx1 = get1D1( k, j, si, XYZ );
-                        #endif // #ifndef __CUDACC__ 
+#                       endif // #ifndef __CUDACC__ 
 
                         g_Fluid_In[bx][DENS][Idx1] = De_New;
                         g_Fluid_In[bx][PHAS][Idx1] = Ph_New;
@@ -574,7 +587,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                         g_Flux[bx][XYZ+1][0][Idx3] = s_Flux[ty][PS1 + FLU_GHOST_SIZE] / Eta;
                         g_Flux[bx][XYZ+2][0][Idx3] = s_Flux[ty][PS2 + FLU_GHOST_SIZE] / Eta;
                      }
-#                    endif 
+#                    endif // # ifdef CONSERVE_MASS
                   } // if ( time_level < N_TIME_LEVELS - 1 ) {
                } // CELL_LOOP(FLU_NXT, g2, g2)
 #              ifdef __CUDACC__ 
