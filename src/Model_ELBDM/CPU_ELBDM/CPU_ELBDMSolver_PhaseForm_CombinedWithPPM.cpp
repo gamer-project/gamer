@@ -35,15 +35,15 @@
 # define GRADC4(In, t) ( real(1.0/12.0) * (  1*In[t-2] - 8*In[t-1] + 8*In[t+1] - 1*In[t+2] ))
 
 //First-order upwind flux reconstruction
-# if ( HYBRID_SCHEME == HYBRID_UPWIND )
+# if ( HYBRID_SCHEME == UPWIND )
 
 # define UPWIND_FM(Rc, Vb, t)        (   FMAX(Vb, 0) * Rc[t-1] \
                                        + FMIN(Vb, 0) * Rc[t  ] )
 
-# endif // #if ( HYBRID_SCHEME == HYBRID_UPWIND )
+# endif // #if ( HYBRID_SCHEME == UPWIND )
 
 //Second-order MUSCL flux reconstruction
-#if ( HYBRID_SCHEME == HYBRID_MUSCL )
+#if ( HYBRID_SCHEME == MUSCL )
 
 // VAN ALBADA LIMITER
 # define LIMITER(In) ( (SQR(In) + In)/((real)1. + SQR(In)) )
@@ -61,43 +61,24 @@
 # define MUSCL_FM(Rc, Vb, t, dx, dt) (   FMAX(Vb, 0) * Rc[t-1] \
                                        + FMIN(Vb, 0) * Rc[t  ] \
                                        +  real(0.5) * FABS(Vb) * (1. - FABS(Vb * dt/dx)) * LIMITER(UPWIND_GRADIENT_RATIO(Rc, Vb, t)) * (Rc[t] - Rc[t - 1]) )
-# endif // #if ( HYBRID_SCHEME == HYBRID_MUSCL )
+# endif // #if ( HYBRID_SCHEME == MUSCL )
 
 //Third-order PPM flux reconstruction
-# if ( HYBRID_SCHEME == HYBRID_PPM )
+# if ( HYBRID_SCHEME == TOS )
 void PPM_INTERPOLATION(real* a_array, real* a_L_array, real* a_R_array, int i, int densityLimiter);
 void PPM_LIMITER      (real* a_array, real* a_L_array, real* a_R_array, int i, int densityLimiter);
 real PPM_FM           (real* a_array, real* a_L_array, real* a_R_array, real* v_L_array, int i, real dh, real dt);
-# endif // # if ( HYBRID_SCHEME == HYBRID_PPM )
+# endif // # if ( HYBRID_SCHEME == TOS )
 
 //Second- and fourth-order quantum pressure depending on the scheme used
-# if (HYBRID_SCHEME == HYBRID_MUSCL || HYBRID_SCHEME == HYBRID_UPWIND)
+# if (HYBRID_SCHEME == MUSCL || HYBRID_SCHEME == UPWIND)
 # define QUANTUM_PRESSURE(Sr, t)  ((real) 0.5 * (pow(GRADC2(Sr, t), 2) + LAP2(Sr, t)))
 # else 
 # define QUANTUM_PRESSURE(Sr, t)  ((real) 0.5 * (pow(GRADC4(Sr, t), 2) + LAP4(Sr, t)))
-# endif // # if (HYBRID_SCHEME == HYBRID_MUSCL || HYBRID_SCHEME == HYBRID_UPWIND)
+# endif // # if (HYBRID_SCHEME == MUSCL || HYBRID_SCHEME == UPWIND)
 
 //Osher-Sethian flux for Hamilton-Jacobi equation
 # define OSHER_SETHIAN_FLUX(vp, vm) ((real) 0.5 * (pow(MIN(vp, 0), 2) + pow(MAX(vm, 0), 2)))
-
-
-//#define N_TIME_LEVELS 1
-//const real TIME_COEFFS[N_TIME_LEVELS]                = {1.0};
-//const real RK_COEFFS  [N_TIME_LEVELS][N_TIME_LEVELS] = {{1.0}};
-
-
-//#define N_TIME_LEVELS 2
-//const real TIME_COEFFS[N_TIME_LEVELS]                = {1.0/2.0, 1.0};
-//const real RK_COEFFS  [N_TIME_LEVELS][N_TIME_LEVELS] = {{1.0, 0.0}, {1.0, 0.0}};
-
-#define N_TIME_LEVELS 3
-const double TIME_COEFFS[N_TIME_LEVELS]                = {1.0, 1.0/4.0, 2.0/3.0};
-const double FLUX_COEFFS[N_TIME_LEVELS]                = {1.0/6.0, 1.0/6.0, 2.0/3.0};
-const double RK_COEFFS  [N_TIME_LEVELS][N_TIME_LEVELS] = {{1.0, 0.0, 0.0}, {3.0/4.0, 1.0/4.0, 0.0}, {1.0/3.0, 0.0, 2.0/3.0}};
-
-#define NO_LIMITER    0
-#define SOME_LIMITER  1
-#define FULL_LIMITER  2 
 
 
 static void CPU_AdvanceX( real u[][ CUBE(FLU_NXT)], real Flux_Array[][NFLUX_TOTAL][ SQR(PS2) ], 
@@ -215,6 +196,24 @@ void CPU_ELBDMSolver_PhaseForm( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT)],
 } // FUNCTION : CPU_ELBDMSolver
 
 
+//#define N_TIME_LEVELS 1
+//const real TIME_COEFFS[N_TIME_LEVELS]                = {1.0};
+//const real RK_COEFFS  [N_TIME_LEVELS][N_TIME_LEVELS] = {{1.0}};
+
+
+//#define N_TIME_LEVELS 2
+//const real TIME_COEFFS[N_TIME_LEVELS]                = {1.0/2.0, 1.0};
+//const real RK_COEFFS  [N_TIME_LEVELS][N_TIME_LEVELS] = {{1.0, 0.0}, {1.0, 0.0}};
+
+#define N_TIME_LEVELS 3
+const double TIME_COEFFS[N_TIME_LEVELS]                = {1.0, 1.0/4.0, 2.0/3.0};
+const double FLUX_COEFFS[N_TIME_LEVELS]                = {1.0/6.0, 1.0/6.0, 2.0/3.0};
+const double RK_COEFFS  [N_TIME_LEVELS][N_TIME_LEVELS] = {{1.0, 0.0, 0.0}, {3.0/4.0, 1.0/4.0, 0.0}, {1.0/3.0, 0.0, 2.0/3.0}};
+
+#define NO_LIMITER    0
+#define SOME_LIMITER  1
+#define FULL_LIMITER  2 
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_AdvanceX
@@ -260,16 +259,17 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT)], real Flux_Array[][NFLUX_TOTAL][ SQR
 
    real Fm[FLU_NXT], Sr[FLU_NXT], Fm_avg[FLU_NXT], Rc_RK1[FLU_NXT], Pc_RK1[FLU_NXT];
   
-#  if ( HYBRID_SCHEME == HYBRID_MUSCL || HYBRID_SCHEME == HYBRID_UPWIND)
+#  if ( HYBRID_SCHEME == MUSCL || HYBRID_SCHEME == UPWIND)
    const int ghostZonePerStage = 2; 
 #  else
    const int ghostZonePerStage = 4; 
    real v_C[FLU_NXT], v_L[FLU_NXT], v_R[FLU_NXT], rho_L[FLU_NXT], rho_R[FLU_NXT];
 #  endif 
 
+
 #  ifdef CONSERVE_MASS
-   int Idx3; 
-#  endif 
+   uint Idx3;
+#  endif
 
 // loop over all targeted columns
    for (int k=k_start; k<k_end; k++)
@@ -288,10 +288,10 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT)], real Flux_Array[][NFLUX_TOTAL][ SQR
       memcpy( Pc[0], Pc_N, FLU_NXT*sizeof(real) );
       memset( Fm_avg,   0, FLU_NXT*sizeof(real) );
 
-//#     ifdef GAMER_DEBUG
-//      if ( Rc[0][i] != Rc[0][i] || Pc[0][i] != Pc[0][i] || Rc[0][i] < 0)
-//          Aux_Error( ERROR_INFO, "nan in input array of fluid solver k %d j %d i %d Rho %f Pha %f !\n\n", k, j, i, Rc[0][i], Pc[0][i]); 
-//#     endif
+#     ifdef GAMER_DEBUG
+      if ( Rc[0][i] != Rc[0][i] || Pc[0][i] != Pc[0][i] || Rc[0][i] < 0)
+          Aux_Error( ERROR_INFO, "nan in input array of fluid solver k %d j %d i %d Rho %f Pha %f !\n\n", k, j, i, Rc[0][i], Pc[0][i]); 
+#     endif
 
 
       for (int time_level = 0; time_level < N_TIME_LEVELS; ++time_level) 
@@ -305,7 +305,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT)], real Flux_Array[][NFLUX_TOTAL][ SQR
          }
 
 //       prepare arrays of velocity and density interpolated to cell-face for PPM scheme
-#        if ( HYBRID_SCHEME == HYBRID_PPM )
+#        if ( HYBRID_SCHEME == TOS )
 
 //       GRADC4 requires ghost boundary of size 2 in each direction
 //       Respect ghost boundary of size 2 from GRADC4 since PPM_INTERPOLATION accesses v_C[i-1, i, i+1, i+2]
@@ -325,18 +325,18 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT)], real Flux_Array[][NFLUX_TOTAL][ SQR
             PPM_INTERPOLATION(Rc[time_level], rho_L, rho_R, i, FULL_LIMITER);
             PPM_LIMITER      (Rc[time_level], rho_L, rho_R, i, FULL_LIMITER);
          } 
-#        endif // #        if ( HYBRID_SCHEME == HYBRID_PPM )
+#        endif // #        if ( HYBRID_SCHEME == TOS )
 
 //       compute backward density fluxes at all cell faces of real cells
          for (int i = g2; i < FLU_NXT - g2 + 1; i++)
          {
-#        if ( HYBRID_SCHEME == HYBRID_UPWIND )
+#        if ( HYBRID_SCHEME == UPWIND )
 //          Access Rc[time_level][i, i-1], Pc[time_level][i, i-1]
             Fm[i] = UPWIND_FM(Rc[time_level], _dh * GRADB1 (Pc[time_level], i), i); 
-#        elif ( HYBRID_SCHEME == HYBRID_MUSCL )
+#        elif ( HYBRID_SCHEME == MUSCL )
 //          Access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
             Fm[i] = MUSCL_FM (Rc[time_level], _dh * GRADB1 (Pc[time_level], i), i, dh, dt); 
-#        elif ( HYBRID_SCHEME == HYBRID_PPM ) 
+#        elif ( HYBRID_SCHEME == TOS ) 
 //          Access rho_L[i, i-1], rho_R[i, i-1], v_L[i]
             Fm[i] = PPM_FM   (Rc[time_level], rho_L, rho_R, v_L, i, dh, dt);
 #        endif
@@ -490,7 +490,7 @@ void TransposeXZ( real u[][ CUBE(FLU_NXT)] )
 } // FUNCTION : TrasposeXZ
 
 
-# if ( HYBRID_SCHEME == HYBRID_PPM )
+# if ( HYBRID_SCHEME == TOS )
 
 
 //Accesses a_array[i-1, i, i+1, i+2] and fills a_R_array[i] and a_L_array[i+1]

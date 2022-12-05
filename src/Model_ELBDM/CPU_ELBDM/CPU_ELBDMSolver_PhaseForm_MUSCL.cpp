@@ -75,7 +75,7 @@ static void TransposeXZ( real u[][ CUBE(FLU_NXT) ] );
 //                                 false : z->y->x (backward sweep)
 //-------------------------------------------------------------------------------------------------------
 void CPU_ELBDMSolver_PhaseForm( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                      real Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
+                      real Flu_Array_Out[][FLU_NIN][ CUBE(PS2) ],
                       real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                       const bool XYZ, const real MinDens )
@@ -136,7 +136,7 @@ void CPU_ELBDMSolver_PhaseForm( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
    for (int P=0; P<NPatchGroup; P++)
    {
 //    copy data
-      for (int v=0; v<FLU_NOUT; v++)
+      for (int v=0; v<FLU_NIN; v++)
       {
          Idx1 = 0;
 
