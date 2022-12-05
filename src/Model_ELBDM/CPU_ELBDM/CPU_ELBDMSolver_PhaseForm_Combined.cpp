@@ -266,6 +266,11 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT)], real Flux_Array[][NFLUX_TOTAL][ SQR
    real v_C[FLU_NXT], v_L[FLU_NXT], v_R[FLU_NXT], rho_L[FLU_NXT], rho_R[FLU_NXT];
 #  endif 
 
+
+#  ifdef CONSERVE_MASS
+   uint Idx3;
+#  endif
+
 // loop over all targeted columns
    for (int k=k_start; k<k_end; k++)
    for (int j=j_start; j<j_end; j++)
