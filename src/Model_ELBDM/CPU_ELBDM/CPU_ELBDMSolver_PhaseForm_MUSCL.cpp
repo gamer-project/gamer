@@ -45,7 +45,7 @@
 
 
 static void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], real Flux_Array[][NFLUX_TOTAL][ SQR(PS2) ],
-                          const real dt, const real dh, const real Eta, const bool StoreFlux, const real Taylor3_Coeff, const real MinDens, 
+                          const real dt, const real dh, const real Eta, const bool StoreFlux, const real MinDens, 
                           const int j_gap, const int k_gap, const int Flux_XYZ );
 static void TransposeXY( real u[][ CUBE(FLU_NXT) ] );
 static void TransposeXZ( real u[][ CUBE(FLU_NXT) ] );
@@ -74,11 +74,11 @@ static void TransposeXZ( real u[][ CUBE(FLU_NXT) ] );
 //                XYZ            : true  : x->y->z ( forward sweep)
 //                                 false : z->y->x (backward sweep)
 //-------------------------------------------------------------------------------------------------------
-void CPU_ELBDMSolver_PhaseForm_MUSCL( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+void CPU_ELBDMSolver_PhaseForm( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                       real Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
                       real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
-                      const real Taylor3_Coeff, const bool XYZ, const real MinDens )
+                      const bool XYZ, const real MinDens )
 {
    const real FluidMinDens = FMAX(1e-10, MinDens); 
 
@@ -87,17 +87,17 @@ void CPU_ELBDMSolver_PhaseForm_MUSCL( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_N
 #     pragma omp parallel for schedule( runtime )
       for (int P=0; P<NPatchGroup; P++)
       {
-         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, Taylor3_Coeff, FluidMinDens,
+         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, FluidMinDens,
                                     0,              0, 0 );
 
          TransposeXY ( Flu_Array_In[P] );
 
-         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, Taylor3_Coeff, FluidMinDens,
+         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, FluidMinDens,
                        FLU_GHOST_SIZE,              0, 3 );
 
          TransposeXZ ( Flu_Array_In[P] );
 
-         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, Taylor3_Coeff, FluidMinDens,
+         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, FluidMinDens,
                        FLU_GHOST_SIZE, FLU_GHOST_SIZE, 6 );
 
          TransposeXZ ( Flu_Array_In[P] );
@@ -113,17 +113,17 @@ void CPU_ELBDMSolver_PhaseForm_MUSCL( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_N
          TransposeXY ( Flu_Array_In[P] );
          TransposeXZ ( Flu_Array_In[P] );
 
-         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, Taylor3_Coeff, FluidMinDens,
+         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, FluidMinDens,
                                     0,              0, 6 );
 
          TransposeXZ ( Flu_Array_In[P] );
 
-         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, Taylor3_Coeff, FluidMinDens,
+         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, FluidMinDens,
                                     0, FLU_GHOST_SIZE, 3 );
 
          TransposeXY ( Flu_Array_In[P] );
 
-         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, Taylor3_Coeff, FluidMinDens,
+         CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, FluidMinDens,
                        FLU_GHOST_SIZE, FLU_GHOST_SIZE, 0 );
       }
    }
@@ -194,7 +194,7 @@ const real RK_COEFFS  [N_TIME_LEVELS][N_TIME_LEVELS] = {{1., 0., 0.}, {3./4, 1./
 //const real RK_COEFFS [N_TIME_LEVELS][N_TIME_LEVELS] = {{1., 0.}, {0, 1.}};
 
 void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_TOTAL][ PS2*PS2 ], 
-                   const real dt, const real dh, const real Eta, const bool StoreFlux, const real Taylor3_Coeff,  const real MinDens,
+                   const real dt, const real dh, const real Eta, const bool StoreFlux,  const real MinDens,
                    const int j_gap, const int k_gap, const int Flux_XYZ )
 {
 
