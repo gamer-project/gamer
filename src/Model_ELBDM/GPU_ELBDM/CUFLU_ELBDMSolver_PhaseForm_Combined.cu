@@ -14,6 +14,14 @@
 # define to1D1(z,y,x) ( __umul24(z, FLU_NXT*FLU_NXT) + __umul24(y, FLU_NXT) + x )
 # define to1D2(z,y,x) ( __umul24(z-FLU_GHOST_SIZE, PS2*PS2) + __umul24(y-FLU_GHOST_SIZE, PS2) + x-FLU_GHOST_SIZE )
 
+#ifdef __CUDACC__
+# define CGPU_FLU_BLOCK_SIZE_X FLU_BLOCK_SIZE_X
+# define CGPU_FLU_BLOCK_SIZE_Y FLU_BLOCK_SIZE_Y
+#else 
+# define CGPU_FLU_BLOCK_SIZE_X 1
+# define CGPU_FLU_BLOCK_SIZE_Y 1
+#endif 
+
 GPU_DEVICE
 static uint get1D1(uint k, uint j, uint i, int XYZ) {
    switch ( XYZ )
@@ -110,6 +118,13 @@ real PPM_FM           (real* a_array, real* a_L_array, real* a_R_array, real* v_
 //Osher-Sethian flux for Hamilton-Jacobi equation
 # define OSHER_SETHIAN_FLUX(vp, vm) ((real) 0.5 * (pow(MIN(vp, 0), 2) + pow(MAX(vm, 0), 2)))
 
+
+#  if ( HYBRID_SCHEME == HYBRID_MUSCL || HYBRID_SCHEME == HYBRID_UPWIND)
+# define GHOST_ZONE_PER_STAGE     2                      // ghost zone per Runge-Kutta stage                       
+#  else 
+# define GHOST_ZONE_PER_STAGE     4                      // ghost zone per Runge-Kutta stage
+#  endif 
+
 //#define N_TIME_LEVELS 1
 //const real TIME_COEFFS[N_TIME_LEVELS]                = {1.0};
 //const real RK_COEFFS  [N_TIME_LEVELS][N_TIME_LEVELS] = {{1.0}};
@@ -202,12 +217,12 @@ void CPU_ELBDMSolver_PhaseForm(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT)],
 
 #  ifdef __CUDACC__
 // create memories for columns of various intermediate fields in shared GPU memory
-   __shared__ real s_In  [FLU_BLOCK_SIZE_Y][N_TIME_LEVELS + 1][FLU_NIN][FLU_NXT];
-   __shared__ real s_Sr  [FLU_BLOCK_SIZE_Y][FLU_NXT]; // one column of the 0.5 * log(rho) for every thread block
-   __shared__ real s_Fm  [FLU_BLOCK_SIZE_Y][FLU_NXT]; // one column of the fluxes for every thread block
+   __shared__ real s_In  [CGPU_FLU_BLOCK_SIZE_Y][N_TIME_LEVELS + 1][FLU_NIN][FLU_NXT];
+   __shared__ real s_Sr  [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT]; // one column of the 0.5 * log(rho) for every thread block
+   __shared__ real s_Fm  [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT]; // one column of the fluxes for every thread block
 
 #  ifdef CONSERVE_MASS
-   __shared__ real s_Flux [FLU_BLOCK_SIZE_Y][FLU_NXT];
+   __shared__ real s_Flux [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];
 #  else  // #  ifdef CONSERVE_MASS
               real (*s_Flux)[FLU_NXT] = NULL;  // useless if CONSERVE_MASS is off
 #  endif // #  ifdef CONSERVE_MASS ... # else
@@ -276,8 +291,7 @@ void CPU_ELBDMSolver_PhaseForm(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT)],
 //                                 --> This parameter is also used to determine the place to store the output fluxes
 //                MinDens        : Minimum allowed density
 //-------------------------------------------------------------------------------------------------------
-
-GPU_DEVICE
+__device__
 void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
                      real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
@@ -297,11 +311,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
    const real Coeff2       = dt/(dh * dh * Eta);            // coefficient for HJ-equation
    const real FluidMinDens = FMAX(1e-10, MinDens);          // minimum density while computing quantum pressure and when correcting negative density 
 
-#  if ( HYBRID_SCHEME == HYBRID_MUSCL || HYBRID_SCHEME == HYBRID_UPWIND)
-   const uint ghostZonePerStage = 2;                        // ghost zone per Runge-Kutta stage                       
-#  else 
-   const uint ghostZonePerStage = 4;                        // ghost zone per Runge-Kutta stage
-#  endif 
 
    const uint j_end        = FLU_NXT -  j_gap    ;          // last y-column to be updated
 
@@ -315,11 +324,11 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  endif
    {
 #     ifdef __CUDACC__
-      const int bx = blockIdx.x;
+      const uint bx = blockIdx.x;
 #     else
 //    in CPU mode, every thread works on one patch group at a time and corresponds to one block in the grid of the GPU solver
 #     pragma omp for schedule( runtime ) private ( s_In, s_Sr, s_Fm, s_Flux )
-      for (int bx=0; bx<NPatchGroup; bx++)
+      for (uint bx=0; bx<NPatchGroup; bx++)
 #     endif
       {
 
@@ -344,21 +353,17 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //       use two-dimensional thread blocks in GPU mode
          const uint tx            = threadIdx.x;
          const uint ty            = threadIdx.y;
-         const uint FluBlockSizeX = FLU_BLOCK_SIZE_X;
-         const uint FluBlockSizeY = FLU_BLOCK_SIZE_Y;
-#        else 
+#        else  // # ifdef __CUDACC__
 //       every block just has a single thread with temporary memory on the stack in CPU mode
          const uint tx            = 0;
          const uint ty            = 0;
-         const uint FluBlockSizeX = 1;
-         const uint FluBlockSizeY = 1;
 
 //       create arrays for columns of various intermediate fields on the stack
-         real s_In_1PG   [FluBlockSizeY][N_TIME_LEVELS + 1][FLU_NIN][FLU_NXT];   // density and phase fields at all RK stages + RK 1 result
-         real s_Sr_1PG   [FluBlockSizeY][FLU_NXT];                               // 1/2 * density logarithm 
-         real s_Fm_1PG   [FluBlockSizeY][FLU_NXT];                               // density flux
+         real s_In_1PG   [CGPU_FLU_BLOCK_SIZE_Y][N_TIME_LEVELS + 1][FLU_NIN][FLU_NXT];   // density and phase fields at all RK stages + RK 1 result
+         real s_Sr_1PG   [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];                               // 1/2 * density logarithm 
+         real s_Fm_1PG   [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];                               // density flux
 #        ifdef CONSERVE_MASS
-         real s_Flux_1PG [FluBlockSizeY][FLU_NXT];
+         real s_Flux_1PG [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];
 #        endif // #  ifdef CONSERVE_MASS
 
          s_In   = s_In_1PG;
@@ -368,14 +373,14 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          s_Flux = s_Flux_1PG;
 #        endif // #  ifdef CONSERVE_MASS
 
-#        endif 
+#        endif // # ifdef __CUDACC__ ... # else 
 
-         const uint tid          = __umul24( ty , FluBlockSizeX ) + tx;    // thread ID within block
+         const uint tid          = __umul24( ty , CGPU_FLU_BLOCK_SIZE_X ) + tx;    // thread ID within block
                uint j            = j_gap + ty % size_j;                    // (i,j,k): array indices used in g_Fluid_In
                uint k            = k_gap + ty / size_j;                    // (i,j,k): array indices used in g_Fluid_In
                uint i            = tx + FLU_GHOST_SIZE;                    // (i,j,k): array indices used in g_Fluid_In
-         uint NColumnOnce        = MIN( NColumnTotal, FluBlockSizeY );     // number of columns updated per iteration
-         const uint NThread      = FluBlockSizeX * FluBlockSizeY;          // total number of threads within block
+         uint NColumnOnce        = MIN( NColumnTotal, CGPU_FLU_BLOCK_SIZE_Y );     // number of columns updated per iteration
+         const uint NThread      = CGPU_FLU_BLOCK_SIZE_X * CGPU_FLU_BLOCK_SIZE_Y;          // total number of threads within block
 
 
 //       determine the array indices for loading the ghost-zone data for GPU solver
@@ -453,8 +458,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //          2. Runge-Kutta iterations
             for (time_level = 0; time_level < N_TIME_LEVELS; ++time_level) 
             {
-               g1 = ghostZonePerStage *   time_level       ;
-               g2 = ghostZonePerStage * ( time_level + 1 ) ;         
+               g1 = GHOST_ZONE_PER_STAGE *   time_level       ;
+               g2 = GHOST_ZONE_PER_STAGE * ( time_level + 1 ) ;         
 
 //             2.1 compute density logarithms
                CELL_LOOP(FLU_NXT, g1, g1)
@@ -545,7 +550,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
                         g_Fluid_Out[bx][DENS][Idx2] = De_New;
                         g_Fluid_Out[bx][PHAS][Idx2] = Ph_New;
-                        g_Fluid_Out[bx][STUB][Idx2] = 0;
+                        //g_Fluid_Out[bx][STUB][Idx2] = 0;
 
                      } else { // if ( FinalOut )           
 
@@ -589,7 +594,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 //          5.4 update remaining number of columns
             Column0     += NColumnOnce;
-            NColumnOnce  = MIN( NColumnTotal - Column0, FluBlockSizeY );
+            NColumnOnce  = MIN( NColumnTotal - Column0, CGPU_FLU_BLOCK_SIZE_Y );
 
          } // while ( Column0 < NColumnTotal )
       }
