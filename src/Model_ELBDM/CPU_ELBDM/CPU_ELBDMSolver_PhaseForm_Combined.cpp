@@ -96,9 +96,15 @@ static uint get1D2(uint k, uint j, uint i, int XYZ) {
                                            + (Rc[t+1] - Rc[t  ]) * LSS(Vb, 0)) \
                                            / (Rc[t] - Rc[t-1] + (((Rc[t] - Rc[t-1]) == 0) ? 1e-8 : 0)))
 
-# define MUSCL_FM(Rc, Vb, t, dx, dt) (   FMAX(Vb, 0) * Rc[t-1] \
-                                       + FMIN(Vb, 0) * Rc[t  ] \
-                                       +  real(0.5) * FABS(Vb) * (1. - FABS(Vb * dt/dx)) * LIMITER(UPWIND_GRADIENT_RATIO(Rc, Vb, t)) * (Rc[t] - Rc[t - 1]) )
+# define MUSCL_FM(Rc, Vb, t, _v) (   FMAX(Vb, 0) * Rc[t-1] \
+                                   + FMIN(Vb, 0) * Rc[t  ] \
+                                   + real(0.5) * FABS(Vb) * (1. - FABS(Vb * _v)) * LIMITER(UPWIND_GRADIENT_RATIO(Rc, Vb, t)) * (Rc[t] - Rc[t - 1]) )
+
+
+# define FROMM_FM(Rc, Vb, t, _v) (   FMAX(Vb, 0) * ( Rc[t-1] + real(0.25) * ( Rc[t  ] - Rc[t-2] ) * (1.0 - Vb * _v)) \
+                                   + FMIN(Vb, 0) * ( Rc[t  ] - real(0.25) * ( Rc[t+1] - Rc[t-1] ) * (1.0 + Vb * _v)) )
+
+
 # endif // #if ( HYBRID_SCHEME == HYBRID_MUSCL )
 
 //Third-order PPM flux reconstruction
@@ -230,11 +236,11 @@ void CPU_ELBDMSolver_PhaseForm(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT)],
 
 #  else // #  ifdef __CUDACC__
 // allocate memory on stack within loop for CPU run
-   real (*s_In) [N_TIME_LEVELS + 1][FLU_NIN][FLU_NXT]  = NULL;
-   real (*s_LogRho) [FLU_NXT]                          = NULL;
-   real (*s_Fm) [FLU_NXT]                              = NULL;
-   real (*s_Flux)[FLU_NXT]                             = NULL;
-   const real _dh                                      = 1.0/dh; 
+   real (*s_In)     [N_TIME_LEVELS + 1][FLU_NIN][FLU_NXT]  = NULL;
+   real (*s_LogRho) [FLU_NXT]                              = NULL;
+   real (*s_Fm)     [FLU_NXT]                              = NULL;
+   real (*s_Flux)   [FLU_NXT]                              = NULL;
+   const real _dh                                          = 1.0/dh; 
 #  endif
 
    if ( XYZ )
@@ -310,7 +316,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
    const real Coeff1       =       dt/(dh * Eta);           // coefficient for continuity equation
    const real Coeff2       = 0.5 * dt/(dh * dh * Eta);      // coefficient for HJ-equation
    const real FluidMinDens = FMAX(1e-10, MinDens);          // minimum density while computing quantum pressure and when correcting negative density 
-
+   const real _v           = dt * _dh; 
 
    const uint j_end        = FLU_NXT -  j_gap    ;          // last y-column to be updated
 
@@ -424,7 +430,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                s_In[ty][time_level][DENS][i] = g_Fluid_In[bx][DENS][Idx1];
                s_In[ty][time_level][PHAS][i] = g_Fluid_In[bx][PHAS][Idx1];
 #              ifdef CONSERVE_MASS
-               s_Flux[ty][si] = 0;
+               s_Flux[ty][i] = 0;
 #              endif 
 
 //             1.3 load the ghost-zone data into shared memory
@@ -477,7 +483,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      s_Fm[sj][si] = UPWIND_FM(s_In[sj][time_level][DENS], _dh * GRADB1 (s_In[sj][time_level][PHAS], si), si); 
 #                 elif ( HYBRID_SCHEME == HYBRID_MUSCL )
 //                   access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
-                     s_Fm[sj][si] = MUSCL_FM (s_In[sj][time_level][DENS], _dh * GRADB1 (s_In[sj][time_level][PHAS], si), si, dh, dt); 
+                     s_Fm[sj][si] = MUSCL_FM (s_In[sj][time_level][DENS], _dh * GRADB1 (s_In[sj][time_level][PHAS], si), si, _v); 
 #                 elif ( HYBRID_SCHEME == HYBRID_PPM ) 
 //                   access rho_L[i, i-1], rho_R[i, i-1], v_L[i]
                      s_Fm[sj][si] = PPM_FM   (s_In[sj][time_level][DENS], rho_L, rho_R, v_L, si, dh, dt);
