@@ -137,8 +137,16 @@ real PPM_FM           (real* a_array, real* a_L_array, real* a_R_array, real* v_
 
 
 //#define N_TIME_LEVELS 2
-//const real TIME_COEFFS[N_TIME_LEVELS]                = {1.0/2.0, 1.0};
-//const real RK_COEFFS  [N_TIME_LEVELS][N_TIME_LEVELS] = {{1.0, 0.0}, {1.0, 0.0}};
+//GPU_DEVICE_VARIABLE
+//const static real TIME_COEFFS[N_TIME_LEVELS]                = {1.0/2.0, 1.0};
+//
+//GPU_DEVICE_VARIABLE
+//const static real RK_COEFFS  [N_TIME_LEVELS][N_TIME_LEVELS] = {{1.0, 0.0}, {1.0, 0.0}};
+//
+//#ifdef CONSERVE_MASS
+//GPU_DEVICE_VARIABLE
+//const static real FLUX_COEFFS[N_TIME_LEVELS]                = {0.0, 1.0};
+//#endif 
 
 #define N_TIME_LEVELS 3
 GPU_DEVICE_VARIABLE
