@@ -65,12 +65,15 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    if ( OPT__FLAG_INTERFERENCE )
    {
       real (*Var)  [PS1 ][PS1 ][PS1 ] = ( real(*) [PS1 ][PS1 ][PS1 ] )  Interf_Cond;
-      
-      bool FlagInterferenceOne    =  ELBDM_Flag_Interference( i, j, k, Interf_Cond,             FlagTable_Interference[lv][0]);
-      bool FlagInterferenceTwo    =  ELBDM_Flag_VolumeFracQP( Interf_Cond,                      FlagTable_Interference[lv][0], FlagTable_Interference[lv][1]);
-      bool FlagInterferenceThree  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond + CUBE(PS1), FlagTable_Interference[lv][2]);
-      //bool FlagInterferenceFour   =  ELBDM_Flag_VolumeFracQP( Interf_Cond +  CUBE(PS1),         FlagTable_Interference[lv][2], FlagTable_Interference[lv][1]);
+      bool FlagIntQP = false, FlagIntPhaseDiscont = false;
 
+      if ( FlagTable_Interference[lv][1] > 0 )
+         FlagIntQP  =  ELBDM_Flag_VolumeFracQP( Interf_Cond, FlagTable_Interference[lv][0], FlagTable_Interference[lv][1]);
+      else
+         FlagIntQP  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond,             FlagTable_Interference[lv][0]);
+
+      FlagIntPhaseDiscont   =  ELBDM_Flag_Interference( i, j, k, Interf_Cond + CUBE(PS1), FlagTable_Interference[lv][2]);
+      
 #     ifdef GAMER_DEBUG
       //if (FlagInterferenceOne) {
       //   Aux_Message( stdout, "Information: QP Interfence on level %d at i %d j %d k %d\n", lv, i, j, k);
@@ -80,9 +83,8 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       //}
 #     endif 
 
-      //Flag |= FlagInterferenceOne;
-      Flag |= FlagInterferenceTwo;
-      Flag |= FlagInterferenceThree;
+      Flag |= FlagIntQP;
+      Flag |= FlagIntPhaseDiscont;
 
 #     if ( ELBDM_SCHEME == HYBRID )
       if ( Flag &&  FlagTable_Interference[lv][3] >= 0.0 ) {
@@ -93,7 +95,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 //       if the slope is bigger, this may be due to a real phase discontinuity because of a 2 pi winding of the phase at a point of zero density
 //       we check for the latter with FlagInterferenceTwo
 //       if the curvature of the phase is high at a point where the phase jump is bigger than pi, we assume that it is a real jump and still switch to the wave scheme
-         bool dBResolvedAfterRefine = ! ELBDM_Flag_Interference( i, j, k, Interf_Cond + 2 * CUBE(PS1), M_PI ) || FlagInterferenceOne;
+         bool dBResolvedAfterRefine = ! ELBDM_Flag_Interference( i, j, k, Interf_Cond + 2 * CUBE(PS1), M_PI ) || FlagIntQP;
          if ( !dBResolvedAfterRefine ) {
             const int    Idx               = 2 * PS1*PS1*PS1 + k*PS1*PS1 + j*PS1 + i;
             const real   PhaseDifference   = Interf_Cond[Idx];
@@ -409,13 +411,13 @@ bool Check_Curl( const int i, const int j, const int k,
 //-------------------------------------------------------------------------------------------------------
 bool ELBDM_Flag_VolumeFracQP( const real Cond[], const double Threshold_QP, const double Threshold_VolumeFraction )
 {
-   const int NTotal = PS1 * PS1 * PS1;
-   int NExceedThreshold = 0;
+   const float NTotal = PS1 * PS1 * PS1;
+   float NExceedThreshold = 0;
 
    for (int Idx = 0; Idx < NTotal; ++Idx) 
          if ( Cond[Idx] > Threshold_QP ) ++NExceedThreshold;
 
-   float ratio =  NExceedThreshold / (float) NTotal;
+   float ratio =  NExceedThreshold / NTotal;
 
    return ratio > Threshold_VolumeFraction;
 
