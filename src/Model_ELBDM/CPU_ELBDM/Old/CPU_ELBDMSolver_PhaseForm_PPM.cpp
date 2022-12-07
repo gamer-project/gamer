@@ -2,7 +2,7 @@
 #include "CUFLU.h"
 
 
-#if ( !defined GPU  &&  MODEL == ELBDM && ELBDM_SCHEME == HYBRID && HYBRID_SCHEME == TOS )
+#if ( !defined GPU  &&  MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 
 // useful macros
@@ -57,13 +57,14 @@ static void computePPMInterpolation(real* a_array, real* a_L_array, real* a_R_ar
 //                XYZ            : true  : x->y->z ( forward sweep)
 //                                 false : z->y->x (backward sweep)
 //-------------------------------------------------------------------------------------------------------
-void CPU_ELBDMSolver_PhaseForm_PPM( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                      real Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
+void CPU_ELBDMSolver_PhaseForm( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                      real Flu_Array_Out[][FLU_NIN][ CUBE(PS2) ],
                       real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
-                      const real Taylor3_Coeff, const bool XYZ, const real MinDens )
+                      const bool XYZ, const real MinDens )
 {
    const real FluidMinDens = FMAX(1e-10, MinDens); 
+   real Taylor3_Coeff = 0; 
 
    if ( true )
    {
@@ -119,7 +120,7 @@ void CPU_ELBDMSolver_PhaseForm_PPM( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT
    for (int P=0; P<NPatchGroup; P++)
    {
 //    copy data
-      for (int v=0; v<FLU_NOUT; v++)
+      for (int v=0; v<FLU_NIN; v++)
       {
          Idx1 = 0;
 
