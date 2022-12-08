@@ -14,12 +14,12 @@
 
 
 # simulation scale
-BOX_SIZE                      1.0         # box size along the longest side (in Mpc/h if COMOVING is adopted)
-NX0_TOT_X                     64          # number of base-level cells along x
-NX0_TOT_Y                     16          # number of base-level cells along y
-NX0_TOT_Z                     16          # number of base-level cells along z
+BOX_SIZE                      1.6         # box size along the longest side (in Mpc/h if COMOVING is adopted)
+NX0_TOT_X                     32          # number of base-level cells along x
+NX0_TOT_Y                     32          # number of base-level cells along y
+NX0_TOT_Z                     32          # number of base-level cells along z
 OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
-END_T                        -1.0         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
+END_T                         0.5         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
 END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
 
 
@@ -33,12 +33,12 @@ OPT__UNIT                     0           # specify code units -> must set exact
 
 
 # boundary conditions
-OPT__BC_FLU_XM                4           # fluid boundary condition at the -x face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) ##2/3/5 for HYDRO ONLY##
-OPT__BC_FLU_XP                4           # fluid boundary condition at the +x face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) ##2/3/5 for HYDRO ONLY##
-OPT__BC_FLU_YM                4           # fluid boundary condition at the -y face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) ##2/3/5 for HYDRO ONLY##
-OPT__BC_FLU_YP                4           # fluid boundary condition at the +y face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) ##2/3/5 for HYDRO ONLY##
-OPT__BC_FLU_ZM                4           # fluid boundary condition at the -z face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) ##2/3/5 for HYDRO ONLY##
-OPT__BC_FLU_ZP                4           # fluid boundary condition at the +z face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) ##2/3/5 for HYDRO ONLY##
+OPT__BC_FLU_XM                1           # fluid boundary condition at the -x face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) ##2/3/5 for HYDRO ONLY##
+OPT__BC_FLU_XP                1           # fluid boundary condition at the +x face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) ##2/3/5 for HYDRO ONLY##
+OPT__BC_FLU_YM                1           # fluid boundary condition at the -y face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) ##2/3/5 for HYDRO ONLY##
+OPT__BC_FLU_YP                1           # fluid boundary condition at the +y face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) ##2/3/5 for HYDRO ONLY##
+OPT__BC_FLU_ZM                1           # fluid boundary condition at the -z face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) ##2/3/5 for HYDRO ONLY##
+OPT__BC_FLU_ZP                1           # fluid boundary condition at the +z face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) ##2/3/5 for HYDRO ONLY##
 
 
 # time-step
@@ -96,7 +96,7 @@ ELBDM_REMOVE_MOTION_CM        0           # remove the motion of center-of-mass 
 # fluid solvers in all models
 FLU_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU fluid solver (<=0=auto) [-1]
 GPU_NSTREAM                  -1           # number of CUDA streams for the asynchronous memory copy in GPU (<=0=auto) [-1]
-OPT__FIXUP_FLUX               1           # correct coarse grids by the fine-grid boundary fluxes [1] ##HYDRO and ELBDM ONLY##
+OPT__FIXUP_FLUX               0           # correct coarse grids by the fine-grid boundary fluxes [1] ##HYDRO and ELBDM ONLY##
 OPT__FIXUP_RESTRICT           1           # correct coarse grids by averaging the fine-grid data [1]
 OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all levels are synchronized (see "Flu_CorrAfterAllSync"):
                                           # (-1=auto, 0=off, 1=every step, 2=before dump) [-1]

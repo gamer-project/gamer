@@ -177,17 +177,24 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       break;
    }
 
-   const double dr1        = r -     Gau_v0*Time - Gau_Center;
-   const double dr2        = r - 0.5*Gau_v0*Time - Gau_Center;
-   const double Gau_Const1 = 1.0 + pow(  Time / ( ELBDM_ETA*SQR(Gau_Width) ), 2.0  );
-   const double Gau_Const2 = pow( SQR(Gau_Width)*M_PI*Gau_Const1, -0.25 )
+   double dr1, dr2, Gau_Const1, Gau_Const2, Gau_Theta1, Gau_Theta2, Re, Im;
+   Re = 0.0;
+   Im = 0.0;
+   for (int i=-10; i<=10; i++){
+       dr1        = r +i*BOX_SIZE -     Gau_v0*Time - Gau_Center;
+       dr2        = r +i*BOX_SIZE - 0.5*Gau_v0*Time - Gau_Center;
+       Gau_Const1 = 1.0 + pow(  Time / ( ELBDM_ETA*SQR(Gau_Width) ), 2.0  );
+       Gau_Const2 = pow( SQR(Gau_Width)*M_PI*Gau_Const1, -0.25 )
                              *exp(  -0.5*pow( dr1/Gau_Width, 2.0 )/Gau_Const1  );
-   const double Gau_Theta1 = -0.5*acos(  pow( Gau_Const1, -0.5 )  );
-   const double Gau_Theta2 = 0.5*pow( dr1, 2.0 )*ELBDM_ETA*Time/(  pow( ELBDM_ETA*SQR(Gau_Width), 2.0) + SQR(Time)  )
+       Gau_Theta1 = -0.5*acos(  pow( Gau_Const1, -0.5 )  );
+       Gau_Theta2 = 0.5*pow( dr1, 2.0 )*ELBDM_ETA*Time/(  pow( ELBDM_ETA*SQR(Gau_Width), 2.0) + SQR(Time)  )
                              + Gau_v0*ELBDM_ETA*dr2;
 
-   fluid[REAL] = Gau_Const2*cos( Gau_Theta1 + Gau_Theta2 );
-   fluid[IMAG] = Gau_Const2*sin( Gau_Theta1 + Gau_Theta2 );
+       Re += Gau_Const2*cos( Gau_Theta1 + Gau_Theta2 );
+       Im += Gau_Const2*sin( Gau_Theta1 + Gau_Theta2 );
+   }
+   fluid[REAL] = Re;
+   fluid[IMAG] = Im;
    fluid[DENS] = SQR(fluid[REAL]) + SQR(fluid[IMAG]);
 
 } // FUNCTION : SetGridIC
