@@ -94,6 +94,12 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
+// initialize FFTW for spectral solver
+#  if ( MODEL == ELBDM )
+   Init_FFTW_ELBDM();
+#  endif
+
+
 // initialize the test problem parameters
    Init_TestProb();
 

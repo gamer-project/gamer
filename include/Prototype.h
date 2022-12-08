@@ -521,6 +521,9 @@ bool   ELBDM_Flag_EngyDensity( const int i, const int j, const int k, const real
 real   ELBDM_UnwrapPhase( const real Phase_Ref, const real Phase_Wrapped );
 real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 void   ELBDM_RemoveMotionCM();
+void   CPU_ELBDMSolver_FFT( const real dt, const double Time, const int SaveSg );
+void   End_FFTW_ELBDM();
+void   Init_FFTW_ELBDM();
 
 
 #else

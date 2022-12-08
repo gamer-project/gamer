@@ -25,7 +25,7 @@
 #  include <omp.h>
 #endif
 
-#ifdef GRAVITY
+#if defined GRAVITY || ( MODEL == ELBDM )
 #  ifdef FLOAT8
 #     ifdef SERIAL
 #        include <drfftw.h>

@@ -31,6 +31,10 @@ void End_GAMER()
    End_FFTW();
 #  endif
 
+#  if ( MODEL == ELBDM )
+   End_FFTW_ELBDM();
+#  endif
+
 #  ifdef SUPPORT_LIBYT
    YT_End();
 #  endif

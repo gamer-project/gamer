@@ -94,7 +94,7 @@ SIMU_OPTION += -DEOS=EOS_GAMMA
 # ------------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
 # enforce the mass conservation
-SIMU_OPTION += -DCONSERVE_MASS
+#SIMU_OPTION += -DCONSERVE_MASS
 
 # 4-th order Laplacian
 SIMU_OPTION += -DLAPLACIAN_4TH
@@ -532,7 +532,7 @@ endif # MHD
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
 GPU_FILE    += CUFLU_ELBDMSolver.cu
 
-CPU_FILE    += CPU_ELBDMSolver.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
+CPU_FILE    += CPU_ELBDMSolver.cpp  CPU_ELBDMSolver_FFT.cpp  Init_FFTW_ELBDM.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
                ELBDM_GetTimeStep_Fluid.cpp  ELBDM_Flag_EngyDensity.cpp  ELBDM_UnwrapPhase.cpp \
                ELBDM_GetTimeStep_Phase.cpp  ELBDM_SetTaylor3Coeff.cpp  ELBDM_RemoveMotionCM.cpp
 
@@ -753,6 +753,23 @@ ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
    endif
 endif
 
+ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
+   LIB += -L$(FFTW_PATH)/lib
+   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
+      ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" "-DSERIAL"
+         LIB += -ldrfftw -ldfftw
+      else
+         LIB += -ldrfftw_mpi -ldfftw_mpi -ldrfftw -ldfftw
+      endif
+   else
+      ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" "-DSERIAL"
+         LIB += -lsrfftw -lsfftw
+      else
+         LIB += -lsrfftw_mpi -lsfftw_mpi -lsrfftw -lsfftw
+      endif
+   endif
+endif
+
 ifeq "$(filter -DSUPPORT_GRACKLE, $(SIMU_OPTION))" "-DSUPPORT_GRACKLE"
 LIB += -L$(GRACKLE_PATH)/lib -lgrackle
 endif
@@ -783,6 +800,10 @@ INCLUDE += -I$(MPI_PATH)/include
 endif
 
 ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
+INCLUDE += -I$(FFTW_PATH)/include
+endif
+
+ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
 INCLUDE += -I$(FFTW_PATH)/include
 endif
 
