@@ -1021,7 +1021,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      real Re, Im, Phase;
                      int FaPID, FaLv, Success;
 
-                     //printf("Saving Wave level = %d\n", lv);
+                     #ifdef GAMER_DEBUG
+                     real Stub;
+                     #endif 
+
 
                      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++) 
                      {
@@ -1081,7 +1084,25 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                               FieldData[PID][k][j][i] = ELBDM_UnwrapPhase( Phase, SATAN2(Im, Re) );
                            }
                            else if ( v == IMAG ) {
+#                             ifdef GAMER_DEBUG
+                              int childCoordinates[3], fatherCoordinates[3];
+
+                              if ( Success ) {
+                                 childCoordinates[0] = i;
+                                 childCoordinates[1] = j;
+                                 childCoordinates[2] = k;
+                                 for (int h = 0; h < 3; h++) {
+                                    fatherCoordinates[h] =  ( amr->patch[0][lv][PID]->corner[h] + childCoordinates[h] * amr->scale[lv] - amr->patch[0][FaLv][FaPID]->corner[h] ) / amr->scale[FaLv];
+                                 }
+                                 Stub = amr->patch[ amr->FluSg[FaLv] ][FaLv][FaPID]->fluid[STUB][fatherCoordinates[2]][fatherCoordinates[1]][fatherCoordinates[0]];
+                              } else {
+                                 Stub = 0;
+                              }
+                              FieldData[PID][k][j][i] = Stub;
+
+#                             else // #ifdef GAMER_DEBUG
                               FieldData[PID][k][j][i] = 0;
+#                             endif // #ifdef GAMER_DEBUG ... #else
                            }
                         }
                      }

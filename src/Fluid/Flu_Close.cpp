@@ -138,7 +138,7 @@ void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
          int I, J, K, KJI;
 
 //       fluid variables
-#        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && !defined(GAMER_DEBUG) )
          if ( amr->use_wave_flag[lv] ) {
 #        endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
          for (int v=0; v<FLU_NOUT; v++)      {
@@ -151,7 +151,7 @@ void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
             amr->patch[SaveSg_Flu][lv][PID]->fluid[v][k][j][i] = h_Flu_Array_F_Out[TID][v][KJI];
 
          }}}}
-#        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && !defined(GAMER_DEBUG) )
          } else {
          for (int v=0; v<FLU_NIN; v++)      {
          for (int k=0; k<PATCH_SIZE; k++)    {  K = Table_z + k;

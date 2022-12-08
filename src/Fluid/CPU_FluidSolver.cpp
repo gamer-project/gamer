@@ -89,7 +89,11 @@ void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
                       const real Taylor3_Coeff, const bool XYZ, const real MinDens );
 #if ( ELBDM_SCHEME == HYBRID )
 void CPU_ELBDMSolver_PhaseForm(  real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT)], 
-                      real Flu_Array_Out[][FLU_NIN][ SQR(PS2)*PS2 ], 
+                      #ifdef GAMER_DEBUG
+                      real Flu_Array_Out[][FLU_NOUT][ SQR(PS2)*PS2 ], 
+                      #else
+                      real Flu_Array_Out[][FLU_NIN] [ SQR(PS2)*PS2 ], 
+                      #endif 
                       real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ], 
                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                       const bool XYZ, const real MinDens );
@@ -262,7 +266,11 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
    
 #  if ( ELBDM_SCHEME == HYBRID )
    } else { 
-      real (*smaller_h_Flu_Array_Out  )[FLU_NIN][CUBE(PS2)] = (real (*)[FLU_NIN][CUBE(PS2)]) h_Flu_Array_Out;
+#     ifndef GAMER_DEBUG
+      real (*smaller_h_Flu_Array_Out  )[FLU_NIN ][CUBE(PS2)] = (real (*)[FLU_NIN][CUBE(PS2)]) h_Flu_Array_Out;
+#     else // # ifndef GAMER_DEBUG
+      real (*smaller_h_Flu_Array_Out  )[FLU_NOUT][CUBE(PS2)] = h_Flu_Array_Out;
+#     endif // # ifndef GAMER_DEBUG ... else
       CPU_ELBDMSolver_PhaseForm( h_Flu_Array_In, smaller_h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
             XYZ, MinDens );
    }
