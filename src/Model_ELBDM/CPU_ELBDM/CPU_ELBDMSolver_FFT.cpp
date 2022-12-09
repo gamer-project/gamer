@@ -91,6 +91,8 @@ void Patch2Slab_Psi( real *Psi, real *SendBuf_Psi, real *RecvBuf_Psi, long *Send
    const bool        DE_Consistency_No = false;
    const real        MinDens_No        = -1.0;
    const real        MinPres_No        = -1.0;
+   const real        MinTemp_No        = -1.0;
+   const real        MinEntr_No        = -1.0;
    const int         GhostSize         = 0;
    const int         NPG               = 1;
 
@@ -104,15 +106,15 @@ void Patch2Slab_Psi( real *Psi, real *SendBuf_Psi, real *RecvBuf_Psi, long *Send
       if ( Target ==  REAL  )
          Prepare_PatchData( 0, Time, Psi_prep[0][0][0], NULL, GhostSize, NPG, &PID0, _REAL, _NONE,
                             IntScheme, INT_NONE, UNIT_PATCH, NSide_None, IntPhase_No, OPT__BC_FLU, PotBC_None,
-                            MinDens_No, MinPres_No, DE_Consistency_No );
+                            MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
       else if ( Target == IMAG  )
          Prepare_PatchData( 0, Time, Psi_prep[0][0][0], NULL, GhostSize, NPG, &PID0, _IMAG, _NONE,
                             IntScheme, INT_NONE, UNIT_PATCH, NSide_None, IntPhase_No, OPT__BC_FLU, PotBC_None,
-                            MinDens_No, MinPres_No, DE_Consistency_No );
+                            MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
       else if ( Target == DENS  )
          Prepare_PatchData( 0, Time, Psi_prep[0][0][0], NULL, GhostSize, NPG, &PID0, _DENS, _NONE,
                             IntScheme, INT_NONE, UNIT_PATCH, NSide_None, IntPhase_No, OPT__BC_FLU, PotBC_None,
-                            MinDens_No, MinPres_No, DE_Consistency_No );
+                            MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
 
 //    copy data to the send buffer
