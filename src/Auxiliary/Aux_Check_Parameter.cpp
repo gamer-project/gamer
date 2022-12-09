@@ -347,8 +347,6 @@ void Aux_Check_Parameter()
 #  endif
 #  if ( MODEL == ELBDM )
    Flag |= OPT__FLAG_ENGY_DENSITY;
-#  endif
-#  if ( MODEL == ELBDM  && ELBDM_SCHEME == HYBRID )
    Flag |= OPT__FLAG_INTERFERENCE;
 #  endif
 #  ifdef PARTICLE

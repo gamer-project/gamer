@@ -53,6 +53,7 @@
 #define HYBRID_UPWIND 1
 #define HYBRID_MUSCL  2
 #define HYBRID_PPM    3
+#define HYBRID_FROMM  4
 
 // data reconstruction schemes
 #define PLM          1

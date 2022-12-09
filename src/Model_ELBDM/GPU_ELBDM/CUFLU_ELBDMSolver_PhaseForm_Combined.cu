@@ -114,21 +114,23 @@ real PPM_FM           (real* a_array, real* a_L_array, real* a_R_array, real* v_
 # endif // # if ( HYBRID_SCHEME == HYBRID_PPM )
 
 //Second- and fourth-order quantum pressure depending on the scheme used
-# if (HYBRID_SCHEME == HYBRID_MUSCL || HYBRID_SCHEME == HYBRID_UPWIND)
+# if (HYBRID_SCHEME == HYBRID_FROMM || HYBRID_SCHEME == HYBRID_MUSCL || HYBRID_SCHEME == HYBRID_UPWIND)
 # define QUANTUM_PRESSURE(Sr, t)  ((real) 0.5 * (pow(GRADC2(Sr, t), 2) + LAP2(Sr, t)))
 # else 
 # define QUANTUM_PRESSURE(Sr, t)  ((real) 0.5 * (pow(GRADC4(Sr, t), 2) + LAP4(Sr, t)))
-# endif // # if (HYBRID_SCHEME == HYBRID_MUSCL || HYBRID_SCHEME == HYBRID_UPWIND)
-
-//Osher-Sethian flux for Hamilton-Jacobi equation
-# define OSHER_SETHIAN_FLUX(vp, vm) ((real) 0.5 * (pow(MIN(vp, 0), 2) + pow(MAX(vm, 0), 2)))
+# endif // # if (HYBRID_SCHEME == HYBRID_FROMM || HYBRID_SCHEME == HYBRID_MUSCL || HYBRID_SCHEME == HYBRID_UPWIND)
 
 
-#  if ( HYBRID_SCHEME == HYBRID_MUSCL || HYBRID_SCHEME == HYBRID_UPWIND)
+#  if ( HYBRID_SCHEME == HYBRID_FROMM || HYBRID_SCHEME == HYBRID_MUSCL || HYBRID_SCHEME == HYBRID_UPWIND)
 # define GHOST_ZONE_PER_STAGE     2                      // ghost zone per Runge-Kutta stage                       
 #  else 
 # define GHOST_ZONE_PER_STAGE     4                      // ghost zone per Runge-Kutta stage
 #  endif 
+
+
+//Osher-Sethian flux for Hamilton-Jacobi equation
+# define OSHER_SETHIAN_FLUX(vp, vm) ((real) 0.5 * (pow(MIN(vp, 0), 2) + pow(MAX(vm, 0), 2)))
+
 
 //#define N_TIME_LEVELS 1
 //const real TIME_COEFFS[N_TIME_LEVELS]                = {1.0};
@@ -285,7 +287,7 @@ void CPU_ELBDMSolver_PhaseForm(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT)],
                      FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_LogRho, s_Fm, s_Flux, s_Updt,  true, 0, MinDens );
    }
 
-} // FUNCTION : CUFLU_ELBDMSolver_PhaseForm_MUSCL
+} // FUNCTION : CUFLU_ELBDMSolver_PhaseForm
 
 
 
@@ -514,12 +516,12 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #                 if ( HYBRID_SCHEME == HYBRID_UPWIND )
 //                   access Rc[time_level][i, i-1], Pc[time_level][i, i-1]
                      s_Fm[sj][si] = UPWIND_FM(s_In[sj][time_level][DENS], v, si); 
-#                 elif ( HYBRID_SCHEME == HYBRID_MUSCL )
-//                   access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
-                     s_Fm[sj][si] = MUSCL_FM (s_In[sj][time_level][DENS], v, si, _v); 
 #                 elif ( HYBRID_SCHEME == HYBRID_FROMM )
 //                   access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
                      s_Fm[sj][si] = FROMM_FM (s_In[sj][time_level][DENS], v, si, _v); 
+#                 elif ( HYBRID_SCHEME == HYBRID_MUSCL )
+//                   access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
+                     s_Fm[sj][si] = MUSCL_FM (s_In[sj][time_level][DENS], v, si, _v); 
 #                 elif ( HYBRID_SCHEME == HYBRID_PPM ) 
 //                   access rho_L[i, i-1], rho_R[i, i-1], v_L[i]
                      s_Fm[sj][si] = PPM_FM   (s_In[sj][time_level][DENS], rho_L, rho_R, v_L, si, dh, dt);
