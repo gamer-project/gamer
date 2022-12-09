@@ -78,10 +78,8 @@ static uint get1D2(uint k, uint j, uint i, int XYZ) {
 # define UPWIND_FM(Rc, Vb, t)        (   FMAX(Vb, 0) * Rc[t-1] \
                                        + FMIN(Vb, 0) * Rc[t  ] )
 
-# endif // #if ( HYBRID_SCHEME == HYBRID_UPWIND )
-
 //Second-order MUSCL flux reconstruction
-#if ( HYBRID_SCHEME == HYBRID_MUSCL )
+# elif ( HYBRID_SCHEME == HYBRID_MUSCL )
 
 // VAN ALBADA LIMITER
 # define LIMITER(In) ( (SQR(In) + In)/((real)1. + SQR(In)) )
@@ -101,14 +99,15 @@ static uint get1D2(uint k, uint j, uint i, int XYZ) {
                                    + real(0.5) * FABS(Vb) * (1. - FABS(Vb * _v)) * LIMITER(UPWIND_GRADIENT_RATIO(Rc, Vb, t)) * (Rc[t] - Rc[t - 1]) )
 
 
+//Second-order unlimited flux reconstruction
+# elif  ( HYBRID_SCHEME == HYBRID_FROMM )
+
 # define FROMM_FM(Rc, Vb, t, _v) (   FMAX(Vb, 0) * ( Rc[t-1] + real(0.25) * ( Rc[t  ] - Rc[t-2] ) * (1.0 - Vb * _v)) \
                                    + FMIN(Vb, 0) * ( Rc[t  ] - real(0.25) * ( Rc[t+1] - Rc[t-1] ) * (1.0 + Vb * _v)) )
 
 
-# endif // #if ( HYBRID_SCHEME == HYBRID_MUSCL )
-
-//Third-order PPM flux reconstruction
-# if ( HYBRID_SCHEME == HYBRID_PPM )
+//Third-order monotonic flux reconstruction
+#elif ( HYBRID_SCHEME == HYBRID_PPM )
 void PPM_INTERPOLATION(real* a_array, real* a_L_array, real* a_R_array, int i, int densityLimiter);
 void PPM_LIMITER      (real* a_array, real* a_L_array, real* a_R_array, int i, int densityLimiter);
 real PPM_FM           (real* a_array, real* a_L_array, real* a_R_array, real* v_L_array, int i, real dh, real dt);
@@ -518,6 +517,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #                 elif ( HYBRID_SCHEME == HYBRID_MUSCL )
 //                   access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
                      s_Fm[sj][si] = MUSCL_FM (s_In[sj][time_level][DENS], v, si, _v); 
+#                 elif ( HYBRID_SCHEME == HYBRID_FROMM )
+//                   access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
+                     s_Fm[sj][si] = FROMM_FM (s_In[sj][time_level][DENS], v, si, _v); 
 #                 elif ( HYBRID_SCHEME == HYBRID_PPM ) 
 //                   access rho_L[i, i-1], rho_R[i, i-1], v_L[i]
                      s_Fm[sj][si] = PPM_FM   (s_In[sj][time_level][DENS], rho_L, rho_R, v_L, si, dh, dt);
@@ -536,8 +538,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //                if the time step adopted in solver is larger than what velocity-dependent CFL condition allows, we do not update the cell since updates would be unstable
                   if ( dt > dt_min ) {
 //                   compute how far wrong information can propagate
-                     l_min = si - (N_TIME_LEVELS - time_level) * 2;
-                     l_max = si + (N_TIME_LEVELS - time_level) * 2 + 1;
+                     l_min = si - 2;//(N_TIME_LEVELS - time_level) * 2;
+                     l_max = si + 3;//(N_TIME_LEVELS - time_level) * 2 + 1;
                      if (l_min < 0)        l_min = 0;
                      if (l_max > FLU_NXT ) l_max = FLU_NXT; 
                      for (l = l_min; l < l_max; ++l) s_Updt[sj][l] = true;

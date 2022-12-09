@@ -37,7 +37,7 @@ SIMU_OPTION += -DMODEL=ELBDM
 
 
 # enable gravity
-#SIMU_OPTION += -DGRAVITY
+SIMU_OPTION += -DGRAVITY
 
 # enable particles
 #SIMU_OPTION += -DPARTICLE
@@ -100,6 +100,8 @@ else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
 # --> defaults to ELBDM_SCHEME=WAVE
 #SIMU_OPTION += -DELBDM_SCHEME=HYBRID
 
+#SIMU_OPTION += -DHYBRID_SCHEME=HYBRID_MUSCL
+
 # enforce the mass conservation
 SIMU_OPTION += -DCONSERVE_MASS
 
@@ -134,7 +136,7 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 #SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # comoving frame for cosmological simulations
-#SIMU_OPTION += -DCOMOVING
+SIMU_OPTION += -DCOMOVING
 endif # GRAVITY
 
 
@@ -173,13 +175,13 @@ SIMU_OPTION += -DPATCH_SIZE=8
 
 # GPU acceleration
 # --> must set GPU_ARCH as well
-#SIMU_OPTION += -DGPU
+SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING/AMPERE
-#SIMU_OPTION += -DGPU_ARCH=TURING
+SIMU_OPTION += -DGPU_ARCH=TURING
 
 # debug mode
-SIMU_OPTION += -DGAMER_DEBUG
+#SIMU_OPTION += -DGAMER_DEBUG
 
 # bitwise reproducibility
 #SIMU_OPTION += -DBITWISE_REPRODUCIBILITY
@@ -192,7 +194,7 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # double precision
-#SIMU_OPTION += -DFLOAT8
+SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
@@ -219,7 +221,7 @@ SIMU_OPTION += -DSUPPORT_HDF5
 #SIMU_OPTION += -DSUPPORT_GSL
 
 # support yt inline analysis
-SIMU_OPTION += -DSUPPORT_LIBYT
+#SIMU_OPTION += -DSUPPORT_LIBYT
 
 # use patch group as the unit in libyt; this will speed up inline-analysis but increase memory consumption
 # --> must enable SUPPORT_LIBYT
@@ -293,7 +295,7 @@ endif
 # CUDA
 # -------------------------------------------------------------------------------
 #NVCC = $(CUDA_PATH)/bin/nvcc                            # CUDA compiler
-NVCC = $(CUDA_PATH)/bin/nvcc -ccbin mpicxx -DOMPI_SKIP_MPICXX            # with a specified host compiler
+NVCC = $(CUDA_PATH)/bin/nvcc -ccbin mpicxx -DOMPI_SKIP_MPICXX -O3          # with a specified host compiler
 #NVCC = nvcc -ccbin CC                                   # for the Cray environment
 
 
@@ -535,8 +537,8 @@ endif # MHD
 # ELBDM source files (included only inf "MODEL=ELBDM")
 # -------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
-GPU_FILE    += CUFLU_ELBDMSolver.cu CUFLU_ELBDMSolver_PhaseForm_MUSCL.cu
-CPU_FILE    += CPU_ELBDMSolver.cpp  CPU_ELBDMSolver_PhaseForm_MUSCL.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
+GPU_FILE    += CUFLU_ELBDMSolver.cu CUFLU_ELBDMSolver_PhaseForm_Combined.cu
+CPU_FILE    += CPU_ELBDMSolver.cpp CPU_ELBDMSolver_PhaseForm_Combined.cpp ELBDM_Init_ByFunction_AssignData.cpp \
                ELBDM_GetTimeStep_Fluid.cpp  ELBDM_GetTimeStep_Hybrid.cpp  ELBDM_Flag_EngyDensity.cpp ELBDM_Flag_Interference.cpp ELBDM_UnwrapPhase.cpp \
                ELBDM_GetTimeStep_Phase.cpp  ELBDM_GetTimeStep_Velocity.cpp  ELBDM_SetTaylor3Coeff.cpp  ELBDM_RemoveMotionCM.cpp
 
