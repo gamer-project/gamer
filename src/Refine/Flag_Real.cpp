@@ -61,7 +61,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const int  Interf_NGhost           = 1;                     // number of ghost cells for the interference criterion
    const int  Interf_NCell            = PS1 + 2*Interf_NGhost; // size of the variable array for interference criterion
    const int  Interf_NCond            = PS1;                   // size of the array for interference criterion
-   const IntScheme_t Interf_IntScheme = INT_MINMOD1D;          // interpolation scheme for interference criterion
+   const IntScheme_t Interf_IntScheme = INT_CQUAD;          // interpolation scheme for interference criterion
 #  endif // # if ( MODEL == ELBDM )
 
 #  if ( MODEL == HYDRO  &&  defined GRAVITY )
