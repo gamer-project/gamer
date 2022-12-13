@@ -1635,6 +1635,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       real *FData_Dens = NULL;
       real *FData_Phas = NULL;
 
+      const int NVar = 1; 
       int DensIdx=-1, PhasIdx=-1;
 
       for (int v=0; v<NVarCC_Flu; v++)
@@ -1644,28 +1645,27 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          if      ( TVarCCIdx_Flu == DENS )   DensIdx = v;
          else if ( TVarCCIdx_Flu == PHAS )   PhasIdx = v;
       }
-
-//    check
-#     ifdef GAMER_DEBUG
-      if ( DensIdx == -1  ||  PhasIdx == -1 )
-         Aux_Error( ERROR_INFO, "dens and/or phas parts are not found for interpolation in hybrid ELBDM !!\n" );
-#     endif
-
-      CData_Dens = CData_CC   + DensIdx*CSize3D_CC;
-      CData_Phas = CData_CC   + PhasIdx*CSize3D_CC;
-
-      FData_Dens = IntData_CC + DensIdx*FSize3D_CC;
-      FData_Phas = IntData_CC + PhasIdx*FSize3D_CC;
+      
 
 //    interpolate density
-      Interpolate( CData_Dens, CSize_CC, CStart_CC, CRange_CC, FData_Dens, FSize_CC, FStart_CC,
-                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes, IntOppSign0thOrder_No,
-                   ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
+      if (DensIdx != -1) {
+         CData_Dens = CData_CC   + DensIdx*CSize3D_CC;
+         FData_Dens = IntData_CC + DensIdx*FSize3D_CC;
+
+         Interpolate( CData_Dens, CSize_CC, CStart_CC, CRange_CC, FData_Dens, FSize_CC, FStart_CC, NVar, 
+                      IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes, IntOppSign0thOrder_No,
+                      ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
+      }
 
 //    interpolate phase
-      Interpolate( CData_Phas, CSize_CC, CStart_CC, CRange_CC, FData_Phas, FSize_CC, FStart_CC,
-                   1, IntScheme_CC, PhaseUnwrapping_Cond, &Monotonicity_No, IntOppSign0thOrder_No,
-                   ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
+      if (PhasIdx != -1) {
+         CData_Phas = CData_CC   + PhasIdx*CSize3D_CC;
+         FData_Phas = IntData_CC + PhasIdx*FSize3D_CC;
+
+         Interpolate( CData_Phas, CSize_CC, CStart_CC, CRange_CC, FData_Phas, FSize_CC, FStart_CC, NVar, 
+                      IntScheme_CC, PhaseUnwrapping_Cond, &Monotonicity_No, IntOppSign0thOrder_No,
+                      ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
+      }                   
    }
 #  endif // #  if ( ELBDM_SCHEME == HYBRID )
 // c3. interpolation on original variables

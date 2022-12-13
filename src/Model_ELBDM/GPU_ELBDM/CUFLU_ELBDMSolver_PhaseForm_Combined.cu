@@ -51,7 +51,14 @@ static uint get1D2(uint k, uint j, uint i, int XYZ) {
 # define GTR( a, b )     (  ( (a) > (b) ) ? (1) : (0)  )
 # define LSS( a, b )     (  ( (a) < (b) ) ? (1) : (0)  )
 # define SGN( a )        (  ( (a) > (0) ) ? (1) : ( (a) < (0) ) ? (-1) : (0) )
-            
+
+# ifdef SMOOTH_PHASE
+# define  TWOPI          (  real(2 * M_PI)  )
+# define _TWOPI          (  real(1.0) / TWOPI )
+# define UNWRAP( ref, wrap ) (  round(((ref) - (wrap)) * _TWOPI) )
+# define GRADIENT_RATIO(f, t) ( (f[t+1] - f[t  ]) / (f[t] - f[t-1] + (((f[t] - f[t-1]) == 0) ? 1e-8 : 0)))
+# endif // # ifdef SMOOTH_PHASE
+
 // First-order forward and backward gradient
 # define GRADF1(In, t) ( In[t + 1] - In[t    ] )
 # define GRADB1(In, t) ( In[t    ] - In[t - 1] )
@@ -135,7 +142,7 @@ real PPM_FM           (real* a_array, real* a_L_array, real* a_R_array, real* v_
 //#define N_TIME_LEVELS 1
 //const real TIME_COEFFS[N_TIME_LEVELS]                = {1.0};
 //const real RK_COEFFS  [N_TIME_LEVELS][N_TIME_LEVELS] = {{1.0}};
-
+//const static real FLUX_COEFFS[N_TIME_LEVELS]         = {1.0};
 
 //#define N_TIME_LEVELS 2
 //GPU_DEVICE_VARIABLE
@@ -181,10 +188,8 @@ static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                            real s_Fm    [][FLU_NXT],
                            real s_Flux  [][FLU_NXT], 
                            bool s_Updt  [][FLU_NXT],
+                           int  s_2PI   [][FLU_NXT],
                            const bool FinalOut, const int XYZ, const real MinDens );
-
-
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUFLU_ELBDMSolver_PhaseForm
@@ -255,6 +260,14 @@ void CPU_ELBDMSolver_PhaseForm(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT)],
 #  else  // #  ifdef CONSERVE_MASS
               real (*s_Flux)[FLU_NXT] = NULL;  // useless if CONSERVE_MASS is off
 #  endif // #  ifdef CONSERVE_MASS ... # else
+
+#  ifdef SMOOTH_PHASE
+   __shared__ int   s_2PI    [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];
+#  else // # ifdef SMOOTH_PHASE
+              int (*s_2PI)   [FLU_NXT] = NULL; 
+#  endif // # ifdef SMOOTH_PHASE
+
+
    const int NPatchGroup = 0; 
 
 #  else // #  ifdef __CUDACC__
@@ -262,29 +275,30 @@ void CPU_ELBDMSolver_PhaseForm(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT)],
    real (*s_In)     [N_TIME_LEVELS][FLU_NIN][FLU_NXT]      = NULL;
    real (*s_LogRho) [FLU_NXT]                              = NULL;
    real (*s_Fm)     [FLU_NXT]                              = NULL;
-   real (*s_Flux)   [FLU_NXT]                              = NULL;
    bool (*s_Updt)   [FLU_NXT]                              = NULL;
+   real (*s_Flux)   [FLU_NXT]                              = NULL;
+   int  (*s_2PI)    [FLU_NXT]                              = NULL; 
    const real _dh                                          = real(1.0)/dh; 
 #  endif
 
    if ( XYZ )
    {
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                                  0,              0, s_In, s_LogRho, s_Fm, s_Flux, s_Updt, false, 0, MinDens );
+                                  0,              0, s_In, s_LogRho, s_Fm, s_Flux, s_Updt, s_2PI, false, 0, MinDens );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                     FLU_GHOST_SIZE,              0, s_In, s_LogRho, s_Fm, s_Flux, s_Updt, false, 3, MinDens );
+                     FLU_GHOST_SIZE,              0, s_In, s_LogRho, s_Fm, s_Flux, s_Updt, s_2PI, false, 3, MinDens );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                     FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_LogRho, s_Fm, s_Flux, s_Updt,  true, 6, MinDens );
+                     FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_LogRho, s_Fm, s_Flux, s_Updt, s_2PI,  true, 6, MinDens );
    }
 
    else
    {
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                                  0,              0, s_In, s_LogRho, s_Fm, s_Flux, s_Updt, false, 6, MinDens );
+                                  0,              0, s_In, s_LogRho, s_Fm, s_Flux, s_Updt, s_2PI, false, 6, MinDens );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                                  0, FLU_GHOST_SIZE, s_In, s_LogRho, s_Fm, s_Flux, s_Updt, false, 3, MinDens );
+                                  0, FLU_GHOST_SIZE, s_In, s_LogRho, s_Fm, s_Flux, s_Updt, s_2PI, false, 3, MinDens );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                     FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_LogRho, s_Fm, s_Flux, s_Updt,  true, 0, MinDens );
+                     FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_LogRho, s_Fm, s_Flux, s_Updt, s_2PI,  true, 0, MinDens );
    }
 
 } // FUNCTION : CUFLU_ELBDMSolver_PhaseForm
@@ -337,6 +351,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      real s_Fm     [][FLU_NXT],
                      real s_Flux   [][FLU_NXT], 
                      bool s_Updt   [][FLU_NXT],
+                     int  s_2PI    [][FLU_NXT],
                      const bool FinalOut,
                      const int XYZ, const real MinDens )
 {
@@ -362,7 +377,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
       const int bx = blockIdx.x;
 #     else
 //    in CPU mode, every thread works on one patch group at a time and corresponds to one block in the grid of the GPU solver
-#     pragma omp for schedule( runtime ) private ( s_In, s_LogRho, s_Fm, s_Flux, s_Updt )
+#     pragma omp for schedule( runtime ) private ( s_In, s_LogRho, s_Fm, s_Flux, s_Updt, s_2PI )
       for (int bx=0; bx<NPatchGroup; bx++)
 #     endif
       {
@@ -372,6 +387,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #        ifdef CONSERVE_MASS
          uint Idx3;                       // temporary index used for writing data to g_Flux
 #        endif
+#        ifdef SMOOTH_PHASE
+         uint Idx4;
+#        endif // # ifdef SMOOTH_PHASE
          uint delta_k;
          uint si, sj;                     // array indices used in the shared memory array
          uint g1, g2;                     // left and right ghost zones while updating each column
@@ -398,18 +416,29 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          real s_In_1PG       [CGPU_FLU_BLOCK_SIZE_Y][N_TIME_LEVELS][FLU_NIN][FLU_NXT];   // density and phase fields at all RK stages + RK 1 result
          real s_LogRho_1PG   [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];                               // 1/2 * density logarithm 
          real s_Fm_1PG       [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];                               // density flux
+
+         bool s_Updt_1PG     [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];
+
 #        ifdef CONSERVE_MASS
          real s_Flux_1PG     [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];
 #        endif // #  ifdef CONSERVE_MASS
-         bool s_Updt_1PG     [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];
+
+#        ifdef SMOOTH_PHASE
+         int  s_2PI_1PG      [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT]; 
+#        endif // # ifdef SMOOTH_PHASE
 
          s_In       = s_In_1PG;
          s_LogRho   = s_LogRho_1PG; 
          s_Fm       = s_Fm_1PG;
+         s_Updt     = s_Updt_1PG;
+
 #        ifdef CONSERVE_MASS
          s_Flux     = s_Flux_1PG;
 #        endif // #  ifdef CONSERVE_MASS
-         s_Updt     = s_Updt_1PG;
+
+#        ifdef SMOOTH_PHASE
+         s_2PI      = s_2PI_1PG; 
+#        endif 
 
 #        endif // # ifdef __CUDACC__ ... # else 
 
@@ -486,11 +515,10 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   Idx1 = get1D1( k, j, si, XYZ );
                   s_In[ty][time_level][DENS][si] = g_Fluid_In[bx][DENS][Idx1];
                   s_In[ty][time_level][PHAS][si] = g_Fluid_In[bx][PHAS][Idx1];
-
+                  s_Updt[ty][si] = false;
 #                 ifdef CONSERVE_MASS
                   s_Flux[ty][si] = 0; 
-#                 endif            
-                  s_Updt[ty][si] = false;
+#                 endif         
                }
 #              endif // # ifdef __CUDACC__  ... else
             } // if ( tid < NColumnOnce*PS2 )
@@ -500,6 +528,61 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
             __syncthreads();
 #           endif // # ifdef __CUDACC_
 
+//          1.5 smooth out 2 PI-discontinuitites in phase field
+#           ifdef SMOOTH_PHASE
+
+
+
+            bool hasChanged = false; 
+            
+//          1.5.1. compute magnitude of 2 pi-jumps wherever we detect discontinuity
+            CELL_LOOP(FLU_NXT, 1, 1)
+            {
+               if (GRADIENT_RATIO(s_In[sj][0][PHAS], si) < .5) {
+                  s_2PI[sj][si] = UNWRAP(s_In[sj][0][PHAS][si - 1], s_In[sj][0][PHAS][si]);
+                  if ( s_2PI[sj][si] > 0) {
+                     hasChanged=true;
+                     //printf("Unwrap at si = %d for XYZ = %d, phase1 = %f, phase2 = %f and wrap is %d\n", si, XYZ, s_In[sj][0][PHAS][si - 1], s_In[sj][0][PHAS][si], s_2PI[sj][si]);
+                  }
+//                handle discontinuitites at boundary separately
+                  if (si == FLU_NXT - 2) {
+                     s_2PI[sj][FLU_NXT - 1] = UNWRAP(s_In[sj][0][PHAS][si], s_In[sj][0][PHAS][si + 1]);
+                     if ( s_2PI[sj][FLU_NXT - 1] > 0) {
+                        hasChanged=true;
+                        //printf("Unwrap at si = %d for XYZ = %d, phase1 = %f, phase2 = %f and wrap is %d\n", si, XYZ, s_In[sj][0][PHAS][si], s_In[sj][0][PHAS][si + 1], s_2PI[sj][si + 1]);
+                     }
+                  }
+               } else {
+                  s_2PI[sj][si] = 0;
+                  if (si == FLU_NXT - 2) {
+                     s_2PI[sj][si + 1] = 0;
+                  }
+               }
+            }
+
+#           ifdef __CUDACC__
+            __syncthreads();
+#           endif // # ifdef __CUDACC_
+
+            if (hasChanged) {
+               //printf("The field at K = %d and j = %d has changed: \n", k, j); 
+//             1.5.2. add multiples of 2 pi to initial phase field to smoothen it
+               CELL_LOOP(FLU_NXT, 1, 0)
+               {
+                  for (Idx4 = 1; Idx4 <= si; ++Idx4) {
+                     s_In[sj][time_level][PHAS][si] += s_2PI[sj][Idx4] * TWOPI;
+                  }
+                  if (hasChanged) {
+                     //printf("%f ", s_In[sj][time_level][PHAS][si]);
+                  }
+               }
+               //printf("\n");
+            }
+
+#           ifdef __CUDACC__
+            __syncthreads();
+#           endif // # ifdef __CUDACC_
+#           endif // # ifdef SMOOTH_PHASE
 
 //          2. Runge-Kutta iterations
             for (time_level = 0; time_level < N_TIME_LEVELS; ++time_level) 
@@ -632,6 +715,13 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      } else { // if ( FinalOut )       
 //                      do not store negative densities
                         De_New = (De_New < 0) ? MinDens : De_New;    
+
+//                      restore original global phase field
+#                       ifdef SMOOTH_PHASE
+                        for (Idx4 = 1; Idx4 <= si; ++Idx4) {
+                           Ph_New -= s_2PI[sj][Idx4] * TWOPI;
+                        }
+#                       endif // # ifdef SMOOTH_PHASE
 
 #                       ifndef __CUDACC__ 
                         Idx1 = get1D1( k, j, si, XYZ );
@@ -796,5 +886,6 @@ real PPM_FM(real* a_array, real* a_L_array, real* a_R_array, real* v_L_array, in
    return fm_L * FMAX(  v_L_array[i], 0.0 ) + fm_R * FMIN(  v_L_array[i], 0.0 );
 }
 #endif // # if ( HYBRID_SCHEME == HYBRID_PPM )
+
 
 #endif // #if ( defined GPU  &&  MODEL == ELBDM && ELBDM_SCHEME == HYBRID)

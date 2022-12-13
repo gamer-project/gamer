@@ -119,6 +119,12 @@ void Interpolate( real CData[], const int CSize[3], const int CStart[3], const i
       Aux_Error( ERROR_INFO, "phase unwrapping is useful in ELBDM model only !!\n" );
 #     endif
    }
+
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) ) 
+      if ( (IntScheme != INT_CQUAD) && (IntScheme != INT_CQUAR) )
+         Aux_Error( ERROR_INFO, "unsupported hybrid phase interpolation scheme (%d) !!\n", IntScheme );
+#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) ) 
+
 #  endif // #ifdef GAMER_DEBUG
 
 #  if ( MODEL == HYDRO )
