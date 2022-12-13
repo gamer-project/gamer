@@ -503,7 +503,7 @@ typedef real (*ExtPot_t)       ( const double x, const double y, const double z,
                                  const ExtPotUsage_t Usage, const real PotTable[], void **GenePtr );
 typedef void (*IntSchemeFunc_t)( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                                  real FData[], const int FSize[3], const int FStart[3], const int NComp,
-                                 const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
+                                 const int UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
 
 
 

@@ -796,8 +796,9 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 // 3.2 perform spatial interpolation
 // 3.2.1 determine which variables require **monotonic** interpolation
-   const bool PhaseUnwrapping_Yes   = true;
-   const bool PhaseUnwrapping_No    = false;
+   const int PhaseUnwrapping_Cond  = 2;
+   const int PhaseUnwrapping_Yes   = 1;
+   const int PhaseUnwrapping_No    = 0;
    const bool Monotonicity_Yes      = true;
    const bool Monotonicity_No       = false;
    const bool IntOppSign0thOrder_No = false;
@@ -962,13 +963,15 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 #  if ( ELBDM_SCHEME == HYBRID )
    } else { // if ( amr->use_wave_flag[FaLv] )
+//    interpolate density
+      Interpolate( CData_Dens, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[DENS][0][0][0],
+                   FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes,
+                   IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
 
-//    adopt INT_PRIM_NO to ensure conservation
-//    use NCOMP_TOTAL - 1 because there is no need to interpolate the stub field
-      Interpolate( CData_Flu, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[0][0][0][0],
-                  FSize_CC3, FStart_CC, NCOMP_TOTAL - 1, OPT__REF_FLU_INT_SCHEME,
-                  PhaseUnwrapping_No, Monotonicity,
-                  INT_OPP_SIGN_0TH_ORDER, ALL_CONS_YES, INT_PRIM_NO, INT_REDUCE_MONO_COEFF, NULL, NULL );
+//    interpolate phase
+      Interpolate( CData_Phas, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[PHAS][0][0][0],
+                   FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Cond, &Monotonicity_No,
+                   IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
    }
 #  endif // #if ( ELBDM_SCHEME == HYBRID )
 

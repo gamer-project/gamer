@@ -1285,8 +1285,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 // c. interpolation : CData_CC[] --> IntData_CC[]
 // ------------------------------------------------------------------------------------------------------------
-   const bool PhaseUnwrapping_Yes   = true;
-   const bool PhaseUnwrapping_No    = false;
+   const int PhaseUnwrapping_Cond  = 2;
+   const int PhaseUnwrapping_Yes   = 1;
+   const int PhaseUnwrapping_No    = 0;
    const bool Monotonicity_Yes      = true;
    const bool Monotonicity_No       = false;
    const bool IntOppSign0thOrder_No = false;
@@ -1626,10 +1627,49 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          FData_Imag[t] = Amp*SIN( Phase );
       }
    } // if ( IntPhase ) || if ( IntPhase && amr->use_wave_flag[lv] == true) in hybrid scheme
+#  if ( ELBDM_SCHEME == HYBRID )
+   else if ( amr->use_wave_flag[lv] == false ) 
+   {
+      real *CData_Dens = NULL;
+      real *CData_Phas = NULL;
+      real *FData_Dens = NULL;
+      real *FData_Phas = NULL;
 
+      int DensIdx=-1, PhasIdx=-1;
 
+      for (int v=0; v<NVarCC_Flu; v++)
+      {
+         TVarCCIdx_Flu = TVarCCIdxList_Flu[v];
+
+         if      ( TVarCCIdx_Flu == DENS )   DensIdx = v;
+         else if ( TVarCCIdx_Flu == PHAS )   PhasIdx = v;
+      }
+
+//    check
+#     ifdef GAMER_DEBUG
+      if ( DensIdx == -1  ||  PhasIdx == -1 )
+         Aux_Error( ERROR_INFO, "dens and/or phas parts are not found for interpolation in hybrid ELBDM !!\n" );
+#     endif
+
+      CData_Dens = CData_CC   + DensIdx*CSize3D_CC;
+      CData_Phas = CData_CC   + PhasIdx*CSize3D_CC;
+
+      FData_Dens = IntData_CC + DensIdx*FSize3D_CC;
+      FData_Phas = IntData_CC + PhasIdx*FSize3D_CC;
+
+//    interpolate density
+      Interpolate( CData_Dens, CSize_CC, CStart_CC, CRange_CC, FData_Dens, FSize_CC, FStart_CC,
+                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes, IntOppSign0thOrder_No,
+                   ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
+
+//    interpolate phase
+      Interpolate( CData_Phas, CSize_CC, CStart_CC, CRange_CC, FData_Phas, FSize_CC, FStart_CC,
+                   1, IntScheme_CC, PhaseUnwrapping_Cond, &Monotonicity_No, IntOppSign0thOrder_No,
+                   ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
+   }
+#  endif // #  if ( ELBDM_SCHEME == HYBRID )
 // c3. interpolation on original variables
-   else // if ( IntPhase ) || if ( IntPhase && amr->use_wave_flag[lv] == true) in hybrid scheme
+   else // if ( IntPhase || ( IntPhase && amr->use_wave_flag[lv] == true) ) ... else if ( amr->use_wave_flag[lv] == false ) 
 #  endif // if ( MODEL == ELBDM )
    {
 //    c3-1. prepare the fine-grid, cell-centered B field for IntIter
