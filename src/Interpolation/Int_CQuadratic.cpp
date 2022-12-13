@@ -46,10 +46,6 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
    const int Cdy    = Cdx*CSize[0];
    const int Cdz    = Cdy*CSize[1];
 
-// index stride of the coarse-grid input array without ghost boundary (without ghost = woG)
-   const int CwoGdx = 1;
-   const int CwoGdy = CwoGdx*CRange[0];
-   const int CwoGdz = CwoGdy*CRange[1];
 
 // index stride of the temporary arrays storing the data after x and y interpolations
    const int Tdx    = 1;
@@ -75,6 +71,12 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
    real LSlopeDh_4, RSlopeDh_4, SlopeDh_4, Sign;
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
+
+// index stride of the coarse-grid input array without ghost boundary (without ghost = woG)
+   const int CwoGdx = 1;
+   const int CwoGdy = CwoGdx*CRange[0];
+   const int CwoGdz = CwoGdy*CRange[1];
+   
    real *TData_GlobalPhase  = NULL;
    
    if ( UnwrapPhase == 2)

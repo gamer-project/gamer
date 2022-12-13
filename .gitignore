@@ -38,3 +38,18 @@ tool/.vscode/settings.json
 tool/.vscode/targets.log
 src/Makefile
 Calab 通訊錄.pdf
+FindingTheRightThreshold/2DCosmoRelativeError_FlagBuf4_RK1=2_Fromm.png
+FindingTheRightThreshold/2DCosmoRelativeError_FlagBuf4_RK1=2.png
+FindingTheRightThreshold/2DCosmoRelativeError_FlagBuf4.png
+FindingTheRightThreshold/2DCosmoRelativeError_FlagBuf6_RK1=2.png
+FindingTheRightThreshold/2DCosmoRelativeError_FlagBuf8.png
+FindingTheRightThreshold/2DCosmoVolumes_FlagBuf4.png
+FindingTheRightThreshold/2DCosmoVolumes_FlagBuf6.png
+FindingTheRightThreshold/2DCosmoVolumes_FlagBuf6vs4_Threshold0.04.png
+FindingTheRightThreshold/2DCosmoVolumes_FlagBuf6vs4_Threshold0.06.png
+FindingTheRightThreshold/2DCosmoVolumes_FlagBuf6vs4_Threshold0.12.png
+FindingTheRightThreshold/2DCosmoVolumes_FlagBuf6vs4_Threshold0.18.png
+FindingTheRightThreshold/2DCosmoVolumes_FlagBuf8.png
+src/fromm_cosmo
+.gitignore
+src/wave_cosmo

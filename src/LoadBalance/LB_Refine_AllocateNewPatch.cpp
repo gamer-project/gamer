@@ -796,7 +796,11 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 // 3.2 perform spatial interpolation
 // 3.2.1 determine which variables require **monotonic** interpolation
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
    const int PhaseUnwrapping_Cond  = 2;
+#  else 
+   const int PhaseUnwrapping_Cond  = 0;
+#  endif
    const int PhaseUnwrapping_Yes   = 1;
    const int PhaseUnwrapping_No    = 0;
    const bool Monotonicity_Yes      = true;

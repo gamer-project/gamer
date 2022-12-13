@@ -98,9 +98,11 @@ else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
 # ELBDM scheme: WAVE/HYBRID
 # --> need not be set even when MODEL=ELBDM
 # --> defaults to ELBDM_SCHEME=WAVE
-#SIMU_OPTION += -DELBDM_SCHEME=HYBRID
+SIMU_OPTION += -DELBDM_SCHEME=HYBRID
+SIMU_OPTION += -DHYBRID_SCHEME=HYBRID_MUSCL
 
-#SIMU_OPTION += -DHYBRID_SCHEME=HYBRID_MUSCL
+# enforce a smooth phase field by adding multiples of 2PI
+#SIMU_OPTION += -DSMOOTH_PHASE 
 
 # enforce the mass conservation
 SIMU_OPTION += -DCONSERVE_MASS
@@ -181,7 +183,7 @@ SIMU_OPTION += -DGPU
 SIMU_OPTION += -DGPU_ARCH=TURING
 
 # debug mode
-#SIMU_OPTION += -DGAMER_DEBUG
+SIMU_OPTION += -DGAMER_DEBUG
 
 # bitwise reproducibility
 #SIMU_OPTION += -DBITWISE_REPRODUCIBILITY
@@ -194,7 +196,7 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # double precision
-SIMU_OPTION += -DFLOAT8
+#SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
@@ -271,7 +273,7 @@ CXX         = mpicxx                    # MPI compiler
 #CXX         = CC                                        # cray wrapper script
 #CXXFLAG     = -g -O3                                    # general flags
 #CXXFLAG      = -g -O3                                         # general flags
-CXXFLAG     = -std=c++11 -O3 -DOMPI_SKIP_MPICXX
+CXXFLAG     = -std=c++11 -g -DOMPI_SKIP_MPICXX
 #CXXFLAG     = -g -Ofast
  CXXFLAG    += -Wall -Wextra                             # warning flags
  CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \

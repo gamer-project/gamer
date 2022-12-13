@@ -675,7 +675,11 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //       (c1.3.4) perform spatial interpolation
+#        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
          const int PhaseUnwrapping_Cond  = 2;
+#        else 
+         const int PhaseUnwrapping_Cond  = 0;
+#        endif
          const int PhaseUnwrapping_Yes   = 1;
          const int PhaseUnwrapping_No    = 0;
 

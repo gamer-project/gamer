@@ -1285,7 +1285,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 // c. interpolation : CData_CC[] --> IntData_CC[]
 // ------------------------------------------------------------------------------------------------------------
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
    const int PhaseUnwrapping_Cond  = 2;
+#  else 
+   const int PhaseUnwrapping_Cond  = 0;
+#  endif
+
    const int PhaseUnwrapping_Yes   = 1;
    const int PhaseUnwrapping_No    = 0;
    const bool Monotonicity_Yes      = true;
