@@ -187,7 +187,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
 #           if ( ELBDM_SCHEME == HYBRID )
                   real (*PFaPtr)[PS1][PS1]  = amr->patch[  FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
-                  real (*OldPFaPtr)[PS1][PS1]  = amr->patch[1-FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
+                  real (*OldPFaPtr)[PS1][PS1]  = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
 //                handle that we do not have data of previous time step during initialisation corresponding to a negative time
                   if ( amr->FluSgTime[FaLv][1-FaFluSg ] < 0 ) {
                      OldPFaPtr = PFaPtr;

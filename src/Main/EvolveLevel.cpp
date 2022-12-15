@@ -618,9 +618,9 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       if ( !amr->use_wave_flag[lv] && amr->use_wave_flag[lv+1] ) {
          int FaLv    = lv; 
          int FaFluSg = amr->FluSg[FaLv];
-         if ( amr->FluSgTime[FaLv][1-FaFluSg] >= 0 ) {
-            FaFluSg = 1 - FaFluSg;
-         }
+         //if ( amr->FluSgTime[FaLv][1-FaFluSg] >= 0 ) {
+         //   FaFluSg = 1 - FaFluSg;
+         //}
          TIMING_FUNC(   Buf_GetBufferData( FaLv, FaFluSg, NULL_INT, NULL_INT, DATA_GENERAL,
                                           _PHAS, _NONE, PATCH_SIZE, USELB_YES ),
                         Timer_GetBuf[lv][2],   TIMER_ON   );
@@ -874,9 +874,9 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             if ( !amr->use_wave_flag[lv_refine] && amr->use_wave_flag[lv_refine+1] && OPT__CORR_AFTER_ALL_SYNC ) {
                int FaLv    = lv_refine; 
                int FaFluSg = amr->FluSg[FaLv];
-               if ( amr->FluSgTime[FaLv][1-FaFluSg] >= 0 ) {
-                  FaFluSg = 1 - FaFluSg;
-               }
+               //if ( amr->FluSgTime[FaLv][1-FaFluSg] >= 0 ) {
+               //   FaFluSg = 1 - FaFluSg;
+               //}
                TIMING_FUNC(   Buf_GetBufferData( FaLv, FaFluSg, NULL_INT, NULL_INT, DATA_GENERAL,
                                                 _PHAS, _NONE, PATCH_SIZE, USELB_YES ),
                               Timer_GetBuf[lv_refine][4],   TIMER_ON   );

@@ -102,7 +102,8 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
 #        else    
          Cond[1][k][j][i] = 0;
 #        endif                               
-                                 
+
+#        ifdef GAMER_DEBUG                       
          //Check maximum phase difference in all 6 directions
          Cond[2][k][j][i] = MAX(MAX(MAX(MAX(MAX(
             FABS(Temp[1][kk ][jj ][iip] - Temp[1][kk ][jj ][ii ]),
@@ -111,7 +112,9 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
             FABS(Temp[1][kk ][jj ][ii ] - Temp[1][kk ][jjm][ii ])),
             FABS(Temp[1][kkp][jj ][ii ] - Temp[1][kk ][jj ][ii ])),
             FABS(Temp[1][kk ][jj ][ii ] - Temp[1][kkm][jj ][ii ]));
-
+#        else
+         Cond[2][k][j][i] = 0;
+#        endif 
       }
    }}} // k,j,i
 
