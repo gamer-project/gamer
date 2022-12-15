@@ -658,8 +658,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //                3.1 && 3.2 as one-liners for performance reasons (2.5 times faster execution of the whole solver and I do not understand why)
                   De_New = TIME_COEFFS[time_level] * Coeff1 * ( s_Fm[sj][si] - s_Fm[sj][si+1] );
                   Ph_New = TIME_COEFFS[time_level] * Coeff2 * ( \
-                           - SQR(FMIN(GRADF2(s_In[sj][time_level][PHAS], si), 0)) \
-                           - SQR(FMAX(GRADB2(s_In[sj][time_level][PHAS], si), 0)) \
+                           - SQR(FMIN(GRADF3(s_In[sj][time_level][PHAS], si), 0)) \
+                           - SQR(FMAX(GRADB3(s_In[sj][time_level][PHAS], si), 0)) \
                            + real(1.0/2.0) * LAP2(s_LogRho[sj], si) \
                            + real(1.0/4.0) * SQR(GRADC2(s_LogRho[sj], si)));
             
