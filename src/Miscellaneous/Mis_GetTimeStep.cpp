@@ -99,7 +99,14 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv  );
 #  if ( ELBDM_SCHEME == HYBRID )
    } else { // if ( amr->use_wave_flag[lv] )
-   dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv  ) / 0.125 * 0.3;
+      if ( lv + 1 < NLEVEL ) {
+         if ( amr->use_wave_flag[lv + 1] )
+            dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv  );
+         else
+            dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv  ) * 10;
+      } else {
+         dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv  ) * 10;
+      }
    } // if ( amr->use_wave_flag[lv] ) ... else 
 #  endif // #  if ( ELBDM_SCHEME == HYBRID )
    sprintf( dTime_Name[NdTime++], "%s", "ELBDM_Pot" );
