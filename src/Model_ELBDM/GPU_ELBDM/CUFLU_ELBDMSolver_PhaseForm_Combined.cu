@@ -360,7 +360,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
    const real Coeff1       = real(1.0) * dt /(dh * Eta);           // coefficient for continuity equation
    const real Coeff2       = real(0.5) * dt /(dh * dh * Eta);      // coefficient for HJ-equation
    const real FluidMinDens = FMAX(real(1e-10), MinDens);          // minimum density while computing quantum pressure and when correcting negative density 
-   const real _v           = dt * _dh; 
 
    const uint j_end        = FLU_NXT -  j_gap    ;          // last y-column to be updated
 
@@ -601,10 +600,10 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      s_Fm[sj][si] = UPWIND_FM(s_In[sj][time_level][DENS], v, si); 
 #                 elif ( HYBRID_SCHEME == HYBRID_FROMM )
 //                   access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
-                     s_Fm[sj][si] = FROMM_FM (s_In[sj][time_level][DENS], v, si, _v); 
+                     s_Fm[sj][si] = FROMM_FM (s_In[sj][time_level][DENS], v, si, Coeff1); 
 #                 elif ( HYBRID_SCHEME == HYBRID_MUSCL )
 //                   access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
-                     s_Fm[sj][si] = MUSCL_FM (s_In[sj][time_level][DENS], v, si, _v); 
+                     s_Fm[sj][si] = MUSCL_FM (s_In[sj][time_level][DENS], v, si, Coeff1); 
 #                 elif ( HYBRID_SCHEME == HYBRID_PPM ) 
 //                   access rho_L[i, i-1], rho_R[i, i-1], v_L[i]
                      s_Fm[sj][si] = PPM_FM   (s_In[sj][time_level][DENS], rho_L, rho_R, v_L, si, dh, dt);
