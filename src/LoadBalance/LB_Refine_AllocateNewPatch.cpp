@@ -908,6 +908,9 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    real *const CData_Dens = CData_Flu + DENS*CSize_Flu1v;
    real *const CData_Real = CData_Flu + REAL*CSize_Flu1v;
    real *const CData_Imag = CData_Flu + IMAG*CSize_Flu1v;
+#  if ( ELBDM_SCHEME == HYBRID )
+   real *const CData_Phas = CData_Flu + PHAS*CSize_Flu1v;
+#  endif 
 #  endif
    CData_Next += NCOMP_TOTAL*CSize_Flu1v;
 

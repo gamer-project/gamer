@@ -1,5 +1,5 @@
-#include "Macro.h"
 #include "CUFLU.h"
+#include "Macro.h"
 
 #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
