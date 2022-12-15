@@ -1198,12 +1198,16 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
    if ( switchNextLevelsToWaveScheme ) {
 
+#     ifdef GAMER_DEBUG
       printf("Max level %i: \n", MAX_LEVEL);
+#     endif 
 
       //Set corresponding flag
       for (int level = lv + 1; level <= MAX_LEVEL; ++level) {
 
+#        ifdef GAMER_DEBUG
          printf("Converting level %i to wave scheme\n\n", level);
+#        endif 
          //int counter = 0;
 
          amr->use_wave_flag[level] = true; 

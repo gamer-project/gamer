@@ -206,7 +206,9 @@ void LB_Refine( const int FaLv )
          int n_buffer = n_total - n_real;
 
 
+#        ifdef GAMER_DEBUG
          printf("Converting level %i with %d real and %d buffer patches to wave scheme on rank %d\n\n", level, n_real, n_buffer, MPI_Rank);
+#        endif 
 
          amr->use_wave_flag[level] = true; 
          int fluSg = amr->FluSg[level];
@@ -215,12 +217,12 @@ void LB_Refine( const int FaLv )
 
          for (int PID=0; PID<amr->NPatchComma[level][1]; PID++)
          { 
+#           ifdef GAMER_DEBUG
             if (amr->patch[fluSg][level][PID]->fluid == NULL || !amr->patch[fluSg][level][PID]->Active ) {
                printf("Encountered NULL FLUID at PID %d where the number of real patches is %d and the total number of patches is %d \n", PID, amr->NPatchComma[level][1], amr->NPatchComma[level][27]);
                continue;
             }
-
-#           ifdef GAMER_DEBUG
+            
 //          check for phase jumps!
             for (int k=0; k<PS1; k++)  {
             for (int j=0; j<PS1; j++)  {
