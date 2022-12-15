@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#ifdef GRAVITY
+#if ( defined GRAVITY  &&  defined SUPPORT_FFTW )
 
 
 
@@ -713,4 +713,4 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 
 
 
-#endif // #ifdef GRAVITY
+#endif // #if ( defined GRAVITY  &&  defined SUPPORT_FFTW )

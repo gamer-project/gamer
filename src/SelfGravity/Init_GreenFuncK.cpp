@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#ifdef GRAVITY
+#if ( defined GRAVITY  &&  defined SUPPORT_FFTW )
 
 #ifdef SERIAL
 extern rfftwnd_plan     FFTW_Plan;
@@ -94,4 +94,4 @@ void Init_GreenFuncK()
 
 
 
-#endif // #ifdef GRAVITY
+#endif // #if ( defined GRAVITY  &&  defined SUPPORT_FFTW )

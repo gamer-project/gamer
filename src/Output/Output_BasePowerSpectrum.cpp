@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#ifdef GRAVITY
+#if ( defined GRAVITY  &&  defined SUPPORT_FFTW )
 
 //output the dimensionless power spectrum
 //#define DIMENSIONLESS_FORM
@@ -286,4 +286,4 @@ void GetBasePowerSpectrum( real *RhoK, const int j_start, const int dj, double *
 
 
 
-#endif // #ifdef GRAVITY
+#endif // #if ( defined GRAVITY  &&  defined SUPPORT_FFTW )

@@ -88,9 +88,11 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
-#  ifdef GRAVITY
+#  ifdef SUPPORT_FFTW
 // initialize FFTW
+#  ifdef GRAVITY
    Init_FFTW();
+#  endif
 #  endif
 
 

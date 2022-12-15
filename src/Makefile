@@ -36,6 +36,7 @@ COMPILE_VERBOSE := 0
 SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
+# --> must enable SUPPORT_FFTW
 #SIMU_OPTION += -DGRAVITY
 
 # enable particles
@@ -210,6 +211,10 @@ SIMU_OPTION += -DOPENMP
 
 # support GNU scientific library
 #SIMU_OPTION += -DSUPPORT_GSL
+
+# support FFTW library
+# --> must be enabled when GRAVITY is enabled
+#SIMU_OPTION += -DSUPPORT_FFTW
 
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT
@@ -736,7 +741,7 @@ ifeq "$(filter -DLAOHU, $(SIMU_OPTION))" "-DLAOHU"
 LIB += -L$(GPUID_PATH) -lgpudevmgr
 endif
 
-ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
+ifeq "$(filter -DSUPPORT_FFTW, $(SIMU_OPTION))" "-DSUPPORT_FFTW"
    LIB += -L$(FFTW_PATH)/lib
    ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
       ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" "-DSERIAL"
@@ -782,7 +787,7 @@ ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" ""
 INCLUDE += -I$(MPI_PATH)/include
 endif
 
-ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
+ifeq "$(filter -DSUPPORT_FFTW, $(SIMU_OPTION))" "-DSUPPORT_FFTW"
 INCLUDE += -I$(FFTW_PATH)/include
 endif
 
