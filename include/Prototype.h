@@ -353,6 +353,7 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
 void Slab2Patch( const real *RhoK, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
                  int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
                  const int NSendSlice );
+void Init_GreenFuncK();
 #endif
 void End_MemFree_PoissonGravity();
 void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
@@ -374,7 +375,6 @@ void Gra_Prepare_USG( const int lv, const double PrepTime,
 void Init_ExtAccPot();
 void End_ExtAccPot();
 void Init_LoadExtPotTable();
-void Init_GreenFuncK();
 void Init_MemAllocate_PoissonGravity( const int Pot_NPatchGroup );
 void Init_Set_Default_MG_Parameter( int &Max_Iter, int &NPre_Smooth, int &NPost_Smooth, double &Tolerated_Error );
 void Init_Set_Default_SOR_Parameter( double &SOR_Omega, int &SOR_Max_Iter, int &SOR_Min_Iter );
