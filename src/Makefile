@@ -471,7 +471,7 @@ CPU_FILE    += Mis_CompareRealValue.cpp  Mis_GetTotalPatchNumber.cpp  Mis_GetTim
 CPU_FILE    += Output_DumpData_Total.cpp  Output_DumpData.cpp  Output_DumpManually.cpp  Output_PatchMap.cpp \
                Output_DumpData_Part.cpp  Output_FlagMap.cpp  Output_Patch.cpp  Output_PreparedPatch_Fluid.cpp \
                Output_PatchCorner.cpp  Output_Flux.cpp  Output_User.cpp  Output_BasePowerSpectrum.cpp \
-               Output_DumpData_Total_HDF5.cpp  Output_L1Error.cpp
+               Output_DumpData_Total_HDF5.cpp  Output_L1Error.cpp  Output_UserWorkBeforeOutput.cpp
 
 CPU_FILE    += Flag_Real.cpp  Refine.cpp   SiblingSearch.cpp  SiblingSearch_Base.cpp  FindFather.cpp \
                Flag_User.cpp  Flag_Check.cpp  Flag_Lohner.cpp  Flag_Region.cpp
