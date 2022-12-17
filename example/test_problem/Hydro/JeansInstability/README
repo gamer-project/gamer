@@ -1,6 +1,6 @@
 Compilation flags:
 ========================================
-Enable : MODEL=HYDRO, GRAVITY [, MHD]
+Enable : MODEL=HYDRO, GRAVITY, FLOAT8 [, MHD]
 Disable: PARTICLE, COMOVING
 
 
