@@ -212,6 +212,10 @@ void Init_OpenMP();
 #ifdef SUPPORT_HDF5
 void Init_ByRestart_HDF5( const char *FileName );
 #endif
+#ifdef SUPPORT_FFTW
+void End_FFTW();
+void Init_FFTW();
+#endif
 
 
 // Interpolation
@@ -366,10 +370,6 @@ void Gra_Prepare_Corner( const int lv, double h_Corner_Array[][3], const int NPG
 void Gra_Prepare_USG( const int lv, const double PrepTime,
                       real h_Pot_Array_USG_G[][USG_NXT_G][USG_NXT_G][USG_NXT_G],
                       real h_Flu_Array_USG_G[][GRA_NIN-1][PS1][PS1][PS1], const int NPG, const int *PID0_List );
-#endif
-#ifdef SUPPORT_FFTW
-void End_FFTW();
-void Init_FFTW();
 #endif
 void Init_ExtAccPot();
 void End_ExtAccPot();

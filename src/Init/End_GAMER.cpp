@@ -28,9 +28,7 @@ void End_GAMER()
    if ( End_User_Ptr != NULL )   End_User_Ptr();
 
 #  ifdef SUPPORT_FFTW
-#  ifdef GRAVITY
    End_FFTW();
-#  endif
 #  endif
 
 #  ifdef SUPPORT_LIBYT

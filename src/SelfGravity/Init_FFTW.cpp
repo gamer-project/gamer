@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#if ( defined GRAVITY  &&  defined SUPPORT_FFTW )
+#ifdef SUPPORT_FFTW
 
 
 
@@ -107,4 +107,4 @@ void End_FFTW()
 
 
 
-#endif // #if ( defined GRAVITY  &&  defined SUPPORT_FFTW )
+#endif // #ifdef SUPPORT_FFTW
