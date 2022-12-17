@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2455)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2456)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -229,6 +229,7 @@ Procedure for outputting new variables:
 //                                             AUTO_REDUCE_INT_MONO_FACTOR, AUTO_REDUCE_INT_MONO_MIN,
 //                                             INT_MONO_COEFF_B
 //                2455 : 2022/11/04 --> output REFINE_NLEVEL
+//                2456 : 2022/12/16 --> output ELBDM_BASE_SPECTRAL
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1734,7 +1735,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2455;
+   KeyInfo.FormatVersion        = 2456;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2487,6 +2488,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.ELBDM_Taylor3_Coeff     = ELBDM_TAYLOR3_COEFF;
    InputPara.ELBDM_Taylor3_Auto      = ELBDM_TAYLOR3_AUTO;
    InputPara.ELBDM_RemoveMotionCM    = ELBDM_REMOVE_MOTION_CM;
+   InputPara.ELBDM_BaseSpectral      = ELBDM_BASE_SPECTRAL;
 #  endif // ELBDM
 
 // fluid solvers in different models
@@ -3360,6 +3362,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "ELBDM_Taylor3_Coeff",     HOFFSET(InputPara_t,ELBDM_Taylor3_Coeff    ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "ELBDM_Taylor3_Auto",      HOFFSET(InputPara_t,ELBDM_Taylor3_Auto     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "ELBDM_RemoveMotionCM",    HOFFSET(InputPara_t,ELBDM_RemoveMotionCM   ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "ELBDM_BaseSpectral",      HOFFSET(InputPara_t,ELBDM_BaseSpectral     ), H5T_NATIVE_INT     );
 #  endif // ELBDM
 
 // fluid solvers in different models

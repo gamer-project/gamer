@@ -540,7 +540,8 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, real *PsiD, const int j_start, con
 // Function    :  CPU_PoissonSolver_FFT
 // Description :  Evolve base-level wavefunction by FFT
 //
-// Note        :
+// Note        :  1. Work with the option ELBDM_BASE_SPECTRAL
+//                2. Invoked by Flu_AdvanceDt()
 //
 // Parameter   :  dt       : Time interval to advance solution
 //                Time     : Physical time for preparing the wavefunction
@@ -548,7 +549,7 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, real *PsiD, const int j_start, con
 //-------------------------------------------------------------------------------------------------------
 void CPU_ELBDMSolver_FFT( const real dt, const double Time, const int SaveSg )
 {
-
+   Aux_Message( stdout, "ELBDM_BASE_SPECTRAL is working.\n" );
 // determine the FFT size
    int FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
 

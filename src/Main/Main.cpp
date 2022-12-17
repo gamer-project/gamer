@@ -118,6 +118,7 @@ double               ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
 double               ELBDM_LAMBDA;
 #endif
 ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
+bool                 ELBDM_BASE_SPECTRAL;
 
 #else
 #error : unsupported MODEL !!
