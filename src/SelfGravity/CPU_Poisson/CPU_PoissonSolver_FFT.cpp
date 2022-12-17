@@ -9,9 +9,9 @@ static void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, 
 static int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Guess );
 
 #ifdef SERIAL
-extern rfftwnd_plan     FFTW_Plan, FFTW_Plan_Inv;
+extern rfftwnd_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
 #else
-extern rfftwnd_mpi_plan FFTW_Plan, FFTW_Plan_Inv;
+extern rfftwnd_mpi_plan FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
 #endif
 
 extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,
@@ -467,9 +467,9 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 
 // forward FFT
 #  ifdef SERIAL
-   rfftwnd_one_real_to_complex( FFTW_Plan, RhoK, NULL );
+   rfftwnd_one_real_to_complex( FFTW_Plan_Poi, RhoK, NULL );
 #  else
-   rfftwnd_mpi( FFTW_Plan, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
+   rfftwnd_mpi( FFTW_Plan_Poi, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
 #  endif
 
 
@@ -538,9 +538,9 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 
 // backward FFT
 #  ifdef SERIAL
-   rfftwnd_one_complex_to_real( FFTW_Plan_Inv, cdata, NULL );
+   rfftwnd_one_complex_to_real( FFTW_Plan_Poi_Inv, cdata, NULL );
 #  else
-   rfftwnd_mpi( FFTW_Plan_Inv, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
+   rfftwnd_mpi( FFTW_Plan_Poi_Inv, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
 #  endif
 
 
@@ -575,9 +575,9 @@ void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const i
 
 // forward FFT
 #  ifdef SERIAL
-   rfftwnd_one_real_to_complex( FFTW_Plan, RhoK, NULL );
+   rfftwnd_one_real_to_complex( FFTW_Plan_Poi, RhoK, NULL );
 #  else
-   rfftwnd_mpi( FFTW_Plan, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
+   rfftwnd_mpi( FFTW_Plan_Poi, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
 #  endif
 
 
@@ -595,9 +595,9 @@ void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const i
 
 // backward FFT
 #  ifdef SERIAL
-   rfftwnd_one_complex_to_real( FFTW_Plan_Inv, RhoK_cplx, NULL );
+   rfftwnd_one_complex_to_real( FFTW_Plan_Poi_Inv, RhoK_cplx, NULL );
 #  else
-   rfftwnd_mpi( FFTW_Plan_Inv, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
+   rfftwnd_mpi( FFTW_Plan_Poi_Inv, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
 #  endif
 
 

@@ -244,7 +244,7 @@ void Output_DumpData( const int Stage )
          else
             Aux_Error( ERROR_INFO, "Output_User_Ptr == NULL for OPT__OUTPUT_USER !!\n" );
       }
-#     ifdef GRAVITY
+#     ifdef SUPPORT_FFTW
       if ( OPT__OUTPUT_BASEPS )           Output_BasePowerSpectrum( FileName_PS );
 #     endif
 #     ifdef PARTICLE
