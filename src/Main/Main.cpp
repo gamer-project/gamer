@@ -66,6 +66,7 @@ bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__FREEZE_FLUID, 
 bool                 OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 bool                 OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
 bool                 OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID;
+double               AveDensity_Init = -1.0;    // initialize it as <= 0 to check if it is properly set later
 
 UM_IC_Format_t       OPT__UM_IC_FORMAT;
 TestProbID_t         TESTPROB_ID;
@@ -124,7 +125,6 @@ double               ELBDM_LAMBDA;
 
 // (2-2) self-gravity
 #ifdef GRAVITY
-double               AveDensity_Init = -1.0;    // initialize it as <= 0 to check if it is properly set later
 int                  Pot_ParaBuf, Rho_ParaBuf;
 
 real                *GreenFuncK = NULL;

@@ -220,12 +220,7 @@ void Init_ByRestart()
    fread( NPatchTotal,                    sizeof(int),    NLv_Restart, File );
    fread( NDataPatch_Total,               sizeof(int),    NLv_Restart, File );
    fread( AdvanceCounter,                 sizeof(long),   NLv_Restart, File );
-
-#  ifdef GRAVITY
    fread( &AveDensity_Init,               sizeof(double),           1, File );
-#  else
-   fseek( File, sizeof(double), SEEK_CUR );
-#  endif
 
 #  ifdef PARTICLE
    fread( &amr->Par->NPar_Active_AllRank, sizeof(long),             1, File );
@@ -263,9 +258,7 @@ void Init_ByRestart()
       }
 
       Step            = 0;
-#     ifdef GRAVITY
       AveDensity_Init = -1.0;    // set to an arbitrary negative value
-#     endif
    }
 
 

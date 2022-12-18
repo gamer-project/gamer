@@ -204,6 +204,7 @@ void Init_TestProb();
 void Init_ByFile();
 void Init_UniformGrid( const int lv, const bool FindHomePatchForPar );
 void Init_Field();
+void Init_GetAverageDensity();
 FieldIdx_t AddField( const char *InputLabel, const NormPassive_t Norm, const IntFracPassive_t IntFrac );
 FieldIdx_t GetFieldIndex( const char *InputLabel, const Check_t Check );
 #ifdef OPENMP
@@ -389,7 +390,6 @@ void Poi_Close( const int lv, const int SaveSg, const real h_Pot_Array_P_Out[][G
 void Poi_BoundaryCondition_Extrapolation( real *Array, const int BC_Face, const int NVar, const int GhostSize,
                                           const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                           const int Idx_Start[], const int Idx_End[] );
-void Poi_GetAverageDensity();
 void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In[][POT_NXT][POT_NXT][POT_NXT],
                       const int NPG, const int *PID0_List );
 void Poi_Prepare_Rho( const int lv, const double PrepTime, real h_Rho_Array_P[][RHO_NXT][RHO_NXT][RHO_NXT],

@@ -710,9 +710,6 @@ void Output_DumpData_Total( const char *FileName )
 
       fseek( File, HeaderOffset_SimuInfo, SEEK_SET );
 
-#     ifndef GRAVITY
-      const double AveDensity_Init     = NULL_REAL;
-#     endif
 #     ifdef PARTICLE
       const long   NParAllRank         = amr->Par->NPar_Active_AllRank;
 #     else
