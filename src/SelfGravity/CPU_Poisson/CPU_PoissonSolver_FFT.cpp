@@ -643,7 +643,7 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
    local_y_start_after_transpose = NULL_INT;
    total_local_size              = 2*(FFT_Size[0]/2+1)*FFT_Size[1]*FFT_Size[2];
 #  else
-   rfftwnd_mpi_local_sizes( FFTW_Plan, &local_nz, &local_z_start, &local_ny_after_transpose,
+   rfftwnd_mpi_local_sizes( FFTW_Plan_Poi, &local_nz, &local_z_start, &local_ny_after_transpose,
                             &local_y_start_after_transpose, &total_local_size );
 #  endif
 
