@@ -215,6 +215,15 @@ void Init_ByRestart_HDF5( const char *FileName );
 #ifdef SUPPORT_FFTW
 void End_FFTW();
 void Init_FFTW();
+void Patch2Slab_Rho( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf_SIdx, long *RecvBuf_SIdx,
+                     int **List_PID, int **List_k, int *List_NSend_Rho, int *List_NRecv_Rho,
+                     const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
+                     const double PrepTime );
+#ifdef GRAVITY
+void Slab2Patch_Pot( const real *RhoK, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
+                     int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
+                     const int NSendSlice );
+#endif
 #endif
 
 
@@ -346,13 +355,6 @@ void CPU_ExtPotSolver_BaseLevel( const ExtPot_t Func, const double AuxArray_Flt[
                                  const double Time, const bool PotIsInit, const int SaveSg );
 #ifdef SUPPORT_FFTW
 void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double PrepTime );
-void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf_SIdx, long *RecvBuf_SIdx,
-                 int **List_PID, int **List_k, int *List_NSend_Rho, int *List_NRecv_Rho,
-                 const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
-                 const double PrepTime );
-void Slab2Patch( const real *RhoK, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
-                 int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
-                 const int NSendSlice );
 void Init_GreenFuncK();
 #endif
 void End_MemFree_PoissonGravity();

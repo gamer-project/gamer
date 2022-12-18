@@ -101,8 +101,8 @@ void Output_BasePowerSpectrum( const char *FileName )
 
 
 // 4. rearrange data from patch to slab
-   Patch2Slab( RhoK, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID, List_k, List_NSend, List_NRecv, List_z_start,
-               local_nz, FFT_Size, NRecvSlice, Time[0] );
+   Patch2Slab_Rho( RhoK, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID, List_k, List_NSend, List_NRecv, List_z_start,
+                   local_nz, FFT_Size, NRecvSlice, Time[0] );
 
 
 // 5. evaluate the base-level power spectrum by FFT
