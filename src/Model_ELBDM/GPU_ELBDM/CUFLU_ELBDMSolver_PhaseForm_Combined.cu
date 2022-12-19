@@ -394,7 +394,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          uint g1, g2;                     // left and right ghost zones while updating each column
 
          uint NStep;                      // number of iterations for updating each column
-         real De_New, Ph_New, v, dt_min;
+         real De_New, Ph_New, v, dt_min, qp;
          int l, l_min, l_max;
          uint time_level; 
 
@@ -614,6 +614,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      s_Flux[sj][si] += FLUX_COEFFS[time_level] * s_Fm[sj][si];
 #                 endif
 
+/*
 //                2.2.2 check the velocity-dependent CFL-condition and switch to forward-Euler for updating the density wherever the CFL-condition is not met
 //                dt = 1 / MaxdS_dx * 0.5 * ELBDM_ETA * DT__VELOCITY;
 //                compute CFL condition timestep
@@ -628,6 +629,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      if (l_max > FLU_NXT ) l_max = FLU_NXT; 
                      for (l = l_min; l < l_max; ++l) s_Updt[sj][l] = true;
                   }
+                  */
                }
 
 //             2.2 compute density logarithms
@@ -654,15 +656,18 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //                  vp  = GRADF3(s_In[sj][time_level][PHAS], si);
 //                  vm  = GRADB3(s_In[sj][time_level][PHAS], si);
 //                  osf = OSHER_SETHIAN_FLUX(vp, vm); 
+                  qp =     + real(1.0/2.0) * LAP2(s_LogRho[sj], si) \
+                           + real(1.0/4.0) * SQR(GRADC2(s_LogRho[sj], si));
 
 //                3.1 && 3.2 as one-liners for performance reasons (2.5 times faster execution of the whole solver and I do not understand why)
                   De_New = TIME_COEFFS[time_level] * Coeff1 * ( s_Fm[sj][si] - s_Fm[sj][si+1] );
                   Ph_New = TIME_COEFFS[time_level] * Coeff2 * ( \
                            - SQR(FMIN(GRADF3(s_In[sj][time_level][PHAS], si), 0)) \
                            - SQR(FMAX(GRADB3(s_In[sj][time_level][PHAS], si), 0)) \
-                           + real(1.0/2.0) * LAP2(s_LogRho[sj], si) \
-                           + real(1.0/4.0) * SQR(GRADC2(s_LogRho[sj], si)));
-            
+                           + qp);
+
+
+
 //                3.3 use N_TIME_LEVELS-stages RK-algorithm
                   for (uint tl = 0; tl < time_level + 1; ++tl) {
                      De_New += RK_COEFFS[time_level][tl] * s_In[sj][tl][DENS][si];
@@ -679,12 +684,13 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   if ( time_level < N_TIME_LEVELS - 1 ) {
                      s_In[sj][time_level+1][DENS][si] = De_New;
                      s_In[sj][time_level+1][PHAS][si] = Ph_New;    
-                  } 
+                  }
+
 //                4. write back final results to g_Fluid_In[0] or g_Fluid_Out to save memory
                   else if ( time_level == N_TIME_LEVELS - 1 ) {
 
 //                   4.1 handle the case that the velocity timestep criterion is not met -> no update
-                     if ( s_Updt[sj][si] ) {
+                     if ( (FABS(qp) * real(1.0/3.0)) > real(0.1) ) {
                         De_New = s_In[sj][0][DENS][si];
                         Ph_New = s_In[sj][0][PHAS][si];
                      }
