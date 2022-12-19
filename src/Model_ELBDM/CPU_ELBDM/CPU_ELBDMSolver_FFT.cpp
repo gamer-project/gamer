@@ -546,7 +546,7 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, real *PsiD, const int j_start, con
 //-------------------------------------------------------------------------------------------------------
 void CPU_ELBDMSolver_FFT( const real dt, const double Time, const int SaveSg )
 {
-   Aux_Message( stdout, "ELBDM_BASE_SPECTRAL is working.\n" );
+   if ( MPI_Rank == 0 ) Aux_Message( stdout, "ELBDM_BASE_SPECTRAL is working.\n" ); //-----debug only-----
 // determine the FFT size
    int FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
 

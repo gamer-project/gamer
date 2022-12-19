@@ -17,6 +17,7 @@
 void Flu_FixUp_Flux( const int lv )
 {
 
+   if ( MPI_Rank == 0 ) Aux_Message( stdout, "Flu_Fixup_Flux is working on lv %d.\n", lv ); //-----debug only-----
    const bool CheckMinPres_No = false;
    const real Const[6]        = { real(-1.0/amr->dh[lv]), real(+1.0/amr->dh[lv]),
                                   real(-1.0/amr->dh[lv]), real(+1.0/amr->dh[lv]),
