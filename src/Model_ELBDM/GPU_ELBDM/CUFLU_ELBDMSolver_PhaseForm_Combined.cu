@@ -185,7 +185,7 @@ static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                            real s_LogRho[][FLU_NXT],
                            real s_Fm    [][2][FLU_NXT],
                            real s_Flux  [][FLU_NXT], 
-                           bool s_Updt  [][FLU_NXT],
+                           bool s_RK1  [][FLU_NXT],
                            int  s_2PI   [][FLU_NXT],
                            const bool FinalOut, const int XYZ, const real MinDens );
 
@@ -251,7 +251,7 @@ void CPU_ELBDMSolver_PhaseForm(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT)],
    __shared__ real s_In      [CGPU_FLU_BLOCK_SIZE_Y][N_TIME_LEVELS + 1][FLU_NIN][FLU_NXT];
    __shared__ real s_LogRho  [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT]; // one column of the 0.5 * log(rho) for every thread block
    __shared__ real s_Fm      [CGPU_FLU_BLOCK_SIZE_Y][2][FLU_NXT]; // one column of the fluxes for every thread block
-   __shared__ bool s_Updt    [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT]; 
+   __shared__ bool s_RK1    [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT]; 
 
 #  ifdef CONSERVE_MASS
    __shared__ real s_Flux    [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];
@@ -273,7 +273,7 @@ void CPU_ELBDMSolver_PhaseForm(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT)],
    real (*s_In)     [N_TIME_LEVELS + 1][FLU_NIN][FLU_NXT]      = NULL;
    real (*s_LogRho) [FLU_NXT]                              = NULL;
    real (*s_Fm)     [2][FLU_NXT]                           = NULL;
-   bool (*s_Updt)   [FLU_NXT]                              = NULL;
+   bool (*s_RK1)   [FLU_NXT]                              = NULL;
    real (*s_Flux)   [FLU_NXT]                              = NULL;
    int  (*s_2PI)    [FLU_NXT]                              = NULL; 
    const real _dh                                          = real(1.0)/dh; 
@@ -282,21 +282,21 @@ void CPU_ELBDMSolver_PhaseForm(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT)],
    if ( XYZ )
    {
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                                  0,              0, s_In, s_LogRho, s_Fm, s_Flux, s_Updt, s_2PI, false, 0, MinDens );
+                                  0,              0, s_In, s_LogRho, s_Fm, s_Flux, s_RK1, s_2PI, false, 0, MinDens );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                     FLU_GHOST_SIZE,              0, s_In, s_LogRho, s_Fm, s_Flux, s_Updt, s_2PI, false, 3, MinDens );
+                     FLU_GHOST_SIZE,              0, s_In, s_LogRho, s_Fm, s_Flux, s_RK1, s_2PI, false, 3, MinDens );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                     FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_LogRho, s_Fm, s_Flux, s_Updt, s_2PI,  true, 6, MinDens );
+                     FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_LogRho, s_Fm, s_Flux, s_RK1, s_2PI,  true, 6, MinDens );
    }
 
    else
    {
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                                  0,              0, s_In, s_LogRho, s_Fm, s_Flux, s_Updt, s_2PI, false, 6, MinDens );
+                                  0,              0, s_In, s_LogRho, s_Fm, s_Flux, s_RK1, s_2PI, false, 6, MinDens );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                                  0, FLU_GHOST_SIZE, s_In, s_LogRho, s_Fm, s_Flux, s_Updt, s_2PI, false, 3, MinDens );
+                                  0, FLU_GHOST_SIZE, s_In, s_LogRho, s_Fm, s_Flux, s_RK1, s_2PI, false, 3, MinDens );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                     FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_LogRho, s_Fm, s_Flux, s_Updt, s_2PI,  true, 0, MinDens );
+                     FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_LogRho, s_Fm, s_Flux, s_RK1, s_2PI,  true, 0, MinDens );
    }
 
 } // FUNCTION : CUFLU_ELBDMSolver_PhaseForm
@@ -348,7 +348,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      real s_LogRho [][FLU_NXT],
                      real s_Fm     [][2][FLU_NXT],
                      real s_Flux   [][FLU_NXT], 
-                     bool s_Updt   [][FLU_NXT],
+                     bool s_RK1   [][FLU_NXT],
                      int  s_2PI    [][FLU_NXT],
                      const bool FinalOut,
                      const int XYZ, const real MinDens )
@@ -374,7 +374,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
       const int bx = blockIdx.x;
 #     else
 //    in CPU mode, every thread works on one patch group at a time and corresponds to one block in the grid of the GPU solver
-#     pragma omp for schedule( runtime ) private ( s_In, s_LogRho, s_Fm, s_Flux, s_Updt, s_2PI )
+#     pragma omp for schedule( runtime ) private ( s_In, s_LogRho, s_Fm, s_Flux, s_RK1, s_2PI )
       for (int bx=0; bx<NPatchGroup; bx++)
 #     endif
       {
@@ -392,7 +392,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          uint g1, g2;                     // left and right ghost zones while updating each column
 
          uint NStep;                      // number of iterations for updating each column
-         real De_New, Ph_New, v, dt_min, qp;
+         real De_New, Ph_New, v, dt_min, vp, vm;
          int l, l_min, l_max;
          uint time_level; 
 
@@ -414,7 +414,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          real s_LogRho_1PG   [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];                               // 1/2 * density logarithm 
          real s_Fm_1PG       [CGPU_FLU_BLOCK_SIZE_Y][2][FLU_NXT];                               // density flux
 
-         bool s_Updt_1PG     [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];
+         bool s_RK1_1PG     [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];
 
 #        ifdef CONSERVE_MASS
          real s_Flux_1PG     [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];
@@ -427,7 +427,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          s_In       = s_In_1PG;
          s_LogRho   = s_LogRho_1PG; 
          s_Fm       = s_Fm_1PG;
-         s_Updt     = s_Updt_1PG;
+         s_RK1     = s_RK1_1PG;
 
 #        ifdef CONSERVE_MASS
          s_Flux     = s_Flux_1PG;
@@ -493,7 +493,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #              ifdef CONSERVE_MASS
                s_Flux[ty][i] = 0;
 #              endif
-               s_Updt[ty][i] = false;
+               s_RK1[ty][i] = false;
 
 //             1.3 load the ghost-zone data into shared memory
                if ( LoadGhost )
@@ -503,7 +503,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #                 ifdef CONSERVE_MASS
                   s_Flux[ty][LoadGhost_i] = 0;
 #                 endif 
-                  s_Updt[ty][LoadGhost_i] = false;
+                  s_RK1[ty][LoadGhost_i] = false;
                }
 #              else // # ifdef __CUDACC__
 
@@ -512,7 +512,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   Idx1 = get1D1( k, j, si, XYZ );
                   s_In[ty][time_level][DENS][si] = g_Fluid_In[bx][DENS][Idx1];
                   s_In[ty][time_level][PHAS][si] = g_Fluid_In[bx][PHAS][Idx1];
-                  s_Updt[ty][si] = false;
+                  s_RK1[ty][si] = false;
 #                 ifdef CONSERVE_MASS
                   s_Flux[ty][si] = 0; 
 #                 endif         
@@ -575,11 +575,40 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                g2 = GHOST_ZONE_PER_STAGE * ( time_level + 1 ) ;         
 
 
-//             2.1 compute backward density fluxes at all cell faces of real cells
+//             2.1 check the velocity-dependent CFL-condition and switch to forward-Euler for updating the density wherever the CFL-condition is not met
+               CELL_LOOP(FLU_NXT, g2, g2 - 1)
+               {
+                  v = _dh * GRADC2 (s_In[sj][time_level][PHAS], si);
+
+//                dt = 1 / MaxdS_dx * 0.5 * ELBDM_ETA * DT__VELOCITY;
+//                compute CFL condition timestep
+                  dt_min = dh / FABS(v) * real(0.5) * Eta * real(3.5) ;
+                  
+//                if the time step adopted in solver is larger than what velocity-dependent CFL condition allows, we do not update the cell since updates would be unstable
+                  if ( dt > dt_min ) {
+//                   compute how far wrong information can propagate
+                     l_min = si - 2;//(N_TIME_LEVELS - time_level) * 2;
+                     l_max = si + 3;//(N_TIME_LEVELS - time_level) * 2 + 1;
+                     if (l_min < 0)        l_min = 0;
+                     if (l_max > FLU_NXT ) l_max = FLU_NXT; 
+                     for (l = l_min; l < l_max; ++l) s_RK1[sj][l] = true;
+                  }
+               }
+
+
+//             2.2 sync s_RK1
+#              ifdef __CUDACC__ 
+               __syncthreads();
+#              endif 
+
+//             2.3 compute backward density fluxes at all cell faces of real cells
                CELL_LOOP(FLU_NXT, g2, g2 - 1)
                {
                   v = _dh * GRADB1 (s_In[sj][time_level][PHAS], si);
 
+                  if ( s_RK1[sj][si] ) {
+                     s_Fm[sj][0][si] = UPWIND_FM(s_In[sj][time_level][DENS], v, si); 
+                  } else {
 #                 if ( HYBRID_SCHEME == HYBRID_UPWIND )
 //                   access Rc[time_level][i, i-1], Pc[time_level][i, i-1]
                      s_Fm[sj][0][si] = UPWIND_FM(s_In[sj][time_level][DENS], v, si); 
@@ -593,28 +622,12 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //                   access rho_L[i, i-1], rho_R[i, i-1], v_L[i]
                      s_Fm[sj][0][si] = PPM_FM   (s_In[sj][time_level][DENS], rho_L, rho_R, v_L, si, dh, dt);
 #                 endif
+                  }
 
 #                 ifdef CONSERVE_MASS
 //                   2.2.1 update density fluxes
                      s_Flux[sj][si] += FLUX_COEFFS[time_level] * s_Fm[sj][0][si];
 #                 endif
-
-
-//                2.2.2 check the velocity-dependent CFL-condition and switch to forward-Euler for updating the density wherever the CFL-condition is not met
-//                dt = 1 / MaxdS_dx * 0.5 * ELBDM_ETA * DT__VELOCITY;
-//                compute CFL condition timestep
-                  dt_min = dh / FABS(v) * real(0.5) * Eta * real(3.5) ;
-                  
-//                if the time step adopted in solver is larger than what velocity-dependent CFL condition allows, we do not update the cell since updates would be unstable
-                  if ( dt > dt_min ) {
-//                   compute how far wrong information can propagate
-                     l_min = si - 4;//(N_TIME_LEVELS - time_level) * 2;
-                     l_max = si + 5;//(N_TIME_LEVELS - time_level) * 2 + 1;
-                     if (l_min < 0)        l_min = 0;
-                     if (l_max > FLU_NXT ) l_max = FLU_NXT; 
-                     for (l = l_min; l < l_max; ++l) s_Updt[sj][l] = true;
-                  }
-                  
                }
 
 //             2.2 compute density logarithms
@@ -641,25 +654,28 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //                  vp  = GRADF3(s_In[sj][time_level][PHAS], si);
 //                  vm  = GRADB3(s_In[sj][time_level][PHAS], si);
 //                  osf = OSHER_SETHIAN_FLUX(vp, vm); 
-                  qp =     + real(1.0/2.0) * LAP2(s_LogRho[sj], si) \
-                           + real(1.0/4.0) * SQR(GRADC2(s_LogRho[sj], si));
+                  if ( s_RK1[sj][si] ) {
+                     vp = GRADF1(s_In[sj][time_level][PHAS], si);
+                     vm = GRADB1(s_In[sj][time_level][PHAS], si);
+                  } else {
+                     vp = GRADF3(s_In[sj][time_level][PHAS], si);
+                     vm = GRADB3(s_In[sj][time_level][PHAS], si);
+                  }
 
-//                3.1 && 3.2 as one-liners for performance reasons (2.5 times faster execution of the whole solver and I do not understand why)
+//                3.1 && 3.2
                   De_New = TIME_COEFFS[time_level] * Coeff1 * ( s_Fm[sj][0][si] - s_Fm[sj][0][si+1] );
                   Ph_New = TIME_COEFFS[time_level] * Coeff2 * ( \
-                           - SQR(FMIN(GRADF3(s_In[sj][time_level][PHAS], si), 0)) \
-                           - SQR(FMAX(GRADB3(s_In[sj][time_level][PHAS], si), 0)) \
-                           + qp);
-
-
+                           - SQR(FMIN(vp, 0)) \
+                           - SQR(FMAX(vm, 0)) \
+                           + real(1.0/2.0) * LAP2(s_LogRho[sj], si) \
+                           + real(1.0/4.0) * SQR(GRADC2(s_LogRho[sj], si)));
 
 //                3.3 use N_TIME_LEVELS-stages RK-algorithm
                   for (uint tl = 0; tl < time_level + 1; ++tl) {
                      De_New += RK_COEFFS[time_level][tl] * s_In[sj][tl][DENS][si];
                      Ph_New += RK_COEFFS[time_level][tl] * s_In[sj][tl][PHAS][si];
                   }
-
-//                3.4 write density and phase change as well as density fluxes after RK1 update to buffer
+                  
                   if ( time_level == 0 ) {
                      s_In[sj][N_TIME_LEVELS][DENS][si] = FMAX(De_New, FluidMinDens);
                      s_In[sj][N_TIME_LEVELS][PHAS][si] =      Ph_New;
@@ -676,7 +692,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   else if ( time_level == N_TIME_LEVELS - 1 ) {
 
 //                   4.1 handle the case that the velocity timestep criterion is not met -> no update
-                     if ( FABS(qp) > 0.15 || s_Updt[sj][si] || De_New < 0 || De_New != De_New ) {
+                     if ( s_RK1[sj][si] || De_New < 0 || De_New != De_New ) {
                         De_New = s_In[sj][N_TIME_LEVELS][DENS][si];
                         Ph_New = s_In[sj][N_TIME_LEVELS][PHAS][si];
 #                       ifdef CONSERVE_MASS
@@ -703,7 +719,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 //                      write cells that have been updated with RK1 to stub field in debug mode
 #                       ifdef GAMER_DEBUG
-                        g_Fluid_Out[bx][STUB][Idx2] += (real) s_Updt[sj][si];
+                        g_Fluid_Out[bx][STUB][Idx2] += (real) s_RK1[sj][si];
 #                       endif 
 
                      } else { // if ( FinalOut )       
@@ -730,10 +746,10 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                         if ( k >= FLU_GHOST_SIZE && k < PS2 + FLU_GHOST_SIZE &&  j >= FLU_GHOST_SIZE && j < PS2 + FLU_GHOST_SIZE ) {
 #                          ifndef __CUDACC__ 
                            Idx2 = get1D2( k, j, si, XYZ);
-                           St_New = (real) s_Updt[sj][si];
+                           St_New = (real) s_RK1[sj][si];
 #                          else // #ifndef __CUDACC_
                            Idx2 = get1D2( k, j,  i, XYZ);
-                           St_New = (real) s_Updt[sj][si];
+                           St_New = (real) s_RK1[sj][si];
 #                          endif // #ifndef __CUDACC_ ... else
                               if (XYZ == 0) {
                                  g_Fluid_Out[bx][STUB][Idx2]  = St_New;
