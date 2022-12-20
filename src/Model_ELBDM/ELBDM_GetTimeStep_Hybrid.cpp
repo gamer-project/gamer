@@ -30,7 +30,7 @@ double ELBDM_GetTimeStep_Hybrid( const int lv )
 
    if ( lv + 1 < NLEVEL ) {
       if ( amr->use_wave_flag[lv + 1] )
-         dt *= 0.2;
+         dt *= 0.1;
       else
          dt *= DT__HYBRID;
    } else {
