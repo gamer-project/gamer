@@ -223,7 +223,7 @@ void Interpolate( real CData[], const int CSize[3], const int CStart[3], const i
                   const IntPrim_t IntPrim, const ReduceOrFixMonoCoeff_t ReduceMonoCoeff,
                   const real CMag_IntIter[], const real FMag_IntIter[][NCOMP_MAG] );
 void Int_Table( const IntScheme_t IntScheme, int &NSide, int &NGhost );
-
+bool Int_HasDiscontinuity ( real CData[], int Idx, int dx, int limit); 
 
 // Miscellaneous
 template <typename T> void  Mis_Idx1D2Idx3D( const int Size[], const T Idx1D, int Idx3D[] );
