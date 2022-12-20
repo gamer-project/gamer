@@ -1277,6 +1277,15 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                amr->patch[fluSg][level][PID]->fluid[IMAG][k][j][i] = amp * SIN(phase);
                amr->patch[fluSg][level][PID]->fluid[DENS][k][j][i] = dens;
             }}}
+            for (int k=0; k<PS1; k++)  {
+            for (int j=0; j<PS1; j++)  {
+            for (int i=0; i<PS1; i++)  {
+               dens  = amr->patch[1-fluSg][level][PID]->fluid[DENS][k][j][i];
+               amp   = SQRT(dens);
+               phase = amr->patch[1-fluSg][level][PID]->fluid[PHAS][k][j][i];
+               amr->patch[1-fluSg][level][PID]->fluid[REAL][k][j][i] = amp * COS(phase);
+               amr->patch[1-fluSg][level][PID]->fluid[IMAG][k][j][i] = amp * SIN(phase);
+            }}}
          } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       } // for (int level = lv + 1; level < NLEVEL; ++level)
 
