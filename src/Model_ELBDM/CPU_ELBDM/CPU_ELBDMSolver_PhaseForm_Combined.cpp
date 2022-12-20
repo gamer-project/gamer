@@ -1,5 +1,5 @@
-#include "CUFLU.h"
 #include "Macro.h"
+#include "CUFLU.h"
 
 #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
@@ -360,7 +360,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
    const real Coeff1       = real(1.0) * dt /(dh * Eta);           // coefficient for continuity equation
    const real Coeff2       = real(0.5) * dt /(dh * dh * Eta);      // coefficient for HJ-equation
    const real FluidMinDens = FMAX(real(1e-10), MinDens);          // minimum density while computing quantum pressure and when correcting negative density 
-   const real _v           = dt * _dh; 
 
    const uint j_end        = FLU_NXT -  j_gap    ;          // last y-column to be updated
 
@@ -395,7 +394,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          uint g1, g2;                     // left and right ghost zones while updating each column
 
          uint NStep;                      // number of iterations for updating each column
-         real De_New, Ph_New, v, dt_min;
+         real De_New, Ph_New, v, dt_min, qp;
          int l, l_min, l_max;
          uint time_level; 
 
@@ -538,19 +537,11 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //          1.5.1. compute magnitude of 2 pi-jumps wherever we detect discontinuity
             CELL_LOOP(FLU_NXT, 1, 1)
             {
-               if (GRADIENT_RATIO(s_In[sj][0][PHAS], si) < .5) {
+               if ( GRADIENT_RATIO(s_In[sj][0][PHAS], si) < - real(0.0) ) {
                   s_2PI[sj][si] = UNWRAP(s_In[sj][0][PHAS][si - 1], s_In[sj][0][PHAS][si]);
-                  if ( s_2PI[sj][si] > 0) {
-                     hasChanged=true;
-                     //printf("Unwrap at si = %d for XYZ = %d, phase1 = %f, phase2 = %f and wrap is %d\n", si, XYZ, s_In[sj][0][PHAS][si - 1], s_In[sj][0][PHAS][si], s_2PI[sj][si]);
-                  }
 //                handle discontinuitites at boundary separately
                   if (si == FLU_NXT - 2) {
                      s_2PI[sj][FLU_NXT - 1] = UNWRAP(s_In[sj][0][PHAS][si], s_In[sj][0][PHAS][si + 1]);
-                     if ( s_2PI[sj][FLU_NXT - 1] > 0) {
-                        hasChanged=true;
-                        //printf("Unwrap at si = %d for XYZ = %d, phase1 = %f, phase2 = %f and wrap is %d\n", si, XYZ, s_In[sj][0][PHAS][si], s_In[sj][0][PHAS][si + 1], s_2PI[sj][si + 1]);
-                     }
                   }
                } else {
                   s_2PI[sj][si] = 0;
@@ -564,19 +555,11 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
             __syncthreads();
 #           endif // # ifdef __CUDACC_
 
-            if (hasChanged) {
-               //printf("The field at K = %d and j = %d has changed: \n", k, j); 
-//             1.5.2. add multiples of 2 pi to initial phase field to smoothen it
-               CELL_LOOP(FLU_NXT, 1, 0)
-               {
-                  for (Idx4 = 1; Idx4 <= si; ++Idx4) {
-                     s_In[sj][time_level][PHAS][si] += s_2PI[sj][Idx4] * TWOPI;
-                  }
-                  if (hasChanged) {
-                     //printf("%f ", s_In[sj][time_level][PHAS][si]);
-                  }
+            CELL_LOOP(FLU_NXT, 1, 0)
+            {
+               for (Idx4 = 1; Idx4 <= si; ++Idx4) {
+                  s_In[sj][time_level][PHAS][si] += s_2PI[sj][Idx4] * TWOPI;
                }
-               //printf("\n");
             }
 
 #           ifdef __CUDACC__
@@ -601,10 +584,10 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      s_Fm[sj][si] = UPWIND_FM(s_In[sj][time_level][DENS], v, si); 
 #                 elif ( HYBRID_SCHEME == HYBRID_FROMM )
 //                   access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
-                     s_Fm[sj][si] = FROMM_FM (s_In[sj][time_level][DENS], v, si, _v); 
+                     s_Fm[sj][si] = FROMM_FM (s_In[sj][time_level][DENS], v, si, Coeff1); 
 #                 elif ( HYBRID_SCHEME == HYBRID_MUSCL )
 //                   access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
-                     s_Fm[sj][si] = MUSCL_FM (s_In[sj][time_level][DENS], v, si, _v); 
+                     s_Fm[sj][si] = MUSCL_FM (s_In[sj][time_level][DENS], v, si, Coeff1); 
 #                 elif ( HYBRID_SCHEME == HYBRID_PPM ) 
 //                   access rho_L[i, i-1], rho_R[i, i-1], v_L[i]
                      s_Fm[sj][si] = PPM_FM   (s_In[sj][time_level][DENS], rho_L, rho_R, v_L, si, dh, dt);
@@ -614,6 +597,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //                   2.2.1 update density fluxes
                      s_Flux[sj][si] += FLUX_COEFFS[time_level] * s_Fm[sj][si];
 #                 endif
+
 
 //                2.2.2 check the velocity-dependent CFL-condition and switch to forward-Euler for updating the density wherever the CFL-condition is not met
 //                dt = 1 / MaxdS_dx * 0.5 * ELBDM_ETA * DT__VELOCITY;
@@ -629,6 +613,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      if (l_max > FLU_NXT ) l_max = FLU_NXT; 
                      for (l = l_min; l < l_max; ++l) s_Updt[sj][l] = true;
                   }
+                  
                }
 
 //             2.2 compute density logarithms
@@ -655,15 +640,18 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //                  vp  = GRADF3(s_In[sj][time_level][PHAS], si);
 //                  vm  = GRADB3(s_In[sj][time_level][PHAS], si);
 //                  osf = OSHER_SETHIAN_FLUX(vp, vm); 
+                  qp =     + real(1.0/2.0) * LAP2(s_LogRho[sj], si) \
+                           + real(1.0/4.0) * SQR(GRADC2(s_LogRho[sj], si));
 
 //                3.1 && 3.2 as one-liners for performance reasons (2.5 times faster execution of the whole solver and I do not understand why)
                   De_New = TIME_COEFFS[time_level] * Coeff1 * ( s_Fm[sj][si] - s_Fm[sj][si+1] );
                   Ph_New = TIME_COEFFS[time_level] * Coeff2 * ( \
-                           - SQR(FMIN(GRADF2(s_In[sj][time_level][PHAS], si), 0)) \
-                           - SQR(FMAX(GRADB2(s_In[sj][time_level][PHAS], si), 0)) \
-                           + real(1.0/2.0) * LAP2(s_LogRho[sj], si) \
-                           + real(1.0/4.0) * SQR(GRADC2(s_LogRho[sj], si)));
-            
+                           - SQR(FMIN(GRADF3(s_In[sj][time_level][PHAS], si), 0)) \
+                           - SQR(FMAX(GRADB3(s_In[sj][time_level][PHAS], si), 0)) \
+                           + qp);
+
+
+
 //                3.3 use N_TIME_LEVELS-stages RK-algorithm
                   for (uint tl = 0; tl < time_level + 1; ++tl) {
                      De_New += RK_COEFFS[time_level][tl] * s_In[sj][tl][DENS][si];
@@ -680,12 +668,13 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   if ( time_level < N_TIME_LEVELS - 1 ) {
                      s_In[sj][time_level+1][DENS][si] = De_New;
                      s_In[sj][time_level+1][PHAS][si] = Ph_New;    
-                  } 
+                  }
+
 //                4. write back final results to g_Fluid_In[0] or g_Fluid_Out to save memory
                   else if ( time_level == N_TIME_LEVELS - 1 ) {
 
 //                   4.1 handle the case that the velocity timestep criterion is not met -> no update
-                     if ( s_Updt[sj][si] ) {
+                     if ( s_Updt[sj][l] || De_New < 0 || De_New != De_New ) {
                         De_New = s_In[sj][0][DENS][si];
                         Ph_New = s_In[sj][0][PHAS][si];
                      }

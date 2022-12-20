@@ -537,11 +537,11 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //          1.5.1. compute magnitude of 2 pi-jumps wherever we detect discontinuity
             CELL_LOOP(FLU_NXT, 1, 1)
             {
-               if (GRADIENT_RATIO(s_In[sj][0][PHAS], si) < .5) {
+               if ( GRADIENT_RATIO(s_In[sj][0][PHAS], si) < - real(0.0) ) {
                   s_2PI[sj][si] = UNWRAP(s_In[sj][0][PHAS][si - 1], s_In[sj][0][PHAS][si]);
                   if ( s_2PI[sj][si] > 0) {
                      hasChanged=true;
-                     //printf("Unwrap at si = %d for XYZ = %d, phase1 = %f, phase2 = %f and wrap is %d\n", si, XYZ, s_In[sj][0][PHAS][si - 1], s_In[sj][0][PHAS][si], s_2PI[sj][si]);
+                     printf("Unwrap at si = %d for XYZ = %d, phase1 = %f, phase2 = %f and wrap is %d\n", si, XYZ, s_In[sj][0][PHAS][si - 1], s_In[sj][0][PHAS][si], s_2PI[sj][si]);
                   }
 //                handle discontinuitites at boundary separately
                   if (si == FLU_NXT - 2) {
@@ -690,7 +690,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   else if ( time_level == N_TIME_LEVELS - 1 ) {
 
 //                   4.1 handle the case that the velocity timestep criterion is not met -> no update
-                     if ( (FABS(qp) * real(1.0/3.0)) > real(0.1) ) {
+                     if ( De_New < 0 || De_New != De_New ) {
                         De_New = s_In[sj][0][DENS][si];
                         Ph_New = s_In[sj][0][PHAS][si];
                      }

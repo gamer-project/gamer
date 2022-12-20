@@ -109,7 +109,7 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
 
 //          only unwrap if we detect discontinuity
 #           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
-            if ( Int_HasDiscontinuity(CPtr, Idx_InC, Cdx, CStart[0]+CRange[0]+CGhost) )
+            if ( Int_HasDiscontinuity(CPtr, Idx_InC, Cdx, i == CStart[0]+CRange[0]+CGhost - 1) )
 #           endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
             CPtr[Idx_InC] = ELBDM_UnwrapPhase( CPtr[Idx_InL], CPtr[Idx_InC] );
          }
@@ -174,7 +174,7 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
             Idx_InL         = Idx_InC - Tdy;
 //          only unwrap if we detect discontinuity
 #           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
-            if ( Int_HasDiscontinuity(CPtr, Idx_InC, Tdy, CRange[1]+2*CGhost) )
+            if ( Int_HasDiscontinuity(CPtr, Idx_InC, Tdy, j == CRange[1] + 2*CGhost - 1) )
 #           endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
             TDataX[Idx_InC] = ELBDM_UnwrapPhase( TDataX[Idx_InL], TDataX[Idx_InC] );
          }
@@ -239,7 +239,7 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
             
 //          only unwrap if we detect discontinuity
 #           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
-            if ( Int_HasDiscontinuity( CPtr, Idx_InC, TdzY, CRange[2]+2*CGhost) )
+            if ( Int_HasDiscontinuity( CPtr, Idx_InC, TdzY, k == CRange[2]+2*CGhost - 1) )
 #           endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
             TDataY[Idx_InC] = ELBDM_UnwrapPhase( TDataY[Idx_InL], TDataY[Idx_InC] );
          }

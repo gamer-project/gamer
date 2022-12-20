@@ -77,6 +77,31 @@ void Int_Quadratic( real CData[], const int CSize[3], const int CStart[3], const
    int Idx_InL, Idx_InC, Idx_InR, Idx_Out;
    real LSlopeDh_4, RSlopeDh_4, SlopeDh_4, Sign, CDataMax, CDataMin;
 
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
+
+// index stride of the coarse-grid input array without ghost boundary (without ghost = woG)
+   const int CwoGdx = 1;
+   const int CwoGdy = CwoGdx*CRange[0];
+   const int CwoGdz = CwoGdy*CRange[1];
+   
+   real *TData_GlobalPhase  = NULL;
+   
+   if ( UnwrapPhase == 2)
+   {
+      TData_GlobalPhase = new real [ CRange[0] * CRange[1] * CRange[2] ];
+
+
+      for (int k=CStart[2];  k<CStart[2]+CRange[2];  k++)
+      for (int j=CStart[1];  j<CStart[1]+CRange[1];  j++)
+      for (int i=CStart[0];  i<CStart[0]+CRange[0];  i++)
+      {
+         Idx_InC      = k*Cdz + j*Cdy + i*Cdx;
+         Idx_Out      = (k - CStart[2]) * CwoGdz + (j - CStart[1]) * CwoGdy + (i - CStart[0]) *CwoGdx;
+         TData_GlobalPhase[Idx_Out] = CPtr[Idx_InC]; 
+      }
+
+   }
+#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
 
    for (int v=0; v<NComp; v++)
    {
@@ -322,10 +347,41 @@ void Int_Quadratic( real CData[], const int CSize[3], const int CStart[3], const
          }
       } // k,j,i
 
+
+#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
+   
+      if ( UnwrapPhase == 2)
+      {
+         real shift; 
+
+         for (int In_z=0, Out_z=0;  In_z<CRange[2];  In_z++, Out_z+=2)
+         for (int In_y=0, Out_y=0;  In_y<CRange[1];  In_y++, Out_y+=2)
+         for (int In_x=0, Out_x=0;  In_x<CRange[0];  In_x++, Out_x+=2)
+         {
+            Idx_InC       =  In_z*CwoGdz +  In_y*CwoGdy +  In_x*CwoGdx;
+            Idx_Out       = Out_z*   Fdz + Out_y*   Fdy + Out_x*   Fdx;
+
+            shift         = real(2 * M_PI) * ELBDM_UnwrapWindingNumber( TData_GlobalPhase[Idx_InC], FPtr[Idx_Out] );
+            FPtr[Idx_Out             ]       += shift;
+            FPtr[Idx_Out + Fdx       ]       += shift;
+            FPtr[Idx_Out + Fdy       ]       += shift;
+            FPtr[Idx_Out + Fdz       ]       += shift;
+            FPtr[Idx_Out + Fdx + Fdy ]       += shift;
+            FPtr[Idx_Out + Fdx + Fdz ]       += shift;
+            FPtr[Idx_Out + Fdy + Fdz ]       += shift;
+            FPtr[Idx_Out + Fdx + Fdy + Fdz]  += shift;
+         }
+      }
+#     endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
+
       CPtr += CDisp;
       FPtr += FDisp;
 
    } // for (int v=0; v<NComp; v++)
+
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
+   if ( UnwrapPhase == 2) delete [] TData_GlobalPhase; 
+#  endif // ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
 
    delete [] TDataX;
    delete [] TDataY;
