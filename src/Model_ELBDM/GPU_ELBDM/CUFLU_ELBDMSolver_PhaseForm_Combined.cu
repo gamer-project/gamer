@@ -578,7 +578,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //             2.1 check the velocity-dependent CFL-condition and switch to forward-Euler for updating the density wherever the CFL-condition is not met
                CELL_LOOP(FLU_NXT, g2, g2 - 1)
                {
-                  v = _dh * GRADC2 (s_In[sj][time_level][PHAS], si);
+                  v = _dh * GRADB1 (s_In[sj][time_level][PHAS], si);
 
 //                dt = 1 / MaxdS_dx * 0.5 * ELBDM_ETA * DT__VELOCITY;
 //                compute CFL condition timestep
@@ -587,8 +587,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //                if the time step adopted in solver is larger than what velocity-dependent CFL condition allows, we do not update the cell since updates would be unstable
                   if ( dt > dt_min ) {
 //                   compute how far wrong information can propagate
-                     l_min = si - 2;//(N_TIME_LEVELS - time_level) * 2;
-                     l_max = si + 3;//(N_TIME_LEVELS - time_level) * 2 + 1;
+                     l_min = si - (N_TIME_LEVELS - time_level) * 1;
+                     l_max = si + (N_TIME_LEVELS - time_level) * 1 + 1;
                      if (l_min < 0)        l_min = 0;
                      if (l_max > FLU_NXT ) l_max = FLU_NXT; 
                      for (l = l_min; l < l_max; ++l) s_RK1[sj][l] = true;
