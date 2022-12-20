@@ -539,17 +539,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
             {
                if ( GRADIENT_RATIO(s_In[sj][0][PHAS], si) < - real(0.0) ) {
                   s_2PI[sj][si] = UNWRAP(s_In[sj][0][PHAS][si - 1], s_In[sj][0][PHAS][si]);
-                  if ( s_2PI[sj][si] > 0) {
-                     hasChanged=true;
-                     printf("Unwrap at si = %d for XYZ = %d, phase1 = %f, phase2 = %f and wrap is %d\n", si, XYZ, s_In[sj][0][PHAS][si - 1], s_In[sj][0][PHAS][si], s_2PI[sj][si]);
-                  }
-//                handle discontinuitites at boundary separately
                   if (si == FLU_NXT - 2) {
                      s_2PI[sj][FLU_NXT - 1] = UNWRAP(s_In[sj][0][PHAS][si], s_In[sj][0][PHAS][si + 1]);
-                     if ( s_2PI[sj][FLU_NXT - 1] > 0) {
-                        hasChanged=true;
-                        //printf("Unwrap at si = %d for XYZ = %d, phase1 = %f, phase2 = %f and wrap is %d\n", si, XYZ, s_In[sj][0][PHAS][si], s_In[sj][0][PHAS][si + 1], s_2PI[sj][si + 1]);
-                     }
                   }
                } else {
                   s_2PI[sj][si] = 0;
@@ -563,19 +554,15 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
             __syncthreads();
 #           endif // # ifdef __CUDACC_
 
-            if (hasChanged) {
-               //printf("The field at K = %d and j = %d has changed: \n", k, j); 
-//             1.5.2. add multiples of 2 pi to initial phase field to smoothen it
-               CELL_LOOP(FLU_NXT, 1, 0)
-               {
-                  for (Idx4 = 1; Idx4 <= si; ++Idx4) {
-                     s_In[sj][time_level][PHAS][si] += s_2PI[sj][Idx4] * TWOPI;
-                  }
-                  if (hasChanged) {
-                     //printf("%f ", s_In[sj][time_level][PHAS][si]);
-                  }
+//          1.5.2. add multiples of 2 pi to initial phase field to smoothen it
+            CELL_LOOP(FLU_NXT, 1, 0)
+            {
+               for (Idx4 = 1; Idx4 <= si; ++Idx4) {
+                  s_In[sj][time_level][PHAS][si] += s_2PI[sj][Idx4] * TWOPI;
                }
-               //printf("\n");
+               if (hasChanged) {
+                  //printf("%f ", s_In[sj][time_level][PHAS][si]);
+               }
             }
 
 #           ifdef __CUDACC__
@@ -614,7 +601,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      s_Flux[sj][si] += FLUX_COEFFS[time_level] * s_Fm[sj][si];
 #                 endif
 
-/*
+
 //                2.2.2 check the velocity-dependent CFL-condition and switch to forward-Euler for updating the density wherever the CFL-condition is not met
 //                dt = 1 / MaxdS_dx * 0.5 * ELBDM_ETA * DT__VELOCITY;
 //                compute CFL condition timestep
@@ -629,7 +616,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      if (l_max > FLU_NXT ) l_max = FLU_NXT; 
                      for (l = l_min; l < l_max; ++l) s_Updt[sj][l] = true;
                   }
-                  */
+                  
                }
 
 //             2.2 compute density logarithms
@@ -690,7 +677,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   else if ( time_level == N_TIME_LEVELS - 1 ) {
 
 //                   4.1 handle the case that the velocity timestep criterion is not met -> no update
-                     if ( De_New < 0 || De_New != De_New ) {
+                     if ( FABS(qp) > 0.15 || s_Updt[sj][si] || De_New < 0 || De_New != De_New ) {
                         De_New = s_In[sj][0][DENS][si];
                         Ph_New = s_In[sj][0][PHAS][si];
                      }

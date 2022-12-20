@@ -539,7 +539,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
             {
                if ( GRADIENT_RATIO(s_In[sj][0][PHAS], si) < - real(0.0) ) {
                   s_2PI[sj][si] = UNWRAP(s_In[sj][0][PHAS][si - 1], s_In[sj][0][PHAS][si]);
-//                handle discontinuitites at boundary separately
                   if (si == FLU_NXT - 2) {
                      s_2PI[sj][FLU_NXT - 1] = UNWRAP(s_In[sj][0][PHAS][si], s_In[sj][0][PHAS][si + 1]);
                   }
@@ -555,10 +554,14 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
             __syncthreads();
 #           endif // # ifdef __CUDACC_
 
+//          1.5.2. add multiples of 2 pi to initial phase field to smoothen it
             CELL_LOOP(FLU_NXT, 1, 0)
             {
                for (Idx4 = 1; Idx4 <= si; ++Idx4) {
                   s_In[sj][time_level][PHAS][si] += s_2PI[sj][Idx4] * TWOPI;
+               }
+               if (hasChanged) {
+                  //printf("%f ", s_In[sj][time_level][PHAS][si]);
                }
             }
 
@@ -674,7 +677,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   else if ( time_level == N_TIME_LEVELS - 1 ) {
 
 //                   4.1 handle the case that the velocity timestep criterion is not met -> no update
-                     if ( s_Updt[sj][si] || De_New < 0 || De_New != De_New ) {
+                     if ( FABS(qp) > 0.15 || s_Updt[sj][si] || De_New < 0 || De_New != De_New ) {
                         De_New = s_In[sj][0][DENS][si];
                         Ph_New = s_In[sj][0][PHAS][si];
                      }
