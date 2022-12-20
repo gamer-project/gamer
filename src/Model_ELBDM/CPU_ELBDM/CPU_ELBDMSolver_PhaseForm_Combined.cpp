@@ -674,7 +674,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   else if ( time_level == N_TIME_LEVELS - 1 ) {
 
 //                   4.1 handle the case that the velocity timestep criterion is not met -> no update
-                     if ( s_Updt[sj][l] || De_New < 0 || De_New != De_New ) {
+                     if ( s_Updt[sj][si] || De_New < 0 || De_New != De_New ) {
                         De_New = s_In[sj][0][DENS][si];
                         Ph_New = s_In[sj][0][PHAS][si];
                      }
