@@ -581,7 +581,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //                compute CFL condition timestep
                   dt_min = dh / FABS(v) * real(0.5) * Eta * real(3.5) ;
                   
-//                if the time step adopted in solver is larger than what velocity-dependent CFL condition allows, we do not update the cell since updates would be unstable
+//                if the time step adopted in solver is larger than what velocity-dependent CFL condition allows, we switch to RK1 with a first-order upwind discretisation
                   if ( dt > dt_min ) {
 //                   compute how far wrong information can propagate
                      l_min = si - (N_TIME_LEVELS - time_level) * 1;
@@ -660,6 +660,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   }
 
                   qp = real(1.0/2.0) * LAP2(s_LogRho[sj], si)  + real(1.0/4.0) * SQR(GRADC2(s_LogRho[sj], si));
+                  if ( FABS(qp) > 0.15 ) s_RK1[sj][si] = true; 
 
 //                3.1 && 3.2
                   De_New = TIME_COEFFS[time_level] * Coeff1 * ( s_Fm[sj][0][si] - s_Fm[sj][0][si+1] );
@@ -688,7 +689,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   else if ( time_level == N_TIME_LEVELS - 1 ) {
 
 //                   4.1 handle the case that the velocity timestep criterion is not met -> no update
-                     if ( s_RK1[sj][si] || De_New < 0 || De_New != De_New || FABS(qp) > 0.15 ) {
+                     if ( s_RK1[sj][si] || De_New < 0 || De_New != De_New ) {
 #                       ifdef GAMER_DEBUG
                         s_RK1[sj][si] = true; 
 #                       endif // # ifdef GAMER_DEBUG
