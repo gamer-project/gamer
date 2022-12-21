@@ -1131,16 +1131,16 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : DT__PHASE (%13.7e) is not within the normal range [0...1] !!\n", DT__PHASE );
 
 #  if ( ELBDM_SCHEME == HYBRID )
-   if ( DT__HYBRID < 0.0  ||  DT__HYBRID > 0.4 )
+   if ( DT__HYBRID < 0.0  ||  DT__HYBRID > 0.49 )
       Aux_Message( stderr, "WARNING : DT__HYBRID (%14.7e) is not within the normal range [0...0.4] !!\n",
                    DT__HYBRID );
-   if ( DT__VELOCITY < 0.0  ||  DT__VELOCITY > 1.0 )
+   if ( DT__VELOCITY < 0.0  ||  DT__VELOCITY > 3.5 )
       Aux_Message( stderr, "WARNING : DT__VELOCITY (%14.7e) is not within the normal range [0...1] !!\n",
                    DT__VELOCITY );
 
       
    if ( !OPT__FIXUP_RESTRICT )
-      Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme requires the restrict operation OPT__FIXUP_RESTRICT !!\n");
+      Aux_Message( stderr, "WARNING : hybrid scheme requires the restrict operation OPT__FIXUP_RESTRICT !!\n");
 
 #  ifdef LOAD_BALANCE
    if ( !OPT__LB_EXCHANGE_FATHER )

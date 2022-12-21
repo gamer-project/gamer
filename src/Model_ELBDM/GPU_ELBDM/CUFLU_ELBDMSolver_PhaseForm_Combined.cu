@@ -392,7 +392,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          uint g1, g2;                     // left and right ghost zones while updating each column
 
          uint NStep;                      // number of iterations for updating each column
-         real De_New, Ph_New, v, dt_min, vp, vm;
+         real De_New, Ph_New, v, dt_min, qp, vp, vm;
          int l, l_min, l_max;
          uint time_level; 
 
@@ -558,9 +558,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                for (Idx4 = 1; Idx4 <= si; ++Idx4) {
                   s_In[sj][time_level][PHAS][si] += s_2PI[sj][Idx4] * TWOPI;
                }
-               if (hasChanged) {
-                  //printf("%f ", s_In[sj][time_level][PHAS][si]);
-               }
             }
 
 #           ifdef __CUDACC__
@@ -662,13 +659,11 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      vm = GRADB3(s_In[sj][time_level][PHAS], si);
                   }
 
+                  qp = real(1.0/2.0) * LAP2(s_LogRho[sj], si)  + real(1.0/4.0) * SQR(GRADC2(s_LogRho[sj], si));
+
 //                3.1 && 3.2
                   De_New = TIME_COEFFS[time_level] * Coeff1 * ( s_Fm[sj][0][si] - s_Fm[sj][0][si+1] );
-                  Ph_New = TIME_COEFFS[time_level] * Coeff2 * ( \
-                           - SQR(FMIN(vp, 0)) \
-                           - SQR(FMAX(vm, 0)) \
-                           + real(1.0/2.0) * LAP2(s_LogRho[sj], si) \
-                           + real(1.0/4.0) * SQR(GRADC2(s_LogRho[sj], si)));
+                  Ph_New = TIME_COEFFS[time_level] * Coeff2 * ( - SQR(FMIN(vp, 0)) - SQR(FMAX(vm, 0)) + qp );
 
 //                3.3 use N_TIME_LEVELS-stages RK-algorithm
                   for (uint tl = 0; tl < time_level + 1; ++tl) {
@@ -676,6 +671,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      Ph_New += RK_COEFFS[time_level][tl] * s_In[sj][tl][PHAS][si];
                   }
                   
+//                3.4 store RK1 results on time_level 0 
                   if ( time_level == 0 ) {
                      s_In[sj][N_TIME_LEVELS][DENS][si] = FMAX(De_New, FluidMinDens);
                      s_In[sj][N_TIME_LEVELS][PHAS][si] =      Ph_New;
@@ -692,12 +688,15 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   else if ( time_level == N_TIME_LEVELS - 1 ) {
 
 //                   4.1 handle the case that the velocity timestep criterion is not met -> no update
-                     if ( s_RK1[sj][si] || De_New < 0 || De_New != De_New ) {
-                        De_New = s_In[sj][N_TIME_LEVELS][DENS][si];
-                        Ph_New = s_In[sj][N_TIME_LEVELS][PHAS][si];
+                     if ( s_RK1[sj][si] || De_New < 0 || De_New != De_New || FABS(qp) > 0.15 ) {
+#                       ifdef GAMER_DEBUG
+                        s_RK1[sj][si] = true; 
+#                       endif // # ifdef GAMER_DEBUG
+                        De_New        = s_In[sj][N_TIME_LEVELS][DENS][si];
+                        Ph_New        = s_In[sj][N_TIME_LEVELS][PHAS][si];
 #                       ifdef CONSERVE_MASS
                         s_Flux[sj][si] = s_Fm[sj][1][si];
-#                       endif
+#                       endif // #ifdef CONSERVE_MASS
                      }
 
                      
