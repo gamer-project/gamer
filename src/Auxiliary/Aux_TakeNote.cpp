@@ -198,7 +198,18 @@ void Aux_TakeNote()
 #     elif ( MODEL == ELBDM )
 
 #     if ( ELBDM_SCHEME == HYBRID )
-      fprintf( Note, "HYBRID_SCHEME                   ON\n" );
+      fprintf( Note, "HYBRID_SCHEME                   ");
+#     if ( HYBRID_SCHEME == HYBRID_UPWIND )
+      fprintf( Note, "UPWIND\n" );
+#     elif ( HYBRID_SCHEME == HYBRID_FROMM )
+      fprintf( Note, "FROMM\n" );
+#     elif ( HYBRID_SCHEME == HYBRID_MUSCL )
+      fprintf( Note, "MUSCL\n" );
+#     elif ( HYBRID_SCHEME == HYBRID_PPM )
+      fprintf( Note, "PPM\n" );
+#     else 
+#     error : ERROR : unsupported MODEL !!
+#     endif 
 #     endif 
 
 #     ifdef CONSERVE_MASS
