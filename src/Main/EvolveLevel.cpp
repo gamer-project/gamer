@@ -609,7 +609,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                      Timer_GetBuf[lv][1],   TIMER_ON   );
 #     endif
 
-//    exchange phase field on level lv if level lv + 1 uses wave scheme
+//    exchange the entire phase field (not only the updated parts) in buffers on level lv if level lv + 1 uses wave scheme
 //    this is required for backward matching
 //    if available, we use the phase information from the previous time step (1 - amr->FluSg[FaLv]) for this purpose
 #     ifdef LOAD_BALANCE
@@ -818,7 +818,9 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //          store wave flag in buffer to determine whether fluid scheme data was converted to wave scheme
 #           ifdef LOAD_BALANCE
 #           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+
             bool old_wave_flag = amr->use_wave_flag[ lv_refine + 1 ]; 
+
 #           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 #           endif // # ifdef LOAD_BALANCE
 
@@ -883,12 +885,12 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             }
 
 //          exchange all fluid data on refined wave levels after switching to wave scheme
-            if ( old_wave_flag != amr->use_wave_flag[lv_refine+1] ) {
+            if ( old_wave_flag != amr->use_wave_flag[ lv_refine+1 ] ) {
                for (int i = lv_refine + 1; i <= TOP_LEVEL; ++i) {
-                  TIMING_FUNC(   Buf_GetBufferData( lv_refine,  amr->FluSg[lv_refine], NULL_INT, NULL_INT, DATA_GENERAL,
+                  TIMING_FUNC(   Buf_GetBufferData( i,     amr->FluSg[i], NULL_INT, NULL_INT, DATA_GENERAL,
                                                     _TOTAL, _NONE, PATCH_SIZE, USELB_YES ),
                                  Timer_GetBuf[lv_refine][4],   TIMER_ON   );
-                  TIMING_FUNC(   Buf_GetBufferData( lv_refine,1-amr->FluSg[lv_refine], NULL_INT, NULL_INT, DATA_GENERAL,
+                  TIMING_FUNC(   Buf_GetBufferData( i, 1 - amr->FluSg[i], NULL_INT, NULL_INT, DATA_GENERAL,
                                                     _TOTAL, _NONE, PATCH_SIZE, USELB_YES ),
                                  Timer_GetBuf[lv_refine][4],   TIMER_ON   );
                }

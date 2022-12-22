@@ -108,8 +108,7 @@ void LB_Refine( const int FaLv )
    MPI_Allreduce(&send, &recv, 1, MPI_INT, MPI_LOR, MPI_COMM_WORLD);
 
    switchNextLevelsToWaveScheme = recv;
-#  endif 
-
+# endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 // 3. get the magnetic field on the coarse-fine interfaces for the divergence-free interpolation
 // ==========================================================================================
@@ -202,12 +201,12 @@ void LB_Refine( const int FaLv )
       //Set corresponding flag
       for (int level = SonLv; level <= TOP_LEVEL; ++level) {
          int n_total = amr->NPatchComma[level][27];
-         int n_real = amr->NPatchComma[level][1];
+         int n_real  = amr->NPatchComma[level][1];
          int n_buffer = n_total - n_real;
 
 
 #        ifdef GAMER_DEBUG
-         printf("Converting level %i with %d real and %d buffer patches to wave scheme on rank %d\n\n", level, n_real, n_buffer, MPI_Rank);
+         Aux_Message( stdout, "Converting level %i with %d real and %d buffer patches to wave scheme on rank %d.\n", level, n_real, n_buffer, MPI_Rank);
 #        endif 
 
          amr->use_wave_flag[level] = true; 
@@ -271,16 +270,12 @@ void LB_Refine( const int FaLv )
             for (int k=0; k<PS1; k++)  {
             for (int j=0; j<PS1; j++)  {
             for (int i=0; i<PS1; i++)  {
-               dens  = amr->patch[fluSg][level][PID]->fluid[DENS][k][j][i];
+               dens  = amr->patch[  fluSg][level][PID]->fluid[DENS][k][j][i];
                amp   = SQRT(dens);
-               phase = amr->patch[fluSg][level][PID]->fluid[PHAS][k][j][i];
-               amr->patch[fluSg][level][PID]->fluid[DENS][k][j][i] = dens;
-               amr->patch[fluSg][level][PID]->fluid[REAL][k][j][i] = amp * COS(phase);
-               amr->patch[fluSg][level][PID]->fluid[IMAG][k][j][i] = amp * SIN(phase);
-            }}}
-            for (int k=0; k<PS1; k++)  {
-            for (int j=0; j<PS1; j++)  {
-            for (int i=0; i<PS1; i++)  {
+               phase = amr->patch[  fluSg][level][PID]->fluid[PHAS][k][j][i];
+               amr->patch[  fluSg][level][PID]->fluid[REAL][k][j][i] = amp * COS(phase);
+               amr->patch[  fluSg][level][PID]->fluid[IMAG][k][j][i] = amp * SIN(phase);
+
                dens  = amr->patch[1-fluSg][level][PID]->fluid[DENS][k][j][i];
                amp   = SQRT(dens);
                phase = amr->patch[1-fluSg][level][PID]->fluid[PHAS][k][j][i];
