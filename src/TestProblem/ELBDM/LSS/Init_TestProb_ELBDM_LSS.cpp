@@ -198,8 +198,8 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
    fluid_out[IMAG] = Im;
 #  if ( ELBDM_SCHEME == HYBRID )
    } else { // if ( amr->use_wave_flag[lv] )
-   fluid_out[DENS] = SQR( Re ) + SQR( Im );
-   fluid_out[PHAS] = SATAN2(Im, Re);
+   fluid_out[DENS] = Re;//SQR( Re ) + SQR( Im );
+   fluid_out[PHAS] = Im;//SATAN2(Im, Re);
    fluid_out[STUB] = 0.0;
    } // if ( amr->use_wave_flag[lv] ) ... else
 #  endif 
