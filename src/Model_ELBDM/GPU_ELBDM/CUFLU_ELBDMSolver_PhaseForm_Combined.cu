@@ -348,7 +348,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      real s_LogRho [][FLU_NXT],
                      real s_Fm     [][2][FLU_NXT],
                      real s_Flux   [][FLU_NXT], 
-                     bool s_RK1   [][FLU_NXT],
+                     bool s_RK1    [][FLU_NXT],
                      int  s_2PI    [][FLU_NXT],
                      const bool FinalOut,
                      const int XYZ, const real MinDens )
@@ -357,6 +357,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
    const real dh           = real(1.0)/_dh;                      // grid spacing
    const real Coeff1       = real(1.0) * dt /(dh * Eta);           // coefficient for continuity equation
    const real Coeff2       = real(0.5) * dt /(dh * dh * Eta);      // coefficient for HJ-equation
+   const real Coeff3       = dh * real(0.5) * Eta * real(3.0);     // coefficient for determining velocity timestep
    const real FluidMinDens = FMAX(real(1e-10), MinDens);          // minimum density while computing quantum pressure and when correcting negative density 
 
    const uint j_end        = FLU_NXT -  j_gap    ;          // last y-column to be updated
@@ -392,7 +393,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          uint g1, g2;                     // left and right ghost zones while updating each column
 
          uint NStep;                      // number of iterations for updating each column
-         real De_New, Ph_New, v, dt_min, qp, vp, vm;
+         real De_New, Ph_New, v, qp, vp, vm;
          int l, l_min, l_max;
          uint time_level; 
 
@@ -571,18 +572,27 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                g1 = GHOST_ZONE_PER_STAGE *   time_level       ;
                g2 = GHOST_ZONE_PER_STAGE * ( time_level + 1 ) ;         
 
+//             2.2 compute density logarithms
+               CELL_LOOP(FLU_NXT, g1 + 1, g1 + 1)
+               { 
+                  s_LogRho[sj][si] = log(FMAX(s_In[sj][time_level][DENS][si], FluidMinDens));
+               } 
+
+//             2.3 sync s_Fm, s_LogRho and s_Flux
+#              ifdef __CUDACC__ 
+               __syncthreads();
+#              endif 
 
 //             2.1 check the velocity-dependent CFL-condition and switch to forward-Euler for updating the density wherever the CFL-condition is not met
                CELL_LOOP(FLU_NXT, g2, g2 - 1)
                {
-                  v = _dh * GRADB1 (s_In[sj][time_level][PHAS], si);
-
+                  v = _dh * GRADC2 (s_In[sj][time_level][PHAS], si);
 //                dt = 1 / MaxdS_dx * 0.5 * ELBDM_ETA * DT__VELOCITY;
-//                compute CFL condition timestep
-                  dt_min = dh / FABS(v) * real(0.5) * Eta * real(3.5) ;
+//                compute CFL condition timestep and quantum pressure term
+                  qp     = real(1.0/2.0) * LAP2(s_LogRho[sj], si)  + real(1.0/4.0) * SQR(GRADC2(s_LogRho[sj], si));
                   
 //                if the time step adopted in solver is larger than what velocity-dependent CFL condition allows, we switch to RK1 with a first-order upwind discretisation
-                  if ( dt > dt_min ) {
+                  if ( dt * FABS(v)  > Coeff3 || FABS(qp) > 0.15) {
 //                   compute how far wrong information can propagate
                      l_min = si - (N_TIME_LEVELS - time_level) * 1;
                      l_max = si + (N_TIME_LEVELS - time_level) * 1 + 1;
@@ -627,11 +637,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #                 endif
                }
 
-//             2.2 compute density logarithms
-               CELL_LOOP(FLU_NXT, g1 + 1, g1 + 1)
-               { 
-                  s_LogRho[sj][si] = log(FMAX(s_In[sj][time_level][DENS][si], FluidMinDens));
-               } 
 
 //             2.3 sync s_Fm, s_LogRho and s_Flux
 #              ifdef __CUDACC__ 
@@ -651,6 +656,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //                  vp  = GRADF3(s_In[sj][time_level][PHAS], si);
 //                  vm  = GRADB3(s_In[sj][time_level][PHAS], si);
 //                  osf = OSHER_SETHIAN_FLUX(vp, vm); 
+                  qp     = real(1.0/2.0) * LAP2(s_LogRho[sj], si)  + real(1.0/4.0) * SQR(GRADC2(s_LogRho[sj], si));
+
                   if ( s_RK1[sj][si] ) {
                      vp = GRADF1(s_In[sj][time_level][PHAS], si);
                      vm = GRADB1(s_In[sj][time_level][PHAS], si);
@@ -659,8 +666,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      vm = GRADB3(s_In[sj][time_level][PHAS], si);
                   }
 
-                  qp = real(1.0/2.0) * LAP2(s_LogRho[sj], si)  + real(1.0/4.0) * SQR(GRADC2(s_LogRho[sj], si));
-                  if ( FABS(qp) > 0.15 ) s_RK1[sj][si] = true; 
 
 //                3.1 && 3.2
                   De_New = TIME_COEFFS[time_level] * Coeff1 * ( s_Fm[sj][0][si] - s_Fm[sj][0][si+1] );
