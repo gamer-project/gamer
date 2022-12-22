@@ -217,12 +217,11 @@ void LB_Refine( const int FaLv )
 
          for (int PID=0; PID<amr->NPatchComma[level][1]; PID++)
          { 
-#           ifdef GAMER_DEBUG
             if (amr->patch[fluSg][level][PID]->fluid == NULL || !amr->patch[fluSg][level][PID]->Active ) {
-               printf("Encountered NULL FLUID at PID %d where the number of real patches is %d and the total number of patches is %d \n", PID, amr->NPatchComma[level][1], amr->NPatchComma[level][27]);
-               continue;
+               Aux_Error( ERROR_INFO, "Encountered NULL PATCH IN LB_REFINE\n");
             }
             
+#           ifdef GAMER_DEBUG
 //          check for phase jumps!
             for (int k=0; k<PS1; k++)  {
             for (int j=0; j<PS1; j++)  {

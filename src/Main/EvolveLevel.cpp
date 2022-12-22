@@ -618,7 +618,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       if ( !amr->use_wave_flag[lv] && amr->use_wave_flag[lv+1] ) {
          int FaLv    = lv; 
          int FaFluSg = amr->FluSg[FaLv];
-         if ( amr->FluSgTime[FaLv][1-FaFluSg] >= 0 ) {
+         if ( amr->FluSgTime[ FaLv] [ 1 - FaFluSg ] >= 0 ) {
             FaFluSg = 1 - FaFluSg;
          }
          TIMING_FUNC(   Buf_GetBufferData( FaLv, FaFluSg, NULL_INT, NULL_INT, DATA_GENERAL,
@@ -818,7 +818,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //          store wave flag in buffer to determine whether fluid scheme data was converted to wave scheme
 #           ifdef LOAD_BALANCE
 #           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-            bool old_wave_flag = amr->use_wave_flag[lv_refine+1]; 
+            bool old_wave_flag = amr->use_wave_flag[ lv_refine + 1 ]; 
 #           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 #           endif // # ifdef LOAD_BALANCE
 
@@ -874,7 +874,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             if ( !amr->use_wave_flag[lv_refine] && amr->use_wave_flag[lv_refine+1] && OPT__CORR_AFTER_ALL_SYNC ) {
                int FaLv    = lv_refine; 
                int FaFluSg = amr->FluSg[FaLv];
-               if ( amr->FluSgTime[FaLv][1-FaFluSg] >= 0 ) {
+               if ( amr->FluSgTime[ FaLv ][ 1 - FaFluSg ] >= 0 ) {
                   FaFluSg = 1 - FaFluSg;
                }
                TIMING_FUNC(   Buf_GetBufferData( FaLv, FaFluSg, NULL_INT, NULL_INT, DATA_GENERAL,
