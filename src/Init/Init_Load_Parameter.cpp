@@ -448,6 +448,11 @@ void Init_Load_Parameter()
 
 // yt inline analysis
 #  ifdef SUPPORT_LIBYT
+   ReadPara->Add( "OPT__EXECUTE_YT_MODE",       &OPT__EXECUTE_YT_MODE,           -1,               1,             3              );
+   ReadPara->Add( "OPT__EXECUTE_YT_RESTART",    &OPT__EXECUTE_YT_RESTART,         false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "EXECUTE_YT_STEP",            &EXECUTE_YT_STEP,                -1,               NoMin_int,     NoMax_int      );
+   ReadPara->Add( "EXECUTE_YT_DT",              &EXECUTE_YT_DT,                  -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "INIT_EXECUTE_YT_ID",         &INIT_EXECUTE_YT_ID,             -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "YT_SCRIPT",                   YT_SCRIPT,                       NoDef_str,       Useless_str,   Useless_str    );
    ReadPara->Add( "YT_VERBOSE",           (int*)&YT_VERBOSE,                      1,               0,             3              );
    ReadPara->Add( "YT_FIG_BASENAME",             YT_FIG_BASENAME,                 NoDef_str,       Useless_str,   Useless_str    );

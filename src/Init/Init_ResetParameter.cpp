@@ -311,6 +311,13 @@ void Init_ResetParameter()
    else                    DumpID = INIT_DUMPID;
 
 
+#ifdef SUPPORT_LIBYT
+// initial yt inline analysis execution ID
+   if ( INIT_EXECUTE_YT_ID < 0 )  ExecuteYTID = 0;
+   else                           ExecuteYTID = INIT_EXECUTE_YT_ID;
+#endif
+
+
 // ResPower2 in the AMR_t structure
    int NBits0, NX0_TOT_Max;
 

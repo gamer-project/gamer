@@ -131,6 +131,16 @@ const OptOutputMode_t
    OUTPUT_USE_TABLE  = 3;
 
 
+#ifdef SUPPORT_LIBYT 
+// yt inline analysis execuation criteria
+typedef int OptExecuteYTMode_t;
+const OptExecuteYTMode_t
+   EXECUTE_YT_CONST_STEP = 1,
+   EXECUTE_YT_CONST_DT   = 2,
+   EXECUTE_YT_USE_TABLE  = 3;
+#endif
+
+
 // OPT__OUTPUT_PART options
 typedef int OptOutputPart_t;
 const OptOutputPart_t

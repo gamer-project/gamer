@@ -1763,6 +1763,9 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    KeyInfo.Par_NPar             = amr->Par->NPar_Active_AllRank;
    KeyInfo.Par_NAttStored       = PAR_NATT_STORED;
 #  endif
+#  ifdef SUPPORT_LIBYT
+   KeyInfo.ExecuteYTID          = ExecuteYTID;
+#  endif
 #  if ( MODEL == HYDRO )
 #  ifdef MHD
    KeyInfo.Magnetohydrodynamics = 1;
@@ -2738,6 +2741,18 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  endif
    InputPara.Opt__Ck_InputFluid      = OPT__CK_INPUT_FLUID;
 
+// libyt
+#  ifdef SUPPORT_LIBYT
+   InputPara.YT_Script               = YT_SCRIPT;
+   InputPara.YT_Verbose              = (int)YT_VERBOSE;
+   InputPara.YT_Fig_Basename         = YT_FIG_BASENAME;
+   InputPara.Init_Execute_YT_ID      = INIT_EXECUTE_YT_ID;
+   InputPara.Execute_YT_Step         = EXECUTE_YT_STEP;
+   InputPara.Execute_YT_Dt           = EXECUTE_YT_DT;
+   InputPara.Opt__Execute_YT_Restart = OPT__EXECUTE_YT_RESTART;
+   InputPara.Opt__Execute_YT_Mode    = OPT__EXECUTE_YT_MODE;
+#  endif  
+
 // flag tables
 #  if   ( MODEL == HYDRO )
    const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES ||
@@ -2841,7 +2856,7 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "CellScale",            HOFFSET(KeyInfo_t,CellScale           ), H5_TypeID_Arr_NLvInt    );
 #  if ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Magnetohydrodynamics", HOFFSET(KeyInfo_t,Magnetohydrodynamics), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "CosmicRay",            HOFFSET(KeyInfo_t,CosmicRay),            H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "CosmicRay",            HOFFSET(KeyInfo_t,CosmicRay           ), H5T_NATIVE_INT          );
 #  endif
 
    H5Tinsert( H5_TypeID, "Step",                 HOFFSET(KeyInfo_t,Step                ), H5T_NATIVE_LONG         );
@@ -2849,8 +2864,12 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "NFieldStored",         HOFFSET(KeyInfo_t,NFieldStored        ), H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "NMagStored",           HOFFSET(KeyInfo_t,NMagStored          ), H5T_NATIVE_INT          );
 #  ifdef PARTICLE
-   H5Tinsert( H5_TypeID, "Par_NPar",             HOFFSET(KeyInfo_t,Par_NPar),             H5T_NATIVE_LONG         );
+   H5Tinsert( H5_TypeID, "Par_NPar",             HOFFSET(KeyInfo_t,Par_NPar            ), H5T_NATIVE_LONG         );
    H5Tinsert( H5_TypeID, "Par_NAttStored",       HOFFSET(KeyInfo_t,Par_NAttStored      ), H5T_NATIVE_INT          );
+#  endif
+
+#  ifdef SUPPORT_LIBYT
+   H5Tinsert( H5_TypeID, "ExecuteYTID",          HOFFSET(KeyInfo_t,ExecuteYTID         ), H5T_NATIVE_INT          );
 #  endif
 
    H5Tinsert( H5_TypeID, "BoxSize",              HOFFSET(KeyInfo_t,BoxSize             ), H5_TypeID_Arr_3Double   );
@@ -3597,6 +3616,19 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Ck_DivergenceB",     HOFFSET(InputPara_t,Opt__Ck_DivergenceB    ), H5T_NATIVE_INT              );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Ck_InputFluid",      HOFFSET(InputPara_t,Opt__Ck_InputFluid     ), H5T_NATIVE_INT              );
+
+// libyt
+#  ifdef SUPPORT_LIBYT
+   H5Tinsert( H5_TypeID, "YT_Script",               HOFFSET(InputPara_t,YT_Script               ), H5_TypeID_VarStr           );
+   H5Tinsert( H5_TypeID, "YT_Verbose",              HOFFSET(InputPara_t,YT_Verbose              ), H5T_NATIVE_INT             );
+   H5Tinsert( H5_TypeID, "YT_Fig_Basename",         HOFFSET(InputPara_t,YT_Fig_Basename         ), H5_TypeID_VarStr           );
+   H5Tinsert( H5_TypeID, "Init_Execute_YT_ID",      HOFFSET(InputPara_t,Init_Execute_YT_ID      ), H5T_NATIVE_INT             );
+   H5Tinsert( H5_TypeID, "Execute_YT_Step",         HOFFSET(InputPara_t,Execute_YT_Step         ), H5T_NATIVE_INT             );
+   H5Tinsert( H5_TypeID, "Execute_YT_Dt",           HOFFSET(InputPara_t,Execute_YT_Dt           ), H5T_NATIVE_DOUBLE          );
+   H5Tinsert( H5_TypeID, "Opt__Execute_YT_Restart", HOFFSET(InputPara_t,Opt__Execute_YT_Restart ), H5T_NATIVE_INT             );
+   H5Tinsert( H5_TypeID, "Opt__Execute_YT_Mode",    HOFFSET(InputPara_t,Opt__Execute_YT_Mode    ), H5T_NATIVE_INT             );
+#  endif
+
 
 // flag tables
 #  if ( NLEVEL > 1 )

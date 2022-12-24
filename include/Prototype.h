@@ -679,6 +679,8 @@ void Par_LB_MapBuffer2RealPatch( const int lv, const int  Buff_NPatchTotal, int 
 void YT_Init( int argc, char *argv[] );
 void YT_End();
 void YT_Inline();
+void Execute_YT( const int Stage );
+void YT_Load_ExecuteTable();
 #endif // #ifdef SUPPORT_LIBYT
 
 

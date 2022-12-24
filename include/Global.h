@@ -199,10 +199,19 @@ extern ParOutputDens_t OPT__OUTPUT_PAR_DENS;
 // (2-6) yt inline analysis
 // ============================================================================================================
 #ifdef SUPPORT_LIBYT
-extern char            YT_SCRIPT[MAX_STRING];
-extern yt_verbose      YT_VERBOSE;
-extern char            YT_FIG_BASENAME[MAX_STRING];
-extern int             YT_GID_Offset[NLEVEL];
+extern char               YT_SCRIPT[MAX_STRING];
+extern yt_verbose         YT_VERBOSE;
+extern char               YT_FIG_BASENAME[MAX_STRING];
+extern int                INIT_EXECUTE_YT_ID, EXECUTE_YT_STEP;
+extern int                YT_GID_Offset[NLEVEL];
+extern int                ExecuteYTTable_NExecute;
+extern double             EXECUTE_YT_DT;
+extern double            *ExecuteYTTable;
+extern bool               OPT__EXECUTE_YT_RESTART;
+extern OptExecuteYTMode_t OPT__EXECUTE_YT_MODE;
+
+extern int                ExecuteYTID;
+extern double             ExecuteYTTime;
 #endif
 
 

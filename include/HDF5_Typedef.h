@@ -82,6 +82,10 @@ struct KeyInfo_t
    char  *GitCommit;
    long   UniqueDataID;
 
+#  ifdef SUPPORT_LIBYT
+   int    ExecuteYTID;
+#  endif
+
 }; // struct KeyInfo_t
 
 
@@ -718,6 +722,18 @@ struct InputPara_t
    int    Opt__Ck_DivergenceB;
 #  endif
    int    Opt__Ck_InputFluid;
+
+// libyt parameters 
+#ifdef SUPPORT_LIBYT
+   char  *YT_Script;
+   int    YT_Verbose;
+   char  *YT_Fig_Basename;
+   int    Init_Execute_YT_ID;
+   int    Execute_YT_Step;
+   double Execute_YT_Dt;
+   int    Opt__Execute_YT_Restart;
+   int    Opt__Execute_YT_Mode;
+#endif
 
 // flag tables
    double FlagTable_Rho         [NLEVEL-1];

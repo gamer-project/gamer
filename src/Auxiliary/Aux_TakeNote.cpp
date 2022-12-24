@@ -1325,9 +1325,14 @@ void Aux_TakeNote()
 #     ifdef SUPPORT_LIBYT
       fprintf( Note, "Parameters of YT Inline Analysis\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "YT_SCRIPT                       %s\n",      YT_SCRIPT  );
-      fprintf( Note, "YT_VERBOSE                      %d\n",      YT_VERBOSE );
-      fprintf( Note, "YT_FIG_BASENAME                 %s\n",      YT_FIG_BASENAME );
+      fprintf( Note, "OPT__EXECUTE_YT_MODE            %d\n",      OPT__EXECUTE_YT_MODE    );
+      fprintf( Note, "OPT__EXECUTE_YT_RESTART         %d\n",      OPT__EXECUTE_YT_RESTART );
+      fprintf( Note, "EXECUTE_YT_STEP                 %d\n",      EXECUTE_YT_STEP         );
+      fprintf( Note, "EXECUTE_YT_DT                   %20.14e\n", EXECUTE_YT_DT           );
+      fprintf( Note, "INIT_EXECUTE_YT_ID              %d\n",      INIT_EXECUTE_YT_ID      );
+      fprintf( Note, "YT_SCRIPT                       %s\n",      YT_SCRIPT               );
+      fprintf( Note, "YT_VERBOSE                      %d\n",      YT_VERBOSE              );
+      fprintf( Note, "YT_FIG_BASENAME                 %s\n",      YT_FIG_BASENAME         );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif

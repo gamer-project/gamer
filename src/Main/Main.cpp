@@ -186,10 +186,19 @@ ParOutputDens_t      OPT__OUTPUT_PAR_DENS;
 
 // (2-6) yt inline analysis
 #ifdef SUPPORT_LIBYT
+int                  ExecuteYTID            = 0;
+double               ExecuteYTTime          = 0.0;
+
 char                 YT_SCRIPT[MAX_STRING];
 yt_verbose           YT_VERBOSE;
 char                 YT_FIG_BASENAME[MAX_STRING];
+int                  INIT_EXECUTE_YT_ID, EXECUTE_YT_STEP;
 int                  YT_GID_Offset[NLEVEL];
+int                  ExecuteYTTable_NExecute;
+double               EXECUTE_YT_DT;
+double              *ExecuteYTTable = NULL;
+bool                 OPT__EXECUTE_YT_RESTART;
+OptExecuteYTMode_t   OPT__EXECUTE_YT_MODE;
 #endif
 
 // (2-7) Grackle
@@ -527,7 +536,7 @@ int main( int argc, char *argv[] )
 #  endif
 
 #  ifdef SUPPORT_LIBYT
-   YT_Inline();
+   Execute_YT( 0 );
 #  endif
 
 #  ifdef TIMING
@@ -610,7 +619,7 @@ int main( int argc, char *argv[] )
 //    4. perform yt inline analysis
 //    ---------------------------------------------------------------------------------------------------
 #     ifdef SUPPORT_LIBYT
-      TIMING_FUNC(   YT_Inline(),                     Timer_Main[7],   TIMER_ON   );
+      TIMING_FUNC(   Execute_YT( 1 ),                     Timer_Main[7],   TIMER_ON   );
 #     endif
 //    ---------------------------------------------------------------------------------------------------
 
@@ -703,6 +712,12 @@ int main( int argc, char *argv[] )
 // ======================================================================================================
 // output the final result
    Output_DumpData( 2 );
+
+
+// execute the final yt inline analysis
+#  ifdef SUPPORT_LIBYT
+   Execute_YT( 2 );
+#  endif
 
 
 // record the total simulation time
