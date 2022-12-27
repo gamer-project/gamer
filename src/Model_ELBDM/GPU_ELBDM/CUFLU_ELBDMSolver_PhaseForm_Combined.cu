@@ -582,7 +582,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                g2 = GHOST_ZONE_PER_STAGE * ( time_level + 1 ) ;         
 
 //             2.2 compute density logarithms
-               CELL_LOOP(FLU_NXT, g1 + 1, g1 + 1)
+               CELL_LOOP(FLU_NXT, g1, g1)
                { 
                   s_LogRho[sj][si] = log(FMAX(s_In[sj][time_level][DENS][si], FluidMinDens));
                } 
@@ -593,7 +593,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #              endif 
 
 //             2.4 check the velocity-dependent CFL-condition and switch to forward-Euler for updating the density wherever the CFL-condition is not met
-               CELL_LOOP(FLU_NXT, g2, g2 - 1)
+               CELL_LOOP(FLU_NXT, g1 + 1, g1 + 1)
                {
 //                dt = 1 / MaxdS_dx * 0.5 * ELBDM_ETA * DT__VELOCITY;
 //                compute CFL condition timestep and quantum pressure term
@@ -632,7 +632,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      s_Fm[sj][0][si] = FROMM_FM (s_In[sj][time_level][DENS], v, si, Coeff1); 
 #                 elif ( HYBRID_SCHEME == HYBRID_MUSCL )
 //                   access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
-                     s_Fm[sj][0][si] = MUSCL_FM (s_In[sj][time_level][DENS], v, si, Coeff1); 
+                     s_Fm[sj][0][si] = MUSCL_FM (s_In[sj][time_level][DENS], v, si, Coeff1);
 #                 elif ( HYBRID_SCHEME == HYBRID_PPM ) 
 //                   access rho_L[i, i-1], rho_R[i, i-1], v_L[i]
                      s_Fm[sj][0][si] = PPM_FM   (s_In[sj][time_level][DENS], rho_L, rho_R, v_L, si, dh, dt);
@@ -792,7 +792,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #              endif 
             } // for (time_level = 0; time_level < N_TIME_LEVELS; ++time_level) 
             
-//          5.3 reset the target array indices
+//          4.4 reset the target array indices
             j += NColumnOnce;
 
             if ( j >= j_end )
@@ -802,7 +802,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                j       -= __umul24( size_j, delta_k );
             }
 
-//          5.4 update remaining number of columns
+//          4.5 update remaining number of columns
             Column0     += NColumnOnce;
             NColumnOnce  = MIN( NColumnTotal - Column0, CGPU_FLU_BLOCK_SIZE_Y );
 
