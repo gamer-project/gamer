@@ -23,7 +23,7 @@ real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const do
 //                2. Mass introduced here will only be used for computing gravity (i.e., when solving the Poisson eq.)
 //                   --> It will NOT be used when solving other eqs. (e.g., hydro/MHD/Schroedinger)
 //                   --> It will NOT be stored in the output data
-//                   --> It WILL be included when computing the average density in Init_GetAverageDensity(),
+//                   --> It WILL be included when computing the average density in Poi_GetAverageDensity(),
 //                       which will then be used as DC in the periodic Poisson solver
 //                3. Enabled by the runtime option "OPT__GRAVITY_EXTRA_MASS"
 //

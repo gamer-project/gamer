@@ -1,16 +1,16 @@
 #include "GAMER.h"
 
 #ifdef GRAVITY
+
 extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,
                                                const int lv, double AuxArray[] );
-#endif
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_GetAverageDensity
-// Description :  Evaluate the average density
+// Function    :  Poi_GetAverageDensity
+// Description :  Evaluate the average density for the Poisson solver
 //
 // Note        :  1. For the Poisson solver with the periodic BC (in both physical and comoving frames,
 //                   the average density will be subtracted from the total density at each cell when
@@ -26,7 +26,7 @@ extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, c
 //
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_GetAverageDensity()
+void Poi_GetAverageDensity()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -34,17 +34,15 @@ void Init_GetAverageDensity()
 
 // check
 #  ifndef DENS
-#  error : ERROR : VARIABLE "DENS" IS NOT DEFINED IN THE FUNCTION "Init_GetAverageDensity" !!
+#  error : ERROR : VARIABLE "DENS" IS NOT DEFINED IN THE FUNCTION "Poi_GetAverageDensity" !!
 #  endif
 
    if ( !OPT__INIT_RESTRICT  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : option \"%s\" is NOT turned on when evaluating the average density !!\n",
                    "OPT__INIT_RESTRICT" );
 
-#  ifdef GRAVITY
    if ( OPT__GRAVITY_EXTRA_MASS  &&  Poi_AddExtraMassForGravity_Ptr == NULL )
       Aux_Error( ERROR_INFO, "Poi_AddExtraMassForGravity_Ptr == NULL for OPT__GRAVITY_EXTRA_MASS !!\n" );
-#  endif
 
 
 // initialize it to zero
@@ -97,7 +95,6 @@ void Init_GetAverageDensity()
       for (int i=0; i<PS1; i++)
          Rho_Local[PID] += (double)amr->patch[ amr->FluSg[0] ][0][PID]->fluid[DENS][k][j][i];
 
-#     ifdef GRAVITY
 //    add extra mass source for gravity if required
       if ( OPT__GRAVITY_EXTRA_MASS )
       {
@@ -114,7 +111,6 @@ void Init_GetAverageDensity()
             Rho_Local[PID] += (double)Poi_AddExtraMassForGravity_Ptr( x, y, z, Time[0], 0, NULL );
          }}}
       }
-#     endif
    } // for (int PID=0; PID<amr->NPatchComma[0][1]; PID++)
 
 // gather data
@@ -215,7 +211,6 @@ void Init_GetAverageDensity()
       for (int i=0; i<PATCH_SIZE; i++)
          AveDensity_Init_local += amr->patch[ amr->FluSg[0] ][0][PID]->fluid[DENS][k][j][i];
 
-#     ifdef GRAVITY
 //    add extra mass source for gravity if required
       if ( OPT__GRAVITY_EXTRA_MASS )
       {
@@ -232,7 +227,6 @@ void Init_GetAverageDensity()
             AveDensity_Init_local += (double)Poi_AddExtraMassForGravity_Ptr( x, y, z, Time[0], 0, NULL );
          }}}
       }
-#     endif
    } // for (int PID=0; PID<amr->NPatchComma[0][1]; PID++)
 
 // sum over all MPI ranks
@@ -282,4 +276,8 @@ void Init_GetAverageDensity()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_GetAverageDensity
+} // FUNCTION : Poi_GetAverageDensity
+
+
+
+#endif // #ifdef GRAVITY

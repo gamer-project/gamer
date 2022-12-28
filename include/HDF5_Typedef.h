@@ -72,7 +72,9 @@ struct KeyInfo_t
    double Time       [NLEVEL];
    double CellSize   [NLEVEL];      // amr->dh[lv]
    double dTime_AllLv[NLEVEL];
+#  ifdef GRAVITY
    double AveDens_Init;             // AveDensity_Init
+#  endif
 
    char  *CodeVersion;
    char  *DumpWallTime;

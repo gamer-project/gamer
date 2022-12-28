@@ -249,10 +249,6 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
-// evaluate the initial average density if it is not set yet (may already be set in Init_ByRestart)
-   if ( AveDensity_Init <= 0.0 )    Init_GetAverageDensity();
-
-
 #  ifdef GRAVITY
    if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
    {
@@ -260,6 +256,10 @@ void Init_GAMER( int *argc, char ***argv )
 //    initialize the k-space Green's function for the isolated BC.
       if ( OPT__SELF_GRAVITY  &&  OPT__BC_POT == BC_POT_ISOLATED )    Init_GreenFuncK();
 #     endif
+
+
+//    evaluate the initial average density if it is not set yet (may already be set in Init_ByRestart)
+      if ( AveDensity_Init <= 0.0 )    Poi_GetAverageDensity();
 
 
 //    evaluate the gravitational potential

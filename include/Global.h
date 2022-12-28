@@ -72,7 +72,6 @@ extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__FREEZE_FLUID, OPT
 extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 extern bool       OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
 extern bool       OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID;
-extern double     AveDensity_Init;     // initial average mass density (in all levels)
 
 extern UM_IC_Format_t     OPT__UM_IC_FORMAT;
 extern TestProbID_t       TESTPROB_ID;
@@ -133,6 +132,7 @@ extern double           ELBDM_LAMBDA;
 // (2-2) self-gravity
 // ============================================================================================================
 #ifdef GRAVITY
+extern double        AveDensity_Init;     // initial average mass density (in all levels)
 extern int           Pot_ParaBuf;         // number of parallel buffers to exchange potential for the
                                           // Poisson/Gravity solvers and the potential refinement
 extern int           Rho_ParaBuf;         // number of parallel buffers to exchange density for the Poisson solver
