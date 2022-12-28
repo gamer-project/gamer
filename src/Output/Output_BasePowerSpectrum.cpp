@@ -65,16 +65,16 @@ void Output_BasePowerSpectrum( const char *FileName )
    const int NRecvSlice = MIN( List_z_start[MPI_Rank]+local_nz, NX0_TOT[2] ) - MIN( List_z_start[MPI_Rank], NX0_TOT[2] );
 
    double *PS_total     = NULL;
-   real   *RhoK         = new real [ total_local_size ];                         // array storing both density and potential
-   real   *SendBuf      = new real [ amr->NPatchComma[0][1]*CUBE(PS1) ];         // MPI send buffer for density and potential
-   real   *RecvBuf      = new real [ NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];         // MPI recv buffer for density and potentia
+   real   *RhoK         = new real [ total_local_size ];                         // array storing density
+   real   *SendBuf      = new real [ amr->NPatchComma[0][1]*CUBE(PS1) ];         // MPI send buffer for density
+   real   *RecvBuf      = new real [ NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];         // MPI recv buffer for density
    long   *SendBuf_SIdx = new long [ amr->NPatchComma[0][1]*PS1 ];               // MPI send buffer for 1D coordinate in slab
    long   *RecvBuf_SIdx = new long [ NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/SQR(PS1) ];// MPI recv buffer for 1D coordinate in slab
 
    int  *List_PID    [MPI_NRank];   // PID of each patch slice sent to each rank
    int  *List_k      [MPI_NRank];   // local z coordinate of each patch slice sent to each rank
-   int   List_NSend  [MPI_NRank];   // size of data (density/potential) sent to each rank
-   int   List_NRecv  [MPI_NRank];   // size of data (density/potential) received from each rank
+   int   List_NSend  [MPI_NRank];   // size of data (density) sent to each rank
+   int   List_NRecv  [MPI_NRank];   // size of data (density) received from each rank
 
    if ( MPI_Rank == 0 )    PS_total = new double [Nx_Padded];
 
@@ -157,7 +157,7 @@ void Output_BasePowerSpectrum( const char *FileName )
 //
 // Note        :  Invoked by the function "Output_BasePowerSpectrum"
 //
-// Parameter   :  RhoK        : Array storing the input density and output potential
+// Parameter   :  RhoK        : Array storing the input density
 //                j_start     : Starting j index
 //                dj          : Size of array in the j (y) direction after the forward FFT
 //                PS_total    : Power spectrum summed over all MPI ranks
