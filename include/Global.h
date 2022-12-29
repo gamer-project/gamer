@@ -210,6 +210,7 @@ extern double            *ExecuteYTTable;
 extern bool               OPT__EXECUTE_YT_RESTART;
 extern OptExecuteYTMode_t OPT__EXECUTE_YT_MODE;
 
+extern bool               FirstExecuteYT;
 extern int                ExecuteYTID;
 extern double             ExecuteYTTime;
 #endif

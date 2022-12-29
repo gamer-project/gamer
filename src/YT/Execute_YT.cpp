@@ -135,6 +135,8 @@ void Execute_YT( const int Stage )
 // execute yt inline analysis
    if ( ExecuteYT )
    {
+      if ( FirstExecuteYT ) FirstExecuteYT = !FirstExecuteYT;  // change the first execution flag to false
+
       YT_Inline();
 
       Write_ExecuteYTRecord();

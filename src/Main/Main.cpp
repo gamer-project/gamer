@@ -186,6 +186,7 @@ ParOutputDens_t      OPT__OUTPUT_PAR_DENS;
 
 // (2-6) yt inline analysis
 #ifdef SUPPORT_LIBYT
+bool                 FirstExecuteYT         = true;
 int                  ExecuteYTID            = 0;
 double               ExecuteYTTime          = 0.0;
 
@@ -591,7 +592,15 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 
 
-//    3. output data and execute auxiliary functions
+//    3. perform yt inline analysis
+//    ---------------------------------------------------------------------------------------------------
+#     ifdef SUPPORT_LIBYT
+      TIMING_FUNC(   Execute_YT( 1 ),                     Timer_Main[7],   TIMER_ON   );
+#     endif
+//    ---------------------------------------------------------------------------------------------------
+
+
+//    4. output data and execute auxiliary functions
 //    ---------------------------------------------------------------------------------------------------
       TIMING_FUNC(   Output_DumpData( 1 ),            Timer_Main[3],   TIMER_ON   );
 
@@ -613,14 +622,6 @@ int main( int argc, char *argv[] )
 #     endif
 
       TIMING_FUNC(   Aux_Check(),                     Timer_Main[4],   TIMER_ON   );
-//    ---------------------------------------------------------------------------------------------------
-
-
-//    4. perform yt inline analysis
-//    ---------------------------------------------------------------------------------------------------
-#     ifdef SUPPORT_LIBYT
-      TIMING_FUNC(   Execute_YT( 1 ),                     Timer_Main[7],   TIMER_ON   );
-#     endif
 //    ---------------------------------------------------------------------------------------------------
 
 
@@ -710,14 +711,14 @@ int main( int argc, char *argv[] )
 
 // termination
 // ======================================================================================================
-// output the final result
-   Output_DumpData( 2 );
-
-
 // execute the final yt inline analysis
 #  ifdef SUPPORT_LIBYT
    Execute_YT( 2 );
 #  endif
+
+
+// output the final result
+   Output_DumpData( 2 );
 
 
 // record the total simulation time

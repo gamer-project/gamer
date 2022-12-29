@@ -1764,7 +1764,8 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    KeyInfo.Par_NAttStored       = PAR_NATT_STORED;
 #  endif
 #  ifdef SUPPORT_LIBYT
-   KeyInfo.ExecuteYTID          = ExecuteYTID;
+   if   ( FirstExecuteYT )  KeyInfo.ExecuteYTID = ExecuteYTID;     // If inline analysis hasn't been executed, no need to subtract 1 
+   else                     KeyInfo.ExecuteYTID = ExecuteYTID - 1; // ExecuteYTID is always larger by 1 then the real execution index if inline analysis has ever been executed, due to ExecuteYTID++ in YT/ExecuteYT.cpp
 #  endif
 #  if ( MODEL == HYDRO )
 #  ifdef MHD
