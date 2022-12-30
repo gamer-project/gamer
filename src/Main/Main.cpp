@@ -516,8 +516,6 @@ int main( int argc, char *argv[] )
 #     endif
    }
 
-   Output_DumpData( 0 );
-
    if ( OPT__PATCH_COUNT > 0 )            Aux_Record_PatchCount();
    if ( OPT__RECORD_MEMORY )              Aux_GetMemInfo();
    if ( OPT__RECORD_USER ) {
@@ -535,6 +533,8 @@ int main( int argc, char *argv[] )
 #  ifdef TIMING
    Aux_ResetTimer();
 #  endif
+
+   Output_DumpData( 0 );
 
 #  ifdef SUPPORT_LIBYT
    Execute_YT( 0 );
