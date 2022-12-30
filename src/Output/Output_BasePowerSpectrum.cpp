@@ -256,7 +256,7 @@ void GetBasePowerSpectrum( real *RhoK, const int j_start, const int dj, double *
 
 // normalization
    double Coeff;
-   double SQRAveRho;
+   double AveRho;
    double Norm;
 
 #  ifdef DIMENSIONLESS_FORM
@@ -266,11 +266,9 @@ void GetBasePowerSpectrum( real *RhoK, const int j_start, const int dj, double *
 
    if ( MPI_Rank == 0 )
    {
-//    normalization coefficient
-      Coeff     = amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] / SQR( (double)Nx*(double)Ny*(double)Nz );
-      SQRAveRho = (PS_total[0]/(double)Count_total[0])*Coeff;  // SQR(AveRho) from DC mode of FFT
-      Coeff    /= SQRAveRho;                                   // SQR(AveRho) accounts for Delta=Rho/AveRho
-                                                               // equivalent to Coeff = (double)Count_total[0]/PS_total[0]
+//    normalization: SQR(AveRho) accounts for Delta=Rho/AveRho
+      AveRho = SQRT(PS_total[0]/(double)Count_total[0]) / ( (double)Nx*(double)Ny*(double)Nz );  // from DC mode of FFT
+      Coeff  = amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] / SQR( (double)Nx*(double)Ny*(double)Nz*AveRho );
 
       for (int b=0; b<Nx_Padded; b++)
       {
