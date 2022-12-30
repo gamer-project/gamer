@@ -76,12 +76,6 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif // #ifdef GPU
 
 
-//// initialize yt inline analysis
-//#  ifdef SUPPORT_LIBYT
-//   YT_Init( *argc, *argv );
-//#  endif
-
-
 // initialize Grackle
 #  ifdef SUPPORT_GRACKLE
    if ( GRACKLE_ACTIVATE )    Grackle_Init();
