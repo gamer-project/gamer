@@ -6,7 +6,7 @@
 //#define DIMENSIONLESS_FORM
 
 
-static void GetBasePowerSpectrum( real *RhoK, const int j_start, const int dj, double *PS_total );
+static void GetBasePowerSpectrum( real *RhoK, const int j_start, const int dj, double *PS_total, double *NormDC );
 
 #ifdef SERIAL
 extern rfftwnd_plan     FFTW_Plan_PS;
@@ -106,7 +106,8 @@ void Output_BasePowerSpectrum( const char *FileName )
 
 
 // 5. evaluate the base-level power spectrum by FFT
-   GetBasePowerSpectrum( RhoK, local_y_start_after_transpose, local_ny_after_transpose, PS_total );
+   double NormDC;  // to record the FFT DC value used for normalization
+   GetBasePowerSpectrum( RhoK, local_y_start_after_transpose, local_ny_after_transpose, PS_total, &NormDC );
 
 
 // 6. output the power spectrum
@@ -120,7 +121,8 @@ void Output_BasePowerSpectrum( const char *FileName )
       const double WaveK0 = 2.0*M_PI/amr->BoxSize[0];
       FILE *File = fopen( FileName, "w" );
 
-      fprintf( File, "%13s%4s%13s\n", "k", "", "Power" );
+      fprintf( File, "%13s%4s%13s", "k", "", "Power" );
+      fprintf( File, "  ## average density (DC) used for normalization = %14.7e ##\n", NormDC );
 
 //    DC mode is not output
       for (int b=1; b<Nx_Padded; b++)     fprintf( File, "%13.6e%4s%13.6e\n", WaveK0*b, "", PS_total[b] );
@@ -161,10 +163,11 @@ void Output_BasePowerSpectrum( const char *FileName )
 //                j_start     : Starting j index
 //                dj          : Size of array in the j (y) direction after the forward FFT
 //                PS_total    : Power spectrum summed over all MPI ranks
+//                NormDC      : Record of the average (DC) value used for normalization of power spectrum
 //
-// Return      :  PS_total
+// Return      :  PS_total, NormDC
 //-------------------------------------------------------------------------------------------------------
-void GetBasePowerSpectrum( real *RhoK, const int j_start, const int dj, double *PS_total )
+void GetBasePowerSpectrum( real *RhoK, const int j_start, const int dj, double *PS_total, double *NormDC )
 {
 
 // check
@@ -284,6 +287,8 @@ void GetBasePowerSpectrum( real *RhoK, const int j_start, const int dj, double *
 #        endif
          PS_total[b] *= Norm;
       }
+
+      *NormDC = AveRho;
    }
 
 } // FUNCTION : GetBasePowerSpectrum
