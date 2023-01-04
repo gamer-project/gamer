@@ -121,8 +121,9 @@ void Output_BasePowerSpectrum( const char *FileName )
       const double WaveK0 = 2.0*M_PI/amr->BoxSize[0];
       FILE *File = fopen( FileName, "w" );
 
-      fprintf( File, "%13s%4s%13s", "k", "", "Power" );
-      fprintf( File, "  ## average density (DC) used for normalization = %14.7e ##\n", NormDC );
+      fprintf( File, "# average density (DC) used for normalization = %13.7e\n", NormDC );
+      fprintf( File, "\n" );
+      fprintf( File, "#%12s%4s%13s\n", "k", "", "Power" );
 
 //    DC mode is not output
       for (int b=1; b<Nx_Padded; b++)     fprintf( File, "%13.6e%4s%13.6e\n", WaveK0*b, "", PS_total[b] );
