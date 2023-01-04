@@ -107,7 +107,7 @@ void End_FFTW()
    rfftwnd_destroy_plan    ( FFTW_Plan_Poi_Inv );
 #  endif
 
-#  else
+#  else // #ifdef SERIAL
    rfftwnd_mpi_destroy_plan( FFTW_Plan_PS      );
 
 #  ifdef GRAVITY
@@ -115,7 +115,7 @@ void End_FFTW()
    rfftwnd_mpi_destroy_plan( FFTW_Plan_Poi_Inv );
 #  endif
 
-#  endif
+#  endif // #ifdef SERIAL ... else ...
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 

@@ -224,7 +224,7 @@ void Slab2Patch_Pot( const real *RhoK, real *SendBuf, real *RecvBuf, const int S
                      int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
                      const int NSendSlice );
 #endif
-#endif
+#endif // #ifdef SUPPORT_FFTW
 
 
 // Interpolation
