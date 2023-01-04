@@ -117,9 +117,11 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 //    do not need to calculate the gravitational potential if self-gravity is disabled
       if ( UsePot )
       {
+#        ifdef SUPPORT_FFTW
          if ( OPT__SELF_GRAVITY )
          TIMING_FUNC(   CPU_PoissonSolver_FFT( Poi_Coeff, SaveSg_Pot, TimeNew ),
                         Timer_Gra_Advance[lv],   Timing   );
+#        endif
 
          if ( OPT__EXT_POT )
          TIMING_FUNC(   CPU_ExtPotSolver_BaseLevel( CPUExtPot_Ptr, ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int,

@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2455)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2456)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -228,6 +228,7 @@ Procedure for outputting new variables:
 //                                             AUTO_REDUCE_INT_MONO_FACTOR, AUTO_REDUCE_INT_MONO_MIN,
 //                                             INT_MONO_COEFF_B
 //                2455 : 2022/11/04 --> output REFINE_NLEVEL
+//                2456 : 2022/12/15 --> output SUPPORT_FFTW
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1733,7 +1734,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2455;
+   KeyInfo.FormatVersion        = 2456;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1922,6 +1923,12 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.SupportGSL             = 1;
 #  else
    Makefile.SupportGSL             = 0;
+#  endif
+
+#  ifdef SUPPORT_FFTW
+   Makefile.SupportFFTW            = 1;
+#  else
+   Makefile.SupportFFTW            = 0;
 #  endif
 
 #  ifdef SUPPORT_LIBYT
@@ -2914,6 +2921,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Laohu",                  HOFFSET(Makefile_t,Laohu                  ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportHDF5",            HOFFSET(Makefile_t,SupportHDF5            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportGSL",             HOFFSET(Makefile_t,SupportGSL             ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "SupportFFTW",            HOFFSET(Makefile_t,SupportFFTW            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportLibYT",           HOFFSET(Makefile_t,SupportLibYT           ), H5T_NATIVE_INT );
 #  ifdef SUPPORT_LIBYT
    H5Tinsert( H5_TypeID, "LibYTUsePatchGroup",     HOFFSET(Makefile_t,LibYTUsePatchGroup     ), H5T_NATIVE_INT );

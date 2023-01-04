@@ -25,7 +25,7 @@
 #  include <omp.h>
 #endif
 
-#ifdef GRAVITY
+#ifdef SUPPORT_FFTW
 #  ifdef FLOAT8
 #     ifdef SERIAL
 #        include <drfftw.h>
