@@ -218,7 +218,7 @@ void Init_FFTW();
 void Patch2Slab_Rho( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf_SIdx, long *RecvBuf_SIdx,
                      int **List_PID, int **List_k, int *List_NSend_Rho, int *List_NRecv_Rho,
                      const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
-                     const double PrepTime );
+                     const double PrepTime, const bool AddExtraMass );
 #ifdef GRAVITY
 void Slab2Patch_Pot( const real *RhoK, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
                      int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],

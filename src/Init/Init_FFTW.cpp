@@ -141,17 +141,18 @@ void End_FFTW()
 //                FFT_Size       : Size of the FFT operation including the zero-padding regions
 //                NRecvSlice     : Total number of z slices received from other ranks (could be zero in the isolated BC)
 //                PrepTime       : Physical time for preparing the density field
+//                AddExtraMass   : Adding an extra density field for computing gravitational potential only
 //-------------------------------------------------------------------------------------------------------
 void Patch2Slab_Rho( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf_SIdx, long *RecvBuf_SIdx,
                      int **List_PID, int **List_k, int *List_NSend_Rho, int *List_NRecv_Rho,
                      const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
-                     const double PrepTime )
+                     const double PrepTime, const bool AddExtraMass )
 {
 
 #  ifdef GRAVITY
 // check
-   if ( OPT__GRAVITY_EXTRA_MASS  &&  Poi_AddExtraMassForGravity_Ptr == NULL )
-      Aux_Error( ERROR_INFO, "Poi_AddExtraMassForGravity_Ptr == NULL for OPT__GRAVITY_EXTRA_MASS !!\n" );
+   if ( AddExtraMass  &&  Poi_AddExtraMassForGravity_Ptr == NULL )
+      Aux_Error( ERROR_INFO, "Poi_AddExtraMassForGravity_Ptr == NULL for AddExtraMass !!\n" );
 #  endif // GRAVITY
 
 #  ifdef GAMER_DEBUG
@@ -220,7 +221,7 @@ void Patch2Slab_Rho( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *Sen
 
 #     ifdef GRAVITY
 //    add extra mass source for gravity if required
-      if ( OPT__GRAVITY_EXTRA_MASS )
+      if ( AddExtraMass )
       {
          const double dh = amr->dh[0];
 
