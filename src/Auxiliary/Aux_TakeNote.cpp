@@ -356,6 +356,12 @@ void Aux_TakeNote()
       fprintf( Note, "SUPPORT_GSL                     OFF\n" );
 #     endif
 
+#     ifdef SUPPORT_FFTW
+      fprintf( Note, "SUPPORT_FFTW                    ON\n" );
+#     else
+      fprintf( Note, "SUPPORT_FFTW                    OFF\n" );
+#     endif
+
 #     ifdef SUPPORT_LIBYT
       fprintf( Note, "SUPPORT_LIBYT                   ON\n" );
 #     else

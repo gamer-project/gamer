@@ -116,6 +116,7 @@ struct Makefile_t
    int Laohu;
    int SupportHDF5;
    int SupportGSL;
+   int SupportFFTW;
    int SupportLibYT;
 #  ifdef SUPPORT_LIBYT
    int LibYTUsePatchGroup;
