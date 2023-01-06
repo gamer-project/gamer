@@ -4,7 +4,7 @@
 
 
 
-static void Psi_Advance_FFT( real *PsiR, real *PsiI, real *PsiD, const int j_start, const int dj, const int PsiK_Size, const real dt )
+static void Psi_Advance_FFT( real *PsiR, real *PsiI, real *PsiD, const int j_start, const int dj, const int PsiK_Size, const real dt );
 
 #ifdef SERIAL
 extern fftwnd_plan     FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;
