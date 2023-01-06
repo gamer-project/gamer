@@ -1076,6 +1076,11 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "\"%s\" does NOT support \"%s\" !!\n", "ELBDM_REMOVE_MOTION_CM", "BITWISE_REPRODUCIBILITY" );
 #  endif
 
+#  ifndef SUPPORT_FFTW
+   if ( ELBDM_BASE_SPECTRAL )
+      Aux_Error( ERROR_INFO, "SUPPORT_FFTW must be enabled in the makefile when ELBDM_BASE_SPECTRAL is on !!\n" );
+#  endif
+
 
 // warnings
 // ------------------------------
