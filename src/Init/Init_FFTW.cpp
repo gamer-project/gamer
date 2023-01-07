@@ -615,13 +615,13 @@ void Slab2Patch_Pot( const real *RhoK, real *SendBuf, real *RecvBuf, const int S
 //                local_nz       : Slab thickness of this MPI rank
 //                FFT_Size       : Size of the FFT operation
 //                NRecvSlice     : Total number of z slices received from other ranks
-//                Time           : Physical time for preparing the wavefunction
+//                PrepTime       : Physical time for preparing the wavefunction
 //                Target         : Target variable to be prepared (REAL or IMAG or DENS)
 //-------------------------------------------------------------------------------------------------------
 void Patch2Slab_Psi( real *Psi, real *SendBuf_Psi, real *RecvBuf_Psi, long *SendBuf_SIdx, long *RecvBuf_SIdx,
                      int **List_PID, int **List_k, int *List_NSend_Psi, int *List_NRecv_Psi,
                      const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
-                     const double Time, const int Target )
+                     const double PrepTime, const int Target )
 {
 
 // check
@@ -655,11 +655,8 @@ void Patch2Slab_Psi( real *Psi, real *SendBuf_Psi, real *RecvBuf_Psi, long *Send
    for (int r=0; r<MPI_NRank; r++)
    {
       MemSize        [r] = MemUnit;
-      if ( Target == REAL  ) // REAL is the first one to use them
-      {
-         List_PID    [r] = (int* )malloc( MemSize[r]*sizeof(int)         );
-         List_k      [r] = (int* )malloc( MemSize[r]*sizeof(int)         );
-      }
+      List_PID       [r] = (int* )malloc( MemSize[r]*sizeof(int)         );
+      List_k         [r] = (int* )malloc( MemSize[r]*sizeof(int)         );
       TempBuf_SIdx   [r] = (long*)malloc( MemSize[r]*sizeof(long)        );
       TempBuf_Psi    [r] = (real*)malloc( MemSize[r]*sizeof(real)*PSSize );
       List_NSend_SIdx[r] = 0;
@@ -684,15 +681,15 @@ void Patch2Slab_Psi( real *Psi, real *SendBuf_Psi, real *RecvBuf_Psi, long *Send
    for (int PID0=0; PID0<amr->NPatchComma[0][1]; PID0+=8)
    {
       if ( Target ==  REAL  )
-         Prepare_PatchData( 0, Time, Psi_prep[0][0][0], NULL, GhostSize, NPG, &PID0, _REAL, _NONE,
+         Prepare_PatchData( 0, PrepTime, Psi_prep[0][0][0], NULL, GhostSize, NPG, &PID0, _REAL, _NONE,
                             IntScheme, INT_NONE, UNIT_PATCH, NSide_None, IntPhase_No, OPT__BC_FLU, PotBC_None,
                             MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
       else if ( Target == IMAG  )
-         Prepare_PatchData( 0, Time, Psi_prep[0][0][0], NULL, GhostSize, NPG, &PID0, _IMAG, _NONE,
+         Prepare_PatchData( 0, PrepTime, Psi_prep[0][0][0], NULL, GhostSize, NPG, &PID0, _IMAG, _NONE,
                             IntScheme, INT_NONE, UNIT_PATCH, NSide_None, IntPhase_No, OPT__BC_FLU, PotBC_None,
                             MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
       else if ( Target == DENS  )
-         Prepare_PatchData( 0, Time, Psi_prep[0][0][0], NULL, GhostSize, NPG, &PID0, _DENS, _NONE,
+         Prepare_PatchData( 0, PrepTime, Psi_prep[0][0][0], NULL, GhostSize, NPG, &PID0, _DENS, _NONE,
                             IntScheme, INT_NONE, UNIT_PATCH, NSide_None, IntPhase_No, OPT__BC_FLU, PotBC_None,
                             MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
@@ -719,21 +716,15 @@ void Patch2Slab_Psi( real *Psi, real *SendBuf_Psi, real *RecvBuf_Psi, long *Send
             if ( List_NSend_SIdx[TRank] >= MemSize[TRank] )
             {
                MemSize     [TRank] += MemUnit;
-               if ( Target == REAL  ) // REAL is the first one to use them
-               {
-                  List_PID [TRank]  = (int* )realloc( List_PID    [TRank], MemSize[TRank]*sizeof(int)         );
-                  List_k   [TRank]  = (int* )realloc( List_k      [TRank], MemSize[TRank]*sizeof(int)         );
-               }
+               List_PID    [TRank]  = (int* )realloc( List_PID    [TRank], MemSize[TRank]*sizeof(int)         );
+               List_k      [TRank]  = (int* )realloc( List_k      [TRank], MemSize[TRank]*sizeof(int)         );
                TempBuf_SIdx[TRank]  = (long*)realloc( TempBuf_SIdx[TRank], MemSize[TRank]*sizeof(long)        );
                TempBuf_Psi [TRank]  = (real*)realloc( TempBuf_Psi [TRank], MemSize[TRank]*sizeof(real)*PSSize );
             }
 
 //          record list
-            if ( Target == REAL  ) // REAL is the first one to use them
-            {
-               List_PID [TRank][ List_NSend_SIdx[TRank] ] = PID;
-               List_k   [TRank][ List_NSend_SIdx[TRank] ] = k;
-            }
+            List_PID    [TRank][ List_NSend_SIdx[TRank] ] = PID;
+            List_k      [TRank][ List_NSend_SIdx[TRank] ] = k;
             TempBuf_SIdx[TRank][ List_NSend_SIdx[TRank] ] = SIdx;
 
 //          store data
@@ -945,13 +936,10 @@ void Slab2Patch_Psi( const real *Psi, real *SendBuf, real *RecvBuf, const int Sa
 
 
 // free memory
-   if ( Target == DENS  ) // DENS is the last one to use them
+   for (int r=0; r<MPI_NRank; r++)
    {
-      for (int r=0; r<MPI_NRank; r++)
-      {
-         free( List_PID[r] );
-         free( List_k  [r] );
-      }
+      free( List_PID[r] );
+      free( List_k  [r] );
    }
 
 } // FUNCTION : Slab2Patch_Psi

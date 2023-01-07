@@ -130,10 +130,10 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, real *PsiD, const int j_start, con
 //                2. Invoked by Flu_AdvanceDt()
 //
 // Parameter   :  dt       : Time interval to advance solution
-//                Time     : Physical time for preparing the wavefunction
+//                PrepTime : Physical time for preparing the wavefunction
 //                SaveSg   : Sandglass to store the updated data
 //-------------------------------------------------------------------------------------------------------
-void CPU_ELBDMSolver_FFT( const real dt, const double Time, const int SaveSg )
+void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg )
 {
    if ( MPI_Rank == 0 ) Aux_Message( stdout, "ELBDM_BASE_SPECTRAL is working.\n" ); //-----debug only-----
 // determine the FFT size
@@ -180,19 +180,23 @@ void CPU_ELBDMSolver_FFT( const real dt, const double Time, const int SaveSg )
    long *SendBuf_SIdx = new long [ amr->NPatchComma[0][1]*PS1 ];                 // MPI send buffer for 1D coordinate in slab
    long *RecvBuf_SIdx = new long [ NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/SQR(PS1) ];  // MPI recv buffer for 1D coordinate in slab
 
-   int  *List_PID    [MPI_NRank];   // PID of each patch slice sent to each rank
-   int  *List_k      [MPI_NRank];   // local z coordinate of each patch slice sent to each rank
+   int  *List_PID_R  [MPI_NRank];   // PID of each patch slice sent to each rank for the real part
+   int  *List_k_R    [MPI_NRank];   // local z coordinate of each patch slice sent to each rank for the real part
+   int  *List_PID_I  [MPI_NRank];   // PID of each patch slice sent to each rank for the imag part
+   int  *List_k_I    [MPI_NRank];   // local z coordinate of each patch slice sent to each rank for the imag part
+   int  *List_PID_D  [MPI_NRank];   // PID of each patch slice sent to each rank for the density
+   int  *List_k_D    [MPI_NRank];   // local z coordinate of each patch slice sent to each rank for the density
    int   List_NSend  [MPI_NRank];   // size of data sent to each rank
    int   List_NRecv  [MPI_NRank];   // size of data received from each rank
 
 
 // rearrange data from patch to slab
-   Patch2Slab_Psi( PsiR, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID, List_k, List_NSend, List_NRecv, List_z_start,
-                   local_nz, FFT_Size, NRecvSlice, Time, REAL );
-   Patch2Slab_Psi( PsiI, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID, List_k, List_NSend, List_NRecv, List_z_start,
-                   local_nz, FFT_Size, NRecvSlice, Time, IMAG );
-   Patch2Slab_Psi( PsiD, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID, List_k, List_NSend, List_NRecv, List_z_start,
-                   local_nz, FFT_Size, NRecvSlice, Time, DENS );
+   Patch2Slab_Psi( PsiR, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID_R, List_k_R, List_NSend, List_NRecv, List_z_start,
+                   local_nz, FFT_Size, NRecvSlice, PrepTime, REAL );
+   Patch2Slab_Psi( PsiI, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID_I, List_k_I, List_NSend, List_NRecv, List_z_start,
+                   local_nz, FFT_Size, NRecvSlice, PrepTime, IMAG );
+   Patch2Slab_Psi( PsiD, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID_D, List_k_D, List_NSend, List_NRecv, List_z_start,
+                   local_nz, FFT_Size, NRecvSlice, PrepTime, DENS );
 
 
 // evolve wavefunction by FFT
@@ -200,11 +204,11 @@ void CPU_ELBDMSolver_FFT( const real dt, const double Time, const int SaveSg )
 
 
 // rearrange data from slab back to patch
-   Slab2Patch_Psi( PsiR, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID, List_k, List_NRecv, List_NSend,
+   Slab2Patch_Psi( PsiR, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID_R, List_k_R, List_NRecv, List_NSend,
                    local_nz, FFT_Size, NRecvSlice, REAL );
-   Slab2Patch_Psi( PsiI, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID, List_k, List_NRecv, List_NSend,
+   Slab2Patch_Psi( PsiI, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID_I, List_k_I, List_NRecv, List_NSend,
                    local_nz, FFT_Size, NRecvSlice, IMAG );
-   Slab2Patch_Psi( PsiD, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID, List_k, List_NRecv, List_NSend,
+   Slab2Patch_Psi( PsiD, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID_D, List_k_D, List_NRecv, List_NSend,
                    local_nz, FFT_Size, NRecvSlice, DENS );
 
 
