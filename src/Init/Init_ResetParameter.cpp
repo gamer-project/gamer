@@ -717,7 +717,7 @@ void Init_ResetParameter()
 #  endif
 
 
-// ELBDM_BASE_SPECTRAL in ELBDM is useful only if SUPPORT_FFTW is on
+// ELBDM_BASE_SPECTRAL in ELBDM is not support if SUPPORT_FFTW is disabled
 #  if ( MODEL == ELBDM  &&  !defined SUPPORT_FFTW )
    if ( ELBDM_BASE_SPECTRAL )
    {

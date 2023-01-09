@@ -95,7 +95,7 @@ SIMU_OPTION += -DEOS=EOS_GAMMA
 # ------------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
 # enforce the mass conservation
-#SIMU_OPTION += -DCONSERVE_MASS
+SIMU_OPTION += -DCONSERVE_MASS
 
 # 4-th order Laplacian
 SIMU_OPTION += -DLAPLACIAN_4TH

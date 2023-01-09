@@ -228,7 +228,7 @@ void Slab2Patch_Pot( const real *RhoK, real *SendBuf, real *RecvBuf, const int S
 void Patch2Slab_Psi( real *Psi, real *SendBuf_Psi, real *RecvBuf_Psi, long *SendBuf_SIdx, long *RecvBuf_SIdx,
                      int **List_PID, int **List_k, int *List_NSend_Psi, int *List_NRecv_Psi,
                      const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
-                     const double Time, const int Target );
+                     const double PrepTime, const int Target );
 void Slab2Patch_Psi( const real *Psi, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
                      int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
                      const int NSendSlice, const int Target );
@@ -536,7 +536,7 @@ real   ELBDM_UnwrapPhase( const real Phase_Ref, const real Phase_Wrapped );
 real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 void   ELBDM_RemoveMotionCM();
 #ifdef SUPPORT_FFTW
-void   CPU_ELBDMSolver_FFT( const real dt, const double Time, const int SaveSg );
+void   CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg );
 #endif
 
 

@@ -5,6 +5,9 @@
 
 
 static int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Guess );
+#if ( MODEL == ELBDM )
+static int ZIndex2Rank_Psi( const int IndexZ, const int *List_z_start, const int TRank_Guess );
+#endif
 
 #ifdef SERIAL
 rfftwnd_plan     FFTW_Plan_PS;                        // PS  : plan for calculating the power spectrum
@@ -14,7 +17,7 @@ rfftwnd_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for the self
 #endif // #ifdef GRAVITY
 
 #if ( MODEL == ELBDM )
-fftwnd_plan      FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;   //  Psi : plan for the ELBDM spectral sovler
+fftwnd_plan      FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;    // Psi : plan for the ELBDM spectral sovler
 #endif // #if ( MODEL == ELBDM )
 
 #else  // #ifdef SERIAL
@@ -467,10 +470,6 @@ int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Gues
    if ( List_z_start[MPI_NRank] < FFT_SizeZ )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "List_z_start[MPI_NRank]", List_z_start[MPI_NRank] );
 #  endif // #ifdef GRAVITY
-#  if ( MODEL == ELBDM ) //!!!!!!!!!!!!!!!!!!!!!!!!
-   if ( List_z_start[MPI_NRank] < NX0_TOT[2] )
-      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "List_z_start[MPI_NRank]", List_z_start[MPI_NRank] );
-#  endif // #if ( MODEL == ELBDM )
 
    if ( IndexZ < 0  ||  IndexZ >= NX0_TOT[2] )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "IndexZ", IndexZ );
@@ -703,7 +702,7 @@ void Patch2Slab_Psi( real *Psi, real *SendBuf_Psi, real *RecvBuf_Psi, long *Send
          {
             BPos_z      = Cr[2] + k;
             TRank_Guess = BPos_z / AveNz;
-            TRank       = ZIndex2Rank( BPos_z, List_z_start, TRank_Guess );
+            TRank       = ZIndex2Rank_Psi( BPos_z, List_z_start, TRank_Guess );
             SPos_z      = BPos_z - List_z_start[TRank];
             SIdx        = ( (long)SPos_z*SSize[1] + Cr[1] )*SSize[0] + Cr[0];
 
@@ -842,6 +841,57 @@ void Patch2Slab_Psi( real *Psi, real *SendBuf_Psi, real *RecvBuf_Psi, long *Send
    }
 
 } // FUNCTION : Patch2Slab_Psi
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  ZIndex2Rank_Psi
+// Description :  Return the MPI rank which the input z coordinates belongs to in the FFTW slab decomposition
+//
+// Note        :  1. "List_z_start[r] <= IndexZ < List_z_start[r+1]" belongs to rank r
+//                2. List_z_start[MPI_NRank] can be set to any value >= FFT_Size[2]
+//
+// Parameter   :  IndexZ       : Input z coordinate
+//                List_z_start : Starting z coordinate of each rank in the FFTW slab decomposition
+//                TRank_Guess  : First guess of the targeting MPI rank
+//
+// Return      :  MPI rank
+//-------------------------------------------------------------------------------------------------------
+int ZIndex2Rank_Psi( const int IndexZ, const int *List_z_start, const int TRank_Guess )
+{
+
+// check
+#  ifdef GAMER_DEBUG
+   const int FFT_SizeZ = NX0_TOT[2];
+
+   if ( IndexZ < 0  ||  IndexZ >= NX0_TOT[2] )
+      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "IndexZ", IndexZ );
+
+   if ( List_z_start[MPI_NRank] < FFT_SizeZ )
+      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "List_z_start[MPI_NRank]", List_z_start[MPI_NRank] );
+
+   if ( TRank_Guess < 0  ||  TRank_Guess >= MPI_NRank )
+      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TRank_Guess", TRank_Guess );
+#  endif
+
+
+   int TRank = TRank_Guess;   // have a first guess to improve the performance
+
+   while ( true )
+   {
+#     ifdef GAMER_DEBUG
+      if ( TRank < 0  ||  TRank >= MPI_NRank )  Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TRank", TRank );
+#     endif
+
+      if ( IndexZ < List_z_start[TRank] )    TRank --;
+      else
+      {
+         if ( IndexZ < List_z_start[TRank+1] )  return TRank;
+         else                                   TRank ++;
+      }
+   }
+
+} // FUNCTION : ZIndex2Rank_Psi
 
 
 

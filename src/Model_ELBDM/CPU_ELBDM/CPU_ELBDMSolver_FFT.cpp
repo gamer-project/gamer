@@ -17,9 +17,9 @@ extern fftwnd_mpi_plan FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Psi_Advance_FFT
-// Description :  Evolve the wavefunction by FFT (the pseudo-spectral method)
+// Description :  Use FFT to advance the wavefunction by the kinetic operator (the pseudo-spectral method)
 //
-// Note        :
+// Note        :  Invoked by CPU_ELBDMSolver_FFT()
 //
 // Parameter   :  PsiR     : Array storing the real part of wavefunction (input and output)
 //                PsiI     : Array storing the imag part of wavefunction (input and output)
@@ -63,7 +63,7 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, real *PsiD, const int j_start, con
    for (int k=0; k<Nz; k++) { kz[k] = ( k <= Nz/2 ) ? 2.0*M_PI/(Nz*dh)*k : 2.0*M_PI/(Nz*dh)*(k-Nz);}
 
 
-// multiply wavefunction and exp(-i*dt*k^2/(2*ELBDM_ETA)) in the k space
+// multiply the wavefunction by exp(-i*dt*k^2/(2*ELBDM_ETA)) in the k space
    long ID;
 #  ifdef SERIAL // serial mode
 
@@ -123,8 +123,8 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, real *PsiD, const int j_start, con
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_PoissonSolver_FFT
-// Description :  Evolve base-level wavefunction by FFT
+// Function    :  CPU_ELBDMSolver_FFT
+// Description :  ELBDM kinetic solver of base-level wavefunction using FFT (the pseudo-spectral method)
 //
 // Note        :  1. Work with the option ELBDM_BASE_SPECTRAL
 //                2. Invoked by Flu_AdvanceDt()
@@ -135,7 +135,6 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, real *PsiD, const int j_start, con
 //-------------------------------------------------------------------------------------------------------
 void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg )
 {
-   if ( MPI_Rank == 0 ) Aux_Message( stdout, "ELBDM_BASE_SPECTRAL is working.\n" ); //-----debug only-----
 // determine the FFT size
    int FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
 
