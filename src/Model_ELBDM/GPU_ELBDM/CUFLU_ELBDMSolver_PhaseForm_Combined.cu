@@ -598,7 +598,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //                dt = 1 / MaxdS_dx * 0.5 * ELBDM_ETA * DT__VELOCITY;
 //                compute CFL condition timestep and quantum pressure term
                   s_QP[sj][si] = real(1.0/2.0) * LAP2(s_LogRho[sj], si)  + real(1.0/4.0) * SQR(GRADC2(s_LogRho[sj], si));
-                  
+
+#                 ifndef IGNORE_PHASE_TIMESTEP                  
 //                if the time step adopted in solver is larger than what velocity-dependent CFL condition allows, we switch to RK1 with a first-order upwind discretisation
                   if (FABS(s_QP[sj][si]) > 0.15 || FABS(GRADC2 (s_In[sj][time_level][PHAS], si))  > Coeff3) {
 //                   compute how far wrong information can propagate
@@ -608,6 +609,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      if (l_max > FLU_NXT ) l_max = FLU_NXT; 
                      for (l = l_min; l < l_max; ++l) s_RK1[sj][l] = true;
                   }
+#                 endif // # ifndef IGNORE_PHASE_TIMESTEP
                }
 
 
