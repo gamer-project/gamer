@@ -7,7 +7,7 @@ FILE_IN_PREFIX  = 'Gaussian_Dens'
 FILE_IN_SUFFIX  = ''
 FILE_OUT_PREFIX = 'Fig__Gaussian_Dens'
 START_ID        = 0
-END_ID          = 17
+END_ID          = 50
 DELTA_ID        = 1
 PAUSE           = -1.0  # <= 0.0 --> mouse
 
