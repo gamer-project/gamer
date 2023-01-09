@@ -9,6 +9,10 @@ static double VorPairLin_BgAmp;     // psi_vorpair(x,y) = BgAmp + WaveAmp*cos(ky
 static double VorPairLin_WaveAmp;
 static double VorPairLin_Phase0;
 
+static double VorPairLin_BgAmp;     // psi_vorpair(x,y) = BgAmp + WaveAmp*cos(ky*y)*exp( i*(kx*x-Omega*t+Phase0) )
+static double VorPairLin_WaveAmp;
+static double VorPairLin_Phase0;
+
 static double VorPairLin_kx;
 static double VorPairLin_ky;
 static double VorPairLin_Omega;
