@@ -790,6 +790,24 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       if ( lv != TOP_LEVEL  &&  AdvanceCounter[lv] % REGRID_COUNT == 0 )
       {
 //       REFINE_NLEVEL>1 allows for refining multiple levels at once
+         int refine_nlevel = REFINE_NLEVEL;
+
+#        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+//       always refine at least until first wave level if using fluid scheme
+         if ( !amr->use_wave_flag[lv] ) {
+            int first_wave_level = NLEVEL;
+            for (int lv_wave = 0; lv_wave < NLEVEL; ++lv_wave ) {
+               if ( amr->use_wave_flag[lv_wave] ) {
+                  first_wave_level = lv_wave;
+                  break;
+               }
+            }
+            if ( lv < first_wave_level )
+               refine_nlevel = first_wave_level - lv + REFINE_NLEVEL;
+        }
+#        endif // # ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+
+
          const int lv_refine_max = MIN( lv+REFINE_NLEVEL, TOP_LEVEL ) - 1;
 
          for (int lv_refine=lv; lv_refine<=lv_refine_max; lv_refine++)
