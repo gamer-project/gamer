@@ -17,12 +17,13 @@ extern fftwnd_mpi_plan FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Psi_Advance_FFT
-// Description :  Use FFT to advance the wavefunction by the kinetic operator (the pseudo-spectral method)
+// Description :  Use FFT to advance the wave function by the kinetic operator (the pseudo-spectral method)
 //
-// Note        :  Invoked by CPU_ELBDMSolver_FFT()
+// Note        :  1. Invoked by CPU_ELBDMSolver_FFT()
+//                2. Advance wave function by exp( -i*dt*k^2/(2*ELBDM_ETA) ) in the k-space
 //
-// Parameter   :  PsiR     : Array storing the real part of wavefunction (input and output)
-//                PsiI     : Array storing the imag part of wavefunction (input and output)
+// Parameter   :  PsiR     : Array storing the real part of wave function (input and output)
+//                PsiI     : Array storing the imag part of wave function (input and output)
 //                PsiD     : Array storing the density (output)
 //                j_start  : Starting j index
 //                dj       : Size of array in the j (y) direction after the forward FFT
@@ -63,7 +64,7 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, real *PsiD, const int j_start, con
    for (int k=0; k<Nz; k++) { kz[k] = ( k <= Nz/2 ) ? 2.0*M_PI/(Nz*dh)*k : 2.0*M_PI/(Nz*dh)*(k-Nz);}
 
 
-// multiply the wavefunction by exp(-i*dt*k^2/(2*ELBDM_ETA)) in the k space
+// multiply the wave function by exp( -i*dt*k^2/(2*ELBDM_ETA) ) in the k-space
    long ID;
 #  ifdef SERIAL // serial mode
 
@@ -124,13 +125,13 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, real *PsiD, const int j_start, con
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_ELBDMSolver_FFT
-// Description :  ELBDM kinetic solver of base-level wavefunction using FFT (the pseudo-spectral method)
+// Description :  CPU ELBDM kinetic solver of base-level wave function using FFT (the pseudo-spectral method)
 //
 // Note        :  1. Work with the option ELBDM_BASE_SPECTRAL
 //                2. Invoked by Flu_AdvanceDt()
 //
 // Parameter   :  dt       : Time interval to advance solution
-//                PrepTime : Physical time for preparing the wavefunction
+//                PrepTime : Physical time for preparing the wave function
 //                SaveSg   : Sandglass to store the updated data
 //-------------------------------------------------------------------------------------------------------
 void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg )
@@ -171,8 +172,8 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
 // allocate memory
    const int NRecvSlice = MIN( List_z_start[MPI_Rank]+local_nz, NX0_TOT[2] ) - MIN( List_z_start[MPI_Rank], NX0_TOT[2] );
 
-   real *PsiR         = new real [ total_local_size ];                           // array storing the real part of wavefunction
-   real *PsiI         = new real [ total_local_size ];                           // array storing the imag part of wavefunction
+   real *PsiR         = new real [ total_local_size ];                           // array storing the real part of wave function
+   real *PsiI         = new real [ total_local_size ];                           // array storing the imag part of wave function
    real *PsiD         = new real [ total_local_size ];                           // array storing the density
    real *SendBuf      = new real [ (long)amr->NPatchComma[0][1]*CUBE(PS1) ];     // MPI send buffer
    real *RecvBuf      = new real [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];     // MPI recv buffer
@@ -198,7 +199,7 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
                    local_nz, FFT_Size, NRecvSlice, PrepTime, DENS );
 
 
-// evolve wavefunction by FFT
+// advance wave function by exp( -i*dt*k^2/(2*ELBDM_ETA) ) in the k-space using FFT
    Psi_Advance_FFT( PsiR, PsiI, PsiD, local_y_start_after_transpose, local_ny_after_transpose, total_local_size , dt );
 
 

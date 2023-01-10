@@ -599,22 +599,22 @@ void Slab2Patch_Pot( const real *RhoK, real *SendBuf, real *RecvBuf, const int S
 #if ( MODEL == ELBDM )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Patch2Slab_Psi
-// Description :  Patch-based data --> slab domain decomposition (for wavefunction)
+// Description :  Patch-based data --> slab domain decomposition (for wave function)
 //
-// Parameter   :  Psi            : Array storing wavefunction
-//                SendBuf_Psi    : Sending MPI buffer of wavefunction
-//                RecvBuf_Psi    : Receiving MPI buffer of wavefunction
+// Parameter   :  Psi            : Array storing wave function
+//                SendBuf_Psi    : Sending MPI buffer of wave function
+//                RecvBuf_Psi    : Receiving MPI buffer of wave function
 //                SendBuf_SIdx   : Sending MPI buffer of 1D coordinate in slab
 //                RecvBuf_SIdx   : Receiving MPI buffer of 1D coordinate in slab
 //                List_PID       : PID of each patch slice sent to each rank
 //                List_k         : Local z coordinate of each patch slice sent to each rank
-//                List_NSend_Psi : Size of wavefunction data sent to each rank
-//                List_NRecv_Psi : Size of wavefunction data received from each rank
+//                List_NSend_Psi : Size of wave function data sent to each rank
+//                List_NRecv_Psi : Size of wave function data received from each rank
 //                List_z_start   : Starting z coordinate of each rank in the FFTW slab decomposition
 //                local_nz       : Slab thickness of this MPI rank
 //                FFT_Size       : Size of the FFT operation
 //                NRecvSlice     : Total number of z slices received from other ranks
-//                PrepTime       : Physical time for preparing the wavefunction
+//                PrepTime       : Physical time for preparing the wave function
 //                Target         : Target variable to be prepared (REAL or IMAG or DENS)
 //-------------------------------------------------------------------------------------------------------
 void Patch2Slab_Psi( real *Psi, real *SendBuf_Psi, real *RecvBuf_Psi, long *SendBuf_SIdx, long *RecvBuf_SIdx,
@@ -644,7 +644,7 @@ void Patch2Slab_Psi( real *Psi, real *SendBuf_Psi, real *RecvBuf_Psi, long *Send
    int   List_NSend_SIdx[MPI_NRank];   // number of patch slices sent to each rank
    int   List_NRecv_SIdx[MPI_NRank];   // number of patch slices received from each rank
    long *TempBuf_SIdx   [MPI_NRank];   // 1D slab coordinate of each patch slice sent to each rank
-   real *TempBuf_Psi    [MPI_NRank];   // wavefunction of each patch slice sent to each rank
+   real *TempBuf_Psi    [MPI_NRank];   // wave function of each patch slice sent to each rank
    real *TempBuf_Psi_Ptr = NULL;
 
    int TRank, TRank_Guess, MemSize[MPI_NRank], idx;
@@ -897,17 +897,17 @@ int ZIndex2Rank_Psi( const int IndexZ, const int *List_z_start, const int TRank_
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Slab2Patch_Psi
-// Description :  Slab domain decomposition --> patch-based data (for wavefunction)
+// Description :  Slab domain decomposition --> patch-based data (for wave function)
 //
-// Parameter   :  Psi        : Array storing wavefunction
-//                SendBuf    : Sending MPI buffer of wavefunction
-//                RecvBuf    : Receiving MPI buffer of wavefunction
+// Parameter   :  Psi        : Array storing wave function
+//                SendBuf    : Sending MPI buffer of wave function
+//                RecvBuf    : Receiving MPI buffer of wave function
 //                SaveSg     : Sandglass to store the updated data
 //                List_SIdx  : 1D coordinate in slab
 //                List_PID   : PID of each patch slice sent to each rank
 //                List_k     : Local z coordinate of each patch slice sent to each rank
-//                List_NSend : Size of wavefunction data sent to each rank
-//                List_NRecv : Size of wavefunction data received from each rank
+//                List_NSend : Size of wave function data sent to each rank
+//                List_NRecv : Size of wave function data received from each rank
 //                local_nz   : Slab thickness of this MPI rank
 //                FFT_Size   : Size of the FFT operation
 //                NSendSlice : Total number of z slices need to be sent to other ranks
@@ -918,7 +918,7 @@ void Slab2Patch_Psi( const real *Psi, real *SendBuf, real *RecvBuf, const int Sa
                      const int NSendSlice, const int Target )
 {
 
-// 1. store the evaluated wavefunction to the send buffer
+// 1. store the evaluated wave function to the send buffer
    const int   SSize[2]   = { FFT_Size[0], FFT_Size[1] };                     // slab size in the x and y directions
    const int   PSSize     = PS1*PS1;                                          // patch slice size
    const long  NPSlice    = (long)NX0_TOT[0]*NX0_TOT[1]*NSendSlice/PSSize;    // total number of patch slices to be sent
