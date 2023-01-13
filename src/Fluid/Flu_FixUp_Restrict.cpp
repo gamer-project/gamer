@@ -141,17 +141,17 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 //    flag that determines whether OPT__RES_PHASE is ignored because of vortices and the resulting pi-jumps in the phase field
       bool disableResPhase = false; 
 
-#     ifdef AVOID_VORTICES
+#     ifdef DISABLE_PHASE_AT_VORTEX
 //    check for vortices and restrict RE/IM for entire father patch if vortex occurs
       if ( ResFlu && (TVarCC & (_REAL) || TVarCC & (_IMAG)) && OPT__RES_PHASE ) {
          int ii, jj, kk;
          for (int k=0; k<PS1; k++)  {
          for (int j=0; j<PS1; j++)  {
          for (int i=0; i<PS1; i++)  {
-         disableResPhase |= ELBDM_DetectVortex( i, j, k, PS1, PS1, PS1, &amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[DENS][0][0][0], AVOID_VORTICES_THRESHOLD);
+         disableResPhase |= ELBDM_DetectVortex( i, j, k, PS1, PS1, PS1, &amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[DENS][0][0][0], DISABLE_PHASE_AT_VORTEX_THRESHOLD);
          }}}
       }
-#     endif  // # ifdef AVOID_VORTICES
+#     endif  // # ifdef DISABLE_PHASE_AT_VORTEX
 
 //    loop over eight sons
       for (int LocalID=0; LocalID<8; LocalID++)

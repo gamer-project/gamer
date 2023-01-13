@@ -1390,7 +1390,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    real *FData_Dens = NULL;
    real *FData_Phas = NULL;
 
-// turn off phase interpolation if AVOID_VORTICES is defined and we detect vortex in interpolation data
+// turn off phase interpolation if DISABLE_PHASE_AT_VORTEX is defined and we detect vortex in interpolation data
    bool disableIntPhase = false;
 
 //Parameter IntPhase in hybrid scheme only relevant where we use wave solver 
@@ -1448,15 +1448,15 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          CData_Dens[t] = Re*Re + Im*Im;
       }
 
-#     ifdef AVOID_VORTICES
+#     ifdef DISABLE_PHASE_AT_VORTEX
       for (int k=0; k<CSize_CC[2]; k++)
       for (int j=0; j<CSize_CC[1]; j++)
       for (int i=0; i<CSize_CC[0]; i++)
       {
-         disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_CC[0], CSize_CC[1], CSize_CC[2], CData_Dens, AVOID_VORTICES_THRESHOLD);
+         disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_CC[0], CSize_CC[1], CSize_CC[2], CData_Dens, DISABLE_PHASE_AT_VORTEX_THRESHOLD);
       }
 
-#     endif // # ifdef AVOID_VORTICES
+#     endif // # ifdef DISABLE_PHASE_AT_VORTEX
    }
 
 #  if ( ELBDM_SCHEME == HYBRID )

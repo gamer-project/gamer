@@ -807,7 +807,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    const bool Monotonicity_No       = false;
    const bool IntOppSign0thOrder_No = false;
    
-// turn off phase interpolation if AVOID_VORTICES is defined and we detect vortex in interpolation data
+// turn off phase interpolation if DISABLE_PHASE_AT_VORTEX is defined and we detect vortex in interpolation data
          bool disableIntPhase       = false; 
 
    bool Monotonicity[NCOMP_TOTAL];
@@ -924,17 +924,17 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    if ( amr->use_wave_flag[FaLv] ) {
 #  endif 
 
-#  ifdef AVOID_VORTICES
+#  ifdef DISABLE_PHASE_AT_VORTEX
    if ( OPT__INT_PHASE ) {
 //    iterate over coarse array data and disable phase interpolation for all 8 children if vortex is found
       for (int k=0; k<CSize_Flu; k++)
       for (int j=0; j<CSize_Flu; j++)
       for (int i=0; i<CSize_Flu; i++)
       {
-         disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_Flu, CSize_Flu, CSize_Flu, CData_Dens, AVOID_VORTICES_THRESHOLD);
+         disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_Flu, CSize_Flu, CSize_Flu, CData_Dens, DISABLE_PHASE_AT_VORTEX_THRESHOLD);
       }
    } // if ( OPT__INT_PHASE ) 
-#  endif // # ifdef AVOID_VORTICES
+#  endif // # ifdef DISABLE_PHASE_AT_VORTEX
 
    if ( OPT__INT_PHASE && !disableIntPhase )
    {

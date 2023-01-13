@@ -263,7 +263,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 
-//       turn off phase interpolation if AVOID_VORTICES is defined and we detect vortex in interpolation data
+//       turn off phase interpolation if DISABLE_PHASE_AT_VORTEX is defined and we detect vortex in interpolation data
          bool disableIntPhase = false; 
 
 
@@ -743,7 +743,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          if ( amr->use_wave_flag[lv] ) {
 #        endif // # if ( ELBDM_SCHEME == HYBRID )
 
-#        ifdef AVOID_VORTICES
+#        ifdef DISABLE_PHASE_AT_VORTEX
 
 //       only check if OPT__INT_PHASE needs to be disabled if it is enabled in the first place
          if ( OPT__INT_PHASE ) {
@@ -752,10 +752,10 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             for (int j=0; j<CSize_Flu; j++)
             for (int i=0; i<CSize_Flu; i++)
             {
-               disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_Flu, CSize_Flu, CSize_Flu, &Flu_CData[DENS][0][0][0], AVOID_VORTICES_THRESHOLD);
+               disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_Flu, CSize_Flu, CSize_Flu, &Flu_CData[DENS][0][0][0], DISABLE_PHASE_AT_VORTEX_THRESHOLD);
             }
          } // if ( OPT__INT_PHASE ) {
-#        endif // # ifdef AVOID_VORTICES
+#        endif // # ifdef DISABLE_PHASE_AT_VORTEX
 
          if ( OPT__INT_PHASE && !disableIntPhase )
          {
@@ -1061,7 +1061,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                   Imag      = amr->patch[FFluSg][lv+1][SonPID]->fluid[IMAG][k][j][i];
                   Rho_Wrong = Real*Real + Imag*Imag;
                   Rho_Corr  = amr->patch[FFluSg][lv+1][SonPID]->fluid[DENS][k][j][i];
-   
+
 //                be careful about the negative density introduced from the round-off errors
                   if ( Rho_Wrong <= (real)0.0  ||  Rho_Corr <= (real)0.0 )
                   {
@@ -1070,7 +1070,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                   }
                   else
                      Rescale = SQRT( Rho_Corr/Rho_Wrong );
-   
+
                   amr->patch[FFluSg][lv+1][SonPID]->fluid[REAL][k][j][i] *= Rescale;
                   amr->patch[FFluSg][lv+1][SonPID]->fluid[IMAG][k][j][i] *= Rescale;
                }
