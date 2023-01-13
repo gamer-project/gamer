@@ -12,41 +12,49 @@
 // external functions
 #ifdef __CUDACC__
 
-#if   ( RSOLVER == EXACT )
+#if ( RSOLVER == EXACT  ||  RSOLVER_RESCUE == EXACT )
 # include "CUFLU_Shared_RiemannSolver_Exact.cu"
-#elif ( RSOLVER == ROE )
+#endif
+#if ( RSOLVER == ROE    ||  RSOLVER_RESCUE == ROE   )
 # include "CUFLU_Shared_RiemannSolver_Roe.cu"
-#elif ( RSOLVER == HLLE )
+#endif
+#if ( RSOLVER == HLLE   ||  RSOLVER_RESCUE == HLLE  )
 # include "CUFLU_Shared_RiemannSolver_HLLE.cu"
-#elif ( RSOLVER == HLLC )
+#endif
+#if ( RSOLVER == HLLC   ||  RSOLVER_RESCUE == HLLC  )
 # include "CUFLU_Shared_RiemannSolver_HLLC.cu"
-#elif ( RSOLVER == HLLD )
+#endif
+#if ( RSOLVER == HLLD   ||  RSOLVER_RESCUE == HLLD  )
 # include "CUFLU_Shared_RiemannSolver_HLLD.cu"
 #endif
 
 #else // #ifdef __CUDACC__
 
-#if   ( RSOLVER == EXACT )
+#if ( RSOLVER == EXACT  ||  RSOLVER_RESCUE == EXACT )
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                 const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                                 const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                                 const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
-#elif ( RSOLVER == ROE )
+#endif
+#if ( RSOLVER == ROE    ||  RSOLVER_RESCUE == ROE   )
 void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                               const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                               const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
-#elif ( RSOLVER == HLLE )
+#endif
+#if ( RSOLVER == HLLE   ||  RSOLVER_RESCUE == HLLE  )
 void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                                const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
-#elif ( RSOLVER == HLLC )
+#endif
+#if ( RSOLVER == HLLC   ||  RSOLVER_RESCUE == HLLC  )
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                                const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
-#elif ( RSOLVER == HLLD )
+#endif
+#if ( RSOLVER == HLLD   ||  RSOLVER_RESCUE == HLLD  )
 void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
@@ -294,11 +302,119 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 #        endif
 
 
-//       3. store the fluxes of all cells in g_FC_Flux[]
+//       3. switch to a different Riemann solver if the default one fails
+#        if ( RSOLVER_RESCUE != NONE )
+         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
+         {
+//          only check NaN for now
+            if ( Flux_1Face[v] != Flux_1Face[v] )
+            {
+#              ifdef CHECK_UNPHYSICAL_IN_FLUID
+               printf( "WARNING : default Riemann solver failed in Hydro_ComputeFlux() --> switch to RSOLVER_RESCUE (%d) !!\n", RSOLVER_RESCUE );
+#              endif
+
+#              if   ( RSOLVER_RESCUE == EXACT  &&  !defined MHD )
+               Hydro_RiemannSolver_Exact( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
+                                          EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
+                                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+#              elif ( RSOLVER_RESCUE == ROE )
+               Hydro_RiemannSolver_Roe  ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
+                                          EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
+                                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+#              elif ( RSOLVER_RESCUE == HLLE )
+               Hydro_RiemannSolver_HLLE ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
+                                          EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
+                                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+#              elif ( RSOLVER_RESCUE == HLLC  &&  !defined MHD )
+               Hydro_RiemannSolver_HLLC ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
+                                          EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
+                                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+#              elif ( RSOLVER_RESCUE == HLLD  &&  defined MHD )
+               Hydro_RiemannSolver_HLLD ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
+                                          EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
+                                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+#              else
+#              error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC/HLLD) !!
+#              endif
+
+//             check again
+#              ifdef CHECK_UNPHYSICAL_IN_FLUID
+               for (int w=0; w<NCOMP_TOTAL_PLUS_MAG; w++) {
+                  if ( Flux_1Face[w] != Flux_1Face[w] ) {
+                     printf( "ERROR : RSOLVER_RESCUE still failed !!\n" );
+                     break;
+                  }
+               }
+#              endif
+
+               break;
+            } // if ( Flux_1Face[v] != Flux_1Face[v] )
+         } // for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
+#        endif // #if ( RSOLVER_RESCUE != NONE )
+
+
+//       4. store the fluxes of all cells in g_FC_Flux[]
 //       --> including the magnetic components since they are required for CT
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_FC_Flux[d][v][idx_flux] = Flux_1Face[v];
 
 
+//       5. store the inter-patch fluxes in g_IntFlux[]
+//       --> no need to store the magnetic components since this array is only for the flux fix-up operation
+         if ( DumpIntFlux )
+         {
+            int int_face, int_idx;
+
+//          we have assumed N_FC_VAR=PS2+2 for pure hydro
+//          --> for MHD, one additional flux is evaluated along each transverse direction for computing the CT electric field
+//          --> must exclude it when storing the inter-patch fluxes
+            if (  d == 0  &&  ( i_flux == 0 || i_flux == PS1 || i_flux == PS2 )  )
+            {
+#              ifdef MHD
+               if ( j_flux > 0  &&  j_flux < PS2+1  &&  k_flux > 0  &&  k_flux < PS2+1 )
+#              endif
+               {
+                  int_face = i_flux/PS1;
+#                 ifdef MHD
+                  int_idx  = (k_flux-1)*PS2 + j_flux-1;
+#                 else
+                  int_idx  = (k_flux  )*PS2 + j_flux;
+#                 endif
+                  for (int v=0; v<NCOMP_TOTAL; v++)   g_IntFlux[int_face][v][int_idx] = Flux_1Face[v];
+               }
+            }
+
+            else if (  d == 1  &&  ( j_flux == 0 || j_flux == PS1 || j_flux == PS2 )  )
+            {
+#              ifdef MHD
+               if ( i_flux > 0  &&  i_flux < PS2+1  &&  k_flux > 0  &&  k_flux < PS2+1 )
+#              endif
+               {
+                  int_face = j_flux/PS1 + 3;
+#                 ifdef MHD
+                  int_idx  = (k_flux-1)*PS2 + i_flux-1;
+#                 else
+                  int_idx  = (k_flux  )*PS2 + i_flux;
+#                 endif
+                  for (int v=0; v<NCOMP_TOTAL; v++)   g_IntFlux[int_face][v][int_idx] = Flux_1Face[v];
+               }
+            }
+
+            else if (  d == 2  &&  ( k_flux == 0 || k_flux == PS1 || k_flux == PS2 )  )
+            {
+#              ifdef MHD
+               if ( i_flux > 0  &&  i_flux < PS2+1  &&  j_flux > 0  &&  j_flux < PS2+1 )
+#              endif
+               {
+                  int_face = k_flux/PS1 + 6;
+#                 ifdef MHD
+                  int_idx  = (j_flux-1)*PS2 + i_flux-1;
+#                 else
+                  int_idx  = (j_flux  )*PS2 + i_flux;
+#                 endif
+                  for (int v=0; v<NCOMP_TOTAL; v++)   g_IntFlux[int_face][v][int_idx] = Flux_1Face[v];
+               }
+            }
+         } // if ( DumpIntFlux )
       } // i,j,k
    } // for (int d=0; d<3; d++)
 
@@ -308,81 +424,6 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 #  endif
 
 } // FUNCTION : Hydro_ComputeFlux
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_StoreFixFlux
-// Description :  Store the inter-patch fluxes in g_IntFlux[]
-//
-// Note        :  1. No need to store the magnetic components since this array is only for the flux fix-up operation
-//
-// Parameter   :  g_FC_Flux       : Array to store the output face-centered fluxes
-//                g_IntFlux       : Array for OPT__FIXUP_FLUX
-//                NFlux           : Stride for accessing g_FC_Flux[]
-//                NSkip_N         : Number of cells to be skipped in the normal directions
-//                                  --> "(N_FC_VAR-1-2*NSkip_N)" fluxes will be computed along the normal direction
-//                NSkip_T         : Number of cells to be skipped in the transverse directions
-//                                  --> "(N_FC_VAR-2*NSkip_T)^2" fluxes will be computed along the transverse direction
-//-------------------------------------------------------------------------------------------------------
-GPU_DEVICE
-void Hydro_StoreFixFlux( const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                               real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
-                         const int NFlux, const int NSkip_N, const int NSkip_T )
-{
-
-// check
-#  ifdef GAMER_DEBUG
-   if ( NFlux > N_FC_FLUX )
-      printf( "ERROR : NFlux (%d) > N_FC_FLUX (%d) !!\n", NFlux, N_FC_FLUX );
-#  endif // #ifdef GAMER_DEBUG
-
-   CGPU_LOOP( idx, SQR(PS2) )
-   {
-      // index of the 2 transverse directions
-      const int store_idx_0 = idx % PS2;
-      const int store_idx_1 = idx / PS2;
-      const int flux_idx_0  = store_idx_0 + 1 - NSkip_T;
-      const int flux_idx_1  = store_idx_1 + 1 - NSkip_T;
-
-      // flux index
-      // x-face
-      const int idx_flux_0  = IDX321(          0, flux_idx_0, flux_idx_1, NFlux, NFlux );
-      const int idx_flux_1  = IDX321(        PS1, flux_idx_0, flux_idx_1, NFlux, NFlux );
-      const int idx_flux_2  = IDX321(        PS2, flux_idx_0, flux_idx_1, NFlux, NFlux );
-      // y-face
-      const int idx_flux_3  = IDX321( flux_idx_0,          0, flux_idx_1, NFlux, NFlux );
-      const int idx_flux_4  = IDX321( flux_idx_0,        PS1, flux_idx_1, NFlux, NFlux );
-      const int idx_flux_5  = IDX321( flux_idx_0,        PS2, flux_idx_1, NFlux, NFlux );
-      // z-face
-      const int idx_flux_6  = IDX321( flux_idx_0, flux_idx_1,          0, NFlux, NFlux );
-      const int idx_flux_7  = IDX321( flux_idx_0, flux_idx_1,        PS1, NFlux, NFlux );
-      const int idx_flux_8  = IDX321( flux_idx_0, flux_idx_1,        PS2, NFlux, NFlux );
-      
-      // Store the flux
-      for (int v=0; v<NCOMP_TOTAL; v++) {
-         // x-face
-         g_IntFlux[0][v][idx] = g_FC_Flux[0][v][idx_flux_0];
-         g_IntFlux[1][v][idx] = g_FC_Flux[0][v][idx_flux_1];
-         g_IntFlux[2][v][idx] = g_FC_Flux[0][v][idx_flux_2];
-         // y-face
-         g_IntFlux[3][v][idx] = g_FC_Flux[1][v][idx_flux_3];
-         g_IntFlux[4][v][idx] = g_FC_Flux[1][v][idx_flux_4];
-         g_IntFlux[5][v][idx] = g_FC_Flux[1][v][idx_flux_5];
-         // z-face
-         g_IntFlux[6][v][idx] = g_FC_Flux[2][v][idx_flux_6];
-         g_IntFlux[7][v][idx] = g_FC_Flux[2][v][idx_flux_7];
-         g_IntFlux[8][v][idx] = g_FC_Flux[2][v][idx_flux_8];
-      }
-
-   } // CGPU_LOOP( idx, SQR(PS2) )
-
-
-#  ifdef __CUDACC__
-   __syncthreads();
-#  endif
-
-} // FUNCTION : Hydro_StoreFixFlux
 
 
 

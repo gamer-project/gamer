@@ -1,7 +1,10 @@
 #include "GAMER.h"
 
+extern Timer_t Timer_OutputWalltime;
+
 static void Write_DumpRecord();
 extern void (*Output_User_Ptr)();
+extern void (*Output_UserWorkBeforeOutput_Ptr)();
 
 
 
@@ -179,6 +182,39 @@ void Output_DumpData( const int Stage )
    if ( OPT__MANUAL_CONTROL )    Output_DumpManually( OutputData_RunTime );
 
 
+// dump data if the elapsed walltime exceeds the user-defined walltime
+   int OutputData_Walltime = false;
+
+   if ( OUTPUT_WALLTIME > 0.0 )
+   {
+      Timer_OutputWalltime.Stop();
+
+      double ElapsedWalltime = Timer_OutputWalltime.GetValue();
+
+#     ifndef SERIAL
+      MPI_Allreduce( MPI_IN_PLACE, &ElapsedWalltime, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
+#     endif
+
+      switch ( OUTPUT_WALLTIME_UNIT )
+      {
+         case 0 :                               break;
+         case 1 : ElapsedWalltime /=    60.0;   break;
+         case 2 : ElapsedWalltime /=  3600.0;   break;
+         case 3 : ElapsedWalltime /= 86400.0;   break;
+         default: Aux_Error( ERROR_INFO, "unsupported unit (%d) for output walltime !!\n", OUTPUT_WALLTIME_UNIT );
+      }
+
+
+      if ( ElapsedWalltime >= OUTPUT_WALLTIME )
+      {
+         OutputData_Walltime = true;
+         Timer_OutputWalltime.Reset();
+      }
+
+      Timer_OutputWalltime.Start();
+   } // if ( OUTPUT_WALLTIME > 0.0 )
+
+
 // set the acceleration of tracer particles to zero to make the output deterministic
 #  if ( defined TRACER  &&  defined STORE_PAR_ACC )
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
@@ -194,12 +230,16 @@ void Output_DumpData( const int Stage )
 
 
 // output data
-   if ( OutputData || OutputData_RunTime )
+   if ( OutputData || OutputData_RunTime || OutputData_Walltime )
    {
 //    apply various corrections (e.g., synchronize particles, restrict data, recalculate potential and particle acceleration)
 //    before dumpting data --> for bitwise reproducibility
       if ( OPT__CORR_AFTER_ALL_SYNC == CORR_AFTER_SYNC_BEFORE_DUMP  &&  Stage != 0 )  Flu_CorrAfterAllSync();
 
+//    perform user-specified work before dumping data 
+      if ( Output_UserWorkBeforeOutput_Ptr != NULL )  Output_UserWorkBeforeOutput_Ptr();
+
+//    start dumping data
       if ( OPT__OUTPUT_TOTAL )            Output_DumpData_Total( FileName_Total );
       if ( OPT__OUTPUT_PART  )            Output_DumpData_Part( OPT__OUTPUT_PART, OPT__OUTPUT_BASE, OUTPUT_PART_X,
                                                                 OUTPUT_PART_Y, OUTPUT_PART_Z, FileName_Part );

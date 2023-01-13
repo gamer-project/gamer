@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2450)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2455)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -221,11 +221,18 @@ Procedure for outputting new variables:
 //                2448 : 2022/05/18 --> output PAR_IC_TYPE
 //                2449 : 2022/07/08 --> output OPT__OUTPUT_RESTART
 //                2450 : 2022/07/13 --> output OPT__INT_PRIM
+//                2451 : 2022/10/10 --> output OPT__SAME_INTERFACE_B
+//                2452 : 2022/10/17 --> output INTERP_MASK, OPT__CK_INPUT_FLUID
+//                2453 : 2022/10/20 --> output RSOLVER_RESCUE
+//                2454 : 2022/10/24 --> output AUTO_REDUCE_MINMOD_FACTOR, AUTO_REDUCE_MINMOD_MIN,
+//                                             AUTO_REDUCE_INT_MONO_FACTOR, AUTO_REDUCE_INT_MONO_MIN,
+//                                             INT_MONO_COEFF_B
+//                2455 : 2022/11/04 --> output REFINE_NLEVEL
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ...\n", __FUNCTION__, DumpID );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d)     ...\n", __FUNCTION__, DumpID );
 
 
 // check the synchronization
@@ -1705,7 +1712,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    }
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ... done\n", __FUNCTION__, DumpID );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d)     ... done\n", __FUNCTION__, DumpID );
 
 } // FUNCTION : Output_DumpData_Total_HDF5
 
@@ -1726,7 +1733,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2450;
+   KeyInfo.FormatVersion        = 2455;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2178,6 +2185,12 @@ void FillIn_SymConst( SymConst_t &SymConst )
 #  endif
 #  endif // #ifdef MHD
 
+#  ifdef INTERP_MASK
+   SymConst.InterpMask           = 1;
+#  else
+   SymConst.InterpMask           = 0;
+#  endif
+
 
 #  if   ( MODEL == HYDRO )
    SymConst.Flu_BlockSize_x      = FLU_BLOCK_SIZE_X;
@@ -2201,6 +2214,11 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.CheckIntermediate    = CHECK_INTERMEDIATE;
 #  else
    SymConst.CheckIntermediate    = 0;
+#  endif
+#  ifdef RSOLVER_RESCUE
+   SymConst.RSolverRescue        = RSOLVER_RESCUE;
+#  else
+   SymConst.RSolverRescue        = 0;
 #  endif
 #  ifdef HLL_NO_REF_STATE
    SymConst.HLL_NoRefState       = 1;
@@ -2377,9 +2395,16 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.AutoReduceDt            = AUTO_REDUCE_DT;
    InputPara.AutoReduceDtFactor      = AUTO_REDUCE_DT_FACTOR;
    InputPara.AutoReduceDtFactorMin   = AUTO_REDUCE_DT_FACTOR_MIN;
+#  if ( MODEL == HYDRO )
+   InputPara.AutoReduceMinModFactor  = AUTO_REDUCE_MINMOD_FACTOR;
+   InputPara.AutoReduceMinModMin     = AUTO_REDUCE_MINMOD_MIN;
+#  endif
+   InputPara.AutoReduceIntMonoFactor = AUTO_REDUCE_INT_MONO_FACTOR;
+   InputPara.AutoReduceIntMonoMin    = AUTO_REDUCE_INT_MONO_MIN;
 
 // domain refinement
    InputPara.RegridCount             = REGRID_COUNT;
+   InputPara.RefineNLevel            = REFINE_NLEVEL;
    InputPara.FlagBufferSize          = FLAG_BUFFER_SIZE;
    InputPara.FlagBufferSizeMaxM1Lv   = FLAG_BUFFER_SIZE_MAXM1_LV;
    InputPara.FlagBufferSizeMaxM2Lv   = FLAG_BUFFER_SIZE_MAXM2_LV;
@@ -2441,7 +2466,13 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__LR_Limiter         = OPT__LR_LIMITER;
    InputPara.Opt__1stFluxCorr        = OPT__1ST_FLUX_CORR;
    InputPara.Opt__1stFluxCorrScheme  = OPT__1ST_FLUX_CORR_SCHEME;
+#  ifdef DUAL_ENERGY
+   InputPara.DualEnergySwitch        = DUAL_ENERGY_SWITCH;
 #  endif
+#  ifdef MHD
+   InputPara.Opt__SameInterfaceB     = OPT__SAME_INTERFACE_B;
+#  endif
+#  endif // HYDRO
 
 // ELBDM solvers
 #  if ( MODEL == ELBDM )
@@ -2452,7 +2483,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  endif
    InputPara.ELBDM_Taylor3_Coeff     = ELBDM_TAYLOR3_COEFF;
    InputPara.ELBDM_Taylor3_Auto      = ELBDM_TAYLOR3_AUTO;
-#  endif
+#  endif // ELBDM
 
 // fluid solvers in different models
    InputPara.Flu_GPU_NPGroup         = FLU_GPU_NPGROUP;
@@ -2501,9 +2532,6 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.JeansMinPres            = JEANS_MIN_PRES;
    InputPara.JeansMinPres_Level      = JEANS_MIN_PRES_LEVEL;
    InputPara.JeansMinPres_NCell      = JEANS_MIN_PRES_NCELL;
-#  endif
-#  ifdef DUAL_ENERGY
-   InputPara.DualEnergySwitch        = DUAL_ENERGY_SWITCH;
 #  endif
 
 // self-gravity
@@ -2630,6 +2658,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__RefPot_IntScheme   = OPT__REF_POT_INT_SCHEME;
 #  endif
    InputPara.IntMonoCoeff            = INT_MONO_COEFF;
+#  ifdef MHD
+   InputPara.IntMonoCoeffB           = INT_MONO_COEFF_B;
+#  endif
    InputPara.Mono_MaxIter            = MONO_MAX_ITER;
    InputPara.IntOppSign0thOrder      = INT_OPP_SIGN_0TH_ORDER;
 
@@ -2705,6 +2736,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Ck_InterfaceB      = OPT__CK_INTERFACE_B;
    InputPara.Opt__Ck_DivergenceB     = OPT__CK_DIVERGENCE_B;
 #  endif
+   InputPara.Opt__Ck_InputFluid      = OPT__CK_INPUT_FLUID;
 
 // flag tables
 #  if   ( MODEL == HYDRO )
@@ -3015,6 +3047,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 #  ifdef MHD
    H5Tinsert( H5_TypeID, "BitRep_Electric",      HOFFSET(SymConst_t,BitRep_Electric     ), H5T_NATIVE_INT    );
 #  endif
+   H5Tinsert( H5_TypeID, "InterpMask",           HOFFSET(SymConst_t,InterpMask          ), H5T_NATIVE_INT    );
 
 #  if   ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Flu_BlockSize_x",      HOFFSET(SymConst_t,Flu_BlockSize_x     ), H5T_NATIVE_INT    );
@@ -3023,6 +3056,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "CharReconstruction",   HOFFSET(SymConst_t,CharReconstruction  ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "LR_Eint",              HOFFSET(SymConst_t,LR_Eint             ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "CheckIntermediate",    HOFFSET(SymConst_t,CheckIntermediate   ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "RSolverRescue",        HOFFSET(SymConst_t,RSolverRescue       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "HLL_NoRefState",       HOFFSET(SymConst_t,HLL_NoRefState      ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "HLL_IncludeAllWaves",  HOFFSET(SymConst_t,HLL_IncludeAllWaves ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "HLLC_WaveSpeed",       HOFFSET(SymConst_t,HLLC_WaveSpeed      ), H5T_NATIVE_INT    );
@@ -3230,10 +3264,17 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "AutoReduceDt",            HOFFSET(InputPara_t,AutoReduceDt           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "AutoReduceDtFactor",      HOFFSET(InputPara_t,AutoReduceDtFactor     ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "AutoReduceDtFactorMin",   HOFFSET(InputPara_t,AutoReduceDtFactorMin  ), H5T_NATIVE_DOUBLE  );
+#  if ( MODEL == HYDRO )
+   H5Tinsert( H5_TypeID, "AutoReduceMinModFactor",  HOFFSET(InputPara_t,AutoReduceMinModFactor ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "AutoReduceMinModMin",     HOFFSET(InputPara_t,AutoReduceMinModMin    ), H5T_NATIVE_DOUBLE  );
+#  endif
+   H5Tinsert( H5_TypeID, "AutoReduceIntMonoFactor", HOFFSET(InputPara_t,AutoReduceIntMonoFactor), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "AutoReduceIntMonoMin",    HOFFSET(InputPara_t,AutoReduceIntMonoMin   ), H5T_NATIVE_DOUBLE  );
 
 
 // domain refinement
    H5Tinsert( H5_TypeID, "RegridCount",             HOFFSET(InputPara_t,RegridCount            ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "RefineNLevel",            HOFFSET(InputPara_t,RefineNLevel           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "FlagBufferSize",          HOFFSET(InputPara_t,FlagBufferSize         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "FlagBufferSizeMaxM1Lv",   HOFFSET(InputPara_t,FlagBufferSizeMaxM1Lv  ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "FlagBufferSizeMaxM2Lv",   HOFFSET(InputPara_t,FlagBufferSizeMaxM2Lv  ), H5T_NATIVE_INT     );
@@ -3295,7 +3336,13 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__LR_Limiter",         HOFFSET(InputPara_t,Opt__LR_Limiter        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__1stFluxCorr",        HOFFSET(InputPara_t,Opt__1stFluxCorr       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__1stFluxCorrScheme",  HOFFSET(InputPara_t,Opt__1stFluxCorrScheme ), H5T_NATIVE_INT     );
+#  ifdef DUAL_ENERGY
+   H5Tinsert( H5_TypeID, "DualEnergySwitch",        HOFFSET(InputPara_t,DualEnergySwitch       ), H5T_NATIVE_DOUBLE  );
 #  endif
+#  ifdef MHD
+   H5Tinsert( H5_TypeID, "Opt__SameInterfaceB",     HOFFSET(InputPara_t,Opt__SameInterfaceB    ), H5T_NATIVE_INT     );
+#  endif
+#  endif // HYDRO
 
 // ELBDM solvers
 #  if ( MODEL == ELBDM )
@@ -3306,7 +3353,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  endif
    H5Tinsert( H5_TypeID, "ELBDM_Taylor3_Coeff",     HOFFSET(InputPara_t,ELBDM_Taylor3_Coeff    ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "ELBDM_Taylor3_Auto",      HOFFSET(InputPara_t,ELBDM_Taylor3_Auto     ), H5T_NATIVE_INT     );
-#  endif
+#  endif // ELBDM
 
 // fluid solvers in different models
    H5Tinsert( H5_TypeID, "Flu_GPU_NPGroup",         HOFFSET(InputPara_t,Flu_GPU_NPGroup        ), H5T_NATIVE_INT     );
@@ -3365,9 +3412,6 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "JeansMinPres",            HOFFSET(InputPara_t,JeansMinPres           ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "JeansMinPres_Level",      HOFFSET(InputPara_t,JeansMinPres_Level     ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "JeansMinPres_NCell",      HOFFSET(InputPara_t,JeansMinPres_NCell     ), H5T_NATIVE_INT              );
-#  endif
-#  ifdef DUAL_ENERGY
-   H5Tinsert( H5_TypeID, "DualEnergySwitch",        HOFFSET(InputPara_t,DualEnergySwitch       ), H5T_NATIVE_DOUBLE           );
 #  endif
 
 // self-gravity
@@ -3474,6 +3518,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__RefPot_IntScheme",   HOFFSET(InputPara_t,Opt__RefPot_IntScheme  ), H5T_NATIVE_INT              );
 #  endif
    H5Tinsert( H5_TypeID, "IntMonoCoeff",            HOFFSET(InputPara_t,IntMonoCoeff           ), H5T_NATIVE_DOUBLE           );
+#  ifdef MHD
+   H5Tinsert( H5_TypeID, "IntMonoCoeffB",           HOFFSET(InputPara_t,IntMonoCoeffB          ), H5T_NATIVE_DOUBLE           );
+#  endif
    H5Tinsert( H5_TypeID, "Mono_MaxIter",            HOFFSET(InputPara_t,Mono_MaxIter           ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "IntOppSign0thOrder",      HOFFSET(InputPara_t,IntOppSign0thOrder     ), H5T_NATIVE_INT              );
 
@@ -3549,6 +3596,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Ck_InterfaceB",      HOFFSET(InputPara_t,Opt__Ck_InterfaceB     ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Ck_DivergenceB",     HOFFSET(InputPara_t,Opt__Ck_DivergenceB    ), H5T_NATIVE_INT              );
 #  endif
+   H5Tinsert( H5_TypeID, "Opt__Ck_InputFluid",      HOFFSET(InputPara_t,Opt__Ck_InputFluid     ), H5T_NATIVE_INT              );
 
 // flag tables
 #  if ( NLEVEL > 1 )

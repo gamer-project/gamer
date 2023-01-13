@@ -108,10 +108,15 @@ OPT__RECORD_DT                1           # record info of the dt determination 
 AUTO_REDUCE_DT                1           # reduce dt automatically when the program fails (for OPT__DT_LEVEL==3 only) [1]
 AUTO_REDUCE_DT_FACTOR         0.8         # reduce dt by a factor of AUTO_REDUCE_DT_FACTOR when the program fails [0.8]
 AUTO_REDUCE_DT_FACTOR_MIN     0.1         # minimum allowed AUTO_REDUCE_DT_FACTOR after consecutive failures [0.1]
+AUTO_REDUCE_MINMOD_FACTOR     0.8         # reduce MINMOD_COEFF by this factor together with AUTO_REDUCE_DT (1.0=off) [0.8] ##HYDRO ONLY##
+AUTO_REDUCE_MINMOD_MIN        1.0e-2      # minimum allowed MINMOD_COEFF after consecutive failures [1.0e-2] ##HYDRO ONLY##
+AUTO_REDUCE_INT_MONO_FACTOR   0.8         # reduce INT_MONO_COEFF(_B) by this factor together with AUTO_REDUCE_DT (1.0=off) [0.8]
+AUTO_REDUCE_INT_MONO_MIN      1.0e-2      # minimum allowed INT_MONO_COEFF(_B) after consecutive failures [1.0e-2]
 
 
 # grid refinement (examples of Input__Flag_XXX tables are put at "example/input/")
 REGRID_COUNT                  4           # refine every REGRID_COUNT sub-step [4]
+REFINE_NLEVEL                 1           # number of new AMR levels to be created at once during refinement [1]
 FLAG_BUFFER_SIZE             -1           # number of buffer cells for the flag operation (0~PATCH_SIZE; <0=auto -> PATCH_SIZE) [-1]
 FLAG_BUFFER_SIZE_MAXM1_LV    -1           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-1 (<0=auto -> REGRID_COUNT) [-1]
 FLAG_BUFFER_SIZE_MAXM2_LV    -1           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-2 (<0=auto) [-1]
@@ -197,6 +202,7 @@ OPT__1ST_FLUX_CORR           -1           # correct unphysical results (defined 
                                           # (<0=auto, 0=off, 1=3D, 2=3D+1D) [-1] ##MHM/MHM_RP/CTU ONLY##
 OPT__1ST_FLUX_CORR_SCHEME    -1           # Riemann solver for OPT__1ST_FLUX_CORR (-1=auto, 0=none, 1=Roe, 2=HLLC, 3=HLLE, 4=HLLD) [-1]
 DUAL_ENERGY_SWITCH            2.0e-2      # apply dual-energy if E_int/E_kin < DUAL_ENERGY_SWITCH [2.0e-2] ##DUAL_ENERGY ONLY##
+OPT__SAME_INTERFACE_B         0           # ensure B field consistency on the shared interfaces between sibling patches (for debugging) [0] ##MHD ONLY##
 
 
 # fluid solver in ELBDM (MODEL==ELBDM only)
@@ -298,6 +304,7 @@ OPT__RHO_INT_SCHEME           4           # ghost-zone mass density for the Pois
 OPT__GRA_INT_SCHEME           4           # ghost-zone potential for the gravity solver (for UNSPLIT_GRAVITY as well) [4]
 OPT__REF_POT_INT_SCHEME       4           # newly allocated potential during grid refinement [4]
 INT_MONO_COEFF                2.0         # coefficient for ensuring the interpolation monotonicity (1.0~4.0) [2.0]
+INT_MONO_COEFF_B              2.0         # coefficient for ensuring the interpolation monotonicity of B field (1.0~4.0) [2.0] ##MHD ONLY##
 MONO_MAX_ITER                 10          # maximum number of iterations to reduce INT_MONO_COEFF when interpolation fails (0=off) [10]
 INT_OPP_SIGN_0TH_ORDER        1           # switch to 0th-order interpolation if adjacent values change signs [HYDRO:1; ELBDM:0]
 
@@ -325,6 +332,8 @@ OPT__OUTPUT_MODE              1           # (1=const step, 2=const dt, 3=dump ta
 OPT__OUTPUT_RESTART           0           # output data immediately after restart [0]
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
 OUTPUT_DT                     1.0         # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
+OUTPUT_WALLTIME              -1.0         # output data every OUTPUT_WALLTIME walltime (<=0.0=off) [-1.0]
+OUTPUT_WALLTIME_UNIT          0           # unit of OUTPUT_WALLTIME (0=second, 1=minute, 2=hour, 3=day) [0]
 OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Y                -1.0         # y coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Z                -1.0         # z coordinate for OPT__OUTPUT_PART [-1.0]
@@ -366,3 +375,4 @@ OPT__CK_MEMFREE               1.0         # check the free memory in GB (0=off, 
 OPT__CK_PARTICLE              0           # check the particle allocation [0]
 OPT__CK_INTERFACE_B           0           # check the consistency of patch interface B field [0] ##MHD ONLY##
 OPT__CK_DIVERGENCE_B          0           # check the divergence-free constraint on B field (0=off, 1=on, 2=on+verbose) [0] ##MHD ONLY##
+OPT__CK_INPUT_FLUID           0           # check the input data of the fluid solver [0]

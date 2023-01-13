@@ -239,6 +239,7 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 ##CXXFLAG     = -g -O3 -std=c++11 #-gxx-name=YOUR_G++
 ##CXXFLAG     = -g -fast
 # CXXFLAG    += -w1                                       # warning flags
+# CXXFLAG    += -fp-model precise                         # disable optimizations that are not value-safe
 # OPENMPFLAG  = -fopenmp                                  # openmp flag
 # LIB         = -limf                                     # libraries and linker flags
 #
@@ -273,6 +274,8 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 # for debug only
 ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
 #CXXFLAG    += -fstack-protector-all
+#CXXFLAG    += -fsanitize=undefined -fsanitize=address
+#LIB        += -fsanitize=undefined -fsanitize=address
 endif
 
 # suppress warning when OpenMP is disabled
@@ -468,7 +471,7 @@ CPU_FILE    += Mis_CompareRealValue.cpp  Mis_GetTotalPatchNumber.cpp  Mis_GetTim
 CPU_FILE    += Output_DumpData_Total.cpp  Output_DumpData.cpp  Output_DumpManually.cpp  Output_PatchMap.cpp \
                Output_DumpData_Part.cpp  Output_FlagMap.cpp  Output_Patch.cpp  Output_PreparedPatch_Fluid.cpp \
                Output_PatchCorner.cpp  Output_Flux.cpp  Output_User.cpp  Output_BasePowerSpectrum.cpp \
-               Output_DumpData_Total_HDF5.cpp  Output_L1Error.cpp
+               Output_DumpData_Total_HDF5.cpp  Output_L1Error.cpp  Output_UserWorkBeforeOutput.cpp
 
 CPU_FILE    += Flag_Real.cpp  Refine.cpp   SiblingSearch.cpp  SiblingSearch_Base.cpp  FindFather.cpp \
                Flag_User.cpp  Flag_Check.cpp  Flag_Lohner.cpp  Flag_Region.cpp
@@ -512,7 +515,8 @@ ifeq "$(filter -DMHD, $(SIMU_OPTION))" "-DMHD"
 CPU_FILE    += MHD_GetCellCenteredBInPatch.cpp  MHD_InterpolateBField.cpp  MHD_AllocateElectricArray.cpp \
                MHD_Aux_Check_InterfaceB.cpp  MHD_FixUp_Electric.cpp  MHD_Aux_Check_DivergenceB.cpp \
                MHD_BoundaryCondition_Outflow.cpp  MHD_BoundaryCondition_Reflecting.cpp  MHD_BoundaryCondition_User.cpp \
-               MHD_BoundaryCondition_Diode.cpp  MHD_CopyPatchInterfaceBField.cpp MHD_Init_BField_ByFile.cpp
+               MHD_BoundaryCondition_Diode.cpp  MHD_CopyPatchInterfaceBField.cpp  MHD_Init_BField_ByFile.cpp \
+               MHD_SameInterfaceB.cpp
 
 CPU_FILE    += CPU_Shared_ConstrainedTransport.cpp  CPU_Shared_RiemannSolver_HLLD.cpp
 

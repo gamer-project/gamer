@@ -400,6 +400,12 @@ void Aux_TakeNote()
 #     endif
 #     endif
 
+#     ifdef INTERP_MASK
+      fprintf( Note, "INTERP_MASK                     ON\n" );
+#     else
+      fprintf( Note, "INTERP_MASK                     OFF\n" );
+#     endif
+
 #     if   ( MODEL == HYDRO )
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
       fprintf( Note, "CHECK_UNPHYSICAL_IN_FLUID       ON\n" );
@@ -431,6 +437,20 @@ void Aux_TakeNote()
       fprintf( Note, "CHECK_INTERMEDIATE              OFF\n" );
 #     else
       fprintf( Note, "CHECK_INTERMEDIATE              UNKNOWN\n" );
+#     endif
+
+#     if   ( RSOLVER_RESCUE == EXACT )
+      fprintf( Note, "RSOLVER_RESCUE                  EXACT\n" );
+#     elif ( RSOLVER_RESCUE == HLLE )
+      fprintf( Note, "RSOLVER_RESCUE                  HLLE\n" );
+#     elif ( RSOLVER_RESCUE == HLLC )
+      fprintf( Note, "RSOLVER_RESCUE                  HLLC\n" );
+#     elif ( RSOLVER_RESCUE == HLLD )
+      fprintf( Note, "RSOLVER_RESCUE                  HLLD\n" );
+#     elif ( RSOLVER_RESCUE == NONE )
+      fprintf( Note, "RSOLVER_RESCUE                  OFF\n" );
+#     else
+      fprintf( Note, "RSOLVER_RESCUE                  UNKNOWN\n" );
 #     endif
 
 #     ifdef HLL_NO_REF_STATE
@@ -757,31 +777,37 @@ void Aux_TakeNote()
 //    record the parameters of time-step determination
       fprintf( Note, "Parameters of Time-step Determination\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "DT__MAX                        %14.7e\n",   DT__MAX                   );
-      fprintf( Note, "DT__FLUID                       %13.7e\n",  DT__FLUID                 );
-      fprintf( Note, "DT__FLUID_INIT                  %13.7e\n",  DT__FLUID_INIT            );
+      fprintf( Note, "DT__MAX                        %14.7e\n",   DT__MAX                     );
+      fprintf( Note, "DT__FLUID                       %13.7e\n",  DT__FLUID                   );
+      fprintf( Note, "DT__FLUID_INIT                  %13.7e\n",  DT__FLUID_INIT              );
 #     ifdef GRAVITY
-      fprintf( Note, "DT__GRAVITY                     %13.7e\n",  DT__GRAVITY               );
+      fprintf( Note, "DT__GRAVITY                     %13.7e\n",  DT__GRAVITY                 );
 #     endif
 #     if ( MODEL == ELBDM )
-      fprintf( Note, "DT__PHASE                       %13.7e\n",  DT__PHASE                 );
+      fprintf( Note, "DT__PHASE                       %13.7e\n",  DT__PHASE                   );
 #     endif
 #     ifdef PARTICLE
-      fprintf( Note, "DT__PARVEL                      %13.7e\n",  DT__PARVEL                );
-      fprintf( Note, "DT__PARVEL_MAX                 %14.7e\n",   DT__PARVEL_MAX            );
-      fprintf( Note, "DT__PARACC                      %13.7e\n",  DT__PARACC                );
+      fprintf( Note, "DT__PARVEL                      %13.7e\n",  DT__PARVEL                  );
+      fprintf( Note, "DT__PARVEL_MAX                 %14.7e\n",   DT__PARVEL_MAX              );
+      fprintf( Note, "DT__PARACC                      %13.7e\n",  DT__PARACC                  );
 #     endif
 #     ifdef COMOVING
-      fprintf( Note, "DT__MAX_DELTA_A                 %13.7e\n",  DT__MAX_DELTA_A           );
+      fprintf( Note, "DT__MAX_DELTA_A                 %13.7e\n",  DT__MAX_DELTA_A             );
 #     endif
-      fprintf( Note, "DT__SYNC_PARENT_LV              %13.7e\n",  DT__SYNC_PARENT_LV        );
-      fprintf( Note, "DT__SYNC_CHILDREN_LV            %13.7e\n",  DT__SYNC_CHILDREN_LV      );
-      fprintf( Note, "OPT__DT_USER                    %d\n",      OPT__DT_USER              );
-      fprintf( Note, "OPT__DT_LEVEL                   %d\n",      OPT__DT_LEVEL             );
-      fprintf( Note, "AUTO_REDUCE_DT                  %d\n",      AUTO_REDUCE_DT            );
-      fprintf( Note, "AUTO_REDUCE_DT_FACTOR           %13.7e\n",  AUTO_REDUCE_DT_FACTOR     );
-      fprintf( Note, "AUTO_REDUCE_DT_FACTOR_MIN       %13.7e\n",  AUTO_REDUCE_DT_FACTOR_MIN );
-      fprintf( Note, "OPT__RECORD_DT                  %d\n",      OPT__RECORD_DT            );
+      fprintf( Note, "DT__SYNC_PARENT_LV              %13.7e\n",  DT__SYNC_PARENT_LV          );
+      fprintf( Note, "DT__SYNC_CHILDREN_LV            %13.7e\n",  DT__SYNC_CHILDREN_LV        );
+      fprintf( Note, "OPT__DT_USER                    %d\n",      OPT__DT_USER                );
+      fprintf( Note, "OPT__DT_LEVEL                   %d\n",      OPT__DT_LEVEL               );
+      fprintf( Note, "AUTO_REDUCE_DT                  %d\n",      AUTO_REDUCE_DT              );
+      fprintf( Note, "AUTO_REDUCE_DT_FACTOR           %13.7e\n",  AUTO_REDUCE_DT_FACTOR       );
+      fprintf( Note, "AUTO_REDUCE_DT_FACTOR_MIN       %13.7e\n",  AUTO_REDUCE_DT_FACTOR_MIN   );
+#     if ( MODEL == HYDRO )
+      fprintf( Note, "AUTO_REDUCE_MINMOD_FACTOR       %13.7e\n",  AUTO_REDUCE_MINMOD_FACTOR   );
+      fprintf( Note, "AUTO_REDUCE_MINMOD_MIN          %13.7e\n",  AUTO_REDUCE_MINMOD_MIN      );
+#     endif
+      fprintf( Note, "AUTO_REDUCE_INT_MONO_FACTOR     %13.7e\n",  AUTO_REDUCE_INT_MONO_FACTOR );
+      fprintf( Note, "AUTO_REDUCE_INT_MONO_MIN        %13.7e\n",  AUTO_REDUCE_INT_MONO_MIN    );
+      fprintf( Note, "OPT__RECORD_DT                  %d\n",      OPT__RECORD_DT              );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
@@ -790,6 +816,7 @@ void Aux_TakeNote()
       fprintf( Note, "Parameters of Domain Refinement\n" );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "REGRID_COUNT                    %d\n",      REGRID_COUNT              );
+      fprintf( Note, "REFINE_NLEVEL                   %d\n",      REFINE_NLEVEL             );
       fprintf( Note, "FLAG_BUFFER_SIZE                %d\n",      FLAG_BUFFER_SIZE          );
       fprintf( Note, "FLAG_BUFFER_SIZE_MAXM1_LV       %d\n",      FLAG_BUFFER_SIZE_MAXM1_LV );
       fprintf( Note, "FLAG_BUFFER_SIZE_MAXM2_LV       %d\n",      FLAG_BUFFER_SIZE_MAXM2_LV );
@@ -942,6 +969,12 @@ void Aux_TakeNote()
                                                                   ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_HLLD ) ? "RSOLVER_1ST_HLLD" :
                                                                   ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_NONE ) ? "NONE"             :
                                                                                                                 "UNKNOWN" );
+#     ifdef DUAL_ENERGY
+      fprintf( Note, "DUAL_ENERGY_SWITCH              %13.7e\n",  DUAL_ENERGY_SWITCH       );
+#     endif
+#     ifdef MHD
+      fprintf( Note, "OPT__SAME_INTERFACE_B           %d\n",      OPT__SAME_INTERFACE_B    );
+#     endif
 
 #     elif ( MODEL == ELBDM )
       if ( OPT__UNIT ) {
@@ -1031,9 +1064,6 @@ void Aux_TakeNote()
       if ( JEANS_MIN_PRES ) {
       fprintf( Note, "JEANS_MIN_PRES_LEVEL            %d\n",      JEANS_MIN_PRES_LEVEL     );
       fprintf( Note, "JEANS_MIN_PRES_NCELL            %d\n",      JEANS_MIN_PRES_NCELL     ); }
-#     endif
-#     ifdef DUAL_ENERGY
-      fprintf( Note, "DUAL_ENERGY_SWITCH              %13.7e\n",  DUAL_ENERGY_SWITCH       );
 #     endif
       fprintf( Note, "WITH_COARSE_FINE_FLUX           %d\n",      amr->WithFlux            );
 #     ifdef MHD
@@ -1222,6 +1252,9 @@ void Aux_TakeNote()
                                                                                                              "UNKNOWN" );
 #     endif
       fprintf( Note, "INT_MONO_COEFF                  %13.7e\n",  INT_MONO_COEFF          );
+#     ifdef MHD
+      fprintf( Note, "INT_MONO_COEFF_B                %13.7e\n",  INT_MONO_COEFF_B        );
+#     endif
       fprintf( Note, "MONO_MAX_ITER                   %d\n",      MONO_MAX_ITER           );
       fprintf( Note, "INT_OPP_SIGN_0TH_ORDER          %d\n",      INT_OPP_SIGN_0TH_ORDER  );
       fprintf( Note, "***********************************************************************************\n" );
@@ -1278,6 +1311,8 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_RESTART             %d\n",      OPT__OUTPUT_RESTART    );
       fprintf( Note, "OUTPUT_STEP                     %d\n",      OUTPUT_STEP            );
       fprintf( Note, "OUTPUT_DT                       %20.14e\n", OUTPUT_DT              );
+      fprintf( Note, "OUTPUT_WALLTIME                 %20.14e\n", OUTPUT_WALLTIME        );
+      fprintf( Note, "OUTPUT_WALLTIME_UNIT            %d\n",      OUTPUT_WALLTIME_UNIT   );
       fprintf( Note, "OUTPUT_PART_X                   %20.14e\n", OUTPUT_PART_X          );
       fprintf( Note, "OUTPUT_PART_Y                   %20.14e\n", OUTPUT_PART_Y          );
       fprintf( Note, "OUTPUT_PART_Z                   %20.14e\n", OUTPUT_PART_Z          );
@@ -1338,6 +1373,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__CK_INTERFACE_B             %d\n",      OPT__CK_INTERFACE_B       );
       fprintf( Note, "OPT__CK_DIVERGENCE_B            %d\n",      OPT__CK_DIVERGENCE_B      );
 #     endif
+      fprintf( Note, "OPT__CK_INPUT_FLUID             %d\n",      OPT__CK_INPUT_FLUID       );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
