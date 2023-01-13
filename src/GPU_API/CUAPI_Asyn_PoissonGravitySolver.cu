@@ -150,6 +150,7 @@ extern cudaStream_t *Stream;
 //                TimeOld            : Physical time at the previous step (for external gravity in UNSPLIT_GRAVITY)
 //                MinEint            : Internal energy floor
 //                GPU_NStream        : Number of CUDA streams for the asynchronous memory copy
+//                useWaveFlag        : Determine whether to use wave or phase scheme
 //
 // Useless parameters in HYDRO : ELBDM_Eta, ELBDM_Lambda
 // Useless parameters in ELBDM : P5_Gradient
@@ -171,7 +172,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                       const real ELBDM_Lambda, const bool Poisson, const bool GraAcc,
                                       const bool SelfGravity, const OptExtPot_t ExtPot, const OptExtAcc_t ExtAcc,
                                       const double TimeNew, const double TimeOld, const real MinEint,
-                                      const int GPU_NStream, bool useWaveSolver )
+                                      const int GPU_NStream, bool useWaveFlag )
 {
 
 // model-independent constants
@@ -450,7 +451,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 
 #        elif ( MODEL == ELBDM )
 #        if ( ELBDM_SCHEME == HYBRID )
-         if ( useWaveSolver )
+         if ( useWaveFlag )
 #        endif 
          CUPOT_ELBDMGravitySolver <<< NPatch_per_Stream[s], Gra_Block_Dim, 0, Stream[s] >>>
                                   ( d_Flu_Array_G      + UsedPatch[s],
