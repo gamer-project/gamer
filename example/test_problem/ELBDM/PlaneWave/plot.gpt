@@ -7,7 +7,7 @@ FILE_IN_PREFIX  = 'PlaneWave'
 FILE_IN_SUFFIX  = ''
 FILE_OUT_PREFIX = 'Fig__PlaneWave'
 START_ID        = 0
-END_ID          = 80
+END_ID          = 48
 DELTA_ID        = 1
 PAUSE           = -1.0  # <= 0.0 --> mouse
 
@@ -30,7 +30,7 @@ set ylabel "Wave function"
 #set format y "10^{%T}"
  set pointsize 1.0
  set size square
- set yrange [-1.02:1.02]
+ set yrange [-2.00:5.00]
  set xrange [0.0:1.0]
 
 
@@ -71,11 +71,11 @@ do for [ID=START_ID:END_ID:DELTA_ID] {
 #  plot
 
    plot FILE_IN_DENS  u ($1):($2**0.5) w p pt 6 lc 4 title 'Simulation Dens^{1/2}' \
-       ,FILE_IN_DENS  u ($1):($3**0.5) w l      lc 4 title 'Analytical Dens^{1/2}' \
-       ,FILE_IN_REAL  u ($1):($2     ) w p pt 7 lc 7 title 'Simulation Real' \
-       ,FILE_IN_REAL  u ($1):($3     ) w l      lc 7 title 'Analytical Real' \
-       ,FILE_IN_IMAG  u ($1):($2     ) w p pt 8 lc 8 title 'Simulation Imag' \
-       ,FILE_IN_IMAG  u ($1):($3     ) w l      lc 8 title 'Analytical Imag'
+       ,FILE_IN_DENS  u ($1):($3**0.5) w l      lc 8 title 'Analytical Dens^{1/2}' \
+       ,FILE_IN_REAL  u ($1):($2     ) w p pt 7 lc 6 title 'Simulation Real' \
+       ,FILE_IN_REAL  u ($1):($3     ) w l dt 4 lc 8 title 'Analytical Real' \
+       ,FILE_IN_IMAG  u ($1):($2     ) w p pt 8 lc 7 title 'Simulation Imag' \
+       ,FILE_IN_IMAG  u ($1):($3     ) w l dt 5 lc 8 title 'Analytical Imag'
 
 
    if ( GPVAL_TERM eq 'x11' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };

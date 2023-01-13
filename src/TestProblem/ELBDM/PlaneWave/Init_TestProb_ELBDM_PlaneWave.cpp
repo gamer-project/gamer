@@ -102,7 +102,7 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "PWave_Lambda",      &PWave_Lambda,          1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "PWave_Lambda",      &PWave_Lambda,          0.5,           Eps_double,       NoMax_double      );
    ReadPara->Add( "PWave_Amp",         &PWave_Amp,             1.0,           0.0,              NoMax_double      );
    ReadPara->Add( "PWave_Phase0",      &PWave_Phase0,          0.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "PWave_XYZ",         &PWave_XYZ,             0,             0,                3                 );
@@ -130,7 +130,7 @@ void SetParameter()
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default    = 10.0*PWave_Period;
+   const double End_T_Default    = 6.0*PWave_Period; // 6 periods
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
