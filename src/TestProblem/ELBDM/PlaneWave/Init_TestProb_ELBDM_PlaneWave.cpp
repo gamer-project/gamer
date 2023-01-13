@@ -6,15 +6,16 @@
 // problem-specific global variables
 // =======================================================================================
 static double PWave_Lambda;        // plane wave wavelength
-static double PWave_Amp;           // plane wave amplitude 
+static double PWave_Amp;           // plane wave amplitude
 static double PWave_Phase0;        // plane wave phase constant
 static int    PWave_XYZ;           // plane wave direction (0/1/2/3 --> x/y/z/diagonal)
 static int    PWave_LSR;           // plane wave direction (<0/0/>0 --> negative direction/standing wave/positive direction)
 
 static double PWave_Period;        // plane wave period
 static double PWave_WaveK;         // plane wave wavenumber
-static double PWave_WaveW;         // plane wave angular frequency 
-static double PWave_WaveV;         // plane wave velocity 
+static double PWave_WaveW;         // plane wave angular frequency
+static double PWave_PhaseV;        // plane wave phase velocity
+static double PWave_GroupV;        // plane wave group velocity
 // =======================================================================================
 
 static void OutputError();
@@ -123,7 +124,8 @@ void SetParameter()
    PWave_WaveK  = 2.0*M_PI/PWave_Lambda;
    PWave_WaveW  = 0.5*SQR( PWave_WaveK )/ELBDM_ETA;
    PWave_Period = 2.0*M_PI/PWave_WaveW;
-   PWave_WaveV  = PWave_WaveK/ELBDM_ETA;
+   PWave_PhaseV = 0.5*PWave_WaveK/ELBDM_ETA;
+   PWave_GroupV = PWave_WaveK/ELBDM_ETA;
 
 
 
@@ -159,11 +161,12 @@ void SetParameter()
       }
       else{
       Aux_Message( stdout, "  standing wave                    = false\n"                              );
-      Aux_Message( stdout, "  plane wave propagation direction = %s%s\n",  ( PWave_LSR > 0 )  ? "+" : "-", 
+      Aux_Message( stdout, "  plane wave propagation direction = %s%s\n",  ( PWave_LSR > 0 )  ? "+" : "-",
                                                                            ( PWave_XYZ == 0 ) ? "x" :
                                                                            ( PWave_XYZ == 1 ) ? "y" :
                                                                            ( PWave_XYZ == 2 ) ? "z" : "diagonal" );
-      Aux_Message( stdout, "  plane wave propagation velocity  = %13.7e\n", PWave_WaveV                );
+      Aux_Message( stdout, "  plane wave phase velocity        = %13.7e\n", PWave_PhaseV               );
+      Aux_Message( stdout, "  plane wave group velocity        = %13.7e\n", PWave_GroupV               );
       }
       Aux_Message( stdout, "=============================================================================\n" );
    }
