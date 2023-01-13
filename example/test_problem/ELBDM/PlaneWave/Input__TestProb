@@ -1,6 +1,6 @@
 # problem-specific runtime parameters
-PWave_Lambda     0.5           # plane wave wavelength
-PWave_Amp        1.0           # plane wave amplitude 
-PWave_Phase0     0.0           # plane wave phase constant
-PWave_XYZ          0           # plane wave direction (0/1/2/3 --> x/y/z/diagonal)
-PWave_LSR          1           # plane wave direction (<0/0/>0 --> negative direction/standing wave/positive direction)  
+PWave_Lambda     0.5           # plane wave wavelength [0.5]
+PWave_Amp        1.0           # plane wave amplitude [1.0]
+PWave_Phase0     0.0           # plane wave phase constant [0.0]
+PWave_XYZ          0           # plane wave direction (0/1/2/3 --> x/y/z/diagonal) [0]
+PWave_LSR          1           # plane wave direction (<0/0/>0 --> Left-moving/Standing/Right-moving) [1]
