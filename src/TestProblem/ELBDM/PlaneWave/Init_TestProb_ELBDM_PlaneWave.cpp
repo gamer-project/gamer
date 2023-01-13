@@ -155,10 +155,10 @@ void SetParameter()
       Aux_Message( stdout, "  plane wave angular frequency     = %13.7e\n", PWave_WaveW                );
       Aux_Message( stdout, "  plane wave period                = %13.7e\n", PWave_Period               );
       if ( PWave_LSR == 0){
-      Aux_Message( stdout, "  standing wave                    = true\n",                              );
+      Aux_Message( stdout, "  standing wave                    = true\n"                               );
       }
       else{
-      Aux_Message( stdout, "  standing wave                    = false\n",                             );
+      Aux_Message( stdout, "  standing wave                    = false\n"                              );
       Aux_Message( stdout, "  plane wave propagation direction = %s%s\n",  ( PWave_LSR > 0 )  ? "+" : "-", 
                                                                            ( PWave_XYZ == 0 ) ? "x" :
                                                                            ( PWave_XYZ == 1 ) ? "y" :
