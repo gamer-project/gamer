@@ -9,7 +9,7 @@ static double PWave_Lambda;        // plane wave wavelength
 static double PWave_Amp;           // plane wave amplitude
 static double PWave_Phase0;        // plane wave phase constant
 static int    PWave_XYZ;           // plane wave direction (0/1/2/3 --> x/y/z/diagonal)
-static int    PWave_LSR;           // plane wave direction (<0/0/>0 --> negative direction/standing wave/positive direction)
+static int    PWave_LSR;           // plane wave direction (<0/0/>0 --> Left-moving/Standing/Right-moving)
 
 static double PWave_Period;        // plane wave period
 static double PWave_WaveK;         // plane wave wavenumber
@@ -215,16 +215,16 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 // set the real and imaginary parts
    if ( PWave_LSR > 0 ){      // Right-moving wave
-      fluid[REAL] = 0.5*PWave_Amp*cos( PhaseR ) + 0.5*PWave_Amp*cos( PhaseR );
-      fluid[IMAG] = 0.5*PWave_Amp*sin( PhaseR ) + 0.5*PWave_Amp*sin( PhaseR );
+      fluid[REAL] = PWave_Amp*cos( PhaseR );
+      fluid[IMAG] = PWave_Amp*sin( PhaseR );
    }
    else if ( PWave_LSR < 0 ){ // Left-moving wave
-      fluid[REAL] = 0.5*PWave_Amp*cos( PhaseL ) + 0.5*PWave_Amp*cos( PhaseL );
-      fluid[IMAG] = 0.5*PWave_Amp*sin( PhaseL ) + 0.5*PWave_Amp*sin( PhaseL );
+      fluid[REAL] = PWave_Amp*cos( PhaseL );
+      fluid[IMAG] = PWave_Amp*sin( PhaseL );
    }
    else{ //( PWave_LSR == 0 ) // Standing wave
-      fluid[REAL] = 0.5*PWave_Amp*cos( PhaseR ) + 0.5*PWave_Amp*cos( PhaseL );
-      fluid[IMAG] = 0.5*PWave_Amp*sin( PhaseR ) + 0.5*PWave_Amp*sin( PhaseL );
+      fluid[REAL] = 0.5*( PWave_Amp*cos( PhaseR ) + PWave_Amp*cos( PhaseL ) );
+      fluid[IMAG] = 0.5*( PWave_Amp*sin( PhaseR ) + PWave_Amp*sin( PhaseL ) );
    }
 
 // set the density
