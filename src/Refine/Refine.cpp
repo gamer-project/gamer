@@ -262,6 +262,11 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          }
 #        endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
+
+//       turn off phase interpolation if AVOID_VORTICES is defined and we detect vortex in interpolation data
+         bool disableIntPhase = false; 
+
+
 //       (c1.3) assign data to child patches by spatial interpolation
 //       (c1.3.1) fill up the central region of CData
          int i_out, j_out, k_out;
@@ -736,8 +741,23 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        if ( MODEL == ELBDM )
 #        if ( ELBDM_SCHEME == HYBRID )
          if ( amr->use_wave_flag[lv] ) {
-#        endif 
-         if ( OPT__INT_PHASE )
+#        endif // # if ( ELBDM_SCHEME == HYBRID )
+
+#        ifdef AVOID_VORTICES
+
+//       only check if OPT__INT_PHASE needs to be disabled if it is enabled in the first place
+         if ( OPT__INT_PHASE ) {
+//          iterate over coarse array data and disable phase interpolation for all 8 children if vortex is found
+            for (int k=0; k<CSize_Flu; k++)
+            for (int j=0; j<CSize_Flu; j++)
+            for (int i=0; i<CSize_Flu; i++)
+            {
+               disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_Flu, CSize_Flu, CSize_Flu, &Flu_CData[DENS][0][0][0], AVOID_VORTICES_THRESHOLD);
+            }
+         } // if ( OPT__INT_PHASE ) {
+#        endif // # ifdef AVOID_VORTICES
+
+         if ( OPT__INT_PHASE && !disableIntPhase )
          {
 //          get the wrapped phase (store in the REAL component)
 #           ifdef GAMER_DEBUG
@@ -760,14 +780,14 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                          IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
          }
 
-         else // if ( OPT__INT_PHASE )
+         else // if ( OPT__INT_PHASE  && !disableIntPhase )
          {
             Interpolate( &Flu_CData[0][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[0][0][0][0],
                          FSize_CC3, FStart_CC, NCOMP_TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
                          IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
          }
 
-         if ( OPT__INT_PHASE )
+         if ( OPT__INT_PHASE && !disableIntPhase )
          {
 //          retrieve real and imaginary parts
             real Amp, Phase, Rho;
@@ -790,7 +810,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                Flu_FData[REAL][k][j][i] = Amp*COS( Phase );
                Flu_FData[IMAG][k][j][i] = Amp*SIN( Phase );
             }
-         }
+         } // if ( OPT__INT_PHASE && !disableIntPhase )
 
 #        if ( ELBDM_SCHEME == HYBRID )
          } else { // if ( amr->use_wave_flag[lv] )
@@ -911,7 +931,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #              if ( ELBDM_SCHEME == HYBRID )
                if ( amr->use_wave_flag[lv+1] ) {
 #              endif 
-               if ( OPT__INT_PHASE )
+               if ( OPT__INT_PHASE && !disableIntPhase )
                {
                   const real Rescale = SQRT( (real)MIN_DENS / DensOld );
 
@@ -1031,28 +1051,30 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #           endif 
             real Real, Imag, Rho_Wrong, Rho_Corr, Rescale;
 
-            if ( !OPT__INT_PHASE )
-            for (int k=0; k<PS1; k++)
-            for (int j=0; j<PS1; j++)
-            for (int i=0; i<PS1; i++)
+            if ( !OPT__INT_PHASE || disableIntPhase ) 
             {
-               Real      = amr->patch[FFluSg][lv+1][SonPID]->fluid[REAL][k][j][i];
-               Imag      = amr->patch[FFluSg][lv+1][SonPID]->fluid[IMAG][k][j][i];
-               Rho_Wrong = Real*Real + Imag*Imag;
-               Rho_Corr  = amr->patch[FFluSg][lv+1][SonPID]->fluid[DENS][k][j][i];
-
-//             be careful about the negative density introduced from the round-off errors
-               if ( Rho_Wrong <= (real)0.0  ||  Rho_Corr <= (real)0.0 )
+               for (int k=0; k<PS1; k++)
+               for (int j=0; j<PS1; j++)
+               for (int i=0; i<PS1; i++)
                {
-                  amr->patch[FFluSg][lv+1][SonPID]->fluid[DENS][k][j][i] = (real)0.0;
-                  Rescale = (real)0.0;
+                  Real      = amr->patch[FFluSg][lv+1][SonPID]->fluid[REAL][k][j][i];
+                  Imag      = amr->patch[FFluSg][lv+1][SonPID]->fluid[IMAG][k][j][i];
+                  Rho_Wrong = Real*Real + Imag*Imag;
+                  Rho_Corr  = amr->patch[FFluSg][lv+1][SonPID]->fluid[DENS][k][j][i];
+   
+//                be careful about the negative density introduced from the round-off errors
+                  if ( Rho_Wrong <= (real)0.0  ||  Rho_Corr <= (real)0.0 )
+                  {
+                     amr->patch[FFluSg][lv+1][SonPID]->fluid[DENS][k][j][i] = (real)0.0;
+                     Rescale = (real)0.0;
+                  }
+                  else
+                     Rescale = SQRT( Rho_Corr/Rho_Wrong );
+   
+                  amr->patch[FFluSg][lv+1][SonPID]->fluid[REAL][k][j][i] *= Rescale;
+                  amr->patch[FFluSg][lv+1][SonPID]->fluid[IMAG][k][j][i] *= Rescale;
                }
-               else
-                  Rescale = SQRT( Rho_Corr/Rho_Wrong );
-
-               amr->patch[FFluSg][lv+1][SonPID]->fluid[REAL][k][j][i] *= Rescale;
-               amr->patch[FFluSg][lv+1][SonPID]->fluid[IMAG][k][j][i] *= Rescale;
-            }
+            } // if ( !OPT__INT_PHASE || disableIntPhase )
 #           if ( ELBDM_SCHEME == HYBRID )
             } // if ( amr->use_wave_flag[lv+1] )
 #           endif 

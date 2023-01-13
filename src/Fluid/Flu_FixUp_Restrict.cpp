@@ -138,6 +138,21 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #     endif // #ifdef GAMER_DEBUG
 
 
+//    flag that determines whether OPT__RES_PHASE is ignored because of vortices and the resulting pi-jumps in the phase field
+      bool disableResPhase = false; 
+
+#     ifdef AVOID_VORTICES
+//    check for vortices and restrict RE/IM for entire father patch if vortex occurs
+      if ( ResFlu && (TVarCC & (_REAL) || TVarCC & (_IMAG)) && OPT__RES_PHASE ) {
+         int ii, jj, kk;
+         for (int k=0; k<PS1; k++)  {
+         for (int j=0; j<PS1; j++)  {
+         for (int i=0; i<PS1; i++)  {
+         disableResPhase |= ELBDM_DetectVortex( i, j, k, PS1, PS1, PS1, &amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[DENS][0][0][0], AVOID_VORTICES_THRESHOLD);
+         }}}
+      }
+#     endif  // # ifdef AVOID_VORTICES
+
 //    loop over eight sons
       for (int LocalID=0; LocalID<8; LocalID++)
       {
@@ -169,12 +184,12 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #        if ( ELBDM_SCHEME == HYBRID )
          if ( ResFlu \
                && ( TVarCC & (_REAL) || TVarCC & (_IMAG)) \
-               && (     (OPT__RES_PHASE && amr->use_wave_flag[FaLv] && amr->use_wave_flag[SonLv]) \
+               && (     (OPT__RES_PHASE && !disableResPhase && amr->use_wave_flag[FaLv] && amr->use_wave_flag[SonLv]) \
                     ||  (!amr->use_wave_flag[FaLv] && amr->use_wave_flag[SonLv]))
             ) {
 #        else // # if ( ELBDM_SCHEME == HYBRID )
 //       average phase instead of real and imaginary part if option OPT__RES_PHASE is on
-         if ( ResFlu && (TVarCC & (_REAL) || TVarCC & (_IMAG)) && OPT__RES_PHASE  ) {
+         if ( ResFlu && (TVarCC & (_REAL) || TVarCC & (_IMAG)) && OPT__RES_PHASE && !disableResPhase) {
 #        endif // # if ( ELBDM_SCHEME == HYBRID )
 //          D = DENS, R = REAL, I = IMAG, P = PHAS, S = STUB
             const real (*DSonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[DENS];

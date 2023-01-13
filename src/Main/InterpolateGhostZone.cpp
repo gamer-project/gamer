@@ -1380,6 +1380,19 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 // c2. interpolation on phase in ELBDM
 #  if ( MODEL == ELBDM )
 
+   real *CData_Real = NULL;
+   real *CData_Imag = NULL;
+   real *CData_Dens = NULL;
+   real *CData_Phas = NULL;
+
+   real *FData_Real = NULL;
+   real *FData_Imag = NULL;
+   real *FData_Dens = NULL;
+   real *FData_Phas = NULL;
+
+// turn off phase interpolation if AVOID_VORTICES is defined and we detect vortex in interpolation data
+   bool disableIntPhase = false;
+
 //Parameter IntPhase in hybrid scheme only relevant where we use wave solver 
 #  if ( ELBDM_SCHEME == HYBRID )
    if ( IntPhase && amr->use_wave_flag[lv] == true)
@@ -1388,15 +1401,6 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #  endif 
    {
 //    determine the array indices
-      real *CData_Real = NULL;
-      real *CData_Imag = NULL;
-      real *CData_Dens = NULL;
-      real *CData_Phas = NULL;
-
-      real *FData_Real = NULL;
-      real *FData_Imag = NULL;
-      real *FData_Dens = NULL;
-      real *FData_Phas = NULL;
 
       int DensIdx=-1, RealIdx=-1, ImagIdx=-1;
 
@@ -1444,6 +1448,23 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          CData_Dens[t] = Re*Re + Im*Im;
       }
 
+#     ifdef AVOID_VORTICES
+      for (int k=0; k<CSize_CC[2]; k++)
+      for (int j=0; j<CSize_CC[1]; j++)
+      for (int i=0; i<CSize_CC[0]; i++)
+      {
+         disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_CC[0], CSize_CC[1], CSize_CC[2], CData_Dens, AVOID_VORTICES_THRESHOLD);
+      }
+
+#     endif // # ifdef AVOID_VORTICES
+   }
+
+#  if ( ELBDM_SCHEME == HYBRID )
+   if ( IntPhase && !disableIntPhase && amr->use_wave_flag[lv] == true)
+#  else 
+   if ( IntPhase && !disableIntPhase )
+#  endif 
+   {
 //    interpolate density
       Interpolate( CData_Dens, CSize_CC, CStart_CC, CRange_CC, FData_Dens, FSize_CC, FStart_CC,
                    1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes, IntOppSign0thOrder_No,
@@ -1571,6 +1592,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          real *FData_Dens_IntTime = IntData_CC_IntTime + 0*FSize3D_CC;
          real *FData_Phas_IntTime = IntData_CC_IntTime + 1*FSize3D_CC;
 
+         real Re, Im;
+
          for (int t=0; t<CSize3D_CC; t++)
          {
             Re = CData_Real_IntTime[t];
@@ -1631,7 +1654,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          FData_Real[t] = Amp*COS( Phase );
          FData_Imag[t] = Amp*SIN( Phase );
       }
-   } // if ( IntPhase ) || if ( IntPhase && amr->use_wave_flag[lv] == true) in hybrid scheme
+   } // if ( IntPhase && !disableIntPhase ) || if ( IntPhase && amr->use_wave_flag[lv] == true && !disableIntPhase ) in hybrid scheme
 #  if ( ELBDM_SCHEME == HYBRID )
    else if ( amr->use_wave_flag[lv] == false ) 
    {
