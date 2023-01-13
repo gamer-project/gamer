@@ -210,8 +210,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       break;
    }
 
-   PhaseR  =  1.0*PWave_WaveK*r - PWave_WaveW*Time + PWave_Phase0;
-   PhaseL  = -1.0*PWave_WaveK*r - PWave_WaveW*Time + PWave_Phase0;
+   PhaseR  =  PWave_WaveK*r - PWave_WaveW*Time + PWave_Phase0;
+   PhaseL  = -PWave_WaveK*r - PWave_WaveW*Time + PWave_Phase0;
 
 // set the real and imaginary parts
    if ( PWave_LSR > 0 ){      // Right-moving wave
