@@ -51,11 +51,12 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *Cond1D, bool convertWaveToFluid)
+void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *Cond1D, bool useWaveFlag)
 {
 
    const int NCell  = PS1 + 2;   // size of the arrays Var, Temp
    const int NCond  = PS1;       // size of the array  Cond
+   const float vortexThreshold = 0.5; 
 
    int ii, jj, kk, iim, jjm, kkm, iip, jjp, kkp;
 
@@ -71,8 +72,8 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
       Temp[0][k][j][i] = SQRT(Var[0][k][j][i]);
 
       //Check whether we are on fluid level and convert imaginary and real parts to phase accordingly
-      if ( convertWaveToFluid ) {
-         Temp[1][k][j][i] = 0;//SATAN2(Var[IMAG][k][j][i], Var[REAL][k][j][i]);
+      if ( useWaveFlag ) {
+         Temp[1][k][j][i] = SATAN2(Var[IMAG][k][j][i], Var[REAL][k][j][i]);
       } else {
          Temp[1][k][j][i] = Var[1][k][j][i];
       }
@@ -88,12 +89,26 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
                                + Temp[0][kkp][jj ][ii ] + Temp[0][kkm][jj ][ii ] \
                                -  (real) 6.0 * Temp[0][kk ][jj ][ii])\
                                / ((real) 3.0 * Temp[0][kk ][jj ][ii]);   
-      if (convertWaveToFluid)   {
+      if (useWaveFlag)   {
          Cond[1][k][j][i] = 0;
-         Cond[2][k][j][i] = 0;
+
+//       Resolve de Broglie wavelength when vortices are absent
+//       Use quantum pressure combined with vortex threshold to determine whether vortex is present
+         if ( Cond[0][k][j][i] < vortexThreshold ) {
+            Cond[2][k][j][i] = MAX(MAX(MAX(MAX(MAX(
+               FABS(Temp[1][kk ][jj ][iip] - ELBDM_UnwrapPhase(Temp[1][kk ][jj ][iip], Temp[1][kk ][jj ][ii ])),
+               FABS(Temp[1][kk ][jj ][ii ] - ELBDM_UnwrapPhase(Temp[1][kk ][jj ][ii ], Temp[1][kk ][jj ][iim]))),
+               FABS(Temp[1][kk ][jjp][ii ] - ELBDM_UnwrapPhase(Temp[1][kk ][jjp][ii ], Temp[1][kk ][jj ][ii ]))),
+               FABS(Temp[1][kk ][jj ][ii ] - ELBDM_UnwrapPhase(Temp[1][kk ][jj ][ii ], Temp[1][kk ][jjm][ii ]))),
+               FABS(Temp[1][kkp][jj ][ii ] - ELBDM_UnwrapPhase(Temp[1][kkp][jj ][ii ], Temp[1][kk ][jj ][ii ]))),
+               FABS(Temp[1][kk ][jj ][ii ] - ELBDM_UnwrapPhase(Temp[1][kk ][jj ][ii ], Temp[1][kkm][jj ][ii ])));
+         } else {
+            Cond[2][k][j][i] = 0;
+         }
       } else {
+
 #        ifndef SMOOTH_PHASE
-         //Check second derivative of phase field (divided by number of dimensions for normalisation) to detect phase jumps
+//       Check second derivative of phase field (divided by number of dimensions for normalisation) to detect phase jumps
          Cond[1][k][j][i] =  FABS( Temp[1][kk ][jj ][iip] + Temp[1][kk ][jj ][iim] \
                                  + Temp[1][kk ][jjp][ii ] + Temp[1][kk ][jjm][ii ] \
                                  + Temp[1][kkp][jj ][ii ] + Temp[1][kkm][jj ][ii ] \
@@ -104,7 +119,7 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
 #        endif                               
 
 #        ifdef GAMER_DEBUG                       
-         //Check maximum phase difference in all 6 directions
+//       Check maximum phase difference in all 6 directions
          Cond[2][k][j][i] = MAX(MAX(MAX(MAX(MAX(
             FABS(Temp[1][kk ][jj ][iip] - Temp[1][kk ][jj ][ii ]),
             FABS(Temp[1][kk ][jj ][ii ] - Temp[1][kk ][jj ][iim])),
@@ -119,8 +134,8 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
    }}} // k,j,i
 
 
-} // FUNCTION : Prepare_for_Interference_Criterion*/
+} // FUNCTION : Prepare_for_Interference_Criterion
 
 
 
-#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#endif // #if ( MODEL == ELBDM )

@@ -65,26 +65,28 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    if ( OPT__FLAG_INTERFERENCE )
    {
       real (*Var)  [PS1 ][PS1 ][PS1 ] = ( real(*) [PS1 ][PS1 ][PS1 ] )  Interf_Cond;
-      bool FlagIntQP = false, FlagIntPhaseDiscont = false;
+      bool FlagIntQP = false, FlagIntPhaseDiscont = false, dBWavelengthNotResolved = false;
 
       if ( FlagTable_Interference[lv][1] > 0 )
          FlagIntQP  =  ELBDM_Flag_VolumeFracQP( Interf_Cond, FlagTable_Interference[lv][0], FlagTable_Interference[lv][1]);
       else
-         FlagIntQP  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond,             FlagTable_Interference[lv][0]);
-
-      FlagIntPhaseDiscont   =  ELBDM_Flag_Interference( i, j, k, Interf_Cond + CUBE(PS1), FlagTable_Interference[lv][2]);
-      
-#     ifdef GAMER_DEBUG
-      //if (FlagInterferenceOne) {
-      //   Aux_Message( stdout, "Information: QP Interfence on level %d at i %d j %d k %d\n", lv, i, j, k);
-      //}      
-      //if (FlagInterferenceTwo) {
-      //   Aux_Message( stdout, "Information: Phase Interfence on lv %d PID %d i %d j %d k %d\n", lv, PID,  i, j, k);
-      //}
-#     endif 
+         FlagIntQP  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond,                     FlagTable_Interference[lv][0]);
 
       Flag |= FlagIntQP;
-      Flag |= FlagIntPhaseDiscont;
+
+
+//    For wave solver: Check whether dB wavelength is resolved using FlagTable_Interference[lv][2] as maximum phase difference between neighbouring cells
+      if ( amr->use_wave_flag[lv] ) {
+         dBWavelengthNotResolved = ELBDM_Flag_Interference( i, j, k, Interf_Cond + 2 * CUBE(PS1), FlagTable_Interference[lv][2] );
+
+         Flag |= dBWavelengthNotResolved;
+
+//    For fluid solver: Check phase curvature using FlagTable_Interference[lv][2] as maximum allowed phase curvature
+      } else {
+         FlagIntPhaseDiscont   =  ELBDM_Flag_Interference( i, j, k, Interf_Cond + CUBE(PS1), FlagTable_Interference[lv][2]);
+
+         Flag |= FlagIntPhaseDiscont;
+      }
 
 #     if ( ELBDM_SCHEME == HYBRID )
       if ( Flag &&  FlagTable_Interference[lv][3] >= 0.0 ) {
@@ -154,9 +156,6 @@ if ( OPT__FLAG_RHO )
 
 // check density gradient
 // ===========================================================================================
-#  if ( ELBDM_SCHEME == HYBRID )
-   if ( amr->use_wave_flag[lv] )
-#  endif 
    if ( OPT__FLAG_RHO_GRADIENT )
    {
       Flag |= Check_Gradient( i, j, k, &Fluid[DENS][0][0][0], FlagTable_RhoGradient[lv] );

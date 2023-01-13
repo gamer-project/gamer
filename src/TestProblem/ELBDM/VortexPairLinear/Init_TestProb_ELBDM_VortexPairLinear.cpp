@@ -5,21 +5,25 @@
 
 // problem-specific global variables
 // =======================================================================================
-static double VorPairLin_BgAmp;     // psi_vorpair(x,y) = BgAmp + WaveAmp*cos(ky*y)*exp( i*(kx*x-Omega*t+Phase0) )
+static double VorPairLin_BgReal;     // psi_vorpair(x,y) = BgReal + i * BgImag + WaveAmp*cos(ky*y)*exp( i*(kx*x-Omega*t+Phase0) )
+static double VorPairLin_BgImag;
 static double VorPairLin_WaveAmp;
 static double VorPairLin_Phase0;
 
-static double VorPairLin_BgAmp;     // psi_vorpair(x,y) = BgAmp + WaveAmp*cos(ky*y)*exp( i*(kx*x-Omega*t+Phase0) )
-static double VorPairLin_WaveAmp;
-static double VorPairLin_Phase0;
 
 static double VorPairLin_kx;
 static double VorPairLin_ky;
 static double VorPairLin_Omega;
 
+// optional:
 static double VorPairLin_ZWaveAmp; // psi(x, y) = psi_vorpair(x,y) + ZWaveAmp * exp( i*(kz*z-ZWaveOmega*t) )
 static double VorPairLin_kz;
 static double VorPairLin_ZWaveOmega;
+
+static double VorPairLin_f1;
+static double VorPairLin_f1_Lambda;
+static double VorPairLin_f1_k;
+static double VorPairLin_f1_Omega;
 // =======================================================================================
 
 
@@ -97,10 +101,16 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",    &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "VorPairLin_BgAmp",   &VorPairLin_BgAmp,     -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "VorPairLin_WaveAmp", &VorPairLin_WaveAmp,   -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "VorPairLin_Phase0",  &VorPairLin_Phase0,     0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "VorPairLin_ZWaveAmp",&VorPairLin_ZWaveAmp,   0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "VorPairLin_BgReal",    &VorPairLin_BgReal,      1.0,           0.0       ,       NoMax_double      );
+   ReadPara->Add( "VorPairLin_BgImag",    &VorPairLin_BgImag,      0.0,           0.0       ,       NoMax_double      );
+   ReadPara->Add( "VorPairLin_WaveAmp",   &VorPairLin_WaveAmp,    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "VorPairLin_ZWaveAmp",  &VorPairLin_ZWaveAmp,    0.0,           0.0,              NoMax_double      );
+   ReadPara->Add( "VorPairLin_Phase0",    &VorPairLin_Phase0,      0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "VorPairLin_kx",        &VorPairLin_kx,          1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "VorPairLin_ky",        &VorPairLin_ky,          1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "VorPairLin_kz",        &VorPairLin_kz,          1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "VorPairLin_f1",        &VorPairLin_f1,          0.0,           0.0,              NoMax_double      );
+   ReadPara->Add( "VorPairLin_f1_Lambda", &VorPairLin_f1_Lambda,   0.0,           Eps_double,       NoMax_double      );
 
    ReadPara->Read( FileName );
 
@@ -112,16 +122,22 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
-   VorPairLin_kx         = 2.0*M_PI/amr->BoxSize[0];   // by default we set wavelength equal to the box size
-   VorPairLin_ky         = 2.0*M_PI/amr->BoxSize[1];
-   VorPairLin_kz         = 2.0*M_PI/amr->BoxSize[2];
+   VorPairLin_kx        *= 2.0*M_PI/amr->BoxSize[0];   // by default we set wavelength equal to multiples of the box size
+   VorPairLin_ky        *= 2.0*M_PI/amr->BoxSize[1];
+   VorPairLin_kz        *= 2.0*M_PI/amr->BoxSize[2];
    VorPairLin_Omega      = 0.5/ELBDM_ETA*( SQR(VorPairLin_kx) + SQR(VorPairLin_ky) );
    VorPairLin_ZWaveOmega = 0.5/ELBDM_ETA*  SQR(VorPairLin_kz);
+   VorPairLin_f1_k       = SQRT(2 * VorPairLin_f1_Lambda) * VorPairLin_kx;
+   VorPairLin_f1_Omega   = 0.5/ELBDM_ETA* ( SQR(VorPairLin_f1_k) );
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default    = 1.0*2.0*M_PI/VorPairLin_Omega;    // 1 period
+   double End_T_Default    = 1.0*2.0*M_PI/VorPairLin_Omega;    // 1 period
+
+// in 3D test choose 1 period of the z-wave or x-y-wave depending on which is longer
+   if (VorPairLin_ZWaveAmp > 0)
+      End_T_Default    = FMAX(End_T_Default, 1.0*2.0*M_PI/VorPairLin_ZWaveOmega);
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -139,7 +155,8 @@ void SetParameter()
    {
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID       = %d\n",     TESTPROB_ID           );
-      Aux_Message( stdout, "  VorPairLin_BgAmp      = %13.7e\n", VorPairLin_BgAmp      );
+      Aux_Message( stdout, "  VorPairLin_BgReal     = %13.7e\n", VorPairLin_BgReal     );
+      Aux_Message( stdout, "  VorPairLin_BgImag     = %13.7e\n", VorPairLin_BgImag     );
       Aux_Message( stdout, "  VorPairLin_WaveAmp    = %13.7e\n", VorPairLin_WaveAmp    );
       Aux_Message( stdout, "  VorPairLin_Phase0     = %13.7e\n", VorPairLin_Phase0     );
       Aux_Message( stdout, "  VorPairLin_ZWaveAmp   = %13.7e\n", VorPairLin_ZWaveAmp   );
@@ -148,6 +165,10 @@ void SetParameter()
       Aux_Message( stdout, "  VorPairLin_kz         = %13.7e\n", VorPairLin_kz         );
       Aux_Message( stdout, "  VorPairLin_Omega      = %13.7e\n", VorPairLin_Omega      );
       Aux_Message( stdout, "  VorPairLin_ZWaveOmega = %13.7e\n", VorPairLin_ZWaveOmega );
+      Aux_Message( stdout, "  VorPairLin_f1         = %13.7e\n", VorPairLin_f1         );
+      Aux_Message( stdout, "  VorPairLin_f1_k       = %13.7e\n", VorPairLin_f1_k       );
+      Aux_Message( stdout, "  VorPairLin_f1_Lambda  = %13.7e\n", VorPairLin_f1_Lambda  );
+      Aux_Message( stdout, "  VorPairLin_f1_Omega   = %13.7e\n", VorPairLin_f1_Omega   );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -179,12 +200,14 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   const double phase  = VorPairLin_kx*x - VorPairLin_Omega*Time + VorPairLin_Phase0;
-   const double amp    = VorPairLin_WaveAmp*cos( VorPairLin_ky*y );
-   const double zphase = VorPairLin_kz*z - VorPairLin_ZWaveOmega*Time;
-   const double zamp   = VorPairLin_ZWaveAmp;
-   const double Re     = VorPairLin_BgAmp + amp*cos( phase ) + zamp*cos( zphase );
-   const double Im     =                  + amp*sin( phase ) + zamp*sin( zphase );
+   const double phase   = VorPairLin_kx*x - VorPairLin_Omega*Time + VorPairLin_Phase0;
+   const double amp     = VorPairLin_WaveAmp*cos( VorPairLin_ky*y );
+   const double zphase  = VorPairLin_kz*z - VorPairLin_ZWaveOmega*Time;
+   const double zamp    = VorPairLin_ZWaveAmp;
+   const double bgphase = VorPairLin_f1_Lambda*x - VorPairLin_f1_Omega*Time;
+   const double bgamp   = VorPairLin_f1;
+   const double Re     = VorPairLin_BgReal + bgamp * cos(bgphase) + amp*cos( phase ) + zamp*cos( zphase );
+   const double Im     = VorPairLin_BgImag + bgamp * sin(bgphase) + amp*sin( phase ) + zamp*sin( zphase );
    fluid[DENS] = SQR( Re ) + SQR( Im );
 
 #  if ( ELBDM_SCHEME == HYBRID )
