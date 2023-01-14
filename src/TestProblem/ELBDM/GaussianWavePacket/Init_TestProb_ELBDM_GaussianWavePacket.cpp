@@ -5,12 +5,12 @@
 
 // problem-specific global variables
 // =======================================================================================
-static double Gau_v0;      // mean velocity
-static double Gau_Width;   // Gaussian width
-static double Gau_Center;  // Gaussian center
-static int    Gau_XYZ;     // wave propagation direction (0/1/2 --> x/y/z)
-static int    Gau_PerodicN;// periodic boundary condition
-                           // (0 = non-periodic, >0 = number of periodic images each side)
+static double Gau_v0;       // mean velocity
+static double Gau_Width;    // Gaussian width
+static double Gau_Center;   // Gaussian center
+static int    Gau_XYZ;      // wave propagation direction (0/1/2 --> x/y/z)
+static int    Gau_PeriodicN;// periodic boundary condition
+                            // (0 = non-periodic, >0 = number of periodic images each side)
 // =======================================================================================
 
 static void OutputError();
