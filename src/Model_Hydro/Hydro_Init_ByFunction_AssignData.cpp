@@ -10,8 +10,8 @@ static void Init_Function_User_Template( real fluid[], const double x, const dou
 void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                                 const int lv, double AuxArray[] ) = NULL;
 
-extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
-                                         const double dt, const int lv, double AuxArray[] );
+extern int (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
+                                        const double dt, const int lv, double AuxArray[] );
 
 #ifdef MHD
 // declare as static so that other functions cannot invoke it directly and must use the function pointer

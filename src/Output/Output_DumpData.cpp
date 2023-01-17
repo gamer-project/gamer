@@ -4,6 +4,7 @@ extern Timer_t Timer_OutputWalltime;
 
 static void Write_DumpRecord();
 extern void (*Output_User_Ptr)();
+extern void (*Output_UserWorkBeforeOutput_Ptr)();
 
 
 
@@ -235,6 +236,10 @@ void Output_DumpData( const int Stage )
 //    before dumpting data --> for bitwise reproducibility
       if ( OPT__CORR_AFTER_ALL_SYNC == CORR_AFTER_SYNC_BEFORE_DUMP  &&  Stage != 0 )  Flu_CorrAfterAllSync();
 
+//    perform user-specified work before dumping data 
+      if ( Output_UserWorkBeforeOutput_Ptr != NULL )  Output_UserWorkBeforeOutput_Ptr();
+
+//    start dumping data
       if ( OPT__OUTPUT_TOTAL )            Output_DumpData_Total( FileName_Total );
       if ( OPT__OUTPUT_PART  )            Output_DumpData_Part( OPT__OUTPUT_PART, OPT__OUTPUT_BASE, OUTPUT_PART_X,
                                                                 OUTPUT_PART_Y, OUTPUT_PART_Z, FileName_Part );
@@ -244,7 +249,7 @@ void Output_DumpData( const int Stage )
          else
             Aux_Error( ERROR_INFO, "Output_User_Ptr == NULL for OPT__OUTPUT_USER !!\n" );
       }
-#     ifdef GRAVITY
+#     ifdef SUPPORT_FFTW
       if ( OPT__OUTPUT_BASEPS )           Output_BasePowerSpectrum( FileName_PS );
 #     endif
 #     ifdef PARTICLE

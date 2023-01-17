@@ -210,10 +210,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          exit( -1 );
    }
 
-   fluid[MOMX] = NULL_REAL;
-   fluid[MOMY] = NULL_REAL;
-   fluid[MOMZ] = NULL_REAL;
-   fluid[ENGY] = NULL_REAL;
+   fluid[MOMX] = 0.0;
+   fluid[MOMY] = 0.0;
+   fluid[MOMZ] = 0.0;
+   fluid[ENGY] = 1.0e10;
 
 } // FUNCTION : SetGridIC
 

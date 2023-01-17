@@ -48,8 +48,8 @@ extern int    Bondi_SinkNCell;
 // Return      :  true  : This cell has been reset
 //                false : This cell has not been reset
 //-------------------------------------------------------------------------------------------------------
-bool Flu_ResetByUser_Func_Bondi( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
-                                 const double dt, const int lv, double AuxArray[] )
+int Flu_ResetByUser_Func_Bondi( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
+                                const double dt, const int lv, double AuxArray[] )
 {
 
    const double Pos[3]  = { x, y, z };
@@ -109,7 +109,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double Time
    const real  _Gamma_m1 = (real)1.0 / Gamma_m1;
 #  endif
 
-   bool   Reset;
+   int    Reset;
    real   fluid[NCOMP_TOTAL], fluid_bk[NCOMP_TOTAL];
    double x, y, z, x0, y0, z0;
 

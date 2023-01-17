@@ -1147,6 +1147,10 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
+#  ifndef SUPPORT_FFTW
+#     error : ERROR : SUPPORT_FFTW must be enabled in the makefile when GRAVITY is on !!
+#  endif
+
 #  if ( POT_SCHEME != SOR  &&  POT_SCHEME != MG )
 #     error : ERROR : unsupported Poisson solver in the makefile (SOR/MG) !!
 #  endif

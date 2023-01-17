@@ -709,13 +709,13 @@ void Init_ResetParameter()
 #  endif
 
 
-// OPT__OUTPUT_BASEPS is not supported if GRAVITY is disabled
-#  ifndef GRAVITY
+// OPT__OUTPUT_BASEPS is not supported if SUPPORT_FFTW is disabled
+#  ifndef SUPPORT_FFTW
    if ( OPT__OUTPUT_BASEPS )
    {
       OPT__OUTPUT_BASEPS = false;
 
-      PRINT_WARNING( OPT__OUTPUT_BASEPS, FORMAT_INT, "since GRAVITY is disabled" );
+      PRINT_WARNING( OPT__OUTPUT_BASEPS, FORMAT_INT, "since SUPPORT_FFTW is disabled" );
    }
 #  endif
 

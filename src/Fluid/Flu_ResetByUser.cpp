@@ -1,13 +1,13 @@
 #include "GAMER.h"
 
 // declare as static so that other functions cannot invoke them directly and must use the function pointers
-static bool Flu_ResetByUser_Func_Template( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
-                                           const double dt, const int lv, double AuxArray[] );
+static int Flu_ResetByUser_Func_Template( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
+                                          const double dt, const int lv, double AuxArray[] );
 static void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const double TimeNew, const double dt );
 
 // this function pointer **must** be set by a test problem initializer
-bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
-                                  const double dt, const int lv, double AuxArray[] ) = NULL;
+int (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
+                                 const double dt, const int lv, double AuxArray[] ) = NULL;
 // this function pointer **may** be overwritten by a test problem initializer
 void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TimeNew, const double dt ) = Flu_ResetByUser_API_Default;
 
@@ -40,8 +40,8 @@ void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double Tim
 // Return      :  true  : This cell has been reset
 //                false : This cell has not been reset
 //-------------------------------------------------------------------------------------------------------
-bool Flu_ResetByUser_Func_Template( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
-                                    const double dt, const int lv, double AuxArray[] )
+int Flu_ResetByUser_Func_Template( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
+                                   const double dt, const int lv, double AuxArray[] )
 {
 
 // Example : reset fluid variables to extremely small values if the cell is within a specific sphere
@@ -118,7 +118,7 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const double Ti
 
    const double dh = amr->dh[lv];
 
-   bool   Reset;
+   int    Reset;
    real   fluid[NCOMP_TOTAL];
    double x, y, z, x0, y0, z0;
 
