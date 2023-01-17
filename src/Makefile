@@ -36,6 +36,7 @@ COMPILE_VERBOSE := 0
 SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
+# --> must enable SUPPORT_FFTW
 #SIMU_OPTION += -DGRAVITY
 
 # enable particles
@@ -210,6 +211,10 @@ SIMU_OPTION += -DOPENMP
 
 # support GNU scientific library
 #SIMU_OPTION += -DSUPPORT_GSL
+
+# support FFTW library
+# --> must be enabled when GRAVITY is enabled
+#SIMU_OPTION += -DSUPPORT_FFTW
 
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT
@@ -457,7 +462,7 @@ CPU_FILE    += End_GAMER.cpp  End_MemFree.cpp  End_MemFree_Fluid.cpp  End_StopMa
                Init_MemAllocate_Fluid.cpp  Init_Parallelization.cpp  Init_RecordBasePatch.cpp  Init_Refine.cpp \
                Init_ByRestart_v1.cpp  Init_ByFunction.cpp  Init_TestProb.cpp  Init_ByFile.cpp  Init_OpenMP.cpp \
                Init_ByRestart_HDF5.cpp  Init_ResetParameter.cpp  Init_ByRestart_v2.cpp  Init_MemoryPool.cpp \
-               Init_Unit.cpp  Init_UniformGrid.cpp  Init_Field.cpp  Init_User.cpp
+               Init_Unit.cpp  Init_UniformGrid.cpp  Init_Field.cpp  Init_User.cpp  Init_FFTW.cpp
 
 CPU_FILE    += Interpolate.cpp  Int_CQuadratic.cpp  Int_MinMod1D.cpp  Int_MinMod3D.cpp  Int_vanLeer.cpp \
                Int_Quadratic.cpp  Int_Table.cpp  Int_CQuartic.cpp  Int_Quartic.cpp
@@ -471,7 +476,7 @@ CPU_FILE    += Mis_CompareRealValue.cpp  Mis_GetTotalPatchNumber.cpp  Mis_GetTim
 CPU_FILE    += Output_DumpData_Total.cpp  Output_DumpData.cpp  Output_DumpManually.cpp  Output_PatchMap.cpp \
                Output_DumpData_Part.cpp  Output_FlagMap.cpp  Output_Patch.cpp  Output_PreparedPatch_Fluid.cpp \
                Output_PatchCorner.cpp  Output_Flux.cpp  Output_User.cpp  Output_BasePowerSpectrum.cpp \
-               Output_DumpData_Total_HDF5.cpp  Output_L1Error.cpp
+               Output_DumpData_Total_HDF5.cpp  Output_L1Error.cpp  Output_UserWorkBeforeOutput.cpp
 
 CPU_FILE    += Flag_Real.cpp  Refine.cpp   SiblingSearch.cpp  SiblingSearch_Base.cpp  FindFather.cpp \
                Flag_User.cpp  Flag_Check.cpp  Flag_Lohner.cpp  Flag_Region.cpp
@@ -565,7 +570,7 @@ GPU_FILE    += CUPOT_PoissonSolver_SOR.cu \
 CPU_FILE    += CPU_PoissonGravitySolver.cpp  CPU_PoissonSolver_SOR.cpp  CPU_PoissonSolver_FFT.cpp \
                CPU_PoissonSolver_MG.cpp  CPU_ExtPotSolver.cpp  CPU_ExtPotSolver_BaseLevel.cpp
 
-CPU_FILE    += Init_FFTW.cpp  Gra_Close.cpp  Gra_Prepare_Flu.cpp  Gra_Prepare_Pot.cpp  Gra_Prepare_Corner.cpp \
+CPU_FILE    += Gra_Close.cpp  Gra_Prepare_Flu.cpp  Gra_Prepare_Pot.cpp  Gra_Prepare_Corner.cpp \
                Gra_AdvanceDt.cpp  Poi_Close.cpp  Poi_Prepare_Pot.cpp  Poi_Prepare_Rho.cpp \
                Output_PreparedPatch_Poisson.cpp  Init_MemAllocate_PoissonGravity.cpp \
                End_MemFree_PoissonGravity.cpp  Init_Set_Default_SOR_Parameter.cpp  Init_GreenFuncK.cpp \
@@ -736,7 +741,7 @@ ifeq "$(filter -DLAOHU, $(SIMU_OPTION))" "-DLAOHU"
 LIB += -L$(GPUID_PATH) -lgpudevmgr
 endif
 
-ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
+ifeq "$(filter -DSUPPORT_FFTW, $(SIMU_OPTION))" "-DSUPPORT_FFTW"
    LIB += -L$(FFTW_PATH)/lib
    ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
       ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" "-DSERIAL"
@@ -782,7 +787,7 @@ ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" ""
 INCLUDE += -I$(MPI_PATH)/include
 endif
 
-ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
+ifeq "$(filter -DSUPPORT_FFTW, $(SIMU_OPTION))" "-DSUPPORT_FFTW"
 INCLUDE += -I$(FFTW_PATH)/include
 endif
 

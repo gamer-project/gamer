@@ -4,6 +4,7 @@ static bool Check_Gradient( const int i, const int j, const int k, const real In
 static bool Check_Curl( const int i, const int j, const int k,
                         const real vx[][PS1][PS1], const real vy[][PS1][PS1], const real vz[][PS1][PS1],
                         const double Threshold );
+extern bool (*Flag_Region_Ptr)( const int i, const int j, const int k, const int lv, const int PID );
 extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 
 
@@ -51,7 +52,9 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 // ===========================================================================================
    if ( OPT__FLAG_REGION )
    {
-      if (  !Flag_Region( i, j, k, lv, PID )  )    return false;
+      if ( Flag_Region_Ptr == NULL )   Aux_Error( ERROR_INFO, "Flag_Region_Ptr == NULL for OPT__FLAG_REGION !!\n" );
+
+      if (  !Flag_Region_Ptr( i, j, k, lv, PID )  )    return false;
    }
 
 
