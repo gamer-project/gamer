@@ -251,7 +251,7 @@ void OutputError()
    const char Prefix[100]     = "Gaussian";
    const OptOutputPart_t Part = OUTPUT_X + Gau_XYZ;
 
-   Output_L1Error( SetGridIC, NULL, Prefix, Part, 0.0, 0.0, 0.0 );
+   Output_L1Error( SetGridIC, NULL, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
 
 } // FUNCTION : OutputError
 #endif // #if ( MODEL == ELBDM )
