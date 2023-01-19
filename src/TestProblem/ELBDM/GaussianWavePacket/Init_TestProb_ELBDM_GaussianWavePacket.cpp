@@ -5,10 +5,12 @@
 
 // problem-specific global variables
 // =======================================================================================
-static double Gau_v0;      // mean velocity
-static double Gau_Width;   // Gaussian width
-static double Gau_Center;  // Gaussian center
-static int    Gau_XYZ;     // wave propagation direction (0/1/2 --> x/y/z)
+static double Gau_v0;       // mean velocity
+static double Gau_Width;    // Gaussian width
+static double Gau_Center;   // Gaussian center
+static int    Gau_XYZ;      // wave propagation direction (0/1/2 --> x/y/z)
+static int    Gau_PeriodicN;// periodic boundary condition
+                            // (0 = non-periodic, >0 = number of periodic images each side)
 // =======================================================================================
 
 static void OutputError();
@@ -96,6 +98,7 @@ void SetParameter()
    ReadPara->Add( "Gau_Width",         &Gau_Width,             0.1,           Eps_double,       NoMax_double      );
    ReadPara->Add( "Gau_Center",        &Gau_Center,            NoDef_double,  NoMin_double,     NoMax_double      );
    ReadPara->Add( "Gau_XYZ",           &Gau_XYZ,               0,             0,                2                 );
+   ReadPara->Add( "Gau_PeriodicN",     &Gau_PeriodicN,         0,             0,                NoMax_int         );
 
    ReadPara->Read( FileName );
 
@@ -130,11 +133,12 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID       = %d\n",     TESTPROB_ID );
-      Aux_Message( stdout, "  mean velocity         = %14.7e\n", Gau_v0      );
-      Aux_Message( stdout, "  Gaussian width        = %14.7e\n", Gau_Width   );
-      Aux_Message( stdout, "  Gaussian center       = %14.7e\n", Gau_Center  );
-      Aux_Message( stdout, "  propagation direction = %d\n",     Gau_XYZ     );
+      Aux_Message( stdout, "  test problem ID                    = %d\n",     TESTPROB_ID   );
+      Aux_Message( stdout, "  mean velocity                      = %14.7e\n", Gau_v0        );
+      Aux_Message( stdout, "  Gaussian width                     = %14.7e\n", Gau_Width     );
+      Aux_Message( stdout, "  Gaussian center                    = %14.7e\n", Gau_Center    );
+      Aux_Message( stdout, "  propagation direction              = %d\n",     Gau_XYZ       );
+      Aux_Message( stdout, "  number of periodic image each side = %d\n",     Gau_PeriodicN );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -185,9 +189,45 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double Gau_Theta1 = -0.5*acos(  pow( Gau_Const1, -0.5 )  );
    const double Gau_Theta2 = 0.5*pow( dr1, 2.0 )*ELBDM_ETA*Time/(  pow( ELBDM_ETA*SQR(Gau_Width), 2.0) + SQR(Time)  )
                              + Gau_v0*ELBDM_ETA*dr2;
+   double Re, Im;
 
-   fluid[REAL] = Gau_Const2*cos( Gau_Theta1 + Gau_Theta2 );
-   fluid[IMAG] = Gau_Const2*sin( Gau_Theta1 + Gau_Theta2 );
+   Re = Gau_Const2*cos( Gau_Theta1 + Gau_Theta2 );
+   Im = Gau_Const2*sin( Gau_Theta1 + Gau_Theta2 );
+
+   // Approximate periodic BC by including Gaussian wave packets outside the box
+   if ( Gau_PeriodicN > 0 ){
+      double Gau_Center_p, dr1_p, dr2_p, Gau_Const2_p, Gau_Theta2_p;
+      double Gau_Center_m, dr1_m, dr2_m, Gau_Const2_m, Gau_Theta2_m;
+
+      for (int n=1; n<Gau_PeriodicN+1; n++){
+         // Gaussian wave packet image for periodic BC on plus(+) direction
+         Gau_Center_p      = Gau_Center + n*amr->BoxSize[Gau_XYZ];
+         dr1_p             = r -     Gau_v0*Time - Gau_Center_p;
+         dr2_p             = r - 0.5*Gau_v0*Time - Gau_Center_p;
+         Gau_Const2_p      = pow( SQR(Gau_Width)*M_PI*Gau_Const1, -0.25 )
+                             *exp(  -0.5*pow( dr1_p/Gau_Width, 2.0 )/Gau_Const1  );
+         Gau_Theta2_p      = 0.5*pow( dr1_p, 2.0 )*ELBDM_ETA*Time/(  pow( ELBDM_ETA*SQR(Gau_Width), 2.0) + SQR(Time)  )
+                             + Gau_v0*ELBDM_ETA*dr2_p;
+
+         Re += Gau_Const2_p*cos( Gau_Theta1 + Gau_Theta2_p );
+         Im += Gau_Const2_p*sin( Gau_Theta1 + Gau_Theta2_p );
+
+         // Gaussian wave packet image for periodic BC on minus(-) direction
+         Gau_Center_m      = Gau_Center - n*amr->BoxSize[Gau_XYZ];
+         dr1_m             = r -     Gau_v0*Time - Gau_Center_m;
+         dr2_m             = r - 0.5*Gau_v0*Time - Gau_Center_m;
+         Gau_Const2_m      = pow( SQR(Gau_Width)*M_PI*Gau_Const1, -0.25 )
+                             *exp(  -0.5*pow( dr1_m/Gau_Width, 2.0 )/Gau_Const1  );
+         Gau_Theta2_m      = 0.5*pow( dr1_m, 2.0 )*ELBDM_ETA*Time/(  pow( ELBDM_ETA*SQR(Gau_Width), 2.0) + SQR(Time)  )
+                             + Gau_v0*ELBDM_ETA*dr2_m;
+
+         Re += Gau_Const2_m*cos( Gau_Theta1 + Gau_Theta2_m );
+         Im += Gau_Const2_m*sin( Gau_Theta1 + Gau_Theta2_m );
+      }
+   } // if ( Gau_PeriodicN > 0 )
+
+   fluid[REAL] = Re;
+   fluid[IMAG] = Im;
    fluid[DENS] = SQR(fluid[REAL]) + SQR(fluid[IMAG]);
 
 } // FUNCTION : SetGridIC
@@ -211,7 +251,7 @@ void OutputError()
    const char Prefix[100]     = "Gaussian";
    const OptOutputPart_t Part = OUTPUT_X + Gau_XYZ;
 
-   Output_L1Error( SetGridIC, NULL, Prefix, Part, 0.0, 0.0, 0.0 );
+   Output_L1Error( SetGridIC, NULL, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
 
 } // FUNCTION : OutputError
 #endif // #if ( MODEL == ELBDM )
