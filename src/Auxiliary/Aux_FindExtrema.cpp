@@ -39,16 +39,28 @@
 //                            --> PATCH_LEAF_PLUS_MAXNONLEAF includes leaf patches on all target levels
 //                                (i.e., MinLv ~ MaxLv) and non-leaf patches only on MaxLv
 //
-// Example     :  ...
+// Example     :  Extrema_t Extrema;
+//                Extrema.Field     = _DENS;
+//                Extrema.Radius    = HUGE_NUMBER; // entire domain
+//                Extrema.Center[0] = amr->BoxCenter[0];
+//                Extrema.Center[1] = amr->BoxCenter[1];
+//                Extrema.Center[2] = amr->BoxCenter[2];
 //
-//                Aux_FindExtrema(  ... );
+//                Aux_FindExtrema( &Extrema, EXTREMA_MAX, 0, TOP_LEVEL, PATCH_LEAF );
 //
 //                if ( MPI_Rank == 0 )
 //                {
 //                   char Filename[MAX_STRING];
 //                   sprintf( Filename, "Extrema.txt" );
 //                   FILE *File = fopen( Filename, "w" );
-//                   fprintf( File, "#...", ... );
+//                   fprintf( File, "#%13s%14s%3s%14s %10s %13s %13s %13s %13s %14s %13s %13s %13s %5s %5s %5s %4s %4s %4s\n",
+//                            "Time", "Step", "", "dt", "Field", "Radius", "Center[x]", "Center[y]", "Center[z]",
+//                            "Value", "Coord[x]", "Coord[y]", "Coord[z]", "Rank", "Level", "PID", "i", "j", "k" );
+//                   fprintf( File, "%14.7e%14ld%3s%14.7e", Time[0], Step, "", dTime_Base );
+//                   fprintf( File, " %10d %13.7e %13.7e %13.7e %13.7e %14.7e %13.7e %13.7e %13.7e %5d %5d %5d %4d %4d %4d\n",
+//                            Extrema.Field, Extrema.Radius, Extrema.Center[0], Extrema.Center[1], Extrema.Center[2],
+//                            Extrema.Value, Extrema.Coord[0], Extrema.Coord[1], Extrema.Coord[2],
+//                            Extrema.Rank, Extrema.Level, Extrema.PID, Extrema.Cell[0], Extrema.Cell[1], Extrema.Cell[2] );
 //                   fclose( File );
 //                }
 //
