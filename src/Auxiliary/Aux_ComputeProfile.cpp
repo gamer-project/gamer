@@ -116,6 +116,10 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
    if ( MinLv > MaxLv )
       Aux_Error( ERROR_INFO, "MinLv (%d) > MaxLv (%d) !!\n", MinLv, MaxLv );
+
+   if ( PatchType != PATCH_LEAF  &&  PatchType != PATCH_NONLEAF  &&
+        PatchType != PATCH_BOTH  &&  PatchType != PATCH_LEAF_PLUS_MAXNONLEAF )
+      Aux_Error( ERROR_INFO, "incorrect PatchType (%d) !!\n", PatchType );
 #  endif
 
 

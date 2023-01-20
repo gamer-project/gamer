@@ -111,7 +111,7 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
    }
 
 
-   const int    Field       = Extrema->Field
+   const int    Field       = Extrema->Field;
    const double MaxR        = Extrema->Radius;
    const double MaxR2       = SQR( MaxR );
    const double HalfBox[3]  = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
@@ -259,7 +259,7 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
       if (  ( Mode == EXTREMA_MAX && OMP_Extrema[TID].Value > Extrema->Value )  ||
             ( Mode == EXTREMA_MIN && OMP_Extrema[TID].Value < Extrema->Value )   )
          *Extrema = OMP_Extrema[TID];
-   j
+   }
 
 // restore the input fields
    Extrema->Field     = Field;
