@@ -63,6 +63,7 @@ extern "C" {
 #include "Timer.h"
 #include "RandomNumber.h"
 #include "Profile.h"
+#include "Extrema.h"
 #include "SrcTerms.h"
 #include "EoS.h"
 #include "Global.h"
