@@ -208,7 +208,7 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
             const double y0  = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
             const double z0  = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
 
-            for (int k=0; k<PS1; k++)  {  const double z = z0  + k*dh;
+            for (int k=0; k<PS1; k++)  {  const double z = z0 + k*dh;
                                           double dz = z - Center[2];
                                           if ( Periodic[2] ) {
                                              if      ( dz > +HalfBox[2] )  {  dz -= amr->BoxSize[2];  }
@@ -259,7 +259,7 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
                } // if ( r2 < MaxR2 )
             }}} // i,j,k
          } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-      } // for (int lv=lv_min; lv<=lv_max; lv++)
+      } // for (int lv=MinLv; lv<=MaxLv; lv++)
    } // OpenMP parallel region
 
 
@@ -283,7 +283,7 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
 
 // for MPI only
 #  ifndef SERIAL
-// define an MPI dervied datatype for Extrema_t
+// define an MPI derived datatype for Extrema_t
    MPI_Datatype MPI_Extrema_t;
 
    Extrema->CreateMPIType( &MPI_Extrema_t );
