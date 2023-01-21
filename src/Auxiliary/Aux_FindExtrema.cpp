@@ -57,7 +57,7 @@
 //                            "Time", "Step", "", "dt", "Field", "Radius", "Center[x]", "Center[y]", "Center[z]",
 //                            "Value", "Coord[x]", "Coord[y]", "Coord[z]", "Rank", "Level", "PID", "i", "j", "k" );
 //                   fprintf( File, "%14.7e%14ld%3s%14.7e", Time[0], Step, "", dTime_Base );
-//                   fprintf( File, " %10d %13.7e %13.7e %13.7e %13.7e %14.7e %13.7e %13.7e %13.7e %5d %5d %5d %4d %4d %4d\n",
+//                   fprintf( File, " %10ld %13.7e %13.7e %13.7e %13.7e %14.7e %13.7e %13.7e %13.7e %5d %5d %5d %4d %4d %4d\n",
 //                            Extrema.Field, Extrema.Radius, Extrema.Center[0], Extrema.Center[1], Extrema.Center[2],
 //                            Extrema.Value, Extrema.Coord[0], Extrema.Coord[1], Extrema.Coord[2],
 //                            Extrema.Rank, Extrema.Level, Extrema.PID, Extrema.Cell[0], Extrema.Cell[1], Extrema.Cell[2] );
@@ -83,7 +83,7 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
       Aux_Error( ERROR_INFO, "Field == _NONE !!\n" );
 
    if ( Extrema->Field & ~SupportedField )
-      Aux_Error( ERROR_INFO, "unsupported field (%d) !!\n", Extrema->Field );
+      Aux_Error( ERROR_INFO, "unsupported field (%ld) !!\n", Extrema->Field );
 
    if ( Extrema->Radius <= 0.0 )
       Aux_Error( ERROR_INFO, "Radius (%14.7e) <= 0.0 !!\n", Extrema->Radius );
@@ -123,7 +123,7 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
    }
 
 
-   const int    Field       = Extrema->Field;
+   const long   Field       = Extrema->Field;
    const double MaxR        = Extrema->Radius;
    const double MaxR2       = SQR( MaxR );
    const double HalfBox[3]  = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
@@ -240,7 +240,7 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
                      Value = PotPtr[k][j][i];
 #                 endif
                   else
-                     Aux_Error( ERROR_INFO, "unsupported field (%d) !!\n", Extrema->Field );
+                     Aux_Error( ERROR_INFO, "unsupported field (%ld) !!\n", Extrema->Field );
 
                   if (  ( Mode == EXTREMA_MAX && Value > OMP_Extrema[TID].Value )  ||
                         ( Mode == EXTREMA_MIN && Value < OMP_Extrema[TID].Value )   )

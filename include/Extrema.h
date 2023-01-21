@@ -30,7 +30,7 @@ struct Extrema_t
 // --> must be consistent with CreateMPIType()
 // ===================================================================================
 // input parameters
-   int    Field;
+   long   Field;
    double Radius;
    double Center[3];
 
@@ -54,22 +54,22 @@ struct Extrema_t
    Extrema_t()
    {
 
-      Field     = -1;
+      Field     = _NONE;
       Radius    = NULL_REAL;
       Center[0] = NULL_REAL;
       Center[1] = NULL_REAL;
       Center[2] = NULL_REAL;
 
-      Value    = NULL_REAL;
-      Coord[0] = NULL_REAL;
-      Coord[1] = NULL_REAL;
-      Coord[2] = NULL_REAL;
-      Rank     = -1;
-      Level    = -1;
-      PID      = -1;
-      Cell[0]  = -1;
-      Cell[1]  = -1;
-      Cell[2]  = -1;
+      Value     = NULL_REAL;
+      Coord[0]  = NULL_REAL;
+      Coord[1]  = NULL_REAL;
+      Coord[2]  = NULL_REAL;
+      Rank      = -1;
+      Level     = -1;
+      PID       = -1;
+      Cell[0]   = -1;
+      Cell[1]   = -1;
+      Cell[2]   = -1;
 
    } // METHOD : Extrema_t
 
@@ -104,7 +104,7 @@ struct Extrema_t
 
       const int          NBlk         = 9;
       const int          Length[NBlk] = { 1, 1, 3, 1, 3, 1, 1, 1, 3 };
-      const MPI_Datatype Type  [NBlk] = { MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_GAMER_REAL, MPI_DOUBLE, MPI_INT, MPI_INT, MPI_INT, MPI_INT };
+      const MPI_Datatype Type  [NBlk] = { MPI_LONG, MPI_DOUBLE, MPI_DOUBLE, MPI_GAMER_REAL, MPI_DOUBLE, MPI_INT, MPI_INT, MPI_INT, MPI_INT };
 
       MPI_Aint Disp[NBlk];
 
