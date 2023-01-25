@@ -88,7 +88,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
-#  ifdef GRAVITY
+#  ifdef SUPPORT_FFTW
 // initialize FFTW
    Init_FFTW();
 #  endif
@@ -232,6 +232,13 @@ void Init_GAMER( int *argc, char ***argv )
    }
 
 
+// ensure B field consistency on the shared interfaces between sibling patches
+#  if ( MODEL == HYDRO  &&  defined MHD )
+   if ( OPT__SAME_INTERFACE_B )
+   for (int lv=0; lv<NLEVEL; lv++)  MHD_SameInterfaceB( lv );
+#  endif
+
+
 // user-defined initialization
    if ( Init_User_Ptr != NULL )  Init_User_Ptr();
 
@@ -245,8 +252,10 @@ void Init_GAMER( int *argc, char ***argv )
 #  ifdef GRAVITY
    if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
    {
+#     ifdef SUPPORT_FFTW
 //    initialize the k-space Green's function for the isolated BC.
       if ( OPT__SELF_GRAVITY  &&  OPT__BC_POT == BC_POT_ISOLATED )    Init_GreenFuncK();
+#     endif
 
 
 //    evaluate the initial average density if it is not set yet (may already be set in Init_ByRestart)
@@ -285,7 +294,7 @@ void Init_GAMER( int *argc, char ***argv )
    const bool UseStoredAcc_No = false;
 
    for (int lv=0; lv<NLEVEL; lv++)
-   Par_UpdateParticle( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], NULL_REAL, PAR_UPSTEP_ACC_ONLY, StoreAcc_Yes, UseStoredAcc_No );
+      Par_UpdateParticle( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], NULL_REAL, PAR_UPSTEP_ACC_ONLY, StoreAcc_Yes, UseStoredAcc_No );
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating particle acceleration" );
 #  endif // #if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_ACC )
@@ -294,12 +303,15 @@ void Init_GAMER( int *argc, char ***argv )
 // initialize tracer particles
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Initializing tracer particles" );
 
+   const bool MapOnly_Yes = true;
+
    for (int lv=0; lv<NLEVEL; lv++)
-   Par_UpdateTracerParticle( lv, Time[lv], NULL_REAL, true );
+      Par_UpdateTracerParticle( lv, Time[lv], NULL_REAL, MapOnly_Yes );
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Initializing tracer particles" );
 #  endif // #ifdef TRACER
 
 #  endif // #ifdef PARTICLE
+
 
 } // FUNCTION : Init_GAMER

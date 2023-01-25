@@ -263,7 +263,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    for (int f=0; f<6; f++)
    {
       if ( FluBC[f] != BC_FLU_PERIODIC    &&  FluBC[f] != BC_FLU_OUTFLOW  &&
-           FluBC[f] != BC_FLU_REFLECTING  &&  FluBC[f] != BC_FLU_USER        )
+           FluBC[f] != BC_FLU_REFLECTING  &&  FluBC[f] != BC_FLU_DIODE    &&
+           FluBC[f] != BC_FLU_USER )
          Aux_Error( ERROR_INFO, "unsupported parameter FluBC[%d] = %d !!\n", f, FluBC[f] );
 
 #     if ( MODEL != HYDRO )
@@ -272,6 +273,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
       if ( FluBC[f] == BC_FLU_REFLECTING )
          Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO !!\n" );
+
+      if ( FluBC[f] == BC_FLU_DIODE )
+         Aux_Error( ERROR_INFO, "diode boundary condition (OPT__BC_FLU=5) only works with HYDRO !!\n" );
 #     endif
    }
 
@@ -1812,6 +1816,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                                             PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
                                                             TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der );
                      break;
+
+                     case BC_FLU_DIODE:
+                        Hydro_BoundaryCondition_Diode     ( Data1PG_CC_Ptr, BC_Face[BC_Sibling], NVarCC_Flu,            GhostSize,
+                                                            PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
+                                                            TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der );
+                     break;
 #                    endif
 
                      case BC_FLU_USER:
@@ -1863,6 +1873,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
                      case BC_FLU_REFLECTING:
                         MHD_BoundaryCondition_Reflecting( MagDataPtr, BC_Face[BC_Sibling], NVarFC_Tot, GhostSize,
+                                                          PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
+                                                          TVarFCIdxList );
+                     break;
+
+                     case BC_FLU_DIODE:
+                        MHD_BoundaryCondition_Diode     ( MagDataPtr, BC_Face[BC_Sibling], NVarFC_Tot, GhostSize,
                                                           PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
                                                           TVarFCIdxList );
                      break;
