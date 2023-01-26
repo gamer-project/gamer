@@ -1027,16 +1027,12 @@ void Aux_Check_Parameter()
 #     error : ERROR : NCOMP_FLUID != 3 in ELBDM !!
 #  endif
 
-#  if ( FLU_NIN != 2 )
-#     error : ERROR : FLU_NIN != 2 in ELBDM !!
+#  if ( FLU_NIN < 2 )
+#     error : ERROR : FLU_NIN < 2 in ELBDM !!
 #  endif
 
-#  if ( FLU_NOUT != 3 )
-#     error : ERROR : FLU_NOUT != 3 in ELBDM !!
-#  endif
-
-#  if ( NCOMP_PASSIVE > 0 )
-#     error : ERROR : NCOMP_PASSIVE > 0 in ELBDM (currently this model does not support passive scalars) !!
+#  if ( FLU_NOUT < 3 )
+#     error : ERROR : FLU_NOUT < 3 in ELBDM !!
 #  endif
 
 #  ifdef QUARTIC_SELF_INTERACTION
@@ -1080,6 +1076,11 @@ void Aux_Check_Parameter()
 // warnings
 // ------------------------------
    if ( MPI_Rank == 0 ) {
+
+#  if ( NCOMP_PASSIVE > 0 )
+   Aux_Message( stderr, "WARNING : NCOMP_PASSIVE (%d) > 0 but ELBDM does not really support passive scalars !!\n",
+                NCOMP_PASSIVE );
+#  endif
 
    if ( !ELBDM_TAYLOR3_AUTO  &&  ELBDM_TAYLOR3_COEFF < 1.0/8.0 )
       Aux_Message( stderr, "WARNING : ELBDM_TAYLOR3_COEFF (%13.7e) < 0.125 is unconditionally unstable !!\n",
