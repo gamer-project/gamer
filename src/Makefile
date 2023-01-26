@@ -105,7 +105,7 @@ SIMU_OPTION += -DLAPLACIAN_4TH
 #SIMU_OPTION += -DQUARTIC_SELF_INTERACTION
 
 # number of passively advected scalars
-# --> not supported yet and must be set to 0 (or comment it out)
+# --> not supported yet and thus can only be used as auxiliary fields
 SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
 endif # MODEL
