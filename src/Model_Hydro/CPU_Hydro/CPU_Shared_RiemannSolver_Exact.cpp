@@ -6,7 +6,7 @@
 #include "CUFLU.h"
 
 #if (  MODEL == HYDRO  &&  \
-       ( RSOLVER == EXACT || CHECK_INTERMEDIATE == EXACT )  &&  \
+       ( RSOLVER == EXACT || RSOLVER_RESCUE == EXACT || CHECK_INTERMEDIATE == EXACT )  &&  \
        ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
 
 
@@ -421,7 +421,7 @@ void Set_Flux( real flux[], const real val[], const real Gamma )
 
 
 
-#endif // #if ( MODEL == HYDRO  &&  ( RSOLVER == EXACT || CHECK_INTE == EXACT ) && ( SCHEME == MHM/MHM_RP/CTU ) )
+#endif // #if ( MODEL == HYDRO  &&  ( RSOLVER == EXACT || RSOLVER_RESCUE == EXACT || CHECK_INTERMEDIATE == EXACT )  &&  ( FLU_SCHEME == MHM/MHM_RP/CTU ) )
 
 
 

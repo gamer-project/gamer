@@ -12,41 +12,49 @@
 // external functions
 #ifdef __CUDACC__
 
-#if   ( RSOLVER == EXACT )
+#if ( RSOLVER == EXACT  ||  RSOLVER_RESCUE == EXACT )
 # include "CUFLU_Shared_RiemannSolver_Exact.cu"
-#elif ( RSOLVER == ROE )
+#endif
+#if ( RSOLVER == ROE    ||  RSOLVER_RESCUE == ROE   )
 # include "CUFLU_Shared_RiemannSolver_Roe.cu"
-#elif ( RSOLVER == HLLE )
+#endif
+#if ( RSOLVER == HLLE   ||  RSOLVER_RESCUE == HLLE  )
 # include "CUFLU_Shared_RiemannSolver_HLLE.cu"
-#elif ( RSOLVER == HLLC )
+#endif
+#if ( RSOLVER == HLLC   ||  RSOLVER_RESCUE == HLLC  )
 # include "CUFLU_Shared_RiemannSolver_HLLC.cu"
-#elif ( RSOLVER == HLLD )
+#endif
+#if ( RSOLVER == HLLD   ||  RSOLVER_RESCUE == HLLD  )
 # include "CUFLU_Shared_RiemannSolver_HLLD.cu"
 #endif
 
 #else // #ifdef __CUDACC__
 
-#if   ( RSOLVER == EXACT )
+#if ( RSOLVER == EXACT  ||  RSOLVER_RESCUE == EXACT )
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                 const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                                 const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                                 const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
-#elif ( RSOLVER == ROE )
+#endif
+#if ( RSOLVER == ROE    ||  RSOLVER_RESCUE == ROE   )
 void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                               const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                               const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
-#elif ( RSOLVER == HLLE )
+#endif
+#if ( RSOLVER == HLLE   ||  RSOLVER_RESCUE == HLLE  )
 void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                                const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
-#elif ( RSOLVER == HLLC )
+#endif
+#if ( RSOLVER == HLLC   ||  RSOLVER_RESCUE == HLLC  )
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                                const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
-#elif ( RSOLVER == HLLD )
+#endif
+#if ( RSOLVER == HLLD   ||  RSOLVER_RESCUE == HLLD  )
 void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
@@ -301,12 +309,63 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 #        endif
 
 
-//       3. store the fluxes of all cells in g_FC_Flux[]
+//       3. switch to a different Riemann solver if the default one fails
+#        if ( RSOLVER_RESCUE != NONE )
+         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
+         {
+//          only check NaN for now
+            if ( Flux_1Face[v] != Flux_1Face[v] )
+            {
+#              ifdef CHECK_UNPHYSICAL_IN_FLUID
+               printf( "WARNING : default Riemann solver failed in Hydro_ComputeFlux() --> switch to RSOLVER_RESCUE (%d) !!\n", RSOLVER_RESCUE );
+#              endif
+
+#              if   ( RSOLVER_RESCUE == EXACT  &&  !defined MHD )
+               Hydro_RiemannSolver_Exact( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
+                                          EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
+                                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+#              elif ( RSOLVER_RESCUE == ROE )
+               Hydro_RiemannSolver_Roe  ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
+                                          EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
+                                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+#              elif ( RSOLVER_RESCUE == HLLE )
+               Hydro_RiemannSolver_HLLE ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
+                                          EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
+                                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+#              elif ( RSOLVER_RESCUE == HLLC  &&  !defined MHD )
+               Hydro_RiemannSolver_HLLC ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
+                                          EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
+                                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+#              elif ( RSOLVER_RESCUE == HLLD  &&  defined MHD )
+               Hydro_RiemannSolver_HLLD ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
+                                          EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
+                                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+#              else
+#              error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC/HLLD) !!
+#              endif
+
+//             check again
+#              ifdef CHECK_UNPHYSICAL_IN_FLUID
+               for (int w=0; w<NCOMP_TOTAL_PLUS_MAG; w++) {
+                  if ( Flux_1Face[w] != Flux_1Face[w] ) {
+                     printf( "ERROR : RSOLVER_RESCUE still failed !!\n" );
+                     break;
+                  }
+               }
+#              endif
+
+               break;
+            } // if ( Flux_1Face[v] != Flux_1Face[v] )
+         } // for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
+#        endif // #if ( RSOLVER_RESCUE != NONE )
+
+
+//       4. store the fluxes of all cells in g_FC_Flux[]
 //       --> including the magnetic components since they are required for CT
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_FC_Flux[d][v][idx_flux] = Flux_1Face[v];
 
 
-//       4. store the inter-patch fluxes in g_IntFlux[]
+//       5. store the inter-patch fluxes in g_IntFlux[]
 //       --> no need to store the magnetic components since this array is only for the flux fix-up operation
          if ( DumpIntFlux )
          {

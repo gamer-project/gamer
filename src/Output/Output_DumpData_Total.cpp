@@ -52,7 +52,7 @@ void Output_DumpData_Total( const char *FileName )
 #  endif
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ...\n", __FUNCTION__, DumpID );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d)     ...\n", __FUNCTION__, DumpID );
 
 
 // check the synchronization
@@ -1020,7 +1020,7 @@ void Output_DumpData_Total( const char *FileName )
    }
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ... done\n", __FUNCTION__, DumpID );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d)     ... done\n", __FUNCTION__, DumpID );
 
 } // FUNCTION : Output_DumpData_Total
 
