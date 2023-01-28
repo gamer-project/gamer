@@ -160,8 +160,8 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
       Aux_Error( ERROR_INFO, "Init_Function_BField_User_Ptr == NULL !!\n" );
 #  endif
 
-   if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_Func_Ptr == NULL )
-      Aux_Error( ERROR_INFO, "Flu_ResetByUser_Func_Ptr == NULL for OPT__RESET_FLUID !!\n" );
+   if ( OPT__RESET_FLUID_INIT  &&  Flu_ResetByUser_Func_Ptr == NULL )
+      Aux_Error( ERROR_INFO, "Flu_ResetByUser_Func_Ptr == NULL for OPT__RESET_FLUID_INIT !!\n" );
 
 
 // set the number of OpenMP threads
@@ -249,7 +249,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
 //          modify the initial condition if required
 //          --> always set the magnetic energy to zero since fluid_sub[ENGY] doesn't include that
-            if ( OPT__RESET_FLUID )
+            if ( OPT__RESET_FLUID_INIT )
                Flu_ResetByUser_Func_Ptr( fluid_sub, (real)0.0, x, y, z, Time[lv], 0.0, lv, NULL );
 
             for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] += fluid_sub[v];
