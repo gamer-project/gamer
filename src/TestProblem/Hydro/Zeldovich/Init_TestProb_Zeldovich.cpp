@@ -520,8 +520,8 @@ void Init_TestProb_Hydro_Zeldovich()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr = SetGridIC;
-   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_Zeldovich; // Point mass function pointer -> initialization by function
+   Init_Function_User_Ptr  = SetGridIC;
+   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_Zeldovich;
 
    if ( Gas_Par_Setup == 1 )  // gas-only setup
    {

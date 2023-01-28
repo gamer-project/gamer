@@ -1,6 +1,6 @@
 Compilation flags:
 ========================================
-Enable : MODEL=HYDRO, GRAVITY, COMOVING, PARTICLE, FLOAT8, SUPPORT_GSL, DUAL_ENERGY
+Enable : MODEL=HYDRO, GRAVITY, COMOVING, PARTICLE, FLOAT8, SUPPORT_GSL, DSUPPORT_FFTW, DUAL_ENERGY
 Disable: DSERIAL
 
 
@@ -67,3 +67,4 @@ Note:
 6. The analysis script ./plots/analysis_plot_Zeldovich.py works for both gas-/particle-only setups. Note
    that the parameters under "# user-specified parameters" in the script NEEDS to match those adopted in
    "Input__TestProb," especially the value of "Gas_Par_Setup."
+7. For references, see Sec. 9.2 of Springel, MNRAS 401 791 (2010) and Sec. 3 of Heitmann et al., ApJS 160 28 (2005)
