@@ -116,6 +116,10 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
    if ( MinLv > MaxLv )
       Aux_Error( ERROR_INFO, "MinLv (%d) > MaxLv (%d) !!\n", MinLv, MaxLv );
+
+   if ( PatchType != PATCH_LEAF  &&  PatchType != PATCH_NONLEAF  &&
+        PatchType != PATCH_BOTH  &&  PatchType != PATCH_LEAF_PLUS_MAXNONLEAF )
+      Aux_Error( ERROR_INFO, "incorrect PatchType (%d) !!\n", PatchType );
 #  endif
 
 
@@ -537,7 +541,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                } // if ( r2 < r_max2 )
             }}} // i,j,k
          } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-      } // for (int lv=lv_min; lv<=lv_max; lv++)
+      } // for (int lv=MinLv; lv<=MaxLv; lv++)
 
 #     if ( MODEL == HYDRO )
       delete [] Passive;         Passive      = NULL;
