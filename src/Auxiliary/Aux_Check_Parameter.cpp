@@ -593,8 +593,8 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : DT__FLUID_INIT (%14.7e) is not within the normal range [0...1] !!\n",
                    DT__FLUID_INIT );
 
-   if ( OPT__RESET_FLUID  &&   OPT__INIT == INIT_BY_FILE )
-      Aux_Message( stderr, "WARNING : \"%s\" will NOT be applied to the input uniform data !!\n", "OPT__RESET_FLUID" );
+   if ( OPT__RESET_FLUID_INIT  &&   OPT__INIT == INIT_BY_FILE )
+      Aux_Message( stderr, "WARNING : \"%s\" will NOT be applied to the input uniform data !!\n", "OPT__RESET_FLUID_INIT" );
 
    if ( OPT__FREEZE_FLUID )
       Aux_Message( stderr, "REMINDER : \"%s\" will prevent fluid variables from being updated\n", "OPT__FREEZE_FLUID" );

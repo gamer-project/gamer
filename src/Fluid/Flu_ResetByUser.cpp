@@ -26,7 +26,7 @@ void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double Tim
 //                4. Even when DUAL_ENERGY is adopted, one does NOT need to set the dual-energy variable here
 //                   --> It will be set automatically in Flu_ResetByUser_API_Default() and
 //                       Model_Init_ByFunction_AssignData()
-//                5. Enabled by the runtime option "OPT__RESET_FLUID"
+//                5. Enabled by the runtime options "OPT__RESET_FLUID" or "OPT__RESET_FLUID_INIT"
 //
 // Parameter   :  fluid    : Fluid array storing both the input (original) and reset values
 //                           --> Including both active and passive variables

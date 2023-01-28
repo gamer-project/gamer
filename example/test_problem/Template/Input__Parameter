@@ -225,6 +225,7 @@ OPT__NORMALIZE_PASSIVE        1           # ensure "sum(passive_scalar_density) 
 OPT__INT_FRAC_PASSIVE_LR      1           # convert specified passive scalars to mass fraction during data reconstruction [1]
 OPT__OVERLAP_MPI              0           # overlap MPI communication with CPU/GPU computations [0] ##NOT SUPPORTED YET##
 OPT__RESET_FLUID              0           # reset fluid variables after each update -> edit "Flu_ResetByUser.cpp" [0]
+OPT__RESET_FLUID_INIT        -1           # reset fluid variables during initialization (<0=auto -> OPT__RESET_FLUID, 0=off, 1=on) [-1]
 OPT__FREEZE_FLUID             0           # do not evolve fluid at all [0]
 OPT__CHECK_PRES_AFTER_FLU    -1           # check unphysical pressure at the end of the fluid solver (<0=auto) [-1]
 OPT__LAST_RESORT_FLOOR        1           # apply floor values as the last resort when the fluid solver fails [1] ##HYDRO and MHD ONLY##

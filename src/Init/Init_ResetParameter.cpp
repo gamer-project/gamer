@@ -979,6 +979,15 @@ void Init_ResetParameter()
 #  endif
 
 
+// set OPT__RESET_FLUID_INIT = OPT__RESET_FLUID by default
+   if ( OPT__RESET_FLUID_INIT < 0 )
+   {
+      OPT__RESET_FLUID_INIT = OPT__RESET_FLUID;
+
+      PRINT_WARNING( OPT__RESET_FLUID_INIT, FORMAT_INT, "to match OPT__RESET_FLUID" );
+   }
+
+
 // remove symbolic constants and macros only used in this structure
 #  undef FORMAT_INT
 #  undef FORMAT_FLT
