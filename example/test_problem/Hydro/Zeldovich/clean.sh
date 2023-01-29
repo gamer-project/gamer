@@ -4,5 +4,3 @@ rm -f Record__Note Record__Timing Record__TimeStep Record__PatchCount Record__Du
       PowerSpec_* Particle_* nohup.out Record__Performance Record__TimingMPI_* gamer.e* gamer.o* Zeldovich_* \
       Record__ParticleCount Record__User Patch_* Record__NCorrUnphy FailedPatchGroup* *.pyc Record__LoadBalance \
       GRACKLE_INFO  Record__DivB
-
-rm -f Fig__Riemann_*

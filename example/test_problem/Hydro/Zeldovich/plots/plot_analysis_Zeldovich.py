@@ -206,7 +206,7 @@ for ds in ts.piter():
         plt.axhline(y=0, color='0.9', linestyle='--')
         if current_time_z > zc_Collapse:
             plt.plot(x_line_Coordinates - BoxSize_x/2, (100/current_time_a)*MomX_Numerical/Dens_Numerical, label = "GAMER")
-            plt.plot(x_line_Coordinates - BoxSize_x/2, (100/current_time_a)*MomX_Analytical/Dens_Analytical, color="r", linestyle='-.', label = "Analytical") 
+            plt.plot(x_line_Coordinates - BoxSize_x/2, (100/current_time_a)*MomX_Analytical/Dens_Analytical, color="r", linestyle='-.', label = "Analytical")
             print("Maximum x-velocity [km/sec]: %f"%np.amax((100/current_time_a)*MomX_Numerical/Dens_Numerical))
         else:
             px_dens_line = plt.plot(smoothed_grid_x_line,smoothed_grid_vel_line, label = "GAMER")

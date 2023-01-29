@@ -2,8 +2,8 @@
 #include "TestProb.h"
 #include <math.h>
 #ifdef SUPPORT_GSL
-   #include <gsl/gsl_errno.h>
-   #include <gsl/gsl_roots.h>
+#  include <gsl/gsl_errno.h>
+#  include <gsl/gsl_roots.h>
 #endif
 
 
@@ -11,14 +11,13 @@
 // problem-specific global variables
 // =======================================================================================
 // =======================================================================================
-static int Gas_Par_Setup;        // gas-only or particle-only setup
-static int n_Pert_Wave_Len;      // "Pert_Wave_Len = BOXSIZE_x/n_Pert_Wave_Len"
-static int NPar_X;               // 1D number of particles along the x-axis (axis of perturbation)
+static int Gas_Par_Setup;        // 1=gas-only, 2=particle-only
+static int n_Pert_Wave_Len;      // "Pert_Wave_Len = BOX_SIZE_x/n_Pert_Wave_Len"
 static int NPar_YZ;              // 1D number of particles along the y/z-axis
 static double Pert_Wave_Len;     // perturbation wavelength [Mpc/h]
 static double k_Pert;            // perturbation wavenumber
-static double zi_Initial;        // redshfit of simulation IC
-static double zc_Collapse;       // redshfit at the onset of Zeldovich pancake collapse
+static double z_Initial;         // redshift of simulation IC
+static double z_Collapse;        // redshift at the onset of Zeldovich pancake collapse
 static double GasTemp_Init;      // initial gas temperature in Kelvin
 static double H0;                // Hubble parameter at redshift zero
 static double rho_crit_i;        // comoving critical density = 3H0^2/8*pi*G
@@ -29,15 +28,22 @@ static double dhx;               // 1D inter-particle separation [Mpc/h]
 // problem-specific function prototypes
 struct Zeldovich_coord_params
 {
-   double x_shift_input, zi_Initial;
+   double x_shift_input, z_Initial;
 };
-static double Zeldovich_coord_transformation(double x_Lagrangian_Trial, void *params);
+static double Zeldovich_coord_transformation( const double x_Lagrangian_Trial, void *params );
 static void OutputError();
 #ifdef SUPPORT_GSL
-   static double Zeldovich_coord_transformation_solver(double x_shift_input, double zi_Initial);
-   static double Zeldovich_density_profile(double x_Lagrangian, double zi_Initial);
-   static double Zeldovich_x_velocity_profile(double x_Lagrangian, double zi_Initial);
-#endif
+static double Zeldovich_coord_transformation_solver( const double x_shift_input, const double z_Initial );
+static double Zeldovich_density_profile( const double x_Lagrangian, const double z_Initial );
+static double Zeldovich_x_velocity_profile( const double x_Lagrangian, const double z_Initial );
+#ifdef PARTICLE
+void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_AllRank,
+                                    real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
+                                    real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
+                                    real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
+#endif // #ifdef PARTICLE
+#endif // #ifdef SUPPORT_GSL
+
 
 
 
@@ -71,8 +77,8 @@ void Validate()
 #  endif
 
 #  ifdef COMOVING
-   if ( OMEGA_M0 != 1 )
-      Aux_Error( ERROR_INFO, "OMEGA_M0 != 1 (matter-only) for this test !!\n");
+   if ( OMEGA_M0 != 1.0 )
+      Aux_Error( ERROR_INFO, "OMEGA_M0 (%13.7e) != 1.0 (matter-only) for this test !!\n", OMEGA_M0 );
 #  endif
 
 #  ifdef GRAVITY
@@ -83,17 +89,21 @@ void Validate()
    if ( OPT__INIT != INIT_BY_FUNCTION  &&  OPT__INIT != INIT_BY_RESTART )
       Aux_Error( ERROR_INFO, "OPT__INIT != FUNCTION (1) or RESTART (2) for this test !!\n" );
 
+/*
 #  ifndef FLOAT8
    Aux_Error( ERROR_INFO, "FLOAT8 must be enabled !!\n" );
 #  endif
-
+*/
 #  ifndef SUPPORT_GSL
    Aux_Error( ERROR_INFO, "SUPPORT_GSL must be enabled !!\n" );
 #  endif
 
 #  ifdef PARTICLE
-   if ( amr->Par->Init != PAR_INIT_BY_FUNCTION )
-      Aux_Error( ERROR_INFO, "PAR_INIT != FUNCTION (1) for this test !!\n" );
+   if ( amr->Par->Init != PAR_INIT_BY_FUNCTION  &&  amr->Par->Init != PAR_INIT_BY_RESTART )
+      Aux_Error( ERROR_INFO, "PAR_INIT != FUNCTION (1) OR RESTART (2) for this test !!\n" );
+
+   if ( NX0_TOT[1] != NX0_TOT[2] )
+      Aux_Error( ERROR_INFO, "NX0_TOT[1] (%ld) != NX0_TOT[2] (%ld) !!\n", NX0_TOT[1], NX0_TOT[2] );
 #  endif
 
 
@@ -136,10 +146,9 @@ void SetParameter()
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,               DEFAULT,      MIN,              MAX               );
 // ********************************************************************************************************************************
    ReadPara->Add( "Gas_Par_Setup",     &Gas_Par_Setup,          1,            1,                2                 );
-   ReadPara->Add( "n_Pert_Wave_Len",   &n_Pert_Wave_Len,        2,            1,                NoMax_int         );
-   ReadPara->Add( "zc_Collapse",       &zc_Collapse,            1.0,          0.0,              NoMax_double      );
+   ReadPara->Add( "n_Pert_Wave_Len",   &n_Pert_Wave_Len,        1,            1,                NoMax_int         );
+   ReadPara->Add( "z_Collapse",        &z_Collapse,             1.0,          0.0,              NoMax_double      );
    ReadPara->Add( "GasTemp_Init",      &GasTemp_Init,           100.0,        0.0,              NoMax_double      );
-   ReadPara->Add( "NPar_X",            &NPar_X,                 NX0_TOT[0],    0,                NoMax_int         );
 
    ReadPara->Read( FileName );
 
@@ -147,17 +156,20 @@ void SetParameter()
 
 
 // (1-2) set the default values
+   z_Initial = (1.0/Time[0]) - 1.0;
+
 
 // (1-3) check the runtime parameters
+   if ( z_Initial < z_Collapse )  Aux_Error( ERROR_INFO, "z_Collapse (%13.7e) must be smaller than z_Initial (%13.7e) !!\n", z_Collapse, z_Initial );
 
 
 // (2) set the problem-specific derived parameters
 #  ifdef COMOVING
-   H0            = HUBBLE0*(100*Const_km/(Const_s*Const_Mpc))*UNIT_T;
+   H0            = HUBBLE0*(100.0*Const_km/(Const_s*Const_Mpc))*UNIT_T;
    Pert_Wave_Len = amr->BoxSize[0]/n_Pert_Wave_Len;
-   rho_crit_i    = 1;             // [UNIT_D]; comoving critical density = 3H0^2/8*pi*G
+   rho_crit_i    = 1.0;            // [UNIT_D]; comoving critical density = 3H0^2/8*pi*G
    k_Pert        = 2.0*M_PI/Pert_Wave_Len;
-   dhx           = amr->BoxSize[0] / NPar_X;
+   dhx           = amr->BoxSize[0] / NX0_TOT[0];
    NPar_YZ       = amr->BoxSize[1] / dhx;
 #  endif
 
@@ -182,10 +194,11 @@ void SetParameter()
    {
       amr->Par->NPar_Active_AllRank = 0;
    }
-   if ( Gas_Par_Setup == 2 ) // overwrite the total number of particles in particle-only setup
+   else if ( Gas_Par_Setup == 2 ) // overwrite the total number of particles in particle-only setup
    {
-      amr->Par->NPar_Active_AllRank = NPar_X*SQR(NPar_YZ);
+      amr->Par->NPar_Active_AllRank = (long)NX0_TOT[0]*SQR((long)NPar_YZ);
    }
+   PRINT_WARNING( "PAR_NPAR", amr->Par->NPar_Active_AllRank, FORMAT_LONG );
 #  endif
 
 
@@ -195,10 +208,10 @@ void SetParameter()
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID                   = %d\n",     TESTPROB_ID     );
       Aux_Message( stdout, "  gas[1]/particle[2] setup          = %d\n",     Gas_Par_Setup   );
-      Aux_Message( stdout, "  perturbation wavelength multiple  = %14.7e\n", n_Pert_Wave_Len );
-      Aux_Message( stdout, "  Zeldovich collapse redshift       = %14.7e\n", zc_Collapse     );
-      Aux_Message( stdout, "  initial gas temperature in Kelvin = %14.7e\n", GasTemp_Init    );
-      Aux_Message( stdout, "  particle number along the x-axis  = %d\n",     NPar_X          );
+      Aux_Message( stdout, "  perturbation wavelength multiple  = %d\n",     n_Pert_Wave_Len );
+      Aux_Message( stdout, "  Zeldovich collapse redshift       = %13.7e\n", z_Collapse      );
+      Aux_Message( stdout, "  initial gas temperature in Kelvin = %13.7e\n", GasTemp_Init    );
+      if ( Gas_Par_Setup == 2 )  Aux_Message( stdout, "  particle number along the x-axis  = %d\n", NX0_TOT[0] );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -210,55 +223,64 @@ void SetParameter()
 
 
 // compute conversion between Lagrangian (x_Lagrangian) and Eulerian/code coordinates (x_shift)
-double Zeldovich_coord_transformation(double x_Lagrangian_Trial, void *params)
+double Zeldovich_coord_transformation( const double x_Lagrangian_Trial, void *params )
 {
    struct Zeldovich_coord_params *p = (struct Zeldovich_coord_params *) params;
    double x_shift_input = p->x_shift_input;
-   double zi_Initial = p->zi_Initial;
+   double z_Initial     = p->z_Initial;
 
-   return (x_Lagrangian_Trial - ((1+zc_Collapse)/(1+zi_Initial))*sin(k_Pert*x_Lagrangian_Trial)/k_Pert) - x_shift_input;
+   return (x_Lagrangian_Trial - ((1.0+z_Collapse)/(1.0+z_Initial))*sin(k_Pert*x_Lagrangian_Trial)/k_Pert) - x_shift_input;
 }
+
+
+
 #ifdef SUPPORT_GSL
-   double Zeldovich_coord_transformation_solver(double x_shift_input, double zi_Initial)
+double Zeldovich_coord_transformation_solver( const double x_shift_input, const double z_Initial )
+{
+   int status;
+   int iter = 0, max_iter = 100;
+   const gsl_root_fsolver_type *T;
+   gsl_root_fsolver *s;
+   double x_Lagrangian_Trial = x_shift_input;
+   double x_lower_bound = x_shift_input-Pert_Wave_Len/4.0, x_upper_bound = x_shift_input+Pert_Wave_Len/4.0;
+   gsl_function F;
+   struct Zeldovich_coord_params params = { x_shift_input, z_Initial };
+
+   F.function = &Zeldovich_coord_transformation;
+   F.params = &params;
+
+   T = gsl_root_fsolver_brent;
+   s = gsl_root_fsolver_alloc( T );
+   gsl_root_fsolver_set( s, &F, x_lower_bound, x_upper_bound );
+
+   do
    {
-      int status;
-      int iter = 0, max_iter = 100;
-      const gsl_root_fsolver_type *T;
-      gsl_root_fsolver *s;
-      double x_Lagrangian_Trial = x_shift_input;
-      double x_lower_bound = x_shift_input-Pert_Wave_Len/4, x_upper_bound = x_shift_input+Pert_Wave_Len/4;
-      gsl_function F;
-      struct Zeldovich_coord_params params = {x_shift_input, zi_Initial};
-
-      F.function = &Zeldovich_coord_transformation;
-      F.params = &params;
-
-      T = gsl_root_fsolver_brent;
-      s = gsl_root_fsolver_alloc (T);
-      gsl_root_fsolver_set (s, &F, x_lower_bound, x_upper_bound);
-
-      do
-      {
-         iter++;
-         status = gsl_root_fsolver_iterate (s);
-         x_Lagrangian_Trial = gsl_root_fsolver_root (s);
-         x_lower_bound = gsl_root_fsolver_x_lower (s);
-         x_upper_bound = gsl_root_fsolver_x_upper (s);
-         status = gsl_root_test_interval (x_lower_bound, x_upper_bound, Pert_Wave_Len/1e5, 1e-5);
-      }
-      while (status == GSL_CONTINUE && iter < max_iter);
-
-      gsl_root_fsolver_free (s);
-
-      return x_Lagrangian_Trial;
+      iter++;
+      status = gsl_root_fsolver_iterate( s );
+      x_Lagrangian_Trial = gsl_root_fsolver_root( s );
+      x_lower_bound = gsl_root_fsolver_x_lower( s );
+      x_upper_bound = gsl_root_fsolver_x_upper( s );
+      status = gsl_root_test_interval( x_lower_bound, x_upper_bound, Pert_Wave_Len/1.0e5, 1.0e-5 );
    }
-double Zeldovich_density_profile(double x_Lagrangian, double zi_Initial)
-{
-   return rho_crit_i/(1-((1+zc_Collapse)/(1+zi_Initial))*cos(k_Pert*x_Lagrangian));
+   while ( status == GSL_CONTINUE  &&  iter < max_iter );
+
+   gsl_root_fsolver_free( s );
+
+   return x_Lagrangian_Trial;
 }
-double Zeldovich_x_velocity_profile(double x_Lagrangian, double zi_Initial)
+
+
+
+double Zeldovich_density_profile( const double x_Lagrangian, const double z_Initial )
 {
-   return (-H0*(1+zc_Collapse)/sqrt(1+zi_Initial)/(1+zi_Initial))*(sin(k_Pert*x_Lagrangian)/k_Pert);
+   return rho_crit_i/(1.0-((1.0+z_Collapse)/(1.0+z_Initial))*cos(k_Pert*x_Lagrangian));
+}
+
+
+
+double Zeldovich_x_velocity_profile( const double x_Lagrangian, const double z_Initial )
+{
+   return (-H0*(1.0+z_Collapse)/sqrt(1.0+z_Initial)/(1.0+z_Initial))*(sin(k_Pert*x_Lagrangian)/k_Pert);
 }
 #endif // #ifdef SUPPORT_GSL
 
@@ -281,32 +303,30 @@ double Zeldovich_x_velocity_profile(double x_Lagrangian, double zi_Initial)
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-   void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
-                  const int lv, double AuxArray[] )
-   {
-   #ifdef COMOVING
-   #ifdef SUPPORT_GSL
-//    compute relevant physical quantities
-      zi_Initial = (1/Time) - 1;
-      const double x_shift      = x - 0.5*amr->BoxSize[0]; // unperturbed simulation grids
-      const double x_Lagrangian = Zeldovich_coord_transformation_solver(x_shift,zi_Initial);
+void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
+                const int lv, double AuxArray[] )
+{
+#  ifdef COMOVING
+#  ifdef SUPPORT_GSL
+// compute relevant physical quantities
+   const double x_shift      = x - 0.5*amr->BoxSize[0]; // unperturbed simulation grids
+   const double x_Lagrangian = Zeldovich_coord_transformation_solver( x_shift,z_Initial );
 
-   #  if   ( MODEL == HYDRO )
-      if ( Gas_Par_Setup == 1 ) // gas-only setup
-      {
-      fluid[DENS] = Zeldovich_density_profile(x_Lagrangian, zi_Initial); // (comoving density)
-      fluid[MOMX] = fluid[DENS]*Zeldovich_x_velocity_profile(x_Lagrangian, zi_Initial); // (comoving density)*(comoving velocity)
+   if ( Gas_Par_Setup == 1 ) // gas-only setup
+   {
+      fluid[DENS] = Zeldovich_density_profile( x_Lagrangian, z_Initial );                // (comoving density)
+      fluid[MOMX] = fluid[DENS]*Zeldovich_x_velocity_profile( x_Lagrangian, z_Initial ); // (comoving density)*(comoving velocity)
       fluid[MOMY] = 0.0;
       fluid[MOMZ] = 0.0;
 
-      const double Pres = EoS_DensTemp2Pres_CPUPtr( fluid[DENS], SQR(A_INIT)*GasTemp_Init*SQR(cbrt(fluid[DENS]/rho_crit_i)),
-                                                    NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-      const double Eint = EoS_DensPres2Eint_CPUPtr( fluid[DENS], Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      const real Pres = EoS_DensTemp2Pres_CPUPtr( fluid[DENS], SQR(A_INIT)*GasTemp_Init*SQR(cbrt(fluid[DENS]/rho_crit_i)),
+                                                  NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      const real Eint = EoS_DensPres2Eint_CPUPtr( fluid[DENS], Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       fluid[ENGY] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint, 0.0 );
 
-      }
-      else if ( Gas_Par_Setup == 2 ) // particle-only setup
-      {
+   }
+   else if ( Gas_Par_Setup == 2 ) // particle-only setup
+   {
       double Dens, MomX, MomY, MomZ, Eint, Etot;
 //    gas density and energy cannot be zero so set them to an extremely small value
       Dens = 10.0*TINY_NUMBER;
@@ -321,12 +341,10 @@ double Zeldovich_x_velocity_profile(double x_Lagrangian, double zi_Initial)
       fluid[MOMY] = MomY;
       fluid[MOMZ] = MomZ;
       fluid[ENGY] = Etot;
-   #endif // #ifdef SUPPORT_GSL
-   #endif // #ifdef COMOVING
-      }
-   #  endif //  #if ( MODEL == HYDRO )
-
-   } // FUNCTION : SetGridIC
+   }
+#  endif // #ifdef SUPPORT_GSL
+#  endif // #ifdef COMOVING
+} // FUNCTION : SetGridIC
 
 
 
@@ -362,84 +380,82 @@ double Zeldovich_x_velocity_profile(double x_Lagrangian, double zi_Initial)
 //
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttribute
 //-------------------------------------------------------------------------------------------------------
+#ifdef PARTICLE
 void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_AllRank,
-                                  real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                  real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                  real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
+                                    real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
+                                    real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
+                                    real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
 {
-   #ifdef SUPPORT_GSL
-   if ( Gas_Par_Setup == 2 )
+#  ifdef SUPPORT_GSL
+   if ( Gas_Par_Setup != 2 )   return;
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
+
+   real *ParData_AllRank[PAR_NATT_TOTAL];
+   for (int v=0; v<PAR_NATT_TOTAL; v++)   ParData_AllRank[v] = NULL;
+
+// only the master rank will construct the initial condition
+   if ( MPI_Rank == 0 )
    {
-      zi_Initial = (1/Time[0]) - 1;
+      double PosVec[3], VelVec[3];
+      int NPar_AllRank_Counter = 0;
+//    determine the total mass enclosed within the simulation box boundaries
+      const double TotM_Boundary = amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2]*rho_crit_i;
+//    determine the individual mass of identical particles
+      const double ParM = TotM_Boundary / NPar_AllRank;
 
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
+      ParData_AllRank[PAR_MASS] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_POSX] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_POSY] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_POSZ] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_VELX] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_VELY] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_VELZ] = new real [NPar_AllRank];
 
-
-      real *ParData_AllRank[PAR_NATT_TOTAL];
-      for (int v=0; v<PAR_NATT_TOTAL; v++)   ParData_AllRank[v] = NULL;
-
-//    only the master rank will construct the initial condition
-      if ( MPI_Rank == 0 )
+//    set particle attributes
+      for (long px=0; px<NX0_TOT[0]; px++)
       {
-         double PosVec[3], VelVec[3];
-         int NPar_AllRank_Counter = 0;
-//       determine the total mass enclosed within the simulation box boundaries
-         const double TotM_Boundary = amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2]*rho_crit_i;
-//       determine the individual mass of identical particles
-         const double ParM = TotM_Boundary / NPar_AllRank;
-
-         ParData_AllRank[PAR_MASS] = new real [NPar_AllRank];
-         ParData_AllRank[PAR_POSX] = new real [NPar_AllRank];
-         ParData_AllRank[PAR_POSY] = new real [NPar_AllRank];
-         ParData_AllRank[PAR_POSZ] = new real [NPar_AllRank];
-         ParData_AllRank[PAR_VELX] = new real [NPar_AllRank];
-         ParData_AllRank[PAR_VELY] = new real [NPar_AllRank];
-         ParData_AllRank[PAR_VELZ] = new real [NPar_AllRank];
-
-//       set particle attributes
-         for (long px=0; px<NPar_X; px++)
-         {
 //       x-component position
-         PosVec[0] = Zeldovich_coord_transformation_solver(px*dhx,zi_Initial);
+         PosVec[0] = Zeldovich_coord_transformation_solver( px*dhx, z_Initial );
 //       velocity
-         VelVec[0] = -Zeldovich_x_velocity_profile(PosVec[0], zi_Initial);
-         VelVec[1] = 0;
-         VelVec[2] = 0;
+         VelVec[0] = -Zeldovich_x_velocity_profile( PosVec[0], z_Initial );
+         VelVec[1] = 0.0;
+         VelVec[2] = 0.0;
 
-            for (long py=0; py<NPar_YZ; py++)
-            {
+         for (long py=0; py<NPar_YZ; py++)
+         {
 //          y-component position
             PosVec[1] = py*dhx;
 
-               for (long pz=0; pz<NPar_YZ; pz++)
-               {
+            for (long pz=0; pz<NPar_YZ; pz++)
+            {
 //             mass
                ParData_AllRank[PAR_MASS][NPar_AllRank_Counter] = ParM;
 
 //             z-component position
                PosVec[2] = pz*dhx;
 
-                  for (int d=0; d<3; d++)
-                  {
-                     ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter] = PosVec[d];
-                     ParData_AllRank[PAR_VELX+d][NPar_AllRank_Counter] = VelVec[d];
-//                 check periodicity
-                     if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )
-                        ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter] = FMOD( ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter]+(real)amr->BoxSize[d], (real)amr->BoxSize[d] );
-                  }
-
-               NPar_AllRank_Counter += 1;
+               for (int d=0; d<3; d++)
+               {
+                  ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter] = PosVec[d];
+                  ParData_AllRank[PAR_VELX+d][NPar_AllRank_Counter] = VelVec[d];
+//                check periodicity
+                  if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )
+                     ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter] = FMOD( ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter]+(real)amr->BoxSize[d], (real)amr->BoxSize[d] );
                }
-         }
-      }
+
+            ++NPar_AllRank_Counter;
+            }
+         } // for (long py=0; py<NPar_YZ; py++)
+      } // for (long px=0; px<NX0_TOT[0]; px++)
 
       Aux_Message( stdout, "   Total mass within box boundaries = %13.7e\n",  TotM_Boundary );
-      Aux_Message( stdout, "   Total particle number            = %d\n",      NPar_AllRank );
+      Aux_Message( stdout, "   Total particle number            = %ld\n",     NPar_AllRank );
       Aux_Message( stdout, "   Particle mass                    = %13.7e\n",  ParM );
       Aux_Message( stdout, "   x_boundary_size                  = %13.7e\n",  amr->BoxSize[0] );
       Aux_Message( stdout, "   y/z_boundary_size                = %13.7e\n",  amr->BoxSize[1] );
-      Aux_Message( stdout, "   zi_Initial                       = %13.7e\n",  zi_Initial );
-      Aux_Message( stdout, "   zc_Collapse                      = %13.7e\n",  zc_Collapse );
+      Aux_Message( stdout, "   z_Initial                        = %13.7e\n",  z_Initial );
+      Aux_Message( stdout, "   z_Collapse                       = %13.7e\n",  z_Collapse );
       Aux_Message( stdout, "   Pert_Wave_Len                    = %13.7e\n",  Pert_Wave_Len );
 
    } // if ( MPI_Rank == 0 )
@@ -448,28 +464,29 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
    Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, ParData_AllRank, AllAttribute );
 
 // synchronize all particles to the physical time on the base level, and set generic particle type
-   for (long p=0; p<NPar_ThisRank; p++) {
+   for (long p=0; p<NPar_ThisRank; p++)
+   {
       ParTime[p] = Time[0];
       ParType[p] = PTYPE_GENERIC_MASSIVE;
    }
 
-// free resource
+// free memory
    if ( MPI_Rank == 0 )
    {
       for (int v=0; v<PAR_NATT_TOTAL; v++)   delete [] ParData_AllRank[v];
    }
 
-
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
-   }
-   #endif // #ifdef SUPPORT_GSL
+
+#  endif // #ifdef SUPPORT_GSL
 } // FUNCTION : Par_Init_ByFunction_Zeldovich
+#endif // #ifdef PARTICLE
 
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  OutputError
-// Description :  Output numerical error in density, x-velocity, and temperature profiles while "z > zc_Collapse"
+// Description :  Output numerical error in density, x-velocity, and temperature profiles while "z > z_Collapse"
 //
 // Note        :  1. Invoke Output_L1Error()
 //                2. Use SetGridIC() to provide the analytical solution at any given time
@@ -480,15 +497,10 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
 //-------------------------------------------------------------------------------------------------------
 void OutputError()
 {
-   #ifdef SUPPORT_GSL
-   if (zi_Initial > zc_Collapse)
-   {
    const char Prefix[100]     = "Zeldovich";
    const OptOutputPart_t Part = OUTPUT_X + 0;  // along the x-direction
 
    Output_L1Error( SetGridIC, NULL, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
-   }
-   #endif
 } // FUNCTION : OutputError
 #endif // #if ( MODEL == HYDRO )
 
@@ -520,9 +532,10 @@ void Init_TestProb_Hydro_Zeldovich()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr  = SetGridIC;
+   Init_Function_User_Ptr = SetGridIC;
+#  ifdef PARTICLE
    Par_Init_ByFunction_Ptr = Par_Init_ByFunction_Zeldovich;
-
+#  endif // #ifdef PARTICLE
    if ( Gas_Par_Setup == 1 )  // gas-only setup
    {
    Output_User_Ptr = OutputError; // output gas numerical and analytical profiles

@@ -18,7 +18,7 @@ BOX_SIZE                      80          # box size along the longest side (in 
 NX0_TOT_X                     128         # number of base-level cells along x
 NX0_TOT_Y                     32          # number of base-level cells along y
 NX0_TOT_Z                     32          # number of base-level cells along z
-OMP_NTHREAD                   8           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
+OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
 END_T                        -1           # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
 END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
 
@@ -43,7 +43,7 @@ OPT__BC_POT                   1           # gravity boundary condition: (1=perio
 
 
 # particle (PARTICLE only)
-PAR_NPAR                      0           # total number of particles; [deprecated in this test problem] set by "NPar_X" in Input__TestProb instead
+PAR_NPAR                     -1           # total number of particles; [deprecated in this test problem] set by "NPar_X" in Input__TestProb instead
 PAR_INIT                      1           # initialization option for particles: (1=FUNCTION, 2=RESTART, 3=FILE->"PAR_IC")
 PAR_IC_FORMAT                 1           # data format of PAR_IC: (1=[attribute][id], 2=[id][attribute]; row-major) [1]
 PAR_IC_MASS                  -1.0         # mass of all particles for PAR_INIT==3 (<0=off) [-1.0]

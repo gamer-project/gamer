@@ -1,7 +1,6 @@
 Compilation flags:
 ========================================
-Enable : MODEL=HYDRO, GRAVITY, COMOVING, PARTICLE, FLOAT8, SUPPORT_GSL, DSUPPORT_FFTW, DUAL_ENERGY
-Disable: DSERIAL
+Enable : MODEL=HYDRO, GRAVITY, COMOVING, PARTICLE, FLOAT8, SUPPORT_GSL, SUPPORT_FFTW, DUAL_ENERGY
 
 
 Default setup:
@@ -20,7 +19,7 @@ Default setup:
    OPT__OUTPUT_BASEPS      0
    OUTPUT_PART_X/Y/Z       0.0
 
-3. PAR_NPAR                0
+3. PAR_NPAR               -1
    PAR_INIT                1
    PAR_IC_FORMAT           1
    PAR_IC_MASS            -1.0
@@ -36,7 +35,7 @@ For "Gas-only" setup:
 4-II. [Input__TestProb]
    Gas_Par_Setup           1
    n_Pert_Wave_Len         1
-   zc_Collapse             1
+   zc_Collapse             1.0
    GasTemp_Init            100
 
 For "Particle-only" setup:
@@ -46,25 +45,23 @@ For "Particle-only" setup:
 4-II. [Input__TestProb]
    Gas_Par_Setup           2
    n_Pert_Wave_Len         1
-   zc_Collapse             1
-   NPar_X                  64
+   zc_Collapse             1.0
 
 
 Note:
 ========================================
 1. Zeldovich pancake collapse cosmological simulations
-2. Recommeneded compilation flags for this test problem: GPU, SUPPORT_HDF5, LOAD_BALANCE=HILBERT
-3. Since GAMER does not support genuine 1D/2D simulations, one should set the root-level grid size to 32
+2. Since GAMER does not support genuine 1D/2D simulations, one should set the root-level grid size to 32
    (i.e., patch size*2*2) in the transverse directions. The density distribution is perturbed along only
-   the x-axis and remains unifrom across the y-z plane.
-4. The perturbation wavelength set by "n_Pert_Wave_Len," initial simulation scale factor "A_INIT,"
+   the x-axis and remains uniform across the y-z plane.
+3. The perturbation wavelength set by "n_Pert_Wave_Len", initial simulation scale factor "A_INIT",
    pancake collapse redshift "zc_Collapse" are free parameters in this test problem. Note that "zc_Collapse"
    has to be smaller than the initial redsfhit. Analytical solutions are applicable for "z > zc_Collapse."
-5. The parameter "PAR_NPAR" is irrelevant for the gas-only setup, and replaced by "NPar_X" in Input__TestProb
+4. The parameter "PAR_NPAR" is irrelevant for the gas-only setup, and replaced by "NPar_X" in Input__TestProb
    for the particle-only setup. Freezing the fluid component "OPT__FREEZE_FLUID = 1" is necessary for the
    particle-only setup. For the particle-only setup, "NPar_X = 64" is the minimum spatial resolution such
    that the collapsed structure can be properly resolved.
-6. The analysis script ./plots/analysis_plot_Zeldovich.py works for both gas-/particle-only setups. Note
-   that the parameters under "# user-specified parameters" in the script NEEDS to match those adopted in
-   "Input__TestProb," especially the value of "Gas_Par_Setup."
-7. For references, see Sec. 9.2 of Springel, MNRAS 401 791 (2010) and Sec. 3 of Heitmann et al., ApJS 160 28 (2005)
+5. The analysis script ./plots/analysis_plot_Zeldovich.py works for both gas-/particle-only setups. Note
+   that the parameters under "# user-specified parameters" in the script NEED to match those adopted in
+   "Input__TestProb," especially the value of "Gas_Par_Setup".
+6. For references, see Sec. 9.2 of Springel, MNRAS 401 791 (2010) and Sec. 3 of Heitmann et al., ApJS 160 28 (2005)
