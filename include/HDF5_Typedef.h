@@ -522,6 +522,7 @@ struct InputPara_t
 #  endif
    int    Opt__OverlapMPI;
    int    Opt__ResetFluid;
+   int    Opt__ResetFluidInit;
    int    Opt__FreezeFluid;
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    double MinDens;

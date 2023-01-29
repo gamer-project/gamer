@@ -126,6 +126,9 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
+   if ( !OPT__RESET_FLUID || !OPT__RESET_FLUID_INIT )
+      Aux_Error( ERROR_INFO, "must enable both OPT__RESET_FLUID and OPT__RESET_FLUID_INIT !!\n" );
+
 #  ifdef GRAVITY
    if ( OPT__BC_POT != BC_POT_ISOLATED )
       Aux_Error( ERROR_INFO, "please set \"OPT__BC_POT = 2\" (i.e., isolated gravity) !!\n" );
