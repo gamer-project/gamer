@@ -849,7 +849,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //          normalize passive scalars
-#           if ( NCOMP_PASSIVE > 0 )
+#           if ( NCOMP_PASSIVE > 0  &&  MODEL == HYDRO )
             if ( OPT__NORMALIZE_PASSIVE )
             {
                real Passive[NCOMP_PASSIVE];

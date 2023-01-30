@@ -10,8 +10,8 @@ static void Init_Function_User_Template( real fluid[], const double x, const dou
 void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                                 const int lv, double AuxArray[] ) = NULL;
 
-extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
-                                         const int lv, double AuxArray[] );
+extern int (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
+                                        const int lv, double AuxArray[] );
 
 
 
@@ -77,8 +77,8 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
 // check
    if ( Init_Function_User_Ptr == NULL )  Aux_Error( ERROR_INFO, "Init_Function_User_Ptr == NULL !!\n" );
 
-   if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_Func_Ptr == NULL )
-      Aux_Error( ERROR_INFO, "Flu_ResetByUser_Func_Ptr == NULL for OPT__RESET_FLUID !!\n" );
+   if ( OPT__RESET_FLUID_INIT  &&  Flu_ResetByUser_Func_Ptr == NULL )
+      Aux_Error( ERROR_INFO, "Flu_ResetByUser_Func_Ptr == NULL for OPT__RESET_FLUID_INIT !!\n" );
 
 
 // set the number of OpenMP threads
@@ -111,7 +111,7 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
          Init_Function_User_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
 
 //       modify the initial condition if required
-         if ( OPT__RESET_FLUID )
+         if ( OPT__RESET_FLUID_INIT )
             Flu_ResetByUser_Func_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
 
          for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] += fluid_sub[v];
@@ -134,12 +134,14 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
       }
 
 //    floor and normalize passive scalars (actually passive scalars are NOT supported by ELBDM yet)
+      /*
 #     if ( NCOMP_PASSIVE > 0 )
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = FMAX( fluid[v], TINY_NUMBER );
 
       if ( OPT__NORMALIZE_PASSIVE )
-         CPU_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+         Hydro_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
 #     endif
+      */
 
       for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = fluid[v];
 
