@@ -5,12 +5,13 @@
 
 // problem-specific global variables
 // =======================================================================================
-static double PWave_Lambda;        // plane wave wavelength
+static int    PWave_NWavelength;   // number of plane wave wavelength (will be reset to 3 times input value if PWave_XYZ == 3)
 static double PWave_Amp;           // plane wave amplitude
 static double PWave_Phase0;        // plane wave phase constant
 static int    PWave_XYZ;           // plane wave direction (0/1/2/3 --> x/y/z/diagonal)
 static int    PWave_LSR;           // plane wave direction (<0/0/>0 --> Left-moving/Standing/Right-moving)
 
+static double PWave_Lambda;        // plane wave wavelength
 static double PWave_Period;        // plane wave period
 static double PWave_WaveK;         // plane wave wavenumber
 static double PWave_WaveW;         // plane wave angular frequency
@@ -55,6 +56,10 @@ void Validate()
 #  ifndef FLOAT8
    Aux_Error( ERROR_INFO, "FLOAT8 must be enabled !!\n" );
 #  endif
+
+   for (int f=0; f<6; f++)
+   if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
+      Aux_Error( ERROR_INFO, "must adopt periodic BC for fluid --> reset OPT__BC_FLU* !!\n" );
 
 
 // warnings
@@ -103,7 +108,7 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "PWave_Lambda",      &PWave_Lambda,          0.5,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "PWave_NWavelength", &PWave_NWavelength,     2,             1,                NoMax_int         );
    ReadPara->Add( "PWave_Amp",         &PWave_Amp,             1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "PWave_Phase0",      &PWave_Phase0,          0.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "PWave_XYZ",         &PWave_XYZ,             0,             0,                3                 );
@@ -114,6 +119,14 @@ void SetParameter()
    delete ReadPara;
 
 // (1-2) set the default values
+   if ( PWave_XYZ == 3 )
+   {
+      PWave_NWavelength *= 3;
+
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : parameter [%-25s] is reset to [%- 21d] in %s test for PWave_XYZ == 3 !!\n",
+                      "PWave_NWavelength", PWave_NWavelength, "ELBDM PlaneWave" );
+   }
 
 // (1-3) check the runtime parameters
    if (  PWave_XYZ == 3  &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )
@@ -121,6 +134,7 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
+   PWave_Lambda = ( PWave_XYZ == 3 ) ? amr->BoxSize[0]*sqrt(3.0)/PWave_NWavelength : amr->BoxSize[PWave_XYZ]/PWave_NWavelength;
    PWave_WaveK  = 2.0*M_PI/PWave_Lambda;
    PWave_WaveW  = 0.5*SQR( PWave_WaveK )/ELBDM_ETA;
    PWave_Period = 2.0*M_PI/PWave_WaveW;
@@ -283,7 +297,6 @@ void Init_TestProb_ELBDM_PlaneWave()
 
 
    Init_Function_User_Ptr = SetGridIC;
-   BC_User_Ptr            = SetGridIC;
    Output_User_Ptr        = OutputError;
 #  endif // #if ( MODEL == ELBDM )
 
