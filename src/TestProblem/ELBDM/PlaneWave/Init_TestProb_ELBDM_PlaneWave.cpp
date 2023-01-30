@@ -119,6 +119,11 @@ void SetParameter()
    delete ReadPara;
 
 // (1-2) set the default values
+
+// (1-3) check and reset the runtime parameters
+   if ( PWave_XYZ == 3  &&  ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2] ) )
+      Aux_Error( ERROR_INFO, "simulation domain must be CUBIC in %s test if PWave_XYZ == 3 !!\n", "ELBDM PlaneWave" );
+
    if ( PWave_XYZ == 3 )
    {
       PWave_NWavelength *= 3;
@@ -127,10 +132,6 @@ void SetParameter()
          Aux_Message( stderr, "WARNING : parameter [%-25s] is reset to [%- 21d] in %s test for PWave_XYZ == 3 !!\n",
                       "PWave_NWavelength", PWave_NWavelength, "ELBDM PlaneWave" );
    }
-
-// (1-3) check the runtime parameters
-   if (  PWave_XYZ == 3  &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )
-      Aux_Error( ERROR_INFO, "simulation domain must be CUBIC in %s test if PWave_XYZ == 3 !!\n", "ELBDM PlaneWave" );
 
 
 // (2) set the problem-specific derived parameters
