@@ -104,7 +104,7 @@ void SetParameter()
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
    ReadPara->Add( "PWave_Lambda",      &PWave_Lambda,          0.5,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "PWave_Amp",         &PWave_Amp,             1.0,           0.0,              NoMax_double      );
+   ReadPara->Add( "PWave_Amp",         &PWave_Amp,             1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "PWave_Phase0",      &PWave_Phase0,          0.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "PWave_XYZ",         &PWave_XYZ,             0,             0,                3                 );
    ReadPara->Add( "PWave_LSR",         &PWave_LSR,             1,             NoMin_int,        NoMax_int         );
@@ -156,15 +156,13 @@ void SetParameter()
       Aux_Message( stdout, "  plane wave wavenumber            = %13.7e\n", PWave_WaveK                );
       Aux_Message( stdout, "  plane wave angular frequency     = %13.7e\n", PWave_WaveW                );
       Aux_Message( stdout, "  plane wave period                = %13.7e\n", PWave_Period               );
-      if ( PWave_LSR == 0){
-      Aux_Message( stdout, "  standing wave                    = true\n"                               );
-      }
-      else{
-      Aux_Message( stdout, "  standing wave                    = false\n"                              );
-      Aux_Message( stdout, "  plane wave propagation direction = %s%s\n",  ( PWave_LSR > 0 )  ? "+" : "-",
+      Aux_Message( stdout, "  standing wave                    = %s\n",    ( PWave_LSR == 0 ) ? "true" : "false" );                              );
+      Aux_Message( stdout, "  plane wave direction             = %s%s\n",  ( PWave_LSR == 0 ) ? " " :
+                                                                           ( PWave_LSR >  0 ) ? "+" : "-",
                                                                            ( PWave_XYZ == 0 ) ? "x" :
                                                                            ( PWave_XYZ == 1 ) ? "y" :
                                                                            ( PWave_XYZ == 2 ) ? "z" : "diagonal" );
+      if ( PWave_LSR != 0 ) {
       Aux_Message( stdout, "  plane wave phase velocity        = %13.7e\n", PWave_PhaseV               );
       Aux_Message( stdout, "  plane wave group velocity        = %13.7e\n", PWave_GroupV               );
       }
@@ -214,15 +212,15 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    PhaseL  = -PWave_WaveK*r - PWave_WaveW*Time + PWave_Phase0;
 
 // set the real and imaginary parts
-   if ( PWave_LSR > 0 ){      // Right-moving wave
+   if ( PWave_LSR > 0 ) {      // Right-moving wave
       fluid[REAL] = PWave_Amp*cos( PhaseR );
       fluid[IMAG] = PWave_Amp*sin( PhaseR );
    }
-   else if ( PWave_LSR < 0 ){ // Left-moving wave
+   else if ( PWave_LSR < 0 ) { // Left-moving wave
       fluid[REAL] = PWave_Amp*cos( PhaseL );
       fluid[IMAG] = PWave_Amp*sin( PhaseL );
    }
-   else{ //( PWave_LSR == 0 ) // Standing wave
+   else { //( PWave_LSR == 0 ) // Standing wave
       fluid[REAL] = 0.5*( PWave_Amp*cos( PhaseR ) + PWave_Amp*cos( PhaseL ) );
       fluid[IMAG] = 0.5*( PWave_Amp*sin( PhaseR ) + PWave_Amp*sin( PhaseL ) );
    }
@@ -248,10 +246,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 void OutputError()
 {
 
-   const char Prefix[100]     = "PlaneWave";
-   const OptOutputPart_t Part = ( PWave_XYZ == 3) ? OUTPUT_DIAG : (OUTPUT_X + PWave_XYZ);
+   const char Prefix[MAX_STRING] = "PlaneWave";
+   const OptOutputPart_t Part    = ( PWave_XYZ == 3 ) ? OUTPUT_DIAG : (OUTPUT_X + PWave_XYZ);
 
-   Output_L1Error( SetGridIC, NULL, Prefix, Part, 0.0, 0.0, 0.0 );
+   Output_L1Error( SetGridIC, NULL, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
 
 } // FUNCTION : OutputError
 #endif // #if ( MODEL == ELBDM )
