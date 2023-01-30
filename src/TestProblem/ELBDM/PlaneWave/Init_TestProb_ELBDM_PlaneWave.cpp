@@ -156,7 +156,7 @@ void SetParameter()
       Aux_Message( stdout, "  plane wave wavenumber            = %13.7e\n", PWave_WaveK                );
       Aux_Message( stdout, "  plane wave angular frequency     = %13.7e\n", PWave_WaveW                );
       Aux_Message( stdout, "  plane wave period                = %13.7e\n", PWave_Period               );
-      Aux_Message( stdout, "  standing wave                    = %s\n",    ( PWave_LSR == 0 ) ? "true" : "false" );                              );
+      Aux_Message( stdout, "  standing wave                    = %s\n",    ( PWave_LSR == 0 ) ? "true" : "false" );
       Aux_Message( stdout, "  plane wave direction             = %s%s\n",  ( PWave_LSR == 0 ) ? " " :
                                                                            ( PWave_LSR >  0 ) ? "+" : "-",
                                                                            ( PWave_XYZ == 0 ) ? "x" :
