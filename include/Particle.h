@@ -61,7 +61,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                                          --> R2B : Real to Buffer
 //                                          --> Mainly for the Poisson solver
 //                                          --> For LOAD_BALANCE only
-//                R2B_Buff_NPatchEachRank :  Number of buffer patches to receive data from different MPI ranks
+//                R2B_Buff_NPatchEachRank : Number of buffer patches to receive data from different MPI ranks
 //                R2B_Buff_PIDList        : Buffer patch IDs list to receive particles from other ranks
 //                                          --> Mainly for the Poisson solver
 //                                          --> For LOAD_BALANCE only

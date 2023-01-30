@@ -356,6 +356,12 @@ void Aux_TakeNote()
       fprintf( Note, "SUPPORT_GSL                     OFF\n" );
 #     endif
 
+#     ifdef SUPPORT_FFTW
+      fprintf( Note, "SUPPORT_FFTW                    ON\n" );
+#     else
+      fprintf( Note, "SUPPORT_FFTW                    OFF\n" );
+#     endif
+
 #     ifdef SUPPORT_LIBYT
       fprintf( Note, "SUPPORT_LIBYT                   ON\n" );
 #     else
@@ -818,6 +824,7 @@ void Aux_TakeNote()
       fprintf( Note, "Parameters of Domain Refinement\n" );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "REGRID_COUNT                    %d\n",      REGRID_COUNT              );
+      fprintf( Note, "REFINE_NLEVEL                   %d\n",      REFINE_NLEVEL             );
       fprintf( Note, "FLAG_BUFFER_SIZE                %d\n",      FLAG_BUFFER_SIZE          );
       fprintf( Note, "FLAG_BUFFER_SIZE_MAXM1_LV       %d\n",      FLAG_BUFFER_SIZE_MAXM1_LV );
       fprintf( Note, "FLAG_BUFFER_SIZE_MAXM2_LV       %d\n",      FLAG_BUFFER_SIZE_MAXM2_LV );
@@ -1051,6 +1058,7 @@ void Aux_TakeNote()
 
       fprintf( Note, "OPT__OVERLAP_MPI                %d\n",      OPT__OVERLAP_MPI         );
       fprintf( Note, "OPT__RESET_FLUID                %d\n",      OPT__RESET_FLUID         );
+      fprintf( Note, "OPT__RESET_FLUID_INIT           %d\n",      OPT__RESET_FLUID_INIT    );
       fprintf( Note, "OPT__FREEZE_FLUID               %d\n",      OPT__FREEZE_FLUID        );
 #     if ( MODEL == HYDRO  ||  MODEL == ELBDM )
       fprintf( Note, "MIN_DENS                        %13.7e\n",  MIN_DENS                 );
@@ -1314,6 +1322,8 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_RESTART             %d\n",      OPT__OUTPUT_RESTART    );
       fprintf( Note, "OUTPUT_STEP                     %d\n",      OUTPUT_STEP            );
       fprintf( Note, "OUTPUT_DT                       %20.14e\n", OUTPUT_DT              );
+      fprintf( Note, "OUTPUT_WALLTIME                 %20.14e\n", OUTPUT_WALLTIME        );
+      fprintf( Note, "OUTPUT_WALLTIME_UNIT            %d\n",      OUTPUT_WALLTIME_UNIT   );
       fprintf( Note, "OUTPUT_PART_X                   %20.14e\n", OUTPUT_PART_X          );
       fprintf( Note, "OUTPUT_PART_Y                   %20.14e\n", OUTPUT_PART_Y          );
       fprintf( Note, "OUTPUT_PART_Z                   %20.14e\n", OUTPUT_PART_Z          );

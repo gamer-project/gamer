@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2454)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2457)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -228,6 +228,9 @@ Procedure for outputting new variables:
 //                2454 : 2022/10/24 --> output AUTO_REDUCE_MINMOD_FACTOR, AUTO_REDUCE_MINMOD_MIN,
 //                                             AUTO_REDUCE_INT_MONO_FACTOR, AUTO_REDUCE_INT_MONO_MIN,
 //                                             INT_MONO_COEFF_B
+//                2455 : 2022/11/04 --> output REFINE_NLEVEL
+//                2456 : 2022/12/15 --> output SUPPORT_FFTW
+//                2457 : 2023/01/28 --> output OPT__RESET_FLUID_INIT
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1733,7 +1736,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2454;
+   KeyInfo.FormatVersion        = 2457;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1922,6 +1925,12 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.SupportGSL             = 1;
 #  else
    Makefile.SupportGSL             = 0;
+#  endif
+
+#  ifdef SUPPORT_FFTW
+   Makefile.SupportFFTW            = 1;
+#  else
+   Makefile.SupportFFTW            = 0;
 #  endif
 
 #  ifdef SUPPORT_LIBYT
@@ -2406,6 +2415,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 
 // domain refinement
    InputPara.RegridCount             = REGRID_COUNT;
+   InputPara.RefineNLevel            = REFINE_NLEVEL;
    InputPara.FlagBufferSize          = FLAG_BUFFER_SIZE;
    InputPara.FlagBufferSizeMaxM1Lv   = FLAG_BUFFER_SIZE_MAXM1_LV;
    InputPara.FlagBufferSizeMaxM2Lv   = FLAG_BUFFER_SIZE_MAXM2_LV;
@@ -2520,6 +2530,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 
    InputPara.Opt__OverlapMPI         = OPT__OVERLAP_MPI;
    InputPara.Opt__ResetFluid         = OPT__RESET_FLUID;
+   InputPara.Opt__ResetFluidInit     = OPT__RESET_FLUID_INIT;
    InputPara.Opt__FreezeFluid        = OPT__FREEZE_FLUID;
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    InputPara.MinDens                 = MIN_DENS;
@@ -2917,6 +2928,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Laohu",                  HOFFSET(Makefile_t,Laohu                  ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportHDF5",            HOFFSET(Makefile_t,SupportHDF5            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportGSL",             HOFFSET(Makefile_t,SupportGSL             ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "SupportFFTW",            HOFFSET(Makefile_t,SupportFFTW            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportLibYT",           HOFFSET(Makefile_t,SupportLibYT           ), H5T_NATIVE_INT );
 #  ifdef SUPPORT_LIBYT
    H5Tinsert( H5_TypeID, "LibYTUsePatchGroup",     HOFFSET(Makefile_t,LibYTUsePatchGroup     ), H5T_NATIVE_INT );
@@ -3279,6 +3291,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 
 // domain refinement
    H5Tinsert( H5_TypeID, "RegridCount",             HOFFSET(InputPara_t,RegridCount            ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "RefineNLevel",            HOFFSET(InputPara_t,RefineNLevel           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "FlagBufferSize",          HOFFSET(InputPara_t,FlagBufferSize         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "FlagBufferSizeMaxM1Lv",   HOFFSET(InputPara_t,FlagBufferSizeMaxM1Lv  ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "FlagBufferSizeMaxM2Lv",   HOFFSET(InputPara_t,FlagBufferSizeMaxM2Lv  ), H5T_NATIVE_INT     );
@@ -3403,6 +3416,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 
    H5Tinsert( H5_TypeID, "Opt__OverlapMPI",         HOFFSET(InputPara_t,Opt__OverlapMPI        ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__ResetFluid",         HOFFSET(InputPara_t,Opt__ResetFluid        ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__ResetFluidInit",     HOFFSET(InputPara_t,Opt__ResetFluidInit    ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__FreezeFluid",        HOFFSET(InputPara_t,Opt__FreezeFluid       ), H5T_NATIVE_INT              );
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "MinDens",                 HOFFSET(InputPara_t,MinDens                ), H5T_NATIVE_DOUBLE           );

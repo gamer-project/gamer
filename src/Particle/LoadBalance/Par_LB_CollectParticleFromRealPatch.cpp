@@ -14,11 +14,8 @@
 //                   and the corresponding real patches "Real_NPatchTotal, Real_PIDList, Real_NPatchEachRank" must be
 //                   provided. The information of real patches can be calculated in advance by using Par_LB_MapBuffer2RealPatch()
 //                2. All Target patches (those in Buff_PIDList[] and Real_PIDList[]) must be patches at the same level "lv"
-//                3. Currently this function only collects particle mass and position
-//                   --> For particle mass assignment only
-//                   --> But it should be generalized to work with arbitrary particle attributes in the future
-//                4. This function is called by Par_LB_CollectParticle2OneLevel()
-//                5. ParAtt_Copy[] will be allocated for all target buffer patches with particles in the
+//                3. This function is called by Par_LB_CollectParticle2OneLevel()
+//                4. ParAtt_Copy[] will be allocated for all target buffer patches with particles in the
 //                   corresponding real patches
 //                   --> Must be deallocated afterward by calling Par_LB_CollectParticle2OneLevel_FreeMemory()
 //
