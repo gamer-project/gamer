@@ -117,7 +117,7 @@ void SetParameter()
 
 // (1-3) check the runtime parameters
    if (  PWave_XYZ == 3  &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )
-      Aux_Error( ERROR_INFO, "simulation domain must be CUBIC in the %s test if PWave_XYZ == 3 !!\n", "ELBDM plane wave" );
+      Aux_Error( ERROR_INFO, "simulation domain must be CUBIC in %s test if PWave_XYZ == 3 !!\n", "ELBDM PlaneWave" );
 
 
 // (2) set the problem-specific derived parameters
@@ -150,13 +150,14 @@ void SetParameter()
    {
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID                  = %d\n",     TESTPROB_ID                );
+      Aux_Message( stdout, "  number of plane wave wavelength  = %d\n",     PWave_NWavelength          );
       Aux_Message( stdout, "  plane wave wavelength            = %13.7e\n", PWave_Lambda               );
       Aux_Message( stdout, "  plane wave amplitude             = %13.7e\n", PWave_Amp                  );
       Aux_Message( stdout, "  plane wave phase constant        = %13.7e\n", PWave_Phase0               );
       Aux_Message( stdout, "  plane wave wavenumber            = %13.7e\n", PWave_WaveK                );
       Aux_Message( stdout, "  plane wave angular frequency     = %13.7e\n", PWave_WaveW                );
       Aux_Message( stdout, "  plane wave period                = %13.7e\n", PWave_Period               );
-      Aux_Message( stdout, "  standing wave                    = %s\n",    ( PWave_LSR == 0 ) ? "true" : "false" );
+      Aux_Message( stdout, "  standing wave                    = %s\n",    ( PWave_LSR == 0 ) ? "YES" : "NO" );
       Aux_Message( stdout, "  plane wave direction             = %s%s\n",  ( PWave_LSR == 0 ) ? ""  :
                                                                            ( PWave_LSR >  0 ) ? "+" : "-",
                                                                            ( PWave_XYZ == 0 ) ? "x" :
