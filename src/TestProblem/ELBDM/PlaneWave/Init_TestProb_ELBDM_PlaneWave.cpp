@@ -233,25 +233,25 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    PhaseR  =  PWave_WaveK*r - PWave_WaveW*Time + PWave_Phase0;
    PhaseL  = -PWave_WaveK*r - PWave_WaveW*Time + PWave_Phase0;
 
-// set the real and imaginary parts and the unwrapped phase
+// set the real and imaginary parts
    if ( PWave_LSR > 0 ) {      // Right-moving wave
       fluid[REAL] = PWave_Amp*cos( PhaseR );
       fluid[IMAG] = PWave_Amp*sin( PhaseR );
-      fluid[PWave_Idx_Phase] = ELBDM_UnwrapPhase( 0.0, PhaseR );
    }
    else if ( PWave_LSR < 0 ) { // Left-moving wave
       fluid[REAL] = PWave_Amp*cos( PhaseL );
       fluid[IMAG] = PWave_Amp*sin( PhaseL );
-      fluid[PWave_Idx_Phase] = ELBDM_UnwrapPhase( 0.0, PhaseL );
    }
    else { //( PWave_LSR == 0 ) // Standing wave
       fluid[REAL] = 0.5*( PWave_Amp*cos( PhaseR ) + PWave_Amp*cos( PhaseL ) );
       fluid[IMAG] = 0.5*( PWave_Amp*sin( PhaseR ) + PWave_Amp*sin( PhaseL ) );
-      fluid[PWave_Idx_Phase] = ELBDM_UnwrapPhase( 0.0, -PWave_WaveW*Time + PWave_Phase0 );
    }
 
 // set the density
    fluid[DENS] = SQR( fluid[REAL] ) + SQR( fluid[IMAG] );
+
+// set the unwrapped phase
+   fluid[PWave_Idx_Phase] = ATAN2( fluid[IMAG], fluid[REAL] );
 
 } // FUNCTION : SetGridIC
 
