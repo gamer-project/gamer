@@ -17,6 +17,8 @@ static double PWave_WaveK;         // plane wave wavenumber
 static double PWave_WaveW;         // plane wave angular frequency
 static double PWave_PhaseV;        // plane wave phase velocity
 static double PWave_GroupV;        // plane wave group velocity
+
+static FieldIdx_t PWave_Idx_Phase = Idx_Undefined;    // field index for unwrapped phase
 // =======================================================================================
 
 static void OutputError();
@@ -60,6 +62,9 @@ void Validate()
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
       Aux_Error( ERROR_INFO, "must adopt periodic BC for fluid --> reset OPT__BC_FLU* !!\n" );
+
+   if ( NCOMP_PASSIVE_USER != 1 )
+      Aux_Error( ERROR_INFO, "please set NCOMP_PASSIVE_USER to 1 !!\n" );
 
 
 // warnings
@@ -200,6 +205,7 @@ void SetParameter()
 //                   --> In this case, it should provide the analytical solution at the given "Time"
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   --> Please ensure that everything here is thread-safe
+//                3. fluid[Idx_Phase] is used to store the unwrapped phase
 //
 // Parameter   :  fluid    : Fluid field to be initialized
 //                x/y/z    : Physical coordinates
@@ -227,24 +233,89 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    PhaseR  =  PWave_WaveK*r - PWave_WaveW*Time + PWave_Phase0;
    PhaseL  = -PWave_WaveK*r - PWave_WaveW*Time + PWave_Phase0;
 
-// set the real and imaginary parts
+// set the real and imaginary parts and the unwrapped phase
    if ( PWave_LSR > 0 ) {      // Right-moving wave
       fluid[REAL] = PWave_Amp*cos( PhaseR );
       fluid[IMAG] = PWave_Amp*sin( PhaseR );
+      fluid[PWave_Idx_Phase] = ELBDM_UnwrapPhase( 0.0, PhaseR );
    }
    else if ( PWave_LSR < 0 ) { // Left-moving wave
       fluid[REAL] = PWave_Amp*cos( PhaseL );
       fluid[IMAG] = PWave_Amp*sin( PhaseL );
+      fluid[PWave_Idx_Phase] = ELBDM_UnwrapPhase( 0.0, PhaseL );
    }
    else { //( PWave_LSR == 0 ) // Standing wave
       fluid[REAL] = 0.5*( PWave_Amp*cos( PhaseR ) + PWave_Amp*cos( PhaseL ) );
       fluid[IMAG] = 0.5*( PWave_Amp*sin( PhaseR ) + PWave_Amp*sin( PhaseL ) );
+      fluid[PWave_Idx_Phase] = ELBDM_UnwrapPhase( 0.0, -PWave_WaveW*Time + PWave_Phase0 );
    }
 
 // set the density
    fluid[DENS] = SQR( fluid[REAL] ) + SQR( fluid[IMAG] );
 
 } // FUNCTION : SetGridIC
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AddNewField_PlaneWave
+// Description :  Add the unwrapped phase as problem-specific fields
+//
+// Note        :  1. Ref: https://github.com/gamer-project/gamer/wiki/Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes
+//                2. Invoke AddField() for each of the problem-specific field:
+//                   --> Field label sent to AddField() will be used as the output name of the field
+//                   --> Field index returned by AddField() can be used to access the field data
+//                3. Pre-declared field indices are put in Field.h
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void AddNewField_PlaneWave()
+{
+   if ( PWave_Idx_Phase == Idx_Undefined )
+      PWave_Idx_Phase = AddField( "Phase", NORMALIZE_NO, INTERP_FRAC_NO );
+
+} // FUNCTION : AddNewField_PlaneWave
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Output_UserWorkBeforeOutput_PlaneWave
+// Description :  Calculate and update the unwrapped phase field before dumping data
+//
+// Note        :  1. Invoked by Output_DumpData() using the function pointer "Output_UserWorkBeforeOutput_Ptr"
+//
+// Parameter   :
+//
+// Return      :
+//-------------------------------------------------------------------------------------------------------
+void Output_UserWorkBeforeOutput_PlaneWave()
+{
+
+   for (int lv=0; lv<NLEVEL; lv++)
+   {
+      int FluSg = amr->FluSg[lv];
+
+      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+      {
+         for (int k=0; k<PATCH_SIZE; k++)
+         for (int j=0; j<PATCH_SIZE; j++)
+         for (int i=0; i<PATCH_SIZE; i++)
+         {
+//          record the unwrapped phase
+            double Phase;
+
+            Phase = ATAN2( amr->patch[FluSg][lv][PID]->fluid[IMAG][k][j][i],
+                           amr->patch[FluSg][lv][PID]->fluid[REAL][k][j][i] );
+
+            amr->patch[FluSg][lv][PID]->fluid[PWave_Idx_Phase][k][j][i] = Phase;
+
+         } // i,j,k
+      } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+   } // for (int lv=0; lv<NLEVEL; lv++)
+
+} // FUNCTION : Output_UserWorkBeforeOutput_PlaneWave
 
 
 
@@ -298,7 +369,9 @@ void Init_TestProb_ELBDM_PlaneWave()
 
 
    Init_Function_User_Ptr = SetGridIC;
+   Init_Field_User_Ptr    = AddNewField_PlaneWave;
    Output_User_Ptr        = OutputError;
+   Output_UserWorkBeforeOutput_Ptr = Output_UserWorkBeforeOutput_PlaneWave;
 #  endif // #if ( MODEL == ELBDM )
 
 
