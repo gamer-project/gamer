@@ -13,7 +13,7 @@ mpl.rcParams['agg.path.chunksize'] = 10000
 
 # -------------------------------------------------------------------------------------------------------------------------
 # user-specified parameters (consistent with "Input__TestProb")
-Gas_Par_Setup    = 2             # Gas-only [1] or Particle-only [2] setup
+Gas_Par_Setup    = 1             # Gas-only [1] or Particle-only [2] setup
 n_Pert_Wave_Len  = 1             # Pert_Wave_Len = BOXSIZE_x/n_Pert_Wave_Len
 zc_Collapse      = 1
 Temp_gas_init    = 100           # [Kelvin]

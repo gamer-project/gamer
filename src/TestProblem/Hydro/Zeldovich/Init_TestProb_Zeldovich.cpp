@@ -13,6 +13,7 @@
 // =======================================================================================
 static int Gas_Par_Setup;        // 1=gas-only, 2=particle-only
 static int n_Pert_Wave_Len;      // "Pert_Wave_Len = BOX_SIZE_x/n_Pert_Wave_Len"
+static int NPar_X;               // 1D number of particles along the x-axis (axis of perturbation)
 static int NPar_YZ;              // 1D number of particles along the y/z-axis
 static double Pert_Wave_Len;     // perturbation wavelength [Mpc/h]
 static double k_Pert;            // perturbation wavenumber
@@ -33,9 +34,9 @@ struct Zeldovich_coord_params
 static double Zeldovich_coord_transformation( const double x_Lagrangian_Trial, void *params );
 static void OutputError();
 #ifdef SUPPORT_GSL
-static double Zeldovich_coord_transformation_solver( const double x_shift_input, const double z_Initial );
-static double Zeldovich_density_profile( const double x_Lagrangian, const double z_Initial );
-static double Zeldovich_x_velocity_profile( const double x_Lagrangian, const double z_Initial );
+static double Zeldovich_coord_transformation_solver( const double x_shift_input, const double z );
+static double Zeldovich_density_profile( const double x_Lagrangian, const double z );
+static double Zeldovich_x_velocity_profile( const double x_Lagrangian, const double z );
 #ifdef PARTICLE
 void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_AllRank,
                                     real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
@@ -89,11 +90,12 @@ void Validate()
    if ( OPT__INIT != INIT_BY_FUNCTION  &&  OPT__INIT != INIT_BY_RESTART )
       Aux_Error( ERROR_INFO, "OPT__INIT != FUNCTION (1) or RESTART (2) for this test !!\n" );
 
-/*
+
 #  ifndef FLOAT8
-   Aux_Error( ERROR_INFO, "FLOAT8 must be enabled !!\n" );
+   Aux_Message( stderr, "WARNING : it's recommended to enable FLOAT8 for gas-only setup to" );
+   Aux_Message( stderr, " properly resolve the pressure and temperature of the cold flow\n" );
 #  endif
-*/
+
 #  ifndef SUPPORT_GSL
    Aux_Error( ERROR_INFO, "SUPPORT_GSL must be enabled !!\n" );
 #  endif
@@ -103,11 +105,18 @@ void Validate()
       Aux_Error( ERROR_INFO, "PAR_INIT != FUNCTION (1) OR RESTART (2) for this test !!\n" );
 
    if ( NX0_TOT[1] != NX0_TOT[2] )
-      Aux_Error( ERROR_INFO, "NX0_TOT[1] (%ld) != NX0_TOT[2] (%ld) !!\n", NX0_TOT[1], NX0_TOT[2] );
+      Aux_Error( ERROR_INFO, "NX0_TOT[1] (%d) != NX0_TOT[2] (%d) !!\n", NX0_TOT[1], NX0_TOT[2] );
 #  endif
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
+   if ( MPI_Rank == 0 )
+   {
+      Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
+
+#     ifndef DUAL_ENERGY
+      Aux_Message( stderr, "WARNING : it's recommended to enable DUAL_ENERGY for this test\n" );
+#     endif
+   }
 
 } // FUNCTION : Validate
 
@@ -149,6 +158,7 @@ void SetParameter()
    ReadPara->Add( "n_Pert_Wave_Len",   &n_Pert_Wave_Len,        1,            1,                NoMax_int         );
    ReadPara->Add( "z_Collapse",        &z_Collapse,             1.0,          0.0,              NoMax_double      );
    ReadPara->Add( "GasTemp_Init",      &GasTemp_Init,           100.0,        0.0,              NoMax_double      );
+   ReadPara->Add( "NPar_X",            &NPar_X,                 NX0_TOT[0],   0,                NoMax_int         );
 
    ReadPara->Read( FileName );
 
@@ -162,6 +172,17 @@ void SetParameter()
 // (1-3) check the runtime parameters
    if ( z_Initial < z_Collapse )  Aux_Error( ERROR_INFO, "z_Collapse (%13.7e) must be smaller than z_Initial (%13.7e) !!\n", z_Collapse, z_Initial );
 
+   if ( Gas_Par_Setup == 1 ) // for gas-only setup
+   {
+      if ( OPT__FREEZE_FLUID != 0 )  Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID != 0 !!\n");
+      if ( OPT__OUTPUT_USER  != 1 )  Aux_Error( ERROR_INFO, "OPT__OUTPUT_USER != 1 !!\n");
+   }
+   else if ( Gas_Par_Setup == 2 ) // for particle-only setup
+   {
+      if ( OPT__FREEZE_FLUID != 1 )  Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID != 1 !!\n");
+      if ( OPT__OUTPUT_USER  != 0 )  Aux_Message( stderr, "WARNING : it's recommended to disable OPT__OUTPUT_USER for particle-only setup\n" );
+   }
+
 
 // (2) set the problem-specific derived parameters
 #  ifdef COMOVING
@@ -169,7 +190,7 @@ void SetParameter()
    Pert_Wave_Len = amr->BoxSize[0]/n_Pert_Wave_Len;
    rho_crit_i    = 1.0;            // [UNIT_D]; comoving critical density = 3H0^2/8*pi*G
    k_Pert        = 2.0*M_PI/Pert_Wave_Len;
-   dhx           = amr->BoxSize[0] / NX0_TOT[0];
+   dhx           = amr->BoxSize[0] / NPar_X;
    NPar_YZ       = amr->BoxSize[1] / dhx;
 #  endif
 
@@ -196,7 +217,7 @@ void SetParameter()
    }
    else if ( Gas_Par_Setup == 2 ) // overwrite the total number of particles in particle-only setup
    {
-      amr->Par->NPar_Active_AllRank = (long)NX0_TOT[0]*SQR((long)NPar_YZ);
+      amr->Par->NPar_Active_AllRank = (long)NPar_X*SQR((long)NPar_YZ);
    }
    PRINT_WARNING( "PAR_NPAR", amr->Par->NPar_Active_AllRank, FORMAT_LONG );
 #  endif
@@ -211,7 +232,8 @@ void SetParameter()
       Aux_Message( stdout, "  perturbation wavelength multiple  = %d\n",     n_Pert_Wave_Len );
       Aux_Message( stdout, "  Zeldovich collapse redshift       = %13.7e\n", z_Collapse      );
       Aux_Message( stdout, "  initial gas temperature in Kelvin = %13.7e\n", GasTemp_Init    );
-      if ( Gas_Par_Setup == 2 )  Aux_Message( stdout, "  particle number along the x-axis  = %d\n", NX0_TOT[0] );
+      if ( Gas_Par_Setup == 2 )
+      Aux_Message( stdout, "  particle number along the x-axis  = %d\n",     NPar_X          );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -235,7 +257,7 @@ double Zeldovich_coord_transformation( const double x_Lagrangian_Trial, void *pa
 
 
 #ifdef SUPPORT_GSL
-double Zeldovich_coord_transformation_solver( const double x_shift_input, const double z_Initial )
+double Zeldovich_coord_transformation_solver( const double x_shift_input, const double z )
 {
    int status;
    int iter = 0, max_iter = 100;
@@ -244,7 +266,7 @@ double Zeldovich_coord_transformation_solver( const double x_shift_input, const 
    double x_Lagrangian_Trial = x_shift_input;
    double x_lower_bound = x_shift_input-Pert_Wave_Len/4.0, x_upper_bound = x_shift_input+Pert_Wave_Len/4.0;
    gsl_function F;
-   struct Zeldovich_coord_params params = { x_shift_input, z_Initial };
+   struct Zeldovich_coord_params params = { x_shift_input, z };
 
    F.function = &Zeldovich_coord_transformation;
    F.params = &params;
@@ -260,27 +282,29 @@ double Zeldovich_coord_transformation_solver( const double x_shift_input, const 
       x_Lagrangian_Trial = gsl_root_fsolver_root( s );
       x_lower_bound = gsl_root_fsolver_x_lower( s );
       x_upper_bound = gsl_root_fsolver_x_upper( s );
-      status = gsl_root_test_interval( x_lower_bound, x_upper_bound, Pert_Wave_Len/1.0e5, 1.0e-5 );
+      status = gsl_root_test_interval( x_lower_bound, x_upper_bound, Pert_Wave_Len/1.0e8, 1.0e-8 );
    }
    while ( status == GSL_CONTINUE  &&  iter < max_iter );
 
    gsl_root_fsolver_free( s );
+
+   Aux_Message( stdout, "  total number of iteration  = %d\n",     iter          );
 
    return x_Lagrangian_Trial;
 }
 
 
 
-double Zeldovich_density_profile( const double x_Lagrangian, const double z_Initial )
+double Zeldovich_density_profile( const double x_Lagrangian, const double z )
 {
-   return rho_crit_i/(1.0-((1.0+z_Collapse)/(1.0+z_Initial))*cos(k_Pert*x_Lagrangian));
+   return rho_crit_i/(1.0-((1.0+z_Collapse)/(1.0+z))*cos(k_Pert*x_Lagrangian));
 }
 
 
 
-double Zeldovich_x_velocity_profile( const double x_Lagrangian, const double z_Initial )
+double Zeldovich_x_velocity_profile( const double x_Lagrangian, const double z )
 {
-   return (-H0*(1.0+z_Collapse)/sqrt(1.0+z_Initial)/(1.0+z_Initial))*(sin(k_Pert*x_Lagrangian)/k_Pert);
+   return (-H0*(1.0+z_Collapse)/sqrt(1.0+z)/(1.0+z))*(sin(k_Pert*x_Lagrangian)/k_Pert);
 }
 #endif // #ifdef SUPPORT_GSL
 
@@ -306,16 +330,16 @@ double Zeldovich_x_velocity_profile( const double x_Lagrangian, const double z_I
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-#  ifdef COMOVING
-#  ifdef SUPPORT_GSL
+#  if ( defined COMOVING  &&  defined SUPPORT_GSL )
 // compute relevant physical quantities
    const double x_shift      = x - 0.5*amr->BoxSize[0]; // unperturbed simulation grids
-   const double x_Lagrangian = Zeldovich_coord_transformation_solver( x_shift,z_Initial );
+   const double z_current    = 1.0/Time - 1.0;          // redshift at the current simulation time slice
+   const double x_Lagrangian = Zeldovich_coord_transformation_solver( x_shift,z_current );
 
    if ( Gas_Par_Setup == 1 ) // gas-only setup
    {
-      fluid[DENS] = Zeldovich_density_profile( x_Lagrangian, z_Initial );                // (comoving density)
-      fluid[MOMX] = fluid[DENS]*Zeldovich_x_velocity_profile( x_Lagrangian, z_Initial ); // (comoving density)*(comoving velocity)
+      fluid[DENS] = Zeldovich_density_profile( x_Lagrangian, z_current );                // (comoving density)
+      fluid[MOMX] = fluid[DENS]*Zeldovich_x_velocity_profile( x_Lagrangian, z_current ); // (comoving density)*(comoving velocity)
       fluid[MOMY] = 0.0;
       fluid[MOMZ] = 0.0;
 
@@ -342,8 +366,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       fluid[MOMZ] = MomZ;
       fluid[ENGY] = Etot;
    }
-#  endif // #ifdef SUPPORT_GSL
-#  endif // #ifdef COMOVING
+#  endif // #if ( defined COMOVING  &&  defined SUPPORT_GSL )
 } // FUNCTION : SetGridIC
 
 
@@ -413,7 +436,7 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
       ParData_AllRank[PAR_VELZ] = new real [NPar_AllRank];
 
 //    set particle attributes
-      for (long px=0; px<NX0_TOT[0]; px++)
+      for (long px=0; px<NPar_X; px++)
       {
 //       x-component position
          PosVec[0] = Zeldovich_coord_transformation_solver( px*dhx, z_Initial );
@@ -532,16 +555,11 @@ void Init_TestProb_Hydro_Zeldovich()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr = SetGridIC;
+   Init_Function_User_Ptr  = SetGridIC;
 #  ifdef PARTICLE
    Par_Init_ByFunction_Ptr = Par_Init_ByFunction_Zeldovich;
 #  endif // #ifdef PARTICLE
-   if ( Gas_Par_Setup == 1 )  // gas-only setup
-   {
-   Output_User_Ptr = OutputError; // output gas numerical and analytical profiles
-   }
-
-
+   Output_User_Ptr         = ( Gas_Par_Setup == 1 ) ? OutputError : NULL; // output gas numerical and analytical profiles
 #  endif // #if ( MODEL == HYDRO )
 
 
