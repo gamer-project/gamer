@@ -1,6 +1,6 @@
 Compilation flags:
 ========================================
-Enable : MODEL=ELBDM, FLOAT8
+Enable : MODEL=ELBDM, FLOAT8, NCOMP_PASSIVE_USER=1
 Disable: GRAVITY, PARTICLE
 
 
