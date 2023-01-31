@@ -5,10 +5,12 @@
 
 // problem-specific global variables
 // =======================================================================================
-static double Gau_v0;      // mean velocity
-static double Gau_Width;   // Gaussian width
-static double Gau_Center;  // Gaussian center
-static int    Gau_XYZ;     // wave propagation direction (0/1/2 --> x/y/z)
+static double Gau_v0;       // mean velocity
+static double Gau_Width;    // Gaussian width
+static double Gau_Center;   // Gaussian center
+static int    Gau_XYZ;      // wave propagation direction (0/1/2 --> x/y/z)
+static int    Gau_PeriodicN;// periodic boundary condition
+                            // (0 = non-periodic, >0 = number of periodic images each side)
 // =======================================================================================
 
 static void OutputError();
@@ -96,6 +98,7 @@ void SetParameter()
    ReadPara->Add( "Gau_Width",         &Gau_Width,             0.1,           Eps_double,       NoMax_double      );
    ReadPara->Add( "Gau_Center",        &Gau_Center,            NoDef_double,  NoMin_double,     NoMax_double      );
    ReadPara->Add( "Gau_XYZ",           &Gau_XYZ,               0,             0,                2                 );
+   ReadPara->Add( "Gau_PeriodicN",     &Gau_PeriodicN,         0,             0,                NoMax_int         );
 
    ReadPara->Read( FileName );
 
@@ -105,6 +108,11 @@ void SetParameter()
    if ( Gau_Center == NoDef_double )   Gau_Center = amr->BoxCenter[Gau_XYZ];
 
 // (1-3) check the runtime parameters
+   if ( MPI_Rank == 0 )
+   {
+      if ( OPT__BC_FLU[2*Gau_XYZ] == BC_FLU_PERIODIC  &&  Gau_PeriodicN == 0 )
+         Aux_Message( stderr, "WARNING : Gau_PeriodicN should be >0 when adopting periodic BC for fluid !!\n" );
+   }
 
 
 // (2) set the problem-specific derived parameters
@@ -130,11 +138,12 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID       = %d\n",     TESTPROB_ID );
-      Aux_Message( stdout, "  mean velocity         = %14.7e\n", Gau_v0      );
-      Aux_Message( stdout, "  Gaussian width        = %14.7e\n", Gau_Width   );
-      Aux_Message( stdout, "  Gaussian center       = %14.7e\n", Gau_Center  );
-      Aux_Message( stdout, "  propagation direction = %d\n",     Gau_XYZ     );
+      Aux_Message( stdout, "  test problem ID                    = %d\n",     TESTPROB_ID   );
+      Aux_Message( stdout, "  mean velocity                      = %14.7e\n", Gau_v0        );
+      Aux_Message( stdout, "  Gaussian width                     = %14.7e\n", Gau_Width     );
+      Aux_Message( stdout, "  Gaussian center                    = %14.7e\n", Gau_Center    );
+      Aux_Message( stdout, "  propagation direction              = %d\n",     Gau_XYZ       );
+      Aux_Message( stdout, "  number of periodic image each side = %d\n",     Gau_PeriodicN );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -177,17 +186,28 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       break;
    }
 
-   const double dr1        = r -     Gau_v0*Time - Gau_Center;
-   const double dr2        = r - 0.5*Gau_v0*Time - Gau_Center;
    const double Gau_Const1 = 1.0 + pow(  Time / ( ELBDM_ETA*SQR(Gau_Width) ), 2.0  );
-   const double Gau_Const2 = pow( SQR(Gau_Width)*M_PI*Gau_Const1, -0.25 )
-                             *exp(  -0.5*pow( dr1/Gau_Width, 2.0 )/Gau_Const1  );
    const double Gau_Theta1 = -0.5*acos(  pow( Gau_Const1, -0.5 )  );
-   const double Gau_Theta2 = 0.5*pow( dr1, 2.0 )*ELBDM_ETA*Time/(  pow( ELBDM_ETA*SQR(Gau_Width), 2.0) + SQR(Time)  )
-                             + Gau_v0*ELBDM_ETA*dr2;
+   double Re=0.0, Im=0.0;
 
-   fluid[REAL] = Gau_Const2*cos( Gau_Theta1 + Gau_Theta2 );
-   fluid[IMAG] = Gau_Const2*sin( Gau_Theta1 + Gau_Theta2 );
+// n=0, m=0: original wave packet
+// n>0, m=0/1: images for periodic BC on the plus(+)/minus(-) direction
+   for (int n=0; n<Gau_PeriodicN+1; n++) {
+   for (int m=0; m<((n==0)?1:2); m++) {
+      const double Center     = Gau_Center + n*(1-2*m)*amr->BoxSize[Gau_XYZ];
+      const double dr1        = r -     Gau_v0*Time - Center;
+      const double dr2        = r - 0.5*Gau_v0*Time - Center;
+      const double Gau_Const2 = pow( SQR(Gau_Width)*M_PI*Gau_Const1, -0.25 )
+                                *exp(  -0.5*pow( dr1/Gau_Width, 2.0 )/Gau_Const1  );
+      const double Gau_Theta2 = 0.5*pow( dr1, 2.0 )*ELBDM_ETA*Time/(  pow( ELBDM_ETA*SQR(Gau_Width), 2.0) + SQR(Time)  )
+                                + Gau_v0*ELBDM_ETA*dr2;
+
+      Re += Gau_Const2*cos( Gau_Theta1 + Gau_Theta2 );
+      Im += Gau_Const2*sin( Gau_Theta1 + Gau_Theta2 );
+   }}
+
+   fluid[REAL] = Re;
+   fluid[IMAG] = Im;
    fluid[DENS] = SQR(fluid[REAL]) + SQR(fluid[IMAG]);
 
 } // FUNCTION : SetGridIC
@@ -211,7 +231,7 @@ void OutputError()
    const char Prefix[100]     = "Gaussian";
    const OptOutputPart_t Part = OUTPUT_X + Gau_XYZ;
 
-   Output_L1Error( SetGridIC, NULL, Prefix, Part, 0.0, 0.0, 0.0 );
+   Output_L1Error( SetGridIC, NULL, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
 
 } // FUNCTION : OutputError
 #endif // #if ( MODEL == ELBDM )
