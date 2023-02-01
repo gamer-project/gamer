@@ -29,7 +29,7 @@ static double dhx;               // 1D inter-particle separation [Mpc/h]
 // problem-specific function prototypes
 struct Zeldovich_coord_params
 {
-   double x_shift_input, z_Initial;
+   double x_shift_input, z;
 };
 static double Zeldovich_coord_transformation( const double x_Lagrangian_Trial, void *params );
 static void OutputError();
@@ -92,8 +92,11 @@ void Validate()
 
 
 #  ifndef FLOAT8
-   Aux_Message( stderr, "WARNING : it's recommended to enable FLOAT8 for gas-only setup to" );
-   Aux_Message( stderr, " properly resolve the pressure and temperature of the cold flow\n" );
+   if ( MPI_Rank == 0 )
+   {
+      Aux_Message( stderr, "WARNING : it's recommended to enable FLOAT8 for gas-only setup to" );
+      Aux_Message( stderr, " properly resolve the pressure and temperature of the cold flow\n" );
+   }
 #  endif
 
 #  ifndef SUPPORT_GSL
@@ -111,11 +114,11 @@ void Validate()
 
    if ( MPI_Rank == 0 )
    {
-      Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
-
 #     ifndef DUAL_ENERGY
       Aux_Message( stderr, "WARNING : it's recommended to enable DUAL_ENERGY for this test\n" );
 #     endif
+
+      Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
    }
 
 } // FUNCTION : Validate
@@ -172,15 +175,18 @@ void SetParameter()
 // (1-3) check the runtime parameters
    if ( z_Initial < z_Collapse )  Aux_Error( ERROR_INFO, "z_Collapse (%13.7e) must be smaller than z_Initial (%13.7e) !!\n", z_Collapse, z_Initial );
 
-   if ( Gas_Par_Setup == 1 ) // for gas-only setup
+   if ( MPI_Rank == 0 )
    {
-      if ( OPT__FREEZE_FLUID != 0 )  Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID != 0 !!\n");
-      if ( OPT__OUTPUT_USER  != 1 )  Aux_Error( ERROR_INFO, "OPT__OUTPUT_USER != 1 !!\n");
-   }
-   else if ( Gas_Par_Setup == 2 ) // for particle-only setup
-   {
-      if ( OPT__FREEZE_FLUID != 1 )  Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID != 1 !!\n");
-      if ( OPT__OUTPUT_USER  != 0 )  Aux_Message( stderr, "WARNING : it's recommended to disable OPT__OUTPUT_USER for particle-only setup\n" );
+      if ( Gas_Par_Setup == 1 ) // for gas-only setup
+      {
+         if ( OPT__FREEZE_FLUID != 0 )  Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID != 0 !!\n");
+         if ( OPT__OUTPUT_USER  != 1 )  Aux_Error( ERROR_INFO, "OPT__OUTPUT_USER != 1 !!\n");
+      }
+      else if ( Gas_Par_Setup == 2 ) // for particle-only setup
+      {
+         if ( OPT__FREEZE_FLUID != 1 )  Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID != 1 !!\n");
+         if ( OPT__OUTPUT_USER  != 0 )  Aux_Message( stderr, "WARNING : it's recommended to disable OPT__OUTPUT_USER for particle-only setup\n" );
+      }
    }
 
 
@@ -249,9 +255,9 @@ double Zeldovich_coord_transformation( const double x_Lagrangian_Trial, void *pa
 {
    struct Zeldovich_coord_params *p = (struct Zeldovich_coord_params *) params;
    double x_shift_input = p->x_shift_input;
-   double z_Initial     = p->z_Initial;
+   double z             = p->z;
 
-   return (x_Lagrangian_Trial - ((1.0+z_Collapse)/(1.0+z_Initial))*sin(k_Pert*x_Lagrangian_Trial)/k_Pert) - x_shift_input;
+   return (x_Lagrangian_Trial - ((1.0+z_Collapse)/(1.0+z))*sin(k_Pert*x_Lagrangian_Trial)/k_Pert) - x_shift_input;
 }
 
 
@@ -287,8 +293,6 @@ double Zeldovich_coord_transformation_solver( const double x_shift_input, const 
    while ( status == GSL_CONTINUE  &&  iter < max_iter );
 
    gsl_root_fsolver_free( s );
-
-   Aux_Message( stdout, "  total number of iteration  = %d\n",     iter          );
 
    return x_Lagrangian_Trial;
 }
@@ -334,7 +338,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // compute relevant physical quantities
    const double x_shift      = x - 0.5*amr->BoxSize[0]; // unperturbed simulation grids
    const double z_current    = 1.0/Time - 1.0;          // redshift at the current simulation time slice
-   const double x_Lagrangian = Zeldovich_coord_transformation_solver( x_shift,z_current );
+   const double x_Lagrangian = Zeldovich_coord_transformation_solver( x_shift, z_current );
 
    if ( Gas_Par_Setup == 1 ) // gas-only setup
    {
@@ -470,7 +474,7 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
             ++NPar_AllRank_Counter;
             }
          } // for (long py=0; py<NPar_YZ; py++)
-      } // for (long px=0; px<NX0_TOT[0]; px++)
+      } // for (long px=0; px<NPar_X; px++)
 
       Aux_Message( stdout, "   Total mass within box boundaries = %13.7e\n",  TotM_Boundary );
       Aux_Message( stdout, "   Total particle number            = %ld\n",     NPar_AllRank );
