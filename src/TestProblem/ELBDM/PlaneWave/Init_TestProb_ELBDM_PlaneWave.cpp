@@ -129,13 +129,9 @@ void SetParameter()
    if ( PWave_XYZ == 3  &&  ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2] ) )
       Aux_Error( ERROR_INFO, "simulation domain must be CUBIC in %s test if PWave_XYZ == 3 !!\n", "ELBDM PlaneWave" );
 
-   if ( PWave_XYZ == 3 )
-   {
+   if ( PWave_XYZ == 3 ) {
       PWave_NWavelength *= 3;
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : parameter [%-25s] is reset to [%- 21d] in %s test for PWave_XYZ == 3 !!\n",
-                      "PWave_NWavelength", PWave_NWavelength, "ELBDM PlaneWave" );
+      PRINT_WARNING( "PWave_NWavelength", PWave_NWavelength, FORMAT_INT );
    }
 
 
