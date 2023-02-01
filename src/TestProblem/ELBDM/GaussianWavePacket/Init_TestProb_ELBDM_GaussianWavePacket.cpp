@@ -53,9 +53,6 @@ void Validate()
    {
       if ( !OPT__OUTPUT_USER )
          Aux_Message( stderr, "WARNING : it's recommended to enable OPT__OUTPUT_USER !!\n" );
-
-      if ( OPT__BC_FLU[2*Gau_XYZ] == BC_FLU_PERIODIC  &&  Gau_PeriodicN == 0 )
-         Aux_Message( stderr, "WARNING : Gau_PeriodicN should be >0 when adopting periodic BC for fluid !!\n" );
    }
 
 
@@ -111,6 +108,11 @@ void SetParameter()
    if ( Gau_Center == NoDef_double )   Gau_Center = amr->BoxCenter[Gau_XYZ];
 
 // (1-3) check the runtime parameters
+   if ( MPI_Rank == 0 )
+   {
+      if ( OPT__BC_FLU[2*Gau_XYZ] == BC_FLU_PERIODIC  &&  Gau_PeriodicN == 0 )
+         Aux_Message( stderr, "WARNING : Gau_PeriodicN should be >0 when adopting periodic BC for fluid !!\n" );
+   }
 
 
 // (2) set the problem-specific derived parameters

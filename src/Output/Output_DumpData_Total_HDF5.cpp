@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2457)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2458)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -230,7 +230,8 @@ Procedure for outputting new variables:
 //                                             INT_MONO_COEFF_B
 //                2455 : 2022/11/04 --> output REFINE_NLEVEL
 //                2456 : 2022/12/15 --> output SUPPORT_FFTW
-//                2457 : 2022/12/16 --> output ELBDM_BASE_SPECTRAL
+//                2457 : 2023/01/28 --> output OPT__RESET_FLUID_INIT
+//                2458 : 2023/02/01 --> output ELBDM_BASE_SPECTRAL
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1736,7 +1737,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2457;
+   KeyInfo.FormatVersion        = 2458;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2531,6 +2532,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 
    InputPara.Opt__OverlapMPI         = OPT__OVERLAP_MPI;
    InputPara.Opt__ResetFluid         = OPT__RESET_FLUID;
+   InputPara.Opt__ResetFluidInit     = OPT__RESET_FLUID_INIT;
    InputPara.Opt__FreezeFluid        = OPT__FREEZE_FLUID;
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    InputPara.MinDens                 = MIN_DENS;
@@ -3416,6 +3418,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 
    H5Tinsert( H5_TypeID, "Opt__OverlapMPI",         HOFFSET(InputPara_t,Opt__OverlapMPI        ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__ResetFluid",         HOFFSET(InputPara_t,Opt__ResetFluid        ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__ResetFluidInit",     HOFFSET(InputPara_t,Opt__ResetFluidInit    ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__FreezeFluid",        HOFFSET(InputPara_t,Opt__FreezeFluid       ), H5T_NATIVE_INT              );
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "MinDens",                 HOFFSET(InputPara_t,MinDens                ), H5T_NATIVE_DOUBLE           );
