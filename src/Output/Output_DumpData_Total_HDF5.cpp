@@ -231,6 +231,7 @@ Procedure for outputting new variables:
 //                2455 : 2022/11/04 --> output REFINE_NLEVEL
 //                2456 : 2022/12/15 --> output SUPPORT_FFTW
 //                2457 : 2023/01/28 --> output OPT__RESET_FLUID_INIT
+//                2458 : 2023/02/02 --> add OPT__RES_PHASE
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
