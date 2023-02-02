@@ -11,10 +11,10 @@
 // problem-specific global variables
 // =======================================================================================
 // =======================================================================================
-static int Gas_Par_Setup;        // 1=gas-only, 2=particle-only
-static int n_Pert_Wave_Len;      // "Pert_Wave_Len = BOX_SIZE_x/n_Pert_Wave_Len"
-static int NPar_X;               // 1D number of particles along the x-axis (axis of perturbation)
-static int NPar_YZ;              // 1D number of particles along the y/z-axis
+static int    Gas_Par_Setup;     // 1=gas-only, 2=particle-only
+static int    n_Pert_Wave_Len;   // "Pert_Wave_Len = BOX_SIZE_x/n_Pert_Wave_Len"
+static int    NPar_X;            // 1D number of particles along the x-axis (axis of perturbation)
+static int    NPar_YZ;           // 1D number of particles along the y/z-axis
 static double Pert_Wave_Len;     // perturbation wavelength [Mpc/h]
 static double k_Pert;            // perturbation wavenumber
 static double z_Initial;         // redshift of simulation IC
@@ -90,15 +90,6 @@ void Validate()
    if ( OPT__INIT != INIT_BY_FUNCTION  &&  OPT__INIT != INIT_BY_RESTART )
       Aux_Error( ERROR_INFO, "OPT__INIT != FUNCTION (1) or RESTART (2) for this test !!\n" );
 
-
-#  ifndef FLOAT8
-   if ( MPI_Rank == 0 )
-   {
-      Aux_Message( stderr, "WARNING : it's recommended to enable FLOAT8 for gas-only setup to" );
-      Aux_Message( stderr, " properly resolve the pressure and temperature of the cold flow\n" );
-   }
-#  endif
-
 #  ifndef SUPPORT_GSL
    Aux_Error( ERROR_INFO, "SUPPORT_GSL must be enabled !!\n" );
 #  endif
@@ -112,14 +103,21 @@ void Validate()
 #  endif
 
 
+// warnings
    if ( MPI_Rank == 0 )
    {
+#     ifndef FLOAT8
+      Aux_Message( stderr, "WARNING : it's recommended to enable FLOAT8 for gas-only setup to" );
+      Aux_Message( stderr, " properly resolve the pressure and temperature of the cold flow\n" );
+#     endif
+
 #     ifndef DUAL_ENERGY
       Aux_Message( stderr, "WARNING : it's recommended to enable DUAL_ENERGY for this test\n" );
 #     endif
+   } // // if ( MPI_Rank == 0 )
 
-      Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
-   }
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
 
 } // FUNCTION : Validate
 
@@ -173,20 +171,25 @@ void SetParameter()
 
 
 // (1-3) check the runtime parameters
-   if ( z_Initial < z_Collapse )  Aux_Error( ERROR_INFO, "z_Collapse (%13.7e) must be smaller than z_Initial (%13.7e) !!\n", z_Collapse, z_Initial );
+   if ( z_Initial < z_Collapse )
+      Aux_Error( ERROR_INFO, "z_Collapse (%13.7e) must be smaller than z_Initial (%13.7e) !!\n", z_Collapse, z_Initial );
 
-   if ( MPI_Rank == 0 )
+   if      ( Gas_Par_Setup == 1 )   // for gas-only setup
    {
-      if ( Gas_Par_Setup == 1 ) // for gas-only setup
-      {
-         if ( OPT__FREEZE_FLUID != 0 )  Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID != 0 !!\n");
-         if ( OPT__OUTPUT_USER  != 1 )  Aux_Error( ERROR_INFO, "OPT__OUTPUT_USER != 1 !!\n");
-      }
-      else if ( Gas_Par_Setup == 2 ) // for particle-only setup
-      {
-         if ( OPT__FREEZE_FLUID != 1 )  Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID != 1 !!\n");
-         if ( OPT__OUTPUT_USER  != 0 )  Aux_Message( stderr, "WARNING : it's recommended to disable OPT__OUTPUT_USER for particle-only setup\n" );
-      }
+      if ( OPT__FREEZE_FLUID != 0 )
+         Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID != 0 for Gas_Par_Setup == 1 !!\n");
+
+      if ( OPT__OUTPUT_USER  != 1 )
+         Aux_Error( ERROR_INFO, "OPT__OUTPUT_USER != 1 for Gas_Par_Setup == 1 !!\n");
+   }
+
+   else if ( Gas_Par_Setup == 2 )   // for particle-only setup
+   {
+      if ( OPT__FREEZE_FLUID != 1 )
+         Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID != 1 for Gas_Par_Setup == 2 !!\n");
+
+      if ( OPT__OUTPUT_USER  != 0  &&  MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : it's recommended to disable OPT__OUTPUT_USER for Gas_Par_Setup == 2\n" );
    }
 
 
@@ -217,14 +220,12 @@ void SetParameter()
    }
 
 #  ifdef PARTICLE
-   if ( Gas_Par_Setup == 1 ) // overwrite the total number of particles in gas-only setup
-   {
+   if      ( Gas_Par_Setup == 1 )   // overwrite the total number of particles in gas-only setup
       amr->Par->NPar_Active_AllRank = 0;
-   }
-   else if ( Gas_Par_Setup == 2 ) // overwrite the total number of particles in particle-only setup
-   {
+
+   else if ( Gas_Par_Setup == 2 )   // overwrite the total number of particles in particle-only setup
       amr->Par->NPar_Active_AllRank = (long)NPar_X*SQR((long)NPar_YZ);
-   }
+
    PRINT_WARNING( "PAR_NPAR", amr->Par->NPar_Active_AllRank, FORMAT_LONG );
 #  endif
 
@@ -351,8 +352,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                                                   NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       const real Eint = EoS_DensPres2Eint_CPUPtr( fluid[DENS], Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       fluid[ENGY] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint, 0.0 );
-
    }
+
    else if ( Gas_Par_Setup == 2 ) // particle-only setup
    {
       double Dens, MomX, MomY, MomZ, Eint, Etot;
@@ -375,6 +376,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 
+#ifdef PARTICLE
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Init_ByFunction_Zeldovich
 // Description :  User-specified function to initialize particle attributes
@@ -407,16 +409,18 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttribute
 //-------------------------------------------------------------------------------------------------------
-#ifdef PARTICLE
 void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_AllRank,
                                     real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                     real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                     real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
 {
+
 #  ifdef SUPPORT_GSL
    if ( Gas_Par_Setup != 2 )   return;
 
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
+
 
    real *ParData_AllRank[PAR_NATT_TOTAL];
    for (int v=0; v<PAR_NATT_TOTAL; v++)   ParData_AllRank[v] = NULL;
@@ -468,23 +472,23 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
                   ParData_AllRank[PAR_VELX+d][NPar_AllRank_Counter] = VelVec[d];
 //                check periodicity
                   if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )
-                     ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter] = FMOD( ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter]+(real)amr->BoxSize[d], (real)amr->BoxSize[d] );
+                     ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter]
+                        = FMOD( ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter]+(real)amr->BoxSize[d], (real)amr->BoxSize[d] );
                }
 
-            ++NPar_AllRank_Counter;
-            }
+               NPar_AllRank_Counter ++;
+            } // for (long pz=0; pz<NPar_YZ; pz++)
          } // for (long py=0; py<NPar_YZ; py++)
       } // for (long px=0; px<NPar_X; px++)
 
-      Aux_Message( stdout, "   Total mass within box boundaries = %13.7e\n",  TotM_Boundary );
-      Aux_Message( stdout, "   Total particle number            = %ld\n",     NPar_AllRank );
-      Aux_Message( stdout, "   Particle mass                    = %13.7e\n",  ParM );
+      Aux_Message( stdout, "   Total mass within box boundaries = %13.7e\n",  TotM_Boundary   );
+      Aux_Message( stdout, "   Total particle number            = %ld\n",     NPar_AllRank    );
+      Aux_Message( stdout, "   Particle mass                    = %13.7e\n",  ParM            );
       Aux_Message( stdout, "   x_boundary_size                  = %13.7e\n",  amr->BoxSize[0] );
       Aux_Message( stdout, "   y/z_boundary_size                = %13.7e\n",  amr->BoxSize[1] );
-      Aux_Message( stdout, "   z_Initial                        = %13.7e\n",  z_Initial );
-      Aux_Message( stdout, "   z_Collapse                       = %13.7e\n",  z_Collapse );
-      Aux_Message( stdout, "   Pert_Wave_Len                    = %13.7e\n",  Pert_Wave_Len );
-
+      Aux_Message( stdout, "   z_Initial                        = %13.7e\n",  z_Initial       );
+      Aux_Message( stdout, "   z_Collapse                       = %13.7e\n",  z_Collapse      );
+      Aux_Message( stdout, "   Pert_Wave_Len                    = %13.7e\n",  Pert_Wave_Len   );
    } // if ( MPI_Rank == 0 )
 
 // send particle attributes from the master rank to all ranks
@@ -503,9 +507,10 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
       for (int v=0; v<PAR_NATT_TOTAL; v++)   delete [] ParData_AllRank[v];
    }
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 #  endif // #ifdef SUPPORT_GSL
+
 } // FUNCTION : Par_Init_ByFunction_Zeldovich
 #endif // #ifdef PARTICLE
 
@@ -524,10 +529,12 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
 //-------------------------------------------------------------------------------------------------------
 void OutputError()
 {
+
    const char Prefix[100]     = "Zeldovich";
    const OptOutputPart_t Part = OUTPUT_X + 0;  // along the x-direction
 
    Output_L1Error( SetGridIC, NULL, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
+
 } // FUNCTION : OutputError
 #endif // #if ( MODEL == HYDRO )
 
