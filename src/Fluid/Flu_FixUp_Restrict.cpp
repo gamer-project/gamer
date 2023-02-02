@@ -108,6 +108,16 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
       return;
    }
 
+// update NFluVar and TFluVarIdxList to exclude density, real and imaginary part if phase restriction is on
+#  if ( MODEL == ELBDM )
+   if ( ResFlu && OPT__RES_PHASE && (TVarCC & (_REAL) || TVarCC & (_IMAG)) ) {
+      NFluVar=0;
+      for (int v=0; v<NCOMP_TOTAL; v++)
+//       only add field if it is neither density nor real or imaginary part
+         if ( TVarCC & (1L<<v) && v != DENS && v != REAL && v != IMAG)    TFluVarIdxList[ NFluVar ++ ] = v;
+   }
+#  endif
+
 
 // restrict
 #  pragma omp parallel for schedule( runtime )
@@ -189,11 +199,11 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                refphase   = SATAN2(ISonPtr[K ][J ][I ], RSonPtr[K ][J ][I ]);
                avgphase   = 0.125*(                   refphase                                                    +
                                     ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[K ][J ][Ip], RSonPtr[K ][J ][Ip])) +
-                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[K ][Jp][I ], RSonPtr[K ][Jp][I ])) + 
+                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[K ][Jp][I ], RSonPtr[K ][Jp][I ])) +
                                     ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][J ][I ], RSonPtr[Kp][J ][I ])) +
-                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[K ][Jp][Ip], RSonPtr[K ][Jp][Ip])) + 
+                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[K ][Jp][Ip], RSonPtr[K ][Jp][Ip])) +
                                     ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][Jp][I ], RSonPtr[Kp][Jp][I ])) +
-                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][J ][Ip], RSonPtr[Kp][J ][Ip])) + 
+                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][J ][Ip], RSonPtr[Kp][J ][Ip])) +
                                     ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][Jp][Ip], RSonPtr[Kp][Jp][Ip])) );
                avgdens    = 0.125* ( DSonPtr[K ][J ][I ] + DSonPtr[K ][J ][Ip] +
                                      DSonPtr[K ][Jp][I ] + DSonPtr[Kp][J ][I ] +
@@ -205,8 +215,8 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                if (TVarCC & _IMAG) IFaPtr[kk][jj][ii] = SQRT(avgdens) * SIN(avgphase);
 
             }}}
-         } 
-         else // if ( ResFlu && OPT__RES_PHASE && (TVarCC & (_REAL) || TVarCC & (_IMAG)) )
+         }
+         
 #        endif 
 //       restrict the fluid data
          if ( ResFlu ) {
