@@ -711,12 +711,6 @@ int main( int argc, char *argv[] )
 
 // termination
 // ======================================================================================================
-// execute the final yt inline analysis
-#  ifdef SUPPORT_LIBYT
-   Execute_YT( 2 );
-#  endif
-
-
 // output the final result
    Output_DumpData( 2 );
 
