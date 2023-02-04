@@ -115,7 +115,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                      EdgeL = BoxEdgeR-PatchSize*dh[lv] and EdgeR = BoxEdgeR, and for those just outside
 //                                      the simulation right edge will have EdgeL = BoxEdgeL and EdgeR = BoxEdgeL+PatchSize*dh[lv]
 //                                  --> Different from corner[3], which do NOT assume periodicity
-//                PaddedCr1D      : 1D corner coordiniate padded with two base-level patches on each side
+//                PaddedCr1D      : 1D corner coordinate padded with two base-level patches on each side
 //                                  in each direction, normalized to the finest-level patch scale (PATCH_SIZE)
 //                                  --> Each PaddedCr1D defines a unique 3D position
 //                                  --> Patches at different levels with the same PaddedCr1D have the same
@@ -1099,85 +1099,5 @@ struct patch_t
 
 
 }; // struct patch_t
-
-
-class NonCopyable
-{
-  protected:
-    NonCopyable() {}
-    ~NonCopyable() {}
-  private: 
-    NonCopyable(const NonCopyable &);
-    NonCopyable& operator=(const NonCopyable &);
-}; // class NonCopyable
-
-struct LB_GlobalPatch
-{
-   int    corner[3];
-   long   sibling[26];
-   long   father;
-   long   son;
-   long   LB_Idx;
-   int    level; 
-#  ifdef PARTICLE
-   int    NPar;
-#  endif 
-}; // struct LB_GlobalPatch
-
-struct LB_PatchCount : private NonCopyable
-{
-   LB_PatchCount();
-   ~LB_PatchCount();
-
-   long NPatchAllLv;
-   int NPatchLocalLv;
-   int NPatchLocal[NLEVEL]; // number of patches per level on MPI_Rank
-   int (*NPatchAllRank)[NLEVEL]; // number of patches in [MPI rank][level]
-   int GID_Offset[NLEVEL]; // offsets that can be used to convert local PID at level lv to GID via GID = PID + GID_Offset[lv]
-   int GID_LvStart[NLEVEL]; // global patch index at which level starts 
-   bool isInitialised;
-}; // struct LB_PatchCount
-
-
-// allocate memory and store pointers to lists with local patch information
-struct LB_LocalPatchExchangeList : private NonCopyable
-{
-   LB_LocalPatchExchangeList();
-   ~LB_LocalPatchExchangeList();
-
-   long *LBIdxList_Local[NLEVEL];         // load balance ids 
-   int  (*CrList_Local   [NLEVEL])[3];    // patch corners
-   int   *FaList_Local   [NLEVEL];        // father GIDs
-   int   *SonList_Local  [NLEVEL];        // son GIDs
-   int  (*SibList_Local  [NLEVEL])[26];   // sibling GIDs
-#  ifdef PARTICLE
-   int   *NParList_Local [NLEVEL]         // particle GIDs
-#  endif
-   bool  isInitialised;
-
-   long *LBIdxList_Sort         [NLEVEL];
-   int  *LBIdxList_Sort_IdxTable[NLEVEL];
-   bool  LBIdxisInitialised; 
-}; // struct LB_LocalPatchExchangeList
-
-
-// allocate memory and store pointers to lists with global patch information
-struct LB_GlobalPatchExchangeList : private NonCopyable
-{
-   LB_GlobalPatchExchangeList(LB_PatchCount& pc, int root);
-   ~LB_GlobalPatchExchangeList();
-
-   long *LBIdxList_AllLv;     // load balance ids
-   int  (*CrList_AllLv)[3];   // patch corners 
-   int  *FaList_AllLv;        // father GIDs
-   int  *SonList_AllLv;       // son GIDs
-   int  (*SibList_AllLv)[26]; // sibling GIDs
-#  ifdef PARTICLE
-   int  *NParList_AllLv;      // particle numbers
-#  endif
-   bool isAllocated;
-   bool isInitialised;
-}; // struct LB_GlobalPatchExchangeList
-
 
 #endif // #ifndef __PATCH_H__
