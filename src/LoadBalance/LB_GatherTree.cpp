@@ -77,6 +77,11 @@ LB_LocalPatchExchangeList::~LB_LocalPatchExchangeList() {
 
 // allocate memory and store pointers to lists with global patch information
 LB_GlobalPatchExchangeList::LB_GlobalPatchExchangeList(LB_PatchCount& pc, int root) : isAllocated(false), isInitialised(false) {
+#  ifdef GAMER_DEBUG
+   if ( !pc.isInitialised )
+      Aux_Error( ERROR_INFO, "create object of type LB_GlobalPatchExchangeList without initialising LB_PatchCount object !!\n");
+#  endif
+
 // allocate lists for all ranks or for root rank
    if ( root < 0 || root == MPI_Rank) {
       LBIdxList_AllLv      = new long   [ pc.NPatchAllLv ];
@@ -275,21 +280,21 @@ void LB_FillLocalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList&
    long  FaLBIdx, SonLBIdx, SibLBIdx;
    int  *SonCr=NULL, *SibCr=NULL;
 
-// 4. store the local tree
+// store the local tree
    for (int lv=0; lv<NLEVEL; lv++)
    {
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
-//       4-1. LBIdx (set already)
+//       1. LBIdx (set already)
 //       lel.LBIdxList_Local[lv][PID] = amr->patch[0][lv][PID]->LB_Idx;
 
 
-//       4-2. corner
+//       2. corner
          for (int d=0; d<3; d++)
          lel.CrList_Local[lv][PID][d] = amr->patch[0][lv][PID]->corner[d];
 
 
-//       4-3. father GID
+//       3. father GID
          FaPID = amr->patch[0][lv][PID]->father;
          FaLv  = lv - 1;
 
@@ -338,7 +343,7 @@ void LB_FillLocalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList&
          lel.FaList_Local[lv][PID] = FaGID;
 
 
-//       4-4. son GID
+//       4. son GID
          SonPID = amr->patch[0][lv][PID]->son;
          SonLv  = lv + 1;
 
@@ -395,7 +400,7 @@ void LB_FillLocalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList&
          lel.SonList_Local[lv][PID] = SonGID;
 
 
-//       4-5. sibling GID
+//       5. sibling GID
          for (int s=0; s<26; s++)
          {
             SibPID = amr->patch[0][lv][PID]->sibling[s];
@@ -436,22 +441,22 @@ void LB_FillLocalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList&
 
          } // for (int s=0; s<26; s++)
 
-//       4-7. left edge
+//       6. left edge
          for (int d=0; d<3; d++)
          lel.EdgeLList_Local[lv][PID][d] = amr->patch[0][lv][PID]->EdgeL[d];
 
-//       4-8. right edge
+//       7. right edge
          for (int d=0; d<3; d++)
          lel.EdgeRList_Local[lv][PID][d] = amr->patch[0][lv][PID]->EdgeR[d];
 
-//       4-8. PaddedCr1D
+//       8. PaddedCr1D
          lel.PaddedCr1DList_Local[lv][PID] = amr->patch[0][lv][PID]->PaddedCr1D;
 
-//       4-9. MPI Rank
+//       9. MPI Rank
          lel.MPI_RankList_Local[lv][PID] = MPI_Rank;
 
 #        ifdef PARTICLE
-//       4-10. NPar
+//       10. NPar
          lel.NParList_Local[lv][PID] = amr->patch[0][lv][PID]->NPar;
 #        endif
 
@@ -541,17 +546,17 @@ void LB_FillGlobalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList
          MPI_Allgatherv( lel.CrList_Local[lv][0],  amr->NPatchComma[lv][1]*3,    MPI_INT,
                       (gel.CrList_AllLv+pc.GID_LvStart[lv])[0],         RecvCount_Cr,           RecvDisp_Cr,         MPI_INT,                   MPI_COMM_WORLD );
 
-         MPI_Allgatherv( lel.EdgeLList_Local[lv][0],  amr->NPatchComma[lv][1]*3,     MPI_DOUBLE,
+         MPI_Allgatherv( lel.EdgeLList_Local[lv][0],  amr->NPatchComma[lv][1]*3, MPI_DOUBLE,
                       (gel.EdgeLList_AllLv+pc.GID_LvStart[lv])[0],      RecvCount_EdgeL,        RecvDisp_EdgeL,      MPI_DOUBLE,                MPI_COMM_WORLD );
 
-         MPI_Allgatherv( lel.EdgeRList_Local[lv][0],  amr->NPatchComma[lv][1]*3,     MPI_DOUBLE,
+         MPI_Allgatherv( lel.EdgeRList_Local[lv][0],  amr->NPatchComma[lv][1]*3, MPI_DOUBLE,
                       (gel.EdgeRList_AllLv+pc.GID_LvStart[lv])[0],      RecvCount_EdgeR,        RecvDisp_EdgeR,      MPI_DOUBLE,                MPI_COMM_WORLD );
 
-         MPI_Allgatherv( lel.PaddedCr1DList_Local[lv],  amr->NPatchComma[lv][1],  MPI_UNSIGNED_LONG,
-                      (gel.PaddedCr1DList_AllLv+pc.GID_LvStart[lv]), RecvCount_PaddedCr1D,   RecvDisp_PaddedCr1D, MPI_UNSIGNED_LONG,         MPI_COMM_WORLD );
+         MPI_Allgatherv( lel.PaddedCr1DList_Local[lv],  amr->NPatchComma[lv][1], MPI_UNSIGNED_LONG,
+                      (gel.PaddedCr1DList_AllLv+pc.GID_LvStart[lv]),    RecvCount_PaddedCr1D,   RecvDisp_PaddedCr1D, MPI_UNSIGNED_LONG,         MPI_COMM_WORLD );
 
-         MPI_Allgatherv( lel.MPI_RankList_Local[lv],  amr->NPatchComma[lv][1],    MPI_INT,
-                      (gel.MPI_RankList_AllLv+pc.GID_LvStart[lv]),   RecvCount_MPI_Rank,     RecvDisp_MPI_Rank,   MPI_INT,                   MPI_COMM_WORLD );
+         MPI_Allgatherv( lel.MPI_RankList_Local[lv],  amr->NPatchComma[lv][1],   MPI_INT,
+                      (gel.MPI_RankList_AllLv+pc.GID_LvStart[lv]),      RecvCount_MPI_Rank,     RecvDisp_MPI_Rank,   MPI_INT,                   MPI_COMM_WORLD );
 
 #        ifdef PARTICLE
          MPI_Allgatherv( lel.NParList_Local[lv],    amr->NPatchComma[lv][1],     MPI_INT,
@@ -570,17 +575,17 @@ void LB_FillGlobalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList
          MPI_Gatherv( lel.CrList_Local[lv][0],  amr->NPatchComma[lv][1]*3,       MPI_INT,
                       (gel.CrList_AllLv+pc.GID_LvStart[lv])[0],         RecvCount_Cr,           RecvDisp_Cr,         MPI_INT,             root, MPI_COMM_WORLD );
 
-         MPI_Gatherv( lel.EdgeLList_Local[lv][0],  amr->NPatchComma[lv][1]*3,        MPI_DOUBLE,
+         MPI_Gatherv( lel.EdgeLList_Local[lv][0],  amr->NPatchComma[lv][1]*3,    MPI_DOUBLE,
                       (gel.EdgeLList_AllLv+pc.GID_LvStart[lv])[0],      RecvCount_EdgeL,        RecvDisp_EdgeL,      MPI_DOUBLE,          root, MPI_COMM_WORLD );
 
-         MPI_Gatherv( lel.EdgeRList_Local[lv][0],  amr->NPatchComma[lv][1]*3,        MPI_DOUBLE,
+         MPI_Gatherv( lel.EdgeRList_Local[lv][0],  amr->NPatchComma[lv][1]*3,    MPI_DOUBLE,
                       (gel.EdgeRList_AllLv+pc.GID_LvStart[lv])[0],      RecvCount_EdgeR,        RecvDisp_EdgeR,      MPI_DOUBLE,          root, MPI_COMM_WORLD );
 
-         MPI_Gatherv( lel.PaddedCr1DList_Local[lv],  amr->NPatchComma[lv][1],     MPI_UNSIGNED_LONG,
-                      (gel.PaddedCr1DList_AllLv+pc.GID_LvStart[lv]), RecvCount_PaddedCr1D,   RecvDisp_PaddedCr1D, MPI_UNSIGNED_LONG,   root, MPI_COMM_WORLD );
+         MPI_Gatherv( lel.PaddedCr1DList_Local[lv],  amr->NPatchComma[lv][1],    MPI_UNSIGNED_LONG,
+                      (gel.PaddedCr1DList_AllLv+pc.GID_LvStart[lv]),    RecvCount_PaddedCr1D,   RecvDisp_PaddedCr1D, MPI_UNSIGNED_LONG,   root, MPI_COMM_WORLD );
 
-         MPI_Gatherv( lel.MPI_RankList_Local[lv],  amr->NPatchComma[lv][1],       MPI_INT,
-                      (gel.MPI_RankList_AllLv+pc.GID_LvStart[lv]),   RecvCount_MPI_Rank,     RecvDisp_MPI_Rank,   MPI_INT,             root, MPI_COMM_WORLD );
+         MPI_Gatherv( lel.MPI_RankList_Local[lv],  amr->NPatchComma[lv][1],      MPI_INT,
+                      (gel.MPI_RankList_AllLv+pc.GID_LvStart[lv]),      RecvCount_MPI_Rank,     RecvDisp_MPI_Rank,   MPI_INT,             root, MPI_COMM_WORLD );
 
 #        ifdef PARTICLE
          MPI_Gatherv( lel.NParList_Local[lv],    amr->NPatchComma[lv][1],        MPI_INT,
@@ -590,7 +595,12 @@ void LB_FillGlobalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList
 
    } // for (int lv=0; lv<NLEVEL; lv++)
 
-   gel.isInitialised = true;
+// set isInitialised for ranks that received global exchange lists
+   if (root < 0) {
+      gel.isInitialised = true;
+   } else if ( root == MPI_Rank ) {
+      gel.isInitialised = true;
+   }
 }
 
 //-------------------------------------------------------------------------------------------------------
@@ -608,7 +618,7 @@ void LB_FillGlobalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList
 //             :  root : root MPI rank that receives global list, -1 for all ranks
 //-------------------------------------------------------------------------------------------------------
 LB_GlobalPatch* LB_ConstructGlobalTree(LB_PatchCount& pc, LB_GlobalPatchExchangeList& gel, int root) {
-   LB_GlobalPatch* global_tree;
+   LB_GlobalPatch* global_tree = NULL;
    if ( root >= 0 && root != MPI_Rank )
       return global_tree;
 
@@ -659,9 +669,10 @@ LB_GlobalPatch* LB_ConstructGlobalTree(LB_PatchCount& pc, LB_GlobalPatchExchange
 //                      LB_PatchCount pc;
 //                      std::vector<LB_GlobalPatch> t = LB_GatherTree(pc, 0);
 //                      if (t[GID].son != -1) printf(t[t[GID].son].level);
+//                - pass root = -1 to exchange local patch list data from all ranks to all ranks
 //
-// Parameter   :  pc  : reference to LB_PatchCount object that is filled with the GID offsets for
-//                      the local rank as well as total number of patches
+// Parameter   :  pc   : reference to LB_PatchCount object
+//             :  root : root MPI rank, -1 for gathering tree at all ranks
 //-------------------------------------------------------------------------------------------------------
 
 LB_GlobalPatch* LB_GatherTree(LB_PatchCount& pc, int root) {
