@@ -108,13 +108,14 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
       return;
    }
 
-// update NFluVar and TFluVarIdxList to exclude density, real and imaginary part if phase restriction is on
+// reset NFluVar and TFluVarIdxList to exclude density, real and imaginary part if phase restriction is on
 #  if ( MODEL == ELBDM )
-   if ( ResFlu && OPT__RES_PHASE && (TVarCC & (_REAL) || TVarCC & (_IMAG)) ) {
+   const bool ResPha = ResFlu && OPT__RES_PHASE && (TVarCC & (_REAL) || TVarCC & (_IMAG));
+   if ( ResPha ) {
       NFluVar=0;
       for (int v=0; v<NCOMP_TOTAL; v++)
 //       only add field if it is neither density nor real or imaginary part
-         if ( TVarCC & (1L<<v) && v != DENS && v != REAL && v != IMAG)    TFluVarIdxList[ NFluVar ++ ] = v;
+         if ( TVarCC & (1L<<v)  &&  v != DENS  &&  v != REAL  &&  v != IMAG )    TFluVarIdxList[ NFluVar ++ ] = v;
    }
 #  endif
 
@@ -178,7 +179,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
 #        if ( MODEL == ELBDM )
 //       average phase instead of real and imaginary part if option OPT__RES_PHASE is on
-         if ( ResFlu && OPT__RES_PHASE && (TVarCC & (_REAL) || TVarCC & (_IMAG)) ) {
+         if ( ResPha ) {
 
 //          D = DENS, R = REAL, I = IMAG
             const real (*DSonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[DENS];
@@ -215,12 +216,11 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                if (TVarCC & _IMAG) IFaPtr[kk][jj][ii] = SQRT(avgdens) * SIN(avgphase);
 
             }}}
-         }
+         } // if ( ResPha )
 
 #        endif
 //       restrict the fluid data
          if ( ResFlu ) {
-
          for (int v=0; v<NFluVar; v++)
          {
             const int TFluVarIdx = TFluVarIdxList[v];
