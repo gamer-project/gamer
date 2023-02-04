@@ -231,6 +231,7 @@ Procedure for outputting new variables:
 //                2455 : 2022/11/04 --> output REFINE_NLEVEL
 //                2456 : 2022/12/15 --> output SUPPORT_FFTW
 //                2457 : 2023/01/28 --> output OPT__RESET_FLUID_INIT
+//                2458 : 2023/02/02 --> add OPT__RES_PHASE
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -2657,6 +2658,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  endif
 #  if ( MODEL == ELBDM )
    InputPara.Opt__Int_Phase          = OPT__INT_PHASE;
+   InputPara.Opt__Res_Phase          = OPT__RES_PHASE;
 #  endif
    InputPara.Opt__Flu_IntScheme      = OPT__FLU_INT_SCHEME;
    InputPara.Opt__RefFlu_IntScheme   = OPT__REF_FLU_INT_SCHEME;
@@ -3522,6 +3524,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  endif
 #  if ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "Opt__Int_Phase",          HOFFSET(InputPara_t,Opt__Int_Phase         ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Res_Phase",          HOFFSET(InputPara_t,Opt__Res_Phase         ), H5T_NATIVE_INT              );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Flu_IntScheme",      HOFFSET(InputPara_t,Opt__Flu_IntScheme     ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__RefFlu_IntScheme",   HOFFSET(InputPara_t,Opt__RefFlu_IntScheme  ), H5T_NATIVE_INT              );
