@@ -43,6 +43,8 @@ TESTPROB_ID                   0           # test problem ID [0]
                                           #   15: HYDRO MHD linear wave (+MHD)
                                           #   16: HYDRO Jeans instability (+GRAVITY) [+MHD]
                                           #   17: HYDRO particle in equilibrium (+GRAVITY & PARTICLE)
+                                          #  100: HYDRO CDM cosmological simulation (+GRAVITY & COMOVING & PARTICLE)
+                                          #  101: HYDRO Zeldovich pancake collapse (+GRAVITY & COMOVING & PARTICLE)
                                           # 1000: ELBDM external potential (+GRAVITY)
                                           # 1001: ELBDM Jeans instability in the comoving frame (+GRAVITY, +COMOVING)
                                           # 1002: ELBDM Jeans instability in the physical frame (+GRAVITY)
@@ -306,6 +308,7 @@ INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initiali
 OPT__INT_TIME                 1           # perform "temporal" interpolation for OPT__DT_LEVEL == 2/3 [1]
 OPT__INT_PRIM                 1           # switch to primitive variables when the interpolation on conserved variables fails [1] ##HYDRO ONLY##
 OPT__INT_PHASE                1           # interpolation on phase (does not support MinMod-1D) [1] ##ELBDM ONLY##
+OPT__RES_PHASE                0           # restriction on phase [0] ##ELBDM ONLY##
 OPT__FLU_INT_SCHEME          -1           # ghost-zone fluid variables for the fluid solver [-1]
 OPT__REF_FLU_INT_SCHEME      -1           # newly allocated fluid variables during grid refinement [-1]
 OPT__MAG_INT_SCHEME           4           # ghost-zone magnetic field for the MHD solver (2,3,4,6 only) [4]

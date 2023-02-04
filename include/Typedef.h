@@ -54,7 +54,7 @@ const TestProbID_t
    TESTPROB_HYDRO_PARTICLE_TEST                =   18,
    TESTPROB_HYDRO_BARRED_POT                   =   51,
    TESTPROB_HYDRO_CDM_LSS                      =  100,
-
+   TESTPROB_HYDRO_ZELDOVICH                    =  101,
    TESTPROB_ELBDM_EXTPOT                       = 1000,
    TESTPROB_ELBDM_JEANS_INSTABILITY_COMOVING   = 1001,
    TESTPROB_ELBDM_JEANS_INSTABILITY_PHYSICAL   = 1002,
@@ -64,7 +64,8 @@ const TestProbID_t
    TESTPROB_ELBDM_VORTEX_PAIR_LINEAR           = 1006,
    TESTPROB_ELBDM_ISOLATED_HALO                = 1007,
    TESTPROB_ELBDM_GAUSSIAN_WAVE_PACKET         = 1008,
-   TESTPROB_ELBDM_LSS                          = 1009;
+   TESTPROB_ELBDM_LSS                          = 1009,
+   TESTPROB_ELBDM_PLANE_WAVE                   = 1010;
 
 
 // program initialization options

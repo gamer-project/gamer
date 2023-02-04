@@ -1188,6 +1188,7 @@ void Aux_TakeNote()
 #     endif
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__INT_PHASE                  %d\n",      OPT__INT_PHASE          );
+      fprintf( Note, "OPT__RES_PHASE                  %d\n",      OPT__RES_PHASE          );
 #     endif
       fprintf( Note, "OPT__FLU_INT_SCHEME             %s\n",      ( OPT__FLU_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
                                                                   ( OPT__FLU_INT_SCHEME == INT_MINMOD1D ) ? "MINMOD1D" :

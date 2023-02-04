@@ -630,6 +630,7 @@ struct InputPara_t
 #  endif
 #  if ( MODEL == ELBDM )
    int    Opt__Int_Phase;
+   int    Opt__Res_Phase;
 #  endif
    int    Opt__Flu_IntScheme;
    int    Opt__RefFlu_IntScheme;
