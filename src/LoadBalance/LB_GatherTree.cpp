@@ -672,12 +672,12 @@ LB_GlobalPatch* LB_ConstructGlobalTree(LB_PatchCount& pc, LB_GlobalPatchExchange
 //                      printf("Information about patches: \n");
 //                      for (int i = 0; i < pc.NPatchAllLv; ++i) {
 //                         printf("GID %d on level %d residing on MPI rank %d\n", i, gt[i].level, gt[i].MPI_Rank);
-//                         printf("Father PID   = %ld\n", gt[i].father);
-//                         printf("Son PID      = %ld\n", gt[i].son);
+//                         printf("Father PID   = %d\n", gt[i].father);
+//                         printf("Son PID      = %d\n", gt[i].son);
 //                         printf("LB IDx       = %ld\n", gt[i].LB_Idx);
 //                         printf("Sibling PIDs = ");
 //                         for (int c = 0; c < 26; ++c) {
-//                            printf("%ld ", gt[i].sibling[c]);
+//                            printf("%d ", gt[i].sibling[c]);
 //                         }
 //                         printf("\n");
 //                         printf("Corners      = ");

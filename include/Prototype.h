@@ -416,7 +416,7 @@ class LB_LocalPatchExchangeList;
 class LB_GlobalPatchExchangeList;
 class LB_GlobalPatch;
 
-void LB_GetPID(long GID, int& level, int& PID, int* GID_Offset);
+void LB_GetPID(int GID, int& level, int& PID, int* GID_Offset);
 void LB_AllgatherPatchCount(LB_PatchCount& pc);
 void LB_AllgatherLBIdx(LB_PatchCount& pc, LB_LocalPatchExchangeList& lel, LB_GlobalPatchExchangeList* gel = NULL);
 void LB_FillLocalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList& lel);
