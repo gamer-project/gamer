@@ -115,7 +115,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                      EdgeL = BoxEdgeR-PatchSize*dh[lv] and EdgeR = BoxEdgeR, and for those just outside
 //                                      the simulation right edge will have EdgeL = BoxEdgeL and EdgeR = BoxEdgeL+PatchSize*dh[lv]
 //                                  --> Different from corner[3], which do NOT assume periodicity
-//                PaddedCr1D      : 1D corner coordinate padded with two base-level patches on each side
+//                PaddedCr1D      : 1D corner coordiniate padded with two base-level patches on each side
 //                                  in each direction, normalized to the finest-level patch scale (PATCH_SIZE)
 //                                  --> Each PaddedCr1D defines a unique 3D position
 //                                  --> Patches at different levels with the same PaddedCr1D have the same
@@ -1099,5 +1099,7 @@ struct patch_t
 
 
 }; // struct patch_t
+
+
 
 #endif // #ifndef __PATCH_H__
