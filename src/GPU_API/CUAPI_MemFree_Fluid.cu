@@ -9,6 +9,7 @@ extern real (*d_Flu_Array_F_In )[FLU_NIN ][ CUBE(FLU_NXT) ];
 extern real (*d_Flu_Array_F_Out)[FLU_NOUT][ CUBE(PS2) ];
 extern real (*d_Flux_Array)[9][NFLUX_TOTAL][ SQR(PS2) ];
 #ifdef UNSPLIT_GRAVITY
+extern real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ];
 extern double (*d_Corner_Array_F)[3];
 #endif
 #ifdef DUAL_ENERGY
@@ -64,6 +65,7 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
    if ( d_Flu_Array_F_Out    != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Flu_Array_F_Out    )  );  d_Flu_Array_F_Out    = NULL; }
    if ( d_Flux_Array         != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Flux_Array         )  );  d_Flux_Array         = NULL; }
 #  ifdef UNSPLIT_GRAVITY
+   if ( d_Pot_Array_USG_F    != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Pot_Array_USG_F    )  );  d_Pot_Array_USG_F    = NULL; }
    if ( d_Corner_Array_F     != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Corner_Array_F     )  );  d_Corner_Array_F     = NULL; }
 #  endif
 #  ifdef DUAL_ENERGY
@@ -111,6 +113,7 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
       if ( h_Flu_Array_F_Out[t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Flu_Array_F_Out[t] )  );  h_Flu_Array_F_Out[t] = NULL; }
       if ( h_Flux_Array     [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Flux_Array     [t] )  );  h_Flux_Array     [t] = NULL; }
 #     ifdef UNSPLIT_GRAVITY
+      if ( h_Pot_Array_USG_F[t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Pot_Array_USG_F[t] )  );  h_Pot_Array_USG_F[t] = NULL; }
       if ( h_Corner_Array_F [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Corner_Array_F [t] )  );  h_Corner_Array_F [t] = NULL; }
 #     endif
 #     ifdef DUAL_ENERGY
