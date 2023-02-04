@@ -929,6 +929,10 @@
 #define MIN( a, b )     (  ( (a) < (b) ) ? (a) : (b)  )
 
 
+// safe ATAN2 that does not return nan when a = b = 0
+#define SATAN2( a, b )   (  ( (a) == (real)0.0  &&  (b) == (real)0.0 ) ? (real)0.0 : ATAN2( (a), (b) )  )
+
+
 // square/cube function
 #define SQR(  a )       ( (a)*(a)     )
 #define CUBE( a )       ( (a)*(a)*(a) )
