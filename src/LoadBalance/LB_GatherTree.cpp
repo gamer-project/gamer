@@ -606,19 +606,14 @@ void LB_FillGlobalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList
 // Description :  Gather global tree structure as vector indexed by GIDs to root rank
 //
 // Note        :  - Store global tree AMR structure gathered from all ranks in vector
-//                - Example usage: Print level of MPI rank 0's patch's son
-//                      LB_PatchCount pc;
-//                      std::vector<LB_GlobalPatch> t = LB_GatherTree(pc, 0);
-//                      if (t[GID].son != -1) printf(t[t[GID].son].level);
-//
 //                - WARNING: memory allocated for LB_GlobalPatch object must be free by user
 //
 // Parameter   :  pc   : reference to LB_PatchCount object
 //             :  gel  : reference to LB_GlobalPatchExchangeList that needs to be initialised by calling LB_FillGlobalPatchExchangeList
 //             :  root : root MPI rank that receives global list, -1 for all ranks
 //
-// Return      :  - pointer to LB_GlobalPatch object allocated on heap
-//                - must be freed by user
+// Return      :  - pointer to LB_GlobalPatch array of length pc.NPatchAllLv allocated on heap
+//                - must be freed by user via delete
 //-------------------------------------------------------------------------------------------------------
 LB_GlobalPatch* LB_ConstructGlobalTree(LB_PatchCount& pc, LB_GlobalPatchExchangeList& gel, int root) {
    LB_GlobalPatch* global_tree = NULL;
@@ -668,19 +663,50 @@ LB_GlobalPatch* LB_ConstructGlobalTree(LB_PatchCount& pc, LB_GlobalPatchExchange
 // Description :  Gather global tree structure as vector indexed by GIDs to root rank
 //
 // Note        :  - Store global tree AMR structure gathered from all ranks in vector
-//                - Example usage: Print level of MPI rank 0's patch's son
-//                      LB_PatchCount pc;
-//                      std::vector<LB_GlobalPatch> t = LB_GatherTree(pc, 0);
-//                      if (t[GID].son != -1) printf(t[t[GID].son].level);
-//                - pass root = -1 to exchange local patch list data from all ranks to all ranks
+
+//                - Example usage: Print the information stored in the global tree structure on MPI Node 0
+//
+//                   LB_GlobalPatch* gt = LB_GatherTree(pc, 0);
+//
+//                   if ( MPI_Rank == 0) {
+//                      printf("Information about patches: \n");
+//                      for (int i = 0; i < pc.NPatchAllLv; ++i) {
+//                         printf("GID %d on level %d residing on MPI rank %d\n", i, gt[i].level, gt[i].MPI_Rank);
+//                         printf("Father PID   = %ld\n", gt[i].father);
+//                         printf("Son PID      = %ld\n", gt[i].son);
+//                         printf("LB IDx       = %ld\n", gt[i].LB_Idx);
+//                         printf("Sibling PIDs = ");
+//                         for (int c = 0; c < 26; ++c) {
+//                            printf("%ld ", gt[i].sibling[c]);
+//                         }
+//                         printf("\n");
+//                         printf("Corners      = ");
+//                         for (int c = 0; c < 3; ++c) {
+//                            printf("%d ", gt[i].corner[c]);
+//                         }
+//                         printf("\n");
+//                         printf("PaddedCr1D   = %ld\n", gt[i].PaddedCr1D);
+//                         printf("Edges: \n");
+//                         printf("[x_L, x_R]   = [%9.6f, %9.6f]\n", gt[i].EdgeL[0], gt[i].EdgeR[0]);
+//                         printf("[y_L, y_R]   = [%9.6f, %9.6f]\n", gt[i].EdgeL[1], gt[i].EdgeR[1]);
+//                         printf("[z_L, z_R]   = [%9.6f, %9.6f]\n", gt[i].EdgeL[2], gt[i].EdgeR[2]);
+//
+//                         printf("\n");
+//#                        ifdef PARTICLE
+//                         printf("#Particles   = %d\n", gt[i].NPar);
+//#                        endif
+//                      }
+//                   }
+//
+//                   delete gt;
 //
 //                - WARNING: memory allocated for LB_GlobalPatch object must be free by user
 //
 // Parameter   :  pc   : reference to LB_PatchCount object
 //             :  root : root MPI rank, -1 for gathering tree at all ranks
 //
-// Return      :  - pointer to LB_GlobalPatch object allocated on heap
-//                - must be free by user
+// Return      :  - pointer to LB_GlobalPatch array of length pc.NPatchAllLv allocated on heap
+//                - must be freed by user via delete
 //-------------------------------------------------------------------------------------------------------
 
 LB_GlobalPatch* LB_GatherTree(LB_PatchCount& pc, int root) {
