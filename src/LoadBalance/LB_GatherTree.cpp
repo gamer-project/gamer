@@ -96,6 +96,8 @@ LB_GlobalPatchExchangeList::LB_GlobalPatchExchangeList(LB_PatchCount& pc, int ro
 #     ifdef PARTICLE
       NParList_AllLv       = new int    [ pc.NPatchAllLv ];
 #     endif // # ifdef  PARTICLE
+
+//    set allocation flag
       isAllocated          = true;
    } else {
       LBIdxList_AllLv      = NULL;
@@ -139,9 +141,9 @@ LB_GlobalPatchExchangeList::~LB_GlobalPatchExchangeList() {
 // Note        :  - Calculate PID and level from GID.
 //
 // Parameter   :  GID        : GID to convert
-//                level      : reference to integer where level corresponding to GID is stored
-//                PID        : reference to integer where PID corrsponding to GID is stored
-//                GID_Offset : pointer to table with GID offsets on rank; array of length NLEVEL
+//             :  level      : reference to integer where level corresponding to GID is stored
+//             :  PID        : reference to integer where PID corrsponding to GID is stored
+//             :  GID_Offset : pointer to table with GID offsets on rank; array of length NLEVEL
 //-------------------------------------------------------------------------------------------------------
 void LB_GetPID(int GID, int& level, int& PID, int* GID_Offset) {
 #   ifdef GAMER_DEBUG
@@ -668,7 +670,7 @@ LB_GlobalPatch* LB_ConstructGlobalTree(LB_PatchCount& pc, LB_GlobalPatchExchange
 //
 //                   LB_GlobalPatch* gt = LB_GatherTree(pc, 0);
 //
-//                   if ( MPI_Rank == 0) {
+//                   if ( MPI_Rank == 0 ) {
 //                      printf("Information about patches: \n");
 //                      for (int i = 0; i < pc.NPatchAllLv; ++i) {
 //                         printf("GID %d on level %d residing on MPI rank %d\n", i, gt[i].level, gt[i].MPI_Rank);
