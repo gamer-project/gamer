@@ -423,7 +423,6 @@ void LB_FillLocalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList&
 void LB_FillGlobalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList& lel, LB_GlobalPatchExchangeList& gel, int root);
 LB_GlobalPatch* LB_ConstructGlobalTree(LB_PatchCount& pc, LB_GlobalPatchExchangeList& gel, int root);
 LB_GlobalPatch* LB_GatherTree(LB_PatchCount& pc, int root);
-LB_GlobalPatch* LB_AllgatherTree(LB_PatchCount& pc);
 
 #ifdef LOAD_BALANCE
 void LB_AllocateBufferPatch_Father( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0,

@@ -136,14 +136,12 @@ LB_GlobalPatchExchangeList::~LB_GlobalPatchExchangeList() {
 // Function    :  LB_GetPID
 // Description :  Convert GID to local PID
 //
-// Note        :  1. Calculate GID and level from PID.
+// Note        :  - Calculate PID and level from GID.
 //
 // Parameter   :  GID        : GID to convert
-//                level      : fill in level of GID.
-//                PID        : fill in PID of GID
-//                GID_Offset : table with GID offsets on rank
-//
-// Return      :  *level, *PID
+//                level      : reference to integer where level corresponding to GID is stored
+//                PID        : reference to integer where PID corrsponding to GID is stored
+//                GID_Offset : pointer to table with GID offsets on rank; array of length NLEVEL
 //-------------------------------------------------------------------------------------------------------
 void LB_GetPID(long GID, int& level, int& PID, int* GID_Offset) {
 #   ifdef GAMER_DEBUG
@@ -501,7 +499,7 @@ void LB_FillGlobalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList
 #  endif // #  ifdef PARTICLE
 
 
-// 5. gather data from all ranks
+// gather data from all ranks
    for (int lv=0; lv<NLEVEL; lv++)
    {
       for (int r=0; r<MPI_NRank; r++)
@@ -613,9 +611,14 @@ void LB_FillGlobalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList
 //                      std::vector<LB_GlobalPatch> t = LB_GatherTree(pc, 0);
 //                      if (t[GID].son != -1) printf(t[t[GID].son].level);
 //
+//                - WARNING: memory allocated for LB_GlobalPatch object must be free by user
+//
 // Parameter   :  pc   : reference to LB_PatchCount object
 //             :  gel  : reference to LB_GlobalPatchExchangeList that needs to be initialised by calling LB_FillGlobalPatchExchangeList
 //             :  root : root MPI rank that receives global list, -1 for all ranks
+//
+// Return      :  - pointer to LB_GlobalPatch object allocated on heap
+//                - must be freed by user
 //-------------------------------------------------------------------------------------------------------
 LB_GlobalPatch* LB_ConstructGlobalTree(LB_PatchCount& pc, LB_GlobalPatchExchangeList& gel, int root) {
    LB_GlobalPatch* global_tree = NULL;
@@ -671,8 +674,13 @@ LB_GlobalPatch* LB_ConstructGlobalTree(LB_PatchCount& pc, LB_GlobalPatchExchange
 //                      if (t[GID].son != -1) printf(t[t[GID].son].level);
 //                - pass root = -1 to exchange local patch list data from all ranks to all ranks
 //
+//                - WARNING: memory allocated for LB_GlobalPatch object must be free by user
+//
 // Parameter   :  pc   : reference to LB_PatchCount object
 //             :  root : root MPI rank, -1 for gathering tree at all ranks
+//
+// Return      :  - pointer to LB_GlobalPatch object allocated on heap
+//                - must be free by user
 //-------------------------------------------------------------------------------------------------------
 
 LB_GlobalPatch* LB_GatherTree(LB_PatchCount& pc, int root) {
@@ -694,17 +702,4 @@ LB_GlobalPatch* LB_GatherTree(LB_PatchCount& pc, int root) {
 
 // construct and return vector with global tree information
    return LB_ConstructGlobalTree(pc, gel, root);
-}
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  LB_AllgatherTree
-// Description :  Gather global tree structure as vector indexed by GIDs to all ranks
-//
-// Note        :  - see LB_GatherTrees
-//
-// Parameter   :  pc  : reference to LB_PatchCount object that is filled with the GID offsets for the local rank as well as total number of patches
-//-------------------------------------------------------------------------------------------------------
-LB_GlobalPatch* LB_AllgatherTree(LB_PatchCount& pc) {
-// call LB_GatherTree with root = -1 to synchronise data between all ranks
-   return LB_GatherTree(pc, -1);
 }

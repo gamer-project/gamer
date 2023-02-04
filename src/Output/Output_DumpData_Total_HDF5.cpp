@@ -337,7 +337,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 // 1. gather the number of patches at different MPI ranks and set the corresponding GID offset
    LB_PatchCount pc;
-   LB_AllgatherPatchCount(pc); 
+   LB_AllgatherPatchCount(pc);
 
 // 2. prepare all HDF5 variables
    hsize_t H5_SetDims_LBIdx, H5_SetDims_Cr[2], H5_SetDims_Fa, H5_SetDims_Son, H5_SetDims_Sib[2], H5_SetDims_Field[4];
@@ -438,7 +438,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 
 // 4. output the AMR tree structure (father, son, sibling, LBIdx, corner, and the number of particles --> sorted by GID)
-   int root = 0; 
+   int root = 0;
 
 // 4-1. allocate lists
    LB_LocalPatchExchangeList  lel;
@@ -1329,7 +1329,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                        lv, GID, gel.FaList_AllLv[GID], gel.SonList_AllLv[ gel.FaList_AllLv[GID] ] );
 
 //       7-1-5. son->father == itself
-         SonGID = gel.SonList_AllLv[GID];
+         const int SonGID = gel.SonList_AllLv[GID];
          if ( SonGID != -1 )
          {
             if ( lv >= MAX_LEVEL )
@@ -1351,7 +1351,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //       7-1-6. sibling->sibling_mirror = itself
          for (int s=0; s<26; s++)
          {
-            SibGID = gel.SibList_AllLv[GID][s];
+            const int SibGID = gel.SibList_AllLv[GID][s];
 
             if ( SibGID >= 0 )
             {
