@@ -216,8 +216,8 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
             }}}
          }
-         
-#        endif 
+
+#        endif
 //       restrict the fluid data
          if ( ResFlu ) {
 
@@ -238,7 +238,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                                            SonPtr[K ][Jp][Ip] + SonPtr[Kp][Jp][I ] +
                                            SonPtr[Kp][J ][Ip] + SonPtr[Kp][Jp][Ip] );
             }}}
-         } 
+         }
          } // if ( ResFlu )
 
 

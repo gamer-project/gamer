@@ -84,7 +84,7 @@ dpi         = 150
 if use_phase:
      def _phase(field, data):
           return data["gamer", "Phase"]
-else:       
+else:
      def _phase(field, data):
           return np.arctan2(data["gamer", "Imag"], data["gamer", "Real"])
 
@@ -146,7 +146,7 @@ for idx in range(idx_start, idx_end+1, didx):
                               ("gas", "density_gradient_magnitude"),
                               ("gamer", "Phase"),
                          ]
-                     
+
 
                      pz = yt.SlicePlot( ds, myax, fields)
                      if not make_reim_plot:
