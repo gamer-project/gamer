@@ -17,9 +17,9 @@ class NonCopyable
 struct LB_GlobalPatch
 {
    int    corner[3];
-   long   sibling[26];
-   long   father;
-   long   son;
+   int    sibling[26];
+   int    father;
+   int    son;
    long   LB_Idx;
    int    level;
    double EdgeL[3];

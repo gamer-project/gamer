@@ -143,7 +143,7 @@ LB_GlobalPatchExchangeList::~LB_GlobalPatchExchangeList() {
 //                PID        : reference to integer where PID corrsponding to GID is stored
 //                GID_Offset : pointer to table with GID offsets on rank; array of length NLEVEL
 //-------------------------------------------------------------------------------------------------------
-void LB_GetPID(long GID, int& level, int& PID, int* GID_Offset) {
+void LB_GetPID(int GID, int& level, int& PID, int* GID_Offset) {
 #   ifdef GAMER_DEBUG
     long NPatchAllLv = 0;
     for (int lv=0; lv<NLEVEL; lv++)  NPatchAllLv += NPatchTotal[lv];
@@ -239,7 +239,7 @@ void LB_AllgatherLBIdx(LB_PatchCount& pc, LB_LocalPatchExchangeList& lel, LB_Glo
 // store in the AllLv array BEFORE sorting
    if ( gel != NULL ) {
       if ( gel->isAllocated ) {
-         long MyGID = 0;
+         int MyGID = 0;
 
          for (int lv=0; lv<NLEVEL; lv++)
          for (int PID=0; PID<NPatchTotal[lv]; PID++)
@@ -629,7 +629,7 @@ LB_GlobalPatch* LB_ConstructGlobalTree(LB_PatchCount& pc, LB_GlobalPatchExchange
 
    global_tree = new LB_GlobalPatch[pc.NPatchAllLv];
 
-   long MyGID = 0;
+   int MyGID = 0;
    for (int lv=0; lv<NLEVEL; lv++)
    {
       for (int i = 0; i < NPatchTotal[lv]; ++i) {
