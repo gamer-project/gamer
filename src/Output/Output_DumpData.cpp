@@ -215,7 +215,22 @@ void Output_DumpData( const int Stage )
    } // if ( OUTPUT_WALLTIME > 0.0 )
 
 
-// set the acceleration of tracer particles to zero to make the output deterministic
+// set potential to zero when disabling both self-gravity and external potential
+// to make outputs deterministic and more reasonable
+#  ifdef GRAVITY
+   if ( !OPT__SELF_GRAVITY && !OPT__EXT_POT )
+   {
+      for (int lv=0; lv<NLEVEL; lv++)
+      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+      for (int k=0; k<PS1; k++)
+      for (int j=0; j<PS1; j++)
+      for (int i=0; i<PS1; i++)
+         amr->patch[ amr->PotSg[lv] ][lv][PID]->pot[k][j][i] = (real)0.0;
+   }
+#  endif
+
+
+// set the acceleration of tracer particles to zero to make outputs deterministic
 #  if ( defined TRACER  &&  defined STORE_PAR_ACC )
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
