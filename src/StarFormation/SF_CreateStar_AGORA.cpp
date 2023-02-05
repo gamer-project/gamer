@@ -263,7 +263,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 //    ===========================================================================================================
 //    use OpenMP critical construct since both amr->Par->AddOneParticle() and amr->patch[0][lv][PID]->AddParticle()
 //    will modify some global variables
-//    --> note that the order of which thread calls amr->Par->AddOneParticle() is nondeterministic and may change from run to run
+//    --> note that the order of which thread calls amr->Par->AddOneParticle() is non-deterministic and may change from run to run
 //        --> order of particles stored in the particle repository (i.e., their particle ID) may change from run to run
 //        --> particle text file may change from run to run since it's dumped according to the order of particle ID
 //    --> but it's not an issue since the actual data of each particle will not be affected
