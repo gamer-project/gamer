@@ -155,7 +155,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
             NPar_Remove_Tot ++;
 
 //          use OpenMP critical construct since RemoveOneParticle will modify NPar_Active/Inactive, which are global variables
-//          --> note that the order of which thread calls RemoveOneParticle() is nondeterministic and may change from run to run
+//          --> note that the order of which thread calls RemoveOneParticle() is non-deterministic and may change from run to run
 //              --> order of particles stored in the particle repository (i.e., their particle ID) may change from run to run
 //              --> particle text file may change from run to run since it's dumped according to the order of particle ID
 //          --> but it's not an issue since the actual data of each particle will not be affected
