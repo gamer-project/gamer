@@ -31,8 +31,10 @@ extern void **d_ExtPotGenePtr;
 // Description :  Allocate device and host memory for the Poisson and Gravity solvers
 //
 // Parameter   :  Pot_NPG  : Number of patch groups evaluated simultaneously by GPU
+//
+// Return      : GAMER_SUCCESS / GAMER_FAILED
 //-------------------------------------------------------------------------------------------------------
-void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
+int CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 {
 
    const long Pot_NP            = 8*Pot_NPG;
@@ -135,6 +137,9 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_ExtPotTable,         ExtPot_MemSize    )  );
 
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_ExtPotGenePtr,       GenePtr_MemSize   )  );
+
+
+   return GAMER_SUCCESS;
 
 } // FUNCTION : CUAPI_MemAllocate_PoissonGravity
 

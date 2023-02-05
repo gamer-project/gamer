@@ -64,8 +64,10 @@ extern real  *d_SrcDlepProf_Radius;
 //                              --> Here it is used only for the dt solver
 //                Src_NPG     : Number of patch groups evaluated simultaneously by GPU for the source-term solver
 //                GPU_NStream : Number of CUDA stream objects
+
+// Return      : GAMER_SUCCESS / GAMER_FAILED
 //-------------------------------------------------------------------------------------------------------
-void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src_NPG, const int GPU_NStream )
+int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src_NPG, const int GPU_NStream )
 {
 
 // size of the global memory arrays in all models
@@ -310,6 +312,9 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Sr
 // create streams
    Stream = new cudaStream_t [GPU_NStream];
    for (int s=0; s<GPU_NStream; s++)      CUDA_CHECK_ERROR(  cudaStreamCreate( &Stream[s] )  );
+
+
+   return GAMER_SUCCESS;
 
 } // FUNCTION : CUAPI_MemAllocate_Fluid
 
