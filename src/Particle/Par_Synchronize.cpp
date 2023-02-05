@@ -65,7 +65,6 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
       Backup_NPar   = 0;
       Backup_ParID  = ( long *      )malloc(   MemSize*sizeof(long) );
       Backup_ParAtt = ( real (*)[7] )malloc( 7*MemSize*sizeof(real) );  // 7 = pos*3, vel*3, time
-
    }
 
 
@@ -84,6 +83,10 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
    const real SyncTime_Real = (real)SyncTime;
 
    real dt;
+#  ifdef COMOVING
+   bool dTime2dt, Initialized=false;
+   real ParTime_Prev=NULL_REAL, dt_Prev=NULL_REAL;
+#  endif
 
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
@@ -91,9 +94,9 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
       if ( amr->Par->Mass[p] < 0.0 )   continue;
 
 //    skip massive particles when enabling OPT__FREEZE_PAR
-      if ( OPT__FREEZE_PAR  &&  amr->Par->Type[p] != PTYPE_TRACER )  continue;
+      if ( OPT__FREEZE_PAR  &&  ParType[p] != PTYPE_TRACER )   continue;
 
-      if (  ! Mis_CompareRealValue( SyncTime_Real, amr->Par->Time[p], NULL, false )  )
+      if (  ! Mis_CompareRealValue( SyncTime_Real, ParTime[p], NULL, false )  )
       {
 //       backup data before synchronization
          if ( SyncOption == PAR_SYNC_TEMP )
@@ -120,7 +123,30 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
 
 
 //       synchronize particles
-         dt = SyncTime_Real - amr->Par->Time[p];
+         dt = SyncTime_Real - ParTime[p];
+
+//       convert time-step for comoving
+#        ifdef COMOVING
+         if ( Initialized )
+            dTime2dt    = ( ParTime[p] != ParTime_Prev );
+
+         else
+         {
+            dTime2dt    = true;
+            Initialized = true;
+         }
+
+//       avoid redundant calculations
+         if ( dTime2dt )
+         {
+            dt           = Mis_dTime2dt( ParTime[p], dt );
+            dt_Prev      = dt;
+            ParTime_Prev = ParTime[p];
+         }
+
+         else
+            dt = dt_Prev;
+#        endif // #ifdef COMOVING
 
          for (int d=0; d<3; d++)
          {
@@ -131,7 +157,7 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
          }
 
          ParTime[p] = SyncTime_Real;
-      } // if (  ! Mis_CompareRealValue( SyncTime_Real, amr->Par->Time[p], NULL, false )  )
+      } // if (  ! Mis_CompareRealValue( SyncTime_Real, ParTime[p], NULL, false )  )
    } // for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
 
 

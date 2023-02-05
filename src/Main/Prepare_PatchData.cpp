@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real IntData_FC[],
+void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real IntData_FC[], real IntData_CC_IntTime[],
                            const int FSide, const double PrepTime, const int GhostSize,
                            const IntScheme_t IntScheme_CC, const IntScheme_t IntScheme_FC,
                            const int NTSib[], int *TSib[], const long TVarCC, const int NVarCC_Tot,
@@ -247,6 +247,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #     if ( MODEL == ELBDM )
       if (  !(TVarCC & _REAL)  ||  !(TVarCC & _IMAG)  )
       Aux_Error( ERROR_INFO, "real and/or imag parts are not found for phase interpolation in ELBDM !!\n" );
+
+//    we have assumed in InterpolateGhostZone() that when adopting IntPhase this function will NOT prepare
+//    anything other than wave function and, optionally, density
+//    --> e.g., one cannot prepare wave function and potential at the same time when enabling IntPhase
+      if (  TVarCC & ~( _REAL | _IMAG | _DENS )  )
+      Aux_Error( ERROR_INFO, "unsupported parameter %s = %d for IntPhase !!\n", "TVarCC", TVarCC );
 #     else
       Aux_Error( ERROR_INFO, "\"interpolation on phase\" is useful only in ELBDM !!\n" );
 #     endif
@@ -257,7 +263,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    for (int f=0; f<6; f++)
    {
       if ( FluBC[f] != BC_FLU_PERIODIC    &&  FluBC[f] != BC_FLU_OUTFLOW  &&
-           FluBC[f] != BC_FLU_REFLECTING  &&  FluBC[f] != BC_FLU_USER        )
+           FluBC[f] != BC_FLU_REFLECTING  &&  FluBC[f] != BC_FLU_DIODE    &&
+           FluBC[f] != BC_FLU_USER )
          Aux_Error( ERROR_INFO, "unsupported parameter FluBC[%d] = %d !!\n", f, FluBC[f] );
 
 #     if ( MODEL != HYDRO )
@@ -266,6 +273,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
       if ( FluBC[f] == BC_FLU_REFLECTING )
          Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO !!\n" );
+
+      if ( FluBC[f] == BC_FLU_DIODE )
+         Aux_Error( ERROR_INFO, "diode boundary condition (OPT__BC_FLU=5) only works with HYDRO !!\n" );
 #     endif
    }
 
@@ -698,6 +708,16 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
       real *FInterface_Data = NULL;
 
       if ( NVarFC_Tot > 0 )   FInterface_Data = new real [ SQR(PS2) + 4*PS2*GhostSize_Padded ];
+#     endif
+
+//    IntData_CC_IntTime: for temporal interpolation on density and phase in ELBDM
+#     if ( MODEL == ELBDM )
+      real *IntData_CC_IntTime = (  IntPhase  &&  OPT__INT_TIME  &&  lv > 0  &&
+                                   !Mis_CompareRealValue( PrepTime, amr->FluSgTime[lv-1][  amr->FluSg[lv-1]], NULL, false )  &&
+                                   !Mis_CompareRealValue( PrepTime, amr->FluSgTime[lv-1][1-amr->FluSg[lv-1]], NULL, false )  )
+                                 ? new real [ 2*PS2*PS2*GhostSize_Padded ] : NULL;
+#     else
+      real *IntData_CC_IntTime = NULL;
 #     endif
 
 
@@ -1657,7 +1677,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 
 //             (b2-3) perform interpolation and store the results in IntData_CC[] and IntData_FC[]
-               InterpolateGhostZone( lv-1, FaSibPID, IntData_CC, IntData_FC, Side, PrepTime, GhostSize,
+               InterpolateGhostZone( lv-1, FaSibPID, IntData_CC, IntData_FC, IntData_CC_IntTime, Side, PrepTime, GhostSize,
                                      IntScheme_CC, IntScheme_FC, NTSib, TSib, TVarCC, NVarCC_Tot, NVarCC_Flu,
                                      TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der, TVarFC, NVarFC_Tot, TVarFCIdxList,
                                      IntPhase, FluBC, PotBC, BC_Face, MinPres, MinTemp, MinEntr, DE_Consistency,
@@ -1796,6 +1816,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                                             PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
                                                             TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der );
                      break;
+
+                     case BC_FLU_DIODE:
+                        Hydro_BoundaryCondition_Diode     ( Data1PG_CC_Ptr, BC_Face[BC_Sibling], NVarCC_Flu,            GhostSize,
+                                                            PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
+                                                            TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der );
+                     break;
 #                    endif
 
                      case BC_FLU_USER:
@@ -1847,6 +1873,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
                      case BC_FLU_REFLECTING:
                         MHD_BoundaryCondition_Reflecting( MagDataPtr, BC_Face[BC_Sibling], NVarFC_Tot, GhostSize,
+                                                          PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
+                                                          TVarFCIdxList );
+                     break;
+
+                     case BC_FLU_DIODE:
+                        MHD_BoundaryCondition_Diode     ( MagDataPtr, BC_Face[BC_Sibling], NVarFC_Tot, GhostSize,
                                                           PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
                                                           TVarFCIdxList );
                      break;
@@ -2208,6 +2240,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
       }
       delete [] IntData_CC;
       delete [] IntData_FC;
+      delete [] IntData_CC_IntTime;
 
 #     ifdef MHD
       delete [] FInterface_Data;

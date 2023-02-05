@@ -53,6 +53,8 @@ const TestProbID_t
    TESTPROB_HYDRO_PARTICLE_EQUILIBRIUM_IC      =   17,
    TESTPROB_HYDRO_PARTICLE_TEST                =   18,
    TESTPROB_HYDRO_BARRED_POT                   =   51,
+   TESTPROB_HYDRO_CDM_LSS                      =  100,
+   TESTPROB_HYDRO_ZELDOVICH                    =  101,
    TESTPROB_ELBDM_EXTPOT                       = 1000;
 
 
@@ -264,7 +266,8 @@ const OptFluBC_t
    BC_FLU_PERIODIC   = 1,
    BC_FLU_OUTFLOW    = 2,
    BC_FLU_REFLECTING = 3,
-   BC_FLU_USER       = 4;
+   BC_FLU_USER       = 4,
+   BC_FLU_DIODE      = 5;
 
 
 // the gravity boundary conditions
@@ -442,13 +445,20 @@ const SF_CreateStarScheme_t
 #endif
 
 
-// options in Aux_ComputeProfile()
+// options in Aux_ComputeProfile() and Aux_FindExtrema()
 typedef int PatchType_t;
 const PatchType_t
    PATCH_LEAF                 = 0,
    PATCH_NONLEAF              = 1,
    PATCH_BOTH                 = 2,
    PATCH_LEAF_PLUS_MAXNONLEAF = 3;
+
+
+// options in Aux_FindExtrema()
+typedef int ExtremaMode_t;
+const ExtremaMode_t
+   EXTREMA_MIN = 1,
+   EXTREMA_MAX = 2;
 
 
 // function pointers

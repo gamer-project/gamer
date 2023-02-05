@@ -177,6 +177,10 @@ void Aux_Check_Parameter()
    for (int f=0; f<6; f++)
       if ( OPT__BC_FLU[f] == BC_FLU_REFLECTING )
          Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO !!\n" );
+
+   for (int f=0; f<6; f++)
+      if ( OPT__BC_FLU[f] == BC_FLU_DIODE )
+         Aux_Error( ERROR_INFO, "diode boundary condition (OPT__BC_FLU=5) only works with HYDRO !!\n" );
 #  endif
 
    for (int f=0; f<6; f+=2)
@@ -194,6 +198,11 @@ void Aux_Check_Parameter()
 
    if ( INT_MONO_COEFF < 1.0  ||  INT_MONO_COEFF > 4.0 )
       Aux_Error( ERROR_INFO, "INT_MONO_COEFF (%14.7e) is not within the correct range [1.0, 4.0] !!\n", INT_MONO_COEFF );
+
+#  ifdef MHD
+   if ( INT_MONO_COEFF_B < 1.0  ||  INT_MONO_COEFF_B > 4.0 )
+      Aux_Error( ERROR_INFO, "INT_MONO_COEFF_B (%14.7e) is not within the correct range [1.0, 4.0] !!\n", INT_MONO_COEFF_B );
+#  endif
 
    if ( OPT__MEMORY_POOL  &&  !OPT__REUSE_MEMORY )
       Aux_Error( ERROR_INFO, "please turn on OPT__REUSE_MEMORY for OPT__MEMORY_POOL !!\n" );
@@ -558,6 +567,15 @@ void Aux_Check_Parameter()
    if ( OPT__RESET_FLUID  &&   OPT__OVERLAP_MPI )
       Aux_Error( ERROR_INFO, "\"%s\" is NOT supported for \"%s\" !!\n", "OPT__OVERLAP_MPI", "OPT__RESET_FLUID" );
 
+   if ( MONO_MAX_ITER > 0 )
+   {
+      if ( OPT__FLU_INT_SCHEME == INT_VANLEER  ||  OPT__FLU_INT_SCHEME == INT_MINMOD3D  ||  OPT__FLU_INT_SCHEME == INT_MINMOD1D )
+         Aux_Error( ERROR_INFO, "OPT__FLU_INT_SCHEME=INT_VANLEER/INT_MINMOD3D/INT_MINMOD1D do not support MONO_MAX_ITER != 0 !!\n" );
+
+      if ( OPT__REF_FLU_INT_SCHEME == INT_VANLEER  ||  OPT__REF_FLU_INT_SCHEME == INT_MINMOD3D  ||  OPT__REF_FLU_INT_SCHEME == INT_MINMOD1D )
+         Aux_Error( ERROR_INFO, "OPT__REF_FLU_INT_SCHEME=INT_VANLEER/INT_MINMOD3D/INT_MINMOD1D do not support MONO_MAX_ITER != 0 !!\n" );
+   }
+
 
 // warnings
 // ------------------------------
@@ -575,8 +593,8 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : DT__FLUID_INIT (%14.7e) is not within the normal range [0...1] !!\n",
                    DT__FLUID_INIT );
 
-   if ( OPT__RESET_FLUID  &&   OPT__INIT == INIT_BY_FILE )
-      Aux_Message( stderr, "WARNING : \"%s\" will NOT be applied to the input uniform data !!\n", "OPT__RESET_FLUID" );
+   if ( OPT__RESET_FLUID_INIT  &&   OPT__INIT == INIT_BY_FILE )
+      Aux_Message( stderr, "WARNING : \"%s\" will NOT be applied to the input uniform data !!\n", "OPT__RESET_FLUID_INIT" );
 
    if ( OPT__FREEZE_FLUID )
       Aux_Message( stderr, "REMINDER : \"%s\" will prevent fluid variables from being updated\n", "OPT__FREEZE_FLUID" );
@@ -616,12 +634,18 @@ void Aux_Check_Parameter()
 #  endif
 
 #  ifdef MHD
-#   if ( defined RSOLVER  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLD )
+#   if ( RSOLVER != NONE  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLD )
 #     error : ERROR : unsupported Riemann solver for MHD (ROE/HLLE/HLLD) !!
 #   endif
+#   if ( RSOLVER_RESCUE != NONE  &&  RSOLVER_RESCUE != ROE  &&  RSOLVER_RESCUE != HLLE  &&  RSOLVER_RESCUE != HLLD )
+#     error : ERROR : unsupported RSOLVER_RESCUE for MHD (ROE/HLLE/HLLD) !!
+#   endif
 #  else
-#   if ( defined RSOLVER  &&  RSOLVER != EXACT  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLC )
+#   if ( RSOLVER != NONE  &&  RSOLVER != EXACT  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLC )
 #     error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC) !!
+#   endif
+#   if ( RSOLVER_RESCUE != NONE  &&  RSOLVER_RESCUE != EXACT  &&  RSOLVER_RESCUE != ROE  &&  RSOLVER_RESCUE != HLLE  &&  RSOLVER_RESCUE != HLLC )
+#     error : ERROR : unsupported RSOLVER_RESCUE (EXACT/ROE/HLLE/HLLC) !!
 #   endif
 #  endif // MHD
 
@@ -671,8 +695,12 @@ void Aux_Check_Parameter()
 #        error : ERROR : HLL_WAVESPEED_ROE only works with EOS_GAMMA !!
 #     endif
 
-#     if (  defined RSOLVER  &&  ( RSOLVER == ROE || RSOLVER == EXACT )  )
+#     if ( RSOLVER == ROE  ||  RSOLVER == EXACT )
 #        error : ERROR : unsupported Riemann solver for EOS != EOS_GAMMA (HLLE/HLLC/HLLD) !!
+#     endif
+
+#     if ( RSOLVER_RESCUE == ROE  ||  RSOLVER_RESCUE == EXACT )
+#        error : ERROR : unsupported RSOLVER_RESCUE for EOS != EOS_GAMMA (HLLE/HLLC/HLLD) !!
 #     endif
 
 #     if ( defined LR_SCHEME  &&  defined CHAR_RECONSTRUCTION )
@@ -748,7 +776,7 @@ void Aux_Check_Parameter()
 // ------------------------------
    if ( MPI_Rank == 0 ) {
 
-#  if ( defined RSOLVER  &&  RSOLVER == EXACT )
+#  if ( RSOLVER == EXACT  ||  RSOLVER_RESCUE == EXACT )
 #     warning : WARNING : exact Riemann solver is not recommended since the vacuum solution has not been implemented
       Aux_Message( stderr, "WARNING : exact Riemann solver is not recommended since the vacuum solution " );
       Aux_Message( stderr,           "has not been implemented !!\n" );
@@ -981,6 +1009,10 @@ void Aux_Check_Parameter()
    if ( !OPT__OUTPUT_CC_MAG )
       Aux_Message( stderr, "WARNING : yt requires \"OPT__OUTPUT_CC_MAG\" for analyzing magnetic field !!\n" );
 
+   if ( MINMOD_MAX_ITER != 0 )
+      Aux_Message( stderr, "WARNING : MINMOD_MAX_ITER (%d) can break B field consistency --> use AUTO_REDUCE_MINMOD_FACTOR instead !!\n",
+                   MINMOD_MAX_ITER );
+
 #  endif // #ifdef MHD
 
 
@@ -995,16 +1027,12 @@ void Aux_Check_Parameter()
 #     error : ERROR : NCOMP_FLUID != 3 in ELBDM !!
 #  endif
 
-#  if ( FLU_NIN != 2 )
-#     error : ERROR : FLU_NIN != 2 in ELBDM !!
+#  if ( FLU_NIN < 2 )
+#     error : ERROR : FLU_NIN < 2 in ELBDM !!
 #  endif
 
-#  if ( FLU_NOUT != 3 )
-#     error : ERROR : FLU_NOUT != 3 in ELBDM !!
-#  endif
-
-#  if ( NCOMP_PASSIVE > 0 )
-#     error : ERROR : NCOMP_PASSIVE > 0 in ELBDM (currently this model does not support passive scalars) !!
+#  if ( FLU_NOUT < 3 )
+#     error : ERROR : FLU_NOUT < 3 in ELBDM !!
 #  endif
 
 #  ifdef QUARTIC_SELF_INTERACTION
@@ -1036,6 +1064,11 @@ void Aux_Check_Parameter()
 // warnings
 // ------------------------------
    if ( MPI_Rank == 0 ) {
+
+#  if ( NCOMP_PASSIVE > 0 )
+   Aux_Message( stderr, "WARNING : NCOMP_PASSIVE (%d) > 0 but ELBDM does not really support passive scalars !!\n",
+                NCOMP_PASSIVE );
+#  endif
 
    if ( !ELBDM_TAYLOR3_AUTO  &&  ELBDM_TAYLOR3_COEFF < 1.0/8.0 )
       Aux_Message( stderr, "WARNING : ELBDM_TAYLOR3_COEFF (%13.7e) < 0.125 is unconditionally unstable !!\n",
@@ -1115,6 +1148,10 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
+#  ifndef SUPPORT_FFTW
+#     error : ERROR : SUPPORT_FFTW must be enabled in the makefile when GRAVITY is on !!
+#  endif
+
 #  if ( POT_SCHEME != SOR  &&  POT_SCHEME != MG )
 #     error : ERROR : unsupported Poisson solver in the makefile (SOR/MG) !!
 #  endif
@@ -1282,10 +1319,6 @@ void Aux_Check_Parameter()
 // ------------------------------
 #  if ( ! defined MASSIVE_PARTICLES  &&  ! defined TRACER )
 #     error : ERROR : both MASSIVE_PARTICLES (GRAVITY) and TRACER are disabled for PARTICLE !!
-#  endif
-
-#  ifdef COMOVING
-#     error : ERROR : currently PARTICLE does NOT support COMOVING !!
 #  endif
 
 #  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )

@@ -494,6 +494,38 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                } // if ( OPT__FLAG_NPAR_PATCH != 0 )
 #              endif // #ifdef PARTICLE
 
+
+//             check the derefinement criterion of Lohner if required
+//             --> do it separately from all other refinement criteria since it
+//                 (a) does not flag sibling patches and
+//                 (b) only applies to patches with sons but have been marked for derefinement
+//             --> it can suppress derefinement (by having derefinement thresholds lower than refinement thresholds)
+               if ( Lohner_NVar > 0  &&  FlagTable_Lohner[lv][1] < FlagTable_Lohner[lv][0]  &&
+                    !amr->patch[0][lv][PID]->flag  &&  amr->patch[0][lv][PID]->son != -1 )
+               {
+                  bool Skip = false;
+
+                  for (int k=0; k<PS1; k++)  {  if ( Skip )  break;
+                  for (int j=0; j<PS1; j++)  {  if ( Skip )  break;
+                  for (int i=0; i<PS1; i++)  {  if ( Skip )  break;
+
+//                   check Lohner only if density is greater than the minimum threshold
+#                    ifdef DENS
+                     if ( Fluid[DENS][k][j][i] >= FlagTable_Lohner[lv][4] )
+#                    endif
+                     if (  Flag_Lohner( i, j, k, OPT__FLAG_LOHNER_FORM,
+                                        Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope, Lohner_NVar,
+                                        FlagTable_Lohner[lv][1], FlagTable_Lohner[lv][2], FlagTable_Lohner[lv][3] )  )
+                     {
+//                      flag itself
+                        amr->patch[0][lv][PID]->flag = true;
+
+//                      skip all remaining cells
+                        Skip = true;
+                     }
+                  }}} // i,j,k
+               } // if ( ... )
+
             } // if ( ProperNesting )
          } // for (int LocalID=0; LocalID<8; LocalID++)
       } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)

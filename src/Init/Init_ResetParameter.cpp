@@ -709,13 +709,13 @@ void Init_ResetParameter()
 #  endif
 
 
-// OPT__OUTPUT_BASEPS is not supported if GRAVITY is disabled
-#  ifndef GRAVITY
+// OPT__OUTPUT_BASEPS is not supported if SUPPORT_FFTW is disabled
+#  ifndef SUPPORT_FFTW
    if ( OPT__OUTPUT_BASEPS )
    {
       OPT__OUTPUT_BASEPS = false;
 
-      PRINT_WARNING( OPT__OUTPUT_BASEPS, FORMAT_INT, "since GRAVITY is disabled" );
+      PRINT_WARNING( OPT__OUTPUT_BASEPS, FORMAT_INT, "since SUPPORT_FFTW is disabled" );
    }
 #  endif
 
@@ -977,6 +977,15 @@ void Init_ResetParameter()
       PRINT_WARNING( OPT__INIT_GRID_WITH_OMP, FORMAT_INT, "since OPENMP is disabled" );
    }
 #  endif
+
+
+// set OPT__RESET_FLUID_INIT = OPT__RESET_FLUID by default
+   if ( OPT__RESET_FLUID_INIT < 0 )
+   {
+      OPT__RESET_FLUID_INIT = OPT__RESET_FLUID;
+
+      PRINT_WARNING( OPT__RESET_FLUID_INIT, FORMAT_INT, "to match OPT__RESET_FLUID" );
+   }
 
 
 // remove symbolic constants and macros only used in this structure

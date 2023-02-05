@@ -116,6 +116,7 @@ struct Makefile_t
    int Laohu;
    int SupportHDF5;
    int SupportGSL;
+   int SupportFFTW;
    int SupportLibYT;
 #  ifdef SUPPORT_LIBYT
    int LibYTUsePatchGroup;
@@ -251,6 +252,8 @@ struct SymConst_t
    int    BitRep_Electric;
 #  endif
 
+   int    InterpMask;
+
 
 #  if   ( MODEL == HYDRO )
    int    Flu_BlockSize_x;
@@ -259,6 +262,7 @@ struct SymConst_t
    int    CharReconstruction;
    int    LR_Eint;
    int    CheckIntermediate;
+   int    RSolverRescue;
    int    HLL_NoRefState;
    int    HLL_IncludeAllWaves;
    int    HLLC_WaveSpeed;
@@ -407,9 +411,16 @@ struct InputPara_t
    int    AutoReduceDt;
    double AutoReduceDtFactor;
    double AutoReduceDtFactorMin;
+#  if ( MODEL == HYDRO )
+   double AutoReduceMinModFactor;
+   double AutoReduceMinModMin;
+#  endif
+   double AutoReduceIntMonoFactor;
+   double AutoReduceIntMonoMin;
 
 // domain refinement
    int    RegridCount;
+   int    RefineNLevel;
    int    FlagBufferSize;
    int    FlagBufferSizeMaxM1Lv;
    int    FlagBufferSizeMaxM2Lv;
@@ -471,7 +482,13 @@ struct InputPara_t
    int    Opt__LR_Limiter;
    int    Opt__1stFluxCorr;
    int    Opt__1stFluxCorrScheme;
+#  ifdef DUAL_ENERGY
+   double DualEnergySwitch;
 #  endif
+#  ifdef MHD
+   int    Opt__SameInterfaceB;
+#  endif
+#  endif // HYDRO
 
 // ELBDM solvers
 #  if ( MODEL == ELBDM )
@@ -482,7 +499,7 @@ struct InputPara_t
 #  endif
    double ELBDM_Taylor3_Coeff;
    int    ELBDM_Taylor3_Auto;
-#  endif
+#  endif // ELBDM
 
 // fluid solvers in different models
    int    Flu_GPU_NPGroup;
@@ -505,6 +522,7 @@ struct InputPara_t
 #  endif
    int    Opt__OverlapMPI;
    int    Opt__ResetFluid;
+   int    Opt__ResetFluidInit;
    int    Opt__FreezeFluid;
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    double MinDens;
@@ -519,9 +537,6 @@ struct InputPara_t
    int    JeansMinPres;
    int    JeansMinPres_Level;
    int    JeansMinPres_NCell;
-#  endif
-#  ifdef DUAL_ENERGY
-   double DualEnergySwitch;
 #  endif
 
 // gravity
@@ -626,6 +641,9 @@ struct InputPara_t
    int    Opt__RefPot_IntScheme;
 #  endif
    double IntMonoCoeff;
+#  ifdef MHD
+   double IntMonoCoeffB;
+#  endif
    int    Mono_MaxIter;
    int    IntOppSign0thOrder;
 
@@ -701,11 +719,12 @@ struct InputPara_t
    int    Opt__Ck_InterfaceB;
    int    Opt__Ck_DivergenceB;
 #  endif
+   int    Opt__Ck_InputFluid;
 
 // flag tables
    double FlagTable_Rho         [NLEVEL-1];
    double FlagTable_RhoGradient [NLEVEL-1];
-   double FlagTable_Lohner      [NLEVEL-1][4];
+   double FlagTable_Lohner      [NLEVEL-1][5];
    hvl_t  FlagTable_User        [NLEVEL-1];
 #  if   ( MODEL == HYDRO )
    double FlagTable_PresGradient[NLEVEL-1];

@@ -26,9 +26,11 @@ extern double  Merger_Coll_VelX2;
 extern double  Merger_Coll_VelY2;
 extern double  Merger_Coll_VelX3;
 extern double  Merger_Coll_VelY3;
+extern long    NPar_EachCluster[3];
+extern long    NPar_AllCluster;
+
 
 #ifdef MASSIVE_PARTICLES
-long Read_Particle_Number_ClusterMerger(std::string filename);
 void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
                                   real_par_in xpos[], real_par_in ypos[],
                                   real_par_in zpos[], real_par_in xvel[],
@@ -83,53 +85,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
 #ifdef SUPPORT_HDF5
 
-
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
-
-// check file existence
-   if ( !Aux_CheckFileExist(Merger_File_Par1) )
-      Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par1 );
-
-   if ( Merger_Coll_NumHalos > 1  &&  !Aux_CheckFileExist(Merger_File_Par2) )
-      Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par2 );
-
-   if ( Merger_Coll_NumHalos > 2  &&  !Aux_CheckFileExist(Merger_File_Par3) )
-      Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par3 );
-
-   const std::string filename1(Merger_File_Par1);
-   const std::string filename2(Merger_File_Par2);
-   const std::string filename3(Merger_File_Par3);
-
-// check file size
-   long NPar_EachCluster[3] = {0,0,0};
-   long NPar_AllCluster;
-
-   if ( MPI_Rank == 0 ) {
-
-      NPar_EachCluster[0] = Read_Particle_Number_ClusterMerger(filename1);
-
-      Aux_Message( stdout, "   Number of particles in cluster 1 = %ld\n",
-                   NPar_EachCluster[0] );
-
-      if ( Merger_Coll_NumHalos > 1 ) {
-         NPar_EachCluster[1] = Read_Particle_Number_ClusterMerger(filename2);
-         Aux_Message( stdout, "   Number of particles in cluster 2 = %ld\n", NPar_EachCluster[1] );
-      }
-
-      if ( Merger_Coll_NumHalos > 2 ) {
-         NPar_EachCluster[2] = Read_Particle_Number_ClusterMerger(filename3);
-         Aux_Message( stdout, "   Number of particles in cluster 3 = %ld\n", NPar_EachCluster[2] );
-      }
-
-   }
-
-   MPI_Bcast(NPar_EachCluster, 3, MPI_LONG, 0, MPI_COMM_WORLD);
-
-   NPar_AllCluster = NPar_EachCluster[0] + NPar_EachCluster[1] + NPar_EachCluster[2];
-
-   if ( NPar_AllCluster != NPar_AllRank )
-      Aux_Error( ERROR_INFO, "total number of particles found in cluster [%ld] != expect [%ld] !!\n",
-                 NPar_AllCluster, NPar_AllRank );
 
    // prepare to load data
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Preparing to load data ... " );
@@ -324,29 +280,6 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 } // FUNCTION : Par_Init_ByFunction_ClusterMerger
 
 #ifdef SUPPORT_HDF5
-
-long Read_Particle_Number_ClusterMerger(std::string filename)
-{
-
-   hid_t   file_id, dataset, dataspace;
-   herr_t  status;
-   hsize_t dims[1], maxdims[1];
-
-   int rank;
-
-   file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-
-   dataset   = H5Dopen(file_id, "particle_mass", H5P_DEFAULT);
-   dataspace = H5Dget_space(dataset);
-   rank      = H5Sget_simple_extent_dims(dataspace, dims, maxdims);
-
-   H5Sclose(dataspace);
-   H5Dclose(dataset);
-   H5Fclose(file_id);
-
-   return (long)dims[0];
-
-} // FUNCTION : Read_Particle_Number_ClusterMerger
 
 void Read_Particles_ClusterMerger( std::string filename, long offset, long num,
                                    real_par_in xpos[], real_par_in ypos[],

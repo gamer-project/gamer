@@ -10,8 +10,8 @@ static void Init_Function_User_Template( real fluid[], const double x, const dou
 void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                                 const int lv, double AuxArray[] ) = NULL;
 
-extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
-                                         const double dt, const int lv, double AuxArray[] );
+extern int (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
+                                        const double dt, const int lv, double AuxArray[] );
 
 #ifdef MHD
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
@@ -160,8 +160,8 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
       Aux_Error( ERROR_INFO, "Init_Function_BField_User_Ptr == NULL !!\n" );
 #  endif
 
-   if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_Func_Ptr == NULL )
-      Aux_Error( ERROR_INFO, "Flu_ResetByUser_Func_Ptr == NULL for OPT__RESET_FLUID !!\n" );
+   if ( OPT__RESET_FLUID_INIT  &&  Flu_ResetByUser_Func_Ptr == NULL )
+      Aux_Error( ERROR_INFO, "Flu_ResetByUser_Func_Ptr == NULL for OPT__RESET_FLUID_INIT !!\n" );
 
 
 // set the number of OpenMP threads
@@ -179,11 +179,9 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
 
 #  ifdef MHD
-
-   if ( OPT__INIT_BFIELD_BYFILE )
-     MHD_Init_BField_ByFile(lv);
-
+   if ( OPT__INIT_BFIELD_BYFILE )   MHD_Init_BField_ByFile( lv );
 #  endif
+
 
 #  pragma omp parallel for schedule( runtime ) num_threads( OMP_NThread )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -228,7 +226,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
                amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[v][ idx ++ ] = magnetic_1v*_NSub2;
             }}} // i,j,k
          } // for (int v=0; v<NCOMP_MAG; v++)
-      } // if ( !OPT__INIT_BFIELD_BY_FILE )
+      } // if ( !OPT__INIT_BFIELD_BYFILE )
 
 #     endif // #ifdef MHD
 
@@ -250,8 +248,9 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
             Init_Function_User_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
 
 //          modify the initial condition if required
-            if ( OPT__RESET_FLUID )
-               Flu_ResetByUser_Func_Ptr( fluid_sub, x, y, z, Time[lv], 0.0, lv, NULL );
+//          --> always set the magnetic energy to zero since fluid_sub[ENGY] doesn't include that
+            if ( OPT__RESET_FLUID_INIT )
+               Flu_ResetByUser_Func_Ptr( fluid_sub, (real)0.0, x, y, z, Time[lv], 0.0, lv, NULL );
 
             for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] += fluid_sub[v];
 

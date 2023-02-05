@@ -801,6 +801,24 @@ real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const re
 
    if ( EintOut != NULL )  *EintOut = Eint;
 
+// check unphysical results
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
+   if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "output pressure", ERROR_INFO, UNPHY_VERBOSE )  )
+   {
+      printf( "Input: Dens %14.7e MomX %14.7e MomY %14.7e MomZ %14.7e Engy %14.7e Eint %14.7e",
+              Dens, MomX, MomY, MomZ, Engy, Eint );
+#     ifdef MHD
+      printf( " Emag %14.7e", Emag );
+#     endif
+      printf( "\n" );
+#     if ( NCOMP_PASSIVE > 0 )
+      printf( "       Passive " );
+      for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " [%d] %14.7e", v, Passive[v] );
+      printf( "\n" );
+#     endif
+   }
+#  endif // #ifdef CHECK_UNPHYSICAL_IN_FLUID
+
    return Pres;
 
 } // FUNCTION : Hydro_Con2Pres
