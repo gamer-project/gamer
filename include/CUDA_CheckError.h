@@ -15,7 +15,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 inline void CUDA_Check_Error( cudaError Return, const char *File, const int Line, const char *Func )
 {
    if ( Return != cudaSuccess )
-      Aux_Error( ERROR_INFO, "CUDA ERROR : %s !!\n", cudaGetErrorString(Return) );
+      Aux_Error( File, Line, Func, "CUDA ERROR : %s !!\n", cudaGetErrorString(Return) );
 }
 
 
