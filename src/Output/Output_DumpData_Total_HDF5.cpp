@@ -340,27 +340,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 
 // 1. gather the number of patches at different MPI ranks and set the corresponding GID offset
-   int (*NPatchAllRank)[NLEVEL] = new int [MPI_NRank][NLEVEL];
-   int NPatchLocal[NLEVEL], NPatchAllLv=0, GID_Offset[NLEVEL], GID_LvStart[NLEVEL];
-
-   for (int lv=0; lv<NLEVEL; lv++)  NPatchLocal[lv] = amr->NPatchComma[lv][1];
-
-   MPI_Allgather( NPatchLocal, NLEVEL, MPI_INT, NPatchAllRank[0], NLEVEL, MPI_INT, MPI_COMM_WORLD );
-
-   for (int lv=0; lv<NLEVEL; lv++)
-   {
-      GID_Offset[lv] = 0;
-
-      for (int r=0; r<MPI_Rank; r++)      GID_Offset[lv] += NPatchAllRank[r][lv];
-
-      for (int FaLv=0; FaLv<lv; FaLv++)   GID_Offset[lv] += NPatchTotal[FaLv];
-
-      NPatchAllLv += NPatchTotal[lv];
-
-      GID_LvStart[lv] = ( lv == 0 ) ? 0 : GID_LvStart[lv-1] + NPatchTotal[lv-1];
-   }
-
-
+   LB_PatchCount pc;
+   LB_AllgatherPatchCount( pc );
 
 // 2. prepare all HDF5 variables
    hsize_t H5_SetDims_LBIdx, H5_SetDims_Cr[2], H5_SetDims_Fa, H5_SetDims_Son, H5_SetDims_Sib[2], H5_SetDims_Field[4];
@@ -461,303 +442,20 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 
 // 4. output the AMR tree structure (father, son, sibling, LBIdx, corner, and the number of particles --> sorted by GID)
-   long *LBIdxList_Local[NLEVEL], *LBIdxList_AllLv;
-   int  (*CrList_Local[NLEVEL])[3], (*CrList_AllLv)[3];
-   int  *FaList_Local[NLEVEL], *FaList_AllLv;
-   int  *SonList_Local[NLEVEL], *SonList_AllLv;
-   int  (*SibList_Local[NLEVEL])[26], (*SibList_AllLv)[26];
-#  ifdef PARTICLE
-   int  *NParList_Local[NLEVEL], *NParList_AllLv;
-#  endif
-
-   long *LBIdxList_Sort[NLEVEL];
-   int  *LBIdxList_Sort_IdxTable[NLEVEL];
-
-   int   MyGID, FaPID, FaGID, FaLv, SonPID, SonGID, SonLv, SibPID, SibGID, MatchIdx;
-   long  FaLBIdx, SonLBIdx, SibLBIdx;
-   int  *SonCr=NULL, *SibCr=NULL;
-
-   int   RecvCount_LBIdx[MPI_NRank], RecvDisp_LBIdx[MPI_NRank], RecvCount_Cr[MPI_NRank], RecvDisp_Cr[MPI_NRank];
-   int   RecvCount_Fa[MPI_NRank], RecvDisp_Fa[MPI_NRank], RecvCount_Son[MPI_NRank], RecvDisp_Son[MPI_NRank];
-   int   RecvCount_Sib[MPI_NRank], RecvDisp_Sib[MPI_NRank];
-#  ifdef PARTICLE
-   int   RecvCount_NPar[MPI_NRank], RecvDisp_NPar[MPI_NRank];
-#  endif
+   int root = 0;
 
 // 4-1. allocate lists
-   if ( MPI_Rank == 0 )
-   {
-      LBIdxList_AllLv = new long [ NPatchAllLv ];
-      CrList_AllLv    = new int  [ NPatchAllLv ][3];
-      FaList_AllLv    = new int  [ NPatchAllLv ];
-      SonList_AllLv   = new int  [ NPatchAllLv ];
-      SibList_AllLv   = new int  [ NPatchAllLv ][26];
-#     ifdef PARTICLE
-      NParList_AllLv  = new int  [ NPatchAllLv ];
-#     endif
-   }
-
-   for (int lv=0; lv<NLEVEL; lv++)
-   {
-      LBIdxList_Local        [lv] = new long [ amr->NPatchComma[lv][1] ];
-      CrList_Local           [lv] = new int  [ amr->NPatchComma[lv][1] ][3];
-      FaList_Local           [lv] = new int  [ amr->NPatchComma[lv][1] ];
-      SonList_Local          [lv] = new int  [ amr->NPatchComma[lv][1] ];
-      SibList_Local          [lv] = new int  [ amr->NPatchComma[lv][1] ][26];
-#     ifdef PARTICLE
-      NParList_Local         [lv] = new int  [ amr->NPatchComma[lv][1] ];
-#     endif
-
-      LBIdxList_Sort         [lv] = new long [ NPatchTotal[lv] ];
-      LBIdxList_Sort_IdxTable[lv] = new int  [ NPatchTotal[lv] ];
-   }
-
+   LB_LocalPatchExchangeList  lel;
+   LB_GlobalPatchExchangeList gel( pc, root );
 
 // 4-2. collect and sort LBIdx from all ranks
-   for (int lv=0; lv<NLEVEL; lv++)
-   {
-      for (int r=0; r<MPI_NRank; r++)
-      {
-         RecvCount_LBIdx[r] = NPatchAllRank[r][lv];
-         RecvDisp_LBIdx [r] = ( r == 0 ) ? 0 : RecvDisp_LBIdx[r-1] + RecvCount_LBIdx[r-1];
-      }
-
-      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-         LBIdxList_Local[lv][PID] = amr->patch[0][lv][PID]->LB_Idx;
-
-//    all ranks need to get LBIdxList_Sort since we will use it to calculate GID
-      MPI_Allgatherv( LBIdxList_Local[lv], amr->NPatchComma[lv][1], MPI_LONG,
-                      LBIdxList_Sort[lv], RecvCount_LBIdx, RecvDisp_LBIdx, MPI_LONG,
-                      MPI_COMM_WORLD );
-   } // for (int lv=0; lv<NLEVEL; lv++)
-
-// store in the AllLv array BEFORE sorting
-   if ( MPI_Rank == 0 )
-   {
-      MyGID = 0;
-
-      for (int lv=0; lv<NLEVEL; lv++)
-      for (int PID=0; PID<NPatchTotal[lv]; PID++)
-         LBIdxList_AllLv[ MyGID++ ] = LBIdxList_Sort[lv][PID];
-   }
-
-// sort list and get the corresponding index table (for calculating GID later)
-   for (int lv=0; lv<NLEVEL; lv++)
-      Mis_Heapsort( NPatchTotal[lv], LBIdxList_Sort[lv], LBIdxList_Sort_IdxTable[lv] );
-
+   LB_AllgatherLBIdx( pc, lel, &gel );
 
 // 4-3. store the local tree
-   for (int lv=0; lv<NLEVEL; lv++)
-   {
-      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-      {
-//       4-3-1. LBIdx (set already)
-//       LBIdxList_Local[lv][PID] = amr->patch[0][lv][PID]->LB_Idx;
-
-
-//       4-3-2. corner
-         for (int d=0; d<3; d++)
-         CrList_Local[lv][PID][d] = amr->patch[0][lv][PID]->corner[d];
-
-
-//       4-3-3. father GID
-         FaPID = amr->patch[0][lv][PID]->father;
-         FaLv  = lv - 1;
-
-//       no father (only possible for the root patches)
-         if ( FaPID < 0 )
-         {
-#           ifdef DEBUG_HDF5
-            if ( lv != 0 )       Aux_Error( ERROR_INFO, "Lv %d, PID %d, FaPID %d < 0 !!\n", lv, PID, FaPID );
-            if ( FaPID != -1 )   Aux_Error( ERROR_INFO, "Lv %d, PID %d, FaPID %d < 0 but != -1 !!\n", lv, PID, FaPID );
-#           endif
-
-            FaGID = FaPID;
-         }
-
-//       father patch is a real patch
-         else if ( FaPID < amr->NPatchComma[FaLv][1] )
-            FaGID = FaPID + GID_Offset[FaLv];
-
-//       father patch is a buffer patch (only possible in LOAD_BALANCE)
-         else // (FaPID >= amr->NPatchComma[FaLv][1] )
-         {
-#           ifdef DEBUG_HDF5
-#           ifndef LOAD_BALANCE
-            Aux_Error( ERROR_INFO, "Lv %d, PID %d, FaPID %d >= NRealFaPatch %d (only possible in LOAD_BALANCE) !!\n",
-                       lv, PID, FaPID, amr->NPatchComma[FaLv][1] );
-#           endif
-
-            if ( FaPID >= amr->num[FaLv] )
-            Aux_Error( ERROR_INFO, "Lv %d, PID %d, FaPID %d >= total number of patches %d !!\n",
-                       lv, PID, FaPID, amr->num[FaLv] );
-#           endif // DEBUG_HDF5
-
-            FaLBIdx = amr->patch[0][FaLv][FaPID]->LB_Idx;
-
-            Mis_Matching_int( NPatchTotal[FaLv], LBIdxList_Sort[FaLv], 1, &FaLBIdx, &MatchIdx );
-
-#           ifdef DEBUG_HDF5
-            if ( MatchIdx < 0 )
-            Aux_Error( ERROR_INFO, "Lv %d, PID %d, FaPID %d, FaLBIdx %ld, couldn't find a matching patch !!\n",
-                       lv, PID, FaPID, FaLBIdx );
-#           endif
-
-            FaGID = LBIdxList_Sort_IdxTable[FaLv][MatchIdx] + GID_LvStart[FaLv];
-         } // if ( FaPID >= amr->NPatchComma[FaLv][1] )
-
-         FaList_Local[lv][PID] = FaGID;
-
-
-//       4-3-4. son GID
-         SonPID = amr->patch[0][lv][PID]->son;
-         SonLv  = lv + 1;
-
-//       no son (must check this first since SonLv may be out of range --> == NLEVEL)
-         if      ( SonPID == -1 )
-            SonGID = SonPID;
-
-//       son patch is a real patch at home
-         else if ( SonPID >= 0  &&  SonPID < amr->NPatchComma[SonLv][1] )
-            SonGID = SonPID + GID_Offset[SonLv];
-
-//       son patch lives abroad (only possible in LOAD_BALANCE)
-         else if ( SonPID < -1 )
-         {
-#           ifdef DEBUG_HDF5
-#           ifdef LOAD_BALANCE
-            const int SonRank = SON_OFFSET_LB - SonPID;
-            if ( SonRank < 0  ||  SonRank == MPI_Rank  ||  SonRank >= MPI_NRank )
-            Aux_Error( ERROR_INFO, "Lv %d, PID %d, SonPID %d, incorrect SonRank %d (MyRank %d, NRank %d) !!\n",
-                       lv, PID, SonPID, SonRank, MPI_Rank, MPI_NRank );
-#           else
-            Aux_Error( ERROR_INFO, "Lv %d, PID %d, SonPID %d < -1 (only possible in LOAD_BALANCE) !!\n",
-                       lv, PID, SonPID );
-#           endif // LOAD_BALANCE
-#           endif // DEBUG_HDF5
-
-//          get the SonGID by "father corner = son corner -> son LB_Idx -> son GID"
-//          --> didn't assume any relation between son's and father's LB_Idx
-//          (although for Hilbert curve we have "SonLBIdx-SonLBIdx%8 = 8*MyLBIdx")
-            SonCr    = amr->patch[0][lv][PID]->corner;
-            SonLBIdx = LB_Corner2Index( SonLv, SonCr, CHECK_ON );
-
-#           if ( defined DEBUG_HDF5  &&  LOAD_BALANCE == HILBERT )
-            if ( SonLBIdx - SonLBIdx%8 != 8*amr->patch[0][lv][PID]->LB_Idx )
-            Aux_Error( ERROR_INFO, "Lv %d, PID %d, SonPID %d, SonCr (%d,%d,%d), incorret SonLBIdx %ld, (MyLBIdx %ld) !!\n",
-                       lv, PID, SonPID, SonCr[0], SonCr[1], SonCr[2], SonLBIdx, amr->patch[0][lv][PID]->LB_Idx );
-#           endif
-
-            Mis_Matching_int( NPatchTotal[SonLv], LBIdxList_Sort[SonLv], 1, &SonLBIdx, &MatchIdx );
-
-#           ifdef DEBUG_HDF5
-            if ( MatchIdx < 0 )
-            Aux_Error( ERROR_INFO, "Lv %d, PID %d, SonPID %d, SonLBIdx %ld, couldn't find a matching patch !!\n",
-                       lv, PID, SonPID, SonLBIdx );
-#           endif
-
-            SonGID = LBIdxList_Sort_IdxTable[SonLv][MatchIdx] + GID_LvStart[SonLv];
-         } // else if ( SonPID < -1 )
-
-//       son patch is a buffer patch (SonPID >= amr->NPatchComma[SonLv][1]) --> impossible
-         else // ( SonPID >= amr->NPatchComma[SonLv][1] )
-            Aux_Error( ERROR_INFO, "Lv %d, PID %d, SonPID %d is a buffer patch (NRealSonPatch %d) !!\n",
-                       lv, PID, SonPID, amr->NPatchComma[SonLv][1] );
-
-         SonList_Local[lv][PID] = SonGID;
-
-
-//       4-3-5. sibling GID
-         for (int s=0; s<26; s++)
-         {
-            SibPID = amr->patch[0][lv][PID]->sibling[s];
-
-//          no sibling (SibPID can be either -1 or SIB_OFFSET_NONPERIODIC-BoundaryDirection)
-            if      ( SibPID < 0 )
-               SibGID = SibPID;
-
-//          sibling patch is a real patch
-            else if ( SibPID < amr->NPatchComma[lv][1] )
-               SibGID = SibPID + GID_Offset[lv];
-
-//          sibling patch is a buffer patch (which may lie outside the simulation domain)
-            else
-            {
-#              ifdef DEBUG_HDF5
-               if ( SibPID >= amr->num[lv] )
-               Aux_Error( ERROR_INFO, "Lv %d, PID %d, SibPID %d >= total number of patches %d !!\n",
-                          lv, PID, SibPID, amr->num[lv] );
-#              endif
-
-//             get the SibGID by "sibling corner -> sibling LB_Idx -> sibling GID"
-               SibCr    = amr->patch[0][lv][SibPID]->corner;
-               SibLBIdx = LB_Corner2Index( lv, SibCr, CHECK_OFF );   // periodicity has been assumed here
-
-               Mis_Matching_int( NPatchTotal[lv], LBIdxList_Sort[lv], 1, &SibLBIdx, &MatchIdx );
-
-#              ifdef DEBUG_HDF5
-               if ( MatchIdx < 0 )
-               Aux_Error( ERROR_INFO, "Lv %d, PID %d, SibPID %d, SibLBIdx %ld, couldn't find a matching patch !!\n",
-                          lv, PID, SibPID, SibLBIdx );
-#              endif
-
-               SibGID = LBIdxList_Sort_IdxTable[lv][MatchIdx] + GID_LvStart[lv];
-            } // if ( SibPID >= amr->NPatchComma[lv][1] )
-
-            SibList_Local[lv][PID][s] = SibGID;
-
-         } // for (int s=0; s<26; s++)
-
-
-#        ifdef PARTICLE
-//       4-3-6. NPar
-         NParList_Local[lv][PID] = amr->patch[0][lv][PID]->NPar;
-#        endif
-      } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-   } // for (int lv=0; lv<NLEVEL; lv++)
-
+   LB_FillLocalPatchExchangeList( pc, lel );
 
 // 4-4. gather data from all ranks
-   for (int lv=0; lv<NLEVEL; lv++)
-   {
-      for (int r=0; r<MPI_NRank; r++)
-      {
-         RecvCount_Fa  [r] = NPatchAllRank[r][lv];
-         RecvCount_Son [r] = RecvCount_Fa[r];
-         RecvCount_Sib [r] = RecvCount_Fa[r]*26;
-         RecvCount_Cr  [r] = RecvCount_Fa[r]*3;
-#        ifdef PARTICLE
-         RecvCount_NPar[r] = RecvCount_Fa[r];
-#        endif
-
-         RecvDisp_Fa   [r] = ( r == 0 ) ? 0 : RecvDisp_Fa[r-1] + RecvCount_Fa[r-1];
-         RecvDisp_Son  [r] = RecvDisp_Fa[r];
-         RecvDisp_Sib  [r] = RecvDisp_Fa[r]*26;
-         RecvDisp_Cr   [r] = RecvDisp_Fa[r]*3;
-#        ifdef PARTICLE
-         RecvDisp_NPar [r] = RecvDisp_Fa[r];
-#        endif
-      }
-
-//    note that we collect data at one level at a time
-      MPI_Gatherv( FaList_Local[lv],     amr->NPatchComma[lv][1],    MPI_INT,
-                   FaList_AllLv+GID_LvStart[lv],       RecvCount_Fa,   RecvDisp_Fa,   MPI_INT, 0, MPI_COMM_WORLD );
-
-      MPI_Gatherv( SonList_Local[lv],    amr->NPatchComma[lv][1],    MPI_INT,
-                   SonList_AllLv+GID_LvStart[lv],      RecvCount_Son,  RecvDisp_Son,  MPI_INT, 0, MPI_COMM_WORLD );
-
-      MPI_Gatherv( SibList_Local[lv][0], amr->NPatchComma[lv][1]*26, MPI_INT,
-                   (SibList_AllLv+GID_LvStart[lv])[0], RecvCount_Sib,  RecvDisp_Sib,  MPI_INT, 0, MPI_COMM_WORLD );
-
-      MPI_Gatherv( CrList_Local[lv][0],  amr->NPatchComma[lv][1]*3,  MPI_INT,
-                   (CrList_AllLv+GID_LvStart[lv])[0],  RecvCount_Cr,   RecvDisp_Cr,   MPI_INT, 0, MPI_COMM_WORLD );
-
-#     ifdef PARTICLE
-      MPI_Gatherv( NParList_Local[lv],    amr->NPatchComma[lv][1],    MPI_INT,
-                   NParList_AllLv+GID_LvStart[lv],     RecvCount_NPar, RecvDisp_NPar, MPI_INT, 0, MPI_COMM_WORLD );
-#     endif
-   } // for (int lv=0; lv<NLEVEL; lv++)
-
+   LB_FillGlobalPatchExchangeList( pc, lel, gel, root );
 
 // 4-5. dump the tree info
    if ( MPI_Rank == 0 )
@@ -770,19 +468,19 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       if ( H5_GroupID_Tree < 0 )    Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "Tree" );
 
 //    4-5-1. LBIdx
-      H5_SetDims_LBIdx = NPatchAllLv;
+      H5_SetDims_LBIdx = pc.NPatchAllLv;
       H5_SpaceID_LBIdx = H5Screate_simple( 1, &H5_SetDims_LBIdx, NULL );
       H5_SetID_LBIdx   = H5Dcreate( H5_GroupID_Tree, "LBIdx", H5T_NATIVE_LONG, H5_SpaceID_LBIdx,
                                     H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
 
       if ( H5_SetID_LBIdx < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "LBIdx" );
 
-      H5_Status = H5Dwrite( H5_SetID_LBIdx, H5T_NATIVE_LONG, H5S_ALL, H5S_ALL, H5P_DEFAULT, LBIdxList_AllLv );
+      H5_Status = H5Dwrite( H5_SetID_LBIdx, H5T_NATIVE_LONG, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.LBIdxList_AllLv );
       H5_Status = H5Dclose( H5_SetID_LBIdx );
       H5_Status = H5Sclose( H5_SpaceID_LBIdx );
 
 //    4-5-2. corner
-      H5_SetDims_Cr[0] = NPatchAllLv;
+      H5_SetDims_Cr[0] = pc.NPatchAllLv;
       H5_SetDims_Cr[1] = 3;
       H5_SpaceID_Cr    = H5Screate_simple( 2, H5_SetDims_Cr, NULL );
       H5_SetID_Cr      = H5Dcreate( H5_GroupID_Tree, "Corner", H5T_NATIVE_INT, H5_SpaceID_Cr,
@@ -799,36 +497,36 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       H5_Status = H5Awrite( H5_AttID_Cvt2Phy, H5T_NATIVE_DOUBLE, &amr->dh[TOP_LEVEL] );
       H5_Status = H5Aclose( H5_AttID_Cvt2Phy );
 
-      H5_Status = H5Dwrite( H5_SetID_Cr, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, CrList_AllLv );
+      H5_Status = H5Dwrite( H5_SetID_Cr, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.CrList_AllLv );
       H5_Status = H5Dclose( H5_SetID_Cr );
       H5_Status = H5Sclose( H5_SpaceID_Cr );
 
 //    4-5-3. father
-      H5_SetDims_Fa = NPatchAllLv;
+      H5_SetDims_Fa = pc.NPatchAllLv;
       H5_SpaceID_Fa = H5Screate_simple( 1, &H5_SetDims_Fa, NULL );
       H5_SetID_Fa   = H5Dcreate( H5_GroupID_Tree, "Father", H5T_NATIVE_INT, H5_SpaceID_Fa,
                                  H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
 
       if ( H5_SetID_Fa < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "Father" );
 
-      H5_Status = H5Dwrite( H5_SetID_Fa, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, FaList_AllLv );
+      H5_Status = H5Dwrite( H5_SetID_Fa, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.FaList_AllLv );
       H5_Status = H5Dclose( H5_SetID_Fa );
       H5_Status = H5Sclose( H5_SpaceID_Fa );
 
 //    4-5-4. son
-      H5_SetDims_Son = NPatchAllLv;
+      H5_SetDims_Son = pc.NPatchAllLv;
       H5_SpaceID_Son = H5Screate_simple( 1, &H5_SetDims_Son, NULL );
       H5_SetID_Son   = H5Dcreate( H5_GroupID_Tree, "Son", H5T_NATIVE_INT, H5_SpaceID_Son,
                                   H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
 
       if ( H5_SetID_Son < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "Son" );
 
-      H5_Status = H5Dwrite( H5_SetID_Son, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, SonList_AllLv );
+      H5_Status = H5Dwrite( H5_SetID_Son, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.SonList_AllLv );
       H5_Status = H5Dclose( H5_SetID_Son );
       H5_Status = H5Sclose( H5_SpaceID_Son );
 
 //    4-5-5. sibling
-      H5_SetDims_Sib[0] = NPatchAllLv;
+      H5_SetDims_Sib[0] = pc.NPatchAllLv;
       H5_SetDims_Sib[1] = 26;
       H5_SpaceID_Sib    = H5Screate_simple( 2, H5_SetDims_Sib, NULL );
       H5_SetID_Sib      = H5Dcreate( H5_GroupID_Tree, "Sibling", H5T_NATIVE_INT, H5_SpaceID_Sib,
@@ -836,20 +534,20 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
       if ( H5_SetID_Sib < 0 )    Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "Sibling" );
 
-      H5_Status = H5Dwrite( H5_SetID_Sib, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, SibList_AllLv );
+      H5_Status = H5Dwrite( H5_SetID_Sib, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.SibList_AllLv );
       H5_Status = H5Dclose( H5_SetID_Sib );
       H5_Status = H5Sclose( H5_SpaceID_Sib );
 
 //    4-5-6. NPar
 #     ifdef PARTICLE
-      H5_SetDims_NPar = NPatchAllLv;
+      H5_SetDims_NPar = pc.NPatchAllLv;
       H5_SpaceID_NPar = H5Screate_simple( 1, &H5_SetDims_NPar, NULL );
       H5_SetID_NPar   = H5Dcreate( H5_GroupID_Tree, "NPar", H5T_NATIVE_INT, H5_SpaceID_NPar,
                                    H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
 
       if ( H5_SetID_NPar < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "NPar" );
 
-      H5_Status = H5Dwrite( H5_SetID_NPar, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, NParList_AllLv );
+      H5_Status = H5Dwrite( H5_SetID_NPar, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.NParList_AllLv );
       H5_Status = H5Dclose( H5_SetID_NPar );
       H5_Status = H5Sclose( H5_SpaceID_NPar );
 #     endif
@@ -871,7 +569,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #  endif
 
 // 5-1. initialize the "GridData" group and the datasets of all fields and magnetic field
-   H5_SetDims_Field[0] = NPatchAllLv;
+   H5_SetDims_Field[0] = pc.NPatchAllLv;
    H5_SetDims_Field[1] = PS1;
    H5_SetDims_Field[2] = PS1;
    H5_SetDims_Field[3] = PS1;
@@ -882,7 +580,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #  ifdef MHD
    for (int v=0; v<NCOMP_MAG; v++)
    {
-      H5_SetDims_FCMag[0] = NPatchAllLv;
+      H5_SetDims_FCMag[0] = pc.NPatchAllLv;
       for (int t=1; t<4; t++)
       H5_SetDims_FCMag[t] = ( 3-t == v ) ? PS1P1 : PS1;
 
@@ -1014,7 +712,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 
 //          5-2-1-2. determine the subset of the dataspace
-            H5_Offset_Field[0] = GID_Offset[lv];
+            H5_Offset_Field[0] = pc.GID_Offset[lv];
             H5_Offset_Field[1] = 0;
             H5_Offset_Field[2] = 0;
             H5_Offset_Field[3] = 0;
@@ -1369,7 +1067,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 
 //             5-2-2-2. determine the subset of the dataspace
-               H5_Offset_FCMag[0] = GID_Offset[lv];
+               H5_Offset_FCMag[0] = pc.GID_Offset[lv];
                H5_Offset_FCMag[1] = 0;
                H5_Offset_FCMag[2] = 0;
                H5_Offset_FCMag[3] = 0;
@@ -1594,7 +1292,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
       if ( H5_SetID_Fa < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", SetName );
 
-      H5_Status = H5Dread( H5_SetID_Fa, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, FaList_AllLv );
+      H5_Status = H5Dread( H5_SetID_Fa, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.FaList_AllLv );
       H5_Status = H5Dclose( H5_SetID_Fa );
 
       sprintf( SetName, "Tree/Son" );
@@ -1602,7 +1300,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
       if ( H5_SetID_Son < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", SetName );
 
-      H5_Status = H5Dread( H5_SetID_Son, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, SonList_AllLv );
+      H5_Status = H5Dread( H5_SetID_Son, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.SonList_AllLv );
       H5_Status = H5Dclose( H5_SetID_Son );
 
       sprintf( SetName, "Tree/Sibling" );
@@ -1610,32 +1308,32 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
       if ( H5_SetID_Sib < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", SetName );
 
-      H5_Status = H5Dread( H5_SetID_Sib, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, SibList_AllLv );
+      H5_Status = H5Dread( H5_SetID_Sib, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.SibList_AllLv );
       H5_Status = H5Dclose( H5_SetID_Sib );
 
 
       for (int lv=0; lv<NLEVEL; lv++)
-      for (int GID=GID_LvStart[lv]; GID<GID_LvStart[lv]+NPatchTotal[lv]; GID++)
+      for (int GID=pc.GID_LvStart[lv]; GID<pc.GID_LvStart[lv]+NPatchTotal[lv]; GID++)
       {
 //       7-1-2. root patches have no father
          if ( lv == 0 )
-         if ( FaList_AllLv[GID] != -1 )
-            Aux_Error( ERROR_INFO, "Lv %d, GID %d, FaGID %d != -1 !!\n", lv, GID, FaList_AllLv[GID] );
+         if ( gel.FaList_AllLv[GID] != -1 )
+            Aux_Error( ERROR_INFO, "Lv %d, GID %d, FaGID %d != -1 !!\n", lv, GID, gel.FaList_AllLv[GID] );
 
 //       7-1-3. all patches at refinement levels have fathers
          if ( lv > 0 )
-         if ( FaList_AllLv[GID] < 0  ||  FaList_AllLv[GID] >= GID_LvStart[lv] )
+         if ( gel.FaList_AllLv[GID] < 0  ||  gel.FaList_AllLv[GID] >= pc.GID_LvStart[lv] )
             Aux_Error( ERROR_INFO, "Lv %d, GID %d, FaGID %d < 0 (or > max = %d) !!\n",
-                       lv, GID, FaList_AllLv[GID], GID_LvStart[lv]-1 );
+                       lv, GID, gel.FaList_AllLv[GID], pc.GID_LvStart[lv]-1 );
 
 //       7-1-4. father->son == itself
          if ( lv > 0 )
-         if ( SonList_AllLv[ FaList_AllLv[GID] ] + GID%8 != GID )
+         if ( gel.SonList_AllLv[ gel.FaList_AllLv[GID] ] + GID%8 != GID )
             Aux_Error( ERROR_INFO, "Lv %d, GID %d, FaGID %d, FaGID->Son %d ==> inconsistent !!\n",
-                       lv, GID, FaList_AllLv[GID], SonList_AllLv[ FaList_AllLv[GID] ] );
+                       lv, GID, gel.FaList_AllLv[GID], gel.SonList_AllLv[ gel.FaList_AllLv[GID] ] );
 
 //       7-1-5. son->father == itself
-         SonGID = SonList_AllLv[GID];
+         const int SonGID = gel.SonList_AllLv[GID];
          if ( SonGID != -1 )
          {
             if ( lv >= MAX_LEVEL )
@@ -1644,30 +1342,30 @@ void Output_DumpData_Total_HDF5( const char *FileName )
             if ( SonGID < -1 )
                Aux_Error( ERROR_INFO, "Lv %d, GID %d, SonGID %d < -1 !!\n", lv, GID, SonGID );
 
-            if ( lv < NLEVEL-1  &&  SonGID >= GID_LvStart[lv+1]+NPatchTotal[lv+1] )
+            if ( lv < NLEVEL-1  &&  SonGID >= pc.GID_LvStart[lv+1]+NPatchTotal[lv+1] )
                Aux_Error( ERROR_INFO, "Lv %d, GID %d, SonGID %d > max %d !!\n", lv, GID, SonGID,
-                          GID_LvStart[lv+1]+NPatchTotal[lv+1]-1 );
+                          pc.GID_LvStart[lv+1]+NPatchTotal[lv+1]-1 );
 
             for (int LocalID=0; LocalID<8; LocalID++)
-            if ( FaList_AllLv[SonGID+LocalID] != GID )
+            if ( gel.FaList_AllLv[SonGID+LocalID] != GID )
                Aux_Error( ERROR_INFO, "Lv %d, GID %d, SonGID %d, SonGID->Father %d ==> inconsistent !!\n",
-                          lv, GID, SonGID+LocalID, FaList_AllLv[SonGID+LocalID] );
+                          lv, GID, SonGID+LocalID, gel.FaList_AllLv[SonGID+LocalID] );
          }
 
 //       7-1-6. sibling->sibling_mirror = itself
          for (int s=0; s<26; s++)
          {
-            SibGID = SibList_AllLv[GID][s];
+            const int SibGID = gel.SibList_AllLv[GID][s];
 
             if ( SibGID >= 0 )
             {
-               if ( SibGID < GID_LvStart[lv]  ||  SibGID >= GID_LvStart[lv]+NPatchTotal[lv] )
+               if ( SibGID < pc.GID_LvStart[lv]  ||  SibGID >= pc.GID_LvStart[lv]+NPatchTotal[lv] )
                   Aux_Error( ERROR_INFO, "Lv %d, GID %d, sib %d, SibGID %d lies outside the correct range (%d <= SibGID < %d) !!\n",
-                             lv, GID, s, SibGID, GID_LvStart[lv], GID_LvStart[lv]+NPatchTotal[lv] );
+                             lv, GID, s, SibGID, pc.GID_LvStart[lv], pc.GID_LvStart[lv]+NPatchTotal[lv] );
 
-               if ( SibList_AllLv[SibGID][ MirrorSib[s] ] != GID )
+               if ( gel.SibList_AllLv[SibGID][ MirrorSib[s] ] != GID )
                   Aux_Error( ERROR_INFO, "Lv %d, GID %d, sib %d, SibGID %d != SibGID->sibling %d !!\n",
-                             lv, GID, s, SibGID, SibList_AllLv[SibGID][ MirrorSib[s] ] );
+                             lv, GID, s, SibGID, gel.SibList_AllLv[SibGID][ MirrorSib[s] ] );
             }
          }
       } // for (int lv=0; lv<NLEVEL; lv++)
@@ -1685,36 +1383,6 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    H5_Status = H5Tclose( H5_TypeID_Com_InputPara );
    H5_Status = H5Sclose( H5_SpaceID_Scalar );
    H5_Status = H5Pclose( H5_DataCreatePropList );
-
-   delete [] NPatchAllRank;
-
-   if ( MPI_Rank == 0 )
-   {
-      delete [] LBIdxList_AllLv;
-      delete []    CrList_AllLv;
-      delete []    FaList_AllLv;
-      delete []   SonList_AllLv;
-      delete []   SibList_AllLv;
-#     ifdef PARTICLE
-      delete []  NParList_AllLv;
-#     endif
-   }
-
-   for (int lv=0; lv<NLEVEL; lv++)
-   {
-      delete [] LBIdxList_Local[lv];
-      delete []    CrList_Local[lv];
-      delete []    FaList_Local[lv];
-      delete []   SonList_Local[lv];
-      delete []   SibList_Local[lv];
-#     ifdef PARTICLE
-      delete []  NParList_Local[lv];
-#     endif
-
-      delete [] LBIdxList_Sort[lv];
-      delete [] LBIdxList_Sort_IdxTable[lv];
-   }
-
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d)     ... done\n", __FUNCTION__, DumpID );
 
