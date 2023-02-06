@@ -61,10 +61,6 @@ void DerivedFuncWithName_PatchGroup(int list_len, long *list_gid, char *field, y
     if ( gamer_fieldBIdx == -100 )
         Aux_Error( ERROR_INFO, "cannot find the matching gamer field bitwise index for libyt field \"%s\" !!\n", field );
 
-    // look for Prepare_PatchData desired variable.
-    OptFluBC_t FluBC[6];
-    for(int d=0; d<6; d++){ FluBC[d] = BC_FLU_NONE; }
-
     // loop through list_gid and fill in data.
     for(int lid=0; lid<list_len; lid++){
         // parse level and PID0
@@ -73,7 +69,7 @@ void DerivedFuncWithName_PatchGroup(int list_len, long *list_gid, char *field, y
 
         // generate data in patch.
         Prepare_PatchData(level, Time[0], (real*) data_array[lid].data_ptr, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
-                          UNIT_PATCHGROUP, NSIDE_00, false, FluBC, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false);
+                          UNIT_PATCHGROUP, NSIDE_00, false, OPT__BC_FLU, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false);
     }
 }
 
