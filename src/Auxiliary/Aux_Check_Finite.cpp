@@ -101,7 +101,7 @@ void Aux_Check_Finite( const int lv, const char *comment )
    if ( Pass )
    {
       if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "\"%s\" : <%s> PASSED at level %2d, Time = %13.7e, Step = %ld \n",
+         Aux_Message( stdout, "\"%s\" : <%s> PASSED at level %2d, Time = %13.7e, Step = %ld\n",
                       comment, __FUNCTION__, lv, Time[lv], Step );
    }
 

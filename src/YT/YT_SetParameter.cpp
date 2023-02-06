@@ -19,7 +19,7 @@
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalLv )
+void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalAllLv )
 {
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -46,12 +46,12 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
    param_yt.num_fields              = NField;
 
 #  ifdef LIBYT_USE_PATCH_GROUP
-   if ( NPatchAllLv % 8 != 0 || NPatchLocalLv % 8 != 0 ) Aux_Error( ERROR_INFO, "Using patch group in libyt failed !!\n" );
+   if ( NPatchAllLv % 8 != 0 || NPatchLocalAllLv % 8 != 0 ) Aux_Error( ERROR_INFO, "Using patch group in libyt failed !!\n" );
    param_yt.num_grids               = NPatchAllLv / 8;
-   param_yt.num_grids_local         = NPatchLocalLv / 8;
+   param_yt.num_grids_local         = NPatchLocalAllLv / 8;
 #  else
    param_yt.num_grids               = NPatchAllLv;
-   param_yt.num_grids_local         = NPatchLocalLv;
+   param_yt.num_grids_local         = NPatchLocalAllLv;
 #  endif
 
 #  ifdef PARTICLE
