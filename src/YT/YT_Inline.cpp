@@ -58,7 +58,7 @@ void YT_Inline()
    LB_PatchCount pc;
 
 // 1. get patch counts per level and per rank from all ranks
-   LB_AllgatherPatchCount(pc);
+   LB_AllgatherPatchCount( pc );
 
 
 // set YT_GID_Offset for searching GID in derived function and particle get attribute function.
