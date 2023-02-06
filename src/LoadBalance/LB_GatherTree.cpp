@@ -665,19 +665,20 @@ LB_GlobalPatch* LB_ConstructGlobalTree(LB_PatchCount& pc, LB_GlobalPatchExchange
 // Description :  Gather global tree structure as vector indexed by GIDs to root rank
 //
 // Note        :  - Store global tree AMR structure gathered from all ranks in vector
-
+//                - Initialises pc by calling LB_AllgatherPatchCount ( pc need not be initialised beforehand )
 //                - Example usage: Print the information stored in the global tree structure on MPI Node 0
 //
+//                   LB_PatchCount pc;
 //                   LB_GlobalPatch* gt = LB_GatherTree(pc, 0);
 //
 //                   if ( MPI_Rank == 0 ) {
 //                      printf("Information about patches: \n");
 //                      for (int i = 0; i < pc.NPatchAllLv; ++i) {
 //                         printf("GID %d on level %d residing on MPI rank %d\n", i, gt[i].level, gt[i].MPI_Rank);
-//                         printf("Father PID   = %d\n", gt[i].father);
-//                         printf("Son PID      = %d\n", gt[i].son);
+//                         printf("Father GID   = %d\n", gt[i].father);
+//                         printf("Son GID      = %d\n", gt[i].son);
 //                         printf("LB IDx       = %ld\n", gt[i].LB_Idx);
-//                         printf("Sibling PIDs = ");
+//                         printf("Sibling GIDs = ");
 //                         for (int c = 0; c < 26; ++c) {
 //                            printf("%d ", gt[i].sibling[c]);
 //                         }
