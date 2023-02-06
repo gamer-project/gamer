@@ -31,8 +31,8 @@ void YT_AddLocalGrid( int NField, yt_field *FieldList, LB_PatchCount& pc)
    LB_LocalPatchExchangeList lel;
 
 // sync load balance ids
-   LB_AllgatherLBIdx(pc, lel);
-   LB_FillLocalPatchExchangeList(pc, lel);
+   LB_AllgatherLBIdx( pc, lel );
+   LB_FillLocalPatchExchangeList( pc, lel );
 
 // loop over local patches at all levels
    for (int lv=0; lv<NLEVEL; lv++)

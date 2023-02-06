@@ -339,7 +339,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 // 1. gather the number of patches at different MPI ranks and set the corresponding GID offset
    LB_PatchCount pc;
-   LB_AllgatherPatchCount(pc);
+   LB_AllgatherPatchCount( pc );
 
 // 2. prepare all HDF5 variables
    hsize_t H5_SetDims_LBIdx, H5_SetDims_Cr[2], H5_SetDims_Fa, H5_SetDims_Son, H5_SetDims_Sib[2], H5_SetDims_Field[4];
@@ -444,16 +444,16 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 // 4-1. allocate lists
    LB_LocalPatchExchangeList  lel;
-   LB_GlobalPatchExchangeList gel(pc, root);
+   LB_GlobalPatchExchangeList gel( pc, root );
 
 // 4-2. collect and sort LBIdx from all ranks
-   LB_AllgatherLBIdx(pc, lel, &gel);
+   LB_AllgatherLBIdx( pc, lel, &gel );
 
 // 4-3. store the local tree
-   LB_FillLocalPatchExchangeList(pc, lel);
+   LB_FillLocalPatchExchangeList( pc, lel );
 
 // 4-4. gather data from all ranks
-   LB_FillGlobalPatchExchangeList(pc, lel, gel, root);
+   LB_FillGlobalPatchExchangeList( pc, lel, gel, root );
 
 // 4-5. dump the tree info
    if ( MPI_Rank == 0 )
