@@ -423,13 +423,13 @@ class LB_LocalPatchExchangeList;
 class LB_GlobalPatchExchangeList;
 class LB_GlobalPatch;
 
-void LB_GetPID(int GID, int& level, int& PID, int* GID_Offset);
-void LB_AllgatherPatchCount(LB_PatchCount& pc);
-void LB_AllgatherLBIdx(LB_PatchCount& pc, LB_LocalPatchExchangeList& lel, LB_GlobalPatchExchangeList* gel = NULL);
-void LB_FillLocalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList& lel);
-void LB_FillGlobalPatchExchangeList(LB_PatchCount& pc, LB_LocalPatchExchangeList& lel, LB_GlobalPatchExchangeList& gel, int root);
-LB_GlobalPatch* LB_ConstructGlobalTree(LB_PatchCount& pc, LB_GlobalPatchExchangeList& gel, int root);
-LB_GlobalPatch* LB_GatherTree(LB_PatchCount& pc, int root);
+void LB_GetPID( const int GID, int& level, int& PID, int* GID_Offset );
+void LB_AllgatherPatchCount( LB_PatchCount& pc );
+void LB_AllgatherLBIdx( LB_PatchCount& pc, LB_LocalPatchExchangeList& lel, LB_GlobalPatchExchangeList* gel = NULL );
+void LB_FillLocalPatchExchangeList( LB_PatchCount& pc, LB_LocalPatchExchangeList& lel );
+void LB_FillGlobalPatchExchangeList( LB_PatchCount& pc, LB_LocalPatchExchangeList& lel, LB_GlobalPatchExchangeList& gel, int root );
+LB_GlobalPatch* LB_ConstructGlobalTree( LB_PatchCount& pc, LB_GlobalPatchExchangeList& gel, int root );
+LB_GlobalPatch* LB_GatherTree( LB_PatchCount& pc, int root );
 
 #ifdef LOAD_BALANCE
 void LB_AllocateBufferPatch_Father( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0,

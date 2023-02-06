@@ -18,7 +18,7 @@
 //-------------------------------------------------------------------------------------------------------
 void YT_GetPID(const long gid, int *level, int *PID) {
 #   ifdef  LIBYT_USE_PATCH_GROUP
-    LB_GetPID( 8 * gid, *level, *PID, YT_GID_Offset ); 
+    LB_GetPID( 8 * gid, *level, *PID, YT_GID_Offset );
 #   else
     LB_GetPID(     gid, *level, *PID, YT_GID_Offset );
 #   endif // # ifdef  LIBYT_USE_PATCH_GROUP
