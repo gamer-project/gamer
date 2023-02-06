@@ -260,11 +260,17 @@ void YT_Inline()
 // 4. prepare local patches for libyt
    YT_AddLocalGrid( GID_LvStart, NPatchAllRank, NField, FieldList);
 
-// 5. perform yt inline analysis
+// 5-1. perform yt inline analysis
    if ( yt_run_FunctionArguments( "yt_inline_inputArg", 1, "\'Dens\'" ) != YT_SUCCESS )
        Aux_Error( ERROR_INFO, "yt_run_FunctionArguments() failed !!\n" );
    if ( yt_run_Function( "yt_inline" ) != YT_SUCCESS )
        Aux_Error( ERROR_INFO, "yt_run_Function() failed !!\n" );
+
+#ifdef SUPPORT_LIBYT_INTERACTIVE
+// 5-2. activate libyt interactive mode
+   if ( yt_run_InteractiveMode("LIBYT_STOP") != YT_SUCCESS )
+       Aux_Error( ERROR_INFO, "yt_run_InteractiveMode() failed !!\n" );
+#endif
 
 // 6. free resource
    if ( yt_free() != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_free() failed !!\n" );
