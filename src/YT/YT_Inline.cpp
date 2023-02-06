@@ -56,10 +56,10 @@ void YT_Inline()
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
    LB_PatchCount pc;
-   
+
 // 1. get patch counts per level and per rank from all ranks
-   LB_AllgatherPatchCount(pc); 
-   
+   LB_AllgatherPatchCount(pc);
+
 
 // set YT_GID_Offset for searching GID in derived function and particle get attribute function.
    for (int lv=0; lv<NLEVEL; lv++)
@@ -245,7 +245,7 @@ void YT_Inline()
    YT_AddLocalGrid( NField, FieldList, pc);
 
 // 5. perform yt inline analysis
-   if ( yt_inline_argument( "yt_inline_inputArg", 1, "\'density\'" ) != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_inline_inputArg() failed !!\n" );
+   if ( yt_inline_argument( "yt_inline_inputArg", 1, "\'Dens\'" ) != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_inline_inputArg() failed !!\n" );
    if ( yt_inline( "yt_inline" ) != YT_SUCCESS )     Aux_Error( ERROR_INFO, "yt_inline() failed !!\n" );
 
 // 6. free resource
