@@ -149,7 +149,7 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
       int *RecvPtr_LBIdx_IdxTable = new int [ SendEachRank_N[r] ];
 
 //    be aware that there may be duplicate LBIdx in RecvPtr_LBIdx[]
-//    --> RecvPtr_LBIdx_IdxTable[] is indeterministic in that case
+//    --> RecvPtr_LBIdx_IdxTable[] is non-deterministic in that case
 //    --> but it's not a real issue since the mapped PID is deterministic
       Mis_Heapsort( SendEachRank_N[r], RecvPtr_LBIdx, RecvPtr_LBIdx_IdxTable );
 

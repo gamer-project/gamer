@@ -251,7 +251,7 @@ void Output_DumpData( const int Stage )
 //    before dumpting data --> for bitwise reproducibility
       if ( OPT__CORR_AFTER_ALL_SYNC == CORR_AFTER_SYNC_BEFORE_DUMP  &&  Stage != 0 )  Flu_CorrAfterAllSync();
 
-//    perform user-specified work before dumping data 
+//    perform user-specified work before dumping data
       if ( Output_UserWorkBeforeOutput_Ptr != NULL )  Output_UserWorkBeforeOutput_Ptr();
 
 //    start dumping data
