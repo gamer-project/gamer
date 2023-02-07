@@ -639,7 +639,7 @@ endif # !SERIAL
 
 # load-balance source files (included only if "LOAD_BALANCE" is turned on)
 # ------------------------------------------------------------------------------------
-CPU_FILE    += LB_HilbertCurve.cpp  LB_Utility.cpp
+CPU_FILE    += LB_HilbertCurve.cpp  LB_Utility.cpp  LB_GatherTree.cpp
 
 ifeq "$(findstring -DLOAD_BALANCE, $(SIMU_OPTION))" "-DLOAD_BALANCE"
 CPU_FILE    += LB_Init_LoadBalance.cpp  LB_AllocateBufferPatch_Sibling.cpp  LB_RecordOvelapMPIPatchID.cpp \

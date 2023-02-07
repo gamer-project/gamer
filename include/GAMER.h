@@ -70,6 +70,7 @@ extern "C" {
 #include "Field.h"
 #include "Prototype.h"
 #include "PhysicalConstant.h"
+#include "GatherTree.h"
 
 #ifdef SERIAL
 #  include "Serial.h"
