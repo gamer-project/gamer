@@ -120,10 +120,10 @@ void Interpolate( real CData[], const int CSize[3], const int CStart[3], const i
 #     endif
    }
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) ) 
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
       if ( (IntScheme != INT_CQUAD) && (IntScheme != INT_CQUAR) )
          Aux_Error( ERROR_INFO, "unsupported hybrid phase interpolation scheme (%d) !!\n", IntScheme );
-#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) ) 
+#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
 
 #  endif // #ifdef GAMER_DEBUG
 
@@ -558,12 +558,13 @@ static IntSchemeFunc_t Int_SelectScheme( const IntScheme_t IntScheme )
 //
 // Note        :  Use the input parameter "IntScheme" to determine the adopted interpolation scheme
 //
-// Parameter   :  CPtr             dsfdfatBoundaryFlattened 3D-input array
-//                Idx              dsfdfatBoundary1D-index of cell to be checked for discontinuity
-//                dIdx            dfatBoundaryIndex stride to next and previous cell
+// Parameter   :  CPtr         Flattened 3D-input array
+//                Idx          1D-index of cell to be checked for discontinuity
+//                dIdx         Index stride to next and previous cell
 //                atBoundary   Flag indicating whether cell Idx is at boundary
 //
-// Return      :  bool 
+// Return      :  "true"  if there is    discontinuity in input array
+//                "false" if there is NO discontinuity in input array
 //-------------------------------------------------------------------------------------------------------
 bool Int_HasDiscontinuity( real* CPtr, int Idx, int dIdx, bool atBoundary ) {
    if ( atBoundary ) {

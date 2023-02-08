@@ -56,7 +56,7 @@ SET_GLOBAL( FieldIdx_t Idx_Stub,          Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_Dens,          Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_Real,          Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_Imag,          Idx_Undefined );
-#endif // # if ( ELBDM_SCHEME == HYBRID ) ... # else 
+#endif // # if ( ELBDM_SCHEME == HYBRID ) ... # else
 
 #else
 #  error : ERROR : unsupported MODEL !!

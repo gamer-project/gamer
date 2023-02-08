@@ -83,9 +83,9 @@ void Int_Quadratic( real CData[], const int CSize[3], const int CStart[3], const
    const int CwoGdx = 1;
    const int CwoGdy = CwoGdx*CRange[0];
    const int CwoGdz = CwoGdy*CRange[1];
-   
+
    real *TData_GlobalPhase  = NULL;
-   
+
    if ( UnwrapPhase == 2)
    {
       TData_GlobalPhase = new real [ CRange[0] * CRange[1] * CRange[2] ];
@@ -97,7 +97,7 @@ void Int_Quadratic( real CData[], const int CSize[3], const int CStart[3], const
       {
          Idx_InC      = k*Cdz + j*Cdy + i*Cdx;
          Idx_Out      = (k - CStart[2]) * CwoGdz + (j - CStart[1]) * CwoGdy + (i - CStart[0]) *CwoGdx;
-         TData_GlobalPhase[Idx_Out] = CPtr[Idx_InC]; 
+         TData_GlobalPhase[Idx_Out] = CPtr[Idx_InC];
       }
 
    }
@@ -361,10 +361,10 @@ void Int_Quadratic( real CData[], const int CSize[3], const int CStart[3], const
 
 
 #     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
-   
+
       if ( UnwrapPhase == 2)
       {
-         real shift; 
+         real shift;
 
          for (int In_z=0, Out_z=0;  In_z<CRange[2];  In_z++, Out_z+=2)
          for (int In_y=0, Out_y=0;  In_y<CRange[1];  In_y++, Out_y+=2)
@@ -392,7 +392,7 @@ void Int_Quadratic( real CData[], const int CSize[3], const int CStart[3], const
    } // for (int v=0; v<NComp; v++)
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
-   if ( UnwrapPhase == 2) delete [] TData_GlobalPhase; 
+   if ( UnwrapPhase == 2) delete [] TData_GlobalPhase;
 #  endif // ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
 
    delete [] TDataX;

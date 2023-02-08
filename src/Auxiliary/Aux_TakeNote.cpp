@@ -204,12 +204,28 @@ void Aux_TakeNote()
       fprintf( Note, "HYBRID_SCHEME                   FROMM\n" );
 #     elif ( HYBRID_SCHEME == HYBRID_MUSCL )
       fprintf( Note, "HYBRID_SCHEME                   MUSCL\n" );
-#     elif ( HYBRID_SCHEME == HYBRID_PPM )
-      fprintf( Note, "HYBRID_SCHEME                   PPM\n" );
 #     else
 #     error : ERROR : unsupported SCHEME !!
-#     endif 
-#     endif 
+#     endif
+#     endif
+
+#     ifdef IGNORE_FLUID_FAILURE
+      fprintf( Note, "IGNORE_FLUID_FAILURE            ON\n" );
+#     else
+      fprintf( Note, "IGNORE_FLUID_FAILURE            OFF\n" );
+#     endif
+
+#     ifdef DISABLE_PHASE_AT_DEFECT
+      fprintf( Note, "DISABLE_PHASE_AT_DEFECT         ON\n" );
+#     else
+      fprintf( Note, "DISABLE_PHASE_AT_DEFECT         OFF\n" );
+#     endif
+
+#     ifdef SMOOTH_PHASE
+      fprintf( Note, "SMOOTH_PHASE                    ON\n" );
+#     else
+      fprintf( Note, "SMOOTH_PHASE                    OFF\n" );
+#     endif
 
 #     ifdef CONSERVE_MASS
       fprintf( Note, "CONSERVE_MASS                   ON\n" );
@@ -808,10 +824,10 @@ void Aux_TakeNote()
 #     if ( MODEL == ELBDM )
       fprintf( Note, "DT__PHASE                       %13.7e\n",  DT__PHASE                   );
 #     if ( ELBDM_SCHEME == HYBRID )
-      fprintf( Note, "DT__VELOCITY                    %13.7e\n",  DT__VELOCITY              );
-      fprintf( Note, "DT__HYBRID                      %13.7e\n",  DT__HYBRID                );
+      fprintf( Note, "DT__VELOCITY                    %13.7e\n",  DT__VELOCITY                );
+      fprintf( Note, "DT__HYBRID                      %13.7e\n",  DT__HYBRID                  );
 #     endif // # if ( ELBDM_SCHEME == HYBRID )
-#     endif
+#     endif // # if ( MODEL == ELBDM )
 #     ifdef PARTICLE
       fprintf( Note, "DT__PARVEL                      %13.7e\n",  DT__PARVEL                  );
       fprintf( Note, "DT__PARVEL_MAX                 %14.7e\n",   DT__PARVEL_MAX              );

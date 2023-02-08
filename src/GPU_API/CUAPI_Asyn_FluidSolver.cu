@@ -88,7 +88,7 @@ __global__ void CUFLU_ELBDMSolver_PhaseForm( real g_Fluid_In [][FLU_NIN ][ CUBE(
                                              real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
                                              #else
                                              real g_Fluid_Out[][FLU_NIN ][ CUBE(PS2) ],
-                                             #endif 
+                                             #endif
                                              real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
                                              const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                              const bool XYZ, const real MinDens );
@@ -472,7 +472,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
       } else { // if ( useWaveFlag ) {
 #        ifdef GAMER_DEBUG
          real (*smaller_d_Flu_Array_F_Out)[FLU_NOUT][CUBE(PS2)] = d_Flu_Array_F_Out;
-#        else // # ifdef GAMER_DEBUG        
+#        else // # ifdef GAMER_DEBUG
          real (*smaller_d_Flu_Array_F_Out)[FLU_NIN][CUBE(PS2)]  = (real (*)[FLU_NIN][CUBE(PS2)]) d_Flu_Array_F_Out;
 #        endif // # ifdef GAMER_DEBUG ... else
          CUFLU_ELBDMSolver_PhaseForm <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
@@ -480,7 +480,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                smaller_d_Flu_Array_F_Out + UsedPatch[s],
                d_Flux_Array              + UsedPatch[s],
                dt, 1.0/dh, ELBDM_Eta, StoreFlux, XYZ, MinDens );
-      } // if ( useWaveFlag ) { ... else 
+      } // if ( useWaveFlag ) { ... else
 #     endif // #     if ( ELBDM_SCHEME == HYBRID )
 
 #     else
@@ -511,7 +511,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
       real (*smaller_d_Flu_Array_F_Out)[FLU_NIN][CUBE(PS2)] = (real (*)[FLU_NIN][CUBE(PS2)]) d_Flu_Array_F_Out;
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( smaller_h_Flu_Array_Out + UsedPatch[s], smaller_d_Flu_Array_F_Out + UsedPatch[s],
                          Flu_MemSize_Out[s], cudaMemcpyDeviceToHost, Stream[s] )  );
-      } // if ( useWaveFlag ) { ... else 
+      } // if ( useWaveFlag ) { ... else
 #     endif // #     if ( ELBDM_SCHEME == HYBRID )
 
       if ( StoreFlux )

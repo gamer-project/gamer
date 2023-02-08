@@ -22,9 +22,9 @@
 //                FaPotSg  : Potential sandglass at level "FaLv"
 //                TVarCC   : Target cell-centered variables
 //                           --> Supported variables in different models:
-//                               HYDRO  : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY,[, _POTE]
-//                               ELBDM  : _DENS, _REAL, _IMAG, [, _POTE]
-//                               HYBRID : _DENS, _PHAS [, _POTE]
+//                               HYDRO        : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY,[, _POTE]
+//                               ELBDM        : _DENS, _REAL, _IMAG, [, _POTE]
+//                               ELBDM HYBRID : _DENS, _PHAS [, _POTE]
 //                           --> _FLUID, _PASSIVE, and _TOTAL apply to all models
 //                TVarFC   : Target face-centered variables
 //                            --> Supported variables in different models:
@@ -146,17 +146,17 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 //    flag that determines whether OPT__RES_PHASE is ignored because of vortices and the resulting pi-jumps in the phase field
       bool disableResPha = false;
 
-#     ifdef DISABLE_PHASE_AT_VORTEX
+#     ifdef DISABLE_PHASE_AT_DEFECT
 //    check for vortices and restrict RE/IM for entire father patch if vortex occurs
       if ( ResPha ) {
          int ii, jj, kk;
          for (int k=0; k<PS1; k++)  {
          for (int j=0; j<PS1; j++)  {
          for (int i=0; i<PS1; i++)  {
-         disableResPha |= ELBDM_DetectVortex( i, j, k, PS1, PS1, PS1, &amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[DENS][0][0][0], DISABLE_PHASE_AT_VORTEX_THRESHOLD);
+         disableResPha |= ELBDM_DetectVortex( i, j, k, PS1, PS1, PS1, &amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[DENS][0][0][0], DISABLE_PHASE_AT_DEFECT_THRESHOLD);
          }}}
       }
-#     endif  // # ifdef DISABLE_PHASE_AT_VORTEX
+#     endif  // # ifdef DISABLE_PHASE_AT_DEFECT
 
 
       if ( ResPha && ! disableResPha ) {

@@ -103,10 +103,10 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                PID0_List      : List recording the patch indices with LocalID==0 to be prepared
 //                TVarCC         : Target cell-centered variables to be prepared
 //                                 --> Supported variables in different models:
-//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP, _ENTR
-//                                             [, _POTE] [, _MAGX_CC, _MAGY_CC, _MAGZ_CC, _MAGE_CC]
-//                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
-//                                     ELBDM HYBRID: _DENS, _PHAS [, _POTE]
+//                                     HYDRO        : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP, _ENTR
+//                                                    [, _POTE] [, _MAGX_CC, _MAGY_CC, _MAGZ_CC, _MAGE_CC]
+//                                     ELBDM        : _DENS, _REAL, _IMAG [, _POTE]
+//                                     ELBDM HYBRID : _DENS, _PHAS [, _POTE]
 //                                 --> _FLUID, _PASSIVE, _TOTAL, and _DERIVED apply to all models
 //                TVarFC         : Target face-centered variables to be prepared
 //                                 --> Supported variables in different models:
@@ -1704,10 +1704,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 //             and want to prepare patch with real and imaginary part on level lv
 //             set target variable for lv - 1 to dens and phase and later convert to real and imaginary parts
                if ( amr->use_wave_flag[lv] && !amr->use_wave_flag[lv - 1] && (TVarCC & (_REAL | _IMAG)) ) {
-                  TVarCCBuffer     = _DENS|_PHAS|_PASSIVE;    
+                  TVarCCBuffer     = _DENS|_PHAS|_PASSIVE;
                   NVarCC_FluBuffer = 0;
                   for (int v=0; v<NCOMP_TOTAL; v++)
-                     if ( TVarCCBuffer & (1L<<v) )    
+                     if ( TVarCCBuffer & (1L<<v) )
                         TVarCCIdxList_FluBuffer[ NVarCC_FluBuffer++ ] = v;
                }
 #              endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
@@ -1750,9 +1750,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   for (int i=0; i<loop[0]; i++) {
                      Dens  = IntData_CC_Ptr[ Idx2 ];
                      Phase = IntData_CC_Ptr[ Idx2 + FSize3D_CC ];
-                     
+
                      Amp   = SQRT(Dens);
- 
+
                      IntData_CC_Ptr[ Idx2               ] = Amp * COS( Phase );
                      IntData_CC_Ptr[ Idx2  + FSize3D_CC ] = Amp * SIN( Phase );
                      Idx2 ++;

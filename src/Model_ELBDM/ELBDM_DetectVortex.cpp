@@ -39,22 +39,22 @@ bool ELBDM_DetectVortex( const int i, const int j, const int k, const int i_size
    bool isVortex;
 
 
-   real Lap_Rho  = 0; 
+   real Lap_Rho  = 0;
 
 // evaluate laplacians
    for (int d=0; d<3; d++)
    {
-      if ( ijk[d] == 0 ) 
+      if ( ijk[d] == 0 )
       {
          Idx_m = Idx              ;   Idx_c = Idx + dIdx[d]; Idx_p = Idx + 2 * dIdx[d];
-      } else 
+      } else
       if ( ijk[d] == sizes[d]-1 )
       {
          Idx_m = Idx - 2 * dIdx[d];   Idx_c = Idx - dIdx[d]; Idx_p = Idx              ;
       } else
       {
          Idx_m = Idx - 1 * dIdx[d];   Idx_c = Idx          ; Idx_p = Idx + 1 * dIdx[d];
-      } 
+      }
 
       Lap_Rho += FABS( Dens_Array[Idx_p] - 2 * Dens_Array[Idx_c]  + Dens_Array[Idx_m]);
 

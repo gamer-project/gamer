@@ -893,7 +893,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 //          exchange phase field on level lv if level lv + 1 uses wave scheme
 //          this is required for backward matching if option OPT__CORR_AFTER_ALL_SYNC is turned on
-//          otherwhise, the phase field on FaLv will be exchanged anyway after the fluid fields are updated
+//          otherwise, the phase field on FaLv will be exchanged after the fluid fields are updated
 //          if available, we use the phase information from the previous time step (1 - amr->FluSg[FaLv]) for this purpose
             if ( !amr->use_wave_flag[lv_refine] && amr->use_wave_flag[lv_refine+1] && OPT__CORR_AFTER_ALL_SYNC ) {
                int FaLv    = lv_refine;
@@ -907,7 +907,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             }
 
 //          exchange all fluid data on refined wave levels after switching to wave scheme
-            if ( old_wave_flag != amr->use_wave_flag[ lv_refine+1 ] ) {
+            if ( old_wave_flag != amr->use_wave_flag[ lv_refine + 1 ] ) {
                for (int i = lv_refine + 1; i <= TOP_LEVEL; ++i) {
                   TIMING_FUNC(   Buf_GetBufferData( i,     amr->FluSg[i], NULL_INT, NULL_INT, DATA_GENERAL,
                                                     _TOTAL, _NONE, PATCH_SIZE, USELB_YES ),

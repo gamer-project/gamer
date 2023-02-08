@@ -54,7 +54,8 @@ double ELBDM_GetTimeStep_Velocity( const int lv )
 //             : tree : pointer to array of LB_GlobalPatch objects
 //                      needs to initialised beforehand by calling LB_GlobalPatch* tree = LB_GatherTree(pc, MPI_Node);
 //
-// Return      :  boolean that is true if cell [I, J, K] in patch GID0 has wave counterpart
+// Return      :  "true"  if cell [I, J, K] in patch GID0 has    wave counterpart
+//                "false" if cell [I, J, K] in patch GID0 has NO wave counterpart
 //-------------------------------------------------------------------------------------------------------
 bool ELBDM_HasWaveCounterpart(int I, int J, int K, long GID0, LB_GlobalPatch* tree) {
    int lv = tree[GID0].level;
@@ -102,7 +103,7 @@ bool ELBDM_HasWaveCounterpart(int I, int J, int K, long GID0, LB_GlobalPatch* tr
    }
 
    return amr->use_wave_flag[currentLv];
-}
+} // FUNCTION : ELBDM_HasWaveCounterpart
 
 
 //-------------------------------------------------------------------------------------------------------

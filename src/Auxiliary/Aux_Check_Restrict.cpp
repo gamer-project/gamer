@@ -46,7 +46,7 @@ void Aux_Check_Restrict( const int lv, const char *comment )
    int Pass = true;
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-// Convert between phase/dens and re/im 
+// Convert between phase/dens and re/im
    const bool convertWaveToFluid = ( amr->use_wave_flag[lv] == false && amr->use_wave_flag[lv + 1] == true );
 #  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 

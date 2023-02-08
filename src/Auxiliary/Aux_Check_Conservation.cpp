@@ -136,7 +136,7 @@ void Aux_Check_Conservation( const char *comment )
          const real MinPres_No = -1.0;
          const real MinTemp_No = -1.0;
          const real MinEntr_No = -1.0;
-         long  TVar = -1.0; 
+         long  TVar = -1.0;
 
 #        if ( ELBDM_SCHEME == HYBRID )
          if ( amr->use_wave_flag[lv] ) {
@@ -145,7 +145,7 @@ void Aux_Check_Conservation( const char *comment )
 #        if ( ELBDM_SCHEME == HYBRID )
          } else { // if ( amr->use_wave_flag[lv] )
          TVar = _DENS|_PHAS;
-         } // if ( amr->use_wave_flag[lv] == true ) ... else 
+         } // if ( amr->use_wave_flag[lv] == true ) ... else
 #        endif // # if ( ELBDM_SCHEME == HYBRID )
 
          Prepare_PatchData( lv, Time[lv], Flu_ELBDM[0][0][0][0], NULL, NGhost, NPG, &PID0, TVar, _NONE,
@@ -237,7 +237,7 @@ void Aux_Check_Conservation( const char *comment )
 
                const int t = PID - PID0;
 
-//             Convert density to log(density) for computing kinetic energy in fluid patches
+//             convert density to log(density) for computing kinetic energy in fluid patches
 #              if ( ELBDM_SCHEME == HYBRID )
                if ( !amr->use_wave_flag[lv] ) {
                   for (int k=0; k<Size_Flu; k++)   {
@@ -292,7 +292,7 @@ void Aux_Check_Conservation( const char *comment )
 //                [4] kinetic energy in ELBDM
                   Fluid_lv[4] += _2Eta2 * Dens * ( SQR(GradR[0]) + SQR(GradR[1]) + SQR(GradR[2])\
                                                  + SQR(GradI[0]) + SQR(GradI[1]) + SQR(GradI[2])   );
-                  } //if ( amr->use_wave_flag[lv] == true ) ... else 
+                  } //if ( amr->use_wave_flag[lv] == true ) ... else
 #                 endif // #if ( ELBDM_SCHEME == HYBRID )
                }}}
 

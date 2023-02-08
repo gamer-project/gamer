@@ -44,7 +44,7 @@ void Aux_Check_Finite( const int lv, const char *comment )
 
                for (int v=0; v<NCOMP_TOTAL; v++) {
 #	            if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
-	               if ( !amr->use_wave_flag[lv] && v == STUB ) 
+	               if ( !amr->use_wave_flag[lv] && v == STUB )
                        Data[ NextIdx ++ ] = 0;
 	               else
 #	            endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID)

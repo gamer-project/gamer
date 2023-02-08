@@ -92,7 +92,7 @@ void LB_Refine( const int FaLv )
    int    CFB_NSibEachRank[MPI_NRank];
    real  *CFB_BField=NULL;
 
-   bool switchNextLevelsToWaveScheme = false; 
+   bool switchNextLevelsToWaveScheme = false;
 
    LB_Refine_GetNewRealPatchList( FaLv, NNew_Home, NewPID_Home, NNew_Away, NewCr1D_Away, NewCr1D_Away_IdxTable, NewCData_Away,
                                   NDel_Home, DelPID_Home, NDel_Away, DelCr1D_Away,
@@ -101,7 +101,7 @@ void LB_Refine( const int FaLv )
                                   switchNextLevelsToWaveScheme );
 
 # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-// Sync information whether refined levels are switched to wave scheme 
+// Sync information whether refined levels are switched to wave scheme
    int send = switchNextLevelsToWaveScheme;
    int recv;
 
@@ -204,38 +204,37 @@ void LB_Refine( const int FaLv )
          int n_real  = amr->NPatchComma[level][1];
          int n_buffer = n_total - n_real;
 
-
 #        ifdef GAMER_DEBUG
          Aux_Message( stdout, "Converting level %i with %d real and %d buffer patches to wave scheme on rank %d.\n", level, n_real, n_buffer, MPI_Rank);
-#        endif 
+#        endif
 
-         amr->use_wave_flag[level] = true; 
+         amr->use_wave_flag[level] = true;
          int fluSg = amr->FluSg[level];
 
          real dens, amp, phase;
 
          for (int PID=0; PID<amr->NPatchComma[level][1]; PID++)
-         { 
+         {
+#           ifdef GAMER_DEBUG
             if (amr->patch[fluSg][level][PID]->fluid == NULL || !amr->patch[fluSg][level][PID]->Active ) {
                Aux_Error( ERROR_INFO, "Encountered NULL PATCH IN LB_REFINE\n");
             }
-            
-#           ifdef GAMER_DEBUG
+
 //          check for phase jumps!
             for (int k=0; k<PS1; k++)  {
             for (int j=0; j<PS1; j++)  {
             for (int i=0; i<PS1; i++)  {
-               int kk  =  k; 
-               int kkp = (kk + 1) < PS1  ? kk + 1 : kk    ; 
+               int kk  =  k;
+               int kkp = (kk + 1) < PS1  ? kk + 1 : kk    ;
                int kkm = (kk - 1) < 0         ? kk     : kk - 1;
-               int ii  =  i; 
-               int iip = (ii + 1) < PS1  ? ii + 1 : ii    ; 
+               int ii  =  i;
+               int iip = (ii + 1) < PS1  ? ii + 1 : ii    ;
                int iim = (ii - 1) < 0         ? ii     : ii - 1;
-               int jj  =  j; 
-               int jjp = (jj + 1) < PS1  ? jj + 1 : jj    ; 
+               int jj  =  j;
+               int jjp = (jj + 1) < PS1  ? jj + 1 : jj    ;
                int jjm = (jj - 1) < 0         ? jj     : jj - 1;
-               
-               //check whether dB wavelength is resolved within the newly converted patch 
+
+               //check whether dB wavelength is resolved within the newly converted patch
                real maxphase = MAX(MAX(MAX(MAX(MAX(
                FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][iip] - amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ]),
                FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ] - amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][iim])),
@@ -253,16 +252,16 @@ void LB_Refine( const int FaLv )
                                 amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jjm][ii ],
                                 amr->patch[fluSg][level][PID]->fluid[PHAS][kkp][jj ][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ],
                                 amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kkm][jj ][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jj ][ii ], 
+                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jj ][ii ],
                                 amr->patch[fluSg][level][PID]->fluid[STUB][kkp][jj ][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jjp][ii ], 
+                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jjp][ii ],
                                 amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jj ][iip],
-                                amr->patch[fluSg][level][PID]->fluid[STUB][kkm][jj ][ii ], 
+                                amr->patch[fluSg][level][PID]->fluid[STUB][kkm][jj ][ii ],
                                 amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jjm][ii ],
                                 amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jj ][iim]
                               );
                }
-            }}} 
+            }}}
 
 #           endif // # ifdef GAMER_DEBUG
 
@@ -270,17 +269,21 @@ void LB_Refine( const int FaLv )
             for (int k=0; k<PS1; k++)  {
             for (int j=0; j<PS1; j++)  {
             for (int i=0; i<PS1; i++)  {
+//             convert patches at current fluSg
                dens  = amr->patch[  fluSg][level][PID]->fluid[DENS][k][j][i];
                amp   = SQRT(dens);
                phase = amr->patch[  fluSg][level][PID]->fluid[PHAS][k][j][i];
                amr->patch[  fluSg][level][PID]->fluid[REAL][k][j][i] = amp * COS(phase);
                amr->patch[  fluSg][level][PID]->fluid[IMAG][k][j][i] = amp * SIN(phase);
 
+//             convert patches at 1-fluSg if they are initialised
+               if ( amr->FluSgTime[level][1-fluSg] >= 0 ) {
                dens  = amr->patch[1-fluSg][level][PID]->fluid[DENS][k][j][i];
                amp   = SQRT(dens);
                phase = amr->patch[1-fluSg][level][PID]->fluid[PHAS][k][j][i];
                amr->patch[1-fluSg][level][PID]->fluid[REAL][k][j][i] = amp * COS(phase);
                amr->patch[1-fluSg][level][PID]->fluid[IMAG][k][j][i] = amp * SIN(phase);
+               }
             }}}
          } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
@@ -288,7 +291,7 @@ void LB_Refine( const int FaLv )
 
 //    sync flags across all MPI ranks after conversion
       for (int i = SonLv; i <= TOP_LEVEL; ++i) {
-         Flag_Sync( i ); 
+         Flag_Sync( i );
       }
    } // if ( switchNextLevelToWaveScheme )
 

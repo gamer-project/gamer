@@ -132,18 +132,18 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //       A: lv & lv+1 wave scheme & lv & lv+1 phase scheme and no use_wave_flag
 //       1. no modification
 //
-//       B: lv & lv+1 phase scheme & use_wave_flag:    
+//       B: lv & lv+1 phase scheme & use_wave_flag:
 //       1. switch to wave scheme on level lv+1
 //       2. no modification for interpolation
 //       3. convert DENS/PHAS to IM/RE after refinement for all patches on levels greater than lv
 //
 //       C: lv phase scheme & lv+1 wave scheme
 //       1. in interpolation, we provide information from neighbouring patches on lv that is already present as DENS/PHAS, same for boundary conditions
-//       2. convert refined patch to IM/RE after interpolation 
+//       2. convert refined patch to IM/RE after interpolation
 //
 
    bool switchNextLevelsToWaveScheme = false;
-   
+
 #  endif
 
 // determine the priority of different boundary faces (z>y>x) to set the corner cells properly for the non-periodic B.C.
@@ -263,8 +263,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 
-//       turn off phase interpolation if DISABLE_PHASE_AT_VORTEX is defined and we detect vortex in interpolation data
-         bool disableIntPhase = false; 
+//       turn off phase interpolation if DISABLE_PHASE_AT_DEFECT is defined and we detect vortex in interpolation data
+         bool disableIntPhase = false;
 
 
 //       (c1.3) assign data to child patches by spatial interpolation
@@ -682,7 +682,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //       (c1.3.4) perform spatial interpolation
 #        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
          const int PhaseUnwrapping_Cond  = 2;
-#        else 
+#        else
          const int PhaseUnwrapping_Cond  = 0;
 #        endif
          const int PhaseUnwrapping_Yes   = 1;
@@ -716,7 +716,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             } else { // if ( amr->use_wave_flag[lv] )
             if ( v != PHAS  &&  v != STUB )  Monotonicity[v] = Monotonicity_Yes;
             else                             Monotonicity[v] = Monotonicity_No;
-            } // if ( amr->use_wave_flag[lv] ) ... else 
+            } // if ( amr->use_wave_flag[lv] ) ... else
 #           endif // if ( ELBDM_SCHEME == HYBRID )
 
 #           else
@@ -743,7 +743,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          if ( amr->use_wave_flag[lv] ) {
 #        endif // # if ( ELBDM_SCHEME == HYBRID )
 
-#        ifdef DISABLE_PHASE_AT_VORTEX
+#        ifdef DISABLE_PHASE_AT_DEFECT
 
 //       only check if OPT__INT_PHASE needs to be disabled if it is enabled in the first place
          if ( OPT__INT_PHASE ) {
@@ -752,10 +752,10 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             for (int j=0; j<CSize_Flu; j++)
             for (int i=0; i<CSize_Flu; i++)
             {
-               disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_Flu, CSize_Flu, CSize_Flu, &Flu_CData[DENS][0][0][0], DISABLE_PHASE_AT_VORTEX_THRESHOLD);
+               disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_Flu, CSize_Flu, CSize_Flu, &Flu_CData[DENS][0][0][0], DISABLE_PHASE_AT_DEFECT_THRESHOLD);
             }
          } // if ( OPT__INT_PHASE ) {
-#        endif // # ifdef DISABLE_PHASE_AT_VORTEX
+#        endif // # ifdef DISABLE_PHASE_AT_DEFECT
 
          if ( OPT__INT_PHASE && !disableIntPhase )
          {
@@ -876,17 +876,17 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             for (int k=0; k<FSize_CC; k++) {
             for (int j=0; j<FSize_CC; j++) {
             for (int i=0; i<FSize_CC; i++) {
-                  int kk  =  k; 
-                  int kkp = (kk + 1) < FSize_CC  ? kk + 1 : kk    ; 
+                  int kk  =  k;
+                  int kkp = (kk + 1) < FSize_CC  ? kk + 1 : kk    ;
                   int kkm = (kk - 1) < 0         ? kk     : kk - 1;
-                  int ii  =  i; 
-                  int iip = (ii + 1) < FSize_CC  ? ii + 1 : ii    ; 
+                  int ii  =  i;
+                  int iip = (ii + 1) < FSize_CC  ? ii + 1 : ii    ;
                   int iim = (ii - 1) < 0         ? ii     : ii - 1;
-                  int jj  =  j; 
-                  int jjp = (jj + 1) < FSize_CC  ? jj + 1 : jj    ; 
+                  int jj  =  j;
+                  int jjp = (jj + 1) < FSize_CC  ? jj + 1 : jj    ;
                   int jjm = (jj - 1) < 0         ? jj     : jj - 1;
-                  
-                  //check whether dB wavelength is resolved within the newly converted patch 
+
+                  //check whether dB wavelength is resolved within the newly converted patch
                   real maxphase = MAX(MAX(MAX(MAX(MAX(
                   FABS(Flu_FData[PHAS][kk ][jj ][iip] - Flu_FData[PHAS][kk ][jj ][ii ]),
                   FABS(Flu_FData[PHAS][kk ][jj ][ii ] - Flu_FData[PHAS][kk ][jj ][iim])),
@@ -899,7 +899,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                      Aux_Message ( stderr, "WARNING: When converting patch to wave scheme, phase jump ii %d iim %d iip %d jj %d jjm %d jjp %d kk %d kkm %d kkp %d %f \n", ii, iim, iip, jj, jjm, jjp, kk, kkm, kkp, maxphase);
                   }
             }}}
-#           endif   // # ifdef GAMER_DEBUG       
+#           endif   // # ifdef GAMER_DEBUG
 
             for (int k=0; k<FSize_CC; k++) {
             for (int j=0; j<FSize_CC; j++) {
@@ -930,7 +930,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #              if ( MODEL == ELBDM )
 #              if ( ELBDM_SCHEME == HYBRID )
                if ( amr->use_wave_flag[lv+1] ) {
-#              endif 
+#              endif
                if ( OPT__INT_PHASE && !disableIntPhase )
                {
                   const real Rescale = SQRT( (real)MIN_DENS / DensOld );
@@ -940,7 +940,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                }
 #              if ( ELBDM_SCHEME == HYBRID )
                } // if ( amr->use_wave_flag[lv+1] )
-#              endif 
+#              endif
 #              endif // #if ( MODEL == ELBDM )
 //             apply minimum density
                Flu_FData[DENS][k][j][i] = MIN_DENS;
@@ -1048,10 +1048,10 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #           if ( MODEL == ELBDM )
 #           if ( ELBDM_SCHEME == HYBRID )
             if ( amr->use_wave_flag[lv+1] ) {
-#           endif 
+#           endif
             real Real, Imag, Rho_Wrong, Rho_Corr, Rescale;
 
-            if ( !OPT__INT_PHASE || disableIntPhase ) 
+            if ( !OPT__INT_PHASE || disableIntPhase )
             {
                for (int k=0; k<PS1; k++)
                for (int j=0; j<PS1; j++)
@@ -1077,7 +1077,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             } // if ( !OPT__INT_PHASE || disableIntPhase )
 #           if ( ELBDM_SCHEME == HYBRID )
             } // if ( amr->use_wave_flag[lv+1] )
-#           endif 
+#           endif
 #           endif // #if ( MODEL == ELBDM )
          } // for (int LocalID=0; LocalID<8; LocalID++)
 
@@ -1222,17 +1222,17 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 #     ifdef GAMER_DEBUG
       printf("Max level %i: \n", MAX_LEVEL);
-#     endif 
+#     endif
 
       //Set corresponding flag
       for (int level = lv + 1; level <= MAX_LEVEL; ++level) {
 
 #        ifdef GAMER_DEBUG
          printf("Converting level %i to wave scheme\n\n", level);
-#        endif 
+#        endif
          //int counter = 0;
 
-         amr->use_wave_flag[level] = true; 
+         amr->use_wave_flag[level] = true;
          int fluSg = amr->FluSg[level];
 
          //printf("PID count = %d\n", amr->NPatchComma[level][1]);
@@ -1246,17 +1246,17 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             for (int k=0; k<PS1; k++)  {
             for (int j=0; j<PS1; j++)  {
             for (int i=0; i<PS1; i++)  {
-               int kk  =  k; 
-               int kkp = (kk + 1) < PS1  ? kk + 1 : kk    ; 
+               int kk  =  k;
+               int kkp = (kk + 1) < PS1  ? kk + 1 : kk    ;
                int kkm = (kk - 1) < 0         ? kk     : kk - 1;
-               int ii  =  i; 
-               int iip = (ii + 1) < PS1  ? ii + 1 : ii    ; 
+               int ii  =  i;
+               int iip = (ii + 1) < PS1  ? ii + 1 : ii    ;
                int iim = (ii - 1) < 0         ? ii     : ii - 1;
-               int jj  =  j; 
-               int jjp = (jj + 1) < PS1  ? jj + 1 : jj    ; 
+               int jj  =  j;
+               int jjp = (jj + 1) < PS1  ? jj + 1 : jj    ;
                int jjm = (jj - 1) < 0         ? jj     : jj - 1;
-               
-               //check whether dB wavelength is resolved within the newly converted patch 
+
+               //check whether dB wavelength is resolved within the newly converted patch
                real maxphase = MAX(MAX(MAX(MAX(MAX(
                FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][iip] - amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ]),
                FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ] - amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][iim])),
@@ -1275,16 +1275,16 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                                 amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jjm][ii ],
                                 amr->patch[fluSg][level][PID]->fluid[PHAS][kkp][jj ][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ],
                                 amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kkm][jj ][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jj ][ii ], 
+                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jj ][ii ],
                                 amr->patch[fluSg][level][PID]->fluid[STUB][kkp][jj ][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jjp][ii ], 
+                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jjp][ii ],
                                 amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jj ][iip],
-                                amr->patch[fluSg][level][PID]->fluid[STUB][kkm][jj ][ii ], 
+                                amr->patch[fluSg][level][PID]->fluid[STUB][kkm][jj ][ii ],
                                 amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jjm][ii ],
                                 amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jj ][iim]
                               );
                }
-            }}} 
+            }}}
 
 #           endif // # ifdef GAMER_DEBUG
 

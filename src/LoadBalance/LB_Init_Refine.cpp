@@ -66,7 +66,7 @@ void LB_Init_Refine( const int FaLv, const bool AllocData )
         if ( amr->patch[0][FaLv][FaPID]->use_wave_flag ) {
             amr->use_wave_flag[SonLv] = true;
         }
-#       endif 
+#       endif
 
       } // if ( amr->patch[0][FaLv][FaPID]->flag )
    } // for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)

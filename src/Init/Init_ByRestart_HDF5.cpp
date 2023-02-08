@@ -217,9 +217,9 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "AveDens_Init",         &KeyInfo.AveDens_Init,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 #  endif
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )   
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
    LoadField( "UseWaveScheme",        &KeyInfo.UseWaveScheme,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID ) 
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 // must initialize all char* pointers as NULL so that we can safely free them later
 // --> in case they do not exist in the restart file

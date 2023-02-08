@@ -39,7 +39,7 @@ void Init_Load_FlagCriteria()
 #  if (  MODEL != ELBDM )
    const bool OPT__FLAG_INTERFERENCE  = false;
    double FlagTable_Interference[NLEVEL-1][4];
-#  endif 
+#  endif
 
 #  ifndef PARTICLE
    const bool OPT__FLAG_NPAR_PATCH    = false;

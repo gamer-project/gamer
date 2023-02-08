@@ -45,7 +45,7 @@
 #define MHM_RP       4
 #define CTU          5
 
-// elbdm schemes 
+// elbdm schemes
 #define WAVE         1
 #define HYBRID       2
 
@@ -191,7 +191,7 @@
 
 // for ELBDM, we do not need to transfer the density component into GPU
 // for the hybrid scheme, we carry around the obsolete extra component in FLU_NOUT for now
-// this keeps modifications to the existing wave solver code to a 
+// this keeps modifications to the existing wave solver code to a
 #elif ( MODEL == ELBDM )
 #  define FLU_NIN             ( NCOMP_TOTAL - 1 )
 #  define FLU_NOUT            ( NCOMP_TOTAL - 0 )
@@ -386,7 +386,7 @@
 #if ( ELBDM_SCHEME == HYBRID )
 #ifndef DENS
 #  define  DENS               0
-#endif 
+#endif
 #  define  PHAS               1
 #  define  STUB               2
 #endif // #if ( ELBDM_SCHEME == HYBRID )
@@ -406,14 +406,14 @@
 #if ( ELBDM_SCHEME == HYBRID )
 # ifndef _DENS
 #  define _DENS               ( 1L << DENS )
-# endif 
+# endif
 #  define  _PHAS              ( 1L << PHAS )
 #  define  _STUB              ( 1L << STUB )
 #endif // #if ( ELBDM_SCHEME == HYBRID )
 
 
 // bitwise flux indices
-// for the hybrid scheme, we also only need the density flux 
+// for the hybrid scheme, we also only need the density flux
 #  define _FLUX_DENS          ( 1L << FLUX_DENS )
 
 // bitwise indices of derived fields
@@ -595,9 +595,9 @@
 #  if ( ELBDM_SCHEME == HYBRID )
 #     if ( HYBRID_SCHEME == TOS )
 #          define FLU_GHOST_SIZE          6
-#     else 
+#     else
 #          define FLU_GHOST_SIZE          6
-#     endif 
+#     endif
 #  else // # if ( ELBDM_SCHEME == HYBRID )
 #     ifdef LAPLACIAN_4TH
 #        define FLU_GHOST_SIZE         6

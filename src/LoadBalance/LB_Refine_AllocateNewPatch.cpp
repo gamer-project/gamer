@@ -798,7 +798,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 // 3.2.1 determine which variables require **monotonic** interpolation
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
    const int PhaseUnwrapping_Cond  = 2;
-#  else 
+#  else
    const int PhaseUnwrapping_Cond  = 0;
 #  endif
    const int PhaseUnwrapping_Yes   = 1;
@@ -806,9 +806,9 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    const bool Monotonicity_Yes      = true;
    const bool Monotonicity_No       = false;
    const bool IntOppSign0thOrder_No = false;
-   
-// turn off phase interpolation if DISABLE_PHASE_AT_VORTEX is defined and we detect vortex in interpolation data
-         bool disableIntPhase       = false; 
+
+// turn off phase interpolation if DISABLE_PHASE_AT_DEFECT is defined and we detect vortex in interpolation data
+         bool disableIntPhase       = false;
 
    bool Monotonicity[NCOMP_TOTAL];
 
@@ -826,14 +826,14 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #     elif ( MODEL == ELBDM )
 #     if ( ELBDM_SCHEME == HYBRID )
       if ( amr->use_wave_flag[FaLv] ) {
-#     endif 
+#     endif
       if ( v != REAL  &&  v != IMAG )  Monotonicity[v] = Monotonicity_Yes;
       else                             Monotonicity[v] = Monotonicity_No;
 #     if ( ELBDM_SCHEME == HYBRID )
       } else { // if ( amr->use_wave_flag[FaLv] )
       if ( v != PHAS  &&  v != STUB )  Monotonicity[v] = Monotonicity_Yes;
       else                             Monotonicity[v] = Monotonicity_No;
-      } // if ( amr->use_wave_flag[FaLv] ) ... else 
+      } // if ( amr->use_wave_flag[FaLv] ) ... else
 #     endif // #if ( ELBDM_SCHEME == HYBRID )
 
 #     else
@@ -913,7 +913,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    real *const CData_Imag = CData_Flu + IMAG*CSize_Flu1v;
 #  if ( ELBDM_SCHEME == HYBRID )
    real *const CData_Phas = CData_Flu + PHAS*CSize_Flu1v;
-#  endif 
+#  endif
 #  endif
    CData_Next += NCOMP_TOTAL*CSize_Flu1v;
 
@@ -922,19 +922,19 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #  if ( MODEL == ELBDM )
 #  if ( ELBDM_SCHEME == HYBRID )
    if ( amr->use_wave_flag[FaLv] ) {
-#  endif 
+#  endif
 
-#  ifdef DISABLE_PHASE_AT_VORTEX
+#  ifdef DISABLE_PHASE_AT_DEFECT
    if ( OPT__INT_PHASE ) {
 //    iterate over coarse array data and disable phase interpolation for all 8 children if vortex is found
       for (int k=0; k<CSize_Flu; k++)
       for (int j=0; j<CSize_Flu; j++)
       for (int i=0; i<CSize_Flu; i++)
       {
-         disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_Flu, CSize_Flu, CSize_Flu, CData_Dens, DISABLE_PHASE_AT_VORTEX_THRESHOLD);
+         disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_Flu, CSize_Flu, CSize_Flu, CData_Dens, DISABLE_PHASE_AT_DEFECT_THRESHOLD);
       }
-   } // if ( OPT__INT_PHASE ) 
-#  endif // # ifdef DISABLE_PHASE_AT_VORTEX
+   } // if ( OPT__INT_PHASE )
+#  endif // # ifdef DISABLE_PHASE_AT_DEFECT
 
    if ( OPT__INT_PHASE && !disableIntPhase )
    {
@@ -1059,17 +1059,17 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       for (int k=0; k<FSize_CC; k++) {
       for (int j=0; j<FSize_CC; j++) {
       for (int i=0; i<FSize_CC; i++) {
-            int kk  =  k; 
-            int kkp = (kk + 1) < FSize_CC  ? kk + 1 : kk    ; 
+            int kk  =  k;
+            int kkp = (kk + 1) < FSize_CC  ? kk + 1 : kk    ;
             int kkm = (kk - 1) < 0         ? kk     : kk - 1;
-            int ii  =  i; 
-            int iip = (ii + 1) < FSize_CC  ? ii + 1 : ii    ; 
+            int ii  =  i;
+            int iip = (ii + 1) < FSize_CC  ? ii + 1 : ii    ;
             int iim = (ii - 1) < 0         ? ii     : ii - 1;
-            int jj  =  j; 
-            int jjp = (jj + 1) < FSize_CC  ? jj + 1 : jj    ; 
+            int jj  =  j;
+            int jjp = (jj + 1) < FSize_CC  ? jj + 1 : jj    ;
             int jjm = (jj - 1) < 0         ? jj     : jj - 1;
-            
-//    Check whether dB wavelength is resolved within the newly converted patch 
+
+//    Check whether dB wavelength is resolved within the newly converted patch
             real maxphase = MAX(MAX(MAX(MAX(MAX(
             FABS(FData_Flu[PHAS][kk ][jj ][iip] - FData_Flu[PHAS][kk ][jj ][ii ]),
             FABS(FData_Flu[PHAS][kk ][jj ][ii ] - FData_Flu[PHAS][kk ][jj ][iim])),
@@ -1082,8 +1082,8 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
                Aux_Message ( stderr, "WARNING: When converting patch to wave scheme, phase jump ii %d iim %d iip %d jj %d jjm %d jjp %d kk %d kkm %d kkp %d %f \n", ii, iim, iip, jj, jjm, jjp, kk, kkm, kkp, maxphase);
             }
       }}}
-#     endif   // # ifdef GAMER_DEBUG       
-      
+#     endif   // # ifdef GAMER_DEBUG
+
       for (int k=0; k<FSize_CC; k++) {
       for (int j=0; j<FSize_CC; j++) {
       for (int i=0; i<FSize_CC; i++) {
@@ -1113,7 +1113,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #        if ( MODEL == ELBDM )
 #        if ( ELBDM_SCHEME == HYBRID )
          if ( amr->use_wave_flag[SonLv] )
-#        endif 
+#        endif
          if ( OPT__INT_PHASE && !disableIntPhase )
          {
             const real Rescale = SQRT( (real)MIN_DENS / DensOld );
@@ -1231,7 +1231,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #     if ( MODEL == ELBDM )
 #     if ( ELBDM_SCHEME == HYBRID )
       if ( amr->use_wave_flag[SonLv] ) {
-#     endif 
+#     endif
       real Real, Imag, Rho_Corr, Rho_Wrong, Rescale;
 
       if ( !OPT__INT_PHASE || disableIntPhase ) {
@@ -1260,7 +1260,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 #     if ( ELBDM_SCHEME == HYBRID )
       } // if ( amr->use_wave_flag[SonLv] )
-#     endif 
+#     endif
 #     endif
    } // for (int LocalID=0; LocalID<8; LocalID++)
 

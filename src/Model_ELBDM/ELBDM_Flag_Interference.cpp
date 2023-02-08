@@ -4,10 +4,10 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_Flag_Interference
-// Description :  Flag according to the interference criterion 
+// Description :  Flag according to the interference criterion
 //
 // Note        :  1. Flag the input cell if the interference criteria are met (Interference, Phase jumps and additional check whether dB wavelength is resolved)
-//                2. Size of the input array "Cond_Array" should be PATCH_SIZE^3 
+//                2. Size of the input array "Cond_Array" should be PATCH_SIZE^3
 //
 // Parameter   :  i,j,k       : Indices of the target cell in the arrays "Cond_Array"
 //                Theshold    : Refinement Threshold for M_int
@@ -46,7 +46,7 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
 //
 // Parameter   :  Var       : Array storing the input density and phase/re & im for the interference criterion
 //                Temp      : Array to store the intermediate variable sqrt(density)
-//                Cond      : Array to store the output dimensionless quantum pressure, the curvature of the phase field as well as 
+//                Cond      : Array to store the output dimensionless quantum pressure, the curvature of the phase field as well as
 //                            the maximum phase difference between neighbouring points
 //
 // Return      :  None
@@ -56,7 +56,7 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
 
    const int NCell  = PS1 + 2;   // size of the arrays Var, Temp
    const int NCond  = PS1;       // size of the array  Cond
-   const float vortexThreshold = 0.5; 
+   const float vortexThreshold = 0.5;
 
    int ii, jj, kk, iim, jjm, kkm, iip, jjp, kkp;
 
@@ -88,7 +88,7 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
                                + Temp[0][kk ][jjp][ii ] + Temp[0][kk ][jjm][ii ] \
                                + Temp[0][kkp][jj ][ii ] + Temp[0][kkm][jj ][ii ] \
                                -  (real) 6.0 * Temp[0][kk ][jj ][ii])\
-                               / ((real) 3.0 * Temp[0][kk ][jj ][ii]);   
+                               / ((real) 3.0 * Temp[0][kk ][jj ][ii]);
       if (useWaveFlag)   {
          Cond[1][k][j][i] = 0;
 
@@ -114,11 +114,11 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
                                  + Temp[1][kkp][jj ][ii ] + Temp[1][kkm][jj ][ii ] \
                                  -  (real) 6.0 * Temp[1][kk ][jj ][ii])\
                                  / ((real) 3.0);
-#        else    
+#        else
          Cond[1][k][j][i] = 0;
-#        endif                               
+#        endif
 
-#        ifdef GAMER_DEBUG                       
+#        ifdef GAMER_DEBUG
 //       Check maximum phase difference in all 6 directions
          Cond[2][k][j][i] = MAX(MAX(MAX(MAX(MAX(
             FABS(Temp[1][kk ][jj ][iip] - Temp[1][kk ][jj ][ii ]),
@@ -129,7 +129,7 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
             FABS(Temp[1][kk ][jj ][ii ] - Temp[1][kkm][jj ][ii ]));
 #        else
          Cond[2][k][j][i] = 0;
-#        endif 
+#        endif
       }
    }}} // k,j,i
 
