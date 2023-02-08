@@ -64,8 +64,8 @@ extern real  *d_SrcDlepProf_Radius;
 //                              --> Here it is used only for the dt solver
 //                Src_NPG     : Number of patch groups evaluated simultaneously by GPU for the source-term solver
 //                GPU_NStream : Number of CUDA stream objects
-
-// Return      : GAMER_SUCCESS / GAMER_FAILED
+//
+// Return      :  GAMER_SUCCESS / GAMER_FAILED
 //-------------------------------------------------------------------------------------------------------
 int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src_NPG, const int GPU_NStream )
 {

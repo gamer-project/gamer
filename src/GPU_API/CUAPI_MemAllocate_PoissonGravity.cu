@@ -32,7 +32,7 @@ extern void **d_ExtPotGenePtr;
 //
 // Parameter   :  Pot_NPG  : Number of patch groups evaluated simultaneously by GPU
 //
-// Return      : GAMER_SUCCESS / GAMER_FAILED
+// Return      :  GAMER_SUCCESS / GAMER_FAILED
 //-------------------------------------------------------------------------------------------------------
 int CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 {
