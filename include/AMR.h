@@ -116,9 +116,9 @@ struct AMR_t
 #  endif
    long   NUpdateLv   [NLEVEL];
 
-#if ( MODEL == ELBDM  && ELBDM_SCHEME == HYBRID )
+#  if ( MODEL == ELBDM  && ELBDM_SCHEME == HYBRID )
    bool   use_wave_flag[NLEVEL];
-#endif // #if ( MODEL == ELBDM  && ELBDM_SCHEME == HYBRID )
+#  endif // #if ( MODEL == ELBDM  && ELBDM_SCHEME == HYBRID )
 
    //===================================================================================
    // Constructor :  AMR_t
