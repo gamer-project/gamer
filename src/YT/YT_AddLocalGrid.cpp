@@ -13,6 +13,7 @@
 // Parameter   :  NField        : Number of fields loaded to YT.
 //                FieldList     : List of field_name, field_define_type.
 //                pc            : Patch count object with information about the number of patches on all ranks
+//
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
 void YT_AddLocalGrid( int NField, yt_field *FieldList, LB_PatchCount& pc)
@@ -27,11 +28,11 @@ void YT_AddLocalGrid( int NField, yt_field *FieldList, LB_PatchCount& pc)
 // record local grids index and patched grids index if LIBYT_USE_PATCH_GROUP
    int LID = 0;
 
-   LB_LocalPatchExchangeList lel; 
+   LB_LocalPatchExchangeList lel;
 
-// sync load balance ids 
-   LB_AllgatherLBIdx(pc, lel);
-   LB_FillLocalPatchExchangeList(pc, lel); 
+// sync load balance ids
+   LB_AllgatherLBIdx( pc, lel );
+   LB_FillLocalPatchExchangeList( pc, lel );
 
 // loop over local patches at all levels
    for (int lv=0; lv<NLEVEL; lv++)
@@ -92,7 +93,7 @@ void YT_AddLocalGrid( int NField, yt_field *FieldList, LB_PatchCount& pc)
          long FaGID = lel.FaList_Local[lv][PID];
 
 #        ifdef LIBYT_USE_PATCH_GROUP
-         if ( FaGID != -1 ) FaGID = (long) (FaGID / 8); 
+         if ( FaGID != -1 ) FaGID = (long) (FaGID / 8);
 #        endif // #ifdef LIBYT_USE_PATCH_GROUP
 
          YT_Grids[LID].parent_id = FaGID;

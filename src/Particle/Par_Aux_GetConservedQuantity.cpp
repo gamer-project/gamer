@@ -17,7 +17,7 @@
 //                   --> But it is found to have a minimal effect since most particles are synchronized
 //                   --> We don't want to synchronize particles in this routine (by calling Par_Synchronize)
 //                       since particles may move outside the current patch which requires additional workload
-//                5. Results obtained from serial (with SERIAL on) and parallel codes (with LOAD_BALANCE) on
+//                5. Results obtained from serial (with SERIAL on) and parallel codes (with LOAD_BALANCE on)
 //                   can be slightly different due to round-off errors
 //                   --> We do not correct it even in the debug mode because it should have no impact on the
 //                       actual simulation variables

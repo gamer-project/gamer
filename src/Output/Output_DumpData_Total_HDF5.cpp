@@ -70,7 +70,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2455)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2458)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -230,10 +230,13 @@ Procedure for outputting new variables:
 //                                             AUTO_REDUCE_INT_MONO_FACTOR, AUTO_REDUCE_INT_MONO_MIN,
 //                                             INT_MONO_COEFF_B
 //                2455 : 2022/11/04 --> output REFINE_NLEVEL
-//                2456 : 2022/11/14 --> output OPT__FLAG_INTERFERENCE, FlagTable_Interference
+//                2456 : 2022/12/15 --> output SUPPORT_FFTW
+//                2457 : 2023/01/28 --> output OPT__RESET_FLUID_INIT
+//                2458 : 2023/02/02 --> add OPT__RES_PHASE
+//                2459 : 2022/02/08 --> output OPT__FLAG_INTERFERENCE, FlagTable_Interference
 //                                      output DENS and PHAS for hybrid scheme,
-//                                      output use_wave_flag[lv] for AMR structure
-//                2457 : 2022/11/17 --> output OPT__LB_EXCHANGE_FATHER
+//                                      output use_wave_flag[lv] for AMR structure,
+//                                      output OPT__LB_EXCHANGE_FATHER
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -344,8 +347,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 // 1. gather the number of patches at different MPI ranks and set the corresponding GID offset
    LB_PatchCount pc;
-   LB_AllgatherPatchCount(pc); 
-
+   LB_AllgatherPatchCount( pc );
 
 // 2. prepare all HDF5 variables
    hsize_t H5_SetDims_LBIdx, H5_SetDims_Cr[2], H5_SetDims_Fa, H5_SetDims_Son, H5_SetDims_Sib[2], H5_SetDims_Field[4];
@@ -446,20 +448,20 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 
 // 4. output the AMR tree structure (father, son, sibling, LBIdx, corner, and the number of particles --> sorted by GID)
-   int root = 0; 
+   int root = 0;
 
 // 4-1. allocate lists
    LB_LocalPatchExchangeList  lel;
-   LB_GlobalPatchExchangeList gel(pc, root);
+   LB_GlobalPatchExchangeList gel( pc, root );
 
 // 4-2. collect and sort LBIdx from all ranks
-   LB_AllgatherLBIdx(pc, lel, &gel);
+   LB_AllgatherLBIdx( pc, lel, &gel );
 
 // 4-3. store the local tree
-   LB_FillLocalPatchExchangeList(pc, lel);
+   LB_FillLocalPatchExchangeList( pc, lel );
 
 // 4-4. gather data from all ranks
-   LB_FillGlobalPatchExchangeList(pc, lel, gel, root);
+   LB_FillGlobalPatchExchangeList( pc, lel, gel, root );
 
 // 4-5. dump the tree info
    if ( MPI_Rank == 0 )
@@ -1023,10 +1025,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
                      #ifdef GAMER_DEBUG
                      real Stub;
-                     #endif 
+                     #endif
 
 
-                     for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++) 
+                     for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                      {
                         Phase = 0;
                         Success = 0;
@@ -1034,7 +1036,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                         FaPID = PID;
                         if (amr->patch[0][lv][PID]->father == -1 && lv > 0 && v == REAL) {
                            Aux_Error( ERROR_INFO, "WARNING: NO FATHER PATCH FOR WAVE PATCH! PID %d Lv %d\n", PID, lv);
-                           
+
                            for (int k=0; k<PS1; k++)
                            for (int j=0; j<PS1; j++)
                            for (int i=0; i<PS1; i++) {
@@ -1043,11 +1045,11 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                               printf("%6d %6d %6d %6d %6.6f\n", PID, k, j, i, SQR(Re) + SQR(Im));
                            }
 
-                  
+
                         }
                         while (FaLv > 0  && !(FaPID < 0) && v == REAL) {
                            FaPID = amr->patch[0][FaLv][FaPID]->father;
-                           FaLv -= 1; 
+                           FaLv -= 1;
                            //printf("FaPID %d FaLv %d FaUseWave %d\n", FaPID, FaLv, amr->use_wave_flag[FaLv]);
                            if ( !amr->use_wave_flag[FaLv] && !(FaPID < 0)) {
                               Success = 1;
@@ -1076,7 +1078,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                                  Aux_Error( ERROR_INFO, "ERROR: NO FATHER PATCH FOR WAVE PATCH! PID %d FaPID %d Lv %d UseWave %d FaLV %d FaUseWave %d \n", PID, FaPID, lv, amr->use_wave_flag[lv], FaLv, amr->use_wave_flag[FaLv]);
                                  Phase = 0;
                               }
-                              
+
                               Re = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[REAL][k][j][i];
                               Im = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[IMAG][k][j][i];
 
@@ -1109,7 +1111,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   } else
 #                 else // #ifdef SERIAL
                      real Re, Im;
-                     for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++) 
+                     for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                      {
                         for (int k=0; k<PS1; k++)
                         for (int j=0; j<PS1; j++)
@@ -1125,8 +1127,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                            }
                         }
                      }
-                  } else 
-#                 endif // # ifdef SERIAL ... #else 
+                  } else
+#                 endif // # ifdef SERIAL ... #else
 #                 endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                      memcpy( FieldData[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
@@ -1181,6 +1183,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 
 //             5-2-2-2. determine the subset of the dataspace
+               H5_Offset_FCMag[0] = pc.GID_Offset[lv];
                H5_Offset_FCMag[0] = pc.GID_Offset[lv];
                H5_Offset_FCMag[1] = 0;
                H5_Offset_FCMag[2] = 0;
@@ -1407,6 +1410,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       if ( H5_SetID_Fa < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", SetName );
 
       H5_Status = H5Dread( H5_SetID_Fa, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.FaList_AllLv );
+      H5_Status = H5Dread( H5_SetID_Fa, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.FaList_AllLv );
       H5_Status = H5Dclose( H5_SetID_Fa );
 
       sprintf( SetName, "Tree/Son" );
@@ -1414,6 +1418,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
       if ( H5_SetID_Son < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", SetName );
 
+      H5_Status = H5Dread( H5_SetID_Son, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.SonList_AllLv );
       H5_Status = H5Dread( H5_SetID_Son, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.SonList_AllLv );
       H5_Status = H5Dclose( H5_SetID_Son );
 
@@ -1447,7 +1452,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                        lv, GID, gel.FaList_AllLv[GID], gel.SonList_AllLv[ gel.FaList_AllLv[GID] ] );
 
 //       7-1-5. son->father == itself
-         long SonGID = gel.SonList_AllLv[GID];
+         const int SonGID = gel.SonList_AllLv[GID];
          if ( SonGID != -1 )
          {
             if ( lv >= MAX_LEVEL )
@@ -1469,7 +1474,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //       7-1-6. sibling->sibling_mirror = itself
          for (int s=0; s<26; s++)
          {
-            long SibGID = gel.SibList_AllLv[GID][s];
+            const int SibGID = gel.SibList_AllLv[GID][s];
 
             if ( SibGID >= 0 )
             {
@@ -1519,7 +1524,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2455;
+   KeyInfo.FormatVersion        = 2458;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1580,7 +1585,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
 #     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
       KeyInfo.UseWaveScheme [lv] = amr->use_wave_flag [lv];
-#     endif 
+#     endif
    }
 
    KeyInfo.CodeVersion  = (char*)VERSION;
@@ -1712,6 +1717,12 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.SupportGSL             = 1;
 #  else
    Makefile.SupportGSL             = 0;
+#  endif
+
+#  ifdef SUPPORT_FFTW
+   Makefile.SupportFFTW            = 1;
+#  else
+   Makefile.SupportFFTW            = 0;
 #  endif
 
 #  ifdef SUPPORT_LIBYT
@@ -2317,6 +2328,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 
    InputPara.Opt__OverlapMPI         = OPT__OVERLAP_MPI;
    InputPara.Opt__ResetFluid         = OPT__RESET_FLUID;
+   InputPara.Opt__ResetFluidInit     = OPT__RESET_FLUID_INIT;
    InputPara.Opt__FreezeFluid        = OPT__FREEZE_FLUID;
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    InputPara.MinDens                 = MIN_DENS;
@@ -2726,6 +2738,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Laohu",                  HOFFSET(Makefile_t,Laohu                  ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportHDF5",            HOFFSET(Makefile_t,SupportHDF5            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportGSL",             HOFFSET(Makefile_t,SupportGSL             ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "SupportFFTW",            HOFFSET(Makefile_t,SupportFFTW            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportLibYT",           HOFFSET(Makefile_t,SupportLibYT           ), H5T_NATIVE_INT );
 #  ifdef SUPPORT_LIBYT
    H5Tinsert( H5_TypeID, "LibYTUsePatchGroup",     HOFFSET(Makefile_t,LibYTUsePatchGroup     ), H5T_NATIVE_INT );
@@ -3222,6 +3235,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 
    H5Tinsert( H5_TypeID, "Opt__OverlapMPI",         HOFFSET(InputPara_t,Opt__OverlapMPI        ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__ResetFluid",         HOFFSET(InputPara_t,Opt__ResetFluid        ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__ResetFluidInit",     HOFFSET(InputPara_t,Opt__ResetFluidInit    ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__FreezeFluid",        HOFFSET(InputPara_t,Opt__FreezeFluid       ), H5T_NATIVE_INT              );
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "MinDens",                 HOFFSET(InputPara_t,MinDens                ), H5T_NATIVE_DOUBLE           );

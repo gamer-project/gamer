@@ -26,7 +26,7 @@ void LB_GetPID(long GID, int& level, int& PID, int* GID_Offset) {
    level = 0;
 
    for(int lv = 1; lv < NLEVEL; lv++) {
-      if ( GID < GID_Offset[lv] )      
+      if ( GID < GID_Offset[lv] )
         break;
       level = lv;
    }
@@ -51,10 +51,9 @@ void LB_GetPID(long GID, int& level, int& PID, int* GID_Offset) {
 //-------------------------------------------------------------------------------------------------------
 void YT_GetPID(const long gid, int *level, int *PID) {
 #   ifdef  LIBYT_USE_PATCH_GROUP
-    LB_GetPID( 8 * gid, *level, *PID, YT_GID_Offset ); 
+    LB_GetPID( 8 * gid, *level, *PID, YT_GID_Offset );
 #   else
     LB_GetPID(     gid, *level, *PID, YT_GID_Offset );
 #   endif // # ifdef  LIBYT_USE_PATCH_GROUP
 }
 #endif // #ifdef SUPPORT_LIBYT
-

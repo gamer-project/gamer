@@ -114,7 +114,7 @@ fig.colorbar(im6, cax=cax, orientation='vertical')
 
 plt.savefig("ComparisonOfRestrictionMethodsBeforeEvolution.png")
 plt.close()
- 
+
 ds1  = yt.load("Data_000002_NoRefinement")
 ds2  = yt.load("Data_000002_OldRestriction")
 ds3  = yt.load("Data_000002_NewRestriction")
@@ -195,4 +195,5 @@ fig.colorbar(im6, cax=cax, orientation='vertical')
 
 plt.savefig("ComparisonOfRestrictionMethodsAfterEvolution.png")
 plt.close()
-  
+
+

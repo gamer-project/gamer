@@ -5,6 +5,7 @@ static bool Check_Curl( const int i, const int j, const int k,
                         const real vx[][PS1][PS1], const real vy[][PS1][PS1], const real vz[][PS1][PS1],
                         const double Threshold );
 static bool ELBDM_Flag_VolumeFracQP( const real Cond[], const double Threshold_QP, const double Threshold_VolumeFraction );
+extern bool (*Flag_Region_Ptr)( const int i, const int j, const int k, const int lv, const int PID );
 extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 
 
@@ -53,11 +54,13 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 // ===========================================================================================
    if ( OPT__FLAG_REGION )
    {
-      if (  !Flag_Region( i, j, k, lv, PID )  )    return false;
+      if ( Flag_Region_Ptr == NULL )   Aux_Error( ERROR_INFO, "Flag_Region_Ptr == NULL for OPT__FLAG_REGION !!\n" );
+
+      if (  !Flag_Region_Ptr( i, j, k, lv, PID )  )    return false;
    }
 
 
-// check ELBDM interference 
+// check ELBDM interference
 // if FlagTable_Interference[lv][2] > 0 we set use wave flag if interference > FlagTable_Interference[lv][0],[1]
 // if FlagTable_Interference[lv][2] < 0 we just use it as refinement criterion for fluid patches
 // ===========================================================================================
@@ -107,9 +110,9 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
          if ( !dBResolvedAfterRefine ) {
             const int    Idx               = 2 * PS1*PS1*PS1 + k*PS1*PS1 + j*PS1 + i;
             const real   PhaseDifference   = Interf_Cond[Idx];
-//          convert coordinates of cell to global integer coordinate system 
+//          convert coordinates of cell to global integer coordinate system
             int coordinates[3] = {i, j, k};
-       
+
             for ( int l = 0; l < 3; ++l ) {
                coordinates[l] *= amr->scale[lv];
                coordinates[l] += amr->patch[0][lv][PID]->corner[l];
@@ -117,7 +120,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
             Aux_Message( stdout, "WARNING: Switching to wave solver, but dB wavelength not resolved at lv %d i %d j %d k %d for phase jump = %4.2f on rank %d\n", lv, coordinates[0], coordinates[1], coordinates[2], PhaseDifference, MPI_Rank);
 
          }
-#        endif 
+#        endif
 
          amr->patch[0][lv][PID]->use_wave_flag =  true;
 
@@ -226,7 +229,7 @@ if ( OPT__FLAG_RHO )
 #  if ( MODEL == ELBDM )
 #  if ( ELBDM_SCHEME == HYBRID )
    if ( amr->use_wave_flag[lv] )
-#  endif 
+#  endif
    if ( OPT__FLAG_ENGY_DENSITY )
    {
       Flag |= ELBDM_Flag_EngyDensity( i, j, k, &Fluid[REAL][0][0][0], &Fluid[IMAG][0][0][0],
@@ -242,7 +245,7 @@ if ( OPT__FLAG_RHO )
 
 #  if ( ELBDM_SCHEME == HYBRID )
    if ( amr->use_wave_flag[lv] )
-#  endif 
+#  endif
    if ( Lohner_NVar > 0 )
    {
 //    check Lohner only if density is greater than the minimum threshold
@@ -419,7 +422,7 @@ bool ELBDM_Flag_VolumeFracQP( const real Cond[], const double Threshold_QP, cons
    const float NTotal = PS1 * PS1 * PS1;
    float NExceedThreshold = 0;
 
-   for (int Idx = 0; Idx < NTotal; ++Idx) 
+   for (int Idx = 0; Idx < NTotal; ++Idx)
          if ( Cond[Idx] > Threshold_QP ) ++NExceedThreshold;
 
    float ratio =  NExceedThreshold / NTotal;

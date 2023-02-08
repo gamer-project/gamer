@@ -939,7 +939,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    if ( OPT__INT_PHASE && !disableIntPhase )
    {
 //    get the wrapped phase (store in the REAL component)
-      for (int t=0; t<CSize_Flu1v; t++)   CData_Real[t] = ATAN2( CData_Imag[t], CData_Real[t] );
+      for (int t=0; t<CSize_Flu1v; t++)   CData_Real[t] = SATAN2( CData_Imag[t], CData_Real[t] );
 
 //    interpolate density
       Interpolate( CData_Dens, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[DENS][0][0][0],
@@ -1162,7 +1162,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 
 //    normalize passive scalars
-#     if ( NCOMP_PASSIVE > 0 )
+#     if ( NCOMP_PASSIVE > 0  &&  MODEL == HYDRO )
       if ( OPT__NORMALIZE_PASSIVE )
       {
          real Passive[NCOMP_PASSIVE];

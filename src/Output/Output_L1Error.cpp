@@ -19,9 +19,6 @@ static void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const
 #define NERR      ( NBASIC + NEXTRA )
 
 
-#include <iostream>
- 
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_L1Error
 // Description :  Compare the numerical and analytical solutions and output the L1 errors
@@ -97,11 +94,15 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
    sprintf( FileName[            0], "%s_Dens_%06d", Prefix, DumpID );
    sprintf( FileName[            1], "%s_Phas_%06d", Prefix, DumpID );
    sprintf( FileName[            2], "%s_Stub_%06d", Prefix, DumpID );
-#  else 
+#  else
    sprintf( FileName[            0], "%s_Dens_%06d", Prefix, DumpID );
    sprintf( FileName[            1], "%s_Real_%06d", Prefix, DumpID );
    sprintf( FileName[            2], "%s_Imag_%06d", Prefix, DumpID );
-#  endif 
+#  endif
+
+   for (int v=0; v<NCOMP_PASSIVE; v++)
+   sprintf( FileName[NCOMP_FLUID+v], "%s_Passive%02d_%06d", Prefix, v, DumpID );
+
 #  else
 #  error : unsupported MODEL !!
 #  endif // MODEL
@@ -270,12 +271,18 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 
 #        elif ( MODEL == ELBDM )
 #        if ( ELBDM_SCHEME == HYBRID )
-         fprintf( File_L1, "#%5s %13s %19s %19s %19s\n",
+         fprintf( File_L1, "#%5s %13s %19s %19s %19s",
                   "NGrid", "Time", "Error(Dens)", "Error(Phas)", "Stub" );
-#        else 
-         fprintf( File_L1, "#%5s %13s %19s %19s %19s\n",
+#        else
+         fprintf( File_L1, "#%5s %13s %19s %19s %19s",
                   "NGrid", "Time", "Error(Dens)", "Error(Real)", "Error(Imag)" );
-#        endif 
+#        endif
+
+         for (int v=0; v<NCOMP_PASSIVE; v++)
+         fprintf( File_L1, "    Error(Passive%02d)", v );
+
+         fprintf( File_L1, "\n" );
+
 #        else
 #        error : unsupported MODEL !!
 #        endif // MODEL
@@ -391,7 +398,7 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
    Anal[NBASIC+0] = Temp_Anal;
 #  endif
 
-// convert real and imaginary part to phase for wave patches in hybrid scheme 
+// convert real and imaginary part to phase for wave patches in hybrid scheme
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
    if ( amr->use_wave_flag[lv] ) {
       Anal[PHAS] = SATAN2(Anal[IMAG], Anal[REAL]);
