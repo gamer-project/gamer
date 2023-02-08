@@ -43,10 +43,6 @@ extern real (*d_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
 extern real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif
 #endif // FLU_SCHEME
-#if ( MODEL == HYDRO )
-extern real (*d_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX];
-extern real  *d_SrcDlepProf_Radius;
-#endif
 
 #if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
@@ -102,10 +98,6 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
    const long Flu_MemSize_S_In    = sizeof(real  )*Src_NP*FLU_NIN_S *CUBE(SRC_NXT);
    const long Flu_MemSize_S_Out   = sizeof(real  )*Src_NP*FLU_NOUT_S*CUBE(PS1);
    const long Corner_MemSize_S    = sizeof(double)*Src_NP*3;
-#  if ( MODEL == HYDRO )
-   const long DelProfData_MemSize = sizeof(real)*SRC_DLEP_PROF_NVAR*SRC_DLEP_PROF_NBINMAX;
-   const long DelProfRad_MemSize  = sizeof(real)*                   SRC_DLEP_PROF_NBINMAX;
-#  endif
 
 // the size of the global memory arrays in different models
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
@@ -175,11 +167,6 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
       TotalSize += Corner_MemSize_S;
    }
 
-#  if ( MODEL == HYDRO )
-   if ( SrcTerms.Deleptonization )
-      TotalSize += DelProfData_MemSize + DelProfRad_MemSize;
-#  endif
-
    if ( MPI_Rank == 0 )
       Aux_Message( stdout, "NOTE : total memory requirement in GPU fluid solver = %ld MB\n", TotalSize/(1<<20) );
 
@@ -240,18 +227,6 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
    CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_Corner_Array_S,       Corner_MemSize_S     )  );
    }
 
-#  if ( MODEL == HYDRO )
-   if ( SrcTerms.Deleptonization )
-   {
-      CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_SrcDlepProf_Data,  DelProfData_MemSize  )  );
-      CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_SrcDlepProf_Radius,DelProfRad_MemSize   )  );
-
-//    store the device pointers in SrcTerms when using GPU
-      SrcTerms.Dlep_Profile_DataDevPtr   = d_SrcDlepProf_Data;
-      SrcTerms.Dlep_Profile_RadiusDevPtr = d_SrcDlepProf_Radius;
-   }
-#  endif
-
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #     warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
 #  endif
@@ -299,14 +274,6 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
       CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_Corner_Array_S [t],  Corner_MemSize_S     )  );
       }
    } // for (int t=0; t<2; t++)
-
-#  if ( MODEL == HYDRO )
-   if ( SrcTerms.Deleptonization )
-   {
-      CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_SrcDlepProf_Data,    DelProfData_MemSize )  );
-      CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_SrcDlepProf_Radius,  DelProfRad_MemSize  )  );
-   }
-#  endif
 
 
 // create streams

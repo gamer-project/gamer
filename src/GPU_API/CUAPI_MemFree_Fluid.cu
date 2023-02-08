@@ -37,10 +37,6 @@ extern real (*d_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
 extern real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif
 #endif // FLU_SCHEME
-#if ( MODEL == HYDRO )
-extern real (*d_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX];
-extern real  *d_SrcDlepProf_Radius;
-#endif
 
 #if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
@@ -93,13 +89,6 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
    if ( d_EC_Ele             != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_EC_Ele             )  );  d_EC_Ele             = NULL; }
 #  endif
 #  endif // FLU_SCHEME
-#  if ( MODEL == HYDRO )
-   if ( d_SrcDlepProf_Data   != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_SrcDlepProf_Data   )  );  d_SrcDlepProf_Data   = NULL; }
-   if ( d_SrcDlepProf_Radius != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_SrcDlepProf_Radius )  );  d_SrcDlepProf_Radius = NULL; }
-
-   SrcTerms.Dlep_Profile_DataDevPtr   = NULL;
-   SrcTerms.Dlep_Profile_RadiusDevPtr = NULL;
-#  endif
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #    warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
@@ -132,11 +121,6 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
       if ( h_Flu_Array_S_Out[t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Flu_Array_S_Out[t] )  );  h_Flu_Array_S_Out[t] = NULL; }
       if ( h_Corner_Array_S [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Corner_Array_S [t] )  );  h_Corner_Array_S [t] = NULL; }
    } // for (int t=0; t<2; t++)
-
-#  if ( MODEL == HYDRO )
-   if ( h_SrcDlepProf_Data   != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_SrcDlepProf_Data   )  );  h_SrcDlepProf_Data   = NULL; }
-   if ( h_SrcDlepProf_Radius != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_SrcDlepProf_Radius )  );  h_SrcDlepProf_Radius = NULL; }
-#  endif
 
 
 // destroy streams
