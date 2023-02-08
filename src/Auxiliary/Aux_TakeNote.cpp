@@ -209,18 +209,6 @@ void Aux_TakeNote()
 #     endif
 #     endif
 
-#     ifdef IGNORE_FLUID_FAILURE
-      fprintf( Note, "IGNORE_FLUID_FAILURE            ON\n" );
-#     else
-      fprintf( Note, "IGNORE_FLUID_FAILURE            OFF\n" );
-#     endif
-
-#     ifdef DISABLE_PHASE_AT_DEFECT
-      fprintf( Note, "DISABLE_PHASE_AT_DEFECT         ON\n" );
-#     else
-      fprintf( Note, "DISABLE_PHASE_AT_DEFECT         OFF\n" );
-#     endif
-
 #     ifdef SMOOTH_PHASE
       fprintf( Note, "SMOOTH_PHASE                    ON\n" );
 #     else
@@ -1225,6 +1213,7 @@ void Aux_TakeNote()
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__INT_PHASE                  %d\n",      OPT__INT_PHASE          );
       fprintf( Note, "OPT__RES_PHASE                  %d\n",      OPT__RES_PHASE          );
+      fprintf( Note, "OPT__CK_PHASE_DEFECT            %f\n",      OPT__CK_PHASE_DEFECT    );
 #     if ( ELBDM_SCHEME == HYBRID )
       fprintf( Note, "OPT__MATCH_PHASE                %d\n",      OPT__MATCH_PHASE        );
 #     endif // # if ( ELBDM_SCHEME == HYBRID )

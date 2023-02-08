@@ -383,6 +383,7 @@ void Init_Load_Parameter()
 #  if ( MODEL == ELBDM )
    ReadPara->Add( "OPT__INT_PHASE",             &OPT__INT_PHASE,                  true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RES_PHASE",             &OPT__RES_PHASE,                  false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__CK_PHASE_DEFECT",       &OPT__CK_PHASE_DEFECT,           -1.0,             NoMin_double,  NoMax_double   );
 #  if ( ELBDM_SCHEME == HYBRID )
    ReadPara->Add( "OPT__MATCH_PHASE",           &OPT__MATCH_PHASE,                true,            Useless_bool,  Useless_bool   );
 #  endif // # if ( ELBDM_SCHEME == HYBRID )
