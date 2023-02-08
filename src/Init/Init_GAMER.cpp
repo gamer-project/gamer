@@ -66,13 +66,9 @@ void Init_GAMER( int *argc, char ***argv )
 #  ifdef GPU
    CUAPI_SetDevice( OPT__GPUID_SELECT );
 
-#  ifndef GRAVITY
-   int POT_GPU_NPGROUP = NULL_INT;
-#  endif
-#  ifndef SUPPORT_GRACKLE
-   int CHE_GPU_NPGROUP = NULL_INT;
-#  endif
-   CUAPI_Set_Default_GPU_Parameter( GPU_NSTREAM, FLU_GPU_NPGROUP, POT_GPU_NPGROUP, CHE_GPU_NPGROUP, SRC_GPU_NPGROUP );
+   CUAPI_MemAllocate();
+
+   CUAPI_SetCache();
 #  endif // #ifdef GPU
 
 
@@ -104,7 +100,7 @@ void Init_GAMER( int *argc, char ***argv )
 
 
 // initialize all fields and particle attributes
-// --> Init_Field() must be called before CUAPI_Set_Default_GPU_Parameter()
+// --> Init_Field() must be called before CUAPI_SetConstMemory()
    Init_Field();
 #  ifdef PARTICLE
    Par_Init_Attribute();
