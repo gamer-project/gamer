@@ -359,7 +359,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
    const real dh           = real(1.0)/_dh;                                  // grid spacing
    const real Coeff1       = real(1.0) * dt /(dh * Eta);                     // coefficient for continuity equation
    const real Coeff2       = real(0.5) * dt /(dh * dh * Eta);                // coefficient for HJ-equation
+#  ifndef IGNORE_FLUID_FAILURE
    const real Coeff3       = real(0.5) * real(3.0) * dh * dh * Eta / dt;     // coefficient for determining velocity timestep
+#  endif // # ifndef IGNORE_FLUID_FAILURE
    const real FluidMinDens = FMAX(real(1e-10), MinDens);                     // minimum density while computing quantum pressure
 
    const uint j_end        = FLU_NXT -  j_gap    ;          // last y-column to be updated
@@ -395,7 +397,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
          uint NStep;                      // number of iterations for updating each column
          real De_New, Ph_New, v, vp, vm;
+#        ifndef IGNORE_FLUID_FAILURE
          int l, l_min, l_max;
+#        endif // # ifndef IGNORE_FLUID_FAILURE
          uint time_level;
 
 #        ifdef GAMER_DEBUG

@@ -808,7 +808,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    const bool IntOppSign0thOrder_No = false;
 
 // turn off phase interpolation if DISABLE_PHASE_AT_DEFECT is defined and we detect vortex in interpolation data
-         bool disableIntPhase       = false;
+   bool disableIntPhase       = false;
 
    bool Monotonicity[NCOMP_TOTAL];
 
@@ -931,7 +931,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       for (int j=0; j<CSize_Flu; j++)
       for (int i=0; i<CSize_Flu; i++)
       {
-         disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_Flu, CSize_Flu, CSize_Flu, CData_Dens, DISABLE_PHASE_AT_DEFECT_THRESHOLD);
+         disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_Flu, CSize_Flu, CSize_Flu, CData_Dens, DISABLE_PHASE_AT_VORTEX_THRESHOLD);
       }
    } // if ( OPT__INT_PHASE )
 #  endif // # ifdef DISABLE_PHASE_AT_DEFECT
