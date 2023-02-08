@@ -104,7 +104,7 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
 #     endif // #if ( ELBDM_SCHEME == HYBRID )
       fprintf( File, "%16s%16s", FieldLabel[REAL], FieldLabel[IMAG] );
 #     if ( ELBDM_SCHEME == HYBRID )
-      } //if ( amr->use_wave_flag[TLv] ) ... else 
+      } //if ( amr->use_wave_flag[TLv] ) ... else
 #     endif // #if ( ELBDM_SCHEME == HYBRID )
 
 #     else
