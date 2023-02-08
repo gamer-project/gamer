@@ -41,25 +41,39 @@ double ELBDM_GetTimeStep_Velocity( const int lv )
 
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  ELBDM_HasWaveCounterpart
+// Description :  Check whether cell [I, J, K] in patch indexed by GID GID0 has wave counterpart on refined levels by traversing the global AMR tree
+//
+// Note        :  1. This function requires LB_GlobalPatch* tree to be initialised beforehand
+//
+// Parameter   :  I   : x-index of patch GID0
+//             :  J   : y-index of patch GID0
+//             :  K   : z-index of patch GID0
+//             : GID0 : global ID of patch
+//             : tree : pointer to array of LB_GlobalPatch objects
+//                      needs to initialised beforehand by calling LB_GlobalPatch* tree = LB_GatherTree(pc, MPI_Node);
+//
+// Return      :  boolean that is true if cell [I, J, K] in patch GID0 has wave counterpart
+//-------------------------------------------------------------------------------------------------------
+bool ELBDM_HasWaveCounterpart(int I, int J, int K, long GID0, LB_GlobalPatch* tree) {
+   int lv = tree[GID0].level;
 
-bool hasWaveCounterpart(int I, int J, int K, long GID0, LB_GlobalPatch* tree) {
-   int lv = tree[GID0].level; 
-
-// convert coordinates of cell to global integer coordinate system 
+// convert coordinates of cell to global integer coordinate system
    int coordinates[3] = {I, J, K};
-   for ( int l = 0; l < 3; ++l ) 
+   for ( int l = 0; l < 3; ++l )
       coordinates[l] = tree[GID0].corner[l] + coordinates[l] * amr->scale[lv];
-   
+
 // during first iteration, we can cover the eight patches in the patch group
 // imagine that patches in patch group are children of a common father even at level 0
 // we set currentLv = 0 in loop and iterate over patch group
 // once we find the patch that the coordinate is in, we iterate over that patch's children
 
    int  currentLv  = lv - 1;
-   bool isInside   = true; 
+   bool isInside   = true;
 
    long currentGID = GID0;
-   long sonGID     = GID0; 
+   long sonGID     = GID0;
 
 // traverse the tree until we get to leave nodes
    while ( sonGID != -1 ) {
@@ -68,7 +82,7 @@ bool hasWaveCounterpart(int I, int J, int K, long GID0, LB_GlobalPatch* tree) {
 //    loop over patches in patch block or sons and check which patch the cell {K, J, I} belongs to
       for (int GID=sonGID; GID<sonGID+8; GID++)
       {
-         isInside = true; 
+         isInside = true;
 //       check whether cell {I, J, K} is within g,iven patch
          for ( int l = 0; l < 3; ++l ) {
             if (coordinates[l] < tree[GID].corner[l] || coordinates[l] >=  tree[GID].corner[l] + PS1 * amr->scale[currentLv])
@@ -76,7 +90,7 @@ bool hasWaveCounterpart(int I, int J, int K, long GID0, LB_GlobalPatch* tree) {
          }
 
 //       if it is within the given patch, go to the patch's son
-         if ( isInside ) { 
+         if ( isInside ) {
             currentGID = GID;
             sonGID     = tree[GID].son;
             break;
@@ -87,7 +101,7 @@ bool hasWaveCounterpart(int I, int J, int K, long GID0, LB_GlobalPatch* tree) {
       }
    }
 
-   return amr->use_wave_flag[currentLv]; 
+   return amr->use_wave_flag[currentLv];
 }
 
 
@@ -131,33 +145,9 @@ real GetMaxVelocity( const int lv, bool excludeWave )
 
    LB_PatchCount pc;
 
-// construct global tree structure 
-   LB_GlobalPatch* global_tree = LB_AllgatherTree(pc);
+// construct global tree structure
+   LB_GlobalPatch* global_tree = LB_GatherTree(pc, -1);
 
-/*
-   for(int i = 0; i < MPI_NRank; i++) {
-      MPI_Barrier(MPI_COMM_WORLD);
-      if (i == MPI_Rank) {
-         printf("Rank %d \n\n", MPI_Rank);
-         printf("Adress of pointer %p\n", global_tree);
-      
-         printf("\nGlobal Tree\n");
-      
-         printf("NPatchAllLv: %ld\n", NPatchAllLv);
-      
-         for (int i = 0; i < NLEVEL; ++i) {
-            printf("lv: %d GID_Offset: %ld\n", i, GID_Offset[i]);
-         }   
-      
-      
-         printf("\nThe GIDs\n");
-      
-         for (long i = 0; i < NPatchAllLv; ++i ) {
-            printf("lv %d GID %d father %d son %d\n", global_tree[i].level, i, global_tree[i].father, global_tree[i].son);
-            }
-         }
-   }
-*/
 #  pragma omp parallel private( Flu_Array, dS_dx, GradS, \
                                 im, ip, jm, jp, km, kp, I, J, K)
    {
@@ -167,14 +157,14 @@ real GetMaxVelocity( const int lv, bool excludeWave )
 #     pragma omp for reduction( max:MaxdS_dx ) schedule( runtime )
       for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=NPG*8)
       {
-         
+
 //       prepare phase with NGhost ghost zone on each side (any interpolation scheme can be used)
          Prepare_PatchData( lv, Time[lv], &Flu_Array[0][0][0][0][0], NULL, NGhost, NPG, &PID0, _PHAS, _NONE,
                             INT_CQUAD, INT_NONE, UNIT_PATCHGROUP, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                             MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
 
-         long GID0 = PID0 + pc.GID_Offset[lv]; 
+         long GID0 = PID0 + pc.GID_Offset[lv];
 
 //       evaluate dS_dt
          for (int k=NGhost; k<Size_Flu-NGhost; k++)    {  km = k - 1;    kp = k + 1;   K = k - NGhost;
@@ -184,7 +174,7 @@ real GetMaxVelocity( const int lv, bool excludeWave )
 //       skip velocities of cells that have a wave counterpart on the refined levels
 
          bool calculateVelocity = true;
-         if (excludeWave) calculateVelocity = !hasWaveCounterpart(I, J, K, GID0, global_tree );
+         if (excludeWave) calculateVelocity = !ELBDM_HasWaveCounterpart(I, J, K, GID0, global_tree );
 
 //       check whether leave node corresponding to cell uses phase scheme
          if ( calculateVelocity ) {
@@ -206,7 +196,6 @@ real GetMaxVelocity( const int lv, bool excludeWave )
 
 // clean up global tree
    delete [] global_tree;
-
 
 // get the maximum potential in all ranks
    real MaxdS_dx_AllRank;
