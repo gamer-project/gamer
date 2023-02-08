@@ -111,6 +111,7 @@ bool                 OPT__INIT_BFIELD_BYFILE, OPT__SAME_INTERFACE_B;
 #elif ( MODEL == ELBDM )
 double               DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
 bool                 OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, OPT__RES_PHASE;
+double               OPT__CK_PHASE_DEFECT;
 bool                 ELBDM_TAYLOR3_AUTO;
 double               ELBDM_TAYLOR3_COEFF;
 double               ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
@@ -118,7 +119,7 @@ double               ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
 bool                 OPT__FLAG_INTERFERENCE;
 double               FlagTable_Interference[NLEVEL-1][4];
 #if ( ELBDM_SCHEME == HYBRID )
-bool                 OPT__MATCH_PHASE; 
+bool                 OPT__MATCH_PHASE;
 double               DT__HYBRID, DT__VELOCITY;
 #endif // # if ( ELBDM_SCHEME == HYBRID )
 

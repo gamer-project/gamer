@@ -1053,8 +1053,6 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       real amp, phase, stub, Re, Im ;
 
 #     ifdef GAMER_DEBUG
-      printf("~ Converting patch group at rank %d to wave scheme.\n", MPI_Rank);
-
 //    Check whether dB wavelength is resolved
       for (int k=0; k<FSize_CC; k++) {
       for (int j=0; j<FSize_CC; j++) {

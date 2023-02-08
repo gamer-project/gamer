@@ -2,23 +2,21 @@
 
 #if ( MODEL == ELBDM )
 
-
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_Flag_DetectVortex
 // Description :  Detect vortex by using Lap(Density)/Density
 //
-// Note        :  1. Flag the input cell if Lap(Density)/(3 * Density) exceeds threshold
+// Note        :  - Flag the input cell if Lap(Density)/(3 * Density) exceeds threshold
+//             :  - Detection is turned off for negative threshold
 //
 // Parameter   :  i,j,k                    : Indices of the target cell in the array "Dens"
-//                i_size, j_size, k_size   : Sizes of the array "Dens" in all directions
-//                Dens_Array               : Density array
-//                Threshodl                : Vortex detection threshold
-//                Eps         : Soften factor
+//             :  i_size, j_size, k_size   : Sizes of the array "Dens" in all directions
+//             :  Dens_Array               : Density array
+//             :  Threshold                : Vortex detection threshold
+//             :  Eps                      : Soften factor
 //
 // Return      :  "true"  if vortex is detected
-//                "false" if vortex is not detected
+//                "false" if vortex is not detected or if Threshold is negative
 //-------------------------------------------------------------------------------------------------------
 bool ELBDM_DetectVortex( const int i, const int j, const int k, const int i_size, const int j_size, const int k_size, const real Dens_Array[], const double Threshold )
 {
@@ -28,6 +26,10 @@ bool ELBDM_DetectVortex( const int i, const int j, const int k, const int i_size
    if (  i < 0  ||  i >= i_size  ||  j < 0  ||  j >= j_size  ||  k < 0  ||  k >= k_size  )
       Aux_Error( ERROR_INFO, "incorrect index (i,j,k) = (%d,%d,%d) !!\n", i, j, k );
 #  endif
+
+// no vortex check for negative threshold
+   if ( Threshold < 0.0 )
+      return false;
 
    const int    ijk[3]    = { i, j, k };
    const int    sizes[3]  = { i_size, j_size, k_size };

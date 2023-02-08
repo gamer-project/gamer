@@ -233,10 +233,10 @@ Procedure for outputting new variables:
 //                2456 : 2022/12/15 --> output SUPPORT_FFTW
 //                2457 : 2023/01/28 --> output OPT__RESET_FLUID_INIT
 //                2458 : 2023/02/02 --> add OPT__RES_PHASE
-//                2459 : 2022/02/08 --> output OPT__FLAG_INTERFERENCE, FlagTable_Interference
-//                                      output DENS and PHAS for hybrid scheme,
-//                                      output use_wave_flag[lv] for AMR structure,
-//                                      output OPT__LB_EXCHANGE_FATHER
+//                2459 : 2022/02/08 --> output OPT__FLAG_INTERFERENCE, OPT__MATCH_PHASE, OPT__CK_PHASE_DEFECT,
+//                                             OPT__LB_EXCHANGE_FATHER, FlagTable_Interference
+//                                             DENS and PHAS for hybrid scheme,
+//                                             use_wave_flag[lv] for AMR structure,
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -2454,6 +2454,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  if ( MODEL == ELBDM )
    InputPara.Opt__Int_Phase          = OPT__INT_PHASE;
    InputPara.Opt__Res_Phase          = OPT__RES_PHASE;
+   InputPara.Opt__Ck_Phase_Defect    = OPT__CK_PHASE_DEFECT;
 #  if ( ELBDM_SCHEME == HYBRID )
    InputPara.Opt__Match_Phase        = OPT__MATCH_PHASE;
 #  endif //#  if ( ELBDM_SCHEME == HYBRID )
@@ -3341,6 +3342,10 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  if ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "Opt__Int_Phase",          HOFFSET(InputPara_t,Opt__Int_Phase         ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Res_Phase",          HOFFSET(InputPara_t,Opt__Res_Phase         ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Ck_Phase_Defect",    HOFFSET(InputPara_t,Opt__Ck_Phase_Defect   ), H5T_NATIVE_DOUBLE           );
+#  if ( ELBDM_SCHEME == HYBRID )
+   H5Tinsert( H5_TypeID, "Opt__Match_Phase",        HOFFSET(InputPara_t,Opt__Match_Phase       ), H5T_NATIVE_INT              );
+#  endif
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Flu_IntScheme",      HOFFSET(InputPara_t,Opt__Flu_IntScheme     ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__RefFlu_IntScheme",   HOFFSET(InputPara_t,Opt__RefFlu_IntScheme  ), H5T_NATIVE_INT              );
