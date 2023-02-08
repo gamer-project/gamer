@@ -261,10 +261,19 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    int  NFieldStored = 0;
 
    const int FluDumpIdx0 = NFieldStored;
-   NFieldStored += NCOMP_TOTAL;
-   if ( FluDumpIdx0+NCOMP_TOTAL-1 >= NFIELD_STORED_MAX )
+
+   int NCompStore = NCOMP_TOTAL;
+
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && !defined(GAMER_DEBUG))
+// do not store STUB field when not debugging hybrid scheme
+   NCompStore -= 1 ;
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && !defined(GAMER_DEBUG))
+
+   NFieldStored += NCompStore;
+
+   if ( FluDumpIdx0+NCompStore-1 >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   for (int v=0; v<NCOMP_TOTAL; v++)   sprintf( FieldLabelOut[ FluDumpIdx0 + v ], FieldLabel[v] );
+   for (int v=0; v<NCompStore; v++)   sprintf( FieldLabelOut[ FluDumpIdx0 + v ], FieldLabel[v] );
 
 #  ifdef GRAVITY
    const int PotDumpIdx = ( OPT__OUTPUT_POT ) ? NFieldStored++ : -1;
@@ -1013,12 +1022,14 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                else
 
 //             e. fluid variables
-               if ( v >= FluDumpIdx0  &&  v < FluDumpIdx0+NCOMP_TOTAL )
+               if ( v >= FluDumpIdx0  &&  v < FluDumpIdx0+NCompStore )
                {
 
 //                convert real/imag to density/phase in hybrid scheme
 #                 if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
                   if ( amr->use_wave_flag[lv] && (v == REAL || v == IMAG) ) {
+//                in serial mode, the phase computed from the wave function is matched to the phase on the unrefined levels
+//                in MPI mode, this is not yet implemented
 #                 ifdef SERIAL
                      real Re, Im, Phase;
                      int FaPID, FaLv, Success;
@@ -1034,29 +1045,13 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                         Success = 0;
                         FaLv  = lv;
                         FaPID = PID;
-                        if (amr->patch[0][lv][PID]->father == -1 && lv > 0 && v == REAL) {
-                           Aux_Error( ERROR_INFO, "WARNING: NO FATHER PATCH FOR WAVE PATCH! PID %d Lv %d\n", PID, lv);
 
-                           for (int k=0; k<PS1; k++)
-                           for (int j=0; j<PS1; j++)
-                           for (int i=0; i<PS1; i++) {
-                              Re = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[REAL][k][j][i];
-                              Im = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[IMAG][k][j][i];
-                              printf("%6d %6d %6d %6d %6.6f\n", PID, k, j, i, SQR(Re) + SQR(Im));
-                           }
-
-
-                        }
+//                      traverse AMR tree to find first fluid-level parent of wave patch
                         while (FaLv > 0  && !(FaPID < 0) && v == REAL) {
                            FaPID = amr->patch[0][FaLv][FaPID]->father;
                            FaLv -= 1;
-                           //printf("FaPID %d FaLv %d FaUseWave %d\n", FaPID, FaLv, amr->use_wave_flag[FaLv]);
                            if ( !amr->use_wave_flag[FaLv] && !(FaPID < 0)) {
                               Success = 1;
-                              //printf("Lv %d UseWave %d FaLV %d FaUseWave %d LvScale %d FaLvScale %d ", lv, amr->use_wave_flag[lv], FaLv, amr->use_wave_flag[FaLv], amr->scale[lv], amr->scale[FaLv]);
-                              //printf("LvCorner x %d y %d z %d FaLvCorner x %d y %d z %d\n", \
-                              amr->patch[ amr->FluSg[  lv] ][  lv][  PID]->corner[0], amr->patch[ amr->FluSg[  lv] ][  lv][  PID]->corner[1], amr->patch[ amr->FluSg[  lv] ][  lv][  PID]->corner[2] , \
-                              amr->patch[ amr->FluSg[FaLv] ][FaLv][FaPID]->corner[0], amr->patch[ amr->FluSg[FaLv] ][FaLv][FaPID]->corner[1], amr->patch[ amr->FluSg[FaLv] ][FaLv][FaPID]->corner[2] );
                               break;
                            }
                         }
@@ -1075,17 +1070,20 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                                  }
                                  Phase = amr->patch[ amr->FluSg[FaLv] ][FaLv][FaPID]->fluid[PHAS][fatherCoordinates[2]][fatherCoordinates[1]][fatherCoordinates[0]];
                               } else {
-                                 Aux_Error( ERROR_INFO, "ERROR: NO FATHER PATCH FOR WAVE PATCH! PID %d FaPID %d Lv %d UseWave %d FaLV %d FaUseWave %d \n", PID, FaPID, lv, amr->use_wave_flag[lv], FaLv, amr->use_wave_flag[FaLv]);
+#                                ifdef GAMER_DEBUG
+                                 Aux_Error( ERROR_INFO, "ERROR: No fluid parent patch for wave patch found! PID %d FaPID %d Lv %d UseWave %d FaLV %d FaUseWave %d \n", PID, FaPID, lv, amr->use_wave_flag[lv], FaLv, amr->use_wave_flag[FaLv]);
+#                                endif // # ifdef GAMER_DEBUG
                                  Phase = 0;
                               }
 
                               Re = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[REAL][k][j][i];
                               Im = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[IMAG][k][j][i];
 
-
+//                            match reconstructed phase to parent patch's phase
                               FieldData[PID][k][j][i] = ELBDM_UnwrapPhase( Phase, SATAN2(Im, Re) );
                            }
                            else if ( v == IMAG ) {
+//                            store stub field field indicating where first-order scheme was used for fluid update in debug mode
 #                             ifdef GAMER_DEBUG
                               int childCoordinates[3], fatherCoordinates[3];
 

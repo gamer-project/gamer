@@ -611,6 +611,13 @@ void Init_ByRestart_HDF5( const char *FileName )
 // 3. load and allocate patches (load particles as well if PARTICLE is on)
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading patches and particles ...\n" );
 
+   int NCompStore = NCOMP_TOTAL;
+
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && !defined(GAMER_DEBUG))
+// do not store STUB field when not debugging hybrid scheme
+   NCompStore -= 1 ;
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && !defined(GAMER_DEBUG))
+
 #  ifdef LOAD_BALANCE
    const bool Recursive_No  = false;
 #  else
@@ -618,9 +625,9 @@ void Init_ByRestart_HDF5( const char *FileName )
    int  TRange_Min[3], TRange_Max[3];
 #  endif
 
-   char (*FieldName)[MAX_STRING] = new char [NCOMP_TOTAL][MAX_STRING];
+   char (*FieldName)[MAX_STRING] = new char [NCompStore][MAX_STRING];
    hsize_t H5_SetDims_Field[4], H5_MemDims_Field[4];
-   hid_t   H5_SetID_Field[NCOMP_TOTAL], H5_MemID_Field, H5_SpaceID_Field, H5_GroupID_GridData;
+   hid_t   H5_SetID_Field[NCompStore], H5_MemID_Field, H5_SpaceID_Field, H5_GroupID_GridData;
 
 #  ifdef MHD
    char (*FCMagName)[MAX_STRING] = new char [NCOMP_MAG][MAX_STRING];
@@ -649,7 +656,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 
 
 // 3-1. set the names of all grid fields and particle attributes
-   for (int v=0; v<NCOMP_TOTAL; v++)      sprintf( FieldName[v], "%s", FieldLabel[v] );
+   for (int v=0; v<NCompStore; v++)      sprintf( FieldName[v], "%s", FieldLabel[v] );
 
 #  ifdef MHD
    for (int v=0; v<NCOMP_MAG; v++)        sprintf( FCMagName[v], "%s", MagLabel[v] );
@@ -721,7 +728,7 @@ void Init_ByRestart_HDF5( const char *FileName )
          H5_GroupID_GridData = H5Gopen( H5_FileID, "GridData", H5P_DEFAULT );
          if ( H5_GroupID_GridData < 0 )   Aux_Error( ERROR_INFO, "failed to open the group \"%s\" !!\n", "GridData" );
 
-         for (int v=0; v<NCOMP_TOTAL; v++)
+         for (int v=0; v<NCompStore; v++)
          {
             H5_SetID_Field[v] = H5Dopen( H5_GroupID_GridData, FieldName[v], H5P_DEFAULT );
             if ( H5_SetID_Field[v] < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", FieldName[v] );
@@ -837,7 +844,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 #        endif // #ifdef LOAD_BALANCE ... else ...
 
 //       free resource
-         for (int v=0; v<NCOMP_TOTAL; v++)      H5_Status = H5Dclose( H5_SetID_Field[v] );
+         for (int v=0; v<NCompStore; v++)      H5_Status = H5Dclose( H5_SetID_Field[v] );
 #        ifdef MHD
          for (int v=0; v<NCOMP_MAG;   v++)      H5_Status = H5Dclose( H5_SetID_FCMag[v] );
 #        endif
@@ -1251,6 +1258,14 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
    herr_t  H5_Status;
    int     SonGID0, PID;
 
+   int NCompStore = NCOMP_TOTAL;
+
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && !defined(GAMER_DEBUG))
+// do not store STUB field when not debugging hybrid scheme
+   NCompStore -= 1 ;
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && !defined(GAMER_DEBUG))
+
+
 // allocate patch
    amr->pnew( lv, CrList[GID][0], CrList[GID][1], CrList[GID][2], -1, WithData_Yes, WithData_Yes, WithData_Yes );
 
@@ -1272,9 +1287,10 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
    if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab for the grid data !!\n" );
 
 
+
 // load cell-centered intrinsic variables from disk
 // --> excluding all derived variables such as gravitational potential and cell-centered B field
-   for (int v=0; v<NCOMP_TOTAL; v++)
+   for (int v=0; v<NCompStore; v++)
    {
       H5_Status = H5Dread( H5_SetID_Field[v], H5T_GAMER_REAL, H5_MemID_Field, H5_SpaceID_Field, H5P_DEFAULT,
                            amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v] );
