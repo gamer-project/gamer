@@ -163,7 +163,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          Aux_Message( stdout, "   Lv %2d: Flu_AdvanceDt, counter = %8ld ... ", lv, AdvanceCounter[lv] );
 #        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
          Aux_Message( stdout, " Use Wave = %d ... ", amr->use_wave_flag[lv] );
-#        endif 
+#        endif
       }
       if ( false ) {}
       /*
@@ -616,7 +616,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
       if ( lv != TOP_LEVEL )
       if ( !amr->use_wave_flag[lv] && amr->use_wave_flag[lv+1] ) {
-         int FaLv    = lv; 
+         int FaLv    = lv;
          int FaFluSg = amr->FluSg[FaLv];
          if ( amr->FluSgTime[ FaLv] [ 1 - FaFluSg ] >= 0 ) {
             FaFluSg = 1 - FaFluSg;
@@ -793,18 +793,22 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          int refine_nlevel = REFINE_NLEVEL;
 
 #        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-//       always refine at least until first wave level if using fluid scheme
+//       always refine at least until first wave level + REFINE_NLEVEL when using fluid scheme
          if ( !amr->use_wave_flag[lv] ) {
             int first_wave_level = NLEVEL;
+
+//          determine first level using wave scheme
             for (int lv_wave = 0; lv_wave < NLEVEL; ++lv_wave ) {
                if ( amr->use_wave_flag[lv_wave] ) {
                   first_wave_level = lv_wave;
                   break;
                }
             }
+
+//          make sure refine_nlevel reaches to first wave level plus REFINE_NLEVEL
             if ( lv < first_wave_level )
                refine_nlevel = first_wave_level - lv + REFINE_NLEVEL;
-        }
+         }
 #        endif // # ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 
@@ -837,7 +841,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #           ifdef LOAD_BALANCE
 #           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
-            bool old_wave_flag = amr->use_wave_flag[ lv_refine + 1 ]; 
+            bool old_wave_flag = amr->use_wave_flag[ lv_refine + 1 ];
 
 #           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 #           endif // # ifdef LOAD_BALANCE
@@ -892,7 +896,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //          otherwhise, the phase field on FaLv will be exchanged anyway after the fluid fields are updated
 //          if available, we use the phase information from the previous time step (1 - amr->FluSg[FaLv]) for this purpose
             if ( !amr->use_wave_flag[lv_refine] && amr->use_wave_flag[lv_refine+1] && OPT__CORR_AFTER_ALL_SYNC ) {
-               int FaLv    = lv_refine; 
+               int FaLv    = lv_refine;
                int FaFluSg = amr->FluSg[FaLv];
                if ( amr->FluSgTime[ FaLv ][ 1 - FaFluSg ] >= 0 ) {
                   FaFluSg = 1 - FaFluSg;
@@ -925,7 +929,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          } // for (int lv_refine=lv, lv_refine<=lv_refine_max; lv_refine++)
 
 
-      
+
 
       } // if ( lv != TOP_LEVEL  &&  AdvanceCounter[lv] % REGRID_COUNT == 0 )
 // ===============================================================================================
