@@ -2,12 +2,13 @@ Compilation flags:
 ========================================
 Enable : MODEL=ELBDM
 Disable: PARTICLE
-OPTIONAL: GRAVITY, COMOVING
+Optional: ELBDM_SCHEME = HYBRID, GRAVITY, COMOVING
 
 Default setup:
 ========================================
 1. Enable gravity to study collapse
 2. Use periodic boundary conditions
+3. Demonstrate refinement in hybrid scheme by using Input__Flag_Interference
 
 Note:
 ========================================

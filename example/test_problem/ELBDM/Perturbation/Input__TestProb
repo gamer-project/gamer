@@ -1,5 +1,5 @@
 # problem-specific runtime parameters
 Perturbation_BgAmp   1.0   # psi_perturbation(x,y) = BgAmp + sum_l,j,k Amp* exp(i k_x * l) exp (i k_y * j) exp(i k_z * k)
 Perturbation_Amp     1e-2  #
-Perturbation_N       1     # [Min: 1, Max: 4]
+Perturbation_N       4     # [Min: 1, Max: 4]
 Perturbation_NDim    3     # [Min: 1, Max: 3]
