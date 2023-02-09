@@ -72,12 +72,6 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif // #ifdef GPU
 
 
-// initialize yt inline analysis
-#  ifdef SUPPORT_LIBYT
-   YT_Init( *argc, *argv );
-#  endif
-
-
 // initialize Grackle
 #  ifdef SUPPORT_GRACKLE
    if ( GRACKLE_ACTIVATE )    Grackle_Init();
@@ -226,6 +220,13 @@ void Init_GAMER( int *argc, char ***argv )
 
       default : Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "OPT__INIT", OPT__INIT );
    }
+
+
+// initialize yt inline analysis
+#  ifdef SUPPORT_LIBYT
+   YT_Init( *argc, *argv );
+   if ( OPT__EXECUTE_YT_MODE == EXECUTE_YT_USE_TABLE )   YT_Load_ExecuteTable();
+#  endif
 
 
 // ensure B field consistency on the shared interfaces between sibling patches

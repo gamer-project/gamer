@@ -201,6 +201,32 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 #  endif
 
 
+#  ifdef SUPPORT_LIBYT
+// 1.9 CRITERION NINE : match the time of the next yt inline analysis execution
+// =============================================================================================================
+// DumpByTime : true --> dump data according to the physical time
+   const bool ExecuteYTByTime = ( OPT__EXECUTE_YT_MODE == EXECUTE_YT_CONST_DT || OPT__EXECUTE_YT_MODE == EXECUTE_YT_USE_TABLE )
+                                   ? true : false;
+
+   if ( ExecuteYTByTime )
+   {
+      dTime[NdTime] = ExecuteYTTime - Time[lv];
+
+      if ( dTime[NdTime] <= 0.0 )
+      {
+         Aux_Message( stderr, "********************************************************************************\n" );
+         Aux_Message( stderr, "ERROR : dTime (%20.14e) <= 0.0, something is wrong !!\n", dTime[NdTime] );
+         Aux_Message( stderr, "        (ExecuteYTTime %20.14e, Time %20.14e, lv %d)\n", ExecuteYTTime, Time[lv], lv );
+         Aux_Message( stderr, "        Rank <%d>, file <%s>, line <%d>, function <%s>\n",
+                      MPI_Rank, __FILE__, __LINE__, __FUNCTION__ );
+         Aux_Message( stderr, "********************************************************************************\n" );
+         MPI_Exit();
+      }
+
+      sprintf( dTime_Name[NdTime++], "%s", "Execute_YT" );
+   }
+# endif
+
 
 // 2. get the minimum time-step from all criteria
 // =============================================================================================================

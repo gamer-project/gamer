@@ -38,6 +38,9 @@ void YT_Init( int argc, char *argv[] )
    param_libyt.check_data = false;
 #endif
 
+// counter for recording times of yt inline analysis and for naming files
+   param_libyt.counter = ExecuteYTID;
+
 // initialize libyt
    if ( yt_init( argc, argv, &param_libyt ) != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_init() failed !!\n" );
 

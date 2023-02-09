@@ -186,10 +186,20 @@ ParOutputDens_t      OPT__OUTPUT_PAR_DENS;
 
 // (2-6) yt inline analysis
 #ifdef SUPPORT_LIBYT
+bool                 FirstExecuteYT         = true;
+int                  ExecuteYTID            = 0;
+double               ExecuteYTTime          = 0.0;
+
 char                 YT_SCRIPT[MAX_STRING];
 yt_verbose           YT_VERBOSE;
 char                 YT_FIG_BASENAME[MAX_STRING];
+int                  INIT_EXECUTE_YT_ID, EXECUTE_YT_STEP;
 int                  YT_GID_Offset[NLEVEL];
+int                  ExecuteYTTable_NExecute;
+double               EXECUTE_YT_DT;
+double              *ExecuteYTTable = NULL;
+bool                 OPT__EXECUTE_YT_RESTART;
+OptExecuteYTMode_t   OPT__EXECUTE_YT_MODE;
 #endif
 
 // (2-7) Grackle
@@ -506,8 +516,6 @@ int main( int argc, char *argv[] )
 #     endif
    }
 
-   Output_DumpData( 0 );
-
    if ( OPT__PATCH_COUNT > 0 )            Aux_Record_PatchCount();
    if ( OPT__RECORD_MEMORY )              Aux_GetMemInfo();
    if ( OPT__RECORD_USER ) {
@@ -526,8 +534,10 @@ int main( int argc, char *argv[] )
    Aux_ResetTimer();
 #  endif
 
+   Output_DumpData( 0 );
+
 #  ifdef SUPPORT_LIBYT
-   YT_Inline();
+   Execute_YT( 0 );
 #  endif
 
 #  ifdef TIMING
@@ -582,7 +592,15 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 
 
-//    3. output data and execute auxiliary functions
+//    3. perform yt inline analysis
+//    ---------------------------------------------------------------------------------------------------
+#     ifdef SUPPORT_LIBYT
+      TIMING_FUNC(   Execute_YT( 1 ),                     Timer_Main[7],   TIMER_ON   );
+#     endif
+//    ---------------------------------------------------------------------------------------------------
+
+
+//    4. output data and execute auxiliary functions
 //    ---------------------------------------------------------------------------------------------------
       TIMING_FUNC(   Output_DumpData( 1 ),            Timer_Main[3],   TIMER_ON   );
 
@@ -604,14 +622,6 @@ int main( int argc, char *argv[] )
 #     endif
 
       TIMING_FUNC(   Aux_Check(),                     Timer_Main[4],   TIMER_ON   );
-//    ---------------------------------------------------------------------------------------------------
-
-
-//    4. perform yt inline analysis
-//    ---------------------------------------------------------------------------------------------------
-#     ifdef SUPPORT_LIBYT
-      TIMING_FUNC(   YT_Inline(),                     Timer_Main[7],   TIMER_ON   );
-#     endif
 //    ---------------------------------------------------------------------------------------------------
 
 
