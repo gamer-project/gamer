@@ -543,11 +543,13 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
             {
                if ( GRADIENT_RATIO(s_In[sj][0][PHAS], si) < - real(0.0) ) {
                   s_2PI[sj][si] = UNWRAP(s_In[sj][0][PHAS][si - 1], s_In[sj][0][PHAS][si]);
+//                handle boundary
                   if (si == FLU_NXT - 2) {
                      s_2PI[sj][FLU_NXT - 1] = UNWRAP(s_In[sj][0][PHAS][si], s_In[sj][0][PHAS][si + 1]);
                   }
                } else {
                   s_2PI[sj][si] = 0;
+//                handle boundary
                   if (si == FLU_NXT - 2) {
                      s_2PI[sj][si + 1] = 0;
                   }

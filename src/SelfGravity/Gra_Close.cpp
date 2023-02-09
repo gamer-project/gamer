@@ -91,13 +91,13 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
 #           if ( ELBDM_SCHEME == HYBRID )
             if ( amr->use_wave_flag[lv] ) {
 #           endif // # if ( ELBDM_SCHEME == HYBRID )
-//          density field is NOT sent in and out in the ELBDM gravity solver for the wave scheme (v + 1)
+//          density field is NOT sent in and out in the ELBDM gravity solver for the wave scheme ( v + 1 )
             amr->patch[SaveSg][lv][PID]->fluid[v+1][k][j][i] = h_Flu_Array_G[N][v][k][j][i];
 #           if ( ELBDM_SCHEME == HYBRID )
             } else { // if ( amr->use_wave_flag[lv] ) {
-//          in fluid scheme, we send both density and phase fields (v + 1)
+//          in fluid scheme, we send both density and phase fields ( v )
             amr->patch[SaveSg][lv][PID]->fluid[v][k][j][i] = h_Flu_Array_G[N][v][k][j][i];
-            } // if ( amr->use_wave_flag[lv] ) { ... else 
+            } // if ( amr->use_wave_flag[lv] ) { ... else
 #           endif  // # if ( ELBDM_SCHEME == HYBRID )
 #        else
 #        error : unsupported MODEL !!

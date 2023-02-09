@@ -5,6 +5,7 @@
 
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_GetTimeStep_Fluid
 // Description :  Estimate the evolution time-step from the ELBDM kinematic energy solver
@@ -28,8 +29,6 @@ double ELBDM_GetTimeStep_Fluid( const int lv )
    double dt;
 
    dt = 4.0/M_PI*ELBDM_ETA*SQR(dh);
-   
-
 /*
 #  ifdef GRAVITY
    dt = 4.0/3.0/M_PI*ELBDM_ETA*SQR(dh);      // 3D k-space rotation angle
