@@ -16,8 +16,7 @@ const real Perturbation_Coefficients[8][FOURIER_MODE_NUMBER][FOURIER_MODE_NUMBER
 
 // =======================================================================================
 
-
-
+# if ( MODEL == ELBDM )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -52,7 +51,6 @@ void Validate()
 
 
 
-#if ( MODEL == ELBDM )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -173,6 +171,7 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
+
    double kx, ky, kz, d1, d2, d3, d4, d5, d6, dtotal, omega;
 
    double Re     = Perturbation_BgAmplitude;
@@ -222,8 +221,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 } // FUNCTION : SetGridIC
 
-#endif // #if ( MODEL == ELBDM )
-
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -248,6 +245,8 @@ void OutputError()
 } // FUNCTION : OutputError
 
 
+#endif // # if ( MODEL == ELBDM )
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_ELBDM_Soliton
 // Description :  Test problem initializer
@@ -263,15 +262,13 @@ void Init_TestProb_ELBDM_SmallPerturbation()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
+#  if ( MODEL == ELBDM )
 
 // validate the compilation flags and runtime parameters
    Validate();
 
-
-#  if ( MODEL == ELBDM )
 // set the problem-specific runtime parameters
    SetParameter();
-
 
    Init_Function_User_Ptr = SetGridIC;
    Output_User_Ptr        = OutputError;
