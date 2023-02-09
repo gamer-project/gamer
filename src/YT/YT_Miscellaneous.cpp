@@ -2,39 +2,6 @@
 
 #ifdef SUPPORT_LIBYT
 
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  LB_GetPID
-// Description :  Convert GID to local PID
-//
-// Note        :  1. Calculate PID and level from PID.
-//
-// Parameter   :  GID        : GID to convert
-//                level      : fill in level of GID.
-//                PID        : fill in PID of GID
-//                GID_Offset : table with GID offsets on rank
-//
-// Return      :  *level, *PID
-//-------------------------------------------------------------------------------------------------------
-void LB_GetPID(long GID, int& level, int& PID, int* GID_Offset) {
-#   ifdef GAMER_DEBUG
-    long NPatchAllLv = 0;
-    for (int lv=0; lv<NLEVEL; lv++)  NPatchAllLv += NPatchTotal[lv];
-    if ( GID < 0  ||  GID >= NPatchAllLv )  Aux_Error( ERROR_INFO, "incorrect gid %ld (max = %ld) !!\n", GID, NPatchAllLv-1 );
-#   endif
-
-   level = 0;
-
-   for(int lv = 1; lv < NLEVEL; lv++) {
-      if ( GID < GID_Offset[lv] )
-        break;
-      level = lv;
-   }
-
-   PID = GID - GID_Offset[level];
-}
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  YT_GetPID
 // Description :  Get PID from YT passed in gid.

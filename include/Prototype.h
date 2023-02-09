@@ -125,7 +125,7 @@ real Hydro_Con2Dual( const real Dens, const real MomX, const real MomY, const re
 real Hydro_DensPres2Dual( const real Dens, const real Pres, const real Gamma_m1 );
 real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Gamma_m1,
                           const bool CheckMinPres, const real MinPres );
-#endif // #ifdef DUAL_ENERGYFlu_Close
+#endif // #ifdef DUAL_ENERGY
 #endif // #if ( MODEL == HYDRO )
 int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
                    const int SaveSg_Flu, const int SaveSg_Mag, const bool OverlapMPI, const bool Overlap_Sync );

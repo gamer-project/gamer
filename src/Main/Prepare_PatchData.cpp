@@ -250,7 +250,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
    if (((  (TVarCC & _REAL)  &&  !(TVarCC & _IMAG) )  || ( !(TVarCC & _REAL)  &&  (TVarCC & _IMAG) )) && amr->use_wave_flag[lv])
-      Aux_Error( ERROR_INFO, "Prepare_PatchData() for hybrid scheme currently requires that we request real and imaginary parts of the wave function together !!\n" );
+      Aux_Error( ERROR_INFO, "Prepare_PatchData() for hybrid scheme currently requires that the real and imaginary parts of the wave function together are prepared together !!\n" );
 #  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
    if ( IntPhase )

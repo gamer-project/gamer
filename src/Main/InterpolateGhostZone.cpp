@@ -75,7 +75,7 @@ void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, const d
 //                TVarFCIdxList      : List recording the target face-centered variable indices
 //                                     ( = [0 ... NCOMP_MAG-1] )
 //                IntPhase           : true --> Perform interpolation on rho/phase instead of real/imag parts in ELBDM
-//                                     This is done irrespective of IntPhase for the fluid patches in the ELBDM hybrid solver
+//                                     This is done irregardless of IntPhase for the fluid patches in the ELBDM hybrid solver
 //                FluBC              : Fluid boundary condition
 //                PotBC              : Gravity boundary condition (not used currently)
 //                BC_Face            : Priority of the B.C. along different boundary faces (z>y>x)

@@ -52,8 +52,7 @@
 // hybrid schemes
 #define HYBRID_UPWIND 1
 #define HYBRID_MUSCL  2
-#define HYBRID_PPM    3
-#define HYBRID_FROMM  4
+#define HYBRID_FROMM  3
 
 // data reconstruction schemes
 #define PLM          1
@@ -593,11 +592,7 @@
 
 #elif ( MODEL == ELBDM )   // ELBDM
 #  if ( ELBDM_SCHEME == HYBRID )
-#     if ( HYBRID_SCHEME == TOS )
-#          define FLU_GHOST_SIZE          6
-#     else
-#          define FLU_GHOST_SIZE          6
-#     endif
+#          define FLU_GHOST_SIZE       6
 #  else // # if ( ELBDM_SCHEME == HYBRID )
 #     ifdef LAPLACIAN_4TH
 #        define FLU_GHOST_SIZE         6

@@ -1,8 +1,5 @@
 #include "GAMER.h"
 
-#include <sstream>
-#include <string>
-
 #ifdef TIMING
 extern Timer_t *Timer_dt         [NLEVEL];
 extern Timer_t *Timer_Flu_Advance[NLEVEL];
@@ -26,9 +23,6 @@ extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const dou
 extern void (*Mis_UserWorkBeforeNextLevel_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt );
 extern void (*Mis_UserWorkBeforeNextSubstep_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt );
 
-int master_counter = 0;
-
-const bool OPT__OUTPUT_DEBUG = false;
 
 
 
@@ -727,7 +721,6 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //       12-1. use the average data on fine grids to correct the coarse-grid data
          if ( OPT__FIXUP_RESTRICT )
          {
-
             TIMING_FUNC(   Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv],
                                                NULL_INT, NULL_INT, _TOTAL, _MAG ),
                            Timer_FixUp[lv],   TIMER_ON   );
@@ -779,7 +772,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                                            _TOTAL, _MAG, Flu_ParaBuf, USELB_YES  ),
                         Timer_GetBuf[lv][3],   TIMER_ON   );
 
-         if ( OPT__VERBOSE && MPI_Rank == 0)    Aux_Message( stdout, "done\n");
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 // ===============================================================================================
 
       } // if ( lv != TOP_LEVEL  &&  NPatchTotal[lv+1] != 0 )
@@ -838,13 +831,9 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d: Refine %27s... ", lv_refine, "" );
 
 //          store wave flag in buffer to determine whether fluid scheme data was converted to wave scheme
-#           ifdef LOAD_BALANCE
-#           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-
+#           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(LOAD_BALANCE))
             bool old_wave_flag = amr->use_wave_flag[ lv_refine + 1 ];
-
-#           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-#           endif // # ifdef LOAD_BALANCE
+#           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(LOAD_BALANCE))
 
             TIMING_FUNC(   Refine( lv_refine, USELB_YES ),
                            Timer_Refine[lv_refine],   TIMER_ON   );
@@ -927,9 +916,6 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             if ( OPT__PARTICLE_COUNT == 2 )  Par_Aux_Record_ParticleCount();
 #           endif
          } // for (int lv_refine=lv, lv_refine<=lv_refine_max; lv_refine++)
-
-
-
 
       } // if ( lv != TOP_LEVEL  &&  AdvanceCounter[lv] % REGRID_COUNT == 0 )
 // ===============================================================================================

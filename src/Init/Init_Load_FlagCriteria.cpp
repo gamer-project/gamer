@@ -73,7 +73,7 @@ void Init_Load_FlagCriteria()
                                     "OPT__FLAG_VORTICITY", "OPT__FLAG_JEANS", "OPT__FLAG_CURRENT",
                                     "OPT__FLAG_INTERFERENCE" };
    const char FileName[][100]   = { "Input__Flag_Rho", "Input__Flag_RhoGradient", "Input__Flag_PresGradient",
-                                    "Input__Flag_EngyDensity",  "Input__Flag_Lohner", "Input__Flag_User",
+                                    "Input__Flag_EngyDensity", "Input__Flag_Lohner", "Input__Flag_User",
                                     "Input__Flag_NParPatch", "Input__Flag_NParCell", "Input__Flag_ParMassCell",
                                     "Input__Flag_Vorticity", "Input__Flag_Jeans", "Input__Flag_Current",
                                     "Input__Flag_Interference" };

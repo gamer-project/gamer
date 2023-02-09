@@ -257,7 +257,7 @@ void OutputError()
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_ELBDM_SmallPerturbation()
+void Init_TestProb_ELBDM_Perturbation()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
