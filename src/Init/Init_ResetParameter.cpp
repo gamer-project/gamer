@@ -296,7 +296,11 @@ void Init_ResetParameter()
 
       PRINT_WARNING( ELBDM_TAYLOR3_AUTO, FORMAT_INT, "since OPT__FREEZE_FLUID is enabled" );
    }
-#  endif // #if ( MODEL == ELBDM )
+
+#  if ( ELBDM_SCHEME == HYBRID && defined( LOAD_BALANCE )
+// always exchange father pathes for hybrid scheme with OpenMPI
+   OPT__LB_EXCHANGE_FATHER = true
+#  endif // #if ( MODEL == ELBDM  && defined( LOAD_BALANCE ) )
 
 
 // interpolation schemes for the fluid variables
