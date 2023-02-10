@@ -81,7 +81,10 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 //                       (i,j,k) in g_FC_Flux_y[] is defined on the +y surface of the cell (i+NSkip_T, j+NSkip_N, k+NSkip_T) in g_FC_Var[]
 //                       (i,j,k) in g_FC_Flux_z[] is defined on the +z surface of the cell (i+NSkip_T, j+NSkip_T, k+NSkip_N) in g_FC_Var[]
 //                4. This function is shared by MHM, MHM_RP, and CTU schemes
-//                5. For the unsplitting scheme in gravity (i.e., UNSPLIT_GRAVITY), this function also corrects the half-step
+//                5. For the performance consideration, this function will also be responsible for storing the
+//                   inter-patch fluxes
+//                   --> Option "DumpIntFlux"
+//                6. For the unsplitting scheme in gravity (i.e., UNSPLIT_GRAVITY), this function also corrects the half-step
 //                   velocity by gravity when CorrHalfVel==true
 //
 // Parameter   :  g_FC_Var        : Array storing the input face-centered conserved variables
@@ -102,6 +105,8 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 //                ExtAcc_Func     : Function pointer to the external acceleration routine    (for UNSPLIT_GRAVITY only)
 //                ExtAcc_AuxArray : Auxiliary array for external acceleration                (for UNSPLIT_GRAVITY only)
 //                MinDens/Pres    : Density and pressure floors
+//                DumpIntFlux     : true --> store the inter-patch fluxes in g_IntFlux[]
+//                g_IntFlux       : Array for DumpIntFlux
 //                EoS             : EoS object
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
@@ -111,7 +116,9 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                         const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[],
                         const real dt, const real dh, const double Time, const bool UsePot,
                         const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
-                        const real MinDens, const real MinPres, const EoS_t *EoS )
+                        const real MinDens, const real MinPres, const bool DumpIntFlux,
+                        real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
+                        const EoS_t *EoS )
 {
 
 // check
