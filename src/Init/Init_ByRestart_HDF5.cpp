@@ -1458,6 +1458,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "Laohu",                  &RS.Laohu,                  SID, TID, NonFatal, &RT.Laohu,                  1, NonFatal );
    LoadField( "SupportHDF5",            &RS.SupportHDF5,            SID, TID, NonFatal, &RT.SupportHDF5,            1, NonFatal );
    LoadField( "SupportGSL",             &RS.SupportGSL,             SID, TID, NonFatal, &RT.SupportGSL,             1, NonFatal );
+   LoadField( "SupportFFTW",            &RS.SupportFFTW,            SID, TID, NonFatal, &RT.SupportFFTW,            1, NonFatal );
    LoadField( "SupportLibYT",           &RS.SupportLibYT,           SID, TID, NonFatal, &RT.SupportLibYT,           1, NonFatal );
 #  ifdef SUPPORT_LIBYT
    LoadField( "LibYTUsePatchGroup",     &RS.LibYTUsePatchGroup,     SID, TID, NonFatal, &RT.LibYTUsePatchGroup,     1, NonFatal );
@@ -1938,6 +1939,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "IntFracPassive_VarIdx",    RS.IntFracPassive_VarIdx,   SID, TID, NonFatal,  RT.IntFracPassive_VarIdx,   NP, NonFatal );
    LoadField( "Opt__OverlapMPI",         &RS.Opt__OverlapMPI,         SID, TID, NonFatal, &RT.Opt__OverlapMPI,          1, NonFatal );
    LoadField( "Opt__ResetFluid",         &RS.Opt__ResetFluid,         SID, TID, NonFatal, &RT.Opt__ResetFluid,          1, NonFatal );
+   LoadField( "Opt__ResetFluidInit",     &RS.Opt__ResetFluidInit,     SID, TID, NonFatal, &RT.Opt__ResetFluidInit,      1, NonFatal );
    LoadField( "Opt__FreezeFluid",        &RS.Opt__FreezeFluid,        SID, TID, NonFatal, &RT.Opt__FreezeFluid,         1, NonFatal );
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    LoadField( "MinDens",                 &RS.MinDens,                 SID, TID, NonFatal, &RT.MinDens,                  1, NonFatal );

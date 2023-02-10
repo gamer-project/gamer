@@ -457,8 +457,8 @@ void End_Jet()
 // Return      :  true  : This cell has been reset
 //                false : This cell has not been reset
 //-------------------------------------------------------------------------------------------------------
-bool Flu_ResetByUser_Jet( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
-                          const double dt, const int lv, double AuxArray[] )
+int Flu_ResetByUser_Jet( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
+                         const double dt, const int lv, double AuxArray[] )
 {
 
    const double r[3] = { x, y, z };

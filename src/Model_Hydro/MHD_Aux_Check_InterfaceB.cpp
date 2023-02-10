@@ -142,7 +142,7 @@ void CheckError( int &Pass, const real B, const real BSib, const int lv, const i
    {
       if ( Pass )
       {
-         Aux_Message( stderr, "\"%s\" : <%s> FAILED, Time = %13.7e, Step = %ld !!\n",
+         Aux_Message( stderr, "\"%s\" : <%s> FAILED, Time = %13.7e, Step = %ld!!\n",
                       comment, "MHD_Aux_Check_InterfaceB", Time[0], Step );
          Aux_Message( stderr, "%4s   %2s   %7s   %3s   %4s   %4s   %21s   %21s   %21s\n",
                       "Rank", "Lv", "PID", "Sib", "Idx1", "Idx2", "B", "BSib", "Error" );

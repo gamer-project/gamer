@@ -67,6 +67,7 @@ int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 // the parenthesis enclosing MPI_Allreduce() is necessary for the serial mode
 // note that AUTO_REDUCE_DT may deteriorate the performance of OPT__MINIMIZE_MPI_BARRIER because of the following extra MPI call
+// --> use MPI_BAND instead of MPI_BOR since GAMER_SUCCESS=1
    if ( AUTO_REDUCE_DT )   { MPI_Allreduce( &FluStatus_ThisRank, &FluStatus_AllRank, 1, MPI_INT, MPI_BAND, MPI_COMM_WORLD ); }
    else                    FluStatus_AllRank = GAMER_SUCCESS;
 

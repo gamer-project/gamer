@@ -7,7 +7,6 @@
 #include "Typedef.h"
 #include "AMR.h"
 
-
 // Auxiliary
 void Aux_Check_MemFree( const double MinMemFree_Total, const char *comment );
 void Aux_Check_Conservation( const char *comment );
@@ -39,6 +38,8 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                          const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const long TVarBitIdx[],
                          const int NProf, const int MinLv, const int MaxLv, const PatchType_t PatchType,
                          const double PrepTime );
+void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int MinLv, const int MaxLv,
+                      const PatchType_t PatchType );
 #ifndef SERIAL
 void Aux_Record_BoundaryPatch( const int lv, int *NList, int **IDList, int **PosList );
 #endif
@@ -212,6 +213,19 @@ void Init_OpenMP();
 #ifdef SUPPORT_HDF5
 void Init_ByRestart_HDF5( const char *FileName );
 #endif
+#ifdef SUPPORT_FFTW
+void End_FFTW();
+void Init_FFTW();
+void Patch2Slab_Rho( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf_SIdx, long *RecvBuf_SIdx,
+                     int **List_PID, int **List_k, int *List_NSend_Rho, int *List_NRecv_Rho,
+                     const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
+                     const double PrepTime, const bool AddExtraMass );
+#ifdef GRAVITY
+void Slab2Patch_Pot( const real *RhoK, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
+                     int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
+                     const int NSendSlice );
+#endif
+#endif // #ifdef SUPPORT_FFTW
 
 
 // Interpolation
@@ -340,14 +354,10 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
 void CPU_ExtPotSolver_BaseLevel( const ExtPot_t Func, const double AuxArray_Flt[], const int AuxArray_Int[],
                                  const real Table[], void **GenePtr,
                                  const double Time, const bool PotIsInit, const int SaveSg );
+#ifdef SUPPORT_FFTW
 void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double PrepTime );
-void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf_SIdx, long *RecvBuf_SIdx,
-                 int **List_PID, int **List_k, int *List_NSend_Rho, int *List_NRecv_Rho,
-                 const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
-                 const double PrepTime );
-void Slab2Patch( const real *RhoK, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
-                 int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
-                 const int NSendSlice );
+void Init_GreenFuncK();
+#endif
 void End_MemFree_PoissonGravity();
 void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
                     const int SaveSg_Flu, const int SaveSg_Pot, const bool Poisson, const bool Gravity,
@@ -365,12 +375,9 @@ void Gra_Prepare_USG( const int lv, const double PrepTime,
                       real h_Pot_Array_USG_G[][USG_NXT_G][USG_NXT_G][USG_NXT_G],
                       real h_Flu_Array_USG_G[][GRA_NIN-1][PS1][PS1][PS1], const int NPG, const int *PID0_List );
 #endif
-void End_FFTW();
-void Init_FFTW();
 void Init_ExtAccPot();
 void End_ExtAccPot();
 void Init_LoadExtPotTable();
-void Init_GreenFuncK();
 void Init_MemAllocate_PoissonGravity( const int Pot_NPatchGroup );
 void Init_Set_Default_MG_Parameter( int &Max_Iter, int &NPre_Smooth, int &NPost_Smooth, double &Tolerated_Error );
 void Init_Set_Default_SOR_Parameter( double &SOR_Omega, int &SOR_Max_Iter, int &SOR_Min_Iter );
@@ -409,6 +416,21 @@ void TABLE_GetSibPID_Based( const int lv, const int PID0, int SibPID_Based[] );
 
 // LoadBalance
 long LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
+
+// Declare classes defined in GatherTree.h
+class LB_PatchCount;
+class LB_LocalPatchExchangeList;
+class LB_GlobalPatchExchangeList;
+class LB_GlobalPatch;
+
+void LB_GetPID( const int GID, int& level, int& PID, int* GID_Offset );
+void LB_AllgatherPatchCount( LB_PatchCount& pc );
+void LB_AllgatherLBIdx( LB_PatchCount& pc, LB_LocalPatchExchangeList& lel, LB_GlobalPatchExchangeList* gel = NULL );
+void LB_FillLocalPatchExchangeList( LB_PatchCount& pc, LB_LocalPatchExchangeList& lel );
+void LB_FillGlobalPatchExchangeList( LB_PatchCount& pc, LB_LocalPatchExchangeList& lel, LB_GlobalPatchExchangeList& gel, int root );
+LB_GlobalPatch* LB_ConstructGlobalTree( LB_PatchCount& pc, LB_GlobalPatchExchangeList& gel, int root );
+LB_GlobalPatch* LB_GatherTree( LB_PatchCount& pc, int root );
+
 #ifdef LOAD_BALANCE
 void LB_AllocateBufferPatch_Father( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0,
                                     const bool RecordFaPID, int* NNewFaBuf0, int** NewFaBufPID0 );
@@ -563,10 +585,9 @@ void CUAPI_Asyn_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NX
                            const real MinDens, const real MinPres, const real MinEint,
                            const int GPU_NStream );
 void CUAPI_DiagnoseDevice();
-void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src_NPG, const int GPU_NStream );
+void CUAPI_MemAllocate();
 void CUAPI_MemFree_Fluid( const int GPU_NStream );
-void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGroup, int &Che_GPU_NPGroup,
-                                      int &Src_GPU_NPGroup );
+void CUAPI_SetCache();
 void CUAPI_SetDevice( const int Mode );
 void CUAPI_SetConstMemory();
 void CUAPI_SetConstMemory_EoS();
@@ -592,7 +613,6 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                       const double TimeNew, const double TimeOld, const real MinEint,
                                       const int GPU_NStream );
 void CUAPI_SendExtPotTable2GPU( const real *h_Table );
-void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPatchGroup );
 void CUAPI_MemFree_PoissonGravity();
 #endif // #ifdef GRAVITY
 #endif // #ifdef GPU
