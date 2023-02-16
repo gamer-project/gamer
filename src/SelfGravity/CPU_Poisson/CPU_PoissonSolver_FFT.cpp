@@ -259,8 +259,8 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 
 
 // rearrange data from patch to slab
-   Patch2Slab_Rho( RhoK, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID, List_k, List_NSend, List_NRecv, List_z_start,
-                   local_nz, FFT_Size, NRecvSlice, PrepTime, OPT__GRAVITY_EXTRA_MASS );
+   Patch2Slab( RhoK, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID, List_k, List_NSend, List_NRecv, List_z_start,
+               local_nz, FFT_Size, NRecvSlice, PrepTime, _TOTAL_DENS, true, OPT__GRAVITY_EXTRA_MASS );
 
 
 // evaluate potential by FFT
@@ -275,8 +275,8 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 
 
 // rearrange data from slab back to patch
-   Slab2Patch_Pot( RhoK, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID, List_k, List_NRecv, List_NSend,
-                   local_nz, FFT_Size, NRecvSlice );
+   Slab2Patch( RhoK, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID, List_k, List_NRecv, List_NSend,
+               local_nz, FFT_Size, NRecvSlice, _POTE, true );
 
 
    delete [] RhoK;
