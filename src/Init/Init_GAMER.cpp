@@ -66,8 +66,6 @@ void Init_GAMER( int *argc, char ***argv )
 #  ifdef GPU
    CUAPI_SetDevice( OPT__GPUID_SELECT );
 
-   CUAPI_MemAllocate();
-
    CUAPI_SetCache();
 #  endif // #ifdef GPU
 
@@ -172,7 +170,11 @@ void Init_GAMER( int *argc, char ***argv )
    if ( OPT__MEMORY_POOL )    Init_MemoryPool();
 
 
-// allocate memory for several global arrays
+// allocate memory for several CPU/GPU global arrays
+#  ifdef GPU
+   CUAPI_MemAllocate();
+#  endif
+
    Init_MemAllocate();
 
 
