@@ -251,6 +251,7 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
    int  *List_k      [MPI_NRank];   // local z coordinate of each patch slice sent to each rank
    int   List_NSend  [MPI_NRank];   // size of data (density/potential) sent to each rank
    int   List_NRecv  [MPI_NRank];   // size of data (density/potential) received from each rank
+   const bool InPlacePad  = true;   // padded the array for in-place real-to-complex FFT
 
 
 // initialize RhoK as zeros for the isolated BC where the zero-padding method is adopted
@@ -260,7 +261,7 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 
 // rearrange data from patch to slab
    Patch2Slab( RhoK, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID, List_k, List_NSend, List_NRecv, List_z_start,
-               local_nz, FFT_Size, NRecvSlice, PrepTime, _TOTAL_DENS, true, OPT__GRAVITY_EXTRA_MASS );
+               local_nz, FFT_Size, NRecvSlice, PrepTime, _TOTAL_DENS, InPlacePad, OPT__GRAVITY_EXTRA_MASS );
 
 
 // evaluate potential by FFT
