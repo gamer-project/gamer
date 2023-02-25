@@ -80,7 +80,7 @@ void Validate()
 
 
 
-#if ( MODEL == HYDRO )
+#if ( MODEL == HYDRO  &&  defined SUPPORT_FFTW )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -209,7 +209,7 @@ void OutputEnergyPowerSpectrum()
    Output_BasePowerSpectrum( FileName_EnergyPS, _ENGY );
 
 } // FUNCTION : OutputEnergyPowerSpectrum
-#endif // #if ( MODEL == HYDRO )
+#endif // #if ( MODEL == HYDRO  &&  defined SUPPORT_FFTW )
 
 
 
@@ -233,7 +233,7 @@ void Init_TestProb_Hydro_EnergyPowerSpectrum()
    Validate();
 
 
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO  &&  defined SUPPORT_FFTW )
 // set the problem-specific runtime parameters
    SetParameter();
 
@@ -241,7 +241,7 @@ void Init_TestProb_Hydro_EnergyPowerSpectrum()
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr = SetGridIC;
    Output_User_Ptr        = OutputEnergyPowerSpectrum;
-#  endif // #if ( MODEL == HYDRO )
+#  endif // #if ( MODEL == HYDRO  &&  defined SUPPORT_FFTW )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

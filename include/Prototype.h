@@ -298,7 +298,9 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
                                  const real h_Flu_Array[][FLU_NIN][ CUBE(FLU_NXT) ],
                                  const real h_Mag_Array[][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                  const int NPG, const int *PID0_List, const int CLv, const char *comment );
+#ifdef SUPPORT_FFTW
 void Output_BasePowerSpectrum( const char *FileName, const long TVar );
+#endif
 void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const double y, const double z, const double Time,
                                            const int lv, double AuxArray[] ),
                      void (*AnalFunc_Mag)( real magnetic[], const double x, const double y, const double z, const double Time,
