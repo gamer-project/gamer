@@ -277,7 +277,7 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 
 // rearrange data from slab back to patch
    Slab2Patch( RhoK, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID, List_k, List_NRecv, List_NSend,
-               local_nz, FFT_Size, NRecvSlice, _POTE, true );
+               local_nz, FFT_Size, NRecvSlice, _POTE, InPlacePad );
 
 
    delete [] RhoK;
