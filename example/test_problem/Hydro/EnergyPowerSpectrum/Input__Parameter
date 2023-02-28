@@ -23,8 +23,8 @@ END_STEP                     -1           # end step (<0=auto -> must be set by 
 
 
 # test problems
-TESTPROB_ID                   200         # test problem ID [0]
-                                          # 200: energy power spectrum in pure hydro
+TESTPROB_ID                   19          # test problem ID [0]
+                                          # 19: energy power spectrum in pure hydro
 
 
 # boundary conditions
@@ -118,7 +118,7 @@ INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initiali
 OPT__OUTPUT_TOTAL             0           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
 OPT__OUTPUT_PART              7           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
 OPT__OUTPUT_USER              1           # output the user-specified data -> edit "Output_User.cpp" [0]
-OPT__OUTPUT_BASEPS            1           # output the base-level power spectrum [0]
+OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_PRES              0           # output gas pressure [0] ##HYDRO ONLY##
 OPT__OUTPUT_TEMP              0           # output gas temperature [0] ##HYDRO ONLY##
 OPT__OUTPUT_ENTR              0           # output gas entropy [0] ##HYDRO ONLY##

@@ -39,10 +39,6 @@ void Validate()
    Aux_Error( ERROR_INFO, "SUPPORT_FFTW must be enabled !!\n" );
 #  endif
 
-#  ifdef GRAVITY
-   Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
-#  endif
-
 #  ifdef COMOVING
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
@@ -66,12 +62,11 @@ void Validate()
    if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
       Aux_Error( ERROR_INFO, "please set \"OPT__BC_FLU_* = 1\" (i.e., periodic BC) !!\n" );
 
+   if ( !OPT__OUTPUT_USER )
+      Aux_Error( ERROR_INFO, "please set \"OPT__OUTPUT_USER = 1\" !!\n" );
+
 
 // warnings
-   if ( MPI_Rank == 0 )
-   {
-      if ( !OPT__OUTPUT_USER )   Aux_Message( stdout, "WARNING : OPT__OUTPUT_USER is off !!\n" );
-   }
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
@@ -125,7 +120,7 @@ void SetParameter()
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
    const double End_T_Default    = 0.0;
-   const long   End_Step_Default = __INT_MAX__;
+   const long   End_Step_Default = 0;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -177,14 +172,14 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   const double r = SQRT( SQR(x-0.5*amr->BoxSize[0]) + SQR(y-0.5*amr->BoxSize[1]) + SQR(z-0.5*amr->BoxSize[2]) );
+   const double r = sqrt( SQR(x-amr->BoxCenter[0]) + SQR(y-amr->BoxCenter[1]) + SQR(z-0.5*amr->BoxCenter[2]) );
 
 // set the output array
    fluid[DENS] = 1.0;
    fluid[MOMX] = 0.0;
    fluid[MOMY] = 0.0;
    fluid[MOMZ] = 0.0;
-   fluid[ENGY] = CUBE(1.0/SQRT(2.0*M_PI*SQR(Energy_GauWidth)))*exp(-0.5*SQR(r/Energy_GauWidth));
+   fluid[ENGY] = CUBE(1.0/sqrt(2.0*M_PI*SQR(Energy_GauWidth)))*exp(-0.5*SQR(r/Energy_GauWidth));
 
 } // FUNCTION : SetGridIC
 
@@ -203,7 +198,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 void OutputEnergyPowerSpectrum()
 {
 
-   char FileName_EnergyPS[50];
+   char FileName_EnergyPS[MAX_STRING];
    sprintf( FileName_EnergyPS, "EnergyPowerSpectrum_%06d", DumpID );
 
    Output_BasePowerSpectrum( FileName_EnergyPS, _ENGY );

@@ -28,15 +28,17 @@ GaussianWidth   = 0.01
 
 # plot style
 # -----------------------------------------------------------
-#set log xy
- set key reverse Left spacing 2 right
+ set log xy
+ set key reverse Left spacing 2 bottom left
 #set key reverse Left spacing 1 at first 1.5e2, 1e8
  set xlabel "k"
  set ylabel "P(k)"
-#set format x "10^{%T}"
-#set format y "10^{%T}"
+ set format x "10^{%T}"
+ set format y "10^{%T}"
  set pointsize 1.0
  set size square
+ set xrange [1e0:4.5e2]
+ set yrange [1e-8:2e1]
 
 
 # constants

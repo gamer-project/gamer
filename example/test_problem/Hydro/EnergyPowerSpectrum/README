@@ -1,7 +1,7 @@
 Compilation flags:
 ========================================
-Enable : MODEL=HYDRO, SUPPORT_FFTW
-Disable: COMOVING, PARTICLE, GRAVITY, MHD
+Enable : MODEL=HYDRO, SUPPORT_FFTW, EOS=EOS_GAMMA
+Disable: COMOVING, PARTICLE, MHD
 
 
 Default setup:
