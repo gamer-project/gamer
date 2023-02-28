@@ -58,10 +58,6 @@ void Validate()
    if ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )
       Aux_Error( ERROR_INFO, "simulation domain must be cubic !!\n" );
 
-   for (int f=0; f<6; f++)
-   if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
-      Aux_Error( ERROR_INFO, "please set \"OPT__BC_FLU_* = 1\" (i.e., periodic BC) !!\n" );
-
    if ( !OPT__OUTPUT_USER )
       Aux_Error( ERROR_INFO, "please set \"OPT__OUTPUT_USER = 1\" !!\n" );
 
