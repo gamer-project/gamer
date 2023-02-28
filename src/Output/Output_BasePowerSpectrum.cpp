@@ -76,7 +76,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    int  *List_k      [MPI_NRank];   // local z coordinate of each patch slice sent to each rank
    int   List_NSend  [MPI_NRank];   // size of data sent to each rank
    int   List_NRecv  [MPI_NRank];   // size of data received from each rank
-   const bool InPlacePad  = true;   // padded the array for in-place real-to-complex FFT
+   const bool InPlacePad  = true;   // pad the array for in-place real-to-complex FFT
 
    if ( MPI_Rank == 0 )    PS_total = new double [Nx_Padded];
 

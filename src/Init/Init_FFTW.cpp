@@ -128,8 +128,8 @@ void End_FFTW()
 // Description :  Patch-based data --> slab domain decomposition
 //
 // Parameter   :  VarS           : Arrary of target variable for FFT
-//                SendBuf_Var    : Sending MPI buffer of data
-//                RecvBuf_Var    : Receiving MPI buffer of data
+//                SendBuf_Var    : Sending MPI buffer of the target field
+//                RecvBuf_Var    : Receiving MPI buffer of the target field
 //                SendBuf_SIdx   : Sending MPI buffer of 1D coordinate in slab
 //                RecvBuf_SIdx   : Receiving MPI buffer of 1D coordinate in slab
 //                List_PID       : PID of each patch slice sent to each rank
@@ -142,7 +142,7 @@ void End_FFTW()
 //                NRecvSlice     : Total number of z slices received from other ranks (could be zero in the isolated BC)
 //                PrepTime       : Physical time for preparing the target variable field
 //                TVar           : Target variable to be prepared
-//                InPlacePad     : Whether padded the array size for in-place real-to-complex FFT
+//                InPlacePad     : Whether or not to pad the array size for in-place real-to-complex FFT
 //                AddExtraMass   : Adding an extra density field for computing gravitational potential only
 //-------------------------------------------------------------------------------------------------------
 void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf_SIdx, long *RecvBuf_SIdx,
@@ -153,7 +153,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
 #  ifdef GRAVITY
 // check
-   if ( ( TVar == _TOTAL_DENS )  &&  AddExtraMass  &&  Poi_AddExtraMassForGravity_Ptr == NULL )
+   if ( TVar == _TOTAL_DENS  &&  AddExtraMass  &&  Poi_AddExtraMassForGravity_Ptr == NULL )
       Aux_Error( ERROR_INFO, "Poi_AddExtraMassForGravity_Ptr == NULL for AddExtraMass !!\n" );
 #  endif // GRAVITY
 
@@ -354,7 +354,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
       SendPtr_SIdx += List_NSend_SIdx[r];
    }
 
-// 3.4 prepare the send buffer of data
+// 3.4 prepare the send buffer of the target field
    SendPtr_Var = SendBuf_Var;
    for (int r=0; r<MPI_NRank; r++)
    {
@@ -466,8 +466,8 @@ int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Gues
 // Description :  Slab domain decomposition --> patch-based data
 //
 // Parameter   :  VarS       : Arrary of target variable after FFT
-//                SendBuf    : Sending MPI buffer of data
-//                RecvBuf    : Receiving MPI buffer of data
+//                SendBuf    : Sending MPI buffer of the target field
+//                RecvBuf    : Receiving MPI buffer of the target field
 //                SaveSg     : Sandglass to store the updated data
 //                List_SIdx  : 1D coordinate in slab
 //                List_PID   : PID of each patch slice sent to each rank
@@ -478,7 +478,7 @@ int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Gues
 //                FFT_Size   : Size of the FFT operation including the zero-padding regions
 //                NSendSlice : Total number of z slices need to be sent to other ranks (could be zero in the isolated BC)
 //                TVar       : Target variable to be prepared
-//                InPlacePad : Whether padded the array size for in-place real-to-complex FFT
+//                InPlacePad : Whether or not to pad the array size for in-place real-to-complex FFT
 //-------------------------------------------------------------------------------------------------------
 void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
                  int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
