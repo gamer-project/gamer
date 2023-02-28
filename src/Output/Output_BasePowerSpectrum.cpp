@@ -82,26 +82,26 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 
 
 // 3. initialize the particle density array (rho_ext) and collect particles to the target level
-   if ( TVar == _TOTAL_DENS ) {
-#     ifdef PARTICLE
-      const bool TimingSendPar_No = false;
-      const bool JustCountNPar_No = false;
-#     ifdef LOAD_BALANCE
-      const bool PredictPos       = amr->Par->PredictPos;
-      const bool SibBufPatch      = true;
-      const bool FaSibBufPatch    = true;
-#     else
-      const bool PredictPos       = false;
-      const bool SibBufPatch      = NULL_BOOL;
-      const bool FaSibBufPatch    = NULL_BOOL;
-#     endif
+#  ifdef MASSIVE_PARTICLES
+   const bool TimingSendPar_No = false;
+   const bool JustCountNPar_No = false;
+#  ifdef LOAD_BALANCE
+   const bool PredictPos       = amr->Par->PredictPos;
+   const bool SibBufPatch      = true;
+   const bool FaSibBufPatch    = true;
+#  else
+   const bool PredictPos       = false;
+   const bool SibBufPatch      = NULL_BOOL;
+   const bool FaSibBufPatch    = NULL_BOOL;
+#  endif
 
+   if ( TVar == _TOTAL_DENS ) {
       Prepare_PatchData_InitParticleDensityArray( 0 );
 
       Par_CollectParticle2OneLevel( 0, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos, Time[0],
                                     SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
-#     endif // #ifdef PARTICLE
    } // if ( TVar == _TOTAL_DENS )
+#  endif // #ifdef PARTICLE
 
 
 // 4. rearrange data from patch to slab
@@ -144,14 +144,14 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    delete [] RecvBuf_SIdx;
    if ( MPI_Rank == 0 )    delete [] PS_total;
 
+// free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
+#  ifdef MASSIVE_PARTICLES
    if ( TVar == _TOTAL_DENS ) {
-//    free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
-#     ifdef PARTICLE
       Par_CollectParticle2OneLevel_FreeMemory( 0, SibBufPatch, FaSibBufPatch );
 
       Prepare_PatchData_FreeParticleDensityArray( 0 );
-#     endif
    }
+#  endif
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ... done\n", __FUNCTION__, DumpID );
