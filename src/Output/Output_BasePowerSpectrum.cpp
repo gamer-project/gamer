@@ -29,6 +29,17 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ...\n", __FUNCTION__, DumpID );
 
+// check
+// check only single field
+   int NVar = 0;  // record number of target variables
+   int NMax = NCOMP_TOTAL + NDERIVE + 3; // all possible fields ( _TOTAL | _DERIVED | _POTE | _PAR_DENS | _TOTAL_DENS )
+
+   for (int v=0; v<NMax; v++)
+      if ( TVar & (1L<<v) )  NVar++;
+
+   if ( NVar != 1 )
+      Aux_Error( ERROR_INFO, "number of target variables is not one !!\n" );
+
 
 // 1. determine the FFT size
    const int Nx_Padded   = NX0_TOT[0]/2+1;

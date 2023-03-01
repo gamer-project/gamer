@@ -151,6 +151,17 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
                  const double PrepTime, const long TVar, const bool InPlacePad, const bool AddExtraMass )
 {
 
+// check
+// check only single field
+   int NVar = 0;  // record number of target variables
+   int NMax = NCOMP_TOTAL + NDERIVE + 3; // all possible fields ( _TOTAL | _DERIVED | _POTE | _PAR_DENS | _TOTAL_DENS )
+
+   for (int v=0; v<NMax; v++)
+      if ( TVar & (1L<<v) )  NVar++;
+
+   if ( NVar != 1 )
+      Aux_Error( ERROR_INFO, "number of target variables is not one !!\n" );
+
 #  ifdef GRAVITY
 // check
    if ( TVar == _TOTAL_DENS  &&  AddExtraMass  &&  Poi_AddExtraMassForGravity_Ptr == NULL )
@@ -485,6 +496,34 @@ void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveS
                  const int NSendSlice, const long TVar, const bool InPlacePad )
 {
 
+// check
+// check TVar is one of the fields in NCOMP_TOTAL or POTE
+   long SupportedVar = _TOTAL;
+#  ifdef GRAVITY
+   SupportedVar |= _POTE;
+#  endif
+
+   if ( TVar & ~SupportedVar )
+      Aux_Error( ERROR_INFO, "unsupported variable %s = %d !!\n", "TVar", TVar );
+
+// check only single field and record variable index
+   int TVarIdx;   // target variable index
+   int NVar = 0;  // record number of target variables
+   int NMax = NCOMP_TOTAL + NDERIVE + 3; // all possible fields ( _TOTAL | _DERIVED | _POTE | _PAR_DENS | _TOTAL_DENS )
+
+   for (int v=0; v<NMax; v++)
+   {
+      if ( TVar & (1L<<v) )
+      {
+         TVarIdx = v;
+         NVar++;
+      }
+   }
+
+   if ( NVar != 1 )
+      Aux_Error( ERROR_INFO, "number of target variables is not one !!\n" );
+
+
 // 1. store the evaluated data to the send buffer
    const int   SSize[2]   = { ( ( InPlacePad ) ? 2*(FFT_Size[0]/2+1) : FFT_Size[0]), FFT_Size[1] };  // padded slab size in the x and y directions
    const int   PSSize     = PS1*PS1;                                          // patch slice size
@@ -540,12 +579,14 @@ void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveS
          PID = List_PID[r][t];
          k   = List_k  [r][t];
 
+         if ( TVarIdx < NCOMP_TOTAL )
+            memcpy( amr->patch[SaveSg][0][PID]->fluid[TVarIdx][k], RecvPtr, PSSize*sizeof(real) );
 #        ifdef GRAVITY
-         if ( TVar == _POTE )
+         else if ( TVarIdx == NCOMP_TOTAL+NDERIVE ) // POTE
             memcpy( amr->patch[SaveSg][0][PID]->pot[k], RecvPtr, PSSize*sizeof(real) );
-         else
 #        endif
-            Aux_Error( ERROR_INFO, "incorrect target variable %s = %d !!\n", "TVar", TVar );
+         else
+            Aux_Error( ERROR_INFO, "incorrect target variable index %s = %d !!\n", "TVarIdx", TVarIdx );
 
          RecvPtr += PSSize;
       }
