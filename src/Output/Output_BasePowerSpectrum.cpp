@@ -31,13 +31,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 
 // check
 // check only single field
-   int NVar = 0;  // record number of target variables
-   int NMax = NCOMP_TOTAL + NDERIVE + 3; // all possible fields ( _TOTAL | _DERIVED | _POTE | _PAR_DENS | _TOTAL_DENS )
-
-   for (int v=0; v<NMax; v++)
-      if ( TVar & (1L<<v) )  NVar++;
-
-   if ( NVar != 1 )
+   if ( TVar == 0  ||  ( TVar & (TVar-1) ) != 0 )
       Aux_Error( ERROR_INFO, "number of target variables is not one !!\n" );
 
 

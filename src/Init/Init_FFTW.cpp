@@ -154,13 +154,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
 // check
 // check only single field
-   int NVar = 0;  // record number of target variables
-   int NMax = NCOMP_TOTAL + NDERIVE + 3; // all possible fields ( _TOTAL | _DERIVED | _POTE | _PAR_DENS | _TOTAL_DENS )
-
-   for (int v=0; v<NMax; v++)
-      if ( TVar & (1L<<v) )  NVar++;
-
-   if ( NVar != 1 )
+   if ( TVar == 0  ||  ( TVar & (TVar-1) ) != 0 )
       Aux_Error( ERROR_INFO, "number of target variables is not one !!\n" );
 
 #  ifdef GRAVITY
@@ -501,6 +495,10 @@ void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveS
 {
 
 // check
+// check only single field
+   if ( TVar == 0  ||  ( TVar & (TVar-1) ) != 0 )
+      Aux_Error( ERROR_INFO, "number of target variables is not one !!\n" );
+
 // check TVar is one of the fields in NCOMP_TOTAL or POTE
    long SupportedVar = _TOTAL;
 #  ifdef GRAVITY
@@ -510,22 +508,17 @@ void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveS
    if ( TVar & ~SupportedVar )
       Aux_Error( ERROR_INFO, "unsupported variable %s = %d !!\n", "TVar", TVar );
 
-// check only single field and record variable index
-   int TVarIdx;   // target variable index
-   int NVar = 0;  // record number of target variables
-   int NMax = NCOMP_TOTAL + NDERIVE + 3; // all possible fields ( _TOTAL | _DERIVED | _POTE | _PAR_DENS | _TOTAL_DENS )
+// find the variable index
+   int TVarIdx = -1;   // target variable index
+   for (int v=0; v<NCOMP_TOTAL; v++)
+      if ( TVar & (1L<<v) )  TVarIdx = v;  // assuming only single field
 
-   for (int v=0; v<NMax; v++)
-   {
-      if ( TVar & (1L<<v) )
-      {
-         TVarIdx = v;
-         NVar++;
-      }
-   }
+#  ifdef GRAVITY
+   if ( TVar == _POTE )  TVarIdx = NCOMP_TOTAL+NDERIVE;  // assuming only single field
+#  endif
 
-   if ( NVar != 1 )
-      Aux_Error( ERROR_INFO, "number of target variables is not one !!\n" );
+   if ( TVarIdx < 0 )
+      Aux_Error( ERROR_INFO, "TVarIdx is not found !!\n" );
 
 
 // 1. store the evaluated data to the send buffer
@@ -586,7 +579,7 @@ void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveS
          if ( TVarIdx < NCOMP_TOTAL )
             memcpy( amr->patch[SaveSg][0][PID]->fluid[TVarIdx][k], RecvPtr, PSSize*sizeof(real) );
 #        ifdef GRAVITY
-         else if ( TVarIdx == NCOMP_TOTAL+NDERIVE ) // POTE
+         else if ( TVarIdx == NCOMP_TOTAL+NDERIVE ) // TVar == _POTE
             memcpy( amr->patch[SaveSg][0][PID]->pot[k], RecvPtr, PSSize*sizeof(real) );
 #        endif
          else
