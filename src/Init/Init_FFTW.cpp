@@ -175,11 +175,11 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 #  endif // GAMER_DEBUG
 
 
-   const int SSize[2]   = { ( ( InPlacePad ) ? 2*(FFT_Size[0]/2+1) : FFT_Size[0]), FFT_Size[1] };     // padded slab size in the x and y directions
+   const int SSize[2]   = { ( InPlacePad ? 2*(FFT_Size[0]/2+1) : FFT_Size[0] ), FFT_Size[1] };     // padded slab size in the x and y directions
    const int PSSize     = PS1*PS1;                                // patch slice size
 // const int MemUnit    = amr->NPatchComma[0][1]*PS1/MPI_NRank;   // set arbitrarily
    const int MemUnit    = amr->NPatchComma[0][1]*PS1;             // set arbitrarily
-   const int AveNz      = FFT_Size[2]/MPI_NRank + ( (FFT_Size[2]%MPI_NRank == 0 ) ? 0 : 1 );    // average slab thickness
+   const int AveNz      = FFT_Size[2]/MPI_NRank + ( ( FFT_Size[2]%MPI_NRank == 0 ) ? 0 : 1 );    // average slab thickness
    const int Scale0     = amr->scale[0];
 
    int   Cr[3];                        // corner coordinates of each patch normalized to the base-level grid size
@@ -234,7 +234,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
 #     ifdef GRAVITY
 //    add extra mass source for gravity if required
-      if ( ( TVar == _TOTAL_DENS )  &&  AddExtraMass )
+      if ( TVar == _TOTAL_DENS  &&  AddExtraMass )
       {
          const double dh = amr->dh[0];
 
@@ -301,7 +301,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 //          subtract the background density (which is assumed to be UNITY) for the isolated BC in the comoving frame
 //          --> to be consistent with the comoving-frame Poisson eq.
 #           ifdef COMOVING
-            if ( ( TVar == _TOTAL_DENS )  &&  OPT__BC_POT == BC_POT_ISOLATED )
+            if ( TVar == _TOTAL_DENS  &&  OPT__BC_POT == BC_POT_ISOLATED )
             {
                for (int t=0; t<PSSize; t++)  TempBuf_Var_Ptr[t] -= (real)1.0;
             }
@@ -525,7 +525,7 @@ void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveS
 
 
 // 1. store the evaluated data to the send buffer
-   const int   SSize[2]   = { ( ( InPlacePad ) ? 2*(FFT_Size[0]/2+1) : FFT_Size[0]), FFT_Size[1] };  // padded slab size in the x and y directions
+   const int   SSize[2]   = { ( InPlacePad ? 2*(FFT_Size[0]/2+1) : FFT_Size[0] ), FFT_Size[1] };  // padded slab size in the x and y directions
    const int   PSSize     = PS1*PS1;                                          // patch slice size
    const long  NPSlice    = (long)NX0_TOT[0]*NX0_TOT[1]*NSendSlice/PSSize;    // total number of patch slices to be sent
    const real *VarS_Ptr   = NULL;
