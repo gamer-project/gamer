@@ -127,7 +127,7 @@ void End_FFTW()
 // Function    :  Patch2Slab
 // Description :  Patch-based data --> slab domain decomposition
 //
-// Parameter   :  VarS           : Arrary of target variable for FFT
+// Parameter   :  VarS           : Slab array of target variable for FFT
 //                SendBuf_Var    : Sending MPI buffer of the target field
 //                RecvBuf_Var    : Receiving MPI buffer of the target field
 //                SendBuf_SIdx   : Sending MPI buffer of 1D coordinate in slab
@@ -220,14 +220,14 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
    const int         GhostSize         = 0;
    const int         NPG               = 1;
 
-   real (*Var)[PS1][PS1][PS1] = new real [8*NPG][PS1][PS1][PS1];
+   real (*VarPatch)[PS1][PS1][PS1] = new real [8*NPG][PS1][PS1][PS1];
 
    for (int PID0=0; PID0<amr->NPatchComma[0][1]; PID0+=8)
    {
 //    even with NSIDE_00 and GhostSize=0, we still need OPT__BC_FLU to determine whether periodic BC is adopted
 //    for depositing particle mass onto grids.
 //    also note that we do not check minimum density here since no ghost zones are required
-      Prepare_PatchData( 0, PrepTime, Var[0][0][0], NULL, GhostSize, NPG, &PID0, TVar, _NONE,
+      Prepare_PatchData( 0, PrepTime, VarPatch[0][0][0], NULL, GhostSize, NPG, &PID0, TVar, _NONE,
                          IntScheme, INT_NONE, UNIT_PATCH, NSide_None, IntPhase_No, OPT__BC_FLU, PotBC_None,
                          MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
@@ -249,7 +249,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
             for (int k=0; k<PS1; k++)  {  z = z0 + k*dh;
             for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;
             for (int i=0; i<PS1; i++)  {  x = x0 + i*dh;
-               Var[LocalID][k][j][i] += Poi_AddExtraMassForGravity_Ptr( x, y, z, Time[0], 0, NULL );
+               VarPatch[LocalID][k][j][i] += Poi_AddExtraMassForGravity_Ptr( x, y, z, Time[0], 0, NULL );
             }}}
          }
       }
@@ -295,7 +295,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
             idx = 0;
             for (int j=0; j<PS1; j++)
             for (int i=0; i<PS1; i++)
-               TempBuf_Var_Ptr[ idx ++ ] = Var[LocalID][k][j][i];
+               TempBuf_Var_Ptr[ idx ++ ] = VarPatch[LocalID][k][j][i];
 
 #           ifdef GRAVITY
 //          subtract the background density (which is assumed to be UNITY) for the isolated BC in the comoving frame
@@ -313,7 +313,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
       } // for (int PID=PID0, LocalID=0; PID<PID0+8; PID++, LocalID++)
    } // for (int PID0=0; PID0<amr->NPatchComma[0][1]; PID0+=8)
 
-   delete [] Var;
+   delete [] VarPatch;
 
 
 // 3. prepare the send buffer
@@ -476,7 +476,7 @@ int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Gues
 // Function    :  Slab2Patch
 // Description :  Slab domain decomposition --> patch-based data
 //
-// Parameter   :  VarS       : Arrary of target variable after FFT
+// Parameter   :  VarS       : Slab array of target variable after FFT
 //                SendBuf    : Sending MPI buffer of the target field
 //                RecvBuf    : Receiving MPI buffer of the target field
 //                SaveSg     : Sandglass to store the updated data
