@@ -143,12 +143,13 @@ void End_FFTW()
 //                PrepTime       : Physical time for preparing the target variable field
 //                TVar           : Target variable to be prepared
 //                InPlacePad     : Whether or not to pad the array size for in-place real-to-complex FFT
-//                AddExtraMass   : Adding an extra density field for computing gravitational potential only
+//                ForPoisson     : Preparing the density field for the Poisson solver
+//                AddExtraMass   : Adding an extra density field for computing gravitational potential (only works with ForPoisson)
 //-------------------------------------------------------------------------------------------------------
 void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf_SIdx, long *RecvBuf_SIdx,
                  int **List_PID, int **List_k, int *List_NSend_Var, int *List_NRecv_Var,
                  const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
-                 const double PrepTime, const long TVar, const bool InPlacePad, const bool AddExtraMass )
+                 const double PrepTime, const long TVar, const bool InPlacePad, const bool ForPoisson, const bool AddExtraMass )
 {
 
 // check
@@ -164,7 +165,10 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
 #  ifdef GRAVITY
 // check
-   if ( TVar == _TOTAL_DENS  &&  AddExtraMass  &&  Poi_AddExtraMassForGravity_Ptr == NULL )
+   if ( ForPoisson  &&  TVar != _TOTAL_DENS )
+      Aux_Error( ERROR_INFO, "TVar != _TOTAL_DENS for Poisson solver !!\n" );
+
+   if ( ForPoisson  &&  AddExtraMass  &&  Poi_AddExtraMassForGravity_Ptr == NULL )
       Aux_Error( ERROR_INFO, "Poi_AddExtraMassForGravity_Ptr == NULL for AddExtraMass !!\n" );
 #  endif // GRAVITY
 
@@ -234,7 +238,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
 #     ifdef GRAVITY
 //    add extra mass source for gravity if required
-      if ( TVar == _TOTAL_DENS  &&  AddExtraMass )
+      if ( ForPoisson  &&  AddExtraMass )
       {
          const double dh = amr->dh[0];
 
@@ -301,7 +305,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 //          subtract the background density (which is assumed to be UNITY) for the isolated BC in the comoving frame
 //          --> to be consistent with the comoving-frame Poisson eq.
 #           ifdef COMOVING
-            if ( TVar == _TOTAL_DENS  &&  OPT__BC_POT == BC_POT_ISOLATED )
+            if ( For_Poisson  &&  OPT__BC_POT == BC_POT_ISOLATED )
             {
                for (int t=0; t<PSSize; t++)  TempBuf_Var_Ptr[t] -= (real)1.0;
             }

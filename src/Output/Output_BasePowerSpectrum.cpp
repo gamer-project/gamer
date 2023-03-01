@@ -87,6 +87,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    int  *List_k      [MPI_NRank];   // local z coordinate of each patch slice sent to each rank
    int   List_NSend  [MPI_NRank];   // size of data sent to each rank
    int   List_NRecv  [MPI_NRank];   // size of data received from each rank
+   const bool ForPoisson  = false;  // preparing the density field for the Poisson solver
    const bool InPlacePad  = true;   // pad the array for in-place real-to-complex FFT
 
    if ( MPI_Rank == 0 )    PS_total = new double [Nx_Padded];
@@ -117,7 +118,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 
 // 4. rearrange data from patch to slab
    Patch2Slab( VarK, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID, List_k, List_NSend, List_NRecv, List_z_start,
-               local_nz, FFT_Size, NRecvSlice, Time[0], TVar, InPlacePad, false );
+               local_nz, FFT_Size, NRecvSlice, Time[0], TVar, InPlacePad, ForPoisson, false );
 
 
 // 5. evaluate the base-level power spectrum by FFT

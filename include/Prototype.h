@@ -219,7 +219,7 @@ void Init_FFTW();
 void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf_SIdx, long *RecvBuf_SIdx,
                  int **List_PID, int **List_k, int *List_NSend_Var, int *List_NRecv_Var,
                  const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
-                 const double PrepTime, const long TVar, const bool InPlacePad, const bool AddExtraMass );
+                 const double PrepTime, const long TVar, const bool InPlacePad, const bool ForPoisson, const bool AddExtraMass );
 void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
                  int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
                  const int NSendSlice, const long TVar, const bool InPlacePad );
