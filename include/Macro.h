@@ -863,6 +863,7 @@
 
 
 // GAMER status
+// --> if we ever want to swap the following values, must check all MPI functions using MPI_BAND or MPI_BOR
 #define GAMER_SUCCESS      1
 #define GAMER_FAILED       0
 

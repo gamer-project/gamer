@@ -9,6 +9,7 @@ extern real (*d_Flu_Array_F_In )[FLU_NIN ][ CUBE(FLU_NXT) ];
 extern real (*d_Flu_Array_F_Out)[FLU_NOUT][ CUBE(PS2) ];
 extern real (*d_Flux_Array)[9][NFLUX_TOTAL][ SQR(PS2) ];
 #ifdef UNSPLIT_GRAVITY
+extern real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ];
 extern double (*d_Corner_Array_F)[3];
 #endif
 #ifdef DUAL_ENERGY
@@ -36,10 +37,6 @@ extern real (*d_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
 extern real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif
 #endif // FLU_SCHEME
-#if ( MODEL == HYDRO )
-extern real (*d_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX];
-extern real  *d_SrcDlepProf_Radius;
-#endif
 
 #if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
@@ -64,6 +61,7 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
    if ( d_Flu_Array_F_Out    != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Flu_Array_F_Out    )  );  d_Flu_Array_F_Out    = NULL; }
    if ( d_Flux_Array         != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Flux_Array         )  );  d_Flux_Array         = NULL; }
 #  ifdef UNSPLIT_GRAVITY
+   if ( d_Pot_Array_USG_F    != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Pot_Array_USG_F    )  );  d_Pot_Array_USG_F    = NULL; }
    if ( d_Corner_Array_F     != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Corner_Array_F     )  );  d_Corner_Array_F     = NULL; }
 #  endif
 #  ifdef DUAL_ENERGY
@@ -91,13 +89,6 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
    if ( d_EC_Ele             != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_EC_Ele             )  );  d_EC_Ele             = NULL; }
 #  endif
 #  endif // FLU_SCHEME
-#  if ( MODEL == HYDRO )
-   if ( d_SrcDlepProf_Data   != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_SrcDlepProf_Data   )  );  d_SrcDlepProf_Data   = NULL; }
-   if ( d_SrcDlepProf_Radius != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_SrcDlepProf_Radius )  );  d_SrcDlepProf_Radius = NULL; }
-
-   SrcTerms.Dlep_Profile_DataDevPtr   = NULL;
-   SrcTerms.Dlep_Profile_RadiusDevPtr = NULL;
-#  endif
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #    warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
@@ -111,6 +102,7 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
       if ( h_Flu_Array_F_Out[t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Flu_Array_F_Out[t] )  );  h_Flu_Array_F_Out[t] = NULL; }
       if ( h_Flux_Array     [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Flux_Array     [t] )  );  h_Flux_Array     [t] = NULL; }
 #     ifdef UNSPLIT_GRAVITY
+      if ( h_Pot_Array_USG_F[t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Pot_Array_USG_F[t] )  );  h_Pot_Array_USG_F[t] = NULL; }
       if ( h_Corner_Array_F [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Corner_Array_F [t] )  );  h_Corner_Array_F [t] = NULL; }
 #     endif
 #     ifdef DUAL_ENERGY
@@ -129,11 +121,6 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
       if ( h_Flu_Array_S_Out[t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Flu_Array_S_Out[t] )  );  h_Flu_Array_S_Out[t] = NULL; }
       if ( h_Corner_Array_S [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Corner_Array_S [t] )  );  h_Corner_Array_S [t] = NULL; }
    } // for (int t=0; t<2; t++)
-
-#  if ( MODEL == HYDRO )
-   if ( h_SrcDlepProf_Data   != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_SrcDlepProf_Data   )  );  h_SrcDlepProf_Data   = NULL; }
-   if ( h_SrcDlepProf_Radius != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_SrcDlepProf_Radius )  );  h_SrcDlepProf_Radius = NULL; }
-#  endif
 
 
 // destroy streams
