@@ -299,7 +299,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 //          subtract the background density (which is assumed to be UNITY) for the isolated BC in the comoving frame
 //          --> to be consistent with the comoving-frame Poisson eq.
 #           ifdef COMOVING
-            if ( For_Poisson  &&  OPT__BC_POT == BC_POT_ISOLATED )
+            if ( ForPoisson  &&  OPT__BC_POT == BC_POT_ISOLATED )
             {
                for (int t=0; t<PSSize; t++)  TempBuf_Var_Ptr[t] -= (real)1.0;
             }

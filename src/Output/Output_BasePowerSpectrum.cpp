@@ -107,7 +107,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
       Par_CollectParticle2OneLevel( 0, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos, Time[0],
                                     SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
    } // if ( TVar == _TOTAL_DENS )
-#  endif // #ifdef PARTICLE
+#  endif // #ifdef MASSIVE_PARTICLES
 
 
 // 4. rearrange data from patch to slab
