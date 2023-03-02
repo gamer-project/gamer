@@ -31,7 +31,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 
 // check
 // check only single field
-   if ( TVar == 0  ||  ( TVar & (TVar-1) ) != 0 )
+   if ( TVar == 0  ||  TVar & (TVar-1) )
       Aux_Error( ERROR_INFO, "number of target variables is not one !!\n" );
 
 

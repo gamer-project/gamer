@@ -154,7 +154,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
 // check
 // check only single field
-   if ( TVar == 0  ||  ( TVar & (TVar-1) ) != 0 )
+   if ( TVar == 0  ||  TVar & (TVar-1) )
       Aux_Error( ERROR_INFO, "number of target variables is not one !!\n" );
 
 #  ifdef GRAVITY
@@ -496,7 +496,7 @@ void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveS
 
 // check
 // check only single field
-   if ( TVar == 0  ||  ( TVar & (TVar-1) ) != 0 )
+   if ( TVar == 0  ||  TVar & (TVar-1) )
       Aux_Error( ERROR_INFO, "number of target variables is not one !!\n" );
 
 // check TVar is one of the fields in NCOMP_TOTAL or POTE
