@@ -265,7 +265,7 @@ void Output_DumpData( const int Stage )
             Aux_Error( ERROR_INFO, "Output_User_Ptr == NULL for OPT__OUTPUT_USER !!\n" );
       }
 #     ifdef SUPPORT_FFTW
-      if ( OPT__OUTPUT_BASEPS )           Output_BasePowerSpectrum( FileName_PS );
+      if ( OPT__OUTPUT_BASEPS )           Output_BasePowerSpectrum( FileName_PS, _TOTAL_DENS );
 #     endif
 #     ifdef PARTICLE
       if ( OPT__OUTPUT_PAR_MODE == OUTPUT_PAR_TEXT )  Par_Output_TextFile( FileName_Particle );

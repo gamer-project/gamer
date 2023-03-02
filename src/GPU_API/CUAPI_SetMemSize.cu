@@ -222,6 +222,50 @@ void CUAPI_SetMemSize( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGr
    } // if ( Src_GPU_NPGroup <= 0 )
 
 
+// check
+   if ( GPU_NStream < 1 )  Aux_Error( ERROR_INFO, "GPU_NSTREAM (%d) < 1 !!\n", GPU_NStream );
+
+   if ( Flu_GPU_NPGroup % GPU_NStream != 0 )
+      Aux_Error( ERROR_INFO, "FLU_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
+                 Flu_GPU_NPGroup, GPU_NStream );
+
+#  ifdef GRAVITY
+   if ( Pot_GPU_NPGroup % GPU_NStream != 0 )
+      Aux_Error( ERROR_INFO, "POT_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
+                 Pot_GPU_NPGroup, GPU_NStream );
+#  endif
+
+#  ifdef SUPPORT_GRACKLE
+   /*
+   if ( Che_GPU_NPGroup % GPU_NStream != 0 )
+      Aux_Error( ERROR_INFO, "CHE_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
+                 Che_GPU_NPGroup, GPU_NStream );
+                 */
+#  endif
+
+   if ( Src_GPU_NPGroup % GPU_NStream != 0 )
+      Aux_Error( ERROR_INFO, "SRC_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
+                 Src_GPU_NPGroup, GPU_NStream );
+
+#  ifdef OPENMP
+   if ( Flu_GPU_NPGroup < OMP_NTHREAD )
+      Aux_Error( ERROR_INFO, "FLU_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", Flu_GPU_NPGroup, OMP_NTHREAD );
+
+#  ifdef GRAVITY
+   if ( Pot_GPU_NPGroup < OMP_NTHREAD )
+      Aux_Error( ERROR_INFO, "POT_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", Pot_GPU_NPGroup, OMP_NTHREAD );
+#  endif
+
+#  ifdef SUPPORT_GRACKLE
+   if ( Che_GPU_NPGroup < OMP_NTHREAD )
+      Aux_Error( ERROR_INFO, "CHE_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", Che_GPU_NPGroup, OMP_NTHREAD );
+#  endif
+
+   if ( Src_GPU_NPGroup < OMP_NTHREAD )
+      Aux_Error( ERROR_INFO, "SRC_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", Src_GPU_NPGroup, OMP_NTHREAD );
+#  endif // #ifdef OPENMP
+
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : CUAPI_SetMemSize
