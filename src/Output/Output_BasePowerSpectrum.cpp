@@ -37,6 +37,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    if ( NX0_TOT[0] != NX0_TOT[1] || NX0_TOT[0] != NX0_TOT[2] )
       Aux_Error( ERROR_INFO, "%s only works with CUBIC domain !!\n", __FUNCTION__ );
 
+
 // 1. determine the FFT size
    const int Nx_Padded   = NX0_TOT[0]/2+1;
    const int FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
