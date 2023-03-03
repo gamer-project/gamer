@@ -4,7 +4,7 @@
 
 
 
-static void Psi_Advance_FFT( real *PsiR, real *PsiI, real *PsiD, const int j_start, const int dj, const int PsiK_Size, const real dt );
+static void Psi_Advance_FFT( real *PsiR, real *PsiI, const int j_start, const int dj, const int PsiK_Size, const real dt );
 
 #ifdef SERIAL
 extern fftwnd_plan     FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;
@@ -24,13 +24,12 @@ extern fftwnd_mpi_plan FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;
 //
 // Parameter   :  PsiR     : Array storing the real part of wave function (input and output)
 //                PsiI     : Array storing the imag part of wave function (input and output)
-//                PsiD     : Array storing the density (output)
 //                j_start  : Starting j index
 //                dj       : Size of array in the j (y) direction after the forward FFT
 //                PsiK_Size: Size of the array "PsiK"
 //                dt       : Time interval to advance solution
 //-------------------------------------------------------------------------------------------------------
-void Psi_Advance_FFT( real *PsiR, real *PsiI, real *PsiD, const int j_start, const int dj, const int PsiK_Size, const real dt )
+void Psi_Advance_FFT( real *PsiR, real *PsiI, const int j_start, const int dj, const int PsiK_Size, const real dt )
 {
 
    const int Nx        = NX0_TOT[0];
@@ -129,7 +128,6 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, real *PsiD, const int j_start, con
    {
       PsiR[t] = PsiK[t].re * norm;
       PsiI[t] = PsiK[t].im * norm;
-      PsiD[t] = SQR( PsiR[t] ) + SQR( PsiI[t] );
    }
 
    free( PsiK );
@@ -189,7 +187,6 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
 
    real *PsiR         = new real [ total_local_size ];                           // array storing the real part of wave function
    real *PsiI         = new real [ total_local_size ];                           // array storing the imag part of wave function
-   real *PsiD         = new real [ total_local_size ];                           // array storing the density
    real *SendBuf      = new real [ (long)amr->NPatchComma[0][1]*CUBE(PS1) ];     // MPI send buffer
    real *RecvBuf      = new real [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];     // MPI recv buffer
    long *SendBuf_SIdx = new long [ amr->NPatchComma[0][1]*PS1 ];                 // MPI send buffer for 1D coordinate in slab
@@ -199,8 +196,6 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
    int  *List_k_R    [MPI_NRank];   // local z coordinate of each patch slice sent to each rank for the real part
    int  *List_PID_I  [MPI_NRank];   // PID of each patch slice sent to each rank for the imag part
    int  *List_k_I    [MPI_NRank];   // local z coordinate of each patch slice sent to each rank for the imag part
-   int  *List_PID_D  [MPI_NRank];   // PID of each patch slice sent to each rank for the density
-   int  *List_k_D    [MPI_NRank];   // local z coordinate of each patch slice sent to each rank for the density
    int   List_NSend  [MPI_NRank];   // size of data sent to each rank
    int   List_NRecv  [MPI_NRank];   // size of data received from each rank
 
@@ -210,12 +205,10 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
                local_nz, FFT_Size, NRecvSlice, PrepTime, _REAL, false, false, false );
    Patch2Slab( PsiI, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID_I, List_k_I, List_NSend, List_NRecv, List_z_start,
                local_nz, FFT_Size, NRecvSlice, PrepTime, _IMAG, false, false, false );
-   Patch2Slab( PsiD, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID_D, List_k_D, List_NSend, List_NRecv, List_z_start,
-               local_nz, FFT_Size, NRecvSlice, PrepTime, _DENS, false, false, false );
 
 
 // advance wave function by exp( -i*dt*k^2/(2*ELBDM_ETA) ) in the k-space using FFT
-   Psi_Advance_FFT( PsiR, PsiI, PsiD, local_y_start_after_transpose, local_ny_after_transpose, total_local_size , dt );
+   Psi_Advance_FFT( PsiR, PsiI, local_y_start_after_transpose, local_ny_after_transpose, total_local_size , dt );
 
 
 // rearrange data from slab back to patch
@@ -223,13 +216,28 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
                local_nz, FFT_Size, NRecvSlice, _REAL, false );
    Slab2Patch( PsiI, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID_I, List_k_I, List_NRecv, List_NSend,
                local_nz, FFT_Size, NRecvSlice, _IMAG, false );
-   Slab2Patch( PsiD, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID_D, List_k_D, List_NRecv, List_NSend,
-               local_nz, FFT_Size, NRecvSlice, _DENS, false );
 
 
+   // update the density according to the updated wave function
+   real NewReal, NewImag, NewDens;
+   for (int PID=0; PID<amr->NPatchComma[0][1]; PID++)
+   for (int k=0; k<PS1; k++)
+   for (int j=0; j<PS1; j++)
+   for (int i=0; i<PS1; i++)
+   {
+
+      NewReal = amr->patch[SaveSg][0][PID]->fluid[REAL][k][j][i];
+      NewImag = amr->patch[SaveSg][0][PID]->fluid[IMAG][k][j][i];
+      NewDens = SQR( NewReal ) + SQR( NewImag );
+
+      amr->patch[SaveSg][0][PID]->fluid[DENS][k][j][i] = NewDens;
+
+   } // PID,i,j,k
+
+
+   // free memory
    delete [] PsiR;
    delete [] PsiI;
-   delete [] PsiD;
    delete [] SendBuf;
    delete [] RecvBuf;
    delete [] SendBuf_SIdx;
