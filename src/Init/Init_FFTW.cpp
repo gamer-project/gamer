@@ -5,9 +5,6 @@
 
 
 static int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Guess );
-#if ( MODEL == ELBDM )
-static int ZIndex2Rank_Psi( const int IndexZ, const int *List_z_start, const int TRank_Guess );
-#endif
 
 #ifdef SERIAL
 rfftwnd_plan     FFTW_Plan_PS;                        // PS  : plan for calculating the power spectrum
