@@ -37,6 +37,7 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, real *PsiD, const int j_start, con
    const int Ny        = NX0_TOT[1];
    const int Nz        = NX0_TOT[2];
    const real dh       = amr->dh[0];
+   const real Dt_2Eta  = (real)0.5*dt/ELBDM_ETA;
    real PsiKR, PsiKI, DtKK_2Eta;
    fftw_complex *PsiK;
    PsiK = (fftw_complex*) malloc( PsiK_Size * sizeof(fftw_complex));
@@ -57,11 +58,25 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, real *PsiD, const int j_start, con
 
 
 // set up the dimensional wave number
-   real kx[Nx], ky[Ny], kz[Nz];
+// and the k-space evolution phase (K_i*K_i)*dt/(2*ELBDM_ETA), where i=x,y,z
+   real Kx[Nx], Ky[Ny], Kz[Nz];
+   real DtKxKx_2Eta[Nx], DtKyKy_2Eta[Ny], DtKzKz_2Eta[Nz];
 
-   for (int i=0; i<Nx; i++) { kx[i] = ( i <= Nx/2 ) ? 2.0*M_PI/(Nx*dh)*i : 2.0*M_PI/(Nx*dh)*(i-Nx);}
-   for (int j=0; j<Ny; j++) { ky[j] = ( j <= Ny/2 ) ? 2.0*M_PI/(Ny*dh)*j : 2.0*M_PI/(Ny*dh)*(j-Ny);}
-   for (int k=0; k<Nz; k++) { kz[k] = ( k <= Nz/2 ) ? 2.0*M_PI/(Nz*dh)*k : 2.0*M_PI/(Nz*dh)*(k-Nz);}
+   for (int i=0; i<Nx; i++)
+   {
+      Kx[i]          = ( i <= Nx/2 ) ? 2.0*M_PI/(Nx*dh)*i : 2.0*M_PI/(Nx*dh)*(i-Nx);
+      DtKxKx_2Eta[i] = SQR(Kx[i])*Dt_2Eta;
+   }
+   for (int j=0; j<Ny; j++)
+   {
+      Ky[j]          = ( j <= Ny/2 ) ? 2.0*M_PI/(Ny*dh)*j : 2.0*M_PI/(Ny*dh)*(j-Ny);
+      DtKyKy_2Eta[j] = SQR(Ky[j])*Dt_2Eta;
+   }
+   for (int k=0; k<Nz; k++)
+   {
+      Kz[k]          = ( k <= Nz/2 ) ? 2.0*M_PI/(Nz*dh)*k : 2.0*M_PI/(Nz*dh)*(k-Nz);
+      DtKzKz_2Eta[k] = SQR(Kz[k])*Dt_2Eta;
+   }
 
 
 // multiply the wave function by exp( -i*dt*k^2/(2*ELBDM_ETA) ) in the k-space
@@ -91,7 +106,7 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, real *PsiD, const int j_start, con
 
          PsiKR = PsiK[ID].re;
          PsiKI = PsiK[ID].im;
-         DtKK_2Eta = (real)0.5*dt*( kx[i]*kx[i] + ky[j]*ky[j] + kz[k]*kz[k] )/ELBDM_ETA;
+         DtKK_2Eta = DtKxKx_2Eta[i] + DtKyKy_2Eta[j] + DtKzKz_2Eta[k];
 
          PsiK[ID].re =  PsiKR * COS(DtKK_2Eta) + PsiKI * SIN(DtKK_2Eta);
          PsiK[ID].im =  PsiKI * COS(DtKK_2Eta) - PsiKR * SIN(DtKK_2Eta);
