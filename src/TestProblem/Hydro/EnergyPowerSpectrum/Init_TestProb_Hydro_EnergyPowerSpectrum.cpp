@@ -55,8 +55,8 @@ void Validate()
    Aux_Error( ERROR_INFO, "EOS != EOS_GAMMA !!\n" );
 #  endif
 
-   if ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )
-      Aux_Error( ERROR_INFO, "simulation domain must be cubic !!\n" );
+//   if ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )
+//      Aux_Error( ERROR_INFO, "simulation domain must be cubic !!\n" );
 
    if ( !OPT__OUTPUT_USER )
       Aux_Error( ERROR_INFO, "please set \"OPT__OUTPUT_USER = 1\" !!\n" );
