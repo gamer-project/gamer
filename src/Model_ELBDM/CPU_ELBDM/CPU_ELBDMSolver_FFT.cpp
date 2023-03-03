@@ -191,12 +191,12 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
 
 
 // rearrange data from patch to slab
-   Patch2Slab_Psi( PsiR, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID_R, List_k_R, List_NSend, List_NRecv, List_z_start,
-                   local_nz, FFT_Size, NRecvSlice, PrepTime, REAL );
-   Patch2Slab_Psi( PsiI, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID_I, List_k_I, List_NSend, List_NRecv, List_z_start,
-                   local_nz, FFT_Size, NRecvSlice, PrepTime, IMAG );
-   Patch2Slab_Psi( PsiD, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID_D, List_k_D, List_NSend, List_NRecv, List_z_start,
-                   local_nz, FFT_Size, NRecvSlice, PrepTime, DENS );
+   Patch2Slab( PsiR, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID_R, List_k_R, List_NSend, List_NRecv, List_z_start,
+               local_nz, FFT_Size, NRecvSlice, PrepTime, _REAL, false, false, false );
+   Patch2Slab( PsiI, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID_I, List_k_I, List_NSend, List_NRecv, List_z_start,
+               local_nz, FFT_Size, NRecvSlice, PrepTime, _IMAG, false, false, false );
+   Patch2Slab( PsiD, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID_D, List_k_D, List_NSend, List_NRecv, List_z_start,
+               local_nz, FFT_Size, NRecvSlice, PrepTime, _DENS, false, false, false );
 
 
 // advance wave function by exp( -i*dt*k^2/(2*ELBDM_ETA) ) in the k-space using FFT
@@ -204,12 +204,12 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
 
 
 // rearrange data from slab back to patch
-   Slab2Patch_Psi( PsiR, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID_R, List_k_R, List_NRecv, List_NSend,
-                   local_nz, FFT_Size, NRecvSlice, REAL );
-   Slab2Patch_Psi( PsiI, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID_I, List_k_I, List_NRecv, List_NSend,
-                   local_nz, FFT_Size, NRecvSlice, IMAG );
-   Slab2Patch_Psi( PsiD, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID_D, List_k_D, List_NRecv, List_NSend,
-                   local_nz, FFT_Size, NRecvSlice, DENS );
+   Slab2Patch( PsiR, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID_R, List_k_R, List_NRecv, List_NSend,
+               local_nz, FFT_Size, NRecvSlice, _REAL, false );
+   Slab2Patch( PsiI, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID_I, List_k_I, List_NRecv, List_NSend,
+               local_nz, FFT_Size, NRecvSlice, _IMAG, false );
+   Slab2Patch( PsiD, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID_D, List_k_D, List_NRecv, List_NSend,
+               local_nz, FFT_Size, NRecvSlice, _DENS, false );
 
 
    delete [] PsiR;
