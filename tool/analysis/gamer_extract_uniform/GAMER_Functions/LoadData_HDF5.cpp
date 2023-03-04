@@ -368,37 +368,37 @@ void LoadData_HDF5( const char *FileName )
    if ( FormatVersion >= 2300 )
    {
       for (int v=0; v<NCOMP_TOTAL; v++)
-      sprintf( FieldName[v], FieldName_In[v] );
+      sprintf( FieldName[v], "%s", FieldName_In[v] );
    }
 
    else
    {
 #     if   ( MODEL == HYDRO )
-      sprintf( FieldName[DENS], "Dens" );
-      sprintf( FieldName[MOMX], "MomX" );
-      sprintf( FieldName[MOMY], "MomY" );
-      sprintf( FieldName[MOMZ], "MomZ" );
-      sprintf( FieldName[ENGY], "Engy" );
+      sprintf( FieldName[DENS], "%s", "Dens" );
+      sprintf( FieldName[MOMX], "%s", "MomX" );
+      sprintf( FieldName[MOMY], "%s", "MomY" );
+      sprintf( FieldName[MOMZ], "%s", "MomZ" );
+      sprintf( FieldName[ENGY], "%s", "Engy" );
 
 #     elif ( MODEL == ELBDM )
-      sprintf( FieldName[DENS], "Dens" );
-      sprintf( FieldName[REAL], "Real" );
-      sprintf( FieldName[IMAG], "Imag" );
+      sprintf( FieldName[DENS], "%s", "Dens" );
+      sprintf( FieldName[REAL], "%s", "Real" );
+      sprintf( FieldName[IMAG], "%s", "Imag" );
 
 #     else
 #     error : ERROR : unsupported MODEL !!
 #     endif
 
       for (int v=0; v<NCOMP_PASSIVE; v++)
-      sprintf( FieldName[ NCOMP_FLUID + v ], PassiveFieldName_Grid[v] );
+      sprintf( FieldName[ NCOMP_FLUID + v ], "%s", PassiveFieldName_Grid[v] );
    }
 
 // set the names of potential and particle/total density
-   sprintf( FieldName[ NCOMP_TOTAL + 0 ], (OutputPot)?"Pote":"None" );
-   sprintf( FieldName[ NCOMP_TOTAL + 1 ], (OutputParDens==0)?"None":
-                                          (OutputParDens==1)?"ParDens":
-                                          (OutputParDens==2)?"TotalDens":
-                                                             "Unknown" );
+   sprintf( FieldName[ NCOMP_TOTAL + 0 ], "%s", (OutputPot)?"Pote":"None" );
+   sprintf( FieldName[ NCOMP_TOTAL + 1 ], "%s", (OutputParDens==0)?"None":
+                                                (OutputParDens==1)?"ParDens":
+                                                (OutputParDens==2)?"TotalDens":
+                                                                   "Unknown" );
 
 
 // 4-2. initialize relevant HDF5 objects

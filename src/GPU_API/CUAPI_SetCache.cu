@@ -139,7 +139,6 @@ void CUPOT_HydroGravitySolver(
 __global__
 void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
                                const real g_Pot_Array[][ CUBE(GRA_NXT) ],
-                               const double g_Corner_Array[][3],
                                const real EtaDt, const real dh, const real Lambda );
 
 #else
