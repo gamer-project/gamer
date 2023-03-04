@@ -126,15 +126,15 @@ void Init_DerivedField_User_Template()
 // 2. set the field labels
    UserDerField_Label = new char [UserDerField_Num][MAX_STRING];
 
-   sprintf( UserDerField_Label[0], "UserDerField_Label0" );
-   sprintf( UserDerField_Label[1], "UserDerField_Label1" );
+   sprintf( UserDerField_Label[0], "%s", "UserDerField_Label0" );
+   sprintf( UserDerField_Label[1], "%s", "UserDerField_Label1" );
 
 
 // 3. set the field units
    UserDerField_Unit = new char [UserDerField_Num][MAX_STRING];
 
-   sprintf( UserDerField_Unit[0], "UserDerField_Unit0" );
-   sprintf( UserDerField_Unit[1], "UserDerField_Unit1" );
+   sprintf( UserDerField_Unit[0], "%s", "UserDerField_Unit0" );
+   sprintf( UserDerField_Unit[1], "%s", "UserDerField_Unit1" );
 
 
 // 4. set the major function pointer
