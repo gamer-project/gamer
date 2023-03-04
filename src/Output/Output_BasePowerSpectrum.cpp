@@ -6,7 +6,7 @@
 //#define DIMENSIONLESS_FORM
 
 
-static void GetBasePowerSpectrum( real *RhoK, const int j_start, const int dj, double *PS_total, double *NormDC );
+static void GetBasePowerSpectrum( real *VarK, const int j_start, const int dj, double *PS_total, double *NormDC );
 
 #ifdef SERIAL
 extern rfftwnd_plan     FFTW_Plan_PS;
@@ -19,14 +19,20 @@ extern rfftwnd_mpi_plan FFTW_Plan_PS;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_BasePowerSpectrum
-// Description :  Evaluate and output the base-level power spectrum by FFT
+// Description :  Evaluate and output the base-level power spectrum of the target variable by FFT
 //
 // Parameter   :  FileName : Name of the output file
+//                TVar     : Target variable
 //-------------------------------------------------------------------------------------------------------
-void Output_BasePowerSpectrum( const char *FileName )
+void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ...\n", __FUNCTION__, DumpID );
+
+// check
+// check only single field
+   if ( TVar == 0  ||  TVar & (TVar-1) )
+      Aux_Error( ERROR_INFO, "number of target variables is not one !!\n" );
 
 
 // 1. determine the FFT size
@@ -65,22 +71,24 @@ void Output_BasePowerSpectrum( const char *FileName )
    const int NRecvSlice = MIN( List_z_start[MPI_Rank]+local_nz, NX0_TOT[2] ) - MIN( List_z_start[MPI_Rank], NX0_TOT[2] );
 
    double *PS_total     = NULL;
-   real   *RhoK         = new real [ total_local_size ];                         // array storing density
-   real   *SendBuf      = new real [ amr->NPatchComma[0][1]*CUBE(PS1) ];         // MPI send buffer for density
-   real   *RecvBuf      = new real [ NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];         // MPI recv buffer for density
+   real   *VarK         = new real [ total_local_size ];                         // array storing data
+   real   *SendBuf      = new real [ amr->NPatchComma[0][1]*CUBE(PS1) ];         // MPI send buffer for data
+   real   *RecvBuf      = new real [ NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];         // MPI recv buffer for data
    long   *SendBuf_SIdx = new long [ amr->NPatchComma[0][1]*PS1 ];               // MPI send buffer for 1D coordinate in slab
    long   *RecvBuf_SIdx = new long [ NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/SQR(PS1) ];// MPI recv buffer for 1D coordinate in slab
 
    int  *List_PID    [MPI_NRank];   // PID of each patch slice sent to each rank
    int  *List_k      [MPI_NRank];   // local z coordinate of each patch slice sent to each rank
-   int   List_NSend  [MPI_NRank];   // size of data (density) sent to each rank
-   int   List_NRecv  [MPI_NRank];   // size of data (density) received from each rank
+   int   List_NSend  [MPI_NRank];   // size of data sent to each rank
+   int   List_NRecv  [MPI_NRank];   // size of data received from each rank
+   const bool ForPoisson  = false;  // preparing the density field for the Poisson solver
+   const bool InPlacePad  = true;   // pad the array for in-place real-to-complex FFT
 
    if ( MPI_Rank == 0 )    PS_total = new double [Nx_Padded];
 
 
 // 3. initialize the particle density array (rho_ext) and collect particles to the target level
-#  ifdef PARTICLE
+#  ifdef MASSIVE_PARTICLES
    const bool TimingSendPar_No = false;
    const bool JustCountNPar_No = false;
 #  ifdef LOAD_BALANCE
@@ -93,21 +101,23 @@ void Output_BasePowerSpectrum( const char *FileName )
    const bool FaSibBufPatch    = NULL_BOOL;
 #  endif
 
-   Prepare_PatchData_InitParticleDensityArray( 0 );
+   if ( TVar == _TOTAL_DENS ) {
+      Prepare_PatchData_InitParticleDensityArray( 0 );
 
-   Par_CollectParticle2OneLevel( 0, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos, Time[0],
-                                 SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
-#  endif // #ifdef PARTICLE
+      Par_CollectParticle2OneLevel( 0, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos, Time[0],
+                                    SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
+   } // if ( TVar == _TOTAL_DENS )
+#  endif // #ifdef MASSIVE_PARTICLES
 
 
 // 4. rearrange data from patch to slab
-   Patch2Slab_Rho( RhoK, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID, List_k, List_NSend, List_NRecv, List_z_start,
-                   local_nz, FFT_Size, NRecvSlice, Time[0], false );
+   Patch2Slab( VarK, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID, List_k, List_NSend, List_NRecv, List_z_start,
+               local_nz, FFT_Size, NRecvSlice, Time[0], TVar, InPlacePad, ForPoisson, false );
 
 
 // 5. evaluate the base-level power spectrum by FFT
    double NormDC;  // to record the FFT DC value used for normalization
-   GetBasePowerSpectrum( RhoK, local_y_start_after_transpose, local_ny_after_transpose, PS_total, &NormDC );
+   GetBasePowerSpectrum( VarK, local_y_start_after_transpose, local_ny_after_transpose, PS_total, &NormDC );
 
 
 // 6. output the power spectrum
@@ -121,7 +131,7 @@ void Output_BasePowerSpectrum( const char *FileName )
       const double WaveK0 = 2.0*M_PI/amr->BoxSize[0];
       FILE *File = fopen( FileName, "w" );
 
-      fprintf( File, "# average density (DC) used for normalization = %13.7e\n", NormDC );
+      fprintf( File, "# average value (DC) used for normalization = %13.7e\n", NormDC );
       fprintf( File, "\n" );
       fprintf( File, "#%12s%4s%13s\n", "k", "", "Power" );
 
@@ -133,7 +143,7 @@ void Output_BasePowerSpectrum( const char *FileName )
 
 
 // 7. free memory
-   delete [] RhoK;
+   delete [] VarK;
    delete [] SendBuf;
    delete [] RecvBuf;
    delete [] SendBuf_SIdx;
@@ -141,10 +151,12 @@ void Output_BasePowerSpectrum( const char *FileName )
    if ( MPI_Rank == 0 )    delete [] PS_total;
 
 // free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
-#  ifdef PARTICLE
-   Par_CollectParticle2OneLevel_FreeMemory( 0, SibBufPatch, FaSibBufPatch );
+#  ifdef MASSIVE_PARTICLES
+   if ( TVar == _TOTAL_DENS ) {
+      Par_CollectParticle2OneLevel_FreeMemory( 0, SibBufPatch, FaSibBufPatch );
 
-   Prepare_PatchData_FreeParticleDensityArray( 0 );
+      Prepare_PatchData_FreeParticleDensityArray( 0 );
+   }
 #  endif
 
 
@@ -160,7 +172,7 @@ void Output_BasePowerSpectrum( const char *FileName )
 //
 // Note        :  Invoked by the function "Output_BasePowerSpectrum"
 //
-// Parameter   :  RhoK        : Array storing the input density
+// Parameter   :  VarK        : Array storing the input data
 //                j_start     : Starting j index
 //                dj          : Size of array in the j (y) direction after the forward FFT
 //                PS_total    : Power spectrum summed over all MPI ranks
@@ -168,7 +180,7 @@ void Output_BasePowerSpectrum( const char *FileName )
 //
 // Return      :  PS_total, NormDC
 //-------------------------------------------------------------------------------------------------------
-void GetBasePowerSpectrum( real *RhoK, const int j_start, const int dj, double *PS_total, double *NormDC )
+void GetBasePowerSpectrum( real *VarK, const int j_start, const int dj, double *PS_total, double *NormDC )
 {
 
 // check
@@ -188,14 +200,14 @@ void GetBasePowerSpectrum( real *RhoK, const int j_start, const int dj, double *
 
 // forward FFT
 #  ifdef SERIAL
-   rfftwnd_one_real_to_complex( FFTW_Plan_PS, RhoK, NULL );
+   rfftwnd_one_real_to_complex( FFTW_Plan_PS, VarK, NULL );
 #  else
-   rfftwnd_mpi( FFTW_Plan_PS, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
+   rfftwnd_mpi( FFTW_Plan_PS, 1, VarK, NULL, FFTW_TRANSPOSED_ORDER );
 #  endif
 
 
 // the data are now complex, so typecast a pointer
-   cdata = (fftw_complex*) RhoK;
+   cdata = (fftw_complex*) VarK;
 
 
 // set up the dimensionless wave number coefficients according to the FFTW data format
@@ -260,7 +272,7 @@ void GetBasePowerSpectrum( real *RhoK, const int j_start, const int dj, double *
 
 // normalization
    double Coeff;
-   double AveRho;
+   double AveVar;
    double Norm;
 
 #  ifdef DIMENSIONLESS_FORM
@@ -270,9 +282,9 @@ void GetBasePowerSpectrum( real *RhoK, const int j_start, const int dj, double *
 
    if ( MPI_Rank == 0 )
    {
-//    normalization: SQR(AveRho) accounts for Delta=Rho/AveRho
-      AveRho = SQRT(PS_total[0]/(double)Count_total[0]) / ( (double)Nx*(double)Ny*(double)Nz );  // from DC mode of FFT
-      Coeff  = amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] / SQR( (double)Nx*(double)Ny*(double)Nz*AveRho );
+//    normalization: SQR(AveVar) accounts for Delta=Var/AveVar
+      AveVar = SQRT(PS_total[0]/(double)Count_total[0]) / ( (double)Nx*(double)Ny*(double)Nz );  // from DC mode of FFT
+      Coeff  = amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] / SQR( (double)Nx*(double)Ny*(double)Nz*AveVar );
 
       for (int b=0; b<Nx_Padded; b++)
       {
@@ -289,7 +301,7 @@ void GetBasePowerSpectrum( real *RhoK, const int j_start, const int dj, double *
          PS_total[b] *= Norm;
       }
 
-      *NormDC = AveRho;
+      *NormDC = AveVar;
    }
 
 } // FUNCTION : GetBasePowerSpectrum
