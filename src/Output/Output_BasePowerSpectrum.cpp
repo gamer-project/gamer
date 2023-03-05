@@ -34,7 +34,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    if ( TVar == 0  ||  TVar & (TVar-1) )
       Aux_Error( ERROR_INFO, "number of target variables is not one !!\n" );
 // check cubic box
-   if ( NX0_TOT[0] != NX0_TOT[1] || NX0_TOT[0] != NX0_TOT[2] )
+   if ( NX0_TOT[0] != NX0_TOT[1]  ||  NX0_TOT[0] != NX0_TOT[2] )
       Aux_Error( ERROR_INFO, "%s only works with CUBIC domain !!\n", __FUNCTION__ );
 
 
