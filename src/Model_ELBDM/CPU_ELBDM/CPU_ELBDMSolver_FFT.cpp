@@ -198,13 +198,15 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
    int  *List_k_I    [MPI_NRank];   // local z coordinate of each patch slice sent to each rank for the imag part
    int   List_NSend  [MPI_NRank];   // size of data sent to each rank
    int   List_NRecv  [MPI_NRank];   // size of data received from each rank
+   const bool InPlacePad_No = false;   // not pad the array for in-place real-to-complex FFT
+   const bool ForPoisson_No = false;   // not for the Poisson solver
 
 
 // rearrange data from patch to slab
    Patch2Slab( PsiR, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID_R, List_k_R, List_NSend, List_NRecv, List_z_start,
-               local_nz, FFT_Size, NRecvSlice, PrepTime, _REAL, false, false, false );
+               local_nz, FFT_Size, NRecvSlice, PrepTime, _REAL, InPlacePad_No, ForPoisson_No, false );
    Patch2Slab( PsiI, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID_I, List_k_I, List_NSend, List_NRecv, List_z_start,
-               local_nz, FFT_Size, NRecvSlice, PrepTime, _IMAG, false, false, false );
+               local_nz, FFT_Size, NRecvSlice, PrepTime, _IMAG, InPlacePad_No, ForPoisson_No, false );
 
 
 // advance wave function by exp( -i*dt*k^2/(2*ELBDM_ETA) ) in the k-space using FFT
@@ -213,9 +215,9 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
 
 // rearrange data from slab back to patch
    Slab2Patch( PsiR, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID_R, List_k_R, List_NRecv, List_NSend,
-               local_nz, FFT_Size, NRecvSlice, _REAL, false );
+               local_nz, FFT_Size, NRecvSlice, _REAL, InPlacePad_No );
    Slab2Patch( PsiI, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID_I, List_k_I, List_NRecv, List_NSend,
-               local_nz, FFT_Size, NRecvSlice, _IMAG, false );
+               local_nz, FFT_Size, NRecvSlice, _IMAG, InPlacePad_No );
 
 
 // update density according to the updated wave function
