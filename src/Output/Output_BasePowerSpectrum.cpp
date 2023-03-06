@@ -33,6 +33,9 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 // check only single field
    if ( TVar == 0  ||  TVar & (TVar-1) )
       Aux_Error( ERROR_INFO, "number of target variables is not one !!\n" );
+// check cubic box
+   if ( NX0_TOT[0] != NX0_TOT[1]  ||  NX0_TOT[0] != NX0_TOT[2] )
+      Aux_Error( ERROR_INFO, "%s only works with CUBIC domain !!\n", __FUNCTION__ );
 
 
 // 1. determine the FFT size
@@ -148,6 +151,13 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    delete [] RecvBuf;
    delete [] SendBuf_SIdx;
    delete [] RecvBuf_SIdx;
+
+   for (int r=0; r<MPI_NRank; r++)
+   {
+      free( List_PID[r] );
+      free( List_k  [r] );
+   }
+
    if ( MPI_Rank == 0 )    delete [] PS_total;
 
 // free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
