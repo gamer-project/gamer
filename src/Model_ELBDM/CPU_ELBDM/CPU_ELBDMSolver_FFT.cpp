@@ -150,7 +150,7 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, const int j_start, const int dj, c
 void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg )
 {
 // determine the FFT size
-   int FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
+   const int FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
 
 
 // get the array indices using by FFTW
@@ -164,7 +164,7 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
    total_local_size              = FFT_Size[0]*FFT_Size[1]*FFT_Size[2];
 #  else
    fftwnd_mpi_local_sizes( FFTW_Plan_Psi, &local_nz, &local_z_start, &local_ny_after_transpose,
-                            &local_y_start_after_transpose, &total_local_size );
+                           &local_y_start_after_transpose, &total_local_size );
 #  endif
 
 
@@ -218,20 +218,18 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
                local_nz, FFT_Size, NRecvSlice, _IMAG, false );
 
 
-   // update the density according to the updated wave function
+// update density according to the updated wave function
    real NewReal, NewImag, NewDens;
    for (int PID=0; PID<amr->NPatchComma[0][1]; PID++)
    for (int k=0; k<PS1; k++)
    for (int j=0; j<PS1; j++)
    for (int i=0; i<PS1; i++)
    {
-
       NewReal = amr->patch[SaveSg][0][PID]->fluid[REAL][k][j][i];
       NewImag = amr->patch[SaveSg][0][PID]->fluid[IMAG][k][j][i];
       NewDens = SQR( NewReal ) + SQR( NewImag );
 
       amr->patch[SaveSg][0][PID]->fluid[DENS][k][j][i] = NewDens;
-
    } // PID,i,j,k
 
 

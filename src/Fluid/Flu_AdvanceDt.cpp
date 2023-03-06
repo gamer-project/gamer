@@ -65,7 +65,6 @@ int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
    }
    else
 #  endif
-
    InvokeSolver( FLUID_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg_Flu, SaveSg_Mag, NULL_INT, OverlapMPI, Overlap_Sync );
 
 
