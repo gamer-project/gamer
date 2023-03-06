@@ -187,8 +187,8 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
 
    real *PsiR         = new real [ total_local_size ];                           // array storing the real part of wave function
    real *PsiI         = new real [ total_local_size ];                           // array storing the imag part of wave function
-   real *SendBuf      = new real [ (long)amr->NPatchComma[0][1]*CUBE(PS1) ];     // MPI send buffer
-   real *RecvBuf      = new real [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];     // MPI recv buffer
+   real *SendBuf      = new real [ amr->NPatchComma[0][1]*CUBE(PS1) ];           // MPI send buffer
+   real *RecvBuf      = new real [ NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];           // MPI recv buffer
    long *SendBuf_SIdx = new long [ amr->NPatchComma[0][1]*PS1 ];                 // MPI send buffer for 1D coordinate in slab
    long *RecvBuf_SIdx = new long [ NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/SQR(PS1) ];  // MPI recv buffer for 1D coordinate in slab
 
