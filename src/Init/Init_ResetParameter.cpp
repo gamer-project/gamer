@@ -717,17 +717,6 @@ void Init_ResetParameter()
 #  endif
 
 
-// ELBDM_BASE_SPECTRAL in ELBDM is not support if SUPPORT_FFTW is disabled
-#  if ( MODEL == ELBDM  &&  !defined SUPPORT_FFTW )
-   if ( ELBDM_BASE_SPECTRAL )
-   {
-      ELBDM_BASE_SPECTRAL = false;
-
-      PRINT_WARNING( ELBDM_BASE_SPECTRAL, FORMAT_INT, "since SUPPORT_FFTW is disabled" );
-   }
-#  endif
-
-
 // OPT__OUTPUT_BASEPS is not supported if SUPPORT_FFTW is disabled
 #  ifndef SUPPORT_FFTW
    if ( OPT__OUTPUT_BASEPS )

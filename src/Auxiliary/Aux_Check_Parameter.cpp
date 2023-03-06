@@ -1065,6 +1065,11 @@ void Aux_Check_Parameter()
       if ( ELBDM_BASE_SPECTRAL  &&  OPT__BC_FLU[f] != BC_FLU_PERIODIC )
          Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL only works with periodic boundary condition (OPT__BC_FLU=1) !!\n" );
 
+#  ifndef SUPPORT_FFTW
+   if ( ELBDM_BASE_SPECTRAL )
+      Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL must work with SUPPORT_FFTW !!\n" );
+#  endif
+
 
 // warnings
 // ------------------------------
