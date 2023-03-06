@@ -39,7 +39,7 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, const int j_start, const int dj, c
    const real Dt_2Eta  = (real)0.5*dt/ELBDM_ETA;
    real PsiKR, PsiKI, DtKK_2Eta;
    fftw_complex *PsiK;
-   PsiK = (fftw_complex*) malloc( PsiK_Size * sizeof(fftw_complex));
+   PsiK = (fftw_complex*) malloc( PsiK_Size * sizeof(fftw_complex) );
 
    for (int t=0; t<PsiK_Size; t++)
    {
@@ -79,33 +79,33 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, const int j_start, const int dj, c
 
 
 // multiply the wave function by exp( -i*dt*k^2/(2*ELBDM_ETA) ) in the k-space
-   long ID;
 #  ifdef SERIAL // serial mode
 
+#  pragma omp parallel for schedule( runtime )
    for (int k=0; k<Nz; k++)
    {
       for (int j=0; j<Ny; j++)
       for (int i=0; i<Nx; i++)
       {
-         ID = ((long)k*Ny + j)*Nx + i;
+         long ID = ((long)k*Ny + j)*Nx + i;
 
 #  else // parallel mode
-   int j;
 
+#  pragma omp parallel for schedule( runtime )
    for (int jj=0; jj<dj; jj++)
    {
-      j = j_start + jj;
+      int j = j_start + jj;
 
       for (int k=0; k<Nz; k++)
       for (int i=0; i<Nx; i++)
       {
-         ID = ((long)jj*Nz + k)*Nx + i;
+         long ID = ((long)jj*Nz + k)*Nx + i;
 
 #  endif // #ifdef SERIAL ... else ...
 
-         PsiKR = PsiK[ID].re;
-         PsiKI = PsiK[ID].im;
-         DtKK_2Eta = DtKxKx_2Eta[i] + DtKyKy_2Eta[j] + DtKzKz_2Eta[k];
+         const real PsiKR = PsiK[ID].re;
+         const real PsiKI = PsiK[ID].im;
+         const real DtKK_2Eta = DtKxKx_2Eta[i] + DtKyKy_2Eta[j] + DtKzKz_2Eta[k];
 
          PsiK[ID].re =  PsiKR * COS(DtKK_2Eta) + PsiKI * SIN(DtKK_2Eta);
          PsiK[ID].im =  PsiKI * COS(DtKK_2Eta) - PsiKR * SIN(DtKK_2Eta);
@@ -221,15 +221,15 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
 
 
 // update density according to the updated wave function
-   real NewReal, NewImag, NewDens;
+#  pragma omp parallel for schedule( runtime )
    for (int PID=0; PID<amr->NPatchComma[0][1]; PID++)
    for (int k=0; k<PS1; k++)
    for (int j=0; j<PS1; j++)
    for (int i=0; i<PS1; i++)
    {
-      NewReal = amr->patch[SaveSg][0][PID]->fluid[REAL][k][j][i];
-      NewImag = amr->patch[SaveSg][0][PID]->fluid[IMAG][k][j][i];
-      NewDens = SQR( NewReal ) + SQR( NewImag );
+      const real NewReal = amr->patch[SaveSg][0][PID]->fluid[REAL][k][j][i];
+      const real NewImag = amr->patch[SaveSg][0][PID]->fluid[IMAG][k][j][i];
+      const real NewDens = SQR( NewReal ) + SQR( NewImag );
 
       amr->patch[SaveSg][0][PID]->fluid[DENS][k][j][i] = NewDens;
    } // PID,i,j,k
