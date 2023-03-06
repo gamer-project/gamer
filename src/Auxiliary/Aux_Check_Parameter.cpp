@@ -1132,10 +1132,10 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : %s is disabled in ELBDM even though CONSERVE_MASS is on !!\n",
                    "OPT__FIXUP_FLUX" );
    if ( ELBDM_BASE_SPECTRAL )
-      Aux_Message( stderr, "WARNING : Mass may be not conserved under %s solver even though CONSERVE_MASS is on !!\n",
+      Aux_Message( stderr, "WARNING : mass may not conserve with the %s solver even though CONSERVE_MASS is on !!\n",
                    "ELBDM_BASE_SPECTRAL" );
    if ( ELBDM_BASE_SPECTRAL && OPT__FIXUP_FLUX )
-      Aux_Message( stderr, "WARNING : OPT__FIXUP_FLUX will not work on base level when %s is on !!\n",
+      Aux_Message( stderr, "WARNING : OPT__FIXUP_FLUX will not be applied to the base level when %s is on !!\n",
                    "ELBDM_BASE_SPECTRAL" );
 #  else
    if ( OPT__FIXUP_FLUX )
