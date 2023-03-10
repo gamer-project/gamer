@@ -37,6 +37,7 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, const int j_start, const int dj, c
    const int Nz        = NX0_TOT[2];
    const real dh       = amr->dh[0];
    const real Dt_2Eta  = (real)0.5*dt/ELBDM_ETA;
+
    real PsiKR, PsiKI, DtKK_2Eta;
    fftw_complex *PsiK;
    PsiK = (fftw_complex*) malloc( PsiK_Size * sizeof(fftw_complex) );
@@ -87,19 +88,19 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, const int j_start, const int dj, c
       for (int j=0; j<Ny; j++)
       for (int i=0; i<Nx; i++)
       {
-         long ID = ((long)k*Ny + j)*Nx + i;
+         const long ID = ((long)k*Ny + j)*Nx + i;
 
 #  else // parallel mode
 
 #  pragma omp parallel for schedule( runtime )
    for (int jj=0; jj<dj; jj++)
    {
-      int j = j_start + jj;
+      const int j = j_start + jj;
 
       for (int k=0; k<Nz; k++)
       for (int i=0; i<Nx; i++)
       {
-         long ID = ((long)jj*Nz + k)*Nx + i;
+         const long ID = ((long)jj*Nz + k)*Nx + i;
 
 #  endif // #ifdef SERIAL ... else ...
 
@@ -109,7 +110,6 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, const int j_start, const int dj, c
 
          PsiK[ID].re =  PsiKR * COS(DtKK_2Eta) + PsiKI * SIN(DtKK_2Eta);
          PsiK[ID].im =  PsiKI * COS(DtKK_2Eta) - PsiKR * SIN(DtKK_2Eta);
-
       } // i,j,k
    } // i,j,k
 
@@ -183,7 +183,9 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
 
 
 // allocate memory
-   const int NRecvSlice = MIN( List_z_start[MPI_Rank]+local_nz, NX0_TOT[2] ) - MIN( List_z_start[MPI_Rank], NX0_TOT[2] );
+   const bool InPlacePad_No = false;   // not pad the array for in-place real-to-complex FFT
+   const bool ForPoisson_No = false;   // not for the Poisson solver
+   const int  NRecvSlice    = MIN( List_z_start[MPI_Rank]+local_nz, NX0_TOT[2] ) - MIN( List_z_start[MPI_Rank], NX0_TOT[2] );
 
    real *PsiR         = new real [ total_local_size ];                           // array storing the real part of wave function
    real *PsiI         = new real [ total_local_size ];                           // array storing the imag part of wave function
@@ -198,8 +200,6 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
    int  *List_k_I    [MPI_NRank];   // local z coordinate of each patch slice sent to each rank for the imag part
    int   List_NSend  [MPI_NRank];   // size of data sent to each rank
    int   List_NRecv  [MPI_NRank];   // size of data received from each rank
-   const bool InPlacePad_No = false;   // not pad the array for in-place real-to-complex FFT
-   const bool ForPoisson_No = false;   // not for the Poisson solver
 
 
 // rearrange data from patch to slab
@@ -235,7 +235,7 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
    } // PID,i,j,k
 
 
-   // free memory
+// free memory
    delete [] PsiR;
    delete [] PsiI;
    delete [] SendBuf;

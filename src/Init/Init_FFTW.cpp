@@ -107,9 +107,9 @@ void Init_FFTW()
    FFTW_Plan_Psi     = fftw3d_mpi_create_plan( MPI_COMM_WORLD, NX0_TOT[2], NX0_TOT[1], NX0_TOT[0],
                                                FFTW_FORWARD, FFTW_ESTIMATE );
 
-   // Note that the dimensions of the inverse transform,
-   // which are given by the dimensions of the output of the forward transform,
-   // are Ny*Nz*Nx because we are using "FFTW_TRANSPOSED_ORDER" in fftwnd_mpi().
+// Note that the dimensions of the inverse transform,
+// which are given by the dimensions of the output of the forward transform,
+// are Ny*Nz*Nx because we are using "FFTW_TRANSPOSED_ORDER" in fftwnd_mpi().
    FFTW_Plan_Psi_Inv = fftw3d_mpi_create_plan( MPI_COMM_WORLD, NX0_TOT[1], NX0_TOT[2], NX0_TOT[0],
                                                FFTW_BACKWARD, FFTW_ESTIMATE );
 #  endif

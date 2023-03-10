@@ -730,7 +730,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //             --> apply AFTER other fix-up operations since it will check negative pressure as well
 //                 (which requires the coarse-grid B field updated by Flu_FixUp_Restrict() and MHD_FixUp_Electric())
 //             --> do not apply the flux fix-up on base level when ELBDM_BASE_SPECTRAL is enabled
-#        if ( MODEL == HYDRO )
+#        if ( MODEL != ELBDM )
          const bool ELBDM_BASE_SPECTRAL = false;
 #        endif
          if ( OPT__FIXUP_FLUX  &&  !( ELBDM_BASE_SPECTRAL  &&  lv == 0 ) )
