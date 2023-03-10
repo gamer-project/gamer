@@ -127,6 +127,9 @@ void End_FFTW()
 // Function    :  Patch2Slab
 // Description :  Patch-based data --> slab domain decomposition
 //
+// Note        :  1. List_PID[] and List_k[] will be allocated here; user needs to either call Slab2Patch()
+//                   to free the memory or do manual deallocation
+//
 // Parameter   :  VarS           : Slab array of target variable for FFT
 //                SendBuf_Var    : Sending MPI buffer of the target field
 //                RecvBuf_Var    : Receiving MPI buffer of the target field
