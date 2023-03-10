@@ -11,16 +11,25 @@ rfftwnd_plan     FFTW_Plan_PS;                        // PS  : plan for calculat
 
 #ifdef GRAVITY
 rfftwnd_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for the self-gravity Poisson solver
-#endif
+#endif // #ifdef GRAVITY
 
-#else
+#if ( MODEL == ELBDM )
+fftwnd_plan      FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;    // Psi : plan for the ELBDM spectral sovler
+#endif // #if ( MODEL == ELBDM )
+
+#else  // #ifdef SERIAL
 rfftwnd_mpi_plan FFTW_Plan_PS;
 
 #ifdef GRAVITY
 rfftwnd_mpi_plan FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
-#endif
+#endif // #ifdef GRAVITY
 
-#endif
+#if ( MODEL == ELBDM )
+fftwnd_mpi_plan  FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;
+#endif // #if ( MODEL == ELBDM )
+
+#endif // #ifdef SERIAL ... else ...
+
 
 #ifdef GRAVITY
 extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,
@@ -84,6 +93,29 @@ void Init_FFTW()
 #  endif // #ifdef GRAVITY
 
 
+#  if ( MODEL == ELBDM )
+// create plans for the ELBDM spectral solver
+#  ifdef SERIAL
+   FFTW_Plan_Psi     = fftw3d_create_plan( NX0_TOT[2], NX0_TOT[1], NX0_TOT[0], FFTW_FORWARD,
+                                           FFTW_ESTIMATE | FFTW_IN_PLACE );
+
+   FFTW_Plan_Psi_Inv = fftw3d_create_plan( NX0_TOT[2], NX0_TOT[1], NX0_TOT[0], FFTW_BACKWARD,
+                                           FFTW_ESTIMATE | FFTW_IN_PLACE );
+
+#  else
+
+   FFTW_Plan_Psi     = fftw3d_mpi_create_plan( MPI_COMM_WORLD, NX0_TOT[2], NX0_TOT[1], NX0_TOT[0],
+                                               FFTW_FORWARD, FFTW_ESTIMATE );
+
+// Note that the dimensions of the inverse transform,
+// which are given by the dimensions of the output of the forward transform,
+// are Ny*Nz*Nx because we are using "FFTW_TRANSPOSED_ORDER" in fftwnd_mpi().
+   FFTW_Plan_Psi_Inv = fftw3d_mpi_create_plan( MPI_COMM_WORLD, NX0_TOT[1], NX0_TOT[2], NX0_TOT[0],
+                                               FFTW_BACKWARD, FFTW_ESTIMATE );
+#  endif
+#  endif // #if ( MODEL == ELBDM )
+
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 } // FUNCTION : Init_FFTW
@@ -105,7 +137,12 @@ void End_FFTW()
 #  ifdef GRAVITY
    rfftwnd_destroy_plan    ( FFTW_Plan_Poi     );
    rfftwnd_destroy_plan    ( FFTW_Plan_Poi_Inv );
-#  endif
+#  endif // #ifdef GRAVITY
+
+#  if ( MODEL == ELBDM )
+   fftwnd_destroy_plan     ( FFTW_Plan_Psi     );
+   fftwnd_destroy_plan     ( FFTW_Plan_Psi_Inv );
+#  endif // #if ( MODEL == ELBDM )
 
 #  else // #ifdef SERIAL
    rfftwnd_mpi_destroy_plan( FFTW_Plan_PS      );
@@ -113,7 +150,12 @@ void End_FFTW()
 #  ifdef GRAVITY
    rfftwnd_mpi_destroy_plan( FFTW_Plan_Poi     );
    rfftwnd_mpi_destroy_plan( FFTW_Plan_Poi_Inv );
-#  endif
+#  endif // #ifdef GRAVITY
+
+#  if ( MODEL == ELBDM )
+   fftwnd_mpi_destroy_plan ( FFTW_Plan_Psi     );
+   fftwnd_mpi_destroy_plan ( FFTW_Plan_Psi_Inv );
+#  endif // #if ( MODEL == ELBDM )
 
 #  endif // #ifdef SERIAL ... else ...
 
@@ -126,6 +168,9 @@ void End_FFTW()
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Patch2Slab
 // Description :  Patch-based data --> slab domain decomposition
+//
+// Note        :  1. List_PID[] and List_k[] will be allocated here; user needs to either call Slab2Patch()
+//                   to free the memory or do manual deallocation
 //
 // Parameter   :  VarS           : Slab array of target variable for FFT
 //                SendBuf_Var    : Sending MPI buffer of the target field

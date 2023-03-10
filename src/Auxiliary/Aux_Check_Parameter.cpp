@@ -1061,6 +1061,15 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "\"%s\" does NOT support \"%s\" !!\n", "ELBDM_REMOVE_MOTION_CM", "BITWISE_REPRODUCIBILITY" );
 #  endif
 
+   for (int f=0; f<6; f++)
+      if ( ELBDM_BASE_SPECTRAL  &&  OPT__BC_FLU[f] != BC_FLU_PERIODIC )
+         Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL only works with periodic boundary condition (OPT__BC_FLU=1) !!\n" );
+
+#  ifndef SUPPORT_FFTW
+   if ( ELBDM_BASE_SPECTRAL )
+      Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL must work with SUPPORT_FFTW !!\n" );
+#  endif
+
 
 // warnings
 // ------------------------------
@@ -1127,6 +1136,12 @@ void Aux_Check_Parameter()
    if ( !OPT__FIXUP_FLUX )
       Aux_Message( stderr, "WARNING : %s is disabled in ELBDM even though CONSERVE_MASS is on !!\n",
                    "OPT__FIXUP_FLUX" );
+   if ( ELBDM_BASE_SPECTRAL )
+      Aux_Message( stderr, "WARNING : mass may not conserve with the %s solver even though CONSERVE_MASS is on !!\n",
+                   "ELBDM_BASE_SPECTRAL" );
+   if ( ELBDM_BASE_SPECTRAL && OPT__FIXUP_FLUX )
+      Aux_Message( stderr, "WARNING : OPT__FIXUP_FLUX will not be applied to the base level when %s is on !!\n",
+                   "ELBDM_BASE_SPECTRAL" );
 #  else
    if ( OPT__FIXUP_FLUX )
       Aux_Message( stderr, "WARNING : %s is useless in ELBDM when CONSERVE_MASS is off !!\n", "OPT__FIXUP_FLUX" );

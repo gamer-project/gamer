@@ -1013,6 +1013,7 @@ void Aux_TakeNote()
       fprintf( Note, "ELBDM_TAYLOR3_COEFF             %13.7e\n",     ELBDM_TAYLOR3_COEFF    );
       fprintf( Note, "ELBDM_TAYLOR3_AUTO              %d\n",         ELBDM_TAYLOR3_AUTO     );
       fprintf( Note, "ELBDM_REMOVE_MOTION_CM          %d\n",         ELBDM_REMOVE_MOTION_CM );
+      fprintf( Note, "ELBDM_BASE_SPECTRAL             %d\n",         ELBDM_BASE_SPECTRAL    );
 
 #     else
 #     error : ERROR : unsupported MODEL !!

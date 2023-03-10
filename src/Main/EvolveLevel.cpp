@@ -729,7 +729,11 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //       12-3. use the fine-grid fluxes across the coarse-fine boundaries to correct the coarse-grid data
 //             --> apply AFTER other fix-up operations since it will check negative pressure as well
 //                 (which requires the coarse-grid B field updated by Flu_FixUp_Restrict() and MHD_FixUp_Electric())
-         if ( OPT__FIXUP_FLUX )
+//             --> do not apply the flux fix-up on base level when ELBDM_BASE_SPECTRAL is enabled
+#        if ( MODEL != ELBDM )
+         const bool ELBDM_BASE_SPECTRAL = false;
+#        endif
+         if ( OPT__FIXUP_FLUX  &&  !( ELBDM_BASE_SPECTRAL  &&  lv == 0 ) )
          {
 #           ifdef LOAD_BALANCE
             TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, NULL_INT, COARSE_FINE_FLUX,
