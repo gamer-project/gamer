@@ -51,7 +51,7 @@
 //                if ( MPI_Rank == 0 )
 //                {
 //                   char Filename[MAX_STRING];
-//                   sprintf( Filename, "Extrema.txt" );
+//                   sprintf( Filename, "%s", "Extrema.txt" );
 //                   FILE *File = fopen( Filename, "w" );
 //                   fprintf( File, "#%13s%14s%3s%14s %10s %13s %13s %13s %13s %14s %13s %13s %13s %5s %5s %5s %4s %4s %4s\n",
 //                            "Time", "Step", "", "dt", "Field", "Radius", "Center[x]", "Center[y]", "Center[z]",

@@ -144,7 +144,7 @@ void SetParameter()
 #                           ifdef MHD
                             Riemann_Mag = Riemann_MagL_T1 = Riemann_MagL_T2 = Riemann_MagR_T1 = Riemann_MagR_T2 = 0.0;
 #                           endif
-                            sprintf( Riemann_Name, "Sod's shock tube" );
+                            sprintf( Riemann_Name, "%s", "Sod's shock tube" );
                             break;
 
       case STRONG_SHOCK   : Riemann_RhoL = 1250.0;  Riemann_VelL = 0.0;  Riemann_PreL = 500.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
@@ -153,7 +153,7 @@ void SetParameter()
 #                           ifdef MHD
                             Riemann_Mag = Riemann_MagL_T1 = Riemann_MagL_T2 = Riemann_MagR_T1 = Riemann_MagR_T2 = 0.0;
 #                           endif
-                            sprintf( Riemann_Name, "strong shock" );
+                            sprintf( Riemann_Name, "%s", "strong shock" );
                             break;
 
       case TWO_SHOCKS     : Riemann_RhoL = 1.0;  Riemann_VelL = 3.0;  Riemann_PreL = 1.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
@@ -162,7 +162,7 @@ void SetParameter()
 #                           ifdef MHD
                             Riemann_Mag = Riemann_MagL_T1 = Riemann_MagL_T2 = Riemann_MagR_T1 = Riemann_MagR_T2 = 0.0;
 #                           endif
-                            sprintf( Riemann_Name, "two shocks" );
+                            sprintf( Riemann_Name, "%s", "two shocks" );
                             break;
 
       case EINFELDT_1203  : Riemann_RhoL = 1.0;  Riemann_VelL = -2.0;  Riemann_PreL = GAMMA-1.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
@@ -171,7 +171,7 @@ void SetParameter()
 #                           ifdef MHD
                             Riemann_Mag = Riemann_MagL_T1 = Riemann_MagL_T2 = Riemann_MagR_T1 = Riemann_MagR_T2 = 0.0;
 #                           endif
-                            sprintf( Riemann_Name, "Einfeldt's 1-2-0-3" );
+                            sprintf( Riemann_Name, "%s", "Einfeldt's 1-2-0-3" );
                             if ( GAMMA < 1.0 )  Aux_Error( ERROR_INFO, "GAMMA (%13.7e) < 1.0 !!\n", GAMMA );
                             break;
 
@@ -181,7 +181,7 @@ void SetParameter()
 #                           ifdef MHD
                             Riemann_Mag = Riemann_MagL_T1 = Riemann_MagL_T2 = Riemann_MagR_T1 = Riemann_MagR_T2 = 0.0;
 #                           endif
-                            sprintf( Riemann_Name, "Einfeldt's 1-1-2-5" );
+                            sprintf( Riemann_Name, "%s", "Einfeldt's 1-1-2-5" );
                             if ( GAMMA < 1.0 )  Aux_Error( ERROR_INFO, "GAMMA (%13.7e) < 1.0 !!\n", GAMMA );
                             break;
 
@@ -191,7 +191,7 @@ void SetParameter()
 #                           ifdef MHD
                             Riemann_Mag = Riemann_MagL_T1 = Riemann_MagL_T2 = Riemann_MagR_T1 = Riemann_MagR_T2 = 0.0;
 #                           endif
-                            sprintf( Riemann_Name, "sonic rarefaction wave" );
+                            sprintf( Riemann_Name, "%s", "sonic rarefaction wave" );
                             break;
 
 #     ifdef MHD
@@ -201,7 +201,7 @@ void SetParameter()
                             Riemann_MagL_T1 = 3.6/sqrt(4.0*M_PI);  Riemann_MagL_T2 = 2.0/sqrt(4.0*M_PI);
                             Riemann_MagR_T1 = 4.0/sqrt(4.0*M_PI);  Riemann_MagR_T2 = 2.0/sqrt(4.0*M_PI);
                             Riemann_Mag     = 2.0/sqrt(4.0*M_PI);
-                            sprintf( Riemann_Name, "RJ2a" );
+                            sprintf( Riemann_Name, "%s", "RJ2a" );
                             break;
 
       case TORRILHON      : Riemann_RhoL = 1.0;  Riemann_VelL = 0.0;   Riemann_PreL = 1.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
@@ -210,7 +210,7 @@ void SetParameter()
                             Riemann_MagL_T1 = 1.0;       Riemann_MagL_T2 = 0.0;
                             Riemann_MagR_T1 = cos(3.0);  Riemann_MagR_T2 = sin(3.0);
                             Riemann_Mag     = 1.0;
-                            sprintf( Riemann_Name, "Torrilhon" );
+                            sprintf( Riemann_Name, "%s", "Torrilhon" );
                             break;
 
       case BRIO_WU        : Riemann_RhoL = 1.0;    Riemann_VelL = 0.0;   Riemann_PreL = 1.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
@@ -219,7 +219,7 @@ void SetParameter()
                             Riemann_MagL_T1 = +1.0;  Riemann_MagL_T2 = 0.0;
                             Riemann_MagR_T1 = -1.0;  Riemann_MagR_T2 = 0.0;
                             Riemann_Mag     = 0.75;
-                            sprintf( Riemann_Name, "Brio & Wu shock tube" );
+                            sprintf( Riemann_Name, "%s", "Brio & Wu shock tube" );
                             break;
 #     endif // #ifdef MHD
 
@@ -229,7 +229,7 @@ void SetParameter()
 #                           ifdef MHD
                             Riemann_Mag = Riemann_MagL_T1 = Riemann_MagL_T2 = Riemann_MagR_T1 = Riemann_MagR_T2 = 0.0;
 #                           endif
-                            sprintf( Riemann_Name, "Noh's strong shock" );
+                            sprintf( Riemann_Name, "%s", "Noh's strong shock" );
                             break;
 
       default : Aux_Error( ERROR_INFO, "unsupported Riemann problem (%d) !!\n", Riemann_Prob );
