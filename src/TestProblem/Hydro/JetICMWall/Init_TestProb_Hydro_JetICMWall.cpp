@@ -3,16 +3,15 @@
 #include "TestProb.h"
 
 #if ( MODEL == HYDRO )
-extern bool OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
 
 static void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
 		const int GhostSize, const int idx[], const double pos[], const double Time,
 		const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
-static FieldIdx_t JetFieldIdx = 5;
-static FieldIdx_t ICMFieldIdx = 6;
-static FieldIdx_t LobeFieldIdx = 7;
-static FieldIdx_t IntFieldIdx = 8;
+static FieldIdx_t JetFieldIdx = Idx_Undefined;
+static FieldIdx_t ICMFieldIdx = Idx_Undefined;
+static FieldIdx_t LobeFieldIdx = Idx_Undefined;
+static FieldIdx_t IntFieldIdx = Idx_Undefined;
 
 // problem-specific global variables
 // =======================================================================================
@@ -314,9 +313,6 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
 	 const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
 // check
-    if (OPT__FLAG_LOHNER_PRES == 1 || OPT__FLAG_LOHNER_TEMP == 1 )
-        Aux_Error( ERROR_INFO, "temporary solution does not support OPT__FLAG_LOHNER_PRES or OPT__FLAG_LOHNER_TEMP !!" );
-
 
     int i, j, k;
 
@@ -386,14 +382,14 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
 void AddNewField_JetICMWall()
 {
 
-  if ( JetFieldIdx == 5 )
-    JetFieldIdx = AddField( "JetField", NORMALIZE_YES );
-  if ( ICMFieldIdx == 6 )
-    ICMFieldIdx = AddField( "ICMField", NORMALIZE_YES );
-  if ( LobeFieldIdx == 7 )
-    LobeFieldIdx = AddField( "LobeField", NORMALIZE_YES );
-  if ( IntFieldIdx == 8 )
-    IntFieldIdx = AddField( "IntField", NORMALIZE_YES );
+  if ( JetFieldIdx == Idx_Undefined )
+    JetFieldIdx = AddField( "JetField", NORMALIZE_YES, INTERP_FRAC_NO );
+  if ( ICMFieldIdx == Idx_Undefined )
+    ICMFieldIdx = AddField( "ICMField", NORMALIZE_YES, INTERP_FRAC_NO );
+  if ( LobeFieldIdx == Idx_Undefined )
+    LobeFieldIdx = AddField( "LobeField", NORMALIZE_YES, INTERP_FRAC_NO );
+  if ( IntFieldIdx == Idx_Undefined )
+    IntFieldIdx = AddField( "IntField", NORMALIZE_YES, INTERP_FRAC_NO );
 }
 
 //-------------------------------------------------------------------------------------------------------
