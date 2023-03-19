@@ -24,6 +24,7 @@ extern void (*FB_End_User_Ptr)();
 //-------------------------------------------------------------------------------------------------------
 // Function    :  FB_Plummer
 // Description :  Example of explosion and mass accretion feedbacks
+//                --> Just an example and is by no means to be physically correct
 //
 // Note        :  1. Input and output fluid and particle data are stored in Fluid[] and ParAtt[], respectively
 //                   --> This function is responsible for updating gas and particles within
