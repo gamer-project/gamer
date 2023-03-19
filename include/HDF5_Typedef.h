@@ -311,6 +311,11 @@ struct SymConst_t
    int    Der_Nxt;
    int    Der_NOut_Max;
 
+#  ifdef FEEDBACK
+   int    FB_GhostSize;
+   int    FB_Nxt;
+#  endif
+
    int    NFieldStoredMax;
 
 }; // struct SymConst_t

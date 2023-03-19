@@ -1690,6 +1690,11 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Der_Nxt",              &RS.Der_Nxt,              SID, TID, NonFatal, &RT.Der_Nxt,               1, NonFatal );
    LoadField( "Der_NOut_Max",         &RS.Der_NOut_Max,         SID, TID, NonFatal, &RT.Der_NOut_Max,          1, NonFatal );
 
+#  ifdef FEEDBACK
+   LoadField( "FB_GhostSize",         &RS.FB_GhostSize,         SID, TID, NonFatal, &RT.FB_GhostSize,          1, NonFatal );
+   LoadField( "FB_Nxt",               &RS.FB_Nxt,               SID, TID, NonFatal, &RT.FB_Nxt,                1, NonFatal );
+#  endif
+
    LoadField( "NFieldStoredMax",      &RS.NFieldStoredMax,      SID, TID, NonFatal, &RT.NFieldStoredMax,       1, NonFatal );
 
 

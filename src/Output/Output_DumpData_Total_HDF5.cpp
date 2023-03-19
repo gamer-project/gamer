@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2461)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2462)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -234,6 +234,7 @@ Procedure for outputting new variables:
 //                2459 : 2022/11/04 --> output REFINE_NLEVEL
 //                2460 : 2022/12/15 --> output SUPPORT_FFTW
 //                2461 : 2023/01/28 --> output OPT__RESET_FLUID_INIT
+//                2462 : 2023/03/19 --> output FB_GHOST_SIZE, FB_NXT
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1407,7 +1408,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2461;
+   KeyInfo.FormatVersion        = 2462;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1971,6 +1972,11 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.Der_GhostSize        = DER_GHOST_SIZE;
    SymConst.Der_Nxt              = DER_NXT;
    SymConst.Der_NOut_Max         = DER_NOUT_MAX;
+
+#  ifdef FEEDBACK
+   SymConst.FB_GhostSize         = FB_GHOST_SIZE;
+   SymConst.FB_Nxt               = FB_NXT;
+#  endif
 
    SymConst.NFieldStoredMax      = NFIELD_STORED_MAX;
 
@@ -2799,6 +2805,11 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Der_GhostSize",        HOFFSET(SymConst_t,Der_GhostSize       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Der_Nxt",              HOFFSET(SymConst_t,Der_Nxt             ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Der_NOut_Max",         HOFFSET(SymConst_t,Der_NOut_Max        ), H5T_NATIVE_INT    );
+
+#  ifdef FEEDBACK
+   H5Tinsert( H5_TypeID, "FB_GhostSize",         HOFFSET(SymConst_t,FB_GhostSize        ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "FB_Nxt",               HOFFSET(SymConst_t,FB_Nxt              ), H5T_NATIVE_INT    );
+#  endif
 
    H5Tinsert( H5_TypeID, "NFieldStoredMax",      HOFFSET(SymConst_t,NFieldStoredMax     ), H5T_NATIVE_INT    );
 

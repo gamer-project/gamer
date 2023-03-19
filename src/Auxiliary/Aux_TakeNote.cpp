@@ -590,6 +590,9 @@ void Aux_TakeNote()
 #     endif // #ifdef GRAVITY
       fprintf( Note, "#define SRC_GHOST_SIZE          %d\n",      SRC_GHOST_SIZE        );
       fprintf( Note, "#define DER_GHOST_SIZE          %d\n",      DER_GHOST_SIZE        );
+#     ifdef FEEDBACK
+      fprintf( Note, "#define FB_GHOST_SIZE           %d\n",      FB_GHOST_SIZE         );
+#     endif
       fprintf( Note, "#define FLU_NXT                 %d\n",      FLU_NXT               );
 #     ifdef GRAVITY
       fprintf( Note, "#define POT_NXT                 %d\n",      POT_NXT               );
@@ -605,6 +608,9 @@ void Aux_TakeNote()
 #     endif
       fprintf( Note, "#define SRC_NXT                 %d\n",      SRC_NXT               );
       fprintf( Note, "#define DER_NXT                 %d\n",      DER_NXT               );
+#     ifdef FEEDBACK
+      fprintf( Note, "#define FB_NXT                  %d\n",      FB_NXT                );
+#     endif
 #     if ( MODEL == HYDRO )
       fprintf( Note, "#define EOS_NAUX_MAX            %d\n",      EOS_NAUX_MAX          );
       fprintf( Note, "#define EOS_NTABLE_MAX          %d\n",      EOS_NTABLE_MAX        );
