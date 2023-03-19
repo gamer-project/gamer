@@ -83,32 +83,18 @@ void FB_User_Template( const int lv, const double TimeNew, const double TimeOld,
 #  endif // #ifdef GAMER_DEBUG
 
 
+// for a complete example, see src/TestProblem/Hydro/Plummer/FB_Plummer.cpp
    /*
-   const double Frac = 1.0e-5;
    const double _dh  = 1.0 / dh;
 
    for (int t=0; t<NPar; t++)
    {
-      const int    p       = ParSortID[t];
-      const double xyz[3]  = { ParAtt[PAR_POSX][p], ParAtt[PAR_POSY][p], ParAtt[PAR_POSZ][p] };
-      const real   MassFac = RNG->GetValue( TID, 0.0, 1.0 );
-      const real   EngyFac = RNG->GetValue( TID, 5.0e0, 1.0e1 );
+      const int    p      = ParSortID[t];
+      const double xyz[3] = { ParAtt[PAR_POSX][p], ParAtt[PAR_POSY][p], ParAtt[PAR_POSZ][p] };
 
-      if ( MassFac > 1.0 - Frac )
-      {
-         int idx[3];
-         for (int d=0; d<3; d++)    idx[d] = (int)FLOOR( ( xyz[d] - EdgeL[d] )*_dh );
+      int idx[3];
+      for (int d=0; d<3; d++)    idx[d] = (int)FLOOR( ( xyz[d] - EdgeL[d] )*_dh );
 
-         for (int dk=-1; dk<=1; dk++)  {  const int k = idx[2] + dk;  if ( k < FB_GHOST_SIZE || k >= FB_GHOST_SIZE+PS2 )   continue;
-         for (int dj=-1; dj<=1; dj++)  {  const int j = idx[1] + dj;  if ( j < FB_GHOST_SIZE || j >= FB_GHOST_SIZE+PS2 )   continue;
-         for (int di=-1; di<=1; di++)  {  const int i = idx[0] + di;  if ( i < FB_GHOST_SIZE || i >= FB_GHOST_SIZE+PS2 )   continue;
-
-            Fluid[ENGY][k][j][i] *= EngyFac;
-
-         }}}
-
-         ParAtt[PAR_MASS][p] *= MassFac;
-      }
    } // for (int t=0; t<NPar; t++)
    */
 
