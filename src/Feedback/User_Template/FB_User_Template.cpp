@@ -7,7 +7,7 @@
 // function pointers to be set by FB_Init_User_Template()
 extern void (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
                             const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                            real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
+                            real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
                             const int TID, RandomNumber_t *RNG );
 extern void (*FB_End_User_Ptr)();
 
@@ -19,6 +19,9 @@ extern void (*FB_End_User_Ptr)();
 // Description :  Template of a user-defined feedback
 //
 // Note        :  1. Input and output fluid and particle data are stored in Fluid[] and ParAtt[], respectively
+//                   --> This function is responsible for updating gas and particles within
+//                       ** FB_GHOST_SIZE <= cell indices i,j,k < FB_GHOST_SIZE+PS2 ** 
+//                   --> Updating gas and particles outside this range is fine but will have no effect at all
 //                2. Must use ParSortID[] to access ParAtt[]
 //                   --> ParAtt[PAR_MASS/PAR_POSX/etc][ ParSortID[...] ]
 //                3. Particles may be outside the target region
@@ -51,9 +54,9 @@ extern void (*FB_End_User_Ptr)();
 //                ParSortID  : Sorted particle IDs
 //                ParAtt     : Particle attribute arrays
 //                Fluid      : Array to store the input/output fluid data
-//                             --> Array size is fixed to PS2^3
+//                             --> Array size is fixed to (FB_NXT)^3=(PS2+2*FB_GHOST_SIZE)^3
 //                EdgeL      : Left edge of Fluid[]
-//                             --> Right edge is given by EdgeL[]+PS2*dh
+//                             --> Right edge is given by EdgeL[]+FB_NXT*dh
 //                dh         : Cell size of Fluid[]
 //                CoarseFine : Coarse-fine boundaries along the 26 sibling directions
 //                TID        : Thread ID
@@ -65,7 +68,7 @@ extern void (*FB_End_User_Ptr)();
 //-------------------------------------------------------------------------------------------------------
 void FB_User_Template( const int lv, const double TimeNew, const double TimeOld, const double dt,
                        const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                       real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
+                       real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
                        const int TID, RandomNumber_t *RNG )
 {
 
@@ -96,9 +99,9 @@ void FB_User_Template( const int lv, const double TimeNew, const double TimeOld,
          int idx[3];
          for (int d=0; d<3; d++)    idx[d] = (int)FLOOR( ( xyz[d] - EdgeL[d] )*_dh );
 
-         for (int dk=-1; dk<=1; dk++)  {  const int k = idx[2] + dk;  if ( k < 0 || k >= PS2 )  continue;
-         for (int dj=-1; dj<=1; dj++)  {  const int j = idx[1] + dj;  if ( j < 0 || j >= PS2 )  continue;
-         for (int di=-1; di<=1; di++)  {  const int i = idx[0] + di;  if ( i < 0 || i >= PS2 )  continue;
+         for (int dk=-1; dk<=1; dk++)  {  const int k = idx[2] + dk;  if ( k < FB_GHOST_SIZE || k >= FB_GHOST_SIZE+PS2 )   continue;
+         for (int dj=-1; dj<=1; dj++)  {  const int j = idx[1] + dj;  if ( j < FB_GHOST_SIZE || j >= FB_GHOST_SIZE+PS2 )   continue;
+         for (int di=-1; di<=1; di++)  {  const int i = idx[0] + di;  if ( i < FB_GHOST_SIZE || i >= FB_GHOST_SIZE+PS2 )   continue;
 
             Fluid[ENGY][k][j][i] *= EngyFac;
 

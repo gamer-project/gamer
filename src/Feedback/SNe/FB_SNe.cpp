@@ -10,6 +10,9 @@
 // Description :  Supernova explosion feedback
 //
 // Note        :  1. Input and output fluid and particle data are stored in Fluid[] and ParAtt[], respectively
+//                   --> This function is responsible for updating gas and particles within
+//                       ** FB_GHOST_SIZE <= cell indices i,j,k < FB_GHOST_SIZE+PS2 ** 
+//                   --> Updating gas and particles outside this range is fine but will have no effect at all
 //                2. Must use ParSortID[] to access ParAtt[]
 //                   --> ParAtt[PAR_MASS/PAR_POSX/etc][ ParSortID[...] ]
 //                3. Particles may be outside the target region
@@ -41,9 +44,9 @@
 //                ParSortID  : Sorted particle IDs
 //                ParAtt     : Particle attribute arrays
 //                Fluid      : Array to store the input/output fluid data
-//                             --> Array size is fixed to PS2^3
+//                             --> Array size is fixed to (FB_NXT)^3=(PS2+2*FB_GHOST_SIZE)^3
 //                EdgeL      : Left edge of Fluid[]
-//                             --> Right edge is given by EdgeL[]+PS2*dh
+//                             --> Right edge is given by EdgeL[]+FB_NXT*dh
 //                dh         : Cell size of Fluid[]
 //                CoarseFine : Coarse-fine boundaries along the 26 sibling directions
 //                TID        : Thread ID
@@ -55,7 +58,7 @@
 //-------------------------------------------------------------------------------------------------------
 void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
              const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-             real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
+             real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
              const int TID, RandomNumber_t *RNG )
 {
 

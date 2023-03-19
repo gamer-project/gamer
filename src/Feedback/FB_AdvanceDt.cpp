@@ -7,14 +7,14 @@
 // prototypes of built-in feedbacks
 void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
              const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-             real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
+             real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
              const int TID, RandomNumber_t *RNG );
 
 
 // user-specified feedback to be set by a test problem initializer
 void (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
                      const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                     real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
+                     real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
                      const int TID, RandomNumber_t *RNG ) = NULL;
 
 
@@ -125,7 +125,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 // array to store the input and output fluid data
-   real (*fluid_PG)[PS2][PS2][PS2] = new real [NCOMP_TOTAL][PS2][PS2][PS2];
+   real (*fluid_PG)[FB_NXT][FB_NXT][FB_NXT] = new real [NCOMP_TOTAL][FB_NXT][FB_NXT][FB_NXT];
 
 
 // iterate over all real patches
@@ -140,7 +140,6 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //    3. prepare the fluid data to be updated
 //    --> exclude magnetic field for now
 //    --> use patch group as the basic unit
-      const int  GhostZone_No        = 0;
       const int  NPG                 = 1;
 #     ifndef MHD
       const int  OPT__MAG_INT_SCHEME = INT_NONE;
@@ -154,8 +153,8 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //###OPTIMIZATION: only prepare the necessary fluid fields
       const long FluidBitIdx         = _TOTAL;
 
-      Prepare_PatchData( lv, TimeNew, fluid_PG[0][0][0], NULL, GhostZone_No, NPG, &PID0, FluidBitIdx, _NONE,
-                         OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_00, IntPhase_No,
+      Prepare_PatchData( lv, TimeNew, fluid_PG[0][0][0], NULL, FB_GHOST_SIZE, NPG, &PID0, FluidBitIdx, _NONE,
+                         OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
                          OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
 
@@ -343,11 +342,15 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 //       7-2. invoke all feedback routines
+         const double EdgeL[3] = { amr->patch[0][lv][PID0]->EdgeL[0] - FB_GHOST_SIZE*amr->dh[lv],
+                                   amr->patch[0][lv][PID0]->EdgeL[1] - FB_GHOST_SIZE*amr->dh[lv],
+                                   amr->patch[0][lv][PID0]->EdgeL[2] - FB_GHOST_SIZE*amr->dh[lv] };
+
          if ( FB_SNE  )    FB_SNe     ( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
-                                        amr->patch[0][lv][PID0]->EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
+                                        EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
 
          if ( FB_USER )    FB_User_Ptr( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
-                                        amr->patch[0][lv][PID0]->EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
+                                        EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
 
 
 
@@ -371,9 +374,9 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       for (int LocalID=0; LocalID<8; LocalID++)
       {
          const int PID    = PID0 + LocalID;
-         const int Disp_i = TABLE_02( LocalID, 'x', 0, PS1 );
-         const int Disp_j = TABLE_02( LocalID, 'y', 0, PS1 );
-         const int Disp_k = TABLE_02( LocalID, 'z', 0, PS1 );
+         const int Disp_i = TABLE_02( LocalID, 'x', FB_GHOST_SIZE, FB_GHOST_SIZE+PS1 );
+         const int Disp_j = TABLE_02( LocalID, 'y', FB_GHOST_SIZE, FB_GHOST_SIZE+PS1 );
+         const int Disp_k = TABLE_02( LocalID, 'z', FB_GHOST_SIZE, FB_GHOST_SIZE+PS1 );
 
          for (int v=0; v<NCOMP_TOTAL; v++)   {
 
