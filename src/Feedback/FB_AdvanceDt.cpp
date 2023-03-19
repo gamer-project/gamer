@@ -30,6 +30,7 @@ extern RandomNumber_t *FB_RNG;
 //
 // Note        :  1. Invoked by EvolveLevel()
 //                2. FB_LEVEL must equal MAX_LEVEL for now
+//                3. Feedback is still an experimental feature
 //
 // Parameter   :  lv         : Target refinement level
 //                TimeNew    : Target physical time to reach
@@ -37,7 +38,7 @@ extern RandomNumber_t *FB_RNG;
 //                             --> This function updates physical time from TimeOld to TimeNew
 //                dt         : Time interval to advance solution
 //                SaveSg_Flu : Sandglass to store the updated fluid data
-//                SaveSg_Mag : Sandglass to store the updated B field
+//                SaveSg_Mag : Sandglass to store the updated B field (useless for now)
 //
 // Return      :  Update both grids and particles
 //-------------------------------------------------------------------------------------------------------
@@ -327,7 +328,8 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
                   if      ( dr > +HalfBox[d] )  *ParPos -= amr->BoxSize[d];
                   else if ( dr < -HalfBox[d] )  *ParPos += amr->BoxSize[d];
                }
-         }} // for d, if ( Periodic[d] )
+            } // if ( Periodic[d] )
+         }} // for (int d=0; d<3; d++)
 
 
 
