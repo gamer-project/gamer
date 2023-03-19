@@ -329,7 +329,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
                   else if ( dr < -HalfBox[d] )  *ParPos += amr->BoxSize[d];
                }
             } // if ( Periodic[d] )
-         }} // for (int d=0; d<3; d++)
+         } // for (int d=0; d<3; d++)
 
 
 
