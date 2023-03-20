@@ -54,6 +54,9 @@ extern void (*FB_End_User_Ptr)();
 //                9. Since Fluid[] stores both the input and output data, the order of particles may affect the
 //                   final output results
 //                   --> For example, particle 2 may use the data updated by particle 1 as the input data
+//                   --> Actually, even if we separate Fluid[] to input and output arrays, the final output results
+//                       may still depend on the order of particles for non-local feedback since different particles
+//                       may update the same cell
 //                10. Linked to FB_User_Ptr in FB_Init_Plummer()
 //
 // Parameter   :  lv         : Target refinement level
