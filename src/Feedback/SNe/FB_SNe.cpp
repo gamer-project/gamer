@@ -34,6 +34,9 @@
 //                   --->x    18  10  19
 //                7. Invoked by FB_AdvanceDt()
 //                8. Must NOT change particle positions
+//                9. Since Fluid[] stores both the input and output data, the order of particles may affect the
+//                   final output results
+//                   --> For example, particle 2 may use the data updated by particle 1 as the input data
 //
 // Parameter   :  lv         : Target refinement level
 //                TimeNew    : Target physical time to reach

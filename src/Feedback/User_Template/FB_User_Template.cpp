@@ -43,7 +43,10 @@ extern void (*FB_End_User_Ptr)();
 //                   --->x    18  10  19
 //                7. Invoked by FB_AdvanceDt()
 //                8. Must NOT change particle positions
-//                9. Linked to FB_User_Ptr in FB_Init_User_Template()
+//                9. Since Fluid[] stores both the input and output data, the order of particles may affect the
+//                   final output results
+//                   --> For example, particle 2 may use the data updated by particle 1 as the input data
+//                10. Linked to FB_User_Ptr in FB_Init_User_Template()
 //
 // Parameter   :  lv         : Target refinement level
 //                TimeNew    : Target physical time to reach

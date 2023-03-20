@@ -51,7 +51,10 @@ extern void (*FB_End_User_Ptr)();
 //                   --->x    18  10  19
 //                7. Invoked by FB_AdvanceDt()
 //                8. Must NOT change particle positions
-//                9. Linked to FB_User_Ptr in FB_Init_Plummer()
+//                9. Since Fluid[] stores both the input and output data, the order of particles may affect the
+//                   final output results
+//                   --> For example, particle 2 may use the data updated by particle 1 as the input data
+//                10. Linked to FB_User_Ptr in FB_Init_Plummer()
 //
 // Parameter   :  lv         : Target refinement level
 //                TimeNew    : Target physical time to reach
@@ -118,6 +121,7 @@ void FB_Plummer( const int lv, const double TimeNew, const double TimeOld, const
          {
 //          inject explosion energy to the nearby 27 cells including itself
 //          --> skip cells in the ghost zones
+//          --> should also skip cells too close to the coarse-fine boundaries using CoarseFine[] (not implemented here)
             for (int dk=-1; dk<=1; dk++)  {  const int k = idx[2] + dk;  if ( k < FB_GHOST_SIZE || k >= FB_GHOST_SIZE+PS2 )   continue;
             for (int dj=-1; dj<=1; dj++)  {  const int j = idx[1] + dj;  if ( j < FB_GHOST_SIZE || j >= FB_GHOST_SIZE+PS2 )   continue;
             for (int di=-1; di<=1; di++)  {  const int i = idx[0] + di;  if ( i < FB_GHOST_SIZE || i >= FB_GHOST_SIZE+PS2 )   continue;
@@ -137,6 +141,7 @@ void FB_Plummer( const int lv, const double TimeNew, const double TimeOld, const
 //       mass accretion
          if ( Plummer_FB_Acc )
          {
+//          --> should also skip cells too close to the coarse-fine boundaries using CoarseFine[] (not implemented here)
          } // if ( Plummer_FB_Acc )
       } // if ( RNG->GetValue(TID,0.0,1.0) < Plummer_FB_Like )
    } // for (int t=0; t<NPar; t++)
