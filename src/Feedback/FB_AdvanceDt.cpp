@@ -106,6 +106,13 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 
+// 3. allocate a temporary array to store the updated fluid data
+#  ifdef SEP_FB_FLUOUT
+   real (*fluid_updated)[NCOMP_TOTAL][PS1][PS1][PS1] = new real [ amr->NPatchComma[lv][1] ][NCOMP_TOTAL][PS1][PS1][PS1];
+#  endif
+
+
+
 // get the sibling index differences along different directions
    int NSibPID_Delta[26], *SibPID_Delta[26];
 
@@ -137,7 +144,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
                                    amr->patch[0][lv][PID0+7]->EdgeL[2] };
 
 
-//    3. prepare the fluid data to be updated
+//    4. prepare the fluid data to be updated
 //    --> exclude magnetic field for now
 //    --> use patch group as the basic unit
       const int  NPG                 = 1;
@@ -159,11 +166,11 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 
-//    4. collect patch information
+//    5. collect patch information
       const int NNearbyPatchMax = 64;  // maximum number of neaby patches of a patch group (including 8 local patches)
       int Nearby_PID_List[NNearbyPatchMax], NNearbyPatch, SibPID0_List[26];
 
-//    4-1. get nearby patches
+//    5-1. get nearby patches
       NNearbyPatch = 0;
 
 //    local patches
@@ -187,14 +194,14 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       }
 
 
-//    4-2. record the coarse-fine boundaries
+//    5-2. record the coarse-fine boundaries
 //         --> regard non-periodic boundaries as coarse-fine boundaries too
       bool CoarseFine[26];
       for (int s=0; s<26; s++)   CoarseFine[s] = ( SibPID0_List[s] < 0 ) ? true : false;
 
 
 
-//    5. allocate arrays to store the local particle data
+//    6. allocate arrays to store the local particle data
 //       --> **local** means particles that affect the target patch group
 //       --> include particles in both real and buffer patches
 //       --> allocate the **maximum** required size among all nearby patches of a given patch group **just once**
@@ -229,8 +236,8 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
          const int PID = Nearby_PID_List[t];
 
 
-//       6. prepare the input particle data
-//       6-1. get the particle list of the target patch
+//       7. prepare the input particle data
+//       7-1. get the particle list of the target patch
          long  *ParList = NULL;
          int    NPar;
          bool   UseParAttCopy;
@@ -263,7 +270,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
          } // if ( amr->patch[0][lv][PID]->son == -1  &&  PID < amr->NPatchComma[lv][1] ) ... else ...
 
 
-//       6-2. copy the particle data
+//       7-2. copy the particle data
 //            --> we don't want to modify the input particle data during the iteration of different patch groups
 //                since different patch groups will be affected by the same particles when feedback is non-local
 //            --> if we modify the input particle data here, some patch groups may read the **updated** particle data
@@ -301,14 +308,14 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
          } // if ( UseParAttCopy ) ... else ...
 
 
-//       6-3. sort particles by positions to fix their order
+//       7-3. sort particles by positions to fix their order
 //            --> necessary when feedback involves random numbers
 //            --> otherwise, the same particles accessed by different patches may have different random numbers
          Par_SortByPos( NPar, ParAtt_Local[PAR_POSX], ParAtt_Local[PAR_POSY], ParAtt_Local[PAR_POSZ], ParSortID );
 
 
 
-//       6-4. periodic boundary conditions
+//       7-4. periodic boundary conditions
 //            --> assuming there are at least TWO patch groups along each spatial direction (i.e., NX0_TOT[*]/PS2>=2)
 //            --> so each particle won't affect the same patch group more than once
          const bool   Periodic [3] = { OPT__BC_FLU[0] == BC_FLU_PERIODIC,
@@ -332,8 +339,8 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 
-//       7. feedback
-//       7-1. set the random seed
+//       8. feedback
+//       8-1. set the random seed
 //            --> to get deterministic and different random numbers for all patches, reset the random seed of
 //                each patch according to its location and counter
 //            --> factors 1e2 and 1e8 are to make random seeds more different
@@ -341,7 +348,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
          FB_RNG->SetSeed( TID, RSeed );
 
 
-//       7-2. invoke all feedback routines
+//       8-2. invoke all feedback routines
          const double EdgeL[3] = { amr->patch[0][lv][PID0]->EdgeL[0] - FB_GHOST_SIZE*amr->dh[lv],
                                    amr->patch[0][lv][PID0]->EdgeL[1] - FB_GHOST_SIZE*amr->dh[lv],
                                    amr->patch[0][lv][PID0]->EdgeL[2] - FB_GHOST_SIZE*amr->dh[lv] };
@@ -354,7 +361,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 
-//       8. store the updated particle data in ParAtt_Updated[]
+//       9. store the updated particle data in ParAtt_Updated[]
 //          --> only for particles in the central 8 patches
 //              --> particles in the sibling patches will be updated and stored when applying feedback to these patches
 //              --> avoid duplicate updates
@@ -369,7 +376,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 
-//    9. store the updated fluid data
+//    10. store the updated fluid data
 //       --> different OpenMP threads work on different patch groups and thus won't update the same fluid data
       for (int LocalID=0; LocalID<8; LocalID++)
       {
@@ -385,7 +392,11 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
             for (int j_o=0; j_o<PS1; j_o++)  {  const int j_i = Disp_j + j_o;
             for (int i_o=0; i_o<PS1; i_o++)  {  const int i_i = Disp_i + i_o;
 
+#              ifdef SEP_FB_FLUOUT
+               fluid_updated             [PID]       [v][k_o][j_o][i_o] = fluid_PG[v][k_i][j_i][i_i];
+#              else
                amr->patch[SaveSg_Flu][lv][PID]->fluid[v][k_o][j_o][i_o] = fluid_PG[v][k_i][j_i][i_i];
+#              endif
 
             }}}
          }
@@ -405,7 +416,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 
-// 10. store the updated particle data
+// 11. store the updated particle data
    for (int v=0; v<PAR_NATT_TOTAL; v++) {
       if ( ParAttBitIdx_Out & BIDX(v) )
          memcpy( amr->Par->Attribute[v], ParAtt_Updated[v], amr->Par->ParListSize*sizeof(real) );
@@ -413,9 +424,21 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 
-// free memory
+// 12. store the updated fluid data
+#  ifdef SEP_FB_FLUOUT
+   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+      memcpy( amr->patch[SaveSg_Flu][lv][PID]->fluid[0][0][0], fluid_updated[PID][0][0][0],
+              NCOMP_TOTAL*CUBE(PS1)*sizeof(real) );
+#  endif
+
+
+
+// 13. free memory
    for (int v=0; v<PAR_NATT_TOTAL; v++)   delete [] ParAtt_Updated[v];
    Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch_Yes, FaSibBufPatch_No );
+#  ifdef SEP_FB_FLUOUT
+   delete [] fluid_updated;
+#  endif
 
 } // FUNCTION : FB_AdvanceDt
 

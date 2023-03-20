@@ -396,8 +396,8 @@ void Aux_TakeNote()
       fprintf( Note, "\n\n");
 
 
-//    record the simulation options in CUFLU.h and CUPOT.h
-      fprintf( Note, "Other Options (in CUFLU.h and CUPOT.h)\n" );
+//    record the simulation options in Macro.h, CUFLU.h and CUPOT.h
+      fprintf( Note, "Other Options (in Macro.h, CUFLU.h and CUPOT.h)\n" );
       fprintf( Note, "***********************************************************************************\n" );
 
 #     ifdef BIT_REP_FLUX
@@ -418,6 +418,12 @@ void Aux_TakeNote()
       fprintf( Note, "INTERP_MASK                     ON\n" );
 #     else
       fprintf( Note, "INTERP_MASK                     OFF\n" );
+#     endif
+
+#     ifdef SEP_FB_FLUOUT
+      fprintf( Note, "SEP_FB_FLUOUT                   ON\n" );
+#     else
+      fprintf( Note, "SEP_FB_FLUOUT                   OFF\n" );
 #     endif
 
 #     if   ( MODEL == HYDRO )

@@ -749,6 +749,12 @@
 #define UNMASKED                 false
 
 
+// in FB_AdvanceDt(), store the updated fluid data in a separate array to avoid data racing among different patch groups
+#if ( defined FEEDBACK  &&  FB_GHOST_SIZE > 0 )
+#  define SEP_FB_FLUOUT
+#endif
+
+
 // extreme values
 #ifndef __INT_MAX__
 #  define __INT_MAX__            2147483647
