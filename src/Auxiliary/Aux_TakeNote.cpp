@@ -420,10 +420,10 @@ void Aux_TakeNote()
       fprintf( Note, "INTERP_MASK                     OFF\n" );
 #     endif
 
-#     ifdef SEP_FB_FLUOUT
-      fprintf( Note, "SEP_FB_FLUOUT                   ON\n" );
+#     ifdef FB_SEP_FLUOUT
+      fprintf( Note, "FB_SEP_FLUOUT                   ON\n" );
 #     else
-      fprintf( Note, "SEP_FB_FLUOUT                   OFF\n" );
+      fprintf( Note, "FB_SEP_FLUOUT                   OFF\n" );
 #     endif
 
 #     if   ( MODEL == HYDRO )

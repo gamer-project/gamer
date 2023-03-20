@@ -254,6 +254,7 @@ struct SymConst_t
 #  endif
 
    int    InterpMask;
+   int    FB_SepFluOut;
 
 
 #  if   ( MODEL == HYDRO )

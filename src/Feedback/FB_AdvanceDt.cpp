@@ -107,7 +107,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 // 3. allocate a temporary array to store the updated fluid data
-#  ifdef SEP_FB_FLUOUT
+#  ifdef FB_SEP_FLUOUT
    real (*fluid_updated)[NCOMP_TOTAL][PS1][PS1][PS1] = new real [ amr->NPatchComma[lv][1] ][NCOMP_TOTAL][PS1][PS1][PS1];
 #  endif
 
@@ -392,7 +392,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
             for (int j_o=0; j_o<PS1; j_o++)  {  const int j_i = Disp_j + j_o;
             for (int i_o=0; i_o<PS1; i_o++)  {  const int i_i = Disp_i + i_o;
 
-#              ifdef SEP_FB_FLUOUT
+#              ifdef FB_SEP_FLUOUT
                fluid_updated             [PID]       [v][k_o][j_o][i_o] = fluid_PG[v][k_i][j_i][i_i];
 #              else
                amr->patch[SaveSg_Flu][lv][PID]->fluid[v][k_o][j_o][i_o] = fluid_PG[v][k_i][j_i][i_i];
@@ -425,7 +425,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 // 12. store the updated fluid data
-#  ifdef SEP_FB_FLUOUT
+#  ifdef FB_SEP_FLUOUT
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       memcpy( amr->patch[SaveSg_Flu][lv][PID]->fluid[0][0][0], fluid_updated[PID][0][0][0],
               NCOMP_TOTAL*CUBE(PS1)*sizeof(real) );
@@ -436,7 +436,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 // 13. free memory
    for (int v=0; v<PAR_NATT_TOTAL; v++)   delete [] ParAtt_Updated[v];
    Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch_Yes, FaSibBufPatch_No );
-#  ifdef SEP_FB_FLUOUT
+#  ifdef FB_SEP_FLUOUT
    delete [] fluid_updated;
 #  endif
 
