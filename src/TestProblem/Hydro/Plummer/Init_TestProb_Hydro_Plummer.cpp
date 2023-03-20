@@ -22,11 +22,13 @@ static bool   Plummer_AddColor;     // assign different colors to different clou
 
 #ifdef FEEDBACK
        bool   Plummer_FB_Exp;       // enable explosion feedback
-       double Plummer_FB_ExpEMin;   // minimum/maximum energy gain factors for Plummer_FB_Exp (0-->no energy gain)
+       double Plummer_FB_ExpEMin;   // minimum/maximum energy gain factors    for Plummer_FB_Exp (0-->no energy gain)
        double Plummer_FB_ExpEMax;
-       double Plummer_FB_ExpMMin;   // minimum/maximum mass loss factors   for Plummer_FB_Exp (0-->no mass loss; 1-->loss all mass)
+       double Plummer_FB_ExpMMin;   // minimum/maximum mass loss factors      for Plummer_FB_Exp (0-->no mass loss; 1-->loss all mass)
        double Plummer_FB_ExpMMax;
        bool   Plummer_FB_Acc;       // enable mass accretion feedback
+       double Plummer_FB_AccMMin;   // minimum/maximum mass accretion factors for Plummer_FB_Acc (0-->no mass accretion; 1-->accrete all mass)
+       double Plummer_FB_AccMMax;
        double Plummer_FB_Like;      // feedback likelihood of each particle (0-1) [1e-4]
 #endif
 
@@ -164,6 +166,8 @@ void SetParameter()
    ReadPara->Add( "Plummer_FB_ExpMMin",   &Plummer_FB_ExpMMin,    0.0,           0.0,              1.0               );
    ReadPara->Add( "Plummer_FB_ExpMMax",   &Plummer_FB_ExpMMax,    1.0e-5,        0.0,              1.0               );
    ReadPara->Add( "Plummer_FB_Acc",       &Plummer_FB_Acc,        false,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Plummer_FB_AccMMin",   &Plummer_FB_AccMMin,    0.0,           0.0,              1.0               );
+   ReadPara->Add( "Plummer_FB_AccMMax",   &Plummer_FB_AccMMax,    1.0e-2,        0.0,              1.0               );
    ReadPara->Add( "Plummer_FB_Like",      &Plummer_FB_Like,       1.0e-6,        0.0,              1.0               );
 #  endif
 
@@ -312,6 +316,10 @@ void SetParameter()
    if ( Plummer_FB_Acc )
    {
       if ( ! FB_USER )  Aux_Error( ERROR_INFO, "must enable FB_USER for Plummer_FB_Acc !!\n" );
+
+      if ( Plummer_FB_AccMMin > Plummer_FB_AccMMax )
+         Aux_Error( ERROR_INFO, "Plummer_FB_AccMMin (%13.7e) > Plummer_FB_AccMMax (%13.7e) !!\n",
+                    Plummer_FB_AccMMin, Plummer_FB_AccMMax );
    }
 #  endif
 
@@ -370,6 +378,9 @@ void SetParameter()
       Aux_Message( stdout, "     minimum mass loss factor               = %13.7e\n", Plummer_FB_ExpMMin );
       Aux_Message( stdout, "     maximum mass loss factor               = %13.7e\n", Plummer_FB_ExpMMax ); }
       Aux_Message( stdout, "  mass accretion feedback                   = %d\n",     Plummer_FB_Acc );
+      if ( Plummer_FB_Acc ) {
+      Aux_Message( stdout, "     minimum mass accretion factor          = %13.7e\n", Plummer_FB_AccMMin );
+      Aux_Message( stdout, "     maximum mass accretion factor          = %13.7e\n", Plummer_FB_AccMMax ); }
       Aux_Message( stdout, "  feedback likelihood                       = %13.7e\n", Plummer_FB_Like );
 #     endif
       Aux_Message( stdout, "=============================================================================\n" );
