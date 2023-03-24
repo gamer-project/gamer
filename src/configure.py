@@ -1,68 +1,37 @@
 """
-Cluster and flags setup
-    --cluster            Select the cluster config.  
-    --flags              Compiler flags config.
+A. User Guide:
+  This script is for generating the GAMER Makefile. To use this script, you need to know the following:
+  1. Library paths:
+    When using library, you need to assign the library path. The path config file can be found under `../configs/`. 
+    To setup your own config file, please copy `example.config` and modify it.
+  2. Compilation flags: 
+    We already have two flag config files under `../configs/, `intel.make` and `gnu.make`, which are for the 
+    intel and gnu compiler respetively. To setup your own config file, please copy `example.make` and modify it.
+  3. Run the script: 
+    This script can run under Python2 and Python3. To run the script, please run the following command:
+      `python configure.py [--your_arguments]`
+    After the command finishes, the `Makefile` will be generated.
 
-A. Physical models and options of diffierent physical models 
-    --model              Select the physical model.
-    --passive            Set the number of passive scalars.
-
-A.1 Hydro options
-    --flu_scheme         Select the fluid solver for HYDRO model.
-    --slope              Select the spatial data reconstruction method.
-    --flux               Select the Riemann solver.
-    --dual               Select the dual-energy formalism.
-    --mhd                Enable magnetohydrodynamic.
-    --cosmic_ray         Enable cosmic rays.
-    --eos                Select the equation of state.
-    --barotropic         Whether or not the --eos set is barotropic.
-
-A.2 ELBDM scheme
-    --conserve_mass      Enforce the mass conservation. 
-    --laplacian_four     Enable the fourth order of Laplacian.
-    --self_interaction   Including the quartic self-interaction potential.
-
-A.3 gravity
-    --gravity            Enable gravity.
-    --pot_scheme         Select the Poisson solver.
-    --store_pot_ghost    Store the potential ghost-zone for each patch on each side.
-    --unsplit_gravity    Use unsplitting method to couple gravity to the target model.
-    --comoving           Comoving frame for cosmological simulation.
-
-A.4 particle
-    --particle           Enable particle.
-    --tracer             Enable tracer particles. 
-    --store_acc          Store particle acceleration.
-    --star_formation     Allow creating new particles after initialization.
-    --par_attribute      Set user defined particle attributes.
-
-A.5 grackle
-    --grackle            Enable Grackle, a chemistry and radiative cooling library. 
-
-B. Miscellaneous options
-    --nlevel             Set the maximum level of AMR.
-    --max_patch          Set the maximum patchs on each level of AMR.
-    --patch_size         Set size of each direction of a single patch.
-    --debug              Enable debug mode.
-    --bitwise_reproduce  Enable bitwise reproducibility.
-    --timing             Enable to measure timing.
-    --timing_solver      Enable measure GPU time.
-    --double             Enable double precision.
-    --laohu              Work on the NAOC Laohu GPU cluster. 
-    --hdf5               Support HDF5 format.
-    --GSL                Support GNU scientific library.
-    --FFTW               Support FFTW library.
-    --LIBYT              Support yt inline analysis.
-    --LIBYT_patch        Use patch group as the unit in libyt. Note that this will speed up inline-analysis but increase memory consumption.
-    --RNG                Select the random number generator.
-
-C. Parallelization and flags
-    --serial             Serial compiler type.
-    --openmp             Enable openmp parallization. 
-    --mpi                Enable mpi parallization.
-    --overlap_mpi        Overlap MPI communication with computation.
-    --GPU                Enable GPU.
-    --GPU_arch           Select the archtecture of GPU.
+B. Developer guide:
+  1. Add new simulation option:
+    a. Make sure you have coded the necessary files in `Makefile_base`.
+    b. Add the python argument reader for the new simulation option.
+    c. Add the name convertion dictionary [python_argument:gamer_argument] to the `NAME_TABLE`.
+    d. [Optional] Add the error rules in `validation()`.
+    e. [Optional] Add the warning rules in `warning()`.
+  2. Add a new path:
+    a. Add a new line in the Makefile_base in the path section. 
+      `NEW_PATH := @@@NEW_PATH@@@`
+    b. Add a new line in the path config file. 
+      `NEW_PATH    /path/of/new`
+  3. Add a compiler flag:
+    a. Add a new line in the Makefile_base in the flag section. 
+      `NEW_FLAG := @@@NEW_FLAG@@@`
+    b. Add a new flag key ["NEW_FLAG":""] in flags of `load_compile()`.
+    c. Add a new line in the path config file. 
+      `NEW_FLAG    -new_flag`
+  4. Rules of Makefile_base:
+    a. The string will be replaced by this script need to be sandwitch by `@@@`.
 """
 
 ####################################################################################################
