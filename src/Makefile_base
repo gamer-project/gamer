@@ -622,7 +622,6 @@ endif
 
 # CPU linker
 	@echo "Linking CPU codes"
-	@echo ${SIMU_OPTION}
 ifeq "$(COMPILE_VERBOSE)" "1"
 	$(CXX) -o $@ $^ $(OBJ_GPU_LINK) $(LIB) $(OPENMPFLAG)
 	@printf "\nCompiling GAMER --> Successful!\n\n"; \
