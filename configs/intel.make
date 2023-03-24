@@ -1,0 +1,11 @@
+CXXFLAG -g 
+CXXFLAG -O3
+CXXFLAG -w1
+CXXFLAG -fp-model precise
+
+OPENMPFLAG -fopenmp
+
+LIBFLAG -limf
+
+CUDAFLAG
+
