@@ -1,6 +1,6 @@
 """
 A. User Guide:
-  This script is for generating the GAMER Makefile. To use this script, you need to know the following:
+  This script is for generating the GAMER Makefile. To use this script, you need to know the followings:
   1. Library paths:
     When using library, you need to assign the library path. The path config file can be found under `../configs/`. 
     To setup your own config file, please copy `example.config` and modify it.
@@ -17,21 +17,26 @@ B. Developer guide:
     a. Make sure you have coded the necessary files in `Makefile_base`.
     b. Add the python argument reader for the new simulation option.
     c. Add the name convertion dictionary [python_argument:gamer_argument] to the `NAME_TABLE`.
-    d. [Optional] Add the error rules in `validation()`.
-    e. [Optional] Add the warning rules in `warning()`.
+    d. Add the new argument in `sim_opt` of `load_sim`.
+    e. [Optional] Add the error rules in `validation()`.
+    f. [Optional] Add the warning rules in `warning()`.
   2. Add a new path:
     a. Add a new line in the Makefile_base in the path section. 
       `NEW_PATH := @@@NEW_PATH@@@`
     b. Add a new line in the path config file. 
       `NEW_PATH    /path/of/new`
-  3. Add a compiler flag:
+  3. Add a new compiler flag type:
     a. Add a new line in the Makefile_base in the flag section. 
       `NEW_FLAG := @@@NEW_FLAG@@@`
-    b. Add a new flag key ["NEW_FLAG":""] in flags of `load_compile()`.
+    b. Add a new flag key ["NEW_FLAG":""] in `flags` of `load_compile()`.
     c. Add a new line in the path config file. 
       `NEW_FLAG    -new_flag`
   4. Rules of Makefile_base:
-    a. The string will be replaced by this script need to be sandwitch by `@@@`.
+    a. The string will be replaced by this script need to be sandwitched by `@@@`.
+  5. Modify the help message:
+    We overwrite the original `print_help` since GAMER has too many options. You should follow the followings.
+    a. `print_help`: Showing the essential message only. The default option should start with '*' sign.
+    b. `print_help_detail`: Should be as clear as possible. 
 """
 
 ####################################################################################################
@@ -50,7 +55,7 @@ import re
 GAMER_CONFIG_DIR  = "../configs/"
 GAMER_MAKE_BASE   = "Makefile_base"
 GAMER_MAKE_OUT    = "Makefile"
-GAMER_DESCRIPTION = "Prepare customize Makefile for GAMER.\nTo show the detail help message, please use -lh argument."
+GAMER_DESCRIPTION = "Prepare customize Makefile for GAMER.\nThe default value starts with '*' sign.\nTo show the detail help message, please use -lh argument."
 GAMER_EPILOG      = "The default complie flags are %sintel.make and %sgnu.make"%(GAMER_CONFIG_DIR, GAMER_CONFIG_DIR)
 # The convert name from the python argument to the makefile argument.
 NAME_TABLE        = {"model":"MODEL", "passive":"NCOMP_PASSIVE_USER", "flu_scheme":"FLU_SCHEME", 
@@ -83,7 +88,7 @@ class BCOLOR:
 
 
 ####################################################################################################
-# Functions 
+# Classes
 ####################################################################################################
 class ArgumentParser( argparse.ArgumentParser ):
     def __init__(self, *args, **kwargs):
@@ -155,16 +160,25 @@ class ArgumentParser( argparse.ArgumentParser ):
             for option in self.options:
                 for item in option["flags"]:
                     if "choices" in option:
-                        temp = [ str(opt) for opt in option["choices"] ]
+                        if "default" in option:
+                            temp = [ "*"+str(opt) if opt == option["default"] else str(opt) for opt in option["choices"] ]
+                        else:
+                            temp = [ str(opt) for opt in option["choices"] ]
                         usage += [ "[%s {%s}]"%(item, ", ".join(temp)) ]
                         continue
                     
                     if "metavar" in option:
-                        usage += [ "[%s %s]"%(item, option["metavar"]) ]
+                        if "default" in option:
+                            usage += [ "[%s %s *%s]"%(item, option["metavar"], str(option["default"])) ]
+                        else:
+                            usage += [ "[%s %s]"%(item, option["metavar"]) ]
                         continue
                     
                     if "dest" in option:
-                        usage += [ "[%s %s]"%(item, option["dest"].upper()) ]
+                        if "default" in option:
+                            usage += [ "[%s %s *%s]"%(item, option["dest"], str(option["default"])) ]
+                        else:
+                            usage += [ "[%s %s]"%(item, option["dest"].upper()) ]
                         continue
                     
                     usage += ["[%s]"%(item)]
@@ -633,9 +647,6 @@ def warning( paths, **kwargs ):
 # Main execution
 ####################################################################################################
 # 1. Load the input arguments
-#parser = argparse.ArgumentParser( description = GAMER_DESCRIPTION, 
-#                                  formatter_class = argparse.RawTextHelpFormatter,
-#                                  epilog = GAMER_EPILOG )
 parser = ArgumentParser( description = GAMER_DESCRIPTION, 
                          formatter_class = argparse.RawTextHelpFormatter,
                          epilog = GAMER_EPILOG )
@@ -643,7 +654,7 @@ parser = ArgumentParser( description = GAMER_DESCRIPTION,
 # long help message
 parser.add_argument( "-lh",
                      action="store_true",
-                     help="Show this help message in detail.\n"
+                     help="Show this help message in detail and exit.\n"
                    )
 
 # cluster and flags setup
@@ -652,7 +663,7 @@ parser.add_argument( "--cluster", type=str, metavar="NAME",
                      help="Select the cluster. \nChoice: [eureka, YOUR_CLUSTER_NAME] => "
                    )
 
-parser.add_argument( "--flags", type=str,
+parser.add_argument( "--flags", type=str, metavar="NAME",
                      default="intel",
                      help="Compiler flags. \nChoice: [intel, gnu, YOUR_FLAG_NAME] => "
                    )
@@ -663,7 +674,7 @@ parser.add_argument( "--model", type=str, metavar="MODEL",
                      help="Select the physical model.\n"
                    )
 
-parser.add_argument( "--passive", type=int, metavar="number",
+parser.add_argument( "--passive", type=int, metavar="NUMBER",
                      default=0,
                      help="Set the number of passive scalars.\n"
                    )
@@ -885,8 +896,7 @@ parser.add_argument( "--GPU",
                      help="Enable GPU.\n"
                    )
 
-#parser.add_argument( "--GPU_arch", type=str, metavar="TYPE",
-parser.add_argument( "--GPU_arch", type=str,
+parser.add_argument( "--GPU_arch", type=str, metavar="TYPE",
                      default="TURING", choices=["FERMI", "KEPLER", "MAXWELL", "PASCAL", "VOLTA", "TURING", "AMPERE"],
                      help="Select the archtecture of GPU.\n"
                    )
