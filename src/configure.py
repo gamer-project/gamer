@@ -38,6 +38,8 @@ B. Developer guide:
 # Packages
 ####################################################################################################
 import argparse
+import os
+import sys
 import re
 
 
@@ -48,7 +50,7 @@ import re
 GAMER_CONFIG_DIR  = "../configs/"
 GAMER_MAKE_BASE   = "Makefile_base"
 GAMER_MAKE_OUT    = "Makefile"
-GAMER_DESCRIPTION = "Prepare custom Makefile for GAMER."
+GAMER_DESCRIPTION = "Prepare customize Makefile for GAMER.\nTo show the detail help message, please use -lh argument."
 GAMER_EPILOG      = "The default complie flags are %sintel.make and %sgnu.make"%(GAMER_CONFIG_DIR, GAMER_CONFIG_DIR)
 # The convert name from the python argument to the makefile argument.
 NAME_TABLE        = {"model":"MODEL", "passive":"NCOMP_PASSIVE_USER", "flu_scheme":"FLU_SCHEME", 
@@ -79,8 +81,170 @@ class BCOLOR:
     UNDERLINE = '\033[4m'
 
 
+
 ####################################################################################################
-# Global variables
+# Functions 
+####################################################################################################
+class ArgumentParser( argparse.ArgumentParser ):
+    def __init__(self, *args, **kwargs):
+        self.program = { key: kwargs[key] for key in kwargs }
+        self.options = []
+        super(ArgumentParser, self).__init__(*args, **kwargs)
+
+    def add_argument(self, *args, **kwargs):
+        super(ArgumentParser, self).add_argument(*args, **kwargs)
+        option = {}
+        option["flags"] = [ item for item in args ]
+        for key in kwargs:
+            option[key] = kwargs[key]
+        self.options.append(option)
+
+    def usage_align( self, string, indent, width ):
+        N          = len(indent)
+        sub_indent = N * " "
+        if width < N:  exit("width is smaller than indent length.")
+        
+        now_n = 0
+        new_str = ""
+        new_line = False
+        for i in range(len(string)):
+            if new_line: 
+                new_str += "\n" + sub_indent
+                new_line = False
+                now_n = N
+
+            new_str += string[i]
+            now_n += 1
+            if now_n >= width:
+                if string[i] == "]": new_line = True
+        return new_str
+    
+    def option_align( self, string, indent, width ):
+        N          = len(indent)
+        sub_indent = N * " "
+        if width < N:  exit("width is smaller than indent length.")
+        
+        now_n = 0
+        new_str = ""
+        new_line = False
+        for i in range(len(string)):
+            if new_line:
+                new_str += "\n" + sub_indent
+                new_line = False
+                now_n = N
+                
+            if string[i] == "\n": 
+                new_line = True
+                continue
+            
+            new_str += string[i]
+            now_n += 1
+            
+            if now_n >= width:
+                if string[i] == " ": new_line = True
+        return new_str
+
+    def print_help(self):
+        usage_width  = 100
+
+        # Print usage
+        if "usage" in self.program:
+            print("Usage: %s" % self.program["usage"])
+        else:
+            usage = []
+            for option in self.options:
+                for item in option["flags"]:
+                    if "choices" in option:
+                        temp = [ str(opt) for opt in option["choices"] ]
+                        usage += [ "[%s {%s}]"%(item, ", ".join(temp)) ]
+                        continue
+                    
+                    if "metavar" in option:
+                        usage += [ "[%s %s]"%(item, option["metavar"]) ]
+                        continue
+                    
+                    if "dest" in option:
+                        usage += [ "[%s %s]"%(item, option["dest"].upper()) ]
+                        continue
+                    
+                    usage += ["[%s]"%(item)]
+            indent     = "Usage: %s " % os.path.basename(sys.argv[0])
+            output = indent + " " + str.join(" ", usage)
+            print( self.usage_align(output, indent, usage_width) )
+        print("")
+
+        # Print description
+        if "description" in self.program:
+            print(self.program["description"])
+            print("")
+        
+        # Print epilog
+        if "epilog" in self.program:
+            print(self.program["epilog"])
+            print("")
+
+    def print_help_detail(self):
+        usage_width  = 100
+        option_width = 100
+
+        # Print usage
+        if "usage" in self.program:
+            print("Usage: %s" % self.program["usage"])
+        else:
+            usage = []
+            for option in self.options:
+                usage += [ "[%s %s]" % (item, option["metavar"]) if "metavar" in option else "[%s %s]" % (item, option["dest"].upper()) if "dest" in option else "[%s]" % item for item in option["flags"] ]
+            indent     = "Usage: %s " % os.path.basename(sys.argv[0])
+            output = indent + " " + str.join(" ", usage)
+            print( self.usage_align(output, indent, usage_width) )
+        print("")
+
+        # Print description
+        if "description" in self.program:
+            print(self.program["description"])
+            print("")
+
+        # Print options
+        print("Options:")
+        option_indent = 0
+        for option in self.options:
+            option["flags2"] = str.join(", ", [ "%s %s" % (item, option["metavar"]) if "metavar" in option else "%s %s" % (item, option["dest"].upper()) if "dest" in option else item for item in option["flags"] ])
+            if len(option["flags2"]) > option_indent:
+                option_indent = len(option["flags2"])
+        
+        for option in self.options:
+            template = "  %-" + str(option_indent) + "s  "
+            indent = template %(option["flags2"])
+            output = indent
+
+            if "help" in option: output += option["help"]
+            
+            if "action" in option:
+                if option["action"] == "help":
+                    print( self.option_align(output, indent, option_width) )
+                    continue
+            
+            if "choices" in option:
+                temp = [ str(opt) for opt in option["choices"] ]
+                output += "Choice: [%s] => "%(", ".join(temp))
+
+            if "default" in option:
+                output += "Default: %s" % option["default"] if isinstance(option["default"], str) else "Default: %s" % str(option["default"])
+
+            if "action" in option:
+                output += "Default: False" if option["action"] == "store_true" else "Default: False"
+
+            print( self.option_align(output, indent, option_width) )
+        
+        # Print epilog
+        if "epilog" in self.program:
+            print(self.program["epilog"])
+            print("")
+
+
+
+####################################################################################################
+# Functions 
 ####################################################################################################
 def color_print( string, color ):
     print( color + string + BCOLOR.ENDC )
@@ -186,6 +350,7 @@ def load_sims( **kwargs ):
     if kwargs["GSL"]           : sim_opt[NAME_TABLE["GSL"]]           = kwargs["GSL"]
     if kwargs["FFTW"]          : sim_opt[NAME_TABLE["FFTW"]]          = kwargs["FFTW"]
     if kwargs["LIBYT"]         : sim_opt[NAME_TABLE["LIBYT"]]         = kwargs["LIBYT"]
+    if kwargs["LIBYT_patch"]   : sim_opt[NAME_TABLE["LIBYT_patch"]]   = kwargs["LIBYT_patch"]
 
     # C. parallel options
     if kwargs["openmp"]: sim_opt[NAME_TABLE["openmp"]] = kwargs["openmp"]
@@ -468,264 +633,271 @@ def warning( paths, **kwargs ):
 # Main execution
 ####################################################################################################
 # 1. Load the input arguments
-parser = argparse.ArgumentParser( description = GAMER_DESCRIPTION, 
-                                  formatter_class = argparse.RawTextHelpFormatter,
-                                  epilog = GAMER_EPILOG )
+#parser = argparse.ArgumentParser( description = GAMER_DESCRIPTION, 
+#                                  formatter_class = argparse.RawTextHelpFormatter,
+#                                  epilog = GAMER_EPILOG )
+parser = ArgumentParser( description = GAMER_DESCRIPTION, 
+                         formatter_class = argparse.RawTextHelpFormatter,
+                         epilog = GAMER_EPILOG )
+
+# long help message
+parser.add_argument( "-lh",
+                     action="store_true",
+                     help="Show this help message in detail.\n"
+                   )
 
 # cluster and flags setup
-parser.add_argument( "--cluster", type=str,
+parser.add_argument( "--cluster", type=str, metavar="NAME",
                      default="eureka",
-                     help="Select the cluster [eureka, YOUR_CLUSTER_NAME]. \nDefault: %(default)s"
+                     help="Select the cluster. \nChoice: [eureka, YOUR_CLUSTER_NAME] => "
                    )
 
 parser.add_argument( "--flags", type=str,
                      default="intel",
-                     help="Compiler flags [intel, gnu, YOUR_FLAG_NAME]. \nDefault: %(default)s"
+                     help="Compiler flags. \nChoice: [intel, gnu, YOUR_FLAG_NAME] => "
                    )
 
 # A. physical models and options of diffierent physical models 
-parser.add_argument( "--model", type=str,
-                     default="HYDRO",
-                     choices=["HYDRO", "ELBDM", "PAR_ONLY"],
-                     help="Select the physical model. \nDefault: %(default)s"
+parser.add_argument( "--model", type=str, metavar="MODEL",
+                     default="HYDRO", choices=["HYDRO", "ELBDM", "PAR_ONLY"],
+                     help="Select the physical model.\n"
                    )
 
-parser.add_argument( "--passive", type=int,
+parser.add_argument( "--passive", type=int, metavar="number",
                      default=0,
-                     help="Set the number of passive scalars. \nDefault: %(default)s"
+                     help="Set the number of passive scalars.\n"
                    )
 
 # A.1 Hydro options
-parser.add_argument( "--flu_scheme", type=str,
-                     default="CTU",
-                     choices=["RTVD", "MHM", "MHM_RP", "CTU"],
-                     help="Select the fluid solver for HYDRO model. \nDefault: %(default)s"
+parser.add_argument( "--flu_scheme", type=str, metavar="SCHEME",
+                     default="CTU", choices=["RTVD", "MHM", "MHM_RP", "CTU"],
+                     help="Select the fluid solver for HYDRO model.\n"
                    )
 
-parser.add_argument( "--slope", type=str,
-                     default="PPM",
-                     choices=["PLM", "PPM"],
-                     help="Select the spatial data reconstruction method. \nDefault: %(default)s"
+parser.add_argument( "--slope", type=str, metavar="TYPE",
+                     default="PPM", choices=["PLM", "PPM"],
+                     help="Select the spatial data reconstruction method.\n"
                    )
 
-parser.add_argument( "--flux", type=str,
-                     default="ROE",
-                     choices=["EXACT", "ROE", "HLLE", "HLLC", "HLLD"],
-                     help="Select the Riemann solver. \nDefault: %(default)s"
+parser.add_argument( "--flux", type=str, metavar="TYPE",
+                     default="ROE", choices=["EXACT", "ROE", "HLLE", "HLLC", "HLLD"],
+                     help="Select the Riemann solver.\n"
                    )
 
-parser.add_argument( "--dual", type=str,
-                     default="",
-                     choices=["", "ENPY", "EINT"],
-                     help="Select the dual-energy formalism. \nDefault: %(default)s"
+parser.add_argument( "--dual", type=str, metavar="TYPE",
+                     default="", choices=["", "ENPY", "EINT"],
+                     help="Select the dual-energy formalism.\n"
                    )
 
 parser.add_argument( "--mhd",
                      action="store_true",
-                     help="Enable magnetohydrodynamic. \nDefault: %(default)s"
+                     help="Enable magnetohydrodynamic.\n"
                    )
 
 parser.add_argument( "--cosmic_ray",
                      action="store_true",
-                     help="Enable cosmic rays. \nDefault: %(default)s"
+                     help="Enable cosmic rays.\n"
                    )
 
-parser.add_argument( "--eos", type=str,
-                     default="GAMMA",
-                     choices=["GAMMA", "ISOTHERMAL", "NUCLEAR", "TABULAR", "USER"],
-                     help="Select the equation of state. \nDefault: %(default)s"
+parser.add_argument( "--eos", type=str, metavar="TYPE",
+                     default="GAMMA", choices=["GAMMA", "ISOTHERMAL", "NUCLEAR", "TABULAR", "USER"],
+                     help="Select the equation of state.\n"
                    )
 
 parser.add_argument( "--barotropic",
                      action="store_true",
-                     help="Whether or not the --eos set is barotropic. \nDefault: %(default)s"
+                     help="Whether or not the --eos set is barotropic.\n"
                    )
 
 # A.2 ELBDM scheme
 parser.add_argument( "--conserve_mass",
                      action="store_true",
-                     help="Enforce the mass conservation. \nDefault: %(default)s"
+                     help="Enforce the mass conservation.\n"
                    )
 
 parser.add_argument( "--laplacian_four",
                      action="store_true",
-                     help="Enable the fourth order of Laplacian. \nDefault: %(default)s"
+                     help="Enable the fourth order of Laplacian.\n"
                    )
 
 parser.add_argument( "--self_interaction",
                      action="store_true",
-                     help="Including the quartic self-interaction potential. \nDefault: %(default)s"
+                     help="Including the quartic self-interaction potential.\n"
                    )
 
 # A.3 gravity
 parser.add_argument( "--gravity",
                      action="store_true",
-                     help="Enable gravity. \nDefault: %(default)s"
+                     help="Enable gravity.\n"
                    )
 
-parser.add_argument( "--pot_scheme", type=str,
-                     default="SOR",
-                     choices=["SOR", "MG"],
-                     help="Select the Poisson solver. \nDefault: %(default)s"
+parser.add_argument( "--pot_scheme", type=str, metavar="SCHEME",
+                     default="SOR", choices=["SOR", "MG"],
+                     help="Select the Poisson solver.\n"
                    )
 
 parser.add_argument( "--store_pot_ghost",
                      action="store_true",
-                     help="Store the potential ghost-zone for each patch on each side. \nDefault: %(default)s"
+                     help="Store the potential ghost-zone for each patch on each side.\n"
                    )
 
 parser.add_argument( "--unsplit_gravity",
                      action="store_true",
-                     help="Use unsplitting method to couple gravity to the target model. \nDefault: %(default)s"
+                     help="Use unsplitting method to couple gravity to the target model.\n"
                    )
 
 parser.add_argument( "--comoving",
                      action="store_true",
-                     help="Comoving frame for cosmological simulation. \nDefault: %(default)s"
+                     help="Comoving frame for cosmological simulation.\n"
                    )
 
 # A.4 particle
 parser.add_argument( "--particle",
                      action="store_true",
-                     help="Enable particle. \nDefault: %(default)s"
+                     help="Enable particle.\n"
                    )
 parser.add_argument( "--tracer",
                      action="store_true",
-                     help="Enable tracer particles. \nDefault: %(default)s"
+                     help="Enable tracer particles.\n"
                    )
 
 parser.add_argument( "--store_acc",
                      action="store_true",
-                     help="Store particle acceleration. \nDefault: %(default)s"
+                     help="Store particle acceleration.\n"
                    )
 
 parser.add_argument( "--star_formation",
                      action="store_true",
-                     help="Allow creating new particles after initialization. \nDefault: %(default)s"
+                     help="Allow creating new particles after initialization.\n"
                    )
 
-parser.add_argument( "--par_attribute", type=int,
+parser.add_argument( "--par_attribute", type=int, metavar="N_ATT",
                      default=0,
-                     help="Set the number of user defined particle attributes. \nDefault: %(default)s"
+                     help="Set the number of user defined particle attributes.\n"
                    )
 
 # A.5 grackle
 parser.add_argument( "--grackle",
                      action="store_true",
-                     help="Enable Grackle, a chemistry and radiative cooling library. \nDefault: %(default)s"
+                     help="Enable Grackle, a chemistry and radiative cooling library.\n"
                    )
 
 # B. miscellaneous options
 parser.add_argument( "--nlevel", type=int,
                      default=10,
-                     help="Set the maximum level of AMR. \nDefault: %(default)s"
+                     help="Set the maximum level of AMR.\n"
                    )
 
 parser.add_argument( "--max_patch", type=int,
                      default=100000,
-                     help="Set the maximum patchs on each level of AMR. \nDefault: %(default)s"
+                     help="Set the maximum patchs on each level of AMR.\n"
                    )
 
 parser.add_argument( "--patch_size", type=int,
                      default=8,
-                     help="Set size of each direction of a single patch. \nDefault: %(default)s"
+                     help="Set size of each direction of a single patch.\n"
                    )
 
 
 parser.add_argument( "--debug",
                      action="store_true",
-                     help="Enable debug mode. \nDefault: %(default)s"
+                     help="Enable debug mode.\n"
                    )
 
 parser.add_argument( "--bitwise_reproduce",
                      action="store_true",
-                     help="Enable bitwise reproduce. \nDefault: %(default)s"
+                     help="Enable bitwise reproduce.\n"
                    )
 
 parser.add_argument( "--timing",
                      action="store_true",
-                     help="Enable to measure timing. \nDefault: %(default)s"
+                     help="Enable to measure timing.\n"
                    )
 
 parser.add_argument( "--timing_solver",
                      action="store_true",
-                     help="Enable measure GPU time. \nDefault: %(default)s"
+                     help="Enable measure GPU time.\n"
                    )
 
 parser.add_argument( "--double",
                      action="store_true",
-                     help="Enable double precision. \nDefault: %(default)s"
+                     help="Enable double precision.\n"
                    )
 
 parser.add_argument( "--laohu",
                      action="store_true",
-                     help="Work on the NAOC Laohu GPU cluster. \nDefault: %(default)s"
+                     help="Work on the NAOC Laohu GPU cluster.\n"
                    )
 
 parser.add_argument( "--hdf5",
                      action="store_true",
-                     help="Support HDF5 format. \nDefault: %(default)s"
+                     help="Support HDF5 format.\n"
                    )
 
 parser.add_argument( "--GSL",
                      action="store_true",
-                     help="Support GNU scientific library. \nDefault: %(default)s"
+                     help="Support GNU scientific library.\n"
                    )
 
 parser.add_argument( "--FFTW",
                      action="store_true",
-                     help="Support FFTW library. \nDefault: %(default)s"
+                     help="Support FFTW library.\n"
                    )
 
 parser.add_argument( "--LIBYT",
                      action="store_true",
-                     help="Support yt inline analysis. \nDefault: %(default)s"
+                     help="Support yt inline analysis.\n"
                    )
 
 parser.add_argument( "--LIBYT_patch",
                      action="store_true",
-                     help="Use patch group as the unit in libyt. Note that this will speed up inline-analysis but increase memory consumption. \nDefault: %(default)s"
+                     help="Use patch group as the unit in libyt. Note that this will speed up inline-analysis but increase memory consumption.\n"
                    )
 
-parser.add_argument( "--RNG", type=str,
+parser.add_argument( "--RNG", type=str, metavar="TYPE",
                      default="RNG_GNU_EXT",
                      choices=["RNG_GNU_EXT", "RNG_CPP11"],
-                     help="Select the random number generator. \nDefault: %(default)s"
+                     help="Select the random number generator.\n"
                    )
 
 # C. parallelization and flags
-parser.add_argument( "--serial",
+parser.add_argument( "--serial", type=str, metavar="COMPILER",
                      default="icpc",
-                     help="Serial compiler type[icpc, g++, YOUR_GNU_PATH]. \nDefault: %(default)s"
+                     help="Serial compiler type.\n"
                    )
 parser.add_argument( "--openmp",
                      action="store_true",
-                     help="Enable openmp parallization. \nDefault: %(default)s"
+                     help="Enable openmp parallization.\n"
                    )
  
 parser.add_argument( "--mpi",
                      action="store_true",
-                     help="Enable mpi parallization. \nDefault: %(default)s"
+                     help="Enable mpi parallization.\n"
                    )
 
 parser.add_argument( "--overlap_mpi",
                      action="store_true",
-                     help="Overlap MPI communication with computation. \nDefault: %(default)s"
+                     help="Overlap MPI communication with computation.\n"
                    )
 
 parser.add_argument( "--GPU",
                      action="store_true",
-                     help="Enable GPU. \nDefault: %(default)s"
+                     help="Enable GPU.\n"
                    )
 
+#parser.add_argument( "--GPU_arch", type=str, metavar="TYPE",
 parser.add_argument( "--GPU_arch", type=str,
-                     default="TURING",
-                     choices=["FERMI", "KEPLER", "MAXWELL", "PASCAL", "VOLTA", "TURING", "AMPERE"],
-                     help="Select the archtecture of GPU. \nDefault: %(default)s"
+                     default="TURING", choices=["FERMI", "KEPLER", "MAXWELL", "PASCAL", "VOLTA", "TURING", "AMPERE"],
+                     help="Select the archtecture of GPU.\n"
                    )
 
 
 args = vars( parser.parse_args() )
+
+# 1.1 print out the detail help message
+if args["lh"]:
+    parser.print_help_detail()
+    exit()
 
 
 #------------------------------------------------------------
