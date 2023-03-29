@@ -1,11 +1,13 @@
 """
 A. User Guide:
   This script is for generating the GAMER Makefile. To use this script, you need to know the followings:
+  0. Help:
+    Use the `-h` or `--help` to get the short help message. Use `-lh` to get detail help message.
   1. Library paths:
     When using library, you need to assign the library path. The path config file can be found under `../configs/`. 
     To setup your own config file, please copy `example.config` and modify it.
   2. Compilation flags: 
-    We already have two flag config files under `../configs/, `intel.make` and `gnu.make`, which are for the 
+    We already have two flag config files under `../configs/`, `intel.make` and `gnu.make`, which are for the 
     intel and gnu compiler respetively. To setup your own config file, please copy `example.make` and modify it.
   3. Run the script: 
     This script can run under Python2 and Python3. To run the script, please run the following command:
@@ -14,12 +16,14 @@ A. User Guide:
 
 B. Developer guide:
   1. Add new simulation option:
-    a. Make sure you have coded the necessary files in `Makefile_base`.
-    b. Add the python argument reader for the new simulation option.
-    c. Add the name convertion dictionary [python_argument:gamer_argument] to the `NAME_TABLE`.
-    d. Add the new argument in `sim_opt` of `load_sim`.
-    e. [Optional] Add the error rules in `validation()`.
-    f. [Optional] Add the warning rules in `warning()`.
+    a. Make sure you have added the necessary source files in `Makefile_base`.
+    b. Add the python argument reader for the new simulation option in the `Main execution` part of the code.
+    c. Add the name convertion dictionary `[python_argument:gamer_argument]` to the `NAME_TABLE`.
+       (You can find it in the `Global variable` part of the code.)
+    d. Add the new argument to the `sim_opt` parameter of `load_sim()`. (You can find it in the `Functions` 
+       part of the code.)
+    e. [Optional] Add the error rules in `validation()`. (You can find it in the `Functions` part of the code.)
+    f. [Optional] Add the warning rules in `warning()`. (You can find it in the `Functions` part of the code.)
   2. Add a new path:
     a. Add a new line in the Makefile_base in the path section. 
       `NEW_PATH := @@@NEW_PATH@@@`
@@ -28,7 +32,7 @@ B. Developer guide:
   3. Add a new compiler flag type:
     a. Add a new line in the Makefile_base in the flag section. 
       `NEW_FLAG := @@@NEW_FLAG@@@`
-    b. Add a new flag key ["NEW_FLAG":""] in `flags` of `load_compile()`.
+    b. Add a new flag key `["NEW_FLAG":""]` in `flags` of `load_compile()`.
     c. Add a new line in the path config file. 
       `NEW_FLAG    -new_flag`
   4. Rules of Makefile_base:
@@ -182,6 +186,7 @@ class ArgumentParser( argparse.ArgumentParser ):
                         continue
                     
                     usage += ["[%s]"%(item)]
+                    #TODO: it should show something if it takes arguments
             indent     = "Usage: %s " % os.path.basename(sys.argv[0])
             output = indent + " " + str.join(" ", usage)
             print( self.usage_align(output, indent, usage_width) )
@@ -377,7 +382,7 @@ def load_sims( **kwargs ):
         sim_opt[NAME_TABLE["GPU"]] = kwargs["GPU"]
         sim_opt[NAME_TABLE["GPU_arch"]] = kwargs["GPU_arch"]
 
-    # D. Setup the sumulation option string.
+    # D. Setup the simulation option string.
     # NOTE: every -Doption must have trailing space
     opts = ""
     for key, val in sim_opt.items():
@@ -431,14 +436,14 @@ def validation( paths, **kwargs ):
     if   kwargs["model"] == "HYDRO":
         if kwargs["mhd"]: 
             if kwargs["flu_scheme"] not in ["MHM_RP", "CTU"]:
-                color_print("MHD only support MHM_RP and CTU.", BCOLOR.FAIL)
+                color_print("MHD only supports MHM_RP and CTU.", BCOLOR.FAIL)
                 success = False
             if kwargs["flux"] not in ["EXACT", "ROE", "HLLE", "HLLD"]:
-                color_print("MHD only support EXACT, ROE, HLLE, and HLLD Riemann solver.", BCOLOR.FAIL)
+                color_print("MHD only supports EXACT, ROE, HLLE, and HLLD Riemann solver.", BCOLOR.FAIL)
                 success = False
         else:
             if kwargs["flux"] not in ["EXACT", "ROE", "HLLE", "HLLC"]:
-                color_print("Pure hydro only support EXACT, ROE, HLLE, and HLLC Riemann solver.", BCOLOR.FAIL)
+                color_print("Pure hydro only supports EXACT, ROE, HLLE, and HLLC Riemann solver.", BCOLOR.FAIL)
                 success = False
 
         if kwargs["flu_scheme"] == "RTVD":
@@ -458,7 +463,7 @@ def validation( paths, **kwargs ):
         
         if kwargs["eos"] != "GAMMA":
             if kwargs["dual"] == "ENPY":
-                color_print("ENPY dual energy only support for --eos=GAMMA.", BCOLOR.FAIL)
+                color_print("ENPY dual energy is only supported for --eos=GAMMA.", BCOLOR.FAIL)
                 success = False
             if kwargs["flux"] != "ROE" or kwargs["flux"] != "EXACT":
                 color_print("Only ROE and EXACT Riemann solver are supported for --eos!=GAMMA.", BCOLOR.FAIL)
@@ -478,7 +483,7 @@ def validation( paths, **kwargs ):
             color_print("--cosmic_ray is not supported yet.", BCOLOR.FAIL)
             success = False
             if kwargs["dual"] == "ENPY":
-                color_print("ENPY dual energy only support for --cosmic_ray.", BCOLOR.FAIL)
+                color_print("ENPY dual energy is not supported for --cosmic_ray.", BCOLOR.FAIL)
                 success = False
         
         if kwargs["barotropic"]:
@@ -496,14 +501,14 @@ def validation( paths, **kwargs ):
                 color_print("--comoving is not supported with --self_interaction.", BCOLOR.FAIL)
                 success = False
         if kwargs["passive"] != 0:
-            color_print("Not supported yet and thus can only be used as auxiliary fields.", BCOLOR.FAIL)
+            color_print("Not supported yet and can only be used as auxiliary fields.", BCOLOR.FAIL)
             success = False
 
     elif kwargs["model"] == "PAR_ONLY":
         color_print("--model PAR_ONLY is not supported yet.", BCOLOR.FAIL)
         success = False
     else:
-        color_print("Unrecognize model: %s. Please add to the model choices.", BCOLOR.FAIL)
+        color_print("Unrecognized model: %s. Please add to the model choices."%kwargs["model"], BCOLOR.FAIL)
         success = False
 
     # A.2 Gravity
@@ -514,8 +519,6 @@ def validation( paths, **kwargs ):
         if kwargs["unsplit_gravity"] and kwargs["model"] != "HYDRO":
             color_print("--unsplit_gravity is only supported for --model=HYDRO.", BCOLOR.FAIL)
             success = False
-    
-    #TODO: unsplit gravity and gravity
      
     # A.3 Particle
     if kwargs["particle"]:
@@ -649,9 +652,15 @@ def warning( paths, **kwargs ):
 # 1. Load the input arguments
 parser = ArgumentParser( description = GAMER_DESCRIPTION, 
                          formatter_class = argparse.RawTextHelpFormatter,
-                         epilog = GAMER_EPILOG )
+                         epilog = GAMER_EPILOG,
+                         add_help=False)
 
-# long help message
+parser.add_argument( "-h", "--help",
+                     action="help", default=argparse.SUPPRESS,
+                     help="Show this help message and exit.\n"
+                   )
+
+# detail help message
 parser.add_argument( "-lh",
                      action="store_true",
                      help="Show this help message in detail and exit.\n"
@@ -782,7 +791,7 @@ parser.add_argument( "--star_formation",
                      help="Allow creating new particles after initialization.\n"
                    )
 
-parser.add_argument( "--par_attribute", type=int, metavar="N_ATT",
+parser.add_argument( "--par_attribute", type=int, metavar="NUMBER",
                      default=0,
                      help="Set the number of user defined particle attributes.\n"
                    )
@@ -794,21 +803,20 @@ parser.add_argument( "--grackle",
                    )
 
 # B. miscellaneous options
-parser.add_argument( "--nlevel", type=int,
+parser.add_argument( "--nlevel", type=int, metavar="NUMBER",
                      default=10,
                      help="Set the maximum level of AMR.\n"
                    )
 
-parser.add_argument( "--max_patch", type=int,
+parser.add_argument( "--max_patch", type=int, metavar="NUMBER",
                      default=100000,
                      help="Set the maximum patchs on each level of AMR.\n"
                    )
 
-parser.add_argument( "--patch_size", type=int,
+parser.add_argument( "--patch_size", type=int, metavar="NUMBER",
                      default=8,
                      help="Set size of each direction of a single patch.\n"
                    )
-
 
 parser.add_argument( "--debug",
                      action="store_true",
@@ -817,7 +825,7 @@ parser.add_argument( "--debug",
 
 parser.add_argument( "--bitwise_reproduce",
                      action="store_true",
-                     help="Enable bitwise reproduce.\n"
+                     help="Enable bitwise reproducibility.\n"
                    )
 
 parser.add_argument( "--timing",
@@ -827,7 +835,7 @@ parser.add_argument( "--timing",
 
 parser.add_argument( "--timing_solver",
                      action="store_true",
-                     help="Enable measure GPU time.\n"
+                     help="Enable to measure GPU time.\n"
                    )
 
 parser.add_argument( "--double",
@@ -878,12 +886,12 @@ parser.add_argument( "--serial", type=str, metavar="COMPILER",
                    )
 parser.add_argument( "--openmp",
                      action="store_true",
-                     help="Enable openmp parallization.\n"
+                     help="Enable OpenMP parallization.\n"
                    )
  
 parser.add_argument( "--mpi",
                      action="store_true",
-                     help="Enable mpi parallization.\n"
+                     help="Enable MPI parallization.\n"
                    )
 
 parser.add_argument( "--overlap_mpi",
