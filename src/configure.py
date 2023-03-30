@@ -15,6 +15,9 @@ A. User Guide:
     After the command finishes, the `Makefile` will be generated.
 
 B. Developer guide:
+  This code can be separated to the 5 parts which are `Packages`, `Global variables`, `Classes`, `Functions`, and
+  `Main execution`.
+
   1. Add new simulation option:
     a. Make sure you have added the necessary source files in `Makefile_base`.
     b. Add the python argument reader for the new simulation option in the `Main execution` part of the code.
@@ -76,7 +79,7 @@ NAME_TABLE        = {"model":"MODEL", "passive":"NCOMP_PASSIVE_USER", "flu_schem
                      "timing_solver":"TIMING_SOLVER", "double":"FLOAT8", "laohu":"LAOHU", 
                      "hdf5":"SUPPORT_HDF5", "GSL":"SUPPORT_GSL", "FFTW":"SUPPORT_FFTW", 
                      "LIBYT":"SUPPORT_LIBYT", "LIBYT_patch":"LIBYT_USE_PATCH_GROUP", "RNG":"RANDOM_NUMBER", 
-                     "serial":"SERIAL", "openmp":"OPENMP", "mpi":"LOAD_BALANCE=HILBERT", 
+                     "serial_compiler":"SERIAL", "openmp":"OPENMP", "mpi":"LOAD_BALANCE=HILBERT", 
                      "overlap_mpi":"OVERLAP_MPI", "GPU":"GPU", "GPU_arch":"GPU_ARCH"}
 class BCOLOR:
     HEADER = '\033[95m'
@@ -108,27 +111,10 @@ class ArgumentParser( argparse.ArgumentParser ):
             option[key] = kwargs[key]
         self.options.append(option)
 
-    def usage_align( self, string, indent, width ):
-        N          = len(indent)
-        sub_indent = N * " "
-        if width < N:  exit("width is smaller than indent length.")
-        
-        now_n = 0
-        new_str = ""
-        new_line = False
-        for i in range(len(string)):
-            if new_line: 
-                new_str += "\n" + sub_indent
-                new_line = False
-                now_n = N
-
-            new_str += string[i]
-            now_n += 1
-            if now_n >= width:
-                if string[i] == "]": new_line = True
-        return new_str
-    
-    def option_align( self, string, indent, width ):
+    def string_align( self, string, indent, width, end_char ):
+        """
+        end_char : The ending character of a word.
+        """
         N          = len(indent)
         sub_indent = N * " "
         if width < N:  exit("width is smaller than indent length.")
@@ -150,13 +136,12 @@ class ArgumentParser( argparse.ArgumentParser ):
             now_n += 1
             
             if now_n >= width:
-                if string[i] == " ": new_line = True
+                if string[i] == end_char: new_line = True
         return new_str
 
-    def print_help(self):
+    def print_usage(self):
         usage_width  = 100
 
-        # Print usage
         if "usage" in self.program:
             print("Usage: %s" % self.program["usage"])
         else:
@@ -185,12 +170,24 @@ class ArgumentParser( argparse.ArgumentParser ):
                             usage += [ "[%s %s]"%(item, option["dest"].upper()) ]
                         continue
                     
-                    usage += ["[%s]"%(item)]
-                    #TODO: it should show something if it takes arguments
+                    if "action" in option:
+                        if option["action"] in ["help", "store_const", "store_true", "store_false"]:
+                            usage += ["[%s]"%(item)]
+                            continue
+
+                    temp = re.sub(r"^(-{1,})", "", item).upper()
+                    if "default" in option:
+                        usage += [ "[%s %s *%s]"%(item, temp, str(option["default"])) ]
+                    else:
+                        usage += [ "[%s %s]"%(item, temp) ]
             indent     = "Usage: %s " % os.path.basename(sys.argv[0])
             output = indent + " " + str.join(" ", usage)
-            print( self.usage_align(output, indent, usage_width) )
+            print( self.string_align(output, indent, usage_width, "]") )
         print("")
+
+    def print_help(self):
+        # Print usage
+        self.print_usage()
 
         # Print description
         if "description" in self.program:
@@ -203,20 +200,8 @@ class ArgumentParser( argparse.ArgumentParser ):
             print("")
 
     def print_help_detail(self):
-        usage_width  = 100
-        option_width = 100
-
         # Print usage
-        if "usage" in self.program:
-            print("Usage: %s" % self.program["usage"])
-        else:
-            usage = []
-            for option in self.options:
-                usage += [ "[%s %s]" % (item, option["metavar"]) if "metavar" in option else "[%s %s]" % (item, option["dest"].upper()) if "dest" in option else "[%s]" % item for item in option["flags"] ]
-            indent     = "Usage: %s " % os.path.basename(sys.argv[0])
-            output = indent + " " + str.join(" ", usage)
-            print( self.usage_align(output, indent, usage_width) )
-        print("")
+        self.print_usage()
 
         # Print description
         if "description" in self.program:
@@ -225,6 +210,7 @@ class ArgumentParser( argparse.ArgumentParser ):
 
         # Print options
         print("Options:")
+        option_width = 100
         option_indent = 0
         for option in self.options:
             option["flags2"] = str.join(", ", [ "%s %s" % (item, option["metavar"]) if "metavar" in option else "%s %s" % (item, option["dest"].upper()) if "dest" in option else item for item in option["flags"] ])
@@ -240,7 +226,7 @@ class ArgumentParser( argparse.ArgumentParser ):
             
             if "action" in option:
                 if option["action"] == "help":
-                    print( self.option_align(output, indent, option_width) )
+                    print( self.string_align(output, indent, option_width, " ") )
                     continue
             
             if "choices" in option:
@@ -253,7 +239,7 @@ class ArgumentParser( argparse.ArgumentParser ):
             if "action" in option:
                 output += "Default: False" if option["action"] == "store_true" else "Default: False"
 
-            print( self.option_align(output, indent, option_width) )
+            print( self.string_align(output, indent, option_width, " ") )
         
         # Print epilog
         if "epilog" in self.program:
@@ -306,8 +292,8 @@ def load_flag( config ):
     return flags
 
 def load_sims( **kwargs ):
-
     sim_opt = {}
+
     # A. Physics
     # A.1 Module 
     if   kwargs["model"] == "HYDRO":
@@ -376,7 +362,7 @@ def load_sims( **kwargs ):
     if kwargs["mpi"]:
         sim_opt[NAME_TABLE["mpi"]] = kwargs["mpi"]
     else:
-        sim_opt["SERIAL"] = True
+        sim_opt["SERIAL"] = True  # hard coded the option of serial
 
     if kwargs["GPU"]:
         sim_opt[NAME_TABLE["GPU"]] = kwargs["GPU"]
@@ -404,13 +390,13 @@ def load_compile( paths, flags, kwargs ):
     com_opt = {}
 
     # 1. complier. If mpi, overwrite the compiler to mpi.
-    com_opt["CXX"] = paths["MPI_PATH"] + "/bin/mpicxx" if kwargs["mpi"] else kwargs["serial"]
+    com_opt["CXX"] = paths["MPI_PATH"] + "/bin/mpicxx" if kwargs["mpi"] else kwargs["serial_compiler"]
 
     # 2. compiler flags
-    if kwargs["serial"] == "icpc" and not kwargs["openmp"]:
+    if kwargs["serial_compiler"] == "icpc" and not kwargs["openmp"]:
         flags["CXXFLAG"] += "-Wno-unknown-pragmas -diag-disable 3180 "
 
-    elif kwargs["serial"] == "g++" and not kwargs["openmp"]:
+    elif kwargs["serial_compiler"] == "g++" and not kwargs["openmp"]:
         flags["CXXFLAG"] += "-Wno-unknown-pragmas "
     elif not kwargs["openmp"]:
         flags["CXXFLAG"] += "-Wno-unknown-pragmas "
@@ -569,10 +555,10 @@ def validation( paths, **kwargs ):
 
 def warning( paths, **kwargs ):
     # 1. serial config not match
-    if kwargs["serial"] == "icpc" and kwargs["flags"] == "gnu":
+    if kwargs["serial_compiler"] == "icpc" and kwargs["flags"] == "gnu":
         color_print("Warning: The compiler does not match to the default flag config.", BCOLOR.WARNING)
     
-    if kwargs["serial"] == "g++" and kwargs["flags"] == "intel":
+    if kwargs["serial_compiler"] == "g++" and kwargs["flags"] == "intel":
         color_print("Warning: The compiler does not match to the default flag config.", BCOLOR.WARNING)
 
 
@@ -803,17 +789,17 @@ parser.add_argument( "--grackle",
                    )
 
 # B. miscellaneous options
-parser.add_argument( "--nlevel", type=int, metavar="NUMBER",
+parser.add_argument( "--nlevel", type=int,
                      default=10,
                      help="Set the maximum level of AMR.\n"
                    )
 
-parser.add_argument( "--max_patch", type=int, metavar="NUMBER",
+parser.add_argument( "--max_patch", type=int,
                      default=100000,
                      help="Set the maximum patchs on each level of AMR.\n"
                    )
 
-parser.add_argument( "--patch_size", type=int, metavar="NUMBER",
+parser.add_argument( "--patch_size", type=int,
                      default=8,
                      help="Set size of each direction of a single patch.\n"
                    )
@@ -880,7 +866,7 @@ parser.add_argument( "--RNG", type=str, metavar="TYPE",
                    )
 
 # C. parallelization and flags
-parser.add_argument( "--serial", type=str, metavar="COMPILER",
+parser.add_argument( "--serial_compiler", type=str, metavar="COMPILER",
                      default="icpc",
                      help="Serial compiler type.\n"
                    )
