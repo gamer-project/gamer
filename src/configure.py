@@ -117,7 +117,7 @@ class ArgumentParser( argparse.ArgumentParser ):
         """
         N          = len(indent)
         sub_indent = N * " "
-        if width < N:  exit("width is smaller than indent length.")
+        if width < N:  raise ValueError("width is smaller than indent length.")
         
         now_n = 0
         new_str = ""
@@ -382,7 +382,7 @@ def load_sims( **kwargs ):
             opts += "-D%s=%d "%(key, val)
             print("%-20s : %d"%(key, val))
         else:
-            exit("Unknown type to add the simulation options.")
+            raise TypeError("Unknown type to add the simulation options.")
 
     return {"SIMU_OPTION":opts}
 
@@ -415,11 +415,17 @@ def validation( paths, **kwargs ):
     validation then store the parameter
     """
     success = True
+    
+    # 0. Makefile 
+    if not os.path.isfile( GAMER_MAKE_BASE ):
+        color_print("ERROR: %s does not exist."%(GAMER_MAKE_BASE), BCOLOR.FAIL)
+        success = False
+    
     sim_opt = {}
     
     # A. Physics
     # A.1 Module 
-    if   kwargs["model"] == "HYDRO":
+    if kwargs["model"] == "HYDRO":
         if kwargs["mhd"]: 
             if kwargs["flu_scheme"] not in ["MHM_RP", "CTU"]:
                 color_print("MHD only supports MHM_RP and CTU.", BCOLOR.FAIL)
@@ -474,9 +480,8 @@ def validation( paths, **kwargs ):
         
         if kwargs["barotropic"]:
             if kwargs["eos"] not in ["ISOTHERMAL", "TABULAR", "USER"]:
-                color_print("--barotropic is supported for ISOTHERMAL, TABULAR, and USER.", BCOLOR.FAIL)
+                color_print("--barotropic is only supported for ISOTHERMAL, TABULAR, and USER.", BCOLOR.FAIL)
                 success = False
-
 
     elif kwargs["model"] == "ELBDM":
         if kwargs["self_interaction"]: 
@@ -549,11 +554,15 @@ def validation( paths, **kwargs ):
             color_print("--overlap_mpi must enable --mpi.", BCOLOR.FAIL)
             success = False
     
-    if not success: exit(BCOLOR.FAIL+"The above validations are fail."+BCOLOR.ENDC)
+    if not success: raise BaseException(BCOLOR.FAIL+"The above validations are fail."+BCOLOR.ENDC)
     return
 
 
 def warning( paths, **kwargs ):
+    # 0. Makefile 
+    if os.path.isfile( GAMER_MAKE_OUT ):
+        color_print("Warning: %s already exist and will be overwriten."%(GAMER_MAKE_OUT), BCOLOR.WARNING)
+
     # 1. serial config not match
     if kwargs["serial_compiler"] == "icpc" and kwargs["flags"] == "gnu":
         color_print("Warning: The compiler does not match to the default flag config.", BCOLOR.WARNING)
