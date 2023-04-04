@@ -63,6 +63,7 @@ extern void (*FB_End_User_Ptr)();
 //                    (i.e., PATCH_SIZE/2=4 cells for PATCH_SIZE=8)
 //                    --> Increase PATCH_SIZE if necessary
 //                11. Linked to FB_User_Ptr in FB_Init_Plummer()
+//                12. Must have FB_GHOST_SIZE>=1 for the mass accretion feedback
 //
 // Parameter   :  lv         : Target refinement level
 //                TimeNew    : Target physical time to reach
