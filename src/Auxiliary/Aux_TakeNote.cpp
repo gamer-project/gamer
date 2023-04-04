@@ -900,6 +900,9 @@ void Aux_TakeNote()
       fprintf( Note, "Pot_ParaBuf                     %d\n",      Pot_ParaBuf               );
       fprintf( Note, "Rho_ParaBuf                     %d\n",      Rho_ParaBuf               );
 #     endif
+#     ifdef FEEDBACK
+      fprintf( Note, "FB_ParaBuf                      %d\n",      FB_ParaBuf                );
+#     endif
 #     ifdef LOAD_BALANCE
       fprintf( Note, "LB_WLI_MAX                      %13.7e\n",  amr->LB->WLI_Max          );
 #     ifdef PARTICLE

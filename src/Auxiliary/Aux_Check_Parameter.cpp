@@ -1503,6 +1503,9 @@ void Aux_Check_Parameter()
                     "FB_AdvanceDt()", d );
    }
 
+   if ( FB_ParaBuf > PATCH_SIZE )
+      Aux_Error( ERROR_INFO, "FB_ParaBuf (%d) > PATCH_SIZE (%d) !!\n", FB_ParaBuf, PATCH_SIZE );
+
 // warning
 // ------------------------------
    if ( MPI_Rank == 0 ) {

@@ -575,12 +575,18 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       const int SaveSg_FBFlu = SaveSg_Flu;   // save in the same Flu/MagSg
       const int SaveSg_FBMag = SaveSg_Mag;
 
-      if ( true )
+      if ( FB_Any )
       {
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
             Aux_Message( stdout, "   Lv %2d: FB_AdvanceDt, counter = %9ld ... ", lv, AdvanceCounter[lv] );
 
-//###REVISE: we have assumed that FB_AdvanceDt() requires no ghost zones
+//       exchange the updated fluid field in the buffer patches for the feedback routines
+//       --> does NOT support MHD for now
+//       --> reuse the timer Timer_GetBuf[lv][2] for now
+         TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, SaveSg_Mag, NULL_INT, DATA_GENERAL,
+                                           _TOTAL, _NONE, FB_ParaBuf, USELB_YES ),
+                        Timer_GetBuf[lv][2],   TIMER_ON   );
+
          TIMING_FUNC(   FB_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_FBFlu, SaveSg_FBMag ),
                         Timer_FB_Advance[lv],   TIMER_ON   );
 
