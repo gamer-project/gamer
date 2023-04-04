@@ -756,6 +756,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
                    const int SaveSg_Flu, const int SaveSg_Mag );
 void FB_Init();
 void FB_End();
+int FB_Aux_CellPatchRelPos( const int ijk[] );
 #endif
 
 

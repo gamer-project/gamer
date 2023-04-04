@@ -49,7 +49,10 @@ extern void (*FB_End_User_Ptr)();
 //                   --> Actually, even if we separate Fluid[] to input and output arrays, the final output results
 //                       may still depend on the order of particles for non-local feedback since different particles
 //                       may update the same cell
-//                10. Linked to FB_User_Ptr in FB_Init_User_Template()
+//                10. In general, it is recommended to have the maximum feedback radius no larger than half of the patch size
+//                    (i.e., PATCH_SIZE/2=4 cells for PATCH_SIZE=8)
+//                    --> Increase PATCH_SIZE if necessary
+//                11. Linked to FB_User_Ptr in FB_Init_User_Template()
 //
 // Parameter   :  lv         : Target refinement level
 //                TimeNew    : Target physical time to reach

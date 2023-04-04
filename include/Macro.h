@@ -660,7 +660,7 @@
 // --> can be changed manually
 // --> set to 0 if applicable to improve performance
 #ifdef FEEDBACK
-#        define FB_GHOST_SIZE       2
+#        define FB_GHOST_SIZE       3
 #endif
 
 

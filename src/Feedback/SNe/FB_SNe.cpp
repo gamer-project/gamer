@@ -40,6 +40,9 @@
 //                   --> Actually, even if we separate Fluid[] to input and output arrays, the final output results
 //                       may still depend on the order of particles for non-local feedback since different particles
 //                       may update the same cell
+//                10. In general, it is recommended to have the maximum feedback radius no larger than half of the patch size
+//                    (i.e., PATCH_SIZE/2=4 cells for PATCH_SIZE=8)
+//                    --> Increase PATCH_SIZE if necessary
 //
 // Parameter   :  lv         : Target refinement level
 //                TimeNew    : Target physical time to reach

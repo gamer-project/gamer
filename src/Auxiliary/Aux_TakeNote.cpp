@@ -871,7 +871,7 @@ void Aux_TakeNote()
                                                                   (OPT__FLAG_LOHNER_FORM==LOHNER_FLASH2   ) ? "LOHNER_FLASH2"    :
                                                                   (OPT__FLAG_LOHNER_FORM==LOHNER_FORM_INV1) ? "LOHNER_FORM_INV1" :
                                                                   (OPT__FLAG_LOHNER_FORM==LOHNER_FORM_INV2) ? "LOHNER_FORM_INV2" :
-                                                                                                               "UNKNOWN" );
+                                                                                                              "UNKNOWN" );
       fprintf( Note, "OPT__FLAG_USER                  %d\n",      OPT__FLAG_USER            );
       fprintf( Note, "OPT__FLAG_USER_NUM              %d\n",      OPT__FLAG_USER_NUM        );
       fprintf( Note, "OPT__FLAG_REGION                %d\n",      OPT__FLAG_REGION          );
