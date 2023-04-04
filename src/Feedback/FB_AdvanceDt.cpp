@@ -168,60 +168,60 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 //    5. collect patch information
       const int NNearbyPatchMax = 64;  // maximum number of neaby patches of a patch group (including 8 local patches)
-      int Nearby_PID_List[NNearbyPatchMax], NNearbyPatch, SibPID0_List[26];
+      int NearbyPIDList[NNearbyPatchMax], NNearbyPatch, SibPID0List[26];
 
 //    5-1. get nearby patches
       NNearbyPatch = 0;
 
 //    local patches
-      for (int PID=PID0; PID<PID0+8; PID++)  Nearby_PID_List[ NNearbyPatch ++ ] = PID;
+      for (int PID=PID0; PID<PID0+8; PID++)  NearbyPIDList[ NNearbyPatch ++ ] = PID;
 
 //    sibling patches
-      TABLE_GetSibPID_Based( lv, PID0, SibPID0_List );
+      TABLE_GetSibPID_Based( lv, PID0, SibPID0List );
 
 //###OPTIMIZATION: skip sibling patches if the maximum feedback radius is zero
       for (int s=0; s<26; s++)
       {
-         const int SibPID0 = SibPID0_List[s];   // first target patch in the sibling patch group
+         const int SibPID0 = SibPID0List[s];    // first target patch in the sibling patch group
 
 //       only consider leaf patches on FB_LEVEL (including both real and buffer patches)
          if ( SibPID0 >= 0 )
          for (int c=0; c<NSibPID_Delta[s]; c++)
          {
             const int SibPID = SibPID0 + SibPID_Delta[s][c];
-            Nearby_PID_List[ NNearbyPatch ++ ] = SibPID;
+            NearbyPIDList[ NNearbyPatch ++ ] = SibPID;
          }
       }
 
 
 //    5.2. sort PID by position
 //         --> necessary for fixing the order of particles in different patches
-      int *NearByPIDList_IdxTable = new int [NNearbyPatch];
-      int *NearByPIDList_Old      = new int [NNearbyPatch];
+      int *NearbyPIDList_IdxTable = new int [NNearbyPatch];
+      int *NearbyPIDList_Old      = new int [NNearbyPatch];
       real **PCr = NULL;
       Aux_AllocateArray2D( PCr, 3, NNearbyPatch );
 
       for (int t=0; t<NNearbyPatch; t++)
       {
-         const int PID = Nearby_PID_List[t];
+         const int PID = NearbyPIDList[t];
          for (int d=0; d<3; d++)    PCr[d][t] = amr->patch[0][lv][PID]->corner[d];
       }
 
-      Par_SortByPos( NNearbyPatch, PCr[0], PCr[1], PCr[2], NearByPIDList_IdxTable );
+      Par_SortByPos( NNearbyPatch, PCr[0], PCr[1], PCr[2], NearbyPIDList_IdxTable );
 
-      memcpy( NearByPIDList_Old, Nearby_PID_List, NNearbyPatch*sizeof(int) );
+      memcpy( NearbyPIDList_Old, NearbyPIDList, NNearbyPatch*sizeof(int) );
 
-      for (int t=0; t<NNearbyPatch; t++)  Nearby_PID_List[t] = NearByPIDList_Old[ NearByPIDList_IdxTable[t] ];
+      for (int t=0; t<NNearbyPatch; t++)  NearbyPIDList[t] = NearbyPIDList_Old[ NearbyPIDList_IdxTable[t] ];
 
-      delete [] NearByPIDList_IdxTable;
-      delete [] NearByPIDList_Old;
+      delete [] NearbyPIDList_IdxTable;
+      delete [] NearbyPIDList_Old;
       Aux_DeallocateArray2D( PCr );
 
 
 //    5-3. record the coarse-fine boundaries
 //         --> regard non-periodic boundaries as coarse-fine boundaries too
       bool CoarseFine[26];
-      for (int s=0; s<26; s++)   CoarseFine[s] = ( SibPID0_List[s] < 0 ) ? true : false;
+      for (int s=0; s<26; s++)   CoarseFine[s] = ( SibPID0List[s] < 0 ) ? true : false;
 
 
 
@@ -238,7 +238,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
       for (int t=0; t<NNearbyPatch; t++)
       {
-         const int PID = Nearby_PID_List[t];
+         const int PID = NearbyPIDList[t];
 
 //       check both NPar and NPar_Copy (NPar_Copy may be -1, which is fine)
          NParMax = MAX( NParMax, amr->patch[0][lv][PID]->NPar      );
@@ -257,7 +257,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //    iterate over all nearby patches of the target patch group to apply feedback
       for (int t=0; t<NNearbyPatch; t++)
       {
-         const int PID = Nearby_PID_List[t];
+         const int PID = NearbyPIDList[t];
 
 
 //       7. prepare the input particle data
