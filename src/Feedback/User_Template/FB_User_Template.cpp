@@ -5,10 +5,10 @@
 
 
 // function pointers to be set by FB_Init_User_Template()
-extern void (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                            const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                            real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
-                            const int TID, RandomNumber_t *RNG );
+extern int (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                           const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
+                           real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
+                           const int TID, RandomNumber_t *RNG );
 extern void (*FB_End_User_Ptr)();
 
 
@@ -75,10 +75,10 @@ extern void (*FB_End_User_Ptr)();
 //
 // Return      :  Fluid, ParAtt
 //-------------------------------------------------------------------------------------------------------
-void FB_User_Template( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                       const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                       real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
-                       const int TID, RandomNumber_t *RNG )
+int FB_User_Template( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                      const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
+                      real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
+                      const int TID, RandomNumber_t *RNG )
 {
 
 // check
@@ -106,6 +106,9 @@ void FB_User_Template( const int lv, const double TimeNew, const double TimeOld,
 
    } // for (int t=0; t<NPar; t++)
    */
+
+
+   return GAMER_SUCCESS;
 
 } // FUNCTION : FB_User_Template
 

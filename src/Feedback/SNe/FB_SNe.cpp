@@ -65,10 +65,10 @@
 //
 // Return      :  Fluid, ParAtt
 //-------------------------------------------------------------------------------------------------------
-void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
-             const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-             real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
-             const int TID, RandomNumber_t *RNG )
+int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
+            const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
+            real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
+            const int TID, RandomNumber_t *RNG )
 {
 
 // check
@@ -80,6 +80,9 @@ void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const dou
       if ( ParAtt == NULL )      Aux_Error( ERROR_INFO, "ParAtt == NULL for NPar = %d !!\n", NPar );
    }
 #  endif // #ifdef GAMER_DEBUG
+
+
+   return GAMER_SUCCESS;
 
 } // FUNCTION : FB_SNe
 

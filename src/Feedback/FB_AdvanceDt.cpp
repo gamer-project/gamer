@@ -5,17 +5,17 @@
 
 
 // prototypes of built-in feedbacks
-void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
-             const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-             real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
-             const int TID, RandomNumber_t *RNG );
+int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
+            const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
+            real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
+            const int TID, RandomNumber_t *RNG );
 
 
 // user-specified feedback to be set by a test problem initializer
-void (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                     const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                     real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
-                     const int TID, RandomNumber_t *RNG ) = NULL;
+int (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                    const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
+                    real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
+                    const int TID, RandomNumber_t *RNG ) = NULL;
 
 
 // random number generators
@@ -376,12 +376,13 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
          const double EdgeL[3] = { amr->patch[0][lv][PID0]->EdgeL[0] - FB_GHOST_SIZE*amr->dh[lv],
                                    amr->patch[0][lv][PID0]->EdgeL[1] - FB_GHOST_SIZE*amr->dh[lv],
                                    amr->patch[0][lv][PID0]->EdgeL[2] - FB_GHOST_SIZE*amr->dh[lv] };
+         int Status;
 
-         if ( FB_SNE  )    FB_SNe     ( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
-                                        EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
+         if ( FB_SNE  )    Status = FB_SNe     ( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
+                                                 EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
 
-         if ( FB_USER )    FB_User_Ptr( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
-                                        EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
+         if ( FB_USER )    Status = FB_User_Ptr( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
+                                                 EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
 
 
 
