@@ -194,7 +194,31 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       }
 
 
-//    5-2. record the coarse-fine boundaries
+//    5.2. sort PID by position
+//         --> necessary for fixing the order of particles in different patches
+      int *NearByPIDList_IdxTable = new int [NNearbyPatch];
+      int *NearByPIDList_Old      = new int [NNearbyPatch];
+      real **PCr = NULL;
+      Aux_AllocateArray2D( PCr, 3, NNearbyPatch );
+
+      for (int t=0; t<NNearbyPatch; t++)
+      {
+         const int PID = Nearby_PID_List[t];
+         for (int d=0; d<3; d++)    PCr[d][t] = amr->patch[0][lv][PID]->corner[d];
+      }
+
+      Par_SortByPos( NNearbyPatch, PCr[0], PCr[1], PCr[2], NearByPIDList_IdxTable );
+
+      memcpy( NearByPIDList_Old, Nearby_PID_List, NNearbyPatch*sizeof(int) );
+
+      for (int t=0; t<NNearbyPatch; t++)  Nearby_PID_List[t] = NearByPIDList_Old[ NearByPIDList_IdxTable[t] ];
+
+      delete [] NearByPIDList_IdxTable;
+      delete [] NearByPIDList_Old;
+      Aux_DeallocateArray2D( PCr );
+
+
+//    5-3. record the coarse-fine boundaries
 //         --> regard non-periodic boundaries as coarse-fine boundaries too
       bool CoarseFine[26];
       for (int s=0; s<26; s++)   CoarseFine[s] = ( SibPID0_List[s] < 0 ) ? true : false;
@@ -366,7 +390,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //              --> particles in the sibling patches will be updated and stored when applying feedback to these patches
 //              --> avoid duplicate updates
 //          --> different OpenMP threads work on different patch groups and thus won't update the same particles
-         if ( t < 8  &&  amr->patch[0][lv][PID]->son == -1 ) {
+         if ( PID >= PID0  &&  PID < PID0+8  &&  amr->patch[0][lv][PID]->son == -1 ) {
             for (int v=0; v<PAR_NATT_TOTAL; v++)
                if ( ParAttBitIdx_Out & BIDX(v) )
                   for (int p=0; p<NPar; p++)

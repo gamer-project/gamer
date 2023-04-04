@@ -107,6 +107,9 @@ void FB_Plummer( const int lv, const double TimeNew, const double TimeOld, const
    const double _dv  = 1.0 / dv;
    const int    MaxR = 1;
 
+   if ( Plummer_FB_Acc  &&  FB_GHOST_SIZE < MaxR )
+      Aux_Error( ERROR_INFO, "FB_GHOST_SIZE (%d) < MaxR (%d) for Plummer_FB_Acc !!\n", FB_GHOST_SIZE, MaxR );
+
    bool CheckCF = false;
 #  if ( FB_GHOST_SIZE > 0 )
    for (int s=0; s<26; s++) {
