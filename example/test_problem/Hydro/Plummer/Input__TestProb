@@ -21,7 +21,7 @@ Plummer_AddColor        0                    # assign different colors to differ
 Plummer_FB_Exp          0                    # enable explosion feedback [0]
 Plummer_FB_ExpEMin      1.0e-1               # minimum/maximum energy gain factors for Plummer_FB_Exp
 Plummer_FB_ExpEMax      5.0e-1               # (0-->no energy gain) [1.0/10.0]
-Plummer_FB_ExpMMin      0.0                  # minimum/maximum mass loss factor    for Plummer_FB_Exp
+Plummer_FB_ExpMMin      0.0                  # minimum/maximum mass loss factors   for Plummer_FB_Exp
 Plummer_FB_ExpMMax      1.0e-5               # (0-->no mass loss; 1-->loss all mass) [0.0/1.0e-5]
 Plummer_FB_Acc          0                    # enable mass accretion feedback [0]
 Plummer_FB_AccMMin      0.0                  # minimum/maximum mass accretion factors for Plummer_FB_Acc
