@@ -11,10 +11,10 @@ void FB_Init_SNe();
 // user-specified feedback to be set by a test problem initializer
 void (*FB_Init_User_Ptr)() = NULL;
 
-extern void (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                            const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                            real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
-                            const int TID, RandomNumber_t *RNG );
+extern int (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                           const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
+                           real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
+                           const int TID, RandomNumber_t *RNG );
 
 
 // random number generators
