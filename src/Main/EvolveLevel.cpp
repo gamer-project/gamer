@@ -582,10 +582,10 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
 //       exchange the updated fluid field in the buffer patches for the feedback routines
 //       --> does NOT support MHD for now
-//       --> reuse the timer Timer_GetBuf[lv][2] for now
+//       --> reuse the timer Timer_FB_Advance[lv] for now
          TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, SaveSg_Mag, NULL_INT, DATA_GENERAL,
                                            _TOTAL, _NONE, FB_ParaBuf, USELB_YES ),
-                        Timer_GetBuf[lv][2],   TIMER_ON   );
+                        Timer_FB_Advance[lv],   TIMER_ON   );
 
          TIMING_FUNC(   FB_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_FBFlu, SaveSg_FBMag ),
                         Timer_FB_Advance[lv],   TIMER_ON   );
