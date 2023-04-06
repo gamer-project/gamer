@@ -233,8 +233,8 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
 
 
 // 3-1. set the names of all grid variables
-   for (int v=0; v<NField; v++)  sprintf( FieldLabel[v], FieldLabel_In[v] );
-   for (int v=0; v<NMag;   v++)  sprintf(   MagLabel[v],   MagLabel_In[v] );
+   for (int v=0; v<NField; v++)  sprintf( FieldLabel[v], "%s", FieldLabel_In[v] );
+   for (int v=0; v<NMag;   v++)  sprintf(   MagLabel[v], "%s",   MagLabel_In[v] );
 
 
 // 3-2. initialize relevant HDF5 objects
@@ -337,15 +337,14 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
 
 
 // 4. load particles
+// 4-1. set the names of all particle attributes
+   ParAttLabel = new char [NParAtt][MAX_STRING];
+   for (int v=0; v<NParAtt; v++)    sprintf( ParAttLabel[v], "%s", ParAttLabel_In[v] );
+
    if ( NPar > 0 )
    {
-//    4-1. allocate the particle data array
+//    4-2. allocate the particle data array
       Aux_AllocateArray2D( ParData, NParAtt, NPar );
-
-
-//    4-2. set the names of all particle attributes
-      ParAttLabel = new char [NParAtt][MAX_STRING];
-      for (int v=0; v<NParAtt; v++)    sprintf( ParAttLabel[v], ParAttLabel_In[v] );
 
 
 //    4-3. initialize HDF5 objects
