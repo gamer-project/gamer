@@ -49,6 +49,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
    if ( lv > MAX_LEVEL )  return;
 
 
+
 // 0. determine the target particle attributes
 // --> assuming _VAR_NAME = 1L<<VAR_NAME (e.g., _PAR_MASS == 1L<<PAR_MASS == BIDX(PAR_MASS))
 // --> PosSendIdx[] is used by Par_PredictPos()
@@ -191,7 +192,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
    } // for (int t=0; t<Real_NPatchTotal; t++)
 
 // get the array offset of each patch (mainly for the OpenMP parallelization)
-   SendBuf_Offset[0] = 0L;
+   if ( Real_NPatchTotal > 0 )   SendBuf_Offset[0] = 0L;
    for (int t=0; t<Real_NPatchTotal-1; t++)  SendBuf_Offset[t+1] = SendBuf_Offset[t] + long(SendBuf_NParEachPatch[t]*NAtt);
 
 
@@ -306,7 +307,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
 
 // 4-0. get the array offset of each patch (mainly for the OpenMP parallelization)
    long *RecvBuf_Offset = new long [Buff_NPatchTotal];
-   RecvBuf_Offset[0] = 0L;
+   if ( Buff_NPatchTotal > 0 )   RecvBuf_Offset[0] = 0L;
    for (int t=0; t<Buff_NPatchTotal-1; t++)  RecvBuf_Offset[t+1] = RecvBuf_Offset[t] + long(RecvBuf_NParEachPatch[t]*NAtt);
 
 #  pragma omp parallel for private( PID, NParThisPatch, RecvPtr ) schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )

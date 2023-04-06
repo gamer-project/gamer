@@ -5,7 +5,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_MemAllocate
-// Description :  Allocate memory for several global arrays
+// Description :  Allocate CPU memory for several global arrays
 //-------------------------------------------------------------------------------------------------------
 void Init_MemAllocate()
 {
@@ -21,28 +21,17 @@ void Init_MemAllocate()
    BaseP = new int [ NPatch1D[0]*NPatch1D[1]*NPatch1D[2] ];
 
 
-// b. allocate memory for all GPU (or CPU) solvers (including the global memory in GPU)
-#  ifdef GPU
-#     ifdef GRAVITY
-      CUAPI_MemAllocate_Fluid( FLU_GPU_NPGROUP, POT_GPU_NPGROUP, SRC_GPU_NPGROUP, GPU_NSTREAM );
-#     else
-      CUAPI_MemAllocate_Fluid( FLU_GPU_NPGROUP, NULL_INT,        SRC_GPU_NPGROUP, GPU_NSTREAM );
-#     endif
-#  else
-#     ifdef GRAVITY
-      Init_MemAllocate_Fluid ( FLU_GPU_NPGROUP, POT_GPU_NPGROUP, SRC_GPU_NPGROUP );
-#     else
-      Init_MemAllocate_Fluid ( FLU_GPU_NPGROUP, NULL_INT,        SRC_GPU_NPGROUP );
-#     endif
-#  endif // #ifdef GPU ... else ...
-
-#  ifdef GRAVITY
-#     ifdef GPU
-      CUAPI_MemAllocate_PoissonGravity( POT_GPU_NPGROUP );
-#     else
-      Init_MemAllocate_PoissonGravity ( POT_GPU_NPGROUP );
-#     endif
+// b. allocate memory for all CPU solvers
+//    --> memory of GPU solvers is allocated by CUAPI_MemAllocate()
+#  ifndef GPU
+#  ifndef GRAVITY
+   const int POT_GPU_NPGROUP = NULL_INT;
 #  endif
+   Init_MemAllocate_Fluid( FLU_GPU_NPGROUP, POT_GPU_NPGROUP, SRC_GPU_NPGROUP );
+#  ifdef GRAVITY
+   Init_MemAllocate_PoissonGravity( POT_GPU_NPGROUP );
+#  endif
+#  endif // #ifndef GPU
 
 #  ifdef SUPPORT_GRACKLE
    if ( GRACKLE_ACTIVATE )

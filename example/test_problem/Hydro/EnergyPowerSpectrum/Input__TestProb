@@ -1,0 +1,2 @@
+# problem-specific runtime parameters
+Energy_GauWidth      0.01           # width of gaussian distribution [0.01]
