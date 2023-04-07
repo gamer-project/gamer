@@ -111,6 +111,13 @@ class ArgumentParser( argparse.ArgumentParser ):
             option[key] = kwargs[key]
         self.options.append(option)
 
+    def parse_args(self, args=None, namespace=None):
+        args, argv = self.parse_known_args(args, namespace)
+        if argv:
+            msg = 'unrecognized arguments: %s'
+            self.error(msg % ' '.join(argv))
+        return args
+
     def string_align( self, string, indent, width, end_char ):
         """
         end_char : The ending character of a word.
@@ -263,7 +270,7 @@ def load_config( config ):
     
     for line in lines:
         if line[0] == "#": continue
-        temp = line.split()
+        temp = list( filter( None, re.split(" |:=|\n", line) ) )
         if len(temp) == 0: continue
         try:
            paths[temp[0]] = temp[1]
@@ -664,12 +671,12 @@ parser.add_argument( "-lh",
 # cluster and flags setup
 parser.add_argument( "--cluster", type=str, metavar="NAME",
                      default="eureka",
-                     help="Select the cluster. \nChoice: [eureka, YOUR_CLUSTER_NAME] => "
+                     help="Select the *.config file under ../configs directory. \nChoice: [eureka, YOUR_CLUSTER_NAME] => "
                    )
 
 parser.add_argument( "--flags", type=str, metavar="NAME",
                      default="intel",
-                     help="Compiler flags. \nChoice: [intel, gnu, YOUR_FLAG_NAME] => "
+                     help="Select the *.make file under ../configs directory. \nChoice: [intel, gnu, YOUR_FLAG_NAME] => "
                    )
 
 # A. physical models and options of diffierent physical models 
