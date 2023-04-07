@@ -139,7 +139,7 @@ class ArgumentParser( argparse.ArgumentParser ):
                 if string[i] == end_char: new_line = True
         return new_str
 
-    def print_usage(self):
+    def print_usage(self, *args, **kwargs):
         usage_width  = 100
 
         if "usage" in self.program:
@@ -185,7 +185,7 @@ class ArgumentParser( argparse.ArgumentParser ):
             print( self.string_align(output, indent, usage_width, "]") )
         print("")
 
-    def print_help(self):
+    def print_help(self, *args, **kwargs):
         # Print usage
         self.print_usage()
 
