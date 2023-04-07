@@ -59,11 +59,11 @@ import re
 ####################################################################################################
 # Global variables
 ####################################################################################################
-GAMER_CONFIG_DIR  = "../configs/"
+GAMER_CONFIG_DIR  = "../configs"
 GAMER_MAKE_BASE   = "Makefile_base"
 GAMER_MAKE_OUT    = "Makefile"
 GAMER_DESCRIPTION = "Prepare customize Makefile for GAMER.\nThe default value starts with '*' sign.\nTo show the detail help message, please use -lh argument."
-GAMER_EPILOG      = "The default complie flags are %sintel.make and %sgnu.make"%(GAMER_CONFIG_DIR, GAMER_CONFIG_DIR)
+GAMER_EPILOG      = "The default complie flags are %s/intel.make and %s/gnu.make"%(GAMER_CONFIG_DIR, GAMER_CONFIG_DIR)
 # The convert name from the python argument to the makefile argument.
 NAME_TABLE        = {"model":"MODEL", "passive":"NCOMP_PASSIVE_USER", "flu_scheme":"FLU_SCHEME", 
                      "slope":"LR_SCHEME", "flux":"RSOLVER", "dual":"DUAL_ENERGY", "mhd":"MHD",
@@ -77,10 +77,10 @@ NAME_TABLE        = {"model":"MODEL", "passive":"NCOMP_PASSIVE_USER", "flu_schem
                      "patch_size":"PATCH_SIZE", "debug":"GAMER_DEBUG", 
                      "bitwise_reproduce":"BITWISE_REPRODUCIBILITY", "timing":"TIMING", 
                      "timing_solver":"TIMING_SOLVER", "double":"FLOAT8", "laohu":"LAOHU", 
-                     "hdf5":"SUPPORT_HDF5", "GSL":"SUPPORT_GSL", "FFTW":"SUPPORT_FFTW", 
-                     "LIBYT":"SUPPORT_LIBYT", "LIBYT_patch":"LIBYT_USE_PATCH_GROUP", "RNG":"RANDOM_NUMBER", 
+                     "hdf5":"SUPPORT_HDF5", "gsl":"SUPPORT_GSL", "fftw":"SUPPORT_FFTW", 
+                     "libyt":"SUPPORT_LIBYT", "libyt_patch":"LIBYT_USE_PATCH_GROUP", "rng":"RANDOM_NUMBER", 
                      "serial_compiler":"SERIAL", "openmp":"OPENMP", "mpi":"LOAD_BALANCE=HILBERT", 
-                     "overlap_mpi":"OVERLAP_MPI", "GPU":"GPU", "GPU_arch":"GPU_ARCH"}
+                     "overlap_mpi":"OVERLAP_MPI", "gpu":"GPU", "gpu_arch":"GPU_ARCH"}
 class BCOLOR:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -343,7 +343,7 @@ def load_sims( **kwargs ):
     sim_opt[NAME_TABLE["nlevel"]]     = kwargs["nlevel"]
     sim_opt[NAME_TABLE["max_patch"]]  = kwargs["max_patch"]
     sim_opt[NAME_TABLE["patch_size"]] = kwargs["patch_size"]
-    sim_opt[NAME_TABLE["RNG"]]        = kwargs["RNG"]
+    sim_opt[NAME_TABLE["rng"]]        = kwargs["rng"]
     if kwargs["bitwise_reproduce"] : sim_opt[NAME_TABLE["bitwise_reproduce"]] = kwargs["bitwise_reproduce"]
     
     if kwargs["debug"]         : sim_opt[NAME_TABLE["debug"]]         = kwargs["debug"] 
@@ -352,10 +352,10 @@ def load_sims( **kwargs ):
     if kwargs["double"]        : sim_opt[NAME_TABLE["double"]]        = kwargs["double"] 
     if kwargs["laohu"]         : sim_opt[NAME_TABLE["laohu"]]         = kwargs["laohu"]
     if kwargs["hdf5"]          : sim_opt[NAME_TABLE["hdf5"]]          = kwargs["hdf5"]
-    if kwargs["GSL"]           : sim_opt[NAME_TABLE["GSL"]]           = kwargs["GSL"]
-    if kwargs["FFTW"]          : sim_opt[NAME_TABLE["FFTW"]]          = kwargs["FFTW"]
-    if kwargs["LIBYT"]         : sim_opt[NAME_TABLE["LIBYT"]]         = kwargs["LIBYT"]
-    if kwargs["LIBYT_patch"]   : sim_opt[NAME_TABLE["LIBYT_patch"]]   = kwargs["LIBYT_patch"]
+    if kwargs["gsl"]           : sim_opt[NAME_TABLE["gsl"]]           = kwargs["gsl"]
+    if kwargs["fftw"]          : sim_opt[NAME_TABLE["fftw"]]          = kwargs["fftw"]
+    if kwargs["libyt"]         : sim_opt[NAME_TABLE["libyt"]]         = kwargs["libyt"]
+    if kwargs["libyt_patch"]   : sim_opt[NAME_TABLE["libyt_patch"]]   = kwargs["libyt_patch"]
 
     # C. parallel options
     if kwargs["openmp"]: sim_opt[NAME_TABLE["openmp"]] = kwargs["openmp"]
@@ -364,9 +364,9 @@ def load_sims( **kwargs ):
     else:
         sim_opt["SERIAL"] = True  # hard coded the option of serial
 
-    if kwargs["GPU"]:
-        sim_opt[NAME_TABLE["GPU"]] = kwargs["GPU"]
-        sim_opt[NAME_TABLE["GPU_arch"]] = kwargs["GPU_arch"]
+    if kwargs["gpu"]:
+        sim_opt[NAME_TABLE["gpu"]] = kwargs["gpu"]
+        sim_opt[NAME_TABLE["gpu_arch"]] = kwargs["gpu_arch"]
 
     # D. Setup the simulation option string.
     # NOTE: every -Doption must have trailing space
@@ -504,8 +504,8 @@ def validation( paths, **kwargs ):
 
     # A.2 Gravity
     if kwargs["gravity"]:
-        if not kwargs["FFTW"]:
-            color_print("--FFTW must be enable with --gravity.", BCOLOR.FAIL)
+        if not kwargs["fftw"]:
+            color_print("--fftw must be enable with --gravity.", BCOLOR.FAIL)
             success = False
         if kwargs["unsplit_gravity"] and kwargs["model"] != "HYDRO":
             color_print("--unsplit_gravity is only supported for --model=HYDRO.", BCOLOR.FAIL)
@@ -543,8 +543,8 @@ def validation( paths, **kwargs ):
         color_print("--timing_solver must enable --timing.", BCOLOR.FAIL)
         success = False
 
-    if kwargs["LIBYT_patch"] and not kwargs["LIBYT"]:
-        color_print("--LIBYT_patch must enable --LIBYT.", BCOLOR.FAIL)
+    if kwargs["libyt_patch"] and not kwargs["libyt"]:
+        color_print("--libyt_patch must enable --libyt.", BCOLOR.FAIL)
         success = False
 
     if kwargs["overlap_mpi"]:
@@ -581,27 +581,27 @@ def warning( paths, **kwargs ):
         color_print("Warning: Data reconstruction is useless for RTVD.", BCOLOR.WARNING)
         color_print("Warning: Riemann solver is useless for RTVD.", BCOLOR.WARNING)
     
-    # 4. RNG sys
-    if kwargs["RNG"] == "RNG_GNU_EXT":
-        color_print("Warning: %s is not supported on some macOS."%kwargs["RNG"], BCOLOR.WARNING)
+    # 4. rng sys
+    if kwargs["rng"] == "RNG_GNU_EXT":
+        color_print("Warning: %s is not supported on some macOS."%kwargs["rng"], BCOLOR.WARNING)
     
-    if kwargs["RNG"] == "RNG_CPP":
+    if kwargs["rng"] == "RNG_CPP":
         color_print("Warning: You may need to add -std=c++11 to CXXFLAG in flag config.", BCOLOR.WARNING)
     
     # 5. Path
-    if kwargs["GPU"]:
+    if kwargs["gpu"]:
         if "CUDA_PATH" not in paths:
-            color_print("CUDA_PATH is not given with --GPU.", BCOLOR.WARNING)
+            color_print("CUDA_PATH is not given with --gpu.", BCOLOR.WARNING)
             paths["CUDA_PATH"] = ""
         elif paths["CUDA_PATH"] == "":
-            color_print("CUDA_PATH is not given with --GPU.", BCOLOR.WARNING)
+            color_print("CUDA_PATH is not given with --gpu.", BCOLOR.WARNING)
     
-    if kwargs["FFTW"]:
+    if kwargs["fftw"]:
         if "FFTW_PATH" not in paths:
-            color_print("FFTW_PATH is not given with --FFTW.", BCOLOR.WARNING)
+            color_print("FFTW_PATH is not given with --fftw.", BCOLOR.WARNING)
             paths["FFTW_PATH"] = ""
         elif paths["FFTW_PATH"] == "":
-            color_print("FFTW_PATH is not given with --FFTW.", BCOLOR.WARNING)
+            color_print("FFTW_PATH is not given with --fftw.", BCOLOR.WARNING)
     
     if kwargs["mpi"]:
         if "MPI_PATH" not in paths:
@@ -624,19 +624,19 @@ def warning( paths, **kwargs ):
         elif paths["GRACKLE_PATH"] == "":
             color_print("GRACKLE_PATH is not given with --grackle.", BCOLOR.WARNING)
     
-    if kwargs["GSL"]:
+    if kwargs["gsl"]:
         if "GSL_PATH" not in paths:
-            color_print("GSL_PATH is not given with --GSL.", BCOLOR.WARNING)
+            color_print("GSL_PATH is not given with --gsl.", BCOLOR.WARNING)
             paths["GSL_PATH"] = ""
         elif paths["GSL_PATH"] == "":
-            color_print("GSL_PATH is not given with --GSL.", BCOLOR.WARNING)
+            color_print("GSL_PATH is not given with --gsl.", BCOLOR.WARNING)
     
-    if kwargs["LIBYT"]:
+    if kwargs["libyt"]:
         if "LIBYT_PATH" not in paths:
-            color_print("LIBYT_PATH is not given with --LIBYT.", BCOLOR.WARNING)
+            color_print("LIBYT_PATH is not given with --libyt.", BCOLOR.WARNING)
             paths["LIBYT_PATH"] = ""
         elif paths["LIBYT_PATH"] == "":
-            color_print("LIBYT_PATH is not given with --LIBYT.", BCOLOR.WARNING)
+            color_print("LIBYT_PATH is not given with --libyt.", BCOLOR.WARNING)
     return
 
 
@@ -848,27 +848,27 @@ parser.add_argument( "--hdf5",
                      help="Support HDF5 format.\n"
                    )
 
-parser.add_argument( "--GSL",
+parser.add_argument( "--gsl",
                      action="store_true",
                      help="Support GNU scientific library.\n"
                    )
 
-parser.add_argument( "--FFTW",
+parser.add_argument( "--fftw",
                      action="store_true",
                      help="Support FFTW library.\n"
                    )
 
-parser.add_argument( "--LIBYT",
+parser.add_argument( "--libyt",
                      action="store_true",
                      help="Support yt inline analysis.\n"
                    )
 
-parser.add_argument( "--LIBYT_patch",
+parser.add_argument( "--libyt_patch",
                      action="store_true",
                      help="Use patch group as the unit in libyt. Note that this will speed up inline-analysis but increase memory consumption.\n"
                    )
 
-parser.add_argument( "--RNG", type=str, metavar="TYPE",
+parser.add_argument( "--rng", type=str, metavar="TYPE",
                      default="RNG_GNU_EXT",
                      choices=["RNG_GNU_EXT", "RNG_CPP11"],
                      help="Select the random number generator.\n"
@@ -894,12 +894,12 @@ parser.add_argument( "--overlap_mpi",
                      help="Overlap MPI communication with computation.\n"
                    )
 
-parser.add_argument( "--GPU",
+parser.add_argument( "--gpu",
                      action="store_true",
                      help="Enable GPU.\n"
                    )
 
-parser.add_argument( "--GPU_arch", type=str, metavar="TYPE",
+parser.add_argument( "--gpu_arch", type=str, metavar="TYPE",
                      default="TURING", choices=["FERMI", "KEPLER", "MAXWELL", "PASCAL", "VOLTA", "TURING", "AMPERE"],
                      help="Select the archtecture of GPU.\n"
                    )
@@ -916,8 +916,8 @@ if args["lh"]:
 #------------------------------------------------------------
 # 2. Prepare the makiefile args
 # 2.1 load the cluster steup
-paths = load_config( "%s%s.config"%(GAMER_CONFIG_DIR, args["cluster"]) )
-flags = load_flag("%s%s.make"%(GAMER_CONFIG_DIR, args["flags"]))
+paths = load_config( "%s/%s.config"%(GAMER_CONFIG_DIR, args["cluster"]) )
+flags = load_flag("%s/%s.make"%(GAMER_CONFIG_DIR, args["flags"]))
 
 # 2.2 Check if the argument are valid
 validation( paths, **args )
