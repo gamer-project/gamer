@@ -86,7 +86,7 @@ void Par_Init_ByFunction_Feedback( const long NPar_ThisRank, const long NPar_All
       for (int d=0; d<3; d++)
       {
 	 ParData_AllRank[PAR_POSX+d][p] = 0.50390625 * boxsize; 
-         ParData_AllRank[PAR_VELX+d][p] = 0.0005;
+         ParData_AllRank[PAR_VELX+d][p] = 0.0;
       }
    }
 

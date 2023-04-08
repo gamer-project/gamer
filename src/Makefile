@@ -45,7 +45,7 @@ SIMU_OPTION += -DPARTICLE
 # support Grackle, a chemistry and radiative cooling library
 # --> must set NCOMP_PASSIVE_USER according to the primordial chemistry network set by GRACKLE_PRIMORDIAL
 # --> please enable OpenMP when compiling Grackle (by "make omp-on")
-#SIMU_OPTION += -DSUPPORT_GRACKLE
+SIMU_OPTION += -DSUPPORT_GRACKLE
 
 
 # (b) options of different physical modules
@@ -55,7 +55,7 @@ ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
 # hydrodynamic scheme: RTVD/MHM/MHM_RP/CTU
 # --> must be set when MODEL=HYDRO
 # --> MHD only supports MHM_RP and CTU
-SIMU_OPTION += -DFLU_SCHEME=MHM_RP
+SIMU_OPTION += -DFLU_SCHEME=MHM
 
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
 # --> useless for RTVD
@@ -69,12 +69,12 @@ SIMU_OPTION += -DRSOLVER=HLLC
 
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy)
 # --> DE_EINT is not supported yet; useless for RTVD
-#SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
+SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 
 # number of user-defined passively advected scalars
 # --> set it to 0 or comment it out if none is required
 # --> useless for RTVD
-SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
+SIMU_OPTION += -DNCOMP_PASSIVE_USER=1
 
 # magnetohydrodynamics
 #SIMU_OPTION += -DMHD
@@ -106,7 +106,7 @@ SIMU_OPTION += -DLAPLACIAN_4TH
 
 # number of passively advected scalars
 # --> not supported yet and must be set to 0 (or comment it out)
-SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
+SIMU_OPTION += -DNCOMP_PASSIVE_USER=2
 
 endif # MODEL
 
@@ -150,7 +150,7 @@ SIMU_OPTION += -DFEEDBACK
 
 # number of user-defined particle attributes
 # --> set it to 0 or comment it out if none is required
-SIMU_OPTION += -DPAR_NATT_USER=0
+SIMU_OPTION += -DPAR_NATT_USER=1
 endif # PARTICLE
 
 
@@ -176,7 +176,7 @@ SIMU_OPTION += -DGPU
 SIMU_OPTION += -DGPU_ARCH=TURING
 
 # debug mode
-SIMU_OPTION += -DGAMER_DEBUG
+#SIMU_OPTION += -DGAMER_DEBUG
 
 # bitwise reproducibility
 SIMU_OPTION += -DBITWISE_REPRODUCIBILITY
@@ -237,13 +237,13 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 # intel
 # -------------------------------------------------------------------------------
 #CXX         = icpc                                      # serial compiler
- CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
+CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 #CXX         = CC                                        # cray wrapper script
- CXXFLAG     = -g -O3                                    # general flags
+CXXFLAG     = -g -O3                                    # general flags
 #CXXFLAG     = -g -O3 -std=c++11
 #CXXFLAG     = -g -fast
  CXXFLAG    += -w1                                       # warning flags
- OPENMPFLAG  = -fopenmp                                  # openmp flag
+OPENMPFLAG  = -fopenmp                                  # openmp flag
  LIB         = -limf                                     # libraries and linker flags
 
 # for debug only
@@ -379,7 +379,7 @@ CUDA_PATH    := /software/cuda/default
 FFTW_PATH    := /software/fftw/default
 MPI_PATH     := /software/openmpi/default
 HDF5_PATH    := /software/hdf5/default
-#GRACKLE_PATH :=
+GRACKLE_PATH := /work1/yglee/Software/grackle/
 GSL_PATH     := /software/gsl/default
 #LIBYT_PATH   :=
 

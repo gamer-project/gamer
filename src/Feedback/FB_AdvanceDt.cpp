@@ -5,7 +5,7 @@
 
 
 // prototypes of built-in feedbacks
-void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
+int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
              const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
              real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh,
 	     bool CoarseFine[], const int TID, RandomNumber_t *RNG );
@@ -65,6 +65,9 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
    const bool FaSibBufPatch_No  = false;
 //###OPTIMIZATION: only collect necessary particle attributes
    const long ParAttBitIdx_In   = _PAR_TOTAL;
+
+   int NSNe = 0; //total number of this time step of this rank
+   int NSNe_total; // sum of NSNe from all ranks
 
    Par_CollectParticle2OneLevel( lv, ParAttBitIdx_In, PredictPos_No, TimeNew, SibBufPatch_Yes, FaSibBufPatch_No,
                                  JustCountNPar_No, TimingSendPar_Yes );
@@ -131,7 +134,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 // iterate over all real patches
-#  pragma omp for schedule( runtime )
+#  pragma omp for schedule( runtime ) reduction(+: NSNe)
    for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
    {
       const double PGCenter[3] = { amr->patch[0][lv][PID0+7]->EdgeL[0],
@@ -228,6 +231,8 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       for (int t=0; t<NNearbyPatch; t++)
       {
          const int PID = Nearby_PID_List[t];
+
+//	 printf("PID = %d\n", PID);
 
 
 //       6. prepare the input particle data
@@ -342,8 +347,8 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 //       7-2. invoke all feedback routines
-         if ( FB_SNE  )    FB_SNe     ( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
-                                        amr->patch[0][lv][PID0]->EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
+         if ( FB_SNE  )    NSNe+=FB_SNe( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
+                                   amr->patch[0][lv][PID0]->EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
 
          if ( FB_USER )    FB_User_Ptr( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
                                         amr->patch[0][lv][PID0]->EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
@@ -394,11 +399,17 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
    } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
 
+
 // free memory
    delete [] fluid_PG;
 
    } // end of OpenMP parallel region
 
+  MPI_Reduce( &NSNe, &NSNe_total, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD );
+
+  if ( MPI_Rank == 0 ) {
+  FB_snnumber += NSNe_total;
+  }
 
 
 // 10. store the updated particle data

@@ -426,9 +426,9 @@ void FB_User_Template( const int lv, const double TimeNew, const double TimeOld,
       Fluid[DENS][idx[0]][idx[1]][idx[2]] +=  wind_dens + SNe_dens;
       
       // TODO: dual energy fixed
-      #ifdef DUAL_ENERGY
-      Fluid[ENPY][idx[0]][idx[1]][idx[2]] += fb_energy;
-      #endif // #ifdef DUAL_ENERGY
+      // #ifdef DUAL_ENERGY
+      // Fluid[ENPY][idx[0]][idx[1]][idx[2]] += fb_energy;
+      // #endif // #ifdef DUAL_ENERGY
 
       // 5: SN Momentum feedback
       // no momentum feedback now
@@ -1075,14 +1075,14 @@ void FB_SNeMomentumFeedback( real (*Fluid)[PS2][PS2][PS2], const int particleExp
          Fluid[MOMZ][ flu_i ][ flu_j ][ flu_k ] += rz * cellMom / cellMass;
 
          // TODO : check the dual energy and switch to GAMER variable
-         #ifdef DUAL_ENERGY
-         Fluid[ENGY][ flu_i ][ flu_j ][ flu_k ] = 
-	 Fluid[ENPY][ flu_i ][ flu_j ][ flu_k ] + 
-	 0.5*( POW(Fluid[MOMX][ flu_i ][ flu_j ][ flu_k ], 2) + 
-	 POW(Fluid[MOMY][ flu_i ][ flu_j ][ flu_k ], 2) + 
-	 POW(Fluid[MOMZ][ flu_i ][ flu_j ][ flu_k ], 2) ) /
-	 Fluid[DENS][ flu_i ][ flu_j ][ flu_k ];
-         #endif // #ifdef DUAL_ENERGY
+         // #ifdef DUAL_ENERGY
+         // Fluid[ENGY][ flu_i ][ flu_j ][ flu_k ] = 
+	 // Fluid[ENPY][ flu_i ][ flu_j ][ flu_k ] + 
+	 // 0.5*( POW(Fluid[MOMX][ flu_i ][ flu_j ][ flu_k ], 2) + 
+	 // POW(Fluid[MOMY][ flu_i ][ flu_j ][ flu_k ], 2) + 
+	 // POW(Fluid[MOMZ][ flu_i ][ flu_j ][ flu_k ], 2) ) /
+	 // Fluid[DENS][ flu_i ][ flu_j ][ flu_k ];
+         // #endif // #ifdef DUAL_ENERGY
 
          // Record kinetic energy deposited in this cell
          kesum += 0.5 / cellMass * SQR( cellMom );

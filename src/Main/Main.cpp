@@ -270,6 +270,9 @@ char (*UserDerField_Unit )[MAX_STRING] = NULL;
 int  FB_LEVEL, FB_RSEED;
 bool FB_SNE, FB_USER;
 bool FB_Any;
+int FB_snnumber = 0;
+FILE *fout;
+FILE *Fout;
 #endif
 
 
@@ -609,6 +612,18 @@ int main( int argc, char *argv[] )
 #     endif
 
       TIMING_FUNC(   Aux_Check(),                     Timer_Main[4],   TIMER_ON   );
+
+#     ifdef FEEDBACK
+  // if( (Step%40) == 0 ) {
+  if( MPI_Rank == 0 ) {
+      fout = fopen("SNnumber.txt","a");
+      if(fout==NULL) {printf("Fail To Open File SNnumber.txt!!");}
+      fprintf(fout, "%f 	%d\n", Time[0], FB_snnumber);
+      fclose(fout);
+      FB_snnumber = 0;
+  } // if( MPI_Rank == 0 )
+//  } */
+#     endif
 //    ---------------------------------------------------------------------------------------------------
 
 
