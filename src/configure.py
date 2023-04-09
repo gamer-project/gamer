@@ -113,9 +113,20 @@ class ArgumentParser( argparse.ArgumentParser ):
 
     def parse_args(self, args=None, namespace=None):
         args, argv = self.parse_known_args(args, namespace)
+        msg = "\n"
         if argv:
-            msg = 'unrecognized arguments: %s'
-            self.error(msg % ' '.join(argv))
+            for arg in argv:
+                if arg[0] != "-": continue
+                min_dist = 100000
+                pos_key = ""
+                for key in NAME_TABLE:
+                    dist = distance( arg, "--"+key )
+                    if dist < min_dist: 
+                        min_dist = dist
+                        pos_key = "--"+key
+                msg += 'unrecognized arguments: %s, do you mean: %s ?\n'%(arg, pos_key)
+
+            self.error( msg )
         return args
 
     def string_align( self, string, indent, width, end_char ):
@@ -261,6 +272,28 @@ class ArgumentParser( argparse.ArgumentParser ):
 def color_print( string, color ):
     print( color + string + BCOLOR.ENDC )
     return
+
+def distance( s1, s2 ): 
+    """
+    Calculate the distance of two string.
+    See: https://en.wikipedia.org/wiki/Damerau-Levenshtein_distance
+         https://www.geeksforgeeks.org/damerau-levenshtein-distance/
+    """
+    matrix = [ [ 0 for i in range(len(s2)+1)] for j in range(len(s1)+1) ]
+
+    for i in range(len(s1)+1):
+        matrix[i][0] = i 
+    for j in range(len(s2)+1):
+        matrix[0][j] = j 
+    
+    for i in range(len(s1)+1):
+        for j in range(1, len(s2)+1):
+            if s1[i-1] == s2[j-1]:
+                matrix[i][j] = matrix[i-1][j-1]
+            else:
+                matrix[i][j] = 1 + min(matrix[i-1][j], matrix[i][j-1], matrix[i-1][j-1])
+
+    return matrix[len(s1)][len(s2)]
 
 def load_config( config ):
     print("Using %s as the path config."%(config))
