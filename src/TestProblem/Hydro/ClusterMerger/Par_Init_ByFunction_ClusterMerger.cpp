@@ -31,6 +31,9 @@ extern long    NPar_AllCluster;
 
 
 #ifdef MASSIVE_PARTICLES
+
+extern int ParHaloIdx;
+
 void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
                                   real_par_in xpos[], real_par_in ypos[],
                                   real_par_in zpos[], real_par_in xvel[],
@@ -216,6 +219,9 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
          // synchronize all particles to the physical time at the base level
          ParTime[pp] = (real_par)Time[0];
+
+	 // Set tag for each cluster
+	 AllAttribute[ParHaloIdx][pp] = real( c );
 
       }
 
