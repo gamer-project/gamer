@@ -512,6 +512,7 @@ struct InputPara_t
    double ELBDM_Taylor3_Coeff;
    int    ELBDM_Taylor3_Auto;
    int    ELBDM_RemoveMotionCM;
+   int    ELBDM_BaseSpectral;
 #  endif // ELBDM
 
 // fluid solvers in different models

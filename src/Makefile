@@ -455,8 +455,9 @@ LIBYT_PATH   :=
 # -------------------------------------------------------------------------------
 # CUDA source files (compiled with nvcc)
 GPU_FILE    := CUAPI_Asyn_FluidSolver.cu  CUAPI_DiagnoseDevice.cu  CUAPI_MemAllocate_Fluid.cu \
-               CUAPI_MemFree_Fluid.cu  CUAPI_Set_Default_GPU_Parameter.cu  CUAPI_SetDevice.cu \
-               CUAPI_Synchronize.cu  CUAPI_Asyn_dtSolver.cu  CUAPI_SetConstMemory.cu  CUAPI_SetConstMemory_EoS.cu
+               CUAPI_MemFree_Fluid.cu  CUAPI_SetMemSize.cu  CUAPI_SetCache.cu  CUAPI_SetDevice.cu \
+               CUAPI_Synchronize.cu  CUAPI_Asyn_dtSolver.cu  CUAPI_SetConstMemory.cu  CUAPI_SetConstMemory_EoS.cu \
+               CUAPI_MemAllocate.cu
 
 
 # C/C++ source files (compiled with c++ compiler)
@@ -557,7 +558,7 @@ endif # MHD
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
 GPU_FILE    += CUFLU_ELBDMSolver.cu CUFLU_ELBDMSolver_PhaseForm_Combined.cu
 
-CPU_FILE    += CPU_ELBDMSolver.cpp  CPU_ELBDMSolver_PhaseForm_Combined.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
+CPU_FILE    += CPU_ELBDMSolver.cpp  CPU_ELBDMSolver_FFT.cpp  CPU_ELBDMSolver_PhaseForm_Combined.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
                ELBDM_GetTimeStep_Fluid.cpp  ELBDM_GetTimeStep_Hybrid.cpp  ELBDM_Flag_EngyDensity.cpp  ELBDM_Flag_Interference.cpp  ELBDM_UnwrapPhase.cpp \
                ELBDM_GetTimeStep_Phase.cpp  ELBDM_GetTimeStep_Velocity.cpp  ELBDM_SetTaylor3Coeff.cpp  ELBDM_RemoveMotionCM.cpp
 

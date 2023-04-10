@@ -217,15 +217,13 @@ void Init_ByRestart_HDF5( const char *FileName );
 #ifdef SUPPORT_FFTW
 void End_FFTW();
 void Init_FFTW();
-void Patch2Slab_Rho( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf_SIdx, long *RecvBuf_SIdx,
-                     int **List_PID, int **List_k, int *List_NSend_Rho, int *List_NRecv_Rho,
-                     const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
-                     const double PrepTime, const bool AddExtraMass );
-#ifdef GRAVITY
-void Slab2Patch_Pot( const real *RhoK, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
-                     int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
-                     const int NSendSlice );
-#endif
+void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf_SIdx, long *RecvBuf_SIdx,
+                 int **List_PID, int **List_k, int *List_NSend_Var, int *List_NRecv_Var,
+                 const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
+                 const double PrepTime, const long TVar, const bool InPlacePad, const bool ForPoisson, const bool AddExtraMass );
+void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
+                 int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
+                 const int NSendSlice, const long TVar, const bool InPlacePad );
 #endif // #ifdef SUPPORT_FFTW
 
 
@@ -301,7 +299,9 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
                                  const real h_Flu_Array[][FLU_NIN][ CUBE(FLU_NXT) ],
                                  const real h_Mag_Array[][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                  const int NPG, const int *PID0_List, const int CLv, const char *comment );
-void Output_BasePowerSpectrum( const char *FileName );
+#ifdef SUPPORT_FFTW
+void Output_BasePowerSpectrum( const char *FileName, const long TVar );
+#endif
 void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const double y, const double z, const double Time,
                                            const int lv, double AuxArray[] ),
                      void (*AnalFunc_Mag)( real magnetic[], const double x, const double y, const double z, const double Time,
@@ -561,6 +561,9 @@ bool   ELBDM_DetectVortex( const int i, const int j, const int k, const int i_si
                                const double Threshold );
 real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 void   ELBDM_RemoveMotionCM();
+#ifdef SUPPORT_FFTW
+void   CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg );
+#endif
 
 
 #else
@@ -604,10 +607,9 @@ void CUAPI_Asyn_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NX
                            const real MinDens, const real MinPres, const real MinEint,
                            const int GPU_NStream );
 void CUAPI_DiagnoseDevice();
-void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src_NPG, const int GPU_NStream );
+void CUAPI_MemAllocate();
 void CUAPI_MemFree_Fluid( const int GPU_NStream );
-void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGroup, int &Che_GPU_NPGroup,
-                                      int &Src_GPU_NPGroup );
+void CUAPI_SetCache();
 void CUAPI_SetDevice( const int Mode );
 void CUAPI_SetConstMemory();
 void CUAPI_SetConstMemory_EoS();
@@ -633,7 +635,6 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                       const double TimeNew, const double TimeOld, const real MinEint,
                                       const int GPU_NStream, const bool useWaveFlag );
 void CUAPI_SendExtPotTable2GPU( const real *h_Table );
-void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPatchGroup );
 void CUAPI_MemFree_PoissonGravity();
 #endif // #ifdef GRAVITY
 #endif // #ifdef GPU

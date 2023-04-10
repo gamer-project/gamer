@@ -131,6 +131,7 @@ extern bool             OPT__MATCH_PHASE;
 #endif //  # if ( ELBDM_SCHEME == HYBRID )
 
 extern ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
+extern bool             ELBDM_BASE_SPECTRAL;
 
 #else
 #  error : ERROR : unsupported MODEL !!

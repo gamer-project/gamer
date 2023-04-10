@@ -127,6 +127,7 @@ double               DT__HYBRID, DT__VELOCITY;
 double               ELBDM_LAMBDA;
 #endif
 ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
+bool                 ELBDM_BASE_SPECTRAL;
 
 #else
 #error : unsupported MODEL !!

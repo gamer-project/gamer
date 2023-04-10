@@ -31,8 +31,10 @@ extern void **d_ExtPotGenePtr;
 // Description :  Allocate device and host memory for the Poisson and Gravity solvers
 //
 // Parameter   :  Pot_NPG  : Number of patch groups evaluated simultaneously by GPU
+//
+// Return      :  GAMER_SUCCESS / GAMER_FAILED
 //-------------------------------------------------------------------------------------------------------
-void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
+int CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 {
 
    const long Pot_NP            = 8*Pot_NPG;
@@ -77,64 +79,67 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 
 
 // allocate the device memory
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Rho_Array_P,      Rho_MemSize_P     )  );
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Pot_Array_P_In,   Pot_MemSize_P_In  )  );
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Pot_Array_P_Out,  Pot_MemSize_P_Out )  );
+   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_Rho_Array_P,       Rho_MemSize_P     )  );
+   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_Pot_Array_P_In,    Pot_MemSize_P_In  )  );
+   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_Pot_Array_P_Out,   Pot_MemSize_P_Out )  );
 #  ifdef UNSPLIT_GRAVITY
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Pot_Array_USG_G,  Pot_MemSize_USG_G )  );
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Flu_Array_USG_G,  Flu_MemSize_USG_G )  );
+   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_Pot_Array_USG_G,   Pot_MemSize_USG_G )  );
+   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_Flu_Array_USG_G,   Flu_MemSize_USG_G )  );
 #  endif
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Flu_Array_G,      Flu_MemSize_G     )  );
+   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_Flu_Array_G,       Flu_MemSize_G     )  );
 
    if ( OPT__EXT_ACC  ||  OPT__EXT_POT )
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Corner_Array_PGT, Corner_MemSize    )  );
+   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_Corner_Array_PGT,  Corner_MemSize    )  );
 
 #  ifdef DUAL_ENERGY
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_DE_Array_G,       DE_MemSize_G      )  );
+   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_DE_Array_G,        DE_MemSize_G      )  );
 #  endif
 
 #  ifdef MHD
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Emag_Array_G,     Emag_MemSize_G    )  );
+   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_Emag_Array_G,      Emag_MemSize_G    )  );
 #  endif
 
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Pot_Array_T,      Pot_MemSize_T     )  );
+   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_Pot_Array_T,       Pot_MemSize_T     )  );
 
    if ( OPT__EXT_POT == EXT_POT_TABLE )
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_ExtPotTable,      ExtPot_MemSize    )  );
+   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_ExtPotTable,       ExtPot_MemSize    )  );
 
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_ExtPotGenePtr,    GenePtr_MemSize   )  );
+   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_ExtPotGenePtr,     GenePtr_MemSize   )  );
 
 
 // allocate the host memory by CUDA
    for (int t=0; t<2; t++)
    {
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Rho_Array_P     [t], Rho_MemSize_P     )  );
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_P_In  [t], Pot_MemSize_P_In  )  );
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_P_Out [t], Pot_MemSize_P_Out )  );
+      CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_Rho_Array_P     [t], Rho_MemSize_P     )  );
+      CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_Pot_Array_P_In  [t], Pot_MemSize_P_In  )  );
+      CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_Pot_Array_P_Out [t], Pot_MemSize_P_Out )  );
 #     ifdef UNSPLIT_GRAVITY
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_USG_G [t], Pot_MemSize_USG_G )  );
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flu_Array_USG_G [t], Flu_MemSize_USG_G )  );
+      CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_Pot_Array_USG_G [t], Pot_MemSize_USG_G )  );
+      CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_Flu_Array_USG_G [t], Flu_MemSize_USG_G )  );
 #     endif
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flu_Array_G     [t], Flu_MemSize_G     )  );
+      CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_Flu_Array_G     [t], Flu_MemSize_G     )  );
 
       if ( OPT__EXT_ACC  ||  OPT__EXT_POT )
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Corner_Array_PGT[t], Corner_MemSize    )  );
+      CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_Corner_Array_PGT[t], Corner_MemSize    )  );
 
 #     ifdef DUAL_ENERGY
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_DE_Array_G      [t], DE_MemSize_G      )  );
+      CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_DE_Array_G      [t], DE_MemSize_G      )  );
 #     endif
 
 #     ifdef MHD
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Emag_Array_G    [t], Emag_MemSize_G    )  );
+      CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_Emag_Array_G    [t], Emag_MemSize_G    )  );
 #     endif
 
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_T     [t], Pot_MemSize_T     )  );
+      CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_Pot_Array_T     [t], Pot_MemSize_T     )  );
    } // for (int t=0; t<2; t++)
 
    if ( OPT__EXT_POT == EXT_POT_TABLE )
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_ExtPotTable,         ExtPot_MemSize    )  );
+      CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_ExtPotTable,         ExtPot_MemSize    )  );
 
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_ExtPotGenePtr,       GenePtr_MemSize   )  );
+      CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_ExtPotGenePtr,       GenePtr_MemSize   )  );
+
+
+   return GAMER_SUCCESS;
 
 } // FUNCTION : CUAPI_MemAllocate_PoissonGravity
 

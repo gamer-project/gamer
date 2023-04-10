@@ -543,17 +543,6 @@ void Aux_Check_Parameter()
    if ( Flu_ParaBuf > PATCH_SIZE )
       Aux_Error( ERROR_INFO, "Flu_ParaBuf (%d) > PATCH_SIZE (%d) !!\n", Flu_ParaBuf, PATCH_SIZE );
 
-   if ( GPU_NSTREAM < 1 )  Aux_Error( ERROR_INFO, "GPU_NSTREAM (%d) < 1 !!\n", GPU_NSTREAM );
-
-   if ( FLU_GPU_NPGROUP % GPU_NSTREAM != 0 )
-      Aux_Error( ERROR_INFO, "FLU_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
-                 FLU_GPU_NPGROUP, GPU_NSTREAM );
-
-#  ifdef OPENMP
-   if ( FLU_GPU_NPGROUP < OMP_NTHREAD )
-      Aux_Error( ERROR_INFO, "FLU_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", FLU_GPU_NPGROUP, OMP_NTHREAD );
-#  endif
-
    if ( OPT__FIXUP_FLUX  &&  !amr->WithFlux )
       Aux_Error( ERROR_INFO, "%s is enabled but amr->WithFlux is off !!\n", "OPT__FIXUP_FLUX" );
 
@@ -1073,6 +1062,15 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "\"%s\" does NOT support \"%s\" !!\n", "ELBDM_REMOVE_MOTION_CM", "BITWISE_REPRODUCIBILITY" );
 #  endif
 
+   for (int f=0; f<6; f++)
+      if ( ELBDM_BASE_SPECTRAL  &&  OPT__BC_FLU[f] != BC_FLU_PERIODIC )
+         Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL only works with periodic boundary condition (OPT__BC_FLU=1) !!\n" );
+
+#  ifndef SUPPORT_FFTW
+   if ( ELBDM_BASE_SPECTRAL )
+      Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL must work with SUPPORT_FFTW !!\n" );
+#  endif
+
 
 // warnings
 // ------------------------------
@@ -1158,6 +1156,12 @@ void Aux_Check_Parameter()
    if ( !OPT__FIXUP_FLUX )
       Aux_Message( stderr, "WARNING : %s is disabled in ELBDM even though CONSERVE_MASS is on !!\n",
                    "OPT__FIXUP_FLUX" );
+   if ( ELBDM_BASE_SPECTRAL )
+      Aux_Message( stderr, "WARNING : mass may not conserve with the %s solver even though CONSERVE_MASS is on !!\n",
+                   "ELBDM_BASE_SPECTRAL" );
+   if ( ELBDM_BASE_SPECTRAL && OPT__FIXUP_FLUX )
+      Aux_Message( stderr, "WARNING : OPT__FIXUP_FLUX will not be applied to the base level when %s is on !!\n",
+                   "ELBDM_BASE_SPECTRAL" );
 #  else
    if ( OPT__FIXUP_FLUX )
       Aux_Message( stderr, "WARNING : %s is useless in ELBDM when CONSERVE_MASS is off !!\n", "OPT__FIXUP_FLUX" );
@@ -1232,15 +1236,6 @@ void Aux_Check_Parameter()
    if ( MG_NPRE_SMOOTH < 0 )           Aux_Error( ERROR_INFO, "MG_NPRE_SMOOTH (%d) < 0 !!\n", MG_NPRE_SMOOTH );
    if ( MG_NPOST_SMOOTH < 0 )          Aux_Error( ERROR_INFO, "MG_NPOST_SMOOTH (%d) < 0 !!\n", MG_NPOST_SMOOTH );
    if ( MG_TOLERATED_ERROR < 0.0 )     Aux_Error( ERROR_INFO, "MG_TOLERATED_ERROR (%14.7e) < 0.0 !!\n", MG_TOLERATED_ERROR );
-#  endif
-
-   if ( POT_GPU_NPGROUP % GPU_NSTREAM != 0 )
-      Aux_Error( ERROR_INFO, "POT_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
-                 POT_GPU_NPGROUP, GPU_NSTREAM );
-
-#  ifdef OPENMP
-   if ( POT_GPU_NPGROUP < OMP_NTHREAD )
-      Aux_Error( ERROR_INFO, "POT_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", POT_GPU_NPGROUP, OMP_NTHREAD );
 #  endif
 
 #  if ( NLEVEL > 1 )
@@ -1458,19 +1453,8 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-   /*
-   if ( CHE_GPU_NPGROUP % GPU_NSTREAM != 0 )
-      Aux_Error( ERROR_INFO, "CHE_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
-                 CHE_GPU_NPGROUP, GPU_NSTREAM );
-                 */
-
 #  if ( EOS != EOS_GAMMA )
 #     error : ERROR : SUPPORT_GRACKLE must work with EOS_GAMMA !!
-#  endif
-
-#  ifdef OPENMP
-   if ( CHE_GPU_NPGROUP < OMP_NTHREAD )
-      Aux_Error( ERROR_INFO, "CHE_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", CHE_GPU_NPGROUP, OMP_NTHREAD );
 #  endif
 
 // warning
@@ -1501,15 +1485,6 @@ void Aux_Check_Parameter()
 #  if ( MODEL != HYDRO )
    if ( SrcTerms.Deleptonization )
       Aux_Error( ERROR_INFO, "SRC_DELEPTONIZATION is only supported in HYDRO !!\n" );
-#  endif
-
-   if ( SRC_GPU_NPGROUP % GPU_NSTREAM != 0 )
-      Aux_Error( ERROR_INFO, "SRC_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
-                 SRC_GPU_NPGROUP, GPU_NSTREAM );
-
-#  ifdef OPENMP
-   if ( SRC_GPU_NPGROUP < OMP_NTHREAD )
-      Aux_Error( ERROR_INFO, "SRC_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", SRC_GPU_NPGROUP, OMP_NTHREAD );
 #  endif
 
 // warning

@@ -678,33 +678,33 @@ void WriteRoot()
       if ( nmesh != 0 )
       {
          char MultiPatchName[30];
-         sprintf( MultiPatchName, "Patch" );
+         sprintf( MultiPatchName, "%s", "Patch" );
          DBPutMultimesh( dbfile, MultiPatchName, nmesh, patchnames, patchtypes, OptList );
 
          char MultiMeshName[30];
-         sprintf( MultiMeshName, "Mesh" );
+         sprintf( MultiMeshName, "%s", "Mesh" );
          DBPutMultimesh( dbfile, MultiMeshName, nmesh, meshnames, meshtypes, OptList );
 
          char MultiVarName[30];
 #        if   ( MODEL == HYDRO )
-         sprintf( MultiVarName, "Rho" );
+         sprintf( MultiVarName, "%s", "Rho" );
          DBPutMultivar( dbfile, MultiVarName, nvar, varnames0, vartypes, OptList );
 
-         sprintf( MultiVarName, "Vel" );
+         sprintf( MultiVarName, "%s", "Vel" );
          DBPutMultivar( dbfile, MultiVarName, nvar, varnames1, vartypes, OptList );
 
-         sprintf( MultiVarName, "Egy" );
+         sprintf( MultiVarName, "%s", "Egy" );
          DBPutMultivar( dbfile, MultiVarName, nvar, varnames2, vartypes, OptList );
 
          if ( OutputPres )
          {
-         sprintf( MultiVarName, "Pre" );
+         sprintf( MultiVarName, "%s", "Pre" );
          DBPutMultivar( dbfile, MultiVarName, nvar, varnames3, vartypes, OptList );
          }
 
          if ( OutputVort )
          {
-         sprintf( MultiVarName, "Vor" );
+         sprintf( MultiVarName, "%s", "Vor" );
          DBPutMultivar( dbfile, MultiVarName, nvar, varnames4, vartypes, OptList );
          }
 
@@ -712,22 +712,22 @@ void WriteRoot()
 #        warning : WAIT MHD !!!
 
 #        elif ( MODEL == ELBDM )
-         sprintf( MultiVarName, "Dens" );
+         sprintf( MultiVarName, "%s", "Dens" );
          DBPutMultivar( dbfile, MultiVarName, nvar, varnames0, vartypes, OptList );
 
-         sprintf( MultiVarName, "Real" );
+         sprintf( MultiVarName, "%s", "Real" );
          DBPutMultivar( dbfile, MultiVarName, nvar, varnames1, vartypes, OptList );
 
-         sprintf( MultiVarName, "Imag" );
+         sprintf( MultiVarName, "%s", "Imag" );
          DBPutMultivar( dbfile, MultiVarName, nvar, varnames2, vartypes, OptList );
 
-         sprintf( MultiVarName, "Vel" );
+         sprintf( MultiVarName, "%s", "Vel" );
          DBPutMultivar( dbfile, MultiVarName, nvar, varnames3, vartypes, OptList );
 
-         sprintf( MultiVarName, "VelT" );
+         sprintf( MultiVarName, "%s", "VelT" );
          DBPutMultivar( dbfile, MultiVarName, nvar, varnames4, vartypes, OptList );
 
-         sprintf( MultiVarName, "VelE" );
+         sprintf( MultiVarName, "%s", "VelE" );
          DBPutMultivar( dbfile, MultiVarName, nvar, varnames5, vartypes, OptList );
 
 #        else
@@ -736,7 +736,7 @@ void WriteRoot()
 
          if ( OutputPot )
          {
-         sprintf( MultiVarName, "Pot" );
+         sprintf( MultiVarName, "%s", "Pot" );
          DBPutMultivar( dbfile, MultiVarName, nvar, varname_pot, vartypes, OptList );
          }
 

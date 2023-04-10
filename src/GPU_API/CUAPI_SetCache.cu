@@ -105,15 +105,15 @@ __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ]
 
 // Poisson solver prototypes
 #if   ( POT_SCHEME == SOR )
-__global__ void CUPOT_PoissonSolver_SOR( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
-                                         const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
-                                               real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
+__global__ void CUPOT_PoissonSolver_SOR( const real g_Rho_Array    [][ CUBE(RHO_NXT) ],
+                                         const real g_Pot_Array_In [][ CUBE(POT_NXT) ],
+                                               real g_Pot_Array_Out[][ CUBE(GRA_NXT) ],
                                          const int Min_Iter, const int Max_Iter, const real Omega_6,
                                          const real Const, const IntScheme_t IntScheme );
 #elif ( POT_SCHEME == MG )
-__global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
-                                        const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
-                                              real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
+__global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ CUBE(RHO_NXT) ],
+                                        const real g_Pot_Array_In [][ CUBE(POT_NXT) ],
+                                              real g_Pot_Array_Out[][ CUBE(GRA_NXT) ],
                                         const real dh_Min, const int Max_Iter, const int NPre_Smooth,
                                         const int NPost_Smooth, const real Tolerated_Error, const real Poi_Coeff,
                                         const IntScheme_t IntScheme );
@@ -163,224 +163,18 @@ void CUSRC_SrcSolver_IterateAllCells(
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CUAPI_Set_Default_GPU_Parameter
-// Description :  Set several GPU parameters to the default values if they are not set in the input file
+// Function    :  CUAPI_SetCache
+// Description :  Set cache preference
 //
-// Parameter   :  GPU_NStream     : Number of streams for the asynchronous memory copy in GPU
-//                Flu_GPU_NPGroup : Number of patch groups sent into GPU simultaneously for the fluid solver
-//                Pot_GPU_NPGroup : Number of patch groups sent into GPU simultaneously for the Poisson solver
-//                Che_GPU_NPGroup : Number of patch groups sent into GPU simultaneously for the Grackle solver
-//                Src_GPU_NPGroup : Number of patch groups sent into GPU simultaneously for the source-term solver
+// Parameter   :
 //-------------------------------------------------------------------------------------------------------
-void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGroup, int &Che_GPU_NPGroup,
-                                      int &Src_GPU_NPGroup )
+void CUAPI_SetCache()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-// get the device ID
-   int GetDeviceID = 999;
-   CUDA_CHECK_ERROR(  cudaGetDevice( &GetDeviceID )  );
-
-
-// load the device properties
-   cudaDeviceProp DeviceProp;
-   CUDA_CHECK_ERROR(  cudaGetDeviceProperties( &DeviceProp, GetDeviceID )  );
-
-
-// set the default GPU parameters
-// (1) GPU_NSTREAM
-   if ( GPU_NStream <= 0 )
-   {
-      if ( DeviceProp.deviceOverlap )
-      {
-#        if   ( MODEL == HYDRO )
-#           if   ( GPU_ARCH == FERMI )
-            GPU_NStream = 8;
-#           elif ( GPU_ARCH == KEPLER )
-            GPU_NStream = 16;
-#           elif ( GPU_ARCH == MAXWELL )
-            GPU_NStream = 16;
-#           elif ( GPU_ARCH == PASCAL )
-            GPU_NStream = 16;
-#           elif ( GPU_ARCH == VOLTA )
-            GPU_NStream = 16;
-#           elif ( GPU_ARCH == TURING )
-            GPU_NStream = 16;
-#           elif ( GPU_ARCH == AMPERE )
-            GPU_NStream = 16;
-#           else
-#           error : UNKNOWN GPU_ARCH !!
-#           endif
-
-#        elif ( MODEL == ELBDM )
-#           if   ( GPU_ARCH == FERMI )
-            GPU_NStream = 8;
-#           elif ( GPU_ARCH == KEPLER )
-            GPU_NStream = 16;
-#           elif ( GPU_ARCH == MAXWELL )
-            GPU_NStream = 16;
-#           elif ( GPU_ARCH == PASCAL )
-            GPU_NStream = 16;
-#           elif ( GPU_ARCH == VOLTA )
-            GPU_NStream = 16;
-#           elif ( GPU_ARCH == TURING )
-            GPU_NStream = 16;
-#           elif ( GPU_ARCH == AMPERE )
-            GPU_NStream = 16;
-#           else
-#           error : ERROR : UNKNOWN GPU_ARCH !!
-#           endif
-#        else
-#           error : ERROR : UNKNOWN MODEL !!
-#        endif // MODEL
-      } // if ( DeviceProp.deviceOverlap )
-
-      else
-         GPU_NStream = 1;
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d"
-                              " --> might be further fine-tuned\n", "GPU_NSTREAM", GPU_NSTREAM );
-   } // if ( GPU_NStream <= 0 )
-
-
-// (2) XXX_GPU_NPGROUP
-// (2-1) FLU_GPU_NPGROUP
-   if ( Flu_GPU_NPGroup <= 0 )
-   {
-#     if   ( MODEL == HYDRO )
-#        if   ( GPU_ARCH == FERMI )
-         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#        elif ( GPU_ARCH == KEPLER )
-         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#        elif ( GPU_ARCH == MAXWELL )
-         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#        elif ( GPU_ARCH == PASCAL )
-         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#        elif ( GPU_ARCH == VOLTA )
-         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#        elif ( GPU_ARCH == TURING )
-         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#        elif ( GPU_ARCH == AMPERE )
-         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#        else
-#        error : UNKNOWN GPU_ARCH !!
-#        endif
-
-#     elif ( MODEL == ELBDM )
-#        if   ( GPU_ARCH == FERMI )
-         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#        elif ( GPU_ARCH == KEPLER )
-         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#        elif ( GPU_ARCH == MAXWELL )
-         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#        elif ( GPU_ARCH == PASCAL )
-         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#        elif ( GPU_ARCH == VOLTA )
-         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#        elif ( GPU_ARCH == TURING )
-         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#        elif ( GPU_ARCH == AMPERE )
-         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#        else
-#        error : UNKNOWN GPU_ARCH !!
-#        endif
-#     else
-#        error : ERROR : UNKNOWN MODEL !!
-#     endif // MODEL
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d"
-                              " --> might be further fine-tuned\n", "FLU_GPU_NPGROUP", Flu_GPU_NPGroup );
-   } // if ( Flu_GPU_NPGroup <= 0 )
-
-// (2-2) POT_GPU_NPGROUP
-#  ifdef GRAVITY
-   if ( Pot_GPU_NPGroup <= 0 )
-   {
-#     if   ( GPU_ARCH == FERMI )
-      Pot_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     elif ( GPU_ARCH == KEPLER )
-      Pot_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     elif ( GPU_ARCH == MAXWELL )
-      Pot_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     elif ( GPU_ARCH == PASCAL )
-      Pot_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     elif ( GPU_ARCH == VOLTA )
-      Pot_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     elif ( GPU_ARCH == TURING )
-      Pot_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     elif ( GPU_ARCH == AMPERE )
-      Pot_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     else
-#     error : UNKNOWN GPU_ARCH !!
-#     endif
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d"
-                              " --> might be further fine-tuned\n", "POT_GPU_NPGROUP", Pot_GPU_NPGroup );
-   } // if ( Pot_GPU_NPGroup <= 0 )
-#  endif
-
-// (2-3) CHE_GPU_NPGROUP
-#  ifdef SUPPORT_GRACKLE
-   if ( Che_GPU_NPGroup <= 0 )
-   {
-#     if   ( GPU_ARCH == FERMI )
-      Che_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     elif ( GPU_ARCH == KEPLER )
-      Che_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     elif ( GPU_ARCH == MAXWELL )
-      Che_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     elif ( GPU_ARCH == PASCAL )
-      Che_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     elif ( GPU_ARCH == VOLTA )
-      Che_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     elif ( GPU_ARCH == TURING )
-      Che_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     elif ( GPU_ARCH == AMPERE )
-      Che_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     else
-#     error : UNKNOWN GPU_ARCH !!
-#     endif
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d"
-                              " --> might be further fine-tuned\n", "CHE_GPU_NPGROUP", Che_GPU_NPGroup );
-   } // if ( Che_GPU_NPGroup <= 0 )
-#  endif
-
-// (2-4) SRC_GPU_NPGROUP
-   if ( Src_GPU_NPGroup <= 0 )
-   {
-#     if   ( GPU_ARCH == FERMI )
-      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     elif ( GPU_ARCH == KEPLER )
-      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     elif ( GPU_ARCH == MAXWELL )
-      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     elif ( GPU_ARCH == PASCAL )
-      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     elif ( GPU_ARCH == VOLTA )
-      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     elif ( GPU_ARCH == TURING )
-      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     elif ( GPU_ARCH == AMPERE )
-      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#     else
-#     error : UNKNOWN GPU_ARCH !!
-#     endif
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d"
-                              " --> might be further fine-tuned\n", "SRC_GPU_NPGROUP", Src_GPU_NPGroup );
-   } // if ( Src_GPU_NPGroup <= 0 )
-
-
-// (3) cache preference
-// (3-1) fluid solver
+// 1. fluid solver
 #  if   ( MODEL == HYDRO )
 #  if   ( FLU_SCHEME == RTVD )
    CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_RTVD,             cudaFuncCachePreferShared )  );
@@ -406,7 +200,7 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 
 #  ifdef GRAVITY
 
-// (3-2) Poisson solver
+// 2. Poisson solver
 #  if   ( POT_SCHEME == SOR )
    CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUPOT_PoissonSolver_SOR,            cudaFuncCachePreferShared )  );
 #  elif ( POT_SCHEME == MG )
@@ -414,7 +208,7 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #  endif // POT_SCHEME
 
 
-// (3-3) gravity solver
+// 3. gravity solver
 #  if   ( MODEL == HYDRO )
    CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUPOT_HydroGravitySolver,           cudaFuncCachePreferShared )  );
 
@@ -428,13 +222,13 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #  endif // GRAVITY
 
 
-// (3-4) source-term solver
+// 4. source-term solver
    CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUSRC_SrcSolver_IterateAllCells,   cudaFuncCachePreferL1      )  );
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : CUAPI_Set_Default_GPU_Parameter
+} // FUNCTION : CUAPI_SetCache
 
 
 

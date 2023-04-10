@@ -70,7 +70,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2459)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2460)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -233,7 +233,9 @@ Procedure for outputting new variables:
 //                2456 : 2022/12/15 --> output SUPPORT_FFTW
 //                2457 : 2023/01/28 --> output OPT__RESET_FLUID_INIT
 //                2458 : 2023/02/02 --> add OPT__RES_PHASE
-//                2459 : 2022/02/08 --> output OPT__FLAG_INTERFERENCE, OPT__MATCH_PHASE, OPT__CK_PHASE_DEFECT,
+
+//                2459 : 2023/02/07 --> output ELBDM_BASE_SPECTRAL
+//                2460 : 2022/02/08 --> output OPT__FLAG_INTERFERENCE, OPT__MATCH_PHASE, OPT__CK_PHASE_DEFECT,
 //                                             OPT__LB_EXCHANGE_FATHER, FlagTable_Interference
 //                                             DENS and PHAS for hybrid scheme,
 //                                             use_wave_flag[lv] for AMR structure,
@@ -273,21 +275,21 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
    if ( FluDumpIdx0+NCompStore-1 >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   for (int v=0; v<NCompStore; v++)   sprintf( FieldLabelOut[ FluDumpIdx0 + v ], FieldLabel[v] );
+   for (int v=0; v<NCompStore; v++)   sprintf( FieldLabelOut[ FluDumpIdx0 + v ], "%s", FieldLabel[v] );
 
 #  ifdef GRAVITY
    const int PotDumpIdx = ( OPT__OUTPUT_POT ) ? NFieldStored++ : -1;
    if ( PotDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_POT )  sprintf( FieldLabelOut[PotDumpIdx], PotLabel );
+   if ( OPT__OUTPUT_POT )  sprintf( FieldLabelOut[PotDumpIdx], "%s", PotLabel );
 #  endif
 
 #  ifdef MASSIVE_PARTICLES
    const int ParDensDumpIdx = ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE ) ? NFieldStored++ : -1;
    if ( ParDensDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if      ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY )   sprintf( FieldLabelOut[ParDensDumpIdx], "ParDens"   );
-   else if ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_TOTAL    )   sprintf( FieldLabelOut[ParDensDumpIdx], "TotalDens" );
+   if      ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY )   sprintf( FieldLabelOut[ParDensDumpIdx], "%s", "ParDens"   );
+   else if ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_TOTAL    )   sprintf( FieldLabelOut[ParDensDumpIdx], "%s", "TotalDens" );
 #  endif
 
 #  ifdef MHD
@@ -297,9 +299,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    if ( OPT__OUTPUT_CC_MAG )
    {
       NFieldStored += NCOMP_MAG;
-      sprintf( FieldLabelOut[ CCMagDumpIdx0 + MAGX ], "CCMagX" );
-      sprintf( FieldLabelOut[ CCMagDumpIdx0 + MAGY ], "CCMagY" );
-      sprintf( FieldLabelOut[ CCMagDumpIdx0 + MAGZ ], "CCMagZ" );
+      sprintf( FieldLabelOut[ CCMagDumpIdx0 + MAGX ], "%s", "CCMagX" );
+      sprintf( FieldLabelOut[ CCMagDumpIdx0 + MAGY ], "%s", "CCMagY" );
+      sprintf( FieldLabelOut[ CCMagDumpIdx0 + MAGZ ], "%s", "CCMagZ" );
    }
 #  endif
 
@@ -307,39 +309,39 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    const int PresDumpIdx   = ( OPT__OUTPUT_PRES   ) ? NFieldStored++ : -1;
    if ( PresDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_PRES   )  sprintf( FieldLabelOut[PresDumpIdx  ], "Pres"   );
+   if ( OPT__OUTPUT_PRES   )  sprintf( FieldLabelOut[PresDumpIdx  ], "%s", "Pres"   );
 
    const int TempDumpIdx   = ( OPT__OUTPUT_TEMP   ) ? NFieldStored++ : -1;
    if ( TempDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_TEMP   )  sprintf( FieldLabelOut[TempDumpIdx  ], "Temp"   );
+   if ( OPT__OUTPUT_TEMP   )  sprintf( FieldLabelOut[TempDumpIdx  ], "%s", "Temp"   );
 
    const int EntrDumpIdx   = ( OPT__OUTPUT_ENTR   ) ? NFieldStored++ : -1;
    if ( EntrDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_ENTR   )  sprintf( FieldLabelOut[EntrDumpIdx  ], "Entr"   );
+   if ( OPT__OUTPUT_ENTR   )  sprintf( FieldLabelOut[EntrDumpIdx  ], "%s", "Entr"   );
 
    const int CsDumpIdx     = ( OPT__OUTPUT_CS     ) ? NFieldStored++ : -1;
    if ( CsDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_CS     )  sprintf( FieldLabelOut[CsDumpIdx    ], "Cs"     );
+   if ( OPT__OUTPUT_CS     )  sprintf( FieldLabelOut[CsDumpIdx    ], "%s", "Cs"     );
 
    const int DivVelDumpIdx = ( OPT__OUTPUT_DIVVEL ) ? NFieldStored++ : -1;
    if ( DivVelDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_DIVVEL )  sprintf( FieldLabelOut[DivVelDumpIdx], "DivVel" );
+   if ( OPT__OUTPUT_DIVVEL )  sprintf( FieldLabelOut[DivVelDumpIdx], "%s", "DivVel" );
 
    const int MachDumpIdx   = ( OPT__OUTPUT_MACH   ) ? NFieldStored++ : -1;
    if ( MachDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_MACH   )  sprintf( FieldLabelOut[MachDumpIdx  ], "Mach"   );
+   if ( OPT__OUTPUT_MACH   )  sprintf( FieldLabelOut[MachDumpIdx  ], "%s", "Mach"   );
 #  endif
 
 #  ifdef MHD
    const int DivMagDumpIdx = ( OPT__OUTPUT_DIVMAG ) ? NFieldStored++ : -1;
    if ( DivMagDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_DIVMAG )  sprintf( FieldLabelOut[DivMagDumpIdx], "DivMag" );
+   if ( OPT__OUTPUT_DIVMAG )  sprintf( FieldLabelOut[DivMagDumpIdx], "%s", "DivMag" );
 #  endif
 
 
@@ -349,7 +351,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    if ( OPT__OUTPUT_USER_FIELD )
    {
       NFieldStored += UserDerField_Num;
-      for (int v=0; v<UserDerField_Num; v++)    sprintf( FieldLabelOut[ UserDumpIdx0 + v ], UserDerField_Label[v] );
+      for (int v=0; v<UserDerField_Num; v++)    sprintf( FieldLabelOut[ UserDumpIdx0 + v ], "%s", UserDerField_Label[v] );
    }
 
 
@@ -1402,7 +1404,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //    7-1. validate the father-son relation
 //    7-1-1. load data
       char SetName[MAX_STRING];
-      sprintf( SetName, "Tree/Father" );
+      sprintf( SetName, "%s", "Tree/Father" );
       H5_SetID_Fa = H5Dopen( H5_FileID, SetName, H5P_DEFAULT );
 
       if ( H5_SetID_Fa < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", SetName );
@@ -1411,7 +1413,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       H5_Status = H5Dread( H5_SetID_Fa, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.FaList_AllLv );
       H5_Status = H5Dclose( H5_SetID_Fa );
 
-      sprintf( SetName, "Tree/Son" );
+      sprintf( SetName, "%s", "Tree/Son" );
       H5_SetID_Son = H5Dopen( H5_FileID, SetName, H5P_DEFAULT );
 
       if ( H5_SetID_Son < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", SetName );
@@ -1420,7 +1422,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       H5_Status = H5Dread( H5_SetID_Son, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.SonList_AllLv );
       H5_Status = H5Dclose( H5_SetID_Son );
 
-      sprintf( SetName, "Tree/Sibling" );
+      sprintf( SetName, "%s", "Tree/Sibling" );
       H5_SetID_Sib = H5Dopen( H5_FileID, SetName, H5P_DEFAULT );
 
       if ( H5_SetID_Sib < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", SetName );
@@ -1522,7 +1524,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2459;
+   KeyInfo.FormatVersion        = 2460;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2291,6 +2293,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.ELBDM_Taylor3_Coeff     = ELBDM_TAYLOR3_COEFF;
    InputPara.ELBDM_Taylor3_Auto      = ELBDM_TAYLOR3_AUTO;
    InputPara.ELBDM_RemoveMotionCM    = ELBDM_REMOVE_MOTION_CM;
+   InputPara.ELBDM_BaseSpectral      = ELBDM_BASE_SPECTRAL;
 #  endif // ELBDM
 
 // fluid solvers in different models
@@ -3189,6 +3192,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "ELBDM_Taylor3_Coeff",     HOFFSET(InputPara_t,ELBDM_Taylor3_Coeff    ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "ELBDM_Taylor3_Auto",      HOFFSET(InputPara_t,ELBDM_Taylor3_Auto     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "ELBDM_RemoveMotionCM",    HOFFSET(InputPara_t,ELBDM_RemoveMotionCM   ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "ELBDM_BaseSpectral",      HOFFSET(InputPara_t,ELBDM_BaseSpectral     ), H5T_NATIVE_INT     );
 #  endif // ELBDM
 
 // fluid solvers in different models
