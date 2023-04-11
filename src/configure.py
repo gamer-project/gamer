@@ -620,53 +620,33 @@ def warning( paths, **kwargs ):
     
     # 5. Path
     if kwargs["gpu"]:
-        if "CUDA_PATH" not in paths:
-            color_print("CUDA_PATH is not given with --gpu.", BCOLOR.WARNING)
-            paths["CUDA_PATH"] = ""
-        elif paths["CUDA_PATH"] == "":
+        if path.setdefault("CUDA_PATH", default="") == "":
             color_print("CUDA_PATH is not given with --gpu.", BCOLOR.WARNING)
     
     if kwargs["fftw"]:
-        if "FFTW_PATH" not in paths:
-            color_print("FFTW_PATH is not given with --fftw.", BCOLOR.WARNING)
-            paths["FFTW_PATH"] = ""
-        elif paths["FFTW_PATH"] == "":
+        if path.setdefault("FFTW_PATH", default="") == "":
             color_print("FFTW_PATH is not given with --fftw.", BCOLOR.WARNING)
     
     if kwargs["mpi"]:
-        if "MPI_PATH" not in paths:
-            color_print("MPI_PATH is not given with --mpi.", BCOLOR.WARNING)
-            paths["MPI_PATH"] = ""
-        elif paths["MPI_PATH"] == "":
+        if path.setdefault("MPI_PATH", default="") == "":
             color_print("MPI_PATH is not given with --mpi.", BCOLOR.WARNING)
     
     if kwargs["hdf5"]:
-        if "HDF5_PATH" not in paths:
-            color_print("HDF5_PATH is not given with --hdf5.", BCOLOR.WARNING)
-            paths["HDF5_PATH"] = ""
-        elif paths["HDF5_PATH"] == "":
+        if path.setdefault("HDF5_PATH", default="") == "":
             color_print("HDF5_PATH is not given with --hdf5.", BCOLOR.WARNING)
     
     if kwargs["grackle"]:
-        if "GRACKLE_PATH" not in paths:
-            color_print("GRACKLE_PATH is not given with --grackle.", BCOLOR.WARNING)
-            paths["GRACKLE_PATH"] = ""
-        elif paths["GRACKLE_PATH"] == "":
+        if path.setdefault("GRACKLE_PATH", default="") == "":
             color_print("GRACKLE_PATH is not given with --grackle.", BCOLOR.WARNING)
     
     if kwargs["gsl"]:
-        if "GSL_PATH" not in paths:
-            color_print("GSL_PATH is not given with --gsl.", BCOLOR.WARNING)
-            paths["GSL_PATH"] = ""
-        elif paths["GSL_PATH"] == "":
+        if path.setdefault("GSL_PATH", default="") == "":
             color_print("GSL_PATH is not given with --gsl.", BCOLOR.WARNING)
     
     if kwargs["libyt"]:
-        if "LIBYT_PATH" not in paths:
+        if path.setdefault("LIBYT_PATH", default="") == "":
             color_print("LIBYT_PATH is not given with --libyt.", BCOLOR.WARNING)
-            paths["LIBYT_PATH"] = ""
-        elif paths["LIBYT_PATH"] == "":
-            color_print("LIBYT_PATH is not given with --libyt.", BCOLOR.WARNING)
+    
     return
 
 
