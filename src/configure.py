@@ -23,8 +23,10 @@ B. Developer guide:
     b. Add the python argument reader for the new simulation option in the `Main execution` part of the code.
     c. Add the name convertion dictionary `[python_argument:gamer_argument]` to the `NAME_TABLE`.
        (You can find it in the `Global variable` part of the code.)
-    d. Add the new argument to the `sim_opt` parameter of `load_sim()`. (You can find it in the `Functions` 
-       part of the code.)
+    d. If the new arguments are not base on any argument, you can add one new line of `add_option()` in `load_sim()`. 
+       (You can find it in the `Functions` part of the code.) If the new arguments are base on one of the argument,
+       you might create a option list in `Global variables` section, and loop over the list in `load_sim()`. 
+       Please check out how we add the `openmp` argument or `GRAVITY_OPTION` in `sim_load()`.
     e. [Optional] Add the error rules in `validation()`. (You can find it in the `Functions` part of the code.)
     f. [Optional] Add the warning rules in `warning()`. (You can find it in the `Functions` part of the code.)
   2. Add a new path:
@@ -81,6 +83,15 @@ NAME_TABLE        = {"model":"MODEL", "passive":"NCOMP_PASSIVE_USER", "flu_schem
                      "libyt":"SUPPORT_LIBYT", "libyt_patch":"LIBYT_USE_PATCH_GROUP", "rng":"RANDOM_NUMBER", 
                      "serial_compiler":"SERIAL", "openmp":"OPENMP", "mpi":"LOAD_BALANCE=HILBERT", 
                      "overlap_mpi":"OVERLAP_MPI", "gpu":"GPU", "gpu_arch":"GPU_ARCH"}
+
+HYDRO_OPTION         = ["model", "flu_scheme", "slope", "flux", "eos", "passive", "mhd", "dual", "cosmic_ray", "barotropic"]
+ELBDM_OPTION         = ["model", "passive", "conserve_mass", "laplacian_four", "self_interaction"]
+GRAVITY_OPTION       = ["gravity", "pot_scheme", "store_pot_ghost", "unsplit_gravity", "comoving"]
+PARTICALE_OPTION     = ["particle", "par_attribute", "tracer", "store_acc", "star_formation"]
+MISCELLANEOUS_OPTION = ["nlevel", "max_patch", "patch_size", "rng", "bitwise_reproduce", "debug", "timing",
+                        "timing_solver", "double", "laohu", "hdf5", "gsl", "fftw", "libyt", "libyt_patch"]
+GPU_OPTION           = ["gpu", "gpu_arch"]
+
 class BCOLOR:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -273,6 +284,19 @@ def color_print( string, color ):
     print( color + string + BCOLOR.ENDC )
     return
 
+def add_option( opt_str, name, val ):
+    # NOTE: every -Doption must have trailing space
+    if type(val) == type(True): 
+        if val:    opt_str += "-D%s "%(name)
+    elif type(val) == type("str"): 
+        opt_str += "-D%s=%s "%(name, val)
+    elif type(val) == type(0):
+        opt_str += "-D%s=%d "%(name, val)
+    else:
+        raise TypeError("Unknown type to add the simulation options.")
+    
+    return opt_str
+
 def distance( s1, s2 ): 
     """
     Calculate the distance of two string.
@@ -332,99 +356,65 @@ def load_flag( config ):
     return flags
 
 def load_sims( **kwargs ):
-    sim_opt = {}
+    opt_str = ""
 
     # A. Physics
     # A.1 Module 
-    if   kwargs["model"] == "HYDRO":
-        sim_opt[NAME_TABLE["model"]]      = kwargs["model"]
-        sim_opt[NAME_TABLE["flu_scheme"]] = kwargs["flu_scheme"]
-        sim_opt[NAME_TABLE["slope"]]      = kwargs["slope"]
-        sim_opt[NAME_TABLE["flux"]]       = kwargs["flux"]
-        sim_opt[NAME_TABLE["eos"]]        = "EOS_" + kwargs["eos"]
-        sim_opt[NAME_TABLE["passive"]]    = kwargs["passive"]
+    if kwargs["model"] == "HYDRO":
+        kwargs["eos"] = "EOS_" + kwargs["eos"] # special string prefix of EOS
+        for opt in HYDRO_OPTION:
+            name = NAME_TABLE[opt]
+            val  = kwargs[opt]
+            opt_str = add_option( opt_str, name, val)
 
-        if kwargs["mhd"]:         sim_opt[NAME_TABLE["mhd"]]  = kwargs["mhd"]
-        if kwargs["dual"] != "":  sim_opt[NAME_TABLE["dual"]] = kwargs["dual"]
-        if kwargs["cosmic_ray"] : sim_opt[NAME_TABLE["cosmic_ray"]] = kwargs["cosmic_ray"]
-        if kwargs["barotropic"]:  sim_opt[NAME_TABLE["barotropic"]] = kwargs["barotropic"]
+    if kwargs["model"] == "ELBDM":
+        for opt in ELBDM_OPTION:
+            name = NAME_TABLE[opt]
+            val  = kwargs[opt]
+            opt_str = add_option( opt_str, name, val)
 
-
-    elif kwargs["model"] == "ELBDM":
-        sim_opt[NAME_TABLE["model"]]   = kwargs["model"]
-        sim_opt[NAME_TABLE["passive"]] = kwargs["passive"]
-        if kwargs["conserve_mass"]:    sim_opt[NAME_TABLE["conserve_mass"]]    = kwargs["conserve_mass"]
-        if kwargs["laplacian_four"]:   sim_opt[NAME_TABLE["laplacian_four"]]   = kwargs["laplacian_four"]
-        if kwargs["self_interaction"]: sim_opt[NAME_TABLE["self_interaction"]] = kwargs["self_interaction"]
-
-    elif kwargs["model"] == "PAR_ONLY":
-        sim_opt[NAME_TABLE["model"]] = kwargs["model"]
+    if kwargs["model"] == "PAR_ONLY":
+        opt_str = add_option( opt_str, NAME_TABLE["model"], kwargs["model"] )
 
     # A.2 Gravity
     if kwargs["gravity"]:
-        sim_opt[NAME_TABLE["gravity"]]     = kwargs["gravity"]
-        sim_opt[NAME_TABLE["pot_scheme"]]  = kwargs["pot_scheme"]
-        if kwargs["store_pot_ghost"]: sim_opt[NAME_TABLE["store_pot_ghost"]] = kwargs["store_pot_ghost"]
-        if kwargs["unsplit_gravity"]: sim_opt[NAME_TABLE["unsplit_gravity"]] = kwargs["unsplit_gravity"]
-        if kwargs["comoving"]       : sim_opt[NAME_TABLE["comoving"]]        = kwargs["comoving"]
+        for opt in GRAVITY_OPTION:
+            name = NAME_TABLE[opt]
+            val  = kwargs[opt]
+            opt_str = add_option( opt_str, name, val)
 
     # A.3 Particle
     if kwargs["particle"]:
-        sim_opt[NAME_TABLE["particle"]]      = kwargs["particle"]
-        sim_opt[NAME_TABLE["par_attribute"]] = kwargs["par_attribute"]
-        if kwargs["tracer"]         : sim_opt[NAME_TABLE["tracer"]]         = kwargs["tracer"]
-        if kwargs["store_acc"]      : sim_opt[NAME_TABLE["store_acc"]]      = kwargs["store_acc"]
-        if kwargs["star_formation"] : sim_opt[NAME_TABLE["star_formation"]] = kwargs["star_formation"]
+        for opt in PARTICLE_OPTION:
+            name = NAME_TABLE[opt]
+            val  = kwargs[opt]
+            opt_str = add_option( opt_str, name, val)
 
     # A.4 Grackle
-    if kwargs["grackle"] : sim_opt[NAME_TABLE["grackle"]] = kwargs["grackle"]
+    if kwargs["grackle"]: 
+        opt_str = add_option( opt_str, NAME_TABLE["grackle"], kwargs["grackle"] )
 
     # B. miscellaneous options
-    sim_opt[NAME_TABLE["nlevel"]]     = kwargs["nlevel"]
-    sim_opt[NAME_TABLE["max_patch"]]  = kwargs["max_patch"]
-    sim_opt[NAME_TABLE["patch_size"]] = kwargs["patch_size"]
-    sim_opt[NAME_TABLE["rng"]]        = kwargs["rng"]
-    if kwargs["bitwise_reproduce"] : sim_opt[NAME_TABLE["bitwise_reproduce"]] = kwargs["bitwise_reproduce"]
-    
-    if kwargs["debug"]         : sim_opt[NAME_TABLE["debug"]]         = kwargs["debug"] 
-    if kwargs["timing"]        : sim_opt[NAME_TABLE["timing"]]        = kwargs["timing"]
-    if kwargs["timing_solver"] : sim_opt[NAME_TABLE["timing_solver"]] = kwargs["timing_solver"]
-    if kwargs["double"]        : sim_opt[NAME_TABLE["double"]]        = kwargs["double"] 
-    if kwargs["laohu"]         : sim_opt[NAME_TABLE["laohu"]]         = kwargs["laohu"]
-    if kwargs["hdf5"]          : sim_opt[NAME_TABLE["hdf5"]]          = kwargs["hdf5"]
-    if kwargs["gsl"]           : sim_opt[NAME_TABLE["gsl"]]           = kwargs["gsl"]
-    if kwargs["fftw"]          : sim_opt[NAME_TABLE["fftw"]]          = kwargs["fftw"]
-    if kwargs["libyt"]         : sim_opt[NAME_TABLE["libyt"]]         = kwargs["libyt"]
-    if kwargs["libyt_patch"]   : sim_opt[NAME_TABLE["libyt_patch"]]   = kwargs["libyt_patch"]
+    for opt in MISCELLANEOUS_OPTION:
+        name = NAME_TABLE[opt]
+        val  = kwargs[opt]
+        opt_str = add_option( opt_str, name, val)
 
     # C. parallel options
-    if kwargs["openmp"]: sim_opt[NAME_TABLE["openmp"]] = kwargs["openmp"]
+    if kwargs["openmp"]: 
+        opt_str = add_option( opt_str, NAME_TABLE["openmp"], kwargs["openmp"])
     if kwargs["mpi"]:
-        sim_opt[NAME_TABLE["mpi"]] = kwargs["mpi"]
+        opt_str = add_option( opt_str, NAME_TABLE["mpi"], kwargs["mpi"])
     else:
-        sim_opt["SERIAL"] = True  # hard coded the option of serial
+        opt_str = add_option( opt_str, "SERIAL", True)  # hard coded the option of serial
 
     if kwargs["gpu"]:
-        sim_opt[NAME_TABLE["gpu"]] = kwargs["gpu"]
-        sim_opt[NAME_TABLE["gpu_arch"]] = kwargs["gpu_arch"]
+        for opt in GPU_OPTION:
+            name = NAME_TABLE[opt]
+            val  = kwargs[opt]
+            opt_str = add_option( opt_str, name, val)
 
-    # D. Setup the simulation option string.
-    # NOTE: every -Doption must have trailing space
-    opts = ""
-    for key, val in sim_opt.items():
-        if type(val) == type(True): 
-            opts += "-D%s "%(key)
-            print("%-20s : %r"%(key, val))
-        elif type(val) == type("str"): 
-            opts += "-D%s=%s "%(key, val)
-            print("%-20s : %s"%(key, val))
-        elif type(val) == type(0):
-            opts += "-D%s=%d "%(key, val)
-            print("%-20s : %d"%(key, val))
-        else:
-            raise TypeError("Unknown type to add the simulation options.")
-
-    return {"SIMU_OPTION":opts}
+    return {"SIMU_OPTION":opt_str}
 
 def load_compile( paths, flags, kwargs ):
     com_opt = {}
