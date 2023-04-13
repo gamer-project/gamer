@@ -2,4 +2,4 @@
 
 PYTHON=python
 
-${PYTHON} configure.py --cluster=eureka --flag=intel --model=HYDRO --double --timing
+${PYTHON} configure.py --cluster=eureka --flag=intel --model=HYDRO --double --timing --openmp 
