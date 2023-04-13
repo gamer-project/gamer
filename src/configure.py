@@ -287,11 +287,15 @@ def color_print( string, color ):
 def add_option( opt_str, name, val ):
     # NOTE: every -Doption must have trailing space
     if type(val) == type(True): 
-        if val:    opt_str += "-D%s "%(name)
+        if val:
+            opt_str += "-D%s "%(name)
+            print("%-20s : %r"%(name, val))
     elif type(val) == type("str"): 
         opt_str += "-D%s=%s "%(name, val)
+        print("%-20s : %s"%(name, val))
     elif type(val) == type(0):
         opt_str += "-D%s=%d "%(name, val)
+        print("%-20s : %d"%(name, val))
     else:
         raise TypeError("Unknown type to add the simulation options.")
     
