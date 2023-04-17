@@ -16,11 +16,8 @@ extern rfftwnd_plan     FFTW_Plan_PS;
 #else // #ifdef SERIAL
 extern rfftwnd_mpi_plan FFTW_Plan_PS;
 #endif // #ifdef SERIAL ... # else
-
-#elif (defined(SUPPORT_FFTW3)) // #ifdef SUPPORT_FFTW2
-
-extern fftw_plan     FFTW_Plan_PS;
-
+#else // #ifdef SUPPORT_FFTW2
+extern rfftw3_plan     FFTW_Plan_PS;
 #endif // #ifdef SUPPORT_FFTW2 ... #endif
 
 
@@ -60,10 +57,10 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    local_ny_after_transpose      = NULL_INT;
    local_y_start_after_transpose = NULL_INT;
    total_local_size              = 2*Nx_Padded*FFT_Size[1]*FFT_Size[2];
-#  else
+#  else // #  ifdef SERIAL
    rfftwnd_mpi_local_sizes( FFTW_Plan_PS, &local_nz, &local_z_start, &local_ny_after_transpose,
                             &local_y_start_after_transpose, &total_local_size );
-#  endif
+#  endif // #  ifdef SERIAL ... # else
 
 // collect "local_nz" from all ranks and set the corresponding list "List_z_start"
    int List_nz     [MPI_NRank  ];   // slab thickness of each rank in the FFTW slab decomposition
@@ -223,18 +220,9 @@ void GetBasePowerSpectrum( real *VarK, const int j_start, const int dj, double *
 #  else // #  ifdef SERIAL
    rfftwnd_mpi( FFTW_Plan_PS, 1, VarK, NULL, FFTW_TRANSPOSED_ORDER );
 #  endif // #  ifdef SERIAL ... # else
-
-#  elif defined(SUPPORT_FFTW3) // # ifdef SUPPORT_FFTW2
-
-#  ifdef SERIAL
-   //fftw_plan_dft_c2r()
-#  else // #  ifdef SERIAL
-   //rfftwnd_mpi( FFTW_Plan_PS, 1, VarK, NULL, FFTW_TRANSPOSED_ORDER );
-#  endif // #  ifdef SERIAL ... # else
-
-   //fftw_execute(FFTW_Plan_PS);
-
-#  endif // #  ifdef SUPPORT_FFTW2 ... #else
+#  else // # ifdef SUPPORT_FFTW2
+   rfftw3_execute_dft_r2c( FFTW_Plan_PS, (real*) VarK, (rfftw3_complex*) VarK );
+#  endif // #  ifdef SUPPORT_FFTW2 ... # else
 
 // the data are now complex, so typecast a pointer
    cdata = (fftw_complex*) VarK;

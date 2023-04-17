@@ -30,17 +30,15 @@ rfftwnd_mpi_plan FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
 
 #endif // #ifdef SERIAL ... # else
 
-#elif defined(SUPPORT_FFTW3) // #ifdef SUPPORT_FFTW2
-
+#else  // #ifdef SUPPORT_FFTW2
 
 // In FFTW 3, all plans are of type fftw_plan and all are destroyed by fftw_destroy_plan(plan).
-fftw_plan     FFTW_Plan_PS;                        // PS  : plan for calculating the power spectrum
-
+rfftw3_plan     FFTW_Plan_PS;                        // PS  : plan for calculating the power spectrum
 #ifdef GRAVITY
-fftw_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for the self-gravity Poisson solver
+rfftw3_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for the self-gravity Poisson solver
 #endif // #ifdef GRAVITY
 
-#endif // #ifdef SUPPORT_FFTW2 ... #elif defined(SUPPORT_FFTW3)
+#endif // #ifdef SUPPORT_FFTW2 ... #else
 
 
 
@@ -53,53 +51,99 @@ void Init_FFTW()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
-#  ifdef SUPPORT_FFTW2
-// create plans for calculating the power spectrum
-#  ifdef SERIAL
-   FFTW_Plan_PS = rfftw3d_create_plan( NX0_TOT[2], NX0_TOT[1], NX0_TOT[0], FFTW_REAL_TO_COMPLEX,
-                                       FFTW_ESTIMATE | FFTW_IN_PLACE );
-#  else
-   FFTW_Plan_PS = rfftw3d_mpi_create_plan( MPI_COMM_WORLD, NX0_TOT[2], NX0_TOT[1], NX0_TOT[0],
-                                           FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE );
-#  endif
+// determine the FFT size for the power spectrum
+   int PS_FFT_Size[3]     = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
 
+// compute size of array holding FFT input and output for in-place transform with padding
+   int total_local_ps_fft_size = 2*(PS_FFT_Size[0]/2+1)*PS_FFT_Size[1]*PS_FFT_Size[2];
 
-#  ifdef GRAVITY
 // determine the FFT size for the self-gravity solver
-   int FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
+#  ifdef GRAVITY
+   int Gravity_FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
 
 // the zero-padding method is adopted for the isolated BC.
    if ( OPT__BC_POT == BC_POT_ISOLATED )
-      for (int d=0; d<3; d++)    FFT_Size[d] *= 2;
+      for (int d=0; d<3; d++)    Gravity_FFT_Size[d] *= 2;
 
 // check
    if ( MPI_Rank == 0 )
    for (int d=0; d<3; d++)
    {
-      if ( FFT_Size[d] <= 0 )    Aux_Error( ERROR_INFO, "FFT_Size[%d] = %d < 0 !!\n", d, FFT_Size[d] );
+      if ( Gravity_FFT_Size[d] <= 0 )    Aux_Error( ERROR_INFO, "Gravity_FFT_Size[%d] = %d < 0 !!\n", d, Gravity_FFT_Size[d] );
    }
 
+// compute size of array holding FFT input and output for in-place transform
+   int total_local_gravity_fft_size = 2*(Gravity_FFT_Size[0]/2+1)*Gravity_FFT_Size[1]*Gravity_FFT_Size[2];
+
+#  endif // #  ifdef GRAVITY
+
+#  ifdef SUPPORT_FFTW2
+// create plans for calculating the power spectrum
+#  ifdef SERIAL
+   FFTW_Plan_PS = rfftw3d_create_plan( PS_FFT_Size[2], PS_FFT_Size[1], PS_FFT_Size[0], FFTW_REAL_TO_COMPLEX,
+                                       FFTW_ESTIMATE | FFTW_IN_PLACE );
+#  else
+   FFTW_Plan_PS = rfftw3d_mpi_create_plan( MPI_COMM_WORLD, PS_FFT_Size[2], PS_FFT_Size[1], PS_FFT_Size[0],
+                                           FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE );
+#  endif
 
 // create plans for the self-gravity solver
+#  ifdef GRAVITY
 #  ifdef SERIAL
-   FFTW_Plan_Poi     = rfftw3d_create_plan( FFT_Size[2], FFT_Size[1], FFT_Size[0], FFTW_REAL_TO_COMPLEX,
+   FFTW_Plan_Poi     = rfftw3d_create_plan( Gravity_FFT_Size[2], Gravity_FFT_Size[1], Gravity_FFT_Size[0], FFTW_REAL_TO_COMPLEX,
                                             FFTW_ESTIMATE | FFTW_IN_PLACE );
 
-   FFTW_Plan_Poi_Inv = rfftw3d_create_plan( FFT_Size[2], FFT_Size[1], FFT_Size[0], FFTW_COMPLEX_TO_REAL,
+   FFTW_Plan_Poi_Inv = rfftw3d_create_plan( Gravity_FFT_Size[2], Gravity_FFT_Size[1], Gravity_FFT_Size[0], FFTW_COMPLEX_TO_REAL,
                                             FFTW_ESTIMATE | FFTW_IN_PLACE );
 
-#  else
+#  else // #  ifdef SERIAL
 
+   FFTW_Plan_Poi     = rfftw3d_mpi_create_plan( MPI_COMM_WORLD, Gravity_FFT_Size[2], Gravity_FFT_Size[1], Gravity_FFT_Size[0],
+                                                FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE );
+
+   FFTW_Plan_Poi_Inv = rfftw3d_mpi_create_plan( MPI_COMM_WORLD, Gravity_FFT_Size[2], Gravity_FFT_Size[1], Gravity_FFT_Size[0],
+                                                FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE );
+#  endif // #  ifdef SERIAL ... # else
+#  endif // #  ifdef GRAVITY
+
+#  elif defined(SUPPORT_FFTW3) // #ifdef SUPPORT_FFTW2
+
+// create plans for calculating the power spectrum
+#  ifdef SERIAL
+
+// allocate memory for power spectrum array to initialise fftw3 plan
+   real* PS         = (real*) malloc(total_local_ps_fft_size * sizeof(real));
+   FFTW_Plan_PS     = rfftw3_plan_dft_r2c_3d (PS_FFT_Size[2], PS_FFT_Size[1], PS_FFT_Size[0], (real*) PS, (rfftw3_complex*) PS, FFTW_ESTIMATE | FFTW_UNALIGNED);
+// free memory for power spectrum array to initialise fftw3 plan
+   free(PS);
+
+#  else // # ifdef SERIAL
+   FFTW_Plan_PS = rfftw3d_mpi_create_plan( MPI_COMM_WORLD, NX0_TOT[2], NX0_TOT[1], NX0_TOT[0],
+                                           FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE );
+#  endif  // # ifdef SERIAL ... # else
+
+// create plans for the self-gravity solver
+#  ifdef GRAVITY
+
+#  ifdef SERIAL
+
+// allocate memory for density array to initialise fftw3 plan
+   real* RhoK = (real*) malloc(total_local_gravity_fft_size * sizeof(real));
+
+   FFTW_Plan_Poi     = rfftw3_plan_dft_r2c_3d(Gravity_FFT_Size[2], Gravity_FFT_Size[1], Gravity_FFT_Size[0], (real*) RhoK, (rfftw3_complex*) RhoK, FFTW_ESTIMATE | FFTW_UNALIGNED);
+   FFTW_Plan_Poi_Inv = rfftw3_plan_dft_c2r_3d(Gravity_FFT_Size[2], Gravity_FFT_Size[1], Gravity_FFT_Size[0], (rfftw3_complex*) RhoK, (real*) RhoK, FFTW_ESTIMATE | FFTW_UNALIGNED);
+
+// free memory for density array
+   free(RhoK);
+
+#  else // #  ifdef SERIAL
    FFTW_Plan_Poi     = rfftw3d_mpi_create_plan( MPI_COMM_WORLD, FFT_Size[2], FFT_Size[1], FFT_Size[0],
                                                 FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE );
 
    FFTW_Plan_Poi_Inv = rfftw3d_mpi_create_plan( MPI_COMM_WORLD, FFT_Size[2], FFT_Size[1], FFT_Size[0],
                                                 FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE );
-#  endif
-#  endif // #ifdef GRAVITY
-
-#  elif defined(SUPPORT_FFTW3) // #ifdef SUPPORT_FFTW2
-
+#  endif // #  ifdef SERIAL ... # else
+#  endif // #  ifdef GRAVITY
 #  endif // #ifdef SUPPORT_FFTW2 ... #elif defined(SUPPORT_FFTW3)
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
@@ -137,6 +181,13 @@ void End_FFTW()
 #  endif // #ifdef SERIAL ... else ...
 
 #  elif defined(SUPPORT_FFTW3) // #ifdef SUPPORT_FFTW2
+
+   rfftw3_destroy_plan    ( FFTW_Plan_PS      );
+
+#  ifdef GRAVITY
+   rfftw3_destroy_plan    ( FFTW_Plan_Poi     );
+   rfftw3_destroy_plan    ( FFTW_Plan_Poi_Inv );
+#  endif // #  ifdef GRAVITY
 
 #  endif // #ifdef SUPPORT_FFTW2 ... #elif defined(SUPPORT_FFTW3)
 

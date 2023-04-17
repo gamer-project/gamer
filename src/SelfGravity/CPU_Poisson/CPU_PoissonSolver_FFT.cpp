@@ -13,8 +13,8 @@ extern rfftwnd_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
 #else // #ifdef SERIAL
 extern rfftwnd_mpi_plan FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
 #endif // #ifdef SERIAL ... # else
-#elif (defined(SUPPORT_FFTW3)) // #ifdef SUPPORT_FFTW2
-extern fftw_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
+#else // #ifdef SUPPORT_FFTW2
+extern rfftw3_plan      FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
 #endif // #ifdef SUPPORT_FFTW2 ... # else
 
 
@@ -52,17 +52,8 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 #  else // #  ifdef SERIAL
    rfftwnd_mpi( FFTW_Plan_Poi, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
 #  endif // #  ifdef SERIAL ... # else
-#  elif (defined(SUPPORT_FFTW3)) // #  ifdef SUPPORT_FFTW2
-
-// determine the FFT size for the self-gravity solver
-   int FFT_Size[3] = { Nx, Ny, Nz };
-
-// create plans for the self-gravity solver
-   FFTW_Plan_Poi = fftw_plan_dft_r2c_3d(FFT_Size[2], FFT_Size[1], FFT_Size[0], (real*) RhoK, (fftw_complex*) RhoK, FFTW_ESTIMATE);
-   fftw_execute(FFTW_Plan_Poi);
-   fftw_destroy_plan(FFTW_Plan_Poi);
-
-
+#  else // #  ifdef SUPPORT_FFTW2
+   rfftw3_execute_dft_r2c( FFTW_Plan_Poi, (real*) RhoK, (rfftw3_complex*) RhoK);
 #  endif // # ifdef SUPPORT_FFTW2 ... # else
 
 // the data are now complex, so typecast a pointer
@@ -135,12 +126,8 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 #  else // #  ifdef SERIAL
    rfftwnd_mpi( FFTW_Plan_Poi_Inv, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
 #  endif // #  ifdef SERIAL ... # else
-#  elif (defined(SUPPORT_FFTW3)) // #  ifdef SUPPORT_FFTW2
-
-   FFTW_Plan_Poi_Inv = fftw_plan_dft_c2r_3d(FFT_Size[2], FFT_Size[1], FFT_Size[0], (fftw_complex*) RhoK, (real*) RhoK , FFTW_ESTIMATE);
-   fftw_execute(FFTW_Plan_Poi_Inv);
-   fftw_destroy_plan(FFTW_Plan_Poi_Inv);
-
+#  else // #  ifdef SUPPORT_FFTW2
+   rfftw3_execute_dft_c2r ( FFTW_Plan_Poi_Inv, (rfftw3_complex*) RhoK, (real* ) RhoK );
 #  endif // # ifdef SUPPORT_FFTW2 ... # else
 
 // normalization
@@ -183,16 +170,8 @@ void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const i
 #  else
    rfftwnd_mpi( FFTW_Plan_Poi, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
 #  endif // #  ifdef SERIAL ... # else
-#  elif (defined(SUPPORT_FFTW3)) // #  ifdef SUPPORT_FFTW2
-
-// determine the FFT size for the self-gravity solver
-   int FFT_Size[3] = { Nx, Ny, Nz };
-
-// create plans for the self-gravity solver
-   FFTW_Plan_Poi = fftw_plan_dft_r2c_3d(FFT_Size[2], FFT_Size[1], FFT_Size[0], (real*) RhoK, (fftw_complex*) RhoK, FFTW_ESTIMATE);
-   fftw_execute(FFTW_Plan_Poi);
-   fftw_destroy_plan(FFTW_Plan_Poi);
-
+#  else // #  ifdef SUPPORT_FFTW2
+   rfftw3_execute_dft_r2c (FFTW_Plan_Poi, (real*) RhoK, (rfftw3_complex*) RhoK);
 #  endif // # ifdef SUPPORT_FFTW2 ... # else
 
 
@@ -216,14 +195,9 @@ void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const i
 #  else
    rfftwnd_mpi( FFTW_Plan_Poi_Inv, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
 #  endif // #  ifdef SERIAL ... # else
-#  elif (defined(SUPPORT_FFTW3)) // #  ifdef SUPPORT_FFTW2
-
-   FFTW_Plan_Poi_Inv = fftw_plan_dft_c2r_3d(FFT_Size[2], FFT_Size[1], FFT_Size[0], (fftw_complex*) RhoK, (real*) RhoK , FFTW_ESTIMATE);
-   fftw_execute(FFTW_Plan_Poi_Inv);
-   fftw_destroy_plan(FFTW_Plan_Poi_Inv);
-
+#  else // #  ifdef SUPPORT_FFTW2
+   rfftw3_execute_dft_c2r( FFTW_Plan_Poi_Inv, (rfftw3_complex*) RhoK, (real* ) RhoK );
 #  endif // # ifdef SUPPORT_FFTW2 ... # else
-
 
 
 // effect of "4*PI*NEWTON_G" has been included in gFuncK, but the scale factor in the comoving frame hasn't

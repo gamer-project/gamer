@@ -1016,6 +1016,24 @@
 #ifdef SUPPORT_FFTW3
 #define c_re(c) ((c)[0])
 #define c_im(c) ((c)[1])
+
+#ifdef FLOAT8
+#define rfftw3_plan            fftw_plan
+#define rfftw3_destroy_plan    fftw_destroy_plan
+#define rfftw3_complex         fftw_complex
+#define rfftw3_execute_dft_r2c fftw_execute_dft_r2c
+#define rfftw3_execute_dft_c2r fftw_execute_dft_c2r
+#define rfftw3_plan_dft_r2c_3d fftw_plan_dft_r2c_3d
+#define rfftw3_plan_dft_c2r_3d fftw_plan_dft_c2r_3d
+#else // #ifdef FLOAT8
+#define rfftw3_plan            fftwf_plan
+#define rfftw3_destroy_plan    fftwf_destroy_plan
+#define rfftw3_complex         fftwf_complex
+#define rfftw3_execute_dft_r2c fftwf_execute_dft_r2c
+#define rfftw3_execute_dft_c2r fftwf_execute_dft_c2r
+#define rfftw3_plan_dft_r2c_3d fftwf_plan_dft_r2c_3d
+#define rfftw3_plan_dft_c2r_3d fftwf_plan_dft_c2r_3d
+#endif // #ifdef FLOAT8 ... else
 #endif
 
 

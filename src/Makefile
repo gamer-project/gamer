@@ -749,7 +749,7 @@ endif
 
 ifeq "$(filter -DSUPPORT_FFTW3, $(SIMU_OPTION))" "-DSUPPORT_FFTW3"
    LIB += -L$(FFTW3_PATH)/lib
-   LIB += -lfftw3
+   LIB += -lfftw3 -lfftw3f
 endif
 
 ifeq "$(filter -DSUPPORT_FFTW, $(SIMU_OPTION))" "-DSUPPORT_FFTW"

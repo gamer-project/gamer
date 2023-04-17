@@ -8,8 +8,8 @@ extern rfftwnd_plan     FFTW_Plan_Poi;
 #else  // #ifdef SERIAL
 extern rfftwnd_mpi_plan FFTW_Plan_Poi;
 #endif // #ifdef SERIAL ... # else
-#elif (defined(SUPPORT_FFTW3)) // #ifdef SUPPORT_FFTW2
-extern fftw_plan     FFTW_Plan_Poi;
+#else  // #ifdef SUPPORT_FFTW2
+extern rfftw3_plan     FFTW_Plan_Poi;
 #endif // #ifdef SUPPORT_FFTW2 ... # else
 
 
@@ -92,13 +92,8 @@ void Init_GreenFuncK()
 #  else // # ifdef SERIAL
    rfftwnd_mpi( FFTW_Plan_Poi, 1, GreenFuncK, NULL, FFTW_TRANSPOSED_ORDER );
 #  endif // #  ifdef SERIAL ... # else
-#  elif (defined(SUPPORT_FFTW3)) // #  ifdef SUPPORT_FFTW2
-
-// create plans for the self-gravity solver
-   FFTW_Plan_Poi = fftw_plan_dft_r2c_3d(FFT_Size[2], FFT_Size[1], FFT_Size[0], (real*) GreenFuncK, (fftw_complex*) GreenFuncK, FFTW_ESTIMATE);
-   fftw_execute(FFTW_Plan_Poi);
-   fftw_destroy_plan(FFTW_Plan_Poi);
-
+#  else // #  ifdef SUPPORT_FFTW2
+   rfftw3_execute_dft_r2c(FFTW_Plan_Poi, (real*) GreenFuncK, (rfftw3_complex*) GreenFuncK);
 #  endif // # ifdef SUPPORT_FFTW2 ... # else
 
 
