@@ -1012,13 +1012,11 @@
 #  undef STORE_PAR_ACC
 #endif
 
-// macros for backward compatibility with fftw2
+// wrappers for fftw2 and fftw3 interfaces
 #ifdef SUPPORT_FFTW
 
+// wrappers for fftw3 single and double precision routines
 #ifdef SUPPORT_FFTW3
-#define c_re(c) ((c)[0])
-#define c_im(c) ((c)[1])
-
 #ifdef FLOAT8
 #define rfftw3_plan            fftw_plan
 #define rfftw3_destroy_plan    fftw_destroy_plan
@@ -1036,10 +1034,28 @@
 #define rfftw3_plan_dft_r2c_3d fftwf_plan_dft_r2c_3d
 #define rfftw3_plan_dft_c2r_3d fftwf_plan_dft_c2r_3d
 #endif // #ifdef FLOAT8 ... else
-
 #endif // #ifdef SUPPORT_FFTW3
 
-#ifdef SUPPORT_FFTW2
+
+//wrapper for fftw complex type
+//note that real and imaginary part should only be accessed through c_re and c_im since this macro is also defined in FFTW2
+#ifdef SUPPORT_FFTW3
+#define rfftw_complex rfftw3_complex
+#define c_re(c) ((c)[0])
+#define c_im(c) ((c)[1])
+#else // # ifdef SUPPORT_FFTW3
+#define rfftw_complex fftw_complex
+#endif // # ifdef SUPPORT_FFTW3 ... # else
+
+
+
+//wrappers for fftw plans and real-to-complex as well as complex to real n-dimensional transforms on the root level of the AMR hierarchy
+//used for Poisson solver and for computing power spectra
+#ifdef SUPPORT_FFTW3
+#define root_fftw_plan              rfftw3_plan
+#define root_fftw_r2c(plan, array)  rfftw3_execute_dft_r2c( plan, (real*)           array, (rfftw3_complex*) array )
+#define root_fftw_c2r(plan, array)  rfftw3_execute_dft_c2r( plan, (rfftw3_complex*) array, (real*)           array )
+#else // # ifdef SUPPORT_FFTW3
 #ifdef SERIAL
 #define root_fftw_plan              rfftwnd_plan
 #define root_fftw_r2c(plan, array)  rfftwnd_one_real_to_complex( plan, array, NULL )
@@ -1049,11 +1065,7 @@
 #define root_fftw_r2c(plan, array)  rfftwnd_mpi( plan, 1, array, NULL, FFTW_TRANSPOSED_ORDER )
 #define root_fftw_c2r(plan, array)  rfftwnd_mpi( plan, 1, array, NULL, FFTW_TRANSPOSED_ORDER )
 #endif // #ifdef SERIAL ... # else
-#else
-#define root_fftw_plan              rfftw3_plan
-#define root_fftw_r2c(plan, array)  rfftw3_execute_dft_r2c( plan, (real*)           array, (rfftw3_complex*) array )
-#define root_fftw_c2r(plan, array)  rfftw3_execute_dft_c2r( plan, (rfftw3_complex*) array, (real*)           array )
-#endif
-
+#endif // # ifdef SUPPORT_FFTW3 ... # else
 #endif  // #ifdef SUPPORT_FFTW
+
 #endif  // #ifndef __MACRO_H__

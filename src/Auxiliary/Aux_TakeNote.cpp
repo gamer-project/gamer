@@ -359,12 +359,12 @@ void Aux_TakeNote()
 #     ifdef SUPPORT_FFTW
 #     ifdef SUPPORT_FFTW3
       fprintf( Note, "SUPPORT_FFTW3                   ON\n" );
-#     else
+#     else  // # ifdef SUPPORT_FFTW3
       fprintf( Note, "SUPPORT_FFTW2                   ON\n" );
-#     endif
-#     else
+#     endif // # ifdef SUPPORT_FFTW3 ... # else
+#     else // # ifdef SUPPORT_FFTW
       fprintf( Note, "SUPPORT_FFTW                    OFF\n" );
-#     endif
+#     endif // # ifdef SUPPORT_FFTW ... # else
 
 #     ifdef SUPPORT_LIBYT
       fprintf( Note, "SUPPORT_LIBYT                   ON\n" );

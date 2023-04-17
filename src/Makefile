@@ -186,7 +186,8 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # double precision
-SIMU_OPTION += -DFLOAT8
+#SIMU_OPTION += -DFLOAT8
+
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE

@@ -31,14 +31,14 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
    const int Nx_Padded = Nx/2 + 1;
    const real dh       = amr->dh[0];
    real Deno;
-   fftw_complex *cdata;
+   rfftw_complex *cdata;
 
 
 // forward FFT
    root_fftw_r2c( FFTW_Plan_Poi, RhoK );
 
 // the data are now complex, so typecast a pointer
-   cdata = (fftw_complex*) RhoK;
+   cdata = (rfftw_complex*) RhoK;
 
 
 // set up the dimensionless wave number and the corresponding sin(k)^2 function
@@ -131,9 +131,9 @@ void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const i
    const int Ny        = 2 * NX0_TOT[1];
    const int Nz        = 2 * NX0_TOT[2];
 
-   fftw_complex *RhoK_cplx   = (fftw_complex *)RhoK;
-   fftw_complex *gFuncK_cplx = (fftw_complex *)gFuncK;
-   fftw_complex  Temp_cplx;
+   rfftw_complex *RhoK_cplx   = (rfftw_complex *)RhoK;
+   rfftw_complex *gFuncK_cplx = (rfftw_complex *)gFuncK;
+   rfftw_complex  Temp_cplx;
 
 
 // forward FFT

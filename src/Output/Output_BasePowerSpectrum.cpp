@@ -195,7 +195,7 @@ void GetBasePowerSpectrum( real *VarK, const int j_start, const int dj, double *
    const int Nz        = NX0_TOT[2];
    const int Nx_Padded = Nx/2 + 1;
 
-   fftw_complex *cdata=NULL;
+   rfftw_complex *cdata=NULL;
    double PS_local[Nx_Padded];
    long   Count_local[Nx_Padded], Count_total[Nx_Padded];
    int    bin, bin_i[Nx_Padded], bin_j[Ny], bin_k[Nz];
@@ -203,7 +203,7 @@ void GetBasePowerSpectrum( real *VarK, const int j_start, const int dj, double *
    root_fftw_r2c( FFTW_Plan_PS, VarK );
 
 // the data are now complex, so typecast a pointer
-   cdata = (fftw_complex*) VarK;
+   cdata = (rfftw_complex*) VarK;
 
 
 // set up the dimensionless wave number coefficients according to the FFTW data format
