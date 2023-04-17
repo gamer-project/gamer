@@ -215,8 +215,8 @@ SIMU_OPTION += -DOPENMP
 
 # support FFTW library
 # --> must be enabled when GRAVITY is enabled
-#SIMU_OPTION += -DSUPPORT_FFTW
-SIMU_OPTION += -DSUPPORT_FFTW3
+SIMU_OPTION += -DSUPPORT_FFTW
+#SIMU_OPTION += -DSUPPORT_FFTW3
 
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT

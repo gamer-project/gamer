@@ -53,8 +53,8 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    total_local_size = fftw_mpi_local_size_3d_transposed( FFT_Size[2], local_ny, local_nx, MPI_COMM_WORLD,
                            &local_nz, &local_z_start, &local_ny_after_transpose, &local_y_start_after_transpose );
 #  else // # ifdef SUPPORT_FFTW3
-   rfftwnd_mpi_local_sizes( FFTW_Plan_PS, &local_nz, &local_z_start, &local_ny_after_transpose,
-                            &local_y_start_after_transpose, &total_local_size );
+   rfftwnd_mpi_local_sizes( FFTW_Plan_PS, (int*) &local_nz, (int*) &local_z_start, (int*) &local_ny_after_transpose,
+                            (int*) &local_y_start_after_transpose, (int*) &total_local_size );
 #  endif // #  ifdef SUPPORT_FFTW3 ... # else
 #  endif // #  ifdef SERIAL ... # else
 
