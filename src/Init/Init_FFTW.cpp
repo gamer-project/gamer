@@ -17,20 +17,20 @@ root_fftw_plan     FFTW_Plan_PS;                        // PS  : plan for calcul
 root_fftw_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for the self-gravity Poisson solver
 #endif
 
-//wrappers for fftw create and destroy plan functions
+//wrappers for fftw create and destroy plan functions used in Init_FFTW
 #ifdef SUPPORT_FFTW3
 #define create_fftw_3d_r2c_plan(size, arr)  rfftw3_plan_dft_r2c_3d( size[2], size[1], size[0], (real*)           arr, (rfftw3_complex*) arr, FFTW_ESTIMATE | FFTW_UNALIGNED )
 #define create_fftw_3d_c2r_plan(size, arr)  rfftw3_plan_dft_c2r_3d( size[2], size[1], size[0], (rfftw3_complex*) arr, (real*)           arr, FFTW_ESTIMATE | FFTW_UNALIGNED )
-#define destroy_fftw_plan                         rfftw3_destroy_plan
+#define destroy_fftw_plan                   rfftw3_destroy_plan
 #else // # ifdef SUPPORT_FFTW3
 #ifdef SERIAL
 #define create_fftw_3d_r2c_plan(size, arr)  rfftw3d_create_plan( size[2], size[1], size[0], FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE | FFTW_IN_PLACE )
 #define create_fftw_3d_c2r_plan(size, arr)  rfftw3d_create_plan( size[2], size[1], size[0], FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE | FFTW_IN_PLACE )
-#define destroy_fftw_plan                         rfftwnd_destroy_plan
+#define destroy_fftw_plan                   rfftwnd_destroy_plan
 #else  // #ifdef SERIAL
 #define create_fftw_3d_r2c_plan(size, arr)  rfftw3d_mpi_create_plan( MPI_COMM_WORLD, size[2], size[1], size[0], FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE )
 #define create_fftw_3d_c2r_plan(size, arr)  rfftw3d_mpi_create_plan( MPI_COMM_WORLD, size[2], size[1], size[0], FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE )
-#define destroy_fftw_plan                         rfftwnd_mpi_destroy_plan
+#define destroy_fftw_plan                   rfftwnd_mpi_destroy_plan
 #endif // #ifdef SERIAL ... # else
 #endif // # ifdef SUPPORT_FFTW3 ... # else
 
@@ -55,7 +55,7 @@ void Init_FFTW()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
 // determine the FFT size for the power spectrum
-   int PS_FFT_Size[3]     = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
+   int PS_FFT_Size[3]      = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
 
 // determine the FFT size for the self-gravity solver
 #  ifdef GRAVITY
@@ -122,6 +122,10 @@ void End_FFTW()
    destroy_fftw_plan  ( FFTW_Plan_Poi     );
    destroy_fftw_plan  ( FFTW_Plan_Poi_Inv );
 #  endif // #  ifdef GRAVITY
+
+#  ifdef SUPPORT_FFTW3
+   rfftw3_cleanup();
+#  endif // # ifdef SUPPORT_FFTW3
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 

@@ -186,7 +186,7 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # double precision
-#SIMU_OPTION += -DFLOAT8
+SIMU_OPTION += -DFLOAT8
 
 
 # serial mode (in which no MPI libraries are required)
@@ -215,8 +215,8 @@ SIMU_OPTION += -DOPENMP
 
 # support FFTW library
 # --> must be enabled when GRAVITY is enabled
-#SIMU_OPTION += -DSUPPORT_FFTW
-SIMU_OPTION += -DSUPPORT_FFTW3
+SIMU_OPTION += -DSUPPORT_FFTW
+#SIMU_OPTION += -DSUPPORT_FFTW3
 
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT

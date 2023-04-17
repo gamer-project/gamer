@@ -26,10 +26,9 @@
 #endif
 
 #ifdef SUPPORT_FFTW3
-#        include <fftw3.h>
-#        define SUPPORT_FFTW
-#elif defined(SUPPORT_FFTW2)
-#       define SUPPORT_FFTW
+#  include <fftw3.h>
+#  define SUPPORT_FFTW
+#else
 #  ifdef FLOAT8
 #     ifdef SERIAL
 #        include <drfftw.h>
