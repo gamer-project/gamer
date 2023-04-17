@@ -1018,23 +1018,37 @@
 // wrappers for fftw3 single and double precision routines
 #ifdef SUPPORT_FFTW3
 #ifdef FLOAT8
-#define rfftw3_plan            fftw_plan
-#define rfftw3_destroy_plan    fftw_destroy_plan
-#define rfftw3_complex         fftw_complex
-#define rfftw3_execute_dft_r2c fftw_execute_dft_r2c
-#define rfftw3_execute_dft_c2r fftw_execute_dft_c2r
-#define rfftw3_plan_dft_r2c_3d fftw_plan_dft_r2c_3d
-#define rfftw3_plan_dft_c2r_3d fftw_plan_dft_c2r_3d
-#define rfftw3_cleanup         fftw_cleanup
+#define rfftw3_plan                fftw_plan
+#define rfftw3_destroy_plan        fftw_destroy_plan
+#define rfftw3_complex             fftw_complex
+#define rfftw3_execute_dft_r2c     fftw_execute_dft_r2c
+#define rfftw3_execute_dft_c2r     fftw_execute_dft_c2r
+#define rfftw3_plan_dft_r2c_3d     fftw_plan_dft_r2c_3d
+#define rfftw3_plan_dft_c2r_3d     fftw_plan_dft_c2r_3d
+#define rfftw3_cleanup             fftw_cleanup
+#ifndef SERIAL
+#define rfftw3_mpi_execute_dft_r2c fftw_mpi_execute_dft_r2c
+#define rfftw3_mpi_execute_dft_c2r fftw_mpi_execute_dft_c2r
+#define rfftw3_mpi_plan_dft_r2c_3d fftw_mpi_plan_dft_r2c_3d
+#define rfftw3_mpi_plan_dft_c2r_3d fftw_mpi_plan_dft_c2r_3d
+#define rfftw3_mpi_cleanup         fftw_mpi_cleanup
+#endif // #ifndef SERIAL
 #else // #ifdef FLOAT8
-#define rfftw3_plan            fftwf_plan
-#define rfftw3_destroy_plan    fftwf_destroy_plan
-#define rfftw3_complex         fftwf_complex
-#define rfftw3_execute_dft_r2c fftwf_execute_dft_r2c
-#define rfftw3_execute_dft_c2r fftwf_execute_dft_c2r
-#define rfftw3_plan_dft_r2c_3d fftwf_plan_dft_r2c_3d
-#define rfftw3_plan_dft_c2r_3d fftwf_plan_dft_c2r_3d
-#define rfftw3_cleanup         fftwf_cleanup
+#define rfftw3_plan                fftwf_plan
+#define rfftw3_destroy_plan        fftwf_destroy_plan
+#define rfftw3_complex             fftwf_complex
+#define rfftw3_execute_dft_r2c     fftwf_execute_dft_r2c
+#define rfftw3_execute_dft_c2r     fftwf_execute_dft_c2r
+#define rfftw3_plan_dft_r2c_3d     fftwf_plan_dft_r2c_3d
+#define rfftw3_plan_dft_c2r_3d     fftwf_plan_dft_c2r_3d
+#define rfftw3_cleanup             fftwf_cleanup
+#ifndef SERIAL
+#define rfftw3_mpi_execute_dft_r2c fftwf_mpi_execute_dft_r2c
+#define rfftw3_mpi_execute_dft_c2r fftwf_mpi_execute_dft_c2r
+#define rfftw3_mpi_plan_dft_r2c_3d fftwf_mpi_plan_dft_r2c_3d
+#define rfftw3_mpi_plan_dft_c2r_3d fftwf_mpi_plan_dft_c2r_3d
+#define rfftw3_mpi_cleanup         fftwf_mpi_cleanup
+#endif // #ifndef SERIAL
 #endif // #ifdef FLOAT8 ... else
 #endif // #ifdef SUPPORT_FFTW3
 
@@ -1054,9 +1068,15 @@
 //wrappers for fftw plans and real-to-complex as well as complex to real n-dimensional transforms on the root level of the AMR hierarchy
 //used for Poisson solver and for computing power spectra
 #ifdef SUPPORT_FFTW3
+#ifdef SERIAL
 #define root_fftw_plan              rfftw3_plan
 #define root_fftw_r2c(plan, array)  rfftw3_execute_dft_r2c( plan, (real*)           array, (rfftw_complex*) array )
 #define root_fftw_c2r(plan, array)  rfftw3_execute_dft_c2r( plan, (rfftw_complex*) array, (real*)           array )
+#else  // #ifdef SERIAL
+#define root_fftw_plan              rfftw3_plan
+#define root_fftw_r2c(plan, array)  rfftw3_mpi_execute_dft_r2c( plan, (real*)          array, (rfftw_complex*) array )
+#define root_fftw_c2r(plan, array)  rfftw3_mpi_execute_dft_c2r( plan, (rfftw_complex*) array, (real*)           array )
+#endif // #ifdef SERIAL ... # else
 #else // # ifdef SUPPORT_FFTW3
 #ifdef SERIAL
 #define root_fftw_plan              rfftwnd_plan

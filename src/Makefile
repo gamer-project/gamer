@@ -173,7 +173,7 @@ SIMU_OPTION += -DPATCH_SIZE=8
 SIMU_OPTION += -DGPU_ARCH=TURING
 
 # debug mode
-#SIMU_OPTION += -DGAMER_DEBUG
+SIMU_OPTION += -DGAMER_DEBUG
 
 # bitwise reproducibility
 #SIMU_OPTION += -DBITWISE_REPRODUCIBILITY
@@ -186,16 +186,16 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # double precision
-SIMU_OPTION += -DFLOAT8
+#SIMU_OPTION += -DFLOAT8
 
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
-SIMU_OPTION += -DSERIAL
+#SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization: HILBERT
 # --> must disable SERIAL
-#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation
 # --> NOT supported yet; must enable LOAD_BALANCE
@@ -215,8 +215,8 @@ SIMU_OPTION += -DOPENMP
 
 # support FFTW library
 # --> must be enabled when GRAVITY is enabled
-SIMU_OPTION += -DSUPPORT_FFTW
-#SIMU_OPTION += -DSUPPORT_FFTW3
+#SIMU_OPTION += -DSUPPORT_FFTW
+SIMU_OPTION += -DSUPPORT_FFTW3
 
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT
@@ -264,10 +264,10 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 
 # gnu
 # -------------------------------------------------------------------------------
- CXX         = g++                                       # serial compiler
-#CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
+#CXX         = g++                                       # serial compiler
+CXX          = mpicxx                    # MPI compiler
 #CXX         = CC                                        # cray wrapper script
- CXXFLAG     = -g -O3                                    # general flags
+CXXFLAG     = -g                                     # general flags
 #CXXFLAG     = -g -O3 -std=c++11
 #CXXFLAG     = -g -Ofast
  CXXFLAG    += -Wall -Wextra                             # warning flags
@@ -275,7 +275,7 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
                -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
                -Wno-unused-result -Wno-unused-function \
 	       -Wno-implicit-fallthrough -Wno-parentheses
- OPENMPFLAG  = -fopenmp                                  # openmp flag
+ OPENMPFLAG  = -fopenmp -pthread
  LIB         =                                           # libraries and linker flags
 
 # for debug only
@@ -307,8 +307,8 @@ endif
 # template
 CUDA_PATH    := /usr/local/cuda/
 FFTW_PATH    := ~/Downloads/fftw-2.1.5/rfftw
-FFTW3_PATH   :=
-MPI_PATH     := /usr/lib/x86_64-linux-gnu/mpich
+FFTW3_PATH   := /usr/local
+MPI_PATH     := /usr/lib/x86_64-linux-gnu/openmpi
 HDF5_PATH    := /usr/lib/x86_64-linux-gnu/hdf5/serial
 GRACKLE_PATH :=
 GSL_PATH     :=
@@ -750,7 +750,11 @@ endif
 
 ifeq "$(filter -DSUPPORT_FFTW3, $(SIMU_OPTION))" "-DSUPPORT_FFTW3"
    LIB += -L$(FFTW3_PATH)/lib
-   LIB += -lfftw3 -lfftw3f
+   ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" "-DSERIAL"
+      LIB += -lfftw3 -lfftw3f -lm
+   else
+      LIB += -lfftw3_mpi -lfftw3 -lfftw3f_mpi -lfftw3f -lm
+   endif
 endif
 
 ifeq "$(filter -DSUPPORT_FFTW, $(SIMU_OPTION))" "-DSUPPORT_FFTW"

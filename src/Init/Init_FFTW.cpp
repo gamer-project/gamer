@@ -19,9 +19,15 @@ root_fftw_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for the se
 
 //wrappers for fftw create and destroy plan functions used in Init_FFTW
 #ifdef SUPPORT_FFTW3
+#ifdef SERIAL
 #define create_fftw_3d_r2c_plan(size, arr)  rfftw3_plan_dft_r2c_3d( size[2], size[1], size[0], (real*)           arr, (rfftw3_complex*) arr, FFTW_ESTIMATE | FFTW_UNALIGNED )
 #define create_fftw_3d_c2r_plan(size, arr)  rfftw3_plan_dft_c2r_3d( size[2], size[1], size[0], (rfftw3_complex*) arr, (real*)           arr, FFTW_ESTIMATE | FFTW_UNALIGNED )
 #define destroy_fftw_plan                   rfftw3_destroy_plan
+#else  // #ifdef SERIAL
+#define create_fftw_3d_r2c_plan(size, arr)  rfftw3_mpi_plan_dft_r2c_3d( size[2], size[1], size[0], (real*)           arr, (rfftw3_complex*) arr, MPI_COMM_WORLD, FFTW_ESTIMATE | FFTW_UNALIGNED | FFTW_MPI_TRANSPOSED_OUT )
+#define create_fftw_3d_c2r_plan(size, arr)  rfftw3_mpi_plan_dft_c2r_3d( size[2], size[1], size[0], (rfftw3_complex*) arr, (real*)           arr, MPI_COMM_WORLD, FFTW_ESTIMATE | FFTW_UNALIGNED | FFTW_MPI_TRANSPOSED_IN  )
+#define destroy_fftw_plan                   rfftw3_destroy_plan
+#endif // #ifdef SERIAL ... # else
 #else // # ifdef SUPPORT_FFTW3
 #ifdef SERIAL
 #define create_fftw_3d_r2c_plan(size, arr)  rfftw3d_create_plan( size[2], size[1], size[0], FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE | FFTW_IN_PLACE )
@@ -53,6 +59,12 @@ void Init_FFTW()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
+
+#  ifdef SUPPORT_FFTW3
+#  ifndef SERIAL
+   fftw_mpi_init();
+#  endif // # ifndef SERIAL
+#  endif // # ifdef SUPPORT_FFTW3
 
 // determine the FFT size for the power spectrum
    int PS_FFT_Size[3]      = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
@@ -124,7 +136,11 @@ void End_FFTW()
 #  endif // #  ifdef GRAVITY
 
 #  ifdef SUPPORT_FFTW3
+#  ifdef SERIAL
    rfftw3_cleanup();
+#  else
+   rfftw3_mpi_cleanup();
+#  endif
 #  endif // # ifdef SUPPORT_FFTW3
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );

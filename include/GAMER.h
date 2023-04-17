@@ -26,8 +26,12 @@
 #endif
 
 #ifdef SUPPORT_FFTW3
-#  include <fftw3.h>
 #  define SUPPORT_FFTW
+#  ifdef SERIAL
+#     include <fftw3.h>
+#  else
+#     include <fftw3-mpi.h>
+#  endif
 #else
 #  ifdef FLOAT8
 #     ifdef SERIAL

@@ -36,17 +36,26 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    const int FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
 
 // get the array indices using by FFTW
-   int local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose, total_local_size;
+   long int local_nx, local_ny, local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose, total_local_size;
+
+// note: total_local_size is NOT necessarily equal to local_nx*local_ny*local_nz
+   local_nx = 2*( FFT_Size[0]/2 + 1 );
+   local_ny = FFT_Size[1];
 
 #  ifdef SERIAL
    local_nz                      = FFT_Size[2];
    local_z_start                 = 0;
    local_ny_after_transpose      = NULL_INT;
    local_y_start_after_transpose = NULL_INT;
-   total_local_size              = 2*Nx_Padded*FFT_Size[1]*FFT_Size[2];
-#  else // #  ifdef SERIAL
+   total_local_size              = local_nx*local_ny*local_nz;
+#  else // # ifdef SERIAL
+#  ifdef SUPPORT_FFTW3
+   total_local_size = fftw_mpi_local_size_3d_transposed( FFT_Size[2], local_ny, local_nx, MPI_COMM_WORLD,
+                           &local_nz, &local_z_start, &local_ny_after_transpose, &local_y_start_after_transpose );
+#  else // # ifdef SUPPORT_FFTW3
    rfftwnd_mpi_local_sizes( FFTW_Plan_PS, &local_nz, &local_z_start, &local_ny_after_transpose,
                             &local_y_start_after_transpose, &total_local_size );
+#  endif // #  ifdef SUPPORT_FFTW3 ... # else
 #  endif // #  ifdef SERIAL ... # else
 
 // collect "local_nz" from all ranks and set the corresponding list "List_z_start"

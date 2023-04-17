@@ -189,17 +189,26 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 
 
 // get the array indices using by FFTW
-   int local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose, total_local_size;
+   long int local_nx, local_ny, local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose, total_local_size;
+
+// note: total_local_size is NOT necessarily equal to local_nx*local_ny*local_nz
+   local_nx = 2*( FFT_Size[0]/2 + 1 );
+   local_ny = FFT_Size[1];
 
 #  ifdef SERIAL
    local_nz                      = FFT_Size[2];
    local_z_start                 = 0;
    local_ny_after_transpose      = NULL_INT;
    local_y_start_after_transpose = NULL_INT;
-   total_local_size              = 2*(FFT_Size[0]/2+1)*FFT_Size[1]*FFT_Size[2];
-#  else
-   rfftwnd_mpi_local_sizes( FFTW_Plan_Poi, &local_nz, &local_z_start, &local_ny_after_transpose,
+   total_local_size              = local_nx*local_ny*local_nz;
+#  else // # ifdef SERIAL
+#  ifdef SUPPORT_FFTW3
+   total_local_size = fftw_mpi_local_size_3d_transposed( FFT_Size[2], local_ny, local_nx, MPI_COMM_WORLD,
+                           &local_nz, &local_z_start, &local_ny_after_transpose, &local_y_start_after_transpose );
+#  else // # ifdef SUPPORT_FFTW3
+   rfftwnd_mpi_local_sizes( FFTW_Plan_PS, &local_nz, &local_z_start, &local_ny_after_transpose,
                             &local_y_start_after_transpose, &total_local_size );
+#  endif // #  ifdef SUPPORT_FFTW3 ... # else
 #  endif
 
 
