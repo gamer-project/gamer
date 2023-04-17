@@ -8,20 +8,7 @@
 
 static void GetBasePowerSpectrum( real *VarK, const int j_start, const int dj, double *PS_total, double *NormDC );
 
-
-#ifdef SUPPORT_FFTW2
-
-#ifdef SERIAL
-extern rfftwnd_plan     FFTW_Plan_PS;
-#else // #ifdef SERIAL
-extern rfftwnd_mpi_plan FFTW_Plan_PS;
-#endif // #ifdef SERIAL ... # else
-#else // #ifdef SUPPORT_FFTW2
-extern rfftw3_plan     FFTW_Plan_PS;
-#endif // #ifdef SUPPORT_FFTW2 ... #endif
-
-
-
+extern root_fftw_plan     FFTW_Plan_PS;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_BasePowerSpectrum
@@ -213,16 +200,7 @@ void GetBasePowerSpectrum( real *VarK, const int j_start, const int dj, double *
    long   Count_local[Nx_Padded], Count_total[Nx_Padded];
    int    bin, bin_i[Nx_Padded], bin_j[Ny], bin_k[Nz];
 
-#  ifdef SUPPORT_FFTW2
-// forward FFT
-#  ifdef SERIAL
-   rfftwnd_one_real_to_complex( FFTW_Plan_PS, VarK, NULL );
-#  else // #  ifdef SERIAL
-   rfftwnd_mpi( FFTW_Plan_PS, 1, VarK, NULL, FFTW_TRANSPOSED_ORDER );
-#  endif // #  ifdef SERIAL ... # else
-#  else // # ifdef SUPPORT_FFTW2
-   rfftw3_execute_dft_r2c( FFTW_Plan_PS, (real*) VarK, (rfftw3_complex*) VarK );
-#  endif // #  ifdef SUPPORT_FFTW2 ... # else
+   root_fftw_r2c( FFTW_Plan_PS, VarK );
 
 // the data are now complex, so typecast a pointer
    cdata = (fftw_complex*) VarK;

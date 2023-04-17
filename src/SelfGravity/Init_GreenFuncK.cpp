@@ -2,19 +2,7 @@
 
 #if ( defined GRAVITY  &&  defined SUPPORT_FFTW )
 
-#ifdef SUPPORT_FFTW2
-#ifdef SERIAL
-extern rfftwnd_plan     FFTW_Plan_Poi;
-#else  // #ifdef SERIAL
-extern rfftwnd_mpi_plan FFTW_Plan_Poi;
-#endif // #ifdef SERIAL ... # else
-#else  // #ifdef SUPPORT_FFTW2
-extern rfftw3_plan     FFTW_Plan_Poi;
-#endif // #ifdef SUPPORT_FFTW2 ... # else
-
-
-
-
+extern root_fftw_plan     FFTW_Plan_Poi;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_GreenFuncK
@@ -86,15 +74,7 @@ void Init_GreenFuncK()
 
 
 // 4. convert the Green's function to the k space
-#  ifdef SUPPORT_FFTW2
-#  ifdef SERIAL
-   rfftwnd_one_real_to_complex( FFTW_Plan_Poi, GreenFuncK, NULL );
-#  else // # ifdef SERIAL
-   rfftwnd_mpi( FFTW_Plan_Poi, 1, GreenFuncK, NULL, FFTW_TRANSPOSED_ORDER );
-#  endif // #  ifdef SERIAL ... # else
-#  else // #  ifdef SUPPORT_FFTW2
-   rfftw3_execute_dft_r2c(FFTW_Plan_Poi, (real*) GreenFuncK, (rfftw3_complex*) GreenFuncK);
-#  endif // # ifdef SUPPORT_FFTW2 ... # else
+   root_fftw_r2c( FFTW_Plan_Poi, GreenFuncK );
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

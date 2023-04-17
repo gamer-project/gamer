@@ -7,17 +7,7 @@
 static void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const int dj, const int RhoK_Size );
 static void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const int RhoK_Size );
 
-#ifdef SUPPORT_FFTW2
-#ifdef SERIAL
-extern rfftwnd_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
-#else // #ifdef SERIAL
-extern rfftwnd_mpi_plan FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
-#endif // #ifdef SERIAL ... # else
-#else // #ifdef SUPPORT_FFTW2
-extern rfftw3_plan      FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
-#endif // #ifdef SUPPORT_FFTW2 ... # else
-
-
+extern root_fftw_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  FFT_Periodic
@@ -45,16 +35,7 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 
 
 // forward FFT
-
-#  ifdef SUPPORT_FFTW2
-#  ifdef SERIAL
-   rfftwnd_one_real_to_complex( FFTW_Plan_Poi, RhoK, NULL );
-#  else // #  ifdef SERIAL
-   rfftwnd_mpi( FFTW_Plan_Poi, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
-#  endif // #  ifdef SERIAL ... # else
-#  else // #  ifdef SUPPORT_FFTW2
-   rfftw3_execute_dft_r2c( FFTW_Plan_Poi, (real*) RhoK, (rfftw3_complex*) RhoK);
-#  endif // # ifdef SUPPORT_FFTW2 ... # else
+   root_fftw_r2c( FFTW_Plan_Poi, RhoK );
 
 // the data are now complex, so typecast a pointer
    cdata = (fftw_complex*) RhoK;
@@ -120,15 +101,7 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 
 
 // backward FFT
-#  ifdef SUPPORT_FFTW2
-#  ifdef SERIAL
-   rfftwnd_one_complex_to_real( FFTW_Plan_Poi_Inv, cdata, NULL );
-#  else // #  ifdef SERIAL
-   rfftwnd_mpi( FFTW_Plan_Poi_Inv, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
-#  endif // #  ifdef SERIAL ... # else
-#  else // #  ifdef SUPPORT_FFTW2
-   rfftw3_execute_dft_c2r ( FFTW_Plan_Poi_Inv, (rfftw3_complex*) RhoK, (real* ) RhoK );
-#  endif // # ifdef SUPPORT_FFTW2 ... # else
+   root_fftw_c2r( FFTW_Plan_Poi_Inv, RhoK );
 
 // normalization
    const real norm = dh*dh / ( (real)Nx*Ny*Nz );
@@ -164,15 +137,7 @@ void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const i
 
 
 // forward FFT
-#  ifdef SUPPORT_FFTW2
-#  ifdef SERIAL
-   rfftwnd_one_real_to_complex( FFTW_Plan_Poi, RhoK, NULL );
-#  else
-   rfftwnd_mpi( FFTW_Plan_Poi, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
-#  endif // #  ifdef SERIAL ... # else
-#  else // #  ifdef SUPPORT_FFTW2
-   rfftw3_execute_dft_r2c (FFTW_Plan_Poi, (real*) RhoK, (rfftw3_complex*) RhoK);
-#  endif // # ifdef SUPPORT_FFTW2 ... # else
+   root_fftw_r2c( FFTW_Plan_Poi, RhoK );
 
 
 // multiply density and Green's function in the k space
@@ -189,16 +154,7 @@ void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const i
 
 
 // backward FFT
-#  ifdef SUPPORT_FFTW2
-#  ifdef SERIAL
-   rfftwnd_one_complex_to_real( FFTW_Plan_Poi_Inv, RhoK_cplx, NULL );
-#  else
-   rfftwnd_mpi( FFTW_Plan_Poi_Inv, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
-#  endif // #  ifdef SERIAL ... # else
-#  else // #  ifdef SUPPORT_FFTW2
-   rfftw3_execute_dft_c2r( FFTW_Plan_Poi_Inv, (rfftw3_complex*) RhoK, (real* ) RhoK );
-#  endif // # ifdef SUPPORT_FFTW2 ... # else
-
+   root_fftw_c2r( FFTW_Plan_Poi_Inv, RhoK );
 
 // effect of "4*PI*NEWTON_G" has been included in gFuncK, but the scale factor in the comoving frame hasn't
 #  ifdef COMOVING

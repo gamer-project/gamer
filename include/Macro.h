@@ -1013,6 +1013,8 @@
 #endif
 
 // macros for backward compatibility with fftw2
+#ifdef SUPPORT_FFTW
+
 #ifdef SUPPORT_FFTW3
 #define c_re(c) ((c)[0])
 #define c_im(c) ((c)[1])
@@ -1034,7 +1036,24 @@
 #define rfftw3_plan_dft_r2c_3d fftwf_plan_dft_r2c_3d
 #define rfftw3_plan_dft_c2r_3d fftwf_plan_dft_c2r_3d
 #endif // #ifdef FLOAT8 ... else
+
+#endif // #ifdef SUPPORT_FFTW3
+
+#ifdef SUPPORT_FFTW2
+#ifdef SERIAL
+#define root_fftw_plan              rfftwnd_plan
+#define root_fftw_r2c(plan, array)  rfftwnd_one_real_to_complex( plan, array, NULL )
+#define root_fftw_c2r(plan, array)  rfftwnd_one_complex_to_real( plan, array, NULL )
+#else  // #ifdef SERIAL
+#define root_fftw_plan              rfftwnd_mpi_plan
+#define root_fftw_r2c(plan, array)  rfftwnd_mpi( plan, 1, array, NULL, FFTW_TRANSPOSED_ORDER )
+#define root_fftw_c2r(plan, array)  rfftwnd_mpi( plan, 1, array, NULL, FFTW_TRANSPOSED_ORDER )
+#endif // #ifdef SERIAL ... # else
+#else
+#define root_fftw_plan              rfftw3_plan
+#define root_fftw_r2c(plan, array)  rfftw3_execute_dft_r2c( plan, (real*)           array, (rfftw3_complex*) array )
+#define root_fftw_c2r(plan, array)  rfftw3_execute_dft_c2r( plan, (rfftw3_complex*) array, (real*)           array )
 #endif
 
-
+#endif  // #ifdef SUPPORT_FFTW
 #endif  // #ifndef __MACRO_H__
