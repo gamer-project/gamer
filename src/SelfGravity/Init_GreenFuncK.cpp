@@ -2,11 +2,16 @@
 
 #if ( defined GRAVITY  &&  defined SUPPORT_FFTW )
 
+#ifdef SUPPORT_FFTW2
 #ifdef SERIAL
 extern rfftwnd_plan     FFTW_Plan_Poi;
-#else
+#else  // #ifdef SERIAL
 extern rfftwnd_mpi_plan FFTW_Plan_Poi;
-#endif
+#endif // #ifdef SERIAL ... # else
+#elif (defined(SUPPORT_FFTW3)) // #ifdef SUPPORT_FFTW2
+extern fftw_plan     FFTW_Plan_Poi;
+#endif // #ifdef SUPPORT_FFTW2 ... # else
+
 
 
 
@@ -81,11 +86,20 @@ void Init_GreenFuncK()
 
 
 // 4. convert the Green's function to the k space
+#  ifdef SUPPORT_FFTW2
 #  ifdef SERIAL
    rfftwnd_one_real_to_complex( FFTW_Plan_Poi, GreenFuncK, NULL );
-#  else
+#  else // # ifdef SERIAL
    rfftwnd_mpi( FFTW_Plan_Poi, 1, GreenFuncK, NULL, FFTW_TRANSPOSED_ORDER );
-#  endif
+#  endif // #  ifdef SERIAL ... # else
+#  elif (defined(SUPPORT_FFTW3)) // #  ifdef SUPPORT_FFTW2
+
+// create plans for the self-gravity solver
+   FFTW_Plan_Poi = fftw_plan_dft_r2c_3d(FFT_Size[2], FFT_Size[1], FFT_Size[0], (real*) GreenFuncK, (fftw_complex*) GreenFuncK, FFTW_ESTIMATE);
+   fftw_execute(FFTW_Plan_Poi);
+   fftw_destroy_plan(FFTW_Plan_Poi);
+
+#  endif // # ifdef SUPPORT_FFTW2 ... # else
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

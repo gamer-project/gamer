@@ -1012,6 +1012,11 @@
 #  undef STORE_PAR_ACC
 #endif
 
+// macros for backward compatibility with fftw2
+#ifdef SUPPORT_FFTW3
+#define c_re(c) ((c)[0])
+#define c_im(c) ((c)[1])
+#endif
 
 
 #endif  // #ifndef __MACRO_H__

@@ -6,27 +6,41 @@
 
 static int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Guess );
 
-#ifdef SERIAL
-rfftwnd_plan     FFTW_Plan_PS;                        // PS  : plan for calculating the power spectrum
-
-#ifdef GRAVITY
-rfftwnd_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for the self-gravity Poisson solver
-#endif
-
-#else
-rfftwnd_mpi_plan FFTW_Plan_PS;
-
-#ifdef GRAVITY
-rfftwnd_mpi_plan FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
-#endif
-
-#endif
 
 #ifdef GRAVITY
 extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,
                                                const int lv, double AuxArray[] );
 #endif
 
+#ifdef SUPPORT_FFTW2
+
+#ifdef SERIAL
+rfftwnd_plan     FFTW_Plan_PS;                        // PS  : plan for calculating the power spectrum
+
+#ifdef GRAVITY
+rfftwnd_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for the self-gravity Poisson solver
+#endif // #ifdef GRAVITY
+
+#else // #ifdef SERIAL
+rfftwnd_mpi_plan FFTW_Plan_PS;
+
+#ifdef GRAVITY
+rfftwnd_mpi_plan FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
+#endif // #ifdef GRAVITY
+
+#endif // #ifdef SERIAL ... # else
+
+#elif defined(SUPPORT_FFTW3) // #ifdef SUPPORT_FFTW2
+
+
+// In FFTW 3, all plans are of type fftw_plan and all are destroyed by fftw_destroy_plan(plan).
+fftw_plan     FFTW_Plan_PS;                        // PS  : plan for calculating the power spectrum
+
+#ifdef GRAVITY
+fftw_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for the self-gravity Poisson solver
+#endif // #ifdef GRAVITY
+
+#endif // #ifdef SUPPORT_FFTW2 ... #elif defined(SUPPORT_FFTW3)
 
 
 
@@ -39,6 +53,7 @@ void Init_FFTW()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
+#  ifdef SUPPORT_FFTW2
 // create plans for calculating the power spectrum
 #  ifdef SERIAL
    FFTW_Plan_PS = rfftw3d_create_plan( NX0_TOT[2], NX0_TOT[1], NX0_TOT[0], FFTW_REAL_TO_COMPLEX,
@@ -83,6 +98,9 @@ void Init_FFTW()
 #  endif
 #  endif // #ifdef GRAVITY
 
+#  elif defined(SUPPORT_FFTW3) // #ifdef SUPPORT_FFTW2
+
+#  endif // #ifdef SUPPORT_FFTW2 ... #elif defined(SUPPORT_FFTW3)
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
@@ -99,13 +117,14 @@ void End_FFTW()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
+#  ifdef SUPPORT_FFTW2
 #  ifdef SERIAL
    rfftwnd_destroy_plan    ( FFTW_Plan_PS      );
 
 #  ifdef GRAVITY
    rfftwnd_destroy_plan    ( FFTW_Plan_Poi     );
    rfftwnd_destroy_plan    ( FFTW_Plan_Poi_Inv );
-#  endif
+#  endif // #  ifdef GRAVITY
 
 #  else // #ifdef SERIAL
    rfftwnd_mpi_destroy_plan( FFTW_Plan_PS      );
@@ -113,15 +132,17 @@ void End_FFTW()
 #  ifdef GRAVITY
    rfftwnd_mpi_destroy_plan( FFTW_Plan_Poi     );
    rfftwnd_mpi_destroy_plan( FFTW_Plan_Poi_Inv );
-#  endif
+#  endif // #  ifdef GRAVITY
 
 #  endif // #ifdef SERIAL ... else ...
+
+#  elif defined(SUPPORT_FFTW3) // #ifdef SUPPORT_FFTW2
+
+#  endif // #ifdef SUPPORT_FFTW2 ... #elif defined(SUPPORT_FFTW3)
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 } // FUNCTION : End_FFTW
-
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Patch2Slab

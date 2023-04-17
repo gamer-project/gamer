@@ -37,7 +37,7 @@ SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
 # --> must enable SUPPORT_FFTW
-#SIMU_OPTION += -DGRAVITY
+SIMU_OPTION += -DGRAVITY
 
 # enable particles
 #SIMU_OPTION += -DPARTICLE
@@ -186,7 +186,7 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # double precision
-#SIMU_OPTION += -DFLOAT8
+SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
@@ -215,6 +215,7 @@ SIMU_OPTION += -DOPENMP
 # support FFTW library
 # --> must be enabled when GRAVITY is enabled
 #SIMU_OPTION += -DSUPPORT_FFTW
+SIMU_OPTION += -DSUPPORT_FFTW3
 
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT
@@ -303,13 +304,16 @@ endif
 #######################################################################################################
 
 # template
-CUDA_PATH    :=
-FFTW_PATH    :=
-MPI_PATH     :=
-HDF5_PATH    :=
+CUDA_PATH    := /usr/local/cuda/
+FFTW_PATH    := ~/Downloads/fftw-2.1.5/rfftw
+FFTW3_PATH   :=
+MPI_PATH     := /usr/lib/x86_64-linux-gnu/mpich
+HDF5_PATH    := /usr/lib/x86_64-linux-gnu/hdf5/serial
 GRACKLE_PATH :=
 GSL_PATH     :=
-LIBYT_PATH   :=
+LIBYT_PATH   := /home/calab912/Documents/libyt/
+CUFFTDX_PATH := /home/calab912/Documents/nvidia-mathdx-22.11.0-Linux/nvidia/mathdx/22.11/
+
 
 # NCSA-bluewaters (only need to specify the path of user-installed packages)
 #GRACKLE_PATH :=
@@ -740,6 +744,12 @@ endif
 
 ifeq "$(filter -DLAOHU, $(SIMU_OPTION))" "-DLAOHU"
 LIB += -L$(GPUID_PATH) -lgpudevmgr
+endif
+
+
+ifeq "$(filter -DSUPPORT_FFTW3, $(SIMU_OPTION))" "-DSUPPORT_FFTW3"
+   LIB += -L$(FFTW3_PATH)/lib
+   LIB += -lfftw3
 endif
 
 ifeq "$(filter -DSUPPORT_FFTW, $(SIMU_OPTION))" "-DSUPPORT_FFTW"

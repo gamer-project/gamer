@@ -7,12 +7,15 @@
 static void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const int dj, const int RhoK_Size );
 static void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const int RhoK_Size );
 
+#ifdef SUPPORT_FFTW2
 #ifdef SERIAL
 extern rfftwnd_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
-#else
+#else // #ifdef SERIAL
 extern rfftwnd_mpi_plan FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
-#endif
-
+#endif // #ifdef SERIAL ... # else
+#elif (defined(SUPPORT_FFTW3)) // #ifdef SUPPORT_FFTW2
+extern fftw_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
+#endif // #ifdef SUPPORT_FFTW2 ... # else
 
 
 
@@ -42,12 +45,25 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 
 
 // forward FFT
+
+#  ifdef SUPPORT_FFTW2
 #  ifdef SERIAL
    rfftwnd_one_real_to_complex( FFTW_Plan_Poi, RhoK, NULL );
-#  else
+#  else // #  ifdef SERIAL
    rfftwnd_mpi( FFTW_Plan_Poi, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
-#  endif
+#  endif // #  ifdef SERIAL ... # else
+#  elif (defined(SUPPORT_FFTW3)) // #  ifdef SUPPORT_FFTW2
 
+// determine the FFT size for the self-gravity solver
+   int FFT_Size[3] = { Nx, Ny, Nz };
+
+// create plans for the self-gravity solver
+   FFTW_Plan_Poi = fftw_plan_dft_r2c_3d(FFT_Size[2], FFT_Size[1], FFT_Size[0], (real*) RhoK, (fftw_complex*) RhoK, FFTW_ESTIMATE);
+   fftw_execute(FFTW_Plan_Poi);
+   fftw_destroy_plan(FFTW_Plan_Poi);
+
+
+#  endif // # ifdef SUPPORT_FFTW2 ... # else
 
 // the data are now complex, so typecast a pointer
    cdata = (fftw_complex*) RhoK;
@@ -99,26 +115,33 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 //       remove the DC mode
          if ( Deno == 0.0 )
          {
-            cdata[ID].re = 0.0;
-            cdata[ID].im = 0.0;
+            c_re(cdata[ID]) = 0.0;
+            c_im(cdata[ID]) = 0.0;
          }
 
          else
          {
-            cdata[ID].re =  cdata[ID].re * Poi_Coeff / Deno;
-            cdata[ID].im =  cdata[ID].im * Poi_Coeff / Deno;
+            c_re(cdata[ID]) =  c_re(cdata[ID]) * Poi_Coeff / Deno;
+            c_im(cdata[ID]) =  c_im(cdata[ID]) * Poi_Coeff / Deno;
          }
       } // i,j,k
    } // i,j,k
 
 
 // backward FFT
+#  ifdef SUPPORT_FFTW2
 #  ifdef SERIAL
    rfftwnd_one_complex_to_real( FFTW_Plan_Poi_Inv, cdata, NULL );
-#  else
+#  else // #  ifdef SERIAL
    rfftwnd_mpi( FFTW_Plan_Poi_Inv, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
-#  endif
+#  endif // #  ifdef SERIAL ... # else
+#  elif (defined(SUPPORT_FFTW3)) // #  ifdef SUPPORT_FFTW2
 
+   FFTW_Plan_Poi_Inv = fftw_plan_dft_c2r_3d(FFT_Size[2], FFT_Size[1], FFT_Size[0], (fftw_complex*) RhoK, (real*) RhoK , FFTW_ESTIMATE);
+   fftw_execute(FFTW_Plan_Poi_Inv);
+   fftw_destroy_plan(FFTW_Plan_Poi_Inv);
+
+#  endif // # ifdef SUPPORT_FFTW2 ... # else
 
 // normalization
    const real norm = dh*dh / ( (real)Nx*Ny*Nz );
@@ -144,17 +167,33 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const int RhoK_Size )
 {
 
+   const int Nx        = 2 * NX0_TOT[0];
+   const int Ny        = 2 * NX0_TOT[1];
+   const int Nz        = 2 * NX0_TOT[2];
+
    fftw_complex *RhoK_cplx   = (fftw_complex *)RhoK;
    fftw_complex *gFuncK_cplx = (fftw_complex *)gFuncK;
    fftw_complex  Temp_cplx;
 
 
 // forward FFT
+#  ifdef SUPPORT_FFTW2
 #  ifdef SERIAL
    rfftwnd_one_real_to_complex( FFTW_Plan_Poi, RhoK, NULL );
 #  else
    rfftwnd_mpi( FFTW_Plan_Poi, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
-#  endif
+#  endif // #  ifdef SERIAL ... # else
+#  elif (defined(SUPPORT_FFTW3)) // #  ifdef SUPPORT_FFTW2
+
+// determine the FFT size for the self-gravity solver
+   int FFT_Size[3] = { Nx, Ny, Nz };
+
+// create plans for the self-gravity solver
+   FFTW_Plan_Poi = fftw_plan_dft_r2c_3d(FFT_Size[2], FFT_Size[1], FFT_Size[0], (real*) RhoK, (fftw_complex*) RhoK, FFTW_ESTIMATE);
+   fftw_execute(FFTW_Plan_Poi);
+   fftw_destroy_plan(FFTW_Plan_Poi);
+
+#  endif // # ifdef SUPPORT_FFTW2 ... # else
 
 
 // multiply density and Green's function in the k space
@@ -162,19 +201,29 @@ void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const i
 
    for (int t=0; t<RhoK_Size_cplx; t++)
    {
-      Temp_cplx = RhoK_cplx[t];
+      c_re(Temp_cplx) = c_re(RhoK_cplx[t]);
+      c_im(Temp_cplx) = c_im(RhoK_cplx[t]);
 
-      RhoK_cplx[t].re = Temp_cplx.re*gFuncK_cplx[t].re - Temp_cplx.im*gFuncK_cplx[t].im;
-      RhoK_cplx[t].im = Temp_cplx.re*gFuncK_cplx[t].im + Temp_cplx.im*gFuncK_cplx[t].re;
+      c_re(RhoK_cplx[t]) = c_re(Temp_cplx)*c_re(gFuncK_cplx[t]) - c_im(Temp_cplx)*c_im(gFuncK_cplx[t]);
+      c_im(RhoK_cplx[t]) = c_re(Temp_cplx)*c_im(gFuncK_cplx[t]) + c_im(Temp_cplx)*c_re(gFuncK_cplx[t]);
    }
 
 
 // backward FFT
+#  ifdef SUPPORT_FFTW2
 #  ifdef SERIAL
    rfftwnd_one_complex_to_real( FFTW_Plan_Poi_Inv, RhoK_cplx, NULL );
 #  else
    rfftwnd_mpi( FFTW_Plan_Poi_Inv, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
-#  endif
+#  endif // #  ifdef SERIAL ... # else
+#  elif (defined(SUPPORT_FFTW3)) // #  ifdef SUPPORT_FFTW2
+
+   FFTW_Plan_Poi_Inv = fftw_plan_dft_c2r_3d(FFT_Size[2], FFT_Size[1], FFT_Size[0], (fftw_complex*) RhoK, (real*) RhoK , FFTW_ESTIMATE);
+   fftw_execute(FFTW_Plan_Poi_Inv);
+   fftw_destroy_plan(FFTW_Plan_Poi_Inv);
+
+#  endif // # ifdef SUPPORT_FFTW2 ... # else
+
 
 
 // effect of "4*PI*NEWTON_G" has been included in gFuncK, but the scale factor in the comoving frame hasn't

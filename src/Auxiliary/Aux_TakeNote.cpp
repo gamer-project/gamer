@@ -357,7 +357,11 @@ void Aux_TakeNote()
 #     endif
 
 #     ifdef SUPPORT_FFTW
-      fprintf( Note, "SUPPORT_FFTW                    ON\n" );
+#     ifdef SUPPORT_FFTW3
+      fprintf( Note, "SUPPORT_FFTW3                   ON\n" );
+#     else
+      fprintf( Note, "SUPPORT_FFTW2                   ON\n" );
+#     endif
 #     else
       fprintf( Note, "SUPPORT_FFTW                    OFF\n" );
 #     endif

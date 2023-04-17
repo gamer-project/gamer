@@ -25,7 +25,11 @@
 #  include <omp.h>
 #endif
 
-#ifdef SUPPORT_FFTW
+#ifdef SUPPORT_FFTW3
+#        include <fftw3.h>
+#        define SUPPORT_FFTW
+#elif defined(SUPPORT_FFTW2)
+#       define SUPPORT_FFTW
 #  ifdef FLOAT8
 #     ifdef SERIAL
 #        include <drfftw.h>
