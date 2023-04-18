@@ -173,7 +173,7 @@ SIMU_OPTION += -DPATCH_SIZE=8
 SIMU_OPTION += -DGPU_ARCH=TURING
 
 # debug mode
-SIMU_OPTION += -DGAMER_DEBUG
+#SIMU_OPTION += -DGAMER_DEBUG
 
 # bitwise reproducibility
 #SIMU_OPTION += -DBITWISE_REPRODUCIBILITY
@@ -186,7 +186,7 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # double precision
-SIMU_OPTION += -DFLOAT8
+#SIMU_OPTION += -DFLOAT8
 
 
 # serial mode (in which no MPI libraries are required)
