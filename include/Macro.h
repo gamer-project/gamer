@@ -1018,6 +1018,8 @@
 // wrappers for fftw3 single and double precision routines
 #ifdef SUPPORT_FFTW3
 #ifdef FLOAT8
+#define rfftw3_malloc              fftw_malloc
+#define rfftw3_free                fftw_free
 #define rfftw3_plan                fftw_plan
 #define rfftw3_destroy_plan        fftw_destroy_plan
 #define rfftw3_complex             fftw_complex
@@ -1034,6 +1036,8 @@
 #define rfftw3_mpi_cleanup         fftw_mpi_cleanup
 #endif // #ifndef SERIAL
 #else // #ifdef FLOAT8
+#define rfftw3_malloc              fftwf_malloc
+#define rfftw3_free                fftwf_free
 #define rfftw3_plan                fftwf_plan
 #define rfftw3_destroy_plan        fftwf_destroy_plan
 #define rfftw3_complex             fftwf_complex
@@ -1063,7 +1067,7 @@
 #define rfftw_complex fftw_complex
 #endif // # ifdef SUPPORT_FFTW3 ... # else
 
-
+// define index types for mpi_local_size function that uses int in FFTW2 and long int in FFTW3
 # ifdef SUPPORT_FFTW3
 # define lsmpi_int long int
 # else
@@ -1073,16 +1077,19 @@
 //wrappers for fftw plans and real-to-complex as well as complex to real n-dimensional transforms on the root level of the AMR hierarchy
 //used for Poisson solver and for computing power spectra
 #ifdef SUPPORT_FFTW3
-#ifdef SERIAL
 #define root_fftw_plan              rfftw3_plan
+#define root_fftw_malloc            rfftw3_malloc
+#define root_fftw_free              rfftw3_free
+#ifdef SERIAL
 #define root_fftw_r2c(plan, array)  rfftw3_execute_dft_r2c( plan, (real*)           array, (rfftw_complex*) array )
 #define root_fftw_c2r(plan, array)  rfftw3_execute_dft_c2r( plan, (rfftw_complex*) array, (real*)           array )
 #else  // #ifdef SERIAL
-#define root_fftw_plan              rfftw3_plan
 #define root_fftw_r2c(plan, array)  rfftw3_mpi_execute_dft_r2c( plan, (real*)          array, (rfftw_complex*) array )
 #define root_fftw_c2r(plan, array)  rfftw3_mpi_execute_dft_c2r( plan, (rfftw_complex*) array, (real*)           array )
 #endif // #ifdef SERIAL ... # else
 #else // # ifdef SUPPORT_FFTW3
+#define root_fftw_malloc            malloc
+#define root_fftw_free              free
 #ifdef SERIAL
 #define root_fftw_plan              rfftwnd_plan
 #define root_fftw_r2c(plan, array)  rfftwnd_one_real_to_complex( plan, (real*)          array, NULL )

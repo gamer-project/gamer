@@ -6,29 +6,50 @@
 
 static int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Guess );
 
-#ifdef SERIAL
-rfftwnd_plan     FFTW_Plan_PS;                        // PS  : plan for calculating the power spectrum
-
-#ifdef GRAVITY
-rfftwnd_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for the self-gravity Poisson solver
-#endif
-
-#else
-rfftwnd_mpi_plan FFTW_Plan_PS;
-
-#ifdef GRAVITY
-rfftwnd_mpi_plan FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
-#endif
-
-#endif
 
 #ifdef GRAVITY
 extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,
                                                const int lv, double AuxArray[] );
 #endif
 
+root_fftw_plan     FFTW_Plan_PS;                        // PS  : plan for calculating the power spectrum
+#ifdef GRAVITY
+root_fftw_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for the self-gravity Poisson solver
+#endif
+
+//wrappers for fftw create and destroy plan functions used in Init_FFTW
+#ifdef SUPPORT_FFTW3
+#ifdef SERIAL
+#define create_fftw_3d_r2c_plan(size, arr)  rfftw3_plan_dft_r2c_3d( size[2], size[1], size[0], (real*)           arr, (rfftw3_complex*) arr, FFTW_ESTIMATE | FFTW_UNALIGNED )
+#define create_fftw_3d_c2r_plan(size, arr)  rfftw3_plan_dft_c2r_3d( size[2], size[1], size[0], (rfftw3_complex*) arr, (real*)           arr, FFTW_ESTIMATE | FFTW_UNALIGNED )
+#define destroy_fftw_plan                   rfftw3_destroy_plan
+#else  // #ifdef SERIAL
+#define create_fftw_3d_r2c_plan(size, arr)  rfftw3_mpi_plan_dft_r2c_3d( size[2], size[1], size[0], (real*)           arr, (rfftw3_complex*) arr, MPI_COMM_WORLD, FFTW_ESTIMATE | FFTW_UNALIGNED | FFTW_MPI_TRANSPOSED_OUT )
+#define create_fftw_3d_c2r_plan(size, arr)  rfftw3_mpi_plan_dft_c2r_3d( size[2], size[1], size[0], (rfftw3_complex*) arr, (real*)           arr, MPI_COMM_WORLD, FFTW_ESTIMATE | FFTW_UNALIGNED | FFTW_MPI_TRANSPOSED_IN  )
+#define destroy_fftw_plan                   rfftw3_destroy_plan
+#endif // #ifdef SERIAL ... # else
+#else // # ifdef SUPPORT_FFTW3
+#ifdef SERIAL
+#define create_fftw_3d_r2c_plan(size, arr)  rfftw3d_create_plan( size[2], size[1], size[0], FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE | FFTW_IN_PLACE )
+#define create_fftw_3d_c2r_plan(size, arr)  rfftw3d_create_plan( size[2], size[1], size[0], FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE | FFTW_IN_PLACE )
+#define destroy_fftw_plan                   rfftwnd_destroy_plan
+#else  // #ifdef SERIAL
+#define create_fftw_3d_r2c_plan(size, arr)  rfftw3d_mpi_create_plan( MPI_COMM_WORLD, size[2], size[1], size[0], FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE )
+#define create_fftw_3d_c2r_plan(size, arr)  rfftw3d_mpi_create_plan( MPI_COMM_WORLD, size[2], size[1], size[0], FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE )
+#define destroy_fftw_plan                   rfftwnd_mpi_destroy_plan
+#endif // #ifdef SERIAL ... # else
+#endif // # ifdef SUPPORT_FFTW3 ... # else
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  computePaddedTotalSize
+// Description :  Return padded total size for complex-to-real and real-to-complex 3D FFTW transforms
+// Parameter   :  size          : 3D array with size of FFT block
+// Return      :  length of array that is large enough to store FFT input and output
+//-------------------------------------------------------------------------------------------------------
+int ComputePaddedTotalSize(int* size) {
+   return 2*(size[0]/2+1)*size[1]*size[2];
+}
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_FFTW
@@ -39,49 +60,57 @@ void Init_FFTW()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
-// create plans for calculating the power spectrum
-#  ifdef SERIAL
-   FFTW_Plan_PS = rfftw3d_create_plan( NX0_TOT[2], NX0_TOT[1], NX0_TOT[0], FFTW_REAL_TO_COMPLEX,
-                                       FFTW_ESTIMATE | FFTW_IN_PLACE );
-#  else
-   FFTW_Plan_PS = rfftw3d_mpi_create_plan( MPI_COMM_WORLD, NX0_TOT[2], NX0_TOT[1], NX0_TOT[0],
-                                           FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE );
-#  endif
+#  ifdef SUPPORT_FFTW3
+#  ifndef SERIAL
+   fftw_mpi_init();
+#  endif // # ifndef SERIAL
+#  endif // # ifdef SUPPORT_FFTW3
 
+// determine the FFT size for the power spectrum
+   int PS_FFT_Size[3]      = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
 
-#  ifdef GRAVITY
 // determine the FFT size for the self-gravity solver
-   int FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
+#  ifdef GRAVITY
+   int Gravity_FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
 
 // the zero-padding method is adopted for the isolated BC.
    if ( OPT__BC_POT == BC_POT_ISOLATED )
-      for (int d=0; d<3; d++)    FFT_Size[d] *= 2;
+      for (int d=0; d<3; d++)    Gravity_FFT_Size[d] *= 2;
 
 // check
    if ( MPI_Rank == 0 )
    for (int d=0; d<3; d++)
    {
-      if ( FFT_Size[d] <= 0 )    Aux_Error( ERROR_INFO, "FFT_Size[%d] = %d < 0 !!\n", d, FFT_Size[d] );
+      if ( Gravity_FFT_Size[d] <= 0 )    Aux_Error( ERROR_INFO, "Gravity_FFT_Size[%d] = %d < 0 !!\n", d, Gravity_FFT_Size[d] );
    }
+#  endif // #  ifdef GRAVITY
+
+   real* PS   = NULL;
+   real* RhoK = NULL;
 
 
-// create plans for the self-gravity solver
-#  ifdef SERIAL
-   FFTW_Plan_Poi     = rfftw3d_create_plan( FFT_Size[2], FFT_Size[1], FFT_Size[0], FFTW_REAL_TO_COMPLEX,
-                                            FFTW_ESTIMATE | FFTW_IN_PLACE );
+// allocate memory for arrays in fftw3
+#  ifdef SUPPORT_FFTW3
+   PS   = (real*) root_fftw_malloc(ComputePaddedTotalSize(PS_FFT_Size     ) * sizeof(real));
+#  ifdef GRAVITY
+   RhoK = (real*) root_fftw_malloc(ComputePaddedTotalSize(Gravity_FFT_Size) * sizeof(real));
+#  endif // # ifdef GRAVITY
+#  endif // # ifdef SUPPORT_FFTW3
 
-   FFTW_Plan_Poi_Inv = rfftw3d_create_plan( FFT_Size[2], FFT_Size[1], FFT_Size[0], FFTW_COMPLEX_TO_REAL,
-                                            FFTW_ESTIMATE | FFTW_IN_PLACE );
+// create plans for power spectrum and the self-gravity solver
+   FFTW_Plan_PS      = create_fftw_3d_r2c_plan(PS_FFT_Size, PS);
+#  ifdef GRAVITY
+   FFTW_Plan_Poi     = create_fftw_3d_r2c_plan(Gravity_FFT_Size, RhoK);
+   FFTW_Plan_Poi_Inv = create_fftw_3d_c2r_plan(Gravity_FFT_Size, RhoK);
+#  endif // # ifdef GRAVITY
 
-#  else
-
-   FFTW_Plan_Poi     = rfftw3d_mpi_create_plan( MPI_COMM_WORLD, FFT_Size[2], FFT_Size[1], FFT_Size[0],
-                                                FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE );
-
-   FFTW_Plan_Poi_Inv = rfftw3d_mpi_create_plan( MPI_COMM_WORLD, FFT_Size[2], FFT_Size[1], FFT_Size[0],
-                                                FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE );
-#  endif
-#  endif // #ifdef GRAVITY
+// free memory for arrays in fftw3
+#  ifdef SUPPORT_FFTW3
+   free(PS);
+#  ifdef GRAVITY
+   free(RhoK);
+#  endif // # ifdef GRAVITY
+#  endif // # ifdef SUPPORT_FFTW3
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
@@ -99,29 +128,24 @@ void End_FFTW()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
+   destroy_fftw_plan  ( FFTW_Plan_PS      );
+
+#  ifdef GRAVITY
+   destroy_fftw_plan  ( FFTW_Plan_Poi     );
+   destroy_fftw_plan  ( FFTW_Plan_Poi_Inv );
+#  endif // #  ifdef GRAVITY
+
+#  ifdef SUPPORT_FFTW3
 #  ifdef SERIAL
-   rfftwnd_destroy_plan    ( FFTW_Plan_PS      );
-
-#  ifdef GRAVITY
-   rfftwnd_destroy_plan    ( FFTW_Plan_Poi     );
-   rfftwnd_destroy_plan    ( FFTW_Plan_Poi_Inv );
+   rfftw3_cleanup();
+#  else
+   rfftw3_mpi_cleanup();
 #  endif
-
-#  else // #ifdef SERIAL
-   rfftwnd_mpi_destroy_plan( FFTW_Plan_PS      );
-
-#  ifdef GRAVITY
-   rfftwnd_mpi_destroy_plan( FFTW_Plan_Poi     );
-   rfftwnd_mpi_destroy_plan( FFTW_Plan_Poi_Inv );
-#  endif
-
-#  endif // #ifdef SERIAL ... else ...
+#  endif // # ifdef SUPPORT_FFTW3
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 } // FUNCTION : End_FFTW
-
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Patch2Slab
@@ -433,7 +457,6 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 //-------------------------------------------------------------------------------------------------------
 int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Guess )
 {
-
 // check
 // disabled because we cannot determine whether ZIndex2Rank was called for Poisson solver or for computing base PS
 /*
@@ -454,7 +477,6 @@ int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Gues
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TRank_Guess", TRank_Guess );
 #  endif
 */
-
 
    int TRank = TRank_Guess;   // have a first guess to improve the performance
 
