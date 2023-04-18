@@ -304,18 +304,17 @@ endif
 
 
 # library paths
-#######################################################################################################
+################################################################## template
 
 # template
-CUDA_PATH    := /usr/local/cuda/
-FFTW_PATH    := ~/Downloads/fftw-2.1.5/rfftw
-FFTW3_PATH   := /usr/local
-MPI_PATH     := /usr/lib/x86_64-linux-gnu/openmpi
-HDF5_PATH    := /usr/lib/x86_64-linux-gnu/hdf5/serial
+CUDA_PATH    :=
+FFTW_PATH    :=
+FFTW3_PATH   :=
+MPI_PATH     :=
+HDF5_PATH    :=
 GRACKLE_PATH :=
 GSL_PATH     :=
-LIBYT_PATH   := /home/calab912/Documents/libyt/
-CUFFTDX_PATH := /home/calab912/Documents/nvidia-mathdx-22.11.0-Linux/nvidia/mathdx/22.11/
+LIBYT_PATH   :=
 
 
 # NCSA-bluewaters (only need to specify the path of user-installed packages)

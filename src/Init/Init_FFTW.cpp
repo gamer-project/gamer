@@ -20,8 +20,8 @@ root_fftw_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for the se
 //wrappers for fftw create and destroy plan functions used in Init_FFTW
 #ifdef SUPPORT_FFTW3
 #ifdef SERIAL
-#define create_fftw_3d_r2c_plan(size, arr)  rfftw3_plan_dft_r2c_3d( size[2], size[1], size[0], (real*)           arr, (rfftw3_complex*) arr, FFTW_ESTIMATE )
-#define create_fftw_3d_c2r_plan(size, arr)  rfftw3_plan_dft_c2r_3d( size[2], size[1], size[0], (rfftw3_complex*) arr, (real*)           arr, FFTW_ESTIMATE )
+#define create_fftw_3d_r2c_plan(size, arr)  rfftw3_plan_dft_r2c_3d(     size[2], size[1], size[0], (real*)           arr, (rfftw3_complex*) arr, FFTW_ESTIMATE )
+#define create_fftw_3d_c2r_plan(size, arr)  rfftw3_plan_dft_c2r_3d(     size[2], size[1], size[0], (rfftw3_complex*) arr, (real*)           arr, FFTW_ESTIMATE )
 #define destroy_fftw_plan                   rfftw3_destroy_plan
 #else  // #ifdef SERIAL
 #define create_fftw_3d_r2c_plan(size, arr)  rfftw3_mpi_plan_dft_r2c_3d( size[2], size[1], size[0], (real*)           arr, (rfftw3_complex*) arr, MPI_COMM_WORLD, FFTW_ESTIMATE | FFTW_MPI_TRANSPOSED_OUT )
@@ -30,8 +30,8 @@ root_fftw_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for the se
 #endif // #ifdef SERIAL ... # else
 #else // # ifdef SUPPORT_FFTW3
 #ifdef SERIAL
-#define create_fftw_3d_r2c_plan(size, arr)  rfftw3d_create_plan( size[2], size[1], size[0], FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE | FFTW_IN_PLACE )
-#define create_fftw_3d_c2r_plan(size, arr)  rfftw3d_create_plan( size[2], size[1], size[0], FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE | FFTW_IN_PLACE )
+#define create_fftw_3d_r2c_plan(size, arr)  rfftw3d_create_plan(        size[2], size[1], size[0], FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE | FFTW_IN_PLACE )
+#define create_fftw_3d_c2r_plan(size, arr)  rfftw3d_create_plan(        size[2], size[1], size[0], FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE | FFTW_IN_PLACE )
 #define destroy_fftw_plan                   rfftwnd_destroy_plan
 #else  // #ifdef SERIAL
 #define create_fftw_3d_r2c_plan(size, arr)  rfftw3d_mpi_create_plan( MPI_COMM_WORLD, size[2], size[1], size[0], FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE )
@@ -97,7 +97,7 @@ void Init_FFTW()
 
 // tell all subsequent fftw3 planners to use OMP_NTHREAD threads
 #  ifdef OPENMP
-   if (FFTW3_OMP_Enabled)  fftw_plan_with_nthreads(OMP_NTHREAD);
+   if (FFTW3_OMP_Enabled)  fftw_plan_with_nthreads (OMP_NTHREAD);
    if (FFTW3f_OMP_Enabled) fftwf_plan_with_nthreads(OMP_NTHREAD);
 #  endif // # ifdef OPENMP
 #  endif // # ifdef SUPPORT_FFTW3

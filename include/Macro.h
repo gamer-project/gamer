@@ -1081,10 +1081,10 @@
 #define root_fftw_malloc            rfftw3_malloc
 #define root_fftw_free              rfftw3_free
 #ifdef SERIAL
-#define root_fftw_r2c(plan, array)  rfftw3_execute_dft_r2c( plan, (real*)           array, (rfftw_complex*) array )
-#define root_fftw_c2r(plan, array)  rfftw3_execute_dft_c2r( plan, (rfftw_complex*) array, (real*)           array )
+#define root_fftw_r2c(plan, array)  rfftw3_execute_dft_r2c    ( plan, (real*)          array, (rfftw_complex*)  array )
+#define root_fftw_c2r(plan, array)  rfftw3_execute_dft_c2r    ( plan, (rfftw_complex*) array, (real*)           array )
 #else  // #ifdef SERIAL
-#define root_fftw_r2c(plan, array)  rfftw3_mpi_execute_dft_r2c( plan, (real*)          array, (rfftw_complex*) array )
+#define root_fftw_r2c(plan, array)  rfftw3_mpi_execute_dft_r2c( plan, (real*)          array, (rfftw_complex*)  array )
 #define root_fftw_c2r(plan, array)  rfftw3_mpi_execute_dft_c2r( plan, (rfftw_complex*) array, (real*)           array )
 #endif // #ifdef SERIAL ... # else
 #else // # ifdef SUPPORT_FFTW3
