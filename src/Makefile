@@ -186,8 +186,7 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # double precision
-SIMU_OPTION += -DFLOAT8
-
+#SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
@@ -232,6 +231,7 @@ SIMU_OPTION += -DSUPPORT_FFTW
 # --> use RNG_GNU_EXT for compilers supporting GNU extensions (**not supported on some macOS**)
 #     use RNG_CPP11   for compilers supporting c++11 (**may need to add -std=c++11 to CXXFLAG**)
 SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
+
 
 
 
@@ -307,16 +307,14 @@ endif
 #######################################################################################################
 
 # template
-CUDA_PATH    := /usr/local/cuda/
-FFTW_PATH    := ~/Downloads/fftw-2.1.5/rfftw
-FFTW3_PATH   := /usr/local
-MPI_PATH     := /usr/lib/x86_64-linux-gnu/openmpi
-HDF5_PATH    := /usr/lib/x86_64-linux-gnu/hdf5/serial
+CUDA_PATH    :=
+FFTW_PATH    :=
+FFTW3_PATH   :=
+MPI_PATH     :=
+HDF5_PATH    :=
 GRACKLE_PATH :=
 GSL_PATH     :=
-LIBYT_PATH   := /home/calab912/Documents/libyt/
-CUFFTDX_PATH := /home/calab912/Documents/nvidia-mathdx-22.11.0-Linux/nvidia/mathdx/22.11/
-
+LIBYT_PATH   :=
 
 # NCSA-bluewaters (only need to specify the path of user-installed packages)
 #GRACKLE_PATH :=
@@ -749,8 +747,11 @@ ifeq "$(filter -DLAOHU, $(SIMU_OPTION))" "-DLAOHU"
 LIB += -L$(GPUID_PATH) -lgpudevmgr
 endif
 
-
 ifeq "$(filter -DSUPPORT_FFTW3, $(SIMU_OPTION))" "-DSUPPORT_FFTW3"
+   ifeq "$(filter -DSUPPORT_FFTW, $(SIMU_OPTION))" "-DSUPPORT_FFTW"
+      $(error Please either enable SUPPORT_FFTW or SUPPORT_FFTW3)
+   endif
+
    LIB += -L$(FFTW3_PATH)/lib
    ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" "-DSERIAL"
       LIB += -lfftw3 -lfftw3f -lm
