@@ -749,7 +749,7 @@ endif
 
 ifeq "$(filter -DSUPPORT_FFTW3, $(SIMU_OPTION))" "-DSUPPORT_FFTW3"
    ifeq "$(filter -DSUPPORT_FFTW, $(SIMU_OPTION))" "-DSUPPORT_FFTW"
-      $(error Please either enable SUPPORT_FFTW or SUPPORT_FFTW3)
+      $(error Please either enable SUPPORT_FFTW or SUPPORT_FFTW3, but not both.)
    endif
 
    LIB += -L$(FFTW3_PATH)/lib
