@@ -36,7 +36,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    const int FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
 
 // get the array indices using by FFTW
-   long int local_nx, local_ny, local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose, total_local_size;
+   lsmpi_int local_nx, local_ny, local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose, total_local_size;
 
 // note: total_local_size is NOT necessarily equal to local_nx*local_ny*local_nz
    local_nx = 2*( FFT_Size[0]/2 + 1 );

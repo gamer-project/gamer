@@ -1064,6 +1064,11 @@
 #endif // # ifdef SUPPORT_FFTW3 ... # else
 
 
+# ifdef SUPPORT_FFTW3
+# define lsmpi_int long int
+# else
+# define lsmpi_int int
+# endif
 
 //wrappers for fftw plans and real-to-complex as well as complex to real n-dimensional transforms on the root level of the AMR hierarchy
 //used for Poisson solver and for computing power spectra
