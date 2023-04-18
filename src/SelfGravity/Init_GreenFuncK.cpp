@@ -2,7 +2,7 @@
 
 #if ( defined GRAVITY  &&  defined SUPPORT_FFTW )
 
-extern root_fftw_plan     FFTW_Plan_Poi;
+extern root_real_fftw_plan     FFTW_Plan_Poi;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_GreenFuncK
@@ -27,7 +27,7 @@ void Init_GreenFuncK()
 
 // 1. get the array indices used by FFTW
    const int FFT_Size[3] = { 2*NX0_TOT[0], 2*NX0_TOT[1], 2*NX0_TOT[2] };
-   lsmpi_int local_nx, local_ny, local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose, total_local_size;
+   mpi_index_int local_nx, local_ny, local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose, total_local_size;
 
 // note: total_local_size is NOT necessarily equal to local_nx*local_ny*local_nz
    local_nx = 2*( FFT_Size[0]/2 + 1 );

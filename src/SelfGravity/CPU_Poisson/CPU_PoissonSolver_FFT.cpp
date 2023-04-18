@@ -7,7 +7,7 @@
 static void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const int dj, const int RhoK_Size );
 static void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const int RhoK_Size );
 
-extern root_fftw_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
+extern root_real_fftw_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  FFT_Periodic
@@ -31,14 +31,14 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
    const int Nx_Padded = Nx/2 + 1;
    const real dh       = amr->dh[0];
    real Deno;
-   rfftw_complex *cdata;
+   gamer_float_complex *cdata;
 
 
 // forward FFT
    root_fftw_r2c( FFTW_Plan_Poi, RhoK );
 
 // the data are now complex, so typecast a pointer
-   cdata = (rfftw_complex*) RhoK;
+   cdata = (gamer_float_complex*) RhoK;
 
 
 // set up the dimensionless wave number and the corresponding sin(k)^2 function
@@ -131,9 +131,9 @@ void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const i
    const int Ny        = 2 * NX0_TOT[1];
    const int Nz        = 2 * NX0_TOT[2];
 
-   rfftw_complex *RhoK_cplx   = (rfftw_complex *)RhoK;
-   rfftw_complex *gFuncK_cplx = (rfftw_complex *)gFuncK;
-   rfftw_complex  Temp_cplx;
+   gamer_float_complex *RhoK_cplx   = (gamer_float_complex *)RhoK;
+   gamer_float_complex *gFuncK_cplx = (gamer_float_complex *)gFuncK;
+   gamer_float_complex  Temp_cplx;
 
 
 // forward FFT
@@ -188,7 +188,7 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 
 
 // get the array indices using by FFTW
-   lsmpi_int local_nx, local_ny, local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose, total_local_size;
+   mpi_index_int local_nx, local_ny, local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose, total_local_size;
 
 // note: total_local_size is NOT necessarily equal to local_nx*local_ny*local_nz
    local_nx = 2*( FFT_Size[0]/2 + 1 );

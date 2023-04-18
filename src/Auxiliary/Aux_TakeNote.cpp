@@ -1095,8 +1095,8 @@ void Aux_TakeNote()
       }
 #     endif
 #     ifdef SUPPORT_FFTW3
-      fprintf( Note, "FFTW3 double precision OMP      %d\n",      FFTW3_OMP_Enabled        );
-      fprintf( Note, "FFTW3 single precision OMP      %d\n",      FFTW3f_OMP_Enabled       );
+      fprintf( Note, "FFTW3 Double Precision OMP      %d\n",      FFTW3_Double_OMP_Enabled        );
+      fprintf( Note, "FFTW3 Single Precision OMP      %d\n",      FFTW3_Single_OMP_Enabled       );
 #     endif // # ifdef SUPPORT_FFTW3
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");

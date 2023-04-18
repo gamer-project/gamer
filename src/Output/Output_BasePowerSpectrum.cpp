@@ -8,7 +8,7 @@
 
 static void GetBasePowerSpectrum( real *VarK, const int j_start, const int dj, double *PS_total, double *NormDC );
 
-extern root_fftw_plan     FFTW_Plan_PS;
+extern root_real_fftw_plan     FFTW_Plan_PS;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_BasePowerSpectrum
@@ -36,7 +36,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    const int FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
 
 // get the array indices using by FFTW
-   lsmpi_int local_nx, local_ny, local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose, total_local_size;
+   mpi_index_int local_nx, local_ny, local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose, total_local_size;
 
 // note: total_local_size is NOT necessarily equal to local_nx*local_ny*local_nz
    local_nx = 2*( FFT_Size[0]/2 + 1 );
@@ -204,7 +204,7 @@ void GetBasePowerSpectrum( real *VarK, const int j_start, const int dj, double *
    const int Nz        = NX0_TOT[2];
    const int Nx_Padded = Nx/2 + 1;
 
-   rfftw_complex *cdata=NULL;
+   gamer_float_complex *cdata=NULL;
    double PS_local[Nx_Padded];
    long   Count_local[Nx_Padded], Count_total[Nx_Padded];
    int    bin, bin_i[Nx_Padded], bin_j[Ny], bin_k[Nz];
@@ -212,7 +212,7 @@ void GetBasePowerSpectrum( real *VarK, const int j_start, const int dj, double *
    root_fftw_r2c( FFTW_Plan_PS, VarK );
 
 // the data are now complex, so typecast a pointer
-   cdata = (rfftw_complex*) VarK;
+   cdata = (gamer_float_complex*) VarK;
 
 
 // set up the dimensionless wave number coefficients according to the FFTW data format
