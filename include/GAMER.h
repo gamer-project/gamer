@@ -32,7 +32,7 @@
 #  else
 #     include <fftw3-mpi.h>
 #  endif
-#else
+#elif defined(SUPPORT_FFTW)
 #  ifdef FLOAT8
 #     ifdef SERIAL
 #        include <drfftw.h>
@@ -46,7 +46,7 @@
 #        include <srfftw_mpi.h>
 #     endif
 #  endif
-#endif
+#endif // #ifdef SUPPORT_FFTW3 ...# elif defined(SUPPORT_FFTW)
 
 #ifdef SUPPORT_GRACKLE
 #ifdef FLOAT8

@@ -97,12 +97,16 @@ void Init_FFTW()
 #  endif // # ifdef GRAVITY
 #  endif // # ifdef SUPPORT_FFTW3
 
+   printf("Creating plans for PS\n");
 // create plans for power spectrum and the self-gravity solver
-   FFTW_Plan_PS      = create_fftw_3d_r2c_plan(PS_FFT_Size, PS);
+   rfftwnd_mpi_plan FFTW_Plan_PS2      = rfftw3d_mpi_create_plan( MPI_COMM_WORLD, 128, 128, 128, FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE );//create_fftw_3d_r2c_plan(PS_FFT_Size, PS);
+   printf("and for Poi\n");
 #  ifdef GRAVITY
    FFTW_Plan_Poi     = create_fftw_3d_r2c_plan(Gravity_FFT_Size, RhoK);
    FFTW_Plan_Poi_Inv = create_fftw_3d_c2r_plan(Gravity_FFT_Size, RhoK);
 #  endif // # ifdef GRAVITY
+
+   printf("Done\n");
 
 // free memory for arrays in fftw3
 #  ifdef SUPPORT_FFTW3

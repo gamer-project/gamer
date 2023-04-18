@@ -1084,8 +1084,8 @@
 #define root_fftw_c2r(plan, array)  rfftwnd_one_complex_to_real( plan, (rfftw_complex*) array, NULL )
 #else  // #ifdef SERIAL
 #define root_fftw_plan              rfftwnd_mpi_plan
-#define root_fftw_r2c(plan, array)  rfftwnd_mpi( plan, 1, (real*)          array, NULL, FFTW_TRANSPOSED_ORDER )
-#define root_fftw_c2r(plan, array)  rfftwnd_mpi( plan, 1, (rfftw_complex*) array, NULL, FFTW_TRANSPOSED_ORDER )
+#define root_fftw_r2c(plan, array)  rfftwnd_mpi( plan, 1, (real*) array, NULL, FFTW_TRANSPOSED_ORDER )
+#define root_fftw_c2r(plan, array)  rfftwnd_mpi( plan, 1, (real*) array, NULL, FFTW_TRANSPOSED_ORDER )
 #endif // #ifdef SERIAL ... # else
 #endif // # ifdef SUPPORT_FFTW3 ... # else
 #endif  // #ifdef SUPPORT_FFTW
