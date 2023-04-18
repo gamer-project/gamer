@@ -227,11 +227,11 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 // allocate memory (properly taking into account the zero-padding regions, where no data need to be exchanged)
    const int NRecvSlice = MIN( List_z_start[MPI_Rank]+local_nz, NX0_TOT[2] ) - MIN( List_z_start[MPI_Rank], NX0_TOT[2] );
 
-   real *RhoK         = new real [ total_local_size ];                           // array storing both density and potential
-   real *SendBuf      = new real [ (long)amr->NPatchComma[0][1]*CUBE(PS1) ];     // MPI send buffer for density and potential
-   real *RecvBuf      = new real [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];     // MPI recv buffer for density and potentia
-   long *SendBuf_SIdx = new long [ amr->NPatchComma[0][1]*PS1 ];                 // MPI send buffer for 1D coordinate in slab
-   long *RecvBuf_SIdx = new long [ NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/SQR(PS1) ];  // MPI recv buffer for 1D coordinate in slab
+   real *RhoK         = (real* ) root_fftw_malloc(sizeof(real) * total_local_size);   // array storing both density and potential
+   real *SendBuf      = new real [ (long)amr->NPatchComma[0][1]*CUBE(PS1) ];          // MPI send buffer for density and potential
+   real *RecvBuf      = new real [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];          // MPI recv buffer for density and potentia
+   long *SendBuf_SIdx = new long [ amr->NPatchComma[0][1]*PS1 ];                      // MPI send buffer for 1D coordinate in slab
+   long *RecvBuf_SIdx = new long [ NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/SQR(PS1) ];       // MPI recv buffer for 1D coordinate in slab
 
    int  *List_PID    [MPI_NRank];   // PID of each patch slice sent to each rank
    int  *List_k      [MPI_NRank];   // local z coordinate of each patch slice sent to each rank
@@ -267,7 +267,7 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
                local_nz, FFT_Size, NRecvSlice, _POTE, InPlacePad );
 
 
-   delete [] RhoK;
+   root_fftw_free(RhoK);
    delete [] SendBuf;
    delete [] RecvBuf;
    delete [] SendBuf_SIdx;

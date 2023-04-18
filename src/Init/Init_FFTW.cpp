@@ -20,12 +20,12 @@ root_fftw_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for the se
 //wrappers for fftw create and destroy plan functions used in Init_FFTW
 #ifdef SUPPORT_FFTW3
 #ifdef SERIAL
-#define create_fftw_3d_r2c_plan(size, arr)  rfftw3_plan_dft_r2c_3d( size[2], size[1], size[0], (real*)           arr, (rfftw3_complex*) arr, FFTW_ESTIMATE | FFTW_UNALIGNED )
-#define create_fftw_3d_c2r_plan(size, arr)  rfftw3_plan_dft_c2r_3d( size[2], size[1], size[0], (rfftw3_complex*) arr, (real*)           arr, FFTW_ESTIMATE | FFTW_UNALIGNED )
+#define create_fftw_3d_r2c_plan(size, arr)  rfftw3_plan_dft_r2c_3d( size[2], size[1], size[0], (real*)           arr, (rfftw3_complex*) arr, FFTW_ESTIMATE )
+#define create_fftw_3d_c2r_plan(size, arr)  rfftw3_plan_dft_c2r_3d( size[2], size[1], size[0], (rfftw3_complex*) arr, (real*)           arr, FFTW_ESTIMATE )
 #define destroy_fftw_plan                   rfftw3_destroy_plan
 #else  // #ifdef SERIAL
-#define create_fftw_3d_r2c_plan(size, arr)  rfftw3_mpi_plan_dft_r2c_3d( size[2], size[1], size[0], (real*)           arr, (rfftw3_complex*) arr, MPI_COMM_WORLD, FFTW_ESTIMATE | FFTW_UNALIGNED | FFTW_MPI_TRANSPOSED_OUT )
-#define create_fftw_3d_c2r_plan(size, arr)  rfftw3_mpi_plan_dft_c2r_3d( size[2], size[1], size[0], (rfftw3_complex*) arr, (real*)           arr, MPI_COMM_WORLD, FFTW_ESTIMATE | FFTW_UNALIGNED | FFTW_MPI_TRANSPOSED_IN  )
+#define create_fftw_3d_r2c_plan(size, arr)  rfftw3_mpi_plan_dft_r2c_3d( size[2], size[1], size[0], (real*)           arr, (rfftw3_complex*) arr, MPI_COMM_WORLD, FFTW_ESTIMATE | FFTW_MPI_TRANSPOSED_OUT )
+#define create_fftw_3d_c2r_plan(size, arr)  rfftw3_mpi_plan_dft_c2r_3d( size[2], size[1], size[0], (rfftw3_complex*) arr, (real*)           arr, MPI_COMM_WORLD, FFTW_ESTIMATE | FFTW_MPI_TRANSPOSED_IN  )
 #define destroy_fftw_plan                   rfftw3_destroy_plan
 #endif // #ifdef SERIAL ... # else
 #else // # ifdef SUPPORT_FFTW3
@@ -61,10 +61,48 @@ void Init_FFTW()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
 #  ifdef SUPPORT_FFTW3
+   FFTW3_OMP_Enabled  = false;
+   FFTW3f_OMP_Enabled = false;
+
+
+#  ifdef OPENMP
+
+#  ifndef SERIAL
+// check the level of MPI thread support
+   int MPI_Thread_Status;
+   MPI_Query_thread( &MPI_Thread_Status );
+
+// enable multithreading if possible
+   FFTW3_OMP_Enabled  = MPI_Thread_Status >= MPI_THREAD_FUNNELED;
+   FFTW3f_OMP_Enabled = FFTW3_OMP_Enabled;
+#  else // # ifndef SERIAL
+
+// always enable multithreading in serial mode with openmp
+   FFTW3_OMP_Enabled  = true;
+   FFTW3f_OMP_Enabled = true;
+#  endif // # ifndef SERIAL ... # else
+
+// initialise fftw multithreading
+   if (FFTW3_OMP_Enabled) {
+      FFTW3_OMP_Enabled  = fftw_init_threads();
+      FFTW3f_OMP_Enabled = fftwf_init_threads();
+   }
+#  endif // # ifdef OPENMP
+
+// initialise fftw mpi support
 #  ifndef SERIAL
    fftw_mpi_init();
+   fftwf_mpi_init();
 #  endif // # ifndef SERIAL
+
+// tell all subsequent fftw3 planners to use OMP_NTHREAD threads
+#  ifdef OPENMP
+   if (FFTW3_OMP_Enabled)  fftw_plan_with_nthreads(OMP_NTHREAD);
+   if (FFTW3f_OMP_Enabled) fftwf_plan_with_nthreads(OMP_NTHREAD);
+#  endif // # ifdef OPENMP
 #  endif // # ifdef SUPPORT_FFTW3
+
+
 
 // determine the FFT size for the power spectrum
    int PS_FFT_Size[3]      = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
@@ -106,9 +144,9 @@ void Init_FFTW()
 
 // free memory for arrays in fftw3
 #  ifdef SUPPORT_FFTW3
-   free(PS);
+   root_fftw_free(PS);
 #  ifdef GRAVITY
-   free(RhoK);
+   root_fftw_free(RhoK);
 #  endif // # ifdef GRAVITY
 #  endif // # ifdef SUPPORT_FFTW3
 
@@ -136,10 +174,16 @@ void End_FFTW()
 #  endif // #  ifdef GRAVITY
 
 #  ifdef SUPPORT_FFTW3
+#  ifdef OPENMP
+   if (FFTW3_OMP_Enabled)  fftw_cleanup_threads();
+   if (FFTW3f_OMP_Enabled) fftwf_cleanup_threads();
+#  endif
 #  ifdef SERIAL
-   rfftw3_cleanup();
+   fftw_cleanup();
+   fftwf_cleanup();
 #  else
-   rfftw3_mpi_cleanup();
+   fftw_mpi_cleanup();
+   fftwf_mpi_cleanup();
 #  endif
 #  endif // # ifdef SUPPORT_FFTW3
 

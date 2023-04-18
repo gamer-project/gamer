@@ -56,7 +56,7 @@ void Init_GreenFuncK()
    int    kk;
    long   idx;
 
-   GreenFuncK = new real [ total_local_size ];
+   GreenFuncK = (real*) root_fftw_malloc(sizeof(real) * total_local_size);
 
    for (int k=0; k<local_nz; k++)   {  kk = k + local_z_start;
                                        z  = ( kk <= NX0_TOT[2] ) ? kk*dh0 : (FFT_Size[2]-kk)*dh0;

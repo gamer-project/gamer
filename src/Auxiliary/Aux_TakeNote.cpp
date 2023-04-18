@@ -1094,6 +1094,10 @@ void Aux_TakeNote()
          default:                      fprintf( Note, "UNKNOWN\n" );
       }
 #     endif
+#     ifdef SUPPORT_FFTW3
+      fprintf( Note, "FFTW3 OMP                       %d\n",      FFTW3_OMP_Enabled );
+      fprintf( Note, "FFTW3f OMP                      %d\n",      FFTW3f_OMP_Enabled );
+#     endif // # ifdef SUPPORT_FFTW3
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 

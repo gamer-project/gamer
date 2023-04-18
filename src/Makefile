@@ -215,8 +215,8 @@ SIMU_OPTION += -DOPENMP
 
 # support FFTW library
 # --> must be enabled when GRAVITY is enabled
-SIMU_OPTION += -DSUPPORT_FFTW
-#SIMU_OPTION += -DSUPPORT_FFTW3
+#SIMU_OPTION += -DSUPPORT_FFTW
+SIMU_OPTION += -DSUPPORT_FFTW3
 
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT
@@ -755,6 +755,11 @@ ifeq "$(filter -DSUPPORT_FFTW3, $(SIMU_OPTION))" "-DSUPPORT_FFTW3"
    else
       LIB += -lfftw3_mpi -lfftw3 -lfftw3f_mpi -lfftw3f -lm
    endif
+
+   ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" "-DOPENMP"
+      LIB += -lfftw3_omp -lfftw3f_omp
+   endif
+
 endif
 
 ifeq "$(filter -DSUPPORT_FFTW, $(SIMU_OPTION))" "-DSUPPORT_FFTW"

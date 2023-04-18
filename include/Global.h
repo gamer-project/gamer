@@ -183,7 +183,9 @@ extern double     LB_INPUT__PAR_WEIGHT;               // LB->Par_Weight loaded f
 extern bool       OPT__RECORD_LOAD_BALANCE;
 #endif
 extern bool       OPT__MINIMIZE_MPI_BARRIER;
-
+#ifdef SUPPORT_FFTW3
+extern bool       FFTW3_OMP_Enabled, FFTW3f_OMP_Enabled;
+#endif
 
 // (2-5) particle
 // ============================================================================================================
