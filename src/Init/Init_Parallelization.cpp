@@ -97,6 +97,9 @@ void Init_Parallelization()
 
 #  ifdef FEEDBACK
    FB_ParaBuf  = MAX( FB_GHOST_SIZE,  IntGhostSize_FB );
+   Flu_ParaBuf = MAX( Flu_ParaBuf,    IntGhostSize_FB );    // ensure that the fluid ghost zone is large enough for filling in
+                                                            // the feedback ghost zone outside coarse-fine boundaries with
+                                                            // spatial and temporal interpolations
 #  endif
 
 
