@@ -29,7 +29,7 @@ static bool   Plummer_AddColor;     // assign different colors to different clou
        bool   Plummer_FB_Acc;       // enable mass accretion feedback
        double Plummer_FB_AccMMin;   // minimum/maximum mass accretion factors for Plummer_FB_Acc (0-->no mass accretion; 1-->accrete all mass)
        double Plummer_FB_AccMMax;
-       double Plummer_FB_Like;      // feedback likelihood of each particle (0-1) [1e-4]
+       double Plummer_FB_Like;      // feedback likelihood of each particle (0-1)
 #endif
 
 static double Plummer_FreeT;        // free-fall time at Plummer_R0
@@ -168,7 +168,7 @@ void SetParameter()
    ReadPara->Add( "Plummer_FB_Acc",       &Plummer_FB_Acc,        false,         Useless_bool,     Useless_bool      );
    ReadPara->Add( "Plummer_FB_AccMMin",   &Plummer_FB_AccMMin,    0.0,           0.0,              1.0               );
    ReadPara->Add( "Plummer_FB_AccMMax",   &Plummer_FB_AccMMax,    1.0e-2,        0.0,              1.0               );
-   ReadPara->Add( "Plummer_FB_Like",      &Plummer_FB_Like,       1.0e-6,        0.0,              1.0               );
+   ReadPara->Add( "Plummer_FB_Like",      &Plummer_FB_Like,       1.0e-4,        0.0,              1.0               );
 #  endif
 
    ReadPara->Read( FileName );

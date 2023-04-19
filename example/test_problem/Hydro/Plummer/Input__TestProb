@@ -26,4 +26,4 @@ Plummer_FB_ExpMMax      1.0e-5               # (0-->no mass loss; 1-->loss all m
 Plummer_FB_Acc          0                    # enable mass accretion feedback [0]
 Plummer_FB_AccMMin      0.0                  # minimum/maximum mass accretion factors for Plummer_FB_Acc
 Plummer_FB_AccMMax      1.0e-2               # (0-->no mass accretion; 1-->accrete all mass) [0.0/1.0e-2]
-Plummer_FB_Like         1.0e-4               # feedback likelihood of each particle (0-1) [1e-6]
+Plummer_FB_Like         1.0e-4               # feedback likelihood of each particle (0-1) [1e-4]
