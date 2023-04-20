@@ -142,7 +142,7 @@ int FB_Plummer( const int lv, const double TimeNew, const double TimeOld, const 
          for (int di=-1; di<=1; di++)  {  if ( Skip )  break;  ijk[0] = idx[0] + di*MaxR;
 
             const int CellPatchRelPos = FB_Aux_CellPatchRelPos( ijk );
-            if ( CellPatchRelPos != -1   &&  CoarseFine[CellPatchRelPos] )    Skip = true;   // cell is in a coarse patch
+            if ( CellPatchRelPos != -1  &&  CoarseFine[CellPatchRelPos] )  Skip = true;   // cell is in a coarse patch
 
          }}}
       }

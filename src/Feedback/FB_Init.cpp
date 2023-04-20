@@ -50,7 +50,7 @@ void FB_Init()
 
 
 // call the initialization routines of different feedbacks
-   if ( FB_SNE)   FB_Init_SNe();
+   if ( FB_SNE )  FB_Init_SNe();
 
    if ( FB_USER )
    {

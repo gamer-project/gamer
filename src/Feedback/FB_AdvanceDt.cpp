@@ -56,7 +56,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 // 1. collect particles for the sibling buffer patches
 //    --> exclude father-sibling buffer patches (FaSibBufPatch_No) since currently we assume FB_LEVEL == MAX_LEVEL
-//    --> for simplicity, we disable particle postition prediction (PredictPos_No) currently even though particles
+//    --> for simplicity, we disable particle position prediction (PredictPos_No) currently even though particles
 //        just crossing from coarse (lv-1) to fine (lv) grids may have time greater than other particles at lv
 //        --> to fix it, we will need to correct other particle attributes such as velocity too
    const bool TimingSendPar_Yes = true;
@@ -87,7 +87,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //###OPTIMIZATION: only store the attributes being updated
 //###OPTIMIZATION: only count particles on FB_LEVEL
    real *ParAtt_Updated[PAR_NATT_TOTAL];
-   long  ParAttBitIdx_Out = _PAR_TOTAL;;
+   long  ParAttBitIdx_Out = _PAR_TOTAL;
 
 // do not update particle positions and accelerations
    ParAttBitIdx_Out &= ~( _PAR_POSX | _PAR_POSY | _PAR_POSZ );
@@ -167,7 +167,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 //    5. collect patch information
-      const int NNearbyPatchMax = 64;  // maximum number of neaby patches of a patch group (including 8 local patches)
+      const int NNearbyPatchMax = 64;  // maximum number of nearby patches of a patch group (including 8 local patches)
       int NearbyPIDList[NNearbyPatchMax], NNearbyPatch, SibPID0List[26];
 
 //    5-1. get nearby patches
