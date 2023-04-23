@@ -1,7 +1,7 @@
 Compilation flags:
 ========================================
 Enable : MODEL=HYDRO, GRAVITY
-Disable: PARTICLE, COMOVING, DUAL_ENERGY
+Disable: MHD, PARTICLE, COMOVING, DUAL_ENERGY
 
 
 Default setup:
@@ -9,6 +9,7 @@ Default setup:
 1. Adopt mass density as the refinement criteria
    --> Input__Flag_Rho
 2. Maximum refinement level (MAX_LEVEL) = 6
+3. Isolated Poisson solver (OPT__BC_POT = 2)
 
 
 Note:
@@ -33,3 +34,8 @@ Note:
    --> Note that errors in NFW can be very large since the total mass in NFW diverges and the adopted analytical
        solution assumes zero potential at infinity
        --> Numerical and analytical solutions will differ by a DC term
+
+4. Set Gra_NIterProf>0 to measure the average performance of the Poisson solver
+   --> The measured performance excludes the time for exchanging MPI buffer data
+   -->  When adopting the isolated Poisson solver (i.e., OPT__BC_POT = 2), both "NCell" and "Cells/s"
+        in Record__PoissonPerformance do not count the number of cells in the padded region
