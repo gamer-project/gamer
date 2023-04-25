@@ -235,7 +235,7 @@ void Init_Unit()
          else
             Aux_Error( ERROR_INFO, "cannot determine the density unit !!\n" );
       }
-
+#     endif
 //    (6) energy unit (which cannot be set by users)
       if ( true )
       {
@@ -261,7 +261,6 @@ void Init_Unit()
          else
             Aux_Error( ERROR_INFO, "cannot determine the energy density unit !!\n" );
       }
-#     endif
 
 //    (8) magnetic field unit (which cannot be set by users)
 #     ifdef MHD
