@@ -795,7 +795,7 @@ void Aux_TakeNote()
       fprintf( Note, "DT__FLUID                       %13.7e\n",  DT__FLUID                   );
       fprintf( Note, "DT__FLUID_INIT                  %13.7e\n",  DT__FLUID_INIT              );
 #     ifdef SRHD
-      fprintf( Note, "DT_SPEED_OF_LIGHT               %d\n",      DT_SPEED_OF_LIGHT           );
+      fprintf( Note, "DT__SPEED_OF_LIGHT               %d\n",      DT__SPEED_OF_LIGHT           );
 #     endif
 #     ifdef GRAVITY
       fprintf( Note, "DT__GRAVITY                     %13.7e\n",  DT__GRAVITY                 );

@@ -53,6 +53,7 @@ void BC_User_Template( real Array[], const int ArraySize[], real fluid[], const 
    const real Vz    = 3.70e-1;
    const real Pres0 = 1.0;
    const real Emag0 = 0.0;    // must be zero here even for MHD
+   const double x, y, z;
 
    real Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
 #  if ( NCOMP_PASSIVE > 0 )
@@ -60,6 +61,10 @@ void BC_User_Template( real Array[], const int ArraySize[], real fluid[], const 
 #  else
    real *Passive = NULL;
 #  endif
+
+   x = pos[0];
+   y = pos[1];
+   z = pos[2];
 
    Dens       = Dens0 + 0.2*exp(  -(  SQR(1.1*x-0.5*amr->BoxSize[0])
                                      +SQR(2.2*y-0.5*amr->BoxSize[1])
@@ -146,13 +151,9 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Ghos
 #  endif
    const bool   CheckMinPres_Yes = true;
    const bool   CheckMinTemp_Yes = true;
-#  ifdef SRHD
-   const bool   PrepLrtz         = ( TVar & _LORENTZ_FACTOR ) ? true : false; // Lorentz factor
-#  else
    const bool   PrepVx           = ( TVar & _VELX ) ? true : false;
    const bool   PrepVy           = ( TVar & _VELY ) ? true : false;
    const bool   PrepVz           = ( TVar & _VELZ ) ? true : false;
-#  endif
    const bool   PrepPres         = ( TVar & _PRES ) ? true : false;
    const bool   PrepTemp         = ( TVar & _TEMP ) ? true : false;
 
@@ -220,19 +221,6 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Ghos
       v2 = NVar_Flu;
 
 #     if   ( MODEL == HYDRO )
-#     ifdef SRHD
-      if ( PrepLrtz )
-      {
-         real LorentzFactor, Prim[NCOMP_FLUID];
-
-         Hydro_Con2Pri( BVal, Prim, (real)NULL_REAL, true, true, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
-                        (real)NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
-                        EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
-                        EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
-
-         Array3D[ v2 ++ ][k][j][i] = LorentzFactor;
-      } 
-#     else
       if ( PrepVx   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMX] / BVal[DENS];
       if ( PrepVy   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMY] / BVal[DENS];
       if ( PrepVz   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMZ] / BVal[DENS];

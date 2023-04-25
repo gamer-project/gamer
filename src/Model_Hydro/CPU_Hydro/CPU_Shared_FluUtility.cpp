@@ -204,9 +204,9 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut, real* LorentzFactorPtr )
 {
 
+   const real _Rho             = (real)1.0/In[0];
 #  ifndef SRHD
    const bool CheckMinPres_Yes = true;
-   const real _Rho             = (real)1.0/In[0];
 #  ifdef MHD
    const real Bx               = In[ MAG_OFFSET + 0 ];
    const real By               = In[ MAG_OFFSET + 1 ];

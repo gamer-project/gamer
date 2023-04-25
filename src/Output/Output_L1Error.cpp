@@ -372,22 +372,10 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 // get pressure and temperature
 #  if ( MODEL == HYDRO )
    const real Emag_Zero = 0.0;   // Anal[ENGY] set by AnalFunc_Flu() does NOT include magentic energy
-
-<<<<<<< HEAD
-   const real Pres_Anal = Hydro_Con2Pres( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY], Anal+NCOMP_FLUID,
-                                          CheckMinPres_No, NULL_REAL, Emag_Zero,
-                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-   const real Temp_Anal = Hydro_Con2Temp( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY], Anal+NCOMP_FLUID,
-                                          CheckMinTemp_No, NULL_REAL, Emag_Zero,
-                                          EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-   Anal[ENGY    ] = Pres_Anal;
-   Anal[NBASIC+0] = Temp_Anal;
-=======
    Anal[ENGY] = Hydro_Con2Pres( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY], Anal+NCOMP_FLUID,
                                 CheckMinPres_No, NULL_REAL, Emag_Zero,
                                 EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
->>>>>>> 7fbd0a8d6 (Adding SRHD)
 #  endif
 
 

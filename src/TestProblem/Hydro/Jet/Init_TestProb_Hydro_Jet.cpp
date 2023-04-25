@@ -36,7 +36,9 @@ static int     Jet_HSE_BgTable_NBin;               // for Jet_HSE: number of bin
 void Init_ExtAcc_Jet();
 #endif
 
-
+static void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                const int GhostSize, const int idx[], const double pos[], const double Time,
+                const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -430,6 +432,44 @@ void End_Jet()
 } // FUNCTION : End_Jet
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  IsolatedBC
+// Description :  Isolated boundary condition for galaxies, only allow outflow velocities
+//
+// Note        :  1. Linked to the function pointer "BC_User_Ptr"
+//
+// Parameter   :  fluid    : Fluid field to be set
+//                x/y/z    : Physical coordinates
+//                Time     : Physical time
+//                lv       : Refinement level
+//                AuxArray : Auxiliary array
+//
+// Return      :  fluid
+//-------------------------------------------------------------------------------------------------------
+void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+         const int GhostSize, const int idx[], const double pos[], const double Time,
+         const int lv, const int TFluVarIdxList[], double AuxArray[] )
+{
+
+  //   real Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
+  //
+  //   Dens       = 1.0e-6*(Const_Msun/CUBE(Const_pc))/(UNIT_M/CUBE(UNIT_L));
+  //   MomX       = Dens*Vx;
+  //   MomY       = Dens*Vy;
+  //   MomZ       = Dens*Vz;
+  //   Pres       = Pres0*(  2.0 + sin( 2.0*M_PI*(4.5*x+5.5*y*6.5*z)/amr->BoxSize[2] )  );
+  //   Eint       = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray );
+  //   Etot       = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, Emag0 );
+
+  //   fluid[DENS] = Dens;
+  //   fluid[MOMX] = MomX;
+  //   fluid[MOMY] = MomY;
+  //   fluid[MOMZ] = MomZ;
+  //   fluid[ENGY] = Etot;
+
+  SetGridIC( fluid, pos[0], pos[1], pos[2], Time, lv, AuxArray );
+
+} // FUNCTION : BC
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_ResetByUser_Jet
@@ -562,7 +602,7 @@ void Init_TestProb_Hydro_Jet()
    Init_Function_User_Ptr   = SetGridIC;
    Flag_User_Ptr            = NULL;
    Mis_GetTimeStep_User_Ptr = NULL;
-   BC_User_Ptr              = SetGridIC;
+   BC_User_Ptr              = BC;
    Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Jet;
    Output_User_Ptr          = NULL;
    Aux_Record_User_Ptr      = NULL;
