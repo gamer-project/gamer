@@ -65,6 +65,9 @@ extern "C" {
 
 #ifdef SUPPORT_LIBYT
 #  include <libyt.h>
+# ifdef LIBYT_INTERACTIVE
+#  include <libyt_interactive_mode.h>
+# endif
 #endif
 
 #include "Macro.h"
