@@ -36,7 +36,7 @@ COMPILE_VERBOSE := 0
 SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
-# --> must enable SUPPORT_FFTW
+# --> must define SUPPORT_FFTW=FFTW2 or FFTW3
 #SIMU_OPTION += -DGRAVITY
 
 # enable particles
@@ -213,7 +213,7 @@ SIMU_OPTION += -DOPENMP
 #SIMU_OPTION += -DSUPPORT_GSL
 
 # support FFTW library
-# --> SUPPORT_FFTW must be enabled when GRAVITY is enabled
+# --> SUPPORT_FFTW must be defined when GRAVITY is enabled
 # --> use FFTW3 for fftw3 support
 #     use FFTW2 for fftw2 support
 # SIMU_OPTION += -DSUPPORT_FFTW=FFTW3

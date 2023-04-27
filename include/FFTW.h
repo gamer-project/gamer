@@ -10,8 +10,6 @@
 
 #if ( SUPPORT_FFTW == FFTW2 || SUPPORT_FFTW == FFTW3 )
 
-#define SUPPORT_FFTW
-
 // wrappers for fftw3 single and double precision routines
 #if ( SUPPORT_FFTW == FFTW3 )
 #ifdef FLOAT8
