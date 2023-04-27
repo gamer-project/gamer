@@ -101,13 +101,15 @@ void Init_FFTW()
 #  else // # ifndef SERIAL
 
 // always enable multithreading in serial mode with openmp
-   FFTW3_Double_OMP_Enabled  = true;
+   FFTW3_Double_OMP_Enabled = true;
    FFTW3_Single_OMP_Enabled = true;
 #  endif // # ifndef SERIAL ... # else
 
 // initialise fftw multithreading
    if (FFTW3_Double_OMP_Enabled) {
       FFTW3_Double_OMP_Enabled = fftw_init_threads();
+   }
+   if (FFTW3_Single_OMP_Enabled) {
       FFTW3_Single_OMP_Enabled = fftwf_init_threads();
    }
 #  endif // # ifdef OPENMP

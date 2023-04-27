@@ -126,11 +126,6 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 //-------------------------------------------------------------------------------------------------------
 void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const int RhoK_Size )
 {
-
-   const int Nx        = 2 * NX0_TOT[0];
-   const int Ny        = 2 * NX0_TOT[1];
-   const int Nz        = 2 * NX0_TOT[2];
-
    gamer_float_complex *RhoK_cplx   = (gamer_float_complex *)RhoK;
    gamer_float_complex *gFuncK_cplx = (gamer_float_complex *)gFuncK;
    gamer_float_complex  Temp_cplx;
