@@ -25,6 +25,10 @@
 #  include <omp.h>
 #endif
 
+// fftw version
+#define FFTW2        2
+#define FFTW3        3
+
 #if ( SUPPORT_FFTW == FFTW3 )
 #  ifdef SERIAL
 #     include <fftw3.h>
@@ -77,10 +81,12 @@ extern "C" {
 #include "Prototype.h"
 #include "PhysicalConstant.h"
 #include "GatherTree.h"
+#include "FFTW.h"
 
 #ifdef SERIAL
 #  include "Serial.h"
 #endif
+
 
 
 

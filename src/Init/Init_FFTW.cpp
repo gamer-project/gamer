@@ -2,8 +2,6 @@
 
 #ifdef SUPPORT_FFTW
 
-
-
 static int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Guess );
 
 
