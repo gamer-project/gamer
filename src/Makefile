@@ -222,9 +222,14 @@ SIMU_OPTION += -DOPENMP
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT
 
-# use patch group as the unit in libyt; this will speed up inline-analysis but increase memory consumption
+# use patch group as the unit in libyt, this will speed up inline-analysis but increase memory consumption
 # --> must enable SUPPORT_LIBYT
 #SIMU_OPTION += -DLIBYT_USE_PATCH_GROUP
+
+# support libyt interactive mode, this activates python prompt and does not shut down a simulation when there are
+# errors in an inline python script. must compile libyt with -DINTERACTIVE_MODE
+# --> must enable SUPPORT_LIBYT
+#SIMU_OPTION += -DLIBYT_INTERACTIVE
 
 # random number implementation: RNG_GNU_EXT/RNG_CPP11 (GNU extension drand48_r/c++11 <random>)
 # --> use RNG_GNU_EXT for compilers supporting GNU extensions (**not supported on some macOS**)

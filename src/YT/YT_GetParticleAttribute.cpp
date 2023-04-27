@@ -21,7 +21,7 @@ void YT_GetPID(const long gid, int *level, int *PID);
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Get_ParticleAttribute(int list_len, long *list_gid, char *attr, yt_array *data_array){
+void Get_ParticleAttribute(const int list_len, const long *list_gid, const char *ptype, const char *attr, yt_array *data_array){
     // Get attribute index in GAMER
     FieldIdx_t ParAttr_Idx = GetParticleAttributeIndex( attr, CHECK_ON );
 
