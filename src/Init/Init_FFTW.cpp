@@ -15,62 +15,28 @@ root_real_fftw_plan     FFTW_Plan_PS;                        // PS  : plan for c
 root_real_fftw_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for the self-gravity Poisson solver
 #endif // #ifdef GRAVITY
 
-//wrappers for fftw create and destroy plan functions used in Init_FFTW
-#if ( SUPPORT_FFTW == FFTW3 )
-#ifdef SERIAL
-#define create_fftw_3d_r2c_plan(size, arr)          gamer_float_fftw3_plan_dft_r2c_3d(     size[2], size[1], size[0], (real*)                      arr, (gamer_float_fftw3_complex*) arr,                FFTW_ESTIMATE )
-#define create_fftw_3d_c2r_plan(size, arr)          gamer_float_fftw3_plan_dft_c2r_3d(     size[2], size[1], size[0], (gamer_float_fftw3_complex*) arr, (real*)                      arr,                FFTW_ESTIMATE )
-#define create_fftw_3d_forward_c2c_plan(size, arr)  gamer_float_fftw3_plan_dft_c2c_3d(     size[2], size[1], size[0], (gamer_float_fftw3_complex*) arr, (gamer_float_fftw3_complex*) arr, FFTW_FORWARD , FFTW_ESTIMATE )
-#define create_fftw_3d_backward_c2c_plan(size, arr) gamer_float_fftw3_plan_dft_c2c_3d(     size[2], size[1], size[0], (gamer_float_fftw3_complex*) arr, (gamer_float_fftw3_complex*) arr, FFTW_BACKWARD, FFTW_ESTIMATE )
-#define destroy_real_fftw_plan                      gamer_float_fftw3_destroy_plan
-#define destroy_complex_fftw_plan                   gamer_float_fftw3_destroy_plan
-#else  // #ifdef SERIAL
-#define create_fftw_3d_r2c_plan(size, arr)          gamer_float_fftw3_mpi_plan_dft_r2c_3d( size[2], size[1], size[0], (real*)                      arr, (gamer_float_fftw3_complex*) arr, MPI_COMM_WORLD,                FFTW_ESTIMATE | FFTW_MPI_TRANSPOSED_OUT )
-#define create_fftw_3d_c2r_plan(size, arr)          gamer_float_fftw3_mpi_plan_dft_c2r_3d( size[2], size[1], size[0], (gamer_float_fftw3_complex*) arr, (real*)                      arr, MPI_COMM_WORLD,                FFTW_ESTIMATE | FFTW_MPI_TRANSPOSED_IN  )
-#define create_fftw_3d_forward_c2c_plan(size, arr)  gamer_float_fftw3_mpi_plan_dft_c2c_3d( size[2], size[1], size[0], (gamer_float_fftw3_complex*) arr, (gamer_float_fftw3_complex*) arr, MPI_COMM_WORLD, FFTW_FORWARD , FFTW_ESTIMATE | FFTW_MPI_TRANSPOSED_OUT )
-#define create_fftw_3d_backward_c2c_plan(size, arr) gamer_float_fftw3_mpi_plan_dft_c2c_3d( size[2], size[1], size[0], (gamer_float_fftw3_complex*) arr, (gamer_float_fftw3_complex*) arr, MPI_COMM_WORLD, FFTW_BACKWARD, FFTW_ESTIMATE | FFTW_MPI_TRANSPOSED_IN  )
-#define destroy_real_fftw_plan                      gamer_float_fftw3_destroy_plan
-#define destroy_complex_fftw_plan                   gamer_float_fftw3_destroy_plan
-#endif // #ifdef SERIAL ... # else
-#else // # if ( SUPPORT_FFTW == FFTW3 )
-#ifdef SERIAL
-#define create_fftw_3d_r2c_plan(size, arr)          rfftw3d_create_plan(                     size[2], size[1], size[0], FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE | FFTW_IN_PLACE )
-#define create_fftw_3d_c2r_plan(size, arr)          rfftw3d_create_plan(                     size[2], size[1], size[0], FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE | FFTW_IN_PLACE )
-#define create_fftw_3d_forward_c2c_plan(size, arr)   fftw3d_create_plan(                     size[2], size[1], size[0], FFTW_FORWARD        , FFTW_ESTIMATE | FFTW_IN_PLACE )
-#define create_fftw_3d_backward_c2c_plan(size, arr)  fftw3d_create_plan(                     size[2], size[1], size[0], FFTW_BACKWARD       , FFTW_ESTIMATE | FFTW_IN_PLACE )
-#define destroy_real_fftw_plan                      rfftwnd_destroy_plan
-#define destroy_complex_fftw_plan                    fftwnd_destroy_plan
-#else  // #ifdef SERIAL
-#define create_fftw_3d_r2c_plan(size, arr)          rfftw3d_mpi_create_plan( MPI_COMM_WORLD, size[2], size[1], size[0], FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE )
-#define create_fftw_3d_c2r_plan(size, arr)          rfftw3d_mpi_create_plan( MPI_COMM_WORLD, size[2], size[1], size[0], FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE )
-#define create_fftw_3d_forward_c2c_plan(size, arr)   fftw3d_mpi_create_plan( MPI_COMM_WORLD, size[2], size[1], size[0], FFTW_FORWARD        , FFTW_ESTIMATE )
-#define create_fftw_3d_backward_c2c_plan(size, arr)  fftw3d_mpi_create_plan( MPI_COMM_WORLD, size[2], size[1], size[0], FFTW_BACKWARD       , FFTW_ESTIMATE )
-#define destroy_real_fftw_plan                      rfftwnd_mpi_destroy_plan
-#define destroy_complex_fftw_plan                    fftwnd_mpi_destroy_plan
-#endif // #ifdef SERIAL ... # else
-#endif // # if ( SUPPORT_FFTW == FFTW3 )  ... # else
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  computePaddedTotalSize
+// Function    :  ComputePaddedTotalSize
 // Description :  Return padded total size for complex-to-real and real-to-complex 3D FFTW transforms
-// Parameter   :  size          : 3D array with size of FFT block
+// Parameter   :  size: 3D array with size of FFT block
 // Return      :  length of array that is large enough to store FFT input and output
 //-------------------------------------------------------------------------------------------------------
 int ComputePaddedTotalSize(int* size) {
    return 2*(size[0]/2+1)*size[1]*size[2];
-}
+} // FUNCTION : ComputePaddedTotalSize
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  computeTotalSize
+// Function    :  ComputeTotalSize
 // Description :  Return total size for complex-to-complex 3D FFTW transforms
-// Parameter   :  size          : 3D array with size of FFT block
+// Parameter   :  size: 3D array with size of FFT block
 // Return      :  length of array that is large enough to store FFT input and output
 //-------------------------------------------------------------------------------------------------------
 int ComputeTotalSize(int* size) {
    return size[0]*size[1]*size[2];
-}
+} // FUNCTION : ComputeTotalSize
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_FFTW
