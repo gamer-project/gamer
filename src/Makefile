@@ -84,12 +84,6 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 # special relativistic hydrodynamics
 #SIMU_OPTION += -DSRHD
 
-# evolving reduced energy density instead of total energy density
-#SIMU_OPTION += -DREDUCED_ENERGY
-
-# using 4-velocity instead of 3-velocity in data reconstruction and recovering primitive variables
-#SIMU_OPTION += -DFOUR_VELOCITY
-
 # cosmic rays (not supported yet)
 #SIMU_OPTION += -DCOSMIC_RAY
 
