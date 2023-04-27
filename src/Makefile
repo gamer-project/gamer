@@ -226,8 +226,10 @@ SIMU_OPTION += -DOPENMP
 # --> must enable SUPPORT_LIBYT
 #SIMU_OPTION += -DLIBYT_USE_PATCH_GROUP
 
-# support libyt interactive mode, this activates python prompt and does not shut down a simulation when there are
-# errors in an inline python script. must compile libyt with -DINTERACTIVE_MODE
+# support libyt interactive mode
+# --> this activates python prompt and does not shut down a simulation when there are
+#     errors in an inline python script
+# --> must compile libyt with INTERACTIVE_MODE
 # --> must enable SUPPORT_LIBYT
 #SIMU_OPTION += -DLIBYT_INTERACTIVE
 
