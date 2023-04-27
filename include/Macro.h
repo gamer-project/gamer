@@ -87,10 +87,6 @@
 // load-balance parallelization
 #define HILBERT      1
 
-// fftw version
-#define FFTW2        1
-#define FFTW3        2
-
 // random number implementation
 #define RNG_GNU_EXT  1
 #define RNG_CPP11    2

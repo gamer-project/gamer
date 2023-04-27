@@ -106,7 +106,7 @@
 #define root_real_fftw_plan         rfftwnd_mpi_plan
 #define root_complex_fftw_plan       fftwnd_mpi_plan
 #define root_fftw_r2c(plan, array)  rfftwnd_mpi( plan, 1, (real*)                array, NULL, FFTW_TRANSPOSED_ORDER )
-#define root_fftw_c2r(plan, array)  rfftwnd_mpi( plan, 1, (gamer_float_complex*) array, NULL, FFTW_TRANSPOSED_ORDER )
+#define root_fftw_c2r(plan, array)  rfftwnd_mpi( plan, 1, (real*)                array, NULL, FFTW_TRANSPOSED_ORDER )
 #define root_fftw_c2c(plan, array)   fftwnd_mpi( plan, 1, (gamer_float_complex*) array, NULL, FFTW_TRANSPOSED_ORDER )
 #endif // #ifdef SERIAL ... # else
 #endif // # if ( SUPPORT_FFTW == FFTW3 )  ... # else
