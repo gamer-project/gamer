@@ -372,17 +372,22 @@ void Aux_TakeNote()
 
 #     ifdef SUPPORT_LIBYT
       fprintf( Note, "SUPPORT_LIBYT                   ON\n" );
-#     else
-      fprintf( Note, "SUPPORT_LIBYT                   OFF\n" );
-#     endif
 
-#     ifdef SUPPORT_LIBYT
 #     ifdef LIBYT_USE_PATCH_GROUP
       fprintf( Note, "LIBYT_USE_PATCH_GROUP           ON\n" );
 #     else
       fprintf( Note, "LIBYT_USE_PATCH_GROUP           OFF\n" );
 #     endif
-#     endif // #ifdef SUPPORT_LIBYT
+
+#     ifdef LIBYT_INTERACTIVE
+      fprintf( Note, "LIBYT_INTERACTIVE               ON\n" );
+#     else
+      fprintf( Note, "LIBYT_INTERACTIVE               OFF\n" );
+#     endif
+
+#     else  // #ifdef SUPPORT_LIBYT
+      fprintf( Note, "SUPPORT_LIBYT                   OFF\n" );
+#     endif // #ifdef SUPPORT_LIBYT ... else ...
 
 #     if   ( RANDOM_NUMBER == RNG_GNU_EXT )
       fprintf( Note, "RANDOM_NUMBER                   RNG_GNU_EXT\n" );

@@ -120,6 +120,7 @@ struct Makefile_t
    int SupportLibYT;
 #  ifdef SUPPORT_LIBYT
    int LibYTUsePatchGroup;
+   int LibYTInteractive;
 #  endif
    int SupportGrackle;
    int RandomNumber;
