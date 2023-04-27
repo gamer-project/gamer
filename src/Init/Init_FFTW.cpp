@@ -18,7 +18,7 @@ root_real_fftw_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for t
 #endif // #ifdef GRAVITY
 
 //wrappers for fftw create and destroy plan functions used in Init_FFTW
-#ifdef SUPPORT_FFTW3
+#if ( SUPPORT_FFTW == FFTW3 )
 #ifdef SERIAL
 #define create_fftw_3d_r2c_plan(size, arr)          gamer_float_fftw3_plan_dft_r2c_3d(     size[2], size[1], size[0], (real*)                      arr, (gamer_float_fftw3_complex*) arr,                FFTW_ESTIMATE )
 #define create_fftw_3d_c2r_plan(size, arr)          gamer_float_fftw3_plan_dft_c2r_3d(     size[2], size[1], size[0], (gamer_float_fftw3_complex*) arr, (real*)                      arr,                FFTW_ESTIMATE )
@@ -34,7 +34,7 @@ root_real_fftw_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for t
 #define destroy_real_fftw_plan                      gamer_float_fftw3_destroy_plan
 #define destroy_complex_fftw_plan                   gamer_float_fftw3_destroy_plan
 #endif // #ifdef SERIAL ... # else
-#else // # ifdef SUPPORT_FFTW3
+#else // # if ( SUPPORT_FFTW == FFTW3 )
 #ifdef SERIAL
 #define create_fftw_3d_r2c_plan(size, arr)          rfftw3d_create_plan(                     size[2], size[1], size[0], FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE | FFTW_IN_PLACE )
 #define create_fftw_3d_c2r_plan(size, arr)          rfftw3d_create_plan(                     size[2], size[1], size[0], FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE | FFTW_IN_PLACE )
@@ -50,7 +50,7 @@ root_real_fftw_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for t
 #define destroy_real_fftw_plan                      rfftwnd_mpi_destroy_plan
 #define destroy_complex_fftw_plan                    fftwnd_mpi_destroy_plan
 #endif // #ifdef SERIAL ... # else
-#endif // # ifdef SUPPORT_FFTW3 ... # else
+#endif // # if ( SUPPORT_FFTW == FFTW3 )  ... # else
 
 
 
@@ -83,8 +83,8 @@ void Init_FFTW()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
-#  ifdef SUPPORT_FFTW3
-   FFTW3_Double_OMP_Enabled  = false;
+#  if ( SUPPORT_FFTW == FFTW3 )
+   FFTW3_Double_OMP_Enabled = false;
    FFTW3_Single_OMP_Enabled = false;
 
 
@@ -123,7 +123,7 @@ void Init_FFTW()
    if (FFTW3_Double_OMP_Enabled) fftw_plan_with_nthreads (OMP_NTHREAD);
    if (FFTW3_Single_OMP_Enabled) fftwf_plan_with_nthreads(OMP_NTHREAD);
 #  endif // # ifdef OPENMP
-#  endif // # ifdef SUPPORT_FFTW3
+#  endif // # if ( SUPPORT_FFTW == FFTW3 )
 
 
 
@@ -151,12 +151,12 @@ void Init_FFTW()
 
 
 // allocate memory for arrays in fftw3
-#  ifdef SUPPORT_FFTW3
+#  if ( SUPPORT_FFTW == FFTW3 )
    PS   = (real*) root_fftw_malloc(ComputePaddedTotalSize(PS_FFT_Size     ) * sizeof(real));
 #  ifdef GRAVITY
    RhoK = (real*) root_fftw_malloc(ComputePaddedTotalSize(Gravity_FFT_Size) * sizeof(real));
 #  endif // # ifdef GRAVITY
-#  endif // # ifdef SUPPORT_FFTW3
+#  endif // # if ( SUPPORT_FFTW == FFTW3 )
 
 // create plans for power spectrum and the self-gravity solver
    FFTW_Plan_PS      = create_fftw_3d_r2c_plan(PS_FFT_Size, PS);
@@ -166,12 +166,12 @@ void Init_FFTW()
 #  endif // # ifdef GRAVITY
 
 // free memory for arrays in fftw3
-#  ifdef SUPPORT_FFTW3
+#  if ( SUPPORT_FFTW == FFTW3 )
    root_fftw_free(PS);
 #  ifdef GRAVITY
    root_fftw_free(RhoK);
 #  endif // # ifdef GRAVITY
-#  endif // # ifdef SUPPORT_FFTW3
+#  endif // # if ( SUPPORT_FFTW == FFTW3 )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
@@ -196,7 +196,7 @@ void End_FFTW()
    destroy_real_fftw_plan  ( FFTW_Plan_Poi_Inv );
 #  endif // #  ifdef GRAVITY
 
-#  ifdef SUPPORT_FFTW3
+#  if ( SUPPORT_FFTW == FFTW3 )
 #  ifdef OPENMP
    if (FFTW3_Double_OMP_Enabled)  fftw_cleanup_threads();
    if (FFTW3_Single_OMP_Enabled) fftwf_cleanup_threads();
@@ -208,7 +208,7 @@ void End_FFTW()
    fftw_mpi_cleanup();
    fftwf_mpi_cleanup();
 #  endif
-#  endif // # ifdef SUPPORT_FFTW3
+#  endif // # if ( SUPPORT_FFTW == FFTW3 )
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 

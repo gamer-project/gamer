@@ -25,14 +25,13 @@
 #  include <omp.h>
 #endif
 
-#ifdef SUPPORT_FFTW3
-#  define SUPPORT_FFTW
+#if ( SUPPORT_FFTW == FFTW3 )
 #  ifdef SERIAL
 #     include <fftw3.h>
 #  else
 #     include <fftw3-mpi.h>
 #  endif
-#elif defined(SUPPORT_FFTW)
+#elif ( SUPPORT_FFTW == FFTW2 )
 #  ifdef FLOAT8
 #     ifdef SERIAL
 #        include <drfftw.h>
@@ -46,7 +45,7 @@
 #        include <srfftw_mpi.h>
 #     endif
 #  endif
-#endif // #ifdef SUPPORT_FFTW3 ...# elif defined(SUPPORT_FFTW)
+#endif // #if ( SUPPORT_FFTW == FFTW3 ) ... #elif ( SUPPORT_FFTW == FFTW2 )
 
 #ifdef SUPPORT_GRACKLE
 #ifdef FLOAT8

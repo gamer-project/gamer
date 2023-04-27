@@ -357,11 +357,11 @@ void Aux_TakeNote()
 #     endif
 
 #     ifdef SUPPORT_FFTW
-#     ifdef SUPPORT_FFTW3
+#     if ( SUPPORT_FFTW == FFTW3 )
       fprintf( Note, "SUPPORT_FFTW3                   ON\n" );
-#     else  // # ifdef SUPPORT_FFTW3
+#     elif ( SUPPORT_FFTW == FFTW2 )
       fprintf( Note, "SUPPORT_FFTW2                   ON\n" );
-#     endif // # ifdef SUPPORT_FFTW3 ... # else
+#     endif // # if ( SUPPORT_FFTW == FFTW3 )  ... # else
 #     else // # ifdef SUPPORT_FFTW
       fprintf( Note, "SUPPORT_FFTW                    OFF\n" );
 #     endif // # ifdef SUPPORT_FFTW ... # else
@@ -1094,10 +1094,10 @@ void Aux_TakeNote()
          default:                      fprintf( Note, "UNKNOWN\n" );
       }
 #     endif
-#     ifdef SUPPORT_FFTW3
+#     ifdef ( SUPPORT_FFTW == FFTW3 )
       fprintf( Note, "FFTW3 Double Precision OMP      %d\n",      FFTW3_Double_OMP_Enabled        );
       fprintf( Note, "FFTW3 Single Precision OMP      %d\n",      FFTW3_Single_OMP_Enabled       );
-#     endif // # ifdef SUPPORT_FFTW3
+#     endif // # ifdef ( SUPPORT_FFTW == FFTW3 )
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 

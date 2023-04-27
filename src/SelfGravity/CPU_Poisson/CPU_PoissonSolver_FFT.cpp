@@ -201,13 +201,13 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
    local_y_start_after_transpose = NULL_INT;
    total_local_size              = local_nx*local_ny*local_nz;
 #  else // # ifdef SERIAL
-#  ifdef SUPPORT_FFTW3
+#  if ( SUPPORT_FFTW == FFTW3 )
    total_local_size = fftw_mpi_local_size_3d_transposed( FFT_Size[2], local_ny, local_nx, MPI_COMM_WORLD,
                            &local_nz, &local_z_start, &local_ny_after_transpose, &local_y_start_after_transpose );
-#  else // # ifdef SUPPORT_FFTW3
+#  else // # if ( SUPPORT_FFTW == FFTW3 )
    rfftwnd_mpi_local_sizes( FFTW_Plan_Poi, &local_nz, &local_z_start, &local_ny_after_transpose,
                             &local_y_start_after_transpose, &total_local_size );
-#  endif // #  ifdef SUPPORT_FFTW3 ... # else
+#  endif // #  if ( SUPPORT_FFTW == FFTW3 ) ... # else
 #  endif
 
 // collect "local_nz" from all ranks and set the corresponding list "List_z_start"
