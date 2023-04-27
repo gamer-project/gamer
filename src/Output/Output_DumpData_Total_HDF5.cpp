@@ -808,6 +808,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                                             CheckMinTemp_No, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
                                             EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                             EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#                    ifdef SRHD
+		     Temp *= EoS_AuxArray_Flt[1];
+#                    endif
                      FieldData[PID][k][j][i] = Temp;
                   }
                } // if ( v == TempDumpIdx )
