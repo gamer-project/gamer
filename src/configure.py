@@ -4,12 +4,12 @@ A. User Guide:
   0. Help:
     Use the `-h` or `--help` to get the short help message. Use `-lh` to get detail help message.
   1. Library paths:
-    When using library, you need to assign the library path. The path config file can be found under `../configs/`. 
+    When using library, you need to assign the library path. The path config file can be found under `../configs/`.
     To setup your own config file, please copy `example.config` and modify it.
-  2. Compilation flags: 
-    We already have two flag config files under `../configs/`, `intel.make` and `gnu.make`, which are for the 
+  2. Compilation flags:
+    We already have two flag config files under `../configs/`, `intel.make` and `gnu.make`, which are for the
     intel and gnu compiler respetively. To setup your own config file, please copy `example.make` and modify it.
-  3. Run the script: 
+  3. Run the script:
     This script can run under Python2 and Python3. To run the script, please run the following command:
       `python configure.py [--your_arguments]`
     After the command finishes, the `Makefile` will be generated.
@@ -23,29 +23,29 @@ B. Developer guide:
     b. Add the python argument reader for the new simulation option in the `Main execution` part of the code.
     c. Add the name convertion dictionary `[python_argument:gamer_argument]` to the `NAME_TABLE`.
        (You can find it in the `Global variable` part of the code.)
-    d. If the new arguments are not base on any argument, you can add one new line of `add_option()` in `load_sim()`. 
+    d. If the new arguments are not base on any argument, you can add one new line of `add_option()` in `load_sim()`.
        (You can find it in the `Functions` part of the code.) If the new arguments are base on one of the argument,
-       you might create a option list in `Global variables` section, and loop over the list in `load_sim()`. 
+       you might create a option list in `Global variables` section, and loop over the list in `load_sim()`.
        Please check out how we add the `openmp` argument or `GRAVITY_OPTION` in `sim_load()`.
     e. [Optional] Add the error rules in `validation()`. (You can find it in the `Functions` part of the code.)
     f. [Optional] Add the warning rules in `warning()`. (You can find it in the `Functions` part of the code.)
   2. Add a new path:
-    a. Add a new line in the Makefile_base in the path section. 
+    a. Add a new line in the Makefile_base in the path section.
       `NEW_PATH := @@@NEW_PATH@@@`
-    b. Add a new line in the path config file. 
+    b. Add a new line in the path config file.
       `NEW_PATH    /path/of/new`
   3. Add a new compiler flag type:
-    a. Add a new line in the Makefile_base in the flag section. 
+    a. Add a new line in the Makefile_base in the flag section.
       `NEW_FLAG := @@@NEW_FLAG@@@`
     b. Add a new flag key `["NEW_FLAG":""]` in `flags` of `load_compile()`.
-    c. Add a new line in the path config file. 
+    c. Add a new line in the path config file.
       `NEW_FLAG    -new_flag`
   4. Rules of Makefile_base:
     a. The string will be replaced by this script need to be sandwitched by `@@@`.
   5. Modify the help message:
     We overwrite the original `print_help` since GAMER has too many options. You should follow the followings.
     a. `print_help`: Showing the essential message only. The default option should start with '*' sign.
-    b. `print_help_detail`: Should be as clear as possible. 
+    b. `print_help_detail`: Should be as clear as possible.
 """
 
 ####################################################################################################
@@ -67,29 +67,31 @@ GAMER_MAKE_OUT    = "Makefile"
 GAMER_DESCRIPTION = "Prepare customize Makefile for GAMER.\nThe default value starts with '*' sign.\nTo show the detail help message, please use -lh argument."
 GAMER_EPILOG      = "The default complie flags are %s/intel.make and %s/gnu.make"%(GAMER_CONFIG_DIR, GAMER_CONFIG_DIR)
 # The convert name from the python argument to the makefile argument.
-NAME_TABLE        = {"model":"MODEL", "passive":"NCOMP_PASSIVE_USER", "flu_scheme":"FLU_SCHEME", 
+NAME_TABLE        = {"model":"MODEL", "passive":"NCOMP_PASSIVE_USER", "flu_scheme":"FLU_SCHEME",
                      "slope":"LR_SCHEME", "flux":"RSOLVER", "dual":"DUAL_ENERGY", "mhd":"MHD",
-                     "cosmic_ray":"COSMIC_RAY", "eos":"EOS", "barotropic":"BAROTROPIC_EOS", 
-                     "conserve_mass":"CONSERVE_MASS", "laplacian_four":"LAPLACIAN_4TH", 
-                     "self_interaction":"QUARTIC_SELF_INTERACTION", "gravity":"GRAVITY", 
-                     "pot_scheme":"POT_SCHEME", "store_pot_ghost":"STORE_POT_GHOST", 
-                     "unsplit_gravity":"UNSPLIT_GRAVITY", "comoving":"COMOVING", "particle":"PARTICLE", 
-                     "tracer":"TRACER", "store_acc":"STORE_PAR_ACC", "star_formation":"STAR_FORMATION", 
-                     "par_attribute":"PAR_NATT_USER", "nlevel":"NLEVEL", "max_patch":"MAX_PATCH", 
-                     "patch_size":"PATCH_SIZE", "debug":"GAMER_DEBUG", 
-                     "bitwise_reproduce":"BITWISE_REPRODUCIBILITY", "timing":"TIMING", 
-                     "timing_solver":"TIMING_SOLVER", "double":"FLOAT8", "laohu":"LAOHU", 
-                     "hdf5":"SUPPORT_HDF5", "gsl":"SUPPORT_GSL", "fftw":"SUPPORT_FFTW", 
-                     "libyt":"SUPPORT_LIBYT", "libyt_patch":"LIBYT_USE_PATCH_GROUP", "rng":"RANDOM_NUMBER", 
-                     "serial_compiler":"SERIAL", "openmp":"OPENMP", "mpi":"LOAD_BALANCE=HILBERT", 
+                     "cosmic_ray":"COSMIC_RAY", "eos":"EOS", "barotropic":"BAROTROPIC_EOS",
+                     "conserve_mass":"CONSERVE_MASS", "laplacian_four":"LAPLACIAN_4TH",
+                     "self_interaction":"QUARTIC_SELF_INTERACTION",
+                     "gravity":"GRAVITY", "pot_scheme":"POT_SCHEME", "store_pot_ghost":"STORE_POT_GHOST",
+                     "unsplit_gravity":"UNSPLIT_GRAVITY", "comoving":"COMOVING",
+                     "particle":"PARTICLE", "tracer":"TRACER", "store_acc":"STORE_PAR_ACC",
+                     "star_formation":"STAR_FORMATION", "feedback":"FEEDBACK", "par_attribute":"PAR_NATT_USER",
+                     "nlevel":"NLEVEL", "max_patch":"MAX_PATCH", "patch_size":"PATCH_SIZE", "debug":"GAMER_DEBUG",
+                     "bitwise_reproduce":"BITWISE_REPRODUCIBILITY", "timing":"TIMING",
+                     "timing_solver":"TIMING_SOLVER", "double":"FLOAT8", "laohu":"LAOHU",
+                     "hdf5":"SUPPORT_HDF5", "gsl":"SUPPORT_GSL", "fftw":"SUPPORT_FFTW",
+                     "libyt":"SUPPORT_LIBYT", "libyt_patch":"LIBYT_USE_PATCH_GROUP",
+                     "libyt_interactive":"LIBYT_INTERACTIVE", "rng":"RANDOM_NUMBER",
+                     "serial_compiler":"SERIAL", "openmp":"OPENMP", "mpi":"LOAD_BALANCE=HILBERT",
                      "overlap_mpi":"OVERLAP_MPI", "gpu":"GPU", "gpu_arch":"GPU_ARCH"}
 
 HYDRO_OPTION         = ["model", "flu_scheme", "slope", "flux", "eos", "passive", "mhd", "dual", "cosmic_ray", "barotropic"]
 ELBDM_OPTION         = ["model", "passive", "conserve_mass", "laplacian_four", "self_interaction"]
 GRAVITY_OPTION       = ["gravity", "pot_scheme", "store_pot_ghost", "unsplit_gravity", "comoving"]
-PARTICALE_OPTION     = ["particle", "par_attribute", "tracer", "store_acc", "star_formation"]
-MISCELLANEOUS_OPTION = ["nlevel", "max_patch", "patch_size", "rng", "bitwise_reproduce", "debug", "timing",
-                        "timing_solver", "double", "laohu", "hdf5", "gsl", "fftw", "libyt", "libyt_patch"]
+PARTICALE_OPTION     = ["particle", "par_attribute", "tracer", "store_acc", "feedback", "star_formation"]
+MISCELLANEOUS_OPTION = ["nlevel", "max_patch", "patch_size", "debug", "bitwise_reproduce", "timing",
+                        "timing_solver", "double", "laohu", "hdf5", "gsl", "fftw", "libyt", "libyt_patch",
+                        "libyt_interactive", "rng"]
 GPU_OPTION           = ["gpu", "gpu_arch"]
 
 class BCOLOR:
@@ -132,7 +134,7 @@ class ArgumentParser( argparse.ArgumentParser ):
                 pos_key = ""
                 for key in NAME_TABLE:
                     dist = distance( arg, "--"+key )
-                    if dist < min_dist: 
+                    if dist < min_dist:
                         min_dist = dist
                         pos_key = "--"+key
                 msg += 'unrecognized arguments: %s, do you mean: %s ?\n'%(arg, pos_key)
@@ -147,7 +149,7 @@ class ArgumentParser( argparse.ArgumentParser ):
         N          = len(indent)
         sub_indent = N * " "
         if width < N:  raise ValueError("width is smaller than indent length.")
-        
+
         now_n = 0
         new_str = ""
         new_line = False
@@ -156,14 +158,14 @@ class ArgumentParser( argparse.ArgumentParser ):
                 new_str += "\n" + sub_indent
                 new_line = False
                 now_n = N
-                
-            if string[i] == "\n": 
+
+            if string[i] == "\n":
                 new_line = True
                 continue
-            
+
             new_str += string[i]
             now_n += 1
-            
+
             if now_n >= width:
                 if string[i] == end_char: new_line = True
         return new_str
@@ -184,24 +186,24 @@ class ArgumentParser( argparse.ArgumentParser ):
                             temp = [ str(opt) for opt in option["choices"] ]
                         usage += [ "[%s {%s}]"%(item, ", ".join(temp)) ]
                         continue
-                    
+
                     if "metavar" in option:
                         if "default" in option:
                             usage += [ "[%s %s *%s]"%(item, option["metavar"], str(option["default"])) ]
                         else:
                             usage += [ "[%s %s]"%(item, option["metavar"]) ]
                         continue
-                    
+ 
                     if "dest" in option:
                         if "default" in option:
                             usage += [ "[%s %s *%s]"%(item, option["dest"], str(option["default"])) ]
                         else:
                             usage += [ "[%s %s]"%(item, option["dest"].upper()) ]
                         continue
-                    
+
                     if "action" in option:
                         if option["action"] in ["help", "store_const", "store_true", "store_false"]:
-                            usage += ["[%s]"%(item)]
+                            usage += [ "[%s]"%(item) ]
                             continue
 
                     temp = re.sub(r"^(-{1,})", "", item).upper()
@@ -222,7 +224,7 @@ class ArgumentParser( argparse.ArgumentParser ):
         if "description" in self.program:
             print(self.program["description"])
             print("")
-        
+
         # Print epilog
         if "epilog" in self.program:
             print(self.program["epilog"])
@@ -245,19 +247,19 @@ class ArgumentParser( argparse.ArgumentParser ):
             option["flags2"] = str.join(", ", [ "%s %s" % (item, option["metavar"]) if "metavar" in option else "%s %s" % (item, option["dest"].upper()) if "dest" in option else item for item in option["flags"] ])
             if len(option["flags2"]) > option_indent:
                 option_indent = len(option["flags2"])
-        
+
         for option in self.options:
             template = "  %-" + str(option_indent) + "s  "
             indent = template %(option["flags2"])
             output = indent
 
             if "help" in option: output += option["help"]
-            
+
             if "action" in option:
                 if option["action"] == "help":
                     print( self.string_align(output, indent, option_width, " ") )
                     continue
-            
+
             if "choices" in option:
                 temp = [ str(opt) for opt in option["choices"] ]
                 output += "Choice: [%s] => "%(", ".join(temp))
@@ -269,7 +271,7 @@ class ArgumentParser( argparse.ArgumentParser ):
                 output += "Default: False" if option["action"] == "store_true" else "Default: False"
 
             print( self.string_align(output, indent, option_width, " ") )
-        
+
         # Print epilog
         if "epilog" in self.program:
             print(self.program["epilog"])
@@ -278,7 +280,7 @@ class ArgumentParser( argparse.ArgumentParser ):
 
 
 ####################################################################################################
-# Functions 
+# Functions
 ####################################################################################################
 def color_print( string, color ):
     print( color + string + BCOLOR.ENDC )
@@ -286,11 +288,11 @@ def color_print( string, color ):
 
 def add_option( opt_str, name, val ):
     # NOTE: every -Doption must have trailing space
-    if type(val) == type(True): 
+    if type(val) == type(True):
         if val:
             opt_str += "-D%s "%(name)
             print("%-20s : %r"%(name, val))
-    elif type(val) == type("str"): 
+    elif type(val) == type("str"):
         opt_str += "-D%s=%s "%(name, val)
         print("%-20s : %s"%(name, val))
     elif type(val) == type(0):
@@ -298,22 +300,22 @@ def add_option( opt_str, name, val ):
         print("%-20s : %d"%(name, val))
     else:
         raise TypeError("Unknown type to add the simulation options.")
-    
+
     return opt_str
 
-def distance( s1, s2 ): 
+def distance( s1, s2 ):
     """
     Calculate the distance of two string.
     See: https://en.wikipedia.org/wiki/Damerau-Levenshtein_distance
          https://www.geeksforgeeks.org/damerau-levenshtein-distance/
     """
-    matrix = [ [ 0 for i in range(len(s2)+1)] for j in range(len(s1)+1) ]
+    matrix = [ [ 0 for i in range(len(s2)+1) ] for j in range(len(s1)+1) ]
 
     for i in range(len(s1)+1):
-        matrix[i][0] = i 
+        matrix[i][0] = i
     for j in range(len(s2)+1):
-        matrix[0][j] = j 
-    
+        matrix[0][j] = j
+
     for i in range(len(s1)+1):
         for j in range(1, len(s2)+1):
             if s1[i-1] == s2[j-1]:
@@ -328,7 +330,7 @@ def load_config( config ):
     paths = {}
     with open( config, 'r') as f:
         lines = f.readlines()
-    
+
     for line in lines:
         if line[0] == "#": continue
         temp = list( filter( None, re.split(" |:=|\n", line) ) )
@@ -346,9 +348,9 @@ def load_flag( config ):
     flags = {"CXXFLAG":"", "OPENMPFLAG":"", "LIBFLAG":"", "CUDAFLAG":""}
     with open( config, 'r') as f:
         lines = f.readlines()
-   
+
     for line in lines:
-        if line[0] == "#":    continue 
+        if line[0] == "#":    continue
         temp = line.split()
         if len(temp) == 0: continue
         if len(temp) == 1: continue
@@ -363,19 +365,19 @@ def load_sims( **kwargs ):
     opt_str = ""
 
     # A. Physics
-    # A.1 Module 
+    # A.1 Module
     if kwargs["model"] == "HYDRO":
         kwargs["eos"] = "EOS_" + kwargs["eos"] # special string prefix of EOS
         for opt in HYDRO_OPTION:
             name = NAME_TABLE[opt]
             val  = kwargs[opt]
-            opt_str = add_option( opt_str, name, val)
+            opt_str = add_option( opt_str, name, val )
 
     if kwargs["model"] == "ELBDM":
         for opt in ELBDM_OPTION:
             name = NAME_TABLE[opt]
             val  = kwargs[opt]
-            opt_str = add_option( opt_str, name, val)
+            opt_str = add_option( opt_str, name, val )
 
     if kwargs["model"] == "PAR_ONLY":
         opt_str = add_option( opt_str, NAME_TABLE["model"], kwargs["model"] )
@@ -385,38 +387,38 @@ def load_sims( **kwargs ):
         for opt in GRAVITY_OPTION:
             name = NAME_TABLE[opt]
             val  = kwargs[opt]
-            opt_str = add_option( opt_str, name, val)
+            opt_str = add_option( opt_str, name, val )
 
     # A.3 Particle
     if kwargs["particle"]:
         for opt in PARTICLE_OPTION:
             name = NAME_TABLE[opt]
             val  = kwargs[opt]
-            opt_str = add_option( opt_str, name, val)
+            opt_str = add_option( opt_str, name, val )
 
     # A.4 Grackle
-    if kwargs["grackle"]: 
+    if kwargs["grackle"]:
         opt_str = add_option( opt_str, NAME_TABLE["grackle"], kwargs["grackle"] )
 
     # B. miscellaneous options
     for opt in MISCELLANEOUS_OPTION:
         name = NAME_TABLE[opt]
         val  = kwargs[opt]
-        opt_str = add_option( opt_str, name, val)
+        opt_str = add_option( opt_str, name, val )
 
     # C. parallel options
-    if kwargs["openmp"]: 
-        opt_str = add_option( opt_str, NAME_TABLE["openmp"], kwargs["openmp"])
+    if kwargs["openmp"]:
+        opt_str = add_option( opt_str, NAME_TABLE["openmp"], kwargs["openmp"] )
     if kwargs["mpi"]:
-        opt_str = add_option( opt_str, NAME_TABLE["mpi"], kwargs["mpi"])
+        opt_str = add_option( opt_str, NAME_TABLE["mpi"], kwargs["mpi"] )
     else:
-        opt_str = add_option( opt_str, "SERIAL", True)  # hard coded the option of serial
+        opt_str = add_option( opt_str, "SERIAL", True )  # hard coded the option of serial
 
     if kwargs["gpu"]:
         for opt in GPU_OPTION:
             name = NAME_TABLE[opt]
             val  = kwargs[opt]
-            opt_str = add_option( opt_str, name, val)
+            opt_str = add_option( opt_str, name, val )
 
     return {"SIMU_OPTION":opt_str}
 
@@ -449,18 +451,18 @@ def validation( paths, **kwargs ):
     validation then store the parameter
     """
     success = True
-    
-    # 0. Makefile 
+
+    # 0. Makefile
     if not os.path.isfile( GAMER_MAKE_BASE ):
         color_print("ERROR: %s does not exist."%(GAMER_MAKE_BASE), BCOLOR.FAIL)
         success = False
-    
+
     sim_opt = {}
-    
+
     # A. Physics
-    # A.1 Module 
+    # A.1 Module
     if kwargs["model"] == "HYDRO":
-        if kwargs["mhd"]: 
+        if kwargs["mhd"]:
             if kwargs["flu_scheme"] not in ["MHM_RP", "CTU"]:
                 color_print("MHD only supports MHM_RP and CTU.", BCOLOR.FAIL)
                 success = False
@@ -473,20 +475,20 @@ def validation( paths, **kwargs ):
                 success = False
 
         if kwargs["flu_scheme"] == "RTVD":
-            if kwargs["passive"] != 0: 
+            if kwargs["passive"] != 0:
                 color_print("Passive scalar is not supported for RTVD.", BCOLOR.FAIL)
                 success = False
-            if kwargs["unsplit_gravity"]: 
+            if kwargs["unsplit_gravity"]:
                 color_print("Unsplit gravity is not supported for RTVD.", BCOLOR.FAIL)
                 success = False
-            if kwargs["dual"] != "": 
+            if kwargs["dual"] != "":
                 color_print("Dual energy is not supported for RTVD.", BCOLOR.FAIL)
                 success = False
 
-        if kwargs["dual"] not in ["", "ENPY"]: 
+        if kwargs["dual"] not in ["", "ENPY"]:
             color_print("This dual energy form is not supported yet.", BCOLOR.FAIL)
             success = False
-        
+
         if kwargs["eos"] != "GAMMA":
             if kwargs["dual"] == "ENPY":
                 color_print("ENPY dual energy is only supported for --eos=GAMMA.", BCOLOR.FAIL)
@@ -504,21 +506,21 @@ def validation( paths, **kwargs ):
         if kwargs["eos"] == "ISOTHERMAL" and not kwargs["barotropic"]:
             color_print("--barotropic must be enabled for --eos=ISOTHERMAL.", BCOLOR.FAIL)
             success = False
-            
-        if kwargs["cosmic_ray"] : 
+
+        if kwargs["cosmic_ray"]:
             color_print("--cosmic_ray is not supported yet.", BCOLOR.FAIL)
             success = False
             if kwargs["dual"] == "ENPY":
                 color_print("ENPY dual energy is not supported for --cosmic_ray.", BCOLOR.FAIL)
                 success = False
-        
+
         if kwargs["barotropic"]:
             if kwargs["eos"] not in ["ISOTHERMAL", "TABULAR", "USER"]:
                 color_print("--barotropic is only supported for ISOTHERMAL, TABULAR, and USER.", BCOLOR.FAIL)
                 success = False
 
     elif kwargs["model"] == "ELBDM":
-        if kwargs["self_interaction"]: 
+        if kwargs["self_interaction"]:
             if not kwargs["gravity"]:
                 color_print("--gravity must be enabled when --self_interaction.", BCOLOR.FAIL)
                 success = False
@@ -544,7 +546,7 @@ def validation( paths, **kwargs ):
         if kwargs["unsplit_gravity"] and kwargs["model"] != "HYDRO":
             color_print("--unsplit_gravity is only supported for --model=HYDRO.", BCOLOR.FAIL)
             success = False
-     
+
     # A.3 Particle
     if kwargs["particle"]:
         if kwargs["star_formation"] and kwargs["store_par_acc"]:
@@ -581,26 +583,30 @@ def validation( paths, **kwargs ):
         color_print("--libyt_patch must enable --libyt.", BCOLOR.FAIL)
         success = False
 
+    if kwargs["libyt_interactive"] and not kwargs["libyt"]:
+        color_print("--libyt_interactive must enable --libyt.", BCOLOR.FAIL)
+        success = False
+
     if kwargs["overlap_mpi"]:
         color_print("--overlap_mpi is not supported yet.", BCOLOR.FAIL)
         success = False
         if not kwargs["mpi"]:
             color_print("--overlap_mpi must enable --mpi.", BCOLOR.FAIL)
             success = False
-    
+
     if not success: raise BaseException(BCOLOR.FAIL+"The above validations are fail."+BCOLOR.ENDC)
     return
 
 
 def warning( paths, **kwargs ):
-    # 0. Makefile 
+    # 0. Makefile
     if os.path.isfile( GAMER_MAKE_OUT ):
         color_print("Warning: %s already exist and will be overwriten."%(GAMER_MAKE_OUT), BCOLOR.WARNING)
 
     # 1. serial config not match
     if kwargs["serial_compiler"] == "icpc" and kwargs["flags"] == "gnu":
         color_print("Warning: The compiler does not match to the default flag config.", BCOLOR.WARNING)
-    
+
     if kwargs["serial_compiler"] == "g++" and kwargs["flags"] == "intel":
         color_print("Warning: The compiler does not match to the default flag config.", BCOLOR.WARNING)
 
@@ -608,49 +614,48 @@ def warning( paths, **kwargs ):
     # 2. mpi
     if kwargs["mpi"]:
         color_print("Warning: MPI is set, Serial mode force to be disabled.", BCOLOR.WARNING)
-    
-    
+
     # 3. RTVD
     if kwargs["flu_scheme"] == "RTVD":
         color_print("Warning: Data reconstruction is useless for RTVD.", BCOLOR.WARNING)
         color_print("Warning: Riemann solver is useless for RTVD.", BCOLOR.WARNING)
-    
+
     # 4. rng sys
     if kwargs["rng"] == "RNG_GNU_EXT":
         color_print("Warning: %s is not supported on some macOS."%kwargs["rng"], BCOLOR.WARNING)
-    
+
     if kwargs["rng"] == "RNG_CPP":
         color_print("Warning: You may need to add -std=c++11 to CXXFLAG in flag config.", BCOLOR.WARNING)
-    
+
     # 5. Path
     if kwargs["gpu"]:
         if path.setdefault("CUDA_PATH", default="") == "":
             color_print("CUDA_PATH is not given with --gpu.", BCOLOR.WARNING)
-    
+
     if kwargs["fftw"]:
         if path.setdefault("FFTW_PATH", default="") == "":
             color_print("FFTW_PATH is not given with --fftw.", BCOLOR.WARNING)
-    
+
     if kwargs["mpi"]:
         if path.setdefault("MPI_PATH", default="") == "":
             color_print("MPI_PATH is not given with --mpi.", BCOLOR.WARNING)
-    
+
     if kwargs["hdf5"]:
         if path.setdefault("HDF5_PATH", default="") == "":
             color_print("HDF5_PATH is not given with --hdf5.", BCOLOR.WARNING)
-    
+
     if kwargs["grackle"]:
         if path.setdefault("GRACKLE_PATH", default="") == "":
             color_print("GRACKLE_PATH is not given with --grackle.", BCOLOR.WARNING)
-    
+
     if kwargs["gsl"]:
         if path.setdefault("GSL_PATH", default="") == "":
             color_print("GSL_PATH is not given with --gsl.", BCOLOR.WARNING)
-    
+
     if kwargs["libyt"]:
         if path.setdefault("LIBYT_PATH", default="") == "":
             color_print("LIBYT_PATH is not given with --libyt.", BCOLOR.WARNING)
-    
+
     return
 
 
@@ -659,7 +664,7 @@ def warning( paths, **kwargs ):
 # Main execution
 ####################################################################################################
 # 1. Load the input arguments
-parser = ArgumentParser( description = GAMER_DESCRIPTION, 
+parser = ArgumentParser( description = GAMER_DESCRIPTION,
                          formatter_class = argparse.RawTextHelpFormatter,
                          epilog = GAMER_EPILOG,
                          add_help=False)
@@ -686,7 +691,7 @@ parser.add_argument( "--flags", type=str, metavar="NAME",
                      help="Select the *.make file under ../configs directory. \nChoice: [intel, gnu, YOUR_FLAG_NAME] => "
                    )
 
-# A. physical models and options of diffierent physical models 
+# A. physical models and options of diffierent physical models
 parser.add_argument( "--model", type=str, metavar="MODEL",
                      default="HYDRO", choices=["HYDRO", "ELBDM", "PAR_ONLY"],
                      help="Select the physical model.\n"
@@ -800,6 +805,11 @@ parser.add_argument( "--star_formation",
                      help="Allow creating new particles after initialization.\n"
                    )
 
+parser.add_argument( "--feedback",
+                     action="store_true",
+                     help="Feedback from particles to grids.\n"
+                   )
+
 parser.add_argument( "--par_attribute", type=int, metavar="NUMBER",
                      default=0,
                      help="Set the number of user defined particle attributes.\n"
@@ -882,6 +892,11 @@ parser.add_argument( "--libyt_patch",
                      help="Use patch group as the unit in libyt. Note that this will speed up inline-analysis but increase memory consumption.\n"
                    )
 
+parser.add_argument( "--libyt_interactive",
+                     action="store_true",
+                     help="This activates python prompt and does not shut down a simulation when there are errors in an inline python script\n"
+                   )
+
 parser.add_argument( "--rng", type=str, metavar="TYPE",
                      default="RNG_GNU_EXT",
                      choices=["RNG_GNU_EXT", "RNG_CPP11"],
@@ -897,7 +912,7 @@ parser.add_argument( "--openmp",
                      action="store_true",
                      help="Enable OpenMP parallization.\n"
                    )
- 
+
 parser.add_argument( "--mpi",
                      action="store_true",
                      help="Enable MPI parallization.\n"
@@ -921,7 +936,7 @@ parser.add_argument( "--gpu_arch", type=str, metavar="TYPE",
 
 args = vars( parser.parse_args() )
 
-# 1.1 print out the detail help message
+# 1.1 print out the detail help message then exit
 if args["lh"]:
     parser.print_help_detail()
     exit()
