@@ -288,6 +288,16 @@ extern void (*Flu_DerivedField_User_Ptr)( real Out[], const real FluIn[], const 
                                           const int NGhost, const double dh );
 
 
+// (2-12) feedback
+// =======================================================================================================
+#ifdef FEEDBACK
+extern int  FB_LEVEL, FB_RSEED;
+extern bool FB_SNE, FB_USER;
+extern bool FB_Any;
+extern int  FB_ParaBuf;
+#endif
+
+
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // ============================================================================================================

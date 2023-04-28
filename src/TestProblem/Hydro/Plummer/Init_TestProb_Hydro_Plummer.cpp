@@ -20,6 +20,18 @@
        int    Plummer_MassProfNBin; // number of radial bins in the mass profile table
 static bool   Plummer_AddColor;     // assign different colors to different clouds for Plummer_Collision
 
+#ifdef FEEDBACK
+       bool   Plummer_FB_Exp;       // enable explosion feedback
+       double Plummer_FB_ExpEMin;   // minimum/maximum energy gain factors    for Plummer_FB_Exp (0-->no energy gain)
+       double Plummer_FB_ExpEMax;
+       double Plummer_FB_ExpMMin;   // minimum/maximum mass loss factors      for Plummer_FB_Exp (0-->no mass loss; 1-->loss all mass)
+       double Plummer_FB_ExpMMax;
+       bool   Plummer_FB_Acc;       // enable mass accretion feedback
+       double Plummer_FB_AccMMin;   // minimum/maximum mass accretion factors for Plummer_FB_Acc (0-->no mass accretion; 1-->accrete all mass)
+       double Plummer_FB_AccMMax;
+       double Plummer_FB_Like;      // feedback likelihood of each particle (0-1)
+#endif
+
 static double Plummer_FreeT;        // free-fall time at Plummer_R0
 
 static FieldIdx_t Plummer_Idx_Cloud0 = Idx_Undefined;    // field indices for Plummer_AddColor
@@ -35,6 +47,9 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 #endif
 void Init_ExtAcc_Plummer();
 void Init_ExtPot_Plummer();
+#ifdef FEEDBACK
+void FB_Init_Plummer();
+#endif
 
 
 
@@ -144,6 +159,17 @@ void SetParameter()
    ReadPara->Add( "Plummer_ExtPotMFrac",  &Plummer_ExtPotMFrac,   0.25,          0.0,              1.0               );
    ReadPara->Add( "Plummer_MassProfNBin", &Plummer_MassProfNBin,  1000,          2,                NoMax_int         );
    ReadPara->Add( "Plummer_AddColor",     &Plummer_AddColor,      false,         Useless_bool,     Useless_bool      );
+#  ifdef FEEDBACK
+   ReadPara->Add( "Plummer_FB_Exp",       &Plummer_FB_Exp,        false,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Plummer_FB_ExpEMin",   &Plummer_FB_ExpEMin,    1.0,           0.0,              NoMax_double      );
+   ReadPara->Add( "Plummer_FB_ExpEMax",   &Plummer_FB_ExpEMax,    10.0,          0.0,              NoMax_double      );
+   ReadPara->Add( "Plummer_FB_ExpMMin",   &Plummer_FB_ExpMMin,    0.0,           0.0,              1.0               );
+   ReadPara->Add( "Plummer_FB_ExpMMax",   &Plummer_FB_ExpMMax,    1.0e-5,        0.0,              1.0               );
+   ReadPara->Add( "Plummer_FB_Acc",       &Plummer_FB_Acc,        false,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Plummer_FB_AccMMin",   &Plummer_FB_AccMMin,    0.0,           0.0,              1.0               );
+   ReadPara->Add( "Plummer_FB_AccMMax",   &Plummer_FB_AccMMax,    1.0e-2,        0.0,              1.0               );
+   ReadPara->Add( "Plummer_FB_Like",      &Plummer_FB_Like,       1.0e-4,        0.0,              1.0               );
+#  endif
 
    ReadPara->Read( FileName );
 
@@ -273,6 +299,31 @@ void SetParameter()
    } // if ( OPT__SELF_GRAVITY ) ... else ...
 #  endif // #ifdef GRAVITY
 
+#  ifdef FEEDBACK
+   if ( Plummer_FB_Exp )
+   {
+      if ( ! FB_USER )  Aux_Error( ERROR_INFO, "must enable FB_USER for Plummer_FB_Exp !!\n" );
+
+      if ( Plummer_FB_ExpEMin > Plummer_FB_ExpEMax )
+         Aux_Error( ERROR_INFO, "Plummer_FB_ExpEMin (%13.7e) > Plummer_FB_ExpEMax (%13.7e) !!\n",
+                    Plummer_FB_ExpEMin, Plummer_FB_ExpEMax );
+
+      if ( Plummer_FB_ExpMMin > Plummer_FB_ExpMMax )
+         Aux_Error( ERROR_INFO, "Plummer_FB_ExpMMin (%13.7e) > Plummer_FB_ExpMMax (%13.7e) !!\n",
+                    Plummer_FB_ExpMMin, Plummer_FB_ExpMMax );
+   }
+
+   if ( Plummer_FB_Acc )
+   {
+      if ( ! FB_USER )  Aux_Error( ERROR_INFO, "must enable FB_USER for Plummer_FB_Acc !!\n" );
+
+      if ( Plummer_FB_AccMMin > Plummer_FB_AccMMax )
+         Aux_Error( ERROR_INFO, "Plummer_FB_AccMMin (%13.7e) > Plummer_FB_AccMMax (%13.7e) !!\n",
+                    Plummer_FB_AccMMin, Plummer_FB_AccMMax );
+   }
+#  endif
+
+
 // (2) set the problem-specific derived parameters
 #  ifdef GRAVITY
    Plummer_FreeT = sqrt( (3.0*M_PI*pow(2.0,1.5)) / (32.0*NEWTON_G*Plummer_Rho0) );
@@ -319,6 +370,19 @@ void SetParameter()
       Aux_Message( stdout, "  external potential    mass fraction       = %13.7e\n", Plummer_ExtPotMFrac );
       Aux_Message( stdout, "  number of radial bins in the mass profile = %d\n",     Plummer_MassProfNBin );
       Aux_Message( stdout, "  free-fall time at the scale radius        = %13.7e\n", Plummer_FreeT );
+#     ifdef FEEDBACK
+      Aux_Message( stdout, "  explosion feedback                        = %d\n",     Plummer_FB_Exp );
+      if ( Plummer_FB_Exp ) {
+      Aux_Message( stdout, "     minimum energy gain factor             = %13.7e\n", Plummer_FB_ExpEMin );
+      Aux_Message( stdout, "     maximum energy gain factor             = %13.7e\n", Plummer_FB_ExpEMax );
+      Aux_Message( stdout, "     minimum mass loss factor               = %13.7e\n", Plummer_FB_ExpMMin );
+      Aux_Message( stdout, "     maximum mass loss factor               = %13.7e\n", Plummer_FB_ExpMMax ); }
+      Aux_Message( stdout, "  mass accretion feedback                   = %d\n",     Plummer_FB_Acc );
+      if ( Plummer_FB_Acc ) {
+      Aux_Message( stdout, "     minimum mass accretion factor          = %13.7e\n", Plummer_FB_AccMMin );
+      Aux_Message( stdout, "     maximum mass accretion factor          = %13.7e\n", Plummer_FB_AccMMax ); }
+      Aux_Message( stdout, "  feedback likelihood                       = %13.7e\n", Plummer_FB_Like );
+#     endif
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -485,6 +549,9 @@ void Init_TestProb_Hydro_Plummer()
 #  ifdef MASSIVE_PARTICLES
    Par_Init_ByFunction_Ptr = Par_Init_ByFunction_Plummer;
 #  endif
+#  endif
+#  ifdef FEEDBACK
+   FB_Init_User_Ptr        = FB_Init_Plummer;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 
