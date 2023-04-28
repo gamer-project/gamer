@@ -4,6 +4,10 @@
 
 static int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Guess );
 
+#ifdef GRAVITY
+extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,
+                                               const int lv, double AuxArray[] );
+#endif
 
 root_real_fftw_plan      FFTW_Plan_PS;                            // PS  : plan for calculating the power spectrum
 #ifdef GRAVITY
@@ -120,7 +124,7 @@ void Init_FFTW()
 // are Ny*Nz*Nx because we are using "FFTW_TRANSPOSED_ORDER" in fftwnd_mpi().
    int InvPsi_FFT_Size[3] = { NX0_TOT[0], NX0_TOT[2], NX0_TOT[1] };
 #  endif // # ifdef SERIAL ... # else
-
+#  endif // # if ( MODEL == ELBDM )
    real* PS   = NULL;
    real* RhoK = NULL;
    real* PsiK = NULL;
