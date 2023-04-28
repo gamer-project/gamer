@@ -23,8 +23,6 @@ static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List
                                const real h_Mag_Array_F_In[][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                const real h_Mag_Array_F_Out[][NCOMP_MAG][ PS2P1*SQR(PS2) ],
                                const real dt );
-extern real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real InEngy,
-				      const real MinEint, const real Emag );
 #ifdef MHD
 void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                     const int NPG, const int *PID0_List, const real dt );
@@ -33,9 +31,9 @@ void CorrectElectric( const int SonLv, const real h_Ele_Array[][9][NCOMP_ELE][ P
 void ResetLongB( real L[], real R[], const real FC_B, const int d );
 #endif
 extern void Hydro_RiemannSolver_Roe ( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-				      const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
-				      const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
-				      const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
+                                      const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                                      const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
+                                      const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
 extern void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                       const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                                       const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
@@ -453,6 +451,7 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
 } // FUNCTION : Unphysical
 
 
+#ifndef SRHD
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CorrectUnphysical
@@ -1190,7 +1189,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
 } // FUNCTION : CorrectUnphysical
 
-
+#endif // #ifndef SRHD
 
 #ifdef MHD
 //-------------------------------------------------------------------------------------------------------
