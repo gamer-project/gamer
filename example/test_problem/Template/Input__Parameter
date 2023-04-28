@@ -366,8 +366,8 @@ OPT__RECORD_NOTE              1           # take notes for the general simulatio
 OPT__RECORD_UNPHY             1           # record the number of cells with unphysical results being corrected [1]
 OPT__RECORD_MEMORY            1           # record the memory consumption [1]
 OPT__RECORD_PERFORMANCE       1           # record the code performance [1]
-OPT__MANUAL_CONTROL           1           # support manually dump data or stop run during the runtime
-                                          # (by generating the file DUMP_GAMER_DUMP or STOP_GAMER_STOP) [1]
+OPT__MANUAL_CONTROL           1           # support manually dump data, stop run, or pause run during the runtime
+                                          # (by generating the file DUMP_GAMER_DUMP, STOP_GAMER_STOP, PAUSE_GAMER_PAUSE, respectively) [1]
 OPT__RECORD_USER              0           # record the user-specified info -> edit "Aux_Record_User.cpp" [0]
 OPT__OPTIMIZE_AGGRESSIVE      0           # apply aggressive optimizations (experimental) [0]
 

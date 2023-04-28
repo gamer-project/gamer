@@ -627,13 +627,17 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 
 
-//    5. check whether to manually terminate the run
+//    5. check whether to manually terminate or pause the run
 //    ---------------------------------------------------------------------------------------------------
       int Terminate = false;
 
 //    enable this functionality only if OPT__MANUAL_CONTROL is on
       if ( OPT__MANUAL_CONTROL )
-      TIMING_FUNC(   End_StopManually( Terminate ),   Timer_Main[4],   TIMER_ON   );
+      {
+         TIMING_FUNC(   End_StopManually( Terminate ),   Timer_Main[4],   TIMER_ON   );
+
+         TIMING_FUNC(   Aux_PauseManually(),             Timer_Main[4],   TIMER_ON   );
+      }
 //    ---------------------------------------------------------------------------------------------------
 
 

@@ -52,6 +52,7 @@ template <typename T> int  Aux_LoadTable( T *&Data, const char *FileName, const 
                                           const bool RowMajor, const bool AllocMem );
 int Aux_IsFinite( const float x );
 int Aux_IsFinite( const double x );
+void Aux_PauseManually();
 
 
 // Buffer
