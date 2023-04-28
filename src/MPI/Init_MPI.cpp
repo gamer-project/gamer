@@ -15,7 +15,7 @@ void Init_MPI( int *argc, char ***argv )
 {
 
 // initialise MPI with OpenMP support for FFTW3 according to (https://www.fftw.org/fftw3_doc/Combining-MPI-and-Threads.html)
-#  if ( defined(OVERLAP_MPI) || ( defined(SUPPORT_FFTW3) && defined(OPENMP) ) )
+#  if (  defined(OVERLAP_MPI) || ( SUPPORT_FFTW == FFTW3 && defined(OPENMP) )  )
    int MPI_Thread_Status = -1;
 
 // MPI_Init_thread( argc, argv, MPI_THREAD_SINGLE,     &MPI_Thread_Status );

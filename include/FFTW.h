@@ -1,12 +1,16 @@
 #ifndef __FFTW_H__
 #define __FFTW_H__
 
-#include "GAMER.h"
+
 
 // ****************************************************************************
 // ** This header defines wrappers for functions in the FFTW 2 and 3         **
 // ** libraries in single and double precision.                              **
 // ****************************************************************************
+
+
+#include "GAMER.h"
+
 
 #if ( SUPPORT_FFTW == FFTW2 || SUPPORT_FFTW == FFTW3 )
 
@@ -110,7 +114,6 @@
 #define root_fftw_c2c(plan, array)   fftwnd_mpi( plan, 1, (gamer_float_complex*) array, NULL, FFTW_TRANSPOSED_ORDER )
 #endif // #ifdef SERIAL ... # else
 #endif // # if ( SUPPORT_FFTW == FFTW3 )  ... # else
-#endif  // #if ( SUPPORT_FFTW == FFTW2 || SUPPORT_FFTW == FFTW3 )
 
 //wrappers for fftw create and destroy plan functions used in Init_FFTW
 #if ( SUPPORT_FFTW == FFTW3 )
@@ -146,6 +149,8 @@
 #define destroy_complex_fftw_plan                    fftwnd_mpi_destroy_plan
 #endif // #ifdef SERIAL ... # else
 #endif // # if ( SUPPORT_FFTW == FFTW3 )  ... # else
+
+#endif  // #if ( SUPPORT_FFTW == FFTW2 || SUPPORT_FFTW == FFTW3 )
 
 
 

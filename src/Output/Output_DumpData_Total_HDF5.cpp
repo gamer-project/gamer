@@ -1602,7 +1602,7 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  endif
 
 #  ifdef SUPPORT_FFTW
-   Makefile.SupportFFTW            = 1;
+   Makefile.SupportFFTW            = SUPPORT_FFTW;
 #  else
    Makefile.SupportFFTW            = 0;
 #  endif

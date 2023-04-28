@@ -92,5 +92,4 @@ extern "C" {
 
 
 
-
 #endif // #ifndef __GAMER_H__

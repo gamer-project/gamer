@@ -21,22 +21,30 @@ root_real_fftw_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for t
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ComputePaddedTotalSize
 // Description :  Return padded total size for complex-to-real and real-to-complex 3D FFTW transforms
-// Parameter   :  size: 3D array with size of FFT block
+//
+// Parameter   :  size : 3D array with size of FFT block
+//
 // Return      :  length of array that is large enough to store FFT input and output
 //-------------------------------------------------------------------------------------------------------
 int ComputePaddedTotalSize(int* size) {
    return 2*(size[0]/2+1)*size[1]*size[2];
 } // FUNCTION : ComputePaddedTotalSize
 
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ComputeTotalSize
 // Description :  Return total size for complex-to-complex 3D FFTW transforms
-// Parameter   :  size: 3D array with size of FFT block
+//
+// Parameter   :  size : 3D array with size of FFT block
+//
 // Return      :  length of array that is large enough to store FFT input and output
 //-------------------------------------------------------------------------------------------------------
 int ComputeTotalSize(int* size) {
    return size[0]*size[1]*size[2];
 } // FUNCTION : ComputeTotalSize
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_FFTW
@@ -72,9 +80,11 @@ void Init_FFTW()
 // initialise fftw multithreading
    if (FFTW3_Double_OMP_Enabled) {
       FFTW3_Double_OMP_Enabled = fftw_init_threads();
+      if ( !FFTW3_Double_OMP_Enabled )    Aux_Error( ERROR_INFO, "fftw_init_threads() failed !!\n" );
    }
    if (FFTW3_Single_OMP_Enabled) {
       FFTW3_Single_OMP_Enabled = fftwf_init_threads();
+      if ( !FFTW3_Single_OMP_Enabled )    Aux_Error( ERROR_INFO, "fftwf_init_threads() failed !!\n" );
    }
 #  endif // # ifdef OPENMP
 
@@ -179,6 +189,8 @@ void End_FFTW()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 } // FUNCTION : End_FFTW
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Patch2Slab
@@ -490,26 +502,6 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 //-------------------------------------------------------------------------------------------------------
 int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Guess )
 {
-// check
-// disabled because we cannot determine whether ZIndex2Rank was called for Poisson solver or for computing base PS
-/*
-#  ifdef GAMER_DEBUG
-#  ifdef GRAVITY
-   const int FFT_SizeZ = ( OPT__BC_POT == BC_POT_ISOLATED ) ? 2*NX0_TOT[2] : NX0_TOT[2];
-#  else
-   const int FFT_SizeZ = NX0_TOT[2];
-#  endif // #ifdef GRAVITY
-
-   if ( List_z_start[MPI_NRank] < FFT_SizeZ )
-      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "List_z_start[MPI_NRank]", List_z_start[MPI_NRank] );
-
-   if ( IndexZ < 0  ||  IndexZ >= NX0_TOT[2] )
-      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "IndexZ", IndexZ );
-
-   if ( TRank_Guess < 0  ||  TRank_Guess >= MPI_NRank )
-      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TRank_Guess", TRank_Guess );
-#  endif
-*/
 
    int TRank = TRank_Guess;   // have a first guess to improve the performance
 

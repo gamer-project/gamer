@@ -219,7 +219,7 @@ SIMU_OPTION += -DOPENMP
 # --> SUPPORT_FFTW must be defined when GRAVITY is enabled
 # --> use FFTW3 for fftw3 support
 #     use FFTW2 for fftw2 support
-# SIMU_OPTION += -DSUPPORT_FFTW=FFTW3
+#SIMU_OPTION += -DSUPPORT_FFTW=FFTW3
 
 
 # support yt inline analysis
@@ -331,6 +331,7 @@ LIBYT_PATH   :=
 # UIUC-campus (intel-15.0 + openmpi-1.8.4)
 #CUDA_PATH    := /usr/local/cuda/7.0
 #FFTW2_PATH   := /projects/ncsa/grav/softwares/fftw/2.1.5
+#FFTW3_PATH   :=
 #MPI_PATH     := /usr/local/mpi/openmpi-1.8.4-intel-15.0
 #HDF5_PATH    := /projects/ncsa/grav/softwares/miniconda2
 #GRACKLE_PATH := /home/hyschive/local
@@ -339,6 +340,7 @@ LIBYT_PATH   :=
 # UIUC-campus (gcc-4.9.2 + openmpi-1.8.4)
 #CUDA_PATH    := /usr/local/cuda/7.0
 #FFTW2_PATH   := /projects/ncsa/grav/softwares/fftw/2.1.5-openmpi-1.8.4-gcc-4.9.2
+#FFTW3_PATH   :=
 #MPI_PATH     := /usr/local/mpi/openmpi-1.8.4-gcc-4.9.2
 #HDF5_PATH    := /projects/ncsa/grav/softwares/miniconda2
 #GRACKLE_PATH := /home/hyschive/local
@@ -348,6 +350,7 @@ LIBYT_PATH   :=
 #CUDA_PATH    := /usr/local/cuda-8.0
 #MPI_PATH     := /home/hyschive/project/software/openmpi/2.0.2
 #FFTW2_PATH   := /home/hyschive/project/software/fftw/2.1.5
+#FFTW3_PATH   :=
 #HDF5_PATH    := /home/hyschive/project/software/miniconda2
 #GSL_PATH     :=
 
@@ -355,12 +358,14 @@ LIBYT_PATH   :=
 #CUDA_PATH    := /usr/local/cuda
 #MPI_PATH     := /mnt/lustre/allen/hyschive/software/openmpi/2.0.2
 #FFTW2_PATH   := /mnt/lustre/allen/hyschive/software/fftw/2.1.5
+#FFTW3_PATH   :=
 #HDF5_PATH    := /mnt/lustre/allen/hyschive/software/miniconda2
 #GSL_PATH     :=
 
 # NCSA-dxl (gcc, serial)
 #CUDA_PATH    :=
 #FFTW2_PATH   := /home/hyschive/software/fftw/2.1.5
+#FFTW3_PATH   :=
 #MPI_PATH     := /usr
 #HDF5_PATH    := /home/hyschive/software/miniconda2
 #GSL_PATH     := /usr/lib
@@ -369,6 +374,7 @@ LIBYT_PATH   :=
 # NTU-eureka (default: openmpi-intel)
 #CUDA_PATH    := /software/cuda/default
 #FFTW2_PATH   := /software/fftw/default
+#FFTW3_PATH   := /software/fftw/3.3.10-intel-2022.0.1-openmpi-4.1.1-ucx_mt
 #MPI_PATH     := /software/openmpi/default
 #HDF5_PATH    := /software/hdf5/default
 #GRACKLE_PATH :=
@@ -378,6 +384,7 @@ LIBYT_PATH   :=
 # NTU-hulk (openmpi-intel-qlc)
 #CUDA_PATH    := /opt/gpu/cuda/4.2
 #FFTW2_PATH   := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
+#FFTW3_PATH   :=
 #MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
 #HDF5_PATH    := /opt/hdf5/1.8.20
 #GRACKLE_PATH := /work1/fish/Software/grackle
@@ -392,6 +399,7 @@ LIBYT_PATH   :=
 # NTU-hulk (openmpi-gcc-qlc)
 #CUDA_PATH    := /opt/gpu/cuda/4.2
 #FFTW2_PATH   := /opt/math/fftw/2.1.5-gcc-qlc
+#FFTW3_PATH   :=
 #MPI_PATH     := /usr/mpi/gcc/openmpi-1.4.3-qlc
 #HDF5_PATH    := /opt/hdf5/1.8.9
 #GRACKLE_PATH := /work1/fish/Software/grackle
@@ -403,6 +411,7 @@ LIBYT_PATH   :=
 # NTHU-fomalhaut (openmpi-gnu)
 #CUDA_PATH    := /usr/local/cuda-10.0
 #FFTW2_PATH   := /home/hyschive/software/fftw/2.1.5-openmpi-gnu
+#FFTW3_PATH   :=
 #MPI_PATH     := /storage/app/gnu/openmpi-3.1.3-gcc8
 #HDF5_PATH    := /storage/app/gnu/hdf5-1.8.21-gcc8
 #GRACKLE_PATH :=
@@ -411,12 +420,14 @@ LIBYT_PATH   :=
 # NAOC-laohu (OpenMPI-1.3.2-intel)
 #CUDA_PATH    := $(CUDA_INSTALL_PATH)
 #FFTW2_PATH   := /ifs/data/hsiyu/Software/fftw/2.1.5-openmpi-1.3.2-intel
+#FFTW3_PATH   :=
 #MPI_PATH     := /usr/mpi/intel/openmpi-1.3.2-qlc
 #GPUID_PATH   := /ifs/data/hsiyu/Software/gpudevmgr
 
 # A "typical" macOS installation without GPU
 #CUDA_PATH    :=
 #FFTW2_PATH   := /usr/local/fftw-2.1.5
+#FFTW3_PATH   :=
 #MPI_PATH     := /usr/local/mpich-3.2
 #HDF5_PATH    := ${HOME}/miniconda3
 #GRACKLE_PATH :=
@@ -425,6 +436,7 @@ LIBYT_PATH   :=
 # NASA Pleiades (intel compilers and SGI MPI)
 #CUDA_PATH    := /nasa/cuda/9.0/
 #FFTW2_PATH   := /u/jzuhone/opt/fftw-2.1.5
+#FFTW3_PATH   :=
 #MPI_PATH     := /nasa/sgi/mpt/2.14r19
 #HDF5_PATH    := /nasa/hdf5/1.8.18_serial
 #GRACKLE_PATH :=
@@ -433,6 +445,7 @@ LIBYT_PATH   :=
 # NCTS (default: openmpi-intel)
 #CUDA_PATH    := /cluster/cuda-11.6
 #FFTW2_PATH   := /cluster/intel-2022.1/fftw-2.1.5_openmpi4
+#FFTW3_PATH   :=
 #MPI_PATH     := /cluster/intel-2022.1/openmpi-4.1.2
 #HDF5_PATH    := /cluster/intel-2022.1/hdf5-1.10.8_openmpi4
 #GRACKLE_PATH :=
@@ -766,7 +779,6 @@ LIB += -L$(GPUID_PATH) -lgpudevmgr
 endif
 
 ifeq "$(filter -DSUPPORT_FFTW=FFTW3, $(SIMU_OPTION))" "-DSUPPORT_FFTW=FFTW3"
-
    LIB += -L$(FFTW3_PATH)/lib
    ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" "-DSERIAL"
       LIB += -lfftw3 -lfftw3f -lm
@@ -777,7 +789,6 @@ ifeq "$(filter -DSUPPORT_FFTW=FFTW3, $(SIMU_OPTION))" "-DSUPPORT_FFTW=FFTW3"
    ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" "-DOPENMP"
       LIB += -lfftw3_omp -lfftw3f_omp
    endif
-
 endif
 
 ifeq "$(filter -DSUPPORT_FFTW=FFTW2, $(SIMU_OPTION))" "-DSUPPORT_FFTW=FFTW2"
