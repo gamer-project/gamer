@@ -176,6 +176,9 @@ double               LB_INPUT__PAR_WEIGHT;
 bool                 OPT__RECORD_LOAD_BALANCE;
 #endif
 bool                 OPT__MINIMIZE_MPI_BARRIER;
+#if ( SUPPORT_FFTW == FFTW3 )
+bool                 FFTW3_Double_OMP_Enabled, FFTW3_Single_OMP_Enabled;
+#endif
 
 // (2-5) particle
 #ifdef PARTICLE
@@ -266,6 +269,14 @@ bool OPT__OUTPUT_USER_FIELD;
 int  UserDerField_Num                  = -1;    // must be negative for Output_DumpData_Total_HDF5()
 char (*UserDerField_Label)[MAX_STRING] = NULL;
 char (*UserDerField_Unit )[MAX_STRING] = NULL;
+
+// (2-12) feedback
+#ifdef FEEDBACK
+int  FB_LEVEL, FB_RSEED;
+bool FB_SNE, FB_USER;
+bool FB_Any;
+int  FB_ParaBuf;
+#endif
 
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
@@ -447,6 +458,7 @@ Timer_t *Timer_Gra_Advance[NLEVEL];
 Timer_t *Timer_Src_Advance[NLEVEL];
 Timer_t *Timer_Che_Advance[NLEVEL];
 Timer_t *Timer_SF         [NLEVEL];
+Timer_t *Timer_FB_Advance [NLEVEL];
 Timer_t *Timer_FixUp      [NLEVEL];
 Timer_t *Timer_Flag       [NLEVEL];
 Timer_t *Timer_Refine     [NLEVEL];

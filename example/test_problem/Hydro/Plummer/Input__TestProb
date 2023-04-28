@@ -17,3 +17,13 @@ Plummer_ExtPotMFrac     0.25                 # external potential    mass fracti
 Plummer_MassProfNBin    1000                 # number of radial bins in the mass profile table [1000]
 Plummer_AddColor        0                    # assign different colors to different clouds (must turn on Plummer_Collision
                                              # and set NCOMP_PASSIVE_USER to 2 in the Makefile) [0]
+# feedback (must enable FEEDBACK and FB_USER)
+Plummer_FB_Exp          0                    # enable explosion feedback [0]
+Plummer_FB_ExpEMin      1.0e-1               # minimum/maximum energy gain factors for Plummer_FB_Exp
+Plummer_FB_ExpEMax      5.0e-1               # (0-->no energy gain) [1.0/10.0]
+Plummer_FB_ExpMMin      0.0                  # minimum/maximum mass loss factors   for Plummer_FB_Exp
+Plummer_FB_ExpMMax      1.0e-5               # (0-->no mass loss; 1-->loss all mass) [0.0/1.0e-5]
+Plummer_FB_Acc          0                    # enable mass accretion feedback [0]
+Plummer_FB_AccMMin      0.0                  # minimum/maximum mass accretion factors for Plummer_FB_Acc
+Plummer_FB_AccMMax      1.0e-2               # (0-->no mass accretion; 1-->accrete all mass) [0.0/1.0e-2]
+Plummer_FB_Like         1.0e-4               # feedback likelihood of each particle (0-1) [1e-4]

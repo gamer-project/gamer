@@ -113,6 +113,12 @@ OPT__MINIMIZE_MPI_BARRIER     1           # minimize MPI barriers to improve loa
                                           # (STORE_POT_GHOST, PAR_IMPROVE_ACC=1, OPT__TIMING_BARRIER=0 only; recommend AUTO_REDUCE_DT=0)
 
 
+# feedback (FEEDBACK only)
+FB_LEVEL                     -1           # AMR level to apply feedback (must be MAX_LEVEL for now; <0=auto -> MAX_LEVEL) [-1]
+FB_RSEED                      456         # random seed [456]
+FB_USER                       0           # user-defined feedback [0]
+
+
 # fluid solver in HYDRO (MODEL==HYDRO only)
 GAMMA                         1.666666667 # ratio of specific heats (i.e., adiabatic index) [5.0/3.0]
 MOLECULAR_WEIGHT              0.6         # mean molecular weight -> currently only for post-processing [0.6]
