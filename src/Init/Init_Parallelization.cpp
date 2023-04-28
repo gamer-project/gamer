@@ -76,6 +76,12 @@ void Init_Parallelization()
    IntGhostSize_Mag = MAX( IntGhostSize_Mag, ((FLU_GHOST_SIZE+1)/2)*2 );
 #  endif
 
+#  ifdef FEEDBACK
+// feedback currently shares the same interpolation scheme as the fluid solver (OPT__FLU_INT_SCHEME)
+   int IntGhostSize_FB;
+   IntGhostSize_FB = ( (FB_GHOST_SIZE == 0) ? 0 : (FB_GHOST_SIZE+1)/2 + NGhost_Flu );
+#  endif
+
 // 1.2 set the sizes of parallel buffers
    Flu_ParaBuf = MAX( FLU_GHOST_SIZE, IntGhostSize_Flu );
 #  ifdef GRAVITY
@@ -87,6 +93,13 @@ void Init_Parallelization()
 #  endif
 #  ifdef MHD
    Flu_ParaBuf = MAX( Flu_ParaBuf,    IntGhostSize_Mag );   // ensure that the fluid ghost zone is large enough for MHD
+#  endif
+
+#  ifdef FEEDBACK
+   FB_ParaBuf  = MAX( FB_GHOST_SIZE,  IntGhostSize_FB );
+   Flu_ParaBuf = MAX( Flu_ParaBuf,    IntGhostSize_FB );    // ensure that the fluid ghost zone is large enough for filling in
+                                                            // the feedback ghost zone outside coarse-fine boundaries with
+                                                            // spatial and temporal interpolations
 #  endif
 
 

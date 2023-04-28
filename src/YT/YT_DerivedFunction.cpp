@@ -26,7 +26,7 @@ void YT_GetPID(const long gid, int *level, int *PID);
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void DerivedFuncWithName_PatchGroup(int list_len, long *list_gid, char *field, yt_array *data_array){
+void DerivedFuncWithName_PatchGroup(const int list_len, const long *list_gid, const char *field, yt_array *data_array){
     // get gamer field index through field name.
     int gamer_fieldIdx = GetFieldIndex( field, CHECK_OFF );
     long gamer_fieldBIdx = -100;
@@ -89,7 +89,7 @@ void DerivedFuncWithName_PatchGroup(int list_len, long *list_gid, char *field, y
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void MagX_DerivedFunc(int list_len, long *list_gid, yt_array *data_array){
+void MagX_DerivedFunc(const int list_len, const long *list_gid, const char *field_name, yt_array *data_array){
     for(int lid=0; lid<list_len; lid++){
         // Get the dimension of the grid, and the data array pointer of the grid
         int Dimensions[3];
@@ -113,7 +113,7 @@ void MagX_DerivedFunc(int list_len, long *list_gid, yt_array *data_array){
     }
 }
 
-void MagY_DerivedFunc(int list_len, long *list_gid, yt_array *data_array){
+void MagY_DerivedFunc(const int list_len, const long *list_gid, const char *field_name, yt_array *data_array){
     for(int lid=0; lid<list_len; lid++){
         // Get the dimension of the grid, and the data array pointer of the grid
         int Dimensions[3];
@@ -137,7 +137,7 @@ void MagY_DerivedFunc(int list_len, long *list_gid, yt_array *data_array){
     }
 }
 
-void MagZ_DerivedFunc(int list_len, long *list_gid, yt_array *data_array){
+void MagZ_DerivedFunc(const int list_len, const long *list_gid, const char *field_name, yt_array *data_array){
     for(int lid=0; lid<list_len; lid++){
         // Get the dimension of the grid, and the data array pointer of the grid
         int Dimensions[3];
@@ -177,7 +177,7 @@ void MagZ_DerivedFunc(int list_len, long *list_gid, yt_array *data_array){
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Temperature_DerivedFunc(int list_len, long *list_gid, yt_array *data_array){
+void Temperature_DerivedFunc(const int list_len, const long *list_gid, const char *field_name, yt_array *data_array){
     // universal
     char     *CCMagLabel[] = {"CCMagX", "CCMagY", "CCMagZ"};
 
