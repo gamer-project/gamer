@@ -246,6 +246,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "GAMMA",                      &GAMMA,                           __DBL_MAX__,     NoMin_double,  NoMax_double   );
 #  endif
    ReadPara->Add( "MOLECULAR_WEIGHT",           &MOLECULAR_WEIGHT,                0.6,             Eps_double,    NoMax_double   );
+   ReadPara->Add( "MU_NORM",                    &MU_NORM,                        -1.0,             NoMin_double,  NoMax_double   );
 #  if ( EOS == EOS_ISOTHERMAL )
    ReadPara->Add( "ISO_TEMP",                   &ISO_TEMP,                       -1.0,             Eps_double,    NoMax_double   );
 #  else

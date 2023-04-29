@@ -486,6 +486,7 @@ struct InputPara_t
 #  if ( MODEL == HYDRO )
    double Gamma;
    double MolecularWeight;
+   double MuNorm;
    double IsoTemp;
    double MinMod_Coeff;
    int    MinMod_MaxIter;
