@@ -49,7 +49,7 @@ void EoS_SetAuxArray_Isothermal( double AuxArray_Flt[], int AuxArray_Int[] )
 {
 
 // Cs^2 = kB*T/m = P/rho
-   AuxArray_Flt[0] = ( OPT__UNIT ) ? ( Const_kB*ISO_TEMP/UNIT_E ) / ( MOLECULAR_WEIGHT*Const_amu/UNIT_M )
+   AuxArray_Flt[0] = ( OPT__UNIT ) ? ( Const_kB*ISO_TEMP/UNIT_E ) / ( MOLECULAR_WEIGHT*MU_NORM/UNIT_M )
                                    : ISO_TEMP / MOLECULAR_WEIGHT;
    AuxArray_Flt[1] = ISO_TEMP;
 
