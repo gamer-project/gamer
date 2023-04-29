@@ -530,7 +530,7 @@ void Aux_Check_Parameter()
                    "COMOVING", "GRAVITY" );
 #  endif
 
-#endif // COMOVING
+#endif // #ifdef COMOVING
 
 
 
@@ -1168,6 +1168,10 @@ void Aux_Check_Parameter()
 #     error : ERROR : SUPPORT_FFTW must be enabled in the makefile when GRAVITY is on !!
 #  endif
 
+#  if (  defined SUPPORT_FFTW  &&  ( SUPPORT_FFTW != FFTW2 && SUPPORT_FFTW != FFTW3 )  )
+#     error : ERROR : SUPPORT_FFTW != FFTW2/FFTW3 !!
+#  endif
+
 #  if ( POT_SCHEME != SOR  &&  POT_SCHEME != MG )
 #     error : ERROR : unsupported Poisson solver in the makefile (SOR/MG) !!
 #  endif
@@ -1314,7 +1318,7 @@ void Aux_Check_Parameter()
 #  error : unsupported MODEL !!
 #  endif // MODEL
 
-#endif // GRAVITY
+#endif // #ifdef GRAVITY
 
 
 
@@ -1423,7 +1427,7 @@ void Aux_Check_Parameter()
    }
 
 
-#endif // PARTICLE
+#endif // #ifdef PARTICLE
 
 
 
@@ -1449,7 +1453,7 @@ void Aux_Check_Parameter()
 
    } // if ( MPI_Rank == 0 )
 
-#endif // SUPPORT_GRACKLE
+#endif // #ifdef SUPPORT_GRACKLE
 
 
 
@@ -1506,7 +1510,40 @@ void Aux_Check_Parameter()
 
    } // if ( MPI_Rank == 0 )
 
-#endif // ifdef STAR_FORMATION
+#endif // #ifdef STAR_FORMATION
+
+
+
+// feedback
+// =======================================================================================
+#ifdef FEEDBACK
+
+// errors
+// ------------------------------
+#  ifndef PARTICLE
+#     error : FEEDBACK must work with PARTICLE !!
+#  endif
+
+   if ( FB_LEVEL != MAX_LEVEL )  Aux_Error( ERROR_INFO, "FB_LEVEL (%d) != MAX_LEVEL (%d) !!\n", FB_LEVEL, MAX_LEVEL );
+
+   for (int d=0; d<3; d++)
+   {
+//    we have assumed that OPT__BC_FLU[2*d] == OPT__BC_FLU[2*d+1] when adopting the periodic BC
+      if ( OPT__BC_FLU[2*d] == BC_FLU_PERIODIC  &&  NX0_TOT[d]/PS2 == 1 )
+         Aux_Error( ERROR_INFO, "\"%s\" does NOT work for NX0_TOT[%d] = 2*PATCH_SIZE when periodic BC is adopted !!\n",
+                    "FB_AdvanceDt()", d );
+   }
+
+   if ( FB_ParaBuf > PATCH_SIZE )
+      Aux_Error( ERROR_INFO, "FB_ParaBuf (%d) > PATCH_SIZE (%d) !!\n", FB_ParaBuf, PATCH_SIZE );
+
+// warning
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
+
+   } // if ( MPI_Rank == 0 )
+
+#endif // #ifdef FEEDBACK
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ... done\n" );
