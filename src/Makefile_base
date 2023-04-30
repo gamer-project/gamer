@@ -49,7 +49,8 @@ OPENMPFLAG  = @@@OPENMPFLAG@@@
 # library paths
 #######################################################################################################
 CUDA_PATH    := @@@CUDA_PATH@@@
-FFTW_PATH    := @@@FFTW_PATH@@@
+FFTW2_PATH   := @@@FFTW2_PATH@@@
+FFTW3_PATH   := @@@FFTW3_PATH@@@
 MPI_PATH     := @@@MPI_PATH@@@
 HDF5_PATH    := @@@HDF5_PATH@@@
 GRACKLE_PATH := @@@GRACKLE_PATH@@@
@@ -80,7 +81,7 @@ CPU_FILE    += Aux_Check_Parameter.cpp  Aux_Check_Conservation.cpp  Aux_Check.cp
                Aux_GetMemInfo.cpp  Aux_Message.cpp  Aux_Record_PatchCount.cpp  Aux_TakeNote.cpp  Aux_Timing.cpp \
                Aux_Check_MemFree.cpp  Aux_Record_Performance.cpp  Aux_CheckFileExist.cpp  Aux_Array.cpp \
                Aux_Record_User.cpp  Aux_Record_CorrUnphy.cpp  Aux_SwapPointer.cpp  Aux_Check_NormalizePassive.cpp \
-               Aux_LoadTable.cpp  Aux_IsFinite.cpp  Aux_ComputeProfile.cpp  Aux_FindExtrema.cpp
+               Aux_LoadTable.cpp  Aux_IsFinite.cpp  Aux_ComputeProfile.cpp  Aux_FindExtrema.cpp  Aux_PauseManually.cpp
 
 CPU_FILE    += CPU_FluidSolver.cpp  Flu_AdvanceDt.cpp  Flu_Prepare.cpp  Flu_Close.cpp  Flu_FixUp_Flux.cpp \
                Flu_FixUp_Restrict.cpp  Flu_AllocateFluxArray.cpp  Flu_BoundaryCondition_User.cpp  Flu_ResetByUser.cpp \
@@ -381,8 +382,21 @@ ifeq "$(filter -DLAOHU, $(SIMU_OPTION))" "-DLAOHU"
 LIB += -L$(GPUID_PATH) -lgpudevmgr
 endif
 
-ifeq "$(filter -DSUPPORT_FFTW, $(SIMU_OPTION))" "-DSUPPORT_FFTW"
-   LIB += -L$(FFTW_PATH)/lib
+ifeq "$(filter -DSUPPORT_FFTW=FFTW3, $(SIMU_OPTION))" "-DSUPPORT_FFTW=FFTW3"
+   LIB += -L$(FFTW3_PATH)/lib
+   ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" "-DSERIAL"
+      LIB += -lfftw3 -lfftw3f -lm
+   else
+      LIB += -lfftw3_mpi -lfftw3 -lfftw3f_mpi -lfftw3f -lm
+   endif
+
+   ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" "-DOPENMP"
+      LIB += -lfftw3_omp -lfftw3f_omp
+   endif
+endif
+
+ifeq "$(filter -DSUPPORT_FFTW=FFTW2, $(SIMU_OPTION))" "-DSUPPORT_FFTW=FFTW2"
+   LIB += -L$(FFTW2_PATH)/lib
    ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
       ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" "-DSERIAL"
          LIB += -ldrfftw -ldfftw
@@ -427,8 +441,12 @@ ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" ""
 INCLUDE += -I$(MPI_PATH)/include
 endif
 
-ifeq "$(filter -DSUPPORT_FFTW, $(SIMU_OPTION))" "-DSUPPORT_FFTW"
-INCLUDE += -I$(FFTW_PATH)/include
+ifeq "$(filter -DSUPPORT_FFTW=FFTW3, $(SIMU_OPTION))" "-DSUPPORT_FFTW=FFTW3"
+INCLUDE += -I$(FFTW3_PATH)/include
+endif
+
+ifeq "$(filter -DSUPPORT_FFTW=FFTW2, $(SIMU_OPTION))" "-DSUPPORT_FFTW=FFTW2"
+INCLUDE += -I$(FFTW2_PATH)/include
 endif
 
 ifeq "$(filter -DSUPPORT_GRACKLE, $(SIMU_OPTION))" "-DSUPPORT_GRACKLE"
@@ -574,7 +592,8 @@ NVCCFLAG_FLU := $(strip $(NVCCFLAG_FLU))
 NVCCFLAG_POT := $(strip $(NVCCFLAG_POT))
 GIT_INFO     := $(strip $(GIT_INFO))
 CUDA_PATH    := $(strip $(CUDA_PATH))
-FFTW_PATH    := $(strip $(FFTW_PATH))
+FFTW2_PATH   := $(strip $(FFTW2_PATH))
+FFTW3_PATH   := $(strip $(FFTW3_PATH))
 MPI_PATH     := $(strip $(MPI_PATH))
 HDF5_PATH    := $(strip $(HDF5_PATH))
 GRACKLE_PATH := $(strip $(GRACKLE_PATH))

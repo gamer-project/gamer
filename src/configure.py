@@ -293,11 +293,13 @@ def add_option( opt_str, name, val ):
             opt_str += "-D%s "%(name)
             print("%-20s : %r"%(name, val))
     elif type(val) == type("str"):
-        opt_str += "-D%s=%s "%(name, val)
-        print("%-20s : %s"%(name, val))
+        if val != "":
+            opt_str += "-D%s=%s "%(name, val)
+            print("%-20s : %s"%(name, val))
     elif type(val) == type(0):
-        opt_str += "-D%s=%d "%(name, val)
-        print("%-20s : %d"%(name, val))
+        if val != 0:
+            opt_str += "-D%s=%d "%(name, val)
+            print("%-20s : %d"%(name, val))
     else:
         raise TypeError("Unknown type to add the simulation options.")
 
@@ -540,8 +542,8 @@ def validation( paths, **kwargs ):
 
     # A.2 Gravity
     if kwargs["gravity"]:
-        if not kwargs["fftw"]:
-            color_print("--fftw must be enable with --gravity.", BCOLOR.FAIL)
+        if kwargs["fftw"] == "":
+            color_print("--fftw must be selected with --gravity.", BCOLOR.FAIL)
             success = False
         if kwargs["unsplit_gravity"] and kwargs["model"] != "HYDRO":
             color_print("--unsplit_gravity is only supported for --model=HYDRO.", BCOLOR.FAIL)
@@ -629,31 +631,35 @@ def warning( paths, **kwargs ):
 
     # 5. Path
     if kwargs["gpu"]:
-        if path.setdefault("CUDA_PATH", default="") == "":
+        if path.setdefault("CUDA_PATH", "") == "":
             color_print("CUDA_PATH is not given with --gpu.", BCOLOR.WARNING)
 
-    if kwargs["fftw"]:
-        if path.setdefault("FFTW_PATH", default="") == "":
-            color_print("FFTW_PATH is not given with --fftw.", BCOLOR.WARNING)
+    if kwargs["fftw"] == "FFTW2":
+        if paths.setdefault("FFTW2_PATH", "") == "":
+            color_print("FFTW2_PATH is not given with --fftw=FFTW2.", BCOLOR.WARNING)
+    
+    if kwargs["fftw"] == "FFTW3":
+        if paths.setdefault("FFTW3_PATH", "") == "":
+            color_print("FFTW3_PATH is not given with --fftw=FFTW3.", BCOLOR.WARNING)
 
     if kwargs["mpi"]:
-        if path.setdefault("MPI_PATH", default="") == "":
+        if paths.setdefault("MPI_PATH", "") == "":
             color_print("MPI_PATH is not given with --mpi.", BCOLOR.WARNING)
 
     if kwargs["hdf5"]:
-        if path.setdefault("HDF5_PATH", default="") == "":
+        if paths.setdefault("HDF5_PATH", "") == "":
             color_print("HDF5_PATH is not given with --hdf5.", BCOLOR.WARNING)
 
     if kwargs["grackle"]:
-        if path.setdefault("GRACKLE_PATH", default="") == "":
+        if paths.setdefault("GRACKLE_PATH", "") == "":
             color_print("GRACKLE_PATH is not given with --grackle.", BCOLOR.WARNING)
 
     if kwargs["gsl"]:
-        if path.setdefault("GSL_PATH", default="") == "":
+        if paths.setdefault("GSL_PATH", "") == "":
             color_print("GSL_PATH is not given with --gsl.", BCOLOR.WARNING)
 
     if kwargs["libyt"]:
-        if path.setdefault("LIBYT_PATH", default="") == "":
+        if paths.setdefault("LIBYT_PATH", "") == "":
             color_print("LIBYT_PATH is not given with --libyt.", BCOLOR.WARNING)
 
     return
@@ -877,8 +883,8 @@ parser.add_argument( "--gsl",
                      help="Support GNU scientific library.\n"
                    )
 
-parser.add_argument( "--fftw",
-                     action="store_true",
+parser.add_argument( "--fftw", type=str,
+                     default="", choices=["", "FFTW2", "FFTW3"],
                      help="Support FFTW library.\n"
                    )
 
