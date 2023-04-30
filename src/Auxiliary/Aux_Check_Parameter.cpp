@@ -760,6 +760,9 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "RTVD does not support \"JEANS_MIN_PRES\" !!\n" );
 #  endif
 
+   if ( MU_NORM <= 0.0 )
+      Aux_Error( ERROR_INFO, "MU_NORM (%14.7e) <= 0.0 !!\n", MU_NORM );
+
 
 // warnings
 // ------------------------------
@@ -1139,6 +1142,10 @@ void Aux_Check_Parameter()
 // ------------------------------
 #  ifndef SUPPORT_FFTW
 #     error : ERROR : SUPPORT_FFTW must be enabled in the makefile when GRAVITY is on !!
+#  endif
+
+#  if (  defined SUPPORT_FFTW  &&  ( SUPPORT_FFTW != FFTW2 && SUPPORT_FFTW != FFTW3 )  )
+#     error : ERROR : SUPPORT_FFTW != FFTW2/FFTW3 !!
 #  endif
 
 #  if ( POT_SCHEME != SOR  &&  POT_SCHEME != MG )

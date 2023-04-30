@@ -84,7 +84,7 @@ OptTimeStepLevel_t   OPT__DT_LEVEL;
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
 double               FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1], FlagTable_Jeans[NLEVEL-1];
-double               GAMMA, MINMOD_COEFF, AUTO_REDUCE_MINMOD_FACTOR, AUTO_REDUCE_MINMOD_MIN, MOLECULAR_WEIGHT, ISO_TEMP;
+double               GAMMA, MINMOD_COEFF, AUTO_REDUCE_MINMOD_FACTOR, AUTO_REDUCE_MINMOD_MIN, MOLECULAR_WEIGHT, MU_NORM, ISO_TEMP;
 LR_Limiter_t         OPT__LR_LIMITER;
 Opt1stFluxCorr_t     OPT__1ST_FLUX_CORR;
 OptRSolver1st_t      OPT__1ST_FLUX_CORR_SCHEME;
@@ -174,6 +174,9 @@ double               LB_INPUT__PAR_WEIGHT;
 bool                 OPT__RECORD_LOAD_BALANCE;
 #endif
 bool                 OPT__MINIMIZE_MPI_BARRIER;
+#if ( SUPPORT_FFTW == FFTW3 )
+bool                 FFTW3_Double_OMP_Enabled, FFTW3_Single_OMP_Enabled;
+#endif
 
 // (2-5) particle
 #ifdef PARTICLE
@@ -624,13 +627,17 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 
 
-//    5. check whether to manually terminate the run
+//    5. check whether to manually terminate or pause the run
 //    ---------------------------------------------------------------------------------------------------
       int Terminate = false;
 
 //    enable this functionality only if OPT__MANUAL_CONTROL is on
       if ( OPT__MANUAL_CONTROL )
-      TIMING_FUNC(   End_StopManually( Terminate ),   Timer_Main[4],   TIMER_ON   );
+      {
+         TIMING_FUNC(   End_StopManually( Terminate ),   Timer_Main[4],   TIMER_ON   );
+
+         TIMING_FUNC(   Aux_PauseManually(),             Timer_Main[4],   TIMER_ON   );
+      }
 //    ---------------------------------------------------------------------------------------------------
 
 

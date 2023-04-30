@@ -87,7 +87,6 @@
 // load-balance parallelization
 #define HILBERT      1
 
-
 // random number implementation
 #define RNG_GNU_EXT  1
 #define RNG_CPP11    2
@@ -1029,7 +1028,6 @@
 #ifndef GRAVITY
 #  undef STORE_PAR_ACC
 #endif
-
 
 
 #endif  // #ifndef __MACRO_H__
