@@ -883,6 +883,23 @@ void Init_ResetParameter()
 #  endif
 
 
+#  if ( MODEL == HYDRO )
+   if      ( MU_NORM < 0.0 )
+   {
+      MU_NORM = Const_mH;
+
+      PRINT_WARNING( MU_NORM, FORMAT_FLT, "" );
+   }
+
+   else if ( MU_NORM == 0.0 )
+   {
+      MU_NORM = Const_amu;
+
+      PRINT_WARNING( MU_NORM, FORMAT_FLT, "" );
+   }
+#  endif
+
+
 // AUTO_REDUCE_DT only works for DT_LEVEL_FLEXIBLE
    if ( AUTO_REDUCE_DT  &&  OPT__DT_LEVEL != DT_LEVEL_FLEXIBLE )
    {

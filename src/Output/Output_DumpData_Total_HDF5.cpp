@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2464)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2465)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -237,6 +237,7 @@ Procedure for outputting new variables:
 //                2462 : 2023/03/19 --> output FB_GHOST_SIZE, FB_NXT
 //                2463 : 2023/03/20 --> output FB_SEP_FLUOUT
 //                2464 : 2023/04/27 --> output LIBYT_INTERACTIVE
+//                2465 : 2023/04/29 --> output MU_NORM
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1410,7 +1411,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2464;
+   KeyInfo.FormatVersion        = 2465;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1602,7 +1603,7 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  endif
 
 #  ifdef SUPPORT_FFTW
-   Makefile.SupportFFTW            = 1;
+   Makefile.SupportFFTW            = SUPPORT_FFTW;
 #  else
    Makefile.SupportFFTW            = 0;
 #  endif
@@ -2165,6 +2166,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  if ( MODEL == HYDRO )
    InputPara.Gamma                   = GAMMA;
    InputPara.MolecularWeight         = MOLECULAR_WEIGHT;
+   InputPara.MuNorm                  = MU_NORM;
    InputPara.IsoTemp                 = ISO_TEMP;
    InputPara.MinMod_Coeff            = MINMOD_COEFF;
    InputPara.MinMod_MaxIter          = MINMOD_MAX_ITER;
@@ -3053,6 +3055,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  if ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Gamma",                   HOFFSET(InputPara_t,Gamma                  ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "MolecularWeight",         HOFFSET(InputPara_t,MolecularWeight        ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "MuNorm",                  HOFFSET(InputPara_t,MuNorm                 ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "IsoTemp",                 HOFFSET(InputPara_t,IsoTemp                ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "MinMod_Coeff",            HOFFSET(InputPara_t,MinMod_Coeff           ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "MinMod_MaxIter",          HOFFSET(InputPara_t,MinMod_MaxIter         ), H5T_NATIVE_INT     );

@@ -1905,6 +1905,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  if ( MODEL == HYDRO )
    LoadField( "Gamma",                   &RS.Gamma,                   SID, TID, NonFatal, &RT.Gamma,                    1, NonFatal );
    LoadField( "MolecularWeight",         &RS.MolecularWeight,         SID, TID, NonFatal, &RT.MolecularWeight,          1, NonFatal );
+   LoadField( "MuNorm",                  &RS.MuNorm,                  SID, TID, NonFatal, &RT.MuNorm,                   1, NonFatal );
    LoadField( "IsoTemp",                 &RS.IsoTemp,                 SID, TID, NonFatal, &RT.IsoTemp,                  1, NonFatal );
    LoadField( "MinMod_Coeff",            &RS.MinMod_Coeff,            SID, TID, NonFatal, &RT.MinMod_Coeff,             1, NonFatal );
    LoadField( "MinMod_MaxIter",          &RS.MinMod_MaxIter,          SID, TID, NonFatal, &RT.MinMod_MaxIter,           1, NonFatal );
