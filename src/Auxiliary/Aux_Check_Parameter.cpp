@@ -230,9 +230,15 @@ void Aux_Check_Parameter()
       if ( OPT__TIMING_BARRIER )
          Aux_Error( ERROR_INFO, "OPT__MINIMIZE_MPI_BARRIER does NOT work with OPT__TIMING_BARRIER !!\n" );
 
-      if ( AUTO_REDUCE_DT  &&  MPI_Rank == 0 )
+      if ( MPI_Rank == 0 ) {
+      if ( AUTO_REDUCE_DT )
          Aux_Message( stderr, "WARNING : AUTO_REDUCE_DT will introduce an extra MPI barrier for OPT__MINIMIZE_MPI_BARRIER !!\n" );
-   }
+
+#     ifdef FEEDBACK
+         Aux_Message( stderr, "WARNING : OPT__MINIMIZE_MPI_BARRIER + FEEDBACK --> must ensure feedback does not need potential ghost zones !!\n" );
+#     endif
+      } // if ( MPI_Rank == 0 )
+   } // if ( OPT__MINIMIZE_MPI_BARRIER )
 
 #  ifdef BITWISE_REPRODUCIBILITY
    if ( OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_BEFORE_DUMP  &&  OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_EVERY_STEP )
