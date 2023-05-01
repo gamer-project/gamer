@@ -70,32 +70,40 @@ real GetMaxPot( const int lv )
                            reduction( max:MaxPot ) reduction( ||:AnyCell ) schedule( runtime )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
-//    skip all non-leaf patches not adjacent to any coarse-fine boundaries (since their data are useless)
-      Skip = true;
+//    if OPT__FIXUP_RESTRICT is enabled, skip all non-leaf patches not adjacent to any coarse-fine boundaries
+//    because their data is not used for providing ghost boundaries and they are later overwritten by the refined patches
+//    we still need to update their mass density for the Poisson solver but their phase is irrelevant
+//    so they need not be considered in the gravity time step calculation
+//    note that this leads to the gravity timestep being "inf" when a level is completely refined
+      if ( OPT__FIXUP_RESTRICT ) {
+         Skip = true;
 
-      if ( amr->patch[0][lv][PID]->son == -1 )  Skip = false;
-      else
-      {
-         for (int s=0; s<26; s++)
+         if ( amr->patch[0][lv][PID]->son == -1 )  Skip = false;
+         else
          {
-            SibPID = amr->patch[0][lv][PID]->sibling[s];
-
-//          proper-nesting check
-#           ifdef GAMER_DEBUG
-            if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 (Lv %d, PID %d) !!\n", lv, PID );
-#           endif
-
-//          non-periodic BC.
-            if ( SibPID < -1 )   continue;
-
-//          check whether this patch is adjacent to a coarse-fine boundary
-            if ( amr->patch[0][lv][SibPID]->son == -1 )
+            for (int s=0; s<26; s++)
             {
-               Skip = false;
-               break;
-            }
-         } // for (int s=0; s<26; s++)
-      } // if ( amr->patch[0][lv][PID]->son == -1 ) ... else ...
+               SibPID = amr->patch[0][lv][PID]->sibling[s];
+
+//             proper-nesting check
+#              ifdef GAMER_DEBUG
+               if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 (Lv %d, PID %d) !!\n", lv, PID );
+#              endif
+
+//             non-periodic BC.
+               if ( SibPID < -1 )   continue;
+
+//             check whether this patch is adjacent to a coarse-fine boundary
+               if ( amr->patch[0][lv][SibPID]->son == -1 )
+               {
+                  Skip = false;
+                  break;
+               }
+            } // for (int s=0; s<26; s++)
+         } // if ( amr->patch[0][lv][PID]->son == -1 ) ... else ...
+      } else { // if ( OPT__FIXUP_RESTRICT ) {
+         Skip = false;
+      } // if ( OPT__FIXUP_RESTRICT ) { ... else
 
       if ( Skip )    continue;
       else           AnyCell = true;
