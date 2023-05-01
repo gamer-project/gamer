@@ -87,7 +87,7 @@ OPT__MEMORY_POOL              0           # preallocate patches for OPT__REUSE_M
 # load balance (LOAD_BALANCE only)
 LB_INPUT__WLI_MAX             0.1         # weighted-load-imbalance (WLI) threshold for redistributing all patches [0.1]
 OPT__RECORD_LOAD_BALANCE      1           # record the load-balance info [1]
-OPT__MINIMIZE_MPI_BARRIER     1           # minimize MPI barriers to improve load balance, especially with particles [1]
+OPT__MINIMIZE_MPI_BARRIER     0           # minimize MPI barriers to improve load balance, especially with particles [0]
                                           # (STORE_POT_GHOST, PAR_IMPROVE_ACC=1, OPT__TIMING_BARRIER=0 only; recommend AUTO_REDUCE_DT=0)
 
 
