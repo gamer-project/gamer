@@ -74,11 +74,18 @@ void Init_ResetParameter()
 #     ifdef GRAVITY
       DT__FLUID = 0.20;                   // 1D k-max mode rotates 0.20*2*PI
 #     else
+#     if ( WAVE_SCHEME == WAVE_FD )
 #     ifdef LAPLACIAN_4TH
       DT__FLUID = SQRT(27.0)*M_PI/32.0;   // stability limit (~0.51)
 #     else
       DT__FLUID = SQRT(3.0)*M_PI/8.0;     // stability limit (~0.68)
 #     endif
+#     elif ( WAVE_SCHEME == WAVE_GRAMFE )
+      DT__FLUID = 0.20;                   // stability limit depends on ghost boundary and extension order
+#     else // #  if (WAVE_SCHEME == WAVE_FD )
+#        error : ERROR : unsupported WAVE_SCHEME !!
+#     endif // WAVE_SCHEME
+
 #     endif // #ifdef GRAVITY ... else ...
 
 #     else

@@ -197,6 +197,24 @@ void Aux_TakeNote()
 //    c. options in ELBDM
 #     elif ( MODEL == ELBDM )
 
+#     if ( WAVE_SCHEME == WAVE_GRAMFE )
+      fprintf( Note, "WAVE_SCHEME                     GRAM FE\n" );
+      fprintf( Note, "GRAMFE_GAMMA                    %d\n",      GRAMFE_GAMMA );
+      fprintf( Note, "GRAMFE_G                        %d\n",      GRAMFE_G );
+      fprintf( Note, "GRAMFE_NDELTA                   %d\n",      GRAMFE_NDELTA);
+      fprintf( Note, "GRAMFE_ND                       %d\n",      GRAMFE_ND);
+      fprintf( Note, "GRAMFE_ORDER                    %d\n",      GRAMFE_ORDER);
+#     ifdef GRAMFE_FLOAT8
+      fprintf( Note, "GRAMFE_FLOAT8                   ON\n" );
+#     else // # ifdef GRAMFE_FLOAT8
+      fprintf( Note, "GRAMFE_FLOAT8                   OFF\n" );
+#     endif // # ifdef GRAMFE_FLOAT8 ... # else
+#     elif ( WAVE_SCHEME == WAVE_FD )
+      fprintf( Note, "WAVE_SCHEME                     FD\n ");
+#     else // #  if (WAVE_SCHEME == WAVE_GRAMFE )
+#     error : ERROR : unsupported WAVE_SCHEME !!
+#     endif // WAVE_SCHEME
+
 #     ifdef CONSERVE_MASS
       fprintf( Note, "CONSERVE_MASS                   ON\n" );
 #     else

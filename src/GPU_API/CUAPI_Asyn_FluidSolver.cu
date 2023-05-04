@@ -3,6 +3,20 @@
 
 #ifdef GPU
 
+// Include CUDA FFT libraby if gpu kinetic ELBDM Gram Fourier extension solver is enabled
+#if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
+#include <cufftdx.hpp>
+
+using namespace cufftdx;
+using fft_incomplete = decltype(Block() + Size<GRAMFE_FLU_NXT>() + Type<fft_type::c2c>() + Precision<gramfe_float>() + SM<750>());
+using fft_base       = decltype(fft_incomplete() + Direction<fft_direction::forward>());
+using ifft_base      = decltype(fft_incomplete() + Direction<fft_direction::inverse>());
+static constexpr unsigned int elements_per_thread = use_suggested ? fft_base::elements_per_thread : custom_elements_per_thread;
+static constexpr unsigned int ffts_per_block      = use_suggested ? fft_base::suggested_ffts_per_block : custom_ffts_per_block;
+using FFT            = decltype(fft_base() + ElementsPerThread<elements_per_thread>() + FFTsPerBlock<ffts_per_block>());
+using IFFT           = decltype(ifft_base() + ElementsPerThread<elements_per_thread>() + FFTsPerBlock<ffts_per_block>());
+using complex_type   = typename FFT::value_type;
+#endif
 
 
 #if   ( MODEL == HYDRO )
@@ -75,12 +89,29 @@ void CUFLU_FluidSolver_CTU(
 #endif // FLU_SCHEME
 
 #elif ( MODEL == ELBDM )
+
+#if ( WAVE_SCHEME == WAVE_FD )
 __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                                    real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
                                    real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
                                    const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                    const real Taylor3_Coeff, const bool XYZ, const real MinDens );
 real ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
+# elif ( WAVE_SCHEME == WAVE_GRAMFE )
+# ifdef GRAMFE_ENABLE_GPU
+__launch_bounds__(FFT::max_threads_per_block)
+__global__ void CUFLU_ELBDMSolver_GramFE(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                                             real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
+                                             real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                             const real dt, const real _dh, const real Eta, const bool StoreFlux,
+                                             const bool XYZ, const real MinDens,
+                                             typename FFT::workspace_type workspace,
+                                             typename IFFT::workspace_type iworkspace);
+#  endif // # ifdef GRAMFE_ENABLE_GPU
+#  else // #  if (WAVE_SCHEME == WAVE_GRAMFE )
+#     error : ERROR : unsupported WAVE_SCHEME !!
+#  endif // WAVE_SCHEME
+
 
 #else
 #error : ERROR : unsupported MODEL !!
@@ -280,8 +311,37 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  if   ( MODEL == HYDRO )
 
 #  elif ( MODEL == ELBDM )
+
+#  if ( WAVE_SCHEME == WAVE_FD )
 // evaluate the optimized Taylor expansion coefficient
    if ( ELBDM_Taylor3_Auto )  ELBDM_Taylor3_Coeff = ELBDM_SetTaylor3Coeff( dt, dh, ELBDM_Eta );
+#  elif ( WAVE_SCHEME == WAVE_GRAMFE )
+#  ifdef GRAMFE_ENABLE_GPU
+// total size of shared memory required for storing FFT::ffts_per_block rows of data after Gram extension and the coefficients of the respective left and right extension polynomials
+   auto          size       = FFT::ffts_per_block * cufftdx::size_of<FFT>::value + 2 * FFT::ffts_per_block * GRAMFE_NDELTA;
+   auto          size_bytes = size * sizeof(complex_type);
+
+// shared memory must fit input data and must be big enough to run FFT
+   uint cufftdx_shared_memory_size = std::max((unsigned int)FFT::shared_memory_size, (unsigned int)size_bytes);
+
+// increase max shared memory if needed
+   CUDA_CHECK_ERROR(cudaFuncSetAttribute(
+      CUFLU_ELBDMSolver_GramFE,
+      cudaFuncAttributeMaxDynamicSharedMemorySize,
+      cufftdx_shared_memory_size));
+
+// create forward and backward cufftx workspaces
+   cudaError_t error_code = cudaSuccess;
+   auto cufftdx_workspace = make_workspace<FFT>(error_code);
+   CUDA_CHECK_ERROR(error_code);
+   error_code = cudaSuccess;
+   auto cufftdx_iworkspace = make_workspace<IFFT>(error_code);
+   CUDA_CHECK_ERROR(error_code);
+
+#  endif // #  ifdef GRAMFE_ENABLE_GPU
+#  else // #  if (WAVE_SCHEME == WAVE_GRAMFE )
+#     error : ERROR : unsupported WAVE_SCHEME !!
+#  endif // WAVE_SCHEME
 
 #  else
 #  error : ERROR : unsupported MODEL !!
@@ -440,13 +500,23 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #        endif // FLU_SCHEME
 
 #     elif ( MODEL == ELBDM )
-
+#     if   ( WAVE_SCHEME == WAVE_FD )
          CUFLU_ELBDMSolver <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
             ( d_Flu_Array_F_In  + UsedPatch[s],
               d_Flu_Array_F_Out + UsedPatch[s],
               d_Flux_Array      + UsedPatch[s],
               dt, 1.0/dh, ELBDM_Eta, StoreFlux, ELBDM_Taylor3_Coeff, XYZ, MinDens );
-
+#     elif ( WAVE_SCHEME == WAVE_GRAMFE )
+#     ifdef GRAMFE_ENABLE_GPU
+         CUFLU_ELBDMSolver_GramFE <<< NPatch_per_Stream[s], FFT::block_dim, cufftdx_shared_memory_size, Stream[s] >>>
+            ( d_Flu_Array_F_In  + UsedPatch[s],
+              d_Flu_Array_F_Out + UsedPatch[s],
+              d_Flux_Array      + UsedPatch[s],
+              dt, 1.0/dh, ELBDM_Eta, StoreFlux, XYZ, MinDens, cufftdx_workspace, cufftdx_iworkspace );
+#     endif // # ifdef GRAMFE_ENABLE_GPU
+#     else // #  if (WAVE_SCHEME == WAVE_FD )
+#        error : ERROR : unsupported WAVE_SCHEME !!
+#     endif // WAVE_SCHEME
 #     else
 
 #        error : unsupported MODEL !!

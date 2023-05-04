@@ -497,9 +497,11 @@
 #ifdef __CUDACC__
 # define GPU_DEVICE          __forceinline__ __device__
 # define GPU_DEVICE_NOINLINE    __noinline__ __device__
+# define GPU_DEVICE_VARIABLE                 __device__
 #else
 # define GPU_DEVICE
 # define GPU_DEVICE_NOINLINE
+# define GPU_DEVICE_VARIABLE
 #endif
 
 // unified CPU/GPU loop
@@ -509,6 +511,12 @@
 # define CGPU_LOOP( var, niter )    for (int (var)=0;           (var)<(niter); (var)++          )
 #endif
 
+// set number of threads and blocks used in GRAMFE GPU scheme
+# if ( WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
+static constexpr unsigned int use_suggested                = 0;
+static constexpr unsigned int custom_elements_per_thread   = 4;
+static constexpr unsigned int custom_ffts_per_block        = 12;
+# endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
 
 
 #endif // #ifndef __CUFLU_H__

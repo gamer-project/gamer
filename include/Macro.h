@@ -45,6 +45,9 @@
 #define MHM_RP       4
 #define CTU          5
 
+// wave schemes
+#define WAVE_FD      1
+#define WAVE_GRAMFE  2
 
 // data reconstruction schemes
 #define PLM          1
@@ -560,16 +563,53 @@
 #    endif // MHD
 #  endif // FLU_SCHEME
 
+
 #elif ( MODEL == ELBDM )   // ELBDM
-#  ifdef LAPLACIAN_4TH
-#     define FLU_GHOST_SIZE         6
-#  else
-#     define FLU_GHOST_SIZE         3
+// use finite-difference scheme by default
+#  ifndef WAVE_SCHEME
+#  define WAVE_SCHEME WAVE_FD
 #  endif
+
+#  if ( WAVE_SCHEME == WAVE_FD )
+#     ifdef LAPLACIAN_4TH
+#        define FLU_GHOST_SIZE         6
+#     else
+#        define FLU_GHOST_SIZE         3
+#     endif
+#  elif ( WAVE_SCHEME == WAVE_GRAMFE )
+#        define FLU_GHOST_SIZE         8
+#  else  // # if ( WAVE_SCHEME == WAVE_FD ) ... else
+#     error : ERROR : unsupported WAVE_SCHEME !!
+#  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE ) ... # else
 
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
+
+
+// set default parameters of gram extension scheme if not changed in Makefile
+# if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
+# ifndef GRAMFE_GAMMA
+#   define GRAMFE_GAMMA  150
+# endif
+# ifndef GRAMFE_G
+#   define GRAMFE_G      63
+# endif
+# ifndef GRAMFE_NDELTA
+#   define GRAMFE_NDELTA 14
+# endif
+# ifndef GRAMFE_ND
+#   define GRAMFE_ND     28
+# endif
+# ifndef GRAMFE_ORDER
+#   define GRAMFE_ORDER  14
+# endif
+# if ( GRAMFE_ORDER > GRAMFE_NDELTA )
+#  error : ERROR : Gram Fourier extension order must not be higher than NDELTA
+# endif
+# define GRAMFE_FLU_NXT ( FLU_NXT + GRAMFE_ND - 2)
+# endif // # if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
+
 
 
 
