@@ -294,7 +294,7 @@ void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
    complex_type (*s_Ae)   [GRAMFE_NDELTA]           = NULL;
    complex_type (*s_Ao)   [GRAMFE_NDELTA]           = NULL;
    const gramfe_float _dh                           = gramfe_float(1.0)/dh;
-   bool workspace, workspace_inverse;
+   bool workspace = false, workspace_inverse = false;
 #  endif // #  ifdef __CUDACC__ ... else
 
 
