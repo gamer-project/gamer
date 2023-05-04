@@ -218,4 +218,5 @@
 #endif // #if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
 
 
+#endif  // # if ( SUPPORT_FFTW == FFTW2 || SUPPORT_FFTW == FFTW3 )
 #endif  // #ifndef __FFTW_H__

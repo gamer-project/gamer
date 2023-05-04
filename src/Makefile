@@ -881,6 +881,7 @@ ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
    ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
       ifeq "$(filter -DGRAMFE_ENABLE_GPU, $(SIMU_OPTION))" "-DGRAMFE_ENABLE_GPU"
          INCLUDE += -I$(CUFFTDX_PATH)/include
+      endif
    endif
 endif
 
