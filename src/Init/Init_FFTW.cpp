@@ -10,15 +10,14 @@ extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, c
                                                const int lv, double AuxArray[] );
 #endif
 
-root_real_fftw_plan     FFTW_Plan_PS;                        // PS  : plan for calculating the power spectrum
+root_real_fftw_plan      FFTW_Plan_PS;                            // PS  : plan for calculating the power spectrum
 #ifdef GRAVITY
-root_real_fftw_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for the self-gravity Poisson solver
-#endif
+root_real_fftw_plan      FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;        // Poi : plan for the self-gravity Poisson solver
+#endif // #ifdef GRAVITY
++
 #if ( MODEL == ELBDM )
-root_complex_fftw_plan  FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;   // Psi  : plan for the ELBDM spectral sovler
-#endif
-
-
+root_complex_fftw_plan   FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;         // Psi : plan for the ELBDM spectral solver
+#endif // #if ( MODEL == ELBDM )
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -126,17 +125,34 @@ void Init_FFTW()
    }
 #  endif // #  ifdef GRAVITY
 
+// determine the FFT size for the base-level FFT wave solver
+#  if ( MODEL == ELBDM )
+   int Psi_FFT_Size[3]    = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
+#  ifdef SERIAL
+   int InvPsi_FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
+#  else // # ifdef SERIAL
+// Note that the dimensions of the inverse transform,
+// which are given by the dimensions of the output of the forward transform,
+// are Ny*Nz*Nx because we are using "FFTW_TRANSPOSED_ORDER" in fftwnd_mpi().
+   int InvPsi_FFT_Size[3] = { NX0_TOT[0], NX0_TOT[2], NX0_TOT[1] };
+#  endif // # ifdef SERIAL ... # else
+#  endif // # if ( MODEL == ELBDM )
    real* PS   = NULL;
    real* RhoK = NULL;
+   real* PsiK = NULL;
 
 
 // allocate memory for arrays in fftw3
 #  if ( SUPPORT_FFTW == FFTW3 )
-   PS   = (real*) root_fftw_malloc(ComputePaddedTotalSize(PS_FFT_Size     ) * sizeof(real));
+   PS   = (real*) root_fftw_malloc(ComputePaddedTotalSize( PS_FFT_Size      ) * sizeof(real));
 #  ifdef GRAVITY
-   RhoK = (real*) root_fftw_malloc(ComputePaddedTotalSize(Gravity_FFT_Size) * sizeof(real));
+   RhoK = (real*) root_fftw_malloc(ComputePaddedTotalSize( Gravity_FFT_Size ) * sizeof(real));
 #  endif // # ifdef GRAVITY
+#  if ( MODEL == ELBDM )
+   PsiK = (real*) root_fftw_malloc( ComputeTotalSize     ( Psi_FFT_Size     ) * sizeof(real));
+#  endif // # if ( MODEL == ELBDM )
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
+
 
 // create plans for power spectrum and the self-gravity solver
    FFTW_Plan_PS      = create_fftw_3d_r2c_plan(PS_FFT_Size, PS);
@@ -144,6 +160,10 @@ void Init_FFTW()
    FFTW_Plan_Poi     = create_fftw_3d_r2c_plan(Gravity_FFT_Size, RhoK);
    FFTW_Plan_Poi_Inv = create_fftw_3d_c2r_plan(Gravity_FFT_Size, RhoK);
 #  endif // # ifdef GRAVITY
+#  if ( MODEL == ELBDM )
+   FFTW_Plan_Psi     = create_fftw_3d_forward_c2c_plan ( Psi_FFT_Size,    PsiK );
+   FFTW_Plan_Psi_Inv = create_fftw_3d_backward_c2c_plan( InvPsi_FFT_Size, PsiK );
+#  endif // #  if ( MODEL == ELBDM )
 
 // free memory for arrays in fftw3
 #  if ( SUPPORT_FFTW == FFTW3 )
@@ -151,32 +171,10 @@ void Init_FFTW()
 #  ifdef GRAVITY
    root_fftw_free(RhoK);
 #  endif // # ifdef GRAVITY
-#  endif // # if ( SUPPORT_FFTW == FFTW3 )
-
-
 #  if ( MODEL == ELBDM )
-//###REVISE: support FFTW3
-// create plans for the ELBDM spectral solver
-#  ifdef SERIAL
-   FFTW_Plan_Psi     = fftw3d_create_plan( NX0_TOT[2], NX0_TOT[1], NX0_TOT[0], FFTW_FORWARD,
-                                           FFTW_ESTIMATE | FFTW_IN_PLACE );
-
-   FFTW_Plan_Psi_Inv = fftw3d_create_plan( NX0_TOT[2], NX0_TOT[1], NX0_TOT[0], FFTW_BACKWARD,
-                                           FFTW_ESTIMATE | FFTW_IN_PLACE );
-
-#  else
-
-   FFTW_Plan_Psi     = fftw3d_mpi_create_plan( MPI_COMM_WORLD, NX0_TOT[2], NX0_TOT[1], NX0_TOT[0],
-                                               FFTW_FORWARD, FFTW_ESTIMATE );
-
-// Note that the dimensions of the inverse transform,
-// which are given by the dimensions of the output of the forward transform,
-// are Ny*Nz*Nx because we are using "FFTW_TRANSPOSED_ORDER" in fftwnd_mpi().
-   FFTW_Plan_Psi_Inv = fftw3d_mpi_create_plan( MPI_COMM_WORLD, NX0_TOT[1], NX0_TOT[2], NX0_TOT[0],
-                                               FFTW_BACKWARD, FFTW_ESTIMATE );
-#  endif
-#  endif // #if ( MODEL == ELBDM )
-
+   root_fftw_free(PsiK);
+#  endif // # if ( MODEL == ELBDM )
+#  endif // # if ( SUPPORT_FFTW == FFTW3 )
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
@@ -197,29 +195,29 @@ void End_FFTW()
    destroy_real_fftw_plan   ( FFTW_Plan_PS      );
 
 #  ifdef GRAVITY
-   destroy_real_fftw_plan   ( FFTW_Plan_Poi     );
-   destroy_real_fftw_plan   ( FFTW_Plan_Poi_Inv );
-#  endif
+   destroy_real_fftw_plan  ( FFTW_Plan_Poi     );
+   destroy_real_fftw_plan  ( FFTW_Plan_Poi_Inv );
+#  endif // #  ifdef GRAVITY
+
 
 #  if ( MODEL == ELBDM )
-   destroy_complex_fftw_plan( FFTW_Plan_Psi     );
-   destroy_complex_fftw_plan( FFTW_Plan_Psi_Inv );
-#  endif
+   destroy_complex_fftw_plan  ( FFTW_Plan_Psi     );
+   destroy_complex_fftw_plan  ( FFTW_Plan_Psi_Inv );
+#  endif // #if ( MODEL == ELBDM )
 
 #  if ( SUPPORT_FFTW == FFTW3 )
 #  ifdef OPENMP
    if (FFTW3_Double_OMP_Enabled)  fftw_cleanup_threads();
    if (FFTW3_Single_OMP_Enabled) fftwf_cleanup_threads();
 #  endif
-#  ifdef SERIAL
+
    fftw_cleanup();
    fftwf_cleanup();
-#  else
+#  ifndef SERIAL
    fftw_mpi_cleanup();
    fftwf_mpi_cleanup();
 #  endif
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
-
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
