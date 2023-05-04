@@ -1079,6 +1079,14 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL must work with SUPPORT_FFTW !!\n" );
 #  endif
 
+#  if ( WAVE_SCHEME == WAVE_GRAMFE && ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
+#  error : ERROR : GPU Gram-Fourier extension scheme requires SUPPORT_FFTW flag!
+#  endif // #  if ( WAVE_SCHEME == WAVE_GRAMFE && ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
+
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   if ( OPT__FIXUP_FLUX )
+      Aux_Error( ERROR_INFO, "WAVE_GRAMFE does not support OPT__FIXUP_FLUX !!\n" );
+#  endif 
 
 // warnings
 // ------------------------------
