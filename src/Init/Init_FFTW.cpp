@@ -14,7 +14,7 @@ root_real_fftw_plan      FFTW_Plan_PS;                            // PS  : plan 
 #ifdef GRAVITY
 root_real_fftw_plan      FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;        // Poi : plan for the self-gravity Poisson solver
 #endif // #ifdef GRAVITY
-+
+
 #if ( MODEL == ELBDM )
 root_complex_fftw_plan   FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;         // Psi : plan for the ELBDM spectral solver
 #endif // #if ( MODEL == ELBDM )
@@ -144,21 +144,21 @@ void Init_FFTW()
 
 // allocate memory for arrays in fftw3
 #  if ( SUPPORT_FFTW == FFTW3 )
-   PS   = (real*) root_fftw_malloc(ComputePaddedTotalSize( PS_FFT_Size      ) * sizeof(real));
+   PS   = (real*) root_fftw_malloc( ComputePaddedTotalSize( PS_FFT_Size      ) * sizeof(real));
 #  ifdef GRAVITY
-   RhoK = (real*) root_fftw_malloc(ComputePaddedTotalSize( Gravity_FFT_Size ) * sizeof(real));
+   RhoK = (real*) root_fftw_malloc( ComputePaddedTotalSize( Gravity_FFT_Size ) * sizeof(real));
 #  endif // # ifdef GRAVITY
 #  if ( MODEL == ELBDM )
-   PsiK = (real*) root_fftw_malloc( ComputeTotalSize     ( Psi_FFT_Size     ) * sizeof(real));
+   PsiK = (real*) root_fftw_malloc( ComputeTotalSize      ( Psi_FFT_Size     ) * sizeof(real));
 #  endif // # if ( MODEL == ELBDM )
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
 
 
 // create plans for power spectrum and the self-gravity solver
-   FFTW_Plan_PS      = create_fftw_3d_r2c_plan(PS_FFT_Size, PS);
+   FFTW_Plan_PS      = create_fftw_3d_r2c_plan( PS_FFT_Size, PS );
 #  ifdef GRAVITY
-   FFTW_Plan_Poi     = create_fftw_3d_r2c_plan(Gravity_FFT_Size, RhoK);
-   FFTW_Plan_Poi_Inv = create_fftw_3d_c2r_plan(Gravity_FFT_Size, RhoK);
+   FFTW_Plan_Poi     = create_fftw_3d_r2c_plan( Gravity_FFT_Size, RhoK );
+   FFTW_Plan_Poi_Inv = create_fftw_3d_c2r_plan( Gravity_FFT_Size, RhoK );
 #  endif // # ifdef GRAVITY
 #  if ( MODEL == ELBDM )
    FFTW_Plan_Psi     = create_fftw_3d_forward_c2c_plan ( Psi_FFT_Size,    PsiK );
@@ -167,12 +167,12 @@ void Init_FFTW()
 
 // free memory for arrays in fftw3
 #  if ( SUPPORT_FFTW == FFTW3 )
-   root_fftw_free(PS);
+   root_fftw_free( PS );
 #  ifdef GRAVITY
-   root_fftw_free(RhoK);
+   root_fftw_free( RhoK );
 #  endif // # ifdef GRAVITY
 #  if ( MODEL == ELBDM )
-   root_fftw_free(PsiK);
+   root_fftw_free( PsiK );
 #  endif // # if ( MODEL == ELBDM )
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
 
@@ -192,7 +192,7 @@ void End_FFTW()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
 
-   destroy_real_fftw_plan   ( FFTW_Plan_PS      );
+   destroy_real_fftw_plan  ( FFTW_Plan_PS      );
 
 #  ifdef GRAVITY
    destroy_real_fftw_plan  ( FFTW_Plan_Poi     );
@@ -209,14 +209,14 @@ void End_FFTW()
 #  ifdef OPENMP
    if (FFTW3_Double_OMP_Enabled)  fftw_cleanup_threads();
    if (FFTW3_Single_OMP_Enabled) fftwf_cleanup_threads();
-#  endif
+#  endif // # ifdef OPENMP
 
    fftw_cleanup();
    fftwf_cleanup();
-#  ifndef SERIAL
+#  ifndef SERIAL 
    fftw_mpi_cleanup();
    fftwf_mpi_cleanup();
-#  endif
+#  endif // # ifndef SERIAL 
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
