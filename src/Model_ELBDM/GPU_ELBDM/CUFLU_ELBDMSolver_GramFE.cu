@@ -443,8 +443,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
          uint NColumnOnce = MIN( NColumnTotal, CGPU_FLU_BLOCK_SIZE_Y );     // number of columns updated per iteration
 
-         complex_type Al, Ar;
-
+         complex_type Al, Ar;             // temporary storage for left and right Gram coefficients
+         real   Amp_New, Re_New, Im_New;  // store density, real and imaginary part to apply minimum density check
+         
 //       loop over all data columns
          while ( Column0 < NColumnTotal )
          {
@@ -545,9 +546,22 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   k = k_gap + ( sj + Column0 ) / size_j;
 
                   Idx2 = get1D2( k, j, si, XYZ);
-                  g_Fluid_Out[bx][DENS][Idx2] = SQR(s_In[sj][si].real()) + SQR(s_In[sj][si].imag());
-                  g_Fluid_Out[bx][REAL][Idx2] = s_In[sj][si].real();
-                  g_Fluid_Out[bx][IMAG][Idx2] = s_In[sj][si].imag();
+
+                  Amp_New =  SQR(s_In[sj][si].real()) + SQR(s_In[sj][si].imag());
+                  Re_New  =  s_In[sj][si].real();
+                  Im_New  =  s_In[sj][si].imag();
+//                apply the the minimum density check
+                  if ( Amp_New < MinDens )
+                  {
+                     const real Rescale = SQRT( MinDens / (real)Amp_New );
+
+                     Re_New *= Rescale;
+                     Im_New *= Rescale;
+                     Amp_New = MinDens;
+                  }
+                  g_Fluid_Out[bx][DENS][Idx2] = Amp_New; 
+                  g_Fluid_Out[bx][REAL][Idx2] = Re_New; 
+                  g_Fluid_Out[bx][IMAG][Idx2] = Im_New;
                } // CELL_LOOP(FLU_NXT, FLU_GHOST_SIZE, FLU_GHOST_SIZE)
             } else { // if ( FinalOut )
                CELL_LOOP(FLU_NXT, FLU_GHOST_SIZE, FLU_GHOST_SIZE)
@@ -559,7 +573,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   g_Fluid_In[bx][0][Idx1]     = s_In[sj][si].real();
                   g_Fluid_In[bx][1][Idx1]     = s_In[sj][si].imag();
                }  // CELL_LOOP(FLU_NXT, FLU_GHOST_SIZE, FLU_GHOST_SIZE)
-            } // if ( FinalOut ) ... else#
+            } // if ( FinalOut ) ... else 
 
 #           ifdef  __CUDACC__
             __syncthreads();
