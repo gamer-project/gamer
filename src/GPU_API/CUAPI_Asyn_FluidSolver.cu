@@ -304,9 +304,11 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  endif
 #  endif // #ifdef GAMER_DEBUG
 
-
+#  if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
+   const dim3 BlockDim_FluidSolver ( FFT::block_dim ); // for the fluidsolvers
+#  else 
    const dim3 BlockDim_FluidSolver ( FLU_BLOCK_SIZE_X, FLU_BLOCK_SIZE_Y, 1 ); // for the fluidsolvers
-
+#  endif 
 // model-dependent operations
 #  if   ( MODEL == HYDRO )
 
@@ -508,7 +510,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               dt, 1.0/dh, ELBDM_Eta, StoreFlux, ELBDM_Taylor3_Coeff, XYZ, MinDens );
 #     elif ( WAVE_SCHEME == WAVE_GRAMFE )
 #     ifdef GRAMFE_ENABLE_GPU
-         CUFLU_ELBDMSolver_GramFE <<< NPatch_per_Stream[s], FFT::block_dim, cufftdx_shared_memory_size, Stream[s] >>>
+         CUFLU_ELBDMSolver_GramFE <<< NPatch_per_Stream[s], BlockDim_FluidSolver, cufftdx_shared_memory_size, Stream[s] >>>
             ( d_Flu_Array_F_In  + UsedPatch[s],
               d_Flu_Array_F_Out + UsedPatch[s],
               d_Flux_Array      + UsedPatch[s],
