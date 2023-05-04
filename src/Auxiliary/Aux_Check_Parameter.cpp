@@ -466,6 +466,13 @@ void Aux_Check_Parameter()
 #     error : ERROR : currently GAMER only supports "LOAD_BALANCE == HILBERT" !!
 #  endif
 
+
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   if ( OPT__FIXUP_FLUX )
+      Aux_Error( ERROR_INFO, "WAVE_GRAMFE does not support OPT__FIXUP_FLUX !!\n" );
+#  endif 
+
+
 // for sending fluid data fixed by coarse-fine fluxes correctly
    if ( OPT__FIXUP_FLUX  &&  Flu_ParaBuf >= PATCH_SIZE )
       Aux_Error( ERROR_INFO, "\"%s\" is required for \"%s\" in LOAD_BALANCE --> check LB_RecordExchangeFixUpDataPatchID() !!\n",
@@ -1082,11 +1089,6 @@ void Aux_Check_Parameter()
 #  if ( WAVE_SCHEME == WAVE_GRAMFE && ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
 #  error : ERROR : GPU Gram-Fourier extension scheme requires SUPPORT_FFTW flag!
 #  endif // #  if ( WAVE_SCHEME == WAVE_GRAMFE && ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
-
-#  if ( WAVE_SCHEME == WAVE_GRAMFE )
-   if ( OPT__FIXUP_FLUX )
-      Aux_Error( ERROR_INFO, "WAVE_GRAMFE does not support OPT__FIXUP_FLUX !!\n" );
-#  endif 
 
 // warnings
 // ------------------------------
