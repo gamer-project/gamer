@@ -37,7 +37,7 @@ static constexpr unsigned int ffts_per_block      = use_suggested ? fft_base::su
 
 using FFT          = decltype(fft_base()  + ElementsPerThread<elements_per_thread>() + FFTsPerBlock<ffts_per_block>());
 using IFFT         = decltype(ifft_base() + ElementsPerThread<elements_per_thread>() + FFTsPerBlock<ffts_per_block>());
-using complex_type          = typename FFT::value_type;
+using complex_type           = typename FFT::value_type;
 using forward_workspace_type = typename FFT::workspace_type;
 using inverse_workspace_type = typename IFFT::workspace_type;
 
@@ -193,9 +193,8 @@ static uint get1D2(uint k, uint j, uint i, int XYZ) {
 GPU_DEVICE
 static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                            real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
-                           real Flux_Array [][9][NFLUX_TOTAL][ SQR(PS2) ],
                            int NPatchGroup,
-                           const gramfe_float dt, const gramfe_float _dh, const gramfe_float Eta, const bool StoreFlux,
+                           const gramfe_float dt, const gramfe_float _dh, const gramfe_float Eta,
                            const uint j_gap, const uint k_gap,
                            complex_type s_In  [][GRAMFE_FLU_NXT],
                            complex_type s_Al  [][GRAMFE_NDELTA],
@@ -217,19 +216,14 @@ static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //
 // Parameter   :  Flu_Array_In   : Array storing the input variables (only REAL/IMAG)
 //                Flu_Array_Out  : Array to store the output variables (DENS/REAL/IMAG)
-//                Flux_Array     : Array to store the output flux
 //                NPatchGroup    : Number of patch groups to be evaluated
 //                dt             : Time interval to advance solution
 //                dh             : Grid size
 //                Eta            : Particle mass / Planck constant
-//                StoreFlux      : true --> store the coarse-fine fluxes
-//                                      --> useful only if CONSERVE_MASS is defined
 //                XYZ            : true  : x->y->z ( forward sweep)
 //                                 false : z->y->x (backward sweep)
-//                                 --> Meaningless if CONSERVE_MASS is off since the operators along different directions
+//                                 --> Meaningless since the operators along different directions
 //                                     commute
-//                                 --> Meaningful if CONSERVE_MASS is on, in which the symmetry along different directions
-//                                     are broken ...
 //                MinDens        : Minimum allowed density
 //-------------------------------------------------------------------------------------------------------
 
@@ -290,14 +284,7 @@ void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 // create memories for columns of various intermediate fields in shared GPU memory
    complex_type (*s_In)[GRAMFE_FLU_NXT]     = (complex_type (*)[GRAMFE_FLU_NXT]) (shared_mem);
    complex_type (*s_Ae)[GRAMFE_NDELTA]      = (complex_type (*)[GRAMFE_NDELTA])  (shared_mem + CGPU_FLU_BLOCK_SIZE_Y * (GRAMFE_FLU_NXT                   ));    // 0.5 * log(rho)
-   complex_type (*s_Ao)[GRAMFE_NDELTA]      = (complex_type (*)[GRAMFE_NDELTA])  (shared_mem + CGPU_FLU_BLOCK_SIZE_Y * (GRAMFE_FLU_NXT + GRAMFE_NDELTA));    // the fluxes for every thread block
-
-#  ifdef CONSERVE_MASS
-   __shared__ real s_Flux    [CGPU_FLU_BLOCK_SIZE_Y][GRAMFE_FLU_NXT];
-#  else  // #  ifdef CONSERVE_MASS
-              real (*s_Flux)[GRAMFE_FLU_NXT] = NULL;  // useless if CONSERVE_MASS is off
-#  endif // #  ifdef CONSERVE_MASS ... # else
-
+   complex_type (*s_Ao)[GRAMFE_NDELTA]      = (complex_type (*)[GRAMFE_NDELTA])  (shared_mem + CGPU_FLU_BLOCK_SIZE_Y * (GRAMFE_FLU_NXT + GRAMFE_NDELTA));       // the fluxes for every thread block
    const int NPatchGroup = 0;
    const gramfe_float dh                            = gramfe_float(1.0)/_dh;
 
@@ -322,10 +309,8 @@ void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
    complex_type ExpCoeff[GRAMFE_FLU_NXT];             // exp(1j * dT * k^2)
 
    const gramfe_float kmax     = M_PI*_dh;
-
    const gramfe_float dT       = -(gramfe_float)0.5*dt/Eta;                     // coefficient in time evolution operator
-
-   const gramfe_float Norm     = 1.0 / ( (gramfe_float)GRAMFE_FLU_NXT );
+   const gramfe_float Norm     = 1.0 / ( (gramfe_float)GRAMFE_FLU_NXT );        // norm for inverse Fourier transform 
 
    for (int i=0; i<GRAMFE_FLU_NXT; i++)
    {
@@ -339,6 +324,8 @@ void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
       //ExpCoeff[i] = complex_type(COS(Coeff), SIN(Coeff)) * Norm * Filter;
 
 //    ideal Taylor expansion order == FLU_GHOST_SIZE - 1
+//    this is because the time-evolution operator depends on higher-order derivatives
+//    these are only accessible for suitable chosen ghost boundaries 
 //    for FLU_GHOST_SIZE == 8, an order of 7 provides optimal results
       ExpCoeff[i] = complex_type(cosine_series(Coeff, 4), sine_series(Coeff, 3)) * Norm * Filter;
    }
@@ -346,18 +333,18 @@ void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
    if ( XYZ )
    {
-      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
+      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, NPatchGroup, dt, _dh, Eta,
                                   0,              0, s_In, s_Ae, s_Ao, ExpCoeff, false, 0, MinDens, workspace, workspace_inverse );
-      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
+      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, NPatchGroup, dt, _dh, Eta,
                      FLU_GHOST_SIZE,              0, s_In, s_Ae, s_Ao, ExpCoeff, false, 3, MinDens, workspace, workspace_inverse );
-      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
+      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, NPatchGroup, dt, _dh, Eta,
                      FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_Ae, s_Ao, ExpCoeff, true, 6, MinDens, workspace, workspace_inverse );
    } else  {
-      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
+      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, NPatchGroup, dt, _dh, Eta,
                                   0,              0, s_In, s_Ae, s_Ao, ExpCoeff, false, 6, MinDens, workspace, workspace_inverse );
-      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
+      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, NPatchGroup, dt, _dh, Eta,
                                   0, FLU_GHOST_SIZE, s_In, s_Ae, s_Ao, ExpCoeff, false, 3, MinDens, workspace, workspace_inverse );
-      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
+      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, NPatchGroup, dt, _dh, Eta,
                      FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_Ae, s_Ao, ExpCoeff, true, 0, MinDens, workspace, workspace_inverse );
    }
 
@@ -389,9 +376,8 @@ void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 GPU_DEVICE
 void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
-                     real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
                      int NPatchGroup,
-                     const gramfe_float dt, const gramfe_float _dh, const gramfe_float Eta, const bool StoreFlux,
+                     const gramfe_float dt, const gramfe_float _dh, const gramfe_float Eta,
                      const uint j_gap, const uint k_gap,
                      complex_type s_In    [][GRAMFE_FLU_NXT],
                      complex_type s_Ae    [][GRAMFE_NDELTA],
@@ -403,11 +389,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      inverse_workspace_type workspace_inverse  )
 
 {
-   const uint j_end        = FLU_NXT -  j_gap    ;          // last y-column to be updated
    const uint size_j       = FLU_NXT -  j_gap * 2;          // number of y-columns to be updated
    const uint size_k       = FLU_NXT -  k_gap * 2;          // number of z-columns to be updated
    const uint NColumnTotal = __umul24( size_j, size_k );    // total number of data columns to be updated
-   int Idx;
 
 // openmp pragma for the CPU solver
 #  ifndef __CUDACC__
@@ -421,8 +405,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //    create arrays for columns of various intermediate fields on the stack
       complex_type* s_In_1PG = (complex_type* ) gramfe_fftw_malloc( GRAMFE_FLU_NXT * sizeof(complex_type) ); // allocate memory for fourier transform
 
-      complex_type s_Ae_1PG     [CGPU_FLU_BLOCK_SIZE_Y][GRAMFE_NDELTA]; // left projection polynomials
-      complex_type s_Ao_1PG     [CGPU_FLU_BLOCK_SIZE_Y][GRAMFE_NDELTA]; // right projection polynomials
+      complex_type  s_Ae_1PG [CGPU_FLU_BLOCK_SIZE_Y][GRAMFE_NDELTA]; // left projection polynomials
+      complex_type  s_Ao_1PG [CGPU_FLU_BLOCK_SIZE_Y][GRAMFE_NDELTA]; // right projection polynomials
 
 //    in CPU mode, every thread works on one patch group at a time and corresponds to one block in the grid of the GPU solver
 #     pragma omp for schedule( runtime ) private ( s_In, s_Ae, s_Ao )
@@ -449,15 +433,15 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          const uint tid          = __umul24( ty , CGPU_FLU_BLOCK_SIZE_X ) + tx;    // thread ID within block
          const uint NThread      = CGPU_FLU_BLOCK_SIZE_X * CGPU_FLU_BLOCK_SIZE_Y;  // total number of threads within block
 
-         uint j, k;                         // (i,j,k): array indices used in g_Fluid_In
+         uint j, k;             // (i,j,k): array indices used in g_Fluid_In
 
-         uint Column0 = 0;                // the total number of columns that have been updated
-         uint Idx, Idx1, Idx2;            // temporary indices used for indexing column updates, writing data to g_Fluid_In, g_Fluid_Out
+         uint Column0 = 0;      // the total number of columns that have been updated
+         uint Idx, Idx1, Idx2;  // temporary indices used for indexing column updates, writing data to g_Fluid_In, g_Fluid_Out
 
-         uint si, sj;                     // array indices used in the shared memory array
-         uint NStep;                      // number of iterations for updating each column
+         uint si, sj;           // array indices used in the shared memory array
+         uint NStep;            // number of iterations for updating each column
 
-         uint NColumnOnce        = MIN( NColumnTotal, CGPU_FLU_BLOCK_SIZE_Y );     // number of columns updated per iteration
+         uint NColumnOnce = MIN( NColumnTotal, CGPU_FLU_BLOCK_SIZE_Y );     // number of columns updated per iteration
 
          complex_type Al, Ar;
 
@@ -476,7 +460,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //             1.2 load the interior data into shared memory
                s_In[sj][si].real(g_Fluid_In[bx][0][Idx1]);
                s_In[sj][si].imag(g_Fluid_In[bx][1][Idx1]);
-            } // CELL_LOOP(FLU_NXT, 0, 0) {
+            } // CELL_LOOP(FLU_NXT, 0, 0) 
 
 //          1.4 sync data read into S_In
 #           ifdef __CUDACC__
@@ -509,7 +493,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                s_In[sj][si].real(0);
                s_In[sj][si].imag(0);
 
-
                for (int order=0; order < GRAMFE_ORDER; order++) {
                   s_In[sj][si] += s_Ae[sj][order] *  Fe[order][si - FLU_NXT + GRAMFE_NDELTA];
                   s_In[sj][si] += s_Ao[sj][order] *  Fo[order][si - FLU_NXT + GRAMFE_NDELTA];
@@ -522,7 +505,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 //          3.1 forward FFT
 #           ifdef __CUDACC__
-            FFT().execute(reinterpret_cast<void*>(s_In), workspace);//, shared_memory, workspace);
+            FFT().execute(reinterpret_cast<void*>(s_In), workspace);
 #           else // # ifdef __CUDACC_
             gramfe_fftw_c2c( FFTW_Plan_ExtPsi, s_In );
 #           endif // # ifdef __CUDACC_ ... # else
@@ -544,7 +527,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 //          3.3 backward FFT
 #           ifdef __CUDACC__
-            IFFT().execute(reinterpret_cast<void*>(s_In), workspace_inverse);//, shared_memory, workspace);
+            IFFT().execute(reinterpret_cast<void*>(s_In), workspace_inverse);
 #           else // # ifdef __CUDACC_
             gramfe_fftw_c2c( FFTW_Plan_ExtPsi_Inv, s_In );
 #           endif // # ifdef __CUDACC_ ... # else
