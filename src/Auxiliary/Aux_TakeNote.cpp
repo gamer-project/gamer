@@ -209,6 +209,16 @@ void Aux_TakeNote()
 #     else // # ifdef GRAMFE_FLOAT8
       fprintf( Note, "GRAMFE_FLOAT8                   OFF\n" );
 #     endif // # ifdef GRAMFE_FLOAT8 ... # else
+#     ifdef GRAMFE_ENABLE_SINGLE_PRECISION
+      fprintf( Note, "GRAMFE_ENABLE_SINGLE_PRECISION  ON\n" );
+#     else // # ifdef GRAMFE_ENABLE_SINGLE_PRECISION
+      fprintf( Note, "GRAMFE_ENABLE_SINGLE_PRECISION  OFF\n" );
+#     endif // # ifdef GRAMFE_ENABLE_SINGLE_PRECISION ... # else
+#     ifdef GRAMFE_ENABLE_GPU
+      fprintf( Note, "GRAMFE_ENABLE_GPU               ON\n" );
+#     else // # ifdef GRAMFE_ENABLE_GPU
+      fprintf( Note, "GRAMFE_ENABLE_GPU               OFF\n" );
+#     endif // # ifdef GRAMFE_ENABLE_GPU ... # else
 #     elif ( WAVE_SCHEME == WAVE_FD )
       fprintf( Note, "WAVE_SCHEME                     FD\n ");
 #     else // #  if (WAVE_SCHEME == WAVE_GRAMFE )
