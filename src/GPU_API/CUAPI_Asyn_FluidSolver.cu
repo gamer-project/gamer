@@ -8,14 +8,8 @@
 #include <cufftdx.hpp>
 
 using namespace cufftdx;
-using fft_incomplete = decltype(Block() + Size<GRAMFE_FLU_NXT>() + Type<fft_type::c2c>() + Precision<gramfe_float>() + SM<750>());
-using fft_base       = decltype(fft_incomplete() + Direction<fft_direction::forward>());
-using ifft_base      = decltype(fft_incomplete() + Direction<fft_direction::inverse>());
-static constexpr unsigned int elements_per_thread = use_suggested ? fft_base::elements_per_thread : custom_elements_per_thread;
-static constexpr unsigned int ffts_per_block      = use_suggested ? fft_base::suggested_ffts_per_block : custom_ffts_per_block;
-using FFT            = decltype(fft_base() + ElementsPerThread<elements_per_thread>() + FFTsPerBlock<ffts_per_block>());
-using IFFT           = decltype(ifft_base() + ElementsPerThread<elements_per_thread>() + FFTsPerBlock<ffts_per_block>());
-using complex_type   = typename FFT::value_type;
+using fft_incomplete = decltype(Block() + Size<GRAMFE_FLU_NXT>() + Type<fft_type::c2c>() + Precision<gramfe_float>() );
+using complex_type   = typename fft_incomplete::value_type;
 #endif
 
 
@@ -99,6 +93,7 @@ __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ]
 real ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 # elif ( WAVE_SCHEME == WAVE_GRAMFE )
 # ifdef GRAMFE_ENABLE_GPU
+template<class FFT, class IFFT>
 __launch_bounds__(FFT::max_threads_per_block)
 __global__ void CUFLU_ELBDMSolver_GramFE(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                                              real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
@@ -318,7 +313,23 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 // evaluate the optimized Taylor expansion coefficient
    if ( ELBDM_Taylor3_Auto )  ELBDM_Taylor3_Coeff = ELBDM_SetTaylor3Coeff( dt, dh, ELBDM_Eta );
 #  elif ( WAVE_SCHEME == WAVE_GRAMFE )
+// set up GPU FFT if GPU is used for Gram Fourier extension scheme
 #  ifdef GRAMFE_ENABLE_GPU
+// load the device properties
+   cudaDeviceProp DeviceProp;
+   CUDA_CHECK_ERROR(  cudaGetDeviceProperties( &DeviceProp, GetDeviceID )  );
+
+
+// complete FFT description 
+   const int GPUArch     = DeviceProp.major * 100 + DeviceProp.minor * 10;
+   using gpuarch_fft  = decltype( fft_base() + SM<GPUArch>()); 
+   static constexpr unsigned int elements_per_thread = use_suggested ? gpu_arch_fft::elements_per_thread      : custom_elements_per_thread;
+   static constexpr unsigned int ffts_per_block      = use_suggested ? gpu_arch_fft::suggested_ffts_per_block : custom_ffts_per_block;
+   
+   using FFT             = decltype( incomplete_FFT() + Direction<fft_direction::forward>()  + ElementsPerThread<elements_per_thread>() + FFTsPerBlock<ffts_per_block>());
+   using IFFT            = decltype(incomplete_IFFT() + Direction<fft_direction::backward>() + ElementsPerThread<elements_per_thread>() + FFTsPerBlock<ffts_per_block>());
+
+
 // total size of shared memory required for storing FFT::ffts_per_block rows of data after Gram extension and the coefficients of the respective left and right extension polynomials
    auto          size       = FFT::ffts_per_block * cufftdx::size_of<FFT>::value + 2 * FFT::ffts_per_block * GRAMFE_NDELTA;
    auto          size_bytes = size * sizeof(complex_type);
@@ -328,7 +339,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 // increase max shared memory if needed
    CUDA_CHECK_ERROR(cudaFuncSetAttribute(
-      CUFLU_ELBDMSolver_GramFE,
+      CUFLU_ELBDMSolver_GramFE<FFT, IFFT>,
       cudaFuncAttributeMaxDynamicSharedMemorySize,
       cufftdx_shared_memory_size));
 

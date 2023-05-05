@@ -28,19 +28,8 @@
 
 using namespace cufftdx;
 
-using fft_incomplete = decltype(Block() + Size<GRAMFE_FLU_NXT>() + Type<fft_type::c2c>() + Precision<gramfe_float>() + SM<750>());
-using fft_base       = decltype(fft_incomplete() + Direction<fft_direction::forward>());
-using ifft_base      = decltype(fft_incomplete() + Direction<fft_direction::inverse>());
-static constexpr unsigned int elements_per_thread = use_suggested ? fft_base::elements_per_thread : custom_elements_per_thread;
-static constexpr unsigned int ffts_per_block      = use_suggested ? fft_base::suggested_ffts_per_block : custom_ffts_per_block;
-
-
-using FFT          = decltype(fft_base()  + ElementsPerThread<elements_per_thread>() + FFTsPerBlock<ffts_per_block>());
-using IFFT         = decltype(ifft_base() + ElementsPerThread<elements_per_thread>() + FFTsPerBlock<ffts_per_block>());
-using complex_type           = typename FFT::value_type;
-using forward_workspace_type = typename FFT::workspace_type;
-using inverse_workspace_type = typename IFFT::workspace_type;
-
+using fft_incomplete = decltype(Block() + Type<fft_type::c2c>() + Precision<gramfe_float>());
+using complex_type   = typename fft_incomplete::value_type;
 
 //overload cufftdx's complex_type to allow for all the arithmetic operations required
 template<class OtherType>
@@ -73,6 +62,12 @@ __device__ __forceinline__ complex_type operator-(const complex_type& a, const c
 #else   // #if ( defined(__CUDACC__) && defined(GRAMFE_ENABLE_GPU) )
 
 extern gramfe_complex_fftw_plan FFTW_Plan_ExtPsi, FFTW_Plan_ExtPsi_Inv;
+
+#include <complex.h>
+
+using complex_type = std::complex<gramfe_float>;
+
+/*
 
 #if ( SUPPORT_FFTW == FFTW3 )
 #include <complex.h>
@@ -143,22 +138,9 @@ complex_type operator*(const OtherType& other, const complex_type& a) {
       return a * other;
 }
 #endif // #if ( SUPPORT_FFTW == FFTW3 ) ... # else
-
-
-// no workspaces required in CPU solver
-using forward_workspace_type = bool;
-using inverse_workspace_type = bool;
+*/
 #endif // #if ( defined(__CUDACC__) && defined(GRAMFE_ENABLE_GPU) )
 
-
-
-#ifdef __CUDACC__
-# define CGPU_FLU_BLOCK_SIZE_X FFT::block_dim.x
-# define CGPU_FLU_BLOCK_SIZE_Y FFT::block_dim.y
-#else
-# define CGPU_FLU_BLOCK_SIZE_X 1
-# define CGPU_FLU_BLOCK_SIZE_Y 1
-#endif
 
 
 
@@ -190,19 +172,37 @@ static uint get1D2(uint k, uint j, uint i, int XYZ) {
                                                             (Idx  += NThread, (si = Idx % NStep + (leftGhost), sj = Idx / NStep)) )
 
 
+#ifdef __CUDACC__
+template<class FFT, class IFFT>
 GPU_DEVICE
-static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                           real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
-                           int NPatchGroup,
-                           const gramfe_float dt, const gramfe_float _dh, const gramfe_float Eta,
-                           const uint j_gap, const uint k_gap,
-                           complex_type s_In  [][GRAMFE_FLU_NXT],
-                           complex_type s_Al  [][GRAMFE_NDELTA],
-                           complex_type s_Ar  [][GRAMFE_NDELTA],
-                           complex_type ExpCoeff [],
-                           const bool FinalOut, const int XYZ, const gramfe_float MinDens,
-                           forward_workspace_type workspace,
-                           inverse_workspace_type workspace_inverse );
+void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                     real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
+                     int NPatchGroup,
+                     const gramfe_float dt, const gramfe_float _dh, const gramfe_float Eta,
+                     const uint j_gap, const uint k_gap,
+                     complex_type s_In    [][GRAMFE_FLU_NXT],
+                     complex_type s_Ae    [][GRAMFE_NDELTA],
+                     complex_type s_Ao    [][GRAMFE_NDELTA],
+                     complex_type ExpCoeff [],
+                     const bool FinalOut,
+                     const int XYZ, const gramfe_float MinDens,
+                     typename FFT::workspace_type workspace,
+                     typename IFFT::workspace_type workspace_inverse  )
+#else 
+void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                     real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
+                     int NPatchGroup,
+                     const gramfe_float dt, const gramfe_float _dh, const gramfe_float Eta,
+                     const uint j_gap, const uint k_gap,
+                     complex_type s_In    [][GRAMFE_FLU_NXT],
+                     complex_type s_Ae    [][GRAMFE_NDELTA],
+                     complex_type s_Ao    [][GRAMFE_NDELTA],
+                     complex_type ExpCoeff [],
+                     const bool FinalOut,
+                     const int XYZ, const gramfe_float MinDens,
+                     bool workspace,
+                     bool workspace_inverse  )
+#endif 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUFLU_ELBDMSolver_GramFE
@@ -259,6 +259,7 @@ gramfe_float sine_series(gramfe_float x, int Nterms) {
 }
 
 #ifdef __CUDACC__
+template<class FFT, class IFFT>
 __launch_bounds__(FFT::max_threads_per_block)
 __global__
 void CUFLU_ELBDMSolver_GramFE(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
@@ -373,6 +374,9 @@ void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //                                 --> useful only if CONSERVE_MASS is defined
 //-------------------------------------------------------------------------------------------------------
 
+
+#ifdef __CUDACC__
+template<class FFT, class IFFT>
 GPU_DEVICE
 void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
@@ -385,10 +389,32 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      complex_type ExpCoeff [],
                      const bool FinalOut,
                      const int XYZ, const gramfe_float MinDens,
-                     forward_workspace_type workspace,
-                     inverse_workspace_type workspace_inverse  )
-
+                     typename FFT::workspace_type workspace,
+                     typename IFFT::workspace_type workspace_inverse  )
+#else 
+void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                     real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
+                     int NPatchGroup,
+                     const gramfe_float dt, const gramfe_float _dh, const gramfe_float Eta,
+                     const uint j_gap, const uint k_gap,
+                     complex_type s_In    [][GRAMFE_FLU_NXT],
+                     complex_type s_Ae    [][GRAMFE_NDELTA],
+                     complex_type s_Ao    [][GRAMFE_NDELTA],
+                     complex_type ExpCoeff [],
+                     const bool FinalOut,
+                     const int XYZ, const gramfe_float MinDens,
+                     bool workspace,
+                     bool workspace_inverse  )
+#endif 
 {
+#ifdef __CUDACC__
+   const int CGPU_FLU_BLOCK_SIZE_X FFT::block_dim.x;
+   const int CGPU_FLU_BLOCK_SIZE_Y FFT::block_dim.y;
+#else
+   const int CGPU_FLU_BLOCK_SIZE_X 1;
+   const int CGPU_FLU_BLOCK_SIZE_Y 1;
+#endif
+
    const uint size_j       = FLU_NXT -  j_gap * 2;          // number of y-columns to be updated
    const uint size_k       = FLU_NXT -  k_gap * 2;          // number of z-columns to be updated
    const uint NColumnTotal = __umul24( size_j, size_k );    // total number of data columns to be updated
