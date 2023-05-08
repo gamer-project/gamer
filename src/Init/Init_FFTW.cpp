@@ -128,10 +128,10 @@ void Init_FFTW()
 // determine the FFT size for the base-level FFT wave solver
 #  if ( MODEL == ELBDM )
    int Psi_FFT_Size[3]    = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
-#  ifdef SERIAL
+#  if ( defined(SERIAL) || SUPPORT_FFTW == FFTW3 )
    int InvPsi_FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
 #  else // # ifdef SERIAL
-// Note that the dimensions of the inverse transform,
+// Note that the dimensions of the inverse transform in FFTW2,
 // which are given by the dimensions of the output of the forward transform,
 // are Ny*Nz*Nx because we are using "FFTW_TRANSPOSED_ORDER" in fftwnd_mpi().
    int InvPsi_FFT_Size[3] = { NX0_TOT[0], NX0_TOT[2], NX0_TOT[1] };
@@ -211,12 +211,14 @@ void End_FFTW()
    if (FFTW3_Single_OMP_Enabled) fftwf_cleanup_threads();
 #  endif // # ifdef OPENMP
 
+#  ifdef SERIAL
    fftw_cleanup();
    fftwf_cleanup();
-#  ifndef SERIAL 
+#  else // # ifdef SERIAL
+// fftwx_mpi_cleanup also calls fftwx_cleanup
    fftw_mpi_cleanup();
    fftwf_mpi_cleanup();
-#  endif // # ifndef SERIAL 
+#  endif // # ifdef SERIAL ... # else
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
