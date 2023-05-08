@@ -56,8 +56,8 @@ void Init_FFTW()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
 #  if ( SUPPORT_FFTW == FFTW3 )
-   FFTW3_Double_OMP_Enabled = false;
-   FFTW3_Single_OMP_Enabled = false;
+   FFTW3_DOUBLE_OMP_ENABLED = false;
+   FFTW3_SINGLE_OMP_ENABLED = false;
 
 
 #  ifdef OPENMP
@@ -68,23 +68,23 @@ void Init_FFTW()
    MPI_Query_thread( &MPI_Thread_Status );
 
 // enable multithreading if possible
-   FFTW3_Double_OMP_Enabled = MPI_Thread_Status >= MPI_THREAD_FUNNELED;
-   FFTW3_Single_OMP_Enabled = FFTW3_Double_OMP_Enabled;
+   FFTW3_DOUBLE_OMP_ENABLED = MPI_Thread_Status >= MPI_THREAD_FUNNELED;
+   FFTW3_SINGLE_OMP_ENABLED = FFTW3_DOUBLE_OMP_ENABLED;
 #  else // # ifndef SERIAL
 
 // always enable multithreading in serial mode with openmp
-   FFTW3_Double_OMP_Enabled = true;
-   FFTW3_Single_OMP_Enabled = true;
+   FFTW3_DOUBLE_OMP_ENABLED = true;
+   FFTW3_SINGLE_OMP_ENABLED = true;
 #  endif // # ifndef SERIAL ... # else
 
 // initialise fftw multithreading
-   if (FFTW3_Double_OMP_Enabled) {
-      FFTW3_Double_OMP_Enabled = fftw_init_threads();
-      if ( !FFTW3_Double_OMP_Enabled )    Aux_Error( ERROR_INFO, "fftw_init_threads() failed !!\n" );
+   if (FFTW3_DOUBLE_OMP_ENABLED) {
+      FFTW3_DOUBLE_OMP_ENABLED = fftw_init_threads();
+      if ( !FFTW3_DOUBLE_OMP_ENABLED )    Aux_Error( ERROR_INFO, "fftw_init_threads() failed !!\n" );
    }
-   if (FFTW3_Single_OMP_Enabled) {
-      FFTW3_Single_OMP_Enabled = fftwf_init_threads();
-      if ( !FFTW3_Single_OMP_Enabled )    Aux_Error( ERROR_INFO, "fftwf_init_threads() failed !!\n" );
+   if (FFTW3_SINGLE_OMP_ENABLED) {
+      FFTW3_SINGLE_OMP_ENABLED = fftwf_init_threads();
+      if ( !FFTW3_SINGLE_OMP_ENABLED )    Aux_Error( ERROR_INFO, "fftwf_init_threads() failed !!\n" );
    }
 #  endif // # ifdef OPENMP
 
@@ -96,8 +96,8 @@ void Init_FFTW()
 
 // tell all subsequent fftw3 planners to use OMP_NTHREAD threads
 #  ifdef OPENMP
-   if (FFTW3_Double_OMP_Enabled) fftw_plan_with_nthreads (OMP_NTHREAD);
-   if (FFTW3_Single_OMP_Enabled) fftwf_plan_with_nthreads(OMP_NTHREAD);
+   if (FFTW3_DOUBLE_OMP_ENABLED) fftw_plan_with_nthreads (OMP_NTHREAD);
+   if (FFTW3_SINGLE_OMP_ENABLED) fftwf_plan_with_nthreads(OMP_NTHREAD);
 #  endif // # ifdef OPENMP
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
 
@@ -125,6 +125,19 @@ void Init_FFTW()
    real* PS   = NULL;
    real* RhoK = NULL;
 
+// determine how to initialise fftw plans
+   int StartupFlag;
+
+   switch ( OPT_FFTW_STARTUP )
+   {
+      case FFTW_STARTUP_ESTIMATE:    StartupFlag = FFTW__ESTIMATE;               break;
+      case FFTW_STARTUP_MEASURE:     StartupFlag = FFTW__MEASURE;                break;
+#     if ( SUPPORT_FFTW == FFTW3 )
+      case FFTW_STARTUP_PATIENT:     StartupFlag = FFTW__PATIENT;                break;
+#     endif // # if ( SUPPORT_FFTW == FFTW3 )
+
+      default:                       StartupFlag = FFTW__MEASURE;
+   } // switch ( OPT_FFTW_STARTUP )
 
 // allocate memory for arrays in fftw3
 #  if ( SUPPORT_FFTW == FFTW3 )
@@ -135,10 +148,10 @@ void Init_FFTW()
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
 
 // create plans for power spectrum and the self-gravity solver
-   FFTW_Plan_PS      = create_fftw_3d_r2c_plan(PS_FFT_Size, PS);
+   FFTW_Plan_PS      = create_fftw_3d_r2c_plan(PS_FFT_Size, PS, StartupFlag);
 #  ifdef GRAVITY
-   FFTW_Plan_Poi     = create_fftw_3d_r2c_plan(Gravity_FFT_Size, RhoK);
-   FFTW_Plan_Poi_Inv = create_fftw_3d_c2r_plan(Gravity_FFT_Size, RhoK);
+   FFTW_Plan_Poi     = create_fftw_3d_r2c_plan(Gravity_FFT_Size, RhoK, StartupFlag);
+   FFTW_Plan_Poi_Inv = create_fftw_3d_c2r_plan(Gravity_FFT_Size, RhoK, StartupFlag);
 #  endif // # ifdef GRAVITY
 
 // free memory for arrays in fftw3
@@ -174,8 +187,8 @@ void End_FFTW()
 
 #  if ( SUPPORT_FFTW == FFTW3 )
 #  ifdef OPENMP
-   if (FFTW3_Double_OMP_Enabled)  fftw_cleanup_threads();
-   if (FFTW3_Single_OMP_Enabled) fftwf_cleanup_threads();
+   if (FFTW3_DOUBLE_OMP_ENABLED)  fftw_cleanup_threads();
+   if (FFTW3_SINGLE_OMP_ENABLED) fftwf_cleanup_threads();
 #  endif
 #  ifdef SERIAL
    fftw_cleanup();

@@ -238,6 +238,7 @@ Procedure for outputting new variables:
 //                2463 : 2023/03/20 --> output FB_SEP_FLUOUT
 //                2464 : 2023/04/27 --> output LIBYT_INTERACTIVE
 //                2465 : 2023/04/29 --> output MU_NORM
+//                2466 : 2023/05/08 --> output OPT__FFTW_STARTUP
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -2352,7 +2353,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  ifdef MHD
    InputPara.Opt__InitBFieldByFile   = OPT__INIT_BFIELD_BYFILE;
 #  endif
-
+#  ifdef SUPPORT_FFTW
+   InputPara.Opt__FFTW_Startup       = OPT__FFTW_STARTUP;
+#  endif
 // interpolation schemes
    InputPara.Opt__Int_Time           = OPT__INT_TIME;
 #  if ( MODEL == HYDRO )
