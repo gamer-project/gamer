@@ -470,7 +470,7 @@ void Aux_Check_Parameter()
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
    if ( OPT__FIXUP_FLUX )
       Aux_Error( ERROR_INFO, "WAVE_GRAMFE does not support OPT__FIXUP_FLUX !!\n" );
-#  endif 
+#  endif
 
 
 // for sending fluid data fixed by coarse-fine fluxes correctly
@@ -1087,7 +1087,7 @@ void Aux_Check_Parameter()
 #  endif
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE && ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
-#  error : ERROR : GPU Gram-Fourier extension scheme requires SUPPORT_FFTW flag!
+#  error : ERROR : CPU Gram-Fourier extension scheme requires SUPPORT_FFTW flag!
 #  endif // #  if ( WAVE_SCHEME == WAVE_GRAMFE && ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
 
 // warnings
@@ -1099,6 +1099,7 @@ void Aux_Check_Parameter()
                 NCOMP_PASSIVE );
 #  endif
 
+#  if ( WAVE_SCHEME == WAVE_FD )
    if ( !ELBDM_TAYLOR3_AUTO  &&  ELBDM_TAYLOR3_COEFF < 1.0/8.0 )
       Aux_Message( stderr, "WARNING : ELBDM_TAYLOR3_COEFF (%13.7e) < 0.125 is unconditionally unstable !!\n",
                    ELBDM_TAYLOR3_COEFF );
@@ -1171,6 +1172,27 @@ void Aux_Check_Parameter()
 
    } // if ( MPI_Rank == 0 )
 
+#  elif ( WAVE_SCHEME == WAVE_GRAMFE ) // #  if ( WAVE_SCHEME == WAVE_FD )
+
+   const double dt_fluid_max = 0.4;
+
+   if ( DT__FLUID > dt_fluid_max )
+      Aux_Message( stderr, "WARNING : DT__FLUID (%13.7e) > %13.7e is unstable !!\n",
+                   DT__FLUID, dt_fluid_max );
+
+#  ifdef GRAMFE_ENABLE_SINGLE_PRECISION
+   Aux_Message( stderr, "WARNING : GRAMFE_ENABLE_SINGLE_PRECISION is unstable !!\n" );
+#  endif // #  ifdef GRAMFE_ENABLE_SINGLE_PRECISION
+
+
+#  ifdef CONSERVE_MASS
+   Aux_Message( stderr, "WARNING : mass is not conserved with the %s solver even though CONSERVE_MASS is on !!\n",
+                  "WAVE_GRAMFE" );
+#  endif // #  ifdef CONSERVE_MASS
+
+#  endif // #  if ( WAVE_SCHEME == WAVE_FD ) ... # else
+
+   } // if ( MPI_Rank == 0 ) {
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
