@@ -207,12 +207,12 @@
 //wrappers for fftw create and destroy plan functions used for Gram Fourier extension scheme
 #if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
 #if ( SUPPORT_FFTW == FFTW3 )
-#define create_gramfe_fftw_1d_forward_c2c_plan(size, arr)   gramfe_float_fftw3_plan_dft_c2c_1d(     size, (gramfe_float_fftw3_complex*) arr, (gramfe_float_fftw3_complex*) arr, FFTW_FORWARD , FFTW_MEASURE )
-#define create_gramfe_fftw_1d_backward_c2c_plan(size, arr)  gramfe_float_fftw3_plan_dft_c2c_1d(     size, (gramfe_float_fftw3_complex*) arr, (gramfe_float_fftw3_complex*) arr, FFTW_BACKWARD, FFTW_MEASURE )
+#define create_gramfe_fftw_1d_forward_c2c_plan(size, arr)   gramfe_float_fftw3_plan_dft_c2c_1d(     size, (gramfe_float_fftw3_complex*) arr, (gramfe_float_fftw3_complex*) arr, FFTW_FORWARD , FFTW_PATIENT )
+#define create_gramfe_fftw_1d_backward_c2c_plan(size, arr)  gramfe_float_fftw3_plan_dft_c2c_1d(     size, (gramfe_float_fftw3_complex*) arr, (gramfe_float_fftw3_complex*) arr, FFTW_BACKWARD, FFTW_PATIENT )
 #define destroy_gramfe_complex_fftw_plan                    gramfe_float_fftw3_destroy_plan
 #else // #if ( SUPPORT_FFTW == FFTW3 )
-#define create_gramfe_fftw_1d_forward_c2c_plan(size, arr)   fftw_create_plan( size, FFTW_FORWARD , FFTW_MEASURE | FFTW_IN_PLACE )
-#define create_gramfe_fftw_1d_backward_c2c_plan(size, arr)  fftw_create_plan( size, FFTW_BACKWARD, FFTW_MEASURE | FFTW_IN_PLACE )
+#define create_gramfe_fftw_1d_forward_c2c_plan(size, arr)   fftw_create_plan( size, FFTW_FORWARD , FFTW_PATIENT | FFTW_IN_PLACE )
+#define create_gramfe_fftw_1d_backward_c2c_plan(size, arr)  fftw_create_plan( size, FFTW_BACKWARD, FFTW_PATIENT | FFTW_IN_PLACE )
 #define destroy_gramfe_complex_fftw_plan                    fftw_destroy_plan
 #endif // #if ( SUPPORT_FFTW == FFTW3 ) ... # else
 #endif // #if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
