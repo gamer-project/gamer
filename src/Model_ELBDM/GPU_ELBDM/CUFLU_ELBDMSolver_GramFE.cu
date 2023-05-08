@@ -482,7 +482,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                Ar.real(0);
                Ar.imag(0);
                for (int t=0; t < GRAMFE_NDELTA; t++) {
-                  Al += Pl[si][t] * s_In[sj][t];                              // left boundary
+                  Al += Pl[si][t] * s_In[sj][t];                           // left boundary
                   Ar += Pr[si][t] * s_In[sj][FLU_NXT - GRAMFE_NDELTA + t]; // right boundary
                } // for t
 
@@ -501,8 +501,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                s_In[sj][si].imag(0);
 
                for (int order=0; order < GRAMFE_ORDER; order++) {
-                  s_In[sj][si] += s_Ae[sj][order] *  Fe[order][si - FLU_NXT + GRAMFE_NDELTA];
-                  s_In[sj][si] += s_Ao[sj][order] *  Fo[order][si - FLU_NXT + GRAMFE_NDELTA];
+                  s_In[sj][si] += s_Ae[sj][order] *  Fe[order][si - FLU_NXT];
+                  s_In[sj][si] += s_Ao[sj][order] *  Fo[order][si - FLU_NXT];
                } // for (int order=0; order < GRAMFE_ORDER; order++)
             } // CELL_LOOP(GRAMFE_FLU_NXT, FLU_NXT, 0)
 

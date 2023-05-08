@@ -599,7 +599,7 @@
 #   define GRAMFE_NDELTA 14
 # endif
 # ifndef GRAMFE_ND
-#   define GRAMFE_ND     28
+#   define GRAMFE_ND     26
 # endif
 # ifndef GRAMFE_ORDER
 #   define GRAMFE_ORDER  14
