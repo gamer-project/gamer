@@ -149,7 +149,7 @@ void Init_FFTW()
    RhoK = (real*) root_fftw_malloc( ComputePaddedTotalSize( Gravity_FFT_Size ) * sizeof(real));
 #  endif // # ifdef GRAVITY
 #  if ( MODEL == ELBDM )
-   PsiK = (real*) root_fftw_malloc( ComputeTotalSize      ( Psi_FFT_Size     ) * sizeof(real) * 2);
+   PsiK = (real*) root_fftw_malloc( ComputeTotalSize      ( Psi_FFT_Size     ) * sizeof(real) * 2); // 2 * real for size of complex number
 #  endif // # if ( MODEL == ELBDM )
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
 
