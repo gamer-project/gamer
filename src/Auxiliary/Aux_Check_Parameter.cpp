@@ -1170,7 +1170,6 @@ void Aux_Check_Parameter()
    if ( OPT__INIT == INIT_BY_FILE )
       Aux_Message( stderr, "WARNING : currently we don't check MIN_DENS for the initial data loaded from UM_IC !!\n" );
 
-   } // if ( MPI_Rank == 0 )
 
 #  elif ( WAVE_SCHEME == WAVE_GRAMFE ) // #  if ( WAVE_SCHEME == WAVE_FD )
 
@@ -1192,7 +1191,7 @@ void Aux_Check_Parameter()
 
 #  endif // #  if ( WAVE_SCHEME == WAVE_FD ) ... # else
 
-   } // if ( MPI_Rank == 0 ) {
+   } // if ( MPI_Rank == 0 )
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
