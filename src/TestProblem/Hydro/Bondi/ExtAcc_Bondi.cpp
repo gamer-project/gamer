@@ -73,6 +73,9 @@ void SetExtAccAuxArray_Bondi( double AuxArray[], const double Time )
               case 4: // sigmoid
                   AuxArray[8] *= 2/(1+exp(-Time*log(3)/Bondi_Soliton_t))-1;
                   break;
+              case 5: // tanh
+                  AuxArray[8] *= tanh(Time/Bondi_Soliton_t);
+                  break;
                 
           }
       } 
