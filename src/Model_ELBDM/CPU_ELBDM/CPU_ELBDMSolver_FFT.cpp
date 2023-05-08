@@ -2,17 +2,9 @@
 
 #if ( MODEL == ELBDM  &&  defined SUPPORT_FFTW )
 
-
-
 static void Psi_Advance_FFT( real *PsiR, real *PsiI, const int j_start, const int dj, const int PsiK_Size, const real dt );
 
-#ifdef SERIAL
-extern fftwnd_plan     FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;
-#else
-extern fftwnd_mpi_plan FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;
-#endif
-
-
+extern root_complex_fftw_plan      FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;   // Psi : plan for the ELBDM spectral solver
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -39,22 +31,18 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, const int j_start, const int dj, c
    const real Dt_2Eta  = (real)0.5*dt/ELBDM_ETA;
 
    real PsiKR, PsiKI, DtKK_2Eta;
-   fftw_complex *PsiK;
-   PsiK = (fftw_complex*) malloc( PsiK_Size * sizeof(fftw_complex) );
+   gamer_float_complex *PsiK;
+   PsiK = (gamer_float_complex*) root_fftw_malloc( PsiK_Size * sizeof(gamer_float_complex) );
 
    for (int t=0; t<PsiK_Size; t++)
    {
-      PsiK[t].re = PsiR[t];
-      PsiK[t].im = PsiI[t];
+      c_re(PsiK[t]) = PsiR[t];
+      c_im(PsiK[t]) = PsiI[t];
    }
 
 
 // forward FFT
-#  ifdef SERIAL
-   fftwnd_one( FFTW_Plan_Psi, PsiK, NULL );
-#  else
-   fftwnd_mpi( FFTW_Plan_Psi, 1, PsiK, NULL, FFTW_TRANSPOSED_ORDER );
-#  endif
+   root_fftw_c2c( FFTW_Plan_Psi, PsiK );
 
 
 // set up the dimensional wave number
@@ -104,33 +92,29 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, const int j_start, const int dj, c
 
 #  endif // #ifdef SERIAL ... else ...
 
-         const real PsiKR = PsiK[ID].re;
-         const real PsiKI = PsiK[ID].im;
+         const real PsiKR = c_re(PsiK[ID]);
+         const real PsiKI = c_im(PsiK[ID]);
          const real DtKK_2Eta = DtKxKx_2Eta[i] + DtKyKy_2Eta[j] + DtKzKz_2Eta[k];
 
-         PsiK[ID].re =  PsiKR * COS(DtKK_2Eta) + PsiKI * SIN(DtKK_2Eta);
-         PsiK[ID].im =  PsiKI * COS(DtKK_2Eta) - PsiKR * SIN(DtKK_2Eta);
+         c_re(PsiK[ID]) =  PsiKR * COS(DtKK_2Eta) + PsiKI * SIN(DtKK_2Eta);
+         c_im(PsiK[ID]) =  PsiKI * COS(DtKK_2Eta) - PsiKR * SIN(DtKK_2Eta);
       } // i,j,k
    } // i,j,k
 
 
 // backward FFT
-#  ifdef SERIAL
-   fftwnd_one( FFTW_Plan_Psi_Inv, PsiK, NULL );
-#  else
-   fftwnd_mpi( FFTW_Plan_Psi_Inv, 1, PsiK, NULL, FFTW_TRANSPOSED_ORDER );
-#  endif
+   root_fftw_c2c(FFTW_Plan_Psi_Inv, PsiK);
 
 // normalization
    const real norm = 1.0 / ( (real)Nx*Ny*Nz );
 
    for (int t=0; t<PsiK_Size; t++)
    {
-      PsiR[t] = PsiK[t].re * norm;
-      PsiI[t] = PsiK[t].im * norm;
+      PsiR[t] = c_re(PsiK[t]) * norm;
+      PsiI[t] = c_im(PsiK[t]) * norm;
    }
 
-   free( PsiK );
+   root_fftw_free( PsiK );
 
 } // FUNCTION : Psi_Advance_FFT
 
@@ -154,18 +138,27 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
 
 
 // get the array indices using by FFTW
-   int local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose, total_local_size;
+   mpi_index_int local_nx, local_ny, local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose, total_local_size;
+
+// note: total_local_size is NOT necessarily equal to local_nx*local_ny*local_nz
+   local_nx = FFT_Size[0];
+   local_ny = FFT_Size[1];
 
 #  ifdef SERIAL
    local_nz                      = FFT_Size[2];
    local_z_start                 = 0;
    local_ny_after_transpose      = NULL_INT;
    local_y_start_after_transpose = NULL_INT;
-   total_local_size              = FFT_Size[0]*FFT_Size[1]*FFT_Size[2];
-#  else
+   total_local_size              = local_nx*local_ny*local_nz;
+#  else // # ifdef SERIAL
+#  if (SUPPORT_FFTW == FFTW3)
+   total_local_size = fftw_mpi_local_size_3d_transposed( FFT_Size[2], local_ny, local_nx, MPI_COMM_WORLD,
+                           &local_nz, &local_z_start, &local_ny_after_transpose, &local_y_start_after_transpose );
+#  else // #  if (SUPPORT_FFTW == FFTW3)
    fftwnd_mpi_local_sizes( FFTW_Plan_Psi, &local_nz, &local_z_start, &local_ny_after_transpose,
-                           &local_y_start_after_transpose, &total_local_size );
-#  endif
+                            &local_y_start_after_transpose, &total_local_size );
+#  endif // #  if (SUPPORT_FFTW == FFTW3) ... # else
+#  endif // #  ifdef SERIAL ... # else
 
 
 // collect "local_nz" from all ranks and set the corresponding list "List_z_start"

@@ -312,6 +312,9 @@ void Init_TestProb_Template()
 #  endif
 #  endif // #if ( MODEL == HYDRO )
    Src_Init_User_Ptr                 = NULL; // option: SRC_USER;                example: SourceTerms/User_Template/CPU_Src_User_Template.cpp
+#  ifdef FEEDBACK
+   FB_Init_User_Ptr                  = NULL; // option: FB_USER;                 example: TestProblem/Hydro/Plummer/FB_Plummer.cpp
+#  endif
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

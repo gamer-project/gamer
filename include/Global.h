@@ -92,7 +92,7 @@ extern OptTimeStepLevel_t OPT__DT_LEVEL;
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
 extern double           FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1], FlagTable_Jeans[NLEVEL-1];
-extern double           GAMMA, MINMOD_COEFF, AUTO_REDUCE_MINMOD_FACTOR, AUTO_REDUCE_MINMOD_MIN, MOLECULAR_WEIGHT, ISO_TEMP;
+extern double           GAMMA, MINMOD_COEFF, AUTO_REDUCE_MINMOD_FACTOR, AUTO_REDUCE_MINMOD_MIN, MOLECULAR_WEIGHT, MU_NORM, ISO_TEMP;
 extern LR_Limiter_t     OPT__LR_LIMITER;
 extern Opt1stFluxCorr_t OPT__1ST_FLUX_CORR;
 extern OptRSolver1st_t  OPT__1ST_FLUX_CORR_SCHEME;
@@ -185,7 +185,9 @@ extern double     LB_INPUT__PAR_WEIGHT;               // LB->Par_Weight loaded f
 extern bool       OPT__RECORD_LOAD_BALANCE;
 #endif
 extern bool       OPT__MINIMIZE_MPI_BARRIER;
-
+#if ( SUPPORT_FFTW == FFTW3 )
+extern bool       FFTW3_Double_OMP_Enabled, FFTW3_Single_OMP_Enabled;
+#endif // #if ( SUPPORT_FFTW == FFTW3 )
 
 // (2-5) particle
 // ============================================================================================================
@@ -288,6 +290,16 @@ extern char (*UserDerField_Unit )[MAX_STRING];
 extern void (*Flu_DerivedField_User_Ptr)( real Out[], const real FluIn[], const real MagIn[], const int NFieldOut,
                                           const int NCellInX, const int NCellInY, const int NCellInZ,
                                           const int NGhost, const double dh );
+
+
+// (2-12) feedback
+// =======================================================================================================
+#ifdef FEEDBACK
+extern int  FB_LEVEL, FB_RSEED;
+extern bool FB_SNE, FB_USER;
+extern bool FB_Any;
+extern int  FB_ParaBuf;
+#endif
 
 
 

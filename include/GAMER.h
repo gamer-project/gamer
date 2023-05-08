@@ -25,7 +25,17 @@
 #  include <omp.h>
 #endif
 
-#ifdef SUPPORT_FFTW
+// fftw version
+#define FFTW2        2
+#define FFTW3        3
+
+#if ( SUPPORT_FFTW == FFTW3 )
+#  ifdef SERIAL
+#     include <fftw3.h>
+#  else
+#     include <fftw3-mpi.h>
+#  endif
+#elif ( SUPPORT_FFTW == FFTW2 )
 #  ifdef FLOAT8
 #     ifdef SERIAL
 #        include <drfftw.h>
@@ -39,7 +49,7 @@
 #        include <srfftw_mpi.h>
 #     endif
 #  endif
-#endif
+#endif // #if ( SUPPORT_FFTW == FFTW3 ) ... #elif ( SUPPORT_FFTW == FFTW2 )
 
 #ifdef SUPPORT_GRACKLE
 #ifdef FLOAT8
@@ -55,6 +65,9 @@ extern "C" {
 
 #ifdef SUPPORT_LIBYT
 #  include <libyt.h>
+# ifdef LIBYT_INTERACTIVE
+#  include <libyt_interactive_mode.h>
+# endif
 #endif
 
 #include "Macro.h"
@@ -71,6 +84,7 @@ extern "C" {
 #include "Prototype.h"
 #include "PhysicalConstant.h"
 #include "GatherTree.h"
+#include "FFTW.h"
 
 #ifdef SERIAL
 #  include "Serial.h"

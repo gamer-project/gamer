@@ -120,6 +120,7 @@ struct Makefile_t
    int SupportLibYT;
 #  ifdef SUPPORT_LIBYT
    int LibYTUsePatchGroup;
+   int LibYTInteractive;
 #  endif
    int SupportGrackle;
    int RandomNumber;
@@ -158,6 +159,7 @@ struct Makefile_t
    int Tracer;
    int StoreParAcc;
    int StarFormation;
+   int Feedback;
    int Par_NAttUser;
 #  endif
 
@@ -253,6 +255,7 @@ struct SymConst_t
 #  endif
 
    int    InterpMask;
+   int    FB_SepFluOut;
 
 
 #  if   ( MODEL == HYDRO )
@@ -311,6 +314,11 @@ struct SymConst_t
    int    Der_GhostSize;
    int    Der_Nxt;
    int    Der_NOut_Max;
+
+#  ifdef FEEDBACK
+   int    FB_GhostSize;
+   int    FB_Nxt;
+#  endif
 
    int    NFieldStoredMax;
 
@@ -478,6 +486,7 @@ struct InputPara_t
 #  if ( MODEL == HYDRO )
    double Gamma;
    double MolecularWeight;
+   double MuNorm;
    double IsoTemp;
    double MinMod_Coeff;
    int    MinMod_MaxIter;
@@ -602,6 +611,14 @@ struct InputPara_t
    double SF_CreateStar_MassEff;
    double SF_CreateStar_MinStarMass;
    double SF_CreateStar_MaxStarMFrac;
+#  endif
+
+// feedback
+#  ifdef FEEDBACK
+   int   FB_Level;
+   int   FB_RSeed;
+   int   FB_SNe;
+   int   FB_User;
 #  endif
 
 // initialization
