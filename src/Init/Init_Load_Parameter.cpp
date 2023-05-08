@@ -360,9 +360,6 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__RESTART_RESET",         &OPT__RESTART_RESET,              false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__UM_IC_LEVEL",           &OPT__UM_IC_LEVEL,                0,               0,             TOP_LEVEL      );
    ReadPara->Add( "OPT__UM_IC_NLEVEL",          &OPT__UM_IC_NLEVEL,               1,               1,             NoMax_int      );
-#  ifdef SUPPORT_FFTW
-   ReadPara->Add( "OPT__FFTW_STARTUP",          &OPT__FFTW_STARTUP,          FFTW_STARTUP_MEASURE, 0,             2              );
-#  endif // # ifdef SUPPORT_FFTW
 
 // do not check OPT__UM_IC_NVAR since it depends on OPT__INIT and MODEL
 // --> also, we do not load the density field for ELBDM
@@ -382,6 +379,9 @@ void Init_Load_Parameter()
 #  ifdef MHD
    ReadPara->Add( "OPT__INIT_BFIELD_BYFILE",    &OPT__INIT_BFIELD_BYFILE,         false,           Useless_bool,  Useless_bool   );
 #  endif
+#  ifdef SUPPORT_FFTW
+   ReadPara->Add( "OPT__FFTW_STARTUP",          &OPT__FFTW_STARTUP,              -1,               0,             NoMax_int      );
+#  endif // # ifdef SUPPORT_FFTW
 
 // interpolation schemes
    ReadPara->Add( "OPT__INT_TIME",              &OPT__INT_TIME,                   true,            Useless_bool,  Useless_bool   );
