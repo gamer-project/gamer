@@ -122,13 +122,13 @@ else ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=W
 # enable for GPU support of Gram-Fourier extension algorithm in GPU mode (CPU is used by default because it is faster)
 #SIMU_OPTION += -DGRAMFE_ENABLE_GPU              # must enable -std=c++17 for cuda compiler
 
-# Optional and mostly for debugging:
-#SIMU_OPTION += -DGRAMFE_NDELTA    = 14
-#SIMU_OPTION += -DGRAMFE_ORDER     = 14
-#SIMU_OPTION += -DGRAMFE_ND        = 28
+# Only for development:
+#SIMU_OPTION += -DGRAMFE_NDELTA    = 14          # size of boundary used for Gram polynomials
+#SIMU_OPTION += -DGRAMFE_ORDER     = 14          # order of Gram polynomials
+#SIMU_OPTION += -DGRAMFE_ND        = 28          # size of extension domain
 #SIMU_OPTION += -DGRAMFE_GAMMA     = 150         # only for record, not used in Gram-Fourier extension scheme
 #SIMU_OPTION += -DGRAMFE_G         = 63          # only for record, not used in Gram-Fourier extension scheme
-#SIMU_OPTION += -DGRAMFE_ENABLE_SINGLE_PRECISION # unstable, only for development
+#SIMU_OPTION += -DGRAMFE_ENABLE_SINGLE_PRECISION # unstable
 endif # WAVE_SCHEME
 endif # MODEL
 
