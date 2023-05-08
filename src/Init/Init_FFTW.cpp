@@ -180,7 +180,7 @@ void Init_FFTW()
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
 
-// the Gram-Fourier extension planners only use one thread because OMP parallelisation is achieved on the level of thread blocks
+// the Gram-Fourier extension planners only use one thread because OMP parallelisation by evolving different patches parallely
 #  if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )
    if (FFTW3_Double_OMP_Enabled)  fftw_plan_with_nthreads(1);
    if (FFTW3_Single_OMP_Enabled) fftwf_plan_with_nthreads(1);
