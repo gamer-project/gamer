@@ -107,8 +107,8 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 SIMU_OPTION += -DCONSERVE_MASS
 
 # choose wave scheme WAVE_FD (finite difference), WAVE_GRAMFE (local spectral method)
-# --> must turn on SUPPORT_FFTW=FFTW3 or GPU and GRAMFE_ENABLE_GPU for WAVE_GRAMFE
-SIMU_OPTION += -DWAVE_SCHEME=WAVE_FD
+# --> must turn on (SUPPORT_FFTW=FFTW2 and FLOAT8) or (SUPPORT_FFTW=FFTW3) or (GPU and GRAMFE_ENABLE_GPU) for WAVE_GRAMFE
+SIMU_OPTION += -DWAVE_SCHEME=WAVE_GRAMFE
 
 # (b-2-1) WAVE_FD options
 # ------------------------------------------------------------------------------------
