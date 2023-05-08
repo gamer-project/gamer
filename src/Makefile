@@ -87,11 +87,11 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
 # equation of state: EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_USER
 # --> must be set when MODEL=HYDRO; must also enable BAROTROPIC_EOS for EOS_ISOTHERMAL
-SIMU_OPTION += -DEOS=EOS_ISOTHERMAL#-DEOS=EOS_GAMMA
+SIMU_OPTION += -DEOS=EOS_GAMMA
 
 # whether or not the EOS set above is barotropic
 # --> mandatory for EOS_ISOTHERMAL; optional for EOS_TABULAR/EOS_USER
-SIMU_OPTION += -DBAROTROPIC_EOS
+#SIMU_OPTION += -DBAROTROPIC_EOS
 
 
 # (b-2) ELBDM options
@@ -173,10 +173,10 @@ SIMU_OPTION += -DPATCH_SIZE=8
 
 # GPU acceleration
 # --> must set GPU_ARCH as well
-#SIMU_OPTION += -DGPU
+SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING/AMPERE
-#SIMU_OPTION += -DGPU_ARCH=TURING
+SIMU_OPTION += -DGPU_ARCH=TURING
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
@@ -192,7 +192,7 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # double precision
-SIMU_OPTION += -DFLOAT8
+#SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
