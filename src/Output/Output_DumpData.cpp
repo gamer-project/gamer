@@ -215,7 +215,22 @@ void Output_DumpData( const int Stage )
    } // if ( OUTPUT_WALLTIME > 0.0 )
 
 
-// set the acceleration of tracer particles to zero to make the output deterministic
+// set potential to zero when disabling both self-gravity and external potential
+// to make outputs deterministic and more reasonable
+#  ifdef GRAVITY
+   if ( !OPT__SELF_GRAVITY && !OPT__EXT_POT )
+   {
+      for (int lv=0; lv<NLEVEL; lv++)
+      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+      for (int k=0; k<PS1; k++)
+      for (int j=0; j<PS1; j++)
+      for (int i=0; i<PS1; i++)
+         amr->patch[ amr->PotSg[lv] ][lv][PID]->pot[k][j][i] = (real)0.0;
+   }
+#  endif
+
+
+// set the acceleration of tracer particles to zero to make outputs deterministic
 #  if ( defined TRACER  &&  defined STORE_PAR_ACC )
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
@@ -236,7 +251,7 @@ void Output_DumpData( const int Stage )
 //    before dumpting data --> for bitwise reproducibility
       if ( OPT__CORR_AFTER_ALL_SYNC == CORR_AFTER_SYNC_BEFORE_DUMP  &&  Stage != 0 )  Flu_CorrAfterAllSync();
 
-//    perform user-specified work before dumping data 
+//    perform user-specified work before dumping data
       if ( Output_UserWorkBeforeOutput_Ptr != NULL )  Output_UserWorkBeforeOutput_Ptr();
 
 //    start dumping data
@@ -250,7 +265,7 @@ void Output_DumpData( const int Stage )
             Aux_Error( ERROR_INFO, "Output_User_Ptr == NULL for OPT__OUTPUT_USER !!\n" );
       }
 #     ifdef SUPPORT_FFTW
-      if ( OPT__OUTPUT_BASEPS )           Output_BasePowerSpectrum( FileName_PS );
+      if ( OPT__OUTPUT_BASEPS )           Output_BasePowerSpectrum( FileName_PS, _TOTAL_DENS );
 #     endif
 #     ifdef PARTICLE
       if ( OPT__OUTPUT_PAR_MODE == OUTPUT_PAR_TEXT )  Par_Output_TextFile( FileName_Particle );

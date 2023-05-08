@@ -7,7 +7,6 @@
 #include "Typedef.h"
 #include "AMR.h"
 
-
 // Auxiliary
 void Aux_Check_MemFree( const double MinMemFree_Total, const char *comment );
 void Aux_Check_Conservation( const char *comment );
@@ -53,6 +52,7 @@ template <typename T> int  Aux_LoadTable( T *&Data, const char *FileName, const 
                                           const bool RowMajor, const bool AllocMem );
 int Aux_IsFinite( const float x );
 int Aux_IsFinite( const double x );
+void Aux_PauseManually();
 
 
 // Buffer
@@ -217,15 +217,13 @@ void Init_ByRestart_HDF5( const char *FileName );
 #ifdef SUPPORT_FFTW
 void End_FFTW();
 void Init_FFTW();
-void Patch2Slab_Rho( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf_SIdx, long *RecvBuf_SIdx,
-                     int **List_PID, int **List_k, int *List_NSend_Rho, int *List_NRecv_Rho,
-                     const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
-                     const double PrepTime, const bool AddExtraMass );
-#ifdef GRAVITY
-void Slab2Patch_Pot( const real *RhoK, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
-                     int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
-                     const int NSendSlice );
-#endif
+void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf_SIdx, long *RecvBuf_SIdx,
+                 int **List_PID, int **List_k, int *List_NSend_Var, int *List_NRecv_Var,
+                 const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
+                 const double PrepTime, const long TVar, const bool InPlacePad, const bool ForPoisson, const bool AddExtraMass );
+void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
+                 int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
+                 const int NSendSlice, const long TVar, const bool InPlacePad );
 #endif // #ifdef SUPPORT_FFTW
 
 
@@ -301,7 +299,9 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
                                  const real h_Flu_Array[][FLU_NIN][ CUBE(FLU_NXT) ],
                                  const real h_Mag_Array[][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                  const int NPG, const int *PID0_List, const int CLv, const char *comment );
-void Output_BasePowerSpectrum( const char *FileName );
+#ifdef SUPPORT_FFTW
+void Output_BasePowerSpectrum( const char *FileName, const long TVar );
+#endif
 void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const double y, const double z, const double Time,
                                            const int lv, double AuxArray[] ),
                      void (*AnalFunc_Mag)( real magnetic[], const double x, const double y, const double z, const double Time,
@@ -417,6 +417,21 @@ void TABLE_GetSibPID_Based( const int lv, const int PID0, int SibPID_Based[] );
 
 // LoadBalance
 long LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
+
+// Declare classes defined in GatherTree.h
+class LB_PatchCount;
+class LB_LocalPatchExchangeList;
+class LB_GlobalPatchExchangeList;
+class LB_GlobalPatch;
+
+void LB_GetPID( const int GID, int& level, int& PID, int* GID_Offset );
+void LB_AllgatherPatchCount( LB_PatchCount& pc );
+void LB_AllgatherLBIdx( LB_PatchCount& pc, LB_LocalPatchExchangeList& lel, LB_GlobalPatchExchangeList* gel = NULL );
+void LB_FillLocalPatchExchangeList( LB_PatchCount& pc, LB_LocalPatchExchangeList& lel );
+void LB_FillGlobalPatchExchangeList( LB_PatchCount& pc, LB_LocalPatchExchangeList& lel, LB_GlobalPatchExchangeList& gel, int root );
+LB_GlobalPatch* LB_ConstructGlobalTree( LB_PatchCount& pc, LB_GlobalPatchExchangeList& gel, int root );
+LB_GlobalPatch* LB_GatherTree( LB_PatchCount& pc, int root );
+
 #ifdef LOAD_BALANCE
 void LB_AllocateBufferPatch_Father( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0,
                                     const bool RecordFaPID, int* NNewFaBuf0, int** NewFaBufPID0 );
@@ -571,10 +586,9 @@ void CUAPI_Asyn_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NX
                            const real MinDens, const real MinPres, const real MinEint,
                            const int GPU_NStream );
 void CUAPI_DiagnoseDevice();
-void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src_NPG, const int GPU_NStream );
+void CUAPI_MemAllocate();
 void CUAPI_MemFree_Fluid( const int GPU_NStream );
-void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGroup, int &Che_GPU_NPGroup,
-                                      int &Src_GPU_NPGroup );
+void CUAPI_SetCache();
 void CUAPI_SetDevice( const int Mode );
 void CUAPI_SetConstMemory();
 void CUAPI_SetConstMemory_EoS();
@@ -600,7 +614,6 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                       const double TimeNew, const double TimeOld, const real MinEint,
                                       const int GPU_NStream );
 void CUAPI_SendExtPotTable2GPU( const real *h_Table );
-void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPatchGroup );
 void CUAPI_MemFree_PoissonGravity();
 #endif // #ifdef GRAVITY
 #endif // #ifdef GPU
@@ -622,6 +635,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
                          const int RhoSize, const double *EdgeL, const double dh, const bool PredictPos,
                          const double TargetTime, const bool InitZero, const bool Periodic[], const int PeriodicSize[3],
                          const bool UnitDens, const bool CheckFarAway, const bool UseInputMassPos, real **InputMassPos );
+void Par_SortByPos( const long NPar, const real *PosX, const real *PosY, const real *PosZ, int *IdxTable );
 void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOld, const ParUpStep_t UpdateStep,
                          const bool StoreAcc, const bool UseStoredAcc );
 void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double TimeOld,
@@ -734,6 +748,16 @@ void SF_FreeRNG();
 void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, RandomNumber_t *RNG,
                           const real GasDensThres, const real Efficiency, const real MinStarMass, const real MaxStarMFrac,
                           const bool DetRandom, const bool UseMetal );
+#endif
+
+
+// feedback
+#ifdef FEEDBACK
+void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                   const int SaveSg_Flu, const int SaveSg_Mag );
+void FB_Init();
+void FB_End();
+int FB_Aux_CellPatchRelPos( const int ijk[] );
 #endif
 
 

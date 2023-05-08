@@ -883,6 +883,23 @@ void Init_ResetParameter()
 #  endif
 
 
+#  if ( MODEL == HYDRO )
+   if      ( MU_NORM < 0.0 )
+   {
+      MU_NORM = Const_mH;
+
+      PRINT_WARNING( MU_NORM, FORMAT_FLT, "" );
+   }
+
+   else if ( MU_NORM == 0.0 )
+   {
+      MU_NORM = Const_amu;
+
+      PRINT_WARNING( MU_NORM, FORMAT_FLT, "" );
+   }
+#  endif
+
+
 // AUTO_REDUCE_DT only works for DT_LEVEL_FLEXIBLE
    if ( AUTO_REDUCE_DT  &&  OPT__DT_LEVEL != DT_LEVEL_FLEXIBLE )
    {
@@ -942,6 +959,17 @@ void Init_ResetParameter()
 #  endif // #ifdef STAR_FORMATION
 
 
+// feedback options
+#  ifdef FEEDBACK
+   if ( FB_LEVEL < 0 )
+   {
+      FB_LEVEL = MAX_LEVEL;
+
+      PRINT_WARNING( FB_LEVEL, FORMAT_INT, "" );
+   }
+#  endif // #ifdef FEEDBACK
+
+
 // convert to code units
 #  ifdef STAR_FORMATION
 // SF_CREATE_STAR_MIN_GAS_DENS: HI count/cm^3 --> mass density in code units
@@ -977,6 +1005,15 @@ void Init_ResetParameter()
       PRINT_WARNING( OPT__INIT_GRID_WITH_OMP, FORMAT_INT, "since OPENMP is disabled" );
    }
 #  endif
+
+
+// set OPT__RESET_FLUID_INIT = OPT__RESET_FLUID by default
+   if ( OPT__RESET_FLUID_INIT < 0 )
+   {
+      OPT__RESET_FLUID_INIT = OPT__RESET_FLUID;
+
+      PRINT_WARNING( OPT__RESET_FLUID_INIT, FORMAT_INT, "to match OPT__RESET_FLUID" );
+   }
 
 
 // remove symbolic constants and macros only used in this structure

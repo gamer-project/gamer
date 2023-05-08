@@ -230,9 +230,15 @@ void Aux_Check_Parameter()
       if ( OPT__TIMING_BARRIER )
          Aux_Error( ERROR_INFO, "OPT__MINIMIZE_MPI_BARRIER does NOT work with OPT__TIMING_BARRIER !!\n" );
 
-      if ( AUTO_REDUCE_DT  &&  MPI_Rank == 0 )
+      if ( MPI_Rank == 0 ) {
+      if ( AUTO_REDUCE_DT )
          Aux_Message( stderr, "WARNING : AUTO_REDUCE_DT will introduce an extra MPI barrier for OPT__MINIMIZE_MPI_BARRIER !!\n" );
-   }
+
+#     ifdef FEEDBACK
+         Aux_Message( stderr, "WARNING : OPT__MINIMIZE_MPI_BARRIER + FEEDBACK --> must ensure feedback does not need potential ghost zones !!\n" );
+#     endif
+      } // if ( MPI_Rank == 0 )
+   } // if ( OPT__MINIMIZE_MPI_BARRIER )
 
 #  ifdef BITWISE_REPRODUCIBILITY
    if ( OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_BEFORE_DUMP  &&  OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_EVERY_STEP )
@@ -530,7 +536,7 @@ void Aux_Check_Parameter()
                    "COMOVING", "GRAVITY" );
 #  endif
 
-#endif // COMOVING
+#endif // #ifdef COMOVING
 
 
 
@@ -541,17 +547,6 @@ void Aux_Check_Parameter()
 // ------------------------------
    if ( Flu_ParaBuf > PATCH_SIZE )
       Aux_Error( ERROR_INFO, "Flu_ParaBuf (%d) > PATCH_SIZE (%d) !!\n", Flu_ParaBuf, PATCH_SIZE );
-
-   if ( GPU_NSTREAM < 1 )  Aux_Error( ERROR_INFO, "GPU_NSTREAM (%d) < 1 !!\n", GPU_NSTREAM );
-
-   if ( FLU_GPU_NPGROUP % GPU_NSTREAM != 0 )
-      Aux_Error( ERROR_INFO, "FLU_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
-                 FLU_GPU_NPGROUP, GPU_NSTREAM );
-
-#  ifdef OPENMP
-   if ( FLU_GPU_NPGROUP < OMP_NTHREAD )
-      Aux_Error( ERROR_INFO, "FLU_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", FLU_GPU_NPGROUP, OMP_NTHREAD );
-#  endif
 
    if ( OPT__FIXUP_FLUX  &&  !amr->WithFlux )
       Aux_Error( ERROR_INFO, "%s is enabled but amr->WithFlux is off !!\n", "OPT__FIXUP_FLUX" );
@@ -593,8 +588,8 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : DT__FLUID_INIT (%14.7e) is not within the normal range [0...1] !!\n",
                    DT__FLUID_INIT );
 
-   if ( OPT__RESET_FLUID  &&   OPT__INIT == INIT_BY_FILE )
-      Aux_Message( stderr, "WARNING : \"%s\" will NOT be applied to the input uniform data !!\n", "OPT__RESET_FLUID" );
+   if ( OPT__RESET_FLUID_INIT  &&   OPT__INIT == INIT_BY_FILE )
+      Aux_Message( stderr, "WARNING : \"%s\" will NOT be applied to the input uniform data !!\n", "OPT__RESET_FLUID_INIT" );
 
    if ( OPT__FREEZE_FLUID )
       Aux_Message( stderr, "REMINDER : \"%s\" will prevent fluid variables from being updated\n", "OPT__FREEZE_FLUID" );
@@ -770,6 +765,9 @@ void Aux_Check_Parameter()
    if ( JEANS_MIN_PRES )
       Aux_Error( ERROR_INFO, "RTVD does not support \"JEANS_MIN_PRES\" !!\n" );
 #  endif
+
+   if ( MU_NORM <= 0.0 )
+      Aux_Error( ERROR_INFO, "MU_NORM (%14.7e) <= 0.0 !!\n", MU_NORM );
 
 
 // warnings
@@ -1027,16 +1025,12 @@ void Aux_Check_Parameter()
 #     error : ERROR : NCOMP_FLUID != 3 in ELBDM !!
 #  endif
 
-#  if ( FLU_NIN != 2 )
-#     error : ERROR : FLU_NIN != 2 in ELBDM !!
+#  if ( FLU_NIN < 2 )
+#     error : ERROR : FLU_NIN < 2 in ELBDM !!
 #  endif
 
-#  if ( FLU_NOUT != 3 )
-#     error : ERROR : FLU_NOUT != 3 in ELBDM !!
-#  endif
-
-#  if ( NCOMP_PASSIVE > 0 )
-#     error : ERROR : NCOMP_PASSIVE > 0 in ELBDM (currently this model does not support passive scalars) !!
+#  if ( FLU_NOUT < 3 )
+#     error : ERROR : FLU_NOUT < 3 in ELBDM !!
 #  endif
 
 #  ifdef QUARTIC_SELF_INTERACTION
@@ -1068,6 +1062,11 @@ void Aux_Check_Parameter()
 // warnings
 // ------------------------------
    if ( MPI_Rank == 0 ) {
+
+#  if ( NCOMP_PASSIVE > 0 )
+   Aux_Message( stderr, "WARNING : NCOMP_PASSIVE (%d) > 0 but ELBDM does not really support passive scalars !!\n",
+                NCOMP_PASSIVE );
+#  endif
 
    if ( !ELBDM_TAYLOR3_AUTO  &&  ELBDM_TAYLOR3_COEFF < 1.0/8.0 )
       Aux_Message( stderr, "WARNING : ELBDM_TAYLOR3_COEFF (%13.7e) < 0.125 is unconditionally unstable !!\n",
@@ -1151,6 +1150,10 @@ void Aux_Check_Parameter()
 #     error : ERROR : SUPPORT_FFTW must be enabled in the makefile when GRAVITY is on !!
 #  endif
 
+#  if (  defined SUPPORT_FFTW  &&  ( SUPPORT_FFTW != FFTW2 && SUPPORT_FFTW != FFTW3 )  )
+#     error : ERROR : SUPPORT_FFTW != FFTW2/FFTW3 !!
+#  endif
+
 #  if ( POT_SCHEME != SOR  &&  POT_SCHEME != MG )
 #     error : ERROR : unsupported Poisson solver in the makefile (SOR/MG) !!
 #  endif
@@ -1199,15 +1202,6 @@ void Aux_Check_Parameter()
    if ( MG_NPRE_SMOOTH < 0 )           Aux_Error( ERROR_INFO, "MG_NPRE_SMOOTH (%d) < 0 !!\n", MG_NPRE_SMOOTH );
    if ( MG_NPOST_SMOOTH < 0 )          Aux_Error( ERROR_INFO, "MG_NPOST_SMOOTH (%d) < 0 !!\n", MG_NPOST_SMOOTH );
    if ( MG_TOLERATED_ERROR < 0.0 )     Aux_Error( ERROR_INFO, "MG_TOLERATED_ERROR (%14.7e) < 0.0 !!\n", MG_TOLERATED_ERROR );
-#  endif
-
-   if ( POT_GPU_NPGROUP % GPU_NSTREAM != 0 )
-      Aux_Error( ERROR_INFO, "POT_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
-                 POT_GPU_NPGROUP, GPU_NSTREAM );
-
-#  ifdef OPENMP
-   if ( POT_GPU_NPGROUP < OMP_NTHREAD )
-      Aux_Error( ERROR_INFO, "POT_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", POT_GPU_NPGROUP, OMP_NTHREAD );
 #  endif
 
 #  if ( NLEVEL > 1 )
@@ -1306,7 +1300,7 @@ void Aux_Check_Parameter()
 #  error : unsupported MODEL !!
 #  endif // MODEL
 
-#endif // GRAVITY
+#endif // #ifdef GRAVITY
 
 
 
@@ -1415,7 +1409,7 @@ void Aux_Check_Parameter()
    }
 
 
-#endif // PARTICLE
+#endif // #ifdef PARTICLE
 
 
 
@@ -1425,19 +1419,8 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-   /*
-   if ( CHE_GPU_NPGROUP % GPU_NSTREAM != 0 )
-      Aux_Error( ERROR_INFO, "CHE_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
-                 CHE_GPU_NPGROUP, GPU_NSTREAM );
-                 */
-
 #  if ( EOS != EOS_GAMMA )
 #     error : ERROR : SUPPORT_GRACKLE must work with EOS_GAMMA !!
-#  endif
-
-#  ifdef OPENMP
-   if ( CHE_GPU_NPGROUP < OMP_NTHREAD )
-      Aux_Error( ERROR_INFO, "CHE_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", CHE_GPU_NPGROUP, OMP_NTHREAD );
 #  endif
 
 // warning
@@ -1452,7 +1435,7 @@ void Aux_Check_Parameter()
 
    } // if ( MPI_Rank == 0 )
 
-#endif // SUPPORT_GRACKLE
+#endif // #ifdef SUPPORT_GRACKLE
 
 
 
@@ -1468,15 +1451,6 @@ void Aux_Check_Parameter()
 #  if ( MODEL != HYDRO )
    if ( SrcTerms.Deleptonization )
       Aux_Error( ERROR_INFO, "SRC_DELEPTONIZATION is only supported in HYDRO !!\n" );
-#  endif
-
-   if ( SRC_GPU_NPGROUP % GPU_NSTREAM != 0 )
-      Aux_Error( ERROR_INFO, "SRC_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
-                 SRC_GPU_NPGROUP, GPU_NSTREAM );
-
-#  ifdef OPENMP
-   if ( SRC_GPU_NPGROUP < OMP_NTHREAD )
-      Aux_Error( ERROR_INFO, "SRC_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", SRC_GPU_NPGROUP, OMP_NTHREAD );
 #  endif
 
 // warning
@@ -1518,7 +1492,40 @@ void Aux_Check_Parameter()
 
    } // if ( MPI_Rank == 0 )
 
-#endif // ifdef STAR_FORMATION
+#endif // #ifdef STAR_FORMATION
+
+
+
+// feedback
+// =======================================================================================
+#ifdef FEEDBACK
+
+// errors
+// ------------------------------
+#  ifndef PARTICLE
+#     error : FEEDBACK must work with PARTICLE !!
+#  endif
+
+   if ( FB_LEVEL != MAX_LEVEL )  Aux_Error( ERROR_INFO, "FB_LEVEL (%d) != MAX_LEVEL (%d) !!\n", FB_LEVEL, MAX_LEVEL );
+
+   for (int d=0; d<3; d++)
+   {
+//    we have assumed that OPT__BC_FLU[2*d] == OPT__BC_FLU[2*d+1] when adopting the periodic BC
+      if ( OPT__BC_FLU[2*d] == BC_FLU_PERIODIC  &&  NX0_TOT[d]/PS2 == 1 )
+         Aux_Error( ERROR_INFO, "\"%s\" does NOT work for NX0_TOT[%d] = 2*PATCH_SIZE when periodic BC is adopted !!\n",
+                    "FB_AdvanceDt()", d );
+   }
+
+   if ( FB_ParaBuf > PATCH_SIZE )
+      Aux_Error( ERROR_INFO, "FB_ParaBuf (%d) > PATCH_SIZE (%d) !!\n", FB_ParaBuf, PATCH_SIZE );
+
+// warning
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
+
+   } // if ( MPI_Rank == 0 )
+
+#endif // #ifdef FEEDBACK
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ... done\n" );

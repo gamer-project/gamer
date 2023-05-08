@@ -61,7 +61,7 @@ extern double     OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z, AUTO_REDUCE_DT_FA
 extern double     AUTO_REDUCE_INT_MONO_FACTOR, AUTO_REDUCE_INT_MONO_MIN;
 extern double     OPT__CK_MEMFREE, INT_MONO_COEFF, UNIT_L, UNIT_M, UNIT_T, UNIT_V, UNIT_D, UNIT_E, UNIT_P;
 extern bool       OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_USER, OPT__FLAG_LOHNER_DENS, OPT__FLAG_REGION;
-extern int        OPT__FLAG_USER_NUM, MONO_MAX_ITER;
+extern int        OPT__FLAG_USER_NUM, MONO_MAX_ITER, OPT__RESET_FLUID_INIT;
 extern bool       OPT__DT_USER, OPT__RECORD_DT, OPT__RECORD_MEMORY, OPT__MEMORY_POOL, OPT__RESTART_RESET;
 extern bool       OPT__FIXUP_RESTRICT, OPT__INIT_RESTRICT, OPT__VERBOSE, OPT__MANUAL_CONTROL, OPT__UNIT;
 extern bool       OPT__INT_TIME, OPT__OUTPUT_USER, OPT__OUTPUT_BASE, OPT__OUTPUT_RESTART, OPT__OVERLAP_MPI, OPT__TIMING_BALANCE;
@@ -92,7 +92,7 @@ extern OptTimeStepLevel_t OPT__DT_LEVEL;
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
 extern double           FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1], FlagTable_Jeans[NLEVEL-1];
-extern double           GAMMA, MINMOD_COEFF, AUTO_REDUCE_MINMOD_FACTOR, AUTO_REDUCE_MINMOD_MIN, MOLECULAR_WEIGHT, ISO_TEMP;
+extern double           GAMMA, MINMOD_COEFF, AUTO_REDUCE_MINMOD_FACTOR, AUTO_REDUCE_MINMOD_MIN, MOLECULAR_WEIGHT, MU_NORM, ISO_TEMP;
 extern LR_Limiter_t     OPT__LR_LIMITER;
 extern Opt1stFluxCorr_t OPT__1ST_FLUX_CORR;
 extern OptRSolver1st_t  OPT__1ST_FLUX_CORR_SCHEME;
@@ -183,7 +183,9 @@ extern double     LB_INPUT__PAR_WEIGHT;               // LB->Par_Weight loaded f
 extern bool       OPT__RECORD_LOAD_BALANCE;
 #endif
 extern bool       OPT__MINIMIZE_MPI_BARRIER;
-
+#if ( SUPPORT_FFTW == FFTW3 )
+extern bool       FFTW3_Double_OMP_Enabled, FFTW3_Single_OMP_Enabled;
+#endif // #if ( SUPPORT_FFTW == FFTW3 )
 
 // (2-5) particle
 // ============================================================================================================
@@ -286,6 +288,16 @@ extern char (*UserDerField_Unit )[MAX_STRING];
 extern void (*Flu_DerivedField_User_Ptr)( real Out[], const real FluIn[], const real MagIn[], const int NFieldOut,
                                           const int NCellInX, const int NCellInY, const int NCellInZ,
                                           const int NGhost, const double dh );
+
+
+// (2-12) feedback
+// =======================================================================================================
+#ifdef FEEDBACK
+extern int  FB_LEVEL, FB_RSEED;
+extern bool FB_SNE, FB_USER;
+extern bool FB_Any;
+extern int  FB_ParaBuf;
+#endif
 
 
 

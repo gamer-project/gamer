@@ -701,7 +701,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             for (int k=0; k<CSize_Flu; k++)
             for (int j=0; j<CSize_Flu; j++)
             for (int i=0; i<CSize_Flu; i++)
-               Flu_CData[REAL][k][j][i] = ATAN2( Flu_CData[IMAG][k][j][i], Flu_CData[REAL][k][j][i] );
+               Flu_CData[REAL][k][j][i] = SATAN2( Flu_CData[IMAG][k][j][i], Flu_CData[REAL][k][j][i] );
 #           endif
 
 //          interpolate density
@@ -849,7 +849,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //          normalize passive scalars
-#           if ( NCOMP_PASSIVE > 0 )
+#           if ( NCOMP_PASSIVE > 0  &&  MODEL == HYDRO )
             if ( OPT__NORMALIZE_PASSIVE )
             {
                real Passive[NCOMP_PASSIVE];
@@ -1101,7 +1101,7 @@ void ELBDM_GetPhase_DebugOnly( real *CData, const int CSize )
    real *const CData_Real = CData + REAL*CSize_1v;
    real *const CData_Imag = CData + IMAG*CSize_1v;
 
-   for (int t=0; t<CSize_1v; t++)   CData_Real[t] = ATAN2( CData_Imag[t], CData_Real[t] );
+   for (int t=0; t<CSize_1v; t++)   CData_Real[t] = SATAN2( CData_Imag[t], CData_Real[t] );
 
 } // FUNCTION :
 #endif // #if ( MODEL == ELBDM  &&  defined GAMER_DEBUG )
