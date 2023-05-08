@@ -1203,7 +1203,7 @@ void Aux_TakeNote()
 #     endif
 #     ifdef SUPPORT_FFTW
       fprintf( Note, "FFTW Startup Mode               " );
-      switch ( OPT_FFTW_STARTUP )
+      switch ( OPT__FFTW_STARTUP )
       {
          case FFTW_STARTUP_ESTIMATE:    fprintf( Note, "ESTIMATE\n" );               break;
          case FFTW_STARTUP_MEASURE:     fprintf( Note, "MEASURE\n" );                break;

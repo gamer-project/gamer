@@ -128,16 +128,16 @@ void Init_FFTW()
 // determine how to initialise fftw plans
    int StartupFlag;
 
-   switch ( OPT_FFTW_STARTUP )
+   switch ( OPT__FFTW_STARTUP )
    {
-      case FFTW_STARTUP_ESTIMATE:    StartupFlag = FFTW__ESTIMATE;               break;
-      case FFTW_STARTUP_MEASURE:     StartupFlag = FFTW__MEASURE;                break;
+      case FFTW_STARTUP_ESTIMATE:    StartupFlag = FFTW_ESTIMATE;               break;
+      case FFTW_STARTUP_MEASURE:     StartupFlag = FFTW_MEASURE;                break;
 #     if ( SUPPORT_FFTW == FFTW3 )
-      case FFTW_STARTUP_PATIENT:     StartupFlag = FFTW__PATIENT;                break;
+      case FFTW_STARTUP_PATIENT:     StartupFlag = FFTW_PATIENT;                break;
 #     endif // # if ( SUPPORT_FFTW == FFTW3 )
 
-      default:                       StartupFlag = FFTW__MEASURE;
-   } // switch ( OPT_FFTW_STARTUP )
+      default:                       StartupFlag = FFTW_MEASURE;
+   } // switch ( OPT__FFTW_STARTUP )
 
 // allocate memory for arrays in fftw3
 #  if ( SUPPORT_FFTW == FFTW3 )
