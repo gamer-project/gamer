@@ -95,26 +95,6 @@ SIMU_OPTION += -DEOS=EOS_GAMMA
 # ------------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
 
-# choose wave scheme WAVE_FD (finite difference), WAVE_GRAMFE (local spectral method)
-SIMU_OPTION += -DWAVE_SCHEME=WAVE_FD
-
-# finite-difference scheme specific options
-# enforce the mass conservation
-SIMU_OPTION += -DCONSERVE_MASS
-# 4-th order Laplacian
-SIMU_OPTION += -DLAPLACIAN_4TH
-
-# Gram-Fourier extension scheme specific options
-# Optional:
-#SIMU_OPTION += -DGRAMFE_GAMMA     = 150 # only for record, not used in Gram-Fourier extension scheme
-#SIMU_OPTION += -DGRAMFE_G         = 63  # only for record, not used in Gram-Fourier extension scheme
-#SIMU_OPTION += -DGRAMFE_NDELTA    = 14
-#SIMU_OPTION += -DGRAMFE_ORDER     = 14
-#SIMU_OPTION += -DGRAMFE_ND        = 28
-#SIMU_OPTION += -DGRAMFE_ENABLE_GPU      # must enable -std=c++17 for cuda compiler
-#SIMU_OPTION += -DGRAMFE_ENABLE_SINGLE_PRECISION # unstable, not recommended
-
-
 # include the quartic self-interaction potential
 # --> must turn on GRAVITY; does not support COMOVING
 #SIMU_OPTION += -DQUARTIC_SELF_INTERACTION
@@ -123,6 +103,33 @@ SIMU_OPTION += -DLAPLACIAN_4TH
 # --> not supported yet and thus can only be used as auxiliary fields
 SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
+# enforce the mass conservation (only partly enforced by local spectral method)
+SIMU_OPTION += -DCONSERVE_MASS
+
+# choose wave scheme WAVE_FD (finite difference), WAVE_GRAMFE (local spectral method)
+# --> must turn on SUPPORT_FFTW=FFTW3 or GPU and GRAMFE_ENABLE_GPU for WAVE_GRAMFE
+SIMU_OPTION += -DWAVE_SCHEME=WAVE_FD
+
+# (b-2-1) WAVE_FD options
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DWAVE_SCHEME=WAVE_FD, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_FD"
+# 4-th order Laplacian
+SIMU_OPTION += -DLAPLACIAN_4TH
+
+# (b-2-2) WAVE_GRAMFE options
+# ------------------------------------------------------------------------------------
+else ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
+# enable for GPU support of Gram-Fourier extension algorithm in GPU mode (CPU is used by default because it is faster)
+#SIMU_OPTION += -DGRAMFE_ENABLE_GPU              # must enable -std=c++17 for cuda compiler
+
+# Optional and mostly for debugging:
+#SIMU_OPTION += -DGRAMFE_NDELTA    = 14
+#SIMU_OPTION += -DGRAMFE_ORDER     = 14
+#SIMU_OPTION += -DGRAMFE_ND        = 28
+#SIMU_OPTION += -DGRAMFE_GAMMA     = 150         # only for record, not used in Gram-Fourier extension scheme
+#SIMU_OPTION += -DGRAMFE_G         = 63          # only for record, not used in Gram-Fourier extension scheme
+#SIMU_OPTION += -DGRAMFE_ENABLE_SINGLE_PRECISION # unstable, only for development
+endif # WAVE_SCHEME
 endif # MODEL
 
 
