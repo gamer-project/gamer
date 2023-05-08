@@ -279,7 +279,7 @@ void CUFLU_ELBDMSolver_GramFE(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                                   const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                   const bool XYZ, const real MinDens,
                                   typename FFT::workspace_type  Workspace,
-                                  typename IFFT::workspace_type Workspace  )
+                                  typename IFFT::workspace_type WorkspaceInv  )
 #else
 void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                                   real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
@@ -307,7 +307,7 @@ void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
    complex_type (*s_Ao)   [GRAMFE_NDELTA]           = NULL;
    const gramfe_float _dh                           = gramfe_float(1.0)/dh;
    bool Workspace                                   = false;
-   bool WorkspaceInv                           = false;
+   bool WorkspaceInv                                = false;
 #  endif // #  ifdef __CUDACC__ ... else
 
 
@@ -347,14 +347,14 @@ void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, NPatchGroup, dt, _dh, Eta,
                      FLU_GHOST_SIZE,              0, s_In, s_Ae, s_Ao, ExpCoeff, false, 3, MinDens, Workspace, WorkspaceInv );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, NPatchGroup, dt, _dh, Eta,
-                     FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_Ae, s_Ao, ExpCoeff, true, 6, MinDens, Workspace, WorkspaceInv );
+                     FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_Ae, s_Ao, ExpCoeff, true,  6, MinDens, Workspace, WorkspaceInv );
    } else  {
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, NPatchGroup, dt, _dh, Eta,
                                   0,              0, s_In, s_Ae, s_Ao, ExpCoeff, false, 6, MinDens, Workspace, WorkspaceInv );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, NPatchGroup, dt, _dh, Eta,
                                   0, FLU_GHOST_SIZE, s_In, s_Ae, s_Ao, ExpCoeff, false, 3, MinDens, Workspace, WorkspaceInv );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, NPatchGroup, dt, _dh, Eta,
-                     FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_Ae, s_Ao, ExpCoeff, true, 0, MinDens, Workspace, WorkspaceInv );
+                     FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_Ae, s_Ao, ExpCoeff, true,  0, MinDens, Workspace, WorkspaceInv );
    }
 
 } // FUNCTION : CUFLU_ELBDMSolver_GramFE

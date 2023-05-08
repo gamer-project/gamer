@@ -1176,13 +1176,23 @@ void Aux_Check_Parameter()
    const double dt_fluid_max = 0.4;
 
    if ( DT__FLUID > dt_fluid_max )
-      Aux_Message( stderr, "WARNING : DT__FLUID (%13.7e) > %13.7e is unstable !!\n",
-                   DT__FLUID, dt_fluid_max );
+      Aux_Message( stderr, "WARNING : %s solver with DT__FLUID (%13.7e) > %13.7e is unstable !!\n",
+                   "WAVE_GRAMFE", DT__FLUID, dt_fluid_max );
 
-#  ifdef GRAMFE_ENABLE_SINGLE_PRECISION
-   Aux_Message( stderr, "WARNING : GRAMFE_ENABLE_SINGLE_PRECISION is unstable !!\n" );
-#  endif // #  ifdef GRAMFE_ENABLE_SINGLE_PRECISION
+#  if ( SUPPORT_FFTW == FFTW3 && defined(GRAMFE_ENABLE_SINGLE_PRECISION) )
+   Aux_Message( stderr, "WARNING : %s solver using GRAMFE_ENABLE_SINGLE_PRECISION is unstable !!\n",
+                  "WAVE_GRAMFE"  );
+#  endif // #  if ( SUPPORT_FFTW == FFTW3 && defined(GRAMFE_ENABLE_SINGLE_PRECISION) )
 
+#  if ( SUPPORT_FFTW == FFTW2 && !(defined(FLOAT8)) )
+   Aux_Message( stderr, "WARNING : %s solver using CPU and FFTW2 without FLOAT8 is unstable !!\n",
+                  "WAVE_GRAMFE"  );
+#  endif // #  if ( SUPPORT_FFTW == FFTW2 && !(defined(FLOAT8)) )
+
+#  if ( SUPPORT_FFTW == FFTW2 && defined(GRAMFE_ENABLE_SINGLE_PRECISION) )
+   Aux_Message( stderr, "WARNING : %s solver using FFTW2 ignores GRAMFE_ENABLE_SINGLE_PRECISION !!\n",
+                  "WAVE_GRAMFE"  );
+#  endif // #  if ( SUPPORT_FFTW == FFTW2 && defined(GRAMFE_ENABLE_SINGLE_PRECISION) )
 
 #  ifdef CONSERVE_MASS
    Aux_Message( stderr, "WARNING : mass is not conserved with the %s solver even though CONSERVE_MASS is on !!\n",
