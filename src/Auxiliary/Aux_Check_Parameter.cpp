@@ -282,14 +282,6 @@ void Aux_Check_Parameter()
 #  endif // #if ( MODEL == HYDRO )
 
 
-// FFTW
-#  ifdef SUPPORT_FFTW
-#  if ( SUPPORT_FFTW == FFTW2 )
-   if ( OPT__FFTW_STARTUP == FFTW_STARTUP_PATIENT )
-      Aux_Error( ERROR_INFO, "OPT__FFTW_STARTUP does not support FFTW_STARTUP_PATIENT for SUPPORT_FFTW == FFTW2 !!\n" );
-#  endif // # if ( SUPPORT_FFTW == FFTW2 )
-#  endif // # ifdef SUPPORT_FFTW
-
 // general warnings
 // =======================================================================================
 #  ifdef OVERLAP_MPI
