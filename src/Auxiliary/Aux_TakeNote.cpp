@@ -1141,7 +1141,7 @@ void Aux_TakeNote()
 #     if ( SUPPORT_FFTW == FFTW3 )
       fprintf( Note, "FFTW3_Double_OMP_Enabled        %d\n",      FFTW3_Double_OMP_Enabled );
       fprintf( Note, "FFTW3_Single_OMP_Enabled        %d\n",      FFTW3_Single_OMP_Enabled );
-#     endif
+#     endif // # if ( SUPPORT_FFTW == FFTW3 )
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
@@ -1205,6 +1205,17 @@ void Aux_TakeNote()
 #     ifdef MHD
       fprintf( Note, "OPT__INIT_BFIELD_BYFILE         %d\n",      OPT__INIT_BFIELD_BYFILE );
 #     endif
+#     ifdef SUPPORT_FFTW
+      fprintf( Note, "OPT__FFTW_STARTUP               " );
+      switch ( OPT__FFTW_STARTUP )
+      {
+         case FFTW_STARTUP_ESTIMATE:    fprintf( Note, "FFTW_ESTIMATE\n" );               break;
+         case FFTW_STARTUP_MEASURE:     fprintf( Note, "FFTW_MEASURE\n" );                break;
+         case FFTW_STARTUP_PATIENT:     fprintf( Note, "FFTW_PATIENT\n" );                break;
+
+         default:                       fprintf( Note, "UNKNOWN\n" );
+      } // switch ( OPT__FFTW_STARTUP )
+#     endif // # ifdef SUPPORT_FFTW
 
 //    refinement region for OPT__UM_IC_NLEVEL>1
       if ( OPT__INIT == INIT_BY_FILE  &&  OPT__UM_IC_NLEVEL > 1 ) {
