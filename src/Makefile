@@ -98,6 +98,8 @@ else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
 # enable hybrid scheme by setting ELBDM_SCHEME=HYBRID
 #SIMU_OPTION += -DELBDM_SCHEME=HYBRID
 
+ifeq "$(filter -DELBDM_SCHEME=HYBRID, $(SIMU_OPTION))" "-DELBDM_SCHEME=HYBRID"
+
 # choose fluid scheme as HYBRID_SCHEME = [HYBRID_UPWIND, HYBRID_FROMM, HYBRID_MUSCL]
 # default is HYBRID_FROMM, for fluid-only simulation (no wave-scheme) pick HYBRID_MUSCL
 # --> must be set when ELBDM_SCHEME=HYBRID
@@ -109,6 +111,8 @@ else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
 
 # enforce a smoother phase field by adding multiples of 2PI ( experimental )
 #SIMU_OPTION += -DSMOOTH_PHASE
+
+endif # ELBDM_SCHEME
 
 # turn off phase restriction and switch from phase to wave function interpolation around phase defects (experimental)
 # --> additionally need to set detection threshold CK_PHASE_DEFECT in Input_Parameter
