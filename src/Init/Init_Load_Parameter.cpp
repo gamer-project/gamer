@@ -380,7 +380,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__INIT_BFIELD_BYFILE",    &OPT__INIT_BFIELD_BYFILE,         false,           Useless_bool,  Useless_bool   );
 #  endif
 #  ifdef SUPPORT_FFTW
-   ReadPara->Add( "OPT__FFTW_STARTUP",          &OPT__FFTW_STARTUP,              -1,               0,             NoMax_int      );
+   ReadPara->Add( "OPT__FFTW_STARTUP",          &OPT__FFTW_STARTUP,              -1,               NoMin_int,     NoMax_int      );
 #  endif // # ifdef SUPPORT_FFTW
 
 // interpolation schemes

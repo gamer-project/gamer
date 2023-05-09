@@ -801,10 +801,13 @@ void Init_ResetParameter()
    }
 
 #  ifdef SUPPORT_FFTW
+// use FFTW measure as automatic default
    if ( OPT__FFTW_STARTUP < 0)
    {
       OPT__FFTW_STARTUP = FFTW_STARTUP_MEASURE;
    }
+
+// use FFTW measure by default if unsupported mode is chosen
 #  if ( SUPPORT_FFTW == SUPPORT_FFTW2 )
    if ( OPT__FFTW_STARTUP > FFTW_STARTUP_MEASURE ) {
 #  else

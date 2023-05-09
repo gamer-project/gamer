@@ -1202,12 +1202,12 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__INIT_BFIELD_BYFILE         %d\n",      OPT__INIT_BFIELD_BYFILE );
 #     endif
 #     ifdef SUPPORT_FFTW
-      fprintf( Note, "FFTW Startup Mode               " );
+      fprintf( Note, "OPT__FFTW_STARTUP               " );
       switch ( OPT__FFTW_STARTUP )
       {
-         case FFTW_STARTUP_ESTIMATE:    fprintf( Note, "ESTIMATE\n" );               break;
-         case FFTW_STARTUP_MEASURE:     fprintf( Note, "MEASURE\n" );                break;
-         case FFTW_STARTUP_PATIENT:     fprintf( Note, "PATIENT\n" );                break;
+         case FFTW_STARTUP_ESTIMATE:    fprintf( Note, "FFTW_ESTIMATE\n" );               break;
+         case FFTW_STARTUP_MEASURE:     fprintf( Note, "FFTW_MEASURE\n" );                break;
+         case FFTW_STARTUP_PATIENT:     fprintf( Note, "FFTW_PATIENT\n" );                break;
 
          default:                       fprintf( Note, "UNKNOWN\n" );
       }
