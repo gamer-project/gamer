@@ -1,4 +1,6 @@
-#ifndef GPU
+#include "GAMER.h"
+
+#if (!defined(GPU) || ((MODEL == ELBDM) && (WAVE_SCHEME == WAVE_GRAMFE) && !defined(GRAMFE_ENABLE_GPU)))
 
 
 
@@ -82,19 +84,27 @@ void CPU_FluidSolver_CTU(
 #endif // FLU_SCHEME
 
 #elif ( MODEL == ELBDM )
+#if ( WAVE_SCHEME == WAVE_FD )
 void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
                       real Flu_Array_Out[][FLU_NOUT   ][ CUBE(PS2) ],
                       real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                       const real Taylor3_Coeff, const bool XYZ, const real MinDens );
+#elif ( WAVE_SCHEME == WAVE_GRAMFE ) // #if ( WAVE_SCHEME == WAVE_FD )
+void CPU_ELBDMSolver_GramFE( real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
+                      real Flu_Array_Out[][FLU_NOUT   ][ CUBE(PS2) ],
+                      real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
+                      const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
+                      const bool XYZ, const real MinDens );
+#endif // #if ( WAVE_SCHEME == WAVE_FD ) ... else
 #if ( ELBDM_SCHEME == HYBRID )
-void CPU_ELBDMSolver_PhaseForm(  real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT)], 
+void CPU_ELBDMSolver_PhaseForm(  real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT)],
                       #ifdef GAMER_DEBUG
-                      real Flu_Array_Out[][FLU_NOUT][ SQR(PS2)*PS2 ], 
+                      real Flu_Array_Out[][FLU_NOUT][ SQR(PS2)*PS2 ],
                       #else
-                      real Flu_Array_Out[][FLU_NIN] [ SQR(PS2)*PS2 ], 
-                      #endif 
-                      real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ], 
+                      real Flu_Array_Out[][FLU_NIN] [ SQR(PS2)*PS2 ],
+                      #endif
+                      real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                       const bool XYZ, const real MinDens );
 #endif // # if ( ELBDM_SCHEME == HYBRID )
@@ -253,19 +263,25 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 
 #  elif ( MODEL == ELBDM )
 
-//Conditional nesting to support phase scheme in patches that do not use wave scheme for hybrid scheme
-//By default, we use wave scheme (CPU_ELBDMSolver)
+
 #  if ( ELBDM_SCHEME == HYBRID )
    if ( useWaveFlag ) {
 #  endif // # if ( ELBDM_SCHEME == HYBRID )
-   //    evaluate the optimized Taylor expansion coefficient
-   if ( ELBDM_Taylor3_Auto )  ELBDM_Taylor3_Coeff = ELBDM_SetTaylor3Coeff( dt, dh, ELBDM_Eta );
 
+#  if (WAVE_SCHEME == WAVE_FD )
+//    evaluate the optimized Taylor expansion coefficient
+   if ( ELBDM_Taylor3_Auto )  ELBDM_Taylor3_Coeff = ELBDM_SetTaylor3Coeff( dt, dh, ELBDM_Eta );
    CPU_ELBDMSolver( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
                      ELBDM_Taylor3_Coeff, XYZ, MinDens );
-   
+#  elif ( WAVE_SCHEME == WAVE_GRAMFE ) // #  if (WAVE_SCHEME == WAVE_FD )
+   CPU_ELBDMSolver_GramFE( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
+                     XYZ, MinDens );
+#  else // #  if (WAVE_SCHEME == WAVE_GRAMFE )
+#     error : ERROR : unsupported WAVE_SCHEME !!
+#  endif // WAVE_SCHEME
+
 #  if ( ELBDM_SCHEME == HYBRID )
-   } else { 
+   } else {
 #     ifndef GAMER_DEBUG
       real (*smaller_h_Flu_Array_Out  )[FLU_NIN ][CUBE(PS2)] = (real (*)[FLU_NIN][CUBE(PS2)]) h_Flu_Array_Out;
 #     else // # ifndef GAMER_DEBUG
@@ -275,6 +291,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
             XYZ, MinDens );
    }
 #  endif // # if ( ELBDM_SCHEME == HYBRID )
+
 #  else
 #     error : ERROR : unsupported MODEL !!
 #  endif // MODEL

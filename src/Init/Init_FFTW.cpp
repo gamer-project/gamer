@@ -15,7 +15,10 @@ root_real_fftw_plan      FFTW_Plan_PS;                      // PS  : plan for ca
 root_real_fftw_plan      FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;  // Poi : plan for the self-gravity Poisson solver
 #endif // #ifdef GRAVITY
 #if ( MODEL == ELBDM )
-root_complex_fftw_plan   FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;  // Psi : plan for the ELBDM spectral solver
+root_complex_fftw_plan   FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;         // Psi : plan for the ELBDM spectral solver
+#if ( WAVE_SCHEME == WAVE_GRAMFE )
+gramfe_complex_fftw_plan FFTW_Plan_ExtPsi, FFTW_Plan_ExtPsi_Inv;   // ExtPsi : plan for the Gram Fourier extension solver
+#endif // #if (WAVE_SCHEME == WAVE_GRAMFE)
 #endif // #if ( MODEL == ELBDM )
 
 
@@ -136,25 +139,18 @@ void Init_FFTW()
 // which are given by the dimensions of the output of the forward transform,
 // are Ny*Nz*Nx because we are using "FFTW_TRANSPOSED_ORDER" in fftwnd_mpi().
    int InvPsi_FFT_Size[3] = { NX0_TOT[0], NX0_TOT[2], NX0_TOT[1] };
-#  endif // # ifdef SERIAL || FFTW3 ... # else
+#  endif // # ifdef SERIAL ... # else
+
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   int ExtPsi_FFT_Size    = GRAMFE_FLU_NXT;
+#  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
 #  endif // # if ( MODEL == ELBDM )
    real* PS   = NULL;
    real* RhoK = NULL;
    real* PsiK = NULL;
-
-// determine how to initialise fftw plans
-   int StartupFlag;
-
-   switch ( OPT__FFTW_STARTUP )
-   {
-      case FFTW_STARTUP_ESTIMATE:    StartupFlag = FFTW_ESTIMATE;               break;
-      case FFTW_STARTUP_MEASURE:     StartupFlag = FFTW_MEASURE;                break;
-#     if ( SUPPORT_FFTW == FFTW3 )
-      case FFTW_STARTUP_PATIENT:     StartupFlag = FFTW_PATIENT;                break;
-#     endif // # if ( SUPPORT_FFTW == FFTW3 )
-
-      default:                       Aux_Error( ERROR_INFO, "unrecognised FFTW startup option %d  !!\n", OPT__FFTW_STARTUP );
-   } // switch ( OPT__FFTW_STARTUP )
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   gramfe_float_complex* ExtPsiK  = NULL;
+#  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
 
 // allocate memory for arrays in fftw3
 #  if ( SUPPORT_FFTW == FFTW3 )
@@ -165,6 +161,10 @@ void Init_FFTW()
 #  if ( MODEL == ELBDM )
    PsiK = (real*) root_fftw_malloc( ComputeTotalSize      ( Psi_FFT_Size     ) * sizeof(real) * 2 );  // 2 * real for size of complex number
 #  endif // # if ( MODEL == ELBDM )
+
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   ExtPsiK = (gramfe_float_complex*)   gramfe_fftw_malloc( ExtPsi_FFT_Size * sizeof(gramfe_float_complex) );
+#  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
 
 
@@ -175,8 +175,27 @@ void Init_FFTW()
    FFTW_Plan_Poi_Inv = create_fftw_3d_c2r_plan( Gravity_FFT_Size, RhoK, StartupFlag );
 #  endif // # ifdef GRAVITY
 #  if ( MODEL == ELBDM )
-   FFTW_Plan_Psi     = create_fftw_3d_forward_c2c_plan ( Psi_FFT_Size,    PsiK, StartupFlag );
-   FFTW_Plan_Psi_Inv = create_fftw_3d_backward_c2c_plan( InvPsi_FFT_Size, PsiK, StartupFlag );
+   FFTW_Plan_Psi     = create_fftw_3d_forward_c2c_plan ( Psi_FFT_Size,    PsiK );
+   FFTW_Plan_Psi_Inv = create_fftw_3d_backward_c2c_plan( InvPsi_FFT_Size, PsiK );
+
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+
+// the Gram-Fourier extension planners only use one thread because OMP parallelisation by evolving different patches parallely
+#  if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )
+   if (FFTW3_Double_OMP_Enabled)  fftw_plan_with_nthreads(1);
+   if (FFTW3_Single_OMP_Enabled) fftwf_plan_with_nthreads(1);
+#  endif // # if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )
+
+   FFTW_Plan_ExtPsi      = create_gramfe_fftw_1d_forward_c2c_plan ( ExtPsi_FFT_Size, ExtPsiK );
+   FFTW_Plan_ExtPsi_Inv  = create_gramfe_fftw_1d_backward_c2c_plan( ExtPsi_FFT_Size, ExtPsiK );
+
+// restore regular settings
+#  if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )
+   if (FFTW3_Double_OMP_Enabled)  fftw_plan_with_nthreads(OMP_NTHREAD);
+   if (FFTW3_Single_OMP_Enabled) fftwf_plan_with_nthreads(OMP_NTHREAD);
+#  endif // # if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )
+#  endif // #  if ( WAVE_SCHEME == WAVE_GRAMFE )
+
 #  endif // #  if ( MODEL == ELBDM )
 
 // free memory for arrays in fftw3
@@ -187,6 +206,9 @@ void Init_FFTW()
 #  endif // # ifdef GRAVITY
 #  if ( MODEL == ELBDM )
    root_fftw_free( PsiK );
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   gramfe_fftw_free( ExtPsiK );
+#  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
 #  endif // # if ( MODEL == ELBDM )
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
 
@@ -216,8 +238,13 @@ void End_FFTW()
 
 
 #  if ( MODEL == ELBDM )
-   destroy_complex_fftw_plan( FFTW_Plan_Psi     );
-   destroy_complex_fftw_plan( FFTW_Plan_Psi_Inv );
+   destroy_complex_fftw_plan  ( FFTW_Plan_Psi     );
+   destroy_complex_fftw_plan  ( FFTW_Plan_Psi_Inv );
+
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   destroy_gramfe_complex_fftw_plan  ( FFTW_Plan_ExtPsi     );
+   destroy_gramfe_complex_fftw_plan  ( FFTW_Plan_ExtPsi_Inv );
+#  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
 #  endif // #if ( MODEL == ELBDM )
 
 #  if ( SUPPORT_FFTW == FFTW3 )

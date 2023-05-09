@@ -206,14 +206,55 @@ void Aux_TakeNote()
       fprintf( Note, "HYBRID_SCHEME                   MUSCL\n" );
 #     else
 #     error : ERROR : unsupported SCHEME !!
-#     endif
-#     endif
+#     endif // HYBRID_SCHEME
 
 #     ifdef SMOOTH_PHASE
       fprintf( Note, "SMOOTH_PHASE                    ON\n" );
 #     else
       fprintf( Note, "SMOOTH_PHASE                    OFF\n" );
+#     endif // SMOOTH_PHASE
+
+#     endif // ELBDM_SCHEME
+
+
+//    c.1 options in WAVE_GRAMFE
+#     if ( WAVE_SCHEME == WAVE_GRAMFE )
+      fprintf( Note, "WAVE_SCHEME                     GRAM FE\n" );
+
+      fprintf( Note, "GRAMFE_GAMMA                    %d\n",      GRAMFE_GAMMA );
+      fprintf( Note, "GRAMFE_G                        %d\n",      GRAMFE_G );
+      fprintf( Note, "GRAMFE_NDELTA                   %d\n",      GRAMFE_NDELTA);
+      fprintf( Note, "GRAMFE_ND                       %d\n",      GRAMFE_ND);
+      fprintf( Note, "GRAMFE_ORDER                    %d\n",      GRAMFE_ORDER);
+#     ifdef GRAMFE_FLOAT8
+      fprintf( Note, "GRAMFE_FLOAT8                   ON\n" );
+#     else // # ifdef GRAMFE_FLOAT8
+      fprintf( Note, "GRAMFE_FLOAT8                   OFF\n" );
+#     endif // # ifdef GRAMFE_FLOAT8 ... # else
+#     ifdef GRAMFE_ENABLE_SINGLE_PRECISION
+      fprintf( Note, "GRAMFE_ENABLE_SINGLE_PRECISION  ON\n" );
+#     else // # ifdef GRAMFE_ENABLE_SINGLE_PRECISION
+      fprintf( Note, "GRAMFE_ENABLE_SINGLE_PRECISION  OFF\n" );
+#     endif // # ifdef GRAMFE_ENABLE_SINGLE_PRECISION ... # else
+#     ifdef GRAMFE_ENABLE_GPU
+      fprintf( Note, "GRAMFE_ENABLE_GPU               ON\n" );
+#     else // # ifdef GRAMFE_ENABLE_GPU
+      fprintf( Note, "GRAMFE_ENABLE_GPU               OFF\n" );
+#     endif // # ifdef GRAMFE_ENABLE_GPU ... # else
+
+//    c.1 options in WAVE_FD
+#     elif ( WAVE_SCHEME == WAVE_FD )
+      fprintf( Note, "WAVE_SCHEME                     FD\n ");
+
+#     ifdef LAPLACIAN_4TH
+      fprintf( Note, "LAPLACIAN_4TH                   ON\n" );
+#     else
+      fprintf( Note, "LAPLACIAN_4TH                   OFF\n" );
 #     endif
+
+#     else // #  if (WAVE_SCHEME == WAVE_GRAMFE )
+#     error : ERROR : unsupported WAVE_SCHEME !!
+#     endif // WAVE_SCHEME
 
 #     ifdef CONSERVE_MASS
       fprintf( Note, "CONSERVE_MASS                   ON\n" );
@@ -221,11 +262,6 @@ void Aux_TakeNote()
       fprintf( Note, "CONSERVE_MASS                   OFF\n" );
 #     endif
 
-#     ifdef LAPLACIAN_4TH
-      fprintf( Note, "LAPLACIAN_4TH                   ON\n" );
-#     else
-      fprintf( Note, "LAPLACIAN_4TH                   OFF\n" );
-#     endif
 
 #     ifdef QUARTIC_SELF_INTERACTION
       fprintf( Note, "QUARTIC_SELF_INTERACTION        ON\n" );

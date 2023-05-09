@@ -95,9 +95,52 @@ SIMU_OPTION += -DEOS=EOS_GAMMA
 # ------------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
 
+# include the quartic self-interaction potential
+# --> must turn on GRAVITY; does not support COMOVING
+#SIMU_OPTION += -DQUARTIC_SELF_INTERACTION
+
+# number of passively advected scalars
+# --> not supported yet and thus can only be used as auxiliary fields
+SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
+
+# enforce the mass conservation (only partly enforced by local spectral method)
+SIMU_OPTION += -DCONSERVE_MASS
+
+# turn off phase restriction and switch from phase to wave function interpolation around phase defects (experimental)
+# --> additionally need to set detection threshold CK_PHASE_DEFECT in Input_Parameter
+#SIMU_OPTION += -DDISABLE_PHASE_AT_DEFECT
+
+# choose wave scheme WAVE_FD (finite difference), WAVE_GRAMFE (local spectral method)
+# --> must turn on (SUPPORT_FFTW=FFTW2 and FLOAT8) or (SUPPORT_FFTW=FFTW3) or (GPU and GRAMFE_ENABLE_GPU) for WAVE_GRAMFE
+SIMU_OPTION += -DWAVE_SCHEME=WAVE_GRAMFE
+
+# (b-2-1) WAVE_FD options
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DWAVE_SCHEME=WAVE_FD, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_FD"
+# 4-th order Laplacian
+SIMU_OPTION += -DLAPLACIAN_4TH
+
+# (b-2-2) WAVE_GRAMFE options
+# ------------------------------------------------------------------------------------
+else ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
+# enable for GPU support of Gram-Fourier extension algorithm in GPU mode (CPU is used by default because it is faster)
+#SIMU_OPTION += -DGRAMFE_ENABLE_GPU              # must enable -std=c++17 for cuda compiler
+
+# Only for development:
+#SIMU_OPTION += -DGRAMFE_NDELTA    = 14          # size of boundary used for Gram polynomials
+#SIMU_OPTION += -DGRAMFE_ORDER     = 14          # order of Gram polynomials
+#SIMU_OPTION += -DGRAMFE_ND        = 28          # size of extension domain
+#SIMU_OPTION += -DGRAMFE_GAMMA     = 150         # only for record, not used in Gram-Fourier extension scheme
+#SIMU_OPTION += -DGRAMFE_G         = 63          # only for record, not used in Gram-Fourier extension scheme
+#SIMU_OPTION += -DGRAMFE_ENABLE_SINGLE_PRECISION # unstable
+endif # WAVE_SCHEME
+
+
 # enable hybrid scheme by setting ELBDM_SCHEME=HYBRID
 #SIMU_OPTION += -DELBDM_SCHEME=HYBRID
 
+# (b-2-3) HYBRID options
+# ------------------------------------------------------------------------------------
 ifeq "$(filter -DELBDM_SCHEME=HYBRID, $(SIMU_OPTION))" "-DELBDM_SCHEME=HYBRID"
 
 # choose fluid scheme as HYBRID_SCHEME = [HYBRID_UPWIND, HYBRID_FROMM, HYBRID_MUSCL]
@@ -114,23 +157,6 @@ ifeq "$(filter -DELBDM_SCHEME=HYBRID, $(SIMU_OPTION))" "-DELBDM_SCHEME=HYBRID"
 
 endif # ELBDM_SCHEME
 
-# turn off phase restriction and switch from phase to wave function interpolation around phase defects (experimental)
-# --> additionally need to set detection threshold CK_PHASE_DEFECT in Input_Parameter
-#SIMU_OPTION += -DDISABLE_PHASE_AT_DEFECT
-
-# enforce the mass conservation
-SIMU_OPTION += -DCONSERVE_MASS
-
-# 4-th order Laplacian
-SIMU_OPTION += -DLAPLACIAN_4TH
-
-# include the quartic self-interaction potential
-# --> must turn on GRAVITY; does not support COMOVING
-#SIMU_OPTION += -DQUARTIC_SELF_INTERACTION
-
-# number of passively advected scalars
-# --> not supported yet and thus can only be used as auxiliary fields
-SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
 endif # MODEL
 
@@ -348,6 +374,7 @@ HDF5_PATH    :=
 GRACKLE_PATH :=
 GSL_PATH     :=
 LIBYT_PATH   :=
+CUFFTDX_PATH :=
 
 # NCSA-bluewaters (only need to specify the path of user-installed packages)
 #GRACKLE_PATH :=
@@ -587,9 +614,9 @@ endif # MHD
 # ELBDM source files (included only inf "MODEL=ELBDM")
 # -------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
-GPU_FILE    += CUFLU_ELBDMSolver.cu CUFLU_ELBDMSolver_PhaseForm_Combined.cu
+GPU_FILE    += CUFLU_ELBDMSolver.cu CUFLU_ELBDMSolver_PhaseForm_Combined.cu CUFLU_ELBDMSolver_GramFE.cu
 
-CPU_FILE    += CPU_ELBDMSolver.cpp  CPU_ELBDMSolver_FFT.cpp  CPU_ELBDMSolver_PhaseForm_Combined.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
+CPU_FILE    += CPU_ELBDMSolver.cpp  CPU_ELBDMSolver_FFT.cpp  CPU_ELBDMSolver_GramFE.cpp CPU_ELBDMSolver_PhaseForm_Combined.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
                ELBDM_GetTimeStep_Fluid.cpp  ELBDM_GetTimeStep_Hybrid.cpp  ELBDM_Flag_EngyDensity.cpp  ELBDM_Flag_Interference.cpp  ELBDM_UnwrapPhase.cpp \
                ELBDM_GetTimeStep_Phase.cpp  ELBDM_GetTimeStep_Velocity.cpp  ELBDM_SetTaylor3Coeff.cpp  ELBDM_RemoveMotionCM.cpp
 
@@ -885,6 +912,13 @@ ifeq "$(filter -DSUPPORT_LIBYT, $(SIMU_OPTION))" "-DSUPPORT_LIBYT"
 INCLUDE += -I$(LIBYT_PATH)/include
 endif
 
+ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
+   ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
+      ifeq "$(filter -DGRAMFE_ENABLE_GPU, $(SIMU_OPTION))" "-DGRAMFE_ENABLE_GPU"
+         INCLUDE += -I$(CUFFTDX_PATH)/include
+      endif
+   endif
+endif
 
 # CXX flags
 # -------------------------------------------------------------------------------

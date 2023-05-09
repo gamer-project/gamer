@@ -4,9 +4,6 @@
 
 extern root_real_fftw_plan     FFTW_Plan_Poi;
 
-
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_GreenFuncK
 // Description :  Evaluate the k-space Green's function for the Possin solver with the isolated BC.

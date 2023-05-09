@@ -25,6 +25,11 @@
 #endif
 
 
+// Include CUDA FFT libraby if gpu kinetic ELBDM Gram Fourier extension solver is enabled
+#if ( defined(__CUDACC__) && MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
+#include <cufftdx.hpp>
+#endif // #if ( defined(__CUDACC__) && MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
+
 // faster integer multiplication in Fermi
 #if ( defined __CUDACC__  &&  __CUDA_ARCH__ >= 200 )
 #  define __umul24( a, b )   ( (a)*(b) )
@@ -395,7 +400,6 @@
 //=========================================================================================
 #elif ( MODEL == ELBDM )
 #     define FLU_BLOCK_SIZE_X       PS2
-
 #  if   ( GPU_ARCH == FERMI )
 #     ifdef FLOAT8
 #        define FLU_BLOCK_SIZE_Y    4
@@ -451,6 +455,53 @@
 #        error : UNKNOWN GPU_ARCH !!
 #        endif
 #  endif
+
+// set number of threads and blocks used in GRAMFE GPU scheme
+# if ( defined(__CUDACC__) && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
+
+
+#  if   ( GPU_ARCH == FERMI )
+   #define GPU_COMPUTE_CAPABILITY 200
+#  elif ( GPU_ARCH == KEPLER )
+   #define GPU_COMPUTE_CAPABILITY 300
+#  elif ( GPU_ARCH == MAXWELL )
+   #define GPU_COMPUTE_CAPABILITY 500
+#  elif ( GPU_ARCH == PASCAL )
+   #define GPU_COMPUTE_CAPABILITY 600
+#  elif ( GPU_ARCH == VOLTA )
+   #define GPU_COMPUTE_CAPABILITY 700
+#  elif ( GPU_ARCH == TURING )
+   #define GPU_COMPUTE_CAPABILITY 750
+#  elif ( GPU_ARCH == AMPERE )
+   #define GPU_COMPUTE_CAPABILITY 800
+#  else
+#  error : ERROR : Unsupported GPU architecture in cuFFTdx library for GPU Gram Fourier extension scheme
+#  endif
+
+#  define GRAMFE_USE_SUGGESTED_BLOCKS        0
+#  define GRAMFE_CUSTOM_ELEMENTS_PER_THREAD  4
+#  define GRAMFE_CUSTOM_FFTS_PER_BLOCK       12
+
+
+using CUFFTDX_ARCH = decltype(cufftdx::SM<GPU_COMPUTE_CAPABILITY>());
+
+using fft_base     = decltype(cufftdx::Block() + cufftdx::Size<GRAMFE_FLU_NXT>() + cufftdx::Type<cufftdx::fft_type::c2c>() + cufftdx::Precision<gramfe_float>() + CUFFTDX_ARCH() );
+using forward_fft  = decltype(fft_base() + cufftdx::Direction<cufftdx::fft_direction::forward>());
+using inverse_fft  = decltype(fft_base() + cufftdx::Direction<cufftdx::fft_direction::inverse>());
+
+// complete FFT description
+static constexpr unsigned int elements_per_thread = GRAMFE_USE_SUGGESTED_BLOCKS ? forward_fft::elements_per_thread      : GRAMFE_CUSTOM_ELEMENTS_PER_THREAD;
+static constexpr unsigned int ffts_per_block      = GRAMFE_USE_SUGGESTED_BLOCKS ? inverse_fft::suggested_ffts_per_block : GRAMFE_CUSTOM_FFTS_PER_BLOCK;
+
+using FFT          = decltype( forward_fft() + cufftdx::ElementsPerThread<elements_per_thread>() + cufftdx::FFTsPerBlock<ffts_per_block>());
+using IFFT         = decltype( inverse_fft() + cufftdx::ElementsPerThread<elements_per_thread>() + cufftdx::FFTsPerBlock<ffts_per_block>());
+
+using complex_type = typename FFT::value_type;
+
+# endif // # if ( defined(__CUDACC__) && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
+
+# else
+# error : ERROR : Unsupported model in CUFLU.h
 
 #endif // MODEL
 
@@ -510,6 +561,7 @@
 #else
 # define CGPU_LOOP( var, niter )    for (int (var)=0;           (var)<(niter); (var)++          )
 #endif
+
 
 
 
