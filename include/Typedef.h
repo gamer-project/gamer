@@ -94,6 +94,14 @@ const ParICFormat_t
    PAR_IC_FORMAT_ID_ATT = 2;
 
 
+// FFTW startup options
+typedef int FFTWStartup_t;
+const FFTWStartup_t
+   FFTW_STARTUP_ESTIMATE = 0,
+   FFTW_STARTUP_MEASURE  = 1,
+   FFTW_STARTUP_PATIENT  = 2;
+
+
 // program restart options
 typedef int OptRestartH_t;
 const OptRestartH_t

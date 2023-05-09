@@ -39,7 +39,7 @@ void YT_Init( int argc, char *argv[] )
 #endif
 
 // initialize libyt
-   if ( yt_init( argc, argv, &param_libyt ) != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_init() failed !!\n" );
+   if ( yt_initialize( argc, argv, &param_libyt ) != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_initialize() failed !!\n" );
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

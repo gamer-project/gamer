@@ -95,7 +95,6 @@
 // load-balance parallelization
 #define HILBERT      1
 
-
 // random number implementation
 #define RNG_GNU_EXT  1
 #define RNG_CPP11    2
@@ -697,6 +696,15 @@
 #        define DER_GHOST_SIZE      1
 
 
+// number of ghost zones for feedback
+// --> can be changed manually
+// --> set to 0 if applicable to improve performance
+#ifdef FEEDBACK
+#        define FB_GHOST_SIZE       3
+#endif
+
+
+
 // patch size (number of cells of a single patch in the x/y/z directions)
 #define PS1             ( 1*PATCH_SIZE )
 #define PS2             ( 2*PATCH_SIZE )
@@ -730,6 +738,9 @@
 #  define SRC_NXT       ( PS1 + 2*SRC_GHOST_SIZE )                // use patch as the unit
 #  define SRC_NXT_P1    ( SRC_NXT + 1 )
 #  define DER_NXT       ( PS1 + 2*DER_GHOST_SIZE )                // use patch as the unit
+#ifdef FEEDBACK
+#  define FB_NXT        ( PS2 + 2*FB_GHOST_SIZE )                 // use patch group as the unit
+#endif
 
 
 // size of auxiliary arrays and EoS tables
@@ -779,6 +790,12 @@
 // used by INTERP_MASK for now but can be applied to other places in the future
 #define MASKED                   true
 #define UNMASKED                 false
+
+
+// in FB_AdvanceDt(), store the updated fluid data in a separate array to avoid data racing among different patch groups
+#if ( defined FEEDBACK  &&  FB_GHOST_SIZE > 0 )
+#  define FB_SEP_FLUOUT
+#endif
 
 
 // extreme values
@@ -1057,7 +1074,6 @@
 #ifndef GRAVITY
 #  undef STORE_PAR_ACC
 #endif
-
 
 
 #endif  // #ifndef __MACRO_H__
