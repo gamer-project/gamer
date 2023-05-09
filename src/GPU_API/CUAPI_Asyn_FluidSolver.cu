@@ -301,7 +301,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  endif
 #  endif // #ifdef GAMER_DEBUG
 
-#  if ( !( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE ) )
+#  if ( !( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && ELBDM_SCHEME != HYBRID) )
    const dim3 BlockDim_FluidSolver ( FLU_BLOCK_SIZE_X, FLU_BLOCK_SIZE_Y, 1 ); // for the fluidsolvers
 #  endif // #  if ( !( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE ) )
 

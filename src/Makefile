@@ -614,9 +614,9 @@ endif # MHD
 # ELBDM source files (included only inf "MODEL=ELBDM")
 # -------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
-GPU_FILE    += CUFLU_ELBDMSolver.cu CUFLU_ELBDMSolver_HamiltonJacobi_Combined.cu CUFLU_ELBDMSolver_GramFE.cu
+GPU_FILE    += CUFLU_ELBDMSolver.cu CUFLU_ELBDMSolver_HJ.cu CUFLU_ELBDMSolver_GramFE.cu
 
-CPU_FILE    += CPU_ELBDMSolver.cpp  CPU_ELBDMSolver_FFT.cpp  CPU_ELBDMSolver_GramFE.cpp CPU_ELBDMSolver_HamiltonJacobi_Combined.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
+CPU_FILE    += CPU_ELBDMSolver.cpp  CPU_ELBDMSolver_FFT.cpp  CPU_ELBDMSolver_GramFE.cpp CPU_ELBDMSolver_HJ.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
                ELBDM_GetTimeStep_Fluid.cpp  ELBDM_GetTimeStep_Hybrid.cpp  ELBDM_Flag_EngyDensity.cpp  ELBDM_Flag_Interference.cpp  ELBDM_UnwrapPhase.cpp \
                ELBDM_GetTimeStep_Phase.cpp  ELBDM_GetTimeStep_Velocity.cpp  ELBDM_SetTaylor3Coeff.cpp  ELBDM_RemoveMotionCM.cpp
 
@@ -624,9 +624,9 @@ vpath %.cu     Model_ELBDM/GPU_ELBDM
 vpath %.cpp    Model_ELBDM/CPU_ELBDM  Model_ELBDM
 
 ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
-GPU_FILE    += CUPOT_ELBDMGravitySolver.cu  CUPOT_ELBDMGravitySolver_HamiltonJacobi.cu
+GPU_FILE    += CUPOT_ELBDMGravitySolver.cu  CUPOT_ELBDMGravitySolver_HJ.cu
 
-CPU_FILE    += CPU_ELBDMGravitySolver.cpp  CPU_ELBDMGravitySolver_HamiltonJacobi.cpp  ELBDM_GetTimeStep_Gravity.cpp
+CPU_FILE    += CPU_ELBDMGravitySolver.cpp  CPU_ELBDMGravitySolver_HJ.cpp  ELBDM_GetTimeStep_Gravity.cpp
 
 vpath %.cu     Model_ELBDM/GPU_ELBDMGravity
 vpath %.cpp    Model_ELBDM/CPU_ELBDMGravity

@@ -615,7 +615,7 @@
 #  endif // # if ( ELBDM_SCHEME == HYBRID )
 
 #  if ( ELBDM_SCHEME == HYBRID )
-#          define FLU_GHOST_SIZE       8
+#          define FLU_GHOST_SIZE       6
 #  else // # if ( ELBDM_SCHEME == HYBRID )
 
 #  if ( WAVE_SCHEME == WAVE_FD )
