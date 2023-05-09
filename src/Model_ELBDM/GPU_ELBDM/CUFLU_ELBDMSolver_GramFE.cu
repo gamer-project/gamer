@@ -290,15 +290,14 @@ void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 {
 
 #  ifdef __CUDACC__
-    // Execute FFT
-    extern __shared__ complex_type shared_mem[];
+// shared memory array for cufftdx
+   extern __shared__ complex_type shared_mem[];
 
 // create memories for columns of various intermediate fields in shared GPU memory
    complex_type (*s_In)[GRAMFE_FLU_NXT]             = (complex_type (*)[GRAMFE_FLU_NXT]) (shared_mem);
    complex_type (*s_Ae)[GRAMFE_NDELTA]              = (complex_type (*)[GRAMFE_NDELTA])  (shared_mem + CGPU_FLU_BLOCK_SIZE_Y * (GRAMFE_FLU_NXT                   ));    // 0.5 * log(rho)
    complex_type (*s_Ao)[GRAMFE_NDELTA]              = (complex_type (*)[GRAMFE_NDELTA])  (shared_mem + CGPU_FLU_BLOCK_SIZE_Y * (GRAMFE_FLU_NXT + GRAMFE_NDELTA));       // the fluxes for every thread block
    const int NPatchGroup                            = 0;
-   const gramfe_float dh                            = gramfe_float(1.0)/_dh;
 
 #  else // #  ifdef __CUDACC__
 // allocate memory on stack within loop for CPU run
@@ -313,30 +312,32 @@ void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 // set up time evolution operator and filter
    gramfe_float K;
-   gramfe_float Filter;                                                          // exp(-filterDecay * (k/kMax)**(2*filterDegree))
-   gramfe_float Coeff;                                                           // dT * k^2
-   complex_type ExpCoeff[GRAMFE_FLU_NXT];                                        // exp(- 1j * dt/(2*ELBDM_ETA) * k^2)
+   gramfe_float Filter;                                                                // exp(-filterDecay * (k/kMax)**(2*filterDegree))
+   gramfe_float Coeff;                                                                 // dT * k^2
+   complex_type ExpCoeff[GRAMFE_FLU_NXT];                                              // exp(- 1j * dt/(2*ELBDM_ETA) * k^2)
 
-   const gramfe_float filterDecay      = 32.0 * 2.302585f;                       // decay of k-space filter ( 32 * log(10) )
-   const gramfe_float filterDegree     = 100;                                    // degree of k-space filter
-   const gramfe_float kmax             = M_PI*_dh;                               // maximum value of k
-   const gramfe_float dT               = -(gramfe_float)0.5*dt/Eta;              // coefficient in time evolution operator
-   const gramfe_float Norm             = 1.0 / ( (gramfe_float)GRAMFE_FLU_NXT ); // norm for inverse Fourier transform
+   const gramfe_float filterDecay      = (gramfe_float) 32.0 * 2.302585f;              // decay of k-space filter ( 32 * log(10) )
+   const gramfe_float filterDegree     = (gramfe_float) 100;                           // degree of k-space filter
+   const gramfe_float kmax             = (gramfe_float) M_PI * _dh;                    // maximum value of k
+   const gramfe_float dk               = (gramfe_float) + 2.0 * kmax / GRAMFE_FLU_NXT; // k steps in k-space
+   const gramfe_float dT               = (gramfe_float) - 0.5 * dt / Eta;              // coefficient in time evolution operator
+   const gramfe_float Norm             = (gramfe_float) + 1.0 / GRAMFE_FLU_NXT;        // norm for inverse Fourier transform
 
+// naively "exp(1j * Coeff)" should give the exact time evolution of the free Schrödinger equation
+// however, the time-evolution operator depends on higher-order derivatives
+// since these are unavailable for a finite ghost boundary size, the series needs to be truncated
+// the ideal Taylor expansion order using all available derivatives is FLU_GHOST_SIZE - 1
+// for FLU_GHOST_SIZE == 8, 4 terms in the cosine series and 3 terms in the sine series are retained
+   const int          cosineNTerms     = (int) ( FLU_GHOST_SIZE / 2.0 );
+   const int          sineNTerms       = cosineNTerms - (int) ((FLU_GHOST_SIZE % 2) == 0);
+
+// set up momentum, filter and time evolution array
    for (int i=0; i<GRAMFE_FLU_NXT; i++)
    {
-//    set up momentum, filter and time evolution array
-      K           = ( i <= GRAMFE_FLU_NXT/2 ) ? 2.0*M_PI/(GRAMFE_FLU_NXT*dh)*i : 2.0*M_PI/(GRAMFE_FLU_NXT*dh)*(i-GRAMFE_FLU_NXT);
+      K           = ( i <= GRAMFE_FLU_NXT/2 ) ? dk*i : dk*(i-GRAMFE_FLU_NXT);
       Filter      = EXP(-filterDecay * POW(FABS(K/kmax), 2*filterDegree));
       Coeff       = SQR(K)*dT;
-
-//    naively "ExpCoeff[i] = complex_type(COS(Coeff), SIN(Coeff)) * Norm * Filter;" should give the best results
-//    however, the time-evolution operator depends on higher-order derivatives
-//    since these are unavailable for a finite ghost boundary size, the series needs to be truncated
-//    the ideal Taylor expansion order is FLU_GHOST_SIZE - 1
-//    since larger ghost boundaries provide higher-order derivatives
-//    for FLU_GHOST_SIZE == 8, an order of 7 provides optimal results
-      ExpCoeff[i] = complex_type(CosineTaylorExpansion(Coeff, 4), SineTaylorExpansion(Coeff, 3)) * Norm * Filter;
+      ExpCoeff[i] = complex_type(CosineTaylorExpansion(Coeff, cosineNTerms), SineTaylorExpansion(Coeff, sineNTerms)) * Norm * Filter;
    }
 
 

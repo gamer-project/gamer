@@ -197,8 +197,10 @@ void Aux_TakeNote()
 //    c. options in ELBDM
 #     elif ( MODEL == ELBDM )
 
+//    c.1 options in WAVE_GRAMFE
 #     if ( WAVE_SCHEME == WAVE_GRAMFE )
       fprintf( Note, "WAVE_SCHEME                     GRAM FE\n" );
+
       fprintf( Note, "GRAMFE_GAMMA                    %d\n",      GRAMFE_GAMMA );
       fprintf( Note, "GRAMFE_G                        %d\n",      GRAMFE_G );
       fprintf( Note, "GRAMFE_NDELTA                   %d\n",      GRAMFE_NDELTA);
@@ -219,8 +221,17 @@ void Aux_TakeNote()
 #     else // # ifdef GRAMFE_ENABLE_GPU
       fprintf( Note, "GRAMFE_ENABLE_GPU               OFF\n" );
 #     endif // # ifdef GRAMFE_ENABLE_GPU ... # else
+
+//    c.1 options in WAVE_FD
 #     elif ( WAVE_SCHEME == WAVE_FD )
       fprintf( Note, "WAVE_SCHEME                     FD\n ");
+
+#     ifdef LAPLACIAN_4TH
+      fprintf( Note, "LAPLACIAN_4TH                   ON\n" );
+#     else
+      fprintf( Note, "LAPLACIAN_4TH                   OFF\n" );
+#     endif
+
 #     else // #  if (WAVE_SCHEME == WAVE_GRAMFE )
 #     error : ERROR : unsupported WAVE_SCHEME !!
 #     endif // WAVE_SCHEME
@@ -231,11 +242,6 @@ void Aux_TakeNote()
       fprintf( Note, "CONSERVE_MASS                   OFF\n" );
 #     endif
 
-#     ifdef LAPLACIAN_4TH
-      fprintf( Note, "LAPLACIAN_4TH                   ON\n" );
-#     else
-      fprintf( Note, "LAPLACIAN_4TH                   OFF\n" );
-#     endif
 
 #     ifdef QUARTIC_SELF_INTERACTION
       fprintf( Note, "QUARTIC_SELF_INTERACTION        ON\n" );
