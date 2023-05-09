@@ -205,7 +205,7 @@ void Aux_TakeNote()
 #     elif ( HYBRID_SCHEME == HYBRID_MUSCL )
       fprintf( Note, "HYBRID_SCHEME                   MUSCL\n" );
 #     else
-#     error : ERROR : unsupported SCHEME !!
+#     error : ERROR : unsupported HYBRID_SCHEME !!
 #     endif // HYBRID_SCHEME
 
 #     ifdef SMOOTH_PHASE

@@ -596,11 +596,23 @@
 
 #elif ( MODEL == ELBDM )   // ELBDM
 
+
+// use wave-only scheme by default
+#  ifndef ELBDM_SCHEME
+#  define ELBDM_SCHEME WAVE
+#  endif // # ifndef ELBDM_SCHEME
+
 // use finite-difference scheme by default
 #  ifndef WAVE_SCHEME
 #  define WAVE_SCHEME WAVE_FD
-#  endif
+#  endif // # ifndef WAVE_SCHEME
 
+// use Fromm scheme  by default
+#  if ( ELBDM_SCHEME == HYBRID )
+#  ifndef HYBRID_SCHEME
+#  define HYBRID_SCHEME HYBRID_FROMM
+#  endif // # ifndef HYBRID_SCHEME
+#  endif // # if ( ELBDM_SCHEME == HYBRID )
 
 #  if ( ELBDM_SCHEME == HYBRID )
 #          define FLU_GHOST_SIZE       8
@@ -617,7 +629,7 @@
 #  else  // # if ( WAVE_SCHEME == WAVE_FD ) ... else
 #     error : ERROR : unsupported WAVE_SCHEME !!
 #  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE ) ... # else
-#endif
+#  endif // # if ( ELBDM_SCHEME == HYBRID )
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL

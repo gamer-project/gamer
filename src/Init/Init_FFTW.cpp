@@ -168,6 +168,21 @@ void Init_FFTW()
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
 
 
+// determine how to initialise fftw plans
+   int StartupFlag;
+
+   switch ( OPT__FFTW_STARTUP )
+   {
+      case FFTW_STARTUP_ESTIMATE:    StartupFlag = FFTW_ESTIMATE;               break;
+      case FFTW_STARTUP_MEASURE:     StartupFlag = FFTW_MEASURE;                break;
+#     if ( SUPPORT_FFTW == FFTW3 )
+      case FFTW_STARTUP_PATIENT:     StartupFlag = FFTW_PATIENT;                break;
+#     endif // # if ( SUPPORT_FFTW == FFTW3 )
+
+      default:                       Aux_Error( ERROR_INFO, "unrecognised FFTW startup option %d  !!\n", OPT__FFTW_STARTUP );
+   } // switch ( OPT__FFTW_STARTUP )
+
+
 // create plans for power spectrum and the self-gravity solver
    FFTW_Plan_PS      = create_fftw_3d_r2c_plan( PS_FFT_Size, PS, StartupFlag );
 #  ifdef GRAVITY
@@ -175,8 +190,8 @@ void Init_FFTW()
    FFTW_Plan_Poi_Inv = create_fftw_3d_c2r_plan( Gravity_FFT_Size, RhoK, StartupFlag );
 #  endif // # ifdef GRAVITY
 #  if ( MODEL == ELBDM )
-   FFTW_Plan_Psi     = create_fftw_3d_forward_c2c_plan ( Psi_FFT_Size,    PsiK );
-   FFTW_Plan_Psi_Inv = create_fftw_3d_backward_c2c_plan( InvPsi_FFT_Size, PsiK );
+   FFTW_Plan_Psi     = create_fftw_3d_forward_c2c_plan ( Psi_FFT_Size,    PsiK, StartupFlag );
+   FFTW_Plan_Psi_Inv = create_fftw_3d_backward_c2c_plan( InvPsi_FFT_Size, PsiK, StartupFlag );
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
 
