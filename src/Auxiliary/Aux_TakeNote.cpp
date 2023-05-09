@@ -1210,7 +1210,7 @@ void Aux_TakeNote()
          case FFTW_STARTUP_PATIENT:     fprintf( Note, "FFTW_PATIENT\n" );                break;
 
          default:                       fprintf( Note, "UNKNOWN\n" );
-      }
+      } // switch ( OPT__FFTW_STARTUP )
 #     endif // # ifdef SUPPORT_FFTW
 
 //    refinement region for OPT__UM_IC_NLEVEL>1

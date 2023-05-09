@@ -379,13 +379,13 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__INIT_BFIELD_BYFILE",    &OPT__INIT_BFIELD_BYFILE,         false,           Useless_bool,  Useless_bool   );
 #  endif
 #  ifdef SUPPORT_FFTW
-#  if (SUPPORT_FFTW == FFTW2)
+#  if ( SUPPORT_FFTW == FFTW2 )
    ReadPara->Add( "OPT__FFTW_STARTUP",     &OPT__FFTW_STARTUP, FFTW_STARTUP_MEASURE, FFTW_STARTUP_ESTIMATE, FFTW_STARTUP_MEASURE );
-#  elif (SUPPORT_FFTW == FFTW3) // #  if (SUPPORT_FFTW == FFTW2)
+#  elif ( SUPPORT_FFTW == FFTW3 ) // #  if ( SUPPORT_FFTW == FFTW2 )
    ReadPara->Add( "OPT__FFTW_STARTUP",     &OPT__FFTW_STARTUP, FFTW_STARTUP_MEASURE, FFTW_STARTUP_ESTIMATE, FFTW_STARTUP_PATIENT );
-#  else  // # if (SUPPORT_FFTW == FFTW2) ... # else
+#  else  // # if ( SUPPORT_FFTW == FFTW2 ) ... # else
 #  error : ERROR : Unsupported FFTW version for OPT__FFTW_STARTUP
-#  endif // #  if (SUPPORT_FFTW == FFTW2) ... # else
+#  endif // #  if ( SUPPORT_FFTW == FFTW2 ) ... # else
 #  endif // # ifdef SUPPORT_FFTW
 
 // interpolation schemes
