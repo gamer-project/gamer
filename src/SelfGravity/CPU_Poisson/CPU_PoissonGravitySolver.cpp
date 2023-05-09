@@ -54,7 +54,7 @@ void CPU_ELBDMGravitySolver  (       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
                                const int NPatchGroup,
                                const real EtaDt, const real dh, const real Lambda );
 #if (ELBDM_SCHEME == HYBRID)
-void CPU_ELBDMGravitySolver_PhaseForm  (       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
+void CPU_ELBDMGravitySolver_HamiltonJacobi  (       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
                                const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
                                const int NPatchGroup,
                                const real EtaDt, const real dh, const real Lambda );
@@ -229,7 +229,7 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                               NPatchGroup, ELBDM_Eta*dt, dh, ELBDM_Lambda );
 #     if ( ELBDM_SCHEME == HYBRID )
       } else {
-      CPU_ELBDMGravitySolver_PhaseForm( (real(*)[GRA_NIN][ CUBE(PS1) ]) h_Flu_Array,
+      CPU_ELBDMGravitySolver_HamiltonJacobi( (real(*)[GRA_NIN][ CUBE(PS1) ]) h_Flu_Array,
                                         (real(*)[ CUBE(GRA_NXT) ])      h_Pot_Array_Out,
                                          NPatchGroup, ELBDM_Eta*dt, dh, ELBDM_Lambda );
       }

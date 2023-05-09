@@ -98,15 +98,15 @@ void CUFLU_ELBDMSolver_GramFE(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  endif // WAVE_SCHEME
 
 #if ( ELBDM_SCHEME == HYBRID )
-__global__ void CUFLU_ELBDMSolver_PhaseForm( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                                             #ifdef GAMER_DEBUG
-                                             real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
-                                             #else
-                                             real g_Fluid_Out[][FLU_NIN ][ CUBE(PS2) ],
-                                             #endif
-                                             real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                             const real dt, const real _dh, const real Eta, const bool StoreFlux,
-                                             const bool XYZ, const real MinDens );
+__global__ void CUFLU_ELBDMSolver_HamiltonJacobi( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                                                  #ifdef GAMER_DEBUG
+                                                  real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
+                                                  #else
+                                                  real g_Fluid_Out[][FLU_NIN ][ CUBE(PS2) ],
+                                                  #endif
+                                                  real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                                  const real dt, const real _dh, const real Eta, const bool StoreFlux,
+                                                  const bool XYZ, const real MinDens );
 #endif // #if ( ELBDM_SCHEME == HYBRID )
 
 #else
@@ -533,7 +533,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #        else // # ifdef GAMER_DEBUG
          real (*smaller_d_Flu_Array_F_Out)[FLU_NIN][CUBE(PS2)]  = (real (*)[FLU_NIN][CUBE(PS2)]) d_Flu_Array_F_Out;
 #        endif // # ifdef GAMER_DEBUG ... else
-         CUFLU_ELBDMSolver_PhaseForm <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
+         CUFLU_ELBDMSolver_HamiltonJacobi <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
             (  d_Flu_Array_F_In          + UsedPatch[s],
                smaller_d_Flu_Array_F_Out + UsedPatch[s],
                d_Flux_Array              + UsedPatch[s],

@@ -186,7 +186,7 @@ static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                            const bool FinalOut, const int XYZ, const real MinDens );
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CUFLU_ELBDMSolver_PhaseForm
+// Function    :  CUFLU_ELBDMSolver_HamiltonJacobi
 // Description :  GPU solver for kinetic term in Hamilton Jacobi-Madelung equations
 //
 // Note        :  1. The three-dimensional evolution is achieved by applying x, y, and z operators successively.
@@ -218,26 +218,26 @@ static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 #ifdef __CUDACC__
 __global__
-void CUFLU_ELBDMSolver_PhaseForm( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                                  #ifdef GAMER_DEBUG
-                                  real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
-                                  #else
-                                  real g_Fluid_Out[][FLU_NIN ][ CUBE(PS2) ],
-                                  #endif
-                                  real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                  const real dt, const real _dh, const real Eta, const bool StoreFlux,
-                                  const bool XYZ, const real MinDens )
+void CUFLU_ELBDMSolver_HamiltonJacobi( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                                       #ifdef GAMER_DEBUG
+                                       real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
+                                       #else
+                                       real g_Fluid_Out[][FLU_NIN ][ CUBE(PS2) ],
+                                       #endif
+                                       real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                       const real dt, const real _dh, const real Eta, const bool StoreFlux,
+                                       const bool XYZ, const real MinDens )
 #else
-void CPU_ELBDMSolver_PhaseForm(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT)],
-                                  #ifdef GAMER_DEBUG
-                                  real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
-                                  #else
-                                  real g_Fluid_Out[][FLU_NIN ][ CUBE(PS2) ],
-                                  #endif
-                                  real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                  const int NPatchGroup,
-                                  const real dt, const real dh, const real Eta, const bool StoreFlux,
-                                  const bool XYZ, const real MinDens )
+void CPU_ELBDMSolver_HamiltonJacobi(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT)],
+                                       #ifdef GAMER_DEBUG
+                                       real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
+                                       #else
+                                       real g_Fluid_Out[][FLU_NIN ][ CUBE(PS2) ],
+                                       #endif
+                                       real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                       const int NPatchGroup,
+                                       const real dt, const real dh, const real Eta, const bool StoreFlux,
+                                       const bool XYZ, const real MinDens )
 #endif
 {
 
@@ -297,7 +297,7 @@ void CPU_ELBDMSolver_PhaseForm(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT)],
                      FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_LogRho, s_QP, s_Fm, s_Flux, s_RK1, s_2PI,  true, 0, MinDens );
    }
 
-} // FUNCTION : CUFLU_ELBDMSolver_PhaseForm
+} // FUNCTION : CUFLU_ELBDMSolver_HamiltonJacobi
 
 
 
@@ -359,9 +359,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
    const real dh           = real(1.0)/_dh;                                  // grid spacing
    const real Coeff1       = real(1.0) * dt /(dh * Eta);                     // coefficient for continuity equation
    const real Coeff2       = real(0.5) * dt /(dh * dh * Eta);                // coefficient for HJ-equation
-#  ifndef IGNORE_FLUID_FAILURE
    const real Coeff3       = real(0.5) * real(3.0) * dh * dh * Eta / dt;     // coefficient for determining velocity timestep
-#  endif // # ifndef IGNORE_FLUID_FAILURE
    const real FluidMinDens = FMAX(real(1e-10), MinDens);                     // minimum density while computing quantum pressure
 
    const uint j_end        = FLU_NXT -  j_gap    ;          // last y-column to be updated
@@ -397,9 +395,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
          uint NStep;                      // number of iterations for updating each column
          real De_New, Ph_New, v, vp, vm;
-#        ifndef IGNORE_FLUID_FAILURE
          int l, l_min, l_max;
-#        endif // # ifndef IGNORE_FLUID_FAILURE
          uint time_level;
 
 #        ifdef GAMER_DEBUG
@@ -543,13 +539,11 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
             {
                if ( GRADIENT_RATIO(s_In[sj][0][PHAS], si) < - real(0.0) ) {
                   s_2PI[sj][si] = UNWRAP(s_In[sj][0][PHAS][si - 1], s_In[sj][0][PHAS][si]);
-//                handle boundary
                   if (si == FLU_NXT - 2) {
                      s_2PI[sj][FLU_NXT - 1] = UNWRAP(s_In[sj][0][PHAS][si], s_In[sj][0][PHAS][si + 1]);
                   }
                } else {
                   s_2PI[sj][si] = 0;
-//                handle boundary
                   if (si == FLU_NXT - 2) {
                      s_2PI[sj][si + 1] = 0;
                   }

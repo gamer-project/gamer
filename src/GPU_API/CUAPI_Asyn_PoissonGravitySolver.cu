@@ -54,9 +54,9 @@ void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
 
 #if ( ELBDM_SCHEME == HYBRID )
 __global__
-void CUPOT_ELBDMGravitySolver_PhaseForm(       real g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
-                               const real g_Pot_Array[][ CUBE(GRA_NXT) ],
-                               const real EtaDt, const real dh, const real Lambda );
+void CUPOT_ELBDMGravitySolver_HamiltonJacobi(       real g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
+                                              const real g_Pot_Array[][ CUBE(GRA_NXT) ],
+                                              const real EtaDt, const real dh, const real Lambda );
 #endif
 #else
 #error : ERROR : unsupported MODEL !!
@@ -459,7 +459,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                     ELBDM_EtaDt, dh, ELBDM_Lambda );
 #        if ( ELBDM_SCHEME == HYBRID )
          else
-         CUPOT_ELBDMGravitySolver_PhaseForm <<< NPatch_per_Stream[s], Gra_Block_Dim, 0, Stream[s] >>>
+         CUPOT_ELBDMGravitySolver_HamiltonJacobi <<< NPatch_per_Stream[s], Gra_Block_Dim, 0, Stream[s] >>>
                                   ( d_Flu_Array_G      + UsedPatch[s],
                                     d_Pot_Array_P_Out  + UsedPatch[s],
                                     ELBDM_EtaDt, dh, ELBDM_Lambda );
