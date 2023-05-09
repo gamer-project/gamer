@@ -1071,6 +1071,21 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL must work with SUPPORT_FFTW !!\n" );
 #  endif
 
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+
+   if ( MAX_LEVEL > 0 && FLAG_BUFFER_SIZE < 8 )
+      Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme with AMR requires a flag buffer size of at least 8!!\n");
+
+   if ( MAX_LEVEL > 0 && !OPT__FIXUP_RESTRICT )
+      Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme with AMR requires the restrict operation OPT__FIXUP_RESTRICT !!\n");
+
+#  ifdef LOAD_BALANCE
+   if ( !OPT__LB_EXCHANGE_FATHER )
+      Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme requires the option OPT__LB_EXCHANGE_FATHER for load balancing !!\n");
+#  endif // # ifdef LOAD_BALANCE
+
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+
 
 // warnings
 // ------------------------------
@@ -1131,20 +1146,11 @@ void Aux_Check_Parameter()
 
 #  if ( ELBDM_SCHEME == HYBRID )
    if ( DT__HYBRID < 0.0  ||  DT__HYBRID > 0.49 )
-      Aux_Message( stderr, "WARNING : DT__HYBRID (%14.7e) is not within the normal range [0...0.4] !!\n",
+      Aux_Message( stderr, "WARNING : DT__HYBRID (%14.7e) is not within the normal range [0...0.49] !!\n",
                    DT__HYBRID );
    if ( DT__VELOCITY < 0.0  ||  DT__VELOCITY > 3.5 )
-      Aux_Message( stderr, "WARNING : DT__VELOCITY (%14.7e) is not within the normal range [0...1] !!\n",
+      Aux_Message( stderr, "WARNING : DT__VELOCITY (%14.7e) is not within the normal range [0...3.5] !!\n",
                    DT__VELOCITY );
-
-
-   if ( !OPT__FIXUP_RESTRICT )
-      Aux_Message( stderr, "WARNING : hybrid scheme requires the restrict operation OPT__FIXUP_RESTRICT !!\n");
-
-#  ifdef LOAD_BALANCE
-   if ( !OPT__LB_EXCHANGE_FATHER )
-      Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme requires the option OPT__LB_EXCHANGE_FATHER for load balancing !!\n");
-#  endif // # ifdef LOAD_BALANCE
 
 #  endif // # if ( ELBDM_SCHEME == HYBRID )
 
