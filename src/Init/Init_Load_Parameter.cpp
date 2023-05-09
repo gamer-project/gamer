@@ -360,7 +360,6 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__RESTART_RESET",         &OPT__RESTART_RESET,              false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__UM_IC_LEVEL",           &OPT__UM_IC_LEVEL,                0,               0,             TOP_LEVEL      );
    ReadPara->Add( "OPT__UM_IC_NLEVEL",          &OPT__UM_IC_NLEVEL,               1,               1,             NoMax_int      );
-
 // do not check OPT__UM_IC_NVAR since it depends on OPT__INIT and MODEL
 // --> also, we do not load the density field for ELBDM
 #  if ( MODEL == ELBDM )
@@ -380,7 +379,13 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__INIT_BFIELD_BYFILE",    &OPT__INIT_BFIELD_BYFILE,         false,           Useless_bool,  Useless_bool   );
 #  endif
 #  ifdef SUPPORT_FFTW
-   ReadPara->Add( "OPT__FFTW_STARTUP",          &OPT__FFTW_STARTUP,              -1,               NoMin_int,     NoMax_int      );
+#  if (SUPPORT_FFTW == FFTW2)
+   ReadPara->Add( "OPT__FFTW_STARTUP",     &OPT__FFTW_STARTUP, FFTW_STARTUP_MEASURE, FFTW_STARTUP_ESTIMATE, FFTW_STARTUP_MEASURE );
+#  elif (SUPPORT_FFTW == FFTW3) // #  if (SUPPORT_FFTW == FFTW2)
+   ReadPara->Add( "OPT__FFTW_STARTUP",     &OPT__FFTW_STARTUP, FFTW_STARTUP_MEASURE, FFTW_STARTUP_ESTIMATE, FFTW_STARTUP_PATIENT );
+#  else  // # if (SUPPORT_FFTW == FFTW2) ... # else
+#  error : ERROR : Unsupported FFTW version for OPT__FFTW_STARTUP
+#  endif // #  if (SUPPORT_FFTW == FFTW2) ... # else
 #  endif // # ifdef SUPPORT_FFTW
 
 // interpolation schemes

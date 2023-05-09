@@ -56,8 +56,8 @@ void Init_FFTW()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
 #  if ( SUPPORT_FFTW == FFTW3 )
-   FFTW3_DOUBLE_OMP_ENABLED = false;
-   FFTW3_SINGLE_OMP_ENABLED = false;
+   FFTW3_Double_OMP_Enabled = false;
+   FFTW3_Single_OMP_Enabled = false;
 
 
 #  ifdef OPENMP
@@ -68,23 +68,23 @@ void Init_FFTW()
    MPI_Query_thread( &MPI_Thread_Status );
 
 // enable multithreading if possible
-   FFTW3_DOUBLE_OMP_ENABLED = MPI_Thread_Status >= MPI_THREAD_FUNNELED;
-   FFTW3_SINGLE_OMP_ENABLED = FFTW3_DOUBLE_OMP_ENABLED;
+   FFTW3_Double_OMP_Enabled = MPI_Thread_Status >= MPI_THREAD_FUNNELED;
+   FFTW3_Single_OMP_Enabled = FFTW3_Double_OMP_Enabled;
 #  else // # ifndef SERIAL
 
 // always enable multithreading in serial mode with openmp
-   FFTW3_DOUBLE_OMP_ENABLED = true;
-   FFTW3_SINGLE_OMP_ENABLED = true;
+   FFTW3_Double_OMP_Enabled = true;
+   FFTW3_Single_OMP_Enabled = true;
 #  endif // # ifndef SERIAL ... # else
 
 // initialise fftw multithreading
-   if (FFTW3_DOUBLE_OMP_ENABLED) {
-      FFTW3_DOUBLE_OMP_ENABLED = fftw_init_threads();
-      if ( !FFTW3_DOUBLE_OMP_ENABLED )    Aux_Error( ERROR_INFO, "fftw_init_threads() failed !!\n" );
+   if (FFTW3_Double_OMP_Enabled) {
+      FFTW3_Double_OMP_Enabled = fftw_init_threads();
+      if ( !FFTW3_Double_OMP_Enabled )    Aux_Error( ERROR_INFO, "fftw_init_threads() failed !!\n" );
    }
-   if (FFTW3_SINGLE_OMP_ENABLED) {
-      FFTW3_SINGLE_OMP_ENABLED = fftwf_init_threads();
-      if ( !FFTW3_SINGLE_OMP_ENABLED )    Aux_Error( ERROR_INFO, "fftwf_init_threads() failed !!\n" );
+   if (FFTW3_Single_OMP_Enabled) {
+      FFTW3_Single_OMP_Enabled = fftwf_init_threads();
+      if ( !FFTW3_Single_OMP_Enabled )    Aux_Error( ERROR_INFO, "fftwf_init_threads() failed !!\n" );
    }
 #  endif // # ifdef OPENMP
 
@@ -96,8 +96,8 @@ void Init_FFTW()
 
 // tell all subsequent fftw3 planners to use OMP_NTHREAD threads
 #  ifdef OPENMP
-   if (FFTW3_DOUBLE_OMP_ENABLED) fftw_plan_with_nthreads (OMP_NTHREAD);
-   if (FFTW3_SINGLE_OMP_ENABLED) fftwf_plan_with_nthreads(OMP_NTHREAD);
+   if (FFTW3_Double_OMP_Enabled) fftw_plan_with_nthreads (OMP_NTHREAD);
+   if (FFTW3_Single_OMP_Enabled) fftwf_plan_with_nthreads(OMP_NTHREAD);
 #  endif // # ifdef OPENMP
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
 
@@ -136,7 +136,7 @@ void Init_FFTW()
       case FFTW_STARTUP_PATIENT:     StartupFlag = FFTW_PATIENT;                break;
 #     endif // # if ( SUPPORT_FFTW == FFTW3 )
 
-      default:                       StartupFlag = FFTW_MEASURE;
+      default:                       Aux_Error( ERROR_INFO, "unrecognised FFTW startup option %d  !!\n", OPT__FFTW_STARTUP );
    } // switch ( OPT__FFTW_STARTUP )
 
 // allocate memory for arrays in fftw3
@@ -187,8 +187,8 @@ void End_FFTW()
 
 #  if ( SUPPORT_FFTW == FFTW3 )
 #  ifdef OPENMP
-   if (FFTW3_DOUBLE_OMP_ENABLED)  fftw_cleanup_threads();
-   if (FFTW3_SINGLE_OMP_ENABLED) fftwf_cleanup_threads();
+   if (FFTW3_Double_OMP_Enabled)  fftw_cleanup_threads();
+   if (FFTW3_Single_OMP_Enabled) fftwf_cleanup_threads();
 #  endif
 #  ifdef SERIAL
    fftw_cleanup();

@@ -186,7 +186,7 @@ extern bool       OPT__MINIMIZE_MPI_BARRIER;
 #ifdef SUPPORT_FFTW
 extern int        OPT__FFTW_STARTUP;
 #if ( SUPPORT_FFTW == FFTW3 )
-extern bool       FFTW3_DOUBLE_OMP_ENABLED, FFTW3_SINGLE_OMP_ENABLED;
+extern bool       FFTW3_Double_OMP_Enabled, FFTW3_Single_OMP_Enabled;
 #endif // # if ( SUPPORT_FFTW == FFTW3 )
 #endif // # ifdef SUPPORT_FFTW
 

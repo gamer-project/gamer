@@ -800,23 +800,6 @@ void Init_ResetParameter()
       PRINT_WARNING( OPT__UM_IC_NVAR, FORMAT_INT, "" );
    }
 
-#  ifdef SUPPORT_FFTW
-// use FFTW measure as automatic default
-   if ( OPT__FFTW_STARTUP < 0)
-   {
-      OPT__FFTW_STARTUP = FFTW_STARTUP_MEASURE;
-   }
-
-// use FFTW measure by default if unsupported mode is chosen
-#  if ( SUPPORT_FFTW == SUPPORT_FFTW2 )
-   if ( OPT__FFTW_STARTUP > FFTW_STARTUP_MEASURE ) {
-#  else
-   if ( OPT__FFTW_STARTUP > FFTW_STARTUP_PATIENT ) {
-#  endif
-      OPT__FFTW_STARTUP = FFTW_STARTUP_MEASURE;
-      PRINT_WARNING( OPT__FFTW_STARTUP, FORMAT_INT, "since OPT__FFTW_STARTUP does not support currently chosen mode" );
-   }
-#  endif // # ifdef SUPPORT_FFTW
 
 // always turn on "OPT__CK_PARTICLE" when debugging particles
 #  ifdef DEBUG_PARTICLE

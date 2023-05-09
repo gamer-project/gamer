@@ -1135,8 +1135,8 @@ void Aux_TakeNote()
       }
 #     endif
 #     if ( SUPPORT_FFTW == FFTW3 )
-      fprintf( Note, "FFTW3_DOUBLE_OMP_ENABLED        %d\n",      FFTW3_DOUBLE_OMP_ENABLED );
-      fprintf( Note, "FFTW3_SINGLE_OMP_ENABLED        %d\n",      FFTW3_SINGLE_OMP_ENABLED );
+      fprintf( Note, "FFTW3_Double_OMP_Enabled        %d\n",      FFTW3_Double_OMP_Enabled );
+      fprintf( Note, "FFTW3_Single_OMP_Enabled        %d\n",      FFTW3_Single_OMP_Enabled );
 #     endif // # if ( SUPPORT_FFTW == FFTW3 )
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
