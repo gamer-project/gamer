@@ -71,6 +71,7 @@ void Init_ResetParameter()
 #     endif
 
 #     elif  ( MODEL == ELBDM )
+
 #     if ( WAVE_SCHEME == WAVE_FD )
 #     ifdef GRAVITY
       DT__FLUID = 0.20;                   // 1D k-max mode rotates 0.20*2*PI
@@ -81,6 +82,7 @@ void Init_ResetParameter()
       DT__FLUID = SQRT(3.0)*M_PI/8.0;     // stability limit (~0.68)
 #     endif // # ifdef LAPLACIAN_4TH ... # else
 #     endif // # ifdef GRAVITY ... # else
+
 #     elif ( WAVE_SCHEME == WAVE_GRAMFE )
 #     ifdef GRAVITY
       DT__FLUID = 0.20;                   // 1D k-max mode rotates 0.20*2*PI
@@ -90,8 +92,6 @@ void Init_ResetParameter()
 #     else // #  if (WAVE_SCHEME == WAVE_FD )
 #        error : ERROR : unsupported WAVE_SCHEME !!
 #     endif // WAVE_SCHEME
-
-#     endif // #ifdef GRAVITY ... else ...
 
 #     else
 #     error : ERROR : unsupported MODEL !!
