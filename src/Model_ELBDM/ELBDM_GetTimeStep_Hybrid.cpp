@@ -28,9 +28,10 @@ double ELBDM_GetTimeStep_Hybrid( const int lv )
 
    dt = ELBDM_ETA*SQR(dh);
 
+// adopt smaller timestep at fluid-wave interface
    if ( lv + 1 < NLEVEL ) {
       if ( amr->use_wave_flag[lv + 1] )
-         dt *= 0.1;
+         dt *= DT__FLUID;
       else
          dt *= DT__HYBRID;
    } else {
