@@ -71,7 +71,7 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
    int Idx_InL2, Idx_InL1, Idx_InC, Idx_InR1, Idx_InR2, Idx_Out;
    real LSlopeDh_4, RSlopeDh_4, SlopeDh_4, Sign;
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(HYBRID_SMOOTH_PHASE) )
 
 // index stride of the coarse-grid input array without ghost boundary (without ghost = woG)
    const int CwoGdx = 1;
@@ -95,7 +95,7 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
       }
 
    }
-#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
+#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(HYBRID_SMOOTH_PHASE) )
 
    for (int v=0; v<NComp; v++)
    {
@@ -111,9 +111,9 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
             Idx_InL1      = Idx_InC - Cdx;
 
 //          only unwrap if we detect discontinuity
-#           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
+#           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(HYBRID_SMOOTH_PHASE) )
             if ( Int_HasDiscontinuity(CPtr, Idx_InC, Cdx, i == CStart[0]+CRange[0]+CGhost - 1) )
-#           endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
+#           endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(HYBRID_SMOOTH_PHASE) )
             CPtr[Idx_InC] = ELBDM_UnwrapPhase( CPtr[Idx_InL1], CPtr[Idx_InC] );
 
          }
@@ -181,9 +181,9 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
             Idx_InC         = k*TdzX + j*Tdy + i*Tdx;
             Idx_InL1        = Idx_InC - Tdy;
 //          only unwrap if we detect discontinuity
-#           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
+#           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(HYBRID_SMOOTH_PHASE) )
             if ( Int_HasDiscontinuity(CPtr, Idx_InC, Tdy, j == CRange[1] + 2*CGhost - 1) )
-#           endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
+#           endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(HYBRID_SMOOTH_PHASE) )
             TDataX[Idx_InC] = ELBDM_UnwrapPhase( TDataX[Idx_InL1], TDataX[Idx_InC] );
          }
       }
@@ -250,9 +250,9 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
             Idx_InL1        = Idx_InC - TdzY;
 
 //          only unwrap if we detect discontinuity
-#           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
+#           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(HYBRID_SMOOTH_PHASE) )
             if ( Int_HasDiscontinuity( CPtr, Idx_InC, TdzY, k == CRange[2] + 2*CGhost - 1) )
-#           endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
+#           endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(HYBRID_SMOOTH_PHASE) )
             TDataY[Idx_InC] = ELBDM_UnwrapPhase( TDataY[Idx_InL1], TDataY[Idx_InC] );
          }
       }
@@ -308,7 +308,7 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
 
 
 // restore global phase information
-#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
+#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(HYBRID_SMOOTH_PHASE) )
 
       if ( UnwrapPhase == 2)
       {
@@ -332,7 +332,7 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
             FPtr[Idx_Out + Fdx + Fdy + Fdz]  += shift;
          }
       }
-#     endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
+#     endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(HYBRID_SMOOTH_PHASE) )
 
       CPtr += CDisp;
       FPtr += FDisp;
@@ -340,9 +340,9 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
    } // for (int v=0; v<NComp; v++)
 
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(HYBRID_SMOOTH_PHASE) )
    if ( UnwrapPhase == 2) delete [] TData_GlobalPhase;
-#  endif // ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(SMOOTH_PHASE) )
+#  endif // ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(HYBRID_SMOOTH_PHASE) )
 
    delete [] TDataX;
    delete [] TDataY;

@@ -52,12 +52,12 @@ static uint get1D2(uint k, uint j, uint i, int XYZ) {
 # define LSS( a, b )     (  ( (a) < (b) ) ? (1) : (0)  )
 # define SGN( a )        (  ( (a) > (0) ) ? (1) : ( (a) < (0) ) ? (-1) : (0) )
 
-# ifdef SMOOTH_PHASE
+# ifdef HYBRID_SMOOTH_PHASE
 # define  TWOPI          (  real(2 * M_PI)  )
 # define _TWOPI          (  real(1.0) / TWOPI )
 # define UNWRAP( ref, wrap ) (  round(((ref) - (wrap)) * _TWOPI) )
 # define GRADIENT_RATIO(f, t) ( (f[t+1] - f[t  ]) / (f[t] - f[t-1] + (((f[t] - f[t-1]) == 0) ? 1e-8 : 0)))
-# endif // # ifdef SMOOTH_PHASE
+# endif // # ifdef HYBRID_SMOOTH_PHASE
 
 // First-order forward and backward gradient
 # define GRADF1(In, t) ( In[t + 1] - In[t    ] )
@@ -256,11 +256,11 @@ void CPU_ELBDMSolver_HamiltonJacobi(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NX
               real (*s_Flux)[FLU_NXT] = NULL;  // useless if CONSERVE_MASS is off
 #  endif // #  ifdef CONSERVE_MASS ... # else
 
-#  ifdef SMOOTH_PHASE
+#  ifdef HYBRID_SMOOTH_PHASE
    __shared__ int   s_2PI    [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];    // number of phase windings between neighbouring points
-#  else // # ifdef SMOOTH_PHASE
+#  else // # ifdef HYBRID_SMOOTH_PHASE
               int (*s_2PI)   [FLU_NXT] = NULL;
-#  endif // # ifdef SMOOTH_PHASE
+#  endif // # ifdef HYBRID_SMOOTH_PHASE
 
 
    const int NPatchGroup = 0;
@@ -326,7 +326,7 @@ void CPU_ELBDMSolver_HamiltonJacobi(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NX
 //                s_Fm           : Shared memory array to store the boundary density fluxes during the computation
 //                s_Flux         : Shared memory array to store the boundary fluxes
 //                s_RK1          : Shared memory array to store where to use the RK1, first-order upwind scheme
-//                s_2PI          : Shared memory array to store the 2 PI winding of the phase in case the option SMOOTH_PHASE is turned on
+//                s_2PI          : Shared memory array to store the 2 PI winding of the phase in case the option HYBRID_SMOOTH_PHASE is turned on
 //                FinalOut       : true --> store the updated data to g_Fluid_Out
 //                XYZ            : 0 : Update the solution in the x direction
 //                                 3 : Update the solution in the y direction
@@ -386,9 +386,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #        ifdef CONSERVE_MASS
          uint Idx3;                       // temporary index used for writing data to g_Flux
 #        endif // # ifdef CONSERVE_MASS
-#        ifdef SMOOTH_PHASE
+#        ifdef HYBRID_SMOOTH_PHASE
          uint Idx4;
-#        endif // # ifdef SMOOTH_PHASE
+#        endif // # ifdef HYBRID_SMOOTH_PHASE
          uint delta_k;
          uint si, sj;                     // array indices used in the shared memory array
          uint g1, g2;                     // left and right ghost zones while updating each column
@@ -423,9 +423,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          real s_Flux_1PG     [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];                               // boundary fluxes for fixup flux
 #        endif // #  ifdef CONSERVE_MASS
 
-#        ifdef SMOOTH_PHASE
+#        ifdef HYBRID_SMOOTH_PHASE
          int  s_2PI_1PG      [CGPU_FLU_BLOCK_SIZE_Y][FLU_NXT];                               // 2PI windings
-#        endif // # ifdef SMOOTH_PHASE
+#        endif // # ifdef HYBRID_SMOOTH_PHASE
 
          s_In       = s_In_1PG;
          s_LogRho   = s_LogRho_1PG;
@@ -437,7 +437,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          s_Flux     = s_Flux_1PG;
 #        endif // #  ifdef CONSERVE_MASS
 
-#        ifdef SMOOTH_PHASE
+#        ifdef HYBRID_SMOOTH_PHASE
          s_2PI      = s_2PI_1PG;
 #        endif
 
@@ -530,7 +530,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #           endif // # ifdef __CUDACC_
 
 //          1.5 smooth out 2 PI-discontinuitites in phase field
-#           ifdef SMOOTH_PHASE
+#           ifdef HYBRID_SMOOTH_PHASE
 
             bool hasChanged = false;
 
@@ -565,7 +565,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #           ifdef __CUDACC__
             __syncthreads();
 #           endif // # ifdef __CUDACC_
-#           endif // # ifdef SMOOTH_PHASE
+#           endif // # ifdef HYBRID_SMOOTH_PHASE
 
 //          2. Runge-Kutta iterations
             for (time_level = 0; time_level < N_TIME_LEVELS; ++time_level)
@@ -591,7 +591,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //                compute CFL condition timestep and quantum pressure term
                   s_QP[sj][si] = real(1.0/2.0) * LAP2(s_LogRho[sj], si)  + real(1.0/4.0) * SQR(GRADC2(s_LogRho[sj], si));
 
-#                 ifndef IGNORE_FLUID_FAILURE
+#                 ifndef HYBRID_IGNORE_FLUID_FAILURE
 //                if the time step adopted in solver is larger than what velocity-dependent CFL condition allows, we switch to RK1 with a first-order upwind discretisation
                   if (FABS(s_QP[sj][si]) > 0.15 || FABS(GRADC2 (s_In[sj][time_level][PHAS], si))  > Coeff3) {
 //                   compute how far wrong information can propagate
@@ -601,7 +601,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      if (l_max > FLU_NXT ) l_max = FLU_NXT;
                      for (l = l_min; l < l_max; ++l) s_RK1[sj][l] = true;
                   }
-#                 endif // # ifndef IGNORE_FLUID_FAILURE
+#                 endif // # ifndef HYBRID_IGNORE_FLUID_FAILURE
                }
 
 
@@ -730,11 +730,11 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                         De_New = (De_New < 0) ? MinDens : De_New;
 
 //                      restore original global phase field
-#                       ifdef SMOOTH_PHASE
+#                       ifdef HYBRID_SMOOTH_PHASE
                         for (Idx4 = 1; Idx4 <= si; ++Idx4) {
                            Ph_New -= s_2PI[sj][Idx4] * TWOPI;
                         }
-#                       endif // # ifdef SMOOTH_PHASE
+#                       endif // # ifdef HYBRID_SMOOTH_PHASE
 
 #                       ifndef __CUDACC__
                         Idx1 = get1D1( k, j, si, XYZ );

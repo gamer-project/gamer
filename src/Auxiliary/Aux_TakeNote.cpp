@@ -208,11 +208,19 @@ void Aux_TakeNote()
 #     error : ERROR : unsupported HYBRID_SCHEME !!
 #     endif // HYBRID_SCHEME
 
-#     ifdef SMOOTH_PHASE
-      fprintf( Note, "SMOOTH_PHASE                    ON\n" );
+
+#     ifdef HYBRID_IGNORE_FLUID_FAILURE
+      fprintf( Note, "HYBRID_IGNORE_FLUID_FAILURE     ON\n" );
 #     else
-      fprintf( Note, "SMOOTH_PHASE                    OFF\n" );
-#     endif // SMOOTH_PHASE
+      fprintf( Note, "HYBRID_IGNORE_FLUID_FAILURE     OFF\n" );
+#     endif // HYBRID_IGNORE_FLUID_FAILURE
+
+
+#     ifdef HYBRID_SMOOTH_PHASE
+      fprintf( Note, "HYBRID_SMOOTH_PHASE             ON\n" );
+#     else
+      fprintf( Note, "HYBRID_SMOOTH_PHASE             OFF\n" );
+#     endif // HYBRID_SMOOTH_PHASE
 
 #     endif // ELBDM_SCHEME
 
@@ -244,7 +252,7 @@ void Aux_TakeNote()
 
 //    c.1 options in WAVE_FD
 #     elif ( WAVE_SCHEME == WAVE_FD )
-      fprintf( Note, "WAVE_SCHEME                     FD\n ");
+      fprintf( Note, "WAVE_SCHEME                     FD\n");
 
 #     ifdef LAPLACIAN_4TH
       fprintf( Note, "LAPLACIAN_4TH                   ON\n" );

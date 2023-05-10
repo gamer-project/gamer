@@ -107,7 +107,7 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
          }
       } else {
 
-#        ifndef SMOOTH_PHASE
+#        ifndef HYBRID_SMOOTH_PHASE
 //       Check second derivative of phase field (divided by number of dimensions for normalisation) to detect phase jumps
          Cond[1][k][j][i] =  FABS( Temp[1][kk ][jj ][iip] + Temp[1][kk ][jj ][iim] \
                                  + Temp[1][kk ][jjp][ii ] + Temp[1][kk ][jjm][ii ] \
