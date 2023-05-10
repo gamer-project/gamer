@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2467)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2468)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -235,12 +235,13 @@ Procedure for outputting new variables:
 //                2459 : 2022/11/04 --> output REFINE_NLEVEL
 //                2460 : 2022/12/15 --> output SUPPORT_FFTW
 //                2461 : 2023/01/28 --> output OPT__RESET_FLUID_INIT
-//                2462 : 2023/02/02 --> add OPT__RES_PHASE
-//                2463 : 2023/02/07 --> output ELBDM_BASE_SPECTRAL
-//                2464 : 2023/03/19 --> output FB_GHOST_SIZE, FB_NXT
-//                2465 : 2023/03/20 --> output FB_SEP_FLUOUT
-//                2466 : 2023/04/27 --> output LIBYT_INTERACTIVE
-//                2467 : 2023/04/29 --> output MU_NORM
+//                2462 : 2023/03/19 --> output FB_GHOST_SIZE, FB_NXT
+//                2463 : 2023/03/20 --> output FB_SEP_FLUOUT
+//                2464 : 2023/04/27 --> output LIBYT_INTERACTIVE
+//                2465 : 2023/04/29 --> output MU_NORM
+//                2466 : 2023/02/02 --> output OPT__RES_PHASE
+//                2467 : 2023/02/07 --> output ELBDM_BASE_SPECTRAL
+//                2468 : 2023/05/08 --> output OPT__FFTW_STARTUP
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1414,7 +1415,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2467;
+   KeyInfo.FormatVersion        = 2468;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2359,7 +2360,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  ifdef MHD
    InputPara.Opt__InitBFieldByFile   = OPT__INIT_BFIELD_BYFILE;
 #  endif
-
+#  ifdef SUPPORT_FFTW
+   InputPara.Opt__FFTW_Startup       = OPT__FFTW_STARTUP;
+#  endif
 // interpolation schemes
    InputPara.Opt__Int_Time           = OPT__INT_TIME;
 #  if ( MODEL == HYDRO )
@@ -3242,6 +3245,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Init_Subsampling_NCell",  HOFFSET(InputPara_t,Init_Subsampling_NCell ), H5T_NATIVE_INT              );
 #  ifdef MHD
    H5Tinsert( H5_TypeID, "Opt__InitBFieldByFile",   HOFFSET(InputPara_t,Opt__InitBFieldByFile  ), H5T_NATIVE_INT              );
+#  endif
+#  ifdef SUPPORT_FFTW
+   H5Tinsert( H5_TypeID, "Opt__FFTW_Startup",       HOFFSET(InputPara_t,Opt__FFTW_Startup      ), H5T_NATIVE_INT              );
 #  endif
 
 // interpolation schemes
