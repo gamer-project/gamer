@@ -2118,7 +2118,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Res_Phase",          &RS.Opt__Res_Phase,          SID, TID, NonFatal, &RT.Opt__Res_Phase,           1, NonFatal );
    LoadField( "Opt__Ck_Phase_Defect",    &RS.Opt__Ck_Phase_Defect,    SID, TID, NonFatal, &RT.Opt__Ck_Phase_Defect,     1, NonFatal );
 #  if ( ELBDM_SCHEME == HYBRID )
-   LoadField( "Opt__Match_Phase",        &RS.Opt__Match_Phase,        SID, TID, NonFatal, &RT.Opt__Match_Phase,         1, NonFatal );
+   LoadField( "Opt__Hybrid_Match_Phase", &RS.Opt__Hybrid_Match_Phase, SID, TID, NonFatal, &RT.Opt__Hybrid_Match_Phase,  1, NonFatal );
 #  endif // # if ( ELBDM_SCHEME == HYBRID )
 #  endif
    LoadField( "Opt__Flu_IntScheme",      &RS.Opt__Flu_IntScheme,      SID, TID, NonFatal, &RT.Opt__Flu_IntScheme,       1, NonFatal );

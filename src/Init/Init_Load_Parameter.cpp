@@ -406,7 +406,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__RES_PHASE",             &OPT__RES_PHASE,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_PHASE_DEFECT",       &OPT__CK_PHASE_DEFECT,           -1.0,             NoMin_double,  NoMax_double   );
 #  if ( ELBDM_SCHEME == HYBRID )
-   ReadPara->Add( "OPT__MATCH_PHASE",           &OPT__MATCH_PHASE,                true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__HYBRID_MATCH_PHASE",    &OPT__HYBRID_MATCH_PHASE,         true,            Useless_bool,  Useless_bool   );
 #  endif // # if ( ELBDM_SCHEME == HYBRID )
 #  endif
 // do not check OPT__FLU_INT_SCHEME and OPT__REF_FLU_INT_SCHEME since they may be reset by Init_ResetDefaultParameter()

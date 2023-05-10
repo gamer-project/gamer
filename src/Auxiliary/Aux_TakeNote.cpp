@@ -197,7 +197,17 @@ void Aux_TakeNote()
 //    c. options in ELBDM
 #     elif ( MODEL == ELBDM )
 
+//    c.1 options in HYBRID ELBDM
 #     if ( ELBDM_SCHEME == HYBRID )
+      fprintf( Note, "ELBDM_SCHEME                    HYBRID\n" );
+#     elif ( ELBDM_SCHEME == WAVE )
+      fprintf( Note, "ELBDM_SCHEME                    WAVE\n" );
+#     else
+#     error : ERROR : unsupported ELBDM_SCHEME !!
+#     endif
+
+#     if ( ELBDM_SCHEME == HYBRID )
+
 #     if ( HYBRID_SCHEME == HYBRID_UPWIND )
       fprintf( Note, "HYBRID_SCHEME                   UPWIND\n" );
 #     elif ( HYBRID_SCHEME == HYBRID_FROMM )
@@ -206,29 +216,27 @@ void Aux_TakeNote()
       fprintf( Note, "HYBRID_SCHEME                   MUSCL\n" );
 #     else
 #     error : ERROR : unsupported HYBRID_SCHEME !!
-#     endif // HYBRID_SCHEME
+#     endif
 
 
 #     ifdef HYBRID_IGNORE_FLUID_FAILURE
       fprintf( Note, "HYBRID_IGNORE_FLUID_FAILURE     ON\n" );
 #     else
       fprintf( Note, "HYBRID_IGNORE_FLUID_FAILURE     OFF\n" );
-#     endif // HYBRID_IGNORE_FLUID_FAILURE
+#     endif
 
 
 #     ifdef HYBRID_SMOOTH_PHASE
       fprintf( Note, "HYBRID_SMOOTH_PHASE             ON\n" );
 #     else
       fprintf( Note, "HYBRID_SMOOTH_PHASE             OFF\n" );
-#     endif // HYBRID_SMOOTH_PHASE
+#     endif
 
-#     endif // ELBDM_SCHEME
+#     endif // # if ( ELBDM_SCHEME == HYBRID )
 
-
-//    c.1 options in WAVE_GRAMFE
+//    c.2 options in WAVE_GRAMFE
 #     if ( WAVE_SCHEME == WAVE_GRAMFE )
       fprintf( Note, "WAVE_SCHEME                     GRAM FE\n" );
-
       fprintf( Note, "GRAMFE_GAMMA                    %d\n",      GRAMFE_GAMMA );
       fprintf( Note, "GRAMFE_G                        %d\n",      GRAMFE_G );
       fprintf( Note, "GRAMFE_NDELTA                   %d\n",      GRAMFE_NDELTA);
@@ -250,7 +258,7 @@ void Aux_TakeNote()
       fprintf( Note, "GRAMFE_ENABLE_GPU               OFF\n" );
 #     endif // # ifdef GRAMFE_ENABLE_GPU ... # else
 
-//    c.1 options in WAVE_FD
+//    c.3 options in WAVE_FD
 #     elif ( WAVE_SCHEME == WAVE_FD )
       fprintf( Note, "WAVE_SCHEME                     FD\n");
 
@@ -263,6 +271,8 @@ void Aux_TakeNote()
 #     else // #  if (WAVE_SCHEME == WAVE_GRAMFE )
 #     error : ERROR : unsupported WAVE_SCHEME !!
 #     endif // WAVE_SCHEME
+
+//    c.4 general ELBDM options
 
 #     ifdef CONSERVE_MASS
       fprintf( Note, "CONSERVE_MASS                   ON\n" );
@@ -1325,7 +1335,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__RES_PHASE                  %d\n",      OPT__RES_PHASE          );
       fprintf( Note, "OPT__CK_PHASE_DEFECT            %f\n",      OPT__CK_PHASE_DEFECT    );
 #     if ( ELBDM_SCHEME == HYBRID )
-      fprintf( Note, "OPT__MATCH_PHASE                %d\n",      OPT__MATCH_PHASE        );
+      fprintf( Note, "OPT__HYBRID_MATCH_PHASE         %d\n",      OPT__HYBRID_MATCH_PHASE );
 #     endif // # if ( ELBDM_SCHEME == HYBRID )
 #     endif
       fprintf( Note, "OPT__FLU_INT_SCHEME             %s\n",      ( OPT__FLU_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :

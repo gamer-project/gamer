@@ -127,7 +127,7 @@ extern bool             OPT__FLAG_INTERFERENCE;
 extern double           FlagTable_Interference[NLEVEL-1][4];
 # if ( ELBDM_SCHEME == HYBRID )
 extern double           DT__HYBRID, DT__VELOCITY;
-extern bool             OPT__MATCH_PHASE;
+extern bool             OPT__HYBRID_MATCH_PHASE;
 #endif //  # if ( ELBDM_SCHEME == HYBRID )
 
 extern ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;

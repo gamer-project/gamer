@@ -104,6 +104,26 @@
 #define RNG_CPP11    2
 
 
+// default compile-time options for ELBDM
+#if ( MODEL == ELBDM )
+// use wave-only scheme by default
+#  ifndef ELBDM_SCHEME
+#  define ELBDM_SCHEME WAVE
+#  endif // # ifndef ELBDM_SCHEME
+
+// use finite-difference scheme by default
+#  ifndef WAVE_SCHEME
+#  define WAVE_SCHEME WAVE_FD
+#  endif // # ifndef WAVE_SCHEME
+
+// use Fromm scheme  by default
+#  if ( ELBDM_SCHEME == HYBRID )
+#  ifndef HYBRID_SCHEME
+#  define HYBRID_SCHEME HYBRID_FROMM
+#  endif // # ifndef HYBRID_SCHEME
+#  endif // # if ( ELBDM_SCHEME == HYBRID )
+#endif // # if ( MODEL == ELBDM )
+
 // NCOMP_FLUID : number of active components in each cell (for patch->fluid[])
 //               --> do not include passive components here, which is set by NCOMP_PASSIVE
 // NFLUX_FLUID : number of active components in patch->flux[]
@@ -595,25 +615,6 @@
 
 
 #elif ( MODEL == ELBDM )   // ELBDM
-
-
-// use wave-only scheme by default
-#  ifndef ELBDM_SCHEME
-#  define ELBDM_SCHEME WAVE
-#  endif // # ifndef ELBDM_SCHEME
-
-// use finite-difference scheme by default
-#  ifndef WAVE_SCHEME
-#  define WAVE_SCHEME WAVE_FD
-#  endif // # ifndef WAVE_SCHEME
-
-// use Fromm scheme  by default
-#  if ( ELBDM_SCHEME == HYBRID )
-#  ifndef HYBRID_SCHEME
-#  define HYBRID_SCHEME HYBRID_FROMM
-#  endif // # ifndef HYBRID_SCHEME
-#  endif // # if ( ELBDM_SCHEME == HYBRID )
-
 #  if ( ELBDM_SCHEME == HYBRID )
 #          define FLU_GHOST_SIZE       6
 #  else // # if ( ELBDM_SCHEME == HYBRID )

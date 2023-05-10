@@ -249,7 +249,7 @@ Procedure for outputting new variables:
 //                2466 : 2023/02/02 --> output OPT__RES_PHASE
 //                2467 : 2023/02/07 --> output ELBDM_BASE_SPECTRAL
 //                2468 : 2023/05/08 --> output OPT__FFTW_STARTUP
-//                2469 : 2022/05/09 --> output OPT__FLAG_INTERFERENCE, OPT__MATCH_PHASE, OPT__CK_PHASE_DEFECT,
+//                2469 : 2022/05/09 --> output OPT__FLAG_INTERFERENCE, OPT__HYBRID_MATCH_PHASE, OPT__CK_PHASE_DEFECT,
 //                                             OPT__LB_EXCHANGE_FATHER, FlagTable_Interference
 //                                             DENS and PHAS for hybrid scheme,
 //                                             use_wave_flag[lv] for AMR structure,
@@ -2506,7 +2506,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Res_Phase          = OPT__RES_PHASE;
    InputPara.Opt__Ck_Phase_Defect    = OPT__CK_PHASE_DEFECT;
 #  if ( ELBDM_SCHEME == HYBRID )
-   InputPara.Opt__Match_Phase        = OPT__MATCH_PHASE;
+   InputPara.OPT__Hybrid_Match_Phase = OPT__HYBRID_MATCH_PHASE;
 #  endif //#  if ( ELBDM_SCHEME == HYBRID )
 #  endif
    InputPara.Opt__Flu_IntScheme      = OPT__FLU_INT_SCHEME;
@@ -3415,7 +3415,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Res_Phase",          HOFFSET(InputPara_t,Opt__Res_Phase         ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Ck_Phase_Defect",    HOFFSET(InputPara_t,Opt__Ck_Phase_Defect   ), H5T_NATIVE_DOUBLE           );
 #  if ( ELBDM_SCHEME == HYBRID )
-   H5Tinsert( H5_TypeID, "Opt__Match_Phase",        HOFFSET(InputPara_t,Opt__Match_Phase       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "OPT__Hybrid_Match_Phase", HOFFSET(InputPara_t,OPT__Hybrid_Match_Phase), H5T_NATIVE_INT              );
 #  endif
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Flu_IntScheme",      HOFFSET(InputPara_t,Opt__Flu_IntScheme     ), H5T_NATIVE_INT              );

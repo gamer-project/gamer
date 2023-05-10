@@ -44,8 +44,8 @@ void Validate()
 #  endif
 
 #  if ( ELBDM_SCHEME == HYBRID )
-   if ( OPT__MATCH_PHASE ) 
-      Aux_Error( ERROR_INFO, "OPT__MATCH_PHASE must be disabled !!\n" );
+   if ( OPT__HYBRID_MATCH_PHASE )
+      Aux_Error( ERROR_INFO, "OPT__HYBRID_MATCH_PHASE must be disabled !!\n" );
 #  endif // #  if ( ELBDM_SCHEME == HYBRID )
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
@@ -166,12 +166,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double J1    = VorPairRot_J1Amp*j1( sqrt(2.0*ELBDM_ETA*VorPairRot_Omega)*R );
    const double Re    = VorPairRot_BgAmp - J1*cos( phase );
    const double Im    =                  - J1*sin( phase );
-   
+
    fluid[DENS] = SQR( Re ) + SQR( Im );
 
 #  if ( ELBDM_SCHEME == HYBRID )
    if ( amr->use_wave_flag[lv] ) {
-#  endif 
+#  endif
    fluid[REAL] = Re;
    fluid[IMAG] = Im;
 #  if ( ELBDM_SCHEME == HYBRID )
@@ -181,7 +181,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    //   printf("Coords %f %f %f Phase %f", x, y, z, fluid[PHAS]);
    fluid[STUB] = 0.0;
    } // if ( amr->use_wave_flag[lv] ) ... else
-#  endif 
+#  endif
 
 } // FUNCTION : SetGridIC
 #endif // #if ( MODEL == ELBDM )

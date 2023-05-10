@@ -257,8 +257,8 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                                        DSonPtr[Kp][J ][Ip] + DSonPtr[Kp][Jp][Ip] );
 
 #              if ( ELBDM_SCHEME == HYBRID )
-//             if father level uses fluid scheme and OPT__MATCH_PHASE is on, unwrap average phase to match parent phase
-               if ( !amr->use_wave_flag[FaLv] && OPT__MATCH_PHASE ) {
+//             if father level uses fluid scheme and OPT__HYBRID_MATCH_PHASE is on, unwrap average phase to match parent phase
+               if ( !amr->use_wave_flag[FaLv] && OPT__HYBRID_MATCH_PHASE ) {
                   avgphase    = ELBDM_UnwrapPhase(OldPFaPtr[kk][jj][ii], avgphase);
                }
 
