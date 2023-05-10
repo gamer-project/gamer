@@ -174,9 +174,12 @@ double               LB_INPUT__PAR_WEIGHT;
 bool                 OPT__RECORD_LOAD_BALANCE;
 #endif
 bool                 OPT__MINIMIZE_MPI_BARRIER;
+#ifdef SUPPORT_FFTW
+int                  OPT__FFTW_STARTUP;
 #if ( SUPPORT_FFTW == FFTW3 )
 bool                 FFTW3_Double_OMP_Enabled, FFTW3_Single_OMP_Enabled;
-#endif
+#endif // # if ( SUPPORT_FFTW == FFTW3 )
+#endif // # ifdef SUPPORT_FFTW
 
 // (2-5) particle
 #ifdef PARTICLE
