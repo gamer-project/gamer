@@ -152,6 +152,20 @@ void Init_FFTW()
    gramfe_float_complex* ExtPsiK  = NULL;
 #  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
 
+// determine how to initialise fftw plans
+   int StartupFlag;
+
+   switch ( OPT__FFTW_STARTUP )
+   {
+      case FFTW_STARTUP_ESTIMATE:    StartupFlag = FFTW_ESTIMATE;               break;
+      case FFTW_STARTUP_MEASURE:     StartupFlag = FFTW_MEASURE;                break;
+#     if ( SUPPORT_FFTW == FFTW3 )
+      case FFTW_STARTUP_PATIENT:     StartupFlag = FFTW_PATIENT;                break;
+#     endif // # if ( SUPPORT_FFTW == FFTW3 )
+
+      default:                       Aux_Error( ERROR_INFO, "unrecognised FFTW startup option %d  !!\n", OPT__FFTW_STARTUP );
+   } // switch ( OPT__FFTW_STARTUP )
+
 // allocate memory for arrays in fftw3
 #  if ( SUPPORT_FFTW == FFTW3 )
    PS   = (real*) root_fftw_malloc( ComputePaddedTotalSize( PS_FFT_Size      ) * sizeof(real) );
@@ -166,21 +180,6 @@ void Init_FFTW()
    ExtPsiK = (gramfe_float_complex*)   gramfe_fftw_malloc( ExtPsi_FFT_Size * sizeof(gramfe_float_complex) );
 #  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
-
-
-// determine how to initialise fftw plans
-   int StartupFlag;
-
-   switch ( OPT__FFTW_STARTUP )
-   {
-      case FFTW_STARTUP_ESTIMATE:    StartupFlag = FFTW_ESTIMATE;               break;
-      case FFTW_STARTUP_MEASURE:     StartupFlag = FFTW_MEASURE;                break;
-#     if ( SUPPORT_FFTW == FFTW3 )
-      case FFTW_STARTUP_PATIENT:     StartupFlag = FFTW_PATIENT;                break;
-#     endif // # if ( SUPPORT_FFTW == FFTW3 )
-
-      default:                       Aux_Error( ERROR_INFO, "unrecognised FFTW startup option %d  !!\n", OPT__FFTW_STARTUP );
-   } // switch ( OPT__FFTW_STARTUP )
 
 
 // create plans for power spectrum and the self-gravity solver
