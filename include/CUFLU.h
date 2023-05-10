@@ -400,6 +400,8 @@
 //=========================================================================================
 #elif ( MODEL == ELBDM )
 #     define FLU_BLOCK_SIZE_X       PS2
+
+#  if ( ELBDM_SCHEME == WAVE )
 #  if   ( GPU_ARCH == FERMI )
 #     ifdef FLOAT8
 #        define FLU_BLOCK_SIZE_Y    4
@@ -454,6 +456,23 @@
 #        ifdef GPU
 #        error : UNKNOWN GPU_ARCH !!
 #        endif
+#  endif
+#  elif ( ELBDM_SCHEME == HYBRID )
+#  if ( PATCH_SIZE == 8 )
+#     ifdef FLOAT8
+#        define FLU_BLOCK_SIZE_Y    8
+#     else
+#        define FLU_BLOCK_SIZE_Y    16
+#     endif
+#  else // # if ( PATCH_SIZE == 8 )
+#     ifdef FLOAT8
+#        define FLU_BLOCK_SIZE_Y    4
+#     else
+#        define FLU_BLOCK_SIZE_Y    8
+#     endif
+#  endif // # if ( PATCH_SIZE == 8 ) ... # else
+#  else
+#  error : ERROR : UNKWNOWN ELBDM_SCHEME
 #  endif
 
 // set number of threads and blocks used in GRAMFE GPU scheme
