@@ -631,7 +631,7 @@ def warning( paths, **kwargs ):
 
     # 5. Path
     if kwargs["gpu"]:
-        if path.setdefault("CUDA_PATH", "") == "":
+        if paths.setdefault("CUDA_PATH", "") == "":
             color_print("CUDA_PATH is not given with --gpu.", BCOLOR.WARNING)
 
     if kwargs["fftw"] == "FFTW2":
