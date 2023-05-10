@@ -62,11 +62,11 @@ void LB_Init_Refine( const int FaLv, const bool AllocData )
          Par_PassParticle2Son_SinglePatch( FaLv, FaPID );
 #        endif
 
-#       if ( MODEL == ELBDM && ELBDM_SCHEME )
+#       if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
         if ( amr->patch[0][FaLv][FaPID]->use_wave_flag ) {
             amr->use_wave_flag[SonLv] = true;
         }
-#       endif
+#       endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
       } // if ( amr->patch[0][FaLv][FaPID]->flag )
    } // for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
@@ -76,7 +76,7 @@ void LB_Init_Refine( const int FaLv, const bool AllocData )
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 // ensure that all MPI ranks see the same use_wave_flag
    Flag_Sync( SonLv );
-#  endif
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 } // FUNCTION : LB_Init_Refine
 
