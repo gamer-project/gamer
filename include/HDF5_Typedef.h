@@ -664,7 +664,7 @@ struct InputPara_t
    int    Opt__Res_Phase;
    double Opt__Ck_Phase_Defect;
 #  if ( ELBDM_SCHEME == HYBRID )
-   int    OPT__Hybrid_Match_Phase;
+   int    Opt__Hybrid_Match_Phase;
 #  endif // # if ( ELBDM_SCHEME == HYBRID )
 #  endif
    int    Opt__Flu_IntScheme;
