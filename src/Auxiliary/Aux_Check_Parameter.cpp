@@ -468,11 +468,6 @@ void Aux_Check_Parameter()
 #  endif
 
 
-#  if ( WAVE_SCHEME == WAVE_GRAMFE )
-   if ( OPT__FIXUP_FLUX )
-      Aux_Error( ERROR_INFO, "WAVE_GRAMFE does not support OPT__FIXUP_FLUX !!\n" );
-#  endif
-
 
 // for sending fluid data fixed by coarse-fine fluxes correctly
    if ( OPT__FIXUP_FLUX  &&  Flu_ParaBuf >= PATCH_SIZE )
@@ -1192,6 +1187,13 @@ void Aux_Check_Parameter()
    if ( ELBDM_BASE_SPECTRAL && OPT__FIXUP_FLUX )
       Aux_Message( stderr, "WARNING : OPT__FIXUP_FLUX will not be applied to the base level when %s is on !!\n",
                    "ELBDM_BASE_SPECTRAL" );
+
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   if ( OPT__FIXUP_FLUX )
+      Aux_Error( stderr, "WARNING : OPT__FIXUP_FLUX will not be applied when %s is on !!\n",
+                   "WAVE_SCHEME == WAVE_GRAMFE" );
+#  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
+
 #  else
    if ( OPT__FIXUP_FLUX )
       Aux_Message( stderr, "WARNING : %s is useless in ELBDM when CONSERVE_MASS is off !!\n", "OPT__FIXUP_FLUX" );
