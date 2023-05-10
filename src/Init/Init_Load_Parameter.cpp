@@ -185,7 +185,7 @@ void Init_Load_Parameter()
 #  endif
    ReadPara->Add( "OPT__RECORD_LOAD_BALANCE",   &OPT__RECORD_LOAD_BALANCE,        true,            Useless_bool,  Useless_bool   );
 #  endif
-   ReadPara->Add( "OPT__MINIMIZE_MPI_BARRIER",  &OPT__MINIMIZE_MPI_BARRIER,       true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__MINIMIZE_MPI_BARRIER",  &OPT__MINIMIZE_MPI_BARRIER,       false,           Useless_bool,  Useless_bool   );
 
 
 // source terms
@@ -378,6 +378,15 @@ void Init_Load_Parameter()
 #  ifdef MHD
    ReadPara->Add( "OPT__INIT_BFIELD_BYFILE",    &OPT__INIT_BFIELD_BYFILE,         false,           Useless_bool,  Useless_bool   );
 #  endif
+#  ifdef SUPPORT_FFTW
+#  if ( SUPPORT_FFTW == FFTW2 )
+   ReadPara->Add( "OPT__FFTW_STARTUP",     &OPT__FFTW_STARTUP, FFTW_STARTUP_MEASURE, FFTW_STARTUP_ESTIMATE, FFTW_STARTUP_MEASURE );
+#  elif ( SUPPORT_FFTW == FFTW3 ) // #  if ( SUPPORT_FFTW == FFTW2 )
+   ReadPara->Add( "OPT__FFTW_STARTUP",     &OPT__FFTW_STARTUP, FFTW_STARTUP_MEASURE, FFTW_STARTUP_ESTIMATE, FFTW_STARTUP_PATIENT );
+#  else  // # if ( SUPPORT_FFTW == FFTW2 ) ... # else
+#  error : ERROR : Unsupported FFTW version for OPT__FFTW_STARTUP
+#  endif // #  if ( SUPPORT_FFTW == FFTW2 ) ... # else
+#  endif // # ifdef SUPPORT_FFTW
 
 // interpolation schemes
    ReadPara->Add( "OPT__INT_TIME",              &OPT__INT_TIME,                   true,            Useless_bool,  Useless_bool   );
