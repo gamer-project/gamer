@@ -277,6 +277,12 @@ void Aux_TakeNote()
       fprintf( Note, "QUARTIC_SELF_INTERACTION        OFF\n" );
 #     endif
 
+#     ifdef DISABLE_PHASE_AT_DEFECT
+      fprintf( Note, "DISABLE_PHASE_AT_DEFECT         ON\n" );
+#     else
+      fprintf( Note, "DISABLE_PHASE_AT_DEFECT         OFF\n" );
+#     endif
+
 #     else
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
