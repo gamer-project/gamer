@@ -1083,6 +1083,8 @@ void Aux_Check_Parameter()
 #  endif
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+   if ( ELBDM_BASE_SPECTRAL )
+      Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL incompatible with ELBDM_SCHEME == HYBRID !!\n" );
 
    if ( MAX_LEVEL > 0 && FLAG_BUFFER_SIZE < 8 )
       Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme with AMR requires a flag buffer size of at least 8!!\n");
