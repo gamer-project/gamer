@@ -91,8 +91,6 @@ void Init_ResetParameter()
 #        error : ERROR : unsupported WAVE_SCHEME !!
 #     endif // WAVE_SCHEME
 
-#     endif // #ifdef GRAVITY ... else ...
-
 #     else
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
