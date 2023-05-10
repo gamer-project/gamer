@@ -837,7 +837,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #        endif // # ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 
-         const int lv_refine_max = MIN( lv+REFINE_NLEVEL, TOP_LEVEL ) - 1;
+         const int lv_refine_max = MIN( lv+refine_nlevel, TOP_LEVEL ) - 1;
 
          for (int lv_refine=lv; lv_refine<=lv_refine_max; lv_refine++)
          {
