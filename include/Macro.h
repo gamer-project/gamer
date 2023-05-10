@@ -648,7 +648,12 @@
 #   define GRAMFE_NDELTA 14
 # endif
 # ifndef GRAMFE_ND
+//  default values in order for GRAMFE_FLU_NXT to have small prime factorisations
+#   if ( PATCH_SIZE == 8  || PATCH_SIZE == 16 || PATCH_SIZE == 64 )
 #   define GRAMFE_ND     26
+#   else ( PATCH_SIZE == 32 )
+#   define GRAMFE_ND     28
+# endif
 # endif
 # ifndef GRAMFE_ORDER
 #   define GRAMFE_ORDER  14
