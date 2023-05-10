@@ -1095,6 +1095,10 @@ void Aux_Check_Parameter()
    if ( MAX_LEVEL > 0 && !OPT__FIXUP_RESTRICT )
       Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme with AMR requires the restrict operation OPT__FIXUP_RESTRICT !!\n");
 
+#  if ( defined(HYBRID_IGNORE_FLUID_FAILURE) && (HYBRID_SCHEME != HYBRID_MUSCL) )
+#  error : ERROR : Hybrid scheme with HYBRID_IGNORE_FLUID_FAILURE requires HYBRID_SCHEME = HYBRID_MUSCL!
+#  endif
+
 #  ifdef LOAD_BALANCE
    if ( !OPT__LB_EXCHANGE_FATHER )
       Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme requires the option OPT__LB_EXCHANGE_FATHER for load balancing !!\n");
