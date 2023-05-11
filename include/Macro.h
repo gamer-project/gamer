@@ -648,11 +648,19 @@
 # endif
 # ifndef GRAMFE_ND
 //  default values in order for GRAMFE_FLU_NXT to have small prime factorisations
-#   if ( PATCH_SIZE == 8  || PATCH_SIZE == 16 || PATCH_SIZE == 64 )
-#   define GRAMFE_ND     26
-#   else ( PATCH_SIZE == 32 )
-#   define GRAMFE_ND     28
-# endif
+#   if ( PATCH_SIZE == 8 )
+#   define GRAMFE_ND     34  // GRAMFE_FLU_NXT = 2^6
+#   elif ( PATCH_SIZE == 16 )
+#   define GRAMFE_ND     26  // GRAMFE_FLU_NXT = 2^3 * 3^2
+#   elif ( PATCH_SIZE == 32 )
+#   define GRAMFE_ND     30  // GRAMFE_FLU_NXT = 2^2 * 3^3
+#   elif ( PATCH_SIZE == 64 )
+#   define GRAMFE_ND     26  // GRAMFE_FLU_NXT = 2^3 * 3 * 7
+#   elif ( PATCH_SIZE == 128 )
+#   define GRAMFE_ND     30  // GRAMFE_FLU_NXT = 2^2 * 3 * 5^2
+#   else
+#   error : ERROR : UNSUPPORTED PATCH_SIZE FOR GRAM FOURIER EXTENSION SCHEME
+#   endif
 # endif
 # ifndef GRAMFE_ORDER
 #   define GRAMFE_ORDER  14
