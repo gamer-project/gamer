@@ -53,7 +53,6 @@ void Flu_Prepare( const int lv, const double PrepTime,
    const bool   DE_Consistency      = ( OPT__OPTIMIZE_AGGRESSIVE ) ? DE_Consistency_No : DE_Consistency_Yes;
    const real   MinDens             = ( OPT__OPTIMIZE_AGGRESSIVE ) ? MinDens_No : MIN_DENS;
 
-
 // prepare the fluid array
 #  if ( MODEL == ELBDM )
 #  if ( ELBDM_SCHEME == HYBRID )
@@ -126,9 +125,23 @@ void Flu_Prepare( const int lv, const double PrepTime,
          for (int j=0; j<FLU_NXT; j++)
          for (int i=0; i<FLU_NXT; i++)
          {
-            const int t = IDX321( i, j, k, FLU_NXT, FLU_NXT );
+#           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+            if ( amr->use_wave_flag[lv] ) {
+#           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
+            const int t = IDX321( i, j, k, FLU_NXT, FLU_NXT );
             for (int v=0; v<FLU_NIN; v++)    fluid[v] = h_Flu_Array_F_In[TID][v][t];
+
+#           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+            } else { // if ( amr->use_wave_flag[lv] ) {
+
+            real (*smaller_h_Flu_Array_F_In   )[FLU_NIN ][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) h_Flu_Array_F_In;
+            const int t = IDX321( i, j, k, HYB_NXT, HYB_NXT );
+
+            for (int v=0; v<FLU_NIN; v++)    fluid[v] = smaller_h_Flu_Array_F_In[TID][v][t];
+            } // if ( amr->use_wave_flag[lv] ) { ... else
+#           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+
 
 //          HYDRO
 #           if ( MODEL == HYDRO )

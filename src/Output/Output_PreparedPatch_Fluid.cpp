@@ -128,9 +128,24 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
       for (int j=-FLU_GHOST_SIZE; j<FLU_GHOST_SIZE+PS1; j++)  {  J = j + Disp_j;
       for (int i=-FLU_GHOST_SIZE; i<FLU_GHOST_SIZE+PS1; i++)  {  I = i + Disp_i;
 
+#        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+         if ( amr->use_wave_flag[TLv] ) {
+#        endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+
          Idx = K*FLU_NXT*FLU_NXT + J*FLU_NXT + I;
 
          for (int v=0; v<FLU_NIN; v++)    u[v] = h_Flu_Array[TID][v][Idx];
+
+#        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+      } else { // if ( amr->use_wave_flag[lv] ) {
+
+         real (*smaller_h_Flu_Array)[FLU_NIN ][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) h_Flu_Array;
+         Idx = K*HYB_NXT*HYB_NXT + J*HYB_NXT + I;
+
+         for (int v=0; v<FLU_NIN; v++)    u[v] = smaller_h_Flu_Array[TID][v][Idx];
+
+         } // if ( amr->use_wave_flag[lv] ) { ... else
+#        endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 //       cell indices
          fprintf( File, "(%3d,%3d,%3d )", i, j, k );
