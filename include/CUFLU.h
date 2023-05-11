@@ -460,15 +460,15 @@
 #  elif ( ELBDM_SCHEME == HYBRID )
 #  if ( PATCH_SIZE == 8 )
 #     ifdef FLOAT8
-#        define FLU_BLOCK_SIZE_Y    8
-#     else
 #        define FLU_BLOCK_SIZE_Y    16
+#     else
+#        define FLU_BLOCK_SIZE_Y    32
 #     endif
 #  else // # if ( PATCH_SIZE == 8 )
 #     ifdef FLOAT8
-#        define FLU_BLOCK_SIZE_Y    4
-#     else
 #        define FLU_BLOCK_SIZE_Y    8
+#     else
+#        define FLU_BLOCK_SIZE_Y    16
 #     endif
 #  endif // # if ( PATCH_SIZE == 8 ) ... # else
 #  else
