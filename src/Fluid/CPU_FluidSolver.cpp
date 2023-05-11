@@ -98,7 +98,7 @@ void CPU_ELBDMSolver_GramFE( real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
                       const bool XYZ, const real MinDens );
 #endif // #if ( WAVE_SCHEME == WAVE_FD ) ... else
 #if ( ELBDM_SCHEME == HYBRID )
-void CPU_ELBDMSolver_HamiltonJacobi(  real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT)],
+void CPU_ELBDMSolver_HamiltonJacobi(  real Flu_Array_In [][FLU_NIN ][ CUBE(HYB_NXT)],
                                       #ifdef GAMER_DEBUG
                                       real Flu_Array_Out[][FLU_NOUT][ SQR(PS2)*PS2 ],
                                       #else
@@ -282,12 +282,13 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 
 #  if ( ELBDM_SCHEME == HYBRID )
    } else {
+      real (*smaller_h_Flu_Array_In   )[FLU_NIN ][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) h_Flu_Array_In;
 #     ifndef GAMER_DEBUG
       real (*smaller_h_Flu_Array_Out  )[FLU_NIN ][CUBE(PS2)] = (real (*)[FLU_NIN][CUBE(PS2)]) h_Flu_Array_Out;
 #     else // # ifndef GAMER_DEBUG
       real (*smaller_h_Flu_Array_Out  )[FLU_NOUT][CUBE(PS2)] = h_Flu_Array_Out;
 #     endif // # ifndef GAMER_DEBUG ... else
-      CPU_ELBDMSolver_HamiltonJacobi( h_Flu_Array_In, smaller_h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
+      CPU_ELBDMSolver_HamiltonJacobi( smaller_h_Flu_Array_In, smaller_h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
             XYZ, MinDens );
    }
 #  endif // # if ( ELBDM_SCHEME == HYBRID )

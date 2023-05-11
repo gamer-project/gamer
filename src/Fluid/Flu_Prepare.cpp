@@ -67,7 +67,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
 #  if ( ELBDM_SCHEME == HYBRID )
    } else  { // if ( amr->use_wave_flag[lv] )
       Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In[0][0], NULL,
-                        FLU_GHOST_SIZE, NPG, PID0_List, _DENS|_PHAS|_PASSIVE, _NONE,
+                        HYB_GHOST_SIZE, NPG, PID0_List, _DENS|_PHAS|_PASSIVE, _NONE,
                         OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, OPT__INT_PHASE,
                         OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
    } // if (amr->use_wave_flag[lv] ) ... else

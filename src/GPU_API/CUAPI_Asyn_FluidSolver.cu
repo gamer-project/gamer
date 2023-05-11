@@ -98,7 +98,7 @@ void CUFLU_ELBDMSolver_GramFE(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  endif // WAVE_SCHEME
 
 #if ( ELBDM_SCHEME == HYBRID )
-__global__ void CUFLU_ELBDMSolver_HamiltonJacobi( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+__global__ void CUFLU_ELBDMSolver_HamiltonJacobi( real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NXT) ],
                                                   #ifdef GAMER_DEBUG
                                                   real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
                                                   #else
@@ -309,6 +309,9 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  if   ( MODEL == HYDRO )
 
 #  elif ( MODEL == ELBDM )
+#  if ( ELBDM_SCHEME == HYBRID )
+   if ( useWaveFlag ) {
+#  endif // # if ( ELBDM_SCHEME == HYBRID )
 
 #  if ( WAVE_SCHEME == WAVE_FD )
 // evaluate the optimized Taylor expansion coefficient
@@ -341,6 +344,10 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  else // #  if (WAVE_SCHEME == WAVE_GRAMFE )
 #     error : ERROR : unsupported WAVE_SCHEME !!
 #  endif // WAVE_SCHEME
+
+#  if ( ELBDM_SCHEME == HYBRID )
+   } // if ( useWaveFlag )
+#     endif // # if ( ELBDM_SCHEME == HYBRID )
 
 #  else
 #  error : ERROR : unsupported MODEL !!
@@ -401,9 +408,12 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #     endif
 
 //    optimisation for phase scheme, only transfer density and phase instead of re/im/dens back from GPU
-#     if ( ELBDM_SCHEME == HYBRID && !defined(GAMER_DEBUG) )
+#     if ( ELBDM_SCHEME == HYBRID )
       if ( !useWaveFlag ) {
+         Flu_MemSize_In [s] = sizeof(real  )*NPatch_per_Stream[s]*FLU_NIN*CUBE(HYB_NXT);
+#     ifndef GAMER_DEBUG
          Flu_MemSize_Out[s] = sizeof(real  )*NPatch_per_Stream[s]*FLU_NIN*CUBE(PS2);
+#     endif // # ifndef GAMER_DEBUG
       }
 #     endif // # if ( ELBDM_SCHEME == HYBRID )
    }
@@ -415,9 +425,19 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
    {
       if ( NPatch_per_Stream[s] == 0 )    continue;
 
+#     if ( ELBDM_SCHEME == HYBRID )
+      if ( useWaveFlag ) {
+#     endif // # if ( ELBDM_SCHEME == HYBRID )
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Flu_Array_F_In  + UsedPatch[s], h_Flu_Array_In  + UsedPatch[s],
                          Flu_MemSize_In[s], cudaMemcpyHostToDevice, Stream[s] )  );
+#     if ( ELBDM_SCHEME == HYBRID )
+      } else { // if ( useWaveFlag ) {
+      real (*smaller_d_Flu_Array_F_In)[FLU_NIN][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) d_Flu_Array_F_In;
 
+      CUDA_CHECK_ERROR(  cudaMemcpyAsync( smaller_d_Flu_Array_F_In  + UsedPatch[s], smaller_d_Flu_Array_F_In  + UsedPatch[s],
+                         Flu_MemSize_In[s], cudaMemcpyHostToDevice, Stream[s] )  );
+      }
+#     endif // #if ( ELBDM_SCHEME == HYBRID )
 #     ifdef MHD
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Mag_Array_F_In  + UsedPatch[s], h_Mag_Array_In  + UsedPatch[s],
                          Mag_MemSize_In[s], cudaMemcpyHostToDevice, Stream[s] )  );
@@ -528,13 +548,14 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #     endif // WAVE_SCHEME
 #     if ( ELBDM_SCHEME == HYBRID )
       } else { // if ( useWaveFlag ) {
+         real (*smaller_d_Flu_Array_F_In)[FLU_NIN][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) d_Flu_Array_F_In;
 #        ifdef GAMER_DEBUG
          real (*smaller_d_Flu_Array_F_Out)[FLU_NOUT][CUBE(PS2)] = d_Flu_Array_F_Out;
 #        else // # ifdef GAMER_DEBUG
          real (*smaller_d_Flu_Array_F_Out)[FLU_NIN][CUBE(PS2)]  = (real (*)[FLU_NIN][CUBE(PS2)]) d_Flu_Array_F_Out;
 #        endif // # ifdef GAMER_DEBUG ... else
          CUFLU_ELBDMSolver_HamiltonJacobi <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
-            (  d_Flu_Array_F_In          + UsedPatch[s],
+            (  smaller_d_Flu_Array_F_In  + UsedPatch[s],
                smaller_d_Flu_Array_F_Out + UsedPatch[s],
                d_Flux_Array              + UsedPatch[s],
                dt, 1.0/dh, ELBDM_Eta, StoreFlux, XYZ, MinDens );

@@ -684,6 +684,9 @@ void Aux_TakeNote()
 #     ifdef FEEDBACK
       fprintf( Note, "#define FB_GHOST_SIZE           %d\n",      FB_GHOST_SIZE         );
 #     endif
+#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+      fprintf( Note, "#define HYB_GHOST_SIZE          %d\n",      HYB_GHOST_SIZE        );
+#     endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
       fprintf( Note, "#define FLU_NXT                 %d\n",      FLU_NXT               );
 #     ifdef GRAVITY
       fprintf( Note, "#define POT_NXT                 %d\n",      POT_NXT               );

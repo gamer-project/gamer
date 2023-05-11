@@ -615,10 +615,6 @@
 
 
 #elif ( MODEL == ELBDM )   // ELBDM
-#  if ( ELBDM_SCHEME == HYBRID )
-#        define FLU_GHOST_SIZE         8
-#  else // # if ( ELBDM_SCHEME == HYBRID )
-
 #  if ( WAVE_SCHEME == WAVE_FD )
 #     ifdef LAPLACIAN_4TH
 #        define FLU_GHOST_SIZE         6
@@ -630,11 +626,14 @@
 #  else  // # if ( WAVE_SCHEME == WAVE_FD ) ... else
 #     error : ERROR : unsupported WAVE_SCHEME !!
 #  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE ) ... # else
-#  endif // # if ( ELBDM_SCHEME == HYBRID )
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
 
+
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  define HYB_GHOST_SIZE         6
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 // set default parameters of gram extension scheme if not changed in Makefile
 # if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
@@ -778,6 +777,7 @@
 //###REVISE: support interpolation schemes requiring 2 ghost cells on each side for POT_NXT
 #  define FLU_NXT       ( PS2 + 2*FLU_GHOST_SIZE )                // use patch group as the unit
 #  define FLU_NXT_P1    ( FLU_NXT + 1 )
+
 #ifdef GRAVITY
 #  define POT_NXT       ( PS1/2 + 2*( (POT_GHOST_SIZE+3)/2 ) )    // assuming interpolation ghost zone == 1
 #  define RHO_NXT       ( PS1 + 2*RHO_GHOST_SIZE )                // POT/RHO/GRA_NXT use patch as the unit
@@ -802,7 +802,10 @@
 #ifdef FEEDBACK
 #  define FB_NXT        ( PS2 + 2*FB_GHOST_SIZE )                 // use patch group as the unit
 #endif
-
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  define HYB_NXT       ( PS2 + 2*HYB_GHOST_SIZE )
+#  define HYB_NXT_P1    ( HYB_NXT + 1 )
+#  endif // # if ( ELBDM_SCHEME == HYBRID )
 
 // size of auxiliary arrays and EoS tables
 #if ( MODEL == HYDRO )
