@@ -314,9 +314,12 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  endif // # if ( ELBDM_SCHEME == HYBRID )
 
 #  if ( WAVE_SCHEME == WAVE_FD )
+
 // evaluate the optimized Taylor expansion coefficient
    if ( ELBDM_Taylor3_Auto )  ELBDM_Taylor3_Coeff = ELBDM_SetTaylor3Coeff( dt, dh, ELBDM_Eta );
+
 #  elif ( WAVE_SCHEME == WAVE_GRAMFE )
+
 // set up GPU FFT if GPU is used for Gram Fourier extension scheme
 #  ifdef GRAMFE_ENABLE_GPU
 // total size of shared memory required for storing FFT::ffts_per_block rows of data after Gram extension and the coefficients of the respective left and right extension polynomials
@@ -340,14 +343,14 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
    auto cufftdx_iworkspace = cufftdx::make_workspace<IFFT>(error_code);
    CUDA_CHECK_ERROR(error_code);
 
-#  endif // #  ifdef GRAMFE_ENABLE_GPU
-#  else // #  if (WAVE_SCHEME == WAVE_GRAMFE )
+#  endif // # ifdef GRAMFE_ENABLE_GPU
+#  else // # if (WAVE_SCHEME == WAVE_GRAMFE )
 #     error : ERROR : unsupported WAVE_SCHEME !!
 #  endif // WAVE_SCHEME
 
 #  if ( ELBDM_SCHEME == HYBRID )
    } // if ( useWaveFlag )
-#     endif // # if ( ELBDM_SCHEME == HYBRID )
+#  endif // # if ( ELBDM_SCHEME == HYBRID )
 
 #  else
 #  error : ERROR : unsupported MODEL !!
@@ -526,39 +529,48 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #        endif // FLU_SCHEME
 
 #     elif ( MODEL == ELBDM )
+
 #     if ( ELBDM_SCHEME == HYBRID )
       if ( useWaveFlag ) {
 #     endif // # if ( ELBDM_SCHEME == HYBRID )
+
 #     if   ( WAVE_SCHEME == WAVE_FD )
+
          CUFLU_ELBDMSolver <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
             ( d_Flu_Array_F_In  + UsedPatch[s],
               d_Flu_Array_F_Out + UsedPatch[s],
               d_Flux_Array      + UsedPatch[s],
               dt, 1.0/dh, ELBDM_Eta, StoreFlux, ELBDM_Taylor3_Coeff, XYZ, MinDens );
+
 #     elif ( WAVE_SCHEME == WAVE_GRAMFE )
 #     ifdef GRAMFE_ENABLE_GPU
+
          CUFLU_ELBDMSolver_GramFE <<< NPatch_per_Stream[s], FFT::block_dim, cufftdx_shared_memory_size, Stream[s] >>>
             ( d_Flu_Array_F_In  + UsedPatch[s],
               d_Flu_Array_F_Out + UsedPatch[s],
               d_Flux_Array      + UsedPatch[s],
               dt, 1.0/dh, ELBDM_Eta, StoreFlux, XYZ, MinDens, cufftdx_workspace, cufftdx_iworkspace );
+
 #     endif // # ifdef GRAMFE_ENABLE_GPU
 #     else // #  if (WAVE_SCHEME == WAVE_FD )
 #        error : ERROR : unsupported WAVE_SCHEME !!
 #     endif // WAVE_SCHEME
 #     if ( ELBDM_SCHEME == HYBRID )
       } else { // if ( useWaveFlag ) {
+
          real (*smaller_d_Flu_Array_F_In)[FLU_NIN][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) d_Flu_Array_F_In;
 #        ifdef GAMER_DEBUG
          real (*smaller_d_Flu_Array_F_Out)[FLU_NOUT][CUBE(PS2)] = d_Flu_Array_F_Out;
 #        else // # ifdef GAMER_DEBUG
          real (*smaller_d_Flu_Array_F_Out)[FLU_NIN][CUBE(PS2)]  = (real (*)[FLU_NIN][CUBE(PS2)]) d_Flu_Array_F_Out;
 #        endif // # ifdef GAMER_DEBUG ... else
+
          CUFLU_ELBDMSolver_HamiltonJacobi <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
             (  smaller_d_Flu_Array_F_In  + UsedPatch[s],
                smaller_d_Flu_Array_F_Out + UsedPatch[s],
                d_Flux_Array              + UsedPatch[s],
                dt, 1.0/dh, ELBDM_Eta, StoreFlux, XYZ, MinDens );
+
       } // if ( useWaveFlag ) { ... else
 #     endif // #     if ( ELBDM_SCHEME == HYBRID )
 

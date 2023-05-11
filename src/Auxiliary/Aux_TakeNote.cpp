@@ -698,13 +698,16 @@ void Aux_TakeNote()
 #     endif
 #     endif // #ifdef GRAVITY
 #     ifdef MASSIVE_PARTICLES
-      fprintf( Note, "#define RHOEXT_NXT              %d\n",      RHOEXT_NXT          );
+      fprintf( Note, "#define RHOEXT_NXT              %d\n",      RHOEXT_NXT            );
 #     endif
       fprintf( Note, "#define SRC_NXT                 %d\n",      SRC_NXT               );
       fprintf( Note, "#define DER_NXT                 %d\n",      DER_NXT               );
 #     ifdef FEEDBACK
       fprintf( Note, "#define FB_NXT                  %d\n",      FB_NXT                );
 #     endif
+#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+      fprintf( Note, "#define HYB_NXT                 %d\n",      HYB_NXT               );
+#     endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 #     if ( MODEL == HYDRO )
       fprintf( Note, "#define EOS_NAUX_MAX            %d\n",      EOS_NAUX_MAX          );
       fprintf( Note, "#define EOS_NTABLE_MAX          %d\n",      EOS_NTABLE_MAX        );
