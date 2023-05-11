@@ -784,11 +784,12 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          bool DisableFixupFlux = false;
 
 #        if ( MODEL == ELBDM )
+         DisableFixupFlux |= (ELBDM_BASE_SPECTRAL  &&  lv == 0);
+
 #        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-         if ( amr->use_wave_flag[lv] ) {
+         if ( amr->use_wave_flag[lv + 1] ) {
 #        endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 //       disable fixup for base level spectral solver on base-level
-         DisableFixupFlux |= (ELBDM_BASE_SPECTRAL  &&  lv == 0);
 #        if ( WAVE_SCHEME == WAVE_GRAMFE )
 //       disable fixup for local spectral method on wave levels
          DisableFixupFlux |= true;
