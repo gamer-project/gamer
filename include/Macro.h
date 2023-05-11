@@ -604,7 +604,7 @@
 #   define GRAMFE_ND     34  // GRAMFE_FLU_NXT = 2^6
 #   elif ( PATCH_SIZE == 16 )
 #   define GRAMFE_ND     26  // GRAMFE_FLU_NXT = 2^3 * 3^2
-#   else ( PATCH_SIZE == 32 )
+#   elif ( PATCH_SIZE == 32 )
 #   define GRAMFE_ND     30  // GRAMFE_FLU_NXT = 2^2 * 3^3
 #   elif ( PATCH_SIZE == 64 )
 #   define GRAMFE_ND     26  // GRAMFE_FLU_NXT = 2^3 * 3 * 7
