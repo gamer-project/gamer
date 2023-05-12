@@ -309,6 +309,13 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  if   ( MODEL == HYDRO )
 
 #  elif ( MODEL == ELBDM )
+
+#  if ( WAVE_SCHEME == WAVE_GRAMFE && defined( GRAMFE_ENABLE_GPU ) )
+   uint cufftdx_shared_memory_size;
+   typename  FFT::workspace_type cufftdx_workspace;
+   typename IFFT::workspace_type cufftdx_iworkspace;
+#  endif // #  if ( WAVE_SCHEME == WAVE_GRAMFE && defined( GRAMFE_ENABLE_GPU ) )
+
 #  if ( ELBDM_SCHEME == HYBRID )
    if ( useWaveFlag ) {
 #  endif // # if ( ELBDM_SCHEME == HYBRID )
@@ -327,7 +334,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
    auto size_bytes                 = size * sizeof(complex_type);
 
 // shared memory must fit input data and must be big enough to run FFT
-   uint cufftdx_shared_memory_size = std::max((unsigned int)FFT::shared_memory_size, (unsigned int)size_bytes);
+   cufftdx_shared_memory_size = std::max((unsigned int)FFT::shared_memory_size, (unsigned int)size_bytes);
 
 // increase max shared memory if needed
    CUDA_CHECK_ERROR(cudaFuncSetAttribute(
@@ -337,10 +344,10 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 // create forward and backward cufftx workspaces
    cudaError_t error_code  = cudaSuccess;
-   auto cufftdx_workspace  = cufftdx::make_workspace<FFT>(error_code);
+   cufftdx_workspace  = cufftdx::make_workspace<FFT>(error_code);
    CUDA_CHECK_ERROR(error_code);
    error_code              = cudaSuccess;
-   auto cufftdx_iworkspace = cufftdx::make_workspace<IFFT>(error_code);
+   cufftdx_iworkspace = cufftdx::make_workspace<IFFT>(error_code);
    CUDA_CHECK_ERROR(error_code);
 
 #  endif // # ifdef GRAMFE_ENABLE_GPU
@@ -436,8 +443,9 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #     if ( ELBDM_SCHEME == HYBRID )
       } else { // if ( useWaveFlag ) {
       real (*smaller_d_Flu_Array_F_In)[FLU_NIN][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) d_Flu_Array_F_In;
+      real (*smaller_h_Flu_Array_In  )[FLU_NIN][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) h_Flu_Array_In  ;
 
-      CUDA_CHECK_ERROR(  cudaMemcpyAsync( smaller_d_Flu_Array_F_In  + UsedPatch[s], smaller_d_Flu_Array_F_In  + UsedPatch[s],
+      CUDA_CHECK_ERROR(  cudaMemcpyAsync( smaller_d_Flu_Array_F_In  + UsedPatch[s], smaller_h_Flu_Array_In  + UsedPatch[s],
                          Flu_MemSize_In[s], cudaMemcpyHostToDevice, Stream[s] )  );
       }
 #     endif // #if ( ELBDM_SCHEME == HYBRID )
@@ -534,7 +542,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
       if ( useWaveFlag ) {
 #     endif // # if ( ELBDM_SCHEME == HYBRID )
 
-#     if   ( WAVE_SCHEME == WAVE_FD )
+#     if ( WAVE_SCHEME == WAVE_FD )
 
          CUFLU_ELBDMSolver <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
             ( d_Flu_Array_F_In  + UsedPatch[s],
@@ -557,12 +565,11 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #     endif // WAVE_SCHEME
 #     if ( ELBDM_SCHEME == HYBRID )
       } else { // if ( useWaveFlag ) {
-
-         real (*smaller_d_Flu_Array_F_In)[FLU_NIN][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) d_Flu_Array_F_In;
+         real (*smaller_d_Flu_Array_F_In) [FLU_NIN] [CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) d_Flu_Array_F_In;
 #        ifdef GAMER_DEBUG
-         real (*smaller_d_Flu_Array_F_Out)[FLU_NOUT][CUBE(PS2)] = d_Flu_Array_F_Out;
+         real (*smaller_d_Flu_Array_F_Out)[FLU_NOUT][CUBE(PS2)]     = d_Flu_Array_F_Out;
 #        else // # ifdef GAMER_DEBUG
-         real (*smaller_d_Flu_Array_F_Out)[FLU_NIN][CUBE(PS2)]  = (real (*)[FLU_NIN][CUBE(PS2)]) d_Flu_Array_F_Out;
+         real (*smaller_d_Flu_Array_F_Out)[FLU_NIN] [CUBE(PS2)]     = (real (*)[FLU_NIN][CUBE(PS2)]    ) d_Flu_Array_F_Out;
 #        endif // # ifdef GAMER_DEBUG ... else
 
          CUFLU_ELBDMSolver_HamiltonJacobi <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
