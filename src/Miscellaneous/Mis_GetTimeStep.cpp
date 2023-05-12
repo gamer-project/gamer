@@ -109,11 +109,11 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    } else { // if ( amr->use_wave_flag[lv] )
       if ( lv + 1 < NLEVEL ) {
          if ( amr->use_wave_flag[lv + 1] )
-            dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv  ) * 0.5;
+            dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv ) * 0.5;
          else
-            dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv  );
+            dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv );
       } else {
-         dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv  );
+         dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv );
       }
    } // if ( amr->use_wave_flag[lv] ) ... else
 #  endif // #  if ( ELBDM_SCHEME == HYBRID )

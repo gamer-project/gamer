@@ -73,7 +73,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       if ( FlagTable_Interference[lv][1] > 0 )
          FlagIntQP  =  ELBDM_Flag_VolumeFracQP( Interf_Cond, FlagTable_Interference[lv][0], FlagTable_Interference[lv][1]);
       else
-         FlagIntQP  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond,                     FlagTable_Interference[lv][0]);
+         FlagIntQP  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond,                       FlagTable_Interference[lv][0]);
 
       Flag |= FlagIntQP;
 
@@ -91,7 +91,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #     if ( MODEL == ELBDM  && ELBDM_SCHEME == HYBRID )
 //    For fluid solver: Check phase curvature using FlagTable_Interference[lv][2] as maximum allowed phase curvature
       } else {
-         FlagIntPhaseDiscont   =  ELBDM_Flag_Interference( i, j, k, Interf_Cond + CUBE(PS1), FlagTable_Interference[lv][2]);
+         FlagIntPhaseDiscont  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond + CUBE(PS1), FlagTable_Interference[lv][2]);
 
          Flag |= FlagIntPhaseDiscont;
       }

@@ -613,10 +613,10 @@ void Init_ByRestart_HDF5( const char *FileName )
 
    int NCompStore = NCOMP_TOTAL;
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && !defined(GAMER_DEBUG))
-// do not store STUB field when not debugging hybrid scheme
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
+// do not load STUB field
    NCompStore -= 1 ;
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && !defined(GAMER_DEBUG))
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 #  ifdef LOAD_BALANCE
    const bool Recursive_No  = false;
@@ -1260,10 +1260,10 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
 
    int NCompStore = NCOMP_TOTAL;
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && !defined(GAMER_DEBUG))
-// do not store STUB field when not debugging hybrid scheme
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+// do not load STUB field
    NCompStore -= 1 ;
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && !defined(GAMER_DEBUG))
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 
 // allocate patch
