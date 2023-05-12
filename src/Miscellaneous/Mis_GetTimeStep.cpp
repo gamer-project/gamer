@@ -67,13 +67,21 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 #  if ( ELBDM_SCHEME == HYBRID )
    if ( amr->use_wave_flag[lv] ) {
 #  endif // # if ( ELBDM_SCHEME == HYBRID )
-   dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Fluid( lv );
-   sprintf( dTime_Name[NdTime++], "%s", "ELBDM_CFL" );
+      dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Fluid( lv );
 #  if ( ELBDM_SCHEME == HYBRID )
    } else { // if ( amr->use_wave_flag[lv] )
-   dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Hybrid( lv );
+      dTime[NdTime] = HUGE_NUMBER;
+   }
+#  endif // # if ( ELBDM_SCHEME == HYBRID ) ... else
+   sprintf( dTime_Name[NdTime++], "%s", "ELBDM_CFL" );
+
+#  if ( ELBDM_SCHEME == HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+      dTime[NdTime] = HUGE_NUMBER;
+   } else { // if ( amr->use_wave_flag[lv] )
+      dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Hybrid( lv );
+   } // if ( amr->use_wave_flag[lv] ) ... else
    sprintf( dTime_Name[NdTime++], "%s", "Hybrid_CFL" );
-   } // if ( amr->use_wave_flag[lv] ) ... else 
 #  endif // # if ( ELBDM_SCHEME == HYBRID ) ... else
 
 
@@ -107,7 +115,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
       } else {
          dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv  );
       }
-   } // if ( amr->use_wave_flag[lv] ) ... else 
+   } // if ( amr->use_wave_flag[lv] ) ... else
 #  endif // #  if ( ELBDM_SCHEME == HYBRID )
    sprintf( dTime_Name[NdTime++], "%s", "ELBDM_Pot" );
 
@@ -229,10 +237,13 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 // 1.9 CRITERION NINE : maximum velocity dS/dx ##ELBDM PHASE SOLVER ONLY##
 // =============================================================================================================
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-   if (amr->use_wave_flag[lv] == false) {
+   if ( amr->use_wave_flag[lv] ) {
+      dTime[NdTime] = HUGE_NUMBER;
+   } else { // if ( amr->use_wave_flag[lv] )
       dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Velocity( lv );
-      sprintf( dTime_Name[NdTime++], "%s", "Hybrid_Velocity" );
-   }
+   } // if ( amr->use_wave_flag[lv] ) ... else
+
+   sprintf( dTime_Name[NdTime++], "%s", "Hybrid_Velocity" );
 #  endif //  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
 
 // 2. get the minimum time-step from all criteria

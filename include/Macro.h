@@ -632,7 +632,7 @@
 
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-#  define HYB_GHOST_SIZE         6
+#       define HYB_GHOST_SIZE         6
 #  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 // set default parameters of gram extension scheme if not changed in Makefile
