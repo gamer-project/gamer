@@ -24,11 +24,9 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
       Aux_Error( ERROR_INFO, "incorrect index (i,j,k) = (%d,%d,%d) !!\n", i, j, k );
 #  endif
 
-   const int    Idx       = k*PS1*PS1 + j*PS1 + i;
-   const real   InterferenceCriterion   = Cond_Array[Idx];
-   bool Flag = InterferenceCriterion > Threshold;
+   const int Idx = k*PS1*PS1 + j*PS1 + i;
 
-   return Flag;
+   return ( Cond_Array[Idx] > Threshold );
 } // FUNCTION : ELBDM_Flag_Interference
 
 
