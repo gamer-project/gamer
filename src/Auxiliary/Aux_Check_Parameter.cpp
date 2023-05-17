@@ -1095,8 +1095,8 @@ void Aux_Check_Parameter()
    if ( ELBDM_BASE_SPECTRAL )
       Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL incompatible with ELBDM_SCHEME == HYBRID !!\n" );
 
-   if ( MAX_LEVEL > 0 && FLAG_BUFFER_SIZE < 8 )
-      Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme with AMR requires a flag buffer size of at least 8!!\n");
+   if ( MAX_LEVEL > 0 && FLAG_BUFFER_SIZE != PATCH_SIZE )
+      Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme with AMR requires that the flag buffer size equals the patch size!!\n");
 
    if ( MAX_LEVEL > 0 && !OPT__FIXUP_RESTRICT )
       Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme with AMR requires the restrict operation OPT__FIXUP_RESTRICT !!\n");
