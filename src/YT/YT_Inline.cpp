@@ -249,7 +249,7 @@ void YT_Inline()
    if ( yt_run_Function( "yt_inline" ) != YT_SUCCESS )
        Aux_Error( ERROR_INFO, "yt_run_Function() failed !!\n" );
 
-#ifdef SUPPORT_LIBYT_INTERACTIVE
+#ifdef LIBYT_INTERACTIVE
 // 5-2. activate libyt interactive mode
    if ( yt_run_InteractiveMode("LIBYT_STOP") != YT_SUCCESS )
        Aux_Error( ERROR_INFO, "yt_run_InteractiveMode() failed !!\n" );

@@ -16,6 +16,7 @@ const DensProf_t
 static DensProf_t Gra_DensProf;  // density profile
 static double     Gra_Radius0;   // radius  parameter for the adopted density profile
 static double     Gra_Dens0;     // density parameter for the adopted density profile
+static int        Gra_NIterPerf; // number of iterations to measure the average performance of the Poisson solver (0->off)
 // =======================================================================================
 
 
@@ -121,6 +122,7 @@ void SetParameter()
    ReadPara->Add( "Gra_DensProf",      &Gra_DensProf,          2,             1,                2                 );
    ReadPara->Add( "Gra_Radius0",       &Gra_Radius0,           1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "Gra_Dens0",         &Gra_Dens0,             1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Gra_NIterPerf",     &Gra_NIterPerf,         0,             0,                NoMax_int         );
 
    ReadPara->Read( FileName );
 
@@ -149,15 +151,26 @@ void SetParameter()
       PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
    }
 
+   if ( Gra_NIterPerf > 0  &&  !OPT__RECORD_USER ) {
+      OPT__RECORD_USER = true;
+      PRINT_WARNING( "OPT__RECORD_USER", OPT__RECORD_USER, FORMAT_BOOL );
+   }
+
+   else if ( Gra_NIterPerf == 0  &&  OPT__RECORD_USER ) {
+      OPT__RECORD_USER = false;
+      PRINT_WARNING( "OPT__RECORD_USER", OPT__RECORD_USER, FORMAT_BOOL );
+   }
+
 
 // (4) make a note
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID = %d\n",     TESTPROB_ID  );
-      Aux_Message( stdout, "  Gra_DensProf    = %d\n",     Gra_DensProf );
-      Aux_Message( stdout, "  Gra_Radius0     = %13.7e\n", Gra_Radius0  );
-      Aux_Message( stdout, "  Gra_Dens0       = %13.7e\n", Gra_Dens0    );
+      Aux_Message( stdout, "  test problem ID = %d\n",     TESTPROB_ID   );
+      Aux_Message( stdout, "  Gra_DensProf    = %d\n",     Gra_DensProf  );
+      Aux_Message( stdout, "  Gra_Radius0     = %13.7e\n", Gra_Radius0   );
+      Aux_Message( stdout, "  Gra_Dens0       = %13.7e\n", Gra_Dens0     );
+      Aux_Message( stdout, "  Gra_NIterPerf   = %d\n",     Gra_NIterPerf );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -305,6 +318,76 @@ void OutputError()
    Output_DumpData_Part( OUTPUT_DIAG, false, NULL_INT, NULL_INT, NULL_INT, filename_txt );
 
 } // FUNCTION : OutputError
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Aux_Record_Gravity
+// Description :  Invoke the Poisson solver and measure its performance
+//
+// Note        :  1. Invoked by main() using the function pointer "Aux_Record_User_Ptr",
+//                   which must be set by a test problem initializer
+//                2. Enabled by the runtime option "OPT__RECORD_USER"
+//
+// Parameter   :  None
+//-------------------------------------------------------------------------------------------------------
+void Aux_Record_Gravity()
+{
+
+// measure the total elapsed time of invoking the Poisson solver Gra_NIterPerf times
+   const double Poi_Coeff = 4.0*M_PI*NEWTON_G;
+   Timer_t Timer_PoiPerf;
+
+   for (int lv=0; lv<NLEVEL; lv++)
+   {
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _DENS, _NONE,
+                         Rho_ParaBuf, USELB_YES );
+
+//    exclude the time for exchanging MPI buffer data
+      Timer_PoiPerf.Start();
+      for (int t=0; t<Gra_NIterPerf; t++)
+      {
+         if ( lv == 0 )
+            CPU_PoissonSolver_FFT( Poi_Coeff, amr->PotSg[lv], Time[lv] );
+
+         else
+            InvokeSolver( POISSON_SOLVER, lv, Time[lv], NULL_REAL, NULL_REAL, Poi_Coeff,
+                          NULL_INT, NULL_INT, amr->PotSg[lv], false, false );
+      }
+      Timer_PoiPerf.Stop();
+
+      if ( lv > 0 )
+      Buf_GetBufferData( lv, NULL_INT, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, _NONE,
+                         Pot_ParaBuf, USELB_YES );
+   } // for (int lv=0; lv<NLEVEL; lv++)
+
+
+// record the results
+   if ( MPI_Rank == 0 )
+   {
+//    header
+      const char FileName[] = "Record__PoissonPerformance";
+
+      if ( !Aux_CheckFileExist(FileName) )
+      {
+         FILE *File = fopen( FileName, "w" );
+         fprintf( File, "#%6s  %7s  %10s  %7s  %13s  %13s\n",
+                  "NRank", "NThread", "NCell", "NIter", "Time [s]", "Cells/s" );
+         fclose( File );
+      }
+
+//    performance
+      const double TimePoi = Timer_PoiPerf.GetValue();
+      long NCell = 0;
+      for (int lv=0; lv<NLEVEL; lv++)  NCell += (long)NPatchTotal[lv]*CUBE( PS1 );
+
+      FILE *File = fopen( FileName, "a" );
+      fprintf( File, "%7d  %7d  %10ld  %7d  %13.7e  %13.7e\n",
+               MPI_NRank, OMP_NTHREAD, NCell, Gra_NIterPerf, TimePoi, (double)NCell*Gra_NIterPerf/TimePoi );
+      fclose( File );
+   } // if ( MPI_Rank == 0 )
+
+} // FUNCTION : Aux_Record_Gravity
 #endif // #if ( MODEL == HYDRO  &&  defined GRAVITY )
 
 
@@ -336,6 +419,7 @@ void Init_TestProb_Hydro_Gravity()
 
    Init_Function_User_Ptr = SetGridIC;
    Output_User_Ptr        = OutputError;
+   Aux_Record_User_Ptr    = Aux_Record_Gravity;
 #  endif
 
 
