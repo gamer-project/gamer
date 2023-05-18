@@ -1,6 +1,61 @@
 #include "GAMER.h"
 
 
+#ifdef MHD
+// declare as static so that other functions cannot invoke it directly and must use the function pointer
+static void Init_BField_ByVecPot_User_Template( double *mag_vecpot, const double x, const double y, const double z, const double Time,
+                                                const int lv, const char Axis, double AuxArray[] );
+
+// this function pointer must be set by a test problem initializer
+void (*Init_BField_ByVecPot_User_Ptr)( double *mag_vecpot, const double x, const double y, const double z, const double Time,
+                                       const int lv, const char Axis, double AuxArray[] ) = NULL;
+#endif
+
+
+
+
+#ifdef MHD
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_BField_ByVecPot_User_Template
+// Description :  Function template to initialize the magnetic vector potential
+//
+// Note        :  1. Invoked by MHD_Init_BField_ByVecPot_Function() using the function pointer
+//                   "Init_BField_ByVecPot_User_Ptr", which must be set by a test problem initializer
+//                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
+//                   --> Please ensure that everything here is thread-safe
+//
+// Parameter   :  mag_vecpot : Output magnetic vector potential
+//                x/y/z      : Target physical coordinates
+//                Time       : Target physical time
+//                lv         : Target refinement level
+//                Axis       : Axis of the output magnetic vector potential
+//                AuxArray   : Auxiliary array
+//
+// Return      :  magnetic vector potential
+//-------------------------------------------------------------------------------------------------------
+void Init_BField_ByVecPot_User_Template( double *mag_vecpot, const double x, const double y, const double z, const double Time,
+                                         const int lv, const char Axis, double AuxArray[] )
+{
+
+   const double BoxCenter[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
+
+   const double x0    = x - BoxCenter[0];
+   const double y0    = y - BoxCenter[1];
+   const double varpi = sqrt(  SQR( x0 ) + SQR( y0 )  );
+
+
+   switch ( Axis )
+   {
+      case 'x' :   *mag_vecpot = 0.0;           break;
+      case 'y' :   *mag_vecpot = 0.0;           break;
+      case 'z' :   *mag_vecpot = 1.0 / varpi;   break;
+      default  :   Aux_Error( ERROR_INFO, "unsupported Axis (%d) !!\n", Axis );
+   }
+
+} // FUNCTION : Init_BField_ByVecPot_User_Template
+#endif // #ifdef MHD
+
 
 
 //-------------------------------------------------------------------------------------------------------
