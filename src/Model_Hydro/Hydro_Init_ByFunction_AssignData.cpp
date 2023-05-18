@@ -156,7 +156,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
    if ( Init_Function_User_Ptr == NULL )  Aux_Error( ERROR_INFO, "Init_Function_User_Ptr == NULL !!\n" );
 
 #  ifdef MHD
-   if ( Init_Function_BField_User_Ptr == NULL  &&  !OPT__INIT_BFIELD_BYFILE )
+   if ( Init_Function_BField_User_Ptr == NULL  &&  !OPT__INIT_BFIELD_BYVECPOT )
       Aux_Error( ERROR_INFO, "Init_Function_BField_User_Ptr == NULL !!\n" );
 #  endif
 
@@ -179,7 +179,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
 
 #  ifdef MHD
-   if ( OPT__INIT_BFIELD_BYFILE )   MHD_Init_BField_ByFile( lv );
+   if ( OPT__INIT_BFIELD_BYVECPOT )   MHD_Init_BField_ByFile( lv );
 #  endif
 
 
@@ -189,7 +189,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 //    1. set the magnetic field
 #     ifdef MHD
 
-      if ( !OPT__INIT_BFIELD_BYFILE ) {
+      if ( !OPT__INIT_BFIELD_BYVECPOT ) {
 
          real magnetic_1v, magnetic_sub[NCOMP_MAG];
 
@@ -226,7 +226,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
                amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[v][ idx ++ ] = magnetic_1v*_NSub2;
             }}} // i,j,k
          } // for (int v=0; v<NCOMP_MAG; v++)
-      } // if ( !OPT__INIT_BFIELD_BYFILE )
+      } // if ( !OPT__INIT_BFIELD_BYVECPOT )
 
 #     endif // #ifdef MHD
 
