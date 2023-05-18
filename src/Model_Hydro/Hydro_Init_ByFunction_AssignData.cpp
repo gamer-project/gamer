@@ -179,7 +179,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
 
 #  ifdef MHD
-   if ( OPT__INIT_BFIELD_BYVECPOT )   MHD_Init_BField_ByFile( lv );
+   if ( OPT__INIT_BFIELD_BYVECPOT )   MHD_Init_BField_ByVecPot_File( lv );
 #  endif
 
 
