@@ -3,12 +3,12 @@
 
 #ifdef MHD
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-static void Init_BField_ByVecPot_User_Template( double *mag_vecpot, const double x, const double y, const double z, const double Time,
-                                                const int lv, const char Axis, double AuxArray[] );
+static double Init_BField_ByVecPot_User_Template( const double x, const double y, const double z, const double Time,
+                                                  const int lv, const char Axis, double AuxArray[] );
 
 // this function pointer must be set by a test problem initializer
-void (*Init_BField_ByVecPot_User_Ptr)( double *mag_vecpot, const double x, const double y, const double z, const double Time,
-                                       const int lv, const char Axis, double AuxArray[] ) = NULL;
+double (*Init_BField_ByVecPot_User_Ptr)( const double x, const double y, const double z, const double Time,
+                                         const int lv, const char Axis, double AuxArray[] ) = NULL;
 #endif
 
 
@@ -25,8 +25,7 @@ void (*Init_BField_ByVecPot_User_Ptr)( double *mag_vecpot, const double x, const
 //                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
 //                   --> Please ensure that everything here is thread-safe
 //
-// Parameter   :  mag_vecpot : Output magnetic vector potential
-//                x/y/z      : Target physical coordinates
+// Parameter   :  x/y/z      : Target physical coordinates
 //                Time       : Target physical time
 //                lv         : Target refinement level
 //                Axis       : Axis of the output magnetic vector potential
@@ -34,24 +33,29 @@ void (*Init_BField_ByVecPot_User_Ptr)( double *mag_vecpot, const double x, const
 //
 // Return      :  magnetic vector potential
 //-------------------------------------------------------------------------------------------------------
-void Init_BField_ByVecPot_User_Template( double *mag_vecpot, const double x, const double y, const double z, const double Time,
-                                         const int lv, const char Axis, double AuxArray[] )
+double Init_BField_ByVecPot_User_Template( const double x, const double y, const double z, const double Time,
+                                           const int lv, const char Axis, double AuxArray[] )
 {
 
    const double BoxCenter[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
 
    const double x0    = x - BoxCenter[0];
    const double y0    = y - BoxCenter[1];
-   const double varpi = sqrt(  SQR( x0 ) + SQR( y0 )  );
+   const double varpi = sqrt( SQR(x0) + SQR(y0) );
+
+         double mag_vecpot;
 
 
    switch ( Axis )
    {
-      case 'x' :   *mag_vecpot = 0.0;           break;
-      case 'y' :   *mag_vecpot = 0.0;           break;
-      case 'z' :   *mag_vecpot = 1.0 / varpi;   break;
+      case 'x' :   mag_vecpot = 0.0;           break;
+      case 'y' :   mag_vecpot = 0.0;           break;
+      case 'z' :   mag_vecpot = 1.0 / varpi;   break;
       default  :   Aux_Error( ERROR_INFO, "unsupported Axis (%d) !!\n", Axis );
    }
+
+
+   return mag_vecpot;
 
 } // FUNCTION : Init_BField_ByVecPot_User_Template
 #endif // #ifdef MHD
@@ -102,7 +106,10 @@ void MHD_Init_BField_ByVecPot_Function( const int B_lv )
 
 
 // loop over the patches on the target AMR level
-   const double dh = amr->dh[B_lv];
+   const double sample_res  = pow(2, MAX_LEVEL - B_lv);
+   const double sample_fact = 1.0 / ((double)sample_res);
+   const double dh          = amr->dh[B_lv];
+   const double dh_sample   = dh * sample_fact;
 
 #  pragma omp parallel for schedule( runtime ) num_threads( OMP_NThread )
    for (int PID=0; PID<amr->NPatchComma[B_lv][1]; PID++)
@@ -114,15 +121,11 @@ void MHD_Init_BField_ByVecPot_Function( const int B_lv )
       const int TID = 0;
 #     endif
 
-      const double EdgeL[3] = { amr->patch[0][B_lv][PID]->EdgeL[0],
-                                amr->patch[0][B_lv][PID]->EdgeL[1],
-                                amr->patch[0][B_lv][PID]->EdgeL[2] };
-
 
 //    set the magnetic vector potential from function
-      for (int k=0; k<PS1+1; k++) {  const double z0 = EdgeL[2] + k*dh;  const double zc = z0 + 0.5*dh;
-      for (int j=0; j<PS1+1; j++) {  const double y0 = EdgeL[1] + j*dh;  const double yc = y0 + 0.5*dh;
-      for (int i=0; i<PS1+1; i++) {  const double x0 = EdgeL[0] + i*dh;  const double xc = x0 + 0.5*dh;
+      for (int k=0; k<PS1+1; k++) {  const double z0 = amr->patch[0][B_lv][PID]->EdgeL[2] + k*dh;
+      for (int j=0; j<PS1+1; j++) {  const double y0 = amr->patch[0][B_lv][PID]->EdgeL[1] + j*dh;
+      for (int i=0; i<PS1+1; i++) {  const double x0 = amr->patch[0][B_lv][PID]->EdgeL[0] + i*dh;
 
          int idx = IDX321( i, j, k, PS1+1, PS1+1 );
 
@@ -130,9 +133,38 @@ void MHD_Init_BField_ByVecPot_Function( const int B_lv )
          Ay[TID][idx] = 0.0;
          Az[TID][idx] = 0.0;
 
-         if ( i != PS1 )   Init_BField_ByVecPot_User_Ptr( &Ax[TID][idx], xc, y0, z0, Time[B_lv], B_lv, 'x', NULL );
-         if ( j != PS1 )   Init_BField_ByVecPot_User_Ptr( &Ay[TID][idx], x0, yc, z0, Time[B_lv], B_lv, 'y', NULL );
-         if ( k != PS1 )   Init_BField_ByVecPot_User_Ptr( &Az[TID][idx], x0, y0, zc, Time[B_lv], B_lv, 'z', NULL );
+
+         if ( i != PS1 ) {
+
+            for ( int ii=0; ii<sample_res; ii++ ) {
+               const double x = x0 + (ii + 0.5) * dh_sample;
+               Ax[TID][idx] += Init_BField_ByVecPot_User_Ptr( x,  y0, z0, Time[B_lv], B_lv, 'x', NULL );
+            }
+
+         }
+
+         if ( j != PS1 ) {
+
+            for ( int jj=0; jj<sample_res; jj++ ) {
+               const double y = y0 + (jj + 0.5) * dh_sample;
+               Ay[TID][idx] += Init_BField_ByVecPot_User_Ptr( x0, y,  z0, Time[B_lv], B_lv, 'y', NULL );
+            }
+
+         }
+
+         if ( k != PS1 ) {
+
+            for ( int kk=0; kk<sample_res; kk++ ) {
+               const double z = z0 + (kk + 0.5) * dh_sample;
+               Az[TID][idx] += Init_BField_ByVecPot_User_Ptr( x0, y0, z,  Time[B_lv], B_lv, 'z', NULL );
+            }
+
+         }
+
+
+         Ax[TID][idx] *= sample_fact;
+         Ay[TID][idx] *= sample_fact;
+         Az[TID][idx] *= sample_fact;
 
       }}}
 
