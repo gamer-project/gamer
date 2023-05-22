@@ -22,14 +22,6 @@ typedef double real;
 typedef float  real;
 #endif
 
-#ifndef GRAMFE_ENABLE_SINGLE_PRECISION
-#  ifdef GRAMFE_FLOAT8
-#     error "Cannot enable GRAMFE_FLOAT8 and GRAMFE_ENABLE_SINGLE_PRECISION at the same time!"
-#  else
-#     define GRAMFE_FLOAT8
-#  endif
-#endif
-
 #ifdef GRAMFE_FLOAT8
 typedef double gramfe_float;
 #else

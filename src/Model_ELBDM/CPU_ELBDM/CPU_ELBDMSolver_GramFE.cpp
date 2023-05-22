@@ -95,6 +95,7 @@ struct complex_type : public gramfe_float_complex {
    gramfe_float real() const {
       return c_re(*this);
    }
+
    gramfe_float imag() const {
       return c_im(*this);
    }
@@ -102,6 +103,7 @@ struct complex_type : public gramfe_float_complex {
    void real(gramfe_float re) {
       c_re(*this) = re;
    }
+
    void imag(gramfe_float im) {
       c_im(*this) = im;
    }
@@ -109,9 +111,11 @@ struct complex_type : public gramfe_float_complex {
    complex_type operator*(const complex_type& other) {
          return complex_type(this->real() * other.real() - this->imag() * other.imag(), this->real() * other.imag() + this->imag() * other.real());
    }
+
    complex_type operator+(const complex_type& other) {
          return complex_type(this->real() + other.real(), this->imag() + other.imag());
    }
+
    complex_type operator-(const complex_type& other) {
          return complex_type(this->real() - other.real(), this->imag() - other.imag());
    }
@@ -120,6 +124,7 @@ struct complex_type : public gramfe_float_complex {
       (*this) = (*this) * other;
       return *this;
    }
+
    complex_type& operator+=(const complex_type& other) {
       (*this) = (*this) + other;
       return *this;
@@ -190,10 +195,10 @@ static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                            int NPatchGroup,
                            const gramfe_float dt, const gramfe_float _dh, const gramfe_float Eta,
                            const uint j_gap, const uint k_gap,
-                           complex_type s_In  [][GRAMFE_FLU_NXT],
-                           complex_type s_Al  [][GRAMFE_NDELTA],
-                           complex_type s_Ar  [][GRAMFE_NDELTA],
-                           complex_type ExpCoeff [],
+                           complex_type s_In       [][GRAMFE_FLU_NXT],
+                           complex_type s_Al       [][GRAMFE_NDELTA],
+                           complex_type s_Ar       [][GRAMFE_NDELTA],
+                           complex_type ExpCoeff   [],
                            const bool FinalOut, const int XYZ, const gramfe_float MinDens,
                            forward_workspace_type Workspace,
                            inverse_workspace_type WorkspaceInv );
@@ -295,8 +300,8 @@ void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 // create memories for columns of various intermediate fields in shared GPU memory
    complex_type (*s_In)[GRAMFE_FLU_NXT]             = (complex_type (*)[GRAMFE_FLU_NXT]) (shared_mem);
-   complex_type (*s_Ae)[GRAMFE_NDELTA]              = (complex_type (*)[GRAMFE_NDELTA])  (shared_mem + CGPU_FLU_BLOCK_SIZE_Y * (GRAMFE_FLU_NXT                   ));    // 0.5 * log(rho)
-   complex_type (*s_Ao)[GRAMFE_NDELTA]              = (complex_type (*)[GRAMFE_NDELTA])  (shared_mem + CGPU_FLU_BLOCK_SIZE_Y * (GRAMFE_FLU_NXT + GRAMFE_NDELTA));       // the fluxes for every thread block
+   complex_type (*s_Ae)[GRAMFE_NDELTA]              = (complex_type (*)[GRAMFE_NDELTA])  (shared_mem + CGPU_FLU_BLOCK_SIZE_Y * (GRAMFE_FLU_NXT                ));    // even extension coefficients
+   complex_type (*s_Ao)[GRAMFE_NDELTA]              = (complex_type (*)[GRAMFE_NDELTA])  (shared_mem + CGPU_FLU_BLOCK_SIZE_Y * (GRAMFE_FLU_NXT + GRAMFE_NDELTA));    // odd extension coefficients
    const int NPatchGroup                            = 0;
 
 #  else // #  ifdef __CUDACC__
