@@ -27,7 +27,7 @@
 
 // include CUDA FFT library if GPU kinetic ELBDM Gram-Fourier extension solver is enabled
 #if ( defined(__CUDACC__) && MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
-#include <cufftdx.hpp>
+#  include <cufftdx.hpp>
 #endif // #if ( defined(__CUDACC__) && MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
 
 // faster integer multiplication in Fermi
@@ -254,32 +254,6 @@
 //=========================================================================================
 #elif ( MODEL == ELBDM )
 
-// set parameters of gram extension scheme
-# if ( WAVE_SCHEME == WAVE_GRAMFE )
-#   define GRAMFE_GAMMA  150
-#   define GRAMFE_G      63
-#   define GRAMFE_NDELTA 14
-//  default values in order for GRAMFE_FLU_NXT to have small prime factorisations
-#   if ( PATCH_SIZE == 8 )
-#   define GRAMFE_ND     32  // GRAMFE_FLU_NXT = 2^6
-#   elif ( PATCH_SIZE == 16 )
-#   define GRAMFE_ND     24  // GRAMFE_FLU_NXT = 2^3 * 3^2
-#   elif ( PATCH_SIZE == 32 )
-#   define GRAMFE_ND     28  // GRAMFE_FLU_NXT = 2^2 * 3^3
-#   elif ( PATCH_SIZE == 64 )
-#   define GRAMFE_ND     24  // GRAMFE_FLU_NXT = 2^3 * 3 * 7
-#   elif ( PATCH_SIZE == 128 )
-#   define GRAMFE_ND     28  // GRAMFE_FLU_NXT = 2^2 * 3 * 5^2
-#   else
-#   error : ERROR : UNSUPPORTED PATCH_SIZE FOR GRAM FOURIER EXTENSION SCHEME
-#   endif
-# endif
-# if ( GRAMFE_ORDER > GRAMFE_NDELTA )
-#  error : ERROR : Gram Fourier extension order must not be higher than NDELTA
-# endif
-# define GRAMFE_FLU_NXT ( FLU_NXT + GRAMFE_ND )
-# endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
-
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
@@ -487,15 +461,15 @@
 
 
 #  if   ( GPU_ARCH == FERMI || GPU_ARCH == KEPLER || GPU_ARCH == MAXWELL || GPU_ARCH == PASCAL )
-#  error : ERROR : Unsupported GPU architecture in cuFFTdx library for GPU Gram Fourier extension scheme
+#     error : ERROR : Unsupported GPU architecture in cuFFTdx library for GPU Gram Fourier extension scheme!
 #  elif ( GPU_ARCH == VOLTA )
-   #define GPU_COMPUTE_CAPABILITY 700
+#     define GPU_COMPUTE_CAPABILITY 700
 #  elif ( GPU_ARCH == TURING )
-   #define GPU_COMPUTE_CAPABILITY 750
+#     define GPU_COMPUTE_CAPABILITY 750
 #  elif ( GPU_ARCH == AMPERE )
-   #define GPU_COMPUTE_CAPABILITY 800
+#     define GPU_COMPUTE_CAPABILITY 800
 #  else
-#  error : ERROR : Unknown GPU architecture in GPU Gram Fourier extension scheme ( Please update CUFLU.h )
+#     error : ERROR : Unknown GPU architecture in GPU Gram Fourier extension scheme ( Please update CUFLU.h! )!
 #  endif
 
 // number of blocks suggested by cufftdx disabled by default
@@ -525,8 +499,7 @@ using complex_type = typename FFT::value_type;
 
 # else
 # error : ERROR : Unsupported model in CUFLU.h
-
-#endif // MODEL
+# endif // MODEL
 
 
 // 3. dt solver for fluid

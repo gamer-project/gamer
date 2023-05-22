@@ -1023,12 +1023,10 @@ void Aux_Check_Parameter()
 // errors
 // ------------------------------
 
-
 #  ifndef WAVE_SCHEME
 #     error : ERROR : WAVE_SCHEME not defined in ELBDM !!
 #  endif
 
-#  ifndef
 #  if ( NCOMP_FLUID != 3 )
 #     error : ERROR : NCOMP_FLUID != 3 in ELBDM !!
 #  endif

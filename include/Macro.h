@@ -587,6 +587,33 @@
 #endif // MODEL
 
 
+// set parameters of gram extension scheme
+# if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
+#   define GRAMFE_GAMMA  150
+#   define GRAMFE_G      63
+#   define GRAMFE_NDELTA 14
+#   define GRAMFE_ORDER  14
+//  default values in order for GRAMFE_FLU_NXT to have small prime factorisations
+#   if ( PATCH_SIZE == 8 )
+#     define GRAMFE_ND     32  // GRAMFE_FLU_NXT = 2^6
+#   elif ( PATCH_SIZE == 16 )
+#     define GRAMFE_ND     24  // GRAMFE_FLU_NXT = 2^3 * 3^2
+#   elif ( PATCH_SIZE == 32 )
+#     define GRAMFE_ND     28  // GRAMFE_FLU_NXT = 2^2 * 3^3
+#   elif ( PATCH_SIZE == 64 )
+#     define GRAMFE_ND     24  // GRAMFE_FLU_NXT = 2^3 * 3 * 7
+#   elif ( PATCH_SIZE == 128 )
+#     define GRAMFE_ND     28  // GRAMFE_FLU_NXT = 2^2 * 3 * 5^2
+#   else
+#     error : ERROR : UNSUPPORTED PATCH_SIZE FOR GRAM FOURIER EXTENSION SCHEME
+#   endif // PATCH_SIZE
+# if ( GRAMFE_ORDER > GRAMFE_NDELTA )
+#   error : ERROR : Gram Fourier extension order must not be higher than NDELTA
+# endif
+# define GRAMFE_FLU_NXT ( FLU_NXT + GRAMFE_ND )
+# endif // # if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
+
+
 // self-gravity constants
 #ifdef GRAVITY
 
