@@ -1,7 +1,8 @@
 #include "GAMER.h"
 
-
 #ifdef MHD
+
+
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 static double Init_BField_ByVecPot_User_Template( const double x, const double y, const double z, const double Time,
                                                   const int lv, const char Axis, double AuxArray[] );
@@ -9,12 +10,10 @@ static double Init_BField_ByVecPot_User_Template( const double x, const double y
 // this function pointer must be set by a test problem initializer
 double (*Init_BField_ByVecPot_User_Ptr)( const double x, const double y, const double z, const double Time,
                                          const int lv, const char Axis, double AuxArray[] ) = NULL;
-#endif
 
 
 
 
-#ifdef MHD
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_BField_ByVecPot_User_Template
 // Description :  Function template to initialize the magnetic vector potential
@@ -30,8 +29,9 @@ double (*Init_BField_ByVecPot_User_Ptr)( const double x, const double y, const d
 //                lv         : Target refinement level
 //                Axis       : Axis of the output magnetic vector potential
 //                AuxArray   : Auxiliary array
+//                             --> useless since it is currently fixed to NULL
 //
-// Return      :  magnetic vector potential
+// Return      :  "XYZ" component of the magnetic vector potential at (x, y, z, Time)
 //-------------------------------------------------------------------------------------------------------
 double Init_BField_ByVecPot_User_Template( const double x, const double y, const double z, const double Time,
                                            const int lv, const char Axis, double AuxArray[] )
@@ -41,9 +41,9 @@ double Init_BField_ByVecPot_User_Template( const double x, const double y, const
 
    const double x0    = x - BoxCenter[0];
    const double y0    = y - BoxCenter[1];
-   const double varpi = sqrt( SQR(x0) + SQR(y0) );
+   const double varpi = 1.0e-4*sqrt( SQR(x0) + SQR(y0) + SQR(amr->dh[MAX_LEVEL]) );
 
-         double mag_vecpot;
+   double mag_vecpot;
 
 
    switch ( Axis )
@@ -51,14 +51,13 @@ double Init_BField_ByVecPot_User_Template( const double x, const double y, const
       case 'x' :   mag_vecpot = 0.0;           break;
       case 'y' :   mag_vecpot = 0.0;           break;
       case 'z' :   mag_vecpot = 1.0 / varpi;   break;
-      default  :   Aux_Error( ERROR_INFO, "unsupported Axis (%d) !!\n", Axis );
+      default  :   Aux_Error( ERROR_INFO, "unsupported Axis (%c) !!\n", Axis );
    }
 
 
    return mag_vecpot;
 
 } // FUNCTION : Init_BField_ByVecPot_User_Template
-#endif // #ifdef MHD
 
 
 
@@ -82,7 +81,10 @@ void MHD_Init_BField_ByVecPot_Function( const int B_lv )
    Aux_Error( ERROR_INFO, "MHD must be enabled !!\n" );
 #  endif
 
-   if ( Init_BField_ByVecPot_User_Ptr == NULL  &&  OPT__INIT_BFIELD_BYVECPOT == 2 )
+   if ( OPT__INIT_BFIELD_BYVECPOT =! 2 )
+      Aux_Error( ERROR_INFO, "OPT__INIT_BFIELD_BYVECPOT != 2 !!\n" );
+
+   if ( Init_BField_ByVecPot_User_Ptr == NULL )
       Aux_Error( ERROR_INFO, "Init_BField_ByVecPot_User_Ptr == NULL !!\n" );
 
 
@@ -107,7 +109,7 @@ void MHD_Init_BField_ByVecPot_Function( const int B_lv )
 
 // loop over the patches on the target AMR level
    const double sample_res  = pow(2, MAX_LEVEL - B_lv);
-   const double sample_fact = 1.0 / ((double)sample_res);
+   const double sample_fact = 1.0 / sample_res;
    const double dh          = amr->dh[B_lv];
    const double dh_sample   = dh * sample_fact;
 
@@ -217,3 +219,7 @@ void MHD_Init_BField_ByVecPot_Function( const int B_lv )
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Constructing the magnetic field from vector potential ... done\n" );
 
 } // FUNCTION : MHD_Init_BField_ByVecPot_Function
+
+
+
+#endif // #ifdef MHD
