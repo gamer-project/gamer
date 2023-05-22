@@ -200,8 +200,8 @@ void Init_FFTW()
    if (FFTW3_Single_OMP_Enabled) fftwf_plan_with_nthreads(1);
 #  endif // # if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )
 
-   FFTW_Plan_ExtPsi      = create_gramfe_fftw_1d_forward_c2c_plan ( ExtPsi_FFT_Size, ExtPsiK );
-   FFTW_Plan_ExtPsi_Inv  = create_gramfe_fftw_1d_backward_c2c_plan( ExtPsi_FFT_Size, ExtPsiK );
+   FFTW_Plan_ExtPsi      = gramfe_create_fftw_1d_forward_c2c_plan ( ExtPsi_FFT_Size, ExtPsiK );
+   FFTW_Plan_ExtPsi_Inv  = gramfe_create_fftw_1d_backward_c2c_plan( ExtPsi_FFT_Size, ExtPsiK );
 
 // restore regular settings
 #  if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )
@@ -256,8 +256,8 @@ void End_FFTW()
    destroy_complex_fftw_plan  ( FFTW_Plan_Psi_Inv );
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
-   destroy_gramfe_complex_fftw_plan  ( FFTW_Plan_ExtPsi     );
-   destroy_gramfe_complex_fftw_plan  ( FFTW_Plan_ExtPsi_Inv );
+   gramfe_destroy_complex_fftw_plan  ( FFTW_Plan_ExtPsi     );
+   gramfe_destroy_complex_fftw_plan  ( FFTW_Plan_ExtPsi_Inv );
 #  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
 #  endif // #if ( MODEL == ELBDM )
 
