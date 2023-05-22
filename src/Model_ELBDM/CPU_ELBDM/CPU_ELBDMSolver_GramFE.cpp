@@ -562,7 +562,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   j = j_gap + ( sj + Column0 ) % size_j ;
                   k = k_gap + ( sj + Column0 ) / size_j;
 
-                  Idx2 = get1D2( k, j, si, XYZ);
+                  Idx2 = get1D2( k, j, si, XYZ );
 
                   Amp_New =  SQR(s_In[sj][si].real()) + SQR(s_In[sj][si].imag());
                   Re_New  =  s_In[sj][si].real();
@@ -586,7 +586,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   j = j_gap + ( sj + Column0 ) % size_j ;
                   k = k_gap + ( sj + Column0 ) / size_j;
 
-                  Idx1 = get1D1( k, j,si, XYZ);
+                  Idx1 = get1D1( k, j,si, XYZ );
                   g_Fluid_In[bx][0][Idx1]     = s_In[sj][si].real();
                   g_Fluid_In[bx][1][Idx1]     = s_In[sj][si].imag();
                }  // CELL_LOOP(FLU_NXT, FLU_GHOST_SIZE, FLU_GHOST_SIZE)
