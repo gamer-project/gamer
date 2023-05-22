@@ -120,15 +120,7 @@ SIMU_OPTION += -DLAPLACIAN_4TH
 # ------------------------------------------------------------------------------------
 else ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
 # enable for GPU support of Gram-Fourier extension algorithm in GPU mode (CPU is used by default because it is faster)
-#SIMU_OPTION += -DGRAMFE_ENABLE_GPU              # must enable -std=c++17 for cuda compiler
-
-# Only for development:
-#SIMU_OPTION += -DGRAMFE_NDELTA    = 14          # size of boundary used for Gram polynomials
-#SIMU_OPTION += -DGRAMFE_ORDER     = 14          # order of Gram polynomials
-#SIMU_OPTION += -DGRAMFE_ND        = 28          # size of extension domain
-#SIMU_OPTION += -DGRAMFE_GAMMA     = 150         # only for record, not used in Gram-Fourier extension scheme
-#SIMU_OPTION += -DGRAMFE_G         = 63          # only for record, not used in Gram-Fourier extension scheme
-#SIMU_OPTION += -DGRAMFE_ENABLE_SINGLE_PRECISION # unstable
+#SIMU_OPTION += -DGRAMFE_ENABLE_GPU
 endif # WAVE_SCHEME
 endif # MODEL
 
@@ -330,6 +322,14 @@ endif
 #NVCC = $(CUDA_PATH)/bin/nvcc -ccbin YOUR_G++            # with a specified host compiler
 #NVCC = nvcc -ccbin CC                                   # for the Cray environment
 
+# enable C++ 17 support for ELBDM GPU Gram-Fourier extension scheme
+ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
+   ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
+      ifeq "$(filter -DGRAMFE_ENABLE_GPU, $(SIMU_OPTION))" "-DGRAMFE_ENABLE_GPU"
+         NVCC += -std=c++17
+      endif
+   endif
+endif
 
 
 
