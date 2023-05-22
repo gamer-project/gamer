@@ -425,6 +425,7 @@
 //=========================================================================================
 #elif ( MODEL == ELBDM )
 #     define FLU_BLOCK_SIZE_X       PS2
+
 #  if   ( GPU_ARCH == FERMI )
 #     ifdef FLOAT8
 #        define FLU_BLOCK_SIZE_Y    4
@@ -485,14 +486,8 @@
 # if ( defined(__CUDACC__) && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
 
 
-#  if   ( GPU_ARCH == FERMI )
-   #define GPU_COMPUTE_CAPABILITY 200
-#  elif ( GPU_ARCH == KEPLER )
-   #define GPU_COMPUTE_CAPABILITY 300
-#  elif ( GPU_ARCH == MAXWELL )
-   #define GPU_COMPUTE_CAPABILITY 500
-#  elif ( GPU_ARCH == PASCAL )
-   #define GPU_COMPUTE_CAPABILITY 600
+#  if   ( GPU_ARCH == FERMI || GPU_ARCH == KEPLER || GPU_ARCH == MAXWELL || GPU_ARCH == PASCAL )
+#  error : ERROR : Unsupported GPU architecture in cuFFTdx library for GPU Gram Fourier extension scheme
 #  elif ( GPU_ARCH == VOLTA )
    #define GPU_COMPUTE_CAPABILITY 700
 #  elif ( GPU_ARCH == TURING )
@@ -500,9 +495,12 @@
 #  elif ( GPU_ARCH == AMPERE )
    #define GPU_COMPUTE_CAPABILITY 800
 #  else
-#  error : ERROR : Unsupported GPU architecture in cuFFTdx library for GPU Gram Fourier extension scheme
+#  error : ERROR : Unknown GPU architecture in GPU Gram Fourier extension scheme ( Please update CUFLU.h )
 #  endif
 
+// number of blocks suggested by cufftdx disabled by default
+// profiling the code showed that a different number of blocks provides better performance
+// this is because the code does not only compute the FFT, but also the Fourier extension
 #  define GRAMFE_USE_SUGGESTED_BLOCKS        0
 #  define GRAMFE_CUSTOM_ELEMENTS_PER_THREAD  4
 #  define GRAMFE_CUSTOM_FFTS_PER_BLOCK       12

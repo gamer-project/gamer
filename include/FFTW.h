@@ -178,7 +178,7 @@
 #define gramfe_float_fftw3_plan_dft_r2c_1d     fftwf_plan_dft_r2c_1d
 #endif // #ifdef GRAMFE_FLOAT8 ... # else
 #endif // #if ( WAVE_SCHEME == WAVE_GRAMFE)
-#endif // # if ( SUPPORT_FFTW == FFTW3 )  ... # else
+#endif // # if ( SUPPORT_FFTW == FFTW3
 
 //wrappers for fftw plans and complex 1D-transform used in Gram-Fourier extension algorithm
 #if ( SUPPORT_FFTW == FFTW3 )
