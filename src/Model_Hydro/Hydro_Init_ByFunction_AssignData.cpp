@@ -181,10 +181,10 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 #  ifdef MHD
    switch ( OPT__INIT_BFIELD_BYVECPOT )
    {
-      case 0 :                                            break;
-      case 1 : MHD_Init_BField_ByVecPot_File( lv );       break;
-      case 2 : MHD_Init_BField_ByVecPot_Function( lv );   break;
-      default: Aux_Error( ERROR_INFO, "unsupported OPT__INIT_BFIELD_BYVECPOT (%d) !!\n", OPT__INIT_BFIELD_BYVECPOT );
+      case INIT_MAG_BYVECPOT_NONE :                                            break;
+      case INIT_MAG_BYVECPOT_FILE : MHD_Init_BField_ByVecPot_File( lv );       break;
+      case INIT_MAG_BYVECPOT_FUNC : MHD_Init_BField_ByVecPot_Function( lv );   break;
+      default                     : Aux_Error( ERROR_INFO, "unsupported OPT__INIT_BFIELD_BYVECPOT (%d) !!\n", OPT__INIT_BFIELD_BYVECPOT );
    }
 #  endif
 

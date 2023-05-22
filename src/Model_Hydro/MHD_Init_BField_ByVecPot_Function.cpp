@@ -81,8 +81,8 @@ void MHD_Init_BField_ByVecPot_Function( const int B_lv )
    Aux_Error( ERROR_INFO, "MHD must be enabled !!\n" );
 #  endif
 
-   if ( OPT__INIT_BFIELD_BYVECPOT =! 2 )
-      Aux_Error( ERROR_INFO, "OPT__INIT_BFIELD_BYVECPOT != 2 !!\n" );
+   if ( OPT__INIT_BFIELD_BYVECPOT != INIT_MAG_BYVECPOT_FUNC )
+      Aux_Error( ERROR_INFO, "OPT__INIT_BFIELD_BYVECPOT != %d !!\n", INIT_MAG_BYVECPOT_FUNC );
 
    if ( Init_BField_ByVecPot_User_Ptr == NULL )
       Aux_Error( ERROR_INFO, "Init_BField_ByVecPot_User_Ptr == NULL !!\n" );
