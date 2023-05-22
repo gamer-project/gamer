@@ -565,10 +565,6 @@
 
 
 #elif ( MODEL == ELBDM )   // ELBDM
-// use finite-difference scheme by default
-#  ifndef WAVE_SCHEME
-#  define WAVE_SCHEME WAVE_FD
-#  endif
 
 #  if ( WAVE_SCHEME == WAVE_FD )
 #     ifdef LAPLACIAN_4TH
@@ -577,6 +573,10 @@
 #        define FLU_GHOST_SIZE         3
 #     endif
 #  elif ( WAVE_SCHEME == WAVE_GRAMFE )
+// the accuracy of the local spectral method increases with larger FLU_GHOST_SIZE.
+// a minimum of FLU_GHOST_SIZE 6 has been found to be stable with the filter options alpha = 100 and beta = 32 * log(10)
+// larger ghost zones should increase stability and accuracy and allow for larger timesteps, but have not extensively tested
+// for smaller ghost zones, GRAMFE_ORDER should be decreased to values between 6 and 12 and the filter parameters should be adapted
 #        define FLU_GHOST_SIZE         8
 #  else  // # if ( WAVE_SCHEME == WAVE_FD ) ... else
 #     error : ERROR : unsupported WAVE_SCHEME !!
@@ -585,45 +585,6 @@
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
-
-
-// set default parameters of gram extension scheme if not changed in Makefile
-# if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
-# ifndef GRAMFE_GAMMA
-#   define GRAMFE_GAMMA  150
-# endif
-# ifndef GRAMFE_G
-#   define GRAMFE_G      63
-# endif
-# ifndef GRAMFE_NDELTA
-#   define GRAMFE_NDELTA 14
-# endif
-# ifndef GRAMFE_ND
-//  default values in order for GRAMFE_FLU_NXT to have small prime factorisations
-#   if ( PATCH_SIZE == 8 )
-#   define GRAMFE_ND     32  // GRAMFE_FLU_NXT = 2^6
-#   elif ( PATCH_SIZE == 16 )
-#   define GRAMFE_ND     24  // GRAMFE_FLU_NXT = 2^3 * 3^2
-#   elif ( PATCH_SIZE == 32 )
-#   define GRAMFE_ND     28  // GRAMFE_FLU_NXT = 2^2 * 3^3
-#   elif ( PATCH_SIZE == 64 )
-#   define GRAMFE_ND     24  // GRAMFE_FLU_NXT = 2^3 * 3 * 7
-#   elif ( PATCH_SIZE == 128 )
-#   define GRAMFE_ND     28  // GRAMFE_FLU_NXT = 2^2 * 3 * 5^2
-#   else
-#   error : ERROR : UNSUPPORTED PATCH_SIZE FOR GRAM FOURIER EXTENSION SCHEME
-#   endif
-# endif
-# ifndef GRAMFE_ORDER
-#   define GRAMFE_ORDER  14
-# endif
-# if ( GRAMFE_ORDER > GRAMFE_NDELTA )
-#  error : ERROR : Gram Fourier extension order must not be higher than NDELTA
-# endif
-# define GRAMFE_FLU_NXT ( FLU_NXT + GRAMFE_ND )
-# endif // # if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
-
-
 
 
 // self-gravity constants

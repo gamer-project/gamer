@@ -1022,6 +1022,13 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
+
+
+#  ifndef WAVE_SCHEME
+#     error : ERROR : WAVE_SCHEME not defined in ELBDM !!
+#  endif
+
+#  ifndef
 #  if ( NCOMP_FLUID != 3 )
 #     error : ERROR : NCOMP_FLUID != 3 in ELBDM !!
 #  endif
@@ -1080,9 +1087,21 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL must work with SUPPORT_FFTW !!\n" );
 #  endif
 
-#  if ( WAVE_SCHEME == WAVE_GRAMFE && ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+#  if ( SUPPORT_FFTW == FFTW2 && !(defined(GRAMFE_ENABLE_GPU)) && defined(FLOAT8) && defined(GRAMFE_ENABLE_SINGLE_PRECISION) )
+   Aux_Error( stderr, "WARNING : For %s solver using CPU and FFTW2, FLOAT8 and GRAMFE_ENABLE_SINGLE_PRECISION are mutually exclusive options !!\n",
+                  "WAVE_GRAMFE"  );
+#  endif // #  if ( SUPPORT_FFTW == FFTW2 && !(defined(FLOAT8)) )
+
+#  if ( FLU_GHOST_SIZE < 6 )
+#  error : ERROR : WAVE_GRAMFE only stable (empirically) for FLU_GHOST_SIZE >= 6!
+#  endif
+
+#  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
 #  error : ERROR : CPU Gram-Fourier extension scheme requires SUPPORT_FFTW flag!
 #  endif // #  if ( WAVE_SCHEME == WAVE_GRAMFE && ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
+
+#  endif // #  if ( WAVE_SCHEME == WAVE_GRAMFE )
 
 // warnings
 // ------------------------------
@@ -1159,7 +1178,7 @@ void Aux_Check_Parameter()
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
    if ( OPT__FIXUP_FLUX )
-      Aux_Error( stderr, "WARNING : OPT__FIXUP_FLUX will not be applied when %s is on !!\n",
+      Aux_Message( stderr, "WARNING : OPT__FIXUP_FLUX will not be applied when %s is on !!\n",
                    "WAVE_SCHEME == WAVE_GRAMFE" );
 #  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
 
@@ -1174,26 +1193,17 @@ void Aux_Check_Parameter()
 
 #  elif ( WAVE_SCHEME == WAVE_GRAMFE ) // #  if ( WAVE_SCHEME == WAVE_FD )
 
-   const double dt_fluid_max = 0.4;
+   const double dt_fluid_max = 0.35;
 
    if ( DT__FLUID > dt_fluid_max )
       Aux_Message( stderr, "WARNING : %s solver with DT__FLUID (%13.7e) > %13.7e is unstable !!\n",
                    "WAVE_GRAMFE", DT__FLUID, dt_fluid_max );
 
-#  if ( SUPPORT_FFTW == FFTW3 && defined(GRAMFE_ENABLE_SINGLE_PRECISION) )
+#  ifdef ( GRAMFE_ENABLE_SINGLE_PRECISION )
    Aux_Message( stderr, "WARNING : %s solver using GRAMFE_ENABLE_SINGLE_PRECISION is unstable !!\n",
                   "WAVE_GRAMFE"  );
-#  endif // #  if ( SUPPORT_FFTW == FFTW3 && defined(GRAMFE_ENABLE_SINGLE_PRECISION) )
+#  endif // #  ifdef ( GRAMFE_ENABLE_SINGLE_PRECISION )
 
-#  if ( SUPPORT_FFTW == FFTW2 && !(defined(FLOAT8)) )
-   Aux_Message( stderr, "WARNING : %s solver using CPU and FFTW2 without FLOAT8 is unstable !!\n",
-                  "WAVE_GRAMFE"  );
-#  endif // #  if ( SUPPORT_FFTW == FFTW2 && !(defined(FLOAT8)) )
-
-#  if ( SUPPORT_FFTW == FFTW2 && defined(GRAMFE_ENABLE_SINGLE_PRECISION) )
-   Aux_Message( stderr, "WARNING : %s solver using FFTW2 ignores GRAMFE_ENABLE_SINGLE_PRECISION !!\n",
-                  "WAVE_GRAMFE"  );
-#  endif // #  if ( SUPPORT_FFTW == FFTW2 && defined(GRAMFE_ENABLE_SINGLE_PRECISION) )
 
 #  ifdef CONSERVE_MASS
    Aux_Message( stderr, "WARNING : mass is not conserved with the %s solver even though CONSERVE_MASS is on !!\n",

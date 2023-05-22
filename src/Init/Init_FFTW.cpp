@@ -139,7 +139,7 @@ void Init_FFTW()
 // which are given by the dimensions of the output of the forward transform,
 // are Ny*Nz*Nx because we are using "FFTW_TRANSPOSED_ORDER" in fftwnd_mpi().
    int InvPsi_FFT_Size[3] = { NX0_TOT[0], NX0_TOT[2], NX0_TOT[1] };
-#  endif // # ifdef SERIAL ... # else
+#  endif // # ifdef SERIAL || FFTW3 ... # else
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
    int ExtPsi_FFT_Size    = GRAMFE_FLU_NXT;
@@ -194,7 +194,11 @@ void Init_FFTW()
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
 
-// the Gram-Fourier extension planners only use one thread because OMP parallelisation by evolving different patches parallely
+// the Gram-Fourier extension planners only use one thread because OMP parallelisation evolves different patches parallely
+// From the FFTW3 documentation: https://www.fftw.org/fftw3_doc/Usage-of-Multi_002dthreaded-FFTW.html
+// "You can call fftw_plan_with_nthreads, create some plans,
+// call fftw_plan_with_nthreads again with a different argument, and create some more plans for a new number of threads."
+
 #  if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )
    if (FFTW3_Double_OMP_Enabled)  fftw_plan_with_nthreads(1);
    if (FFTW3_Single_OMP_Enabled) fftwf_plan_with_nthreads(1);

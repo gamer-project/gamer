@@ -403,6 +403,7 @@ CUFFTDX_PATH :=
 #GRACKLE_PATH :=
 #GSL_PATH     := /software/gsl/default
 #LIBYT_PATH   :=
+#CUFFTDX_PATH := /software/cuFFTDx/default
 
 # NTU-hulk (openmpi-intel-qlc)
 #CUDA_PATH    := /opt/gpu/cuda/4.2
