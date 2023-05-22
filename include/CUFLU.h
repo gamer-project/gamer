@@ -25,7 +25,7 @@
 #endif
 
 
-// Include CUDA FFT libraby if gpu kinetic ELBDM Gram Fourier extension solver is enabled
+// include CUDA FFT library if GPU kinetic ELBDM Gram-Fourier extension solver is enabled
 #if ( defined(__CUDACC__) && MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
 #include <cufftdx.hpp>
 #endif // #if ( defined(__CUDACC__) && MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
