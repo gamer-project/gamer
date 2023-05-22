@@ -777,6 +777,11 @@
 #  define FB_SEP_FLUOUT
 #endif
 
+// enable double precision for WAVE_GRAMFE scheme by default
+#if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
+#   define GRAMFE_FLOAT8
+#endif
+
 
 // extreme values
 #ifndef __INT_MAX__

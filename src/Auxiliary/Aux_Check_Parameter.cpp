@@ -1088,18 +1088,18 @@ void Aux_Check_Parameter()
 #  endif
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
-#  if ( SUPPORT_FFTW == FFTW2 && !(defined(GRAMFE_ENABLE_GPU)) && defined(FLOAT8) && defined(GRAMFE_ENABLE_SINGLE_PRECISION) )
-   Aux_Error( stderr, "WARNING : For %s solver using CPU and FFTW2, FLOAT8 and GRAMFE_ENABLE_SINGLE_PRECISION are mutually exclusive options !!\n",
+#  ifndef GRAMFE_FLOAT8
+   Aux_Error( stderr, "ERROR : For %s solver GRAMFE_FLOAT8 is required for stability !!\n",
                   "WAVE_GRAMFE"  );
-#  endif // #  if ( SUPPORT_FFTW == FFTW2 && !(defined(FLOAT8)) )
+#  endif // # ifndef GRAMFE_FLOAT8
 
 #  if ( FLU_GHOST_SIZE < 6 )
 #  error : ERROR : WAVE_GRAMFE only stable (empirically) for FLU_GHOST_SIZE >= 6!
-#  endif
+#  endif // #  if ( FLU_GHOST_SIZE < 6 )
 
 #  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
 #  error : ERROR : CPU Gram-Fourier extension scheme requires SUPPORT_FFTW flag!
-#  endif // #  if ( WAVE_SCHEME == WAVE_GRAMFE && ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
+#  endif // #  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
 
 #  endif // #  if ( WAVE_SCHEME == WAVE_GRAMFE )
 
@@ -1198,12 +1198,6 @@ void Aux_Check_Parameter()
    if ( DT__FLUID > dt_fluid_max )
       Aux_Message( stderr, "WARNING : %s solver with DT__FLUID (%13.7e) > %13.7e is unstable !!\n",
                    "WAVE_GRAMFE", DT__FLUID, dt_fluid_max );
-
-#  ifdef ( GRAMFE_ENABLE_SINGLE_PRECISION )
-   Aux_Message( stderr, "WARNING : %s solver using GRAMFE_ENABLE_SINGLE_PRECISION is unstable !!\n",
-                  "WAVE_GRAMFE"  );
-#  endif // #  ifdef ( GRAMFE_ENABLE_SINGLE_PRECISION )
-
 
 #  ifdef CONSERVE_MASS
    Aux_Message( stderr, "WARNING : mass is not conserved with the %s solver even though CONSERVE_MASS is on !!\n",
