@@ -1099,6 +1099,10 @@ void Aux_Check_Parameter()
 #  error : ERROR : CPU Gram-Fourier extension scheme requires SUPPORT_FFTW flag!
 #  endif // #  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
 
+#  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && SUPPORT_FFTW == FFTW2 && !defined(FLOAT8) )
+#  error : ERROR : CPU Gram-Fourier extension scheme using FFTW2 requires FLOAT8!
+#  endif // #  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && SUPPORT_FFTW == FFTW2 && !defined(FLOAT8) )
+
 #  endif // #  if ( WAVE_SCHEME == WAVE_GRAMFE )
 
 // warnings
