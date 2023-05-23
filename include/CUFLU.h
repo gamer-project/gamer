@@ -456,20 +456,47 @@
 #        endif
 #  endif
 
+// define GPU compute capabilities
+#ifdef GPU
+#  if   ( GPU_ARCH == FERMI )
+   #define GPU_COMPUTE_CAPABILITY 200
+#  elif ( GPU_ARCH == KEPLER )
+   #define GPU_COMPUTE_CAPABILITY 300
+#  elif ( GPU_ARCH == MAXWELL )
+   #define GPU_COMPUTE_CAPABILITY 500
+#  elif ( GPU_ARCH == PASCAL )
+   #define GPU_COMPUTE_CAPABILITY 600
+#  elif ( GPU_ARCH == VOLTA )
+   #define GPU_COMPUTE_CAPABILITY 700
+#  elif ( GPU_ARCH == TURING )
+   #define GPU_COMPUTE_CAPABILITY 750
+#  elif ( GPU_ARCH == AMPERE )
+   #define GPU_COMPUTE_CAPABILITY 800
+#  else
+#  error : ERROR : Please add GPU_COMPUTE_CAPABILITY for GPU_ARCH!
+#  endif // GPU_ARCH
+#endif // GPU
+
 // set number of threads and blocks used in GRAMFE GPU scheme
 # if ( defined(__CUDACC__) && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
 
 
-#  if   ( GPU_ARCH == FERMI || GPU_ARCH == KEPLER || GPU_ARCH == MAXWELL || GPU_ARCH == PASCAL )
-#     error : ERROR : Unsupported GPU architecture in cuFFTdx library for GPU Gram Fourier extension scheme!
-#  elif ( GPU_ARCH == VOLTA )
-#     define GPU_COMPUTE_CAPABILITY 700
-#  elif ( GPU_ARCH == TURING )
-#     define GPU_COMPUTE_CAPABILITY 750
-#  elif ( GPU_ARCH == AMPERE )
-#     define GPU_COMPUTE_CAPABILITY 800
-#  else
-#     error : ERROR : Unknown GPU architecture in GPU Gram Fourier extension scheme ( Please update CUFLU.h! )!
+// cuFFTdx supports the following GPU architectures at the time of writing (23.05.23)
+//
+//    Volta: 700 and 720 (sm_70, sm_72),
+//
+//    Turing: 750 (sm_75), and
+//
+//    Ampere: 800, 860 and 870 (sm_80, sm_86, sm_87).
+//
+//    Ada: 890 (sm_89).
+//
+//    Hopper: 900 (sm_90).
+#  if   ( GPU_COMPUTE_CAPABILITY != 700 && GPU_COMPUTE_CAPABILITY != 720 && GPU_COMPUTE_CAPABILITY != 750 \
+      &&  GPU_COMPUTE_CAPABILITY != 800 && GPU_COMPUTE_CAPABILITY != 860 && GPU_COMPUTE_CAPABILITY != 870 \
+      &&  GPU_COMPUTE_CAPABILITY != 890 \
+      &&  GPU_COMPUTE_CAPABILITY != 900 )
+#     error : ERROR : GPU_COMPUTE_CAPABILITY unsupported by cuFFTdx (please visit cuFFTdx website to check whether your GPU is supported and update CUFLU.h accordingly if it is) !
 #  endif
 
 // number of blocks suggested by cufftdx disabled by default

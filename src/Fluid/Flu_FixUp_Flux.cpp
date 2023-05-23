@@ -68,6 +68,9 @@ void Flu_FixUp_Flux( const int lv )
    Aux_Error( ERROR_INFO, "FLUX_DENS (%d) != 0 for the option OPT__FIXUP_FLUX !!\n", FLUX_DENS );
 #  endif
 
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   Aux_Error( ERROR_INFO, "WAVE_GRAMFE does not support the option OPT__FIXUP_FLUX !!\n" );
+#  endif
 
 // if "NCOMP_TOTAL != NFLUX_TOTAL", one must specify how to correct cell data from the flux arrays
 // --> specifically, how to map different flux variables to fluid active/passive variables

@@ -83,9 +83,9 @@ void Init_ResetParameter()
 #     endif // # ifdef GRAVITY ... # else
 #     elif ( WAVE_SCHEME == WAVE_GRAMFE )
 #     ifdef GRAVITY
-      DT__FLUID = 0.20;                   // 1D k-max mode rotates 0.30*2*PI
+      DT__FLUID = 0.20;                   // 1D k-max mode rotates 0.20*2*PI
 #     else // # ifdef GRAVITY
-      DT__FLUID = 0.35;                   // stability limit depends on ghost boundary and extension order
+      DT__FLUID = 0.30;                   // stability limit depends on ghost boundary and extension order
 #     endif // # ifdef GRAVITY ... # else
 #     else // #  if (WAVE_SCHEME == WAVE_FD )
 #        error : ERROR : unsupported WAVE_SCHEME !!

@@ -222,7 +222,7 @@ gramfe_float CosineTaylorExpansion(gramfe_float x, int Nterms) {
    gramfe_float result = 0;
 
    for (int i = 0; i  < Nterms; ++i) {
-      result += (gramfe_float(1.0)-gramfe_float(-2.0)*gramfe_float(i&1)) * (1 / ((gramfe_float) Factorial(2 * i))) * pow(x, 2 * i   );
+      result += pow(-1, i) * (1 / ((gramfe_float) Factorial(2 * i))) * pow(x, 2 * i   );
    }
 
    return result;
@@ -240,7 +240,7 @@ gramfe_float SineTaylorExpansion(gramfe_float x, int Nterms) {
    gramfe_float result = 0;
 
    for (int i = 0; i  < Nterms; ++i) {
-      result += (gramfe_float(1.0)-gramfe_float(-2.0)*gramfe_float(i&1)) * ( 1 / ((gramfe_float) Factorial(2 * i + 1)) ) * pow(x, 2 * i + 1);
+      result += pow(-1, i) * ( 1 / ((gramfe_float) Factorial(2 * i + 1)) ) * pow(x, 2 * i + 1);
    }
 
    return result;
@@ -331,15 +331,15 @@ void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 // since these are unavailable for a finite ghost boundary size, the series needs to be truncated
 // the ideal Taylor expansion order using all available derivatives is FLU_GHOST_SIZE - 1
 // for FLU_GHOST_SIZE == 8, 4 terms in the cosine series and 3 terms in the sine series are retained
-   const int          cosineNTerms = (int) ( FLU_GHOST_SIZE / 2.0 );
-   const int          sineNTerms   = cosineNTerms - 1-(FLU_GHOST_SIZE&1);
+   const int cosineNTerms = FLU_GHOST_SIZE / 2;
+   const int sineNTerms   = cosineNTerms - (int) ((FLU_GHOST_SIZE % 2) == 0);
 
 // set up momentum, filter and time evolution array
    for (int i=0; i<GRAMFE_FLU_NXT; i++)
    {
       K           = ( i <= GRAMFE_FLU_NXT/2 ) ? dk*i : dk*(i-GRAMFE_FLU_NXT);
       Filter      = exp(-filterDecay * pow(fabs(K/kmax), 2*filterDegree));
-      Coeff       = sqr(K)*dT;
+      Coeff       = SQR(K)*dT;
       ExpCoeff[i] = complex_type(CosineTaylorExpansion(Coeff, cosineNTerms), SineTaylorExpansion(Coeff, sineNTerms)) * Norm * Filter;
    }
 

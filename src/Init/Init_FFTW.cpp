@@ -204,8 +204,8 @@ void Init_FFTW()
    if (FFTW3_Single_OMP_Enabled) fftwf_plan_with_nthreads(1);
 #  endif // # if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )
 
-   FFTW_Plan_ExtPsi      = gramfe_create_fftw_1d_forward_c2c_plan ( ExtPsi_FFT_Size, ExtPsiK );
-   FFTW_Plan_ExtPsi_Inv  = gramfe_create_fftw_1d_backward_c2c_plan( ExtPsi_FFT_Size, ExtPsiK );
+   FFTW_Plan_ExtPsi      = gramfe_create_fftw_1d_forward_c2c_plan ( ExtPsi_FFT_Size, ExtPsiK, StartupFlag );
+   FFTW_Plan_ExtPsi_Inv  = gramfe_create_fftw_1d_backward_c2c_plan( ExtPsi_FFT_Size, ExtPsiK, StartupFlag );
 
 // restore regular settings
 #  if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )

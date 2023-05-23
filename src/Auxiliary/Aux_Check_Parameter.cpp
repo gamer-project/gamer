@@ -469,7 +469,7 @@ void Aux_Check_Parameter()
 // for sending fluid data fixed by coarse-fine fluxes correctly
    if ( OPT__FIXUP_FLUX  &&  Flu_ParaBuf >= PATCH_SIZE )
       Aux_Error( ERROR_INFO, "\"%s\" is required for \"%s\" in LOAD_BALANCE --> check LB_RecordExchangeFixUpDataPatchID() !!\n \
-                  For ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE ) consider turning OPT__FIXUP_FLUX off or increasing the patch size!! \n",
+                  For ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE ) consider turning OPT__FIXUP_FLUX off or increase the patch size!! \n",
                  "Flu_ParaBuf < PATCH_SIZE", "OPT__FIXUP_FLUX" );
 
 // ensure that the variable "PaddedCr1D" will not overflow
