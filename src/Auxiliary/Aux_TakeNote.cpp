@@ -1184,22 +1184,22 @@ void Aux_TakeNote()
 //    record the parameters of initialization
       fprintf( Note, "Parameters of Initialization\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "OPT__INIT                       %d\n",      OPT__INIT               );
-      fprintf( Note, "RESTART_LOAD_NRANK              %d\n",      RESTART_LOAD_NRANK      );
-      fprintf( Note, "OPT__RESTART_RESET              %d\n",      OPT__RESTART_RESET      );
-      fprintf( Note, "OPT__UM_IC_LEVEL                %d\n",      OPT__UM_IC_LEVEL        );
-      fprintf( Note, "OPT__UM_IC_NLEVEL               %d\n",      OPT__UM_IC_NLEVEL       );
-      fprintf( Note, "OPT__UM_IC_NVAR                 %d\n",      OPT__UM_IC_NVAR         );
-      fprintf( Note, "OPT__UM_IC_FORMAT               %d\n",      OPT__UM_IC_FORMAT       );
-      fprintf( Note, "OPT__UM_IC_DOWNGRADE            %d\n",      OPT__UM_IC_DOWNGRADE    );
-      fprintf( Note, "OPT__UM_IC_REFINE               %d\n",      OPT__UM_IC_REFINE       );
-      fprintf( Note, "OPT__UM_IC_LOAD_NRANK           %d\n",      OPT__UM_IC_LOAD_NRANK   );
-      fprintf( Note, "OPT__INIT_RESTRICT              %d\n",      OPT__INIT_RESTRICT      );
-      fprintf( Note, "OPT__INIT_GRID_WITH_OMP         %d\n",      OPT__INIT_GRID_WITH_OMP );
-      fprintf( Note, "OPT__GPUID_SELECT               %d\n",      OPT__GPUID_SELECT       );
-      fprintf( Note, "INIT_SUBSAMPLING_NCELL          %d\n",      INIT_SUBSAMPLING_NCELL  );
+      fprintf( Note, "OPT__INIT                       %d\n",      OPT__INIT                 );
+      fprintf( Note, "RESTART_LOAD_NRANK              %d\n",      RESTART_LOAD_NRANK        );
+      fprintf( Note, "OPT__RESTART_RESET              %d\n",      OPT__RESTART_RESET        );
+      fprintf( Note, "OPT__UM_IC_LEVEL                %d\n",      OPT__UM_IC_LEVEL          );
+      fprintf( Note, "OPT__UM_IC_NLEVEL               %d\n",      OPT__UM_IC_NLEVEL         );
+      fprintf( Note, "OPT__UM_IC_NVAR                 %d\n",      OPT__UM_IC_NVAR           );
+      fprintf( Note, "OPT__UM_IC_FORMAT               %d\n",      OPT__UM_IC_FORMAT         );
+      fprintf( Note, "OPT__UM_IC_DOWNGRADE            %d\n",      OPT__UM_IC_DOWNGRADE      );
+      fprintf( Note, "OPT__UM_IC_REFINE               %d\n",      OPT__UM_IC_REFINE         );
+      fprintf( Note, "OPT__UM_IC_LOAD_NRANK           %d\n",      OPT__UM_IC_LOAD_NRANK     );
+      fprintf( Note, "OPT__INIT_RESTRICT              %d\n",      OPT__INIT_RESTRICT        );
+      fprintf( Note, "OPT__INIT_GRID_WITH_OMP         %d\n",      OPT__INIT_GRID_WITH_OMP   );
+      fprintf( Note, "OPT__GPUID_SELECT               %d\n",      OPT__GPUID_SELECT         );
+      fprintf( Note, "INIT_SUBSAMPLING_NCELL          %d\n",      INIT_SUBSAMPLING_NCELL    );
 #     ifdef MHD
-      fprintf( Note, "OPT__INIT_BFIELD_BYFILE         %d\n",      OPT__INIT_BFIELD_BYFILE );
+      fprintf( Note, "OPT__INIT_BFIELD_BYVECPOT       %d\n",      OPT__INIT_BFIELD_BYVECPOT );
 #     endif
 #     ifdef SUPPORT_FFTW
       fprintf( Note, "OPT__FFTW_STARTUP               " );
