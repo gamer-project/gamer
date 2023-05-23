@@ -5,11 +5,11 @@
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 static double Init_BField_ByVecPot_User_Template( const double x, const double y, const double z, const double Time,
-                                                  const int lv, const char Axis, double AuxArray[] );
+                                                  const int lv, const char Component, double AuxArray[] );
 
 // this function pointer must be set by a test problem initializer
 double (*Init_BField_ByVecPot_User_Ptr)( const double x, const double y, const double z, const double Time,
-                                         const int lv, const char Axis, double AuxArray[] ) = NULL;
+                                         const int lv, const char Component, double AuxArray[] ) = NULL;
 
 
 
@@ -24,17 +24,18 @@ double (*Init_BField_ByVecPot_User_Ptr)( const double x, const double y, const d
 //                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
 //                   --> Please ensure that everything here is thread-safe
 //
-// Parameter   :  x/y/z      : Target physical coordinates
-//                Time       : Target physical time
-//                lv         : Target refinement level
-//                Axis       : Axis of the output magnetic vector potential
-//                AuxArray   : Auxiliary array
-//                             --> useless since it is currently fixed to NULL
+// Parameter   :  x/y/z     : Target physical coordinates
+//                Time      : Target physical time
+//                lv        : Target refinement level
+//                Component : Component of the output magnetic vector potential
+//                            --> Supported components: 'x', 'y', 'z'
+//                AuxArray  : Auxiliary array
+//                            --> Useless since it is currently fixed to NULL
 //
 // Return      :  "XYZ" component of the magnetic vector potential at (x, y, z, Time)
 //-------------------------------------------------------------------------------------------------------
 double Init_BField_ByVecPot_User_Template( const double x, const double y, const double z, const double Time,
-                                           const int lv, const char Axis, double AuxArray[] )
+                                           const int lv, const char Component, double AuxArray[] )
 {
 
    const double BoxCenter[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
@@ -46,12 +47,12 @@ double Init_BField_ByVecPot_User_Template( const double x, const double y, const
    double mag_vecpot;
 
 
-   switch ( Axis )
+   switch ( Component )
    {
       case 'x' :   mag_vecpot = 0.0;           break;
       case 'y' :   mag_vecpot = 0.0;           break;
       case 'z' :   mag_vecpot = 1.0 / varpi;   break;
-      default  :   Aux_Error( ERROR_INFO, "unsupported Axis (%c) !!\n", Axis );
+      default  :   Aux_Error( ERROR_INFO, "unsupported component (%c) !!\n", Component );
    }
 
 
