@@ -101,24 +101,8 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    sprintf( dTime_Name[NdTime++], "%s", "Hydro_Acc" );
 
 #  elif ( MODEL == ELBDM )
-#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( amr->use_wave_flag[lv] ) {
-#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv  );
-#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   } else { // if ( amr->use_wave_flag[lv] )
-      if ( lv + 1 < NLEVEL ) {
-         if ( amr->use_wave_flag[lv + 1] )
-            dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv ) * 0.5;
-         else
-            dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv );
-      } else {
-         dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv );
-      }
-   } // if ( amr->use_wave_flag[lv] ) ... else
-#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    sprintf( dTime_Name[NdTime++], "%s", "ELBDM_Pot" );
-
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
