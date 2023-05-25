@@ -1096,6 +1096,7 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL must work with SUPPORT_FFTW !!\n" );
 #  endif
 
+// check hybrid scheme parameters for errors
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #  if ( FLU_GHOST_SIZE < HYB_GHOST_SIZE )
@@ -1120,8 +1121,19 @@ void Aux_Check_Parameter()
       Aux_Error(  ERROR_INFO, "ELBDM_HYBRID requires the option OPT__LB_EXCHANGE_FATHER for load balancing !!\n");
 #  endif // # ifdef LOAD_BALANCE
 
+   const double dt_hybrid_max   = 0.49;
+   const double dt_velocity_max = 3.50;
+
+   if ( DT__HYBRID_FLUID > dt_hybrid_max )
+      Aux_Error(  ERROR_INFO, "DT__HYBRID_FLUID (%13.7e) > %13.7e is unstable !!\n",
+                   DT__HYBRID_FLUID, dt_hybrid_max );
+   if ( DT__HYBRID_VELOCITY > dt_velocity_max )
+      Aux_Error(  ERROR_INFO, "DT__HYBRID_VELOCITY (%13.7e) > %13.7e is unstable !!\n",
+                   DT__HYBRID_VELOCITY, dt_velocity_max );
+
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
+// check finite-difference scheme for errors
 #  if ( WAVE_SCHEME == WAVE_FD )
    if ( !ELBDM_TAYLOR3_AUTO  &&  ELBDM_TAYLOR3_COEFF < 1.0/8.0 )
       Aux_Error( ERROR_INFO, "ELBDM_TAYLOR3_COEFF (%13.7e) < 0.125 is unconditionally unstable !!\n",
@@ -1168,6 +1180,7 @@ void Aux_Check_Parameter()
       }
    }
 
+// check local spectral scheme for errors
 #  elif ( WAVE_SCHEME == WAVE_GRAMFE )
 
    const double dt_fluid_max = 0.35;
@@ -1235,16 +1248,6 @@ void Aux_Check_Parameter()
 
    if ( OPT__INIT == INIT_BY_FILE )
       Aux_Message( stderr, "WARNING : currently we don't check MIN_DENS for the initial data loaded from UM_IC !!\n" );
-
-
-#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( DT__HYBRID   < 0.0  ||  DT__HYBRID   > 0.49 )
-      Aux_Message( stderr, "WARNING : DT__HYBRID (%14.7e) is not within the normal range [0...0.49] !!\n",
-                   DT__HYBRID );
-   if ( DT__VELOCITY < 0.0  ||  DT__VELOCITY > 3.50 )
-      Aux_Message( stderr, "WARNING : DT__VELOCITY (%14.7e) is not within the normal range [0...3.5] !!\n",
-                   DT__VELOCITY );
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 #  if ( WAVE_SCHEME == WAVE_FD )

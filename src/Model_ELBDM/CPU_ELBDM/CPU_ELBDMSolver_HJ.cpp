@@ -576,7 +576,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 //             2.4 check the velocity-dependent CFL-condition and switch to forward-Euler for updating the density wherever the CFL-condition is not met
                CELL_LOOP(HYB_NXT, g1 + 1, g1 + 1)
                {
-//                dt = 1 / MaxdS_dx * 0.5 * ELBDM_ETA * DT__VELOCITY;
+//                dt = 1 / MaxdS_dx * 0.5 * ELBDM_ETA * DT__HYBRID_VELOCITY;
 //                compute CFL condition timestep and quantum pressure term
                   s_QP[sj][si] = real(1.0/2.0) * LAP2(s_LogRho[sj], si)  + real(1.0/4.0) * SQR(GRADC2(s_LogRho[sj], si));
 

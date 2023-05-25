@@ -2219,8 +2219,8 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  if ( MODEL == ELBDM )
    InputPara.Dt__Phase               = DT__PHASE;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   InputPara.Dt__Hybrid              = DT__HYBRID;
-   InputPara.Dt__Velocity            = DT__VELOCITY;
+   InputPara.Dt__Hybrid              = DT__HYBRID_FLUID;
+   InputPara.Dt__Velocity            = DT__HYBRID_VELOCITY;
 #  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
 #  ifdef PARTICLE

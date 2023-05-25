@@ -128,7 +128,7 @@ extern double           ELBDM_LAMBDA;
 extern bool             OPT__FLAG_INTERFERENCE;
 extern double           FlagTable_Interference[NLEVEL-1][4];
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
-extern double           DT__HYBRID, DT__VELOCITY;
+extern double           DT__HYBRID_FLUID, DT__HYBRID_VELOCITY;
 extern bool             OPT__HYBRID_MATCH_PHASE;
 #endif //  # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 

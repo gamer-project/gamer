@@ -122,7 +122,7 @@ bool                 OPT__FLAG_INTERFERENCE;
 double               FlagTable_Interference[NLEVEL-1][4];
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 bool                 OPT__HYBRID_MATCH_PHASE;
-double               DT__HYBRID, DT__VELOCITY;
+double               DT__HYBRID_FLUID, DT__HYBRID_VELOCITY;
 #endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #ifdef QUARTIC_SELF_INTERACTION
