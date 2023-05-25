@@ -1149,7 +1149,7 @@ void Aux_Check_Parameter()
 #  endif // #  if ( FLU_GHOST_SIZE < 6 )
 
 #  if ( !defined(GPU) && defined(GRAMFE_ENABLE_GPU) )
-#  error : ERROR : Gram-Fourier extension scheme's GRAMFE_ENABLE_GPU option requires GPU flag!
+#  error : ERROR : Gram-Fourier extension scheme GRAMFE_ENABLE_GPU option requires GPU flag!
 #  endif // #  if ( !defined(GPU) && defined(GRAMFE_ENABLE_GPU) )
 
 #  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
