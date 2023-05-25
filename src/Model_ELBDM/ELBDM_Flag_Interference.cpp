@@ -54,7 +54,6 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
 
    const int NCell  = PS1 + 2;   // size of the arrays Var, Temp
    const int NCond  = PS1;       // size of the array  Cond
-   const float vortexThreshold = 0.5;
 
    int ii, jj, kk, iim, jjm, kkm, iip, jjp, kkp;
 
@@ -66,10 +65,10 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
    for (int k=0; k<NCell; k++)    {
    for (int j=0; j<NCell; j++)    {
    for (int i=0; i<NCell; i++)    {
-      //Compute square root of density field
+//    compute square root of density field
       Temp[0][k][j][i] = SQRT(Var[0][k][j][i]);
 
-      //Check whether we are on fluid level and convert imaginary and real parts to phase accordingly
+//    check whether to convert imaginary and real parts to the phase
       if ( useWaveFlag ) {
          Temp[1][k][j][i] = SATAN2(Var[IMAG][k][j][i], Var[REAL][k][j][i]);
       } else {
@@ -81,32 +80,36 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
    for (int j=0; j<NCond; j++)    {  jj = j + 1;   jjp = jj + 1;   jjm = jj - 1;
    for (int i=0; i<NCond; i++)    {  ii = i + 1;   iip = ii + 1;   iim = ii - 1;
 
-      //Compute the dimensionless quantum pressure (divided by number of dimensions for normalisation)
+//    compute the dimensionless quantum pressure (divided by number of dimensions for normalisation)
       Cond[0][k][j][i] =  FABS(  Temp[0][kk ][jj ][iip] + Temp[0][kk ][jj ][iim] \
                                + Temp[0][kk ][jjp][ii ] + Temp[0][kk ][jjm][ii ] \
                                + Temp[0][kkp][jj ][ii ] + Temp[0][kkm][jj ][ii ] \
                                -  (real) 6.0 * Temp[0][kk ][jj ][ii])\
                                / ((real) 3.0 * Temp[0][kk ][jj ][ii]);
+
+//    flags for wave solver
       if (useWaveFlag)   {
          Cond[1][k][j][i] = 0;
 
-//       Resolve de Broglie wavelength when vortices are absent
-//       Use quantum pressure combined with vortex threshold to determine whether vortex is present
-         if ( Cond[0][k][j][i] < vortexThreshold ) {
+//       resolve de Broglie wavelength when vortices are absent
+//       use quantum pressure combined with vortex threshold to determine whether vortex is present
+         if ( Cond[0][k][j][i] < ELBDM_VORTEX_THRESHOLD ) {
             Cond[2][k][j][i] = MAX(MAX(MAX(MAX(MAX(
                FABS(Temp[1][kk ][jj ][iip] - ELBDM_UnwrapPhase(Temp[1][kk ][jj ][iip], Temp[1][kk ][jj ][ii ])),
                FABS(Temp[1][kk ][jj ][ii ] - ELBDM_UnwrapPhase(Temp[1][kk ][jj ][ii ], Temp[1][kk ][jj ][iim]))),
                FABS(Temp[1][kk ][jjp][ii ] - ELBDM_UnwrapPhase(Temp[1][kk ][jjp][ii ], Temp[1][kk ][jj ][ii ]))),
                FABS(Temp[1][kk ][jj ][ii ] - ELBDM_UnwrapPhase(Temp[1][kk ][jj ][ii ], Temp[1][kk ][jjm][ii ]))),
                FABS(Temp[1][kkp][jj ][ii ] - ELBDM_UnwrapPhase(Temp[1][kkp][jj ][ii ], Temp[1][kk ][jj ][ii ]))),
-               FABS(Temp[1][kk ][jj ][ii ] - ELBDM_UnwrapPhase(Temp[1][kk ][jj ][ii ], Temp[1][kkm][jj ][ii ])));
+               FABS(Temp[1][kk ][jj ][ii ] - ELBDM_UnwrapPhase(Temp[1][kk ][jj ][ii ], Temp[1][kkm][jj ][ii ]))) / (2 * M_PI);
          } else {
             Cond[2][k][j][i] = 0;
          }
-      } else {
+
+//    flags for fluid solver
+      } else { // if (useWaveFlag)
 
 #        ifndef HYBRID_SMOOTH_PHASE
-//       Check second derivative of phase field (divided by number of dimensions for normalisation) to detect phase jumps
+//       check second derivative of phase field (divided by number of dimensions for normalisation) to detect phase jumps
          Cond[1][k][j][i] =  FABS( Temp[1][kk ][jj ][iip] + Temp[1][kk ][jj ][iim] \
                                  + Temp[1][kk ][jjp][ii ] + Temp[1][kk ][jjm][ii ] \
                                  + Temp[1][kkp][jj ][ii ] + Temp[1][kkm][jj ][ii ] \
@@ -116,8 +119,8 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
          Cond[1][k][j][i] = 0;
 #        endif
 
+//       check maximum phase difference
 #        ifdef GAMER_DEBUG
-//       Check maximum phase difference in all 6 directions
          Cond[2][k][j][i] = MAX(MAX(MAX(MAX(MAX(
             FABS(Temp[1][kk ][jj ][iip] - Temp[1][kk ][jj ][ii ]),
             FABS(Temp[1][kk ][jj ][ii ] - Temp[1][kk ][jj ][iim])),
@@ -128,7 +131,7 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
 #        else
          Cond[2][k][j][i] = 0;
 #        endif
-      }
+      }  // if (useWaveFlag) ... else
    }}} // k,j,i
 
 

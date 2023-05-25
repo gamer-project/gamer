@@ -78,7 +78,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       Flag |= FlagIntQP;
 
 
-//    For wave solver: Check whether dB wavelength is resolved using FlagTable_Interference[lv][2] as maximum phase difference between neighbouring cells
+//    for wave solver: Check whether dB wavelength is resolved using FlagTable_Interference[lv][2] as maximum phase difference between neighbouring cells
 
 #     if ( MODEL == ELBDM  && ELBDM_SCHEME == ELBDM_HYBRID )
       if ( amr->use_wave_flag[lv] ) {
@@ -89,7 +89,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       Flag |= dBWavelengthNotResolved;
 
 #     if ( MODEL == ELBDM  && ELBDM_SCHEME == ELBDM_HYBRID )
-//    For fluid solver: Check phase curvature using FlagTable_Interference[lv][2] as maximum allowed phase curvature
+//    for fluid solver: check phase curvature using FlagTable_Interference[lv][2] as maximum allowed phase curvature
       } else {
          FlagIntPhaseDiscont  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond + CUBE(PS1), FlagTable_Interference[lv][2]);
 
