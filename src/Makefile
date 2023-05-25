@@ -94,11 +94,6 @@ SIMU_OPTION += -DEOS=EOS_GAMMA
 # (b-2) ELBDM options
 # ------------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
-# enforce the mass conservation
-SIMU_OPTION += -DCONSERVE_MASS
-
-# 4-th order Laplacian
-SIMU_OPTION += -DLAPLACIAN_4TH
 
 # include the quartic self-interaction potential
 # --> must turn on GRAVITY; does not support COMOVING
@@ -108,6 +103,26 @@ SIMU_OPTION += -DLAPLACIAN_4TH
 # --> not supported yet and thus can only be used as auxiliary fields
 SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
+# enforce the mass conservation (only partly enforced by local spectral method)
+SIMU_OPTION += -DCONSERVE_MASS
+
+# choose wave scheme WAVE_FD (finite difference), WAVE_GRAMFE (local spectral method)
+# --> must turn on (SUPPORT_FFTW=FFTW2 and FLOAT8) or (SUPPORT_FFTW=FFTW3) or (GPU and GRAMFE_ENABLE_GPU) for WAVE_GRAMFE
+SIMU_OPTION += -DWAVE_SCHEME=WAVE_FD
+
+# (b-2-1) WAVE_FD options
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DWAVE_SCHEME=WAVE_FD, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_FD"
+# 4-th order Laplacian
+SIMU_OPTION += -DLAPLACIAN_4TH
+
+# (b-2-2) WAVE_GRAMFE options
+# ------------------------------------------------------------------------------------
+else ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
+# enable for GPU support of Gram-Fourier extension algorithm in GPU mode (CPU is used by default because it is faster)
+# --> must turn on GPU
+#SIMU_OPTION += -DGRAMFE_ENABLE_GPU
+endif # WAVE_SCHEME
 endif # MODEL
 
 
@@ -311,7 +326,6 @@ endif
 
 
 
-
 # library paths
 #######################################################################################################
 
@@ -324,6 +338,7 @@ HDF5_PATH    :=
 GRACKLE_PATH :=
 GSL_PATH     :=
 LIBYT_PATH   :=
+CUFFTDX_PATH :=
 
 # NCSA-bluewaters (only need to specify the path of user-installed packages)
 #GRACKLE_PATH :=
@@ -380,6 +395,7 @@ LIBYT_PATH   :=
 #GRACKLE_PATH :=
 #GSL_PATH     := /software/gsl/default
 #LIBYT_PATH   :=
+#CUFFTDX_PATH := /software/cuFFTDx/default
 
 # NTU-hulk (openmpi-intel-qlc)
 #CUDA_PATH    := /opt/gpu/cuda/4.2
@@ -548,8 +564,8 @@ ifeq "$(filter -DMHD, $(SIMU_OPTION))" "-DMHD"
 CPU_FILE    += MHD_GetCellCenteredBInPatch.cpp  MHD_InterpolateBField.cpp  MHD_AllocateElectricArray.cpp \
                MHD_Aux_Check_InterfaceB.cpp  MHD_FixUp_Electric.cpp  MHD_Aux_Check_DivergenceB.cpp \
                MHD_BoundaryCondition_Outflow.cpp  MHD_BoundaryCondition_Reflecting.cpp  MHD_BoundaryCondition_User.cpp \
-               MHD_BoundaryCondition_Diode.cpp  MHD_CopyPatchInterfaceBField.cpp  MHD_Init_BField_ByFile.cpp \
-               MHD_SameInterfaceB.cpp
+               MHD_BoundaryCondition_Diode.cpp  MHD_CopyPatchInterfaceBField.cpp  MHD_Init_BField_ByVecPot_File.cpp \
+               MHD_SameInterfaceB.cpp  MHD_Init_BField_ByVecPot_Function.cpp
 
 CPU_FILE    += CPU_Shared_ConstrainedTransport.cpp  CPU_Shared_RiemannSolver_HLLD.cpp
 
@@ -563,9 +579,9 @@ endif # MHD
 # ELBDM source files (included only inf "MODEL=ELBDM")
 # -------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
-GPU_FILE    += CUFLU_ELBDMSolver.cu
+GPU_FILE    += CUFLU_ELBDMSolver_FD.cu CUFLU_ELBDMSolver_GramFE.cu
 
-CPU_FILE    += CPU_ELBDMSolver.cpp  CPU_ELBDMSolver_FFT.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
+CPU_FILE    += CPU_ELBDMSolver_FD.cpp  CPU_ELBDMSolver_FFT.cpp  CPU_ELBDMSolver_GramFE.cpp ELBDM_Init_ByFunction_AssignData.cpp \
                ELBDM_GetTimeStep_Fluid.cpp  ELBDM_Flag_EngyDensity.cpp  ELBDM_UnwrapPhase.cpp \
                ELBDM_GetTimeStep_Phase.cpp  ELBDM_SetTaylor3Coeff.cpp  ELBDM_RemoveMotionCM.cpp
 
@@ -861,6 +877,13 @@ ifeq "$(filter -DSUPPORT_LIBYT, $(SIMU_OPTION))" "-DSUPPORT_LIBYT"
 INCLUDE += -I$(LIBYT_PATH)/include
 endif
 
+ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
+   ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
+      ifeq "$(filter -DGRAMFE_ENABLE_GPU, $(SIMU_OPTION))" "-DGRAMFE_ENABLE_GPU"
+         INCLUDE += -I$(CUFFTDX_PATH)/include
+      endif
+   endif
+endif
 
 # CXX flags
 # -------------------------------------------------------------------------------
@@ -925,6 +948,15 @@ endif
 
 #NVCCFLAG_COM += -use_fast_math
 
+# enable C++ 17 support for ELBDM GPU Gram-Fourier extension scheme
+ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
+   ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
+      ifeq "$(filter -DGRAMFE_ENABLE_GPU, $(SIMU_OPTION))" "-DGRAMFE_ENABLE_GPU"
+         NVCCFLAG_COM += -std=c++17
+      endif
+   endif
+endif
+
 # fluid solver flags
 NVCCFLAG_FLU += -Xptxas -dlcm=ca -prec-div=false -ftz=true
 
@@ -971,6 +1003,7 @@ else ifeq "$(filter -DGPU_ARCH=AMPERE, $(SIMU_OPTION))" "-DGPU_ARCH=AMPERE"
      NVCCFLAG_FLU += --maxrregcount=128
    endif
 endif
+
 
 # Poisson/gravity solvers flags
 NVCCFLAG_POT += -Xptxas -dlcm=ca

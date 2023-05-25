@@ -289,7 +289,11 @@ void Init_Load_Parameter()
 // do not check FLU_GPU_NPGROUP and GPU_NSTREAM since they may be reset by either Init_ResetDefaultParameter() or CUAPI_SetMemSize()
    ReadPara->Add( "FLU_GPU_NPGROUP",            &FLU_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "GPU_NSTREAM",                &GPU_NSTREAM,                    -1,               NoMin_int,     NoMax_int      );
+#  if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
+   ReadPara->Add( "OPT__FIXUP_FLUX",            &OPT__FIXUP_FLUX,                 false,           Useless_bool,  Useless_bool   );
+#  else // #  if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
    ReadPara->Add( "OPT__FIXUP_FLUX",            &OPT__FIXUP_FLUX,                 true,            Useless_bool,  Useless_bool   );
+#  endif // #  if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE ) ... # else
 #  ifdef MHD
    ReadPara->Add( "OPT__FIXUP_ELECTRIC",        &OPT__FIXUP_ELECTRIC,             true,            Useless_bool,  Useless_bool   );
 #  endif
@@ -378,7 +382,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__GPUID_SELECT",          &OPT__GPUID_SELECT,              -1,              -3,             NoMax_int      );
    ReadPara->Add( "INIT_SUBSAMPLING_NCELL",     &INIT_SUBSAMPLING_NCELL,          0,               0,             NoMax_int      );
 #  ifdef MHD
-   ReadPara->Add( "OPT__INIT_BFIELD_BYFILE",    &OPT__INIT_BFIELD_BYFILE,         false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__INIT_BFIELD_BYVECPOT", &OPT__INIT_BFIELD_BYVECPOT, INIT_MAG_BYVECPOT_NONE, 0,             2              );
 #  endif
 #  ifdef SUPPORT_FFTW
 #  if ( SUPPORT_FFTW == FFTW2 )

@@ -2054,7 +2054,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__GPUID_Select",       &RS.Opt__GPUID_Select,       SID, TID, NonFatal, &RT.Opt__GPUID_Select,        1, NonFatal );
    LoadField( "Init_Subsampling_NCell",  &RS.Init_Subsampling_NCell,  SID, TID, NonFatal, &RT.Init_Subsampling_NCell,   1, NonFatal );
 #  ifdef MHD
-   LoadField( "Opt__InitBFieldByFile",   &RS.Opt__InitBFieldByFile,   SID, TID, NonFatal, &RT.Opt__InitBFieldByFile,    1, NonFatal );
+   LoadField( "Opt__InitBFieldByVecPot", &RS.Opt__InitBFieldByVecPot, SID, TID, NonFatal, &RT.Opt__InitBFieldByVecPot,  1, NonFatal );
 #  endif
 #  ifdef SUPPORT_FFTW
    LoadField( "Opt__FFTW_Startup",       &RS.Opt__FFTW_Startup,       SID, TID, NonFatal, &RT.Opt__FFTW_Startup,        1, NonFatal );

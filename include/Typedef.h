@@ -22,6 +22,11 @@ typedef double real;
 typedef float  real;
 #endif
 
+#ifdef GRAMFE_FLOAT8
+typedef double gramfe_float;
+#else
+typedef float  gramfe_float;
+#endif
 
 // short names for unsigned type
 typedef unsigned short     ushort;
@@ -75,6 +80,14 @@ const OptInit_t
    INIT_BY_FUNCTION = 1,
    INIT_BY_RESTART  = 2,
    INIT_BY_FILE     = 3;
+
+
+// program initialization options for the magnetic field by vector potential
+typedef int OptInitMagByVecPot_t;
+const OptInitMagByVecPot_t
+   INIT_MAG_BYVECPOT_NONE = 0,
+   INIT_MAG_BYVECPOT_FILE = 1,
+   INIT_MAG_BYVECPOT_FUNC = 2;
 
 
 // data format for OPT__INIT=INIT_BY_FILE

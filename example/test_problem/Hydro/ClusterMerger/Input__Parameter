@@ -168,7 +168,8 @@ RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL        3           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
-OPT__INIT_BFIELD_BYFILE       1
+OPT__INIT_BFIELD_BYVECPOT     1           # initialize the magnetic field from vector potential
+                                          # (0=off, 1=external disk file named "B_IC", see tool/inits/gen_vec_pot.py for example, 2=function) [0] ##MHD ONLY##
 
 
 # interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar)

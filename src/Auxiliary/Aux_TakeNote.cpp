@@ -197,17 +197,46 @@ void Aux_TakeNote()
 //    c. options in ELBDM
 #     elif ( MODEL == ELBDM )
 
-#     ifdef CONSERVE_MASS
-      fprintf( Note, "CONSERVE_MASS                   ON\n" );
-#     else
-      fprintf( Note, "CONSERVE_MASS                   OFF\n" );
-#     endif
+//    c.1 options in WAVE_GRAMFE
+#     if ( WAVE_SCHEME == WAVE_GRAMFE )
+      fprintf( Note, "WAVE_SCHEME                     GRAM FE\n" );
+
+      fprintf( Note, "GRAMFE_GAMMA                    %d\n",      GRAMFE_GAMMA );
+      fprintf( Note, "GRAMFE_G                        %d\n",      GRAMFE_G );
+      fprintf( Note, "GRAMFE_NDELTA                   %d\n",      GRAMFE_NDELTA);
+      fprintf( Note, "GRAMFE_ND                       %d\n",      GRAMFE_ND);
+      fprintf( Note, "GRAMFE_ORDER                    %d\n",      GRAMFE_ORDER);
+#     ifdef GRAMFE_FLOAT8
+      fprintf( Note, "GRAMFE_FLOAT8                   ON\n" );
+#     else // # ifdef GRAMFE_FLOAT8
+      fprintf( Note, "GRAMFE_FLOAT8                   OFF\n" );
+#     endif // # ifdef GRAMFE_FLOAT8 ... # else
+#     ifdef GRAMFE_ENABLE_GPU
+      fprintf( Note, "GRAMFE_ENABLE_GPU               ON\n" );
+#     else // # ifdef GRAMFE_ENABLE_GPU
+      fprintf( Note, "GRAMFE_ENABLE_GPU               OFF\n" );
+#     endif // # ifdef GRAMFE_ENABLE_GPU ... # else
+
+//    c.1 options in WAVE_FD
+#     elif ( WAVE_SCHEME == WAVE_FD )
+      fprintf( Note, "WAVE_SCHEME                     FD\n ");
 
 #     ifdef LAPLACIAN_4TH
       fprintf( Note, "LAPLACIAN_4TH                   ON\n" );
 #     else
       fprintf( Note, "LAPLACIAN_4TH                   OFF\n" );
 #     endif
+
+#     else // #  if (WAVE_SCHEME == WAVE_GRAMFE )
+#     error : ERROR : unsupported WAVE_SCHEME !!
+#     endif // WAVE_SCHEME
+
+#     ifdef CONSERVE_MASS
+      fprintf( Note, "CONSERVE_MASS                   ON\n" );
+#     else
+      fprintf( Note, "CONSERVE_MASS                   OFF\n" );
+#     endif
+
 
 #     ifdef QUARTIC_SELF_INTERACTION
       fprintf( Note, "QUARTIC_SELF_INTERACTION        ON\n" );
@@ -1188,22 +1217,22 @@ void Aux_TakeNote()
 //    record the parameters of initialization
       fprintf( Note, "Parameters of Initialization\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "OPT__INIT                       %d\n",      OPT__INIT               );
-      fprintf( Note, "RESTART_LOAD_NRANK              %d\n",      RESTART_LOAD_NRANK      );
-      fprintf( Note, "OPT__RESTART_RESET              %d\n",      OPT__RESTART_RESET      );
-      fprintf( Note, "OPT__UM_IC_LEVEL                %d\n",      OPT__UM_IC_LEVEL        );
-      fprintf( Note, "OPT__UM_IC_NLEVEL               %d\n",      OPT__UM_IC_NLEVEL       );
-      fprintf( Note, "OPT__UM_IC_NVAR                 %d\n",      OPT__UM_IC_NVAR         );
-      fprintf( Note, "OPT__UM_IC_FORMAT               %d\n",      OPT__UM_IC_FORMAT       );
-      fprintf( Note, "OPT__UM_IC_DOWNGRADE            %d\n",      OPT__UM_IC_DOWNGRADE    );
-      fprintf( Note, "OPT__UM_IC_REFINE               %d\n",      OPT__UM_IC_REFINE       );
-      fprintf( Note, "OPT__UM_IC_LOAD_NRANK           %d\n",      OPT__UM_IC_LOAD_NRANK   );
-      fprintf( Note, "OPT__INIT_RESTRICT              %d\n",      OPT__INIT_RESTRICT      );
-      fprintf( Note, "OPT__INIT_GRID_WITH_OMP         %d\n",      OPT__INIT_GRID_WITH_OMP );
-      fprintf( Note, "OPT__GPUID_SELECT               %d\n",      OPT__GPUID_SELECT       );
-      fprintf( Note, "INIT_SUBSAMPLING_NCELL          %d\n",      INIT_SUBSAMPLING_NCELL  );
+      fprintf( Note, "OPT__INIT                       %d\n",      OPT__INIT                 );
+      fprintf( Note, "RESTART_LOAD_NRANK              %d\n",      RESTART_LOAD_NRANK        );
+      fprintf( Note, "OPT__RESTART_RESET              %d\n",      OPT__RESTART_RESET        );
+      fprintf( Note, "OPT__UM_IC_LEVEL                %d\n",      OPT__UM_IC_LEVEL          );
+      fprintf( Note, "OPT__UM_IC_NLEVEL               %d\n",      OPT__UM_IC_NLEVEL         );
+      fprintf( Note, "OPT__UM_IC_NVAR                 %d\n",      OPT__UM_IC_NVAR           );
+      fprintf( Note, "OPT__UM_IC_FORMAT               %d\n",      OPT__UM_IC_FORMAT         );
+      fprintf( Note, "OPT__UM_IC_DOWNGRADE            %d\n",      OPT__UM_IC_DOWNGRADE      );
+      fprintf( Note, "OPT__UM_IC_REFINE               %d\n",      OPT__UM_IC_REFINE         );
+      fprintf( Note, "OPT__UM_IC_LOAD_NRANK           %d\n",      OPT__UM_IC_LOAD_NRANK     );
+      fprintf( Note, "OPT__INIT_RESTRICT              %d\n",      OPT__INIT_RESTRICT        );
+      fprintf( Note, "OPT__INIT_GRID_WITH_OMP         %d\n",      OPT__INIT_GRID_WITH_OMP   );
+      fprintf( Note, "OPT__GPUID_SELECT               %d\n",      OPT__GPUID_SELECT         );
+      fprintf( Note, "INIT_SUBSAMPLING_NCELL          %d\n",      INIT_SUBSAMPLING_NCELL    );
 #     ifdef MHD
-      fprintf( Note, "OPT__INIT_BFIELD_BYFILE         %d\n",      OPT__INIT_BFIELD_BYFILE );
+      fprintf( Note, "OPT__INIT_BFIELD_BYVECPOT       %d\n",      OPT__INIT_BFIELD_BYVECPOT );
 #     endif
 #     ifdef SUPPORT_FFTW
       fprintf( Note, "OPT__FFTW_STARTUP               " );
