@@ -3,16 +3,10 @@
 
 #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
-#ifndef __umul24
-#  define __umul24( a, b )   ( (a)*(b) )
-#endif
-#ifndef __mul24
-#  define  __mul24( a, b )   ( (a)*(b) )
-#endif
-
-// useful macros
-# define to1D1(z,y,x) ( __umul24(z, HYB_NXT*HYB_NXT) + __umul24(y, HYB_NXT) + x )
-# define to1D2(z,y,x) ( __umul24(z-HYB_GHOST_SIZE, PS2*PS2) + __umul24(y-HYB_GHOST_SIZE, PS2) + x-HYB_GHOST_SIZE )
+// convert to 1D index with ghost boundary
+# define to1D1(z,y,x) (  (z)                 * FLU_NXT * FLU_NXT +  (y)                 * FLU_NXT +  (x)                  )
+// convert to 1D index without ghost boundary
+# define to1D2(z,y,x) ( ((z)-FLU_GHOST_SIZE) * PS2     * PS2     + ((y)-FLU_GHOST_SIZE) * PS2     + ((x)-FLU_GHOST_SIZE)  )
 
 #ifdef __CUDACC__
 # define CGPU_FLU_BLOCK_SIZE_X FLU_BLOCK_SIZE_X
@@ -133,7 +127,7 @@ static uint get1D2(uint k, uint j, uint i, int XYZ) {
 
 //Options for different Runge-Kutta schemes
 
-// First-order method:
+// First-order method (DT_HYBRID < 0.01 ):
 //#define N_TIME_LEVELS 1
 //const real TIME_COEFFS[N_TIME_LEVELS]                = {1.0};
 //const real RK_COEFFS  [N_TIME_LEVELS][N_TIME_LEVELS] = {{1.0}};
@@ -141,7 +135,7 @@ static uint get1D2(uint k, uint j, uint i, int XYZ) {
 //const static real FLUX_COEFFS[N_TIME_LEVELS]         = {1.0};
 //#endif
 
-// Second-order method:
+// Second-order method (DT_HYBRID = 0.05 instead of 0.4):
 //#define N_TIME_LEVELS 2
 //GPU_DEVICE_VARIABLE
 //const static real TIME_COEFFS[N_TIME_LEVELS]                = {1.0/2.0, 1.0};#
@@ -177,12 +171,12 @@ static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NXT) ],
                            const real dt, const real _dh, const real Eta, const bool StoreFlux,
                            const uint j_gap, const uint k_gap,
                            real s_In    [][N_TIME_LEVELS+1][FLU_NIN][HYB_NXT],
-                           real s_LogRho[][HYB_NXT],
-                           real s_QP    [][HYB_NXT],
-                           real s_Fm    [][2][HYB_NXT],
-                           real s_Flux  [][HYB_NXT],
-                           bool s_RK1   [][HYB_NXT],
-                           int  s_2PI   [][HYB_NXT],
+                           real s_LogRho[]                          [HYB_NXT],
+                           real s_QP    []                          [HYB_NXT],
+                           real s_Fm    [][2]                       [HYB_NXT],
+                           real s_Flux  []                          [HYB_NXT],
+                           bool s_RK1   []                          [HYB_NXT],
+                           int  s_2PI   []                          [HYB_NXT],
                            const bool FinalOut, const int XYZ, const real MinDens );
 
 //-------------------------------------------------------------------------------------------------------
@@ -213,14 +207,11 @@ static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NXT) ],
 //                                     are broken ...
 //                MinDens        : Minimum allowed density
 //-------------------------------------------------------------------------------------------------------
-
-
-
 #ifdef __CUDACC__
 __global__
 void CUFLU_ELBDMSolver_HamiltonJacobi( real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NXT) ],
                                        #ifdef GAMER_DEBUG
-                                       real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
+                                       real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
                                        #else
                                        real g_Fluid_Out[][FLU_NIN ][ CUBE(PS2) ],
                                        #endif
@@ -230,7 +221,7 @@ void CUFLU_ELBDMSolver_HamiltonJacobi( real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NX
 #else
 void CPU_ELBDMSolver_HamiltonJacobi(   real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NXT)],
                                        #ifdef GAMER_DEBUG
-                                       real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
+                                       real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
                                        #else
                                        real g_Fluid_Out[][FLU_NIN ][ CUBE(PS2) ],
                                        #endif
@@ -240,8 +231,6 @@ void CPU_ELBDMSolver_HamiltonJacobi(   real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NX
                                        const bool XYZ, const real MinDens )
 #endif
 {
-
-
 #  ifdef __CUDACC__
 // create memories for columns of various intermediate fields in shared GPU memory
    __shared__ real s_In      [CGPU_FLU_BLOCK_SIZE_Y][N_TIME_LEVELS + 1][FLU_NIN][HYB_NXT];
@@ -335,23 +324,23 @@ void CPU_ELBDMSolver_HamiltonJacobi(   real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NX
 //                MinDens        : Minimum allowed density
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NXT) ],
+void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                      #ifdef GAMER_DEBUG
                      real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
                      #else
-                     real g_Fluid_Out[][FLU_NIN ][ CUBE(PS2) ],
+                     real g_Fluid_Out[][FLU_NIN  ][ CUBE(PS2) ],
                      #endif
                      real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
                      int NPatchGroup,
                      const real dt, const real _dh, const real Eta, const bool StoreFlux,
                      const uint j_gap, const uint k_gap,
                      real s_In     [][N_TIME_LEVELS + 1][FLU_NIN][HYB_NXT],
-                     real s_LogRho [][HYB_NXT],
-                     real s_QP     [][HYB_NXT],
-                     real s_Fm     [][2][HYB_NXT],
-                     real s_Flux   [][HYB_NXT],
-                     bool s_RK1    [][HYB_NXT],
-                     int  s_2PI    [][HYB_NXT],
+                     real s_LogRho []                            [HYB_NXT],
+                     real s_QP     []                            [HYB_NXT],
+                     real s_Fm     [][2]                         [HYB_NXT],
+                     real s_Flux   []                            [HYB_NXT],
+                     bool s_RK1    []                            [HYB_NXT],
+                     int  s_2PI    []                            [HYB_NXT],
                      const bool FinalOut,
                      const int XYZ, const real MinDens )
 {
@@ -365,7 +354,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NXT) ],
    const uint j_end        = HYB_NXT -  j_gap    ;          // last y-column to be updated
    const uint size_j       = HYB_NXT - (j_gap<<1);          // number of y-columns to be updated
    const uint size_k       = HYB_NXT - (k_gap<<1);          // number of z-columns to be updated
-   const uint NColumnTotal = __umul24( size_j, size_k );    // total number of data columns to be updated
+   const uint NColumnTotal = size_j * size_k;    // total number of data columns to be updated
 
 // openmp pragma for the CPU solver
 #  ifndef __CUDACC__
@@ -443,7 +432,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NXT) ],
 
 #        endif // # ifdef __CUDACC__ ... # else
 
-         const uint tid          = __umul24( ty , CGPU_FLU_BLOCK_SIZE_X ) + tx;    // thread ID within block
+         const uint tid          = ty * CGPU_FLU_BLOCK_SIZE_X + tx;                // thread ID within block
                uint j            = j_gap + ty % size_j;                            // (i,j,k): array indices used in g_Fluid_In
                uint k            = k_gap + ty / size_j;                            // (i,j,k): array indices used in g_Fluid_In
                uint i            = tx + HYB_GHOST_SIZE;                            // (i,j,k): array indices used in g_Fluid_In
@@ -769,7 +758,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NXT) ],
                      if ( k >= HYB_GHOST_SIZE  &&  k < HYB_NXT-HYB_GHOST_SIZE )
                      if ( j >= HYB_GHOST_SIZE  &&  j < HYB_NXT-HYB_GHOST_SIZE )
                      {
-                        Idx3 = __umul24( k-HYB_GHOST_SIZE, PS2 ) + (j-HYB_GHOST_SIZE);
+                        Idx3 = ( k - HYB_GHOST_SIZE ) * PS2 + (j-HYB_GHOST_SIZE);
 
                         g_Flux[bx][XYZ+0][0][Idx3] = s_Flux[ty][  0 + HYB_GHOST_SIZE] / Eta;
                         g_Flux[bx][XYZ+1][0][Idx3] = s_Flux[ty][PS1 + HYB_GHOST_SIZE] / Eta;
@@ -790,7 +779,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NXT) ],
             {
                delta_k  = ( j - j_end )/size_j + 1;
                k       += delta_k;
-               j       -= __umul24( size_j, delta_k );
+               j       -= size_j * delta_k;
             }
 
 //          4.5 update remaining number of columns
