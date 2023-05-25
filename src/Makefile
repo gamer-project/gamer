@@ -110,8 +110,7 @@ SIMU_OPTION += -DCONSERVE_MASS
 # --> additionally need to set detection threshold CK_PHASE_DEFECT in Input_Parameter
 #SIMU_OPTION += -DDISABLE_PHASE_AT_DEFECT
 
-
-# choose elbdm scheme ELBDM_SCHEME as WAVE (wave-solver only), hybrid (fluid solver on coarse levels, wave solver on refined levels)
+# choose elbdm scheme ELBDM_SCHEME as ELBDM_WAVE (wave-solver only), ELBDM_HYBRID (fluid solver on coarse levels, wave solver on refined levels)
 SIMU_OPTION += -DELBDM_SCHEME=ELBDM_WAVE
 
 # choose wave scheme WAVE_FD (finite difference), WAVE_GRAMFE (local spectral method)
@@ -132,8 +131,6 @@ else ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=W
 #SIMU_OPTION += -DGRAMFE_ENABLE_GPU
 endif # WAVE_SCHEME
 
-
-
 # (b-2-3) ELBDM_HYBRID options
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DELBDM_SCHEME=ELBDM_HYBRID, $(SIMU_OPTION))" "-DELBDM_SCHEME=ELBDM_HYBRID"
@@ -145,7 +142,7 @@ ifeq "$(filter -DELBDM_SCHEME=ELBDM_HYBRID, $(SIMU_OPTION))" "-DELBDM_SCHEME=ELB
 SIMU_OPTION += -DHYBRID_SCHEME=HYBRID_MUSCL
 
 # do not switch to first-order scheme when failure of fluid scheme is detected
-# --> should be set for fluid-only simulation (no wave-scheme) along with HYBRID_SCHEME = HYBRID_MUSCL
+# --> must be set for fluid-only simulation (no wave-scheme) along with HYBRID_SCHEME = HYBRID_MUSCL
 #SIMU_OPTION += -DHYBRID_IGNORE_FLUID_FAILURE
 
 # enforce a smoother phase field by adding multiples of 2PI ( experimental )
