@@ -187,6 +187,26 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #endif // #if ( MODEL == ELBDM )
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  OutputError
+// Description :  Output the L1 error
+//
+// Note        :  1. Invoke Output_L1Error()
+//                2. Use SetGridIC() to provide the analytical solution at any given time
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void OutputError()
+{
+
+   const char Prefix[100]     = "VortexPairRotating";
+   const OptOutputPart_t Part = OUTPUT_X;
+
+   Output_L1Error( SetGridIC, NULL, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
+
+} // FUNCTION : OutputError
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_ELBDM_VortexPairRotating
@@ -215,6 +235,7 @@ void Init_TestProb_ELBDM_VortexPairRotating()
 
    Init_Function_User_Ptr = SetGridIC;
    BC_User_Ptr            = SetGridIC;
+   Output_User_Ptr        = OutputError;
 #  endif // #if ( MODEL == ELBDM )
 
 
