@@ -924,17 +924,15 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    if ( amr->use_wave_flag[FaLv] ) {
 #  endif
 
-#  ifdef DISABLE_PHASE_AT_DEFECT
-   if ( OPT__INT_PHASE ) {
+   if ( OPT__INT_PHASE && OPT__CK_PHASE_DEFECT ) {
 //    iterate over coarse array data and disable phase interpolation for all 8 children if vortex is found
       for (int k=0; k<CSize_Flu; k++)
       for (int j=0; j<CSize_Flu; j++)
       for (int i=0; i<CSize_Flu; i++)
       {
-         disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_Flu, CSize_Flu, CSize_Flu, CData_Dens, DISABLE_PHASE_AT_VORTEX_THRESHOLD);
+         disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_Flu, CSize_Flu, CSize_Flu, CData_Dens, ELBDM_VORTEX_THRESHOLD);
       }
-   } // if ( OPT__INT_PHASE )
-#  endif // # ifdef DISABLE_PHASE_AT_DEFECT
+   } // if ( OPT__INT_PHASE && OPT__CK_PHASE_DEFECT )
 
    if ( OPT__INT_PHASE && !disableIntPhase )
    {

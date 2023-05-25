@@ -1393,7 +1393,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 // turn off phase interpolation if DISABLE_PHASE_AT_DEFECT is defined and we detect vortex in interpolation data
    bool disableIntPhase = false;
 
-//Parameter IntPhase in hybrid scheme only relevant where we use wave solver
+// parameter IntPhase in hybrid scheme only relevant where wave scheme is used
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( IntPhase && amr->use_wave_flag[lv] == true)
 #  else // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
@@ -1450,15 +1450,15 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          CData_Dens[t] = Re*Re + Im*Im;
       }
 
-#     ifdef DISABLE_PHASE_AT_DEFECT
-      for (int k=0; k<CSize_CC[2]; k++)
-      for (int j=0; j<CSize_CC[1]; j++)
-      for (int i=0; i<CSize_CC[0]; i++)
-      {
-         disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_CC[0], CSize_CC[1], CSize_CC[2], CData_Dens, DISABLE_PHASE_AT_DEFECT_THRESHOLD);
-      }
-#     endif // # ifdef DISABLE_PHASE_AT_DEFECT
-   }
+      if ( OPT__CK_PHASE_DEFECT ) {
+         for (int k=0; k<CSize_CC[2]; k++)
+         for (int j=0; j<CSize_CC[1]; j++)
+         for (int i=0; i<CSize_CC[0]; i++)
+         {
+            disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_CC[0], CSize_CC[1], CSize_CC[2], CData_Dens, ELBDM_VORTEX_THRESHOLD);
+         }
+      } // if ( OPT__CK_PHASE_DEFECT ) {
+   } // if ( IntPhase )
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( IntPhase && !disableIntPhase && amr->use_wave_flag[lv] == true)

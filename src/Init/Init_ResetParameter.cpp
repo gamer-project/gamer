@@ -312,6 +312,13 @@ void Init_ResetParameter()
       PRINT_WARNING( ELBDM_TAYLOR3_AUTO, FORMAT_INT, "since OPT__FREEZE_FLUID is enabled" );
    }
 
+// reset vortex detection threshold
+   if ( ELBDM_VORTEX_THRESHOLD < 0 ) {
+      ELBDM_VORTEX_THRESHOLD = 1.00;
+
+      PRINT_WARNING( ELBDM_VORTEX_THRESHOLD, FORMAT_FLT, "" );
+   }
+
 #  endif //  #if ( MODEL == ELBDM )
 
 // interpolation schemes for the fluid variables

@@ -743,19 +743,16 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          if ( amr->use_wave_flag[lv] ) {
 #        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
-#        ifdef DISABLE_PHASE_AT_DEFECT
-
 //       only check if OPT__INT_PHASE needs to be disabled if it is enabled in the first place
-         if ( OPT__INT_PHASE ) {
-//          iterate over coarse array data and disable phase interpolation for all 8 children if vortex is found
+         if ( OPT__INT_PHASE && OPT__CK_PHASE_DEFECT ) {
+//             iterate over coarse array data and disable phase interpolation for all 8 children if vortex is found
             for (int k=0; k<CSize_Flu; k++)
             for (int j=0; j<CSize_Flu; j++)
             for (int i=0; i<CSize_Flu; i++)
             {
-               disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_Flu, CSize_Flu, CSize_Flu, &Flu_CData[DENS][0][0][0], DISABLE_PHASE_AT_DEFECT_THRESHOLD);
+               disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_Flu, CSize_Flu, CSize_Flu, &Flu_CData[DENS][0][0][0], ELBDM_VORTEX_THRESHOLD);
             }
-         } // if ( OPT__INT_PHASE ) {
-#        endif // # ifdef DISABLE_PHASE_AT_DEFECT
+         } // if ( OPT__INT_PHASE && OPT__CK_PHASE_DEFECT ) {
 
          if ( OPT__INT_PHASE && !disableIntPhase )
          {

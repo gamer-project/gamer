@@ -112,8 +112,7 @@ OptInitMagByVecPot_t OPT__INIT_BFIELD_BYVECPOT;
 
 #elif ( MODEL == ELBDM )
 double               DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
-bool                 OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, OPT__RES_PHASE;
-double               OPT__CK_PHASE_DEFECT;
+bool                 OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, OPT__RES_PHASE, OPT__CK_PHASE_DEFECT;
 bool                 ELBDM_TAYLOR3_AUTO;
 double               ELBDM_TAYLOR3_COEFF;
 double               ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
@@ -130,7 +129,7 @@ double               ELBDM_LAMBDA;
 #endif
 ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
 bool                 ELBDM_BASE_SPECTRAL;
-
+double               ELBDM_VORTEX_THRESHOLD;
 #else
 #error : unsupported MODEL !!
 #endif // MODEL

@@ -106,10 +106,6 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 # enforce the mass conservation (only partly enforced by local spectral method)
 SIMU_OPTION += -DCONSERVE_MASS
 
-# turn off phase restriction and switch from phase to wave function interpolation around phase defects (experimental)
-# --> additionally need to set detection threshold CK_PHASE_DEFECT in Input_Parameter
-#SIMU_OPTION += -DDISABLE_PHASE_AT_DEFECT
-
 # choose elbdm scheme ELBDM_SCHEME as ELBDM_WAVE (wave-solver only), ELBDM_HYBRID (fluid solver on coarse levels, wave solver on refined levels)
 SIMU_OPTION += -DELBDM_SCHEME=ELBDM_WAVE
 
@@ -611,7 +607,7 @@ GPU_FILE    += CUFLU_ELBDMSolver_FD.cu CUFLU_ELBDMSolver_GramFE.cu CUFLU_ELBDMSo
 
 CPU_FILE    += CPU_ELBDMSolver_FD.cpp  CPU_ELBDMSolver_FFT.cpp  CPU_ELBDMSolver_GramFE.cpp CPU_ELBDMSolver_HJ.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
                ELBDM_GetTimeStep_Fluid.cpp  ELBDM_GetTimeStep_Hybrid.cpp  ELBDM_Flag_EngyDensity.cpp  ELBDM_Flag_Interference.cpp  ELBDM_UnwrapPhase.cpp \
-               ELBDM_GetTimeStep_Phase.cpp  ELBDM_GetTimeStep_Velocity.cpp  ELBDM_SetTaylor3Coeff.cpp  ELBDM_RemoveMotionCM.cpp
+               ELBDM_GetTimeStep_Phase.cpp  ELBDM_GetTimeStep_Velocity.cpp  ELBDM_SetTaylor3Coeff.cpp  ELBDM_RemoveMotionCM.cpp ELBDM_DetectVortex.cpp
 
 
 vpath %.cu     Model_ELBDM/GPU_ELBDM

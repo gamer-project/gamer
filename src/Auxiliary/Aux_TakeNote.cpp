@@ -282,12 +282,6 @@ void Aux_TakeNote()
       fprintf( Note, "QUARTIC_SELF_INTERACTION        OFF\n" );
 #     endif
 
-#     ifdef DISABLE_PHASE_AT_DEFECT
-      fprintf( Note, "DISABLE_PHASE_AT_DEFECT         ON\n" );
-#     else
-      fprintf( Note, "DISABLE_PHASE_AT_DEFECT         OFF\n" );
-#     endif
-
 #     else
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
@@ -1143,7 +1137,7 @@ void Aux_TakeNote()
       fprintf( Note, "ELBDM_TAYLOR3_AUTO              %d\n",         ELBDM_TAYLOR3_AUTO     );
       fprintf( Note, "ELBDM_REMOVE_MOTION_CM          %d\n",         ELBDM_REMOVE_MOTION_CM );
       fprintf( Note, "ELBDM_BASE_SPECTRAL             %d\n",         ELBDM_BASE_SPECTRAL    );
-
+      fprintf( Note, "ELBDM_VORTEX_THRESHOLD          %13.7e\n",     ELBDM_VORTEX_THRESHOLD );
 #     else
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
@@ -1334,7 +1328,7 @@ void Aux_TakeNote()
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__INT_PHASE                  %d\n",      OPT__INT_PHASE          );
       fprintf( Note, "OPT__RES_PHASE                  %d\n",      OPT__RES_PHASE          );
-      fprintf( Note, "OPT__CK_PHASE_DEFECT            %f\n",      OPT__CK_PHASE_DEFECT    );
+      fprintf( Note, "OPT__CK_PHASE_DEFECT            %d\n",      OPT__CK_PHASE_DEFECT    );
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       fprintf( Note, "OPT__HYBRID_MATCH_PHASE         %d\n",      OPT__HYBRID_MATCH_PHASE );
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )

@@ -522,6 +522,7 @@ struct InputPara_t
    int    ELBDM_Taylor3_Auto;
    int    ELBDM_RemoveMotionCM;
    int    ELBDM_BaseSpectral;
+   double ELBDM_VortexThreshold;
 #  endif // ELBDM
 
 // fluid solvers in different models
@@ -662,7 +663,7 @@ struct InputPara_t
 #  if ( MODEL == ELBDM )
    int    Opt__Int_Phase;
    int    Opt__Res_Phase;
-   double Opt__Ck_Phase_Defect;
+   int    Opt__Ck_Phase_Defect;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    int    Opt__Hybrid_Match_Phase;
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
