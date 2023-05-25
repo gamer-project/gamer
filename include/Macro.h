@@ -382,17 +382,14 @@
 // field indices of fluid[] --> element of [0 ... NCOMP_FLUID-1]
 // --> must NOT modify their values
 
-#if ( ELBDM_SCHEME == ELBDM_WAVE )
 #  define  DENS               0
 #  define  REAL               1
 #  define  IMAG               2
-#elif ( ELBDM_SCHEME == ELBDM_HYBRID )
-#  define  DENS               0
+
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  define  PHAS               1
 #  define  STUB               2
-#else
-#  error : ERROR : Unsupported ELBDM_SCHEME !!
-#endif // ELBDM_SCHEME
+#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 // field indices of passive[] --> element of [NCOMP_FLUID ... NCOMP_TOTAL-1]
 // none for ELBDM
@@ -401,18 +398,14 @@
 #  define  FLUX_DENS          0
 
 // bitwise field indices
-#if ( ELBDM_SCHEME == ELBDM_WAVE )
 #  define _DENS               ( 1L << DENS )
 #  define _REAL               ( 1L << REAL )
 #  define _IMAG               ( 1L << IMAG )
-#elif ( ELBDM_SCHEME == ELBDM_HYBRID )
-#  define _DENS               ( 1L << DENS )
+#  define _MAG                0
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  define _PHAS               ( 1L << PHAS )
 #  define _STUB               ( 1L << STUB )
-#else
-#  error : ERROR : Unsupported ELBDM_SCHEME !!
-#endif // ELBDM_SCHEME
-#  define _MAG                0
+#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 // bitwise flux indices
