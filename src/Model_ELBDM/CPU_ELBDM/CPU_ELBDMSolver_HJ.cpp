@@ -384,8 +384,11 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 
          uint NStep;                      // number of iterations for updating each column
          real De_New, Ph_New, v, vp, vm;
-         int l, l_min, l_max;
          uint time_level;
+
+#        ifndef HYBRID_IGNORE_FLUID_FAILURE
+         int l, l_min, l_max;
+#        endif // # ifndef HYBRID_IGNORE_FLUID_FAILURE
 
 #        ifdef GAMER_DEBUG
          real St_New;                     // for storing where we use RK1 in stub field when GAMER_DEBUG is on
