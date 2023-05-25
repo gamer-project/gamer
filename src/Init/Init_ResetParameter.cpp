@@ -108,7 +108,7 @@ void Init_ResetParameter()
    }
 
 
-// velocity dt
+// hybrid velocity dt
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
    if ( DT__VELOCITY < 0.0 )
    {
@@ -308,11 +308,6 @@ void Init_ResetParameter()
 
       PRINT_WARNING( ELBDM_TAYLOR3_AUTO, FORMAT_INT, "since OPT__FREEZE_FLUID is enabled" );
    }
-
-#  if ( ELBDM_SCHEME == HYBRID && defined( LOAD_BALANCE ) )
-// always exchange father pathes for hybrid scheme with OpenMPI
-   OPT__LB_EXCHANGE_FATHER = true;
-#  endif // #if ( ELBDM_SCHEME == HYBRID  && defined( LOAD_BALANCE ) )
 
 #  endif //  #if ( MODEL == ELBDM )
 

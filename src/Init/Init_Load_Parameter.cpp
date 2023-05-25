@@ -189,8 +189,13 @@ void Init_Load_Parameter()
    ReadPara->Add( "LB_INPUT__PAR_WEIGHT",       &LB_INPUT__PAR_WEIGHT,            0.0,             0.0,           NoMax_double   );
 #  endif
    ReadPara->Add( "OPT__RECORD_LOAD_BALANCE",   &OPT__RECORD_LOAD_BALANCE,        true,            Useless_bool,  Useless_bool   );
+// exchange father pathes for hybrid scheme with MPI
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+   ReadPara->Add( "OPT__LB_EXCHANGE_FATHER",    &OPT__LB_EXCHANGE_FATHER,         true,            Useless_bool,  Useless_bool   );
+#  else // #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
    ReadPara->Add( "OPT__LB_EXCHANGE_FATHER",    &OPT__LB_EXCHANGE_FATHER,         false,           Useless_bool,  Useless_bool   );
-#  endif
+#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID ) ... # else
+#  endif // #  ifdef LOAD_BALANCE
    ReadPara->Add( "OPT__MINIMIZE_MPI_BARRIER",  &OPT__MINIMIZE_MPI_BARRIER,       false,           Useless_bool,  Useless_bool   );
 
 
@@ -295,11 +300,11 @@ void Init_Load_Parameter()
 // do not check FLU_GPU_NPGROUP and GPU_NSTREAM since they may be reset by either Init_ResetDefaultParameter() or CUAPI_SetMemSize()
    ReadPara->Add( "FLU_GPU_NPGROUP",            &FLU_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "GPU_NSTREAM",                &GPU_NSTREAM,                    -1,               NoMin_int,     NoMax_int      );
-#  if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
+#  if ( MODEL == ELBDM && ELBDM_SCHEME != HYBRID && WAVE_SCHEME == WAVE_GRAMFE )
    ReadPara->Add( "OPT__FIXUP_FLUX",            &OPT__FIXUP_FLUX,                 false,           Useless_bool,  Useless_bool   );
-#  else // #  if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
+#  else // #  if ( MODEL == ELBDM && ELBDM_SCHEME != HYBRID && WAVE_SCHEME == WAVE_GRAMFE )
    ReadPara->Add( "OPT__FIXUP_FLUX",            &OPT__FIXUP_FLUX,                 true,            Useless_bool,  Useless_bool   );
-#  endif // #  if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE ) ... # else
+#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME != HYBRID && WAVE_SCHEME == WAVE_GRAMFE ) ... # else
 #  ifdef MHD
    ReadPara->Add( "OPT__FIXUP_ELECTRIC",        &OPT__FIXUP_ELECTRIC,             true,            Useless_bool,  Useless_bool   );
 #  endif

@@ -1100,14 +1100,14 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL incompatible with ELBDM_SCHEME == HYBRID !!\n" );
 
    if ( MAX_LEVEL > 0 && FLAG_BUFFER_SIZE != PATCH_SIZE )
-      Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme with AMR requires that the flag buffer size equals the patch size!!\n");
+      Aux_Error(  ERROR_INFO, "Hybrid scheme with AMR requires that the flag buffer size equal the patch size!!\n");
 
    if ( MAX_LEVEL > 0 && !OPT__FIXUP_RESTRICT )
-      Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme with AMR requires the restrict operation OPT__FIXUP_RESTRICT !!\n");
+      Aux_Error(  ERROR_INFO, "Hybrid scheme with AMR requires the option OPT__FIXUP_RESTRICT !!\n");
 
 #  ifdef LOAD_BALANCE
    if ( !OPT__LB_EXCHANGE_FATHER )
-      Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme requires the option OPT__LB_EXCHANGE_FATHER for load balancing !!\n");
+      Aux_Error(  ERROR_INFO, "Hybrid scheme requires the option OPT__LB_EXCHANGE_FATHER for load balancing !!\n");
 #  endif // # ifdef LOAD_BALANCE
 
 #  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
