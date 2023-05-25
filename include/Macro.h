@@ -589,10 +589,26 @@
 
 // set parameters of gram extension scheme
 # if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
+//  number of evaluation points of Gram polynomials for computing FC(SVD) continuation
 #   define GRAMFE_GAMMA  150
+//  number of Fourier modes used in the FC(SVD) continuation
+//  roughly GRAMFE_G = GRAMFE_GAMMA/2
 #   define GRAMFE_G      63
+//  number of boundary points used for Gram polynomial space on boundary
 #   define GRAMFE_NDELTA 14
+//  maximum order of Gram polynomials on boundary
+//  for GRAMFE_ORDER < GRAMFE_NDELTA, the boundary information is projected
+//  onto a lower-dimensional polynomial space
+//  this increases the stability but decreases the accuracy of the algorithm
 #   define GRAMFE_ORDER  14
+
+//  a boundary of size GRAMFE_NDELTA can only support polynomials of degree up to GRAMFE_ORDER
+#   if ( GRAMFE_ORDER > GRAMFE_NDELTA )
+#       error : ERROR : Gram Fourier extension order must not be higher than NDELTA
+#   endif
+
+//  size of the extension region
+//  total size of extended region = GRAMFE_FLU_NXT = FLU_NXT + GRAMFE_ND
 //  default values in order for GRAMFE_FLU_NXT to have small prime factorisations
 #   if ( PATCH_SIZE == 8 )
 #     define GRAMFE_ND     32  // GRAMFE_FLU_NXT = 2^6
@@ -607,10 +623,10 @@
 #   else
 #     error : ERROR : UNSUPPORTED PATCH_SIZE FOR GRAM FOURIER EXTENSION SCHEME
 #   endif // PATCH_SIZE
-# if ( GRAMFE_ORDER > GRAMFE_NDELTA )
-#   error : ERROR : Gram Fourier extension order must not be higher than NDELTA
-# endif
-# define GRAMFE_FLU_NXT ( FLU_NXT + GRAMFE_ND )
+
+//  total size of extended region
+#   define GRAMFE_FLU_NXT ( FLU_NXT + GRAMFE_ND )
+
 # endif // # if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
 
 

@@ -120,6 +120,7 @@ SIMU_OPTION += -DLAPLACIAN_4TH
 # ------------------------------------------------------------------------------------
 else ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
 # enable for GPU support of Gram-Fourier extension algorithm in GPU mode (CPU is used by default because it is faster)
+# --> must turn on GPU
 #SIMU_OPTION += -DGRAMFE_ENABLE_GPU
 endif # WAVE_SCHEME
 endif # MODEL
@@ -321,15 +322,6 @@ endif
  NVCC = $(CUDA_PATH)/bin/nvcc                            # CUDA compiler
 #NVCC = $(CUDA_PATH)/bin/nvcc -ccbin YOUR_G++            # with a specified host compiler
 #NVCC = nvcc -ccbin CC                                   # for the Cray environment
-
-# enable C++ 17 support for ELBDM GPU Gram-Fourier extension scheme
-ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
-   ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
-      ifeq "$(filter -DGRAMFE_ENABLE_GPU, $(SIMU_OPTION))" "-DGRAMFE_ENABLE_GPU"
-         NVCC += -std=c++17
-      endif
-   endif
-endif
 
 
 
@@ -956,6 +948,15 @@ endif
 
 #NVCCFLAG_COM += -use_fast_math
 
+# enable C++ 17 support for ELBDM GPU Gram-Fourier extension scheme
+ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
+   ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
+      ifeq "$(filter -DGRAMFE_ENABLE_GPU, $(SIMU_OPTION))" "-DGRAMFE_ENABLE_GPU"
+         NVCCFLAG_COM += -std=c++17
+      endif
+   endif
+endif
+
 # fluid solver flags
 NVCCFLAG_FLU += -Xptxas -dlcm=ca -prec-div=false -ftz=true
 
@@ -1002,6 +1003,7 @@ else ifeq "$(filter -DGPU_ARCH=AMPERE, $(SIMU_OPTION))" "-DGPU_ARCH=AMPERE"
      NVCCFLAG_FLU += --maxrregcount=128
    endif
 endif
+
 
 # Poisson/gravity solvers flags
 NVCCFLAG_POT += -Xptxas -dlcm=ca

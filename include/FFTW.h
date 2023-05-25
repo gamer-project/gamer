@@ -150,8 +150,7 @@
 #endif // #ifdef SERIAL ... # else
 #endif // # if ( SUPPORT_FFTW == FFTW3 )
 
-#if ( SUPPORT_FFTW == FFTW3 )
-#if ( WAVE_SCHEME == WAVE_GRAMFE )
+#if ( WAVE_SCHEME == WAVE_GRAMFE && SUPPORT_FFTW == FFTW3 )
 #ifdef GRAMFE_FLOAT8
 #define gramfe_float_fftw3_malloc              fftw_malloc
 #define gramfe_float_fftw3_free                fftw_free
@@ -177,8 +176,7 @@
 #define gramfe_float_fftw3_plan_dft_c2r_1d     fftwf_plan_dft_c2r_1d
 #define gramfe_float_fftw3_plan_dft_r2c_1d     fftwf_plan_dft_r2c_1d
 #endif // #ifdef GRAMFE_FLOAT8 ... # else
-#endif // #if ( WAVE_SCHEME == WAVE_GRAMFE)
-#endif // # if ( SUPPORT_FFTW == FFTW3
+#endif // # if ( WAVE_SCHEME == WAVE_GRAMFE && SUPPORT_FFTW == FFTW3 )
 
 //wrappers for fftw plans and complex 1D-transform used in Gram-Fourier extension algorithm
 #if ( SUPPORT_FFTW == FFTW3 )

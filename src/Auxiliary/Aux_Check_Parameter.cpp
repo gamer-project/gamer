@@ -1023,8 +1023,8 @@ void Aux_Check_Parameter()
 // errors
 // ------------------------------
 
-#  ifndef WAVE_SCHEME
-#     error : ERROR : WAVE_SCHEME not defined in ELBDM !!
+#  if (  !defined( WAVE_SCHEME )  ||  ( WAVE_SCHEME != WAVE_FD && WAVE_SCHEME != WAVE_GRAMFE )  )
+#     error : ERROR : WAVE_SCHEME not defined or unsupported in ELBDM !!
 #  endif
 
 #  if ( NCOMP_FLUID != 3 )
@@ -1097,11 +1097,11 @@ void Aux_Check_Parameter()
    const double dt_fluid_max = 0.25*M_PI;
 #  endif
    if ( DT__FLUID > dt_fluid_max )
-      Aux_Error( ERROR_INFO, "WARNING : DT__FLUID (%13.7e) > %13.7e is unconditionally unstable (even with %s) !!\n",
+      Aux_Error( ERROR_INFO, "DT__FLUID (%13.7e) > %13.7e is unconditionally unstable (even with %s) !!\n",
                    DT__FLUID, dt_fluid_max, "ELBDM_TAYLOR3_AUTO" );
 
    if ( DT__FLUID_INIT > dt_fluid_max )
-      Aux_Error( ERROR_INFO, "WARNING : DT__FLUID_INIT (%13.7e) > %13.7e is unconditionally unstable (even with %s) !!\n",
+      Aux_Error( ERROR_INFO, "DT__FLUID_INIT (%13.7e) > %13.7e is unconditionally unstable (even with %s) !!\n",
                    DT__FLUID_INIT, dt_fluid_max, "ELBDM_TAYLOR3_AUTO" );
 
    if ( !ELBDM_TAYLOR3_AUTO )
@@ -1115,7 +1115,7 @@ void Aux_Check_Parameter()
 
       if ( DT__FLUID > dt_fluid_max_normal  &&  ELBDM_TAYLOR3_COEFF <= 1.0/6.0 )
       {
-         Aux_Error( ERROR_INFO, "WARNING : DT__FLUID (%13.7e) > stability limit (%13.7e) for ELBDM_TAYLOR3_COEFF <= 1/6\n",
+         Aux_Error( ERROR_INFO, "DT__FLUID (%13.7e) > stability limit (%13.7e) for ELBDM_TAYLOR3_COEFF <= 1/6\n",
                       DT__FLUID, dt_fluid_max_normal );
          Aux_Error( ERROR_INFO, "          --> Please either (a) set ELBDM_TAYLOR3_COEFF (%13.7e) > 1/6\n",
                       ELBDM_TAYLOR3_COEFF );
@@ -1124,7 +1124,7 @@ void Aux_Check_Parameter()
 
       if ( DT__FLUID_INIT > dt_fluid_max_normal  &&  ELBDM_TAYLOR3_COEFF <= 1.0/6.0 )
       {
-         Aux_Error( ERROR_INFO, "WARNING : DT__FLUID_INIT (%13.7e) > stability limit (%13.7e) for ELBDM_TAYLOR3_COEFF <= 1/6\n",
+         Aux_Error( ERROR_INFO, "DT__FLUID_INIT (%13.7e) > stability limit (%13.7e) for ELBDM_TAYLOR3_COEFF <= 1/6\n",
                       DT__FLUID_INIT, dt_fluid_max_normal );
          Aux_Error( ERROR_INFO, "          --> Please either (a) set ELBDM_TAYLOR3_COEFF (%13.7e) > 1/6\n",
                       ELBDM_TAYLOR3_COEFF );
@@ -1137,7 +1137,7 @@ void Aux_Check_Parameter()
    const double dt_fluid_max = 0.35;
 
    if ( DT__FLUID > dt_fluid_max )
-      Aux_Error( ERROR_INFO, "WARNING : %s solver with DT__FLUID (%13.7e) > %13.7e is unstable !!\n",
+      Aux_Error( ERROR_INFO, "%s solver with DT__FLUID (%13.7e) > %13.7e is unstable !!\n",
                    "WAVE_GRAMFE", DT__FLUID, dt_fluid_max );
 
 #  ifndef GRAMFE_FLOAT8
@@ -1145,8 +1145,12 @@ void Aux_Check_Parameter()
 #  endif // # ifndef GRAMFE_FLOAT8
 
 #  if ( FLU_GHOST_SIZE < 6 )
-#  error : ERROR : WAVE_GRAMFE only stable (empirically) for FLU_GHOST_SIZE >= 6!
+#  error : ERROR : WAVE_GRAMFE is only stable (empirically) for FLU_GHOST_SIZE >= 6!
 #  endif // #  if ( FLU_GHOST_SIZE < 6 )
+
+#  if ( !defined(GPU) && defined(GRAMFE_ENABLE_GPU) )
+#  error : ERROR : Gram-Fourier extension scheme's GRAMFE_ENABLE_GPU option requires GPU flag!
+#  endif // #  if ( !defined(GPU) && defined(GRAMFE_ENABLE_GPU) )
 
 #  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
 #  error : ERROR : CPU Gram-Fourier extension scheme requires SUPPORT_FFTW flag!

@@ -392,7 +392,6 @@ void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //                Workspace      : Workspace for forward GPU FFT (useless in CPU mode)
 //                WorkspaceInv   : Workspace for inverse GPU FFT (useless in CPU mode)
 //-------------------------------------------------------------------------------------------------------
-
 GPU_DEVICE
 void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
@@ -407,7 +406,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      const int XYZ, const gramfe_float MinDens,
                      forward_workspace_type Workspace,
                      inverse_workspace_type WorkspaceInv  )
-
 {
    const uint size_j       = FLU_NXT -  j_gap * 2; // number of y-columns to be updated
    const uint size_k       = FLU_NXT -  k_gap * 2; // number of z-columns to be updated
