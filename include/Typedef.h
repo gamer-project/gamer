@@ -22,14 +22,6 @@ typedef double real;
 typedef float  real;
 #endif
 
-#ifndef GRAMFE_ENABLE_SINGLE_PRECISION
-#  ifdef GRAMFE_FLOAT8
-#     error "Cannot enable GRAMFE_FLOAT8 and GRAMFE_ENABLE_SINGLE_PRECISION at the same time!"
-#  else
-#     define GRAMFE_FLOAT8
-#  endif
-#endif
-
 #ifdef GRAMFE_FLOAT8
 typedef double gramfe_float;
 #else
@@ -89,6 +81,14 @@ const OptInit_t
    INIT_BY_FUNCTION = 1,
    INIT_BY_RESTART  = 2,
    INIT_BY_FILE     = 3;
+
+
+// program initialization options for the magnetic field by vector potential
+typedef int OptInitMagByVecPot_t;
+const OptInitMagByVecPot_t
+   INIT_MAG_BYVECPOT_NONE = 0,
+   INIT_MAG_BYVECPOT_FILE = 1,
+   INIT_MAG_BYVECPOT_FUNC = 2;
 
 
 // data format for OPT__INIT=INIT_BY_FILE

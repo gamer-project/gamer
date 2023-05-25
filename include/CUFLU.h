@@ -25,9 +25,9 @@
 #endif
 
 
-// Include CUDA FFT libraby if gpu kinetic ELBDM Gram Fourier extension solver is enabled
+// include CUDA FFT library if GPU kinetic ELBDM Gram-Fourier extension solver is enabled
 #if ( defined(__CUDACC__) && MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
-#include <cufftdx.hpp>
+#  include <cufftdx.hpp>
 #endif // #if ( defined(__CUDACC__) && MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
 
 // faster integer multiplication in Fermi
@@ -254,7 +254,6 @@
 //=========================================================================================
 #elif ( MODEL == ELBDM )
 
-
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
@@ -402,6 +401,7 @@
 #     define FLU_BLOCK_SIZE_X       PS2
 
 #  if ( ELBDM_SCHEME == WAVE )
+
 #  if   ( GPU_ARCH == FERMI )
 #     ifdef FLOAT8
 #        define FLU_BLOCK_SIZE_Y    4
@@ -475,10 +475,8 @@
 #  error : ERROR : UNKWNOWN ELBDM_SCHEME
 #  endif
 
-// set number of threads and blocks used in GRAMFE GPU scheme
-# if ( defined(__CUDACC__) && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
-
-
+// define GPU compute capabilities
+#ifdef GPU
 #  if   ( GPU_ARCH == FERMI )
    #define GPU_COMPUTE_CAPABILITY 200
 #  elif ( GPU_ARCH == KEPLER )
@@ -494,9 +492,35 @@
 #  elif ( GPU_ARCH == AMPERE )
    #define GPU_COMPUTE_CAPABILITY 800
 #  else
-#  error : ERROR : Unsupported GPU architecture in cuFFTdx library for GPU Gram Fourier extension scheme
+#  error : ERROR : Please add GPU_COMPUTE_CAPABILITY for GPU_ARCH!
+#  endif // GPU_ARCH
+#endif // GPU
+
+// set number of threads and blocks used in GRAMFE GPU scheme
+# if ( defined(__CUDACC__) && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
+
+
+// cuFFTdx supports the following GPU architectures at the time of writing (23.05.23)
+//
+//    Volta: 700 and 720 (sm_70, sm_72),
+//
+//    Turing: 750 (sm_75), and
+//
+//    Ampere: 800, 860 and 870 (sm_80, sm_86, sm_87).
+//
+//    Ada: 890 (sm_89).
+//
+//    Hopper: 900 (sm_90).
+#  if   ( GPU_COMPUTE_CAPABILITY != 700 && GPU_COMPUTE_CAPABILITY != 720 && GPU_COMPUTE_CAPABILITY != 750 \
+      &&  GPU_COMPUTE_CAPABILITY != 800 && GPU_COMPUTE_CAPABILITY != 860 && GPU_COMPUTE_CAPABILITY != 870 \
+      &&  GPU_COMPUTE_CAPABILITY != 890 \
+      &&  GPU_COMPUTE_CAPABILITY != 900 )
+#     error : ERROR : GPU_COMPUTE_CAPABILITY unsupported by cuFFTdx (please visit cuFFTdx website to check whether your GPU is supported and update CUFLU.h accordingly if it is) !
 #  endif
 
+// number of blocks suggested by cufftdx disabled by default
+// profiling the code showed that a different number of blocks provides better performance
+// this is because the code does not only compute the FFT, but also the Fourier extension
 #  define GRAMFE_USE_SUGGESTED_BLOCKS        0
 #  define GRAMFE_CUSTOM_ELEMENTS_PER_THREAD  4
 #  define GRAMFE_CUSTOM_FFTS_PER_BLOCK       12
@@ -521,8 +545,7 @@ using complex_type = typename FFT::value_type;
 
 # else
 # error : ERROR : Unsupported model in CUFLU.h
-
-#endif // MODEL
+# endif // MODEL
 
 
 // 3. dt solver for fluid

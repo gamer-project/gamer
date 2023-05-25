@@ -467,11 +467,10 @@ void Aux_Check_Parameter()
 #     error : ERROR : currently GAMER only supports "LOAD_BALANCE == HILBERT" !!
 #  endif
 
-
-
 // for sending fluid data fixed by coarse-fine fluxes correctly
    if ( OPT__FIXUP_FLUX  &&  Flu_ParaBuf >= PATCH_SIZE )
-      Aux_Error( ERROR_INFO, "\"%s\" is required for \"%s\" in LOAD_BALANCE --> check LB_RecordExchangeFixUpDataPatchID() !!\n",
+      Aux_Error( ERROR_INFO, "\"%s\" is required for \"%s\" in LOAD_BALANCE --> check LB_RecordExchangeFixUpDataPatchID() !!\n \
+                  For ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE ) consider turning OPT__FIXUP_FLUX off or increase the patch size!! \n",
                  "Flu_ParaBuf < PATCH_SIZE", "OPT__FIXUP_FLUX" );
 
 // ensure that the variable "PaddedCr1D" will not overflow
@@ -1024,6 +1023,11 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
+
+#  if (  !defined( WAVE_SCHEME )  ||  ( WAVE_SCHEME != WAVE_FD && WAVE_SCHEME != WAVE_GRAMFE )  )
+#     error : ERROR : WAVE_SCHEME not defined or unsupported in ELBDM !!
+#  endif
+
 #  if ( NCOMP_FLUID != 3 )
 #     error : ERROR : NCOMP_FLUID != 3 in ELBDM !!
 #  endif
@@ -1122,8 +1126,9 @@ void Aux_Check_Parameter()
 #  endif
 
 #  if ( WAVE_SCHEME == WAVE_FD )
+
    if ( !ELBDM_TAYLOR3_AUTO  &&  ELBDM_TAYLOR3_COEFF < 1.0/8.0 )
-      Aux_Message( stderr, "WARNING : ELBDM_TAYLOR3_COEFF (%13.7e) < 0.125 is unconditionally unstable !!\n",
+      Aux_Error( ERROR_INFO, "ELBDM_TAYLOR3_COEFF (%13.7e) < 0.125 is unconditionally unstable !!\n",
                    ELBDM_TAYLOR3_COEFF );
 
 #  ifdef LAPLACIAN_4TH
@@ -1132,11 +1137,11 @@ void Aux_Check_Parameter()
    const double dt_fluid_max = 0.25*M_PI;
 #  endif
    if ( DT__FLUID > dt_fluid_max )
-      Aux_Message( stderr, "WARNING : DT__FLUID (%13.7e) > %13.7e is unconditionally unstable (even with %s) !!\n",
+      Aux_Error( ERROR_INFO, "DT__FLUID (%13.7e) > %13.7e is unconditionally unstable (even with %s) !!\n",
                    DT__FLUID, dt_fluid_max, "ELBDM_TAYLOR3_AUTO" );
 
    if ( DT__FLUID_INIT > dt_fluid_max )
-      Aux_Message( stderr, "WARNING : DT__FLUID_INIT (%13.7e) > %13.7e is unconditionally unstable (even with %s) !!\n",
+      Aux_Error( ERROR_INFO, "DT__FLUID_INIT (%13.7e) > %13.7e is unconditionally unstable (even with %s) !!\n",
                    DT__FLUID_INIT, dt_fluid_max, "ELBDM_TAYLOR3_AUTO" );
 
    if ( !ELBDM_TAYLOR3_AUTO )
@@ -1150,23 +1155,63 @@ void Aux_Check_Parameter()
 
       if ( DT__FLUID > dt_fluid_max_normal  &&  ELBDM_TAYLOR3_COEFF <= 1.0/6.0 )
       {
-         Aux_Message( stderr, "WARNING : DT__FLUID (%13.7e) > stability limit (%13.7e) for ELBDM_TAYLOR3_COEFF <= 1/6\n",
+         Aux_Error( ERROR_INFO, "DT__FLUID (%13.7e) > stability limit (%13.7e) for ELBDM_TAYLOR3_COEFF <= 1/6\n",
                       DT__FLUID, dt_fluid_max_normal );
-         Aux_Message( stderr, "          --> Please either (a) set ELBDM_TAYLOR3_COEFF (%13.7e) > 1/6\n",
+         Aux_Error( ERROR_INFO, "          --> Please either (a) set ELBDM_TAYLOR3_COEFF (%13.7e) > 1/6\n",
                       ELBDM_TAYLOR3_COEFF );
-         Aux_Message( stderr, "                            (b) set DT__FLUID smaller (c) turn on ELBDM_TAYLOR3_AUTO\n" );
+         Aux_Error( ERROR_INFO, "                            (b) set DT__FLUID smaller (c) turn on ELBDM_TAYLOR3_AUTO\n" );
       }
 
       if ( DT__FLUID_INIT > dt_fluid_max_normal  &&  ELBDM_TAYLOR3_COEFF <= 1.0/6.0 )
       {
-         Aux_Message( stderr, "WARNING : DT__FLUID_INIT (%13.7e) > stability limit (%13.7e) for ELBDM_TAYLOR3_COEFF <= 1/6\n",
+         Aux_Error( ERROR_INFO, "DT__FLUID_INIT (%13.7e) > stability limit (%13.7e) for ELBDM_TAYLOR3_COEFF <= 1/6\n",
                       DT__FLUID_INIT, dt_fluid_max_normal );
-         Aux_Message( stderr, "          --> Please either (a) set ELBDM_TAYLOR3_COEFF (%13.7e) > 1/6\n",
+         Aux_Error( ERROR_INFO, "          --> Please either (a) set ELBDM_TAYLOR3_COEFF (%13.7e) > 1/6\n",
                       ELBDM_TAYLOR3_COEFF );
-         Aux_Message( stderr, "                            (b) set DT__FLUID_INIT smaller (c) turn on ELBDM_TAYLOR3_AUTO\n" );
+         Aux_Error( ERROR_INFO, "                            (b) set DT__FLUID_INIT smaller (c) turn on ELBDM_TAYLOR3_AUTO\n" );
       }
    }
 
+#  elif ( WAVE_SCHEME == WAVE_GRAMFE )
+
+   const double dt_fluid_max = 0.35;
+
+   if ( DT__FLUID > dt_fluid_max )
+      Aux_Error( ERROR_INFO, "%s solver with DT__FLUID (%13.7e) > %13.7e is unstable !!\n",
+                   "WAVE_GRAMFE", DT__FLUID, dt_fluid_max );
+
+#  ifndef GRAMFE_FLOAT8
+#  error : ERROR : WAVE_GRAMFE solver requires GRAMFE_FLOAT8 for stability !!
+#  endif // # ifndef GRAMFE_FLOAT8
+
+#  if ( FLU_GHOST_SIZE < 6 )
+#  error : ERROR : WAVE_GRAMFE is only stable (empirically) for FLU_GHOST_SIZE >= 6!
+#  endif // #  if ( FLU_GHOST_SIZE < 6 )
+
+#  if ( !defined(GPU) && defined(GRAMFE_ENABLE_GPU) )
+#  error : ERROR : Gram-Fourier extension scheme GRAMFE_ENABLE_GPU option requires GPU flag!
+#  endif // #  if ( !defined(GPU) && defined(GRAMFE_ENABLE_GPU) )
+
+#  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
+#  error : ERROR : CPU Gram-Fourier extension scheme requires SUPPORT_FFTW flag!
+#  endif // #  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
+
+#  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && SUPPORT_FFTW == FFTW2 && !defined(FLOAT8) )
+#  error : ERROR : CPU Gram-Fourier extension scheme using FFTW2 requires FLOAT8!
+#  endif // #  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && SUPPORT_FFTW == FFTW2 && !defined(FLOAT8) )
+
+#  endif // #  if ( WAVE_SCHEME == WAVE_GRAMFE )
+
+// warnings
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
+
+#  if ( NCOMP_PASSIVE > 0 )
+   Aux_Message( stderr, "WARNING : NCOMP_PASSIVE (%d) > 0 but ELBDM does not really support passive scalars !!\n",
+                NCOMP_PASSIVE );
+#  endif
+
+#  if ( WAVE_SCHEME == WAVE_FD )
    if ( DT__PHASE > 1.0 )
       Aux_Message( stderr, "WARNING : DT__PHASE (%13.7e) is not within the normal range [0...1] !!\n", DT__PHASE );
 
@@ -1197,7 +1242,7 @@ void Aux_Check_Parameter()
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
    if ( OPT__FIXUP_FLUX )
-      Aux_Error( stderr, "WARNING : OPT__FIXUP_FLUX will not be applied when %s is on !!\n",
+      Aux_Message( stderr, "WARNING : OPT__FIXUP_FLUX will not be applied when %s is on !!\n",
                    "WAVE_SCHEME == WAVE_GRAMFE" );
 #  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
 
@@ -1209,29 +1254,7 @@ void Aux_Check_Parameter()
    if ( OPT__INIT == INIT_BY_FILE )
       Aux_Message( stderr, "WARNING : currently we don't check MIN_DENS for the initial data loaded from UM_IC !!\n" );
 
-
 #  elif ( WAVE_SCHEME == WAVE_GRAMFE ) // #  if ( WAVE_SCHEME == WAVE_FD )
-
-   const double dt_fluid_max = 0.4;
-
-   if ( DT__FLUID > dt_fluid_max )
-      Aux_Message( stderr, "WARNING : %s solver with DT__FLUID (%13.7e) > %13.7e is unstable !!\n",
-                   "WAVE_GRAMFE", DT__FLUID, dt_fluid_max );
-
-#  if ( SUPPORT_FFTW == FFTW3 && defined(GRAMFE_ENABLE_SINGLE_PRECISION) )
-   Aux_Message( stderr, "WARNING : %s solver using GRAMFE_ENABLE_SINGLE_PRECISION is unstable !!\n",
-                  "WAVE_GRAMFE"  );
-#  endif // #  if ( SUPPORT_FFTW == FFTW3 && defined(GRAMFE_ENABLE_SINGLE_PRECISION) )
-
-#  if ( SUPPORT_FFTW == FFTW2 && !(defined(FLOAT8)) )
-   Aux_Message( stderr, "WARNING : %s solver using CPU and FFTW2 without FLOAT8 is unstable !!\n",
-                  "WAVE_GRAMFE"  );
-#  endif // #  if ( SUPPORT_FFTW == FFTW2 && !(defined(FLOAT8)) )
-
-#  if ( SUPPORT_FFTW == FFTW2 && defined(GRAMFE_ENABLE_SINGLE_PRECISION) )
-   Aux_Message( stderr, "WARNING : %s solver using FFTW2 ignores GRAMFE_ENABLE_SINGLE_PRECISION !!\n",
-                  "WAVE_GRAMFE"  );
-#  endif // #  if ( SUPPORT_FFTW == FFTW2 && defined(GRAMFE_ENABLE_SINGLE_PRECISION) )
 
 #  ifdef CONSERVE_MASS
    Aux_Message( stderr, "WARNING : mass is not conserved with the %s solver even though CONSERVE_MASS is on !!\n",

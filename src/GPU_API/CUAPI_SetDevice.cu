@@ -154,6 +154,7 @@ void CUAPI_SetDevice( const int Mode )
 
 
 // (5) verify the GPU architecture
+// (5.1) verify that GPU_ARCH matches device properties
 #  if   ( GPU_ARCH == FERMI )
    if ( DeviceProp.major != 2 )
       Aux_Error( ERROR_INFO, "GPU \"%s\" with the compute capability %d.%d is incompatible with the Fermi architecture !!\n"
@@ -200,6 +201,11 @@ void CUAPI_SetDevice( const int Mode )
 #  error : UNKNOWN GPU_ARCH !!
 #  endif // GPU_ARCH
 
+// (5.2) verify that GPU_COMPUTE_CAPABILITY matches device properties
+   if ( DeviceProp.major * 100 + DeviceProp.minor * 10 != GPU_COMPUTE_CAPABILITY )
+      Aux_Error( ERROR_INFO, "The compute capability %d.%d of the GPU \"%s\" does not match the GPU_COMPUTE_CAPABILITY %d !!\n"
+                           "        --> Please update GPU_COMPUTE_CAPABILITY in CUFLU.h\n",
+               DeviceProp.major, DeviceProp.minor, DeviceProp.name, GPU_COMPUTE_CAPABILITY );
 
 // (6) some options are not supported
 // (6-1) fluid solver

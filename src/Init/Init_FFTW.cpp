@@ -139,7 +139,7 @@ void Init_FFTW()
 // which are given by the dimensions of the output of the forward transform,
 // are Ny*Nz*Nx because we are using "FFTW_TRANSPOSED_ORDER" in fftwnd_mpi().
    int InvPsi_FFT_Size[3] = { NX0_TOT[0], NX0_TOT[2], NX0_TOT[1] };
-#  endif // # ifdef SERIAL ... # else
+#  endif // # ifdef SERIAL || FFTW3 ... # else
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
    int ExtPsi_FFT_Size    = GRAMFE_FLU_NXT;
@@ -194,14 +194,18 @@ void Init_FFTW()
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
 
-// the Gram-Fourier extension planners only use one thread because OMP parallelisation by evolving different patches parallely
+// the Gram-Fourier extension planners only use one thread because OMP parallelisation evolves different patches parallely
+// From the FFTW3 documentation: https://www.fftw.org/fftw3_doc/Usage-of-Multi_002dthreaded-FFTW.html
+// "You can call fftw_plan_with_nthreads, create some plans,
+// call fftw_plan_with_nthreads again with a different argument, and create some more plans for a new number of threads."
+
 #  if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )
    if (FFTW3_Double_OMP_Enabled)  fftw_plan_with_nthreads(1);
    if (FFTW3_Single_OMP_Enabled) fftwf_plan_with_nthreads(1);
 #  endif // # if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )
 
-   FFTW_Plan_ExtPsi      = create_gramfe_fftw_1d_forward_c2c_plan ( ExtPsi_FFT_Size, ExtPsiK );
-   FFTW_Plan_ExtPsi_Inv  = create_gramfe_fftw_1d_backward_c2c_plan( ExtPsi_FFT_Size, ExtPsiK );
+   FFTW_Plan_ExtPsi      = gramfe_create_fftw_1d_forward_c2c_plan ( ExtPsi_FFT_Size, ExtPsiK, StartupFlag );
+   FFTW_Plan_ExtPsi_Inv  = gramfe_create_fftw_1d_backward_c2c_plan( ExtPsi_FFT_Size, ExtPsiK, StartupFlag );
 
 // restore regular settings
 #  if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )
@@ -256,8 +260,8 @@ void End_FFTW()
    destroy_complex_fftw_plan  ( FFTW_Plan_Psi_Inv );
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
-   destroy_gramfe_complex_fftw_plan  ( FFTW_Plan_ExtPsi     );
-   destroy_gramfe_complex_fftw_plan  ( FFTW_Plan_ExtPsi_Inv );
+   gramfe_destroy_complex_fftw_plan  ( FFTW_Plan_ExtPsi     );
+   gramfe_destroy_complex_fftw_plan  ( FFTW_Plan_ExtPsi_Inv );
 #  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
 #  endif // #if ( MODEL == ELBDM )
 

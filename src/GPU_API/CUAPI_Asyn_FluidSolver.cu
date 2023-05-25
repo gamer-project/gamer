@@ -82,7 +82,7 @@ __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ]
                                    const real Taylor3_Coeff, const bool XYZ, const real MinDens );
 real ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 # elif ( WAVE_SCHEME == WAVE_GRAMFE )
-# if ( defined(__CUDACC__) && defined(GRAMFE_ENABLE_GPU) )
+# ifdef GRAMFE_ENABLE_GPU
 __launch_bounds__(FFT::max_threads_per_block)
 __global__
 void CUFLU_ELBDMSolver_GramFE(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
