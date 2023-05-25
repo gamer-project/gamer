@@ -209,7 +209,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  OutputError
+// Function    :  OutputVortexPairLinearError
 // Description :  Output the L1 error
 //
 // Note        :  1. Invoke Output_L1Error()
@@ -219,7 +219,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void OutputError()
+void OutputVortexPairLinearError()
 {
 
    const char Prefix[100]     = "VortexPairLinear";
@@ -227,7 +227,7 @@ void OutputError()
 
    Output_L1Error( SetGridIC, NULL, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
 
-} // FUNCTION : OutputError
+} // FUNCTION : OutputVortexPairLinearError
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_ELBDM_VortexPairLinear
@@ -255,7 +255,7 @@ void Init_TestProb_ELBDM_VortexPairLinear()
 
 
    Init_Function_User_Ptr = SetGridIC;
-   Output_User_Ptr        = OutputError;
+   Output_User_Ptr        = OutputVortexPairLinearError;
 #  endif // #if ( MODEL == ELBDM )
 
 
