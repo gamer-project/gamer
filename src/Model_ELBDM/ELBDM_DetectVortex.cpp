@@ -63,7 +63,7 @@ bool ELBDM_DetectVortex( const int i, const int j, const int k, const int i_size
    } // for (int d=0; d<3; d++)
 
 
-// evaluate energy density and check the flag criterion
+// evaluate quantum pressure and check the flag criterion
    isVortex        = Lap_Rho / (3.0 * (Dens + 1e-12)) > Threshold;
 
    return isVortex;
