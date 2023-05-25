@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 static real GetMaxVelocity( const int lv, bool excludeWave);
 static void GetMaxLevel(patch_t *patch, int lv, int& maxlv);
@@ -216,4 +216,4 @@ real GetMaxVelocity( const int lv, bool excludeWave )
 
 } // FUNCTION : GetMaxVelocity
 
-#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )

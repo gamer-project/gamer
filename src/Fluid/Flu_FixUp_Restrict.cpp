@@ -22,9 +22,9 @@
 //                FaPotSg  : Potential sandglass at level "FaLv"
 //                TVarCC   : Target cell-centered variables on FaLv
 //                           --> Supported variables in different models:
-//                               HYDRO  : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY,[, _POTE]
-//                               ELBDM  : _DENS, _REAL, _IMAG, [, _POTE]
-//                               HYBRID : _DENS, _PHAS [, _POTE]
+//                               HYDRO        : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY,[, _POTE]
+//                               ELBDM_WAVE   : _DENS, _REAL, _IMAG, [, _POTE]
+//                               ELBDM_HYBRID : _DENS, _PHAS [, _POTE]
 //                           --> _FLUID, _PASSIVE, and _TOTAL apply to all models
 //                TVarFC   : Target face-centered variables on FaLv
 //                            --> Supported variables in different models:
@@ -109,17 +109,17 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
    }
 
 #  if ( MODEL == ELBDM )
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 // restrict phase during wave-wave-level restriction if OPT__RES_PHAS is enabled
    const bool ResWWPha = ResFlu && OPT__RES_PHASE && ( TVarCC & (_REAL) || TVarCC & (_IMAG) ) &&   amr->use_wave_flag[FaLv] && amr->use_wave_flag[SonLv];
 // always restrict phase during fluid-wave-level restriction
    const bool ResWFPha = ResFlu &&                   ( TVarCC & (_REAL) || TVarCC & (_IMAG) ) && ! amr->use_wave_flag[FaLv] && amr->use_wave_flag[SonLv];
    const bool ResPha   = ResWWPha || ResWFPha;
-#  else // # if ( ELBDM_SCHEME == HYBRID )
+#  else // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 // restrict phase if OPT__RES_PHAS is enabled
    const bool ResPha   = ResFlu && OPT__RES_PHASE && (TVarCC & (_REAL) || TVarCC & (_IMAG));
-#  endif // # if ( ELBDM_SCHEME == HYBRID ) ... else
-#  endif
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID ) ... else
+#  endif // # if ( MODEL == ELBDM )
 
 
 // restrict
@@ -158,12 +158,12 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
 #     ifdef DISABLE_PHASE_AT_DEFECT
 //    check for vortices and restrict RE/IM for entire father patch if vortex occurs
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //    only check wave-to-wave-level-transitions in hybrid scheme
       if ( ResWWPha ) {
-#     else // # if ( ELBDM_SCHEME == HYBRID )
+#     else // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( ResPha ) {
-#     endif // # if ( ELBDM_SCHEME == HYBRID ) ... # else
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID ) ... # else
          int ii, jj, kk;
          for (int k=0; k<PS1; k++)  {
          for (int j=0; j<PS1; j++)  {
@@ -225,14 +225,14 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                   real (*RFaPtr) [PS1][PS1] = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[REAL];
                   real (*IFaPtr) [PS1][PS1] = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[IMAG];
 
-#           if ( ELBDM_SCHEME == HYBRID )
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
                   real (*PFaPtr)   [PS1][PS1]  = amr->patch[  FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
                   real (*OldPFaPtr)[PS1][PS1]  = amr->patch[1-FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
 //                handle that we do not have data of previous time step during initialisation corresponding to a negative time
                   if ( amr->FluSgTime[FaLv][1-FaFluSg ] < 0 ) {
                      OldPFaPtr = PFaPtr;
                   }
-#           endif // # if ( ELBDM_SCHEME == HYBRID )
+#           endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
             int ii, jj, kk, I, J, K, Ip, Jp, Kp;
             real refphase, avgphase, avgdens;
@@ -256,7 +256,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                                        DSonPtr[K ][Jp][Ip] + DSonPtr[Kp][Jp][I ] +
                                        DSonPtr[Kp][J ][Ip] + DSonPtr[Kp][Jp][Ip] );
 
-#              if ( ELBDM_SCHEME == HYBRID )
+#              if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //             if father level uses fluid scheme and OPT__HYBRID_MATCH_PHASE is on, unwrap average phase to match parent phase
                if ( !amr->use_wave_flag[FaLv] && OPT__HYBRID_MATCH_PHASE ) {
                   avgphase    = ELBDM_UnwrapPhase(OldPFaPtr[kk][jj][ii], avgphase);
@@ -266,13 +266,13 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                   if (TVarCC & _DENS)        DFaPtr[kk][jj][ii] = avgdens;
                   if (TVarCC & _PHAS)        PFaPtr[kk][jj][ii] = avgphase;
                } else { // if ( !amr->use_wave_flag[FaLv] ) {
-#              endif // # if ( ELBDM_SCHEME == HYBRID )
+#              endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
                   if (TVarCC & _DENS)        DFaPtr[kk][jj][ii] = avgdens;
                   if (TVarCC & _REAL)        RFaPtr[kk][jj][ii] = SQRT(avgdens) * COS(avgphase);
                   if (TVarCC & _IMAG)        IFaPtr[kk][jj][ii] = SQRT(avgdens) * SIN(avgphase);
-#              if ( ELBDM_SCHEME == HYBRID )
+#              if ( ELBDM_SCHEME == ELBDM_HYBRID )
                } // if ( !amr->use_wave_flag[FaLv] ) { ... else
-#              endif // # if ( ELBDM_SCHEME == HYBRID )
+#              endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
             }}}
          } // if ( ResPha && ... )
 #        endif // #if ( MODEL == ELBDM )
@@ -459,9 +459,9 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
 //    rescale real and imaginary parts to get the correct density in ELBDM
 #     if ( MODEL == ELBDM )
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( amr->use_wave_flag[FaLv] ) {
-#     endif
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
       real Real, Imag, Rho_Wrong, Rho_Corr, Rescale;
 
       if (  ( TVarCC & _DENS )  &&  ( TVarCC & _REAL )  &&  (TVarCC & _IMAG )  )
@@ -487,10 +487,10 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
          amr->patch[FaFluSg][FaLv][FaPID]->fluid[IMAG][k][j][i] *= Rescale;
       }
 
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       } // if ( amr->use_wave_flag[FaLv] )
-#     endif // # if ( ELBDM_SCHEME == HYBRID )
-#     endif
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#     endif // # if ( MODEL == ELBDM )
 
    } // for (int SonPID0=0; SonPID0<amr->NPatchComma[SonLv][1]; SonPID0+=8)
 

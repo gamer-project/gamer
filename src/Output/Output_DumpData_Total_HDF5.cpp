@@ -281,10 +281,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
    int NCompStore = NCOMP_TOTAL;
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && !defined(GAMER_DEBUG))
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && !defined(GAMER_DEBUG))
 // do not store STUB field when not debugging hybrid scheme
    NCompStore -= 1 ;
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && !defined(GAMER_DEBUG))
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && !defined(GAMER_DEBUG))
 
    NFieldStored += NCompStore;
 
@@ -1043,7 +1043,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                {
 
 //                convert real/imag to density/phase in hybrid scheme
-#                 if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#                 if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
                   if ( amr->use_wave_flag[lv] && (v == REAL || v == IMAG) ) {
 //                in serial mode, the phase computed from the wave function is matched to the phase on the unrefined levels
 //                in MPI mode, this is not yet implemented
@@ -1144,7 +1144,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      }
                   } else
 #                 endif // # ifdef SERIAL ... #else
-#                 endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#                 endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                      memcpy( FieldData[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
 
@@ -1598,9 +1598,9 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
       KeyInfo.AdvanceCounter[lv] = AdvanceCounter[lv];
       KeyInfo.dTime_AllLv   [lv] = dTime_AllLv   [lv];
 
-#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
+#     if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
       KeyInfo.UseWaveScheme [lv] = amr->use_wave_flag [lv];
-#     endif
+#     endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
    }
 
    KeyInfo.CodeVersion  = (char*)VERSION;
@@ -2218,10 +2218,10 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  endif
 #  if ( MODEL == ELBDM )
    InputPara.Dt__Phase               = DT__PHASE;
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    InputPara.Dt__Hybrid              = DT__HYBRID;
    InputPara.Dt__Velocity            = DT__VELOCITY;
-#  endif // #  if ( ELBDM_SCHEME == HYBRID )
+#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
 #  ifdef PARTICLE
    InputPara.Dt__ParVel              = DT__PARVEL;
@@ -2506,9 +2506,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Int_Phase          = OPT__INT_PHASE;
    InputPara.Opt__Res_Phase          = OPT__RES_PHASE;
    InputPara.Opt__Ck_Phase_Defect    = OPT__CK_PHASE_DEFECT;
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    InputPara.Opt__Hybrid_Match_Phase = OPT__HYBRID_MATCH_PHASE;
-#  endif //#  if ( ELBDM_SCHEME == HYBRID )
+#  endif //#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
    InputPara.Opt__Flu_IntScheme      = OPT__FLU_INT_SCHEME;
    InputPara.Opt__RefFlu_IntScheme   = OPT__REF_FLU_INT_SCHEME;
@@ -2731,9 +2731,9 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "AveDens_Init",         HOFFSET(KeyInfo_t,AveDens_Init        ), H5T_NATIVE_DOUBLE       );
 #  endif
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
    H5Tinsert( H5_TypeID, "UseWaveScheme",         HOFFSET(KeyInfo_t,UseWaveScheme      ), H5_TypeID_Arr_NLvInt    );
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
    H5Tinsert( H5_TypeID, "CodeVersion",          HOFFSET(KeyInfo_t,CodeVersion         ), H5_TypeID_VarStr        );
    H5Tinsert( H5_TypeID, "DumpWallTime",         HOFFSET(KeyInfo_t,DumpWallTime        ), H5_TypeID_VarStr        );
@@ -3136,10 +3136,10 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  endif
 #  if ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "Dt__Phase",               HOFFSET(InputPara_t,Dt__Phase              ), H5T_NATIVE_DOUBLE  );
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    H5Tinsert( H5_TypeID, "Dt__Velocity",            HOFFSET(InputPara_t,Dt__Velocity            ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Dt__Hybrid",              HOFFSET(InputPara_t,Dt__Hybrid              ), H5T_NATIVE_DOUBLE  );
-#  endif // # if ( ELBDM_SCHEME == HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Dt__ParVel",              HOFFSET(InputPara_t,Dt__ParVel             ), H5T_NATIVE_DOUBLE  );
@@ -3415,9 +3415,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Int_Phase",          HOFFSET(InputPara_t,Opt__Int_Phase         ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Res_Phase",          HOFFSET(InputPara_t,Opt__Res_Phase         ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Ck_Phase_Defect",    HOFFSET(InputPara_t,Opt__Ck_Phase_Defect   ), H5T_NATIVE_DOUBLE           );
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    H5Tinsert( H5_TypeID, "Opt__Hybrid_Match_Phase", HOFFSET(InputPara_t,Opt__Hybrid_Match_Phase), H5T_NATIVE_INT              );
-#  endif
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Flu_IntScheme",      HOFFSET(InputPara_t,Opt__Flu_IntScheme     ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__RefFlu_IntScheme",   HOFFSET(InputPara_t,Opt__RefFlu_IntScheme  ), H5T_NATIVE_INT              );

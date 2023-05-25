@@ -190,13 +190,13 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
    } // switch ( LSS_InitMode )
 
 
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( amr->use_wave_flag[lv] ) {
 #  endif
    fluid_out[DENS] = SQR( Re ) + SQR( Im );
    fluid_out[REAL] = Re;
    fluid_out[IMAG] = Im;
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    } else { // if ( amr->use_wave_flag[lv] )
    fluid_out[DENS] = Re;
    fluid_out[PHAS] = Im;

@@ -197,16 +197,16 @@ void Aux_TakeNote()
 //    c. options in ELBDM
 #     elif ( MODEL == ELBDM )
 
-//    c.1 options in HYBRID ELBDM
-#     if ( ELBDM_SCHEME == HYBRID )
-      fprintf( Note, "ELBDM_SCHEME                    HYBRID\n" );
-#     elif ( ELBDM_SCHEME == WAVE )
-      fprintf( Note, "ELBDM_SCHEME                    WAVE\n" );
+//    c.1 options in ELBDM_HYBRID ELBDM
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      fprintf( Note, "ELBDM_SCHEME                    ELBDM_HYBRID\n" );
+#     elif ( ELBDM_SCHEME == ELBDM_WAVE )
+      fprintf( Note, "ELBDM_SCHEME                    ELBDM_WAVE\n" );
 #     else
 #     error : ERROR : unsupported ELBDM_SCHEME !!
 #     endif
 
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #     if ( HYBRID_SCHEME == HYBRID_UPWIND )
       fprintf( Note, "HYBRID_SCHEME                   UPWIND\n" );
@@ -232,7 +232,7 @@ void Aux_TakeNote()
       fprintf( Note, "HYBRID_SMOOTH_PHASE             OFF\n" );
 #     endif
 
-#     endif // # if ( ELBDM_SCHEME == HYBRID )
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 //    c.2 options in WAVE_GRAMFE
 #     if ( WAVE_SCHEME == WAVE_GRAMFE )
@@ -679,9 +679,9 @@ void Aux_TakeNote()
 #     ifdef FEEDBACK
       fprintf( Note, "#define FB_GHOST_SIZE           %d\n",      FB_GHOST_SIZE         );
 #     endif
-#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#     if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
       fprintf( Note, "#define HYB_GHOST_SIZE          %d\n",      HYB_GHOST_SIZE        );
-#     endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#     endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
       fprintf( Note, "#define FLU_NXT                 %d\n",      FLU_NXT               );
 #     ifdef GRAVITY
       fprintf( Note, "#define POT_NXT                 %d\n",      POT_NXT               );
@@ -700,9 +700,9 @@ void Aux_TakeNote()
 #     ifdef FEEDBACK
       fprintf( Note, "#define FB_NXT                  %d\n",      FB_NXT                );
 #     endif
-#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#     if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
       fprintf( Note, "#define HYB_NXT                 %d\n",      HYB_NXT               );
-#     endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#     endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 #     if ( MODEL == HYDRO )
       fprintf( Note, "#define EOS_NAUX_MAX            %d\n",      EOS_NAUX_MAX          );
       fprintf( Note, "#define EOS_NTABLE_MAX          %d\n",      EOS_NTABLE_MAX        );
@@ -899,10 +899,10 @@ void Aux_TakeNote()
 #     endif
 #     if ( MODEL == ELBDM )
       fprintf( Note, "DT__PHASE                       %13.7e\n",  DT__PHASE                   );
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       fprintf( Note, "DT__VELOCITY                    %13.7e\n",  DT__VELOCITY                );
       fprintf( Note, "DT__HYBRID                      %13.7e\n",  DT__HYBRID                  );
-#     endif // # if ( ELBDM_SCHEME == HYBRID )
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #     endif // # if ( MODEL == ELBDM )
 #     ifdef PARTICLE
       fprintf( Note, "DT__PARVEL                      %13.7e\n",  DT__PARVEL                  );
@@ -1335,9 +1335,9 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__INT_PHASE                  %d\n",      OPT__INT_PHASE          );
       fprintf( Note, "OPT__RES_PHASE                  %d\n",      OPT__RES_PHASE          );
       fprintf( Note, "OPT__CK_PHASE_DEFECT            %f\n",      OPT__CK_PHASE_DEFECT    );
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       fprintf( Note, "OPT__HYBRID_MATCH_PHASE         %d\n",      OPT__HYBRID_MATCH_PHASE );
-#     endif // # if ( ELBDM_SCHEME == HYBRID )
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #     endif
       fprintf( Note, "OPT__FLU_INT_SCHEME             %s\n",      ( OPT__FLU_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
                                                                   ( OPT__FLU_INT_SCHEME == INT_MINMOD1D ) ? "MINMOD1D" :
@@ -1615,7 +1615,6 @@ void Aux_TakeNote()
          fprintf( Note, "\n\n");
       }
 
-//    # if ( ELBDM_SCHEME == HYBRID )
       if ( OPT__FLAG_INTERFERENCE )
       {
          fprintf( Note, "Flag Criterion (Interference Threshold)\n" );
@@ -1626,7 +1625,6 @@ void Aux_TakeNote()
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }
-//    # endif ( ELBDM_SCHEME == HYBRID )
 #     endif
 
 #     if   ( MODEL == HYDRO )

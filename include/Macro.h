@@ -45,13 +45,13 @@
 #define MHM_RP       4
 #define CTU          5
 
+// elbdm schemes
+#define ELBDM_WAVE   1
+#define ELBDM_HYBRID 2
+
 // wave schemes
 #define WAVE_FD      1
 #define WAVE_GRAMFE  2
-
-// elbdm schemes
-#define WAVE         1
-#define HYBRID       2
 
 // hybrid schemes
 #define HYBRID_UPWIND 1
@@ -103,26 +103,6 @@
 #define RNG_GNU_EXT  1
 #define RNG_CPP11    2
 
-
-// default compile-time options for ELBDM
-#if ( MODEL == ELBDM )
-// use wave-only scheme by default
-#  ifndef ELBDM_SCHEME
-#  define ELBDM_SCHEME WAVE
-#  endif // # ifndef ELBDM_SCHEME
-
-// use finite-difference scheme by default
-#  ifndef WAVE_SCHEME
-#  define WAVE_SCHEME WAVE_FD
-#  endif // # ifndef WAVE_SCHEME
-
-// use Fromm scheme  by default
-#  if ( ELBDM_SCHEME == HYBRID )
-#  ifndef HYBRID_SCHEME
-#  define HYBRID_SCHEME HYBRID_FROMM
-#  endif // # ifndef HYBRID_SCHEME
-#  endif // # if ( ELBDM_SCHEME == HYBRID )
-#endif // # if ( MODEL == ELBDM )
 
 // NCOMP_FLUID : number of active components in each cell (for patch->fluid[])
 //               --> do not include passive components here, which is set by NCOMP_PASSIVE
@@ -401,17 +381,18 @@
 #elif ( MODEL == ELBDM )
 // field indices of fluid[] --> element of [0 ... NCOMP_FLUID-1]
 // --> must NOT modify their values
+
+#if ( ELBDM_SCHEME == ELBDM_WAVE )
 #  define  DENS               0
 #  define  REAL               1
 #  define  IMAG               2
-
-#if ( ELBDM_SCHEME == HYBRID )
-#ifndef DENS
+#elif ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  define  DENS               0
-#endif
 #  define  PHAS               1
 #  define  STUB               2
-#endif // #if ( ELBDM_SCHEME == HYBRID )
+#else
+#  error : ERROR : Unsupported ELBDM_SCHEME !!
+#endif // ELBDM_SCHEME
 
 // field indices of passive[] --> element of [NCOMP_FLUID ... NCOMP_TOTAL-1]
 // none for ELBDM
@@ -420,18 +401,18 @@
 #  define  FLUX_DENS          0
 
 // bitwise field indices
+#if ( ELBDM_SCHEME == ELBDM_WAVE )
 #  define _DENS               ( 1L << DENS )
 #  define _REAL               ( 1L << REAL )
 #  define _IMAG               ( 1L << IMAG )
-#  define _MAG                0
-
-#if ( ELBDM_SCHEME == HYBRID )
-# ifndef _DENS
+#elif ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  define _DENS               ( 1L << DENS )
-# endif
-#  define  _PHAS              ( 1L << PHAS )
-#  define  _STUB              ( 1L << STUB )
-#endif // #if ( ELBDM_SCHEME == HYBRID )
+#  define _PHAS               ( 1L << PHAS )
+#  define _STUB               ( 1L << STUB )
+#else
+#  error : ERROR : Unsupported ELBDM_SCHEME !!
+#endif // ELBDM_SCHEME
+#  define _MAG                0
 
 
 // bitwise flux indices
@@ -635,10 +616,11 @@
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
 
-
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+// define fluid ghost boundary size for hybrid scheme
+// it must be smaller than FLU_GHOST_SIZE because the same fluid arrays are used for both the wave and fluid solvers
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 #       define HYB_GHOST_SIZE         6
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 // set default parameters of gram extension scheme if not changed in Makefile
 # if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
@@ -819,10 +801,10 @@
 #ifdef FEEDBACK
 #  define FB_NXT        ( PS2 + 2*FB_GHOST_SIZE )                 // use patch group as the unit
 #endif
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 #  define HYB_NXT       ( PS2 + 2*HYB_GHOST_SIZE )
 #  define HYB_NXT_P1    ( HYB_NXT + 1 )
-#  endif // # if ( ELBDM_SCHEME == HYBRID )
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 // size of auxiliary arrays and EoS tables
 #if ( MODEL == HYDRO )

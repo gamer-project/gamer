@@ -110,6 +110,10 @@ SIMU_OPTION += -DCONSERVE_MASS
 # --> additionally need to set detection threshold CK_PHASE_DEFECT in Input_Parameter
 #SIMU_OPTION += -DDISABLE_PHASE_AT_DEFECT
 
+
+# choose elbdm scheme ELBDM_SCHEME as WAVE (wave-solver only), hybrid (fluid solver on coarse levels, wave solver on refined levels)
+SIMU_OPTION += -DELBDM_SCHEME=ELBDM_WAVE
+
 # choose wave scheme WAVE_FD (finite difference), WAVE_GRAMFE (local spectral method)
 # --> must turn on (SUPPORT_FFTW=FFTW2 and FLOAT8) or (SUPPORT_FFTW=FFTW3) or (GPU and GRAMFE_ENABLE_GPU) for WAVE_GRAMFE
 SIMU_OPTION += -DWAVE_SCHEME=WAVE_FD
@@ -129,17 +133,15 @@ else ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=W
 endif # WAVE_SCHEME
 
 
-# enable hybrid scheme by setting ELBDM_SCHEME=HYBRID
-#SIMU_OPTION += -DELBDM_SCHEME=HYBRID
 
-# (b-2-3) HYBRID options
+# (b-2-3) ELBDM_HYBRID options
 # ------------------------------------------------------------------------------------
-ifeq "$(filter -DELBDM_SCHEME=HYBRID, $(SIMU_OPTION))" "-DELBDM_SCHEME=HYBRID"
+ifeq "$(filter -DELBDM_SCHEME=ELBDM_HYBRID, $(SIMU_OPTION))" "-DELBDM_SCHEME=ELBDM_HYBRID"
 
-# choose fluid scheme as HYBRID_SCHEME = [HYBRID_UPWIND, HYBRID_FROMM, HYBRID_MUSCL]
-# default is HYBRID_FROMM, for fluid-only simulation (no wave-scheme) pick HYBRID_MUSCL
-# for hybrid simulations (no zoom-in HYBRID_FROMM is the better choice)
-# --> must be set when ELBDM_SCHEME=HYBRID
+# choose fluid scheme HYBRID_SCHEME = [HYBRID_UPWIND, HYBRID_FROMM, HYBRID_MUSCL]
+# default is HYBRID_FROMM, for fluid-only simulation (no wave-scheme on refined levels) pick HYBRID_MUSCL
+# for hybrid simulations (no zoom-in )  HYBRID_FROMM is the better choice
+# --> must be set when ELBDM_SCHEME=ELBDM_HYBRID
 SIMU_OPTION += -DHYBRID_SCHEME=HYBRID_MUSCL
 
 # do not switch to first-order scheme when failure of fluid scheme is detected

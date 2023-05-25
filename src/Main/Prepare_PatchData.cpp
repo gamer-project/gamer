@@ -105,8 +105,8 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                                 --> Supported variables in different models:
 //                                     HYDRO        : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP, _ENTR
 //                                                    [, _POTE] [, _MAGX_CC, _MAGY_CC, _MAGZ_CC, _MAGE_CC]
-//                                     ELBDM        : _DENS, _REAL, _IMAG [, _POTE]
-//                                     ELBDM HYBRID : _DENS, _PHAS [, _POTE]
+//                                     ELBDM_WAVE   : _DENS, _REAL, _IMAG [, _POTE]
+//                                     ELBDM_HYBRID : _DENS, _PHAS [, _POTE]
 //                                 --> _FLUID, _PASSIVE, _TOTAL, and _DERIVED apply to all models
 //                TVarFC         : Target face-centered variables to be prepared
 //                                 --> Supported variables in different models:
@@ -210,9 +210,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #     endif
 
 #     if ( MODEL == ELBDM )
-#     if ( ELBDM_SCHEME == HYBRID)
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID)
       if ( amr->use_wave_flag[lv] )
-#     endif // # if ( ELBDM_SCHEME == HYBRID)
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID)
       if (  ( TVarCC & _REAL )  ||  ( TVarCC & _IMAG )  )
          Aux_Message( stderr, "WARNING : real and imaginary parts are NOT rescaled after applying the minimum density check !!\n" );
 #     endif // # if ( MODEL == ELBDM )
@@ -248,27 +248,30 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #     endif
    }
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
    if (((  (TVarCC & _REAL)  &&  !(TVarCC & _IMAG) )  || ( !(TVarCC & _REAL)  &&  (TVarCC & _IMAG) )) && amr->use_wave_flag[lv])
       Aux_Error( ERROR_INFO, "Prepare_PatchData() for hybrid scheme currently requires that the real and imaginary parts of the wave function together are prepared together !!\n" );
-#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
    if ( IntPhase )
    {
 #  if   ( MODEL == ELBDM)
-#     if ( ELBDM_SCHEME == HYBRID)
-      if ( amr->use_wave_flag[lv] )
-#     endif // # if ( ELBDM_SCHEME == HYBRID)
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID)
+      if ( amr->use_wave_flag[lv] ) {
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID)
       if (  (!(TVarCC & _REAL)  ||  !(TVarCC & _IMAG)) )
       Aux_Error( ERROR_INFO, "real and/or imag parts are not found for phase interpolation in ELBDM !!\n" );
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID)
+      } // if ( amr->use_wave_flag[lv] ) {
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID)
 
 //    we have assumed in InterpolateGhostZone() that when adopting IntPhase this function will NOT prepare
 //    anything other than wave function and, optionally, density
 //    or density and phase for the fluid patches in the hybrid scheme
 //    --> e.g., one cannot prepare wave function and potential at the same time when enabling IntPhase
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( amr->use_wave_flag[lv] )
-#     endif // # if ( ELBDM_SCHEME == HYBRID )
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if (  TVarCC & ~( _REAL | _IMAG | _DENS ))
       Aux_Error( ERROR_INFO, "unsupported parameter %s = %d for IntPhase !!\n", "TVarCC", TVarCC );
 #  else
@@ -1699,10 +1702,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                memcpy( TVarCCIdxList_FluBuffer, TVarCCIdxList_Flu, sizeof(TVarCCIdxList_FluBuffer) );
 
 
-#              if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-//             If we use fluid scheme on level lv - 1 and wave scheme on level lv
-//             and want to prepare patch with real and imaginary part on level lv
+#              if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+//             if fluid scheme is used on level lv - 1 and wave scheme is used on level lv
 //             set target variable for lv - 1 to dens and phase and later convert to real and imaginary parts
+//             for preparing patch with real and imaginary part on level lv
                if ( amr->use_wave_flag[lv] && !amr->use_wave_flag[lv - 1] && (TVarCC & (_REAL | _IMAG)) ) {
                   TVarCCBuffer     = _DENS|_PHAS|_PASSIVE;
                   NVarCC_FluBuffer = 0;
@@ -1710,7 +1713,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      if ( TVarCCBuffer & (1L<<v) )
                         TVarCCIdxList_FluBuffer[ NVarCC_FluBuffer++ ] = v;
                }
-#              endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#              endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 //             (b2-3) perform interpolation and store the results in IntData_CC[] and IntData_FC[]
                InterpolateGhostZone( lv-1, FaSibPID, IntData_CC, IntData_FC, IntData_CC_IntTime, Side, PrepTime, GhostSize,
@@ -1737,7 +1740,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                Data1PG_CC_Ptr = Data1PG_CC;
                IntData_CC_Ptr = IntData_CC;
 
-#              if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#              if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 //             set target variables correctly convert density and phase to real and imaginary parts
                if ( amr->use_wave_flag[lv] && !amr->use_wave_flag[lv - 1]  && (TVarCC & _REAL) && (TVarCC & _IMAG) ) {
 //                density and phase --> real and imaginary parts
@@ -1758,7 +1761,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      Idx2 ++;
                   }}}
                }
-#              endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#              endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 //             (b2-4) copy cell-centered data from IntData_CC[] to Data1PG_CC[]
 //             --> must get rid of NUseless-cell-wide useless data returned by InterpolateGhostZone()

@@ -796,7 +796,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 // 3.2 perform spatial interpolation
 // 3.2.1 determine which variables require **monotonic** interpolation
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(HYBRID_SMOOTH_PHASE) )
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(HYBRID_SMOOTH_PHASE) )
    const int PhaseUnwrapping_Cond  = 2;
 #  else
    const int PhaseUnwrapping_Cond  = 0;
@@ -824,17 +824,17 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
                                        Monotonicity[v] = Monotonicity_Yes;
 
 #     elif ( MODEL == ELBDM )
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( amr->use_wave_flag[FaLv] ) {
 #     endif
       if ( v != REAL  &&  v != IMAG )  Monotonicity[v] = Monotonicity_Yes;
       else                             Monotonicity[v] = Monotonicity_No;
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       } else { // if ( amr->use_wave_flag[FaLv] )
       if ( v != PHAS  &&  v != STUB )  Monotonicity[v] = Monotonicity_Yes;
       else                             Monotonicity[v] = Monotonicity_No;
       } // if ( amr->use_wave_flag[FaLv] ) ... else
-#     endif // #if ( ELBDM_SCHEME == HYBRID )
+#     endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #     else
 #     error : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION IN THIS NEW MODEL ??
@@ -911,7 +911,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    real *const CData_Dens = CData_Flu + DENS*CSize_Flu1v;
    real *const CData_Real = CData_Flu + REAL*CSize_Flu1v;
    real *const CData_Imag = CData_Flu + IMAG*CSize_Flu1v;
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    real *const CData_Phas = CData_Flu + PHAS*CSize_Flu1v;
 #  endif
 #  endif
@@ -920,7 +920,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    real (*FData_Flu)[FSize_CC][FSize_CC][FSize_CC] = new real [NCOMP_TOTAL][FSize_CC][FSize_CC][FSize_CC];
 
 #  if ( MODEL == ELBDM )
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( amr->use_wave_flag[FaLv] ) {
 #  endif
 
@@ -985,7 +985,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       }
    } // if ( OPT__INT_PHASE && !disableIntPhase )
 
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    } else { // if ( amr->use_wave_flag[FaLv] )
 //    interpolate density
       Interpolate( CData_Dens, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[DENS][0][0][0],
@@ -997,7 +997,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
                    FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Cond, &Monotonicity_No,
                    IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
    }
-#  endif // #if ( ELBDM_SCHEME == HYBRID )
+#  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #  else // #if ( MODEL == ELBDM )
 
@@ -1048,7 +1048,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #  endif
 
 // (c1.3.4.3) convert density/phase to real and imaginary parts if patches were refined from phase to wave level
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
    if ( !amr->use_wave_flag[FaLv] && amr->use_wave_flag[SonLv] ) {
       real amp, phase, stub, Re, Im ;
 
@@ -1092,7 +1092,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
             FData_Flu[IMAG][k][j][i] = amp * SIN( phase );
       }}}
    }
-#  endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
+#  endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
 
 // 3.2.3 check minimum density and pressure/internal energy
 // --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
@@ -1109,7 +1109,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       {
 //       rescale wave function (unnecessary if OPT__INT_PHASE is disabled, in which case we will rescale all wave functions later)
 #        if ( MODEL == ELBDM )
-#        if ( ELBDM_SCHEME == HYBRID )
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
          if ( amr->use_wave_flag[SonLv] )
 #        endif
          if ( OPT__INT_PHASE && !disableIntPhase )
@@ -1227,9 +1227,9 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 //    rescale real and imaginary parts to get the correct density in ELBDM if OPT__INT_PHASE is off
 #     if ( MODEL == ELBDM )
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( amr->use_wave_flag[SonLv] ) {
-#     endif
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
       real Real, Imag, Rho_Corr, Rho_Wrong, Rescale;
 
       if ( !OPT__INT_PHASE || disableIntPhase ) {
@@ -1256,10 +1256,10 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          }
       } // if ( !OPT__INT_PHASE || disableIntPhase )
 
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       } // if ( amr->use_wave_flag[SonLv] )
-#     endif
-#     endif
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#     endif // # if ( MODEL == ELBDM )
    } // for (int LocalID=0; LocalID<8; LocalID++)
 
 

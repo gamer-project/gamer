@@ -120,10 +120,10 @@ double               ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
 
 bool                 OPT__FLAG_INTERFERENCE;
 double               FlagTable_Interference[NLEVEL-1][4];
-#if ( ELBDM_SCHEME == HYBRID )
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
 bool                 OPT__HYBRID_MATCH_PHASE;
 double               DT__HYBRID, DT__VELOCITY;
-#endif // # if ( ELBDM_SCHEME == HYBRID )
+#endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #ifdef QUARTIC_SELF_INTERACTION
 double               ELBDM_LAMBDA;

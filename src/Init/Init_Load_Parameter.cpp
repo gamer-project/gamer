@@ -101,7 +101,7 @@ void Init_Load_Parameter()
 
 // time-step
    ReadPara->Add( "DT__MAX",                    &DT__MAX,                        -1.0,             NoMin_double,  NoMax_double   );
-// do not check DT__FLUID/FLUID_INIT/GRAVITY/PARVEL_MAX/HYBRID/VELOCITY since they may be reset by Init_ResetDefaultParameter()
+// do not check DT__FLUID/FLUID_INIT/GRAVITY/PARVEL_MAX/ELBDM_HYBRID/VELOCITY since they may be reset by Init_ResetDefaultParameter()
    ReadPara->Add( "DT__FLUID",                  &DT__FLUID,                      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "DT__FLUID_INIT",             &DT__FLUID_INIT,                 -1.0,             NoMin_double,  NoMax_double   );
 #  ifdef GRAVITY
@@ -109,10 +109,10 @@ void Init_Load_Parameter()
 #  endif
 #  if ( MODEL == ELBDM )
    ReadPara->Add( "DT__PHASE",                  &DT__PHASE,                       0.0,             0.0,           NoMax_double   );
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    ReadPara->Add( "DT__VELOCITY",               &DT__VELOCITY,                   -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "DT__HYBRID",                 &DT__HYBRID,                     -1.0,             NoMin_double,  NoMax_double   );
-#  endif // #  if ( ELBDM_SCHEME == HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
 #  ifdef PARTICLE
    ReadPara->Add( "DT__PARVEL",                 &DT__PARVEL,                      0.5,             0.0,           NoMax_double   );
@@ -190,11 +190,11 @@ void Init_Load_Parameter()
 #  endif
    ReadPara->Add( "OPT__RECORD_LOAD_BALANCE",   &OPT__RECORD_LOAD_BALANCE,        true,            Useless_bool,  Useless_bool   );
 // exchange father pathes for hybrid scheme with MPI
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
    ReadPara->Add( "OPT__LB_EXCHANGE_FATHER",    &OPT__LB_EXCHANGE_FATHER,         true,            Useless_bool,  Useless_bool   );
-#  else // #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  else // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
    ReadPara->Add( "OPT__LB_EXCHANGE_FATHER",    &OPT__LB_EXCHANGE_FATHER,         false,           Useless_bool,  Useless_bool   );
-#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID ) ... # else
+#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID ) ... # else
 #  endif // #  ifdef LOAD_BALANCE
    ReadPara->Add( "OPT__MINIMIZE_MPI_BARRIER",  &OPT__MINIMIZE_MPI_BARRIER,       false,           Useless_bool,  Useless_bool   );
 
@@ -300,11 +300,11 @@ void Init_Load_Parameter()
 // do not check FLU_GPU_NPGROUP and GPU_NSTREAM since they may be reset by either Init_ResetDefaultParameter() or CUAPI_SetMemSize()
    ReadPara->Add( "FLU_GPU_NPGROUP",            &FLU_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "GPU_NSTREAM",                &GPU_NSTREAM,                    -1,               NoMin_int,     NoMax_int      );
-#  if ( MODEL == ELBDM && ELBDM_SCHEME != HYBRID && WAVE_SCHEME == WAVE_GRAMFE )
+#  if ( MODEL == ELBDM && ELBDM_SCHEME != ELBDM_HYBRID && WAVE_SCHEME == WAVE_GRAMFE )
    ReadPara->Add( "OPT__FIXUP_FLUX",            &OPT__FIXUP_FLUX,                 false,           Useless_bool,  Useless_bool   );
-#  else // #  if ( MODEL == ELBDM && ELBDM_SCHEME != HYBRID && WAVE_SCHEME == WAVE_GRAMFE )
+#  else // #  if ( MODEL == ELBDM && ELBDM_SCHEME != ELBDM_HYBRID && WAVE_SCHEME == WAVE_GRAMFE )
    ReadPara->Add( "OPT__FIXUP_FLUX",            &OPT__FIXUP_FLUX,                 true,            Useless_bool,  Useless_bool   );
-#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME != HYBRID && WAVE_SCHEME == WAVE_GRAMFE ) ... # else
+#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME != ELBDM_HYBRID && WAVE_SCHEME == WAVE_GRAMFE ) ... # else
 #  ifdef MHD
    ReadPara->Add( "OPT__FIXUP_ELECTRIC",        &OPT__FIXUP_ELECTRIC,             true,            Useless_bool,  Useless_bool   );
 #  endif
@@ -414,9 +414,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__INT_PHASE",             &OPT__INT_PHASE,                  true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RES_PHASE",             &OPT__RES_PHASE,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_PHASE_DEFECT",       &OPT__CK_PHASE_DEFECT,           -1.0,             NoMin_double,  NoMax_double   );
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    ReadPara->Add( "OPT__HYBRID_MATCH_PHASE",    &OPT__HYBRID_MATCH_PHASE,         true,            Useless_bool,  Useless_bool   );
-#  endif // # if ( ELBDM_SCHEME == HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
 // do not check OPT__FLU_INT_SCHEME and OPT__REF_FLU_INT_SCHEME since they may be reset by Init_ResetDefaultParameter()
    ReadPara->Add( "OPT__FLU_INT_SCHEME",        &OPT__FLU_INT_SCHEME,             INT_DEFAULT,     NoMin_int,     NoMax_int      );

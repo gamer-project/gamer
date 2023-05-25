@@ -109,32 +109,32 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    if ( OPT__FLAG_LOHNER_DENS )
    {
 
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( amr->use_wave_flag[lv] ) {
-#     endif
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
       Lohner_NVar = 2;
       Lohner_TVar = _REAL | _IMAG;
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       } else { //if (amr->use_wave_flag[lv]) {
       //by setting Lohner_NVar to zero, we effectively turn off the Lohner criterion for the levels using the phase scheme
       Lohner_NVar = 0;
       } // if (amr->use_wave_flag[lv]) { ... else
-#     endif
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
    }
 
    if ( OPT__FLAG_INTERFERENCE )
    {
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( amr->use_wave_flag[lv] ) {
-#     endif // # if ( ELBDM_SCHEME == HYBRID )
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
          Interf_NVar = 3;
          Interf_TVar = _DENS | _REAL | _IMAG;
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       } else {
          Interf_NVar = 2;
          Interf_TVar = _DENS | _PHAS;
       }
-#     endif // # if ( ELBDM_SCHEME == HYBRID )
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
       Interf_Stride = Interf_NVar*Interf_NCell*Interf_NCell*Interf_NCell; // stride of array for one interference criterion patch
    }
 
@@ -506,12 +506,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 //                         note that we can have SibPID <= SIB_OFFSET_NONPERIODIC when OPT__NO_FLAG_NEAR_BOUNDARY == false
                            if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
 
-#                          if ( ELBDM_SCHEME == HYBRID )
+#                          if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //                         use_wave_flag should be consistent with the flag buffer
 //                         separate treatment of use_wave_flag since it is set in FlagCheck()
                            if ( amr->patch[0][lv][PID]->use_wave_flag && SibPID >= 0 )
                               amr->patch[0][lv][SibPID]->use_wave_flag = true;
-#                          endif // #if ( ELBDM_SCHEME == HYBRID )
+#                          endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
                         }
                      }
 
@@ -638,10 +638,10 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
          {
             amr->patch[0][lv][PID]->flag = false;
 
-#           if ( ELBDM_SCHEME == HYBRID )
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //          enforce proper-nesting constraint for use_wave_flag
             amr->patch[0][lv][PID]->use_wave_flag = false;
-#           endif // #if ( ELBDM_SCHEME == HYBRID )
+#           endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
             break;
          }
@@ -660,9 +660,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
             {
                amr->patch[0][lv][PID]->flag = false;
 
-#              if ( ELBDM_SCHEME == HYBRID )
+#              if ( ELBDM_SCHEME == ELBDM_HYBRID )
                amr->patch[0][lv][PID]->use_wave_flag = false;
-#              endif // #if ( ELBDM_SCHEME == HYBRID )
+#              endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
                break;
             }

@@ -138,15 +138,15 @@ void Aux_Check_Conservation( const char *comment )
          const real MinEntr_No = -1.0;
          long  TVar = -1.0;
 
-#        if ( ELBDM_SCHEME == HYBRID )
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
          if ( amr->use_wave_flag[lv] ) {
-#        endif // # if ( ELBDM_SCHEME == HYBRID )
+#        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
          TVar = _REAL|_IMAG;
-#        if ( ELBDM_SCHEME == HYBRID )
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
          } else { // if ( amr->use_wave_flag[lv] )
          TVar = _DENS|_PHAS;
          } // if ( amr->use_wave_flag[lv] == true ) ... else
-#        endif // # if ( ELBDM_SCHEME == HYBRID )
+#        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
          Prepare_PatchData( lv, Time[lv], Flu_ELBDM[0][0][0][0], NULL, NGhost, NPG, &PID0, TVar, _NONE,
                             IntScheme, INT_NONE, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
@@ -238,7 +238,7 @@ void Aux_Check_Conservation( const char *comment )
                const int t = PID - PID0;
 
 //             convert density to log(density) for computing kinetic energy in fluid patches
-#              if ( ELBDM_SCHEME == HYBRID )
+#              if ( ELBDM_SCHEME == ELBDM_HYBRID )
                if ( !amr->use_wave_flag[lv] ) {
                   for (int k=0; k<Size_Flu; k++)   {
                   for (int j=0; j<Size_Flu; j++)   {
@@ -246,14 +246,14 @@ void Aux_Check_Conservation( const char *comment )
                      Flu_ELBDM[t][DENS][k ][j ][i] = log(Flu_ELBDM[t][DENS][k ][j ][i]);
                   }}} //k,j,i
                }
-#              endif // #if ( ELBDM_SCHEME == HYBRID )
+#              endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
                for (int k=NGhost; k<Size_Flu-NGhost; k++)   { kp = k+1; km = k-1;
                for (int j=NGhost; j<Size_Flu-NGhost; j++)   { jp = j+1; jm = j-1;
                for (int i=NGhost; i<Size_Flu-NGhost; i++)   { ip = i+1; im = i-1;
-#                 if ( ELBDM_SCHEME == HYBRID )
+#                 if ( ELBDM_SCHEME == ELBDM_HYBRID )
                   if ( amr->use_wave_flag[lv] ) {
-#                 endif // # if ( ELBDM_SCHEME == HYBRID )
+#                 endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //                [1-3] momentum in ELBDM
                   R = Flu_ELBDM[t][0][k][j][i];
                   I = Flu_ELBDM[t][1][k][j][i];
@@ -272,7 +272,7 @@ void Aux_Check_Conservation( const char *comment )
 //                [4] kinetic energy in ELBDM
                   Fluid_lv[4] += _2Eta2*( SQR(GradR[0]) + SQR(GradR[1]) + SQR(GradR[2]) +
                                           SQR(GradI[0]) + SQR(GradI[1]) + SQR(GradI[2])   );
-#                 if ( ELBDM_SCHEME == HYBRID )
+#                 if ( ELBDM_SCHEME == ELBDM_HYBRID )
                   } else { //if ( amr->use_wave_flag[lv] )
 //                [1-3] momentum in ELBDM
                   const double Dens =  exp(Flu_ELBDM[t][DENS][k ][j ][i]);
@@ -293,7 +293,7 @@ void Aux_Check_Conservation( const char *comment )
                   Fluid_lv[4] += _2Eta2 * Dens * ( SQR(GradR[0]) + SQR(GradR[1]) + SQR(GradR[2])\
                                                  + SQR(GradI[0]) + SQR(GradI[1]) + SQR(GradI[2])   );
                   } //if ( amr->use_wave_flag[lv] == true ) ... else
-#                 endif // #if ( ELBDM_SCHEME == HYBRID )
+#                 endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
                }}}
 
 

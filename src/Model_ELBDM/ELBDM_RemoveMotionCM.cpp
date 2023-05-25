@@ -60,35 +60,35 @@ void ELBDM_RemoveMotionCM()
 
             S = ELBDM_Vcm[0]*x + ELBDM_Vcm[1]*y + ELBDM_Vcm[2]*z;
 
-#           if ( ELBDM_SCHEME == HYBRID )
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
             if (amr->use_wave_flag[lv] ) {
-#           endif // # if ( ELBDM_SCHEME == HYBRID )
+#           endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
             R = fluid[REAL][k][j][i];
             I = fluid[IMAG][k][j][i];
 
             fluid[REAL][k][j][i] = +R*COS(S) + I*SIN(S);
             fluid[IMAG][k][j][i] = -R*SIN(S) + I*COS(S);
 
-#           if ( ELBDM_SCHEME == HYBRID )
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
             } else {
             fluid[PHAS][k][j][i] -= S;
             }
-#           endif // # if ( ELBDM_SCHEME == HYBRID ) 
+#           endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
          }}}
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
 //    update the data on MPI buffer patches
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( amr->use_wave_flag[lv] ) {
-#     endif // # if ( ELBDM_SCHEME == HYBRID )
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
       Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _REAL|_IMAG, _NONE, Flu_ParaBuf, USELB_YES );
-#     if ( ELBDM_SCHEME == HYBRID )
-      } else { // if ( amr->use_wave_flag[lv] ) {   
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      } else { // if ( amr->use_wave_flag[lv] ) {
       Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _DENS|_PHAS, _NONE, Flu_ParaBuf, USELB_YES );
       }
-#     endif // # if ( ELBDM_SCHEME == HYBRID ) 
-   
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
    } // for (int lv=0; lv<NLEVEL; lv++)
 
 

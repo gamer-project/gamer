@@ -116,9 +116,9 @@ struct AMR_t
 #  endif
    long   NUpdateLv   [NLEVEL];
 
-#  if ( MODEL == ELBDM  && ELBDM_SCHEME == HYBRID )
+#  if ( MODEL == ELBDM  && ELBDM_SCHEME == ELBDM_HYBRID )
    bool   use_wave_flag[NLEVEL];
-#  endif // #if ( MODEL == ELBDM  && ELBDM_SCHEME == HYBRID )
+#  endif // #if ( MODEL == ELBDM  && ELBDM_SCHEME == ELBDM_HYBRID )
 
    //===================================================================================
    // Constructor :  AMR_t
@@ -158,10 +158,10 @@ struct AMR_t
          PotSgTime[lv][ 1-PotSg[lv] ] = -__FLT_MAX__;
 #        endif
 
-#        if ( MODEL == ELBDM  &&  ELBDM_SCHEME == HYBRID )
-         //Use fluid solver by default for hybrid scheme
+#        if ( MODEL == ELBDM  &&  ELBDM_SCHEME == ELBDM_HYBRID )
+//       use fluid solver by default for hybrid scheme
          use_wave_flag[lv] = false;
-#        endif // # if ( MODEL == ELBDM  &&  ELBDM_SCHEME == HYBRID )
+#        endif // # if ( MODEL == ELBDM  &&  ELBDM_SCHEME == ELBDM_HYBRID )
       }
 
       for (int Sg=0; Sg<2; Sg++)

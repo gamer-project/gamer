@@ -337,9 +337,9 @@ void Flag_Buffer( const int lv );
 void Refine_Buffer( const int lv, const int *SonTable, const int *GrandTable );
 #endif
 
-#if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 void Flag_Sync( const int lv );
-#endif
+#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 // SelfGravity
 #ifdef GRAVITY
@@ -547,10 +547,10 @@ void   ELBDM_Init_ByFunction_AssignData( const int lv );
 double ELBDM_GetTimeStep_Fluid( const int lv );
 double ELBDM_GetTimeStep_Gravity( const int lv );
 double ELBDM_GetTimeStep_Phase( const int lv );
-#if   ( ELBDM_SCHEME == HYBRID )
-double ELBDM_GetTimeStep_Hybrid( const int lv );   //For CFL condition of SPS in phase form
-double ELBDM_GetTimeStep_Velocity( const int lv ); //For velocity dependence of Hamilton-Jacobi equation
-#endif // #if ( ELBDM_SCHEME == HYBRID )
+#if   ( ELBDM_SCHEME == ELBDM_HYBRID )
+double ELBDM_GetTimeStep_Hybrid( const int lv );        // for CFL condition of SPS in phase form
+double ELBDM_GetTimeStep_Velocity( const int lv );      // for velocity dependence of Hamilton-Jacobi equation
+#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 //Flag for refining regions using wave solver
 bool   ELBDM_Flag_EngyDensity( const int i, const int j, const int k, const real Real_Array[],

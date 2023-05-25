@@ -6,7 +6,7 @@
 
 #include "CUPOT.h"
 
-#if ( MODEL == ELBDM  &&  defined GRAVITY && ELBDM_SCHEME == HYBRID )
+#if ( MODEL == ELBDM  &&  defined GRAVITY && ELBDM_SCHEME == ELBDM_HYBRID )
 
 //-----------------------------------------------------------------------------------------
 // Function    :  CPU/CUPOT_ELBDMGravitySolver_HamiltonJacobi
@@ -85,4 +85,4 @@ void CPU_ELBDMGravitySolver_HamiltonJacobi  (      real   g_Flu_Array[][GRA_NIN]
 } // FUNCTION : CPU/CUPOT_ELBDMGravitySolver_HJ
 
 
-#endif // #if ( MODEL == ELBDM  &&  defined GRAVITY && ELBDM_SCHEME == HYBRID )
+#endif // #if ( MODEL == ELBDM  &&  defined GRAVITY && ELBDM_SCHEME == ELBDM_HYBRID )

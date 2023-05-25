@@ -53,9 +53,9 @@ void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, const d
 //                TVarCC             : Target cell-centered variables to be prepared
 //                                     --> Supported variables in different models:
 //                                         HYDRO        : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP, _ENTR,
-//                                                        [, _POTE] [, _MAGX_CC, _MAGY_CC, _MAGZ_CC, _MAGE_CC]
-//                                         ELBDM        : _DENS, _REAL, _IMAG [, _POTE]
-//                                         ELBDM HYBRID : _DENS, _PHAS [, _POTE]
+//                                                         [, _POTE] [, _MAGX_CC, _MAGY_CC, _MAGZ_CC, _MAGE_CC]
+//                                         ELBDM_WAVE   : _DENS, _REAL, _IMAG [, _POTE]
+//                                         ELBDM_HYBRID : _DENS, _PHAS [, _POTE]
 //                                     --> _FLUID, _PASSIVE, _TOTAL, and _DERIVED apply to all models
 //                NVarCC_Tot         : Total number of cell-centered variables to be prepared
 //                NVarCC_Flu         : Number of cell-centered fluid variables to be prepared
@@ -339,13 +339,13 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //       temporal interpolation
 //       --> for IntPhase, apply temporal interpolation to density/phase instead of real/imaginary parts for better accuracy
 #        if ( MODEL == ELBDM )
-#        if ( ELBDM_SCHEME == HYBRID )
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
          // for fluid patches, we do not require the IntPhase flag and therefore only check whether FluIntTime is set
          if (   (amr->use_wave_flag[lv] == true  && FluIntTime  &&  !IntPhase ) \
              || (amr->use_wave_flag[lv] == false && FluIntTime) )
-#        else // #if ( ELBDM_SCHEME == HYBRID )
+#        else // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
          if ( FluIntTime  &&  !IntPhase )
-#        endif // #if ( ELBDM_SCHEME == HYBRID ) .. # else
+#        endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID ) .. # else
 #        else
          if ( FluIntTime )
 #        endif
@@ -740,12 +740,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //             temporal interpolation
 //             --> for IntPhase, apply temporal interpolation to density/phase instead of real/imaginary parts for better accuracy
 #              if ( MODEL == ELBDM )
-#              if ( ELBDM_SCHEME == HYBRID )
+#              if ( ELBDM_SCHEME == ELBDM_HYBRID )
                if (   (amr->use_wave_flag[lv] == true  && FluIntTime  &&  !IntPhase ) \
                    || (amr->use_wave_flag[lv] == false && FluIntTime) )
-#              else // #if ( ELBDM_SCHEME == HYBRID )
+#              else // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
                if ( FluIntTime  &&  !IntPhase )
-#              endif // #if ( ELBDM_SCHEME == HYBRID ) .. # else
+#              endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID ) .. # else
 #              else
                if ( FluIntTime )
 #              endif
@@ -1285,7 +1285,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 // c. interpolation : CData_CC[] --> IntData_CC[]
 // ------------------------------------------------------------------------------------------------------------
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(HYBRID_SMOOTH_PHASE) )
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(HYBRID_SMOOTH_PHASE) )
    const int PhaseUnwrapping_Cond  = 2;
 #  else
    const int PhaseUnwrapping_Cond  = 0;
@@ -1326,7 +1326,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 #     elif ( MODEL == ELBDM )
 //    apply monotonic interpolation to density and all passive scalars
-#     if (ELBDM_SCHEME == HYBRID)
+#     if (ELBDM_SCHEME == ELBDM_HYBRID)
       if (   (TVarCCIdx_Flu != REAL  &&  TVarCCIdx_Flu != IMAG && amr->use_wave_flag[lv] == true  )\
           || (TVarCCIdx_Flu != PHAS  &&  TVarCCIdx_Flu != STUB && amr->use_wave_flag[lv] == false ) )
 #     else
@@ -1394,11 +1394,11 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    bool disableIntPhase = false;
 
 //Parameter IntPhase in hybrid scheme only relevant where we use wave solver
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( IntPhase && amr->use_wave_flag[lv] == true)
-#  else
+#  else // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( IntPhase )
-#  endif
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID ) ... # else
    {
 //    determine the array indices
 
@@ -1460,11 +1460,11 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #     endif // # ifdef DISABLE_PHASE_AT_DEFECT
    }
 
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( IntPhase && !disableIntPhase && amr->use_wave_flag[lv] == true)
-#  else
+#  else // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( IntPhase && !disableIntPhase )
-#  endif
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID ) ... # else
    {
 //    interpolate density
       Interpolate( CData_Dens, CSize_CC, CStart_CC, CRange_CC, FData_Dens, FSize_CC, FStart_CC,
@@ -1658,7 +1658,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          FData_Imag[t] = Amp*SIN( Phase );
       }
    } // if ( IntPhase && !disableIntPhase ) || if ( IntPhase && amr->use_wave_flag[lv] == true && !disableIntPhase ) in hybrid scheme
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    else if ( amr->use_wave_flag[lv] == false )
    {
       real *CData_Dens = NULL;
@@ -1698,7 +1698,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                       ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
       }
    }
-#  endif // #  if ( ELBDM_SCHEME == HYBRID )
+#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 // c3. interpolation on original variables
    else // if ( IntPhase || ( IntPhase && amr->use_wave_flag[lv] == true) ) ... else if ( amr->use_wave_flag[lv] == false )
 #  endif // if ( MODEL == ELBDM )

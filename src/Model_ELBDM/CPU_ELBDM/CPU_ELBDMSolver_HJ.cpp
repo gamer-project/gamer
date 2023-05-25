@@ -1,7 +1,7 @@
 #include "CUFLU.h"
 #include "Macro.h"
 
-#if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 // convert to 1D index with ghost boundary
 # define to1D1(z,y,x) (  (z)                 * FLU_NXT * FLU_NXT +  (y)                 * FLU_NXT +  (x)                  )
@@ -791,4 +791,4 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
    }
 } // FUNCTION : CUFLU_Advance
 
-#endif // #if ( defined GPU  &&  MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
+#endif // #if ( defined GPU  &&  MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)

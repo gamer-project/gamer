@@ -100,7 +100,7 @@ void LB_Refine( const int FaLv )
                                   CFB_SibLBIdx_Home, CFB_SibLBIdx_Away,
                                   switchNextLevelsToWaveScheme );
 
-# if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+# if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 // Sync information whether refined levels are switched to wave scheme
    int send = switchNextLevelsToWaveScheme;
    int recv;
@@ -108,7 +108,7 @@ void LB_Refine( const int FaLv )
    MPI_Allreduce(&send, &recv, 1, MPI_INT, MPI_LOR, MPI_COMM_WORLD);
 
    switchNextLevelsToWaveScheme = recv;
-# endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+# endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 // 3. get the magnetic field on the coarse-fine interfaces for the divergence-free interpolation
 // ==========================================================================================
@@ -196,17 +196,13 @@ void LB_Refine( const int FaLv )
 
 
 // (c1.3.6) convert density/phase to density/real part/imaginary part in hybrid scheme if we switch the level from phase to wave
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
    if ( switchNextLevelsToWaveScheme ) {
-      //Set corresponding flag
+//    set corresponding flag
       for (int level = SonLv; level <= TOP_LEVEL; ++level) {
          int n_total = amr->NPatchComma[level][27];
          int n_real  = amr->NPatchComma[level][1];
          int n_buffer = n_total - n_real;
-
-#        ifdef GAMER_DEBUG
-         Aux_Message( stdout, "Converting level %i with %d real and %d buffer patches to wave scheme on rank %d.\n", level, n_real, n_buffer, MPI_Rank);
-#        endif
 
          amr->use_wave_flag[level] = true;
          int fluSg = amr->FluSg[level];
@@ -215,55 +211,6 @@ void LB_Refine( const int FaLv )
 
          for (int PID=0; PID<amr->NPatchComma[level][1]; PID++)
          {
-#           ifdef GAMER_DEBUG
-            if (amr->patch[fluSg][level][PID]->fluid == NULL || !amr->patch[fluSg][level][PID]->Active ) {
-               Aux_Error( ERROR_INFO, "Encountered NULL PATCH IN LB_REFINE\n");
-            }
-
-//          check for phase jumps!
-            for (int k=0; k<PS1; k++)  {
-            for (int j=0; j<PS1; j++)  {
-            for (int i=0; i<PS1; i++)  {
-               int kk  =  k;
-               int kkp = (kk + 1) < PS1  ? kk + 1 : kk    ;
-               int kkm = (kk - 1) < 0         ? kk     : kk - 1;
-               int ii  =  i;
-               int iip = (ii + 1) < PS1  ? ii + 1 : ii    ;
-               int iim = (ii - 1) < 0         ? ii     : ii - 1;
-               int jj  =  j;
-               int jjp = (jj + 1) < PS1  ? jj + 1 : jj    ;
-               int jjm = (jj - 1) < 0         ? jj     : jj - 1;
-
-               //check whether dB wavelength is resolved within the newly converted patch
-               real maxphase = MAX(MAX(MAX(MAX(MAX(
-               FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][iip] - amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ]),
-               FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ] - amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][iim])),
-               FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jjp][ii ] - amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ])),
-               FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ] - amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jjm][ii ])),
-               FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kkp][jj ][ii ] - amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ])),
-               FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ] - amr->patch[fluSg][level][PID]->fluid[PHAS][kkm][jj ][ii ]));
-
-               if ( maxphase > M_PI * 2) {
-                  Aux_Message ( stderr, "WARNING: When converting level %d to wave scheme on rank %d , phase jump %f at PID %d for k %d i %d j %d\n k %d kp %d km %d i %d ip %d im %d j %d jp %d jm %d\n k j ip %f k j i %f\n k j i %f k j im %f\n k jp i %f k j i %f\n k j i %f k jm i %f\n kp j i %f k j i %f\n k j i %f km j i %f\n stub %f %f %f %f %f %f %f\n",
-                                level, MPI_Rank, maxphase, PID, k, i, j, kk, kkp, kkm, ii, iip, iim, jj, jjp, jjm,
-                                amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][iip], amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][iim],
-                                amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jjp][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jjm][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[PHAS][kkp][jj ][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kkm][jj ][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jj ][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[STUB][kkp][jj ][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jjp][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jj ][iip],
-                                amr->patch[fluSg][level][PID]->fluid[STUB][kkm][jj ][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jjm][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jj ][iim]
-                              );
-               }
-            }}}
-
-#           endif // # ifdef GAMER_DEBUG
 
 //          fluid data
             for (int k=0; k<PS1; k++)  {
@@ -295,7 +242,7 @@ void LB_Refine( const int FaLv )
       }
    } // if ( switchNextLevelToWaveScheme )
 
-#   endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
+#   endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
 
 // 7. miscellaneous
 // ==========================================================================================

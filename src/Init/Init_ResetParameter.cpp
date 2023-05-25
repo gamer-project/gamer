@@ -109,7 +109,7 @@ void Init_ResetParameter()
 
 
 // hybrid velocity dt
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
    if ( DT__VELOCITY < 0.0 )
    {
       DT__VELOCITY = 1.00;
@@ -120,7 +120,7 @@ void Init_ResetParameter()
 
 
 // hybrid dt
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
    if ( DT__HYBRID < 0.0 )
    {
       DT__HYBRID = 0.40;

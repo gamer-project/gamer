@@ -400,7 +400,7 @@
 #elif ( MODEL == ELBDM )
 #     define FLU_BLOCK_SIZE_X       PS2
 
-#  if ( ELBDM_SCHEME == WAVE )
+#  if ( ELBDM_SCHEME == ELBDM_WAVE )
 
 #  if   ( GPU_ARCH == FERMI )
 #     ifdef FLOAT8
@@ -457,7 +457,7 @@
 #        error : UNKNOWN GPU_ARCH !!
 #        endif
 #  endif
-#  elif ( ELBDM_SCHEME == HYBRID )
+#  elif ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  if ( PATCH_SIZE == 8 )
 #     ifdef FLOAT8
 #        define FLU_BLOCK_SIZE_Y    16
@@ -472,7 +472,7 @@
 #     endif
 #  endif // # if ( PATCH_SIZE == 8 ) ... # else
 #  else
-#  error : ERROR : UNKWNOWN ELBDM_SCHEME
+#  error : ERROR : UNKNOWN ELBDM_SCHEME
 #  endif
 
 // define GPU compute capabilities

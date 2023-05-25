@@ -55,22 +55,22 @@ void Flu_Prepare( const int lv, const double PrepTime,
 
 // prepare the fluid array
 #  if ( MODEL == ELBDM )
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( amr->use_wave_flag[lv] ) {
-#  endif // #  if ( ELBDM_SCHEME == HYBRID )
+#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
       Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In[0][0], NULL,
                         FLU_GHOST_SIZE, NPG, PID0_List, _REAL|_IMAG|_PASSIVE, _NONE,
                         OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, OPT__INT_PHASE,
                         OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    } else  { // if ( amr->use_wave_flag[lv] )
       Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In[0][0], NULL,
                         HYB_GHOST_SIZE, NPG, PID0_List, _DENS|_PHAS|_PASSIVE, _NONE,
                         OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, OPT__INT_PHASE,
                         OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
    } // if (amr->use_wave_flag[lv] ) ... else
-#  endif //  #if ( ELBDM_SCHEME == HYBRID )
+#  endif //  #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  else
 #  ifdef MHD
    real *Mag_Array = h_Mag_Array_F_In[0][0];
@@ -125,22 +125,22 @@ void Flu_Prepare( const int lv, const double PrepTime,
          for (int j=0; j<FLU_NXT; j++)
          for (int i=0; i<FLU_NXT; i++)
          {
-#           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#           if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
             if ( amr->use_wave_flag[lv] ) {
-#           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
             const int t = IDX321( i, j, k, FLU_NXT, FLU_NXT );
             for (int v=0; v<FLU_NIN; v++)    fluid[v] = h_Flu_Array_F_In[TID][v][t];
 
-#           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#           if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
             } else { // if ( amr->use_wave_flag[lv] ) {
-
+//          convert to smaller array for HYB_GHOST_SIZE ghost zones
             real (*smaller_h_Flu_Array_F_In   )[FLU_NIN ][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) h_Flu_Array_F_In;
             const int t = IDX321( i, j, k, HYB_NXT, HYB_NXT );
 
             for (int v=0; v<FLU_NIN; v++)    fluid[v] = smaller_h_Flu_Array_F_In[TID][v][t];
             } // if ( amr->use_wave_flag[lv] ) { ... else
-#           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 //          HYDRO

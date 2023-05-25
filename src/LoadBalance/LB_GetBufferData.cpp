@@ -49,8 +49,8 @@ extern Timer_t *Timer_MPI[3];
 //                TVarCC     : Target cell-centered variables to exchange
 //                             --> Supported variables in different models:
 //                                 HYDRO        : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY [, _POTE]
-//                                 ELBDM        : _DENS, _REAL, _IMAG [, _POTE]
-//                                 ELBDM HYBRID : _DENS, _PHAS [, _POTE]
+//                                 ELBDM_WAVE   : _DENS, _REAL, _IMAG [, _POTE]
+//                                 ELBDM_HYBRID : _DENS, _PHAS [, _POTE]
 //                             --> _FLUID, _PASSIVE, and _TOTAL apply to all models
 //                             --> In addition, the flux variables (e.g., _FLUX_DENS) are also supported
 //                             Restrictions :

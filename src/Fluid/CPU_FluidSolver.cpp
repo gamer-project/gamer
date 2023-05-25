@@ -97,17 +97,17 @@ void CPU_ELBDMSolver_GramFE( real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                       const bool XYZ, const real MinDens );
 #endif // #if ( WAVE_SCHEME == WAVE_FD ) ... else
-#if ( ELBDM_SCHEME == HYBRID )
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
 void CPU_ELBDMSolver_HamiltonJacobi(  real Flu_Array_In [][FLU_NIN ][ CUBE(HYB_NXT)],
                                       #ifdef GAMER_DEBUG
-                                      real Flu_Array_Out[][FLU_NOUT][ SQR(PS2)*PS2 ],
+                                      real Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
                                       #else
-                                      real Flu_Array_Out[][FLU_NIN] [ SQR(PS2)*PS2 ],
+                                      real Flu_Array_Out[][FLU_NIN] [ CUBE(PS2) ],
                                       #endif
                                       real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                                       const bool XYZ, const real MinDens );
-#endif // # if ( ELBDM_SCHEME == HYBRID )
+#endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #else
 #error : ERROR : unsupported MODEL !!
@@ -187,7 +187,7 @@ static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 //                                      --> Should be set to the global variable "PassiveIntFrac_VarIdx"
 //                JeansMinPres        : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff  : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
-//                useWaveFlag         : Determines whether wave or fluid solver is used for MODEL == ELBDM and ELBDM_SCHEME == HYBRID
+//                useWaveFlag         : Determines whether wave or fluid solver is used for MODEL == ELBDM and ELBDM_SCHEME == ELBDM_HYBRID
 //-------------------------------------------------------------------------------------------------------
 void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
@@ -264,9 +264,9 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 #  elif ( MODEL == ELBDM )
 
 
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( useWaveFlag ) {
-#  endif // # if ( ELBDM_SCHEME == HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #  if (WAVE_SCHEME == WAVE_FD )
 //    evaluate the optimized Taylor expansion coefficient
@@ -282,18 +282,21 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 #     error : ERROR : unsupported WAVE_SCHEME !!
 #  endif // WAVE_SCHEME
 
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    } else {
       real (*smaller_h_Flu_Array_In   )[FLU_NIN ][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) h_Flu_Array_In;
+
+//    in debug mode, send DENS, PHAS and STUB back from CPU/GPU solvers
+//    in regular mode, only send DENS and PHAS back from CPU/GPU solvers
 #     ifndef GAMER_DEBUG
-      real (*smaller_h_Flu_Array_Out  )[FLU_NIN ][CUBE(PS2)] = (real (*)[FLU_NIN][CUBE(PS2)]) h_Flu_Array_Out;
+      real (*smaller_h_Flu_Array_Out  )[FLU_NIN ][CUBE(PS2)]     = (real (*)[FLU_NIN ][CUBE(PS2)])    h_Flu_Array_Out;
 #     else // # ifndef GAMER_DEBUG
-      real (*smaller_h_Flu_Array_Out  )[FLU_NOUT][CUBE(PS2)] = h_Flu_Array_Out;
+      real (*smaller_h_Flu_Array_Out  )[FLU_NOUT][CUBE(PS2)]     = (real (*)[FLU_NOUT][CUBE(PS2)])    h_Flu_Array_Out;
 #     endif // # ifndef GAMER_DEBUG ... else
       CPU_ELBDMSolver_HamiltonJacobi( smaller_h_Flu_Array_In, smaller_h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
             XYZ, MinDens );
    }
-#  endif // # if ( ELBDM_SCHEME == HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #  else
 #     error : ERROR : unsupported MODEL !!

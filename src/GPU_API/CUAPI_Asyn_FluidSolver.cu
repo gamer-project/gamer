@@ -97,7 +97,7 @@ void CUFLU_ELBDMSolver_GramFE(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #     error : ERROR : unsupported WAVE_SCHEME !!
 #  endif // WAVE_SCHEME
 
-#if ( ELBDM_SCHEME == HYBRID )
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
 __global__ void CUFLU_ELBDMSolver_HamiltonJacobi( real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NXT) ],
                                                   #ifdef GAMER_DEBUG
                                                   real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
@@ -107,7 +107,7 @@ __global__ void CUFLU_ELBDMSolver_HamiltonJacobi( real g_Fluid_In [][FLU_NIN ][ 
                                                   real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
                                                   const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                                   const bool XYZ, const real MinDens );
-#endif // #if ( ELBDM_SCHEME == HYBRID )
+#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #else
 #error : ERROR : unsupported MODEL !!
@@ -301,7 +301,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  endif
 #  endif // #ifdef GAMER_DEBUG
 
-#  if ( !( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && ELBDM_SCHEME != HYBRID) )
+#  if ( !( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && ELBDM_SCHEME != ELBDM_HYBRID) )
    const dim3 BlockDim_FluidSolver ( FLU_BLOCK_SIZE_X, FLU_BLOCK_SIZE_Y, 1 ); // for the fluidsolvers
 #  endif // #  if ( !( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE ) )
 
@@ -316,9 +316,9 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
    typename IFFT::workspace_type cufftdx_iworkspace;
 #  endif // #  if ( WAVE_SCHEME == WAVE_GRAMFE && defined( GRAMFE_ENABLE_GPU ) )
 
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( useWaveFlag ) {
-#  endif // # if ( ELBDM_SCHEME == HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #  if ( WAVE_SCHEME == WAVE_FD )
 
@@ -355,9 +355,9 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #     error : ERROR : unsupported WAVE_SCHEME !!
 #  endif // WAVE_SCHEME
 
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    } // if ( useWaveFlag )
-#  endif // # if ( ELBDM_SCHEME == HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #  else
 #  error : ERROR : unsupported MODEL !!
@@ -418,14 +418,14 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #     endif
 
 //    optimisation for phase scheme, only transfer density and phase instead of re/im/dens back from GPU
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( !useWaveFlag ) {
          Flu_MemSize_In [s] = sizeof(real  )*NPatch_per_Stream[s]*FLU_NIN*CUBE(HYB_NXT);
 #     ifndef GAMER_DEBUG
          Flu_MemSize_Out[s] = sizeof(real  )*NPatch_per_Stream[s]*FLU_NIN*CUBE(PS2);
 #     endif // # ifndef GAMER_DEBUG
       }
-#     endif // # if ( ELBDM_SCHEME == HYBRID )
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
    }
 
 
@@ -435,12 +435,12 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
    {
       if ( NPatch_per_Stream[s] == 0 )    continue;
 
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( useWaveFlag ) {
-#     endif // # if ( ELBDM_SCHEME == HYBRID )
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Flu_Array_F_In  + UsedPatch[s], h_Flu_Array_In  + UsedPatch[s],
                          Flu_MemSize_In[s], cudaMemcpyHostToDevice, Stream[s] )  );
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       } else { // if ( useWaveFlag ) {
       real (*smaller_d_Flu_Array_F_In)[FLU_NIN][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) d_Flu_Array_F_In;
       real (*smaller_h_Flu_Array_In  )[FLU_NIN][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) h_Flu_Array_In  ;
@@ -448,7 +448,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( smaller_d_Flu_Array_F_In  + UsedPatch[s], smaller_h_Flu_Array_In  + UsedPatch[s],
                          Flu_MemSize_In[s], cudaMemcpyHostToDevice, Stream[s] )  );
       }
-#     endif // #if ( ELBDM_SCHEME == HYBRID )
+#     endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #     ifdef MHD
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Mag_Array_F_In  + UsedPatch[s], h_Mag_Array_In  + UsedPatch[s],
                          Mag_MemSize_In[s], cudaMemcpyHostToDevice, Stream[s] )  );
@@ -538,9 +538,9 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 #     elif ( MODEL == ELBDM )
 
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( useWaveFlag ) {
-#     endif // # if ( ELBDM_SCHEME == HYBRID )
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #     if ( WAVE_SCHEME == WAVE_FD )
 
@@ -563,7 +563,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #     else // #  if (WAVE_SCHEME == WAVE_FD )
 #        error : ERROR : unsupported WAVE_SCHEME !!
 #     endif // WAVE_SCHEME
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       } else { // if ( useWaveFlag ) {
          real (*smaller_d_Flu_Array_F_In) [FLU_NIN] [CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) d_Flu_Array_F_In;
 #        ifdef GAMER_DEBUG
@@ -579,7 +579,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                dt, 1.0/dh, ELBDM_Eta, StoreFlux, XYZ, MinDens );
 
       } // if ( useWaveFlag ) { ... else
-#     endif // #     if ( ELBDM_SCHEME == HYBRID )
+#     endif // #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #     else
 
@@ -598,19 +598,19 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
    {
       if ( NPatch_per_Stream[s] == 0 )    continue;
 
-#     if ( ELBDM_SCHEME == HYBRID && !defined(GAMER_DEBUG) )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID && !defined(GAMER_DEBUG) )
       if ( useWaveFlag ) {
-#     endif // #     if ( ELBDM_SCHEME == HYBRID )
+#     endif // #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_Flu_Array_Out + UsedPatch[s], d_Flu_Array_F_Out + UsedPatch[s],
                          Flu_MemSize_Out[s], cudaMemcpyDeviceToHost, Stream[s] )  );
-#     if ( ELBDM_SCHEME == HYBRID && !defined(GAMER_DEBUG) )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID && !defined(GAMER_DEBUG) )
       } else { // if ( useWaveFlag ) {
       real (*smaller_h_Flu_Array_Out  )[FLU_NIN][CUBE(PS2)] = (real (*)[FLU_NIN][CUBE(PS2)]) h_Flu_Array_Out;
       real (*smaller_d_Flu_Array_F_Out)[FLU_NIN][CUBE(PS2)] = (real (*)[FLU_NIN][CUBE(PS2)]) d_Flu_Array_F_Out;
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( smaller_h_Flu_Array_Out + UsedPatch[s], smaller_d_Flu_Array_F_Out + UsedPatch[s],
                          Flu_MemSize_Out[s], cudaMemcpyDeviceToHost, Stream[s] )  );
       } // if ( useWaveFlag ) { ... else
-#     endif // #     if ( ELBDM_SCHEME == HYBRID )
+#     endif // #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
       if ( StoreFlux )
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_Flux_Array    + UsedPatch[s], d_Flux_Array      + UsedPatch[s],

@@ -76,9 +76,9 @@ struct KeyInfo_t
    double AveDens_Init;             // AveDensity_Init
 #  endif
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-   int UseWaveScheme[NLEVEL];     // AMR levels where wave solver is used
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+   int UseWaveScheme[NLEVEL];       // AMR levels where wave solver is used
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
    char  *CodeVersion;
    char  *DumpWallTime;
@@ -408,10 +408,10 @@ struct InputPara_t
 #  endif
 #  if ( MODEL == ELBDM )
    double Dt__Phase;
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    double Dt__Hybrid;
    double Dt__Velocity;
-#  endif //  # if ( ELBDM_SCHEME == HYBRID )
+#  endif //  # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
 #  ifdef PARTICLE
    double Dt__ParVel;
@@ -663,9 +663,9 @@ struct InputPara_t
    int    Opt__Int_Phase;
    int    Opt__Res_Phase;
    double Opt__Ck_Phase_Defect;
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    int    Opt__Hybrid_Match_Phase;
-#  endif // # if ( ELBDM_SCHEME == HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
    int    Opt__Flu_IntScheme;
    int    Opt__RefFlu_IntScheme;
@@ -774,9 +774,7 @@ struct InputPara_t
 #  endif
 #  elif ( MODEL == ELBDM )
    double FlagTable_EngyDensity  [NLEVEL-1][2];
-// # if ( ELBDM_SCHEME == HYBRID )
    double FlagTable_Interference [NLEVEL-1][4];
-// # endif
 #  endif
 #  ifdef PARTICLE
    int    FlagTable_NParPatch   [NLEVEL-1];

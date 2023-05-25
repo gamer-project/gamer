@@ -97,15 +97,15 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
       fprintf( File, "(%3s,%3s,%3s )", "i", "j", "k" );
 
 #     if ( MODEL == ELBDM )
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( amr->use_wave_flag[TLv] ) {
       fprintf( File, "%16s%16s", FieldLabel[DENS], FieldLabel[PHAS] );
       } else { //if ( amr->use_wave_flag[TLv] )
-#     endif // #if ( ELBDM_SCHEME == HYBRID )
+#     endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
       fprintf( File, "%16s%16s", FieldLabel[REAL], FieldLabel[IMAG] );
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       } //if ( amr->use_wave_flag[TLv] ) ... else
-#     endif // #if ( ELBDM_SCHEME == HYBRID )
+#     endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #     else
       for (int v=0; v<FLU_NIN; v++)    fprintf( File, "%16s", FieldLabel[v] );
@@ -128,15 +128,15 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
       for (int j=-FLU_GHOST_SIZE; j<FLU_GHOST_SIZE+PS1; j++)  {  J = j + Disp_j;
       for (int i=-FLU_GHOST_SIZE; i<FLU_GHOST_SIZE+PS1; i++)  {  I = i + Disp_i;
 
-#        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#        if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
          if ( amr->use_wave_flag[TLv] ) {
-#        endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#        endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
          Idx = K*FLU_NXT*FLU_NXT + J*FLU_NXT + I;
 
          for (int v=0; v<FLU_NIN; v++)    u[v] = h_Flu_Array[TID][v][Idx];
 
-#        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#        if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
       } else { // if ( amr->use_wave_flag[lv] ) {
 
          real (*smaller_h_Flu_Array)[FLU_NIN ][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) h_Flu_Array;
@@ -145,7 +145,7 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
          for (int v=0; v<FLU_NIN; v++)    u[v] = smaller_h_Flu_Array[TID][v][Idx];
 
          } // if ( amr->use_wave_flag[lv] ) { ... else
-#        endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#        endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 //       cell indices
          fprintf( File, "(%3d,%3d,%3d )", i, j, k );

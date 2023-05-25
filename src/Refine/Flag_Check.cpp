@@ -80,32 +80,32 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 //    For wave solver: Check whether dB wavelength is resolved using FlagTable_Interference[lv][2] as maximum phase difference between neighbouring cells
 
-#     if ( MODEL == ELBDM  && ELBDM_SCHEME == HYBRID )
+#     if ( MODEL == ELBDM  && ELBDM_SCHEME == ELBDM_HYBRID )
       if ( amr->use_wave_flag[lv] ) {
-#     endif // # if ( MODEL == ELBDM  && ELBDM_SCHEME == HYBRID )
+#     endif // # if ( MODEL == ELBDM  && ELBDM_SCHEME == ELBDM_HYBRID )
 
       dBWavelengthNotResolved = ELBDM_Flag_Interference( i, j, k, Interf_Cond + 2 * CUBE(PS1), FlagTable_Interference[lv][2] );
 
       Flag |= dBWavelengthNotResolved;
 
-#     if ( MODEL == ELBDM  && ELBDM_SCHEME == HYBRID )
+#     if ( MODEL == ELBDM  && ELBDM_SCHEME == ELBDM_HYBRID )
 //    For fluid solver: Check phase curvature using FlagTable_Interference[lv][2] as maximum allowed phase curvature
       } else {
          FlagIntPhaseDiscont  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond + CUBE(PS1), FlagTable_Interference[lv][2]);
 
          Flag |= FlagIntPhaseDiscont;
       }
-#     endif // # if ( MODEL == ELBDM  && ELBDM_SCHEME == HYBRID )
+#     endif // # if ( MODEL == ELBDM  && ELBDM_SCHEME == ELBDM_HYBRID )
 
-#     if ( ELBDM_SCHEME == HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( Flag &&  FlagTable_Interference[lv][3] >= 0.0 ) {
 
 #        ifdef GAMER_DEBUG
-//       we distinguish two cases:
-//       if the slope of the phase field is lower than PI, we know that the dB wavelength will be resolved after refinement and we can safely switch to the wave scheme
+//       distinguish two cases:
+//       if the slope of the phase field is lower than PI, the dB wavelength will be resolved after refinement and one can safely switch to the wave scheme
 //       if the slope is bigger, this may be due to a real phase discontinuity because of a 2 pi winding of the phase at a point of zero density
-//       we check for the latter with FlagInterferenceTwo
-//       if the curvature of the phase is high at a point where the phase jump is bigger than pi, we assume that it is a real jump and still switch to the wave scheme
+//       check for the latter with FlagInterferenceTwo
+//       if the curvature of the phase is high at a point where the phase jump is bigger than pi, assume that it is a real jump and still switch to the wave scheme
          bool dBResolvedAfterRefine = ! ELBDM_Flag_Interference( i, j, k, Interf_Cond + 2 * CUBE(PS1), M_PI ) || FlagIntQP;
          if ( !dBResolvedAfterRefine ) {
             const int    Idx               = 2 * PS1*PS1*PS1 + k*PS1*PS1 + j*PS1 + i;
@@ -125,12 +125,12 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
          amr->patch[0][lv][PID]->use_wave_flag =  true;
 
       }
-#     endif // # if ( ELBDM_SCHEME == HYBRID )
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
       if ( Flag )
             return Flag;
    }
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 #  ifdef PARTICLE
@@ -227,15 +227,18 @@ if ( OPT__FLAG_RHO )
 // check ELBDM energy density
 // ===========================================================================================
 #  if ( MODEL == ELBDM )
-#  if ( ELBDM_SCHEME == HYBRID )
-   if ( amr->use_wave_flag[lv] )
-#  endif
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( OPT__FLAG_ENGY_DENSITY )
    {
       Flag |= ELBDM_Flag_EngyDensity( i, j, k, &Fluid[REAL][0][0][0], &Fluid[IMAG][0][0][0],
                                       FlagTable_EngyDensity[lv][0], FlagTable_EngyDensity[lv][1] );
       if ( Flag )    return Flag;
    }
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } // if ( amr->use_wave_flag[lv] ) {
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
 
 
@@ -243,9 +246,9 @@ if ( OPT__FLAG_RHO )
 // check Lohner's error estimator
 // ===========================================================================================
 
-#  if ( ELBDM_SCHEME == HYBRID )
-   if ( amr->use_wave_flag[lv] )
-#  endif
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( Lohner_NVar > 0 )
    {
 //    check Lohner only if density is greater than the minimum threshold
@@ -256,6 +259,9 @@ if ( OPT__FLAG_RHO )
                            FlagTable_Lohner[lv][0], FlagTable_Lohner[lv][2], FlagTable_Lohner[lv][3] );
       if ( Flag )    return Flag;
    }
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+   } // if ( amr->use_wave_flag[lv] ) {
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 // check user-defined criteria

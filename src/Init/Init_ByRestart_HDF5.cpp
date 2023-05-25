@@ -217,9 +217,9 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "AveDens_Init",         &KeyInfo.AveDens_Init,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 #  endif
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-   LoadField( "UseWaveScheme",        &KeyInfo.UseWaveScheme,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+   LoadField( "UseWaveScheme",        &KeyInfo.UseWaveScheme,        H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 // must initialize all char* pointers as NULL so that we can safely free them later
 // --> in case they do not exist in the restart file
@@ -262,9 +262,9 @@ void Init_ByRestart_HDF5( const char *FileName )
          if ( KeyInfo.FormatVersion >= 2250 )
          dTime_AllLv   [lv] = KeyInfo.dTime_AllLv   [lv];
 
-#        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#        if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
          amr->use_wave_flag[lv] = KeyInfo.UseWaveScheme [lv];
-#        endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#        endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
       }
 
       Step            = KeyInfo.Step;
@@ -613,10 +613,10 @@ void Init_ByRestart_HDF5( const char *FileName )
 
    int NCompStore = NCOMP_TOTAL;
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
 // do not load STUB field
    NCompStore -= 1 ;
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 #  ifdef LOAD_BALANCE
    const bool Recursive_No  = false;
@@ -1260,10 +1260,10 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
 
    int NCompStore = NCOMP_TOTAL;
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 // do not load STUB field
    NCompStore -= 1 ;
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 // allocate patch
@@ -1299,7 +1299,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
    }
 
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 // convert phase/density to real and imaginary parts
    if ( amr->use_wave_flag[lv] ) {
       real Dens, Phas, Im, Re;
@@ -1314,7 +1314,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
          amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[IMAG][i][k][j] = Im;
       }}}
    }
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 // load face-centered magnetic field from disk
@@ -1867,10 +1867,10 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  endif
 #  if ( MODEL == ELBDM )
    LoadField( "Dt__Phase",               &RS.Dt__Phase,               SID, TID, NonFatal, &RT.Dt__Phase,                1, NonFatal );
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    LoadField( "Dt__Velocity",            &RS.Dt__Velocity,            SID, TID, NonFatal, &RT.Dt__Velocity,             1, NonFatal );
    LoadField( "Dt__Hybrid",              &RS.Dt__Hybrid,              SID, TID, NonFatal, &RT.Dt__Hybrid,               1, NonFatal );
-#  endif // # if ( ELBDM_SCHEME == HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
 #  ifdef PARTICLE
    LoadField( "Dt__ParVel",              &RS.Dt__ParVel,              SID, TID, NonFatal, &RT.Dt__ParVel,               1, NonFatal );
@@ -2117,9 +2117,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Int_Phase",          &RS.Opt__Int_Phase,          SID, TID, NonFatal, &RT.Opt__Int_Phase,           1, NonFatal );
    LoadField( "Opt__Res_Phase",          &RS.Opt__Res_Phase,          SID, TID, NonFatal, &RT.Opt__Res_Phase,           1, NonFatal );
    LoadField( "Opt__Ck_Phase_Defect",    &RS.Opt__Ck_Phase_Defect,    SID, TID, NonFatal, &RT.Opt__Ck_Phase_Defect,     1, NonFatal );
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    LoadField( "Opt__Hybrid_Match_Phase", &RS.Opt__Hybrid_Match_Phase, SID, TID, NonFatal, &RT.Opt__Hybrid_Match_Phase,  1, NonFatal );
-#  endif // # if ( ELBDM_SCHEME == HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
    LoadField( "Opt__Flu_IntScheme",      &RS.Opt__Flu_IntScheme,      SID, TID, NonFatal, &RT.Opt__Flu_IntScheme,       1, NonFatal );
    LoadField( "Opt__RefFlu_IntScheme",   &RS.Opt__RefFlu_IntScheme,   SID, TID, NonFatal, &RT.Opt__RefFlu_IntScheme,    1, NonFatal );

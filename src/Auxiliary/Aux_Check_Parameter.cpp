@@ -1024,9 +1024,19 @@ void Aux_Check_Parameter()
 // errors
 // ------------------------------
 
+#  if (  !defined( ELBDM_SCHEME ) ||  ( ELBDM_SCHEME != ELBDM_WAVE && ELBDM_SCHEME != ELBDM_HYBRID )  )
+#     error : ERROR : ELBDM_SCHEME not defined or unsupported in ELBDM !!
+#  endif // # if (  !defined( ELBDM_SCHEME ) ||  ( ELBDM_SCHEME != ELBDM_WAVE && ELBDM_SCHEME != ELBDM_HYBRID )  )
+
 #  if (  !defined( WAVE_SCHEME )  ||  ( WAVE_SCHEME != WAVE_FD && WAVE_SCHEME != WAVE_GRAMFE )  )
 #     error : ERROR : WAVE_SCHEME not defined or unsupported in ELBDM !!
-#  endif
+#  endif // #  if (  !defined( WAVE_SCHEME )  ||  ( WAVE_SCHEME != WAVE_FD && WAVE_SCHEME != WAVE_GRAMFE )  )
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  if (  !defined( HYBRID_SCHEME ) ||  ( HYBRID_SCHEME != HYBRID_UPWIND && HYBRID_SCHEME != HYBRID_FROMM && HYBRID_SCHEME != HYBRID_MUSCL )  )
+#     error : ERROR : HYBRID_SCHEME not defined or unsupported in ELBDM_HYBRID !!
+#  endif // #  if (  !defined( HYBRID_SCHEME ) ||  ( HYBRID_SCHEME != HYBRID_UPWIND && HYBRID_SCHEME != HYBRID_FROMM && HYBRID_SCHEME != HYBRID_MUSCL )  )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #  if ( NCOMP_FLUID != 3 )
 #     error : ERROR : NCOMP_FLUID != 3 in ELBDM !!
@@ -1086,7 +1096,7 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL must work with SUPPORT_FFTW !!\n" );
 #  endif
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 #  if ( FLU_GHOST_SIZE < HYB_GHOST_SIZE )
 #  error : ERROR : FLU_GHOST_SIZE needs to be bigger than HYB_GHOST_SIZE !!
@@ -1097,7 +1107,7 @@ void Aux_Check_Parameter()
 #  endif
 
    if ( ELBDM_BASE_SPECTRAL )
-      Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL incompatible with ELBDM_SCHEME == HYBRID !!\n" );
+      Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL incompatible with ELBDM_SCHEME == ELBDM_HYBRID !!\n" );
 
    if ( MAX_LEVEL > 0 && FLAG_BUFFER_SIZE != PATCH_SIZE )
       Aux_Error(  ERROR_INFO, "Hybrid scheme with AMR requires that the flag buffer size equal the patch size!!\n");
@@ -1110,7 +1120,7 @@ void Aux_Check_Parameter()
       Aux_Error(  ERROR_INFO, "Hybrid scheme requires the option OPT__LB_EXCHANGE_FATHER for load balancing !!\n");
 #  endif // # ifdef LOAD_BALANCE
 
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE && ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
 #  error : ERROR : CPU Gram-Fourier extension scheme requires SUPPORT_FFTW flag!
@@ -1215,7 +1225,7 @@ void Aux_Check_Parameter()
    if ( DT__PHASE > 1.0 )
       Aux_Message( stderr, "WARNING : DT__PHASE (%13.7e) is not within the normal range [0...1] !!\n", DT__PHASE );
 
-#  if ( ELBDM_SCHEME == HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( DT__HYBRID < 0.0  ||  DT__HYBRID > 0.49 )
       Aux_Message( stderr, "WARNING : DT__HYBRID (%14.7e) is not within the normal range [0...0.49] !!\n",
                    DT__HYBRID );
@@ -1223,7 +1233,7 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : DT__VELOCITY (%14.7e) is not within the normal range [0...3.5] !!\n",
                    DT__VELOCITY );
 
-#  endif // # if ( ELBDM_SCHEME == HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
    if ( OPT__CK_FLUX_ALLOCATE  &&  !OPT__FIXUP_FLUX )
       Aux_Message( stderr, "WARNING : %s is useless since %s is off !!\n",

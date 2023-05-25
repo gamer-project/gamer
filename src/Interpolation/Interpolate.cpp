@@ -120,10 +120,10 @@ void Interpolate( real CData[], const int CSize[3], const int CStart[3], const i
 #     endif
    }
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(HYBRID_SMOOTH_PHASE) )
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(HYBRID_SMOOTH_PHASE) )
       if ( (IntScheme != INT_CQUAD) && (IntScheme != INT_CQUAR) )
          Aux_Error( ERROR_INFO, "unsupported hybrid phase interpolation scheme (%d) !!\n", IntScheme );
-#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID && defined(HYBRID_SMOOTH_PHASE) )
+#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(HYBRID_SMOOTH_PHASE) )
 
 #  endif // #ifdef GAMER_DEBUG
 
