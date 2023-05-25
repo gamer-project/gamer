@@ -45,6 +45,9 @@
 #define MHM_RP       4
 #define CTU          5
 
+// wave schemes
+#define WAVE_FD      1
+#define WAVE_GRAMFE  2
 
 // data reconstruction schemes
 #define PLM          1
@@ -560,17 +563,71 @@
 #    endif // MHD
 #  endif // FLU_SCHEME
 
+
 #elif ( MODEL == ELBDM )   // ELBDM
-#  ifdef LAPLACIAN_4TH
-#     define FLU_GHOST_SIZE         6
-#  else
-#     define FLU_GHOST_SIZE         3
-#  endif
+
+#  if ( WAVE_SCHEME == WAVE_FD )
+#     ifdef LAPLACIAN_4TH
+#        define FLU_GHOST_SIZE         6
+#     else
+#        define FLU_GHOST_SIZE         3
+#     endif
+#  elif ( WAVE_SCHEME == WAVE_GRAMFE )
+// the accuracy of the local spectral method increases with larger FLU_GHOST_SIZE.
+// a minimum of FLU_GHOST_SIZE 6 has been found to be stable with the filter options alpha = 100 and beta = 32 * log(10)
+// larger ghost zones should increase stability and accuracy and allow for larger timesteps, but have not extensively tested
+// for smaller ghost zones, GRAMFE_ORDER should be decreased to values between 6 and 12 and the filter parameters should be adapted
+#        define FLU_GHOST_SIZE         8
+#  else  // # if ( WAVE_SCHEME == WAVE_FD ) ... else
+#     error : ERROR : unsupported WAVE_SCHEME !!
+#  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE ) ... # else
 
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
 
+
+// set parameters of gram extension scheme
+# if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
+//  number of evaluation points of Gram polynomials for computing FC(SVD) continuation
+#   define GRAMFE_GAMMA  150
+//  number of Fourier modes used in the FC(SVD) continuation
+//  roughly GRAMFE_G = GRAMFE_GAMMA/2
+#   define GRAMFE_G      63
+//  number of boundary points used for Gram polynomial space on boundary
+#   define GRAMFE_NDELTA 14
+//  maximum order of Gram polynomials on boundary
+//  for GRAMFE_ORDER < GRAMFE_NDELTA, the boundary information is projected
+//  onto a lower-dimensional polynomial space
+//  this increases the stability but decreases the accuracy of the algorithm
+#   define GRAMFE_ORDER  14
+
+//  a boundary of size GRAMFE_NDELTA can only support polynomials of degree up to GRAMFE_ORDER
+#   if ( GRAMFE_ORDER > GRAMFE_NDELTA )
+#       error : ERROR : Gram Fourier extension order must not be higher than NDELTA
+#   endif
+
+//  size of the extension region
+//  total size of extended region = GRAMFE_FLU_NXT = FLU_NXT + GRAMFE_ND
+//  default values in order for GRAMFE_FLU_NXT to have small prime factorisations
+#   if ( PATCH_SIZE == 8 )
+#     define GRAMFE_ND     32  // GRAMFE_FLU_NXT = 2^6
+#   elif ( PATCH_SIZE == 16 )
+#     define GRAMFE_ND     24  // GRAMFE_FLU_NXT = 2^3 * 3^2
+#   elif ( PATCH_SIZE == 32 )
+#     define GRAMFE_ND     28  // GRAMFE_FLU_NXT = 2^2 * 3^3
+#   elif ( PATCH_SIZE == 64 )
+#     define GRAMFE_ND     24  // GRAMFE_FLU_NXT = 2^3 * 3 * 7
+#   elif ( PATCH_SIZE == 128 )
+#     define GRAMFE_ND     28  // GRAMFE_FLU_NXT = 2^2 * 3 * 5^2
+#   else
+#     error : ERROR : UNSUPPORTED PATCH_SIZE FOR GRAM FOURIER EXTENSION SCHEME
+#   endif // PATCH_SIZE
+
+//  total size of extended region
+#   define GRAMFE_FLU_NXT ( FLU_NXT + GRAMFE_ND )
+
+# endif // # if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
 
 
 // self-gravity constants
@@ -761,6 +818,11 @@
 // in FB_AdvanceDt(), store the updated fluid data in a separate array to avoid data racing among different patch groups
 #if ( defined FEEDBACK  &&  FB_GHOST_SIZE > 0 )
 #  define FB_SEP_FLUOUT
+#endif
+
+// enable double precision for WAVE_GRAMFE scheme by default
+#if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
+#   define GRAMFE_FLOAT8
 #endif
 
 

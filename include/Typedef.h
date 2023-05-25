@@ -22,6 +22,11 @@ typedef double real;
 typedef float  real;
 #endif
 
+#ifdef GRAMFE_FLOAT8
+typedef double gramfe_float;
+#else
+typedef float  gramfe_float;
+#endif
 
 // short names for unsigned type
 typedef unsigned short     ushort;
