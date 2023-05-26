@@ -186,7 +186,7 @@ static uint get1D2(uint k, uint j, uint i, int XYZ) {
 
 
 GPU_DEVICE
-static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN  ][ CUBE(FLU_NXT) ],
                            real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
                            int NPatchGroup,
                            const gramfe_float dt, const gramfe_float _dh, const gramfe_float Eta,
