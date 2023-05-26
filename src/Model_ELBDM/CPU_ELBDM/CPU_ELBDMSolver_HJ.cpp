@@ -4,9 +4,9 @@
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 // convert to 1D index with ghost boundary
-# define to1D1(z,y,x) (  (z)                 * FLU_NXT * FLU_NXT +  (y)                 * FLU_NXT +  (x)                  )
+# define to1D1(z,y,x) (  (z)                 * HYB_NXT * HYB_NXT +  (y)                 * HYB_NXT +  (x)                  )
 // convert to 1D index without ghost boundary
-# define to1D2(z,y,x) ( ((z)-FLU_GHOST_SIZE) * PS2     * PS2     + ((y)-FLU_GHOST_SIZE) * PS2     + ((x)-FLU_GHOST_SIZE)  )
+# define to1D2(z,y,x) ( ((z)-HYB_GHOST_SIZE) * PS2     * PS2     + ((y)-HYB_GHOST_SIZE) * PS2     + ((x)-HYB_GHOST_SIZE)  )
 
 #ifdef __CUDACC__
 # define CGPU_FLU_BLOCK_SIZE_X FLU_BLOCK_SIZE_X
@@ -236,19 +236,19 @@ void CPU_ELBDMSolver_HamiltonJacobi(   real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NX
    __shared__ real s_In      [CGPU_FLU_BLOCK_SIZE_Y][N_TIME_LEVELS + 1][FLU_NIN][HYB_NXT];
    __shared__ real s_LogRho  [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT];        // 0.5 * log(rho)
    __shared__ real s_QP      [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT];        // the quantum pressure
-   __shared__ real s_Fm      [CGPU_FLU_BLOCK_SIZE_Y][2]                         [HYB_NXT];        // the fluxes for every thread block
+   __shared__ real s_Fm      [CGPU_FLU_BLOCK_SIZE_Y][2]                         [HYB_NXT];        // the density fluxes for every thread block
    __shared__ bool s_RK1     [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT];        // booleans indicating where to switch to first-order
 
 #  ifdef CONSERVE_MASS
-   __shared__ real s_Flux    [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT];
+   __shared__ real s_Flux    [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT];         // the average density fluxes
 #  else  // #  ifdef CONSERVE_MASS
               real (*s_Flux)                                                    [HYB_NXT] = NULL;  // useless if CONSERVE_MASS is off
 #  endif // #  ifdef CONSERVE_MASS ... # else
 
 #  ifdef HYBRID_SMOOTH_PHASE
-   __shared__ int   s_2PI    [CGPU_FLU_BLOCK_SIZE_Y][HYB_NXT];    // number of phase windings between neighbouring points
+   __shared__ int   s_2PI    [CGPU_FLU_BLOCK_SIZE_Y][HYB_NXT];                                     // number of phase windings between neighbouring points
 #  else // # ifdef HYBRID_SMOOTH_PHASE
-              int (*s_2PI)   [HYB_NXT] = NULL;
+              int (*s_2PI)   [HYB_NXT] = NULL;                                                     // useless if HYBRID_SMOOTH_PHASE is off
 #  endif // # ifdef HYBRID_SMOOTH_PHASE
 
 
