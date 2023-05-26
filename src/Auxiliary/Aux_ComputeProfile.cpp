@@ -42,7 +42,7 @@ extern void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, 
 //                TVarBitIdx  : Bitwise indices of target variables for computing the profiles
 //                              --> Supported indices (defined in Macro.h):
 //                                     HYDRO        : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELR, _PRES, _EINT
-//                                                 [, _DUAL, _POTE]
+//                                                    [, _DUAL, _POTE]
 //                                     ELBDM_WAVE   : _DENS, _REAL, _IMAG [, _POTE]
 //                                     ELBDM_HYBRID : _DENS [, _POTE]
 //                              --> For a passive scalar with an integer field index FieldIdx returned by AddField(),

@@ -243,7 +243,7 @@ void Aux_Check_Conservation( const char *comment )
                   for (int k=0; k<Size_Flu; k++)   {
                   for (int j=0; j<Size_Flu; j++)   {
                   for (int i=0; i<Size_Flu; i++)   {
-                     Flu_ELBDM[t][DENS][k ][j ][i] = log(Flu_ELBDM[t][DENS][k ][j ][i]);
+                     Flu_ELBDM[t][DENS][k ][j ][i] = LOG(Flu_ELBDM[t][DENS][k ][j ][i]);
                   }}} //k,j,i
                }
 #              endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )

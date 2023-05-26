@@ -91,7 +91,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #     if ( MODEL == ELBDM  && ELBDM_SCHEME == ELBDM_HYBRID )
 //    for fluid solver: check phase curvature using FlagTable_Interference[lv][2] as maximum allowed phase curvature
       } else {
-         FlagIntPhaseDiscont  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond + CUBE(PS1), FlagTable_Interference[lv][2]);
+         FlagIntPhaseDiscont  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond + CUBE(PS1), FlagTable_Interference[lv][2] );
 
          Flag |= FlagIntPhaseDiscont;
       }

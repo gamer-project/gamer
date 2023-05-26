@@ -381,7 +381,6 @@
 #elif ( MODEL == ELBDM )
 // field indices of fluid[] --> element of [0 ... NCOMP_FLUID-1]
 // --> must NOT modify their values
-
 #  define  DENS               0
 #  define  REAL               1
 #  define  IMAG               2
@@ -589,7 +588,6 @@
 
 
 #elif ( MODEL == ELBDM )   // ELBDM
-
 #  if ( WAVE_SCHEME == WAVE_FD )
 #     ifdef LAPLACIAN_4TH
 #        define FLU_GHOST_SIZE         6
