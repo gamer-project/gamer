@@ -47,9 +47,9 @@ static uint get1D2(uint k, uint j, uint i, int XYZ) {
 # define SGN( a )        (  ( (a) > (0) ) ? (1) : ( (a) < (0) ) ? (-1) : (0) )
 
 # ifdef HYBRID_SMOOTH_PHASE
-# define  TWOPI          (  real(2 * M_PI)  )
-# define _TWOPI          (  real(1.0) / TWOPI )
-# define UNWRAP( ref, wrap ) (  round(((ref) - (wrap)) * _TWOPI) )
+# define  TWOPI               (  real( 2 * M_PI )  )
+# define _TWOPI               (  real( 1.0 ) / TWOPI )
+# define UNWRAP( ref, wrap )  (  round(((ref) - (wrap)) * _TWOPI) )
 # define GRADIENT_RATIO(f, t) ( (f[t+1] - f[t  ]) / (f[t] - f[t-1] + (((f[t] - f[t-1]) == 0) ? 1e-8 : 0)))
 # endif // # ifdef HYBRID_SMOOTH_PHASE
 
@@ -80,7 +80,7 @@ static uint get1D2(uint k, uint j, uint i, int XYZ) {
 //Second-order MUSCL flux reconstruction
 # if ( HYBRID_SCHEME == HYBRID_MUSCL )
 
-// VAN ALBADA LIMITER
+// VAN ALBADA LIMITER ( works best, VAN LEER also good, smooth functions are better then SUPERBEE for instance )
 # define LIMITER(In) ( (SQR(In) + In)/((real)1. + SQR(In)) )
 // MC
 //# define LIMITER(r) MAX(0, MIN(MIN((1. + r) / 2., 2.), 2. * r))
@@ -460,9 +460,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 
             switch ( XYZ )
             {
-               case 0:  LoadGhost_dIdx1 = LoadGhost_di;                                break;
-               case 3:  LoadGhost_dIdx1 = __mul24( LoadGhost_di, HYB_NXT );            break;
-               case 6:  LoadGhost_dIdx1 = __mul24( LoadGhost_di, HYB_NXT*HYB_NXT );    break;
+               case 0:  LoadGhost_dIdx1 = LoadGhost_di;                      break;
+               case 3:  LoadGhost_dIdx1 = LoadGhost_di * HYB_NXT;            break;
+               case 6:  LoadGhost_dIdx1 = LoadGhost_di * HYB_NXT*HYB_NXT;    break;
             }
 
             LoadGhost_i = (int)i + LoadGhost_di;
@@ -568,7 +568,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 //             2.2 compute density logarithms
                CELL_LOOP(HYB_NXT, g1, g1)
                {
-                  s_LogRho[sj][si] = log(FMAX(s_In[sj][time_level][DENS][si], FluidMinDens));
+                  s_LogRho[sj][si] = LOG(FMAX(s_In[sj][time_level][DENS][si], FluidMinDens));
                }
 
 //             2.3 sync _LogRho
