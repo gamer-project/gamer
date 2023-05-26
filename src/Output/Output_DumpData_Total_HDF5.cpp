@@ -281,10 +281,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
    int NCompStore = NCOMP_TOTAL;
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && !defined(GAMER_DEBUG))
 // do not store STUB field when not debugging hybrid scheme
-   NCompStore -= 1 ;
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && !defined(GAMER_DEBUG))
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && !defined(GAMER_DEBUG) )
+   NCompStore = NCOMP_TOTAL - 1;
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && !defined(GAMER_DEBUG) )
 
    NFieldStored += NCompStore;
 
