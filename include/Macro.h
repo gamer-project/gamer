@@ -613,7 +613,7 @@
 #       define HYB_GHOST_SIZE         6
 #  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
-// set default parameters of gram extension scheme if not changed in Makefile
+// set default parameters of gram extension scheme
 # if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
 //  number of evaluation points of Gram polynomials for computing FC(SVD) continuation
 #   define GRAMFE_GAMMA  150
