@@ -40,7 +40,6 @@ class IPRContext
 {
 public:
 
-
    //-------------------------------------------------------------------------------------------------------
    // Function    :  IPRContext
    // Description :  Constructor of IPRContext, uses FFT and LU decomposition to compute a change-of-basis matrix from k-space to space of Gegenbauer polynomials
@@ -531,7 +530,7 @@ int counter = 0;
 //-------------------------------------------------------------------------------------------------------
 void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                     real FData[], const int FSize[3], const int FStart[3], const int NComp,
-                    const int UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder )
+                    const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder )
 {
 
 // interpolation-scheme-dependent parameters
@@ -545,10 +544,6 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
    double* Input, *Output;
    Input  = (double*) fftw_malloc( 1 * maxSize * sizeof(double) * 2);
    Output = (double*) fftw_malloc( 2 * maxSize * sizeof(double) * 2);
-
-    // Prepare data.
-    int n = 5000;
-    std::vector<double> x, xlr, y, ylr;
 
 // index stride of the coarse-grid input array
    const int Cdx    = 1;
@@ -576,59 +571,11 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
    real *TDataX = new real [ (CRange[2]+2*CGhost)*TdzX ];   // temporary array after x interpolation
    real *TDataY = new real [ (CRange[2]+2*CGhost)*TdzY ];   // temporary array after y interpolation
 
-
-
    int Idx_InL, Idx_InC, Idx_InR, Idx_Out;
-
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(SMOOTH_PHASE) )
-
-// index stride of the coarse-grid input array without ghost boundary (without ghost = woG)
-   const int CwoGdx = 1;
-   const int CwoGdy = CwoGdx*CRange[0];
-   const int CwoGdz = CwoGdy*CRange[1];
-
-   real *TData_GlobalPhase  = NULL;
-
-   if ( UnwrapPhase == 2)
-   {
-      TData_GlobalPhase = new real [ CRange[0] * CRange[1] * CRange[2] ];
-
-
-      for (int k=CStart[2];  k<CStart[2]+CRange[2];  k++)
-      for (int j=CStart[1];  j<CStart[1]+CRange[1];  j++)
-      for (int i=CStart[0];  i<CStart[0]+CRange[0];  i++)
-      {
-         Idx_InC      = k*Cdz + j*Cdy + i*Cdx;
-         Idx_Out      = (k - CStart[2]) * CwoGdz + (j - CStart[1]) * CwoGdy + (i - CStart[0]) *CwoGdx;
-         TData_GlobalPhase[Idx_Out] = CPtr[Idx_InC];
-      }
-
-   }
-#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(SMOOTH_PHASE) )
 
    for (int v=0; v<NComp; v++)
    {
-//    unwrap phase along x direction
-#     if ( MODEL == ELBDM )
-      if ( UnwrapPhase )
-      {
-         for (int k=CStart[2]-CGhost;    k<CStart[2]+CRange[2]+CGhost;  k++)
-         for (int j=CStart[1]-CGhost;    j<CStart[1]+CRange[1]+CGhost;  j++)
-         for (int i=CStart[0]-CGhost+1;  i<CStart[0]+CRange[0]+CGhost;  i++)
-         {
-            Idx_InC       = k*Cdz + j*Cdy + i*Cdx;
-            Idx_InL       = Idx_InC - Cdx;
-            //          only unwrap if we detect discontinuity
-#           if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(SMOOTH_PHASE) )
-            if ( Int_HasDiscontinuity(CPtr, Idx_InC, Cdx, i == CStart[0]+CRange[0]+CGhost - 1) )
-#           endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(SMOOTH_PHASE) )
-            CPtr[Idx_InC] = ELBDM_UnwrapPhase( CPtr[Idx_InL], CPtr[Idx_InC] );
-         }
-      }
-#     endif
-
-
-//    interpolation along x direction
+    //    interpolation along x direction
       for (int In_z=CStart[2]-CGhost, Out_z=0;  In_z<CStart[2]+CRange[2]+CGhost;  In_z++, Out_z++)
       for (int In_y=CStart[1]-CGhost, Out_y=0;  In_y<CStart[1]+CRange[1]+CGhost;  In_y++, Out_y++)
       {
@@ -650,26 +597,6 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
             TDataX[ Idx_Out + Tdx ] = Output[2 * In_x + 1];
          } // i
       } // k,j
-
-//    unwrap phase along y direction
-#     if ( MODEL == ELBDM )
-      if ( UnwrapPhase )
-      {
-         for (int k=0;  k<CRange[2]+2*CGhost;  k++)
-         for (int j=1;  j<CRange[1]+2*CGhost;  j++)
-         for (int i=0;  i<2*CRange[0];         i++)
-         {
-            Idx_InC         = k*TdzX + j*Tdy + i*Tdx;
-            Idx_InL         = Idx_InC - Tdy;
-//          only unwrap if we detect discontinuity
-#           if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(SMOOTH_PHASE) )
-            if ( Int_HasDiscontinuity(CPtr, Idx_InC, Tdy, j == CRange[1] + 2*CGhost - 1) )
-#           endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(SMOOTH_PHASE) )
-            TDataX[Idx_InC] = ELBDM_UnwrapPhase( TDataX[Idx_InL], TDataX[Idx_InC] );
-         }
-      }
-#     endif
-
 
 //    interpolation along y direction
       for (int InOut_z=0;             InOut_z<CRange[2]+2*CGhost;  InOut_z++)
@@ -694,26 +621,6 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
          } // j
       } // k,i
 
-//    unwrap phase along z direction
-#     if ( MODEL == ELBDM )
-      if ( UnwrapPhase )
-      {
-         for (int k=1;  k<CRange[2]+2*CGhost;  k++)
-         for (int j=0;  j<2*CRange[1];         j++)
-         for (int i=0;  i<2*CRange[0];         i++)
-         {
-            Idx_InC         = k*TdzY + j*Tdy + i*Tdx;
-            Idx_InL         = Idx_InC - TdzY;
-//          only unwrap if we detect discontinuity
-#           if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(SMOOTH_PHASE) )
-            if ( Int_HasDiscontinuity( CPtr, Idx_InC, TdzY, k == CRange[2] + 2*CGhost - 1) )
-#           endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(SMOOTH_PHASE) )
-            TDataY[Idx_InC] = ELBDM_UnwrapPhase( TDataY[Idx_InL], TDataY[Idx_InC] );
-         }
-      }
-#     endif
-
-
 //    interpolation along z direction
       for (int In_y=0,      Out_y=FStart[1];  In_y<2*CRange[1];       In_y++, Out_y++)
       for (int In_x=0,      Out_x=FStart[0];  In_x<2*CRange[0];       In_x++, Out_x++)
@@ -737,39 +644,9 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
          }
       } // k,j,i
 
-#     if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(SMOOTH_PHASE) )
-
-      if ( UnwrapPhase == 2)
-      {
-         real shift;
-
-         for (int In_z=0, Out_z=0;  In_z<CRange[2];  In_z++, Out_z+=2)
-         for (int In_y=0, Out_y=0;  In_y<CRange[1];  In_y++, Out_y+=2)
-         for (int In_x=0, Out_x=0;  In_x<CRange[0];  In_x++, Out_x+=2)
-         {
-            Idx_InC       =  In_z * CwoGdz +  In_y * CwoGdy +  In_x * CwoGdx;
-            Idx_Out       = Out_z *    Fdz + Out_y *    Fdy + Out_x *    Fdx;
-            shift         = real(2 * M_PI) * ELBDM_UnwrapWindingNumber( TData_GlobalPhase[Idx_InC], FPtr[Idx_Out] );
-
-            FPtr[Idx_Out             ]       += shift;
-            FPtr[Idx_Out + Fdx       ]       += shift;
-            FPtr[Idx_Out + Fdy       ]       += shift;
-            FPtr[Idx_Out + Fdz       ]       += shift;
-            FPtr[Idx_Out + Fdx + Fdy ]       += shift;
-            FPtr[Idx_Out + Fdx + Fdz ]       += shift;
-            FPtr[Idx_Out + Fdy + Fdz ]       += shift;
-            FPtr[Idx_Out + Fdx + Fdy + Fdz]  += shift;
-         }
-      }
-#     endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(SMOOTH_PHASE) )
-
       CPtr += CDisp;
       FPtr += FDisp;
    } // for (int v=0; v<NComp; v++)
-
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(SMOOTH_PHASE) )
-   if ( UnwrapPhase == 2) delete [] TData_GlobalPhase;
-#  endif // ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(SMOOTH_PHASE) )
 
    delete [] TDataX;
    delete [] TDataY;

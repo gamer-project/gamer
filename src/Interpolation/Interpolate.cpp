@@ -540,7 +540,6 @@ static IntSchemeFunc_t Int_SelectScheme( const IntScheme_t IntScheme )
       case INT_QUAD     :  return Int_Quadratic;   break;
       case INT_CQUAR    :  return Int_CQuartic;    break;
       case INT_QUAR     :  return Int_Quartic;     break;
-      case INT_QUAR     :  return Int_Quartic;     break;
 #     if ( defined(SUPPORT_FFTW) && defined(SUPPORT_GSL) )
       case INT_SPECTRAL :  return Int_Spectral;    break;
 #     endif // #if ( defined(SUPPORT_FFTW) && defined(SUPPORT_GSL) )

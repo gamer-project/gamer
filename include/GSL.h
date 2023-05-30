@@ -38,11 +38,6 @@ namespace gsl_double_precision {
     const auto  vector_complex_get               =  gsl_vector_complex_get;
     const auto  matrix_complex_set               =  gsl_matrix_complex_set;
     const auto  matrix_complex_get               =  gsl_matrix_complex_get;
-    const auto  complex_abs                      =  gsl_complex_abs;
-    const auto  complex_mul                      =  gsl_complex_mul;
-    const auto  complex_div                      =  gsl_complex_div;
-    const auto  complex_add                      =  gsl_complex_add;
-    const auto  complex_sub                      =  gsl_complex_sub;
     const auto  blas_cgemv                       =  gsl_blas_zgemv;
 };
 
@@ -73,11 +68,6 @@ namespace gsl_single_precision {
     const auto vector_complex_get               =  gsl_vector_complex_float_get;
     const auto matrix_complex_set               =  gsl_matrix_complex_float_set;
     const auto matrix_complex_get               =  gsl_matrix_complex_float_get;
-    const auto complex_abs                      =  gsl_complex_float_abs;
-    const auto complex_mul                      =  gsl_complex_float_mul;
-    const auto complex_div                      =  gsl_complex_float_div;
-    const auto complex_add                      =  gsl_complex_float_add;
-    const auto complex_sub                      =  gsl_complex_float_sub;
     const auto sf_gegenpoly_n                   =  gsl_sf_gegenpoly_n;
     const auto blas_cgemv                       =  gsl_blas_cgemv;
 };
