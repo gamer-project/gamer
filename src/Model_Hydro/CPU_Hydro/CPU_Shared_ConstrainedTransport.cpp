@@ -886,13 +886,22 @@ void MHD_UpdateMagnetic_Half( real fc[][NCOMP_LR],
 
    // 1. calculate the source terms of magnetic field at each faces
    real B_source[2][3];
+   real dE1, dE2;
    for ( int d=0; d<3; d++) 
    {
       const int TDir1 = (d+1)%3;    // transverse direction 1
       const int TDir2 = (d+2)%3;    // transverse direction 2
+      
+      dE1  = g_EC_Ele[TDir2][ idx_E + didx_E[TDir1] ] ;
+      dE1 -= g_EC_Ele[TDir2][ idx_E ] ;
 
-      B_source[fL][d] = ( g_EC_Ele[TDir2][ idx_E + didx_E[TDir1] ] - g_EC_Ele[TDir2][ idx_E ] ) * dt_dh2 -
-                        ( g_EC_Ele[TDir1][ idx_E + didx_E[TDir2] ] - g_EC_Ele[TDir1][ idx_E ] ) * dt_dh2 ;
+      dE2 = g_EC_Ele[TDir1][ idx_E + didx_E[TDir2] ] - g_EC_Ele[TDir1][ idx_E ] ;
+      
+      B_source[fL][d] = dE1 * dt_dh2 - dE2 * dt_dh2 ;
+
+      // TODO: The code should be in this version. 
+      // B_source[fL][d] = ( g_EC_Ele[TDir2][ idx_E + didx_E[TDir1] ] - g_EC_Ele[TDir2][ idx_E ] ) * dt_dh2 -
+      //                   ( g_EC_Ele[TDir1][ idx_E + didx_E[TDir2] ] - g_EC_Ele[TDir1][ idx_E ] ) * dt_dh2 ;
 
       B_source[fR][d] = ( g_EC_Ele[TDir2][ idx_E + didx_E[TDir1] + didx_E[d] ] - g_EC_Ele[TDir2][ idx_E + didx_E[d] ] ) * dt_dh2 - 
                         ( g_EC_Ele[TDir1][ idx_E + didx_E[TDir2] + didx_E[d] ] - g_EC_Ele[TDir1][ idx_E + didx_E[d] ] ) * dt_dh2 ;
