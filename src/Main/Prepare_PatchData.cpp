@@ -120,6 +120,7 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                                     INT_QUAD     : quadratic
 //                                     INT_CQUAR    : conservative quartic
 //                                     INT_QUAR     : quartic
+//                                     INT_SPECTRAL : spectral
 //                IntScheme_FC   : Interpolation scheme for the face-centered variables
 //                                 --> Supported schemes include
 //                                     INT_MINMOD1D : MinMod-1D
