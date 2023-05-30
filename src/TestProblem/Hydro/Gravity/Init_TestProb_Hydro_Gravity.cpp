@@ -13,10 +13,11 @@ const DensProf_t
    DENSPROF_NFW       = 1,
    DENSPROF_HERNQUIST = 2;
 
-static DensProf_t Gra_DensProf;  // density profile
-static double     Gra_Radius0;   // radius  parameter for the adopted density profile
-static double     Gra_Dens0;     // density parameter for the adopted density profile
-static int        Gra_NIterPerf; // number of iterations to measure the average performance of the Poisson solver (0->off)
+static DensProf_t Gra_DensProf;     // density profile
+static double     Gra_Radius0;      // radius  parameter for the adopted density profile
+static double     Gra_Dens0;        // density parameter for the adopted density profile
+static int        Gra_NIterPerf;    // number of iterations to measure the average performance of the Poisson solver (0->off)
+static bool       Gra_PerfExcRoot;  // exclude the root level when measuring the Poisson solver performance with Gra_NIterPerf
 // =======================================================================================
 
 
@@ -123,6 +124,7 @@ void SetParameter()
    ReadPara->Add( "Gra_Radius0",       &Gra_Radius0,           1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "Gra_Dens0",         &Gra_Dens0,             1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "Gra_NIterPerf",     &Gra_NIterPerf,         0,             0,                NoMax_int         );
+   ReadPara->Add( "Gra_PerfExcRoot",   &Gra_PerfExcRoot,       false,         Useless_bool,     Useless_bool      );
 
    ReadPara->Read( FileName );
 
@@ -166,11 +168,12 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID = %d\n",     TESTPROB_ID   );
-      Aux_Message( stdout, "  Gra_DensProf    = %d\n",     Gra_DensProf  );
-      Aux_Message( stdout, "  Gra_Radius0     = %13.7e\n", Gra_Radius0   );
-      Aux_Message( stdout, "  Gra_Dens0       = %13.7e\n", Gra_Dens0     );
-      Aux_Message( stdout, "  Gra_NIterPerf   = %d\n",     Gra_NIterPerf );
+      Aux_Message( stdout, "  test problem ID = %d\n",     TESTPROB_ID     );
+      Aux_Message( stdout, "  Gra_DensProf    = %d\n",     Gra_DensProf    );
+      Aux_Message( stdout, "  Gra_Radius0     = %13.7e\n", Gra_Radius0     );
+      Aux_Message( stdout, "  Gra_Dens0       = %13.7e\n", Gra_Dens0       );
+      Aux_Message( stdout, "  Gra_NIterPerf   = %d\n",     Gra_NIterPerf   );
+      Aux_Message( stdout, "  Gra_PerfExcRoot = %d\n",     Gra_PerfExcRoot );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -336,15 +339,17 @@ void Aux_Record_Gravity()
 
 // measure the total elapsed time of invoking the Poisson solver Gra_NIterPerf times
    const double Poi_Coeff = 4.0*M_PI*NEWTON_G;
+   const int    MinLv     = ( Gra_PerfExcRoot ) ? 1 : 0;
    Timer_t Timer_PoiPerf;
 
+// start from lv=0 even when enabling Gra_PerfExcRoot to provide correct boundary conditions for higher levels
    for (int lv=0; lv<NLEVEL; lv++)
    {
       Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _DENS, _NONE,
                          Rho_ParaBuf, USELB_YES );
 
 //    exclude the time for exchanging MPI buffer data
-      Timer_PoiPerf.Start();
+      if ( lv >= MinLv )   Timer_PoiPerf.Start();
       for (int t=0; t<Gra_NIterPerf; t++)
       {
          if ( lv == 0 )
@@ -354,7 +359,7 @@ void Aux_Record_Gravity()
             InvokeSolver( POISSON_SOLVER, lv, Time[lv], NULL_REAL, NULL_REAL, Poi_Coeff,
                           NULL_INT, NULL_INT, amr->PotSg[lv], false, false );
       }
-      Timer_PoiPerf.Stop();
+      if ( lv >= MinLv )   Timer_PoiPerf.Stop();
 
       if ( lv > 0 )
       Buf_GetBufferData( lv, NULL_INT, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, _NONE,
@@ -379,7 +384,7 @@ void Aux_Record_Gravity()
 //    performance
       const double TimePoi = Timer_PoiPerf.GetValue();
       long NCell = 0;
-      for (int lv=0; lv<NLEVEL; lv++)  NCell += (long)NPatchTotal[lv]*CUBE( PS1 );
+      for (int lv=MinLv; lv<NLEVEL; lv++)  NCell += (long)NPatchTotal[lv]*CUBE( PS1 );
 
       FILE *File = fopen( FileName, "a" );
       fprintf( File, "%7d  %7d  %10ld  %7d  %13.7e  %13.7e\n",
