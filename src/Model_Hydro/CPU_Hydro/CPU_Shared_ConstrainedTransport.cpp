@@ -701,6 +701,227 @@ void MHD_HalfStepPrimitive( const real g_Flu_In[][ CUBE(FLU_NXT) ],
 
 
 
+# if ( FLU_SCHEME == MHM )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MHD_ComputeElectric_Half
+// Description :  Compute the edge-centered line-averaged electric field E=B x V (electromotive force; EMF)
+//                for the constrained-transport algorithm
+//
+// Note        :  1. Ref : TBF
+//                3. g_EC_Ele [] has the size of N_EC_ELE^3  but is accessed with a stride "NEle"
+//                   --> But there are only NEle-1 useful elements along x/y/z for Ex/Ey/Ez, respectively
+//                   g_FC_Flux[] has the size of N_FC_FLUX^3 but is accessed with a stride "NFlux"
+//                   g_PriVar [] has the size of FLU_NXT^3   but is accessed with a stride "NPri"
+//                4. EMF-x/y/z( i, j, k ) are defined at the lower-left edge center of
+//                   g_PriVar( i+OffsetPri+1, j+OffsetPri+1, k+OffsetPri+1 )
+//                5. Store the electric field at the patch boundaries for correcting the coarse-grid B field
+//                   --> Option "DumpIntEle"
+//                   --> Structure of g_IntEle[] = [face index][E field index][cell index]
+//                          Face index: [0/1/2] = left/middle/right x faces
+//                                      [3/4/5] = left/middle/right y faces
+//                                      [6/7/8] = left/middle/right z faces
+//                          E field index on x faces: [0/1] = Ey/Ez
+//                                           y faces: [0/1] = Ez/Ex
+//                                           z faces: [0/1] = Ex/Ey
+//                          Cell index on x faces: [Nz][Ny] (= [PS2+1][PS2] for Ey and [PS2][PS2+1] for Ez)
+//                                     on y faces: [Nx][Nz] (= [PS2+1][PS2] for Ez and [PS2][PS2+1] for Ex)
+//                                     on z faces: [Ny][Nx] (= [PS2+1][PS2] for Ex and [PS2][PS2+1] for Ey)
+//
+// Parameter   :  g_EC_Ele        : Array to store the output electric field
+//                g_ConVar        : Array storing the input cell-centered conserved variables
+//                g_FC_B          : Array storing the face-centered magnetic field
+//                NEle            : Stride for accessing g_EC_Ele[]
+//                NCon            : Stride for accessing g_ConVar[]
+//                OffsetCon       : Offset for accessing g_ConVar[]
+//                dt              : Time interval to advance solution
+//                dh              : Cell size
+//
+// Return      :  g_EC_Ele[]
+//------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+void MHD_ComputeElectric_Half(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
+                               const real g_ConVar[][ CUBE(FLU_NXT) ],
+                               const real g_FC_B  [][SQR(FLU_NXT)*FLU_NXT_P1],
+                               const int NEle, const int NCon, const int OffsetCon )
+{
+#  ifdef GAMER_DEBUG
+   if ( NCon != FLU_NXT ) 
+      printf("ERROR: NCon != FLU_NXT (NCon: %d, FLU_NXT: %d)\n", NCon, FLU_NXT);
+   if ( NEle != N_HF_ELE ) 
+      printf("ERROR: NEle != N_HF_ELE (NEle: %d, N_HF_ELE: %d)\n", NEle, N_HF_ELE);
+#  endif // # ifdef GAMER_DEBUG
+
+   const int  NEleM1       = NEle - 1;
+   const int  didx_con [3] = { 1, NCon,  SQR(NCon)  };
+
+   for (int d=0; d<3; d++)
+   {
+      const int TDir1 = (d+1)%3;             // transverse direction 1
+      const int TDir2 = (d+2)%3;             // transverse direction 2
+      const int TV1   = TDir1 + 1;           // velocity component along the transverse direction 1
+      const int TV2   = TDir2 + 1;           // velocity component along the transverse direction 2
+      const int TB1   = TDir1 + MAG_OFFSET;  // B field  component along the transverse direction 1
+      const int TB2   = TDir2 + MAG_OFFSET;  // B field  component along the transverse direction 2
+
+      int idx_ele_e[2];
+      int sizeB_i, sizeB_j, sizeB_k; 
+
+      switch ( d )
+      {
+         case 0 : idx_ele_e [0] = NEleM1;  idx_ele_e [1] = NEle;
+                  sizeB_i = FLU_NXT_P1; sizeB_j = FLU_NXT; sizeB_k = FLU_NXT;
+                  break;
+
+         case 1 : idx_ele_e [0] = NEle;    idx_ele_e [1] = NEleM1;
+                  sizeB_i = FLU_NXT; sizeB_j = FLU_NXT_P1; sizeB_k = FLU_NXT;
+                  break;
+
+         case 2 : idx_ele_e [0] = NEle;    idx_ele_e [1] = NEle;
+                  sizeB_i = FLU_NXT; sizeB_j = FLU_NXT; sizeB_k = FLU_NXT_P1;
+                  break;
+      }
+
+      const int size_ij = idx_ele_e[0]*idx_ele_e[1];
+      CGPU_LOOP( idx, NEleM1*SQR(NEle)  )
+      {
+         const int i_ele    = idx % idx_ele_e[0];
+         const int j_ele    = idx % size_ij / idx_ele_e[0];
+         const int k_ele    = idx / size_ij;
+         const int idx_ele  = IDX321( i_ele, j_ele, k_ele, NEle, NEle );
+         
+         const int i_con    = i_ele + OffsetCon;
+         const int j_con    = j_ele + OffsetCon;
+         const int k_con    = k_ele + OffsetCon;
+         const int idx_con  = IDX321( i_con, j_con, k_con, NCon, NCon );
+         
+         const int i_B1    = i_con;
+         const int j_B1    = j_con;
+         const int k_B1    = k_con;
+         const int idx_B1  = IDX321( i_B1, j_B1, k_B1, sizeB_k, sizeB_i );
+         
+         const int i_B2    = i_B1;
+         const int j_B2    = j_B1;
+         const int k_B2    = k_B1;
+         const int idx_B2  = IDX321( i_B2, j_B2, k_B2, sizeB_j, sizeB_k );
+      
+         const int didx_B1 [3] = { 1, sizeB_k, sizeB_k*sizeB_i };
+         const int didx_B2 [3] = { 1, sizeB_j, sizeB_j*sizeB_k };
+
+         real V1, V2, B1, B2;
+         
+         // get the veolcity average
+         V1 = (real)0.25 * ( 
+              g_ConVar[TV1][ idx_con                                     ] / g_ConVar[DENS][ idx_con                                     ] + 
+              g_ConVar[TV1][ idx_con - didx_con[TDir1]                   ] / g_ConVar[DENS][ idx_con - didx_con[TDir1]                   ] +
+              g_ConVar[TV1][ idx_con - didx_con[TDir2]                   ] / g_ConVar[DENS][ idx_con - didx_con[TDir2]                   ] + 
+              g_ConVar[TV1][ idx_con - didx_con[TDir1] - didx_con[TDir2] ] / g_ConVar[DENS][ idx_con - didx_con[TDir1] - didx_con[TDir2] ] );
+         V2 = (real)0.25 * ( 
+              g_ConVar[TV2][ idx_con                                     ] / g_ConVar[DENS][ idx_con                                     ] + 
+              g_ConVar[TV2][ idx_con - didx_con[TDir2]                   ] / g_ConVar[DENS][ idx_con - didx_con[TDir2]                   ] + 
+              g_ConVar[TV2][ idx_con - didx_con[TDir1]                   ] / g_ConVar[DENS][ idx_con - didx_con[TDir1]                   ] + 
+              g_ConVar[TV2][ idx_con - didx_con[TDir2] - didx_con[TDir1] ] / g_ConVar[DENS][ idx_con - didx_con[TDir2] - didx_con[TDir1] ] );
+         
+         // get the magnetic field average
+         B1 = (real)0.5 * ( g_FC_B[TDir1][ idx_B1 - didx_B1[TDir2] ] + g_FC_B[TDir1][ idx_B1 ] );
+         B2 = (real)0.5 * ( g_FC_B[TDir2][ idx_B2 - didx_B2[TDir1] ] + g_FC_B[TDir2][ idx_B2 ] );
+
+//       store the electric field of all cells in g_EC_Ele[]
+         g_EC_Ele[d][idx_ele] = V1*B2 - V2*B1;
+         
+      } // CGPU_LOOP( idx_ele, idx_ele_e[0]*idx_ele_e[1]*idx_ele_e[2] )
+   } // for ( int d=0; d<3; d++)
+
+
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
+
+} // FUNCTION : MHD_ComputeElectric_Half
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MHD_UpdataMagnetic_Half
+// Description :  Update magnetic field with the constrained transport algorithm
+//
+// Note        :  1. 
+//                2. g_FC_Bx/y/z_Out[] are accessed with a stride "NOut"
+//                   g_FC_B_In[] has the size of FLU_NXT_P1^3 and is also accessed with the same stride
+//                   g_EC_Ele[] has the size of N_EC_ELE^3 but is accessed with a stride "NEle"
+//
+// Parameter   :  g_FC_B_Out  : Array to store the output face-centered B field
+//                              --> Separate into three arrays since the array dimension is different
+//                                  during the half- and full-step updates
+//                g_FC_B_In   : Array storing the input face-centered B field
+//                g_EC_Ele    : Array storing the input edge-centered electric field
+//                dt          : Time interval to advance solution
+//                dh          : Cell size
+//                NOut        : Stride for accessing g_FC_Bx/y/z_Out[]
+//                NEle        : Stride for accessing g_EC_Ele[]
+//                Offset_B_In : Offset for accessing g_FC_B_In[]
+//
+// Return      :  fc[][NCOMP_LR]
+//------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+void MHD_UpdateMagnetic_Half( real fc[][NCOMP_LR],
+                              const real g_FC_B[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                              const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
+                              const real dt, const real dh,
+                              const int idx_i, const int idx_j, const int idx_k,
+                              const int NCon, const int NGhost, const int NEle )
+{
+
+   const real dt_dh2      = (real)0.5 * dt/dh;
+   const int NEleM1      = NEle - 1;
+   const int fL = 0, fR = 1;
+  
+   // TODO: This was the original index calculation. Since the compiler issue, we not calculate the index inside function, but the issue still hold.
+   // const int size_ij = SQR( NCon );
+   // const int idx_i   = idx_cc % NCon;
+   // const int idx_j   = idx_cc % size_ij / NCon;
+   // const int idx_k   = idx_cc / size_ij;
+
+   const int idx_E = IDX321( idx_i-NGhost, idx_j-NGhost, idx_k-NGhost, NEle, NEle );
+   const int didx_E [3] = { 1, NEle, SQR(NEle) };
+
+   // 1. calculate the source terms of magnetic field at each faces
+   real B_source[2][3];
+   for ( int d=0; d<3; d++) 
+   {
+      const int TDir1 = (d+1)%3;    // transverse direction 1
+      const int TDir2 = (d+2)%3;    // transverse direction 2
+
+      B_source[fL][d] = ( g_EC_Ele[TDir2][ idx_E + didx_E[TDir1] ] - g_EC_Ele[TDir2][ idx_E ] ) * dt_dh2 -
+                        ( g_EC_Ele[TDir1][ idx_E + didx_E[TDir2] ] - g_EC_Ele[TDir1][ idx_E ] ) * dt_dh2 ;
+
+      B_source[fR][d] = ( g_EC_Ele[TDir2][ idx_E + didx_E[TDir1] + didx_E[d] ] - g_EC_Ele[TDir2][ idx_E + didx_E[d] ] ) * dt_dh2 - 
+                        ( g_EC_Ele[TDir1][ idx_E + didx_E[TDir2] + didx_E[d] ] - g_EC_Ele[TDir1][ idx_E + didx_E[d] ] ) * dt_dh2 ;
+   }
+
+   for (int d=0; d<3; d++)
+   {
+      const int faceL = d*2;
+      const int faceR = faceL+1;
+      const int TDir1 = (d+1)%3;    // transverse direction 1
+      const int TDir2 = (d+2)%3;    // transverse direction 2
+      
+      // 2-a. update the normal magnetic field
+      fc[faceL][MAG_OFFSET+d] += B_source[fL][d];
+      fc[faceR][MAG_OFFSET+d] += B_source[fR][d];
+
+      // 2-b. update the transverse magnetic field
+      fc[faceL][MAG_OFFSET+TDir1] += (real)0.5 * ( B_source[fL][TDir1] + B_source[fR][TDir1] );
+      fc[faceR][MAG_OFFSET+TDir1] += (real)0.5 * ( B_source[fL][TDir1] + B_source[fR][TDir1] );
+      fc[faceL][MAG_OFFSET+TDir2] += (real)0.5 * ( B_source[fL][TDir2] + B_source[fR][TDir2] );
+      fc[faceR][MAG_OFFSET+TDir2] += (real)0.5 * ( B_source[fL][TDir2] + B_source[fR][TDir2] );
+
+   } // for (int d=0; d<3; d++)
+
+} // FUNCTION : MHD_UpdateMagnetic_Half
+# endif // # if ( FLU_SCHEME == MHM )
+
+
+
 #endif // #if ( MODEL == HYDRO  &&  defined MHD )
 
 

@@ -40,6 +40,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                      real g_PriVar   [][ CUBE(FLU_NXT) ],
                                      real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                                      real g_Slope_PPM[][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ],
+                                     real g_EC_Ele   [][ CUBE(N_EC_ELE) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
                                const real MinDens, const real MinPres, const real MinEint,
@@ -96,6 +97,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
                     const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                     const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut );
+#endif // #if ( FLU_SCHEME == MHM_RP )
 #ifdef MHD
 void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                           const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
@@ -111,7 +113,6 @@ void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out
                          const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                          const real dt, const real dh, const int NOut, const int NEle, const int Offset_B_In );
 #endif // #ifdef MHD
-#endif // #if ( FLU_SCHEME == MHM_RP )
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -337,6 +338,15 @@ void CPU_FluidSolver_MHM(
 #     endif
 #     endif // if ( FLU_SCHEME == MHM_RP )
 
+#     if ( FLU_SCHEME == MHM && defined MHD )
+      // NOTE: The array size of half step is over-estimated, we only need CUBE(N_FC_VAR).
+      //       Since I don't want to change the original MHM_RP full step MHD_ComputeElectric, 
+      //       I used the same array size as the half step variables of MHM_RP.
+      real (*const g_PriVar_Half_1PG )[ CUBE(FLU_NXT)  ] = g_PriVar_1PG;
+      // TODO: This is the same as MHM_RP, I should declear once only.
+      real (*const g_EC_Ele_1PG      )[ CUBE(N_EC_ELE) ] = g_EC_Ele[array_idx];
+#     endif // if ( FLU_SCHEME == MHM && defined MHD )
+
 
 //    loop over all patch groups
 //    --> CPU/GPU solver: use different (OpenMP threads) / (CUDA thread blocks)
@@ -432,7 +442,7 @@ void CPU_FluidSolver_MHM(
 //          1-a-5. evaluate the face-centered values by data reconstruction
 //                 --> note that g_PriVar_Half_1PG[] returned by Hydro_RiemannPredict() stores the primitive variables
             Hydro_DataReconstruction( NULL, g_FC_Mag_Half_1PG, g_PriVar_Half_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
-                                      Con2Pri_No, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
+                                      NULL, Con2Pri_No, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
                                       MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
                                       JeansMinPres, JeansMinPres_Coeff, &EoS );
 
@@ -459,10 +469,17 @@ void CPU_FluidSolver_MHM(
 
 
 //          evaluate the face-centered values by data reconstruction
-            Hydro_DataReconstruction( g_Flu_Array_In[P], NULL, g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
-                                      Con2Pri_Yes, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
+#           ifdef MHD
+            Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_Half_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
+                                      g_EC_Ele_1PG, Con2Pri_Yes, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
                                       MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
                                       JeansMinPres, JeansMinPres_Coeff, &EoS );
+#           else
+            Hydro_DataReconstruction( g_Flu_Array_In[P], NULL, g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
+                                      NULL, Con2Pri_Yes, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
+                                      MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
+                                      JeansMinPres, JeansMinPres_Coeff, &EoS );
+#           endif
 
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
 
@@ -486,10 +503,17 @@ void CPU_FluidSolver_MHM(
 //             --> must update B field before Hydro_FullStepUpdate() since the latter requires
 //                 the updated magnetic energy when adopting the dual-energy formalism
 #           ifdef MHD
+#           if ( FLU_SCHEME == MHM )
+            MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_Half_1PG, N_FL_ELE, N_FL_FLUX,
+                                 N_HF_VAR, 0, dt, dh, StoreElectric, g_Ele_Array[P],
+                                 CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P], Time,
+                                 UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray );
+#           else
             MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_Half_1PG, N_FL_ELE, N_FL_FLUX,
                                  N_HF_VAR, LR_GHOST_SIZE, dt, dh, StoreElectric, g_Ele_Array[P],
                                  CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P], Time,
                                  UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray );
+#           endif
 
             MHD_UpdateMagnetic( g_Mag_Array_Out[P][0], g_Mag_Array_Out[P][1], g_Mag_Array_Out[P][2],
                                 g_Mag_Array_In[P], g_EC_Ele_1PG, dt, dh, PS2, N_FL_ELE, FLU_GHOST_SIZE );

@@ -76,8 +76,17 @@
 #  if   ( FLU_SCHEME == MHM )
 
 #     define N_FC_VAR            ( PS2 + 2 )
+#    ifdef MHD
+#     define N_HF_VAR            ( N_FC_VAR )
+#     define N_FL_FLUX           ( PS2 + 2 )
+// Note: We dont have half flux actually, this is only for calculating the electric field in half step
+#     define N_HF_FLUX           ( N_FL_FLUX+2 ) 
+#    else
 #     define N_FL_FLUX           ( PS2 + 1 )
-#     define N_FC_FLUX           ( N_FL_FLUX )
+// Note: We dont have half flux actually, this is only for avoiding the compiling problem
+#     define N_HF_FLUX           ( N_FL_FLUX ) 
+#    endif
+#     define N_FC_FLUX           ( N_HF_FLUX )
 
 #  elif ( FLU_SCHEME == MHM_RP )
 
@@ -111,7 +120,7 @@
 #  define N_SLOPE_PPM            ( N_FC_VAR + 2 )
 
 #  ifdef MHD
-#   define N_HF_ELE              ( N_FC_FLUX - 1 )
+#   define N_HF_ELE              ( N_HF_FLUX - 1 ) // TODO: can I change to this? Not varified.
 #   define N_FL_ELE              ( N_FL_FLUX - 1 )
 #   define N_EC_ELE              ( N_FC_FLUX - 1 )
 #  else
