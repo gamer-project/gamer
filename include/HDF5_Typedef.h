@@ -636,6 +636,9 @@ struct InputPara_t
 #  ifdef MHD
    int    Opt__InitBFieldByFile;
 #  endif
+#  ifdef SUPPORT_FFTW
+   int    Opt__FFTW_Startup;
+#  endif
 
 // interpolation schemes
    int    Opt__Int_Time;
