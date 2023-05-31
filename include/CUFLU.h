@@ -57,6 +57,7 @@
 #  endif // GPU_ARCH
 #endif // GPU
 
+
 // #################################
 // ## macros for different models ##
 // #################################
@@ -474,6 +475,7 @@
 #        error : UNKNOWN GPU_ARCH !!
 #        endif
 #  endif
+
 
 // set number of threads and blocks used in GRAMFE GPU scheme
 # if ( defined(__CUDACC__) && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
