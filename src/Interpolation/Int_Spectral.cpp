@@ -11,500 +11,397 @@
 
 // STL includes
 #include <unordered_map>
+#include <array>
+#include <memory>
+
+
+#define GFEI_FFTW_FLOAT8
+#define GFEI_GSL_FLOAT8
+
+// Accuracy for FFT in Gram-FE extension interpolation (GFEI)
+#if ( SUPPORT_FFTW == FFTW3 )
+#ifdef GFEI_FFTW_FLOAT8
+namespace gfei_fftw = fftw3_double_precision;
+#else // #ifdef GRAMFE_FLOAT8
+namespace gfei_fftw = fftw3_single_precision;
+#endif // #ifdef GRAMFE_FLOAT8 ... # else
+#else // #if ( SUPPORT_FFTW == FFTW3 )
+namespace gfei_fftw = fftw2;
+#endif // #if ( SUPPORT_FFTW == FFTW3 ) ... #else
+
+
+// Accuracy for matrix multiplication in Gram-FE extension interpolation (GFEI)
+#ifdef GFEI_GSL_FLOAT8
+namespace gfei_gsl  = gsl_double_precision;
+#else
+namespace gfei_gsl  = gsl_single_precision;
+#endif
+
+// Accuracy for matrix multiplication in precomputed interpolation (PI)
+#ifdef FLOAT8
+namespace pi_gsl  = gsl_double_precision;
+#else
+namespace pi_gsl  = gsl_single_precision;
+#endif
+
+// Base class for interpolation context
+struct InterpolationContext {
+    virtual void InterpolateReal(const real* input, real *output, size_t N, size_t ghostBoundary) = 0;
+};
 
 //-------------------------------------------------------------------------------------------------------
-// Structure   :  IPRContext
-// Description :  Data structure of the IPR implementation
+// Structure   :  GramFEInterpolationContext
+// Description :  Data structure of the Gram-Fourier extension interpolation implementation
 //
 // Data Member :
-//                changeOfBasisMatrix             : Complex  NxN array
-//                interpolationPolynomials        : Complex 2NxN array
-//                interpolationMatrix             : Complex 2NxN array
-//                fftwPlan                        : FFTW plan
-//                p                               : GSL permutation
+//             :  nInput                          : Size of input array
+//             :  nGhostBoundary                  : Size of ghost boundary
+//             :  nInterpolated                   : Size of interpolated input data
+//             :  nExtension                      : Size of extension region
+//             :  nExtended                       : Size of domain after extension
+//             :  nExtendedPadded                 : Complex size of domain after extension with padding for real FFT
+//             :  nDelta                          : Size of boundary domain
+//             :  inputExtended                   : Array to store input array after extension
+//             :  outputL                         : Array to store left interpolated values
+//             :  outputR                         : Array to store right interpolated values
+//             :  translationCoeffL               : Array to store left translation coefficients
+//             :  translationCoeffR               : Array to store right translation coefficients
+//             :  extensionMatrix                 : Array to store Gram-Fourier table
+//             :  r2cPlan, c2rPlan                : Real-To-Complex and Complex-To-Real FFT plans
 //
-// Method      :  IPRContext                      : Constructor
-//               ~IPRContext                      : Destructor
+// Method      :  GramFEInterpolationContext      : Constructor
+//               ~GramFEInterpolationContext      : Destructor
+//                InterpolateReal                 : Interpolate real function of
+//                ComputeLUDecomposition          : Compute LU decomposition with pivoting
+//                ComputeChangeOfBasisMatrix      : Change from k-space to Gegenbauer space
+//                ComputeInterpolationPolynomials : Evaluate Gegenbauer polynomials at interpolation points
+//                ComputeInterpolationMatrix      : Interpolate values given k-space values
+//                GetChangeOfBasisMatrix          : Get change-of-basis matrix
+//                GetInterpolationMatrix          : Get interpolation matrix
+//                GetC2CPlan                      : Get complex forward FFT plan of size nInput
+//                GetR2CPlan                      : Get real-to-complex FFT plan of size nInput
+//                GetPermutation                  : Get permutation of LU decomposition
+//-------------------------------------------------------------------------------------------------------
+class GramFEInterpolationContext  : public InterpolationContext {
+//  data members
+public:
+    const size_t nInput, nGhostBoundary, nInterpolated, nExtension, nExtended, nExtendedPadded, nDelta;
+    gfei_fftw::fft_real* inputExtended;
+    gfei_fftw::fft_real* outputL;
+    gfei_fftw::fft_real* outputR;
+    std::array<gfei_fftw::fft_real> boundary;
+
+private:
+    std::array<gfei_fftw::std_complex> translationCoeffL, translationCoeffR;
+    std::array<gfei_fftw::fft_real>    extensionMatrix;
+    gfei_fftw::real_plan                r2cPlan, c2rPlan;
+
+public:
+
+   //-------------------------------------------------------------------------------------------------------
+   // Function    :  GramFEInterpolationContext
+   // Description :  Constructor of GramFEInterpolationContext, sets up FFTs and translation arrays in k-space for fast interpolation, load Gram-Fourier extension table from disk
+   //
+   // Parameter   :  nInput        : Size of input function to be interpolated
+   //                nGhostBoundary : Size of ghost boundary
+   //                nExtension    : Size of extension domain
+   //                nDelta        : Size of boundary domain used for Gram-Fourier extension
+   //
+   //-------------------------------------------------------------------------------------------------------
+    GramFEInterpolationContext(size_t nInput, size_t nGhostBoundary, size_t nExtension, size_t nDelta) :
+        nInput              (nInput),
+        nGhostBoundary      (nGhostBoundary),
+        nInterpolated       (2 * (nInput - 2 * nGhostBoundary)),
+        nExtension          (nExtension),
+        nExtended           (nInput + nExtension),
+        nExtendedPadded     (nExtended / 2 + 1),
+        nDelta              (nDelta),
+        inputExtended       (NULL),
+        outputL             (NULL),
+        outputR             (NULL),
+        boundary            (2*nDelta),
+        translationCoeffL   (nExtendedPadded),
+        translationCoeffR   (nExtendedPadded),
+        extensionMatrix     (nExtension * 2 * nDelta)
+        {
+
+//      allocate memory for planning FFTs
+        gfei_fftw::fft_complex* planner_array = (gfei_fftw::fft_complex*) gfei_fftw::fft_malloc(nExtended * sizeof(gfei_fftw::fft_complex));
+
+//      plan FFT of function to be interpolated
+        r2cPlan  = gfei_fftw_create_1d_r2c_plan(nExtended, planner_array);
+        c2rPlan  = gfei_fftw_create_1d_c2r_plan(nExtended, planner_array);
+
+//      free memory
+        gfei_fftw::fft_free(planner_array);
+
+//      set up translation arrays
+        const gfei_fftw::fft_real Norm = 1.0 / ( (gfei_fftw::fft_real) nExtended );
+        gfei_fftw::fft_real  K;
+        for (int i = 0; i < nExtendedPadded; i++)
+        {
+            K                       = 2.0 * M_PI / nExtended * i;
+            translationCoeffL.at(i) = gfei_fftw::std_complex({cos(-K/4.0), sin(-K/4.0)}) * Norm;
+            translationCoeffR.at(i) = gfei_fftw::std_complex({cos(+K/4.0), sin(+K/4.0)}) * Norm;
+        }
+
+//      load Gram-Fourier extension tables from files
+        char filename[100];
+        sprintf(filename, "gram/%ld_%ld_%d_%d.bin", nExtension, nDelta, 150, 63);
+        std::array<double> doubleExtensionMatrix(nExtension * 2 * nDelta);
+        ReadBinaryFile(filename, doubleExtensionMatrix.data(), 2 * nDelta * nExtension);
+
+//      convert extension table to precision of DFT
+        for (size_t i = 0; i < nExtension; ++i) {
+            for (size_t j = 0; j < 2 * nDelta; ++j) {
+                extensionMatrix.at(2 * nDelta * i + j) = (gfei_fftw::fft_real) doubleExtensionMatrix.at(2 * nDelta * i + j);
+            }
+        }
+
+//      allocate memory for FFT arrays
+        inputExtended = (gfei_fftw::fft_real*) gfei_fftw::fft_malloc(2 * sizeof(gfei_fftw::fft_real) * nExtendedPadded); // extension region
+        outputL       = (gfei_fftw::fft_real*) gfei_fftw::fft_malloc(2 * sizeof(gfei_fftw::fft_real) * nExtendedPadded); // left output
+        outputR       = (gfei_fftw::fft_real*) gfei_fftw::fft_malloc(2 * sizeof(gfei_fftw::fft_real) * nExtendedPadded); // right output
+
+    } // CONSTRUCTOR : GramFEInterpolationContext
+
+
+   //-------------------------------------------------------------------------------------------------------
+   // Function    :  ~GramFEInterpolationContext
+   // Description :  Destructor of GramFEInterpolationContext, frees memory
+   //
+   //-------------------------------------------------------------------------------------------------------
+    ~GramFEInterpolationContext() {
+        gfei_fftw::destroy_real_plan(r2cPlan);
+        gfei_fftw::destroy_real_plan(c2rPlan);
+        gfei_fftw::fft_free(inputExtended);
+        gfei_fftw::fft_free(outputL);
+        gfei_fftw::fft_free(outputR);
+    } // DESTRUCTOR : GramFEInterpolationContext
+
+
+   //-------------------------------------------------------------------------------------------------------
+   // Function    :  InterpolateReal
+   // Description :  Interpolate input array of size nInput and store interpolation results of size 2 * (nInput - nGhostBoundary) in output array
+   //
+   // Parameter   :  input          : Real input  array of size nInput
+   //                output         : Real output array of size 2 * (nInput - nGhostBoundary)
+   //                nInput         : Size of input array
+   //                nGhostBoundary : Size of ghost boundary
+   //
+   //-------------------------------------------------------------------------------------------------------
+    void InterpolateReal(const real* input, real *output)
+    {
+    //  convert input to FFT precision
+        for (size_t i = 0; i < nInput; ++i) {
+            inputExtended[i]    = (gfei_fftw::fft_real) input[ i];
+        }
+
+    //  write boundaries of input array to boundary array
+        for (size_t i = 0; i < nDelta; ++i) {
+            boundary[i         ] = (gfei_fftw::fft_real) input[                  i];
+            boundary[i + nDelta] = (gfei_fftw::fft_real) input[nInput - nDelta + i];
+        }
+
+    //  compute extension using GSL BLAS real matrix-vector multiplication
+        gfei_gsl::matrix_const_view A_view = gfei_gsl::matrix_const_view_array(extensionMatrix.data(), nExtension, 2 * nDelta);
+        gfei_gsl::vector_const_view B_view = gfei_gsl::vector_const_view_array(boundary.data(),                    2 * nDelta);
+        gfei_gsl::vector_view C_view       = gfei_gsl::vector_view_array      (inputExtended + nInput, nExtension);
+
+        gfei_gsl::blas_sgemv(CblasNoTrans, 1.0, &A_view.matrix, &B_view.vector, 0.0, &C_view.vector);
+
+    //  compute forward FFT
+        gfei_fftw_r2c   (r2cPlan, inputExtended);
+
+
+        gfei_fftw::std_complex* InputK   = (gfei_fftw::std_complex* ) inputExtended;
+        gfei_fftw::std_complex* OutputLK = (gfei_fftw::std_complex* ) outputL;
+        gfei_fftw::std_complex* OutputRK = (gfei_fftw::std_complex* ) outputR;
+
+    //  interpolate by shifting samples to the left by 0.25 dh
+        for (size_t i = 0; i < nExtendedPadded; i++)
+        {
+            OutputLK[i] = InputK[i] * translationCoeffL[i];
+            OutputRK[i] = InputK[i] * translationCoeffR[i];
+        }
+
+    //  compute backward FFT
+        gfei_fftw_c2r( c2rPlan, OutputLK );
+
+    //  compute backward FFT
+        gfei_fftw_c2r( c2rPlan, OutputRK );
+
+    //  store output data
+        for (size_t i = nGhostBoundary; i < nInput - nGhostBoundary; i++)
+        {
+            output[2 * (i - nGhostBoundary)    ] = outputL[i];
+            output[2 * (i - nGhostBoundary) + 1] = outputR[i];
+        }
+    } // FUNCTION : InterpolateReal
+
+    void ReadBinaryFile(const char* filename, double* array, int size)
+    {
+        FILE* file = fopen(filename, "rb");
+        if (file == NULL) {
+            fprintf(stderr, "Failed to open the file %s.\n", filename);
+            return;
+        }
+        // Read the array from the binary file
+        fread(array, sizeof(double), size, file);
+
+        // Close the file
+        fclose(file);
+    }
+}; // CLASS : GramFEInterpolationContext
+
+//-------------------------------------------------------------------------------------------------------
+// Structure   :  PrecomputedInterpolationContext
+// Description :  Data structure of the precomputed Gram-Fourier extension interpolation implementation
+//
+// Data Member :
+//             :  nInput                          : Size of input array
+//             :  nGhostBoundary                  : Size of ghost boundary
+//             :  nInterpolated                   : Size of interpolated input data
+//             :  interpolationMatrix             : GSL matrix of size nInterpolated x nInput
+//
+// Method      :  PrecomputedInterpolationContext      : Constructor
+//               ~PrecomputedInterpolationContext      : Destructor
+//                InterpolateReal                      : Interpolate real function of
+//-------------------------------------------------------------------------------------------------------
+struct PrecomputedInterpolationContext : public InterpolationClass
+{
+private:
+    const size_t nInput, nGhostBoundary, nInterpolated;
+    pi_gsl::matrix* interpolationMatrix;
+
+public:
+    PrecomputedInterpolationContext(size_t nInput, size_t nGhostBoundary) :
+    nInput          (nInput),
+    nGhostBoundary  (nGhostBoundary),
+    nInterpolated   (2 * (nInput - 2 * nGhostBoundary))
+    {
+//      load interpolation table from binary file
+        char filename[100];
+        sprintf(filename, "gfei/N=%ld.bin", nInput);
+
+        std::array<double> doubleInterpolationMatrix(2 * (nInput - 2) * nInput);
+        ReadBinaryFile(filename, doubleInterpolationMatrix.data(), 2 * (nInput - 2) * nInput);
+
+        interpolationMatrix = pi_gsl::matrix_alloc(nInterpolated, nInput);
+
+        for (size_t i = 0; i < nInterpolated; ++i) {
+            for (size_t j = 0; j < nInput; ++j) {
+                pi_gsl::matrix_set(interpolationMatrix, i, j, (pi_gsl::gsl_real) doubleInterpolationMatrix[(i + 2 * (nGhostBoundary - 1)) * nInput + j]);
+            }
+        }
+    } // CONSTRUCTOR : PrecomputedInterpolationContext
+
+   //-------------------------------------------------------------------------------------------------------
+   // Function    :  ~PrecomputedInterpolationContext
+   // Description :  Destructor of GramFEInterpolationContext, frees memory
+   //
+   //-------------------------------------------------------------------------------------------------------
+    ~PrecomputedInterpolationContext()
+    {
+        pi_gsl::matrix_free(interpolationMatrix);
+    } // DESTRUCTOR : PrecomputedInterpolationContext
+
+   //-------------------------------------------------------------------------------------------------------
+   // Function    :  InterpolateReal
+   // Description :  Interpolate input array of size nInput and store interpolation results of size 2 * (nInput - nGhostBoundary) in output array
+   //
+   // Parameter   :  input          : Real input  array of size nInput
+   //                output         : Real output array of size 2 * (nInput - nGhostBoundary)
+   //                nInput         : Size of input array
+   //                nGhostBoundary : Size of ghost boundary
+   //
+   //-------------------------------------------------------------------------------------------------------
+    void InterpolateReal(const real *input, real *output, size_t nInput, size_t nGhostBoundary)
+    {
+        pi_gsl::vector_const_view in = pi_gsl::vector_const_view_array( input, nInput       );
+        pi_gsl::vector_view out      = pi_gsl::vector_view_array      (output, nInterpolated);
+
+        pi_gsl::blas_sgemv(CblasNoTrans, 1.0, interpolationMatrix, &in.vector, 0.0, &out.vector);
+    } // FUNCTION : InterpolateReal
+
+private:
+
+    void ReadBinaryFile(const char *filename, double *array, int size)
+    {
+        FILE *file = fopen(filename, "rb");
+        if (file == NULL)
+        {
+            printf("Failed to open the file.\n");
+            return;
+        }
+
+        // Read the array from the binary file
+        fread(array, sizeof(double), size, file);
+
+        // Close the file
+        fclose(file);
+    } // FUNCTION : ReadBinaryFile
+}; // CLASS : PrecomputedInterpolationContext
+
+
+//-------------------------------------------------------------------------------------------------------
+// Structure   :  SpectralInterpolation
+// Description :  Data structure to switch between depending spectral interpolation schemes depending on the input size
+//
+// Data Member :  contexts                        : Unordered map that holds interpolation contexts for different interpolations sizes
+//
+// Method      :  GramFEInterpolationContext      : Constructor
+//               ~GramFEInterpolationContext      : Destructor
 //                GetPolynomial                   : Evaluate Gegenbauer polynomial
 //                ComputeLUDecomposition          : Compute LU decomposition with pivoting
 //                ComputeChangeOfBasisMatrix      : Change from k-space to Gegenbauer space
 //                ComputeInterpolationPolynomials : Evaluate Gegenbauer polynomials at interpolation points
 //                ComputeInterpolationMatrix      : Interpolate values given k-space values
-//                GetInterpolationPolynomials     : Get interpolation values
 //                GetChangeOfBasisMatrix          : Get change-of-basis matrix
 //                GetInterpolationMatrix          : Get interpolation matrix
-//                GetFFTWPlan                     : Get complex forward FFT plan of size N
+//                GetC2CPlan                      : Get complex forward FFT plan of size nInput
+//                GetR2CPlan                      : Get real-to-complex FFT plan of size nInput
 //                GetPermutation                  : Get permutation of LU decomposition
 //-------------------------------------------------------------------------------------------------------
-class IPRContext
-{
-public:
-
-   //-------------------------------------------------------------------------------------------------------
-   // Function    :  IPRContext
-   // Description :  Constructor of IPRContext, uses FFT and LU decomposition to compute a change-of-basis matrix from k-space to space of Gegenbauer polynomials
-   //                Evaluates Gegenbauer polynomials of order up to N at 2 * N - 2 * ghostBoundary evaluation points and stores their values in N x ( 2 * N - 2 * ghostBoundary ) matrix
-   //                Computes interpolation matrix of size N x ( 2 * N - 2 * ghostBoundary ) that takes k-space coefficients of (non-periodic) function as input and returns interpolated points
-   //
-   // Parameter   :  N             : Size of coarse grid function
-   //                ghostBoundary : Number of coarse grid points on each side to be discarded during interpolation, must be greater than 1
-   //                lambda        : Parameter of Gegenbauer polynomials
-   //-------------------------------------------------------------------------------------------------------
-    IPRContext(size_t N, size_t ghostBoundary, double lambda)
-    {
-
-//      complex N^2 array
-        changeOfBasisMatrix      = new double[2 * N * N];
-
-//      number of interpolation points
-        size_t Nint              = 2 * (N - 2 * ghostBoundary);
-
-//      real array with N polynomials of degree 0 - (N-1) evaluated at Nout points
-        interpolationPolynomials = new double[2 * Nint * N];
-
-//      interpolation matrix
-        interpolationMatrix      = new double[2 * Nint * N];
-
-//      allocate memory for permutation
-        p                        = gsl_permutation_alloc(N);
-
-//      plan FFT of function to be interpolated
-        fftw_complex* planner_array = (fftw_complex*) fftw_malloc(N * sizeof(fftw_complex));
-        fftwPlan                    = fftw_plan_dft_1d(N, planner_array, planner_array, FFTW_FORWARD, FFTW_MEASURE);
-        fftw_free(planner_array);
-
-//      compute change-of-basis matrix from polynomial to k-space
-        ComputeChangeOfBasisMatrix(changeOfBasisMatrix, N, lambda);
-
-//      compute LU decomposition of W
-        int signum;
-        ComputeLUDecomposition(changeOfBasisMatrix, N, p, &signum);
-
-//      compute interpolation polynomials
-        ComputeInterpolationPolynomials(interpolationPolynomials, N, lambda, Nint, ghostBoundary);
-
-        ComputeInterpolationMatrix(interpolationMatrix, changeOfBasisMatrix, interpolationPolynomials, N, Nint);
-    } // FUNCTION :  IPRContext
-
-
-   //-------------------------------------------------------------------------------------------------------
-   // Function    :  ~IPRContext
-   // Description :  Destructor of IPRContext, frees memory
-   //
-   //-------------------------------------------------------------------------------------------------------
-    ~IPRContext()
-    {
-        delete [] changeOfBasisMatrix;
-        delete [] interpolationPolynomials;
-        delete [] interpolationMatrix;
-        gsl_permutation_free(p);
-        fftw_destroy_plan(fftwPlan);
-    } // FUNCTION : ~IPRContext
-
-   //-------------------------------------------------------------------------------------------------------
-   // Function    :  GetPolynomial
-   // Description :  Return Gegenbauer polynomial of order n with parameter lambda evaluated at the point x
-   //
-   // Parameter   :  n      : Order of Polynomial
-   //                lambda : Gegenbauer parameter (lambda = 0.5 -> Legendre polynomials, lambda = 1.0 -> Chebyshev polynomials)
-   //                x      : Point in [-1, 1]
-   //
-   // Return      :  Value of Gegenbauer polynomial
-   //-------------------------------------------------------------------------------------------------------
-    double GetPolynomial(size_t n, double lambda, double x) const
-    {
-        return gsl_sf_gegenpoly_n(n, lambda, x);
-    } // FUNCTION : GetPolynomial
-
-   //-------------------------------------------------------------------------------------------------------
-   // Function    :  ComputeLUDecomposition
-   // Description :  Compute LU decomposition with pivoting of complex NxN matrix
-   //
-   // Note        :  Pointer to GSL permutation must be allocated using gsl_permutation_alloc(N) beforehand
-   //
-   // Parameter   :  input  : Pointer to complex double-precision array of size NxN
-   //                N      : Matrix size
-   //                p      : Pointer to allocated GSL permutation of size N that stores pivoting in LU decomposition
-   //                signum : Pointer to integer storing the sign of the determinant of input matrix
-   //
-   //-------------------------------------------------------------------------------------------------------
-    void ComputeLUDecomposition(double* input, size_t N, gsl_permutation* p, int* signum)
-    {
-        gsl_matrix_complex_view input_view = gsl_matrix_complex_view_array(input, N, N);
-
-        gsl_linalg_complex_LU_decomp(&input_view.matrix, p, signum);
-    } // FUNCTION : ComputeLUDecomposition
-
-   //-------------------------------------------------------------------------------------------------------
-   // Function    :  ComputeChangeOfBasisMatrix
-   // Description :  Compute complex change-of-basis NxN matrix from k-space to Gegenbauer space with lambda
-   //
-   // Parameter   :  W      : Pointer to complex double-precision array of size NxN
-   //                N      : Dimension of vector spaces
-   //                lambda : Gegenbauer parameter (lambda = 0.5 -> Legendre polynomials, lambda = 1.0 -> Chebyshev polynomials)
-   //
-   //-------------------------------------------------------------------------------------------------------
-    void ComputeChangeOfBasisMatrix(double* W, size_t N, double lambda) const
-    {
-//      allocate input array for FFT
-        double*       input  = (double* )       fftw_malloc( N * 1 * sizeof( double )       );
-        fftw_complex* output = (fftw_complex* ) W;
-
-        for (size_t n = 0; n < N; ++n)
-        {
-//          evaluate polynomial in interval [-1, 1]
-            for (size_t j = 0; j < N; ++j)
-            {
-                input[j] = GetPolynomial( n, lambda, -1 + j / ((double)N / 2.0) );
-            }
-
-//          create FFTW plan for double-to-complex FFT
-            fftw_plan plan = fftw_plan_dft_r2c_1d(N, input, &output[n * N], FFTW_ESTIMATE);
-
-//          compute forward FFT
-            fftw_execute(plan);
-
-//          destroy the FFTW plan
-            fftw_destroy_plan(plan);
-
-//          real-to-complex FFT maps from n to n/2 +1 because of symmetry of real FFT
-//          fill up remaining n - n/2 - 1 values with complex conjugate to obtain square matrix
-            for (size_t j = (N / 2 + 1); j < N; ++j)
-            {
-                output[ n * N + j ][0] =   output[ n * N + N - j ][0];
-                output[ n * N + j ][1] = - output[ n * N + N - j ][1];
-            }
-        }
-
-//      transpose output array
-        gsl_matrix_complex_view output_view = gsl_matrix_complex_view_array((double* ) output, N, N);
-        gsl_matrix_complex_transpose(&output_view.matrix);
-
-//      free input array for FFT
-        fftw_free(input);
-
-    } // FUNCTION : ComputeChangeOfBasisMatrix
-
-   //-------------------------------------------------------------------------------------------------------
-   // Function    :  ComputeInterpolationPolynomials
-   // Description :  Compute complex 2NxN matrix with values of Gegenbauer polynomials with parameter lambda
-   //                of order [0 - N-1] evaluated at the 2 N points {-1 + 1/2N + ( j + 1 + 2 * ghostBoundary - 1)) * 1 / N for j = 0...2N}
-   //                For N = 7 points and ghostBoundary = 2:
-   //                i    0   1   2   3   4   5   6
-   //                j           0 1 2 3 4 5
-   //
-   // Parameter   :  polynomialMatrix : Pointer to complex double-precision array of size 2NxN
-   //                N                : Number of input points
-   //                lambda           : Gegenbauer parameter (lambda = 0.5 -> Legendre polynomials, lambda = 1.0 -> Chebyshev polynomials)
-   //                Nint             : Number of interpolation points
-   //                ghostBoundary    : Size of ghost boundary
-   //-------------------------------------------------------------------------------------------------------
-    void ComputeInterpolationPolynomials(double *polynomialMatrix, size_t N, double lambda, size_t Nint, size_t ghostBoundary) const
-    {
-        const double dx    = 2.0 / N;
-        const double x0    = -1.0 - dx / 4.0 + ghostBoundary * dx;
-        double x;
-
-//      iterate over cells in interval [-1, 1] and evaluate polynomial
-        for (size_t cell = 0; cell < Nint; ++cell)
-        {
-//          iterate over polynomials
-            for (size_t polyOrder = 0; polyOrder < N; ++polyOrder)
-            {
-                x = x0 + cell * dx / 2.0;
-                polynomialMatrix[((cell * N) + polyOrder) * 2     ] = (real) GetPolynomial(polyOrder, lambda, x);
-                polynomialMatrix[((cell * N) + polyOrder) * 2 + 1 ] = 0;
-            }
-        }
-    } // FUNCTION : ComputeInterpolationPolynomials
-
-    //-------------------------------------------------------------------------------------------------------
-    // Function    :  ComputeInterpolationMatrix
-    // Description :  Compute complex 2NxN matrix that converts the k-space value of an input function evaluated at the points {i * dx for i = 0...N}
-    //                to the interpolated function values in real space at the points {i * dx/2 + dx/4 for i = 0...2N}
-    //
-    // Note        :  Compute inverse of upper triangular part of change-of-basis matrix and multiply with interpolation polynomials evaluated at 2N points
-    // Parameter   :  transformationMatrix     : Pointer to complex NintxN output matrix
-    //                changeOfBasisMatrix      : Pointer to complex    NxN change-of-basis matrix
-    //                interpolationPolynomials : Pointer to complex NintxN matrix with interpolation polynomials
-    //                N                        : Number of input points
-    //                Nint                     : Number of interpolation points
-    //-------------------------------------------------------------------------------------------------------
-    void ComputeInterpolationMatrix(double* transformationMatrix, const double* changeOfBasisMatrix, const double* interpolationPolynomials, size_t N, size_t Nint)
-    {
-//      alllocate memory for matrix inversion and multiplication
-        double* in         = new double[2 * N * N];
-        double* out        = new double[2 * N * N];
-//      allocate memory for LU inversion of U matrix
-        gsl_permutation* p = gsl_permutation_alloc(N);
-        int signum;
-//      copy change of basis matrix since LU decomposition overwrites data
-        memcpy(in, changeOfBasisMatrix, 2 * N * N * sizeof(double));
-
-//      create GSL matrix views
-        gsl_matrix_complex_view input_view       = gsl_matrix_complex_view_array       (in,  N, N);
-        gsl_matrix_complex_view output_view      = gsl_matrix_complex_view_array       (out, N, N);
-        gsl_matrix_complex_const_view poly_view  = gsl_matrix_complex_const_view_array (interpolationPolynomials, Nint, N);
-        gsl_matrix_complex_view trans_view       = gsl_matrix_complex_view_array       (transformationMatrix,     Nint, N);
-
-//      set lower triangular part of change-of-basis-matrix to zero
-        for (size_t m = 1; m < N; ++m)
-        {
-            for (size_t n = 0; n < m; ++n)
-            {
-                gsl_matrix_complex_set(&input_view.matrix, m, n, {0, 0});
-            }
-        }
-
-//      invert upper triangular part
-        gsl_linalg_complex_LU_decomp(&input_view.matrix, p, &signum);
-        gsl_linalg_complex_LU_invert(&input_view.matrix, p, &output_view.matrix);
-
-//      multiply inverted U by polynomials matrix to obtain transformation matrix
-        gsl_blas_zgemm(CblasNoTrans, CblasNoTrans, {1.0, 0.0}, &poly_view.matrix, &output_view.matrix, {0.0, 0.0}, &trans_view.matrix);
-
-//      free memory
-        delete[] in;
-        delete[] out;
-        gsl_permutation_free(p);
-    } // FUNCTION : ComputeInterpolationMatrix
-
-   //-------------------------------------------------------------------------------------------------------
-   // Function    :  GetInterpolationPolynomials
-   // Description :  Return constant pointer to complex 2NxN matrix with values of Gegenbauer polynomials with parameter lambda
-   //
-   // Return      :  Pointer to double array of size 2 * N * N * 2
-   //-------------------------------------------------------------------------------------------------------
-    const double* GetInterpolationPolynomials() const
-    {
-        return interpolationPolynomials;
-    } // FUNCTION : GetInterpolationPolynomials
-
-   //-------------------------------------------------------------------------------------------------------
-   // Function    :  GetChangeOfBasisMatrix
-   // Description :  Return constant pointer to complex change-of-basis NxN matrix from k-space to Gegenbauer space with lambda
-   //
-   // Return      :  Pointer to double array of size 2 * N * N
-   //-------------------------------------------------------------------------------------------------------
-    const double* GetChangeOfBasisMatrix() const
-    {
-        return changeOfBasisMatrix;
-    } // FUNCTION : GetChangeOfBasisMatrix
-
-   //-------------------------------------------------------------------------------------------------------
-   // Function    :  GetInterpolationMatrix
-   // Description :  Return constant pointer to complex 2*NxN matrix that converts the k-space value of an input function evaluated at the points {i * dx for i = 0...N}
-   //
-   // Return      :  Pointer to double array of size 2 * N * N * 2
-   //-------------------------------------------------------------------------------------------------------
-    const double* GetInterpolationMatrix() const
-    {
-        return interpolationMatrix;
-    } // FUNCTION : GetInterpolationMatrix
-
-   //-------------------------------------------------------------------------------------------------------
-   // Function    :  GetFFTWPlan
-   // Description :  Return pointer to FFTW plan for complex, forward FFT of size N
-   //
-   // Return      :  Pointer to FFTW plan
-   //-------------------------------------------------------------------------------------------------------
-    fftw_plan GetFFTWPlan() const
-    {
-        return fftwPlan;
-    } // FUNCTION : GetFFTWPlan
-
-   //-------------------------------------------------------------------------------------------------------
-   // Function    :  GetPermutation
-   // Description :  Return constant pointer to permutation of LU decomposition of change-of-basis matrix
-   //
-   // Return      :  Pointer to permutation
-   //-------------------------------------------------------------------------------------------------------
-    const gsl_permutation* GetPermutation() const
-    {
-        return p;
-    } // FUNCTION : GetPermutation
-
+class InterpolationHandler {
+// data members
 private:
-    double*                 changeOfBasisMatrix;
-    double*                 interpolationPolynomials;
-    double*                 interpolationMatrix;
-    fftw_plan               fftwPlan;
-    gsl_permutation*        p;
-}; // CLASS : IPRContext
+    std::unordered_map<size_t, std::shared_ptr<InterpolationContext>> contexts;
+    std::array<size_t> nWithSmallPrimeFactorisations = {16, 18, 24, 32, 36, 40, 48, 54, 60, 64, 72, 80, 90, 96, 100, 108, 112, 120, 128, 135, 256, 288, 512, 540};
 
-//-------------------------------------------------------------------------------------------------------
-// Structure   :  IPR
-// Description :  Interpolation using Inverse Polynomial Reconstruction (IPR)
-//
-// Data Member :  contexts                   : STL container for IPR contexts
-//
-// Method      :  InterpolateComplex         : Interpolate complex function
-//                InterpolateReal            : Interpolate real function
-//                GaussianElimWithTrunc      : Perform Gaussian elimination with truncation
-//                Interpolate                : Interpolate FFT values using BLAS matrix multiplication
-//-------------------------------------------------------------------------------------------------------
-class IPR
-{
+
 public:
-    //-------------------------------------------------------------------------------------------------------
-    // Function    :  InterpolateComplex
-    // Description :  Interpolate complex input vector given at the points {i * dx for i = 0...N-1} at the points  {i * dx/2 + dx/4 for i = 0...2N}
-    //                using IPR
-    // Note        :  Compute inverse of upper triangular part of change-of-basis matrix and multiply with interpolation polynomials evaluated at 2N points
-    // Parameter   :  input         : Pointer to complex input vector of size N
-    //                output        : Pointer to complex output vector of size 2 N
-    //                N             : Size of vectors
-    //                ghostBoundary : Size of ghost zone
-    //-------------------------------------------------------------------------------------------------------
-    void InterpolateComplex(fftw_complex *input, fftw_complex *output, size_t N, size_t ghostBoundary)
-    {
+    void InterpolateReal(const real* input, real* output, size_t nInput, size_t nGhostBoundary)  {
+        if (contexts.find(nInput) == contexts.end()) {
 
-        size_t Nint = 2 * (N - 2 * ghostBoundary);
-        const double lambda = 20.0;
+    //      for small N <= 32 pick precomputed interpolation
+            if ( nInput <= 32 ) {
+                contexts.insert({nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary)});
+            } else {
+        //      for large N >  32 use Gram-Fourier extension scheme
+                size_t nExtension = 32, nDelta = 14;
 
-        if (contexts.find(N) == contexts.end()) {
-            contexts.emplace(std::piecewise_construct, std::make_tuple(N), std::make_tuple(N, ghostBoundary, lambda));
-        }
-
-        IPRContext& c = contexts.at(N);
-
-//      compute forward FFT
-        fftw_execute_dft   (c.GetFFTWPlan(), (fftw_complex *) input, (fftw_complex *) input);
-
-        size_t truncN = N;
-
-        GaussianElimWithTrunc(c.GetChangeOfBasisMatrix(), (double*) input, N, truncN, 1e-9, c.GetPermutation());
-
-        Interpolate(c.GetInterpolationMatrix(), input, output, N, truncN, Nint);
-    } // FUNCTION : InterpolateComplex
-
-    //-------------------------------------------------------------------------------------------------------
-    // Function    :  InterpolateReal
-    // Description :  Interpolate real input vector given at the points {i * dx for i = 0...N-1} at the points  {i * dx/2 + dx/4 for i = 0...2N}
-    //                using IPR
-    // Note        :  Compute inverse of upper triangular part of change-of-basis matrix and multiply with interpolation polynomials evaluated at 2N points
-    // Parameter   :  input         : Pointer to real input vector of size N
-    //                output        : Pointer to real output vector of size 2 N
-    //                N             : Size of vectors
-    //                ghostBoundary : Size of ghost zone
-    //-------------------------------------------------------------------------------------------------------
-    void InterpolateReal(double* re_input, double *re_output, size_t N, size_t ghostBoundary)
-    {
-        size_t Nint = 2 * (N - 2 * ghostBoundary);
-
-//      compute forward FFT
-        fftw_complex* input  = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
-        fftw_complex* output = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nint);
-
-        for (size_t i = 0; i < N; ++i) {
-            c_re(input[i]) = re_input[i];
-            c_im(input[i]) = 0.0;
-        }
-
-        InterpolateComplex(input, output, N, ghostBoundary);
-
-        for (size_t i = 0; i < Nint; ++i) {
-            re_output[i] = c_re(output[i]);
-        }
-
-        fftw_free(input);
-        fftw_free(output);
-    } // FUNCTION : InterpolateReal
-
-//  interpolation coefficients
-    const real R[ 1 + 2*1 ] = { -3.0/32.0, +30.0/32.0, +5.0/32.0 };
-    const real L[ 1 + 2*1 ] = { +5.0/32.0, +30.0/32.0, -3.0/32.0 };
-
-    void InterpolateRealo(double* re_input, double *re_output, size_t N, size_t ghostBoundary)
-    {
-
-//      compute forward FFT
-        size_t j = 0;
-        for (size_t i = ghostBoundary; i < N - ghostBoundary; ++i) {
-            re_output[2 * j    ] = re_input[i-1] * L[0] + re_input[i] * L[1] + re_input[i+1] * L[2];
-            re_output[2 * j + 1] = re_input[i-1] * R[0] + re_input[i] * R[1] + re_input[i+1] * R[2];
-            j++;
-        }
-    } // FUNCTION : InterpolateReal
-
-
-private:
-
-    //-------------------------------------------------------------------------------------------------------
-    // Function    :  GaussianElimWithTrunc
-    // Description :  Perform Gaussian elimination with truncation for stability of IPR
-    //
-    // Note        :  Perform forward substitution and truncate result
-    // Parameter   :  LU            : Pointer to complex NxN matrix containing LU decomposition of change-of-basis matrix
-    //                x             : Pointer to complex output vector of size N
-    //                N             : Size of vector
-    //                truncN        : Size of truncated vector
-    //                truncThresh   : Threshold for truncation (should be around 10-100 * machine epsilon)
-    //                p             : GSL permutation of LU decomposition
-    //-------------------------------------------------------------------------------------------------------
-    void GaussianElimWithTrunc(const double *LU, double *x, size_t N, size_t& truncN, double truncThresh, const gsl_permutation* p) const
-    {
-    //  create matrix views for input vector and matrix
-        gsl_matrix_complex_const_view A_view = gsl_matrix_complex_const_view_array(LU, N, N);
-        const gsl_matrix_complex          *a = &A_view.matrix;
-
-        gsl_vector_complex_view B_view       = gsl_vector_complex_view_array(x, N);
-        gsl_vector_complex          *b       = &B_view.vector;
-
-
-    //  apply permutation p to b
-        gsl_permute_vector_complex(p, b);
-
-        // forward substitution to solve for Ly = B
-        gsl_blas_ztrsv(CblasLower, CblasNoTrans, CblasUnit, a, b);
-
-
-    //  truncation for IPR
-    //  necessary for convergence for large N (roughly > 32)
-    //  ( see Short Note: On the numerical convergence with the inverse polynomial reconstruction method for the resolution of the Gibbs phenomenon, Jung and Shizgal 2007)
-        for (size_t m = 0; m < N; ++m)
-        {
-            if (gsl_complex_abs(gsl_vector_complex_get(b, m)) < truncThresh)
-            {
-                gsl_vector_complex_set(b, m, {0, 0});
+                const size_t minimumExtensionSize = 18;
+                const size_t maximumExtensionSize = 38;
+                for (auto smallPrimeFactors : nWithSmallPrimeFactorisations) {
+                    if (nInput + minimumExtensionSize < smallPrimeFactors && nInput + maximumExtensionSize >= smallPrimeFactors) {
+                        nExtension = smallPrimeFactors - nInput;
+                        break;
+                    }
+                }
+                contexts.insert({nInput, new GramFEInterpolationContext(nInput, nGhostBoundary, nExtension, nDelta)})
             }
+
+            contexts.emplace(std::piecewise_construct, std::make_tuple(nInput), std::make_tuple(nInput, nGhostBoundary, nExtension, nDelta));
         }
-    } // FUNCTION : GaussianElimWithTrunc
 
-    //-------------------------------------------------------------------------------------------------------
-    // Function    :  Interpolate
-    // Description :  Interpolate by performing matrix multiplication
-    //
-    // Note        :  Perform forward substitution and truncate result
-    // Parameter   :  interpolationMatrix : Pointer to complex NxN matrix containing LU decomposition of change-of-basis matrix
-    //                g                   : Pointer to complex input vector of size N
-    //                output              : Pointer to complex output vector of size N
-    //                N                   : Size of vector
-    //                truncN              : Size of truncated vector
-    //-------------------------------------------------------------------------------------------------------
-    void Interpolate(const double* interpolationMatrix, const fftw_complex* g, fftw_complex* output, size_t N, size_t truncN, size_t Nint) const
-    {
+        contexts.at(nInput)->InterpolateReal(input, output);
+    }
+};
 
-        gsl_matrix_complex_const_view A_view          = gsl_matrix_complex_const_view_array((double*) interpolationMatrix, Nint, N);
-        gsl_matrix_complex_const_view truncatedA_view = gsl_matrix_complex_const_submatrix(&A_view.matrix, 0, 0, Nint, truncN);
-
-        const gsl_matrix_complex*     a      = &truncatedA_view.matrix;
-
-        gsl_vector_complex_const_view B_view = gsl_vector_complex_const_view_array((double*) g, truncN);
-        const gsl_vector_complex*     b      = &B_view.vector;
-
-        gsl_vector_complex_view C_view       = gsl_vector_complex_view_array((double*) output, Nint);
-        gsl_vector_complex*           c      = &C_view.vector;
-
-        gsl_blas_zgemv(CblasNoTrans, {1.0, 0.0}, a, b, {0.0, 0.0}, c);
-
-    } // FUNCTION : Interpolate
-
-    std::unordered_map<size_t, IPRContext> contexts;
-}; // CLASS : IPRContext
 
 // Create IPR object that stores all IPR contexts during runtime of GAMER
-IPR ipr;
+InterpolationHandler interpolationHandler;
 int counter = 0;
 
 //-------------------------------------------------------------------------------------------------------
