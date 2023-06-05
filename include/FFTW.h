@@ -180,18 +180,18 @@ namespace gamer_fftw = fftw2;
 //wrappers for fftw plans and real-to-complex as well as complex to real n-dimensional transforms on the root level of the AMR hierarchy
 //used for Poisson solver and for computing power spectra
 namespace root_fftw {
-const auto malloc               = gamer_fftw::fft_malloc;
-const auto free                 = gamer_fftw::fft_free;
+const auto malloc                  = gamer_fftw::fft_malloc;
+const auto free                    = gamer_fftw::fft_free;
 #ifdef SERIAL
-using      real_plan            = gamer_fftw::real_plan_nd;
-using      complex_plan         = gamer_fftw::complex_plan_nd;
-const auto destroy_real_plan    = gamer_fftw::destroy_real_plan_nd;
-const auto destroy_complex_plan = gamer_fftw::destroy_complex_plan_nd;
+using      real_plan_nd            = gamer_fftw::real_plan_nd;
+using      complex_plan_nd         = gamer_fftw::complex_plan_nd;
+const auto destroy_real_plan_nd    = gamer_fftw::destroy_real_plan_nd;
+const auto destroy_complex_plan_nd = gamer_fftw::destroy_complex_plan_nd;
 #else // #ifdef SERIAL
-using      real_plan            = gamer_fftw::real_mpi_plan_nd;
-using      complex_plan         = gamer_fftw::complex_mpi_plan_nd;
-const auto destroy_real_plan    = gamer_fftw::destroy_real_mpi_plan_nd;
-const auto destroy_complex_plan = gamer_fftw::destroy_complex_mpi_plan_nd;
+using      real_plan_nd            = gamer_fftw::real_mpi_plan_nd;
+using      complex_plan_nd         = gamer_fftw::complex_mpi_plan_nd;
+const auto destroy_real_plan_nd    = gamer_fftw::destroy_real_mpi_plan_nd;
+const auto destroy_complex_plan_nd = gamer_fftw::destroy_complex_mpi_plan_nd;
 #endif // #endif
 };
 

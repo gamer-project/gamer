@@ -10,9 +10,9 @@ extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, c
                                                const int lv, double AuxArray[] );
 #endif
 
-root_fftw::real_plan     FFTW_Plan_PS;                        // PS  : plan for calculating the power spectrum
+root_fftw::real_plan_nd     FFTW_Plan_PS;                        // PS  : plan for calculating the power spectrum
 #ifdef GRAVITY
-root_fftw::real_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for the self-gravity Poisson solver
+root_fftw::real_plan_nd     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for the self-gravity Poisson solver
 #endif // #ifdef GRAVITY
 
 
@@ -141,9 +141,9 @@ void Init_FFTW()
 
 // allocate memory for arrays in fftw3
 #  if ( SUPPORT_FFTW == FFTW3 )
-   PS   = (real*) root_fftw::malloc(ComputePaddedTotalSize(PS_FFT_Size     ) * sizeof(real));
+   PS   = (real*) root_fftw::fft_malloc(ComputePaddedTotalSize(PS_FFT_Size     ) * sizeof(real));
 #  ifdef GRAVITY
-   RhoK = (real*) root_fftw::malloc(ComputePaddedTotalSize(Gravity_FFT_Size) * sizeof(real));
+   RhoK = (real*) root_fftw::fft_malloc(ComputePaddedTotalSize(Gravity_FFT_Size) * sizeof(real));
 #  endif // # ifdef GRAVITY
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
 
@@ -156,9 +156,9 @@ void Init_FFTW()
 
 // free memory for arrays in fftw3
 #  if ( SUPPORT_FFTW == FFTW3 )
-   root_fftw::free(PS);
+   root_fftw::fft_free(PS);
 #  ifdef GRAVITY
-   root_fftw::free(RhoK);
+   root_fftw::fft_free(RhoK);
 #  endif // # ifdef GRAVITY
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
 
@@ -178,11 +178,11 @@ void End_FFTW()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
-   root_fftw::destroy_real_plan  ( FFTW_Plan_PS      );
+   root_fftw::destroy_real_plan_nd  ( FFTW_Plan_PS      );
 
 #  ifdef GRAVITY
-   root_fftw::destroy_real_plan  ( FFTW_Plan_Poi     );
-   root_fftw::destroy_real_plan  ( FFTW_Plan_Poi_Inv );
+   root_fftw::destroy_real_plan_nd  ( FFTW_Plan_Poi     );
+   root_fftw::destroy_real_plan_nd  ( FFTW_Plan_Poi_Inv );
 #  endif // #  ifdef GRAVITY
 
 #  if ( SUPPORT_FFTW == FFTW3 )
