@@ -233,17 +233,6 @@ const auto destroy_complex_plan = gamer_fftw::destroy_complex_mpi_plan_nd;
 #endif // #ifdef SERIAL ... # else
 #endif // # if ( SUPPORT_FFTW == FFTW3 )
 
-#if ( SUPPORT_FFTW == FFTW3 )
-#ifdef FFTW_FLOAT8
-namespace gfei_fftw = fftw3_double_precision;
-#else // #ifdef GRAMFE_FLOAT8
-namespace gfei_fftw = fftw3_single_precision;
-#endif // #ifdef GRAMFE_FLOAT8 ... # else
-#else // #if ( SUPPORT_FFTW == FFTW3 )
-namespace gfei_fftw = fftw2;
-#endif // #if ( SUPPORT_FFTW == FFTW3 ) ... #else
-
-
 // Accuracy for FFT in Gram-FE extension interpolation (GFEI)
 #define GFEI_FFTW_FLOAT8
 
@@ -288,17 +277,17 @@ namespace gramfe_fftw = fftw2;
 
 //wrappers for fftw plans and complex 1D-transform used in Gram-Fourier extension algorithm
 #if ( SUPPORT_FFTW == FFTW3 )
-#define gramfe_fftw_c2c(plan, arr)                          gramfe_fftw::execute_1d_dft_c2c ( plan, (gramfe_fftw::fft_complex*) arr, (gramfe_fftw::fft_complex*) arr )
-#define gramfe_fftw_r2c(plan, arr)                          gramfe_fftw::execute_1d_dft_r2c ( plan, (gramfe_fftw::fft_real*)    arr, (gramfe_fftw::fft_complex*) arr )
-#define gramfe_fftw_c2r(plan, in, out)                      gramfe_fftw::execute_1d_dft_c2r ( plan, (gramfe_fftw::fft_complex*) in,  (gramfe_fftw::fft_real*)    out )
-#define gramfe_fftw_create_1d_forward_c2c_plan(size, arr)   gramfe_fftw::plan_dft_c2c_1d ( size, (gramfe_fftw::fft_complex*) arr, (gramfe_fftw::fft_complex*) arr, FFTW_FORWARD , FFTW_PATIENT )
-#define gramfe_fftw_create_1d_backward_c2c_plan(size, arr)  gramfe_fftw::plan_dft_c2c_1d ( size, (gramfe_fftw::fft_complex*) arr, (gramfe_fftw::fft_complex*) arr, FFTW_BACKWARD, FFTW_PATIENT )
+#define gramfe_fftw_c2c(plan, arr)                                  gramfe_fftw::execute_dft_c2c_1d ( plan, (gramfe_fftw::fft_complex*) arr, (gramfe_fftw::fft_complex*) arr )
+#define gramfe_fftw_r2c(plan, arr)                                  gramfe_fftw::execute_dft_r2c_1d ( plan, (gramfe_fftw::fft_real*)    arr, (gramfe_fftw::fft_complex*) arr )
+#define gramfe_fftw_c2r(plan, in, out)                              gramfe_fftw::execute_dft_c2r_1d ( plan, (gramfe_fftw::fft_complex*) in,  (gramfe_fftw::fft_real*)    out )
+#define gramfe_fftw_create_1d_forward_c2c_plan(size, arr)           gramfe_fftw::plan_dft_c2c_1d    ( size, (gramfe_fftw::fft_complex*) arr, (gramfe_fftw::fft_complex*) arr, FFTW_FORWARD , FFTW_PATIENT )
+#define gramfe_fftw_create_1d_backward_c2c_plan(size, arr)          gramfe_fftw::plan_dft_c2c_1d    ( size, (gramfe_fftw::fft_complex*) arr, (gramfe_fftw::fft_complex*) arr, FFTW_BACKWARD, FFTW_PATIENT )
 #else // #if ( SUPPORT_FFTW == FFTW3 )
-#define gramfe_fftw_c2c(plan, arr)                          gramfe_fftw::execute_1d_dft_c2c ( plan, (gramfe_fftw::fft_complex*) arr, NULL )
-#define gramfe_fftw_r2c(plan, arr)                          gramfe_fftw::execute_1d_dft_r2c ( plan, (gramfe_fftw::fft_real*)    arr, NULL )
-#define gramfe_fftw_c2r(plan, in, out)                      gramfe_fftw::execute_1d_dft_c2r ( plan, (gramfe_fftw::fft_complex*) arr, NULL )
-#define gramfe_fftw_create_1d_forward_c2c_plan(size, arr)   gramfe_fftw::plan_dft_c2c_1d ( size, FFTW_FORWARD , FFTW_PATIENT | FFTW_IN_PLACE )
-#define gramfe_fftw_create_1d_backward_c2c_plan(size, arr)  gramfe_fftw::plan_dft_c2c_1d ( size, FFTW_BACKWARD, FFTW_PATIENT | FFTW_IN_PLACE )
+#define gramfe_fftw_c2c(plan, arr)                                  gramfe_fftw::execute_dft_c2c_1d ( plan, (gramfe_fftw::fft_complex*) arr, NULL )
+#define gramfe_fftw_r2c(plan, arr)                                  gramfe_fftw::execute_dft_r2c_1d ( plan, (gramfe_fftw::fft_real*)    arr, NULL )
+#define gramfe_fftw_c2r(plan, in, out)                              gramfe_fftw::execute_dft_c2r_1d ( plan, (gramfe_fftw::fft_complex*) arr, NULL )
+#define gramfe_fftw_create_1d_forward_c2c_plan(size, arr)           gramfe_fftw::plan_dft_c2c_1d    ( size, FFTW_FORWARD , FFTW_PATIENT | FFTW_IN_PLACE )
+#define gramfe_fftw_create_1d_backward_c2c_plan(size, arr)          gramfe_fftw::plan_dft_c2c_1d   ( size, FFTW_BACKWARD, FFTW_PATIENT | FFTW_IN_PLACE )
 #endif // #if ( SUPPORT_FFTW == FFTW3 ) ... # else
 
 #endif  // #if ( SUPPORT_FFTW == FFTW2 || SUPPORT_FFTW == FFTW3 )
