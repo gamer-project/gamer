@@ -16,20 +16,10 @@
 #include <vector>
 #include <memory>
 
-
-#define GFEI_FFTW_FLOAT8
-#define GFEI_GSL_FLOAT8
-
-// Accuracy for FFT in Gram-FE extension interpolation (GFEI)
-#if ( SUPPORT_FFTW == FFTW3 )
 #ifdef GFEI_FFTW_FLOAT8
-namespace gfei_fftw = fftw3_double_precision;
-#else // #ifdef GRAMFE_FLOAT8
-namespace gfei_fftw = fftw3_single_precision;
-#endif // #ifdef GRAMFE_FLOAT8 ... # else
-#else // #if ( SUPPORT_FFTW == FFTW3 )
-namespace gfei_fftw = fftw2;
-#endif // #if ( SUPPORT_FFTW == FFTW3 ) ... #else
+#define GFEI_GSL_FLOAT8
+#endif
+
 
 
 // Accuracy for matrix multiplication in Gram-FE extension interpolation (GFEI)
