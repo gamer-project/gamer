@@ -31,14 +31,14 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
    const int Nx_Padded = Nx/2 + 1;
    const real dh       = amr->dh[0];
    real Deno;
-   gamer_fftw::complex *cdata;
+   gamer_fftw::fft_complex *cdata;
 
 
 // forward FFT
    root_fftw_r2c( FFTW_Plan_Poi, RhoK );
 
 // the data are now complex, so typecast a pointer
-   cdata = (gamer_fftw::complex*) RhoK;
+   cdata = (gamer_fftw::fft_complex*) RhoK;
 
 
 // set up the dimensionless wave number and the corresponding sin(k)^2 function
@@ -126,9 +126,9 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 //-------------------------------------------------------------------------------------------------------
 void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const int RhoK_Size )
 {
-   gamer_fftw::complex *RhoK_cplx   = (gamer_fftw::complex *)RhoK;
-   gamer_fftw::complex *gFuncK_cplx = (gamer_fftw::complex *)gFuncK;
-   gamer_fftw::complex  Temp_cplx;
+   gamer_fftw::fft_complex *RhoK_cplx   = (gamer_fftw::fft_complex *)RhoK;
+   gamer_fftw::fft_complex *gFuncK_cplx = (gamer_fftw::fft_complex *)gFuncK;
+   gamer_fftw::fft_complex  Temp_cplx;
 
 
 // forward FFT
