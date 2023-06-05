@@ -234,7 +234,9 @@ const auto destroy_complex_plan_nd = gamer_fftw::destroy_complex_mpi_plan_nd;
 #endif // # if ( SUPPORT_FFTW == FFTW3 )  ... # else
 
 
+#ifdef SUPPORT_SPECTRAL_INTERPOLATION
 // Accuracy for FFT in Gram-FE extension interpolation (GFEI)
+// Should always be set to double-precision for stability
 #define GFEI_FFTW_FLOAT8
 
 #if ( SUPPORT_FFTW == FFTW3 )
@@ -252,19 +254,20 @@ namespace gfei_fftw = fftw2;
 #define gfei_fftw_c2c(plan, arr)                                    gfei_fftw::execute_dft_c2c ( plan, (gfei_fftw::fft_complex*) arr, (gfei_fftw::fft_complex*) arr )
 #define gfei_fftw_r2c(plan, arr)                                    gfei_fftw::execute_dft_r2c ( plan, (gfei_fftw::fft_real*)    arr, (gfei_fftw::fft_complex*) arr )
 #define gfei_fftw_c2r(plan, arr)                                    gfei_fftw::execute_dft_c2r ( plan, (gfei_fftw::fft_complex*) arr, (gfei_fftw::fft_real*)    arr )
-#define gfei_fftw_create_1d_forward_c2c_plan(size, arr)             gfei_fftw::plan_dft_c2c_1d ( size, (gfei_fftw::fft_complex*) arr, (gfei_fftw::fft_complex*) arr, FFTW_FORWARD , FFTW_MEASURE )
-#define gfei_fftw_create_1d_backward_c2c_plan(size, arr)            gfei_fftw::plan_dft_c2c_1d ( size, (gfei_fftw::fft_complex*) arr, (gfei_fftw::fft_complex*) arr, FFTW_BACKWARD, FFTW_MEASURE )
-#define gfei_fftw_create_1d_r2c_plan(size, arr)                     gfei_fftw::plan_dft_r2c_1d ( size, (gfei_fftw::fft_real*)    arr, (gfei_fftw::fft_complex*) arr, FFTW_MEASURE )
-#define gfei_fftw_create_1d_c2r_plan(size, arr)                     gfei_fftw::plan_dft_c2r_1d ( size, (gfei_fftw::fft_complex*) arr, (gfei_fftw::fft_real*)    arr, FFTW_MEASURE )
+#define gfei_fftw_create_1d_forward_c2c_plan(size, arr, startup)    gfei_fftw::plan_dft_c2c_1d ( size, (gfei_fftw::fft_complex*) arr, (gfei_fftw::fft_complex*) arr, FFTW_FORWARD , startup )
+#define gfei_fftw_create_1d_backward_c2c_plan(size, arr, startup)   gfei_fftw::plan_dft_c2c_1d ( size, (gfei_fftw::fft_complex*) arr, (gfei_fftw::fft_complex*) arr, FFTW_BACKWARD, startup )
+#define gfei_fftw_create_1d_r2c_plan(size, arr, startup)            gfei_fftw::plan_dft_r2c_1d ( size, (gfei_fftw::fft_real*)    arr, (gfei_fftw::fft_complex*) arr, startup )
+#define gfei_fftw_create_1d_c2r_plan(size, arr, startup)            gfei_fftw::plan_dft_c2r_1d ( size, (gfei_fftw::fft_complex*) arr, (gfei_fftw::fft_real*)    arr, startup )
 #else // #if ( SUPPORT_FFTW == FFTW3 )
 #define gfei_fftw_c2c(plan, arr)                                    gfei_fftw::execute_dft_c2c ( plan, (gfei_fftw::fft_complex*) arr, NULL )
 #define gfei_fftw_r2c(plan, arr)                                    gfei_fftw::execute_dft_r2c ( plan, (gfei_fftw::fft_real*)    arr, NULL )
 #define gfei_fftw_c2r(plan, arr)                                    gfei_fftw::execute_dft_c2r ( plan, (gfei_fftw::fft_real*)    arr, NULL )
-#define gfei_fftw_create_1d_forward_c2c_plan(size, arr)             gfei_fftw::plan_dft_c2c_1d ( size, FFTW_FORWARD , FFTW_MEASURE | FFTW_IN_PLACE )
-#define gfei_fftw_create_1d_backward_c2c_plan(size, arr)            gfei_fftw::plan_dft_c2c_1d ( size, FFTW_BACKWARD, FFTW_MEASURE | FFTW_IN_PLACE )
-#define gfei_fftw_create_1d_r2c_plan(size, arr)                     gfei_fftw::plan_dft_r2c_1d ( size, FFTW_REAL_TO_COMPLEX, FFTW_MEASURE | FFTW_IN_PLACE )
-#define gfei_fftw_create_1d_c2r_plan(size, arr)                     gfei_fftw::plan_dft_c2r_1d ( size, FFTW_COMPLEX_TO_REAL, FFTW_MEASURE | FFTW_IN_PLACE )
+#define gfei_fftw_create_1d_forward_c2c_plan(size, arr, startup)    gfei_fftw::plan_dft_c2c_1d ( size, FFTW_FORWARD , startup | FFTW_IN_PLACE )
+#define gfei_fftw_create_1d_backward_c2c_plan(size, arr, startup)   gfei_fftw::plan_dft_c2c_1d ( size, FFTW_BACKWARD, startup | FFTW_IN_PLACE )
+#define gfei_fftw_create_1d_r2c_plan(size, arr, startup)            gfei_fftw::plan_dft_r2c_1d ( size, FFTW_REAL_TO_COMPLEX, startup | FFTW_IN_PLACE )
+#define gfei_fftw_create_1d_c2r_plan(size, arr, startup)            gfei_fftw::plan_dft_c2r_1d ( size, FFTW_COMPLEX_TO_REAL, startup | FFTW_IN_PLACE )
 #endif // #if ( SUPPORT_FFTW == FFTW3 ) ... # else
+#endif // #ifdef SUPPORT_SPECTRAL_INTERPOLATION
 
 #endif  // #if ( SUPPORT_FFTW == FFTW2 || SUPPORT_FFTW == FFTW3 )
 
