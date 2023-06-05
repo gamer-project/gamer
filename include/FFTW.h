@@ -232,35 +232,17 @@ const auto destroy_complex_plan = gamer_fftw::destroy_complex_mpi_nd_plan;
 #endif // #ifdef SERIAL ... # else
 #endif // # if ( SUPPORT_FFTW == FFTW3 )
 
-#if ( WAVE_SCHEME == WAVE_GRAMFE && SUPPORT_FFTW == FFTW3 )
-#ifdef GRAMFE_FLOAT8
-#define gramfe_float_fftw3_malloc              fftw_malloc
-#define gramfe_float_fftw3_free                fftw_free
-#define gramfe_float_fftw3_plan                fftw_plan
-#define gramfe_float_fftw3_destroy_plan        fftw_destroy_plan
-#define gramfe_float_fftw3_complex             fftw_complex
-#define gramfe_float_fftw3_execute_dft_c2c     fftw_execute_dft
-#define gramfe_float_fftw3_execute_dft_r2c     fftw_execute_dft_r2c
-#define gramfe_float_fftw3_execute_dft_c2r     fftw_execute_dft_c2r
-#define gramfe_float_fftw3_plan_dft_c2c_1d     fftw_plan_dft_1d
-#define gramfe_float_fftw3_plan_dft_c2r_1d     fftw_plan_dft_c2r_1d
-#define gramfe_float_fftw3_plan_dft_r2c_1d     fftw_plan_dft_r2c_1d
-#else // # ifdef GRAMFE_FLOAT8
-#define gramfe_float_fftw3_malloc              fftwf_malloc
-#define gramfe_float_fftw3_free                fftwf_free
-#define gramfe_float_fftw3_plan                fftwf_plan
-#define gramfe_float_fftw3_destroy_plan        fftwf_destroy_plan
-#define gramfe_float_fftw3_complex             fftwf_complex
-#define gramfe_float_fftw3_execute_dft_c2c     fftwf_execute_dft
-#define gramfe_float_fftw3_execute_dft_r2c     fftwf_execute_dft_r2c
-#define gramfe_float_fftw3_execute_dft_c2r     fftwf_execute_dft_c2r
-#define gramfe_float_fftw3_plan_dft_c2c_1d     fftwf_plan_dft_1d
-#define gramfe_float_fftw3_plan_dft_c2r_1d     fftwf_plan_dft_c2r_1d
-#define gramfe_float_fftw3_plan_dft_r2c_1d     fftwf_plan_dft_r2c_1d
+#if ( SUPPORT_FFTW == FFTW3 )
+#ifdef FFTW_FLOAT8
+namespace gfei_fftw = fftw3_double_precision;
+#else // #ifdef GRAMFE_FLOAT8
+namespace gfei_fftw = fftw3_single_precision;
 #endif // #ifdef GRAMFE_FLOAT8 ... # else
-#endif // # if ( WAVE_SCHEME == WAVE_GRAMFE && SUPPORT_FFTW == FFTW3 )
+#else // #if ( SUPPORT_FFTW == FFTW3 )
+namespace gfei_fftw = fftw2;
+#endif // #if ( SUPPORT_FFTW == FFTW3 ) ... #else
 
-//wrappers for fftw plans and complex 1D-transform used in Gram-Fourier extension algorithm
+//wrappers for fftw plans and complex 1D-transform used in Gram-Fourier extension interpolation algorithm
 #if ( SUPPORT_FFTW == FFTW3 )
 #define gfei_fftw_c2c(plan, arr)                                    gfei_fftw::execute_dft_c2c ( plan, (gfei_fftw::fft_complex*) arr, (gfei_fftw::fft_complex*) arr )
 #define gfei_fftw_r2c(plan, arr)                                    gfei_fftw::execute_dft_r2c ( plan, (gfei_fftw::fft_real*)    arr, (gfei_fftw::fft_complex*) arr )
@@ -277,6 +259,31 @@ const auto destroy_complex_plan = gamer_fftw::destroy_complex_mpi_nd_plan;
 #define gfei_fftw_create_1d_backward_c2c_plan(size, arr)            gfei_fftw::plan_dft_c2c_1d ( size, FFTW_BACKWARD, FFTW_MEASURE | FFTW_IN_PLACE )
 #define gfei_fftw_create_1d_r2c_plan(size, arr)                     gfei_fftw::plan_dft_r2c_1d ( size, FFTW_REAL_TO_COMPLEX, FFTW_MEASURE | FFTW_IN_PLACE )
 #define gfei_fftw_create_1d_c2r_plan(size, arr)                     gfei_fftw::plan_dft_c2r_1d ( size, FFTW_COMPLEX_TO_REAL, FFTW_MEASURE | FFTW_IN_PLACE )
+#endif // #if ( SUPPORT_FFTW == FFTW3 ) ... # else
+
+#if ( SUPPORT_FFTW == FFTW3 )
+#ifdef GRAMFE_FLOAT8
+namespace gramfe_fftw = fftw3_double_precision;
+#else // #ifdef GRAMFE_FLOAT8
+namespace gramfe_fftw = fftw3_single_precision;
+#endif // #ifdef GRAMFE_FLOAT8 ... # else
+#else // #if ( SUPPORT_FFTW == FFTW3 )
+namespace gramfe_fftw = fftw2;
+#endif // #if ( SUPPORT_FFTW == FFTW3 ) ... #else
+
+//wrappers for fftw plans and complex 1D-transform used in Gram-Fourier extension algorithm
+#if ( SUPPORT_FFTW == FFTW3 )
+#define gramfe_fftw_c2c(plan, arr)                          gramfe_fftw::execute_1d_dft_c2c ( plan, (gramfe_fftw::fft_complex*) arr, (gramfe_fftw::fft_complex*) arr )
+#define gramfe_fftw_r2c(plan, arr)                          gramfe_fftw::execute_1d_dft_r2c ( plan, (gramfe_fftw::fft_real*)    arr, (gramfe_fftw::fft_complex*) arr )
+#define gramfe_fftw_c2r(plan, in, out)                      gramfe_fftw::execute_1d_dft_c2r ( plan, (gramfe_fftw::fft_complex*) in,  (gramfe_fftw::fft_real*)    out )
+#define gramfe_fftw_create_1d_forward_c2c_plan(size, arr)   gramfe_fftw::plan_dft_c2c_1d ( size, (gramfe_fftw::fft_complex*) arr, (gramfe_fftw::fft_complex*) arr, FFTW_FORWARD , FFTW_PATIENT )
+#define gramfe_fftw_create_1d_backward_c2c_plan(size, arr)  gramfe_fftw::plan_dft_c2c_1d ( size, (gramfe_fftw::fft_complex*) arr, (gramfe_fftw::fft_complex*) arr, FFTW_BACKWARD, FFTW_PATIENT )
+#else // #if ( SUPPORT_FFTW == FFTW3 )
+#define gramfe_fftw_c2c(plan, arr)                          gramfe_fftw::execute_1d_dft_c2c ( plan, (gramfe_fftw::fft_complex*) arr, NULL )
+#define gramfe_fftw_r2c(plan, arr)                          gramfe_fftw::execute_1d_dft_r2c ( plan, (gramfe_fftw::fft_real*)    arr, NULL )
+#define gramfe_fftw_c2r(plan, in, out)                      gramfe_fftw::execute_1d_dft_c2r ( plan, (gramfe_fftw::fft_complex*) arr, NULL )
+#define gramfe_fftw_create_1d_forward_c2c_plan(size, arr)   gramfe_fftw::plan_dft_c2c_1d ( size, FFTW_FORWARD , FFTW_PATIENT | FFTW_IN_PLACE )
+#define gramfe_fftw_create_1d_backward_c2c_plan(size, arr)  gramfe_fftw::plan_dft_c2c_1d ( size, FFTW_BACKWARD, FFTW_PATIENT | FFTW_IN_PLACE )
 #endif // #if ( SUPPORT_FFTW == FFTW3 ) ... # else
 
 #endif  // #if ( SUPPORT_FFTW == FFTW2 || SUPPORT_FFTW == FFTW3 )
