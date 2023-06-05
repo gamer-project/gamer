@@ -8,7 +8,7 @@
 
 static void GetBasePowerSpectrum( real *VarK, const int j_start, const int dj, double *PS_total, double *NormDC );
 
-extern root_fftw::real_plan     FFTW_Plan_PS;
+extern root_fftw::real_plan_nd     FFTW_Plan_PS;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_BasePowerSpectrum
@@ -76,7 +76,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    const int NRecvSlice = MIN( List_z_start[MPI_Rank]+local_nz, NX0_TOT[2] ) - MIN( List_z_start[MPI_Rank], NX0_TOT[2] );
 
    double *PS_total     = NULL;
-   real   *VarK         = (real*) root_fftw::malloc(sizeof(real) * total_local_size);                         // array storing data
+   real   *VarK         = (real*) root_fftw::fft_malloc(sizeof(real) * total_local_size);                         // array storing data
    real   *SendBuf      = new real [ amr->NPatchComma[0][1]*CUBE(PS1) ];         // MPI send buffer for data
    real   *RecvBuf      = new real [ NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];         // MPI recv buffer for data
    long   *SendBuf_SIdx = new long [ amr->NPatchComma[0][1]*PS1 ];               // MPI send buffer for 1D coordinate in slab
@@ -148,7 +148,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 
 
 // 7. free memory
-   root_fftw::free(VarK);
+   root_fftw::fft_free(VarK);
    delete [] SendBuf;
    delete [] RecvBuf;
    delete [] SendBuf_SIdx;

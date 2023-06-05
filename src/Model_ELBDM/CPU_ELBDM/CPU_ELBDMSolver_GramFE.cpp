@@ -59,7 +59,7 @@ __device__ __forceinline__ complex_type operator-(const complex_type& a, const c
 
 #else   // #ifdef __CUDACC__
 
-extern gramfe_complex_fftw_plan FFTW_Plan_ExtPsi, FFTW_Plan_ExtPsi_Inv;
+extern gramfe_fftw::complex_plan_1d FFTW_Plan_ExtPsi, FFTW_Plan_ExtPsi_Inv;
 
 #if ( SUPPORT_FFTW == FFTW3 )
 
@@ -69,8 +69,8 @@ using complex_type = std::complex<gramfe_float>;
 
 #else // #if ( SUPPORT_FFTW == FFTW3 )
 
-//derive from gramfe_float_complex which is an alias for FFTW2's complex_type in gramfe_float precision to allow for complex arithmetic operations
-struct complex_type : public gramfe_float_complex {
+//derive from gramfe_fftw::fft_complex which is an alias for FFTW2's complex_type in gramfe_float precision to allow for complex arithmetic operations
+struct complex_type : public gramfe_fftw::fft_complex {
    complex_type() {
    }
 
@@ -421,7 +421,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #     else
 
 //    create arrays for columns of various intermediate fields on the stack
-      complex_type* s_In_1PG = (complex_type* ) gramfe_fftw_malloc( GRAMFE_FLU_NXT * sizeof(complex_type) ); // allocate memory for fourier transform
+      complex_type* s_In_1PG = (complex_type* ) gramfe_fftw::fft_malloc( GRAMFE_FLU_NXT * sizeof(complex_type) ); // allocate memory for fourier transform
 
       complex_type  s_Ae_1PG [CGPU_FLU_BLOCK_SIZE_Y][GRAMFE_NDELTA]; // left projection polynomials
       complex_type  s_Ao_1PG [CGPU_FLU_BLOCK_SIZE_Y][GRAMFE_NDELTA]; // right projection polynomials
@@ -605,7 +605,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          } // while ( Column0 < NColumnTotal )
       } // # pragma  for (int bx=0; bx<NPatchGroup; bx++)
 #     ifndef __CUDACC__
-      gramfe_fftw_free(s_In_1PG);
+      gramfe_fftw::fft_free(s_In_1PG);
 #     endif
    } // # pragma omp parallel
 } // FUNCTION : CUFLU_Advance
