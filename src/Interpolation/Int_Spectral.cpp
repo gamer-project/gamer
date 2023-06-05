@@ -10,8 +10,10 @@
 #include "FFTW.h"
 
 // STL includes
+#include <complex>
 #include <unordered_map>
 #include <array>
+#include <vector>
 #include <memory>
 
 
@@ -46,7 +48,7 @@ namespace pi_gsl  = gsl_single_precision;
 
 // Base class for interpolation context
 struct InterpolationContext {
-    virtual void InterpolateReal(const real* input, real *output, size_t N, size_t ghostBoundary) = 0;
+    virtual void InterpolateReal(const real* input, real *output) = 0;
 };
 
 //-------------------------------------------------------------------------------------------------------
@@ -89,11 +91,11 @@ public:
     gfei_fftw::fft_real* inputExtended;
     gfei_fftw::fft_real* outputL;
     gfei_fftw::fft_real* outputR;
-    std::array<gfei_fftw::fft_real> boundary;
+    std::vector<gfei_fftw::fft_real> boundary;
 
 private:
-    std::array<gfei_fftw::std_complex> translationCoeffL, translationCoeffR;
-    std::array<gfei_fftw::fft_real>    extensionMatrix;
+    std::vector<gfei_fftw::std_complex> translationCoeffL, translationCoeffR;
+    std::vector<gfei_fftw::fft_real>    extensionMatrix;
     gfei_fftw::real_plan                r2cPlan, c2rPlan;
 
 public:
@@ -138,7 +140,7 @@ public:
 //      set up translation arrays
         const gfei_fftw::fft_real Norm = 1.0 / ( (gfei_fftw::fft_real) nExtended );
         gfei_fftw::fft_real  K;
-        for (int i = 0; i < nExtendedPadded; i++)
+        for (size_t i = 0; i < nExtendedPadded; i++)
         {
             K                       = 2.0 * M_PI / nExtended * i;
             translationCoeffL.at(i) = gfei_fftw::std_complex({cos(-K/4.0), sin(-K/4.0)}) * Norm;
@@ -148,7 +150,7 @@ public:
 //      load Gram-Fourier extension tables from files
         char filename[100];
         sprintf(filename, "gram/%ld_%ld_%d_%d.bin", nExtension, nDelta, 150, 63);
-        std::array<double> doubleExtensionMatrix(nExtension * 2 * nDelta);
+        std::vector<double> doubleExtensionMatrix(nExtension * 2 * nDelta);
         ReadBinaryFile(filename, doubleExtensionMatrix.data(), 2 * nDelta * nExtension);
 
 //      convert extension table to precision of DFT
@@ -268,7 +270,7 @@ public:
 //               ~PrecomputedInterpolationContext      : Destructor
 //                InterpolateReal                      : Interpolate real function of
 //-------------------------------------------------------------------------------------------------------
-struct PrecomputedInterpolationContext : public InterpolationClass
+struct PrecomputedInterpolationContext : public InterpolationContext
 {
 private:
     const size_t nInput, nGhostBoundary, nInterpolated;
@@ -284,7 +286,7 @@ public:
         char filename[100];
         sprintf(filename, "gfei/N=%ld.bin", nInput);
 
-        std::array<double> doubleInterpolationMatrix(2 * (nInput - 2) * nInput);
+        std::vector<double> doubleInterpolationMatrix(2 * (nInput - 2) * nInput);
         ReadBinaryFile(filename, doubleInterpolationMatrix.data(), 2 * (nInput - 2) * nInput);
 
         interpolationMatrix = pi_gsl::matrix_alloc(nInterpolated, nInput);
@@ -316,7 +318,7 @@ public:
    //                nGhostBoundary : Size of ghost boundary
    //
    //-------------------------------------------------------------------------------------------------------
-    void InterpolateReal(const real *input, real *output, size_t nInput, size_t nGhostBoundary)
+    void InterpolateReal(const real *input, real *output)
     {
         pi_gsl::vector_const_view in = pi_gsl::vector_const_view_array( input, nInput       );
         pi_gsl::vector_view out      = pi_gsl::vector_view_array      (output, nInterpolated);
@@ -367,7 +369,7 @@ class InterpolationHandler {
 // data members
 private:
     std::unordered_map<size_t, std::shared_ptr<InterpolationContext>> contexts;
-    std::array<size_t> nWithSmallPrimeFactorisations = {16, 18, 24, 32, 36, 40, 48, 54, 60, 64, 72, 80, 90, 96, 100, 108, 112, 120, 128, 135, 256, 288, 512, 540};
+    std::array<size_t, 24> nWithSmallPrimeFactorisations = {16, 18, 24, 32, 36, 40, 48, 54, 60, 64, 72, 80, 90, 96, 100, 108, 112, 120, 128, 135, 256, 288, 512, 540};
 
 
 public:
@@ -376,7 +378,7 @@ public:
 
     //      for small N <= 32 pick precomputed interpolation
             if ( nInput <= 32 ) {
-                contexts.insert({nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary)});
+                contexts.emplace(nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary));
             } else {
         //      for large N >  32 use Gram-Fourier extension scheme
                 size_t nExtension = 32, nDelta = 14;
@@ -389,10 +391,8 @@ public:
                         break;
                     }
                 }
-                contexts.insert({nInput, new GramFEInterpolationContext(nInput, nGhostBoundary, nExtension, nDelta)})
+                contexts.emplace(nInput, new GramFEInterpolationContext(nInput, nGhostBoundary, nExtension, nDelta));
             }
-
-            contexts.emplace(std::piecewise_construct, std::make_tuple(nInput), std::make_tuple(nInput, nGhostBoundary, nExtension, nDelta));
         }
 
         contexts.at(nInput)->InterpolateReal(input, output);
@@ -437,9 +437,9 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 
    const int maxSize   = MAX(MAX(CSize[0], CSize[1]), CSize[2]) +  2 * CGhost;
 
-   double* Input, *Output;
-   Input  = (double*) fftw_malloc( 1 * maxSize * sizeof(double) * 2);
-   Output = (double*) fftw_malloc( 2 * maxSize * sizeof(double) * 2);
+   real* Input, *Output;
+   Input  = (real*) fftw_malloc( 1 * maxSize * sizeof(real) * 2);
+   Output = (real*) fftw_malloc( 2 * maxSize * sizeof(real) * 2);
 
 // index stride of the coarse-grid input array
    const int Cdx    = 1;
