@@ -400,9 +400,8 @@ public:
 };
 
 
-// Create IPR object that stores all IPR contexts during runtime of GAMER
+// Create InterpolationHandler object that stores all interpolationHandler contexts during runtime of GAMER
 InterpolationHandler interpolationHandler;
-int counter = 0;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Int_Spectral
@@ -484,7 +483,7 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
          } // i
 
 //       interpolate data using IPR
-         ipr.InterpolateReal(Input, Output, CRange[0] + 2 * CGhost, CGhost);
+         interpolationHandler.InterpolateReal(Input, Output, CRange[0] + 2 * CGhost, CGhost);
 
 //       write result of Fourier interpolation (excluding ghost zones) to temporary array
          for (int In_x=0, Out_x=0; In_x<CRange[0]; In_x++, Out_x+=2)
@@ -506,8 +505,8 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
             Input[Out_y]            = TDataX[Idx_InC];
          } // j
 
-//       interpolate data using IPR
-         ipr.InterpolateReal(Input, Output, CRange[1] + 2 * CGhost, CGhost);
+//       interpolate data using interpolationHandler
+         interpolationHandler.InterpolateReal(Input, Output, CRange[1] + 2 * CGhost, CGhost);
 
 
 //       write result of Fourier interpolation to temporary array
@@ -530,8 +529,8 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
             Input[Out_z]            = TDataY[Idx_InC];
          }
 
-//       interpolate data using IPR
-         ipr.InterpolateReal(Input, Output, CRange[2] + 2 * CGhost, CGhost);
+//       interpolate data using interpolationHandler
+         interpolationHandler.InterpolateReal(Input, Output, CRange[2] + 2 * CGhost, CGhost);
 
          for (int In_z=0, Out_z=FStart[2];  In_z<CRange[2];  In_z++, Out_z+=2)
          {
