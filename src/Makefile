@@ -221,6 +221,10 @@ SIMU_OPTION += -DOPENMP
 #     use FFTW2 for fftw2 support
 #SIMU_OPTION += -DSUPPORT_FFTW=FFTW3
 
+# support spectral interpolation
+# --> must enable SUPPORT_FFTW (if FFTW2 must also enable FLOAT8)
+# --> must enable SUPPORT_GSL
+#SIMU_OPTION += -DSUPPORT_SPECTRAL_INTERPOLATION
 
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT

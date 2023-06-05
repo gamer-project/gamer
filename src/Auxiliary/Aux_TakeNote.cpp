@@ -1245,6 +1245,11 @@ void Aux_TakeNote()
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__INT_PHASE                  %d\n",      OPT__INT_PHASE          );
 #     endif
+#     ifdef SUPPORT_SPECTRAL_INTERPOLATION
+      fprintf( Note, "SUPPORT_SPECTRAL_INTERPOLATION  ON\n" );
+#     else
+      fprintf( Note, "SUPPORT_SPECTRAL_INTERPOLATION  OFF\n" );
+#     endif
       fprintf( Note, "OPT__FLU_INT_SCHEME             %s\n",      ( OPT__FLU_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
                                                                   ( OPT__FLU_INT_SCHEME == INT_MINMOD1D ) ? "MINMOD1D" :
                                                                   ( OPT__FLU_INT_SCHEME == INT_VANLEER  ) ? "VANLEER"  :

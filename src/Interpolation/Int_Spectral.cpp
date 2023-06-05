@@ -1,7 +1,7 @@
 #include "GAMER.h"
 
 
-#if ( defined(SUPPORT_FFTW) && defined(SUPPORT_GSL) )
+#ifdef SUPPORT_SPECTRAL_INTERPOLATION
 
 // GSL includes
 #include "GSL.h"
@@ -55,21 +55,20 @@ struct InterpolationContext {
 // Structure   :  GramFEInterpolationContext
 // Description :  Data structure of the Gram-Fourier extension interpolation implementation
 //
-// Data Member :
-//             :  nInput                          : Size of input array
-//             :  nGhostBoundary                  : Size of ghost boundary
-//             :  nInterpolated                   : Size of interpolated input data
-//             :  nExtension                      : Size of extension region
-//             :  nExtended                       : Size of domain after extension
-//             :  nExtendedPadded                 : Complex size of domain after extension with padding for real FFT
-//             :  nDelta                          : Size of boundary domain
-//             :  inputExtended                   : Array to store input array after extension
-//             :  outputL                         : Array to store left interpolated values
-//             :  outputR                         : Array to store right interpolated values
-//             :  translationCoeffL               : Array to store left translation coefficients
-//             :  translationCoeffR               : Array to store right translation coefficients
-//             :  extensionMatrix                 : Array to store Gram-Fourier table
-//             :  r2cPlan, c2rPlan                : Real-To-Complex and Complex-To-Real FFT plans
+// Data Member :  nInput                          : Size of input array
+//                nGhostBoundary                  : Size of ghost boundary
+//                nInterpolated                   : Size of interpolated input data
+//                nExtension                      : Size of extension region
+//                nExtended                       : Size of domain after extension
+//                nExtendedPadded                 : Complex size of domain after extension with padding for real FFT
+//                nDelta                          : Size of boundary domain
+//                inputExtended                   : Array to store input array after extension
+//                outputL                         : Array to store left interpolated values
+//                outputR                         : Array to store right interpolated values
+//                translationCoeffL               : Array to store left translation coefficients
+//                translationCoeffR               : Array to store right translation coefficients
+//                extensionMatrix                 : Array to store Gram-Fourier table
+//                r2cPlan, c2rPlan                : Real-To-Complex and Complex-To-Real FFT plans
 //
 // Method      :  GramFEInterpolationContext      : Constructor
 //               ~GramFEInterpolationContext      : Destructor
@@ -83,6 +82,7 @@ struct InterpolationContext {
 //                GetC2CPlan                      : Get complex forward FFT plan of size nInput
 //                GetR2CPlan                      : Get real-to-complex FFT plan of size nInput
 //                GetPermutation                  : Get permutation of LU decomposition
+//
 //-------------------------------------------------------------------------------------------------------
 class GramFEInterpolationContext  : public InterpolationContext {
 //  data members
@@ -260,15 +260,15 @@ public:
 // Structure   :  PrecomputedInterpolationContext
 // Description :  Data structure of the precomputed Gram-Fourier extension interpolation implementation
 //
-// Data Member :
-//             :  nInput                          : Size of input array
+// Data Member :  nInput                          : Size of input array
 //             :  nGhostBoundary                  : Size of ghost boundary
 //             :  nInterpolated                   : Size of interpolated input data
 //             :  interpolationMatrix             : GSL matrix of size nInterpolated x nInput
 //
-// Method      :  PrecomputedInterpolationContext      : Constructor
-//               ~PrecomputedInterpolationContext      : Destructor
-//                InterpolateReal                      : Interpolate real function of
+// Method      :  PrecomputedInterpolationContext : Constructor
+//               ~PrecomputedInterpolationContext : Destructor
+//                InterpolateReal                 : Interpolate input array of size nInput and store interpolation results of size 2 * (nInput - nGhostBoundary) in output array
+//
 //-------------------------------------------------------------------------------------------------------
 struct PrecomputedInterpolationContext : public InterpolationContext
 {
@@ -364,6 +364,7 @@ private:
 //                GetC2CPlan                      : Get complex forward FFT plan of size nInput
 //                GetR2CPlan                      : Get real-to-complex FFT plan of size nInput
 //                GetPermutation                  : Get permutation of LU decomposition
+//
 //-------------------------------------------------------------------------------------------------------
 class InterpolationHandler {
 // data members
@@ -435,11 +436,11 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
    const int CGhost    = 2;
 // ===============================================================================
 
-   const int maxSize   = MAX(MAX(CSize[0], CSize[1]), CSize[2]) +  2 * CGhost;
+   const int maxSize   = MAX(MAX(CSize[0], CSize[1]), CSize[2])
 
    real* Input, *Output;
-   Input  = (real*) fftw_malloc( 1 * maxSize * sizeof(real) * 2);
-   Output = (real*) fftw_malloc( 2 * maxSize * sizeof(real) * 2);
+   Input  = (real*) fftw_malloc( (maxSize +  2 * CGhost) * sizeof(real) );
+   Output = (real*) fftw_malloc(  2 * maxSize * sizeof(real) );
 
 // index stride of the coarse-grid input array
    const int Cdx    = 1;
@@ -552,4 +553,4 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 
 } // FUNCTION : Int_Spectral
 
-#endif // #if ( defined(SUPPORT_FFTW) && defined(SUPPORT_GSL) )
+#endif // #endif SUPPORT_SPECTRAL_INTERPOLATION

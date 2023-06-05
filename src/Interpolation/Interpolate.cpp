@@ -540,9 +540,9 @@ static IntSchemeFunc_t Int_SelectScheme( const IntScheme_t IntScheme )
       case INT_QUAD     :  return Int_Quadratic;   break;
       case INT_CQUAR    :  return Int_CQuartic;    break;
       case INT_QUAR     :  return Int_Quartic;     break;
-#     if ( defined(SUPPORT_FFTW) && defined(SUPPORT_GSL) )
+#     ifdef SUPPORT_SPECTRAL_INTERPOLATION
       case INT_SPECTRAL :  return Int_Spectral;    break;
-#     endif // #if ( defined(SUPPORT_FFTW) && defined(SUPPORT_GSL) )
+#     endif // # ifdef SUPPORT_SPECTRAL_INTERPOLATION
       default           :  Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "IntScheme", IntScheme );
    }
 
