@@ -132,7 +132,8 @@ const IntScheme_t
    INT_CQUAD    = 4,
    INT_QUAD     = 5,
    INT_CQUAR    = 6,
-   INT_QUAR     = 7;
+   INT_QUAR     = 7,
+   INT_SPECTRAL = 8;
 
 
 // data reconstruction TVD limiters

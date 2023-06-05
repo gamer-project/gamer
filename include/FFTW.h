@@ -14,65 +14,159 @@
 
 #if ( SUPPORT_FFTW == FFTW2 || SUPPORT_FFTW == FFTW3 )
 
+// forward declaration of std::complex
+namespace std {
+    template<typename T> class complex;
+}
+
 // wrappers for fftw3 single and double precision routines
 #if ( SUPPORT_FFTW == FFTW3 )
-#ifdef FLOAT8
-#define gamer_float_fftw3_malloc              fftw_malloc
-#define gamer_float_fftw3_free                fftw_free
-#define gamer_float_fftw3_plan                fftw_plan
-#define gamer_float_fftw3_destroy_plan        fftw_destroy_plan
-#define gamer_float_fftw3_complex             fftw_complex
-#define gamer_float_fftw3_execute_dft_r2c     fftw_execute_dft_r2c
-#define gamer_float_fftw3_execute_dft_c2r     fftw_execute_dft_c2r
-#define gamer_float_fftw3_execute_dft_c2c     fftw_execute_dft
-#define gamer_float_fftw3_plan_dft_r2c_3d     fftw_plan_dft_r2c_3d
-#define gamer_float_fftw3_plan_dft_c2r_3d     fftw_plan_dft_c2r_3d
-#define gamer_float_fftw3_plan_dft_c2c_3d     fftw_plan_dft_3d
-#define gamer_float_fftw3_cleanup             fftw_cleanup
-#ifndef SERIAL
-#define gamer_float_fftw3_mpi_execute_dft_r2c fftw_mpi_execute_dft_r2c
-#define gamer_float_fftw3_mpi_execute_dft_c2r fftw_mpi_execute_dft_c2r
-#define gamer_float_fftw3_mpi_execute_dft_c2c fftw_mpi_execute_dft
-#define gamer_float_fftw3_mpi_plan_dft_r2c_3d fftw_mpi_plan_dft_r2c_3d
-#define gamer_float_fftw3_mpi_plan_dft_c2r_3d fftw_mpi_plan_dft_c2r_3d
-#define gamer_float_fftw3_mpi_plan_dft_c2c_3d fftw_mpi_plan_dft_3d
-#define gamer_float_fftw3_mpi_cleanup         fftw_mpi_cleanup
-#endif // #ifndef SERIAL
-#else // #ifdef FLOAT8
-#define gamer_float_fftw3_malloc              fftwf_malloc
-#define gamer_float_fftw3_free                fftwf_free
-#define gamer_float_fftw3_plan                fftwf_plan
-#define gamer_float_fftw3_destroy_plan        fftwf_destroy_plan
-#define gamer_float_fftw3_complex             fftwf_complex
-#define gamer_float_fftw3_execute_dft_r2c     fftwf_execute_dft_r2c
-#define gamer_float_fftw3_execute_dft_c2r     fftwf_execute_dft_c2r
-#define gamer_float_fftw3_execute_dft_c2c     fftwf_execute_dft
-#define gamer_float_fftw3_plan_dft_r2c_3d     fftwf_plan_dft_r2c_3d
-#define gamer_float_fftw3_plan_dft_c2r_3d     fftwf_plan_dft_c2r_3d
-#define gamer_float_fftw3_plan_dft_c2c_3d     fftwf_plan_dft_3d
-#define gamer_float_fftw3_cleanup             fftwf_cleanup
-#ifndef SERIAL
-#define gamer_float_fftw3_mpi_execute_dft_r2c fftwf_mpi_execute_dft_r2c
-#define gamer_float_fftw3_mpi_execute_dft_c2r fftwf_mpi_execute_dft_c2r
-#define gamer_float_fftw3_mpi_execute_dft_c2c fftwf_mpi_execute_dft
-#define gamer_float_fftw3_mpi_plan_dft_r2c_3d fftwf_mpi_plan_dft_r2c_3d
-#define gamer_float_fftw3_mpi_plan_dft_c2r_3d fftwf_mpi_plan_dft_c2r_3d
-#define gamer_float_fftw3_mpi_plan_dft_c2c_3d fftwf_mpi_plan_dft_3d
-#define gamer_float_fftw3_mpi_cleanup         fftwf_mpi_cleanup
-#endif // #ifndef SERIAL
-#endif // #ifdef FLOAT8 ... else
-#endif // #if ( SUPPORT_FFTW == FFTW3 )
 
+namespace fftw3_single_precision {
+using      fft_real                     = float;
+using      fft_complex                  = fftwf_complex;
+using      std_complex                  = std::complex<float>;
+using      plan                         = fftwf_plan;
+using      real_plan                    = fftwf_plan;
+using      real_nd_plan                 = fftwf_plan;
+using      complex_plan                 = fftwf_plan;
+using      complex_nd_plan              = fftwf_plan;
+const auto fft_malloc                   = fftwf_malloc;
+const auto fft_free                     = fftwf_free;
+const auto destroy_plan                 = fftwf_destroy_plan;
+const auto destroy_real_plan            = fftwf_destroy_plan;
+const auto destroy_real_nd_plan         = fftwf_destroy_plan;
+const auto destroy_complex_plan         = fftwf_destroy_plan;
+const auto destroy_complex_nd_plan      = fftwf_destroy_plan;
+const auto execute_dft_r2c              = fftwf_execute_dft_r2c;
+const auto execute_dft_c2r              = fftwf_execute_dft_c2r;
+const auto execute_dft_c2c              = fftwf_execute_dft;
+const auto execute_nd_dft_r2c           = fftwf_execute_dft_r2c;
+const auto execute_nd_dft_c2r           = fftwf_execute_dft_c2r;
+const auto execute_nd_dft_c2c           = fftwf_execute_dft;
+const auto plan_dft_r2c_3d              = fftwf_plan_dft_r2c_3d;
+const auto plan_dft_c2r_3d              = fftwf_plan_dft_c2r_3d;
+const auto plan_dft_c2c_3d              = fftwf_plan_dft_3d;
+const auto plan_dft_c2c_1d              = fftwf_plan_dft_1d;
+const auto plan_dft_c2r_1d              = fftwf_plan_dft_c2r_1d;
+const auto plan_dft_r2c_1d              = fftwf_plan_dft_r2c_1d;
+const auto cleanup                      = fftwf_cleanup;
+#ifndef SERIAL
+using      real_mpi_nd_plan             = fftwf_plan;
+using      complex_mpi_nd_plan          = fftwf_plan;
+const auto destroy_real_mpi_nd_plan     = fftwf_destroy_plan;
+const auto destroy_complex_mpi_nd_plan  = fftwf_destroy_plan;
+const auto mpi_execute_nd_dft_r2c       = fftwf_mpi_execute_dft_r2c;
+const auto mpi_execute_nd_dft_c2r       = fftwf_mpi_execute_dft_c2r;
+const auto mpi_execute_nd_dft_c2c       = fftwf_mpi_execute_dft;
+const auto mpi_plan_dft_r2c_3d          = fftwf_mpi_plan_dft_r2c_3d;
+const auto mpi_plan_dft_c2r_3d          = fftwf_mpi_plan_dft_c2r_3d;
+const auto mpi_plan_dft_c2c_3d          = fftwf_mpi_plan_dft_3d;
+const auto mpi_cleanup                  = fftwf_mpi_cleanup;
+#endif // #ifndef SERIAL
+};
 
-//wrapper for fftw complex type
-//note that real and imaginary part should only be accessed through c_re and c_im since this macro is also defined in FFTW2
+namespace fftw3_double_precision {
+using      fft_real                     = double;
+using      fft_complex                  = fftw_complex;
+using      std_complex                  = std::complex<double>;
+using      real_plan                    = fftw_plan;
+using      real_nd_plan                 = fftw_plan;
+using      complex_plan                 = fftw_plan;
+using      complex_nd_plan              = fftw_plan;
+const auto fft_malloc                   = fftw_malloc;
+const auto fft_free                     = fftw_free;
+const auto destroy_plan                 = fftw_destroy_plan;
+const auto destroy_real_plan            = fftw_destroy_plan;
+const auto destroy_real_nd_plan         = fftw_destroy_plan;
+const auto destroy_complex_plan         = fftw_destroy_plan;
+const auto destroy_complex_nd_plan      = fftw_destroy_plan;
+const auto execute_dft_r2c              = fftw_execute_dft_r2c;
+const auto execute_dft_c2r              = fftw_execute_dft_c2r;
+const auto execute_dft_c2c              = fftw_execute_dft;
+const auto execute_nd_dft_r2c           = fftw_execute_dft_r2c;
+const auto execute_nd_dft_c2r           = fftw_execute_dft_c2r;
+const auto execute_nd_dft_c2c           = fftw_execute_dft;
+const auto plan_dft_r2c_3d              = fftw_plan_dft_r2c_3d;
+const auto plan_dft_c2r_3d              = fftw_plan_dft_c2r_3d;
+const auto plan_dft_c2c_3d              = fftw_plan_dft_3d;
+const auto plan_dft_c2c_1d              = fftw_plan_dft_1d;
+const auto plan_dft_c2r_1d              = fftw_plan_dft_c2r_1d;
+const auto plan_dft_r2c_1d              = fftw_plan_dft_r2c_1d;
+const auto cleanup                      = fftw_cleanup;
+#ifndef SERIAL
+using      real_mpi_nd_plan             = fftw_plan;
+using      complex_mpi_nd_plan          = fftw_plan;
+const auto destroy_real_mpi_nd_plan     = fftw_destroy_plan;
+const auto destroy_complex_mpi_nd_plan  = fftw_destroy_plan;
+const auto mpi_execute_nd_dft_r2c       = fftw_mpi_execute_dft_r2c;
+const auto mpi_execute_nd_dft_c2r       = fftw_mpi_execute_dft_c2r;
+const auto mpi_execute_nd_dft_c2c       = fftw_mpi_execute_dft;
+const auto mpi_plan_dft_r2c_3d          = fftw_mpi_plan_dft_r2c_3d;
+const auto mpi_plan_dft_c2r_3d          = fftw_mpi_plan_dft_c2r_3d;
+const auto mpi_plan_dft_c2c_3d          = fftw_mpi_plan_dft_3d;
+const auto mpi_cleanup                  = fftw_mpi_cleanup;
+#endif // #ifndef SERIAL
+};
+
+#else // #if ( SUPPORT_FFTW == FFTW3 )
+namespace fftw2 {
+using      fft_real                     = real;
+using      fft_complex                  = fftw_complex;
+using      std_complex                  = std::complex<real>;
+using      real_plan                    =   rfftw_plan;
+using      real_nd_plan                 = rfftwnd_plan;
+using      complex_plan                 =    fftw_plan;
+using      complex_nd_plan              =  fftwnd_plan;
+const auto fft_malloc                   = malloc;
+const auto fft_free                     = free;
+const auto destroy_real_plan            =   rfftw_destroy_plan;
+const auto destroy_real_nd_plan         = rfftwnd_destroy_plan;
+const auto destroy_complex_plan         =    fftw_destroy_plan;
+const auto destroy_complex_nd_plan      =  fftwnd_destroy_plan;
+const auto execute_dft_r2c              =   rfftw_one;
+const auto execute_nd_dft_r2c           = rfftwnd_one_real_to_complex;
+const auto execute_dft_c2r              =   rfftw_one;
+const auto execute_nd_dft_c2r           = rfftwnd_one_complex_to_real;
+const auto execute_dft_c2c              =    fftw_one;
+const auto execute_nd_dft_c2c           =  fftwnd_one;
+const auto plan_dft_r2c_3d              = rfftw3d_create_plan;
+const auto plan_dft_c2r_3d              = rfftw3d_create_plan;
+const auto plan_dft_c2c_3d              =  fftw3d_create_plan;
+const auto plan_dft_c2c_1d              =  fftw_create_plan;
+const auto plan_dft_c2r_1d              = rfftw_create_plan;
+const auto plan_dft_r2c_1d              = rfftw_create_plan;
+#ifndef SERIAL
+using      real_mpi_nd_plan             = rfftwnd_mpi_plan;
+using      complex_mpi_nd_plan          =  fftwnd_mpi_plan;
+const auto destroy_real_mpi_nd_plan     = rfftwnd_mpi_destroy_plan;
+const auto destroy_complex_mpi_nd_plan  =  fftwnd_mpi_destroy_plan;
+const auto mpi_execute_nd_dft_r2c       = rfftwnd_mpi;
+const auto mpi_execute_nd_dft_c2r       = rfftwnd_mpi;
+const auto mpi_execute_nd_dft_c2c       =  fftwnd_mpi;
+const auto mpi_plan_dft_r2c_3d          = rfftw3d_mpi_create_plan;
+const auto mpi_plan_dft_c2r_3d          = rfftw3d_mpi_create_plan;
+const auto mpi_plan_dft_c2c_3d          =  fftw3d_mpi_create_plan;
+#endif // #ifndef SERIAL
+};
+#endif // #if ( SUPPORT_FFTW == FFTW3 ) ... # else
+
 #if ( SUPPORT_FFTW == FFTW3 )
-#define gamer_float_complex gamer_float_fftw3_complex
-#define c_re(c) ((c)[0])
-#define c_im(c) ((c)[1])
-#else // # if ( SUPPORT_FFTW == FFTW3 )
-#define gamer_float_complex fftw_complex
-#endif // # if ( SUPPORT_FFTW == FFTW3 )  ... # else
+#ifdef FLOAT8
+namespace gamer_fftw = fftw3_double_precision;
+#else // #ifdef FLOAT8
+namespace gamer_fftw = fftw3_single_precision;
+#endif // #ifdef FLOAT8 ... # else
+#else // #if ( SUPPORT_FFTW == FFTW3 )
+namespace gamer_fftw = fftw2;
+#endif // #if ( SUPPORT_FFTW == FFTW3 ) ... #else
+
+
+//real and imaginary part should only be accessed through c_re and c_im since this macro is also defined in FFTW2
+# if ( SUPPORT_FFTW == FFTW3 )
+# define c_re(c) ((c)[0])
+# define c_im(c) ((c)[1])
+# endif
 
 // define index types for mpi_local_size function that uses int in FFTW2 and long int in FFTW3
 # if ( SUPPORT_FFTW == FFTW3 )
@@ -81,72 +175,60 @@
 # define mpi_index_int int
 # endif
 
+
 //wrappers for fftw plans and real-to-complex as well as complex to real n-dimensional transforms on the root level of the AMR hierarchy
 //used for Poisson solver and for computing power spectra
-#if ( SUPPORT_FFTW == FFTW3 )
-#define root_real_fftw_plan         gamer_float_fftw3_plan
-#define root_complex_fftw_plan      gamer_float_fftw3_plan
-#define root_fftw_malloc            gamer_float_fftw3_malloc
-#define root_fftw_free              gamer_float_fftw3_free
+namespace root_fftw {
+const auto malloc               = gamer_fftw::fft_malloc;
+const auto free                 = gamer_fftw::fft_free;
 #ifdef SERIAL
-#define root_fftw_r2c(plan, array)  gamer_float_fftw3_execute_dft_r2c    ( plan, (real*)                array, (gamer_float_complex*)  array )
-#define root_fftw_c2r(plan, array)  gamer_float_fftw3_execute_dft_c2r    ( plan, (gamer_float_complex*) array, (real*)                 array )
-#define root_fftw_c2c(plan, array)  gamer_float_fftw3_execute_dft_c2c    ( plan, (gamer_float_complex*) array, (gamer_float_complex*)  array )
-#else  // #ifdef SERIAL
-#define root_fftw_r2c(plan, array)  gamer_float_fftw3_mpi_execute_dft_r2c( plan, (real*)                array, (gamer_float_complex*)  array )
-#define root_fftw_c2r(plan, array)  gamer_float_fftw3_mpi_execute_dft_c2r( plan, (gamer_float_complex*) array, (real*)                 array )
-#define root_fftw_c2c(plan, array)  gamer_float_fftw3_mpi_execute_dft_c2c( plan, (gamer_float_complex*) array, (gamer_float_complex*)  array )
-#endif // #ifdef SERIAL ... # else
-#else // # if ( SUPPORT_FFTW == FFTW3 )
-#define root_fftw_malloc            malloc
-#define root_fftw_free              free
-#ifdef SERIAL
-#define root_real_fftw_plan         rfftwnd_plan
-#define root_complex_fftw_plan       fftwnd_plan
-#define root_fftw_r2c(plan, array)  rfftwnd_one_real_to_complex( plan, (real*)                array, NULL )
-#define root_fftw_c2r(plan, array)  rfftwnd_one_complex_to_real( plan, (gamer_float_complex*) array, NULL )
-#define root_fftw_c2c(plan, array)   fftwnd_one                ( plan, (gamer_float_complex*) array, NULL )
-#else  // #ifdef SERIAL
-#define root_real_fftw_plan         rfftwnd_mpi_plan
-#define root_complex_fftw_plan       fftwnd_mpi_plan
-#define root_fftw_r2c(plan, array)  rfftwnd_mpi( plan, 1, (real*)                array, NULL, FFTW_TRANSPOSED_ORDER )
-#define root_fftw_c2r(plan, array)  rfftwnd_mpi( plan, 1, (real*)                array, NULL, FFTW_TRANSPOSED_ORDER )
-#define root_fftw_c2c(plan, array)   fftwnd_mpi( plan, 1, (gamer_float_complex*) array, NULL, FFTW_TRANSPOSED_ORDER )
-#endif // #ifdef SERIAL ... # else
-#endif // # if ( SUPPORT_FFTW == FFTW3 )  ... # else
+using      real_plan            = gamer_fftw::real_nd_plan;
+using      complex_plan         = gamer_fftw::complex_nd_plan;
+const auto destroy_real_plan    = gamer_fftw::destroy_real_nd_plan;
+const auto destroy_complex_plan = gamer_fftw::destroy_complex_nd_plan;
+#else // #ifdef SERIAL
+using      real_plan            = gamer_fftw::real_mpi_nd_plan;
+using      complex_plan         = gamer_fftw::complex_mpi_nd_plan;
+const auto destroy_real_plan    = gamer_fftw::destroy_real_mpi_nd_plan;
+const auto destroy_complex_plan = gamer_fftw::destroy_complex_mpi_nd_plan;
+#endif // #endif
+};
 
-//wrappers for fftw create and destroy plan functions used in Init_FFTW
 #if ( SUPPORT_FFTW == FFTW3 )
 #ifdef SERIAL
-#define create_fftw_3d_r2c_plan(size, arr, startup)          gamer_float_fftw3_plan_dft_r2c_3d(     size[2], size[1], size[0], (real*)                      arr, (gamer_float_fftw3_complex*) arr,                startup )
-#define create_fftw_3d_c2r_plan(size, arr, startup)          gamer_float_fftw3_plan_dft_c2r_3d(     size[2], size[1], size[0], (gamer_float_fftw3_complex*) arr, (real*)                      arr,                startup )
-#define create_fftw_3d_forward_c2c_plan(size, arr, startup)  gamer_float_fftw3_plan_dft_c2c_3d(     size[2], size[1], size[0], (gamer_float_fftw3_complex*) arr, (gamer_float_fftw3_complex*) arr, FFTW_FORWARD , startup )
-#define create_fftw_3d_backward_c2c_plan(size, arr, startup) gamer_float_fftw3_plan_dft_c2c_3d(     size[2], size[1], size[0], (gamer_float_fftw3_complex*) arr, (gamer_float_fftw3_complex*) arr, FFTW_BACKWARD, startup )
-#define destroy_real_fftw_plan                               gamer_float_fftw3_destroy_plan
-#define destroy_complex_fftw_plan                            gamer_float_fftw3_destroy_plan
+#define root_fftw_create_3d_r2c_plan(size, arr, startup)            gamer_fftw::plan_dft_r2c_3d        ( size[2], size[1], size[0], (gamer_fftw::fft_real*)    arr, (gamer_fftw::fft_complex*) arr,                startup )
+#define root_fftw_create_3d_c2r_plan(size, arr, startup)            gamer_fftw::plan_dft_c2r_3d        ( size[2], size[1], size[0], (gamer_fftw::fft_complex*) arr, (gamer_fftw::fft_real*)    arr,                startup )
+#define root_fftw_create_3d_forward_c2c_plan(size, arr, startup)    gamer_fftw::plan_dft_c2c_3d        ( size[2], size[1], size[0], (gamer_fftw::fft_complex*) arr, (gamer_fftw::fft_complex*) arr, FFTW_FORWARD , startup )
+#define root_fftw_create_3d_backward_c2c_plan(size, arr, startup)   gamer_fftw::plan_dft_c2c_3d        ( size[2], size[1], size[0], (gamer_fftw::fft_complex*) arr, (gamer_fftw::fft_complex*) arr, FFTW_BACKWARD, startup )
+#define root_fftw_r2c(plan, arr)                                    gamer_fftw::execute_nd_dft_r2c     ( plan,                      (gamer_fftw::fft_real*)    arr, (gamer_fftw::fft_complex*) arr )
+#define root_fftw_c2r(plan, arr)                                    gamer_fftw::execute_nd_dft_c2r     ( plan,                      (gamer_fftw::fft_complex*) arr, (gamer_fftw::fft_real*)    arr )
+#define root_fftw_c2c(plan, arr)                                    gamer_fftw::execute_nd_dft_c2c     ( plan,                      (gamer_fftw::fft_complex*) arr, (gamer_fftw::fft_complex*) arr )
 #else  // #ifdef SERIAL
-#define create_fftw_3d_r2c_plan(size, arr, startup)          gamer_float_fftw3_mpi_plan_dft_r2c_3d( size[2], size[1], size[0], (real*)                      arr, (gamer_float_fftw3_complex*) arr, MPI_COMM_WORLD,                startup | FFTW_MPI_TRANSPOSED_OUT )
-#define create_fftw_3d_c2r_plan(size, arr, startup)          gamer_float_fftw3_mpi_plan_dft_c2r_3d( size[2], size[1], size[0], (gamer_float_fftw3_complex*) arr, (real*)                      arr, MPI_COMM_WORLD,                startup | FFTW_MPI_TRANSPOSED_IN  )
-#define create_fftw_3d_forward_c2c_plan(size, arr, startup)  gamer_float_fftw3_mpi_plan_dft_c2c_3d( size[2], size[1], size[0], (gamer_float_fftw3_complex*) arr, (gamer_float_fftw3_complex*) arr, MPI_COMM_WORLD, FFTW_FORWARD , startup | FFTW_MPI_TRANSPOSED_OUT )
-#define create_fftw_3d_backward_c2c_plan(size, arr, startup) gamer_float_fftw3_mpi_plan_dft_c2c_3d( size[2], size[1], size[0], (gamer_float_fftw3_complex*) arr, (gamer_float_fftw3_complex*) arr, MPI_COMM_WORLD, FFTW_BACKWARD, startup | FFTW_MPI_TRANSPOSED_IN  )
-#define destroy_real_fftw_plan                               gamer_float_fftw3_destroy_plan
-#define destroy_complex_fftw_plan                            gamer_float_fftw3_destroy_plan
+#define root_fftw_create_3d_r2c_plan(size, arr, startup)            gamer_fftw::mpi_plan_dft_r2c_3d    ( size[2], size[1], size[0], (gamer_fftw::fft_real*)    arr, (gamer_fftw::fft_complex*) arr, MPI_COMM_WORLD,                startup | FFTW_MPI_TRANSPOSED_OUT )
+#define root_fftw_create_3d_c2r_plan(size, arr, startup)            gamer_fftw::mpi_plan_dft_c2r_3d    ( size[2], size[1], size[0], (gamer_fftw::fft_complex*) arr, (gamer_fftw::fft_real*)    arr, MPI_COMM_WORLD,                startup | FFTW_MPI_TRANSPOSED_IN  )
+#define root_fftw_create_3d_forward_c2c_plan(size, arr, startup)    gamer_fftw::mpi_plan_dft_c2c_3d    ( size[2], size[1], size[0], (gamer_fftw::fft_complex*) arr, (gamer_fftw::fft_complex*) arr, MPI_COMM_WORLD, FFTW_FORWARD , startup | FFTW_MPI_TRANSPOSED_OUT )
+#define root_fftw_create_3d_backward_c2c_plan(size, arr, startup)   gamer_fftw::mpi_plan_dft_c2c_3d    ( size[2], size[1], size[0], (gamer_fftw::fft_complex*) arr, (gamer_fftw::fft_complex*) arr, MPI_COMM_WORLD, FFTW_BACKWARD, startup | FFTW_MPI_TRANSPOSED_IN  )
+#define root_fftw_r2c(plan, arr)                                    gamer_fftw::mpi_execute_nd_dft_r2c ( plan,                      (gamer_fftw::fft_real*)    arr, (gamer_fftw::fft_complex*) arr )
+#define root_fftw_c2r(plan, arr)                                    gamer_fftw::mpi_execute_nd_dft_c2r ( plan,                      (gamer_fftw::fft_complex*) arr, (gamer_fftw::fft_real*)    arr )
+#define root_fftw_c2c(plan, arr)                                    gamer_fftw::mpi_execute_nd_dft_c2c ( plan,                      (gamer_fftw::fft_complex*) arr, (gamer_fftw::fft_complex*) arr )
 #endif // #ifdef SERIAL ... # else
 #else // # if ( SUPPORT_FFTW == FFTW3 )
 #ifdef SERIAL
-#define create_fftw_3d_r2c_plan(size, arr, startup)          rfftw3d_create_plan(                     size[2], size[1], size[0], FFTW_REAL_TO_COMPLEX, startup | FFTW_IN_PLACE )
-#define create_fftw_3d_c2r_plan(size, arr, startup)          rfftw3d_create_plan(                     size[2], size[1], size[0], FFTW_COMPLEX_TO_REAL, startup | FFTW_IN_PLACE )
-#define create_fftw_3d_forward_c2c_plan(size, arr, startup)   fftw3d_create_plan(                     size[2], size[1], size[0], FFTW_FORWARD        , startup | FFTW_IN_PLACE )
-#define create_fftw_3d_backward_c2c_plan(size, arr, startup)  fftw3d_create_plan(                     size[2], size[1], size[0], FFTW_BACKWARD       , startup | FFTW_IN_PLACE )
-#define destroy_real_fftw_plan                               rfftwnd_destroy_plan
-#define destroy_complex_fftw_plan                             fftwnd_destroy_plan
+#define root_fftw_create_3d_r2c_plan(size, arr, startup)            gamer_fftw::plan_dft_r2c_3d        ( size[2], size[1], size[0], FFTW_REAL_TO_COMPLEX, startup | FFTW_IN_PLACE )
+#define root_fftw_create_3d_c2r_plan(size, arr, startup)            gamer_fftw::plan_dft_c2r_3d        ( size[2], size[1], size[0], FFTW_COMPLEX_TO_REAL, startup | FFTW_IN_PLACE )
+#define root_fftw_create_3d_forward_c2c_plan(size, arr, startup)    gamer_fftw::plan_dft_c2c_3d        ( size[2], size[1], size[0], FFTW_FORWARD        , startup | FFTW_IN_PLACE )
+#define root_fftw_create_3d_backward_c2c_plan(size, arr, startup)   gamer_fftw::plan_dft_c2c_3d        ( size[2], size[1], size[0], FFTW_BACKWARD       , startup | FFTW_IN_PLACE )
+#define root_fftw_r2c(plan, arr)                                    gamer_fftw::execute_nd_dft_r2c     ( plan,                      (gamer_fftw::fft_real*)    arr, NULL )
+#define root_fftw_c2r(plan, arr)                                    gamer_fftw::execute_nd_dft_c2r     ( plan,                      (gamer_fftw::fft_complex*) arr, NULL )
+#define root_fftw_c2c(plan, arr)                                    gamer_fftw::execute_nd_dft_c2c     ( plan,                      (gamer_fftw::fft_complex*) arr, NULL )
 #else  // #ifdef SERIAL
-#define create_fftw_3d_r2c_plan(size, arr, startup)          rfftw3d_mpi_create_plan( MPI_COMM_WORLD, size[2], size[1], size[0], FFTW_REAL_TO_COMPLEX, startup )
-#define create_fftw_3d_c2r_plan(size, arr, startup)          rfftw3d_mpi_create_plan( MPI_COMM_WORLD, size[2], size[1], size[0], FFTW_COMPLEX_TO_REAL, startup )
-#define create_fftw_3d_forward_c2c_plan(size, arr, startup)   fftw3d_mpi_create_plan( MPI_COMM_WORLD, size[2], size[1], size[0], FFTW_FORWARD        , startup )
-#define create_fftw_3d_backward_c2c_plan(size, arr, startup)  fftw3d_mpi_create_plan( MPI_COMM_WORLD, size[2], size[1], size[0], FFTW_BACKWARD       , startup )
-#define destroy_real_fftw_plan                               rfftwnd_mpi_destroy_plan
-#define destroy_complex_fftw_plan                             fftwnd_mpi_destroy_plan
+#define root_fftw_create_3d_r2c_plan(size, arr, startup)            gamer_fftw::mpi_plan_dft_r2c_3d    ( MPI_COMM_WORLD, size[2], size[1], size[0], FFTW_REAL_TO_COMPLEX, startup )
+#define root_fftw_create_3d_c2r_plan(size, arr, startup)            gamer_fftw::mpi_plan_dft_c2r_3d    ( MPI_COMM_WORLD, size[2], size[1], size[0], FFTW_COMPLEX_TO_REAL, startup )
+#define root_fftw_create_3d_forward_c2c_plan(size, arr, startup)    gamer_fftw::mpi_plan_dft_c2c_3d    ( MPI_COMM_WORLD, size[2], size[1], size[0], FFTW_FORWARD        , startup )
+#define root_fftw_create_3d_backward_c2c_plan(size, arr, startup)   gamer_fftw::mpi_plan_dft_c2c_3d    ( MPI_COMM_WORLD, size[2], size[1], size[0], FFTW_BACKWARD       , startup )
+#define root_fftw_r2c(plan, arr)                                    gamer_fftw::mpi_execute_nd_dft_r2c ( plan, 1,                   (gamer_fftw::fft_real*)    arr, NULL, FFTW_TRANSPOSED_ORDER )
+#define root_fftw_c2r(plan, arr)                                    gamer_fftw::mpi_execute_nd_dft_c2r ( plan, 1,                   (gamer_fftw::fft_real*)    arr, NULL, FFTW_TRANSPOSED_ORDER )
+#define root_fftw_c2c(plan, arr)                                    gamer_fftw::mpi_execute_nd_dft_c2c ( plan, 1,                   (gamer_fftw::fft_complex*) arr, NULL, FFTW_TRANSPOSED_ORDER )
 #endif // #ifdef SERIAL ... # else
 #endif // # if ( SUPPORT_FFTW == FFTW3 )
 
@@ -180,31 +262,23 @@
 
 //wrappers for fftw plans and complex 1D-transform used in Gram-Fourier extension algorithm
 #if ( SUPPORT_FFTW == FFTW3 )
-#define gramfe_float_complex                                        gramfe_float_fftw3_complex
-#define gramfe_real_fftw_plan                                       gramfe_float_fftw3_plan
-#define gramfe_complex_fftw_plan                                    gramfe_float_fftw3_plan
-#define gramfe_fftw_malloc                                          gramfe_float_fftw3_malloc
-#define gramfe_fftw_free                                            gramfe_float_fftw3_free
-#define gramfe_fftw_c2c(plan, array)                                gramfe_float_fftw3_execute_dft_c2c    ( plan, (gramfe_float_complex*) array, (gramfe_float_complex*)  array )
-#define gramfe_fftw_r2c(plan, array)                                gramfe_float_fftw3_execute_dft_r2c    ( plan, (gramfe_float*)         array, (gramfe_float_complex*)  array )
-#define gramfe_fftw_c2r(plan, in, out)                              gramfe_float_fftw3_execute_dft_c2r    ( plan, (gramfe_float_complex*) in,    (gramfe_float*)          out   )
-#define gramfe_create_fftw_1d_forward_c2c_plan(size, arr, startup)  gramfe_float_fftw3_plan_dft_c2c_1d(     size, (gramfe_float_fftw3_complex*) arr, (gramfe_float_fftw3_complex*) arr, FFTW_FORWARD , startup )
-#define gramfe_create_fftw_1d_backward_c2c_plan(size, arr, startup) gramfe_float_fftw3_plan_dft_c2c_1d(     size, (gramfe_float_fftw3_complex*) arr, (gramfe_float_fftw3_complex*) arr, FFTW_BACKWARD, startup )
-#define gramfe_destroy_complex_fftw_plan                            gramfe_float_fftw3_destroy_plan
+#define gfei_fftw_c2c(plan, arr)                                    gfei_fftw::execute_dft_c2c ( plan, (gfei_fftw::fft_complex*) arr, (gfei_fftw::fft_complex*) arr )
+#define gfei_fftw_r2c(plan, arr)                                    gfei_fftw::execute_dft_r2c ( plan, (gfei_fftw::fft_real*)    arr, (gfei_fftw::fft_complex*) arr )
+#define gfei_fftw_c2r(plan, arr)                                    gfei_fftw::execute_dft_c2r ( plan, (gfei_fftw::fft_complex*) arr, (gfei_fftw::fft_real*)    arr )
+#define gfei_fftw_create_1d_forward_c2c_plan(size, arr)             gfei_fftw::plan_dft_c2c_1d ( size, (gfei_fftw::fft_complex*) arr, (gfei_fftw::fft_complex*) arr, FFTW_FORWARD , FFTW_MEASURE )
+#define gfei_fftw_create_1d_backward_c2c_plan(size, arr)            gfei_fftw::plan_dft_c2c_1d ( size, (gfei_fftw::fft_complex*) arr, (gfei_fftw::fft_complex*) arr, FFTW_BACKWARD, FFTW_MEASURE )
+#define gfei_fftw_create_1d_r2c_plan(size, arr)                     gfei_fftw::plan_dft_r2c_1d ( size, (gfei_fftw::fft_real*)    arr, (gfei_fftw::fft_complex*) arr, FFTW_MEASURE )
+#define gfei_fftw_create_1d_c2r_plan(size, arr)                     gfei_fftw::plan_dft_c2r_1d ( size, (gfei_fftw::fft_complex*) arr, (gfei_fftw::fft_real*)    arr, FFTW_MEASURE )
 #else // #if ( SUPPORT_FFTW == FFTW3 )
-#define gramfe_float_complex                                        fftw_complex
-#define gramfe_fftw_malloc                                          malloc
-#define gramfe_fftw_free                                            free
-#define gramfe_complex_fftw_plan                                    fftw_plan
-#define gramfe_fftw_c2c(plan, array)                                fftw_one                   ( plan, (gramfe_float_complex*) array, NULL )
-#define gramfe_fftw_r2c(plan, array)                                rfftw_one_real_to_complex  ( plan, (gramfe_float*)         array, NULL )
-#define gramfe_fftw_c2r(plan, in, out)                              rfftw_one_complex_to_real  ( plan, (gamer_float_complex*)  array, NULL )
-#define gramfe_create_fftw_1d_forward_c2c_plan(size, arr, startup)  fftw_create_plan( size, FFTW_FORWARD , startup | FFTW_IN_PLACE )
-#define gramfe_create_fftw_1d_backward_c2c_plan(size, arr, startup) fftw_create_plan( size, FFTW_BACKWARD, startup | FFTW_IN_PLACE )
-#define gramfe_destroy_complex_fftw_plan                            fftw_destroy_plan
+#define gfei_fftw_c2c(plan, arr)                                    gfei_fftw::execute_dft_c2c ( plan, (gfei_fftw::fft_complex*) arr, NULL )
+#define gfei_fftw_r2c(plan, arr)                                    gfei_fftw::execute_dft_r2c ( plan, (gfei_fftw::fft_real*)    arr, NULL )
+#define gfei_fftw_c2r(plan, arr)                                    gfei_fftw::execute_dft_c2r ( plan, (gfei_fftw::fft_real*)    arr, NULL )
+#define gfei_fftw_create_1d_forward_c2c_plan(size, arr)             gfei_fftw::plan_dft_c2c_1d ( size, FFTW_FORWARD , FFTW_MEASURE | FFTW_IN_PLACE )
+#define gfei_fftw_create_1d_backward_c2c_plan(size, arr)            gfei_fftw::plan_dft_c2c_1d ( size, FFTW_BACKWARD, FFTW_MEASURE | FFTW_IN_PLACE )
+#define gfei_fftw_create_1d_r2c_plan(size, arr)                     gfei_fftw::plan_dft_r2c_1d ( size, FFTW_REAL_TO_COMPLEX, FFTW_MEASURE | FFTW_IN_PLACE )
+#define gfei_fftw_create_1d_c2r_plan(size, arr)                     gfei_fftw::plan_dft_c2r_1d ( size, FFTW_COMPLEX_TO_REAL, FFTW_MEASURE | FFTW_IN_PLACE )
 #endif // #if ( SUPPORT_FFTW == FFTW3 ) ... # else
 
+#endif  // #if ( SUPPORT_FFTW == FFTW2 || SUPPORT_FFTW == FFTW3 )
 
-
-#endif  // # if ( SUPPORT_FFTW == FFTW2 || SUPPORT_FFTW == FFTW3 )
 #endif  // #ifndef __FFTW_H__

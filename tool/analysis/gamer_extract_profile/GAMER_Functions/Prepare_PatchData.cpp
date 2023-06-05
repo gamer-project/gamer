@@ -44,6 +44,7 @@ static int Table_02( const int lv, const int PID, const int Side );
 //                                     INT_QUAD     : quadratic
 //                                     INT_CQUAR    : conservative quartic
 //                                     INT_QUAR     : quartic
+//                                     INT_SPECTRAL : spectral
 //                NSide          : Number of sibling directions to prepare data
 //                                 --> NSIDE_06 (=  6) : prepare only sibling directions 0~5
 //                                     NSIDE_26 (= 26) : prepare all sibling directions 0~25
