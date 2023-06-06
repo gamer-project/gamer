@@ -3,6 +3,7 @@
 
 #ifdef SUPPORT_SPECTRAL_INTERPOLATION
 
+#include <complex>
 #include <memory>
 #include "GramFE_Interpolation.h"
 
@@ -166,14 +167,37 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 
 } // FUNCTION : Int_Spectral
 
+
+void InterpolationContext::ReadBinaryFile(const char* filename, double* array, int size) const
+{
+   FILE* file = fopen(filename, "rb");
+   if (file == NULL) {
+      Aux_Error(ERROR_INFO, "Failed to open the interpolation file %s.\n", filename);
+      return;
+   }
+
+   // Read the array from the binary file
+   fread(array, sizeof(double), size, file);
+
+   /*
+   printf("The array of size %d\n", size);
+   for (size_t i = 0; i < size; ++i) {
+      printf("%f ", array[i]);
+   }
+   printf("\n");*/
+
+   // Close the file
+   fclose(file);
+} // FUNCTION : ReadBinaryFile
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  GramFEInterpolationContext
 // Description :  Constructor of GramFEInterpolationContext, sets up FFTs and translation arrays in k-space for fast interpolation, load Gram-Fourier extension table from disk
 //
-// Parameter   :  nInput        : Size of input function to be interpolated
+// Parameter   :  nInput         : Size of input function to be interpolated
 //                nGhostBoundary : Size of ghost boundary
-//                nExtension    : Size of extension domain
-//                nDelta        : Size of boundary domain used for Gram-Fourier extension
+//                nExtension     : Size of extension domain
+//                nDelta         : Size of boundary domain used for Gram-Fourier extension
 //
 //-------------------------------------------------------------------------------------------------------
 GramFEInterpolationContext::GramFEInterpolationContext(size_t nInput, size_t nGhostBoundary, size_t nExtension, size_t nDelta) :
@@ -186,12 +210,17 @@ GramFEInterpolationContext::GramFEInterpolationContext(size_t nInput, size_t nGh
    nDelta              (nDelta)
 {
 
-// load Gram-Fourier extension tables from files
-   double* table = GramFE_GetBoundaryToExtensionTable(nExtension);
+// load Gram-Fourier extension tables from file
+   char filename[300];
+   sprintf(filename, "/home/calab912/Documents/SpectralInterpolation/gamer/tool/table_maker/GramFE/boundary2extension_tables/%ld_%ld_%d_%d.bin", nExtension, nDelta, 150, 63);
 
-   extensionMatrix = gfei_gsl::matrix_alloc(nExtension, 2 * nDelta);
+   size_t  size  = nExtension * 2 * nDelta;
+   double* table = (double*) malloc(size * sizeof(double));
+   ReadBinaryFile(filename, table, size);
+
 
 // load extension table into GSL matrix
+   extensionMatrix = gfei_gsl::matrix_alloc(nExtension, 2 * nDelta);
    for (size_t i = 0; i < nExtension; ++i) {
       for (size_t j = 0; j < 2 * nDelta; ++j) {
             gfei_gsl::matrix_set(extensionMatrix, i, j, (gfei_gsl::gsl_real) table[2 * nDelta * i + j]);
@@ -199,7 +228,7 @@ GramFEInterpolationContext::GramFEInterpolationContext(size_t nInput, size_t nGh
    }
 
 // free table
-   delete [] table;
+   free(table);
 
 // allocate memory for planning FFTs
    gfei_fftw::fft_complex* planner_array = (gfei_fftw::fft_complex*) gfei_fftw::fft_malloc(nExtended * sizeof(gfei_fftw::fft_complex));
@@ -220,8 +249,10 @@ GramFEInterpolationContext::GramFEInterpolationContext(size_t nInput, size_t nGh
    for (size_t i = 0; i < nExtendedPadded; i++)
    {
       K                    = 2.0 * M_PI / nExtended * i;
-      translationCoeffL[i] = (gfei_fftw::fft_complex) (std::complex<gfei_fftw::fft_real>({cos(-K/4.0), sin(-K/4.0)}) * Norm);
-      translationCoeffR[i] = (gfei_fftw::fft_complex) (std::complex<gfei_fftw::fft_real>({cos(+K/4.0), sin(+K/4.0)}) * Norm);
+      c_re(translationCoeffL[i]) = cos(-K/4.0)* Norm;
+      c_im(translationCoeffL[i]) = sin(-K/4.0)* Norm;
+      c_re(translationCoeffR[i]) = cos(+K/4.0)* Norm;
+      c_im(translationCoeffR[i]) = sin(+K/4.0)* Norm;
    }
 
 } // CONSTRUCTOR : GramFEInterpolationContext
@@ -281,7 +312,7 @@ void GramFEInterpolationContext::InterpolateReal(const real* input, real *output
 
 // convert input to FFT precision
    for (size_t i = 0; i < nInput; ++i) {
-      inputExtended[i]    = (gfei_fftw::fft_real) input[ i];
+      inputExtended[i]     = (gfei_fftw::fft_real) input[ i];
    }
 
 // write boundaries of input array to boundary array
@@ -328,7 +359,6 @@ void GramFEInterpolationContext::InterpolateReal(const real* input, real *output
 } // FUNCTION : InterpolateReal
 
 
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  PrecomputedInterpolationContext::PrecomputedInterpolationContext
 // Description :  Constructor of PrecomputedInterpolationContext, loads interpolation table into memory
@@ -339,20 +369,26 @@ PrecomputedInterpolationContext::PrecomputedInterpolationContext(size_t nInput, 
    nGhostBoundary  (nGhostBoundary),
    nInterpolated   (2 * (nInput - 2 * nGhostBoundary))
 {
-// load interpolation table from binary file
-   double* table = GramFE_GetBoundaryToExtensionTable(nInput);
+
+
+   char filename[300];
+   sprintf(filename, "/home/calab912/Documents/SpectralInterpolation/gamer/tool/table_maker/GramFE/interpolation_tables/N=%ld.bin", nInput);
+
+   size_t size   = 2 * (nInput - 2) * nInput;
+   double* table = (double*) malloc(size * sizeof(double));
+   ReadBinaryFile(filename, table, size);
 
 // write table to GSL matrix in desired precision
    interpolationMatrix = pi_gsl::matrix_alloc(nInterpolated, nInput);
-
    for (size_t i = 0; i < nInterpolated; ++i) {
       for (size_t j = 0; j < nInput; ++j) {
-            pi_gsl::matrix_set(interpolationMatrix, i, j, (pi_gsl::gsl_real) table[(i + 2 * (nGhostBoundary - 1)) * nInput + j]);
+         size_t index = (i + 2 * (nGhostBoundary - 1)) * nInput + j;
+         pi_gsl::matrix_set(interpolationMatrix, i, j, (pi_gsl::gsl_real) table[index]);
       }
    }
 
 // free table array
-   delete [] table;
+   free(table);
 } // CONSTRUCTOR : PrecomputedInterpolationContext
 
 //-------------------------------------------------------------------------------------------------------
@@ -396,6 +432,48 @@ void PrecomputedInterpolationContext::InterpolateReal(const real *input, real *o
 } // FUNCTION : InterpolateReal
 
 
+const real QuarticInterpolationContext::QuarticL[5] = { +35.0/2048.0, -252.0/2048.0, +1890.0/2048.0, +420.0/2048.0, -45.0/2048.0 };
+const real QuarticInterpolationContext::QuarticR[5] = { -45.0/2048.0, +420.0/2048.0, +1890.0/2048.0, -252.0/2048.0, +35.0/2048.0 };
+
+QuarticInterpolationContext::QuarticInterpolationContext(size_t nInput, size_t nGhostBoundary) : nInput(nInput), nGhostBoundary(nGhostBoundary)
+{
+}
+//-------------------------------------------------------------------------------------------------------
+// Function    :  PrecomputedInterpolationContext::GetWorkspaceSize
+// Description :  Return NULL since PrecomputedInterpolationContext does not require a workspace
+//
+// Parameter   :  nInput         : Size of input array
+//                nGhostBoundary : Size of ghost boundary
+//
+//-------------------------------------------------------------------------------------------------------
+size_t QuarticInterpolationContext::GetWorkspaceSize(size_t nInput, size_t nGhostBoundary) const {
+   return 0; // no workspace required
+} // FUNCTION : GetWorkspaceSize
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  QuadraticInterpolationContext::InterpolateReal
+// Description :  Interpolate input array of size nInput and store interpolation results of size 2 * (nInput - nGhostBoundary) in output array
+//
+// Parameter   :  input          : Real input  array of size nInput
+//                output         : Real output array of size 2 * (nInput - nGhostBoundary)
+//                nInput         : Size of input array
+//                nGhostBoundary : Size of ghost boundary
+//
+//-------------------------------------------------------------------------------------------------------
+void QuarticInterpolationContext::InterpolateReal(const real *input, real *output, char* workspace) const
+{
+   for (size_t i = 0; i < nInput - 2 * nGhostBoundary; ++i) {
+      real r = 0, l = 0;
+      for ( size_t j = 0; j < 5; ++j ) {
+            r += QuarticR[j] * input[i + j + (nGhostBoundary - 2)];
+            l += QuarticL[j] * input[i + j + (nGhostBoundary - 2)];
+      }
+      output[i * 2    ] = l;
+      output[i * 2 + 1] = r;
+   }
+} // FUNCTION : InterpolateReal
+
+
 const size_t NFast = 24;
 const size_t fastNExtended[NFast] = {16, 18, 24, 32, 36, 40, 48, 54, 60, 64, 72, 80, 90, 96, 100, 108, 112, 120, 128, 135, 256, 288, 512, 540};
 
@@ -403,7 +481,7 @@ void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostB
 {
 
    if (contexts.find(nInput) == contexts.end()) {
-
+      ///contexts.emplace(nInput, new QuarticInterpolationContext(nInput, nGhostBoundary));
 //      for small N <= 32 pick precomputed interpolation
       if ( nInput <= 32 ) {
             contexts.emplace(nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary));
@@ -419,7 +497,9 @@ void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostB
                   break;
                }
             }
+            //printf("Creating GFC for n = %ld with ghostBoundary = %ld nExt = %ld and nDelta %ld nExtended %ld\n", nInput, nGhostBoundary, nExtension, nDelta, nInput + nExtension);
             contexts.emplace(nInput, new GramFEInterpolationContext(nInput, nGhostBoundary, nExtension, nDelta));
+
       }
    }
 } // FUNCTION : AddContext
