@@ -36,10 +36,19 @@ namespace pi_gsl  = gsl_single_precision;
 #endif
 #endif // #ifdef SUPPORT_SPECTRAL_INTERPOLATION
 
-struct InterpolationContext {
-    virtual size_t GetWorkspaceSize(size_t nInput, size_t nGhostBoundary) const = 0;
-    virtual void   InterpolateReal(const real* input, real *output, char* workspace) const = 0;
-    void           ReadBinaryFile(const char* filename, double* array, int size) const;
+class InterpolationContext {
+public:
+    InterpolationContext(size_t nInput, size_t nGhostBoundary);
+    virtual void   Preprocess       (real* input, const bool UnwrapPhase) const;
+    virtual void   Postprocess      (const real* input, real* output, const bool Monotonic, const real MonoCoeff, const bool OppSign0thOrder) const;
+    void           ReadBinaryFile   (const char* filename, double* array, int size) const;
+
+    virtual size_t GetWorkspaceSize () const = 0;
+    virtual void   InterpolateReal  (const real* input, real *output, char* workspace) const = 0;
+
+    const size_t nInput;
+    const size_t nGhostBoundary;
+    const size_t nInterpolated;
 };
 
 //-------------------------------------------------------------------------------------------------------
@@ -67,12 +76,9 @@ class GramFEInterpolationContext  : public InterpolationContext
 public:
     GramFEInterpolationContext(size_t nInput, size_t nGhostBoundary, size_t nExtension, size_t nDelta);
     ~GramFEInterpolationContext();
-    size_t GetWorkspaceSize(size_t nInput, size_t nGhostBoundary) const;
-    void   InterpolateReal(const real* input, real *output, char* workspace) const;
+    size_t GetWorkspaceSize () const;
+    void   InterpolateReal  (const real* input, real *output, char* workspace) const;
 private:
-    const size_t nInput;
-    const size_t nGhostBoundary;
-    const size_t nInterpolated;
     const size_t nExtension;
     const size_t nExtended;
     const size_t nExtendedPadded;
@@ -104,17 +110,14 @@ struct PrecomputedInterpolationContext : public InterpolationContext
 public:
     PrecomputedInterpolationContext(size_t nInput, size_t nGhostBoundary);
     ~PrecomputedInterpolationContext();
-    size_t GetWorkspaceSize(size_t nInput, size_t nGhostBoundary) const;
-    void   InterpolateReal(const real *input, real *output, char* workspace) const;
+    size_t GetWorkspaceSize () const;
+    void   InterpolateReal  (const real *input, real *output, char* workspace) const;
 private:
-    const size_t nInput;
-    const size_t nGhostBoundary;
-    const size_t nInterpolated;
     pi_gsl::matrix* interpolationMatrix;
 }; // CLASS : PrecomputedInterpolationContext
 
 //-------------------------------------------------------------------------------------------------------
-// Structure   :  QuadraticInterpolationContext
+// Structure   :  QuarticInterpolationContext
 // Description :  Data structure of quadratic interpolator
 //
 // Method      :  GetWorkspaceSize                : Return size of interpolation workspace in bytes
@@ -128,15 +131,12 @@ public:
     static const real QuarticL[ 1 + 2*2 ];
 
     QuarticInterpolationContext(size_t nInput, size_t nGhostBoundary);
-    size_t GetWorkspaceSize(size_t nInput, size_t nGhostBoundary) const;
-    void   InterpolateReal(const real *input, real *output, char* workspace) const;
-private:
-    const size_t nInput;
-    const size_t nGhostBoundary;
+    size_t GetWorkspaceSize () const;
+    void   InterpolateReal  (const real *input, real *output, char* workspace) const;
 }; // CLASS : QuarticInterpolationContext
 
 //-------------------------------------------------------------------------------------------------------
-// Structure   :  InterpolationHandler
+// Class       :  InterpolationHandler
 // Description :  Data structure to switch between depending spectral interpolation schemes depending on the input size
 //
 // Data Member :  contexts                        : Unordered map that holds interpolation contexts for different interpolations sizes
@@ -150,9 +150,9 @@ private:
 //-------------------------------------------------------------------------------------------------------
 class InterpolationHandler {
 public:
-    void   AddInterpolationContext(size_t nInput, size_t nGhostBoundary);
-    size_t GetWorkspaceSize(size_t nInput, size_t nGhostBoundary) const;
-    void   InterpolateReal(const real* input, real* output, size_t nInput, size_t nGhostBoundary, char* workspace) const;
+    void   AddInterpolationContext  (size_t nInput, size_t nGhostBoundary);
+    size_t GetWorkspaceSize         (size_t nInput, size_t nGhostBoundary) const;
+    void   InterpolateReal          (real* input, real* output, size_t nInput, size_t nGhostBoundary,char* workspace, const bool UnwrapPhase, const bool Monotonic, const real MonoCoeff, const bool OppSign0thOrder) const;
 private:
     std::unordered_map<size_t, std::shared_ptr<InterpolationContext>> contexts;
 }; // CLASS : InterpolationHandler

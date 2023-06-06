@@ -428,6 +428,12 @@ void Aux_TakeNote()
       fprintf( Note, "RANDOM_NUMBER                   UNKNOWN\n" );
 #     endif
 
+#     ifdef SUPPORT_SPECTRAL_INTERPOLATION
+      fprintf( Note, "SUPPORT_SPECTRAL_INTERPOLATION  ON\n" );
+#     else
+      fprintf( Note, "SUPPORT_SPECTRAL_INTERPOLATION  OFF\n" );
+#     endif
+
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
@@ -1280,9 +1286,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__RES_PHASE                  %d\n",      OPT__RES_PHASE          );
 #     endif
 #     ifdef SUPPORT_SPECTRAL_INTERPOLATION
-      fprintf( Note, "SUPPORT_SPECTRAL_INTERPOLATION  ON\n" );
-#     else
-      fprintf( Note, "SUPPORT_SPECTRAL_INTERPOLATION  OFF\n" );
+      fprintf( Note, "INT_TABLE_PATH                  %s\n",      INT_TABLE_PATH          );
 #     endif
       fprintf( Note, "OPT__FLU_INT_SCHEME             %s\n",      ( OPT__FLU_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
                                                                   ( OPT__FLU_INT_SCHEME == INT_MINMOD1D ) ? "MINMOD1D" :

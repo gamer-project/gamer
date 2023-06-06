@@ -481,6 +481,10 @@ void Init_Load_Parameter()
    ReadPara->Add( "YT_FIG_BASENAME",             YT_FIG_BASENAME,                 NoDef_str,       Useless_str,   Useless_str    );
 #  endif
 
+// GramFE tables
+#  ifdef SUPPORT_SPECTRAL_INTERPOLATION
+   ReadPara->Add( "INT_TABLE_PATH",              INT_TABLE_PATH,                  NoDef_str,       Useless_str,   Useless_str    );
+#  endif
 
 // miscellaneous
    ReadPara->Add( "OPT__VERBOSE",               &OPT__VERBOSE,                    false,           Useless_bool,  Useless_bool   );
