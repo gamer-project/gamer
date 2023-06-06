@@ -87,6 +87,13 @@ void Init_GAMER( int *argc, char ***argv )
    Init_FFTW();
 #  endif
 
+#  ifdef SUPPORT_SPECTRAL_INTERPOLATION
+// initialise spectral interpolation
+   for (size_t N0 = 7; N0 < 10 * PATCH_SIZE; ++N0)
+   {
+      INTERPOLATION_HANDLER.AddInterpolationContext(N0, 2);
+   }
+#  endif
 
 // initialize the test problem parameters
    Init_TestProb();

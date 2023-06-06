@@ -16,9 +16,6 @@
 #include <gsl/gsl_permute_matrix.h>
 #include <gsl/gsl_linalg.h>
 
-float gsl_complex_float_abs (gsl_complex_float z) {
-    return (GSL_REAL(z)*GSL_REAL(z) + GSL_IMAG(z)*GSL_IMAG(z));
-}
 
 namespace gsl_double_precision {
     using       gsl_real                         =  double;
@@ -73,7 +70,6 @@ namespace gsl_double_precision {
     const auto  matrix_get                       =  gsl_matrix_get;
     const auto  matrix_complex_set               =  gsl_matrix_complex_set;
     const auto  matrix_complex_get               =  gsl_matrix_complex_get;
-    const auto  complex_abs                      =  gsl_complex_abs;
     const auto  blas_cgemv                       =  gsl_blas_zgemv;
     const auto  blas_ctrsv                       =  gsl_blas_ztrsv;
     const auto  blas_sgemv                       =  gsl_blas_dgemv;
@@ -133,7 +129,6 @@ namespace gsl_single_precision {
     const auto matrix_get                       =  gsl_matrix_float_get;
     const auto matrix_complex_set               =  gsl_matrix_complex_float_set;
     const auto matrix_complex_get               =  gsl_matrix_complex_float_get;
-    const auto complex_abs                      =  gsl_complex_float_abs;
     const auto blas_cgemv                       =  gsl_blas_cgemv;
     const auto blas_ctrsv                       =  gsl_blas_ctrsv;
     const auto blas_sgemv                       =  gsl_blas_sgemv;
