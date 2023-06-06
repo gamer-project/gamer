@@ -219,6 +219,7 @@ void InterpolationContext::Preprocess(real* input, const bool UnwrapPhase) const
       if ( UnwrapPhase )
       {
          size_t Idx_InC, Idx_InL1;
+         real* CPtr = input;
          for (size_t i = 1;  i<nInput;  i++)
          {
             Idx_InC       = i;
