@@ -39,17 +39,23 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
    const int CGhost    = 2;
 // ===============================================================================
 
-   size_t maxSize       = MAX(MAX(CSize[0], CSize[1]), CSize[2]);
+   size_t maxSize       = MAX(MAX(CRange[0], CRange[1]), CRange[2]);
 
 
    real* Input, *Output;
    Input  = (real*) malloc( (maxSize +  2 * CGhost) * sizeof(real) );
    Output = (real*) malloc(  2 * maxSize            * sizeof(real) );
 
+
+// initialise spectral interpolation
+   for (size_t i = 0; i < 3; ++i) {
+      INTERPOLATION_HANDLER.AddInterpolationContext( CRange[i] +  2 * CGhost, CGhost);
+   }
+
 // determine workspace size
    size_t workspaceSize = 0;
    for (size_t i = 0; i < 3; ++i) {
-      workspaceSize = MAX(workspaceSize, INTERPOLATION_HANDLER.GetWorkspaceSize( CSize[i] +  2 * CGhost, CGhost ));
+      workspaceSize = MAX(workspaceSize, INTERPOLATION_HANDLER.GetWorkspaceSize( CRange[i] +  2 * CGhost, CGhost ));
    }
 
    char* workspace = (char*) gamer_fftw::fft_malloc(workspaceSize);
@@ -516,13 +522,17 @@ void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostB
 {
 
    if (contexts.find(nInput) == contexts.end()) {
-      ///contexts.emplace(nInput, new QuarticInterpolationContext(nInput, nGhostBoundary));
-//      for small N <= 32 pick precomputed interpolation
-      if ( nInput <= 32 ) {
+//    ensure thread safety when adding new interpolation contexts
+//    only one thread in OMP enviroment may add a new interpolation context
+      #pragma omp critical
+      {
+         printf("\nAdding context for nInput %ld and nGhostBoundary %ld\n", nInput, nGhostBoundary);
+//       for small N <= 32 pick precomputed interpolation
+         if ( nInput <= 32 ) {
             contexts.emplace(nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary));
-      } else {
-//          for large N >  32 use Gram-Fourier extension scheme
-            size_t nExtension = 32, nDelta = 14;
+//       for large N >  32 use Gram-Fourier extension scheme
+         } else {
+            size_t nExtension = 32, nDelta = 6;
 
             const size_t minimumExtensionSize = 24;
             const size_t maximumExtensionSize = 36;
@@ -533,8 +543,9 @@ void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostB
                }
             }
             //printf("Creating GFC for n = %ld with ghostBoundary = %ld nExt = %ld and nDelta %ld nExtended %ld\n", nInput, nGhostBoundary, nExtension, nDelta, nInput + nExtension);
-            contexts.emplace(nInput, new GramFEInterpolationContext(nInput, nGhostBoundary, nExtension, nDelta));
 
+            contexts.emplace(nInput, new GramFEInterpolationContext(nInput, nGhostBoundary, nExtension, nDelta));
+         }
       }
    }
 } // FUNCTION : AddContext
