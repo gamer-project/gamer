@@ -283,6 +283,7 @@ int  FB_ParaBuf;
 
 // (2-13) spectral interpolation
 #ifdef SUPPORT_SPECTRAL_INTERPOLATION
+char                 INT_TABLE_PATH[MAX_STRING];
 InterpolationHandler INTERPOLATION_HANDLER;
 #endif // #ifdef SUPPORT_SPECTRAL_INTERPOLATION
 

@@ -7,6 +7,8 @@
 #include <memory>
 #include "GramFE_Interpolation.h"
 
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Int_Spectral
 // Description :  Perform spatial interpolation based on the Gram-Fourier extension method
@@ -39,17 +41,22 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
    const int CGhost    = 2;
 // ===============================================================================
 
-   size_t maxSize       = MAX(MAX(CSize[0], CSize[1]), CSize[2]);
+   size_t maxSize       = MAX(MAX(CRange[0], CRange[1]), CRange[2]);
 
 
    real* Input, *Output;
    Input  = (real*) malloc( (maxSize +  2 * CGhost) * sizeof(real) );
    Output = (real*) malloc(  2 * maxSize            * sizeof(real) );
 
+// add interpolation contexts (make sure that everything is thread-safe in AddInterpolationContext)
+   for (size_t i = 0; i < 3; ++i) {
+      INTERPOLATION_HANDLER.AddInterpolationContext( CRange[i] +  2 * CGhost, CGhost );
+   }
+
 // determine workspace size
    size_t workspaceSize = 0;
    for (size_t i = 0; i < 3; ++i) {
-      workspaceSize = MAX(workspaceSize, INTERPOLATION_HANDLER.GetWorkspaceSize( CSize[i] +  2 * CGhost, CGhost ));
+      workspaceSize = MAX(workspaceSize, INTERPOLATION_HANDLER.GetWorkspaceSize( CRange[i] +  2 * CGhost, CGhost ));
    }
 
    char* workspace = (char*) gamer_fftw::fft_malloc(workspaceSize);
@@ -82,6 +89,7 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
    real *TDataY = new real [ (CRange[2]+2*CGhost)*TdzY ];   // temporary array after y interpolation
 
    int Idx_InL, Idx_InC, Idx_InR, Idx_Out;
+   size_t nInput;
 
    for (int v=0; v<NComp; v++)
    {
@@ -97,7 +105,7 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
          } // i
 
 //       interpolate data
-         INTERPOLATION_HANDLER.InterpolateReal(Input, Output, CRange[0] + 2 * CGhost, CGhost, workspace);
+         INTERPOLATION_HANDLER.InterpolateReal(Input, Output, CRange[0] + 2 * CGhost, CGhost, workspace, UnwrapPhase, Monotonic[v], MonoCoeff, OppSign0thOrder);
 
 //       write result of Fourier interpolation (excluding ghost zones) to temporary array
          for (int In_x=0, Out_x=0; In_x<CRange[0]; In_x++, Out_x+=2)
@@ -120,7 +128,7 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
          } // j
 
 //       interpolate data
-         INTERPOLATION_HANDLER.InterpolateReal(Input, Output, CRange[1] + 2 * CGhost, CGhost, workspace);
+         INTERPOLATION_HANDLER.InterpolateReal(Input, Output, CRange[1] + 2 * CGhost, CGhost, workspace, UnwrapPhase, Monotonic[v], MonoCoeff, OppSign0thOrder);
 
 
 //       write result of Fourier interpolation to temporary array
@@ -144,7 +152,7 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
          }
 
 //       interpolate data
-         INTERPOLATION_HANDLER.InterpolateReal(Input, Output, CRange[2] + 2 * CGhost, CGhost, workspace);
+         INTERPOLATION_HANDLER.InterpolateReal(Input, Output, CRange[2] + 2 * CGhost, CGhost, workspace, UnwrapPhase, Monotonic[v], MonoCoeff, OppSign0thOrder);
 
          for (int In_z=0, Out_z=FStart[2];  In_z<CRange[2];  In_z++, Out_z+=2)
          {
@@ -168,6 +176,27 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 } // FUNCTION : Int_Spectral
 
 
+InterpolationContext::InterpolationContext(size_t nInput, size_t nGhostBoundary) :
+   nInput         (nInput),
+   nGhostBoundary (nGhostBoundary),
+   nInterpolated  (2 * (nInput - 2 * nGhostBoundary))
+{
+#  ifdef GAMER_DEBUG
+   if ( nInput <  3 )
+   {
+      Aux_Error(ERROR_INFO, "Input size %ld is smaller than minimum supported input size %d!!\n", nInput, 3);
+   }
+   if ( nGhostBoundary <  1 )
+   {
+      Aux_Error(ERROR_INFO, "Ghost boundary must be greater than 0!!\n");
+   }
+   if ( nInput <= 2 * nGhostBoundary )
+   {
+      Aux_Error(ERROR_INFO, "Input array of size %ld smaller than left and right ghost boundary of size %ld!!\n", nInput, nGhostBoundary);
+   }
+#  endif
+}
+
 void InterpolationContext::ReadBinaryFile(const char* filename, double* array, int size) const
 {
    FILE* file = fopen(filename, "rb");
@@ -179,16 +208,93 @@ void InterpolationContext::ReadBinaryFile(const char* filename, double* array, i
    // Read the array from the binary file
    fread(array, sizeof(double), size, file);
 
-   /*
-   printf("The array of size %d\n", size);
-   for (size_t i = 0; i < size; ++i) {
-      printf("%f ", array[i]);
-   }
-   printf("\n");*/
-
    // Close the file
    fclose(file);
 } // FUNCTION : ReadBinaryFile
+
+
+void InterpolationContext::Preprocess(real* input, const bool UnwrapPhase) const {
+//    unwrap phase
+#     if ( MODEL == ELBDM )
+      if ( UnwrapPhase )
+      {
+         size_t Idx_InC, Idx_InL1;
+         for (size_t i = 1;  i<nInput;  i++)
+         {
+            Idx_InC       = i;
+            Idx_InL1      = i - 1;
+            CPtr[Idx_InC] = ELBDM_UnwrapPhase( CPtr[Idx_InL1], CPtr[Idx_InC] );
+         }
+      }
+#     endif
+}
+
+void InterpolationContext::Postprocess(const real* input, real* output, const bool Monotonic, const real MonoCoeff, const bool OppSign0thOrder) const {
+// ensure monotonicity
+   if ( Monotonic )
+   {
+//    MonoCoeff/4
+      const real MonoCoeff_4 = (real)0.25*MonoCoeff;
+      real LSlopeDh_4, RSlopeDh_4, SlopeDh_4, Sign, CDataMax, CDataMin;
+
+      size_t Idx_InC, Idx_InL1, Idx_InR1, Idx_Out, Tdy;
+
+      for (size_t i = nGhostBoundary;  i < nInput - nGhostBoundary;  i++) {
+         Idx_InC    = i;
+         Idx_InL1   = i - 1;
+         Idx_InR1   = i + 1;
+         Idx_Out    = 2 * (i - nGhostBoundary);
+         Tdy        = 1;
+
+         LSlopeDh_4 = input[Idx_InC ] - input[Idx_InL1];
+         RSlopeDh_4 = input[Idx_InR1] - input[Idx_InC ];
+
+         if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 )
+         {
+            if ( LSlopeDh_4 > (real)0.0 )
+            {
+               CDataMax = input[Idx_InR1];
+               CDataMin = input[Idx_InL1];
+            }
+            else
+            {
+               CDataMax = input[Idx_InL1];
+               CDataMin = input[Idx_InR1];
+            }
+
+            if (  FMAX( output[Idx_Out], output[Idx_Out+Tdy] ) > CDataMax  ||
+                  FMIN( output[Idx_Out], output[Idx_Out+Tdy] ) < CDataMin  ||
+                  ( output[Idx_Out+Tdy] - output[Idx_Out] )*LSlopeDh_4 < (real)0.0  )
+            {
+               SlopeDh_4   = (real)0.125*( input[Idx_InR1] - input[Idx_InL1] );
+               LSlopeDh_4 *= MonoCoeff_4;
+               RSlopeDh_4 *= MonoCoeff_4;
+               Sign        = SIGN( LSlopeDh_4 );
+
+               SlopeDh_4 *= Sign;
+               SlopeDh_4  = FMIN( Sign*LSlopeDh_4, SlopeDh_4 );
+               SlopeDh_4  = FMIN( Sign*RSlopeDh_4, SlopeDh_4 );
+               SlopeDh_4 *= Sign;
+
+               output[ Idx_Out       ] = input[Idx_InC] - SlopeDh_4;
+               output[ Idx_Out + Tdy ] = input[Idx_InC] + SlopeDh_4;
+            }
+         } // if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 )
+
+         else
+         {
+            output[ Idx_Out       ] = input[Idx_InC];
+            output[ Idx_Out + Tdy ] = input[Idx_InC];
+         } // if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 ) ... else
+      } // if ( Monotonic[v] )
+
+      if ( OppSign0thOrder  &&  input[Idx_InL1]*input[Idx_InR1] < (real)0.0 )
+      {
+         output[ Idx_Out       ] = input[Idx_InC];
+         output[ Idx_Out + Tdy ] = input[Idx_InC];
+      }
+   }
+}
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  GramFEInterpolationContext
@@ -201,9 +307,7 @@ void InterpolationContext::ReadBinaryFile(const char* filename, double* array, i
 //
 //-------------------------------------------------------------------------------------------------------
 GramFEInterpolationContext::GramFEInterpolationContext(size_t nInput, size_t nGhostBoundary, size_t nExtension, size_t nDelta) :
-   nInput              (nInput),
-   nGhostBoundary      (nGhostBoundary),
-   nInterpolated       (2 * (nInput - 2 * nGhostBoundary)),
+   InterpolationContext(nInput, nGhostBoundary),
    nExtension          (nExtension),
    nExtended           (nInput + nExtension),
    nExtendedPadded     (nExtended / 2 + 1),
@@ -211,18 +315,6 @@ GramFEInterpolationContext::GramFEInterpolationContext(size_t nInput, size_t nGh
 {
 // sanity checks
 #  ifdef GAMER_DEBUG
-   if ( nInput <  3 )
-   {
-      Aux_Error(ERROR_INFO, "Input size %ld is smaller than ,inimum supported input size %d!!\n", nInput, 3);
-   }
-   if ( nGhostBoundary <  1 )
-   {
-      Aux_Error(ERROR_INFO, "Ghost boundary must be greater than 0!!\n");
-   }
-   if ( nInput <= 2 * nGhostBoundary )
-   {
-      Aux_Error(ERROR_INFO, "Input array of size %ld smaller than left and right ghost boundary of size %ld!!\n", nInput, nGhostBoundary);
-   }
    if ( nInput < nDelta )
    {
       Aux_Error(ERROR_INFO, "Input array of size %ld smaller than Gram polynomial boundary of size %ld!!\n", nInput, nDelta);
@@ -230,8 +322,8 @@ GramFEInterpolationContext::GramFEInterpolationContext(size_t nInput, size_t nGh
 #  endif // # ifdef GAMER_DEBUG
 
 // load Gram-Fourier extension tables from file
-   char filename[300];
-   sprintf(filename, "/home/calab912/Documents/SpectralInterpolation/gamer/tool/table_maker/GramFE/boundary2extension_tables/%ld_%ld_%d_%d.bin", nExtension, nDelta, 150, 63);
+   char filename[2 * MAX_STRING];
+   sprintf(filename, "%s/boundary2extension_tables/%ld_%ld_%d_%d.bin", INT_TABLE_PATH, nExtension, nDelta, 150, 63);
 
    size_t  size  = nExtension * 2 * nDelta;
    double* table = (double*) malloc(size * sizeof(double));
@@ -301,7 +393,7 @@ GramFEInterpolationContext::~GramFEInterpolationContext()
 //                nGhostBoundary : Size of ghost boundary
 //
 //-------------------------------------------------------------------------------------------------------
-size_t GramFEInterpolationContext::GetWorkspaceSize(size_t nInput, size_t nGhostBoundary) const {
+size_t GramFEInterpolationContext::GetWorkspaceSize() const {
    size_t total_size = 0;
    total_size += 2  * nDelta;          // left and right boundary for Gram polynomials
    total_size += 2  * nExtendedPadded; // extension region
@@ -317,8 +409,7 @@ size_t GramFEInterpolationContext::GetWorkspaceSize(size_t nInput, size_t nGhost
 //
 // Parameter   :  input          : Real input  array of size nInput
 //                output         : Real output array of size 2 * (nInput - nGhostBoundary)
-//                nInput         : Size of input array
-//                nGhostBoundary : Size of ghost boundary
+//                workspace      : Workspace with size GetWorkspaceSize in bytes that needs to be allocated by user using fftw_malloc
 //
 //-------------------------------------------------------------------------------------------------------
 void GramFEInterpolationContext::InterpolateReal(const real* input, real *output, char* workspace) const
@@ -384,29 +475,10 @@ void GramFEInterpolationContext::InterpolateReal(const real* input, real *output
 //
 //-------------------------------------------------------------------------------------------------------
 PrecomputedInterpolationContext::PrecomputedInterpolationContext(size_t nInput, size_t nGhostBoundary) :
-   nInput          (nInput),
-   nGhostBoundary  (nGhostBoundary),
-   nInterpolated   (2 * (nInput - 2 * nGhostBoundary))
+   InterpolationContext(nInput, nGhostBoundary)
 {
-
-// sanity checks
-#  ifdef GAMER_DEBUG
-   if ( nInput <  3 )
-   {
-      Aux_Error(ERROR_INFO, "Input size %ld is smaller than ,inimum supported input size %d!!\n", nInput, 3);
-   }
-   if ( nGhostBoundary <  1 )
-   {
-      Aux_Error(ERROR_INFO, "Ghost boundary must be greater than 0!!\n");
-   }
-   if ( nInput <= 2 * nGhostBoundary )
-   {
-      Aux_Error(ERROR_INFO, "Input array of size %ld smaller than left and right ghost boundary of size %ld!!\n", nInput, nGhostBoundary);
-   }
-#  endif // # ifdef GAMER_DEBUG
-
-   char filename[300];
-   sprintf(filename, "/home/calab912/Documents/SpectralInterpolation/gamer/tool/table_maker/GramFE/interpolation_tables/N=%ld.bin", nInput);
+   char filename[2 * MAX_STRING];
+   sprintf(filename, "%s/interpolation_tables/N=%ld.bin", INT_TABLE_PATH, nInput);
 
    size_t size   = 2 * (nInput - 2) * nInput;
    double* table = (double*) malloc(size * sizeof(double));
@@ -440,12 +512,9 @@ PrecomputedInterpolationContext::~PrecomputedInterpolationContext()
 // Function    :  PrecomputedInterpolationContext::GetWorkspaceSize
 // Description :  Return NULL since PrecomputedInterpolationContext does not require a workspace
 //
-// Parameter   :  nInput         : Size of input array
-//                nGhostBoundary : Size of ghost boundary
-//
 //-------------------------------------------------------------------------------------------------------
-size_t PrecomputedInterpolationContext::GetWorkspaceSize(size_t nInput, size_t nGhostBoundary) const {
-   return 0; // no workspace required
+size_t PrecomputedInterpolationContext::GetWorkspaceSize() const {
+   return 0;
 } // FUNCTION : GetWorkspaceSize
 
 //-------------------------------------------------------------------------------------------------------
@@ -454,8 +523,7 @@ size_t PrecomputedInterpolationContext::GetWorkspaceSize(size_t nInput, size_t n
 //
 // Parameter   :  input          : Real input  array of size nInput
 //                output         : Real output array of size 2 * (nInput - nGhostBoundary)
-//                nInput         : Size of input array
-//                nGhostBoundary : Size of ghost boundary
+//                workspace      : Useless for PrecomputedInterpolationContext
 //
 //-------------------------------------------------------------------------------------------------------
 void PrecomputedInterpolationContext::InterpolateReal(const real *input, real *output, char* workspace) const
@@ -467,22 +535,28 @@ void PrecomputedInterpolationContext::InterpolateReal(const real *input, real *o
 } // FUNCTION : InterpolateReal
 
 
+//fixed interpolation constants
 const real QuarticInterpolationContext::QuarticL[5] = { +35.0/2048.0, -252.0/2048.0, +1890.0/2048.0, +420.0/2048.0, -45.0/2048.0 };
 const real QuarticInterpolationContext::QuarticR[5] = { -45.0/2048.0, +420.0/2048.0, +1890.0/2048.0, -252.0/2048.0, +35.0/2048.0 };
 
-QuarticInterpolationContext::QuarticInterpolationContext(size_t nInput, size_t nGhostBoundary) : nInput(nInput), nGhostBoundary(nGhostBoundary)
+//-------------------------------------------------------------------------------------------------------
+// Function    :  QuarticInterpolationContext::QuarticInterpolationContext
+// Description :  Constructor of QuarticInterpolationContext
+//
+//-------------------------------------------------------------------------------------------------------
+QuarticInterpolationContext::QuarticInterpolationContext(size_t nInput, size_t nGhostBoundary) :
+   InterpolationContext(nInput, nGhostBoundary)
 {
 }
+
 //-------------------------------------------------------------------------------------------------------
-// Function    :  PrecomputedInterpolationContext::GetWorkspaceSize
-// Description :  Return NULL since PrecomputedInterpolationContext does not require a workspace
-//
-// Parameter   :  nInput         : Size of input array
-//                nGhostBoundary : Size of ghost boundary
+// Function    :  QuarticInterpolationContext::GetWorkspaceSize
+// Description :  Return 0 since QuarticInterpolationContext does not require a workspace
 //
 //-------------------------------------------------------------------------------------------------------
-size_t QuarticInterpolationContext::GetWorkspaceSize(size_t nInput, size_t nGhostBoundary) const {
-   return 0; // no workspace required
+size_t QuarticInterpolationContext::GetWorkspaceSize() const
+{
+   return 0;
 } // FUNCTION : GetWorkspaceSize
 
 //-------------------------------------------------------------------------------------------------------
@@ -491,8 +565,7 @@ size_t QuarticInterpolationContext::GetWorkspaceSize(size_t nInput, size_t nGhos
 //
 // Parameter   :  input          : Real input  array of size nInput
 //                output         : Real output array of size 2 * (nInput - nGhostBoundary)
-//                nInput         : Size of input array
-//                nGhostBoundary : Size of ghost boundary
+//                workspace      : Useless for QuadraticInterpolationContext
 //
 //-------------------------------------------------------------------------------------------------------
 void QuarticInterpolationContext::InterpolateReal(const real *input, real *output, char* workspace) const
@@ -516,36 +589,47 @@ void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostB
 {
 
    if (contexts.find(nInput) == contexts.end()) {
-      ///contexts.emplace(nInput, new QuarticInterpolationContext(nInput, nGhostBoundary));
-//      for small N <= 32 pick precomputed interpolation
-      if ( nInput <= 32 ) {
-            contexts.emplace(nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary));
-      } else {
-//          for large N >  32 use Gram-Fourier extension scheme
-            size_t nExtension = 32, nDelta = 14;
+//    ensure thread safety when adding new interpolation contexts
+//    only one thread in OMP enviroment may add a new interpolation context
+      #pragma omp critical
+      {
+//       for small N <= 32 pick precomputed interpolation with cost of N^2
+         if ( nInput <= 32 ) {
+               contexts.emplace(nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary));
+//       for large N >  32 use Gram-Fourier extension scheme with cost of N log(N)
+         } else {
+               size_t nExtension = 32, nDelta = 14;
 
-            const size_t minimumExtensionSize = 24;
-            const size_t maximumExtensionSize = 36;
-            for (size_t i = 0; i < NFast; ++i) {
-               if (nInput + minimumExtensionSize < fastNExtended[i] && nInput + maximumExtensionSize >= fastNExtended[i]) {
-                  nExtension = fastNExtended[i] - nInput;
-                  break;
+               const size_t minimumExtensionSize = 24;
+               const size_t maximumExtensionSize = 36;
+               for (size_t i = 0; i < NFast; ++i) {
+                  if (nInput + minimumExtensionSize < fastNExtended[i] && nInput + maximumExtensionSize >= fastNExtended[i]) {
+                     nExtension = fastNExtended[i] - nInput;
+                     break;
+                  }
                }
-            }
-            //printf("Creating GFC for n = %ld with ghostBoundary = %ld nExt = %ld and nDelta %ld nExtended %ld\n", nInput, nGhostBoundary, nExtension, nDelta, nInput + nExtension);
-            contexts.emplace(nInput, new GramFEInterpolationContext(nInput, nGhostBoundary, nExtension, nDelta));
+               contexts.emplace(nInput, new GramFEInterpolationContext(nInput, nGhostBoundary, nExtension, nDelta));
 
+         }
       }
    }
 } // FUNCTION : AddContext
 
-size_t InterpolationHandler::GetWorkspaceSize(size_t nInput, size_t nGhostBoundary) const {
-   return contexts.at(nInput)->GetWorkspaceSize(nInput, nGhostBoundary);
+size_t InterpolationHandler::GetWorkspaceSize(size_t nInput, size_t nGhostBoundary) const
+{
+   return contexts.at(nInput)->GetWorkspaceSize();
 } // FUNCTION : GetWorkspaceSize
 
-void InterpolationHandler::InterpolateReal(const real* input, real* output, size_t nInput, size_t nGhostBoundary,char* workspace) const
+void InterpolationHandler::InterpolateReal(real* input, real* output, size_t nInput, size_t nGhostBoundary, char* workspace, const bool UnwrapPhase, const bool Monotonic, const real MonoCoeff, const bool OppSign0thOrder) const
 {
-   contexts.at(nInput)->InterpolateReal(input, output, workspace);
+   auto context = contexts.at(nInput);
+
+// unwrap phase
+   context->Preprocess(input, UnwrapPhase);
+// interpolate
+   context->InterpolateReal(input, output, workspace);
+// ensure monotonicity
+   context->Postprocess(input, output, Monotonic, MonoCoeff, OppSign0thOrder);
 } // FUNCTION : InterpolateReal
 
 
