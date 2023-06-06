@@ -209,6 +209,25 @@ GramFEInterpolationContext::GramFEInterpolationContext(size_t nInput, size_t nGh
    nExtendedPadded     (nExtended / 2 + 1),
    nDelta              (nDelta)
 {
+// sanity checks
+#  ifdef GAMER_DEBUG
+   if ( nInput <  3 )
+   {
+      Aux_Error(ERROR_INFO, "Input size %ld is smaller than ,inimum supported input size %d!!\n", nInput, 3);
+   }
+   if ( nGhostBoundary <  1 )
+   {
+      Aux_Error(ERROR_INFO, "Ghost boundary must be greater than 0!!\n");
+   }
+   if ( nInput <= 2 * nGhostBoundary )
+   {
+      Aux_Error(ERROR_INFO, "Input array of size %ld smaller than left and right ghost boundary of size %ld!!\n", nInput, nGhostBoundary);
+   }
+   if ( nInput < nDelta )
+   {
+      Aux_Error(ERROR_INFO, "Input array of size %ld smaller than Gram polynomial boundary of size %ld!!\n", nInput, nDelta);
+   }
+#  endif // # ifdef GAMER_DEBUG
 
 // load Gram-Fourier extension tables from file
    char filename[300];
@@ -264,9 +283,12 @@ GramFEInterpolationContext::GramFEInterpolationContext(size_t nInput, size_t nGh
 //-------------------------------------------------------------------------------------------------------
 GramFEInterpolationContext::~GramFEInterpolationContext()
 {
+// free interpolation matrix
    gfei_gsl::matrix_free(extensionMatrix);
+// free FFTW plans
    gfei_fftw::destroy_real_plan_1d(r2cPlan);
    gfei_fftw::destroy_real_plan_1d(c2rPlan);
+// free arrays with translation coefficients
    free(translationCoeffL);
    free(translationCoeffR);
 } // DESTRUCTOR : GramFEInterpolationContext
@@ -301,13 +323,11 @@ size_t GramFEInterpolationContext::GetWorkspaceSize(size_t nInput, size_t nGhost
 //-------------------------------------------------------------------------------------------------------
 void GramFEInterpolationContext::InterpolateReal(const real* input, real *output, char* workspace) const
 {
-   gfei_fftw::fft_real* realWorkspace = (gfei_fftw::fft_real*) workspace;
-
 // define arrays in workspace
-   gfei_fftw::fft_real* boundary      = realWorkspace;
+   gfei_fftw::fft_real* boundary      = (gfei_fftw::fft_real*) workspace;
    gfei_fftw::fft_real* inputExtended = boundary      + 2 * nDelta;          // extension region
    gfei_fftw::fft_real* outputL       = inputExtended + 2 * nExtendedPadded; // left output
-   gfei_fftw::fft_real* outputR       = inputExtended + 2 * nExtendedPadded; // right output
+   gfei_fftw::fft_real* outputR       = outputL       + 2 * nExtendedPadded; // right output
 
 
 // convert input to FFT precision
@@ -324,13 +344,12 @@ void GramFEInterpolationContext::InterpolateReal(const real* input, real *output
 // compute extension using GSL BLAS real matrix-vector multiplication
    gfei_gsl::vector_const_view Boundary_view = gfei_gsl::vector_const_view_array(boundary, 2 * nDelta);
    gfei_gsl::vector_view Extension_view      = gfei_gsl::vector_view_array      (inputExtended + nInput, nExtension);
-
    gfei_gsl::blas_sgemv(CblasNoTrans, 1.0, extensionMatrix, &Boundary_view.vector, 0.0, &Extension_view.vector);
 
 // compute forward FFT
    gfei_fftw_r2c   (r2cPlan, inputExtended);
 
-
+// set up arrays with complex multiplication
    std::complex<gfei_fftw::fft_real>* InputK   = (std::complex<gfei_fftw::fft_real>*) inputExtended;
    std::complex<gfei_fftw::fft_real>* OutputLK = (std::complex<gfei_fftw::fft_real>*) outputL;
    std::complex<gfei_fftw::fft_real>* OutputRK = (std::complex<gfei_fftw::fft_real>*) outputR;
@@ -370,6 +389,21 @@ PrecomputedInterpolationContext::PrecomputedInterpolationContext(size_t nInput, 
    nInterpolated   (2 * (nInput - 2 * nGhostBoundary))
 {
 
+// sanity checks
+#  ifdef GAMER_DEBUG
+   if ( nInput <  3 )
+   {
+      Aux_Error(ERROR_INFO, "Input size %ld is smaller than ,inimum supported input size %d!!\n", nInput, 3);
+   }
+   if ( nGhostBoundary <  1 )
+   {
+      Aux_Error(ERROR_INFO, "Ghost boundary must be greater than 0!!\n");
+   }
+   if ( nInput <= 2 * nGhostBoundary )
+   {
+      Aux_Error(ERROR_INFO, "Input array of size %ld smaller than left and right ghost boundary of size %ld!!\n", nInput, nGhostBoundary);
+   }
+#  endif // # ifdef GAMER_DEBUG
 
    char filename[300];
    sprintf(filename, "/home/calab912/Documents/SpectralInterpolation/gamer/tool/table_maker/GramFE/interpolation_tables/N=%ld.bin", nInput);
@@ -398,6 +432,7 @@ PrecomputedInterpolationContext::PrecomputedInterpolationContext(size_t nInput, 
 //-------------------------------------------------------------------------------------------------------
 PrecomputedInterpolationContext::~PrecomputedInterpolationContext()
 {
+// free interpolation matrix
    pi_gsl::matrix_free(interpolationMatrix);
 } // DESTRUCTOR : PrecomputedInterpolationContext
 
