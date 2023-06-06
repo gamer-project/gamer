@@ -304,6 +304,11 @@ extern bool FB_Any;
 extern int  FB_ParaBuf;
 #endif
 
+// (2-13) spectral interpolation
+#ifdef SUPPORT_SPECTRAL_INTERPOLATION
+class InterpolationHandler;
+extern InterpolationHandler INTERPOLATION_HANDLER;
+#endif // #ifdef SUPPORT_SPECTRAL_INTERPOLATION
 
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
