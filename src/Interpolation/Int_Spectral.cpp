@@ -41,9 +41,9 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
    const int CGhost    = 2;
 // ===============================================================================
 
+
+// allocate memory to store largest input and output column
    size_t maxSize       = MAX(MAX(CRange[0], CRange[1]), CRange[2]);
-
-
    real* Input, *Output;
    Input  = (real*) malloc( (maxSize +  2 * CGhost) * sizeof(real) );
    Output = (real*) malloc(  2 * maxSize            * sizeof(real) );
@@ -59,6 +59,7 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
       workspaceSize = MAX(workspaceSize, INTERPOLATION_HANDLER.GetWorkspaceSize( CRange[i] +  2 * CGhost, CGhost ));
    }
 
+// allocate workspace using fftw_malloc for contiguous memory used in FFT
    char* workspace = (char*) gamer_fftw::fft_malloc(workspaceSize);
 
 
@@ -93,7 +94,7 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 
    for (int v=0; v<NComp; v++)
    {
-    //    interpolation along x direction
+//    interpolation along x direction
       for (int In_z=CStart[2]-CGhost, Out_z=0;  In_z<CStart[2]+CRange[2]+CGhost;  In_z++, Out_z++)
       for (int In_y=CStart[1]-CGhost, Out_y=0;  In_y<CStart[1]+CRange[1]+CGhost;  In_y++, Out_y++)
       {
@@ -604,7 +605,7 @@ QuarticInterpolationContext::QuarticInterpolationContext(size_t nInput, size_t n
       Aux_Error(ERROR_INFO, "QuarticInterpolationContext requires nGhostBoundary = 2!!\n");
    }
 #  endif
-}
+} // CONSTRUCTOR : QuarticInterpolationContext
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  QuarticInterpolationContext::GetWorkspaceSize
