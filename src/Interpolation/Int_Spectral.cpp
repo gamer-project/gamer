@@ -201,12 +201,20 @@ void InterpolationContext::ReadBinaryFile(const char* filename, double* array, i
 {
    FILE* file = fopen(filename, "rb");
    if (file == NULL) {
-      Aux_Error(ERROR_INFO, "Failed to open the interpolation file %s.\n", filename);
+      Aux_Error(ERROR_INFO, "Error opening interpolation file %s.\n", filename);
       return;
    }
 
    // Read the array from the binary file
-   fread(array, sizeof(double), size, file);
+   int num = fread(array, sizeof(double), size, file);
+
+   if ( num != size ) {
+       /* fread failed */
+      if ( ferror(file) )    /* possibility 1 */
+        Aux_Error(ERROR_INFO, "Error reading interpolation file %s.\n", filename);
+      else if ( feof(file))  /* possibility 2 */
+        Aux_Error(ERROR_INFO, "EOF found in interpolation file %s.\n", filename);
+   }
 
    // Close the file
    fclose(file);
@@ -307,12 +315,12 @@ void InterpolationContext::Postprocess(const real* input, real* output, const bo
 //                nDelta         : Size of boundary domain used for Gram-Fourier extension
 //
 //-------------------------------------------------------------------------------------------------------
-GramFEInterpolationContext::GramFEInterpolationContext(size_t nInput, size_t nGhostBoundary, size_t nExtension, size_t nDelta) :
-   InterpolationContext(nInput, nGhostBoundary),
-   nExtension          (nExtension),
-   nExtended           (nInput + nExtension),
-   nExtendedPadded     (nExtended / 2 + 1),
-   nDelta              (nDelta)
+GramFEInterpolationContext::GramFEInterpolationContext(size_t nInput, size_t nGhostBoundary, size_t nExtension, size_t nDelta)
+   :  InterpolationContext(nInput, nGhostBoundary),
+      nExtension          (nExtension),
+      nExtended           (nInput + nExtension),
+      nExtendedPadded     (nExtended / 2 + 1),
+      nDelta              (nDelta)
 {
 // sanity checks
 #  ifdef GAMER_DEBUG
@@ -475,8 +483,8 @@ void GramFEInterpolationContext::InterpolateReal(const real* input, real *output
 // Description :  Constructor of PrecomputedInterpolationContext, loads interpolation table into memory
 //
 //-------------------------------------------------------------------------------------------------------
-PrecomputedInterpolationContext::PrecomputedInterpolationContext(size_t nInput, size_t nGhostBoundary) :
-   InterpolationContext(nInput, nGhostBoundary)
+PrecomputedInterpolationContext::PrecomputedInterpolationContext(size_t nInput, size_t nGhostBoundary)
+   :  InterpolationContext(nInput, nGhostBoundary)
 {
    char filename[2 * MAX_STRING];
    sprintf(filename, "%s/interpolation_tables/N=%ld.bin", INT_TABLE_PATH, nInput);
@@ -537,17 +545,23 @@ void PrecomputedInterpolationContext::InterpolateReal(const real *input, real *o
 
 
 //fixed interpolation constants
-const real QuarticInterpolationContext::QuarticL[5] = { +35.0/2048.0, -252.0/2048.0, +1890.0/2048.0, +420.0/2048.0, -45.0/2048.0 };
-const real QuarticInterpolationContext::QuarticR[5] = { -45.0/2048.0, +420.0/2048.0, +1890.0/2048.0, -252.0/2048.0, +35.0/2048.0 };
+const real QuarticInterpolationContext::QuarticR[5] = { +35.0/2048.0, -252.0/2048.0, +1890.0/2048.0, +420.0/2048.0, -45.0/2048.0 };
+const real QuarticInterpolationContext::QuarticL[5] = { -45.0/2048.0, +420.0/2048.0, +1890.0/2048.0, -252.0/2048.0, +35.0/2048.0 };
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  QuarticInterpolationContext::QuarticInterpolationContext
 // Description :  Constructor of QuarticInterpolationContext
 //
 //-------------------------------------------------------------------------------------------------------
-QuarticInterpolationContext::QuarticInterpolationContext(size_t nInput, size_t nGhostBoundary) :
-   InterpolationContext(nInput, nGhostBoundary)
+QuarticInterpolationContext::QuarticInterpolationContext(size_t nInput, size_t nGhostBoundary)
+   :  InterpolationContext(nInput, nGhostBoundary)
 {
+#  ifdef GAMER_DEBUG
+   if (nGhostBoundary != 2)
+   {
+      Aux_Error(ERROR_INFO, "QuarticInterpolationContext requires nGhostBoundary = 2!!\n");
+   }
+#  endif
 }
 
 //-------------------------------------------------------------------------------------------------------
@@ -574,8 +588,8 @@ void QuarticInterpolationContext::InterpolateReal(const real *input, real *outpu
    for (size_t i = 0; i < nInput - 2 * nGhostBoundary; ++i) {
       real r = 0, l = 0;
       for ( size_t j = 0; j < 5; ++j ) {
-            r += QuarticR[j] * input[i + j + (nGhostBoundary - 2)];
-            l += QuarticL[j] * input[i + j + (nGhostBoundary - 2)];
+         l += QuarticInterpolationContext::QuarticL[j] * input[i + j + (nGhostBoundary - 2)];
+         r += QuarticInterpolationContext::QuarticR[j] * input[i + j + (nGhostBoundary - 2)];
       }
       output[i * 2    ] = l;
       output[i * 2 + 1] = r;
@@ -596,7 +610,8 @@ void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostB
       {
 //       for small N <= 32 pick precomputed interpolation with cost of N^2
          if ( nInput <= 32 ) {
-               contexts.emplace(nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary));
+               contexts.emplace(nInput, new QuarticInterpolationContext(nInput, nGhostBoundary));
+               //contexts.emplace(nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary));
 //       for large N >  32 use Gram-Fourier extension scheme with cost of N log(N)
          } else {
                size_t nExtension = 32, nDelta = 14;
@@ -626,11 +641,11 @@ void InterpolationHandler::InterpolateReal(real* input, real* output, size_t nIn
    auto context = contexts.at(nInput);
 
 // unwrap phase
-   context->Preprocess(input, UnwrapPhase);
+   //context->Preprocess(input, UnwrapPhase);
 // interpolate
    context->InterpolateReal(input, output, workspace);
 // ensure monotonicity
-   context->Postprocess(input, output, Monotonic, MonoCoeff, OppSign0thOrder);
+   //context->Postprocess(input, output, Monotonic, MonoCoeff, OppSign0thOrder);
 } // FUNCTION : InterpolateReal
 
 
