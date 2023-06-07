@@ -90,7 +90,7 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
    real *TDataY = new real [ (CRange[2]+2*CGhost)*TdzY ];   // temporary array after y interpolation
 
    int Idx_InL, Idx_InC, Idx_InR, Idx_Out;
-   size_t nInput;
+   int nInput;
 
    for (int v=0; v<NComp; v++)
    {

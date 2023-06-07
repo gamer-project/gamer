@@ -135,26 +135,26 @@ private:
 }; // CLASS : PrecomputedInterpolationContext
 
 //-------------------------------------------------------------------------------------------------------
-// Structure   :  ConservativeQuarticInterpolationContext
+// Structure   :  QuarticInterpolationContext
 // Description :  Data structure of quartic interpolator derived from InterpolationContext
 //
-// Data Member :  ConservativeQuarticR         : Conservative quartic right interpolation coefficients
-//                ConservativeQuarticL         : Conservative quartic left interpolation coefficients
+// Data Member :  QuarticR         :  quartic right interpolation coefficients
+//                QuarticL         :  quartic left interpolation coefficients
 //
 // Method      :  GetWorkspaceSize : Return size of interpolation workspace in bytes
 //                InterpolateReal  : Interpolate input array of size nInput and store interpolation results of size 2 * (nInput - nGhostBoundary) in output array
 //
 //-------------------------------------------------------------------------------------------------------
-struct ConservativeQuarticInterpolationContext : public InterpolationContext
+struct QuarticInterpolationContext : public InterpolationContext
 {
 public:
-    static const real ConservativeQuarticR[ 5 ];
-    static const real ConservativeQuarticL[ 5 ];
+    static const real QuarticR[ 5 ];
+    static const real QuarticL[ 5 ];
 
-    ConservativeQuarticInterpolationContext(size_t nInput, size_t nGhostBoundary);
+    QuarticInterpolationContext(size_t nInput, size_t nGhostBoundary);
     size_t GetWorkspaceSize () const;
     void   InterpolateReal  (const real *input, real *output, char* workspace) const;
-}; // CLASS : ConservativeQuarticInterpolationContext
+}; // CLASS : QuarticInterpolationContext
 
 //-------------------------------------------------------------------------------------------------------
 // Class       :  InterpolationHandler
