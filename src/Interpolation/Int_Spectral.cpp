@@ -653,8 +653,8 @@ void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostB
       {
 //       for small N <= 32 pick precomputed interpolation with cost of N^2
          if ( nInput <= 32 ) {
-               //contexts.emplace(nInput, new QuarticInterpolationContext(nInput, nGhostBoundary));
-               contexts.emplace(nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary));
+               contexts.emplace(nInput, new QuarticInterpolationContext(nInput, nGhostBoundary));
+               //contexts.emplace(nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary));
 //       for large N >  32 use Gram-Fourier extension scheme with cost of N log(N)
          } else {
                size_t nExtension = 32, nDelta = 14;
@@ -684,11 +684,11 @@ void InterpolationHandler::InterpolateReal(real* input, real* output, size_t nIn
    auto context = contexts.at(nInput);
 
 // unwrap phase
-   //context->Preprocess(input, UnwrapPhase);
+   context->Preprocess(input, UnwrapPhase);
 // interpolate
    context->InterpolateReal(input, output, workspace);
 // ensure monotonicity
-   //context->Postprocess(input, output, Monotonic, MonoCoeff, OppSign0thOrder);
+   context->Postprocess(input, output, Monotonic, MonoCoeff, OppSign0thOrder);
 } // FUNCTION : InterpolateReal
 
 
