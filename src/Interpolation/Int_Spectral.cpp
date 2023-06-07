@@ -14,7 +14,7 @@
 // Description :  Perform spatial interpolation based on the Gram-Fourier extension method
 //
 // Note        :  1. The interpolation is spectrally accurate
-//                2. The interpolation result is neither conservative nor monotonic
+//                2. The interpolation result is neither  nor monotonic
 //                3. 3D interpolation is achieved by performing interpolation along x, y, and z directions
 //                   in order
 //
@@ -26,9 +26,9 @@
 //                FStart          : (x,y,z) starting indcies to store the interpolation results
 //                NComp           : Number of components in the CData and FData array
 //                UnwrapPhase     : Unwrap phase when OPT__INT_PHASE is on (for ELBDM only)
-//                Monotonic       : Unused
-//                MonoCoeff       : Unused
-//                OppSign0thOrder : Unused
+//                Monotonic       : Ensure that all interpolation results are monotonic
+//                MonoCoeff       : Slope limiter coefficient for the option "Monotonic"
+//                OppSign0thOrder : See Int_MinMod1D()
 //-------------------------------------------------------------------------------------------------------
 void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                     real FData[], const int FSize[3], const int FStart[3], const int NComp,
@@ -97,15 +97,17 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
       for (int In_z=CStart[2]-CGhost, Out_z=0;  In_z<CStart[2]+CRange[2]+CGhost;  In_z++, Out_z++)
       for (int In_y=CStart[1]-CGhost, Out_y=0;  In_y<CStart[1]+CRange[1]+CGhost;  In_y++, Out_y++)
       {
+         nInput = CRange[0] + 2 * CGhost;
+
 //       fill FFT array with one column of input data (including ghost zones) in x-direction
-         for (int In_x=CStart[0]-CGhost, Out_x=0;  In_x<CStart[0]+CRange[0]+CGhost;  In_x++, Out_x++)
+         for (int In_x=CStart[0]-CGhost, Out_x=0;  In_x<CStart[0]-CGhost+nInput;  In_x++, Out_x++)
          {
             Idx_InC                 = In_z*Cdz  +  In_y*Cdy +  In_x*Cdx;
             Input[Out_x]            = CPtr[Idx_InC];
          } // i
 
 //       interpolate data
-         INTERPOLATION_HANDLER.InterpolateReal(Input, Output, CRange[0] + 2 * CGhost, CGhost, workspace, UnwrapPhase, Monotonic[v], MonoCoeff, OppSign0thOrder);
+         INTERPOLATION_HANDLER.InterpolateReal(Input, Output, nInput, CGhost, workspace, UnwrapPhase, Monotonic[v], MonoCoeff, OppSign0thOrder);
 
 //       write result of Fourier interpolation (excluding ghost zones) to temporary array
          for (int In_x=0, Out_x=0; In_x<CRange[0]; In_x++, Out_x+=2)
@@ -121,14 +123,15 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
       for (int InOut_x=0;             InOut_x<2*CRange[0];         InOut_x++)
       {
 
+         nInput = CRange[1] + 2 * CGhost;
 //       fill FFT array with one column of input data (including ghost boundary) in y-direction
-         for (int In_y=0, Out_y=0;    In_y < CRange[1]+2*CGhost;   In_y++, Out_y++) {
+         for (int In_y=0, Out_y=0;    In_y < nInput;   In_y++, Out_y++) {
             Idx_InC                 = InOut_z*TdzX +  In_y*Tdy + InOut_x*Tdx;
             Input[Out_y]            = TDataX[Idx_InC];
          } // j
 
 //       interpolate data
-         INTERPOLATION_HANDLER.InterpolateReal(Input, Output, CRange[1] + 2 * CGhost, CGhost, workspace, UnwrapPhase, Monotonic[v], MonoCoeff, OppSign0thOrder);
+         INTERPOLATION_HANDLER.InterpolateReal(Input, Output, nInput, CGhost, workspace, UnwrapPhase, Monotonic[v], MonoCoeff, OppSign0thOrder);
 
 
 //       write result of Fourier interpolation to temporary array
@@ -144,15 +147,16 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
       for (int In_x=0,      Out_x=FStart[0];  In_x<2*CRange[0];       In_x++, Out_x++)
       {
 
+         nInput = CRange[2] + 2 * CGhost;
 //       fill FFT array with one column of input data in z-direction
-         for (int In_z=0, Out_z=0;  In_z<CRange[2]+2*CGhost;  In_z++, Out_z++)
+         for (int In_z=0, Out_z=0;  In_z<nInput;  In_z++, Out_z++)
          {
             Idx_InC                 = In_z*TdzY +  In_y*Tdy +  In_x*Tdx;
             Input[Out_z]            = TDataY[Idx_InC];
          }
 
 //       interpolate data
-         INTERPOLATION_HANDLER.InterpolateReal(Input, Output, CRange[2] + 2 * CGhost, CGhost, workspace, UnwrapPhase, Monotonic[v], MonoCoeff, OppSign0thOrder);
+         INTERPOLATION_HANDLER.InterpolateReal(Input, Output, nInput, CGhost, workspace, UnwrapPhase, Monotonic[v], MonoCoeff, OppSign0thOrder);
 
          for (int In_z=0, Out_z=FStart[2];  In_z<CRange[2];  In_z++, Out_z+=2)
          {
@@ -176,6 +180,14 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 } // FUNCTION : Int_Spectral
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  InterpolationContext::InterpolationContext
+// Description :  Constructor of InterpolationContext; perform parameter checks
+//
+// Parameter   :  nInput             : Size of input array
+//                nGhostBoundary     : Size of ghost boundary
+//
+//-------------------------------------------------------------------------------------------------------
 InterpolationContext::InterpolationContext(size_t nInput, size_t nGhostBoundary) :
    nInput         (nInput),
    nGhostBoundary (nGhostBoundary),
@@ -195,24 +207,51 @@ InterpolationContext::InterpolationContext(size_t nInput, size_t nGhostBoundary)
       Aux_Error(ERROR_INFO, "Input array of size %ld smaller than left and right ghost boundary of size %ld!!\n", nInput, nGhostBoundary);
    }
 #  endif
-}
+} // CONSTRUCTOR : InterpolationContext
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  InterpolationContext::ReadBinaryFile
+// Description :  Read "size" doubles from binary file "filename" into memory at pointer "array"
+//
+// Note        :  Array must be preallocated, e.g. via array = (double*) malloc(sizeof(double) * size);
+//
+// Parameter   :  filename    : Input filename
+//                array       : Pointer to preallocated memory with sizeof(double) * size bytes
+//                size        : Number of double precision values to load
+//
+//-------------------------------------------------------------------------------------------------------
 void InterpolationContext::ReadBinaryFile(const char* filename, double* array, int size) const
 {
    FILE* file = fopen(filename, "rb");
    if (file == NULL) {
-      Aux_Error(ERROR_INFO, "Failed to open the interpolation file %s.\n", filename);
+      Aux_Error(ERROR_INFO, "Error opening interpolation file %s.\n", filename);
       return;
    }
 
-   // Read the array from the binary file
-   fread(array, sizeof(double), size, file);
+// read the array from the binary file
+   int num = fread(array, sizeof(double), size, file);
 
-   // Close the file
+   if ( num != size ) {
+       /* fread failed */
+      if ( ferror(file) )    /* possibility 1 */
+        Aux_Error(ERROR_INFO, "Error reading interpolation file %s.\n", filename);
+      else if ( feof(file))  /* possibility 2 */
+        Aux_Error(ERROR_INFO, "EOF found in interpolation file %s.\n", filename);
+   }
+
+// close the file
    fclose(file);
 } // FUNCTION : ReadBinaryFile
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  InterpolationContext::Preprocess
+// Description :  Unwrap phase in ELBDM
+//
+// Parameter   :  input           : Input array
+//                UnwrapPhase     : Unwrap phase when OPT__INT_PHASE is on (for ELBDM only)
+//
+//-------------------------------------------------------------------------------------------------------
 void InterpolationContext::Preprocess(real* input, const bool UnwrapPhase) const {
 //    unwrap phase
 #     if ( MODEL == ELBDM )
@@ -228,8 +267,19 @@ void InterpolationContext::Preprocess(real* input, const bool UnwrapPhase) const
          }
       }
 #     endif
-}
+} // FUNCTION : Preprocess
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  InterpolationContext::Postprocess
+// Description :  Ensure monotonicity of interpolation result assuming nonconservative quartic interpolation
+//
+// Parameter   :  input           : Input array
+//                output          : Output array
+//                Monotonic       : Ensure that all interpolation results are monotonic
+//                MonoCoeff       : Slope limiter coefficient for the option "Monotonic"
+//                OppSign0thOrder : See Int_MinMod1D()
+//
+//-------------------------------------------------------------------------------------------------------
 void InterpolationContext::Postprocess(const real* input, real* output, const bool Monotonic, const real MonoCoeff, const bool OppSign0thOrder) const {
 // ensure monotonicity
    if ( Monotonic )
@@ -295,7 +345,7 @@ void InterpolationContext::Postprocess(const real* input, real* output, const bo
          output[ Idx_Out + Tdy ] = input[Idx_InC];
       }
    }
-}
+} // FUNCTION : Postprocess
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  GramFEInterpolationContext
@@ -307,12 +357,12 @@ void InterpolationContext::Postprocess(const real* input, real* output, const bo
 //                nDelta         : Size of boundary domain used for Gram-Fourier extension
 //
 //-------------------------------------------------------------------------------------------------------
-GramFEInterpolationContext::GramFEInterpolationContext(size_t nInput, size_t nGhostBoundary, size_t nExtension, size_t nDelta) :
-   InterpolationContext(nInput, nGhostBoundary),
-   nExtension          (nExtension),
-   nExtended           (nInput + nExtension),
-   nExtendedPadded     (nExtended / 2 + 1),
-   nDelta              (nDelta)
+GramFEInterpolationContext::GramFEInterpolationContext(size_t nInput, size_t nGhostBoundary, size_t nExtension, size_t nDelta)
+   :  InterpolationContext(nInput, nGhostBoundary),
+      nExtension          (nExtension),
+      nExtended           (nInput + nExtension),
+      nExtendedPadded     (nExtended / 2 + 1),
+      nDelta              (nDelta)
 {
 // sanity checks
 #  ifdef GAMER_DEBUG
@@ -475,8 +525,8 @@ void GramFEInterpolationContext::InterpolateReal(const real* input, real *output
 // Description :  Constructor of PrecomputedInterpolationContext, loads interpolation table into memory
 //
 //-------------------------------------------------------------------------------------------------------
-PrecomputedInterpolationContext::PrecomputedInterpolationContext(size_t nInput, size_t nGhostBoundary) :
-   InterpolationContext(nInput, nGhostBoundary)
+PrecomputedInterpolationContext::PrecomputedInterpolationContext(size_t nInput, size_t nGhostBoundary)
+   :  InterpolationContext(nInput, nGhostBoundary)
 {
    char filename[2 * MAX_STRING];
    sprintf(filename, "%s/interpolation_tables/N=%ld.bin", INT_TABLE_PATH, nInput);
@@ -537,17 +587,23 @@ void PrecomputedInterpolationContext::InterpolateReal(const real *input, real *o
 
 
 //fixed interpolation constants
-const real QuarticInterpolationContext::QuarticL[5] = { +35.0/2048.0, -252.0/2048.0, +1890.0/2048.0, +420.0/2048.0, -45.0/2048.0 };
-const real QuarticInterpolationContext::QuarticR[5] = { -45.0/2048.0, +420.0/2048.0, +1890.0/2048.0, -252.0/2048.0, +35.0/2048.0 };
+const real QuarticInterpolationContext::QuarticR[5] = { +35.0/2048.0, -252.0/2048.0, +1890.0/2048.0, +420.0/2048.0, -45.0/2048.0 };
+const real QuarticInterpolationContext::QuarticL[5] = { -45.0/2048.0, +420.0/2048.0, +1890.0/2048.0, -252.0/2048.0, +35.0/2048.0 };
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  QuarticInterpolationContext::QuarticInterpolationContext
 // Description :  Constructor of QuarticInterpolationContext
 //
 //-------------------------------------------------------------------------------------------------------
-QuarticInterpolationContext::QuarticInterpolationContext(size_t nInput, size_t nGhostBoundary) :
-   InterpolationContext(nInput, nGhostBoundary)
+QuarticInterpolationContext::QuarticInterpolationContext(size_t nInput, size_t nGhostBoundary)
+   :  InterpolationContext(nInput, nGhostBoundary)
 {
+#  ifdef GAMER_DEBUG
+   if (nGhostBoundary < 2)
+   {
+      Aux_Error(ERROR_INFO, "QuarticInterpolationContext requires nGhostBoundary = 2!!\n");
+   }
+#  endif
 }
 
 //-------------------------------------------------------------------------------------------------------
@@ -571,14 +627,14 @@ size_t QuarticInterpolationContext::GetWorkspaceSize() const
 //-------------------------------------------------------------------------------------------------------
 void QuarticInterpolationContext::InterpolateReal(const real *input, real *output, char* workspace) const
 {
-   for (size_t i = 0; i < nInput - 2 * nGhostBoundary; ++i) {
+   for (size_t i = nGhostBoundary; i < nInput - nGhostBoundary; ++i) {
       real r = 0, l = 0;
       for ( size_t j = 0; j < 5; ++j ) {
-            r += QuarticR[j] * input[i + j + (nGhostBoundary - 2)];
-            l += QuarticL[j] * input[i + j + (nGhostBoundary - 2)];
+         l += QuarticInterpolationContext::QuarticL[j] * input[i - 2 + j];
+         r += QuarticInterpolationContext::QuarticR[j] * input[i - 2 + j];
       }
-      output[i * 2    ] = l;
-      output[i * 2 + 1] = r;
+      output[(i - nGhostBoundary) * 2    ] = l;
+      output[(i - nGhostBoundary) * 2 + 1] = r;
    }
 } // FUNCTION : InterpolateReal
 
@@ -596,6 +652,7 @@ void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostB
       {
 //       for small N <= 32 pick precomputed interpolation with cost of N^2
          if ( nInput <= 32 ) {
+               //contexts.emplace(nInput, new QuarticInterpolationContext(nInput, nGhostBoundary));
                contexts.emplace(nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary));
 //       for large N >  32 use Gram-Fourier extension scheme with cost of N log(N)
          } else {

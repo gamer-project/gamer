@@ -36,6 +36,23 @@ namespace pi_gsl  = gsl_single_precision;
 #endif
 #endif // #ifdef SUPPORT_SPECTRAL_INTERPOLATION
 
+//-------------------------------------------------------------------------------------------------------
+// Class       :  InterpolationContext
+// Description :  Base class for interpolation contexts
+//
+// Data Member :  nInput                    : Size of input array
+//                nGhostBoundary            : Size of ghost boundary
+//                nInterpolated             : Size of interpolated input data
+//
+// Method      :  InterpolationContext      : Constructor
+//               ~InterpolationContext      : Destructor
+//                Preprocess                : Prepare input array by unwrapping phase etc.
+//                Postprocess               : Postprocess interpolation results by enforcing monotonicity etc.
+//                ReadBinaryFile            : Read "size" doubles from binary file "filename" into double array "array"
+//                GetWorkspaceSize          : Purely virtual; Return size of interpolation workspace in bytes
+//                InterpolateReal           : Purely virtual; Interpolate input array of size nInput and store interpolation results of size 2 * (nInput - nGhostBoundary) in output array
+//
+//-------------------------------------------------------------------------------------------------------
 class InterpolationContext {
 public:
     InterpolationContext(size_t nInput, size_t nGhostBoundary);
@@ -46,14 +63,14 @@ public:
     virtual size_t GetWorkspaceSize () const = 0;
     virtual void   InterpolateReal  (const real* input, real *output, char* workspace) const = 0;
 
-    const size_t nInput;
-    const size_t nGhostBoundary;
-    const size_t nInterpolated;
-};
+    const size_t   nInput;
+    const size_t   nGhostBoundary;
+    const size_t   nInterpolated;
+}; // CLASS : InterpolationContext
 
 //-------------------------------------------------------------------------------------------------------
-// Structure   :  GramFEInterpolationContext
-// Description :  Data structure of the Gram-Fourier extension interpolation implementation
+// Class       :  GramFEInterpolationContext
+// Description :  Data structure of the Gram-Fourier extension interpolation implementation derived from InterpolationContext
 //
 // Data Member :  nInput                          : Size of input array
 //                nGhostBoundary                  : Size of ghost boundary
@@ -62,8 +79,11 @@ public:
 //                nExtended                       : Size of domain after extension
 //                nExtendedPadded                 : Complex size of domain after extension with padding for real FFT
 //                nDelta                          : Size of boundary domain
+//                r2cPlan                         : Real-To-Complex FFT plan
+//                c2rPlan                         : Complex-To-Real FFT plan
+//                translationCoeffL               : Array of nExtendedPadded complex coefficients for translation to left by dx/4 in k-space
+//                translationCoeffR               : Array of nExtendedPadded complex coefficients for translation to right by dx/4 in k-space
 //                extensionMatrix                 : GSL matrix of size 2 * nDelta x nExtension to store Gram-Fourier table
-//                r2cPlan, c2rPlan                : Real-To-Complex and Complex-To-Real FFT plans
 //
 // Method      :  GramFEInterpolationContext      : Constructor
 //               ~GramFEInterpolationContext      : Destructor
@@ -78,6 +98,7 @@ public:
     ~GramFEInterpolationContext();
     size_t GetWorkspaceSize () const;
     void   InterpolateReal  (const real* input, real *output, char* workspace) const;
+
 private:
     const size_t nExtension;
     const size_t nExtended;
@@ -92,12 +113,9 @@ private:
 
 //-------------------------------------------------------------------------------------------------------
 // Structure   :  PrecomputedInterpolationContext
-// Description :  Data structure of the precomputed Gram-Fourier extension interpolation implementation
+// Description :  Data structure of the precomputed Gram-Fourier extension interpolation implementation derived from InterpolationContext
 //
-// Data Member :  nInput                          : Size of input array
-//             :  nGhostBoundary                  : Size of ghost boundary
-//             :  nInterpolated                   : Size of interpolated input data
-//             :  interpolationMatrix             : GSL matrix of size nInterpolated x nInput
+// Data Member :  interpolationMatrix             : GSL matrix of size nInterpolated x nInput
 //
 // Method      :  PrecomputedInterpolationContext : Constructor
 //               ~PrecomputedInterpolationContext : Destructor
@@ -117,23 +135,26 @@ private:
 }; // CLASS : PrecomputedInterpolationContext
 
 //-------------------------------------------------------------------------------------------------------
-// Structure   :  QuarticInterpolationContext
-// Description :  Data structure of quadratic interpolator
+// Structure   :  ConservativeQuarticInterpolationContext
+// Description :  Data structure of quartic interpolator derived from InterpolationContext
 //
-// Method      :  GetWorkspaceSize                : Return size of interpolation workspace in bytes
-//                InterpolateReal                 : Interpolate input array of size nInput and store interpolation results of size 2 * (nInput - nGhostBoundary) in output array
+// Data Member :  ConservativeQuarticR         : Conservative quartic right interpolation coefficients
+//                ConservativeQuarticL         : Conservative quartic left interpolation coefficients
+//
+// Method      :  GetWorkspaceSize : Return size of interpolation workspace in bytes
+//                InterpolateReal  : Interpolate input array of size nInput and store interpolation results of size 2 * (nInput - nGhostBoundary) in output array
 //
 //-------------------------------------------------------------------------------------------------------
-struct QuarticInterpolationContext : public InterpolationContext
+struct ConservativeQuarticInterpolationContext : public InterpolationContext
 {
 public:
-    static const real QuarticR[ 1 + 2*2 ];
-    static const real QuarticL[ 1 + 2*2 ];
+    static const real ConservativeQuarticR[ 5 ];
+    static const real ConservativeQuarticL[ 5 ];
 
-    QuarticInterpolationContext(size_t nInput, size_t nGhostBoundary);
+    ConservativeQuarticInterpolationContext(size_t nInput, size_t nGhostBoundary);
     size_t GetWorkspaceSize () const;
     void   InterpolateReal  (const real *input, real *output, char* workspace) const;
-}; // CLASS : QuarticInterpolationContext
+}; // CLASS : ConservativeQuarticInterpolationContext
 
 //-------------------------------------------------------------------------------------------------------
 // Class       :  InterpolationHandler
@@ -152,7 +173,7 @@ class InterpolationHandler {
 public:
     void   AddInterpolationContext  (size_t nInput, size_t nGhostBoundary);
     size_t GetWorkspaceSize         (size_t nInput, size_t nGhostBoundary) const;
-    void   InterpolateReal          (real* input, real* output, size_t nInput, size_t nGhostBoundary,char* workspace, const bool UnwrapPhase, const bool Monotonic, const real MonoCoeff, const bool OppSign0thOrder) const;
+    void   InterpolateReal          (real* input, real* output, size_t nInput, size_t nGhostBoundary, char* workspace, const bool UnwrapPhase, const bool Monotonic, const real MonoCoeff, const bool OppSign0thOrder) const;
 private:
     std::unordered_map<size_t, std::shared_ptr<InterpolationContext>> contexts;
 }; // CLASS : InterpolationHandler
