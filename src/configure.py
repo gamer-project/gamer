@@ -63,7 +63,7 @@ GAMER_CONFIG_DIR  = "../configs"
 GAMER_MAKE_BASE   = "Makefile_base"
 GAMER_MAKE_OUT    = "Makefile"
 GAMER_DESCRIPTION = "Prepare a customized Makefile for GAMER.\nDefault values are marked by '*'.\nUse -lh to show a detailed help message.\n"
-GAMER_EPILOG      = "The default complie flags are %s/intel.make and %s/gnu.make\n"%(GAMER_CONFIG_DIR, GAMER_CONFIG_DIR)
+GAMER_EPILOG      = "\n"
 # Mapping between the Python arguments used in this script and the GAMER symbolic constants defined in the Makefile.
 NAME_TABLE        = {"model":"MODEL", "passive":"NCOMP_PASSIVE_USER", "flu_scheme":"FLU_SCHEME",
                      "slope":"LR_SCHEME", "flux":"RSOLVER", "dual":"DUAL_ENERGY", "mhd":"MHD",
