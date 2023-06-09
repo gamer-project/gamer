@@ -74,6 +74,7 @@ namespace gsl_double_precision {
     const auto  blas_ctrsv                       =  gsl_blas_ztrsv;
     const auto  blas_sgemv                       =  gsl_blas_dgemv;
     const auto  blas_sgemm                       =  gsl_blas_dgemm;
+    const auto  blas_cgemm                       =  gsl_blas_zgemm;
 };
 
 namespace gsl_single_precision {
@@ -133,6 +134,7 @@ namespace gsl_single_precision {
     const auto blas_ctrsv                       =  gsl_blas_ctrsv;
     const auto blas_sgemv                       =  gsl_blas_sgemv;
     const auto blas_sgemm                       =  gsl_blas_sgemm;
+    const auto blas_cgemm                       =  gsl_blas_cgemm;
 };
 
 #endif // #ifdef SUPPORT_GSL

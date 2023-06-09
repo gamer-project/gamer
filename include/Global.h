@@ -385,6 +385,11 @@ extern real        *h_SrcDlepProf_Radius;
 #endif
 
 
+#if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(ENABLE_FAST_GRAMFE) )
+extern real       (*h_Flu_TimeEvo)[2 * FLU_NXT];
+#endif
+
+
 
 // 4/5. GPU (device) global memory arrays and timers
 // ============================================================================================================

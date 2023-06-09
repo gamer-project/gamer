@@ -374,6 +374,11 @@ real (*h_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX]                  = NULL;
 real  *h_SrcDlepProf_Radius                                        = NULL;
 #endif
 
+#  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(ENABLE_FAST_GRAMFE) )
+real (*h_Flu_TimeEvo) [2 * FLU_NXT]                                = NULL;
+#  endif // #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(ENABLE_FAST_GRAMFE) )
+
+
 
 // 4. GPU (device) global memory arrays
 // =======================================================================================================
@@ -400,7 +405,12 @@ real (*d_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ]  = NULL;
 real (*d_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]        = NULL;
 real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 #endif
+
 #endif // FLU_SCHEME
+
+#if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(GRAMFE_ENABLE_GPU) && defined(ENABLE_FAST_GRAMFE) )
+real (*d_Flu_TimeEvo)[2 * FLU_NXT]                                 = NULL;
+#endif
 
 #ifdef GRAVITY
 // (4-2) Poisson and gravity solver

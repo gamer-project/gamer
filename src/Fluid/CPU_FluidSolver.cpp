@@ -3,7 +3,7 @@
 #if (!defined(GPU) || ((MODEL == ELBDM) && (WAVE_SCHEME == WAVE_GRAMFE) && !defined(GRAMFE_ENABLE_GPU)))
 
 
-
+#include "GramFE_ExtensionTables.h"
 #include "GAMER.h"
 #include "CUFLU.h"
 
@@ -91,11 +91,12 @@ void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                       const real Taylor3_Coeff, const bool XYZ, const real MinDens );
 #elif ( WAVE_SCHEME == WAVE_GRAMFE ) // #if ( WAVE_SCHEME == WAVE_FD )
-void CPU_ELBDMSolver_GramFE( real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
-                      real Flu_Array_Out[][FLU_NOUT   ][ CUBE(PS2) ],
-                      real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
-                      const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
-                      const bool XYZ, const real MinDens );
+void CPU_ELBDMSolver_GramFE(  real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
+                              real Flu_Array_Out[][FLU_NOUT   ][ CUBE(PS2) ],
+                              real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
+                              real Evolve    [][2 * FLU_NXT],
+                              const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
+                              const bool XYZ, const real MinDens );
 #endif // #if ( WAVE_SCHEME == WAVE_FD ) ... else
 
 #else
@@ -260,7 +261,9 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 
 #  elif ( WAVE_SCHEME == WAVE_GRAMFE ) // #  if (WAVE_SCHEME == WAVE_FD )
 
-   CPU_ELBDMSolver_GramFE( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
+   GramFE_SetupTimeEvolutionMatrix(h_Flu_TimeEvo, dt, dh, ELBDM_Eta);
+
+   CPU_ELBDMSolver_GramFE( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, h_Flu_TimeEvo, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
                      XYZ, MinDens );
 
 #  else // #  if (WAVE_SCHEME == WAVE_GRAMFE )

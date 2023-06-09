@@ -1,6 +1,6 @@
 #include "CUAPI.h"
 #include "CUFLU.h"
-
+#include "GramFE_ExtensionTables.h"
 #ifdef GPU
 
 #if   ( MODEL == HYDRO )
@@ -97,6 +97,7 @@ __global__
 void CUFLU_ELBDMSolver_GramFE(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                                   real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
                                   real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                  real g_Evolve   [][FLU_NXT * 2],
                                   const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                   const bool XYZ, const real MinDens);
 #  endif
@@ -149,6 +150,9 @@ static real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 #endif // FLU_SCHEME
 #endif // #if ( MODEL == HYDRO )
 
+#if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(GRAMFE_ENABLE_GPU) && defined(ENABLE_FAST_GRAMFE) )
+extern real (*d_Flu_TimeEvo)[2 * FLU_NXT];
+#endif
 #ifdef UNSPLIT_GRAVITY
 extern real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ];
 #elif ( MODEL == HYDRO )
@@ -332,7 +336,11 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
    auto cufftdx_iworkspace = cufftdx::make_workspace<IFFT>(error_code);
    CUDA_CHECK_ERROR(error_code);
 
-#  endif // #  ifdef GRAMFE_ENABLE_GPU
+#  elif (defined(GRAMFE_ENABLE_GPU) && defined(ENABLE_FAST_GRAMFE))
+   size_t h_FluTimeEvo_MemSize = 2 * FLU_NXT * PS2 * sizeof(real);
+   GramFE_SetupTimeEvolutionMatrix(h_Flu_TimeEvo, dt, dh, ELBDM_Eta);
+   CUDA_CHECK_ERROR( cudaMemcpyAsync( d_Flu_TimeEvo, h_Flu_TimeEvo, h_FluTimeEvo_MemSize, cudaMemcpyHostToDevice) );
+#  endif
 #  else // #  if (WAVE_SCHEME == WAVE_GRAMFE )
 #     error : ERROR : unsupported WAVE_SCHEME !!
 #  endif // WAVE_SCHEME
@@ -512,6 +520,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
             ( d_Flu_Array_F_In  + UsedPatch[s],
               d_Flu_Array_F_Out + UsedPatch[s],
               d_Flux_Array      + UsedPatch[s],
+              d_Flu_TimeEvo,
               dt, dh, ELBDM_Eta, StoreFlux, XYZ, MinDens );
 #     endif
 #     else // #  if (WAVE_SCHEME == WAVE_FD )

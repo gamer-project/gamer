@@ -44,6 +44,9 @@ extern real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif
 #endif // FLU_SCHEME
 
+#if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(GRAMFE_ENABLE_GPU) && defined(ENABLE_FAST_GRAMFE) )
+extern real (*d_Flu_TimeEvo)[2 * FLU_NXT];
+#endif
 #if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
 #endif
@@ -113,6 +116,11 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
 #  endif
 #  endif // FLU_SCHEME
 
+
+#  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(GRAMFE_ENABLE_GPU) && defined(ENABLE_FAST_GRAMFE) )
+   const long Flu_TimeEvo_MemSize = sizeof(real) * 2 * PS2 * FLU_NXT;
+#  endif
+
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #     warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
 #  endif
@@ -153,6 +161,10 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
    TotalSize += FC_Mag_Half_MemSize + EC_Ele_MemSize;
 #  endif
 #  endif // MHM/MHM_RP/CTU
+
+#  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(GRAMFE_ENABLE_GPU) && defined(ENABLE_FAST_GRAMFE) )
+   TotalSize += Flu_TimeEvo_MemSize;
+#  endif
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #     warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
@@ -227,6 +239,11 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
    CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_Corner_Array_S,       Corner_MemSize_S     )  );
    }
 
+#  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(GRAMFE_ENABLE_GPU) && defined(ENABLE_FAST_GRAMFE) )
+   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_Flu_TimeEvo,          Flu_TimeEvo_MemSize  )  );
+#  endif
+
+
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #     warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
 #  endif
@@ -274,6 +291,11 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
       CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_Corner_Array_S [t],  Corner_MemSize_S     )  );
       }
    } // for (int t=0; t<2; t++)
+
+
+#  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(GRAMFE_ENABLE_GPU) && defined(ENABLE_FAST_GRAMFE) )
+   CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_Flu_TimeEvo,  Flu_TimeEvo_MemSize  )  );
+#  endif
 
 
 // create streams

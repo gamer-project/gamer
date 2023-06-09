@@ -4,7 +4,7 @@
 #if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || ( defined(__CUDACC__) && defined(GRAMFE_ENABLE_GPU) ) )
 
 #if ( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE && !defined(ENABLE_FAST_GRAMFE) )
-#include "GramExtensionTables.h"
+#include "GramFE_ExtensionTables.h"
 
 
 // useful macros
