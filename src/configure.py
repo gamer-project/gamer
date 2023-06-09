@@ -463,7 +463,7 @@ def validation( paths, **kwargs ):
             if kwargs["dual"] == "ENPY":
                 color_print("ENPY dual energy is only supported for --eos=GAMMA.", BCOLOR.FAIL)
                 success = False
-            if kwargs["flux"] != "ROE" or kwargs["flux"] != "EXACT":
+            if kwargs["flux"] == "ROE" or kwargs["flux"] == "EXACT":
                 color_print("Only ROE and EXACT Riemann solver are supported for --eos!=GAMMA.", BCOLOR.FAIL)
                 success = False
             if kwargs["flu_scheme"] == "RTVD" or kwargs["flu_scheme"] == "CTU":
