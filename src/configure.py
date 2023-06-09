@@ -76,7 +76,7 @@ NAME_TABLE        = {"model":"MODEL", "passive":"NCOMP_PASSIVE_USER", "flu_schem
                      "particle":"PARTICLE", "tracer":"TRACER", "store_acc":"STORE_PAR_ACC",
                      "star_formation":"STAR_FORMATION", "feedback":"FEEDBACK", "par_attribute":"PAR_NATT_USER",
                      "nlevel":"NLEVEL", "max_patch":"MAX_PATCH", "patch_size":"PATCH_SIZE", "debug":"GAMER_DEBUG",
-                     "bitwise_reproduce":"BITWISE_REPRODUCIBILITY", "timing":"TIMING",
+                     "bitwise_reproducibility":"BITWISE_REPRODUCIBILITY", "timing":"TIMING",
                      "timing_solver":"TIMING_SOLVER", "double":"FLOAT8", "laohu":"LAOHU",
                      "hdf5":"SUPPORT_HDF5", "gsl":"SUPPORT_GSL", "fftw":"SUPPORT_FFTW",
                      "libyt":"SUPPORT_LIBYT", "libyt_patchgroup":"LIBYT_USE_PATCH_GROUP",
@@ -88,7 +88,7 @@ HYDRO_OPTION         = ["model", "flu_scheme", "slope", "flux", "eos", "passive"
 ELBDM_OPTION         = ["model", "passive", "conserve_mass", "laplacian_four", "self_interaction"]
 GRAVITY_OPTION       = ["gravity", "pot_scheme", "store_pot_ghost", "unsplit_gravity", "comoving"]
 PARTICLE_OPTION      = ["particle", "par_attribute", "tracer", "store_acc", "feedback", "star_formation"]
-MISCELLANEOUS_OPTION = ["nlevel", "max_patch", "patch_size", "debug", "bitwise_reproduce", "timing",
+MISCELLANEOUS_OPTION = ["nlevel", "max_patch", "patch_size", "debug", "bitwise_reproducilibity", "timing",
                         "timing_solver", "double", "laohu", "hdf5", "gsl", "fftw", "libyt", "libyt_patchgroup",
                         "libyt_interactive", "rng"]
 GPU_OPTION           = ["gpu", "gpu_arch"]
@@ -838,7 +838,7 @@ parser.add_argument( "--debug",
                      help="Enable debug mode.\n"
                    )
 
-parser.add_argument( "--bitwise_reproduce",
+parser.add_argument( "--bitwise_reproducibility",
                      action="store_true",
                      help="Enable bitwise reproducibility.\n"
                    )
