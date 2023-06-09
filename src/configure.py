@@ -17,17 +17,17 @@ A. User Guide:
 B. Developer guide:
   This code consists of five parts: Packages, Global variables, Classes, Functions, and Main execution.
 
-  1. Add a new simulation option:
+  0. Add a new source file:
     a. Make sure you have added the necessary source files in `Makefile_base`.
-    b. Add a python argument reader for the new simulation option in the `Main execution` part of the code.
-    c. Add the name convertion dictionary `[python_argument:gamer_argument]` to the `NAME_TABLE`.
+  1. Add a new simulation option:
+    a. Add a python argument reader for the new simulation option in the `Main execution` part of the code.
+    b. Add the name convertion dictionary `[python_argument:gamer_argument]` to the `NAME_TABLE`.
        (You can find it in the `Global variables` part of the code.)
-    d. If the new arguments are not base on any argument, you can add one new line of `add_option()` in `load_sim()`.
+    c. If the new arguments are not base on any argument, you can add one new line of `add_option()` in `load_sim()`.
        (You can find it in the `Functions` part of the code.) If the new arguments are base on one of the argument,
        you might create a option list in `Global variables` section, and loop over the list in `load_sims()`.
        Please check out how we add the `openmp` argument or `GRAVITY_OPTION` in `load_sims()`.
-    e. [Optional] Add the error rules in `validation()`. (You can find it in the `Functions` part of the code.)
-    f. [Optional] Add the warning rules in `warning()`. (You can find it in the `Functions` part of the code.)
+    d. [Optional] Add error and warning messages in validation() and warning(), respectively, under Functions.
   2. Add a new path:
     a. Add a new line in the Makefile_base under "# library paths".
       `NEW_PATH := @@@NEW_PATH@@@`
