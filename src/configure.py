@@ -679,7 +679,7 @@ parser.add_argument( "-lh",
 # machine config setup
 parser.add_argument( "--machine", type=str, metavar="MACHINE",
                      default="eureka",
-                     help="Select the *.config file under ../configs directory. \nChoice: [eureka, YOUR_MACHINE_NAME] => "
+                     help="Select the MACHINE.config file under ../configs directory. \nChoice: [eureka, YOUR_MACHINE_NAME] => "
                    )
 
 parser.add_argument( "--flags", type=str, metavar="NAME",
