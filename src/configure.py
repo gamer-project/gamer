@@ -407,19 +407,10 @@ def load_compile( paths, flags, kwargs ):
     # 1. complier. If mpi, overwrite the compiler to mpi.
     com_opt["CXX"] = paths["MPI_PATH"] + "/bin/mpicxx" if kwargs["mpi"] else kwargs["serial_compiler"]
 
-    # 2. compiler flags
-    if kwargs["serial_compiler"] == "icpc" and not kwargs["openmp"]:
-        flags["CXXFLAG"] += "-Wno-unknown-pragmas -diag-disable 3180 "
-
-    elif kwargs["serial_compiler"] == "g++" and not kwargs["openmp"]:
-        flags["CXXFLAG"] += "-Wno-unknown-pragmas "
-    elif not kwargs["openmp"]:
-        flags["CXXFLAG"] += "-Wno-unknown-pragmas "
-
-    # 3. openmp flags
+    # 2. openmp flags
     if not kwargs["openmp"]: flags["OPENMPFLAG"] = ""
 
-    # 4. write to complie option
+    # 3. write to complie option
     for key, val in flags.items():
         com_opt[key] = val
 
