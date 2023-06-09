@@ -126,7 +126,7 @@ class ArgumentParser( argparse.ArgumentParser ):
     def parse_args(self, args=None, namespace=None):
         args, argv = self.parse_known_args(args, namespace)
         msg = "\n"
-        close_dist = 3
+        close_dist = 2
         
         for arg in argv:
             if arg[0] != "-":
@@ -139,7 +139,7 @@ class ArgumentParser( argparse.ArgumentParser ):
                 if dist >= min_dist: continue
                 min_dist = dist
                 pos_key = "--"+key
-            if dist <= close_dist:
+            if min_dist <= close_dist:
                 msg += 'unrecognized argument: %s, do you mean: %s ?\n'%(arg, pos_key)
             else:
                 msg += 'unrecognized argument: %s\n'%(arg)
