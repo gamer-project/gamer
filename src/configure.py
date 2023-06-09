@@ -277,6 +277,16 @@ class ArgumentParser( argparse.ArgumentParser ):
 ####################################################################################################
 # Functions
 ####################################################################################################
+def str2bool(v):
+    if isinstance(v, bool): return v
+    if v.lower() == "true":
+        return True
+    elif v.lower() == "false":
+        return False
+    else:
+        raise TypeError("Can not convert <%s> to boolean"%(v))
+    return
+
 def color_print( string, color ):
     print( color + string + BCOLOR.ENDC )
     return
@@ -380,13 +390,13 @@ def load_arguments():
                          help="Select the dual-energy formalism.\n"
                        )
 
-    parser.add_argument( "--mhd", type=bool,
+    parser.add_argument( "--mhd", type=str2bool,
                          default=False,
                          help="Enable magnetohydrodynamics.\n"
                        )
 
-    parser.add_argument( "--cosmic_ray",
-                         action="store_true",
+    parser.add_argument( "--cosmic_ray", type=str2bool,
+                         default=False,
                          help="Enable cosmic rays.\n"
                        )
 
@@ -395,30 +405,30 @@ def load_arguments():
                          help="Select the equation of state.\n"
                        )
 
-    parser.add_argument( "--barotropic",
-                         action="store_true",
+    parser.add_argument( "--barotropic", type=str2bool,
+                         default=False,
                          help="Whether or not the equation of state set by --eos is barotropic.\n"
                        )
 
     # A.2 ELBDM scheme
-    parser.add_argument( "--conserve_mass",
-                         action="store_true",
+    parser.add_argument( "--conserve_mass", type=str2bool,
+                         default=False,
                          help="Enforce the mass conservation for model=ELBDM.\n"
                        )
 
-    parser.add_argument( "--laplacian_four",
-                         action="store_true",
+    parser.add_argument( "--laplacian_four", type=str2bool,
+                         default=False,
                          help="Enable the fourth-order of Laplacian for model=ELBDM.\n"
                        )
 
-    parser.add_argument( "--self_interaction",
-                         action="store_true",
+    parser.add_argument( "--self_interaction", type=str2bool,
+                         default=False,
                          help="Include the quartic self-interaction potential for model=ELBDM.\n"
                        )
 
     # A.3 gravity
-    parser.add_argument( "--gravity",
-                         action="store_true",
+    parser.add_argument( "--gravity", type=str2bool,
+                         default=False,
                          help="Enable gravity.\n"
                        )
 
@@ -427,43 +437,43 @@ def load_arguments():
                          help="Select the Poisson solver.\n"
                        )
 
-    parser.add_argument( "--store_pot_ghost",
-                         action="store_true",
+    parser.add_argument( "--store_pot_ghost", type=str2bool,
+                         default=True,
                          help="Store the ghost-zone potential for each patch.\n"
                        )
 
-    parser.add_argument( "--unsplit_gravity",
-                         action="store_true",
+    parser.add_argument( "--unsplit_gravity", type=str2bool,
+                         default=False,
                          help="Use unsplitting method to couple gravity to the target model.\n"
                        )
 
-    parser.add_argument( "--comoving",
-                         action="store_true",
+    parser.add_argument( "--comoving", type=str2bool,
+                         default=False,
                          help="Comoving frame for cosmological simulations.\n"
                        )
 
     # A.4 particle
-    parser.add_argument( "--particle",
-                         action="store_true",
+    parser.add_argument( "--particle", type=str2bool,
+                         default=False,
                          help="Enable particles.\n"
                        )
-    parser.add_argument( "--tracer",
-                         action="store_true",
+    parser.add_argument( "--tracer", type=str2bool,
+                         default=False,
                          help="Enable tracer particles.\n"
                        )
 
-    parser.add_argument( "--store_par_acc",
-                         action="store_true",
+    parser.add_argument( "--store_par_acc", type=str2bool,
+                         default=True,
                          help="Store particle acceleration.\n"
                        )
 
-    parser.add_argument( "--star_formation",
-                         action="store_true",
+    parser.add_argument( "--star_formation", type=str2bool,
+                         default=False,
                          help="Allow creating new particles after initialization.\n"
                        )
 
-    parser.add_argument( "--feedback",
-                         action="store_true",
+    parser.add_argument( "--feedback", type=str2bool,
+                         default=False,
                          help="Feedback from particles to grids and vice versa.\n"
                        )
 
@@ -473,8 +483,8 @@ def load_arguments():
                        )
 
     # A.5 grackle
-    parser.add_argument( "--grackle",
-                         action="store_true",
+    parser.add_argument( "--grackle", type=str2bool,
+                         default=False,
                          help="Enable Grackle, a chemistry and radiative cooling library.\n"
                        )
 
@@ -494,43 +504,43 @@ def load_arguments():
                          help="Set the number of cells along each direction in a single patch.\n"
                        )
 
-    parser.add_argument( "--debug",
-                         action="store_true",
+    parser.add_argument( "--debug", type=str2bool,
+                         default=False,
                          help="Enable debug mode.\n"
                        )
 
-    parser.add_argument( "--bitwise_reproducibility",
-                         action="store_true",
+    parser.add_argument( "--bitwise_reproducibility", type=str2bool,
+                         default=False,
                          help="Enable bitwise reproducibility.\n"
                        )
 
-    parser.add_argument( "--timing",
-                         action="store_true",
+    parser.add_argument( "--timing", type=str2bool,
+                         default=True,
                          help="Enable timing analysis of a simulation.\n"
                        )
 
-    parser.add_argument( "--timing_solver",
-                         action="store_true",
+    parser.add_argument( "--timing_solver", type=str2bool,
+                         default=False,
                          help="Enable more detailed timing analysis of GPU solvers.\n"
                        )
 
-    parser.add_argument( "--double",
-                         action="store_true",
+    parser.add_argument( "--double", type=str2bool,
+                         default=False,
                          help="Enable double precision.\n"
                        )
 
-    parser.add_argument( "--laohu",
-                         action="store_true",
+    parser.add_argument( "--laohu", type=str2bool,
+                         default=False,
                          help="Work on the NAOC Laohu GPU cluster.\n"
                        )
 
-    parser.add_argument( "--hdf5",
-                         action="store_true",
+    parser.add_argument( "--hdf5", type=str2bool,
+                         default=False,
                          help="Support HDF5.\n"
                        )
 
-    parser.add_argument( "--gsl",
-                         action="store_true",
+    parser.add_argument( "--gsl", type=str2bool,
+                         default=False,
                          help="Support GNU scientific library.\n"
                        )
 
@@ -539,18 +549,18 @@ def load_arguments():
                          help="Support FFTW library.\n"
                        )
 
-    parser.add_argument( "--libyt",
-                         action="store_true",
+    parser.add_argument( "--libyt", type=str2bool,
+                         default=False,
                          help="Support yt inline analysis.\n"
                        )
 
-    parser.add_argument( "--libyt_patchgroup",
-                         action="store_true",
+    parser.add_argument( "--libyt_patchgroup", type=str2bool,
+                         default=False,
                          help="Use patch groups instead of patches as the unit in libyt for better performance (recommended).\n"
                        )
 
-    parser.add_argument( "--libyt_interactive",
-                         action="store_true",
+    parser.add_argument( "--libyt_interactive", typestr2bool,
+                         defcult=False,
                          help="Enable the interactive mode of libyt.\n"
                        )
 
@@ -565,23 +575,23 @@ def load_arguments():
                          default="icpc",
                          help="Serial compiler type.\n"
                        )
-    parser.add_argument( "--openmp",
-                         action="store_true",
+    parser.add_argument( "--openmp", type=str2bool,
+                         default=True,
                          help="Enable OpenMP parallization.\n"
                        )
 
-    parser.add_argument( "--mpi",
-                         action="store_true",
+    parser.add_argument( "--mpi", type=str2bool,
+                         default=False,
                          help="Enable MPI parallization.\n"
                        )
 
-    parser.add_argument( "--overlap_mpi",
-                         action="store_true",
+    parser.add_argument( "--overlap_mpi", type=str2bool,
+                         default=False,
                          help="Overlap MPI communication with computation.\n"
                        )
 
-    parser.add_argument( "--gpu",
-                         action="store_true",
+    parser.add_argument( "--gpu", type=str2bool,
+                         default=False,
                          help="Enable GPU.\n"
                        )
 
