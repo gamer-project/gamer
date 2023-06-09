@@ -676,10 +676,10 @@ parser.add_argument( "-lh",
                      help="Show this help message in detail and exit.\n"
                    )
 
-# cluster and flags setup
-parser.add_argument( "--cluster", type=str, metavar="NAME",
+# machine config setup
+parser.add_argument( "--machine", type=str, metavar="MACHINE",
                      default="eureka",
-                     help="Select the *.config file under ../configs directory. \nChoice: [eureka, YOUR_CLUSTER_NAME] => "
+                     help="Select the *.config file under ../configs directory. \nChoice: [eureka, YOUR_MACHINE_NAME] => "
                    )
 
 parser.add_argument( "--flags", type=str, metavar="NAME",
@@ -942,7 +942,7 @@ if args["lh"]:
 #------------------------------------------------------------
 # 2. Prepare the makiefile args
 # 2.1 Load the cluster steup
-paths = load_config( "%s/%s.config"%(GAMER_CONFIG_DIR, args["cluster"]) )
+paths = load_config( "%s/%s.config"%(GAMER_CONFIG_DIR, args["machine"]) )
 flags = load_flag("%s/%s.make"%(GAMER_CONFIG_DIR, args["flags"]))
 
 # 2.2 Check if the arguments are valid
