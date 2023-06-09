@@ -516,10 +516,9 @@ def validation( paths, **kwargs ):
 
     # A.3 Particle
     if kwargs["particle"]:
-        if kwargs["star_formation"] and kwargs["store_par_acc"]:
-            if not kwargs["store_pot_ghost"]:
-                color_print("--store_pot_ghost must be enabled when --star_formation and --store_par_acc are enabled.", BCOLOR.FAIL)
-                success = False
+        if kwargs["star_formation"] and kwargs["store_par_acc"] and not kwargs["store_pot_ghost"]:
+            color_print("--store_pot_ghost must be enabled when --star_formation and --store_par_acc are enabled.", BCOLOR.FAIL)
+            success = False
         if not kwargs["gravity"] and not kwargs["tracer"]:
             color_print("At least one of --gravity or --tracer must be enabled for --particle.", BCOLOR.FAIL)
             success = False
