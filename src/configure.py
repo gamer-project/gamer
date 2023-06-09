@@ -610,16 +610,11 @@ def warning( paths, **kwargs ):
     if kwargs["serial_compiler"] == "g++" and kwargs["flags"] == "intel":
         color_print("Warning: The compiler does not match to the default flag config.", BCOLOR.WARNING)
 
-
-    # 2. mpi
-    if kwargs["mpi"]:
-        color_print("Warning: MPI is set, Serial mode force to be disabled.", BCOLOR.WARNING)
-
-    # 3. rng sys
+    # 2. rng sys
     if kwargs["rng"] == "RNG_GNU_EXT":
         color_print("Warning: %s is not supported on some macOS."%kwargs["rng"], BCOLOR.WARNING)
 
-    # 4. Path
+    # 3. Path
     if kwargs["gpu"]:
         if paths.setdefault("CUDA_PATH", "") == "":
             color_print("CUDA_PATH is not given with --gpu.", BCOLOR.WARNING)
