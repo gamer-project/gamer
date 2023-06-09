@@ -459,8 +459,6 @@ def validation( paths, **kwargs ):
         color_print("ERROR: %s does not exist."%(GAMER_MAKE_BASE), BCOLOR.FAIL)
         success = False
 
-    sim_opt = {}
-
     # A. Physics
     # A.1 Module
     if kwargs["model"] == "HYDRO":
