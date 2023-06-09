@@ -617,19 +617,14 @@ def warning( paths, **kwargs ):
     if kwargs["mpi"]:
         color_print("Warning: MPI is set, Serial mode force to be disabled.", BCOLOR.WARNING)
 
-    # 3. RTVD
-    if kwargs["flu_scheme"] == "RTVD":
-        color_print("Warning: Data reconstruction is useless for RTVD.", BCOLOR.WARNING)
-        color_print("Warning: Riemann solver is useless for RTVD.", BCOLOR.WARNING)
-
-    # 4. rng sys
+    # 3. rng sys
     if kwargs["rng"] == "RNG_GNU_EXT":
         color_print("Warning: %s is not supported on some macOS."%kwargs["rng"], BCOLOR.WARNING)
 
     if kwargs["rng"] == "RNG_CPP":
         color_print("Warning: You may need to add -std=c++11 to CXXFLAG in flag config.", BCOLOR.WARNING)
 
-    # 5. Path
+    # 4. Path
     if kwargs["gpu"]:
         if paths.setdefault("CUDA_PATH", "") == "":
             color_print("CUDA_PATH is not given with --gpu.", BCOLOR.WARNING)
