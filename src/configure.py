@@ -569,7 +569,7 @@ def validation( paths, **kwargs ):
         success = False
 
     if not kwargs["timing"] and kwargs["timing_solver"]:
-        color_print("--timing_solver work with --timing.", BCOLOR.FAIL)
+        color_print("--timing_solver must work with --timing.", BCOLOR.FAIL)
         success = False
 
     if kwargs["libyt_patchgroup"] and not kwargs["libyt"]:
@@ -584,7 +584,7 @@ def validation( paths, **kwargs ):
         color_print("--overlap_mpi is not supported yet.", BCOLOR.FAIL)
         success = False
         if not kwargs["mpi"]:
-            color_print("--overlap_mpi work with --mpi.", BCOLOR.FAIL)
+            color_print("--overlap_mpi must work with --mpi.", BCOLOR.FAIL)
             success = False
 
     if not success: raise BaseException(BCOLOR.FAIL+"The above validation failed."+BCOLOR.ENDC)
@@ -610,35 +610,35 @@ def warning( paths, **kwargs ):
     # 3. Path
     if kwargs["gpu"]:
         if paths.setdefault("CUDA_PATH", "") == "":
-            color_print("CUDA_PATH is not given with --gpu.", BCOLOR.WARNING)
+            color_print("Warning: CUDA_PATH is not given in %s when enabling --gpu."%(kwargs["machine"]), BCOLOR.WARNING)
 
     if kwargs["fftw"] == "FFTW2":
         if paths.setdefault("FFTW2_PATH", "") == "":
-            color_print("FFTW2_PATH is not given with --fftw=FFTW2.", BCOLOR.WARNING)
+            color_print("Warning: FFTW2_PATH is not given in %s when enabling --fftw=FFTW2."%(kwargs["machine"]), BCOLOR.WARNING)
 
     if kwargs["fftw"] == "FFTW3":
         if paths.setdefault("FFTW3_PATH", "") == "":
-            color_print("FFTW3_PATH is not given with --fftw=FFTW3.", BCOLOR.WARNING)
+            color_print("Warning: FFTW3_PATH is not given in %s when enabling --fftw=FFTW3."%(kwargs["machine"]), BCOLOR.WARNING)
 
     if kwargs["mpi"]:
         if paths.setdefault("MPI_PATH", "") == "":
-            color_print("MPI_PATH is not given with --mpi.", BCOLOR.WARNING)
+            color_print("Warning: MPI_PATH is not given in %s when enabling --mpi."%(kwargs["machine"]), BCOLOR.WARNING)
 
     if kwargs["hdf5"]:
         if paths.setdefault("HDF5_PATH", "") == "":
-            color_print("HDF5_PATH is not given with --hdf5.", BCOLOR.WARNING)
+            color_print("Warning: HDF5_PATH is not given in %s when enabling --hdf5."%(kwargs["machine"]), BCOLOR.WARNING)
 
     if kwargs["grackle"]:
         if paths.setdefault("GRACKLE_PATH", "") == "":
-            color_print("GRACKLE_PATH is not given with --grackle.", BCOLOR.WARNING)
+            color_print("Warning: GRACKLE_PATH is not given in %s when enabling --grackle."%(kwargs["machine"]), BCOLOR.WARNING)
 
     if kwargs["gsl"]:
         if paths.setdefault("GSL_PATH", "") == "":
-            color_print("GSL_PATH is not given with --gsl.", BCOLOR.WARNING)
+            color_print("Warning: GSL_PATH is not given in %s when enabling --gsl."%(kwargs["machine"]), BCOLOR.WARNING)
 
     if kwargs["libyt"]:
         if paths.setdefault("LIBYT_PATH", "") == "":
-            color_print("LIBYT_PATH is not given with --libyt.", BCOLOR.WARNING)
+            color_print("Warning: LIBYT_PATH is not given in %s when enabling --libyt."%(kwargs["machine"]), BCOLOR.WARNING)
 
     return
 
