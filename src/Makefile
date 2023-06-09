@@ -374,7 +374,7 @@ LIBYT_PATH   :=
 # NTU-eureka (default: openmpi-intel)
 #CUDA_PATH    := /software/cuda/default
 #FFTW2_PATH   := /software/fftw/default
-#FFTW3_PATH   := /software/fftw/3.3.10-intel-2022.0.1-openmpi-4.1.1-ucx_mt
+#FFTW3_PATH   := /software/fftw/default3
 #MPI_PATH     := /software/openmpi/default
 #HDF5_PATH    := /software/hdf5/default
 #GRACKLE_PATH :=
