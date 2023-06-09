@@ -497,9 +497,6 @@ def validation( paths, **kwargs ):
             if kwargs["comoving"]:
                 color_print("--comoving is not supported with --self_interaction.", BCOLOR.FAIL)
                 success = False
-        if kwargs["passive"] != 0:
-            color_print("Not supported yet and can only be used as auxiliary fields.", BCOLOR.FAIL)
-            success = False
 
     elif kwargs["model"] == "PAR_ONLY":
         color_print("--model PAR_ONLY is not supported yet.", BCOLOR.FAIL)
@@ -572,12 +569,16 @@ def warning( paths, **kwargs ):
     # 1. Makefile
     if os.path.isfile( GAMER_MAKE_OUT ):
         color_print("Warning: %s already exists and will be overwritten."%(GAMER_MAKE_OUT), BCOLOR.WARNING)
+    
+    # 2. Physics
+    if kwargs["model"] == "ELBDM" and kwargs["passive"] != 0:
+        color_print("Warning: Not supported yet and can only be used as auxiliary fields.", BCOLOR.WARNING)
 
-    # 2. rng sys
+    # 3. RNG sys
     if kwargs["rng"] == "RNG_GNU_EXT":
         color_print("Warning: %s is not supported on some macOS."%kwargs["rng"], BCOLOR.WARNING)
 
-    # 3. Path
+    # 4. Path
     if kwargs["gpu"]:
         if paths.setdefault("CUDA_PATH", "") == "":
             color_print("Warning: CUDA_PATH is not given in %s when enabling --gpu."%(kwargs["machine"]), BCOLOR.WARNING)
