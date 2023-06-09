@@ -344,7 +344,6 @@ def load_config( config ):
             try:
                paths[temp[0]] = temp[1]
             except:
-               color_print( "WARNING: %s is not set."%temp[0], BCOLOR.WARNING )
                paths[temp[0]] = ''
 
     return paths, flags
