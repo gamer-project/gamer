@@ -621,9 +621,6 @@ def warning( paths, **kwargs ):
     if kwargs["rng"] == "RNG_GNU_EXT":
         color_print("Warning: %s is not supported on some macOS."%kwargs["rng"], BCOLOR.WARNING)
 
-    if kwargs["rng"] == "RNG_CPP":
-        color_print("Warning: You may need to add -std=c++11 to CXXFLAG in flag config.", BCOLOR.WARNING)
-
     # 4. Path
     if kwargs["gpu"]:
         if paths.setdefault("CUDA_PATH", "") == "":
@@ -901,7 +898,8 @@ parser.add_argument( "--libyt_interactive",
 parser.add_argument( "--rng", type=str, metavar="TYPE",
                      default="RNG_GNU_EXT",
                      choices=["RNG_GNU_EXT", "RNG_CPP11"],
-                     help="Select the random number generator.\n"
+                     help="Select the random number generator.\nIf you use 'RNG_CPP', you need to add -std=c++11 to CXXFLAG in config file.")
+
                    )
 
 # C. parallelization and flags
