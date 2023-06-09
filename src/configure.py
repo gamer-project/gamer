@@ -21,10 +21,10 @@ B. Developer guide:
     a. Add a python argument reader for the new simulation option in the `Main execution` part of the code.
     b. Add the name convertion dictionary `[python_argument:gamer_argument]` to the `NAME_TABLE`.
        (You can find it in the `Global variables` part of the code.)
-    c. If the new arguments are not base on any argument, you can add one new line of `add_option()` in `load_sim()`.
+    c. If the new arguments are not base on any argument, you can add one new line of `add_option()` in `set_sim()`.
        (You can find it in the `Functions` part of the code.) If the new arguments are base on one of the argument,
-       you might create a option list in `Global variables` section, and loop over the list in `load_sims()`.
-       Please check out how we add the `openmp` argument or `GRAVITY_OPTION` in `load_sims()`.
+       you might create a option list in `Global variables` section, and loop over the list in `set_sims()`.
+       Please check out how we add the `openmp` argument or `GRAVITY_OPTION` in `set_sims()`.
     d. [Optional] Add error and warning messages in validation() and warning(), respectively, under Functions.
   2. Add a new path:
     a. Add a new line in the Makefile_base under "# library paths".
@@ -348,7 +348,7 @@ def load_config( config ):
 
     return paths, flags
 
-def load_sims( **kwargs ):
+def set_sims( **kwargs ):
     opt_str = ""
 
     # A. Physics
@@ -402,7 +402,7 @@ def load_sims( **kwargs ):
 
     return {"SIMU_OPTION":opt_str}
 
-def load_compile( paths, flags, kwargs ):
+def set_compile( paths, flags, kwargs ):
     com_opt = {}
 
     # 1. complier. If mpi, overwrite the compiler to mpi.
@@ -907,10 +907,10 @@ print("")
 print("========================================")
 print("GAMER has the following setting.")
 print("----------------------------------------")
-sims = load_sims( **args )
+sims = set_sims( **args )
 
 # 2.4 setup compiler
-compiles = load_compile( paths, flags, args )
+compiles = set_compile( paths, flags, args )
 
 
 #------------------------------------------------------------
