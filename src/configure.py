@@ -4,11 +4,10 @@ A. User Guide:
   0. Help:
     Use the `-h` or `--help` to get the short help message and `-lh` to get detail help message.
   1. Library paths:
-    When using library, you need to assign the library path. The path config file can be found under `../configs/`.
-    To setup your own config file, please copy `example.config` and modify it.
+    When using library, you need to assign the library path. The config file can be found under `../configs/`.
+    To setup your own config file, please copy `template.config` and modify it.
   2. Compilation flags:
-    We already have two flag config files under `../configs/`, `intel.make` and `gnu.make`, which are for the
-    intel and gnu compiler respetively. To setup your own config file, please copy `example.make` and modify it.
+    Like the step 1, please copy `template.config` and modity it.
   3. Run the script:
     Run the following command to generate the Makefile. This script supports both Python2 and Python3.
       `python configure.py [--your_arguments]`
@@ -36,7 +35,7 @@ B. Developer guide:
   3. Add a new compiler flag type:
     a. Add a new line in the Makefile_base under "# compilers and flags".
       `NEW_FLAG := @@@NEW_FLAG@@@`
-    b. Add a new flag key `["NEW_FLAG":""]` in `flags` of `load_flag()`.
+    b. Add a new flag key `["NEW_FLAG":""]` in `flags` of `load_config()`.
     c. Add a new line in the config file.
       `NEW_FLAG    -new_flag`
   4. Rules of Makefile_base:
@@ -88,7 +87,7 @@ HYDRO_OPTION         = ["model", "flu_scheme", "slope", "flux", "eos", "passive"
 ELBDM_OPTION         = ["model", "passive", "conserve_mass", "laplacian_four", "self_interaction"]
 GRAVITY_OPTION       = ["gravity", "pot_scheme", "store_pot_ghost", "unsplit_gravity", "comoving"]
 PARTICLE_OPTION      = ["particle", "par_attribute", "tracer", "store_par_acc", "feedback", "star_formation"]
-MISCELLANEOUS_OPTION = ["nlevel", "max_patch", "patch_size", "debug", "bitwise_reproducilibity", "timing",
+MISCELLANEOUS_OPTION = ["nlevel", "max_patch", "patch_size", "debug", "bitwise_reproducibility", "timing",
                         "timing_solver", "double", "laohu", "hdf5", "gsl", "fftw", "rng"]
 LIBYT_OPTION         = ["libyt", "libyt_patchgroup", "libyt_interactive"]
 GPU_OPTION           = ["gpu", "gpu_arch"]
@@ -289,17 +288,14 @@ def add_option( opt_str, name, val ):
         if val: opt_str += "-D%s "%(name)
         print("%-25s : %r"%(name, val))
     elif type(val) == type("str"):
-        if val != "":
-            opt_str += "-D%s=%s "%(name, val)
-            print("%-25s : %s"%(name, val))
+        if val != "": opt_str += "-D%s=%s "%(name, val)
+        print("%-25s : %s"%(name, val))
     elif type(val) == type(0):
-        if val != 0: 
-            opt_str += "-D%s=%d "%(name, val)
-            print("%-25s : %d"%(name, val))
+        if val != 0: opt_str += "-D%s=%d "%(name, val)
+        print("%-25s : %d"%(name, val))
     elif type(val) == type(0.):
-        if val < 0.0:   # The condition might need to be changed
-            opt_str += "-D%s=%f "%(name, val)
-            print("%-25s : %f"%(name, val))
+        if val < 0.0: opt_str += "-D%s=%f "%(name, val) # The condition might need to be changed
+        print("%-25s : %f"%(name, val))
     else:
         raise TypeError("Unknown type to add the simulation options.")
 
@@ -328,40 +324,28 @@ def distance( s1, s2 ):
     return matrix[len(s1)][len(s2)]
 
 def load_config( config ):
-    print("Using %s as the path config."%(config))
-    paths = {}
+    print("Using %s as the config."%(config))
+    paths, flags = {}, {"CXXFLAG":"", "OPENMPFLAG":"", "LIBFLAG":"", "CUDAFLAG":""}
     with open( config, 'r') as f:
         lines = f.readlines()
 
     for line in lines:
-        if line[0] == "#": continue
-        temp = list( filter( None, re.split(" |:=|\n", line) ) )
-        if len(temp) == 0: continue
-        try:
-           paths[temp[0]] = temp[1]
-        except:
-           color_print( "WARNING: %s is not set."%temp[0], BCOLOR.WARNING )
-           paths[temp[0]] = ''
+        temp = list( filter( None, re.split(" |:=|\n", line) ) ) # separate by " " and ":="
+        if len(temp) == 0: continue             # empty line
+        if temp[0][0] == "#": continue          # skip comment line
+        if temp[0] in flags:
+            if len(temp) == 1: continue         # empty flag
+            for i in range(1, len(temp)):
+                if temp[i][0] == "#": break     # comment flag
+                flags[temp[0]] += temp[i] + " "
+        else:
+            try:
+               paths[temp[0]] = temp[1]
+            except:
+               color_print( "WARNING: %s is not set."%temp[0], BCOLOR.WARNING )
+               paths[temp[0]] = ''
 
-    return paths
-
-def load_flag( config ):
-    print("Using %s as the flag config."%(config))
-    flags = {"CXXFLAG":"", "OPENMPFLAG":"", "LIBFLAG":"", "CUDAFLAG":""}
-    with open( config, 'r') as f:
-        lines = f.readlines()
-
-    for line in lines:
-        if line[0] == "#":    continue
-        temp = line.split()
-        if len(temp) == 0: continue
-        if len(temp) == 1: continue
-
-        for i in range(1, len(temp)):
-            if temp[i][0] == "#": break
-            flags[temp[0]] += temp[i] + " "
-
-    return flags
+    return paths, flags
 
 def load_sims( **kwargs ):
     opt_str = ""
@@ -446,6 +430,7 @@ def validation( paths, **kwargs ):
     Validate the parameters.
     """
     success = True
+    #TODO: validate the negative integer
 
     # 0. Makefile
     if not os.path.isfile( GAMER_MAKE_BASE ):
@@ -592,16 +577,9 @@ def validation( paths, **kwargs ):
 
 
 def warning( paths, **kwargs ):
-    # 0. Makefile
+    # 1. Makefile
     if os.path.isfile( GAMER_MAKE_OUT ):
         color_print("Warning: %s already exists and will be overwritten."%(GAMER_MAKE_OUT), BCOLOR.WARNING)
-
-    # 1. serial config not match
-    if kwargs["serial_compiler"] == "icpc" and kwargs["flags"] == "gnu":
-        color_print("Warning: The compiler does not match to the default flag config.", BCOLOR.WARNING)
-
-    if kwargs["serial_compiler"] == "g++" and kwargs["flags"] == "intel":
-        color_print("Warning: The compiler does not match to the default flag config.", BCOLOR.WARNING)
 
     # 2. rng sys
     if kwargs["rng"] == "RNG_GNU_EXT":
@@ -668,11 +646,6 @@ parser.add_argument( "-lh",
 parser.add_argument( "--machine", type=str, metavar="MACHINE",
                      default="eureka",
                      help="Select the MACHINE.config file under ../configs directory. \nChoice: [eureka, YOUR_MACHINE_NAME] => "
-                   )
-
-parser.add_argument( "--flags", type=str, metavar="NAME",
-                     default="intel",
-                     help="Select the *.make file under ../configs directory. \nChoice: [intel, gnu, YOUR_FLAG_NAME] => "
                    )
 
 # A. physical models and options of diffierent physical models
@@ -884,8 +857,7 @@ parser.add_argument( "--libyt_interactive",
 parser.add_argument( "--rng", type=str, metavar="TYPE",
                      default="RNG_GNU_EXT",
                      choices=["RNG_GNU_EXT", "RNG_CPP11"],
-                     help="Select the random number generator.\nIf you use 'RNG_CPP', you need to add -std=c++11 to CXXFLAG in config file.")
-
+                     help="Select the random number generator.\nIf you use 'RNG_CPP', you need to add -std=c++11 to CXXFLAG in config file."
                    )
 
 # C. parallelization and flags
@@ -930,8 +902,7 @@ if args["lh"]:
 #------------------------------------------------------------
 # 2. Prepare the makiefile args
 # 2.1 Load the cluster steup
-paths = load_config( "%s/%s.config"%(GAMER_CONFIG_DIR, args["machine"]) )
-flags = load_flag("%s/%s.make"%(GAMER_CONFIG_DIR, args["flags"]))
+paths, flags = load_config( "%s/%s.config"%(GAMER_CONFIG_DIR, args["machine"]) )
 
 # 2.2 Check if the arguments are valid
 validation( paths, **args )
