@@ -293,8 +293,9 @@ def add_option( opt_str, name, val ):
             opt_str += "-D%s=%s "%(name, val)
             print("%-25s : %s"%(name, val))
     elif type(val) == type(0):
-        if val != 0: opt_str += "-D%s=%d "%(name, val)
-        print("%-25s : %d"%(name, val))
+        if val != 0: 
+            opt_str += "-D%s=%d "%(name, val)
+            print("%-25s : %d"%(name, val))
     elif type(val) == type(0.):
         if val < 0.0:   # The condition might need to be changed
             opt_str += "-D%s=%f "%(name, val)
