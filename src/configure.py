@@ -450,7 +450,7 @@ def load_compile( paths, flags, kwargs ):
 
 def validation( paths, **kwargs ):
     """
-    validation then store the parameter
+    Validate the parameters.
     """
     success = True
 
