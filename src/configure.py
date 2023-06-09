@@ -3,12 +3,11 @@ A. User Guide:
   This script is for generating the GAMER Makefile. To use this script, you need to know the followings:
   0. Help:
     Use the `-h` or `--help` to get the short help message and `-lh` to get detail help message.
-  1. Library paths:
-    When using library, you need to assign the library path. The config file can be found under `../configs/`.
+  1. Library paths and compilation flags:
+    When using library, you need to assign the library path. Also, you might want to assign the compilation 
+    flags.The config file can be found under `../configs/`.
     To setup your own config file, please copy `template.config` and modify it.
-  2. Compilation flags:
-    Like the step 1, please copy `template.config` and modity it.
-  3. Run the script:
+  2. Run the script:
     Run the following command to generate the Makefile. This script supports both Python2 and Python3.
       `python configure.py [--your_arguments]`
     After the command finishes, the `Makefile` will be generated.
