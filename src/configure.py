@@ -63,8 +63,8 @@ import re
 GAMER_CONFIG_DIR  = "../configs"
 GAMER_MAKE_BASE   = "Makefile_base"
 GAMER_MAKE_OUT    = "Makefile"
-GAMER_DESCRIPTION = "Prepare a customized Makefile for GAMER.\nDefault values are marked by '*'.\nUse -lh to show a detailed help message."
-GAMER_EPILOG      = "The default complie flags are %s/intel.make and %s/gnu.make"%(GAMER_CONFIG_DIR, GAMER_CONFIG_DIR)
+GAMER_DESCRIPTION = "Prepare a customized Makefile for GAMER.\nDefault values are marked by '*'.\nUse -lh to show a detailed help message.\n"
+GAMER_EPILOG      = "The default complie flags are %s/intel.make and %s/gnu.make\n"%(GAMER_CONFIG_DIR, GAMER_CONFIG_DIR)
 # Mapping between the Python arguments used in this script and the GAMER symbolic constants defined in the Makefile.
 NAME_TABLE        = {"model":"MODEL", "passive":"NCOMP_PASSIVE_USER", "flu_scheme":"FLU_SCHEME",
                      "slope":"LR_SCHEME", "flux":"RSOLVER", "dual":"DUAL_ENERGY", "mhd":"MHD",
@@ -126,19 +126,25 @@ class ArgumentParser( argparse.ArgumentParser ):
     def parse_args(self, args=None, namespace=None):
         args, argv = self.parse_known_args(args, namespace)
         msg = "\n"
-        if argv:
-            for arg in argv:
-                if arg[0] != "-": continue
-                min_dist = 100000
-                pos_key = ""
-                for key in NAME_TABLE:
-                    dist = distance( arg, "--"+key )
-                    if dist < min_dist:
-                        min_dist = dist
-                        pos_key = "--"+key
+        close_dist = 3
+        
+        for arg in argv:
+            if arg[0] != "-":
+                msg += 'unrecognized positional argument: %s\n'%(arg)
+                continue
+            min_dist = 100000
+            pos_key = ""
+            for key in NAME_TABLE:
+                dist = distance( arg, "--"+key )
+                if dist >= min_dist: continue
+                min_dist = dist
+                pos_key = "--"+key
+            if dist <= close_dist:
                 msg += 'unrecognized argument: %s, do you mean: %s ?\n'%(arg, pos_key)
+            else:
+                msg += 'unrecognized argument: %s\n'%(arg)
 
-            self.error( msg )
+        if len(argv) != 0: self.error( msg )
         return args
 
     def string_align( self, string, indent, width, end_char ):
@@ -220,23 +226,17 @@ class ArgumentParser( argparse.ArgumentParser ):
         self.print_usage()
 
         # Print description
-        if "description" in self.program:
-            print(self.program["description"])
-            print("")
+        if "description" in self.program: print(self.program["description"])
 
         # Print epilog
-        if "epilog" in self.program:
-            print(self.program["epilog"])
-            print("")
+        if "epilog" in self.program: print(self.program["epilog"])
 
     def print_help_detail(self):
         # Print usage
         self.print_usage()
 
         # Print description
-        if "description" in self.program:
-            print(self.program["description"])
-            print("")
+        if "description" in self.program: print(self.program["description"])
 
         # Print options
         print("Options:")
@@ -272,9 +272,7 @@ class ArgumentParser( argparse.ArgumentParser ):
             print( self.string_align(output, indent, option_width, " ") )
 
         # Print epilog
-        if "epilog" in self.program:
-            print(self.program["epilog"])
-            print("")
+        if "epilog" in self.program: print(self.program["epilog"])
 
 
 
@@ -299,6 +297,10 @@ def add_option( opt_str, name, val ):
         if val != 0:
             opt_str += "-D%s=%d "%(name, val)
             print("%-20s : %d"%(name, val))
+    elif type(val) == type(0.):
+        if val != 0.0:
+            opt_str += "-D%s=%f "%(name, val)
+            print("%-20s : %f"%(name, val))
     else:
         raise TypeError("Unknown type to add the simulation options.")
 
