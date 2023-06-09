@@ -19,6 +19,8 @@ B. Developer guide:
     a. Make sure you have added the necessary source files in `Makefile_base`.
   1. Add a new simulation option:
     a. Add a python argument reader for the new simulation option under `load_arguments()`.
+      i. For the arguments which the default value is depend on the other argument, please set the 
+         default value to None, and assign the value under `set_conditional_defaults()`. 
     b. Add the name convertion dictionary `[python_argument:gamer_argument]` to the `NAME_TABLE`.
        (You can find it in the `Global variables` part of the code.)
     c. If the new arguments are not base on any argument, you can add one new line of `add_option()` in `set_sim()`.
@@ -58,11 +60,14 @@ import re
 ####################################################################################################
 # Global variables
 ####################################################################################################
+NONE_STR = "NONE"
+
 GAMER_CONFIG_DIR  = "../configs"
 GAMER_MAKE_BASE   = "Makefile_base"
 GAMER_MAKE_OUT    = "Makefile"
 GAMER_DESCRIPTION = "Prepare a customized Makefile for GAMER.\nDefault values are marked by '*'.\nUse -lh to show a detailed help message.\n"
-GAMER_EPILOG      = "\n"
+GAMER_EPILOG      = "2023 CA Lab, NTU. All rights reserved.\n"
+
 # Mapping between the Python arguments used in this script and the GAMER symbolic constants defined in the Makefile.
 NAME_TABLE        = {"model":"MODEL", "passive":"NCOMP_PASSIVE_USER", "flu_scheme":"FLU_SCHEME",
                      "slope":"LR_SCHEME", "flux":"RSOLVER", "dual":"DUAL_ENERGY", "mhd":"MHD",
@@ -91,6 +96,11 @@ MISCELLANEOUS_OPTION = ["nlevel", "max_patch", "patch_size", "debug", "bitwise_r
 LIBYT_OPTION         = ["libyt", "libyt_patchgroup", "libyt_interactive"]
 GPU_OPTION           = ["gpu", "gpu_arch"]
 
+
+
+####################################################################################################
+# Classes
+####################################################################################################
 class BCOLOR:
     HEADER    = '\033[95m'
     OKBLUE    = '\033[94m'
@@ -102,11 +112,6 @@ class BCOLOR:
     BOLD      = '\033[1m'
     UNDERLINE = '\033[4m'
 
-
-
-####################################################################################################
-# Classes
-####################################################################################################
 class ArgumentParser( argparse.ArgumentParser ):
     def __init__(self, *args, **kwargs):
         self.program = { key: kwargs[key] for key in kwargs }
@@ -211,7 +216,7 @@ class ArgumentParser( argparse.ArgumentParser ):
 
                     temp = re.sub(r"^(-{1,})", "", item).upper()
                     if "default" in option:
-                        usage += [ "[%s %s *%s]"%(item, temp, str(option["default"])) ]
+                        usage += [ "[%s %s *%s]"%(item, temp, "Undecided" if option["default"] == None else str(option["default"])) ]
                     else:
                         usage += [ "[%s %s]"%(item, temp) ]
             indent     = "Usage: %s " % os.path.basename(sys.argv[0])
@@ -262,7 +267,7 @@ class ArgumentParser( argparse.ArgumentParser ):
                 output += "Choice: [%s] => "%(", ".join(temp))
 
             if "default" in option:
-                output += "Default: %s" % option["default"] if isinstance(option["default"], str) else "Default: %s" % str(option["default"])
+                output += "Default: %s" %("Undecided" if option["default"] == None else str(option["default"]))
 
             if "action" in option:
                 output += "Default: False" if option["action"] == "store_true" else "Default: False"
@@ -297,7 +302,7 @@ def add_option( opt_str, name, val ):
         if val: opt_str += "-D%s "%(name)
         print("%-25s : %r"%(name, val))
     elif type(val) == type("str"):
-        if val != "":
+        if val != NONE_STR:
             opt_str += "-D%s=%s "%(name, val)
             print("%-25s : %s"%(name, val))
     elif type(val) == type(0):
@@ -386,16 +391,16 @@ def load_arguments():
                        )
 
     parser.add_argument( "--dual", type=str, metavar="TYPE",
-                         default="", choices=["", "ENPY", "EINT"],
+                         default=NONE_STR, choices=[NONE_STR, "ENPY", "EINT"],
                          help="Select the dual-energy formalism.\n"
                        )
 
-    parser.add_argument( "--mhd", type=str2bool,
+    parser.add_argument( "--mhd", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Enable magnetohydrodynamics.\n"
                        )
 
-    parser.add_argument( "--cosmic_ray", type=str2bool,
+    parser.add_argument( "--cosmic_ray", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Enable cosmic rays.\n"
                        )
@@ -405,29 +410,29 @@ def load_arguments():
                          help="Select the equation of state.\n"
                        )
 
-    parser.add_argument( "--barotropic", type=str2bool,
+    parser.add_argument( "--barotropic", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Whether or not the equation of state set by --eos is barotropic.\n"
                        )
 
     # A.2 ELBDM scheme
-    parser.add_argument( "--conserve_mass", type=str2bool,
-                         default=False,
+    parser.add_argument( "--conserve_mass", type=str2bool, metavar="BOOLEAN",
+                         default=True,
                          help="Enforce the mass conservation for model=ELBDM.\n"
                        )
 
-    parser.add_argument( "--laplacian_four", type=str2bool,
-                         default=False,
+    parser.add_argument( "--laplacian_four", type=str2bool, metavar="BOOLEAN",
+                         default=True,
                          help="Enable the fourth-order of Laplacian for model=ELBDM.\n"
                        )
 
-    parser.add_argument( "--self_interaction", type=str2bool,
+    parser.add_argument( "--self_interaction", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Include the quartic self-interaction potential for model=ELBDM.\n"
                        )
 
     # A.3 gravity
-    parser.add_argument( "--gravity", type=str2bool,
+    parser.add_argument( "--gravity", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Enable gravity.\n"
                        )
@@ -437,42 +442,42 @@ def load_arguments():
                          help="Select the Poisson solver.\n"
                        )
 
-    parser.add_argument( "--store_pot_ghost", type=str2bool,
+    parser.add_argument( "--store_pot_ghost", type=str2bool, metavar="BOOLEAN",
                          default=True,
                          help="Store the ghost-zone potential for each patch.\n"
                        )
 
-    parser.add_argument( "--unsplit_gravity", type=str2bool,
-                         default=False,
+    parser.add_argument( "--unsplit_gravity", type=str2bool, metavar="BOOLEAN",
+                         default=None,
                          help="Use unsplitting method to couple gravity to the target model.\n"
                        )
 
-    parser.add_argument( "--comoving", type=str2bool,
+    parser.add_argument( "--comoving", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Comoving frame for cosmological simulations.\n"
                        )
 
     # A.4 particle
-    parser.add_argument( "--particle", type=str2bool,
+    parser.add_argument( "--particle", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Enable particles.\n"
                        )
-    parser.add_argument( "--tracer", type=str2bool,
+    parser.add_argument( "--tracer", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Enable tracer particles.\n"
                        )
 
-    parser.add_argument( "--store_par_acc", type=str2bool,
+    parser.add_argument( "--store_par_acc", type=str2bool, metavar="BOOLEAN",
                          default=True,
                          help="Store particle acceleration.\n"
                        )
 
-    parser.add_argument( "--star_formation", type=str2bool,
+    parser.add_argument( "--star_formation", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Allow creating new particles after initialization.\n"
                        )
 
-    parser.add_argument( "--feedback", type=str2bool,
+    parser.add_argument( "--feedback", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Feedback from particles to grids and vice versa.\n"
                        )
@@ -483,7 +488,7 @@ def load_arguments():
                        )
 
     # A.5 grackle
-    parser.add_argument( "--grackle", type=str2bool,
+    parser.add_argument( "--grackle", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Enable Grackle, a chemistry and radiative cooling library.\n"
                        )
@@ -504,63 +509,63 @@ def load_arguments():
                          help="Set the number of cells along each direction in a single patch.\n"
                        )
 
-    parser.add_argument( "--debug", type=str2bool,
+    parser.add_argument( "--debug", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Enable debug mode.\n"
                        )
 
-    parser.add_argument( "--bitwise_reproducibility", type=str2bool,
+    parser.add_argument( "--bitwise_reproducibility", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Enable bitwise reproducibility.\n"
                        )
 
-    parser.add_argument( "--timing", type=str2bool,
+    parser.add_argument( "--timing", type=str2bool, metavar="BOOLEAN",
                          default=True,
                          help="Enable timing analysis of a simulation.\n"
                        )
 
-    parser.add_argument( "--timing_solver", type=str2bool,
+    parser.add_argument( "--timing_solver", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Enable more detailed timing analysis of GPU solvers.\n"
                        )
 
-    parser.add_argument( "--double", type=str2bool,
+    parser.add_argument( "--double", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Enable double precision.\n"
                        )
 
-    parser.add_argument( "--laohu", type=str2bool,
+    parser.add_argument( "--laohu", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Work on the NAOC Laohu GPU cluster.\n"
                        )
 
-    parser.add_argument( "--hdf5", type=str2bool,
+    parser.add_argument( "--hdf5", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Support HDF5.\n"
                        )
 
-    parser.add_argument( "--gsl", type=str2bool,
+    parser.add_argument( "--gsl", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Support GNU scientific library.\n"
                        )
 
     parser.add_argument( "--fftw", type=str,
-                         default="", choices=["", "FFTW2", "FFTW3"],
+                         default="FFTW3", choices=["FFTW2", "FFTW3"],
                          help="Support FFTW library.\n"
                        )
 
-    parser.add_argument( "--libyt", type=str2bool,
+    parser.add_argument( "--libyt", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Support yt inline analysis.\n"
                        )
 
-    parser.add_argument( "--libyt_patchgroup", type=str2bool,
+    parser.add_argument( "--libyt_patchgroup", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Use patch groups instead of patches as the unit in libyt for better performance (recommended).\n"
                        )
 
-    parser.add_argument( "--libyt_interactive", typestr2bool,
-                         defcult=False,
+    parser.add_argument( "--libyt_interactive", type=str2bool, metavar="BOOLEAN",
+                         default=False,
                          help="Enable the interactive mode of libyt.\n"
                        )
 
@@ -575,22 +580,22 @@ def load_arguments():
                          default="icpc",
                          help="Serial compiler type.\n"
                        )
-    parser.add_argument( "--openmp", type=str2bool,
+    parser.add_argument( "--openmp", type=str2bool, metavar="BOOLEAN",
                          default=True,
                          help="Enable OpenMP parallization.\n"
                        )
 
-    parser.add_argument( "--mpi", type=str2bool,
+    parser.add_argument( "--mpi", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Enable MPI parallization.\n"
                        )
 
-    parser.add_argument( "--overlap_mpi", type=str2bool,
+    parser.add_argument( "--overlap_mpi", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Overlap MPI communication with computation.\n"
                        )
 
-    parser.add_argument( "--gpu", type=str2bool,
+    parser.add_argument( "--gpu", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Enable GPU.\n"
                        )
@@ -602,11 +607,13 @@ def load_arguments():
 
     args = vars( parser.parse_args() )
 
-    # 1. print out a detail help message then exit
+    # 1. print out a detail help message then exit.
     if args["lh"]:
         parser.print_help_detail()
         exit()
 
+    # 2. conditionlly default argument.
+    args = set_conditional_defaults( args )
     return args
 
 def load_config( config ):
@@ -632,13 +639,20 @@ def load_config( config ):
 
     return paths, flags
 
+def set_conditional_defaults( args ):
+    if args["gravity"]:
+        args["unsplit_gravity"] = True if args["model"] == "HYDRO" else False
+
+    return args
+
 def set_sims( **kwargs ):
     opt_str = ""
 
     # A. Physics
     # A.1 Module
     if kwargs["model"] == "HYDRO":
-        kwargs["eos"] = "EOS_" + kwargs["eos"] # special string prefix of EOS
+        kwargs["eos"]  = "EOS_" + kwargs["eos"] # special string prefix of EOS
+        kwargs["dual"] = "DE_" + kwargs["dual"] # special string prefix of dual energy
         for opt in HYDRO_OPTION:
             opt_str = add_option( opt_str, name=NAME_TABLE[opt], val=kwargs[opt] )
 
@@ -706,7 +720,6 @@ def validation( paths, **kwargs ):
     Validate the parameters.
     """
     success = True
-    #TODO: validate the negative integer
 
     # 0. Makefile
     if not os.path.isfile( GAMER_MAKE_BASE ):
@@ -716,6 +729,9 @@ def validation( paths, **kwargs ):
     # A. Physics
     # A.1 Module
     if kwargs["model"] == "HYDRO":
+        if kwargs["passive"] < 0:
+            color_print("Passive scalar should not be negative.", BCOLOR.FAIL)
+            success = False
         if kwargs["mhd"]:
             if kwargs["flu_scheme"] not in ["MHM_RP", "CTU"]:
                 color_print("MHD only supports MHM_RP and CTU.", BCOLOR.FAIL)
@@ -735,11 +751,11 @@ def validation( paths, **kwargs ):
             if kwargs["unsplit_gravity"]:
                 color_print("Unsplit gravity is not supported for RTVD.", BCOLOR.FAIL)
                 success = False
-            if kwargs["dual"] != "":
+            if kwargs["dual"] != NONE_STR:
                 color_print("Dual energy is not supported for RTVD.", BCOLOR.FAIL)
                 success = False
 
-        if kwargs["dual"] not in ["", "ENPY"]:
+        if kwargs["dual"] not in [NONE_STR, "ENPY"]:
             color_print("This dual energy form is not supported yet.", BCOLOR.FAIL)
             success = False
 
@@ -774,6 +790,9 @@ def validation( paths, **kwargs ):
                 success = False
 
     elif kwargs["model"] == "ELBDM":
+        if kwargs["passive"] < 0:
+            color_print("Passive scalar should not be negative.", BCOLOR.FAIL)
+            success = False
         if kwargs["self_interaction"]:
             if not kwargs["gravity"]:
                 color_print("--gravity must be enabled for --self_interaction.", BCOLOR.FAIL)
@@ -805,6 +824,9 @@ def validation( paths, **kwargs ):
             success = False
         if not kwargs["gravity"] and not kwargs["tracer"]:
             color_print("At least one of --gravity or --tracer must be enabled for --particle.", BCOLOR.FAIL)
+            success = False
+        if kwargs["par_attribute"] < 0:
+            color_print("Number of particle attribute should not be negative.", BCOLOR.FAIL)
             success = False
 
     # A.4 Grackle
