@@ -538,8 +538,8 @@ def validation( paths, **kwargs ):
         color_print("--max_patch should be greater than zero.", BCOLOR.FAIL)
         success = False
 
-    if kwargs["patch_size"]%2 != 0 or kwargs["patch_size"] < 8:
-        color_print("--patch_size should be an even number and greater than 6.", BCOLOR.FAIL)
+    if kwargs["patch_size"]%2 != 0:
+        color_print("--patch_size should be an even number.", BCOLOR.FAIL)
         success = False
 
     if not kwargs["timing"] and kwargs["timing_solver"]:
