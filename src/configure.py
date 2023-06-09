@@ -2,7 +2,7 @@
 A. User Guide:
   This script is for generating the GAMER Makefile. To use this script, you need to know the followings:
   0. Help:
-    Use the `-h` or `--help` to get the short help message. Use `-lh` to get detail help message.
+    Use the `-h` or `--help` to get the short help message and `-lh` to get detail help message.
   1. Library paths:
     When using library, you need to assign the library path. The path config file can be found under `../configs/`.
     To setup your own config file, please copy `example.config` and modify it.
@@ -10,41 +10,40 @@ A. User Guide:
     We already have two flag config files under `../configs/`, `intel.make` and `gnu.make`, which are for the
     intel and gnu compiler respetively. To setup your own config file, please copy `example.make` and modify it.
   3. Run the script:
-    This script can run under Python2 and Python3. To run the script, please run the following command:
+    Run the following command to generate the Makefile. This script supports both Python2 and Python3.
       `python configure.py [--your_arguments]`
     After the command finishes, the `Makefile` will be generated.
 
 B. Developer guide:
-  This code can be separated to the 5 parts which are `Packages`, `Global variables`, `Classes`, `Functions`, and
-  `Main execution`.
+  This code consists of five parts: Packages, Global variables, Classes, Functions, and Main execution.
 
-  1. Add new simulation option:
+  1. Add a new simulation option:
     a. Make sure you have added the necessary source files in `Makefile_base`.
-    b. Add the python argument reader for the new simulation option in the `Main execution` part of the code.
+    b. Add a python argument reader for the new simulation option in the `Main execution` part of the code.
     c. Add the name convertion dictionary `[python_argument:gamer_argument]` to the `NAME_TABLE`.
-       (You can find it in the `Global variable` part of the code.)
+       (You can find it in the `Global variables` part of the code.)
     d. If the new arguments are not base on any argument, you can add one new line of `add_option()` in `load_sim()`.
        (You can find it in the `Functions` part of the code.) If the new arguments are base on one of the argument,
-       you might create a option list in `Global variables` section, and loop over the list in `load_sim()`.
-       Please check out how we add the `openmp` argument or `GRAVITY_OPTION` in `sim_load()`.
+       you might create a option list in `Global variables` section, and loop over the list in `load_sims()`.
+       Please check out how we add the `openmp` argument or `GRAVITY_OPTION` in `load_sims()`.
     e. [Optional] Add the error rules in `validation()`. (You can find it in the `Functions` part of the code.)
     f. [Optional] Add the warning rules in `warning()`. (You can find it in the `Functions` part of the code.)
   2. Add a new path:
-    a. Add a new line in the Makefile_base in the path section.
+    a. Add a new line in the Makefile_base under "# library paths".
       `NEW_PATH := @@@NEW_PATH@@@`
-    b. Add a new line in the path config file.
+    b. Add a new line in the config file.
       `NEW_PATH    /path/of/new`
   3. Add a new compiler flag type:
-    a. Add a new line in the Makefile_base in the flag section.
+    a. Add a new line in the Makefile_base under "# compilers and flags".
       `NEW_FLAG := @@@NEW_FLAG@@@`
-    b. Add a new flag key `["NEW_FLAG":""]` in `flags` of `load_compile()`.
-    c. Add a new line in the path config file.
+    b. Add a new flag key `["NEW_FLAG":""]` in `flags` of `load_flag()`.
+    c. Add a new line in the config file.
       `NEW_FLAG    -new_flag`
   4. Rules of Makefile_base:
-    a. The string will be replaced by this script need to be sandwitched by `@@@`.
+    a. The strings to be replaced by this script need to be sandwitched by `@@@`.
   5. Modify the help message:
     We overwrite the original `print_help` since GAMER has too many options. You should follow the followings.
-    a. `print_help`: Showing the essential message only. The default option should start with '*' sign.
+    a. `print_help`: Showing the essential message only. The default option should start with '*'.
     b. `print_help_detail`: Should be as clear as possible.
 """
 
@@ -64,9 +63,9 @@ import re
 GAMER_CONFIG_DIR  = "../configs"
 GAMER_MAKE_BASE   = "Makefile_base"
 GAMER_MAKE_OUT    = "Makefile"
-GAMER_DESCRIPTION = "Prepare customize Makefile for GAMER.\nThe default value starts with '*' sign.\nTo show the detail help message, please use -lh argument."
+GAMER_DESCRIPTION = "Prepare a customized Makefile for GAMER.\nDefault values are marked by '*'.\nUse -lh to show a detailed help message."
 GAMER_EPILOG      = "The default complie flags are %s/intel.make and %s/gnu.make"%(GAMER_CONFIG_DIR, GAMER_CONFIG_DIR)
-# The convert name from the python argument to the makefile argument.
+# Mapping between the Python arguments used in this script and the GAMER symbolic constants defined in the Makefile.
 NAME_TABLE        = {"model":"MODEL", "passive":"NCOMP_PASSIVE_USER", "flu_scheme":"FLU_SCHEME",
                      "slope":"LR_SCHEME", "flux":"RSOLVER", "dual":"DUAL_ENERGY", "mhd":"MHD",
                      "cosmic_ray":"COSMIC_RAY", "eos":"EOS", "barotropic":"BAROTROPIC_EOS",
@@ -88,21 +87,21 @@ NAME_TABLE        = {"model":"MODEL", "passive":"NCOMP_PASSIVE_USER", "flu_schem
 HYDRO_OPTION         = ["model", "flu_scheme", "slope", "flux", "eos", "passive", "mhd", "dual", "cosmic_ray", "barotropic"]
 ELBDM_OPTION         = ["model", "passive", "conserve_mass", "laplacian_four", "self_interaction"]
 GRAVITY_OPTION       = ["gravity", "pot_scheme", "store_pot_ghost", "unsplit_gravity", "comoving"]
-PARTICALE_OPTION     = ["particle", "par_attribute", "tracer", "store_acc", "feedback", "star_formation"]
+PARTICLE_OPTION      = ["particle", "par_attribute", "tracer", "store_acc", "feedback", "star_formation"]
 MISCELLANEOUS_OPTION = ["nlevel", "max_patch", "patch_size", "debug", "bitwise_reproduce", "timing",
                         "timing_solver", "double", "laohu", "hdf5", "gsl", "fftw", "libyt", "libyt_patch",
                         "libyt_interactive", "rng"]
 GPU_OPTION           = ["gpu", "gpu_arch"]
 
 class BCOLOR:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
+    HEADER    = '\033[95m'
+    OKBLUE    = '\033[94m'
+    OKCYAN    = '\033[96m'
+    OKGREEN   = '\033[92m'
+    WARNING   = '\033[93m'
+    FAIL      = '\033[91m'
+    ENDC      = '\033[0m'
+    BOLD      = '\033[1m'
     UNDERLINE = '\033[4m'
 
 
@@ -137,7 +136,7 @@ class ArgumentParser( argparse.ArgumentParser ):
                     if dist < min_dist:
                         min_dist = dist
                         pos_key = "--"+key
-                msg += 'unrecognized arguments: %s, do you mean: %s ?\n'%(arg, pos_key)
+                msg += 'unrecognized argument: %s, do you mean: %s ?\n'%(arg, pos_key)
 
             self.error( msg )
         return args
@@ -193,7 +192,7 @@ class ArgumentParser( argparse.ArgumentParser ):
                         else:
                             usage += [ "[%s %s]"%(item, option["metavar"]) ]
                         continue
- 
+
                     if "dest" in option:
                         if "default" in option:
                             usage += [ "[%s %s *%s]"%(item, option["dest"], str(option["default"])) ]
@@ -287,7 +286,7 @@ def color_print( string, color ):
     return
 
 def add_option( opt_str, name, val ):
-    # NOTE: every -Doption must have trailing space
+    # NOTE: every -Doption must have a trailing space
     if type(val) == type(True):
         if val:
             opt_str += "-D%s "%(name)
@@ -307,7 +306,7 @@ def add_option( opt_str, name, val ):
 
 def distance( s1, s2 ):
     """
-    Calculate the distance of two string.
+    Calculate the distance between two strings.
     See: https://en.wikipedia.org/wiki/Damerau-Levenshtein_distance
          https://www.geeksforgeeks.org/damerau-levenshtein-distance/
     """
@@ -414,7 +413,7 @@ def load_sims( **kwargs ):
     if kwargs["mpi"]:
         opt_str = add_option( opt_str, NAME_TABLE["mpi"], kwargs["mpi"] )
     else:
-        opt_str = add_option( opt_str, "SERIAL", True )  # hard coded the option of serial
+        opt_str = add_option( opt_str, "SERIAL", True )  # hard-code the option of serial
 
     if kwargs["gpu"]:
         for opt in GPU_OPTION:
@@ -469,11 +468,11 @@ def validation( paths, **kwargs ):
                 color_print("MHD only supports MHM_RP and CTU.", BCOLOR.FAIL)
                 success = False
             if kwargs["flux"] not in ["EXACT", "ROE", "HLLE", "HLLD"]:
-                color_print("MHD only supports EXACT, ROE, HLLE, and HLLD Riemann solver.", BCOLOR.FAIL)
+                color_print("MHD only supports EXACT, ROE, HLLE, and HLLD Riemann solvers.", BCOLOR.FAIL)
                 success = False
         else:
             if kwargs["flux"] not in ["EXACT", "ROE", "HLLE", "HLLC"]:
-                color_print("Pure hydro only supports EXACT, ROE, HLLE, and HLLC Riemann solver.", BCOLOR.FAIL)
+                color_print("Pure hydro only supports EXACT, ROE, HLLE, and HLLC Riemann solvers.", BCOLOR.FAIL)
                 success = False
 
         if kwargs["flu_scheme"] == "RTVD":
@@ -499,7 +498,7 @@ def validation( paths, **kwargs ):
                 color_print("Only ROE and EXACT Riemann solver are supported for --eos!=GAMMA.", BCOLOR.FAIL)
                 success = False
             if kwargs["flu_scheme"] == "RTVD" or kwargs["flu_scheme"] == "CTU":
-                color_print("RTVD and CTU are only supported for --eos=GAMMA.", BCOLOR.FAIL)
+                color_print("RTVD and CTU only support --eos=GAMMA.", BCOLOR.FAIL)
                 success = False
             if kwargs["comoving"]:
                 color_print("--comoving is only supported for --eos=GAMMA.", BCOLOR.FAIL)
@@ -524,7 +523,7 @@ def validation( paths, **kwargs ):
     elif kwargs["model"] == "ELBDM":
         if kwargs["self_interaction"]:
             if not kwargs["gravity"]:
-                color_print("--gravity must be enabled when --self_interaction.", BCOLOR.FAIL)
+                color_print("--gravity must be enabled for --self_interaction.", BCOLOR.FAIL)
                 success = False
             if kwargs["comoving"]:
                 color_print("--comoving is not supported with --self_interaction.", BCOLOR.FAIL)
@@ -556,7 +555,7 @@ def validation( paths, **kwargs ):
                 color_print("--store_pot_ghost must be enabled when --star_formation and --store_par_acc are enabled.", BCOLOR.FAIL)
                 success = False
         if not kwargs["gravity"] and not kwargs["tracer"]:
-            color_print("One of --gravity or --tracer must be enabled for --particle.", BCOLOR.FAIL)
+            color_print("At least one of --gravity or --tracer must be enabled for --particle.", BCOLOR.FAIL)
             success = False
 
     # A.4 Grackle
@@ -574,11 +573,11 @@ def validation( paths, **kwargs ):
         success = False
 
     if kwargs["patch_size"]%2 != 0 or kwargs["patch_size"] < 8:
-        color_print("--patch_size should be even number and greater than 6.", BCOLOR.FAIL)
+        color_print("--patch_size should be an even number and greater than 6.", BCOLOR.FAIL)
         success = False
 
     if not kwargs["timing"] and kwargs["timing_solver"]:
-        color_print("--timing_solver must enable --timing.", BCOLOR.FAIL)
+        color_print("--timing_solver work with --timing.", BCOLOR.FAIL)
         success = False
 
     if kwargs["libyt_patch"] and not kwargs["libyt"]:
@@ -593,17 +592,17 @@ def validation( paths, **kwargs ):
         color_print("--overlap_mpi is not supported yet.", BCOLOR.FAIL)
         success = False
         if not kwargs["mpi"]:
-            color_print("--overlap_mpi must enable --mpi.", BCOLOR.FAIL)
+            color_print("--overlap_mpi work with --mpi.", BCOLOR.FAIL)
             success = False
 
-    if not success: raise BaseException(BCOLOR.FAIL+"The above validations are fail."+BCOLOR.ENDC)
+    if not success: raise BaseException(BCOLOR.FAIL+"The above validation failed."+BCOLOR.ENDC)
     return
 
 
 def warning( paths, **kwargs ):
     # 0. Makefile
     if os.path.isfile( GAMER_MAKE_OUT ):
-        color_print("Warning: %s already exist and will be overwriten."%(GAMER_MAKE_OUT), BCOLOR.WARNING)
+        color_print("Warning: %s already exists and will be overwritten."%(GAMER_MAKE_OUT), BCOLOR.WARNING)
 
     # 1. serial config not match
     if kwargs["serial_compiler"] == "icpc" and kwargs["flags"] == "gnu":
@@ -632,7 +631,7 @@ def warning( paths, **kwargs ):
     if kwargs["fftw"] == "FFTW2":
         if paths.setdefault("FFTW2_PATH", "") == "":
             color_print("FFTW2_PATH is not given with --fftw=FFTW2.", BCOLOR.WARNING)
-    
+
     if kwargs["fftw"] == "FFTW3":
         if paths.setdefault("FFTW3_PATH", "") == "":
             color_print("FFTW3_PATH is not given with --fftw=FFTW3.", BCOLOR.WARNING)
@@ -675,7 +674,7 @@ parser.add_argument( "-h", "--help",
                      help="Show this help message and exit.\n"
                    )
 
-# detail help message
+# detailed help message
 parser.add_argument( "-lh",
                      action="store_true",
                      help="Show this help message in detail and exit.\n"
@@ -698,7 +697,7 @@ parser.add_argument( "--model", type=str, metavar="MODEL",
                      help="Select the physical model.\n"
                    )
 
-parser.add_argument( "--passive", type=int, metavar="NUMBER",
+parser.add_argument( "--passive", type=int, metavar="INTEGER",
                      default=0,
                      help="Set the number of passive scalars.\n"
                    )
@@ -726,7 +725,7 @@ parser.add_argument( "--dual", type=str, metavar="TYPE",
 
 parser.add_argument( "--mhd",
                      action="store_true",
-                     help="Enable magnetohydrodynamic.\n"
+                     help="Enable magnetohydrodynamics.\n"
                    )
 
 parser.add_argument( "--cosmic_ray",
@@ -741,23 +740,23 @@ parser.add_argument( "--eos", type=str, metavar="TYPE",
 
 parser.add_argument( "--barotropic",
                      action="store_true",
-                     help="Whether or not the --eos set is barotropic.\n"
+                     help="Whether or not the equation of state set by --eos is barotropic.\n"
                    )
 
 # A.2 ELBDM scheme
 parser.add_argument( "--conserve_mass",
                      action="store_true",
-                     help="Enforce the mass conservation.\n"
+                     help="Enforce the mass conservation for model=ELBDM.\n"
                    )
 
 parser.add_argument( "--laplacian_four",
                      action="store_true",
-                     help="Enable the fourth order of Laplacian.\n"
+                     help="Enable the fourth-order of Laplacian for model=ELBDM.\n"
                    )
 
 parser.add_argument( "--self_interaction",
                      action="store_true",
-                     help="Including the quartic self-interaction potential.\n"
+                     help="Include the quartic self-interaction potential for model=ELBDM.\n"
                    )
 
 # A.3 gravity
@@ -773,7 +772,7 @@ parser.add_argument( "--pot_scheme", type=str, metavar="SCHEME",
 
 parser.add_argument( "--store_pot_ghost",
                      action="store_true",
-                     help="Store the potential ghost-zone for each patch on each side.\n"
+                     help="Store the ghost-zone potential for each patch.\n"
                    )
 
 parser.add_argument( "--unsplit_gravity",
@@ -783,13 +782,13 @@ parser.add_argument( "--unsplit_gravity",
 
 parser.add_argument( "--comoving",
                      action="store_true",
-                     help="Comoving frame for cosmological simulation.\n"
+                     help="Comoving frame for cosmological simulations.\n"
                    )
 
 # A.4 particle
 parser.add_argument( "--particle",
                      action="store_true",
-                     help="Enable particle.\n"
+                     help="Enable particles.\n"
                    )
 parser.add_argument( "--tracer",
                      action="store_true",
@@ -808,12 +807,12 @@ parser.add_argument( "--star_formation",
 
 parser.add_argument( "--feedback",
                      action="store_true",
-                     help="Feedback from particles to grids.\n"
+                     help="Feedback from particles to grids and vice versa.\n"
                    )
 
-parser.add_argument( "--par_attribute", type=int, metavar="NUMBER",
+parser.add_argument( "--par_attribute", type=int, metavar="INTEGER",
                      default=0,
-                     help="Set the number of user defined particle attributes.\n"
+                     help="Set the number of user-defined particle attributes.\n"
                    )
 
 # A.5 grackle
@@ -825,17 +824,17 @@ parser.add_argument( "--grackle",
 # B. miscellaneous options
 parser.add_argument( "--nlevel", type=int,
                      default=10,
-                     help="Set the maximum level of AMR.\n"
+                     help="Set the total number of AMR levels including the root level.\n"
                    )
 
 parser.add_argument( "--max_patch", type=int,
                      default=100000,
-                     help="Set the maximum patchs on each level of AMR.\n"
+                     help="Set the maximum number of patches on each AMR level.\n"
                    )
 
 parser.add_argument( "--patch_size", type=int,
                      default=8,
-                     help="Set size of each direction of a single patch.\n"
+                     help="Set the number of cells along each direction in a single patch.\n"
                    )
 
 parser.add_argument( "--debug",
@@ -850,12 +849,12 @@ parser.add_argument( "--bitwise_reproduce",
 
 parser.add_argument( "--timing",
                      action="store_true",
-                     help="Enable to measure timing.\n"
+                     help="Enable timing analysis of a simulation.\n"
                    )
 
 parser.add_argument( "--timing_solver",
                      action="store_true",
-                     help="Enable to measure GPU time.\n"
+                     help="Enable more detailed timing analysis of GPU solvers.\n"
                    )
 
 parser.add_argument( "--double",
@@ -870,7 +869,7 @@ parser.add_argument( "--laohu",
 
 parser.add_argument( "--hdf5",
                      action="store_true",
-                     help="Support HDF5 format.\n"
+                     help="Support HDF5.\n"
                    )
 
 parser.add_argument( "--gsl",
@@ -890,12 +889,12 @@ parser.add_argument( "--libyt",
 
 parser.add_argument( "--libyt_patch",
                      action="store_true",
-                     help="Use patch group as the unit in libyt. Note that this will speed up inline-analysis but increase memory consumption.\n"
+                     help="Use patch groups instead of patches as the unit in libyt for better performance (recommended).\n"
                    )
 
 parser.add_argument( "--libyt_interactive",
                      action="store_true",
-                     help="This activates python prompt and does not shut down a simulation when there are errors in an inline python script\n"
+                     help="Enable the interactive mode of libyt.\n"
                    )
 
 parser.add_argument( "--rng", type=str, metavar="TYPE",
@@ -931,13 +930,13 @@ parser.add_argument( "--gpu",
 
 parser.add_argument( "--gpu_arch", type=str, metavar="TYPE",
                      default="TURING", choices=["FERMI", "KEPLER", "MAXWELL", "PASCAL", "VOLTA", "TURING", "AMPERE"],
-                     help="Select the archtecture of GPU.\n"
+                     help="Select the architecture of GPU.\n"
                    )
 
 
 args = vars( parser.parse_args() )
 
-# 1.1 print out the detail help message then exit
+# 1.1 print out a detail help message then exit
 if args["lh"]:
     parser.print_help_detail()
     exit()
@@ -949,7 +948,7 @@ if args["lh"]:
 paths = load_config( "%s/%s.config"%(GAMER_CONFIG_DIR, args["cluster"]) )
 flags = load_flag("%s/%s.make"%(GAMER_CONFIG_DIR, args["flags"]))
 
-# 2.2 Check if the argument are valid
+# 2.2 Check if the arguments are valid
 validation( paths, **args )
 
 warning( paths, **args )
