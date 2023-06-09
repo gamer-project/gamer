@@ -325,6 +325,280 @@ def distance( s1, s2 ):
 
     return matrix[len(s1)][len(s2)]
 
+def load_arguments():
+    parser = ArgumentParser( description = GAMER_DESCRIPTION,
+                             formatter_class = argparse.RawTextHelpFormatter,
+                             epilog = GAMER_EPILOG,
+                             add_help=False)
+    
+    parser.add_argument( "-h", "--help",
+                         action="help", default=argparse.SUPPRESS,
+                         help="Show this help message and exit.\n"
+                       )
+    
+    # detailed help message
+    parser.add_argument( "-lh",
+                         action="store_true",
+                         help="Show this help message in detail and exit.\n"
+                       )
+    
+    # machine config setup
+    parser.add_argument( "--machine", type=str, metavar="MACHINE",
+                         default="eureka",
+                         help="Select the MACHINE.config file under ../configs directory. \nChoice: [eureka, YOUR_MACHINE_NAME] => "
+                       )
+    
+    # A. physical models and options of diffierent physical models
+    parser.add_argument( "--model", type=str, metavar="MODEL",
+                         default="HYDRO", choices=["HYDRO", "ELBDM", "PAR_ONLY"],
+                         help="Select the physical model.\n"
+                       )
+    
+    parser.add_argument( "--passive", type=int, metavar="INTEGER",
+                         default=0,
+                         help="Set the number of passive scalars.\n"
+                       )
+    
+    # A.1 Hydro options
+    parser.add_argument( "--flu_scheme", type=str, metavar="SCHEME",
+                         default="CTU", choices=["RTVD", "MHM", "MHM_RP", "CTU"],
+                         help="Select the fluid solver for HYDRO model.\n"
+                       )
+    
+    parser.add_argument( "--slope", type=str, metavar="TYPE",
+                         default="PPM", choices=["PLM", "PPM"],
+                         help="Select the spatial data reconstruction method.\n"
+                       )
+    
+    parser.add_argument( "--flux", type=str, metavar="TYPE",
+                         default="ROE", choices=["EXACT", "ROE", "HLLE", "HLLC", "HLLD"],
+                         help="Select the Riemann solver.\n"
+                       )
+    
+    parser.add_argument( "--dual", type=str, metavar="TYPE",
+                         default="", choices=["", "ENPY", "EINT"],
+                         help="Select the dual-energy formalism.\n"
+                       )
+    
+    parser.add_argument( "--mhd", type=bool,
+                         default=False,
+                         help="Enable magnetohydrodynamics.\n"
+                       )
+    
+    parser.add_argument( "--cosmic_ray",
+                         action="store_true",
+                         help="Enable cosmic rays.\n"
+                       )
+    
+    parser.add_argument( "--eos", type=str, metavar="TYPE",
+                         default="GAMMA", choices=["GAMMA", "ISOTHERMAL", "NUCLEAR", "TABULAR", "USER"],
+                         help="Select the equation of state.\n"
+                       )
+    
+    parser.add_argument( "--barotropic",
+                         action="store_true",
+                         help="Whether or not the equation of state set by --eos is barotropic.\n"
+                       )
+    
+    # A.2 ELBDM scheme
+    parser.add_argument( "--conserve_mass",
+                         action="store_true",
+                         help="Enforce the mass conservation for model=ELBDM.\n"
+                       )
+    
+    parser.add_argument( "--laplacian_four",
+                         action="store_true",
+                         help="Enable the fourth-order of Laplacian for model=ELBDM.\n"
+                       )
+    
+    parser.add_argument( "--self_interaction",
+                         action="store_true",
+                         help="Include the quartic self-interaction potential for model=ELBDM.\n"
+                       )
+    
+    # A.3 gravity
+    parser.add_argument( "--gravity",
+                         action="store_true",
+                         help="Enable gravity.\n"
+                       )
+    
+    parser.add_argument( "--pot_scheme", type=str, metavar="SCHEME",
+                         default="SOR", choices=["SOR", "MG"],
+                         help="Select the Poisson solver.\n"
+                       )
+    
+    parser.add_argument( "--store_pot_ghost",
+                         action="store_true",
+                         help="Store the ghost-zone potential for each patch.\n"
+                       )
+    
+    parser.add_argument( "--unsplit_gravity",
+                         action="store_true",
+                         help="Use unsplitting method to couple gravity to the target model.\n"
+                       )
+    
+    parser.add_argument( "--comoving",
+                         action="store_true",
+                         help="Comoving frame for cosmological simulations.\n"
+                       )
+    
+    # A.4 particle
+    parser.add_argument( "--particle",
+                         action="store_true",
+                         help="Enable particles.\n"
+                       )
+    parser.add_argument( "--tracer",
+                         action="store_true",
+                         help="Enable tracer particles.\n"
+                       )
+    
+    parser.add_argument( "--store_par_acc",
+                         action="store_true",
+                         help="Store particle acceleration.\n"
+                       )
+    
+    parser.add_argument( "--star_formation",
+                         action="store_true",
+                         help="Allow creating new particles after initialization.\n"
+                       )
+    
+    parser.add_argument( "--feedback",
+                         action="store_true",
+                         help="Feedback from particles to grids and vice versa.\n"
+                       )
+    
+    parser.add_argument( "--par_attribute", type=int, metavar="INTEGER",
+                         default=0,
+                         help="Set the number of user-defined particle attributes.\n"
+                       )
+    
+    # A.5 grackle
+    parser.add_argument( "--grackle",
+                         action="store_true",
+                         help="Enable Grackle, a chemistry and radiative cooling library.\n"
+                       )
+    
+    # B. miscellaneous options
+    parser.add_argument( "--nlevel", type=int,
+                         default=10,
+                         help="Set the total number of AMR levels including the root level.\n"
+                       )
+    
+    parser.add_argument( "--max_patch", type=int,
+                         default=100000,
+                         help="Set the maximum number of patches on each AMR level.\n"
+                       )
+    
+    parser.add_argument( "--patch_size", type=int,
+                         default=8,
+                         help="Set the number of cells along each direction in a single patch.\n"
+                       )
+    
+    parser.add_argument( "--debug",
+                         action="store_true",
+                         help="Enable debug mode.\n"
+                       )
+    
+    parser.add_argument( "--bitwise_reproducibility",
+                         action="store_true",
+                         help="Enable bitwise reproducibility.\n"
+                       )
+    
+    parser.add_argument( "--timing",
+                         action="store_true",
+                         help="Enable timing analysis of a simulation.\n"
+                       )
+    
+    parser.add_argument( "--timing_solver",
+                         action="store_true",
+                         help="Enable more detailed timing analysis of GPU solvers.\n"
+                       )
+    
+    parser.add_argument( "--double",
+                         action="store_true",
+                         help="Enable double precision.\n"
+                       )
+    
+    parser.add_argument( "--laohu",
+                         action="store_true",
+                         help="Work on the NAOC Laohu GPU cluster.\n"
+                       )
+    
+    parser.add_argument( "--hdf5",
+                         action="store_true",
+                         help="Support HDF5.\n"
+                       )
+    
+    parser.add_argument( "--gsl",
+                         action="store_true",
+                         help="Support GNU scientific library.\n"
+                       )
+    
+    parser.add_argument( "--fftw", type=str,
+                         default="", choices=["", "FFTW2", "FFTW3"],
+                         help="Support FFTW library.\n"
+                       )
+    
+    parser.add_argument( "--libyt",
+                         action="store_true",
+                         help="Support yt inline analysis.\n"
+                       )
+    
+    parser.add_argument( "--libyt_patchgroup",
+                         action="store_true",
+                         help="Use patch groups instead of patches as the unit in libyt for better performance (recommended).\n"
+                       )
+    
+    parser.add_argument( "--libyt_interactive",
+                         action="store_true",
+                         help="Enable the interactive mode of libyt.\n"
+                       )
+    
+    parser.add_argument( "--rng", type=str, metavar="TYPE",
+                         default="RNG_GNU_EXT",
+                         choices=["RNG_GNU_EXT", "RNG_CPP11"],
+                         help="Select the random number generator.\nIf you use 'RNG_CPP', you need to add -std=c++11 to CXXFLAG in config file."
+                       )
+    
+    # C. parallelization and flags
+    parser.add_argument( "--serial_compiler", type=str, metavar="COMPILER",
+                         default="icpc",
+                         help="Serial compiler type.\n"
+                       )
+    parser.add_argument( "--openmp",
+                         action="store_true",
+                         help="Enable OpenMP parallization.\n"
+                       )
+    
+    parser.add_argument( "--mpi",
+                         action="store_true",
+                         help="Enable MPI parallization.\n"
+                       )
+    
+    parser.add_argument( "--overlap_mpi",
+                         action="store_true",
+                         help="Overlap MPI communication with computation.\n"
+                       )
+    
+    parser.add_argument( "--gpu",
+                         action="store_true",
+                         help="Enable GPU.\n"
+                       )
+    
+    parser.add_argument( "--gpu_arch", type=str, metavar="TYPE",
+                         default="TURING", choices=["FERMI", "KEPLER", "MAXWELL", "PASCAL", "VOLTA", "TURING", "AMPERE"],
+                         help="Select the architecture of GPU.\n"
+                       )
+    
+    
+    args = vars( parser.parse_args() )
+    
+    # 1.1 print out a detail help message then exit
+    if args["lh"]:
+        parser.print_help_detail()
+        exit()
+    return args
+
 def load_config( config ):
     print("Using %s as the config."%(config))
     paths, flags = {}, {"CXXFLAG":"", "OPENMPFLAG":"", "LIBFLAG":"", "CUDAFLAG":""}
@@ -618,278 +892,7 @@ def warning( paths, **kwargs ):
 # Main execution
 ####################################################################################################
 # 1. Load the input arguments
-parser = ArgumentParser( description = GAMER_DESCRIPTION,
-                         formatter_class = argparse.RawTextHelpFormatter,
-                         epilog = GAMER_EPILOG,
-                         add_help=False)
-
-parser.add_argument( "-h", "--help",
-                     action="help", default=argparse.SUPPRESS,
-                     help="Show this help message and exit.\n"
-                   )
-
-# detailed help message
-parser.add_argument( "-lh",
-                     action="store_true",
-                     help="Show this help message in detail and exit.\n"
-                   )
-
-# machine config setup
-parser.add_argument( "--machine", type=str, metavar="MACHINE",
-                     default="eureka",
-                     help="Select the MACHINE.config file under ../configs directory. \nChoice: [eureka, YOUR_MACHINE_NAME] => "
-                   )
-
-# A. physical models and options of diffierent physical models
-parser.add_argument( "--model", type=str, metavar="MODEL",
-                     default="HYDRO", choices=["HYDRO", "ELBDM", "PAR_ONLY"],
-                     help="Select the physical model.\n"
-                   )
-
-parser.add_argument( "--passive", type=int, metavar="INTEGER",
-                     default=0,
-                     help="Set the number of passive scalars.\n"
-                   )
-
-# A.1 Hydro options
-parser.add_argument( "--flu_scheme", type=str, metavar="SCHEME",
-                     default="CTU", choices=["RTVD", "MHM", "MHM_RP", "CTU"],
-                     help="Select the fluid solver for HYDRO model.\n"
-                   )
-
-parser.add_argument( "--slope", type=str, metavar="TYPE",
-                     default="PPM", choices=["PLM", "PPM"],
-                     help="Select the spatial data reconstruction method.\n"
-                   )
-
-parser.add_argument( "--flux", type=str, metavar="TYPE",
-                     default="ROE", choices=["EXACT", "ROE", "HLLE", "HLLC", "HLLD"],
-                     help="Select the Riemann solver.\n"
-                   )
-
-parser.add_argument( "--dual", type=str, metavar="TYPE",
-                     default="", choices=["", "ENPY", "EINT"],
-                     help="Select the dual-energy formalism.\n"
-                   )
-
-parser.add_argument( "--mhd",
-                     action="store_true",
-                     help="Enable magnetohydrodynamics.\n"
-                   )
-
-parser.add_argument( "--cosmic_ray",
-                     action="store_true",
-                     help="Enable cosmic rays.\n"
-                   )
-
-parser.add_argument( "--eos", type=str, metavar="TYPE",
-                     default="GAMMA", choices=["GAMMA", "ISOTHERMAL", "NUCLEAR", "TABULAR", "USER"],
-                     help="Select the equation of state.\n"
-                   )
-
-parser.add_argument( "--barotropic",
-                     action="store_true",
-                     help="Whether or not the equation of state set by --eos is barotropic.\n"
-                   )
-
-# A.2 ELBDM scheme
-parser.add_argument( "--conserve_mass",
-                     action="store_true",
-                     help="Enforce the mass conservation for model=ELBDM.\n"
-                   )
-
-parser.add_argument( "--laplacian_four",
-                     action="store_true",
-                     help="Enable the fourth-order of Laplacian for model=ELBDM.\n"
-                   )
-
-parser.add_argument( "--self_interaction",
-                     action="store_true",
-                     help="Include the quartic self-interaction potential for model=ELBDM.\n"
-                   )
-
-# A.3 gravity
-parser.add_argument( "--gravity",
-                     action="store_true",
-                     help="Enable gravity.\n"
-                   )
-
-parser.add_argument( "--pot_scheme", type=str, metavar="SCHEME",
-                     default="SOR", choices=["SOR", "MG"],
-                     help="Select the Poisson solver.\n"
-                   )
-
-parser.add_argument( "--store_pot_ghost",
-                     action="store_true",
-                     help="Store the ghost-zone potential for each patch.\n"
-                   )
-
-parser.add_argument( "--unsplit_gravity",
-                     action="store_true",
-                     help="Use unsplitting method to couple gravity to the target model.\n"
-                   )
-
-parser.add_argument( "--comoving",
-                     action="store_true",
-                     help="Comoving frame for cosmological simulations.\n"
-                   )
-
-# A.4 particle
-parser.add_argument( "--particle",
-                     action="store_true",
-                     help="Enable particles.\n"
-                   )
-parser.add_argument( "--tracer",
-                     action="store_true",
-                     help="Enable tracer particles.\n"
-                   )
-
-parser.add_argument( "--store_par_acc",
-                     action="store_true",
-                     help="Store particle acceleration.\n"
-                   )
-
-parser.add_argument( "--star_formation",
-                     action="store_true",
-                     help="Allow creating new particles after initialization.\n"
-                   )
-
-parser.add_argument( "--feedback",
-                     action="store_true",
-                     help="Feedback from particles to grids and vice versa.\n"
-                   )
-
-parser.add_argument( "--par_attribute", type=int, metavar="INTEGER",
-                     default=0,
-                     help="Set the number of user-defined particle attributes.\n"
-                   )
-
-# A.5 grackle
-parser.add_argument( "--grackle",
-                     action="store_true",
-                     help="Enable Grackle, a chemistry and radiative cooling library.\n"
-                   )
-
-# B. miscellaneous options
-parser.add_argument( "--nlevel", type=int,
-                     default=10,
-                     help="Set the total number of AMR levels including the root level.\n"
-                   )
-
-parser.add_argument( "--max_patch", type=int,
-                     default=100000,
-                     help="Set the maximum number of patches on each AMR level.\n"
-                   )
-
-parser.add_argument( "--patch_size", type=int,
-                     default=8,
-                     help="Set the number of cells along each direction in a single patch.\n"
-                   )
-
-parser.add_argument( "--debug",
-                     action="store_true",
-                     help="Enable debug mode.\n"
-                   )
-
-parser.add_argument( "--bitwise_reproducibility",
-                     action="store_true",
-                     help="Enable bitwise reproducibility.\n"
-                   )
-
-parser.add_argument( "--timing",
-                     action="store_true",
-                     help="Enable timing analysis of a simulation.\n"
-                   )
-
-parser.add_argument( "--timing_solver",
-                     action="store_true",
-                     help="Enable more detailed timing analysis of GPU solvers.\n"
-                   )
-
-parser.add_argument( "--double",
-                     action="store_true",
-                     help="Enable double precision.\n"
-                   )
-
-parser.add_argument( "--laohu",
-                     action="store_true",
-                     help="Work on the NAOC Laohu GPU cluster.\n"
-                   )
-
-parser.add_argument( "--hdf5",
-                     action="store_true",
-                     help="Support HDF5.\n"
-                   )
-
-parser.add_argument( "--gsl",
-                     action="store_true",
-                     help="Support GNU scientific library.\n"
-                   )
-
-parser.add_argument( "--fftw", type=str,
-                     default="", choices=["", "FFTW2", "FFTW3"],
-                     help="Support FFTW library.\n"
-                   )
-
-parser.add_argument( "--libyt",
-                     action="store_true",
-                     help="Support yt inline analysis.\n"
-                   )
-
-parser.add_argument( "--libyt_patchgroup",
-                     action="store_true",
-                     help="Use patch groups instead of patches as the unit in libyt for better performance (recommended).\n"
-                   )
-
-parser.add_argument( "--libyt_interactive",
-                     action="store_true",
-                     help="Enable the interactive mode of libyt.\n"
-                   )
-
-parser.add_argument( "--rng", type=str, metavar="TYPE",
-                     default="RNG_GNU_EXT",
-                     choices=["RNG_GNU_EXT", "RNG_CPP11"],
-                     help="Select the random number generator.\nIf you use 'RNG_CPP', you need to add -std=c++11 to CXXFLAG in config file."
-                   )
-
-# C. parallelization and flags
-parser.add_argument( "--serial_compiler", type=str, metavar="COMPILER",
-                     default="icpc",
-                     help="Serial compiler type.\n"
-                   )
-parser.add_argument( "--openmp",
-                     action="store_true",
-                     help="Enable OpenMP parallization.\n"
-                   )
-
-parser.add_argument( "--mpi",
-                     action="store_true",
-                     help="Enable MPI parallization.\n"
-                   )
-
-parser.add_argument( "--overlap_mpi",
-                     action="store_true",
-                     help="Overlap MPI communication with computation.\n"
-                   )
-
-parser.add_argument( "--gpu",
-                     action="store_true",
-                     help="Enable GPU.\n"
-                   )
-
-parser.add_argument( "--gpu_arch", type=str, metavar="TYPE",
-                     default="TURING", choices=["FERMI", "KEPLER", "MAXWELL", "PASCAL", "VOLTA", "TURING", "AMPERE"],
-                     help="Select the architecture of GPU.\n"
-                   )
-
-
-args = vars( parser.parse_args() )
-
-# 1.1 print out a detail help message then exit
-if args["lh"]:
-    parser.print_help_detail()
-    exit()
-
+args = load_arguments()
 
 #------------------------------------------------------------
 # 2. Prepare the makiefile args
