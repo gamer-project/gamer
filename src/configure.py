@@ -89,8 +89,8 @@ ELBDM_OPTION         = ["model", "passive", "conserve_mass", "laplacian_four", "
 GRAVITY_OPTION       = ["gravity", "pot_scheme", "store_pot_ghost", "unsplit_gravity", "comoving"]
 PARTICLE_OPTION      = ["particle", "par_attribute", "tracer", "store_par_acc", "feedback", "star_formation"]
 MISCELLANEOUS_OPTION = ["nlevel", "max_patch", "patch_size", "debug", "bitwise_reproducilibity", "timing",
-                        "timing_solver", "double", "laohu", "hdf5", "gsl", "fftw", "libyt", "libyt_patchgroup",
-                        "libyt_interactive", "rng"]
+                        "timing_solver", "double", "laohu", "hdf5", "gsl", "fftw", "rng"]
+LIBYT_OPTION         = ["libyt", "libyt_patchgroup", "libyt_interactive"]
 GPU_OPTION           = ["gpu", "gpu_arch"]
 
 class BCOLOR:
@@ -371,56 +371,49 @@ def load_sims( **kwargs ):
     if kwargs["model"] == "HYDRO":
         kwargs["eos"] = "EOS_" + kwargs["eos"] # special string prefix of EOS
         for opt in HYDRO_OPTION:
-            name = NAME_TABLE[opt]
-            val  = kwargs[opt]
-            opt_str = add_option( opt_str, name, val )
+            opt_str = add_option( opt_str, name=NAME_TABLE[opt], val=kwargs[opt] )
 
     if kwargs["model"] == "ELBDM":
         for opt in ELBDM_OPTION:
-            name = NAME_TABLE[opt]
-            val  = kwargs[opt]
-            opt_str = add_option( opt_str, name, val )
+            opt_str = add_option( opt_str, name=NAME_TABLE[opt], val=kwargs[opt] )
 
     if kwargs["model"] == "PAR_ONLY":
-        opt_str = add_option( opt_str, NAME_TABLE["model"], kwargs["model"] )
+        opt_str = add_option( opt_str, name=NAME_TABLE["model"], val=kwargs["model"] )
 
     # A.2 Gravity
     if kwargs["gravity"]:
         for opt in GRAVITY_OPTION:
-            name = NAME_TABLE[opt]
-            val  = kwargs[opt]
-            opt_str = add_option( opt_str, name, val )
+            opt_str = add_option( opt_str, name=NAME_TABLE[opt], val=kwargs[opt] )
 
     # A.3 Particle
     if kwargs["particle"]:
         for opt in PARTICLE_OPTION:
-            name = NAME_TABLE[opt]
-            val  = kwargs[opt]
-            opt_str = add_option( opt_str, name, val )
+            opt_str = add_option( opt_str, name=NAME_TABLE[opt], val=kwargs[opt] )
 
     # A.4 Grackle
     if kwargs["grackle"]:
-        opt_str = add_option( opt_str, NAME_TABLE["grackle"], kwargs["grackle"] )
+        opt_str = add_option( opt_str, name=NAME_TABLE["grackle"], val=kwargs["grackle"] )
 
-    # B. miscellaneous options
+    # B. Miscellaneous options
+    # B.1 Libyt
+    for opt in LIBYT_OPTION:
+        opt_str = add_option( opt_str, name=NAME_TABLE[opt], val=kwargs[opt] )
+ 
+    # B.2 Others
     for opt in MISCELLANEOUS_OPTION:
-        name = NAME_TABLE[opt]
-        val  = kwargs[opt]
-        opt_str = add_option( opt_str, name, val )
+        opt_str = add_option( opt_str, name=NAME_TABLE[opt], val=kwargs[opt] )
 
-    # C. parallel options
+    # C. Parallel options
     if kwargs["openmp"]:
-        opt_str = add_option( opt_str, NAME_TABLE["openmp"], kwargs["openmp"] )
+        opt_str = add_option( opt_str, name=NAME_TABLE["openmp"], val=kwargs["openmp"] )
     if kwargs["mpi"]:
-        opt_str = add_option( opt_str, NAME_TABLE["mpi"], kwargs["mpi"] )
+        opt_str = add_option( opt_str, name=NAME_TABLE["mpi"], val=kwargs["mpi"] )
     else:
-        opt_str = add_option( opt_str, "SERIAL", True )  # hard-code the option of serial
+        opt_str = add_option( opt_str, name="SERIAL", val=True )  # hard-code the option of serial
 
     if kwargs["gpu"]:
         for opt in GPU_OPTION:
-            name = NAME_TABLE[opt]
-            val  = kwargs[opt]
-            opt_str = add_option( opt_str, name, val )
+            opt_str = add_option( opt_str, name=NAME_TABLE[opt], val=kwargs[opt] )
 
     return {"SIMU_OPTION":opt_str}
 
