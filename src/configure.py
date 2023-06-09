@@ -79,7 +79,7 @@ NAME_TABLE        = {"model":"MODEL", "passive":"NCOMP_PASSIVE_USER", "flu_schem
                      "bitwise_reproduce":"BITWISE_REPRODUCIBILITY", "timing":"TIMING",
                      "timing_solver":"TIMING_SOLVER", "double":"FLOAT8", "laohu":"LAOHU",
                      "hdf5":"SUPPORT_HDF5", "gsl":"SUPPORT_GSL", "fftw":"SUPPORT_FFTW",
-                     "libyt":"SUPPORT_LIBYT", "libyt_patch":"LIBYT_USE_PATCH_GROUP",
+                     "libyt":"SUPPORT_LIBYT", "libyt_patchgroup":"LIBYT_USE_PATCH_GROUP",
                      "libyt_interactive":"LIBYT_INTERACTIVE", "rng":"RANDOM_NUMBER",
                      "serial_compiler":"SERIAL", "openmp":"OPENMP", "mpi":"LOAD_BALANCE=HILBERT",
                      "overlap_mpi":"OVERLAP_MPI", "gpu":"GPU", "gpu_arch":"GPU_ARCH"}
@@ -89,7 +89,7 @@ ELBDM_OPTION         = ["model", "passive", "conserve_mass", "laplacian_four", "
 GRAVITY_OPTION       = ["gravity", "pot_scheme", "store_pot_ghost", "unsplit_gravity", "comoving"]
 PARTICLE_OPTION      = ["particle", "par_attribute", "tracer", "store_acc", "feedback", "star_formation"]
 MISCELLANEOUS_OPTION = ["nlevel", "max_patch", "patch_size", "debug", "bitwise_reproduce", "timing",
-                        "timing_solver", "double", "laohu", "hdf5", "gsl", "fftw", "libyt", "libyt_patch",
+                        "timing_solver", "double", "laohu", "hdf5", "gsl", "fftw", "libyt", "libyt_patchgroup",
                         "libyt_interactive", "rng"]
 GPU_OPTION           = ["gpu", "gpu_arch"]
 
@@ -579,8 +579,8 @@ def validation( paths, **kwargs ):
         color_print("--timing_solver work with --timing.", BCOLOR.FAIL)
         success = False
 
-    if kwargs["libyt_patch"] and not kwargs["libyt"]:
-        color_print("--libyt_patch must enable --libyt.", BCOLOR.FAIL)
+    if kwargs["libyt_patchgroup"] and not kwargs["libyt"]:
+        color_print("--libyt_patchgroup must enable --libyt.", BCOLOR.FAIL)
         success = False
 
     if kwargs["libyt_interactive"] and not kwargs["libyt"]:
@@ -883,7 +883,7 @@ parser.add_argument( "--libyt",
                      help="Support yt inline analysis.\n"
                    )
 
-parser.add_argument( "--libyt_patch",
+parser.add_argument( "--libyt_patchgroup",
                      action="store_true",
                      help="Use patch groups instead of patches as the unit in libyt for better performance (recommended).\n"
                    )
@@ -941,7 +941,7 @@ if args["lh"]:
 
 #------------------------------------------------------------
 # 2. Prepare the makiefile args
-# 2.1 load the cluster steup
+# 2.1 Load the cluster steup
 paths = load_config( "%s/%s.config"%(GAMER_CONFIG_DIR, args["cluster"]) )
 flags = load_flag("%s/%s.make"%(GAMER_CONFIG_DIR, args["flags"]))
 
