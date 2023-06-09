@@ -73,7 +73,7 @@ NAME_TABLE        = {"model":"MODEL", "passive":"NCOMP_PASSIVE_USER", "flu_schem
                      "self_interaction":"QUARTIC_SELF_INTERACTION",
                      "gravity":"GRAVITY", "pot_scheme":"POT_SCHEME", "store_pot_ghost":"STORE_POT_GHOST",
                      "unsplit_gravity":"UNSPLIT_GRAVITY", "comoving":"COMOVING",
-                     "particle":"PARTICLE", "tracer":"TRACER", "store_acc":"STORE_PAR_ACC",
+                     "particle":"PARTICLE", "tracer":"TRACER", "store_par_acc":"STORE_PAR_ACC",
                      "star_formation":"STAR_FORMATION", "feedback":"FEEDBACK", "par_attribute":"PAR_NATT_USER",
                      "nlevel":"NLEVEL", "max_patch":"MAX_PATCH", "patch_size":"PATCH_SIZE", "debug":"GAMER_DEBUG",
                      "bitwise_reproducibility":"BITWISE_REPRODUCIBILITY", "timing":"TIMING",
@@ -87,7 +87,7 @@ NAME_TABLE        = {"model":"MODEL", "passive":"NCOMP_PASSIVE_USER", "flu_schem
 HYDRO_OPTION         = ["model", "flu_scheme", "slope", "flux", "eos", "passive", "mhd", "dual", "cosmic_ray", "barotropic"]
 ELBDM_OPTION         = ["model", "passive", "conserve_mass", "laplacian_four", "self_interaction"]
 GRAVITY_OPTION       = ["gravity", "pot_scheme", "store_pot_ghost", "unsplit_gravity", "comoving"]
-PARTICLE_OPTION      = ["particle", "par_attribute", "tracer", "store_acc", "feedback", "star_formation"]
+PARTICLE_OPTION      = ["particle", "par_attribute", "tracer", "store_par_acc", "feedback", "star_formation"]
 MISCELLANEOUS_OPTION = ["nlevel", "max_patch", "patch_size", "debug", "bitwise_reproducilibity", "timing",
                         "timing_solver", "double", "laohu", "hdf5", "gsl", "fftw", "libyt", "libyt_patchgroup",
                         "libyt_interactive", "rng"]
@@ -791,7 +791,7 @@ parser.add_argument( "--tracer",
                      help="Enable tracer particles.\n"
                    )
 
-parser.add_argument( "--store_acc",
+parser.add_argument( "--store_par_acc",
                      action="store_true",
                      help="Store particle acceleration.\n"
                    )
