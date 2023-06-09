@@ -946,7 +946,7 @@ print("----------------------------------------")
 sims = load_sims( **args )
 
 # 2.4 setup compiler
-flags = load_flag( paths, flags, args )
+compiles = load_compile( paths, flags, args )
 
 
 #------------------------------------------------------------
@@ -965,7 +965,7 @@ for key, val in sims.items():
     makefile = re.sub(r"@@@%s@@@"%(key), val, makefile)
 
 print("----------------------------------------")
-for key, val in flags.items():
+for key, val in compiles.items():
     print("%-10s : %s"%(key, val))
     makefile = re.sub(r"@@@%s@@@"%(key), val, makefile)
 
