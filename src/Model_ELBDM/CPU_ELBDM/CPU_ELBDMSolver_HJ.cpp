@@ -74,8 +74,8 @@ static uint get1D2(uint k, uint j, uint i, int XYZ) {
 # define GRADC4(In, t) ( real(1.0/12.0) * (  1*In[t-2] - 8*In[t-1] + 8*In[t+1] - 1*In[t+2] ))
 
 //First-order upwind flux reconstruction
-# define UPWIND_FM(Rc, Vb, t)        (   FMAX(Vb, 0) * Rc[t-1] \
-                                       + FMIN(Vb, 0) * Rc[t  ] )
+# define UPWIND_FM(Rc, Vb, t)        (   MAX(Vb, 0) * Rc[t-1] \
+                                       + MIN(Vb, 0) * Rc[t  ] )
 
 //Second-order MUSCL flux reconstruction
 # if ( HYBRID_SCHEME == HYBRID_MUSCL )
@@ -93,16 +93,16 @@ static uint get1D2(uint k, uint j, uint i, int XYZ) {
                                            + (Rc[t+1] - Rc[t  ]) * LSS(Vb, 0)) \
                                            / (Rc[t] - Rc[t-1] + (((Rc[t] - Rc[t-1]) == 0) ? 1e-8 : 0)))
 
-# define MUSCL_FM(Rc, Vb, t, _v) (   FMAX(Vb, 0) * Rc[t-1] \
-                                   + FMIN(Vb, 0) * Rc[t  ] \
+# define MUSCL_FM(Rc, Vb, t, _v) (   MAX(Vb, 0) * Rc[t-1] \
+                                   + MIN(Vb, 0) * Rc[t  ] \
                                    + real(0.5) * FABS(Vb) * (1. - FABS(Vb * _v)) * LIMITER(UPWIND_GRADIENT_RATIO(Rc, Vb, t)) * (Rc[t] - Rc[t - 1]) )
 
 
 //Second-order unlimited flux reconstruction
 # elif  ( HYBRID_SCHEME == HYBRID_FROMM )
 
-# define FROMM_FM(Rc, Vb, t, _v) (   FMAX(Vb, 0) * ( Rc[t-1] + real(0.25) * ( Rc[t  ] - Rc[t-2] ) * (1.0 - Vb * _v)) \
-                                   + FMIN(Vb, 0) * ( Rc[t  ] - real(0.25) * ( Rc[t+1] - Rc[t-1] ) * (1.0 + Vb * _v)) )
+# define FROMM_FM(Rc, Vb, t, _v) (   MAX(Vb, 0) * ( Rc[t-1] + real(0.25) * ( Rc[t  ] - Rc[t-2] ) * (1.0 - Vb * _v)) \
+                                   + MIN(Vb, 0) * ( Rc[t  ] - real(0.25) * ( Rc[t+1] - Rc[t-1] ) * (1.0 + Vb * _v)) )
 
 # endif // # if ( HYBRID_SCHEME == HYBRID_MUSCL ) ... # else
 
@@ -348,8 +348,10 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
    const real dh           = real(1.0)/_dh;                                  // grid spacing
    const real Coeff1       = real(1.0) * dt /(dh * Eta);                     // coefficient for continuity equation
    const real Coeff2       = real(0.5) * dt /(dh * dh * Eta);                // coefficient for HJ-equation
+#  ifndef HYBRID_IGNORE_FLUID_FAILURE
    const real Coeff3       = real(0.5) * real(3.0) * dh * dh * Eta / dt;     // coefficient for determining velocity timestep
-   const real FluidMinDens = FMAX(real(1e-10), MinDens);                     // minimum density while computing quantum pressure
+#  endif // # ifndef HYBRID_IGNORE_FLUID_FAILURE
+   const real FluidMinDens = MAX(real(1e-10), MinDens);                      // minimum density while computing quantum pressure
 
    const uint j_end        = HYB_NXT -  j_gap    ;          // last y-column to be updated
    const uint size_j       = HYB_NXT - (j_gap<<1);          // number of y-columns to be updated
@@ -568,7 +570,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 //             2.2 compute density logarithms
                CELL_LOOP(HYB_NXT, g1, g1)
                {
-                  s_LogRho[sj][si] = LOG(FMAX(s_In[sj][time_level][DENS][si], FluidMinDens));
+                  s_LogRho[sj][si] = LOG(MAX(s_In[sj][time_level][DENS][si], FluidMinDens));
                }
 
 //             2.3 sync _LogRho
@@ -659,7 +661,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 
 //                3.1 && 3.2
                   De_New = TIME_COEFFS[time_level] * Coeff1 * ( s_Fm[sj][0][si] - s_Fm[sj][0][si+1] );
-                  Ph_New = TIME_COEFFS[time_level] * Coeff2 * ( - SQR(FMIN(vp, 0)) - SQR(FMAX(vm, 0)) + s_QP[sj][si] );
+                  Ph_New = TIME_COEFFS[time_level] * Coeff2 * ( - SQR(MIN(vp, 0)) - SQR(MAX(vm, 0)) + s_QP[sj][si] );
 
 //                3.3 use N_TIME_LEVELS-stages RK-algorithm
                   for (uint tl = 0; tl < time_level + 1; ++tl) {
@@ -669,8 +671,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 
 //                3.4 store RK1 results on time_level 0
                   if ( time_level == 0 ) {
-                     s_In[sj][N_TIME_LEVELS][DENS][si] = FMAX(De_New, FluidMinDens);
-                     s_In[sj][N_TIME_LEVELS][PHAS][si] =      Ph_New;
+                     s_In[sj][N_TIME_LEVELS][DENS][si] = MAX(De_New, FluidMinDens);
+                     s_In[sj][N_TIME_LEVELS][PHAS][si] =     Ph_New;
                      s_Fm[sj][1][si]                   = s_Fm[sj][0][si];
                   }
 
