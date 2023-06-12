@@ -92,7 +92,7 @@ void GramFE_SetupTimeEvolutionMatrix(real (*output)[2 * FLU_NXT], real dt, real 
    gramfe_mm_real K, Filter, Coeff;
    gramfe_mm_complex_type ExpCoeff;
    gramfe_ev_complex_type (* out)    [FLU_NXT]        = (gramfe_ev_complex_type (*)[       FLU_NXT]) output;
-   gramfe_mm_complex_type (*ifft2)    [GRAMFE_FLU_NXT] = (gramfe_mm_complex_type (*)[GRAMFE_FLU_NXT]) GramFE_IFFT;
+   gramfe_mm_complex_type (*ifft2)   [GRAMFE_FLU_NXT] = (gramfe_mm_complex_type (*)[GRAMFE_FLU_NXT]) GramFE_IFFT;
    gramfe_mm_complex_type (* fft)    [GRAMFE_FLU_NXT] = (gramfe_mm_complex_type (*)[GRAMFE_FLU_NXT]) GramFE_FFT;
    gramfe_mm_complex_type GramFE_DFFT     [GRAMFE_FLU_NXT][GRAMFE_FLU_NXT];
    gramfe_mm_complex_type GramFE_IFFTDFFT [           PS2][GRAMFE_FLU_NXT];  // exp(- 1j * dt/(2*ELBDM_ETA) * k^2)
@@ -124,10 +124,6 @@ void GramFE_SetupTimeEvolutionMatrix(real (*output)[2 * FLU_NXT], real dt, real 
          GramFE_DFFT[i][k] = ExpCoeff * fft[i][k];
       }
    }
-      //printf("1 IFFTDFFT i %d j %d %3.3e + %3.3e \n", k, j, GramFE_IFFTDFFT[k][j].real(), GramFE_DFFT[k][j].imag());
-
-
-
    gramfe_mm_gsl::matrix_complex_const_view extend     = gramfe_mm_gsl::matrix_complex_const_view_array(GramFE_Extend                     , GRAMFE_FLU_NXT, FLU_NXT);
    gramfe_mm_gsl::matrix_complex_const_view ifft       = gramfe_mm_gsl::matrix_complex_const_view_array(GramFE_IFFT                       , PS2           , GRAMFE_FLU_NXT);
    gramfe_mm_gsl::matrix_complex_const_view dfft       = gramfe_mm_gsl::matrix_complex_const_view_array((gramfe_mm_real*) GramFE_DFFT     , GRAMFE_FLU_NXT, GRAMFE_FLU_NXT);
@@ -135,15 +131,6 @@ void GramFE_SetupTimeEvolutionMatrix(real (*output)[2 * FLU_NXT], real dt, real 
    gramfe_mm_gsl::matrix_complex_view       evolution  = gramfe_mm_gsl::matrix_complex_view_array      ((gramfe_mm_real*) GramFE_Evolution, PS2           , FLU_NXT);
 
    gramfe_mm_gsl::blas_cgemm(CblasNoTrans, CblasNoTrans, {1.0,  0.0}, &ifft.matrix,     &dfft.matrix,   {0.0, 0.0}, &ifftdfft.matrix);
-
-   /*
-   for (int i = 0; i < PS2; ++i) {
-      for (int j = 0; j < GRAMFE_FLU_NXT; ++j) {
-         auto r = gramfe_mm_gsl::matrix_complex_get(&ifftdfft.matrix, i, j);
-         printf("1 IFFTDFFT i %d j %d %3.3e + i %3.3e\n", i, j, GSL_REAL(r), GSL_IMAG(r));
-      }
-   }*/
-
    gramfe_mm_gsl::blas_cgemm(CblasNoTrans, CblasNoTrans, {1.0,  0.0}, &ifftdfft.matrix, &extend.matrix, {0.0, 0.0}, &evolution.matrix);
 
    for (size_t i = 0; i < PS2; ++i) {
@@ -210,9 +197,9 @@ static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                            real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
                            int NPatchGroup,
                            const uint j_gap, const uint k_gap,
-                           gramfe_ev_complex_type s_In       [][FLU_NXT],
-                           gramfe_ev_complex_type s_Out      [][PS2],
-                           gramfe_ev_complex_type s_Evolve   [][PS2],
+                           gramfe_ev_complex_type  s_In       [][FLU_NXT],
+                           gramfe_ev_complex_type  s_Out      [][PS2],
+                           gramfe_ev_complex_type* s_Evolve,
                            const bool FinalOut, const int XYZ, const real MinDens
                            );
 
@@ -262,7 +249,7 @@ void CPU_ELBDMSolver_GramFE(     real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
    __shared__ gramfe_ev_complex_type s_In    [FLU_BLOCK_SIZE_Y][FLU_NXT];
    __shared__ gramfe_ev_complex_type s_Out   [FLU_BLOCK_SIZE_Y][PS2];
 
-   const int NPatchGroup               = NULL_INT;
+   const int NPatchGroup                           = NULL_INT;
 
 #  else // #  ifdef __CUDACC__
 // allocate memory on stack within loop for CPU run
@@ -272,12 +259,9 @@ void CPU_ELBDMSolver_GramFE(     real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 // time evolution matrix
 #  ifdef __CUDACC__
-   __shared__ gramfe_ev_complex_type s_Evolve[FLU_NXT][PS2];
-   //__shared__ gramfe_mm_complex_type s_FFT   [PS2][GRAMFE_FLU_NXT];
+   __shared__ gramfe_ev_complex_type s_Evolve[PS2 * FLU_NXT];
 #  else // #  ifdef __CUDACC__
-              gramfe_ev_complex_type (*s_Evolve)[PS2] = (gramfe_ev_complex_type (*)[PS2]) g_Evolve;
-              //gramfe_mm_complex_type s_FFT[PS2][GRAMFE_FLU_NXT];
-   //           gramfe_mm_complex_type s_FFT   [PS2][GRAMFE_FLU_NXT];
+              gramfe_ev_complex_type* s_Evolve = (gramfe_ev_complex_type *) g_Evolve;
 #  endif // #  ifdef __CUDACC__ ... else
 
 #  ifdef __CUDACC__
@@ -289,104 +273,15 @@ void CPU_ELBDMSolver_GramFE(     real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
    const uint ty           = threadIdx.y;
    const uint tid          = ty * CGPU_FLU_BLOCK_SIZE_X + tx;                // thread ID within block
    const uint NThread      = CGPU_FLU_BLOCK_SIZE_X * CGPU_FLU_BLOCK_SIZE_Y;  // total number of threads within block
-   uint j, k;
+   uint row, col;
 
+// tranpose input evolution matrix from PS2 x FLU_NXT to FLU_NXT x PS2 for it to be in row-major order
    for (uint i = tid; i < PS2 * FLU_NXT; i += NThread) {
-      j = i / PS2;
-      k = i % PS2;
-      s_LinEvolve[j * PS2 + k] = g_LinEvolve[i];
+      row = i / FLU_NXT;
+      col = i % FLU_NXT;
+      s_LinEvolve[col * PS2 + row] = g_LinEvolve[i];
    }
 #  endif // #  ifdef __CUDACC__
-   /*
-// set up time evolution operator and filter
-   gramfe_mm_real K;
-   gramfe_mm_real Filter;                                                                      // exp(-filterDecay * (k/kMax)**(2*filterDegree))
-   gramfe_mm_real Coeff;                                                                       // dT * k^2
-   gramfe_mm_complex_type ExpCoeff[GRAMFE_FLU_NXT];                                                    // exp(- 1j * dt/(2*ELBDM_ETA) * k^2)
-
-   const gramfe_mm_real filterDecay  = (gramfe_mm_real) 32.0 * (gramfe_mm_real) 2.302585092994046; // decay of k-space filter ( 32 * log(10) )
-   const gramfe_mm_real filterDegree = (gramfe_mm_real) 100;                                     // degree of k-space filter
-   const gramfe_mm_real kmax         = (gramfe_mm_real) M_PI / dh;                              // maximum value of k
-   const gramfe_mm_real dk           = (gramfe_mm_real) + 2.0 * kmax / GRAMFE_FLU_NXT;           // k steps in k-space
-   const gramfe_mm_real dT           = (gramfe_mm_real) - 0.5 * dt / Eta;                        // coefficient in time evolution operator
-
-// naively "exp(1j * Coeff)" should give the exact time evolution of the free Schrödinger equation
-// however, the time-evolution operator depends on higher-order derivatives
-// since these are unavailable for a finite ghost boundary size, the series needs to be truncated
-// the ideal Taylor expansion order using all available derivatives is FLU_GHOST_SIZE - 1
-// for FLU_GHOST_SIZE == 8, 4 terms in the cosine series and 3 terms in the sine series are retained
-   const int cosineNTerms = FLU_GHOST_SIZE / 2;
-   const int sineNTerms   = cosineNTerms - (int) ((FLU_GHOST_SIZE % 2) == 0);
-
-// set up momentum, filter and time evolution array
-   for (int i=0; i<GRAMFE_FLU_NXT; i++)
-   {
-      K           = ( i <= GRAMFE_FLU_NXT/2 ) ? dk*i : dk*(i-GRAMFE_FLU_NXT);
-      Filter      = exp(-filterDecay * pow(fabs(K/kmax), 2*filterDegree));
-      Coeff       = SQR(K)*dT;
-      ExpCoeff[i] = gramfe_mm_complex_type(CosineTaylorExpansion(Coeff, cosineNTerms), SineTaylorExpansion(Coeff, sineNTerms)) * Filter;
-   }
-   gramfe_mm_complex_type (*extend)  [       FLU_NXT] = (gramfe_mm_complex_type (*)[       FLU_NXT]) GramFE_Extend;
-   gramfe_mm_complex_type (*ifft)    [GRAMFE_FLU_NXT] = (gramfe_mm_complex_type (*)[GRAMFE_FLU_NXT]) GramFE_IFFT;
-   gramfe_mm_complex_type (* fft)    [GRAMFE_FLU_NXT] = (gramfe_mm_complex_type (*)[GRAMFE_FLU_NXT]) GramFE_FFT;
-
-   ////printf("Printing forward matrix\n");
-   for (int i = 0; i < GRAMFE_FLU_NXT; ++i)
-   {
-      for (int j = 0; j < FLU_NXT; ++j)
-      {
-         ////printf("Forward i %d j %d = %f + i %f\n", i, j, forward[i][j].real(), forward[i][j].imag());
-      }
-   }
-   ////printf("Printing IFFT matrix\n");
-   for (int i = 0; i < PS2; ++i)
-   {
-      for (int j = 0; j < GRAMFE_FLU_NXT; ++j)
-      {
-         ////printf("IFFT i %d j %d = %f + i %f\n", i, j, ifft[i][j].real(), ifft[i][j].imag());
-      }
-   }
-
-   ////printf("Setting up evolution matrix\n");
-
-   gramfe_mm_complex_type result;
-
-   int i, j;
-
-   CGPU_LOOP(h, PS2 * GRAMFE_FLU_NXT)
-   {
-      i = h / GRAMFE_FLU_NXT;
-      j = h % GRAMFE_FLU_NXT;
-
-      result = {0, 0};
-
-      for (int k = 0; k < GRAMFE_FLU_NXT; ++k)
-      {
-         result += ifft[i][k] * ExpCoeff[k] * fft[k][j];
-      }
-      s_FFT[i][j] = result;
-      printf("2 IFFTDFFT i %d j %d %3.3e + i %3.3e\n", i, j, s_FFT[i][j].real(), s_FFT[i][j].imag());
-   }
-
-   CGPU_LOOP(h, PS2 * FLU_NXT)
-   {
-      i = h / FLU_NXT;
-      j = h % FLU_NXT;
-
-      result = {0, 0};
-
-      for (int k = 0; k < GRAMFE_FLU_NXT; ++k)
-      {
-         result += s_FFT[i][k] * extend[k][j];
-      }
-      printf("Output i %d j %d\tBefore: %3.3e + i %3.3e\t After: %3.3e + i %3.3e \n", i, j, s_Evolve[i][j].real(), s_Evolve[i][j].imag(), result.real(), result.imag());
-      s_Evolve[i][j] = result;
-   }*/
-
-   //printf("Output i %d j %d %f +i %f \n", i, j, s_Evolve[i][j].real(), s_Evolve[i][j].imag());
-
-
-   ////printf("Setup of evolution matrix done!\n");
 
 
    if ( XYZ )
@@ -442,9 +337,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
                      int NPatchGroup,
                      const uint j_gap, const uint k_gap,
-                     gramfe_ev_complex_type s_In       [][FLU_NXT],
-                     gramfe_ev_complex_type s_Out      [][PS2],
-                     gramfe_ev_complex_type s_Evolve   [][PS2],
+                     gramfe_ev_complex_type  s_In       [][FLU_NXT],
+                     gramfe_ev_complex_type  s_Out      [][PS2],
+                     gramfe_ev_complex_type* s_Evolve,
                      const bool FinalOut,
                      const int XYZ, const real MinDens
                   )
@@ -535,7 +430,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                Psi_New = {0, 0};
 
                for (int t=0; t < FLU_NXT; t++) {
-                  Psi_New += s_Evolve[t][si - FLU_GHOST_SIZE]* s_In[sj][t];
+                  Psi_New += s_Evolve[(si - FLU_GHOST_SIZE) + t * PS2] * s_In[sj][t];
                } // for t
 
                s_Out[sj][si - FLU_GHOST_SIZE] = Psi_New;
@@ -545,6 +440,12 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #           else
             gramfe_ev_gsl::blas_cgemv(CblasNoTrans, {1.0, 0.0}, &Evo_view.matrix, &Input_view.vector, {0.0, 0.0}, &Output_view.vector);
 #           endif
+
+
+            CELL_LOOP(FLU_NXT, FLU_GHOST_SIZE, FLU_GHOST_SIZE)
+            {
+               //printf("si %d %3.7e + i %3.7e\n", si, s_Out[sj][si - FLU_GHOST_SIZE].real(), s_Out[sj][si - FLU_GHOST_SIZE].imag());
+            }
 
             if ( FinalOut )
             {
