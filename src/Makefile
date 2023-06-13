@@ -597,9 +597,9 @@ endif # MHD
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
 GPU_FILE    += CUFLU_ELBDMSolver_FD.cu CUFLU_ELBDMSolver_GramFE_FFT.cu CUFLU_ELBDMSolver_GramFE_MATMUL.cu
 
-CPU_FILE    += CPU_ELBDMSolver_FD.cpp  CPU_ELBDMSolver_FFT.cpp  CPU_ELBDMSolver_GramFE.cpp CPU_ELBDMSolver_GramFE_FFT.cpp CPU_ELBDMSolver_GramFE_MATMUL.cpp ELBDM_Init_ByFunction_AssignData.cpp \
+CPU_FILE    += CPU_ELBDMSolver_FD.cpp  CPU_ELBDMSolver_FFT.cpp  CPU_ELBDMSolver_GramFE_FFT.cpp  CPU_ELBDMSolver_GramFE_MATMUL.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
                ELBDM_GetTimeStep_Fluid.cpp  ELBDM_Flag_EngyDensity.cpp  ELBDM_UnwrapPhase.cpp \
-               ELBDM_GetTimeStep_Phase.cpp  ELBDM_SetTaylor3Coeff.cpp  ELBDM_RemoveMotionCM.cpp
+               ELBDM_GetTimeStep_Phase.cpp  ELBDM_SetTaylor3Coeff.cpp  ELBDM_GramFE_EvolutionMatrix.cpp  ELBDM_RemoveMotionCM.cpp
 
 vpath %.cu     Model_ELBDM/GPU_ELBDM
 vpath %.cpp    Model_ELBDM/CPU_ELBDM  Model_ELBDM
