@@ -849,14 +849,6 @@ def validation( paths, **kwargs ):
         color_print("--timing_solver must work with --timing.", BCOLOR.FAIL)
         success = False
 
-    if kwargs["libyt_patchgroup"] and not kwargs["libyt"]:
-        color_print("--libyt_patchgroup must enable --libyt.", BCOLOR.FAIL)
-        success = False
-
-    if kwargs["libyt_interactive"] and not kwargs["libyt"]:
-        color_print("--libyt_interactive must enable --libyt.", BCOLOR.FAIL)
-        success = False
-
     if kwargs["overlap_mpi"]:
         color_print("--overlap_mpi is not supported yet.", BCOLOR.FAIL)
         success = False
