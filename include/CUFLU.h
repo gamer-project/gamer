@@ -418,8 +418,11 @@
 // 2. ELBDM kinematic solver
 //=========================================================================================
 #elif ( MODEL == ELBDM )
+#  if ( WAVE_SCHEME == WAVE_FD )
 #     define FLU_BLOCK_SIZE_X       PS2
-
+#  elif ( WAVE_SCHEME == WAVE_GRAMFE )
+#     define FLU_BLOCK_SIZE_X       16
+#  endif
 #  if   ( GPU_ARCH == FERMI )
 #     ifdef FLOAT8
 #        define FLU_BLOCK_SIZE_Y    4
