@@ -84,7 +84,7 @@ NAME_TABLE        = {"model":"MODEL", "passive":"NCOMP_PASSIVE_USER", "flu_schem
                      "hdf5":"SUPPORT_HDF5", "gsl":"SUPPORT_GSL", "fftw":"SUPPORT_FFTW",
                      "libyt":"SUPPORT_LIBYT", "libyt_patchgroup":"LIBYT_USE_PATCH_GROUP",
                      "libyt_interactive":"LIBYT_INTERACTIVE", "rng":"RANDOM_NUMBER",
-                     "serial_compiler":"SERIAL", "openmp":"OPENMP", "mpi":"LOAD_BALANCE=HILBERT",
+                     "openmp":"OPENMP", "mpi":"LOAD_BALANCE=HILBERT",
                      "overlap_mpi":"OVERLAP_MPI", "gpu":"GPU", "gpu_arch":"GPU_ARCH"}
 
 HYDRO_OPTION         = ["model", "flu_scheme", "slope", "flux", "eos", "passive", "mhd", "dual", "cosmic_ray", "barotropic"]
@@ -574,10 +574,6 @@ def load_arguments():
                        )
 
     # C. parallelization and flags
-    parser.add_argument( "--serial_compiler", type=str, metavar="COMPILER",
-                         default="icpc",
-                         help="Serial compiler type.\n"
-                       )
     parser.add_argument( "--openmp", type=str2bool, metavar="BOOLEAN",
                          default=True,
                          help="Enable OpenMP parallization.\n"
@@ -616,7 +612,7 @@ def load_arguments():
 
 def load_config( config ):
     print("Using %s as the config."%(config))
-    paths, flags = {}, {"CXXFLAG":"", "OPENMPFLAG":"", "LIBFLAG":"", "CUDAFLAG":""}
+    paths, compilers, flags = {}, {"CXX":"", "CXX_MPI":""}, {"CXXFLAG":"", "OPENMPFLAG":"", "LIBFLAG":"", "CUDAFLAG":""}
     with open( config, 'r') as f:
         lines = f.readlines()
 
@@ -627,15 +623,20 @@ def load_config( config ):
         if temp[0] in flags:
             if len(temp) == 1: continue         # empty flag
             for i in range(1, len(temp)):
-                if temp[i][0] == "#": break     # comment flag
+                if temp[i][0] == "#": break     # commented out
                 flags[temp[0]] += temp[i] + " "
+        elif temp[0] in compilers:
+            if len(temp) == 1: continue         # empty compiler
+            if temp[1][0] == "#": continue      # comment out
+            if compilers[temp[0]] != "": color_print("Warning: The original compiler will be overwrited. <%s>: %s -->%s"%(temp[0], compilers[temp[0]], temp[1]), BCOLOR.WARNING)
+            compilers[temp[0]] = temp[1]        
         else:
             try:
                paths[temp[0]] = temp[1]
             except:
                paths[temp[0]] = ''
 
-    return paths, flags
+    return paths, compilers, flags
 
 def set_conditional_defaults( args ):
     if args["gravity"]:
@@ -698,16 +699,16 @@ def set_sims( **kwargs ):
 
     return {"SIMU_OPTION":opt_str}
 
-def set_compile( paths, flags, kwargs ):
+def set_compile( paths, compilers, flags, kwargs ):
     com_opt = {}
 
     # 1. complier. If mpi, overwrite the compiler to mpi.
-    com_opt["CXX"] = paths["MPI_PATH"] + "/bin/mpicxx" if kwargs["mpi"] else kwargs["serial_compiler"]
+    com_opt["CXX"] = paths["MPI_PATH"]+compilers["CXX_MPI"] if kwargs["mpi"] else compilers["CXX"]
 
     # 2. openmp flags
     if not kwargs["openmp"]: flags["OPENMPFLAG"] = ""
 
-    # 3. write to complie option
+    # 3. write flags to complie option dictionary
     for key, val in flags.items():
         com_opt[key] = val
 
@@ -919,7 +920,7 @@ args = load_arguments()
 #------------------------------------------------------------
 # 2. Prepare the makiefile args
 # 2.1 Load the cluster steup
-paths, flags = load_config( "%s/%s.config"%(GAMER_CONFIG_DIR, args["machine"]) )
+paths, compilers, flags = load_config( "%s/%s.config"%(GAMER_CONFIG_DIR, args["machine"]) )
 
 # 2.2 Check if the arguments are valid
 validation( paths, **args )
@@ -934,7 +935,7 @@ print("----------------------------------------")
 sims = set_sims( **args )
 
 # 2.4 setup compiler
-compiles = set_compile( paths, flags, args )
+compiles = set_compile( paths, compilers, flags, args )
 
 
 #------------------------------------------------------------
