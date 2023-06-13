@@ -28,7 +28,7 @@ typedef double gramfe_float;
 #else
 typedef float  gramfe_float;
 #endif // #ifdef GRAMFE_FFT_FLOAT8
-#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFTFFT )
+#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
 
 // short names for unsigned type
 typedef unsigned short     ushort;

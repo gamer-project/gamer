@@ -132,7 +132,7 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
 
 
 #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL && defined(GRAMFE_FFT_ENABLE_GPU) )
-   if ( h_Flu_TimeEvo != NULL) { CUDA_CHECK_ERROR(  cudaFreeHost ( h_Flu_TimeEvo )  ); h_Flu_TimeEvo = NULL; }
+   if ( h_GramFE_TimeEvo != NULL) { CUDA_CHECK_ERROR(  cudaFreeHost ( h_GramFE_TimeEvo )  ); h_GramFE_TimeEvo = NULL; }
 #  endif // #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL && defined(GRAMFE_FFT_ENABLE_GPU) )
 
 

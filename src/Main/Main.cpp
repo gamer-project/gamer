@@ -375,7 +375,7 @@ real  *h_SrcDlepProf_Radius                                        = NULL;
 #endif
 
 #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
-real (*h_Flu_TimeEvo) [2 * FLU_NXT]                                = NULL;
+real (*h_GramFE_TimeEvo) [2 * FLU_NXT]                             = NULL;
 #  endif // #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 

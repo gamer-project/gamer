@@ -5,19 +5,7 @@
 
 #if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
 
-#include "GramFE_ExtensionTables.h"
 #include "GSL.h"
-
-// precision of computation of time evolution operator, should be double or higher
-#define GRAMFE_MM
-
-#ifdef GRAMFE_MM
-namespace gramfe_mm_gsl = gsl_double_precision;
-#define gramfe_mm_real double
-#else // #ifdef GRAMFE_MM
-namespace gramfe_mm_gsl = gsl_single_precision;
-#define gramfe_mm_real float
-#endif // #ifdef GRAMFE_MM ... # else
 
 // precision of matrix multiplication, same as FLOAT8
 #ifdef FLOAT8
@@ -36,62 +24,11 @@ namespace gramfe_ev_gsl = gsl_single_precision;
 
 #ifdef __CUDACC__
 #include "cuda_complex.h"
-using gramfe_mm_complex_type = complex<gramfe_mm_real>;
 using gramfe_ev_complex_type = complex<gramfe_ev_real>;
 #else
 #include <complex.h>
-using gramfe_mm_complex_type = std::complex<gramfe_mm_real>;
 using gramfe_ev_complex_type = std::complex<gramfe_ev_real>;
 #endif
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Factorial
-// Description :  Compute the factorial of n.
-// Parameter   :  n  : integer
-// Return      :  n!
-//-------------------------------------------------------------------------------------------------------
-GPU_DEVICE
-int Factorial(int n) {
-     return (n==0) || (n==1) ? 1 : n* Factorial(n-1);
-} // FUNCTION : Factorial
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  CosineTaylorExpansion
-// Description :  Compute the taylor expansion of the cosine function at the point x with Nterms terms
-// Parameter   :  x       : Point at which to evaluate Taylor expansion
-//                NTerms  : Number of terms to retain in expansion
-// Return      :  Value of expansion
-//-------------------------------------------------------------------------------------------------------
-GPU_DEVICE
-gramfe_mm_real CosineTaylorExpansion(gramfe_mm_real x, int Nterms) {
-   gramfe_mm_real result = 0;
-
-   for (int i = 0; i  < Nterms; ++i) {
-      result += pow(-1, i) * (1 / ((gramfe_mm_real) Factorial(2 * i))) * pow(x, 2 * i   );
-   }
-
-   return result;
-} // FUNCTION : CosineTaylorExpansion
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  SineTaylorExpansion
-// Description :  Compute the taylor expansion of the sine function at the point x with Nterms terms
-// Parameter   :  x       : Point at which to evaluate Taylor expansion
-//                NTerms  : Number of terms to retain in expansion
-// Return      :  Value of expansion
-//-------------------------------------------------------------------------------------------------------
-GPU_DEVICE
-gramfe_mm_real SineTaylorExpansion(gramfe_mm_real x, int Nterms) {
-   gramfe_mm_real result = 0;
-
-   for (int i = 0; i  < Nterms; ++i) {
-      result += pow(-1, i) * ( 1 / ((gramfe_mm_real) Factorial(2 * i + 1)) ) * pow(x, 2 * i + 1);
-   }
-
-   return result;
-} // FUNCTION : SineTaylorExpansion
-
-
 
 #ifdef __CUDACC__
 # define CGPU_FLU_BLOCK_SIZE_X FLU_BLOCK_SIZE_X
@@ -101,134 +38,11 @@ gramfe_mm_real SineTaylorExpansion(gramfe_mm_real x, int Nterms) {
 # define CGPU_FLU_BLOCK_SIZE_Y 1
 #endif
 
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  GramFE_SetupTimeEvolutionMatrix
-// Description :  Compute the time evolution matrix for the Schrödinger equation and store result in output
-// Parameter   :  output  : Complex PS2 x 2 * FLU_NXT matrix (contiguous memory block of size 2 * FLU_NXT * PS2 * sizeof(real) bytes)
-//                dt      : Time step
-//                dh      : Grid spacing
-//                Eta     : m/hbar
-//-------------------------------------------------------------------------------------------------------
-GPU_DEVICE
-void GramFE_SetupTimeEvolutionMatrix(real (*output)[2 * FLU_NXT], real dt, real dh, real Eta) {
-
-// set up time evolution operator and filter
-   gramfe_mm_real K, Filter, Coeff;
-   gramfe_mm_complex_type ExpCoeff;
-
-   const gramfe_mm_real filterDecay  = (gramfe_mm_real) 32.0 * (gramfe_mm_real) 2.302585092994046; // decay of k-space filter ( 32 * log(10) )
-   const gramfe_mm_real filterDegree = (gramfe_mm_real) 100;                                       // degree of k-space filter
-   const gramfe_mm_real kmax         = (gramfe_mm_real) M_PI / dh;                                 // maximum value of k
-   const gramfe_mm_real dk           = (gramfe_mm_real) + 2.0 * kmax / GRAMFE_FLU_NXT;             // k steps in k-space
-   const gramfe_mm_real dT           = (gramfe_mm_real) - 0.5 * dt / Eta;                          // coefficient in time evolution operator
-
-// naively "exp(1j * Coeff)" should give the exact time evolution of the free Schrödinger equation
-// however, the time-evolution operator depends on higher-order derivatives
-// since these are unavailable for a finite ghost boundary size, the series needs to be truncated
-// the ideal Taylor expansion order using all available derivatives is FLU_GHOST_SIZE - 1
-// for FLU_GHOST_SIZE == 8, 4 terms in the cosine series and 3 terms in the sine series are retained
-   const int cosineNTerms = FLU_GHOST_SIZE / 2;
-   const int sineNTerms   = cosineNTerms - (int) ((FLU_GHOST_SIZE % 2) == 0);
-
-
-
-// set up momentum, filter and time evolution array
-#  ifndef __CUDACC__
-
-   gramfe_ev_complex_type (* Out)    [FLU_NXT]        = (gramfe_ev_complex_type (*)[       FLU_NXT]) output;
-   gramfe_mm_complex_type (* FFT)    [GRAMFE_FLU_NXT] = (gramfe_mm_complex_type (*)[GRAMFE_FLU_NXT]) GramFE_FFT;
-
-   gramfe_mm_complex_type GramFE_DFFT     [GRAMFE_FLU_NXT][GRAMFE_FLU_NXT];  //        exp(-i k^2 dt) * FFT
-   gramfe_mm_complex_type GramFE_IFFTDFFT [           PS2][GRAMFE_FLU_NXT];  // IFFT * exp(-i k^2 dt) * FFT
-   gramfe_mm_complex_type GramFE_Evolution[           PS2][       FLU_NXT];  // IFFT * exp(-i k^2 dt) * FFT * extension
-
-   for (int i=0; i<GRAMFE_FLU_NXT; i++)
-   {
-      K           = ( i <= GRAMFE_FLU_NXT/2 ) ? dk*i : dk*(i-GRAMFE_FLU_NXT);
-      Filter      = exp(-filterDecay * pow(fabs(K/kmax), 2*filterDegree));
-      Coeff       = SQR(K)*dT;
-      ExpCoeff    = gramfe_mm_complex_type(CosineTaylorExpansion(Coeff, cosineNTerms), SineTaylorExpansion(Coeff, sineNTerms)) * Filter;
-
-//    multiply FFT matrix by diagonal time evolution operator in k-space
-      for (int k=0; k<GRAMFE_FLU_NXT; k++)
-      {
-         GramFE_DFFT[i][k] = ExpCoeff * FFT[i][k];
-      }
-   } // for (int i=0; i<GRAMFE_FLU_NXT; i++)
-
-
-   gramfe_mm_gsl::matrix_complex_const_view extend     = gramfe_mm_gsl::matrix_complex_const_view_array(GramFE_Extend                     , GRAMFE_FLU_NXT, FLU_NXT);
-   gramfe_mm_gsl::matrix_complex_const_view ifft       = gramfe_mm_gsl::matrix_complex_const_view_array(GramFE_IFFT                       , PS2           , GRAMFE_FLU_NXT);
-   gramfe_mm_gsl::matrix_complex_const_view dfft       = gramfe_mm_gsl::matrix_complex_const_view_array((gramfe_mm_real*) GramFE_DFFT     , GRAMFE_FLU_NXT, GRAMFE_FLU_NXT);
-   gramfe_mm_gsl::matrix_complex_view       ifftdfft   = gramfe_mm_gsl::matrix_complex_view_array      ((gramfe_mm_real*) GramFE_IFFTDFFT , PS2,            GRAMFE_FLU_NXT);
-   gramfe_mm_gsl::matrix_complex_view       evolution  = gramfe_mm_gsl::matrix_complex_view_array      ((gramfe_mm_real*) GramFE_Evolution, PS2           , FLU_NXT);
-
-   gramfe_mm_gsl::blas_cgemm(CblasNoTrans, CblasNoTrans, {1.0,  0.0}, &ifft.matrix,     &dfft.matrix,   {0.0, 0.0}, &ifftdfft.matrix);
-   gramfe_mm_gsl::blas_cgemm(CblasNoTrans, CblasNoTrans, {1.0,  0.0}, &ifftdfft.matrix, &extend.matrix, {0.0, 0.0}, &evolution.matrix);
-
-   for (size_t i = 0; i < PS2; ++i) {
-      for (size_t j = 0; j < FLU_NXT; ++j) {
-         Out[i][j].real((real) GramFE_Evolution[i][j].real());
-         Out[i][j].imag((real) GramFE_Evolution[i][j].imag());
-      }
-   }
-
-#  else // #  ifndef __CUDACC__
-   const uint tx           = threadIdx.x;
-   const uint ty           = threadIdx.y;
-   const uint tid          = ty * CGPU_FLU_BLOCK_SIZE_X + tx;                // thread ID within block
-   const uint NThread      = CGPU_FLU_BLOCK_SIZE_X * CGPU_FLU_BLOCK_SIZE_Y;  // total number of threads within block
-
-
-   gramfe_mm_complex_type ifftdfft, out;
-   gramfe_ev_complex_type (* Out)    [PS2]            = (gramfe_ev_complex_type (*)[PS2])            output;
-   gramfe_mm_complex_type (* FFT)    [GRAMFE_FLU_NXT] = (gramfe_mm_complex_type (*)[GRAMFE_FLU_NXT]) GramFE_FFT;
-   gramfe_mm_complex_type (* IFFT)   [GRAMFE_FLU_NXT] = (gramfe_mm_complex_type (*)[GRAMFE_FLU_NXT]) GramFE_IFFT;
-   gramfe_mm_complex_type (* Extend) [FLU_NXT]        = (gramfe_mm_complex_type (*)[FLU_NXT])        GramFE_Extend;
-
-   int l, i;
-   for (uint index = tid; index < PS2 * FLU_NXT; index += NThread)
-   {
-      l = index / PS2;
-      i = index % PS2;
-      out = 0;
-
-//    IFFT * D * FFT * EXTEND
-      for (int j = 0; j < GRAMFE_FLU_NXT; ++j)
-      {
-         ifftdfft = 0;
-
-//       IFFT * D * FFT
-         for (int k = 0; k < GRAMFE_FLU_NXT; ++k)
-         {
-
-            K           = ( k <= GRAMFE_FLU_NXT/2 ) ? dk*k : dk*(k-GRAMFE_FLU_NXT);
-            Filter      = exp(-filterDecay * pow(fabs(K/kmax), 2*filterDegree));
-            Coeff       = SQR(K)*dT;
-            ExpCoeff    = gramfe_mm_complex_type(CosineTaylorExpansion(Coeff, cosineNTerms), SineTaylorExpansion(Coeff, sineNTerms)) * Filter;
-
-            ifftdfft += IFFT[i][k] * ExpCoeff * FFT[k][j];
-         }
-
-         out += ifftdfft * Extend[j][l];
-
-      }
-
-      Out[l][i] = out;
-   }
-#  endif // #  ifndef __CUDACC__ ... # else
-}
-
-
 // useful macros
-
 // convert to 1D index with ghost boundary
 # define to1D1(z,y,x) (  (z)                 * FLU_NXT * FLU_NXT +  (y)                 * FLU_NXT +  (x)                  )
 // convert to 1D index without ghost boundary
 # define to1D2(z,y,x) ( ((z)-FLU_GHOST_SIZE) * PS2     * PS2     + ((y)-FLU_GHOST_SIZE) * PS2     + ((x)-FLU_GHOST_SIZE)  )
-
-
 
 
 GPU_DEVICE
@@ -318,7 +132,7 @@ void CPU_ELBDMSolver_GramFE_MATMUL(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NX
    __shared__ gramfe_ev_complex_type s_In    [FLU_BLOCK_SIZE_Y][FLU_NXT];
    __shared__ gramfe_ev_complex_type s_Out   [FLU_BLOCK_SIZE_Y][PS2];
 
-   const int NPatchGroup                           = NULL_INT;
+   const int NPatchGroup = NULL_INT;
 
 #  else // #  ifdef __CUDACC__
 // allocate memory on stack within loop for CPU run
@@ -335,9 +149,6 @@ void CPU_ELBDMSolver_GramFE_MATMUL(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NX
 
 #  ifdef __CUDACC__
 // disabled by default, computing s_TimeEvo on CPU is much faster
-   //GramFE_SetupTimeEvolutionMatrix((real (*) [2 * FLU_NXT]) s_TimeEvo, dt, dh, Eta);
-
-
    gramfe_ev_complex_type* s_LinEvolve = (gramfe_ev_complex_type *) s_TimeEvo;
    gramfe_ev_complex_type* g_LinEvolve = (gramfe_ev_complex_type *) g_TimeEvo;
 

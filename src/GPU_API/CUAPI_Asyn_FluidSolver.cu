@@ -1,6 +1,5 @@
 #include "CUAPI.h"
 #include "CUFLU.h"
-#include "GramFE_ExtensionTables.h"
 #ifdef GPU
 
 #if   ( MODEL == HYDRO )
@@ -93,6 +92,7 @@ void CUFLU_ELBDMSolver_GramFE_FFT(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) 
                                     typename FFT::workspace_type workspace,
                                     typename IFFT::workspace_type workspace_inverse  );
 #  elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+void   ELBDM_GramFE_ComputeTimeEvolutionMatrix(real (*output)[2 * FLU_NXT], real dt, real dh, real Eta);
 __global__
 void CUFLU_ELBDMSolver_GramFE_MATMUL(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                                        real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
@@ -340,8 +340,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
    size_t h_FluTimeEvo_MemSize = 2 * FLU_NXT * PS2 * sizeof(real);
-   GramFE_SetupTimeEvolutionMatrix(h_Flu_TimeEvo, dt, dh, ELBDM_Eta);
-   CUDA_CHECK_ERROR( cudaMemcpyAsync( d_Flu_TimeEvo, h_Flu_TimeEvo, h_FluTimeEvo_MemSize, cudaMemcpyHostToDevice) );
+   ELBDM_GramFE_ComputeTimeEvolutionMatrix(h_GramFE_TimeEvo, dt, dh, ELBDM_Eta);
+   CUDA_CHECK_ERROR( cudaMemcpyAsync( d_Flu_TimeEvo, h_GramFE_TimeEvo, h_FluTimeEvo_MemSize, cudaMemcpyHostToDevice) );
 
 #  endif // GRAMFE_SCHEME
 

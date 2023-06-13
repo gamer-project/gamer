@@ -2,8 +2,6 @@
 
 #if (!defined(GPU) || (MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT && !defined(GRAMFE_FFT_ENABLE_GPU)))
 
-
-#include "GramFE_ExtensionTables.h"
 #include "GAMER.h"
 #include "CUFLU.h"
 
@@ -101,7 +99,7 @@ void CPU_ELBDMSolver_GramFE_FFT (   real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_
 void CPU_ELBDMSolver_GramFE_MATMUL (      real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
                                           real Flu_Array_Out[][FLU_NOUT   ][ CUBE(PS2) ],
                                           real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                          real Evolve    [][2 * FLU_NXT],
+                                          real TimeEvo[][2 * FLU_NXT],
                                           const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                                           const bool XYZ, const real MinDens );
 #endif // GRAMFE_SCHEME
@@ -274,9 +272,10 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
    CPU_ELBDMSolver_GramFE_FFT( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
                      XYZ, MinDens );
 #  elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-   GramFE_SetupTimeEvolutionMatrix(h_Flu_TimeEvo, dt, dh, ELBDM_Eta);
+// evaluate time evolution matrix
+   ELBDM_GramFE_ComputeTimeEvolutionMatrix(h_GramFE_TimeEvo, dt, dh, ELBDM_Eta);
 
-   CPU_ELBDMSolver_GramFE_MATMUL( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, h_Flu_TimeEvo, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
+   CPU_ELBDMSolver_GramFE_MATMUL( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, h_GramFE_TimeEvo, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
                      XYZ, MinDens );
 #  endif
 

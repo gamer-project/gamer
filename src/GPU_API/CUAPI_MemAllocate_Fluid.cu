@@ -118,7 +118,7 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
 
 
 #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
-   const long Flu_TimeEvo_MemSize = sizeof(real) * 2 * PS2 * FLU_NXT;
+   const long GramFE_TimeEvo_MemSize = sizeof(real) * 2 * PS2 * FLU_NXT;
 #  endif
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
@@ -163,7 +163,7 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
 #  endif // MHM/MHM_RP/CTU
 
 #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
-   TotalSize += Flu_TimeEvo_MemSize;
+   TotalSize += GramFE_TimeEvo_MemSize;
 #  endif
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
@@ -240,7 +240,7 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
    }
 
 #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
-   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_Flu_TimeEvo,          Flu_TimeEvo_MemSize  )  );
+   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_Flu_TimeEvo,          GramFE_TimeEvo_MemSize  )  );
 #  endif
 
 
@@ -294,7 +294,7 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
 
 
 #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
-   CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_Flu_TimeEvo,  Flu_TimeEvo_MemSize  )  );
+   CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_GramFE_TimeEvo,  GramFE_TimeEvo_MemSize  )  );
 #  endif
 
 
