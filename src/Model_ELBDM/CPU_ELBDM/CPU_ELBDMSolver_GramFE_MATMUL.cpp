@@ -44,14 +44,13 @@ using gramfe_mm_complex_type = std::complex<gramfe_mm_real>;
 using gramfe_ev_complex_type = std::complex<gramfe_ev_real>;
 #endif
 
-#ifndef __CUDACC__
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Factorial
 // Description :  Compute the factorial of n.
 // Parameter   :  n  : integer
 // Return      :  n!
 //-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
 int Factorial(int n) {
      return (n==0) || (n==1) ? 1 : n* Factorial(n-1);
 } // FUNCTION : Factorial
@@ -63,6 +62,7 @@ int Factorial(int n) {
 //                NTerms  : Number of terms to retain in expansion
 // Return      :  Value of expansion
 //-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
 gramfe_mm_real CosineTaylorExpansion(gramfe_mm_real x, int Nterms) {
    gramfe_mm_real result = 0;
 
@@ -80,6 +80,7 @@ gramfe_mm_real CosineTaylorExpansion(gramfe_mm_real x, int Nterms) {
 //                NTerms  : Number of terms to retain in expansion
 // Return      :  Value of expansion
 //-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
 gramfe_mm_real SineTaylorExpansion(gramfe_mm_real x, int Nterms) {
    gramfe_mm_real result = 0;
 
@@ -91,6 +92,16 @@ gramfe_mm_real SineTaylorExpansion(gramfe_mm_real x, int Nterms) {
 } // FUNCTION : SineTaylorExpansion
 
 
+
+#ifdef __CUDACC__
+# define CGPU_FLU_BLOCK_SIZE_X FLU_BLOCK_SIZE_X
+# define CGPU_FLU_BLOCK_SIZE_Y FLU_BLOCK_SIZE_Y
+#else
+# define CGPU_FLU_BLOCK_SIZE_X 1
+# define CGPU_FLU_BLOCK_SIZE_Y 1
+#endif
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  GramFE_SetupTimeEvolutionMatrix
 // Description :  Compute the time evolution matrix for the Schrödinger equation and store result in output
@@ -99,25 +110,18 @@ gramfe_mm_real SineTaylorExpansion(gramfe_mm_real x, int Nterms) {
 //                dh      : Grid spacing
 //                Eta     : m/hbar
 //-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
 void GramFE_SetupTimeEvolutionMatrix(real (*output)[2 * FLU_NXT], real dt, real dh, real Eta) {
 
 // set up time evolution operator and filter
    gramfe_mm_real K, Filter, Coeff;
    gramfe_mm_complex_type ExpCoeff;
 
-   gramfe_mm_complex_type GramFE_DFFT     [GRAMFE_FLU_NXT][GRAMFE_FLU_NXT];  //        exp(-i k^2 dt) * FFT
-   gramfe_mm_complex_type GramFE_IFFTDFFT [           PS2][GRAMFE_FLU_NXT];  // IFFT * exp(-i k^2 dt) * FFT
-   gramfe_mm_complex_type GramFE_Evolution[           PS2][       FLU_NXT];  // IFFT * exp(-i k^2 dt) * FFT * extension
-
-   gramfe_ev_complex_type (* out)    [FLU_NXT]        = (gramfe_ev_complex_type (*)[       FLU_NXT]) output;
-   gramfe_mm_complex_type (*ifft2)   [GRAMFE_FLU_NXT] = (gramfe_mm_complex_type (*)[GRAMFE_FLU_NXT]) GramFE_IFFT;
-   gramfe_mm_complex_type (* fft)    [GRAMFE_FLU_NXT] = (gramfe_mm_complex_type (*)[GRAMFE_FLU_NXT]) GramFE_FFT;
-
    const gramfe_mm_real filterDecay  = (gramfe_mm_real) 32.0 * (gramfe_mm_real) 2.302585092994046; // decay of k-space filter ( 32 * log(10) )
-   const gramfe_mm_real filterDegree = (gramfe_mm_real) 100;                                     // degree of k-space filter
-   const gramfe_mm_real kmax         = (gramfe_mm_real) M_PI / dh;                              // maximum value of k
-   const gramfe_mm_real dk           = (gramfe_mm_real) + 2.0 * kmax / GRAMFE_FLU_NXT;           // k steps in k-space
-   const gramfe_mm_real dT           = (gramfe_mm_real) - 0.5 * dt / Eta;                        // coefficient in time evolution operator
+   const gramfe_mm_real filterDegree = (gramfe_mm_real) 100;                                       // degree of k-space filter
+   const gramfe_mm_real kmax         = (gramfe_mm_real) M_PI / dh;                                 // maximum value of k
+   const gramfe_mm_real dk           = (gramfe_mm_real) + 2.0 * kmax / GRAMFE_FLU_NXT;             // k steps in k-space
+   const gramfe_mm_real dT           = (gramfe_mm_real) - 0.5 * dt / Eta;                          // coefficient in time evolution operator
 
 // naively "exp(1j * Coeff)" should give the exact time evolution of the free Schrödinger equation
 // however, the time-evolution operator depends on higher-order derivatives
@@ -127,7 +131,17 @@ void GramFE_SetupTimeEvolutionMatrix(real (*output)[2 * FLU_NXT], real dt, real 
    const int cosineNTerms = FLU_GHOST_SIZE / 2;
    const int sineNTerms   = cosineNTerms - (int) ((FLU_GHOST_SIZE % 2) == 0);
 
+
+
 // set up momentum, filter and time evolution array
+#  ifndef __CUDACC__
+
+   gramfe_ev_complex_type (* Out)    [FLU_NXT]        = (gramfe_ev_complex_type (*)[       FLU_NXT]) output;
+   gramfe_mm_complex_type (* FFT)    [GRAMFE_FLU_NXT] = (gramfe_mm_complex_type (*)[GRAMFE_FLU_NXT]) GramFE_FFT;
+
+   gramfe_mm_complex_type GramFE_DFFT     [GRAMFE_FLU_NXT][GRAMFE_FLU_NXT];  //        exp(-i k^2 dt) * FFT
+   gramfe_mm_complex_type GramFE_IFFTDFFT [           PS2][GRAMFE_FLU_NXT];  // IFFT * exp(-i k^2 dt) * FFT
+   gramfe_mm_complex_type GramFE_Evolution[           PS2][       FLU_NXT];  // IFFT * exp(-i k^2 dt) * FFT * extension
 
    for (int i=0; i<GRAMFE_FLU_NXT; i++)
    {
@@ -139,9 +153,10 @@ void GramFE_SetupTimeEvolutionMatrix(real (*output)[2 * FLU_NXT], real dt, real 
 //    multiply FFT matrix by diagonal time evolution operator in k-space
       for (int k=0; k<GRAMFE_FLU_NXT; k++)
       {
-         GramFE_DFFT[i][k] = ExpCoeff * fft[i][k];
+         GramFE_DFFT[i][k] = ExpCoeff * FFT[i][k];
       }
    } // for (int i=0; i<GRAMFE_FLU_NXT; i++)
+
 
    gramfe_mm_gsl::matrix_complex_const_view extend     = gramfe_mm_gsl::matrix_complex_const_view_array(GramFE_Extend                     , GRAMFE_FLU_NXT, FLU_NXT);
    gramfe_mm_gsl::matrix_complex_const_view ifft       = gramfe_mm_gsl::matrix_complex_const_view_array(GramFE_IFFT                       , PS2           , GRAMFE_FLU_NXT);
@@ -154,12 +169,56 @@ void GramFE_SetupTimeEvolutionMatrix(real (*output)[2 * FLU_NXT], real dt, real 
 
    for (size_t i = 0; i < PS2; ++i) {
       for (size_t j = 0; j < FLU_NXT; ++j) {
-         out[i][j].real((real) GramFE_Evolution[i][j].real());
-         out[i][j].imag((real) GramFE_Evolution[i][j].imag());
+         Out[i][j].real((real) GramFE_Evolution[i][j].real());
+         Out[i][j].imag((real) GramFE_Evolution[i][j].imag());
       }
    }
+
+#  else // #  ifndef __CUDACC__
+   const uint tx           = threadIdx.x;
+   const uint ty           = threadIdx.y;
+   const uint tid          = ty * CGPU_FLU_BLOCK_SIZE_X + tx;                // thread ID within block
+   const uint NThread      = CGPU_FLU_BLOCK_SIZE_X * CGPU_FLU_BLOCK_SIZE_Y;  // total number of threads within block
+
+
+   gramfe_mm_complex_type ifftdfft, out;
+   gramfe_ev_complex_type (* Out)    [PS2]            = (gramfe_ev_complex_type (*)[PS2])            output;
+   gramfe_mm_complex_type (* FFT)    [GRAMFE_FLU_NXT] = (gramfe_mm_complex_type (*)[GRAMFE_FLU_NXT]) GramFE_FFT;
+   gramfe_mm_complex_type (* IFFT)   [GRAMFE_FLU_NXT] = (gramfe_mm_complex_type (*)[GRAMFE_FLU_NXT]) GramFE_IFFT;
+   gramfe_mm_complex_type (* Extend) [FLU_NXT]        = (gramfe_mm_complex_type (*)[FLU_NXT])        GramFE_Extend;
+
+   int l, i;
+   for (uint index = tid; index < PS2 * FLU_NXT; index += NThread)
+   {
+      l = index / PS2;
+      i = index % PS2;
+      out = 0;
+
+//    IFFT * D * FFT * EXTEND
+      for (int j = 0; j < GRAMFE_FLU_NXT; ++j)
+      {
+         ifftdfft = 0;
+
+//       IFFT * D * FFT
+         for (int k = 0; k < GRAMFE_FLU_NXT; ++k)
+         {
+
+            K           = ( k <= GRAMFE_FLU_NXT/2 ) ? dk*k : dk*(k-GRAMFE_FLU_NXT);
+            Filter      = exp(-filterDecay * pow(fabs(K/kmax), 2*filterDegree));
+            Coeff       = SQR(K)*dT;
+            ExpCoeff    = gramfe_mm_complex_type(CosineTaylorExpansion(Coeff, cosineNTerms), SineTaylorExpansion(Coeff, sineNTerms)) * Filter;
+
+            ifftdfft += IFFT[i][k] * ExpCoeff * FFT[k][j];
+         }
+
+         out += ifftdfft * Extend[j][l];
+
+      }
+
+      Out[l][i] = out;
+   }
+#  endif // #  ifndef __CUDACC__ ... # else
 }
-#endif // #ifndef __CUDACC__
 
 
 // useful macros
@@ -169,14 +228,6 @@ void GramFE_SetupTimeEvolutionMatrix(real (*output)[2 * FLU_NXT], real dt, real 
 // convert to 1D index without ghost boundary
 # define to1D2(z,y,x) ( ((z)-FLU_GHOST_SIZE) * PS2     * PS2     + ((y)-FLU_GHOST_SIZE) * PS2     + ((x)-FLU_GHOST_SIZE)  )
 
-
-#ifdef __CUDACC__
-# define CGPU_FLU_BLOCK_SIZE_X FLU_BLOCK_SIZE_X
-# define CGPU_FLU_BLOCK_SIZE_Y FLU_BLOCK_SIZE_Y
-#else
-# define CGPU_FLU_BLOCK_SIZE_X 1
-# define CGPU_FLU_BLOCK_SIZE_Y 1
-#endif
 
 
 
@@ -283,6 +334,10 @@ void CPU_ELBDMSolver_GramFE_MATMUL(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NX
 #  endif // #  ifdef __CUDACC__ ... else
 
 #  ifdef __CUDACC__
+// disabled by default, computing s_TimeEvo on CPU is much faster
+   //GramFE_SetupTimeEvolutionMatrix((real (*) [2 * FLU_NXT]) s_TimeEvo, dt, dh, Eta);
+
+
    gramfe_ev_complex_type* s_LinEvolve = (gramfe_ev_complex_type *) s_TimeEvo;
    gramfe_ev_complex_type* g_LinEvolve = (gramfe_ev_complex_type *) g_TimeEvo;
 
@@ -299,6 +354,7 @@ void CPU_ELBDMSolver_GramFE_MATMUL(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NX
       col = i % FLU_NXT;
       s_LinEvolve[col * PS2 + row] = g_LinEvolve[i];
    }
+
 #  endif // #  ifdef __CUDACC__
 
 
