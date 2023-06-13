@@ -205,16 +205,16 @@ void Aux_TakeNote()
       fprintf( Note, "GRAMFE_SCHEME                   FFT\n" );
 
 #     ifdef GRAMFE_FFT_ENABLE_GPU
-      fprintf( Note, "GRAMFE_FFT_ENABLE_GPU    ON\n" );
+      fprintf( Note, "GRAMFE_FFT_ENABLE_GPU           ON\n" );
 #     else // # ifdef GRAMFE_FFT_ENABLE_GPU
-      fprintf( Note, "GRAMFE_FFT_ENABLE_GPU    OFF\n" );
+      fprintf( Note, "GRAMFE_FFT_ENABLE_GPU           OFF\n" );
 #     endif // # ifdef GRAMFE_FFT_ENABLE_GPU ... # else
 
 #     elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
       fprintf( Note, "GRAMFE_SCHEME                   MATMUL\n" );
 #     else
 #     error : ERROR : unsupported GRAMFE_SCHEME !!
-#     endif
+#     endif // GRAMFE_SCHEME
 
 
 //    c.1 options in WAVE_FD
@@ -556,7 +556,8 @@ void Aux_TakeNote()
 #     else // # ifdef GRAMFE_FFT_FLOAT8
       fprintf( Note, "GRAMFE_FFT_FLOAT8               OFF\n" );
 #     endif // # ifdef GRAMFE_FFT_FLOAT8 ... # else
-#     endif
+#     endif // # if ( GRAMFE_SCHEME == GRAMFE_FFT )
+#     endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
 
 #     else
 #     error : ERROR : unsupported MODEL !!

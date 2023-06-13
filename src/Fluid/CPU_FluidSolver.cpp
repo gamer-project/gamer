@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#if (!defined(GPU) || ((MODEL == ELBDM) && (WAVE_SCHEME == WAVE_GRAMFE) && (GRAMFE_SCHEME == GRAMFE_FFT) && !defined(GRAMFE_FFT_ENABLE_GPU)))
+#if (!defined(GPU) || (MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT && !defined(GRAMFE_FFT_ENABLE_GPU)))
 
 
 #include "GramFE_ExtensionTables.h"
@@ -125,6 +125,7 @@ static real (*h_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ] = NULL;
 static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 #endif
 #endif // FLU_SCHEME
+
 
 
 

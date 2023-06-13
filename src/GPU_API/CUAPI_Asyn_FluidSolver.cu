@@ -150,7 +150,7 @@ static real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 #endif // FLU_SCHEME
 #endif // #if ( MODEL == HYDRO )
 
-#if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(GRAMFE_FFT_ENABLE_GPU) && defined(ENABLE_FAST_GRAMFE) )
+#if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
 extern real (*d_Flu_TimeEvo)[2 * FLU_NXT];
 #endif
 #ifdef UNSPLIT_GRAVITY

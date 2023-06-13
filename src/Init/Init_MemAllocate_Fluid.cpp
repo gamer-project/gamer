@@ -92,9 +92,9 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
 #  endif
 #  endif // FLU_SCHEME
 
-#  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(ENABLE_FAST_GRAMFE) )
+#  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
    h_Flu_TimeEvo  = new real [PS2][2 * FLU_NXT];
-#  endif // #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(ENABLE_FAST_GRAMFE) )
+#  endif // #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 } // FUNCTION : Init_MemAllocate_Fluid
 

@@ -66,9 +66,9 @@ void End_MemFree_Fluid()
 #  endif
 #  endif // FLU_SCHEME
 
-#  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(ENABLE_FAST_GRAMFE) )
+#  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
    delete [] h_Flu_TimeEvo;         h_Flu_TimeEvo         = NULL;
-#  endif // #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(ENABLE_FAST_GRAMFE) )
+#  endif // #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 } // FUNCTION : End_MemFree_Fluid
 
