@@ -319,8 +319,8 @@ void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
    gramfe_float Coeff;                                                                       // dT * k^2
    complex_type ExpCoeff[GRAMFE_FLU_NXT];                                                    // exp(- 1j * dt/(2*ELBDM_ETA) * k^2)
 
-   const gramfe_float filterDecay  = (gramfe_float) 32.0 * (gramfe_float) 2.302585092994046; // decay of k-space filter ( 32 * log(10) )
-   const gramfe_float filterDegree = (gramfe_float) 100;                                     // degree of k-space filter
+   const gramfe_float filterDecay  = (gramfe_float) 16.0 * (gramfe_float) 2.302585092994046; // decay of k-space filter ( 32 * log(10) )
+   const gramfe_float filterDegree = (gramfe_float) 50;                                      // degree of k-space filter
    const gramfe_float kmax         = (gramfe_float) M_PI * _dh;                              // maximum value of k
    const gramfe_float dk           = (gramfe_float) + 2.0 * kmax / GRAMFE_FLU_NXT;           // k steps in k-space
    const gramfe_float dT           = (gramfe_float) - 0.5 * dt / Eta;                        // coefficient in time evolution operator
