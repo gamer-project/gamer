@@ -91,8 +91,8 @@ void ELBDM_GramFE_ComputeTimeEvolutionMatrix(gramfe_matmul_float (*output)[2 * F
    gramfe_evo_float K, Filter, Coeff;
    gramfe_evo_complex_type ExpCoeff;
 
-   const gramfe_evo_float filterDecay  = (gramfe_evo_float) 32.0 * (gramfe_evo_float) 2.302585092994046; // decay of k-space filter ( 32 * log(10) )
-   const gramfe_evo_float filterDegree = (gramfe_evo_float) 100;                                       // degree of k-space filter
+   const gramfe_evo_float filterDecay  = (gramfe_evo_float) 16.0 * (gramfe_evo_float) 2.302585092994046; // decay of k-space filter ( 32 * log(10) )
+   const gramfe_evo_float filterDegree = (gramfe_evo_float) 50;                                       // degree of k-space filter
    const gramfe_evo_float kmax         = (gramfe_evo_float) M_PI / dh;                                 // maximum value of k
    const gramfe_evo_float dk           = (gramfe_evo_float) + 2.0 * kmax / GRAMFE_FLU_NXT;             // k steps in k-space
    const gramfe_evo_float dT           = (gramfe_evo_float) - 0.5 * dt / Eta;                          // coefficient in time evolution operator

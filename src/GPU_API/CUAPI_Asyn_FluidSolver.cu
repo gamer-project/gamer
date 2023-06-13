@@ -97,7 +97,7 @@ __global__
 void CUFLU_ELBDMSolver_GramFE_MATMUL(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                                        real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
                                        real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                       real g_Evolve   [][FLU_NXT * 2],
+                                       gramfe_matmul_float g_Evolve   [][FLU_NXT * 2],
                                        const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                        const bool XYZ, const real MinDens);
 #  endif // GRAMFE_SCHEME
@@ -321,11 +321,11 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 #  elif ( MODEL == ELBDM )
 
-#  if ( WAVE_SCHEME == WAVE_GRAMFE && defined( GRAMFE_ENABLE_GPU ) )
+#  if ( WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT && defined( GRAMFE_FFT_ENABLE_GPU ) )
    uint cufftdx_shared_memory_size;
    typename  FFT::workspace_type cufftdx_workspace;
    typename IFFT::workspace_type cufftdx_iworkspace;
-#  endif // #  if ( WAVE_SCHEME == WAVE_GRAMFE && defined( GRAMFE_ENABLE_GPU ) )
+#  endif // #  #  if ( WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT && defined( GRAMFE_FFT_ENABLE_GPU ) )
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( useWaveFlag ) {

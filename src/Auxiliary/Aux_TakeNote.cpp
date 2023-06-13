@@ -596,6 +596,14 @@ void Aux_TakeNote()
       fprintf( Note, "GRAMFE_FFT_FLOAT8               OFF\n" );
 #     endif // # ifdef GRAMFE_FFT_FLOAT8 ... # else
 #     endif // # if ( GRAMFE_SCHEME == GRAMFE_FFT )
+
+#     if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+#     ifdef GRAMFE_MATMUL_FLOAT8
+      fprintf( Note, "GRAMFE_MATMUL_FLOAT8            ON\n" );
+#     else // # ifdef GRAMFE_MATMUL_FLOAT8
+      fprintf( Note, "GRAMFE_MATMUL_FLOAT8            OFF\n" );
+#     endif // # ifdef GRAMFE_MATMUL_FLOAT8 ... # else
+#     endif // # if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 #     endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
 
 #     else
