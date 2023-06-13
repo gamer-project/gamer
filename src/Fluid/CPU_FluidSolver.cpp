@@ -99,7 +99,7 @@ void CPU_ELBDMSolver_GramFE_FFT (   real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_
 void CPU_ELBDMSolver_GramFE_MATMUL (      real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
                                           real Flu_Array_Out[][FLU_NOUT   ][ CUBE(PS2) ],
                                           real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                          real TimeEvo[][2 * FLU_NXT],
+                                          gramfe_matmul_float TimeEvo[][2 * FLU_NXT],
                                           const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                                           const bool XYZ, const real MinDens );
 #endif // GRAMFE_SCHEME

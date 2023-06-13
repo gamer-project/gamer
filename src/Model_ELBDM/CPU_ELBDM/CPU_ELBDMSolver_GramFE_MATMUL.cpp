@@ -7,27 +7,21 @@
 
 #include "GSL.h"
 
-// precision of matrix multiplication, same as FLOAT8
-#ifdef FLOAT8
-#define GRAMFE_EV
-#endif
-
-#ifdef GRAMFE_EV
-namespace gramfe_ev_gsl = gsl_double_precision;
-#define gramfe_ev_real double
-#else // #ifdef GRAMFE_EV
-namespace gramfe_ev_gsl = gsl_single_precision;
-#define gramfe_ev_real float
-#endif // #ifdef GRAMFE_EV ... # else
+// precision of matrix multiplication
+#ifdef GRAMFE_MATMUL_FLOAT8
+namespace gramfe_matmul_gsl = gsl_double_precision;
+#else // #ifdef GRAMFE_MATMUL_FLOAT8
+namespace gramfe_matmul_gsl = gsl_single_precision;
+#endif // #ifdef GRAMFE_MATMUL_FLOAT8 ... # else
 
 
 
 #ifdef __CUDACC__
 #include "cuda_complex.h"
-using gramfe_ev_complex_type = complex<gramfe_ev_real>;
+using gramfe_matmul_complex_type = complex<gramfe_matmul_float>;
 #else
 #include <complex.h>
-using gramfe_ev_complex_type = std::complex<gramfe_ev_real>;
+using gramfe_matmul_complex_type = std::complex<gramfe_matmul_float>;
 #endif
 
 #ifdef __CUDACC__
@@ -81,9 +75,9 @@ static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                            real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
                            int NPatchGroup,
                            const uint j_gap, const uint k_gap,
-                           gramfe_ev_complex_type  s_In       [][FLU_NXT],
-                           gramfe_ev_complex_type  s_Out      [][PS2],
-                           gramfe_ev_complex_type* s_TimeEvo,
+                           gramfe_matmul_complex_type  s_In       [][FLU_NXT],
+                           gramfe_matmul_complex_type  s_Out      [][PS2],
+                           gramfe_matmul_complex_type* s_TimeEvo,
                            const bool FinalOut, const int XYZ, const real MinDens
                            );
 
@@ -114,14 +108,14 @@ __global__
 void CUFLU_ELBDMSolver_GramFE_MATMUL(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                                        real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
                                        real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                       real g_TimeEvo  [][FLU_NXT * 2],
+                                       gramfe_matmul_float g_TimeEvo  [][FLU_NXT * 2],
                                        const real dt, const real dh, const real Eta, const bool StoreFlux,
                                        const bool XYZ, const real MinDens )
 #else
 void CPU_ELBDMSolver_GramFE_MATMUL(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                                        real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
                                        real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                       real g_TimeEvo  [][FLU_NXT * 2],
+                                       gramfe_matmul_float g_TimeEvo  [][FLU_NXT * 2],
                                        const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                                        const bool XYZ, const real MinDens )
 #endif
@@ -129,28 +123,28 @@ void CPU_ELBDMSolver_GramFE_MATMUL(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NX
 
 #  ifdef __CUDACC__
 // create memories for columns of input field
-   __shared__ gramfe_ev_complex_type s_In    [FLU_BLOCK_SIZE_Y][FLU_NXT];
-   __shared__ gramfe_ev_complex_type s_Out   [FLU_BLOCK_SIZE_Y][PS2];
+   __shared__ gramfe_matmul_complex_type s_In    [FLU_BLOCK_SIZE_Y][FLU_NXT];
+   __shared__ gramfe_matmul_complex_type s_Out   [FLU_BLOCK_SIZE_Y][PS2];
 
    const int NPatchGroup = NULL_INT;
 
 #  else // #  ifdef __CUDACC__
 // allocate memory on stack within loop for CPU run
-   gramfe_ev_complex_type (*s_In)        [FLU_NXT] = NULL;
-   gramfe_ev_complex_type (*s_Out)       [PS2]     = NULL;
+   gramfe_matmul_complex_type (*s_In)        [FLU_NXT] = NULL;
+   gramfe_matmul_complex_type (*s_Out)       [PS2]     = NULL;
 #  endif // #  ifdef __CUDACC__ ... else
 
 // time evolution matrix
 #  ifdef __CUDACC__
-   __shared__ gramfe_ev_complex_type s_TimeEvo[PS2 * FLU_NXT];
+   __shared__ gramfe_matmul_complex_type s_TimeEvo[PS2 * FLU_NXT];
 #  else // #  ifdef __CUDACC__
-              gramfe_ev_complex_type* s_TimeEvo = (gramfe_ev_complex_type *) g_TimeEvo;
+              gramfe_matmul_complex_type* s_TimeEvo = (gramfe_matmul_complex_type *) g_TimeEvo;
 #  endif // #  ifdef __CUDACC__ ... else
 
 #  ifdef __CUDACC__
 // disabled by default, computing s_TimeEvo on CPU is much faster
-   gramfe_ev_complex_type* s_LinEvolve = (gramfe_ev_complex_type *) s_TimeEvo;
-   gramfe_ev_complex_type* g_LinEvolve = (gramfe_ev_complex_type *) g_TimeEvo;
+   gramfe_matmul_complex_type* s_LinEvolve = (gramfe_matmul_complex_type *) s_TimeEvo;
+   gramfe_matmul_complex_type* g_LinEvolve = (gramfe_matmul_complex_type *) g_TimeEvo;
 
 
    const uint tx           = threadIdx.x;
@@ -220,9 +214,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
                      int NPatchGroup,
                      const uint j_gap, const uint k_gap,
-                     gramfe_ev_complex_type  s_In       [][FLU_NXT],
-                     gramfe_ev_complex_type  s_Out      [][PS2],
-                     gramfe_ev_complex_type* s_TimeEvo,
+                     gramfe_matmul_complex_type  s_In       [][FLU_NXT],
+                     gramfe_matmul_complex_type  s_Out      [][PS2],
+                     gramfe_matmul_complex_type* s_TimeEvo,
                      const bool FinalOut,
                      const int XYZ, const real MinDens
                   )
@@ -241,12 +235,12 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #     else
 
 //    create arrays for columns of various intermediate fields on the stack
-      gramfe_ev_complex_type* s_In_1PG  = (gramfe_ev_complex_type* ) malloc( FLU_NXT * sizeof(gramfe_ev_complex_type) ); // allocate memory for fourier transform
-      gramfe_ev_complex_type* s_Out_1PG = (gramfe_ev_complex_type* ) malloc(     PS2 * sizeof(gramfe_ev_complex_type) ); // allocate memory for fourier transform
+      gramfe_matmul_complex_type* s_In_1PG  = (gramfe_matmul_complex_type* ) malloc( FLU_NXT * sizeof(gramfe_matmul_complex_type) ); // allocate memory for fourier transform
+      gramfe_matmul_complex_type* s_Out_1PG = (gramfe_matmul_complex_type* ) malloc(     PS2 * sizeof(gramfe_matmul_complex_type) ); // allocate memory for fourier transform
 
-      gramfe_ev_gsl::vector_complex_const_view Input_view  = gramfe_ev_gsl::vector_complex_const_view_array ((gramfe_ev_gsl::gsl_real*) s_In_1PG ,      FLU_NXT);
-      gramfe_ev_gsl::vector_complex_view       Output_view = gramfe_ev_gsl::vector_complex_view_array       ((gramfe_ev_gsl::gsl_real*) s_Out_1PG, PS2         );
-      gramfe_ev_gsl::matrix_complex_const_view Evo_view    = gramfe_ev_gsl::matrix_complex_const_view_array ((gramfe_ev_gsl::gsl_real*) s_TimeEvo, PS2, FLU_NXT);
+      gramfe_matmul_gsl::vector_complex_const_view Input_view  = gramfe_matmul_gsl::vector_complex_const_view_array ((gramfe_matmul_gsl::gsl_real*) s_In_1PG ,      FLU_NXT);
+      gramfe_matmul_gsl::vector_complex_view       Output_view = gramfe_matmul_gsl::vector_complex_view_array       ((gramfe_matmul_gsl::gsl_real*) s_Out_1PG, PS2         );
+      gramfe_matmul_gsl::matrix_complex_const_view Evo_view    = gramfe_matmul_gsl::matrix_complex_const_view_array ((gramfe_matmul_gsl::gsl_real*) s_TimeEvo, PS2, FLU_NXT);
 
 //    in CPU mode, every thread works on one patch group at a time and corresponds to one block in the grid of the GPU solver
 #     pragma omp for schedule( runtime ) private ( s_In, s_Out )
@@ -264,8 +258,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          const uint ty            = 0;
 
 
-         s_In     = (gramfe_ev_complex_type (*)[FLU_NXT]) s_In_1PG;
-         s_Out    = (gramfe_ev_complex_type (*)[PS2])    s_Out_1PG;
+         s_In     = (gramfe_matmul_complex_type (*)[FLU_NXT]) s_In_1PG;
+         s_Out    = (gramfe_matmul_complex_type (*)[PS2])    s_Out_1PG;
 
 #        endif // # ifdef __CUDACC__ ... # else
 
@@ -282,8 +276,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
          uint NColumnOnce = MIN( NColumnTotal, CGPU_FLU_BLOCK_SIZE_Y );     // number of columns updated per iteration
 
-         gramfe_ev_complex_type Psi_New;             // buffer for left and right Gram coefficients
-         gramfe_ev_real   Amp_New, Re_New, Im_New;  // store density, real and imaginary part to apply minimum density check
+         gramfe_matmul_complex_type Psi_New;             // buffer for left and right Gram coefficients
+         gramfe_matmul_float   Amp_New, Re_New, Im_New;  // store density, real and imaginary part to apply minimum density check
 
 //       loop over all data columns
          while ( Column0 < NColumnTotal )
@@ -320,7 +314,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
             __syncthreads();
 #           else
-            gramfe_ev_gsl::blas_cgemv(CblasNoTrans, {1.0, 0.0}, &Evo_view.matrix, &Input_view.vector, {0.0, 0.0}, &Output_view.vector);
+            gramfe_matmul_gsl::blas_cgemv(CblasNoTrans, {1.0, 0.0}, &Evo_view.matrix, &Input_view.vector, {0.0, 0.0}, &Output_view.vector);
 #           endif
 
 

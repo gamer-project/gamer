@@ -384,7 +384,7 @@ real  *h_SrcDlepProf_Radius                                        = NULL;
 #endif
 
 #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
-real (*h_GramFE_TimeEvo) [2 * FLU_NXT]                             = NULL;
+gramfe_matmul_float (*h_GramFE_TimeEvo) [2 * FLU_NXT]                   = NULL;
 #  endif // #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 
@@ -418,7 +418,7 @@ real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 #endif // FLU_SCHEME
 
 #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
-real (*d_Flu_TimeEvo)[2 * FLU_NXT]                                 = NULL;
+gramfe_matmul_float (*d_Flu_TimeEvo)[2 * FLU_NXT]                  = NULL;
 #endif
 
 #ifdef GRAVITY

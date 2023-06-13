@@ -39,7 +39,7 @@ extern real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif // FLU_SCHEME
 
 #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
-extern real (*d_Flu_TimeEvo)[2 * FLU_NXT];
+extern gramfe_matmul_float (*d_Flu_TimeEvo)[2 * FLU_NXT];
 #endif
 
 #if ( MODEL != HYDRO  &&  MODEL != ELBDM )

@@ -92,7 +92,7 @@ void CUFLU_ELBDMSolver_GramFE_FFT(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) 
                                     typename FFT::workspace_type workspace,
                                     typename IFFT::workspace_type workspace_inverse  );
 #  elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-void   ELBDM_GramFE_ComputeTimeEvolutionMatrix(real (*output)[2 * FLU_NXT], real dt, real dh, real Eta);
+void   ELBDM_GramFE_ComputeTimeEvolutionMatrix(gramfe_matmul_float (*output)[2 * FLU_NXT], real dt, real dh, real Eta);
 __global__
 void CUFLU_ELBDMSolver_GramFE_MATMUL(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                                        real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
@@ -162,7 +162,7 @@ static real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 #endif // #if ( MODEL == HYDRO )
 
 #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
-extern real (*d_Flu_TimeEvo)[2 * FLU_NXT];
+extern gramfe_matmul_float (*d_Flu_TimeEvo)[2 * FLU_NXT];
 #endif
 #ifdef UNSPLIT_GRAVITY
 extern real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ];
@@ -363,7 +363,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 #  elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
-   size_t h_FluTimeEvo_MemSize = 2 * FLU_NXT * PS2 * sizeof(real);
+   size_t h_FluTimeEvo_MemSize = 2 * FLU_NXT * PS2 * sizeof(gramfe_matmul_float);
    ELBDM_GramFE_ComputeTimeEvolutionMatrix(h_GramFE_TimeEvo, dt, dh, ELBDM_Eta);
    CUDA_CHECK_ERROR( cudaMemcpyAsync( d_Flu_TimeEvo, h_GramFE_TimeEvo, h_FluTimeEvo_MemSize, cudaMemcpyHostToDevice) );
 

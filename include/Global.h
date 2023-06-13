@@ -394,7 +394,7 @@ extern real        *h_SrcDlepProf_Radius;
 
 
 #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
-extern real       (*h_GramFE_TimeEvo)[2 * FLU_NXT];
+extern gramfe_matmul_float  (*h_GramFE_TimeEvo)[2 * FLU_NXT];
 #endif
 
 

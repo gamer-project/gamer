@@ -12,26 +12,25 @@
 #include <complex.h>
 
 
-#ifdef GRAMFE_MM
-namespace gramfe_mm_gsl = gsl_double_precision;
-#define gramfe_mm_real double
-#else // #ifdef GRAMFE_MM
-namespace gramfe_mm_gsl = gsl_single_precision;
-#define gramfe_mm_real float
-#endif // #ifdef GRAMFE_MM ... # else
+#ifdef GRAMFE_MM_FLOAT8
+namespace gramfe_matmul_gsl = gsl_double_precision;
+#else // #ifdef GRAMFE_MM_FLOAT8
+namespace gramfe_matmul_gsl = gsl_single_precision;
+#endif // #ifdef GRAMFE_MM_FLOAT8 ... # else
+
+#define GRAMFE_EV_FLOAT8
+
+#ifdef GRAMFE_EV_FLOAT8
+namespace gramfe_evo_gsl = gsl_double_precision;
+#define gramfe_evo_float double
+#else // #ifdef GRAMFE_EV_FLOAT8
+namespace gramfe_evo_gsl = gsl_single_precision;
+#define gramfe_evo_float float
+#endif // #ifdef GRAMFE_EV_FLOAT8 ... # else
 
 
-#ifdef GRAMFE_EV
-namespace gramfe_ev_gsl = gsl_double_precision;
-#define gramfe_ev_real double
-#else // #ifdef GRAMFE_EV
-namespace gramfe_ev_gsl = gsl_single_precision;
-#define gramfe_ev_real float
-#endif // #ifdef GRAMFE_EV ... # else
-
-
-using gramfe_mm_complex_type = std::complex<gramfe_mm_real>;
-using gramfe_ev_complex_type = std::complex<gramfe_ev_real>;
+using gramfe_matmul_complex_type = std::complex<gramfe_matmul_float>;
+using gramfe_evo_complex_type    = std::complex<gramfe_evo_float>;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Factorial
@@ -50,11 +49,11 @@ int Factorial(int n) {
 //                NTerms  : Number of terms to retain in expansion
 // Return      :  Value of expansion
 //-------------------------------------------------------------------------------------------------------
-gramfe_mm_real CosineTaylorExpansion(gramfe_mm_real x, int Nterms) {
-   gramfe_mm_real result = 0;
+gramfe_evo_float CosineTaylorExpansion(gramfe_evo_float x, int Nterms) {
+   gramfe_evo_float result = 0;
 
    for (int i = 0; i  < Nterms; ++i) {
-      result += pow(-1, i) * (1 / ((gramfe_mm_real) Factorial(2 * i))) * pow(x, 2 * i   );
+      result += pow(-1, i) * (1 / ((gramfe_evo_float) Factorial(2 * i))) * pow(x, 2 * i   );
    }
 
    return result;
@@ -67,11 +66,11 @@ gramfe_mm_real CosineTaylorExpansion(gramfe_mm_real x, int Nterms) {
 //                NTerms  : Number of terms to retain in expansion
 // Return      :  Value of expansion
 //-------------------------------------------------------------------------------------------------------
-gramfe_mm_real SineTaylorExpansion(gramfe_mm_real x, int Nterms) {
-   gramfe_mm_real result = 0;
+gramfe_evo_float SineTaylorExpansion(gramfe_evo_float x, int Nterms) {
+   gramfe_evo_float result = 0;
 
    for (int i = 0; i  < Nterms; ++i) {
-      result += pow(-1, i) * ( 1 / ((gramfe_mm_real) Factorial(2 * i + 1)) ) * pow(x, 2 * i + 1);
+      result += pow(-1, i) * ( 1 / ((gramfe_evo_float) Factorial(2 * i + 1)) ) * pow(x, 2 * i + 1);
    }
 
    return result;
@@ -86,17 +85,17 @@ gramfe_mm_real SineTaylorExpansion(gramfe_mm_real x, int Nterms) {
 //                dh      : Grid spacing
 //                Eta     : m/hbar
 //-------------------------------------------------------------------------------------------------------
-void ELBDM_GramFE_ComputeTimeEvolutionMatrix(real (*output)[2 * FLU_NXT], real dt, real dh, real Eta)
+void ELBDM_GramFE_ComputeTimeEvolutionMatrix(gramfe_matmul_float (*output)[2 * FLU_NXT], real dt, real dh, real Eta)
 {
 // set up time evolution operator and filter
-   gramfe_mm_real K, Filter, Coeff;
-   gramfe_mm_complex_type ExpCoeff;
+   gramfe_evo_float K, Filter, Coeff;
+   gramfe_evo_complex_type ExpCoeff;
 
-   const gramfe_mm_real filterDecay  = (gramfe_mm_real) 32.0 * (gramfe_mm_real) 2.302585092994046; // decay of k-space filter ( 32 * log(10) )
-   const gramfe_mm_real filterDegree = (gramfe_mm_real) 100;                                       // degree of k-space filter
-   const gramfe_mm_real kmax         = (gramfe_mm_real) M_PI / dh;                                 // maximum value of k
-   const gramfe_mm_real dk           = (gramfe_mm_real) + 2.0 * kmax / GRAMFE_FLU_NXT;             // k steps in k-space
-   const gramfe_mm_real dT           = (gramfe_mm_real) - 0.5 * dt / Eta;                          // coefficient in time evolution operator
+   const gramfe_evo_float filterDecay  = (gramfe_evo_float) 32.0 * (gramfe_evo_float) 2.302585092994046; // decay of k-space filter ( 32 * log(10) )
+   const gramfe_evo_float filterDegree = (gramfe_evo_float) 100;                                       // degree of k-space filter
+   const gramfe_evo_float kmax         = (gramfe_evo_float) M_PI / dh;                                 // maximum value of k
+   const gramfe_evo_float dk           = (gramfe_evo_float) + 2.0 * kmax / GRAMFE_FLU_NXT;             // k steps in k-space
+   const gramfe_evo_float dT           = (gramfe_evo_float) - 0.5 * dt / Eta;                          // coefficient in time evolution operator
 
 // naively "exp(1j * Coeff)" should give the exact time evolution of the free Schrödinger equation
 // however, the time-evolution operator depends on higher-order derivatives
@@ -107,41 +106,65 @@ void ELBDM_GramFE_ComputeTimeEvolutionMatrix(real (*output)[2 * FLU_NXT], real d
    const int sineNTerms   = cosineNTerms - (int) ((FLU_GHOST_SIZE % 2) == 0);
 
 // set up momentum, filter and time evolution array
-   gramfe_ev_complex_type (* Out)    [FLU_NXT]        = (gramfe_ev_complex_type (*)[       FLU_NXT]) output;
-   gramfe_mm_complex_type (* FFT)    [GRAMFE_FLU_NXT] = (gramfe_mm_complex_type (*)[GRAMFE_FLU_NXT]) GramFE_FFT;
+   gramfe_matmul_complex_type (* Out)    [FLU_NXT]        = (gramfe_matmul_complex_type (*)[       FLU_NXT]) output;
+   gramfe_evo_complex_type    (* FFT)    [GRAMFE_FLU_NXT] = (gramfe_evo_complex_type    (*)[GRAMFE_FLU_NXT]) GramFE_FFT;
+   gramfe_evo_complex_type    (*IFFT)    [GRAMFE_FLU_NXT] = (gramfe_evo_complex_type    (*)[GRAMFE_FLU_NXT]) GramFE_IFFT;
+   gramfe_evo_complex_type    (*Extend)  [FLU_NXT]        = (gramfe_evo_complex_type    (*)[       FLU_NXT]) GramFE_Extend;
 
-   gramfe_mm_complex_type GramFE_DFFT     [GRAMFE_FLU_NXT][GRAMFE_FLU_NXT];  //        exp(-i k^2 dt) * FFT
-   gramfe_mm_complex_type GramFE_IFFTDFFT [           PS2][GRAMFE_FLU_NXT];  // IFFT * exp(-i k^2 dt) * FFT
-   gramfe_mm_complex_type GramFE_Evolution[           PS2][       FLU_NXT];  // IFFT * exp(-i k^2 dt) * FFT * extension
+   gramfe_evo_complex_type DFFT     [GRAMFE_FLU_NXT][GRAMFE_FLU_NXT];  //        exp(-i k^2 dt) * FFT
+   gramfe_evo_complex_type IFFTDFFT [           PS2][GRAMFE_FLU_NXT];  // IFFT * exp(-i k^2 dt) * FFT
+   gramfe_evo_complex_type Evolution[           PS2][       FLU_NXT];  // IFFT * exp(-i k^2 dt) * FFT * extension
 
    for (int i=0; i<GRAMFE_FLU_NXT; i++)
    {
       K           = ( i <= GRAMFE_FLU_NXT/2 ) ? dk*i : dk*(i-GRAMFE_FLU_NXT);
       Filter      = exp(-filterDecay * pow(fabs(K/kmax), 2*filterDegree));
       Coeff       = SQR(K)*dT;
-      ExpCoeff    = gramfe_mm_complex_type(CosineTaylorExpansion(Coeff, cosineNTerms), SineTaylorExpansion(Coeff, sineNTerms)) * Filter;
+      ExpCoeff    = gramfe_evo_complex_type(CosineTaylorExpansion(Coeff, cosineNTerms), SineTaylorExpansion(Coeff, sineNTerms)) * Filter;
 
 //    multiply FFT matrix by diagonal time evolution operator in k-space
       for (int k=0; k<GRAMFE_FLU_NXT; k++)
       {
-         GramFE_DFFT[i][k] = ExpCoeff * FFT[i][k];
+         DFFT[i][k] = ExpCoeff * FFT[i][k];
       }
    } // for (int i=0; i<GRAMFE_FLU_NXT; i++)
 
+/*
+   gramfe_evo_gsl::matrix_complex_const_view extend     = gramfe_evo_gsl::matrix_complex_const_view_array(GramFE_Extend                     , GRAMFE_FLU_NXT, FLU_NXT);
+   gramfe_evo_gsl::matrix_complex_const_view ifft       = gramfe_evo_gsl::matrix_complex_const_view_array(GramFE_IFFT                       , PS2           , GRAMFE_FLU_NXT);
+   gramfe_evo_gsl::matrix_complex_const_view dfft       = gramfe_evo_gsl::matrix_complex_const_view_array((gramfe_evo_float*) GramFE_DFFT     , GRAMFE_FLU_NXT, GRAMFE_FLU_NXT);
+   gramfe_evo_gsl::matrix_complex_view       ifftdfft   = gramfe_evo_gsl::matrix_complex_view_array      ((gramfe_evo_float*) GramFE_IFFTDFFT , PS2,            GRAMFE_FLU_NXT);
+   gramfe_evo_gsl::matrix_complex_view       evolution  = gramfe_evo_gsl::matrix_complex_view_array      ((gramfe_evo_float*) GramFE_Evolution, PS2           , FLU_NXT);
 
-   gramfe_mm_gsl::matrix_complex_const_view extend     = gramfe_mm_gsl::matrix_complex_const_view_array(GramFE_Extend                     , GRAMFE_FLU_NXT, FLU_NXT);
-   gramfe_mm_gsl::matrix_complex_const_view ifft       = gramfe_mm_gsl::matrix_complex_const_view_array(GramFE_IFFT                       , PS2           , GRAMFE_FLU_NXT);
-   gramfe_mm_gsl::matrix_complex_const_view dfft       = gramfe_mm_gsl::matrix_complex_const_view_array((gramfe_mm_real*) GramFE_DFFT     , GRAMFE_FLU_NXT, GRAMFE_FLU_NXT);
-   gramfe_mm_gsl::matrix_complex_view       ifftdfft   = gramfe_mm_gsl::matrix_complex_view_array      ((gramfe_mm_real*) GramFE_IFFTDFFT , PS2,            GRAMFE_FLU_NXT);
-   gramfe_mm_gsl::matrix_complex_view       evolution  = gramfe_mm_gsl::matrix_complex_view_array      ((gramfe_mm_real*) GramFE_Evolution, PS2           , FLU_NXT);
+   gramfe_evo_gsl::blas_cgemm(CblasNoTrans, CblasNoTrans, {1.0,  0.0}, &ifft.matrix,     &dfft.matrix,   {0.0, 0.0}, &ifftdfft.matrix);
+   gramfe_evo_gsl::blas_cgemm(CblasNoTrans, CblasNoTrans, {1.0,  0.0}, &ifftdfft.matrix, &extend.matrix, {0.0, 0.0}, &evolution.matrix);
+*/
+   for ( int i = 0; i < PS2; ++i )
+   for ( int j = 0; j < GRAMFE_FLU_NXT; ++j )
+   {
+      gramfe_evo_complex_type out = {0, 0};
+      for ( int k = 0; k < GRAMFE_FLU_NXT; ++k )
+      {
+         out += IFFT[i][k]  * DFFT[k][j];
+      }
+      IFFTDFFT[i][j] = out;
+   }
 
-   gramfe_mm_gsl::blas_cgemm(CblasNoTrans, CblasNoTrans, {1.0,  0.0}, &ifft.matrix,     &dfft.matrix,   {0.0, 0.0}, &ifftdfft.matrix);
-   gramfe_mm_gsl::blas_cgemm(CblasNoTrans, CblasNoTrans, {1.0,  0.0}, &ifftdfft.matrix, &extend.matrix, {0.0, 0.0}, &evolution.matrix);
+   for ( int i = 0; i < PS2; ++i )
+   for ( int j = 0; j < FLU_NXT; ++j )
+   {
+      gramfe_evo_complex_type out = {0, 0};
+      for ( int k = 0; k < GRAMFE_FLU_NXT; ++k )
+      {
+         out += IFFTDFFT[i][k]  * Extend[k][j];
+      }
+      Evolution[i][j] = out;
+   }
 
    for (size_t i = 0; i < PS2; ++i) {
       for (size_t j = 0; j < FLU_NXT; ++j) {
-         Out[i][j].real((real) GramFE_Evolution[i][j].real());
-         Out[i][j].imag((real) GramFE_Evolution[i][j].imag());
+         Out[i][j].real(Evolution[i][j].real());
+         Out[i][j].imag(Evolution[i][j].imag());
       }
    }
 }

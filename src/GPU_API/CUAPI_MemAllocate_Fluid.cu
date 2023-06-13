@@ -45,7 +45,7 @@ extern real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif // FLU_SCHEME
 
 #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
-extern real (*d_Flu_TimeEvo)[2 * FLU_NXT];
+extern gramfe_matmul_float (*d_Flu_TimeEvo)[2 * FLU_NXT];
 #endif
 #if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
@@ -118,7 +118,7 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
 
 
 #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
-   const long GramFE_TimeEvo_MemSize = sizeof(real) * 2 * PS2 * FLU_NXT;
+   const long GramFE_TimeEvo_MemSize = sizeof(gramfe_matmul_float) * 2 * PS2 * FLU_NXT;
 #  endif
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
