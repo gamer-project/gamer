@@ -186,7 +186,7 @@ void CPU_ELBDMSolver_GramFE_MATMUL(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NX
                      FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_Out, s_TimeEvo, true,  0, MinDens);
    }
 
-} // FUNCTION : CUFLU_ELBDMSolver_GramFE
+} // FUNCTION : CUFLU_ELBDMSolver_GramFE_MATMUL
 
 
 

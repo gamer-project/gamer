@@ -325,7 +325,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 // increase max shared memory if needed
    CUDA_CHECK_ERROR(cudaFuncSetAttribute(
-      CUFLU_ELBDMSolver_GramFE,
+      CUFLU_ELBDMSolver_GramFE_FFT,
       cudaFuncAttributeMaxDynamicSharedMemorySize,
       cufftdx_shared_memory_size));
 

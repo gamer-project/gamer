@@ -613,6 +613,8 @@
 
 //  size of the extension region
 //  total size of extended region = GRAMFE_FLU_NXT = FLU_NXT + GRAMFE_ND
+
+#   if ( GRAMFE_SCHEME == GRAMFE_FFT )
 //  default values in order for GRAMFE_FLU_NXT to have small prime factorisations
 #   if ( PATCH_SIZE == 8 )
 #     define GRAMFE_ND     32  // GRAMFE_FLU_NXT = 2^6
@@ -625,8 +627,13 @@
 #   elif ( PATCH_SIZE == 128 )
 #     define GRAMFE_ND     28  // GRAMFE_FLU_NXT = 2^2 * 3 * 5^2
 #   else
-#     error : ERROR : UNSUPPORTED PATCH_SIZE FOR GRAM FOURIER EXTENSION SCHEME
+#     error : ERROR : Unsupported PATCH_SIZE for Gram Fourier extension scheme
 #   endif // PATCH_SIZE
+#   elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+#     define GRAMFE_ND     32  // GRAMFE_FLU_NXT = 2^6
+#   else
+#     error : ERROR : Unsupported GRAMFE_SCHEME
+#   endif
 
 //  total size of extended region
 #   define GRAMFE_FLU_NXT ( FLU_NXT + GRAMFE_ND )

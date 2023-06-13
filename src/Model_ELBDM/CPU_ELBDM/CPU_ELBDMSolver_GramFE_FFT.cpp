@@ -247,7 +247,7 @@ gramfe_float SineTaylorExpansion(gramfe_float x, int Nterms) {
 } // FUNCTION : SineTaylorExpansion
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CUFLU_ELBDMSolver_GramFE
+// Function    :  CUFLU_ELBDMSolver_GramFE_FFT
 // Description :  CPU and GPU ELBDM kinematic solver based on computing Gram (FE) extension and evolving wave function using pseudo-spectral method on extended domain
 //
 // Note        :  1. The three-dimensional evolution is achieved by applying x, y, and z operators successively.
@@ -361,7 +361,7 @@ void CPU_ELBDMSolver_GramFE_FFT(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) 
                      FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_Ae, s_Ao, ExpCoeff, true,  0, MinDens, Workspace, WorkspaceInv );
    }
 
-} // FUNCTION : CUFLU_ELBDMSolver_GramFE
+} // FUNCTION : CUFLU_ELBDMSolver_GramFE_FFT
 
 
 

@@ -22,13 +22,13 @@ typedef double real;
 typedef float  real;
 #endif
 
-#if ( MODEL == ELBDM && ELBDM_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
+#if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
 #ifdef GRAMFE_FFT_FLOAT8
 typedef double gramfe_float;
 #else
 typedef float  gramfe_float;
 #endif // #ifdef GRAMFE_FFT_FLOAT8
-#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
+#endif // #if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
 
 // short names for unsigned type
 typedef unsigned short     ushort;
