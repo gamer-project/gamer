@@ -201,21 +201,21 @@ void Aux_TakeNote()
 #     if ( WAVE_SCHEME == WAVE_GRAMFE )
       fprintf( Note, "WAVE_SCHEME                     GRAM FE\n" );
 
-      fprintf( Note, "GRAMFE_GAMMA                    %d\n",      GRAMFE_GAMMA );
-      fprintf( Note, "GRAMFE_G                        %d\n",      GRAMFE_G );
-      fprintf( Note, "GRAMFE_NDELTA                   %d\n",      GRAMFE_NDELTA);
-      fprintf( Note, "GRAMFE_ND                       %d\n",      GRAMFE_ND);
-      fprintf( Note, "GRAMFE_ORDER                    %d\n",      GRAMFE_ORDER);
-#     ifdef GRAMFE_FLOAT8
-      fprintf( Note, "GRAMFE_FLOAT8                   ON\n" );
-#     else // # ifdef GRAMFE_FLOAT8
-      fprintf( Note, "GRAMFE_FLOAT8                   OFF\n" );
-#     endif // # ifdef GRAMFE_FLOAT8 ... # else
-#     ifdef GRAMFE_ENABLE_GPU
-      fprintf( Note, "GRAMFE_ENABLE_GPU               ON\n" );
-#     else // # ifdef GRAMFE_ENABLE_GPU
-      fprintf( Note, "GRAMFE_ENABLE_GPU               OFF\n" );
-#     endif // # ifdef GRAMFE_ENABLE_GPU ... # else
+#     if ( GRAMFE_SCHEME == GRAMFE_FFT )
+      fprintf( Note, "GRAMFE_SCHEME                   FFT\n" );
+
+#     ifdef GRAMFE_FFT_ENABLE_GPU
+      fprintf( Note, "GRAMFE_FFT_ENABLE_GPU    ON\n" );
+#     else // # ifdef GRAMFE_FFT_ENABLE_GPU
+      fprintf( Note, "GRAMFE_FFT_ENABLE_GPU    OFF\n" );
+#     endif // # ifdef GRAMFE_FFT_ENABLE_GPU ... # else
+
+#     elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+      fprintf( Note, "GRAMFE_SCHEME                   MATMUL\n" );
+#     else
+#     error : ERROR : unsupported GRAMFE_SCHEME !!
+#     endif
+
 
 //    c.1 options in WAVE_FD
 #     elif ( WAVE_SCHEME == WAVE_FD )
@@ -542,6 +542,21 @@ void Aux_TakeNote()
 #     endif // #ifdef MHD
 
 #     elif ( MODEL == ELBDM )
+
+#     if ( WAVE_SCHEME == WAVE_GRAMFE )
+      fprintf( Note, "GRAMFE_GAMMA                    %d\n",      GRAMFE_GAMMA );
+      fprintf( Note, "GRAMFE_G                        %d\n",      GRAMFE_G );
+      fprintf( Note, "GRAMFE_NDELTA                   %d\n",      GRAMFE_NDELTA);
+      fprintf( Note, "GRAMFE_ND                       %d\n",      GRAMFE_ND);
+      fprintf( Note, "GRAMFE_ORDER                    %d\n",      GRAMFE_ORDER);
+
+#     if ( GRAMFE_SCHEME == GRAMFE_FFT )
+#     ifdef GRAMFE_FFT_FLOAT8
+      fprintf( Note, "GRAMFE_FFT_FLOAT8               ON\n" );
+#     else // # ifdef GRAMFE_FFT_FLOAT8
+      fprintf( Note, "GRAMFE_FFT_FLOAT8               OFF\n" );
+#     endif // # ifdef GRAMFE_FFT_FLOAT8 ... # else
+#     endif
 
 #     else
 #     error : ERROR : unsupported MODEL !!

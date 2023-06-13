@@ -82,25 +82,25 @@ __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ]
                                    const real Taylor3_Coeff, const bool XYZ, const real MinDens );
 real ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 # elif ( WAVE_SCHEME == WAVE_GRAMFE )
-# if (defined(GRAMFE_ENABLE_GPU) && !defined(ENABLE_FAST_GRAMFE))
+# if ( GRAMFE_SCHEME == GRAMFE_FFT && defined(GRAMFE_FFT_ENABLE_GPU) )
 __launch_bounds__(FFT::max_threads_per_block)
 __global__
-void CUFLU_ELBDMSolver_GramFE(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                                  real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
-                                  real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                  const real dt, const real _dh, const real Eta, const bool StoreFlux,
-                                  const bool XYZ, const real MinDens,
-                                  typename FFT::workspace_type workspace,
-                                  typename IFFT::workspace_type workspace_inverse  );
-#  elif (defined(ENABLE_FAST_GRAMFE))
+void CUFLU_ELBDMSolver_GramFE_FFT(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                                    real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
+                                    real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                    const real dt, const real _dh, const real Eta, const bool StoreFlux,
+                                    const bool XYZ, const real MinDens,
+                                    typename FFT::workspace_type workspace,
+                                    typename IFFT::workspace_type workspace_inverse  );
+#  elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 __global__
-void CUFLU_ELBDMSolver_GramFE(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                                  real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
-                                  real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                  real g_Evolve   [][FLU_NXT * 2],
-                                  const real dt, const real _dh, const real Eta, const bool StoreFlux,
-                                  const bool XYZ, const real MinDens);
-#  endif
+void CUFLU_ELBDMSolver_GramFE_MATMUL(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                                       real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
+                                       real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                       real g_Evolve   [][FLU_NXT * 2],
+                                       const real dt, const real _dh, const real Eta, const bool StoreFlux,
+                                       const bool XYZ, const real MinDens);
+#  endif // GRAMFE_SCHEME
 #  else // #  if (WAVE_SCHEME == WAVE_GRAMFE )
 #     error : ERROR : unsupported WAVE_SCHEME !!
 #  endif // WAVE_SCHEME
@@ -150,7 +150,7 @@ static real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 #endif // FLU_SCHEME
 #endif // #if ( MODEL == HYDRO )
 
-#if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(GRAMFE_ENABLE_GPU) && defined(ENABLE_FAST_GRAMFE) )
+#if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(GRAMFE_FFT_ENABLE_GPU) && defined(ENABLE_FAST_GRAMFE) )
 extern real (*d_Flu_TimeEvo)[2 * FLU_NXT];
 #endif
 #ifdef UNSPLIT_GRAVITY
@@ -300,9 +300,9 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  endif
 #  endif // #ifdef GAMER_DEBUG
 
-#  if ( !( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && !defined(ENABLE_FAST_GRAMFE)) )
+#  if ( !( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT) )
    const dim3 BlockDim_FluidSolver ( FLU_BLOCK_SIZE_X, FLU_BLOCK_SIZE_Y, 1 ); // for the fluidsolvers
-#  endif // #  if ( !( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE ) )
+#  endif // #  if ( !( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT) )
 
 // model-dependent operations
 #  if   ( MODEL == HYDRO )
@@ -313,8 +313,9 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 // evaluate the optimized Taylor expansion coefficient
    if ( ELBDM_Taylor3_Auto )  ELBDM_Taylor3_Coeff = ELBDM_SetTaylor3Coeff( dt, dh, ELBDM_Eta );
 #  elif ( WAVE_SCHEME == WAVE_GRAMFE )
-// set up GPU FFT if GPU is used for Gram Fourier extension scheme
-#  if (defined(GRAMFE_ENABLE_GPU) && !defined(ENABLE_FAST_GRAMFE))
+
+// set up GPU FFT if GPU is used for Gram Fourier extension FFT scheme
+#  if ( GRAMFE_SCHEME == GRAMFE_FFT && defined(GRAMFE_FFT_ENABLE_GPU) )
 // total size of shared memory required for storing FFT::ffts_per_block rows of data after Gram extension and the coefficients of the respective left and right extension polynomials
    auto size                       = FFT::ffts_per_block * cufftdx::size_of<FFT>::value + 2 * FFT::ffts_per_block * GRAMFE_NDELTA;
    auto size_bytes                 = size * sizeof(complex_type);
@@ -336,11 +337,14 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
    auto cufftdx_iworkspace = cufftdx::make_workspace<IFFT>(error_code);
    CUDA_CHECK_ERROR(error_code);
 
-#  elif (defined(GRAMFE_ENABLE_GPU) && defined(ENABLE_FAST_GRAMFE))
+#  elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+
    size_t h_FluTimeEvo_MemSize = 2 * FLU_NXT * PS2 * sizeof(real);
    GramFE_SetupTimeEvolutionMatrix(h_Flu_TimeEvo, dt, dh, ELBDM_Eta);
    CUDA_CHECK_ERROR( cudaMemcpyAsync( d_Flu_TimeEvo, h_Flu_TimeEvo, h_FluTimeEvo_MemSize, cudaMemcpyHostToDevice) );
-#  endif
+
+#  endif // GRAMFE_SCHEME
+
 #  else // #  if (WAVE_SCHEME == WAVE_GRAMFE )
 #     error : ERROR : unsupported WAVE_SCHEME !!
 #  endif // WAVE_SCHEME
@@ -509,20 +513,23 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_Flux_Array      + UsedPatch[s],
               dt, 1.0/dh, ELBDM_Eta, StoreFlux, ELBDM_Taylor3_Coeff, XYZ, MinDens );
 #     elif ( WAVE_SCHEME == WAVE_GRAMFE )
-#     if (defined(GRAMFE_ENABLE_GPU) && !defined(ENABLE_FAST_GRAMFE))
-         CUFLU_ELBDMSolver_GramFE <<< NPatch_per_Stream[s], FFT::block_dim, cufftdx_shared_memory_size, Stream[s] >>>
+
+#     if ( GRAMFE_SCHEME == GRAMFE_FFT && defined(GRAMFE_FFT_ENABLE_GPU) )
+         CUFLU_ELBDMSolver_GramFE_FFT <<< NPatch_per_Stream[s], FFT::block_dim, cufftdx_shared_memory_size, Stream[s] >>>
             ( d_Flu_Array_F_In  + UsedPatch[s],
               d_Flu_Array_F_Out + UsedPatch[s],
               d_Flux_Array      + UsedPatch[s],
               dt, 1.0/dh, ELBDM_Eta, StoreFlux, XYZ, MinDens, cufftdx_workspace, cufftdx_iworkspace );
-#     elif defined(ENABLE_FAST_GRAMFE) // # ifdef GRAMFE_ENABLE_GPU
-         CUFLU_ELBDMSolver_GramFE <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
+
+#     elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+         CUFLU_ELBDMSolver_GramFE_MATMUL <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
             ( d_Flu_Array_F_In  + UsedPatch[s],
               d_Flu_Array_F_Out + UsedPatch[s],
               d_Flux_Array      + UsedPatch[s],
               d_Flu_TimeEvo,
               dt, dh, ELBDM_Eta, StoreFlux, XYZ, MinDens );
-#     endif
+#     endif // GRAMFE_SCHEME
+
 #     else // #  if (WAVE_SCHEME == WAVE_FD )
 #        error : ERROR : unsupported WAVE_SCHEME !!
 #     endif // WAVE_SCHEME

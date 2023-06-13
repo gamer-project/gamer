@@ -49,6 +49,10 @@
 #define WAVE_FD      1
 #define WAVE_GRAMFE  2
 
+// gramfe schemes
+#define GRAMFE_FFT    1
+#define GRAMFE_MATMUL 2
+
 // data reconstruction schemes
 #define PLM          1
 #define PPM          2
@@ -820,10 +824,10 @@
 #  define FB_SEP_FLUOUT
 #endif
 
-// enable double precision for WAVE_GRAMFE scheme by default
-#if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
-#   define GRAMFE_FLOAT8
-#endif
+// enable double precision for WAVE_GRAMFE FFT scheme by default
+#if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
+#   define GRAMFE_FFT_FLOAT8
+#endif // #if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
 
 
 // extreme values

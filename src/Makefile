@@ -107,7 +107,6 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 SIMU_OPTION += -DCONSERVE_MASS
 
 # choose wave scheme WAVE_FD (finite difference), WAVE_GRAMFE (local spectral method)
-# --> must turn on (SUPPORT_FFTW=FFTW2 and FLOAT8) or (SUPPORT_FFTW=FFTW3) or (GPU and GRAMFE_ENABLE_GPU) for WAVE_GRAMFE
 SIMU_OPTION += -DWAVE_SCHEME=WAVE_FD
 
 # (b-2-1) WAVE_FD options
@@ -119,9 +118,22 @@ SIMU_OPTION += -DLAPLACIAN_4TH
 # (b-2-2) WAVE_GRAMFE options
 # ------------------------------------------------------------------------------------
 else ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
+
+# choose gramfe scheme GRAMFE_FFT (uses fast fourier transform, faster for larger patch sizes), GRAMFE_MATMUL (uses matrix multiplication, faster for smaller patches)
+# --> must turn on (SUPPORT_FFTW=FFTW2 and FLOAT8) or (SUPPORT_FFTW=FFTW3) or (GPU and GRAMFE_FFT_ENABLE_GPU) for GRAMFE_SCHEME == GRAMFE_FFT
+# --> must turn on  SUPPORT_GSL for GRAMFE_SCHEME == GRAMFE_MATMUL
+SIMU_OPTION += -DGRAMFE_SCHEME == GRAMFE_MATMUL
+
+
+# (b-2-2-1) GRAMFE_FFT options
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DGRAMFE_SCHEME=GRAMFE_FFT, $(SIMU_OPTION))" "-DGRAMFE_SCHEME=GRAMFE_FFT"
+
 # enable for GPU support of Gram-Fourier extension algorithm in GPU mode (CPU is used by default because it is faster)
 # --> must turn on GPU
-#SIMU_OPTION += -DGRAMFE_ENABLE_GPU
+#SIMU_OPTION += -DGRAMFE_FFT_ENABLE_GPU
+
+endif # GRAMFE_SCHEME
 endif # WAVE_SCHEME
 endif # MODEL
 
@@ -583,9 +595,9 @@ endif # MHD
 # ELBDM source files (included only inf "MODEL=ELBDM")
 # -------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
-GPU_FILE    += CUFLU_ELBDMSolver_FD.cu CUFLU_ELBDMSolver_GramFE.cu
+GPU_FILE    += CUFLU_ELBDMSolver_FD.cu CUFLU_ELBDMSolver_GramFE_FFT.cu CUFLU_ELBDMSolver_GramFE_MATMUL.cu
 
-CPU_FILE    += CPU_ELBDMSolver_FD.cpp  CPU_ELBDMSolver_FFT.cpp  CPU_ELBDMSolver_GramFE.cpp ELBDM_Init_ByFunction_AssignData.cpp \
+CPU_FILE    += CPU_ELBDMSolver_FD.cpp  CPU_ELBDMSolver_FFT.cpp  CPU_ELBDMSolver_GramFE.cpp CPU_ELBDMSolver_GramFE_FFT.cpp CPU_ELBDMSolver_GramFE_MATMUL.cpp ELBDM_Init_ByFunction_AssignData.cpp \
                ELBDM_GetTimeStep_Fluid.cpp  ELBDM_Flag_EngyDensity.cpp  ELBDM_UnwrapPhase.cpp \
                ELBDM_GetTimeStep_Phase.cpp  ELBDM_SetTaylor3Coeff.cpp  ELBDM_RemoveMotionCM.cpp
 
@@ -883,7 +895,7 @@ endif
 
 ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
    ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
-      ifeq "$(filter -DGRAMFE_ENABLE_GPU, $(SIMU_OPTION))" "-DGRAMFE_ENABLE_GPU"
+      ifeq "$(filter -DGRAMFE_FFT_ENABLE_GPU, $(SIMU_OPTION))" "-DGRAMFE_FFT_ENABLE_GPU"
          INCLUDE += -I$(CUFFTDX_PATH)/include
       endif
    endif
@@ -955,7 +967,7 @@ endif
 # enable C++ 17 support for ELBDM GPU Gram-Fourier extension scheme
 ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
    ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
-      ifeq "$(filter -DGRAMFE_ENABLE_GPU, $(SIMU_OPTION))" "-DGRAMFE_ENABLE_GPU"
+      ifeq "$(filter -DGRAMFE_FFT_ENABLE_GPU, $(SIMU_OPTION))" "-DGRAMFE_FFT_ENABLE_GPU"
          NVCCFLAG_COM += -std=c++17
       endif
    endif

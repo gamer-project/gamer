@@ -38,7 +38,7 @@ extern real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif
 #endif // FLU_SCHEME
 
-#if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(GRAMFE_ENABLE_GPU) && defined(ENABLE_FAST_GRAMFE) )
+#if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL && defined(GRAMFE_FFT_ENABLE_GPU) )
 extern real (*d_Flu_TimeEvo)[2 * FLU_NXT];
 #endif
 
@@ -94,7 +94,7 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
 #  endif
 #  endif // FLU_SCHEME
 
-#if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(GRAMFE_ENABLE_GPU) && defined(ENABLE_FAST_GRAMFE) )
+#if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL && defined(GRAMFE_FFT_ENABLE_GPU) )
    if ( d_Flu_TimeEvo        != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Flu_TimeEvo        )  );  d_Flu_TimeEvo        = NULL; }
 #endif
 
@@ -131,9 +131,9 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
    } // for (int t=0; t<2; t++)
 
 
-#  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(GRAMFE_ENABLE_GPU) && defined(ENABLE_FAST_GRAMFE) )
+#  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL && defined(GRAMFE_FFT_ENABLE_GPU) )
    if ( h_Flu_TimeEvo != NULL) { CUDA_CHECK_ERROR(  cudaFreeHost ( h_Flu_TimeEvo )  ); h_Flu_TimeEvo = NULL; }
-#  endif // #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && defined(GRAMFE_ENABLE_GPU) && defined(ENABLE_FAST_GRAMFE) )
+#  endif // #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL && defined(GRAMFE_FFT_ENABLE_GPU) )
 
 
 // destroy streams
