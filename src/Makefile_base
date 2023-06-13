@@ -27,22 +27,17 @@ COMPILE_VERBOSE := 0
 
 # simulation options
 #######################################################################################################
-SIMU_OPTION = @@@SIMU_OPTION@@@ 
+SIMU_OPTION = @@@SIMU_OPTION@@@
 
 
 
-# compiler and flags
+# compilers and flags
 #######################################################################################################
 CXX         = @@@CXX@@@
 CXXFLAG     = @@@CXXFLAG@@@
 LIB         = @@@LIBFLAG@@@
 OPENMPFLAG  = @@@OPENMPFLAG@@@
-
-
-
-# CUDA
-# -------------------------------------------------------------------------------
- NVCC = $(CUDA_PATH)/bin/nvcc @@@CUDAFLAG@@@
+NVCC        = $(CUDA_PATH)/bin/nvcc @@@CUDAFLAG@@@
 
 
 
