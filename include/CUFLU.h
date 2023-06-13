@@ -26,9 +26,9 @@
 
 
 // include CUDA FFT library if GPU kinetic ELBDM Gram-Fourier extension solver is enabled
-#if ( defined(__CUDACC__) && MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
+#if ( defined(__CUDACC__) && MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT && defined(GRAMFE_FFT_ENABLE_GPU) )
 #  include <cufftdx.hpp>
-#endif // #if ( defined(__CUDACC__) && MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
+#endif // #if ( defined(__CUDACC__) && MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT && defined(GRAMFE_FFT_ENABLE_GPU) )
 
 // faster integer multiplication in Fermi
 #if ( defined __CUDACC__  &&  __CUDA_ARCH__ >= 200 )
@@ -36,6 +36,26 @@
 #  define  __mul24( a, b )   ( (a)*(b) )
 #endif
 
+// define GPU compute capabilities
+#ifdef GPU
+#  if   ( GPU_ARCH == FERMI )
+   #define GPU_COMPUTE_CAPABILITY 200
+#  elif ( GPU_ARCH == KEPLER )
+   #define GPU_COMPUTE_CAPABILITY 300
+#  elif ( GPU_ARCH == MAXWELL )
+   #define GPU_COMPUTE_CAPABILITY 500
+#  elif ( GPU_ARCH == PASCAL )
+   #define GPU_COMPUTE_CAPABILITY 600
+#  elif ( GPU_ARCH == VOLTA )
+   #define GPU_COMPUTE_CAPABILITY 700
+#  elif ( GPU_ARCH == TURING )
+   #define GPU_COMPUTE_CAPABILITY 750
+#  elif ( GPU_ARCH == AMPERE )
+   #define GPU_COMPUTE_CAPABILITY 800
+#  else
+#  error : ERROR : Please add GPU_COMPUTE_CAPABILITY for GPU_ARCH!
+#  endif // GPU_ARCH
+#endif // GPU
 
 
 // #################################
@@ -398,6 +418,7 @@
 // 2. ELBDM kinematic solver
 //=========================================================================================
 #elif ( MODEL == ELBDM )
+#  if ( WAVE_SCHEME == WAVE_FD )
 #     define FLU_BLOCK_SIZE_X       PS2
 
 #  if ( ELBDM_SCHEME == ELBDM_WAVE )
@@ -475,29 +496,27 @@
 #  error : ERROR : UNKNOWN ELBDM_SCHEME
 #  endif
 
-// define GPU compute capabilities
-#ifdef GPU
-#  if   ( GPU_ARCH == FERMI )
-   #define GPU_COMPUTE_CAPABILITY 200
-#  elif ( GPU_ARCH == KEPLER )
-   #define GPU_COMPUTE_CAPABILITY 300
-#  elif ( GPU_ARCH == MAXWELL )
-   #define GPU_COMPUTE_CAPABILITY 500
-#  elif ( GPU_ARCH == PASCAL )
-   #define GPU_COMPUTE_CAPABILITY 600
-#  elif ( GPU_ARCH == VOLTA )
-   #define GPU_COMPUTE_CAPABILITY 700
-#  elif ( GPU_ARCH == TURING )
-   #define GPU_COMPUTE_CAPABILITY 750
-#  elif ( GPU_ARCH == AMPERE )
-   #define GPU_COMPUTE_CAPABILITY 800
+#  elif ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( PATCH_SIZE == 8 )
+#     ifdef FLOAT8
+#        define FLU_BLOCK_SIZE_Y    16
+#     else
+#        define FLU_BLOCK_SIZE_Y    32
+#     endif
+#  else // # if ( PATCH_SIZE == 8 )
+#     ifdef FLOAT8
+#        define FLU_BLOCK_SIZE_Y    8
+#     else
+#        define FLU_BLOCK_SIZE_Y    16
+#     endif
+#  endif // # if ( PATCH_SIZE == 8 ) ... # else
 #  else
-#  error : ERROR : Please add GPU_COMPUTE_CAPABILITY for GPU_ARCH!
-#  endif // GPU_ARCH
-#endif // GPU
+#  error : ERROR : UNKNOWN ELBDM_SCHEME
+#  endif
+
 
 // set number of threads and blocks used in GRAMFE GPU scheme
-# if ( defined(__CUDACC__) && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
+# if ( defined(__CUDACC__) && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT && defined(GRAMFE_FFT_ENABLE_GPU) )
 
 
 // cuFFTdx supports the following GPU architectures at the time of writing (23.05.23)
@@ -541,7 +560,7 @@ using IFFT         = decltype( inverse_fft() + cufftdx::ElementsPerThread<elemen
 
 using complex_type = typename FFT::value_type;
 
-# endif // # if ( defined(__CUDACC__) && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
+# endif // # if ( defined(__CUDACC__) && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT && defined(GRAMFE_FFT_ENABLE_GPU) )
 
 # else
 # error : ERROR : Unsupported model in CUFLU.h

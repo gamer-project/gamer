@@ -38,6 +38,10 @@ extern real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif
 #endif // FLU_SCHEME
 
+#if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
+extern real (*d_Flu_TimeEvo)[2 * FLU_NXT];
+#endif
+
 #if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
 #endif
@@ -90,6 +94,10 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
 #  endif
 #  endif // FLU_SCHEME
 
+#if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
+   if ( d_Flu_TimeEvo        != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Flu_TimeEvo        )  );  d_Flu_TimeEvo        = NULL; }
+#endif
+
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #    warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
 #  endif
@@ -121,6 +129,11 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
       if ( h_Flu_Array_S_Out[t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Flu_Array_S_Out[t] )  );  h_Flu_Array_S_Out[t] = NULL; }
       if ( h_Corner_Array_S [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Corner_Array_S [t] )  );  h_Corner_Array_S [t] = NULL; }
    } // for (int t=0; t<2; t++)
+
+
+#  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL && defined(GRAMFE_FFT_ENABLE_GPU) )
+   if ( h_GramFE_TimeEvo != NULL) { CUDA_CHECK_ERROR(  cudaFreeHost ( h_GramFE_TimeEvo )  ); h_GramFE_TimeEvo = NULL; }
+#  endif // #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL && defined(GRAMFE_FFT_ENABLE_GPU) )
 
 
 // destroy streams

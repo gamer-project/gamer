@@ -47,6 +47,18 @@ void Aux_Check_Parameter()
 #     error : ERROR : incorrect number of NCOMP_PASSIVE !!
 #  endif
 
+#  ifdef SUPPORT_SPECTRAL_INTERPOLATION
+#  ifndef SUPPORT_GSL
+#     error : ERROR : SUPPORT_SPECTRAL_INTERPOLATION requires SUPPORT_GSL!!
+#  endif // # ifndef SUPPORT_GSL
+#  ifndef SUPPORT_FFTW
+#     error : ERROR : SUPPORT_SPECTRAL_INTERPOLATION requires SUPPORT_FFTW!!
+#  endif // # ifndef SUPPORT_FFTW
+#  if ( SUPPORT_FFTW == FFTW2 && !defined FLOAT8 )
+#     error : ERROR : SUPPORT_SPECTRAL_INTERPOLATION with SUPPORT_FFTW=FFTW2 requires FLOAT8!!
+#  endif // # if ( SUPPORT_FFTW == FFTW2 && !defined FLOAT8 )
+#  endif // # ifdef SUPPORT_SPECTRAL_INTERPOLATION
+
 #  ifdef SERIAL
    int NRank = 1;
 #  else
@@ -1189,26 +1201,39 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "%s solver with DT__FLUID (%13.7e) > %13.7e is unstable !!\n",
                    "WAVE_GRAMFE", DT__FLUID, dt_fluid_max );
 
-#  ifndef GRAMFE_FLOAT8
-#  error : ERROR : WAVE_GRAMFE solver requires GRAMFE_FLOAT8 for stability !!
-#  endif // # ifndef GRAMFE_FLOAT8
+
+
+#  if ( GRAMFE_SCHEME == GRAMFE_FFT )
 
 #  if ( FLU_GHOST_SIZE < 6 )
 #  error : ERROR : WAVE_GRAMFE is only stable (empirically) for FLU_GHOST_SIZE >= 6!
 #  endif // #  if ( FLU_GHOST_SIZE < 6 )
 
-#  if ( !defined(GPU) && defined(GRAMFE_ENABLE_GPU) )
-#  error : ERROR : Gram-Fourier extension scheme GRAMFE_ENABLE_GPU option requires GPU flag!
-#  endif // #  if ( !defined(GPU) && defined(GRAMFE_ENABLE_GPU) )
+#  ifndef GRAMFE_FFT_FLOAT8
+#  error : ERROR : WAVE_GRAMFE solver requires GRAMFE_FFT_FLOAT8 for stability !!
+#  endif // # ifndef GRAMFE_FFT_FLOAT8
 
-#  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
-#  error : ERROR : CPU Gram-Fourier extension scheme requires SUPPORT_FFTW flag!
-#  endif // #  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
+#  if ( !defined(GPU) && defined(GRAMFE_FFT_ENABLE_GPU) )
+#  error : ERROR : GRAMFE_FFT_ENABLE_GPU requires GPU!
+#  endif // #  if ( !defined(GPU) && defined(GRAMFE_FFT_ENABLE_GPU) )
 
-#  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && SUPPORT_FFTW == FFTW2 && !defined(FLOAT8) )
-#  error : ERROR : CPU Gram-Fourier extension scheme using FFTW2 requires FLOAT8!
-#  endif // #  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_ENABLE_GPU) ) ) && SUPPORT_FFTW == FFTW2 && !defined(FLOAT8) )
+#  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_FFT_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
+#  error : ERROR : CPU && GRAMFE_SCHEME == GRAMFE_FFT require SUPPORT_FFTW flag!
+#  endif // #  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_FFT_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
 
+#  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_FFT_ENABLE_GPU) ) ) && SUPPORT_FFTW == FFTW2 && !defined(FLOAT8) )
+#  error : ERROR : CPU && GRAMFE_SCHEME == GRAMFE_FFT && SUPPORT_FFTW = FFTW2 require FLOAT8!
+#  endif // #  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_FFT_ENABLE_GPU) ) ) && SUPPORT_FFTW == FFTW2 && !defined(FLOAT8) )
+
+#  elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+
+#  ifndef SUPPORT_GSL
+#  error : ERROR : GRAMFE_SCHEME == GRAMFE_MATMUL requires SUPPORT_GSL!
+#  endif // #  ifndef SUPPORT_GSL
+
+#  else
+#  error : ERROR : Unsupported GRAMFE_SCHEME !
+#  endif
 #  else
 #  error : ERROR : unsupported WAVE_SCHEME
 #  endif  // # WAVE_SCHEME

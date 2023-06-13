@@ -237,21 +237,22 @@ void Aux_TakeNote()
 //    c.2 options in WAVE_GRAMFE
 #     if ( WAVE_SCHEME == WAVE_GRAMFE )
       fprintf( Note, "WAVE_SCHEME                     GRAM FE\n" );
-      fprintf( Note, "GRAMFE_GAMMA                    %d\n",      GRAMFE_GAMMA );
-      fprintf( Note, "GRAMFE_G                        %d\n",      GRAMFE_G );
-      fprintf( Note, "GRAMFE_NDELTA                   %d\n",      GRAMFE_NDELTA);
-      fprintf( Note, "GRAMFE_ND                       %d\n",      GRAMFE_ND);
-      fprintf( Note, "GRAMFE_ORDER                    %d\n",      GRAMFE_ORDER);
-#     ifdef GRAMFE_FLOAT8
-      fprintf( Note, "GRAMFE_FLOAT8                   ON\n" );
-#     else // # ifdef GRAMFE_FLOAT8
-      fprintf( Note, "GRAMFE_FLOAT8                   OFF\n" );
-#     endif // # ifdef GRAMFE_FLOAT8 ... # else
-#     ifdef GRAMFE_ENABLE_GPU
-      fprintf( Note, "GRAMFE_ENABLE_GPU               ON\n" );
-#     else // # ifdef GRAMFE_ENABLE_GPU
-      fprintf( Note, "GRAMFE_ENABLE_GPU               OFF\n" );
-#     endif // # ifdef GRAMFE_ENABLE_GPU ... # else
+
+#     if ( GRAMFE_SCHEME == GRAMFE_FFT )
+      fprintf( Note, "GRAMFE_SCHEME                   FFT\n" );
+
+#     ifdef GRAMFE_FFT_ENABLE_GPU
+      fprintf( Note, "GRAMFE_FFT_ENABLE_GPU           ON\n" );
+#     else // # ifdef GRAMFE_FFT_ENABLE_GPU
+      fprintf( Note, "GRAMFE_FFT_ENABLE_GPU           OFF\n" );
+#     endif // # ifdef GRAMFE_FFT_ENABLE_GPU ... # else
+
+#     elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+      fprintf( Note, "GRAMFE_SCHEME                   MATMUL\n" );
+#     else
+#     error : ERROR : unsupported GRAMFE_SCHEME !!
+#     endif // GRAMFE_SCHEME
+
 
 //    c.3 options in WAVE_FD
 #     elif ( WAVE_SCHEME == WAVE_FD )
@@ -466,6 +467,12 @@ void Aux_TakeNote()
       fprintf( Note, "RANDOM_NUMBER                   UNKNOWN\n" );
 #     endif
 
+#     ifdef SUPPORT_SPECTRAL_INTERPOLATION
+      fprintf( Note, "SUPPORT_SPECTRAL_INTERPOLATION  ON\n" );
+#     else
+      fprintf( Note, "SUPPORT_SPECTRAL_INTERPOLATION  OFF\n" );
+#     endif
+
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
@@ -574,6 +581,22 @@ void Aux_TakeNote()
 #     endif // #ifdef MHD
 
 #     elif ( MODEL == ELBDM )
+
+#     if ( WAVE_SCHEME == WAVE_GRAMFE )
+      fprintf( Note, "GRAMFE_GAMMA                    %d\n",      GRAMFE_GAMMA );
+      fprintf( Note, "GRAMFE_G                        %d\n",      GRAMFE_G );
+      fprintf( Note, "GRAMFE_NDELTA                   %d\n",      GRAMFE_NDELTA);
+      fprintf( Note, "GRAMFE_ND                       %d\n",      GRAMFE_ND);
+      fprintf( Note, "GRAMFE_ORDER                    %d\n",      GRAMFE_ORDER);
+
+#     if ( GRAMFE_SCHEME == GRAMFE_FFT )
+#     ifdef GRAMFE_FFT_FLOAT8
+      fprintf( Note, "GRAMFE_FFT_FLOAT8               ON\n" );
+#     else // # ifdef GRAMFE_FFT_FLOAT8
+      fprintf( Note, "GRAMFE_FFT_FLOAT8               OFF\n" );
+#     endif // # ifdef GRAMFE_FFT_FLOAT8 ... # else
+#     endif // # if ( GRAMFE_SCHEME == GRAMFE_FFT )
+#     endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
 
 #     else
 #     error : ERROR : unsupported MODEL !!
@@ -1329,9 +1352,13 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__INT_PHASE                  %d\n",      OPT__INT_PHASE          );
       fprintf( Note, "OPT__RES_PHASE                  %d\n",      OPT__RES_PHASE          );
       fprintf( Note, "OPT__CK_PHASE_DEFECT            %d\n",      OPT__CK_PHASE_DEFECT    );
+
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       fprintf( Note, "OPT__HYBRID_MATCH_PHASE         %d\n",      OPT__HYBRID_MATCH_PHASE );
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#     endif
+#     ifdef SUPPORT_SPECTRAL_INTERPOLATION
+      fprintf( Note, "INT_TABLE_PATH                  %s\n",      INT_TABLE_PATH          );
 #     endif
       fprintf( Note, "OPT__FLU_INT_SCHEME             %s\n",      ( OPT__FLU_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
                                                                   ( OPT__FLU_INT_SCHEME == INT_MINMOD1D ) ? "MINMOD1D" :
@@ -1340,6 +1367,7 @@ void Aux_TakeNote()
                                                                   ( OPT__FLU_INT_SCHEME == INT_QUAD     ) ? "QUAD"     :
                                                                   ( OPT__FLU_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
                                                                   ( OPT__FLU_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
+                                                                  ( OPT__FLU_INT_SCHEME == INT_SPECTRAL ) ? "SPECTRAL" :
                                                                                                             "UNKNOWN" );
 #     ifdef MHD
       fprintf( Note, "OPT__MAG_INT_SCHEME             %s\n",      ( OPT__MAG_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
@@ -1349,6 +1377,7 @@ void Aux_TakeNote()
                                                                   ( OPT__MAG_INT_SCHEME == INT_QUAD     ) ? "QUAD"     :
                                                                   ( OPT__MAG_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
                                                                   ( OPT__MAG_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
+                                                                  ( OPT__MAG_INT_SCHEME == INT_SPECTRAL ) ? "SPECTRAL" :
                                                                                                             "UNKNOWN" );
 #     endif
 #     ifdef GRAVITY
@@ -1359,6 +1388,7 @@ void Aux_TakeNote()
                                                                   ( OPT__POT_INT_SCHEME == INT_QUAD     ) ? "QUAD"     :
                                                                   ( OPT__POT_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
                                                                   ( OPT__POT_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
+                                                                  ( OPT__POT_INT_SCHEME == INT_SPECTRAL ) ? "SPECTRAL" :
                                                                                                             "UNKNOWN" );
       fprintf( Note, "OPT__RHO_INT_SCHEME             %s\n",      ( OPT__RHO_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
                                                                   ( OPT__RHO_INT_SCHEME == INT_MINMOD1D ) ? "MINMOD1D" :
@@ -1367,6 +1397,7 @@ void Aux_TakeNote()
                                                                   ( OPT__RHO_INT_SCHEME == INT_QUAD     ) ? "QUAD"     :
                                                                   ( OPT__RHO_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
                                                                   ( OPT__RHO_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
+                                                                  ( OPT__RHO_INT_SCHEME == INT_SPECTRAL ) ? "SPECTRAL" :
                                                                                                             "UNKNOWN" );
       fprintf( Note, "OPT__GRA_INT_SCHEME             %s\n",      ( OPT__GRA_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
                                                                   ( OPT__GRA_INT_SCHEME == INT_MINMOD1D ) ? "MINMOD1D" :
@@ -1375,6 +1406,7 @@ void Aux_TakeNote()
                                                                   ( OPT__GRA_INT_SCHEME == INT_QUAD     ) ? "QUAD"     :
                                                                   ( OPT__GRA_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
                                                                   ( OPT__GRA_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
+                                                                  ( OPT__GRA_INT_SCHEME == INT_SPECTRAL ) ? "SPECTRAL" :
                                                                                                             "UNKNOWN" );
 #     endif
       fprintf( Note, "OPT__REF_FLU_INT_SCHEME         %s\n",   ( OPT__REF_FLU_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
@@ -1384,6 +1416,7 @@ void Aux_TakeNote()
                                                                ( OPT__REF_FLU_INT_SCHEME == INT_QUAD     ) ? "QUAD"     :
                                                                ( OPT__REF_FLU_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
                                                                ( OPT__REF_FLU_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
+                                                               ( OPT__REF_FLU_INT_SCHEME == INT_SPECTRAL ) ? "SPECTRAL" :
                                                                                                              "UNKNOWN" );
 #     ifdef MHD
       fprintf( Note, "OPT__REF_MAG_INT_SCHEME         %s\n",   ( OPT__REF_MAG_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
@@ -1393,6 +1426,7 @@ void Aux_TakeNote()
                                                                ( OPT__REF_MAG_INT_SCHEME == INT_QUAD     ) ? "QUAD"     :
                                                                ( OPT__REF_MAG_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
                                                                ( OPT__REF_MAG_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
+                                                               ( OPT__REF_MAG_INT_SCHEME == INT_SPECTRAL ) ? "SPECTRAL" :
                                                                                                              "UNKNOWN" );
 #     endif
 #     ifdef GRAVITY
@@ -1403,6 +1437,7 @@ void Aux_TakeNote()
                                                                ( OPT__REF_POT_INT_SCHEME == INT_QUAD     ) ? "QUAD"     :
                                                                ( OPT__REF_POT_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
                                                                ( OPT__REF_POT_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
+                                                               ( OPT__REF_POT_INT_SCHEME == INT_SPECTRAL ) ? "SPECTRAL" :
                                                                                                              "UNKNOWN" );
 #     endif
       fprintf( Note, "INT_MONO_COEFF                  %13.7e\n",  INT_MONO_COEFF          );

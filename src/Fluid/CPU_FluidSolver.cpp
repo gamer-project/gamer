@@ -1,8 +1,6 @@
 #include "GAMER.h"
 
-#if (!defined(GPU) || ((MODEL == ELBDM) && (WAVE_SCHEME == WAVE_GRAMFE) && !defined(GRAMFE_ENABLE_GPU)))
-
-
+#if (!defined(GPU) || (MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT && !defined(GRAMFE_FFT_ENABLE_GPU)))
 
 #include "GAMER.h"
 #include "CUFLU.h"
@@ -91,11 +89,20 @@ void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                       const real Taylor3_Coeff, const bool XYZ, const real MinDens );
 #elif ( WAVE_SCHEME == WAVE_GRAMFE ) // #if ( WAVE_SCHEME == WAVE_FD )
-void CPU_ELBDMSolver_GramFE(  real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
-                              real Flu_Array_Out[][FLU_NOUT   ][ CUBE(PS2) ],
-                              real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
-                              const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
-                              const bool XYZ, const real MinDens );
+#if ( GRAMFE_SCHEME == GRAMFE_FFT )
+void CPU_ELBDMSolver_GramFE_FFT (   real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
+                                    real Flu_Array_Out[][FLU_NOUT   ][ CUBE(PS2) ],
+                                    real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                    const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
+                                    const bool XYZ, const real MinDens );
+#elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+void CPU_ELBDMSolver_GramFE_MATMUL (      real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
+                                          real Flu_Array_Out[][FLU_NOUT   ][ CUBE(PS2) ],
+                                          real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                          real TimeEvo[][2 * FLU_NXT],
+                                          const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
+                                          const bool XYZ, const real MinDens );
+#endif // GRAMFE_SCHEME
 #endif // #if ( WAVE_SCHEME == WAVE_FD ) ... else
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 void CPU_ELBDMSolver_HamiltonJacobi(  real Flu_Array_In [][FLU_NIN ][ CUBE(HYB_NXT)],
@@ -127,6 +134,7 @@ static real (*h_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ] = NULL;
 static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 #endif
 #endif // FLU_SCHEME
+
 
 
 
@@ -274,9 +282,18 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
    CPU_ELBDMSolver( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
                      ELBDM_Taylor3_Coeff, XYZ, MinDens );
 
-#  elif ( WAVE_SCHEME == WAVE_GRAMFE )
-   CPU_ELBDMSolver_GramFE( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
+#  elif ( WAVE_SCHEME == WAVE_GRAMFE ) // #  if (WAVE_SCHEME == WAVE_FD )
+
+#  if ( GRAMFE_SCHEME == GRAMFE_FFT )
+   CPU_ELBDMSolver_GramFE_FFT( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
                      XYZ, MinDens );
+#  elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+// evaluate time evolution matrix
+   ELBDM_GramFE_ComputeTimeEvolutionMatrix(h_GramFE_TimeEvo, dt, dh, ELBDM_Eta);
+
+   CPU_ELBDMSolver_GramFE_MATMUL( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, h_GramFE_TimeEvo, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
+                     XYZ, MinDens );
+#  endif
 
 #  else // #  if (WAVE_SCHEME == WAVE_GRAMFE )
 #     error : ERROR : unsupported WAVE_SCHEME !!

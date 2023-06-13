@@ -1,11 +1,11 @@
 #include "CUFLU.h"
 #include "GAMER.h"
 
-#if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || ( defined(__CUDACC__) && defined(GRAMFE_ENABLE_GPU) ) )
+#if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || ( defined(__CUDACC__) && defined(GRAMFE_FFT_ENABLE_GPU) ) )
 
-#if ( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE )
-#include "GramExtensionTables.h"
+#if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
 
+#include "GramFE_ExtensionTables.h"
 
 // useful macros
 
@@ -59,7 +59,7 @@ __device__ __forceinline__ complex_type operator-(const complex_type& a, const c
 
 #else   // #ifdef __CUDACC__
 
-extern gramfe_complex_fftw_plan FFTW_Plan_ExtPsi, FFTW_Plan_ExtPsi_Inv;
+extern gramfe_fftw::complex_plan_1d FFTW_Plan_ExtPsi, FFTW_Plan_ExtPsi_Inv;
 
 #if ( SUPPORT_FFTW == FFTW3 )
 
@@ -69,8 +69,8 @@ using complex_type = std::complex<gramfe_float>;
 
 #else // #if ( SUPPORT_FFTW == FFTW3 )
 
-//derive from gramfe_float_complex which is an alias for FFTW2's complex_type in gramfe_float precision to allow for complex arithmetic operations
-struct complex_type : public gramfe_float_complex {
+//derive from gramfe_fftw::fft_complex which is an alias for FFTW2's complex_type in gramfe_float precision to allow for complex arithmetic operations
+struct complex_type : public gramfe_fftw::fft_complex {
    complex_type() {
    }
 
@@ -247,7 +247,7 @@ gramfe_float SineTaylorExpansion(gramfe_float x, int Nterms) {
 } // FUNCTION : SineTaylorExpansion
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CUFLU_ELBDMSolver_GramFE
+// Function    :  CUFLU_ELBDMSolver_GramFE_FFT
 // Description :  CPU and GPU ELBDM kinematic solver based on computing Gram (FE) extension and evolving wave function using pseudo-spectral method on extended domain
 //
 // Note        :  1. The three-dimensional evolution is achieved by applying x, y, and z operators successively.
@@ -274,19 +274,19 @@ gramfe_float SineTaylorExpansion(gramfe_float x, int Nterms) {
 #ifdef __CUDACC__
 __launch_bounds__(FFT::max_threads_per_block)
 __global__
-void CUFLU_ELBDMSolver_GramFE(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                                  real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
-                                  real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                  const real dt, const real _dh, const real Eta, const bool StoreFlux,
-                                  const bool XYZ, const real MinDens,
-                                  typename FFT::workspace_type  Workspace,
-                                  typename IFFT::workspace_type WorkspaceInv  )
+void CUFLU_ELBDMSolver_GramFE_FFT(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                                    real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
+                                    real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                    const real dt, const real _dh, const real Eta, const bool StoreFlux,
+                                    const bool XYZ, const real MinDens,
+                                    typename FFT::workspace_type  Workspace,
+                                    typename IFFT::workspace_type WorkspaceInv  )
 #else
-void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                                  real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
-                                  real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                  const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
-                                  const bool XYZ, const real MinDens )
+void CPU_ELBDMSolver_GramFE_FFT(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                                    real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
+                                    real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                    const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
+                                    const bool XYZ, const real MinDens )
 #endif
 {
 
@@ -361,7 +361,7 @@ void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_Ae, s_Ao, ExpCoeff, true,  0, MinDens, Workspace, WorkspaceInv );
    }
 
-} // FUNCTION : CUFLU_ELBDMSolver_GramFE
+} // FUNCTION : CUFLU_ELBDMSolver_GramFE_FFT
 
 
 
@@ -421,7 +421,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #     else
 
 //    create arrays for columns of various intermediate fields on the stack
-      complex_type* s_In_1PG = (complex_type* ) gramfe_fftw_malloc( GRAMFE_FLU_NXT * sizeof(complex_type) ); // allocate memory for fourier transform
+      complex_type* s_In_1PG = (complex_type* ) gramfe_fftw::fft_malloc( GRAMFE_FLU_NXT * sizeof(complex_type) ); // allocate memory for fourier transform
 
       complex_type  s_Ae_1PG [CGPU_FLU_BLOCK_SIZE_Y][GRAMFE_NDELTA]; // left projection polynomials
       complex_type  s_Ao_1PG [CGPU_FLU_BLOCK_SIZE_Y][GRAMFE_NDELTA]; // right projection polynomials
@@ -605,11 +605,11 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          } // while ( Column0 < NColumnTotal )
       } // # pragma  for (int bx=0; bx<NPatchGroup; bx++)
 #     ifndef __CUDACC__
-      gramfe_fftw_free(s_In_1PG);
+      gramfe_fftw::fft_free(s_In_1PG);
 #     endif
    } // # pragma omp parallel
 } // FUNCTION : CUFLU_Advance
 
 
-#endif // #if ( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE)
-#endif // #if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || ( defined(__CUDACC__) && defined(GRAMFE_ENABLE_GPU) ) )
+#endif // #if ( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
+#endif // #if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || ( defined(__CUDACC__) && defined(GRAMFE_FFT_ENABLE_GPU) ) )

@@ -314,6 +314,12 @@ extern bool FB_Any;
 extern int  FB_ParaBuf;
 #endif
 
+// (2-13) spectral interpolation
+#ifdef SUPPORT_SPECTRAL_INTERPOLATION
+extern char                 INT_TABLE_PATH[MAX_STRING];
+class InterpolationHandler;
+extern InterpolationHandler INTERPOLATION_HANDLER;
+#endif // #ifdef SUPPORT_SPECTRAL_INTERPOLATION
 
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
@@ -384,6 +390,11 @@ extern double     (*h_Corner_Array_S[2])[3];
 #if ( MODEL == HYDRO )
 extern real       (*h_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX];
 extern real        *h_SrcDlepProf_Radius;
+#endif
+
+
+#if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
+extern real       (*h_GramFE_TimeEvo)[2 * FLU_NXT];
 #endif
 
 

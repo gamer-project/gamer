@@ -22,11 +22,13 @@ typedef double real;
 typedef float  real;
 #endif
 
-#ifdef GRAMFE_FLOAT8
+#if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
+#ifdef GRAMFE_FFT_FLOAT8
 typedef double gramfe_float;
 #else
 typedef float  gramfe_float;
-#endif
+#endif // #ifdef GRAMFE_FFT_FLOAT8
+#endif // #if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
 
 // short names for unsigned type
 typedef unsigned short     ushort;
@@ -133,7 +135,8 @@ const IntScheme_t
    INT_CQUAD    = 4,
    INT_QUAD     = 5,
    INT_CQUAR    = 6,
-   INT_QUAR     = 7;
+   INT_QUAR     = 7,
+   INT_SPECTRAL = 8;
 
 
 // data reconstruction TVD limiters

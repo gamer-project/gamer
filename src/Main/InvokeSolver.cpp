@@ -545,10 +545,11 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #        if (   ( defined(GPU) && ( MODEL != ELBDM ) ) \
              || ( defined(GPU) && ( MODEL == ELBDM ) && ( ELBDM_SCHEME == ELBDM_HYBRID  ) ) \
              || ( defined(GPU) && ( MODEL == ELBDM ) && ( ELBDM_SCHEME == ELBDM_WAVE    ) && ( WAVE_SCHEME == WAVE_FD     ) ) \
-             || ( defined(GPU) && ( MODEL == ELBDM ) && ( ELBDM_SCHEME == ELBDM_WAVE    ) && ( WAVE_SCHEME == WAVE_GRAMFE ) && defined( GRAMFE_ENABLE_GPU ) ) )
+             || ( defined(GPU) && ( MODEL == ELBDM ) && ( ELBDM_SCHEME == ELBDM_WAVE    ) && ( WAVE_SCHEME == WAVE_GRAMFE ) && ( GRAMFE_SCHEME == GRAMFE_MATMUL ) ) \
+             || ( defined(GPU) && ( MODEL == ELBDM ) && ( ELBDM_SCHEME == ELBDM_WAVE    ) && ( WAVE_SCHEME == WAVE_GRAMFE ) && ( GRAMFE_SCHEME == GRAMFE_FFT    ) && defined( GRAMFE_FFT_ENABLE_GPU ) ) )
 
 //       when using hybrid GRAM scheme without GRAMFE_ENABLE_GPU, use GPU solver only on fluid levels
-#        if ( ( MODEL == ELBDM ) && ( ELBDM_SCHEME == ELBDM_HYBRID ) && ( WAVE_SCHEME == WAVE_GRAMFE ) && !defined( GRAMFE_ENABLE_GPU ) )
+#        if ( ( MODEL == ELBDM ) && ( ELBDM_SCHEME == ELBDM_HYBRID ) && ( WAVE_SCHEME == WAVE_GRAMFE ) && ( GRAMFE_SCHEME == GRAMFE_FFT    ) && ! defined( GRAMFE_FFT_ENABLE_GPU ) )
          if ( !useWaveFlag )
          {
 #        else // # if ( ( MODEL == ELBDM ) && ( ELBDM_SCHEME == ELBDM_HYBRID ) && ( WAVE_SCHEME == WAVE_GRAMFE ) && !defined( GRAMFE_ENABLE_GPU ) )

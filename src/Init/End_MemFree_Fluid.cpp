@@ -66,6 +66,10 @@ void End_MemFree_Fluid()
 #  endif
 #  endif // FLU_SCHEME
 
+#  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
+   delete [] h_GramFE_TimeEvo;       h_GramFE_TimeEvo     = NULL;
+#  endif // #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
+
 } // FUNCTION : End_MemFree_Fluid
 
 
