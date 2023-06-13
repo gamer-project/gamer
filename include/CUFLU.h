@@ -418,10 +418,7 @@
 // 2. ELBDM kinematic solver
 //=========================================================================================
 #elif ( MODEL == ELBDM )
-#  if ( WAVE_SCHEME == WAVE_FD )
-#     define FLU_BLOCK_SIZE_X       PS2
-
-#  if ( ELBDM_SCHEME == ELBDM_WAVE )
+#     define FLU_BLOCK_SIZE_X      PS2
 
 #  if   ( GPU_ARCH == FERMI )
 #     ifdef FLOAT8
@@ -478,41 +475,7 @@
 #        error : UNKNOWN GPU_ARCH !!
 #        endif
 #  endif
-#  elif ( ELBDM_SCHEME == ELBDM_HYBRID )
-#  if ( PATCH_SIZE == 8 )
-#     ifdef FLOAT8
-#        define FLU_BLOCK_SIZE_Y    16
-#     else
-#        define FLU_BLOCK_SIZE_Y    32
-#     endif
-#  else // # if ( PATCH_SIZE == 8 )
-#     ifdef FLOAT8
-#        define FLU_BLOCK_SIZE_Y    8
-#     else
-#        define FLU_BLOCK_SIZE_Y    16
-#     endif
-#  endif // # if ( PATCH_SIZE == 8 ) ... # else
-#  else
-#  error : ERROR : UNKNOWN ELBDM_SCHEME
-#  endif
 
-#  elif ( ELBDM_SCHEME == ELBDM_HYBRID )
-#  if ( PATCH_SIZE == 8 )
-#     ifdef FLOAT8
-#        define FLU_BLOCK_SIZE_Y    16
-#     else
-#        define FLU_BLOCK_SIZE_Y    32
-#     endif
-#  else // # if ( PATCH_SIZE == 8 )
-#     ifdef FLOAT8
-#        define FLU_BLOCK_SIZE_Y    8
-#     else
-#        define FLU_BLOCK_SIZE_Y    16
-#     endif
-#  endif // # if ( PATCH_SIZE == 8 ) ... # else
-#  else
-#  error : ERROR : UNKNOWN ELBDM_SCHEME
-#  endif
 
 
 // set number of threads and blocks used in GRAMFE GPU scheme
