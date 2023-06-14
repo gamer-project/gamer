@@ -241,12 +241,6 @@ void Aux_TakeNote()
 #     if ( GRAMFE_SCHEME == GRAMFE_FFT )
       fprintf( Note, "GRAMFE_SCHEME                   FFT\n" );
 
-#     ifdef GRAMFE_FFT_ENABLE_GPU
-      fprintf( Note, "GRAMFE_FFT_ENABLE_GPU           ON\n" );
-#     else // # ifdef GRAMFE_FFT_ENABLE_GPU
-      fprintf( Note, "GRAMFE_FFT_ENABLE_GPU           OFF\n" );
-#     endif // # ifdef GRAMFE_FFT_ENABLE_GPU ... # else
-
 #     elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
       fprintf( Note, "GRAMFE_SCHEME                   MATMUL\n" );
 #     else

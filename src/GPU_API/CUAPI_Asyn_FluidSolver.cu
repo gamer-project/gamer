@@ -81,7 +81,7 @@ __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ]
                                    const real Taylor3_Coeff, const bool XYZ, const real MinDens );
 real ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 # elif ( WAVE_SCHEME == WAVE_GRAMFE )
-# if ( GRAMFE_SCHEME == GRAMFE_FFT && defined(GRAMFE_FFT_ENABLE_GPU) )
+# if ( GRAMFE_SCHEME == GRAMFE_FFT )
 __launch_bounds__(FFT::max_threads_per_block)
 __global__
 void CUFLU_ELBDMSolver_GramFE_FFT(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
@@ -321,11 +321,11 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 #  elif ( MODEL == ELBDM )
 
-#  if ( WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT && defined( GRAMFE_FFT_ENABLE_GPU ) )
+#  if ( WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
    uint cufftdx_shared_memory_size;
    typename  FFT::workspace_type cufftdx_workspace;
    typename IFFT::workspace_type cufftdx_iworkspace;
-#  endif // #  #  if ( WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT && defined( GRAMFE_FFT_ENABLE_GPU ) )
+#  endif // #  #  if ( WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( useWaveFlag ) {
@@ -339,7 +339,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  elif ( WAVE_SCHEME == WAVE_GRAMFE )
 
 // set up GPU FFT if GPU is used for Gram Fourier extension FFT scheme
-#  if ( GRAMFE_SCHEME == GRAMFE_FFT && defined(GRAMFE_FFT_ENABLE_GPU) )
+#  if ( GRAMFE_SCHEME == GRAMFE_FFT )
 // total size of shared memory required for storing FFT::ffts_per_block rows of data after Gram extension and the coefficients of the respective left and right extension polynomials
    auto size                       = FFT::ffts_per_block * cufftdx::size_of<FFT>::value + 2 * FFT::ffts_per_block * GRAMFE_NDELTA;
    auto size_bytes                 = size * sizeof(complex_type);
@@ -570,7 +570,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 #     elif ( WAVE_SCHEME == WAVE_GRAMFE )
 
-#     if ( GRAMFE_SCHEME == GRAMFE_FFT && defined(GRAMFE_FFT_ENABLE_GPU) )
+#     if ( GRAMFE_SCHEME == GRAMFE_FFT )
          CUFLU_ELBDMSolver_GramFE_FFT <<< NPatch_per_Stream[s], FFT::block_dim, cufftdx_shared_memory_size, Stream[s] >>>
             ( d_Flu_Array_F_In  + UsedPatch[s],
               d_Flu_Array_F_Out + UsedPatch[s],

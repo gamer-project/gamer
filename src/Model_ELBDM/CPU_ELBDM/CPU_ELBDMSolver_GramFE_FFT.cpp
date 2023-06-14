@@ -15,7 +15,7 @@
 # define to1D2(z,y,x) ( ((z)-FLU_GHOST_SIZE) * PS2     * PS2     + ((y)-FLU_GHOST_SIZE) * PS2     + ((x)-FLU_GHOST_SIZE)  )
 
 // use cufftdx library for FFTs on GPU
-#if __CUDACC__
+#ifdef __CUDACC__
 
 using forward_workspace_type = typename FFT::workspace_type;
 using inverse_workspace_type = typename IFFT::workspace_type;
