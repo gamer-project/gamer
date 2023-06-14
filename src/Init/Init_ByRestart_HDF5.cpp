@@ -1534,6 +1534,8 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "BarotropicEoS",          &RS.BarotropicEoS,          SID, TID, NonFatal, &RT.BarotropicEoS,          1, NonFatal );
 
 #  elif ( MODEL == ELBDM )
+   LoadField( "ELBDMScheme",            &RS.ELBDMScheme,            SID, TID, NonFatal, &RT.ELBDMScheme,            1, NonFatal );
+   LoadField( "WaveScheme",             &RS.WaveScheme,             SID, TID, NonFatal, &RT.WaveScheme,             1, NonFatal );
    LoadField( "ConserveMass",           &RS.ConserveMass,           SID, TID, NonFatal, &RT.ConserveMass,           1, NonFatal );
    LoadField( "Laplacian4th",           &RS.Laplacian4th,           SID, TID, NonFatal, &RT.Laplacian4th,           1, NonFatal );
    LoadField( "SelfInteraction4",       &RS.SelfInteraction4,       SID, TID, NonFatal, &RT.SelfInteraction4,       1, NonFatal );
@@ -1712,6 +1714,14 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Flu_BlockSize_x",      &RS.Flu_BlockSize_x,      SID, TID, NonFatal, &RT.Flu_BlockSize_x,       1, NonFatal );
    LoadField( "Flu_BlockSize_y",      &RS.Flu_BlockSize_y,      SID, TID, NonFatal, &RT.Flu_BlockSize_y,       1, NonFatal );
 
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   LoadField( "GramFEGamma",          &RS.GramFEGamma,          SID, TID, NonFatal, &RT.GramFEGamma ,          1, NonFatal );
+   LoadField( "GramFEG",              &RS.GramFEG,              SID, TID, NonFatal, &RT.GramFEG     ,          1, NonFatal );
+   LoadField( "GramFENDelta",         &RS.GramFENDelta,         SID, TID, NonFatal, &RT.GramFENDelta,          1, NonFatal );
+   LoadField( "GramFEOrder",          &RS.GramFEOrder,          SID, TID, NonFatal, &RT.GramFEOrder ,          1, NonFatal );
+   LoadField( "GramFEND",             &RS.GramFEND,             SID, TID, NonFatal, &RT.GramFEND    ,          1, NonFatal );
+   LoadField( "GramFEFluNxt",         &RS.GramFEFluNxt,         SID, TID, NonFatal, &RT.GramFEFluNxt,          1, NonFatal );
+#  endif // #  if ( WAVE_SCHEME == WAVE_GRAMFE )
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL

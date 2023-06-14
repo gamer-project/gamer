@@ -1828,6 +1828,10 @@ void FillIn_Makefile( Makefile_t &Makefile )
 
 
 #  elif ( MODEL == ELBDM )
+
+   Makefile.ELBDMScheme            = ELBDM_SCHEME;
+   Makefile.WaveScheme             = WAVE_SCHEME;
+
 #  ifdef CONSERVE_MASS
    Makefile.ConserveMass           = 1;
 #  else
@@ -2087,7 +2091,14 @@ void FillIn_SymConst( SymConst_t &SymConst )
 #  elif  ( MODEL == ELBDM )
    SymConst.Flu_BlockSize_x      = FLU_BLOCK_SIZE_X;
    SymConst.Flu_BlockSize_y      = FLU_BLOCK_SIZE_Y;
-
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   SymConst.GramFEGamma          = GRAMFE_GAMMA;
+   SymConst.GramFEG              = GRAMFE_G;
+   SymConst.GramFENDelta         = GRAMFE_NDELTA;
+   SymConst.GramFEOrder          = GRAMFE_ORDER;
+   SymConst.GramFEND             = GRAMFE_ND;
+   SymConst.GramFEFluNxt         = GRAMFE_FLU_NXT;
+#  endif
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
@@ -2822,6 +2833,8 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "BarotropicEoS",          HOFFSET(Makefile_t,BarotropicEoS          ), H5T_NATIVE_INT );
 
 #  elif ( MODEL == ELBDM )
+   H5Tinsert( H5_TypeID, "ELBDMScheme",            HOFFSET(Makefile_t,ELBDMScheme            ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "WaveScheme",             HOFFSET(Makefile_t,WaveScheme             ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "ConserveMass",           HOFFSET(Makefile_t,ConserveMass           ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Laplacian4th",           HOFFSET(Makefile_t,Laplacian4th           ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SelfInteraction4",       HOFFSET(Makefile_t,SelfInteraction4       ), H5T_NATIVE_INT );
@@ -2958,6 +2971,15 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 #  elif  ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "Flu_BlockSize_x",      HOFFSET(SymConst_t,Flu_BlockSize_x     ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Flu_BlockSize_y",      HOFFSET(SymConst_t,Flu_BlockSize_y     ), H5T_NATIVE_INT    );
+
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   H5Tinsert( H5_TypeID, "GramFEGamma",          HOFFSET(SymConst_t,GramFEGamma         ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "GramFEG",              HOFFSET(SymConst_t,GramFEG             ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "GramFENDelta",         HOFFSET(SymConst_t,GramFENDelta        ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "GramFEOrder",          HOFFSET(SymConst_t,GramFEOrder         ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "GramFEND",             HOFFSET(SymConst_t,GramFEND            ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "GramFEFluNxt",         HOFFSET(SymConst_t,GramFEFluNxt        ), H5T_NATIVE_INT    );
+#  endif // #  if ( WAVE_SCHEME == WAVE_GRAMFE )
 
 #  else
 #  error : ERROR : unsupported MODEL !!

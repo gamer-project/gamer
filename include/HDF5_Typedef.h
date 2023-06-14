@@ -150,6 +150,8 @@ struct Makefile_t
    int BarotropicEoS;
 
 #  elif ( MODEL == ELBDM )
+   int ELBDMScheme;
+   int WaveScheme;
    int ConserveMass;
    int Laplacian4th;
    int SelfInteraction4;
@@ -157,7 +159,6 @@ struct Makefile_t
 #  else
 #  error : unsupported MODEL !!
 #  endif // MODEL
-
 #  ifdef PARTICLE
    int MassiveParticles;
    int Tracer;
@@ -292,6 +293,14 @@ struct SymConst_t
 #  elif  ( MODEL == ELBDM )
    int    Flu_BlockSize_x;
    int    Flu_BlockSize_y;
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   int    GramFEGamma;
+   int    GramFEG;
+   int    GramFENDelta;
+   int    GramFEOrder;
+   int    GramFEND;
+   int    GramFEFluNxt;
+#  endif // #  if ( WAVE_SCHEME == WAVE_GRAMFE )
 
 #  else
 #  error : ERROR : unsupported MODEL !!
