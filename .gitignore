@@ -8,3 +8,5 @@ gamer
 GAMER_CompareData
 GAMER_ExtractUniform
 GAMER_ExtractProfile
+*.bin
+tool/table_maker/GramFE/GramFE_ExtensionTables.h
