@@ -123,20 +123,10 @@ SIMU_OPTION += -DLAPLACIAN_4TH
 else ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
 
 # choose gramfe scheme GRAMFE_FFT (uses fast fourier transform, faster for larger patch sizes), GRAMFE_MATMUL (uses matrix multiplication, faster for smaller patches)
-# --> must turn on (SUPPORT_FFTW=FFTW2 and FLOAT8) or (SUPPORT_FFTW=FFTW3) or (GPU and GRAMFE_FFT_ENABLE_GPU) for GRAMFE_SCHEME == GRAMFE_FFT
+# --> must turn on (SUPPORT_FFTW=FFTW2 and FLOAT8) or (SUPPORT_FFTW=FFTW3) or GPU for GRAMFE_SCHEME == GRAMFE_FFT
 # --> must turn on  SUPPORT_GSL for GRAMFE_SCHEME == GRAMFE_MATMUL
 SIMU_OPTION += -DGRAMFE_SCHEME=GRAMFE_FFT
 
-
-# (b-2-2-1) GRAMFE_FFT options
-# ------------------------------------------------------------------------------------
-ifeq "$(filter -DGRAMFE_SCHEME=GRAMFE_FFT, $(SIMU_OPTION))" "-DGRAMFE_SCHEME=GRAMFE_FFT"
-
-# enable for GPU support of Gram-Fourier extension algorithm in GPU mode (CPU is used by default because it is faster)
-# --> must turn on GPU
-SIMU_OPTION += -DGRAMFE_FFT_ENABLE_GPU
-
-endif # GRAMFE_SCHEME
 endif # WAVE_SCHEME
 
 # (b-2-3) ELBDM_HYBRID options
@@ -929,7 +919,7 @@ endif
 
 ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
    ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
-      ifeq "$(filter -DGRAMFE_FFT_ENABLE_GPU, $(SIMU_OPTION))" "-DGRAMFE_FFT_ENABLE_GPU"
+      ifeq "$(filter -DGRAMFE_SCHEME=GRAMFE_FFT, $(SIMU_OPTION))" "-DGRAMFE_SCHEME=GRAMFE_FFT"
          INCLUDE += -I$(CUFFTDX_PATH)/include
       endif
    endif
@@ -1001,7 +991,7 @@ endif
 # enable C++ 17 support for ELBDM GPU Gram-Fourier extension scheme
 ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
    ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
-      ifeq "$(filter -DGRAMFE_FFT_ENABLE_GPU, $(SIMU_OPTION))" "-DGRAMFE_FFT_ENABLE_GPU"
+      ifeq "$(filter -DGRAMFE_SCHEME=GRAMFE_FFT, $(SIMU_OPTION))" "-DGRAMFE_SCHEME=GRAMFE_FFT"
          NVCCFLAG_COM += -std=c++17
       endif
    endif

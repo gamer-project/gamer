@@ -1213,17 +1213,14 @@ void Aux_Check_Parameter()
 #  error : ERROR : WAVE_GRAMFE solver requires GRAMFE_FFT_FLOAT8 for stability !!
 #  endif // # ifndef GRAMFE_FFT_FLOAT8
 
-#  if ( !defined(GPU) && defined(GRAMFE_FFT_ENABLE_GPU) )
-#  error : ERROR : GRAMFE_FFT_ENABLE_GPU requires GPU!
-#  endif // #  if ( !defined(GPU) && defined(GRAMFE_FFT_ENABLE_GPU) )
 
-#  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_FFT_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
+#  if ( !defined(GPU) && !defined(SUPPORT_FFTW) )
 #  error : ERROR : CPU && GRAMFE_SCHEME == GRAMFE_FFT require SUPPORT_FFTW flag!
-#  endif // #  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_FFT_ENABLE_GPU) ) ) && !defined(SUPPORT_FFTW) )
+#  endif // #  if ( !defined(GPU) && !defined(SUPPORT_FFTW) )
 
-#  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_FFT_ENABLE_GPU) ) ) && SUPPORT_FFTW == FFTW2 && !defined(FLOAT8) )
+#  if ( !defined(GPU) && SUPPORT_FFTW == FFTW2 && !defined(FLOAT8) )
 #  error : ERROR : CPU && GRAMFE_SCHEME == GRAMFE_FFT && SUPPORT_FFTW = FFTW2 require FLOAT8!
-#  endif // #  if ( ( !defined(GPU) || ( defined(GPU) && !defined(GRAMFE_FFT_ENABLE_GPU) ) ) && SUPPORT_FFTW == FFTW2 && !defined(FLOAT8) )
+#  endif // #  if ( !defined(GPU) && SUPPORT_FFTW == FFTW2 && !defined(FLOAT8) )
 
 #  elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 

@@ -1,7 +1,7 @@
 #include "CUFLU.h"
 #include "GAMER.h"
 
-#if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || ( defined(__CUDACC__) && defined(GRAMFE_FFT_ENABLE_GPU) ) )
+#if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || defined(__CUDACC__) )
 
 #if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
 
@@ -612,4 +612,4 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 
 #endif // #if ( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
-#endif // #if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || ( defined(__CUDACC__) && defined(GRAMFE_FFT_ENABLE_GPU) ) )
+#endif // #if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || defined(__CUDACC__) )

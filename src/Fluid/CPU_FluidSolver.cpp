@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#if (!defined(GPU) || (MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT && !defined(GRAMFE_FFT_ENABLE_GPU)))
+#ifndef GPU
 
 #include "GAMER.h"
 #include "CUFLU.h"

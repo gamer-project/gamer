@@ -539,23 +539,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
    {
       case FLUID_SOLVER :
 
-//       only use GPU for Gram FE wave scheme if GRAMFE_FFT_ENABLE_GPU is defined
-//       @fish: Can you think of a better way to handle this? I really do not like this code, but unless we also define CUAPI_Asyn_FluidSolver in CPU mode
-//              I do not see a way to get rid of this massive if clause
-#        if (   ( defined(GPU) && ( MODEL != ELBDM ) ) \
-             || ( defined(GPU) && ( MODEL == ELBDM ) && ( ELBDM_SCHEME == ELBDM_HYBRID  ) ) \
-             || ( defined(GPU) && ( MODEL == ELBDM ) && ( ELBDM_SCHEME == ELBDM_WAVE    ) && ( WAVE_SCHEME == WAVE_FD     ) ) \
-             || ( defined(GPU) && ( MODEL == ELBDM ) && ( ELBDM_SCHEME == ELBDM_WAVE    ) && ( WAVE_SCHEME == WAVE_GRAMFE ) && ( GRAMFE_SCHEME == GRAMFE_MATMUL ) ) \
-             || ( defined(GPU) && ( MODEL == ELBDM ) && ( ELBDM_SCHEME == ELBDM_WAVE    ) && ( WAVE_SCHEME == WAVE_GRAMFE ) && ( GRAMFE_SCHEME == GRAMFE_FFT    ) && defined( GRAMFE_FFT_ENABLE_GPU ) ) )
-
-//       when using hybrid GRAM scheme without GRAMFE_FFT_ENABLE_GPU, use GPU solver only on fluid levels
-#        if ( ( MODEL == ELBDM ) && ( ELBDM_SCHEME == ELBDM_HYBRID ) && ( WAVE_SCHEME == WAVE_GRAMFE ) && ( GRAMFE_SCHEME == GRAMFE_FFT    ) && ! defined( GRAMFE_FFT_ENABLE_GPU ) )
-         if ( !useWaveFlag )
-         {
-#        else // # if ( ( MODEL == ELBDM ) && ( ELBDM_SCHEME == ELBDM_HYBRID ) && ( WAVE_SCHEME == WAVE_GRAMFE ) && !defined( GRAMFE_FFT_ENABLE_GPU ) )
-         if ( true )
-         {
-#        endif // # if ( ( MODEL == ELBDM ) && ( ELBDM_SCHEME == ELBDM_HYBRID ) && ( WAVE_SCHEME == WAVE_GRAMFE ) && !defined( GRAMFE_FFT_ENABLE_GPU ) )
+#        ifdef GPU
          CUAPI_Asyn_FluidSolver( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID],
                                  h_Mag_Array_F_In[ArrayID], h_Mag_Array_F_Out[ArrayID],
                                  h_DE_Array_F_Out[ArrayID], h_Flux_Array[ArrayID], h_Ele_Array[ArrayID],
@@ -569,9 +553,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar,
                                  JEANS_MIN_PRES, JeansMinPres_Coeff,
                                  GPU_NSTREAM, useWaveFlag );
-         } else
-#        endif
-         {
+#        else
          CPU_FluidSolver       ( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID],
                                  h_Mag_Array_F_In[ArrayID], h_Mag_Array_F_Out[ArrayID],
                                  h_DE_Array_F_Out[ArrayID], h_Flux_Array[ArrayID], h_Ele_Array[ArrayID],
@@ -584,7 +566,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, PassiveNorm_VarIdx,
                                  OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
                                  JEANS_MIN_PRES, JeansMinPres_Coeff, useWaveFlag );
-         }
+#        endif
       break;
 
 
