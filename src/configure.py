@@ -61,7 +61,8 @@ import re
 ####################################################################################################
 # Global variables
 ####################################################################################################
-NONE_STR = "NONE"
+NONE_STR   = "NONE"
+PYTHON_VER = [sys.version_info.major, sys.version_info.minor]
 
 GAMER_CONFIG_DIR  = "../configs"
 GAMER_MAKE_BASE   = "Makefile_base"
@@ -92,6 +93,8 @@ class ArgumentParser( argparse.ArgumentParser ):
         self.depends     = {}
         self.constrains  = {}
         self.gamer_names = {}
+        # This feature is only supported for version >= 3.5.
+        if PYTHON_VER[0] == 2 or PYTHON_VER[1] < 5: kwargs.pop("allow_abbrev")
         super(ArgumentParser, self).__init__(*args, **kwargs)
 
     def add_argument(self, *args, **kwargs):
@@ -326,6 +329,7 @@ def load_arguments():
     parser = ArgumentParser( description = GAMER_DESCRIPTION,
                              formatter_class = argparse.RawTextHelpFormatter,
                              epilog = GAMER_EPILOG,
+                             allow_abbrev=False,
                              add_help=False)
 
     parser.add_argument( "-h", "--help",
