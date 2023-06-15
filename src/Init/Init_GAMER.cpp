@@ -320,17 +320,17 @@ void Init_GAMER( int *argc, char ***argv )
 
 // initialize source-term fields (e.g., cooling time)
 // --> necessary for, for example, estimating the source-term time-step at the first step
-// --> must ensure each source term does not modify any fluid field (e.g., gas internal energy) when dt=0.0 
+// --> must ensure each source term does not modify any fluid field (e.g., gas internal energy) when dt=0.0
 //     --> source terms violating this criterion (e.g., deleptonization) must be temporarily disabled before calling Src_AdvanceDt()
    if ( OPT__INIT != INIT_BY_RESTART )
-   {  
+   {
       const bool OverlapMPI_No   = false;
       const bool Overlap_Sync_No = false;
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Initializing source-term fields" );
 
       for (int lv=0; lv<NLEVEL; lv++)
-      {  
+      {
          if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d ... ", lv );
 
 //       adopt dt=0.0 to prevent any update of the fluid fields
