@@ -124,6 +124,7 @@ class ArgumentParser( argparse.ArgumentParser ):
             if arg[0] != "-":
                 msg += 'Unrecognized positional argument: %s\n'%(arg)
                 continue
+            arg = arg.split("=")[0]     # separate the assigned value.
             min_dist = 100000
             pos_key = ""
             for key in self.gamer_names:
