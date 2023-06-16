@@ -33,7 +33,7 @@ COMPILE_VERBOSE := 0
 # physical model: HYDRO/ELBDM/PAR_ONLY (ELBDM: wave dark matter; PAR_ONLY: particle-only)
 # --> must be set in any cases; PAR_ONLY is not supported yet;
 #     ELBDM is not publicly available yet but will be released soon
-SIMU_OPTION += -DMODEL=ELBDM
+SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
 # --> must define SUPPORT_FFTW=FFTW2 or FFTW3
@@ -124,7 +124,6 @@ else ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=W
 
 # choose gramfe scheme GRAMFE_FFT (uses fast fourier transform, faster for larger patch sizes), GRAMFE_MATMUL (uses matrix multiplication, faster for smaller patches)
 # --> must turn on (SUPPORT_FFTW=FFTW2 and FLOAT8) or (SUPPORT_FFTW=FFTW3) or GPU for GRAMFE_SCHEME == GRAMFE_FFT
-# --> must turn on  SUPPORT_GSL for GRAMFE_SCHEME == GRAMFE_MATMUL
 SIMU_OPTION += -DGRAMFE_SCHEME=GRAMFE_FFT
 
 endif # WAVE_SCHEME

@@ -129,20 +129,18 @@ void CPU_ELBDMSolver_GramFE_MATMUL(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NX
 #  ifdef __CUDACC__
    __shared__ gramfe_matmul_complex_type s_TimeEvo[PS2 * FLU_NXT];
 #  else // #  ifdef __CUDACC__
-              gramfe_matmul_complex_type* s_TimeEvo = (gramfe_matmul_complex_type *) g_TimeEvo;
+              gramfe_matmul_complex_type s_TimeEvo[PS2 * FLU_NXT];
 #  endif // #  ifdef __CUDACC__ ... else
 
-#  ifdef __CUDACC__
-// disabled by default, computing s_TimeEvo on CPU is much faster
    gramfe_matmul_complex_type* s_LinEvolve = (gramfe_matmul_complex_type *) s_TimeEvo;
    gramfe_matmul_complex_type* g_LinEvolve = (gramfe_matmul_complex_type *) g_TimeEvo;
+   uint row, col;
 
-
+#  ifdef __CUDACC__
    const uint tx           = threadIdx.x;
    const uint ty           = threadIdx.y;
    const uint tid          = ty * CGPU_FLU_BLOCK_SIZE_X + tx;                // thread ID within block
    const uint NThread      = CGPU_FLU_BLOCK_SIZE_X * CGPU_FLU_BLOCK_SIZE_Y;  // total number of threads within block
-   uint row, col;
 
 // tranpose input evolution matrix from PS2 x FLU_NXT to FLU_NXT x PS2 for it to be in row-major order
    for (uint i = tid; i < PS2 * FLU_NXT; i += NThread) {
@@ -151,7 +149,15 @@ void CPU_ELBDMSolver_GramFE_MATMUL(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NX
       s_LinEvolve[col * PS2 + row] = g_LinEvolve[i];
    }
 
-#  endif // #  ifdef __CUDACC__
+#  else
+
+   for (uint i = 0; i < PS2 * FLU_NXT; ++i) {
+      row = i / FLU_NXT;
+      col = i % FLU_NXT;
+      s_LinEvolve[col * PS2 + row] = g_LinEvolve[i];
+   }
+
+#  endif
 
 
    if ( XYZ )
