@@ -11,21 +11,14 @@
 
 #include <complex.h>
 
-
-#ifdef GRAMFE_MM_FLOAT8
-namespace gramfe_matmul_gsl = gsl_double_precision;
-#else // #ifdef GRAMFE_MM_FLOAT8
-namespace gramfe_matmul_gsl = gsl_single_precision;
-#endif // #ifdef GRAMFE_MM_FLOAT8 ... # else
-
 #define GRAMFE_EV_FLOAT8
 
 #ifdef GRAMFE_EV_FLOAT8
 namespace gramfe_evo_gsl = gsl_double_precision;
-#define gramfe_evo_float double
+#define gramfe_evo_float __float128
 #else // #ifdef GRAMFE_EV_FLOAT8
 namespace gramfe_evo_gsl = gsl_single_precision;
-#define gramfe_evo_float float
+#define gramfe_evo_float __float128
 #endif // #ifdef GRAMFE_EV_FLOAT8 ... # else
 
 
@@ -53,7 +46,7 @@ gramfe_evo_float CosineTaylorExpansion(gramfe_evo_float x, int Nterms) {
    gramfe_evo_float result = 0;
 
    for (int i = 0; i  < Nterms; ++i) {
-      result += pow(-1, i) * (1 / ((gramfe_evo_float) Factorial(2 * i))) * pow(x, 2 * i   );
+      result += pow(-1, i) * (1 / ((gramfe_evo_float) Factorial(2 * i))) * pow((long double)x, 2 * i   );
    }
 
    return result;
@@ -70,7 +63,7 @@ gramfe_evo_float SineTaylorExpansion(gramfe_evo_float x, int Nterms) {
    gramfe_evo_float result = 0;
 
    for (int i = 0; i  < Nterms; ++i) {
-      result += pow(-1, i) * ( 1 / ((gramfe_evo_float) Factorial(2 * i + 1)) ) * pow(x, 2 * i + 1);
+      result += pow(-1, i) * ( 1 / ((gramfe_evo_float) Factorial(2 * i + 1)) ) * pow((long double) x, 2 * i + 1);
    }
 
    return result;
@@ -80,7 +73,7 @@ gramfe_evo_float SineTaylorExpansion(gramfe_evo_float x, int Nterms) {
 //-------------------------------------------------------------------------------------------------------
 // Function    :  GramFE_ComputeTimeEvolutionMatrix
 // Description :  Compute the time evolution matrix for the Schrödinger equation and store result in output
-// Parameter   :  output  : Complex PS2 x 2 * FLU_NXT matrix (contiguous memory block of size 2 * FLU_NXT * PS2 * sizeof(real) bytes)
+// Parameter   :  output  : Complex PS2 x 2 * FLU_NXT matrix (contiguous memory block of size 2 * FLU_NXT * PS2 * sizeof(gramfe_matmul_float) bytes)
 //                dt      : Time step
 //                dh      : Grid spacing
 //                Eta     : m/hbar
@@ -91,8 +84,8 @@ void ELBDM_GramFE_ComputeTimeEvolutionMatrix(gramfe_matmul_float (*output)[2 * F
    gramfe_evo_float K, Filter, Coeff;
    gramfe_evo_complex_type ExpCoeff;
 
-   const gramfe_evo_float filterDecay  = (gramfe_evo_float) 16.0 * (gramfe_evo_float) 2.302585092994046; // decay of k-space filter ( 32 * log(10) )
-   const gramfe_evo_float filterDegree = (gramfe_evo_float) 50;                                       // degree of k-space filter
+   const gramfe_evo_float filterDecay  = (gramfe_evo_float) 32.0 * (gramfe_evo_float) 2.302585092994046; // decay of k-space filter ( 32 * log(10) )
+   const gramfe_evo_float filterDegree = (gramfe_evo_float) 100;                                       // degree of k-space filter
    const gramfe_evo_float kmax         = (gramfe_evo_float) M_PI / dh;                                 // maximum value of k
    const gramfe_evo_float dk           = (gramfe_evo_float) + 2.0 * kmax / GRAMFE_FLU_NXT;             // k steps in k-space
    const gramfe_evo_float dT           = (gramfe_evo_float) - 0.5 * dt / Eta;                          // coefficient in time evolution operator
@@ -118,9 +111,9 @@ void ELBDM_GramFE_ComputeTimeEvolutionMatrix(gramfe_matmul_float (*output)[2 * F
    for (int i=0; i<GRAMFE_FLU_NXT; i++)
    {
       K           = ( i <= GRAMFE_FLU_NXT/2 ) ? dk*i : dk*(i-GRAMFE_FLU_NXT);
-      Filter      = exp(-filterDecay * pow(fabs(K/kmax), 2*filterDegree));
+      Filter      = exp(-(long double) filterDecay * pow((long double) abs(K/kmax), 2*filterDegree));
       Coeff       = SQR(K)*dT;
-      ExpCoeff    = gramfe_evo_complex_type(CosineTaylorExpansion(Coeff, cosineNTerms), SineTaylorExpansion(Coeff, sineNTerms)) * Filter;
+      ExpCoeff    = gramfe_evo_complex_type(//)CosineTaylorExpansion(Coeff, cosineNTerms), SineTaylorExpansion(Coeff, sineNTerms)) * Filter;
 
 //    multiply FFT matrix by diagonal time evolution operator in k-space
       for (int k=0; k<GRAMFE_FLU_NXT; k++)
@@ -130,15 +123,16 @@ void ELBDM_GramFE_ComputeTimeEvolutionMatrix(gramfe_matmul_float (*output)[2 * F
    } // for (int i=0; i<GRAMFE_FLU_NXT; i++)
 
 /*
-   gramfe_evo_gsl::matrix_complex_const_view extend     = gramfe_evo_gsl::matrix_complex_const_view_array(GramFE_Extend                     , GRAMFE_FLU_NXT, FLU_NXT);
-   gramfe_evo_gsl::matrix_complex_const_view ifft       = gramfe_evo_gsl::matrix_complex_const_view_array(GramFE_IFFT                       , PS2           , GRAMFE_FLU_NXT);
-   gramfe_evo_gsl::matrix_complex_const_view dfft       = gramfe_evo_gsl::matrix_complex_const_view_array((gramfe_evo_float*) GramFE_DFFT     , GRAMFE_FLU_NXT, GRAMFE_FLU_NXT);
-   gramfe_evo_gsl::matrix_complex_view       ifftdfft   = gramfe_evo_gsl::matrix_complex_view_array      ((gramfe_evo_float*) GramFE_IFFTDFFT , PS2,            GRAMFE_FLU_NXT);
-   gramfe_evo_gsl::matrix_complex_view       evolution  = gramfe_evo_gsl::matrix_complex_view_array      ((gramfe_evo_float*) GramFE_Evolution, PS2           , FLU_NXT);
+   gramfe_evo_gsl::matrix_complex_const_view extend     = gramfe_evo_gsl::matrix_complex_const_view_array(GramFE_Extend                , GRAMFE_FLU_NXT, FLU_NXT);
+   gramfe_evo_gsl::matrix_complex_const_view ifft       = gramfe_evo_gsl::matrix_complex_const_view_array(GramFE_IFFT                  , PS2           , GRAMFE_FLU_NXT);
+   gramfe_evo_gsl::matrix_complex_const_view dfft       = gramfe_evo_gsl::matrix_complex_const_view_array((gramfe_evo_float*) DFFT     , GRAMFE_FLU_NXT, GRAMFE_FLU_NXT);
+   gramfe_evo_gsl::matrix_complex_view       ifftdfft   = gramfe_evo_gsl::matrix_complex_view_array      ((gramfe_evo_float*) IFFTDFFT , PS2           , GRAMFE_FLU_NXT);
+   gramfe_evo_gsl::matrix_complex_view       evolution  = gramfe_evo_gsl::matrix_complex_view_array      ((gramfe_evo_float*) Evolution, PS2           , FLU_NXT);
 
    gramfe_evo_gsl::blas_cgemm(CblasNoTrans, CblasNoTrans, {1.0,  0.0}, &ifft.matrix,     &dfft.matrix,   {0.0, 0.0}, &ifftdfft.matrix);
    gramfe_evo_gsl::blas_cgemm(CblasNoTrans, CblasNoTrans, {1.0,  0.0}, &ifftdfft.matrix, &extend.matrix, {0.0, 0.0}, &evolution.matrix);
 */
+
    for ( int i = 0; i < PS2; ++i )
    for ( int j = 0; j < GRAMFE_FLU_NXT; ++j )
    {
@@ -156,15 +150,15 @@ void ELBDM_GramFE_ComputeTimeEvolutionMatrix(gramfe_matmul_float (*output)[2 * F
       gramfe_evo_complex_type out = {0, 0};
       for ( int k = 0; k < GRAMFE_FLU_NXT; ++k )
       {
-         out += IFFTDFFT[i][k]  * Extend[k][j];
+         out += IFFTDFFT[i][k]  * Extend[k][j] * (__float128) pow(-1, j);
       }
       Evolution[i][j] = out;
    }
 
    for (size_t i = 0; i < PS2; ++i) {
       for (size_t j = 0; j < FLU_NXT; ++j) {
-         Out[i][j].real(Evolution[i][j].real());
-         Out[i][j].imag(Evolution[i][j].imag());
+         Out[i][j].real(Evolution[i][j].real() * pow(-1, j));
+         Out[i][j].imag(Evolution[i][j].imag() * pow(-1, j));
       }
    }
 }

@@ -35,7 +35,7 @@ typedef float  gramfe_float;
 #ifdef GRAMFE_MATMUL_FLOAT8
 typedef double gramfe_matmul_float;
 #else // #ifdef GRAMFE_MM_FLOAT8
-typedef float gramfe_matmul_float;
+typedef double gramfe_matmul_float;
 #endif // #ifdef GRAMFE_MM_FLOAT8 ... # else
 #endif // #if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
 
