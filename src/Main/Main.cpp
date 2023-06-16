@@ -119,6 +119,10 @@ double               ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
 
 bool                 OPT__FLAG_INTERFERENCE;
 double               FlagTable_Interference[NLEVEL-1][4];
+#if ( WAVE_SCHEME == WAVE_GRAMFE )
+bool                 OPT__FLAG_SPECTRAL;
+double               FlagTable_Spectral[NLEVEL-1][2];
+#endif // #if ( WAVE_SCHEME == WAVE_GRAMFE )
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 bool                 OPT__HYBRID_MATCH_PHASE;
 double               DT__HYBRID_FLUID, DT__HYBRID_VELOCITY;

@@ -45,7 +45,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
                  const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1],
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
                  const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff,
-                 const real *Interf_Cond)
+                 const real *Interf_Cond, const real Spectral_Cond)
 {
 
    bool Flag = false;
@@ -228,6 +228,21 @@ if ( OPT__FLAG_RHO )
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
 
+// check ELBDM spectral criterion
+// ===========================================================================================
+#  if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( OPT__FLAG_SPECTRAL )
+   {
+      Flag |= Spectral_Cond > FlagTable_Spectral[lv][1];
+      if ( Flag )    return Flag;
+   }
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } // if ( amr->use_wave_flag[lv] ) {
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif
 
 
 // check Lohner's error estimator
