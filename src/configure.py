@@ -598,7 +598,7 @@ def load_arguments():
     parser.add_argument( "--rng", type=str, metavar="TYPE", gamer_name="RANDOM_NUMBER",
                          default="RNG_GNU_EXT",
                          choices=["RNG_GNU_EXT", "RNG_CPP11"],
-                         help="Select the random number generator.\nIf you use 'RNG_CPP', you need to add -std=c++11 to CXXFLAG in config file.\n"
+                         help="Select the random number generator.\nIf you use 'RNG_CPP', you need to add -std=c++11 to CXXFLAG in config file. RNG_GNU_NXT is not supported on some macOS.\n"
                        )
 
     # C. parallelization and flags
@@ -813,11 +813,7 @@ def warning( paths, **kwargs ):
     if kwargs["model"] == "ELBDM" and kwargs["passive"] != 0:
         color_print("Warning: Not supported yet and can only be used as auxiliary fields.", BCOLOR.WARNING)
 
-    # 3. RNG sys
-    if kwargs["rng"] == "RNG_GNU_EXT":
-        color_print("Warning: %s is not supported on some macOS."%kwargs["rng"], BCOLOR.WARNING)
-
-    # 4. Path
+    # 3. Path
     if kwargs["gpu"]:
         if paths.setdefault("CUDA_PATH", "") == "":
             color_print("Warning: CUDA_PATH is not given in %s when enabling <--gpu>."%(kwargs["machine"]), BCOLOR.WARNING)
