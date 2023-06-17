@@ -345,8 +345,8 @@ def load_arguments():
 
     # machine config setup
     parser.add_argument( "--machine", type=str, metavar="MACHINE",
-                         default="eureka",
-                         help="Select the MACHINE.config file under ../configs directory. \nChoice: [eureka, YOUR_MACHINE_NAME] => "
+                         default="eureka_intel",
+                         help="Select the MACHINE.config file under ../configs directory. \nChoice: [eureka_intel, YOUR_MACHINE_NAME] => "
                        )
 
     # A. physical models and options of diffierent physical models
@@ -628,7 +628,7 @@ def load_arguments():
                          help="Select the architecture of GPU.\n"
                        )
 
-    args, sim_names, depends, constrains = parser.parse_args()
+    args, name_table, depends, constrains = parser.parse_args()
     args = vars( args )
 
     # 1. Print out a detailed help message then exit.
@@ -638,7 +638,7 @@ def load_arguments():
 
     # 2. Conditionlly default argument.
     args = set_conditional_defaults( args )
-    return args, sim_names, depends, constrains
+    return args, name_table, depends, constrains
 
 def load_config( config ):
     print("Using %s as the config."%(config))
@@ -677,10 +677,10 @@ def set_conditional_defaults( args ):
 
     return args
 
-def set_sims( sim_names, depends, **kwargs ):
+def set_sims( name_table, depends, **kwargs ):
     opt_str = ""
     # Loop all the simulation options in GAMER.
-    for opt, gamer_name in sim_names.items():
+    for opt, gamer_name in name_table.items():
         store = True
         # check if the depend is true
         if opt in depends:
@@ -853,7 +853,7 @@ def warning( paths, **kwargs ):
 # Main execution
 ####################################################################################################
 # 1. Load the input arguments
-args, sim_names, depends, constrains = load_arguments()
+args, name_table, depends, constrains = load_arguments()
 
 #------------------------------------------------------------
 # 2. Prepare the makiefile args
@@ -870,7 +870,7 @@ print("")
 print("========================================")
 print("GAMER has the following setting.")
 print("----------------------------------------")
-sims = set_sims( sim_names, depends, **args )
+sims = set_sims( name_table, depends, **args )
 
 # 2.4 setup compiler
 compiles = set_compile( paths, compilers, flags, args )
