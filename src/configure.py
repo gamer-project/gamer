@@ -22,8 +22,8 @@ B. Developer guide:
          default value to None, and assign the value under `set_conditional_defaults()`.
     b. If it is a GAMER simulation option, please include the `gamer_name="NAME_IN_GAMER"` argument
        in `parser.add_argument()`.
-    c. [Optional] If the argument depends on another option, please add `depend={"depend_arg1":depend_value1, "depend_arg2":depend_value2}`
-       in `parser.add_argument()` so the argument will be loaded (or checked) only if `depend_arg` equals `depend_value`.
+    c. [Optional] If the argument depends on other options, please add `depend={"depend_arg1":depend_value1, "depend_arg2":depend_value2}`
+       in `parser.add_argument()` so the argument will be loaded (or checked) only if `depend_arg1==depend_value1` and `depend_arg2==depend_value2`.
     d. [Optional] If the argument must work with other arguments, please add `constrain={con1:[con_val1, con_val2], con2:con_val3}`
        in the `parser.add_argument(), which will check if the `con1` is `con_val1` or `con_val2` and
        if `con2` is `con_val3`. If any of the constrains are not satisified, an error will be raised.
@@ -388,14 +388,14 @@ def load_arguments():
                          default=NONE_STR, choices=[NONE_STR, "DE_ENPY", "DE_EINT"],
                          depend={"model":"HYDRO"},
                          constrain={ "DE_ENPY":{"eos":"GAMMA"} },
-                         help="The dual-energy formalism (DE_ENPY: entropy, DE_EINT: internal energy). DE_EINT is not supported yet. Useless for RTVD.\n\n"
+                         help="The dual-energy formalism (DE_ENPY: entropy, DE_EINT: internal energy). DE_EINT is not supported yet. Useless for RTVD.\n"
                        )
 
     parser.add_argument( "--mhd", type=str2bool, metavar="BOOLEAN", gamer_name="MHD",
                          default=False,
                          depend={"model":"HYDRO"},
-                         constrain={ True:{"flu_scheme":["MHM_RP", "CTU"], "flux":["EXACT", "ROE", "HLLE", "HLLD"]},
-                                     False:{"flux":["ROE", "HLLE", "HLLC"]} },
+                         constrain={ True:{"flu_scheme":["MHM_RP", "CTU"], "flux":["ROE", "HLLE", "HLLD"]},
+                                     False:{"flux":["EXACT", "ROE", "HLLE", "HLLC"]} },
                          help="Magnetohydrodynamics.\n"
                        )
 
@@ -856,7 +856,7 @@ def warning( paths, **kwargs ):
 args, name_table, depends, constrains = load_arguments()
 
 #------------------------------------------------------------
-# 2. Prepare the makiefile args
+# 2. Prepare the makefile args
 # 2.1 Load the machine setup
 paths, compilers, flags = load_config( "%s/%s.config"%(GAMER_CONFIG_DIR, args["machine"]) )
 
@@ -887,17 +887,17 @@ print("----------------------------------------")
 for key, val in paths.items():
     print("%-15s : %s"%(key, val))
     makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
-    if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctlly."%key)
+    if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
 
 for key, val in sims.items():
     makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
-    if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctlly."%key)
+    if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
 
 print("----------------------------------------")
 for key, val in compiles.items():
     print("%-10s : %s"%(key, val))
     makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
-    if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctlly."%key)
+    if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
 
 # 3.3 Write
 with open( GAMER_MAKE_OUT, "w") as make_out:
