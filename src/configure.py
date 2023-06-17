@@ -22,7 +22,7 @@ B. Developer guide:
          default value to None, and assign the value under `set_conditional_defaults()`.
     b. If it is a GAMER simulation option, please include the `gamer_name="NAME_IN_GAMER"` argument
        in `parser.add_argument()`.
-    c. [Optional] If the argument depends on another option, please add `depend={"depend_arg":depend_value}`
+    c. [Optional] If the argument depends on another option, please add `depend={"depend_arg1":depend_value1, "depend_arg2":depend_value2}`
        in `parser.add_argument()` so the argument will be loaded (or checked) only if `depend_arg` equals `depend_value`.
     d. [Optional] If the argument must work with other arguments, please add `constrain={con1:[con_val1, con_val2], con2:con_val3}`
        in the `parser.add_argument(), which will check if the `con1` is `con_val1` or `con_val2` and
