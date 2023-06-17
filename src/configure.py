@@ -207,7 +207,7 @@ class ArgumentParser( argparse.ArgumentParser ):
                         usage += [ "[%s %s *%s]"%(item, temp, "Undecided" if option["default"] == None else str(option["default"])) ]
                     else:
                         usage += [ "[%s %s]"%(item, temp) ]
-            indent     = "Usage: %s " % os.path.basename(sys.argv[0])
+            indent = "Usage: %s " % os.path.basename(sys.argv[0])
             output = indent + " " + str.join(" ", usage)
             print( self.string_align(output, indent, usage_width, "]") )
         print("")
@@ -704,7 +704,7 @@ def set_compile( paths, compilers, flags, kwargs ):
     com_opt = {}
 
     # 1. Set the complier.
-    com_opt["CXX"] = paths["MPI_PATH"]+compilers["CXX_MPI"] if kwargs["mpi"] else compilers["CXX"]
+    com_opt["CXX"] = paths["MPI_PATH"]+"/bin/"+compilers["CXX_MPI"] if kwargs["mpi"] else compilers["CXX"]
 
     # 2. Set the OpenMP flags.
     if not kwargs["openmp"]: flags["OPENMPFLAG"] = ""
