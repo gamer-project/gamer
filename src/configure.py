@@ -886,15 +886,18 @@ with open( GAMER_MAKE_BASE, "r" ) as make_base:
 print("----------------------------------------")
 for key, val in paths.items():
     print("%-15s : %s"%(key, val))
-    makefile = re.sub(r"@@@%s@@@"%(key), val, makefile)
+    makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
+    if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctlly."%key)
 
 for key, val in sims.items():
-    makefile = re.sub(r"@@@%s@@@"%(key), val, makefile)
+    makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
+    if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctlly."%key)
 
 print("----------------------------------------")
 for key, val in compiles.items():
     print("%-10s : %s"%(key, val))
-    makefile = re.sub(r"@@@%s@@@"%(key), val, makefile)
+    makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
+    if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctlly."%key)
 
 # 3.3 Write
 with open( GAMER_MAKE_OUT, "w") as make_out:
