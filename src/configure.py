@@ -517,17 +517,17 @@ def load_arguments():
                        )
 
     # B. miscellaneous options
-    parser.add_argument( "--nlevel", type=int, gamer_name="NLEVEL",
+    parser.add_argument( "--nlevel", type=int, metavar="INTEGER", gamer_name="NLEVEL",
                          default=10,
                          help="Set the total number of AMR levels including the root level.\n"
                        )
 
-    parser.add_argument( "--max_patch", type=int, gamer_name="MAX_PATCH",
+    parser.add_argument( "--max_patch", type=int, metavar="INTEGER", gamer_name="MAX_PATCH",
                          default=100000,
                          help="Set the maximum number of patches on each AMR level.\n"
                        )
 
-    parser.add_argument( "--patch_size", type=int, gamer_name="PATCH_SIZE",
+    parser.add_argument( "--patch_size", type=int, metavar="INTEGER", gamer_name="PATCH_SIZE",
                          default=8,
                          help="Set the number of cells along each direction in a single patch. Must be an even number grater than or equal to 8.\n"
                        )
