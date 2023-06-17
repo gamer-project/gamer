@@ -10,13 +10,12 @@ A. User Guide:
   2. Running the script:
     Run the following command to generate the Makefile. This script supports both Python2 and Python3.
       `python configure.py [--your_arguments]`
-    Once the command finishes, the `Makefile` will be generated.
 
 B. Developer guide:
   This code consists of five parts: Packages, Global variables, Classes, Functions, and Main execution.
 
   0. Adding a new source file:
-    a. Ensure that you have added the necessary source files in `Makefile_base`.
+    a. Edit `Makefile_base` to add new source files.
   1. Adding a new simulation option:
     a. Add a python argument reader for the new simulation option under `load_arguments()`.
       i. For arguments whose default value depends on other arguments, please set the
@@ -24,9 +23,9 @@ B. Developer guide:
     b. If it is a GAMER simulation option, please include the `gamer_name="NAME_IN_GAMER"` argument
        in `parser.add_argument()`.
     c. [Optional] If the argument depends on another option, please add `depend={"depend_arg":depend_value}`
-       in `parser.add_argument()`, so the argument will be loaded (or checked) if `depend_arg` is `depend_value`.
+       in `parser.add_argument()` so the argument will be loaded (or checked) only if `depend_arg` equals `depend_value`.
     d. [Optional] If the argument must work with other arguments, please add `constrain={con1:[con_val1, con_val2], con2:con_val3}`
-       in the `parser.add_argument(), so we will check if the `con1` is `con_val1` or `con_val2` and
+       in the `parser.add_argument(), which will check if the `con1` is `con_val1` or `con_val2` and
        if `con2` is `con_val3`. If any of the constrains are not satisified, an error will be raised.
     e. [Optional] Add error and warning messages in validation() and warning(), respectively, under Functions.
   2. Adding a new path:
@@ -61,14 +60,14 @@ import re
 ####################################################################################################
 # Global variables
 ####################################################################################################
-NONE_STR   = "NONE"
+NONE_STR   = "OFF"
 PYTHON_VER = [sys.version_info.major, sys.version_info.minor]
 
 GAMER_CONFIG_DIR  = "../configs"
 GAMER_MAKE_BASE   = "Makefile_base"
 GAMER_MAKE_OUT    = "Makefile"
 GAMER_DESCRIPTION = "Prepare a customized Makefile for GAMER.\nDefault values are marked by '*'.\nUse -lh to show a detailed help message.\n"
-GAMER_EPILOG      = "2023 CA Lab, NTU. All rights reserved.\n"
+GAMER_EPILOG      = "2023 Computational Astrophysics Lab, NTU. All rights reserved.\n"
 
 
 
@@ -185,14 +184,14 @@ class ArgumentParser( argparse.ArgumentParser ):
 
                     if "metavar" in option:
                         if "default" in option:
-                            usage += [ "[%s %s *%s]"%(item, option["metavar"], str(option["default"])) ]
+                            usage += [ "[%s %s *%s]"%(item, option["metavar"], "Depend" if option["default"] == None else str(option["default"])) ]
                         else:
                             usage += [ "[%s %s]"%(item, option["metavar"]) ]
                         continue
 
                     if "dest" in option:
                         if "default" in option:
-                            usage += [ "[%s %s *%s]"%(item, option["dest"], str(option["default"])) ]
+                            usage += [ "[%s %s *%s]"%(item, option["dest"], "Depend" if option["default"] == None else str(option["default"])) ]
                         else:
                             usage += [ "[%s %s]"%(item, option["dest"].upper()) ]
                         continue
@@ -204,7 +203,7 @@ class ArgumentParser( argparse.ArgumentParser ):
 
                     temp = re.sub(r"^(-{1,})", "", item).upper()
                     if "default" in option:
-                        usage += [ "[%s %s *%s]"%(item, temp, "Undecided" if option["default"] == None else str(option["default"])) ]
+                        usage += [ "[%s %s *%s]"%(item, temp, "Depend" if option["default"] == None else str(option["default"])) ]
                     else:
                         usage += [ "[%s %s]"%(item, temp) ]
             indent = "Usage: %s " % os.path.basename(sys.argv[0])
@@ -255,7 +254,7 @@ class ArgumentParser( argparse.ArgumentParser ):
                 output += "Choice: [%s] => "%(", ".join(temp))
 
             if "default" in option:
-                output += "Default: %s" %("Undecided" if option["default"] == None else str(option["default"]))
+                output += "Default: %s" %("Depend" if option["default"] == None else str(option["default"]))
 
             if "action" in option:
                 output += "Default: False" if option["action"] == "store_true" else "Default: False"
@@ -300,7 +299,7 @@ def add_option( opt_str, name, val ):
         opt_str += "-D%s=%f "%(name, val)
         print("%-25s : %f"%(name, val))
     else:
-        raise TypeError("Variable <%s> has an unknown type <%s> to add in the simulation options."%(name, str(type(val))))
+        raise TypeError("The simulation option <%s> has an unknown type <%s>."%(name, str(type(val))))
 
     return opt_str
 
@@ -351,30 +350,30 @@ def load_arguments():
                        )
 
     # A. physical models and options of diffierent physical models
-    parser.add_argument( "--model", type=str, metavar="MODEL", gamer_name="MODEL",
+    parser.add_argument( "--model", type=str, metavar="TYPE", gamer_name="MODEL",
                          default="HYDRO", choices=["HYDRO", "ELBDM", "PAR_ONLY"],
-                         help="The physical model (ELBDM: wave dark matter, PAR_ONLY: partivle-only). Must be set in any cases. PAR_ONLY is not supported yet.\n"
+                         help="The physical model (HYDRO: hydrodynamics/magnetohydrodynamics, ELBDM: wave dark matter, PAR_ONLY: partivle-only). Must be set in any cases. PAR_ONLY is not supported yet.\n"
                        )
 
     parser.add_argument( "--passive", type=int, metavar="INTEGER", gamer_name="NCOMP_PASSIVE_USER",
                          default=0,
                          depend={"model":["HYDRO", "ELBDM"]},
-                         help="Set the number of user-defined passively advected scalars. Useless of RTVD. Not supproted for <--model=ELBDM>, can only be used auxiliary fields.\n"
+                         help="Set the number of user-defined passively advected scalars. Useless for RTVD. <--model=ELBDM> doesn't support passive scalars and only regards them as auxiliary fields.\n"
                        )
 
     # A.1 Hydro options
-    parser.add_argument( "--flu_scheme", type=str, metavar="SCHEME", gamer_name="FLU_SCHEME",
+    parser.add_argument( "--flu_scheme", type=str, metavar="TYPE", gamer_name="FLU_SCHEME",
                          default="CTU", choices=["RTVD", "MHM", "MHM_RP", "CTU"],
                          depend={"model":"HYDRO"},
                          constrain={ "RTVD":{"unsplit_gravity":False, "passive":0, "dual":NONE_STR, "eos":"GAMMA"},
                                      "CTU":{"eos":"GAMMA"} },
-                         help="The fluid solver for HYDRO model. MHD only supports MHM_RP and CTU.\n"
+                         help="The hydrodynamic/MHD integrator. MHD only supports MHM_RP and CTU.\n"
                        )
 
     parser.add_argument( "--slope", type=str, metavar="TYPE", gamer_name="LR_SCHEME",
                          default="PPM", choices=["PLM", "PPM"],
                          depend={"model":"HYDRO"},
-                         help="Select the spatial data reconstruction method.\n"
+                         help="The spatial data reconstruction method (PLM: piecewise-linear, PPM: piecewise-parabolic). Useless for <--flu_scheme=RTVD>.\n"
                        )
 
     parser.add_argument( "--flux", type=str, metavar="TYPE", gamer_name="RSOLVER",
@@ -382,29 +381,29 @@ def load_arguments():
                          depend={"model":"HYDRO"},
                          constrain={ "ROE":{"eos":"GAMMA"},
                                      "EXACT":{"eos":"GAMMA"} },
-                         help="The Riemann solver. Pure hydro: EXACT/ROE/HLLE/HLLC, MHD: ROE/HLLE/HLLD. Useless for RTVD.\n"
+                         help="The Riemann solver. Pure hydro: EXACT/ROE/HLLE/HLLC^, MHD: ROE/HLLE/HLLD^ (^ indicates the recommended solvers). Useless for RTVD.\n"
                        )
 
     parser.add_argument( "--dual", type=str, metavar="TYPE", gamer_name="DUAL_ENERGY",
                          default=NONE_STR, choices=[NONE_STR, "DE_ENPY", "DE_EINT"],
                          depend={"model":"HYDRO"},
                          constrain={ "DE_ENPY":{"eos":"GAMMA"} },
-                         help="The dual-energy formalism. DE_ENPY: entropy, DE_EINT: internal energy. DE_EINT is not supported yet. Useless for RTVD.\n"
+                         help="The dual-energy formalism (DE_ENPY: entropy, DE_EINT: internal energy). DE_EINT is not supported yet. Useless for RTVD.\n\n"
                        )
 
     parser.add_argument( "--mhd", type=str2bool, metavar="BOOLEAN", gamer_name="MHD",
                          default=False,
                          depend={"model":"HYDRO"},
                          constrain={ True:{"flu_scheme":["MHM_RP", "CTU"], "flux":["EXACT", "ROE", "HLLE", "HLLD"]},
-                                     False:{"flux":["EXACT", "ROE", "HLLE", "HLLC"]} },
+                                     False:{"flux":["ROE", "HLLE", "HLLC"]} },
                          help="Magnetohydrodynamics.\n"
                        )
 
     parser.add_argument( "--cosmic_ray", type=str2bool, metavar="BOOLEAN", gamer_name="COSMIC_RAY",
                          default=False,
                          depend={"model":"HYDRO"},
-                         constrain={ True:{"dual":[NONE_STR, "DE_EINT"]} },
-                         help="Cosmic rays.(not supported yet)\n"
+                         constrain={ True:{"dual":[NONE_STR]} },
+                         help="Cosmic rays (not supported yet).\n"
                        )
 
     parser.add_argument( "--eos", type=str, metavar="TYPE", gamer_name="EOS",
@@ -431,7 +430,7 @@ def load_arguments():
     parser.add_argument( "--laplacian_four", type=str2bool, metavar="BOOLEAN", gamer_name="LAPLACIAN_4TH",
                          default=True,
                          depend={"model":"ELBDM"},
-                         help="Enable the fourth-order of Laplacian for <--model=ELBDM>.\n"
+                         help="Enable the fourth-order Laplacian for <--model=ELBDM>.\n"
                        )
 
     parser.add_argument( "--self_interaction", type=str2bool, metavar="BOOLEAN", gamer_name="QUARTIC_SELF_INTERACTION",
@@ -445,13 +444,13 @@ def load_arguments():
     parser.add_argument( "--gravity", type=str2bool, metavar="BOOLEAN", gamer_name="GRAVITY",
                          default=False,
                          constrain={ True:{"fftw":["FFTW2", "FFTW3"]} },
-                         help="Enable gravity. Must define <--fftw=FFTW2> or <--fftw=FFTW3>.\n"
+                         help="Enable gravity. Must enable <--fftw>.\n"
                        )
 
-    parser.add_argument( "--pot_scheme", type=str, metavar="SCHEME", gamer_name="POT_SCHEME",
+    parser.add_argument( "--pot_scheme", type=str, metavar="TYPE", gamer_name="POT_SCHEME",
                          default="SOR", choices=["SOR", "MG"],
                          depend={"gravity":True},
-                         help="Select the Poisson solver. SOR: successive-overrelaxation(recommended), MG: multigrid. Must be set when <--gravity> is enabled.\n"
+                         help="Select the Poisson solver. SOR: successive-overrelaxation (recommended), MG: multigrid. Must be set when <--gravity> is enabled.\n"
                        )
 
     parser.add_argument( "--store_pot_ghost", type=str2bool, metavar="BOOLEAN", gamer_name="STORE_POT_GHOST",
@@ -464,7 +463,7 @@ def load_arguments():
                          default=None,
                          depend={"gravity":True},
                          constrain={ True:{"model":"HYDRO"} },
-                         help="Use unsplitting method to couple gravity to the target model. Supported only for <--model=HYDRO>.\n"
+                         help="Use unsplitting method to couple gravity to the target model (recommended). Supported only for <--model=HYDRO>.\n"
                        )
 
     parser.add_argument( "--comoving", type=str2bool, metavar="BOOLEAN", gamer_name="COMOVING",
@@ -488,7 +487,7 @@ def load_arguments():
     parser.add_argument( "--store_par_acc", type=str2bool, metavar="BOOLEAN", gamer_name="STORE_PAR_ACC",
                          default=True,
                          depend={"particle":True},
-                         help="Store particle acceleration.\n"
+                         help="Store particle acceleration (recommended).\n"
                        )
 
     parser.add_argument( "--star_formation", type=str2bool, metavar="BOOLEAN", gamer_name="STAR_FORMATION",
@@ -513,7 +512,7 @@ def load_arguments():
     parser.add_argument( "--grackle", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_GRACKLE",
                          default=False,
                          constrain={ True:{"model":"HYDRO", "eos":"GAMMA"} },
-                         help="Enable Grackle, a chemistry and radiative cooling library. Must set <--passive> according to the promordial chemistry network set by GRACKLE_PRIMORDIAL. Please enable OpenMP when compiling Grackle (by 'make omp-on').\n"
+                         help="Enable Grackle, a chemistry and radiative cooling library. Must set <--passive> according to the primordial chemistry network set by GRACKLE_PRIMORDIAL. Please enable OpenMP when compiling Grackle (by 'make omp-on').\n"
                        )
 
     # B. miscellaneous options
@@ -529,7 +528,7 @@ def load_arguments():
 
     parser.add_argument( "--patch_size", type=int, metavar="INTEGER", gamer_name="PATCH_SIZE",
                          default=8,
-                         help="Set the number of cells along each direction in a single patch. Must be an even number grater than or equal to 8.\n"
+                         help="Set the number of cells along each direction in a single patch. Must be an even number greater than or equal to 8.\n"
                        )
 
     parser.add_argument( "--debug", type=str2bool, metavar="BOOLEAN", gamer_name="GAMER_DEBUG",
@@ -550,7 +549,7 @@ def load_arguments():
     parser.add_argument( "--timing_solver", type=str2bool, metavar="BOOLEAN", gamer_name="TIMING_SOLVER",
                          default=False,
                          constrain={ True:{"timing":True} },
-                         help="Enable the wall-clock time of GPU solvers. This option will disable CPU/GPU overlapping. Must enable <--timing>.\n"
+                         help="Enable more detailed timing analysis of GPU solvers. This option will disable CPU/GPU overlapping and thus deteriorate performance. Must enable <--timing>.\n"
                        )
 
     parser.add_argument( "--double", type=str2bool, metavar="BOOLEAN", gamer_name="FLOAT8",
@@ -565,7 +564,7 @@ def load_arguments():
 
     parser.add_argument( "--hdf5", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_HDF5",
                          default=False,
-                         help="Support HDF5.\n"
+                         help="Support HDF5 (recommended).\n"
                        )
 
     parser.add_argument( "--gsl", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_GSL",
@@ -573,9 +572,9 @@ def load_arguments():
                          help="Support GNU scientific library.\n"
                        )
 
-    parser.add_argument( "--fftw", type=str, gamer_name="SUPPORT_FFTW",
+    parser.add_argument( "--fftw", type=str, metavar="TYPE", gamer_name="SUPPORT_FFTW",
                          default=NONE_STR, choices=[NONE_STR, "FFTW2", "FFTW3"],
-                         help="Support FFTW library. Use FFTW3/FFTW2 for fftw3/fftw2 support.\n"
+                         help="Support FFTW library.\n"
                        )
 
     parser.add_argument( "--libyt", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_LIBYT",
@@ -584,7 +583,7 @@ def load_arguments():
                        )
 
     parser.add_argument( "--libyt_patchgroup", type=str2bool, metavar="BOOLEAN", gamer_name="LIBYT_USE_PATCH_GROUP",
-                         default=False,
+                         default=True,
                          depend={"libyt":True},
                          help="Use patch groups instead of patches as the unit in libyt for better performance (recommended). Must enable <--libyt>.\n"
                        )
@@ -598,7 +597,7 @@ def load_arguments():
     parser.add_argument( "--rng", type=str, metavar="TYPE", gamer_name="RANDOM_NUMBER",
                          default="RNG_GNU_EXT",
                          choices=["RNG_GNU_EXT", "RNG_CPP11"],
-                         help="Select the random number generator.\nIf you use 'RNG_CPP', you need to add -std=c++11 to CXXFLAG in config file. RNG_GNU_NXT is not supported on some macOS.\n"
+                         help="Select the random number generator (RNG_GNU_EXT: GNU extension drand48_r, RNG_CPP11: c++11 <random>).\nRNG_GNU_EXT may not be supported on some macOS.\nFor RNG_CPP11, add -std=c++11 to CXXFLAG in your config file.\n"
                        )
 
     # C. parallelization and flags
@@ -609,7 +608,7 @@ def load_arguments():
 
     parser.add_argument( "--mpi", type=str2bool, metavar="BOOLEAN", gamer_name="LOAD_BALANCE=HILBERT",
                          default=False,
-                         help="Enable MPI parallization.\n"
+                         help="Enable MPI parallelization.\n"
                        )
 
     parser.add_argument( "--overlap_mpi", type=str2bool, metavar="BOOLEAN", gamer_name="OVERLAP_MPI",
@@ -632,7 +631,7 @@ def load_arguments():
     args, sim_names, depends, constrains = parser.parse_args()
     args = vars( args )
 
-    # 1. Print out a detail help message then exit.
+    # 1. Print out a detailed help message then exit.
     if args["lh"]:
         parser.print_help_detail()
         exit()
@@ -659,7 +658,7 @@ def load_config( config ):
         elif temp[0] in compilers:
             if len(temp) == 1: continue         # empty compiler
             if temp[1][0] == "#": continue      # comment out
-            if compilers[temp[0]] != "": color_print("Warning: The original compiler will be overwritten. <%s>: %s -->%s"%(temp[0], compilers[temp[0]], temp[1]), BCOLOR.WARNING)
+            if compilers[temp[0]] != "": color_print("Warning: The original compiler will be overwritten. <%s>: %s --> %s"%(temp[0], compilers[temp[0]], temp[1]), BCOLOR.WARNING)
             compilers[temp[0]] = temp[1]
         else:
             try:
@@ -723,7 +722,7 @@ def validation( paths, depends, constrains, **kwargs ):
         color_print("ERROR: %s does not exist."%(GAMER_MAKE_BASE), BCOLOR.FAIL)
         success = False
 
-    # 1. Checking general constrain.
+    # 1. Checking general constrains.
     for opt, condition in constrains.items():
         check = True
         if opt in depends:
@@ -740,7 +739,7 @@ def validation( paths, depends, constrains, **kwargs ):
                 if kwargs[check_opt] in check_val: continue     # satisify the validation
 
                 val_str = ', '.join(str(x) for x in check_val)
-                color_print("ERROR: The option <--%s=%s> requires <--%s> set to be one of [%s]. Current: <--%s=%s>."%(opt, str(kwargs[opt]), check_opt, val_str, check_opt, kwargs[check_opt]), BCOLOR.FAIL)
+                color_print("ERROR: The option <--%s=%s> requires <--%s> to be set to one of [%s]. Current: <--%s=%s>."%(opt, str(kwargs[opt]), check_opt, val_str, check_opt, kwargs[check_opt]), BCOLOR.FAIL)
                 success = False
 
     # 2. Checking other conditions.
@@ -780,7 +779,7 @@ def validation( paths, depends, constrains, **kwargs ):
             color_print("ERROR: At least one of <--gravity> or <--tracer> must be enabled for <--particle>.", BCOLOR.FAIL)
             success = False
         if kwargs["par_attribute"] < 0:
-            color_print("ERROR: Number of particle attribute should not be negative. Current: %d"%kwargs["par_attribute"], BCOLOR.FAIL)
+            color_print("ERROR: Number of particle attributes should not be negative. Current: %d"%kwargs["par_attribute"], BCOLOR.FAIL)
             success = False
 
     # B. miscellaneous options
@@ -792,8 +791,8 @@ def validation( paths, depends, constrains, **kwargs ):
         color_print("ERROR: <--max_patch> should be greater than zero. Current: %d"%kwargs["max_patch"], BCOLOR.FAIL)
         success = False
 
-    if kwargs["patch_size"]%2 != 0 and kwargs["patch_size"] < 8:
-        color_print("ERROR: <--patch_size> should be an even number grater than or equal to 8. Current: %d"%kwargs["patch_size"], BCOLOR.FAIL)
+    if kwargs["patch_size"]%2 != 0 or kwargs["patch_size"] < 8:
+        color_print("ERROR: <--patch_size> should be an even number greater than or equal to 8. Current: %d"%kwargs["patch_size"], BCOLOR.FAIL)
         success = False
 
     if kwargs["overlap_mpi"]:
@@ -816,35 +815,35 @@ def warning( paths, **kwargs ):
     # 3. Path
     if kwargs["gpu"]:
         if paths.setdefault("CUDA_PATH", "") == "":
-            color_print("Warning: CUDA_PATH is not given in %s when enabling <--gpu>."%(kwargs["machine"]), BCOLOR.WARNING)
+            color_print("Warning: CUDA_PATH is not given in %s.config when enabling <--gpu>."%(kwargs["machine"]), BCOLOR.WARNING)
 
     if kwargs["fftw"] == "FFTW2":
         if paths.setdefault("FFTW2_PATH", "") == "":
-            color_print("Warning: FFTW2_PATH is not given in %s when enabling <--fftw=FFTW2>."%(kwargs["machine"]), BCOLOR.WARNING)
+            color_print("Warning: FFTW2_PATH is not given in %s.config when enabling <--fftw=FFTW2>."%(kwargs["machine"]), BCOLOR.WARNING)
 
     if kwargs["fftw"] == "FFTW3":
         if paths.setdefault("FFTW3_PATH", "") == "":
-            color_print("Warning: FFTW3_PATH is not given in %s when enabling <--fftw=FFTW3>."%(kwargs["machine"]), BCOLOR.WARNING)
+            color_print("Warning: FFTW3_PATH is not given in %s.config when enabling <--fftw=FFTW3>."%(kwargs["machine"]), BCOLOR.WARNING)
 
     if kwargs["mpi"]:
         if paths.setdefault("MPI_PATH", "") == "":
-            color_print("Warning: MPI_PATH is not given in %s when enabling <--mpi>."%(kwargs["machine"]), BCOLOR.WARNING)
+            color_print("Warning: MPI_PATH is not given in %s.config when enabling <--mpi>."%(kwargs["machine"]), BCOLOR.WARNING)
 
     if kwargs["hdf5"]:
         if paths.setdefault("HDF5_PATH", "") == "":
-            color_print("Warning: HDF5_PATH is not given in %s when enabling <--hdf5>."%(kwargs["machine"]), BCOLOR.WARNING)
+            color_print("Warning: HDF5_PATH is not given in %s.config when enabling <--hdf5>."%(kwargs["machine"]), BCOLOR.WARNING)
 
     if kwargs["grackle"]:
         if paths.setdefault("GRACKLE_PATH", "") == "":
-            color_print("Warning: GRACKLE_PATH is not given in %s when enabling <--grackle>."%(kwargs["machine"]), BCOLOR.WARNING)
+            color_print("Warning: GRACKLE_PATH is not given in %s.config when enabling <--grackle>."%(kwargs["machine"]), BCOLOR.WARNING)
 
     if kwargs["gsl"]:
         if paths.setdefault("GSL_PATH", "") == "":
-            color_print("Warning: GSL_PATH is not given in %s when enabling <--gsl>."%(kwargs["machine"]), BCOLOR.WARNING)
+            color_print("Warning: GSL_PATH is not given in %s.config when enabling <--gsl>."%(kwargs["machine"]), BCOLOR.WARNING)
 
     if kwargs["libyt"]:
         if paths.setdefault("LIBYT_PATH", "") == "":
-            color_print("Warning: LIBYT_PATH is not given in %s when enabling <--libyt>."%(kwargs["machine"]), BCOLOR.WARNING)
+            color_print("Warning: LIBYT_PATH is not given in %s.config when enabling <--libyt>."%(kwargs["machine"]), BCOLOR.WARNING)
 
     return
 
@@ -858,10 +857,10 @@ args, sim_names, depends, constrains = load_arguments()
 
 #------------------------------------------------------------
 # 2. Prepare the makiefile args
-# 2.1 Load the cluster steup
+# 2.1 Load the machine setup
 paths, compilers, flags = load_config( "%s/%s.config"%(GAMER_CONFIG_DIR, args["machine"]) )
 
-# 2.2 Check if the arguments are valid
+# 2.2 Validate arguments
 validation( paths, depends, constrains, **args )
 
 warning( paths, **args )
