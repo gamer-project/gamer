@@ -636,7 +636,7 @@ def load_arguments():
         parser.print_help_detail()
         exit()
 
-    # 2. Conditionlly default argument.
+    # 2. Conditional default arguments.
     args = set_conditional_defaults( args )
     return args, name_table, depends, constrains
 
