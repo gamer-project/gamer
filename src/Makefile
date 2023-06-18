@@ -114,8 +114,9 @@ endif # MODEL
 # (b-3) gravity options
 # -------------------------------------------------------------------------------
 ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
-# Poisson solver: SOR/MG (successive-overrelaxation (recommended)/multigrid)
+# Poisson solver: SOR/MG/DST (successive-overrelaxation (recommended)/multigrid)
 # --> must be set when GRAVITY is enabled
+# --> for DST only: must turn on GPU. only support Patchsize=8 and 16
 SIMU_OPTION += -DPOT_SCHEME=SOR
 
 # store GRA_GHOST_SIZE ghost-zone potential for each patch on each side
@@ -540,7 +541,7 @@ GPU_FILE    += CUAPI_MemAllocate_PoissonGravity.cu  CUAPI_MemFree_PoissonGravity
 
 GPU_FILE    += CUPOT_PoissonSolver_SOR.cu \
                CUPOT_PoissonSolver_MG.cu  CUPOT_ExtAcc_PointMass.cu  CUPOT_ExtPot_PointMass.cu \
-               CUPOT_ExtPotSolver.cu  CUPOT_ExtPot_Tabular.cu
+               CUPOT_ExtPotSolver.cu  CUPOT_ExtPot_Tabular.cu  CUPOT_PoissonSolver_DST.cu
 
 CPU_FILE    += CPU_PoissonGravitySolver.cpp  CPU_PoissonSolver_SOR.cpp  CPU_PoissonSolver_FFT.cpp \
                CPU_PoissonSolver_MG.cpp  CPU_ExtPotSolver.cpp  CPU_ExtPotSolver_BaseLevel.cpp

@@ -72,6 +72,8 @@ void Aux_TakeNote()
       fprintf( Note, "POT_SCHEME                      SOR\n" );
 #     elif ( POT_SCHEME == MG )
       fprintf( Note, "POT_SCHEME                      MG\n" );
+#     elif ( POT_SCHEME == DST )
+      fprintf( Note, "POT_SCHEME                      DST\n" );
 #     elif ( POT_SCHEME == NONE )
       fprintf( Note, "POT_SCHEME                      NONE\n" );
 #     else
