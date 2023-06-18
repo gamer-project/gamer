@@ -522,7 +522,7 @@ def load_arguments():
                        )
 
     parser.add_argument( "--max_patch", type=int, metavar="INTEGER", gamer_name="MAX_PATCH",
-                         default=100000,
+                         default=1000000,
                          help="Set the maximum number of patches on each AMR level.\n"
                        )
 
