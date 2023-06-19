@@ -2277,9 +2277,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  if ( MODEL == ELBDM )
    InputPara.Opt__Flag_EngyDensity   = OPT__FLAG_ENGY_DENSITY;
    InputPara.Opt__Flag_Interference  = OPT__FLAG_INTERFERENCE;
-#  if ( WAVE_SCHEME == WAVE_GRAMFE )
    InputPara.Opt__Flag_Spectral      = OPT__FLAG_SPECTRAL;
-#  endif
 #  endif
    InputPara.Opt__Flag_LohnerDens    = OPT__FLAG_LOHNER_DENS;
 #  if ( MODEL == HYDRO )
@@ -2654,11 +2652,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
       for (int t=0; t<4; t++) {
       InputPara.FlagTable_Interference [lv][t] = FlagTable_Interference [lv][t];
       }
-#     if ( WAVE_SCHEME == WAVE_GRAMFE )
       for (int t=0; t<2; t++) {
       InputPara.FlagTable_Spectral    [lv][t] = FlagTable_Spectral [lv][t];
       }
-#     endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
 #     endif // ... # elif ( MODEL == ELBDM )
 
 #     ifdef PARTICLE
@@ -3569,9 +3565,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  elif ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "FlagTable_EngyDensity",  HOFFSET(InputPara_t,FlagTable_EngyDensity   ), H5_TypeID_Arr_NLvM1_2Double );
    H5Tinsert( H5_TypeID, "FlagTable_Interference", HOFFSET(InputPara_t,FlagTable_Interference  ), H5_TypeID_Arr_NLvM1_4Double );
-#  if ( WAVE_SCHEME == WAVE_GRAMFE )
    H5Tinsert( H5_TypeID, "FlagTable_Spectral",     HOFFSET(InputPara_t,FlagTable_Spectral      ), H5_TypeID_Arr_NLvM1_2Double );
-#  endif
 #  endif
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "FlagTable_NParPatch",    HOFFSET(InputPara_t,FlagTable_NParPatch     ), H5_TypeID_Arr_NLvM1Int      );

@@ -971,9 +971,7 @@ void Aux_TakeNote()
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__FLAG_ENGY_DENSITY          %d\n",      OPT__FLAG_ENGY_DENSITY    );
       fprintf( Note, "OPT__FLAG_INTERFERENCE          %d\n",      OPT__FLAG_INTERFERENCE    );
-#     if ( WAVE_SCHEME == WAVE_GRAMFE )
       fprintf( Note, "OPT__FLAG_SPECTRAL              %d\n",      OPT__FLAG_SPECTRAL        );
-#     endif // #if ( WAVE_SCHEME == WAVE_GRAMFE )
 #     endif
       fprintf( Note, "OPT__FLAG_LOHNER_DENS           %d\n",      OPT__FLAG_LOHNER_DENS     );
 #     if ( MODEL == HYDRO )
@@ -1660,18 +1658,16 @@ void Aux_TakeNote()
          fprintf( Note, "\n\n");
       }
 
-#     if ( WAVE_SCHEME == WAVE_GRAMFE )
       if ( OPT__FLAG_SPECTRAL )
       {
          fprintf( Note, "Flag Criterion (Spectral)\n" );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level     Threshold\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)
-            fprintf( Note, "%7d    %10.3e\n", lv, FlagTable_Spectral[lv][0], FlagTable_Spectral[lv][1] );
+            fprintf( Note, "%7d    %10.3e  %10.3e\n", lv, FlagTable_Spectral[lv][0], FlagTable_Spectral[lv][1] );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }
-#     endif // #if ( WAVE_SCHEME == WAVE_GRAMFE )
 
 #     endif
 

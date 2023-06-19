@@ -163,9 +163,7 @@ void Init_Load_Parameter()
 #  if ( MODEL == ELBDM )
    ReadPara->Add( "OPT__FLAG_ENGY_DENSITY",     &OPT__FLAG_ENGY_DENSITY,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_INTERFERENCE",     &OPT__FLAG_INTERFERENCE,          false,           Useless_bool,  Useless_bool   );
-#if ( WAVE_SCHEME == WAVE_GRAMFE )
    ReadPara->Add( "OPT__FLAG_SPECTRAL",         &OPT__FLAG_SPECTRAL,              false,           Useless_bool,  Useless_bool   );
-#endif // #if ( WAVE_SCHEME == WAVE_GRAMFE )
 #  endif
    ReadPara->Add( "OPT__FLAG_LOHNER_FORM",      &OPT__FLAG_LOHNER_FORM,           LOHNER_FLASH2,   1,             4              );
    ReadPara->Add( "OPT__FLAG_USER",             &OPT__FLAG_USER,                  false,           Useless_bool,  Useless_bool   );

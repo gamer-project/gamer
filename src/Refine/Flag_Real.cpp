@@ -5,9 +5,7 @@ void Prepare_for_Lohner( const OptLohnerForm_t Form, const real *Var1D, real *Av
 
 #if ( MODEL == ELBDM )
 void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *Cond1D, bool useWaveFlag);
-#if ( WAVE_SCHEME == WAVE_GRAMFE )
 void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond1D);
-#endif
 #endif // #if ( MODEL == ELBDM )
 
 
@@ -67,12 +65,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const IntScheme_t Interf_IntScheme = INT_CQUAD;             // interpolation scheme for interference criterion
 
    //Spectral refinement criterion
-#  if ( WAVE_SCHEME == WAVE_GRAMFE )
-   const int  Spectral_NGhost         = FLU_GHOST_SIZE;        // number of ghost cells
-   const int  Spectral_NCell          = FLU_NXT;               // prepare patch group
+   const int  Spectral_NGhost           = FLU_GHOST_SIZE;      // number of ghost cells
+   const int  Spectral_NCell            = FLU_NXT;             // prepare patch group
    const IntScheme_t Spectral_IntScheme = INT_CQUAD;           // interpolation scheme
-#  endif
-
 #  endif // # if ( MODEL == ELBDM )
 
 #  if ( MODEL == HYDRO  &&  defined GRAVITY )
@@ -152,7 +147,6 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    }
 
 
-#  if ( WAVE_SCHEME == WAVE_GRAMFE )
    if ( OPT__FLAG_SPECTRAL )
    {
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
@@ -164,7 +158,6 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       }
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID
    }
-#  endif // #  if ( WAVE_SCHEME == WAVE_GRAMFE )
 
 #  else
 #  error : unsupported MODEL !!
@@ -205,8 +198,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       real *Interf_Var                   = NULL;   // array storing the density and phase for the interference criterion
       real *Interf_Temp                  = NULL;   // array storing the square root of the density and the ratios of subsequent gradients for the interference criterion
       real *Interf_Cond                  = NULL;   // array storing the quantum pressure, phase curvature and phase discrete differences for the interference criterion
-      real *Spectral_Var                 = NULL;
-      real  Spectral_Cond                = 0.0;
+      real *Spectral_Var                 = NULL;   // array storing a patch group of real and density part for spectral criterion
+      real  Spectral_Cond                = 0.0;    // variable storing the ratio of physical and extension masses
 
       int  i_start, i_end, j_start, j_end, k_start, k_end, SibID, SibPID, PID;
       bool ProperNesting, NextPatch;
@@ -236,11 +229,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
          Interf_Temp      = new real [ 2 *               Interf_NCell * Interf_NCell * Interf_NCell ]; // 2: log(rho) and phase
          Interf_Cond      = new real [ 3 *               Interf_NCond * Interf_NCond * Interf_NCond ]; // 3: quantum pressure, lap(phase), phase differences
       }
-#     if ( WAVE_SCHEME == WAVE_GRAMFE )
       if ( Spectral_NVar > 0 ) {
-         Spectral_Var     = new real [    Spectral_NVar * Spectral_NCell * Spectral_NCell * Spectral_NCell ]; // prepare one patch group
+         Spectral_Var     = new real [ Spectral_NVar * Spectral_NCell * Spectral_NCell * Spectral_NCell ]; // prepare one patch group
       }
-#     endif
 #     endif
 
       if ( Lohner_NVar > 0 )
@@ -269,12 +260,10 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                Interf_IntScheme, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
 
-#     if ( WAVE_SCHEME == WAVE_GRAMFE )
          if ( Spectral_NVar > 0 )
             Prepare_PatchData( lv, Time[lv], Spectral_Var, NULL, Spectral_NGhost, NPG, &PID0, Spectral_TVar, _NONE,
                                Spectral_IntScheme, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
-#     endif
 #     endif // # if ( MODEL == ELBDM )
 
 //       loop over all local patches within the same patch group
@@ -417,10 +406,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                   Prepare_for_Interference_Criterion(Interf_Var+LocalID*Interf_Stride, Interf_Temp, Interf_Cond, Interf_NVar == 3);
 
 //             evaluate the ratio of the GramFE extension masses and the physical wave function
-#              if ( WAVE_SCHEME == WAVE_GRAMFE )
                if ( Spectral_NVar > 0 )
-                  Prepare_for_Spectral_Criterion(Spectral_Var, Interf_Cond);
-#              endif
+                  Prepare_for_Spectral_Criterion(Spectral_Var, Spectral_Cond);
 #              endif // # if ( MODEL == ELBDM )
 
 //             count the number of particles and/or particle mass density on each cell
@@ -662,6 +649,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       delete [] Interf_Var;
       delete [] Interf_Temp;
       delete [] Interf_Cond;
+      delete [] Spectral_Var;
 
    } // OpenMP parallel region
 

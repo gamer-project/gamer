@@ -2274,12 +2274,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
       for (int t=0; t<4; t++) {
       RS.FlagTable_Interference [lv][t] = -1.0;
       }
-
-#     if ( WAVE_SCHEME == WAVE_GRAMFE )
       for (int t=0; t<2; t++) {
       RS.FlagTable_Spectral    [lv][t] = -1.0;
       }
-#     endif
 #     endif
 
 #     ifdef PARTICLE
@@ -2359,7 +2356,6 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    }}
 
 
-#  if ( WAVE_SCHEME == WAVE_GRAMFE )
    if ( OPT__FLAG_SPECTRAL ) {
    LoadField( "FlagTable_Spectral",    RS.FlagTable_Spectral,   SID, TID, NonFatal,  NullPtr,                    -1, NonFatal );
 
@@ -2370,7 +2366,6 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
          Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                        "FlagTable_Spectral", lv, t, RS.FlagTable_Spectral[lv][t],  RT.FlagTable_Spectral[lv][t] );
    }}
-#  endif // #if ( WAVE_SCHEME == WAVE_GRAMFE )
 
 #  endif
 

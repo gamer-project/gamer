@@ -131,10 +131,9 @@ extern double           FlagTable_Interference[NLEVEL-1][4];
 extern double           DT__HYBRID_FLUID, DT__HYBRID_VELOCITY;
 extern bool             OPT__HYBRID_MATCH_PHASE;
 #endif //  # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-#if ( WAVE_SCHEME == WAVE_GRAMFE )
+
 extern bool             OPT__FLAG_SPECTRAL;
 extern double           FlagTable_Spectral[NLEVEL-1][2];
-#endif // #if ( WAVE_SCHEME == WAVE_GRAMFE )
 
 extern ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
 extern bool             ELBDM_BASE_SPECTRAL;

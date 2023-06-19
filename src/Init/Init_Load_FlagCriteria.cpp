@@ -39,9 +39,6 @@ void Init_Load_FlagCriteria()
 #  if (  MODEL != ELBDM )
    const bool OPT__FLAG_INTERFERENCE  = false;
    double FlagTable_Interference[NLEVEL-1][4];
-#  endif
-
-#  if ( MODEL != ELBDM || WAVE_SCHEME != WAVE_GRAMFE )
    const bool OPT__FLAG_SPECTRAL      = false;
    double FlagTable_Spectral[NLEVEL-1][2];
 #  endif // #if ( WAVE_SCHEME == WAVE_GRAMFE )
@@ -208,7 +205,7 @@ void Init_Load_FlagCriteria()
                                                                                       &FlagTable_Interference[lv][3]
                                                                                       );
 //          OPT__FLAG_SPECTRAL loads two columns
-            else if ( FlagMode == 13 )  sscanf( input_line, "%d%lf", &Trash,          &FlagTable_Spectral[lv][0],
+            else if ( FlagMode == 13 )  sscanf( input_line, "%d%lf%lf", &Trash,       &FlagTable_Spectral[lv][0],
                                                                                       &FlagTable_Spectral[lv][1]
                                                                                       );
 //          others use the default format: (integer, double)

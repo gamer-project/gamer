@@ -230,7 +230,7 @@ if ( OPT__FLAG_RHO )
 
 // check ELBDM spectral criterion
 // ===========================================================================================
-#  if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
+#  if ( MODEL == ELBDM )
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( amr->use_wave_flag[lv] ) {
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
