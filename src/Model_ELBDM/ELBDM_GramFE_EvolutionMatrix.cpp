@@ -5,8 +5,6 @@
 
 #if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
 
-#include "GSL.h"
-
 #include "GramFE_ExtensionTables.h"
 
 #include <complex.h>
