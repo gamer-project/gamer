@@ -36,12 +36,6 @@ void Aux_Check_Conservation( const char *comment )
    const char *FileName  = "Record__Conservation";
 
 
-// check
-#  ifdef COMOVING
-   Aux_Message( stderr, "WARNING : function \"%s\" is NOT supported in COMOVING !!\n", __FUNCTION__ );
-   OPT__CK_CONSERVATION = false;
-   return;
-#  endif
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM  &&  MODEL != PAR_ONLY )
    Aux_Message( stderr, "WARNING : function \"%s\" is supported only in the models HYDRO, ELBDM, and PAR_ONLY !!\n",
