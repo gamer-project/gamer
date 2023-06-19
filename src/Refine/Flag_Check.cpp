@@ -236,7 +236,7 @@ if ( OPT__FLAG_RHO )
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( OPT__FLAG_SPECTRAL )
    {
-      Flag |= Spectral_Cond > FlagTable_Spectral[lv][1];
+      Flag |= Spectral_Cond > FlagTable_Spectral[lv][0];
       if ( Flag )    return Flag;
    }
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
