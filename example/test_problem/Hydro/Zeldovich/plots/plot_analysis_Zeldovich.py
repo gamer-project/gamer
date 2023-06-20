@@ -70,7 +70,7 @@ else:
 # -------------------------------------------------------------------------------------------------------------------------
 # load simulation data with yt
 yt.enable_parallelism()
-ts                     = yt.load( [ prefix+'Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
+ts                     = yt.DatasetSeries( [ prefix+'Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 ts0                    = ts[0]
 base_level_cell_num    = int(ts0.domain_dimensions[1])
 BoxSize_x              = float(ts0.domain_width[0])        # [Mpc/h] = [code_length]
