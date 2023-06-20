@@ -2,4 +2,4 @@
 
 PYTHON=python
 
-${PYTHON} configure.py --machine=eureka_intel --model=HYDRO --double=True
+${PYTHON} configure.py --machine=eureka_intel --model=HYDRO
