@@ -340,56 +340,10 @@ GSL_PATH     :=
 LIBYT_PATH   :=
 CUFFTDX_PATH :=
 
-# NCSA-bluewaters (only need to specify the path of user-installed packages)
-#GRACKLE_PATH :=
-
-# UIUC-campus (intel-15.0 + openmpi-1.8.4)
-#CUDA_PATH    := /usr/local/cuda/7.0
-#FFTW2_PATH   := /projects/ncsa/grav/softwares/fftw/2.1.5
-#FFTW3_PATH   :=
-#MPI_PATH     := /usr/local/mpi/openmpi-1.8.4-intel-15.0
-#HDF5_PATH    := /projects/ncsa/grav/softwares/miniconda2
-#GRACKLE_PATH := /home/hyschive/local
-#GSL_PATH     := /usr/local/gsl/gsl-1.16
-
-# UIUC-campus (gcc-4.9.2 + openmpi-1.8.4)
-#CUDA_PATH    := /usr/local/cuda/7.0
-#FFTW2_PATH   := /projects/ncsa/grav/softwares/fftw/2.1.5-openmpi-1.8.4-gcc-4.9.2
-#FFTW3_PATH   :=
-#MPI_PATH     := /usr/local/mpi/openmpi-1.8.4-gcc-4.9.2
-#HDF5_PATH    := /projects/ncsa/grav/softwares/miniconda2
-#GRACKLE_PATH := /home/hyschive/local
-#GSL_PATH     := /usr/local/gsl/gsl-1.16
-
-# NCSA-hybrid (gcc)
-#CUDA_PATH    := /usr/local/cuda-8.0
-#MPI_PATH     := /home/hyschive/project/software/openmpi/2.0.2
-#FFTW2_PATH   := /home/hyschive/project/software/fftw/2.1.5
-#FFTW3_PATH   :=
-#HDF5_PATH    := /home/hyschive/project/software/miniconda2
-#GSL_PATH     :=
-
-# NCSA-nano (intel 2016)
-#CUDA_PATH    := /usr/local/cuda
-#MPI_PATH     := /mnt/lustre/allen/hyschive/software/openmpi/2.0.2
-#FFTW2_PATH   := /mnt/lustre/allen/hyschive/software/fftw/2.1.5
-#FFTW3_PATH   :=
-#HDF5_PATH    := /mnt/lustre/allen/hyschive/software/miniconda2
-#GSL_PATH     :=
-
-# NCSA-dxl (gcc, serial)
-#CUDA_PATH    :=
-#FFTW2_PATH   := /home/hyschive/software/fftw/2.1.5
-#FFTW3_PATH   :=
-#MPI_PATH     := /usr
-#HDF5_PATH    := /home/hyschive/software/miniconda2
-#GSL_PATH     := /usr/lib
-#LIBYT_PATH   := /home/hyschive/project/libyt/libyt.dev/libyt
-
 # NTU-eureka (default: openmpi-intel)
 #CUDA_PATH    := /software/cuda/default
 #FFTW2_PATH   := /software/fftw/default
-#FFTW3_PATH   := /software/fftw/3.3.10-intel-2022.0.1-openmpi-4.1.1-ucx_mt
+#FFTW3_PATH   := /software/fftw/default3
 #MPI_PATH     := /software/openmpi/default
 #HDF5_PATH    := /software/hdf5/default
 #GRACKLE_PATH :=
@@ -432,13 +386,6 @@ CUFFTDX_PATH :=
 #HDF5_PATH    := /storage/app/gnu/hdf5-1.8.21-gcc8
 #GRACKLE_PATH :=
 #GSL_PATH     :=
-
-# NAOC-laohu (OpenMPI-1.3.2-intel)
-#CUDA_PATH    := $(CUDA_INSTALL_PATH)
-#FFTW2_PATH   := /ifs/data/hsiyu/Software/fftw/2.1.5-openmpi-1.3.2-intel
-#FFTW3_PATH   :=
-#MPI_PATH     := /usr/mpi/intel/openmpi-1.3.2-qlc
-#GPUID_PATH   := /ifs/data/hsiyu/Software/gpudevmgr
 
 # A "typical" macOS installation without GPU
 #CUDA_PATH    :=

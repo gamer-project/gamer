@@ -245,5 +245,5 @@ OPT__CK_PARTICLE              0           # check the particle allocation [0]
 
 # YT inline analysis
 YT_SCRIPT                     inline_script # inline python script name, exclude ".py" extension
-YT_VERBOSE                    3             # log level (0=off, 1=info, 2=warning, 3=debug)
+YT_VERBOSE                    1             # log level (0=off, 1=info, 2=warning, 3=debug) [1]
 YT_FIG_BASENAME               Fig           # figure basename, use libyt default if not set: (default=Fig%9d)

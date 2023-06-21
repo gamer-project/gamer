@@ -78,7 +78,7 @@
 //                            --> for example, in MHM_RP FC_Flux[] is also linked to Half_Flux[] used by
 //                                Hydro_RiemannPredict_Flux() and Hydro_RiemannPredict()
 //                            --> for the latter two routines, Half_Flux[] is accessed with N_HF_FLUX
-//                                that is smaller than N_FC_FLUX
+//                                that is equal to N_FC_FLUX and larger than N_FL_FLUX
 // N_HF_VAR             : for accessing PriVar_Half[], which is linked to PriVar[] with the size FLU_NXT^3
 //                        --> also for accessing FC_B_Half[] in MHD
 
