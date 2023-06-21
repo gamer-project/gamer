@@ -1390,8 +1390,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    real *FData_Dens = NULL;
    real *FData_Phas = NULL;
 
-// turn off phase interpolation if DISABLE_PHASE_AT_DEFECT is defined and we detect vortex in interpolation data
-   bool disableIntPhase = false;
+// turn off phase interpolation if OPT__CK_PHASE_DEFECT is defined and we detect vortex in interpolation data
+   bool DisableIntPhase = false;
 
 // parameter IntPhase in hybrid scheme only relevant where wave scheme is used
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
@@ -1455,15 +1455,15 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          for (int j=0; j<CSize_CC[1]; j++)
          for (int i=0; i<CSize_CC[0]; i++)
          {
-            disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_CC[0], CSize_CC[1], CSize_CC[2], CData_Dens, ELBDM_VORTEX_THRESHOLD);
+            DisableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_CC[0], CSize_CC[1], CSize_CC[2], CData_Dens, ELBDM_VORTEX_THRESHOLD);
          }
       } // if ( OPT__CK_PHASE_DEFECT ) {
    } // if ( IntPhase )
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( IntPhase && !disableIntPhase && amr->use_wave_flag[lv] == true)
+   if ( IntPhase && !DisableIntPhase && amr->use_wave_flag[lv] == true)
 #  else // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( IntPhase && !disableIntPhase )
+   if ( IntPhase && !DisableIntPhase )
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID ) ... # else
    {
 //    interpolate density
@@ -1657,7 +1657,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          FData_Real[t] = Amp*COS( Phase );
          FData_Imag[t] = Amp*SIN( Phase );
       }
-   } // if ( IntPhase && !disableIntPhase ) || if ( IntPhase && amr->use_wave_flag[lv] == true && !disableIntPhase ) in hybrid scheme
+   } // if ( IntPhase && !DisableIntPhase ) || if ( IntPhase && amr->use_wave_flag[lv] == true && !DisableIntPhase ) in hybrid scheme
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    else if ( amr->use_wave_flag[lv] == false )
    {

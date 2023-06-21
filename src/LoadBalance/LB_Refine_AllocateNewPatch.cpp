@@ -797,18 +797,18 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 // 3.2 perform spatial interpolation
 // 3.2.1 determine which variables require **monotonic** interpolation
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(HYBRID_SMOOTH_PHASE) )
-   const int PhaseUnwrapping_Cond  = 2;
+   const int PhaseUnwrapping_Cond   = 2;
 #  else
-   const int PhaseUnwrapping_Cond  = 0;
+   const int PhaseUnwrapping_Cond   = 0;
 #  endif
-   const int PhaseUnwrapping_Yes   = 1;
-   const int PhaseUnwrapping_No    = 0;
+   const int PhaseUnwrapping_Yes    = 1;
+   const int PhaseUnwrapping_No     = 0;
    const bool Monotonicity_Yes      = true;
    const bool Monotonicity_No       = false;
    const bool IntOppSign0thOrder_No = false;
 
-// turn off phase interpolation if DISABLE_PHASE_AT_DEFECT is defined and we detect vortex in interpolation data
-   bool disableIntPhase       = false;
+// turn off phase interpolation if OPT__CK_PHASE_DEFECT is defined and we detect vortex in interpolation data
+   bool DisableIntPhase             = false;
 
    bool Monotonicity[NCOMP_TOTAL];
 
@@ -930,11 +930,11 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       for (int j=0; j<CSize_Flu; j++)
       for (int i=0; i<CSize_Flu; i++)
       {
-         disableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_Flu, CSize_Flu, CSize_Flu, CData_Dens, ELBDM_VORTEX_THRESHOLD);
+         DisableIntPhase |= ELBDM_DetectVortex(i, j, k, CSize_Flu, CSize_Flu, CSize_Flu, CData_Dens, ELBDM_VORTEX_THRESHOLD);
       }
    } // if ( OPT__INT_PHASE && OPT__CK_PHASE_DEFECT )
 
-   if ( OPT__INT_PHASE && !disableIntPhase )
+   if ( OPT__INT_PHASE && !DisableIntPhase )
    {
 //    get the wrapped phase (store in the REAL component)
       for (int t=0; t<CSize_Flu1v; t++)   CData_Real[t] = SATAN2( CData_Imag[t], CData_Real[t] );
@@ -950,7 +950,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
                    IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
    }
 
-   else // if ( OPT__INT_PHASE && !disableIntPhase )
+   else // if ( OPT__INT_PHASE && !DisableIntPhase )
    {
       Interpolate( CData_Flu, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[0][0][0][0],
                    FSize_CC3, FStart_CC, NCOMP_TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
@@ -958,7 +958,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    }
 
 // convert density/phase back to real and imaginary parts
-   if ( OPT__INT_PHASE && !disableIntPhase )
+   if ( OPT__INT_PHASE && !DisableIntPhase )
    {
 //    retrieve real and imaginary parts
       real Amp, Phase, Rho;
@@ -981,7 +981,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          FData_Flu[REAL][k][j][i] = Amp*COS( Phase );
          FData_Flu[IMAG][k][j][i] = Amp*SIN( Phase );
       }
-   } // if ( OPT__INT_PHASE && !disableIntPhase )
+   } // if ( OPT__INT_PHASE && !DisableIntPhase )
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    } else { // if ( amr->use_wave_flag[FaLv] )
@@ -1110,13 +1110,13 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #        if ( ELBDM_SCHEME == ELBDM_HYBRID )
          if ( amr->use_wave_flag[SonLv] )
 #        endif
-         if ( OPT__INT_PHASE && !disableIntPhase )
+         if ( OPT__INT_PHASE && !DisableIntPhase )
          {
             const real Rescale = SQRT( (real)MIN_DENS / DensOld );
 
             FData_Flu[REAL][k][j][i] *= Rescale;
             FData_Flu[IMAG][k][j][i] *= Rescale;
-         } // if ( OPT__INT_PHASE && !disableIntPhase )
+         } // if ( OPT__INT_PHASE && !DisableIntPhase )
 #        endif
 
 //       apply density floor
@@ -1230,7 +1230,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
       real Real, Imag, Rho_Corr, Rho_Wrong, Rescale;
 
-      if ( !OPT__INT_PHASE || disableIntPhase ) {
+      if ( !OPT__INT_PHASE || DisableIntPhase ) {
          for (int k=0; k<PS1; k++)
          for (int j=0; j<PS1; j++)
          for (int i=0; i<PS1; i++)
@@ -1252,7 +1252,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
             amr->patch[FSg_Flu][SonLv][SonPID]->fluid[REAL][k][j][i] *= Rescale;
             amr->patch[FSg_Flu][SonLv][SonPID]->fluid[IMAG][k][j][i] *= Rescale;
          }
-      } // if ( !OPT__INT_PHASE || disableIntPhase )
+      } // if ( !OPT__INT_PHASE || DisableIntPhase )
 
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       } // if ( amr->use_wave_flag[SonLv] )
