@@ -394,14 +394,14 @@ def load_arguments():
     parser.add_argument( "--laplacian_four", type=str2bool, metavar="BOOLEAN", gamer_name="LAPLACIAN_4TH",
                          default=None,
                          depend={"model":"ELBDM"},
-                         constrain={ True:{"wave_scheme":"WAVE_FD"} },
+                         constraint={ True:{"wave_scheme":"WAVE_FD"} },
                          help="Enable the fourth-order Laplacian for <--model=ELBDM> (for <--wave_scheme=WAVE_FD> only).\n"
                        )
 
     parser.add_argument( "--gramfe_gpu", type=str2bool, metavar="BOOLEAN", gamer_name="GRAMFE_ENABLE_GPU",
                          default=False,
                          depend={"model":"ELBDM", "wave_scheme":"WAVE_GRAMFE"},
-                         constrain={ True:{"gpu":True} },
+                         constraint={ True:{"gpu":True} },
                          help="Enable GPU for <--wave_scheme=WAVE_GRAMFE> (using CPU by default because it is faster). Must enable <--gpu>.\n"
                        )
 
