@@ -1,50 +1,8 @@
 """
-A. User Guide:
-  This script is used for generating the GAMER Makefile. To use this script, you need to be aware of the followings:
-  0. Help:
-    Use the `-h` or `--help` flag to get a short help message, and `-lh` to get a detailed help message.
-  1. Library paths and compilation flags:
-    When using a library, you need to specify the library path. Additionally, you may want to assign compilation
-    flags. The configuration file can be found under `../configs/`.
-    To set up your own configuration file, please make a copy of `template.config` and modify it.
-  2. Running the script:
-    Run the following command to generate the Makefile. This script supports both Python2 and Python3.
-      `python configure.py [--your_arguments]`
+User and developer guides of this script are provided in the following link.
 
-B. Developer guide:
-  This code consists of five parts: Packages, Global variables, Classes, Functions, and Main execution.
+   https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py
 
-  0. Adding a new source file:
-    a. Edit `Makefile_base` to add new source files.
-  1. Adding a new simulation option:
-    a. Add a python argument reader for the new simulation option under `load_arguments()`.
-      i. For arguments whose default value depends on other arguments, please set the
-         default value to None, and assign the value under `set_conditional_defaults()`.
-    b. If it is a GAMER simulation option, please include the `gamer_name="NAME_IN_GAMER"` argument
-       in `parser.add_argument()`.
-    c. [Optional] If the argument depends on other options, please add `depend={"depend_arg1":depend_value1, "depend_arg2":depend_value2}`
-       in `parser.add_argument()` so the argument will be loaded (or checked) only if `depend_arg1==depend_value1` and `depend_arg2==depend_value2`.
-    d. [Optional] If the argument must work with other arguments, please add `constrain={con1:[con_val1, con_val2], con2:con_val3}`
-       in the `parser.add_argument(), which will check if the `con1` is `con_val1` or `con_val2` and
-       if `con2` is `con_val3`. If any of the constrains are not satisified, an error will be raised.
-    e. [Optional] Add error and warning messages in validation() and warning(), respectively, under Functions.
-  2. Adding a new path:
-    a. Add a new line in the Makefile_base under "# library paths".
-      `NEW_PATH := @@@NEW_PATH@@@`
-    b. Add a new line in the config file.
-      `NEW_PATH    /path/of/new`
-  3. Adding a new compiler flag type:
-    a. Add a new line in the Makefile_base under "# compilers and flags".
-      `NEW_FLAG := @@@NEW_FLAG@@@`
-    b. Add a new flag key `["NEW_FLAG":""]` in `flags` of `load_config()`.
-    c. Add a new line in the config file.
-      `NEW_FLAG    -new_flag`
-  4. Rules of Makefile_base:
-    a. The strings to be replaced by this script need to be sandwitched by `@@@`.
-  5. Modifying the help message:
-    We have overwritten the original `print_help` since GAMER has too many options. Please follw these guidelines.
-    a. `print_help`: Show only the essential message. The default option should be marked with '*'.
-    b. `print_help_detail`: Make it as clear as possible.
 """
 
 ####################################################################################################
@@ -90,7 +48,7 @@ class ArgumentParser( argparse.ArgumentParser ):
         self.program     = { key: kwargs[key] for key in kwargs }
         self.options     = []
         self.depends     = {}
-        self.constrains  = {}
+        self.constraints = {}
         self.gamer_names = {}
         # This feature is only supported for version >= 3.5.
         if PYTHON_VER[0] == 2 or PYTHON_VER[1] < 5: kwargs.pop("allow_abbrev")
@@ -100,9 +58,9 @@ class ArgumentParser( argparse.ArgumentParser ):
         if "depend" in kwargs:
             key = args[0].replace("-", "")
             self.depends[key] = kwargs.pop("depend")
-        if "constrain" in kwargs:
+        if "constraint" in kwargs:
             key = args[0].replace("-", "")
-            self.constrains[key] = kwargs.pop("constrain")
+            self.constraints[key] = kwargs.pop("constraint")
         if "gamer_name" in kwargs:
             key = args[0].replace("-", "")
             self.gamer_names[key] = kwargs.pop("gamer_name")
@@ -135,7 +93,7 @@ class ArgumentParser( argparse.ArgumentParser ):
             msg += ', do you mean: %s ?\n'%(pos_key) if min_dist <= close_dist else "\n"
 
         if len(argv) != 0: self.error( msg )
-        return args, self.gamer_names, self.depends, self.constrains
+        return args, self.gamer_names, self.depends, self.constraints
 
     def string_align( self, string, indent, width, end_char ):
         """
@@ -365,8 +323,8 @@ def load_arguments():
     parser.add_argument( "--flu_scheme", type=str, metavar="TYPE", gamer_name="FLU_SCHEME",
                          default="CTU", choices=["RTVD", "MHM", "MHM_RP", "CTU"],
                          depend={"model":"HYDRO"},
-                         constrain={ "RTVD":{"unsplit_gravity":False, "passive":0, "dual":NONE_STR, "eos":"GAMMA"},
-                                     "CTU":{"eos":"GAMMA"} },
+                         constraint={ "RTVD":{"unsplit_gravity":False, "passive":0, "dual":NONE_STR, "eos":"GAMMA"},
+                                      "CTU":{"eos":"GAMMA"} },
                          help="The hydrodynamic/MHD integrator. MHD only supports MHM_RP and CTU.\n"
                        )
 
@@ -379,22 +337,22 @@ def load_arguments():
     parser.add_argument( "--flux", type=str, metavar="TYPE", gamer_name="RSOLVER",
                          default="ROE", choices=["EXACT", "ROE", "HLLE", "HLLC", "HLLD"],
                          depend={"model":"HYDRO"},
-                         constrain={ "ROE":{"eos":"GAMMA"},
-                                     "EXACT":{"eos":"GAMMA"} },
+                         constraint={ "ROE":{"eos":"GAMMA"},
+                                      "EXACT":{"eos":"GAMMA"} },
                          help="The Riemann solver. Pure hydro: EXACT/ROE/HLLE/HLLC^, MHD: ROE/HLLE/HLLD^ (^ indicates the recommended solvers). Useless for RTVD.\n"
                        )
 
     parser.add_argument( "--dual", type=str, metavar="TYPE", gamer_name="DUAL_ENERGY",
                          default=NONE_STR, choices=[NONE_STR, "DE_ENPY", "DE_EINT"],
                          depend={"model":"HYDRO"},
-                         constrain={ "DE_ENPY":{"eos":"GAMMA"} },
+                         constraint={ "DE_ENPY":{"eos":"GAMMA"} },
                          help="The dual-energy formalism (DE_ENPY: entropy, DE_EINT: internal energy). DE_EINT is not supported yet. Useless for RTVD.\n"
                        )
 
     parser.add_argument( "--mhd", type=str2bool, metavar="BOOLEAN", gamer_name="MHD",
                          default=False,
                          depend={"model":"HYDRO"},
-                         constrain={ True:{"flu_scheme":["MHM_RP", "CTU"], "flux":["ROE", "HLLE", "HLLD"]},
+                         constraint={ True:{"flu_scheme":["MHM_RP", "CTU"], "flux":["ROE", "HLLE", "HLLD"]},
                                      False:{"flux":["EXACT", "ROE", "HLLE", "HLLC"]} },
                          help="Magnetohydrodynamics.\n"
                        )
@@ -402,21 +360,21 @@ def load_arguments():
     parser.add_argument( "--cosmic_ray", type=str2bool, metavar="BOOLEAN", gamer_name="COSMIC_RAY",
                          default=False,
                          depend={"model":"HYDRO"},
-                         constrain={ True:{"dual":[NONE_STR]} },
+                         constraint={ True:{"dual":[NONE_STR]} },
                          help="Cosmic rays (not supported yet).\n"
                        )
 
     parser.add_argument( "--eos", type=str, metavar="TYPE", gamer_name="EOS",
                          default="GAMMA", choices=["GAMMA", "ISOTHERMAL", "NUCLEAR", "TABULAR", "USER"],
                          depend={"model":"HYDRO"},
-                         constrain={ "ISOTHERMAL":{"barotropic":True} },
+                         constraint={ "ISOTHERMAL":{"barotropic":True} },
                          help="Equation of state. Must be set when <--model=HYDRO>. Must enable <--barotropic> for ISOTHERMAL.\n"
                        )
 
     parser.add_argument( "--barotropic", type=str2bool, metavar="BOOLEAN", gamer_name="BAROTROPIC_EOS",
                          default=False,
                          depend={"model":"HYDRO"},
-                         constrain={ True:{"eos":["ISOTHERMAL", "TABULAR", "USER"]} },
+                         constraint={ True:{"eos":["ISOTHERMAL", "TABULAR", "USER"]} },
                          help="Whether or not the equation of state set by <--eos> is barotropic. Mandatory for <--eos=ISOTHEMAL>. Optional for <--eos=TABULAR> and <--eos=USER>.\n"
                        )
 
@@ -436,28 +394,28 @@ def load_arguments():
     parser.add_argument( "--laplacian_four", type=str2bool, metavar="BOOLEAN", gamer_name="LAPLACIAN_4TH",
                          default=None,
                          depend={"model":"ELBDM"},
-                         constrain={ True:{"wave_scheme":"WAVE_FD"} },
+                         constraint={ True:{"wave_scheme":"WAVE_FD"} },
                          help="Enable the fourth-order Laplacian for <--model=ELBDM> (for <--wave_scheme=WAVE_FD> only).\n"
                        )
 
     parser.add_argument( "--gramfe_gpu", type=str2bool, metavar="BOOLEAN", gamer_name="GRAMFE_ENABLE_GPU",
                          default=False,
                          depend={"model":"ELBDM", "wave_scheme":"WAVE_GRAMFE"},
-                         constrain={ True:{"gpu":True} },
+                         constraint={ True:{"gpu":True} },
                          help="Enable GPU for <--wave_scheme=WAVE_GRAMFE> (using CPU by default because it is faster). Must enable <--gpu>.\n"
                        )
 
     parser.add_argument( "--self_interaction", type=str2bool, metavar="BOOLEAN", gamer_name="QUARTIC_SELF_INTERACTION",
                          default=False,
                          depend={"model":"ELBDM"},
-                         constrain={ True:{"gravity":True, "comoving":False} },
+                         constraint={ True:{"gravity":True, "comoving":False} },
                          help="Include the quartic self-interaction potential for <--model=ELBDM>. Must enable <--gravity>. Does not support <--comoving>.\n"
                        )
 
     # A.3 gravity
     parser.add_argument( "--gravity", type=str2bool, metavar="BOOLEAN", gamer_name="GRAVITY",
                          default=False,
-                         constrain={ True:{"fftw":["FFTW2", "FFTW3"]} },
+                         constraint={ True:{"fftw":["FFTW2", "FFTW3"]} },
                          help="Enable gravity. Must enable <--fftw>.\n"
                        )
 
@@ -476,14 +434,14 @@ def load_arguments():
     parser.add_argument( "--unsplit_gravity", type=str2bool, metavar="BOOLEAN", gamer_name="UNSPLIT_GRAVITY",
                          default=None,
                          depend={"gravity":True},
-                         constrain={ True:{"model":"HYDRO"} },
+                         constraint={ True:{"model":"HYDRO"} },
                          help="Use unsplitting method to couple gravity to the target model (recommended). Supported only for <--model=HYDRO>.\n"
                        )
 
     parser.add_argument( "--comoving", type=str2bool, metavar="BOOLEAN", gamer_name="COMOVING",
                          default=False,
                          depend={"gravity":True},
-                         constrain={ True:{"eos":"GAMMA"} },
+                         constraint={ True:{"eos":"GAMMA"} },
                          help="Comoving frame for cosmological simulations.\n"
                        )
 
@@ -525,7 +483,7 @@ def load_arguments():
     # A.5 grackle
     parser.add_argument( "--grackle", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_GRACKLE",
                          default=False,
-                         constrain={ True:{"model":"HYDRO", "eos":"GAMMA"} },
+                         constraint={ True:{"model":"HYDRO", "eos":"GAMMA"} },
                          help="Enable Grackle, a chemistry and radiative cooling library. Must set <--passive> according to the primordial chemistry network set by GRACKLE_PRIMORDIAL. Please enable OpenMP when compiling Grackle (by 'make omp-on').\n"
                        )
 
@@ -562,7 +520,7 @@ def load_arguments():
 
     parser.add_argument( "--timing_solver", type=str2bool, metavar="BOOLEAN", gamer_name="TIMING_SOLVER",
                          default=False,
-                         constrain={ True:{"timing":True} },
+                         constraint={ True:{"timing":True} },
                          help="Enable more detailed timing analysis of GPU solvers. This option will disable CPU/GPU overlapping and thus deteriorate performance. Must enable <--timing>.\n"
                        )
 
@@ -627,7 +585,7 @@ def load_arguments():
 
     parser.add_argument( "--overlap_mpi", type=str2bool, metavar="BOOLEAN", gamer_name="OVERLAP_MPI",
                          default=False,
-                         constrain={ True:{"mpi":True} },
+                         constraint={ True:{"mpi":True} },
                          help="Overlap MPI communication with computation. Not supported yet. Must enable <--mpi>.\n"
                        )
 
@@ -642,7 +600,7 @@ def load_arguments():
                          help="Select the architecture of GPU.\n"
                        )
 
-    args, name_table, depends, constrains = parser.parse_args()
+    args, name_table, depends, constraints = parser.parse_args()
     args = vars( args )
 
     # 1. Print out a detailed help message then exit.
@@ -652,7 +610,7 @@ def load_arguments():
 
     # 2. Conditional default arguments.
     args = set_conditional_defaults( args )
-    return args, name_table, depends, constrains
+    return args, name_table, depends, constraints
 
 def load_config( config ):
     print("Using %s as the config."%(config))
@@ -731,7 +689,7 @@ def set_compile( paths, compilers, flags, kwargs ):
 
     return com_opt
 
-def validation( paths, depends, constrains, **kwargs ):
+def validation( paths, depends, constraints, **kwargs ):
     success = True
 
     # 0. Checking the Makefile_base existance.
@@ -739,8 +697,8 @@ def validation( paths, depends, constrains, **kwargs ):
         color_print("ERROR: %s does not exist."%(GAMER_MAKE_BASE), BCOLOR.FAIL)
         success = False
 
-    # 1. Checking general constrains.
-    for opt, condition in constrains.items():
+    # 1. Checking general constraints.
+    for opt, condition in constraints.items():
         check = True
         if opt in depends:
             for depend, val in depends[opt].items():
@@ -870,7 +828,7 @@ def warning( paths, **kwargs ):
 # Main execution
 ####################################################################################################
 # 1. Load the input arguments
-args, name_table, depends, constrains = load_arguments()
+args, name_table, depends, constraints = load_arguments()
 
 #------------------------------------------------------------
 # 2. Prepare the makefile args
@@ -878,7 +836,7 @@ args, name_table, depends, constrains = load_arguments()
 paths, compilers, flags = load_config( "%s/%s.config"%(GAMER_CONFIG_DIR, args["machine"]) )
 
 # 2.2 Validate arguments
-validation( paths, depends, constrains, **args )
+validation( paths, depends, constraints, **args )
 
 warning( paths, **args )
 
