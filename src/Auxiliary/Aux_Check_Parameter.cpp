@@ -246,6 +246,9 @@ void Aux_Check_Parameter()
 
    if ( ! OPT__FIXUP_RESTRICT )
       Aux_Error( ERROR_INFO, "must enable OPT__FIXUP_RESTRICT for BITWISE_REPRODUCIBILITY !!\n" );
+
+   if ( ! OPT__SORT_PATCH_BY_LBIDX )
+      Aux_Error( ERROR_INFO, "must enable OPT__SORT_PATCH_BY_LBIDX for BITWISE_REPRODUCIBILITY !!\n" );
 #  endif
 
 #  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )

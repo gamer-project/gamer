@@ -488,6 +488,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__MANUAL_CONTROL",        &OPT__MANUAL_CONTROL,             true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RECORD_USER",           &OPT__RECORD_USER,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OPTIMIZE_AGGRESSIVE",   &OPT__OPTIMIZE_AGGRESSIVE,        false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__SORT_PATCH_BY_LBIDX",   &OPT__SORT_PATCH_BY_LBIDX,        true,            Useless_bool,  Useless_bool   );
 
 
 // simulation checks
