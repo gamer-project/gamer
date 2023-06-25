@@ -1447,6 +1447,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__MANUAL_CONTROL             %d\n",      OPT__MANUAL_CONTROL      );
       fprintf( Note, "OPT__RECORD_USER                %d\n",      OPT__RECORD_USER         );
       fprintf( Note, "OPT__OPTIMIZE_AGGRESSIVE        %d\n",      OPT__OPTIMIZE_AGGRESSIVE );
+      fprintf( Note, "OPT__SORT_PATCH_BY_LBIDX        %d\n",      OPT__SORT_PATCH_BY_LBIDX );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 

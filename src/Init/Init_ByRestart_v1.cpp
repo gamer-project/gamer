@@ -475,14 +475,14 @@ void Init_ByRestart_v1( const char FileName[] )
 
 // must not reset load-balance variables (i.e., must adopt ResetLB_No) when calling LB_Init_LoadBalance() for the first time
 // since we MUST NOT overwrite IdxList_Real[] and IdxList_Real_IdxList[] already set above
-   const double ParWeight_Zero   = 0.0;
-   const bool   Redistribute_No  = false;
-   const bool   SendGridData_No  = false;
-   const bool   ResetLB_Yes      = true;
-   const bool   ResetLB_No       = false;
-   const int    AllLv            = -1;
+   const double ParWeight_Zero  = 0.0;
+   const bool   Redistribute_No = false;
+   const bool   SendGridData_No = false;
+   const bool   ResetLB_Yes     = true;
+   const bool   ResetLB_No      = false;
+   const int    AllLv           = -1;
 
-   LB_Init_LoadBalance( Redistribute_No, SendGridData_No, ParWeight_Zero, ResetLB_No, AllLv );
+   LB_Init_LoadBalance( Redistribute_No, SendGridData_No, ParWeight_Zero, ResetLB_No, OPT__SORT_PATCH_BY_LBIDX,  AllLv );
 
 
 // fill up the data of non-leaf patches
