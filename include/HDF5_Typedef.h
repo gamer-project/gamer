@@ -718,6 +718,7 @@ struct InputPara_t
    int    Opt__ManualControl;
    int    Opt__RecordUser;
    int    Opt__OptimizeAggressive;
+   int    Opt__SortPatchByLBIdx;
 
 // simulation checks
    int    Opt__Ck_Refine;

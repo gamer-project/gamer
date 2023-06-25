@@ -371,6 +371,7 @@ OPT__MANUAL_CONTROL           1           # support manually dump data, stop run
                                           # (by generating the file DUMP_GAMER_DUMP, STOP_GAMER_STOP, PAUSE_GAMER_PAUSE, respectively) [1]
 OPT__RECORD_USER              0           # record the user-specified info -> edit "Aux_Record_User.cpp" [0]
 OPT__OPTIMIZE_AGGRESSIVE      0           # apply aggressive optimizations (experimental) [0]
+OPT__SORT_PATCH_BY_LBIDX      1           # sort patches to improve bitwise reproducibility [SERIAL:0, LOAD_BALACNE:1]
 
 
 # checks

@@ -230,9 +230,10 @@ void Init_ByFile()
    const bool   SendGridData_No  = false;
    const bool   ResetLB_Yes      = true;
    const bool   ResetLB_No       = false;
+   const bool   SortRealPatch_No = false;
    const int    AllLv            = -1;
 
-   LB_Init_LoadBalance( Redistribute_No, SendGridData_No, ParWeight_Zero, ResetLB_No, AllLv );
+   LB_Init_LoadBalance( Redistribute_No, SendGridData_No, ParWeight_Zero, ResetLB_No, SortRealPatch_No, AllLv );
 
 #  else // for SERIAL
 
@@ -312,7 +313,7 @@ void Init_ByFile()
 //    redistribute patches for load balancing
 //    --> no need to send grid data since it hasn't been assigned yet
 #     ifdef LOAD_BALANCE
-      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_No, Par_Weight, ResetLB_Yes, SonLv );
+      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_No, Par_Weight, ResetLB_Yes, SortRealPatch_No, SonLv );
 #     endif
 
 //    assign data on SonLv
@@ -355,7 +356,7 @@ void Init_ByFile()
 // 7. optimize load-balancing to take into account particle weighting
 #  if ( defined PARTICLE  &&  defined LOAD_BALANCE )
    if ( Par_Weight > 0.0 )
-      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, Par_Weight, ResetLB_Yes, AllLv );
+      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, Par_Weight, ResetLB_Yes, SortRealPatch_No, AllLv );
 #  endif
 
 
@@ -371,7 +372,7 @@ void Init_ByFile()
       Refine( lv, UseLB );
 
 #     ifdef LOAD_BALANCE
-      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, Par_Weight, ResetLB_Yes, lv+1 );
+      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, Par_Weight, ResetLB_Yes, SortRealPatch_No, lv+1 );
 #     endif
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Downgrading level %d ... done\n", lv+1 );
@@ -390,7 +391,7 @@ void Init_ByFile()
       Refine( lv, UseLB );
 
 #     ifdef LOAD_BALANCE
-      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, Par_Weight, ResetLB_Yes, lv+1 );
+      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, Par_Weight, ResetLB_Yes, SortRealPatch_No, lv+1 );
 #     endif
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Refining level %d ... done\n", lv );

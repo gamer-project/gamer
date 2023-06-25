@@ -247,6 +247,9 @@ void Aux_Check_Parameter()
    if ( ! OPT__FIXUP_RESTRICT )
       Aux_Error( ERROR_INFO, "must enable OPT__FIXUP_RESTRICT for BITWISE_REPRODUCIBILITY !!\n" );
 
+   if ( ! OPT__SORT_PATCH_BY_LBIDX )
+      Aux_Error( ERROR_INFO, "must enable OPT__SORT_PATCH_BY_LBIDX for BITWISE_REPRODUCIBILITY !!\n" );
+
 #  ifdef SUPPORT_FFTW
    if ( OPT__FFTW_STARTUP != FFTW_STARTUP_ESTIMATE )
       Aux_Error( ERROR_INFO, "must set OPT__FFTW_STARTUP=0 (FFTW_STARTUP_ESTIMATE) for BITWISE_REPRODUCIBILITY !!\n" );
