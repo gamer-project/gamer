@@ -1027,6 +1027,21 @@ void Init_ResetParameter()
 #  endif
 
 
+// must set OPT__FFTW_STARTUP = FFTW_STARTUP_ESTIMATE for BITWISE_REPRODUCIBILITY 
+#  ifdef SUPPORT_FFTW
+   if ( OPT__FFTW_STARTUP == FFTW_STARTUP_DEFAULT )
+   {
+#     ifdef BITWISE_REPRODUCIBILITY
+      OPT__FFTW_STARTUP = FFTW_STARTUP_ESTIMATE;
+      PRINT_WARNING( OPT__FFTW_STARTUP, FORMAT_INT, "when enabling BITWISE_REPRODUCIBILITY" );
+#     else
+      OPT__FFTW_STARTUP = FFTW_STARTUP_MEASURE;
+      PRINT_WARNING( OPT__FFTW_STARTUP, FORMAT_INT, "when disabling BITWISE_REPRODUCIBILITY" );
+#     endif
+   }
+#  endif
+
+
 // remove symbolic constants and macros only used in this structure
 #  undef FORMAT_INT
 #  undef FORMAT_FLT
