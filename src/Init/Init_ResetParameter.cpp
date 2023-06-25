@@ -1028,6 +1028,9 @@ void Init_ResetParameter()
 
 
 // must set OPT__FFTW_STARTUP = FFTW_STARTUP_ESTIMATE for BITWISE_REPRODUCIBILITY 
+// --> even when disabling BITWISE_REPRODUCIBILITY, we still use FFTW_STARTUP_ESTIMATE
+//     by default since otherwise the FFT results can vary in each run on the level
+//     of machine precision, which can be confusing
 #  ifdef SUPPORT_FFTW
    if ( OPT__FFTW_STARTUP == FFTW_STARTUP_DEFAULT )
    {
@@ -1035,7 +1038,8 @@ void Init_ResetParameter()
       OPT__FFTW_STARTUP = FFTW_STARTUP_ESTIMATE;
       PRINT_WARNING( OPT__FFTW_STARTUP, FORMAT_INT, "when enabling BITWISE_REPRODUCIBILITY" );
 #     else
-      OPT__FFTW_STARTUP = FFTW_STARTUP_MEASURE;
+//    OPT__FFTW_STARTUP = FFTW_STARTUP_MEASURE;
+      OPT__FFTW_STARTUP = FFTW_STARTUP_ESTIMATE;
       PRINT_WARNING( OPT__FFTW_STARTUP, FORMAT_INT, "when disabling BITWISE_REPRODUCIBILITY" );
 #     endif
    }
