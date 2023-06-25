@@ -248,6 +248,7 @@ void Output_DumpData( const int Stage )
    if ( OutputData || OutputData_RunTime || OutputData_Walltime )
    {
 //    sort real patches by their load-balance indices to improve bitwise reproducibility
+#     ifdef LOAD_BALANCE
       if ( OPT__SORT_PATCH_BY_LBIDX )
       {
 #        ifdef PARTICLE
@@ -263,6 +264,7 @@ void Output_DumpData( const int Stage )
 
          LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, ParWeight, ResetLB_Yes, SortRealPatch_Yes, AllLv );
       }
+#     endif // #ifdef LOAD_BALANCE
 
 //    apply various corrections (e.g., synchronize particles, restrict data, recalculate potential and particle acceleration)
 //    before dumpting data --> for bitwise reproducibility

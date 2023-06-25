@@ -1016,6 +1016,17 @@ void Init_ResetParameter()
    }
 
 
+// SERIAL doesn't support OPT__SORT_PATCH_BY_LBIDX
+#  ifdef SERIAL
+   if ( OPT__SORT_PATCH_BY_LBIDX )
+   {
+      OPT__SORT_PATCH_BY_LBIDX = false;
+
+      PRINT_WARNING( OPT__SORT_PATCH_BY_LBIDX, FORMAT_INT, "for SERIAL" );
+   }
+#  endif
+
+
 // remove symbolic constants and macros only used in this structure
 #  undef FORMAT_INT
 #  undef FORMAT_FLT
