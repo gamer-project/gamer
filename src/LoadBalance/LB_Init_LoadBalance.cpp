@@ -972,8 +972,8 @@ void LB_SortRealPatch( const int lv )
          {
             Output_Patch( lv, PID0, 0, 0, 0, "WrongOrder" );
             Output_Patch( lv, PID1, 0, 0, 0, "WrongOrder" );
-            Aux_Error( ERROR_INFO, "incorrect order of local patches (lv %d, PID0 %d, PID1 %d, d %d, corner0 %d, corner1 %d, offset %d )\n"
-                       "--> Check the files Patch_*_WrongOrder !!\n", lv, PID0, PID1, d, corner0, corner1, offset );
+            Aux_Error( ERROR_INFO, "incorrect order of local patches (lv %d, PID0 %d, PID1 %d, d %d, corner0 %d, corner1 %d, offset %d)\n"
+                       "        --> Check the files Patch_*_WrongOrder !!\n", lv, PID0, PID1, d, corner0, corner1, offset );
          }
       }
    } // for (int LocalID=1; LocalID<8; LocalID++)
