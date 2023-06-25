@@ -964,16 +964,16 @@ void LB_SortRealPatch( const int lv )
 
       for (int d=0; d<3; d++)
       {
-         const int scale0 = amr->patch[0][lv][PID0]->scale[d];
-         const int scale1 = amr->patch[0][lv][PID1]->scale[d];
+         const int corner0 = amr->patch[0][lv][PID0]->corner[d];
+         const int corner1 = amr->patch[0][lv][PID1]->corner[d];
          const int offset = TABLE_02( LocalID, 'x'+d, 0, PScale );
 
-         if ( scale1 != scale0 + offset )
+         if ( corner1 != corner0 + offset )
          {
             Output_Patch( lv, PID0, 0, 0, 0, "WrongOrder" );
             Output_Patch( lv, PID1, 0, 0, 0, "WrongOrder" );
-            Aux_Error( ERROR_INFO, "incorrect order of local patches (lv %d, PID0 %d, PID1 %d, d %d, scale0 %d, scale1 %d, offset %d )\n"
-                       "--> Check the files Patch_*_WrongOrder !!\n", lv, PID0, PID1, d, scale0, scale1, offset );
+            Aux_Error( ERROR_INFO, "incorrect order of local patches (lv %d, PID0 %d, PID1 %d, d %d, corner0 %d, corner1 %d, offset %d )\n"
+                       "--> Check the files Patch_*_WrongOrder !!\n", lv, PID0, PID1, d, corner0, corner1, offset );
          }
       }
    } // for (int LocalID=1; LocalID<8; LocalID++)
