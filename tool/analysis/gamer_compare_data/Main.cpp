@@ -176,6 +176,7 @@ void CompareGridData()
    double Data1, Data2, AbsErr, RelErr;
    int    PID1, PID2;
    int   *Cr1, *Cr2;
+   bool   ErrorDetected = false;
 
    FILE *File = fopen( FileName_Out, "w" );
 
@@ -213,7 +214,19 @@ void CompareGridData()
             }
 
             else
+            {
                PID2 = PID1;
+
+//             assert the two patches have the same corner coordinates
+               Cr1 = amr1.patch[lv][PID1]->corner;
+               Cr2 = amr2.patch[lv][PID2]->corner;
+
+               for (int d=0; d<3; d++)
+                  if ( Cr1[d] != Cr2[d] )
+                     Aux_Error( ERROR_INFO, "patch %d in the two snapshots do not match: d %d, corner %d != %d !!\n"
+                                            "        --> Try enabling the option \"-c\"\n",
+                                PID1, PID2, d, Cr1[d], Cr2[d] );
+            }
 
 
 //          a. cell-centered fields
@@ -230,8 +243,12 @@ void CompareGridData()
                if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
 
                if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
+               {
+                  ErrorDetected = true;
+
                   fprintf( File, "%6d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
                            lv, PID1, PID2, i, j, k, v, Data1, Data2, AbsErr, RelErr );
+               }
             } // i,j,k,v
 
 
@@ -248,6 +265,8 @@ void CompareGridData()
 
                if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
                {
+                  ErrorDetected = true;
+
                   int size_i, size_j, size_k, size_ij, i, j, k;
 
                   switch ( v )
@@ -290,7 +309,10 @@ void CompareGridData()
          if ( LeafOnly  &&  amr1.patch[lv][PID]->son != -1 )   continue;
 
          if ( amr1.patch[lv][PID]->check == false )
+         {
+            ErrorDetected = true;
             Aux_Message( stderr, "WARNING : patch %5d on level %d in input 1 has NOT been checked !!\n", PID, lv );
+         }
       }
 
       for (int PID=0; PID<amr2.num[lv]; PID++)
@@ -298,9 +320,14 @@ void CompareGridData()
          if ( LeafOnly  &&  amr2.patch[lv][PID]->son != -1 )   continue;
 
          if ( amr2.patch[lv][PID]->check == false )
+         {
+            ErrorDetected = true;
             Aux_Message( stderr, "WARNING : patch %5d on level %d in input 2 has NOT been checked !!\n", PID, lv );
+         }
       }
    }
+
+   if ( ! ErrorDetected )  Aux_Message( stdout, "\n*** No error is detected in the grid data ***\n\n" );
 
 
    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
@@ -362,6 +389,7 @@ void CompareParticleData()
    double AbsErr, RelErr;
    long   ParID1, ParID2;
    real   Data1, Data2;
+   bool   ErrorDetected = false;
 
    FILE *File = fopen( FileName_Out, "a" );
 
@@ -392,14 +420,20 @@ void CompareParticleData()
       if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
 
       if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
+      {
+         ErrorDetected = true;
+
          fprintf( File, "  %12ld  %12ld  %4d  %14.7e  %14.7e  %14.7e  %14.7e\n",
                   ParID1, ParID2, v, Data1, Data2, AbsErr, RelErr );
+      }
    }
 
    fclose( File );
 
    delete [] IdxTable1;
    delete [] IdxTable2;
+
+   if ( ! ErrorDetected )  Aux_Message( stdout, "\n*** No error is detected in the particle data ***\n\n" );
 
 
    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
