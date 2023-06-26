@@ -323,8 +323,6 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
    uint cufftdx_shared_memory_size;
-   typename  FFT::workspace_type cufftdx_workspace;
-   typename IFFT::workspace_type cufftdx_iworkspace;
 #  endif // #  #  if ( WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
@@ -355,10 +353,10 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 // create forward and backward cufftx workspaces
    cudaError_t error_code  = cudaSuccess;
-   cufftdx_workspace  = cufftdx::make_workspace<FFT>(error_code);
+   FFT::workspace_type cufftdx_workspace  = cufftdx::make_workspace<FFT>(error_code);
    CUDA_CHECK_ERROR(error_code);
    error_code              = cudaSuccess;
-   cufftdx_iworkspace = cufftdx::make_workspace<IFFT>(error_code);
+   IFFT::workspace_type cufftdx_iworkspace = cufftdx::make_workspace<IFFT>(error_code);
    CUDA_CHECK_ERROR(error_code);
 
 #  elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
