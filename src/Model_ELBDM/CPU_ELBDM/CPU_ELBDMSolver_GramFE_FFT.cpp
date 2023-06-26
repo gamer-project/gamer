@@ -1,5 +1,5 @@
-#include "CUFLU.h"
 #include "GAMER.h"
+#include "CUFLU.h"
 
 #if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || defined(__CUDACC__) )
 
