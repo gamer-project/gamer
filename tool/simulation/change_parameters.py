@@ -8,10 +8,17 @@ How to use it:
        for the detail of inputs.
     b. Wrap all the `File` classes to a list called `files`.
 
+    * NOTICE:
+      Parameter files:
+        The first column specifies the option's name and the second column should be the value of the option.
+      Flag files:
+        The first line(row) of the flag files should always start with `# ` and the following column
+        names in the header specify the options' names.
+
   2. Overwrite the `execution()` function to your execution.
      For instance, `subprocess.called(['./gamer']).
 
-  3. You might also want to pass to the `execution()` the argument from the command line. We already
+  3. You might also want to pass some arguments to the `execution()` from the command line. We already
      pass all the arguments, so all you need to do is to add you own `parser.add_argument` at `Main`
      section.
 
@@ -128,7 +135,8 @@ sys.setrecursionlimit(RECURSION_LIMIT)                                          
 file_name1   = "Input__Parameter"                                               # file name
 const_paras1 = {"END_T":-1, "END_STEP":50}                                      # the parameters change only once
 loop_paras1  = {"NX0_TOT_X":[16, 32], "NX0_TOT_Y":[16, 32]}                     # the parameters change as given list
-file1        = File( file_name1, const_paras1, loop_paras1, flag=False )        # set the `File` class
+# set the `File` class, the file changing method is decided by the last parameter. If the file is a flag file, please set it to `True`.
+file1        = File( file_name1, const_paras1, loop_paras1, flag=False )
 
 file_name2   = "Input__Testprob"
 const_paras2 = {"Const_1":-1, "Const_2":50}
