@@ -35,11 +35,13 @@ void Init_Field()
    NDefinedField       = 0;
    PassiveNorm_NVar    = 0;
    PassiveIntFrac_NVar = 0;
+   PassiveFixUp_NVar   = 0;
 
    for (int v=0; v<NCOMP_PASSIVE; v++)
    {
       PassiveNorm_VarIdx   [v] = -1;
       PassiveIntFrac_VarIdx[v] = -1;
+      PassiveFixUp_VarIdx  [v] = -1;
    }
 
 
@@ -47,11 +49,11 @@ void Init_Field()
 //    --> must not change the following order of declaration since they must be consistent
 //        with the symbolic constants defined in Macro.h (e.g., DENS)
 #  if   ( MODEL == HYDRO )
-   Idx_Dens    = AddField( "Dens",     NORMALIZE_NO, INTERP_FRAC_NO );
-   Idx_MomX    = AddField( "MomX",     NORMALIZE_NO, INTERP_FRAC_NO );
-   Idx_MomY    = AddField( "MomY",     NORMALIZE_NO, INTERP_FRAC_NO );
-   Idx_MomZ    = AddField( "MomZ",     NORMALIZE_NO, INTERP_FRAC_NO );
-   Idx_Engy    = AddField( "Engy",     NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_Dens    = AddField( "Dens",     NORMALIZE_NO, INTERP_FRAC_NO, FIXUP_NO  );
+   Idx_MomX    = AddField( "MomX",     NORMALIZE_NO, INTERP_FRAC_NO, FIXUP_NO  );
+   Idx_MomY    = AddField( "MomY",     NORMALIZE_NO, INTERP_FRAC_NO, FIXUP_NO  );
+   Idx_MomZ    = AddField( "MomZ",     NORMALIZE_NO, INTERP_FRAC_NO, FIXUP_NO  );
+   Idx_Engy    = AddField( "Engy",     NORMALIZE_NO, INTERP_FRAC_NO, FIXUP_NO  );
 
    if ( Idx_Dens != DENS )    Aux_Error( ERROR_INFO, "inconsistent Idx_Dens (%d != %d) !!\n", Idx_Dens, DENS );
    if ( Idx_MomX != MOMX )    Aux_Error( ERROR_INFO, "inconsistent Idx_MomX (%d != %d) !!\n", Idx_MomX, MOMX );
@@ -75,31 +77,31 @@ void Init_Field()
 // 2. add other predefined fields
 #  ifdef SUPPORT_GRACKLE
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
-   Idx_e       = AddField( "Electron", NORMALIZE_YES, INTERP_FRAC_YES );
-   Idx_HI      = AddField( "HI",       NORMALIZE_YES, INTERP_FRAC_YES );
-   Idx_HII     = AddField( "HII",      NORMALIZE_YES, INTERP_FRAC_YES );
-   Idx_HeI     = AddField( "HeI",      NORMALIZE_YES, INTERP_FRAC_YES );
-   Idx_HeII    = AddField( "HeII",     NORMALIZE_YES, INTERP_FRAC_YES );
-   Idx_HeIII   = AddField( "HeIII",    NORMALIZE_YES, INTERP_FRAC_YES );
+   Idx_e       = AddField( "Electron", NORMALIZE_YES, INTERP_FRAC_YES, FIXUP_YES );
+   Idx_HI      = AddField( "HI",       NORMALIZE_YES, INTERP_FRAC_YES, FIXUP_YES );
+   Idx_HII     = AddField( "HII",      NORMALIZE_YES, INTERP_FRAC_YES, FIXUP_YES );
+   Idx_HeI     = AddField( "HeI",      NORMALIZE_YES, INTERP_FRAC_YES, FIXUP_YES );
+   Idx_HeII    = AddField( "HeII",     NORMALIZE_YES, INTERP_FRAC_YES, FIXUP_YES );
+   Idx_HeIII   = AddField( "HeIII",    NORMALIZE_YES, INTERP_FRAC_YES, FIXUP_YES );
    }
 
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
-   Idx_HM      = AddField( "HM",       NORMALIZE_YES, INTERP_FRAC_YES );
-   Idx_H2I     = AddField( "H2I",      NORMALIZE_YES, INTERP_FRAC_YES );
-   Idx_H2II    = AddField( "H2II",     NORMALIZE_YES, INTERP_FRAC_YES );
+   Idx_HM      = AddField( "HM",       NORMALIZE_YES, INTERP_FRAC_YES, FIXUP_YES );
+   Idx_H2I     = AddField( "H2I",      NORMALIZE_YES, INTERP_FRAC_YES, FIXUP_YES );
+   Idx_H2II    = AddField( "H2II",     NORMALIZE_YES, INTERP_FRAC_YES, FIXUP_YES );
    }
 
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12 ) {
-   Idx_DI      = AddField( "DI",       NORMALIZE_YES, INTERP_FRAC_YES );
-   Idx_DII     = AddField( "DII",      NORMALIZE_YES, INTERP_FRAC_YES );
-   Idx_HDI     = AddField( "HDI",      NORMALIZE_YES, INTERP_FRAC_YES );
+   Idx_DI      = AddField( "DI",       NORMALIZE_YES, INTERP_FRAC_YES, FIXUP_YES );
+   Idx_DII     = AddField( "DII",      NORMALIZE_YES, INTERP_FRAC_YES, FIXUP_YES );
+   Idx_HDI     = AddField( "HDI",      NORMALIZE_YES, INTERP_FRAC_YES, FIXUP_YES );
    }
 
 // normalize the metallicity field only when adopting the non-equilibrium chemistry
 // --> may need a machanism to allow users to overwrite this default setup
    if ( GRACKLE_METAL )
    Idx_Metal   = AddField( "Metal",    (GRACKLE_PRIMORDIAL==GRACKLE_PRI_CHE_CLOUDY)?NORMALIZE_NO:NORMALIZE_YES,
-                                                      INTERP_FRAC_YES );
+                                                      INTERP_FRAC_YES, FIXUP_YES );
 #  endif // #ifdef SUPPORT_GRACKLE
 
 
@@ -111,12 +113,12 @@ void Init_Field()
 //    corresponding symbolic constants (e.g., DUAL/CRAY) defined in Macro.h
 //    --> as we still rely on these constants (e.g., DENS, DUAL) in the fluid solvers
 #  ifdef COSMIC_RAY
-   Idx_CRay = AddField( "CRay", NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_CRay = AddField( "CRay", NORMALIZE_NO, INTERP_FRAC_NO, FIXUP_YES );
    if ( Idx_CRay != CRAY )    Aux_Error( ERROR_INFO, "inconsistent Idx_CRay (%d != %d) !!\n", Idx_CRay, CRAY );
 #  endif
 
 #  ifdef DUAL_ENERGY
-   Idx_Dual = AddField( "Dual", NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_Dual = AddField( "Dual", NORMALIZE_NO, INTERP_FRAC_NO, FIXUP_YES );
    if ( Idx_Dual != DUAL )    Aux_Error( ERROR_INFO, "inconsistent Idx_Dual (%d != %d) !!\n", Idx_Dual, DUAL );
 #  endif
 
@@ -170,19 +172,24 @@ void Init_Field()
 //                       --> sum(passive_scalar_density) == gas_density
 //                   (4) add the new field to PassiveIntFrac_VarIdx[] if IntFrac==true
 //                       --> These passive scalars will be converted to fracion form during interpolation
+//                   (5) add the new field to PassiveFixUp_VarIdx[] if FixUp==true
+//                       --> The fix-up operations will be applied to these passive scalars
 //                2. One must invoke AddField() exactly NCOMP_TOTAL times to set the labels of all fields
 //                3. Invoked by Init_Field() and various test problem initializers
 //
 // Parameter   :  InputLabel : Label (i.e., name) of the new field
 //                Norm       : whether or not to normalize the new field
 //                IntFrac    : whether or not to convert the new field to fraction form during interpolation
+//                FixUp      : whether or not to apply fix-up operations
 //
 // Return      :  (1) FieldLabel[]
 //                (2) Index of the newly added field
 //                (3) PassiveNorm_NVar & PassiveNorm_VarIdx[]
 //                (4) PassiveIntFrac_NVar & PassiveIntFrac_VarIdx[]
+//                (5) PassiveFixUp_NVar & PassiveFixUp_VarIdx[]
 //-------------------------------------------------------------------------------------------------------
-FieldIdx_t AddField( const char *InputLabel, const NormPassive_t Norm, const IntFracPassive_t IntFrac )
+FieldIdx_t AddField( const char *InputLabel, const NormPassive_t Norm, const IntFracPassive_t IntFrac,
+                     const FixUpPassive_t FixUp )
 {
 
    const FieldIdx_t FieldIdx = NDefinedField ++;
@@ -246,6 +253,26 @@ FieldIdx_t AddField( const char *InputLabel, const NormPassive_t Norm, const Int
                     FieldIdx, NCOMP_FLUID );
 
       PassiveIntFrac_VarIdx[IntFracIdx] = FieldIdx - NCOMP_FLUID;
+   }
+#  endif
+
+
+// set the fix-up list
+#  if ( NCOMP_PASSIVE > 0 )
+   if ( FixUp )
+   {
+      const int IntFracIdx = PassiveFixUp_NVar ++;
+
+      if ( PassiveFixUp_NVar > NCOMP_PASSIVE )
+         Aux_Error( ERROR_INFO, "total number of fix-up passive scalars (%d) exceeds expectation (%d) after adding the field \"%s\" !!\n",
+                    PassiveFixUp_NVar, NCOMP_PASSIVE, InputLabel );
+
+      if ( FieldIdx < NCOMP_FLUID )
+         Aux_Error( ERROR_INFO, "Field index for fix-up operations (%d) < NCOMP_FLUID (%d) !!\n"
+                    "        --> Set FIXUP_NO when adding a built-in fluid field by AddField()\n",
+                    FieldIdx, NCOMP_FLUID );
+
+      PassiveFixUp_VarIdx[IntFracIdx] = FieldIdx;
    }
 #  endif
 

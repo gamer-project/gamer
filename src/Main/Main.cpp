@@ -37,6 +37,7 @@ int                  DumpTable_NDump;
 int                 *UM_IC_RefineRegion = NULL;
 int                  PassiveNorm_NVar, PassiveNorm_VarIdx[NCOMP_PASSIVE];
 int                  PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
+int                  PassiveFixUp_NVar, PassiveFixUp_VarIdx[NCOMP_PASSIVE];
 
 int                  MPI_Rank, MPI_Rank_X[3], MPI_SibRank[26], NX0[3], NPatchTotal[NLEVEL];
 int                 *BaseP = NULL;

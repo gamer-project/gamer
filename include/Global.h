@@ -48,6 +48,7 @@ extern int        Flu_ParaBuf;                        // number of parallel buff
 
 extern int        PassiveNorm_NVar, PassiveNorm_VarIdx[NCOMP_PASSIVE];
 extern int        PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
+extern int        PassiveFixUp_NVar, PassiveFixUp_VarIdx[NCOMP_PASSIVE];
 
 extern double     BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, OUTPUT_WALLTIME, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
 extern long int   END_STEP;

@@ -716,16 +716,20 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 // ===============================================================================================
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d: Flu_FixUp %24s... ", lv, "" );
 
+//       bitwise field indices for fluid fix-up operations
+         long FixUpVar = _FLUID;
+         for (int v=0; v<PassiveFixUp_NVar; v++)   FixUpVar |= 1<<PassiveFixUp_VarIdx[v];
+
 //       12-1. use the average data on fine grids to correct the coarse-grid data
          if ( OPT__FIXUP_RESTRICT )
          {
             TIMING_FUNC(   Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv],
-                                               NULL_INT, NULL_INT, _TOTAL, _MAG ),
+                                               NULL_INT, NULL_INT, FixUpVar, _MAG ),
                            Timer_FixUp[lv],   TIMER_ON   );
 
 #           ifdef LOAD_BALANCE
             TIMING_FUNC(   LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT,
-                                             _TOTAL, _MAG, NULL_INT ),
+                                             FixUpVar, _MAG, NULL_INT ),
                            Timer_GetBuf[lv][7],   TIMER_ON   );
 #           endif
          }
@@ -767,7 +771,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          if ( OPT__FIXUP_FLUX  ||  OPT__FIXUP_RESTRICT )
 #        endif
          TIMING_FUNC(   Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_AFTER_FIXUP,
-                                           _TOTAL, _MAG, Flu_ParaBuf, USELB_YES  ),
+                                           FixUpVar, _MAG, Flu_ParaBuf, USELB_YES  ),
                         Timer_GetBuf[lv][3],   TIMER_ON   );
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );

@@ -436,6 +436,11 @@ const IntFracPassive_t
    INTERP_FRAC_NO  = 0,
    INTERP_FRAC_YES = 1;
 
+typedef int FixUpPassive_t;
+const FixUpPassive_t
+   FIXUP_NO  = 0,
+   FIXUP_YES = 1;
+
 
 // field types
 typedef int FieldIdx_t;

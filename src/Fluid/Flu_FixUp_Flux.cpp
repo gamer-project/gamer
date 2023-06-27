@@ -290,7 +290,8 @@ void Flu_FixUp_Flux( const int lv )
 
 
 //                store the corrected results
-                  for (int v=0; v<NFLUX_TOTAL; v++)   *FluidPtr1D[v] = CorrVal[v];
+                  for (int v=0; v<NFLUX_FLUID;       v++)   *FluidPtr1D[v] = CorrVal[v];
+                  for (int v=0; v<PassiveFixUp_NVar; v++)   *FluidPtr1D[ PassiveFixUp_VarIdx[v] ] = CorrVal[ PassiveFixUp_VarIdx[v] ];
 
 
 //                rescale the real and imaginary parts to be consistent with the corrected amplitude
