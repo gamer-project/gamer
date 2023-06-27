@@ -88,7 +88,9 @@ def iter_paras( file_name, paras, record, flag, **kwargs ):
         if not kwargs["quite"]: print("File <%s> changing %s --> %s"%(file_name, replace_key, str(val)))
         replace_parameter( file_name, replace_key, val, flag )
         record[replace_key]=val
-    return iter_paras( file_name, copy_paras, record, flag, **kwargs )  # repalce the next parameter
+        iter_paras( file_name, copy_paras, record, flag, **kwargs )  # repalce the next parameter
+    return
+
 
 def replace_parameter( file_name, name, val, flag ):
     if flag:
@@ -98,7 +100,7 @@ def replace_parameter( file_name, name, val, flag ):
         data = np.loadtxt(file_name)
         if len(index) != data.shape[1]: raise BaseException("ERROR: The number of columns in <%s> does not match to the header."%(file_name))
         data[:, index[name]] = val
-        np.savetxt("save_test", data, fmt="%7g"+"%20.16g"*(len(index)-1), header=header[2:-2])
+        np.savetxt(file_name, data, fmt="%7g"+"%20.16g"*(len(index)-1), header=header[2:-1])
     else:
         with open( file_name, 'r' ) as f:
             content = f.read()
@@ -120,23 +122,23 @@ def execution( **kwargs ):
 #====================================================================================================
 # Main
 #====================================================================================================
-sys.setrecursionlimit(RECURSION_LIMIT)                                  # Reset the recursion depth limit
+sys.setrecursionlimit(RECURSION_LIMIT)                                          # Reset the recursion depth limit
 
 # 1. Set up the files and the parameters to be changed
-file_name1   = "Input__Parameter"                                       # file name
-const_paras1 = {"END_T":-1, "END_STEP":50}                              # the parameters change only once
-loop_paras1  = {"NX0_TOT_X":[16, 32], "NX0_TOT_Y":[16, 32]}             # the parameters change as given list
-file1        = File( file_name1, const_paras1, loop_paras1, False )     # set the `File` class
+file_name1   = "Input__Parameter"                                               # file name
+const_paras1 = {"END_T":-1, "END_STEP":50}                                      # the parameters change only once
+loop_paras1  = {"NX0_TOT_X":[16, 32], "NX0_TOT_Y":[16, 32]}                     # the parameters change as given list
+file1        = File( file_name1, const_paras1, loop_paras1, flag=False )        # set the `File` class
 
 file_name2   = "Input__Testprob"
 const_paras2 = {"Const_1":-1, "Const_2":50}
 loop_paras2  = {"Parameter_1":[0.01, 0.02], "Parameter_2":[16, 32]}
-file2        = File( file_name2, const_paras2, loop_paras2, False )
+file2        = File( file_name2, const_paras2, loop_paras2, flag=False )
 
 file_name3   = "Input__Flag"
 const_paras3 = {"derefine":0.1}
 loop_paras3  = {"Soften":[0.01, 0.02], "refine":[16, 32]}
-file3        = File( file_name3, const_paras3, loop_paras3, True )
+file3        = File( file_name3, const_paras3, loop_paras3, flag=True )
 
 # Wrap all the `File` classes.
 files = [file1, file2, file3]
