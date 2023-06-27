@@ -518,6 +518,8 @@ struct InputPara_t
    int    Opt__FixUp_Electric;
 #  endif
    int    Opt__FixUp_Restrict;
+   int    FixUpPassive_NVar;
+   int    FixUpPassive_VarIdx[NCOMP_PASSIVE];
    int    Opt__CorrAfterAllSync;
    int    Opt__NormalizePassive;
    int    NormalizePassive_NVar;

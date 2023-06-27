@@ -1072,6 +1072,17 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FIXUP_ELECTRIC             %d\n",      OPT__FIXUP_ELECTRIC      );
 #     endif
       fprintf( Note, "OPT__FIXUP_RESTRICT             %d\n",      OPT__FIXUP_RESTRICT      );
+
+//    target passive scalars to be applied fix-up operations
+      fprintf( Note, "   Number of fields             %d\n",      PassiveFixUp_NVar        );
+#     if ( NCOMP_PASSIVE > 0 )
+      if ( PassiveFixUp_NVar > 0 ) {
+      fprintf( Note, "   Target fields               "                                     );
+      for (int v=0; v<PassiveFixUp_NVar; v++)
+      fprintf( Note, " %s",                                       FieldLabel[ PassiveFixUp_VarIdx[v] ] );
+      fprintf( Note, "\n" ); }
+#     endif
+
       fprintf( Note, "OPT__CORR_AFTER_ALL_SYNC        %d\n",      OPT__CORR_AFTER_ALL_SYNC );
       fprintf( Note, "OPT__NORMALIZE_PASSIVE          %d\n",      OPT__NORMALIZE_PASSIVE   );
 

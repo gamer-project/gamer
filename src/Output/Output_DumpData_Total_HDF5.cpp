@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2468)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2469)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -241,6 +241,7 @@ Procedure for outputting new variables:
 //                2466 : 2023/05/08 --> output OPT__FFTW_STARTUP
 //                2467 : 2023/05/18 --> replace OPT__INIT_BFIELD_BYFILE by OPT__INIT_BFIELD_BYVECPOT
 //                2468 : 2023/06/24 --> output OPT__SORT_PATCH_BY_LBIDX
+//                2469 : 2023/06/27 --> output FixUpPassive_NVar and FixUpPassive_VarIdx
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1414,7 +1415,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2468;
+   KeyInfo.FormatVersion        = 2469;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2203,6 +2204,12 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__FixUp_Electric     = OPT__FIXUP_ELECTRIC;
 #  endif
    InputPara.Opt__FixUp_Restrict     = OPT__FIXUP_RESTRICT;
+
+   InputPara.FixUpPassive_NVar       = PassiveFixUp_NVar;
+
+   for (int v=0; v<NCOMP_PASSIVE; v++)
+   InputPara.FixUpPassive_VarIdx[v]  = PassiveFixUp_VarIdx[v];
+
    InputPara.Opt__CorrAfterAllSync   = OPT__CORR_AFTER_ALL_SYNC;
    InputPara.Opt__NormalizePassive   = OPT__NORMALIZE_PASSIVE;
 
@@ -3095,6 +3102,10 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__FixUp_Electric",     HOFFSET(InputPara_t,Opt__FixUp_Electric    ), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__FixUp_Restrict",     HOFFSET(InputPara_t,Opt__FixUp_Restrict    ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "FixUpPassive_NVar",       HOFFSET(InputPara_t,FixUpPassive_NVar      ), H5T_NATIVE_INT     );
+#  if ( NCOMP_PASSIVE > 0 )
+   H5Tinsert( H5_TypeID, "FixUpPassive_VarIdx",     HOFFSET(InputPara_t,FixUpPassive_VarIdx    ), H5_TypeID_Arr_NPassive );
+#  endif
    H5Tinsert( H5_TypeID, "Opt__CorrAfterAllSync",   HOFFSET(InputPara_t,Opt__CorrAfterAllSync  ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__NormalizePassive",   HOFFSET(InputPara_t,Opt__NormalizePassive  ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "NormalizePassive_NVar",   HOFFSET(InputPara_t,NormalizePassive_NVar  ), H5T_NATIVE_INT     );
