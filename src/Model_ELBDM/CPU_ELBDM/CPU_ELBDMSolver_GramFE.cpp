@@ -1,11 +1,11 @@
-#include "CUFLU.h"
 #include "GAMER.h"
+#include "CUFLU.h"
 
 #if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || ( defined(__CUDACC__) && defined(GRAMFE_ENABLE_GPU) ) )
 
 #if ( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE )
-#include "GramExtensionTables.h"
 
+#include "GramExtensionTables.h"
 
 // useful macros
 
