@@ -167,6 +167,7 @@ static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NXT) ],
                            real g_Fluid_Out[][FLU_NIN ][ CUBE(PS2) ],
                            #endif
                            real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                           const bool g_HasWaveCounterpart [] [ CUBE(HYB_NXT) ],
                            int NPatchGroup,
                            const real dt, const real _dh, const real Eta, const bool StoreFlux,
                            const uint j_gap, const uint k_gap,
@@ -216,6 +217,7 @@ void CUFLU_ELBDMSolver_HamiltonJacobi( real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NX
                                        real g_Fluid_Out[][FLU_NIN ][ CUBE(PS2) ],
                                        #endif
                                        real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                       const bool g_HasWaveCounterpart [] [ CUBE(HYB_NXT) ],
                                        const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                        const bool XYZ, const real MinDens )
 #else
@@ -226,6 +228,7 @@ void CPU_ELBDMSolver_HamiltonJacobi(   real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NX
                                        real g_Fluid_Out[][FLU_NIN ][ CUBE(PS2) ],
                                        #endif
                                        real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                       const bool g_HasWaveCounterpart [] [ CUBE(HYB_NXT) ],
                                        const int NPatchGroup,
                                        const real dt, const real dh, const real Eta, const bool StoreFlux,
                                        const bool XYZ, const real MinDens )
@@ -268,21 +271,21 @@ void CPU_ELBDMSolver_HamiltonJacobi(   real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NX
 
    if ( XYZ )
    {
-      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
+      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, g_HasWaveCounterpart, NPatchGroup, dt, _dh, Eta, StoreFlux,
                                   0,              0, s_In, s_LogRho, s_QP, s_Fm, s_Flux, s_RK1, s_2PI, false, 0, MinDens );
-      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
+      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, g_HasWaveCounterpart, NPatchGroup, dt, _dh, Eta, StoreFlux,
                      HYB_GHOST_SIZE,              0, s_In, s_LogRho, s_QP, s_Fm, s_Flux, s_RK1, s_2PI, false, 3, MinDens );
-      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
+      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, g_HasWaveCounterpart, NPatchGroup, dt, _dh, Eta, StoreFlux,
                      HYB_GHOST_SIZE, HYB_GHOST_SIZE, s_In, s_LogRho, s_QP, s_Fm, s_Flux, s_RK1, s_2PI,  true, 6, MinDens );
    }
 
    else
    {
-      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
+      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, g_HasWaveCounterpart, NPatchGroup, dt, _dh, Eta, StoreFlux,
                                   0,              0, s_In, s_LogRho, s_QP, s_Fm, s_Flux, s_RK1, s_2PI, false, 6, MinDens );
-      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
+      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, g_HasWaveCounterpart, NPatchGroup, dt, _dh, Eta, StoreFlux,
                                   0, HYB_GHOST_SIZE, s_In, s_LogRho, s_QP, s_Fm, s_Flux, s_RK1, s_2PI, false, 3, MinDens );
-      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, NPatchGroup, dt, _dh, Eta, StoreFlux,
+      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, g_HasWaveCounterpart, NPatchGroup, dt, _dh, Eta, StoreFlux,
                      HYB_GHOST_SIZE, HYB_GHOST_SIZE, s_In, s_LogRho, s_QP, s_Fm, s_Flux, s_RK1, s_2PI,  true, 0, MinDens );
    }
 
@@ -331,6 +334,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                      real g_Fluid_Out[][FLU_NIN  ][ CUBE(PS2) ],
                      #endif
                      real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                     const bool g_HasWaveCounterpart [] [ CUBE(HYB_NXT) ],
                      int NPatchGroup,
                      const real dt, const real _dh, const real Eta, const bool StoreFlux,
                      const uint j_gap, const uint k_gap,
@@ -438,85 +442,35 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 #        endif // # ifdef __CUDACC__ ... # else
 
          const uint tid          = ty * CGPU_FLU_BLOCK_SIZE_X + tx;                // thread ID within block
-               uint j            = j_gap + ty % size_j;                            // (i,j,k): array indices used in g_Fluid_In
-               uint k            = k_gap + ty / size_j;                            // (i,j,k): array indices used in g_Fluid_In
-               uint i            = tx + HYB_GHOST_SIZE;                            // (i,j,k): array indices used in g_Fluid_In
+               uint j,k;                                                           // (j,k): array indices used in g_Fluid_In
          uint NColumnOnce        = MIN( NColumnTotal, CGPU_FLU_BLOCK_SIZE_Y );     // number of columns updated per iteration
          const uint NThread      = CGPU_FLU_BLOCK_SIZE_X * CGPU_FLU_BLOCK_SIZE_Y;  // total number of threads within block
 
-
-//       determine the array indices for loading the ghost-zone data for GPU solver
-#        ifdef __CUDACC__
-         bool LoadGhost = false;                // true --> load the ghost-zone data
-         uint LoadGhost_i;
-         int  LoadGhost_di, LoadGhost_dIdx1;
-
-
-//       use the first 2*HYB_GHOST_SIZE threads to load the ghost zones in addition to their regular cells
-         if ( tx < 2*HYB_GHOST_SIZE )
-         {
-            LoadGhost = true;
-
-            if ( tx < HYB_GHOST_SIZE )    LoadGhost_di = -HYB_GHOST_SIZE;
-            else                          LoadGhost_di = -HYB_GHOST_SIZE + PS2;
-
-            switch ( XYZ )
-            {
-               case 0:  LoadGhost_dIdx1 = LoadGhost_di;                      break;
-               case 3:  LoadGhost_dIdx1 = LoadGhost_di * HYB_NXT;            break;
-               case 6:  LoadGhost_dIdx1 = LoadGhost_di * HYB_NXT*HYB_NXT;    break;
-            }
-
-            LoadGhost_i = (int)i + LoadGhost_di;
-         } // if ( tx < 2*HYB_GHOST_SIZE )
-#        endif // #ifdef __CUDACC__
 
 //       loop over all data columns
          while ( Column0 < NColumnTotal )
          {
 
+            time_level = 0;
+
 //          1. load data into shared memory
-            if ( tid < NColumnOnce*PS2 )
-            {
+            CELL_LOOP(HYB_NXT, 0, 0) {
+               j = j_gap + ( sj + Column0 ) % size_j;
+               k = k_gap + ( sj + Column0 ) / size_j;
 
-               time_level = 0;
-
-#              ifdef __CUDACC__
 //             1.1 determine the array indices for loading global memory data along different directions
-               Idx1 = get1D1( k, j, i, XYZ );
+               Idx1 = get1D1( k, j, si, XYZ );
 
 //             1.2 load the interior data into shared memory at time_level 0
-               s_In[ty][time_level][DENS][i] = g_Fluid_In[bx][DENS][Idx1];
-               s_In[ty][time_level][PHAS][i] = g_Fluid_In[bx][PHAS][Idx1];
+               s_In[sj][time_level][DENS][si] = g_Fluid_In[bx][DENS][Idx1];
+               s_In[sj][time_level][PHAS][si] = g_Fluid_In[bx][PHAS][Idx1];
+
 #              ifdef CONSERVE_MASS
-               s_Flux[ty][i] = 0;
+               s_Flux[sj][si] = 0;
 #              endif
-               s_RK1[ty][i] = false;
 
-//             1.3 load the ghost-zone data into shared memory
-               if ( LoadGhost )
-               {
-                  s_In[ty][time_level][DENS][LoadGhost_i] = g_Fluid_In[bx][DENS][ (int)Idx1 + LoadGhost_dIdx1 ];
-                  s_In[ty][time_level][PHAS][LoadGhost_i] = g_Fluid_In[bx][PHAS][ (int)Idx1 + LoadGhost_dIdx1 ];
-#                 ifdef CONSERVE_MASS
-                  s_Flux[ty][LoadGhost_i] = 0;
-#                 endif
-                  s_RK1[ty][LoadGhost_i] = false;
-               }
-#              else // # ifdef __CUDACC__
-
-               for (si = 0; si < HYB_NXT; ++si)
-               {
-                  Idx1 = get1D1( k, j, si, XYZ );
-                  s_In[ty][time_level][DENS][si] = g_Fluid_In[bx][DENS][Idx1];
-                  s_In[ty][time_level][PHAS][si] = g_Fluid_In[bx][PHAS][Idx1];
-                  s_RK1[ty][si] = false;
-#                 ifdef CONSERVE_MASS
-                  s_Flux[ty][si] = 0;
-#                 endif
-               }
-#              endif // # ifdef __CUDACC__  ... else
-            } // if ( tid < NColumnOnce*PS2 )
+               s_RK1[sj][si] = false;
+            }
 
 //          1.4 sync data read into S_In
 #           ifdef __CUDACC__
@@ -680,12 +634,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                   if ( time_level < N_TIME_LEVELS - 1 ) {
                      s_In[sj][time_level+1][DENS][si] = De_New;
                      s_In[sj][time_level+1][PHAS][si] = Ph_New;
-                  }
-
-//                4. write back final results to g_Fluid_In[0] or g_Fluid_Out to save memory
-                  else if ( time_level == N_TIME_LEVELS - 1 ) {
-
-//                   4.1 handle the case that the velocity timestep criterion is not met, we detect negative density or nan -> first-order update
+                  } else {
+//                3.6 handle the case that the velocity timestep criterion is not met, we detect negative density or nan -> first-order update
                      if ( s_RK1[sj][si] || De_New < 0 || De_New != De_New ) {
 #                       ifdef GAMER_DEBUG
                         s_RK1[sj][si] = true;
@@ -696,86 +646,110 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                         s_Flux[sj][si] = s_Fm[sj][1][si];
 #                       endif // #ifdef CONSERVE_MASS
                      }
+                     s_In[sj][N_TIME_LEVELS][DENS][si] = De_New;
+                     s_In[sj][N_TIME_LEVELS][PHAS][si] = Ph_New;
+                  }
+               }
 
-
-//                   4.2 data
-                     if ( FinalOut )
-                     {
-
-//                      apply the the minimum density check
-                        De_New = (De_New < MinDens) ? MinDens : De_New;
-
-#                       ifndef __CUDACC__
-                        Idx2 = get1D2( k, j, si, XYZ);
-#                       else // #ifndef __CUDACC_
-                        Idx2 = get1D2( k, j,  i, XYZ);
-#                       endif // #ifndef __CUDACC_ ... else
-
-                        g_Fluid_Out[bx][DENS][Idx2] = De_New;
-                        g_Fluid_Out[bx][PHAS][Idx2] = Ph_New;
-
-//                      write cells that have been updated with RK1 to stub field in debug mode
-#                       ifdef GAMER_DEBUG
-                        g_Fluid_Out[bx][STUB][Idx2] += (real) s_RK1[sj][si];
-#                       endif
-
-                     } else { // if ( FinalOut )
-//                      do not store negative densities
-                        De_New = (De_New < 0) ? MinDens : De_New;
-
-//                      restore original global phase field
-#                       ifdef HYBRID_SMOOTH_PHASE
-                        for (Idx4 = 1; Idx4 <= si; ++Idx4) {
-                           Ph_New -= s_2PI[sj][Idx4] * TWOPI;
-                        }
-#                       endif // # ifdef HYBRID_SMOOTH_PHASE
-
-#                       ifndef __CUDACC__
-                        Idx1 = get1D1( k, j, si, XYZ );
-#                       endif // #ifndef __CUDACC__
-
-                        g_Fluid_In[bx][DENS][Idx1] = De_New;
-                        g_Fluid_In[bx][PHAS][Idx1] = Ph_New;
-
-
-//                      write cells that have not been updated to stub field in debug mode
-#                       ifdef GAMER_DEBUG
-                        if ( k >= HYB_GHOST_SIZE && k < PS2 + HYB_GHOST_SIZE &&  j >= HYB_GHOST_SIZE && j < PS2 + HYB_GHOST_SIZE ) {
-#                          ifndef __CUDACC__
-                           Idx2 = get1D2( k, j, si, XYZ);
-                           St_New = (real) s_RK1[sj][si];
-#                          else // #ifndef __CUDACC_
-                           Idx2 = get1D2( k, j,  i, XYZ);
-                           St_New = (real) s_RK1[sj][si];
-#                          endif // #ifndef __CUDACC_ ... else
-                              if (XYZ == 0) {
-                                 g_Fluid_Out[bx][STUB][Idx2]  = St_New;
-                              } else {
-                                 g_Fluid_Out[bx][STUB][Idx2] += St_New;
-                              }
-                        }
-#                       endif
-                     } // if ( FinalOut ) ... else
-
-#                    ifdef CONSERVE_MASS
-//                   4.3 fluxes (for the flux-correction operation)
-                     if ( StoreFlux  &&  tx == 0 )
-                     if ( k >= HYB_GHOST_SIZE  &&  k < HYB_NXT-HYB_GHOST_SIZE )
-                     if ( j >= HYB_GHOST_SIZE  &&  j < HYB_NXT-HYB_GHOST_SIZE )
-                     {
-                        Idx3 = ( k - HYB_GHOST_SIZE ) * PS2 + (j-HYB_GHOST_SIZE);
-
-                        g_Flux[bx][XYZ+0][0][Idx3] = s_Flux[ty][  0 + HYB_GHOST_SIZE] / Eta;
-                        g_Flux[bx][XYZ+1][0][Idx3] = s_Flux[ty][PS1 + HYB_GHOST_SIZE] / Eta;
-                        g_Flux[bx][XYZ+2][0][Idx3] = s_Flux[ty][PS2 + HYB_GHOST_SIZE] / Eta;
-                     }
-#                    endif // # ifdef CONSERVE_MASS
-                  } // if ( time_level < N_TIME_LEVELS - 1 ) {
-               } // CELL_LOOP(HYB_NXT, g2, g2)
-#              ifdef __CUDACC__
+#              ifdef  __CUDACC__
                __syncthreads();
 #              endif
-            } // for (time_level = 0; time_level < N_TIME_LEVELS; ++time_level)
+
+            } // if ( time_level < N_TIME_LEVELS - 1 ) {
+
+//          4. write back final results to g_Fluid_In[0] or g_Fluid_Out to save memory
+
+//          4.1 write FFT array back to output array
+            if ( FinalOut )
+            {
+               CELL_LOOP(HYB_NXT, HYB_GHOST_SIZE, HYB_GHOST_SIZE)
+               {
+                  j = j_gap + ( sj + Column0 ) % size_j ;
+                  k = k_gap + ( sj + Column0 ) / size_j;
+
+                  Idx2 = get1D2( k, j, si, XYZ );
+
+                  De_New = s_In[sj][N_TIME_LEVELS][DENS][si];
+                  Ph_New = s_In[sj][N_TIME_LEVELS][PHAS][si];
+
+//                apply the the minimum density check
+                  De_New = (De_New < MinDens) ? MinDens : De_New;
+
+                  g_Fluid_Out[bx][DENS][Idx2] = De_New;
+                  g_Fluid_Out[bx][PHAS][Idx2] = Ph_New;
+
+//                write cells that have been updated with RK1 to stub field in debug mode
+#                 ifdef GAMER_DEBUG
+                  g_Fluid_Out[bx][STUB][Idx2] += (real) s_RK1[sj][si];
+#                 endif
+               }
+
+            } else { // if ( FinalOut )
+
+               CELL_LOOP(HYB_NXT, HYB_GHOST_SIZE, HYB_GHOST_SIZE)
+               {
+
+                  j = j_gap + ( sj + Column0 ) % size_j ;
+                  k = k_gap + ( sj + Column0 ) / size_j;
+
+                  Idx1 = get1D1( k, j, si, XYZ );
+
+                  De_New = s_In[sj][N_TIME_LEVELS][DENS][si];
+                  Ph_New = s_In[sj][N_TIME_LEVELS][PHAS][si];
+
+//                do not store negative densities
+                  De_New = (De_New < 0) ? MinDens : De_New;
+
+//                restore original global phase field
+#                 ifdef HYBRID_SMOOTH_PHASE
+                  for (Idx4 = 1; Idx4 <= si; ++Idx4)
+                  {
+                     Ph_New -= s_2PI[sj][Idx4] * TWOPI;
+                  }
+#                 endif // # ifdef HYBRID_SMOOTH_PHASE
+
+
+                  g_Fluid_In[bx][DENS][Idx1] = De_New;
+                  g_Fluid_In[bx][PHAS][Idx1] = Ph_New;
+
+
+//                   write cells that have not been updated to stub field in debug mode
+#                 ifdef GAMER_DEBUG
+                  if ( k >= HYB_GHOST_SIZE && k < PS2 + HYB_GHOST_SIZE &&  j >= HYB_GHOST_SIZE && j < PS2 + HYB_GHOST_SIZE ) {
+                     Idx2 = get1D2( k, j, si, XYZ );
+                     if (XYZ == 0) {
+                        g_Fluid_Out[bx][STUB][Idx2]  = St_New;
+                     } else {
+                        g_Fluid_Out[bx][STUB][Idx2] += St_New;
+                     }
+                  }
+#                 endif
+               }
+            } // if ( FinalOut ) ... else
+
+//          4.3 fluxes (for the flux-correction operation)
+#           ifdef CONSERVE_MASS
+            if ( StoreFlux  &&  tx == 0 )
+            {
+               j = j_gap + ty % size_j;
+               k = k_gap + ty / size_j;
+
+               if ( k >= HYB_GHOST_SIZE  &&  k < HYB_NXT-HYB_GHOST_SIZE )
+               if ( j >= HYB_GHOST_SIZE  &&  j < HYB_NXT-HYB_GHOST_SIZE )
+               {
+                  Idx3 = ( k - HYB_GHOST_SIZE ) * PS2 + (j-HYB_GHOST_SIZE);
+
+                  g_Flux[bx][XYZ+0][0][Idx3] = s_Flux[ty][  0 + HYB_GHOST_SIZE] / Eta;
+                  g_Flux[bx][XYZ+1][0][Idx3] = s_Flux[ty][PS1 + HYB_GHOST_SIZE] / Eta;
+                  g_Flux[bx][XYZ+2][0][Idx3] = s_Flux[ty][PS2 + HYB_GHOST_SIZE] / Eta;
+               }
+            }
+#           endif // # ifdef CONSERVE_MASS
+
+
+#           ifdef __CUDACC__
+            __syncthreads();
+#           endif
 
 //          4.4 reset the target array indices
             j += NColumnOnce;

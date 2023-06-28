@@ -319,6 +319,10 @@ real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 #endif
 #endif // FLU_SCHEME
 
+#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+bool (*h_IsRefined)[ CUBE(FLU_NXT) ]                               = NULL;
+#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+
 #ifdef GRAVITY
 // (3-2) Poisson and gravity solver
 real   (*h_Rho_Array_P     [2])[RHO_NXT][RHO_NXT][RHO_NXT]         = { NULL, NULL };

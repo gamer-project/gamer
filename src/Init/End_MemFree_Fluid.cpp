@@ -16,6 +16,9 @@ extern real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif // FLU_SCHEME
 
 
+#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+extern bool (*h_IsRefined)[ CUBE(FLU_NXT) ];
+#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -65,6 +68,10 @@ void End_MemFree_Fluid()
    delete [] h_EC_Ele;               h_EC_Ele             = NULL;
 #  endif
 #  endif // FLU_SCHEME
+
+#     if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+   delete [] h_IsRefined;            h_IsRefined          = NULL;
+#     endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 } // FUNCTION : End_MemFree_Fluid
 
