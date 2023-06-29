@@ -22,7 +22,11 @@ void Flu_Prepare( const int lv, const double PrepTime,
                   real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                   real h_Mag_Array_F_In[][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
                   real h_Pot_Array_USG_F[][ CUBE(USG_NXT_F) ],
-                  double h_Corner_Array_F[][3], const int NPG, const int *PID0_List )
+                  double h_Corner_Array_F[][3],
+                  bool h_IsCompletelyRefined[],
+                  bool h_HasWaveCounterpart[][ CUBE(PS2) ],
+                  const int NPG, const int *PID0_List,
+                  LB_GlobalPatch* GlobalTree, LB_PatchCount* PatchCount )
 {
 
 // check
@@ -109,6 +113,55 @@ void Flu_Prepare( const int lv, const double PrepTime,
    }
 #  endif // #ifdef UNSPLIT_GRAVITY
 
+#  if ( MODEL == ELBDM )
+#  pragma omp parallel for schedule( runtime )
+   for (int TID=0; TID<NPG; TID++)
+   {
+
+      bool PGIsCompletelyRefined = true;
+
+      int PID0 = PID0_List[TID];
+      for (int dPID=0; dPID<8; dPID++)
+      {
+         int PID = PID0 + dPID;
+         if ( amr->patch[0][lv][PID]->son == -1 )
+         {
+            PGIsCompletelyRefined = false;
+         }
+      }
+
+      h_IsCompletelyRefined[TID] = PGIsCompletelyRefined;
+   }
+
+   int c1 = 0;
+   for (int TID=0; TID<NPG; TID++)
+   {
+      if (h_IsCompletelyRefined[TID]) c1++;
+   }
+   //printf("%d out of %d PGs refined on lv %d\n", c1, NPG, lv);
+#  endif
+
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( !amr->use_wave_flag[lv] ) {
+#     pragma omp parallel for schedule( runtime )
+      for (int TID=0; TID<NPG; TID++)
+      {
+         int c1 = 0, c2 = 0;
+         int  PID0 = PID0_List[TID];
+         long GID0 = PID0 + PatchCount->GID_Offset[lv];
+         for (int k=0; k<PS2; k++)
+         for (int j=0; j<PS2; j++)
+         for (int i=0; i<PS2; i++)
+         {
+            const int t = IDX321( i, j, k, PS2, PS2 );
+            h_HasWaveCounterpart[TID][t] = ELBDM_HasWaveCounterpart( i, j, k, GID0, GlobalTree );
+            c1++;
+            if (h_HasWaveCounterpart[TID][t]) c2++;
+         }
+         //printf("TID %ld Ratio %d / %d = %f\n", GID0, c1, c2, c1 / (float) c2);
+      }
+   }
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 // validate input arrays for debugging purposes
    if ( OPT__CK_INPUT_FLUID )

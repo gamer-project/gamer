@@ -328,6 +328,13 @@ real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 #endif
 #endif // FLU_SCHEME
 
+#if ( MODEL == ELBDM )
+bool  (*h_IsCompletelyRefined)                                     = NULL;
+#endif // #if ( MODEL == ELBDM )
+#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+bool (*h_HasWaveCounterpart)[ CUBE(PS2) ]                          = NULL;
+#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+
 #ifdef GRAVITY
 // (3-2) Poisson and gravity solver
 real   (*h_Rho_Array_P     [2])[RHO_NXT][RHO_NXT][RHO_NXT]         = { NULL, NULL };
@@ -420,9 +427,17 @@ real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 
 #endif // FLU_SCHEME
 
+#if ( MODEL == ELBDM )
+bool  (*d_IsCompletelyRefined)                                     = NULL;
+#endif // #if ( MODEL == ELBDM )
+
+#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+bool (*d_HasWaveCounterpart)[ CUBE(PS2) ]                          = NULL;
+#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+
 #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
 gramfe_matmul_float (*d_Flu_TimeEvo)[2 * FLU_NXT]                  = NULL;
-#endif
+#endif // #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 #ifdef GRAVITY
 // (4-2) Poisson and gravity solver

@@ -226,12 +226,6 @@ void Aux_TakeNote()
 #     endif
 
 
-#     ifdef HYBRID_SMOOTH_PHASE
-      fprintf( Note, "HYBRID_SMOOTH_PHASE             ON\n" );
-#     else
-      fprintf( Note, "HYBRID_SMOOTH_PHASE             OFF\n" );
-#     endif
-
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 //    c.2 options in WAVE_GRAMFE

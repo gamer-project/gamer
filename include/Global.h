@@ -395,6 +395,12 @@ extern real       (*h_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX];
 extern real        *h_SrcDlepProf_Radius;
 #endif
 
+#if ( MODEL == ELBDM )
+extern bool        (*h_IsCompletelyRefined);
+#endif // #if ( MODEL == ELBDM )
+#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+extern bool       (*h_HasWaveCounterpart)[ CUBE(PS2) ];
+#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
 extern gramfe_matmul_float  (*h_GramFE_TimeEvo)[2 * FLU_NXT];

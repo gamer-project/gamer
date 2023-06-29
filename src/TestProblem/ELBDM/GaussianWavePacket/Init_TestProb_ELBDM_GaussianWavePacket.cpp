@@ -215,7 +215,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[DENS] = SQR(fluid[REAL]) + SQR(fluid[IMAG]);
 #  if  (ELBDM_SCHEME == ELBDM_HYBRID)
    } else { // if (amr->use_wave_flag[lv])
-   fluid[DENS] = SQR(fluid[REAL]) + SQR(fluid[IMAG]);
+   fluid[DENS] = SQR(Re) + SQR(Im);
    fluid[PHAS] = SATAN2(Im, Re);
    fluid[STUB] = 0.0;
    } // if (amr->use_wave_flag[lv]) ... else

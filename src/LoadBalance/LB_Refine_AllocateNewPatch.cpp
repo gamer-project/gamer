@@ -796,11 +796,6 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 // 3.2 perform spatial interpolation
 // 3.2.1 determine which variables require **monotonic** interpolation
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(HYBRID_SMOOTH_PHASE) )
-   const int PhaseUnwrapping_Cond   = 2;
-#  else
-   const int PhaseUnwrapping_Cond   = 0;
-#  endif
    const int PhaseUnwrapping_Yes    = 1;
    const int PhaseUnwrapping_No     = 0;
    const bool Monotonicity_Yes      = true;
@@ -992,7 +987,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 //    interpolate phase
       Interpolate( CData_Phas, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[PHAS][0][0][0],
-                   FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Cond, &Monotonicity_No,
+                   FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No,
                    IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
    }
 #  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )

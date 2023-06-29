@@ -2,19 +2,19 @@
 
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
-static real GetMaxVelocity( const int lv, bool excludeWave);
+static real GetMaxVelocity( const int lv, bool ExcludeWaveCells);
 static void GetMaxLevel(patch_t *patch, int lv, int& maxlv);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_GetTimeStep_Velocity
 // Description :  Estimate the evolution time-step by via the CFL condition from the Hamilton-Jacobi equation
 //
-// Note        :  1. This function should be applied to both physical and comoving coordinates and always
+// Note        :  1. This function should be applied to both physical and comoving Coordinates and always
 //                   return the evolution time-step (dt) actually used in various solvers
-//                   --> Physical coordinates : dt = physical time interval
-//                       Comoving coordinates : dt = delta(scale_factor) / ( Hubble_parameter*scale_factor^3 )
+//                   --> Physical Coordinates : dt = physical time interval
+//                       Comoving Coordinates : dt = delta(scale_factor) / ( Hubble_parameter*scale_factor^3 )
 //                   --> We convert dt back to the physical time interval, which equals "delta(scale_factor)"
-//                       in the comoving coordinates, in Mis_GetTimeStep()
+//                       in the comoving Coordinates, in Mis_GetTimeStep()
 //                2. dt = 0.5 * dx * m/hbar / sum_i |v_i|
 //
 // Parameter   :  lv : Target refinement level
@@ -41,70 +41,6 @@ double ELBDM_GetTimeStep_Velocity( const int lv )
 
 
 
-//-------------------------------------------------------------------------------------------------------
-// Function    :  ELBDM_HasWaveCounterpart
-// Description :  Check whether cell [I, J, K] in patch indexed by GID GID0 has wave counterpart on refined levels by traversing the global AMR tree
-//
-// Note        :  1. This function requires LB_GlobalPatch* tree to be initialised beforehand
-//
-// Parameter   :  I   : x-index of patch GID0
-//             :  J   : y-index of patch GID0
-//             :  K   : z-index of patch GID0
-//             : GID0 : global ID of patch
-//             : tree : pointer to array of LB_GlobalPatch objects
-//                      needs to initialised beforehand by calling LB_GlobalPatch* tree = LB_GatherTree(pc, MPI_Node);
-//
-// Return      :  "true"  if cell [I, J, K] in patch GID0 has    wave counterpart
-//                "false" if cell [I, J, K] in patch GID0 has NO wave counterpart
-//-------------------------------------------------------------------------------------------------------
-bool ELBDM_HasWaveCounterpart(int I, int J, int K, long GID0, LB_GlobalPatch* tree) {
-   int lv = tree[GID0].level;
-
-// convert coordinates of cell to global integer coordinate system
-   int coordinates[3] = {I, J, K};
-   for ( int l = 0; l < 3; ++l )
-      coordinates[l] = tree[GID0].corner[l] + coordinates[l] * amr->scale[lv];
-
-// during first iteration, we can cover the eight patches in the patch group
-// imagine that patches in patch group are children of a common father even at level 0
-// we set currentLv = 0 in loop and iterate over patch group
-// once we find the patch that the coordinate is in, we iterate over that patch's children
-
-   int  currentLv  = lv - 1;
-   bool isInside   = true;
-
-   long currentGID = GID0;
-   long sonGID     = GID0;
-
-// traverse the tree until we get to leave nodes
-   while ( sonGID != -1 ) {
-      currentLv += 1;
-
-//    loop over patches in patch block or sons and check which patch the cell {K, J, I} belongs to
-      for (int GID=sonGID; GID<sonGID+8; GID++)
-      {
-         isInside = true;
-//       check whether cell {I, J, K} is within g,iven patch
-         for ( int l = 0; l < 3; ++l ) {
-            if (coordinates[l] < tree[GID].corner[l] || coordinates[l] >=  tree[GID].corner[l] + PS1 * amr->scale[currentLv])
-               isInside = false;
-         }
-
-//       if it is within the given patch, go to the patch's son
-         if ( isInside ) {
-            currentGID = GID;
-            sonGID     = tree[GID].son;
-            break;
-         } else if ( !isInside && (GID == (sonGID + 7)) ) {
-            Aux_Error(ERROR_INFO, "Coordinates in hasWaveCounter part not in correct patch block!\n");
-            return false;
-         }
-      }
-   }
-
-   return amr->use_wave_flag[currentLv];
-} // FUNCTION : ELBDM_HasWaveCounterpart
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  GetMaxVelocity
@@ -116,7 +52,7 @@ bool ELBDM_HasWaveCounterpart(int I, int J, int K, long GID0, LB_GlobalPatch* tr
 //
 // Return      :  MaxdS_dx
 //-------------------------------------------------------------------------------------------------------
-real GetMaxVelocity( const int lv, bool excludeWave )
+real GetMaxVelocity( const int lv, bool ExcludeWaveCells )
 {
    // Maximum velocity for calculation of time step zero for wave patches
    // since we are only concerned with a velocity dependent time step criterion for the fluid solver
@@ -147,7 +83,7 @@ real GetMaxVelocity( const int lv, bool excludeWave )
    LB_PatchCount pc;
 
 // construct global tree structure
-   LB_GlobalPatch* global_tree = LB_GatherTree(pc, -1);
+   LB_GlobalPatch* GlobalTree = LB_GatherTree(pc, -1);
 
 #  pragma omp parallel private( Flu_Array, dS_dx, GradS, \
                                 im, ip, jm, jp, km, kp, I, J, K)
@@ -174,11 +110,11 @@ real GetMaxVelocity( const int lv, bool excludeWave )
 
 //       skip velocities of cells that have a wave counterpart on the refined levels
 
-         bool calculateVelocity = true;
-         if (excludeWave) calculateVelocity = !ELBDM_HasWaveCounterpart(I, J, K, GID0, global_tree );
+         bool CalculateVelocity = true;
+         if ( ExcludeWaveCells ) CalculateVelocity = !ELBDM_HasWaveCounterpart(I, J, K, GID0, GlobalTree );
 
 //       check whether leave node corresponding to cell uses phase scheme
-         if ( calculateVelocity ) {
+         if ( CalculateVelocity ) {
 
             GradS[0]   = _dh2 * ( Flu_Array[0][0][k ][j ][ip] - Flu_Array[0][0][k ][j ][im] );
             GradS[1]   = _dh2 * ( Flu_Array[0][0][k ][jp][i ] - Flu_Array[0][0][k ][jm][i ] );
@@ -196,7 +132,7 @@ real GetMaxVelocity( const int lv, bool excludeWave )
    } // OpenMP parallel region
 
 // clean up global tree
-   delete [] global_tree;
+   delete [] GlobalTree;
 
 // get the maximum potential in all ranks
    real MaxdS_dx_AllRank;

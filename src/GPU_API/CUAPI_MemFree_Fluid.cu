@@ -38,9 +38,17 @@ extern real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif
 #endif // FLU_SCHEME
 
+#if ( MODEL == ELBDM )
+extern bool (*d_IsCompletelyRefined);
+#endif // #if ( MODEL == ELBDM )
+
+#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+extern bool (*d_HasWaveCounterpart)[ CUBE(PS2) ];
+#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+
 #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
 extern gramfe_matmul_float (*d_Flu_TimeEvo)[2 * FLU_NXT];
-#endif
+#endif // #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 #if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
@@ -94,9 +102,17 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
 #  endif
 #  endif // FLU_SCHEME
 
+#  if ( MODEL == ELBDM )
+   if ( d_IsCompletelyRefined != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_IsCompletelyRefined)  );  d_IsCompletelyRefined = NULL; }
+#  endif // #if ( MODEL == ELBDM )
+
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( d_HasWaveCounterpart != NULL ) {  CUDA_CHECK_ERROR (  cudaFree( d_HasWaveCounterpart )  );  d_HasWaveCounterpart = NULL; }
+#  endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+
 #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
    if ( d_Flu_TimeEvo        != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Flu_TimeEvo        )  );  d_Flu_TimeEvo        = NULL; }
-#endif
+#endif // #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #    warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
@@ -131,10 +147,17 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
    } // for (int t=0; t<2; t++)
 
 
+#  if ( MODEL == ELBDM )
+   if ( h_IsCompletelyRefined != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_IsCompletelyRefined )  );  h_IsCompletelyRefined = NULL; }
+#  endif // #if ( MODEL == ELBDM )
+
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( h_HasWaveCounterpart != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_HasWaveCounterpart )  );  h_HasWaveCounterpart = NULL; }
+#  endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+
 #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
    if ( h_GramFE_TimeEvo != NULL) { CUDA_CHECK_ERROR(  cudaFreeHost ( h_GramFE_TimeEvo )  ); h_GramFE_TimeEvo = NULL; }
 #  endif // #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
-
 
 // destroy streams
    if ( Stream != NULL )

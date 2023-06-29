@@ -680,11 +680,6 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //       (c1.3.4) perform spatial interpolation
-#        if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(HYBRID_SMOOTH_PHASE) )
-         const int PhaseUnwrapping_Cond  = 2;
-#        else
-         const int PhaseUnwrapping_Cond  = 0;
-#        endif
          const int PhaseUnwrapping_Yes   = 1;
          const int PhaseUnwrapping_No    = 0;
 
@@ -818,7 +813,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                          IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
 //          interpolate phase
             Interpolate( &Flu_CData[PHAS][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[PHAS][0][0][0],
-                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Cond, &Monotonicity_No,
+                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No,
                          IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
          }
 #        endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )

@@ -71,6 +71,12 @@ void Buf_SortBoundaryPatch( const int NPatch, int *IDList, int *PosList );
 #endif // #ifndef SERIAL
 
 
+// Foward declare classes defined in GatherTree.h
+class LB_PatchCount;
+class LB_LocalPatchExchangeList;
+class LB_GlobalPatchExchangeList;
+class LB_GlobalPatch;
+
 // Hydrodynamics
 void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
@@ -81,6 +87,8 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                       const double h_Corner_Array[][3],
                       const real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
+                      const bool h_IsCompletelyRefined[],
+                      const bool h_HasWaveCounterpart[][ CUBE(PS2) ],
                       const int NPatchGroup, const real dt, const real dh,
                       const bool StoreFlux, const bool StoreElectric,
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter,
@@ -145,7 +153,10 @@ void Flu_Prepare( const int lv, const double PrepTime,
                   real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                   real h_Mag_Array_F_In[][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
                   real h_Pot_Array_USG_F[][ CUBE(USG_NXT_F) ],
-                  double h_Corner_Array_F[][3], const int NPG, const int *PID0_List );
+                  double h_Corner_Array_F[][3],
+                  bool h_IsCompletelyRefined[],
+                  bool h_HasWaveCounterpart[][ CUBE(PS2) ],
+                  const int NPG, const int *PID0_List, LB_GlobalPatch* GlobalTree, LB_PatchCount* PatchCount);
 void Flu_FixUp_Flux( const int lv );
 void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const int SonMagSg, const int FaMagSg,
                          const int SonPotSg, const int FaPotSg, const long TVarCC, const long TVarFC );
@@ -426,12 +437,6 @@ void TABLE_GetSibPID_Based( const int lv, const int PID0, int SibPID_Based[] );
 // LoadBalance
 long LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 
-// Declare classes defined in GatherTree.h
-class LB_PatchCount;
-class LB_LocalPatchExchangeList;
-class LB_GlobalPatchExchangeList;
-class LB_GlobalPatch;
-
 void LB_GetPID( const int GID, int& level, int& PID, int* GID_Offset );
 void LB_AllgatherPatchCount( LB_PatchCount& pc );
 void LB_AllgatherLBIdx( LB_PatchCount& pc, LB_LocalPatchExchangeList& lel, LB_GlobalPatchExchangeList* gel = NULL );
@@ -550,6 +555,7 @@ double ELBDM_GetTimeStep_Phase( const int lv );
 #if   ( ELBDM_SCHEME == ELBDM_HYBRID )
 double ELBDM_GetTimeStep_Hybrid( const int lv );        // for CFL condition of SPS in phase form
 double ELBDM_GetTimeStep_Velocity( const int lv );      // for velocity dependence of Hamilton-Jacobi equation
+bool   ELBDM_HasWaveCounterpart(int I, int J, int K, long GID0, LB_GlobalPatch* tree);
 #endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 //Flag for refining regions using wave solver
@@ -587,6 +593,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                              const double h_Corner_Array[][3],
                              real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
+                             const bool h_IsCompletelyRefined[],
+                             const bool h_HasWaveCounterpart[][ CUBE(PS2) ],
                              const int NPatchGroup, const real dt, const real dh,
                              const bool StoreFlux, const bool StoreElectric,
                              const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter,
