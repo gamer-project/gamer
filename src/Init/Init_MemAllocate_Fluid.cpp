@@ -17,7 +17,7 @@ extern real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 
 
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-extern bool (*h_IsRefined)[ CUBE(FLU_NXT) ];
+extern bool (*h_HasWaveCounterpart)[ CUBE(PS2) ];
 #endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 
@@ -96,7 +96,7 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
 #  endif // FLU_SCHEME
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-   h_IsRefined   = new bool [Flu_NPatchGroup][ CUBE(FLU_NXT) ];
+   h_HasWaveCounterpart   = new bool [Flu_NPatchGroup][ CUBE(PS2) ];
 #  endif // // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 } // FUNCTION : Init_MemAllocate_Fluid

@@ -320,7 +320,7 @@ real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 #endif // FLU_SCHEME
 
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-bool (*h_IsRefined)[ CUBE(FLU_NXT) ]                               = NULL;
+bool (*h_HasWaveCounterpart)[ CUBE(PS2) ]                               = NULL;
 #endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 #ifdef GRAVITY

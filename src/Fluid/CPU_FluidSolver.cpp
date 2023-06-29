@@ -105,7 +105,7 @@ void CPU_ELBDMSolver_HamiltonJacobi(  real Flu_Array_In [][FLU_NIN ][ CUBE(HYB_N
                                       real Flu_Array_Out[][FLU_NIN] [ CUBE(PS2) ],
                                       #endif
                                       real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                      const bool HasWaveCounterpart [] [ CUBE(HYB_NXT) ],
+                                      const bool HasWaveCounterpart [] [ CUBE(PS2) ],
                                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                                       const bool XYZ, const real MinDens );
 #endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
@@ -130,7 +130,7 @@ static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 #endif // FLU_SCHEME
 
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-extern bool (*h_IsRefined)[ CUBE(FLU_NXT) ];
+extern bool (*h_HasWaveCounterpart)[ CUBE(PS2) ];
 #endif
 
 
@@ -202,6 +202,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                       const double h_Corner_Array[][3],
                       const real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
+                      const bool h_HasWaveCounterpart[][ CUBE(PS2) ],
                       const int NPatchGroup, const real dt, const real dh,
                       const bool StoreFlux, const bool StoreElectric,
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter,
@@ -290,7 +291,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
    } else {
 //    cast h_Flu_Array_In since HYB_NXT is possibly smaller than FLU_NXT
       real       (*smaller_h_Flu_Array_In )  [FLU_NIN ][CUBE(HYB_NXT)] = (      real (*)[FLU_NIN][CUBE(HYB_NXT)]) h_Flu_Array_In;
-      const bool (*h_HasWaveCounterpart   )            [CUBE(HYB_NXT)] = (const bool (*)         [CUBE(HYB_NXT)]) h_IsRefined;
+      const bool (*h_HasWaveCounterpart   )            [CUBE(PS2)]     = (const bool (*)         [CUBE(PS2)])     h_HasWaveCounterpart;
 
 //    in debug mode, send DENS, PHAS and STUB back from CPU/GPU solvers
 //    in regular mode, only send DENS and PHAS back from CPU/GPU solvers
