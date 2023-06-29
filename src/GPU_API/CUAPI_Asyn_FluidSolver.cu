@@ -178,7 +178,7 @@ static bool                (*d_HasWaveCounterpart)[ CUBE(PS2) ] = NULL;
 #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
 extern gramfe_matmul_float (*d_Flu_TimeEvo)[2 * FLU_NXT];
 #else
-extern real                (*d_Flu_TimeEvo)[2 * FLU_NXT] = NULL;
+static real                (*d_Flu_TimeEvo)[2 * FLU_NXT] = NULL;
 #endif
 
 #ifdef UNSPLIT_GRAVITY
@@ -373,13 +373,6 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
       cudaFuncAttributeMaxDynamicSharedMemorySize,
       cufftdx_shared_memory_size));
 
-// create forward and backward cufftx workspaces
-   cudaError_t error_code  = cudaSuccess;
-   FFT::workspace_type cufftdx_workspace  = cufftdx::make_workspace<FFT>(error_code);
-   CUDA_CHECK_ERROR(error_code);
-   error_code              = cudaSuccess;
-   IFFT::workspace_type cufftdx_iworkspace = cufftdx::make_workspace<IFFT>(error_code);
-   CUDA_CHECK_ERROR(error_code);
 
 #  elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
@@ -614,6 +607,15 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #     elif ( WAVE_SCHEME == WAVE_GRAMFE )
 
 #     if ( GRAMFE_SCHEME == GRAMFE_FFT )
+
+//       create forward and backward cufftx workspaces
+         cudaError_t error_code  = cudaSuccess;
+         FFT::workspace_type cufftdx_workspace  = cufftdx::make_workspace<FFT>(error_code);
+         CUDA_CHECK_ERROR(error_code);
+         error_code              = cudaSuccess;
+         IFFT::workspace_type cufftdx_iworkspace = cufftdx::make_workspace<IFFT>(error_code);
+         CUDA_CHECK_ERROR(error_code);
+
          CUFLU_ELBDMSolver_GramFE_FFT <<< NPatch_per_Stream[s], FFT::block_dim, cufftdx_shared_memory_size, Stream[s] >>>
             ( d_Flu_Array_F_In  + UsedPatch[s],
               d_Flu_Array_F_Out + UsedPatch[s],

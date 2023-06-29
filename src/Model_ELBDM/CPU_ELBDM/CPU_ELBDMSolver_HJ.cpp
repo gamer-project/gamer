@@ -446,7 +446,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                {
                   Idx2 = get1D2( k, j, si, XYZ );
 
-                  s_RK1[sj][si] = g_HasWaveCounterpart[bx][Idx2] && g_IsCompletelyRefined[bx];
+                  s_RK1[sj][si] = g_HasWaveCounterpart[bx][Idx2];
                }
             }
 
