@@ -138,7 +138,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
    {
       if (h_IsCompletelyRefined[TID]) c1++;
    }
-   //printf("%d out of %d PGs refined on lv %d\n", c1, NPG, lv);
+   printf("%d out of %d PGs refined on lv %d\n", c1, NPG, lv);
 #  endif
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
@@ -158,7 +158,8 @@ void Flu_Prepare( const int lv, const double PrepTime,
             c1++;
             if (h_HasWaveCounterpart[TID][t]) c2++;
          }
-         //printf("TID %ld Ratio %d / %d = %f\n", GID0, c1, c2, c1 / (float) c2);
+         if (c2 != 0)
+         printf("TID %ld Ratio %d / %d = %f\n", GID0, c1, c2, c1 / (float) c2);
       }
    }
 #  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )

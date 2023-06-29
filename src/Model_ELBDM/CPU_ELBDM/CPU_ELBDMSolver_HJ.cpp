@@ -360,7 +360,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
             if (g_HasWaveCounterpart[bx][t]) c2++;
             g_Fluid_Out[bx][STUB][t] = g_HasWaveCounterpart[bx][t];
          }
-         //printf("bx %d Ratio %d / %d = %f\n", bx, c1, c2, c1 / (float) c2);
+         if (c2 != 0)
+         printf("bx %d Ratio %d / %d = %f\n", bx, c1, c2, c1 / (float) c2);
 #        endif
 
          uint Column0 = 0;                // the total number of columns that have been updated
@@ -502,16 +503,17 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                      flux = UPWIND_FM(s_In[sj][time_level][DENS], v, si);
                   } else {
                      v = _dh * GRADB1 (s_In[sj][time_level][PHAS], si);
-#                 if ( HYBRID_SCHEME == HYBRID_UPWIND )
+
+#                    if ( HYBRID_SCHEME == HYBRID_UPWIND )
 //                   access Rc[time_level][i, i-1], Pc[time_level][i, i-1]
-                     flux = UPWIND_FM(s_In[sj][time_level][DENS], v, si);
-#                 elif ( HYBRID_SCHEME == HYBRID_FROMM )
+                        flux = UPWIND_FM(s_In[sj][time_level][DENS], v, si);
+#                    elif ( HYBRID_SCHEME == HYBRID_FROMM )
 //                   access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
-                     flux = FROMM_FM (s_In[sj][time_level][DENS], v, si, Coeff1);
-#                 elif ( HYBRID_SCHEME == HYBRID_MUSCL )
+                        flux = FROMM_FM (s_In[sj][time_level][DENS], v, si, Coeff1);
+#                    elif ( HYBRID_SCHEME == HYBRID_MUSCL )
 //                   access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
-                     flux = MUSCL_FM (s_In[sj][time_level][DENS], v, si, Coeff1);
-#                 endif
+                        flux = MUSCL_FM (s_In[sj][time_level][DENS], v, si, Coeff1);
+#                    endif
                   }
 
                   s_Fm[sj][0][si] = flux;
