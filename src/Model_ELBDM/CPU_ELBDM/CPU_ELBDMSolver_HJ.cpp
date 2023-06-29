@@ -571,9 +571,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 
             } // if ( time_level < N_TIME_LEVELS - 1 ) {
 
-//          4. write back final results to g_Fluid_In[0] or g_Fluid_Out to save memory
+//          4. write back final results to g_Fluid_In or g_Fluid_Out to save memory
 
-//          4.1 write FFT array back to output array
+//          4.1 write shared memory array back to global memory
             CELL_LOOP(HYB_NXT, HYB_GHOST_SIZE, HYB_GHOST_SIZE)
             {
 
@@ -590,8 +590,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                } else {
                   Idx1 = get1D1( k, j, si, XYZ );
 
-                  g_Fluid_In[bx][DENS][Idx1] = s_In[sj][N_TIME_LEVELS][DENS][si];
-                  g_Fluid_In[bx][PHAS][Idx1] = s_In[sj][N_TIME_LEVELS][PHAS][si];
+                  g_Fluid_In[bx][DENS][Idx1]  = s_In[sj][N_TIME_LEVELS][DENS][si];
+                  g_Fluid_In[bx][PHAS][Idx1]  = s_In[sj][N_TIME_LEVELS][PHAS][si];
                }
 
 
@@ -609,7 +609,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                }
 #              endif // # ifdef CONSERVE_MASS
             }
-
 
 #           ifdef __CUDACC__
             __syncthreads();
