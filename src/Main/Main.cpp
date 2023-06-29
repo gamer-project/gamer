@@ -319,8 +319,11 @@ real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 #endif
 #endif // FLU_SCHEME
 
+#if ( MODEL == ELBDM )
+bool  (*h_IsCompletelyRefined)                                     = NULL;
+#endif // #if ( MODEL == ELBDM )
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-bool (*h_HasWaveCounterpart)[ CUBE(PS2) ]                               = NULL;
+bool (*h_HasWaveCounterpart)[ CUBE(PS2) ]                          = NULL;
 #endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 #ifdef GRAVITY
@@ -408,6 +411,14 @@ real (*d_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]        = NULL;
 real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 #endif
 #endif // FLU_SCHEME
+
+#if ( MODEL == ELBDM )
+bool  (*d_IsCompletelyRefined)                                     = NULL;
+#endif // #if ( MODEL == ELBDM )
+
+#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+bool (*d_HasWaveCounterpart)[ CUBE(PS2) ]                          = NULL;
+#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 #ifdef GRAVITY
 // (4-2) Poisson and gravity solver

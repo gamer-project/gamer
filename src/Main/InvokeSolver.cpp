@@ -320,16 +320,19 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 #  if ( defined GRAVITY  &&  !defined MHD )
    real (*h_Emag_Array_G   [2])[PS1][PS1][PS1]                        = { NULL, NULL };
 #  endif
+#  if ( MODEL != ELBDM )
+   bool (*h_IsCompletelyRefined)              = NULL;
+#  endif // #  if ( MODEL != ELBDM )
 #  if ( MODEL != ELBDM || ELBDM_SCHEME != ELBDM_HYBRID )
    bool (*h_HasWaveCounterpart) [ CUBE(PS2) ] = NULL;
-#  endif
+#  endif // #  if ( MODEL != ELBDM || ELBDM_SCHEME != ELBDM_HYBRID )
 
 
    switch ( TSolver )
    {
       case FLUID_SOLVER :
          Flu_Prepare( lv, TimeOld, h_Flu_Array_F_In[ArrayID], h_Mag_Array_F_In[ArrayID],
-                      h_Pot_Array_USG_F[ArrayID], h_Corner_Array_F[ArrayID], h_HasWaveCounterpart, NPG, PID0_List, GlobalTree, PatchCount );
+                      h_Pot_Array_USG_F[ArrayID], h_Corner_Array_F[ArrayID], h_IsCompletelyRefined, h_HasWaveCounterpart, NPG, PID0_List, GlobalTree, PatchCount );
       break;
 
 #     ifdef GRAVITY
@@ -530,9 +533,12 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
    real (*h_Mag_Array_S_In [2])[NCOMP_MAG][ SRC_NXT_P1*SQR(SRC_NXT) ] = { NULL, NULL };
 #  endif
 
+#  if ( MODEL != ELBDM )
+   bool (*h_IsCompletelyRefined)                                      = NULL;
+#  endif // #  if ( MODEL != ELBDM )
 #  if ( MODEL != ELBDM || ELBDM_SCHEME != ELBDM_HYBRID )
-   bool (*h_HasWaveCounterpart) [ CUBE(PS2) ]                                  = NULL;
-#  endif
+   bool (*h_HasWaveCounterpart) [ CUBE(PS2) ]                         = NULL;
+#  endif // #  if ( MODEL != ELBDM || ELBDM_SCHEME != ELBDM_HYBRID )
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #  error : ERROR : ADD MODEL-DEPENDENT USELESS VARIABLES FOR THE NEW MODELS HERE !!
@@ -577,6 +583,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  h_Mag_Array_F_In[ArrayID], h_Mag_Array_F_Out[ArrayID],
                                  h_DE_Array_F_Out[ArrayID], h_Flux_Array[ArrayID], h_Ele_Array[ArrayID],
                                  h_Corner_Array_F[ArrayID], h_Pot_Array_USG_F[ArrayID],
+                                 h_IsCompletelyRefined,
                                  h_HasWaveCounterpart,
                                  NPG, dt, dh, OPT__FIXUP_FLUX, OPT__FIXUP_ELECTRIC, Flu_XYZ,
                                  OPT__LR_LIMITER, MINMOD_COEFF, MINMOD_MAX_ITER,
@@ -594,6 +601,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  h_Mag_Array_F_In[ArrayID], h_Mag_Array_F_Out[ArrayID],
                                  h_DE_Array_F_Out[ArrayID], h_Flux_Array[ArrayID], h_Ele_Array[ArrayID],
                                  h_Corner_Array_F[ArrayID], h_Pot_Array_USG_F[ArrayID],
+                                 h_IsCompletelyRefined,
                                  h_HasWaveCounterpart,
                                  NPG, dt, dh, OPT__FIXUP_FLUX, OPT__FIXUP_ELECTRIC, Flu_XYZ,
                                  OPT__LR_LIMITER, MINMOD_COEFF, MINMOD_MAX_ITER,

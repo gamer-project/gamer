@@ -386,9 +386,12 @@ extern real       (*h_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX];
 extern real        *h_SrcDlepProf_Radius;
 #endif
 
+#if ( MODEL == ELBDM )
+extern bool        (*h_IsCompletelyRefined);
+#endif // #if ( MODEL == ELBDM )
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 extern bool       (*h_HasWaveCounterpart)[ CUBE(PS2) ];
-#endif
+#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 // 4/5. GPU (device) global memory arrays and timers

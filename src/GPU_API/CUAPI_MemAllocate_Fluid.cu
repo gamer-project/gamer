@@ -44,6 +44,14 @@ extern real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif
 #endif // FLU_SCHEME
 
+#if ( MODEL == ELBDM )
+extern bool (*d_IsCompletelyRefined);
+#endif // #if ( MODEL == ELBDM )
+
+#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+extern bool (*d_HasWaveCounterpart)[ CUBE(PS2) ];
+#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+
 #if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
 #endif
@@ -112,6 +120,14 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
    const long EC_Ele_MemSize      = sizeof(real  )*Flu_NPG  *NCOMP_MAG*CUBE(N_EC_ELE);
 #  endif
 #  endif // FLU_SCHEME
+
+#  if ( MODEL == ELBDM )
+   const long Flu_MemSize_IsCompletelyRefined = sizeof(bool ) * Flu_NPG;
+#  endif // #if ( MODEL == ELBDM )
+
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+   const long Flu_MemSize_HasWaveCounterpart  = sizeof(bool ) * Flu_NPG * CUBE(PS2);
+#  endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #     warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
@@ -227,6 +243,15 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
    CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_Corner_Array_S,       Corner_MemSize_S     )  );
    }
 
+
+#  if ( MODEL == ELBDM )
+   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_IsCompletelyRefined,  Flu_MemSize_IsCompletelyRefined  )  );
+#  endif // #if ( MODEL == ELBDM )
+
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_HasWaveCounterpart,  Flu_MemSize_HasWaveCounterpart  )  );
+#  endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #     warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
 #  endif
@@ -274,6 +299,16 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
       CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_Corner_Array_S [t],  Corner_MemSize_S     )  );
       }
    } // for (int t=0; t<2; t++)
+
+
+
+#  if ( MODEL == ELBDM )
+   CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_IsCompletelyRefined,  Flu_MemSize_IsCompletelyRefined  )  );
+#  endif // #if ( MODEL == ELBDM )
+
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+   CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_HasWaveCounterpart,  Flu_MemSize_HasWaveCounterpart  )  );
+#  endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 // create streams

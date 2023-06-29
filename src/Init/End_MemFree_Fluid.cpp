@@ -16,6 +16,9 @@ extern real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif // FLU_SCHEME
 
 
+#if ( MODEL == ELBDM )
+extern bool (*h_IsCompletelyRefined);
+#endif
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 extern bool (*h_HasWaveCounterpart)[ CUBE(PS2) ];
 #endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
@@ -69,9 +72,12 @@ void End_MemFree_Fluid()
 #  endif
 #  endif // FLU_SCHEME
 
-#     if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-   delete [] h_HasWaveCounterpart;            h_HasWaveCounterpart          = NULL;
-#     endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( MODEL == ELBDM )
+   delete [] h_IsCompletelyRefined; h_IsCompletelyRefined = NULL;
+#  endif
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+   delete [] h_HasWaveCounterpart;  h_HasWaveCounterpart  = NULL;
+#  endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 } // FUNCTION : End_MemFree_Fluid
 
