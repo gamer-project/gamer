@@ -245,6 +245,10 @@ void Init_ByRestart_HDF5( const char *FileName )
    for (int lv=0; lv<KeyInfo.NLevel; lv++)
    {
       NPatchTotal[lv] = KeyInfo.NPatch[lv];
+
+#     if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+      amr->use_wave_flag[lv] = KeyInfo.UseWaveScheme [lv];
+#     endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
    }
 
 #  ifdef PARTICLE
@@ -261,10 +265,6 @@ void Init_ByRestart_HDF5( const char *FileName )
 
          if ( KeyInfo.FormatVersion >= 2250 )
          dTime_AllLv   [lv] = KeyInfo.dTime_AllLv   [lv];
-
-#        if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-         amr->use_wave_flag[lv] = KeyInfo.UseWaveScheme [lv];
-#        endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
       }
 
       Step            = KeyInfo.Step;
