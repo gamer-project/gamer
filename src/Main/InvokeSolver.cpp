@@ -196,15 +196,16 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
    NPG[ArrayID] = ( NPG_Max < NTotal ) ? NPG_Max : NTotal;
 
    LB_GlobalPatch* GlobalTree = NULL;
+   LB_PatchCount*  PatchCount = NULL;
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 // construct global tree structure
-   LB_PatchCount PatchCount;
-   GlobalTree = LB_GatherTree(PatchCount, -1);
+   PatchCount    = new LB_PatchCount;
+   GlobalTree    = LB_GatherTree(PatchCount, -1);
 #  endif
 
 //-------------------------------------------------------------------------------------------------------------
-   TIMING_SYNC(   Preparation_Step( TSolver, lv, TimeNew, TimeOld, NPG[ArrayID], PID0_List, ArrayID, GlobalTree, &PatchCount ),
+   TIMING_SYNC(   Preparation_Step( TSolver, lv, TimeNew, TimeOld, NPG[ArrayID], PID0_List, ArrayID, GlobalTree, PatchCount ),
                   Timer_Pre[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
 
@@ -223,7 +224,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
 
 //-------------------------------------------------------------------------------------------------------------
-      TIMING_SYNC(   Preparation_Step( TSolver, lv, TimeNew, TimeOld, NPG[ArrayID], PID0_List+Disp, ArrayID, GlobalTree, &PatchCount ),
+      TIMING_SYNC(   Preparation_Step( TSolver, lv, TimeNew, TimeOld, NPG[ArrayID], PID0_List+Disp, ArrayID, GlobalTree, PatchCount ),
                      Timer_Pre[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
 
@@ -267,6 +268,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
    if ( AllocateList )  delete [] PID0_List;
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+   delete PatchCount;
    delete [] GlobalTree;
 #  endif
 
