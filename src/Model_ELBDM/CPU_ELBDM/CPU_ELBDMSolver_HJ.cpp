@@ -449,33 +449,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                {
                   Idx2 = get1D2( k, j, si, XYZ );
 
-
-#                 ifndef HYBRID_IGNORE_FLUID_FAILURE
-
-                  logrhoc   = LOG(MAX(s_In[sj][time_level][DENS][si    ], FluidMinDens));
-                  logrhom1  = LOG(MAX(s_In[sj][time_level][DENS][si - 1], FluidMinDens));
-                  logrhop1  = LOG(MAX(s_In[sj][time_level][DENS][si + 1], FluidMinDens));
-                  logrhovel = logrhop1 - logrhom1;
-                  logrholap = logrhop1 - 2 * logrhoc + logrhom1;
-                  qp        = real(1.0/2.0) * logrholap  + real(1.0/16.0) * SQR(logrhovel);
-
-//                if the time step adopted in solver is larger than what velocity-dependent CFL condition allows, we switch to RK1 with a first-order upwind discretisation
-                  if ( g_HasWaveCounterpart[bx][Idx2] || FABS(qp) > 0.15 || FABS(GRADC2 (s_In[sj][time_level][PHAS], si))  > Coeff3) {
-//                   compute how far wrong information can propagate
-                     l_min = si - (N_TIME_LEVELS - time_level) * 1;
-                     l_max = si + (N_TIME_LEVELS - time_level) * 1 + 1;
-                     if (l_min < 0)        l_min = 0;
-                     if (l_max > HYB_NXT ) l_max = HYB_NXT;
-                     for (l = l_min; l < l_max; ++l) s_RK1[sj][l] = 2;
-                  }
-
-
-                  if ( g_HasWaveCounterpart[bx][Idx2] )
-                  {
-                     s_RK1[sj][si] = 1;
-                  }
-#                 endif // # ifndef HYBRID_IGNORE_FLUID_FAILURE
-
+                  s_RK1[sj][si] = false;//g_HasWaveCounterpart[bx][Idx2] && g_IsCompletelyRefined[bx];
                }
             }
 
@@ -587,7 +561,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                      s_In[sj][time_level+1][PHAS][si] = Ph_New;
                   } else {
 //                3.6 handle the case that the velocity timestep criterion is not met, we detect negative density or nan -> first-order update
-                     if ( s_RK1[sj][si] || De_New < 0 || De_New != De_New ) {
+                     if ( g_IsCompletelyRefined[sj] ) {//s_RK1[sj][si] || De_New < 0 || De_New != De_New ) {
                         De_New        = s_In[sj][N_TIME_LEVELS][DENS][si];
                         Ph_New        = s_In[sj][N_TIME_LEVELS][PHAS][si];
 #                       ifdef CONSERVE_MASS
