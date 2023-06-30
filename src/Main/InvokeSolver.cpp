@@ -201,7 +201,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 // construct global tree structure
    PatchCount    = new LB_PatchCount;
-   GlobalTree    = LB_GatherTree(PatchCount, -1);
+   GlobalTree    = LB_GatherTree(*PatchCount, -1);
 #  endif
 
 //-------------------------------------------------------------------------------------------------------------

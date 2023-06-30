@@ -446,7 +446,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                {
                   Idx2 = get1D2( k, j, si, XYZ );
 
-                  s_RK1[sj][si] = g_HasWaveCounterpart[bx][Idx2] && g_IsCompletelyRefined[bx];
+                  s_RK1[sj][si] = false;//g_HasWaveCounterpart[bx][Idx2] && g_IsCompletelyRefined[bx];
                }
             }
 
@@ -553,7 +553,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                      s_In[sj][time_level+1][PHAS][si] = Ph_New;
                   } else {
 //                3.6 handle the case that the velocity timestep criterion is not met, we detect negative density or nan -> first-order update
-                     if ( s_RK1[sj][si] || De_New < 0 || De_New != De_New ) {
+                     if ( g_IsCompletelyRefined[sj] ) {//s_RK1[sj][si] || De_New < 0 || De_New != De_New ) {
                         De_New        = s_In[sj][N_TIME_LEVELS][DENS][si];
                         Ph_New        = s_In[sj][N_TIME_LEVELS][PHAS][si];
 #                       ifdef CONSERVE_MASS
