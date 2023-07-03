@@ -113,7 +113,7 @@ void CPU_ELBDMSolver_HamiltonJacobi(  real Flu_Array_In [][FLU_NIN ][ CUBE(HYB_N
                                       #endif
                                       real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                                       const bool g_IsCompletelyRefined [],
-                                      const bool HasWaveCounterpart [] [ CUBE(PS2) ],
+                                      const bool HasWaveCounterpart[][ CUBE(HYB_NXT) ],
                                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                                       const bool XYZ, const real MinDens );
 #endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
@@ -142,7 +142,7 @@ static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 extern bool (*h_IsCompletelyRefined);
 #endif // #if ( MODEL == ELBDM )
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-extern bool (*h_HasWaveCounterpart)[ CUBE(PS2) ];
+extern bool (*h_HasWaveCounterpart)[ CUBE(HYB_NXT) ];
 #endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 
@@ -216,7 +216,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const double h_Corner_Array[][3],
                       const real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                       const bool h_IsCompletelyRefined[],
-                      const bool h_HasWaveCounterpart[][ CUBE(PS2) ],
+                      const bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ],
                       const int NPatchGroup, const real dt, const real dh,
                       const bool StoreFlux, const bool StoreElectric,
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter,

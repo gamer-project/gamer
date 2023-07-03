@@ -110,11 +110,17 @@ real GetMaxVelocity( const int lv, bool ExcludeWaveCells )
 
 //       skip velocities of cells that have a wave counterpart on the refined levels
 
-         bool CalculateVelocity = true;
-         if ( ExcludeWaveCells ) CalculateVelocity = !ELBDM_HasWaveCounterpart(I, J, K, GID0, GlobalTree );
+         bool DoNotCalculateVelocity = false;
+         if ( ExcludeWaveCells )
+         {
+            for (int LocalID=0; LocalID<8; LocalID++ )
+            {
+               DoNotCalculateVelocity |= ELBDM_HasWaveCounterpart(I, J, K, GID0, GID0 + LocalID, GlobalTree );
+            }
+         }
 
 //       check whether leave node corresponding to cell uses phase scheme
-         if ( CalculateVelocity ) {
+         if ( !DoNotCalculateVelocity ) {
 
             GradS[0]   = _dh2 * ( Flu_Array[0][0][k ][j ][ip] - Flu_Array[0][0][k ][j ][im] );
             GradS[1]   = _dh2 * ( Flu_Array[0][0][k ][jp][i ] - Flu_Array[0][0][k ][jm][i ] );

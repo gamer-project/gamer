@@ -326,7 +326,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
    bool (*h_IsCompletelyRefined)              = NULL;
 #  endif // #  if ( MODEL != ELBDM )
 #  if ( MODEL != ELBDM || ELBDM_SCHEME != ELBDM_HYBRID )
-   bool (*h_HasWaveCounterpart) [ CUBE(PS2) ] = NULL;
+   bool (*h_HasWaveCounterpart)[ CUBE(HYB_NXT) ] = NULL;
 #  endif // #  if ( MODEL != ELBDM || ELBDM_SCHEME != ELBDM_HYBRID )
 
 
@@ -539,7 +539,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
    bool (*h_IsCompletelyRefined)                                      = NULL;
 #  endif // #  if ( MODEL != ELBDM )
 #  if ( MODEL != ELBDM || ELBDM_SCHEME != ELBDM_HYBRID )
-   bool (*h_HasWaveCounterpart) [ CUBE(PS2) ]                         = NULL;
+   bool (*h_HasWaveCounterpart)[ CUBE(HYB_NXT) ]                         = NULL;
 #  endif // #  if ( MODEL != ELBDM || ELBDM_SCHEME != ELBDM_HYBRID )
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )

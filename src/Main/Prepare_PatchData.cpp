@@ -2315,7 +2315,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    } // end of OpenMP parallel region
 
 
-// free memroy
+// free memory
    for (int s=0; s<26; s++)   delete [] TSib[s];
 
 #  ifdef MASSIVE_PARTICLES
@@ -3514,3 +3514,92 @@ void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const real Tole
 #endif // #ifdef MHD_CHECK_DIV_B
 
 #endif // #ifdef MHD
+
+#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+
+void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ], const int GhostSize, const int NPG, const int *PID0_List, const NSide_t NSide, LB_GlobalPatch* GlobalTree, LB_PatchCount* PatchCount )
+{
+
+// nothing to do if there is no target patch group
+   if ( NPG == 0 )   return;
+
+   const double dh               = amr->dh[lv];
+   const int    PGSize1D_CC      = 2*( PS1 + GhostSize );   // width of a single patch group including ghost zones
+
+#  pragma omp parallel
+   {
+//    thread-private variables
+      int    J, K, I2, J2, K2, Idx1, Idx2, PID0;
+
+//    prepare eight nearby patches (one patch group) at a time
+#     pragma omp for schedule( runtime )
+      for (int TID=0; TID<NPG; TID++)
+      {
+         PID0 = PID0_List[TID];
+
+//       a. fill out the central region of h_HasWaveCounterpart
+// ------------------------------------------------------------------------------------------------------------
+         for (int LocalID=0; LocalID<8; LocalID++ )
+         {
+            const int PID    = PID0 + LocalID;
+            const int GID    = PID  + PatchCount->GID_Offset[lv];
+            const int Disp_i = TABLE_02( LocalID, 'x', GhostSize, GhostSize+PS1 );
+            const int Disp_j = TABLE_02( LocalID, 'y', GhostSize, GhostSize+PS1 );
+            const int Disp_k = TABLE_02( LocalID, 'z', GhostSize, GhostSize+PS1 );
+
+            for (int k=0; k<PS1; k++)  {  K    = k + Disp_k;
+            for (int j=0; j<PS1; j++)  {  J    = j + Disp_j;
+                                          Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
+            for (int i=0; i<PS1; i++)  {
+               h_HasWaveCounterpart[TID][Idx1] = ELBDM_HasWaveCounterpart( i, j, k, GID, GID, GlobalTree );
+               Idx1 ++;
+            }}}
+
+         } // for (int LocalID=0; LocalID<8; LocalID++ )
+
+
+//       b. fill out the ghost zones of h_HasWaveCounterpart
+// ------------------------------------------------------------------------------------------------------------
+//       direct memory copy
+         for (int Side=0; Side<NSide; Side++)
+         {
+//          nothing to do if no ghost zone is required
+            if ( GhostSize == 0 )   break;
+
+            const int SibPID0 = Table_02( lv, PID0, Side );    // the 0th patch of the sibling patch group
+
+//          (b1) if the target sibling patch exists --> just copy data from the nearby patches at the same level
+            if ( SibPID0 >= 0 )
+            {
+               int loop[3], disp2[3];
+               for (int d=0; d<3; d++)
+               {
+                  loop [d] = TABLE_01( Side, 'x'+d, GhostSize, PS1, GhostSize );
+                  disp2[d] = TABLE_01( Side, 'x'+d, PS1-GhostSize, 0, 0 );
+               }
+
+               for (int Count=0; Count<TABLE_04( Side ); Count++)
+               {
+                  const int  LocalID = TABLE_03( Side, Count );
+                  const int  SibPID  = SibPID0 + LocalID;
+                  const long SibGID  = SibPID  + PatchCount->GID_Offset[lv];
+
+                  int disp[3];
+                  for (int d=0; d<3; d++)    disp[d] = Table_01( Side, 'x'+d, Count, GhostSize );
+
+                  for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
+                  for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
+                                                   Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
+                  for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
+                     h_HasWaveCounterpart[TID][Idx1] = false;//ELBDM_HasWaveCounterpart( I2, J2, K2, SibGID, SibGID, GlobalTree );
+                     Idx1 ++;
+                  }}}
+
+               } // for (int Count=0; Count<TABLE_04( Side ); Count++)
+            } // if ( SibPID0 >= 0 )
+         } // for (int Side=0; Side<NSide; Side++)
+      } // for (int TID=0; TID<NPG; TID++)
+   } // end of OpenMP parallel region
+}
+
+#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )

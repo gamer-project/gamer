@@ -20,7 +20,7 @@ extern real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 extern bool (*h_IsCompletelyRefined);
 #endif
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-extern bool (*h_HasWaveCounterpart)[ CUBE(PS2) ];
+extern bool (*h_HasWaveCounterpart)[ CUBE(HYB_NXT) ];
 #endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 

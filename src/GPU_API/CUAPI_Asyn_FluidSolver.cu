@@ -114,7 +114,7 @@ __global__ void CUFLU_ELBDMSolver_HamiltonJacobi( real g_Fluid_In [][FLU_NIN ][ 
                                                   #endif
                                                   real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
                                                   const bool h_IsCompletelyRefined[],
-                                                  const bool h_HasWaveCounterpart[][ CUBE(PS2) ],
+                                                  const bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ],
                                                   const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                                   const bool XYZ, const real MinDens );
 #endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
@@ -170,9 +170,9 @@ static bool                (*d_IsCompletelyRefined) = NULL;
 #endif // #if ( MODEL == ELBDM )
 
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-extern bool                (*d_HasWaveCounterpart)[ CUBE(PS2) ];
+extern bool                (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ];
 #else
-static bool                (*d_HasWaveCounterpart)[ CUBE(PS2) ] = NULL;
+static bool                (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ] = NULL;
 #endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
@@ -269,7 +269,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              const double h_Corner_Array[][3],
                              real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                              const bool h_IsCompletelyRefined[],
-                             const bool h_HasWaveCounterpart[][ CUBE(PS2) ],
+                             const bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ],
                              const int NPatchGroup, const real dt, const real dh,
                              const bool StoreFlux, const bool StoreElectric,
                              const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter,
@@ -468,7 +468,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
       Flu_MemSize_IsCompletelyRefined[s] = sizeof(bool)*NPatch_per_Stream[s];
 #     endif // # if ( MODEL == ELBDM )
 #     if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-      Flu_MemSize_HasWaveCounterpart[s]  = sizeof(bool)*NPatch_per_Stream[s]*CUBE(PS2);
+      Flu_MemSize_HasWaveCounterpart[s]  = sizeof(bool)*NPatch_per_Stream[s]*CUBE(HYB_NXT);
 #     endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
    }
 

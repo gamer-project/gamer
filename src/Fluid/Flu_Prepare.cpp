@@ -24,7 +24,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
                   real h_Pot_Array_USG_F[][ CUBE(USG_NXT_F) ],
                   double h_Corner_Array_F[][3],
                   bool h_IsCompletelyRefined[],
-                  bool h_HasWaveCounterpart[][ CUBE(PS2) ],
+                  bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ],
                   const int NPG, const int *PID0_List,
                   LB_GlobalPatch* GlobalTree, LB_PatchCount* PatchCount )
 {
@@ -138,11 +138,14 @@ void Flu_Prepare( const int lv, const double PrepTime,
    {
       if (h_IsCompletelyRefined[TID]) c1++;
    }
-   printf("%d out of %d PGs refined on lv %d\n", c1, NPG, lv);
+   //printf("%d out of %d PGs refined on lv %d\n", c1, NPG, lv);
 #  endif
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
    if ( !amr->use_wave_flag[lv] ) {
+      Prepare_PatchData_HasWaveCounterpart(lv, h_HasWaveCounterpart, HYB_GHOST_SIZE, NPG, PID0_List, NSIDE_26, GlobalTree, PatchCount);
+
+/*
 #     pragma omp parallel for schedule( runtime )
       for (int TID=0; TID<NPG; TID++)
       {
@@ -153,15 +156,22 @@ void Flu_Prepare( const int lv, const double PrepTime,
          for (int j=0; j<PS2; j++)
          for (int i=0; i<PS2; i++)
          {
-            const int t = IDX321( i, j, k, PS2, PS2 );
-            h_HasWaveCounterpart[TID][t] = ELBDM_HasWaveCounterpart( i, j, k, GID0, GlobalTree );
-            c1++;
-            if (h_HasWaveCounterpart[TID][t]) c2++;
+            const int t = IDX321( i + HYB_GHOST_SIZE, j + HYB_GHOST_SIZE, k + HYB_GHOST_SIZE, HYB_NXT, HYB_NXT );
+            int counter = 0;
+            for (int LocalPID = 0; LocalPID < 8; ++LocalPID)
+               if ( ELBDM_HasWaveCounterpart( i, j, k, GID0, GID0 + LocalPID, GlobalTree ))
+                  counter++;
+            bool flag = false;
+            if (counter > 0 )
+               flag = true;
+
+            if ( h_HasWaveCounterpart[TID][t] != flag )
+               printf("TID %d Counter %d i %d k %d j %d different!\n", TID, counter, i, k, j);
          }
-         if (c2 != 0)
-         printf("TID %ld Ratio %d / %d = %f\n", GID0, c1, c2, c1 / (float) c2);
       }
+   */
    }
+
 #  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 // validate input arrays for debugging purposes

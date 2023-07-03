@@ -49,7 +49,7 @@ extern bool (*d_IsCompletelyRefined);
 #endif // #if ( MODEL == ELBDM )
 
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-extern bool (*d_HasWaveCounterpart)[ CUBE(PS2) ];
+extern bool (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ];
 #endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
@@ -130,7 +130,7 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
 #  endif // #if ( MODEL == ELBDM )
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-   const long Flu_MemSize_HasWaveCounterpart  = sizeof(bool ) * Flu_NPG * CUBE(PS2);
+   const long Flu_MemSize_HasWaveCounterpart  = sizeof(bool ) * Flu_NPG * CUBE(HYB_NXT);
 #  endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )

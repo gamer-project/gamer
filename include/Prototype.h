@@ -88,7 +88,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const double h_Corner_Array[][3],
                       const real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                       const bool h_IsCompletelyRefined[],
-                      const bool h_HasWaveCounterpart[][ CUBE(PS2) ],
+                      const bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ],
                       const int NPatchGroup, const real dt, const real dh,
                       const bool StoreFlux, const bool StoreElectric,
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter,
@@ -155,7 +155,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
                   real h_Pot_Array_USG_F[][ CUBE(USG_NXT_F) ],
                   double h_Corner_Array_F[][3],
                   bool h_IsCompletelyRefined[],
-                  bool h_HasWaveCounterpart[][ CUBE(PS2) ],
+                  bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ],
                   const int NPG, const int *PID0_List, LB_GlobalPatch* GlobalTree, LB_PatchCount* PatchCount);
 void Flu_FixUp_Flux( const int lv );
 void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const int SonMagSg, const int FaMagSg,
@@ -192,6 +192,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         const NSide_t NSide, const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
                         const real MinDens, const real MinPres, const real MinTemp, const real MinEntr, const bool DE_Consistency );
 
+#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+void Prepare_PatchData_HasWaveCounterpart(  const int lv, bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ],
+                                            const int GhostSize, const int NPG, const int *PID0_List,
+                                            const NSide_t NSide, LB_GlobalPatch* GlobalTree, LB_PatchCount* PatchCount );
+#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 // Init
 void End_GAMER();
@@ -555,7 +560,7 @@ double ELBDM_GetTimeStep_Phase( const int lv );
 #if   ( ELBDM_SCHEME == ELBDM_HYBRID )
 double ELBDM_GetTimeStep_Hybrid( const int lv );        // for CFL condition of SPS in phase form
 double ELBDM_GetTimeStep_Velocity( const int lv );      // for velocity dependence of Hamilton-Jacobi equation
-bool   ELBDM_HasWaveCounterpart(int I, int J, int K, long GID0, LB_GlobalPatch* tree);
+bool   ELBDM_HasWaveCounterpart(int I, int J, int K, long GID0, long GID, LB_GlobalPatch* tree);
 #endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 //Flag for refining regions using wave solver
@@ -594,7 +599,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              const double h_Corner_Array[][3],
                              real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                              const bool h_IsCompletelyRefined[],
-                             const bool h_HasWaveCounterpart[][ CUBE(PS2) ],
+                             const bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ],
                              const int NPatchGroup, const real dt, const real dh,
                              const bool StoreFlux, const bool StoreElectric,
                              const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter,

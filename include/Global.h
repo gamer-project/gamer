@@ -399,7 +399,7 @@ extern real        *h_SrcDlepProf_Radius;
 extern bool        (*h_IsCompletelyRefined);
 #endif // #if ( MODEL == ELBDM )
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-extern bool       (*h_HasWaveCounterpart)[ CUBE(PS2) ];
+extern bool       (*h_HasWaveCounterpart)[ CUBE(HYB_NXT) ];
 #endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )

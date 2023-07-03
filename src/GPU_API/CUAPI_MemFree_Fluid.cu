@@ -43,7 +43,7 @@ extern bool (*d_IsCompletelyRefined);
 #endif // #if ( MODEL == ELBDM )
 
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-extern bool (*d_HasWaveCounterpart)[ CUBE(PS2) ];
+extern bool (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ];
 #endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )

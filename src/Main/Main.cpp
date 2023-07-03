@@ -332,7 +332,7 @@ real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 bool  (*h_IsCompletelyRefined)                                     = NULL;
 #endif // #if ( MODEL == ELBDM )
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-bool (*h_HasWaveCounterpart)[ CUBE(PS2) ]                          = NULL;
+bool (*h_HasWaveCounterpart)[ CUBE(HYB_NXT) ]                          = NULL;
 #endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 #ifdef GRAVITY
@@ -432,7 +432,7 @@ bool  (*d_IsCompletelyRefined)                                     = NULL;
 #endif // #if ( MODEL == ELBDM )
 
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-bool (*d_HasWaveCounterpart)[ CUBE(PS2) ]                          = NULL;
+bool (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ]                          = NULL;
 #endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
