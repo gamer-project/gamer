@@ -1961,10 +1961,7 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
 
    const real dt_dh2 = (real)0.5*dt/dh;
 
-   real Flux[6][NCOMP_TOTAL], dFlux;
-   real tt[6][NCOMP_LR];
-
-   for (int f=0; f<6; f++)  for (int v=0; v<NCOMP_LR; v++) tt[f][v] = fc[f][v];
+   real Flux[6][NCOMP_TOTAL_PLUS_MAG], dFlux;
 
 // calculate flux
    for (int f=0; f<6; f++)
@@ -1976,9 +1973,7 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
    {
       dFlux = dt_dh2*( Flux[1][v] - Flux[0][v] + Flux[3][v] - Flux[2][v] + Flux[5][v] - Flux[4][v] );
 
-      for (int f=0; f<6; f++) {
-         fc[f][v] = tt[f][v] - dFlux;
-      }
+      for (int f=0; f<6; f++)  fc[f][v] -= dFlux;
    }
 #  ifdef MHD
 // Update the magnetic field
