@@ -745,9 +745,9 @@ void MHD_ComputeElectric_Half(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                                const int NEle, const int NCon, const int OffsetCon )
 {
 #  ifdef GAMER_DEBUG
-   if ( NCon != FLU_NXT ) 
+   if ( NCon != FLU_NXT )
       printf("ERROR: NCon != FLU_NXT (NCon: %d, FLU_NXT: %d)\n", NCon, FLU_NXT);
-   if ( NEle != N_HF_ELE ) 
+   if ( NEle != N_HF_ELE )
       printf("ERROR: NEle != N_HF_ELE (NEle: %d, N_HF_ELE: %d)\n", NEle, N_HF_ELE);
 #  endif // # ifdef GAMER_DEBUG
 
@@ -764,7 +764,7 @@ void MHD_ComputeElectric_Half(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
       const int TB2   = TDir2 + MAG_OFFSET;  // B field  component along the transverse direction 2
 
       int idx_ele_e[2];
-      int sizeB_i, sizeB_j, sizeB_k; 
+      int sizeB_i, sizeB_j, sizeB_k;
 
       switch ( d )
       {
@@ -788,46 +788,46 @@ void MHD_ComputeElectric_Half(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
          const int j_ele    = idx % size_ij / idx_ele_e[0];
          const int k_ele    = idx / size_ij;
          const int idx_ele  = IDX321( i_ele, j_ele, k_ele, NEle, NEle );
-         
+
          const int i_con    = i_ele + OffsetCon;
          const int j_con    = j_ele + OffsetCon;
          const int k_con    = k_ele + OffsetCon;
          const int idx_con  = IDX321( i_con, j_con, k_con, NCon, NCon );
-         
+
          const int i_B1    = i_con;
          const int j_B1    = j_con;
          const int k_B1    = k_con;
          const int idx_B1  = IDX321( i_B1, j_B1, k_B1, sizeB_k, sizeB_i );
-         
+
          const int i_B2    = i_B1;
          const int j_B2    = j_B1;
          const int k_B2    = k_B1;
          const int idx_B2  = IDX321( i_B2, j_B2, k_B2, sizeB_j, sizeB_k );
-      
+
          const int didx_B1 [3] = { 1, sizeB_k, sizeB_k*sizeB_i };
          const int didx_B2 [3] = { 1, sizeB_j, sizeB_j*sizeB_k };
 
          real V1, V2, B1, B2;
-         
+
          // get the veolcity average
-         V1 = (real)0.25 * ( 
-              g_ConVar[TV1][ idx_con                                     ] / g_ConVar[DENS][ idx_con                                     ] + 
+         V1 = (real)0.25 * (
+              g_ConVar[TV1][ idx_con                                     ] / g_ConVar[DENS][ idx_con                                     ] +
               g_ConVar[TV1][ idx_con - didx_con[TDir1]                   ] / g_ConVar[DENS][ idx_con - didx_con[TDir1]                   ] +
-              g_ConVar[TV1][ idx_con - didx_con[TDir2]                   ] / g_ConVar[DENS][ idx_con - didx_con[TDir2]                   ] + 
+              g_ConVar[TV1][ idx_con - didx_con[TDir2]                   ] / g_ConVar[DENS][ idx_con - didx_con[TDir2]                   ] +
               g_ConVar[TV1][ idx_con - didx_con[TDir1] - didx_con[TDir2] ] / g_ConVar[DENS][ idx_con - didx_con[TDir1] - didx_con[TDir2] ] );
-         V2 = (real)0.25 * ( 
-              g_ConVar[TV2][ idx_con                                     ] / g_ConVar[DENS][ idx_con                                     ] + 
-              g_ConVar[TV2][ idx_con - didx_con[TDir2]                   ] / g_ConVar[DENS][ idx_con - didx_con[TDir2]                   ] + 
-              g_ConVar[TV2][ idx_con - didx_con[TDir1]                   ] / g_ConVar[DENS][ idx_con - didx_con[TDir1]                   ] + 
+         V2 = (real)0.25 * (
+              g_ConVar[TV2][ idx_con                                     ] / g_ConVar[DENS][ idx_con                                     ] +
+              g_ConVar[TV2][ idx_con - didx_con[TDir2]                   ] / g_ConVar[DENS][ idx_con - didx_con[TDir2]                   ] +
+              g_ConVar[TV2][ idx_con - didx_con[TDir1]                   ] / g_ConVar[DENS][ idx_con - didx_con[TDir1]                   ] +
               g_ConVar[TV2][ idx_con - didx_con[TDir2] - didx_con[TDir1] ] / g_ConVar[DENS][ idx_con - didx_con[TDir2] - didx_con[TDir1] ] );
-         
+
          // get the magnetic field average
          B1 = (real)0.5 * ( g_FC_B[TDir1][ idx_B1 - didx_B1[TDir2] ] + g_FC_B[TDir1][ idx_B1 ] );
          B2 = (real)0.5 * ( g_FC_B[TDir2][ idx_B2 - didx_B2[TDir1] ] + g_FC_B[TDir2][ idx_B2 ] );
 
 //       store the electric field of all cells in g_EC_Ele[]
          g_EC_Ele[d][idx_ele] = V1*B2 - V2*B1;
-         
+
       } // CGPU_LOOP( idx_ele, idx_ele_e[0]*idx_ele_e[1]*idx_ele_e[2] )
    } // for ( int d=0; d<3; d++)
 
@@ -844,7 +844,7 @@ void MHD_ComputeElectric_Half(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
 // Function    :  MHD_UpdataMagnetic_Half
 // Description :  Update magnetic field with the constrained transport algorithm
 //
-// Note        :  1. 
+// Note        :  1.
 //                2. g_FC_Bx/y/z_Out[] are accessed with a stride "NOut"
 //                   g_FC_B_In[] has the size of FLU_NXT_P1^3 and is also accessed with the same stride
 //                   g_EC_Ele[] has the size of N_EC_ELE^3 but is accessed with a stride "NEle"
@@ -874,36 +874,21 @@ void MHD_UpdateMagnetic_Half( real fc[][NCOMP_LR],
    const real dt_dh2      = (real)0.5 * dt/dh;
    const int NEleM1      = NEle - 1;
    const int fL = 0, fR = 1;
-  
-   // TODO: This was the original index calculation. Since the compiler issue, we not calculate the index inside function, but the issue still hold.
-   // const int size_ij = SQR( NCon );
-   // const int idx_i   = idx_cc % NCon;
-   // const int idx_j   = idx_cc % size_ij / NCon;
-   // const int idx_k   = idx_cc / size_ij;
 
    const int idx_E = IDX321( idx_i-NGhost, idx_j-NGhost, idx_k-NGhost, NEle, NEle );
    const int didx_E [3] = { 1, NEle, SQR(NEle) };
 
    // 1. calculate the source terms of magnetic field at each faces
    real B_source[2][3];
-   real dE1, dE2;
-   for ( int d=0; d<3; d++) 
+   for ( int d=0; d<3; d++)
    {
       const int TDir1 = (d+1)%3;    // transverse direction 1
       const int TDir2 = (d+2)%3;    // transverse direction 2
-      
-      dE1  = g_EC_Ele[TDir2][ idx_E + didx_E[TDir1] ] ;
-      dE1 -= g_EC_Ele[TDir2][ idx_E ] ;
 
-      dE2 = g_EC_Ele[TDir1][ idx_E + didx_E[TDir2] ] - g_EC_Ele[TDir1][ idx_E ] ;
-      
-      B_source[fL][d] = dE1 * dt_dh2 - dE2 * dt_dh2 ;
+      B_source[fL][d] = ( g_EC_Ele[TDir2][ idx_E + didx_E[TDir1] ] - g_EC_Ele[TDir2][ idx_E ] ) * dt_dh2 -
+                        ( g_EC_Ele[TDir1][ idx_E + didx_E[TDir2] ] - g_EC_Ele[TDir1][ idx_E ] ) * dt_dh2 ;
 
-      // TODO: The code should be in this version. 
-      // B_source[fL][d] = ( g_EC_Ele[TDir2][ idx_E + didx_E[TDir1] ] - g_EC_Ele[TDir2][ idx_E ] ) * dt_dh2 -
-      //                   ( g_EC_Ele[TDir1][ idx_E + didx_E[TDir2] ] - g_EC_Ele[TDir1][ idx_E ] ) * dt_dh2 ;
-
-      B_source[fR][d] = ( g_EC_Ele[TDir2][ idx_E + didx_E[TDir1] + didx_E[d] ] - g_EC_Ele[TDir2][ idx_E + didx_E[d] ] ) * dt_dh2 - 
+      B_source[fR][d] = ( g_EC_Ele[TDir2][ idx_E + didx_E[TDir1] + didx_E[d] ] - g_EC_Ele[TDir2][ idx_E + didx_E[d] ] ) * dt_dh2 -
                         ( g_EC_Ele[TDir1][ idx_E + didx_E[TDir2] + didx_E[d] ] - g_EC_Ele[TDir1][ idx_E + didx_E[d] ] ) * dt_dh2 ;
    }
 
@@ -913,7 +898,7 @@ void MHD_UpdateMagnetic_Half( real fc[][NCOMP_LR],
       const int faceR = faceL+1;
       const int TDir1 = (d+1)%3;    // transverse direction 1
       const int TDir2 = (d+2)%3;    // transverse direction 2
-      
+
       // 2-a. update the normal magnetic field
       fc[faceL][MAG_OFFSET+d] += B_source[fL][d];
       fc[faceR][MAG_OFFSET+d] += B_source[fR][d];
