@@ -62,6 +62,7 @@ long ELBDM_FindRefinedGID(int I, int J, int K, long GID0, long GID, LB_GlobalPat
    long FaGID  = GID;
    long SonGID = Tree[FaGID].son;
 
+   printf("I %d J %d K %d %ld %ld\n", I, J, K, FaGID, SonGID);
 
 // traverse the tree up until leave nodes
    while ( SonGID != -1 ) {
