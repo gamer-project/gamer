@@ -79,7 +79,8 @@ long ELBDM_FindRefinedGID(int I, int J, int K, long GID0, long GID, LB_GlobalPat
 #        ifdef GAMER_DEBUG
          else if ( LocalPID == 7 )
          {
-            Aux_Error(ERROR_INFO, "{I, J, K} in father patch, but not in any son patch!!\n");
+            Aux_Error(ERROR_INFO, "Global coordinates {%d, %d, %d} in father patch (GID = %ld, lv = %d), but not in any son patch (GID = %ld, lv = %d)!!\n",
+            Coordinates[0], Coordinates[1], Coordinates[2], FaGID, Tree[FaGID].level, SonGID, Tree[SonGID].level);
          }
 #        endif
       }
@@ -109,12 +110,12 @@ long ELBDM_FindRefinedGID(int I, int J, int K, long GID0, long GID, LB_GlobalPat
 
    if (Tree[AncestorGID].level != Tree[GID].level)
    {
-      Aux_Error(ERROR_INFO, "GID and Ancestor on different levels!!\n");
+      Aux_Error(ERROR_INFO, "GID (%ld) and Ancestor (%ld) on different levels!!\n", GID, AncestorGID);
    }
 
    if (AncestorGID != GID)
    {
-      Aux_Error(ERROR_INFO, "GID and Ancestor are not related!!\n");
+      Aux_Error(ERROR_INFO, "GID (GID = %ld, lv = %d) and Ancestor (%ld) are not related!!\n", GID, Tree[GID].level, AncestorGID);
    }
 
 #  endif
