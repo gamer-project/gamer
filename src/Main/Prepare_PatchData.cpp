@@ -3591,7 +3591,7 @@ void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpa
                   for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
                                                    Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
                   for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
-                     h_HasWaveCounterpart[TID][Idx1] = false;//ELBDM_HasWaveCounterpart( I2, J2, K2, SibGID, SibGID, GlobalTree );
+                     h_HasWaveCounterpart[TID][Idx1] = ELBDM_HasWaveCounterpart( I2, J2, K2, SibGID, SibGID, GlobalTree );
                      Idx1 ++;
                   }}}
 

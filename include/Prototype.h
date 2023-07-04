@@ -561,6 +561,7 @@ double ELBDM_GetTimeStep_Phase( const int lv );
 double ELBDM_GetTimeStep_Hybrid( const int lv );        // for CFL condition of SPS in phase form
 double ELBDM_GetTimeStep_Velocity( const int lv );      // for velocity dependence of Hamilton-Jacobi equation
 bool   ELBDM_HasWaveCounterpart(int I, int J, int K, long GID0, long GID, LB_GlobalPatch* tree);
+long   ELBDM_FindRefinedGID(int I, int J, int K, long GID0, long GID, LB_GlobalPatch* tree);
 #endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 //Flag for refining regions using wave solver
