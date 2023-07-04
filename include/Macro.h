@@ -805,7 +805,8 @@
 #endif
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 #  define HYB_NXT       ( PS2 + 2*HYB_GHOST_SIZE )
-#  define HYB_NXT_P1    ( HYB_NXT + 1 )
+#  else
+#  define HYB_NXT       ( 1 )
 #  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 // size of auxiliary arrays and EoS tables
