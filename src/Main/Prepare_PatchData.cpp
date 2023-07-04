@@ -3537,6 +3537,11 @@ void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpa
       {
          PID0 = PID0_List[TID];
 
+//       0. reset h_HasWaveCounterpart
+         for (int i=0; i<CUBE(HYB_NXT); i++)  {
+               h_HasWaveCounterpart[TID][i] = false;
+         }
+
 //       a. fill out the central region of h_HasWaveCounterpart
 // ------------------------------------------------------------------------------------------------------------
          for (int LocalID=0; LocalID<8; LocalID++ )
@@ -3581,8 +3586,7 @@ void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpa
                for (int Count=0; Count<TABLE_04( Side ); Count++)
                {
                   const int  LocalID = TABLE_03( Side, Count );
-                  const int  SibPID  = SibPID0 + LocalID;
-                  const long SibGID  = SibPID  + PatchCount->GID_Offset[lv];
+                  const long SibGID  = SibPID0 + LocalID + PatchCount->GID_Offset[lv];
 
                   int disp[3];
                   for (int d=0; d<3; d++)    disp[d] = Table_01( Side, 'x'+d, Count, GhostSize );

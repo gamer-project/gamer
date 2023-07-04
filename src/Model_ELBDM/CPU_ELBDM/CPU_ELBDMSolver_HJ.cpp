@@ -1,6 +1,8 @@
 #include "Macro.h"
 #include "CUFLU.h"
 
+#include "stdio.h"
+
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 // convert to 1D index with ghost boundary
@@ -356,22 +358,34 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
       for (int bx=0; bx<NPatchGroup; bx++)
 #     endif
       {
-
+/*
 #        ifdef GAMER_DEBUG
-         /*int c1 = 0, c2 = 0;
-         for (int k=HYB_GHOST_SIZE; k<HYB_NXT-HYB_GHOST_SIZE; k++)
-         for (int j=HYB_GHOST_SIZE; j<HYB_NXT-HYB_GHOST_SIZE; j++)
-         for (int i=HYB_GHOST_SIZE; i<HYB_NXT-HYB_GHOST_SIZE; i++)
+if (XYZ == 0)
+{
+         int counter = 0;
+         for (int k=0; k<CUBE(HYB_NXT); k++)
          {
-            const int t1 = to1D1( i, j, k );
-            const int t2 = to1D2( i, j, k );
-            c1++;
-            if (g_HasWaveCounterpart[bx][t1]) c2++;
-            g_Fluid_Out[bx][STUB][t2] = g_HasWaveCounterpart[bx][t1];
+            if (g_HasWaveCounterpart[bx][k]) counter++;
          }
-         if (c2 != 0)
-         printf("My bx %d Ratio %d / %d = %f\n", bx, c1, c2, c1 / (float) c2);*/
-#        endif
+
+         printf("PG with bx = %d counter %d\n", bx, counter);
+         int i = 10;
+         for (int j=0; j<HYB_NXT; j++)
+         {
+            for (int k=0; k<HYB_NXT; k++)
+            {
+               const int t1 = to1D1( i, j, k );
+
+               if (g_HasWaveCounterpart[bx][t1])
+                  printf("X ");
+               else
+                  printf("O ");
+            }
+            printf("\n");
+         }
+         printf("\n\n");
+}
+#        endif*/
 
          uint Column0 = 0;                // the total number of columns that have been updated
          uint Idx, Idx1, Idx2;            // temporary indices used for indexing column updates, writing data to g_Fluid_In, g_Fluid_Out
@@ -571,9 +585,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 //                apply the the minimum density check
                   //De_New = (De_New < MinDens) ? MinDens : De_New;
                   if ( De_New < 0 || De_New != De_New || Ph_New != Ph_New ) {
-                     //printf("Patatatam: tl %d wave %d de_n %f ph_n %f NewRg %f von ", time_level,s_HasWaveCounterpart[sj][si], De_New, Ph_New, QP);
-                     //printf("%f %f %f %f %f \t %f %f %f %f %f\n", s_In[sj][0][DENS][si-2], s_In[sj][0][DENS][si-1], s_In[sj][0][DENS][si], s_In[sj][0][DENS][si+1], s_In[sj][0][DENS][si+2],
-                     //s_In[sj][0][PHAS][si-2], s_In[sj][0][PHAS][si-1], s_In[sj][0][PHAS][si], s_In[sj][0][PHAS][si+1], s_In[sj][0][PHAS][si+2]);
+                     printf("Patatatam: tl %d si %d wave %d de_n %f ph_n %f NewRg %f von ", time_level, si, s_HasWaveCounterpart[sj][si], De_New, Ph_New, QP);
+                     printf("%f %f %f %f %f \t %f %f %f %f %f\n", s_In[sj][0][DENS][si-2], s_In[sj][0][DENS][si-1], s_In[sj][0][DENS][si], s_In[sj][0][DENS][si+1], s_In[sj][0][DENS][si+2],
+                     s_In[sj][0][PHAS][si-2], s_In[sj][0][PHAS][si-1], s_In[sj][0][PHAS][si], s_In[sj][0][PHAS][si+1], s_In[sj][0][PHAS][si+2]);
                      De_New        = s_In[sj][0][DENS][si];
                      Ph_New        = s_In[sj][0][PHAS][si];
 
