@@ -110,6 +110,7 @@ struct LB_GlobalTree : private NonCopyable
    int  Local2Global(int I, int XYZ, long GID) const;
    bool IsInsidePatch(int X, int Y, int Z, long GID) const;
    long FindRefinedCounterpart(int X, int Y, int Z, long GID, int MaxLv = NLEVEL) const;
+   const LB_GlobalPatch* GetPatch(long GID)  const;
 
 private:
    LB_PatchCount   PatchCount;
