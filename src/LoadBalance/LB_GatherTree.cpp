@@ -871,20 +871,11 @@ long LB_GlobalTree::FindRefinedCounterpart(int X, int Y, int Z, long GID, int Ma
 
 #  ifdef GAMER_DEBUG
 // sanity check
-   if (GID0 == -1)
-   {
-      Aux_Error(ERROR_INFO, "GID0 == -1 !!\n");
-   }
    if (GID == -1)
    {
       Aux_Error(ERROR_INFO, "GID  == -1!\n");
    }
    if (GID >= NPatch)
-   {
-      Aux_Error(ERROR_INFO, "GID (%ld) >= NPatch (%ld)!\n", GID, NPatch);
-   }
-
-   if (GID0 >= NPatch)
    {
       Aux_Error(ERROR_INFO, "GID (%ld) >= NPatch (%ld)!\n", GID, NPatch);
    }
