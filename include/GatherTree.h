@@ -112,6 +112,8 @@ struct LB_GlobalTree : private NonCopyable
    long FindRefinedCounterpart(int X, int Y, int Z, long GID, int MaxLv = NLEVEL) const;
    const LB_GlobalPatch* GetPatch(long GID) const;
    const LB_GlobalPatch& operator[](long) const;
+   const LB_PatchCount&  GetLBPatchCount() const;
+   long PID2GID(int PID, int lv) const;
 
 private:
    LB_PatchCount   PatchCount;

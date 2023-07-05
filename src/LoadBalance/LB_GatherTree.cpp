@@ -999,3 +999,13 @@ const LB_GlobalPatch& LB_GlobalTree::operator[](long GID) const
 {
    return *GetPatch(GID);
 }
+
+const LB_PatchCount&  LB_GlobalTree::GetLBPatchCount() const
+{
+   return PatchCount;
+}
+
+long LB_GlobalTree::PID2GID(int PID, int lv) const
+{
+   return PID + PatchCount.GID_Offset[lv];
+}
