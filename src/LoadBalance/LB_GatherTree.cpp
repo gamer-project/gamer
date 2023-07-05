@@ -772,12 +772,33 @@ LB_GlobalPatch* LB_GatherTree( LB_PatchCount& pc, int root ) {
 
 LB_GlobalTree::LB_GlobalTree(int root) : PatchCount(), Patches(NULL)
 {
-   Patches = LB_GatherTree(PatchCount, root);
+
+// get patch counts per level and per rank from all ranks
+   LB_AllgatherPatchCount( PatchCount );
+
+// set up local and global exchange lists
+   LocalPatchExchangeList  = new LB_LocalPatchExchangeList;
+   GlobalPatchExchangeList = new LB_GlobalPatchExchangeList( PatchCount, root );
+
+// exchange load balance id's between all ranks
+   LB_AllgatherLBIdx( PatchCount, *LocalPatchExchangeList, GlobalPatchExchangeList );
+
+// fill local patch lists with information from patches
+   LB_FillLocalPatchExchangeList( PatchCount, *LocalPatchExchangeList );
+
+// exchange local patch information with other ranks
+   LB_FillGlobalPatchExchangeList( PatchCount, *LocalPatchExchangeList, *GlobalPatchExchangeList, root );
+
+// construct and return vector with global tree information
+   Patches = LB_ConstructGlobalTree( PatchCount, *GlobalPatchExchangeList, root );
+
    NPatch  = PatchCount.NPatchAllLv;
 }
 
 LB_GlobalTree::~LB_GlobalTree()
 {
+   delete LocalPatchExchangeList;
+   delete GlobalPatchExchangeList;
    delete [] Patches;
 }
 
@@ -962,13 +983,13 @@ long LB_GlobalTree::FindRefinedCounterpart(int X, int Y, int Z, long GID, int Ma
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_GlobalTree::GetPatch
-// Description :  Return pointer to local patch object with GID
+// Description :  Return constant reference to local patch object with GID
 //
 // Parameter   :  GID  : global ID of patch
 //
-// Return      :  Constant pointer to LB_LocalPatch
+// Return      :  Constant reference to LB_LocalPatch
 //-------------------------------------------------------------------------------------------------------
-const LB_GlobalPatch* LB_GlobalTree::GetPatch(long GID)  const
+const LB_GlobalPatch& LB_GlobalTree::GetPatch(long GID)  const
 {
 // sanity check
 #  ifdef GAMER_DEBUG
@@ -983,20 +1004,77 @@ const LB_GlobalPatch* LB_GlobalTree::GetPatch(long GID)  const
 #  endif
 
 
-   return &Patches[GID];
-} // LB_GlobalTree::GetPatch
+   return Patches[GID];
+} // FUNCTION : LB_GlobalTree::GetPatch
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  LB_GlobalTree::operator[]
+// Description :  Alias for GetPatch
+//
+// Parameter   :  GID  : global ID of patch
+//
+// Return      :  Constant reference to LB_LocalPatch
+//-------------------------------------------------------------------------------------------------------
 const LB_GlobalPatch& LB_GlobalTree::operator[](long GID) const
 {
-   return *GetPatch(GID);
-}
+   return GetPatch(GID);
+} // FUNCTION : LB_GlobalTree::operator[]
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  LB_GlobalTree::GetLBPatchCount
+// Description :  Return constant reference to LB_PatchCount object
+//
+// Return      :  Constant reference to LB_PatchCount object
+//-------------------------------------------------------------------------------------------------------
 const LB_PatchCount&  LB_GlobalTree::GetLBPatchCount() const
 {
    return PatchCount;
-}
+} // FUNCTION : LB_GlobalTree::GetLBPatchCount
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  LB_GlobalTree::PID2GID
+// Description :  Given PID and lv, return GID
+//
+// Return      :  GID
+//-------------------------------------------------------------------------------------------------------
 long LB_GlobalTree::PID2GID(int PID, int lv) const
 {
+   if ( PID < 0 )
+   {
+      return PID;
+   }
+// patch is a real patch
+   else if ( PID < amr->NPatchComma[lv][1] )
+   {
+      return PID + PatchCount.GID_Offset[lv];
+   }
+// sibling patch is a buffer patch (which may lie outside the simulation domain)
+   else
+   {
+      int   MatchIdx;
+      long  LBIdx;
+      int  *Cr=NULL;
+
+#     ifdef GAMER_DEBUG
+      if ( PID >= amr->num[lv] )
+      Aux_Error( ERROR_INFO, "Lv %d, PID %d >= total number of patches %d !!\n",
+                 lv, PID, amr->num[lv] );
+#     endif
+
+//    get the GID by "corner -> LB_Idx -> GID"
+      Cr    = amr->patch[0][lv][PID]->corner;
+      LBIdx = LB_Corner2Index( lv, Cr, CHECK_OFF );   // periodicity has been assumed here
+
+      Mis_Matching_int( NPatchTotal[lv], LocalPatchExchangeList->LBIdxList_Sort[lv], 1, &LBIdx, &MatchIdx );
+
+#     ifdef GAMER_DEBUG
+      if ( MatchIdx < 0 )
+      Aux_Error( ERROR_INFO, "Lv %d, PID %d, LBIdx %ld, couldn't find a matching patch !!\n",
+                 lv, PID, LBIdx );
+#     endif
+
+      return LocalPatchExchangeList->LBIdxList_Sort_IdxTable[lv][MatchIdx] + PatchCount.GID_LvStart[lv];
+   } // if ( PID >= amr->NPatchComma[lv][1] )
+
    return PID + PatchCount.GID_Offset[lv];
-}
+} // FUNCTION : LB_GlobalTree::PID2GID
