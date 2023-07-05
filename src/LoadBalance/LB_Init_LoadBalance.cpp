@@ -5,6 +5,7 @@
 
 
 static void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool RemoveParFromRepo, const bool SendGridData );
+static void LB_SortRealPatch( const int lv );
 #ifdef PARTICLE
 static void LB_RedistributeParticle_Init( real **ParAtt_Old );
 static void LB_RedistributeParticle_End( real **ParAtt_Old );
@@ -25,31 +26,37 @@ static void LB_RedistributeParticle_End( real **ParAtt_Old );
 //                6. NPatchTotal[] and NPatchComma[] must be prepared in advance
 //                7. Particles will also be redistributed
 //
-// Parameter   :  Redistribute : true  --> Redistribute all real patches according to the load-balance weighting of
-//                                         each patch and initialize all load-balance related set-up
-//                               false --> Initialize all load-balance related set-up, but do NOT invoke LB_SetCutPoint()
-//                                         and LB_RedistributeRealPatch() to redistribute all real patches
-//                                     --> Currently it is used only during the RESTART process since we already call
-//                                         LB_SetCutPoint() and load real patches accordingly when calling Init_ByRestart_*()
-//                SendGridData : Transfer grid data
-//                               --> Set to false by Init_ByFile() to reduce memory consumption
-//                               --> Useless when Redistribute==false
-//                ParWeight    : Relative load-balance weighting of particles
-//                               --> Weighting of each patch is estimated as "PATCH_SIZE^3 + NParThisPatch*ParWeight"
-//                               --> <= 0.0 : do not consider particle weighting
-//                                            --> Currently we force ParWeight==0.0 when calling LB_Init_LoadBalance()
-//                                                for the first time during the restart process since we don't have enough
-//                                                information for calculating particle weighting at that time
-//                                            --> For example, Par_LB_CollectParticle2OneLevel() invoked by
-//                                                LB_EstimateWorkload_AllPatchGroup() needs amr->LB->IdxList_Real[], which
-//                                                will be constructed only AFTER calling LB_Init_LoadBalance()
-//                Reset        : Call LB->reset() to reset the load-balance variables on the target level(s)
-//                               --> Note that CutPoint[] will NOT be reset even when "Reset == true"
-//                TLv          : Target refinement level(s)
-//                               --> 0~TOP_LEVEL : only apply to a specific level
-//                                   <0          : apply to all levels
+// Parameter   :  Redistribute  : true  --> Redistribute all real patches according to the load-balance weighting of
+//                                          each patch and initialize all load-balance related set-up
+//                                false --> Initialize all load-balance related set-up, but do NOT invoke LB_SetCutPoint()
+//                                          and LB_RedistributeRealPatch() to redistribute all real patches
+//                                      --> Currently it is used only during the RESTART process since we already call
+//                                          LB_SetCutPoint() and load real patches accordingly when calling Init_ByRestart_*()
+//                SendGridData  : Transfer grid data
+//                                --> Set to false by Init_ByFile() to reduce memory consumption
+//                                --> Useless when Redistribute==false
+//                ParWeight     : Relative load-balance weighting of particles
+//                                --> Weighting of each patch is estimated as "PATCH_SIZE^3 + NParThisPatch*ParWeight"
+//                                --> <= 0.0 : do not consider particle weighting
+//                                             --> Currently we force ParWeight==0.0 when calling LB_Init_LoadBalance()
+//                                                 for the first time during the restart process since we don't have enough
+//                                                 information for calculating particle weighting at that time
+//                                             --> For example, Par_LB_CollectParticle2OneLevel() invoked by
+//                                                 LB_EstimateWorkload_AllPatchGroup() needs amr->LB->IdxList_Real[], which
+//                                                 will be constructed only AFTER calling LB_Init_LoadBalance()
+//                Reset         : Call LB->reset() to reset the load-balance variables on the target level(s)
+//                                --> Note that CutPoint[] will NOT be reset even when "Reset == true"
+//                SortRealPatch : Sort real patches by load-balance indices to improve bitwise reproducibility during restart
+//                                --> Ensure the order of real patches in the snapshot and after restart is the same when using
+//                                    the same number of MPI processes
+//                                --> Controlled by the runtime parameter OPT__SORT_PATCH_BY_LBIDX
+//                                --> Work even for Redistribute==false
+//                TLv           : Target refinement level(s)
+//                                --> 0~TOP_LEVEL : only apply to a specific level
+//                                    <0          : apply to all levels
 //-------------------------------------------------------------------------------------------------------
-void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, const double ParWeight, const bool Reset, const int TLv )
+void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, const double ParWeight, const bool Reset,
+                          const bool SortRealPatch, const int TLv )
 {
 
    if ( MPI_Rank == 0 )
@@ -141,15 +148,19 @@ void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, cons
       if ( Redistribute )
       LB_RedistributeRealPatch( lv, ParAtt_Old, (TLv<0)?RemoveParFromRepo_No:RemoveParFromRepo_Yes, SendGridData );
 
-//    3.2 allocate sibling-buffer patches at lv
+//    3.2 sort real patches
+      if ( SortRealPatch )
+      LB_SortRealPatch( lv );
+
+//    3.3 allocate sibling-buffer patches at lv
       LB_AllocateBufferPatch_Sibling( lv );
 
-//    3.3 allocate father-buffer patches at lv
+//    3.4 allocate father-buffer patches at lv
 //        --> only necessary when applying LB_Init_LoadBalance() to a single level
       if ( TLv >= 0  &&  lv < TOP_LEVEL )
       LB_AllocateBufferPatch_Father( lv+1, true, NULL_INT, NULL, false, NULL, NULL );
 
-//    3.4 allocate father-buffer patches at lv-1
+//    3.5 allocate father-buffer patches at lv-1
       if ( lv > 0 )
       LB_AllocateBufferPatch_Father( lv,   true, NULL_INT, NULL, false, NULL, NULL );
 
@@ -831,8 +842,8 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 
 // 7. record LB_IdxList_Real
 // ==========================================================================================
-   if ( amr->LB->IdxList_Real         [lv] != NULL )  delete [] amr->LB->IdxList_Real         [lv];
-   if ( amr->LB->IdxList_Real_IdxTable[lv] != NULL )  delete [] amr->LB->IdxList_Real_IdxTable[lv];
+   delete [] amr->LB->IdxList_Real         [lv];
+   delete [] amr->LB->IdxList_Real_IdxTable[lv];
 
    amr->LB->IdxList_Real         [lv] = new long [NRecv_Total_Patch];
    amr->LB->IdxList_Real_IdxTable[lv] = new int  [NRecv_Total_Patch];
@@ -868,6 +879,107 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 #  endif
 
 } // FUNCTION : LB_RedistributeRealPatch
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  LB_SortRealPatch
+// Description :  Sort real patches on the target level according to their load-balance indices
+//
+// Note        :  1. Must be called before allocating any buffer patches
+//                2. It will reset amr->LB->IdxList_Real[lv] and amr->LB->IdxList_Real_IdxTable[lv]
+//
+// Parameter   :  lv : Target refinement level
+//-------------------------------------------------------------------------------------------------------
+void LB_SortRealPatch( const int lv )
+{
+
+   const int NReal = amr->NPatchComma[lv][1];
+
+// check: there must be no buffer patches
+   if ( NReal != amr->num[lv] )
+      Aux_Error( ERROR_INFO, "NReal (%d) != amr->num[%d] (%d) !!\n", NReal, lv, amr->num[lv] );
+
+
+// 1. back up patch pointers
+   patch_t *(*patch_ptr)[2] = new patch_t* [NReal][2];
+
+   for (int PID=0; PID<NReal; PID++)
+   for (int Sg=0; Sg<2; Sg++)
+      patch_ptr[PID][Sg] = amr->patch[Sg][lv][PID];
+
+
+// 2. sort real patches by LB_Idx
+//    --> use patch groups instead of patches as the sorting unit since we must fix the order of patches
+//        within the same patch group
+//    --> HILBERT guarantees patches within the same patch group have consecutive LB_Idx
+#  if ( defined LOAD_BALANCE  &&  LOAD_BALANCE != HILBERT )
+#  warning : validate the adopted LOAD_BALANCE scheme supports the following code !!
+#  endif
+   for (int NewPID0=0; NewPID0<NReal; NewPID0+=8)
+   {
+      int OldPID0 = amr->LB->IdxList_Real_IdxTable[lv][NewPID0];
+      OldPID0 = OldPID0 - OldPID0%8;
+
+      for (int LocalID=0; LocalID<8; LocalID++)
+      for (int Sg=0; Sg<2; Sg++)
+         amr->patch[Sg][lv][NewPID0+LocalID] = patch_ptr[OldPID0+LocalID][Sg];
+   }
+
+   delete [] patch_ptr;
+
+
+// 3. reset amr->LB->IdxList_Real[lv] and amr->LB->IdxList_Real_IdxTable[lv]
+// --> better still reallocate memory since LB_RedistributeRealPatch() is not called when Redistribute==false
+   delete [] amr->LB->IdxList_Real         [lv];
+   delete [] amr->LB->IdxList_Real_IdxTable[lv];
+
+   amr->LB->IdxList_Real         [lv] = new long [NReal];
+   amr->LB->IdxList_Real_IdxTable[lv] = new int  [NReal];
+
+   for (int PID=0; PID<NReal; PID++)   amr->LB->IdxList_Real[lv][PID] = amr->patch[0][lv][PID]->LB_Idx;
+
+   Mis_Heapsort( NReal, amr->LB->IdxList_Real[lv], amr->LB->IdxList_Real_IdxTable[lv] );
+
+
+// 4. check
+#  ifdef GAMER_DEBUG
+// 4-1. order of patches with LocalID==0
+   for (int PID0=8; PID0<NReal; PID0+=8)
+   {
+      const long LBIdx1 = amr->patch[0][lv][PID0  ]->LB_Idx;
+      const long LBIdx2 = amr->patch[0][lv][PID0-8]->LB_Idx;
+
+      if ( LBIdx1 <= LBIdx2 )    Aux_Error( ERROR_INFO, "LB_Idx %ld <= %ld (lv %d, PID1 %d, PID2 %d) !!\n",
+                                            LBIdx1, LBIdx2, lv, PID0, PID0-8 );
+   }
+
+// 4-2. order of patches within each patch group
+   const int PScale = PS1*amr->scale[lv];
+
+   for (int PID0=0; PID0<NReal; PID0+=8)
+   for (int LocalID=1; LocalID<8; LocalID++)
+   {
+      const int PID1 = PID0 + LocalID;
+
+      for (int d=0; d<3; d++)
+      {
+         const int corner0 = amr->patch[0][lv][PID0]->corner[d];
+         const int corner1 = amr->patch[0][lv][PID1]->corner[d];
+         const int offset = TABLE_02( LocalID, 'x'+d, 0, PScale );
+
+         if ( corner1 != corner0 + offset )
+         {
+            Output_Patch( lv, PID0, 0, 0, 0, "WrongOrder" );
+            Output_Patch( lv, PID1, 0, 0, 0, "WrongOrder" );
+            Aux_Error( ERROR_INFO, "incorrect order of local patches (lv %d, PID0 %d, PID1 %d, d %d, corner0 %d, corner1 %d, offset %d)\n"
+                       "        --> Check the files Patch_*_WrongOrder !!\n", lv, PID0, PID1, d, corner0, corner1, offset );
+         }
+      }
+   } // for (int LocalID=1; LocalID<8; LocalID++)
+#  endif // #ifdef GAMER_DEBUG
+
+} // FUNCTION : LB_SortRealPatch
 
 
 

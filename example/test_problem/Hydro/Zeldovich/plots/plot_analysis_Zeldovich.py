@@ -37,7 +37,7 @@ args=parser.parse_args()
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
 for t in range( len(sys.argv) ):
-   print str(sys.argv[t]),
+   print( str(sys.argv[t]) )
 print( '' )
 print( '-------------------------------------------------------------------\n' )
 
@@ -70,7 +70,7 @@ else:
 # -------------------------------------------------------------------------------------------------------------------------
 # load simulation data with yt
 yt.enable_parallelism()
-ts                     = yt.load( [ prefix+'Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
+ts                     = yt.DatasetSeries( [ prefix+'Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 ts0                    = ts[0]
 base_level_cell_num    = int(ts0.domain_dimensions[1])
 BoxSize_x              = float(ts0.domain_width[0])        # [Mpc/h] = [code_length]
@@ -137,7 +137,7 @@ for ds in ts.piter():
         # extract on-grid physical quantities
         smoothed_grid           = ds.smoothed_covering_grid(0,[0.0, 0.0, 0.0], dims=base_level_cell_num_3D)
         smoothed_grid_den       = smoothed_grid[field_dens].in_units("code_mass/code_length**3")
-        smoothed_grid_temp      = smoothed_grid[field_temp]/(1.0079*current_time_a**2)            # [Kelvin]
+        smoothed_grid_temp      = smoothed_grid[field_temp]/(current_time_a**2)              # [Kelvin]
         smoothed_grid_sspd      = smoothed_grid[field_sound_spd].in_units("km/s")
         smoothed_grid_x         = smoothed_grid["gamer","x"].in_units("code_length")
         smoothed_grid_x_mid     = smoothed_grid_x[-1,base_level_mid_index[1],base_level_mid_index[2]]/2

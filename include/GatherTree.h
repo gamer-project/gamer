@@ -1,12 +1,7 @@
 #ifndef __GATHER_TREE_H__
 #define __GATHER_TREE_H__
 
-
-
-#include <stdio.h>
 #include "Macro.h"
-
-
 
 class NonCopyable
 {
@@ -107,6 +102,20 @@ struct LB_GlobalPatchExchangeList : private NonCopyable
    bool isInitialised;
 }; // struct LB_GlobalPatchExchangeList
 
+struct LB_GlobalTree : private NonCopyable
+{
+   LB_GlobalTree(int root);
+   ~LB_GlobalTree();
+
+   int  Local2Global(int I, int XYZ, long GID) const;
+   bool IsInsidePatch(int X, int Y, int Z, long GID) const;
+   long FindRefinedCounterpart(int X, int Y, int Z, long GID, int MaxLv = NLEVEL) const;
+
+private:
+   LB_PatchCount   PatchCount;
+   LB_GlobalPatch* Patches;
+   long            NPatch;
+}; // struct LB_GlobalTree
 
 
 #endif // #ifndef __GATHER_TREE_H__

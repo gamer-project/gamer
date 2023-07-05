@@ -30,12 +30,10 @@ field       = 'ParDens'
 
 yt.enable_parallelism()
 
-ts = yt.load( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
-p = []
-for idx in range(idx_start,idx_end+1,1):
-   ds = yt.load('Data_%06d'%idx)
+ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
+for ds in ts.piter():
    p = yt.SlicePlot( ds, 'z', 'ParDens', center='c' )
-   field       = 'ParDens'
+   field = 'ParDens'
    p.set_background_color( field )
    p.set_unit('ParDens', 'code_mass/(code_length**3)')
    p.set_axes_unit( 'code_length' )
