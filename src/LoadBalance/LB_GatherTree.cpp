@@ -767,3 +767,203 @@ LB_GlobalPatch* LB_GatherTree( LB_PatchCount& pc, int root ) {
    return LB_ConstructGlobalTree( pc, gel, root );
 
 } // FUNCTION : LB_GatherTree
+
+
+
+LB_GlobalTree::LB_GlobalTree(int root) : PatchCount(), Patches(NULL)
+{
+   Patches = LB_GatherTree(PatchCount, root);
+   NPatch  = PatchCount.NPatchAllLv;
+}
+
+LB_GlobalTree::~LB_GlobalTree()
+{
+   delete [] Patches;
+}
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  LB_GlobalTree::IsInsidePatch
+// Description :  Check whether cell [X, Y, Z] is in patch indexed by GID
+//
+// Parameter   :  X   : global x coordinates
+//             :  Y   : global y coordinates
+//             :  Z   : global z coordinate
+//             : GID  : global ID of patch
+//
+// Return      :  true if cell [X, Y, Z] is in patch GID, false otherwise
+//-------------------------------------------------------------------------------------------------------
+bool LB_GlobalTree::IsInsidePatch(int X, int Y, int Z, long GID)  const
+{
+// sanity check
+#  ifdef GAMER_DEBUG
+   if (GID == -1)
+   {
+      Aux_Error(ERROR_INFO, "GID  == -1!\n");
+   }
+   if (GID >= NPatch)
+   {
+      Aux_Error(ERROR_INFO, "GID (%ld) >= NPatch (%ld)!\n", GID, NPatch);
+   }
+#  endif
+
+   bool IsInside = true;
+
+   int Coordinates[3] = {X, Y, Z};
+
+   for ( int l = 0; l < 3; ++l ) {
+      if (Coordinates[l] < Patches[GID].corner[l] || Coordinates[l] >=  Patches[GID].corner[l] + PS1 * amr->scale[Patches[GID].level])
+         IsInside = false;
+   }
+
+   return IsInside;
+} // LB_GlobalTree::IsInsidePatch
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  LB_GlobalTree::Local2Global
+// Description :  Convert local patch coordinates in direction XYZ to global coordinates
+//
+// Note        :  This function also works for I > PS1 and will return the global coordinate relative to GID.
+//                For patch groups, pass the GID of the root patch and I between (0 and PS2)
+//                int X = Local2Global(I, 0, GID0);
+//                int Y = Local2Global(I, 1, GID0);
+//                int Z = Local2Global(I, 2, GID0);
+//
+// Parameter   :  I   : Coordinate relative to root patch I
+//             : XYZ  : direction
+//             : GID  : Root patch relative to I
+//
+// Return      :  Global coordinate corresponding to I
+//-------------------------------------------------------------------------------------------------------
+int LB_GlobalTree::Local2Global(int I, int XYZ, long GID) const
+{
+// sanity check
+#  ifdef GAMER_DEBUG
+   if (GID == -1)
+   {
+      Aux_Error(ERROR_INFO, "GID  == -1!\n");
+   }
+   if (GID >= NPatch)
+   {
+      Aux_Error(ERROR_INFO, "GID (%ld) >= NPatch (%ld)!\n", GID, NPatch);
+   }
+#  endif
+
+   return Patches[GID].corner[XYZ] + I * amr->scale[Patches[GID].level];
+} // LB_GlobalTree::Local2Global
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  LB_GlobalTree::FindRefinedCounterpart
+// Description :  Return GID of refined patch with maximum level MaxLv (default ) that global coordinates [X, Y, Z] belong to
+//
+//
+// Parameter   :  I   : x-index of patch GID
+//             :  J   : y-index of patch GID
+//             :  K   : z-index of patch GID
+//             : GID  : global ID of patch
+//             : MaxLv: maximum refinemen
+//
+// Return      :  GID of patch
+//-------------------------------------------------------------------------------------------------------
+long LB_GlobalTree::FindRefinedCounterpart(int X, int Y, int Z, long GID, int MaxLv)  const
+{
+
+
+#  ifdef GAMER_DEBUG
+// sanity check
+   if (GID0 == -1)
+   {
+      Aux_Error(ERROR_INFO, "GID0 == -1 !!\n");
+   }
+   if (GID == -1)
+   {
+      Aux_Error(ERROR_INFO, "GID  == -1!\n");
+   }
+   if (GID >= NPatch)
+   {
+      Aux_Error(ERROR_INFO, "GID (%ld) >= NPatch (%ld)!\n", GID, NPatch);
+   }
+
+   if (GID0 >= NPatch)
+   {
+      Aux_Error(ERROR_INFO, "GID (%ld) >= NPatch (%ld)!\n", GID, NPatch);
+   }
+#  endif
+
+   if ( Patches[GID].level > MaxLv )
+   {
+      return -1;
+   }
+
+
+// skip calculation if coordinates are not inside patch GID
+   if ( !IsInsidePatch(X, Y, Z, GID) )
+   {
+      return -1;
+   }
+
+   long FaGID  = GID;
+   long SonGID = Patches[FaGID].son;
+
+// traverse the tree up until leave nodes
+   while ( SonGID != -1 ) {
+
+//    exit loop if FaGID is on MaxLv
+      if ( Patches[SonGID].level > MaxLv )
+      {
+         break;
+      }
+
+//    loop over patches in patch block and check if cell {K, J, I} belongs to patch
+      for (int LocalPID = 0; LocalPID < 8; LocalPID++)
+      {
+
+         if ( IsInsidePatch(X, Y, Z, SonGID + LocalPID) )
+         {
+            FaGID   = SonGID + LocalPID;
+            SonGID  = Patches[FaGID].son;
+            break;
+
+         }
+#        ifdef GAMER_DEBUG
+         else if ( LocalPID == 7 )
+         {
+            Aux_Error(ERROR_INFO, "Global coordinates {%d, %d, %d} in father patch (GID = %ld, lv = %d), but not in any son patch (GID = %ld, lv = %d)!!\n",
+            X, Y, Z, FaGID, Patches[FaGID].level, SonGID, Patches[SonGID].level);
+         }
+#        endif
+      }
+   }
+
+#  ifdef GAMER_DEBUG
+// sanity check
+   if (FaGID == -1)
+   {
+      Aux_Error(ERROR_INFO, "FaGID == -1!!\n");
+   }
+
+// check whether GID is ancestor of FaGID
+// number of generations between GID and FaGID
+   int  NGenerations = Patches[FaGID].level - Patches[GID].level;
+
+// iterate back through ancestors
+   long AncestorGID = FaGID;
+   for (int i = 0; i < NGenerations; ++i)
+   {
+      AncestorGID = Patches[AncestorGID].father;
+   }
+
+   if (Patches[AncestorGID].level != Patches[GID].level)
+   {
+      Aux_Error(ERROR_INFO, "GID (%ld) and Ancestor (%ld) on different levels!!\n", GID, AncestorGID);
+   }
+
+   if (AncestorGID != GID)
+   {
+      Aux_Error(ERROR_INFO, "GID (GID = %ld, lv = %d) and Ancestor (%ld) are not related!!\n", GID, Patches[GID].level, AncestorGID);
+   }
+
+#  endif
+
+   return FaGID;
+} // FUNCTION : LB_GlobalTree::FindRefinedCounterpart
