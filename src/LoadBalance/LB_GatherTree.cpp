@@ -994,3 +994,8 @@ const LB_GlobalPatch* LB_GlobalTree::GetPatch(long GID)  const
 
    return &Patches[GID];
 } // LB_GlobalTree::GetPatch
+
+const LB_GlobalPatch& LB_GlobalTree::operator[](long GID) const
+{
+   return *GetPatch(GID);
+}
