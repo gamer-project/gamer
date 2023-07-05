@@ -11,8 +11,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                            const int BC_Face[], const real MinPres, const real MinTemp, const real MinEntr,
                            const bool DE_Consistency, const real *FInterface[6] );
 static void SetTargetSibling( int NTSib[], int *TSib[] );
-static int Table_01( const int SibID, const char dim, const int Count, const int GhostSize );
-static int Table_02( const int lv, const int PID, const int Side );
+static int  Table_01( const int SibID, const char dim, const int Count, const int GhostSize );
+static int  Table_02( const int lv, const int PID, const int Side );
+static long Table_03( const int lv, const long GID, const int Side, LB_GlobalPatch* Tree );
 void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, const double Time0, const double Time1,
                      bool &IntTime, int &Sg, int &Sg_IntT, real &Weighting, real &Weighting_IntT );
 #ifdef MHD
@@ -2753,6 +2754,164 @@ int Table_02( const int lv, const int PID, const int Side )
 } // FUNCTION : Table_02
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Table_03
+// Description :  Return the patch GID of the 0th patch (local ID = 0) of the sibling patch group
+//
+// Note        :  Work for Prepare_PatchData_HasWaveCounterpart()
+//
+// Parameter   :  lv   : Target refinement level
+//                GID  : Target patch GID to find its sibling patches
+//                Side : Sibling index (0~25)
+//                Tree : Array of LB_GlobalPatches with GID information
+//-------------------------------------------------------------------------------------------------------
+long Table_03( const int lv, const long GID, const int Side, LB_GlobalPatch* Tree)
+{
+
+   int Sib;
+
+   switch ( Side )
+   {
+      case 0:
+         Sib = Tree[GID  ].sibling[0];
+         if ( Sib >= 0 )  return Sib-1;
+         else             return Sib;
+
+      case 1:
+         Sib = Tree[GID+1].sibling[1];
+         if ( Sib >= 0 )  return Sib;
+         else             return Sib;
+
+      case 2:
+         Sib = Tree[GID  ].sibling[2];
+         if ( Sib >= 0 )  return Sib-2;
+         else             return Sib;
+
+      case 3:
+         Sib = Tree[GID+2].sibling[3];
+         if ( Sib >= 0 )  return Sib;
+         else             return Sib;
+
+      case 4:
+         Sib = Tree[GID  ].sibling[4];
+         if ( Sib >= 0 )  return Sib-3;
+         else             return Sib;
+
+      case 5:
+         Sib = Tree[GID+3].sibling[5];
+         if ( Sib >= 0 )  return Sib;
+         else             return Sib;
+
+      case 6:
+         Sib = Tree[GID  ].sibling[6];
+         if ( Sib >= 0 )  return Sib-4;
+         else             return Sib;
+
+      case 7:
+         Sib = Tree[GID+1].sibling[7];
+         if ( Sib >= 0 )  return Sib-2;
+         else             return Sib;
+
+      case 8:
+         Sib = Tree[GID+2].sibling[8];
+         if ( Sib >= 0 )  return Sib-1;
+         else             return Sib;
+
+      case 9:
+         Sib = Tree[GID+4].sibling[9];
+         if ( Sib >= 0 )  return Sib;
+         else             return Sib;
+
+      case 10:
+         Sib = Tree[GID  ].sibling[10];
+         if ( Sib >= 0 )  return Sib-5;
+         else             return Sib;
+
+      case 11:
+         Sib = Tree[GID+2].sibling[11];
+         if ( Sib >= 0 )  return Sib-3;
+         else             return Sib;
+
+      case 12:
+         Sib = Tree[GID+3].sibling[12];
+         if ( Sib >= 0 )  return Sib-2;
+         else             return Sib;
+
+      case 13:
+         Sib = Tree[GID+5].sibling[13];
+         if ( Sib >= 0 )  return Sib;
+         else             return Sib;
+
+      case 14:
+         Sib = Tree[GID  ].sibling[14];
+         if ( Sib >= 0 )  return Sib-6;
+         else             return Sib;
+
+      case 15:
+         Sib = Tree[GID+3].sibling[15];
+         if ( Sib >= 0 )  return Sib-1;
+         else             return Sib;
+
+      case 16:
+         Sib = Tree[GID+1].sibling[16];
+         if ( Sib >= 0 )  return Sib-3;
+         else             return Sib;
+
+      case 17:
+         Sib = Tree[GID+6].sibling[17];
+         if ( Sib >= 0 )  return Sib;
+         else             return Sib;
+
+      case 18:
+         Sib = Tree[GID  ].sibling[18];
+         if ( Sib >= 0 )  return Sib-7;
+         else             return Sib;
+
+      case 19:
+         Sib = Tree[GID+1].sibling[19];
+         if ( Sib >= 0 )  return Sib-5;
+         else             return Sib;
+
+      case 20:
+         Sib = Tree[GID+2].sibling[20];
+         if ( Sib >= 0 )  return Sib-6;
+         else             return Sib;
+
+      case 21:
+         Sib = Tree[GID+4].sibling[21];
+         if ( Sib >= 0 )  return Sib-3;
+         else             return Sib;
+
+      case 22:
+         Sib = Tree[GID+3].sibling[22];
+         if ( Sib >= 0 )  return Sib-4;
+         else             return Sib;
+
+      case 23:
+         Sib = Tree[GID+6].sibling[23];
+         if ( Sib >= 0 )  return Sib-2;
+         else             return Sib;
+
+      case 24:
+         Sib = Tree[GID+5].sibling[24];
+         if ( Sib >= 0 )  return Sib-1;
+         else             return Sib;
+
+      case 25:
+         Sib = Tree[GID+7].sibling[25];
+         if ( Sib >= 0 )  return Sib;
+         else             return Sib;
+
+      default:
+         Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Side", Side );
+         exit(1);
+
+   } // switch ( Side )
+
+   return NULL_INT;
+
+} // FUNCTION : Table_03
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetTargetSibling
@@ -3530,12 +3689,14 @@ void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpa
    {
 //    thread-private variables
       int    J, K, I2, J2, K2, Idx1, Idx2, PID0;
+      long   GID0;
 
 //    prepare eight nearby patches (one patch group) at a time
 #     pragma omp for schedule( runtime )
       for (int TID=0; TID<NPG; TID++)
       {
          PID0 = PID0_List[TID];
+         GID0 = PID0 + PatchCount->GID_Offset[lv];
 
 //       0. reset h_HasWaveCounterpart
          for (int i=0; i<CUBE(HYB_NXT); i++)  {
@@ -3546,8 +3707,7 @@ void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpa
 // ------------------------------------------------------------------------------------------------------------
          for (int LocalID=0; LocalID<8; LocalID++ )
          {
-            const int PID    = PID0 + LocalID;
-            const int GID    = PID  + PatchCount->GID_Offset[lv];
+            const long GID   = GID0 + LocalID;
             const int Disp_i = TABLE_02( LocalID, 'x', GhostSize, GhostSize+PS1 );
             const int Disp_j = TABLE_02( LocalID, 'y', GhostSize, GhostSize+PS1 );
             const int Disp_k = TABLE_02( LocalID, 'z', GhostSize, GhostSize+PS1 );
@@ -3571,10 +3731,10 @@ void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpa
 //          nothing to do if no ghost zone is required
             if ( GhostSize == 0 )   break;
 
-            const int SibPID0 = Table_02( lv, PID0, Side );    // the 0th patch of the sibling patch group
+            const long SibGID0 = Table_03( lv, GID0, Side, GlobalTree );    // the 0th patch of the sibling patch group
 
 //          (b1) if the target sibling patch exists --> just copy data from the nearby patches at the same level
-            if ( SibPID0 >= 0 )
+            if ( SibGID0 >= 0 )
             {
                int loop[3], disp2[3];
                for (int d=0; d<3; d++)
@@ -3586,7 +3746,7 @@ void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpa
                for (int Count=0; Count<TABLE_04( Side ); Count++)
                {
                   const int  LocalID = TABLE_03( Side, Count );
-                  const long SibGID  = SibPID0 + LocalID + PatchCount->GID_Offset[lv];
+                  const long SibGID  = SibGID0 + LocalID;
 
                   int disp[3];
                   for (int d=0; d<3; d++)    disp[d] = Table_01( Side, 'x'+d, Count, GhostSize );
