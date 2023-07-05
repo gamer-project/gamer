@@ -967,3 +967,30 @@ long LB_GlobalTree::FindRefinedCounterpart(int X, int Y, int Z, long GID, int Ma
 
    return FaGID;
 } // FUNCTION : LB_GlobalTree::FindRefinedCounterpart
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  LB_GlobalTree::GetPatch
+// Description :  Return pointer to local patch object with GID
+//
+// Parameter   :  GID  : global ID of patch
+//
+// Return      :  Constant pointer to LB_LocalPatch
+//-------------------------------------------------------------------------------------------------------
+const LB_GlobalPatch* LB_GlobalTree::GetPatch(long GID)  const
+{
+// sanity check
+#  ifdef GAMER_DEBUG
+   if (GID == -1)
+   {
+      Aux_Error(ERROR_INFO, "GID  == -1!\n");
+   }
+   if (GID >= NPatch)
+   {
+      Aux_Error(ERROR_INFO, "GID (%ld) >= NPatch (%ld)!\n", GID, NPatch);
+   }
+#  endif
+
+
+   return &Patches[GID];
+} // LB_GlobalTree::GetPatch
