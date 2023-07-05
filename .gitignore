@@ -10,3 +10,8 @@ GAMER_ExtractUniform
 GAMER_ExtractProfile
 *.bin
 tool/table_maker/GramFE/GramFE_ExtensionTables.h
+src/Model_ELBDM/CPU_ELBDM/CPU_ELBDMSolver_HJ.cpp
+src/HybridMakefile
+src/MakefileBackup
+.gitignore
+tool/table_maker/GramFE/HRExtend.h
