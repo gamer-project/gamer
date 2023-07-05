@@ -358,8 +358,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
       for (int bx=0; bx<NPatchGroup; bx++)
 #     endif
       {
-/*
+
 #        ifdef GAMER_DEBUG
+/*
 if (XYZ == 0)
 {
          int counter = 0;
@@ -384,8 +385,8 @@ if (XYZ == 0)
             printf("\n");
          }
          printf("\n\n");
-}
-#        endif*/
+}*/
+#        endif
 
          uint Column0 = 0;                // the total number of columns that have been updated
          uint Idx, Idx1, Idx2;            // temporary indices used for indexing column updates, writing data to g_Fluid_In, g_Fluid_Out
