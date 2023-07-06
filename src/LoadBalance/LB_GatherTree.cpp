@@ -281,57 +281,6 @@ void LB_AllgatherLBIdx( LB_PatchCount& pc, LB_LocalPatchExchangeList& lel, LB_Gl
 } // FUNCTION : LB_AllgatherLBIdx
 
 
-//-------------------------------------------------------------------------------------------------------
-// Function    :  LB_PID2GID
-// Description :  Given PID and lv, return GID
-//
-// Parameter   :  PID  : PID to convert
-//             :  lv   : Level of PID
-//             :  pc   : Reference to LB_PatchCount object
-//             :  lel  : Reference to LB_LocalPatchExchangeList
-// Return      :  GID
-//-------------------------------------------------------------------------------------------------------
-long LB_PID2GID(int PID, int lv, const LB_PatchCount& pc, const LB_LocalPatchExchangeList& lel)
-{
-   if ( PID < 0 )
-   {
-      return PID;
-   }
-// patch is a real patch
-   else if ( PID < amr->NPatchComma[lv][1] )
-   {
-      return PID + pc.GID_Offset[lv];
-   }
-// sibling patch is a buffer patch (which may lie outside the simulation domain)
-   else
-   {
-      int   MatchIdx;
-      long  LBIdx;
-      int  *Cr=NULL;
-
-#     ifdef GAMER_DEBUG
-      if ( PID >= amr->num[lv] )
-      Aux_Error( ERROR_INFO, "Lv %d, PID %d >= total number of patches %d !!\n",
-                 lv, PID, amr->num[lv] );
-#     endif
-
-//    get the GID by "corner -> LB_Idx -> GID"
-      Cr    = amr->patch[0][lv][PID]->corner;
-      LBIdx = LB_Corner2Index( lv, Cr, CHECK_OFF );   // periodicity has been assumed here
-
-      Mis_Matching_int( NPatchTotal[lv], lel.LBIdxList_Sort[lv], 1, &LBIdx, &MatchIdx );
-
-#     ifdef GAMER_DEBUG
-      if ( MatchIdx < 0 )
-      Aux_Error( ERROR_INFO, "Lv %d, PID %d, LBIdx %ld, couldn't find a matching patch !!\n",
-                 lv, PID, LBIdx );
-#     endif
-
-      return lel.LBIdxList_Sort_IdxTable[lv][MatchIdx] + pc.GID_LvStart[lv];
-   } // if ( PID >= amr->NPatchComma[lv][1] )
-
-} // FUNCTION : LB_PID2GID
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_FillLocalPatchExchangeList
@@ -353,7 +302,9 @@ void LB_FillLocalPatchExchangeList( LB_PatchCount& pc, LB_LocalPatchExchangeList
 #  endif
 
 // temporary variables
-   int   MyGID, FaPID, FaLv, SonPID, SonLv, SibPID, SibLv;
+   int   MyGID, FaPID, FaGID, FaLv, SonPID, SonGID, SonLv, SibPID, SibGID, MatchIdx;
+   long  FaLBIdx, SonLBIdx, SibLBIdx;
+   int  *SonCr=NULL, *SibCr=NULL;
 
 // store the local tree
    for (int lv=0; lv<NLEVEL; lv++)
@@ -380,16 +331,99 @@ void LB_FillLocalPatchExchangeList( LB_PatchCount& pc, LB_LocalPatchExchangeList
             if ( lv != 0 )       Aux_Error( ERROR_INFO, "Lv %d, PID %d, FaPID %d < 0 !!\n", lv, PID, FaPID );
             if ( FaPID != -1 )   Aux_Error( ERROR_INFO, "Lv %d, PID %d, FaPID %d < 0 but != -1 !!\n", lv, PID, FaPID );
 #           endif
+
+            FaGID = FaPID;
          }
 
-         lel.FaList_Local[lv][PID] = LB_PID2GID(FaPID, FaLv, pc, lel);
+//       father patch is a real patch
+         else if ( FaPID < amr->NPatchComma[FaLv][1] )
+            FaGID = FaPID + pc.GID_Offset[FaLv];
+
+//       father patch is a buffer patch (only possible in LOAD_BALANCE)
+         else // (FaPID >= amr->NPatchComma[FaLv][1] )
+         {
+#           ifdef GAMER_DEBUG
+#           ifndef LOAD_BALANCE
+            Aux_Error( ERROR_INFO, "Lv %d, PID %d, FaPID %d >= NRealFaPatch %d (only possible in LOAD_BALANCE) !!\n",
+                       lv, PID, FaPID, amr->NPatchComma[FaLv][1] );
+#           endif
+
+            if ( FaPID >= amr->num[FaLv] )
+            Aux_Error( ERROR_INFO, "Lv %d, PID %d, FaPID %d >= total number of patches %d !!\n",
+                       lv, PID, FaPID, amr->num[FaLv] );
+#           endif // GAMER_DEBUG
+
+            FaLBIdx = amr->patch[0][FaLv][FaPID]->LB_Idx;
+
+            Mis_Matching_int( NPatchTotal[FaLv], lel.LBIdxList_Sort[FaLv], 1, &FaLBIdx, &MatchIdx );
+
+#           ifdef GAMER_DEBUG
+            if ( MatchIdx < 0 )
+            Aux_Error( ERROR_INFO, "Lv %d, PID %d, FaPID %d, FaLBIdx %ld, couldn't find a matching patch !!\n",
+                       lv, PID, FaPID, FaLBIdx );
+#           endif
+
+            FaGID = lel.LBIdxList_Sort_IdxTable[FaLv][MatchIdx] + pc.GID_LvStart[FaLv];
+         } // if ( FaPID >= amr->NPatchComma[FaLv][1] )
+
+         lel.FaList_Local[lv][PID] = FaGID;
 
 
 //       4. son GID
          SonPID = amr->patch[0][lv][PID]->son;
          SonLv  = lv + 1;
 
-         lel.SonList_Local[lv][PID] = LB_PID2GID(SonPID, SonLv, pc, lel);
+//       no son (must check this first since SonLv may be out of range --> == NLEVEL)
+         if      ( SonPID == -1 )
+            SonGID = SonPID;
+
+//       son patch is a real patch at home
+         else if ( SonPID >= 0  &&  SonPID < amr->NPatchComma[SonLv][1] )
+            SonGID = SonPID + pc.GID_Offset[SonLv];
+
+//       son patch lives abroad (only possible in LOAD_BALANCE)
+         else if ( SonPID < -1 )
+         {
+#           ifdef GAMER_DEBUG
+#           ifdef LOAD_BALANCE
+            const int SonRank = SON_OFFSET_LB - SonPID;
+            if ( SonRank < 0  ||  SonRank == MPI_Rank  ||  SonRank >= MPI_NRank )
+            Aux_Error( ERROR_INFO, "Lv %d, PID %d, SonPID %d, incorrect SonRank %d (MyRank %d, NRank %d) !!\n",
+                       lv, PID, SonPID, SonRank, MPI_Rank, MPI_NRank );
+#           else
+            Aux_Error( ERROR_INFO, "Lv %d, PID %d, SonPID %d < -1 (only possible in LOAD_BALANCE) !!\n",
+                       lv, PID, SonPID );
+#           endif // LOAD_BALANCE
+#           endif // GAMER_DEBUG
+
+//          get the SonGID by "father corner = son corner -> son LB_Idx -> son GID"
+//          --> for Hilbert curve we have "SonLBIdx-SonLBIdx%8 = 8*MyLBIdx"
+            SonCr    = amr->patch[0][lv][PID]->corner;
+            SonLBIdx = LB_Corner2Index( SonLv, SonCr, CHECK_ON );
+
+#           if ( defined GAMER_DEBUG  &&  LOAD_BALANCE == HILBERT )
+            if ( SonLBIdx - SonLBIdx%8 != 8*amr->patch[0][lv][PID]->LB_Idx )
+            Aux_Error( ERROR_INFO, "Lv %d, PID %d, SonPID %d, SonCr (%d,%d,%d), incorret SonLBIdx %ld, (MyLBIdx %ld) !!\n",
+                       lv, PID, SonPID, SonCr[0], SonCr[1], SonCr[2], SonLBIdx, amr->patch[0][lv][PID]->LB_Idx );
+#           endif
+
+            Mis_Matching_int( NPatchTotal[SonLv], lel.LBIdxList_Sort[SonLv], 1, &SonLBIdx, &MatchIdx );
+
+#           ifdef GAMER_DEBUG
+            if ( MatchIdx < 0 )
+            Aux_Error( ERROR_INFO, "Lv %d, PID %d, SonPID %d, SonLBIdx %ld, couldn't find a matching patch !!\n",
+                       lv, PID, SonPID, SonLBIdx );
+#           endif
+
+            SonGID = lel.LBIdxList_Sort_IdxTable[SonLv][MatchIdx] + pc.GID_LvStart[SonLv];
+         } // else if ( SonPID < -1 )
+
+//       son patch is a buffer patch (SonPID >= amr->NPatchComma[SonLv][1]) --> impossible
+         else // ( SonPID >= amr->NPatchComma[SonLv][1] )
+            Aux_Error( ERROR_INFO, "Lv %d, PID %d, SonPID %d is a buffer patch (NRealSonPatch %d) !!\n",
+                       lv, PID, SonPID, amr->NPatchComma[SonLv][1] );
+
+         lel.SonList_Local[lv][PID] = SonGID;
 
 
 //       5. sibling GID
@@ -397,7 +431,39 @@ void LB_FillLocalPatchExchangeList( LB_PatchCount& pc, LB_LocalPatchExchangeList
          {
             SibPID = amr->patch[0][lv][PID]->sibling[s];
 
-            lel.SibList_Local[lv][PID][s] = LB_PID2GID(SibPID, lv, pc, lel);
+//          no sibling (SibPID can be either -1 or SIB_OFFSET_NONPERIODIC-BoundaryDirection)
+            if      ( SibPID < 0 )
+               SibGID = SibPID;
+
+//          sibling patch is a real patch
+            else if ( SibPID < amr->NPatchComma[lv][1] )
+               SibGID = SibPID + pc.GID_Offset[lv];
+
+//          sibling patch is a buffer patch (which may lie outside the simulation domain)
+            else
+            {
+#              ifdef GAMER_DEBUG
+               if ( SibPID >= amr->num[lv] )
+               Aux_Error( ERROR_INFO, "Lv %d, PID %d, SibPID %d >= total number of patches %d !!\n",
+                          lv, PID, SibPID, amr->num[lv] );
+#              endif
+
+//             get the SibGID by "sibling corner -> sibling LB_Idx -> sibling GID"
+               SibCr    = amr->patch[0][lv][SibPID]->corner;
+               SibLBIdx = LB_Corner2Index( lv, SibCr, CHECK_OFF );   // periodicity has been assumed here
+
+               Mis_Matching_int( NPatchTotal[lv], lel.LBIdxList_Sort[lv], 1, &SibLBIdx, &MatchIdx );
+
+#              ifdef GAMER_DEBUG
+               if ( MatchIdx < 0 )
+               Aux_Error( ERROR_INFO, "Lv %d, PID %d, SibPID %d, SibLBIdx %ld, couldn't find a matching patch !!\n",
+                          lv, PID, SibPID, SibLBIdx );
+#              endif
+
+               SibGID = lel.LBIdxList_Sort_IdxTable[lv][MatchIdx] + pc.GID_LvStart[lv];
+            } // if ( SibPID >= amr->NPatchComma[lv][1] )
+
+            lel.SibList_Local[lv][PID][s] = SibGID;
 
          } // for (int s=0; s<26; s++)
 
@@ -706,33 +772,12 @@ LB_GlobalPatch* LB_GatherTree( LB_PatchCount& pc, int root ) {
 
 LB_GlobalTree::LB_GlobalTree(int root) : PatchCount(), Patches(NULL)
 {
-
-// get patch counts per level and per rank from all ranks
-   LB_AllgatherPatchCount( PatchCount );
-
-// set up local and global exchange lists
-   LocalPatchExchangeList  = new LB_LocalPatchExchangeList;
-   GlobalPatchExchangeList = new LB_GlobalPatchExchangeList( PatchCount, root );
-
-// exchange load balance id's between all ranks
-   LB_AllgatherLBIdx( PatchCount, *LocalPatchExchangeList, GlobalPatchExchangeList );
-
-// fill local patch lists with information from patches
-   LB_FillLocalPatchExchangeList( PatchCount, *LocalPatchExchangeList );
-
-// exchange local patch information with other ranks
-   LB_FillGlobalPatchExchangeList( PatchCount, *LocalPatchExchangeList, *GlobalPatchExchangeList, root );
-
-// construct and return vector with global tree information
-   Patches = LB_ConstructGlobalTree( PatchCount, *GlobalPatchExchangeList, root );
-
+   Patches = LB_GatherTree(PatchCount, root);
    NPatch  = PatchCount.NPatchAllLv;
 }
 
 LB_GlobalTree::~LB_GlobalTree()
 {
-   delete LocalPatchExchangeList;
-   delete GlobalPatchExchangeList;
    delete [] Patches;
 }
 
@@ -969,9 +1014,29 @@ const LB_PatchCount&  LB_GlobalTree::GetLBPatchCount() const
 // Function    :  LB_GlobalTree::PID2GID
 // Description :  Given PID and lv, return GID
 //
+// Note        :  Does not support patches abroad
+//
 // Return      :  GID
 //-------------------------------------------------------------------------------------------------------
 long LB_GlobalTree::PID2GID(int PID, int lv) const
 {
-   return LB_PID2GID(PID, lv, PatchCount, *LocalPatchExchangeList);
+   if ( PID < 0 )
+   {
+      return PID;
+   }
+// patch is a real patch
+   else if ( PID < amr->NPatchComma[lv][1] )
+   {
+      return PID + PatchCount.GID_Offset[lv];
+   }
+
+// sibling patch is a buffer patch (which may lie outside the simulation domain)
+   else
+   {
+#     ifdef GAMER_DEBUG
+      Aux_Error( ERROR_INFO, "Lv %d, PID %d >= total number of patches on local MPI Rank %d !!\n",
+                 lv, PID, amr->num[lv] );
+#     endif
+      return -1;
+   } // if ( SibPID >= amr->NPatchComma[lv][1] )
 } // FUNCTION : LB_GlobalTree::PID2GID

@@ -117,8 +117,6 @@ struct LB_GlobalTree : private NonCopyable
 
 private:
    LB_PatchCount   PatchCount;
-   LB_LocalPatchExchangeList*  LocalPatchExchangeList;
-   LB_GlobalPatchExchangeList* GlobalPatchExchangeList;
    LB_GlobalPatch* Patches;
    long            NPatch;
 }; // struct LB_GlobalTree
