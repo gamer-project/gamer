@@ -1018,25 +1018,33 @@ const LB_PatchCount&  LB_GlobalTree::GetLBPatchCount() const
 //
 // Return      :  GID
 //-------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
+// Function    :  LB_GlobalTree::PID2GID
+// Description :  Given PID and lv, return GID
+//
+// Note        :  Does not support patches abroad
+//
+// Return      :  GID
+//-------------------------------------------------------------------------------------------------------
 long LB_GlobalTree::PID2GID(int PID, int lv) const
 {
-   if ( PID < 0 )
+   if ( PID == -1 )
    {
       return PID;
    }
 // patch is a real patch
-   else if ( PID < amr->NPatchComma[lv][1] )
+   else if ( -1 < PID && PID < amr->NPatchComma[lv][1] )
    {
       return PID + PatchCount.GID_Offset[lv];
    }
 
-// sibling patch is a buffer patch (which may lie outside the simulation domain)
+// patch is a buffer patch (which may lie outside the simulation domain)
    else
    {
 #     ifdef GAMER_DEBUG
-      Aux_Error( ERROR_INFO, "Lv %d, PID %d >= total number of patches on local MPI Rank %d !!\n",
-                 lv, PID, amr->num[lv] );
+      Aux_Error( ERROR_INFO, "Lv %d, NPatch %d, PID %d is buffer patch on local MPI Rank %d !!\n",
+                 lv, amr->NPatchComma[lv][1], PID, amr->num[lv] );
 #     endif
       return -1;
-   } // if ( SibPID >= amr->NPatchComma[lv][1] )
+   }
 } // FUNCTION : LB_GlobalTree::PID2GID
