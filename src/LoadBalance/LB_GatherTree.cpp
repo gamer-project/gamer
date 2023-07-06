@@ -1009,15 +1009,6 @@ const LB_PatchCount&  LB_GlobalTree::GetLBPatchCount() const
 {
    return PatchCount;
 } // FUNCTION : LB_GlobalTree::GetLBPatchCount
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  LB_GlobalTree::PID2GID
-// Description :  Given PID and lv, return GID
-//
-// Note        :  Does not support patches abroad
-//
-// Return      :  GID
-//-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_GlobalTree::PID2GID
 // Description :  Given PID and lv, return GID
