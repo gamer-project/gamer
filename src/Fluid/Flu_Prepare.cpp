@@ -26,7 +26,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
                   bool h_IsCompletelyRefined[],
                   bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ],
                   const int NPG, const int *PID0_List,
-                  LB_GlobalPatch* GlobalTree, LB_PatchCount* PatchCount )
+                  LB_GlobalTree* GlobalTree )
 {
 
 // check
@@ -132,18 +132,11 @@ void Flu_Prepare( const int lv, const double PrepTime,
 
       h_IsCompletelyRefined[TID] = PGIsCompletelyRefined;
    }
-
-   int c1 = 0;
-   for (int TID=0; TID<NPG; TID++)
-   {
-      if (h_IsCompletelyRefined[TID]) c1++;
-   }
-   //printf("%d out of %d PGs refined on lv %d\n", c1, NPG, lv);
 #  endif
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
    if ( !amr->use_wave_flag[lv] ) {
-      Prepare_PatchData_HasWaveCounterpart(lv, h_HasWaveCounterpart, HYB_GHOST_SIZE, NPG, PID0_List, NSIDE_26, GlobalTree, PatchCount);
+      Prepare_PatchData_HasWaveCounterpart(lv, h_HasWaveCounterpart, HYB_GHOST_SIZE, NPG, PID0_List, NSIDE_26, GlobalTree);
 
 
 #     pragma omp parallel for schedule( runtime )
@@ -151,7 +144,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
       {
          int c1 = 0, c2 = 0;
          int  PID0 = PID0_List[TID];
-         long GID0 = PID0 + PatchCount->GID_Offset[lv];
+         long GID0 = GlobalTree->PID2GID(PID0, lv);
          for (int k=0; k<PS2; k++)
          for (int j=0; j<PS2; j++)
          for (int i=0; i<PS2; i++)
@@ -159,7 +152,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
             const int t = IDX321( i + HYB_GHOST_SIZE, j + HYB_GHOST_SIZE, k + HYB_GHOST_SIZE, HYB_NXT, HYB_NXT );
             int counter = 0;
             for (int LocalPID = 0; LocalPID < 8; ++LocalPID)
-               if ( ELBDM_HasWaveCounterpart( i, j, k, GID0, GID0 + LocalPID, GlobalTree ))
+               if ( ELBDM_HasWaveCounterpart( i, j, k, GID0, GID0 + LocalPID, *GlobalTree ))
                   counter++;
 
             bool flag = false;

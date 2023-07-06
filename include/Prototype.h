@@ -76,6 +76,7 @@ class LB_PatchCount;
 class LB_LocalPatchExchangeList;
 class LB_GlobalPatchExchangeList;
 class LB_GlobalPatch;
+class LB_GlobalTree;
 
 // Hydrodynamics
 void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
@@ -156,7 +157,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
                   double h_Corner_Array_F[][3],
                   bool h_IsCompletelyRefined[],
                   bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ],
-                  const int NPG, const int *PID0_List, LB_GlobalPatch* GlobalTree, LB_PatchCount* PatchCount);
+                  const int NPG, const int *PID0_List, LB_GlobalTree* GlobalTree);
 void Flu_FixUp_Flux( const int lv );
 void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const int SonMagSg, const int FaMagSg,
                          const int SonPotSg, const int FaPotSg, const long TVarCC, const long TVarFC );
@@ -195,7 +196,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 void Prepare_PatchData_HasWaveCounterpart(  const int lv, bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ],
                                             const int GhostSize, const int NPG, const int *PID0_List,
-                                            const NSide_t NSide, LB_GlobalPatch* GlobalTree, LB_PatchCount* PatchCount );
+                                            const NSide_t NSide, LB_GlobalTree* GlobalTree );
 #endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 // Init
@@ -561,8 +562,7 @@ double ELBDM_GetTimeStep_Phase( const int lv );
 #if   ( ELBDM_SCHEME == ELBDM_HYBRID )
 double ELBDM_GetTimeStep_Hybrid( const int lv );        // for CFL condition of SPS in phase form
 double ELBDM_GetTimeStep_Velocity( const int lv );      // for velocity dependence of Hamilton-Jacobi equation
-bool   ELBDM_HasWaveCounterpart(int I, int J, int K, long GID0, long GID, LB_GlobalPatch* tree);
-long   ELBDM_FindRefinedGID(int I, int J, int K, long GID0, long GID, LB_GlobalPatch* tree);
+bool   ELBDM_HasWaveCounterpart(int I, int J, int K, long GID0, long GID, const LB_GlobalTree& GlobalTree);
 #endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 //Flag for refining regions using wave solver

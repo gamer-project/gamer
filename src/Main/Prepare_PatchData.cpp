@@ -2765,7 +2765,7 @@ int Table_02( const int lv, const int PID, const int Side )
 //                Side : Sibling index (0~25)
 //                Tree : Array of LB_GlobalPatches with GID information
 //-------------------------------------------------------------------------------------------------------
-long Table_03( const int lv, const long GID, const int Side, LB_GlobalPatch* Tree)
+long Table_03( const int lv, const long GID, const int Side, LB_GlobalTree& Tree)
 {
 
    int Sib;
@@ -3676,7 +3676,7 @@ void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const real Tole
 
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
-void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ], const int GhostSize, const int NPG, const int *PID0_List, const NSide_t NSide, LB_GlobalPatch* GlobalTree, LB_PatchCount* PatchCount )
+void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ], const int GhostSize, const int NPG, const int *PID0_List, const NSide_t NSide, LB_GlobalTree* GlobalTree )
 {
 
 // nothing to do if there is no target patch group
@@ -3696,7 +3696,7 @@ void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpa
       for (int TID=0; TID<NPG; TID++)
       {
          PID0 = PID0_List[TID];
-         GID0 = PID0 + PatchCount->GID_Offset[lv];
+         GID0 = GlobalTree->PID2GID(PID0, lv);
 
 //       0. reset h_HasWaveCounterpart
          for (int i=0; i<CUBE(HYB_NXT); i++)  {
@@ -3716,7 +3716,7 @@ void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpa
             for (int j=0; j<PS1; j++)  {  J    = j + Disp_j;
                                           Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
             for (int i=0; i<PS1; i++)  {
-               h_HasWaveCounterpart[TID][Idx1] = ELBDM_HasWaveCounterpart( i, j, k, GID, GID, GlobalTree );
+               h_HasWaveCounterpart[TID][Idx1] = ELBDM_HasWaveCounterpart( i, j, k, GID, GID, *GlobalTree );
                Idx1 ++;
             }}}
 
@@ -3731,7 +3731,7 @@ void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpa
 //          nothing to do if no ghost zone is required
             if ( GhostSize == 0 )   break;
 
-            const long SibGID0 = Table_03( lv, GID0, Side, GlobalTree );    // the 0th patch of the sibling patch group
+            const long SibGID0 = Table_03( lv, GID0, Side, *GlobalTree );    // the 0th patch of the sibling patch group
 
 //          (b1) if the target sibling patch exists --> just copy data from the nearby patches at the same level
             if ( SibGID0 >= 0 )
@@ -3755,7 +3755,7 @@ void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpa
                   for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
                                                    Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
                   for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
-                     h_HasWaveCounterpart[TID][Idx1] = ELBDM_HasWaveCounterpart( I2, J2, K2, SibGID, SibGID, GlobalTree );
+                     h_HasWaveCounterpart[TID][Idx1] = ELBDM_HasWaveCounterpart( I2, J2, K2, SibGID, SibGID, *GlobalTree );
                      Idx1 ++;
                   }}}
 

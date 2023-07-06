@@ -1,7 +1,7 @@
 #include "GAMER.h"
 
 static void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const int NPG,
-                              const int *PID0_List, const int ArrayID, LB_GlobalPatch* GlobalTree, LB_PatchCount* PatchCount);
+                              const int *PID0_List, const int ArrayID, LB_GlobalTree* GlobalTree);
 static void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld,
                     const int NPG, const int ArrayID, const double dt, const double Poi_Coeff );
 static void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, const int SaveSg_Mag, const int SaveSg_Pot,
@@ -195,17 +195,18 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
    NPG[ArrayID] = ( NPG_Max < NTotal ) ? NPG_Max : NTotal;
 
-   LB_GlobalPatch* GlobalTree = NULL;
-   LB_PatchCount*  PatchCount = NULL;
+
+   LB_GlobalTree* GlobalTree = NULL;
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 // construct global tree structure
-   PatchCount    = new LB_PatchCount;
-   GlobalTree    = LB_GatherTree(*PatchCount, -1);
+   LB_GlobalTree GlobalTreeObject;
+
+   GlobalTree = &GlobalTreeObject;
 #  endif
 
 //-------------------------------------------------------------------------------------------------------------
-   TIMING_SYNC(   Preparation_Step( TSolver, lv, TimeNew, TimeOld, NPG[ArrayID], PID0_List, ArrayID, GlobalTree, PatchCount ),
+   TIMING_SYNC(   Preparation_Step( TSolver, lv, TimeNew, TimeOld, NPG[ArrayID], PID0_List, ArrayID, GlobalTree ),
                   Timer_Pre[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
 
@@ -224,7 +225,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
 
 //-------------------------------------------------------------------------------------------------------------
-      TIMING_SYNC(   Preparation_Step( TSolver, lv, TimeNew, TimeOld, NPG[ArrayID], PID0_List+Disp, ArrayID, GlobalTree, PatchCount ),
+      TIMING_SYNC(   Preparation_Step( TSolver, lv, TimeNew, TimeOld, NPG[ArrayID], PID0_List+Disp, ArrayID, GlobalTree ),
                      Timer_Pre[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
 
@@ -266,12 +267,6 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
 
    if ( AllocateList )  delete [] PID0_List;
-
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-   delete PatchCount;
-   delete [] GlobalTree;
-#  endif
-
 } // FUNCTION : InvokeSolver
 
 
@@ -305,7 +300,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 //                ArrayID   : Array index to load and store data ( 0 or 1 )
 //-------------------------------------------------------------------------------------------------------
 void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const int NPG,
-                       const int *PID0_List, const int ArrayID, LB_GlobalPatch* GlobalTree, LB_PatchCount* PatchCount )
+                       const int *PID0_List, const int ArrayID, LB_GlobalTree* GlobalTree )
 {
 
 #  ifndef UNSPLIT_GRAVITY
@@ -334,7 +329,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
    {
       case FLUID_SOLVER :
          Flu_Prepare( lv, TimeOld, h_Flu_Array_F_In[ArrayID], h_Mag_Array_F_In[ArrayID],
-                      h_Pot_Array_USG_F[ArrayID], h_Corner_Array_F[ArrayID], h_IsCompletelyRefined, h_HasWaveCounterpart, NPG, PID0_List, GlobalTree, PatchCount );
+                      h_Pot_Array_USG_F[ArrayID], h_Corner_Array_F[ArrayID], h_IsCompletelyRefined, h_HasWaveCounterpart, NPG, PID0_List, GlobalTree );
       break;
 
 #     ifdef GRAVITY

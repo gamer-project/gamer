@@ -80,10 +80,8 @@ real GetMaxVelocity( const int lv, bool ExcludeWaveCells )
    _dh      = (real)1.0/amr->dh[lv];
    _dh2     = (real)0.5*_dh;
 
-   LB_PatchCount pc;
-
 // construct global tree structure
-   LB_GlobalPatch* GlobalTree = LB_GatherTree(pc, -1);
+   LB_GlobalTree GlobalTree;
 
 #  pragma omp parallel private( Flu_Array, dS_dx, GradS, \
                                 im, ip, jm, jp, km, kp, I, J, K)
@@ -101,7 +99,6 @@ real GetMaxVelocity( const int lv, bool ExcludeWaveCells )
                             MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
 
-         long GID0 = PID0 + pc.GID_Offset[lv];
 
 //       evaluate dS_dt
          for (int k=NGhost; k<Size_Flu-NGhost; k++)    {  km = k - 1;    kp = k + 1;   K = k - NGhost;
@@ -110,6 +107,7 @@ real GetMaxVelocity( const int lv, bool ExcludeWaveCells )
 
 //       skip velocities of cells that have a wave counterpart on the refined levels
 
+         long GID0                   = GlobalTree.PID2GID(PID0, lv);
          bool DoNotCalculateVelocity = false;
          if ( ExcludeWaveCells )
          {
@@ -136,9 +134,6 @@ real GetMaxVelocity( const int lv, bool ExcludeWaveCells )
 
       delete [] Flu_Array;
    } // OpenMP parallel region
-
-// clean up global tree
-   delete [] GlobalTree;
 
 // get the maximum potential in all ranks
    real MaxdS_dx_AllRank;
