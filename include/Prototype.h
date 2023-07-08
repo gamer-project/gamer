@@ -446,7 +446,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 real*LB_GetBufferData_MemAllocate_Send( const int NSend );
 real*LB_GetBufferData_MemAllocate_Recv( const int NRecv );
 void LB_GrandsonCheck( const int lv );
-void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, const double ParWeight, const bool Reset, const int TLv );
+void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, const double ParWeight, const bool Reset,
+                          const bool SortRealPatch, const int TLv );
 void LB_Init_ByFunction();
 void LB_Init_Refine( const int FaLv, const bool AllocData );
 void LB_SetCutPoint( const int lv, const int NPG_Total, long *CutPoint, const bool InputLBIdx0AndLoad,
@@ -523,7 +524,8 @@ void MHD_BoundaryCondition_User( real **Array, const int BC_Face, const int NVar
                                  const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                  const int Idx_Start[], const int Idx_End[], const int TVarIdxList[],
                                  const double Time, const double dh, const double *Corner, const int lv );
-void MHD_Init_BField_ByFile( const int B_lv );
+void MHD_Init_BField_ByVecPot_File( const int B_lv );
+void MHD_Init_BField_ByVecPot_Function( const int B_lv );
 #ifdef LOAD_BALANCE
 void MHD_LB_EnsureBFieldConsistencyAfterRestrict( const int lv );
 void MHD_LB_AllocateElectricArray( const int FaLv );

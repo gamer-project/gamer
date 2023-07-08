@@ -65,7 +65,7 @@ bool                 OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
 bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__FREEZE_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 bool                 OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 bool                 OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
-bool                 OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID;
+bool                 OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID, OPT__SORT_PATCH_BY_LBIDX;
 
 UM_IC_Format_t       OPT__UM_IC_FORMAT;
 TestProbID_t         TESTPROB_ID;
@@ -105,7 +105,9 @@ bool                 OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC_MA
 bool                 OPT__OUTPUT_DIVMAG;
 int                  OPT__CK_DIVERGENCE_B;
 double               UNIT_B;
-bool                 OPT__INIT_BFIELD_BYFILE, OPT__SAME_INTERFACE_B;
+bool                 OPT__SAME_INTERFACE_B;
+
+OptInitMagByVecPot_t OPT__INIT_BFIELD_BYVECPOT;
 #endif
 
 #elif ( MODEL == ELBDM )
@@ -664,6 +666,7 @@ int main( int argc, char *argv[] )
          const bool   Redistribute_Yes = true;
          const bool   SendGridData_Yes = true;
          const bool   ResetLB_Yes      = true;
+         const bool   SortRealPatch_No = false;
 #        ifdef PARTICLE
          const double ParWeight        = amr->LB->Par_Weight;
 #        else
@@ -671,7 +674,7 @@ int main( int argc, char *argv[] )
 #        endif
          const int    AllLv            = -1;
 
-         LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, ParWeight, ResetLB_Yes, AllLv );
+         LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, ParWeight, ResetLB_Yes, SortRealPatch_No, AllLv );
 
          if ( OPT__PATCH_COUNT > 0 )         Aux_Record_PatchCount();
 
