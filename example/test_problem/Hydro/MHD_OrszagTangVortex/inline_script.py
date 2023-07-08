@@ -1,9 +1,10 @@
+import yt_libyt
 import yt
 
 yt.enable_parallelism()
 
 def yt_inline():
-    ds = yt.frontends.libyt.libytDataset()
+    ds = yt_libyt.libytDataset()
     slc = yt.OffAxisSlicePlot(ds, [1, 1, 0], [("gas", "density")], center="c")
     slc.annotate_cquiver(("gas", "cutting_plane_velocity_x"), ("gas", "cutting_plane_velocity_y"), factor=10, plot_args={"color":"orange"}, )
 
