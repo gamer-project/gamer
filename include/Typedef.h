@@ -67,6 +67,14 @@ const OptInit_t
    INIT_BY_FILE     = 3;
 
 
+// program initialization options for the magnetic field by vector potential
+typedef int OptInitMagByVecPot_t;
+const OptInitMagByVecPot_t
+   INIT_MAG_BYVECPOT_NONE = 0,
+   INIT_MAG_BYVECPOT_FILE = 1,
+   INIT_MAG_BYVECPOT_FUNC = 2;
+
+
 // data format for OPT__INIT=INIT_BY_FILE
 typedef int UM_IC_Format_t;
 const UM_IC_Format_t
@@ -86,6 +94,7 @@ const ParICFormat_t
 // FFTW startup options
 typedef int FFTWStartup_t;
 const FFTWStartup_t
+   FFTW_STARTUP_DEFAULT  = -1,
    FFTW_STARTUP_ESTIMATE = 0,
    FFTW_STARTUP_MEASURE  = 1,
    FFTW_STARTUP_PATIENT  = 2;
