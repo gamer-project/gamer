@@ -21,6 +21,11 @@ static void Init_Function_BField_User_Template( real magnetic[], const double x,
 // this function pointer must be set by a test problem initializer
 void (*Init_Function_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
                                        const int lv, double AuxArray[] ) = NULL;
+
+extern double (*MHD_ResetByUser_BField_Ptr)( const double x, const double y, const double z, const double Time,
+                                             const double dt, const int lv, const char Component, double AuxArray[], const double B_in,
+                                             const bool UseVecPot, const real *Ax, const real *Ay, const real *Az,
+                                             const int i, const int j, const int k );
 #endif
 
 
@@ -160,8 +165,16 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
       Aux_Error( ERROR_INFO, "Init_Function_BField_User_Ptr == NULL !!\n" );
 #  endif
 
-   if ( OPT__RESET_FLUID_INIT  &&  Flu_ResetByUser_Func_Ptr == NULL )
-      Aux_Error( ERROR_INFO, "Flu_ResetByUser_Func_Ptr == NULL for OPT__RESET_FLUID_INIT !!\n" );
+   if ( OPT__RESET_FLUID_INIT )
+   {
+#     ifdef MHD
+      if ( Flu_ResetByUser_Func_Ptr == NULL  &&  MHD_ResetByUser_BField_Ptr == NULL )
+         Aux_Error( ERROR_INFO, "Flu_ResetByUser_Func_Ptr == NULL and MHD_ResetByUser_BField_Ptr == NULL for OPT__RESET_FLUID_INIT !!\n" );
+#     else
+      if ( Flu_ResetByUser_Func_Ptr == NULL )
+         Aux_Error( ERROR_INFO, "Flu_ResetByUser_Func_Ptr == NULL for OPT__RESET_FLUID_INIT !!\n" );
+#     endif
+   }
 
 
 // set the number of OpenMP threads

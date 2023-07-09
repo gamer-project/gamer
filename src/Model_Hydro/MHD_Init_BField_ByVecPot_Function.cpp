@@ -32,7 +32,7 @@ double (*Init_BField_ByVecPot_User_Ptr)( const double x, const double y, const d
 //                AuxArray  : Auxiliary array
 //                            --> Useless since it is currently fixed to NULL
 //
-// Return      :  "XYZ" component of the magnetic vector potential at (x, y, z, Time)
+// Return      :  "Component"-component of the magnetic vector potential at (x, y, z, Time)
 //-------------------------------------------------------------------------------------------------------
 double Init_BField_ByVecPot_User_Template( const double x, const double y, const double z, const double Time,
                                            const int lv, const char Component, double AuxArray[] )
@@ -129,7 +129,7 @@ void MHD_Init_BField_ByVecPot_Function( const int B_lv )
       for (int j=0; j<PS1+1; j++) {  const double y0 = amr->patch[0][B_lv][PID]->EdgeL[1] + j*dh;
       for (int i=0; i<PS1+1; i++) {  const double x0 = amr->patch[0][B_lv][PID]->EdgeL[0] + i*dh;
 
-         int idx = IDX321( i, j, k, PS1+1, PS1+1 );
+         const int idx = IDX321( i, j, k, PS1+1, PS1+1 );
 
          Ax[TID][idx] = 0.0;
          Ay[TID][idx] = 0.0;
