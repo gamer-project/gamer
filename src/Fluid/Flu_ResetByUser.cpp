@@ -148,13 +148,15 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
 #  ifdef MHD
    if ( ResetMag ) {
 // 1-1. allocate memory for the vector potential arrays
-   real **Ax = NULL, **Ay = NULL, **Az = NULL;
+   real (*Ax)[ CUBE(PS1+1) ] = NULL;
+   real (*Ay)[ CUBE(PS1+1) ] = NULL;
+   real (*Az)[ CUBE(PS1+1) ] = NULL;
 
    if ( UseVecPot )
    {
-      Aux_AllocateArray2D( Ax, NT, CUBE(PS1+1) );
-      Aux_AllocateArray2D( Ay, NT, CUBE(PS1+1) );
-      Aux_AllocateArray2D( Az, NT, CUBE(PS1+1) );
+      Ax = new real [NT][ CUBE(PS1+1) ];
+      Ay = new real [NT][ CUBE(PS1+1) ];
+      Az = new real [NT][ CUBE(PS1+1) ];
    }
 
 
@@ -232,9 +234,9 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
 // 1-4. free memory
    if ( UseVecPot )
    {
-      Aux_DeallocateArray2D( Ax );
-      Aux_DeallocateArray2D( Ay );
-      Aux_DeallocateArray2D( Az );
+      delete [] Ax;
+      delete [] Ay;
+      delete [] Az;
    }
    } // if ( ResetMag )
 #  endif // #ifdef MHD
