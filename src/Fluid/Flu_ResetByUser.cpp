@@ -152,7 +152,7 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
    real (*Ax)[ CUBE(PS1+1) ] = NULL;
    real (*Ay)[ CUBE(PS1+1) ] = NULL;
    real (*Az)[ CUBE(PS1+1) ] = NULL;
-   real (*Emag_old)[PS1][PS1] = new real [PS1][PS1][PS1];
+   real (*Emag_old)[PS1][PS1][PS1] = new real [NT][PS1][PS1][PS1];
 
    if ( UseVecPot )
    {
@@ -165,15 +165,6 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
 #  pragma omp parallel for schedule( runtime )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
-//    1-2. store the magnetic energy density before resetting
-      for (int k=0; k<PS1; k++)
-      for (int j=0; j<PS1; j++)
-      for (int i=0; i<PS1; i++)
-         Emag_old[k][j][i] = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
-
-
-//    1-3. compute vector potential
-//         --> compute the entire patch at once to avoid redundant calculations
       const double dh_2 = 0.5*dh;
 #     ifdef OPENMP
       const int    TID  = omp_get_thread_num();
@@ -181,6 +172,15 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
       const int    TID  = 0;
 #     endif
 
+//    1-2. store the magnetic energy density before resetting
+      for (int k=0; k<PS1; k++)
+      for (int j=0; j<PS1; j++)
+      for (int i=0; i<PS1; i++)
+         Emag_old[TID][k][j][i] = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
+
+
+//    1-3. compute vector potential
+//         --> compute the entire patch at once to avoid redundant calculations
       real *AxTID = ( UseVecPot ) ? Ax[TID] : NULL;
       real *AyTID = ( UseVecPot ) ? Ay[TID] : NULL;
       real *AzTID = ( UseVecPot ) ? Az[TID] : NULL;
@@ -243,7 +243,7 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
       for (int i=0; i<PS1; i++)
       {
          const real Emag_new = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
-         amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i] += Emag_new - Emag_old[k][j][i];
+         amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i] += Emag_new - Emag_old[TID][k][j][i];
       }
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 

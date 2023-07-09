@@ -46,15 +46,16 @@ double MHD_ResetByUser_VecPot_Template( const double x, const double y, const do
                                         const double dt, const int lv, const char Component, double AuxArray[] )
 {
 
+   const double amp   = 1.0e2;   // amplitude
+   const double r0    = 1.0e-2;  // scale radius
+   const double t_min = 1.0e-3;  // starting time
+   const double t_max = 2.0e-3;  // ending time
+
    const double dx    = x - amr->BoxCenter[0];
    const double dy    = y - amr->BoxCenter[1];
    const double dz    = z - amr->BoxCenter[2];
-   const double eps   = amr->dh[MAX_LEVEL];    // softening
-   const double r     = sqrt( SQR(dx) + SQR(dy) + SQR(dz) + SQR(eps) );
-   const double amp   = 1.0e4;
-   const double Az    = amp/r;
-   const double t_min = 1.0e-3;
-   const double t_max = 2.0e-3;
+   const double r     = sqrt( SQR(dx) + SQR(dy) + SQR(dz) );
+   const double Az    = amp*exp( -r/r0 );
 
    double A;
 
@@ -62,7 +63,7 @@ double MHD_ResetByUser_VecPot_Template( const double x, const double y, const do
    {
       case 'x' : A = 0.0;  break;
       case 'y' : A = 0.0;  break;
-      case 'z' : A = ( Time > t_min && Time < t_max ) ? Az : 0.0;    break;
+      case 'z' : A = ( Time > t_min  &&  Time < t_max ) ? Az : 0.0;  break;
 
       default  : Aux_Error( ERROR_INFO, "unsupported component (%c) !!\n", Component );
    }
@@ -113,23 +114,42 @@ double MHD_ResetByUser_BField_Template( const double x, const double y, const do
                                         const int i, const int j, const int k )
 {
 
-   const double dh = amr->dh[lv];
+   const double amp   = 1.0e2;   // amplitude
+   const double r0    = 1.0e-2;  // scale radius
+   const double t_min = 1.0e-3;  // starting time
+   const double t_max = 2.0e-3;  // ending time
+
+   const double dh    = amr->dh[lv];
+   const double dx    = x - amr->BoxCenter[0];
+   const double dy    = y - amr->BoxCenter[1];
+   const double dz    = z - amr->BoxCenter[2];
+   const double r     = sqrt( SQR(dx) + SQR(dy) + SQR(dz) );
    double B_out;
 
    if ( UseVecPot )
    {
       switch ( Component )
       {
-         case 'x' :  B_out = B_in + MHD_ResetByUser_A2Bx( Ax, Ay, Az, i, j, k, dh );    break;
-         case 'y' :  B_out = B_in + MHD_ResetByUser_A2By( Ax, Ay, Az, i, j, k, dh );    break;
-         case 'z' :  B_out = B_in + MHD_ResetByUser_A2Bz( Ax, Ay, Az, i, j, k, dh );    break;
+         case 'x' :  B_out = B_in + dt*MHD_ResetByUser_A2Bx( Ax, Ay, Az, i, j, k, dh );    break;
+         case 'y' :  B_out = B_in + dt*MHD_ResetByUser_A2By( Ax, Ay, Az, i, j, k, dh );    break;
+         case 'z' :  B_out = B_in + dt*MHD_ResetByUser_A2Bz( Ax, Ay, Az, i, j, k, dh );    break;
          default  :  Aux_Error( ERROR_INFO, "unsupported component (%c) !!\n", Component );
       }
    } // if ( UseVecPot )
 
    else
    {
-      B_out = NULL_REAL;
+      if ( Time <= t_min  ||  Time >= t_max )
+         B_out = B_in;
+
+      else
+         switch ( Component )
+         {
+            case 'x' :  B_out = B_in - dt*amp*dy/(r0*r)*exp( -r/r0 );   break;
+            case 'y' :  B_out = B_in + dt*amp*dx/(r0*r)*exp( -r/r0 );   break;
+            case 'z' :  B_out = B_in;                                   break;
+            default  :  Aux_Error( ERROR_INFO, "unsupported component (%c) !!\n", Component );
+         }
    } // if ( UseVecPot ) ... else ...
 
    return B_out;
