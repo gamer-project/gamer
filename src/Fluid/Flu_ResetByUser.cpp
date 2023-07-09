@@ -131,9 +131,9 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
 #  endif
 
 
-   const bool   ResetFlu  = ( Flu_ResetByUser_Func_Ptr   != NULL ); 
+   const bool   ResetFlu  = ( Flu_ResetByUser_Func_Ptr   != NULL );
 #  ifdef MHD
-   const bool   ResetMag  = ( MHD_ResetByUser_BField_Ptr != NULL ); 
+   const bool   ResetMag  = ( MHD_ResetByUser_BField_Ptr != NULL );
    const bool   UseVecPot = ( MHD_ResetByUser_VecPot_Ptr != NULL );
 #  endif
    const double dh = amr->dh[lv];
@@ -147,10 +147,12 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
 // 1. reset the magnetic field
 #  ifdef MHD
    if ( ResetMag ) {
-// 1-1. allocate memory for the vector potential arrays
+
+// 1-1. allocate memory
    real (*Ax)[ CUBE(PS1+1) ] = NULL;
    real (*Ay)[ CUBE(PS1+1) ] = NULL;
    real (*Az)[ CUBE(PS1+1) ] = NULL;
+   real (*Emag_old)[PS1][PS1] = new real [PS1][PS1][PS1];
 
    if ( UseVecPot )
    {
@@ -163,6 +165,15 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
 #  pragma omp parallel for schedule( runtime )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
+//    1-2. store the magnetic energy density before resetting
+      for (int k=0; k<PS1; k++)
+      for (int j=0; j<PS1; j++)
+      for (int i=0; i<PS1; i++)
+         Emag_old[k][j][i] = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
+
+
+//    1-3. compute vector potential
+//         --> compute the entire patch at once to avoid redundant calculations
       const double dh_2 = 0.5*dh;
 #     ifdef OPENMP
       const int    TID  = omp_get_thread_num();
@@ -173,10 +184,6 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
       real *AxTID = ( UseVecPot ) ? Ax[TID] : NULL;
       real *AyTID = ( UseVecPot ) ? Ay[TID] : NULL;
       real *AzTID = ( UseVecPot ) ? Az[TID] : NULL;
-
-
-//    1-2. compute vector potential
-//         --> compute the entire patch at once to avoid redundant calculations
       if ( UseVecPot )
       {
          int idx = 0;
@@ -198,7 +205,7 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
       } // if ( UseVecPot )
 
 
-//    1-3. reset B field
+//    1-4. reset B field
 //         --> set one component at a time since different components are defined at different cell faces
       for (int v=0; v<NCOMP_MAG; v++)
       {
@@ -228,16 +235,27 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
             amr->patch[MagSg][lv][PID]->magnetic[v][ idx ++ ] = B_out;
          }}} // i,j,k
       } // for (int v=0; v<NCOMP_MAG; v++)
+
+
+//    1-5. update the total energy density
+      for (int k=0; k<PS1; k++)
+      for (int j=0; j<PS1; j++)
+      for (int i=0; i<PS1; i++)
+      {
+         const real Emag_new = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
+         amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i] += Emag_new - Emag_old[k][j][i];
+      }
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
 
-// 1-4. free memory
+// 1-6. free memory
    if ( UseVecPot )
    {
       delete [] Ax;
       delete [] Ay;
       delete [] Az;
    }
+   delete [] Emag_old;
    } // if ( ResetMag )
 #  endif // #ifdef MHD
 
