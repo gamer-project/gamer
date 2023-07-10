@@ -28,6 +28,8 @@ double (*MHD_ResetByUser_BField_Ptr)( const double x, const double y, const doub
 //
 // Note        :  1. Invoked by Flu_ResetByUser_API_Default() and Model_Init_ByFunction_AssignData() using the
 //                   function pointer "MHD_ResetByUser_VecPot_Ptr", which must be set by a test problem initializer
+//                   --> Model_Init_ByFunction_AssignData(): constructing an initial condition
+//                       Flu_ResetByUser_API_Default()     : during evolution
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   --> Please ensure that everything here is thread-safe
 //
@@ -80,9 +82,11 @@ double MHD_ResetByUser_VecPot_Template( const double x, const double y, const do
 //
 // Note        :  1. Invoked by Flu_ResetByUser_API_Default() and Model_Init_ByFunction_AssignData() using the
 //                   function pointer "MHD_ResetByUser_BField_Ptr", which must be set by a test problem initializer
-//                2. This function will be invoked when constructing the initial condition in
-//                   Model_Init_ByFunction_AssignData() and after each update in Flu_ResetByUser_API_Default()
-//                3. Enabled by the runtime options "OPT__RESET_FLUID" or "OPT__RESET_FLUID_INIT"
+//                   --> Model_Init_ByFunction_AssignData(): constructing an initial condition
+//                       Flu_ResetByUser_API_Default()     : during evolution
+//                2. Enabled by the runtime options "OPT__RESET_FLUID" or "OPT__RESET_FLUID_INIT"
+//                3. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   --> Please ensure that everything here is thread-safe
 //                4. Total energy density will be updated automatically
 //                5. To ensure divergence-free to the machine precision, one should either use vector potential
 //                   by setting MHD_ResetByUser_VecPot_Ptr or compute the *area-average* B field in this routine
@@ -90,8 +94,6 @@ double MHD_ResetByUser_VecPot_Template( const double x, const double y, const do
 //                       (x,y,z) = (x, [y-0.5*amr->dh[lv] ... y+0.5*amr->dh[lv]], [z-0.5*amr->dh[lv] ... z+0.5*amr->dh[lv]])
 //                   --> When using vector potential, the divergence-free condition can still break on the coarse-fine interfaces
 //                       --> Will be improved in the future
-//                6. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
-//                   --> Please ensure that everything here is thread-safe
 //
 // Parameter   :  x/y/z     : Target physical coordinates
 //                Time      : Target physical time

@@ -14,3 +14,4 @@ Default setup:
 Note:
 ========================================
 1. Two plot scripts are attached: "plot_profile.gpt" and "plot_slice.py"
+2. To reset the magnetic field during the runtime, turn on OPT__RESET_FLUID
