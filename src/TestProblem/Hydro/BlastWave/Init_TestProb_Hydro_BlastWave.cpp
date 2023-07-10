@@ -21,6 +21,7 @@ static bool   Blast_ResetB_VecPot;  // use vector potential to reset magnetic fi
 // =======================================================================================
 
 // problem-specific function prototypes
+bool Flag_BlastWave( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 #ifdef MHD
 double MHD_ResetByUser_VecPot_BlastWave( const double x, const double y, const double z, const double Time,
                                          const double dt, const int lv, const char Component, double AuxArray[] );
@@ -300,6 +301,7 @@ void Init_TestProb_Hydro_BlastWave()
    MHD_ResetByUser_BField_Ptr    = MHD_ResetByUser_BField_BlastWave;
    MHD_ResetByUser_VecPot_Ptr    = (Blast_ResetB_VecPot) ? MHD_ResetByUser_VecPot_BlastWave : NULL;
 #  endif
+   Flag_User_Ptr                 = Flag_BlastWave;
 #  endif // #if ( MODEL == HYDRO )
 
 

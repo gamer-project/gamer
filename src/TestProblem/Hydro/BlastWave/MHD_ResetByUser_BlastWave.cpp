@@ -44,7 +44,7 @@ double MHD_ResetByUser_VecPot_BlastWave( const double x, const double y, const d
    const double dy   = y - amr->BoxCenter[1];
    const double dz   = z - amr->BoxCenter[2];
    const double r    = sqrt( SQR(dx) + SQR(dy) + SQR(dz) );
-   const double Az   = amp*exp( -r/r0 );
+   const double Az   = amp*exp( -SQR(r/r0) );
 
    double A;
 
@@ -133,9 +133,9 @@ double MHD_ResetByUser_BField_BlastWave( const double x, const double y, const d
       else
          switch ( Component )
          {
-            case 'x' :  B_out = B_in - dt*amp*dy/(r0*r)*exp( -r/r0 );   break;
-            case 'y' :  B_out = B_in + dt*amp*dx/(r0*r)*exp( -r/r0 );   break;
-            case 'z' :  B_out = B_in;                                   break;
+            case 'x' :  B_out = B_in - dt*2.0*amp*dy/SQR(r0)*exp( -SQR(r/r0) );  break;
+            case 'y' :  B_out = B_in + dt*2.0*amp*dx/SQR(r0)*exp( -SQR(r/r0) );  break;
+            case 'z' :  B_out = B_in;                                            break;
             default  :  Aux_Error( ERROR_INFO, "unsupported component (%c) !!\n", Component );
          }
    } // if ( UseVecPot ) ... else ...
