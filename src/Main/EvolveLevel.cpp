@@ -628,23 +628,6 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                      Timer_GetBuf[lv][1],   TIMER_ON   );
 #     endif
 
-//    exchange the entire phase field (not only the updated parts) in buffers on level lv if level lv + 1 uses wave scheme
-//    this is required for backward matching
-//    if available, we use the phase information from the previous time step (1 - amr->FluSg[FaLv]) for this purpose
-#     if ( defined( LOAD_BALANCE ) && MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-      if ( lv != TOP_LEVEL )
-      if ( !amr->use_wave_flag[lv] && amr->use_wave_flag[lv+1] ) {
-         int FaLv    = lv;
-         int FaFluSg = amr->FluSg[FaLv];
-         if ( amr->FluSgTime[ FaLv] [ 1 - FaFluSg ] >= 0 ) {
-            FaFluSg = 1 - FaFluSg;
-         }
-         TIMING_FUNC(   Buf_GetBufferData( FaLv, FaFluSg, NULL_INT, NULL_INT, DATA_GENERAL,
-                                          _PHAS, _NONE, PATCH_SIZE, USELB_YES ),
-                        Timer_GetBuf[lv][2],   TIMER_ON   );
-      }
-#     endif // # if ( defined( LOAD_BALANCE ) && MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-
 
 //    9. update tracer particles
 // ===============================================================================================
@@ -744,6 +727,24 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //       12-1. use the average data on fine grids to correct the coarse-grid data
          if ( OPT__FIXUP_RESTRICT )
          {
+//          exchange the entire phase field (not only the updated parts) in buffers on level lv if level lv + 1 uses wave scheme
+//          this is required for backward matching during fixup
+#           if ( defined( LOAD_BALANCE ) && MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+            if ( lv != TOP_LEVEL )
+            if ( !amr->use_wave_flag[lv] && amr->use_wave_flag[lv+1] )
+            {
+               int FaLv    = lv;
+               int FaFluSg = amr->FluSg[FaLv];
+//             if available, use the phase information from the previous time step (1 - amr->FluSg[FaLv]) for this purpose
+               if ( amr->FluSgTime[ FaLv ] [ 1 - FaFluSg ] >= 0 ) {
+                  FaFluSg = 1 - FaFluSg;
+               }
+               TIMING_FUNC(   Buf_GetBufferData( FaLv, FaFluSg, NULL_INT, NULL_INT, DATA_GENERAL,
+                                                _PHAS, _NONE, PATCH_SIZE, USELB_YES ),
+                              Timer_GetBuf[lv][2],   TIMER_ON   );
+            }
+#           endif // # if ( defined( LOAD_BALANCE ) && MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+
             TIMING_FUNC(   Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv],
                                                NULL_INT, NULL_INT, _TOTAL, _MAG ),
                            Timer_FixUp[lv],   TIMER_ON   );
@@ -922,23 +923,9 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                            Timer_Refine[lv_refine],   TIMER_ON   );
 #           endif
 
+
 #           ifdef LOAD_BALANCE
 #           if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-//          exchange phase field on level lv if level lv + 1 uses wave scheme
-//          this is required for backward matching if option OPT__CORR_AFTER_ALL_SYNC is turned on
-//          otherwise, the phase field on FaLv will be exchanged after the fluid fields are updated
-//          if available, we use the phase information from the previous time step (1 - amr->FluSg[FaLv]) for this purpose
-            if ( !amr->use_wave_flag[lv_refine] && amr->use_wave_flag[lv_refine+1] && OPT__CORR_AFTER_ALL_SYNC ) {
-               int FaLv    = lv_refine;
-               int FaFluSg = amr->FluSg[FaLv];
-               if ( amr->FluSgTime[ FaLv ][ 1 - FaFluSg ] >= 0 ) {
-                  FaFluSg = 1 - FaFluSg;
-               }
-               TIMING_FUNC(   Buf_GetBufferData( FaLv, FaFluSg, NULL_INT, NULL_INT, DATA_GENERAL,
-                                                _PHAS, _NONE, PATCH_SIZE, USELB_YES ),
-                              Timer_GetBuf[lv_refine][4],   TIMER_ON   );
-            }
-
 //          exchange all fluid data on refined wave levels after switching to wave scheme
             if ( old_wave_flag != amr->use_wave_flag[ lv_refine + 1 ] ) {
                for (int i = lv_refine + 1; i <= TOP_LEVEL; ++i) {
