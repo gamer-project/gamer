@@ -462,13 +462,13 @@ if (XYZ == 0)
 
 //                compute kinetic velocity
 //                make sure fluxes computed at wave-fluid boundaries agree on left and right side
-                  if ( s_HasWaveCounterpart[sj][si - 1] && s_HasWaveCounterpart[sj][si] && s_HasWaveCounterpart[sj][si + 1]) {
-                     vp = _dh * UNWRAPGRADF1(s_In[sj][time_level][PHAS], si);
-                     vm = _dh * UNWRAPGRADB1(s_In[sj][time_level][PHAS], si);
-                  } else {
+                  //if ( s_HasWaveCounterpart[sj][si - 1] && s_HasWaveCounterpart[sj][si] && s_HasWaveCounterpart[sj][si + 1]) {
+                  //   vp = _dh * UNWRAPGRADF1(s_In[sj][time_level][PHAS], si);
+                  //   vm = _dh * UNWRAPGRADB1(s_In[sj][time_level][PHAS], si);
+                  //} else {
                      vp = _dh * GRADF1(s_In[sj][time_level][PHAS], si);
                      vm = _dh * GRADB1(s_In[sj][time_level][PHAS], si);
-                  }
+                  //}
 
 #                 if ( HYBRID_SCHEME == HYBRID_UPWIND )
 //                access Rc[time_level][i, i-1], Pc[time_level][i, i-1]
@@ -495,15 +495,15 @@ if (XYZ == 0)
 
 
 //                solve wave equation to get well-defined phase update even in regions where density vanishes
-                  if ( s_HasWaveCounterpart[sj][si] )
-                  {
-                     vp = UNWRAPGRADF1(s_In[sj][time_level][PHAS], si);
-                     vm = UNWRAPGRADB1(s_In[sj][time_level][PHAS], si);
-                  } else if ( FABS(QP) > 0.15 )
-                  {
-                     vp = GRADF1(s_In[sj][time_level][PHAS], si);
-                     vm = GRADB1(s_In[sj][time_level][PHAS], si);
-                  }  else
+                  //if ( s_HasWaveCounterpart[sj][si] )
+                  //{
+                  //   vp = UNWRAPGRADF1(s_In[sj][time_level][PHAS], si);
+                  //   vm = UNWRAPGRADB1(s_In[sj][time_level][PHAS], si);
+                  //} else if ( FABS(QP) > 0.15 )
+                  //{
+                  //   vp = GRADF1(s_In[sj][time_level][PHAS], si);
+                  //   vm = GRADB1(s_In[sj][time_level][PHAS], si);
+                  //}  else
                   {
                      vp = GRADF3(s_In[sj][time_level][PHAS], si);
                      vm = GRADB3(s_In[sj][time_level][PHAS], si);
