@@ -461,7 +461,8 @@ if (XYZ == 0)
 
 
 //                compute kinetic velocity
-                  if ( s_HasWaveCounterpart[sj][si] ) {
+//                make sure fluxes computed at wave-fluid boundaries agree on left and right side
+                  if ( s_HasWaveCounterpart[sj][si - 1] && s_HasWaveCounterpart[sj][si] && s_HasWaveCounterpart[sj][si + 1]) {
                      vp = _dh * UNWRAPGRADF1(s_In[sj][time_level][PHAS], si);
                      vm = _dh * UNWRAPGRADB1(s_In[sj][time_level][PHAS], si);
                   } else {
