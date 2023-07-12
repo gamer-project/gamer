@@ -479,7 +479,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 #                 endif
 
 //                make sure fluxes computed at wave-fluid boundaries agree on left and right side
-                  if ( s_HasWaveCounterpart[sj][si - 1] && s_HasWaveCounterpart[sj][si] && s_HasWaveCounterpart[sj][si + 1]) {
+                  //if ( s_HasWaveCounterpart[sj][si - 1] && s_HasWaveCounterpart[sj][si] && s_HasWaveCounterpart[sj][si + 1]) {
+                  if ( s_HasWaveCounterpart[sj][si] ) {
 //                   compute real and imaginary parts
                      const real Re_c       = SQRT(s_In[sj][time_level][DENS][si    ]) * COS(s_In[sj][time_level][PHAS][si    ]);
                      const real Re_p1      = SQRT(s_In[sj][time_level][DENS][si + 1]) * COS(s_In[sj][time_level][PHAS][si + 1]);
@@ -497,8 +498,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                      Ph_New                = EQUALISE(s_In[sj][time_level][PHAS][si], SATAN2(Im_New, Re_New)) - s_In[sj][time_level][PHAS][si];
                      De_New                = SQR(Re_New) + SQR(Im_New) - s_In[sj][time_level][DENS][si];
                   } else {
-                     vp = GRADF3(s_In[sj][time_level][PHAS], si);
-                     vm = GRADB3(s_In[sj][time_level][PHAS], si);
+                     vp = GRADF1(s_In[sj][time_level][PHAS], si);
+                     vm = GRADB1(s_In[sj][time_level][PHAS], si);
 
 //                   evolve continuity equation with density fluxes
 //                   evolve Hamilton-Jacobi equation with Osher-Sethian flux and quantum pressure discretisation
@@ -506,7 +507,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                      Ph_New = TIME_COEFFS[time_level] * Coeff2 * ( - SQR(MIN(vp, 0)) - SQR(MAX(vm, 0)) + QP );
                   }
 
-                  const bool Reset = FABS(Ph_New) > M_PI * 0.95;
 
 //                3.3 use N_TIME_LEVELS-stages RK-algorithm
                   for (uint tl = 0; tl < time_level + 1; ++tl) {
@@ -517,10 +517,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                   if ( De_New < 0 || De_New != De_New || Ph_New != Ph_New ) {
                      De_New = s_In[sj][0][DENS][si];
                      Ph_New = s_In[sj][0][PHAS][si];
-                  }
-
-                  if ( Reset ) {
-                     printf("Karamba\n");
                   }
 
 //                3.5 while computing the temporary results in RK algorithm, just write them to s_In
