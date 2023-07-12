@@ -498,8 +498,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                      Ph_New                = EQUALISE(s_In[sj][time_level][PHAS][si], SATAN2(Im_New, Re_New)) - s_In[sj][time_level][PHAS][si];
                      De_New                = SQR(Re_New) + SQR(Im_New) - s_In[sj][time_level][DENS][si];
                   } else {
-                     vp = GRADF1(s_In[sj][time_level][PHAS], si);
-                     vm = GRADB1(s_In[sj][time_level][PHAS], si);
+                     vp = GRADF3(s_In[sj][time_level][PHAS], si);
+                     vm = GRADB3(s_In[sj][time_level][PHAS], si);
 
 //                   evolve continuity equation with density fluxes
 //                   evolve Hamilton-Jacobi equation with Osher-Sethian flux and quantum pressure discretisation
@@ -515,8 +515,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                   }
 
                   if ( De_New < 0 || De_New != De_New || Ph_New != Ph_New ) {
-                     De_New = s_In[sj][0][DENS][si];
-                     Ph_New = s_In[sj][0][PHAS][si];
+                     printf("Kracher\n");
+                     //De_New = s_In[sj][0][DENS][si];
+                     //Ph_New = s_In[sj][0][PHAS][si];
                   }
 
 //                3.5 while computing the temporary results in RK algorithm, just write them to s_In
