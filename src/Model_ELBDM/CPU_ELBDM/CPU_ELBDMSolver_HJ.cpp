@@ -341,36 +341,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
       for (int bx=0; bx<NPatchGroup; bx++)
 #     endif
       {
-
-#        ifdef GAMER_DEBUG
-/*
-if (XYZ == 0)
-{
-         int counter = 0;
-         for (int k=0; k<CUBE(HYB_NXT); k++)
-         {
-            if (g_HasWaveCounterpart[bx][k]) counter++;
-         }
-
-         printf("PG with bx = %d counter %d\n", bx, counter);
-         int i = 10;
-         for (int j=0; j<HYB_NXT; j++)
-         {
-            for (int k=0; k<HYB_NXT; k++)
-            {
-               const int t1 = to1D1( i, j, k );
-
-               if (g_HasWaveCounterpart[bx][t1])
-                  printf("X ");
-               else
-                  printf("O ");
-            }
-            printf("\n");
-         }
-         printf("\n\n");
-}*/
-#        endif
-
          uint Column0 = 0;                // the total number of columns that have been updated
          uint Idx, Idx1, Idx2;            // temporary indices used for indexing column updates, writing data to g_Fluid_In, g_Fluid_Out
 #        ifdef CONSERVE_MASS
@@ -432,6 +402,27 @@ if (XYZ == 0)
 #              endif
 
                s_HasWaveCounterpart[sj][si]  = g_HasWaveCounterpart[bx][Idx1];
+            }
+
+//          1.4 sync data read into S_In
+#           ifdef __CUDACC__
+            __syncthreads();
+#           endif // # ifdef __CUDACC_
+
+
+            CELL_LOOP(HYB_NXT, 0, 0)
+            {
+               if (s_HasWaveCounterpart[sj][si])
+               {
+//                compute how far wrong information can propagate
+                  int l_min = si - 6 * 1;
+                  int l_max = si + 6 * 1 + 1;
+                  if (l_min < 0)        l_min = 0;
+                  if (l_max > HYB_NXT ) l_max = HYB_NXT;
+                  for (int l = l_min; l < l_max; ++l) {
+                     s_HasWaveCounterpart[sj][l] = true;
+                  }
+               }
             }
 
 //          1.4 sync data read into S_In
@@ -506,15 +497,8 @@ if (XYZ == 0)
                      Ph_New                = EQUALISE(s_In[sj][time_level][PHAS][si], SATAN2(Im_New, Re_New)) - s_In[sj][time_level][PHAS][si];
                      De_New                = SQR(Re_New) + SQR(Im_New) - s_In[sj][time_level][DENS][si];
                   } else {
-                     if ( FABS(QP) > 0.15 )
-                     {
-                        vp = GRADF1(s_In[sj][time_level][PHAS], si);
-                        vm = GRADB1(s_In[sj][time_level][PHAS], si);
-                     }  else
-                     {
-                        vp = GRADF3(s_In[sj][time_level][PHAS], si);
-                        vm = GRADB3(s_In[sj][time_level][PHAS], si);
-                     }
+                     vp = GRADF3(s_In[sj][time_level][PHAS], si);
+                     vm = GRADB3(s_In[sj][time_level][PHAS], si);
 
 //                   evolve continuity equation with density fluxes
 //                   evolve Hamilton-Jacobi equation with Osher-Sethian flux and quantum pressure discretisation
