@@ -750,8 +750,17 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                            Timer_FixUp[lv],   TIMER_ON   );
 
 #           ifdef LOAD_BALANCE
-            TIMING_FUNC(   LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT,
-                                             _TOTAL, _MAG, NULL_INT ),
+            GetBufMode_t GetBufMode = DATA_RESTRICT;
+            int ParaBuf = NULL_INT;
+
+            if ( Flu_ParaBuf == PATCH_SIZE )
+            {
+               GetBufMode = DATA_GENERAL;
+               ParaBuf    = PATCH_SIZE;
+            }
+
+            TIMING_FUNC(   LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, GetBufMode,
+                                             _TOTAL, _MAG, ParaBuf ),
                            Timer_GetBuf[lv][7],   TIMER_ON   );
 #           endif
          }
