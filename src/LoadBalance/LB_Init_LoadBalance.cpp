@@ -278,6 +278,21 @@ void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, cons
    }
 
 
+// 7. reset *SgTime[lv][ 1-*Sg[lv] ] to an arbitrary "negative" number to indicate that the
+//    data at 1-Sg are no longer available
+   if ( Redistribute )
+   for (int lv=lv_min; lv<=lv_max; lv++)
+   {
+      amr->FluSgTime[lv][ 1-amr->FluSg[lv] ] = -__FLT_MAX__;
+#     ifdef MHD
+      amr->MagSgTime[lv][ 1-amr->MagSg[lv] ] = -__FLT_MAX__;
+#     endif
+#     ifdef GRAVITY
+      amr->PotSgTime[lv][ 1-amr->PotSg[lv] ] = -__FLT_MAX__;
+#     endif
+   }
+
+
    if ( MPI_Rank == 0 )
    {
       char lv_str[MAX_STRING];
