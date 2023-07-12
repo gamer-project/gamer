@@ -92,22 +92,22 @@ void LB_Refine( const int FaLv )
    int    CFB_NSibEachRank[MPI_NRank];
    real  *CFB_BField=NULL;
 
-   bool switchNextLevelsToWaveScheme = false;
+   bool SwitchFinerLevelsToWaveScheme = false;
 
    LB_Refine_GetNewRealPatchList( FaLv, NNew_Home, NewPID_Home, NNew_Away, NewCr1D_Away, NewCr1D_Away_IdxTable, NewCData_Away,
                                   NDel_Home, DelPID_Home, NDel_Away, DelCr1D_Away,
                                   RefineF2S_Send_NPatchTotal, RefineF2S_Send_PIDList,
                                   CFB_SibLBIdx_Home, CFB_SibLBIdx_Away,
-                                  switchNextLevelsToWaveScheme );
+                                  SwitchFinerLevelsToWaveScheme );
 
 # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-// Sync information whether refined levels are switched to wave scheme
-   int send = switchNextLevelsToWaveScheme;
-   int recv;
+// sync information whether refined levels are switched to wave scheme
+   int Send = SwitchFinerLevelsToWaveScheme;
+   int Recv;
 
-   MPI_Allreduce(&send, &recv, 1, MPI_INT, MPI_LOR, MPI_COMM_WORLD);
+   MPI_Allreduce(&Send, &Recv, 1, MPI_INT, MPI_LOR, MPI_COMM_WORLD);
 
-   switchNextLevelsToWaveScheme = recv;
+   SwitchFinerLevelsToWaveScheme = Recv;
 # endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 // 3. get the magnetic field on the coarse-fine interfaces for the divergence-free interpolation
@@ -195,52 +195,49 @@ void LB_Refine( const int FaLv )
 
 
 
-// (c1.3.6) convert density/phase to density/real part/imaginary part in hybrid scheme if we switch the level from phase to wave
+// (c1.3.6) convert density/Phase to density/real part/imaginary part in hybrid scheme if we switch the level from Phase to wave
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( switchNextLevelsToWaveScheme ) {
-//    set corresponding flag
-      for (int level = SonLv; level <= TOP_LEVEL; ++level) {
-         int n_total = amr->NPatchComma[level][27];
-         int n_real  = amr->NPatchComma[level][1];
-         int n_buffer = n_total - n_real;
+   if ( SwitchFinerLevelsToWaveScheme ) {
+      for (int lv = SonLv; lv <= TOP_LEVEL; ++lv) {
+//       set use_wave_flag
+         amr->use_wave_flag[lv] = true;
 
-         amr->use_wave_flag[level] = true;
-         int fluSg = amr->FluSg[level];
 
-         real dens, amp, phase;
+//       convert patches
+         const int NTot  = amr->NPatchComma[lv][27];
+//       int NReal = amr->NPatchComma[lv][1];
+//       int NBuf  = NTot - NReal;
 
-         for (int PID=0; PID<amr->NPatchComma[level][1]; PID++)
+         int FluSg = amr->FluSg[lv];
+
+//       iterate over real and buffer patches
+         for (int PID=0; PID < NTot; PID++)
          {
-
-//          fluid data
             for (int k=0; k<PS1; k++)  {
             for (int j=0; j<PS1; j++)  {
             for (int i=0; i<PS1; i++)  {
-//             convert patches at current fluSg
-               dens  = amr->patch[  fluSg][level][PID]->fluid[DENS][k][j][i];
-               amp   = SQRT(dens);
-               phase = amr->patch[  fluSg][level][PID]->fluid[PHAS][k][j][i];
-               amr->patch[  fluSg][level][PID]->fluid[REAL][k][j][i] = amp * COS(phase);
-               amr->patch[  fluSg][level][PID]->fluid[IMAG][k][j][i] = amp * SIN(phase);
-
-//             convert patches at 1-fluSg if they are initialised
-               if ( amr->FluSgTime[level][1-fluSg] >= 0 ) {
-               dens  = amr->patch[1-fluSg][level][PID]->fluid[DENS][k][j][i];
-               amp   = SQRT(dens);
-               phase = amr->patch[1-fluSg][level][PID]->fluid[PHAS][k][j][i];
-               amr->patch[1-fluSg][level][PID]->fluid[REAL][k][j][i] = amp * COS(phase);
-               amr->patch[1-fluSg][level][PID]->fluid[IMAG][k][j][i] = amp * SIN(phase);
+//             convert both sandglasses
+               for ( int FluSg = 0; FluSg < 2; ++FluSg )
+               {
+//                check fluid != NULL for buffer patches
+                  if ( amr->patch[FluSg][lv][PID]->fluid != NULL && amr->FluSgTime[lv][FluSg] >= 0 )
+                  {
+                     const real Amp   = SQRT(amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i]);
+                     const real Phase = amr->patch[FluSg][lv][PID]->fluid[PHAS][k][j][i];
+                     amr->patch[FluSg][lv][PID]->fluid[REAL][k][j][i] = Amp * COS(Phase);
+                     amr->patch[FluSg][lv][PID]->fluid[IMAG][k][j][i] = Amp * SIN(Phase);
+                  }
                }
             }}}
          } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
-      } // for (int level = lv + 1; level < NLEVEL; ++level)
+      } // for (int lv = lv + 1; lv < NLEVEL; ++lv)
 
 //    sync flags across all MPI ranks after conversion
-      for (int i = SonLv; i <= TOP_LEVEL; ++i) {
-         Flag_Sync( i );
+      for (int lv = SonLv; lv <= TOP_LEVEL; ++lv) {
+         Flag_Sync(lv);
       }
-   } // if ( switchNextLevelToWaveScheme )
+   } // if ( SwitchFinerToWaveScheme )
 
 #   endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
 
