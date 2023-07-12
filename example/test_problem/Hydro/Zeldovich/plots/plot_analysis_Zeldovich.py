@@ -83,15 +83,18 @@ if (Gas_Par_Setup == 1): # gas-only setup
     Molecular_Weight       = ts0.parameters["MolecularWeight"]
     base_level_cell_num_3D = ts0.domain_dimensions             # [base_level_cell_num, base_level_cell_num, base_level_cell_num]
     base_level_mid_index   = base_level_cell_num_3D/2          # mid-point (x,y,z) grid indices
-    Const_amu               = 1.660539040e-24                  # in cgs
-    Const_kB                = 1.38064852e-16                   # in cgs
+    Const_amu              = 1.660539040e-24                   # in cgs
+    Const_kB               = 1.38064852e-16                    # in cgs
     # import data columns from GAMER "Output_L1Error()" output files
     def Output_L1Error_Read_In(input_filename):
         data                 = loadtxt("%s"%input_filename, skiprows=1, dtype=float)
         Input_Coordinates    = data[:,0].astype(float)
-        Input_Numerical      = data[:,1].astype(float)
-        Input_Analytical     = data[:,2].astype(float)
-        Input_Absolute_Error = data[:,3].astype(float)
+        Coord_SortOrder      = Input_Coordinates.argsort()
+        # ensure the output arrays are correctly ordered by the x-axis grid values
+        Input_Coordinates    = Input_Coordinates[Coord_SortOrder[::-1]]
+        Input_Numerical      = data[:,1].astype(float)[Coord_SortOrder[::-1]]
+        Input_Analytical     = data[:,2].astype(float)[Coord_SortOrder[::-1]]
+        Input_Absolute_Error = data[:,3].astype(float)[Coord_SortOrder[::-1]]
         Input_Relative_Error = Input_Absolute_Error/abs(Input_Analytical)
         return [Input_Coordinates,Input_Numerical,Input_Analytical,Input_Relative_Error]
     # combine two subplots vertically
@@ -129,7 +132,7 @@ for ds in ts.piter():
             [x_line_Coordinates,MomX_Numerical,MomX_Analytical,MomX_Relative_Error] = Output_L1Error_Read_In("../Zeldovich_MomX_%06d"%DumpID_now)
             [x_line_Coordinates,Pres_Numerical,Pres_Analytical,Pres_Relative_Error] = Output_L1Error_Read_In("../Zeldovich_Pres_%06d"%DumpID_now)
             [x_line_Coordinates,Temp_Numerical,Temp_Analytical,Temp_Relative_Error] = Output_L1Error_Read_In("../Zeldovich_Temp_%06d"%DumpID_now)
-            Temp_Numerical = Temp_Numerical*(Molecular_Weight*Const_amu/Const_kB*(Unit_E/Unit_M)/(current_time_a**2))            # [Kelvin]
+            Temp_Numerical = Temp_Numerical/(float(current_time_a)**2)              # [Kelvin]
             # Zeldovich pancake collapse temperature profile analytical solution at current_time_z
             def Zeldovich_Temp_Analytical(density_profile):
                 return Temp_gas_init*np.abs(((1+current_time_z)/(1+Z_Init))**3*density_profile)**(2.0/3.0)
