@@ -409,7 +409,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
             __syncthreads();
 #           endif // # ifdef __CUDACC_
 
-
+            /*
             CELL_LOOP(HYB_NXT, 0, 0)
             {
                if (s_HasWaveCounterpart[sj][si])
@@ -423,7 +423,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                      s_HasWaveCounterpart[sj][l] = true;
                   }
                }
-            }
+            }*/
 
 //          1.4 sync data read into S_In
 #           ifdef __CUDACC__
@@ -480,7 +480,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 
 //                make sure fluxes computed at wave-fluid boundaries agree on left and right side
                   //if ( s_HasWaveCounterpart[sj][si - 1] && s_HasWaveCounterpart[sj][si] && s_HasWaveCounterpart[sj][si + 1]) {
-                  if ( s_HasWaveCounterpart[sj][si] ) {
+                  if ( s_HasWaveCounterpart[sj][si] || FABS(QP) > 0.15 ) {
 //                   compute real and imaginary parts
                      const real Re_c       = SQRT(s_In[sj][time_level][DENS][si    ]) * COS(s_In[sj][time_level][PHAS][si    ]);
                      const real Re_p1      = SQRT(s_In[sj][time_level][DENS][si + 1]) * COS(s_In[sj][time_level][PHAS][si + 1]);
