@@ -1,6 +1,5 @@
 #include "CUFLU.h"
 #include "Macro.h"
-#include "stdio.h"
 
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
@@ -166,7 +165,7 @@ static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NXT) ],
                            const uint j_gap, const uint k_gap,
                            real s_In    [][N_TIME_LEVELS + 1][FLU_NIN][HYB_NXT],
                            real s_Flux  [][HYB_NXT],
-                           bool s_HasWaveCounterpart   [][HYB_NXT],
+                           int  s_HasWaveCounterpart   [][HYB_NXT],
                            const bool FinalOut, const int XYZ, const real MinDens );
 
 //-------------------------------------------------------------------------------------------------------
@@ -228,7 +227,7 @@ void CPU_ELBDMSolver_HamiltonJacobi(   real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NX
 #  ifdef __CUDACC__
 // create memories for columns of various intermediate fields in shared GPU memory
    __shared__ real  s_In                 [CGPU_FLU_BLOCK_SIZE_Y][N_TIME_LEVELS + 1][FLU_NIN][HYB_NXT];
-   __shared__ bool  s_HasWaveCounterpart [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT];        // booleans indicating where to switch to first-order
+   __shared__ int   s_HasWaveCounterpart [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT];        // booleans indicating where to switch to first-order
 
 #  ifdef CONSERVE_MASS
    __shared__ real  s_Flux               [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT];         // the average density fluxes
@@ -241,7 +240,7 @@ void CPU_ELBDMSolver_HamiltonJacobi(   real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NX
 #  else // #  ifdef __CUDACC__
 // allocate memory on stack within loop for CPU run
    real (*s_In)     [N_TIME_LEVELS + 1][FLU_NIN][HYB_NXT] = NULL;
-   bool (*s_HasWaveCounterpart)                 [HYB_NXT] = NULL;
+   int  (*s_HasWaveCounterpart)                 [HYB_NXT] = NULL;
    real (*s_Flux)                               [HYB_NXT] = NULL;
    const real _dh                                         = real(1.0)/dh;
 #  endif
@@ -315,7 +314,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                      const uint j_gap, const uint k_gap,
                      real s_In                 [][N_TIME_LEVELS + 1][FLU_NIN][HYB_NXT],
                      real s_Flux               [][HYB_NXT],
-                     bool s_HasWaveCounterpart [][HYB_NXT],
+                     int  s_HasWaveCounterpart [][HYB_NXT],
                      const bool FinalOut,
                      const int XYZ, const real MinDens )
 {
@@ -341,6 +340,36 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
       for (int bx=0; bx<NPatchGroup; bx++)
 #     endif
       {
+
+#        ifdef GAMER_DEBUG
+/*
+if (XYZ == 0)
+{
+         int counter = 0;
+         for (int k=0; k<CUBE(HYB_NXT); k++)
+         {
+            if (g_HasWaveCounterpart[bx][k]) counter++;
+         }
+
+         printf("PG with bx = %d counter %d\n", bx, counter);
+         int i = 10;
+         for (int j=0; j<HYB_NXT; j++)
+         {
+            for (int k=0; k<HYB_NXT; k++)
+            {
+               const int t1 = to1D1( i, j, k );
+
+               if (g_HasWaveCounterpart[bx][t1])
+                  printf("X ");
+               else
+                  printf("O ");
+            }
+            printf("\n");
+         }
+         printf("\n\n");
+}*/
+#        endif
+
          uint Column0 = 0;                // the total number of columns that have been updated
          uint Idx, Idx1, Idx2;            // temporary indices used for indexing column updates, writing data to g_Fluid_In, g_Fluid_Out
 #        ifdef CONSERVE_MASS
@@ -360,7 +389,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 
 //       create arrays for columns of various intermediate fields on the stack
          real s_In_1PG                      [CGPU_FLU_BLOCK_SIZE_Y][N_TIME_LEVELS + 1][FLU_NIN][HYB_NXT]; // density and phase fields at all RK stages
-         bool s_HasWaveCounterpart_1PG      [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT]; // use RK1
+         int  s_HasWaveCounterpart_1PG      [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT]; // use RK1
 
 #        ifdef CONSERVE_MASS
          real s_Flux_1PG                    [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT]; // boundary fluxes for fixup flux
@@ -409,27 +438,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
             __syncthreads();
 #           endif // # ifdef __CUDACC_
 
-            /*
-            CELL_LOOP(HYB_NXT, 0, 0)
-            {
-               if (s_HasWaveCounterpart[sj][si])
-               {
-//                compute how far wrong information can propagate
-                  int l_min = si - 6 * 1;
-                  int l_max = si + 6 * 1 + 1;
-                  if (l_min < 0)        l_min = 0;
-                  if (l_max > HYB_NXT ) l_max = HYB_NXT;
-                  for (int l = l_min; l < l_max; ++l) {
-                     s_HasWaveCounterpart[sj][l] = true;
-                  }
-               }
-            }*/
-
-//          1.4 sync data read into S_In
-#           ifdef __CUDACC__
-            __syncthreads();
-#           endif // # ifdef __CUDACC_
-
 //          2. Runge-Kutta iterations
             for (uint time_level = 0; time_level < N_TIME_LEVELS; ++time_level)
             {
@@ -451,9 +459,16 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                   const real LogRho_Lap = LogRho_p1 - 2 * LogRho_c + LogRho_m1;
                   const real QP         = real(1.0/2.0) * LogRho_Lap  + real(1.0/16.0) * SQR(LogRho_Vel);
 
+
 //                compute kinetic velocity
-                  vp = _dh * GRADF1(s_In[sj][time_level][PHAS], si);
-                  vm = _dh * GRADB1(s_In[sj][time_level][PHAS], si);
+//                make sure fluxes computed at wave-fluid boundaries agree on left and right side
+                  if ( s_HasWaveCounterpart[sj][si - 1] && s_HasWaveCounterpart[sj][si] && s_HasWaveCounterpart[sj][si + 1]) {
+                     vp = _dh * UNWRAPGRADF1(s_In[sj][time_level][PHAS], si);
+                     vm = _dh * UNWRAPGRADB1(s_In[sj][time_level][PHAS], si);
+                  } else {
+                     vp = _dh * GRADF1(s_In[sj][time_level][PHAS], si);
+                     vm = _dh * GRADB1(s_In[sj][time_level][PHAS], si);
+                  }
 
 #                 if ( HYBRID_SCHEME == HYBRID_UPWIND )
 //                access Rc[time_level][i, i-1], Pc[time_level][i, i-1]
@@ -478,35 +493,26 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                   }
 #                 endif
 
-//                make sure fluxes computed at wave-fluid boundaries agree on left and right side
-                  //if ( s_HasWaveCounterpart[sj][si - 1] && s_HasWaveCounterpart[sj][si] && s_HasWaveCounterpart[sj][si + 1]) {
-                  if ( s_HasWaveCounterpart[sj][si] || FABS(QP) > 0.15 ) {
-//                   compute real and imaginary parts
-                     const real Re_c       = SQRT(s_In[sj][time_level][DENS][si    ]) * COS(s_In[sj][time_level][PHAS][si    ]);
-                     const real Re_p1      = SQRT(s_In[sj][time_level][DENS][si + 1]) * COS(s_In[sj][time_level][PHAS][si + 1]);
-                     const real Re_m1      = SQRT(s_In[sj][time_level][DENS][si - 1]) * COS(s_In[sj][time_level][PHAS][si - 1]);
-                     const real Im_c       = SQRT(s_In[sj][time_level][DENS][si    ]) * SIN(s_In[sj][time_level][PHAS][si    ]);
-                     const real Im_p1      = SQRT(s_In[sj][time_level][DENS][si + 1]) * SIN(s_In[sj][time_level][PHAS][si + 1]);
-                     const real Im_m1      = SQRT(s_In[sj][time_level][DENS][si - 1]) * SIN(s_In[sj][time_level][PHAS][si - 1]);
-//                   compute laplacians
-                     const real Re_Lap     = Re_p1 - 2 * Re_c + Re_m1;
-                     const real Im_Lap     = Im_p1 - 2 * Im_c + Im_m1;
-//                   second-order centered in space forward in time wave equation update
-                     const real Re_New     = Re_c - TIME_COEFFS[time_level] * Coeff2 * Im_Lap;
-                     const real Im_New     = Im_c + TIME_COEFFS[time_level] * Coeff2 * Re_Lap;
-//                   convert back to phase, match to old phase and then subtract it to get dPhase with NewPhase = OldPhase + dPhase
-                     Ph_New                = EQUALISE(s_In[sj][time_level][PHAS][si], SATAN2(Im_New, Re_New)) - s_In[sj][time_level][PHAS][si];
-                     De_New                = SQR(Re_New) + SQR(Im_New) - s_In[sj][time_level][DENS][si];
-                  } else {
+
+//                solve wave equation to get well-defined phase update even in regions where density vanishes
+                  if ( s_HasWaveCounterpart[sj][si] )
+                  {
+                     vp = UNWRAPGRADF1(s_In[sj][time_level][PHAS], si);
+                     vm = UNWRAPGRADB1(s_In[sj][time_level][PHAS], si);
+                  } else if ( FABS(QP) > 0.15 )
+                  {
+                     vp = GRADF1(s_In[sj][time_level][PHAS], si);
+                     vm = GRADB1(s_In[sj][time_level][PHAS], si);
+                  }  else
+                  {
                      vp = GRADF3(s_In[sj][time_level][PHAS], si);
                      vm = GRADB3(s_In[sj][time_level][PHAS], si);
-
-//                   evolve continuity equation with density fluxes
-//                   evolve Hamilton-Jacobi equation with Osher-Sethian flux and quantum pressure discretisation
-                     De_New = TIME_COEFFS[time_level] * Coeff1 * ( fm - fp );
-                     Ph_New = TIME_COEFFS[time_level] * Coeff2 * ( - SQR(MIN(vp, 0)) - SQR(MAX(vm, 0)) + QP );
                   }
 
+//                evolve continuity equation with density fluxes
+//                evolve Hamilton-Jacobi equation with Osher-Sethian flux and quantum pressure discretisation
+                  De_New = TIME_COEFFS[time_level] * Coeff1 * ( fm - fp );
+                  Ph_New = TIME_COEFFS[time_level] * Coeff2 * ( - SQR(MIN(vp, 0)) - SQR(MAX(vm, 0)) + QP );
 
 //                3.3 use N_TIME_LEVELS-stages RK-algorithm
                   for (uint tl = 0; tl < time_level + 1; ++tl) {
@@ -515,9 +521,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                   }
 
                   if ( De_New < 0 || De_New != De_New || Ph_New != Ph_New ) {
-                     printf("Kracher\n");
-                     //De_New = s_In[sj][0][DENS][si];
-                     //Ph_New = s_In[sj][0][PHAS][si];
+                     De_New = s_In[sj][0][DENS][si];
+                     Ph_New = s_In[sj][0][PHAS][si];
                   }
 
 //                3.5 while computing the temporary results in RK algorithm, just write them to s_In
