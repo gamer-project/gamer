@@ -26,6 +26,12 @@ extern double (*MHD_ResetByUser_BField_Ptr)( const double x, const double y, con
                                              const double dt, const int lv, const char Component, double AuxArray[], const double B_in,
                                              const bool UseVecPot, const real *Ax, const real *Ay, const real *Az,
                                              const int i, const int j, const int k );
+extern double (*MHD_ResetByUser_VecPot_Ptr)( const double x, const double y, const double z, const double Time,
+                                             const double dt, const int lv, const char Component, double AuxArray[] );
+extern double (*MHD_ResetByUser_BField_Ptr)( const double x, const double y, const double z, const double Time,
+                                             const double dt, const int lv, const char Component, double AuxArray[], const double B_in,
+                                             const bool UseVecPot, const real *Ax, const real *Ay, const real *Az,
+                                             const int i, const int j, const int k );
 #endif
 
 
@@ -179,15 +185,18 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
 // set the number of OpenMP threads
 #  ifdef OPENMP
-   const int OMP_NThread = ( OPT__INIT_GRID_WITH_OMP ) ? OMP_NTHREAD : 1;
+   const int    OMP_NT    = ( OPT__INIT_GRID_WITH_OMP ) ? OMP_NTHREAD : 1;
 #  endif
-
-   const int    NSub     = ( INIT_SUBSAMPLING_NCELL <= 0 ) ? 1 : INIT_SUBSAMPLING_NCELL;
-   const double dh       = amr->dh[lv];
-   const double dh_sub   = dh / NSub;
-   const double _NSub3   = 1.0/CUBE(NSub);
+   const int    NSub      = ( INIT_SUBSAMPLING_NCELL <= 0 ) ? 1 : INIT_SUBSAMPLING_NCELL;
+   const double dh        = amr->dh[lv];
+   const double dh_sub    = dh / NSub;
+   const double _NSub3    = 1.0/CUBE(NSub);
+   const bool   ResetFlu  = ( Flu_ResetByUser_Func_Ptr   != NULL );
 #  ifdef MHD
-   const double _NSub2   = 1.0/SQR(NSub);
+   const double dh_2      = 0.5*dh;
+   const double _NSub2    = 1.0/SQR(NSub);
+   const bool   ResetMag  = ( MHD_ResetByUser_BField_Ptr != NULL );
+   const bool   UseVecPot = ( MHD_ResetByUser_VecPot_Ptr != NULL  &&  ResetMag );
 #  endif
 
 
@@ -199,31 +208,76 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
       case INIT_MAG_BYVECPOT_FUNC : MHD_Init_BField_ByVecPot_Function( lv );   break;
       default                     : Aux_Error( ERROR_INFO, "unsupported OPT__INIT_BFIELD_BYVECPOT (%d) !!\n", OPT__INIT_BFIELD_BYVECPOT );
    }
-#  endif
+
+   real (*Ax)[ CUBE(PS1+1) ] = NULL;
+   real (*Ay)[ CUBE(PS1+1) ] = NULL;
+   real (*Az)[ CUBE(PS1+1) ] = NULL;
+
+   if ( UseVecPot )
+   {
+      Ax = new real [OMP_NT][ CUBE(PS1+1) ];
+      Ay = new real [OMP_NT][ CUBE(PS1+1) ];
+      Az = new real [OMP_NT][ CUBE(PS1+1) ];
+   }
+#  endif // #ifdef MHD
 
 
-#  pragma omp parallel for schedule( runtime ) num_threads( OMP_NThread )
+#  pragma omp parallel for schedule( runtime ) num_threads( OMP_NT )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
 //    1. set the magnetic field
 #     ifdef MHD
 
+//    1-1. compute vector potential
+//         --> compute the entire patch at once to avoid redundant calculations
+#     ifdef OPENMP
+      const int TID = omp_get_thread_num();
+#     else
+      const int TID = 0;
+#     endif
+
+      real *AxTID = ( UseVecPot ) ? Ax[TID] : NULL;
+      real *AyTID = ( UseVecPot ) ? Ay[TID] : NULL;
+      real *AzTID = ( UseVecPot ) ? Az[TID] : NULL;
+
+      if ( UseVecPot )
+      {
+         int idx = 0;
+
+         for (int k=0; k<PS1+1; k++) {  const double z = amr->patch[0][lv][PID]->EdgeL[2] + k*dh;
+         for (int j=0; j<PS1+1; j++) {  const double y = amr->patch[0][lv][PID]->EdgeL[1] + j*dh;
+         for (int i=0; i<PS1+1; i++) {  const double x = amr->patch[0][lv][PID]->EdgeL[0] + i*dh;
+
+            AxTID[idx] = (real)0.0;
+            AyTID[idx] = (real)0.0;
+            AzTID[idx] = (real)0.0;
+
+            if ( i != PS1 )   AxTID[idx] = MHD_ResetByUser_VecPot_Ptr( x+dh_2, y,      z,      0.0, 0.0, lv, 'x', NULL );
+            if ( j != PS1 )   AyTID[idx] = MHD_ResetByUser_VecPot_Ptr( x,      y+dh_2, z,      0.0, 0.0, lv, 'y', NULL );
+            if ( k != PS1 )   AzTID[idx] = MHD_ResetByUser_VecPot_Ptr( x,      y,      z+dh_2, 0.0, 0.0, lv, 'z', NULL );
+
+            idx ++;
+         }}} // i,j,k
+      } // if ( UseVecPot )
+
+
       if ( !OPT__INIT_BFIELD_BYVECPOT ) {
 
          real magnetic_1v, magnetic_sub[NCOMP_MAG];
 
-   //    loop over B_X/Y/Z to set one component at a time
+   //    1-2. loop over B_X/Y/Z to set one component at a time
    //    --> because different components are defined at different cell faces
          for (int v=0; v<NCOMP_MAG; v++)
          {
             int    ijk_end[3], sub_end[3], idx=0;
-            double dxyz0[3];
+            double dxyz0[3], dxyz0_reset[3];
 
             for (int d=0; d<3; d++)
             {
-               ijk_end[d] = ( d == v ) ? PS1+1 : PS1;
-               sub_end[d] = ( d == v ) ? 1     : NSub;
-               dxyz0  [d] = ( d == v ) ? 0.0   : 0.5*dh_sub;
+               ijk_end    [d] = ( d == v ) ? PS1+1 : PS1;
+               sub_end    [d] = ( d == v ) ? 1     : NSub;
+               dxyz0      [d] = ( d == v ) ? 0.0   : 0.5*dh_sub;
+               dxyz0_reset[d] = ( d == v ) ? 0.0   : dh_2;
             }
 
             for (int k=0; k<ijk_end[2]; k++)    {  const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + k*dh + dxyz0[2];
@@ -242,7 +296,22 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
                }}}
 
-               amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[v][ idx ++ ] = magnetic_1v*_NSub2;
+               magnetic_1v *= _NSub2;
+
+               amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[v][idx] = magnetic_1v;
+
+               if ( ResetMag )
+               {
+                  const double x_reset = amr->patch[0][lv][PID]->EdgeL[0] + i*dh + dxyz0_reset[0];
+                  const double y_reset = amr->patch[0][lv][PID]->EdgeL[1] + j*dh + dxyz0_reset[1];
+                  const double z_reset = amr->patch[0][lv][PID]->EdgeL[2] + k*dh + dxyz0_reset[2];
+                  const real   B_reset = MHD_ResetByUser_BField_Ptr( x_reset, y_reset, z_reset, 0.0, 0.0, lv, 'x'+v, NULL, magnetic_1v,
+                                                                     UseVecPot, AxTID, AyTID, AzTID, i, j, k );
+
+                  amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[v][idx] = B_reset;
+               }
+
+               idx ++;
             }}} // i,j,k
          } // for (int v=0; v<NCOMP_MAG; v++)
       } // if ( !OPT__INIT_BFIELD_BYVECPOT )
@@ -268,7 +337,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
 //          modify the initial condition if required
 //          --> always set the magnetic energy to zero since fluid_sub[ENGY] doesn't include that
-            if ( OPT__RESET_FLUID_INIT )
+            if ( ResetFlu )
                Flu_ResetByUser_Func_Ptr( fluid_sub, (real)0.0, x, y, z, Time[lv], 0.0, lv, NULL );
 
             for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] += fluid_sub[v];
@@ -310,6 +379,16 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
       }}} // i,j,k
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+
+
+#  ifdef MHD
+   if ( UseVecPot )
+   {
+      delete [] Ax;
+      delete [] Ay;
+      delete [] Az;
+   }
+#  endif
 
 } // FUNCTION : Hydro_Init_ByFunction_AssignData
 

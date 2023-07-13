@@ -136,11 +136,12 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
    const bool   ResetMag  = ( MHD_ResetByUser_BField_Ptr != NULL );
    const bool   UseVecPot = ( MHD_ResetByUser_VecPot_Ptr != NULL );
 #  endif
-   const double dh = amr->dh[lv];
+   const double dh   = amr->dh[lv];
+   const double dh_2 = 0.5*dh;
 #  ifdef OPENMP
-   const int    NT = OMP_NTHREAD;   // number of OpenMP threads
+   const int    NT   = OMP_NTHREAD;   // number of OpenMP threads
 #  else
-   const int    NT = 1;
+   const int    NT   = 1;
 #  endif
 
 
@@ -165,7 +166,6 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
 #  pragma omp parallel for schedule( runtime )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
-      const double dh_2 = 0.5*dh;
 #     ifdef OPENMP
       const int    TID  = omp_get_thread_num();
 #     else
@@ -215,7 +215,7 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
          for (int d=0; d<3; d++)
          {
             ijk_end[d] = ( d == v ) ? PS1+1 : PS1;
-            dxyz0  [d] = ( d == v ) ? 0.0   : 0.5*dh;
+            dxyz0  [d] = ( d == v ) ? 0.0   : dh_2;
          }
 
          const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + dxyz0[0];
@@ -266,9 +266,9 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
 #  pragma omp parallel for schedule( runtime )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
-      const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
-      const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
-      const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
+      const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + dh_2;
+      const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + dh_2;
+      const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + dh_2;
 
       real fluid[NCOMP_TOTAL];
 
