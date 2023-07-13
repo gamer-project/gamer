@@ -47,7 +47,7 @@ void Aux_Check_Restrict( const int lv, const char *comment )
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 // convert between phase/dens and re/im
-   const bool convertWaveToFluid = ( amr->use_wave_flag[lv] == false && amr->use_wave_flag[lv + 1] == true );
+   const bool ConvertWaveToFluid = ( amr->use_wave_flag[lv] == false && amr->use_wave_flag[lv + 1] == true );
 #  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
    int    SonPID0, SonPID, ii0, jj0, kk0, ii, jj, kk;
@@ -104,9 +104,9 @@ void Aux_Check_Restrict( const int lv, const char *comment )
 #                 if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 //                two components required to convert from wave to fluid
 //                store the phase in the REAL component of the wave and ignore the imaginary part
-                  if ( convertWaveToFluid && v == REAL && v == PHAS) {
+                  if ( ConvertWaveToFluid && v == REAL && v == PHAS) {
                      ResData[v][k][j][i] = ELBDM_UnwrapPhase(u, SATAN2(ResData[IMAG][k][j][i], ResData[REAL][k][j][i]));
-                  } else if ( convertWaveToFluid && v == IMAG && v == STUB ) {
+                  } else if ( ConvertWaveToFluid && v == IMAG && v == STUB ) {
                      ResData[v][k][j][i] = 0;
                   }
 #                 endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )

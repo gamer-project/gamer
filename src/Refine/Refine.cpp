@@ -142,7 +142,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //          2. convert refined patch to IM/RE after interpolation
 //
 
-   bool switchNextLevelsToWaveScheme = false;
+   bool SwitchFinerLevelsToWaveScheme = false;
 
 #  endif
 
@@ -257,9 +257,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        endif
 
 #        if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-         if ( !amr->use_wave_flag[lv+1] && !amr->use_wave_flag[lv] && Pedigree->use_wave_flag ) {
-            switchNextLevelsToWaveScheme = true;
-         }
+         SwitchFinerLevelsToWaveScheme = !amr->use_wave_flag[lv+1] && !amr->use_wave_flag[lv] && Pedigree->use_wave_flag;
 #        endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 
@@ -1210,7 +1208,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 // (c1.3.6) convert density/phase to density/real part/imaginary part in hybrid scheme if we switch the level from phase to wave
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( switchNextLevelsToWaveScheme ) {
+   if ( SwitchFinerLevelsToWaveScheme ) {
 
       //Set corresponding flag
       for (int level = lv + 1; level <= MAX_LEVEL; ++level) {

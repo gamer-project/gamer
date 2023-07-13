@@ -23,17 +23,13 @@ static void GetMaxLevel(patch_t *patch, int lv, int& maxlv);
 //-------------------------------------------------------------------------------------------------------
 double ELBDM_GetTimeStep_Velocity( const int lv )
 {
-
-   real   MaxdS_dx, NoExclusion;
-   double dt, dt2;
-
+   const bool ExcludeWaveCells = true;
 
 // get the velocity dS/dx / dx as first derivative of phase
-   MaxdS_dx     = GetMaxVelocity( lv, true);
-   MaxdS_dx    += 1e-8;
+   const real MaxdS_dx     = GetMaxVelocity( lv, ExcludeWaveCells) + 1e-8;
 
 // get the time-step
-   dt  = 1 / MaxdS_dx * 0.5 * ELBDM_ETA * DT__HYBRID_VELOCITY;
+   const double dt  = 1.0 / MaxdS_dx * 0.5 * ELBDM_ETA * DT__HYBRID_VELOCITY;
 
    return dt;
 

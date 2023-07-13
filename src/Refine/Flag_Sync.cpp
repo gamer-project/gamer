@@ -5,14 +5,14 @@
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Flag_Sync
+// Function    :  Sync_UseWaveFlag
 // Description :  Sync amr->use_wave_flag across all GAMER ranks
 //
 // Note        :  None
 //
 // Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
-void Flag_Sync( const int lv )
+void Sync_UseWaveFlag( const int lv )
 {
 
    if ( lv < 0  ||  lv > TOP_LEVEL )
@@ -24,6 +24,6 @@ void Flag_Sync( const int lv )
     MPI_Allreduce(&send, &recv, 1, MPI_INT, MPI_LOR, MPI_COMM_WORLD);
 
     amr->use_wave_flag[lv] = recv;
-} // FUNCTION : Flag_Sync
+} // FUNCTION : Sync_UseWaveFlag
 
 #endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )

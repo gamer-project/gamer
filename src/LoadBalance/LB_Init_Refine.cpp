@@ -75,7 +75,7 @@ void LB_Init_Refine( const int FaLv, const bool AllocData )
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 // ensure that all MPI ranks see the same use_wave_flag
-   Flag_Sync( SonLv );
+   Sync_UseWaveFlag( SonLv );
 #  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 } // FUNCTION : LB_Init_Refine

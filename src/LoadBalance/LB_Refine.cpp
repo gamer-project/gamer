@@ -229,7 +229,7 @@ void LB_Refine( const int FaLv )
 //    sync flags across all MPI ranks after conversion
       for (int lv = SonLv; lv <= TOP_LEVEL; ++lv)
       {
-         Flag_Sync(lv);
+         Sync_UseWaveFlag(lv);
       } // for (int lv = SonLv; lv <= TOP_LEVEL; ++lv)
    } // if ( SwitchFinerToWaveScheme )
 
