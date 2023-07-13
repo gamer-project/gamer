@@ -191,11 +191,11 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
    const double dh        = amr->dh[lv];
    const double dh_sub    = dh / NSub;
    const double _NSub3    = 1.0/CUBE(NSub);
-   const bool   ResetFlu  = ( Flu_ResetByUser_Func_Ptr   != NULL );
+   const bool   ResetFlu  = ( Flu_ResetByUser_Func_Ptr   != NULL  &&  OPT__RESET_FLUID_INIT );
 #  ifdef MHD
    const double dh_2      = 0.5*dh;
    const double _NSub2    = 1.0/SQR(NSub);
-   const bool   ResetMag  = ( MHD_ResetByUser_BField_Ptr != NULL );
+   const bool   ResetMag  = ( MHD_ResetByUser_BField_Ptr != NULL  &&  OPT__RESET_FLUID_INIT );
    const bool   UseVecPot = ( MHD_ResetByUser_VecPot_Ptr != NULL  &&  ResetMag );
 #  endif
 
