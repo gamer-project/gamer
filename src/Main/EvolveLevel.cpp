@@ -836,16 +836,18 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             int FirstWaveLevel = NLEVEL;
 
 //          determine first level using wave scheme
-            for (int lv = 0; lv < NLEVEL; ++lv ) {
-               if ( amr->use_wave_flag[lv] ) {
-                  FirstWaveLevel = lv;
+            for (int wave_lv = 0; wave_lv < NLEVEL; ++wave_lv ) {
+               if ( amr->use_wave_flag[wave_lv] ) {
+                  FirstWaveLevel = wave_lv;
                   break;
                }
             }
 
 //          make sure Refine_NLevel reaches at least first wave level
             if ( lv < FirstWaveLevel )
+            {
                Refine_NLevel = MAX(FirstWaveLevel - lv, REFINE_NLEVEL);
+            }
          }
 #        endif // # ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
