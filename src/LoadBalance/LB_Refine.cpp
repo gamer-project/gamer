@@ -204,14 +204,8 @@ void LB_Refine( const int FaLv )
 
 
 //       convert patches
-         const int NTot  = amr->NPatchComma[lv][27];
-//       int NReal = amr->NPatchComma[lv][1];
-//       int NBuf  = NTot - NReal;
-
-         int FluSg = amr->FluSg[lv];
-
 //       iterate over real and buffer patches
-         for (int PID=0; PID < NTot; PID++)
+         for (int PID=0; PID < amr->NPatchComma[lv][27]; PID++)
          {
             for (int k=0; k<PS1; k++)  {
             for (int j=0; j<PS1; j++)  {
@@ -227,16 +221,16 @@ void LB_Refine( const int FaLv )
                      amr->patch[FluSg][lv][PID]->fluid[REAL][k][j][i] = Amp * COS(Phase);
                      amr->patch[FluSg][lv][PID]->fluid[IMAG][k][j][i] = Amp * SIN(Phase);
                   }
-               }
-            }}}
-         } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-
+               } // FluSg
+            }}} // k,j,i
+         } // for (int PID=0; PID < amr->NPatchComma[lv][27]; PID++)
       } // for (int lv = lv + 1; lv < NLEVEL; ++lv)
 
 //    sync flags across all MPI ranks after conversion
-      for (int lv = SonLv; lv <= TOP_LEVEL; ++lv) {
+      for (int lv = SonLv; lv <= TOP_LEVEL; ++lv)
+      {
          Flag_Sync(lv);
-      }
+      } // for (int lv = SonLv; lv <= TOP_LEVEL; ++lv)
    } // if ( SwitchFinerToWaveScheme )
 
 #   endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)

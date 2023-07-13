@@ -750,17 +750,8 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                            Timer_FixUp[lv],   TIMER_ON   );
 
 #           ifdef LOAD_BALANCE
-            GetBufMode_t GetBufMode = DATA_RESTRICT;
-            int ParaBuf = NULL_INT;
-
-            if ( Flu_ParaBuf == PATCH_SIZE )
-            {
-               GetBufMode = DATA_GENERAL;
-               ParaBuf    = PATCH_SIZE;
-            }
-
-            TIMING_FUNC(   LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, GetBufMode,
-                                             _TOTAL, _MAG, ParaBuf ),
+            TIMING_FUNC(   LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT,
+                                             _TOTAL, _MAG, NULL_INT ),
                            Timer_GetBuf[lv][7],   TIMER_ON   );
 #           endif
          }
@@ -822,7 +813,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #        else
          if ( OPT__FIXUP_FLUX  ||  OPT__FIXUP_RESTRICT )
 #        endif
-         TIMING_FUNC(   Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_AFTER_FIXUP,
+         TIMING_FUNC(   Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, Flu_ParaBuf < PATCH_SIZE ? DATA_AFTER_FIXUP : DATA_GENERAL,
                                            _TOTAL, _MAG, Flu_ParaBuf, USELB_YES  ),
                         Timer_GetBuf[lv][3],   TIMER_ON   );
 
