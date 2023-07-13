@@ -355,7 +355,7 @@ void Refine_Buffer( const int lv, const int *SonTable, const int *GrandTable );
 #endif
 
 #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-void Flag_Sync( const int lv );
+void Sync_UseWaveFlag( const int lv );
 #endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 // SelfGravity
