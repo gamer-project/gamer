@@ -831,6 +831,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          int refine_nlevel = REFINE_NLEVEL;
 
 #        if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+/*
 //       always refine at least until first wave level + REFINE_NLEVEL when using fluid scheme
          if ( !amr->use_wave_flag[lv] ) {
             int first_wave_level = NLEVEL;
@@ -846,7 +847,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //          make sure refine_nlevel reaches to first wave level plus REFINE_NLEVEL
             if ( lv < first_wave_level )
                refine_nlevel = first_wave_level - lv + REFINE_NLEVEL;
-         }
+         }*/
 #        endif // # ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 
