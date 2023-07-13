@@ -81,7 +81,7 @@ void Flu_CorrAfterAllSync()
 //    if available, we use the phase information from the previous time step (1 - amr->FluSg[FaLv]) for this purpose
       if ( !amr->use_wave_flag[lv] && amr->use_wave_flag[lv+1] ) {
          int FaLv    = lv;
-         int FaFluSg = amr->FluSg[ lv ];
+         int FaFluSg = amr->FluSg[ FaLv ];
          if ( amr->FluSgTime[ FaLv ][ 1 - FaFluSg ] >= 0 ) {
             FaFluSg = 1 - FaFluSg;
          }
