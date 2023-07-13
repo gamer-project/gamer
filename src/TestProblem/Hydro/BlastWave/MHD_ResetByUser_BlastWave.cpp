@@ -52,7 +52,7 @@ double MHD_ResetByUser_VecPot_BlastWave( const double x, const double y, const d
    {
       case 'x' : A = 0.0;  break;
       case 'y' : A = 0.0;  break;
-      case 'z' : A = ( Time > tmin  &&  Time < tmax ) ? Az : 0.0;  break;
+      case 'z' : A = ( Time >= tmin  &&  Time <= tmax ) ? Az : 0.0;  break;
 
       default  : Aux_Error( ERROR_INFO, "unsupported component (%c) !!\n", Component );
    }
@@ -127,7 +127,7 @@ double MHD_ResetByUser_BField_BlastWave( const double x, const double y, const d
 
    else
    {
-      if ( Time <= tmin  ||  Time >= tmax )
+      if ( Time < tmin  ||  Time > tmax )
          B_out = B_in;
 
       else
