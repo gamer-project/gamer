@@ -520,9 +520,16 @@ if (XYZ == 0)
                      Ph_New += RK_COEFFS[time_level][tl] * s_In[sj][tl][PHAS][si];
                   }
 
-                  if ( De_New < 0 || De_New != De_New || Ph_New != Ph_New ) {
+                  if ( De_New < 0 || De_New != De_New || Ph_New != Ph_New) {
                      De_New = s_In[sj][0][DENS][si];
                      Ph_New = s_In[sj][0][PHAS][si];
+
+//                   compute how far wrong information can propagate
+                     int l_min = si - (N_TIME_LEVELS - time_level) * 2;
+                     int l_max = si + (N_TIME_LEVELS - time_level) * 2 + 1;
+                     if (l_min < 0)        l_min = 0;
+                     if (l_max > HYB_NXT ) l_max = HYB_NXT;
+                     for (int l = l_min; l < l_max; ++l) s_HasWaveCounterpart[sj][l] = 2;
                   }
 
 //                3.5 while computing the temporary results in RK algorithm, just write them to s_In
@@ -547,6 +554,12 @@ if (XYZ == 0)
 
                real De_New = s_In[sj][N_TIME_LEVELS][DENS][si];
                real Ph_New = s_In[sj][N_TIME_LEVELS][PHAS][si];
+
+               if ( s_HasWaveCounterpart[sj][si] == 2 )
+               {
+                  De_New = s_In[sj][0][DENS][si];
+                  Ph_New = s_In[sj][0][PHAS][si];
+               }
 
                if ( FinalOut )
                {
