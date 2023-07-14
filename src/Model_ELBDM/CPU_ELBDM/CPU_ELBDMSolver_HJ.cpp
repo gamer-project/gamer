@@ -495,35 +495,24 @@ if (XYZ == 0)
 
 
 //                solve wave equation to get well-defined phase update even in regions where density vanishes
-                  if ( s_HasWaveCounterpart[sj][si] || FABS(QP) > 0.15 )
+                  if ( s_HasWaveCounterpart[sj][si] )
                   {
-//                   compute real and imaginary parts
-                     const real Re_c       = SQRT(s_In[sj][time_level][DENS][si    ]) * COS(s_In[sj][time_level][PHAS][si    ]);
-                     const real Re_p1      = SQRT(s_In[sj][time_level][DENS][si + 1]) * COS(s_In[sj][time_level][PHAS][si + 1]);
-                     const real Re_m1      = SQRT(s_In[sj][time_level][DENS][si - 1]) * COS(s_In[sj][time_level][PHAS][si - 1]);
-                     const real Im_c       = SQRT(s_In[sj][time_level][DENS][si    ]) * SIN(s_In[sj][time_level][PHAS][si    ]);
-                     const real Im_p1      = SQRT(s_In[sj][time_level][DENS][si + 1]) * SIN(s_In[sj][time_level][PHAS][si + 1]);
-                     const real Im_m1      = SQRT(s_In[sj][time_level][DENS][si - 1]) * SIN(s_In[sj][time_level][PHAS][si - 1]);
-//                   compute laplacians
-                     const real Re_Lap     = Re_p1 - 2 * Re_c + Re_m1;
-                     const real Im_Lap     = Im_p1 - 2 * Im_c + Im_m1;
-//                   second-order centered in space forward in time wave equation update
-                     const real Re_New     = Re_c - TIME_COEFFS[time_level] * Coeff2 * Im_Lap;
-                     const real Im_New     = Im_c + TIME_COEFFS[time_level] * Coeff2 * Re_Lap;
-//                   convert back to phase, match to old phase and then subtract it to get dPhase with NewPhase = OldPhase + dPhase
-                     Ph_New                = EQUALISE(s_In[sj][time_level][PHAS][si], SATAN2(Im_New, Re_New)) - s_In[sj][time_level][PHAS][si];
-                     De_New                = SQR(Re_New) + SQR(Im_New) - s_In[sj][time_level][DENS][si];
-
-                  } else
+                     vp = UNWRAPGRADF1(s_In[sj][time_level][PHAS], si);
+                     vm = UNWRAPGRADB1(s_In[sj][time_level][PHAS], si);
+                  } else if ( FABS(QP) > 0.15 )
+                  {
+                     vp = GRADF1(s_In[sj][time_level][PHAS], si);
+                     vm = GRADB1(s_In[sj][time_level][PHAS], si);
+                  }  else
                   {
                      vp = GRADF3(s_In[sj][time_level][PHAS], si);
                      vm = GRADB3(s_In[sj][time_level][PHAS], si);
-
-//                   evolve continuity equation with density fluxes
-//                   evolve Hamilton-Jacobi equation with Osher-Sethian flux and quantum pressure discretisation
-                     De_New = TIME_COEFFS[time_level] * Coeff1 * ( fm - fp );
-                     Ph_New = TIME_COEFFS[time_level] * Coeff2 * ( - SQR(MIN(vp, 0)) - SQR(MAX(vm, 0)) + QP );
                   }
+
+//                evolve continuity equation with density fluxes
+//                evolve Hamilton-Jacobi equation with Osher-Sethian flux and quantum pressure discretisation
+                  De_New = TIME_COEFFS[time_level] * Coeff1 * ( fm - fp );
+                  Ph_New = TIME_COEFFS[time_level] * Coeff2 * ( - SQR(MIN(vp, 0)) - SQR(MAX(vm, 0)) + QP );
 
 //                3.3 use N_TIME_LEVELS-stages RK-algorithm
                   for (uint tl = 0; tl < time_level + 1; ++tl) {
