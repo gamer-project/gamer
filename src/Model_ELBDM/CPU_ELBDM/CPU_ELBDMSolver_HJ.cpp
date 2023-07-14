@@ -499,10 +499,6 @@ if (XYZ == 0)
                   {
                      vp = UNWRAPGRADF1(s_In[sj][time_level][PHAS], si);
                      vm = UNWRAPGRADB1(s_In[sj][time_level][PHAS], si);
-                  } else if ( FABS(QP) > 0.15 )
-                  {
-                     vp = GRADF1(s_In[sj][time_level][PHAS], si);
-                     vm = GRADB1(s_In[sj][time_level][PHAS], si);
                   }  else
                   {
                      vp = GRADF3(s_In[sj][time_level][PHAS], si);
