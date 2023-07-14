@@ -311,6 +311,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
    const uint size_j       = HYB_NXT - 2 * j_gap;             // number of y-columns to be updated
    const uint size_k       = HYB_NXT - 2 * k_gap;             // number of z-columns to be updated
    const uint NColumnTotal = size_j * size_k;                 // total number of data columns to be updated
+   const uint NThread      = CGPU_FLU_BLOCK_SIZE_X * CGPU_FLU_BLOCK_SIZE_Y;  // total number of threads in thread block
 
 
 // openmp pragma for the CPU solver
@@ -327,36 +328,31 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 #     endif // #  ifdef CONSERVE_MASS ... # else
 
 #     ifdef __CUDACC__
-      const int bx = blockIdx.x;
+//    use two-dimensional thread blocks in GPU mode
+      const uint tx            = threadIdx.x;
+      const uint ty            = threadIdx.y;
+      const uint tid           = ty * CGPU_FLU_BLOCK_SIZE_X + tx;                // thread ID within block
+      const int  bx            = blockIdx.x;
 #     else
+//    every block just has a single thread with temporary memory on the stack in CPU mode
+      const uint tx            = 0;
+      const uint ty            = 0;
+      const uint tid           = 0;
 //    in CPU mode, every thread works on one patch group at a time and corresponds to one block in the grid of the GPU solver
 #     pragma omp for schedule( runtime )
       for (int bx=0; bx<NPatchGroup; bx++)
 #     endif
       {
 
-         uint Column0 = 0;                // the total number of columns that have been updated
          uint Idx, Idx1, Idx2;            // temporary indices used for indexing column updates, writing data to g_Fluid_In, g_Fluid_Out
 #        ifdef CONSERVE_MASS
          uint Idx3;                       // temporary index used for writing data to g_Flux
 #        endif // # ifdef CONSERVE_MASS
          uint si, sj;                     // array indices used in the shared memory array
          uint NStep;                      // number of iterations for updating each column
-
-#        ifdef __CUDACC__
-//       use two-dimensional thread blocks in GPU mode
-         const uint tx            = threadIdx.x;
-         const uint ty            = threadIdx.y;
-#        else  // # ifdef __CUDACC__
-//       every block just has a single thread with temporary memory on the stack in CPU mode
-         const uint tx            = 0;
-         const uint ty            = 0;
-#        endif // # ifdef __CUDACC__ ... # else
-
-         const uint tid                 = ty * CGPU_FLU_BLOCK_SIZE_X + tx;                // thread ID within block
-               uint j,k;                                                             // (j,k): array indices used in g_Fluid_In
+         uint j,k;                        // (j,k): array indices used in g_Fluid_In
+         uint Column0                   = 0;                                              // the total number of columns that have been updated
          uint NColumnOnce               = MIN( NColumnTotal, CGPU_FLU_BLOCK_SIZE_Y );     // number of columns updated per iteration
-         const uint NThread             = CGPU_FLU_BLOCK_SIZE_X * CGPU_FLU_BLOCK_SIZE_Y;  // total number of threads within block
          const bool IsCompletelyRefined = g_IsCompletelyRefined[bx];
 
 
