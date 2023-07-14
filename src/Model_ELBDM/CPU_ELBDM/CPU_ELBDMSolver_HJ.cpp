@@ -462,13 +462,8 @@ if (XYZ == 0)
 
 //                compute kinetic velocity
 //                make sure fluxes computed at wave-fluid boundaries agree on left and right side
-                  if ( s_HasWaveCounterpart[sj][si - 1] && s_HasWaveCounterpart[sj][si] && s_HasWaveCounterpart[sj][si + 1]) {
-                     vp = _dh * UNWRAPGRADF1(s_In[sj][time_level][PHAS], si);
-                     vm = _dh * UNWRAPGRADB1(s_In[sj][time_level][PHAS], si);
-                  } else {
-                     vp = _dh * GRADF1(s_In[sj][time_level][PHAS], si);
-                     vm = _dh * GRADB1(s_In[sj][time_level][PHAS], si);
-                  }
+                  vp = _dh * GRADF1(s_In[sj][time_level][PHAS], si);
+                  vm = _dh * GRADB1(s_In[sj][time_level][PHAS], si);
 
 #                 if ( HYBRID_SCHEME == HYBRID_UPWIND )
 //                access Rc[time_level][i, i-1], Pc[time_level][i, i-1]
@@ -484,7 +479,6 @@ if (XYZ == 0)
                   fp = MUSCL_FM (s_In[sj][time_level][DENS], vp, si + 1, Coeff1);
 #                 endif
 
-
 #                 ifdef CONSERVE_MASS
 //                2.2.1 update density fluxes
                   s_Flux[sj][si] += FLUX_COEFFS[time_level] * fm;
@@ -493,32 +487,22 @@ if (XYZ == 0)
                   }
 #                 endif
 
-
 //                solve wave equation to get well-defined phase update even in regions where density vanishes
-                  if ( s_HasWaveCounterpart[sj][si] )
-                  {
-                     vp = UNWRAPGRADF1(s_In[sj][time_level][PHAS], si);
-                     vm = UNWRAPGRADB1(s_In[sj][time_level][PHAS], si);
-                  }  else
-                  {
-                     vp = GRADF3(s_In[sj][time_level][PHAS], si);
-                     vm = GRADB3(s_In[sj][time_level][PHAS], si);
-                  }
+                  vp = GRADF3(s_In[sj][time_level][PHAS], si);
+                  vm = GRADB3(s_In[sj][time_level][PHAS], si);
 
 //                evolve continuity equation with density fluxes
 //                evolve Hamilton-Jacobi equation with Osher-Sethian flux and quantum pressure discretisation
-                  De_New = TIME_COEFFS[time_level] * Coeff1 * ( fm - fp );
-                  Ph_New = TIME_COEFFS[time_level] * Coeff2 * ( - SQR(MIN(vp, 0)) - SQR(MAX(vm, 0)) + QP );
+                  De_New = Coeff1 * ( fm - fp );
+                  Ph_New = Coeff2 * ( - SQR(MIN(vp, 0)) - SQR(MAX(vm, 0)) + QP );
+
+                  De_New *= TIME_COEFFS[time_level];
+                  Ph_New *= TIME_COEFFS[time_level];
 
 //                3.3 use N_TIME_LEVELS-stages RK-algorithm
                   for (uint tl = 0; tl < time_level + 1; ++tl) {
                      De_New += RK_COEFFS[time_level][tl] * s_In[sj][tl][DENS][si];
                      Ph_New += RK_COEFFS[time_level][tl] * s_In[sj][tl][PHAS][si];
-                  }
-
-                  if ( De_New < 0 || De_New != De_New || Ph_New != Ph_New ) {
-                     De_New = s_In[sj][0][DENS][si];
-                     Ph_New = s_In[sj][0][PHAS][si];
                   }
 
 //                3.5 while computing the temporary results in RK algorithm, just write them to s_In
@@ -541,8 +525,30 @@ if (XYZ == 0)
                j = j_gap + ( sj + Column0 ) % size_j ;
                k = k_gap + ( sj + Column0 ) / size_j;
 
-               real De_New = s_In[sj][N_TIME_LEVELS][DENS][si];
-               real Ph_New = s_In[sj][N_TIME_LEVELS][PHAS][si];
+               const real De_Old = s_In[sj][0][DENS][si];
+               const real Ph_Old = s_In[sj][0][PHAS][si];
+               real De_New       = s_In[sj][N_TIME_LEVELS][DENS][si];
+               real Ph_New       = s_In[sj][N_TIME_LEVELS][PHAS][si];
+
+//             detect failure of fluid scheme
+               if ( s_HasWaveCounterpart[sj][si] && (De_New < 0 || De_New != De_New || Ph_New != Ph_New || FABS(Ph_New - Ph_Old) > M_PI )) {
+//                   compute real and imaginary parts
+                     const real Re_c       = SQRT(s_In[sj][0][DENS][si    ]) * COS(s_In[sj][0][PHAS][si    ]);
+                     const real Re_p1      = SQRT(s_In[sj][0][DENS][si + 1]) * COS(s_In[sj][0][PHAS][si + 1]);
+                     const real Re_m1      = SQRT(s_In[sj][0][DENS][si - 1]) * COS(s_In[sj][0][PHAS][si - 1]);
+                     const real Im_c       = SQRT(s_In[sj][0][DENS][si    ]) * SIN(s_In[sj][0][PHAS][si    ]);
+                     const real Im_p1      = SQRT(s_In[sj][0][DENS][si + 1]) * SIN(s_In[sj][0][PHAS][si + 1]);
+                     const real Im_m1      = SQRT(s_In[sj][0][DENS][si - 1]) * SIN(s_In[sj][0][PHAS][si - 1]);
+//                   compute laplacians
+                     const real Re_Lap     = Re_p1 - 2 * Re_c + Re_m1;
+                     const real Im_Lap     = Im_p1 - 2 * Im_c + Im_m1;
+//                   second-order centered in space forward in time wave equation update
+                     const real Re_New     = Re_c - Coeff2 * Im_Lap;
+                     const real Im_New     = Im_c + Coeff2 * Re_Lap;
+//                   convert back to phase, match to old phase and then subtract it to get dPhase with NewPhase = OldPhase + dPhase
+                     Ph_New                = EQUALISE( Ph_Old, SATAN2(Im_New, Re_New) );
+                     De_New                = SQR(Re_New) + SQR(Im_New);
+               }
 
                if ( FinalOut )
                {
