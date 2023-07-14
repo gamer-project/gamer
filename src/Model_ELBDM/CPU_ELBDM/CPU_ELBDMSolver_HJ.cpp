@@ -18,6 +18,12 @@
 # define CGPU_FLU_BLOCK_SIZE_Y 1
 #endif
 
+#ifdef __CUDACC__
+#define CGPU_SHARED __shared__
+#else
+#define CGPU_SHARED
+#endif
+
 GPU_DEVICE
 static uint get1D1(uint k, uint j, uint i, int XYZ) {
    switch ( XYZ )
@@ -163,9 +169,6 @@ static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NXT) ],
                            int NPatchGroup,
                            const real dt, const real _dh, const real Eta, const bool StoreFlux,
                            const uint j_gap, const uint k_gap,
-                           real s_In    [][N_TIME_LEVELS + 1][FLU_NIN][HYB_NXT],
-                           real s_Flux  [][HYB_NXT],
-                           int  s_HasWaveCounterpart   [][HYB_NXT],
                            const bool FinalOut, const int XYZ, const real MinDens );
 
 //-------------------------------------------------------------------------------------------------------
@@ -225,43 +228,28 @@ void CPU_ELBDMSolver_HamiltonJacobi(   real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NX
 #endif
 {
 #  ifdef __CUDACC__
-// create memories for columns of various intermediate fields in shared GPU memory
-   __shared__ real  s_In                 [CGPU_FLU_BLOCK_SIZE_Y][N_TIME_LEVELS + 1][FLU_NIN][HYB_NXT];
-   __shared__ int   s_HasWaveCounterpart [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT];        // booleans indicating where to switch to first-order
-
-#  ifdef CONSERVE_MASS
-   __shared__ real  s_Flux               [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT];         // the average density fluxes
-#  else  // #  ifdef CONSERVE_MASS
-              real (*s_Flux)                                                                [HYB_NXT] = NULL;  // useless if CONSERVE_MASS is off
-#  endif // #  ifdef CONSERVE_MASS ... # else
-
    const int NPatchGroup = 0;
-
 #  else // #  ifdef __CUDACC__
-// allocate memory on stack within loop for CPU run
-   real (*s_In)     [N_TIME_LEVELS + 1][FLU_NIN][HYB_NXT] = NULL;
-   int  (*s_HasWaveCounterpart)                 [HYB_NXT] = NULL;
-   real (*s_Flux)                               [HYB_NXT] = NULL;
-   const real _dh                                         = real(1.0)/dh;
+   const real _dh = real(1.0)/dh;
 #  endif
 
    if ( XYZ )
    {
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, g_IsCompletelyRefined, g_HasWaveCounterpart, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                                  0,              0, s_In, s_Flux, s_HasWaveCounterpart, false, 0, MinDens );
+                                  0,              0, false, 0, MinDens );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, g_IsCompletelyRefined, g_HasWaveCounterpart, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                     HYB_GHOST_SIZE,              0, s_In, s_Flux, s_HasWaveCounterpart, false, 3, MinDens );
+                     HYB_GHOST_SIZE,              0, false, 3, MinDens );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, g_IsCompletelyRefined, g_HasWaveCounterpart, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                     HYB_GHOST_SIZE, HYB_GHOST_SIZE, s_In, s_Flux, s_HasWaveCounterpart,  true, 6, MinDens );
+                     HYB_GHOST_SIZE, HYB_GHOST_SIZE,  true, 6, MinDens );
    }
    else
    {
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, g_IsCompletelyRefined, g_HasWaveCounterpart, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                                  0,              0, s_In, s_Flux, s_HasWaveCounterpart, false, 6, MinDens );
+                                  0,              0, false, 6, MinDens );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, g_IsCompletelyRefined, g_HasWaveCounterpart, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                                  0, HYB_GHOST_SIZE, s_In, s_Flux, s_HasWaveCounterpart, false, 3, MinDens );
+                                  0, HYB_GHOST_SIZE, false, 3, MinDens );
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, g_IsCompletelyRefined, g_HasWaveCounterpart, NPatchGroup, dt, _dh, Eta, StoreFlux,
-                     HYB_GHOST_SIZE, HYB_GHOST_SIZE, s_In, s_Flux, s_HasWaveCounterpart,  true, 0, MinDens );
+                     HYB_GHOST_SIZE, HYB_GHOST_SIZE,  true, 0, MinDens );
    }
 
 } // FUNCTION : CUFLU_ELBDMSolver_HamiltonJacobi
@@ -312,9 +300,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                      int NPatchGroup,
                      const real dt, const real _dh, const real Eta, const bool StoreFlux,
                      const uint j_gap, const uint k_gap,
-                     real s_In                 [][N_TIME_LEVELS + 1][FLU_NIN][HYB_NXT],
-                     real s_Flux               [][HYB_NXT],
-                     int  s_HasWaveCounterpart [][HYB_NXT],
                      const bool FinalOut,
                      const int XYZ, const real MinDens )
 {
@@ -327,16 +312,25 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
    const uint size_k       = HYB_NXT - 2 * k_gap;             // number of z-columns to be updated
    const uint NColumnTotal = size_j * size_k;                 // total number of data columns to be updated
 
+
 // openmp pragma for the CPU solver
 #  ifndef __CUDACC__
 #  pragma omp parallel
 #  endif
    {
+//    create memories for columns of various intermediate fields on stack or shared GPU memory
+      CGPU_SHARED real  s_In                 [CGPU_FLU_BLOCK_SIZE_Y][N_TIME_LEVELS + 1][FLU_NIN][HYB_NXT];
+      CGPU_SHARED int   s_HasWaveCounterpart [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT];        // booleans indicating where to switch to first-order
+
+#     ifdef CONSERVE_MASS
+      CGPU_SHARED real  s_Flux               [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT];         // the average density fluxes
+#     endif // #  ifdef CONSERVE_MASS ... # else
+
 #     ifdef __CUDACC__
       const int bx = blockIdx.x;
 #     else
 //    in CPU mode, every thread works on one patch group at a time and corresponds to one block in the grid of the GPU solver
-#     pragma omp for schedule( runtime ) private ( s_In, s_Flux, s_HasWaveCounterpart )
+#     pragma omp for schedule( runtime )
       for (int bx=0; bx<NPatchGroup; bx++)
 #     endif
       {
@@ -357,22 +351,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 //       every block just has a single thread with temporary memory on the stack in CPU mode
          const uint tx            = 0;
          const uint ty            = 0;
-
-//       create arrays for columns of various intermediate fields on the stack
-         real s_In_1PG                      [CGPU_FLU_BLOCK_SIZE_Y][N_TIME_LEVELS + 1][FLU_NIN][HYB_NXT]; // density and phase fields at all RK stages
-         int  s_HasWaveCounterpart_1PG      [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT]; // use RK1
-
-#        ifdef CONSERVE_MASS
-         real s_Flux_1PG                    [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT]; // boundary fluxes for fixup flux
-#        endif // #  ifdef CONSERVE_MASS
-
-         s_In                      = s_In_1PG;
-         s_HasWaveCounterpart      = s_HasWaveCounterpart_1PG;
-
-#        ifdef CONSERVE_MASS
-         s_Flux     = s_Flux_1PG;
-#        endif // #  ifdef CONSERVE_MASS
-
 #        endif // # ifdef __CUDACC__ ... # else
 
          const uint tid                 = ty * CGPU_FLU_BLOCK_SIZE_X + tx;                // thread ID within block
@@ -430,7 +408,10 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                   const real vm         = GRADB1(s_In[sj][time_level][PHAS], si);
                   const real fm         = UPWIND_FM(s_In[sj][time_level][DENS], _dh * vm, si    );
                   const real fp         = UPWIND_FM(s_In[sj][time_level][DENS], _dh * vp, si + 1);
+
+#                 ifdef CONSERVE_MASS
                   s_Flux[sj][si]        = fm;
+#                 endif
                   s_In[sj][N_TIME_LEVELS][DENS][si] = s_In[sj][0][DENS][si] + Coeff1 * ( fm - fp );
                   s_In[sj][N_TIME_LEVELS][PHAS][si] = s_In[sj][0][PHAS][si] + Coeff2 * ( - SQR(MIN(vp, 0)) - SQR(MAX(vm, 0)) + QP );
                }
