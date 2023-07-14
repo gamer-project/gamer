@@ -341,35 +341,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 #     endif
       {
 
-#        ifdef GAMER_DEBUG
-/*
-if (XYZ == 0)
-{
-         int counter = 0;
-         for (int k=0; k<CUBE(HYB_NXT); k++)
-         {
-            if (g_HasWaveCounterpart[bx][k]) counter++;
-         }
-
-         printf("PG with bx = %d counter %d\n", bx, counter);
-         int i = 10;
-         for (int j=0; j<HYB_NXT; j++)
-         {
-            for (int k=0; k<HYB_NXT; k++)
-            {
-               const int t1 = to1D1( i, j, k );
-
-               if (g_HasWaveCounterpart[bx][t1])
-                  printf("X ");
-               else
-                  printf("O ");
-            }
-            printf("\n");
-         }
-         printf("\n\n");
-}*/
-#        endif
-
          uint Column0 = 0;                // the total number of columns that have been updated
          uint Idx, Idx1, Idx2;            // temporary indices used for indexing column updates, writing data to g_Fluid_In, g_Fluid_Out
 #        ifdef CONSERVE_MASS
@@ -438,83 +409,111 @@ if (XYZ == 0)
             __syncthreads();
 #           endif // # ifdef __CUDACC_
 
-//          2. Runge-Kutta iterations
-            for (uint time_level = 0; time_level < N_TIME_LEVELS; ++time_level)
+//          first order update
+            if ( IsCompletelyRefined )
             {
-               const uint ghost = GHOST_ZONE_PER_STAGE * ( time_level + 1 ) ;
+               const uint time_level = 0;
 
-//             3. update density and phase
-               CELL_LOOP(HYB_NXT, ghost, ghost)
+               CELL_LOOP(HYB_NXT, HYB_GHOST_SIZE, HYB_GHOST_SIZE - 1)
                {
 
-                  real De_New, Ph_New, vp, vm, fm, fp;
-
-//                compute density logarithms
-                  const real LogRho_c   = LOG(MAX(s_In[sj][time_level][DENS][si    ], 1e-7));
-                  const real LogRho_p1  = LOG(MAX(s_In[sj][time_level][DENS][si + 1], 1e-7));
-                  const real LogRho_m1  = LOG(MAX(s_In[sj][time_level][DENS][si - 1], 1e-7));
-
 //                compute quantum pressure
+                  const real LogRho_c   = LOG(MAX(s_In[sj][time_level][DENS][si    ], 1e-10));
+                  const real LogRho_p1  = LOG(MAX(s_In[sj][time_level][DENS][si + 1], 1e-10));
+                  const real LogRho_m1  = LOG(MAX(s_In[sj][time_level][DENS][si - 1], 1e-10));
                   const real LogRho_Vel = LogRho_p1 - LogRho_m1;
                   const real LogRho_Lap = LogRho_p1 - 2 * LogRho_c + LogRho_m1;
                   const real QP         = real(1.0/2.0) * LogRho_Lap  + real(1.0/16.0) * SQR(LogRho_Vel);
 
-
-//                compute kinetic velocity
-//                make sure fluxes computed at wave-fluid boundaries agree on left and right side
-                  vp = _dh * GRADF1(s_In[sj][time_level][PHAS], si);
-                  vm = _dh * GRADB1(s_In[sj][time_level][PHAS], si);
-
-#                 if ( HYBRID_SCHEME == HYBRID_UPWIND )
-//                access Rc[time_level][i, i-1], Pc[time_level][i, i-1]
-                  fm = UPWIND_FM(s_In[sj][time_level][DENS], vm, si    );
-                  fp = UPWIND_FM(s_In[sj][time_level][DENS], vp, si + 1);
-#                 elif ( HYBRID_SCHEME == HYBRID_FROMM )
-//                access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
-                  fm = FROMM_FM (s_In[sj][time_level][DENS], vm, si    , Coeff1);
-                  fp = FROMM_FM (s_In[sj][time_level][DENS], vp, si + 1, Coeff1);
-#                 elif ( HYBRID_SCHEME == HYBRID_MUSCL )
-//                access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
-                  fm = MUSCL_FM (s_In[sj][time_level][DENS], vm, si    , Coeff1);
-                  fp = MUSCL_FM (s_In[sj][time_level][DENS], vp, si + 1, Coeff1);
-#                 endif
-
-#                 ifdef CONSERVE_MASS
-//                2.2.1 update density fluxes
-                  s_Flux[sj][si] += FLUX_COEFFS[time_level] * fm;
-                  if ( si == HYB_NXT - ghost - 1) {
-                     s_Flux[sj][si + 1] += FLUX_COEFFS[time_level] * fp;
-                  }
-#                 endif
-
-//                solve wave equation to get well-defined phase update even in regions where density vanishes
-                  vp = GRADF3(s_In[sj][time_level][PHAS], si);
-                  vm = GRADB3(s_In[sj][time_level][PHAS], si);
-
-//                evolve continuity equation with density fluxes
-//                evolve Hamilton-Jacobi equation with Osher-Sethian flux and quantum pressure discretisation
-                  De_New = Coeff1 * ( fm - fp );
-                  Ph_New = Coeff2 * ( - SQR(MIN(vp, 0)) - SQR(MAX(vm, 0)) + QP );
-
-                  De_New *= TIME_COEFFS[time_level];
-                  Ph_New *= TIME_COEFFS[time_level];
-
-//                3.3 use N_TIME_LEVELS-stages RK-algorithm
-                  for (uint tl = 0; tl < time_level + 1; ++tl) {
-                     De_New += RK_COEFFS[time_level][tl] * s_In[sj][tl][DENS][si];
-                     Ph_New += RK_COEFFS[time_level][tl] * s_In[sj][tl][PHAS][si];
-                  }
-
-//                3.5 while computing the temporary results in RK algorithm, just write them to s_In
-                  s_In[sj][time_level + 1][DENS][si] = De_New;
-                  s_In[sj][time_level + 1][PHAS][si] = Ph_New;
+//                compute density
+                  const real vp         = GRADF1(s_In[sj][time_level][PHAS], si);
+                  const real vm         = GRADB1(s_In[sj][time_level][PHAS], si);
+                  const real fm         = UPWIND_FM(s_In[sj][time_level][DENS], _dh * vm, si    );
+                  const real fp         = UPWIND_FM(s_In[sj][time_level][DENS], _dh * vp, si + 1);
+                  s_Flux[sj][si]        = fm;
+                  s_In[sj][N_TIME_LEVELS][DENS][si] = s_In[sj][0][DENS][si] + Coeff1 * ( fm - fp );
+                  s_In[sj][N_TIME_LEVELS][PHAS][si] = s_In[sj][0][PHAS][si] + Coeff2 * ( - SQR(MIN(vp, 0)) - SQR(MAX(vm, 0)) + QP );
                }
-
 #              ifdef  __CUDACC__
                __syncthreads();
 #              endif
+            } else {
+//             2. Runge-Kutta iterations
+               for (uint time_level = 0; time_level < N_TIME_LEVELS; ++time_level)
+               {
+                  const uint ghost = GHOST_ZONE_PER_STAGE * ( time_level + 1 ) ;
 
-            } // if ( time_level < N_TIME_LEVELS - 1 ) {
+//                3. update density and phase
+                  CELL_LOOP(HYB_NXT, ghost, ghost)
+                  {
+
+                     real De_New, Ph_New, vp, vm, fm, fp;
+
+//                   compute quantum pressure
+                     const real LogRho_c   = LOG(MAX(s_In[sj][time_level][DENS][si    ], 1e-10));
+                     const real LogRho_p1  = LOG(MAX(s_In[sj][time_level][DENS][si + 1], 1e-10));
+                     const real LogRho_m1  = LOG(MAX(s_In[sj][time_level][DENS][si - 1], 1e-10));
+                     const real LogRho_Vel = LogRho_p1 - LogRho_m1;
+                     const real LogRho_Lap = LogRho_p1 - 2 * LogRho_c + LogRho_m1;
+                     const real QP         = real(1.0/2.0) * LogRho_Lap  + real(1.0/16.0) * SQR(LogRho_Vel);
+
+
+//                   compute kinetic velocity
+//                   make sure fluxes computed at wave-fluid boundaries agree on left and right side
+                     vp = _dh * GRADF1(s_In[sj][time_level][PHAS], si);
+                     vm = _dh * GRADB1(s_In[sj][time_level][PHAS], si);
+
+#                    if ( HYBRID_SCHEME == HYBRID_UPWIND )
+//                   access Rc[time_level][i, i-1], Pc[time_level][i, i-1]
+                     fm = UPWIND_FM(s_In[sj][time_level][DENS], vm, si    );
+                     fp = UPWIND_FM(s_In[sj][time_level][DENS], vp, si + 1);
+#                    elif ( HYBRID_SCHEME == HYBRID_FROMM )
+//                   access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
+                     fm = FROMM_FM (s_In[sj][time_level][DENS], vm, si    , Coeff1);
+                     fp = FROMM_FM (s_In[sj][time_level][DENS], vp, si + 1, Coeff1);
+#                    elif ( HYBRID_SCHEME == HYBRID_MUSCL )
+//                   access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
+                     fm = MUSCL_FM (s_In[sj][time_level][DENS], vm, si    , Coeff1);
+                     fp = MUSCL_FM (s_In[sj][time_level][DENS], vp, si + 1, Coeff1);
+#                    endif
+
+#                    ifdef CONSERVE_MASS
+//                   2.2.1 update density fluxes
+                     s_Flux[sj][si] += FLUX_COEFFS[time_level] * fm;
+                     if ( si == HYB_NXT - ghost - 1) {
+                        s_Flux[sj][si + 1] += FLUX_COEFFS[time_level] * fp;
+                     }
+#                    endif
+
+//                   solve wave equation to get well-defined phase update even in regions where density vanishes
+                     vp = GRADF3(s_In[sj][time_level][PHAS], si);
+                     vm = GRADB3(s_In[sj][time_level][PHAS], si);
+
+//                   evolve continuity equation with density fluxes
+//                   evolve Hamilton-Jacobi equation with Osher-Sethian flux and quantum pressure discretisation
+                     De_New = Coeff1 * ( fm - fp );
+                     Ph_New = Coeff2 * ( - SQR(MIN(vp, 0)) - SQR(MAX(vm, 0)) + QP );
+
+                     De_New *= TIME_COEFFS[time_level];
+                     Ph_New *= TIME_COEFFS[time_level];
+
+//                   3.3 use N_TIME_LEVELS-stages RK-algorithm
+                     for (uint tl = 0; tl < time_level + 1; ++tl) {
+                        De_New += RK_COEFFS[time_level][tl] * s_In[sj][tl][DENS][si];
+                        Ph_New += RK_COEFFS[time_level][tl] * s_In[sj][tl][PHAS][si];
+                     }
+
+//                   3.5 while computing the temporary results in RK algorithm, just write them to s_In
+                     s_In[sj][time_level + 1][DENS][si] = De_New;
+                     s_In[sj][time_level + 1][PHAS][si] = Ph_New;
+                  }
+
+#                 ifdef  __CUDACC__
+                  __syncthreads();
+#                 endif
+
+               } // if ( time_level < N_TIME_LEVELS - 1 ) {
+            } // if ( isCompletelyRefined ) ... else
 
 //          4. write back final results to g_Fluid_In or g_Fluid_Out to save memory
 
