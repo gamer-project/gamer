@@ -7,7 +7,7 @@ static IntSchemeFunc_t Int_SelectScheme( const IntScheme_t IntScheme );
 #if ( MODEL == HYDRO )
 static void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                                  real FData[], const int FSize[3], const int FStart[3],
-                                 const int NComp, const IntScheme_t IntScheme, const int UnwrapPhase,
+                                 const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase,
                                  const bool Monotonic[], const bool OppSign0thOrder,
                                  const IntPrim_t IntPrim, const ReduceOrFixMonoCoeff_t ReduceMonoCoeff,
                                  const real CMag[], const real FMag[][NCOMP_MAG] );
@@ -15,28 +15,28 @@ static void Interpolate_Iterate( real CData[], const int CSize[3], const int CSt
 
 void Int_MinMod1D  ( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                      real FData[], const int FSize[3], const int FStart[3], const int NComp,
-                     const int UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
+                     const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
 void Int_MinMod3D  ( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                      real FData[], const int FSize[3], const int FStart[3], const int NComp,
-                     const int UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
+                     const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
 void Int_vanLeer   ( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                      real FData[], const int FSize[3], const int FStart[3], const int NComp,
-                     const int UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
+                     const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
 void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                      real FData[], const int FSize[3], const int FStart[3], const int NComp,
-                     const int UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
+                     const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
 void Int_Quadratic ( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                      real FData[], const int FSize[3], const int FStart[3], const int NComp,
-                     const int UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
+                     const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
 void Int_CQuartic  ( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                      real FData[], const int FSize[3], const int FStart[3], const int NComp,
-                     const int UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
+                     const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
 void Int_Quartic   ( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                      real FData[], const int FSize[3], const int FStart[3], const int NComp,
-                     const int UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
+                     const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
 void Int_Spectral  ( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                      real FData[], const int FSize[3], const int FStart[3], const int NComp,
-                     const int UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
+                     const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
 
 
 
@@ -87,7 +87,7 @@ void Int_Spectral  ( real CData[], const int CSize[3], const int CStart[3], cons
 //-------------------------------------------------------------------------------------------------------
 void Interpolate( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                   real FData[], const int FSize[3], const int FStart[3],
-                  const int NComp, const IntScheme_t IntScheme, const int UnwrapPhase,
+                  const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase,
                   const bool Monotonic[], const bool OppSign0thOrder, const bool AllCons,
                   const IntPrim_t IntPrim, const ReduceOrFixMonoCoeff_t ReduceMonoCoeff,
                   const real CMag_IntIter[], const real FMag_IntIter[][NCOMP_MAG] )
@@ -206,7 +206,7 @@ void Interpolate( real CData[], const int CSize[3], const int CStart[3], const i
 //-------------------------------------------------------------------------------------------------------
 void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                           real FData[], const int FSize[3], const int FStart[3],
-                          const int NComp, const IntScheme_t IntScheme, const int UnwrapPhase,
+                          const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase,
                           const bool Monotonic[], const bool OppSign0thOrder,
                           const IntPrim_t IntPrim, const ReduceOrFixMonoCoeff_t ReduceMonoCoeff,
                           const real CMag[], const real FMag[][NCOMP_MAG] )

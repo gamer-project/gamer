@@ -49,7 +49,7 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *Cond1D, bool useWaveFlag)
+void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *Cond1D, bool UseWaveFlag)
 {
 
    const int NCell  = PS1 + 2;   // size of the arrays Var, Temp
@@ -69,7 +69,7 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
       Temp[0][k][j][i] = SQRT(Var[0][k][j][i]);
 
 //    check whether to convert imaginary and real parts to the phase
-      if ( useWaveFlag ) {
+      if ( UseWaveFlag ) {
          Temp[1][k][j][i] = SATAN2(Var[IMAG][k][j][i], Var[REAL][k][j][i]);
       } else {
          Temp[1][k][j][i] = Var[1][k][j][i];
@@ -88,7 +88,7 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
                                / ((real) 3.0 * Temp[0][kk ][jj ][ii]);
 
 //    flags for wave solver
-      if (useWaveFlag)   {
+      if (UseWaveFlag)   {
          Cond[1][k][j][i] = 0;
 
 //       resolve de Broglie wavelength when vortices are absent
@@ -106,7 +106,7 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
          }
 
 //    flags for fluid solver
-      } else { // if (useWaveFlag)
+      } else { // if (UseWaveFlag)
 
 //       check second derivative of phase field (divided by number of dimensions for normalisation) to detect phase jumps
          Cond[1][k][j][i] =  FABS( Temp[1][kk ][jj ][iip] + Temp[1][kk ][jj ][iim] \
@@ -127,7 +127,7 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
 #        else
          Cond[2][k][j][i] = 0;
 #        endif
-      }  // if (useWaveFlag) ... else
+      }  // if (UseWaveFlag) ... else
    }}} // k,j,i
 
 

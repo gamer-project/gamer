@@ -4,7 +4,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID );
 void Prepare_for_Lohner( const OptLohnerForm_t Form, const real *Var1D, real *Ave1D, real *Slope1D, const int NVar );
 
 #if ( MODEL == ELBDM )
-void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *Cond1D, bool useWaveFlag);
+void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *Cond1D, bool UseWaveFlag);
 void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond1D);
 #endif // #if ( MODEL == ELBDM )
 

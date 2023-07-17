@@ -204,7 +204,7 @@ extern bool (*h_HasWaveCounterpart)[ CUBE(HYB_NXT) ];
 //                                      --> Should be set to the global variable "PassiveIntFrac_VarIdx"
 //                JeansMinPres        : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff  : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
-//                useWaveFlag         : Determines whether wave or fluid solver is used for MODEL == ELBDM and ELBDM_SCHEME == ELBDM_HYBRID
+//                UseWaveFlag         : Determines whether wave or fluid solver is used for MODEL == ELBDM and ELBDM_SCHEME == ELBDM_HYBRID
 //-------------------------------------------------------------------------------------------------------
 void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
@@ -227,7 +227,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const bool NormPassive, const int NNorm, const int NormIdx[],
                       const bool FracPassive, const int NFrac, const int FracIdx[],
                       const bool JeansMinPres, const real JeansMinPres_Coeff,
-                      const bool useWaveFlag )
+                      const bool UseWaveFlag )
 {
 
 // check
@@ -284,7 +284,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( useWaveFlag ) {
+   if ( UseWaveFlag ) {
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #  if (WAVE_SCHEME == WAVE_FD )

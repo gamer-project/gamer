@@ -550,10 +550,10 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  endif
 
 // support hybrid scheme, flag is not used unless (MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
-   bool useWaveFlag = true;
+   bool UseWaveFlag = true;
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-   useWaveFlag = amr->use_wave_flag[lv];
+   UseWaveFlag = amr->use_wave_flag[lv];
 #  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
    switch ( TSolver )
@@ -575,7 +575,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar,
                                  OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar,
                                  JEANS_MIN_PRES, JeansMinPres_Coeff,
-                                 GPU_NSTREAM, useWaveFlag );
+                                 GPU_NSTREAM, UseWaveFlag );
 #        else
          CPU_FluidSolver       ( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID],
                                  h_Mag_Array_F_In[ArrayID], h_Mag_Array_F_Out[ArrayID],
@@ -590,7 +590,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, PassiveNorm_VarIdx,
                                  OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
-                                 JEANS_MIN_PRES, JeansMinPres_Coeff, useWaveFlag );
+                                 JEANS_MIN_PRES, JeansMinPres_Coeff, UseWaveFlag );
 #        endif
       break;
 
@@ -608,7 +608,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           NULL_BOOL, ELBDM_ETA, NULL_REAL, POISSON_ON, GRAVITY_OFF,
                                           OPT__SELF_GRAVITY, OPT__EXT_POT, OPT__EXT_ACC,
                                           TimeNew, TimeOld, NULL_REAL,
-                                          GPU_NSTREAM, useWaveFlag );
+                                          GPU_NSTREAM, UseWaveFlag );
 #        else
          CPU_PoissonGravitySolver       ( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID],
                                           h_Pot_Array_P_Out[ArrayID], NULL, h_Corner_Array_PGT[ArrayID],
@@ -618,7 +618,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           MG_TOLERATED_ERROR, Poi_Coeff, OPT__POT_INT_SCHEME,
                                           NULL_BOOL, ELBDM_ETA, NULL_REAL, POISSON_ON, GRAVITY_OFF,
                                           OPT__SELF_GRAVITY, OPT__EXT_POT, OPT__EXT_ACC,
-                                          TimeNew, TimeOld, NULL_REAL, useWaveFlag  );
+                                          TimeNew, TimeOld, NULL_REAL, UseWaveFlag  );
 #        endif
       break;
 
@@ -636,7 +636,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_OFF, GRAVITY_ON,
                                           OPT__SELF_GRAVITY, OPT__EXT_POT, OPT__EXT_ACC,
                                           TimeNew, TimeOld, MIN_EINT,
-                                          GPU_NSTREAM, useWaveFlag );
+                                          GPU_NSTREAM, UseWaveFlag );
 #        else
          CPU_PoissonGravitySolver       ( NULL, NULL,
                                           h_Pot_Array_P_Out[ArrayID], h_Flu_Array_G[ArrayID], h_Corner_Array_PGT[ArrayID],
@@ -647,7 +647,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           NULL_REAL, NULL_REAL, (IntScheme_t)NULL_INT,
                                           OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_OFF, GRAVITY_ON,
                                           OPT__SELF_GRAVITY, OPT__EXT_POT, OPT__EXT_ACC,
-                                          TimeNew, TimeOld, MIN_EINT, useWaveFlag );
+                                          TimeNew, TimeOld, MIN_EINT, UseWaveFlag );
 #        endif
       break;
 
@@ -665,7 +665,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_ON, GRAVITY_ON,
                                           OPT__SELF_GRAVITY, OPT__EXT_POT, OPT__EXT_ACC,
                                           TimeNew, TimeOld, MIN_EINT,
-                                          GPU_NSTREAM, useWaveFlag );
+                                          GPU_NSTREAM, UseWaveFlag );
 #        else
          CPU_PoissonGravitySolver       ( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID],
                                           h_Pot_Array_P_Out[ArrayID], h_Flu_Array_G[ArrayID], h_Corner_Array_PGT[ArrayID],
@@ -676,7 +676,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           MG_TOLERATED_ERROR, Poi_Coeff, OPT__POT_INT_SCHEME,
                                           OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_ON, GRAVITY_ON,
                                           OPT__SELF_GRAVITY, OPT__EXT_POT, OPT__EXT_ACC,
-                                          TimeNew, TimeOld, MIN_EINT, useWaveFlag );
+                                          TimeNew, TimeOld, MIN_EINT, UseWaveFlag );
 #        endif
       break;
 #     endif // #ifdef GRAVITY

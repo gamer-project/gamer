@@ -674,8 +674,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //       (c1.3.4) perform spatial interpolation
-         const int PhaseUnwrapping_Yes   = 1;
-         const int PhaseUnwrapping_No    = 0;
+         const bool PhaseUnwrapping_Yes   = true;
+         const bool PhaseUnwrapping_No    = false;
 
          const bool Monotonicity_Yes      = true;
          const bool Monotonicity_No       = false;

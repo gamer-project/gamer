@@ -32,7 +32,7 @@
 //-------------------------------------------------------------------------------------------------------
 void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                     real FData[], const int FSize[3], const int FStart[3], const int NComp,
-                    const int UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder )
+                    const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder )
 {
 
 // interpolation-scheme-dependent parameters
@@ -253,7 +253,7 @@ void InterpolationContext::ReadBinaryFile(const char* filename, double* array, i
 //                UnwrapPhase     : Unwrap phase when OPT__INT_PHASE is on (for ELBDM only)
 //
 //-------------------------------------------------------------------------------------------------------
-void InterpolationContext::Preprocess(real* input, const int UnwrapPhase) const {
+void InterpolationContext::Preprocess(real* input, const bool UnwrapPhase) const {
 //    unwrap phase
 #     if ( MODEL == ELBDM )
       if ( UnwrapPhase )
@@ -679,7 +679,7 @@ size_t InterpolationHandler::GetWorkspaceSize(size_t nInput, size_t nGhostBounda
    return contexts.at(nInput)->GetWorkspaceSize();
 } // FUNCTION : GetWorkspaceSize
 
-void InterpolationHandler::InterpolateReal(real* input, real* output, size_t nInput, size_t nGhostBoundary, char* workspace, const int UnwrapPhase, const bool Monotonic, const real MonoCoeff, const bool OppSign0thOrder) const
+void InterpolationHandler::InterpolateReal(real* input, real* output, size_t nInput, size_t nGhostBoundary, char* workspace, const bool UnwrapPhase, const bool Monotonic, const real MonoCoeff, const bool OppSign0thOrder) const
 {
    auto context = contexts.at(nInput);
 

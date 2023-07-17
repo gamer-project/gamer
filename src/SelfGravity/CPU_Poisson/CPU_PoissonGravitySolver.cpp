@@ -108,9 +108,9 @@ void CPU_ELBDMGravitySolver_HamiltonJacobi  (       real   g_Flu_Array[][GRA_NIN
 //                TimeNew            : Physical time at the current  step (for external gravity)
 //                TimeOld            : Physical time at the previous step (for external gravity in UNSPLIT_GRAVITY)
 //                MinEint            : Internal energy floor
-//                useWaveFlag        : Determine whether to advance wave function or phase in ELBDM
+//                UseWaveFlag        : Determine whether to advance wave function or phase in ELBDM
 //
-// Useless parameters in HYDRO : ELBDM_Eta, ELBDM_Lambda, useWaveFlag
+// Useless parameters in HYDRO : ELBDM_Eta, ELBDM_Lambda, UseWaveFlag
 // Useless parameters in ELBDM : P5_Gradient
 //
 // Return      :  h_Pot_Array_Out, h_Flu_Array
@@ -131,7 +131,7 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                                const real ELBDM_Eta, const real ELBDM_Lambda, const bool Poisson, const bool GraAcc,
                                const bool SelfGravity, const OptExtPot_t ExtPot, const OptExtAcc_t ExtAcc,
                                const double TimeNew, const double TimeOld, const real MinEint,
-                               const bool useWaveFlag
+                               const bool UseWaveFlag
                                )
 {
 
@@ -222,7 +222,7 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
 
 #     elif ( MODEL == ELBDM )
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      if (useWaveFlag) {
+      if (UseWaveFlag) {
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
       CPU_ELBDMGravitySolver( (real(*)[GRA_NIN][ CUBE(PS1) ]) h_Flu_Array,
                               (real(*)[ CUBE(GRA_NXT) ])      h_Pot_Array_Out,

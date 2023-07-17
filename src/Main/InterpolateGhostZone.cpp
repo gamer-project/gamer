@@ -1285,8 +1285,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 // c. interpolation : CData_CC[] --> IntData_CC[]
 // ------------------------------------------------------------------------------------------------------------
-   const int PhaseUnwrapping_Yes   = 1;
-   const int PhaseUnwrapping_No    = 0;
+   const bool PhaseUnwrapping_Yes   = true;
+   const bool PhaseUnwrapping_No    = false;
    const bool Monotonicity_Yes      = true;
    const bool Monotonicity_No       = false;
    const bool IntOppSign0thOrder_No = false;

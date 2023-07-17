@@ -100,7 +100,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const bool NormPassive, const int NNorm, const int NormIdx[],
                       const bool FracPassive, const int NFrac, const int FracIdx[],
                       const bool JeansMinPres, const real JeansMinPres_Coeff,
-                      const bool useWaveFlag );
+                      const bool UseWaveFlag );
 void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #if ( MODEL == HYDRO )
 real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
@@ -248,7 +248,7 @@ void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveS
 // Interpolation
 void Interpolate( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                   real FData[], const int FSize[3], const int FStart[3],
-                  const int NComp, const IntScheme_t IntScheme, const int UnwrapPhase,
+                  const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase,
                   const bool Monotonic[], const bool OppSign0thOrder, const bool AllCons,
                   const IntPrim_t IntPrim, const ReduceOrFixMonoCoeff_t ReduceMonoCoeff,
                   const real CMag_IntIter[], const real FMag_IntIter[][NCOMP_MAG] );
@@ -376,7 +376,7 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                                const real ELBDM_Eta, const real ELBDM_Lambda, const bool Poisson, const bool GraAcc,
                                const bool SelfGravity, const OptExtPot_t ExtPot, const OptExtAcc_t ExtAcc,
                                const double TimeNew, const double TimeOld, const real MinEint,
-                               const bool useWaveFlag );
+                               const bool UseWaveFlag );
 void CPU_ExtPotSolver_BaseLevel( const ExtPot_t Func, const double AuxArray_Flt[], const int AuxArray_Int[],
                                  const real Table[], void **GenePtr,
                                  const double Time, const bool PotIsInit, const int SaveSg );
@@ -612,7 +612,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              const bool NormPassive, const int NNorm,
                              const bool FracPassive, const int NFrac,
                              const bool JeansMinPres, const real JeansMinPres_Coeff,
-                             const int GPU_NStream, const bool useWaveFlag);
+                             const int GPU_NStream, const bool UseWaveFlag);
 void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                           const real h_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real h_Pot_Array[][ CUBE(GRA_NXT) ],
                           const double h_Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
@@ -653,7 +653,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                       const real ELBDM_Lambda, const bool Poisson, const bool GraAcc,
                                       const bool SelfGravity, const OptExtPot_t ExtPot, const OptExtAcc_t ExtAcc,
                                       const double TimeNew, const double TimeOld, const real MinEint,
-                                      const int GPU_NStream, const bool useWaveFlag );
+                                      const int GPU_NStream, const bool UseWaveFlag );
 void CUAPI_SendExtPotTable2GPU( const real *h_Table );
 void CUAPI_MemFree_PoissonGravity();
 #endif // #ifdef GRAVITY

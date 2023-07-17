@@ -257,7 +257,7 @@ extern cudaStream_t *Stream;
 //                JeansMinPres        : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff  : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //                GPU_NStream         : Number of CUDA streams for the asynchronous memory copy
-//                useWaveFlag         : Determine whether to use wave or phase scheme
+//                UseWaveFlag         : Determine whether to use wave or phase scheme
 //-------------------------------------------------------------------------------------------------------
 void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
@@ -280,7 +280,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              const bool NormPassive, const int NNorm,
                              const bool FracPassive, const int NFrac,
                              const bool JeansMinPres, const real JeansMinPres_Coeff,
-                             const int GPU_NStream, const bool useWaveFlag )
+                             const int GPU_NStream, const bool UseWaveFlag )
 {
 
 // check
@@ -348,7 +348,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  endif // #  #  if ( WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( useWaveFlag ) {
+   if ( UseWaveFlag ) {
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #  if ( WAVE_SCHEME == WAVE_FD )
@@ -387,7 +387,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  endif // WAVE_SCHEME
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   } // if ( useWaveFlag )
+   } // if ( UseWaveFlag )
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #  else
@@ -456,7 +456,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 //    optimisation for phase scheme, only transfer density and phase instead of re/im/dens back from GPU
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      if ( !useWaveFlag ) {
+      if ( !UseWaveFlag ) {
          Flu_MemSize_In [s] = sizeof(real  )*NPatch_per_Stream[s]*FLU_NIN*CUBE(HYB_NXT);
 #     ifndef GAMER_DEBUG
          Flu_MemSize_Out[s] = sizeof(real  )*NPatch_per_Stream[s]*FLU_NIN*CUBE(PS2);
@@ -480,12 +480,12 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
       if ( NPatch_per_Stream[s] == 0 )    continue;
 
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      if ( useWaveFlag ) {
+      if ( UseWaveFlag ) {
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Flu_Array_F_In  + UsedPatch[s], h_Flu_Array_In  + UsedPatch[s],
                          Flu_MemSize_In[s], cudaMemcpyHostToDevice, Stream[s] )  );
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      } else { // if ( useWaveFlag ) {
+      } else { // if ( UseWaveFlag ) {
       real (*smaller_d_Flu_Array_F_In)[FLU_NIN][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) d_Flu_Array_F_In;
       real (*smaller_h_Flu_Array_In  )[FLU_NIN][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) h_Flu_Array_In  ;
 
@@ -593,7 +593,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #     elif ( MODEL == ELBDM )
 
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      if ( useWaveFlag ) {
+      if ( UseWaveFlag ) {
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #     if ( WAVE_SCHEME == WAVE_FD )
@@ -635,7 +635,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #        error : ERROR : unsupported WAVE_SCHEME !!
 #     endif // WAVE_SCHEME
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      } else { // if ( useWaveFlag ) {
+      } else { // if ( UseWaveFlag ) {
          real (*smaller_d_Flu_Array_F_In) [FLU_NIN] [CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) d_Flu_Array_F_In;
 #        ifdef GAMER_DEBUG
          real (*smaller_d_Flu_Array_F_Out)[FLU_NOUT][CUBE(PS2)]     = d_Flu_Array_F_Out;
@@ -651,7 +651,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                d_HasWaveCounterpart      + UsedPatch[s],
                dt, 1.0/dh, ELBDM_Eta, StoreFlux, XYZ, MinDens );
 
-      } // if ( useWaveFlag ) { ... else
+      } // if ( UseWaveFlag ) { ... else
 #     endif // #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #     else
@@ -672,17 +672,17 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
       if ( NPatch_per_Stream[s] == 0 )    continue;
 
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID && !defined(GAMER_DEBUG) )
-      if ( useWaveFlag ) {
+      if ( UseWaveFlag ) {
 #     endif // #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_Flu_Array_Out + UsedPatch[s], d_Flu_Array_F_Out + UsedPatch[s],
                          Flu_MemSize_Out[s], cudaMemcpyDeviceToHost, Stream[s] )  );
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID && !defined(GAMER_DEBUG) )
-      } else { // if ( useWaveFlag ) {
+      } else { // if ( UseWaveFlag ) {
       real (*smaller_h_Flu_Array_Out  )[FLU_NIN][CUBE(PS2)] = (real (*)[FLU_NIN][CUBE(PS2)]) h_Flu_Array_Out;
       real (*smaller_d_Flu_Array_F_Out)[FLU_NIN][CUBE(PS2)] = (real (*)[FLU_NIN][CUBE(PS2)]) d_Flu_Array_F_Out;
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( smaller_h_Flu_Array_Out + UsedPatch[s], smaller_d_Flu_Array_F_Out + UsedPatch[s],
                          Flu_MemSize_Out[s], cudaMemcpyDeviceToHost, Stream[s] )  );
-      } // if ( useWaveFlag ) { ... else
+      } // if ( UseWaveFlag ) { ... else
 #     endif // #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
       if ( StoreFlux )
