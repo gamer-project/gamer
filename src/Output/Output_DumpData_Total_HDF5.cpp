@@ -70,7 +70,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2469)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2471)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -246,14 +246,15 @@ Procedure for outputting new variables:
 //                2463 : 2023/03/20 --> output FB_SEP_FLUOUT
 //                2464 : 2023/04/27 --> output LIBYT_INTERACTIVE
 //                2465 : 2023/04/29 --> output MU_NORM
-//                2466 : 2023/05/08 --> output OPT__FFTW_STARTUP
-//                2467 : 2023/05/18 --> replace OPT__INIT_BFIELD_BYFILE by OPT__INIT_BFIELD_BYVECPOT
-//                2468 : 2023/06/24 --> output OPT__SORT_PATCH_BY_LBIDX
-//                2469 : 2023/06/05 --> output OPT__FLAG_INTERFERENCE, OPT__HYBRID_MATCH_PHASE, OPT__CK_PHASE_DEFECT,
+//                2466 : 2023/02/02 --> output OPT__RES_PHASE
+//                2467 : 2023/02/07 --> output ELBDM_BASE_SPECTRAL
+//                2468 : 2023/05/08 --> output OPT__FFTW_STARTUP
+//                2469 : 2023/05/18 --> replace OPT__INIT_BFIELD_BYFILE by OPT__INIT_BFIELD_BYVECPOT
+//                2470 : 2023/06/24 --> output OPT__SORT_PATCH_BY_LBIDX
+//                2471 : 2023/07/17 --> output OPT__FLAG_INTERFERENCE, OPT__HYBRID_MATCH_PHASE, OPT__CK_PHASE_DEFECT,
 //                                             ELBDM_VORTEX_THRESHOLD, OPT__LB_EXCHANGE_FATHER, FlagTable_Interference
 //                                             DENS and PHAS for hybrid scheme,
 //                                             use_wave_flag[lv] for AMR structure
-
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1539,7 +1540,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2469;
+   KeyInfo.FormatVersion        = 2471;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;

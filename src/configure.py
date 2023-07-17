@@ -379,6 +379,12 @@ def load_arguments():
                        )
 
     # A.2 ELBDM scheme
+    parser.add_argument( "--wave_scheme", type=str, metavar="TYPE", gamer_name="WAVE_SCHEME",
+                         default="WAVE_FD", choices=["WAVE_FD", "WAVE_GRAMFE"],
+                         depend={"model":"ELBDM"},
+                         help="Wave scheme for <--model=ELBDM> (WAVE_FD:finite difference, WAVE_GRAMFE: local spectral method).\n"
+                       )
+
     parser.add_argument( "--conserve_mass", type=str2bool, metavar="BOOLEAN", gamer_name="CONSERVE_MASS",
                          default=True,
                          depend={"model":"ELBDM"},
@@ -386,9 +392,17 @@ def load_arguments():
                        )
 
     parser.add_argument( "--laplacian_four", type=str2bool, metavar="BOOLEAN", gamer_name="LAPLACIAN_4TH",
-                         default=True,
+                         default=None,
                          depend={"model":"ELBDM"},
-                         help="Enable the fourth-order Laplacian for <--model=ELBDM>.\n"
+                         constraint={ True:{"wave_scheme":"WAVE_FD"} },
+                         help="Enable the fourth-order Laplacian for <--model=ELBDM> (for <--wave_scheme=WAVE_FD> only).\n"
+                       )
+
+    parser.add_argument( "--gramfe_gpu", type=str2bool, metavar="BOOLEAN", gamer_name="GRAMFE_ENABLE_GPU",
+                         default=False,
+                         depend={"model":"ELBDM", "wave_scheme":"WAVE_GRAMFE"},
+                         constraint={ True:{"gpu":True} },
+                         help="Enable GPU for <--wave_scheme=WAVE_GRAMFE> (using CPU by default because it is faster). Must enable <--gpu>.\n"
                        )
 
     parser.add_argument( "--self_interaction", type=str2bool, metavar="BOOLEAN", gamer_name="QUARTIC_SELF_INTERACTION",
@@ -632,6 +646,9 @@ def set_conditional_defaults( args ):
 
     if args["bitwise_reproducibility"] == None:
         args["bitwise_reproducibility"] = True if args["debug"] else False
+
+    if args["laplacian_four"] == None:
+      args["laplacian_four"] = True if args["wave_scheme"] == "WAVE_FD" else False
 
     return args
 
