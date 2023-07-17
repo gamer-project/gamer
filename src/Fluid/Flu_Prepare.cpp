@@ -134,43 +134,12 @@ void Flu_Prepare( const int lv, const double PrepTime,
    }
 #  endif
 
+// prepare h_HasWaveCounterpart with information which cells have wave counterparts
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( !amr->use_wave_flag[lv] ) {
+   if ( !amr->use_wave_flag[lv] )
+   {
       Prepare_PatchData_HasWaveCounterpart(lv, h_HasWaveCounterpart, HYB_GHOST_SIZE, NPG, PID0_List, NSIDE_26, GlobalTree);
-
-
-#     pragma omp parallel for schedule( runtime )
-      for (int TID=0; TID<NPG; TID++)
-      {
-         int c1 = 0, c2 = 0;
-         int  PID0 = PID0_List[TID];
-         long GID0 = GlobalTree->PID2GID(PID0, lv);
-         for (int k=0; k<PS2; k++)
-         for (int j=0; j<PS2; j++)
-         for (int i=0; i<PS2; i++)
-         {
-            const int t = IDX321( i + HYB_GHOST_SIZE, j + HYB_GHOST_SIZE, k + HYB_GHOST_SIZE, HYB_NXT, HYB_NXT );
-            int counter = 0;
-            for (int LocalPID = 0; LocalPID < 8; ++LocalPID)
-               if ( ELBDM_HasWaveCounterpart( i, j, k, GID0, GID0 + LocalPID, *GlobalTree ))
-                  counter++;
-
-            bool flag = false;
-            if (counter > 0 )
-               flag = true;
-
-            if ( h_HasWaveCounterpart[TID][t] != flag )
-               printf("TID %d Counter %d i %d k %d j %d different!\n", TID, counter, i, k, j);
-
-            if (flag) c2++;
-            c1++;
-         }
-         //if (c2 != 0)
-         //printf("bx %d Ratio %d / %d = %f\n", TID, c1, c2, c1 / (float) c2);
-      }
-
    }
-
 #  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
 // validate input arrays for debugging purposes
