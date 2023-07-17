@@ -196,8 +196,6 @@
 
 
 // for ELBDM, we do not need to transfer the density component into GPU
-// for the hybrid scheme, we carry around the obsolete extra component in FLU_NOUT for now
-// this keeps modifications to the existing wave solver code to a
 #elif ( MODEL == ELBDM )
 #  define FLU_NIN             ( NCOMP_TOTAL - 1 )
 #  define FLU_NOUT            ( NCOMP_TOTAL - 0 )
