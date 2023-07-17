@@ -153,29 +153,12 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
 
 #     if ( MODEL == ELBDM )
-//    flag that determines whether OPT__RES_PHASE is ignored when there are phase defects
-      bool disableResPha = false;
-
-//    check for vortices and restrict RE/IM for entire father patch if vortex occurs
-#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-//    only check wave-to-wave-level-transitions in hybrid scheme
-      if ( OPT__CK_PHASE_DEFECT && ResWWPha ) {
-#     else // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      if ( OPT__CK_PHASE_DEFECT && ResPha ) {
-#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID ) ... # else
-         int ii, jj, kk;
-         for (int k=0; k<PS1; k++)  {
-         for (int j=0; j<PS1; j++)  {
-         for (int i=0; i<PS1; i++)  {
-         disableResPha |= ELBDM_DetectVortex( i, j, k, PS1, PS1, PS1, &amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[DENS][0][0][0], ELBDM_VORTEX_THRESHOLD);
-         }}} // i, j, k
-      }
 
 //    update the components to be restricted depending on whether phase restriction is enabled
       NFluVar = 0;
 
       for (int v=0; v<NCOMP_TOTAL; v++) {
-         if ( ResPha  && !disableResPha ) {
+         if ( ResPha ) {
                if (  TVarCC & (1L<<v) && v != DENS && v != REAL && v != IMAG )    TFluVarIdxList[ NFluVar ++ ] = v;
          } else {
                if (  TVarCC & (1L<<v)                                        )    TFluVarIdxList[ NFluVar ++ ] = v;
@@ -212,8 +195,8 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #        endif // #ifdef GAMER_DEBUG
 
 #        if ( MODEL == ELBDM )
-//       average phase instead of real and imaginary part if ResPha is set and not disabled
-         if ( ResPha && !disableResPha ) {
+//       average phase instead of real and imaginary part if ResPha is set
+         if ( ResPha ) {
 //          D = DENS, R = REAL, I = IMAG, P = PHAS, S = STUB
             const real (*DSonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[DENS];
             const real (*RSonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[REAL];
@@ -272,7 +255,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                } // if ( !amr->use_wave_flag[FaLv] ) { ... else
 #              endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
             }}}
-         } // if ( ResPha && ... )
+         } // if ( ResPha )
 #        endif // #if ( MODEL == ELBDM )
 //       restrict the fluid data
          if ( ResFlu ) {
