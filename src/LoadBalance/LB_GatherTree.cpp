@@ -786,20 +786,20 @@ LB_GlobalTree::~LB_GlobalTree()
 // Function    :  LB_GlobalTree::IsInsidePatch
 // Description :  Check whether cell [X, Y, Z] is in patch indexed by GID
 //
-// Parameter   :  X   : global x coordinates
-//             :  Y   : global y coordinates
-//             :  Z   : global z coordinate
+// Parameter   :  X   : global integer x coordinate, obtained by converting local coordinate with amr->scale
+//             :  Y   : global integer y coordinate, obtained by converting local coordinate with amr->scale
+//             :  Z   : global integer z coordinate, obtained by converting local coordinate with amr->scale
 //             : GID  : global ID of patch
 //
 // Return      :  true if cell [X, Y, Z] is in patch GID, false otherwise
 //-------------------------------------------------------------------------------------------------------
-bool LB_GlobalTree::IsInsidePatch(int X, int Y, int Z, long GID)  const
+bool LB_GlobalTree::IsInsidePatch(const int X, const int Y, const int Z, const long GID)  const
 {
 // sanity check
 #  ifdef GAMER_DEBUG
    if (GID == -1)
    {
-      Aux_Error(ERROR_INFO, "GID  == -1!\n");
+      Aux_Error(ERROR_INFO, "GID == -1!\n");
    }
    if (GID >= NPatch)
    {
@@ -829,19 +829,19 @@ bool LB_GlobalTree::IsInsidePatch(int X, int Y, int Z, long GID)  const
 //                int Y = Local2Global(I, 1, GID0);
 //                int Z = Local2Global(I, 2, GID0);
 //
-// Parameter   :  I   : Coordinate relative to root patch I
+// Parameter   :  I   : local coordinate I in {0, ..., PS2} relative root patch GID
 //             : XYZ  : direction
-//             : GID  : Root patch relative to I
+//             : GID  : root patch relative to local coordinate I
 //
 // Return      :  Global coordinate corresponding to I
 //-------------------------------------------------------------------------------------------------------
-int LB_GlobalTree::Local2Global(int I, int XYZ, long GID) const
+int LB_GlobalTree::Local2Global(const int I, const int XYZ, const long GID) const
 {
 // sanity check
 #  ifdef GAMER_DEBUG
    if (GID == -1)
    {
-      Aux_Error(ERROR_INFO, "GID  == -1!\n");
+      Aux_Error(ERROR_INFO, "GID == -1!\n");
    }
    if (GID >= NPatch)
    {
@@ -854,18 +854,18 @@ int LB_GlobalTree::Local2Global(int I, int XYZ, long GID) const
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_GlobalTree::FindRefinedCounterpart
-// Description :  Return GID of refined patch with maximum level MaxLv (default ) that global coordinates [X, Y, Z] belong to
+// Description :  Return GID of refined patch with maximum level MaxLv (default = NLEVEL)) that global integer coordinates [X, Y, Z] belong to
 //
 //
-// Parameter   :  I   : x-index of patch GID
-//             :  J   : y-index of patch GID
-//             :  K   : z-index of patch GID
+// Parameter   :  X   : global integer x coordinate, obtained by converting local coordinate with amr->scale
+//             :  Y   : global integer y coordinate, obtained by converting local coordinate with amr->scale
+//             :  Z   : global integer z coordinate, obtained by converting local coordinate with amr->scale
 //             : GID  : global ID of patch
-//             : MaxLv: maximum refinemen
+//             : MaxLv: maximum refinement level
 //
 // Return      :  GID of patch
 //-------------------------------------------------------------------------------------------------------
-long LB_GlobalTree::FindRefinedCounterpart(int X, int Y, int Z, long GID, int MaxLv)  const
+long LB_GlobalTree::FindRefinedCounterpart(const int X, const int Y, const int Z, const long GID, const int MaxLv)  const
 {
 
 
@@ -873,7 +873,7 @@ long LB_GlobalTree::FindRefinedCounterpart(int X, int Y, int Z, long GID, int Ma
 // sanity check
    if (GID == -1)
    {
-      Aux_Error(ERROR_INFO, "GID  == -1!\n");
+      Aux_Error(ERROR_INFO, "GID == -1!\n");
    }
    if (GID >= NPatch)
    {
@@ -905,19 +905,19 @@ long LB_GlobalTree::FindRefinedCounterpart(int X, int Y, int Z, long GID, int Ma
          break;
       }
 
-//    loop over patches in patch block and check if cell {K, J, I} belongs to patch
-      for (int LocalPID = 0; LocalPID < 8; LocalPID++)
+//    loop over patches in patch group and check if cell {K, J, I} belongs to patch
+      for (int LocalID = 0; LocalID < 8; LocalID++)
       {
 
-         if ( IsInsidePatch(X, Y, Z, SonGID + LocalPID) )
+         if ( IsInsidePatch(X, Y, Z, SonGID + LocalID) )
          {
-            FaGID   = SonGID + LocalPID;
+            FaGID   = SonGID + LocalID;
             SonGID  = Patches[FaGID].son;
             break;
 
          }
 #        ifdef GAMER_DEBUG
-         else if ( LocalPID == 7 )
+         else if ( LocalID == 7 )
          {
             Aux_Error(ERROR_INFO, "Global coordinates {%d, %d, %d} in father patch (GID = %ld, lv = %d), but not in any son patch (GID = %ld, lv = %d)!!\n",
             X, Y, Z, FaGID, Patches[FaGID].level, SonGID, Patches[SonGID].level);
@@ -935,18 +935,13 @@ long LB_GlobalTree::FindRefinedCounterpart(int X, int Y, int Z, long GID, int Ma
 
 // check whether GID is ancestor of FaGID
 // number of generations between GID and FaGID
-   int  NGenerations = Patches[FaGID].level - Patches[GID].level;
+   const int NGenerations = Patches[FaGID].level - Patches[GID].level;
 
 // iterate back through ancestors
    long AncestorGID = FaGID;
    for (int i = 0; i < NGenerations; ++i)
    {
       AncestorGID = Patches[AncestorGID].father;
-   }
-
-   if (Patches[AncestorGID].level != Patches[GID].level)
-   {
-      Aux_Error(ERROR_INFO, "GID (%ld) and Ancestor (%ld) on different levels!!\n", GID, AncestorGID);
    }
 
    if (AncestorGID != GID)
@@ -966,15 +961,15 @@ long LB_GlobalTree::FindRefinedCounterpart(int X, int Y, int Z, long GID, int Ma
 //
 // Parameter   :  GID  : global ID of patch
 //
-// Return      :  Constant reference to LB_LocalPatch
+// Return      :  Constant reference to LB_GlobalPatch
 //-------------------------------------------------------------------------------------------------------
-const LB_GlobalPatch& LB_GlobalTree::GetPatch(long GID)  const
+const LB_GlobalPatch& LB_GlobalTree::GetPatch(const long GID)  const
 {
 // sanity check
 #  ifdef GAMER_DEBUG
    if (GID == -1)
    {
-      Aux_Error(ERROR_INFO, "GID  == -1!\n");
+      Aux_Error(ERROR_INFO, "GID == -1!\n");
    }
    if (GID >= NPatch)
    {
@@ -992,9 +987,9 @@ const LB_GlobalPatch& LB_GlobalTree::GetPatch(long GID)  const
 //
 // Parameter   :  GID  : global ID of patch
 //
-// Return      :  Constant reference to LB_LocalPatch
+// Return      :  Constant reference to LB_GlobalPatch
 //-------------------------------------------------------------------------------------------------------
-const LB_GlobalPatch& LB_GlobalTree::operator[](long GID) const
+const LB_GlobalPatch& LB_GlobalTree::operator[](const long GID) const
 {
    return GetPatch(GID);
 } // FUNCTION : LB_GlobalTree::operator[]
@@ -1017,7 +1012,7 @@ const LB_PatchCount&  LB_GlobalTree::GetLBPatchCount() const
 //
 // Return      :  GID
 //-------------------------------------------------------------------------------------------------------
-long LB_GlobalTree::PID2GID(int PID, int lv) const
+long LB_GlobalTree::PID2GID(const int PID, const int lv) const
 {
    if ( PID == -1 )
    {
@@ -1034,7 +1029,7 @@ long LB_GlobalTree::PID2GID(int PID, int lv) const
    {
 #     ifdef GAMER_DEBUG
       Aux_Error( ERROR_INFO, "Lv %d, NPatch %d, PID %d is buffer patch on local MPI Rank %d !!\n",
-                 lv, amr->NPatchComma[lv][1], PID, amr->num[lv] );
+                 lv, amr->NPatchComma[lv][1], PID, MPI_Rank );
 #     endif
       return -1;
    }

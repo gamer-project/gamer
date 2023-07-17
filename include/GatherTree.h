@@ -107,15 +107,15 @@ struct LB_GlobalPatchExchangeList : private NonCopyable
 // global tree information can be accessed after construction via helper functions
 struct LB_GlobalTree : private NonCopyable
 {
-   LB_GlobalTree(int root = -1);
+   LB_GlobalTree(const int root = -1);
    ~LB_GlobalTree();
 
-   int  Local2Global(int I, int XYZ, long GID) const;
-   bool IsInsidePatch(int X, int Y, int Z, long GID) const;
-   long FindRefinedCounterpart(int X, int Y, int Z, long GID, int MaxLv = NLEVEL) const;
-   const LB_GlobalPatch& GetPatch(long GID) const;
+   int  Local2Global(const int I, const int XYZ, const long GID) const;
+   bool IsInsidePatch(const int X, const int Y, const int Z, const long GID) const;
+   long FindRefinedCounterpart(const int X, const int Y, const int Z, const long GID, const int MaxLv = NLEVEL) const;
+   const LB_GlobalPatch& GetPatch(const long GID) const;
    const LB_PatchCount&  GetLBPatchCount() const;
-   long PID2GID(int PID, int lv) const;
+   long PID2GID(const int PID, const int lv) const;
 
    const LB_GlobalPatch& operator[](long) const;
 
