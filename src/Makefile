@@ -110,7 +110,7 @@ SIMU_OPTION += -DCONSERVE_MASS
 SIMU_OPTION += -DELBDM_SCHEME=ELBDM_WAVE
 
 # choose wave scheme WAVE_FD (finite difference), WAVE_GRAMFE (local spectral method)
-SIMU_OPTION += -DWAVE_SCHEME=WAVE_GRAMFE
+SIMU_OPTION += -DWAVE_SCHEME=WAVE_FD
 
 # (b-2-1) WAVE_FD options
 # ------------------------------------------------------------------------------------
@@ -203,7 +203,7 @@ SIMU_OPTION += -DPATCH_SIZE=8
 
 # GPU acceleration
 # --> must set GPU_ARCH as well
-SIMU_OPTION += -DGPU
+#SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING/AMPERE
 SIMU_OPTION += -DGPU_ARCH=TURING
@@ -243,21 +243,21 @@ SIMU_OPTION += -DOPENMP
 #SIMU_OPTION += -DLAOHU
 
 # support HDF5 format
-SIMU_OPTION += -DSUPPORT_HDF5
+#SIMU_OPTION += -DSUPPORT_HDF5
 
 # support GNU scientific library
-SIMU_OPTION += -DSUPPORT_GSL
+#SIMU_OPTION += -DSUPPORT_GSL
 
 # support FFTW library
 # --> SUPPORT_FFTW must be defined when GRAVITY is enabled
 # --> use FFTW3 for fftw3 support
 #     use FFTW2 for fftw2 support
-SIMU_OPTION += -DSUPPORT_FFTW=FFTW3
+#SIMU_OPTION += -DSUPPORT_FFTW=FFTW3
 
 # support spectral interpolation
 # --> must enable SUPPORT_FFTW (if FFTW2 must also enable FLOAT8)
 # --> must enable SUPPORT_GSL
-SIMU_OPTION += -DSUPPORT_SPECTRAL_INTERPOLATION
+#SIMU_OPTION += -DSUPPORT_SPECTRAL_INTERPOLATION
 
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT
@@ -361,15 +361,6 @@ GRACKLE_PATH :=
 GSL_PATH     :=
 LIBYT_PATH   :=
 CUFFTDX_PATH :=
-CUDA_PATH    := /usr/local/cuda/
-FFTW_PATH    := ~/Downloads/fftw-2.1.5/rfftw
-FFTW3_PATH   :=
-MPI_PATH     := /usr/local/
-HDF5_PATH    := /usr/lib/x86_64-linux-gnu/hdf5/serial
-GRACKLE_PATH :=
-GSL_PATH     :=
-LIBYT_PATH   := /home/calab912/Documents/libyt/
-CUFFTDX_PATH := /home/calab912/Documents/nvidia-mathdx-22.11.0-Linux/nvidia/mathdx/22.11/
 
 
 # NTU-eureka (default: openmpi-intel)
