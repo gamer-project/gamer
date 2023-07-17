@@ -22,6 +22,79 @@ How to use it:
      pass all the arguments, so all you need to do is to add you own `parser.add_argument` at `Main`
      section.
 
+An example of the script (from Alexander Kunkel):
+-----------------------------------------------------------------------------------------------------
+# Additional imports for interacting with file system
+import shutil
+import glob
+
+...
+
+def execution( **kwargs ):
+    cwd               = os.getcwd()
+    record_parameters = kwargs["record"]
+    exe               = kwargs["exe"]
+
+
+    # Run GAMER with executable passed as command line parameter
+    subprocess.run([kwargs["exe"]], capture_output=False)
+
+    # Analyse run: Call python scripts etc.
+    os.system("python3 plot_wave_slice.py -s 1 -e 1")
+    os.system("python3 analyse_l1_error.py")
+    os.system("ls -alt > Record__FileSizes")
+
+    # Create folder recording which parameters where changed
+    par_dir  = exe[2:] + "_" + "_".join(record_parameters.keys())
+
+    try:
+        os.mkdir(par_dir)
+    except FileExistsError:
+        pass
+
+    # Create folder recording current runtime parameters
+    sub_dir  = str(record_parameters)
+    dest_dir = os.path.join(par_dir, sub_dir)
+    try:
+        os.mkdir(dest_dir)
+    except FileExistsError:
+        pass
+
+    # Move and or output files to folder, delete with os.remove() (files) and shutil.rmtree() (directories) if necessary
+    for file in glob.glob(r'*.png'):
+        shutil.move(os.path.join(cwd, file), os.path.join(cwd, dest_dir))
+
+    for file in glob.glob(r'Input*'):
+        shutil.copy(os.path.join(cwd, file), os.path.join(cwd, dest_dir))
+
+    for file in glob.glob(r'Record*'):
+        shutil.move(os.path.join(cwd, file), os.path.join(cwd, dest_dir))
+
+    for file in glob.glob(r'VortexPairLinear*'):
+        shutil.move(os.path.join(cwd, file), os.path.join(cwd, dest_dir))
+
+    for file in glob.glob(r'Data*'):
+        shutil.move(os.path.join(cwd, file), os.path.join(cwd, dest_dir))
+
+    return
+
+...
+
+file_name1       = "Input__Parameter"
+loop_paras1      = { "OPT__FIXUP_RESTRICT": [0, 1], "OPT__REF_FLU_INT_SCHEME": [4, 5, 6, 7],
+const_paras1     = {"MAX_LEVEL": 1, "NX0_TOT_X": 64, "NX0_TOT_Y": 64, "OPT__INIT": 2, "END_STEP": 1000, "REFINE_NLEVEL": 1, "REGRID_COUNT":1, "OPT__INT_PHASE": 0}
+
+file_name2       = "Input__Flag_Rho"
+loop_paras2      = { "Density": [0, 1e3]}
+const_paras2     = {}
+
+
+file1  = File( file_name1, const_paras1, loop_paras1, False  )
+file2  = File( file_name2, const_paras2, loop_paras2, True  )
+
+files  = [ file1, file2 ]
+-----------------------------------------------------------------------------------------------------
+
 For developer:
 1. The main concept is to use a recursion function instead of nest for loops, so the code stays clean
    and easy to maintain.
