@@ -65,8 +65,6 @@ void Int_vanLeer( real CData[], const int CSize[3], const int CStart[3], const i
    real LSlope, RSlope, SlopeDh_4;
 
 
-
-
    for (int v=0; v<NComp; v++)
    {
 //    unwrap phase along x direction
@@ -79,7 +77,6 @@ void Int_vanLeer( real CData[], const int CSize[3], const int CStart[3], const i
          {
             Idx_InC       = k*Cdz + j*Cdy + i*Cdx;
             Idx_InL       = Idx_InC - Cdx;
-
             CPtr[Idx_InC] = ELBDM_UnwrapPhase( CPtr[Idx_InL], CPtr[Idx_InC] );
          }
       }
@@ -120,7 +117,6 @@ void Int_vanLeer( real CData[], const int CSize[3], const int CStart[3], const i
          {
             Idx_InC         = k*TdzX + j*Tdy + i*Tdx;
             Idx_InL         = Idx_InC - Tdy;
-
             TDataX[Idx_InC] = ELBDM_UnwrapPhase( TDataX[Idx_InL], TDataX[Idx_InC] );
          }
       }
@@ -161,7 +157,6 @@ void Int_vanLeer( real CData[], const int CSize[3], const int CStart[3], const i
          {
             Idx_InC         = k*TdzY + j*Tdy + i*Tdx;
             Idx_InL         = Idx_InC - TdzY;
-
             TDataY[Idx_InC] = ELBDM_UnwrapPhase( TDataY[Idx_InL], TDataY[Idx_InC] );
          }
       }
@@ -191,15 +186,10 @@ void Int_vanLeer( real CData[], const int CSize[3], const int CStart[3], const i
 
       } // for k,j,i
 
-
-
       CPtr += CDisp;
       FPtr += FDisp;
 
    } // for (int v=0; v<NComp; v++)
-
-
-
 
    delete [] TDataX;
    delete [] TDataY;

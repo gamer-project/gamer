@@ -1,6 +1,8 @@
 #include "GAMER.h"
 
 
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Int_CQuadratic
 // Description :  Perform spatial interpolation based on the conservative quadratic interpolation
@@ -44,7 +46,6 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
    const int Cdy    = Cdx*CSize[0];
    const int Cdz    = Cdy*CSize[1];
 
-
 // index stride of the temporary arrays storing the data after x and y interpolations
    const int Tdx    = 1;
    const int Tdy    = Tdx* CRange[0]*2;
@@ -81,8 +82,6 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
          {
             Idx_InC       = k*Cdz + j*Cdy + i*Cdx;
             Idx_InL       = Idx_InC - Cdx;
-
-
             CPtr[Idx_InC] = ELBDM_UnwrapPhase( CPtr[Idx_InL], CPtr[Idx_InC] );
          }
       }
@@ -144,7 +143,6 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
          {
             Idx_InC         = k*TdzX + j*Tdy + i*Tdx;
             Idx_InL         = Idx_InC - Tdy;
-
             TDataX[Idx_InC] = ELBDM_UnwrapPhase( TDataX[Idx_InL], TDataX[Idx_InC] );
          }
       }
@@ -205,8 +203,6 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
          {
             Idx_InC         = k*TdzY + j*Tdy + i*Tdx;
             Idx_InL         = Idx_InC - TdzY;
-
-
             TDataY[Idx_InC] = ELBDM_UnwrapPhase( TDataY[Idx_InL], TDataY[Idx_InC] );
          }
       }
@@ -256,14 +252,10 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
 
       } // for k,j,i
 
-
-
       CPtr += CDisp;
       FPtr += FDisp;
 
    } // for (int v=0; v<NComp; v++)
-
-
 
    delete [] TDataX;
    delete [] TDataY;

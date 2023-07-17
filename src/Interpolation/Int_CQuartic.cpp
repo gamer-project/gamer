@@ -1,6 +1,8 @@
 #include "GAMER.h"
 
 
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Int_CQuartic
 // Description :  Perform spatial interpolation based on the conservative quartic interpolation
@@ -47,7 +49,6 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
    const int Cdy    = Cdx*CSize[0];
    const int Cdz    = Cdy*CSize[1];
 
-
 // index stride of the temporary arrays storing the data after x and y interpolations
    const int Tdx    = 1;
    const int Tdy    = Tdx* CRange[0]*2;
@@ -72,7 +73,6 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
    real LSlopeDh_4, RSlopeDh_4, SlopeDh_4, Sign;
 
 
-
    for (int v=0; v<NComp; v++)
    {
 //    unwrap phase along x direction
@@ -85,10 +85,7 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
          {
             Idx_InC       = k*Cdz + j*Cdy + i*Cdx;
             Idx_InL1      = Idx_InC - Cdx;
-
-
             CPtr[Idx_InC] = ELBDM_UnwrapPhase( CPtr[Idx_InL1], CPtr[Idx_InC] );
-
          }
       }
 #     endif
@@ -153,7 +150,6 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
          {
             Idx_InC         = k*TdzX + j*Tdy + i*Tdx;
             Idx_InL1        = Idx_InC - Tdy;
-
             TDataX[Idx_InC] = ELBDM_UnwrapPhase( TDataX[Idx_InL1], TDataX[Idx_InC] );
          }
       }
@@ -218,8 +214,6 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
          {
             Idx_InC         = k*TdzY + j*Tdy + i*Tdx;
             Idx_InL1        = Idx_InC - TdzY;
-
-
             TDataY[Idx_InC] = ELBDM_UnwrapPhase( TDataY[Idx_InL1], TDataY[Idx_InC] );
          }
       }
@@ -273,17 +267,10 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
          FPtr[ Idx_Out + Fdz ] = TDataY[Idx_InC] + SlopeDh_4;
       }
 
-
-// restore global phase information
-
-
       CPtr += CDisp;
       FPtr += FDisp;
 
    } // for (int v=0; v<NComp; v++)
-
-
-
 
    delete [] TDataX;
    delete [] TDataY;
