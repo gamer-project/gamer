@@ -133,17 +133,10 @@ endif # WAVE_SCHEME
 ifeq "$(filter -DELBDM_SCHEME=ELBDM_HYBRID, $(SIMU_OPTION))" "-DELBDM_SCHEME=ELBDM_HYBRID"
 
 # choose fluid scheme HYBRID_SCHEME = [HYBRID_UPWIND, HYBRID_FROMM, HYBRID_MUSCL]
-# default is HYBRID_FROMM, for fluid-only simulation (no wave-scheme on refined levels) pick HYBRID_MUSCL
-# for hybrid simulations (no zoom-in )  HYBRID_FROMM is the better choice
+# default is HYBRID_MUSCL, HYBRID_FROMM fails for fluid-only simulations but may be the better choice for hybrid simulations
 # --> must be set when ELBDM_SCHEME=ELBDM_HYBRID
 SIMU_OPTION += -DHYBRID_SCHEME=HYBRID_MUSCL
 
-# do not switch to first-order scheme when failure of fluid scheme is detected
-# --> must be set for fluid-only simulation (no wave-scheme) along with HYBRID_SCHEME = HYBRID_MUSCL
-#SIMU_OPTION += -DHYBRID_IGNORE_FLUID_FAILURE
-
-# enforce a smoother phase field by adding multiples of 2PI ( experimental )
-#SIMU_OPTION += -DHYBRID_SMOOTH_PHASE
 
 endif # ELBDM_SCHEME
 
