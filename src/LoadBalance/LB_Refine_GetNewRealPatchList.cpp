@@ -46,7 +46,7 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 //                CFB_SibLBIdx_Away : Load-balance indices of the siblings of away patches
 //
 //                Hybrid-scheme-only parameters (call-by-reference)
-//                switchNextLevelsToWaveScheme : Convert levels below FaLv to wave scheme
+//                SwitchFinerLevelsToWaveScheme : Convert levels below FaLv to wave scheme
 //
 // Return      :  NNew_Home, NewPID_Home, NNew_Away, NewCr1D_Away, NewCr1D_Away_IdxTable, NewCData_Away,
 //                NDel_Home, DelPID_Home, NDel_Away, DelCr1D_Away, RefineF2S_Send_NPatchTotal, RefineF2S_Send_PIDList,
@@ -57,7 +57,7 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
                                     int &NDel_Home, int *&DelPID_Home, int &NDel_Away, ulong *&DelCr1D_Away,
                                     int &RefineF2S_Send_NPatchTotal, int *&RefineF2S_Send_PIDList,
                                     long (*&CFB_SibLBIdx_Home)[6], long (*&CFB_SibLBIdx_Away)[6],
-                                    bool &switchNextLevelsToWaveScheme )
+                                    bool &SwitchFinerLevelsToWaveScheme )
 {
 
 // 1. construct the unsorted new/delete lists for real patches
@@ -164,7 +164,7 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 
 #        if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
          if ( !amr->use_wave_flag[ SonLv ] && !amr->use_wave_flag[ FaLv ] && TP->use_wave_flag ) {
-            switchNextLevelsToWaveScheme = true;
+            SwitchFinerLevelsToWaveScheme = true;
          }
 #        endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 

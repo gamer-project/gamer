@@ -1348,7 +1348,6 @@ void Aux_TakeNote()
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__INT_PHASE                  %d\n",      OPT__INT_PHASE          );
       fprintf( Note, "OPT__RES_PHASE                  %d\n",      OPT__RES_PHASE          );
-      fprintf( Note, "OPT__CK_PHASE_DEFECT            %d\n",      OPT__CK_PHASE_DEFECT    );
 
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       fprintf( Note, "OPT__HYBRID_MATCH_PHASE         %d\n",      OPT__HYBRID_MATCH_PHASE );
