@@ -1,11 +1,11 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-#if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || defined(__CUDACC__) )
+#if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || ( defined(__CUDACC__) && defined(GRAMFE_ENABLE_GPU) ) )
 
-#if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
+#if ( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE )
 
-#include "GramFE_ExtensionTables.h"
+#include "GramExtensionTables.h"
 
 // useful macros
 
@@ -247,7 +247,7 @@ gramfe_float SineTaylorExpansion(gramfe_float x, int Nterms) {
 } // FUNCTION : SineTaylorExpansion
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CUFLU_ELBDMSolver_GramFE_FFT
+// Function    :  CUFLU_ELBDMSolver_GramFE
 // Description :  CPU and GPU ELBDM kinematic solver based on computing Gram (FE) extension and evolving wave function using pseudo-spectral method on extended domain
 //
 // Note        :  1. The three-dimensional evolution is achieved by applying x, y, and z operators successively.
@@ -274,19 +274,19 @@ gramfe_float SineTaylorExpansion(gramfe_float x, int Nterms) {
 #ifdef __CUDACC__
 __launch_bounds__(FFT::max_threads_per_block)
 __global__
-void CUFLU_ELBDMSolver_GramFE_FFT(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                                    real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
-                                    real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                    const real dt, const real _dh, const real Eta, const bool StoreFlux,
-                                    const bool XYZ, const real MinDens,
-                                    typename FFT::workspace_type  Workspace,
-                                    typename IFFT::workspace_type WorkspaceInv  )
+void CUFLU_ELBDMSolver_GramFE(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                                 real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
+                                 real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                 const real dt, const real _dh, const real Eta, const bool StoreFlux,
+                                 const bool XYZ, const real MinDens,
+                                 typename FFT::workspace_type  Workspace,
+                                 typename IFFT::workspace_type WorkspaceInv  )
 #else
-void CPU_ELBDMSolver_GramFE_FFT(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                                    real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
-                                    real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                    const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
-                                    const bool XYZ, const real MinDens )
+void CPU_ELBDMSolver_GramFE(     real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                                 real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
+                                 real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                 const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
+                                 const bool XYZ, const real MinDens )
 #endif
 {
 
@@ -319,7 +319,7 @@ void CPU_ELBDMSolver_GramFE_FFT(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) 
    gramfe_float Coeff;                                                                       // dT * k^2
    complex_type ExpCoeff[GRAMFE_FLU_NXT];                                                    // exp(- 1j * dt/(2*ELBDM_ETA) * k^2)
 
-   const gramfe_float filterDecay  = (gramfe_float) 32.0 * (gramfe_float) 2.302585092994046; // decay of k-space filter ( 16 * log(10) )
+   const gramfe_float filterDecay  = (gramfe_float) 32.0 * (gramfe_float) 2.302585092994046; // decay of k-space filter ( 32 * log(10) )
    const gramfe_float filterDegree = (gramfe_float) 100;                                     // degree of k-space filter
    const gramfe_float kmax         = (gramfe_float) M_PI * _dh;                              // maximum value of k
    const gramfe_float dk           = (gramfe_float) + 2.0 * kmax / GRAMFE_FLU_NXT;           // k steps in k-space
@@ -361,7 +361,7 @@ void CPU_ELBDMSolver_GramFE_FFT(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) 
                      FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_Ae, s_Ao, ExpCoeff, true,  0, MinDens, Workspace, WorkspaceInv );
    }
 
-} // FUNCTION : CUFLU_ELBDMSolver_GramFE_FFT
+} // FUNCTION : CUFLU_ELBDMSolver_GramFE
 
 
 
@@ -613,6 +613,5 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
    } // # pragma omp parallel
 } // FUNCTION : CUFLU_Advance
 
-
-#endif // #if ( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
-#endif // #if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || defined(__CUDACC__) )
+#endif // #if ( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE)
+#endif // #if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || ( defined(__CUDACC__) && defined(GRAMFE_ENABLE_GPU) ) )
