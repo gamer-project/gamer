@@ -1047,8 +1047,8 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
             int jjp = (jj + 1) < FSize_CC  ? jj + 1 : jj    ;
             int jjm = (jj - 1) < 0         ? jj     : jj - 1;
 
-//    Check whether dB wavelength is resolved within the newly converted patch
-            real maxphase = MAX(MAX(MAX(MAX(MAX(
+//          check whether dB wavelength is resolved within the newly converted patch
+            real dPhase = MAX(MAX(MAX(MAX(MAX(
             FABS(FData_Flu[PHAS][kk ][jj ][iip] - FData_Flu[PHAS][kk ][jj ][ii ]),
             FABS(FData_Flu[PHAS][kk ][jj ][ii ] - FData_Flu[PHAS][kk ][jj ][iim])),
             FABS(FData_Flu[PHAS][kk ][jjp][ii ] - FData_Flu[PHAS][kk ][jj ][ii ])),
@@ -1056,8 +1056,8 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
             FABS(FData_Flu[PHAS][kkp][jj ][ii ] - FData_Flu[PHAS][kk ][jj ][ii ])),
             FABS(FData_Flu[PHAS][kk ][jj ][ii ] - FData_Flu[PHAS][kkm][jj ][ii ]));
 
-            if ( maxphase > M_PI ) {
-               Aux_Message ( stderr, "WARNING: When converting patch to wave scheme, phase jump ii %d iim %d iip %d jj %d jjm %d jjp %d kk %d kkm %d kkp %d %f \n", ii, iim, iip, jj, jjm, jjp, kk, kkm, kkp, maxphase);
+            if ( dPhase > M_PI ) {
+               Aux_Message ( stderr, "WARNING: Phase jump = %d > PI when refining patch from fluid (lv %d) to wave (lv %d) scheme!", dPhase, lv, lv + 1);
             }
       }}}
 #     endif   // # ifdef GAMER_DEBUG

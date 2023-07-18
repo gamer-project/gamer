@@ -862,7 +862,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                   int jjm = (jj - 1) < 0         ? jj     : jj - 1;
 
                   //check whether dB wavelength is resolved within the newly converted patch
-                  real maxphase = MAX(MAX(MAX(MAX(MAX(
+                  real dPhase = MAX(MAX(MAX(MAX(MAX(
                   FABS(Flu_FData[PHAS][kk ][jj ][iip] - Flu_FData[PHAS][kk ][jj ][ii ]),
                   FABS(Flu_FData[PHAS][kk ][jj ][ii ] - Flu_FData[PHAS][kk ][jj ][iim])),
                   FABS(Flu_FData[PHAS][kk ][jjp][ii ] - Flu_FData[PHAS][kk ][jj ][ii ])),
@@ -870,8 +870,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                   FABS(Flu_FData[PHAS][kkp][jj ][ii ] - Flu_FData[PHAS][kk ][jj ][ii ])),
                   FABS(Flu_FData[PHAS][kk ][jj ][ii ] - Flu_FData[PHAS][kkm][jj ][ii ]));
 
-                  if ( maxphase > M_PI ) {
-                     Aux_Message ( stderr, "WARNING: When converting patch to wave scheme, phase jump ii %d iim %d iip %d jj %d jjm %d jjp %d kk %d kkm %d kkp %d %f \n", ii, iim, iip, jj, jjm, jjp, kk, kkm, kkp, maxphase);
+                  if ( dPhase > M_PI ) {
+                     Aux_Message ( stderr, "WARNING: Phase jump = %d > PI when refining patch from fluid (lv %d) to wave (lv %d) scheme!", dPhase, lv, lv + 1);
                   }
             }}}
 #           endif   // # ifdef GAMER_DEBUG
@@ -1221,7 +1221,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                int jjm = (jj - 1) < 0         ? jj     : jj - 1;
 
                //check whether dB wavelength is resolved within the newly converted patch
-               real maxphase = MAX(MAX(MAX(MAX(MAX(
+               real dPhase = MAX(MAX(MAX(MAX(MAX(
                FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][iip] - amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ]),
                FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ] - amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][iim])),
                FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jjp][ii ] - amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ])),
@@ -1229,8 +1229,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kkp][jj ][ii ] - amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ])),
                FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ] - amr->patch[fluSg][level][PID]->fluid[PHAS][kkm][jj ][ii ]));
 
-               if ( maxphase > M_PI * 2) {
-                  Aux_Message ( stderr, "WARNING: When converting level to wave scheme, phase jump %f at PID %d for k %d i %d j %d\n", maxphase, PID, k, i, j);
+               if ( dPhase > M_PI * 2) {
+                  Aux_Message ( stderr, "WARNING: When converting level to wave scheme, phase jump %f at PID %d for k %d i %d j %d\n", dPhase, PID, k, i, j);
                   Aux_Message ( stderr, "k %d kp %d km %d i %d ip %d im %d j %d jp %d jm %d\n k j ip %f k j i %f\n k j i %f k j im %f\n k jp i %f k j i %f\n k j i %f k jm i %f\n kp j i %f k j i %f\n k j i %f km j i %f\n stub %f %f %f %f %f %f %f\n",
                                 kk, kkp, kkm, ii, iip, iim, jj, jjp, jjm,
                                 amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][iip], amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ],
