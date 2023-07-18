@@ -20,13 +20,13 @@
 //                FaMagSg  : B field sandglass at level "FaLv"
 //                SonPotSg : Potential sandglass at level "FaLv+1"
 //                FaPotSg  : Potential sandglass at level "FaLv"
-//                TVarCC   : Target cell-centered variables on FaLv
+//                TVarCC   : Target cell-centered variables on level "FaLv"
 //                           --> Supported variables in different models:
 //                               HYDRO        : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY,[, _POTE]
 //                               ELBDM_WAVE   : _DENS, _REAL, _IMAG, [, _POTE]
 //                               ELBDM_HYBRID : _DENS, _PHAS [, _POTE]
 //                           --> _FLUID, _PASSIVE, and _TOTAL apply to all models
-//                TVarFC   : Target face-centered variables on FaLv
+//                TVarFC   : Target face-centered variables on level "FaLv"
 //                            --> Supported variables in different models:
 //                                HYDRO with MHD : _MAGX, _MAGY, _MAGZ, _MAG
 //                                ELBDM          : none

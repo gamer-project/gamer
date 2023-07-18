@@ -98,19 +98,10 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #     endif // # if ( MODEL == ELBDM  && ELBDM_SCHEME == ELBDM_HYBRID )
 
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      if ( Flag &&  FlagTable_Interference[lv][3] >= 0.0 ) {
-
-#        ifdef GAMER_DEBUG
-//       distinguish two cases:
-//       if the slope of the phase field is lower than PI, the dB wavelength will be resolved after refinement and one can safely switch to the wave scheme
-//       if the slope is bigger, this may be due to a real phase discontinuity because of a 2 pi winding of the phase at a point of zero density
-//       check for the latter with FlagInterferenceTwo
-//       if the curvature of the phase is high at a point where the phase jump is bigger than pi, assume that it is a real jump and still switch to the wave scheme
-//       bool dBResolvedAfterRefine = ! ELBDM_Flag_Interference( i, j, k, Interf_Cond + 2 * CUBE(PS1), M_PI ) || FlagIntQP;
-#        endif
-
+//    set use_wave_flag if fourth column in FlagTable_Interference enables switching from fluid to wave solver
+      if ( Flag &&  FlagTable_Interference[lv][3] >= 0.0 )
+      {
          amr->patch[0][lv][PID]->use_wave_flag =  true;
-
       }
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 

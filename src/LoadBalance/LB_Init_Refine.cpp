@@ -7,7 +7,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_Init_Refine
-// Description :  Refine patches on FaLv to create patches on FaLv+1
+// Description :  Refine patches on level "FaLv" to create patches on level "FaLv"+1
 //
 // Note        :  1. Invoked by LB_Init_ByFunction()
 //                2. Only apply to real patches
@@ -36,7 +36,7 @@ void LB_Init_Refine( const int FaLv, const bool AllocData )
       Aux_Error( ERROR_INFO, "number of son patches on level %d = %d != 0 !!\n", SonLv, amr->num[SonLv] );
 
 
-// loop over all **real** patches on FaLv
+// loop over all **real** patches on level "FaLv"
    for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
    {
       if ( amr->patch[0][FaLv][FaPID]->flag )

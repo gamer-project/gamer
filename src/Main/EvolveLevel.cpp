@@ -154,9 +154,9 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       const int SaveSg_Mag = NULL_INT;
 #     endif
 
-      if ( OPT__VERBOSE  &&  MPI_Rank == 0 ) {
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Flu_AdvanceDt, counter = %8ld ... ", lv, AdvanceCounter[lv] );
-      }
+
       if ( false ) {}
       /*
       if ( OPT__OVERLAP_MPI )
@@ -808,6 +808,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          }
 
 //       12-4. exchange the updated data
+//       use data exchange mode DATA_GENERAL for Flu_ParaBuf == PATCH_SIZE in order to support MPI
 #        ifdef MHD
          if ( OPT__FIXUP_FLUX  ||  OPT__FIXUP_RESTRICT  ||  OPT__FIXUP_ELECTRIC )
 #        else

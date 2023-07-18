@@ -14,7 +14,6 @@ static void GetCompound_Makefile ( hid_t &H5_TypeID );
 static void GetCompound_SymConst ( hid_t &H5_TypeID );
 static void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored );
 
-#define DEBUG_HDF5
 
 
 /*======================================================================================================
@@ -1046,86 +1045,6 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //                convert real/imag to density/phase in hybrid scheme
 #                 if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
                   if ( amr->use_wave_flag[lv] && (v == REAL || v == IMAG) ) {
-//                in serial mode, the phase computed from the wave function is matched to the phase on the unrefined levels
-//                in MPI mode, this is not yet implemented
-#                 ifdef SERIAL
-                     real Re, Im, Phase;
-                     int FaPID, FaLv, Success;
-
-                     #ifdef GAMER_DEBUG
-                     real Stub;
-                     #endif
-
-
-                     for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-                     {
-                        Phase = 0;
-                        Success = 0;
-                        FaLv  = lv;
-                        FaPID = PID;
-
-//                      traverse AMR tree to find first fluid-level parent of wave patch
-                        while (FaLv > 0  && !(FaPID < 0) && v == REAL) {
-                           FaPID = amr->patch[0][FaLv][FaPID]->father;
-                           FaLv -= 1;
-                           if ( !amr->use_wave_flag[FaLv] && !(FaPID < 0)) {
-                              Success = 1;
-                              break;
-                           }
-                        }
-                        for (int k=0; k<PS1; k++)
-                        for (int j=0; j<PS1; j++)
-                        for (int i=0; i<PS1; i++)
-                        {
-                           if ( v == REAL ) {
-                              int childCoordinates[3], fatherCoordinates[3];
-                              if ( Success ) {
-                                 childCoordinates[0] = i;
-                                 childCoordinates[1] = j;
-                                 childCoordinates[2] = k;
-                                 for (int h = 0; h < 3; h++) {
-                                    fatherCoordinates[h] =  ( amr->patch[0][lv][PID]->corner[h] + childCoordinates[h] * amr->scale[lv] - amr->patch[0][FaLv][FaPID]->corner[h] ) / amr->scale[FaLv];
-                                 }
-                                 Phase = amr->patch[ amr->FluSg[FaLv] ][FaLv][FaPID]->fluid[PHAS][fatherCoordinates[2]][fatherCoordinates[1]][fatherCoordinates[0]];
-                              } else {
-#                                ifdef GAMER_DEBUG
-                                 Aux_Error( ERROR_INFO, "ERROR: No fluid parent patch for wave patch found! PID %d FaPID %d Lv %d UseWave %d FaLV %d FaUseWave %d \n", PID, FaPID, lv, amr->use_wave_flag[lv], FaLv, amr->use_wave_flag[FaLv]);
-#                                endif // # ifdef GAMER_DEBUG
-                                 Phase = 0;
-                              }
-
-                              Re = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[REAL][k][j][i];
-                              Im = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[IMAG][k][j][i];
-
-//                            match reconstructed phase to parent patch's phase
-                              FieldData[PID][k][j][i] = ELBDM_UnwrapPhase( Phase, SATAN2(Im, Re) );
-                           }
-                           else if ( v == IMAG ) {
-//                            store stub field field indicating where first-order scheme was used for fluid update in debug mode
-#                             ifdef GAMER_DEBUG
-                              int childCoordinates[3], fatherCoordinates[3];
-
-                              if ( Success ) {
-                                 childCoordinates[0] = i;
-                                 childCoordinates[1] = j;
-                                 childCoordinates[2] = k;
-                                 for (int h = 0; h < 3; h++) {
-                                    fatherCoordinates[h] =  ( amr->patch[0][lv][PID]->corner[h] + childCoordinates[h] * amr->scale[lv] - amr->patch[0][FaLv][FaPID]->corner[h] ) / amr->scale[FaLv];
-                                 }
-                                 Stub = amr->patch[ amr->FluSg[FaLv] ][FaLv][FaPID]->fluid[STUB][fatherCoordinates[2]][fatherCoordinates[1]][fatherCoordinates[0]];
-                              } else {
-                                 Stub = 0;
-                              }
-                              FieldData[PID][k][j][i] = Stub;
-
-#                             else // #ifdef GAMER_DEBUG
-                              FieldData[PID][k][j][i] = 0;
-#                             endif // #ifdef GAMER_DEBUG ... #else
-                           }
-                        }
-                     }
-                  } else
-#                 else // #ifdef SERIAL
                      real Re, Im;
                      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                      {
@@ -1144,7 +1063,6 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                         }
                      }
                   } else
-#                 endif // # ifdef SERIAL ... #else
 #                 endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                      memcpy( FieldData[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );

@@ -30,7 +30,6 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 //                                     INT_QUAD     : quadratic
 //                                     INT_CQUAR    : conservative quartic
 //                                     INT_QUAR     : quartic
-//                                     INT_SPECTRAL : spectral
 //                NTSib          : Number of targeted sibling patches along different sibling directions
 //                TSib           : Targeted sibling indices along different sibling directions
 //                TVar           : Targeted variables to be prepared
