@@ -1,6 +1,6 @@
 Compilation flags:
 ========================================
-Enable : MODEL=ELBDM
+Enable : MODEL=ELBDM, ELBDM_SCHEME=HYBRID
 Disable: GRAVITY, PARTICLE
 
 

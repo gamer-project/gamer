@@ -17,18 +17,6 @@ parser.add_argument( '-d', action='store', required=False, type=int, dest='didx'
                             help='delta data index [%(default)d]', default=1 )
 parser.add_argument( '-i', action='store', required=False,  type=str, dest='prefix',
                       help='data path prefix [%(default)s]', default='./' )
-parser.add_argument( '--plot-grid', dest ="plot_grid", action="store_true")
-parser.set_defaults( plot_grid = False)
-parser.add_argument( '--plot-phase', dest ="plot_phase", action="store_true")
-parser.set_defaults( plot_phase = False)
-parser.add_argument( '--plot-3d', dest ="plot_3d", action="store_true")
-parser.set_defaults( plot_3d = False)
-parser.add_argument( '--plot-reim', dest ="plot_reim", action="store_true")
-parser.set_defaults( plot_reim = False)
-parser.add_argument( '--plot-grav', dest ="plot_grav", action="store_true")
-parser.set_defaults( plot_grav = False)
-parser.add_argument( '--comp-phase', dest ="comp_phase", action="store_true")
-parser.set_defaults( plot_grav = False)
 
 
 ###
@@ -48,74 +36,21 @@ idx_end    = args.idx_end
 didx       = args.didx
 prefix     = args.prefix
 
-plot_grid  = args.plot_grid
-plot_phase = args.plot_phase
-plot_3d    = args.plot_3d
-plot_reim  = args.plot_reim
-plot_grav  = args.plot_grav
-comp_phase = args.comp_phase
-
 colormap    = 'arbre'
 center_mode = 'c'
 dpi         = 150
 
 yt.enable_parallelism()
 
-if comp_phase:
-  def _phase(field, data):
-          return np.arctan2(data["gamer", "Imag"], data["gamer", "Real"])
-
-  yt.add_field(
-      name=("gamer", "Phase"),
-      function=_phase,
-      sampling_type="local",
-      units="",
-  )
-plot_reim2 = 0
-
-if plot_reim2:
-     def _real(field, data):
-          return np.cos(data["gamer", "Phase"])
-
-     def _imag(field, data):
-          return np.sin(data["gamer", "Phase"])
-
-
-     yt.add_field(
-          name=("gamer", "Imag"),
-          function=_imag,
-          sampling_type="local",
-          units="",
-     )
-
-     yt.add_field(
-          name=("gamer", "Real"),
-          function=_real,
-          sampling_type="local",
-          units="",
-     )
-
    
 for idx in range(idx_start, idx_end+1, didx):
           ds = yt.load("Data_%06d"%idx)# ds = yt.load('t_%06d'%idx)
           ds.force_periodicity()
-          grad_fields  = ds.add_gradient_fields(("gas", "density"))
-          phase_fields = ds.add_gradient_fields(("gamer", "Real"))
-          if plot_grav:
-              pot_fields   = ds.add_gradient_fields(("gas", "gravitational_potential"))
-          if plot_reim:
-              grad_fields = ds.add_gradient_fields(("gamer", "Real"))
-              grad_fields = ds.add_gradient_fields(("gamer", "Imag"))
-
-
-
-          if plot_3d:
-                     axes = ["x", "y", "z"]
-          else:
-                     axes = ["z"]
+          
+          axes = ["z"]
 
           for myax in axes:
-                     fig = plt.figure(dpi = 120, figsize=(36 + 12 * plot_grav + 12 * plot_reim, 12))
+                     fig = plt.figure(dpi = 120, figsize=(24, 12))
 
                      # See http://matplotlib.org/mpl_toolkits/axes_grid/api/axes_grid_api.html
                      # These choices of keyword arguments produce a four panel plot that includes
@@ -125,7 +60,7 @@ for idx in range(idx_start, idx_end+1, didx):
                      grid = AxesGrid(
                           fig,
                           (0.075, 0.075, 0.85, 0.85),
-                          nrows_ncols=(4+2*plot_grav+4*plot_reim, 2),
+                          nrows_ncols=(2, 2),
                           axes_pad=(0.2, 0.0),
                           label_mode="L",
                           share_all=True,
@@ -139,25 +74,12 @@ for idx in range(idx_start, idx_end+1, didx):
 
                      fields = [
                           ("gas", "density"),
-                          ("gas", "density_gradient_magnitude"),
-                          #("gamer", "Phase"),
-                          #("gamer", "Phase_gradient_magnitude"),
+                          ("gamer", "Phase"),
                          ]
                      
-                     if plot_grav:
-                         fields.extend([("gas", "gravitational_potential"),
-                              ("gas", "gravitational_potential_gradient_magnitude")])
- 
-                     if plot_reim:
-                         fields.extend([
-                              ("gamer", "Real"),
-                              ("gamer", "Imag")])
 
                      pz = yt.SlicePlot( ds, myax, fields)
                      pz.set_log(("gamer", "Phase"), False)
-                     if plot_reim:
-                         pz.set_log(("gamer", "Real"), False)
-                         pz.set_log(("gamer", "Imag"), False)
 
                      pz.annotate_grids( periodic=False )
 
@@ -173,10 +95,6 @@ for idx in range(idx_start, idx_end+1, didx):
 
                      pz2 = yt.SlicePlot( ds, myax, fields)
                      pz2.set_log(("gamer", "Phase"), False)
-                     if plot_reim:
-                         pz2.set_log(("gamer", "Real"), False)
-                         pz2.set_log(("gamer", "Imag"), False)
-
                      pz2.set_cmap( fields, "viridis" )
                      # For each plotted field, force the SlicePlot to redraw itself onto the AxesGrid
                      # axes.
