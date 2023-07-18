@@ -123,7 +123,7 @@ double               FlagTable_Interference[NLEVEL-1][4];
 bool                 OPT__FLAG_SPECTRAL;
 double               FlagTable_Spectral[NLEVEL-1][2];
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
-bool                 OPT__HYBRID_MATCH_PHASE;
+bool                 ELBDM_MATCH_PHASE;
 double               DT__HYBRID_FLUID, DT__HYBRID_VELOCITY;
 #endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 

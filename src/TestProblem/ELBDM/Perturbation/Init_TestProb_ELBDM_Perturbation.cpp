@@ -40,8 +40,8 @@ void Validate()
 #  endif
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( !OPT__HYBRID_MATCH_PHASE )
-      Aux_Error( ERROR_INFO, "OPT__HYBRID_MATCH_PHASE must be enabled !!\n" );
+   if ( !ELBDM_MATCH_PHASE )
+      Aux_Error( ERROR_INFO, "ELBDM_MATCH_PHASE must be enabled !!\n" );
 #  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 

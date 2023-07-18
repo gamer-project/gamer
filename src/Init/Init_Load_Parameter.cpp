@@ -416,7 +416,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__INT_PHASE",             &OPT__INT_PHASE,                  true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RES_PHASE",             &OPT__RES_PHASE,                  false,           Useless_bool,  Useless_bool   );
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   ReadPara->Add( "OPT__HYBRID_MATCH_PHASE",    &OPT__HYBRID_MATCH_PHASE,         true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "ELBDM_MATCH_PHASE",          &ELBDM_MATCH_PHASE,         true,            Useless_bool,  Useless_bool   );
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
 // do not check OPT__FLU_INT_SCHEME and OPT__REF_FLU_INT_SCHEME since they may be reset by Init_ResetDefaultParameter()

@@ -250,7 +250,7 @@ Procedure for outputting new variables:
 //                2468 : 2023/05/08 --> output OPT__FFTW_STARTUP
 //                2469 : 2023/05/18 --> replace OPT__INIT_BFIELD_BYFILE by OPT__INIT_BFIELD_BYVECPOT
 //                2470 : 2023/06/24 --> output OPT__SORT_PATCH_BY_LBIDX
-//                2471 : 2023/07/17 --> output OPT__FLAG_INTERFERENCE, OPT__HYBRID_MATCH_PHASE
+//                2471 : 2023/07/17 --> output OPT__FLAG_INTERFERENCE, ELBDM_MATCH_PHASE
 //                                             ELBDM_VORTEX_THRESHOLD, OPT__LB_EXCHANGE_FATHER, FlagTable_Interference
 //                                             DENS and PHAS for hybrid scheme,
 //                                             use_wave_flag[lv] for AMR structure

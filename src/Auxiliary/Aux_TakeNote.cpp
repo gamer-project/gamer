@@ -1350,7 +1350,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__RES_PHASE                  %d\n",      OPT__RES_PHASE          );
 
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      fprintf( Note, "OPT__HYBRID_MATCH_PHASE         %d\n",      OPT__HYBRID_MATCH_PHASE );
+      fprintf( Note, "ELBDM_MATCH_PHASE               %d\n",      ELBDM_MATCH_PHASE );
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #     endif
 #     ifdef SUPPORT_SPECTRAL_INT
