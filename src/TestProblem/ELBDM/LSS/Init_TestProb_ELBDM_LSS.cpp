@@ -5,7 +5,7 @@
 
 // problem-specific global variables
 // =======================================================================================
-static int LSS_InitMode;   // initialization mode: 1=density-only, 2=real and imaginary parts
+static int LSS_InitMode;   // initialization mode: 1=density-only, 2=real and imaginary parts or phase and density
 // =======================================================================================
 
 
