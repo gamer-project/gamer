@@ -7,7 +7,7 @@
 static void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const int dj, const int RhoK_Size );
 static void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const int RhoK_Size );
 
-extern root_real_fftw_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
+extern root_fftw::real_plan_nd     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  FFT_Periodic
@@ -31,14 +31,14 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
    const int Nx_Padded = Nx/2 + 1;
    const real dh       = amr->dh[0];
    real Deno;
-   gamer_float_complex *cdata;
+   gamer_fftw::fft_complex *cdata;
 
 
 // forward FFT
    root_fftw_r2c( FFTW_Plan_Poi, RhoK );
 
 // the data are now complex, so typecast a pointer
-   cdata = (gamer_float_complex*) RhoK;
+   cdata = (gamer_fftw::fft_complex*) RhoK;
 
 
 // set up the dimensionless wave number and the corresponding sin(k)^2 function
@@ -126,9 +126,9 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 //-------------------------------------------------------------------------------------------------------
 void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const int RhoK_Size )
 {
-   gamer_float_complex *RhoK_cplx   = (gamer_float_complex *)RhoK;
-   gamer_float_complex *gFuncK_cplx = (gamer_float_complex *)gFuncK;
-   gamer_float_complex  Temp_cplx;
+   gamer_fftw::fft_complex *RhoK_cplx   = (gamer_fftw::fft_complex *)RhoK;
+   gamer_fftw::fft_complex *gFuncK_cplx = (gamer_fftw::fft_complex *)gFuncK;
+   gamer_fftw::fft_complex  Temp_cplx;
 
 
 // forward FFT
@@ -222,7 +222,7 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 // allocate memory (properly taking into account the zero-padding regions, where no data need to be exchanged)
    const int NRecvSlice = MIN( List_z_start[MPI_Rank]+local_nz, NX0_TOT[2] ) - MIN( List_z_start[MPI_Rank], NX0_TOT[2] );
 
-   real *RhoK         = (real* ) root_fftw_malloc(sizeof(real) * total_local_size);   // array storing both density and potential
+   real *RhoK         = (real* ) root_fftw::fft_malloc(sizeof(real) * total_local_size);   // array storing both density and potential
    real *SendBuf      = new real [ (long)amr->NPatchComma[0][1]*CUBE(PS1) ];          // MPI send buffer for density and potential
    real *RecvBuf      = new real [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];          // MPI recv buffer for density and potentia
    long *SendBuf_SIdx = new long [ amr->NPatchComma[0][1]*PS1 ];                      // MPI send buffer for 1D coordinate in slab
@@ -262,7 +262,7 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
                local_nz, FFT_Size, NRecvSlice, _POTE, InPlacePad );
 
 
-   root_fftw_free(RhoK);
+   root_fftw::fft_free(RhoK);
    delete [] SendBuf;
    delete [] RecvBuf;
    delete [] SendBuf_SIdx;
