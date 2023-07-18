@@ -167,9 +167,9 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
 #     ifdef OPENMP
-      const int    TID  = omp_get_thread_num();
+      const int TID = omp_get_thread_num();
 #     else
-      const int    TID  = 0;
+      const int TID = 0;
 #     endif
 
 //    1-2. store the magnetic energy density before resetting
@@ -184,6 +184,7 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
       real *AxTID = ( UseVecPot ) ? Ax[TID] : NULL;
       real *AyTID = ( UseVecPot ) ? Ay[TID] : NULL;
       real *AzTID = ( UseVecPot ) ? Az[TID] : NULL;
+
       if ( UseVecPot )
       {
          int idx = 0;
