@@ -407,6 +407,7 @@ def load_arguments():
     parser.add_argument( "--gramfe_scheme", type=str, metavar="TYPE", gamer_name="GRAMFE_SCHEME",
                          default="GRAMFE_MATMUL", choices=["GRAMFE_MATMUL", "GRAMFE_FFT"],
                          depend={"model":"ELBDM", "wave_scheme": "WAVE_GRAMFE"},
+                         constraint={ "GRAMFE_MATMUL":{"gsl":True} },
                          help="GramFE scheme for <--wave_scheme=WAVE_GRAMFE> (GRAMFE_MATMUL: faster for PATCH_SIZE=8, GRAMFE_FFT: faster for larger patch sizes).\n"
                        )
 
