@@ -1,32 +1,34 @@
 Compilation flags:
 ========================================
-Enable : MODEL=ELBDM, GRAVITY, COMOVING
+Enable : MODEL=ELBDM, ELBDM_SCHEME=ELBDM_HYBRID, GRAVITY, COMOVING
 Disable: PARTICLE
 
 
 Default setup:
 ========================================
-1. ELBDM_MASS              8.0e-23 (eV/c^2)
-   A_INIT                  3.124024e-4
-   OMEGA_M0                0.2835
-   HUBBLE0                 0.6955
-   BOX_SIZE                1.4 (Mpc/h)
+1. ELBDM_MASS              2.0e-23 (eV/c^2)
+   A_INIT                  9.900990099e-3          # initial scale factor
+   OMEGA_M0                0.3158230904284232      # omega matter at the present time
+   HUBBLE0                 0.6732117               # dimensionless Hubble parameter (currently only for converting ELBDM_MASS to code units)
+   BOX_SIZE                2.8 (Mpc/h)
 
-2. MAX_LEVEL               3
+2. MAX_LEVEL               6
    OPT__FLAG_RHO           1
-   OPT__FLAG_LOHNER_DENS   1
-   --> Input__Flag_Rho    = example/input/Input__Flag_Rho8
-       Input__Flag_Lohner = example/input/Input__Flag_Lohner__FLASH1_LSS_DH3.0
+   OPT__FLAG_SPECTRAL      1
+   OPT__FLAG_INTERFERENCE  1
+   --> Input__Flag_Rho          = example/input/Input__Flag_Rho8
+       Input__Flag_Spectral     = example/input/Input__Flag_Spectral
+       Input__Flag_Interference = example/input/Input__Flag_Interference
 
 
 Note:
 ========================================
 1. Cosmological large-scale structure simulations
 
-2. Download the IC file: sh download_ic.sh
+2. Download the IC file: sh download_light_halo_ic.sh or sh download_heavy_halo_ic.sh
 
 3. Default maximum resolution is low
-   --> Only 1.4/(256*2^3) ~ 0.7 kpc/h (comoving)
+   --> Only 2.8/(64*2^6) ~ 0.7 kpc/h (comoving)
    --> Can only marginally resolve a central soliton
 
 4. Some yt visualization scripts are put in "plot_script"

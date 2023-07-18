@@ -160,8 +160,8 @@ INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initiali
 # interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar, 8=Spectral)
 OPT__INT_TIME                 1           # perform "temporal" interpolation for OPT__DT_LEVEL == 2/3 [1]
 OPT__INT_PHASE                0           # interpolation on phase (does not support MinMod-1D) [1] ##ELBDM ONLY##
-OPT__FLU_INT_SCHEME           8           # ghost-zone fluid variables for the fluid solver [-1]
-OPT__REF_FLU_INT_SCHEME       8           # newly allocated fluid variables during grid refinement [-1]
+OPT__FLU_INT_SCHEME           6           # ghost-zone fluid variables for the fluid solver [-1]
+OPT__REF_FLU_INT_SCHEME       6           # newly allocated fluid variables during grid refinement [-1]
 OPT__POT_INT_SCHEME           5           # ghost-zone potential for the Poisson solver (only supports 4 & 5) [5]
 OPT__RHO_INT_SCHEME           4           # ghost-zone mass density for the Poisson solver [4]
 OPT__GRA_INT_SCHEME           5           # ghost-zone potential for the gravity solver (for UNSPLIT_GRAVITY as well) [5]
