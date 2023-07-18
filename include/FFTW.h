@@ -226,11 +226,11 @@ const auto destroy_complex_plan_nd = gamer_fftw::destroy_complex_mpi_plan_nd;
 #endif // # if ( SUPPORT_FFTW == FFTW3 )  ... # else
 
 #if ( SUPPORT_FFTW == FFTW3 )
-#ifdef GRAMFE_FFT_FLOAT8
+#ifdef GRAMFE_FLOAT8
 namespace gramfe_fftw = fftw3_double_precision;
-#else // #ifdef GRAMFE_FFT_FLOAT8
+#else // #ifdef GRAMFE_FLOAT8
 namespace gramfe_fftw = fftw3_single_precision;
-#endif // #ifdef GRAMFE_FFT_FLOAT8 ... # else
+#endif // #ifdef GRAMFE_FLOAT8 ... # else
 #else // #if ( SUPPORT_FFTW == FFTW3 )
 namespace gramfe_fftw = fftw2;
 #endif // #if ( SUPPORT_FFTW == FFTW3 ) ... #else
