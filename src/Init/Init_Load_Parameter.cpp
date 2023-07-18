@@ -498,7 +498,7 @@ void Init_Load_Parameter()
 #  endif
 
 // GramFE tables
-#  ifdef SUPPORT_SPECTRAL_INTERPOLATION
+#  ifdef SUPPORT_SPECTRAL_INT
    ReadPara->Add( "INT_TABLE_PATH",              INT_TABLE_PATH,                  NoDef_str,       Useless_str,   Useless_str    );
 #  endif
 

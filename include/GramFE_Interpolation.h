@@ -1,5 +1,5 @@
-#ifndef __SPECTRAL_INTERPOLATION_H__
-#define __SPECTRAL_INTERPOLATION_H__
+#ifndef __SPECTRAL_INT_H__
+#define __SPECTRAL_INT_H__
 
 
 // ****************************************************************************
@@ -7,7 +7,7 @@
 // ** They are defined in Interpolation/Int_Spectral.cpp                     **
 // ****************************************************************************
 
-#ifdef SUPPORT_SPECTRAL_INTERPOLATION
+#ifdef SUPPORT_SPECTRAL_INT
 
 // GSL includes
 #include "GSL.h"
@@ -19,7 +19,7 @@
 #include <memory>
 
 
-#ifdef SUPPORT_SPECTRAL_INTERPOLATION
+#ifdef SUPPORT_SPECTRAL_INT
 #define GFEI_GSL_FLOAT8
 // Accuracy for matrix multiplication in Gram-FE extension interpolation (GFEI)
 #ifdef GFEI_GSL_FLOAT8
@@ -34,7 +34,7 @@ namespace pi_gsl  = gsl_double_precision;
 #else
 namespace pi_gsl  = gsl_single_precision;
 #endif
-#endif // #ifdef SUPPORT_SPECTRAL_INTERPOLATION
+#endif // #ifdef SUPPORT_SPECTRAL_INT
 
 //-------------------------------------------------------------------------------------------------------
 // Class       :  InterpolationContext
@@ -178,6 +178,6 @@ private:
     std::unordered_map<size_t, std::shared_ptr<InterpolationContext>> contexts;
 }; // CLASS : InterpolationHandler
 
-#endif // #ifdef SUPPORT_SPECTRAL_INTERPOLATION
+#endif // #ifdef SUPPORT_SPECTRAL_INT
 
-#endif // #ifdef __SPECTRAL_INTERPOLATION_H__
+#endif // #ifdef __SPECTRAL_INT_H__

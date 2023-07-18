@@ -560,7 +560,7 @@ def load_arguments():
                          help="Support FFTW library.\n"
                        )
 
-    parser.add_argument( "--spectral_interpolation", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_SPECTRAL_INTERPOLATIOn",
+    parser.add_argument( "--spectral_interpolation", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_SPECTRAL_INT",
                          default=False,
                          constraint={ True:{"gsl":True} },
                          help="Support spectral interpolation.\n"
@@ -836,6 +836,10 @@ def warning( paths, **kwargs ):
     if kwargs["libyt"]:
         if paths.setdefault("LIBYT_PATH", "") == "":
             color_print("Warning: LIBYT_PATH is not given in %s.config when enabling <--libyt>."%(kwargs["machine"]), BCOLOR.WARNING)
+
+    if kwargs["model"] == "ELBDM" and kwargs["wave_scheme"] == "WAVE_GRAMFE" and kwargs["gramfe_scheme"] == "GRAMFE_FFT":
+        if paths.setdefault("CUFFTDX_PATH", "") == "":
+            color_print("Warning: CUFFTDX_PATH is not given in %s.config when enabling <--gramfe_scheme=GRAMFE_FFT>."%(kwargs["machine"]), BCOLOR.WARNING)
 
     return
 

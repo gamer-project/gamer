@@ -1,7 +1,7 @@
 #include "GAMER.h"
 
 
-#ifdef SUPPORT_SPECTRAL_INTERPOLATION
+#ifdef SUPPORT_SPECTRAL_INT
 
 #include <complex>
 #include <memory>
@@ -692,4 +692,4 @@ void InterpolationHandler::InterpolateReal(real* input, real* output, size_t nIn
 } // FUNCTION : InterpolateReal
 
 
-#endif // #endif SUPPORT_SPECTRAL_INTERPOLATION
+#endif // #endif SUPPORT_SPECTRAL_INT

@@ -225,7 +225,7 @@ const auto destroy_complex_plan_nd = gamer_fftw::destroy_complex_mpi_plan_nd;
 #endif // #ifdef SERIAL ... # else
 #endif // # if ( SUPPORT_FFTW == FFTW3 )
 
-#ifdef SUPPORT_SPECTRAL_INTERPOLATION
+#ifdef SUPPORT_SPECTRAL_INT
 // Accuracy for FFT in Gram-FE extension interpolation (GFEI)
 // Should always be set to double-precision for stability
 #define GFEI_FFTW_FLOAT8
@@ -258,7 +258,7 @@ namespace gfei_fftw = fftw2;
 #define gfei_fftw_create_1d_r2c_plan(size, arr, startup)            gfei_fftw::plan_dft_r2c_1d    ( size, FFTW_REAL_TO_COMPLEX, startup | FFTW_IN_PLACE )
 #define gfei_fftw_create_1d_c2r_plan(size, arr, startup)            gfei_fftw::plan_dft_c2r_1d    ( size, FFTW_COMPLEX_TO_REAL, startup | FFTW_IN_PLACE )
 #endif // #if ( SUPPORT_FFTW == FFTW3 ) ... # else
-#endif // #ifdef SUPPORT_SPECTRAL_INTERPOLATION
+#endif // #ifdef SUPPORT_SPECTRAL_INT
 
 #if ( SUPPORT_FFTW == FFTW3 )
 #ifdef GRAMFE_FFT_FLOAT8

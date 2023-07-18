@@ -47,17 +47,17 @@ void Aux_Check_Parameter()
 #     error : ERROR : incorrect number of NCOMP_PASSIVE !!
 #  endif
 
-#  ifdef SUPPORT_SPECTRAL_INTERPOLATION
+#  ifdef SUPPORT_SPECTRAL_INT
 #  ifndef SUPPORT_GSL
-#     error : ERROR : SUPPORT_SPECTRAL_INTERPOLATION requires SUPPORT_GSL!!
+#     error : ERROR : SUPPORT_SPECTRAL_INT requires SUPPORT_GSL!!
 #  endif // # ifndef SUPPORT_GSL
 #  ifndef SUPPORT_FFTW
-#     error : ERROR : SUPPORT_SPECTRAL_INTERPOLATION requires SUPPORT_FFTW!!
+#     error : ERROR : SUPPORT_SPECTRAL_INT requires SUPPORT_FFTW!!
 #  endif // # ifndef SUPPORT_FFTW
 #  if ( SUPPORT_FFTW == FFTW2 && !defined FLOAT8 )
-#     error : ERROR : SUPPORT_SPECTRAL_INTERPOLATION with SUPPORT_FFTW=FFTW2 requires FLOAT8!!
+#     error : ERROR : SUPPORT_SPECTRAL_INT with SUPPORT_FFTW=FFTW2 requires FLOAT8!!
 #  endif // # if ( SUPPORT_FFTW == FFTW2 && !defined FLOAT8 )
-#  endif // # ifdef SUPPORT_SPECTRAL_INTERPOLATION
+#  endif // # ifdef SUPPORT_SPECTRAL_INT
 
 #  ifdef SERIAL
    int NRank = 1;

@@ -455,10 +455,10 @@ void Aux_TakeNote()
       fprintf( Note, "RANDOM_NUMBER                   UNKNOWN\n" );
 #     endif
 
-#     ifdef SUPPORT_SPECTRAL_INTERPOLATION
-      fprintf( Note, "SUPPORT_SPECTRAL_INTERPOLATION  ON\n" );
+#     ifdef SUPPORT_SPECTRAL_INT
+      fprintf( Note, "SUPPORT_SPECTRAL_INT  ON\n" );
 #     else
-      fprintf( Note, "SUPPORT_SPECTRAL_INTERPOLATION  OFF\n" );
+      fprintf( Note, "SUPPORT_SPECTRAL_INT  OFF\n" );
 #     endif
 
       fprintf( Note, "***********************************************************************************\n" );
@@ -1353,7 +1353,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__HYBRID_MATCH_PHASE         %d\n",      OPT__HYBRID_MATCH_PHASE );
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #     endif
-#     ifdef SUPPORT_SPECTRAL_INTERPOLATION
+#     ifdef SUPPORT_SPECTRAL_INT
       fprintf( Note, "INT_TABLE_PATH                  %s\n",      INT_TABLE_PATH          );
 #     endif
       fprintf( Note, "OPT__FLU_INT_SCHEME             %s\n",      ( OPT__FLU_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :

@@ -112,7 +112,7 @@ OptInitMagByVecPot_t OPT__INIT_BFIELD_BYVECPOT;
 
 #elif ( MODEL == ELBDM )
 double               DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
-bool                 OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, OPT__RES_PHASE
+bool                 OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, OPT__RES_PHASE;
 bool                 ELBDM_TAYLOR3_AUTO;
 double               ELBDM_TAYLOR3_COEFF;
 double               ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
@@ -296,10 +296,10 @@ int  FB_ParaBuf;
 #endif
 
 // (2-13) spectral interpolation
-#ifdef SUPPORT_SPECTRAL_INTERPOLATION
+#ifdef SUPPORT_SPECTRAL_INT
 char                 INT_TABLE_PATH[MAX_STRING];
 InterpolationHandler INTERPOLATION_HANDLER;
-#endif // #ifdef SUPPORT_SPECTRAL_INTERPOLATION
+#endif // #ifdef SUPPORT_SPECTRAL_INT
 
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
