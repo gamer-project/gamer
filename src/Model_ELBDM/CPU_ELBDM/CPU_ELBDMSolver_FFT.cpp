@@ -4,7 +4,7 @@
 
 static void Psi_Advance_FFT( real *PsiR, real *PsiI, const int j_start, const int dj, const int PsiK_Size, const real dt );
 
-extern root_complex_fftw_plan      FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;   // Psi : plan for the ELBDM spectral solver
+extern root_fftw::complex_plan_nd      FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;   // Psi : plan for the ELBDM spectral solver
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -31,8 +31,8 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, const int j_start, const int dj, c
    const real Dt_2Eta  = (real)0.5*dt/ELBDM_ETA;
 
    real PsiKR, PsiKI, DtKK_2Eta;
-   gamer_float_complex *PsiK;
-   PsiK = (gamer_float_complex*) root_fftw_malloc( PsiK_Size * sizeof(gamer_float_complex) );
+   gamer_fftw::fft_complex *PsiK;
+   PsiK = (gamer_fftw::fft_complex*) root_fftw::fft_malloc( PsiK_Size * sizeof(gamer_fftw::fft_complex) );
 
    for (int t=0; t<PsiK_Size; t++)
    {
@@ -114,7 +114,7 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, const int j_start, const int dj, c
       PsiI[t] = c_im(PsiK[t]) * norm;
    }
 
-   root_fftw_free( PsiK );
+   root_fftw::fft_free( PsiK );
 
 } // FUNCTION : Psi_Advance_FFT
 

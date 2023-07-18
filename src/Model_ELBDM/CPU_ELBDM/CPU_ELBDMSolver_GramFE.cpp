@@ -1,11 +1,10 @@
-#include "CUFLU.h"
 #include "GAMER.h"
+#include "CUFLU.h"
 
 #if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || ( defined(__CUDACC__) && defined(GRAMFE_ENABLE_GPU) ) )
 
 #if ( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE )
 #include "GramExtensionTables.h"
-
 
 // useful macros
 
@@ -15,7 +14,7 @@
 # define to1D2(z,y,x) ( ((z)-FLU_GHOST_SIZE) * PS2     * PS2     + ((y)-FLU_GHOST_SIZE) * PS2     + ((x)-FLU_GHOST_SIZE)  )
 
 // use cufftdx library for FFTs on GPU
-#if __CUDACC__
+#ifdef __CUDACC__
 
 using forward_workspace_type = typename FFT::workspace_type;
 using inverse_workspace_type = typename IFFT::workspace_type;
@@ -59,7 +58,7 @@ __device__ __forceinline__ complex_type operator-(const complex_type& a, const c
 
 #else   // #ifdef __CUDACC__
 
-extern gramfe_complex_fftw_plan FFTW_Plan_ExtPsi, FFTW_Plan_ExtPsi_Inv;
+extern gramfe_fftw::complex_plan_1d FFTW_Plan_ExtPsi, FFTW_Plan_ExtPsi_Inv;
 
 #if ( SUPPORT_FFTW == FFTW3 )
 
@@ -69,8 +68,8 @@ using complex_type = std::complex<gramfe_float>;
 
 #else // #if ( SUPPORT_FFTW == FFTW3 )
 
-//derive from gramfe_float_complex which is an alias for FFTW2's complex_type in gramfe_float precision to allow for complex arithmetic operations
-struct complex_type : public gramfe_float_complex {
+//derive from gramfe_fftw::fft_complex which is an alias for FFTW2's complex_type in gramfe_float precision to allow for complex arithmetic operations
+struct complex_type : public gramfe_fftw::fft_complex {
    complex_type() {
    }
 
@@ -421,7 +420,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #     else
 
 //    create arrays for columns of various intermediate fields on the stack
-      complex_type* s_In_1PG = (complex_type* ) gramfe_fftw_malloc( GRAMFE_FLU_NXT * sizeof(complex_type) ); // allocate memory for fourier transform
+      complex_type* s_In_1PG = (complex_type* ) gramfe_fftw::fft_malloc( GRAMFE_FLU_NXT * sizeof(complex_type) ); // allocate memory for fourier transform
 
       complex_type  s_Ae_1PG [CGPU_FLU_BLOCK_SIZE_Y][GRAMFE_NDELTA]; // left projection polynomials
       complex_type  s_Ao_1PG [CGPU_FLU_BLOCK_SIZE_Y][GRAMFE_NDELTA]; // right projection polynomials
@@ -509,13 +508,16 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //          2.2 function values in extension domain given as linear combinations of extended Gram polynomials
             CELL_LOOP(GRAMFE_FLU_NXT, FLU_NXT, 0)
             {
-               s_In[sj][si].real(0);
-               s_In[sj][si].imag(0);
+//             reuse Al and sum up result in local register for higher speed
+               Al.real(0);
+               Al.imag(0);
 
                for (int order=0; order < GRAMFE_ORDER; order++) {
-                  s_In[sj][si] += s_Ae[sj][order] *  Fe[order][si - FLU_NXT];
-                  s_In[sj][si] += s_Ao[sj][order] *  Fo[order][si - FLU_NXT];
+                  Al += s_Ae[sj][order] *  Fe[order][si - FLU_NXT];
+                  Al += s_Ao[sj][order] *  Fo[order][si - FLU_NXT];
                } // for (int order=0; order < GRAMFE_ORDER; order++)
+
+               s_In[sj][si] = Al;
             } // CELL_LOOP(GRAMFE_FLU_NXT, FLU_NXT, 0)
 
 #           ifdef __CUDACC__
@@ -605,11 +607,10 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          } // while ( Column0 < NColumnTotal )
       } // # pragma  for (int bx=0; bx<NPatchGroup; bx++)
 #     ifndef __CUDACC__
-      gramfe_fftw_free(s_In_1PG);
+      gramfe_fftw::fft_free(s_In_1PG);
 #     endif
    } // # pragma omp parallel
 } // FUNCTION : CUFLU_Advance
-
 
 #endif // #if ( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE)
 #endif // #if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || ( defined(__CUDACC__) && defined(GRAMFE_ENABLE_GPU) ) )
