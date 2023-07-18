@@ -811,9 +811,13 @@ bool LB_GlobalTree::IsInsidePatch(const int X, const int Y, const int Z, const l
 
    int Coordinates[3] = {X, Y, Z};
 
-   for ( int l = 0; l < 3; ++l ) {
+   for ( int l = 0; l < 3; ++l )
+   {
       if (Coordinates[l] < Patches[GID].corner[l] || Coordinates[l] >=  Patches[GID].corner[l] + PS1 * amr->scale[Patches[GID].level])
+      {
          IsInside = false;
+         break;
+      }
    }
 
    return IsInside;
@@ -824,12 +828,12 @@ bool LB_GlobalTree::IsInsidePatch(const int X, const int Y, const int Z, const l
 // Description :  Convert local patch coordinates in direction XYZ to global coordinates
 //
 // Note        :  This function also works for I > PS1 and will return the global coordinate relative to GID.
-//                For patch groups, pass the GID of the root patch and I between (0 and PS2)
+//                For patch groups, pass the GID of the root patch and the local coordinate I between in {0, ..., PS2}
 //                int X = Local2Global(I, 0, GID0);
 //                int Y = Local2Global(I, 1, GID0);
 //                int Z = Local2Global(I, 2, GID0);
 //
-// Parameter   :  I   : local coordinate I in {0, ..., PS2} relative root patch GID
+// Parameter   :  I   : local coordinate I in {0, ..., PS2} relative to root patch GID
 //             : XYZ  : direction
 //             : GID  : root patch relative to local coordinate I
 //
@@ -854,7 +858,7 @@ int LB_GlobalTree::Local2Global(const int I, const int XYZ, const long GID) cons
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_GlobalTree::FindRefinedCounterpart
-// Description :  Return GID of refined patch with maximum level MaxLv (default = NLEVEL)) that global integer coordinates [X, Y, Z] belong to
+// Description :  Return GID of refined patch with maximum level MaxLv (default = TOP_LEVEL) that global integer coordinates [X, Y, Z] belong to
 //
 //
 // Parameter   :  X   : global integer x coordinate, obtained by converting local coordinate with amr->scale
