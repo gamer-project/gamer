@@ -1,10 +1,12 @@
+#!/usr/bin/env python
+
 import numpy as np
 import scipy
 import sys
 import argparse
 
 # load the command-line parameters
-parser = argparse.ArgumentParser( description='Upscale periodic GAMER ELBDM initial conditions' )
+parser = argparse.ArgumentParser( description='Upscale periodic GAMER ELBDM initial conditions. Example usage: ./ELBDM_RESCALE_PERIODIC_IC.py -n_in 256 -n_out 64 -input UM_IC_high_resolution -output UM_IC_low_resolution' )
 
 parser.add_argument( '-float8', action='store', required=False,  type=bool, dest='float8',
                             help='assume double precision for input and output file', default=False )
@@ -46,8 +48,19 @@ else:
      rprec = np.float32
      cprec = np.complex64
 
+#credit to stackoverflow user Bily for this unpadding function
+def unpad(x, pad_width):
+    slices = []
+    for c in pad_width:
+        e = None if c[1] == 0 else -c[1]
+        slices.append(slice(c[0], e))
+    return x[tuple(slices)]
 
 def interp(psi, N_in, N_out, NThreads):
+     if N_in == N_out:
+         print("N_in == N_out, no rescaling necessary!")
+         return psi
+
      # compute fft of array
      print("Computing FFT... ", end="")
      psihat = scipy.fft.fftn(psi, workers = NThreads, norm="forward")
@@ -59,9 +72,16 @@ def interp(psi, N_in, N_out, NThreads):
      # shift zero frequencies to center of cube
      psihat = np.fft.fftshift(psihat)
 
-     # pad cube from the outside
-     N_pad  = int(np.floor(N_out/2 - N_in/2))
-     psihat = np.pad(psihat, N_pad, mode="constant")
+     # upscale
+     if N_out > N_in:
+         # pad cube from the outside
+         N_pad  = int(np.floor(N_out/2 - N_in/2))
+         psihat = np.pad(psihat, ((N_pad, N_pad), (N_pad, N_pad), (N_pad, N_pad)), mode="constant")
+     #downscale
+     elif N_in > N_out:
+         # unpad cube from the outside
+         N_pad  = int(np.floor(N_in/2 - N_out/2))
+         psihat = unpad(psihat, ((N_pad, N_pad), (N_pad, N_pad), (N_pad, N_pad)))
 
      # shift zero frequencies back to outside of cube
      print("Computing IFFT... ", end="")
