@@ -100,8 +100,8 @@ real Compute_Extension_Mass(const complex_type Data[FLU_NXT][FLU_NXT][FLU_NXT], 
    flag_spectral_complex_type Ae[FLAG_SPECTRAL_ORDER];
    flag_spectral_complex_type Ao[FLAG_SPECTRAL_ORDER];
 
-   for (int k=0; k<FLU_NXT; k+=stride)    {
-   for (int j=0; j<FLU_NXT; j+=stride)    {
+   for (int k=FLU_GHOST_SIZE; k<FLU_NXT-FLU_GHOST_SIZE; k+=stride)    {
+   for (int j=FLU_GHOST_SIZE; j<FLU_NXT-FLU_GHOST_SIZE; j+=stride)    {
       const complex_type* Row = &Data[k][j][0];
 
       for (int i = 0; i < FLAG_SPECTRAL_ORDER; ++i)
