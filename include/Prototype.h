@@ -526,6 +526,12 @@ void MHD_BoundaryCondition_User( real **Array, const int BC_Face, const int NVar
                                  const double Time, const double dh, const double *Corner, const int lv );
 void MHD_Init_BField_ByVecPot_File( const int B_lv );
 void MHD_Init_BField_ByVecPot_Function( const int B_lv );
+real MHD_ResetByUser_A2Bx( const real *Ax, const real *Ay, const real *Az,
+                           const int i, const int j, const int k, const double dh );
+real MHD_ResetByUser_A2By( const real *Ax, const real *Ay, const real *Az,
+                           const int i, const int j, const int k, const double dh );
+real MHD_ResetByUser_A2Bz( const real *Ax, const real *Ay, const real *Az,
+                           const int i, const int j, const int k, const double dh );
 #ifdef LOAD_BALANCE
 void MHD_LB_EnsureBFieldConsistencyAfterRestrict( const int lv );
 void MHD_LB_AllocateElectricArray( const int FaLv );
