@@ -402,8 +402,20 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 //                compute density
                   const real vp         = GRADF1(s_In[sj][time_level][PHAS], si);
                   const real vm         = GRADB1(s_In[sj][time_level][PHAS], si);
+
+#                 if ( HYBRID_SCHEME == HYBRID_UPWIND )
+//                access Rc[time_level][i, i-1], Pc[time_level][i, i-1]
                   const real fm         = UPWIND_FM(s_In[sj][time_level][DENS], _dh * vm, si    );
                   const real fp         = UPWIND_FM(s_In[sj][time_level][DENS], _dh * vp, si + 1);
+#                 elif ( HYBRID_SCHEME == HYBRID_FROMM )
+//                access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
+                  const real fm         = FROMM_FM (s_In[sj][time_level][DENS], _dh * vm, si    , Coeff1);
+                  const real fp         = FROMM_FM (s_In[sj][time_level][DENS], _dh * vp, si + 1, Coeff1);
+#                 elif ( HYBRID_SCHEME == HYBRID_MUSCL )
+//                access Rc[time_level][i, i-1, i-2], Pc[time_level][i, i-1]
+                  const real fm         = MUSCL_FM (s_In[sj][time_level][DENS], _dh * vm, si    , Coeff1);
+                  const real fp         = MUSCL_FM (s_In[sj][time_level][DENS], _dh * vp, si + 1, Coeff1);
+#                 endif
 
 #                 ifdef CONSERVE_MASS
                   s_Flux[sj][si]        = fm;
