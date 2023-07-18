@@ -4,7 +4,6 @@
 #if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || ( defined(__CUDACC__) && defined(GRAMFE_ENABLE_GPU) ) )
 
 #if ( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE )
-
 #include "GramExtensionTables.h"
 
 // useful macros
@@ -186,7 +185,7 @@ static uint get1D2(uint k, uint j, uint i, int XYZ) {
 
 
 GPU_DEVICE
-static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN  ][ CUBE(FLU_NXT) ],
+static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                            real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
                            int NPatchGroup,
                            const gramfe_float dt, const gramfe_float _dh, const gramfe_float Eta,
@@ -274,19 +273,19 @@ gramfe_float SineTaylorExpansion(gramfe_float x, int Nterms) {
 #ifdef __CUDACC__
 __launch_bounds__(FFT::max_threads_per_block)
 __global__
-void CUFLU_ELBDMSolver_GramFE(   real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                                 real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
-                                 real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                 const real dt, const real _dh, const real Eta, const bool StoreFlux,
-                                 const bool XYZ, const real MinDens,
-                                 typename FFT::workspace_type  Workspace,
-                                 typename IFFT::workspace_type WorkspaceInv  )
+void CUFLU_ELBDMSolver_GramFE(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                                  real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
+                                  real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                  const real dt, const real _dh, const real Eta, const bool StoreFlux,
+                                  const bool XYZ, const real MinDens,
+                                  typename FFT::workspace_type  Workspace,
+                                  typename IFFT::workspace_type WorkspaceInv  )
 #else
-void CPU_ELBDMSolver_GramFE(     real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                                 real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
-                                 real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                 const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
-                                 const bool XYZ, const real MinDens )
+void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                                  real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
+                                  real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                  const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
+                                  const bool XYZ, const real MinDens )
 #endif
 {
 
