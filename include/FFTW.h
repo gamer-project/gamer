@@ -223,7 +223,7 @@ const auto destroy_complex_plan_nd = gamer_fftw::destroy_complex_mpi_plan_nd;
 #define root_fftw_c2r(plan, arr)                                    gamer_fftw::mpi_execute_dft_c2r_nd ( plan, 1,                   (gamer_fftw::fft_real*)    arr, NULL, FFTW_TRANSPOSED_ORDER )
 #define root_fftw_c2c(plan, arr)                                    gamer_fftw::mpi_execute_dft_c2c_nd ( plan, 1,                   (gamer_fftw::fft_complex*) arr, NULL, FFTW_TRANSPOSED_ORDER )
 #endif // #ifdef SERIAL ... # else
-#endif // # if ( SUPPORT_FFTW == FFTW3 )
+#endif // # if ( SUPPORT_FFTW == FFTW3 )  ... # else
 
 #ifdef SUPPORT_SPECTRAL_INT
 // Accuracy for FFT in Gram-FE extension interpolation (GFEI)
