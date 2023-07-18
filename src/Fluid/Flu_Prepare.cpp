@@ -113,6 +113,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
    }
 #  endif // #ifdef UNSPLIT_GRAVITY
 
+// prepare boolean array that indicates whether patch group is fully refined (in other words has 8 * 8 = 64 children)
 #  if ( MODEL == ELBDM )
 #  pragma omp parallel for schedule( runtime )
    for (int TID=0; TID<NPG; TID++)
@@ -120,13 +121,14 @@ void Flu_Prepare( const int lv, const double PrepTime,
 
       bool PGIsCompletelyRefined = true;
 
-      int PID0 = PID0_List[TID];
+      const int PID0 = PID0_List[TID];
       for (int dPID=0; dPID<8; dPID++)
       {
-         int PID = PID0 + dPID;
+         const int PID = PID0 + dPID;
          if ( amr->patch[0][lv][PID]->son == -1 )
          {
             PGIsCompletelyRefined = false;
+            break;
          }
       }
 

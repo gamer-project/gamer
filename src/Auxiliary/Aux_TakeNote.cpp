@@ -1656,7 +1656,7 @@ void Aux_TakeNote()
       {
          fprintf( Note, "Flag Criterion (Spectral)\n" );
          fprintf( Note, "***********************************************************************************\n" );
-         fprintf( Note, "  Level     Threshold\n" );
+         fprintf( Note, "  Level     Refinement     Derefinement\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)
             fprintf( Note, "%7d    %10.3e  %10.3e\n", lv, FlagTable_Spectral[lv][0], FlagTable_Spectral[lv][1] );
          fprintf( Note, "***********************************************************************************\n" );

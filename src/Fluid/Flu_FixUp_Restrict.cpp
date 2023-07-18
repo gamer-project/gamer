@@ -258,6 +258,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
          } // if ( ResPha )
 #        endif // #if ( MODEL == ELBDM )
 //       restrict the fluid data
+//       ELBDM: only restrict fluid data that has not yet been restricted using phase restriction
          if ( ResFlu ) {
          for (int v=0; v<NFluVar; v++)
          {
