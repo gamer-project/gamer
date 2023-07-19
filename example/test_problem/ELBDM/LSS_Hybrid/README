@@ -23,9 +23,21 @@ Default setup:
 
 Note:
 ========================================
-1. Cosmological large-scale structure simulations
+1. Cosmological large-scale structure simulations using hybrid scheme
 
 2. Download the IC file: sh download_light_halo_ic.sh or sh download_heavy_halo_ic.sh
+   The wave IC consisting of two blocks of real and imaginary parts are converted to hybrid IC
+   consisting of two blocks with the density and phase fields using the Python script ELBDM_WAVE2HYBRID_IC.py
+
+3. The simulation uses a low base-level resolution of 2.8/64 ~ 44 kpc/h (comoving).
+   This corresponds to a maximum wave vector k ~ 143 h/Mpc well above the cutoff power in the initial conditions.
+   This initial resolution has shown very good agreement with higher resolution runs using wave IC.
+
+4. The simulation uses the fluid solver on levels 0 - 3 and switches to the wave solver in regions of interference on level 4.
+   The minimum resolution for the wave solver 2.8/(64*2^4) ~ 2.75 kpc/h (comoving).
+   This resolution has shown to be a good compromise for the starting resolution of the wave solver.
+   It does not lead to excessive overrefinement of regions with interference and was sufficient to resolve the de Broglie wavelength close to the
+   infall regions.
 
 3. Default maximum resolution is low
    --> Only 2.8/(64*2^6) ~ 0.7 kpc/h (comoving)
