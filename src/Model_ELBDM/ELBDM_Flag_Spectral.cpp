@@ -84,25 +84,63 @@ const static flag_spectral_float  Flag_Spectral_Pr[FLAG_SPECTRAL_ORDER][FLAG_SPE
 {-0.0003100778920474471056327459006496383153717033565044403076171875, 0.0040310125966168128611166743269222934031859040260314941406250000, -0.0241860755797008754319765699847266660071909427642822265625000000, 0.0886822771255698777403964072618691716343164443969726562500000000, -0.2217056928139246874120971142474445514380931854248046875000000000, 0.3990702470650644428928899287711828947067260742187500000000000000, -0.5320936627534192941979540592001285403966903686523437500000000000, 0.5320936627534192941979540592001285403966903686523437500000000000, -0.3990702470650644428928899287711828947067260742187500000000000000, 0.2217056928139246874120971142474445514380931854248046875000000000, -0.0886822771255698777403964072618691716343164443969726562500000000, 0.0241860755797008754319765699847266660071909427642822265625000000, -0.0040310125966168128611166743269222934031859040260314941406250000, 0.0003100778920474471056327459006496383153717033565044403076171875},
 };
 
-real Compute_1D_Extension_Mass(const complex_type Data[FLU_NXT][FLU_NXT][FLU_NXT], flag_spectral_complex_type Ae[FLAG_SPECTRAL_ORDER], flag_spectral_complex_type Ao[FLAG_SPECTRAL_ORDER], int stride);
-static void TransposeXY( complex_type u[ CUBE(FLU_NXT) ] );
-static void TransposeXZ( complex_type u[ CUBE(FLU_NXT) ] );
 
-size_t ConvertTo1DIndex(size_t z, size_t y, size_t x) {
-   return z*FLU_NXT*FLU_NXT + y*FLU_NXT + x;
-}
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Flag_Spectral_Prepare_for_Spectral_Criterio
+// Description :  Evaluate ratio of mass of wave function in patch group and mass of wave function in extension domain
+//
+// Note        :  1. This function is called once per patch group
+//                4. The size of the arrays Var1D must be FLU_NXT^3
+//
+// Parameter   :  Var1D     : Array storing the input re & im
+//                Cond      : Reference to floating point variable where mass ratio is stored
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond1D)
+{
+   const size_t Stride = 4;
 
-real Compute_Extension_Mass(const complex_type Data[FLU_NXT][FLU_NXT][FLU_NXT], int stride) {
+   const real* Re1D = Var1D;
+   const real* Im1D = Var1D + CUBE(FLU_NXT);
 
-   real ExtensionMass = 0;
+   real PhysicalMass = 0, ExtensionMass = 0;
 
    flag_spectral_complex_type Psi, Al, Ar;
    flag_spectral_complex_type Ae[FLAG_SPECTRAL_ORDER];
    flag_spectral_complex_type Ao[FLAG_SPECTRAL_ORDER];
+   complex_type Row[FLU_NXT];
 
-   for (int k=FLU_GHOST_SIZE; k<FLU_NXT-FLU_GHOST_SIZE; k+=stride)    {
-   for (int j=FLU_GHOST_SIZE; j<FLU_NXT-FLU_GHOST_SIZE; j+=stride)    {
-      const complex_type* Row = &Data[k][j][0];
+// iterate over 3 dimensions and sample the physical 2D arrays with a stride
+// for FLU_NXT = 32, FLU_GHOST_SIZE = 8, Stride = 4, compute (16 / 4)^3 = 64 extensions
+   for (size_t XYZ = 0; XYZ < 3; ++XYZ)
+   for (size_t k=FLU_GHOST_SIZE; k<FLU_NXT-FLU_GHOST_SIZE; k+=Stride)
+   for (size_t j=FLU_GHOST_SIZE; j<FLU_NXT-FLU_GHOST_SIZE; j+=Stride)
+   {
+//    read one column of data from 3D block
+      for (size_t i = 0; i < FLU_NXT; ++i) {
+         size_t index;
+
+         switch (XYZ)
+         {
+            case 0:
+               index = IDX321(k, j, i, FLU_NXT, FLU_NXT);
+               break;
+            case 1:
+               index = IDX321(k, i, j, FLU_NXT, FLU_NXT);
+               break;
+            case 2:
+               index = IDX321(i, k, j, FLU_NXT, FLU_NXT);
+               break;
+         }
+
+         const real Re = Re1D[index];
+         const real Im = Im1D[index];
+
+         Row[i] = {Re, Im};
+
+         PhysicalMass += SQR(Re) + SQR(Im);
+      }
 
       for (int i = 0; i < FLAG_SPECTRAL_ORDER; ++i)
       {
@@ -128,132 +166,12 @@ real Compute_Extension_Mass(const complex_type Data[FLU_NXT][FLU_NXT][FLU_NXT], 
 
          ExtensionMass += SQR(Psi.real()) + SQR(Psi.imag());
       }
-   }} // k,j
-
-   return ExtensionMass;
-}
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Flag_Spectral_Prepare_for_Spectral_Criterio
-// Description :  Evaluate ratio of mass of wave function in patch group and mass of wave function in extension domain
-//
-// Note        :  1. This function is called once per patch group
-//                4. The size of the arrays Var1D must be FLU_NXT^3
-//
-// Parameter   :  Var1D     : Array storing the input re & im
-//                Cond      : Reference to floating point variable where mass ratio is stored
-//
-// Return      :  None
-//-------------------------------------------------------------------------------------------------------
-void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond1D)
-{
-   const real* Re1D = Var1D;
-   const real* Im1D = Var1D + CUBE(FLU_NXT);
-
-   complex_type  Data[FLU_NXT ][FLU_NXT ][FLU_NXT ];
-   complex_type* Data1D = (complex_type*) Data;
-
-   real PhysicalMass = 0, ExtensionMass = 0;
-   const int stride = 4;
-
-
-// convert the 1D arrays
-   for (int i = 0; i < CUBE(FLU_NXT); ++i) {
-      Data1D[i].real(Re1D[i]);
-   }
-   for (int i = 0; i < CUBE(FLU_NXT); ++i) {
-      Data1D[i].imag(Im1D[i]);
-   }
-
-
-// compute physical mass
-   for (int k=0; k<FLU_NXT; k+=stride)    {
-   for (int j=0; j<FLU_NXT; j+=stride)    {
-   for (int i=0; i<FLU_NXT; i+=stride)    {
-      PhysicalMass += SQR(Data[k][j][i].real()) + SQR(Data[k][j][i].imag());
-   }}} // k,j,i
-
-
-// x-direction
-   ExtensionMass += Compute_Extension_Mass(Data, stride);
-
-// y-direction
-   TransposeXY ( Data1D );
-   ExtensionMass += Compute_Extension_Mass(Data, stride);
-
-// z-direction
-   TransposeXZ ( Data1D );
-   ExtensionMass += Compute_Extension_Mass(Data, stride);
+   } // XYZ, k,j
 
    Cond1D = ExtensionMass / (PhysicalMass + 1e-4);
 
 } // FUNCTION : Flag_Spectral_Prepare_for_Spectral_Criterion
 
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  TrasposeXY
-// Description :  Transpose the x and y directions
-//
-// Parameter   :  u : Input wave function (density, real, imaginary)
-//-------------------------------------------------------------------------------------------------------
-void TransposeXY( complex_type u[ CUBE(FLU_NXT) ] )
-{
-
-   complex_type* u_xy = new complex_type[ SQR(FLU_NXT) ];
-   int Idx1, Idx2;
-
-   for (int k=0; k<FLU_NXT; k++)
-   {
-      for (int j=0; j<FLU_NXT; j++)
-      for (int i=0; i<FLU_NXT; i++)
-      {
-         Idx1 = ConvertTo1DIndex(k,j,i);
-         Idx2 = j + i*FLU_NXT;
-
-         u_xy[Idx2] = u[Idx1];
-      }
-
-      memcpy( &u[ConvertTo1DIndex(k,0,0)], u_xy, SQR(FLU_NXT)*sizeof(complex_type) );
-   }
-
-   delete [] u_xy;
-
-} // FUNCTION : TrasposeXY
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  TrasposeXZ
-// Description :  Transpose the x and z directions
-//
-// Parameter   :  u : Input wave function (density, real, imaginary)
-//-------------------------------------------------------------------------------------------------------
-void TransposeXZ( complex_type u[ CUBE(FLU_NXT) ] )
-{
-
-   complex_type u_temp;
-   size_t Idx1, Idx2;
-
-   for (size_t j=0; j<FLU_NXT; j++)
-   for (size_t k=0; k<FLU_NXT; k++)
-   {
-      for (size_t i=0; i<k; i++)
-      {
-         Idx1 = ConvertTo1DIndex(k,j,i);
-         Idx2 = ConvertTo1DIndex(i,j,k);
-
-         u_temp = u[Idx1];
-         u[Idx1] = u[Idx2];
-         u[Idx2] = u_temp;
-      }
-
-      Idx1 = ConvertTo1DIndex(k,j,k);
-   } // j,k
-
-} // FUNCTION : TrasposeXZ
 
 
 #endif // #if ( MODEL == ELBDM )
