@@ -30,8 +30,8 @@ Note:
    consisting of two blocks with the density and phase fields using the Python script ELBDM_WAVE2HYBRID_IC.py
 
 3. The simulation uses a low base-level resolution of 2.8/64 ~ 44 kpc/h (comoving).
-   This corresponds to a maximum wave vector k ~ 143 h/Mpc well above the cutoff power in the initial conditions.
-   This initial resolution has shown very good agreement with higher resolution runs using wave IC.
+   This corresponds to a maximum wave vector k ~ 72 h/Mpc well above the cutoff power in the initial conditions for m = 2.0e-23 eV.
+   This initial resolution has shown very good agreement with higher resolution wave initial conditions.
 
 4. The simulation uses the fluid solver on levels 0 - 3 and switches to the wave solver in regions of interference on level 4.
    The minimum resolution for the wave solver 2.8/(64*2^4) ~ 2.75 kpc/h (comoving).
