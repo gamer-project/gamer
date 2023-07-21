@@ -1,0 +1,103 @@
+Compilation flags:
+========================================
+Enable  : MODEL=ELBDM, GRAVITY, PARTICLE, STORE_PAR_ACC
+          SUPPORT_HDF5, NPAR_ATT_USER=1,
+          SUPPORT_GSL(optional, only useful for thin disk)
+Disable : COMOVING
+
+Quick start:
+=======================================
+Download initial conditions of m_22=0.4, M_h=7e10 Msun halo and stellar disk with "sh download_ic.sh"
+
+
+General initial condition setup:
+========================================
+1. Disk  
+
+   a. generate the disk via modified GALIC (https://github.com/HsunYeong/GALIC.git)
+      The snapshots have the filenames snap_XXX.hdf5   
+
+   b. set the filename, units in get_par_ic.py to match the GALIC set-up
+
+   c. set center to be location of the soliton in get_par_ic.py 
+
+   d. execute get_par_ic.py, it will generate PAR_IC 
+
+2. Halo 
+
+   a. If the data is binary file UM_IC
+
+      * Set OPT__INIT = 3 and PAR_INIT = 1
+      * Input__UM_IC_RefineRegion is required
+
+   b. If the data is GAMER snapshot
+
+      * Command "ln -s Data_XXXXXX RESTART" to create a soft link
+      * Set OPT__INIT = 2 and PAR_INIT = 2
+      * Turn on AddParWhenRestart and AddParWhenRestartByFile in Input__TestProb
+      * Set AddParWhenRestartNPar in Input__TestProb
+      * Turn on OPT__RESTART_RESET Input__Parameter
+      # Recommand to turn off AddParWhenRestart, AddParWhenRestartByFile OPT__RESTART_RESET right after the simulation starts
+
+   c. The code for FDM halo reconstruction (https://github.com/calab-ntu/psidm-halo-reconstruction)
+
+3. Thin disk (optional)
+    
+   a. Command "ln -s Data_XXXXXX RESTART" to create a soft link for restart
+
+   b. Set Set OPT__INIT = 2 and PAR_INIT = 2 and turn on OPT__RESTART_RESET Input__Parameter
+
+   c. Turn on AddParWhenRestart in Input__TestProb
+
+   d. Set AddParWhenRestartNPar,Disk_Mass, Disk_R, DispTableFile, DispNbin in Input__TestProb
+
+
+Analysis Scripts
+========================================
+* Check Record__Center and set the snapshot steps in each scripts
+
+1. particle_proj.py: 
+
+   * Plot the projection of disk particles
+
+2. plot_halo_density.py, plot_halo_potential.py: 
+
+   * Plot and store shell-averaged profiles of the halo as Halo_Dens_XXXXXX.npy and Halo_Pote_XXXXXX.npy
+
+3. data_disk.py: 
+   
+   * Compute the disk information (rotation speed, velocity dispersion, surface density, scale height, etc.) 
+   * The file is saved as Data_Disk_XXXXXX.npy
+
+4. data_halo.py: 
+   
+   * Compute the halo information (enclosed mass, velocity dispersion, etc.) 
+   * The file is saved as Data_Halo_XXXXXX.npy
+
+5. get_heating.py
+
+   * Compute the theoretical heating rate of the stellar disk as a function of radius
+   * required files: Data_for_Heating_XXXXXX.npy, rho_h_XXXXXX.npz, height_XXXXXX.npz, sigma_h_XXXXXX.npz, EnMass_XXXXXX.npz, phi_h_XXXXXX.npz
+   * The file is saved as Heating_XXXXXX.npz
+
+6. get_heating_rate_theory.py
+   
+   * Get the time-averaged theoretical heating rate
+   * Heating_XXXXXX.npz of several different times are required
+
+7. vel_distribution.py
+   
+   * Get the velocity distribution for R = 4, 6, 8, 10 kpc bins
+
+8. plot_heating_rate_simulation.py 
+
+   * Need to run vel_distribution.py first   
+   * Get the simulating heating rates
+
+9. plot_data_example.py
+   
+   * An example script to plot the data from .npy files
+
+
+
+
