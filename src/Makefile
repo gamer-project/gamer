@@ -1004,6 +1004,7 @@ HDF5_PATH    := $(strip $(HDF5_PATH))
 GRACKLE_PATH := $(strip $(GRACKLE_PATH))
 GSL_PATH     := $(strip $(GSL_PATH))
 LIBYT_PATH   := $(strip $(LIBYT_PATH))
+CUFFTDX_PATH := $(strip $(CUFFTDX_PATH))
 
 
 # implicit rules (do NOT modify the order of the following rules)
