@@ -172,8 +172,8 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
             for (int i = 1;  i < InSize[XYZ];  i++) Phas[i] = ELBDM_UnwrapPhase( Phas[i - 1], Phas[i] );
             for (int i = 0;  i < InSize[XYZ];  i++)
             {
-               const real x = SQRT(MAX(Dens[i], 0)) * COS( Phas[i] / WavelengthMagnifier);
-               const real y = SQRT(MAX(Dens[i], 0)) * SIN( Phas[i] / WavelengthMagnifier);
+               const real x = Dens[i] * COS( Phas[i] / WavelengthMagnifier);
+               const real y = Dens[i] * SIN( Phas[i] / WavelengthMagnifier);
                Dens[i] = x;
                Phas[i] = y;
             }
@@ -189,16 +189,16 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
          }
 
 #        if ( MODEL == ELBDM )
-         if ( NComp == 2 && UnwrapPhase == true )
+         if ( NComp == 2 && UnwrapPhase )
          {
-            real* Dens = Output  + 0 * OutputDisp;
-            real* Phas = Output  + 1 * OutputDisp;
+            real* Re = Output  + 0 * OutputDisp;
+            real* Im = Output  + 1 * OutputDisp;
 
             for (int i = 0;  i < OutSize[XYZ];  i++) {
-               const real x = SQR(Dens[i]) + SQR(Phas[i]);
-               const real y = SATAN2(Phas[i], Dens[i]) * WavelengthMagnifier;
-               Dens[i] = x;
-               Phas[i] = y;
+               const real Dens = SQRT(SQR(Re[i]) + SQR(Im[i]));
+               const real Phas = SATAN2(Im[i], Re[i]) * WavelengthMagnifier;
+               Re[i] = Dens;
+               Im[i] = Phas;
             }
          }
 #        endif
@@ -715,7 +715,7 @@ void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostB
 
          }
 
-         printf("Added spectral interpolation context with N = %d", nInput);
+         //printf("Added spectral interpolation context with N = %d", nInput);
       }
    }
 } // FUNCTION : AddContext
