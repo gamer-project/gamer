@@ -43,7 +43,7 @@ VCM = [ np.sum(disk_velx)/ N_Disk,
         np.sum(disk_velz)/ N_Disk ]
 #print(np.array(VCM)*UNIT_V/UNIT_V_GALIC)
 
-center = [7.9791828e-02, 7.9875511e-02, 8.0879708e-02]
+center = [7.9770907e-02, 7.9854590e-02, 8.0858787e-02]
 disk_posx = disk_posx - CM[0]
 disk_posy = disk_posy - CM[1]
 disk_posz = disk_posz - CM[2]

@@ -62,28 +62,28 @@ Analysis Scripts
 
 2. plot_halo_density.py, plot_halo_potential.py: 
 
-   * Plot and store shell-averaged profiles of the halo as Halo_Dens_XXXXXX.npy and Halo_Pote_XXXXXX.npy
+   * Plot and store shell-averaged profiles of the halo as Halo_Dens_*.npy and Halo_Pote_*.npy
 
 3. data_disk.py: 
    
    * Compute the disk information (rotation speed, velocity dispersion, surface density, scale height, etc.) 
-   * The file is saved as Data_Disk_XXXXXX.npy
+   * The file is saved as Data_Disk_*.npy
 
 4. data_halo.py: 
    
    * Compute the halo information (enclosed mass, velocity dispersion, etc.) 
-   * The file is saved as Data_Halo_XXXXXX.npy
+   * The file is saved as Data_Halo_*.npy
 
 5. get_heating.py
 
    * Compute the theoretical heating rate of the stellar disk as a function of radius
-   * required files: Data_for_Heating_XXXXXX.npy, rho_h_XXXXXX.npz, height_XXXXXX.npz, sigma_h_XXXXXX.npz, EnMass_XXXXXX.npz, phi_h_XXXXXX.npz
-   * The file is saved as Heating_XXXXXX.npz
+   * required files: Data_Disk_*.npy, Data_Halo_*.npy
+   * The file is saved as Heating_*.npz
 
 6. get_heating_rate_theory.py
    
    * Get the time-averaged theoretical heating rate
-   * Heating_XXXXXX.npz of several different times are required
+   * Heating_*.npz of several different times are required
 
 7. vel_distribution.py
    
