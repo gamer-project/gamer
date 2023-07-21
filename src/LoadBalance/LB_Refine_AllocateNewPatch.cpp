@@ -975,13 +975,6 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    } else { // if ( amr->use_wave_flag[FaLv] )
-      if ( OPT__REF_FLU_INT_SCHEME == INT_SPECTRAL) {
-//    interpolate density & phase
-      Interpolate( CData_Flu , CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[DENS][0][0][0],
-                   FSize_CC3, FStart_CC, 2, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, Monotonicity,
-                   IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
-
-      } else {
 //    interpolate density
       Interpolate( CData_Dens, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[DENS][0][0][0],
                    FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes,
@@ -991,7 +984,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       Interpolate( CData_Phas, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[PHAS][0][0][0],
                    FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No,
                    IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
-      }
+
    }
 #  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
