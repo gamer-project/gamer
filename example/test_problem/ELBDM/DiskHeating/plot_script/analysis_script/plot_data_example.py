@@ -44,13 +44,13 @@ plt.figure(dpi = 140)
 for idx in range(idx_start, idx_end+1, didx):
 
    data = np.load('Data_Disk_%06d.npy'%idx)
-   r = data[:,0]
+   r = data[0]
    r_in_kpc = r/3.08568e+21
-   v_c = data[:,1]/1.0e5       # rotaion speed
-   sigma_r = data[:,2]/1.0e5   # sigma_r
-   sigma_z = data[:,3]/1.0e5   # sigma_z
-   Sigma = data[:,4]           # surface density
-
+   v_c = data[1]/1.0e5       # rotaion speed
+   sigma_r = data[2]/1.0e5   # sigma_r
+   sigma_z = data[3]/1.0e5   # sigma_z
+   Sigma = data[4]           # surface density
+   height = data[7]          # scale height
    plt.plot(r_in_kpc, v_c, color = cm.Blues(0.3+0.6*(idx-idx_start)/(idx_end+1-idx_start)), label ='id=%d'%idx)
 
 plt.xlim((0, 15))
@@ -60,26 +60,6 @@ plt.legend(loc='lower right', shadow=True, prop={'size':8})   ## loc='best', 'up
 plt.xlabel(r"$R$ (kpc)")
 plt.ylabel(r"$v_{\rm cir}$ (km/s)")
 plt.savefig("Rotation_Curve.png", dpi = 140)
-plt.close()
-
-#-----------------------------
-# example: plot scale height
-#-----------------------------
-plt.figure(dpi = 140)
-for idx in range(idx_start, idx_end+1, didx):
-
-   Height = np.load('height_%06d.npz'%idx)
-   r = Height['a']
-   h = Height['b']
-   plt.plot(r, h, color = cm.Blues(0.3+0.6*(idx-idx_start)/(idx_end+1-idx_start)), label ='id=%d'%idx)
-
-plt.xlim((0, 15))
-plt.ylim((0, 4))
-plt.grid(ls='--')
-plt.legend(loc='upper left', shadow=True, prop={'size':8})   ## loc='best', 'upper left', 'upper right', 'lower left', 'lower right' 
-plt.xlabel(r"$R$ (kpc)")
-plt.ylabel(r"$h$ (kpc)")
-plt.savefig("Scale_Height.png", dpi = 140)
 plt.close()
 
 #-------------------------------------
