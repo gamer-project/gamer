@@ -62,7 +62,7 @@ for idx in range(idx_start, idx_end+1):
    i = i + 1
 dt = delta_t*1e6*365*24*3600
 
-h_theory[h_theory==-np.inf]=np.nan
+h_theory[h_theory==-np.inf]=0
 
 num_3 = SearchIndex( 3, r, Div )
 num_5 = SearchIndex( 5, r, Div )
@@ -71,10 +71,12 @@ num_9 = SearchIndex( 9, r, Div )
 num_11 = SearchIndex( 11, r, Div )
 
 for i in range (len(t)):
-   mean_theory[0,i] = np.nanmean(h_theory[num_3:num_5,i])
-   mean_theory[1,i] = np.nanmean(h_theory[num_5:num_7,i])
-   mean_theory[2,i] = np.nanmean(h_theory[num_7:num_9,i])
-   mean_theory[3,i] = np.nanmean(h_theory[num_9:num_11,i])
+   mean_theory[0,i] = np.average(h_theory[num_3:num_5,i], weights=r[num_3:num_5])
+   mean_theory[1,i] = np.average(h_theory[num_5:num_7,i], weights=r[num_5:num_7])
+   mean_theory[2,i] = np.average(h_theory[num_7:num_9,i], weights=r[num_7:num_9])
+   mean_theory[3,i] = np.average(h_theory[num_9:num_11,i], weights=r[num_9:num_11])
+
+
 print('R(kpc)    heating rate (km^2/(s^2*Gyr))')
 for i in range(4):
    print('%2d        %2.6f'%(i*2+4, np.mean(mean_theory[i,:]) ))
