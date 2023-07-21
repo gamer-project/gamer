@@ -173,7 +173,7 @@ class InterpolationHandler {
 public:
     void   AddInterpolationContext  (size_t nInput, size_t nGhostBoundary);
     size_t GetWorkspaceSize         (size_t nInput, size_t nGhostBoundary) const;
-    void   InterpolateReal          (real* input, real* output, size_t nInput, size_t nGhostBoundary, char* workspace, const bool UnwrapPhase, const bool Monotonic, const real MonoCoeff, const bool OppSign0thOrder) const;
+    void   InterpolateReal          (real* input, real* output, size_t nInput, size_t nGhostBoundary, char* workspace, const bool Monotonic, const real MonoCoeff, const bool OppSign0thOrder) const;
 private:
     std::unordered_map<size_t, std::shared_ptr<InterpolationContext>> contexts;
 }; // CLASS : InterpolationHandler

@@ -1448,6 +1448,13 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    if ( IntPhase )
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID ) ... # else
    {
+      if ( IntScheme_CC == INT_SPECTRAL ) {
+//    interpolate density & phase
+      Interpolate( CData_CC, CSize_CC, CStart_CC, CRange_CC,
+                   IntData_CC, FSize_CC, FStart_CC,
+                   2, IntScheme_CC, PhaseUnwrapping_No, Monotonicity_CC, IntOppSign0thOrder_No,
+                   ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
+      } else {
 //    interpolate density
       Interpolate( CData_Dens, CSize_CC, CStart_CC, CRange_CC, FData_Dens, FSize_CC, FStart_CC,
                    1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes, IntOppSign0thOrder_No,
@@ -1458,6 +1465,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                    1, IntScheme_CC, PhaseUnwrapping_Yes, &Monotonicity_No, IntOppSign0thOrder_No,
                    ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
 
+      }
 
 //    temporal interpolation
 //    --> apply it to density/phase instead of real/imaginary parts for better accuracy
@@ -1592,6 +1600,13 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             CData_Dens_IntTime[t] = Re*Re + Im*Im;
          }
 
+         if ( IntScheme_CC == INT_SPECTRAL ) {
+//       interpolate density & phase
+         Interpolate( CData_CC, CSize_CC, CStart_CC, CRange_CC,
+                      IntData_CC_IntTime, FSize_CC, FStart_CC,
+                      2, IntScheme_CC, PhaseUnwrapping_Yes, Monotonicity_CC, IntOppSign0thOrder_No,
+                      ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
+         } else {
 //       interpolate density
          Interpolate( CData_Dens_IntTime, CSize_CC, CStart_CC, CRange_CC,
                       FData_Dens_IntTime, FSize_CC, FStart_CC,
@@ -1603,6 +1618,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                       FData_Phas_IntTime, FSize_CC, FStart_CC,
                       1, IntScheme_CC, PhaseUnwrapping_Yes, &Monotonicity_No, IntOppSign0thOrder_No,
                       ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
+
+         }
 
 
 //       temporal interpolation

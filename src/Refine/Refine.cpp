@@ -744,6 +744,12 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                Flu_CData[REAL][k][j][i] = SATAN2( Flu_CData[IMAG][k][j][i], Flu_CData[REAL][k][j][i] );
 #           endif
 
+            if ( OPT__REF_FLU_INT_SCHEME == INT_SPECTRAL ) {
+//          interpolate density & phase
+            Interpolate( &Flu_CData[DENS][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[DENS][0][0][0],
+                         FSize_CC3, FStart_CC, 2, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, Monotonicity,
+                         IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
+            } else {
 //          interpolate density
             Interpolate( &Flu_CData[DENS][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[DENS][0][0][0],
                          FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes,
@@ -753,6 +759,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             Interpolate( &Flu_CData[REAL][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[REAL][0][0][0],
                          FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, &Monotonicity_No,
                          IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
+            }
          }
 
          else // if ( OPT__INT_PHASE )
