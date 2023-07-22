@@ -57,7 +57,7 @@ i = 0
 for idx in range(idx_start, idx_end+1):
    F = np.load('Data_Disk_%06d.npy'%idx)
    H = np.load('Heating_%06d.npz'%idx) 
-   r = F[:,0]/3.08568e+21
+   r = F[0]/3.08568e+21
    h_theory[:,i] = H['b']*(1e9*365*24*3600)/1e10
    i = i + 1
 dt = delta_t*1e6*365*24*3600
