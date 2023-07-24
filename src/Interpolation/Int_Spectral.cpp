@@ -164,19 +164,23 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 
 
 #        if ( MODEL == ELBDM )
-         if ( NComp == 2 && UnwrapPhase == true )
+         if ( UnwrapPhase )
          {
+            if ( NComp != 2 )
+            {
+               Aux_Error( ERROR_INFO, "NComp = %d != 2 for UnwrapPhase in INT_SPECTRAL !!\n", NComp );
+            }
             real* Dens = Input  + 0 * InputDisp;
             real* Phas = Input  + 1 * InputDisp;
 
             for (int i = 1;  i < InSize[XYZ];  i++) Phas[i] = ELBDM_UnwrapPhase( Phas[i - 1], Phas[i] );
-            for (int i = 0;  i < InSize[XYZ];  i++)
-            {
-               const real x = Dens[i] * COS( Phas[i] / WavelengthMagnifier);
-               const real y = Dens[i] * SIN( Phas[i] / WavelengthMagnifier);
-               Dens[i] = x;
-               Phas[i] = y;
-            }
+            //for (int i = 0;  i < InSize[XYZ];  i++)
+            //{
+            //   const real x = Dens[i] * COS( Phas[i] / WavelengthMagnifier);
+            //   const real y = Dens[i] * SIN( Phas[i] / WavelengthMagnifier);
+            //   Dens[i] = x;
+            //   Phas[i] = y;
+            //}
          }
 #        endif
 
@@ -189,17 +193,17 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
          }
 
 #        if ( MODEL == ELBDM )
-         if ( NComp == 2 && UnwrapPhase )
+         if ( UnwrapPhase )
          {
-            real* Re = Output  + 0 * OutputDisp;
-            real* Im = Output  + 1 * OutputDisp;
+            //real* Re = Output  + 0 * OutputDisp;
+            //real* Im = Output  + 1 * OutputDisp;
 
-            for (int i = 0;  i < OutSize[XYZ];  i++) {
-               const real Dens = SQRT(SQR(Re[i]) + SQR(Im[i]));
-               const real Phas = SATAN2(Im[i], Re[i]) * WavelengthMagnifier;
-               Re[i] = Dens;
-               Im[i] = Phas;
-            }
+            //for (int i = 0;  i < OutSize[XYZ];  i++) {
+            //   const real Dens = SQRT(SQR(Re[i]) + SQR(Im[i]));
+            //   const real Phas = SATAN2(Im[i], Re[i]) * WavelengthMagnifier;
+            //   Re[i] = Dens;
+            //   Im[i] = Phas;
+            //}
          }
 #        endif
 

@@ -1410,17 +1410,33 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          Aux_Error( ERROR_INFO, "real and/or imag parts are not found for phase interpolation in ELBDM !!\n" );
 #     endif
 
-//    store density in the REAL component (if we are not actually preparing the density field) and
-//    phase in the IMAG component
-      CData_Real = CData_CC   + RealIdx*CSize3D_CC;
-      CData_Imag = CData_CC   + ImagIdx*CSize3D_CC;
-      CData_Dens = CData_CC   + ( (DensIdx==-1) ? RealIdx : DensIdx )*CSize3D_CC;
-      CData_Phas = CData_Imag;
+//    if we are not preparing the density field:
+//    store density in the REAL component and phase in the IMAG component
+      if ( DensIdx == -1 )
+      {
+         CData_Real = CData_CC   + RealIdx*CSize3D_CC;
+         CData_Imag = CData_CC   + ImagIdx*CSize3D_CC;
+         CData_Dens = CData_Real;
+         CData_Phas = CData_Imag;
 
-      FData_Real = IntData_CC + RealIdx*FSize3D_CC;
-      FData_Imag = IntData_CC + ImagIdx*FSize3D_CC;
-      FData_Dens = IntData_CC + ( (DensIdx==-1) ? RealIdx : DensIdx )*FSize3D_CC;
-      FData_Phas = FData_Imag;
+         FData_Real = IntData_CC + RealIdx*FSize3D_CC;
+         FData_Imag = IntData_CC + ImagIdx*FSize3D_CC;
+         FData_Dens = FData_Real;
+         FData_Phas = FData_Imag;
+//    otherwise store density in the DENS component and phase in the REAL component
+//    this ensure the two arrays are consecutive in memory
+      } else {
+         printf("Does this happen?\n");
+         CData_Real = CData_CC   + RealIdx*CSize3D_CC;
+         CData_Imag = CData_CC   + ImagIdx*CSize3D_CC;
+         CData_Dens = CData_CC   + DensIdx*CSize3D_CC;
+         CData_Phas = CData_Real;
+
+         FData_Real = IntData_CC + RealIdx*FSize3D_CC;
+         FData_Imag = IntData_CC + ImagIdx*FSize3D_CC;
+         FData_Dens = IntData_CC + DensIdx*FSize3D_CC;
+         FData_Phas = FData_Real;
+      }
 
 //    get the density and wrapped phase
       real Re, Im;
@@ -1443,16 +1459,17 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    } // if ( IntPhase )
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( IntPhase && amr->use_wave_flag[lv] == true)
+   if ( IntPhase && amr->use_wave_flag[lv] )
 #  else // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( IntPhase )
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID ) ... # else
    {
       if ( IntScheme_CC == INT_SPECTRAL ) {
 //    interpolate density & phase
+//    INT_SPECTRAL with PhaseUnwrapping_Yes assumes that the density and phase fields are stored consecutively in memory
       Interpolate( CData_CC, CSize_CC, CStart_CC, CRange_CC,
                    IntData_CC, FSize_CC, FStart_CC,
-                   2, IntScheme_CC, PhaseUnwrapping_No, Monotonicity_CC, IntOppSign0thOrder_No,
+                   2, IntScheme_CC, PhaseUnwrapping_Yes, Monotonicity_CC, IntOppSign0thOrder_No,
                    ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
       } else {
 //    interpolate density
@@ -1602,6 +1619,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
          if ( IntScheme_CC == INT_SPECTRAL ) {
 //       interpolate density & phase
+//       INT_SPECTRAL with PhaseUnwrapping_Yes assumes that the density and phase fields are stored consecutively in memory
          Interpolate( CData_CC, CSize_CC, CStart_CC, CRange_CC,
                       IntData_CC_IntTime, FSize_CC, FStart_CC,
                       2, IntScheme_CC, PhaseUnwrapping_Yes, Monotonicity_CC, IntOppSign0thOrder_No,
@@ -1658,7 +1676,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       }
    } // if ( IntPhase ) || if ( IntPhase && amr->use_wave_flag[lv] == true ) in hybrid scheme
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   else if ( amr->use_wave_flag[lv] == false )
+   else if ( !amr->use_wave_flag[lv] )
    {
       real *CData_Dens = NULL;
       real *CData_Phas = NULL;
