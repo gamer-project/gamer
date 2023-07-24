@@ -352,7 +352,7 @@ def load_arguments():
     parser.add_argument( "--mhd", type=str2bool, metavar="BOOLEAN", gamer_name="MHD",
                          default=False,
                          depend={"model":"HYDRO"},
-                         constraint={ True:{"flu_scheme":["MHM_RP", "CTU"], "flux":["ROE", "HLLE", "HLLD"]},
+                         constraint={ True:{"flu_scheme":["MHM", "MHM_RP", "CTU"], "flux":["ROE", "HLLE", "HLLD"]},
                                      False:{"flux":["EXACT", "ROE", "HLLE", "HLLC"]} },
                          help="Magnetohydrodynamics.\n"
                        )
