@@ -131,7 +131,6 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
    real *OutPtr1D = NULL;
 
 #  if ( MODEL == ELBDM )
-   const real WavelengthMagnifier = 10.0;
 
 #  ifdef GAMER_DEBUG
    if ( UnwrapPhase && NComp != 2 )
@@ -139,6 +138,8 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
       Aux_Error( ERROR_INFO, "NComp = %d != 2 for OPT__INT_PHASE and INT_SPECTRAL !!\n", NComp );
    }
 #  endif
+
+   const real WavelengthMagnifier = 10.0;
 
    real *DensInput = NULL;
    real *DensOutput = NULL;
@@ -187,11 +188,12 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
             real* Real = Input  + 0 * InputDisp;
             real* Imag = Input  + 1 * InputDisp;
 
-//          interpolate density separately
+//          store density
             for (int i = 0;  i < InSize[XYZ];  i++) DensInput[i] = Real[i];
-            INTERPOLATION_HANDLER.InterpolateReal(DensInput, DensOutput, InSize[XYZ], CGhost, Workspace, Monotonic[0], MonoCoeff, OppSign0thOrder);
+//          unwrap phase
+            for (int i = 1;  i < InSize[XYZ];  i++) Imag[i]      = ELBDM_UnwrapPhase( Imag[i - 1], Imag[i] );
 
-            for (int i = 1;  i < InSize[XYZ];  i++) Imag[i] = ELBDM_UnwrapPhase( Imag[i - 1], Imag[i] );
+//          convert density and phase to real and imaginary part
             for (int i = 0;  i < InSize[XYZ];  i++)
             {
                const real SqrtDens = SQRT(Real[i]);
@@ -212,12 +214,15 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 #        if ( MODEL == ELBDM )
          if ( UnwrapPhase )
          {
+            INTERPOLATION_HANDLER.InterpolateReal(DensInput, DensOutput, InSize[XYZ], CGhost, Workspace, Monotonic[0], MonoCoeff, OppSign0thOrder);
+
             real* Re = Output  + 0 * OutputDisp;
             real* Im = Output  + 1 * OutputDisp;
 
             for (int i = 0;  i < OutSize[XYZ];  i++) {
-               Im[i] = SATAN2(Im[i], Re[i]) * WavelengthMagnifier;
+               const real S = SATAN2(Im[i], Re[i]) * WavelengthMagnifier;
                Re[i] = DensOutput[i];
+               Im[i] = S;
             }
          }
 #        endif
@@ -728,8 +733,8 @@ void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostB
       {
 //       for small N <= 32 pick precomputed interpolation with cost of N^2
          if ( nInput <= 15 ) {
-               contexts.emplace(nInput, new QuarticInterpolationContext(nInput, nGhostBoundary));
-               //contexts.emplace(nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary));
+               //contexts.emplace(nInput, new QuarticInterpolationContext(nInput, nGhostBoundary));
+               contexts.emplace(nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary));
 //       for large N >  32 use Gram-Fourier extension scheme with cost of N log(N)
          } else {
                //size_t nExtension = 32, nDelta = 14;
