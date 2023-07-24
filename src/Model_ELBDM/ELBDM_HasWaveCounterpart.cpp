@@ -20,18 +20,18 @@
 // Return      :  "true"  if cell [I, J, K] in patch GID has    wave counterpart
 //                "false" if cell [I, J, K] in patch GID has NO wave counterpart
 //-------------------------------------------------------------------------------------------------------
-bool ELBDM_HasWaveCounterpart(int I, int J, int K, long GID0, long GID, const LB_GlobalTree& GlobalTree)
+bool ELBDM_HasWaveCounterpart(const int I, const int J, const int K, const long GID0, const long GID, const LB_GlobalTree& GlobalTree)
 {
 // convert to global coordinates
-   int X = GlobalTree.Local2Global(I, 0, GID0);
-   int Y = GlobalTree.Local2Global(J, 1, GID0);
-   int Z = GlobalTree.Local2Global(K, 2, GID0);
+   const int X = GlobalTree.Local2Global(I, 0, GID0);
+   const int Y = GlobalTree.Local2Global(J, 1, GID0);
+   const int Z = GlobalTree.Local2Global(K, 2, GID0);
 
 // find GID of child
-   long ChildGID = GlobalTree.FindRefinedCounterpart(X, Y, Z, GID);
+   const long ChildGID = GlobalTree.FindRefinedCounterpart(X, Y, Z, GID);
    if ( ChildGID == -1 ) return false;
 
-   bool HasWaveCounterpart = amr->use_wave_flag[GlobalTree[ChildGID].level];
+   const bool HasWaveCounterpart = amr->use_wave_flag[GlobalTree[ChildGID].level];
 
    return HasWaveCounterpart;
 } // FUNCTION : ELBDM_HasWaveCounterpart

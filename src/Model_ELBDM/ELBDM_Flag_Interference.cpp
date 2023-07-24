@@ -34,15 +34,15 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Prepare_for_Interference_Criterion
-// Description :  Evaluate quantum pressure, phase jumps and whether dB wavelength will be resolved after refinement for the interference criterium
+// Description :  Evaluate quantum pressure, phase jumps and whether dB wavelength will be resolved after refinement for the interference criterion
 //
 // Note        :  1. This function is called in "Flag_Real" before looping over all cells in the patch in order to
 //                   achieve higher performance
 //                2. Evaluate laplacian with second-order stencil and dB wavelength via first-order stencil
 //                3. Do not take into account the physical size of each cell since criteria are dimensionless
-//                4. The sizes of the arrays (Var1D, Temp1D, Cond1D) must be ( (PS1+2)^3, (PS1+2)^3, 3*(PS1)^3 )
+//                4. The sizes of the arrays (Var1D, Temp1D, Cond1D) must be ( (PS1+2)^3, 2*(PS1+2)^3, 3*(PS1)^3 )
 //
-// Parameter   :  Var       : Array storing the input density and phase/re & im for the interference criterion
+// Parameter   :  Var       : Array storing the input density and phase for UseWaveFlag == false and the real and imaginary parts for UseWaveFlag == true
 //                Temp      : Array to store the intermediate variable sqrt(density)
 //                Cond      : Array to store the output dimensionless quantum pressure, the curvature of the phase field as well as
 //                            the maximum phase difference between neighbouring points
@@ -58,9 +58,9 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
    int ii, jj, kk, iim, jjm, kkm, iip, jjp, kkp;
 
 // convert the 1D arrays
-   real (*Var)  [NCell ][NCell ][NCell ] = ( real(*) [NCell ][NCell ][NCell ] )  Var1D;
-   real (*Temp) [NCell ][NCell ][NCell ] = ( real(*) [NCell ][NCell ][NCell ] )  Temp1D;
-   real (*Cond) [NCond ][NCond ][NCond ] = ( real(*) [NCond ][NCond ][NCond ] )  Cond1D;
+   real (*Var)  [NCell][NCell][NCell] = ( real(*) [NCell][NCell][NCell] )  Var1D;
+   real (*Temp) [NCell][NCell][NCell] = ( real(*) [NCell][NCell][NCell] )  Temp1D;
+   real (*Cond) [NCond][NCond][NCond] = ( real(*) [NCond][NCond][NCond] )  Cond1D;
 
    for (int k=0; k<NCell; k++)    {
    for (int j=0; j<NCell; j++)    {
