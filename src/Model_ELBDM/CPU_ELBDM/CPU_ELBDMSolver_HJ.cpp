@@ -513,7 +513,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                j = j_gap + ( sj + Column0 ) % size_j ;
                k = k_gap + ( sj + Column0 ) / size_j;
 
-               const real De_Old = s_In[sj][0][DENS][si];
                const real Ph_Old = s_In[sj][0][PHAS][si];
                real De_New       = s_In[sj][N_TIME_LEVELS][DENS][si];
                real Ph_New       = s_In[sj][N_TIME_LEVELS][PHAS][si];

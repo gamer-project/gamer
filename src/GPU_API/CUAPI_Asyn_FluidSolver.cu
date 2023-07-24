@@ -177,8 +177,6 @@ static bool                (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ] = NULL;
 
 #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
 extern gramfe_matmul_float (*d_Flu_TimeEvo)[2 * FLU_NXT];
-#else
-static real                (*d_Flu_TimeEvo)[2 * FLU_NXT] = NULL;
 #endif
 
 #ifdef UNSPLIT_GRAVITY
