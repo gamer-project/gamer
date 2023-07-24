@@ -7,7 +7,7 @@
 #include <memory>
 #include "GramFE_Interpolation.h"
 
-
+#define SLOPE_RATIO( l, c, r ) (( (r) - (c) ) / ((c) - (l) ))
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Int_Spectral
@@ -139,16 +139,20 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
    }
 #  endif
 
-   const real WavelengthMagnifier = 10.0;
+   const real WavelengthMagnifier = 100.0;
 
-   real *DensInput = NULL;
-   real *DensOutput = NULL;
-
-   if ( UnwrapPhase )
-   {
-      DensInput  = new real [ InputDisp  ];
-      DensOutput = new real [ OutputDisp ];
-   }
+   //real *DensInput  = NULL;
+   //real *PhasInput  = NULL;
+   //real *DensOutput = NULL;
+   //real *PhasOutput = NULL;
+//
+   //if ( UnwrapPhase )
+   //{
+   //   DensInput  = new real [ InputDisp  ];
+   //   PhasInput  = new real [ InputDisp  ];
+   //   DensOutput = new real [ OutputDisp ];
+   //   PhasOutput = new real [ OutputDisp ];
+   //}
 #  endif
 
    for (size_t XYZ=0; XYZ<3; ++XYZ)
@@ -183,17 +187,38 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 
 
 #        if ( MODEL == ELBDM )
+         bool UsePhaseInt = UnwrapPhase;
+
          if ( UnwrapPhase )
          {
             real* Real = Input  + 0 * InputDisp;
             real* Imag = Input  + 1 * InputDisp;
 
-//          store density
-            for (int i = 0;  i < InSize[XYZ];  i++) DensInput[i] = Real[i];
 //          unwrap phase
-            for (int i = 1;  i < InSize[XYZ];  i++) Imag[i]      = ELBDM_UnwrapPhase( Imag[i - 1], Imag[i] );
+            for (int i = 1;  i < InSize[XYZ];  i++) Imag[i] = ELBDM_UnwrapPhase( Imag[i-1], Imag[i] );
+
+//          store density
+            //for (int i = 0;  i < InSize[XYZ];  i++)
+            //{
+            //   DensInput[i] = Real[i];
+            //   PhasInput[i] = Imag[i];
+            //}
+//
+            //for (int i = 1;  i < InSize[XYZ] - 1;  i++)
+            //{
+            //   const real c1 = SLOPE_RATIO(Imag[i-1], Imag[i], Imag[i+1]);
+            //   const real c2 = FABS(Imag[i-1] - Imag[i]) / M_PI;
+            //   //const real c3 = FABS((SQRT(Real[i-1]) - 2 * SQRT(Real[i]) + SQRT(Real[i+1]))/(SQRT(Real[i])));
+            //   if (c2 > 0.7 && c1 < 0) {
+            //      UsePhaseInt = false;//printf("Discont: c1 %3.3e c2 %3.3e c3 %3.3e S: %2.2e %2.2e %2.2e D: %2.2e %2.2e %2.2e\n", c1, c2, c3, Imag[i-1], Imag[i], Imag[i+1], Real[i-1], Real[i], Real[i+1]);
+            //      break;
+            //   }
+            //}
+
+            UsePhaseInt = true;
 
 //          convert density and phase to real and imaginary part
+            if ( !UsePhaseInt )
             for (int i = 0;  i < InSize[XYZ];  i++)
             {
                const real SqrtDens = SQRT(Real[i]);
@@ -212,18 +237,23 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
          }
 
 #        if ( MODEL == ELBDM )
-         if ( UnwrapPhase )
+         if ( UnwrapPhase && !UsePhaseInt )
          {
-            INTERPOLATION_HANDLER.InterpolateReal(DensInput, DensOutput, InSize[XYZ], CGhost, Workspace, Monotonic[0], MonoCoeff, OppSign0thOrder);
+            //INTERPOLATION_HANDLER.InterpolateReal(DensInput, DensOutput, InSize[XYZ], CGhost, Workspace, Monotonic[0], MonoCoeff, OppSign0thOrder);
+            //INTERPOLATION_HANDLER.InterpolateReal(PhasInput, PhasOutput, InSize[XYZ], CGhost, Workspace, Monotonic[0], MonoCoeff, OppSign0thOrder);
 
             real* Re = Output  + 0 * OutputDisp;
             real* Im = Output  + 1 * OutputDisp;
 
             for (int i = 0;  i < OutSize[XYZ];  i++) {
+               const real D = SQR(Im[i]) + SQR(Re[i]);
                const real S = SATAN2(Im[i], Re[i]) * WavelengthMagnifier;
-               Re[i] = DensOutput[i];
+               Re[i] = D;
                Im[i] = S;
             }
+
+            if ( XYZ == 2)
+            for (int i = 1;  i < OutSize[XYZ];  i++) Im[i]      = ELBDM_UnwrapPhase( Im[i - 1], Im[i] );
          }
 #        endif
 
@@ -256,11 +286,13 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
    delete [] TDataY;
 
 #  if ( MODEL == ELBDM )
-   if ( UnwrapPhase )
-   {
-      delete [] DensInput;
-      delete [] DensOutput;
-   }
+   //if ( UnwrapPhase )
+   //{
+   //   delete [] DensInput;
+   //   delete [] PhasInput;
+   //   delete [] DensOutput;
+   //   delete [] PhasOutput;
+   //}
 #  endif
 
    gamer_fftw::fft_free(Workspace);
@@ -733,8 +765,8 @@ void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostB
       {
 //       for small N <= 32 pick precomputed interpolation with cost of N^2
          if ( nInput <= 15 ) {
-               //contexts.emplace(nInput, new QuarticInterpolationContext(nInput, nGhostBoundary));
-               contexts.emplace(nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary));
+               contexts.emplace(nInput, new QuarticInterpolationContext(nInput, nGhostBoundary));
+               //contexts.emplace(nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary));
 //       for large N >  32 use Gram-Fourier extension scheme with cost of N log(N)
          } else {
                //size_t nExtension = 32, nDelta = 14;
