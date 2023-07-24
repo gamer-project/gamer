@@ -142,12 +142,14 @@ void CPU_ELBDMSolver_GramFE_MATMUL(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NX
    const uint tid          = ty * CGPU_FLU_BLOCK_SIZE_X + tx;                // thread ID within block
    const uint NThread      = CGPU_FLU_BLOCK_SIZE_X * CGPU_FLU_BLOCK_SIZE_Y;  // total number of threads within block
 
-// tranpose input evolution matrix from PS2 x FLU_NXT to FLU_NXT x PS2 for it to be in row-major order
+// transpose input evolution matrix from PS2 x FLU_NXT to FLU_NXT x PS2 for it to be in row-major order
    for (uint i = tid; i < PS2 * FLU_NXT; i += NThread) {
       row = i / FLU_NXT;
       col = i % FLU_NXT;
       s_LinEvolve[col * PS2 + row] = g_LinEvolve[i];
    }
+
+   __syncthreads();
 
 #  else
 
