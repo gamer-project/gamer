@@ -469,7 +469,7 @@ int Flu_ResetByUser_Jet( real fluid[], const double Emag, const double x, const 
    real   MomSin;
 
 
-// loop over all cells to add the jet source
+// loop over all jet sources
    for (int n=0; n<Jet_NJet; n++)
    {
 //    distance: jet center to mesh

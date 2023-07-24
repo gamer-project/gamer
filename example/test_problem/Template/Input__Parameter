@@ -301,7 +301,7 @@ OPT__INIT_RESTRICT            1           # restrict all data during the initial
 OPT__INIT_GRID_WITH_OMP       1           # enable OpenMP when assigning the initial condition of each grid patch [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
-OPT__FFTW_STARTUP             1           # initialise fftw plans: (0=ESTIMATE, 1=MEASURE, 2=PATIENT (only FFTW3)) [1]
+OPT__FFTW_STARTUP            -1           # initialise fftw plans: (-1=auto, 0=ESTIMATE, 1=MEASURE, 2=PATIENT (only FFTW3)) [-1]
 
 # interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar)
 OPT__INT_TIME                 1           # perform "temporal" interpolation for OPT__DT_LEVEL == 2/3 [1]
@@ -371,6 +371,7 @@ OPT__MANUAL_CONTROL           1           # support manually dump data, stop run
                                           # (by generating the file DUMP_GAMER_DUMP, STOP_GAMER_STOP, PAUSE_GAMER_PAUSE, respectively) [1]
 OPT__RECORD_USER              0           # record the user-specified info -> edit "Aux_Record_User.cpp" [0]
 OPT__OPTIMIZE_AGGRESSIVE      0           # apply aggressive optimizations (experimental) [0]
+OPT__SORT_PATCH_BY_LBIDX      1           # sort patches to improve bitwise reproducibility [SERIAL:0, LOAD_BALACNE:1]
 
 
 # checks

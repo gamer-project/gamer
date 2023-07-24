@@ -8,7 +8,7 @@
 
 static void GetBasePowerSpectrum( real *VarK, const int j_start, const int dj, double *PS_total, double *NormDC );
 
-extern root_real_fftw_plan     FFTW_Plan_PS;
+extern root_fftw::real_plan_nd     FFTW_Plan_PS;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_BasePowerSpectrum
@@ -76,7 +76,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    const int NRecvSlice = MIN( List_z_start[MPI_Rank]+local_nz, NX0_TOT[2] ) - MIN( List_z_start[MPI_Rank], NX0_TOT[2] );
 
    double *PS_total     = NULL;
-   real   *VarK         = (real*) root_fftw_malloc(sizeof(real) * total_local_size);                         // array storing data
+   real   *VarK         = (real*) root_fftw::fft_malloc(sizeof(real) * total_local_size);                         // array storing data
    real   *SendBuf      = new real [ amr->NPatchComma[0][1]*CUBE(PS1) ];         // MPI send buffer for data
    real   *RecvBuf      = new real [ NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];         // MPI recv buffer for data
    long   *SendBuf_SIdx = new long [ amr->NPatchComma[0][1]*PS1 ];               // MPI send buffer for 1D coordinate in slab
@@ -148,7 +148,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 
 
 // 7. free memory
-   root_fftw_free(VarK);
+   root_fftw::fft_free(VarK);
    delete [] SendBuf;
    delete [] RecvBuf;
    delete [] SendBuf_SIdx;
@@ -204,7 +204,7 @@ void GetBasePowerSpectrum( real *VarK, const int j_start, const int dj, double *
    const int Nz        = NX0_TOT[2];
    const int Nx_Padded = Nx/2 + 1;
 
-   gamer_float_complex *cdata=NULL;
+   gamer_fftw::fft_complex *cdata=NULL;
    double PS_local[Nx_Padded];
    long   Count_local[Nx_Padded], Count_total[Nx_Padded];
    int    bin, bin_i[Nx_Padded], bin_j[Ny], bin_k[Nz];
@@ -212,7 +212,7 @@ void GetBasePowerSpectrum( real *VarK, const int j_start, const int dj, double *
    root_fftw_r2c( FFTW_Plan_PS, VarK );
 
 // the data are now complex, so typecast a pointer
-   cdata = (gamer_float_complex*) VarK;
+   cdata = (gamer_fftw::fft_complex*) VarK;
 
 
 // set up the dimensionless wave number coefficients according to the FFTW data format
