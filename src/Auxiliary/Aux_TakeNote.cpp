@@ -1,4 +1,5 @@
 #include "GAMER.h"
+#include "TestProb.h"
 #include "CUFLU.h"
 #ifdef GRAVITY
 #include "CUPOT.h"
@@ -1100,6 +1101,13 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OVERLAP_MPI                %d\n",      OPT__OVERLAP_MPI         );
       fprintf( Note, "OPT__RESET_FLUID                %d\n",      OPT__RESET_FLUID         );
       fprintf( Note, "OPT__RESET_FLUID_INIT           %d\n",      OPT__RESET_FLUID_INIT    );
+      if ( OPT__RESET_FLUID || OPT__RESET_FLUID_INIT ) {
+      fprintf( Note, "   Reset fluid                  %s\n",      (Flu_ResetByUser_Func_Ptr  !=NULL)?"ON":"OFF" );
+#     ifdef MHD
+      fprintf( Note, "   Reset magnetic field         %s\n",      (MHD_ResetByUser_BField_Ptr!=NULL)?"ON":"OFF" );
+      fprintf( Note, "   Use vector potential         %s\n",      (MHD_ResetByUser_VecPot_Ptr!=NULL)?"ON":"OFF" );
+#     endif
+      }
       fprintf( Note, "OPT__FREEZE_FLUID               %d\n",      OPT__FREEZE_FLUID        );
 #     if ( MODEL == HYDRO  ||  MODEL == ELBDM )
       fprintf( Note, "MIN_DENS                        %13.7e\n",  MIN_DENS                 );
@@ -1413,6 +1421,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__MANUAL_CONTROL             %d\n",      OPT__MANUAL_CONTROL      );
       fprintf( Note, "OPT__RECORD_USER                %d\n",      OPT__RECORD_USER         );
       fprintf( Note, "OPT__OPTIMIZE_AGGRESSIVE        %d\n",      OPT__OPTIMIZE_AGGRESSIVE );
+      fprintf( Note, "OPT__SORT_PATCH_BY_LBIDX        %d\n",      OPT__SORT_PATCH_BY_LBIDX );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 

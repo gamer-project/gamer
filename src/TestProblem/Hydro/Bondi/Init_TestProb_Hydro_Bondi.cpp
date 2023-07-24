@@ -84,12 +84,12 @@ void Record_Bondi();
 bool Flag_Bondi( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 int Flu_ResetByUser_Func_Bondi( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
                                 const double dt, const int lv, double AuxArray[] );
-void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TimeNew, const double dt );
+void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
 static void HSE_SetDensProfileTable();
 
 // this test problem needs to reset both Flu_ResetByUser_API_Ptr and Flu_ResetByUser_Func_Ptr, while
 // the former is not defined in TestProb.h (because it's rarely required)
-extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TimeNew, const double dt );
+extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
 
 
 

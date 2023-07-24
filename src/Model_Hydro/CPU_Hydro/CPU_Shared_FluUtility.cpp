@@ -812,9 +812,14 @@ real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const re
 #     endif
       printf( "\n" );
 #     if ( NCOMP_PASSIVE > 0 )
-      printf( "       Passive " );
-      for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " [%d] %14.7e", v, Passive[v] );
-      printf( "\n" );
+//    note that we may have Passive==NULL even when NCOMP_PASSIVE>0
+//    (e.g., when calling Hydro_Con2Pres() in the Roe solver with GAMMA EoS)
+      if ( Passive != NULL )
+      {
+         printf( "       Passive " );
+         for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " [%d] %14.7e", v, Passive[v] );
+         printf( "\n" );
+      }
 #     endif
    }
 #  endif // #ifdef CHECK_UNPHYSICAL_IN_FLUID

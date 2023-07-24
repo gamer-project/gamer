@@ -94,6 +94,7 @@ const ParICFormat_t
 // FFTW startup options
 typedef int FFTWStartup_t;
 const FFTWStartup_t
+   FFTW_STARTUP_DEFAULT  = -1,
    FFTW_STARTUP_ESTIMATE = 0,
    FFTW_STARTUP_MEASURE  = 1,
    FFTW_STARTUP_PATIENT  = 2;

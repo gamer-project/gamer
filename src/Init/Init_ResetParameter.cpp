@@ -1016,6 +1016,36 @@ void Init_ResetParameter()
    }
 
 
+// SERIAL doesn't support OPT__SORT_PATCH_BY_LBIDX
+#  ifdef SERIAL
+   if ( OPT__SORT_PATCH_BY_LBIDX )
+   {
+      OPT__SORT_PATCH_BY_LBIDX = false;
+
+      PRINT_WARNING( OPT__SORT_PATCH_BY_LBIDX, FORMAT_INT, "for SERIAL" );
+   }
+#  endif
+
+
+// must set OPT__FFTW_STARTUP = FFTW_STARTUP_ESTIMATE for BITWISE_REPRODUCIBILITY 
+// --> even when disabling BITWISE_REPRODUCIBILITY, we still use FFTW_STARTUP_ESTIMATE
+//     by default since otherwise the FFT results can vary in each run on the level
+//     of machine precision, which can be confusing
+#  ifdef SUPPORT_FFTW
+   if ( OPT__FFTW_STARTUP == FFTW_STARTUP_DEFAULT )
+   {
+#     ifdef BITWISE_REPRODUCIBILITY
+      OPT__FFTW_STARTUP = FFTW_STARTUP_ESTIMATE;
+      PRINT_WARNING( OPT__FFTW_STARTUP, FORMAT_INT, "when enabling BITWISE_REPRODUCIBILITY" );
+#     else
+//    OPT__FFTW_STARTUP = FFTW_STARTUP_MEASURE;
+      OPT__FFTW_STARTUP = FFTW_STARTUP_ESTIMATE;
+      PRINT_WARNING( OPT__FFTW_STARTUP, FORMAT_INT, "when disabling BITWISE_REPRODUCIBILITY" );
+#     endif
+   }
+#  endif
+
+
 // remove symbolic constants and macros only used in this structure
 #  undef FORMAT_INT
 #  undef FORMAT_FLT
