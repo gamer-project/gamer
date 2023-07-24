@@ -117,6 +117,8 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
    const int OutSize[3]    = { CRange[0] + CRange[0],  CRange[1] + CRange[1],  CRange[2] + CRange[2]};
 
 
+
+
    real *Input    = new real [ NComp * InputDisp  ];  // hold one column of input data
    real *Output   = new real [ NComp * OutputDisp ];  // hold one column of output data
    real *TDataX   = new real [ NComp * TDataXDisp ];  // temporary array after x interpolation
@@ -129,7 +131,23 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
    real *OutPtr1D = NULL;
 
 #  if ( MODEL == ELBDM )
-   const real WavelengthMagnifier = 1.0;
+   const real WavelengthMagnifier = 10.0;
+
+#  ifdef GAMER_DEBUG
+   if ( UnwrapPhase && NComp != 2 )
+   {
+      Aux_Error( ERROR_INFO, "NComp = %d != 2 for OPT__INT_PHASE and INT_SPECTRAL !!\n", NComp );
+   }
+#  endif
+
+   real *DensInput = NULL;
+   real *DensOutput = NULL;
+
+   if ( UnwrapPhase )
+   {
+      DensInput  = new real [ InputDisp  ];
+      DensOutput = new real [ OutputDisp ];
+   }
 #  endif
 
    for (size_t XYZ=0; XYZ<3; ++XYZ)
@@ -166,20 +184,19 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 #        if ( MODEL == ELBDM )
          if ( UnwrapPhase )
          {
-            if ( NComp != 2 )
-            {
-               Aux_Error( ERROR_INFO, "NComp = %d != 2 for UnwrapPhase in INT_SPECTRAL !!\n", NComp );
-            }
-            real* Dens = Input  + 0 * InputDisp;
-            real* Phas = Input  + 1 * InputDisp;
+            real* Real = Input  + 0 * InputDisp;
+            real* Imag = Input  + 1 * InputDisp;
 
-            for (int i = 1;  i < InSize[XYZ];  i++) Phas[i] = ELBDM_UnwrapPhase( Phas[i - 1], Phas[i] );
+//          interpolate density separately
+            for (int i = 0;  i < InSize[XYZ];  i++) DensInput[i] = Real[i];
+            INTERPOLATION_HANDLER.InterpolateReal(DensInput, DensOutput, InSize[XYZ], CGhost, Workspace, Monotonic[0], MonoCoeff, OppSign0thOrder);
+
+            for (int i = 1;  i < InSize[XYZ];  i++) Imag[i] = ELBDM_UnwrapPhase( Imag[i - 1], Imag[i] );
             for (int i = 0;  i < InSize[XYZ];  i++)
             {
-               const real x = SQRT(Dens[i]) * COS( Phas[i] / WavelengthMagnifier);
-               const real y = SQRT(Dens[i]) * SIN( Phas[i] / WavelengthMagnifier);
-               Dens[i] = x;
-               Phas[i] = y;
+               const real SqrtDens = SQRT(Real[i]);
+               Real[i] = SqrtDens * COS( Imag[i] / WavelengthMagnifier);
+               Imag[i] = SqrtDens * SIN( Imag[i] / WavelengthMagnifier);
             }
          }
 #        endif
@@ -199,10 +216,8 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
             real* Im = Output  + 1 * OutputDisp;
 
             for (int i = 0;  i < OutSize[XYZ];  i++) {
-               const real Dens = SQR(Re[i]) + SQR(Im[i]);
-               const real Phas = SATAN2(Im[i], Re[i]) * WavelengthMagnifier;
-               Re[i] = Dens;
-               Im[i] = Phas;
+               Im[i] = SATAN2(Im[i], Re[i]) * WavelengthMagnifier;
+               Re[i] = DensOutput[i];
             }
          }
 #        endif
@@ -234,6 +249,14 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
    delete [] Output;
    delete [] TDataX;
    delete [] TDataY;
+
+#  if ( MODEL == ELBDM )
+   if ( UnwrapPhase )
+   {
+      delete [] DensInput;
+      delete [] DensOutput;
+   }
+#  endif
 
    gamer_fftw::fft_free(Workspace);
 
@@ -505,6 +528,12 @@ size_t GramFEInterpolationContext::GetWorkspaceSize() const {
 // Function    :  GramFEInterpolationContext:InterpolateReal
 // Description :  Interpolate input array of size nInput and store interpolation results of size 2 * (nInput - nGhostBoundary) in output array
 //
+// Note        :  This method might suffer from large round-off errors because the extension matrix has a high-condition number.
+//                Tests of using the Gram-Fourier extension method with precomputed extension matrices indicate that the matrix has a condition number of
+//                roughly 1e11. This implies that the extension should be computed with quadruple precision in order to be accurate.
+//                However, tests of this interpolation function in single precision indicate that the roundoff error may not be acceptable
+//                for interpolation because it does not accumulate over time. Use with care.
+//
 // Parameter   :  input          : Real input  array of size nInput
 //                output         : Real output array of size 2 * (nInput - nGhostBoundary)
 //                workspace      : Workspace with size GetWorkspaceSize in bytes that needs to be allocated by user using fftw_malloc
@@ -691,11 +720,11 @@ const size_t fastNExtended[NFast] = {16, 18, 24, 32, 36, 40, 48, 54, 60, 64, 72,
 
 void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostBoundary)
 {
-
+   #pragma omp critical
    if (contexts.find(nInput) == contexts.end()) {
 //    ensure thread safety when adding new interpolation contexts
 //    only one thread in OMP enviroment may add a new interpolation context
-      #pragma omp critical
+
       {
 //       for small N <= 32 pick precomputed interpolation with cost of N^2
          if ( nInput <= 15 ) {
@@ -718,8 +747,6 @@ void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostB
                //contexts.emplace(nInput, new GramFEInterpolationContext(nInput, nGhostBoundary, nExtension, nDelta));
 
          }
-
-         //printf("Added spectral interpolation context with N = %d", nInput);
       }
    }
 } // FUNCTION : AddContext
