@@ -52,12 +52,14 @@ for idx in range(idx_start, idx_end+1):
    t.append(idx*delta_t)
 t = np.array(t)
 h_theory = np.zeros((Div, len(t)))
+w = np.zeros((Div, len(t)))
 mean_theory = np.zeros((4, len(t)))
 i = 0
 for idx in range(idx_start, idx_end+1):
    F = np.load('Data_Disk_%06d.npy'%idx)
    H = np.load('Heating_%06d.npz'%idx) 
    r = F[0]/3.08568e+21
+   w[:,i] = r*F[4] ## weight = r*Sigma
    h_theory[:,i] = H['b']*(1e9*365*24*3600)/1e10
    i = i + 1
 dt = delta_t*1e6*365*24*3600
@@ -71,10 +73,10 @@ num_9 = SearchIndex( 9, r, Div )
 num_11 = SearchIndex( 11, r, Div )
 
 for i in range (len(t)):
-   mean_theory[0,i] = np.average(h_theory[num_3:num_5,i], weights=r[num_3:num_5])
-   mean_theory[1,i] = np.average(h_theory[num_5:num_7,i], weights=r[num_5:num_7])
-   mean_theory[2,i] = np.average(h_theory[num_7:num_9,i], weights=r[num_7:num_9])
-   mean_theory[3,i] = np.average(h_theory[num_9:num_11,i], weights=r[num_9:num_11])
+   mean_theory[0,i] = np.average(h_theory[num_3:num_5,i], weights=w[num_3:num_5])
+   mean_theory[1,i] = np.average(h_theory[num_5:num_7,i], weights=w[num_5:num_7])
+   mean_theory[2,i] = np.average(h_theory[num_7:num_9,i], weights=w[num_7:num_9])
+   mean_theory[3,i] = np.average(h_theory[num_9:num_11,i], weights=w[num_9:num_11])
 
 
 print('R(kpc)    heating rate (km^2/(s^2*Gyr))')

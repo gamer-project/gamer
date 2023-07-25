@@ -132,15 +132,15 @@ for idx in range(idx_start, idx_end+1, didx):
       mean_vp = np.mean( disk_velp[ disk_indexR[ disk_num_pre:disk_num ] ] )
       mean_vz = np.mean( disk_velz[ disk_indexR[ disk_num_pre:disk_num ] ] )
       mean_vp2 = np.mean( disk_velp[ disk_indexR[ disk_num_pre:disk_num ] ]**2 )
-      Data[1,j] = mean_vp
-      Data[2,j] = (np.mean(( disk_velr[ disk_indexR[ disk_num_pre:disk_num ] ] - mean_vr )**2))**0.5
-      Data[3,j] = (np.mean(( disk_velz[ disk_indexR[ disk_num_pre:disk_num ] ] - mean_vz )**2))**0.5
+      Data[1,j] = mean_vp      # rotation curve
+      Data[2,j] = (np.mean(( disk_velr[ disk_indexR[ disk_num_pre:disk_num ] ] - mean_vr )**2))**0.5      # sigma_r
+      Data[3,j] = (np.mean(( disk_velz[ disk_indexR[ disk_num_pre:disk_num ] ] - mean_vz )**2))**0.5      # sigma_z
       mass = disk_mass[0]*( disk_num-disk_num_pre )
       mass_total = disk_mass[0]*disk_num
       area = (math.pi *((r + dr)**2 - r**2))
-      Data[4,j] = mass/area
-      Data[5,j] = mean_vp2
-      Data[6,j] = mass_total 
+      Data[4,j] = mass/area    # surface density Sigma
+      Data[5,j] = mean_vp2     # sigma_phi^2
+      Data[6,j] = mass_total   # enclosed mass
       # get sacle height
       CMZ = np.average(disk_posz[ disk_indexR[ disk_num_pre:disk_num ] ])
       disk_z = np.abs( disk_posz[ disk_indexR[ disk_num_pre:disk_num ] ] - CMZ )
@@ -149,7 +149,7 @@ for idx in range(idx_start, idx_end+1, didx):
       index_plus = int(target_index)
       index_minus = int(target_index - 1)
       target_z = sortZ[index_minus] + (target_index - index_minus)*(sortZ[index_plus] - sortZ[index_minus])  
-      Data[7,j] = target_z
+      Data[7,j] = target_z     # scale height
 
       r = r + dr
   

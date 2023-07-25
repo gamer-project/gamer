@@ -191,11 +191,12 @@ for idx in range(idx_start, idx_end+1, didx):
 
    Data = np.zeros((6,Div))
    Data[0] = r_in_kpc
-   Data[1] = rho
-   Data[2] = M_h
-   Data[3] = disp
-   Data[4] = r_log
-   Data[5] = pote_cgs
+   Data[1] = rho       # halo density
+   Data[2] = M_h       # enclosed mass 
+   Data[3] = disp      # Jeans velocity dispersion/sqrt(2)
+   Data[4] = r_log     # r in log bins (used for <P2> computation)
+   Data[5] = pote_cgs  # Phi(halo potential) in log bins (used for <P2> computation)
+
 
    np.save('Data_Halo_%06d'%idx, Data) 
    print('Data_Halo_%06d.npy completed'%idx) 

@@ -64,7 +64,6 @@ def SearchIndex(x, A, N):
 def Gauss(x, mean, disp):
    return np.exp(-(x-mean)**2./2./disp**2.)/disp/(2.*np.pi)**0.5
 
-G = 6.6743e-8
 f = h5py.File('../../Data_%06d'%idx_start, 'r')
 Unit_L = f['Info']['InputPara']['Unit_L']
 Unit_T = f['Info']['InputPara']['Unit_T']*(3.16887646e-14)

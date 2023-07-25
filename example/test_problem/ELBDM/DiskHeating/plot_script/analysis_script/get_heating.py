@@ -49,13 +49,16 @@ unit_base = {'UnitLength_in_cm'         : 3.08568e+21,
              'UnitMass_in_g'            :   1.989e+43,
              'UnitVelocity_in_cm_per_s' :      100000}
 '''
-G = 6.6743e-8 # gravitational constant (cm**3/(g*s**2))
+G = 6.6743e-8   # gravitational constant (cm**3/(g*s**2))
 hb = 1.0546e-27 # reduced planck const cm**2*g/s 
 kappa1 = 0.526
 kappa2 = 1.0
 ILambda1 = 4.82
 ILambda2 = 3.33
+
+# modify m_a for each simulation ---------------------------
 ma = 0.4e-22 *1.6021772e-12/(3e10)**2 # particle mass in g
+# ----------------------------------------------------------
 
 def Gx(x):
    return (sp.erf(x)-2*x*np.exp(-x*x)/(np.pi)**0.5)/2/x**2
