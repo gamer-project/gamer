@@ -845,7 +845,7 @@ void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostB
                //      break;
                //   }
                //}
-               contexts.emplace(nInput, new QuarticInterpolationContext(nInput, nGhostBoundary));
+               contexts.emplace(nInput, new CQuarticInterpolationContext(nInput, nGhostBoundary));
 
                //contexts.emplace(nInput, new GramFEInterpolationContext(nInput, nGhostBoundary, nExtension, nDelta));
 
