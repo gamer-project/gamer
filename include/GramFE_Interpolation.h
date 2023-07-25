@@ -157,6 +157,27 @@ public:
 }; // CLASS : QuarticInterpolationContext
 
 //-------------------------------------------------------------------------------------------------------
+// Structure   :  CQuarticInterpolationContext
+// Description :  Data structure of quartic interpolator derived from InterpolationContext
+//
+// Data Member :  QuarticR         :  quartic right interpolation coefficients
+//                QuarticL         :  quartic left interpolation coefficients
+//
+// Method      :  GetWorkspaceSize : Return size of interpolation workspace in bytes
+//                InterpolateReal  : Interpolate input array of size nInput and store interpolation results of size 2 * (nInput - nGhostBoundary) in output array
+//
+//-------------------------------------------------------------------------------------------------------
+struct CQuarticInterpolationContext : public InterpolationContext
+{
+public:
+    static const real CQuartic[ 5 ];
+
+    CQuarticInterpolationContext(size_t nInput, size_t nGhostBoundary);
+    size_t GetWorkspaceSize () const;
+    void   InterpolateReal  (const real *input, real *output, char* workspace) const;
+}; // CLASS : CQuarticInterpolationContext
+
+//-------------------------------------------------------------------------------------------------------
 // Class       :  InterpolationHandler
 // Description :  Data structure to switch between depending spectral interpolation schemes depending on the input size
 //

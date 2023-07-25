@@ -215,7 +215,7 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
             //   }
             //}
 
-            UsePhaseInt = true;
+            UsePhaseInt = false;
 
 //          convert density and phase to real and imaginary part
             if ( !UsePhaseInt )
@@ -244,6 +244,22 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 
             real* Re = Output  + 0 * OutputDisp;
             real* Im = Output  + 1 * OutputDisp;
+
+
+                  Rho_Corr  = *FluidPtr1D[DENS];
+                  Rho_Wrong = SQR(Re) + SQR(Im);
+
+//                be careful about the negative density introduced from the round-off errors
+                  if ( Rho_Wrong <= (real)0.0  ||  Rho_Corr <= (real)0.0 )
+                  {
+                     *FluidPtr1D[DENS] = (real)0.0;
+                     Rescale           = (real)0.0;
+                  }
+                  else
+                     Rescale = SQRT( Rho_Corr/Rho_Wrong );
+
+                  *FluidPtr1D[REAL] *= Rescale;
+                  *FluidPtr1D[IMAG] *= Rescale;
 
             for (int i = 0;  i < OutSize[XYZ];  i++) {
                const real D = SQR(Im[i]) + SQR(Re[i]);
@@ -751,6 +767,55 @@ void QuarticInterpolationContext::InterpolateReal(const real *input, real *outpu
    }
 } // FUNCTION : InterpolateReal
 
+const real CQuarticInterpolationContext::CQuartic[5] = { +3.0/128.0, -22.0/128.0, +128.0/128.0, +22.0/128.0, -3.0/128.0 };
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CQuarticInterpolationContext::CQuarticInterpolationContext
+// Description :  Constructor of CQuarticInterpolationContext
+//
+//-------------------------------------------------------------------------------------------------------
+CQuarticInterpolationContext::CQuarticInterpolationContext(size_t nInput, size_t nGhostBoundary)
+   :  InterpolationContext(nInput, nGhostBoundary)
+{
+#  ifdef GAMER_DEBUG
+   if (nGhostBoundary != 2)
+   {
+      Aux_Error(ERROR_INFO, "CQuarticInterpolationContext requires nGhostBoundary = 2!!\n");
+   }
+#  endif
+}
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CQuarticInterpolationContext::GetWorkspaceSize
+// Description :  Return 0 since CQuarticInterpolationContext does not require a workspace
+//
+//-------------------------------------------------------------------------------------------------------
+size_t CQuarticInterpolationContext::GetWorkspaceSize() const
+{
+   return 0;
+} // FUNCTION : GetWorkspaceSize
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  QuadraticInterpolationContext::InterpolateReal
+// Description :  Interpolate input array of size nInput and store interpolation results of size 2 * (nInput - nGhostBoundary) in output array
+//
+// Parameter   :  input          : Real input  array of size nInput
+//                output         : Real output array of size 2 * (nInput - nGhostBoundary)
+//                workspace      : Useless for QuadraticInterpolationContext
+//
+//-------------------------------------------------------------------------------------------------------
+void CQuarticInterpolationContext::InterpolateReal(const real *input, real *output, char* workspace) const
+{
+   for (size_t i = nGhostBoundary; i < nInput - nGhostBoundary; ++i) {
+      const real slope = CQuarticInterpolationContext::CQuartic[0] * input[i - 2] \
+                       + CQuarticInterpolationContext::CQuartic[1] * input[i - 1] \
+                       + CQuarticInterpolationContext::CQuartic[3] * input[i + 1] \
+                       + CQuarticInterpolationContext::CQuartic[4] * input[i + 2];
+
+      output[(i - nGhostBoundary) * 2    ] = input[i] - slope;
+      output[(i - nGhostBoundary) * 2 + 1] = input[i] + slope;
+   }
+} // FUNCTION : InterpolateReal
 
 const size_t NFast = 24;
 const size_t fastNExtended[NFast] = {16, 18, 24, 32, 36, 40, 48, 54, 60, 64, 72, 80, 90, 96, 100, 108, 112, 120, 128, 135, 256, 288, 512, 540};
@@ -765,7 +830,7 @@ void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostB
       {
 //       for small N <= 32 pick precomputed interpolation with cost of N^2
          if ( nInput <= 15 ) {
-               contexts.emplace(nInput, new QuarticInterpolationContext(nInput, nGhostBoundary));
+               contexts.emplace(nInput, new CQuarticInterpolationContext(nInput, nGhostBoundary));
                //contexts.emplace(nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary));
 //       for large N >  32 use Gram-Fourier extension scheme with cost of N log(N)
          } else {
