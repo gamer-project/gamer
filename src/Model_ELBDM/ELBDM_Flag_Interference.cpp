@@ -80,12 +80,19 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
    for (int j=0; j<NCond; j++)    {  jj = j + 1;   jjp = jj + 1;   jjm = jj - 1;
    for (int i=0; i<NCond; i++)    {  ii = i + 1;   iip = ii + 1;   iim = ii - 1;
 
-//    compute the dimensionless quantum pressure (divided by number of dimensions for normalisation)
-      Cond[0][k][j][i] =  FABS(  Temp[0][kk ][jj ][iip] + Temp[0][kk ][jj ][iim] \
-                               + Temp[0][kk ][jjp][ii ] + Temp[0][kk ][jjm][ii ] \
-                               + Temp[0][kkp][jj ][ii ] + Temp[0][kkm][jj ][ii ] \
-                               -  (real) 6.0 * Temp[0][kk ][jj ][ii])\
-                               / ((real) 3.0 * Temp[0][kk ][jj ][ii]);
+//    compute the dimensionless quantum pressure (divided by number of dimensions for normalisation) if phase field has local extremum
+      const bool SChangeSign = ( (( Temp[0][kk ][jj ][iip] - Temp[0][kk ][jj ][ii] ) * ( Temp[0][kk ][jj ][ii] - Temp[0][kk ][jj ][iim] ) < 0) \
+                              || (( Temp[0][kk ][jjp][ii ] - Temp[0][kk ][jj ][ii] ) * ( Temp[0][kk ][jj ][ii] - Temp[0][kk ][jjm][ii ] ) < 0) \
+                              || (( Temp[0][kkp][jj ][ii ] - Temp[0][kk ][jj ][ii] ) * ( Temp[0][kk ][jj ][ii] - Temp[0][kkm][jj ][ii ] ) < 0) );
+
+      if ( SChangeSign )
+         Cond[0][k][j][i] =  FABS( Temp[0][kk ][jj ][iip] + Temp[0][kk ][jj ][iim] \
+                                 + Temp[0][kk ][jjp][ii ] + Temp[0][kk ][jjm][ii ] \
+                                 + Temp[0][kkp][jj ][ii ] + Temp[0][kkm][jj ][ii ] \
+                                 -  (real) 6.0 * Temp[0][kk ][jj ][ii])\
+                                 / ((real) 3.0 * Temp[0][kk ][jj ][ii]);
+      else
+         Cond[0][k][j][i] =  0;
 
 //    flags for wave solver
       if (UseWaveFlag)   {
