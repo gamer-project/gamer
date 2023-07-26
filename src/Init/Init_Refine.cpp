@@ -74,7 +74,7 @@ void Init_Refine( const int lv )
 #           endif
 
 #           if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-            if ( amr->patch[0][lv][PID]->use_wave_flag ) {
+            if ( amr->patch[0][lv][PID]->switch_to_wave_flag ) {
                amr->use_wave_flag[lv + 1] = true;
             }
 
