@@ -456,9 +456,9 @@ void Aux_TakeNote()
 #     endif
 
 #     ifdef SUPPORT_SPECTRAL_INT
-      fprintf( Note, "SUPPORT_SPECTRAL_INT  ON\n" );
+      fprintf( Note, "SUPPORT_SPECTRAL_INT            ON\n" );
 #     else
-      fprintf( Note, "SUPPORT_SPECTRAL_INT  OFF\n" );
+      fprintf( Note, "SUPPORT_SPECTRAL_INT            OFF\n" );
 #     endif
 
       fprintf( Note, "***********************************************************************************\n" );
