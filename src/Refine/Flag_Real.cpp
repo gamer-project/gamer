@@ -266,6 +266,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
 #     endif // # if ( MODEL == ELBDM )
 
+#        if ( MODEL == ELBDM )
+//       evaluate the ratio of the GramFE extension masses and the physical wave function
+         if ( Spectral_NVar > 0 )
+            Prepare_for_Spectral_Criterion(Spectral_Var, Spectral_Cond);
+#        endif // # if ( MODEL == ELBDM )
+
 //       loop over all local patches within the same patch group
          for (int LocalID=0; LocalID<8; LocalID++)
          {
@@ -404,11 +410,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 //             evaluate the quantum pressure for interference criterion
                if ( Interf_NVar > 0 )
                   Prepare_for_Interference_Criterion(Interf_Var+LocalID*Interf_Stride, Interf_Temp, Interf_Cond, Interf_NVar == 3);
-
-//             evaluate the ratio of the GramFE extension masses and the physical wave function
-               if ( Spectral_NVar > 0 )
-                  Prepare_for_Spectral_Criterion(Spectral_Var, Spectral_Cond);
 #              endif // # if ( MODEL == ELBDM )
+
 
 //             count the number of particles and/or particle mass density on each cell
 #              ifdef PARTICLE
