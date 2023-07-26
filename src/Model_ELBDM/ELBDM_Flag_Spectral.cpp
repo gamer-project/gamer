@@ -86,7 +86,7 @@ const static flag_spectral_float  Flag_Spectral_Pr[FLAG_SPECTRAL_ORDER][FLAG_SPE
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Flag_Spectral_Prepare_for_Spectral_Criterio
+// Function    :  Flag_Spectral_Prepare_for_Spectral_Criterion
 // Description :  Evaluate ratio of mass of wave function in patch group and mass of wave function in extension domain
 //
 // Note        :  1. This function is called once per patch group
