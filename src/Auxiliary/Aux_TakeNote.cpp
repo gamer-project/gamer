@@ -1645,9 +1645,9 @@ void Aux_TakeNote()
       {
          fprintf( Note, "Flag Criterion (Interference Threshold)\n" );
          fprintf( Note, "***********************************************************************************\n" );
-         fprintf( Note, "  Level     DensCurv    DensCurvVolFrac    PhaseJump    Switch2Wave\n" );
+         fprintf( Note, "  Level     QP          Density      PhaseJump    Switch2Wave\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)
-            fprintf( Note, "%7d    %10.3e   %10.3e        %10.3e    %+d\n", lv, FlagTable_Interference[lv][0], FlagTable_Interference[lv][1], FlagTable_Interference[lv][2], (int) FlagTable_Interference[lv][3] );
+            fprintf( Note, "%7d   %10.2e  %10.2e   %10.2e     %+d\n", lv, FlagTable_Interference[lv][0], FlagTable_Interference[lv][1], FlagTable_Interference[lv][2], (int) FlagTable_Interference[lv][3] );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }

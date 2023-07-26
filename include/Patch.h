@@ -338,7 +338,7 @@ struct patch_t
       Active    = true;
 
 #     if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-//    use fluid scheme by default
+//    do not switch to fluid scheme by default
       switch_to_wave_flag = false;
 #     endif // #  if ( MODEL == ELBDM  && ELBDM_SCHEME == ELBDM_HYBRID )
 
