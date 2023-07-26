@@ -4,7 +4,6 @@ static bool Check_Gradient( const int i, const int j, const int k, const real In
 static bool Check_Curl( const int i, const int j, const int k,
                         const real vx[][PS1][PS1], const real vy[][PS1][PS1], const real vz[][PS1][PS1],
                         const double Threshold );
-static bool ELBDM_Flag_VolumeFracQP( const real Cond[], const double Threshold_QP, const double Threshold_VolumeFraction );
 extern bool (*Flag_Region_Ptr)( const int i, const int j, const int k, const int lv, const int PID );
 extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 
@@ -62,47 +61,21 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 // check ELBDM interference
 // must be performed before any other checks in order to set switch_to_wave_flag correctly
-// if FlagTable_Interference[lv][2] > 0 we set use wave flag if interference > FlagTable_Interference[lv][0],[1]
+// if FlagTable_Interference[lv][2] > 0 we set use_wave_flag if interference > FlagTable_Interference[lv][0],[1]
 // if FlagTable_Interference[lv][2] < 0 we just use it as refinement criterion for fluid patches
 // ===========================================================================================
 #  if ( MODEL == ELBDM )
    if ( OPT__FLAG_INTERFERENCE )
    {
-      bool FlagIntQP = false, FlagIntPhaseDiscont = false, dBWavelengthNotResolved = false;
+      if ( Fluid[DENS][k][j][i] > FlagTable_Interference[lv][1] )
+         Flag |=  ELBDM_Flag_Interference( i, j, k, Interf_Cond, FlagTable_Interference[lv][0]);
 
-      if ( FlagTable_Interference[lv][1] > 0 )
-         FlagIntQP  =  ELBDM_Flag_VolumeFracQP( Interf_Cond, FlagTable_Interference[lv][0], FlagTable_Interference[lv][1]);
-      else
-         FlagIntQP  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond,                       FlagTable_Interference[lv][0]);
-
-      Flag |= FlagIntQP;
-
-
-//    for wave solver: Check whether dB wavelength is resolved using FlagTable_Interference[lv][2] as maximum phase difference between neighbouring cells
-
-#     if ( MODEL == ELBDM  && ELBDM_SCHEME == ELBDM_HYBRID )
-      if ( amr->use_wave_flag[lv] ) {
-#     endif // # if ( MODEL == ELBDM  && ELBDM_SCHEME == ELBDM_HYBRID )
-
-      dBWavelengthNotResolved = ELBDM_Flag_Interference( i, j, k, Interf_Cond + 2 * CUBE(PS1), FlagTable_Interference[lv][2] );
-
-      Flag |= dBWavelengthNotResolved;
-
-#     if ( MODEL == ELBDM  && ELBDM_SCHEME == ELBDM_HYBRID )
-//    for fluid solver: check phase curvature using FlagTable_Interference[lv][2] as maximum allowed phase curvature
-      } else {
-         FlagIntPhaseDiscont  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond + CUBE(PS1), FlagTable_Interference[lv][2] );
-
-         Flag |= FlagIntPhaseDiscont;
-      }
-#     endif // # if ( MODEL == ELBDM  && ELBDM_SCHEME == ELBDM_HYBRID )
+//    check whether dB wavelength is resolved using FlagTable_Interference[lv][2] as maximum phase difference between neighbouring cells
+      Flag |= ELBDM_Flag_Interference( i, j, k, Interf_Cond + 1 * CUBE(PS1), FlagTable_Interference[lv][2] );
 
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //    set use_wave_flag if fourth column in FlagTable_Interference enables switching from fluid to wave solver
-      if ( Flag &&  FlagTable_Interference[lv][3] >= 0.0 )
-      {
-         amr->patch[0][lv][PID]->switch_to_wave_flag =  true;
-      }
+      amr->patch[0][lv][PID]->switch_to_wave_flag |= Flag &&  FlagTable_Interference[lv][3] >= 0.0;
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
       if ( Flag )
@@ -399,33 +372,3 @@ bool Check_Curl( const int i, const int j, const int k,
    return Flag;
 
 } // FUNCTION : Check_Curl
-
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Check_VolumeFracQP
-// Description :  Check if the quantum pressure of more than Threshold_VolumeFraction of the cells in the input patch exceed Threshold_QP
-//
-// Note        :  1, Size of the input array "Cond" should be PATCH_SIZE^3
-//
-// Parameter   :  Cond      : Input vector
-//                Threshold_QP : QP threshold
-//                Threshold_VolumeFraction : Volume Fraction Threshold ( 0.0 - 1.0)
-//
-// Return      :  "true"  if sum | cell > Threshold_QP | / NCell > Theshold_VolumeFraction
-//                "false" otherwise
-//-------------------------------------------------------------------------------------------------------
-bool ELBDM_Flag_VolumeFracQP( const real Cond[], const double Threshold_QP, const double Threshold_VolumeFraction )
-{
-   const float NTotal = PS1 * PS1 * PS1;
-   float NExceedThreshold = 0;
-
-   for (int Idx = 0; Idx < NTotal; ++Idx)
-         if ( Cond[Idx] > Threshold_QP ) ++NExceedThreshold;
-
-   float ratio =  NExceedThreshold / NTotal;
-
-   return ratio > Threshold_VolumeFraction;
-
-} // FUNCTION : Check_VolumeFracQP
