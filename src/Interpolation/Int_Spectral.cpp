@@ -148,9 +148,9 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 //
    if ( UnwrapPhase )
    {
-      DensInput  = new real [ InputDisp  ];
+      //DensInput  = new real [ InputDisp  ];
    //   PhasInput  = new real [ InputDisp  ];
-      DensOutput = new real [ OutputDisp ];
+      //DensOutput = new real [ OutputDisp ];
    //   PhasOutput = new real [ OutputDisp ];
    }
 #  endif
@@ -198,11 +198,11 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
             for (int i = 1;  i < InSize[XYZ];  i++) Imag[i] = ELBDM_UnwrapPhase( Imag[i-1], Imag[i] );
 
 //          store density
-            for (int i = 0;  i < InSize[XYZ];  i++)
-            {
-               DensInput[i] = Real[i];
-            //   PhasInput[i] = Imag[i];
-            }
+            //for (int i = 0;  i < InSize[XYZ];  i++)
+            //{
+            //   DensInput[i] = Real[i];
+            ////   PhasInput[i] = Imag[i];
+            //}
 //
             //for (int i = 1;  i < InSize[XYZ] - 1;  i++)
             //{
@@ -239,7 +239,7 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 #        if ( MODEL == ELBDM )
          if ( UnwrapPhase && !UsePhaseInt )
          {
-            INTERPOLATION_HANDLER.InterpolateReal(DensInput, DensOutput, InSize[XYZ], CGhost, Workspace, Monotonic[0], MonoCoeff, OppSign0thOrder);
+            //INTERPOLATION_HANDLER.InterpolateReal(DensInput, DensOutput, InSize[XYZ], CGhost, Workspace, Monotonic[0], MonoCoeff, OppSign0thOrder);
             //INTERPOLATION_HANDLER.InterpolateReal(PhasInput, PhasOutput, InSize[XYZ], CGhost, Workspace, Monotonic[0], MonoCoeff, OppSign0thOrder);
 
             real* Re = Output  + 0 * OutputDisp;
@@ -249,24 +249,26 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 
             for (int i = 0;  i < OutSize[XYZ];  i++) {
 
-               real Rescale;
+               //real Rescale;
 
                const real RhoWrong   = SQR(Im[i]) + SQR(Re[i]);
                const real PhaseWrong = SATAN2(Im[i], Re[i]) * WavelengthMagnifier;
-               const real ReWrong    = SQRT(RhoWrong) * COS(PhaseWrong);
-               const real ImWrong    = SQRT(RhoWrong) * SIN(PhaseWrong);
-               const real RhoCorrect = DensOutput[i];
-
-//             be careful about the negative density introduced from the round-off errors
-               if ( RhoCorrect <= (real)0.0 )
-                  Rescale = (real) 1.0;
-               else
-                  Rescale = SQRT( RhoCorrect/RhoWrong );
-
-               const real ReCorrect = ReWrong * Rescale;
-               const real ImCorrect = ImWrong * Rescale;
-               Re[i] = SQR(ReCorrect) + SQR(ImCorrect);
-               Im[i] = SATAN2(ImCorrect, ReCorrect);
+               //const real ReWrong    = SQRT(RhoWrong) * COS(PhaseWrong);
+               //const real ImWrong    = SQRT(RhoWrong) * SIN(PhaseWrong);
+               //const real RhoCorrect = DensOutput[i];
+//
+//             //be careful about the negative density introduced from the round-off errors
+               //if ( RhoCorrect <= (real)0.0 )
+               //   Rescale = (real) 0.0;
+               //else
+               //   Rescale = SQRT( RhoCorrect/RhoWrong );
+//
+               //const real ReCorrect = ReWrong * Rescale;
+               //const real ImCorrect = ImWrong * Rescale;
+               //Re[i] = SQR(ReCorrect) + SQR(ImCorrect);
+               //Im[i] = SATAN2(ImCorrect, ReCorrect);
+               Re[i] = RhoWrong;
+               Im[i] = PhaseWrong;
             }
 
             if ( XYZ == 2)
@@ -832,7 +834,7 @@ void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostB
 //       for small N <= 32 pick precomputed interpolation with cost of N^2
          if ( nInput <= 15 ) {
                contexts.emplace(nInput, new CQuarticInterpolationContext(nInput, nGhostBoundary));
-               //contexts.emplace(nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary));
+               contexts.emplace(nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary));
 //       for large N >  32 use Gram-Fourier extension scheme with cost of N log(N)
          } else {
                //size_t nExtension = 32, nDelta = 14;
