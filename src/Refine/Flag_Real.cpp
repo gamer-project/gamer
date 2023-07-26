@@ -196,7 +196,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       real *Lohner_Ave                   = NULL;   // array storing the averages of Lohner_Var for Lohner
       real *Lohner_Slope                 = NULL;   // array storing the slopes of Lohner_Var for Lohner
       real *Interf_Var                   = NULL;   // array storing the density and phase for the interference criterion
-      real *Interf_Temp                  = NULL;   // array storing the square root of the density and the ratios of subsequent gradients for the interference criterion
+      real *Interf_Temp                  = NULL;   // array storing the square root of the density and the phase for the interference criterion
       real *Interf_Cond                  = NULL;   // array storing the quantum pressure, phase curvature and phase discrete differences for the interference criterion
       real *Spectral_Var                 = NULL;   // array storing a patch group of real and density part for spectral criterion
       real  Spectral_Cond                = 0.0;    // variable storing the ratio of physical and extension masses

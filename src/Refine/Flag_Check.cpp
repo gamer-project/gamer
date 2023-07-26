@@ -17,25 +17,25 @@ extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int l
 //                2. For OPT__FLAG_USER, the function pointer "Flag_User_Ptr" must be set by a
 //                   test problem initializer
 //
-// Parameter   :  lv           : Target refinement level
-//                PID          : Target patch ID
-//                i,j,k        : Indices of the target cell
-//                dv           : Cell volume at the target level
-//                Fluid        : Input fluid array (with NCOMP_TOTAL components)
-//                Pot          : Input potential array
-//                MagCC        : Input cell-centered B field array
-//                Vel          : Input velocity array
-//                Pres         : Input pressure array
-//                Lohner_Ave   : Input array storing the averages for the Lohner error estimator
-//                Lohner_Slope : Input array storing the slopes for the Lohner error estimator
-//                Lohner_NVar  : Number of variables stored in Lohner_Ave and Lohner_Slope
-//                ParCount     : Input array storing the number of particles on each cell
-//                               (note that it has the **real** type)
-//                ParDens      : Input array storing the particle mass density on each cell
-//                JeansCoeff   : Pi*GAMMA/(SafetyFactor^2*G), where SafetyFactor = FlagTable_Jeans[lv]
-//                               --> Flag if dh^2 > JeansCoeff*Pres/Dens^2
-//                Phase_Slope  : Input array storing the slope of the phase field to determine whether the dB wavelength is resolved
-//                Interf_Cond  : Input array storing the dimensionless quantum pressures for the interference condition
+// Parameter   :  lv            : Target refinement level
+//                PID           : Target patch ID
+//                i,j,k         : Indices of the target cell
+//                dv            : Cell volume at the target level
+//                Fluid         : Input fluid array (with NCOMP_TOTAL components)
+//                Pot           : Input potential array
+//                MagCC         : Input cell-centered B field array
+//                Vel           : Input velocity array
+//                Pres          : Input pressure array
+//                Lohner_Ave    : Input array storing the averages for the Lohner error estimator
+//                Lohner_Slope  : Input array storing the slopes for the Lohner error estimator
+//                Lohner_NVar   : Number of variables stored in Lohner_Ave and Lohner_Slope
+//                ParCount      : Input array storing the number of particles on each cell
+//                                (note that it has the **real** type)
+//                ParDens       : Input array storing the particle mass density on each cell
+//                JeansCoeff    : Pi*GAMMA/(SafetyFactor^2*G), where SafetyFactor = FlagTable_Jeans[lv]
+//                                --> Flag if dh^2 > JeansCoeff*Pres/Dens^2
+//                Interf_Cond   : Input array storing the dimensionless quantum pressure, the phase curvature and the phase difference for the interference condition
+//                Spectral_Cond : Input array storing the normalised mass rations between the extension mass and the physical mass
 //
 // Return      :  "true"  if any  of the refinement criteria is satisfied
 //                "false" if none of the refinement criteria is satisfied
@@ -61,6 +61,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 
 // check ELBDM interference
+// must be performed before any other checks in order to set switch_to_wave_flag correctly
 // if FlagTable_Interference[lv][2] > 0 we set use wave flag if interference > FlagTable_Interference[lv][0],[1]
 // if FlagTable_Interference[lv][2] < 0 we just use it as refinement criterion for fluid patches
 // ===========================================================================================
