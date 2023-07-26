@@ -541,7 +541,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #                          endif
 
 //                         note that we can have SibPID <= SIB_OFFSET_NONPERIODIC when OPT__NO_FLAG_NEAR_BOUNDARY == false
-                           if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->switch_to_wave_flag = true;
+                           if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
+
+#                          if ( ELBDM_SCHEME == ELBDM_HYBRID )
+                           if ( amr->patch[0][lv][PID]->switch_to_wave_flag && SibPID >= 0 )
+                              amr->patch[0][lv][SibPID]->switch_to_wave_flag = true;
+#                          endif
                         }
                      }
 

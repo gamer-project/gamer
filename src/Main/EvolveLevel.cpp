@@ -736,7 +736,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                int FaLv    = lv;
                int FaFluSg = amr->FluSg[FaLv];
 //             if available, use the phase information from the previous time step (1 - amr->FluSg[FaLv]) for this purpose
-               if ( amr->FluSgTime[ FaLv ] [ 1 - FaFluSg ] >= 0 ) {
+               if ( amr->FluSgTime[FaLv] [1-FaFluSg] >= 0.0 ) {
                   FaFluSg = 1 - FaFluSg;
                }
                TIMING_FUNC(   Buf_GetBufferData( FaLv, FaFluSg, NULL_INT, NULL_INT, DATA_GENERAL,

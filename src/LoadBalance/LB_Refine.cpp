@@ -214,7 +214,7 @@ void LB_Refine( const int FaLv )
                for ( int FluSg = 0; FluSg < 2; ++FluSg )
                {
 //                check fluid != NULL for buffer patches
-                  if ( amr->patch[FluSg][lv][PID]->fluid != NULL && amr->FluSgTime[lv][FluSg] >= 0 )
+                  if ( amr->patch[FluSg][lv][PID]->fluid != NULL && amr->FluSgTime[lv][FluSg] >= 0.0 )
                   {
                      const real Amp   = SQRT(amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i]);
                      const real Phase = amr->patch[FluSg][lv][PID]->fluid[PHAS][k][j][i];
