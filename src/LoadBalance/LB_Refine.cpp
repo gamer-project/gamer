@@ -102,10 +102,10 @@ void LB_Refine( const int FaLv )
 
 # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 // sync information whether refined levels are switched to wave scheme
-   int Send = SwitchFinerLevelsToWaveScheme;
-   int Recv;
+   bool Send = SwitchFinerLevelsToWaveScheme;
+   bool Recv;
 
-   MPI_Allreduce(&Send, &Recv, 1, MPI_INT, MPI_LOR, MPI_COMM_WORLD);
+   MPI_Allreduce(&Send, &Recv, 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD);
 
    SwitchFinerLevelsToWaveScheme = Recv;
 # endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )

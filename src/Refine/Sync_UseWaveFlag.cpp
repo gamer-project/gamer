@@ -18,10 +18,10 @@ void Sync_UseWaveFlag( const int lv )
    if ( lv < 0  ||  lv > TOP_LEVEL )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "lv", lv );
 
-    int recv;
-    int send = amr->use_wave_flag[lv];
+    bool recv;
+    bool send = amr->use_wave_flag[lv];
 
-    MPI_Allreduce(&send, &recv, 1, MPI_INT, MPI_LOR, MPI_COMM_WORLD);
+    MPI_Allreduce(&send, &recv, 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD);
 
     amr->use_wave_flag[lv] = recv;
 } // FUNCTION : Sync_UseWaveFlag
