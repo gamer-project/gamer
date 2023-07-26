@@ -46,7 +46,7 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 //                CFB_SibLBIdx_Away : Load-balance indices of the siblings of away patches
 //
 //                Hybrid-scheme-only parameters (call-by-reference)
-//                SwitchFinerLevelsToWaveScheme : Convert levels below level "FaLv"´ to wave scheme
+//                SwitchFinerLevelsToWaveScheme : Convert levels above level "FaLv"´ to wave scheme
 //
 // Return      :  NNew_Home, NewPID_Home, NNew_Away, NewCr1D_Away, NewCr1D_Away_IdxTable, NewCData_Away,
 //                NDel_Home, DelPID_Home, NDel_Away, DelCr1D_Away, RefineF2S_Send_NPatchTotal, RefineF2S_Send_PIDList,
@@ -163,7 +163,7 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 #        endif // #ifdef MHD
 
 #        if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-         if ( !amr->use_wave_flag[ SonLv ] && !amr->use_wave_flag[ FaLv ] && TP->use_wave_flag ) {
+         if ( !amr->use_wave_flag[ SonLv ] && !amr->use_wave_flag[ FaLv ] && TP->switch_to_wave_flag ) {
             SwitchFinerLevelsToWaveScheme = true;
          }
 #        endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
