@@ -97,7 +97,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const int  NoRefineBoundaryRegion  = ( OPT__NO_FLAG_NEAR_BOUNDARY ) ? PS1*( 1<<(NLEVEL-lv) )*( (1<<lv)-1 ) : NULL_INT;
 
 
-// set the variables for the Lohner's error estimator and interference critrion
+// set the variables for the Lohner's error estimator and interference criterion
    int  Lohner_NVar=0, Lohner_Stride=0;
    long Lohner_TVar=0;
    int  Interf_NVar=0, Interf_Stride=0;

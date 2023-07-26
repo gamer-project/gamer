@@ -88,9 +88,20 @@ const static flag_spectral_float  Flag_Spectral_Pr[FLAG_SPECTRAL_ORDER][FLAG_SPE
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flag_Spectral_Prepare_for_Spectral_Criterion
 // Description :  Evaluate ratio of mass of wave function in patch group and mass of wave function in extension domain
+//                The logic behind this comparison is as follows:
+//                The Gram-Fourier extension is computed by expanding the wave function at the patch boundaries in terms of orthogonal polynomials.
+//                The extension is then computed via the weighted sum of periodic extensions of these polynomials.
+//                The coefficients of the boundary polynomials can be shown to decay exponentially for a well-resolved function.
+//                If the function is not well-resolved the polynomials decay more slowly.
+//                As a result, the higher-order polynomials will have a higher weight.
+//                The higher-order polynomials also have much more massive extensions  ( empirically mass roughly 10^(polynomial order) ).
+//                Therefore, a less well-resolved function will have a extension with a higher mass.
+//                As a consequence, the extension mass can be used to estimate the resolution of the wave function in the physical domain.
 //
 // Note        :  1. This function is called once per patch group
-//                4. The size of the arrays Var1D must be FLU_NXT^3
+//                2. The size of the array Var1D must be FLU_NXT^3
+//                3. Assume a ghost size of FLU_GHOST_SIZE in order to match the GramFE extension algorithm
+//                   This is required in order to compute the same extensions that are also computed in the GramFE wave solver
 //
 // Parameter   :  Var1D     : Array storing the input re & im
 //                Cond      : Reference to floating point variable where mass ratio is stored
@@ -99,6 +110,8 @@ const static flag_spectral_float  Flag_Spectral_Pr[FLAG_SPECTRAL_ORDER][FLAG_SPE
 //-------------------------------------------------------------------------------------------------------
 void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond1D)
 {
+// set the stride to a small value to sample the wave function evenly
+// 1, 2, 4 should all work, but higher values are faster
    const size_t Stride = 4;
 
    const real* Re1D = Var1D;
@@ -168,7 +181,15 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond1D)
       }
    } // XYZ, k,j
 
-   Cond1D = ExtensionMass / (PhysicalMass + 1e-4);
+// compute mass ratio
+// add to safeguard against vanishing physical mass
+// should not trigger refinement for vanishing physical mass and therefore be much bigger than the typical refinement thresholds
+   const real Eps = 1e-4;
+// divide by a typical mass ratio at which one might want to refine in order to make
+// values in Input__Flag_Spectral look more reasonable
+   const real Normalise = 1.0e18;
+
+   Cond1D = (ExtensionMass / (PhysicalMass + Eps )) / (Normalise);
 
 } // FUNCTION : Flag_Spectral_Prepare_for_Spectral_Criterion
 

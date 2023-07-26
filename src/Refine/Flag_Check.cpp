@@ -67,7 +67,6 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #  if ( MODEL == ELBDM )
    if ( OPT__FLAG_INTERFERENCE )
    {
-      real (*Var)  [PS1 ][PS1 ][PS1 ] = ( real(*) [PS1 ][PS1 ][PS1 ] )  Interf_Cond;
       bool FlagIntQP = false, FlagIntPhaseDiscont = false, dBWavelengthNotResolved = false;
 
       if ( FlagTable_Interference[lv][1] > 0 )
@@ -101,7 +100,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 //    set use_wave_flag if fourth column in FlagTable_Interference enables switching from fluid to wave solver
       if ( Flag &&  FlagTable_Interference[lv][3] >= 0.0 )
       {
-         amr->patch[0][lv][PID]->use_wave_flag =  true;
+         amr->patch[0][lv][PID]->switch_to_wave_flag =  true;
       }
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
