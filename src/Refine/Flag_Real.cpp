@@ -4,7 +4,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID );
 void Prepare_for_Lohner( const OptLohnerForm_t Form, const real *Var1D, real *Ave1D, real *Slope1D, const int NVar );
 
 #if ( MODEL == ELBDM )
-void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *Cond1D, bool UseWaveFlag);
+void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *Cond1D, const bool UseWaveFlag);
 void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond1D);
 #endif // #if ( MODEL == ELBDM )
 
@@ -543,7 +543,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #                          if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //                         use_wave_flag should be consistent with the flag buffer
 //                         separate treatment of use_wave_flag since it is set in FlagCheck()
-                           if ( amr->patch[0][lv][PID]->use_wave_flag && SibPID >= 0 )
+                           if ( amr->patch[0][lv][PID]->switch_to_wave_flag && SibPID >= 0 )
                               amr->patch[0][lv][SibPID]->use_wave_flag = true;
 #                          endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
                         }
@@ -675,7 +675,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 #           if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //          enforce proper-nesting constraint for use_wave_flag
-            amr->patch[0][lv][PID]->use_wave_flag = false;
+            amr->patch[0][lv][PID]->switch_to_wave_flag = false;
 #           endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
             break;
@@ -696,7 +696,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                amr->patch[0][lv][PID]->flag = false;
 
 #              if ( ELBDM_SCHEME == ELBDM_HYBRID )
-               amr->patch[0][lv][PID]->use_wave_flag = false;
+               amr->patch[0][lv][PID]->switch_to_wave_flag = false;
 #              endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
                break;
