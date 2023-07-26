@@ -414,7 +414,7 @@ def load_arguments():
     parser.add_argument( "--hybrid_scheme", type=str, metavar="TYPE", gamer_name="HYBRID_SCHEME",
                          default="HYBRID_MUSCL", choices=["HYBRID_UPWIND", "HYBRID_FROMM", "HYBRID_MUSCL"],
                          depend={"model":"ELBDM", "elbdm_scheme": "ELBDM_HYBRID"},
-                         help="Fluid scheme for <--elbdm_scheme=ELBDM_HYBRID> (HYBRID_UPWIND: first-order, diffusive, HYBRID_FROMM: second-order, no limiter, unstable for fluid-only simulations, HYBRID_MUSCL: second-order, with limiter).\n"
+                         help="Fluid scheme for <--elbdm_scheme=ELBDM_HYBRID> (HYBRID_UPWIND: first-order, diffusive, HYBRID_FROMM: second-order, no limiter, unstable for fluid-only simulations, HYBRID_MUSCL: second-order, with limiter, useful for zoom-in and fluid-only simulations).\n"
                        )
 
     parser.add_argument( "--self_interaction", type=str2bool, metavar="BOOLEAN", gamer_name="QUARTIC_SELF_INTERACTION",

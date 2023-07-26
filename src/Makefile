@@ -133,7 +133,10 @@ endif # WAVE_SCHEME
 ifeq "$(filter -DELBDM_SCHEME=ELBDM_HYBRID, $(SIMU_OPTION))" "-DELBDM_SCHEME=ELBDM_HYBRID"
 
 # choose fluid scheme HYBRID_SCHEME = [HYBRID_UPWIND, HYBRID_FROMM, HYBRID_MUSCL]
-# default is HYBRID_MUSCL, HYBRID_FROMM fails for fluid-only simulations but may be the better choice for hybrid simulations
+# default is HYBRID_MUSCL
+# HYBRID_FROMM is a second-order scheme without limiter that fails for fluid-only simulations but may be the better choice for hybrid simulations
+# HYBRID_MUSCL is a second-order scheme with limiter and is required in order for the regions that we do not zoom into to be stable.
+# HYBRID_UPWIND is a diffusive first-order scheme that can be used to debug instabilities
 # --> must be set when ELBDM_SCHEME=ELBDM_HYBRID
 SIMU_OPTION += -DHYBRID_SCHEME=HYBRID_MUSCL
 
