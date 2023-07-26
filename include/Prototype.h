@@ -572,8 +572,6 @@ bool   ELBDM_Flag_EngyDensity( const int i, const int j, const int k, const real
 bool   ELBDM_Flag_Interference( const int i, const int j, const int k, const real Cond_Array[], const double Threshold);
 real   ELBDM_UnwrapPhase( const real Phase_Ref, const real Phase_Wrapped );
 int    ELBDM_UnwrapWindingNumber( const real Phase_Ref, const real Phase_Wrapped );
-bool   ELBDM_DetectVortex( const int i, const int j, const int k, const int i_size, const int j_size, const int k_size, const real Real_Array[],
-                               const double Threshold );
 real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 void   ELBDM_RemoveMotionCM();
 #ifdef SUPPORT_FFTW
