@@ -24,7 +24,6 @@
 // ** GRAMFE_ORDER  = 14                                                                                   **
 // **********************************************************************************************************
 
-Do not compile me before this is fixed
 
 # if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
