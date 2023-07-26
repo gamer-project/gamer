@@ -65,8 +65,7 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
    for (int k=0; k<NCell; k++)    {
    for (int j=0; j<NCell; j++)    {
    for (int i=0; i<NCell; i++)    {
-//    compute square root of density field
-      Temp[0][k][j][i] = Var[0][k][j][i];
+      Temp[0][k][j][i] = SQRT(Var[0][k][j][i]);
 
 //    check whether to convert imaginary and real parts to the phase
       if ( UseWaveFlag ) {
@@ -100,26 +99,10 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
       if ( SChangeSignZ && DChangeSignZ )
          Cond[0][k][j][i] +=  FABS( Temp[0][kkp][jj ][ii ] - 2 * Temp[0][kk ][jj ][ii] + Temp[0][kkm][jj ][ii ] ) / Temp[0][kk][jj][ii];
 
-//    flags for wave solver
-      if (UseWaveFlag)   {
-         Cond[1][k][j][i] = 0;
-
-//    flags for fluid solver
-      } else { // if (UseWaveFlag)
-
-//       check second derivative of phase field (divided by number of dimensions for normalisation) to detect phase jumps
-         Cond[1][k][j][i] =  FABS( Temp[1][kk ][jj ][iip] + Temp[1][kk ][jj ][iim]
-                                 + Temp[1][kk ][jjp][ii ] + Temp[1][kk ][jjm][ii ]
-                                 + Temp[1][kkp][jj ][ii ] + Temp[1][kkm][jj ][ii ]
-                                 -  (real) 6.0 * Temp[1][kk][jj][ii])
-                                 / ((real) 3.0);
-
-      }  // if (UseWaveFlag) ... else
-
 //    resolve de Broglie wavelength when vortices are absent
 //    use quantum pressure combined with vortex threshold to determine whether vortex is present
       if ( Cond[0][k][j][i] < ELBDM_VORTEX_THRESHOLD ) {
-         Cond[2][k][j][i] = FMAX(FMAX(FMAX(FMAX(FMAX(
+         Cond[1][k][j][i] = FMAX(FMAX(FMAX(FMAX(FMAX(
             FABS(Temp[1][kk ][jj ][iip] - ELBDM_UnwrapPhase(Temp[1][kk ][jj ][iip], Temp[1][kk ][jj ][ii ])),
             FABS(Temp[1][kk ][jj ][ii ] - ELBDM_UnwrapPhase(Temp[1][kk ][jj ][ii ], Temp[1][kk ][jj ][iim]))),
             FABS(Temp[1][kk ][jjp][ii ] - ELBDM_UnwrapPhase(Temp[1][kk ][jjp][ii ], Temp[1][kk ][jj ][ii ]))),
@@ -129,7 +112,7 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
       } else {
 //       around the vortex, the velocity and the de Broglie wavelength diverge
 //       disable de Broglie wavelength refinement there
-         Cond[2][k][j][i] = 0;
+         Cond[1][k][j][i] = 0;
       }
    }}} // k,j,i
 } // FUNCTION : Prepare_for_Interference_Criterion
