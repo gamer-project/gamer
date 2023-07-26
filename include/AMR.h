@@ -161,8 +161,10 @@ struct AMR_t
 //       use fluid solver by default for hybrid scheme
 #        if ( ELBDM_SCHEME == ELBDM_WAVE )
          use_wave_flag[lv] = true;
-#        else if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#        elif ( ELBDM_SCHEME == ELBDM_HYBRID )
          use_wave_flag[lv] = false;
+#        else
+#        error : UNKNOWN ELBDM_SCHEME !!
 #        endif // # if ELBDM_SCHEME
       }
 
