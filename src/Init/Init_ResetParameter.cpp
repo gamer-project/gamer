@@ -312,13 +312,6 @@ void Init_ResetParameter()
       PRINT_WARNING( ELBDM_TAYLOR3_AUTO, FORMAT_INT, "since OPT__FREEZE_FLUID is enabled" );
    }
 
-// reset vortex detection threshold
-   if ( ELBDM_VORTEX_THRESHOLD < 0 ) {
-      ELBDM_VORTEX_THRESHOLD = 1.00;
-
-      PRINT_WARNING( ELBDM_VORTEX_THRESHOLD, FORMAT_FLT, "" );
-   }
-
 #  endif //  #if ( MODEL == ELBDM )
 
 // interpolation schemes for the fluid variables
@@ -1078,7 +1071,7 @@ void Init_ResetParameter()
 #  endif
 
 
-// must set OPT__FFTW_STARTUP = FFTW_STARTUP_ESTIMATE for BITWISE_REPRODUCIBILITY 
+// must set OPT__FFTW_STARTUP = FFTW_STARTUP_ESTIMATE for BITWISE_REPRODUCIBILITY
 // --> even when disabling BITWISE_REPRODUCIBILITY, we still use FFTW_STARTUP_ESTIMATE
 //     by default since otherwise the FFT results can vary in each run on the level
 //     of machine precision, which can be confusing
