@@ -117,12 +117,13 @@ bool                 ELBDM_TAYLOR3_AUTO;
 double               ELBDM_TAYLOR3_COEFF;
 double               ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
 
-bool                 OPT__FLAG_INTERFERENCE;
-double               FlagTable_Interference[NLEVEL-1][4];
-
 bool                 OPT__FLAG_SPECTRAL;
 double               FlagTable_Spectral[NLEVEL-1][2];
+
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+bool                 OPT__FLAG_INTERFERENCE;
+double               FlagTable_Interference[NLEVEL-1][4];
+int                  ELBDM_FIRST_WAVE_LEVEL;
 bool                 ELBDM_MATCH_PHASE;
 double               DT__HYBRID_FLUID, DT__HYBRID_VELOCITY;
 #endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )

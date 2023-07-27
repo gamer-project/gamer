@@ -251,7 +251,7 @@ Procedure for outputting new variables:
 //                2469 : 2023/05/18 --> replace OPT__INIT_BFIELD_BYFILE by OPT__INIT_BFIELD_BYVECPOT
 //                2470 : 2023/06/24 --> output OPT__SORT_PATCH_BY_LBIDX
 //                2471 : 2023/07/17 --> output OPT__FLAG_INTERFERENCE, ELBDM_MATCH_PHASE
-//                                             ELBDM_VORTEX_THRESHOLD, OPT__LB_EXCHANGE_FATHER, FlagTable_Interference
+//                                             ELBDM_VORTEX_THRESHOLD, ELBDM_FIRST_WAVE_LEVEL, OPT__LB_EXCHANGE_FATHER, FlagTable_Interference
 //                                             DENS and PHAS for hybrid scheme,
 //                                             use_wave_flag[lv] for AMR structure
 //-------------------------------------------------------------------------------------------------------
@@ -2195,8 +2195,10 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  endif
 #  if ( MODEL == ELBDM )
    InputPara.Opt__Flag_EngyDensity   = OPT__FLAG_ENGY_DENSITY;
-   InputPara.Opt__Flag_Interference  = OPT__FLAG_INTERFERENCE;
    InputPara.Opt__Flag_Spectral      = OPT__FLAG_SPECTRAL;
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   InputPara.Opt__Flag_Interference  = OPT__FLAG_INTERFERENCE;
+#  endif ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
    InputPara.Opt__Flag_LohnerDens    = OPT__FLAG_LOHNER_DENS;
 #  if ( MODEL == HYDRO )
@@ -2264,6 +2266,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.ELBDM_RemoveMotionCM    = ELBDM_REMOVE_MOTION_CM;
    InputPara.ELBDM_BaseSpectral      = ELBDM_BASE_SPECTRAL;
    InputPara.ELBDM_VortexThreshold   = ELBDM_VORTEX_THRESHOLD;
+   InputPara.ELBDM_FirstWaveLevel    = ELBDM_FIRST_WAVE_LEVEL;
 #  endif // ELBDM
 
 // fluid solvers in different models
@@ -2566,14 +2569,16 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 
 #     elif ( MODEL == ELBDM )
       for (int t=0; t<2; t++) {
-      InputPara.FlagTable_EngyDensity [lv][t] = FlagTable_EngyDensity [lv][t];
-      }
-      for (int t=0; t<4; t++) {
-      InputPara.FlagTable_Interference [lv][t] = FlagTable_Interference [lv][t];
+      InputPara.FlagTable_EngyDensity [lv][t] = FlagTable_EngyDensity  [lv][t];
       }
       for (int t=0; t<2; t++) {
-      InputPara.FlagTable_Spectral    [lv][t] = FlagTable_Spectral [lv][t];
+      InputPara.FlagTable_Spectral    [lv][t] = FlagTable_Spectral     [lv][t];
       }
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      for (int t=0; t<4; t++) {
+      InputPara.FlagTable_Interference[lv][t] = FlagTable_Interference [lv][t];
+      }
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #     endif // ... # elif ( MODEL == ELBDM )
 
 #     ifdef PARTICLE
@@ -3196,6 +3201,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "ELBDM_RemoveMotionCM",    HOFFSET(InputPara_t,ELBDM_RemoveMotionCM   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "ELBDM_BaseSpectral",      HOFFSET(InputPara_t,ELBDM_BaseSpectral     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "ELBDM_VortexThreshold",   HOFFSET(InputPara_t,ELBDM_VortexThreshold  ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "ELBDM_FirstWaveLevel",    HOFFSET(InputPara_t,ELBDM_FirstWaveLevel   ), H5T_NATIVE_INT     );
 #  endif // ELBDM
 
 // fluid solvers in different models
@@ -3483,8 +3489,10 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  endif
 #  elif ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "FlagTable_EngyDensity",  HOFFSET(InputPara_t,FlagTable_EngyDensity   ), H5_TypeID_Arr_NLvM1_2Double );
-   H5Tinsert( H5_TypeID, "FlagTable_Interference", HOFFSET(InputPara_t,FlagTable_Interference  ), H5_TypeID_Arr_NLvM1_4Double );
    H5Tinsert( H5_TypeID, "FlagTable_Spectral",     HOFFSET(InputPara_t,FlagTable_Spectral      ), H5_TypeID_Arr_NLvM1_2Double );
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   H5Tinsert( H5_TypeID, "FlagTable_Interference", HOFFSET(InputPara_t,FlagTable_Interference  ), H5_TypeID_Arr_NLvM1_4Double );
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "FlagTable_NParPatch",    HOFFSET(InputPara_t,FlagTable_NParPatch     ), H5_TypeID_Arr_NLvM1Int      );

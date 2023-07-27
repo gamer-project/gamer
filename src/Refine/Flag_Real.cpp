@@ -49,7 +49,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const bool IntPhase_No             = false;                 // for invoking Prepare_PatchData()
    const bool DE_Consistency_No       = false;                 // for invoking Prepare_PatchData()
    const int  NPG                     = 1;                     // for invoking Prepare_PatchData()
-   //Lohner criterion
+// Lohner criterion
    const int  Lohner_NGhost           = 2;                     // number of ghost cells for the Lohner error estimator
    const int  Lohner_NCell            = PS1 + 2*Lohner_NGhost; // size of the variable array for Lohner
    const int  Lohner_NAve             = Lohner_NCell - 2;      // size of the average array for Lohner
@@ -57,16 +57,19 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const IntScheme_t Lohner_IntScheme = INT_MINMOD1D;          // interpolation scheme for Lohner
 
 #  if ( MODEL == ELBDM )
-   //Interference criterion
+
+// Interference criterion
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    const int  Interf_NGhost             = 1;                     // number of ghost cells for the interference criterion
    const int  Interf_NCell              = PS1 + 2*Interf_NGhost; // size of the variable array for interference criterion
    const int  Interf_NCond              = PS1;                   // size of the array for interference criterion
    const IntScheme_t Interf_IntScheme   = INT_CQUAD;             // interpolation scheme for interference criterion
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
-   //Spectral refinement criterion
-   const int  Spectral_NGhost           = FLU_GHOST_SIZE;      // number of ghost cells
-   const int  Spectral_NCell            = FLU_NXT;             // prepare patch group
-   const IntScheme_t Spectral_IntScheme = INT_CQUAD;           // interpolation scheme
+// Spectral refinement criterion
+   const int  Spectral_NGhost           = FLU_GHOST_SIZE;        // number of ghost cells
+   const int  Spectral_NCell            = FLU_NXT;               // prepare patch group
+   const IntScheme_t Spectral_IntScheme = INT_CQUAD;             // interpolation scheme
 #  endif // # if ( MODEL == ELBDM )
 
 #  if ( MODEL == HYDRO  &&  defined GRAVITY )
@@ -129,21 +132,19 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
    }
 
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( OPT__FLAG_INTERFERENCE )
    {
-#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( !amr->use_wave_flag[lv] ) {
-#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-         Interf_NVar = 0;
-         Interf_TVar = 0;
-#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      } else {
          Interf_NVar = 2;
          Interf_TVar = _DENS | _PHAS;
+      } else {
+         Interf_NVar = 0;
+         Interf_TVar = 0;
       }
-#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
       Interf_Stride = Interf_NVar*Interf_NCell*Interf_NCell*Interf_NCell; // stride of array for one interference criterion patch
    }
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
    if ( OPT__FLAG_SPECTRAL )
@@ -221,9 +222,11 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #     endif
 
 #     if ( MODEL == ELBDM )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( Interf_NVar > 0 ) {
          Interf_Var       = new real [ 8 * Interf_NVar * Interf_NCell * Interf_NCell * Interf_NCell ];    // 8: number of local patches
       }
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( Spectral_NVar > 0 ) {
          Spectral_Var     = new real [ Spectral_NVar * Spectral_NCell * Spectral_NCell * Spectral_NCell ]; // prepare one patch group
       }
@@ -250,10 +253,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 //       prepare the ghost-zone data for interference criterion
 #     if ( MODEL == ELBDM )
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
          if ( Interf_NVar > 0 )
             Prepare_PatchData( lv, Time[lv], Interf_Var, NULL, Interf_NGhost, NPG, &PID0, Interf_TVar, _NONE,
                                Interf_IntScheme, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
+#        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
          if ( Spectral_NVar > 0 )
             Prepare_PatchData( lv, Time[lv], Spectral_Var, NULL, Spectral_NGhost, NPG, &PID0, Spectral_TVar, _NONE,

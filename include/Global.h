@@ -125,9 +125,9 @@ extern double           ELBDM_TAYLOR3_COEFF, ELBDM_MASS, ELBDM_PLANCK_CONST, ELB
 #ifdef QUARTIC_SELF_INTERACTION
 extern double           ELBDM_LAMBDA;
 #endif
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
 extern bool             OPT__FLAG_INTERFERENCE;
 extern double           FlagTable_Interference[NLEVEL-1][4];
-#if ( ELBDM_SCHEME == ELBDM_HYBRID )
 extern double           DT__HYBRID_FLUID, DT__HYBRID_VELOCITY;
 extern bool             ELBDM_MATCH_PHASE;
 extern int              ELBDM_FIRST_WAVE_LEVEL;

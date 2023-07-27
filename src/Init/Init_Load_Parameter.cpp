@@ -162,8 +162,10 @@ void Init_Load_Parameter()
 #  endif
 #  if ( MODEL == ELBDM )
    ReadPara->Add( "OPT__FLAG_ENGY_DENSITY",     &OPT__FLAG_ENGY_DENSITY,          false,           Useless_bool,  Useless_bool   );
-   ReadPara->Add( "OPT__FLAG_INTERFERENCE",     &OPT__FLAG_INTERFERENCE,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_SPECTRAL",         &OPT__FLAG_SPECTRAL,              false,           Useless_bool,  Useless_bool   );
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   ReadPara->Add( "OPT__FLAG_INTERFERENCE",     &OPT__FLAG_INTERFERENCE,          false,           Useless_bool,  Useless_bool   );
+#  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
    ReadPara->Add( "OPT__FLAG_LOHNER_FORM",      &OPT__FLAG_LOHNER_FORM,           LOHNER_FLASH2,   1,             4              );
    ReadPara->Add( "OPT__FLAG_USER",             &OPT__FLAG_USER,                  false,           Useless_bool,  Useless_bool   );
@@ -191,11 +193,11 @@ void Init_Load_Parameter()
 #  endif
    ReadPara->Add( "OPT__RECORD_LOAD_BALANCE",   &OPT__RECORD_LOAD_BALANCE,        true,            Useless_bool,  Useless_bool   );
 // exchange father pathes for hybrid scheme with MPI
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    ReadPara->Add( "OPT__LB_EXCHANGE_FATHER",    &OPT__LB_EXCHANGE_FATHER,         true,            Useless_bool,  Useless_bool   );
-#  else // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  else // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
    ReadPara->Add( "OPT__LB_EXCHANGE_FATHER",    &OPT__LB_EXCHANGE_FATHER,         false,           Useless_bool,  Useless_bool   );
-#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID ) ... # else
+#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID ) ... # else
 #  endif // #  ifdef LOAD_BALANCE
    ReadPara->Add( "OPT__MINIMIZE_MPI_BARRIER",  &OPT__MINIMIZE_MPI_BARRIER,       false,           Useless_bool,  Useless_bool   );
 

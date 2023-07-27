@@ -964,9 +964,11 @@ void Aux_TakeNote()
 #     endif
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__FLAG_ENGY_DENSITY          %d\n",      OPT__FLAG_ENGY_DENSITY    );
-      fprintf( Note, "OPT__FLAG_INTERFERENCE          %d\n",      OPT__FLAG_INTERFERENCE    );
       fprintf( Note, "OPT__FLAG_SPECTRAL              %d\n",      OPT__FLAG_SPECTRAL        );
-#     endif
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      fprintf( Note, "OPT__FLAG_INTERFERENCE          %d\n",      OPT__FLAG_INTERFERENCE    );
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#     endif // # if ( MODEL == ELBDM )
       fprintf( Note, "OPT__FLAG_LOHNER_DENS           %d\n",      OPT__FLAG_LOHNER_DENS     );
 #     if ( MODEL == HYDRO )
       fprintf( Note, "OPT__FLAG_LOHNER_ENGY           %d\n",      OPT__FLAG_LOHNER_ENGY     );
@@ -1644,17 +1646,6 @@ void Aux_TakeNote()
          fprintf( Note, "\n\n");
       }
 
-      if ( OPT__FLAG_INTERFERENCE )
-      {
-         fprintf( Note, "Flag Criterion (Interference Threshold)\n" );
-         fprintf( Note, "***********************************************************************************\n" );
-         fprintf( Note, "  Level     QP          Density      PhaseJump    Switch2Wave\n" );
-         for (int lv=0; lv<MAX_LEVEL; lv++)
-            fprintf( Note, "%7d   %10.2e  %10.2e   %10.2e     %+d\n", lv, FlagTable_Interference[lv][0], FlagTable_Interference[lv][1], FlagTable_Interference[lv][2], (int) FlagTable_Interference[lv][3] );
-         fprintf( Note, "***********************************************************************************\n" );
-         fprintf( Note, "\n\n");
-      }
-
       if ( OPT__FLAG_SPECTRAL )
       {
          fprintf( Note, "Flag Criterion (Spectral)\n" );
@@ -1665,6 +1656,19 @@ void Aux_TakeNote()
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }
+
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      if ( OPT__FLAG_INTERFERENCE )
+      {
+         fprintf( Note, "Flag Criterion (Interference Threshold)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level     QP          Density      LapPhase    OnlyAtMaximum\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)
+            fprintf( Note, "%7d   %10.2e  %10.2e   %10.2e     %d\n", lv, FlagTable_Interference[lv][0], FlagTable_Interference[lv][1], FlagTable_Interference[lv][2], (int) (FlagTable_Interference[lv][3] > 0.5));
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #     endif
 

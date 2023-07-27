@@ -373,8 +373,11 @@ void Aux_Check_Parameter()
 #  endif
 #  if ( MODEL == ELBDM )
    Flag |= OPT__FLAG_ENGY_DENSITY;
+   Flag |= OPT__FLAG_SPECTRAL;
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    Flag |= OPT__FLAG_INTERFERENCE;
-#  endif
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif // # if ( MODEL == ELBDM )
 #  ifdef PARTICLE
    Flag |= OPT__FLAG_NPAR_PATCH;
    Flag |= OPT__FLAG_NPAR_CELL;

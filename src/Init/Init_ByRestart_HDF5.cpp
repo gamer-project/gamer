@@ -2274,12 +2274,14 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
       for (int t=0; t<2; t++) {
       RS.FlagTable_EngyDensity [lv][t] = -1.0;
       }
-      for (int t=0; t<4; t++) {
-      RS.FlagTable_Interference [lv][t] = -1.0;
-      }
       for (int t=0; t<2; t++) {
       RS.FlagTable_Spectral    [lv][t] = -1.0;
       }
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      for (int t=0; t<4; t++) {
+      RS.FlagTable_Interference [lv][t] = -1.0;
+      }
+#     endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #     endif
 
 #     ifdef PARTICLE
@@ -2347,8 +2349,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
                        "FlagTable_EngyDensity", lv, t, RS.FlagTable_EngyDensity[lv][t],  RT.FlagTable_EngyDensity[lv][t] );
    }}
 
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( OPT__FLAG_INTERFERENCE ) {
-   LoadField( "FlagTable_Interference",    RS.FlagTable_Interference,   SID, TID, NonFatal,  NullPtr,                    -1, NonFatal );
+   LoadField( "FlagTable_Interference",    RS.FlagTable_Interference,   SID, TID, NonFatal,  NullPtr,                  -1, NonFatal );
 
    for (int lv=0; lv<MAX_LEVEL; lv++)
    for (int t=0; t<4; t++)
@@ -2357,7 +2360,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
          Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                        "FlagTable_Interference", lv, t, RS.FlagTable_Interference[lv][t],  RT.FlagTable_Interference[lv][t] );
    }}
-
+#  endif // ( ELBDM_SCHEME == ELBDM_HYBRID )
 
    if ( OPT__FLAG_SPECTRAL ) {
    LoadField( "FlagTable_Spectral",    RS.FlagTable_Spectral,   SID, TID, NonFatal,  NullPtr,                    -1, NonFatal );

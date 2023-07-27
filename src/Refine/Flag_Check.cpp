@@ -64,7 +64,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 // ===========================================================================================
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( OPT__FLAG_INTERFERENCE )
+   if ( OPT__FLAG_INTERFERENCE && !amr->use_wave_flag[lv] )
    {
 
       Flag |=  ELBDM_Flag_Interference( i, j, k, Interf_Var, FlagTable_Interference[lv][0], FlagTable_Interference[lv][1], FlagTable_Interference[lv][2], FlagTable_Interference[lv][3] > 0.5);

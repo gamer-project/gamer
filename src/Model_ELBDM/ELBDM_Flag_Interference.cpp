@@ -21,7 +21,6 @@
 //-------------------------------------------------------------------------------------------------------
 bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real Var1D[], const double QPThreshold, const double LapPhaseThreshold, const double DensThreshold, const bool OnlyAtExtrema )
 {
-
 // check
 #  ifdef GAMER_DEBUG
    if (  i < 0  ||  i >= PS1  ||  j < 0  ||  j >= PS1  ||  k < 0  ||  k >= PS1  )

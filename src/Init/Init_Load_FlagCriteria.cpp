@@ -34,14 +34,14 @@ void Init_Load_FlagCriteria()
 #  if ( MODEL != ELBDM )
    const bool OPT__FLAG_ENGY_DENSITY  = false;
    double FlagTable_EngyDensity[NLEVEL-1][2];
-#  endif
-
-#  if (  MODEL != ELBDM )
-   const bool OPT__FLAG_INTERFERENCE  = false;
-   double FlagTable_Interference[NLEVEL-1][4];
    const bool OPT__FLAG_SPECTRAL      = false;
    double FlagTable_Spectral[NLEVEL-1][2];
-#  endif // #if ( WAVE_SCHEME == WAVE_GRAMFE )
+#  endif // # if ( MODEL != ELBDM )
+
+#  if ( ELBDM_SCHEME != ELBDM_HYBRID )
+   const bool OPT__FLAG_INTERFERENCE  = false;
+   double FlagTable_Interference[NLEVEL-1][4];
+#  endif
 
 #  ifndef PARTICLE
    const bool OPT__FLAG_NPAR_PATCH    = false;
@@ -116,15 +116,15 @@ void Init_Load_FlagCriteria()
       FlagTable_EngyDensity [lv][t] = -1.0;
       }
 
-      for (int t=0; t<4; t++) {
-      FlagTable_Interference[lv][t] = -1.0;
-      }
-
-#     if ( WAVE_SCHEME == WAVE_GRAMFE )
       for (int t=0; t<2; t++) {
       FlagTable_Spectral    [lv][t] = -1.0;
       }
-#     endif // #if ( WAVE_SCHEME == WAVE_GRAMFE )
+
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      for (int t=0; t<4; t++) {
+      FlagTable_Interference[lv][t] = -1.0;
+      }
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #     endif
 
 #     ifdef PARTICLE
