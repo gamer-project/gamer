@@ -100,6 +100,7 @@ ELBDM_REMOVE_MOTION_CM        0           # remove the motion of center-of-mass 
                                           # (0=off, 1=init, 2=every step) [0]
 ELBDM_BASE_SPECTRAL           0           # adopt the spectral method to evolve base-level wave function (must enable SUPPORT_FFTW) [0]
 ELBDM_MATCH_PHASE             0           # match child phases with father phases [1] ##HYBRID ELBDM ONLY##
+ELBDM_FIRST_WAVE_LEVEL        1           # level at which to start using the wave solver, if set to -1, an error is thrown [-1] ##HYBRID ELBDM ONLY##
 
 
 # fluid solvers in all models

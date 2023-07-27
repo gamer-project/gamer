@@ -1158,6 +1158,9 @@ void Aux_TakeNote()
       fprintf( Note, "ELBDM_REMOVE_MOTION_CM          %d\n",         ELBDM_REMOVE_MOTION_CM );
       fprintf( Note, "ELBDM_BASE_SPECTRAL             %d\n",         ELBDM_BASE_SPECTRAL    );
       fprintf( Note, "ELBDM_VORTEX_THRESHOLD          %13.7e\n",     ELBDM_VORTEX_THRESHOLD );
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      fprintf( Note, "ELBDM_FIRST_WAVE_LEVEL          %d\n",         ELBDM_FIRST_WAVE_LEVEL );
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #     else
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL

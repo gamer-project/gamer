@@ -6,16 +6,20 @@
 // Function    :  ELBDM_Flag_Interference
 // Description :  Flag according to the interference criterion
 //
-// Note        :  1. Flag the input cell if the interference criteria are met (Interference, Phase jumps and additional check whether dB wavelength is resolved)
-//                2. Size of the input array "Cond_Array" should be PATCH_SIZE^3
+// Note        :  1. Flag the input cell if all the interference criteria are met (minimum density, local extrema in phase and density fields, quantum pressure, phase curvature)
+//                2. Size of the input array "Var" should be 2*(PS1+2)^3
 //
-// Parameter   :  i,j,k       : Indices of the target cell in the arrays "Cond_Array"
-//                Threshold   : Refinement Threshold for quantum pressure
+// Parameter   :  i,j,k             : Indices of the target cell in the arrays "Cond_Array"
+//                Var               : Input array holding the density and phase field
+//                QPThreshold       : Refinement Threshold for quantum pressure
+//                DensThreshold     : Minimum density at which to check quantum pressure threshold
+//                LapPhaseThreshold : Refinement Threshold for second derivative of phase field
+//                OnlyAtExtrema     : Boolean flag indicating whether only extrema are refined
 //
 // Return      :  "true"  if the flag criterion is     fulfilled
 //                "false" if the flag criterion is NOT fulfilled
 //-------------------------------------------------------------------------------------------------------
-bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real Cond_Array[], const double Threshold)
+bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real Var1D[], const double QPThreshold, const double LapPhaseThreshold, const double DensThreshold, const bool OnlyAtExtrema )
 {
 
 // check
@@ -24,99 +28,49 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
       Aux_Error( ERROR_INFO, "incorrect index (i,j,k) = (%d,%d,%d) !!\n", i, j, k );
 #  endif
 
-   const int Idx = k*PS1*PS1 + j*PS1 + i;
-
-   return ( Cond_Array[Idx] > Threshold );
-} // FUNCTION : ELBDM_Flag_Interference
-
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Prepare_for_Interference_Criterion
-// Description :  Evaluate quantum pressure, phase jumps and whether dB wavelength will be resolved after refinement for the interference criterion
-//
-// Note        :  1. This function is called in "Flag_Real" before looping over all cells in the patch in order to
-//                   achieve higher performance
-//                2. Evaluate laplacian with second-order stencil and dB wavelength via first-order stencil
-//                3. Do not take into account the physical size of each cell since criteria are dimensionless
-//                4. The sizes of the arrays (Var1D, Temp1D, Cond1D) must be ( (PS1+2)^3, 2*(PS1+2)^3, 3*(PS1)^3 )
-//
-// Parameter   :  Var       : Array storing the input density and phase for UseWaveFlag == false and the real and imaginary parts for UseWaveFlag == true
-//                Temp      : Array to store the intermediate variable sqrt(density) and the phase
-//                Cond      : Array to store the output dimensionless quantum pressure, the curvature of the phase field as well as
-//                            the maximum phase difference between neighbouring points
-//
-// Return      :  None
-//-------------------------------------------------------------------------------------------------------
-void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *Cond1D, const bool UseWaveFlag)
-{
-
-   const int NCell  = PS1 + 2;   // size of the arrays Var, Temp
-   const int NCond  = PS1;       // size of the array  Cond
+   const int NCell  = PS1 + 2;   // size of the array Var
+   const int NCond  = PS1;       // size of the array Var without ghost zones
 
    int ii, jj, kk, iim, jjm, kkm, iip, jjp, kkp;
 
-// convert the 1D arrays
+// convert the 1D array
    real (*Var)  [NCell][NCell][NCell] = ( real(*) [NCell][NCell][NCell] )  Var1D;
-   real (*Temp) [NCell][NCell][NCell] = ( real(*) [NCell][NCell][NCell] )  Temp1D;
-   real (*Cond) [NCond][NCond][NCond] = ( real(*) [NCond][NCond][NCond] )  Cond1D;
 
-   for (int k=0; k<NCell; k++)    {
-   for (int j=0; j<NCell; j++)    {
-   for (int i=0; i<NCell; i++)    {
-      Temp[0][k][j][i] = SQRT(Var[0][k][j][i]);
+   kk = k + 1;   kkp = kk + 1;   kkm = kk - 1;
+   jj = j + 1;   jjp = jj + 1;   jjm = jj - 1;
+   ii = i + 1;   iip = ii + 1;   iim = ii - 1;
 
-//    check whether to convert imaginary and real parts to the phase
-      if ( UseWaveFlag ) {
-         Temp[1][k][j][i] = SATAN2(Var[IMAG][k][j][i], Var[REAL][k][j][i]);
-      } else {
-         Temp[1][k][j][i] = Var[1][k][j][i];
-      }
-   }}} // k,j,i
+// check minimum density
+   const bool DensCond     = Var[0][kk][jj][ii] > DensThreshold;
 
-   for (int k=0; k<NCond; k++)    {  kk = k + 1;   kkp = kk + 1;   kkm = kk - 1;
-   for (int j=0; j<NCond; j++)    {  jj = j + 1;   jjp = jj + 1;   jjm = jj - 1;
-   for (int i=0; i<NCond; i++)    {  ii = i + 1;   iip = ii + 1;   iim = ii - 1;
+   if ( !DensCond ) return false;
 
-//    compute the dimensionless quantum pressure (divided by number of dimensions for normalisation) if phase and density fields have local extrema
-      const bool DChangeSignX = ( Temp[0][kk ][jj ][iip] - Temp[0][kk][jj][ii] ) * ( Temp[0][kk][jj][ii] - Temp[0][kk ][jj ][iim] ) < 0;
-      const bool DChangeSignY = ( Temp[0][kk ][jjp][ii ] - Temp[0][kk][jj][ii] ) * ( Temp[0][kk][jj][ii] - Temp[0][kk ][jjm][ii ] ) < 0;
-      const bool DChangeSignZ = ( Temp[0][kkp][jj ][ii ] - Temp[0][kk][jj][ii] ) * ( Temp[0][kk][jj][ii] - Temp[0][kkm][jj ][ii ] ) < 0;
-      const bool SChangeSignX = ( Temp[1][kk ][jj ][iip] - Temp[1][kk][jj][ii] ) * ( Temp[1][kk][jj][ii] - Temp[1][kk ][jj ][iim] ) < 0;
-      const bool SChangeSignY = ( Temp[1][kk ][jjp][ii ] - Temp[1][kk][jj][ii] ) * ( Temp[1][kk][jj][ii] - Temp[1][kk ][jjm][ii ] ) < 0;
-      const bool SChangeSignZ = ( Temp[1][kkp][jj ][ii ] - Temp[1][kk][jj][ii] ) * ( Temp[1][kk][jj][ii] - Temp[1][kkm][jj ][ii ] ) < 0;
-      //const bool SCurvX     =  FABS( Temp[1][kk ][jj ][iip] - 2 * Temp[1][kk][jj][ii] + Temp[1][kk ][jj ][iim] );
-      //const bool SCurvY     =  FABS( Temp[1][kk ][jjp][ii ] - 2 * Temp[1][kk][jj][ii] + Temp[1][kk ][jjm][ii ] );
-      //const bool SCurvZ     =  FABS( Temp[1][kkp][jj ][ii ] - 2 * Temp[1][kk][jj][ii] + Temp[1][kkm][jj ][ii ] );
-      //const real D          =  Temp[0][kk][jj][ii];
-      Cond[0][k][j][i] =  0;
+// check whether density and phase fields have local extrema
+   const bool DChangeSignX = OnlyAtExtrema && (( Var[0][kk ][jj ][iip] - Var[0][kk][jj][ii] ) * ( Var[0][kk][jj][ii] - Var[0][kk ][jj ][iim] ) < 0.0);
+   const bool DChangeSignY = OnlyAtExtrema && (( Var[0][kk ][jjp][ii ] - Var[0][kk][jj][ii] ) * ( Var[0][kk][jj][ii] - Var[0][kk ][jjm][ii ] ) < 0.0);
+   const bool DChangeSignZ = OnlyAtExtrema && (( Var[0][kkp][jj ][ii ] - Var[0][kk][jj][ii] ) * ( Var[0][kk][jj][ii] - Var[0][kkm][jj ][ii ] ) < 0.0);
+   const bool SChangeSignX = OnlyAtExtrema && (( Var[1][kk ][jj ][iip] - Var[1][kk][jj][ii] ) * ( Var[1][kk][jj][ii] - Var[1][kk ][jj ][iim] ) < 0.0);
+   const bool SChangeSignY = OnlyAtExtrema && (( Var[1][kk ][jjp][ii ] - Var[1][kk][jj][ii] ) * ( Var[1][kk][jj][ii] - Var[1][kk ][jjm][ii ] ) < 0.0);
+   const bool SChangeSignZ = OnlyAtExtrema && (( Var[1][kkp][jj ][ii ] - Var[1][kk][jj][ii] ) * ( Var[1][kk][jj][ii] - Var[1][kkm][jj ][ii ] ) < 0.0);
 
-      if ( SChangeSignX && DChangeSignX )
-         Cond[0][k][j][i] +=  FABS( Temp[0][kk ][jj ][iip] - 2 * Temp[0][kk ][jj ][ii] + Temp[0][kk ][jj ][iim] ) / Temp[0][kk][jj][ii];
-      if ( SChangeSignY && DChangeSignY )
-         Cond[0][k][j][i] +=  FABS( Temp[0][kk ][jjp][ii ] - 2 * Temp[0][kk ][jj ][ii] + Temp[0][kk ][jjm][ii ] ) / Temp[0][kk][jj][ii];
-      if ( SChangeSignZ && DChangeSignZ )
-         Cond[0][k][j][i] +=  FABS( Temp[0][kkp][jj ][ii ] - 2 * Temp[0][kk ][jj ][ii] + Temp[0][kkm][jj ][ii ] ) / Temp[0][kk][jj][ii];
+// compute second derivative of phase field
+   const bool SCurvX       =  FABS( Var[1][kk ][jj ][iip] - 2 * Var[1][kk][jj][ii] + Var[1][kk ][jj ][iim] ) > LapPhaseThreshold;
+   const bool SCurvY       =  FABS( Var[1][kk ][jjp][ii ] - 2 * Var[1][kk][jj][ii] + Var[1][kk ][jjm][ii ] ) > LapPhaseThreshold;
+   const bool SCurvZ       =  FABS( Var[1][kkp][jj ][ii ] - 2 * Var[1][kk][jj][ii] + Var[1][kkm][jj ][ii ] ) > LapPhaseThreshold;
 
-//    resolve de Broglie wavelength when vortices are absent
-//    use quantum pressure combined with vortex threshold to determine whether vortex is present
-      if ( Cond[0][k][j][i] < ELBDM_VORTEX_THRESHOLD ) {
-         Cond[1][k][j][i] = FMAX(FMAX(FMAX(FMAX(FMAX(
-            FABS(Temp[1][kk ][jj ][iip] - ELBDM_UnwrapPhase(Temp[1][kk ][jj ][iip], Temp[1][kk ][jj ][ii ])),
-            FABS(Temp[1][kk ][jj ][ii ] - ELBDM_UnwrapPhase(Temp[1][kk ][jj ][ii ], Temp[1][kk ][jj ][iim]))),
-            FABS(Temp[1][kk ][jjp][ii ] - ELBDM_UnwrapPhase(Temp[1][kk ][jjp][ii ], Temp[1][kk ][jj ][ii ]))),
-            FABS(Temp[1][kk ][jj ][ii ] - ELBDM_UnwrapPhase(Temp[1][kk ][jj ][ii ], Temp[1][kk ][jjm][ii ]))),
-            FABS(Temp[1][kkp][jj ][ii ] - ELBDM_UnwrapPhase(Temp[1][kkp][jj ][ii ], Temp[1][kk ][jj ][ii ]))),
-            FABS(Temp[1][kk ][jj ][ii ] - ELBDM_UnwrapPhase(Temp[1][kk ][jj ][ii ], Temp[1][kkm][jj ][ii ]))) / (2 * M_PI);
-      } else {
-//       around the vortex, the velocity and the de Broglie wavelength diverge
-//       disable de Broglie wavelength refinement there
-         Cond[1][k][j][i] = 0;
-      }
-   }}} // k,j,i
-} // FUNCTION : Prepare_for_Interference_Criterion
+   real QP                 =  0;
+   const real SqrtRhoC     =  SQRT(Var[0][kk][jj][ii]);
+
+   if ( SChangeSignX && DChangeSignX && SCurvX )
+      QP +=  FABS( SQRT(Var[0][kk ][jj ][iip]) - 2 * SqrtRhoC + SQRT(Var[0][kk ][jj ][iim]) ) / SqrtRhoC;
+   if ( SChangeSignY && DChangeSignY && SCurvY )
+      QP +=  FABS( SQRT(Var[0][kk ][jjp][ii ]) - 2 * SqrtRhoC + SQRT(Var[0][kk ][jjm][ii ]) ) / SqrtRhoC;
+   if ( SChangeSignZ && DChangeSignZ && SCurvZ )
+      QP +=  FABS( SQRT(Var[0][kkp][jj ][ii ]) - 2 * SqrtRhoC + SQRT(Var[0][kkm][jj ][ii ]) ) / SqrtRhoC;
 
 
+
+   return ( QP > QPThreshold );
+} // FUNCTION : ELBDM_Flag_Interference
 
 #endif // #if ( MODEL == ELBDM )

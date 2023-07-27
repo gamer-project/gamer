@@ -33,7 +33,7 @@ extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int l
 //                ParDens       : Input array storing the particle mass density on each cell
 //                JeansCoeff    : Pi*GAMMA/(SafetyFactor^2*G), where SafetyFactor = FlagTable_Jeans[lv]
 //                                --> Flag if dh^2 > JeansCoeff*Pres/Dens^2
-//                Interf_Cond   : Input array storing the dimensionless quantum pressure, the phase curvature and the phase difference for the interference condition
+//                Interf_Var    : Input array storing the density and phase for the interference condition
 //                Spectral_Cond : Input array storing the normalised mass rations between the extension mass and the physical mass
 //
 // Return      :  "true"  if any  of the refinement criteria is satisfied
@@ -44,7 +44,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
                  const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1],
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
                  const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff,
-                 const real *Interf_Cond, const real Spectral_Cond)
+                 const real *Interf_Var, const real Spectral_Cond)
 {
 
    bool Flag = false;
@@ -61,27 +61,24 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 // check ELBDM interference
 // must be performed before any other checks in order to set switch_to_wave_flag correctly
-// if FlagTable_Interference[lv][2] > 0 we set use_wave_flag if interference > FlagTable_Interference[lv][0],[1]
-// if FlagTable_Interference[lv][2] < 0 we just use it as refinement criterion for fluid patches
 // ===========================================================================================
-#  if ( MODEL == ELBDM )
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( OPT__FLAG_INTERFERENCE )
    {
-      if ( Fluid[DENS][k][j][i] > FlagTable_Interference[lv][1] )
-         Flag |=  ELBDM_Flag_Interference( i, j, k, Interf_Cond, FlagTable_Interference[lv][0]);
 
-//    check whether dB wavelength is resolved using FlagTable_Interference[lv][2] as maximum phase difference between neighbouring cells
-      Flag |= ELBDM_Flag_Interference( i, j, k, Interf_Cond + 1 * CUBE(PS1), FlagTable_Interference[lv][2] );
+      Flag |=  ELBDM_Flag_Interference( i, j, k, Interf_Var, FlagTable_Interference[lv][0], FlagTable_Interference[lv][1], FlagTable_Interference[lv][2], FlagTable_Interference[lv][3] > 0.5);
 
-#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //    set use_wave_flag if fourth column in FlagTable_Interference enables switching from fluid to wave solver
-      amr->patch[0][lv][PID]->switch_to_wave_flag |= Flag &&  FlagTable_Interference[lv][3] >= 0.0;
-#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      if ( Flag && lv + 1 >= ELBDM_FIRST_WAVE_LEVEL )
+      {
+         amr->patch[0][lv][PID]->switch_to_wave_flag =  true;
+      }
 
       if ( Flag )
             return Flag;
    }
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 #  ifdef PARTICLE

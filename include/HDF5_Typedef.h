@@ -533,6 +533,9 @@ struct InputPara_t
    int    ELBDM_RemoveMotionCM;
    int    ELBDM_BaseSpectral;
    double ELBDM_VortexThreshold;
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   int    ELBDM_FirstWaveLevel;
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif // ELBDM
 
 // fluid solvers in different models

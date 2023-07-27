@@ -341,7 +341,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
                  const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1],
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
                  const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff,
-                 const real *Interf_Cond, const real Spectral_Cond);
+                 const real *Interf_Var, const real Spectral_Cond);
 bool Flag_Region( const int i, const int j, const int k, const int lv, const int PID,
                  const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff );
 bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t Form, const real *Var1D, const real *Ave1D,
@@ -569,7 +569,7 @@ bool   ELBDM_HasWaveCounterpart( const int I, const int J, const int K, const lo
 bool   ELBDM_Flag_EngyDensity( const int i, const int j, const int k, const real Real_Array[],
                                const real Imag_Array[], const double Angle_2pi, const double Eps );
 //Flag for switching between wave and phase scheme in hybrid solver
-bool   ELBDM_Flag_Interference( const int i, const int j, const int k, const real Cond_Array[], const double Threshold);
+bool   ELBDM_Flag_Interference( const int i, const int j, const int k, const real Var[], const double QPThreshold, const double LapPhaseThreshold, const double DensThreshold, const bool OnlyAtExtrema );
 real   ELBDM_UnwrapPhase( const real Phase_Ref, const real Phase_Wrapped );
 int    ELBDM_UnwrapWindingNumber( const real Phase_Ref, const real Phase_Wrapped );
 real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );

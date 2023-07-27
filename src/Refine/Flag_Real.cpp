@@ -4,7 +4,6 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID );
 void Prepare_for_Lohner( const OptLohnerForm_t Form, const real *Var1D, real *Ave1D, real *Slope1D, const int NVar );
 
 #if ( MODEL == ELBDM )
-void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *Cond1D, const bool UseWaveFlag);
 void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond1D);
 #endif // #if ( MODEL == ELBDM )
 
@@ -59,10 +58,10 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 #  if ( MODEL == ELBDM )
    //Interference criterion
-   const int  Interf_NGhost           = 1;                     // number of ghost cells for the interference criterion
-   const int  Interf_NCell            = PS1 + 2*Interf_NGhost; // size of the variable array for interference criterion
-   const int  Interf_NCond            = PS1;                   // size of the array for interference criterion
-   const IntScheme_t Interf_IntScheme = INT_CQUAD;             // interpolation scheme for interference criterion
+   const int  Interf_NGhost             = 1;                     // number of ghost cells for the interference criterion
+   const int  Interf_NCell              = PS1 + 2*Interf_NGhost; // size of the variable array for interference criterion
+   const int  Interf_NCond              = PS1;                   // size of the array for interference criterion
+   const IntScheme_t Interf_IntScheme   = INT_CQUAD;             // interpolation scheme for interference criterion
 
    //Spectral refinement criterion
    const int  Spectral_NGhost           = FLU_GHOST_SIZE;      // number of ghost cells
@@ -133,10 +132,10 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    if ( OPT__FLAG_INTERFERENCE )
    {
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      if ( amr->use_wave_flag[lv] ) {
+      if ( !amr->use_wave_flag[lv] ) {
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-         Interf_NVar = 3;
-         Interf_TVar = _DENS | _REAL | _IMAG;
+         Interf_NVar = 0;
+         Interf_TVar = 0;
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       } else {
          Interf_NVar = 2;
@@ -196,8 +195,6 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       real *Lohner_Ave                   = NULL;   // array storing the averages of Lohner_Var for Lohner
       real *Lohner_Slope                 = NULL;   // array storing the slopes of Lohner_Var for Lohner
       real *Interf_Var                   = NULL;   // array storing the density and phase for the interference criterion
-      real *Interf_Temp                  = NULL;   // array storing the square root of the density and the phase for the interference criterion
-      real *Interf_Cond                  = NULL;   // array storing the quantum pressure, phase curvature and phase discrete differences for the interference criterion
       real *Spectral_Var                 = NULL;   // array storing a patch group of real and density part for spectral criterion
       real  Spectral_Cond                = 0.0;    // variable storing the ratio of physical and extension masses
 
@@ -225,9 +222,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 #     if ( MODEL == ELBDM )
       if ( Interf_NVar > 0 ) {
-         Interf_Var       = new real [ 8 * Interf_NVar * Interf_NCell * Interf_NCell * Interf_NCell ]; // 8: number of local patches;
-         Interf_Temp      = new real [ 2 *               Interf_NCell * Interf_NCell * Interf_NCell ]; // 2: log(rho) and phase
-         Interf_Cond      = new real [ 3 *               Interf_NCond * Interf_NCond * Interf_NCond ]; // 3: quantum pressure, lap(phase), phase differences
+         Interf_Var       = new real [ 8 * Interf_NVar * Interf_NCell * Interf_NCell * Interf_NCell ];    // 8: number of local patches
       }
       if ( Spectral_NVar > 0 ) {
          Spectral_Var     = new real [ Spectral_NVar * Spectral_NCell * Spectral_NCell * Spectral_NCell ]; // prepare one patch group
@@ -405,14 +400,6 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                   Prepare_for_Lohner( OPT__FLAG_LOHNER_FORM, Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope,
                                       Lohner_NVar );
 
-
-#              if ( MODEL == ELBDM )
-//             evaluate the quantum pressure for interference criterion
-               if ( Interf_NVar > 0 )
-                  Prepare_for_Interference_Criterion(Interf_Var+LocalID*Interf_Stride, Interf_Temp, Interf_Cond, Interf_NVar == 3);
-#              endif // # if ( MODEL == ELBDM )
-
-
 //             count the number of particles and/or particle mass density on each cell
 #              ifdef PARTICLE
                if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL )
@@ -515,7 +502,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 //                check if the target cell satisfies the refinement criteria (useless pointers are always == NULL)
                   if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, MagCC, Vel, Pres,
                                                         Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope, Lohner_NVar,
-                                                        ParCount, ParDens, JeansCoeff, Interf_Cond, Spectral_Cond )  )
+                                                        ParCount, ParDens, JeansCoeff, Interf_Var, Spectral_Cond )  )
                   {
 //                   flag itself
                      amr->patch[0][lv][PID]->flag = true;
@@ -648,8 +635,6 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       delete [] Lohner_Ave;
       delete [] Lohner_Slope;
       delete [] Interf_Var;
-      delete [] Interf_Temp;
-      delete [] Interf_Cond;
       delete [] Spectral_Var;
 
    } // OpenMP parallel region

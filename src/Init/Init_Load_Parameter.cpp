@@ -295,6 +295,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "ELBDM_REMOVE_MOTION_CM",     &ELBDM_REMOVE_MOTION_CM,          ELBDM_REMOVE_MOTION_CM_NONE, 0, 2              );
    ReadPara->Add( "ELBDM_BASE_SPECTRAL",        &ELBDM_BASE_SPECTRAL,             false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "ELBDM_VORTEX_THRESHOLD",     &ELBDM_VORTEX_THRESHOLD,          1.0,             NoMin_double,  NoMax_double   );
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   ReadPara->Add( "ELBDM_FIRST_WAVE_LEVEL",     &ELBDM_FIRST_WAVE_LEVEL,           -1,             1,             TOP_LEVEL      );
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif // #if ( MODEL == ELBDM )
 
 
