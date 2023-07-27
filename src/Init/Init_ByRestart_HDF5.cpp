@@ -218,7 +218,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  endif
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   LoadField( "UseWaveScheme",        &KeyInfo.UseWaveScheme,        H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "UseWaveScheme",         KeyInfo.UseWaveScheme,        H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 // must initialize all char* pointers as NULL so that we can safely free them later
@@ -247,7 +247,7 @@ void Init_ByRestart_HDF5( const char *FileName )
       NPatchTotal[lv] = KeyInfo.NPatch[lv];
 
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      amr->use_wave_flag[lv] = KeyInfo.UseWaveScheme [lv];
+      amr->use_wave_flag[lv] = KeyInfo.UseWaveScheme[lv];
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
    }
 

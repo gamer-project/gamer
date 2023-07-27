@@ -225,6 +225,7 @@ void LB_Refine( const int FaLv )
             }}} // k,j,i
          } // for (int PID=0; PID < amr->NPatchComma[ChildLv][27]; PID++)
       } // for (int ChildLv = SonLv; ChildLv <= TOP_LEVEL; ++ChildLv)
+   } // if ( SwitchFinerLevelsToWaveScheme )
 #   endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
 
 // 7. miscellaneous

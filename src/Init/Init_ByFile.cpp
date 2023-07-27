@@ -41,10 +41,17 @@ static void Flag_RefineRegion( const int lv, const int FlagPatch[6] );
 //                               (e.g., entropy) directly instead of loading it from the disk
 //                               --> Only NCOMP_TOTAL-1 (which equals 5+NCOMP_PASSIVE_USER currently) fields
 //                                   should be stored in "UM_IC"
-//                           (2) For ELBDM, we will calculate the density field from the input wave function
-//                               directly instead of loading it from the disk
+//                           (2) For ELBDM:
 //                               --> Only NCOMP_TOTAL-1 (which equals 2+NCOMP_PASSIVE_USER currently) fields
 //                                   should be stored in "UM_IC"
+//
+//                                  ELBDM_SCHEME == ELBDM_WAVE:
+//                                     We will load the real and imaginary parts from the disk on all levels
+//                                     and calculate the density field from the input wave function
+//                                     directly instead of loading it from the disk.
+//                                  ELBDM_SCHEME == ELBDM_HYBRID
+//                                     We will load the density and phase fields from the disk on all levels
+//                                     There is no need to separately calculate the density field.
 //                4. The data format of the UM_IC file is controlled by the runtime parameter OPT__UM_IC_FORMAT
 //                5. Does not work with rectangular domain decomposition anymore
 //                   --> Must enable either SERIAL or LOAD_BALANCE
@@ -598,8 +605,13 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
 //                3. Calculate the dual-energy variable automatically instead of load it from the disk
 //                   --> When adopting DUAL_ENERGY, the input uniform-mesh array must NOT include the dual-energy
 //                       variable
-//                4. Calculate the density field automatically instead of load it from the disk for ELBDM
-//                   --> For ELBDM, the input uniform-mesh array must NOT include the density field
+//                4. ELBDM:
+//                   ELBDM_SCHEME == ELBDM_WAVE:
+//                       Calculate the density field automatically instead of load it from the disk for ELBDM
+//                       --> For ELBDM, the input uniform-mesh array must NOT include the density field
+//                   ELBDM_SCHEME == ELBDM_HYBRID
+//                       We will load the density and phase fields from the disk on all levels
+//                       There is no need to separately calculate the density field.
 //                5. Assuming nvar_in (i.e., OPT__UM_IC_NVAR) == NCOMP_TOTAL
 //                   --> Unless either DUAL_ENERGY or ELBDM is adopted, for which it assumes nvar_in == NCOMP_TOTAL-1
 //

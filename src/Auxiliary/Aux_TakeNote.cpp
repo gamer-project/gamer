@@ -197,7 +197,7 @@ void Aux_TakeNote()
 //    c. options in ELBDM
 #     elif ( MODEL == ELBDM )
 
-//    c.1 options in ELBDM_HYBRID ELBDM
+//    c.1 options in ELBDM_HYBRID
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       fprintf( Note, "ELBDM_SCHEME                    ELBDM_HYBRID\n" );
 #     elif ( ELBDM_SCHEME == ELBDM_WAVE )
