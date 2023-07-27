@@ -103,9 +103,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    int  Lohner_NVar=0, Lohner_Stride=0;
    long Lohner_TVar=0;
    int  Interf_NVar=0, Interf_Stride=0;
-   long Interf_TVar=0;
    int  Spectral_NVar=0;
-   long Spectral_TVar=0;
    real MinDens=-1.0, MinPres=-1.0, MinTemp=-1.0, MinEntr=-1.0;  // default is to disable all floors
 
 #  if   ( MODEL == HYDRO )
@@ -118,18 +116,20 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #  elif ( MODEL == ELBDM )
    if ( OPT__FLAG_LOHNER_DENS )
    {
-
-#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( amr->use_wave_flag[lv] ) {
-#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
       Lohner_NVar = 2;
       Lohner_TVar = _REAL | _IMAG;
-#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      } else { //if (amr->use_wave_flag[lv]) {
-      //by setting Lohner_NVar to zero, we effectively turn off the Lohner criterion for the levels using the phase scheme
+      } else {
+//    turn off the Lohner criterion for the levels using the phase scheme
       Lohner_NVar = 0;
-      } // if (amr->use_wave_flag[lv]) { ... else
-#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      }
+   }
+
+   if ( OPT__FLAG_SPECTRAL )
+   {
+      if ( amr->use_wave_flag[lv] ) {
+      Spectral_NVar = 2;
+      }
    }
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
@@ -137,27 +137,13 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    {
       if ( !amr->use_wave_flag[lv] ) {
          Interf_NVar = 2;
-         Interf_TVar = _DENS | _PHAS;
       } else {
          Interf_NVar = 0;
-         Interf_TVar = 0;
       }
       Interf_Stride = Interf_NVar*Interf_NCell*Interf_NCell*Interf_NCell; // stride of array for one interference criterion patch
    }
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
-
-   if ( OPT__FLAG_SPECTRAL )
-   {
-#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      if ( amr->use_wave_flag[lv] ) {
-#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      Spectral_NVar = 2;
-      Spectral_TVar = _REAL | _IMAG;
-#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      }
-#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID
-   }
 
 #  else
 #  error : unsupported MODEL !!
@@ -222,15 +208,16 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #     endif
 
 #     if ( MODEL == ELBDM )
+      if ( Spectral_NVar > 0 ) {
+         Spectral_Var     = new real [ Spectral_NVar * Spectral_NCell * Spectral_NCell * Spectral_NCell ]; // prepare one patch group
+      }
+#     endif
+
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( Interf_NVar > 0 ) {
          Interf_Var       = new real [ 8 * Interf_NVar * Interf_NCell * Interf_NCell * Interf_NCell ];    // 8: number of local patches
       }
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      if ( Spectral_NVar > 0 ) {
-         Spectral_Var     = new real [ Spectral_NVar * Spectral_NCell * Spectral_NCell * Spectral_NCell ]; // prepare one patch group
-      }
-#     endif
 
       if ( Lohner_NVar > 0 )
       {
@@ -252,25 +239,27 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
 
 //       prepare the ghost-zone data for interference criterion
-#     if ( MODEL == ELBDM )
-#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
-         if ( Interf_NVar > 0 )
-            Prepare_PatchData( lv, Time[lv], Interf_Var, NULL, Interf_NGhost, NPG, &PID0, Interf_TVar, _NONE,
-                               Interf_IntScheme, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
-                               MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
-#        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-
+#        if ( MODEL == ELBDM )
          if ( Spectral_NVar > 0 )
-            Prepare_PatchData( lv, Time[lv], Spectral_Var, NULL, Spectral_NGhost, NPG, &PID0, Spectral_TVar, _NONE,
+         {
+            Prepare_PatchData( lv, Time[lv], Spectral_Var, NULL, Spectral_NGhost, NPG, &PID0, _REAL | _IMAG, _NONE,
                                Spectral_IntScheme, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
-#     endif // # if ( MODEL == ELBDM )
 
-#        if ( MODEL == ELBDM )
-//       evaluate the ratio of the GramFE extension masses and the physical wave function
-         if ( Spectral_NVar > 0 )
+//          evaluate the ratio of the GramFE extension masses and the physical wave function
             Prepare_for_Spectral_Criterion(Spectral_Var, Spectral_Cond);
+         }
 #        endif // # if ( MODEL == ELBDM )
+
+
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         if ( Interf_NVar > 0 )
+         {
+            Prepare_PatchData( lv, Time[lv], Interf_Var, NULL, Interf_NGhost, NPG, &PID0, _DENS | _PHAS, _NONE,
+                               Interf_IntScheme, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
+                               MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
+         }
+#        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 //       loop over all local patches within the same patch group
          for (int LocalID=0; LocalID<8; LocalID++)

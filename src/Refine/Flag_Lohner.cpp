@@ -36,14 +36,9 @@ bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t F
    if (  i < 0  ||  i >= PS1  ||  j < 0  ||  j >= PS1  ||  k < 0  ||  k >= PS1  )
       Aux_Error( ERROR_INFO, "incorrect index (i,j,k) = (%d,%d,%d) !!\n", i, j, k );
 
-#  if ( MODEL == ELBDM )
-#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-// hybrid scheme does not support Lohner flag and will pass NVar = 0 for levels using the phase scheme
-   if ( NVar == 0 )  return false;
-   else
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_WAVE )
    if ( NVar != 2 )  Aux_Error( ERROR_INFO, "NVar (%d) != 2 in ELBDM !!\n", NVar );
-#  endif // # if ( MODEL == ELBDM )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_WAVE )
 #  endif // # ifdef GAMER_DEBUG
 
 

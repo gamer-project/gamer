@@ -40,7 +40,7 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
    ii = i + 1;   iip = ii + 1;   iim = ii - 1;
 
 // check minimum density
-   const bool DensCond     = Var[0][kk][jj][ii] > DensThreshold;
+   const bool DensCond = Var[0][kk][jj][ii] > DensThreshold;
 
    if ( !DensCond ) return false;
 
@@ -72,7 +72,6 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
    {
       QP +=  FABS( SQRT(Var[0][kkp][jj ][ii ]) - 2 * SqrtRhoC + SQRT(Var[0][kkm][jj ][ii ]) ) / SqrtRhoC;
    }
-
 
    return ( QP > QPThreshold );
 } // FUNCTION : ELBDM_Flag_Interference
