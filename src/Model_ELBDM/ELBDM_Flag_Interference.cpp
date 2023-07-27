@@ -28,7 +28,6 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
 #  endif
 
    const int NCell  = PS1 + 2;   // size of the array Var
-   const int NCond  = PS1;       // size of the array Var without ghost zones
 
    int ii, jj, kk, iim, jjm, kkm, iip, jjp, kkp;
 
