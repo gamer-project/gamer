@@ -80,7 +80,7 @@ void Init_Refine( const int lv )
 
 //          if coarse level uses wave flag, also use wave solver on refined levels
             if ( lv > 0)
-               if ( amr->use_wave_flag[lv - 1] )
+               if ( amr->use_wave_flag[lv-1] )
                   amr->use_wave_flag[lv] = true;
 #           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 

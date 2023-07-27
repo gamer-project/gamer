@@ -66,6 +66,10 @@ void LB_Init_Refine( const int FaLv, const bool AllocData )
         if ( amr->patch[0][FaLv][FaPID]->switch_to_wave_flag ) {
             amr->use_wave_flag[SonLv] = true;
         }
+//      if coarse level uses wave flag, also use wave solver on refined levels
+        if ( lv > 0)
+           if ( amr->use_wave_flag[lv-1] )
+              amr->use_wave_flag[lv] = true;
 #       endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
       } // if ( amr->patch[0][FaLv][FaPID]->flag )
