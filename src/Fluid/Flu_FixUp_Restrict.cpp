@@ -441,9 +441,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
 //    rescale real and imaginary parts to get the correct density in ELBDM
 #     if ( MODEL == ELBDM )
-#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( amr->use_wave_flag[FaLv] ) {
-#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
       real Real, Imag, Rho_Wrong, Rho_Corr, Rescale;
 
       if (  ( TVarCC & _DENS )  &&  ( TVarCC & _REAL )  &&  (TVarCC & _IMAG )  )
@@ -469,9 +467,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
          amr->patch[FaFluSg][FaLv][FaPID]->fluid[IMAG][k][j][i] *= Rescale;
       }
 
-#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       } // if ( amr->use_wave_flag[FaLv] )
-#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #     endif // # if ( MODEL == ELBDM )
 
    } // for (int SonPID0=0; SonPID0<amr->NPatchComma[SonLv][1]; SonPID0+=8)

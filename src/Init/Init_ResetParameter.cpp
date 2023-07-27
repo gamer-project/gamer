@@ -119,7 +119,7 @@ void Init_ResetParameter()
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
-// hybrid dt  (empirically determined CFL condition)
+// hybrid dt (empirically determined CFL condition)
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( DT__HYBRID_FLUID < 0.0 )
    {

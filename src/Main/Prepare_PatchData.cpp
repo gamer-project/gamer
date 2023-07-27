@@ -1971,6 +1971,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
          } // for (int Side=0; Side<NSide; Side++)
 
+
 //       c. deposit particle mass onto grids
 // ------------------------------------------------------------------------------------------------------------
 #        ifdef MASSIVE_PARTICLES
@@ -3764,6 +3765,6 @@ void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpa
          } // for (int Side=0; Side<NSide; Side++)
       } // for (int TID=0; TID<NPG; TID++)
    } // end of OpenMP parallel region
-}
+} // FUNCTION : Prepare_PatchData_HasWaveCounterpart
 
 #endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )

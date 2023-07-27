@@ -122,9 +122,9 @@ void Flu_Prepare( const int lv, const double PrepTime,
       bool PGIsCompletelyRefined = true;
 
       const int PID0 = PID0_List[TID];
-      for (int dPID=0; dPID<8; dPID++)
+      for (int LocalID=0; LocalID<8; LocalID++)
       {
-         const int PID = PID0 + dPID;
+         const int PID = PID0 + LocalID;
          if ( amr->patch[0][lv][PID]->son == -1 )
          {
             PGIsCompletelyRefined = false;

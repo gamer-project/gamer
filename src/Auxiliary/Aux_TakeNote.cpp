@@ -568,6 +568,7 @@ void Aux_TakeNote()
       fprintf( Note, "GRAMFE_NDELTA                   %d\n",      GRAMFE_NDELTA);
       fprintf( Note, "GRAMFE_ND                       %d\n",      GRAMFE_ND);
       fprintf( Note, "GRAMFE_ORDER                    %d\n",      GRAMFE_ORDER);
+      fprintf( Note, "GRAMFE_FLU_NXT                  %d\n",      GRAMFE_FLU_NXT);
 
 #     if ( GRAMFE_SCHEME == GRAMFE_FFT )
 #     ifdef GRAMFE_FFT_FLOAT8
