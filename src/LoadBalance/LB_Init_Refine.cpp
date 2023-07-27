@@ -63,7 +63,7 @@ void LB_Init_Refine( const int FaLv, const bool AllocData )
 #        endif
 
 #       if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-        if ( amr->patch[0][FaLv][FaPID]->use_wave_flag ) {
+        if ( amr->patch[0][FaLv][FaPID]->switch_to_wave_flag ) {
             amr->use_wave_flag[SonLv] = true;
         }
 #       endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
