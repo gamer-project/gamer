@@ -1199,91 +1199,38 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 // get the total number of patches at lv+1
    Mis_GetTotalPatchNumber( lv+1 );
 
-// (c1.3.6) convert density/phase to density/real part/imaginary part in hybrid scheme if we switch the level from phase to wave
+// convert density/Phase to density/real part/imaginary part in hybrid scheme if we switch the level from Phase to wave
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
    if ( SwitchFinerLevelsToWaveScheme ) {
+      for (int ChildLv = lv + 1; ChildLv <= TOP_LEVEL; ++ChildLv) {
+//       set use_wave_flag
+         amr->use_wave_flag[ChildLv] = true;
 
-      //Set corresponding flag
-      for (int level = lv + 1; level <= MAX_LEVEL; ++level) {
 
-         amr->use_wave_flag[level] = true;
-         int fluSg = amr->FluSg[level];
-
-         real dens, amp, phase;
-         for (int PID=0; PID<amr->NPatchComma[level][1]; PID++)
+//       convert patches
+//       iterate over real and buffer patches
+         for (int PID=0; PID < amr->NPatchComma[ChildLv][27]; PID++)
          {
-
-#           ifdef GAMER_DEBUG
-//          check for phase jumps!
             for (int k=0; k<PS1; k++)  {
             for (int j=0; j<PS1; j++)  {
             for (int i=0; i<PS1; i++)  {
-               int kk  =  k;
-               int kkp = (kk + 1) < PS1  ? kk + 1 : kk    ;
-               int kkm = (kk - 1) < 0         ? kk     : kk - 1;
-               int ii  =  i;
-               int iip = (ii + 1) < PS1  ? ii + 1 : ii    ;
-               int iim = (ii - 1) < 0         ? ii     : ii - 1;
-               int jj  =  j;
-               int jjp = (jj + 1) < PS1  ? jj + 1 : jj    ;
-               int jjm = (jj - 1) < 0         ? jj     : jj - 1;
+//             convert both sandglasses
+               for ( int FluSg = 0; FluSg < 2; ++FluSg )
+               {
+//                check fluid != NULL for buffer patches
+                  if ( amr->patch[FluSg][ChildLv][PID]->fluid != NULL && amr->FluSgTime[ChildLv][FluSg] >= 0.0 )
+                  {
+                     const real Amp   = SQRT(amr->patch[FluSg][ChildLv][PID]->fluid[DENS][k][j][i]);
+                     const real Phase = amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][k][j][i];
+                     amr->patch[FluSg][ChildLv][PID]->fluid[REAL][k][j][i] = Amp * COS(Phase);
+                     amr->patch[FluSg][ChildLv][PID]->fluid[IMAG][k][j][i] = Amp * SIN(Phase);
+                  }
+               } // FluSg
+            }}} // k,j,i
+         } // for (int PID=0; PID < amr->NPatchComma[ChildLv][27]; PID++)
+      } // for (int ChildLv = lv + 1; ChildLv <= TOP_LEVEL; ++ChildLv)
+   } // if ( SwitchFinerToWaveScheme )
 
-               //check whether dB wavelength is resolved within the newly converted patch
-               real dPhase = MAX(MAX(MAX(MAX(MAX(
-               FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][iip] - amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ]),
-               FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ] - amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][iim])),
-               FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jjp][ii ] - amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ])),
-               FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ] - amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jjm][ii ])),
-               FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kkp][jj ][ii ] - amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ])),
-               FABS(amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ] - amr->patch[fluSg][level][PID]->fluid[PHAS][kkm][jj ][ii ]));
-
-               if ( dPhase > M_PI * 2) {
-                  Aux_Message ( stderr, "WARNING: When converting level to wave scheme, phase jump %f at PID %d for k %d i %d j %d\n", dPhase, PID, k, i, j);
-                  Aux_Message ( stderr, "k %d kp %d km %d i %d ip %d im %d j %d jp %d jm %d\n k j ip %f k j i %f\n k j i %f k j im %f\n k jp i %f k j i %f\n k j i %f k jm i %f\n kp j i %f k j i %f\n k j i %f km j i %f\n stub %f %f %f %f %f %f %f\n",
-                                kk, kkp, kkm, ii, iip, iim, jj, jjp, jjm,
-                                amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][iip], amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][iim],
-                                amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jjp][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jjm][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[PHAS][kkp][jj ][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[PHAS][kk ][jj ][ii ], amr->patch[fluSg][level][PID]->fluid[PHAS][kkm][jj ][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jj ][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[STUB][kkp][jj ][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jjp][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jj ][iip],
-                                amr->patch[fluSg][level][PID]->fluid[STUB][kkm][jj ][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jjm][ii ],
-                                amr->patch[fluSg][level][PID]->fluid[STUB][kk ][jj ][iim]
-                              );
-               }
-            }}}
-
-#           endif // # ifdef GAMER_DEBUG
-
-//          fluid data
-            for (int k=0; k<PS1; k++)  {
-            for (int j=0; j<PS1; j++)  {
-            for (int i=0; i<PS1; i++)  {
-               dens  = amr->patch[fluSg][level][PID]->fluid[DENS][k][j][i];
-               amp   = SQRT(dens);
-               phase = amr->patch[fluSg][level][PID]->fluid[PHAS][k][j][i];
-               amr->patch[fluSg][level][PID]->fluid[REAL][k][j][i] = amp * COS(phase);
-               amr->patch[fluSg][level][PID]->fluid[IMAG][k][j][i] = amp * SIN(phase);
-               amr->patch[fluSg][level][PID]->fluid[DENS][k][j][i] = dens;
-            }}}
-            for (int k=0; k<PS1; k++)  {
-            for (int j=0; j<PS1; j++)  {
-            for (int i=0; i<PS1; i++)  {
-               dens  = amr->patch[1-fluSg][level][PID]->fluid[DENS][k][j][i];
-               amp   = SQRT(dens);
-               phase = amr->patch[1-fluSg][level][PID]->fluid[PHAS][k][j][i];
-               amr->patch[1-fluSg][level][PID]->fluid[REAL][k][j][i] = amp * COS(phase);
-               amr->patch[1-fluSg][level][PID]->fluid[IMAG][k][j][i] = amp * SIN(phase);
-            }}}
-         } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-      } // for (int level = lv + 1; level < NLEVEL; ++level)
-
-   } // if ( switchNextLevelToWaveScheme )
 #   endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
 
 } // FUNCTION : Refine

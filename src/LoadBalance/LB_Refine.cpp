@@ -198,14 +198,14 @@ void LB_Refine( const int FaLv )
 // (c1.3.6) convert density/Phase to density/real part/imaginary part in hybrid scheme if we switch the level from Phase to wave
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
    if ( SwitchFinerLevelsToWaveScheme ) {
-      for (int lv = SonLv; lv <= TOP_LEVEL; ++lv) {
+      for (int ChildLv = SonLv; ChildLv <= TOP_LEVEL; ++ChildLv) {
 //       set use_wave_flag
-         amr->use_wave_flag[lv] = true;
+         amr->use_wave_flag[ChildLv] = true;
 
 
 //       convert patches
 //       iterate over real and buffer patches
-         for (int PID=0; PID < amr->NPatchComma[lv][27]; PID++)
+         for (int PID=0; PID < amr->NPatchComma[ChildLv][27]; PID++)
          {
             for (int k=0; k<PS1; k++)  {
             for (int j=0; j<PS1; j++)  {
@@ -214,23 +214,23 @@ void LB_Refine( const int FaLv )
                for ( int FluSg = 0; FluSg < 2; ++FluSg )
                {
 //                check fluid != NULL for buffer patches
-                  if ( amr->patch[FluSg][lv][PID]->fluid != NULL && amr->FluSgTime[lv][FluSg] >= 0.0 )
+                  if ( amr->patch[FluSg][ChildLv][PID]->fluid != NULL && amr->FluSgTime[ChildLv][FluSg] >= 0.0 )
                   {
-                     const real Amp   = SQRT(amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i]);
-                     const real Phase = amr->patch[FluSg][lv][PID]->fluid[PHAS][k][j][i];
-                     amr->patch[FluSg][lv][PID]->fluid[REAL][k][j][i] = Amp * COS(Phase);
-                     amr->patch[FluSg][lv][PID]->fluid[IMAG][k][j][i] = Amp * SIN(Phase);
+                     const real Amp   = SQRT(amr->patch[FluSg][ChildLv][PID]->fluid[DENS][k][j][i]);
+                     const real Phase = amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][k][j][i];
+                     amr->patch[FluSg][ChildLv][PID]->fluid[REAL][k][j][i] = Amp * COS(Phase);
+                     amr->patch[FluSg][ChildLv][PID]->fluid[IMAG][k][j][i] = Amp * SIN(Phase);
                   }
                } // FluSg
             }}} // k,j,i
-         } // for (int PID=0; PID < amr->NPatchComma[lv][27]; PID++)
-      } // for (int lv = lv + 1; lv < NLEVEL; ++lv)
+         } // for (int PID=0; PID < amr->NPatchComma[ChildLv][27]; PID++)
+      } // for (int ChildLv = SonLv; ChildLv <= TOP_LEVEL; ++ChildLv)
 
 //    sync flags across all MPI ranks after conversion
-      for (int lv = SonLv; lv <= TOP_LEVEL; ++lv)
+      for (int ChildLv = SonLv; ChildLv <= TOP_LEVEL; ++ChildLv)
       {
-         Sync_UseWaveFlag(lv);
-      } // for (int lv = SonLv; lv <= TOP_LEVEL; ++lv)
+         Sync_UseWaveFlag(ChildLv);
+      } // for (int ChildLv = SonLv; ChildLv <= TOP_LEVEL; ++ChildLv)
    } // if ( SwitchFinerToWaveScheme )
 
 #   endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
