@@ -1040,7 +1040,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 // (c1.3.4.3) convert density/phase to real and imaginary parts if patches were refined from phase to wave level
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( !amr->use_wave_flag[FaLv] && amr->use_wave_flag[SonLv] ) {
-      real amp, phase, stub, Re, Im ;
+      real Amp, phase, Re, Im ;
 
 #     ifdef GAMER_DEBUG
 //    Check whether dB wavelength is resolved
@@ -1075,11 +1075,10 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       for (int k=0; k<FSize_CC; k++) {
       for (int j=0; j<FSize_CC; j++) {
       for (int i=0; i<FSize_CC; i++) {
-            amp   = SQRT( FData_Flu[DENS][k][j][i] );
-            phase =       FData_Flu[PHAS][k][j][i] ;
-            stub  =       FData_Flu[STUB][k][j][i] ;
-            FData_Flu[REAL][k][j][i] = amp * COS( phase );
-            FData_Flu[IMAG][k][j][i] = amp * SIN( phase );
+            Amp   = SQRT( FData_Flu[DENS][k][j][i] );
+            Phase =       FData_Flu[PHAS][k][j][i] ;
+            FData_Flu[REAL][k][j][i] = Amp * COS( Phase );
+            FData_Flu[IMAG][k][j][i] = Amp * SIN( Phase );
       }}}
    }
 #  endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
