@@ -684,9 +684,9 @@ void Aux_TakeNote()
 #     ifdef FEEDBACK
       fprintf( Note, "#define FB_GHOST_SIZE           %d\n",      FB_GHOST_SIZE         );
 #     endif
-#     if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       fprintf( Note, "#define HYB_GHOST_SIZE          %d\n",      HYB_GHOST_SIZE        );
-#     endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
       fprintf( Note, "#define FLU_NXT                 %d\n",      FLU_NXT               );
 #     ifdef GRAVITY
       fprintf( Note, "#define POT_NXT                 %d\n",      POT_NXT               );
@@ -705,9 +705,9 @@ void Aux_TakeNote()
 #     ifdef FEEDBACK
       fprintf( Note, "#define FB_NXT                  %d\n",      FB_NXT                );
 #     endif
-#     if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       fprintf( Note, "#define HYB_NXT                 %d\n",      HYB_NXT               );
-#     endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #     if ( MODEL == HYDRO )
       fprintf( Note, "#define EOS_NAUX_MAX            %d\n",      EOS_NAUX_MAX          );
       fprintf( Note, "#define EOS_NTABLE_MAX          %d\n",      EOS_NTABLE_MAX        );

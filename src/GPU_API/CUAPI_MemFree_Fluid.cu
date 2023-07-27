@@ -42,9 +42,9 @@ extern real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 extern bool (*d_IsCompletelyRefined);
 #endif // #if ( MODEL == ELBDM )
 
-#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
 extern bool (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ];
-#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
 extern gramfe_matmul_float (*d_Flu_TimeEvo)[2 * FLU_NXT];
@@ -106,9 +106,9 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
    if ( d_IsCompletelyRefined != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_IsCompletelyRefined)  );  d_IsCompletelyRefined = NULL; }
 #  endif // #if ( MODEL == ELBDM )
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( d_HasWaveCounterpart != NULL ) {  CUDA_CHECK_ERROR (  cudaFree( d_HasWaveCounterpart )  );  d_HasWaveCounterpart = NULL; }
-#  endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
    if ( d_Flu_TimeEvo        != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Flu_TimeEvo        )  );  d_Flu_TimeEvo        = NULL; }
@@ -151,9 +151,9 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
    if ( h_IsCompletelyRefined != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_IsCompletelyRefined )  );  h_IsCompletelyRefined = NULL; }
 #  endif // #if ( MODEL == ELBDM )
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( h_HasWaveCounterpart != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_HasWaveCounterpart )  );  h_HasWaveCounterpart = NULL; }
-#  endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
    if ( h_GramFE_TimeEvo != NULL) { CUDA_CHECK_ERROR(  cudaFreeHost ( h_GramFE_TimeEvo )  ); h_GramFE_TimeEvo = NULL; }

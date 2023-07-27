@@ -109,18 +109,18 @@ void Init_ResetParameter()
 
 
 // hybrid velocity dt (empirically determined CFL condition)
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( DT__HYBRID_VELOCITY < 0.0 )
    {
       DT__HYBRID_VELOCITY = 1.00;
 
       PRINT_WARNING( DT__HYBRID_VELOCITY, FORMAT_FLT, "" );
    } // if ( DT__HYBRID_VELOCITY < 0.0 )
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 // hybrid dt  (empirically determined CFL condition)
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( DT__HYBRID_FLUID < 0.0 )
    {
 #     ifdef GRAVITY
@@ -130,7 +130,7 @@ void Init_ResetParameter()
 #     endif
       PRINT_WARNING( DT__HYBRID_FLUID, FORMAT_FLT, "" );
    } // if ( DT__HYBRID_FLUID < 0.0 )
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 // gravity dt
 #  ifdef GRAVITY

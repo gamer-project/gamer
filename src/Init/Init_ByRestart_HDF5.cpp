@@ -217,9 +217,9 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "AveDens_Init",         &KeyInfo.AveDens_Init,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 #  endif
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    LoadField( "UseWaveScheme",        &KeyInfo.UseWaveScheme,        H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 // must initialize all char* pointers as NULL so that we can safely free them later
 // --> in case they do not exist in the restart file
@@ -246,9 +246,9 @@ void Init_ByRestart_HDF5( const char *FileName )
    {
       NPatchTotal[lv] = KeyInfo.NPatch[lv];
 
-#     if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       amr->use_wave_flag[lv] = KeyInfo.UseWaveScheme [lv];
-#     endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
    }
 
 #  ifdef PARTICLE
@@ -616,7 +616,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
 // do not load STUB field
    NCompStore -= 1 ;
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #  ifdef LOAD_BALANCE
    const bool Recursive_No  = false;
@@ -1260,10 +1260,10 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
 
    int NCompStore = NCOMP_TOTAL;
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 // do not load STUB field
    NCompStore -= 1 ;
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 // allocate patch
@@ -1299,7 +1299,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
    }
 
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 // convert phase/density to real and imaginary parts
    if ( amr->use_wave_flag[lv] ) {
       real Dens, Phas, Im, Re;
@@ -1314,7 +1314,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
          amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[IMAG][i][k][j] = Im;
       }}}
    }
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 // load face-centered magnetic field from disk

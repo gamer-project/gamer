@@ -198,7 +198,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
    LB_GlobalTree* GlobalTree = NULL;
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 // construct global tree structure
    LB_GlobalTree GlobalTreeObject;
 
@@ -552,9 +552,9 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 // support hybrid scheme, flag is not used unless (MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
    bool UseWaveFlag = true;
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    UseWaveFlag = amr->use_wave_flag[lv];
-#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
    switch ( TSolver )
    {

@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -36,4 +36,4 @@ bool ELBDM_HasWaveCounterpart(const int I, const int J, const int K, const long 
    return HasWaveCounterpart;
 } // FUNCTION : ELBDM_HasWaveCounterpart
 
-#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )

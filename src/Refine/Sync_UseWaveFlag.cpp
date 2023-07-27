@@ -2,7 +2,7 @@
 
 
 
-#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Sync_UseWaveFlag
@@ -26,4 +26,4 @@ void Sync_UseWaveFlag( const int lv )
     amr->use_wave_flag[lv] = recv;
 } // FUNCTION : Sync_UseWaveFlag
 
-#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )

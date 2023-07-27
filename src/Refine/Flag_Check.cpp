@@ -209,7 +209,7 @@ if ( OPT__FLAG_RHO )
 // check Lohner's error estimator
 // ===========================================================================================
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( amr->use_wave_flag[lv] ) {
 #  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( Lohner_NVar > 0 )
@@ -222,7 +222,7 @@ if ( OPT__FLAG_RHO )
                            FlagTable_Lohner[lv][0], FlagTable_Lohner[lv][2], FlagTable_Lohner[lv][3] );
       if ( Flag )    return Flag;
    }
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    } // if ( amr->use_wave_flag[lv] ) {
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 

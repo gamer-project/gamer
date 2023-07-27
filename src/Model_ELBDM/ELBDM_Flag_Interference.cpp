@@ -61,11 +61,17 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
    const real SqrtRhoC     =  SQRT(Var[0][kk][jj][ii]);
 
    if ( SChangeSignX && DChangeSignX && SCurvX )
+   {
       QP +=  FABS( SQRT(Var[0][kk ][jj ][iip]) - 2 * SqrtRhoC + SQRT(Var[0][kk ][jj ][iim]) ) / SqrtRhoC;
+   }
    if ( SChangeSignY && DChangeSignY && SCurvY )
+   {
       QP +=  FABS( SQRT(Var[0][kk ][jjp][ii ]) - 2 * SqrtRhoC + SQRT(Var[0][kk ][jjm][ii ]) ) / SqrtRhoC;
+   }
    if ( SChangeSignZ && DChangeSignZ && SCurvZ )
+   {
       QP +=  FABS( SQRT(Var[0][kkp][jj ][ii ]) - 2 * SqrtRhoC + SQRT(Var[0][kkm][jj ][ii ]) ) / SqrtRhoC;
+   }
 
 
    return ( QP > QPThreshold );

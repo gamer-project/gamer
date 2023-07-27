@@ -100,7 +100,7 @@ void LB_Refine( const int FaLv )
                                   CFB_SibLBIdx_Home, CFB_SibLBIdx_Away,
                                   SwitchFinerLevelsToWaveScheme );
 
-# if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+# if ( ELBDM_SCHEME == ELBDM_HYBRID )
 // sync information whether refined levels are switched to wave scheme
    bool Send = SwitchFinerLevelsToWaveScheme;
    bool Recv;
@@ -108,7 +108,7 @@ void LB_Refine( const int FaLv )
    MPI_Allreduce(&Send, &Recv, 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD);
 
    SwitchFinerLevelsToWaveScheme = Recv;
-# endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+# endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 // 3. get the magnetic field on the coarse-fine interfaces for the divergence-free interpolation
 // ==========================================================================================
@@ -196,7 +196,7 @@ void LB_Refine( const int FaLv )
 
 
 // (c1.3.6) convert density/Phase to density/real part/imaginary part in hybrid scheme if we switch the level from Phase to wave
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( SwitchFinerLevelsToWaveScheme ) {
       for (int ChildLv = SonLv; ChildLv <= TOP_LEVEL; ++ChildLv) {
 //       set use_wave_flag

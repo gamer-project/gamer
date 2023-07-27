@@ -137,12 +137,12 @@ void Flu_Prepare( const int lv, const double PrepTime,
 #  endif
 
 // prepare h_HasWaveCounterpart with information which cells have wave counterparts
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( !amr->use_wave_flag[lv] )
    {
       Prepare_PatchData_HasWaveCounterpart(lv, h_HasWaveCounterpart, HYB_GHOST_SIZE, NPG, PID0_List, NSIDE_26, GlobalTree);
    }
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 // validate input arrays for debugging purposes
    if ( OPT__CK_INPUT_FLUID )
@@ -159,14 +159,14 @@ void Flu_Prepare( const int lv, const double PrepTime,
          for (int j=0; j<FLU_NXT; j++)
          for (int i=0; i<FLU_NXT; i++)
          {
-#           if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
             if ( amr->use_wave_flag[lv] ) {
-#           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#           endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
             const int t = IDX321( i, j, k, FLU_NXT, FLU_NXT );
             for (int v=0; v<FLU_NIN; v++)    fluid[v] = h_Flu_Array_F_In[TID][v][t];
 
-#           if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
             } else { // if ( amr->use_wave_flag[lv] ) {
 //          convert to smaller array for HYB_GHOST_SIZE ghost zones
             real (*smaller_h_Flu_Array_F_In   )[FLU_NIN ][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) h_Flu_Array_F_In;
@@ -174,7 +174,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
 
             for (int v=0; v<FLU_NIN; v++)    fluid[v] = smaller_h_Flu_Array_F_In[TID][v][t];
             } // if ( amr->use_wave_flag[lv] ) { ... else
-#           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#           endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 //          HYDRO

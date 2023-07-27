@@ -782,17 +782,17 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #        if ( MODEL == ELBDM )
          DisableFixupFlux |= (ELBDM_BASE_SPECTRAL  &&  lv == 0);
 
-#        if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
          if ( amr->use_wave_flag[lv + 1] ) {
-#        endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //       disable fixup for base level spectral solver on base-level
 #        if ( WAVE_SCHEME == WAVE_GRAMFE )
 //       disable fixup for local spectral method on wave levels
          DisableFixupFlux |= true;
 #        endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
-#        if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
          }
-#        endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #        endif // # if ( MODEL == ELBDM )
 
          if ( OPT__FIXUP_FLUX  &&  !(DisableFixupFlux) )
@@ -831,7 +831,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //       REFINE_NLEVEL>1 allows for refining multiple levels at once
          int Refine_NLevel = REFINE_NLEVEL;
 
-#        if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //       always refine at least until first wave level when using fluid scheme
          if ( !amr->use_wave_flag[lv] ) {
             int FirstWaveLevel = NLEVEL;
@@ -850,7 +850,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                Refine_NLevel = MAX(FirstWaveLevel - lv, REFINE_NLEVEL);
             }
          }
-#        endif // # ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#        endif // # ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
          const int lv_refine_max = MIN( lv+Refine_NLevel, TOP_LEVEL ) - 1;
@@ -928,7 +928,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
 
 #           ifdef LOAD_BALANCE
-#           if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //          exchange all fluid data on refined wave levels after switching to wave scheme
             if ( old_wave_flag != amr->use_wave_flag[ lv_refine + 1 ] ) {
                for (int i = lv_refine + 1; i <= TOP_LEVEL; ++i) {
@@ -940,7 +940,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                                  Timer_GetBuf[lv_refine][4],   TIMER_ON   );
                }
             }
-#           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#           endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #           endif // # ifdef LOAD_BALANCE
 
             if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );

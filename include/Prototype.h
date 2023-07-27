@@ -193,11 +193,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         const NSide_t NSide, const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
                         const real MinDens, const real MinPres, const real MinTemp, const real MinEntr, const bool DE_Consistency );
 
-#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
 void Prepare_PatchData_HasWaveCounterpart(  const int lv, bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ],
                                             const int GhostSize, const int NPG, const int *PID0_List,
                                             const NSide_t NSide, LB_GlobalTree* GlobalTree );
-#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 // Init
 void End_GAMER();
@@ -354,9 +354,9 @@ void Flag_Buffer( const int lv );
 void Refine_Buffer( const int lv, const int *SonTable, const int *GrandTable );
 #endif
 
-#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
 void Sync_UseWaveFlag( const int lv );
-#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 // SelfGravity
 #ifdef GRAVITY

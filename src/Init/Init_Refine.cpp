@@ -73,7 +73,7 @@ void Init_Refine( const int lv )
             Par_PassParticle2Son_SinglePatch( lv, PID );
 #           endif
 
-#           if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
             if ( amr->patch[0][lv][PID]->switch_to_wave_flag ) {
                amr->use_wave_flag[lv + 1] = true;
             }
@@ -82,7 +82,7 @@ void Init_Refine( const int lv )
             if ( lv > 0)
                if ( amr->use_wave_flag[lv-1] )
                   amr->use_wave_flag[lv] = true;
-#           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#           endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
          } // if ( amr->patch[0][lv][PID]->flag )
       } // for (int PID=amr->NPatchComma[lv][s+1]; PID<amr->NPatchComma[lv][s+2]; PID++)

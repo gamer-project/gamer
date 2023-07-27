@@ -1043,7 +1043,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                {
 
 //                convert real/imag to density/phase in hybrid scheme
-#                 if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#                 if ( ELBDM_SCHEME == ELBDM_HYBRID )
                   if ( amr->use_wave_flag[lv] && (v == REAL || v == IMAG) ) {
                      real Re, Im;
                      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -1063,7 +1063,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                         }
                      }
                   } else
-#                 endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#                 endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                      memcpy( FieldData[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
 
@@ -2670,9 +2670,9 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "AveDens_Init",         HOFFSET(KeyInfo_t,AveDens_Init        ), H5T_NATIVE_DOUBLE       );
 #  endif
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    H5Tinsert( H5_TypeID, "UseWaveScheme",         HOFFSET(KeyInfo_t,UseWaveScheme      ), H5_TypeID_Arr_NLvInt    );
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
    H5Tinsert( H5_TypeID, "CodeVersion",          HOFFSET(KeyInfo_t,CodeVersion         ), H5_TypeID_VarStr        );
    H5Tinsert( H5_TypeID, "DumpWallTime",         HOFFSET(KeyInfo_t,DumpWallTime        ), H5_TypeID_VarStr        );

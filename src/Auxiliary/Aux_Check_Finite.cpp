@@ -43,12 +43,12 @@ void Aux_Check_Finite( const int lv, const char *comment )
                NextIdx = 0;
 
                for (int v=0; v<NCOMP_TOTAL; v++) {
-#              if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#              if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //                ignore stub field on fluid levels in hybrid scheme
                   if ( !amr->use_wave_flag[lv] && v == STUB )
                        Data[ NextIdx ++ ] = 0;
                   else
-#              endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#              endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
                        Data[ NextIdx ++ ] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
                }

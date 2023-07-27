@@ -611,9 +611,9 @@
 
 // define fluid ghost boundary size for hybrid scheme
 // it must be smaller than FLU_GHOST_SIZE because the same fluid arrays are used for both the wave and fluid solvers
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #       define HYB_GHOST_SIZE         6
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 // set default parameters of gram extension scheme
 # if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
@@ -801,11 +801,11 @@
 #ifdef FEEDBACK
 #  define FB_NXT        ( PS2 + 2*FB_GHOST_SIZE )                 // use patch group as the unit
 #endif
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  define HYB_NXT       ( PS2 + 2*HYB_GHOST_SIZE )
 #  else
 #  define HYB_NXT       ( 1 )
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 // size of auxiliary arrays and EoS tables
 #if ( MODEL == HYDRO )

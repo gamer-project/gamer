@@ -1,7 +1,7 @@
 #include "CUFLU.h"
 #include "Macro.h"
 
-#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 // convert to 1D index with ghost boundary
 # define to1D1(z,y,x) (  (z)                 * HYB_NXT * HYB_NXT +  (y)                 * HYB_NXT +  (x)                  )

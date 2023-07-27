@@ -1,7 +1,7 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_GetTimeStep_Hybrid
@@ -36,4 +36,4 @@ double ELBDM_GetTimeStep_Hybrid( const int lv )
 
 
 
-#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )

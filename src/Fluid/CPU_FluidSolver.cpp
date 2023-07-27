@@ -141,9 +141,9 @@ static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 #if ( MODEL == ELBDM )
 extern bool (*h_IsCompletelyRefined);
 #endif // #if ( MODEL == ELBDM )
-#if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
 extern bool (*h_HasWaveCounterpart)[ CUBE(HYB_NXT) ];
-#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 

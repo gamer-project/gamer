@@ -162,11 +162,11 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
          }
 #        endif // #ifdef MHD
 
-#        if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
          if ( !amr->use_wave_flag[ SonLv ] && !amr->use_wave_flag[ FaLv ] && TP->switch_to_wave_flag ) {
             SwitchFinerLevelsToWaveScheme = true;
          }
-#        endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#        endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 //       record the new lists

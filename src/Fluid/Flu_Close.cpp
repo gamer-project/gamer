@@ -142,7 +142,7 @@ void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
 //       hybrid scheme in debug mode on fluid levels transfers 3 fields back from GPU: DENS, PHAS and STUB
 //       in debug mode, STUB contains information about the cells that were updated using a first-order scheme where the fluid scheme fails
          if ( amr->use_wave_flag[lv] ) {
-#        endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
          for (int v=0; v<FLU_NOUT; v++)      {
          for (int k=0; k<PATCH_SIZE; k++)    {  K = Table_z + k;
          for (int j=0; j<PATCH_SIZE; j++)    {  J = Table_y + j;

@@ -124,7 +124,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    real (*Mag_FDataCC_IntIter)[NCOMP_MAG] = new real [ CUBE(FSize_CC) ][NCOMP_MAG];
 #  endif // #ifdef MHD
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 //       for hybrid scheme, consider the following cases:
@@ -256,9 +256,9 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          JustRefined[PID] = true;
 #        endif
 
-#        if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
          SwitchFinerLevelsToWaveScheme = !amr->use_wave_flag[lv+1] && !amr->use_wave_flag[lv] && Pedigree->switch_to_wave_flag;
-#        endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#        endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 //       (c1.3) assign data to child patches by spatial interpolation
@@ -850,7 +850,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //       (c1.3.4.3) convert density/phase to real and imaginary parts if patches were refined from phase to wave level
-#        if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
          if ( Pedigree->flag && !amr->use_wave_flag[lv] && amr->use_wave_flag[lv+1] ) {
             real amp, phase, stub, Re, Im ;
 
@@ -1200,7 +1200,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    Mis_GetTotalPatchNumber( lv+1 );
 
 // convert density/Phase to density/real part/imaginary part in hybrid scheme if we switch the level from Phase to wave
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( SwitchFinerLevelsToWaveScheme ) {
       for (int ChildLv = lv + 1; ChildLv <= TOP_LEVEL; ++ChildLv) {
 //       set use_wave_flag

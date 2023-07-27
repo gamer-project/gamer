@@ -76,9 +76,9 @@ struct KeyInfo_t
    double AveDens_Init;             // AveDensity_Init
 #  endif
 
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    int UseWaveScheme[NLEVEL];       // AMR levels where wave solver is used
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
    char  *CodeVersion;
    char  *DumpWallTime;
