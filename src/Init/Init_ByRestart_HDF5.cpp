@@ -1306,12 +1306,12 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       for (int k=0; k<PS1; k++)    {
       for (int j=0; j<PS1; j++)    {
       for (int i=0; i<PS1; i++)    {
-         Dens = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][i][k][j];
-         Phas = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[PHAS][i][k][j];
+         Dens = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
+         Phas = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[PHAS][k][j][i];
          Re   = SQRT(Dens) * COS(Phas);
          Im   = SQRT(Dens) * SIN(Phas);
-         amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[REAL][i][k][j] = Re;
-         amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[IMAG][i][k][j] = Im;
+         amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[REAL][k][j][i] = Re;
+         amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[IMAG][k][j][i] = Im;
       }}}
    }
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
