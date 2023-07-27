@@ -124,7 +124,7 @@ else ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=W
 
 # choose gramfe scheme GRAMFE_FFT (uses fast fourier transform, faster for larger patch sizes), GRAMFE_MATMUL (uses matrix multiplication, faster for smaller patches)
 # --> must turn on (SUPPORT_FFTW=FFTW2 and FLOAT8) or (SUPPORT_FFTW=FFTW3) or GPU for GRAMFE_SCHEME == GRAMFE_FFT
-SIMU_OPTION += -DGRAMFE_SCHEME=GRAMFE_FFT
+SIMU_OPTION += -DGRAMFE_SCHEME=GRAMFE_MATMUL
 
 endif # WAVE_SCHEME
 
@@ -260,7 +260,7 @@ SIMU_OPTION += -DOPENMP
 # support spectral interpolation
 # --> must enable SUPPORT_FFTW (if FFTW2 must also enable FLOAT8)
 # --> must enable SUPPORT_GSL
-#SIMU_OPTION += -DSUPPORT_SPECTRAL_INTERPOLATION
+#SIMU_OPTION += -DSUPPORT_SPECTRAL_INT
 
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT
