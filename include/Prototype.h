@@ -569,7 +569,7 @@ bool   ELBDM_HasWaveCounterpart( const int I, const int J, const int K, const lo
 bool   ELBDM_Flag_EngyDensity( const int i, const int j, const int k, const real Real_Array[],
                                const real Imag_Array[], const double Angle_2pi, const double Eps );
 //Flag for switching between wave and phase scheme in hybrid solver
-bool   ELBDM_Flag_Interference( const int i, const int j, const int k, const real Var[], const double QPThreshold, const double LapPhaseThreshold, const double DensThreshold, const bool OnlyAtExtrema );
+bool   ELBDM_Flag_Interference( const int i, const int j, const int k, const real Var[], const double QPThreshold, const double DensThreshold, const double LapPhaseThreshold, const bool OnlyAtExtrema );
 real   ELBDM_UnwrapPhase( const real Phase_Ref, const real Phase_Wrapped );
 int    ELBDM_UnwrapWindingNumber( const real Phase_Ref, const real Phase_Wrapped );
 real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );

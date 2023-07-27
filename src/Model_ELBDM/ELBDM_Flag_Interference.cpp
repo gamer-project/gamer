@@ -19,7 +19,7 @@
 // Return      :  "true"  if the flag criterion is     fulfilled
 //                "false" if the flag criterion is NOT fulfilled
 //-------------------------------------------------------------------------------------------------------
-bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real Var1D[], const double QPThreshold, const double LapPhaseThreshold, const double DensThreshold, const bool OnlyAtExtrema )
+bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real Var1D[], const double QPThreshold, const double DensThreshold, const double LapPhaseThreshold, const bool OnlyAtExtrema )
 {
 // check
 #  ifdef GAMER_DEBUG
@@ -45,12 +45,12 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
    if ( !DensCond ) return false;
 
 // check whether density and phase fields have local extrema
-   const bool DChangeSignX = OnlyAtExtrema && (( Var[0][kk ][jj ][iip] - Var[0][kk][jj][ii] ) * ( Var[0][kk][jj][ii] - Var[0][kk ][jj ][iim] ) < 0.0);
-   const bool DChangeSignY = OnlyAtExtrema && (( Var[0][kk ][jjp][ii ] - Var[0][kk][jj][ii] ) * ( Var[0][kk][jj][ii] - Var[0][kk ][jjm][ii ] ) < 0.0);
-   const bool DChangeSignZ = OnlyAtExtrema && (( Var[0][kkp][jj ][ii ] - Var[0][kk][jj][ii] ) * ( Var[0][kk][jj][ii] - Var[0][kkm][jj ][ii ] ) < 0.0);
-   const bool SChangeSignX = OnlyAtExtrema && (( Var[1][kk ][jj ][iip] - Var[1][kk][jj][ii] ) * ( Var[1][kk][jj][ii] - Var[1][kk ][jj ][iim] ) < 0.0);
-   const bool SChangeSignY = OnlyAtExtrema && (( Var[1][kk ][jjp][ii ] - Var[1][kk][jj][ii] ) * ( Var[1][kk][jj][ii] - Var[1][kk ][jjm][ii ] ) < 0.0);
-   const bool SChangeSignZ = OnlyAtExtrema && (( Var[1][kkp][jj ][ii ] - Var[1][kk][jj][ii] ) * ( Var[1][kk][jj][ii] - Var[1][kkm][jj ][ii ] ) < 0.0);
+   const bool DChangeSignX = (!OnlyAtExtrema) || (( Var[0][kk ][jj ][iip] - Var[0][kk][jj][ii] ) * ( Var[0][kk][jj][ii] - Var[0][kk ][jj ][iim] ) < 0.0);
+   const bool DChangeSignY = (!OnlyAtExtrema) || (( Var[0][kk ][jjp][ii ] - Var[0][kk][jj][ii] ) * ( Var[0][kk][jj][ii] - Var[0][kk ][jjm][ii ] ) < 0.0);
+   const bool DChangeSignZ = (!OnlyAtExtrema) || (( Var[0][kkp][jj ][ii ] - Var[0][kk][jj][ii] ) * ( Var[0][kk][jj][ii] - Var[0][kkm][jj ][ii ] ) < 0.0);
+   const bool SChangeSignX = (!OnlyAtExtrema) || (( Var[1][kk ][jj ][iip] - Var[1][kk][jj][ii] ) * ( Var[1][kk][jj][ii] - Var[1][kk ][jj ][iim] ) < 0.0);
+   const bool SChangeSignY = (!OnlyAtExtrema) || (( Var[1][kk ][jjp][ii ] - Var[1][kk][jj][ii] ) * ( Var[1][kk][jj][ii] - Var[1][kk ][jjm][ii ] ) < 0.0);
+   const bool SChangeSignZ = (!OnlyAtExtrema) || (( Var[1][kkp][jj ][ii ] - Var[1][kk][jj][ii] ) * ( Var[1][kk][jj][ii] - Var[1][kkm][jj ][ii ] ) < 0.0);
 
 // compute second derivative of phase field
    const bool SCurvX       =  FABS( Var[1][kk ][jj ][iip] - 2 * Var[1][kk][jj][ii] + Var[1][kk ][jj ][iim] ) > LapPhaseThreshold;
@@ -66,7 +66,6 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
       QP +=  FABS( SQRT(Var[0][kk ][jjp][ii ]) - 2 * SqrtRhoC + SQRT(Var[0][kk ][jjm][ii ]) ) / SqrtRhoC;
    if ( SChangeSignZ && DChangeSignZ && SCurvZ )
       QP +=  FABS( SQRT(Var[0][kkp][jj ][ii ]) - 2 * SqrtRhoC + SQRT(Var[0][kkm][jj ][ii ]) ) / SqrtRhoC;
-
 
 
    return ( QP > QPThreshold );

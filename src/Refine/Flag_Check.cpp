@@ -69,7 +69,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
       Flag |=  ELBDM_Flag_Interference( i, j, k, Interf_Var, FlagTable_Interference[lv][0], FlagTable_Interference[lv][1], FlagTable_Interference[lv][2], FlagTable_Interference[lv][3] > 0.5);
 
-//    set use_wave_flag if fourth column in FlagTable_Interference enables switching from fluid to wave solver
+//    switch to wave solver when refining to ELBDM_FIRST_WAVE_LEVEL
       if ( Flag && lv + 1 >= ELBDM_FIRST_WAVE_LEVEL )
       {
          amr->patch[0][lv][PID]->switch_to_wave_flag =  true;

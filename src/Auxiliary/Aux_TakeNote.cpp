@@ -1654,7 +1654,7 @@ void Aux_TakeNote()
       {
          fprintf( Note, "Flag Criterion (Interference Threshold)\n" );
          fprintf( Note, "***********************************************************************************\n" );
-         fprintf( Note, "  Level     QP          Density      LapPhase    OnlyAtMaximum\n" );
+         fprintf( Note, "  Level     QP          Density      LapPhase      OnlyAtMaximum\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)
             fprintf( Note, "%7d   %10.2e  %10.2e   %10.2e     %d\n", lv, FlagTable_Interference[lv][0], FlagTable_Interference[lv][1], FlagTable_Interference[lv][2], (int) (FlagTable_Interference[lv][3] > 0.5));
          fprintf( Note, "***********************************************************************************\n" );
