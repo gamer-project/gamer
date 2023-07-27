@@ -500,7 +500,7 @@ GramFEInterpolationContext::GramFEInterpolationContext(size_t nInput, size_t nGh
 
 // load Gram-Fourier extension tables from file
    char filename[2 * MAX_STRING];
-   sprintf(filename, "%s/boundary2extension_tables/%ld_%ld_%d_%d.bin", INT_TABLE_PATH, nExtension, nDelta, 150, 63);
+   sprintf(filename, "%s/boundary2extension_tables/%ld_%ld_%d_%d.bin", SPEC_INT_TABLE_PATH, nExtension, nDelta, 150, 63);
 
    size_t  size  = nExtension * 2 * nDelta;
    double* table = (double*) malloc(size * sizeof(double));
@@ -661,7 +661,7 @@ PrecomputedInterpolationContext::PrecomputedInterpolationContext(size_t nInput, 
    :  InterpolationContext(nInput, nGhostBoundary)
 {
    char filename[2 * MAX_STRING];
-   sprintf(filename, "%s/interpolation_tables/N=%ld.bin", INT_TABLE_PATH, nInput);
+   sprintf(filename, "%s/interpolation_tables/N=%ld.bin", SPEC_INT_TABLE_PATH, nInput);
 
    size_t size   = 2 * (nInput - 2) * nInput;
    double* table = (double*) malloc(size * sizeof(double));

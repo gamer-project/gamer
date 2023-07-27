@@ -1351,7 +1351,7 @@ void Aux_TakeNote()
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #     endif
 #     ifdef SUPPORT_SPECTRAL_INT
-      fprintf( Note, "INT_TABLE_PATH                  %s\n",      INT_TABLE_PATH          );
+      fprintf( Note, "SPEC_INT_TABLE_PATH             %s\n",      SPEC_INT_TABLE_PATH     );
 #     endif
       fprintf( Note, "OPT__FLU_INT_SCHEME             %s\n",      ( OPT__FLU_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
                                                                   ( OPT__FLU_INT_SCHEME == INT_MINMOD1D ) ? "MINMOD1D" :

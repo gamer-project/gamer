@@ -504,7 +504,7 @@ void Init_Load_Parameter()
 
 // GramFE tables
 #  ifdef SUPPORT_SPECTRAL_INT
-   ReadPara->Add( "INT_TABLE_PATH",              INT_TABLE_PATH,                  NoDef_str,       Useless_str,   Useless_str    );
+   ReadPara->Add( "SPEC_INT_TABLE_PATH",         SPEC_INT_TABLE_PATH,             NoDef_str,       Useless_str,   Useless_str    );
 #  endif
 
 // miscellaneous
