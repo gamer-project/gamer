@@ -218,14 +218,6 @@ void Aux_TakeNote()
 #     error : ERROR : unsupported HYBRID_SCHEME !!
 #     endif
 
-
-#     ifdef HYBRID_IGNORE_FLUID_FAILURE
-      fprintf( Note, "HYBRID_IGNORE_FLUID_FAILURE     ON\n" );
-#     else
-      fprintf( Note, "HYBRID_IGNORE_FLUID_FAILURE     OFF\n" );
-#     endif
-
-
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 //    c.2 options in WAVE_GRAMFE

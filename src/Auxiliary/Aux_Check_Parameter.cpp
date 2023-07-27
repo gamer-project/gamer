@@ -1125,10 +1125,6 @@ void Aux_Check_Parameter()
 #  error : ERROR : FLU_GHOST_SIZE needs to be bigger than HYB_GHOST_SIZE !!
 #  endif // # if ( FLU_GHOST_SIZE < HYB_GHOST_SIZE )
 
-#  if ( defined(HYBRID_IGNORE_FLUID_FAILURE) && (HYBRID_SCHEME != HYBRID_MUSCL) )
-#  error : ERROR : ELBDM_HYBRID with HYBRID_IGNORE_FLUID_FAILURE requires HYBRID_SCHEME = HYBRID_MUSCL!
-#  endif // #  if ( defined(HYBRID_IGNORE_FLUID_FAILURE) && (HYBRID_SCHEME != HYBRID_MUSCL) )
-
    if ( ELBDM_BASE_SPECTRAL )
       Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL incompatible with ELBDM_SCHEME == ELBDM_HYBRID !!\n" );
 
