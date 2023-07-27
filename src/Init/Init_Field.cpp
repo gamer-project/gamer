@@ -80,6 +80,8 @@ void Init_Field()
    Idx_Dens    = AddField( "Dens",     NORMALIZE_NO, INTERP_FRAC_NO );
    Idx_Phas    = AddField( "Phase",    NORMALIZE_NO, INTERP_FRAC_NO );
    Idx_Stub    = AddField( "Stub",     NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_Real    = Idx_Phas;
+   Idx_Imag    = Idx_Stub;
 
    if ( Idx_Dens != DENS )    Aux_Error( ERROR_INFO, "inconsistent Idx_Dens  (%d != %d) !!\n", Idx_Dens, DENS );
    if ( Idx_Phas != PHAS )    Aux_Error( ERROR_INFO, "inconsistent Idx_Phase (%d != %d) !!\n", Idx_Phas, PHAS );
