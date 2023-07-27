@@ -225,14 +225,6 @@ void LB_Refine( const int FaLv )
             }}} // k,j,i
          } // for (int PID=0; PID < amr->NPatchComma[ChildLv][27]; PID++)
       } // for (int ChildLv = SonLv; ChildLv <= TOP_LEVEL; ++ChildLv)
-
-//    sync flags across all MPI ranks after conversion
-      for (int ChildLv = SonLv; ChildLv <= TOP_LEVEL; ++ChildLv)
-      {
-         Sync_UseWaveFlag(ChildLv);
-      } // for (int ChildLv = SonLv; ChildLv <= TOP_LEVEL; ++ChildLv)
-   } // if ( SwitchFinerToWaveScheme )
-
 #   endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
 
 // 7. miscellaneous
