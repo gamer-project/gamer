@@ -35,11 +35,11 @@ static int Factorial(const int n) {
 //                NTerms  : Number of terms to retain in expansion
 // Return      :  Value of expansion
 //-------------------------------------------------------------------------------------------------------
-static gramfe_evo_float CosineTaylorExpansion(const gramfe_evo_float x, const int Nterms) {
-   gramfe_evo_float result = 0;
+static long double CosineTaylorExpansion(const long double x, const int Nterms) {
+   long double result = 0;
 
    for (int i = 0; i  < Nterms; ++i) {
-      result += powq(-1, i) * (1 / ((gramfe_evo_float) Factorial(2 * i))) * powq( x, 2 * i );
+      result += pow(-1, i) * (1 / ((long double) Factorial(2 * i))) * pow( x, 2 * i );
    }
 
    return result;
@@ -52,11 +52,11 @@ static gramfe_evo_float CosineTaylorExpansion(const gramfe_evo_float x, const in
 //                NTerms  : Number of terms to retain in expansion
 // Return      :  Value of expansion
 //-------------------------------------------------------------------------------------------------------
-static gramfe_evo_float SineTaylorExpansion(const gramfe_evo_float x, const int Nterms) {
-   gramfe_evo_float result = 0;
+static long double SineTaylorExpansion(const long double x, const int Nterms) {
+   long double result = 0;
 
    for (int i = 0; i  < Nterms; ++i) {
-      result += powq(-1, i) * ( 1 / ((gramfe_evo_float) Factorial(2 * i + 1)) ) * powq((long double) x, 2 * i + 1);
+      result += pow(-1, i) * ( 1 / ((long double) Factorial(2 * i + 1)) ) * pow(x, 2 * i + 1);
    }
 
    return result;
@@ -74,14 +74,14 @@ static gramfe_evo_float SineTaylorExpansion(const gramfe_evo_float x, const int 
 void ELBDM_GramFE_ComputeTimeEvolutionMatrix(gramfe_matmul_float (*output)[2 * FLU_NXT], const real dt, const real dh, const real Eta)
 {
 // set up time evolution operator and filter
-   gramfe_evo_float K, Filter, Coeff;
+   long double K, Filter, Coeff;
    gramfe_evo_complex_type ExpCoeff;
 
-   const gramfe_evo_float filterDecay  = (gramfe_evo_float) 32.0 * (gramfe_evo_float) 2.302585092994046; // decay of k-space filter ( 32 * log(10) )
-   const gramfe_evo_float filterDegree = (gramfe_evo_float) 100;                                       // degree of k-space filter
-   const gramfe_evo_float kmax         = (gramfe_evo_float) M_PI / dh;                                 // maximum value of k
-   const gramfe_evo_float dk           = (gramfe_evo_float) + 2.0 * kmax / GRAMFE_FLU_NXT;             // k steps in k-space
-   const gramfe_evo_float dT           = (gramfe_evo_float) - 0.5 * dt / Eta;                          // coefficient in time evolution operator
+   const long double filterDecay  = (long double) 32.0 * (long double) 2.302585092994046; // decay of k-space filter ( 32 * log(10) )
+   const long double filterDegree = (long double) 100;                                       // degree of k-space filter
+   const long double kmax         = (long double) M_PI / dh;                                 // maximum value of k
+   const long double dk           = (long double) + 2.0 * kmax / GRAMFE_FLU_NXT;             // k steps in k-space
+   const long double dT           = (long double) - 0.5 * dt / Eta;                          // coefficient in time evolution operator
 
 // naively "exp(1j * Coeff)" should give the exact time evolution of the free Schrödinger equation
 // however, the time-evolution operator depends on higher-order derivatives
@@ -104,9 +104,9 @@ void ELBDM_GramFE_ComputeTimeEvolutionMatrix(gramfe_matmul_float (*output)[2 * F
    for (int i=0; i<GRAMFE_FLU_NXT; i++)
    {
       K           = ( i <= GRAMFE_FLU_NXT/2 ) ? dk*i : dk*(i-GRAMFE_FLU_NXT);
-      Filter      = expq(-(long double) filterDecay * powq((long double) fabsq(K/kmax), 2*filterDegree));
+      Filter      = exp(- filterDecay * pow( abs(K/kmax), 2*filterDegree));
       Coeff       = SQR(K)*dT;
-      ExpCoeff    = gramfe_evo_complex_type(CosineTaylorExpansion(Coeff, cosineNTerms), SineTaylorExpansion(Coeff, sineNTerms)) * Filter;
+      ExpCoeff    = gramfe_evo_complex_type((gramfe_evo_float) CosineTaylorExpansion(Coeff, cosineNTerms), (gramfe_evo_float) SineTaylorExpansion(Coeff, sineNTerms)) * (gramfe_evo_float) Filter;
 
 //    multiply FFT matrix by diagonal time evolution operator in k-space
       for (int k=0; k<GRAMFE_FLU_NXT; k++)
