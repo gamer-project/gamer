@@ -232,12 +232,6 @@ Procedure for outputting new variables:
 //                2458 : 2022/10/24 --> output AUTO_REDUCE_MINMOD_FACTOR, AUTO_REDUCE_MINMOD_MIN,
 //                                             AUTO_REDUCE_INT_MONO_FACTOR, AUTO_REDUCE_INT_MONO_MIN,
 //                                             INT_MONO_COEFF_B
-//                2455 : 2022/11/04 --> output REFINE_NLEVEL
-//                2456 : 2022/12/15 --> output SUPPORT_FFTW
-//                2457 : 2023/01/28 --> output OPT__RESET_FLUID_INIT
-//                2458 : 2023/02/02 --> add OPT__RES_PHASE
-
-//                2459 : 2023/02/07 --> output ELBDM_BASE_SPECTRAL
 //                2459 : 2022/11/04 --> output REFINE_NLEVEL
 //                2460 : 2022/12/15 --> output SUPPORT_FFTW
 //                2461 : 2023/01/28 --> output OPT__RESET_FLUID_INIT
@@ -281,10 +275,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
    int NCompStore = NCOMP_TOTAL;
 
-// do not store STUB field when not debugging hybrid scheme
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && !defined(GAMER_DEBUG) )
+// do not store STUB field unless we are in debug mode without bitwise reproducibility
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID && ( !defined( GAMER_DEBUG ) || defined( BITWISE_REPRODUCIBILITY ) ) )
    NCompStore = NCOMP_TOTAL - 1;
-#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && !defined(GAMER_DEBUG) )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID && ( !defined( GAMER_DEBUG ) || defined( BITWISE_REPRODUCIBILITY ) )
 
    NFieldStored += NCompStore;
 
