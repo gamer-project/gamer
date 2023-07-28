@@ -2269,7 +2269,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.ELBDM_RemoveMotionCM    = ELBDM_REMOVE_MOTION_CM;
    InputPara.ELBDM_BaseSpectral      = ELBDM_BASE_SPECTRAL;
    InputPara.ELBDM_VortexThreshold   = ELBDM_VORTEX_THRESHOLD;
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    InputPara.ELBDM_FirstWaveLevel    = ELBDM_FIRST_WAVE_LEVEL;
+#  endif // ELBDM_SCHEME
 #  endif // ELBDM
 
 // fluid solvers in different models
@@ -3210,7 +3212,10 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "ELBDM_RemoveMotionCM",    HOFFSET(InputPara_t,ELBDM_RemoveMotionCM   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "ELBDM_BaseSpectral",      HOFFSET(InputPara_t,ELBDM_BaseSpectral     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "ELBDM_VortexThreshold",   HOFFSET(InputPara_t,ELBDM_VortexThreshold  ), H5T_NATIVE_DOUBLE  );
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    H5Tinsert( H5_TypeID, "ELBDM_FirstWaveLevel",    HOFFSET(InputPara_t,ELBDM_FirstWaveLevel   ), H5T_NATIVE_INT     );
+#  endif // ELBDM_SCHEME
 #  endif // ELBDM
 
 // fluid solvers in different models

@@ -99,11 +99,11 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
 #     if ( MODEL == ELBDM )
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( amr->use_wave_flag[TLv] ) {
-      fprintf( File, "%16s%16s", FieldLabel[REAL], FieldLabel[IMAG] );
-      } else { //if ( amr->use_wave_flag[TLv] )
 #     endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      fprintf( File, "%16s%16s", FieldLabel[DENS], FieldLabel[PHAS] );
+      fprintf( File, "%16s%16s", FieldLabel[REAL], FieldLabel[IMAG] );
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      } else { //if ( amr->use_wave_flag[TLv] )
+      fprintf( File, "%16s%16s", FieldLabel[DENS], FieldLabel[PHAS] );
       } //if ( amr->use_wave_flag[TLv] ) ... else
 #     endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 

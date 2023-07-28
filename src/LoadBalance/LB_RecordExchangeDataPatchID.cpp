@@ -290,9 +290,6 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 #                 endif
                } // if ( TPID >= NReal )
             } // for (int f=0; f<NFaBuff; f++)
-
-
-
          } // if ( SibPID0 == -1 )
       } // for (int s=0; s<NSib_F; s++)
    } // for (int SonPID0=0; SonPID0<amr->NPatchComma[SonLv][1]; SonPID0+=8)
