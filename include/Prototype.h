@@ -571,7 +571,6 @@ bool   ELBDM_Flag_EngyDensity( const int i, const int j, const int k, const real
 //Flag for switching between wave and phase scheme in hybrid solver
 bool   ELBDM_Flag_Interference( const int i, const int j, const int k, const real Var[], const double QPThreshold, const double DensThreshold, const double LapPhaseThreshold, const bool OnlyAtExtrema );
 real   ELBDM_UnwrapPhase( const real Phase_Ref, const real Phase_Wrapped );
-int    ELBDM_UnwrapWindingNumber( const real Phase_Ref, const real Phase_Wrapped );
 real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 void   ELBDM_RemoveMotionCM();
 #ifdef SUPPORT_FFTW

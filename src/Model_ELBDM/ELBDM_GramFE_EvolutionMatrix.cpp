@@ -9,6 +9,9 @@
 
 #include <complex.h>
 
+// require at least 128 bit precision in order for calculation of evolution matrix to have an error below single precision
+// this is because the extension matrix has a high condition number of 10^15 or higher
+// ideally, gramfe_evo_float should be a 256 bit type
 #define gramfe_evo_float __float128
 
 using gramfe_matmul_complex_type = std::complex<gramfe_matmul_float>;
@@ -133,8 +136,8 @@ void ELBDM_GramFE_ComputeTimeEvolutionMatrix(gramfe_matmul_float (*output)[2 * F
       Evolution[i][j] = out;
    }
 
-   for (size_t i = 0; i < PS2; ++i) {
-      for (size_t j = 0; j < FLU_NXT; ++j) {
+   for ( int i = 0; i < PS2; ++i) {
+      for ( int j = 0; j < FLU_NXT; ++j) {
          Out[i][j].real((gramfe_matmul_float) Evolution[i][j].real());
          Out[i][j].imag((gramfe_matmul_float) Evolution[i][j].imag());
       }

@@ -69,7 +69,8 @@ void Flu_FixUp_Flux( const int lv )
 #  endif
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
-   Aux_Error( ERROR_INFO, "WAVE_GRAMFE does not support the option OPT__FIXUP_FLUX !!\n" );
+   if ( amr->use_wave_flag[lv] )
+      Aux_Error( ERROR_INFO, "WAVE_GRAMFE does not support the option OPT__FIXUP_FLUX !!\n" );
 #  endif
 
 // if "NCOMP_TOTAL != NFLUX_TOTAL", one must specify how to correct cell data from the flux arrays

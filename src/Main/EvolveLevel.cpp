@@ -439,6 +439,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #     endif // #ifdef GRAVITY
 // ===============================================================================================
 
+
 //    5. correct particles velocity and send particles to lv+1
 // ===============================================================================================
 #     ifdef MASSIVE_PARTICLES
@@ -729,8 +730,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          {
 //          exchange the entire phase field (not only the updated parts) in buffers on level lv if level lv + 1 uses wave scheme
 //          this is required for backward matching during fixup
-#           if ( defined( LOAD_BALANCE ) && MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
-            if ( lv != TOP_LEVEL )
+#           if ( defined( LOAD_BALANCE ) && ELBDM_SCHEME == ELBDM_HYBRID )
             if ( !amr->use_wave_flag[lv] && amr->use_wave_flag[lv+1] && ELBDM_MATCH_PHASE )
             {
                int FaLv    = lv;
@@ -743,7 +743,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                                                 _PHAS, _NONE, 0, USELB_YES ),
                               Timer_GetBuf[lv][2],   TIMER_ON   );
             }
-#           endif // # if ( defined( LOAD_BALANCE ) && MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
+#           endif // # if ( defined( LOAD_BALANCE ) && ELBDM_SCHEME == ELBDM_HYBRID )
 
             TIMING_FUNC(   Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv],
                                                NULL_INT, NULL_INT, _TOTAL, _MAG ),
@@ -780,12 +780,12 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          bool DisableFixupFlux = false;
 
 #        if ( MODEL == ELBDM )
+//       disable fixup for base level spectral solver on base-level
          DisableFixupFlux |= (ELBDM_BASE_SPECTRAL  &&  lv == 0);
 
 #        if ( ELBDM_SCHEME == ELBDM_HYBRID )
          if ( amr->use_wave_flag[lv + 1] ) {
 #        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-//       disable fixup for base level spectral solver on base-level
 #        if ( WAVE_SCHEME == WAVE_GRAMFE )
 //       disable fixup for local spectral method on wave levels
          DisableFixupFlux |= true;
@@ -834,20 +834,9 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #        if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //       always refine at least until first wave level when using fluid scheme
          if ( !amr->use_wave_flag[lv] ) {
-            int FirstWaveLevel = NLEVEL;
-
-//          determine first level using wave scheme
-            for (int wave_lv = 0; wave_lv < NLEVEL; ++wave_lv ) {
-               if ( amr->use_wave_flag[wave_lv] ) {
-                  FirstWaveLevel = wave_lv;
-                  break;
-               }
-            }
-
-//          make sure Refine_NLevel reaches at least first wave level
-            if ( lv < FirstWaveLevel )
+            if ( lv < ELBDM_FIRST_WAVE_LEVEL )
             {
-               Refine_NLevel = MAX(FirstWaveLevel - lv, REFINE_NLEVEL);
+               Refine_NLevel = MAX(ELBDM_FIRST_WAVE_LEVEL - lv, REFINE_NLEVEL);
             }
          }
 #        endif // # ( ELBDM_SCHEME == ELBDM_HYBRID )
@@ -880,7 +869,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
 //          store wave flag in buffer to determine whether fluid scheme data was converted to wave scheme
 #           if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(LOAD_BALANCE))
-            bool old_wave_flag = amr->use_wave_flag[ lv_refine + 1 ];
+            const bool old_wave_flag = amr->use_wave_flag[ lv_refine + 1 ];
 #           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(LOAD_BALANCE))
 
             TIMING_FUNC(   Refine( lv_refine, USELB_YES ),
@@ -933,10 +922,10 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             if ( old_wave_flag != amr->use_wave_flag[ lv_refine + 1 ] ) {
                for (int i = lv_refine + 1; i <= TOP_LEVEL; ++i) {
                   TIMING_FUNC(   Buf_GetBufferData( i,     amr->FluSg[i], NULL_INT, NULL_INT, DATA_GENERAL,
-                                                    _TOTAL, _NONE, PATCH_SIZE, USELB_YES ),
+                                                    _TOTAL, _NONE, Flu_ParaBuf, USELB_YES ),
                                  Timer_GetBuf[lv_refine][4],   TIMER_ON   );
                   TIMING_FUNC(   Buf_GetBufferData( i, 1 - amr->FluSg[i], NULL_INT, NULL_INT, DATA_GENERAL,
-                                                    _TOTAL, _NONE, PATCH_SIZE, USELB_YES ),
+                                                    _TOTAL, _NONE, Flu_ParaBuf, USELB_YES ),
                                  Timer_GetBuf[lv_refine][4],   TIMER_ON   );
                }
             }

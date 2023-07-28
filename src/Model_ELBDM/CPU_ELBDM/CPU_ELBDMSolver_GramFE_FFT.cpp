@@ -303,7 +303,7 @@ void CPU_ELBDMSolver_GramFE_FFT(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) 
    const int NPatchGroup                   = NULL_INT;
 
 #  else // #  ifdef __CUDACC__
-// allocate memory on stack within loop for CPU run
+// allocate memory on heap within loop for CPU run
    complex_type (*s_In)   [GRAMFE_FLU_NXT] = NULL;
    complex_type (*s_Ae)   [GRAMFE_NDELTA]  = NULL;
    complex_type (*s_Ao)   [GRAMFE_NDELTA]  = NULL;

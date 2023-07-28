@@ -111,6 +111,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #  if ( MODEL == ELBDM )
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 // restrict phase during wave-wave-level restriction if OPT__RES_PHAS is enabled
+// fluid-fluid-level restriction is treated like normal restriction
    const bool ResWWPha = ResFlu && OPT__RES_PHASE && ( TVarCC & (_REAL) || TVarCC & (_IMAG) ) &&   amr->use_wave_flag[FaLv] && amr->use_wave_flag[SonLv];
 // always restrict phase during fluid-wave-level restriction
    const bool ResWFPha = ResFlu &&                   ( TVarCC & (_REAL) || TVarCC & (_IMAG) ) && ! amr->use_wave_flag[FaLv] && amr->use_wave_flag[SonLv];
@@ -119,8 +120,19 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 // restrict phase if OPT__RES_PHAS is enabled
    const bool ResPha   = ResFlu && OPT__RES_PHASE && (TVarCC & (_REAL) || TVarCC & (_IMAG));
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID ) ... else
-#  endif // # if ( MODEL == ELBDM )
 
+// update the components to be restricted depending on whether phase restriction is enabled
+   NFluVar = 0;
+
+   for (int v=0; v<NCOMP_TOTAL; v++) {
+      if ( ResPha ) {
+            if (  TVarCC & (1L<<v) && v != DENS && v != REAL && v != IMAG )    TFluVarIdxList[ NFluVar ++ ] = v;
+      } else {
+            if (  TVarCC & (1L<<v)                                        )    TFluVarIdxList[ NFluVar ++ ] = v;
+      }
+   }
+
+#  endif // # if ( MODEL == ELBDM )
 
 // restrict
 #  pragma omp parallel for private( NFluVar, TFluVarIdxList ) schedule( runtime )
@@ -151,21 +163,6 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #     endif
 #     endif // #ifdef GAMER_DEBUG
 
-
-#     if ( MODEL == ELBDM )
-
-//    update the components to be restricted depending on whether phase restriction is enabled
-      NFluVar = 0;
-
-      for (int v=0; v<NCOMP_TOTAL; v++) {
-         if ( ResPha ) {
-               if (  TVarCC & (1L<<v) && v != DENS && v != REAL && v != IMAG )    TFluVarIdxList[ NFluVar ++ ] = v;
-         } else {
-               if (  TVarCC & (1L<<v)                                        )    TFluVarIdxList[ NFluVar ++ ] = v;
-         }
-      }
-
-#     endif // # if ( MODEL == ELBDM )
 
 //    loop over eight sons
       for (int LocalID=0; LocalID<8; LocalID++)
@@ -207,9 +204,15 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                   real (*IFaPtr) [PS1][PS1] = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[IMAG];
 
 #           if ( ELBDM_SCHEME == ELBDM_HYBRID )
+//                use phase at previous timestep for ELBDM_MATCH_PHASE because phase update around vortices is not well-defined
+//                the phase field is only well-behaved after restriction from refined levels
                   real (*PFaPtr)   [PS1][PS1]  = amr->patch[  FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
                   real (*OldPFaPtr)[PS1][PS1]  = amr->patch[1-FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
-//                handle that we do not have data of previous time step during initialisation corresponding to a negative time
+//                handle that there is no data of previous time step:
+//                   (i)   during initialisation
+//                   (ii)  after restart
+//                   (iii) after calling LB_Init_LoadBalance() to redistribute patches during the evolution
+//                these cases correspond to negative FluSgTime where the phase has already been restricted and the phase field is well-behaved
                   if ( amr->FluSgTime[FaLv][1-FaFluSg ] < 0.0 ) {
                      OldPFaPtr = PFaPtr;
                   }

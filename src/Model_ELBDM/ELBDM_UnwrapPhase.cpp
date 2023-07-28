@@ -13,8 +13,8 @@
 //
 // Return      :  phase winding number from Phase_Ref to Phase_Wrapped as integer
 //-------------------------------------------------------------------------------------------------------
-int ELBDM_UnwrapWindingNumber( const real Phase_Ref, const real Phase_Wrapped ) {
-   return round((Phase_Ref - Phase_Wrapped) / real(2.0*M_PI) );
+static int ELBDM_UnwrapWindingNumber( const real Phase_Ref, const real Phase_Wrapped ) {
+   return ROUND((Phase_Ref - Phase_Wrapped) / real(2.0*M_PI) );
 
 } // FUNCTION : ELBDM_UnwrapWindingNumber
 

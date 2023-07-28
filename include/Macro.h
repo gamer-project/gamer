@@ -869,10 +869,12 @@
 #endif
 
 // enable double precision for GRAMFE_FFT and GRAMFE_MATMUL schemes by default
+// precision for FFT in GRAMFE_FFT
 #if ( GRAMFE_SCHEME == GRAMFE_FFT )
 #   define GRAMFE_FFT_FLOAT8
 #endif // #if ( GRAMFE_SCHEME == GRAMFE_FFT )
 
+// precision for matrix multiplication in GRAMFE_MATMUL
 #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 #   define GRAMFE_MATMUL_FLOAT8
 #endif // #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
@@ -1039,6 +1041,7 @@
 #  define   EXP( a )         exp( a )
 #  define  ATAN( a )        atan( a )
 #  define FLOOR( a )       floor( a )
+#  define ROUND( a )       round( a )
 #  define  FMAX( a, b )     fmax( a, b )
 #  define  FMIN( a, b )     fmin( a, b )
 #  define   POW( a, b )      pow( a, b )
@@ -1053,6 +1056,7 @@
 #  define   EXP( a )         expf( a )
 #  define  ATAN( a )        atanf( a )
 #  define FLOOR( a )       floorf( a )
+#  define ROUND( a )       roundf( a )
 #  define  FMAX( a, b )     fmaxf( a, b )
 #  define  FMIN( a, b )     fminf( a, b )
 #  define   POW( a, b )      powf( a, b )

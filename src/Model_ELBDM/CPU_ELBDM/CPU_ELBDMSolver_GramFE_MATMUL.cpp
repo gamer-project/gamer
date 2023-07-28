@@ -11,8 +11,17 @@ using gramfe_matmul_complex_type = complex<gramfe_matmul_float>;
 using gramfe_input_complex_type  = complex<real>;
 #else
 #include <complex.h>
+#include "GSL.h"
 using gramfe_matmul_complex_type = std::complex<gramfe_matmul_float>;
 using gramfe_input_complex_type  = std::complex<real>;
+
+// precision of matrix multiplication
+#ifdef GRAMFE_MATMUL_FLOAT8
+namespace gramfe_matmul_gsl = gsl_double_precision;
+#else // #ifdef GRAMFE_MATMUL_FLOAT8
+namespace gramfe_matmul_gsl = gsl_single_precision;
+#endif // #ifdef GRAMFE_MATMUL_FLOAT8 ... # else
+
 #endif
 
 #ifdef __CUDACC__
@@ -120,29 +129,26 @@ void CPU_ELBDMSolver_GramFE_MATMUL(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NX
    const int NPatchGroup = NULL_INT;
 
 #  else // #  ifdef __CUDACC__
-// allocate memory on stack within loop for CPU run
+// allocate memory on heap within loop for CPU run
    gramfe_input_complex_type (*s_In)        [FLU_NXT] = NULL;
    gramfe_input_complex_type (*s_Out)       [PS2]     = NULL;
 #  endif // #  ifdef __CUDACC__ ... else
 
 // time evolution matrix
+// GPU: transpose input evolution matrix from PS2 x FLU_NXT to FLU_NXT x PS2 for it to be in row-major order
+// CPU: no transposition since matrix already is in column-major order
 #  ifdef __CUDACC__
    __shared__ gramfe_matmul_complex_type s_TimeEvo[PS2 * FLU_NXT];
-#  else // #  ifdef __CUDACC__
-              gramfe_matmul_complex_type s_TimeEvo[PS2 * FLU_NXT];
-#  endif // #  ifdef __CUDACC__ ... else
 
    gramfe_matmul_complex_type* s_LinEvolve = (gramfe_matmul_complex_type *) s_TimeEvo;
    gramfe_matmul_complex_type* g_LinEvolve = (gramfe_matmul_complex_type *) g_TimeEvo;
    uint row, col;
 
-#  ifdef __CUDACC__
    const uint tx           = threadIdx.x;
    const uint ty           = threadIdx.y;
    const uint tid          = ty * CGPU_FLU_BLOCK_SIZE_X + tx;                // thread ID within block
    const uint NThread      = CGPU_FLU_BLOCK_SIZE_X * CGPU_FLU_BLOCK_SIZE_Y;  // total number of threads within block
 
-// transpose input evolution matrix from PS2 x FLU_NXT to FLU_NXT x PS2 for it to be in row-major order
    for (uint i = tid; i < PS2 * FLU_NXT; i += NThread) {
       row = i / FLU_NXT;
       col = i % FLU_NXT;
@@ -150,16 +156,9 @@ void CPU_ELBDMSolver_GramFE_MATMUL(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NX
    }
 
    __syncthreads();
-
-#  else
-
-   for (uint i = 0; i < PS2 * FLU_NXT; ++i) {
-      row = i / FLU_NXT;
-      col = i % FLU_NXT;
-      s_LinEvolve[col * PS2 + row] = g_LinEvolve[i];
-   }
-
-#  endif
+#  else // #  ifdef __CUDACC__
+   gramfe_matmul_complex_type* s_TimeEvo = (gramfe_matmul_complex_type *) g_TimeEvo;
+#  endif // #  ifdef __CUDACC__ ... else
 
 
    if ( XYZ )
@@ -213,8 +212,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
                      int NPatchGroup,
                      const uint j_gap, const uint k_gap,
-                     gramfe_input_complex_type  s_In       [][FLU_NXT],
-                     gramfe_input_complex_type  s_Out      [][PS2],
+                     gramfe_input_complex_type  s_In [][FLU_NXT],
+                     gramfe_input_complex_type  s_Out[][PS2],
                      gramfe_matmul_complex_type* s_TimeEvo,
                      const bool FinalOut,
                      const int XYZ, const real MinDens
@@ -232,10 +231,13 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #     ifdef __CUDACC__
       const int bx = blockIdx.x;
 #     else
+//    create arrays for columns of various intermediate fields on the heap
+      gramfe_matmul_complex_type* s_In_1PG  = (gramfe_matmul_complex_type* ) malloc( FLU_NXT * sizeof(gramfe_matmul_complex_type) );
+      gramfe_matmul_complex_type* s_Out_1PG = (gramfe_matmul_complex_type* ) malloc(     PS2 * sizeof(gramfe_matmul_complex_type) );
 
-//    create arrays for columns of various intermediate fields on the stack
-      gramfe_input_complex_type* s_In_1PG  = (gramfe_input_complex_type* ) malloc( FLU_NXT * sizeof(gramfe_input_complex_type) ); // allocate memory for fourier transform
-      gramfe_input_complex_type* s_Out_1PG = (gramfe_input_complex_type* ) malloc(     PS2 * sizeof(gramfe_input_complex_type) ); // allocate memory for fourier transform
+      gramfe_matmul_gsl::vector_complex_const_view Input_view  = gramfe_matmul_gsl::vector_complex_const_view_array ((gramfe_matmul_gsl::gsl_real*) s_In_1PG ,      FLU_NXT);
+      gramfe_matmul_gsl::vector_complex_view       Output_view = gramfe_matmul_gsl::vector_complex_view_array       ((gramfe_matmul_gsl::gsl_real*) s_Out_1PG, PS2         );
+      gramfe_matmul_gsl::matrix_complex_const_view Evo_view    = gramfe_matmul_gsl::matrix_complex_const_view_array ((gramfe_matmul_gsl::gsl_real*) s_TimeEvo, PS2, FLU_NXT);
 
 //    in CPU mode, every thread works on one patch group at a time and corresponds to one block in the grid of the GPU solver
 #     pragma omp for schedule( runtime ) private ( s_In, s_Out )
@@ -295,7 +297,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //          2. evolve wave function via matrix multiplication
 #           ifdef __CUDACC__
             __syncthreads();
-#           endif
 
             CELL_LOOP(FLU_NXT, FLU_GHOST_SIZE, FLU_GHOST_SIZE)
             {
@@ -308,8 +309,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                s_Out[sj][si - FLU_GHOST_SIZE] = (gramfe_input_complex_type) Psi_New;
             }
 
-#           ifdef __CUDACC__
             __syncthreads();
+#           else
+            gramfe_matmul_gsl::blas_cgemv(CblasNoTrans, {1.0, 0.0}, &Evo_view.matrix, &Input_view.vector, {0.0, 0.0}, &Output_view.vector);
 #           endif
 
 
@@ -351,7 +353,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   j = j_gap + ( sj + Column0 ) % size_j ;
                   k = k_gap + ( sj + Column0 ) / size_j;
 
-                  Idx1 = get1D1( k, j,si, XYZ );
+                  Idx1 = get1D1( k, j, si, XYZ );
                   g_Fluid_In[bx][0][Idx1] = Re_New;
                   g_Fluid_In[bx][1][Idx1] = Im_New;
                } // CELL_LOOP(FLU_NXT, FLU_GHOST_SIZE, FLU_GHOST_SIZE)
@@ -361,7 +363,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
             __syncthreads();
 #           endif
 
-//          4.2 update remaining number of columns
+//          3.2 update remaining number of columns
             Column0     += NColumnOnce;
             NColumnOnce  = MIN( NColumnTotal - Column0, CGPU_FLU_BLOCK_SIZE_Y );
 
