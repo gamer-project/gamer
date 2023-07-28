@@ -833,20 +833,20 @@ void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostB
       {
 //       for small N <= 32 pick precomputed interpolation with cost of N^2
          if ( nInput <= 15 ) {
-               contexts.emplace(nInput, new CQuarticInterpolationContext(nInput, nGhostBoundary));
+               //contexts.emplace(nInput, new CQuarticInterpolationContext(nInput, nGhostBoundary));
                contexts.emplace(nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary));
 //       for large N >  32 use Gram-Fourier extension scheme with cost of N log(N)
          } else {
-               //size_t nExtension = 32, nDelta = 14;
+               size_t nExtension = 32, nDelta = 14;
 //
-               //const size_t minimumExtensionSize = 24;
-               //const size_t maximumExtensionSize = 36;
-               //for (size_t i = 0; i < NFast; ++i) {
-               //   if (nInput + minimumExtensionSize < fastNExtended[i] && nInput + maximumExtensionSize >= fastNExtended[i]) {
-               //      nExtension = fastNExtended[i] - nInput;
-               //      break;
-               //   }
-               //}
+               const size_t minimumExtensionSize = 24;
+               const size_t maximumExtensionSize = 36;
+               for (size_t i = 0; i < NFast; ++i) {
+                  if (nInput + minimumExtensionSize < fastNExtended[i] && nInput + maximumExtensionSize >= fastNExtended[i]) {
+                     nExtension = fastNExtended[i] - nInput;
+                     break;
+                  }
+               }
                contexts.emplace(nInput, new CQuarticInterpolationContext(nInput, nGhostBoundary));
 
                //contexts.emplace(nInput, new GramFEInterpolationContext(nInput, nGhostBoundary, nExtension, nDelta));
