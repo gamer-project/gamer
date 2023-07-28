@@ -9,14 +9,7 @@
 
 #include <complex.h>
 
-#define GRAMFE_EV_FLOAT8
-
-#ifdef GRAMFE_EV_FLOAT8
 #define gramfe_evo_float __float128
-#else // #ifdef GRAMFE_EV_FLOAT8
-#define gramfe_evo_float __float128
-#endif // #ifdef GRAMFE_EV_FLOAT8 ... # else
-
 
 using gramfe_matmul_complex_type = std::complex<gramfe_matmul_float>;
 using gramfe_evo_complex_type    = std::complex<gramfe_evo_float>;
@@ -27,7 +20,7 @@ using gramfe_evo_complex_type    = std::complex<gramfe_evo_float>;
 // Parameter   :  n  : integer
 // Return      :  n!
 //-------------------------------------------------------------------------------------------------------
-int Factorial(int n) {
+static int Factorial(const int n) {
      return (n==0) || (n==1) ? 1 : n* Factorial(n-1);
 } // FUNCTION : Factorial
 
@@ -38,7 +31,7 @@ int Factorial(int n) {
 //                NTerms  : Number of terms to retain in expansion
 // Return      :  Value of expansion
 //-------------------------------------------------------------------------------------------------------
-gramfe_evo_float CosineTaylorExpansion(gramfe_evo_float x, int Nterms) {
+static gramfe_evo_float CosineTaylorExpansion(const gramfe_evo_float x, const int Nterms) {
    gramfe_evo_float result = 0;
 
    for (int i = 0; i  < Nterms; ++i) {
@@ -55,7 +48,7 @@ gramfe_evo_float CosineTaylorExpansion(gramfe_evo_float x, int Nterms) {
 //                NTerms  : Number of terms to retain in expansion
 // Return      :  Value of expansion
 //-------------------------------------------------------------------------------------------------------
-gramfe_evo_float SineTaylorExpansion(gramfe_evo_float x, int Nterms) {
+static gramfe_evo_float SineTaylorExpansion(const gramfe_evo_float x, const int Nterms) {
    gramfe_evo_float result = 0;
 
    for (int i = 0; i  < Nterms; ++i) {
@@ -74,7 +67,7 @@ gramfe_evo_float SineTaylorExpansion(gramfe_evo_float x, int Nterms) {
 //                dh      : Grid spacing
 //                Eta     : m/hbar
 //-------------------------------------------------------------------------------------------------------
-void ELBDM_GramFE_ComputeTimeEvolutionMatrix(gramfe_matmul_float (*output)[2 * FLU_NXT], real dt, real dh, real Eta)
+void ELBDM_GramFE_ComputeTimeEvolutionMatrix(gramfe_matmul_float (*output)[2 * FLU_NXT], const real dt, const real dh, const real Eta)
 {
 // set up time evolution operator and filter
    gramfe_evo_float K, Filter, Coeff;

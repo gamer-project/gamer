@@ -27,15 +27,6 @@
 
 # if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
-// precision of computation of time evolution operator, should be double or higher
-#define GRAMFE_MM
-
-// precision of matrix multiplication, same as FLOAT8
-#ifdef FLOAT8
-#define GRAMFE_EV
-#endif
-
-
 # if (PATCH_SIZE == 8 && GRAMFE_ND == 32 && GRAMFE_NDELTA == 14 && GRAMFE_ORDER == 14)
 
 const static __float128 GramFE_FFT[2 * GRAMFE_FLU_NXT * GRAMFE_FLU_NXT] = {

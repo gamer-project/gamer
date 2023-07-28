@@ -1711,7 +1711,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 //             if fluid scheme is used on level lv - 1 and wave scheme is used on level lv
 //             set target variable for lv - 1 to dens and phase and later convert to real and imaginary parts
 //             for preparing patch with real and imaginary part on level lv
-               if ( amr->use_wave_flag[lv] && !amr->use_wave_flag[lv - 1] && (TVarCC & (_REAL | _IMAG)) ) {
+               const bool ConvertWaveToFluid = amr->use_wave_flag[lv] && !amr->use_wave_flag[lv - 1] && (TVarCC & (_REAL | _IMAG));
+               if ( ConvertWaveToFluid ) {
                   TVarCCBuffer     = _DENS|_PHAS|_PASSIVE;
                   NVarCC_FluBuffer = 0;
                   for (int v=0; v<NCOMP_TOTAL; v++)
@@ -1747,7 +1748,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 #              if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //             set target variables correctly convert density and phase to real and imaginary parts
-               if ( amr->use_wave_flag[lv] && !amr->use_wave_flag[lv - 1]  && (TVarCC & _REAL) && (TVarCC & _IMAG) ) {
+               if ( ConvertWaveToFluid ) {
 //                density and phase --> real and imaginary parts
                   real Dens, Phase, Amp;
                   int FSize3D_CC = FSize[0]*FSize[1]*FSize[2];

@@ -578,7 +578,7 @@ void   ELBDM_RemoveMotionCM();
 void   CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg );
 #endif
 #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-void   ELBDM_GramFE_ComputeTimeEvolutionMatrix( gramfe_matmul_float (*output)[2 * FLU_NXT], real dt, real dh, real Eta );
+void   ELBDM_GramFE_ComputeTimeEvolutionMatrix( gramfe_matmul_float (*output)[2 * FLU_NXT], const real dt, const real dh, const real Eta );
 #endif
 
 

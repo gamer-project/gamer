@@ -93,7 +93,7 @@ void CUFLU_ELBDMSolver_GramFE_FFT(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) 
                                     typename FFT::workspace_type workspace,
                                     typename IFFT::workspace_type workspace_inverse  );
 #  elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-void   ELBDM_GramFE_ComputeTimeEvolutionMatrix(gramfe_matmul_float (*output)[2 * FLU_NXT], real dt, real dh, real Eta);
+void   ELBDM_GramFE_ComputeTimeEvolutionMatrix(gramfe_matmul_float (*output)[2 * FLU_NXT], const real dt, const real dh, const real Eta);
 __global__
 void CUFLU_ELBDMSolver_GramFE_MATMUL(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                                        real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
