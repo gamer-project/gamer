@@ -242,7 +242,7 @@ void Aux_Check_Conservation( const char *comment )
                   for (int k=0; k<Size_Flu; k++)   {
                   for (int j=0; j<Size_Flu; j++)   {
                   for (int i=0; i<Size_Flu; i++)   {
-                     Flu_ELBDM[t][DENS][k ][j ][i] = LOG(Flu_ELBDM[t][DENS][k ][j ][i]);
+                     Flu_ELBDM[t][DENS][k][j][i] = LOG(Flu_ELBDM[t][DENS][k][j][i]);
                   }}} //k,j,i
                }
 #              endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
@@ -274,13 +274,13 @@ void Aux_Check_Conservation( const char *comment )
 #                 if ( ELBDM_SCHEME == ELBDM_HYBRID )
                   } else { //if ( amr->use_wave_flag[lv] )
 //                [1-3] momentum in ELBDM
-                  const double Dens =  exp(Flu_ELBDM[t][DENS][k ][j ][i]);
+                  const double Dens =  exp(Flu_ELBDM[t][DENS][k][j][i]);
 
-//                Compute velocities v_i = dS/dx
+//                compute bulk velocities v_i = dS/dx
                   GradI[0] = 1.0 * _dh2*( Flu_ELBDM[t][PHAS][k ][j ][ip] - Flu_ELBDM[t][PHAS][k ][j ][im] );
                   GradI[1] = 1.0 * _dh2*( Flu_ELBDM[t][PHAS][k ][jp][i ] - Flu_ELBDM[t][PHAS][k ][jm][i ] );
                   GradI[2] = 1.0 * _dh2*( Flu_ELBDM[t][PHAS][kp][j ][i ] - Flu_ELBDM[t][PHAS][km][j ][i ] );
-//                Compute velocities v_r = dln(sqrt(rho))/dx = 0.5 * dln(rho)/dx
+//                compute thermal velocities v_r = dln(sqrt(rho))/dx = 0.5 * dln(rho)/dx
                   GradR[0] = 0.5 * _dh2*( Flu_ELBDM[t][DENS][k ][j ][ip] - Flu_ELBDM[t][DENS][k ][j ][im] );
                   GradR[1] = 0.5 * _dh2*( Flu_ELBDM[t][DENS][k ][jp][i ] - Flu_ELBDM[t][DENS][k ][jm][i ] );
                   GradR[2] = 0.5 * _dh2*( Flu_ELBDM[t][DENS][kp][j ][i ] - Flu_ELBDM[t][DENS][km][j ][i ] );
@@ -289,7 +289,7 @@ void Aux_Check_Conservation( const char *comment )
                   Fluid_lv[d+1] += _Eta * Dens * GradI[d];
 
 //                [4] kinetic energy in ELBDM
-                  Fluid_lv[4] += _2Eta2 * Dens * ( SQR(GradR[0]) + SQR(GradR[1]) + SQR(GradR[2])\
+                  Fluid_lv[4] += _2Eta2 * Dens * ( SQR(GradR[0]) + SQR(GradR[1]) + SQR(GradR[2])
                                                  + SQR(GradI[0]) + SQR(GradI[1]) + SQR(GradI[2])   );
                   } //if ( amr->use_wave_flag[lv] == true ) ... else
 #                 endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )

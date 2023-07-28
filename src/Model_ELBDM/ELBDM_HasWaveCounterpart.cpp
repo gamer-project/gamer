@@ -15,7 +15,7 @@
 //             : GID0 : global ID of patch group
 //             : GID  : global ID of patch
 //             : Tree : pointer to array of LB_GlobalPatch objects
-//                      needs to initialised beforehand by calling LB_GlobalPatch* Tree = LB_GatherTree(pc, MPI_Node);
+//                      needs to be initialised beforehand by calling LB_GlobalPatch* Tree = LB_GatherTree(pc, MPI_Node);
 //
 // Return      :  "true"  if cell [I, J, K] in patch GID has    wave counterpart
 //                "false" if cell [I, J, K] in patch GID has NO wave counterpart
