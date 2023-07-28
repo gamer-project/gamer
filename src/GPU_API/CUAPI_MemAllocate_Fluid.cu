@@ -335,7 +335,7 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
    } // for (int t=0; t<2; t++)
 
 #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-   CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_GramFE_TimeEv,  GramFE_TimeEvo_MemSize )  );
+   CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_GramFE_TimeEvo,  GramFE_TimeEvo_MemSize )  );
 #  endif // #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 // create streams

@@ -207,7 +207,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
 #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 // evaluate time evolution matrix ( once per level per timestep )
-   ELBDM_GramFE_ComputeTimeEvolutionMatrix( h_GramFE_TimeEvo, dt, dh, ELBDM_Eta );
+   ELBDM_GramFE_ComputeTimeEvolutionMatrix( h_GramFE_TimeEvo, dt, amr->dh[lv], ELBDM_ETA );
 #  endif
 
 //-------------------------------------------------------------------------------------------------------------
