@@ -550,27 +550,3 @@ static IntSchemeFunc_t Int_SelectScheme( const IntScheme_t IntScheme )
    return NULL;
 
 } // FUNCTION : Int_SelectScheme
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Int_HasDiscontinuity
-// Description :  Return boolean indicating whether there is discontinuity in input array
-//
-// Note        :  Use the input parameter "IntScheme" to determine the adopted interpolation scheme
-//
-// Parameter   :  CPtr         Flattened 3D-input array
-//                Idx          1D-index of cell to be checked for discontinuity
-//                dIdx         Index stride to next and previous cell
-//                atBoundary   Flag indicating whether cell Idx is at boundary
-//
-// Return      :  "true"  if there is    discontinuity in input array
-//                "false" if there is NO discontinuity in input array
-//-------------------------------------------------------------------------------------------------------
-bool Int_HasDiscontinuity( real* CPtr, int Idx, int dIdx, bool atBoundary ) {
-   if ( atBoundary ) {
-      return HAS_DISCONTINUITY(CPtr[ Idx - 2 * dIdx ], CPtr[ Idx - dIdx ],  CPtr[ Idx            ]) ;
-   } else {
-      return HAS_DISCONTINUITY(CPtr[ Idx - 1 * dIdx ], CPtr[ Idx        ],  CPtr[ Idx + 1 * dIdx ]) ;
-   }
-} // FUNCTION : Int_HasDiscontinuity
