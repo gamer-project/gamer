@@ -798,10 +798,12 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   for (int k=0; k<PS1; k++)
                   for (int j=0; j<PS1; j++)
                   for (int i=0; i<PS1; i++)
-//                actually we only need CCMag_1Cell[Bv] here
-//                --> but the overhead of computing the other two B components is probably acceptable
-                  MHD_GetCellCenteredBFieldInPatch( CCMag_1Cell, lv, PID, i, j, k, amr->MagSg[lv] );
-                  FieldData[PID][k][j][i] = CCMag_1Cell[Bv];
+                  {
+//                   actually we only need CCMag_1Cell[Bv] here
+//                   --> but the overhead of computing the other two B components is probably acceptable
+                     MHD_GetCellCenteredBFieldInPatch( CCMag_1Cell, lv, PID, i, j, k, amr->MagSg[lv] );
+                     FieldData[PID][k][j][i] = CCMag_1Cell[Bv];
+                  }
                }
                else
 #              endif
