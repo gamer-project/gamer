@@ -791,13 +791,17 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #              ifdef MHD
                if ( v >= CCMagDumpIdx0  &&  v < CCMagDumpIdx0+NCOMP_MAG )
                {
-                  const int Bv = v - CCMagDumpIdx0;                     for (int v=0; v<NCOMP_TOTAL; v++)   u[v] = amr-
-                  {
-//                   actually we only need CCMag_1Cell[Bv] here
-//                   --> but the overhead of computing the other two B components is probably acceptable
-                     MHD_GetCellCenteredBFieldInPatch( CCMag_1Cell, lv, PID, i, j, k, amr->MagSg[lv] );
-                     FieldData[PID][k][j][i] = CCMag_1Cell[Bv];
-                  }
+                  const int Bv = v - CCMagDumpIdx0;
+                  real CCMag_1Cell[NCOMP_MAG];
+
+                  for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+//                actually we only need CCMag_1Cell[Bv] here
+//                --> but the overhead of computing the other two B components is probably acceptable
+                  MHD_GetCellCenteredBFieldInPatch( CCMag_1Cell, lv, PID, i, j, k, amr->MagSg[lv] );
+                  FieldData[PID][k][j][i] = CCMag_1Cell[Bv];
                }
                else
 #              endif
@@ -1066,7 +1070,6 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #                 endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                      memcpy( FieldData[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
-
                }
 
                else
@@ -1117,7 +1120,6 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 
 //             5-2-2-2. determine the subset of the dataspace
-               H5_Offset_FCMag[0] = pc.GID_Offset[lv];
                H5_Offset_FCMag[0] = pc.GID_Offset[lv];
                H5_Offset_FCMag[1] = 0;
                H5_Offset_FCMag[2] = 0;
@@ -1344,7 +1346,6 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       if ( H5_SetID_Fa < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", SetName );
 
       H5_Status = H5Dread( H5_SetID_Fa, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.FaList_AllLv );
-      H5_Status = H5Dread( H5_SetID_Fa, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.FaList_AllLv );
       H5_Status = H5Dclose( H5_SetID_Fa );
 
       sprintf( SetName, "%s", "Tree/Son" );
@@ -1352,7 +1353,6 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
       if ( H5_SetID_Son < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", SetName );
 
-      H5_Status = H5Dread( H5_SetID_Son, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.SonList_AllLv );
       H5_Status = H5Dread( H5_SetID_Son, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.SonList_AllLv );
       H5_Status = H5Dclose( H5_SetID_Son );
 
@@ -2198,7 +2198,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Flag_Spectral      = OPT__FLAG_SPECTRAL;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    InputPara.Opt__Flag_Interference  = OPT__FLAG_INTERFERENCE;
-#  endif ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
    InputPara.Opt__Flag_LohnerDens    = OPT__FLAG_LOHNER_DENS;
 #  if ( MODEL == HYDRO )
@@ -3134,6 +3134,10 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  endif
 #  if ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "Opt__Flag_EngyDensity",   HOFFSET(InputPara_t,Opt__Flag_EngyDensity  ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__Flag_Spectral",      HOFFSET(InputPara_t,Opt__Flag_Spectral     ), H5T_NATIVE_INT     );
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   H5Tinsert( H5_TypeID, "Opt__Flag_Interference",  HOFFSET(InputPara_t,Opt__Flag_Interference ), H5T_NATIVE_INT     );
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerDens",    HOFFSET(InputPara_t,Opt__Flag_LohnerDens   ), H5T_NATIVE_INT     );
 #  if ( MODEL == HYDRO )
