@@ -76,6 +76,7 @@ void Init_Field()
    if ( Idx_Dens != DENS )    Aux_Error( ERROR_INFO, "inconsistent Idx_Dens (%d != %d) !!\n", Idx_Dens, DENS );
    if ( Idx_Real != REAL )    Aux_Error( ERROR_INFO, "inconsistent Idx_Real (%d != %d) !!\n", Idx_Real, REAL );
    if ( Idx_Imag != IMAG )    Aux_Error( ERROR_INFO, "inconsistent Idx_Imag (%d != %d) !!\n", Idx_Imag, IMAG );
+
 #  elif ( ELBDM_SCHEME == ELBDM_HYBRID )
    Idx_Dens    = AddField( "Dens",     NORMALIZE_NO, INTERP_FRAC_NO );
    Idx_Phas    = AddField( "Phase",    NORMALIZE_NO, INTERP_FRAC_NO );
@@ -84,6 +85,8 @@ void Init_Field()
    Idx_Imag    = Idx_Stub;
 
    if ( Idx_Dens != DENS )    Aux_Error( ERROR_INFO, "inconsistent Idx_Dens  (%d != %d) !!\n", Idx_Dens, DENS );
+   if ( Idx_Real != REAL )    Aux_Error( ERROR_INFO, "inconsistent Idx_Dens  (%d != %d) !!\n", Idx_Real, REAL );
+   if ( Idx_Imag != IMAG )    Aux_Error( ERROR_INFO, "inconsistent Idx_Phase (%d != %d) !!\n", Idx_Imag, IMAG );
    if ( Idx_Phas != PHAS )    Aux_Error( ERROR_INFO, "inconsistent Idx_Phase (%d != %d) !!\n", Idx_Phas, PHAS );
    if ( Idx_Stub != STUB )    Aux_Error( ERROR_INFO, "inconsistent Idx_Stub  (%d != %d) !!\n", Idx_Stub, STUB );
 #  else
