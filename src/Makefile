@@ -552,11 +552,11 @@ endif # MHD
 # ELBDM source files (included only inf "MODEL=ELBDM")
 # -------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
-GPU_FILE    += CUFLU_ELBDMSolver_FD.cu  CUFLU_ELBDMSolver_GramFE_FFT.cu CUFLU_ELBDMSolver_GramFE_MATMUL.cu  CUFLU_ELBDMSolver_HJ.cu
+GPU_FILE    += CUFLU_ELBDMSolver_FD.cu  CUFLU_ELBDMSolver_GramFE_FFT.cu  UFLU_ELBDMSolver_GramFE_MATMUL.cu  CUFLU_ELBDMSolver_HJ.cu
 
 CPU_FILE    += CPU_ELBDMSolver_FD.cpp  CPU_ELBDMSolver_FFT.cpp  CPU_ELBDMSolver_GramFE_FFT.cpp  CPU_ELBDMSolver_GramFE_MATMUL.cpp  CPU_ELBDMSolver_HJ.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
                ELBDM_GetTimeStep_Fluid.cpp  ELBDM_GetTimeStep_Hybrid.cpp  ELBDM_Flag_EngyDensity.cpp  ELBDM_Flag_Interference.cpp  ELBDM_Flag_Spectral.cpp  ELBDM_UnwrapPhase.cpp \
-               ELBDM_GetTimeStep_Phase.cpp  ELBDM_GetTimeStep_Velocity.cpp  ELBDM_HasWaveCounterpart.cpp  ELBDM_SetTaylor3Coeff.cpp  ELBDM_GramFE_EvolutionMatrix.cpp ELBDM_RemoveMotionCM.cpp
+               ELBDM_GetTimeStep_Phase.cpp  ELBDM_GetTimeStep_Velocity.cpp  ELBDM_HasWaveCounterpart.cpp  ELBDM_SetTaylor3Coeff.cpp  ELBDM_GramFE_EvolutionMatrix.cpp  ELBDM_RemoveMotionCM.cpp
 
 vpath %.cu     Model_ELBDM/GPU_ELBDM
 vpath %.cpp    Model_ELBDM/CPU_ELBDM  Model_ELBDM

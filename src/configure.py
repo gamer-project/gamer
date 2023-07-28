@@ -838,7 +838,7 @@ def warning( paths, **kwargs ):
         if paths.setdefault("LIBYT_PATH", "") == "":
             color_print("Warning: LIBYT_PATH is not given in %s.config when enabling <--libyt>."%(kwargs["machine"]), BCOLOR.WARNING)
 
-    if kwargs["model"] == "ELBDM" and kwargs["wave_scheme"] == "WAVE_GRAMFE" and kwargs["gramfe_scheme"] == "GRAMFE_FFT":
+    if kwargs["model"] == "ELBDM" and kwargs["gpu"] and kwargs["wave_scheme"] == "WAVE_GRAMFE" and kwargs["gramfe_scheme"] == "GRAMFE_FFT":
         if paths.setdefault("CUFFTDX_PATH", "") == "":
             color_print("Warning: CUFFTDX_PATH is not given in %s.config when enabling <--gramfe_scheme=GRAMFE_FFT>."%(kwargs["machine"]), BCOLOR.WARNING)
 
