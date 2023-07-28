@@ -202,9 +202,9 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 //    exchange complete father patch if option OPT__LB_EXCHANGE_FATHER is set
       if ( OPT__LB_EXCHANGE_FATHER ) {
 
-         TPID = FaPID; 
+         TPID = FaPID;
 
-         if ( TPID >= NReal ) // work for both periodic and non-periodic boundary conditions
+         if ( TPID >= NReal )
          {
             RSib = 26;
             SibIdx = TPID - NReal;

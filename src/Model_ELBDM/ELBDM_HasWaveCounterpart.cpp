@@ -5,13 +5,13 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_HasWaveCounterpart
-// Description :  Check whether cell [I, J, K] in patch indexed by GID GID has wave counterpart on refined levels by traversing the global AMR Tree
+// Description :  Check whether cell [I, J, K] in patch indexed by GID has wave counterpart on refined levels by traversing the global AMR Tree
 //
 // Note        :  1. This function requires LB_GlobalPatch* Tree to be initialised beforehand
 //
-// Parameter   :  I   : x-index of patch GID
-//             :  J   : y-index of patch GID
-//             :  K   : z-index of patch GID
+// Parameter   :  I   : x-index relative to patch GID0
+//             :  J   : y-index relative to patch GID0
+//             :  K   : z-index relative to patch GID0
 //             : GID0 : global ID of patch group
 //             : GID  : global ID of patch
 //             : Tree : pointer to array of LB_GlobalPatch objects
