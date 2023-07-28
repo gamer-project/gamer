@@ -129,17 +129,16 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //       for hybrid scheme, consider the following cases:
 //
-//       A: lv & lv+1 both use wave scheme or lv & lv+1 both use phase scheme and use_wave_flag = false
+//       A: lv & lv+1 both use wave scheme or lv & lv+1 both use phase scheme and switch_to_wave_flag = false
 //          1. no modification
 //
-//       B: lv & lv+1 both use phase scheme & use_wave_flag on lv + 1:
+//       B: lv & lv+1 both use phase scheme & switch_to_wave_flag on lv + 1:
 //          1. switch to wave scheme on level lv+1
 //          2. no modification for interpolation
 //          3. convert DENS/PHAS to IM/RE after refinement for all patches on levels greater than lv
 //
 //       C: lv uses phase scheme & lv+1 uses wave scheme
-//          1. during interpolation, provide information from neighbouring patches on lv that is already present as DENS/PHAS, same for boundary conditions
-//          2. convert refined patch to IM/RE after interpolation
+//          1. convert refined patch to IM/RE after interpolation
 //
 
    bool SwitchFinerLevelsToWaveScheme = false;
@@ -257,7 +256,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        endif
 
 #        if ( ELBDM_SCHEME == ELBDM_HYBRID )
-         SwitchFinerLevelsToWaveScheme = !amr->use_wave_flag[lv+1] && !amr->use_wave_flag[lv] && Pedigree->switch_to_wave_flag;
+         SwitchFinerLevelsToWaveScheme = !amr->use_wave_flag[lv+1] && Pedigree->switch_to_wave_flag;
 #        endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
@@ -703,8 +702,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             else                             Monotonicity[v] = Monotonicity_No;
 #           if ( ELBDM_SCHEME == ELBDM_HYBRID )
             } else { // if ( amr->use_wave_flag[lv] )
-            if ( v != PHAS  &&  v != STUB )  Monotonicity[v] = Monotonicity_Yes;
-            else                             Monotonicity[v] = Monotonicity_No;
+            if ( v != PHAS )                 Monotonicity[v] = Monotonicity_Yes;
             } // if ( amr->use_wave_flag[lv] ) ... else
 #           endif // if ( ELBDM_SCHEME == ELBDM_HYBRID )
 

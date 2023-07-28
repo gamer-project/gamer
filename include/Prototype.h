@@ -578,8 +578,8 @@ void   ELBDM_RemoveMotionCM();
 #ifdef SUPPORT_FFTW
 void   CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg );
 #endif
-#if ( WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
-void   ELBDM_GramFE_ComputeTimeEvolutionMatrix(gramfe_matmul_float (*output)[2 * FLU_NXT], real dt, real dh, real Eta);
+#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+void   ELBDM_GramFE_ComputeTimeEvolutionMatrix( gramfe_matmul_float (*output)[2 * FLU_NXT], real dt, real dh, real Eta );
 #endif
 
 

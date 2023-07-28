@@ -15,15 +15,6 @@ extern real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif
 #endif // FLU_SCHEME
 
-
-#if ( MODEL == ELBDM )
-extern bool (*h_IsCompletelyRefined);
-#endif
-#if ( ELBDM_SCHEME == ELBDM_HYBRID )
-extern bool (*h_HasWaveCounterpart)[ CUBE(HYB_NXT) ];
-#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  End_MemFree_Fluid
 // Description :  Free memory previously allocated by Init_MemAllocate_Fluid()
