@@ -31,13 +31,11 @@ typedef float  gramfe_fft_float;
 #endif // #if ( GRAMFE_SCHEME == GRAMFE_FFT )
 
 
-#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 #ifdef GRAMFE_MATMUL_FLOAT8
 typedef double gramfe_matmul_float;
 #else // #ifdef GRAMFE_MATMUL_FLOAT8
 typedef float  gramfe_matmul_float;
 #endif // #ifdef GRAMFE_MATMUL_FLOAT8 ... # else
-#endif // #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 
 // short names for unsigned type

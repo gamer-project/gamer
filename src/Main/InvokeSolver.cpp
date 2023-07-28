@@ -543,7 +543,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  endif // #  if ( ELBDM_SCHEME != ELBDM_HYBRID )
 
 #  if ( GRAMFE_SCHEME != GRAMFE_MATMUL )
-   bool (*h_GramFE_TimeEvo)[ 2 * FLU_NXT ]                            = NULL;
+   gramfe_matmul_float (*h_GramFE_TimeEvo)[ 2 * FLU_NXT ]             = NULL;
 #  endif // #  if ( MODEL != ELBDM || ELBDM_SCHEME != ELBDM_HYBRID )
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )

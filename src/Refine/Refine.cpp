@@ -850,7 +850,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //       (c1.3.4.3) convert density/phase to real and imaginary parts if patches were refined from phase to wave level
 #        if ( ELBDM_SCHEME == ELBDM_HYBRID )
          if ( Pedigree->flag && !amr->use_wave_flag[lv] && amr->use_wave_flag[lv+1] ) {
-            real amp, phase, stub, Re, Im ;
+            real Amp, Phase, Re, Im;
 
 #           ifdef GAMER_DEBUG
 //          Check whether dB wavelength is resolved
@@ -885,11 +885,10 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             for (int k=0; k<FSize_CC; k++) {
             for (int j=0; j<FSize_CC; j++) {
             for (int i=0; i<FSize_CC; i++) {
-                  amp   = SQRT( Flu_FData[DENS][k][j][i] );
-                  phase =       Flu_FData[PHAS][k][j][i] ;
-                  stub  =       Flu_FData[STUB][k][j][i] ;
-                  Flu_FData[REAL][k][j][i] = amp * COS( phase );
-                  Flu_FData[IMAG][k][j][i] = amp * SIN( phase );
+                  Amp   = SQRT( Flu_FData[DENS][k][j][i] );
+                  Phase =       Flu_FData[PHAS][k][j][i] ;
+                  Flu_FData[REAL][k][j][i] = Amp * COS( Phase );
+                  Flu_FData[IMAG][k][j][i] = Amp * SIN( Phase );
             }}}
          }
 #        endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
