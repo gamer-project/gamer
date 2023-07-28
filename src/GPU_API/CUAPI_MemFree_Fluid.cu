@@ -103,16 +103,16 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
 #  endif // FLU_SCHEME
 
 #  if ( MODEL == ELBDM )
-   if ( d_IsCompletelyRefined != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_IsCompletelyRefined)  );  d_IsCompletelyRefined = NULL; }
-#  endif // #if ( MODEL == ELBDM )
+   if ( d_IsCompletelyRefined != NULL ) {  CUDA_CHECK_ERROR (  cudaFree( d_IsCompletelyRefined)  );  d_IsCompletelyRefined = NULL; }
+#  endif // # if ( MODEL == ELBDM )
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( d_HasWaveCounterpart != NULL ) {  CUDA_CHECK_ERROR (  cudaFree( d_HasWaveCounterpart )  );  d_HasWaveCounterpart = NULL; }
-#  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( d_HasWaveCounterpart  != NULL ) {  CUDA_CHECK_ERROR (  cudaFree( d_HasWaveCounterpart )  );  d_HasWaveCounterpart  = NULL; }
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
-#if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
-   if ( d_Flu_TimeEvo        != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Flu_TimeEvo        )  );  d_Flu_TimeEvo        = NULL; }
-#endif // #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
+#  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+   if ( d_Flu_TimeEvo         != NULL ) {  CUDA_CHECK_ERROR (   cudaFree ( d_Flu_TimeEvo      )  );  d_Flu_TimeEvo         = NULL; }
+#  endif // # if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #    warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
@@ -144,20 +144,20 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
       if ( h_Flu_Array_S_In [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Flu_Array_S_In [t] )  );  h_Flu_Array_S_In [t] = NULL; }
       if ( h_Flu_Array_S_Out[t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Flu_Array_S_Out[t] )  );  h_Flu_Array_S_Out[t] = NULL; }
       if ( h_Corner_Array_S [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Corner_Array_S [t] )  );  h_Corner_Array_S [t] = NULL; }
+
+#     if ( MODEL == ELBDM )
+      if ( h_IsCompletelyRefined[t] != NULL ) { CUDA_CHECK_ERROR(  cudaFreeHost( h_IsCompletelyRefined[t] )  ); h_IsCompletelyRefined[t] = NULL; }
+#     endif // #if ( MODEL == ELBDM )
+
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      if ( h_HasWaveCounterpart [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_HasWaveCounterpart[t] )  ); h_HasWaveCounterpart [t] = NULL; }
+#     endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+#     if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+      if ( h_GramFE_TimeEvo     [t] != NULL ) { CUDA_CHECK_ERROR(  cudaFreeHost ( h_GramFE_TimeEvo    [t] )  ); h_GramFE_TimeEvo     [t] = NULL; }
+#     endif // #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
    } // for (int t=0; t<2; t++)
 
-
-#  if ( MODEL == ELBDM )
-   if ( h_IsCompletelyRefined != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_IsCompletelyRefined )  );  h_IsCompletelyRefined = NULL; }
-#  endif // #if ( MODEL == ELBDM )
-
-#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( h_HasWaveCounterpart != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_HasWaveCounterpart )  );  h_HasWaveCounterpart = NULL; }
-#  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
-
-#  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
-   if ( h_GramFE_TimeEvo != NULL) { CUDA_CHECK_ERROR(  cudaFreeHost ( h_GramFE_TimeEvo )  ); h_GramFE_TimeEvo = NULL; }
-#  endif // #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 // destroy streams
    if ( Stream != NULL )

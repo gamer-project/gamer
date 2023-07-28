@@ -57,6 +57,20 @@ void End_MemFree_Fluid()
       delete [] h_Mag_Array_T    [t];  h_Mag_Array_T    [t] = NULL;
       delete [] h_Mag_Array_S_In [t];  h_Mag_Array_S_In [t] = NULL;
 #     endif
+
+
+#     if ( MODEL == ELBDM )
+      delete [] h_IsCompletelyRefined[t]; h_IsCompletelyRefined[t] = NULL;
+#     endif // # if ( MODEL == ELBDM )
+
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      delete [] h_HasWaveCounterpart [t]; h_HasWaveCounterpart [t] = NULL;
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+#     if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+      delete [] h_GramFE_TimeEvo     [t]; h_GramFE_TimeEvo     [t] = NULL;
+#     endif // # if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+
    } // for (int t=0; t<2; t++)
 
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
@@ -71,18 +85,6 @@ void End_MemFree_Fluid()
    delete [] h_EC_Ele;               h_EC_Ele             = NULL;
 #  endif
 #  endif // FLU_SCHEME
-
-#  if ( MODEL == ELBDM )
-   delete [] h_IsCompletelyRefined; h_IsCompletelyRefined = NULL;
-#  endif // #  if ( MODEL == ELBDM )
-
-#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   delete [] h_HasWaveCounterpart;  h_HasWaveCounterpart  = NULL;
-#  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
-
-#  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
-   delete [] h_GramFE_TimeEvo;       h_GramFE_TimeEvo     = NULL;
-#  endif // #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 } // FUNCTION : End_MemFree_Fluid
 

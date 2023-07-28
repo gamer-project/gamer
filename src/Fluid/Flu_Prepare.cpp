@@ -15,6 +15,8 @@
 //                h_Mag_Array_F_In     : Host array to store the prepared B field (for MHD onlhy)
 //                h_Pot_Array_USG_F    : Host array to store the prepared potential data (for UNSPLIT_GRAVITY only)
 //                h_Corner_Array_USG_F : Host array to store the prepared corner data (for UNSPLIT_GRAVITY only)
+//                h_IsCompletelyRefined: Host array storing which patch groups are completely refined ( ELBDM only )
+//                h_HasWaveCounterpart : Host array storing which cells have wave counterpart ( ELBDM_HYBRID only )
 //                NPG                  : Number of patch groups to be prepared at a time
 //                PID0_List            : List recording the patch indices with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------

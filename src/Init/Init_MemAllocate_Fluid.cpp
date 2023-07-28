@@ -82,6 +82,20 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
 #     endif
       h_Corner_Array_S [t] = new double [Src_NPatch][3];
       }
+
+
+#     if ( MODEL == ELBDM )
+      h_IsCompletelyRefined [t] = new bool [Flu_NPatchGroup];
+#     endif // #  if ( MODEL == ELBDM )
+
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      h_HasWaveCounterpart  [t] = new bool [Flu_NPatchGroup][ CUBE(HYB_NXT) ];
+#     endif // // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+#     if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+      h_GramFE_TimeEvo      [t] = new gramfe_matmul_float [PS2][2 * FLU_NXT];
+#     endif // #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+
    } // for (int t=0; t<2; t++)
 
 
@@ -97,18 +111,6 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
    h_EC_Ele      = new real [Flu_NPatchGroup][NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #  endif
 #  endif // FLU_SCHEME
-
-#  if ( MODEL == ELBDM )
-   h_IsCompletelyRefined  = new bool [Flu_NPatchGroup];
-#  endif // #  if ( MODEL == ELBDM )
-
-#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   h_HasWaveCounterpart   = new bool [Flu_NPatchGroup][ CUBE(HYB_NXT) ];
-#  endif // // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
-
-#  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
-   h_GramFE_TimeEvo  = new gramfe_matmul_float [PS2][2 * FLU_NXT];
-#  endif // #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 } // FUNCTION : Init_MemAllocate_Fluid
 

@@ -329,7 +329,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
    {
       case FLUID_SOLVER :
          Flu_Prepare( lv, TimeOld, h_Flu_Array_F_In[ArrayID], h_Mag_Array_F_In[ArrayID],
-                      h_Pot_Array_USG_F[ArrayID], h_Corner_Array_F[ArrayID], h_IsCompletelyRefined, h_HasWaveCounterpart, NPG, PID0_List, GlobalTree );
+                      h_Pot_Array_USG_F[ArrayID], h_Corner_Array_F[ArrayID], h_IsCompletelyRefined[ArrayID], h_HasWaveCounterpart[ArrayID], NPG, PID0_List, GlobalTree );
       break;
 
 #     ifdef GRAVITY
@@ -565,8 +565,9 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  h_Mag_Array_F_In[ArrayID], h_Mag_Array_F_Out[ArrayID],
                                  h_DE_Array_F_Out[ArrayID], h_Flux_Array[ArrayID], h_Ele_Array[ArrayID],
                                  h_Corner_Array_F[ArrayID], h_Pot_Array_USG_F[ArrayID],
-                                 h_IsCompletelyRefined,
-                                 h_HasWaveCounterpart,
+                                 h_IsCompletelyRefined[ArrayID],
+                                 h_HasWaveCounterpart[ArrayID],
+                                 h_GramFE_TimeEvo[ArrayID],
                                  NPG, dt, dh, OPT__FIXUP_FLUX, OPT__FIXUP_ELECTRIC, Flu_XYZ,
                                  OPT__LR_LIMITER, MINMOD_COEFF, MINMOD_MAX_ITER,
                                  ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
@@ -581,8 +582,9 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  h_Mag_Array_F_In[ArrayID], h_Mag_Array_F_Out[ArrayID],
                                  h_DE_Array_F_Out[ArrayID], h_Flux_Array[ArrayID], h_Ele_Array[ArrayID],
                                  h_Corner_Array_F[ArrayID], h_Pot_Array_USG_F[ArrayID],
-                                 h_IsCompletelyRefined,
-                                 h_HasWaveCounterpart,
+                                 h_IsCompletelyRefined[ArrayID],
+                                 h_HasWaveCounterpart[ArrayID],
+                                 h_GramFE_TimeEvo[ArrayID],
                                  NPG, dt, dh, OPT__FIXUP_FLUX, OPT__FIXUP_ELECTRIC, Flu_XYZ,
                                  OPT__LR_LIMITER, MINMOD_COEFF, MINMOD_MAX_ITER,
                                  ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
