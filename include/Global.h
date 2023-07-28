@@ -399,13 +399,14 @@ extern real        *h_SrcDlepProf_Radius;
 #if ( MODEL == ELBDM )
 extern bool       (*h_IsCompletelyRefined[2]);
 #endif // #if ( MODEL == ELBDM )
+
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 extern bool       (*h_HasWaveCounterpart[2])[ CUBE(HYB_NXT) ];
 #endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
-#if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
+#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 extern gramfe_matmul_float (*h_GramFE_TimeEvo)[2 * FLU_NXT];
-#endif
+#endif // #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 
 

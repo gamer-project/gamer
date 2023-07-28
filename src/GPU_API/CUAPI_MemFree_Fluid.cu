@@ -46,9 +46,9 @@ extern bool (*d_IsCompletelyRefined);
 extern bool (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ];
 #endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
-#if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
+#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 extern gramfe_matmul_float (*d_Flu_TimeEvo)[2 * FLU_NXT];
-#endif // #if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
+#endif // #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 #if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??

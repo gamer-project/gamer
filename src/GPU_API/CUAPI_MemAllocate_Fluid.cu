@@ -272,9 +272,9 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
    CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_HasWaveCounterpart,   Flu_MemSize_HasWaveCounterpart  )  );
 #  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
-#  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
+#  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
    CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_Flu_TimeEvo,          GramFE_TimeEvo_MemSize          )  );
-#  endif // #  if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
+#  endif // #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
