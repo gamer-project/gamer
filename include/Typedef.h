@@ -24,9 +24,9 @@ typedef float  real;
 
 #if ( GRAMFE_SCHEME == GRAMFE_FFT )
 #ifdef GRAMFE_FFT_FLOAT8
-typedef double gramfe_float;
+typedef double gramfe_fft_float;
 #else
-typedef float  gramfe_float;
+typedef float  gramfe_fft_float;
 #endif // #ifdef GRAMFE_FFT_FLOAT8
 #endif // #if ( GRAMFE_SCHEME == GRAMFE_FFT )
 

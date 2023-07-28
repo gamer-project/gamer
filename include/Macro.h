@@ -640,6 +640,7 @@
 
 #   if ( GRAMFE_SCHEME == GRAMFE_FFT )
 //  default values in order for GRAMFE_FLU_NXT to have small prime factorisations
+//  this is important for the FFT to be fast
 #   if ( PATCH_SIZE == 8 )
 #     define GRAMFE_ND     32  // GRAMFE_FLU_NXT = 2^6
 #   elif ( PATCH_SIZE == 16 )
@@ -651,12 +652,18 @@
 #   elif ( PATCH_SIZE == 128 )
 #     define GRAMFE_ND     28  // GRAMFE_FLU_NXT = 2^2 * 3 * 5^2
 #   else
-#     error : ERROR : Unsupported PATCH_SIZE for Gram Fourier extension scheme
+#     error : ERROR : Unsupported PATCH_SIZE for GRAMFE_FFT!!
 #   endif // PATCH_SIZE
 #   elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+//  for GRAMFE_MATMUL extension size irrelevant since matrix multiplication works for all sizes
 #     define GRAMFE_ND     32  // GRAMFE_FLU_NXT = 2^6
+
+#     if ( PATCH_SIZE != 8 && PATCH_SIZE != 16 && PATCH_SIZE != 32 )
+#       error : ERROR : Unsupported PATCH_SIZE for GRAMFE_MATMUL!!
+#     endif // PATCH_SIZE
+
 #   else
-#     error : ERROR : Unsupported GRAMFE_SCHEME
+#     error : ERROR : Unsupported GRAMFE_SCHEME!!
 #   endif
 
 //  total size of extended region
@@ -861,7 +868,7 @@
 #  define FB_SEP_FLUOUT
 #endif
 
-// enable double precision for WAVE_GRAMFE FFT scheme by default
+// enable double precision for GRAMFE_FFT and GRAMFE_MATMUL schemes by default
 #if ( GRAMFE_SCHEME == GRAMFE_FFT )
 #   define GRAMFE_FFT_FLOAT8
 #endif // #if ( GRAMFE_SCHEME == GRAMFE_FFT )
@@ -1060,9 +1067,6 @@
 // max/min functions
 #define MAX( a, b )     (  ( (a) > (b) ) ? (a) : (b)  )
 #define MIN( a, b )     (  ( (a) < (b) ) ? (a) : (b)  )
-
-
-#define HAS_DISCONTINUITY( l, c, r ) ((( (r) - (c) ) / ((c) - (l) + (((c) - (l)) == 0) ? 1e-8 : 0)) < 0)
 
 // safe ATAN2 that does not return nan when a = b = 0
 #define SATAN2( a, b )   (  ( (a) == (real)0.0  &&  (b) == (real)0.0 ) ? (real)0.0 : ATAN2( (a), (b) )  )

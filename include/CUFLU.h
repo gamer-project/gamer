@@ -510,7 +510,7 @@
 
 using CUFFTDX_ARCH = decltype(cufftdx::SM<GPU_COMPUTE_CAPABILITY>());
 
-using fft_base     = decltype(cufftdx::Block() + cufftdx::Size<GRAMFE_FLU_NXT>() + cufftdx::Type<cufftdx::fft_type::c2c>() + cufftdx::Precision<gramfe_float>() + CUFFTDX_ARCH() );
+using fft_base     = decltype(cufftdx::Block() + cufftdx::Size<GRAMFE_FLU_NXT>() + cufftdx::Type<cufftdx::fft_type::c2c>() + cufftdx::Precision<gramfe_fft_float>() + CUFFTDX_ARCH() );
 using forward_fft  = decltype(fft_base() + cufftdx::Direction<cufftdx::fft_direction::forward>());
 using inverse_fft  = decltype(fft_base() + cufftdx::Direction<cufftdx::fft_direction::inverse>());
 

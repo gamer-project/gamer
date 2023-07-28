@@ -65,16 +65,16 @@ extern gramfe_fftw::complex_plan_1d FFTW_Plan_ExtPsi, FFTW_Plan_ExtPsi_Inv;
 
 #include <complex.h>
 
-using complex_type = std::complex<gramfe_float>;
+using complex_type = std::complex<gramfe_fft_float>;
 
 #else // #if ( SUPPORT_FFTW == FFTW3 )
 
-//derive from gramfe_fftw::fft_complex which is an alias for FFTW2's complex_type in gramfe_float precision to allow for complex arithmetic operations
+//derive from gramfe_fftw::fft_complex which is an alias for FFTW2's complex_type in gramfe_fft_float precision to allow for complex arithmetic operations
 struct complex_type : public gramfe_fftw::fft_complex {
    complex_type() {
    }
 
-   complex_type(gramfe_float re, gramfe_float im) {
+   complex_type(gramfe_fft_float re, gramfe_fft_float im) {
       real(re);
       imag(im);
    }
@@ -85,19 +85,19 @@ struct complex_type : public gramfe_fftw::fft_complex {
       return *this;
    }
 
-   gramfe_float real() const {
+   gramfe_fft_float real() const {
       return c_re(*this);
    }
 
-   gramfe_float imag() const {
+   gramfe_fft_float imag() const {
       return c_im(*this);
    }
 
-   void real(gramfe_float re) {
+   void real(gramfe_fft_float re) {
       c_re(*this) = re;
    }
 
-   void imag(gramfe_float im) {
+   void imag(gramfe_fft_float im) {
       c_im(*this) = im;
    }
 
@@ -189,13 +189,13 @@ GPU_DEVICE
 static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN  ][ CUBE(FLU_NXT) ],
                            real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
                            int NPatchGroup,
-                           const gramfe_float dt, const gramfe_float _dh, const gramfe_float Eta,
+                           const gramfe_fft_float dt, const gramfe_fft_float _dh, const gramfe_fft_float Eta,
                            const uint j_gap, const uint k_gap,
                            complex_type s_In       [][GRAMFE_FLU_NXT],
                            complex_type s_Ae       [][GRAMFE_NDELTA],
                            complex_type s_Ao       [][GRAMFE_NDELTA],
                            complex_type ExpCoeff   [],
-                           const bool FinalOut, const int XYZ, const gramfe_float MinDens,
+                           const bool FinalOut, const int XYZ, const gramfe_fft_float MinDens,
                            forward_workspace_type Workspace,
                            inverse_workspace_type WorkspaceInv );
 
@@ -218,11 +218,11 @@ int Factorial(int n) {
 // Return      :  Value of expansion
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-gramfe_float CosineTaylorExpansion(gramfe_float x, int Nterms) {
-   gramfe_float result = 0;
+gramfe_fft_float CosineTaylorExpansion(gramfe_fft_float x, int Nterms) {
+   gramfe_fft_float result = 0;
 
    for (int i = 0; i  < Nterms; ++i) {
-      result += pow(-1, i) * (1 / ((gramfe_float) Factorial(2 * i))) * pow(x, 2 * i   );
+      result += pow(-1, i) * (1 / ((gramfe_fft_float) Factorial(2 * i))) * pow(x, 2 * i   );
    }
 
    return result;
@@ -236,11 +236,11 @@ gramfe_float CosineTaylorExpansion(gramfe_float x, int Nterms) {
 // Return      :  Value of expansion
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-gramfe_float SineTaylorExpansion(gramfe_float x, int Nterms) {
-   gramfe_float result = 0;
+gramfe_fft_float SineTaylorExpansion(gramfe_fft_float x, int Nterms) {
+   gramfe_fft_float result = 0;
 
    for (int i = 0; i  < Nterms; ++i) {
-      result += pow(-1, i) * ( 1 / ((gramfe_float) Factorial(2 * i + 1)) ) * pow(x, 2 * i + 1);
+      result += pow(-1, i) * ( 1 / ((gramfe_fft_float) Factorial(2 * i + 1)) ) * pow(x, 2 * i + 1);
    }
 
    return result;
@@ -307,24 +307,24 @@ void CPU_ELBDMSolver_GramFE_FFT(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) 
    complex_type (*s_In)   [GRAMFE_FLU_NXT] = NULL;
    complex_type (*s_Ae)   [GRAMFE_NDELTA]  = NULL;
    complex_type (*s_Ao)   [GRAMFE_NDELTA]  = NULL;
-   const gramfe_float _dh                  = gramfe_float(1.0)/dh;
+   const gramfe_fft_float _dh                  = gramfe_fft_float(1.0)/dh;
    bool Workspace                          = NULL_BOOL;
    bool WorkspaceInv                       = NULL_BOOL;
 #  endif // #  ifdef __CUDACC__ ... else
 
 
 // set up time evolution operator and filter
-   gramfe_float K;
-   gramfe_float Filter;                                                                      // exp(-filterDecay * (k/kMax)**(2*filterDegree))
-   gramfe_float Coeff;                                                                       // dT * k^2
+   gramfe_fft_float K;
+   gramfe_fft_float Filter;                                                                      // exp(-filterDecay * (k/kMax)**(2*filterDegree))
+   gramfe_fft_float Coeff;                                                                       // dT * k^2
    complex_type ExpCoeff[GRAMFE_FLU_NXT];                                                    // exp(- 1j * dt/(2*ELBDM_ETA) * k^2)
 
-   const gramfe_float filterDecay  = (gramfe_float) 32.0 * (gramfe_float) 2.302585092994046; // decay of k-space filter ( 32 * log(10) )
-   const gramfe_float filterDegree = (gramfe_float) 100;                                     // degree of k-space filter
-   const gramfe_float kmax         = (gramfe_float) M_PI * _dh;                              // maximum value of k
-   const gramfe_float dk           = (gramfe_float) + 2.0 * kmax / GRAMFE_FLU_NXT;           // k steps in k-space
-   const gramfe_float dT           = (gramfe_float) - 0.5 * dt / Eta;                        // coefficient in time evolution operator
-   const gramfe_float Norm         = (gramfe_float) + 1.0 / GRAMFE_FLU_NXT;                  // norm for inverse Fourier transform
+   const gramfe_fft_float filterDecay  = (gramfe_fft_float) 32.0 * (gramfe_fft_float) 2.302585092994046; // decay of k-space filter ( 32 * log(10) )
+   const gramfe_fft_float filterDegree = (gramfe_fft_float) 100;                                     // degree of k-space filter
+   const gramfe_fft_float kmax         = (gramfe_fft_float) M_PI * _dh;                              // maximum value of k
+   const gramfe_fft_float dk           = (gramfe_fft_float) + 2.0 * kmax / GRAMFE_FLU_NXT;           // k steps in k-space
+   const gramfe_fft_float dT           = (gramfe_fft_float) - 0.5 * dt / Eta;                        // coefficient in time evolution operator
+   const gramfe_fft_float Norm         = (gramfe_fft_float) + 1.0 / GRAMFE_FLU_NXT;                  // norm for inverse Fourier transform
 
 // naively "exp(1j * Coeff)" should give the exact time evolution of the free Schrödinger equation
 // however, the time-evolution operator depends on higher-order derivatives
@@ -396,14 +396,14 @@ GPU_DEVICE
 void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
                      int NPatchGroup,
-                     const gramfe_float dt, const gramfe_float _dh, const gramfe_float Eta,
+                     const gramfe_fft_float dt, const gramfe_fft_float _dh, const gramfe_fft_float Eta,
                      const uint j_gap, const uint k_gap,
                      complex_type s_In       [][GRAMFE_FLU_NXT],
                      complex_type s_Ae       [][GRAMFE_NDELTA],
                      complex_type s_Ao       [][GRAMFE_NDELTA],
                      complex_type ExpCoeff   [],
                      const bool FinalOut,
-                     const int XYZ, const gramfe_float MinDens,
+                     const int XYZ, const gramfe_fft_float MinDens,
                      forward_workspace_type Workspace,
                      inverse_workspace_type WorkspaceInv  )
 {
@@ -498,8 +498,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   Ar += Pr[si][t] * s_In[sj][FLU_NXT - GRAMFE_NDELTA + t]; // right boundary
                } // for t
 
-               s_Ae[sj][si] = (gramfe_float) 0.5 * (Ar + Al);
-               s_Ao[sj][si] = (gramfe_float) 0.5 * (Ar - Al);
+               s_Ae[sj][si] = (gramfe_fft_float) 0.5 * (Ar + Al);
+               s_Ao[sj][si] = (gramfe_fft_float) 0.5 * (Ar - Al);
             } // CELL_LOOP(GRAMFE_ORDER, 0, 0)
 
 #           ifdef __CUDACC__
