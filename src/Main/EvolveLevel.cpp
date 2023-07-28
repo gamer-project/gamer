@@ -740,7 +740,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                   FaFluSg = 1 - FaFluSg;
                }
                TIMING_FUNC(   Buf_GetBufferData( FaLv, FaFluSg, NULL_INT, NULL_INT, DATA_GENERAL,
-                                                _PHAS, _NONE, PATCH_SIZE, USELB_YES ),
+                                                _PHAS, _NONE, 0, USELB_YES ),
                               Timer_GetBuf[lv][2],   TIMER_ON   );
             }
 #           endif // # if ( defined( LOAD_BALANCE ) && MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )

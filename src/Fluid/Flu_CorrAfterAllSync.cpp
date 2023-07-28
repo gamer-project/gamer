@@ -86,7 +86,7 @@ void Flu_CorrAfterAllSync()
             FaFluSg = 1 - FaFluSg;
          }
          Buf_GetBufferData( FaLv, FaFluSg, NULL_INT, NULL_INT, DATA_GENERAL,
-                           _PHAS, _NONE, PATCH_SIZE, USELB_YES );
+                           _PHAS, _NONE, 0, USELB_YES );
       }
 #     endif // # if ( defined(LOAD_BALANCE) && MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 
