@@ -1123,6 +1123,12 @@ void Aux_Check_Parameter()
 // check hybrid scheme parameters for errors
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
+   if ( INIT_SUBSAMPLING_NCELL > 1 )
+      Aux_Error( ERROR_INFO, "ELBDM_HYBRID currently does not support INIT_SUBSAMPLING_NCELL > 1 !!\n" );
+
+   if ( OPT__OUTPUT_TOTAL == 2 )
+      Aux_Error( ERROR_INFO, "ELBDM_HYBRID currently does not support OPT__OUTPUT_TOTAL == 2 !!\n" );
+
 #  if ( FLU_GHOST_SIZE < HYB_GHOST_SIZE )
 #  error : ERROR : FLU_GHOST_SIZE needs to be bigger than HYB_GHOST_SIZE !!
 #  endif // # if ( FLU_GHOST_SIZE < HYB_GHOST_SIZE )

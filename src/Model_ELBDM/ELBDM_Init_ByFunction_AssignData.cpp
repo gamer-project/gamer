@@ -46,17 +46,20 @@ void Init_Function_User_Template( real fluid[], const double x, const double y, 
    const double Height2 =   8.0;
    const double Width1  =  64.0;
    const double Width2  = 512.0;
+   const real Real      = 1.0 + Height1*exp(  -( SQR(x-C1[0]) + SQR(y-C1[1]) + SQR(z-C1[2]) ) /SQR(Width1)  );
+   const real Imag      = 1.0 + Height2*exp(  -( SQR(x-C2[0]) + SQR(y-C2[1]) + SQR(z-C2[2]) ) /SQR(Width2)  );
+   const real Dens      = Real*Real + Imag*Imag;
 
 #  if (ELBDM_SCHEME == ELBDM_HYBRID)
    if ( amr->use_wave_flag[lv] ) {
 #  endif // # if (ELBDM_SCHEME == ELBDM_HYBRID)
-   fluid[REAL] = 1.0 + Height1*exp(  -( SQR(x-C1[0]) + SQR(y-C1[1]) + SQR(z-C1[2]) ) /SQR(Width1)  );
-   fluid[IMAG] = 1.0 + Height2*exp(  -( SQR(x-C2[0]) + SQR(y-C2[1]) + SQR(z-C2[2]) ) /SQR(Width2)  );
-   fluid[DENS] = fluid[REAL]*fluid[REAL] + fluid[IMAG]*fluid[IMAG];
+   fluid[REAL] = Real;
+   fluid[IMAG] = Imag;
+   fluid[DENS] = Dens;
 #  if (ELBDM_SCHEME == ELBDM_HYBRID)
    } else { // if ( amr->use_wave_flag[lv] == true )
-   fluid[PHAS] = 1.0 + Height1*exp(  -( SQR(x-C1[0]) + SQR(y-C1[1]) + SQR(z-C1[2]) ) /SQR(Width1)  );
-   fluid[DENS] = fluid[REAL]*fluid[REAL] + fluid[IMAG]*fluid[IMAG];
+   fluid[PHAS] = SATAN2(Imag, Real);
+   fluid[DENS] = Dens;
    fluid[STUB] = 0.0;
    } // if ( amr->use_wave_flag[lv] == true ) ... else
 #  endif // # if (ELBDM_SCHEME == ELBDM_HYBRID)
@@ -90,6 +93,10 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
    if ( OPT__RESET_FLUID_INIT  &&  Flu_ResetByUser_Func_Ptr == NULL )
       Aux_Error( ERROR_INFO, "Flu_ResetByUser_Func_Ptr == NULL for OPT__RESET_FLUID_INIT !!\n" );
 
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( INIT_SUBSAMPLING_NCELL > 1 )
+      Aux_Error( ERROR_INFO, "ELBDM_HYBRID currently does not support subsampling !!\n" );
+#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 // set the number of OpenMP threads
 #  ifdef OPENMP
