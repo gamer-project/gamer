@@ -8,6 +8,7 @@
 #include "GramFE_ExtensionTables.h"
 
 #include <complex.h>
+#include <quadmath.h>
 
 // require at least 128 bit precision in order for calculation of evolution matrix to have an error below single precision
 // this is because the extension matrix has a high condition number of 10^15 or higher
@@ -38,7 +39,7 @@ static gramfe_evo_float CosineTaylorExpansion(const gramfe_evo_float x, const in
    gramfe_evo_float result = 0;
 
    for (int i = 0; i  < Nterms; ++i) {
-      result += pow(-1, i) * (1 / ((gramfe_evo_float) Factorial(2 * i))) * pow((long double)x, 2 * i   );
+      result += powq(-1, i) * (1 / ((gramfe_evo_float) Factorial(2 * i))) * powq( x, 2 * i );
    }
 
    return result;
@@ -55,7 +56,7 @@ static gramfe_evo_float SineTaylorExpansion(const gramfe_evo_float x, const int 
    gramfe_evo_float result = 0;
 
    for (int i = 0; i  < Nterms; ++i) {
-      result += pow(-1, i) * ( 1 / ((gramfe_evo_float) Factorial(2 * i + 1)) ) * pow((long double) x, 2 * i + 1);
+      result += powq(-1, i) * ( 1 / ((gramfe_evo_float) Factorial(2 * i + 1)) ) * powq((long double) x, 2 * i + 1);
    }
 
    return result;
@@ -103,7 +104,7 @@ void ELBDM_GramFE_ComputeTimeEvolutionMatrix(gramfe_matmul_float (*output)[2 * F
    for (int i=0; i<GRAMFE_FLU_NXT; i++)
    {
       K           = ( i <= GRAMFE_FLU_NXT/2 ) ? dk*i : dk*(i-GRAMFE_FLU_NXT);
-      Filter      = exp(-(long double) filterDecay * pow((long double) abs(K/kmax), 2*filterDegree));
+      Filter      = expq(-(long double) filterDecay * powq((long double) fabsq(K/kmax), 2*filterDegree));
       Coeff       = SQR(K)*dT;
       ExpCoeff    = gramfe_evo_complex_type(CosineTaylorExpansion(Coeff, cosineNTerms), SineTaylorExpansion(Coeff, sineNTerms)) * Filter;
 
