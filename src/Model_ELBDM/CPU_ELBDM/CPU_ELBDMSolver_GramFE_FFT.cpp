@@ -212,7 +212,7 @@ int Factorial(int n) {
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CosineTaylorExpansion
-// Description :  Compute the taylor expansion of the cosine function at the point x with Nterms terms
+// Description :  Compute the Taylor expansion of the cosine function at the point x with Nterms terms
 // Parameter   :  x       : Point at which to evaluate Taylor expansion
 //                NTerms  : Number of terms to retain in expansion
 // Return      :  Value of expansion
@@ -230,7 +230,7 @@ gramfe_fft_float CosineTaylorExpansion(gramfe_fft_float x, int Nterms) {
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SineTaylorExpansion
-// Description :  Compute the taylor expansion of the sine function at the point x with Nterms terms
+// Description :  Compute the Taylor expansion of the sine function at the point x with Nterms terms
 // Parameter   :  x       : Point at which to evaluate Taylor expansion
 //                NTerms  : Number of terms to retain in expansion
 // Return      :  Value of expansion

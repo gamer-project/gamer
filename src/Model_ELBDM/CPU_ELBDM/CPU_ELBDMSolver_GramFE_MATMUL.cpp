@@ -321,7 +321,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   Re_New = s_Out[sj][si - FLU_GHOST_SIZE].real();
                   Im_New = s_Out[sj][si - FLU_GHOST_SIZE].imag();
 
-//                4.1 write FFT array back to output array
+//                3.1 write FFT array back to output array
                   j = j_gap + ( sj + Column0 ) % size_j ;
                   k = k_gap + ( sj + Column0 ) / size_j;
 
