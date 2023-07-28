@@ -79,7 +79,7 @@ void Flu_CorrAfterAllSync()
 #     if ( defined(LOAD_BALANCE) && MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
 //    exchange phase field on level lv if level lv + 1 uses wave scheme
 //    if available, use the phase information from the previous time step (1 - amr->FluSg[FaLv]) for this purpose
-      if ( !amr->use_wave_flag[lv] && amr->use_wave_flag[lv+1] ) {
+      if ( !amr->use_wave_flag[lv] && amr->use_wave_flag[lv+1] && ELBDM_MATCH_PHASE ) {
          int FaLv    = lv;
          int FaFluSg = amr->FluSg[FaLv];
          if ( amr->FluSgTime[FaLv][1-FaFluSg] >= 0.0 ) {

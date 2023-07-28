@@ -136,10 +136,13 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                                 --> NSIDE_00 (=  0) : do not prepare any sibling direction (equivalent to GhostSize=0)
 //                                     NSIDE_06 (=  6) : prepare only sibling directions 0~5
 //                                     NSIDE_26 (= 26) : prepare all sibling directions 0~25
-//                IntPhase       : true --> Wave scheme: Perform interpolation on rho/phase instead of real/imag parts in ELBDM
-//                                      --> TVarCC must contain _REAL and _IMAG if hybrid scheme is turned off
-//                                      --> Fluid scheme: Perform interpolation on rho/phase in fluid patches
-//                                      --> There,  TVarCC must contain _DENS and _PHAS
+//                IntPhase       : true --> ELBDM_WAVE: Perform interpolation on rho/phase instead of real/imag parts
+//                                                      --> TVarCC must contain _REAL and _IMAG
+//                                      --> ELBDM_HYBRID:
+//                                                      Perform interpolation on rho/phase instead of real/imag parts on wave levels
+//                                                      --> TVarCC must contain _REAL and _IMAG
+//                                                      Perform interpolation on rho/phase regardless of IntPhase on fluid levels
+//                                                      --> TVarCC must contain _DENS and _PHAS
 //                FluBC          : Fluid boundary condition
 //                PotBC          : Gravity boundary condition
 //                MinDens        : See MinEntr
@@ -1726,7 +1729,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 
 
-//             (b2-3-1) convert density and phase in IntData_CC[] in hybrid scheme if we interpolate from fluid to wave schem
+//             (b2-3-1) convert density and phase in IntData_CC[] in hybrid scheme if we interpolate from fluid to wave scheme
 //             --> do not convert NUseless-cell-wide useless data returned by InterpolateGhostZone()
 
                const int NUseless = GhostSize & 1;

@@ -731,7 +731,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //          this is required for backward matching during fixup
 #           if ( defined( LOAD_BALANCE ) && MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID )
             if ( lv != TOP_LEVEL )
-            if ( !amr->use_wave_flag[lv] && amr->use_wave_flag[lv+1] )
+            if ( !amr->use_wave_flag[lv] && amr->use_wave_flag[lv+1] && ELBDM_MATCH_PHASE )
             {
                int FaLv    = lv;
                int FaFluSg = amr->FluSg[FaLv];
