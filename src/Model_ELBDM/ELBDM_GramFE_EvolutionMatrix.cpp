@@ -8,7 +8,6 @@
 #include "GramFE_ExtensionTables.h"
 
 #include <complex.h>
-#include <quadmath.h>
 
 // require at least 128 bit precision in order for calculation of evolution matrix to have an error below single precision
 // this is because the extension matrix has a high condition number of 10^15 or higher
