@@ -3,7 +3,7 @@
 
 #if ( ( !defined(__CUDACC__) && defined(SUPPORT_GSL) ) || ( defined(__CUDACC__) ) )
 
-#if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
+#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 #ifdef __CUDACC__
 #include "cuda_complex.h"
@@ -375,5 +375,5 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 } // FUNCTION : CUFLU_Advance
 
 
-#endif // #if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
+#endif // #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 #endif // #if ( ( !defined(__CUDACC__) && defined(SUPPORT_GSL) ) || ( defined(__CUDACC__) ) )

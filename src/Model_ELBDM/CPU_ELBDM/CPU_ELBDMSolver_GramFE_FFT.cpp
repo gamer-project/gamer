@@ -3,7 +3,7 @@
 
 #if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || defined(__CUDACC__) )
 
-#if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
+#if ( GRAMFE_SCHEME == GRAMFE_FFT )
 
 #include "GramFE_ExtensionTables.h"
 

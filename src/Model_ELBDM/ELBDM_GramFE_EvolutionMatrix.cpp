@@ -3,7 +3,7 @@
 #include "GAMER.h"
 
 
-#if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
+#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 #include "GramFE_ExtensionTables.h"
 
@@ -148,4 +148,4 @@ void ELBDM_GramFE_ComputeTimeEvolutionMatrix(gramfe_matmul_float (*output)[2 * F
    }
 }
 
-#endif // #if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
+#endif // #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )

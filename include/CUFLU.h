@@ -26,9 +26,9 @@
 
 
 // include CUDA FFT library if GPU kinetic ELBDM Gram-Fourier extension solver is enabled
-#if ( defined(__CUDACC__) && MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
+#if ( defined(__CUDACC__) && GRAMFE_SCHEME == GRAMFE_FFT )
 #  include <cufftdx.hpp>
-#endif // #if ( defined(__CUDACC__) && MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
+#endif // #if ( defined(__CUDACC__) && GRAMFE_SCHEME == GRAMFE_FFT )
 
 // faster integer multiplication in Fermi
 #if ( defined __CUDACC__  &&  __CUDA_ARCH__ >= 200 )

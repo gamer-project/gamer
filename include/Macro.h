@@ -862,13 +862,13 @@
 #endif
 
 // enable double precision for WAVE_GRAMFE FFT scheme by default
-#if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
+#if ( GRAMFE_SCHEME == GRAMFE_FFT )
 #   define GRAMFE_FFT_FLOAT8
-#endif // #if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
+#endif // #if ( GRAMFE_SCHEME == GRAMFE_FFT )
 
-#if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
+#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 #   define GRAMFE_MATMUL_FLOAT8
-#endif // #if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
+#endif // #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 // extreme values
 #ifndef __INT_MAX__
