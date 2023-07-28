@@ -153,11 +153,12 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
       if ( h_HasWaveCounterpart [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_HasWaveCounterpart[t] )  ); h_HasWaveCounterpart [t] = NULL; }
 #     endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
-#     if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-      if ( h_GramFE_TimeEvo     [t] != NULL ) { CUDA_CHECK_ERROR(  cudaFreeHost ( h_GramFE_TimeEvo    [t] )  ); h_GramFE_TimeEvo     [t] = NULL; }
-#     endif // #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
    } // for (int t=0; t<2; t++)
 
+
+#  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+   if ( h_GramFE_TimeEvo != NULL ) { CUDA_CHECK_ERROR(  cudaFreeHost ( h_GramFE_TimeEvo )  ); h_GramFE_TimeEvo = NULL; }
+#  endif // #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 // destroy streams
    if ( Stream != NULL )

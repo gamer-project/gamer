@@ -102,6 +102,8 @@ void CPU_ELBDMSolver_GramFE_MATMUL (      real Flu_Array_In [][FLU_NIN    ][ CUB
                                           gramfe_matmul_float TimeEvo[][2 * FLU_NXT],
                                           const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                                           const bool XYZ, const real MinDens );
+#else
+#error : ERROR : unsupported GRAMFE_SCHEME !!
 #endif // GRAMFE_SCHEME
 #endif // #if ( WAVE_SCHEME == WAVE_FD ) ... else
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
@@ -293,11 +295,10 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
    CPU_ELBDMSolver_GramFE_FFT( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
                      XYZ, MinDens );
 #  elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-// evaluate time evolution matrix
-   ELBDM_GramFE_ComputeTimeEvolutionMatrix(h_GramFE_TimeEvo, dt, dh, ELBDM_Eta);
-
    CPU_ELBDMSolver_GramFE_MATMUL( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, h_GramFE_TimeEvo, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
                      XYZ, MinDens );
+#  else
+#     error : ERROR : unsupported GRAMFE_SCHEME !!
 #  endif
 
 #  else // #  if (WAVE_SCHEME == WAVE_GRAMFE )

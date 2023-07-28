@@ -332,11 +332,11 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
       CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_HasWaveCounterpart  [t],  Flu_MemSize_HasWaveCounterpart   )  );
 #     endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
-#     if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-      CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_GramFE_TimeEvo      [t],  GramFE_TimeEvo_MemSize           )  );
-#     endif // #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
    } // for (int t=0; t<2; t++)
 
+#  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+   CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_GramFE_TimeEv,  GramFE_TimeEvo_MemSize )  );
+#  endif // #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 // create streams
    Stream = new cudaStream_t [GPU_NStream];

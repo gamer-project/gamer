@@ -396,7 +396,7 @@ real  *h_SrcDlepProf_Radius                                        = NULL;
 #endif
 
 #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-gramfe_matmul_float (*h_GramFE_TimeEvo[2]) [2 * FLU_NXT]           = { NULL, NULL };
+gramfe_matmul_float (*h_GramFE_TimeEvo) [2 * FLU_NXT]              = NULL;
 #  endif // #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 

@@ -1,5 +1,6 @@
 #include "CUAPI.h"
 #include "CUFLU.h"
+
 #ifdef GPU
 
 #if   ( MODEL == HYDRO )
@@ -100,6 +101,8 @@ void CUFLU_ELBDMSolver_GramFE_MATMUL(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NX
                                        gramfe_matmul_float g_Evolve   [][FLU_NXT * 2],
                                        const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                        const bool XYZ, const real MinDens);
+#  else
+#   error : ERROR : unsupported GRAMFE_SCHEME !!
 #  endif // GRAMFE_SCHEME
 #  else // #  if (WAVE_SCHEME == WAVE_GRAMFE )
 #     error : ERROR : unsupported WAVE_SCHEME !!
@@ -175,9 +178,9 @@ extern bool                (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ];
 static bool                (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ] = NULL;
 #endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
-#if ( MODEL == ELBDM  && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_MATMUL )
+#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 extern gramfe_matmul_float (*d_Flu_TimeEvo)[2 * FLU_NXT];
-#endif
+#endif // #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 #ifdef UNSPLIT_GRAVITY
 extern real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ];
@@ -385,7 +388,6 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
    size_t h_FluTimeEvo_MemSize = 2 * FLU_NXT * PS2 * sizeof(gramfe_matmul_float);
-   ELBDM_GramFE_ComputeTimeEvolutionMatrix(h_GramFE_TimeEvo, dt, dh, ELBDM_Eta);
    CUDA_CHECK_ERROR( cudaMemcpyAsync( d_Flu_TimeEvo, h_GramFE_TimeEvo, h_FluTimeEvo_MemSize, cudaMemcpyHostToDevice) );
 
 #  else

@@ -92,12 +92,12 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
       h_HasWaveCounterpart  [t] = new bool [Flu_NPatchGroup][ CUBE(HYB_NXT) ];
 #     endif // // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
-#     if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-      h_GramFE_TimeEvo      [t] = new gramfe_matmul_float [PS2][2 * FLU_NXT];
-#     endif // #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-
    } // for (int t=0; t<2; t++)
 
+
+#  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+   h_GramFE_TimeEvo = new gramfe_matmul_float [PS2][2 * FLU_NXT];
+#  endif // #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
    h_FC_Var      = new real [Flu_NPatchGroup][6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ];

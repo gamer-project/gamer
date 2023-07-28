@@ -67,11 +67,11 @@ void End_MemFree_Fluid()
       delete [] h_HasWaveCounterpart [t]; h_HasWaveCounterpart [t] = NULL;
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
-#     if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-      delete [] h_GramFE_TimeEvo     [t]; h_GramFE_TimeEvo     [t] = NULL;
-#     endif // # if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-
    } // for (int t=0; t<2; t++)
+
+#  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+   delete [] h_GramFE_TimeEvo;       h_GramFE_TimeEvo     = NULL;
+#  endif // # if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
    delete [] h_FC_Var;               h_FC_Var             = NULL;

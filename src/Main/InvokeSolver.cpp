@@ -205,6 +205,11 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
    GlobalTree = &GlobalTreeObject;
 #  endif
 
+#  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+// evaluate time evolution matrix ( once per level per timestep )
+   ELBDM_GramFE_ComputeTimeEvolutionMatrix( h_GramFE_TimeEvo, dt, dh, ELBDM_Eta );
+#  endif
+
 //-------------------------------------------------------------------------------------------------------------
    TIMING_SYNC(   Preparation_Step( TSolver, lv, TimeNew, TimeOld, NPG[ArrayID], PID0_List, ArrayID, GlobalTree ),
                   Timer_Pre[lv][TSolver]  );
@@ -318,10 +323,10 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
    real (*h_Emag_Array_G   [2])[PS1][PS1][PS1]                        = { NULL, NULL };
 #  endif
 #  if ( MODEL != ELBDM )
-   bool (*h_IsCompletelyRefined)              = NULL;
+   bool (*h_IsCompletelyRefined[2])                                   = { NULL, NULL };
 #  endif // #  if ( MODEL != ELBDM )
 #  if ( MODEL != ELBDM || ELBDM_SCHEME != ELBDM_HYBRID )
-   bool (*h_HasWaveCounterpart)[ CUBE(HYB_NXT) ] = NULL;
+   bool (*h_HasWaveCounterpart [2])[ CUBE(HYB_NXT) ]                  = { NULL, NULL };
 #  endif // #  if ( MODEL != ELBDM || ELBDM_SCHEME != ELBDM_HYBRID )
 
 
@@ -525,16 +530,20 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
    real (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2P1*PS2 ]            = { NULL, NULL };
    real (*h_Mag_Array_T    [2])[NCOMP_MAG][ PS1P1*SQR(PS1) ]          = { NULL, NULL };
 #  ifdef GRAVITY
-   real (*h_Emag_Array_G  [2])[PS1][PS1][PS1]                         = { NULL, NULL };
+   real (*h_Emag_Array_G   [2])[PS1][PS1][PS1]                        = { NULL, NULL };
 #  endif
    real (*h_Mag_Array_S_In [2])[NCOMP_MAG][ SRC_NXT_P1*SQR(SRC_NXT) ] = { NULL, NULL };
 #  endif
 
 #  if ( MODEL != ELBDM )
-   bool (*h_IsCompletelyRefined)                                      = NULL;
+   bool (*h_IsCompletelyRefined[2])                                   = { NULL, NULL };
 #  endif // #  if ( MODEL != ELBDM )
-#  if ( MODEL != ELBDM || ELBDM_SCHEME != ELBDM_HYBRID )
-   bool (*h_HasWaveCounterpart)[ CUBE(HYB_NXT) ]                         = NULL;
+#  if ( ELBDM_SCHEME != ELBDM_HYBRID )
+   bool (*h_HasWaveCounterpart [2])[ CUBE(HYB_NXT) ]                  = { NULL, NULL };
+#  endif // #  if ( ELBDM_SCHEME != ELBDM_HYBRID )
+
+#  if ( GRAMFE_SCHEME != GRAMFE_MATMUL )
+   bool (*h_GramFE_TimeEvo)[ 2 * FLU_NXT ]                            = NULL;
 #  endif // #  if ( MODEL != ELBDM || ELBDM_SCHEME != ELBDM_HYBRID )
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
@@ -567,7 +576,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  h_Corner_Array_F[ArrayID], h_Pot_Array_USG_F[ArrayID],
                                  h_IsCompletelyRefined[ArrayID],
                                  h_HasWaveCounterpart[ArrayID],
-                                 h_GramFE_TimeEvo[ArrayID],
+                                 h_GramFE_TimeEvo,
                                  NPG, dt, dh, OPT__FIXUP_FLUX, OPT__FIXUP_ELECTRIC, Flu_XYZ,
                                  OPT__LR_LIMITER, MINMOD_COEFF, MINMOD_MAX_ITER,
                                  ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
@@ -584,7 +593,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  h_Corner_Array_F[ArrayID], h_Pot_Array_USG_F[ArrayID],
                                  h_IsCompletelyRefined[ArrayID],
                                  h_HasWaveCounterpart[ArrayID],
-                                 h_GramFE_TimeEvo[ArrayID],
+                                 h_GramFE_TimeEvo,
                                  NPG, dt, dh, OPT__FIXUP_FLUX, OPT__FIXUP_ELECTRIC, Flu_XYZ,
                                  OPT__LR_LIMITER, MINMOD_COEFF, MINMOD_MAX_ITER,
                                  ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
