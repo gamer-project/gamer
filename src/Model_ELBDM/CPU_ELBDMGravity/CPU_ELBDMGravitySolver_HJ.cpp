@@ -34,14 +34,14 @@
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __global__
-void CUPOT_ELBDMGravitySolver_HamiltonJacobi(      real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
-                                             const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
-                                             const real EtaDt, const real dh, const real Lambda )
+void CUPOT_ELBDMGravitySolver_HamiltonJacobi( real g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
+                                              const real g_Pot_Array[][ CUBE(GRA_NXT) ],
+                                              const real EtaDt, const real dh, const real Lambda )
 #else
-void CPU_ELBDMGravitySolver_HamiltonJacobi  (      real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
-                                             const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
-                                             const int NPatchGroup,
-                                             const real EtaDt, const real dh, const real Lambda )
+void CPU_ELBDMGravitySolver_HamiltonJacobi  ( real g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
+                                              const real g_Pot_Array[][ CUBE(GRA_NXT) ],
+                                              const int NPatchGroup,
+                                              const real EtaDt, const real dh, const real Lambda )
 #endif
 {
 
@@ -70,11 +70,15 @@ void CPU_ELBDMGravitySolver_HamiltonJacobi  (      real   g_Flu_Array[][GRA_NIN]
          const int k_pot   = k_flu + GRA_GHOST_SIZE;
          const int idx_pot = IDX321( i_pot, j_pot, k_pot, GRA_NXT, GRA_NXT );
 
+
          real Pot;
 
          Pot  = g_Pot_Array[P]   [idx_pot];
+
 #        ifdef QUARTIC_SELF_INTERACTION
-         Pot += Lambda*( SQR(Re) + SQR(Im) );
+         const real Rho = g_Flu_Array[P][0][idx_flu];
+
+         Pot += Lambda * Rho;
 #        endif
 
          g_Flu_Array[P][PHAS][idx_flu] -= EtaDt * Pot;
