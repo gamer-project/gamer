@@ -1501,6 +1501,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "Laohu",                  &RS.Laohu,                  SID, TID, NonFatal, &RT.Laohu,                  1, NonFatal );
    LoadField( "SupportHDF5",            &RS.SupportHDF5,            SID, TID, NonFatal, &RT.SupportHDF5,            1, NonFatal );
    LoadField( "SupportGSL",             &RS.SupportGSL,             SID, TID, NonFatal, &RT.SupportGSL,             1, NonFatal );
+   LoadField( "SupportSpectralInt",     &RS.SupportSpectralInt,     SID, TID, NonFatal, &RT.SupportSpectralInt,     1, NonFatal );
    LoadField( "SupportFFTW",            &RS.SupportFFTW,            SID, TID, NonFatal, &RT.SupportFFTW,            1, NonFatal );
    LoadField( "SupportLibYT",           &RS.SupportLibYT,           SID, TID, NonFatal, &RT.SupportLibYT,           1, NonFatal );
 #  ifdef SUPPORT_LIBYT
@@ -1715,6 +1716,7 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Flu_BlockSize_y",      &RS.Flu_BlockSize_y,      SID, TID, NonFatal, &RT.Flu_BlockSize_y,       1, NonFatal );
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   LoadField( "GramFEScheme",         &RS.GramFEScheme,         SID, TID, NonFatal, &RT.GramFEScheme,          1, NonFatal );
    LoadField( "GramFEGamma",          &RS.GramFEGamma,          SID, TID, NonFatal, &RT.GramFEGamma,           1, NonFatal );
    LoadField( "GramFEG",              &RS.GramFEG,              SID, TID, NonFatal, &RT.GramFEG,               1, NonFatal );
    LoadField( "GramFENDelta",         &RS.GramFENDelta,         SID, TID, NonFatal, &RT.GramFENDelta,          1, NonFatal );
@@ -1925,6 +1927,10 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  endif
 #  if ( MODEL == ELBDM )
    LoadField( "Opt__Flag_EngyDensity",   &RS.Opt__Flag_EngyDensity,   SID, TID, NonFatal, &RT.Opt__Flag_EngyDensity,    1, NonFatal );
+   LoadField( "Opt__Flag_Spectral",      &RS.Opt__Flag_Spectral,      SID, TID, NonFatal, &RT.Opt__Flag_Spectral,       1, NonFatal );
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   LoadField( "Opt__Flag_Interference",  &RS.Opt__Flag_Interference,  SID, TID, NonFatal, &RT.Opt__Flag_Interference,   1, NonFatal );
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
    LoadField( "Opt__Flag_LohnerDens",    &RS.Opt__Flag_LohnerDens,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerDens,     1, NonFatal );
 #  if ( MODEL == HYDRO )

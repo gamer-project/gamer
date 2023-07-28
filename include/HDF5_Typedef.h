@@ -120,6 +120,7 @@ struct Makefile_t
    int Laohu;
    int SupportHDF5;
    int SupportGSL;
+   int SupportSpectralInt;
    int SupportFFTW;
    int SupportLibYT;
 #  ifdef SUPPORT_LIBYT
@@ -294,6 +295,7 @@ struct SymConst_t
    int    Flu_BlockSize_x;
    int    Flu_BlockSize_y;
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   int    GramFEScheme;
    int    GramFEGamma;
    int    GramFEG;
    int    GramFENDelta;

@@ -1649,6 +1649,12 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.SupportGSL             = 0;
 #  endif
 
+#  ifdef SUPPORT_SPECTRAL_INT
+   Makefile.SupportSpectralInt     = 1;
+#  else
+   Makefile.SupportSpectralInt     = 0;
+#  endif
+
 #  ifdef SUPPORT_FFTW
    Makefile.SupportFFTW            = SUPPORT_FFTW;
 #  else
@@ -2007,6 +2013,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.Flu_BlockSize_x      = FLU_BLOCK_SIZE_X;
    SymConst.Flu_BlockSize_y      = FLU_BLOCK_SIZE_Y;
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   SymConst.GramFEScheme         = GRAMFE_SCHEME;
    SymConst.GramFEGamma          = GRAMFE_GAMMA;
    SymConst.GramFEG              = GRAMFE_G;
    SymConst.GramFENDelta         = GRAMFE_NDELTA;
@@ -2723,6 +2730,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Laohu",                  HOFFSET(Makefile_t,Laohu                  ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportHDF5",            HOFFSET(Makefile_t,SupportHDF5            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportGSL",             HOFFSET(Makefile_t,SupportGSL             ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "SupportSpectralInt",     HOFFSET(Makefile_t,SupportSpectralInt     ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportFFTW",            HOFFSET(Makefile_t,SupportFFTW            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportLibYT",           HOFFSET(Makefile_t,SupportLibYT           ), H5T_NATIVE_INT );
 #  ifdef SUPPORT_LIBYT
@@ -2896,6 +2904,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Flu_BlockSize_y",      HOFFSET(SymConst_t,Flu_BlockSize_y     ), H5T_NATIVE_INT    );
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   H5Tinsert( H5_TypeID, "GramFEScheme",         HOFFSET(SymConst_t,GramFEScheme        ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "GramFEGamma",          HOFFSET(SymConst_t,GramFEGamma         ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "GramFEG",              HOFFSET(SymConst_t,GramFEG             ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "GramFENDelta",         HOFFSET(SymConst_t,GramFENDelta        ), H5T_NATIVE_INT    );
