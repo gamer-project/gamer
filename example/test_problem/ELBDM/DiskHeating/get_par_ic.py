@@ -16,7 +16,7 @@ def SearchIndex(x, A, N):
    i = 0
    j = N - 1
    while(i <= j):
-      mid = i + (j - i)/2
+      mid = int(i + (j - i)/2)
       if(A[mid] == x):     
          i = mid
          break 

@@ -3,11 +3,17 @@ import sys
 import yt
 import numpy as np
 
-# load the command-line parameters
-parser = argparse.ArgumentParser( description='Density profile' )
 
-parser.add_argument( '-p', action='store', required=False, type=str, dest='prefix',
-                     help='path prefix [%(default)s]', default='../' )
+# -------------------------------------------------------------------------------------------------------------------------
+# user-specified parameters
+dpi         = 150
+nbin        = 256*2
+
+
+#-------------------------------------------------------------------------------------------------------------------------
+# load the command-line parameters
+parser = argparse.ArgumentParser( description='Get the halo density profile' )
+
 parser.add_argument( '-s', action='store', required=True,  type=int, dest='idx_start',
                      help='first data index' )
 parser.add_argument( '-e', action='store', required=True,  type=int, dest='idx_end',
@@ -17,7 +23,11 @@ parser.add_argument( '-d', action='store', required=False, type=int, dest='didx'
 
 args=parser.parse_args()
 
-# take note
+idx_start = args.idx_start
+idx_end   = args.idx_end
+didx      = args.didx
+
+# print command-line parameters
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
 for t in range( len(sys.argv) ):
@@ -25,28 +35,19 @@ for t in range( len(sys.argv) ):
 print( '' )
 print( '-------------------------------------------------------------------\n' )
 
-idx_start = args.idx_start
-idx_end   = args.idx_end
-didx      = args.didx
-prefix    = args.prefix
-
-field = ('gamer', 'Dens')
-
+# -------------------------------------------------------------------------------------------------------------------------
+# output figures
+field       = ('gamer', 'Dens')
 center_mode = 'max'
-dpi         = 150
-nbin        = 256*2
+Center      = np.loadtxt('../../Record__Center', skiprows=1, dtype=float)
 
-Center = np.loadtxt('../Record__Center', skiprows=1, dtype=float)
-
-#==========================================================================
-# input the steps of the output snapshots in Record__Center
-step = [0, 117, 234, 351, 468, 585, 702, 819, 936, 1053, 1170, 
-      1287, 1404, 1521, 1638, 1755, 1872, 1989, 2106, 2223, 2340,
-      2457, 2574, 2691, 2808, 2925]
-#==========================================================================
 for idx in range(idx_start, idx_end+1, didx):
-   ds = yt.load( prefix+'/Data_%06d'%idx )
-   sp = ds.sphere( Center[step[idx],3:6], 0.5*ds.domain_width.to_value().max() )
+   ds             = yt.load( '../../Data_%06d'%idx )
+   current_step   = ds.parameters["Step"]
+   print("Current Simulation Time = %.5e [code units]"%ds.parameters["Time"][0])
+   print("Current Simulation Step = %i "%current_step)
+
+   sp = ds.sphere( Center[current_step,3:6], 0.5*ds.domain_width.to_value().max() )
    prof = yt.ProfilePlot( sp, 'radius', field, weight_field='cell_volume', n_bins=nbin, x_log=True, y_log={field:True} )
    prof.set_unit( 'radius', 'kpc' )
    prof.set_unit( field, 'g/cm**3' )
@@ -56,4 +57,3 @@ for idx in range(idx_start, idx_end+1, didx):
    C = [A,B]
    Data = np.asarray(C)
    np.save("Halo_Dens_"+str(ds),Data)
-

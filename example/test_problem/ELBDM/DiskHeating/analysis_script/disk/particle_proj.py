@@ -7,11 +7,18 @@ from mpl_toolkits.axes_grid1 import AxesGrid
 import argparse
 import sys
 
-# load the command-line parameters
-parser = argparse.ArgumentParser( description='Plot the gas slices and projections' )
 
-parser.add_argument( '-p', action='store', required=False, type=str, dest='prefix',
-                     help='path prefix [%(default)s]', default='../' )
+# -------------------------------------------------------------------------------------------------------------------------
+# user-specified parameters
+FONT_SIZE   = 12.0
+LINE_WIDTH  = 0.5
+colormap    = 'arbre'
+
+
+#-------------------------------------------------------------------------------------------------------------------------
+# load the command-line parameters
+parser = argparse.ArgumentParser( description='Plot the face-on and edge-on projection of stellar disk' )
+
 parser.add_argument( '-s', action='store', required=True,  type=int, dest='idx_start',
                      help='first data index' )
 parser.add_argument( '-e', action='store', required=True,  type=int, dest='idx_end',
@@ -21,7 +28,11 @@ parser.add_argument( '-d', action='store', required=False, type=int, dest='didx'
 
 args=parser.parse_args()
 
-# take note
+idx_start   = args.idx_start
+idx_end     = args.idx_end
+didx        = args.didx
+
+# print command-line parameters
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
 for t in range( len(sys.argv) ):
@@ -29,68 +40,60 @@ for t in range( len(sys.argv) ):
 print( '' )
 print( '-------------------------------------------------------------------\n' )
 
-
-idx_start   = args.idx_start
-idx_end     = args.idx_end
-didx        = args.didx
-prefix      = args.prefix
+if sys.version_info[0] == 3:
+   print('\nWARNING: Running this script with python3 might cause error, use python2 if possible.\n')
 
 
-FONT_SIZE = 12.0
-LINE_WIDTH = 0.5
-plt.rcParams['font.size']= FONT_SIZE
-plt.rcParams['figure.titlesize']= 2*FONT_SIZE
+# -------------------------------------------------------------------------------------------------------------------------
+# specify script unit and output figure settings
+cm       = 1/2.54  # centimeters in inches
+field    = 'particle_mass'
+Center   = np.loadtxt('../../Record__Center', skiprows=1, dtype=float)
 
-plt.rcParams['axes.titlesize']= 2*FONT_SIZE
-plt.rcParams['axes.labelsize']= FONT_SIZE
-plt.rcParams['axes.labelpad']= 0.05
-plt.rcParams['axes.linewidth']= LINE_WIDTH
+plt.rcParams['font.size']         = FONT_SIZE
+plt.rcParams['figure.titlesize']  = 2*FONT_SIZE
 
-plt.rcParams['legend.fontsize']= 6.0
-plt.rcParams['lines.linewidth']= LINE_WIDTH
+plt.rcParams['axes.titlesize']    = 2*FONT_SIZE
+plt.rcParams['axes.labelsize']    = FONT_SIZE
+plt.rcParams['axes.labelpad']     = 0.05
+plt.rcParams['axes.linewidth']    = LINE_WIDTH
 
-plt.rcParams['xtick.major.size'] = 2
+plt.rcParams['legend.fontsize']   = 6.0
+plt.rcParams['lines.linewidth']   = LINE_WIDTH
+
+plt.rcParams['xtick.major.size']  = 2
 plt.rcParams['xtick.major.width'] = 0.5
-plt.rcParams['xtick.minor.size'] = 1
+plt.rcParams['xtick.minor.size']  = 1
 plt.rcParams['xtick.minor.width'] = 0.25
-plt.rcParams['xtick.labelsize'] = FONT_SIZE
+plt.rcParams['xtick.labelsize']   = FONT_SIZE
 
-plt.rcParams['ytick.major.size'] = 2
+plt.rcParams['ytick.major.size']  = 2
 plt.rcParams['ytick.major.width'] = 0.5
-plt.rcParams['ytick.minor.size'] = 1
+plt.rcParams['ytick.minor.size']  = 1
 plt.rcParams['ytick.minor.width'] = 0.25
-plt.rcParams['ytick.labelsize'] = FONT_SIZE
+plt.rcParams['ytick.labelsize']   = FONT_SIZE
 
-plt.rcParams['font.family'] = 'STIXGeneral'
-plt.rcParams['mathtext.fontset'] = 'custom'
-plt.rcParams['mathtext.rm'] = 'STIXGeneral:regular'
-plt.rcParams['mathtext.it'] = 'STIXGeneral:italic'
-plt.rcParams['mathtext.bf'] = 'STIXGeneral:italic:bold'
+plt.rcParams['font.family']       = 'STIXGeneral'
+plt.rcParams['mathtext.fontset']  = 'custom'
+plt.rcParams['mathtext.rm']       = 'STIXGeneral:regular'
+plt.rcParams['mathtext.it']       = 'STIXGeneral:italic'
+plt.rcParams['mathtext.bf']       = 'STIXGeneral:italic:bold'
 
 
-colormap    = 'arbre'
-
-Unit_L = 4.436632034507548e+24
-field = 'particle_mass'
-BOX_SIZE = 100*3.08567758128E+21
-WIDTH = 60*3.08567758128E+21
-time0 = 0
-
-Center = np.loadtxt('../Record__Center', skiprows=1, dtype=float)
-#==========================================================================
-# input the steps of the output snapshots in Record__Center
-step = [0, 117, 234, 351, 468, 585, 702, 819, 936, 1053, 1170, 
-      1287, 1404, 1521, 1638, 1755, 1872, 1989, 2106, 2223, 2340,
-      2457, 2574, 2691, 2808, 2925]
-#==========================================================================
-cm = 1/2.54  # centimeters in inches
-fig = plt.figure(1,(8*cm, 8*cm))
+# -------------------------------------------------------------------------------------------------------------------------
+# output figures
+fig  = plt.figure(1,(8*cm, 8*cm))
 grid = AxesGrid( fig, (0.1, 0.05, 3.2, 2.7), nrows_ncols=(1, 2), axes_pad=(0.7,0.5), label_mode="all", share_all=True, cbar_location="right", cbar_mode="single", cbar_size="2%", cbar_pad="2%")
 
 for idx in range(idx_start, idx_end+1, didx):
-   ds = yt.load( prefix+'/Data_%06d'%idx )
-   ds.periodicity = (True, True, True)
-   parx = yt.ParticleProjectionPlot( ds, 'x', fields = field, center = Center[step[idx],3:6], width =( (60, 'kpc'),(60,'kpc')))
+   ds             = yt.load( '../../Data_%06d'%idx )
+   if sys.version_info[0] == 2:
+      ds.periodicity=(True,True,True)
+   current_step   = ds.parameters["Step"]
+   print("Current Simulation Time = %.5e [code units]"%ds.parameters["Time"][0])
+   print("Current Simulation Step = %i "%current_step)
+
+   parx = yt.ParticleProjectionPlot( ds, 'x', fields = field, center = Center[current_step,3:6], width =( (60, 'kpc'),(60,'kpc')))
    parx.set_background_color( field )
    parx.set_zlim( field, 5.5e+5, 5.5e+2, dynamic_range=None)
    parx.set_cmap( field, colormap )
@@ -99,14 +102,14 @@ for idx in range(idx_start, idx_end+1, didx):
    parx.set_axes_unit( 'kpc' )
    parx.set_unit( field, 'Msun' )
    parx.annotate_text([ 0.05, 0.92], 'edge-on', coord_system="axis",text_args={"size":FONT_SIZE,"color":"black","weight":"normal","bbox":dict(boxstyle="round",ec='white',fc='white',alpha=0.7)})
-  
+
    plot = parx.plots[field]
    plot.figure = fig
    plot.axes = grid[0].axes
    plot.cax = grid.cbar_axes[0]
    parx._setup_plots()
 
-   parz = yt.ParticleProjectionPlot( ds, 'z', fields = field, center = Center[step[idx],3:6], width =( (60, 'kpc'),(60,'kpc')))
+   parz = yt.ParticleProjectionPlot( ds, 'z', fields = field, center = Center[current_step,3:6], width =( (60, 'kpc'),(60,'kpc')))
    parz.set_background_color( field )
    parz.set_zlim( field, 5.5e+5, 5.5e+2, dynamic_range=None)
    parz.set_cmap( field, colormap )
@@ -122,9 +125,7 @@ for idx in range(idx_start, idx_end+1, didx):
    plot.cax = grid.cbar_axes[1]
    parz._setup_plots()
 
-
    fig.dpi = 600
    fig.set_size_inches(8*cm, 8*cm)
    fig.savefig("particle_proj_%06d.png"%idx, bbox_inches='tight',pad_inches=0.02)
    #fig.savefig("particle_proj.pdf", bbox_inches='tight',pad_inches=0.02)
-

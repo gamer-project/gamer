@@ -3,11 +3,17 @@ import sys
 import yt
 import numpy as np
 
-# load the command-line parameters
-parser = argparse.ArgumentParser( description='Plot the gas slices and projections' )
 
-parser.add_argument( '-p', action='store', required=False, type=str, dest='prefix',
-                     help='path prefix [%(default)s]', default='../' )
+# -------------------------------------------------------------------------------------------------------------------------
+# user-specified parameters
+colormap    = 'algae'
+dpi         = 150
+
+
+#-------------------------------------------------------------------------------------------------------------------------
+# load the command-line parameters
+parser = argparse.ArgumentParser( description='Plot the halo slices' )
+
 parser.add_argument( '-s', action='store', required=True,  type=int, dest='idx_start',
                      help='first data index' )
 parser.add_argument( '-e', action='store', required=True,  type=int, dest='idx_end',
@@ -17,7 +23,11 @@ parser.add_argument( '-d', action='store', required=False, type=int, dest='didx'
 
 args=parser.parse_args()
 
-# take note
+idx_start   = args.idx_start
+idx_end     = args.idx_end
+didx        = args.didx
+
+# print command-line parameters
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
 for t in range( len(sys.argv) ):
@@ -26,30 +36,28 @@ print( '' )
 print( '-------------------------------------------------------------------\n' )
 
 
-idx_start   = args.idx_start
-idx_end     = args.idx_end
-didx        = args.didx
-prefix      = args.prefix
-
-colormap    = 'algae'
-dpi         = 150
-center_mode   = 'max'
-
+# -------------------------------------------------------------------------------------------------------------------------
+# output figures
 yt.enable_parallelism()
 
-field = ('Dens')
+field       = ('Dens')
+center_mode = 'max'
+Center      = np.loadtxt('../../Record__Center', skiprows=1, dtype=float)
 
 for idx in range(idx_start, idx_end+1, didx):
-   ds = yt.load( prefix+'/Data_%06d'%idx )
+   ds             = yt.load( '../../Data_%06d'%idx )
    ds.periodicity = (True, True, True)
-   dens = yt.SlicePlot( ds, 0, fields = field, center = center_mode, width = (60 ,'kpc'))
+   current_step   = ds.parameters["Step"]
+   print("Current Simulation Time = %.5e [code units]"%ds.parameters["Time"][0])
+   print("Current Simulation Step = %i "%current_step)
+
+   dens = yt.SlicePlot( ds, 0, fields = field, center = Center[current_step,3:6], width = (60 ,'kpc'))
    dens.set_background_color( field )
    dens.set_zlim( field, 1.0e+1, 1.0e+9, dynamic_range=None)
    dens.set_cmap( field, colormap )
    dens.set_font( {'size':16} )
    dens.set_axes_unit( 'kpc' )
    dens.annotate_grids()
-   dens.annotate_sphere( center = Center[Id[idx],3:6], radius=(0.05, 'kpc'),circle_args={'color':'red'})
+   dens.annotate_sphere( center = Center[current_step,3:6], radius=(0.05, 'kpc'),circle_args={'color':'red'})
    dens.annotate_timestamp( time_unit='Myr', corner='upper_right', text_args={'color':'k'} )
    dens.save( mpl_kwargs={"dpi":dpi} )
-
