@@ -249,7 +249,11 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "must enable OPT__FIXUP_RESTRICT for BITWISE_REPRODUCIBILITY !!\n" );
 
    if ( ! OPT__SORT_PATCH_BY_LBIDX )
+#     ifdef SERIAL
+      Aux_Message( stderr, "WARNING : SERIAL does not support OPT__SORT_PATCH_BY_LBIDX, which may break BITWISE_REPRODUCIBILITY !!\n" );
+#     else
       Aux_Error( ERROR_INFO, "must enable OPT__SORT_PATCH_BY_LBIDX for BITWISE_REPRODUCIBILITY !!\n" );
+#     endif
 
 #  ifdef SUPPORT_FFTW
    if ( OPT__FFTW_STARTUP != FFTW_STARTUP_ESTIMATE )
