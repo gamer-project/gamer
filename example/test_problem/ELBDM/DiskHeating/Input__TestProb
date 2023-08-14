@@ -13,18 +13,18 @@ HaloUseTable            0                      # use density table for the fixed
 
 # parameters for analytical function ---------- HaloUseTable=0 ONLY -----------------------------------------
 # soliton parameters 
-#m_22                                           # m_22 of the analytical halo
-#CoreRadius                                     # core radius (in kpc)
+#m_22                                          # m_22 of the analytical halo
+#CoreRadius                                    # core radius (in kpc)
 # alpha-beta-gamma density profile parameters
-#Rho_0                                          # halo rho_0 (in 1.0e+10 Msun*kpc^-3)
-#Rs                                             # halo Rs (in kpc)
-#Alpha                                          # dimensionless
-#Beta                                           # dimensionless
-#Gamma                                          # dimensionless
+#Rho_0                                         # halo rho_0 (in 1.0e+10 Msun*kpc^-3)
+#Rs                                            # halo Rs (in kpc)
+#Alpha                                         # dimensionless
+#Beta                                          # dimensionless
+#Gamma                                         # dimensionless
 
 # density profile table parameters ------------ HaloUseTable=1 ONLY ---------------------------------------------
-#DensTableFile                                  # density table name
-#DensNbin                                       # bin number of density table
+#DensTableFile                                 # density table name
+#DensNbin                                      # bin number of density table
                                                                                                                              
 # parameters for new disk (disabled in this example)
 AddParWhenRestart       0                      # add a new disk to an existing snapshot ## must set OPT__INIT=2 and OPT__RESTART_RESET=1 ##

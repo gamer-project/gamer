@@ -35,7 +35,6 @@ for t in range( len(sys.argv) ):
 print( '' )
 print( '-------------------------------------------------------------------\n' )
 
-
 # -------------------------------------------------------------------------------------------------------------------------
 # output figures
 field       = ('gamer', 'Pote')
@@ -51,12 +50,14 @@ for idx in range(idx_start, idx_end+1, didx):
    sp = ds.sphere( Center[current_step,3:6], 0.5*ds.domain_width.to_value().max() )
    prof = yt.ProfilePlot( sp, 'radius', field, weight_field='cell_volume', n_bins=nbin, x_log=True, y_log={field:False} )
    prof.set_unit( 'radius', 'kpc' )
-#   prof.set_xlim( 6.0e-2, 1.0e+2 )
-#   prof.set_ylim( field, 1.0e-27, 1.0e-21 )
    prof.set_unit( field, 'cm**2/s**2' )
-   prof.save( mpl_kwargs={"dpi":dpi} )
+ 
    A = prof.profiles[0].x.d
    B = prof.profiles[0][field].d
    C = [A,B]
    Data = np.asarray(C)
+   Data = np.delete(Data,  np.nonzero(Data[1]==0)[0] , axis = 1)
    np.save("Halo_Pote_"+str(ds),Data)
+
+   prof.set_xlim( 5.0e-2, 1.0e+2 )
+   prof.save( mpl_kwargs={"dpi":dpi} )

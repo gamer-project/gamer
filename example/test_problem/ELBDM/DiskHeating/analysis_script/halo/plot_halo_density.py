@@ -51,9 +51,13 @@ for idx in range(idx_start, idx_end+1, didx):
    prof = yt.ProfilePlot( sp, 'radius', field, weight_field='cell_volume', n_bins=nbin, x_log=True, y_log={field:True} )
    prof.set_unit( 'radius', 'kpc' )
    prof.set_unit( field, 'g/cm**3' )
-   prof.save( mpl_kwargs={"dpi":dpi} )
+
    A = prof.profiles[0].x.d
    B = prof.profiles[0][field].d
    C = [A,B]
    Data = np.asarray(C)
+   Data = np.delete(Data,  np.nonzero(Data[1]==0)[0] , axis = 1)
    np.save("Halo_Dens_"+str(ds),Data)
+
+   prof.set_xlim( 5.0e-2, 1.0e+2 )
+   prof.save( mpl_kwargs={"dpi":dpi} )

@@ -125,4 +125,4 @@ for idx in range(idx_start, idx_end+1, didx):
    fig.savefig("particle_proj_%06d.png"%idx, bbox_inches='tight',pad_inches=0.02)
    #fig.savefig("particle_proj_%06d.pdf"%idx, bbox_inches='tight',pad_inches=0.02)
 
-   print('\nparticle_proj_%06d.png completed'%idx)
+   print('\nparticle_proj_%06d.png completed\n'%idx)

@@ -71,7 +71,6 @@ if (output_mode == 2 or output_mode == 3):
    for idx in range(idx_start, idx_end+1, didx):
 
       Dens =  np.load('halo/Halo_Dens_Data_%06d.npy'%idx)
-      Dens =  np.delete(Dens,  np.nonzero(Dens[1]==0)[0] , axis = 1)
       r_d = Dens[0]
       dens_cgs = Dens[1]
       plt.plot(r_d, dens_cgs, color = cm.Blues(0.3+0.6*(idx-idx_start)/(idx_end+1-idx_start)), label ='id=%d'%idx)

@@ -67,9 +67,9 @@ for i in range(4):
    const[i] = para_F[1]
    print('%2d        %2.6f'%(i*2+4, heating[i]*1000 ))
 
-# plot result 
+# plot result
 lines=[]
-color = [cm.Blues(np.linspace(0.4, 0.7, 2)), 
+color = [cm.Blues(np.linspace(0.4, 0.7, 2)),
          cm.Oranges(np.linspace(0.3, 0.6, 2)),
          cm.Greens(np.linspace(0.4, 0.7, 2)),
          cm.Reds(np.linspace(0.5, 0.8, 2))]

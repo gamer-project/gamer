@@ -46,7 +46,8 @@ Center      = np.loadtxt('../../Record__Center', skiprows=1, dtype=float)
 
 for idx in range(idx_start, idx_end+1, didx):
    ds             = yt.load( '../../Data_%06d'%idx )
-   ds.periodicity = (True, True, True)
+   if sys.version_info[0] == 2:
+      ds.periodicity = (True, True, True)
    current_step   = ds.parameters["Step"]
    print("Current Simulation Time = %.5e [code units]"%ds.parameters["Time"][0])
    print("Current Simulation Step = %i "%current_step)

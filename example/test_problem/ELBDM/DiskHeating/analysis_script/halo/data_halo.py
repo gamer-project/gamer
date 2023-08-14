@@ -152,7 +152,6 @@ def jeans_interpolation(r):
 # analyze simulation data and generate processed output files
 for idx in range(idx_start, idx_end+1, didx):
    Dens =  np.load('Halo_Dens_Data_%06d.npy'%idx)
-   Dens =  np.delete(Dens,  np.nonzero(Dens[1]==0)[0] , axis = 1)
    r_d = Dens[0]
    dens_cgs = Dens[1]
    dens = dens_cgs*Unit_L**3/Unit_M
@@ -160,7 +159,6 @@ for idx in range(idx_start, idx_end+1, didx):
    mass_cgs = enmass*Unit_M
 
    Pote =  np.load('Halo_Pote_Data_%06d.npy'%idx)
-   Pote =  np.delete(Pote,  np.nonzero(Pote[1]==0)[0] , axis = 1)
    r_p = Pote[0]
    pote = Pote[1]
    pote_cgs = potential(r_log)
