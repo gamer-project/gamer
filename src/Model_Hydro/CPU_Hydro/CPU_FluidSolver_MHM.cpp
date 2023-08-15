@@ -340,10 +340,9 @@ void CPU_FluidSolver_MHM(
 
 #     if ( FLU_SCHEME == MHM && defined MHD )
       // NOTE: The array size of half step is over-estimated, we only need CUBE(N_FC_VAR).
-      //       Since I don't want to change the original MHM_RP full step MHD_ComputeElectric, 
+      //       Since I don't want to change the original MHM_RP full step MHD_ComputeElectric,
       //       I used the same array size as the half step variables of MHM_RP.
       real (*const g_PriVar_Half_1PG )[ CUBE(FLU_NXT)  ] = g_PriVar_1PG;
-      // TODO: This is the same as MHM_RP, I should declear once only.
       real (*const g_EC_Ele_1PG      )[ CUBE(N_EC_ELE) ] = g_EC_Ele[array_idx];
 #     endif // if ( FLU_SCHEME == MHM && defined MHD )
 

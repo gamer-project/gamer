@@ -120,7 +120,7 @@
 #  define N_SLOPE_PPM            ( N_FC_VAR + 2 )
 
 #  ifdef MHD
-#   define N_HF_ELE              ( N_HF_FLUX - 1 ) // TODO: can I change to this? Not varified.
+#   define N_HF_ELE              ( N_HF_FLUX - 1 )
 #   define N_FL_ELE              ( N_FL_FLUX - 1 )
 #   define N_EC_ELE              ( N_FC_FLUX - 1 )
 #  else

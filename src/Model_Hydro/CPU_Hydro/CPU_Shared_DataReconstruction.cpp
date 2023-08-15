@@ -42,11 +42,10 @@ void MHD_ComputeElectric_Half(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                                const int NEle, const int NCon, const int OffsetCon );
 GPU_DEVICE
 void MHD_UpdateMagnetic_Half(       real fc[][NCOMP_LR],
-                              const real g_FC_B[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                               const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                               const real dt, const real dh,
                               const int idx_i, const int idx_j, const int idx_k,
-                              const int NCon, const int NGhost, const int NEle );
+                              const int NGhost, const int NEle );
 #endif // #ifdef MHD
 #endif // #if ( FLU_SCHEME == MHM )
 
@@ -84,7 +83,7 @@ static void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real
                                   const EoS_t *EoS );
 #ifdef MHD
 GPU_DEVICE
-void Hydro_PriFC2PriCC_MHM(      real g_PriVar[][ CUBE(FLU_NXT) ],
+void Hydro_ConFC2PriCC_MHM(      real g_PriVar[][ CUBE(FLU_NXT) ],
                            const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                            const real MinDens, const real MinPres, const real MinEint,
                            const bool FracPassive, const int NFrac, const int FracIdx[],
@@ -674,7 +673,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 #  if ( FLU_SCHEME == MHM && defined MHD )
 // 9. Store the half-step primitive variables for MHM+MHD
-   Hydro_PriFC2PriCC_MHM( g_PriVar, g_FC_Var, MinDens, MinPres, MinEint, FracPassive, NFrac, FracIdx, 
+   Hydro_ConFC2PriCC_MHM( g_PriVar, g_FC_Var, MinDens, MinPres, MinEint, FracPassive, NFrac, FracIdx, 
                           JeansMinPres, JeansMinPres_Coeff, EoS );
 
 #  endif // if ( FLU_SCHEME == MHM && defined MHD )
@@ -1282,7 +1281,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 #  if ( FLU_SCHEME == MHM && defined MHD )
 // 9. Store the half-step primitive variables for MHM+MHD
-   Hydro_PriFC2PriCC_MHM( g_PriVar, g_FC_Var, MinDens, MinPres, MinEint, FracPassive, NFrac, FracIdx, 
+   Hydro_ConFC2PriCC_MHM( g_PriVar, g_FC_Var, MinDens, MinPres, MinEint, FracPassive, NFrac, FracIdx, 
                           JeansMinPres, JeansMinPres_Coeff, EoS ); 
 
 #  endif // if ( FLU_SCHEME == MHM && defined MHD )
@@ -1945,6 +1944,11 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
 //                                    negative density and pressure
 //                                    --> It is just the input array Flu_Array_In[]
 //                cc_idx            : Index for accessing g_cc_array[]
+//                cc_{i,j,k}        : Index for accessing g_cc_array[] for the MHD_UpdateMagnetic_Half
+//                g_FC_B            : Array storing the face-centered magnetic field
+//                g_EC_Ele          : Array storing the input edge-centered electric field
+//                NGhost            : The ghost zone size of data-reconstruction
+//                NEle              : Stride for accessing g_EC_Ele[]
 //                MinDens/Pres/Eint : Density, pressure, and internal energy floors
 //                EoS               : EoS object
 //-------------------------------------------------------------------------------------------------------
@@ -1977,7 +1981,7 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
    }
 #  ifdef MHD
 // Update the magnetic field
-   MHD_UpdateMagnetic_Half( fc, g_FC_B, g_EC_Ele, dt, dh, cc_i, cc_j, cc_k, FLU_NXT, NGhost, N_HF_ELE );
+   MHD_UpdateMagnetic_Half( fc, g_EC_Ele, dt, dh, cc_i, cc_j, cc_k, NGhost, N_HF_ELE );
 #  endif
 
 // check the negative density and energy
@@ -2021,21 +2025,20 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
 
 #ifdef MHD
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_PriFC2PriCC_MHM
-// Description :  Evolve the face-centered variables by half time-step by calculating the face-centered fluxes
-//                (no Riemann solver is required)
+// Function    :  Hydro_ConFC2PriCC_MHM
+// Description :  Convert the face-centered conserved variables to cell-centered primitive variables for MHM + MHD scheme.
 //
 // Note        :  1. Work for the MHM scheme
 //                2. Do NOT require data in the neighboring cells
 //                3. Input variables must be conserved variables
 //
-// Parameter   :  g_PriVar           : Array storing/to store the cell-centered primitive variables
+// Parameter   :  g_PriVar           : Array to store the cell-centered primitive variables
 //                                     --> Should contain NCOMP_LR variables
 //                                         --> Store internal energy as the last variable when LR_EINT is on
 //                                     --> For MHD, this array currently stores the normal B field as well
 //                                     --> For MHM, g_ConVar[] and g_PriVar[] must point to different arrays since
 //                                         Hydro_HancockPredict() requires the original g_ConVar[]
-//                g_FC_Var           : Array to store the output face-centered conserved variables
+//                g_FC_Var           : Array storing the face-centered conserved variables
 //                                     --> Should contain NCOMP_TOTAL_PLUS_MAG variables
 //                MinDens/Pres/Eint  : Density, pressure, and internal energy floors
 //                FracPassive        : true --> convert passive scalars to mass fraction during data reconstruction
@@ -2044,9 +2047,11 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
 //                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //                EoS                : EoS object
+//
+// Return      : g_PriVar[][ CUBE(FLU_NXT) ]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_PriFC2PriCC_MHM(      real g_PriVar[][ CUBE(FLU_NXT) ],
+void Hydro_ConFC2PriCC_MHM(      real g_PriVar[][ CUBE(FLU_NXT) ],
                            const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                            const real MinDens, const real MinPres, const real MinEint,
                            const bool FracPassive, const int NFrac, const int FracIdx[],
@@ -2099,7 +2104,7 @@ void Hydro_PriFC2PriCC_MHM(      real g_PriVar[][ CUBE(FLU_NXT) ],
    __syncthreads();
 #  endif
 
-} // FUNCTION : Hydro_PriFC2PriCC_MHM
+} // FUNCTION : Hydro_ConFC2PriCC_MHM
 
 #endif // #ifdef MHD
 
