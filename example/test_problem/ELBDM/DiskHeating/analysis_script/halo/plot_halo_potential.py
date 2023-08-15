@@ -44,6 +44,9 @@ Center      = np.loadtxt('../../Record__Center', skiprows=1, dtype=float)
 for idx in range(idx_start, idx_end+1, didx):
    ds = yt.load( '../../Data_%06d'%idx )
    current_step   = ds.parameters["Step"]
+   CellSize       = ds.parameters["CellSize"]
+   MaxLevel       = ds.parameters["MaxLevel"]
+   Resolution     = CellSize[MaxLevel]*ds.parameters["Unit_L"]/3.08568e+21 # spatial resolution in kpc
    print("Current Simulation Time = %.5e [code units]"%ds.parameters["Time"][0])
    print("Current Simulation Step = %i "%current_step)
 
@@ -51,13 +54,12 @@ for idx in range(idx_start, idx_end+1, didx):
    prof = yt.ProfilePlot( sp, 'radius', field, weight_field='cell_volume', n_bins=nbin, x_log=True, y_log={field:False} )
    prof.set_unit( 'radius', 'kpc' )
    prof.set_unit( field, 'cm**2/s**2' )
- 
+   prof.set_xlim( xmin=Resolution/2. )
+   prof.save( mpl_kwargs={"dpi":dpi} )
+
    A = prof.profiles[0].x.d
    B = prof.profiles[0][field].d
    C = [A,B]
    Data = np.asarray(C)
    Data = np.delete(Data,  np.nonzero(Data[1]==0)[0] , axis = 1)
    np.save("Halo_Pote_"+str(ds),Data)
-
-   prof.set_xlim( 5.0e-2, 1.0e+2 )
-   prof.save( mpl_kwargs={"dpi":dpi} )
