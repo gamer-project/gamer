@@ -193,7 +193,7 @@ void CompareGridData()
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
-      Aux_Message( stdout, "  Comparing level %d ...", lv );
+      Aux_Message( stdout, "  Comparing level %d ... ", lv );
 
       for (PID1=0; PID1<amr1.num[lv]; PID1++)
       {
