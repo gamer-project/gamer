@@ -88,8 +88,11 @@ void CheckParameter()
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CompareGridData
 // Description :  Compare the grid data between two files
+//
+// Return      :  EXIT_SUCCESS : no error
+//                EXIT_FAILURE : with errors
 //-------------------------------------------------------------------------------------------------------
-void CompareGridData()
+int CompareGridData()
 {
 
    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -332,6 +335,8 @@ void CompareGridData()
 
    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
+   return ( ErrorDetected ) ? EXIT_FAILURE : EXIT_SUCCESS;
+
 } // FUNCTION : CompareGridData
 
 
@@ -339,8 +344,11 @@ void CompareGridData()
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CompareParticleData
 // Description :  Compare the particle data between two files
+//
+// Return      :  EXIT_SUCCESS : no error
+//                EXIT_FAILURE : with errors
 //-------------------------------------------------------------------------------------------------------
-void CompareParticleData()
+int CompareParticleData()
 {
 
    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -438,6 +446,8 @@ void CompareParticleData()
 
    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
+   return ( ErrorDetected ) ? EXIT_FAILURE : EXIT_SUCCESS;
+
 } // FUNCTION : CompareParticleData
 
 
@@ -484,13 +494,15 @@ int main( int argc, char ** argv )
    LoadData( FileName_In2, amr2, Format2, NField2, NMag2, NParAtt2, NPar2, ParData2,
              FieldLabel2, MagLabel2, ParAttLabel2 );
 
-   CompareGridData();
-   CompareParticleData();
+   int ErrorDetected = false;
+
+   ErrorDetected |= CompareGridData();
+   ErrorDetected |= CompareParticleData();
 
    FreeMemory();
 
    Aux_Message( stdout, "Program terminated successfully\n" );
 
-   return 0;
+   return ( ErrorDetected ) ? EXIT_FAILURE : EXIT_SUCCESS;
 
 } // FUNCTION : main
