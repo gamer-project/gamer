@@ -51,7 +51,9 @@
 #  elif ( GPU_ARCH == TURING )
    #define GPU_COMPUTE_CAPABILITY 750
 #  elif ( GPU_ARCH == AMPERE )
-   #define GPU_COMPUTE_CAPABILITY 800
+// #define GPU_COMPUTE_CAPABILITY 800
+   #define GPU_COMPUTE_CAPABILITY 860
+// #define GPU_COMPUTE_CAPABILITY 870
 #  else
 #  error : ERROR : Please add GPU_COMPUTE_CAPABILITY for GPU_ARCH!
 #  endif // GPU_ARCH

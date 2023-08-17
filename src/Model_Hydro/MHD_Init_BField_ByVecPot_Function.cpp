@@ -32,7 +32,7 @@ double (*Init_BField_ByVecPot_User_Ptr)( const double x, const double y, const d
 //                AuxArray  : Auxiliary array
 //                            --> Useless since it is currently fixed to NULL
 //
-// Return      :  "XYZ" component of the magnetic vector potential at (x, y, z, Time)
+// Return      :  "Component"-component of the magnetic vector potential at (x, y, z, Time)
 //-------------------------------------------------------------------------------------------------------
 double Init_BField_ByVecPot_User_Template( const double x, const double y, const double z, const double Time,
                                            const int lv, const char Component, double AuxArray[] )
@@ -109,7 +109,7 @@ void MHD_Init_BField_ByVecPot_Function( const int B_lv )
 
 
 // loop over the patches on the target AMR level
-   const double sample_res  = pow(2, MAX_LEVEL - B_lv);
+   const int    sample_res  = 1 << (MAX_LEVEL - B_lv);
    const double sample_fact = 1.0 / sample_res;
    const double dh          = amr->dh[B_lv];
    const double dh_sample   = dh * sample_fact;
@@ -117,7 +117,6 @@ void MHD_Init_BField_ByVecPot_Function( const int B_lv )
 #  pragma omp parallel for schedule( runtime ) num_threads( OMP_NThread )
    for (int PID=0; PID<amr->NPatchComma[B_lv][1]; PID++)
    {
-
 #     ifdef OPENMP
       const int TID = omp_get_thread_num();
 #     else
@@ -130,7 +129,7 @@ void MHD_Init_BField_ByVecPot_Function( const int B_lv )
       for (int j=0; j<PS1+1; j++) {  const double y0 = amr->patch[0][B_lv][PID]->EdgeL[1] + j*dh;
       for (int i=0; i<PS1+1; i++) {  const double x0 = amr->patch[0][B_lv][PID]->EdgeL[0] + i*dh;
 
-         int idx = IDX321( i, j, k, PS1+1, PS1+1 );
+         const int idx = IDX321( i, j, k, PS1+1, PS1+1 );
 
          Ax[TID][idx] = 0.0;
          Ay[TID][idx] = 0.0;
@@ -138,37 +137,29 @@ void MHD_Init_BField_ByVecPot_Function( const int B_lv )
 
 
          if ( i != PS1 ) {
-
-            for ( int ii=0; ii<sample_res; ii++ ) {
-               const double x = x0 + (ii + 0.5) * dh_sample;
+            for (int ii=0; ii<sample_res; ii++) {
+               const double x = x0 + (ii+0.5)*dh_sample;
                Ax[TID][idx] += Init_BField_ByVecPot_User_Ptr( x,  y0, z0, Time[B_lv], B_lv, 'x', NULL );
             }
-
          }
 
          if ( j != PS1 ) {
-
-            for ( int jj=0; jj<sample_res; jj++ ) {
-               const double y = y0 + (jj + 0.5) * dh_sample;
+            for (int jj=0; jj<sample_res; jj++) {
+               const double y = y0 + (jj+0.5)*dh_sample;
                Ay[TID][idx] += Init_BField_ByVecPot_User_Ptr( x0, y,  z0, Time[B_lv], B_lv, 'y', NULL );
             }
-
          }
 
          if ( k != PS1 ) {
-
-            for ( int kk=0; kk<sample_res; kk++ ) {
-               const double z = z0 + (kk + 0.5) * dh_sample;
+            for (int kk=0; kk<sample_res; kk++) {
+               const double z = z0 + (kk+0.5)*dh_sample;
                Az[TID][idx] += Init_BField_ByVecPot_User_Ptr( x0, y0, z,  Time[B_lv], B_lv, 'z', NULL );
             }
-
          }
-
 
          Ax[TID][idx] *= sample_fact;
          Ay[TID][idx] *= sample_fact;
          Az[TID][idx] *= sample_fact;
-
       }}}
 
 
@@ -176,36 +167,39 @@ void MHD_Init_BField_ByVecPot_Function( const int B_lv )
       for (int k=0; k<PS1;   k++) {
       for (int j=0; j<PS1;   j++) {
       for (int i=0; i<PS1+1; i++) {
-         int idx  = IDX321   ( i, j,   k,   PS1+1, PS1+1 );
-         int idxj = IDX321   ( i, j+1, k,   PS1+1, PS1+1 );
-         int idxk = IDX321   ( i, j,   k+1, PS1+1, PS1+1 );
-         int idxB = IDX321_BX( i, j,   k,   PS1,   PS1   );
-         real Bx = ( Az[TID][idxj] - Az[TID][idx] - Ay[TID][idxk] + Ay[TID][idx] ) / dh;
-         amr->patch[ amr->MagSg[B_lv] ][B_lv][PID]->magnetic[0][idxB] = Bx;
+         const int  idx  = IDX321   ( i, j,   k,   PS1+1, PS1+1 );
+         const int  idxj = IDX321   ( i, j+1, k,   PS1+1, PS1+1 );
+         const int  idxk = IDX321   ( i, j,   k+1, PS1+1, PS1+1 );
+         const int  idxB = IDX321_BX( i, j,   k,   PS1,   PS1   );
+         const real Bx   = ( Az[TID][idxj] - Az[TID][idx] - Ay[TID][idxk] + Ay[TID][idx] ) / dh;
+
+         amr->patch[ amr->MagSg[B_lv] ][B_lv][PID]->magnetic[MAGX][idxB] = Bx;
       }}}
 
 //    calculate By from vector potential
       for (int k=0; k<PS1;   k++) {
       for (int j=0; j<PS1+1; j++) {
       for (int i=0; i<PS1;   i++) {
-         int idx  = IDX321   ( i,   j, k,   PS1+1, PS1+1 );
-         int idxi = IDX321   ( i+1, j, k,   PS1+1, PS1+1 );
-         int idxk = IDX321   ( i,   j, k+1, PS1+1, PS1+1 );
-         int idxB = IDX321_BY( i,   j, k,   PS1,   PS1   );
-         real By = ( Ax[TID][idxk] - Ax[TID][idx] - Az[TID][idxi] + Az[TID][idx] ) / dh;
-         amr->patch[ amr->MagSg[B_lv] ][B_lv][PID]->magnetic[1][idxB] = By;
+         const int  idx  = IDX321   ( i,   j, k,   PS1+1, PS1+1 );
+         const int  idxi = IDX321   ( i+1, j, k,   PS1+1, PS1+1 );
+         const int  idxk = IDX321   ( i,   j, k+1, PS1+1, PS1+1 );
+         const int  idxB = IDX321_BY( i,   j, k,   PS1,   PS1   );
+         const real By   = ( Ax[TID][idxk] - Ax[TID][idx] - Az[TID][idxi] + Az[TID][idx] ) / dh;
+
+         amr->patch[ amr->MagSg[B_lv] ][B_lv][PID]->magnetic[MAGY][idxB] = By;
       }}}
 
 //    calculate Bz from vector potential
       for (int k=0; k<PS1+1; k++) {
       for (int j=0; j<PS1;   j++) {
       for (int i=0; i<PS1;   i++) {
-         int idx  = IDX321   ( i,   j,   k, PS1+1, PS1+1 );
-         int idxi = IDX321   ( i+1, j,   k, PS1+1, PS1+1 );
-         int idxj = IDX321   ( i,   j+1, k, PS1+1, PS1+1 );
-         int idxB = IDX321_BZ( i,   j,   k, PS1,   PS1   );
-         real Bz = ( Ay[TID][idxi] - Ay[TID][idx] - Ax[TID][idxj] + Ax[TID][idx] ) / dh;
-         amr->patch[ amr->MagSg[B_lv] ][B_lv][PID]->magnetic[2][idxB] = Bz;
+         const int  idx  = IDX321   ( i,   j,   k, PS1+1, PS1+1 );
+         const int  idxi = IDX321   ( i+1, j,   k, PS1+1, PS1+1 );
+         const int  idxj = IDX321   ( i,   j+1, k, PS1+1, PS1+1 );
+         const int  idxB = IDX321_BZ( i,   j,   k, PS1,   PS1   );
+         const real Bz   = ( Ay[TID][idxi] - Ay[TID][idx] - Ax[TID][idxj] + Ax[TID][idx] ) / dh;
+
+         amr->patch[ amr->MagSg[B_lv] ][B_lv][PID]->magnetic[MAGZ][idxB] = Bz;
       }}}
 
    } // for (int PID=0; PID<amr->NPatchComma[B_lv][1]; PID++)
