@@ -205,6 +205,12 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 #  endif // #  if ( SUPPORT_FFTW == FFTW3 ) ... # else
 #  endif
 
+// check integer overflow (in a non-rigorous way)
+   if ( total_local_size <= 0 )
+      Aux_Error( ERROR_INFO, "total_local_size (%d) <= 0 (local_nx/y/z = %d, %d, %d) for FFT !!\n",
+                 total_local_size, local_nx, local_ny, local_nz );
+
+
 // collect "local_nz" from all ranks and set the corresponding list "List_z_start"
    int List_nz     [MPI_NRank  ];   // slab thickness of each rank in the FFTW slab decomposition
    int List_z_start[MPI_NRank+1];   // starting z coordinate of each rank in the FFTW slab decomposition
