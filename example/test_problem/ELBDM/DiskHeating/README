@@ -72,7 +72,7 @@ Analysis scripts:
 2. plot_halo_density.py; plot_halo_potential.py:
 
    * Compute and plot shell-averaged halo density or gravitational potential profiles
-   * Output files: Data_*_1d-Profile_radius_Dens.png, Halo_Dens_Data_*.npy; 
+   * Output files: Data_*_1d-Profile_radius_Dens.png, Halo_Dens_Data_*.npy;
 		   Data_*_1d-Profile_radius_Pote.png, Halo_Pote_Data_*.npy
 
 3. data_disk.py:
@@ -88,7 +88,7 @@ Analysis scripts:
 
 5. vel_distribution.py
 
-   * Compute the velocity distribution in 2-kpc-wide radial bins centered on R = 4, 6, 8, 10 kpc 
+   * Compute the velocity distribution in 2-kpc-wide radial bins centered on R = 4, 6, 8, 10 kpc
    * Output files: Vel_data_*.npz, vel_*.png
 
 6. get_heating.py
