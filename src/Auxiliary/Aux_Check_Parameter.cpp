@@ -1,4 +1,5 @@
 #include "GAMER.h"
+#include "TestProb.h"
 #include "CUFLU.h"
 #ifdef GRAVITY
 #include "CUPOT.h"
@@ -248,7 +249,11 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "must enable OPT__FIXUP_RESTRICT for BITWISE_REPRODUCIBILITY !!\n" );
 
    if ( ! OPT__SORT_PATCH_BY_LBIDX )
+#     ifdef SERIAL
+      Aux_Message( stderr, "WARNING : SERIAL does not support OPT__SORT_PATCH_BY_LBIDX, which may break BITWISE_REPRODUCIBILITY !!\n" );
+#     else
       Aux_Error( ERROR_INFO, "must enable OPT__SORT_PATCH_BY_LBIDX for BITWISE_REPRODUCIBILITY !!\n" );
+#     endif
 
 #  ifdef SUPPORT_FFTW
    if ( OPT__FFTW_STARTUP != FFTW_STARTUP_ESTIMATE )
@@ -597,8 +602,10 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : DT__FLUID_INIT (%14.7e) is not within the normal range [0...1] !!\n",
                    DT__FLUID_INIT );
 
-   if ( OPT__RESET_FLUID_INIT  &&   OPT__INIT == INIT_BY_FILE )
-      Aux_Message( stderr, "WARNING : \"%s\" will NOT be applied to the input uniform data !!\n", "OPT__RESET_FLUID_INIT" );
+#  ifdef MHD
+   if ( OPT__RESET_FLUID_INIT  &&  MHD_ResetByUser_BField_Ptr != NULL  &&  INIT_SUBSAMPLING_NCELL > 1 )
+      Aux_Message( stderr, "WARNING : \"%s\" will NOT be applied to resetting initial magnetic field !!\n", "INIT_SUBSAMPLING_NCELL" );
+#  endif
 
    if ( OPT__FREEZE_FLUID )
       Aux_Message( stderr, "REMINDER : \"%s\" will prevent fluid variables from being updated\n", "OPT__FREEZE_FLUID" );
