@@ -231,7 +231,7 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
    real *RhoK         = (real* ) root_fftw::fft_malloc(sizeof(real) * total_local_size);   // array storing both density and potential
    real *SendBuf      = new real [ (long)amr->NPatchComma[0][1]*CUBE(PS1) ];          // MPI send buffer for density and potential
    real *RecvBuf      = new real [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];          // MPI recv buffer for density and potentia
-   long *SendBuf_SIdx = new long [ amr->NPatchComma[0][1]*PS1 ];                      // MPI send buffer for 1D coordinate in slab
+   long *SendBuf_SIdx = new long [ (long)amr->NPatchComma[0][1]*PS1 ];                // MPI send buffer for 1D coordinate in slab
    long *RecvBuf_SIdx = new long [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/SQR(PS1) ]; // MPI recv buffer for 1D coordinate in slab
 
    int  *List_PID    [MPI_NRank];   // PID of each patch slice sent to each rank
