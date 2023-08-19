@@ -1,0 +1,10 @@
+# problem-specific runtime parameters
+GAMMA_CR                        1.3333333333
+CR_Shocktube_Rho_R              0.2
+CR_Shocktube_Rho_L              1.0
+CR_Shocktube_Pres_R             240.0
+CR_Shocktube_Pres_L             67000.0
+CR_Shocktube_PresCR_R           240.0
+CR_Shocktube_PresCR_L           130000.0
+CR_Shocktube_Dir                0
+

@@ -1,0 +1,21 @@
+Compilation flags:
+========================================
+Enable : 
+        MODEL=HYDRO
+        EOS=EOS_GAMMA_CR
+        FLOAT8
+        COSMIC_RAY
+Disable:
+        COMOVING
+        PARTICLE
+        GRAVITY
+
+
+Default setup:
+========================================
+None.
+
+
+Note:
+========================================
+1. A simple python script "shock_plot.py" is attached
