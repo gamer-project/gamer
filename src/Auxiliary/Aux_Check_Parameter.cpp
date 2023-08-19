@@ -122,7 +122,11 @@ void Aux_Check_Parameter()
                  "OPT__CK_REFINE", "OPT__FLAG_RHO" );
 
 #  if   ( MODEL == HYDRO )
-   if (  ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR )
+   if (  ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR
+           #ifdef COSMIC_RAY
+           || OPT__FLAG_LOHNER_CRAY
+           #endif
+         )
          &&  Flu_ParaBuf < 2  )
       Aux_Error( ERROR_INFO, "Lohner error estimator does NOT work when Flu_ParaBuf (%d) < 2 !!\n", Flu_ParaBuf );
 #  elif ( MODEL == ELBDM )
@@ -357,6 +361,10 @@ void Aux_Check_Parameter()
    Flag |= OPT__FLAG_LOHNER_ENTR;
 #  ifdef MHD
    Flag |= OPT__FLAG_CURRENT;
+#  endif
+#  ifdef COSMIC_RAY
+   Flag |= OPT__FLAG_CRAY;
+   Flag |= OPT__FLAG_LOHNER_CRAY;
 #  endif
 #  endif
 #  if ( MODEL == ELBDM )
@@ -682,15 +690,18 @@ void Aux_Check_Parameter()
 #  endif // MHD
 
 #  ifdef COSMIC_RAY
-#     error : ERROR : COSMIC_RAY is NOT supported yet !!
+//#     error : ERROR : COSMIC_RAY is NOT supported yet !!
+#  if ( EOS != EOS_COSMIC_RAY )
+#     error: ERROR: COSMIC_RAY must use EOS_COSMIC_RAY !!
+#  endif
 #  endif
 
 #  if ( defined LR_EINT  &&  FLU_SCHEME == CTU )
 #     error : ERROR : CTU does NOT support LR_EINT in CUFLU.h !!
 #  endif
 
-#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR  &&  EOS != EOS_USER )
-#     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_USER) !!
+#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR && EOS != EOS_COSMIC_RAY &&  EOS != EOS_USER )
+#     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_COSMIC_RAY/EOS_USER) !!
 #  endif
 
 #  if ( EOS != EOS_GAMMA )
@@ -1534,6 +1545,23 @@ void Aux_Check_Parameter()
    } // if ( MPI_Rank == 0 )
 
 #endif // #ifdef FEEDBACK
+
+
+// cosmic ray diffusion
+// =======================================================================================
+#ifdef CR_DIFFUSION
+
+// errors
+// ------------------------------
+
+// warning
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
+      if ( DT_DIFFUSION < 0.0  ||  DT_DIFFUSION > 1.0 )
+         Aux_Message( stderr, "WARNING : DT_DIFFUSION (%14.7e) is not within the normal range [0...1] !!\n", DT_DIFFUSION );
+   } // if ( MPI_Rank == 0 )
+
+#endif // ifdef CR_DIFFUSION
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ... done\n" );

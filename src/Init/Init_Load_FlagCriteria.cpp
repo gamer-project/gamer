@@ -49,29 +49,53 @@ void Init_Load_FlagCriteria()
 
 #  if   ( MODEL == HYDRO )
    const bool OPT__FLAG_LOHNER = ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES ||
-                                   OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR );
+                                   OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR
+                                   #ifdef COSMIC_RAY
+                                   || OPT__FLAG_LOHNER_CRAY
+                                   #endif
+                                   );
 #  elif ( MODEL == ELBDM )
    const bool OPT__FLAG_LOHNER = OPT__FLAG_LOHNER_DENS;
 #  else
 #  error : unsupported MODEL !!
 #  endif
 
+   #  ifdef COSMIC_RAY
+   const int  NFlagMode         = 13;
+   #  else
    const int  NFlagMode         = 12;
+   #  endif
    const bool Flag[NFlagMode]   = { OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_PRES_GRADIENT,
                                     OPT__FLAG_ENGY_DENSITY, OPT__FLAG_LOHNER, OPT__FLAG_USER,
                                     (bool)OPT__FLAG_NPAR_PATCH, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL,
-                                    OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, OPT__FLAG_CURRENT };
+                                    OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, OPT__FLAG_CURRENT
+                                    #ifdef COSMIC_RAY
+                                    , OPT__FLAG_CRAY
+                                    #endif
+                                    };
    const char ModeName[][100]   = { "OPT__FLAG_RHO", "OPT__FLAG_RHO_GRADIENT", "OPT__FLAG_PRES_GRADIENT",
                                     "OPT__FLAG_ENGY_DENSITY", "OPT__FLAG_LOHNER", "OPT__FLAG_USER",
                                     "OPT__FLAG_NPAR_PATCH", "OPT__FLAG_NPAR_CELL", "OPT__FLAG_PAR_MASS_CELL",
-                                    "OPT__FLAG_VORTICITY", "OPT__FLAG_JEANS", "OPT__FLAG_CURRENT" };
+                                    "OPT__FLAG_VORTICITY", "OPT__FLAG_JEANS", "OPT__FLAG_CURRENT"
+                                    #ifdef COSMIC_RAY
+                                    , "OPT__FLAG_CRAY"
+                                    #endif
+                                    };
    const char FileName[][100]   = { "Input__Flag_Rho", "Input__Flag_RhoGradient", "Input__Flag_PresGradient",
                                     "Input__Flag_EngyDensity", "Input__Flag_Lohner", "Input__Flag_User",
                                     "Input__Flag_NParPatch", "Input__Flag_NParCell", "Input__Flag_ParMassCell",
-                                    "Input__Flag_Vorticity", "Input__Flag_Jeans", "Input__Flag_Current" };
+                                    "Input__Flag_Vorticity", "Input__Flag_Jeans", "Input__Flag_Current"
+                                    #ifdef COSMIC_RAY
+                                    , "Input__Flag_CRay"
+                                    #endif
+                                    };
    double *FlagTable[NFlagMode] = { FlagTable_Rho, FlagTable_RhoGradient, FlagTable_PresGradient,
                                     NULL, NULL, NULL, NULL, NULL, FlagTable_ParMassCell,
-                                    FlagTable_Vorticity, FlagTable_Jeans, FlagTable_Current };
+                                    FlagTable_Vorticity, FlagTable_Jeans, FlagTable_Current
+                                    #ifdef COSMIC_RAY
+                                    , FlagTable_CRay
+                                    #endif
+                                    };
 
    FILE *File;
    char *input_line = NULL, TargetName[100];
@@ -98,6 +122,9 @@ void Init_Load_FlagCriteria()
       FlagTable_Jeans       [lv]    = -1.0;
 #     ifdef MHD
       FlagTable_Current     [lv]    = -1.0;
+#     endif
+#     ifdef COSMIC_RAY
+      FlagTable_CRay        [lv]    = -1.0;
 #     endif
 
 #     elif ( MODEL == ELBDM )

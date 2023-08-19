@@ -1521,6 +1521,12 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.Particle               = 0;
 #  endif
 
+#  ifdef MICROPHYSICS
+// Makefile.Microphysics           = 1;
+#  else
+// Makefile.Microphysics           = 0;
+#  endif
+
 #  ifdef GPU
    Makefile.UseGPU                 = 1;
 #  else
@@ -1753,6 +1759,15 @@ void FillIn_Makefile( Makefile_t &Makefile )
 
    Makefile.Par_NAttUser           = PAR_NATT_USER;
 #  endif // #ifdef PARTICLE
+
+#  ifdef MICROPHYSICS
+#  ifdef CR_DIFFUSION
+// Makefile.CR_Diffusion           = 1;
+#  else
+// Makefile.CR_Diffusion           = 0;
+#  endif
+#  endif // #ifdef MICROPHYSICS
+
 
 } // FUNCTION : FillIn_Makefile
 
@@ -2127,6 +2142,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  ifdef MHD
    InputPara.Opt__Flag_Current       = OPT__FLAG_CURRENT;
 #  endif
+#  ifdef COSMIC_RAY
+// InputPara.Opt__Flag_CRay          = OPT__FLAG_CRAY;
+#  endif
 #  endif
 #  if ( MODEL == ELBDM )
    InputPara.Opt__Flag_EngyDensity   = OPT__FLAG_ENGY_DENSITY;
@@ -2317,6 +2335,18 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.FB_User                 = FB_USER;
 #  endif
 
+// cosmic ray
+#  ifdef COSMIC_RAY
+// InputPara.CR_Gamma                   = GAMMA_CR;
+#  endif
+
+// microphysics
+#  ifdef MICRO_PHYSICS
+// InputPara.CR_Diffusion_ParaCoeff     = CR_DIFF_PARA;
+// InputPara.CR_Diffusion_PerpCoeff     = CR_DIFF_PERP;
+// InputPara.CR_Diffusion_Dt            = DT_DIFFUSION;
+#  endif
+
 // initialization
    InputPara.Opt__Init               = OPT__INIT;
    InputPara.RestartLoadNRank        = RESTART_LOAD_NRANK;
@@ -2488,6 +2518,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #     ifdef MHD
       InputPara.FlagTable_Current     [lv]    = FlagTable_Current     [lv];
 #     endif
+#     ifdef COSMIC_RAY
+//    InputPara.FlagTable_CRay        [lv]    = FlagTable_CRay        [lv];
+#     endif
 
 #     elif ( MODEL == ELBDM )
       for (int t=0; t<2; t++)
@@ -2621,6 +2654,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Gravity",                HOFFSET(Makefile_t,Gravity                ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Comoving",               HOFFSET(Makefile_t,Comoving               ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Particle",               HOFFSET(Makefile_t,Particle               ), H5T_NATIVE_INT );
+// H5Tinsert( H5_TypeID, "Microphysics",           HOFFSET(Makefile_t,Microphysics           ), H5T_NATIVE_INT );
 
    H5Tinsert( H5_TypeID, "UseGPU",                 HOFFSET(Makefile_t,UseGPU                 ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "GAMER_Debug",            HOFFSET(Makefile_t,GAMER_Debug            ), H5T_NATIVE_INT );
@@ -2684,6 +2718,12 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "StarFormation",          HOFFSET(Makefile_t,StarFormation          ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Feedback",               HOFFSET(Makefile_t,Feedback               ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Par_NAttUser",           HOFFSET(Makefile_t,Par_NAttUser           ), H5T_NATIVE_INT );
+#  endif
+
+#  ifdef MICROPHYSICS
+   #ifdef COSMIC_RAY
+// H5Tinsert( H5_TypeID, "CR_DIFFUSION",           HOFFSET(Makefile_t,CR_Diffusion           ), H5T_NATIVE_INT );
+   #endif
 #  endif
 
 } // FUNCTION : GetCompound_Makefile
@@ -3019,6 +3059,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  ifdef MHD
    H5Tinsert( H5_TypeID, "Opt__Flag_Current",       HOFFSET(InputPara_t,Opt__Flag_Current      ), H5T_NATIVE_INT     );
 #  endif
+#  ifdef COSMIC_RAY
+// H5Tinsert( H5_TypeID, "Opt__Flag_CRay",          HOFFSET(InputPara_t,Opt__Flag_CRay         ), H5T_NATIVE_INT     );
+#  endif
 #  endif
 #  if ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "Opt__Flag_EngyDensity",   HOFFSET(InputPara_t,Opt__Flag_EngyDensity  ), H5T_NATIVE_INT     );
@@ -3214,6 +3257,18 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "FB_RSeed",                HOFFSET(InputPara_t,FB_RSeed               ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "FB_SNe",                  HOFFSET(InputPara_t,FB_SNe                 ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "FB_User",                 HOFFSET(InputPara_t,FB_User                ), H5T_NATIVE_INT              );
+#  endif
+
+// cosmic ray
+#  ifdef COSMIC_RAY
+// H5Tinsert( H5_TypeID, "CR_Gamma",               HOFFSET(InputPara_t,CR_Gamma               ), H5T_NATIVE_DOUBLE            );
+#  endif
+
+// microphysics
+#  ifdef MICROPHYSICS
+// H5Tinsert( H5_TypeID, "CR_Diffusion_ParaCoeff", HOFFSET(InputPara_t,CR_Diffusion_ParaCoeff ), H5T_NATIVE_DOUBLE            );
+// H5Tinsert( H5_TypeID, "CR_Diffusion_PerpCoeff", HOFFSET(InputPara_t,CR_Diffusion_PerpCoeff ), H5T_NATIVE_DOUBLE            );
+// H5Tinsert( H5_TypeID, "CR_Diffusion_Dt",        HOFFSET(InputPara_t,CR_Diffusion_Dt        ), H5T_NATIVE_DOUBLE            );
 #  endif
 
 // initialization

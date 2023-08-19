@@ -54,16 +54,27 @@
 __global__
 void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
-                              const real dh, const real Safety, const real MinPres, const EoS_t EoS )
+                              const real dh, const real Safety, const real MinPres, const EoS_t EoS
+                              #ifdef MICROPHYSICS
+                              , const MicroPhy_t Mic
+                              #endif
+                              )
 #else
 void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,
-                              const real dh, const real Safety, const real MinPres, const EoS_t EoS )
+                              const real dh, const real Safety, const real MinPres, const EoS_t EoS
+                              #ifdef MICROPHYSICS
+                              , const MicroPhy_t Mic
+                              #endif
+                              )
 #endif
 {
 
    const bool CheckMinPres_Yes = true;
    const real dhSafety         = Safety*dh;
+   #  ifdef CR_DIFFUSION
+   const real dh2Safety = Mic.CR_safety*0.5*dh*dh;
+   #  endif
 
 // loop over all patches
 // --> CPU/GPU solver: use different (OpenMP threads) / (CUDA thread blocks)
@@ -161,6 +172,27 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
       if ( threadIdx.x == 0 )
 #     endif // #ifdef __CUDACC__
       g_dt_Array[p] = dhSafety/MaxCFL;
+
+#     ifdef CR_DIFFUSION
+      MaxCFL=(real)0.0;
+
+      CGPU_LOOP( t, CUBE(PS1) )
+      {
+        MaxCFL = FMAX( Mic.CR_diff_coeff_para, MaxCFL );
+        MaxCFL = FMAX( Mic.CR_diff_coeff_perp, MaxCFL );
+      } // CGPU_LOOP( t, CUBE(PS1) )
+
+      #     ifdef __CUDACC__
+      #     ifdef DT_FLU_USE_SHUFFLE
+      MaxCFL = BlockReduction_Shuffle ( MaxCFL );
+      #     else
+      MaxCFL = BlockReduction_WarpSync( MaxCFL );
+      #     endif
+      if ( threadIdx.x == 0 )
+      #     endif // #ifdef __CUDACC__
+      g_dt_Array[p] = ( dh2Safety/MaxCFL < g_dt_Array[p]) ? dh2Safety/MaxCFL : g_dt_Array[p];
+
+#     endif // #ifdef CR_DIFFUSION
 
    } // for (int p=0; p<8*NPG; p++)
 

@@ -237,6 +237,24 @@ void Init_Load_Parameter()
    ReadPara->Add( "FB_USER",                    &FB_USER,                         false,           Useless_bool,  Useless_bool   );
 #  endif
 
+// cosmic ray
+#  ifdef COSMIC_RAY
+   ReadPara->Add( "GAMMA_CR",                      &GAMMA_CR,                      4.0/3.0,        1.0,           NoMax_double  );
+   ReadPara->Add( "OPT__FLAG_CRAY",                &OPT__FLAG_CRAY,                false,          Useless_bool,  Useless_bool  );
+   ReadPara->Add( "OPT__FLAG_LOHNER_CRAY",         &OPT__FLAG_LOHNER_CRAY,         false,          Useless_bool,  Useless_bool  );
+#  endif
+
+// microphysics
+#  ifdef MICROPHYSICS
+
+#  ifdef CR_DIFFUSION
+   ReadPara->Add( "CR_DIFF_PARA",                  &CR_DIFF_PARA,                  0.0,            NoMin_double,  NoMax_double  );
+   ReadPara->Add( "CR_DIFF_PERP",                  &CR_DIFF_PERP,                  0.0,            NoMin_double,  NoMax_double  );
+   ReadPara->Add( "DT_DIFFUSION",                  &DT_DIFFUSION,                  3.e-1,          NoMin_double,  NoMax_double  );
+#  endif
+
+#  endif // #ifdef MICROPHYSICS
+
 
 // fluid solvers in HYDRO
 #  if ( MODEL == HYDRO )

@@ -1,0 +1,738 @@
+#include "GAMER.h"
+#include "TestProb.h"
+
+
+static void OutputError();
+static double RandomNumber(RandomNumber_t *RNG, const double Min, const double Max );
+
+
+// problem-specific global variables
+// =======================================================================================
+static double CR_Diffusion_CenterX;
+static double CR_Diffusion_CenterY;
+static double CR_Diffusion_CenterZ;
+static double CR_Diffusion_Vx;
+static double CR_Diffusion_Vy;
+static double CR_Diffusion_Vz;
+static double CR_Diffusion_Rho0;
+static double CR_Diffusion_PGas0;
+static double CR_Diffusion_E0_CR;
+static double CR_Diffusion_BG_CR;
+static int    CR_Diffusion_Type;
+static int    CR_Diffusion_Mag_Type;
+static double CR_Diffusion_MagX;
+static double CR_Diffusion_MagY;
+static double CR_Diffusion_MagZ;
+// simulation dimension
+static int    CR_Diffusion_GX;
+static int    CR_Diffusion_GY;
+static int    CR_Diffusion_GZ;
+// random manetic field
+static int    CR_Diffusion_Seed;
+static RandomNumber_t *RNG = NULL;
+// gaussian ball
+static double CR_Diffusion_R02_CR;
+// step function ring
+static double CR_Diffusion_R_In;
+static double CR_Diffusion_R_Out;
+// gaussian ring
+static double CR_Diffusion_CenterR;
+static double CR_Diffusion_delR;
+static double CR_Diffusion_delPhi;
+// blast wave
+static double CR_Diffusion_R0_CR;
+static double CR_Diffusion_R0_B;
+// =======================================================================================
+
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Validate
+// Description :  Validate the compilation flags and runtime parameters for this test problem
+//
+// Note        :  None
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Validate()
+{
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ...\n", TESTPROB_ID );
+
+
+// errors
+#  if ( MODEL != HYDRO )
+   Aux_Error( ERROR_INFO, "MODEL != HYDRO !!\n" );
+#  endif
+
+#  ifndef MHD
+   Aux_Error( ERROR_INFO, "MHD must be enabled !!\n" );
+#  endif
+
+#  ifndef COSMIC_RAY
+   Aux_Error( ERROR_INFO, "COSMIC_RAY must be enabled !!\n" );
+
+#  ifndef CR_DIFFUSION
+   Aux_Error( ERROR_INFO, "CR_DIFFUSION must be enabled !!\n" );
+#  endif
+
+#  if ( EOS != EOS_COSMIC_RAY )
+   Aux_Error( ERROR_INFO, "EOS != EOS_COSMIC_RAY !!\n" );
+#  endif
+
+#  endif // #ifndef COSMIC_RAY
+
+// warnings
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
+
+} // FUNCTION : Validate
+
+
+
+// replace HYDRO by the target model (e.g., MHD/ELBDM) and also check other compilation flags if necessary (e.g., GRAVITY/PARTICLE)
+#if ( MODEL == HYDRO )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetParameter
+// Description :  Load and set the problem-specific runtime parameters
+//
+// Note        :  1. Filename is set to "Input__TestProb" by default
+//                2. Major tasks in this function:
+//                   (1) load the problem-specific runtime parameters
+//                   (2) set the problem-specific derived parameters
+//                   (3) reset other general-purpose parameters if necessary
+//                   (4) make a note of the problem-specific parameters
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void SetParameter()
+{
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ...\n" );
+
+
+// (1) load the problem-specific runtime parameters
+   const char FileName[] = "Input__TestProb";
+   ReadPara_t *ReadPara  = new ReadPara_t;
+
+// (1-1) add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
+// ********************************************************************************************************************************
+// ReadPara->Add( "KEY_IN_THE_FILE",           &VARIABLE,                       DEFAULT,       MIN,              MAX         );
+// ********************************************************************************************************************************
+   ReadPara->Add( "CR_Diffusion_CenterX",      &CR_Diffusion_CenterX,           0.5,           0.0,              NoMax_double);
+   ReadPara->Add( "CR_Diffusion_CenterY",      &CR_Diffusion_CenterY,           0.5,           0.0,              NoMax_double);
+   ReadPara->Add( "CR_Diffusion_CenterZ",      &CR_Diffusion_CenterZ,           0.5,           0.0,              NoMax_double);
+   ReadPara->Add( "CR_Diffusion_Vx",           &CR_Diffusion_Vx,                0.0,           NoMin_double,     NoMax_double);
+   ReadPara->Add( "CR_Diffusion_Vy",           &CR_Diffusion_Vy,                0.0,           NoMin_double,     NoMax_double);
+   ReadPara->Add( "CR_Diffusion_Vz",           &CR_Diffusion_Vz,                0.0,           NoMin_double,     NoMax_double);
+   ReadPara->Add( "CR_Diffusion_Rho0",         &CR_Diffusion_Rho0,              1.0,           0.0,              NoMax_double);
+   ReadPara->Add( "CR_Diffusion_PGas0",        &CR_Diffusion_PGas0,             1.0,           0.0,              NoMax_double);
+   ReadPara->Add( "CR_Diffusion_E0_CR",        &CR_Diffusion_E0_CR,             0.1,           0.0,              NoMax_double);
+   ReadPara->Add( "CR_Diffusion_BG_CR",        &CR_Diffusion_BG_CR,             0.1,           0.0,              NoMax_double);
+   ReadPara->Add( "CR_Diffusion_R02_CR",       &CR_Diffusion_R02_CR,            0.05,          0.0,              NoMax_double);
+   ReadPara->Add( "CR_Diffusion_Type",         &CR_Diffusion_Type,              0,             0,                NoMax_int);
+   ReadPara->Add( "CR_Diffusion_Mag_Type",     &CR_Diffusion_Mag_Type,          0,             0,                NoMax_int);
+   ReadPara->Add( "CR_Diffusion_MagX",         &CR_Diffusion_MagX,              0.0,           NoMin_double,     NoMax_double);
+   ReadPara->Add( "CR_Diffusion_MagY",         &CR_Diffusion_MagY,              0.0,           NoMin_double,     NoMax_double);
+   ReadPara->Add( "CR_Diffusion_MagZ",         &CR_Diffusion_MagZ,              0.0,           NoMin_double,     NoMax_double);
+   ReadPara->Add( "CR_Diffusion_Seed",         &CR_Diffusion_Seed,              0,             NoMin_int,        NoMax_int);
+   ReadPara->Add( "CR_Diffusion_R_In",         &CR_Diffusion_R_In,              0.5,           0.0,              NoMax_double);
+   ReadPara->Add( "CR_Diffusion_R_Out",        &CR_Diffusion_R_Out,             0.7,           0.0,              NoMax_double);
+   ReadPara->Add( "CR_Diffusion_CenterR",      &CR_Diffusion_CenterR,           0.6,           0.0,              NoMax_double);
+   ReadPara->Add( "CR_Diffusion_delR",         &CR_Diffusion_delR,              0.05,          0.0,              NoMax_double);
+   ReadPara->Add( "CR_Diffusion_delPhi",       &CR_Diffusion_delPhi,            0.5,           0.0,              NoMax_double);
+   ReadPara->Add( "CR_Diffusion_R0_CR",        &CR_Diffusion_R0_CR,             0.02,          0.0,              NoMax_double);
+   ReadPara->Add( "CR_Diffusion_R0_B",         &CR_Diffusion_R0_B,              1.0,           0.0,              NoMax_double);
+   ReadPara->Add( "CR_Diffusion_GX",           &CR_Diffusion_GX,                0,             0,                1);
+   ReadPara->Add( "CR_Diffusion_GY",           &CR_Diffusion_GY,                0,             0,                1);
+   ReadPara->Add( "CR_Diffusion_GZ",           &CR_Diffusion_GZ,                0,             0,                1);
+
+   ReadPara->Read( FileName );
+
+   delete ReadPara;
+
+// get the number of OpenMP threads
+   int NT;
+#  ifdef OPENMP
+#  pragma omp parallel
+#  pragma omp master
+   {  NT = omp_get_num_threads();  }
+#  else
+   {  NT = 1;                      }
+#  endif
+
+// allocate RNG
+   RNG = new RandomNumber_t( NT );
+
+// set the random seed of each MPI rank
+   for (int t=0; t<NT; t++) {
+      RNG->SetSeed(t, CR_Diffusion_Seed+MPI_Rank*1000+t);
+   }
+
+// (1-2) set the default values
+
+// (1-3) check the runtime parameters
+
+
+// (2) set the problem-specific derived parameters
+
+
+// (3) reset other general-purpose parameters
+//     --> a helper macro PRINT_WARNING is defined in TestProb.h
+   const long   End_Step_Default = __INT_MAX__;
+   const double End_T_Default    = __FLT_MAX__;
+
+   if ( END_STEP < 0 ) {
+      END_STEP = End_Step_Default;
+      PRINT_WARNING( "END_STEP", END_STEP, FORMAT_LONG );
+   }
+
+   if ( END_T < 0.0 ) {
+      END_T = End_T_Default;
+      PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
+   }
+
+
+// (4) make a note
+   if ( MPI_Rank == 0 )
+   {
+      Aux_Message( stdout, "=============================================================================\n" );
+      Aux_Message( stdout, "  test problem ID           = %d\n",         TESTPROB_ID );
+      Aux_Message( stdout, "  CR_Diffusion_CenterX      = %14.7e\n",     CR_Diffusion_CenterX );
+      Aux_Message( stdout, "  CR_Diffusion_CenterY      = %14.7e\n",     CR_Diffusion_CenterY );
+      Aux_Message( stdout, "  CR_Diffusion_CenterZ      = %14.7e\n",     CR_Diffusion_CenterZ );
+      Aux_Message( stdout, "  CR_Diffusion_Vx           = %14.7e\n",     CR_Diffusion_Vx );
+      Aux_Message( stdout, "  CR_Diffusion_Vy           = %14.7e\n",     CR_Diffusion_Vy );
+      Aux_Message( stdout, "  CR_Diffusion_Vz           = %14.7e\n",     CR_Diffusion_Vz );
+      Aux_Message( stdout, "  CR_Diffusion_Rho0         = %14.7e\n",     CR_Diffusion_Rho0 );
+      Aux_Message( stdout, "  CR_Diffusion_PGas0        = %14.7e\n",     CR_Diffusion_PGas0 );
+      Aux_Message( stdout, "  CR_Diffusion_E0_CR        = %14.7e\n",     CR_Diffusion_E0_CR );
+      Aux_Message( stdout, "  CR_Diffusion_BG_CR        = %14.7e\n",     CR_Diffusion_BG_CR );
+      Aux_Message( stdout, "  CR_Diffusion_R02_CR       = %14.7e\n",     CR_Diffusion_R02_CR );
+      Aux_Message( stdout, "  CR_Diffusion_Type         = %d\n",         CR_Diffusion_Type );
+      Aux_Message( stdout, "  CR_Diffusion_Mag_Type     = %d\n",         CR_Diffusion_Mag_Type );
+      Aux_Message( stdout, "  CR_Diffusion_MagX         = %14.7e\n",     CR_Diffusion_MagX );
+      Aux_Message( stdout, "  CR_Diffusion_MagY         = %14.7e\n",     CR_Diffusion_MagY );
+      Aux_Message( stdout, "  CR_Diffusion_MagZ         = %14.7e\n",     CR_Diffusion_MagZ );
+      Aux_Message( stdout, "  CR_Diffusion_Seed         = %d\n",         CR_Diffusion_Seed );
+      Aux_Message( stdout, "  CR_Diffusion_R_In         = %14.7e\n",     CR_Diffusion_R_In );
+      Aux_Message( stdout, "  CR_Diffusion_R_Out        = %14.7e\n",     CR_Diffusion_R_Out );
+      Aux_Message( stdout, "  CR_Diffusion_CenterR      = %14.7e\n",     CR_Diffusion_CenterR );
+      Aux_Message( stdout, "  CR_Diffusion_delR         = %14.7e\n",     CR_Diffusion_delR );
+      Aux_Message( stdout, "  CR_Diffusion_delPhi       = %14.7e\n",     CR_Diffusion_delPhi );
+      Aux_Message( stdout, "  CR_Diffusion_R0_CR        = %14.7e\n",     CR_Diffusion_R0_CR );
+      Aux_Message( stdout, "  CR_Diffusion_R0_B         = %14.7e\n",     CR_Diffusion_R0_B );
+      Aux_Message( stdout, "  CR_Diffusion_GX           = %d\n",         CR_Diffusion_GX );
+      Aux_Message( stdout, "  CR_Diffusion_GY           = %d\n",         CR_Diffusion_GY );
+      Aux_Message( stdout, "  CR_Diffusion_GZ           = %d\n",         CR_Diffusion_GZ );
+      Aux_Message( stdout, "=============================================================================\n" );
+   }
+
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
+
+} // FUNCTION : SetParameter
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetGridIC
+// Description :  Set the problem-specific initial condition on grids
+//
+// Note        :  1. This function may also be used to estimate the numerical errors when OPT__OUTPUT_USER is enabled
+//                   --> In this case, it should provide the analytical solution at the given "Time"
+//                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
+//                   --> Please ensure that everything here is thread-safe
+//                3. Even when DUAL_ENERGY is adopted for HYDRO, one does NOT need to set the dual-energy variable here
+//                   --> It will be calculated automatically
+//                4. For MHD, do NOT add magnetic energy (i.e., 0.5*B^2) to fluid[ENGY] here
+//                   --> It will be added automatically later
+//
+// Parameter   :  fluid    : Fluid field to be initialized
+//                x/y/z    : Physical coordinates
+//                Time     : Physical time
+//                lv       : Target refinement level
+//                AuxArray : Auxiliary array
+//
+// Return      :  fluid
+//-------------------------------------------------------------------------------------------------------
+void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
+                const int lv, double AuxArray[] )
+{
+
+   double Dens, MomX, MomY, MomZ, Pres, Eint, Etot, P_cr, CRay;
+   double f;
+
+
+   Dens = CR_Diffusion_Rho0;
+   MomX = Dens * CR_Diffusion_Vx;
+   MomY = Dens * CR_Diffusion_Vy;
+   MomZ = Dens * CR_Diffusion_Vz;
+   Pres = CR_Diffusion_PGas0;
+
+   CRay = CR_Diffusion_E0_CR;
+   int dim  = CR_Diffusion_GX + CR_Diffusion_GY + CR_Diffusion_GZ;
+   int type = CR_Diffusion_GX + 2 * CR_Diffusion_GY + 4 * CR_Diffusion_GZ;
+   double magD1, magD2, magD3, D1, D2, D3, fD1, fD2, fD3;
+   switch (type)
+   {
+      // 1D simulation
+      case 1: magD1 = CR_Diffusion_MagX; magD2 = CR_Diffusion_MagY; magD3 = CR_Diffusion_MagZ;
+              D1 = x - CR_Diffusion_CenterX - CR_Diffusion_Vx*Time;
+              D2 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
+              D3 = z - CR_Diffusion_CenterZ - CR_Diffusion_Vz*Time;
+              break;
+      case 2: magD1 = CR_Diffusion_MagY; magD2 = CR_Diffusion_MagZ; magD3 = CR_Diffusion_MagX;
+              D1 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
+              D2 = z - CR_Diffusion_CenterZ - CR_Diffusion_Vz*Time;
+              D3 = x - CR_Diffusion_CenterX - CR_Diffusion_Vx*Time;
+              break;
+      case 4: magD1 = CR_Diffusion_MagZ; magD2 = CR_Diffusion_MagX; magD3 = CR_Diffusion_MagY;
+              D1 = z - CR_Diffusion_CenterZ - CR_Diffusion_Vz*Time;
+              D2 = x - CR_Diffusion_CenterX - CR_Diffusion_Vx*Time;
+              D3 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
+              break;
+      // 2D simulation
+      case 3: magD1 = CR_Diffusion_MagX; magD2 = CR_Diffusion_MagY; magD3 = CR_Diffusion_MagZ;
+              D1 = x - CR_Diffusion_CenterX - CR_Diffusion_Vx*Time;
+              D2 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
+              D3 = z - CR_Diffusion_CenterZ - CR_Diffusion_Vz*Time;
+              break;
+      case 5: magD1 = CR_Diffusion_MagY; magD2 = CR_Diffusion_MagZ; magD3 = CR_Diffusion_MagX;
+              D1 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
+              D2 = z - CR_Diffusion_CenterZ - CR_Diffusion_Vz*Time;
+              D3 = x - CR_Diffusion_CenterX - CR_Diffusion_Vx*Time;
+              break;
+      case 6: magD1 = CR_Diffusion_MagZ; magD2 = CR_Diffusion_MagX; magD3 = CR_Diffusion_MagY;
+              D1 = z - CR_Diffusion_CenterZ - CR_Diffusion_Vz*Time;
+              D2 = x - CR_Diffusion_CenterX - CR_Diffusion_Vx*Time;
+              D3 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
+              break;
+      // 3D simulation
+      case 7: magD1 = CR_Diffusion_MagX; magD2 = CR_Diffusion_MagY; magD3 = CR_Diffusion_MagZ;
+              D1 = x - CR_Diffusion_CenterX - CR_Diffusion_Vx*Time;
+              D2 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
+              D3 = z - CR_Diffusion_CenterZ - CR_Diffusion_Vz*Time;
+              break;
+   } // switch (type)
+   
+   if ( CR_Diffusion_Type == 0 )
+   {
+#     ifdef CR_DIFFUSION
+      if ( CR_Diffusion_Mag_Type != 0)
+      {
+         Aux_Error( ERROR_INFO, "We only support the uniform magnetic field ( CR_Diffusion_Mag_Type = 0 ) for this test problem.\n" );
+      }
+      
+      if ( dim == 1 ) 
+      {
+         // f(k, t) = 1 + 4 * R_0**2 * k * t
+         // E(x, y) = E_0 * EXP[ -R_0**2 * x**2 / f(k_x, t) ] / SQRT[ f(k_x, t) ] 
+         // Check the Magnetic field to define the time evolution factor
+         if ( magD1 != 0 && magD2 == 0 && magD3 == 0)           fD1 = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PARA * Time;
+         else if ( magD1 == 0 && (magD2 != 0 || magD3 != 0) )   fD1 = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PERP * Time;
+         else     Aux_Error( ERROR_INFO, "This kind of magnetic field is not supported for 1D diffusion case.\n" );
+         
+         CRay *= EXP( -CR_Diffusion_R02_CR * D1 * D1 / fD1 ) / SQRT(fD1);
+      }
+      else if ( dim == 2 ) 
+      {
+         // Check the Magnetic field to define the diffusion coefficient
+         if( magD3 != 0 && (magD1 != 0 || magD2 != 0) )   Aux_Error( ERROR_INFO, "This kind of magnetic field is not supported for 2D diffusion case.\n" );
+         else if ( magD3 != 0 )
+         {
+            fD1 = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PERP * Time;
+            fD2 = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PERP * Time;
+         }
+         else 
+         {
+         // f(k, t) = 1 + 4 * R_0**2 * k * t
+         // E(x, y) = E_0 * EXP[ -R_0**2 * x**2 / f(k_x, t) ] / SQRT[ f(k_x, t) ] 
+         //               * EXP[ -R_0**2 * y**2 / f(k_y, t) ] / SQRT[ f(k_y, t) ] 
+         // 
+         // k_x = k_parallel, k_y = k_perpendicular
+         // 
+         //
+         // C = A \cross B, where A and B are the unit vector.
+         // sin = C, cos = A \dot B
+         // R = [  cos | sin ]
+         //     [ -sin | cos ]
+         //
+         // B = RA, B = (1, 0), A = (B_x, B_y)
+         //
+         // I would like to rotate the magnetic field to (1, 0) direction, so the simulation will be matched the solution above.
+            double Mag_len2 = magD1 * magD1 + magD2 * magD2;
+            double A[2] = {          magD1, magD2 };
+            double B[2] = { SQRT(Mag_len2),   0.0 };
+            double sin  = -A[1] * B[0] / Mag_len2;
+            double cos  =  A[0] * B[0] / Mag_len2;
+            double R[2][2] = { {  cos, sin },
+                               { -sin, cos } };
+            
+            double pos_new[2] = {0.0, 0.0};
+            double pos_old[2] = { D1, D2 };
+            for ( int i = 0; i < 2; i++ )   for (int j = 0; j < 2; j++ )   pos_new[i] += R[i][j] * pos_old[j]; // new coordinate move to origin
+            D1 = SQR( pos_new[0] );
+            fD1 = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PARA * Time;
+            D2 = SQR( pos_new[1] );
+            fD2 = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PERP * Time;
+         }
+         CRay *= EXP( -CR_Diffusion_R02_CR * D1 * D1 / fD1 ) / SQRT(fD1);
+         CRay *= EXP( -CR_Diffusion_R02_CR * D2 * D2 / fD2 ) / SQRT(fD2);
+      }
+      else if ( dim == 3 ) 
+      {
+         // f(k, t) = 1 + 4 * R_0**2 * k * t
+         // E(x, y, z) = E_0 * EXP[ -R_0**2 * x**2 / f(k_x, t) ] / SQRT[ f(k_x, t) ] 
+         //                  * EXP[ -R_0**2 * y**2 / f(k_y, t) ] / SQRT[ f(k_y, t) ] 
+         //                  * EXP[ -R_0**2 * z**2 / f(k_z, t) ] / SQRT[ f(k_z, t) ]
+         // 
+         // k_x = k_parallel, k_y = k_z = k_perpendicular
+         // 
+         //
+         // C = A \cross B, where A and B are the unit vector.
+         // sin = abs(C)??, cos = A \dot B
+         // R = I + v + v**2 / (1+cos), **NOTICE**: this would be invaliad when cos = -1.
+         //     [    1 - (C_2**2 + C_3**2) / (1+cos) | -C_3 +         (C_1*C_2) / (1+cos) |  C_2 +         (C_1*C_3) / (1+cos) ]
+         // R = [  C_3 +         (C_1*C_2) / (1+cos) | 1    - (C_3**2 + C_1**2) / (1+cos) | -C_1 +         (C_2*C_3) / (1+cos) ]
+         //     [ -C_2 +         (C_1*C_3) / (1+cos) |  C_1 +         (C_2*C_3) / (1+cos) |    1 - (C_1**2 + C_2**2) / (1+cos) ]
+         //
+         // B = RA, B = (1, 0, 0), A = (B_x, B_y, B_z)
+         //
+         // I would like to rotate the magnetic field to (1, 0, 0) direction, so the simulation will be matched the solution above.
+         
+         double Mag_len2 = magD1*magD1 + magD2*magD2 + magD3*magD3;
+         double A[3] = {          magD1, magD2, magD3 };
+         double B[3] = { SQRT(Mag_len2),   0.0,   0.0 };
+         double C[3] = { 0.0, A[2]*B[0] / Mag_len2 , -A[1]*B[0] / Mag_len2 };
+         double cosP1 = A[0] * B[0] / Mag_len2 + 1.0;
+         double R[3][3] = { {   1.0 - (C[1]*C[1] + C[2]*C[2]) / cosP1, -C[2] +             (C[0]*C[1]) / cosP1,  C[1] +             (C[0]*C[2]) / cosP1 },
+                            {  C[2] +             (C[0]*C[1]) / cosP1,   1.0 - (C[2]*C[2] + C[0]*C[0]) / cosP1, -C[0] +             (C[1]*C[2]) / cosP1 },
+                            { -C[1] +             (C[0]*C[2]) / cosP1,  C[0] +             (C[1]*C[2]) / cosP1,   1.0 - (C[0]*C[0] + C[1]*C[1]) / cosP1 } };
+         
+         double pos_new[3] = {0.0, 0.0, 0.0};
+         double pos_old[3] = { D1,  D2,  D3};
+         for ( int i = 0; i < 3; i++ )   for (int j = 0; j < 3; j++ )   pos_new[i] += R[i][j] * pos_old[j]; // new coordinate move to origin
+         
+         double x2 = SQR( pos_new[0] );
+         double fx = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PARA * Time;
+         CRay *= EXP( -CR_Diffusion_R02_CR * x2 / fx ) / SQRT(fx);
+         double y2 = SQR( pos_new[1] );
+         double fy = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PERP * Time;
+         CRay *= EXP( -CR_Diffusion_R02_CR * y2 / fy ) / SQRT(fy);
+         double z2 = SQR( pos_new[2] );
+         double fz = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PERP * Time;
+         CRay *= EXP( -CR_Diffusion_R02_CR * z2 / fz ) / SQRT(fz);
+      } 
+      else
+      {
+         Aux_Error( ERROR_INFO, "At least one of the {CR_Diffusion_GX, CR_Diffusion_GY, CR_Diffusion_GZ} should not be zero.\n" );
+      }
+#     endif
+   }
+   else if ( CR_Diffusion_Type == 1 )
+   {
+#     ifdef CR_DIFFUSION
+      if ( dim != 2 )   Aux_Error( ERROR_INFO, "Only one of the {CR_Diffusion_GX, CR_Diffusion_GY, CR_Diffusion_GZ} can be zero.\n" );
+      const double r   = SQRT( SQR(D1) + SQR(D2) );
+      const double phi = ATAN2( D2, D1 );
+      const double D   = SQRT( 4. * Time * CR_DIFF_PARA );
+      // TODO: take the note that the analytical solution can only work for short time evolution.
+
+      if ( Time == 0.0 )
+      {
+         CRay = (r > CR_Diffusion_R_In && r < CR_Diffusion_R_Out && FABS(phi) < M_PI/12.) ? 2.0 : 0.0;
+      } 
+      else
+      {
+         if (r > CR_Diffusion_R_In && r < CR_Diffusion_R_Out && FABS(phi) < M_PI/12.) { 
+            CRay = erfc( (phi - M_PI/12.) * r / D ) + erfc( (phi + M_PI/12.) * r / D );
+         } else {
+            CRay = 0.0;
+         }
+      }
+#     endif
+   }
+   else if ( CR_Diffusion_Type == 2 )
+   {
+#     ifdef CR_DIFFUSION
+      if ( dim != 2 )   Aux_Error( ERROR_INFO, "Only one of the {CR_Diffusion_GX, CR_Diffusion_GY, CR_Diffusion_GZ} can be zero.\n" );
+      const double r   = SQRT( SQR(D1) + SQR(D2) );
+      const double phi = ATAN2( D2, D1 );
+      const double del_r2   = SQR(CR_Diffusion_delR);
+      const double del_phi2 = SQR(CR_Diffusion_delPhi) + 2. * CR_DIFF_PARA * Time / SQR(r);
+
+      CRay *= SQRT( SQR(CR_Diffusion_delPhi) / del_phi2 );
+      CRay *= EXP( -0.5 * SQR(r-CR_Diffusion_CenterR) / del_r2 );
+      CRay *= EXP( -0.5 * SQR(phi) / del_phi2 );
+#     endif
+   }
+   else if ( CR_Diffusion_Type == 3 )
+   {
+#     ifdef CR_DIFFUSION
+      if ( type == 0 )   Aux_Error( ERROR_INFO, "At least one of the {CR_Diffusion_GX, CR_Diffusion_GY, CR_Diffusion_GZ} should not be zero.\n" );
+      double r;
+      switch (type)
+      {
+         // 1D simulation
+         case 1: r = D1;   break;
+         case 2: r = D1;   break;
+         case 4: r = D1;   break;
+         // 2D simulation
+         case 3: r = D1 + D2;   break;
+         case 5: r = D1 + D2;   break;
+         case 6: r = D1 + D2;   break;
+         // 3D simulation
+         case 7: r = D1 + D2 + D3;   break;
+      } // switch (type)
+      
+      const double fr = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PARA * Time;
+      CRay *= EXP( -CR_Diffusion_R02_CR * r * r / fr ) / SQRT(fr);
+#     endif
+   }
+   else if ( CR_Diffusion_Type == 4 )
+   {
+      const double r = SQRT( SQR(D1) + SQR(D2) + SQR(D3) );
+      if ( r > CR_Diffusion_R0_CR )   CRay = 0.0;
+   }
+   else
+   {
+      Aux_Error( ERROR_INFO, "CR_Diffusion_Type = %d is NOT supported [0/1/2/3/4] !!\n", CR_Diffusion_Type );
+   } // if ( CR_Diffusion_Type )
+  
+   CRay = CRay + CR_Diffusion_BG_CR;
+
+#ifdef COSMIC_RAY
+   P_cr = CRay * ( GAMMA_CR - 1.0 );
+   Pres = Pres + P_cr;
+
+// set the output array of passive scaler
+   fluid[CRAY] = CRay;
+#endif
+   
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, fluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
+
+// set the output array
+   fluid[DENS] = Dens;
+   fluid[MOMX] = MomX;
+   fluid[MOMY] = MomY;
+   fluid[MOMZ] = MomZ;
+   fluid[ENGY] = Etot;
+
+} // FUNCTION : SetGridIC
+
+
+
+#ifdef MHD
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetBFieldIC
+// Description :  Set the problem-specific initial condition of magnetic field
+//
+// Note        :  1. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
+//                   --> Please ensure that everything here is thread-safe
+//
+// Parameter   :  magnetic : Array to store the output magnetic field
+//                x/y/z    : Target physical coordinates
+//                Time     : Target physical time
+//                lv       : Target refinement level
+//                AuxArray : Auxiliary array
+//
+// Return      :  magnetic
+//-------------------------------------------------------------------------------------------------------
+void SetBFieldIC( real magnetic[], const double x, const double y, const double z, const double Time,
+                  const int lv, double AuxArray[] )
+{
+
+   int dim  = CR_Diffusion_GX + CR_Diffusion_GY + CR_Diffusion_GZ;
+   int type = CR_Diffusion_GX + 2 * CR_Diffusion_GY + 4 * CR_Diffusion_GZ;
+   double D1, D2, D3, _one = 1.0;
+   if ( CR_Diffusion_Mag_Type == 1 ) _one = -1.0;
+   double pos[3] = {x - CR_Diffusion_CenterX, y - CR_Diffusion_CenterY, z - CR_Diffusion_CenterZ};
+   switch (type)
+   {
+      case 3: D1 =  x - CR_Diffusion_CenterX;
+              D2 = (y - CR_Diffusion_CenterY) * _one;
+              D3 = 0.0;
+              break;
+      case 5: D1 = (x - CR_Diffusion_CenterX) * _one;
+              D2 = 0.0;
+              D3 =  z - CR_Diffusion_CenterZ;
+              break;
+      case 6: D1 = 0.0;
+              D2 =  y - CR_Diffusion_CenterY;
+              D3 = (z - CR_Diffusion_CenterZ) * _one;
+              break;
+   } // switch (type)
+   
+   if ( CR_Diffusion_Mag_Type == 0 )
+   {
+      magnetic[MAGX] = CR_Diffusion_MagX;
+      magnetic[MAGY] = CR_Diffusion_MagY;
+      magnetic[MAGZ] = CR_Diffusion_MagZ;   
+   }
+   else if ( CR_Diffusion_Mag_Type == 1 )
+   {
+      // B = 1.e-10 * ( -y/r, x/r, 0 )
+      const double r = SQRT( SQR(D1) + SQR(D2) + SQR(D3) );
+      magnetic[MAGX] = (D1 != 0.0) ? CR_Diffusion_MagX * (D2+D3)/r : 0.0;
+      magnetic[MAGY] = (D2 != 0.0) ? CR_Diffusion_MagX * (D1+D3)/r : 0.0;
+      magnetic[MAGZ] = (D3 != 0.0) ? CR_Diffusion_MagX * (D1+D2)/r : 0.0;   
+   }
+   else if ( CR_Diffusion_Mag_Type == 2 )
+   {
+      magnetic[MAGX] = RandomNumber(RNG, -1.0, +1.0);
+      magnetic[MAGY] = RandomNumber(RNG, -1.0, +1.0);
+      magnetic[MAGZ] = RandomNumber(RNG, -1.0, +1.0);
+   }
+   else if ( CR_Diffusion_Mag_Type == 3 )
+   {
+      const double r = SQRT( SQR(D1) + SQR(D2) + SQR(D3) );
+      magnetic[MAGX] = CR_Diffusion_MagX * D1 / r;
+      magnetic[MAGY] = CR_Diffusion_MagX * D2 / r;
+      magnetic[MAGZ] = CR_Diffusion_MagX * D3 / r;
+   }
+   else if ( CR_Diffusion_Mag_Type == 4 )
+   {
+      const double pos[3] = { x-CR_Diffusion_CenterX, y-CR_Diffusion_CenterY, z-CR_Diffusion_CenterZ };
+      const double r = SQRT( SQR(pos[0]) + SQR(pos[1]) + SQR(pos[2]) );
+      const double _r0_cub = 1. / CUBE(CR_Diffusion_R0_B);
+      const double _factor = 1. / SQR( 1. + CUBE(r) * _r0_cub );
+      magnetic[MAGX] =  1.5 * CR_Diffusion_MagX * pos[0] * pos[2] * r * _r0_cub * _factor;
+      magnetic[MAGY] =  1.5 * CR_Diffusion_MagX * pos[1] * pos[2] * r * _r0_cub * _factor;
+      magnetic[MAGZ] = SQRT(_factor) 
+                       -1.5 * CR_Diffusion_MagX * (pos[0]*pos[0] + pos[1]*pos[1]) * r * _r0_cub * _factor;
+   }
+   else
+   {
+      Aux_Error( ERROR_INFO, "CR_Diffusion_Mag_Type = %d is NOT supported [0/1/2/3/4] !!\n", CR_Diffusion_Mag_Type );
+   }
+
+} // FUNCTION : SetBFieldIC
+#endif // #ifdef MHD
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  OutputError
+// Description :  Output the L1 error
+//
+// Note        :  1. Invoke Output_L1Error()
+//                2. Use SetGridIC() to provide the analytical solution at any given time
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void OutputError()
+{
+   const char Prefix[100]     = "CosmicRay_Diffusion";
+   int dim  = CR_Diffusion_GX + CR_Diffusion_GY + CR_Diffusion_GZ;
+   int type = CR_Diffusion_GX + 2 * CR_Diffusion_GY + 4 * CR_Diffusion_GZ;
+   double magD1, magD2, magD3, D1, D2, D3, fD1, fD2, fD3;
+   OptOutputPart_t Part;
+   switch (type)
+   {
+      // 1D simulation
+      case 1: Part = OUTPUT_X;         break;
+      case 2: Part = OUTPUT_Y;         break;
+      case 3: Part = OUTPUT_XY;        break;
+      case 4: Part = OUTPUT_Z;         break;
+      case 5: Part = OUTPUT_XZ;        break;
+      case 6: Part = OUTPUT_YZ;        break;
+      case 7: Part = OUTPUT_DIAG;      break;
+   } // switch (type)
+
+#  ifdef MHD
+   Output_L1Error( SetGridIC, SetBFieldIC, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
+#  else
+   Output_L1Error( SetGridIC, NULL,        Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
+#  endif
+
+} // FUNCTION : OutputError
+
+
+
+#endif // #if ( MODEL == HYDRO )
+
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  RandomNumber
+// Description :  Generate a single random number
+//
+// Parameter   :  RNG : Random number generator
+//                Min : Lower limit of the random number
+//                Max : Upper limit of the random number
+//
+// Return      :  Random number
+//-------------------------------------------------------------------------------------------------------
+double RandomNumber(RandomNumber_t *RNG, const double Min, const double Max )
+{
+
+// thread-private variables
+#  ifdef OPENMP
+   const int TID = omp_get_thread_num();
+#  else
+   const int TID = 0;
+#  endif
+
+   return RNG->GetValue( TID, Min, Max );
+
+} // FUNCTION : RandomNumber
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_TestProb_Hydro_Cosmic_Ray_Diffusion
+// Description :  Test problem initializer
+//
+// Note        :  None
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Init_TestProb_Hydro_Cosmic_Ray_Diffusion()
+{
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
+
+
+// validate the compilation flags and runtime parameters
+   Validate();
+
+
+// replace HYDRO by the target model (e.g., MHD/ELBDM) and also check other compilation flags if necessary (e.g., GRAVITY/PARTICLE)
+#  if ( MODEL == HYDRO )
+// set the problem-specific runtime parameters
+   SetParameter();
+
+
+// procedure to enable a problem-specific function:
+// 1. define a user-specified function (example functions are given below)
+// 2. declare its function prototype on the top of this file
+// 3. set the corresponding function pointer below to the new problem-specific function
+// 4. enable the corresponding runtime option in "Input__Parameter"
+//    --> for instance, enable OPT__OUTPUT_USER for Output_User_Ptr
+   Init_Function_User_Ptr         = SetGridIC;
+
+#  ifdef MHD
+   Init_Function_BField_User_Ptr  = SetBFieldIC;
+#  endif
+
+#  endif // #if ( MODEL == HYDRO )
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
+
+} // FUNCTION : Init_TestProb_Hydro_Cosmic_Ray_Diffusion

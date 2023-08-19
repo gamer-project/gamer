@@ -42,6 +42,11 @@ SIMU_OPTION += -DMODEL=HYDRO
 # enable particles
 #SIMU_OPTION += -DPARTICLE
 
+# enable microphysics
+# # --> must enable HYDRO
+# #  Including: Cosmic Ray Diffusion
+# SIMU_OPTION += -DMICROPHYSICS
+
 # support Grackle, a chemistry and radiative cooling library
 # --> must set NCOMP_PASSIVE_USER according to the primordial chemistry network set by GRACKLE_PRIMORDIAL
 # --> please enable OpenMP when compiling Grackle (by "make omp-on")
@@ -79,7 +84,7 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 # magnetohydrodynamics
 #SIMU_OPTION += -DMHD
 
-# cosmic rays (not supported yet)
+# cosmic rays
 #SIMU_OPTION += -DCOSMIC_RAY
 
 # equation of state: EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_USER
@@ -152,6 +157,14 @@ SIMU_OPTION += -DSTORE_PAR_ACC
 # --> set it to 0 or comment it out if none is required
 SIMU_OPTION += -DPAR_NATT_USER=0
 endif # PARTICLE
+
+
+# (b-5) microphysics options
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DMICROPHYSICS, $(SIMU_OPTION))" "-DMICROPHYSICS"
+# enable the cosmic ray diffusion
+SIMU_OPTION += -DCR_DIFFUSION
+endif # MICROPHYSICS
 
 
 # (c) miscellaneous options (AMR, GPU, parallelization, optimizations, ...)
@@ -467,20 +480,21 @@ vpath %.cpp    Main  Init  Refine  Fluid  Interpolation  Tables  Output  Miscell
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
 GPU_FILE    += CUFLU_dtSolver_HydroCFL.cu  CUFLU_FluidSolver_RTVD.cu  CUFLU_FluidSolver_MHM.cu  CUFLU_FluidSolver_CTU.cu \
-               GPU_EoS_Gamma.cu  GPU_EoS_User_Template.cu  GPU_EoS_Isothermal.cu
+               GPU_EoS_Gamma.cu  GPU_EoS_User_Template.cu  GPU_EoS_Isothermal.cu  GPU_EoS_GammaCR.cu
 
 CPU_FILE    += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_MHM.cpp  CPU_FluidSolver_CTU.cpp \
                CPU_Shared_DataReconstruction.cpp  CPU_Shared_FluUtility.cpp  CPU_Shared_ComputeFlux.cpp \
                CPU_Shared_FullStepUpdate.cpp  CPU_Shared_RiemannSolver_Exact.cpp  CPU_Shared_RiemannSolver_Roe.cpp \
                CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_RiemannSolver_HLLC.cpp  CPU_Shared_DualEnergy.cpp \
-               CPU_dtSolver_HydroCFL.cpp  CPU_EoS_Gamma.cpp  CPU_EoS_User_Template.cpp  CPU_EoS_Isothermal.cpp
+               CPU_dtSolver_HydroCFL.cpp  CPU_EoS_Gamma.cpp  CPU_EoS_User_Template.cpp  CPU_EoS_Isothermal.cpp \
+	       CPU_EoS_GammaCR.cpp
 
 CPU_FILE    += Hydro_Init_ByFunction_AssignData.cpp  Hydro_Aux_Check_Negative.cpp \
                Hydro_BoundaryCondition_Reflecting.cpp  Hydro_BoundaryCondition_Outflow.cpp \
                Hydro_BoundaryCondition_Diode.cpp  EoS_Init.cpp  EoS_End.cpp
 
-vpath %.cu     Model_Hydro/GPU_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal
-vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal
+vpath %.cu     Model_Hydro/GPU_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal  EoS/GammaCR
+vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal  EoS/GammaCR
 
 ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
 GPU_FILE    += CUPOT_HydroGravitySolver.cu  CUPOT_dtSolver_HydroGravity.cu
@@ -685,6 +699,30 @@ CPU_FILE    += FB_AdvanceDt.cpp  FB_Init.cpp  FB_End.cpp  FB_Auxiliary.cpp  FB_U
 
 vpath %.cpp    Feedback  Feedback/User_Template  Feedback/SNe
 endif # FEEDBACK
+
+
+# cosmic rays source files (included only if "COSMIC_RAY" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DCOSMIC_RAY, $(SIMU_OPTION))" "-DCOSMIC_RAY"
+CPU_FILE    += CosmicRayDiffusivity_Init.cpp  CPU_AddCosmicRayDiffuseFlux.cpp  CPU_ComputeCosmicRayDiffusivity.cpp \
+               CPU_CosmicRayMaxDiffusivity.cpp
+
+GPU_FILE    += CUFLU_AddCosmicRayDiffuseFlux.cu  CUFLU_ComputeCosmicRayDiffusivity.cu \
+               CUFLU_CosmicRayMaxDiffusivity.cu
+
+vpath %.cpp    Microphysics  Microphysics/CosmicRayDiffusivity
+vpath %.cu     Microphysics  Microphysics/CosmicRayDiffusivity
+endif # COSMIC_RAY
+
+
+# microphysics source files (included only if "MICROPHYSICS" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DMICROPHYSICS, $(SIMU_OPTION))" "-DMICROPHYSICS"
+CPU_FILE    += Microphysics_Init.cpp  Microphysics_End.cpp
+
+vpath %.cpp    Microphysics
+vpath %.cu     Microphysics
+endif # MICROPHYSICS
 
 
 # test problem source files

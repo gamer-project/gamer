@@ -182,6 +182,8 @@ void Aux_TakeNote()
       fprintf( Note, "EOS                             EOS_NUCLEAR\n" );
 #     elif ( EOS == EOS_TABULAR )
       fprintf( Note, "EOS                             EOS_TABULAR\n" );
+#     elif ( EOS == EOS_COSMIC_RAY )
+      fprintf( Note, "EOS                             EOS_COSMIC_RAY\n" );
 #     elif ( EOS == EOS_USER )
       fprintf( Note, "EOS                             EOS_USER\n" );
 #     else
@@ -990,6 +992,31 @@ void Aux_TakeNote()
       fprintf( Note, "\n\n");
 #     endif // #ifdef FEEDBACK
 
+//    record the parameters of cosmic ray
+#     ifdef COSMIC_RAY
+      fprintf( Note, "Parameters of Cosmic Ray\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "GAMMA_CR                        %13.7e\n",           GAMMA_CR                          );
+      fprintf( Note, "OPT__FLAG_CRAY                  %d\n",               OPT__FLAG_CRAY                    );
+      fprintf( Note, "OPT__FLAG_LOHNER_CRAY           %d\n",               OPT__FLAG_LOHNER_CRAY             );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
+#     endif // #ifdef COSMIC_RAY
+
+
+//    record the parameters of Microphysics
+#     ifdef MICROPHYSICS
+      fprintf( Note, "Parameters of Microphysics\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+#     ifdef CR_DIFFUSION
+      fprintf( Note, "CR_DIFF_PARA                    %13.7e\n",           CR_DIFF_PARA                      );
+      fprintf( Note, "CR_DIFF_PERP                    %13.7e\n",           CR_DIFF_PERP                      );
+      fprintf( Note, "DT_DIFFUSION                    %13.7e\n",           DT_DIFFUSION                      );
+#     endif // #ifdef CR_DIFFUSION
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
+#     endif // #ifdef MICROPHYSICS
+
 
 //    record the parameters of Fluid solver in different models
       fprintf( Note, "Parameters of Fluid Solver (in different models)\n" );
@@ -1504,6 +1531,18 @@ void Aux_TakeNote()
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level             Current\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_Current[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+#     endif
+
+#     ifdef COSMIC_RAY
+      if ( OPT__FLAG_CRAY )
+      {
+         fprintf( Note, "Flag Criterion (Cosmic Ray Energy)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level             Cosmic Ray Energy\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_CRay[lv] );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }

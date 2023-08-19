@@ -76,6 +76,7 @@ extern "C" {
 #include "Extrema.h"
 #include "SrcTerms.h"
 #include "EoS.h"
+#include "Microphysics.h"
 #include "Global.h"
 #include "Field.h"
 #include "Prototype.h"

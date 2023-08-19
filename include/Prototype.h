@@ -225,6 +225,10 @@ void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveS
                  int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
                  const int NSendSlice, const long TVar, const bool InPlacePad );
 #endif // #ifdef SUPPORT_FFTW
+#ifdef MICROPHYSICS
+void Microphysics_Init();
+void Microphysics_End();
+#endif
 
 
 // Interpolation
@@ -266,6 +270,9 @@ void   dt_Close( const real h_dt_Array_T[], const int NPG );
 void   CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                      const real Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real Pot_Array[][ CUBE(GRA_NXT) ],
                      const double Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
+                     #ifdef MICROPHYSICS
+                     const MicroPhy_t Mic,
+                     #endif
                      const real MinPres, const bool P5_Gradient,
                      const bool UsePot, const OptExtAcc_t ExtAcc, const double TargetTime );
 
@@ -577,6 +584,9 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                           const real h_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real h_Pot_Array[][ CUBE(GRA_NXT) ],
                           const double h_Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
+                          #ifdef MICROPHYSICS
+                          const MicroPhy_t Mic,
+                          #endif
                           const real MinPres, const bool P5_Gradient, const bool UsePot, const OptExtAcc_t ExtAcc,
                           const double TargetTime, const int GPU_NStream );
 void CUAPI_Asyn_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)           ],

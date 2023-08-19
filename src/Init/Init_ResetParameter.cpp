@@ -970,6 +970,12 @@ void Init_ResetParameter()
 #  endif // #ifdef FEEDBACK
 
 
+// cosmic ray options
+#  ifdef COSMIC_RAY
+// nothing yet
+#  endif // #ifdef COSMIC_RAY
+
+
 // convert to code units
 #  ifdef STAR_FORMATION
 // SF_CREATE_STAR_MIN_GAS_DENS: HI count/cm^3 --> mass density in code units
