@@ -58,10 +58,17 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 #  endif // #  if ( SUPPORT_FFTW == FFTW3 ) ... # else
 #  endif // #  ifdef SERIAL ... # else
 
-// check integer overflow (in a non-rigorous way)
-   if ( total_local_size <= 0 )
-      Aux_Error( ERROR_INFO, "total_local_size (%d) <= 0 (local_nx/y/z = %d, %d, %d) for FFT !!\n",
-                 total_local_size, local_nx, local_ny, local_nz );
+// check integer overflow (assuming local_nx*local_ny*local_nz ~ total_local_size)
+   const long local_nxyz = (long)local_nx*(long)local_ny*(long)local_nz;
+
+   if ( local_nx < 0 || local_ny < 0 || local_nz < 0 )
+      Aux_Error( ERROR_INFO, "local_nx/y/z (%ld, %ld, %ld) < 0 for FFT !!", local_nx, local_ny, local_nz );
+
+   if (  ( sizeof(mpi_index_int) == sizeof(int) && local_nxyz > __INT_MAX__ )  ||  total_local_size < 0  )
+      Aux_Error( ERROR_INFO, "local_nx*local_ny*local_nz = %d*%d*%d = %ld > __INT_MAX__ (%d)\n"
+                     "        and/or total_local_size (%ld) < 0 for FFT, suggesting integer overflow !!\n"
+                     "        --> Try using more MPI processes\n",
+                 local_nx, local_ny, local_nz, local_nxyz, __INT_MAX__, total_local_size );
 
 // collect "local_nz" from all ranks and set the corresponding list "List_z_start"
    int List_nz     [MPI_NRank  ];   // slab thickness of each rank in the FFTW slab decomposition
