@@ -74,7 +74,8 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    int List_nz     [MPI_NRank  ];   // slab thickness of each rank in the FFTW slab decomposition
    int List_z_start[MPI_NRank+1];   // starting z coordinate of each rank in the FFTW slab decomposition
 
-   MPI_Allgather( &local_nz, 1, MPI_INT, List_nz, 1, MPI_INT, MPI_COMM_WORLD );
+   const int local_nz_int = local_nz;  // necessary since "mpi_index_int" maps to "long int" for FFTW3
+   MPI_Allgather( &local_nz_int, 1, MPI_INT, List_nz, 1, MPI_INT, MPI_COMM_WORLD );
 
    List_z_start[0] = 0;
    for (int r=0; r<MPI_NRank; r++)  List_z_start[r+1] = List_z_start[r] + List_nz[r];
