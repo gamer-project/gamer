@@ -3,7 +3,7 @@
 
 #include "CUFLU.h"
 
-#if ( ( MODEL == HYDRO ) && defined CR_DIFFUSION )
+#if ( ( MODEL == HYDRO ) && defined COSMIC_RAY && defined MICROPHYSICS && defined CR_DIFFUSION )
 
 //external functions
 #ifdef __CUDACC__
@@ -12,14 +12,14 @@
 
 #else // #ifdef __CUDACC__
 
-void CR_ComputeDiffusivity( /*dens*/ real &diff_cr_para, real &diff_cr_perp, const MicroPhy_t *Mic );
+void CR_ComputeDiffusivity( real &diff_cr_para, real &diff_cr_perp, const MicroPhy_t *Mic );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
 
 // internal funciton
 GPU_DEVICE
-real MC_limiter(real a, real b); 
+real MC_limiter(real a, real b);
 GPU_DEVICE
 real minmod(real a, real b);
 
@@ -27,22 +27,21 @@ real minmod(real a, real b);
 
 //-----------------------------------------------------------------------------------------
 // Function    : CR_DiffuseFlux_HalfStep
-// Description : Compute the cosmic ray diffusion flux. 
-// Note        : 1. Must enable MHD.
 //
-// Parameter   : g_FC_Var       : Array storing the input fluid variables
-//               g_Flux         : Array to store the output fluxes
-//               g_Mag_Array_In : Array storing the input B field
-//               NFlu           : Stride for accessing g_FC_Var
-//               NFlux          : Stride for accessing g_Flux
-//               NSkip_N        : Number of cells to be skipped in the normal directions
-//               NSkip_T        : Number of cells to be skipped in the transverse directions
-//               NSkip_M        : Number of cells to be skipped in the magnetic array
-//               dt             : Time interval to advance solution
+// Description : Compute the half-step cosmic ray diffusive flux.
+//
+// Note        : 1. Must enable MHD and MICROPHYSICS.
+//
+// Reference   : Yang, H.-Y.~K., Ruszkowski, M., Ricker, P.~M., et al. 2012, apj, 761, 185. doi:10.1088/0004-637X/761/2/185
+//
+// Parameter   : g_Con_Var      : Array storing the input conserved fluid variables
+//               g_Flux_Half    : Array storing the fluxes, and to store the cosmic rays diffusive flux.
+//               g_FC_B         : Array storing the face-centered input B field
+//               g_CC_B         : Array storing the cell-centered input B field
 //               dh             : Cell size
-//               Time           : Current physical time
+//               Mic            : Microphysics object
+//
 // Return      :
-// Reference   :
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
 void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
@@ -52,12 +51,10 @@ void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
                               const real dh, const MicroPhy_t *Mic )
 {
    const int didx_cvar[3] = { 1, FLU_NXT, SQR(FLU_NXT) };
-   real Flux_1Face, Flux_Para, Flux_Perp;
    const int flux_offset = 1;
+   const real small_B    = 1.e-30;
 
-
-// loop over different spatial directions
-   for (int d=0; d<3; d++)
+   for ( int d=0; d<3; d++ )
    {
       const int TDir1          = (d+1)%3;    // transverse direction 1
       const int TDir2          = (d+2)%3;    // transverse direction 2
@@ -88,18 +85,21 @@ void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
       const int size_ij = size_i*size_j;
       CGPU_LOOP( idx, size_i*size_j*size_k )
       {
+         // flux index
          const int i_flux   = idx % size_i           + i_offset;
          const int j_flux   = idx % size_ij / size_i + j_offset;
          const int k_flux   = idx / size_ij          + k_offset;
          const int idx_flux = IDX321( i_flux, j_flux, k_flux, N_HF_FLUX, N_HF_FLUX );
 
+         // conserved variable and cell-centered magnetic field index
          const int i_cvar   = i_flux + i_cvar_s;
          const int j_cvar   = j_flux + j_cvar_s;
          const int k_cvar   = k_flux + k_cvar_s;
          const int idx_cvar = IDX321( i_cvar, j_cvar, k_cvar, FLU_NXT, FLU_NXT );
-         
+
+         // face-centered magnetic field index
          const int idx_fc_B = IDX321( i_cvar, j_cvar, k_cvar, sizeB_i, sizeB_j ) + stride_fc_B[d];
-         
+
          // Get the cell size
          real dh_N, dh_T1, dh_T2;
          dh_N  = dh;
@@ -107,66 +107,32 @@ void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
          dh_T2 = dh;
 
 
-         // =================================================================================
-         // Get the diffusivity
-         // =================================================================================
-         // NOTE: we should calculate different diffusion coefficient in different cell,
-         //       but we just set it as a constant for now.
+         // 1. Get the diffusivity
          real diff_cr_eff_para, diff_cr_eff_perp;
          CR_ComputeDiffusivity( diff_cr_eff_para, diff_cr_eff_perp, Mic );
 
-         // This is for the general diffusion coefficient
-         // Parallel
-         // if ( diff_cr_para(i-1, j, k) * diff_cr_para(i, j, k) == 0.0 )
-         // {
-         //    diff_cr_eff_para = 0.0;
-         // }
-         // else
-         // {
-         //    diff_cr_eff_para = 2.0 * (diff_cr_para(i-1, j, k) * diff_cr_para(i, j, k)) /
-         //                             (diff_cr_para(i-1, j, k) + diff_cr_para(i, j, k));
-         // }
-         //
-         // Perpendicular
-         // if ( diff_cr_perp(i-1, j, k) * diff_cr_perp(i, j, k) == 0.0 )
-         // {
-         //    diff_cr_eff_perp = 0.0;
-         // }
-         // else
-         // {
-         //    diff_cr_eff_perp = 2.0 * (diff_cr_perp(i-1, j, k) * diff_cr_perp(i, j, k)) /
-         //                             (diff_cr_perp(i-1, j, k) + diff_cr_perp(i, j, k));
-         // }
-
-
-
-         // =================================================================================
-         // Compute the mean magnetic field
-         // =================================================================================
-         // ------------------------------
-         // |        |         |         |
-         // |        |    ^    |    ^    |
-         // --------------1---------2-----
-         // |        |    |    |    |    |
-         // |        |         |         |
-         // |        |  i j k -->        |
-         // |        |         |         |
-         // |        |    ^    |    ^    |
-         // --------------3---------4-----
-         // |        |    |    |    |    |
-         // |        |         |         |
-         // ------------------------------
-         // mean = 0.25 * (1+2+3+4) = 0.5([i  , j, k] + [i+1, j, k])
-         real B_N_mean, B_T1_mean, B_T2_mean, B_tot, small_B = 1.e-30;
-
-         B_N_mean  =       g_FC_B[     d ][ idx_fc_B                ];
-         B_T1_mean = 0.5*( g_CC_B[ TDir1 ][ idx_cvar                ] +  // i  , j, k
-                           g_CC_B[ TDir1 ][ idx_cvar + didx_cvar[d] ] ); // i+1, j, k
-         B_T2_mean = 0.5*( g_CC_B[ TDir2 ][ idx_cvar                ] +  // i  , j, k
-                           g_CC_B[ TDir2 ][ idx_cvar + didx_cvar[d] ] ); // i+1, j, k
-
+         // 2. Compute the mean magnetic field
+         // ---------------------
+         // |         |         |
+         // |    ^    |    ^    |
+         // -----1---------2-----
+         // |    |    |    |    |
+         // |         |         |
+         // |  i j k -->        |
+         // |         |         |
+         // |    ^    |    ^    |
+         // -----3---------4-----
+         // |    |    |    |    |
+         // |         |         |
+         // ---------------------
+         real B_N_mean, B_T1_mean, B_T2_mean, B_tot;
+         B_N_mean  =       g_FC_B[    d][ idx_fc_B                ];
+         B_T1_mean = 0.5*( g_CC_B[TDir1][ idx_cvar                ] +
+                           g_CC_B[TDir1][ idx_cvar + didx_cvar[d] ] );
+         B_T2_mean = 0.5*( g_CC_B[TDir2][ idx_cvar                ] +
+                           g_CC_B[TDir2][ idx_cvar + didx_cvar[d] ] );
          B_tot    =  SQRT( B_N_mean*B_N_mean + B_T1_mean*B_T1_mean + B_T2_mean*B_T2_mean );
-   
+
          //if ( B_tot < small_B && diff_cr_eff_perp != diff_cr_eff_para ) {
             // Error
             // xFlux = 0;
@@ -177,70 +143,59 @@ void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
          B_T1_mean = B_T1_mean / B_tot;
          B_T2_mean = B_T2_mean / B_tot;
 
-         
-         // =================================================================================
-         // Compute slope 
-         // =================================================================================
-         // ------------------------------
-         // |        |         |         |
-         // -------------al--------ar-----
-         // |        |         |         |
-         // |        |      N_slope      |
-         // |        |         |         |
-         // -------------bl--------br-----
-         // |        |         |         |
-         // ------------------------------
+
+         // 3. Compute slope
+         // ---------------------
+         // |         |         |
+         // ----al--------ar-----
+         // |         |         |
+         // |      N_slope      |
+         // |         |         |
+         // ----bl--------br-----
+         // |         |         |
+         // ---------------------
 
          real N_slope, T1_slope, T2_slope;
          real al, bl, ar, br;
-         
-         // cosmic ray difference x
+
+         // normal direction
          N_slope = ( g_ConVar[CRAY][ idx_cvar + didx_cvar[d] ] -  g_ConVar[CRAY][ idx_cvar ] ) / dh_N;
 
-         // cosmic ray difference y
-         al = g_ConVar[CRAY][ idx_cvar                                   ] -   // i  , j  , k
-              g_ConVar[CRAY][ idx_cvar                - didx_cvar[TDir1] ]   ; // i  , j-1, k
-         bl = g_ConVar[CRAY][ idx_cvar                + didx_cvar[TDir1] ] -   // i  , j+1, k
-              g_ConVar[CRAY][ idx_cvar                                   ]   ; // i  , j  , k
-         ar = g_ConVar[CRAY][ idx_cvar + didx_cvar[d]                    ] -   // i+1, j  , k
-              g_ConVar[CRAY][ idx_cvar + didx_cvar[d] - didx_cvar[TDir1] ]   ; // i+1, j-1, k
-         br = g_ConVar[CRAY][ idx_cvar + didx_cvar[d] + didx_cvar[TDir1] ] -   // i+1, j+1, k
-              g_ConVar[CRAY][ idx_cvar + didx_cvar[d]                    ]   ; // i+1, j  , k
-         
+         // transverse direction 1
+         al = g_ConVar[CRAY][ idx_cvar                                   ] -
+              g_ConVar[CRAY][ idx_cvar                - didx_cvar[TDir1] ]   ;
+         bl = g_ConVar[CRAY][ idx_cvar                + didx_cvar[TDir1] ] -
+              g_ConVar[CRAY][ idx_cvar                                   ]   ;
+         ar = g_ConVar[CRAY][ idx_cvar + didx_cvar[d]                    ] -
+              g_ConVar[CRAY][ idx_cvar + didx_cvar[d] - didx_cvar[TDir1] ]   ;
+         br = g_ConVar[CRAY][ idx_cvar + didx_cvar[d] + didx_cvar[TDir1] ] -
+              g_ConVar[CRAY][ idx_cvar + didx_cvar[d]                    ]   ;
          T1_slope = ( MC_limiter( MC_limiter(al, bl), MC_limiter(ar, br) ) ) / dh_T1;
 
-         // cosmic ray difference z
-         al = g_ConVar[CRAY][ idx_cvar                                   ] -   //i  , j, k 
-              g_ConVar[CRAY][ idx_cvar                - didx_cvar[TDir2] ]   ; //i  , j, k-1
-         bl = g_ConVar[CRAY][ idx_cvar                + didx_cvar[TDir2] ] -   //i  , j, k+1
-              g_ConVar[CRAY][ idx_cvar                                   ]   ; //i  , j, k
-         ar = g_ConVar[CRAY][ idx_cvar + didx_cvar[d]                    ] -   //i+1, j, k
-              g_ConVar[CRAY][ idx_cvar + didx_cvar[d] - didx_cvar[TDir2] ]   ; //i+1, j, k-1
-         br = g_ConVar[CRAY][ idx_cvar + didx_cvar[d] + didx_cvar[TDir2] ] -   //i+1, j, k+1
-              g_ConVar[CRAY][ idx_cvar + didx_cvar[d]                    ]   ; //i+1, j, k
-         
+         // transverse direction 2
+         al = g_ConVar[CRAY][ idx_cvar                                   ] -
+              g_ConVar[CRAY][ idx_cvar                - didx_cvar[TDir2] ]   ;
+         bl = g_ConVar[CRAY][ idx_cvar                + didx_cvar[TDir2] ] -
+              g_ConVar[CRAY][ idx_cvar                                   ]   ;
+         ar = g_ConVar[CRAY][ idx_cvar + didx_cvar[d]                    ] -
+              g_ConVar[CRAY][ idx_cvar + didx_cvar[d] - didx_cvar[TDir2] ]   ;
+         br = g_ConVar[CRAY][ idx_cvar + didx_cvar[d] + didx_cvar[TDir2] ] -
+              g_ConVar[CRAY][ idx_cvar + didx_cvar[d]                    ]   ;
          T2_slope = ( MC_limiter( MC_limiter(al, bl), MC_limiter(ar, br) ) ) / dh_T2;
-         
 
 
-         // =================================================================================
-         // Compute Flux.
-         // =================================================================================
-         // Flux = -(Kbar_para - Kbar_perp)*Bx*(Bx*Xslope + Bybar*Yslopebar + Bzbar*Zslopebar) 
-         //        - Kbar_perp*Xslope
-         //      = Kbar_para * common + Kbar_perp * ( -Xslope - common)
-         // common: -Bx(Bx*Xslope + Bybar*Yslopebar + Bzbar*Zslopebar)
+
+         // 4. Compute Flux
+         real Flux_1Face, Flux_Para, Flux_Perp;
          real common = -B_N_mean * ( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
-
          Flux_Para = diff_cr_eff_para * common;
          Flux_Perp = diff_cr_eff_perp * (-N_slope - common);
-
          Flux_1Face = Flux_Para + Flux_Perp;
 
-         // total cosmic ray flux = Flux_Perp + Flux_Para
+         // 5. Flux add-up
          g_Flux_Half[d][CRAY][idx_flux] += Flux_1Face;
-         // TODO: dual energy (internal energy) update?
          g_Flux_Half[d][ENGY][idx_flux] += Flux_1Face;
+         // TODO: dual energy (internal energy) update?
 
       } // CGPU_LOOP( idx, size_i*size_j*size_k )
    } // for (int d=0; d<3; d++)
@@ -249,29 +204,28 @@ void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
      __syncthreads();
 #  endif
 
-} // FUNCTION : CR_DiffuseFlux_HalfStep()
+} // FUNCTION : CR_DiffuseFlux_HalfStep
 
 
 
 
 //-----------------------------------------------------------------------------------------
 // Function    : CR_DiffuseFlux_FullStep
-// Description : Compute the cosmic ray diffusion flux. 
-// Note        : 1. Must enable MHD.
 //
-// Parameter   : g_FC_Var       : Array storing the input fluid variables
-//               g_Flux         : Array to store the output fluxes
-//               g_Mag_Array_In : Array storing the input B field
-//               NFlu           : Stride for accessing g_FC_Var
-//               NFlux          : Stride for accessing g_Flux
-//               NSkip_N        : Number of cells to be skipped in the normal directions
-//               NSkip_T        : Number of cells to be skipped in the transverse directions
-//               NSkip_M        : Number of cells to be skipped in the magnetic array
-//               dt             : Time interval to advance solution
+// Description : Compute the full-step cosmic ray diffusive flux.
+//
+// Note        : 1. Must enable MHD and MICROPHYSICS.
+//
+// Reference   : Yang, H.-Y.~K., Ruszkowski, M., Ricker, P.~M., et al. 2012, apj, 761, 185. doi:10.1088/0004-637X/761/2/185
+//
+// Parameter   : g_PriVar_Half  : Array storing the half-step primitive fluid variables.
+//               g_FC_Flux      : Array storing the fluxes, and to store the cosmic rays diffusive flux.
+//               g_FC_B_Half    : Array storing the half-step face-centered magnetic field
+//               NFlux          : Stride for accessing g_FC_Flux
 //               dh             : Cell size
-//               Time           : Current physical time
+//               Mic            : Microphysics object
+//
 // Return      :
-// Reference   :
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
 void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
@@ -281,19 +235,17 @@ void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 {
 
    const int didx_half[3] = { 1, N_HF_VAR, SQR(N_HF_VAR) };
-   real Flux_1Face, Flux_Para, Flux_Perp;
    const int mag_offset  = (N_HF_VAR - PS2)/2;
    const int cell_offset = (N_HF_VAR - N_FC_VAR)/2;
+   const real small_B    = 1.e-30;
 
-
-// loop over different spatial directions
-   for (int d=0; d<3; d++)
+   for ( int d=0; d<3; d++ )
    {
       const int TDir1          = (d+1)%3;    // transverse direction 1
       const int TDir2          = (d+2)%3;    // transverse direction 2
       int sizeB_i, sizeB_j, sizeB_k;
       int mag_offset_i, mag_offset_j, mag_offset_k;
-		
+
       int idx_flux_e[3];
 
       switch ( d )
@@ -312,21 +264,24 @@ void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                   sizeB_i       = N_HF_VAR;     sizeB_j       = N_HF_VAR;     sizeB_k       = N_HF_VAR+1;
                   mag_offset_i  = mag_offset-1; mag_offset_j  = mag_offset-1; mag_offset_k  = mag_offset;
                   break;
-      }
+      } // switch ( d )
 
       const int size_ij = idx_flux_e[0]*idx_flux_e[1];
       CGPU_LOOP( idx, idx_flux_e[0]*idx_flux_e[1]*idx_flux_e[2] )
       {
+         // flux index
          const int i_flux   = idx % idx_flux_e[0];
          const int j_flux   = idx % size_ij / idx_flux_e[0];
          const int k_flux   = idx / size_ij;
          const int idx_flux = IDX321( i_flux, j_flux, k_flux, NFlux, NFlux );
 
+         // half variable index
          const int i_half   = i_flux + cell_offset;
          const int j_half   = j_flux + cell_offset;
          const int k_half   = k_flux + cell_offset;
          const int idx_half = IDX321( i_half, j_half, k_half, N_HF_VAR, N_HF_VAR );
 
+         // magnetic field indexes
          const int i_fc     = i_flux + mag_offset_i;
          const int j_fc     = j_flux + mag_offset_j;
          const int k_fc     = k_flux + mag_offset_k;
@@ -344,17 +299,11 @@ void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
          dh_T2 = dh;
 
 
-         // =================================================================================
-         // Get the diffusivity
-         // =================================================================================
-         // NOTE: we should calculate different diffusion coefficient in different cell,
-         //       but we just set it as a constant for now.
+         // 1. Get the diffusivity
          real diff_cr_eff_para, diff_cr_eff_perp;
          CR_ComputeDiffusivity( diff_cr_eff_para, diff_cr_eff_perp, Mic );
 
-         // =================================================================================
-         // Compute the mean magnetic field
-         // =================================================================================
+         // 2. Compute the mean magnetic field
          // ---------------------
          // |         |         |
          // |    ^    |    ^    |
@@ -369,20 +318,17 @@ void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
          // |         |         |
          // ---------------------
          real B_N_mean, B_T1_mean, B_T2_mean, B_tot;
-         const real small_B = 1.e-30;
+         B_N_mean =         g_FC_B_Half[    d][ idx_fc_BN                                            ];
+         B_T1_mean = 0.25*( g_FC_B_Half[TDir1][ idx_fc_BT1                                           ] +
+                            g_FC_B_Half[TDir1][ idx_fc_BT1                    + stride_fc_BT1[TDir1] ] +
+                            g_FC_B_Half[TDir1][ idx_fc_BT1 - stride_fc_BT1[d]                        ] +
+                            g_FC_B_Half[TDir1][ idx_fc_BT1 - stride_fc_BT1[d] + stride_fc_BT1[TDir1] ] );
+         B_T2_mean = 0.25*( g_FC_B_Half[TDir2][ idx_fc_BT2                                           ] +
+                            g_FC_B_Half[TDir2][ idx_fc_BT2                    + stride_fc_BT2[TDir2] ] +
+                            g_FC_B_Half[TDir2][ idx_fc_BT2 - stride_fc_BT2[d]                        ] +
+                            g_FC_B_Half[TDir2][ idx_fc_BT2 - stride_fc_BT2[d] + stride_fc_BT2[TDir2] ] );
+         B_tot     = SQRT( B_N_mean*B_N_mean + B_T1_mean*B_T1_mean + B_T2_mean*B_T2_mean );
 
-         B_N_mean =         g_FC_B_Half[     d ][ idx_fc_BN                                            ];
-         B_T1_mean = 0.25*( g_FC_B_Half[ TDir1 ][ idx_fc_BT1                                           ] +  // i  , j  , k
-                            g_FC_B_Half[ TDir1 ][ idx_fc_BT1                    + stride_fc_BT1[TDir1] ] +  // i  , j+1, k
-                            g_FC_B_Half[ TDir1 ][ idx_fc_BT1 - stride_fc_BT1[d]                        ] +  // i+1, j  , k 
-                            g_FC_B_Half[ TDir1 ][ idx_fc_BT1 - stride_fc_BT1[d] + stride_fc_BT1[TDir1] ] ); // i+1, j+1, k
-         B_T2_mean = 0.25*( g_FC_B_Half[ TDir2 ][ idx_fc_BT2                                           ] +  // i  , j  , k
-                            g_FC_B_Half[ TDir2 ][ idx_fc_BT2                    + stride_fc_BT2[TDir2] ] +  // i  , j  , k+1
-                            g_FC_B_Half[ TDir2 ][ idx_fc_BT2 - stride_fc_BT2[d]                        ] +  // i+1, j  , k 
-                            g_FC_B_Half[ TDir2 ][ idx_fc_BT2 - stride_fc_BT2[d] + stride_fc_BT2[TDir2] ] ); // i+1, j  , k+1
-
-         B_tot    =  SQRT( B_N_mean*B_N_mean + B_T1_mean*B_T1_mean + B_T2_mean*B_T2_mean );
-   
          //if ( B_tot < small_B && diff_cr_eff_perp != diff_cr_eff_para ) {
             // Error
             // xFlux = 0;
@@ -393,10 +339,8 @@ void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
          B_T1_mean = B_T1_mean / B_tot;
          B_T2_mean = B_T2_mean / B_tot;
 
-         
-         // =================================================================================
-         // Compute slope 
-         // =================================================================================
+
+         // 3. Compute cosmic ray slope
          // ---------------------
          // |         |         |
          // ----al--------ar-----
@@ -406,58 +350,48 @@ void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
          // ----bl--------br-----
          // |         |         |
          // ---------------------
-
          real N_slope, T1_slope, T2_slope;
          real al, bl, ar, br;
-         
-         // cosmic ray difference x
+
+         // normal direction
          N_slope = ( g_PriVar_Half[CRAY][ idx_half + didx_half[d] ] -  g_PriVar_Half[CRAY][ idx_half ] ) / dh_N;
 
-         // cosmic ray difference y
-         al = g_PriVar_Half[CRAY][ idx_half                                   ] -   // i  , j  , k
-              g_PriVar_Half[CRAY][ idx_half                - didx_half[TDir1] ]   ; // i  , j-1, k
-         bl = g_PriVar_Half[CRAY][ idx_half                + didx_half[TDir1] ] -   // i  , j+1, k
-              g_PriVar_Half[CRAY][ idx_half                                   ]   ; // i  , j  , k
-         ar = g_PriVar_Half[CRAY][ idx_half + didx_half[d]                    ] -   // i+1, j  , k
-              g_PriVar_Half[CRAY][ idx_half + didx_half[d] - didx_half[TDir1] ]   ; // i+1, j-1, k
-         br = g_PriVar_Half[CRAY][ idx_half + didx_half[d] + didx_half[TDir1] ] -   // i+1, j+1, k
-              g_PriVar_Half[CRAY][ idx_half + didx_half[d]                    ]   ; // i+1, j  , k
-         
+         // transverse direction 1
+         al = g_PriVar_Half[CRAY][ idx_half                                   ] -
+              g_PriVar_Half[CRAY][ idx_half                - didx_half[TDir1] ]   ;
+         bl = g_PriVar_Half[CRAY][ idx_half                + didx_half[TDir1] ] -
+              g_PriVar_Half[CRAY][ idx_half                                   ]   ;
+         ar = g_PriVar_Half[CRAY][ idx_half + didx_half[d]                    ] -
+              g_PriVar_Half[CRAY][ idx_half + didx_half[d] - didx_half[TDir1] ]   ;
+         br = g_PriVar_Half[CRAY][ idx_half + didx_half[d] + didx_half[TDir1] ] -
+              g_PriVar_Half[CRAY][ idx_half + didx_half[d]                    ]   ;
          T1_slope = ( MC_limiter( MC_limiter(al, bl), MC_limiter(ar, br) ) ) / dh_T1;
 
-         // cosmic ray difference z
-         al = g_PriVar_Half[CRAY][ idx_half                                   ] -   // i  , j, k 
-              g_PriVar_Half[CRAY][ idx_half                - didx_half[TDir2] ]   ; // i  , j, k-1
-         bl = g_PriVar_Half[CRAY][ idx_half                + didx_half[TDir2] ] -   // i  , j, k+1
-              g_PriVar_Half[CRAY][ idx_half                                   ]   ; // i  , j, k
-         ar = g_PriVar_Half[CRAY][ idx_half + didx_half[d]                    ] -   // i+1, j, k
-              g_PriVar_Half[CRAY][ idx_half + didx_half[d] - didx_half[TDir2] ]   ; // i+1, j, k-1
-         br = g_PriVar_Half[CRAY][ idx_half + didx_half[d] + didx_half[TDir2] ] -   // i+1, j, k+1
-              g_PriVar_Half[CRAY][ idx_half + didx_half[d]                    ]   ; // i+1, j, k
-         
+         // transverse direction 2
+         al = g_PriVar_Half[CRAY][ idx_half                                   ] -
+              g_PriVar_Half[CRAY][ idx_half                - didx_half[TDir2] ]   ;
+         bl = g_PriVar_Half[CRAY][ idx_half                + didx_half[TDir2] ] -
+              g_PriVar_Half[CRAY][ idx_half                                   ]   ;
+         ar = g_PriVar_Half[CRAY][ idx_half + didx_half[d]                    ] -
+              g_PriVar_Half[CRAY][ idx_half + didx_half[d] - didx_half[TDir2] ]   ;
+         br = g_PriVar_Half[CRAY][ idx_half + didx_half[d] + didx_half[TDir2] ] -
+              g_PriVar_Half[CRAY][ idx_half + didx_half[d]                    ]   ;
          T2_slope = ( MC_limiter( MC_limiter(al, bl), MC_limiter(ar, br) ) ) / dh_T2;
-         
 
 
-         // =================================================================================
-         // Compute Flux.
-         // =================================================================================
-         // Flux = -(Kbar_para - Kbar_perp)*Bx*(Bx*Xslope + Bybar*Yslopebar + Bzbar*Zslopebar) 
-         //        - Kbar_perp*Xslope
-         //      = Kbar_para * common + Kbar_perp * ( -Xslope - common)
-         // common: -Bx(Bx*Xslope + Bybar*Yslopebar + Bzbar*Zslopebar)
+
+         // 4. Compute Flux
+         real Flux_1Face, Flux_Para, Flux_Perp;
          real common = -B_N_mean * ( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
-
          Flux_Para = diff_cr_eff_para * common;
          Flux_Perp = diff_cr_eff_perp * (-N_slope - common);
-
          Flux_1Face = Flux_Para + Flux_Perp;
-         
-         // total cosmic ray flux = Flux_Perp + Flux_Para
+
+         // 5. Flux add-up
          g_FC_Flux[d][CRAY][idx_flux] += Flux_1Face;
-         // TODO: dual energy (internal energy) update?
          g_FC_Flux[d][ENGY][idx_flux] += Flux_1Face;
-     
+         // TODO: dual energy (internal energy) update?
+
       } // CGPU_LOOP( idx, idx_flux_e[0]*idx_flux_e[1]*idx_flux_e[2] )
    } // for (int d=0; d<3; d++)
 
@@ -465,16 +399,16 @@ void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
      __syncthreads();
 #  endif
 
-} // FUNCTION : CR_DiffuseFlux_FullStep()
+} // FUNCTION : CR_DiffuseFlux_FullStep
 
 
 
 //-----------------------------------------------------------------------------------------
 // Function    : MC_limiter
-// Description : 
+// Description :
 // Note        :
-// Parameter   : a : 
-//               b : 
+// Parameter   : a :
+//               b :
 // Return      :
 // Reference   :
 //-----------------------------------------------------------------------------------------
@@ -488,10 +422,10 @@ real MC_limiter( real a, real b )
 
 //-----------------------------------------------------------------------------------------
 // Function    : minmod
-// Description : 
+// Description :
 // Note        :
-// Parameter   : a : 
-//               b : 
+// Parameter   : a :
+//               b :
 // Return      :
 // Reference   :
 //-----------------------------------------------------------------------------------------
@@ -503,6 +437,6 @@ real minmod( real a, real b )
     if ( a * b <= 0.0 )       return 0.0;
 } // FUNCTION : minmod
 
-#endif // #if ( ( MODEL == HYDRO ) && defined CR_DIFFUSION )
+#endif // #if ( ( MODEL == HYDRO ) && defined COSMIC_RAY && defined MICROPHYSICS && defined CR_DIFFUSION )
 
 #endif // #ifndef __CPU_COSMICRAYDIFFUSE_FLUXES__

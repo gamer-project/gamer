@@ -3,7 +3,7 @@
 
 #include "CUFLU.h"
 
-#if ( ( MODEL == HYDRO ) && defined CR_DIFFUSION )
+#if ( ( MODEL == HYDRO ) && defined COSMIC_RAY && defined MICROPHYSICS && defined CR_DIFFUSION )
 
 //external functions
 #ifdef __CUDACC__
@@ -12,17 +12,22 @@
 
 #else // #ifdef __CUDACC__
 
-void CR_ComputeDiffusivity( /*dens*/ real &diff_cr_para, real &diff_cr_perp, const MicroPhy_t *Mic );
+void CR_ComputeDiffusivity( real &diff_cr_para, real &diff_cr_perp, const MicroPhy_t *Mic );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
 
 //-----------------------------------------------------------------------------------------
 // Function    : Hydro_CosmicRayMaxDiffusivity
-// Description : Compute the max diffusivity of cosmic ray
-// Note        : This is a constant for now. The coefficient should depend on cell fluid.
-// Parameter   :  
-// Return      : The max diffusion coefficient.
+//
+// Description : Compute the maximum diffusion coefficient of cosmic ray
+//
+// Note        :
+//
+// Parameter   : max_diff : Variable to store the maximum diffusion coefficient.
+//               Mic      : Microphysics object
+//
+// Return      :
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
 void CR_MaxDiffusivity( real &max_diff, const MicroPhy_t *Mic )
@@ -33,6 +38,6 @@ void CR_MaxDiffusivity( real &max_diff, const MicroPhy_t *Mic )
 
 } // FUNCTION : CR_MaxDiffusivity
 
-#endif // #if ( ( MODEL == HYDRO ) && defined CR_DIFFUSION )
+#endif // #if ( ( MODEL == HYDRO ) && defined COSMIC_RAY && defined MICROPHYSICS && defined CR_DIFFUSION )
 
 #endif // #ifndef __COMPUTE_COSMICRAYMAXDIFFUSIVITY__
