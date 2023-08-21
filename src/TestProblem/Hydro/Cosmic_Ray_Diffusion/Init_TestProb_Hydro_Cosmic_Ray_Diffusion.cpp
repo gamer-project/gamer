@@ -18,9 +18,9 @@ static double CR_Diffusion_Rho0;        // Background density
 static double CR_Diffusion_PGas0;       // Background gas pressure
 static double CR_Diffusion_E0_CR;       // Amplitude of cosmic ray energy density
 static double CR_Diffusion_BG_CR;       // Background cosmic ray energy density
-static int    CR_Diffusion_Type;        // The test type:
+static int    CR_Diffusion_Type;        // The initial condition type:
                                         // 0: Gaussian distribution ball CR
-                                        // 1: Ring distribution CR
+                                        // 1: Step function ring distribution CR
                                         // 2: Gaussian distribution ring CR
                                         // 3: Gaussian distribution 1D
                                         // 4: CR blast wave
@@ -41,7 +41,7 @@ static int    CR_Diffusion_GZ;          // Include z direction or not [0/1]
 static int    CR_Diffusion_Seed;        // Random seed of magnetic field
 static RandomNumber_t *RNG = NULL;
 // gaussian ball
-static double CR_Diffusion_R02_CR;      // R^2 of the Gaussian distribution
+static double CR_Diffusion_R02_CR;      // Standard deviation square of the Gaussian distribution
 // step function ring
 static double CR_Diffusion_R_In;        // Inner radius
 static double CR_Diffusion_R_Out;       // Outer radius
