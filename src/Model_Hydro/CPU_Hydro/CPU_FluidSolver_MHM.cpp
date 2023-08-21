@@ -338,12 +338,16 @@ void CPU_FluidSolver_MHM(
 #     endif
 #     endif // if ( FLU_SCHEME == MHM_RP )
 
-#     if ( FLU_SCHEME == MHM && defined MHD )
-      // NOTE: The array size of half step is over-estimated, we only need CUBE(N_FC_VAR).
-      //       Since I don't want to change the original MHM_RP full step MHD_ComputeElectric,
-      //       I used the same array size as the half step variables of MHM_RP.
+#     if ( FLU_SCHEME == MHM )
+//    half-step array size is over-estimated as it only needs CUBE(N_FC_VAR)
+//       --> here we use the same array size as the half-step variables of MHM_RP to avoid
+//           changing the MHM_RP full-step MHD_ComputeElectric()
       real (*const g_PriVar_Half_1PG )[ CUBE(FLU_NXT)  ] = g_PriVar_1PG;
+#     ifdef MHD
       real (*const g_EC_Ele_1PG      )[ CUBE(N_EC_ELE) ] = g_EC_Ele[array_idx];
+#     else
+      real (*const g_EC_Ele_1PG      )[ CUBE(N_EC_ELE) ] = NULL;
+#     endif
 #     endif // if ( FLU_SCHEME == MHM && defined MHD )
 
 
@@ -468,17 +472,10 @@ void CPU_FluidSolver_MHM(
 
 
 //          evaluate the face-centered values by data reconstruction
-#           ifdef MHD
             Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_Half_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
                                       g_EC_Ele_1PG, Con2Pri_Yes, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
                                       MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
                                       JeansMinPres, JeansMinPres_Coeff, &EoS );
-#           else
-            Hydro_DataReconstruction( g_Flu_Array_In[P], NULL, g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
-                                      NULL, Con2Pri_Yes, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
-                                      MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
-                                      JeansMinPres, JeansMinPres_Coeff, &EoS );
-#           endif
 
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
 
@@ -502,17 +499,17 @@ void CPU_FluidSolver_MHM(
 //             --> must update B field before Hydro_FullStepUpdate() since the latter requires
 //                 the updated magnetic energy when adopting the dual-energy formalism
 #           ifdef MHD
+
 #           if ( FLU_SCHEME == MHM )
-            MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_Half_1PG, N_FL_ELE, N_FL_FLUX,
-                                 N_HF_VAR, 0, dt, dh, StoreElectric, g_Ele_Array[P],
-                                 CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P], Time,
-                                 UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray );
+            const int OffsetPri = 0;
 #           else
+            const int OffsetPri = LR_GHOST_SIZE;
+#           endif
+
             MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_Half_1PG, N_FL_ELE, N_FL_FLUX,
-                                 N_HF_VAR, LR_GHOST_SIZE, dt, dh, StoreElectric, g_Ele_Array[P],
+                                 N_HF_VAR, OffsetPri, dt, dh, StoreElectric, g_Ele_Array[P],
                                  CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P], Time,
                                  UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray );
-#           endif
 
             MHD_UpdateMagnetic( g_Mag_Array_Out[P][0], g_Mag_Array_Out[P][1], g_Mag_Array_Out[P][2],
                                 g_Mag_Array_In[P], g_EC_Ele_1PG, dt, dh, PS2, N_FL_ELE, FLU_GHOST_SIZE );
