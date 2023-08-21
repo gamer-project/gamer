@@ -7,7 +7,6 @@
 
 // problem-specific global variables
 // =======================================================================================
-static double GAMMA_CR;                 // adiabatic index of cosmic rays
 static double CR_Diffusion_CenterX;
 static double CR_Diffusion_CenterY;
 static double CR_Diffusion_CenterZ;
