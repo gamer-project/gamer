@@ -26,8 +26,6 @@ void CR_ComputeDiffusivity( real &diff_cr_para, real &diff_cr_perp, const MicroP
 //
 // Parameter   : max_diff : Variable to store the maximum diffusion coefficient.
 //               Mic      : Microphysics object
-//
-// Return      :
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
 void CR_MaxDiffusivity( real &max_diff, const MicroPhy_t *Mic )

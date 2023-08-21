@@ -241,6 +241,7 @@ static void CosmicRay_Update( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 //                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //                EoS                : EoS object
+//                Mic                : Microphysics object
 //-------------------------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __global__
@@ -857,23 +858,18 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
       for (int v=0; v<NCOMP_TOTAL; v++)
          out_con[v] = g_ConVar_In[v][idx_in] - dt_dh2*( dflux[0][v] + dflux[1][v] + dflux[2][v] );
 
-//    Cosmic ray half-step update
+//    Cosmic ray half-step adiabatic work down update
 #     ifdef COSMIC_RAY
       const EoS_CRE2CRP_t EoS_CREint2CRPres = EoS->CREint2CRPres_FuncPtr;
       const double *EoS_AuxArray_Flt  = EoS->AuxArrayDevPtr_Flt;
       real div_V[3], Input_1Cell[NCOMP_TOTAL_PLUS_MAG];
       const int idx_fc = idx_in;
 
-      // ==============================
       // 1. store the cosmic ray and calculate the pressure
-      // ==============================
       Input_1Cell[CRAY]  = g_ConVar_In[CRAY][idx_in];
       real pCR_old = EoS_CREint2CRPres( Input_1Cell+NCOMP_FLUID,  EoS_AuxArray_Flt, NULL, NULL );
 
-
-      // ==============================
       // 2. \div V term
-      // ==============================
       // Reference: "Simple Method to Track Pressure Accurately", S. Li, Astronum Proceeding, 2007
       for (int d=0; d<3; d++)
       {
@@ -897,10 +893,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 
       } // for (int d=0; d<3; d++)
 
-
-      // ==============================
       // 3. Update the cosmic ray
-      // ==============================
       out_con[CRAY] = out_con[CRAY] - pCR_old * dt_dh2 * ( div_V[0] + div_V[1] + div_V[2] );
 
 #     endif // # ifdef COSMIC_RAY
@@ -952,8 +945,13 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 #ifdef COSMIC_RAY
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CosmicRay_Update
-// Description :  Evolve the full-step solution of cosmic rays
+//
+// Description :  Update the adiabatic work done term of cosmic ray
+//
 // Note        :
+//
+// Reference   : Yang, H.-Y.~K., Ruszkowski, M., Ricker, P.~M., et al. 2012, apj, 761, 185. doi:10.1088/0004-637X/761/2/185
+//
 // Parameter   :  g_PriVar_Half : Array to store the output primitive variables
 //                                --> Accessed with the stride N_HF_VAR
 //                                --> Although its actually allocated size is FLU_NXT^3 since it points to g_PriVar_1PG[]
@@ -1011,16 +1009,12 @@ void CosmicRay_Update( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
       const int k_fc     = k_out + 1;
       const int idx_fc   = IDX321( i_fc, j_fc, k_fc, N_FC_VAR, N_FC_VAR);
 
-      // ==============================
       // 1. store the cosmic ray and calculate the pressure
-      // ==============================
       Input_Half_1Cell[CRAY] = g_PriVar_Half[CRAY][idx_hf];
       Output_1Cell[CRAY]     = g_Output[CRAY][idx_out];
       real pCR_half = EoS_CREint2CRPres( Input_Half_1Cell+NCOMP_FLUID,  EoS_AuxArray_Flt, NULL, NULL );
 
-      // ==============================
       // 2. \div V term
-      // ==============================
       // Reference: "Simple Method to Track Pressure Accurately", S. Li, Astronum Proceeding, 2007
       for (int d=0; d<3; d++)
       {
@@ -1048,9 +1042,7 @@ void CosmicRay_Update( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
       } // for (int d=0; d<3; d++)
 
 
-      // ==============================
       // 3. Update the cosmic ray
-      // ==============================
       Output_1Cell[CRAY] = Output_1Cell[CRAY] - pCR_half * dt_dh * ( div_V[0] + div_V[1] + div_V[2] );
       g_Output[CRAY][idx_out] = Output_1Cell[CRAY];
 

@@ -47,6 +47,7 @@
 //                Safety      : dt safety factor
 //                MinPres     : Minimum allowed pressure
 //                EoS         : EoS object
+//                Mic         : Microphysics object
 //
 // Return      :  g_dt_Array
 //-----------------------------------------------------------------------------------------
@@ -173,6 +174,7 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
 #     endif // #ifdef __CUDACC__
       g_dt_Array[p] = dhSafety/MaxCFL;
 
+//    The CFL condition determined by the cosmic ray diffusion
 #     ifdef CR_DIFFUSION
       MaxCFL=(real)0.0;
 

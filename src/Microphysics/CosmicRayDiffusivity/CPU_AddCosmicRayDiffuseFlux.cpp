@@ -40,8 +40,6 @@ real minmod(real a, real b);
 //               g_CC_B         : Array storing the cell-centered input B field
 //               dh             : Cell size
 //               Mic            : Microphysics object
-//
-// Return      :
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
 void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
@@ -224,8 +222,6 @@ void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //               NFlux          : Stride for accessing g_FC_Flux
 //               dh             : Cell size
 //               Mic            : Microphysics object
-//
-// Return      :
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
 void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
