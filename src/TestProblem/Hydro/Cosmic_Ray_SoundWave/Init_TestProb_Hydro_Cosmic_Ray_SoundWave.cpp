@@ -44,12 +44,12 @@ void Validate()
 
 #  ifndef COSMIC_RAY
    Aux_Error( ERROR_INFO, "COSMIC_RAY must be enabled !!\n" );
+#  endif // #ifndef COSMIC_RAY
 
 #  if ( defined COSMIC_ARY && EOS != EOS_COSMIC_RAY )
    Aux_Error( ERROR_INFO, "EOS != EOS_COSMIC_RAY when enable COSMIC_RAY!!\n" );
 #  endif
 
-#  endif // #ifndef COSMIC_RAY
 
 // warnings
 
@@ -108,7 +108,7 @@ void SetParameter()
    delete ReadPara;
 
 // (1-2) set the default values
-// force Acoustic_Sign to be +1.0/-1.0 
+// force Acoustic_Sign to be +1.0/-1.0
    if ( CR_Acoustic_Sign >= 0.0 )   CR_Acoustic_Sign = +1.0;
    else                             CR_Acoustic_Sign = -1.0;
 
@@ -181,7 +181,6 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-
    double Dens, MomX, MomY, MomZ, Pres, Eint, Etot, P_cr, CRay;
 #  ifdef COSMIC_RAY
    double cs = SQRT( ( GAMMA * CR_Acoustic_Pres0 + GAMMA_CR * CR_Acoustic_Pres_CR0 ) / CR_Acoustic_Rho0 );
@@ -189,7 +188,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    double cs = SQRT( ( GAMMA * CR_Acoustic_Pres0 ) / CR_Acoustic_Rho0 );
 #  endif
    double delta_cs = CR_Acoustic_Delta / cs;
-   
+
    double wavelength, WaveK, WaveW, r, wave;
    if ( CR_Acoustic_Dir == 0 )
    {
@@ -223,7 +222,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    {
       Aux_Error( ERROR_INFO, "CR_Acoustic_Dir = %d is NOT supported [0/1] !!\n", CR_Acoustic_Dir );
    }
-   
+
 #  ifdef COSMIC_RAY
    double GAMMA_CR_m1_inv = 1.0 / (GAMMA_CR - 1.0);
    P_cr = ( 1.0 + delta_cs * wave * GAMMA_CR ) * CR_Acoustic_Pres_CR0;
@@ -233,7 +232,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // set the output array of passive scaler
    fluid[CRAY] = CRay;
 #  endif
-   
+
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, fluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
 
@@ -271,7 +270,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 
    magnetic[MAGX] = 0.0;
    magnetic[MAGY] = 0.0;
-   magnetic[MAGZ] = 0.0;   
+   magnetic[MAGZ] = 0.0;
 
 } // FUNCTION : SetBFieldIC
 #endif // #ifdef MHD

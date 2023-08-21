@@ -8,40 +8,50 @@ static double RandomNumber(RandomNumber_t *RNG, const double Min, const double M
 
 // problem-specific global variables
 // =======================================================================================
-static double CR_Diffusion_CenterX;
-static double CR_Diffusion_CenterY;
-static double CR_Diffusion_CenterZ;
-static double CR_Diffusion_Vx;
-static double CR_Diffusion_Vy;
-static double CR_Diffusion_Vz;
-static double CR_Diffusion_Rho0;
-static double CR_Diffusion_PGas0;
-static double CR_Diffusion_E0_CR;
-static double CR_Diffusion_BG_CR;
-static int    CR_Diffusion_Type;
-static int    CR_Diffusion_Mag_Type;
-static double CR_Diffusion_MagX;
-static double CR_Diffusion_MagY;
-static double CR_Diffusion_MagZ;
+static double CR_Diffusion_CenterX;     // Center location on x-axis
+static double CR_Diffusion_CenterY;     // Center location on y-axis
+static double CR_Diffusion_CenterZ;     // Center location on z-axis
+static double CR_Diffusion_Vx;          // Background x-velocity
+static double CR_Diffusion_Vy;          // Background y-velocity
+static double CR_Diffusion_Vz;          // Background z-velocity
+static double CR_Diffusion_Rho0;        // Background density
+static double CR_Diffusion_PGas0;       // Background gas pressure
+static double CR_Diffusion_E0_CR;       // Amplitude of cosmic ray energy density
+static double CR_Diffusion_BG_CR;       // Background cosmic ray energy density
+static int    CR_Diffusion_Type;        // The test type:
+                                        // 0: Gaussian distribution ball CR
+                                        // 1: Ring distribution CR
+                                        // 2: Gaussian distribution ring CR
+                                        // 3: Gaussian distribution 1D
+                                        // 4: CR blast wave
+static int    CR_Diffusion_Mag_Type;    // The magnetic field type:
+                                        // 0: Uniform
+                                        // 1: Circular
+                                        // 2: Random within (-1.0,+1.0) (Not divergence free)
+                                        // 3: Radiative (Not divergence free)
+                                        // 4: Suwa+ 2007
+static double CR_Diffusion_MagX;        // Magnitude of x component
+static double CR_Diffusion_MagY;        // Magnitude of y component
+static double CR_Diffusion_MagZ;        // Magnitude of z component
 // simulation dimension
-static int    CR_Diffusion_GX;
-static int    CR_Diffusion_GY;
-static int    CR_Diffusion_GZ;
-// random manetic field
-static int    CR_Diffusion_Seed;
+static int    CR_Diffusion_GX;          // Include x direction or not [0/1]
+static int    CR_Diffusion_GY;          // Include y direction or not [0/1]
+static int    CR_Diffusion_GZ;          // Include z direction or not [0/1]
+// random magnetic field
+static int    CR_Diffusion_Seed;        // Random seed of magnetic field
 static RandomNumber_t *RNG = NULL;
 // gaussian ball
-static double CR_Diffusion_R02_CR;
+static double CR_Diffusion_R02_CR;      // R^2 of the Gaussian distribution
 // step function ring
-static double CR_Diffusion_R_In;
-static double CR_Diffusion_R_Out;
+static double CR_Diffusion_R_In;        // Inner radius
+static double CR_Diffusion_R_Out;       // Outer radius
 // gaussian ring
-static double CR_Diffusion_CenterR;
-static double CR_Diffusion_delR;
-static double CR_Diffusion_delPhi;
+static double CR_Diffusion_CenterR;     // Center radius
+static double CR_Diffusion_delR;        // Standard deviation of the Gaussian distribution on radial direction
+static double CR_Diffusion_delPhi;      // Standard deviation of the Gaussian distribution on azimuthal direction
 // blast wave
-static double CR_Diffusion_R0_CR;
-static double CR_Diffusion_R0_B;
+static double CR_Diffusion_R0_CR;       // CR source radius
+static double CR_Diffusion_R0_B;        // Magnetic filed characteristic length. See Suwa+ 2007.
 // =======================================================================================
 
 
@@ -323,27 +333,27 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
               D3 = z - CR_Diffusion_CenterZ - CR_Diffusion_Vz*Time;
               break;
    } // switch (type)
-   
+
    if ( CR_Diffusion_Type == 0 )
    {
+      Aux_Message( stderr, "WARNING : All the fluid except cosmic ray should be fixed to follow the analytical solution. The adiabatic work done term should be disable also." );
 #     ifdef CR_DIFFUSION
-      if ( CR_Diffusion_Mag_Type != 0)
-      {
+      if ( CR_Diffusion_Mag_Type != 0 )
          Aux_Error( ERROR_INFO, "We only support the uniform magnetic field ( CR_Diffusion_Mag_Type = 0 ) for this test problem.\n" );
-      }
-      
-      if ( dim == 1 ) 
+
+      if ( dim == 1 )
       {
+         // Analytical solution:
          // f(k, t) = 1 + 4 * R_0**2 * k * t
-         // E(x, y) = E_0 * EXP[ -R_0**2 * x**2 / f(k_x, t) ] / SQRT[ f(k_x, t) ] 
+         // E(x, y) = E_0 * EXP[ -R_0**2 * x**2 / f(k_x, t) ] / SQRT[ f(k_x, t) ]
          // Check the Magnetic field to define the time evolution factor
-         if ( magD1 != 0 && magD2 == 0 && magD3 == 0)           fD1 = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PARA * Time;
+         if      ( magD1 != 0 &&  magD2 == 0 && magD3 == 0  )   fD1 = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PARA * Time;
          else if ( magD1 == 0 && (magD2 != 0 || magD3 != 0) )   fD1 = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PERP * Time;
          else     Aux_Error( ERROR_INFO, "This kind of magnetic field is not supported for 1D diffusion case.\n" );
-         
+
          CRay *= EXP( -CR_Diffusion_R02_CR * D1 * D1 / fD1 ) / SQRT(fD1);
       }
-      else if ( dim == 2 ) 
+      else if ( dim == 2 )
       {
          // Check the Magnetic field to define the diffusion coefficient
          if( magD3 != 0 && (magD1 != 0 || magD2 != 0) )   Aux_Error( ERROR_INFO, "This kind of magnetic field is not supported for 2D diffusion case.\n" );
@@ -352,23 +362,21 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
             fD1 = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PERP * Time;
             fD2 = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PERP * Time;
          }
-         else 
+         else
          {
+         // Analytical solution:
          // f(k, t) = 1 + 4 * R_0**2 * k * t
-         // E(x, y) = E_0 * EXP[ -R_0**2 * x**2 / f(k_x, t) ] / SQRT[ f(k_x, t) ] 
-         //               * EXP[ -R_0**2 * y**2 / f(k_y, t) ] / SQRT[ f(k_y, t) ] 
-         // 
          // k_x = k_parallel, k_y = k_perpendicular
-         // 
+         // E(x, y) = E_0 * EXP[ -R_0**2 * x**2 / f(k_x, t) ] / SQRT[ f(k_x, t) ]
+         //               * EXP[ -R_0**2 * y**2 / f(k_y, t) ] / SQRT[ f(k_y, t) ]
          //
+         // We bascially apply a rotation matrix to rotate the magnetic field to (1, 0, 0) direction, so the simulation will be matched the solution above.
          // C = A \cross B, where A and B are the unit vector.
          // sin = C, cos = A \dot B
          // R = [  cos | sin ]
          //     [ -sin | cos ]
          //
          // B = RA, B = (1, 0), A = (B_x, B_y)
-         //
-         // I would like to rotate the magnetic field to (1, 0) direction, so the simulation will be matched the solution above.
             double Mag_len2 = magD1 * magD1 + magD2 * magD2;
             double A[2] = {          magD1, magD2 };
             double B[2] = { SQRT(Mag_len2),   0.0 };
@@ -376,7 +384,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
             double cos  =  A[0] * B[0] / Mag_len2;
             double R[2][2] = { {  cos, sin },
                                { -sin, cos } };
-            
+
             double pos_new[2] = {0.0, 0.0};
             double pos_old[2] = { D1, D2 };
             for ( int i = 0; i < 2; i++ )   for (int j = 0; j < 2; j++ )   pos_new[i] += R[i][j] * pos_old[j]; // new coordinate move to origin
@@ -388,27 +396,25 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          CRay *= EXP( -CR_Diffusion_R02_CR * D1 * D1 / fD1 ) / SQRT(fD1);
          CRay *= EXP( -CR_Diffusion_R02_CR * D2 * D2 / fD2 ) / SQRT(fD2);
       }
-      else if ( dim == 3 ) 
+      else if ( dim == 3 )
       {
+         // Analytical solution:
          // f(k, t) = 1 + 4 * R_0**2 * k * t
-         // E(x, y, z) = E_0 * EXP[ -R_0**2 * x**2 / f(k_x, t) ] / SQRT[ f(k_x, t) ] 
-         //                  * EXP[ -R_0**2 * y**2 / f(k_y, t) ] / SQRT[ f(k_y, t) ] 
-         //                  * EXP[ -R_0**2 * z**2 / f(k_z, t) ] / SQRT[ f(k_z, t) ]
-         // 
          // k_x = k_parallel, k_y = k_z = k_perpendicular
-         // 
+         // E(x, y, z) = E_0 * EXP[ -R_0**2 * x**2 / f(k_x, t) ] / SQRT[ f(k_x, t) ]
+         //                  * EXP[ -R_0**2 * y**2 / f(k_y, t) ] / SQRT[ f(k_y, t) ]
+         //                  * EXP[ -R_0**2 * z**2 / f(k_z, t) ] / SQRT[ f(k_z, t) ]
          //
+         // We bascially apply a rotation matrix to rotate the magnetic field to (1, 0, 0) direction, so the simulation will be matched the solution above.
          // C = A \cross B, where A and B are the unit vector.
-         // sin = abs(C)??, cos = A \dot B
+         // sin = abs(C), cos = A \dot B
          // R = I + v + v**2 / (1+cos), **NOTICE**: this would be invaliad when cos = -1.
          //     [    1 - (C_2**2 + C_3**2) / (1+cos) | -C_3 +         (C_1*C_2) / (1+cos) |  C_2 +         (C_1*C_3) / (1+cos) ]
          // R = [  C_3 +         (C_1*C_2) / (1+cos) | 1    - (C_3**2 + C_1**2) / (1+cos) | -C_1 +         (C_2*C_3) / (1+cos) ]
          //     [ -C_2 +         (C_1*C_3) / (1+cos) |  C_1 +         (C_2*C_3) / (1+cos) |    1 - (C_1**2 + C_2**2) / (1+cos) ]
          //
          // B = RA, B = (1, 0, 0), A = (B_x, B_y, B_z)
-         //
-         // I would like to rotate the magnetic field to (1, 0, 0) direction, so the simulation will be matched the solution above.
-         
+
          double Mag_len2 = magD1*magD1 + magD2*magD2 + magD3*magD3;
          double A[3] = {          magD1, magD2, magD3 };
          double B[3] = { SQRT(Mag_len2),   0.0,   0.0 };
@@ -417,11 +423,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          double R[3][3] = { {   1.0 - (C[1]*C[1] + C[2]*C[2]) / cosP1, -C[2] +             (C[0]*C[1]) / cosP1,  C[1] +             (C[0]*C[2]) / cosP1 },
                             {  C[2] +             (C[0]*C[1]) / cosP1,   1.0 - (C[2]*C[2] + C[0]*C[0]) / cosP1, -C[0] +             (C[1]*C[2]) / cosP1 },
                             { -C[1] +             (C[0]*C[2]) / cosP1,  C[0] +             (C[1]*C[2]) / cosP1,   1.0 - (C[0]*C[0] + C[1]*C[1]) / cosP1 } };
-         
+
          double pos_new[3] = {0.0, 0.0, 0.0};
          double pos_old[3] = { D1,  D2,  D3};
          for ( int i = 0; i < 3; i++ )   for (int j = 0; j < 3; j++ )   pos_new[i] += R[i][j] * pos_old[j]; // new coordinate move to origin
-         
+
          double x2 = SQR( pos_new[0] );
          double fx = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PARA * Time;
          CRay *= EXP( -CR_Diffusion_R02_CR * x2 / fx ) / SQRT(fx);
@@ -431,7 +437,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          double z2 = SQR( pos_new[2] );
          double fz = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PERP * Time;
          CRay *= EXP( -CR_Diffusion_R02_CR * z2 / fz ) / SQRT(fz);
-      } 
+      }
       else
       {
          Aux_Error( ERROR_INFO, "At least one of the {CR_Diffusion_GX, CR_Diffusion_GY, CR_Diffusion_GZ} should not be zero.\n" );
@@ -440,20 +446,21 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    }
    else if ( CR_Diffusion_Type == 1 )
    {
+      Aux_Message( stderr, "WARNING : All the fluid except cosmic ray should be fixed to follow the analytical solution. The adiabatic work done term should be disable also." );
+      Aux_Message( stderr, "WARNING : The analytical solution is only worked for the short time evolution." );
 #     ifdef CR_DIFFUSION
       if ( dim != 2 )   Aux_Error( ERROR_INFO, "Only one of the {CR_Diffusion_GX, CR_Diffusion_GY, CR_Diffusion_GZ} can be zero.\n" );
       const double r   = SQRT( SQR(D1) + SQR(D2) );
       const double phi = ATAN2( D2, D1 );
       const double D   = SQRT( 4. * Time * CR_DIFF_PARA );
-      // TODO: take the note that the analytical solution can only work for short time evolution.
 
       if ( Time == 0.0 )
       {
          CRay = (r > CR_Diffusion_R_In && r < CR_Diffusion_R_Out && FABS(phi) < M_PI/12.) ? 2.0 : 0.0;
-      } 
+      }
       else
       {
-         if (r > CR_Diffusion_R_In && r < CR_Diffusion_R_Out && FABS(phi) < M_PI/12.) { 
+         if (r > CR_Diffusion_R_In && r < CR_Diffusion_R_Out && FABS(phi) < M_PI/12.) {
             CRay = erfc( (phi - M_PI/12.) * r / D ) + erfc( (phi + M_PI/12.) * r / D );
          } else {
             CRay = 0.0;
@@ -463,8 +470,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    }
    else if ( CR_Diffusion_Type == 2 )
    {
+      Aux_Message( stderr, "WARNING : All the fluid except cosmic ray should be fixed to follow the analytical solution. The adiabatic work done term should be disable also." );
 #     ifdef CR_DIFFUSION
-      if ( dim != 2 )   Aux_Error( ERROR_INFO, "Only one of the {CR_Diffusion_GX, CR_Diffusion_GY, CR_Diffusion_GZ} can be zero.\n" );
+      if ( dim != 2 )   Aux_Error( ERROR_INFO, "This is 2-D test type. Only one of the CR_Diffusion_G{X,Y,Z} can be zero.\n" );
       const double r   = SQRT( SQR(D1) + SQR(D2) );
       const double phi = ATAN2( D2, D1 );
       const double del_r2   = SQR(CR_Diffusion_delR);
@@ -477,8 +485,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    }
    else if ( CR_Diffusion_Type == 3 )
    {
+      Aux_Message( stderr, "WARNING : All the fluid except cosmic ray should be fixed to follow the analytical solution. The adiabatic work done term should be disable also." );
 #     ifdef CR_DIFFUSION
-      if ( type == 0 )   Aux_Error( ERROR_INFO, "At least one of the {CR_Diffusion_GX, CR_Diffusion_GY, CR_Diffusion_GZ} should not be zero.\n" );
+      if ( type == 0 )   Aux_Error( ERROR_INFO, "At least one of the CR_Diffusion_G{X,Y,Z} should not be zero.\n" );
       double r;
       switch (type)
       {
@@ -493,7 +502,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          // 3D simulation
          case 7: r = D1 + D2 + D3;   break;
       } // switch (type)
-      
+
       const double fr = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PARA * Time;
       CRay *= EXP( -CR_Diffusion_R02_CR * r * r / fr ) / SQRT(fr);
 #     endif
@@ -507,7 +516,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    {
       Aux_Error( ERROR_INFO, "CR_Diffusion_Type = %d is NOT supported [0/1/2/3/4] !!\n", CR_Diffusion_Type );
    } // if ( CR_Diffusion_Type )
-  
+
    CRay = CRay + CR_Diffusion_BG_CR;
 
 #ifdef COSMIC_RAY
@@ -517,7 +526,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // set the output array of passive scaler
    fluid[CRAY] = CRay;
 #endif
-   
+
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, fluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
 
@@ -573,29 +582,32 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
               D3 = (z - CR_Diffusion_CenterZ) * _one;
               break;
    } // switch (type)
-   
+
    if ( CR_Diffusion_Mag_Type == 0 )
    {
       magnetic[MAGX] = CR_Diffusion_MagX;
       magnetic[MAGY] = CR_Diffusion_MagY;
-      magnetic[MAGZ] = CR_Diffusion_MagZ;   
+      magnetic[MAGZ] = CR_Diffusion_MagZ;
    }
    else if ( CR_Diffusion_Mag_Type == 1 )
    {
-      // B = 1.e-10 * ( -y/r, x/r, 0 )
+      Aux_Message( stderr, "WARNING : CR_Diffusion_MagY and CR_Diffusion_MagZ is useless in this type of magnetic field." );
       const double r = SQRT( SQR(D1) + SQR(D2) + SQR(D3) );
       magnetic[MAGX] = (D1 != 0.0) ? CR_Diffusion_MagX * (D2+D3)/r : 0.0;
       magnetic[MAGY] = (D2 != 0.0) ? CR_Diffusion_MagX * (D1+D3)/r : 0.0;
-      magnetic[MAGZ] = (D3 != 0.0) ? CR_Diffusion_MagX * (D1+D2)/r : 0.0;   
+      magnetic[MAGZ] = (D3 != 0.0) ? CR_Diffusion_MagX * (D1+D2)/r : 0.0;
    }
    else if ( CR_Diffusion_Mag_Type == 2 )
    {
+      Aux_Message( stderr, "WARNING : This type of magnetic field is not difergence free." );
       magnetic[MAGX] = RandomNumber(RNG, -1.0, +1.0);
       magnetic[MAGY] = RandomNumber(RNG, -1.0, +1.0);
       magnetic[MAGZ] = RandomNumber(RNG, -1.0, +1.0);
    }
    else if ( CR_Diffusion_Mag_Type == 3 )
    {
+      Aux_Message( stderr, "WARNING : CR_Diffusion_MagY and CR_Diffusion_MagZ is useless in this type of magnetic field." );
+      Aux_Message( stderr, "WARNING : This type of magnetic field is not difergence free." );
       const double r = SQRT( SQR(D1) + SQR(D2) + SQR(D3) );
       magnetic[MAGX] = CR_Diffusion_MagX * D1 / r;
       magnetic[MAGY] = CR_Diffusion_MagX * D2 / r;
@@ -603,13 +615,16 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
    }
    else if ( CR_Diffusion_Mag_Type == 4 )
    {
+     // Reference: Suwa+ 2007, PASJ, 59, 771
+     // A_phi = 0.5 * B0 * ( R0^3 / (r^3 + R0^3) ) * r * sin(theta), A_r = A_theta = 0
+      Aux_Message( stderr, "WARNING : CR_Diffusion_MagY and CR_Diffusion_MagZ is useless in this type of magnetic field." );
       const double pos[3] = { x-CR_Diffusion_CenterX, y-CR_Diffusion_CenterY, z-CR_Diffusion_CenterZ };
       const double r = SQRT( SQR(pos[0]) + SQR(pos[1]) + SQR(pos[2]) );
       const double _r0_cub = 1. / CUBE(CR_Diffusion_R0_B);
       const double _factor = 1. / SQR( 1. + CUBE(r) * _r0_cub );
       magnetic[MAGX] =  1.5 * CR_Diffusion_MagX * pos[0] * pos[2] * r * _r0_cub * _factor;
       magnetic[MAGY] =  1.5 * CR_Diffusion_MagX * pos[1] * pos[2] * r * _r0_cub * _factor;
-      magnetic[MAGZ] = SQRT(_factor) 
+      magnetic[MAGZ] =  SQRT(_factor)
                        -1.5 * CR_Diffusion_MagX * (pos[0]*pos[0] + pos[1]*pos[1]) * r * _r0_cub * _factor;
    }
    else
@@ -636,9 +651,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 void OutputError()
 {
    const char Prefix[100]     = "CosmicRay_Diffusion";
-   int dim  = CR_Diffusion_GX + CR_Diffusion_GY + CR_Diffusion_GZ;
    int type = CR_Diffusion_GX + 2 * CR_Diffusion_GY + 4 * CR_Diffusion_GZ;
-   double magD1, magD2, magD3, D1, D2, D3, fD1, fD2, fD3;
    OptOutputPart_t Part;
    switch (type)
    {

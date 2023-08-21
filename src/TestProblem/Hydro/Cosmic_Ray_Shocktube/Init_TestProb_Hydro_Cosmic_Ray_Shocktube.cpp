@@ -40,12 +40,12 @@ void Validate()
 
 #  ifndef COSMIC_RAY
    Aux_Error( ERROR_INFO, "COSMIC_RAY must be enabled !!\n" );
+#  endif // #ifndef COSMIC_RAY
 
 #  if ( EOS != EOS_COSMIC_RAY )
    Aux_Error( ERROR_INFO, "EOS != EOS_COSMIC_RAY when enable COSMIC_RAY!!\n" );
 #  endif
 
-#  endif // #ifndef COSMIC_RAY
 
 // warnings
 
@@ -96,7 +96,7 @@ void SetParameter()
    ReadPara->Add( "CR_Shocktube_Pres_L",   &CR_Shocktube_Pres_L,       0.0,           0.0,              NoMax_double);
    ReadPara->Add( "CR_Shocktube_PresCR_R", &CR_Shocktube_PresCR_R,     0.0,           0.0,              NoMax_double);
    ReadPara->Add( "CR_Shocktube_PresCR_L", &CR_Shocktube_PresCR_L,     0.0,           0.0,              NoMax_double);
-   ReadPara->Add( "CR_Shocktube_Dir",      &CR_Shocktube_Dir,             0,             0,                NoMax_int);
+   ReadPara->Add( "CR_Shocktube_Dir",      &CR_Shocktube_Dir,            0,             0,                 NoMax_int);
 
    ReadPara->Read( FileName );
 
@@ -172,10 +172,8 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-
-// HYDRO example
    double Dens, MomX, MomY, MomZ, Pres, Eint, Etot, P_cr, CRay;
-   
+
    if ( CR_Shocktube_Dir == 0 )
    {
       if (x < 0.5)
@@ -205,7 +203,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    }
    else if ( CR_Shocktube_Dir == 1 )
    {
-      
+
       Aux_Error( ERROR_INFO, "CR_Shocktube_Dir = %d is NOT supported [0] !!\n", CR_Shocktube_Dir );
    }
    else
@@ -221,7 +219,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // set the output array of passive scaler
    fluid[CRAY] = CRay;
 #endif
-   
+
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, fluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table);
    Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
 
