@@ -875,6 +875,9 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_LOHNER_PRES           %d\n",      OPT__FLAG_LOHNER_PRES     );
       fprintf( Note, "OPT__FLAG_LOHNER_TEMP           %d\n",      OPT__FLAG_LOHNER_TEMP     );
       fprintf( Note, "OPT__FLAG_LOHNER_ENTR           %d\n",      OPT__FLAG_LOHNER_ENTR     );
+      #ifdef COSMIC_RAY
+      fprintf( Note, "OPT__FLAG_LOHNER_CRAY           %d\n",      OPT__FLAG_LOHNER_CRAY     );
+      #endif
 #     endif
       fprintf( Note, "OPT__FLAG_LOHNER_FORM           %s\n",      (OPT__FLAG_LOHNER_FORM==LOHNER_FLASH1   ) ? "LOHNER_FLASH1"    :
                                                                   (OPT__FLAG_LOHNER_FORM==LOHNER_FLASH2   ) ? "LOHNER_FLASH2"    :
@@ -888,6 +891,9 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_NPAR_PATCH            %d\n",      OPT__FLAG_NPAR_PATCH      );
       fprintf( Note, "OPT__FLAG_NPAR_CELL             %d\n",      OPT__FLAG_NPAR_CELL       );
       fprintf( Note, "OPT__FLAG_PAR_MASS_CELL         %d\n",      OPT__FLAG_PAR_MASS_CELL   );
+#     endif
+#     ifdef COSMIC_RAY
+      fprintf( Note, "OPT__FLAG_CRAY                  %d\n",      OPT__FLAG_CRAY            );
 #     endif
       fprintf( Note, "OPT__NO_FLAG_NEAR_BOUNDARY      %d\n",      OPT__NO_FLAG_NEAR_BOUNDARY);
       fprintf( Note, "OPT__PATCH_COUNT                %d\n",      OPT__PATCH_COUNT          );
@@ -997,8 +1003,6 @@ void Aux_TakeNote()
       fprintf( Note, "Parameters of Cosmic Ray\n" );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "GAMMA_CR                        %13.7e\n",           GAMMA_CR                          );
-      fprintf( Note, "OPT__FLAG_CRAY                  %d\n",               OPT__FLAG_CRAY                    );
-      fprintf( Note, "OPT__FLAG_LOHNER_CRAY           %d\n",               OPT__FLAG_LOHNER_CRAY             );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif // #ifdef COSMIC_RAY
@@ -1563,7 +1567,11 @@ void Aux_TakeNote()
 #     endif
 
 #     if   ( MODEL == HYDRO )
-      if ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR )
+      if ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR
+      #ifdef COSMIC_RAY
+           || OPT__FLAG_LOHNER_CRAY
+      #endif
+         )
 #     elif ( MODEL == ELBDM )
       if ( OPT__FLAG_LOHNER_DENS )
 #     endif
