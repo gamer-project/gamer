@@ -82,7 +82,6 @@ void Init_TestProb()
       case TESTPROB_HYDRO_COSMIC_RAY_SOUNDWAVE :         Init_TestProb_Hydro_Cosmic_Ray_SoundWave();        break;
       case TESTPROB_HYDRO_COSMIC_RAY_SHOCKTUBE :         Init_TestProb_Hydro_Cosmic_Ray_Shocktube();        break;
       case TESTPROB_HYDRO_COSMIC_RAY_DIFFUSION :         Init_TestProb_Hydro_Cosmic_Ray_Diffusion();        break;
-      case TESTPROB_HYDRO_COSMIC_RAY_AMR :               Init_TestProb_Hydro_Cosmic_Ray_AMR();              break;
 
       case TESTPROB_ELBDM_EXTPOT :                       Init_TestProb_ELBDM_ExtPot();                      break;
 

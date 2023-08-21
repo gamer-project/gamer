@@ -56,7 +56,6 @@ const TestProbID_t
    TESTPROB_HYDRO_COSMIC_RAY_SOUNDWAVE         =   20,
    TESTPROB_HYDRO_COSMIC_RAY_SHOCKTUBE         =   21,
    TESTPROB_HYDRO_COSMIC_RAY_DIFFUSION         =   23,
-   TESTPROB_HYDRO_COSMIC_RAY_AMR               =   30,
    TESTPROB_HYDRO_BARRED_POT                   =   51,
    TESTPROB_HYDRO_CDM_LSS                      =  100,
    TESTPROB_HYDRO_ZELDOVICH                    =  101,
