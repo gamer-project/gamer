@@ -983,7 +983,7 @@ void Aux_Check_Parameter()
 #  endif
 
 #  if ( FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != MHM  &&  FLU_SCHEME != CTU )
-#     error : ERROR : unsupported MHD scheme in the makefile (MHM_RP/CTU) !!
+#     error : ERROR : unsupported MHD scheme in the makefile (MHM_RP/MHM/CTU) !!
 #  endif
 
 #  if ( HLLE_WAVESPEED == HLL_WAVESPEED_PVRS )
