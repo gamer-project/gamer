@@ -28,7 +28,6 @@ void Init_TestProb_Hydro_Zeldovich();
 void Init_TestProb_Hydro_EnergyPowerSpectrum();
 void Init_TestProb_Hydro_Cosmic_Ray_SoundWave();
 void Init_TestProb_Hydro_Cosmic_Ray_Shocktube();
-void Init_TestProb_Hydro_Cosmic_Ray_Advection();
 void Init_TestProb_Hydro_Cosmic_Ray_Diffusion();
 void Init_TestProb_Hydro_Cosmic_Ray_AMR();
 
@@ -82,7 +81,6 @@ void Init_TestProb()
       case TESTPROB_HYDRO_ENERGY_POWER_SPECTRUM :        Init_TestProb_Hydro_EnergyPowerSpectrum();         break;
       case TESTPROB_HYDRO_COSMIC_RAY_SOUNDWAVE :         Init_TestProb_Hydro_Cosmic_Ray_SoundWave();        break;
       case TESTPROB_HYDRO_COSMIC_RAY_SHOCKTUBE :         Init_TestProb_Hydro_Cosmic_Ray_Shocktube();        break;
-      case TESTPROB_HYDRO_COSMIC_RAY_ADVECTION :         Init_TestProb_Hydro_Cosmic_Ray_Advection();        break;
       case TESTPROB_HYDRO_COSMIC_RAY_DIFFUSION :         Init_TestProb_Hydro_Cosmic_Ray_Diffusion();        break;
       case TESTPROB_HYDRO_COSMIC_RAY_AMR :               Init_TestProb_Hydro_Cosmic_Ray_AMR();              break;
 
