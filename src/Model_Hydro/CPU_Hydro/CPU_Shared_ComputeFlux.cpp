@@ -229,10 +229,6 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
             ConVar_L[v] = g_FC_Var[faceR][v][ idx_fc            ];
             ConVar_R[v] = g_FC_Var[faceL][v][ idx_fc+didx_fc[d] ];
          }
-#        if ( FLU_SCHEME == MHM && defined MHD )
-         ConVar_L[MAG_OFFSET+d] = (real)0.5 * ( g_FC_Var[faceR][MAG_OFFSET+d][ idx_fc ] + g_FC_Var[faceL][MAG_OFFSET+d][ idx_fc+didx_fc[d] ] );
-         ConVar_R[MAG_OFFSET+d] = ConVar_L[MAG_OFFSET+d];
-#        endif
 
 
 //       1. correct the half-step velocity by gravity
