@@ -878,7 +878,7 @@ void MHD_UpdateMagnetic_Half(       real fc[][NCOMP_LR],
                         ( g_EC_Ele[TDir2][ idx_E + didx_E[TDir1] + didx_E[d] ] - g_EC_Ele[TDir2][ idx_E + didx_E[d] ] ) * dt_dh2 ;
    } // for ( int d=0; d<3; d++)
 
-// 2. Update the magnetic field
+// 2. update the magnetic field
    for (int d=0; d<3; d++)
    {
       const int faceL = d*2;
@@ -891,6 +891,7 @@ void MHD_UpdateMagnetic_Half(       real fc[][NCOMP_LR],
       fc[faceR][MAG_OFFSET+d] += B_source[fR][d];
 
 //    2-b. update the transverse magnetic field
+//         --> the source term for the transverse component should take the average on the transverse direction
       const real B_source_TDir1 = (real)0.5 * ( B_source[fL][TDir1] + B_source[fR][TDir1] );
       const real B_source_TDir2 = (real)0.5 * ( B_source[fL][TDir2] + B_source[fR][TDir2] );
       fc[faceL][MAG_OFFSET+TDir1] += B_source_TDir1;
