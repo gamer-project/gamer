@@ -879,6 +879,7 @@ void MHD_UpdateMagnetic_Half(       real fc[][NCOMP_LR],
    } // for ( int d=0; d<3; d++)
 
 // 2. update the magnetic field
+//    --> the face-centered normal B field is updated by the edge-centered EMF defined at the boundaries of the target face
    for (int d=0; d<3; d++)
    {
       const int faceL = d*2;
