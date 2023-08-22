@@ -17,7 +17,6 @@ void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
                               , const MicroPhy_t Mic
                               #endif
                               );
-                                                                                                                                                      );
 #ifdef GRAVITY
 __global__
 void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ CUBE(GRA_NXT) ],
