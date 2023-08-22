@@ -325,7 +325,7 @@ def load_arguments():
                          depend={"model":"HYDRO"},
                          constraint={ "RTVD":{"unsplit_gravity":False, "passive":0, "dual":NONE_STR, "eos":"GAMMA"},
                                       "CTU":{"eos":"GAMMA"} },
-                         help="The hydrodynamic/MHD integrator. MHD only supports MHM_RP and CTU.\n"
+                         help="The hydrodynamic/MHD integrator. MHD only supports MHM, MHM_RP and CTU.\n"
                        )
 
     parser.add_argument( "--slope", type=str, metavar="TYPE", gamer_name="LR_SCHEME",
