@@ -125,6 +125,7 @@
 #   define N_EC_ELE              ( N_FC_FLUX - 1 )
 #  else
 #   define N_EC_ELE              0
+#   define N_HF_ELE              0
 #  endif
 
 #endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )

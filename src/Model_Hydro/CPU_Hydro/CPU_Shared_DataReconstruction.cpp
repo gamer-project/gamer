@@ -43,7 +43,7 @@ void MHD_UpdateMagnetic_Half(       real fc[][NCOMP_LR],
                               const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                               const real dt, const real dh,
                               const int idx_i, const int idx_j, const int idx_k,
-                              const int NGhost, const int NEle );
+                              const int NEle );
 #endif // #ifdef MHD
 #endif // #if ( FLU_SCHEME == MHM )
 
@@ -325,7 +325,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
    } // if ( Con2Pri )
 
 
-// Find the electric field for MHM
+// find the electric field for MHM
 #  if ( FLU_SCHEME == MHM && defined MHD )
    MHD_ComputeElectric_Half( g_EC_Ele, g_ConVar, g_FC_B, N_HF_ELE, NIn, NGhost );
 #  endif
@@ -663,8 +663,8 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 
 #  if ( FLU_SCHEME == MHM && defined MHD )
-// 9. Store the half-step primitive variables for MHM+MHD
-// This function must be called after the CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) ) loop since this function will update g_PriVar[].
+// 9. store the half-step primitive variables for MHM+MHD
+// this function must be called after the CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) ) loop since this function will update g_PriVar[].
    Hydro_ConFC2PriCC_MHM( g_PriVar, g_FC_Var, MinDens, MinPres, MinEint, FracPassive, NFrac, FracIdx,
                           JeansMinPres, JeansMinPres_Coeff, EoS );
 
@@ -894,7 +894,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #  endif
 
 
-// Find the electric field for MHM
+// find the electric field for MHM
 #  if ( FLU_SCHEME == MHM && defined MHD )
    MHD_ComputeElectric_Half( g_EC_Ele, g_ConVar, g_FC_B, N_HF_ELE, NIn, NGhost );
 #  endif
@@ -1969,8 +1969,8 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
    }
 
 #  ifdef MHD
-// Update the magnetic field
-   MHD_UpdateMagnetic_Half( fc, g_EC_Ele, dt, dh, cc_i, cc_j, cc_k, NGhost, NEle );
+// update the magnetic field
+   MHD_UpdateMagnetic_Half( fc, g_EC_Ele, dt, dh, cc_i-NGhost, cc_j-NGhost, cc_k-NGhost, NEle );
 #  endif
 
 // check the negative density and energy
