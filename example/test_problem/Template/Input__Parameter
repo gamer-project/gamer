@@ -200,6 +200,17 @@ FB_SNE                        0           # supernova explosion feedback [0]
 FB_USER                       0           # user-defined feedback [0]
 
 
+# cosmic ray (COSMIC_RAY only)
+GAMMA_CR                      1.333333333 # adiabatic index of the cosmic rays [4.0/3.0] ##EOS_COSMIC_RAY ONLY##
+
+
+# microphysics (MICROPHYSICS only)
+# --> cosmic rays (CR_DIFFUSION only)
+CR_DIFF_PARA                  0.05        # parallel      diffusion coefficient of cosmic rays
+CR_DIFF_PERP                  0.00        # perpendicular diffusion coefficient of cosmic rays
+DT_DIFFUSION                  0.3         # dt criterion: fluid solver CFL factor of diffusion
+
+
 # fluid solver in HYDRO (MODEL==HYDRO only)
 GAMMA                         1.666666667 # ratio of specific heats (i.e., adiabatic index) [5.0/3.0] ##EOS_GAMMA ONLY##
 MOLECULAR_WEIGHT              0.6         # mean molecular weight [0.6]
