@@ -1451,11 +1451,11 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    KeyInfo.Par_NAttStored       = PAR_NATT_STORED;
 #  endif
 #  ifdef MICROPHYSICS
-   #ifdef CR_DIFFUSION
+#  ifdef CR_DIFFUSION
    KeyInfo.CR_Diffusion         = 1;
-   #else
+#  else
    KeyInfo.CR_Diffusion         = 0;
-   #endif
+#  endif
 #  endif
 #  if ( MODEL == HYDRO )
 #  ifdef MHD
@@ -1774,11 +1774,11 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  endif // #ifdef PARTICLE
 
 #  ifdef MICROPHYSICS
-   #ifdef CR_DIFFUSION
+#  ifdef CR_DIFFUSION
    Makefile.CR_Diffusion           = 1;
-   #else
+#  else
    Makefile.CR_Diffusion           = 0;
-   #endif
+#  endif
 #  endif // #ifdef MICROPHYSICS
 
 
@@ -2168,6 +2168,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Flag_LohnerPres    = OPT__FLAG_LOHNER_PRES;
    InputPara.Opt__Flag_LohnerTemp    = OPT__FLAG_LOHNER_TEMP;
    InputPara.Opt__Flag_LohnerEntr    = OPT__FLAG_LOHNER_ENTR;
+#  ifdef COSMIC_RAY
+   InputPara.Opt__Flag_LohnerCRay    = OPT__FLAG_LOHNER_CRAY;
+#  endif
 #  endif
    InputPara.Opt__Flag_LohnerForm    = OPT__FLAG_LOHNER_FORM;
    InputPara.Opt__Flag_User          = OPT__FLAG_USER;
@@ -2355,11 +2358,11 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 
 // microphysics
 #  ifdef MICROPHYSICS
-   #ifdef CR_DIFFUSION
+#  ifdef CR_DIFFUSION
    InputPara.CR_Diffusion_ParaCoeff     = CR_DIFF_PARA;
    InputPara.CR_Diffusion_PerpCoeff     = CR_DIFF_PERP;
    InputPara.CR_Diffusion_Dt            = DT_DIFFUSION;
-   #endif
+#  endif
 #  endif
 
 // initialization
@@ -3094,6 +3097,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerPres",    HOFFSET(InputPara_t,Opt__Flag_LohnerPres   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerTemp",    HOFFSET(InputPara_t,Opt__Flag_LohnerTemp   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerEntr",    HOFFSET(InputPara_t,Opt__Flag_LohnerEntr   ), H5T_NATIVE_INT     );
+#  ifdef COSMIC_RAY
+   H5Tinsert( H5_TypeID, "Opt__Flag_LohnerCRay",    HOFFSET(InputPara_t,Opt__Flag_LohnerCRay   ), H5T_NATIVE_INT     );
+#  endif
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerForm",    HOFFSET(InputPara_t,Opt__Flag_LohnerForm   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_User",          HOFFSET(InputPara_t,Opt__Flag_User         ), H5T_NATIVE_INT     );
@@ -3103,9 +3109,6 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Flag_NParPatch",     HOFFSET(InputPara_t,Opt__Flag_NParPatch    ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_NParCell",      HOFFSET(InputPara_t,Opt__Flag_NParCell     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_ParMassCell",   HOFFSET(InputPara_t,Opt__Flag_ParMassCell  ), H5T_NATIVE_INT     );
-#  endif
-#  ifdef COSMIC_RAY
-   H5Tinsert( H5_TypeID, "Opt__Flag_LohnerCRay",    HOFFSET(InputPara_t,Opt__Flag_LohnerCRay   ), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__NoFlagNearBoundary", HOFFSET(InputPara_t,Opt__NoFlagNearBoundary), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__PatchCount",         HOFFSET(InputPara_t,Opt__PatchCount        ), H5T_NATIVE_INT     );
@@ -3291,11 +3294,11 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 
 // microphysics
 #  ifdef MICROPHYSICS
-   #ifdef CR_DIFFUSION
+#  ifdef CR_DIFFUSION
    H5Tinsert( H5_TypeID, "CR_Diffusion_ParaCoeff", HOFFSET(InputPara_t,CR_Diffusion_ParaCoeff ), H5T_NATIVE_DOUBLE            );
    H5Tinsert( H5_TypeID, "CR_Diffusion_PerpCoeff", HOFFSET(InputPara_t,CR_Diffusion_PerpCoeff ), H5T_NATIVE_DOUBLE            );
    H5Tinsert( H5_TypeID, "CR_Diffusion_Dt",        HOFFSET(InputPara_t,CR_Diffusion_Dt        ), H5T_NATIVE_DOUBLE            );
-   #endif
+#  endif
 #  endif
 
 // initialization
