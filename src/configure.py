@@ -354,7 +354,7 @@ def load_arguments():
                          depend={"model":"HYDRO"},
                          constraint={ True:{"flu_scheme":["MHM", "MHM_RP", "CTU"], "flux":["ROE", "HLLE", "HLLD"]},
                                      False:{"flux":["EXACT", "ROE", "HLLE", "HLLC"]} },
-                         help="The hydrodynamic/MHD integrator. MHD does not support RTVD.\n"
+                         help="Magnetohydrodynamics.\n"
                        )
 
     parser.add_argument( "--cosmic_ray", type=str2bool, metavar="BOOLEAN", gamer_name="COSMIC_RAY",
