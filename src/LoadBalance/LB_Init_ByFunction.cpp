@@ -29,6 +29,7 @@ void LB_Init_ByFunction()
    const bool   Redistribute_Yes        = true;
    const bool   SendGridData_Yes        = true;
    const bool   ResetLB_Yes             = true;
+   const bool   SortRealPatch_No        = false;
    const bool   AllocData_Yes           = true;
 #  ifdef PARTICLE
    const double Par_Weight              = amr->LB->Par_Weight;
@@ -61,7 +62,7 @@ void LB_Init_ByFunction()
       Init_ByFunction_AssignData( lv );
 
 //    load balance
-      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, Par_Weight, ResetLB_Yes, lv );
+      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, Par_Weight, ResetLB_Yes, SortRealPatch_No, lv );
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ... done\n", lv );
 

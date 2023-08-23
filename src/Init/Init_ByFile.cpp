@@ -16,6 +16,8 @@ static void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, c
 static void Load_RefineRegion( const char Filename[] );
 static void Flag_RefineRegion( const int lv, const int FlagPatch[6] );
 
+extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
+
 
 
 
@@ -159,6 +161,9 @@ void Init_ByFile()
       Aux_Error( ERROR_INFO, "OPT__UM_IC_LEVEL (%d) + OPT__UM_IC_NLEVEL (%d) - 1 = %d > MAX_LEVEL (%d) !!\n",
                  OPT__UM_IC_LEVEL, OPT__UM_IC_NLEVEL, OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1, MAX_LEVEL );
 
+   if ( OPT__RESET_FLUID_INIT  &&  Flu_ResetByUser_API_Ptr == NULL )
+      Aux_Error( ERROR_INFO, "Flu_ResetByUser_API_Ptr == NULL for OPT__RESET_FLUID_INIT !!\n" );
+
 // check file size
    long FileSize, ExpectSize;
 
@@ -230,9 +235,10 @@ void Init_ByFile()
    const bool   SendGridData_No  = false;
    const bool   ResetLB_Yes      = true;
    const bool   ResetLB_No       = false;
+   const bool   SortRealPatch_No = false;
    const int    AllLv            = -1;
 
-   LB_Init_LoadBalance( Redistribute_No, SendGridData_No, ParWeight_Zero, ResetLB_No, AllLv );
+   LB_Init_LoadBalance( Redistribute_No, SendGridData_No, ParWeight_Zero, ResetLB_No, SortRealPatch_No, AllLv );
 
 #  else // for SERIAL
 
@@ -270,6 +276,10 @@ void Init_ByFile()
 
    Init_ByFile_AssignData( UM_Filename, OPT__UM_IC_LEVEL, OPT__UM_IC_LEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK,
                            OPT__UM_IC_FORMAT, UM_Size3D, FlagPatch );
+
+   if ( OPT__RESET_FLUID_INIT )
+      Flu_ResetByUser_API_Ptr( OPT__UM_IC_LEVEL, amr->FluSg[OPT__UM_IC_LEVEL], amr->MagSg[OPT__UM_IC_LEVEL],
+                               Time[OPT__UM_IC_LEVEL], 0.0 );
 
 #  ifdef LOAD_BALANCE
    Buf_GetBufferData( OPT__UM_IC_LEVEL, amr->FluSg[OPT__UM_IC_LEVEL], amr->MagSg[OPT__UM_IC_LEVEL], NULL_INT,
@@ -312,12 +322,15 @@ void Init_ByFile()
 //    redistribute patches for load balancing
 //    --> no need to send grid data since it hasn't been assigned yet
 #     ifdef LOAD_BALANCE
-      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_No, Par_Weight, ResetLB_Yes, SonLv );
+      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_No, Par_Weight, ResetLB_Yes, SortRealPatch_No, SonLv );
 #     endif
 
 //    assign data on SonLv
       Init_ByFile_AssignData( UM_Filename, SonLv, OPT__UM_IC_LEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK,
                               OPT__UM_IC_FORMAT, UM_Size3D, FlagPatch );
+
+      if ( OPT__RESET_FLUID_INIT )
+         Flu_ResetByUser_API_Ptr( SonLv, amr->FluSg[SonLv], amr->MagSg[SonLv], Time[SonLv], 0.0 );
 
 //    fill the buffer patches on SonLv
 #     ifdef LOAD_BALANCE
@@ -355,7 +368,7 @@ void Init_ByFile()
 // 7. optimize load-balancing to take into account particle weighting
 #  if ( defined PARTICLE  &&  defined LOAD_BALANCE )
    if ( Par_Weight > 0.0 )
-      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, Par_Weight, ResetLB_Yes, AllLv );
+      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, Par_Weight, ResetLB_Yes, SortRealPatch_No, AllLv );
 #  endif
 
 
@@ -371,7 +384,7 @@ void Init_ByFile()
       Refine( lv, UseLB );
 
 #     ifdef LOAD_BALANCE
-      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, Par_Weight, ResetLB_Yes, lv+1 );
+      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, Par_Weight, ResetLB_Yes, SortRealPatch_No, lv+1 );
 #     endif
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Downgrading level %d ... done\n", lv+1 );
@@ -380,6 +393,12 @@ void Init_ByFile()
 
 
 // 9. refine the uniform-mesh data from levels OPT__UM_IC_LEVEL to MAX_LEVEL-1
+//    --> we currently do not apply OPT__RESET_FLUID_INIT after Refine() because
+//        (1) the existing patches from level OPT__UM_IC_LEVEL to level OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1
+//            already include the reset results (by Flu_ResetByUser_API_Ptr() directly),
+//        (2) the refined patches on levels higher than OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1
+//            also include the reset results (by interpolation), and
+//        (3) to avoid double-counting the reset data when Flu_ResetByUser_API_Ptr() uses fluid[]+=... instead of fluid[]=...
    if ( OPT__UM_IC_REFINE )
    for (int lv=OPT__UM_IC_LEVEL; lv<MAX_LEVEL; lv++)
    {
@@ -390,7 +409,7 @@ void Init_ByFile()
       Refine( lv, UseLB );
 
 #     ifdef LOAD_BALANCE
-      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, Par_Weight, ResetLB_Yes, lv+1 );
+      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, Par_Weight, ResetLB_Yes, SortRealPatch_No, lv+1 );
 #     endif
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Refining level %d ... done\n", lv );

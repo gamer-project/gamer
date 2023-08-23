@@ -701,21 +701,21 @@ void Init_ByRestart()
 
 // must not reset load-balance variables (i.e., must adopt ResetLB_No) when calling LB_Init_LoadBalance() for the first time
 // since we MUST NOT overwrite IdxList_Real[] and IdxList_Real_IdxList[] already set above
-   const double ParWeight_Zero   = 0.0;
-   const bool   Redistribute_Yes = true;
-   const bool   Redistribute_No  = false;
-   const bool   SendGridData_Yes = true;
-   const bool   SendGridData_No  = false;
-   const bool   ResetLB_Yes      = true;
-   const bool   ResetLB_No       = false;
-   const int    AllLv            = -1;
+   const double ParWeight_Zero    = 0.0;
+   const bool   Redistribute_Yes  = true;
+   const bool   Redistribute_No   = false;
+   const bool   SendGridData_Yes  = true;
+   const bool   SendGridData_No   = false;
+   const bool   ResetLB_Yes       = true;
+   const bool   ResetLB_No        = false;
+   const int    AllLv             = -1;
 
-   LB_Init_LoadBalance( Redistribute_No, SendGridData_No, ParWeight_Zero, ResetLB_No, AllLv );
+   LB_Init_LoadBalance( Redistribute_No,  SendGridData_No,  ParWeight_Zero,      ResetLB_No,  OPT__SORT_PATCH_BY_LBIDX,  AllLv );
 
 // redistribute patches again if we want to take into account the load-balance weighting of particles
 #  ifdef PARTICLE
    if ( amr->LB->Par_Weight > 0.0 )
-   LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, amr->LB->Par_Weight, ResetLB_Yes, AllLv );
+   LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, amr->LB->Par_Weight, ResetLB_Yes, OPT__SORT_PATCH_BY_LBIDX,  AllLv );
 #  endif
 
 

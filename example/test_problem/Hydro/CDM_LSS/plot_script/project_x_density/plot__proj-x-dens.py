@@ -39,7 +39,7 @@ projection_axis = "x"
 width_value     = 30
 
 yt.enable_parallelism()
-ts                   = yt.load( [ prefix+'../Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
+ts                   = yt.DatasetSeries( [ prefix+'../Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 ts0                  = ts[0]
 base_level_cell_num  = int(ts0.domain_dimensions[1])
 max_AMR_level        = int(ts0.parameters["MaxLevel"])

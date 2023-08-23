@@ -380,9 +380,9 @@ void Init_Load_Parameter()
 #  endif
 #  ifdef SUPPORT_FFTW
 #  if ( SUPPORT_FFTW == FFTW2 )
-   ReadPara->Add( "OPT__FFTW_STARTUP",     &OPT__FFTW_STARTUP, FFTW_STARTUP_MEASURE, FFTW_STARTUP_ESTIMATE, FFTW_STARTUP_MEASURE );
+   ReadPara->Add( "OPT__FFTW_STARTUP",     &OPT__FFTW_STARTUP, FFTW_STARTUP_DEFAULT, FFTW_STARTUP_DEFAULT, FFTW_STARTUP_MEASURE );
 #  elif ( SUPPORT_FFTW == FFTW3 ) // #  if ( SUPPORT_FFTW == FFTW2 )
-   ReadPara->Add( "OPT__FFTW_STARTUP",     &OPT__FFTW_STARTUP, FFTW_STARTUP_MEASURE, FFTW_STARTUP_ESTIMATE, FFTW_STARTUP_PATIENT );
+   ReadPara->Add( "OPT__FFTW_STARTUP",     &OPT__FFTW_STARTUP, FFTW_STARTUP_DEFAULT, FFTW_STARTUP_DEFAULT, FFTW_STARTUP_PATIENT );
 #  else  // # if ( SUPPORT_FFTW == FFTW2 ) ... # else
 #  error : ERROR : Unsupported FFTW version for OPT__FFTW_STARTUP
 #  endif // #  if ( SUPPORT_FFTW == FFTW2 ) ... # else
@@ -488,6 +488,11 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__MANUAL_CONTROL",        &OPT__MANUAL_CONTROL,             true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RECORD_USER",           &OPT__RECORD_USER,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OPTIMIZE_AGGRESSIVE",   &OPT__OPTIMIZE_AGGRESSIVE,        false,           Useless_bool,  Useless_bool   );
+#  ifdef LOAD_BALANCE
+   ReadPara->Add( "OPT__SORT_PATCH_BY_LBIDX",   &OPT__SORT_PATCH_BY_LBIDX,        true,            Useless_bool,  Useless_bool   );
+#  else
+   ReadPara->Add( "OPT__SORT_PATCH_BY_LBIDX",   &OPT__SORT_PATCH_BY_LBIDX,        false,           Useless_bool,  Useless_bool   );
+#  endif
 
 
 // simulation checks

@@ -141,7 +141,7 @@ struct AMR_t
 #        endif
 
 //       initialized as arbitrary "negative" number to indicate that they have not been set yet
-//       --> these will be reset by Init_SetDefaultParameter and Init_ByRestart_*
+//       --> these will be reset by Init_ResetParameter(), Init_ByRestart_*(), LB_Init_LoadBalance(), and EvolveLevel()
          FluSgTime[lv][   FluSg[lv] ] = -__FLT_MAX__;
          FluSgTime[lv][ 1-FluSg[lv] ] = -__FLT_MAX__;
 #        ifdef MHD
