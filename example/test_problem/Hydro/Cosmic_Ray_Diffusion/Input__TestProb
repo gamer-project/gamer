@@ -12,7 +12,7 @@ CR_Diffusion_BG_CR       1.0e-1         # Cosmic ray background energy
 #=========================================================================
 CR_Diffusion_Type        0              # Initial condition of cosmic ray [0/1/2/3/4]
 # 0: Gaussian distribution ball (only supported CR_Diffusion_Mag_Type==0)
-CR_Diffusion_R02_CR      40.0           # Standard deviation square of the Gaussian distribution ball
+CR_Diffusion_R02_CR      40.0           # Inverse of variance of the Gaussian distribution ball
 # 1: Step function ring (2D only)
 CR_Diffusion_R_In        0.5            # Inner radius
 CR_Diffusion_R_Out       0.7            # Outer radius
@@ -20,7 +20,7 @@ CR_Diffusion_R_Out       0.7            # Outer radius
 CR_Diffusion_CenterR     2.0            # Center radius of the ring
 CR_Diffusion_delR        0.05           # Standard deviation of the Gaussian distribution on radial direction
 CR_Diffusion_delPhi      0.5            # Standard deviation of the Gaussian distribution of azimuthal direction
-# 3: Gaussian distribution plane wave
+# 3: Gaussian distribution plane
 # parameter is same as Gaussian distribution ball [0]
 # 4: CR blast wave
 CR_Diffusion_R0_CR       0.02        # The energy core radius

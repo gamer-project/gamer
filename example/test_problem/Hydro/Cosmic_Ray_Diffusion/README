@@ -21,3 +21,4 @@ Note:
 1. The analytical of CR_Diffusion_Type={0,1,2,3} need to set all fluid to be fixed but cosmic ray.
 2. The CR_Diffusion_Type={1,2} are 2D simulation only
 3. If your simulation is 2D and want to run in the xz plane, you should set CR_Diffusion_G{X,Z} to 1 and CR_Diffusion_GY to 0
+4. An analytical solution of CR_Diffusion_Type={0,1,2,3} script is given as `ana_solution.py`.

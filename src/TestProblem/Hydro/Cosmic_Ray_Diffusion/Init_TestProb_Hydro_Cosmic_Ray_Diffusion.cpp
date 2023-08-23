@@ -41,7 +41,7 @@ static int    CR_Diffusion_GZ;          // Include z direction or not [0/1]
 static int    CR_Diffusion_Seed;        // Random seed of magnetic field
 static RandomNumber_t *RNG = NULL;
 // gaussian ball
-static double CR_Diffusion_R02_CR;      // Standard deviation square of the Gaussian distribution
+static double CR_Diffusion_R02_CR;      // Inverse of variance of the Gaussian distribution
 // step function ring
 static double CR_Diffusion_R_In;        // Inner radius
 static double CR_Diffusion_R_Out;       // Outer radius
