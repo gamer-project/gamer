@@ -18,9 +18,7 @@ void CR_ComputeDiffusivity( real &diff_cr_para, real &diff_cr_perp, const MicroP
 
 
 // internal funciton
-GPU_DEVICE
 real MC_limiter(real a, real b);
-GPU_DEVICE
 real minmod(real a, real b);
 
 
@@ -83,46 +81,46 @@ void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
       const int size_ij = size_i*size_j;
       CGPU_LOOP( idx, size_i*size_j*size_k )
       {
-         // flux index
+//       flux index
          const int i_flux   = idx % size_i           + i_offset;
          const int j_flux   = idx % size_ij / size_i + j_offset;
          const int k_flux   = idx / size_ij          + k_offset;
          const int idx_flux = IDX321( i_flux, j_flux, k_flux, N_HF_FLUX, N_HF_FLUX );
 
-         // conserved variable and cell-centered magnetic field index
+//       conserved variable and cell-centered magnetic field index
          const int i_cvar   = i_flux + i_cvar_s;
          const int j_cvar   = j_flux + j_cvar_s;
          const int k_cvar   = k_flux + k_cvar_s;
          const int idx_cvar = IDX321( i_cvar, j_cvar, k_cvar, FLU_NXT, FLU_NXT );
 
-         // face-centered magnetic field index
+//       face-centered magnetic field index
          const int idx_fc_B = IDX321( i_cvar, j_cvar, k_cvar, sizeB_i, sizeB_j ) + stride_fc_B[d];
 
-         // Get the cell size
+//       get the cell size
          real dh_N, dh_T1, dh_T2;
          dh_N  = dh;
          dh_T1 = dh;
          dh_T2 = dh;
 
 
-         // 1. Get the diffusivity
+//       1. get the diffusivity
          real diff_cr_eff_para, diff_cr_eff_perp;
          CR_ComputeDiffusivity( diff_cr_eff_para, diff_cr_eff_perp, Mic );
 
-         // 2. Compute the mean magnetic field
-         // ---------------------
-         // |         |         |
-         // |    ^    |    ^    |
-         // -----1---------2-----
-         // |    |    |    |    |
-         // |         |         |
-         // |  i j k -->        |
-         // |         |         |
-         // |    ^    |    ^    |
-         // -----3---------4-----
-         // |    |    |    |    |
-         // |         |         |
-         // ---------------------
+//       2. compute the mean magnetic field
+//       ---------------------
+//       |         |         |
+//       |    ^    |    ^    |
+//       -----1---------2-----
+//       |    |    |    |    |
+//       |         |         |
+//       |  i j k -->        |
+//       |         |         |
+//       |    ^    |    ^    |
+//       -----3---------4-----
+//       |    |    |    |    |
+//       |         |         |
+//       ---------------------
          real B_N_mean, B_T1_mean, B_T2_mean, B_tot;
          B_N_mean  =       g_FC_B[    d][ idx_fc_B                ];
          B_T1_mean = 0.5*( g_CC_B[TDir1][ idx_cvar                ] +
@@ -136,30 +134,29 @@ void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
             // xFlux = 0;
          //}
 
-         // unit magnetic field
+//       normalize magnetic field
          B_N_mean  = B_N_mean  / B_tot;
          B_T1_mean = B_T1_mean / B_tot;
          B_T2_mean = B_T2_mean / B_tot;
 
 
-         // 3. Compute slope
-         // ---------------------
-         // |         |         |
-         // ----al--------ar-----
-         // |         |         |
-         // |      N_slope      |
-         // |         |         |
-         // ----bl--------br-----
-         // |         |         |
-         // ---------------------
-
+//       3. compute slope
+//       ---------------------
+//       |         |         |
+//       ----al--------ar-----
+//       |         |         |
+//       |      N_slope      |
+//       |         |         |
+//       ----bl--------br-----
+//       |         |         |
+//       ---------------------
          real N_slope, T1_slope, T2_slope;
          real al, bl, ar, br;
 
-         // normal direction
+//       normal direction
          N_slope = ( g_ConVar[CRAY][ idx_cvar + didx_cvar[d] ] -  g_ConVar[CRAY][ idx_cvar ] ) / dh_N;
 
-         // transverse direction 1
+//       transverse direction 1
          al = g_ConVar[CRAY][ idx_cvar                                   ] -
               g_ConVar[CRAY][ idx_cvar                - didx_cvar[TDir1] ]   ;
          bl = g_ConVar[CRAY][ idx_cvar                + didx_cvar[TDir1] ] -
@@ -170,7 +167,7 @@ void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
               g_ConVar[CRAY][ idx_cvar + didx_cvar[d]                    ]   ;
          T1_slope = ( MC_limiter( MC_limiter(al, bl), MC_limiter(ar, br) ) ) / dh_T1;
 
-         // transverse direction 2
+//       transverse direction 2
          al = g_ConVar[CRAY][ idx_cvar                                   ] -
               g_ConVar[CRAY][ idx_cvar                - didx_cvar[TDir2] ]   ;
          bl = g_ConVar[CRAY][ idx_cvar                + didx_cvar[TDir2] ] -
@@ -183,14 +180,14 @@ void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
 
 
-         // 4. Compute Flux
+//       4. compute Flux
          real Flux_1Face, Flux_Para, Flux_Perp;
          real common = -B_N_mean * ( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
          Flux_Para = diff_cr_eff_para * common;
          Flux_Perp = diff_cr_eff_perp * (-N_slope - common);
          Flux_1Face = Flux_Para + Flux_Perp;
 
-         // 5. Flux add-up
+//       5. flux add-up
          g_Flux_Half[d][CRAY][idx_flux] += Flux_1Face;
          g_Flux_Half[d][ENGY][idx_flux] += Flux_1Face;
          // TODO: dual energy (internal energy) update?
@@ -265,19 +262,19 @@ void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
       const int size_ij = idx_flux_e[0]*idx_flux_e[1];
       CGPU_LOOP( idx, idx_flux_e[0]*idx_flux_e[1]*idx_flux_e[2] )
       {
-         // flux index
+//       flux index
          const int i_flux   = idx % idx_flux_e[0];
          const int j_flux   = idx % size_ij / idx_flux_e[0];
          const int k_flux   = idx / size_ij;
          const int idx_flux = IDX321( i_flux, j_flux, k_flux, NFlux, NFlux );
 
-         // half variable index
+//       half variable index
          const int i_half   = i_flux + cell_offset;
          const int j_half   = j_flux + cell_offset;
          const int k_half   = k_flux + cell_offset;
          const int idx_half = IDX321( i_half, j_half, k_half, N_HF_VAR, N_HF_VAR );
 
-         // magnetic field indexes
+//       magnetic field indexes
          const int i_fc     = i_flux + mag_offset_i;
          const int j_fc     = j_flux + mag_offset_j;
          const int k_fc     = k_flux + mag_offset_k;
@@ -288,31 +285,31 @@ void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
          const int stride_fc_BT1[3] = { 1, sizeB_k, sizeB_k*sizeB_i };
          const int stride_fc_BT2[3] = { 1, sizeB_j, sizeB_j*sizeB_k };
 
-         // Get the cell size
+//       get the cell size
          real dh_N, dh_T1, dh_T2;
          dh_N  = dh;
          dh_T1 = dh;
          dh_T2 = dh;
 
 
-         // 1. Get the diffusivity
+//       1. get the diffusivity
          real diff_cr_eff_para, diff_cr_eff_perp;
          CR_ComputeDiffusivity( diff_cr_eff_para, diff_cr_eff_perp, Mic );
 
-         // 2. Compute the mean magnetic field
-         // ---------------------
-         // |         |         |
-         // |    ^    |    ^    |
-         // -----1---------2-----
-         // |    |    |    |    |
-         // |         |         |
-         // |  i j k -->        |
-         // |         |         |
-         // |    ^    |    ^    |
-         // -----3---------4-----
-         // |    |    |    |    |
-         // |         |         |
-         // ---------------------
+//       2. compute the mean magnetic field
+//       ---------------------
+//       |         |         |
+//       |    ^    |    ^    |
+//       -----1---------2-----
+//       |    |    |    |    |
+//       |         |         |
+//       |  i j k -->        |
+//       |         |         |
+//       |    ^    |    ^    |
+//       -----3---------4-----
+//       |    |    |    |    |
+//       |         |         |
+//       ---------------------
          real B_N_mean, B_T1_mean, B_T2_mean, B_tot;
          B_N_mean =         g_FC_B_Half[    d][ idx_fc_BN                                            ];
          B_T1_mean = 0.25*( g_FC_B_Half[TDir1][ idx_fc_BT1                                           ] +
@@ -330,29 +327,29 @@ void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
             // xFlux = 0;
          //}
 
-         // unit magnetic field
+//       normalize magnetic field
          B_N_mean  = B_N_mean  / B_tot;
          B_T1_mean = B_T1_mean / B_tot;
          B_T2_mean = B_T2_mean / B_tot;
 
 
-         // 3. Compute cosmic ray slope
-         // ---------------------
-         // |         |         |
-         // ----al--------ar-----
-         // |         |         |
-         // |      N_slope      |
-         // |         |         |
-         // ----bl--------br-----
-         // |         |         |
-         // ---------------------
+//       3. compute cosmic ray slope
+//       ---------------------
+//       |         |         |
+//       ----al--------ar-----
+//       |         |         |
+//       |      N_slope      |
+//       |         |         |
+//       ----bl--------br-----
+//       |         |         |
+//       ---------------------
          real N_slope, T1_slope, T2_slope;
          real al, bl, ar, br;
 
-         // normal direction
+//       normal direction
          N_slope = ( g_PriVar_Half[CRAY][ idx_half + didx_half[d] ] -  g_PriVar_Half[CRAY][ idx_half ] ) / dh_N;
 
-         // transverse direction 1
+//       transverse direction 1
          al = g_PriVar_Half[CRAY][ idx_half                                   ] -
               g_PriVar_Half[CRAY][ idx_half                - didx_half[TDir1] ]   ;
          bl = g_PriVar_Half[CRAY][ idx_half                + didx_half[TDir1] ] -
@@ -363,7 +360,7 @@ void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
               g_PriVar_Half[CRAY][ idx_half + didx_half[d]                    ]   ;
          T1_slope = ( MC_limiter( MC_limiter(al, bl), MC_limiter(ar, br) ) ) / dh_T1;
 
-         // transverse direction 2
+//       transverse direction 2
          al = g_PriVar_Half[CRAY][ idx_half                                   ] -
               g_PriVar_Half[CRAY][ idx_half                - didx_half[TDir2] ]   ;
          bl = g_PriVar_Half[CRAY][ idx_half                + didx_half[TDir2] ] -
@@ -376,14 +373,14 @@ void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 
 
 
-         // 4. Compute Flux
+//       4. compute Flux
          real Flux_1Face, Flux_Para, Flux_Perp;
          real common = -B_N_mean * ( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
          Flux_Para = diff_cr_eff_para * common;
          Flux_Perp = diff_cr_eff_perp * (-N_slope - common);
          Flux_1Face = Flux_Para + Flux_Perp;
 
-         // 5. Flux add-up
+//       5. Flux add-up
          g_FC_Flux[d][CRAY][idx_flux] += Flux_1Face;
          g_FC_Flux[d][ENGY][idx_flux] += Flux_1Face;
          // TODO: dual energy (internal energy) update?
@@ -408,7 +405,6 @@ void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 // Return      :
 // Reference   :
 //-----------------------------------------------------------------------------------------
-GPU_DEVICE
 real MC_limiter( real a, real b )
 {
     return minmod( 2.0*minmod(a, b), 0.5*(a+b) );
@@ -425,7 +421,6 @@ real MC_limiter( real a, real b )
 // Return      :
 // Reference   :
 //-----------------------------------------------------------------------------------------
-GPU_DEVICE
 real minmod( real a, real b )
 {
     if ( a > 0.0 && b > 0.0 ) return MIN(a, b);
