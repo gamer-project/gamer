@@ -348,7 +348,7 @@ void CPU_FluidSolver_MHM(
 #     else
       real (*const g_EC_Ele_1PG      )[ CUBE(N_EC_ELE) ] = NULL;
 #     endif
-#     endif // if ( FLU_SCHEME == MHM && defined MHD )
+#     endif // if ( FLU_SCHEME == MHM )
 
 
 //    loop over all patch groups

@@ -504,7 +504,7 @@ void UpdateVelocityByGravity( real &v1, real &v2, const int TDir1, const int TDi
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  MHD_UpdataMagnetic
+// Function    :  MHD_UpdateMagnetic
 // Description :  Update magnetic field with the constrained transport algorithm
 //
 // Note        :  1. This function is shared by MHM, MHM_RP and CTU schemes
@@ -810,8 +810,8 @@ void MHD_ComputeElectric_Half(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                              g_ConVar[TV1][ idx_con_m2   ] / g_ConVar[DENS][ idx_con_m2   ] +
                              g_ConVar[TV1][ idx_con_m1m2 ] / g_ConVar[DENS][ idx_con_m1m2 ] );
          V2 = (real)0.25 * ( g_ConVar[TV2][ idx_con      ] / g_ConVar[DENS][ idx_con      ] +
-                             g_ConVar[TV2][ idx_con_m2   ] / g_ConVar[DENS][ idx_con_m2   ] +
                              g_ConVar[TV2][ idx_con_m1   ] / g_ConVar[DENS][ idx_con_m1   ] +
+                             g_ConVar[TV2][ idx_con_m2   ] / g_ConVar[DENS][ idx_con_m2   ] +
                              g_ConVar[TV2][ idx_con_m1m2 ] / g_ConVar[DENS][ idx_con_m1m2 ] );
 
 //       get the magnetic field average
@@ -833,7 +833,7 @@ void MHD_ComputeElectric_Half(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  MHD_UpdataMagnetic_Half
+// Function    :  MHD_UpdateMagnetic_Half
 // Description :  Update magnetic field with the constrained transport algorithm
 //
 // Note        :  1. This function can only be used by MHM scheme.
@@ -845,7 +845,7 @@ void MHD_ComputeElectric_Half(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
 //                g_EC_Ele    : Array storing the input edge-centered electric field
 //                dt          : Time interval to advance solution
 //                dh          : Cell size
-//                idx_{i,j,k} : The indeies for accessing g_EC_Ele[]
+//                idx_{i,j,k} : The indices for accessing g_EC_Ele[]
 //                NEle        : Stride for accessing g_EC_Ele[]
 //
 // Return      :  fc[][NCOMP_LR]
