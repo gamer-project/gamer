@@ -89,7 +89,6 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",       &VARIABLE,              DEFAULT,           MIN,              MAX               );
 // ********************************************************************************************************************************
-//   ReadPara->Add( "GAMMA_CR",              &GAMMA_CR,                  0.0,           0.0,              NoMax_double);
    ReadPara->Add( "CR_Shocktube_Rho_R",    &CR_Shocktube_Rho_R,        0.0,           0.0,              NoMax_double);
    ReadPara->Add( "CR_Shocktube_Rho_L",    &CR_Shocktube_Rho_L,        0.0,           0.0,              NoMax_double);
    ReadPara->Add( "CR_Shocktube_Pres_R",   &CR_Shocktube_Pres_R,       0.0,           0.0,              NoMax_double);
@@ -178,28 +177,29 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    {
       if (x < 0.5)
       {
-      Dens = CR_Shocktube_Rho_L;
-      MomX = 0.0;
-      MomY = 0.0;
-      MomZ = 0.0;
-      Pres = CR_Shocktube_Pres_L;
-      P_cr = CR_Shocktube_PresCR_L;
-      } else if (x == 0.5){
-      Dens = 0.5*( CR_Shocktube_Rho_L + CR_Shocktube_Rho_R );
-      MomX = 0.0;
-      MomY = 0.0;
-      MomZ = 0.0;
-      Pres = 0.5*( CR_Shocktube_Pres_L + CR_Shocktube_Pres_R );
-      P_cr = 0.5*( CR_Shocktube_PresCR_L + CR_Shocktube_PresCR_R );
-      }else if (x > 0.5)
+         Dens = CR_Shocktube_Rho_L;
+         MomX = 0.0;
+         MomY = 0.0;
+         MomZ = 0.0;
+         Pres = CR_Shocktube_Pres_L;
+         P_cr = CR_Shocktube_PresCR_L;
+      } else if (x > 0.5)
       {
-      Dens = CR_Shocktube_Rho_R;
-      MomX = 0.0;
-      MomY = 0.0;
-      MomZ = 0.0;
-      Pres = CR_Shocktube_Pres_R;
-      P_cr = CR_Shocktube_PresCR_R;
-      }
+         Dens = CR_Shocktube_Rho_R;
+         MomX = 0.0;
+         MomY = 0.0;
+         MomZ = 0.0;
+         Pres = CR_Shocktube_Pres_R;
+         P_cr = CR_Shocktube_PresCR_R;
+      } else
+      {
+         Dens = 0.5*( CR_Shocktube_Rho_L + CR_Shocktube_Rho_R );
+         MomX = 0.0;
+         MomY = 0.0;
+         MomZ = 0.0;
+         Pres = 0.5*( CR_Shocktube_Pres_L + CR_Shocktube_Pres_R );
+         P_cr = 0.5*( CR_Shocktube_PresCR_L + CR_Shocktube_PresCR_R );
+      } // if (x < 0.5) ... else if ... else
    }
    else if ( CR_Shocktube_Dir == 1 )
    {
@@ -209,7 +209,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    else
    {
       Aux_Error( ERROR_INFO, "CR_Shocktube_Dir = %d is NOT supported [0] !!\n", CR_Shocktube_Dir );
-   }
+   } // if ( CR_Shocktube_Dir == 0 )
 
 #ifdef COSMIC_RAY
    double GAMMA_CR_m1_inv = 1.0 / (GAMMA_CR - 1.0);

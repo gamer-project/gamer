@@ -281,7 +281,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    double Dens, MomX, MomY, MomZ, Pres, Eint, Etot, P_cr, CRay;
    double f;
 
-
    Dens = CR_Diffusion_Rho0;
    MomX = Dens * CR_Diffusion_Vx;
    MomY = Dens * CR_Diffusion_Vy;
@@ -294,7 +293,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    double magD1, magD2, magD3, D1, D2, D3, fD1, fD2, fD3;
    switch (type)
    {
-      // 1D simulation
+//    1D simulation
       case 1: magD1 = CR_Diffusion_MagX; magD2 = CR_Diffusion_MagY; magD3 = CR_Diffusion_MagZ;
               D1 = x - CR_Diffusion_CenterX - CR_Diffusion_Vx*Time;
               D2 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
@@ -310,7 +309,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
               D2 = x - CR_Diffusion_CenterX - CR_Diffusion_Vx*Time;
               D3 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
               break;
-      // 2D simulation
+//    2D simulation
       case 3: magD1 = CR_Diffusion_MagX; magD2 = CR_Diffusion_MagY; magD3 = CR_Diffusion_MagZ;
               D1 = x - CR_Diffusion_CenterX - CR_Diffusion_Vx*Time;
               D2 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
@@ -326,7 +325,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
               D2 = x - CR_Diffusion_CenterX - CR_Diffusion_Vx*Time;
               D3 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
               break;
-      // 3D simulation
+//    3D simulation
       case 7: magD1 = CR_Diffusion_MagX; magD2 = CR_Diffusion_MagY; magD3 = CR_Diffusion_MagZ;
               D1 = x - CR_Diffusion_CenterX - CR_Diffusion_Vx*Time;
               D2 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
@@ -343,10 +342,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
       if ( dim == 1 )
       {
-         // Analytical solution:
-         // f(k, t) = 1 + 4 * R_0**2 * k * t
-         // E(x, y) = E_0 * EXP[ -R_0**2 * x**2 / f(k_x, t) ] / SQRT[ f(k_x, t) ]
-         // Check the Magnetic field to define the time evolution factor
+//       Analytical solution:
+//       f(k, t) = 1 + 4 * R_0**2 * k * t
+//       E(x, y) = E_0 * EXP[ -R_0**2 * x**2 / f(k_x, t) ] / SQRT[ f(k_x, t) ]
+//       Check the Magnetic field to define the time evolution factor
          if      ( magD1 != 0 &&  magD2 == 0 && magD3 == 0  )   fD1 = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PARA * Time;
          else if ( magD1 == 0 && (magD2 != 0 || magD3 != 0) )   fD1 = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PERP * Time;
          else     Aux_Error( ERROR_INFO, "This kind of magnetic field is not supported for 1D diffusion case.\n" );
@@ -355,7 +354,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       }
       else if ( dim == 2 )
       {
-         // Check the Magnetic field to define the diffusion coefficient
+//       Check the Magnetic field to define the diffusion coefficient
          if( magD3 != 0 && (magD1 != 0 || magD2 != 0) )   Aux_Error( ERROR_INFO, "This kind of magnetic field is not supported for 2D diffusion case.\n" );
          else if ( magD3 != 0 )
          {
@@ -364,19 +363,19 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          }
          else
          {
-         // Analytical solution:
-         // f(k, t) = 1 + 4 * R_0**2 * k * t
-         // k_x = k_parallel, k_y = k_perpendicular
-         // E(x, y) = E_0 * EXP[ -R_0**2 * x**2 / f(k_x, t) ] / SQRT[ f(k_x, t) ]
-         //               * EXP[ -R_0**2 * y**2 / f(k_y, t) ] / SQRT[ f(k_y, t) ]
-         //
-         // We bascially apply a rotation matrix to rotate the magnetic field to (1, 0, 0) direction, so the simulation will be matched the solution above.
-         // C = A \cross B, where A and B are the unit vector.
-         // sin = C, cos = A \dot B
-         // R = [  cos | sin ]
-         //     [ -sin | cos ]
-         //
-         // B = RA, B = (1, 0), A = (B_x, B_y)
+//          Analytical solution:
+//          f(k, t) = 1 + 4 * R_0**2 * k * t
+//          k_x = k_parallel, k_y = k_perpendicular
+//          E(x, y) = E_0 * EXP[ -R_0**2 * x**2 / f(k_x, t) ] / SQRT[ f(k_x, t) ]
+//                        * EXP[ -R_0**2 * y**2 / f(k_y, t) ] / SQRT[ f(k_y, t) ]
+//
+//          We bascially apply a rotation matrix to rotate the magnetic field to (1, 0, 0) direction, so the simulation will be matched the solution above.
+//          C = A \cross B, where A and B are the unit vector.
+//          sin = C, cos = A \dot B
+//          R = [  cos | sin ]
+//              [ -sin | cos ]
+//
+//          B = RA, B = (1, 0), A = (B_x, B_y)
             double Mag_len2 = magD1 * magD1 + magD2 * magD2;
             double A[2] = {          magD1, magD2 };
             double B[2] = { SQRT(Mag_len2),   0.0 };
@@ -398,31 +397,31 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       }
       else if ( dim == 3 )
       {
-         // Analytical solution:
-         // f(k, t) = 1 + 4 * R_0**2 * k * t
-         // k_x = k_parallel, k_y = k_z = k_perpendicular
-         // E(x, y, z) = E_0 * EXP[ -R_0**2 * x**2 / f(k_x, t) ] / SQRT[ f(k_x, t) ]
-         //                  * EXP[ -R_0**2 * y**2 / f(k_y, t) ] / SQRT[ f(k_y, t) ]
-         //                  * EXP[ -R_0**2 * z**2 / f(k_z, t) ] / SQRT[ f(k_z, t) ]
-         //
-         // We bascially apply a rotation matrix to rotate the magnetic field to (1, 0, 0) direction, so the simulation will be matched the solution above.
-         // C = A \cross B, where A and B are the unit vector.
-         // sin = abs(C), cos = A \dot B
-         // R = I + v + v**2 / (1+cos), **NOTICE**: this would be invaliad when cos = -1.
-         //     [    1 - (C_2**2 + C_3**2) / (1+cos) | -C_3 +         (C_1*C_2) / (1+cos) |  C_2 +         (C_1*C_3) / (1+cos) ]
-         // R = [  C_3 +         (C_1*C_2) / (1+cos) | 1    - (C_3**2 + C_1**2) / (1+cos) | -C_1 +         (C_2*C_3) / (1+cos) ]
-         //     [ -C_2 +         (C_1*C_3) / (1+cos) |  C_1 +         (C_2*C_3) / (1+cos) |    1 - (C_1**2 + C_2**2) / (1+cos) ]
-         //
-         // B = RA, B = (1, 0, 0), A = (B_x, B_y, B_z)
+//       Analytical solution:
+//       f(k, t) = 1 + 4 * R_0**2 * k * t
+//       k_x = k_parallel, k_y = k_z = k_perpendicular
+//       E(x, y, z) = E_0 * EXP[ -R_0**2 * x**2 / f(k_x, t) ] / SQRT[ f(k_x, t) ]
+//                        * EXP[ -R_0**2 * y**2 / f(k_y, t) ] / SQRT[ f(k_y, t) ]
+//                        * EXP[ -R_0**2 * z**2 / f(k_z, t) ] / SQRT[ f(k_z, t) ]
+//
+//       We bascially apply a rotation matrix to rotate the magnetic field to (1, 0, 0) direction, so the simulation will be matched the solution above.
+//       C = A \cross B, where A and B are the unit vector.
+//       sin = abs(C), cos = A \dot B
+//       R = I + v + v**2 / (1+cos), **NOTICE**: this would be invaliad when cos = -1.
+//           [    1 - (C_2**2 + C_3**2) / (1+cos) | -C_3 +         (C_1*C_2) / (1+cos) |  C_2 +         (C_1*C_3) / (1+cos) ]
+//       R = [  C_3 +         (C_1*C_2) / (1+cos) | 1    - (C_3**2 + C_1**2) / (1+cos) | -C_1 +         (C_2*C_3) / (1+cos) ]
+//           [ -C_2 +         (C_1*C_3) / (1+cos) |  C_1 +         (C_2*C_3) / (1+cos) |    1 - (C_1**2 + C_2**2) / (1+cos) ]
+//
+//       B = RA, B = (1, 0, 0), A = (B_x, B_y, B_z)
 
          double Mag_len2 = magD1*magD1 + magD2*magD2 + magD3*magD3;
-         double A[3] = {          magD1, magD2, magD3 };
-         double B[3] = { SQRT(Mag_len2),   0.0,   0.0 };
-         double C[3] = { 0.0, A[2]*B[0] / Mag_len2 , -A[1]*B[0] / Mag_len2 };
-         double cosP1 = A[0] * B[0] / Mag_len2 + 1.0;
-         double R[3][3] = { {   1.0 - (C[1]*C[1] + C[2]*C[2]) / cosP1, -C[2] +             (C[0]*C[1]) / cosP1,  C[1] +             (C[0]*C[2]) / cosP1 },
-                            {  C[2] +             (C[0]*C[1]) / cosP1,   1.0 - (C[2]*C[2] + C[0]*C[0]) / cosP1, -C[0] +             (C[1]*C[2]) / cosP1 },
-                            { -C[1] +             (C[0]*C[2]) / cosP1,  C[0] +             (C[1]*C[2]) / cosP1,   1.0 - (C[0]*C[0] + C[1]*C[1]) / cosP1 } };
+         double A[3]     = {          magD1,                 magD2,                 magD3 };
+         double B[3]     = { SQRT(Mag_len2),                   0.0,                   0.0 };
+         double C[3]     = {            0.0, A[2]*B[0] / Mag_len2 , -A[1]*B[0] / Mag_len2 };
+         double cosP1    = A[0] * B[0] / Mag_len2 + 1.0;
+         double R[3][3]  = { {   1.0 - (C[1]*C[1] + C[2]*C[2]) / cosP1, -C[2] +             (C[0]*C[1]) / cosP1,  C[1] +             (C[0]*C[2]) / cosP1 },
+                             {  C[2] +             (C[0]*C[1]) / cosP1,   1.0 - (C[2]*C[2] + C[0]*C[0]) / cosP1, -C[0] +             (C[1]*C[2]) / cosP1 },
+                             { -C[1] +             (C[0]*C[2]) / cosP1,  C[0] +             (C[1]*C[2]) / cosP1,   1.0 - (C[0]*C[0] + C[1]*C[1]) / cosP1 } };
 
          double pos_new[3] = {0.0, 0.0, 0.0};
          double pos_old[3] = { D1,  D2,  D3};
@@ -491,15 +490,15 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       double r;
       switch (type)
       {
-         // 1D simulation
+//       1D simulation
          case 1: r = D1;   break;
          case 2: r = D1;   break;
          case 4: r = D1;   break;
-         // 2D simulation
+//       2D simulation
          case 3: r = D1 + D2;   break;
          case 5: r = D1 + D2;   break;
          case 6: r = D1 + D2;   break;
-         // 3D simulation
+//       3D simulation
          case 7: r = D1 + D2 + D3;   break;
       } // switch (type)
 
@@ -615,8 +614,8 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
    }
    else if ( CR_Diffusion_Mag_Type == 4 )
    {
-     // Reference: Suwa+ 2007, PASJ, 59, 771
-     // A_phi = 0.5 * B0 * ( R0^3 / (r^3 + R0^3) ) * r * sin(theta), A_r = A_theta = 0
+//    Reference: Suwa+ 2007, PASJ, 59, 771
+//    A_phi = 0.5 * B0 * ( R0^3 / (r^3 + R0^3) ) * r * sin(theta), A_r = A_theta = 0
       Aux_Message( stderr, "WARNING : CR_Diffusion_MagY and CR_Diffusion_MagZ is useless in this type of magnetic field." );
       const double pos[3] = { x-CR_Diffusion_CenterX, y-CR_Diffusion_CenterY, z-CR_Diffusion_CenterZ };
       const double r = SQRT( SQR(pos[0]) + SQR(pos[1]) + SQR(pos[2]) );
@@ -650,19 +649,18 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 //-------------------------------------------------------------------------------------------------------
 void OutputError()
 {
-   const char Prefix[100]     = "CosmicRay_Diffusion";
+   const char Prefix[100] = "CosmicRay_Diffusion";
    int type = CR_Diffusion_GX + 2 * CR_Diffusion_GY + 4 * CR_Diffusion_GZ;
    OptOutputPart_t Part;
    switch (type)
    {
-      // 1D simulation
-      case 1: Part = OUTPUT_X;         break;
-      case 2: Part = OUTPUT_Y;         break;
-      case 3: Part = OUTPUT_XY;        break;
-      case 4: Part = OUTPUT_Z;         break;
-      case 5: Part = OUTPUT_XZ;        break;
-      case 6: Part = OUTPUT_YZ;        break;
-      case 7: Part = OUTPUT_DIAG;      break;
+      case 1: Part = OUTPUT_X;    break;
+      case 2: Part = OUTPUT_Y;    break;
+      case 3: Part = OUTPUT_XY;   break;
+      case 4: Part = OUTPUT_Z;    break;
+      case 5: Part = OUTPUT_XZ;   break;
+      case 6: Part = OUTPUT_YZ;   break;
+      case 7: Part = OUTPUT_DIAG; break;
    } // switch (type)
 
 #  ifdef MHD
