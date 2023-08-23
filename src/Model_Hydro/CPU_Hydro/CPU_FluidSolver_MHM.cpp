@@ -289,7 +289,7 @@ void CPU_FluidSolver_MHM(
 #  elif ( FLU_SCHEME == MHM_RP )
    const bool Con2Pri_No           = false;
 #  endif
-#  ifdef MHD
+#  if ( defined MHD  &&  FLU_SCHEME == MHM_RP )
    const bool CorrHalfVel_No       = false;
    const bool StoreElectric_No     = false;
 #  endif
@@ -339,16 +339,16 @@ void CPU_FluidSolver_MHM(
 #     endif // if ( FLU_SCHEME == MHM_RP )
 
 #     if ( FLU_SCHEME == MHM )
-//    half-step array size is over-estimated as it only needs CUBE(N_FC_VAR)
-//       --> here we use the same array size as the half-step variables of MHM_RP to avoid
-//           changing the MHM_RP full-step MHD_ComputeElectric()
+//    half-step array size is over-estimated here as it only needs CUBE(N_FC_VAR)
+//    --> we use the same array size as the half-step variables of MHM_RP to avoid
+//        changing the MHM_RP full-step MHD_ComputeElectric()
       real (*const g_PriVar_Half_1PG )[ CUBE(FLU_NXT)  ] = g_PriVar_1PG;
 #     ifdef MHD
       real (*const g_EC_Ele_1PG      )[ CUBE(N_EC_ELE) ] = g_EC_Ele[array_idx];
 #     else
       real (*const g_EC_Ele_1PG      )[ CUBE(N_EC_ELE) ] = NULL;
 #     endif
-#     endif // if ( FLU_SCHEME == MHM )
+#     endif // #if ( FLU_SCHEME == MHM )
 
 
 //    loop over all patch groups
@@ -499,7 +499,6 @@ void CPU_FluidSolver_MHM(
 //             --> must update B field before Hydro_FullStepUpdate() since the latter requires
 //                 the updated magnetic energy when adopting the dual-energy formalism
 #           ifdef MHD
-
 #           if ( FLU_SCHEME == MHM )
             const int OffsetPri = 0;
 #           else
@@ -513,7 +512,7 @@ void CPU_FluidSolver_MHM(
 
             MHD_UpdateMagnetic( g_Mag_Array_Out[P][0], g_Mag_Array_Out[P][1], g_Mag_Array_Out[P][2],
                                 g_Mag_Array_In[P], g_EC_Ele_1PG, dt, dh, PS2, N_FL_ELE, FLU_GHOST_SIZE );
-#           endif
+#           endif // #ifdef MHD
 
 
 //          4. full-step evolution

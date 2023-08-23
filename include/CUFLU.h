@@ -79,11 +79,11 @@
 #    ifdef MHD
 #     define N_HF_VAR            ( N_FC_VAR )
 #     define N_FL_FLUX           ( PS2 + 2 )
-// MHM doesn't have the half-step flux actually; this is only for calculating the half-step electric field
+//    MHM doesn't have the half-step flux actually; this is only for calculating the half-step electric field
 #     define N_HF_FLUX           ( N_FL_FLUX+2 )
 #    else
 #     define N_FL_FLUX           ( PS2 + 1 )
-// MHM doesn't have the half-step flux actually; this is only for defining N_FC_FLUX
+//    MHM doesn't have the half-step flux actually; this is only for defining N_FC_FLUX
 #     define N_HF_FLUX           ( N_FL_FLUX )
 #    endif
 
