@@ -54,7 +54,7 @@ SIMU_OPTION += -DMODEL=HYDRO
 ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
 # hydrodynamic scheme: RTVD/MHM/MHM_RP/CTU
 # --> must be set when MODEL=HYDRO
-# --> MHD only supports MHM_RP and CTU
+# --> MHD only supports MHM, MHM_RP and CTU
 SIMU_OPTION += -DFLU_SCHEME=CTU
 
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
