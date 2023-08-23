@@ -1,10 +1,9 @@
 # problem-specific runtime parameters
-GAMMA_CR                        1.3333333333
-CR_Acoustic_Delta               1.0e-6
-CR_Acoustic_Rho0                1.0
-CR_Acoustic_Pres0               1.0
-CR_Acoustic_Pres_CR0            1.0
-CR_Acoustic_V0                  1.0
-CR_Acoustic_Sign                1.0
-CR_Acoustic_Phase               0.0
-CR_Acoustic_Dir                 0               #[0/1]
+CR_Acoustic_Delta               1.0e-6  # amplitude of the velocity perturbation
+CR_Acoustic_Rho0                1.0     # background density
+CR_Acoustic_Pres0               1.0     # background pressure
+CR_Acoustic_Pres_CR0            1.0     # background pressure of cosmic rays
+CR_Acoustic_V0                  1.0     # background velocity
+CR_Acoustic_Sign                1.0     # [+1/-1] --> [right/left-moving wave]
+CR_Acoustic_Phase               0.0     # initial phase shift
+CR_Acoustic_Dir                 0       # wave direction [0/1] --> [x/diagonal]
