@@ -325,7 +325,7 @@ def load_arguments():
                          depend={"model":"HYDRO"},
                          constraint={ "RTVD":{"unsplit_gravity":False, "passive":0, "dual":NONE_STR, "eos":"GAMMA"},
                                       "CTU":{"eos":"GAMMA"} },
-                         help="The hydrodynamic/MHD integrator. MHD only supports MHM_RP and CTU.\n"
+                         help="The hydrodynamic/MHD integrator. MHD only supports MHM, MHM_RP and CTU.\n"
                        )
 
     parser.add_argument( "--slope", type=str, metavar="TYPE", gamer_name="LR_SCHEME",
@@ -352,7 +352,7 @@ def load_arguments():
     parser.add_argument( "--mhd", type=str2bool, metavar="BOOLEAN", gamer_name="MHD",
                          default=False,
                          depend={"model":"HYDRO"},
-                         constraint={ True:{"flu_scheme":["MHM_RP", "CTU"], "flux":["ROE", "HLLE", "HLLD"]},
+                         constraint={ True:{"flu_scheme":["MHM", "MHM_RP", "CTU"], "flux":["ROE", "HLLE", "HLLD"]},
                                      False:{"flux":["EXACT", "ROE", "HLLE", "HLLC"]} },
                          help="Magnetohydrodynamics.\n"
                        )
