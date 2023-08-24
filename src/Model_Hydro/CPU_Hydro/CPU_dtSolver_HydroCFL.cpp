@@ -115,8 +115,8 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
 
 #        ifdef SRHD
          real Rho;
-         Hydro_Con2Pri( fluid, Pri,(real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
-                        (real)NULL_REAL, NULL, NULL,
+         Hydro_Con2Pri( fluid, Pri, MinPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+                        (real)NULL_REAL, EoS.DensEint2Pres_FuncPtr, EoS.DensPres2Eint_FuncPtr,
                         EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr,
                         EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL, &LorentzFactor );
          Rho   = Pri[0];
