@@ -523,14 +523,14 @@ void CPU_FluidSolver_MHM(
                                MinDens, MinPres, &EoS );
 
 
-            if ( StoreFlux )
-               Hydro_StoreFixFlux( g_FC_Flux_1PG, g_Flux_Array[P], N_FL_FLUX, NSkip_N, NSkip_T );
-
-
 //          add extra flux of cosmic ray
 #           ifdef CR_DIFFUSION
             CR_DiffuseFlux_FullStep( g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_FL_FLUX, dh, &Mic );
 #           endif
+
+
+            if ( StoreFlux )
+               Hydro_StoreFixFlux( g_FC_Flux_1PG, g_Flux_Array[P], N_FL_FLUX, NSkip_N, NSkip_T );
 
 
 //          3. evaluate electric field and update B field at the full time-step
