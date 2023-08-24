@@ -320,8 +320,8 @@ void CPU_FluidSolver_CTU(
                             g_Pot_Array_USG[P], g_Corner_Array[P], dt, dh, Time,
                             UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
                             MinDens, MinPres, &EoS );
-            
-         
+
+
          if ( StoreFlux )
             Hydro_StoreFixFlux( g_FC_Flux_1PG, g_Flux_Array[P], N_FL_FLUX, NSkip_N, NSkip_T );
 
