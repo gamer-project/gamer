@@ -151,6 +151,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__FLAG_PRES_GRADIENT",    &OPT__FLAG_PRES_GRADIENT,         false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_VORTICITY",        &OPT__FLAG_VORTICITY,             false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_JEANS",            &OPT__FLAG_JEANS,                 false,           Useless_bool,  Useless_bool   );
+#  ifdef SRHD
+   ReadPara->Add( "OPT__FLAG_LRTZ_GRADIENT",    &OPT__FLAG_LRTZ_GRADIENT,         false,           Useless_bool,  Useless_bool   );
+#  endif
 #  ifdef MHD
    ReadPara->Add( "OPT__FLAG_CURRENT",          &OPT__FLAG_CURRENT,               false,           Useless_bool,  Useless_bool   );
 #  endif

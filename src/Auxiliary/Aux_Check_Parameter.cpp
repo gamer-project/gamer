@@ -346,6 +346,9 @@ void Aux_Check_Parameter()
 #  ifdef MHD
    Flag |= OPT__FLAG_CURRENT;
 #  endif
+#  ifdef SRHD
+   Flag |= OPT__FLAG_LRTZ_GRADIENT;
+#  endif
 #  endif
 #  if ( MODEL == ELBDM )
    Flag |= OPT__FLAG_ENGY_DENSITY;

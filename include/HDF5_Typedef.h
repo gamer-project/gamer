@@ -436,6 +436,9 @@ struct InputPara_t
 #  ifdef MHD
    int    Opt__Flag_Current;
 #  endif
+#  ifdef SRHD
+   int    Opt__Flag_LrtzGradient;
+#  endif
 #  endif
 #  if ( MODEL == ELBDM )
    int    Opt__Flag_EngyDensity;
@@ -734,6 +737,9 @@ struct InputPara_t
    double FlagTable_Jeans       [NLEVEL-1];
 #  ifdef MHD
    double FlagTable_Current     [NLEVEL-1];
+#  endif
+#  ifdef SRHD
+   double FlagTable_LrtzGradient[NLEVEL-1];
 #  endif
 #  elif ( MODEL == ELBDM )
    double FlagTable_EngyDensity [NLEVEL-1][2];

@@ -27,6 +27,7 @@ extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int l
 //                MagCC        : Input cell-centered B field array
 //                Vel          : Input velocity array
 //                Pres         : Input pressure array
+//                Lrtz         : Input Lorentz factor array
 //                Lohner_Ave   : Input array storing the averages for the Lohner error estimator
 //                Lohner_Slope : Input array storing the slopes for the Lohner error estimator
 //                Lohner_NVar  : Number of variables stored in Lohner_Ave and Lohner_Slope
@@ -41,7 +42,7 @@ extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int l
 //-------------------------------------------------------------------------------------------------------
 bool Flag_Check( const int lv, const int PID, const int i, const int j, const int k, const real dv,
                  const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real MagCC[][PS1][PS1][PS1],
-                 const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1],
+                 const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1], const real Lrtz[][PS1][PS1],
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
                  const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff )
 {
@@ -108,6 +109,15 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    }
 #  endif
 
+// check Lorentz factor gradient in SRHD
+// ===========================================================================================
+#  if ( MODEL == HYDRO && defined SRHD )
+   if ( OPT__FLAG_LRTZ_GRADIENT )
+   {
+      Flag |= Check_Gradient( i, j, k, &Lrtz[0][0][0], FlagTable_LrtzGradient[lv] );
+      if ( Flag )    return Flag;
+   }
+#  endif
 
 // check vorticity
 // ===========================================================================================

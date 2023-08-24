@@ -117,7 +117,9 @@ extern bool             OPT__INIT_BFIELD_BYFILE, OPT__SAME_INTERFACE_B;
 #endif
 
 #ifdef SRHD
+extern double           FlagTable_LrtzGradient[NLEVEL-1];
 extern int              DT__SPEED_OF_LIGHT;
+extern bool             OPT__FLAG_LRTZ_GRADIENT;
 #endif
 
 #elif ( MODEL == ELBDM )

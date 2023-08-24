@@ -2123,6 +2123,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  ifdef MHD
    InputPara.Opt__Flag_Current       = OPT__FLAG_CURRENT;
 #  endif
+#  ifdef SRHD
+   InputPara.Opt__Flag_LrtzGradient  = OPT__FLAG_LRTZ_GRADIENT;
+#  endif
 #  endif
 #  if ( MODEL == ELBDM )
    InputPara.Opt__Flag_EngyDensity   = OPT__FLAG_ENGY_DENSITY;
@@ -2472,7 +2475,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #     ifdef MHD
       InputPara.FlagTable_Current     [lv]    = FlagTable_Current     [lv];
 #     endif
-
+#     ifdef SRHD
+      InputPara.FlagTable_LrtzGradient[lv]    = FlagTable_LrtzGradient[lv];
+#     endif
 #     elif ( MODEL == ELBDM )
       for (int t=0; t<2; t++)
       InputPara.FlagTable_EngyDensity [lv][t] = FlagTable_EngyDensity [lv][t];

@@ -847,6 +847,9 @@ void Aux_TakeNote()
 #     ifdef MHD
       fprintf( Note, "OPT__FLAG_CURRENT               %d\n",      OPT__FLAG_CURRENT         );
 #     endif
+#     ifdef SRHD
+      fprintf( Note, "OPT__FLAG_LRTZ_GRADIENT         %d\n",      OPT__FLAG_LRTZ_GRADIENT   );
+#     endif
 #     endif
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__FLAG_ENGY_DENSITY          %d\n",      OPT__FLAG_ENGY_DENSITY    );
@@ -1459,6 +1462,19 @@ void Aux_TakeNote()
          fprintf( Note, "\n\n");
       }
 #     endif
+
+#     ifdef SRHD
+      if ( OPT__FLAG_LRTZ_GRADIENT )
+      {
+	  fprintf( Note, "Flag Criterion (Lorentz Factor Gradient in HYDRO)\n" );
+	  fprintf( Note, "***********************************************************************************\n" );
+	  fprintf( Note, "  Level   Lorentz Factor Gradient\n" );
+	  for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_LrtzGradient[lv] );
+	  fprintf( Note, "***********************************************************************************\n" );
+	  fprintf( Note, "\n\n");
+      }
+#     endif
+
 #     endif // #if ( MODEL == HYDRO )
 
 #     if ( MODEL == ELBDM )
