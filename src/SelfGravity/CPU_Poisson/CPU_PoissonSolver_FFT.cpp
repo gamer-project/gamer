@@ -4,8 +4,8 @@
 
 
 
-static void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const int dj, const int RhoK_Size );
-static void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const int RhoK_Size );
+static void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const int dj, const long RhoK_Size );
+static void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const long RhoK_Size );
 
 extern root_fftw::real_plan_nd     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
 
@@ -22,7 +22,7 @@ extern root_fftw::real_plan_nd     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
 //                dj        : Size of array in the j (y) direction after the forward FFT
 //                RhoK_Size : Size of the array "RhoK"
 //-------------------------------------------------------------------------------------------------------
-void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const int dj, const int RhoK_Size )
+void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const int dj, const long RhoK_Size )
 {
 
    const int Nx        = NX0_TOT[0];
@@ -106,7 +106,7 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 // normalization
    const real norm = dh*dh / ( (real)Nx*Ny*Nz );
 
-   for (int t=0; t<RhoK_Size; t++)  RhoK[t] *= norm;
+   for (long t=0; t<RhoK_Size; t++)  RhoK[t] *= norm;
 
 } // FUNCTION : FFT_Periodic
 
@@ -124,7 +124,7 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 //                Poi_Coeff : Coefficient in front of density in the Poisson equation (4*Pi*Newton_G*a)
 //                RhoK_Size : Size of the array "RhoK"
 //-------------------------------------------------------------------------------------------------------
-void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const int RhoK_Size )
+void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const long RhoK_Size )
 {
    gamer_fftw::fft_complex *RhoK_cplx   = (gamer_fftw::fft_complex *)RhoK;
    gamer_fftw::fft_complex *gFuncK_cplx = (gamer_fftw::fft_complex *)gFuncK;
@@ -136,9 +136,9 @@ void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const i
 
 
 // multiply density and Green's function in the k space
-   const int RhoK_Size_cplx = RhoK_Size/2;
+   const long RhoK_Size_cplx = RhoK_Size/2;
 
-   for (int t=0; t<RhoK_Size_cplx; t++)
+   for (long t=0; t<RhoK_Size_cplx; t++)
    {
       c_re(Temp_cplx) = c_re(RhoK_cplx[t]);
       c_im(Temp_cplx) = c_im(RhoK_cplx[t]);
@@ -155,7 +155,7 @@ void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const i
 #  ifdef COMOVING
    const real Coeff = Poi_Coeff / ( 4.0*M_PI*NEWTON_G );    // == Time[0] == scale factor at the base level
 
-   for (int t=0; t<RhoK_Size; t++)  RhoK[t] *= Coeff;
+   for (long t=0; t<RhoK_Size; t++)  RhoK[t] *= Coeff;
 #  endif
 
 
@@ -205,11 +205,25 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 #  endif // #  if ( SUPPORT_FFTW == FFTW3 ) ... # else
 #  endif
 
+// check integer overflow (assuming local_nx*local_ny*local_nz ~ total_local_size)
+   const long local_nxyz = (long)local_nx*(long)local_ny*(long)local_nz;
+
+   if ( local_nx < 0 || local_ny < 0 || local_nz < 0 )
+      Aux_Error( ERROR_INFO, "local_nx/y/z (%ld, %ld, %ld) < 0 for FFT !!", local_nx, local_ny, local_nz );
+
+   if (  ( sizeof(mpi_index_int) == sizeof(int) && local_nxyz > __INT_MAX__ )  ||  total_local_size < 0  )
+      Aux_Error( ERROR_INFO, "local_nx*local_ny*local_nz = %d*%d*%d = %ld > __INT_MAX__ (%d)\n"
+                     "        and/or total_local_size (%ld) < 0 for FFT, suggesting integer overflow !!\n"
+                     "        --> Try using more MPI processes\n",
+                 local_nx, local_ny, local_nz, local_nxyz, __INT_MAX__, total_local_size );
+
+
 // collect "local_nz" from all ranks and set the corresponding list "List_z_start"
    int List_nz     [MPI_NRank  ];   // slab thickness of each rank in the FFTW slab decomposition
    int List_z_start[MPI_NRank+1];   // starting z coordinate of each rank in the FFTW slab decomposition
 
-   MPI_Allgather( &local_nz, 1, MPI_INT, List_nz, 1, MPI_INT, MPI_COMM_WORLD );
+   const int local_nz_int = local_nz;  // necessary since "mpi_index_int" maps to "long int" for FFTW3
+   MPI_Allgather( &local_nz_int, 1, MPI_INT, List_nz, 1, MPI_INT, MPI_COMM_WORLD );
 
    List_z_start[0] = 0;
    for (int r=0; r<MPI_NRank; r++)  List_z_start[r+1] = List_z_start[r] + List_nz[r];
@@ -225,8 +239,8 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
    real *RhoK         = (real* ) root_fftw::fft_malloc(sizeof(real) * total_local_size);   // array storing both density and potential
    real *SendBuf      = new real [ (long)amr->NPatchComma[0][1]*CUBE(PS1) ];          // MPI send buffer for density and potential
    real *RecvBuf      = new real [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];          // MPI recv buffer for density and potentia
-   long *SendBuf_SIdx = new long [ amr->NPatchComma[0][1]*PS1 ];                      // MPI send buffer for 1D coordinate in slab
-   long *RecvBuf_SIdx = new long [ NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/SQR(PS1) ];       // MPI recv buffer for 1D coordinate in slab
+   long *SendBuf_SIdx = new long [ (long)amr->NPatchComma[0][1]*PS1 ];                // MPI send buffer for 1D coordinate in slab
+   long *RecvBuf_SIdx = new long [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/SQR(PS1) ]; // MPI recv buffer for 1D coordinate in slab
 
    int  *List_PID    [MPI_NRank];   // PID of each patch slice sent to each rank
    int  *List_k      [MPI_NRank];   // local z coordinate of each patch slice sent to each rank
@@ -238,7 +252,7 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 
 // initialize RhoK as zeros for the isolated BC where the zero-padding method is adopted
    if ( OPT__BC_POT == BC_POT_ISOLATED )
-      for (int t=0; t<total_local_size; t++)    RhoK[t] = (real)0.0;
+      for (long t=0; t<total_local_size; t++)   RhoK[t] = (real)0.0;
 
 
 // rearrange data from patch to slab
