@@ -24,6 +24,8 @@ extern void (*Init_Function_User_Ptr)( real fluid[], const double x, const doubl
 #ifdef MHD
 extern void (*Init_Function_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
                                               const int lv, double AuxArray[] );
+extern double (*Init_BField_ByVecPot_User_Ptr)( const double x, const double y, const double z, const double Time,
+                                                const int lv, const char Component, double AuxArray[] );
 #endif
 extern void (*Init_ByFile_User_Ptr)( real fluid_out[], const real fluid_in[], const int nvar_in,
                                      const double x, const double y, const double z, const double Time,
@@ -47,6 +49,14 @@ extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double
 #endif
 extern int (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
                                         const double dt, const int lv, double AuxArray[] );
+#ifdef MHD
+extern double (*MHD_ResetByUser_VecPot_Ptr)( const double x, const double y, const double z, const double Time,
+                                             const double dt, const int lv, const char Component, double AuxArray[] );
+extern double (*MHD_ResetByUser_BField_Ptr)( const double x, const double y, const double z, const double Time,
+                                             const double dt, const int lv, const char Component, double AuxArray[], const double B_in,
+                                             const bool UseVecPot, const real *Ax, const real *Ay, const real *Az,
+                                             const int i, const int j, const int k );
+#endif
 extern void (*End_User_Ptr)();
 #ifdef GRAVITY
 extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,
@@ -70,6 +80,9 @@ extern void (*EoS_End_Ptr)();
 #endif
 extern void (*Src_Init_User_Ptr)();
 extern void (*Init_DerivedField_User_Ptr)();
+#ifdef FEEDBACK
+extern void (*FB_Init_User_Ptr)();
+#endif
 
 
 // helper macro for printing warning messages when resetting parameters

@@ -52,6 +52,7 @@ template <typename T> int  Aux_LoadTable( T *&Data, const char *FileName, const 
                                           const bool RowMajor, const bool AllocMem );
 int Aux_IsFinite( const float x );
 int Aux_IsFinite( const double x );
+void Aux_PauseManually();
 
 
 // Buffer
@@ -453,7 +454,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 real*LB_GetBufferData_MemAllocate_Send( const int NSend );
 real*LB_GetBufferData_MemAllocate_Recv( const int NRecv );
 void LB_GrandsonCheck( const int lv );
-void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, const double ParWeight, const bool Reset, const int TLv );
+void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, const double ParWeight, const bool Reset,
+                          const bool SortRealPatch, const int TLv );
 void LB_Init_ByFunction();
 void LB_Init_Refine( const int FaLv, const bool AllocData );
 void LB_SetCutPoint( const int lv, const int NPG_Total, long *CutPoint, const bool InputLBIdx0AndLoad,
@@ -532,7 +534,14 @@ void MHD_BoundaryCondition_User( real **Array, const int BC_Face, const int NVar
                                  const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                  const int Idx_Start[], const int Idx_End[], const int TVarIdxList[],
                                  const double Time, const double dh, const double *Corner, const int lv );
-void MHD_Init_BField_ByFile( const int B_lv );
+void MHD_Init_BField_ByVecPot_File( const int B_lv );
+void MHD_Init_BField_ByVecPot_Function( const int B_lv );
+real MHD_ResetByUser_A2Bx( const real *Ax, const real *Ay, const real *Az,
+                           const int i, const int j, const int k, const double dh );
+real MHD_ResetByUser_A2By( const real *Ax, const real *Ay, const real *Az,
+                           const int i, const int j, const int k, const double dh );
+real MHD_ResetByUser_A2Bz( const real *Ax, const real *Ay, const real *Az,
+                           const int i, const int j, const int k, const double dh );
 #ifdef LOAD_BALANCE
 void MHD_LB_EnsureBFieldConsistencyAfterRestrict( const int lv );
 void MHD_LB_AllocateElectricArray( const int FaLv );
@@ -644,6 +653,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
                          const int RhoSize, const double *EdgeL, const double dh, const bool PredictPos,
                          const double TargetTime, const bool InitZero, const bool Periodic[], const int PeriodicSize[3],
                          const bool UnitDens, const bool CheckFarAway, const bool UseInputMassPos, real **InputMassPos );
+void Par_SortByPos( const long NPar, const real *PosX, const real *PosY, const real *PosZ, int *IdxTable );
 void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOld, const ParUpStep_t UpdateStep,
                          const bool StoreAcc, const bool UseStoredAcc );
 void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double TimeOld,
@@ -756,6 +766,16 @@ void SF_FreeRNG();
 void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, RandomNumber_t *RNG,
                           const real GasDensThres, const real Efficiency, const real MinStarMass, const real MaxStarMFrac,
                           const bool DetRandom, const bool UseMetal );
+#endif
+
+
+// feedback
+#ifdef FEEDBACK
+void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                   const int SaveSg_Flu, const int SaveSg_Mag );
+void FB_Init();
+void FB_End();
+int FB_Aux_CellPatchRelPos( const int ijk[] );
 #endif
 
 

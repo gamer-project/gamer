@@ -5,7 +5,7 @@
 // no need to share with other files
 static AMR_t    amr1, amr2;
 static char    *FileName_In1=NULL, *FileName_In2=NULL, *FileName_Out=NULL;
-static bool     UseCorner=false;
+static bool     UseCorner=false, MaxErrOnly=false;
 static int      NField1=-1, NField2=-1, NMag1=-1, NMag2=-1, NParAtt1=-1, NParAtt2=-1, Format1=-1, Format2=-1;
 static long     NPar1=-1, NPar2=-1;
 static double   TolErr=__FLT_MIN__;
@@ -25,7 +25,7 @@ void ReadOption( int argc, char **argv )
 
    int c;
 
-   while( (c = getopt(argc, argv, "hci:j:o:e:")) != -1 )
+   while( (c = getopt(argc, argv, "hcmi:j:o:e:")) != -1 )
       switch(c)
       {
          case 'i': FileName_In1  = optarg;
@@ -38,14 +38,18 @@ void ReadOption( int argc, char **argv )
                    break;
          case 'c': UseCorner     = true;
                    break;
+         case 'm': MaxErrOnly    = true;
+                   break;
          case 'h':
          case '?': cerr << endl << "usage: " << argv[0]
                         << " [-h (for help)] [-i Input FileName1] [-j Input FileName2] [-o Output FileName]"
                         << endl << "                          "
                         << " [-e Tolerant Error] [-c (compare patches with the same corner coordinates) [off]]"
+                        << endl << "                          "
+                        << " [-m Only output the maximum error of each field [off]]"
                         << endl
                         << endl << endl;
-                   exit( 1 );
+                   exit( EXIT_SUCCESS );
       }
 
 } // FUNCTION : ReadOption
@@ -71,7 +75,7 @@ void CheckParameter()
    if ( FileName_Out == NULL )
       Aux_Error( ERROR_INFO, "please provide the name of the output file (-o FileName) !!\n" );
 
-   if ( TolErr == 1.e-20 )
+   if ( TolErr == __FLT_MIN__ )
       Aux_Message( stderr, "WARNING : please provide the tolerant error (-e Tolerant Error) !!\n" );
 
    if ( UseCorner == false )
@@ -88,8 +92,11 @@ void CheckParameter()
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CompareGridData
 // Description :  Compare the grid data between two files
+//
+// Return      :  EXIT_SUCCESS : no error
+//                EXIT_FAILURE : with errors
 //-------------------------------------------------------------------------------------------------------
-void CompareGridData()
+int CompareGridData()
 {
 
    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -176,6 +183,13 @@ void CompareGridData()
    double Data1, Data2, AbsErr, RelErr;
    int    PID1, PID2;
    int   *Cr1, *Cr2;
+   bool   ErrorDetected = false;
+
+   double MaxErrCC_Data[NField1][4], MaxErrFC_Data[NMag1][4];
+   int    MaxErrCC_Info[NField1][7], MaxErrFC_Info[NMag1][7];
+
+   for (int v=0; v<NField1; v++)    MaxErrCC_Data[v][3] = -__FLT_MIN__;
+   for (int v=0; v<NMag1;   v++)    MaxErrFC_Data[v][3] = -__FLT_MIN__;
 
    FILE *File = fopen( FileName_Out, "w" );
 
@@ -192,7 +206,7 @@ void CompareGridData()
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
-      Aux_Message( stdout, "  Comparing level %d ...", lv );
+      Aux_Message( stdout, "  Comparing level %d ... ", lv );
 
       for (PID1=0; PID1<amr1.num[lv]; PID1++)
       {
@@ -213,7 +227,19 @@ void CompareGridData()
             }
 
             else
+            {
                PID2 = PID1;
+
+//             assert the two patches have the same corner coordinates
+               Cr1 = amr1.patch[lv][PID1]->corner;
+               Cr2 = amr2.patch[lv][PID2]->corner;
+
+               for (int d=0; d<3; d++)
+                  if ( Cr1[d] != Cr2[d] )
+                     Aux_Error( ERROR_INFO, "patch %d in the two snapshots do not match: d %d, corner %d != %d !!\n"
+                                            "        --> Try enabling the option \"-c\"\n",
+                                PID1, PID2, d, Cr1[d], Cr2[d] );
+            }
 
 
 //          a. cell-centered fields
@@ -229,9 +255,31 @@ void CompareGridData()
 
                if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
 
-               if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
-                  fprintf( File, "%6d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
-                           lv, PID1, PID2, i, j, k, v, Data1, Data2, AbsErr, RelErr );
+               if ( fabs(RelErr) >= TolErr  ||  !isfinite(RelErr) )
+               {
+                  ErrorDetected = true;
+
+                  if ( MaxErrOnly ) {
+                     if ( fabs(RelErr) > fabs(MaxErrCC_Data[v][3]) ) {
+                        MaxErrCC_Info[v][0] = lv;
+                        MaxErrCC_Info[v][1] = PID1;
+                        MaxErrCC_Info[v][2] = PID2;
+                        MaxErrCC_Info[v][3] = i;
+                        MaxErrCC_Info[v][4] = j;
+                        MaxErrCC_Info[v][5] = k;
+                        MaxErrCC_Info[v][6] = v;
+
+                        MaxErrCC_Data[v][0] = Data1;
+                        MaxErrCC_Data[v][1] = Data2;
+                        MaxErrCC_Data[v][2] = AbsErr;
+                        MaxErrCC_Data[v][3] = RelErr;
+                     }
+                  }
+
+                  else
+                     fprintf( File, "%6d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
+                              lv, PID1, PID2, i, j, k, v, Data1, Data2, AbsErr, RelErr );
+               }
             } // i,j,k,v
 
 
@@ -246,8 +294,10 @@ void CompareGridData()
 
                if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
 
-               if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
+               if ( fabs(RelErr) >= TolErr  ||  !isfinite(RelErr) )
                {
+                  ErrorDetected = true;
+
                   int size_i, size_j, size_k, size_ij, i, j, k;
 
                   switch ( v )
@@ -262,8 +312,26 @@ void CompareGridData()
                   j       = t % size_ij / size_i;
                   k       = t / size_ij;
 
-                  fprintf( File, "%6d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
-                           lv, PID1, PID2, i, j, k, v+MagIdx0, Data1, Data2, AbsErr, RelErr );
+                  if ( MaxErrOnly ) {
+                     if ( fabs(RelErr) > fabs(MaxErrFC_Data[v][3]) ) {
+                        MaxErrFC_Info[v][0] = lv;
+                        MaxErrFC_Info[v][1] = PID1;
+                        MaxErrFC_Info[v][2] = PID2;
+                        MaxErrFC_Info[v][3] = i;
+                        MaxErrFC_Info[v][4] = j;
+                        MaxErrFC_Info[v][5] = k;
+                        MaxErrFC_Info[v][6] = v+MagIdx0;
+
+                        MaxErrFC_Data[v][0] = Data1;
+                        MaxErrFC_Data[v][1] = Data2;
+                        MaxErrFC_Data[v][2] = AbsErr;
+                        MaxErrFC_Data[v][3] = RelErr;
+                     }
+                  }
+
+                  else
+                     fprintf( File, "%6d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
+                              lv, PID1, PID2, i, j, k, v+MagIdx0, Data1, Data2, AbsErr, RelErr );
                }
             } // for v, t
 
@@ -279,6 +347,25 @@ void CompareGridData()
    } // for (int lv=0; lv<NLEVEL; lv++)
 
 
+// output the maximum errors
+   if ( MaxErrOnly )
+   {
+      for (int v=0; v<NField1; v++)
+         if ( MaxErrCC_Data[v][3] != -__FLT_MIN__ )
+            fprintf( File, "%6d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
+                     MaxErrCC_Info[v][0], MaxErrCC_Info[v][1], MaxErrCC_Info[v][2], MaxErrCC_Info[v][3],
+                     MaxErrCC_Info[v][4], MaxErrCC_Info[v][5], MaxErrCC_Info[v][6],
+                     MaxErrCC_Data[v][0], MaxErrCC_Data[v][1], MaxErrCC_Data[v][2], MaxErrCC_Data[v][3] );
+
+      for (int v=0; v<NMag1; v++)
+         if ( MaxErrFC_Data[v][3] != -__FLT_MIN__ )
+            fprintf( File, "%6d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
+                     MaxErrFC_Info[v][0], MaxErrFC_Info[v][1], MaxErrFC_Info[v][2], MaxErrFC_Info[v][3],
+                     MaxErrFC_Info[v][4], MaxErrFC_Info[v][5], MaxErrFC_Info[v][6],
+                     MaxErrFC_Data[v][0], MaxErrFC_Data[v][1], MaxErrFC_Data[v][2], MaxErrFC_Data[v][3] );
+   }
+
+
    fclose( File );
 
 
@@ -290,7 +377,10 @@ void CompareGridData()
          if ( LeafOnly  &&  amr1.patch[lv][PID]->son != -1 )   continue;
 
          if ( amr1.patch[lv][PID]->check == false )
+         {
+            ErrorDetected = true;
             Aux_Message( stderr, "WARNING : patch %5d on level %d in input 1 has NOT been checked !!\n", PID, lv );
+         }
       }
 
       for (int PID=0; PID<amr2.num[lv]; PID++)
@@ -298,12 +388,19 @@ void CompareGridData()
          if ( LeafOnly  &&  amr2.patch[lv][PID]->son != -1 )   continue;
 
          if ( amr2.patch[lv][PID]->check == false )
+         {
+            ErrorDetected = true;
             Aux_Message( stderr, "WARNING : patch %5d on level %d in input 2 has NOT been checked !!\n", PID, lv );
+         }
       }
    }
 
+   if ( ! ErrorDetected )  Aux_Message( stdout, "\n*** No error is detected in the grid data ***\n\n" );
+
 
    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
+
+   return ( ErrorDetected ) ? EXIT_FAILURE : EXIT_SUCCESS;
 
 } // FUNCTION : CompareGridData
 
@@ -312,8 +409,11 @@ void CompareGridData()
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CompareParticleData
 // Description :  Compare the particle data between two files
+//
+// Return      :  EXIT_SUCCESS : no error
+//                EXIT_FAILURE : with errors
 //-------------------------------------------------------------------------------------------------------
-void CompareParticleData()
+int CompareParticleData()
 {
 
    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -362,6 +462,12 @@ void CompareParticleData()
    double AbsErr, RelErr;
    long   ParID1, ParID2;
    real   Data1, Data2;
+   bool   ErrorDetected = false;
+
+   double MaxErrPar_Data[NParAtt1][4];
+   long   MaxErrPar_Info[NParAtt1][3];
+
+   for (int v=0; v<NParAtt1; v++)   MaxErrPar_Data[v][3] = -__FLT_MIN__;
 
    FILE *File = fopen( FileName_Out, "a" );
 
@@ -391,9 +497,37 @@ void CompareParticleData()
 
       if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
 
-      if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
-         fprintf( File, "  %12ld  %12ld  %4d  %14.7e  %14.7e  %14.7e  %14.7e\n",
-                  ParID1, ParID2, v, Data1, Data2, AbsErr, RelErr );
+      if ( fabs(RelErr) >= TolErr  ||  !isfinite(RelErr) )
+      {
+         ErrorDetected = true;
+
+         if ( MaxErrOnly ) {
+            if ( fabs(RelErr) > fabs(MaxErrPar_Data[v][3]) ) {
+               MaxErrPar_Info[v][0] = ParID1;
+               MaxErrPar_Info[v][1] = ParID2;
+               MaxErrPar_Info[v][2] = v;
+
+               MaxErrPar_Data[v][0] = Data1;
+               MaxErrPar_Data[v][1] = Data2;
+               MaxErrPar_Data[v][2] = AbsErr;
+               MaxErrPar_Data[v][3] = RelErr;
+            }
+         }
+
+         else
+            fprintf( File, "  %12ld  %12ld  %4d  %14.7e  %14.7e  %14.7e  %14.7e\n",
+                     ParID1, ParID2, v, Data1, Data2, AbsErr, RelErr );
+      }
+   }
+
+// output the maximum errors
+   if ( MaxErrOnly )
+   {
+      for (int v=0; v<NParAtt1; v++)
+         if ( MaxErrPar_Data[v][3] != -__FLT_MIN__ )
+            fprintf( File, "  %12ld  %12ld  %4d  %14.7e  %14.7e  %14.7e  %14.7e\n",
+                     MaxErrPar_Info[v][0], MaxErrPar_Info[v][1], (int)MaxErrPar_Info[v][2],
+                     MaxErrPar_Data[v][0], MaxErrPar_Data[v][1], MaxErrPar_Data[v][2], MaxErrPar_Data[v][3] );
    }
 
    fclose( File );
@@ -401,8 +535,12 @@ void CompareParticleData()
    delete [] IdxTable1;
    delete [] IdxTable2;
 
+   if ( ! ErrorDetected )  Aux_Message( stdout, "\n*** No error is detected in the particle data ***\n\n" );
+
 
    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
+
+   return ( ErrorDetected ) ? EXIT_FAILURE : EXIT_SUCCESS;
 
 } // FUNCTION : CompareParticleData
 
@@ -450,13 +588,15 @@ int main( int argc, char ** argv )
    LoadData( FileName_In2, amr2, Format2, NField2, NMag2, NParAtt2, NPar2, ParData2,
              FieldLabel2, MagLabel2, ParAttLabel2 );
 
-   CompareGridData();
-   CompareParticleData();
+   int ErrorDetected = false;
+
+   ErrorDetected |= CompareGridData();
+   ErrorDetected |= CompareParticleData();
 
    FreeMemory();
 
    Aux_Message( stdout, "Program terminated successfully\n" );
 
-   return 0;
+   return ( ErrorDetected ) ? EXIT_FAILURE : EXIT_SUCCESS;
 
 } // FUNCTION : main

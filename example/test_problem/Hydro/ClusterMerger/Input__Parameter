@@ -120,7 +120,7 @@ OPT__FLAG_CURRENT             0           # flag: current density in MHD (Input_
 LB_INPUT__WLI_MAX             0.1         # weighted-load-imbalance (WLI) threshold for redistributing all patches [0.1]
 LB_INPUT__PAR_WEIGHT          2.0         # load-balance weighting of one particle over one cell [0.0]
 OPT__RECORD_LOAD_BALANCE      1           # record the load-balance info [1]
-OPT__MINIMIZE_MPI_BARRIER     1           # minimize MPI barriers to improve load balance, especially with particles [1]
+OPT__MINIMIZE_MPI_BARRIER     0           # minimize MPI barriers to improve load balance, especially with particles [0]
                                           # (STORE_POT_GHOST, PAR_IMPROVE_ACC=1, OPT__TIMING_BARRIER=0 only; recommend AUTO_REDUCE_DT=0)
 
 
@@ -168,7 +168,8 @@ RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL        3           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
-OPT__INIT_BFIELD_BYFILE       1
+OPT__INIT_BFIELD_BYVECPOT     1           # initialize the magnetic field from vector potential
+                                          # (0=off, 1=external disk file named "B_IC", see tool/inits/gen_vec_pot.py for example, 2=function) [0] ##MHD ONLY##
 
 
 # interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar)

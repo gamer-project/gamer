@@ -8,14 +8,7 @@
 
 static void GetBasePowerSpectrum( real *VarK, const int j_start, const int dj, double *PS_total, double *NormDC );
 
-#ifdef SERIAL
-extern rfftwnd_plan     FFTW_Plan_PS;
-#else
-extern rfftwnd_mpi_plan FFTW_Plan_PS;
-#endif
-
-
-
+extern root_fftw::real_plan_nd     FFTW_Plan_PS;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_BasePowerSpectrum
@@ -43,24 +36,46 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    const int FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
 
 // get the array indices using by FFTW
-   int local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose, total_local_size;
+   mpi_index_int local_nx, local_ny, local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose, total_local_size;
+
+// note: total_local_size is NOT necessarily equal to local_nx*local_ny*local_nz
+   local_nx = 2*( FFT_Size[0]/2 + 1 );
+   local_ny = FFT_Size[1];
 
 #  ifdef SERIAL
    local_nz                      = FFT_Size[2];
    local_z_start                 = 0;
    local_ny_after_transpose      = NULL_INT;
    local_y_start_after_transpose = NULL_INT;
-   total_local_size              = 2*Nx_Padded*FFT_Size[1]*FFT_Size[2];
-#  else
+   total_local_size              = local_nx*local_ny*local_nz;
+#  else // # ifdef SERIAL
+#  if ( SUPPORT_FFTW == FFTW3 )
+   total_local_size = fftw_mpi_local_size_3d_transposed( FFT_Size[2], local_ny, local_nx, MPI_COMM_WORLD,
+                           &local_nz, &local_z_start, &local_ny_after_transpose, &local_y_start_after_transpose );
+#  else // # if ( SUPPORT_FFTW == FFTW3 )
    rfftwnd_mpi_local_sizes( FFTW_Plan_PS, &local_nz, &local_z_start, &local_ny_after_transpose,
                             &local_y_start_after_transpose, &total_local_size );
-#  endif
+#  endif // #  if ( SUPPORT_FFTW == FFTW3 ) ... # else
+#  endif // #  ifdef SERIAL ... # else
+
+// check integer overflow (assuming local_nx*local_ny*local_nz ~ total_local_size)
+   const long local_nxyz = (long)local_nx*(long)local_ny*(long)local_nz;
+
+   if ( local_nx < 0 || local_ny < 0 || local_nz < 0 )
+      Aux_Error( ERROR_INFO, "local_nx/y/z (%ld, %ld, %ld) < 0 for FFT !!", local_nx, local_ny, local_nz );
+
+   if (  ( sizeof(mpi_index_int) == sizeof(int) && local_nxyz > __INT_MAX__ )  ||  total_local_size < 0  )
+      Aux_Error( ERROR_INFO, "local_nx*local_ny*local_nz = %d*%d*%d = %ld > __INT_MAX__ (%d)\n"
+                     "        and/or total_local_size (%ld) < 0 for FFT, suggesting integer overflow !!\n"
+                     "        --> Try using more MPI processes\n",
+                 local_nx, local_ny, local_nz, local_nxyz, __INT_MAX__, total_local_size );
 
 // collect "local_nz" from all ranks and set the corresponding list "List_z_start"
    int List_nz     [MPI_NRank  ];   // slab thickness of each rank in the FFTW slab decomposition
    int List_z_start[MPI_NRank+1];   // starting z coordinate of each rank in the FFTW slab decomposition
 
-   MPI_Allgather( &local_nz, 1, MPI_INT, List_nz, 1, MPI_INT, MPI_COMM_WORLD );
+   const int local_nz_int = local_nz;  // necessary since "mpi_index_int" maps to "long int" for FFTW3
+   MPI_Allgather( &local_nz_int, 1, MPI_INT, List_nz, 1, MPI_INT, MPI_COMM_WORLD );
 
    List_z_start[0] = 0;
    for (int r=0; r<MPI_NRank; r++)  List_z_start[r+1] = List_z_start[r] + List_nz[r];
@@ -74,11 +89,11 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    const int NRecvSlice = MIN( List_z_start[MPI_Rank]+local_nz, NX0_TOT[2] ) - MIN( List_z_start[MPI_Rank], NX0_TOT[2] );
 
    double *PS_total     = NULL;
-   real   *VarK         = new real [ total_local_size ];                         // array storing data
-   real   *SendBuf      = new real [ amr->NPatchComma[0][1]*CUBE(PS1) ];         // MPI send buffer for data
-   real   *RecvBuf      = new real [ NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];         // MPI recv buffer for data
-   long   *SendBuf_SIdx = new long [ amr->NPatchComma[0][1]*PS1 ];               // MPI send buffer for 1D coordinate in slab
-   long   *RecvBuf_SIdx = new long [ NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/SQR(PS1) ];// MPI recv buffer for 1D coordinate in slab
+   real   *VarK         = (real*) root_fftw::fft_malloc(sizeof(real) * total_local_size); // array storing data
+   real   *SendBuf      = new real [ (long)amr->NPatchComma[0][1]*CUBE(PS1) ];            // MPI send buffer for data
+   real   *RecvBuf      = new real [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];            // MPI recv buffer for data
+   long   *SendBuf_SIdx = new long [ (long)amr->NPatchComma[0][1]*PS1 ];                  // MPI send buffer for 1D coordinate in slab
+   long   *RecvBuf_SIdx = new long [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/SQR(PS1) ];   // MPI recv buffer for 1D coordinate in slab
 
    int  *List_PID    [MPI_NRank];   // PID of each patch slice sent to each rank
    int  *List_k      [MPI_NRank];   // local z coordinate of each patch slice sent to each rank
@@ -146,7 +161,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 
 
 // 7. free memory
-   delete [] VarK;
+   root_fftw::fft_free(VarK);
    delete [] SendBuf;
    delete [] RecvBuf;
    delete [] SendBuf_SIdx;
@@ -202,22 +217,15 @@ void GetBasePowerSpectrum( real *VarK, const int j_start, const int dj, double *
    const int Nz        = NX0_TOT[2];
    const int Nx_Padded = Nx/2 + 1;
 
-   fftw_complex *cdata=NULL;
+   gamer_fftw::fft_complex *cdata=NULL;
    double PS_local[Nx_Padded];
    long   Count_local[Nx_Padded], Count_total[Nx_Padded];
    int    bin, bin_i[Nx_Padded], bin_j[Ny], bin_k[Nz];
 
-
-// forward FFT
-#  ifdef SERIAL
-   rfftwnd_one_real_to_complex( FFTW_Plan_PS, VarK, NULL );
-#  else
-   rfftwnd_mpi( FFTW_Plan_PS, 1, VarK, NULL, FFTW_TRANSPOSED_ORDER );
-#  endif
-
+   root_fftw_r2c( FFTW_Plan_PS, VarK );
 
 // the data are now complex, so typecast a pointer
-   cdata = (fftw_complex*) VarK;
+   cdata = (gamer_fftw::fft_complex*) VarK;
 
 
 // set up the dimensionless wave number coefficients according to the FFTW data format
@@ -268,7 +276,7 @@ void GetBasePowerSpectrum( real *VarK, const int j_start, const int dj, double *
 
          if ( bin < Nx_Padded )
          {
-            PS_local   [bin] += double(  SQR( cdata[Idx].re ) + SQR( cdata[Idx].im )  );
+            PS_local   [bin] += double(  SQR( c_re(cdata[Idx]) ) + SQR( c_im(cdata[Idx])  ) );
             Count_local[bin] ++;
          }
       } // i,j,k

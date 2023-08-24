@@ -101,7 +101,7 @@ OPT__MEMORY_POOL              0           # preallocate patches for OPT__REUSE_M
 # load balance (LOAD_BALANCE only)
 LB_INPUT__WLI_MAX             1.0e20      # weighted-load-imbalance (WLI) threshold for redistributing all patches [0.1]
 OPT__RECORD_LOAD_BALANCE      0           # record the load-balance info [1]
-OPT__MINIMIZE_MPI_BARRIER     0           # minimize MPI barriers to improve load balance, especially with particles [1]
+OPT__MINIMIZE_MPI_BARRIER     0           # minimize MPI barriers to improve load balance, especially with particles [0]
                                           # (STORE_POT_GHOST, PAR_IMPROVE_ACC=1, OPT__TIMING_BARRIER=0 only; recommend AUTO_REDUCE_DT=0)
 
 
@@ -155,8 +155,8 @@ OPT__EXT_POT                  0           # add external potential    (0=off, 1=
 
 # initialization
 OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
-OPT__INIT_BFIELD_BYFILE       0           # initialize the magnetic field from a vector potential disk file named "B_IC"
-                                          # (example python script: tool/inits/gen_vec_pot.py) [0] ##MHD ONLY##
+OPT__INIT_BFIELD_BYVECPOT     0           # initialize the magnetic field from vector potential
+                                          # (0=off, 1=external disk file named "B_IC", see tool/inits/gen_vec_pot.py for example, 2=function) [0] ##MHD ONLY##
 RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
 OPT__RESTART_RESET            0           # reset some simulation status parameters (e.g., current step and time) during restart [0]
 OPT__UM_IC_LEVEL              0           # starting AMR level in UM_IC [0]

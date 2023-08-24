@@ -1,4 +1,5 @@
 #include "GAMER.h"
+#include "TestProb.h"
 #include "CUFLU.h"
 #ifdef GRAVITY
 #include "CUPOT.h"
@@ -230,17 +231,35 @@ void Aux_Check_Parameter()
       if ( OPT__TIMING_BARRIER )
          Aux_Error( ERROR_INFO, "OPT__MINIMIZE_MPI_BARRIER does NOT work with OPT__TIMING_BARRIER !!\n" );
 
-      if ( AUTO_REDUCE_DT  &&  MPI_Rank == 0 )
+      if ( MPI_Rank == 0 ) {
+      if ( AUTO_REDUCE_DT )
          Aux_Message( stderr, "WARNING : AUTO_REDUCE_DT will introduce an extra MPI barrier for OPT__MINIMIZE_MPI_BARRIER !!\n" );
-   }
+
+#     ifdef FEEDBACK
+         Aux_Message( stderr, "WARNING : OPT__MINIMIZE_MPI_BARRIER + FEEDBACK --> must ensure feedback does not need potential ghost zones !!\n" );
+#     endif
+      } // if ( MPI_Rank == 0 )
+   } // if ( OPT__MINIMIZE_MPI_BARRIER )
 
 #  ifdef BITWISE_REPRODUCIBILITY
    if ( OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_BEFORE_DUMP  &&  OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_EVERY_STEP )
-      Aux_Error( ERROR_INFO, "please set OPT__CORR_AFTER_ALL_SYNC to 1/2 when BITWISE_REPRODUCIBILITY is enabled !!\n" );
+      Aux_Error( ERROR_INFO, "please set OPT__CORR_AFTER_ALL_SYNC to 1/2 for BITWISE_REPRODUCIBILITY !!\n" );
 
    if ( ! OPT__FIXUP_RESTRICT )
       Aux_Error( ERROR_INFO, "must enable OPT__FIXUP_RESTRICT for BITWISE_REPRODUCIBILITY !!\n" );
+
+   if ( ! OPT__SORT_PATCH_BY_LBIDX )
+#     ifdef SERIAL
+      Aux_Message( stderr, "WARNING : SERIAL does not support OPT__SORT_PATCH_BY_LBIDX, which may break BITWISE_REPRODUCIBILITY !!\n" );
+#     else
+      Aux_Error( ERROR_INFO, "must enable OPT__SORT_PATCH_BY_LBIDX for BITWISE_REPRODUCIBILITY !!\n" );
+#     endif
+
+#  ifdef SUPPORT_FFTW
+   if ( OPT__FFTW_STARTUP != FFTW_STARTUP_ESTIMATE )
+      Aux_Error( ERROR_INFO, "must set OPT__FFTW_STARTUP=0 (FFTW_STARTUP_ESTIMATE) for BITWISE_REPRODUCIBILITY !!\n" );
 #  endif
+#  endif // #ifdef BITWISE_REPRODUCIBILITY
 
 #  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
    if ( OPT__INIT == INIT_BY_FILE )
@@ -535,7 +554,7 @@ void Aux_Check_Parameter()
                    "COMOVING", "GRAVITY" );
 #  endif
 
-#endif // COMOVING
+#endif // #ifdef COMOVING
 
 
 
@@ -587,8 +606,10 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : DT__FLUID_INIT (%14.7e) is not within the normal range [0...1] !!\n",
                    DT__FLUID_INIT );
 
-   if ( OPT__RESET_FLUID_INIT  &&   OPT__INIT == INIT_BY_FILE )
-      Aux_Message( stderr, "WARNING : \"%s\" will NOT be applied to the input uniform data !!\n", "OPT__RESET_FLUID_INIT" );
+#  ifdef MHD
+   if ( OPT__RESET_FLUID_INIT  &&  MHD_ResetByUser_BField_Ptr != NULL  &&  INIT_SUBSAMPLING_NCELL > 1 )
+      Aux_Message( stderr, "WARNING : \"%s\" will NOT be applied to resetting initial magnetic field !!\n", "INIT_SUBSAMPLING_NCELL" );
+#  endif
 
    if ( OPT__FREEZE_FLUID )
       Aux_Message( stderr, "REMINDER : \"%s\" will prevent fluid variables from being updated\n", "OPT__FREEZE_FLUID" );
@@ -777,6 +798,9 @@ void Aux_Check_Parameter()
    if ( JEANS_MIN_PRES )
       Aux_Error( ERROR_INFO, "RTVD does not support \"JEANS_MIN_PRES\" !!\n" );
 #  endif
+
+   if ( MU_NORM <= 0.0 )
+      Aux_Error( ERROR_INFO, "MU_NORM (%14.7e) <= 0.0 !!\n", MU_NORM );
 
 
 // warnings
@@ -976,8 +1000,8 @@ void Aux_Check_Parameter()
 #     error : ERROR : MHD must work with either SERIAL or LOAD_BALANCE !!
 #  endif
 
-#  if ( FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
-#     error : ERROR : unsupported MHD scheme in the makefile (MHM_RP/CTU) !!
+#  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
+#     error : ERROR : unsupported MHD scheme (MHM/MHM_RP/CTU) !!
 #  endif
 
 #  if ( HLLE_WAVESPEED == HLL_WAVESPEED_PVRS )
@@ -1159,6 +1183,10 @@ void Aux_Check_Parameter()
 #     error : ERROR : SUPPORT_FFTW must be enabled in the makefile when GRAVITY is on !!
 #  endif
 
+#  if (  defined SUPPORT_FFTW  &&  ( SUPPORT_FFTW != FFTW2 && SUPPORT_FFTW != FFTW3 )  )
+#     error : ERROR : SUPPORT_FFTW != FFTW2/FFTW3 !!
+#  endif
+
 #  if ( POT_SCHEME != SOR  &&  POT_SCHEME != MG )
 #     error : ERROR : unsupported Poisson solver in the makefile (SOR/MG) !!
 #  endif
@@ -1305,7 +1333,7 @@ void Aux_Check_Parameter()
 #  error : unsupported MODEL !!
 #  endif // MODEL
 
-#endif // GRAVITY
+#endif // #ifdef GRAVITY
 
 
 
@@ -1414,7 +1442,7 @@ void Aux_Check_Parameter()
    }
 
 
-#endif // PARTICLE
+#endif // #ifdef PARTICLE
 
 
 
@@ -1440,7 +1468,7 @@ void Aux_Check_Parameter()
 
    } // if ( MPI_Rank == 0 )
 
-#endif // SUPPORT_GRACKLE
+#endif // #ifdef SUPPORT_GRACKLE
 
 
 
@@ -1497,7 +1525,40 @@ void Aux_Check_Parameter()
 
    } // if ( MPI_Rank == 0 )
 
-#endif // ifdef STAR_FORMATION
+#endif // #ifdef STAR_FORMATION
+
+
+
+// feedback
+// =======================================================================================
+#ifdef FEEDBACK
+
+// errors
+// ------------------------------
+#  ifndef PARTICLE
+#     error : FEEDBACK must work with PARTICLE !!
+#  endif
+
+   if ( FB_LEVEL != MAX_LEVEL )  Aux_Error( ERROR_INFO, "FB_LEVEL (%d) != MAX_LEVEL (%d) !!\n", FB_LEVEL, MAX_LEVEL );
+
+   for (int d=0; d<3; d++)
+   {
+//    we have assumed that OPT__BC_FLU[2*d] == OPT__BC_FLU[2*d+1] when adopting the periodic BC
+      if ( OPT__BC_FLU[2*d] == BC_FLU_PERIODIC  &&  NX0_TOT[d]/PS2 == 1 )
+         Aux_Error( ERROR_INFO, "\"%s\" does NOT work for NX0_TOT[%d] = 2*PATCH_SIZE when periodic BC is adopted !!\n",
+                    "FB_AdvanceDt()", d );
+   }
+
+   if ( FB_ParaBuf > PATCH_SIZE )
+      Aux_Error( ERROR_INFO, "FB_ParaBuf (%d) > PATCH_SIZE (%d) !!\n", FB_ParaBuf, PATCH_SIZE );
+
+// warning
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
+
+   } // if ( MPI_Rank == 0 )
+
+#endif // #ifdef FEEDBACK
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ... done\n" );

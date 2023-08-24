@@ -71,7 +71,7 @@ extern bool       OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
 extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__FREEZE_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 extern bool       OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
-extern bool       OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID;
+extern bool       OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID, OPT__SORT_PATCH_BY_LBIDX;
 
 extern UM_IC_Format_t     OPT__UM_IC_FORMAT;
 extern TestProbID_t       TESTPROB_ID;
@@ -92,7 +92,7 @@ extern OptTimeStepLevel_t OPT__DT_LEVEL;
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
 extern double           FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1], FlagTable_Jeans[NLEVEL-1];
-extern double           GAMMA, MINMOD_COEFF, AUTO_REDUCE_MINMOD_FACTOR, AUTO_REDUCE_MINMOD_MIN, MOLECULAR_WEIGHT, ISO_TEMP;
+extern double           GAMMA, MINMOD_COEFF, AUTO_REDUCE_MINMOD_FACTOR, AUTO_REDUCE_MINMOD_MIN, MOLECULAR_WEIGHT, MU_NORM, ISO_TEMP;
 extern LR_Limiter_t     OPT__LR_LIMITER;
 extern Opt1stFluxCorr_t OPT__1ST_FLUX_CORR;
 extern OptRSolver1st_t  OPT__1ST_FLUX_CORR_SCHEME;
@@ -113,7 +113,9 @@ extern bool             OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC
 extern bool             OPT__OUTPUT_DIVMAG;
 extern int              OPT__CK_DIVERGENCE_B;
 extern double           UNIT_B;
-extern bool             OPT__INIT_BFIELD_BYFILE, OPT__SAME_INTERFACE_B;
+extern bool             OPT__SAME_INTERFACE_B;
+
+extern OptInitMagByVecPot_t OPT__INIT_BFIELD_BYVECPOT;
 #endif
 
 #ifdef SRHD
@@ -189,7 +191,12 @@ extern double     LB_INPUT__PAR_WEIGHT;               // LB->Par_Weight loaded f
 extern bool       OPT__RECORD_LOAD_BALANCE;
 #endif
 extern bool       OPT__MINIMIZE_MPI_BARRIER;
-
+#ifdef SUPPORT_FFTW
+extern int        OPT__FFTW_STARTUP;
+#if ( SUPPORT_FFTW == FFTW3 )
+extern bool       FFTW3_Double_OMP_Enabled, FFTW3_Single_OMP_Enabled;
+#endif // # if ( SUPPORT_FFTW == FFTW3 )
+#endif // # ifdef SUPPORT_FFTW
 
 // (2-5) particle
 // ============================================================================================================
@@ -300,6 +307,16 @@ extern char (*UserDerField_Unit )[MAX_STRING];
 extern void (*Flu_DerivedField_User_Ptr)( real Out[], const real FluIn[], const real MagIn[], const int NFieldOut,
                                           const int NCellInX, const int NCellInY, const int NCellInZ,
                                           const int NGhost, const double dh );
+
+
+// (2-12) feedback
+// =======================================================================================================
+#ifdef FEEDBACK
+extern int  FB_LEVEL, FB_RSEED;
+extern bool FB_SNE, FB_USER;
+extern bool FB_Any;
+extern int  FB_ParaBuf;
+#endif
 
 
 

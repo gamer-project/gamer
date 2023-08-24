@@ -36,7 +36,7 @@ COMPILE_VERBOSE := 0
 SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
-# --> must enable SUPPORT_FFTW
+# --> must define SUPPORT_FFTW=FFTW2 or FFTW3
 #SIMU_OPTION += -DGRAVITY
 
 # enable particles
@@ -54,7 +54,7 @@ SIMU_OPTION += -DMODEL=HYDRO
 ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
 # hydrodynamic scheme: RTVD/MHM/MHM_RP/CTU
 # --> must be set when MODEL=HYDRO
-# --> MHD only supports MHM_RP and CTU
+# --> MHD only supports MHM, MHM_RP and CTU
 SIMU_OPTION += -DFLU_SCHEME=CTU
 
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
@@ -150,6 +150,9 @@ SIMU_OPTION += -DSTORE_PAR_ACC
 # --> must turn on STORE_POT_GHOST when STORE_PAR_ACC is adopted
 #SIMU_OPTION += -DSTAR_FORMATION
 
+# feedback from particles to grids
+#SIMU_OPTION += -DFEEDBACK
+
 # number of user-defined particle attributes
 # --> set it to 0 or comment it out if none is required
 SIMU_OPTION += -DPAR_NATT_USER=0
@@ -218,15 +221,25 @@ SIMU_OPTION += -DOPENMP
 #SIMU_OPTION += -DSUPPORT_GSL
 
 # support FFTW library
-# --> must be enabled when GRAVITY is enabled
-#SIMU_OPTION += -DSUPPORT_FFTW
+# --> SUPPORT_FFTW must be defined when GRAVITY is enabled
+# --> use FFTW3 for fftw3 support
+#     use FFTW2 for fftw2 support
+#SIMU_OPTION += -DSUPPORT_FFTW=FFTW3
+
 
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT
 
-# use patch group as the unit in libyt; this will speed up inline-analysis but increase memory consumption
+# use patch group as the unit in libyt, this will speed up inline-analysis but increase memory consumption
 # --> must enable SUPPORT_LIBYT
 #SIMU_OPTION += -DLIBYT_USE_PATCH_GROUP
+
+# support libyt interactive mode
+# --> this activates python prompt and does not shut down a simulation when there are
+#     errors in an inline python script
+# --> must compile libyt with INTERACTIVE_MODE
+# --> must enable SUPPORT_LIBYT
+#SIMU_OPTION += -DLIBYT_INTERACTIVE
 
 # random number implementation: RNG_GNU_EXT/RNG_CPP11 (GNU extension drand48_r/c++11 <random>)
 # --> use RNG_GNU_EXT for compilers supporting GNU extensions (**not supported on some macOS**)
@@ -277,7 +290,7 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
  CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
                -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
                -Wno-unused-result -Wno-unused-function \
-	       -Wno-implicit-fallthrough -Wno-parentheses
+               -Wno-implicit-fallthrough -Wno-parentheses
  OPENMPFLAG  = -fopenmp                                  # openmp flag
  LIB         =                                           # libraries and linker flags
 
@@ -309,57 +322,18 @@ endif
 
 # template
 CUDA_PATH    :=
-FFTW_PATH    :=
+FFTW2_PATH   :=
+FFTW3_PATH   :=
 MPI_PATH     :=
 HDF5_PATH    :=
 GRACKLE_PATH :=
 GSL_PATH     :=
 LIBYT_PATH   :=
 
-# NCSA-bluewaters (only need to specify the path of user-installed packages)
-#GRACKLE_PATH :=
-
-# UIUC-campus (intel-15.0 + openmpi-1.8.4)
-#CUDA_PATH    := /usr/local/cuda/7.0
-#FFTW_PATH    := /projects/ncsa/grav/softwares/fftw/2.1.5
-#MPI_PATH     := /usr/local/mpi/openmpi-1.8.4-intel-15.0
-#HDF5_PATH    := /projects/ncsa/grav/softwares/miniconda2
-#GRACKLE_PATH := /home/hyschive/local
-#GSL_PATH     := /usr/local/gsl/gsl-1.16
-
-# UIUC-campus (gcc-4.9.2 + openmpi-1.8.4)
-#CUDA_PATH    := /usr/local/cuda/7.0
-#FFTW_PATH    := /projects/ncsa/grav/softwares/fftw/2.1.5-openmpi-1.8.4-gcc-4.9.2
-#MPI_PATH     := /usr/local/mpi/openmpi-1.8.4-gcc-4.9.2
-#HDF5_PATH    := /projects/ncsa/grav/softwares/miniconda2
-#GRACKLE_PATH := /home/hyschive/local
-#GSL_PATH     := /usr/local/gsl/gsl-1.16
-
-# NCSA-hybrid (gcc)
-#CUDA_PATH    := /usr/local/cuda-8.0
-#MPI_PATH     := /home/hyschive/project/software/openmpi/2.0.2
-#FFTW_PATH    := /home/hyschive/project/software/fftw/2.1.5
-#HDF5_PATH    := /home/hyschive/project/software/miniconda2
-#GSL_PATH     :=
-
-# NCSA-nano (intel 2016)
-#CUDA_PATH    := /usr/local/cuda
-#MPI_PATH     := /mnt/lustre/allen/hyschive/software/openmpi/2.0.2
-#FFTW_PATH    := /mnt/lustre/allen/hyschive/software/fftw/2.1.5
-#HDF5_PATH    := /mnt/lustre/allen/hyschive/software/miniconda2
-#GSL_PATH     :=
-
-# NCSA-dxl (gcc, serial)
-#CUDA_PATH    :=
-#FFTW_PATH    := /home/hyschive/software/fftw/2.1.5
-#MPI_PATH     := /usr
-#HDF5_PATH    := /home/hyschive/software/miniconda2
-#GSL_PATH     := /usr/lib
-#LIBYT_PATH   := /home/hyschive/project/libyt/libyt.dev/libyt
-
 # NTU-eureka (default: openmpi-intel)
 #CUDA_PATH    := /software/cuda/default
-#FFTW_PATH    := /software/fftw/default
+#FFTW2_PATH   := /software/fftw/default
+#FFTW3_PATH   := /software/fftw/default3
 #MPI_PATH     := /software/openmpi/default
 #HDF5_PATH    := /software/hdf5/default
 #GRACKLE_PATH :=
@@ -368,21 +342,23 @@ LIBYT_PATH   :=
 
 # NTU-hulk (openmpi-intel-qlc)
 #CUDA_PATH    := /opt/gpu/cuda/4.2
-#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
+#FFTW2_PATH   := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
+#FFTW3_PATH   :=
 #MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
 #HDF5_PATH    := /opt/hdf5/1.8.20
 #GRACKLE_PATH := /work1/fish/Software/grackle
 #GSL_PATH     := /opt/math/gsl/2.5
 #LIBYT_PATH   := /project/fish/libyt/libyt
-#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.6.0-qlc
+#FFTW2_PATH   := /opt/math/fftw/2.1.5-intel-openmpi-1.6.0-qlc
 #MPI_PATH     := /opt/mpi/openmpi/1.6.0-intel-qlc
-#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-2.1.5-qlc
+#FFTW2_PATH   := /opt/math/fftw/2.1.5-intel-openmpi-2.1.5-qlc
 #MPI_PATH     := /opt/mpi/openmpi/2.1.5-intel-qlc
 #CUDA_PATH    := /usr/local/cuda-7.5
 
 # NTU-hulk (openmpi-gcc-qlc)
 #CUDA_PATH    := /opt/gpu/cuda/4.2
-#FFTW_PATH    := /opt/math/fftw/2.1.5-gcc-qlc
+#FFTW2_PATH   := /opt/math/fftw/2.1.5-gcc-qlc
+#FFTW3_PATH   :=
 #MPI_PATH     := /usr/mpi/gcc/openmpi-1.4.3-qlc
 #HDF5_PATH    := /opt/hdf5/1.8.9
 #GRACKLE_PATH := /work1/fish/Software/grackle
@@ -393,21 +369,17 @@ LIBYT_PATH   :=
 
 # NTHU-fomalhaut (openmpi-gnu)
 #CUDA_PATH    := /usr/local/cuda-10.0
-#FFTW_PATH    := /home/hyschive/software/fftw/2.1.5-openmpi-gnu
+#FFTW2_PATH   := /home/hyschive/software/fftw/2.1.5-openmpi-gnu
+#FFTW3_PATH   :=
 #MPI_PATH     := /storage/app/gnu/openmpi-3.1.3-gcc8
 #HDF5_PATH    := /storage/app/gnu/hdf5-1.8.21-gcc8
 #GRACKLE_PATH :=
 #GSL_PATH     :=
 
-# NAOC-laohu (OpenMPI-1.3.2-intel)
-#CUDA_PATH    := $(CUDA_INSTALL_PATH)
-#FFTW_PATH    := /ifs/data/hsiyu/Software/fftw/2.1.5-openmpi-1.3.2-intel
-#MPI_PATH     := /usr/mpi/intel/openmpi-1.3.2-qlc
-#GPUID_PATH   := /ifs/data/hsiyu/Software/gpudevmgr
-
 # A "typical" macOS installation without GPU
 #CUDA_PATH    :=
-#FFTW_PATH    := /usr/local/fftw-2.1.5
+#FFTW2_PATH   := /usr/local/fftw-2.1.5
+#FFTW3_PATH   :=
 #MPI_PATH     := /usr/local/mpich-3.2
 #HDF5_PATH    := ${HOME}/miniconda3
 #GRACKLE_PATH :=
@@ -415,7 +387,8 @@ LIBYT_PATH   :=
 
 # NASA Pleiades (intel compilers and SGI MPI)
 #CUDA_PATH    := /nasa/cuda/9.0/
-#FFTW_PATH    := /u/jzuhone/opt/fftw-2.1.5
+#FFTW2_PATH   := /u/jzuhone/opt/fftw-2.1.5
+#FFTW3_PATH   :=
 #MPI_PATH     := /nasa/sgi/mpt/2.14r19
 #HDF5_PATH    := /nasa/hdf5/1.8.18_serial
 #GRACKLE_PATH :=
@@ -423,7 +396,8 @@ LIBYT_PATH   :=
 
 # NCTS (default: openmpi-intel)
 #CUDA_PATH    := /cluster/cuda-11.6
-#FFTW_PATH    := /cluster/intel-2022.1/fftw-2.1.5_openmpi4
+#FFTW2_PATH   := /cluster/intel-2022.1/fftw-2.1.5_openmpi4
+#FFTW3_PATH   :=
 #MPI_PATH     := /cluster/intel-2022.1/openmpi-4.1.2
 #HDF5_PATH    := /cluster/intel-2022.1/hdf5-1.10.8_openmpi4
 #GRACKLE_PATH :=
@@ -455,7 +429,7 @@ CPU_FILE    += Aux_Check_Parameter.cpp  Aux_Check_Conservation.cpp  Aux_Check.cp
                Aux_GetMemInfo.cpp  Aux_Message.cpp  Aux_Record_PatchCount.cpp  Aux_TakeNote.cpp  Aux_Timing.cpp \
                Aux_Check_MemFree.cpp  Aux_Record_Performance.cpp  Aux_CheckFileExist.cpp  Aux_Array.cpp \
                Aux_Record_User.cpp  Aux_Record_CorrUnphy.cpp  Aux_SwapPointer.cpp  Aux_Check_NormalizePassive.cpp \
-               Aux_LoadTable.cpp  Aux_IsFinite.cpp  Aux_ComputeProfile.cpp  Aux_FindExtrema.cpp
+               Aux_LoadTable.cpp  Aux_IsFinite.cpp  Aux_ComputeProfile.cpp  Aux_FindExtrema.cpp  Aux_PauseManually.cpp
 
 CPU_FILE    += CPU_FluidSolver.cpp  Flu_AdvanceDt.cpp  Flu_Prepare.cpp  Flu_Close.cpp  Flu_FixUp_Flux.cpp \
                Flu_FixUp_Restrict.cpp  Flu_AllocateFluxArray.cpp  Flu_BoundaryCondition_User.cpp  Flu_ResetByUser.cpp \
@@ -527,8 +501,8 @@ ifeq "$(filter -DMHD, $(SIMU_OPTION))" "-DMHD"
 CPU_FILE    += MHD_GetCellCenteredBInPatch.cpp  MHD_InterpolateBField.cpp  MHD_AllocateElectricArray.cpp \
                MHD_Aux_Check_InterfaceB.cpp  MHD_FixUp_Electric.cpp  MHD_Aux_Check_DivergenceB.cpp \
                MHD_BoundaryCondition_Outflow.cpp  MHD_BoundaryCondition_Reflecting.cpp  MHD_BoundaryCondition_User.cpp \
-               MHD_BoundaryCondition_Diode.cpp  MHD_CopyPatchInterfaceBField.cpp  MHD_Init_BField_ByFile.cpp \
-               MHD_SameInterfaceB.cpp
+               MHD_BoundaryCondition_Diode.cpp  MHD_CopyPatchInterfaceBField.cpp  MHD_Init_BField_ByVecPot_File.cpp \
+               MHD_SameInterfaceB.cpp  MHD_Init_BField_ByVecPot_Function.cpp  MHD_ResetByUser.cpp
 
 CPU_FILE    += CPU_Shared_ConstrainedTransport.cpp  CPU_Shared_RiemannSolver_HLLD.cpp
 
@@ -603,7 +577,7 @@ CPU_FILE    += Par_Init_ByFunction.cpp  Par_Output_TextFile.cpp  Par_Output_Bina
                Par_Aux_InitCheck.cpp  Par_Aux_Record_ParticleCount.cpp  Par_PassParticle2Son_MultiPatch.cpp \
                Par_Synchronize.cpp  Par_PredictPos.cpp  Par_Init_ByFile.cpp  Par_Init_Attribute.cpp \
                Par_AddParticleAfterInit.cpp  Par_PassParticle2Son_SinglePatch.cpp  Par_EquilibriumIC.cpp \
-               Par_ScatterParticleData.cpp  Par_UpdateTracerParticle.cpp  Par_MapMesh2Particles.cpp
+               Par_ScatterParticleData.cpp  Par_UpdateTracerParticle.cpp  Par_MapMesh2Particles.cpp  Par_Sort.cpp
 
 vpath %.cu     Particle/GPU
 vpath %.cpp    Particle/CPU  Particle
@@ -710,6 +684,15 @@ vpath %.cpp    StarFormation
 endif # STAR_FORMATION
 
 
+# feedback source files (included only if "FEEDBACK" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DFEEDBACK, $(SIMU_OPTION))" "-DFEEDBACK"
+CPU_FILE    += FB_AdvanceDt.cpp  FB_Init.cpp  FB_End.cpp  FB_Auxiliary.cpp  FB_User_Template.cpp  FB_SNe.cpp
+
+vpath %.cpp    Feedback  Feedback/User_Template  Feedback/SNe
+endif # FEEDBACK
+
+
 # test problem source files
 # --> just compile all .cpp and .cu files under TestProblem/*/*/
 # ------------------------------------------------------------------------------------
@@ -740,7 +723,7 @@ endif
 # -------------------------------------------------------------------------------
 ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
 LIB += -L$(CUDA_PATH)/lib64
-#LIB += -L$(CUDA_PATH)/lib
+LIB += -Wl,-rpath=$(CUDA_PATH)/lib64
 LIB += -lcudart
 endif
 
@@ -748,8 +731,23 @@ ifeq "$(filter -DLAOHU, $(SIMU_OPTION))" "-DLAOHU"
 LIB += -L$(GPUID_PATH) -lgpudevmgr
 endif
 
-ifeq "$(filter -DSUPPORT_FFTW, $(SIMU_OPTION))" "-DSUPPORT_FFTW"
-   LIB += -L$(FFTW_PATH)/lib
+ifeq "$(filter -DSUPPORT_FFTW=FFTW3, $(SIMU_OPTION))" "-DSUPPORT_FFTW=FFTW3"
+   LIB += -L$(FFTW3_PATH)/lib
+   LIB += -Wl,-rpath=$(FFTW3_PATH)/lib
+   ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" "-DSERIAL"
+      LIB += -lfftw3 -lfftw3f -lm
+   else
+      LIB += -lfftw3_mpi -lfftw3 -lfftw3f_mpi -lfftw3f -lm
+   endif
+
+   ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" "-DOPENMP"
+      LIB += -lfftw3_omp -lfftw3f_omp
+   endif
+endif
+
+ifeq "$(filter -DSUPPORT_FFTW=FFTW2, $(SIMU_OPTION))" "-DSUPPORT_FFTW=FFTW2"
+   LIB += -L$(FFTW2_PATH)/lib
+   LIB += -Wl,-rpath=$(FFTW2_PATH)/lib
    ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
       ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" "-DSERIAL"
          LIB += -ldrfftw -ldfftw
@@ -767,18 +765,22 @@ endif
 
 ifeq "$(filter -DSUPPORT_GRACKLE, $(SIMU_OPTION))" "-DSUPPORT_GRACKLE"
 LIB += -L$(GRACKLE_PATH)/lib -lgrackle
+LIB += -Wl,-rpath=$(GRACKLE_PATH)/lib
 endif
 
 ifeq "$(filter -DSUPPORT_HDF5, $(SIMU_OPTION))" "-DSUPPORT_HDF5"
 LIB += -L$(HDF5_PATH)/lib -lhdf5
+LIB += -Wl,-rpath=$(HDF5_PATH)/lib
 endif
 
 ifeq "$(filter -DSUPPORT_GSL, $(SIMU_OPTION))" "-DSUPPORT_GSL"
 LIB += -L$(GSL_PATH)/lib -lgsl -lgslcblas
+LIB += -Wl,-rpath=$(GSL_PATH)/lib
 endif
 
 ifeq "$(filter -DSUPPORT_LIBYT, $(SIMU_OPTION))" "-DSUPPORT_LIBYT"
 LIB += -L$(LIBYT_PATH)/lib -lyt
+LIB += -Wl,-rpath=$(LIBYT_PATH)/lib
 endif
 
 
@@ -794,8 +796,12 @@ ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" ""
 INCLUDE += -I$(MPI_PATH)/include
 endif
 
-ifeq "$(filter -DSUPPORT_FFTW, $(SIMU_OPTION))" "-DSUPPORT_FFTW"
-INCLUDE += -I$(FFTW_PATH)/include
+ifeq "$(filter -DSUPPORT_FFTW=FFTW3, $(SIMU_OPTION))" "-DSUPPORT_FFTW=FFTW3"
+INCLUDE += -I$(FFTW3_PATH)/include
+endif
+
+ifeq "$(filter -DSUPPORT_FFTW=FFTW2, $(SIMU_OPTION))" "-DSUPPORT_FFTW=FFTW2"
+INCLUDE += -I$(FFTW2_PATH)/include
 endif
 
 ifeq "$(filter -DSUPPORT_GRACKLE, $(SIMU_OPTION))" "-DSUPPORT_GRACKLE"
@@ -941,7 +947,8 @@ NVCCFLAG_FLU := $(strip $(NVCCFLAG_FLU))
 NVCCFLAG_POT := $(strip $(NVCCFLAG_POT))
 GIT_INFO     := $(strip $(GIT_INFO))
 CUDA_PATH    := $(strip $(CUDA_PATH))
-FFTW_PATH    := $(strip $(FFTW_PATH))
+FFTW2_PATH   := $(strip $(FFTW2_PATH))
+FFTW3_PATH   := $(strip $(FFTW3_PATH))
 MPI_PATH     := $(strip $(MPI_PATH))
 HDF5_PATH    := $(strip $(HDF5_PATH))
 GRACKLE_PATH := $(strip $(GRACKLE_PATH))

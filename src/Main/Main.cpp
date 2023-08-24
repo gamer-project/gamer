@@ -65,7 +65,7 @@ bool                 OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
 bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__FREEZE_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 bool                 OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 bool                 OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
-bool                 OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID;
+bool                 OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID, OPT__SORT_PATCH_BY_LBIDX;
 
 UM_IC_Format_t       OPT__UM_IC_FORMAT;
 TestProbID_t         TESTPROB_ID;
@@ -84,7 +84,7 @@ OptTimeStepLevel_t   OPT__DT_LEVEL;
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
 double               FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1], FlagTable_Jeans[NLEVEL-1];
-double               GAMMA, MINMOD_COEFF, AUTO_REDUCE_MINMOD_FACTOR, AUTO_REDUCE_MINMOD_MIN, MOLECULAR_WEIGHT, ISO_TEMP;
+double               GAMMA, MINMOD_COEFF, AUTO_REDUCE_MINMOD_FACTOR, AUTO_REDUCE_MINMOD_MIN, MOLECULAR_WEIGHT, MU_NORM, ISO_TEMP;
 LR_Limiter_t         OPT__LR_LIMITER;
 Opt1stFluxCorr_t     OPT__1ST_FLUX_CORR;
 OptRSolver1st_t      OPT__1ST_FLUX_CORR_SCHEME;
@@ -105,7 +105,9 @@ bool                 OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC_MA
 bool                 OPT__OUTPUT_DIVMAG;
 int                  OPT__CK_DIVERGENCE_B;
 double               UNIT_B;
-bool                 OPT__INIT_BFIELD_BYFILE, OPT__SAME_INTERFACE_B;
+bool                 OPT__SAME_INTERFACE_B;
+
+OptInitMagByVecPot_t OPT__INIT_BFIELD_BYVECPOT;
 #endif
 #ifdef SRHD
 double               FlagTable_LrtzGradient[NLEVEL-1];
@@ -179,6 +181,12 @@ double               LB_INPUT__PAR_WEIGHT;
 bool                 OPT__RECORD_LOAD_BALANCE;
 #endif
 bool                 OPT__MINIMIZE_MPI_BARRIER;
+#ifdef SUPPORT_FFTW
+int                  OPT__FFTW_STARTUP;
+#if ( SUPPORT_FFTW == FFTW3 )
+bool                 FFTW3_Double_OMP_Enabled, FFTW3_Single_OMP_Enabled;
+#endif // # if ( SUPPORT_FFTW == FFTW3 )
+#endif // # ifdef SUPPORT_FFTW
 
 // (2-5) particle
 #ifdef PARTICLE
@@ -278,6 +286,14 @@ bool OPT__OUTPUT_USER_FIELD;
 int  UserDerField_Num                  = -1;    // must be negative for Output_DumpData_Total_HDF5()
 char (*UserDerField_Label)[MAX_STRING] = NULL;
 char (*UserDerField_Unit )[MAX_STRING] = NULL;
+
+// (2-12) feedback
+#ifdef FEEDBACK
+int  FB_LEVEL, FB_RSEED;
+bool FB_SNE, FB_USER;
+bool FB_Any;
+int  FB_ParaBuf;
+#endif
 
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
@@ -459,6 +475,7 @@ Timer_t *Timer_Gra_Advance[NLEVEL];
 Timer_t *Timer_Src_Advance[NLEVEL];
 Timer_t *Timer_Che_Advance[NLEVEL];
 Timer_t *Timer_SF         [NLEVEL];
+Timer_t *Timer_FB_Advance [NLEVEL];
 Timer_t *Timer_FixUp      [NLEVEL];
 Timer_t *Timer_Flag       [NLEVEL];
 Timer_t *Timer_Refine     [NLEVEL];
@@ -629,13 +646,17 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 
 
-//    5. check whether to manually terminate the run
+//    5. check whether to manually terminate or pause the run
 //    ---------------------------------------------------------------------------------------------------
       int Terminate = false;
 
 //    enable this functionality only if OPT__MANUAL_CONTROL is on
       if ( OPT__MANUAL_CONTROL )
-      TIMING_FUNC(   End_StopManually( Terminate ),   Timer_Main[4],   TIMER_ON   );
+      {
+         TIMING_FUNC(   End_StopManually( Terminate ),   Timer_Main[4],   TIMER_ON   );
+
+         TIMING_FUNC(   Aux_PauseManually(),             Timer_Main[4],   TIMER_ON   );
+      }
 //    ---------------------------------------------------------------------------------------------------
 
 
@@ -659,6 +680,7 @@ int main( int argc, char *argv[] )
          const bool   Redistribute_Yes = true;
          const bool   SendGridData_Yes = true;
          const bool   ResetLB_Yes      = true;
+         const bool   SortRealPatch_No = false;
 #        ifdef PARTICLE
          const double ParWeight        = amr->LB->Par_Weight;
 #        else
@@ -666,7 +688,7 @@ int main( int argc, char *argv[] )
 #        endif
          const int    AllLv            = -1;
 
-         LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, ParWeight, ResetLB_Yes, AllLv );
+         LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, ParWeight, ResetLB_Yes, SortRealPatch_No, AllLv );
 
          if ( OPT__PATCH_COUNT > 0 )         Aux_Record_PatchCount();
 

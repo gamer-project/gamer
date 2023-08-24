@@ -23,7 +23,7 @@ void YT_AddLocalGrid( int NField, yt_field *FieldList, LB_PatchCount& pc)
 
 // get the libyt local grids array pointer
    yt_grid *YT_Grids;
-   yt_get_gridsPtr( &YT_Grids );
+   yt_get_GridsPtr( &YT_Grids );
 
 // record local grids index and patched grids index if LIBYT_USE_PATCH_GROUP
    int LID = 0;
@@ -74,10 +74,10 @@ void YT_AddLocalGrid( int NField, yt_field *FieldList, LB_PatchCount& pc)
          for(int i=PID; i<PID+8; i++){
              particle_count += (long) amr->patch[0][lv][i]->NPar;
          }
-         YT_Grids[LID].particle_count_list[0] = particle_count;
+         YT_Grids[LID].par_count_list[0] = particle_count;
 #        else
          // input particle num in this grid
-         YT_Grids[LID].particle_count_list[0] = (long) amr->patch[0][lv][PID]->NPar;
+         YT_Grids[LID].par_count_list[0] = (long) amr->patch[0][lv][PID]->NPar;
 #        endif // #ifdef LIBYT_USE_PATCH_GROUP
 #        endif // #ifdef PARTICLE
 
@@ -154,7 +154,7 @@ void YT_AddLocalGrid( int NField, yt_field *FieldList, LB_PatchCount& pc)
       }
    }
 
-   if ( yt_commit_grids( ) != YT_SUCCESS )  Aux_Error( ERROR_INFO, "yt_commit_grids() failed !!\n" );
+   if ( yt_commit( ) != YT_SUCCESS )  Aux_Error( ERROR_INFO, "yt_commit() failed !!\n" );
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )   Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 

@@ -49,9 +49,10 @@ vpath %.cpp ./ GAMER_Functions
 # rules and targets
 #######################################################################################################
 HDF5_PATH := /software/hdf5/default
+#HDF5_PATH := /software/hdf5/1.10.6-intel-2023.1.0
 
 CC    := icpc
-CFLAG := -O3 -w1 -g
+CFLAG := -O3 -w1 -g -diag-disable=10441
 
 INCLUDE  := -I./Header
 ifeq "$(findstring SUPPORT_HDF5, $(SIMU_OPTION))" "SUPPORT_HDF5"

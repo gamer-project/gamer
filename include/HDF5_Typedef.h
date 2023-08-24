@@ -121,6 +121,7 @@ struct Makefile_t
    int SupportLibYT;
 #  ifdef SUPPORT_LIBYT
    int LibYTUsePatchGroup;
+   int LibYTInteractive;
 #  endif
    int SupportGrackle;
    int RandomNumber;
@@ -160,6 +161,7 @@ struct Makefile_t
    int Tracer;
    int StoreParAcc;
    int StarFormation;
+   int Feedback;
    int Par_NAttUser;
 #  endif
 
@@ -255,6 +257,7 @@ struct SymConst_t
 #  endif
 
    int    InterpMask;
+   int    FB_SepFluOut;
 
 
 #  if   ( MODEL == HYDRO )
@@ -311,6 +314,11 @@ struct SymConst_t
    int    Der_GhostSize;
    int    Der_Nxt;
    int    Der_NOut_Max;
+
+#  ifdef FEEDBACK
+   int    FB_GhostSize;
+   int    FB_Nxt;
+#  endif
 
    int    NFieldStoredMax;
 
@@ -481,6 +489,7 @@ struct InputPara_t
 #  if ( MODEL == HYDRO )
    double Gamma;
    double MolecularWeight;
+   double MuNorm;
    double IsoTemp;
    double MinMod_Coeff;
    int    MinMod_MaxIter;
@@ -605,6 +614,14 @@ struct InputPara_t
    double SF_CreateStar_MaxStarMFrac;
 #  endif
 
+// feedback
+#  ifdef FEEDBACK
+   int   FB_Level;
+   int   FB_RSeed;
+   int   FB_SNe;
+   int   FB_User;
+#  endif
+
 // initialization
    int    Opt__Init;
    int    RestartLoadNRank;
@@ -622,7 +639,10 @@ struct InputPara_t
    int    Opt__GPUID_Select;
    int    Init_Subsampling_NCell;
 #  ifdef MHD
-   int    Opt__InitBFieldByFile;
+   int    Opt__InitBFieldByVecPot;
+#  endif
+#  ifdef SUPPORT_FFTW
+   int    Opt__FFTW_Startup;
 #  endif
 
 // interpolation schemes
@@ -703,6 +723,7 @@ struct InputPara_t
    int    Opt__ManualControl;
    int    Opt__RecordUser;
    int    Opt__OptimizeAggressive;
+   int    Opt__SortPatchByLBIdx;
 
 // simulation checks
    int    Opt__Ck_Refine;
