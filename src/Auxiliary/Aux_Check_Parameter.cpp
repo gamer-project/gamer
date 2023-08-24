@@ -983,8 +983,8 @@ void Aux_Check_Parameter()
 #     error : ERROR : MHD must work with either SERIAL or LOAD_BALANCE !!
 #  endif
 
-#  if ( FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
-#     error : ERROR : unsupported MHD scheme in the makefile (MHM_RP/CTU) !!
+#  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
+#     error : ERROR : unsupported MHD scheme (MHM/MHM_RP/CTU) !!
 #  endif
 
 #  if ( HLLE_WAVESPEED == HLL_WAVESPEED_PVRS )
