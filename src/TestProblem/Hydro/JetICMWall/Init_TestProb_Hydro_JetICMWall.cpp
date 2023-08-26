@@ -249,7 +249,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 // variables for jet
-   real PriReal[NCOMP_FLUID];
+   real PriReal[NCOMP_TOTAL];
 
    //double xx = x - Jump_Tangent*(y-Jump_Position_y) - Jump_Position_x;
    double xx =  (x - Jump_Position_x)*Jump_Cosine - (y - Jump_Position_y)*Jump_Sine;
@@ -286,10 +286,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    //double ICM_d = min((d-0.4*ICM_Density)*(0.4*ICM_Density), 0.0;
    //double lobe_d = (ICM_Density-d)*Lobe_Density/(2.0*d0);
 
+   /*
    fluid[JetFieldIdx] = 0.0;
    fluid[ICMFieldIdx] = (real)(ICM_x*d);
    fluid[LobeFieldIdx] = (real)(lobe_x*d);
    fluid[IntFieldIdx] = (real)((1-ICM_x-lobe_x)*d);
+   */
 
 } // FUNCTION : SetGridIC
 
@@ -320,7 +322,7 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
     j = idx[1];
     k = idx[2];
 
-    real PriReal[NCOMP_FLUID];
+    real PriReal[NCOMP_TOTAL];
 
     const int j_ref = GhostSize;  // reference j index
 
@@ -342,7 +344,7 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
       double u_jet_x = 0.0;
       double u_jet_y = u_jet;
       double u_jet_z = 0.0;
-      
+
       // set fluid variable inside source
       PriReal[0] = (real)Jet_Density;
       PriReal[1] = (real)0.0;
@@ -353,11 +355,13 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
       Hydro_Pri2Con( PriReal, BVal, false, PassiveNorm_NVar, PassiveNorm_VarIdx, 
 		     EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
 		     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-            
+
+      /*
       BVal[JetFieldIdx] = (real)(LntzFact*Jet_Density);
       BVal[ICMFieldIdx] = 0.0;
       BVal[LobeFieldIdx] = 0.0;
       BVal[IntFieldIdx] = 0.0;
+      */
 
     }
     else 
@@ -418,7 +422,7 @@ void Init_TestProb_Hydro_JetICMWall()
 
 // get enclosed mass
    Init_Function_User_Ptr   = SetGridIC;
-   Init_Field_User_Ptr      = AddNewField_JetICMWall;
+   Init_Field_User_Ptr      = NULL; //AddNewField_JetICMWall;
    Flag_User_Ptr            = NULL;
    Flag_Region_Ptr          = NULL;
    Mis_GetTimeStep_User_Ptr = NULL;
