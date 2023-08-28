@@ -216,7 +216,6 @@ void CPU_FluidSolver_CTU(
    const bool CorrHalfVel          = false;
 #  endif
    const bool CorrHalfVel_No       = false;
-   const bool StoreFlux_No         = false;
    const bool Con2Pri_Yes          = true;
 #  ifdef MHD
    const bool StoreElectric_No     = false;
