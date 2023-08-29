@@ -394,41 +394,41 @@ void Hydro_StoreIntFlux( const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC
 //    indices of the 2 transverse directions
 //    for MHD, one additional flux is evaluated along each transverse direction for computing the CT electric field
 #     ifdef MHD
-      const int idx_in_0  = idx_out % PS2 + 1;
-      const int idx_in_1  = idx_out / PS2 + 1;
+      const int idx_flux_0  = idx_out % PS2 + 1;
+      const int idx_flux_1  = idx_out / PS2 + 1;
 #     else
-      const int idx_in_0  = idx_out % PS2;
-      const int idx_in_1  = idx_out / PS2;
+      const int idx_flux_0  = idx_out % PS2;
+      const int idx_flux_1  = idx_out / PS2;
 #     endif
 
 //    flux index
 //    x-face
-      const int idx_flux_0  = IDX321(        0, idx_in_0, idx_in_1, NFlux, NFlux );
-      const int idx_flux_1  = IDX321(      PS1, idx_in_0, idx_in_1, NFlux, NFlux );
-      const int idx_flux_2  = IDX321(      PS2, idx_in_0, idx_in_1, NFlux, NFlux );
+      const int idx_in_0  = IDX321(          0, idx_flux_0, idx_flux_1, NFlux, NFlux );
+      const int idx_in_1  = IDX321(        PS1, idx_flux_0, idx_flux_1, NFlux, NFlux );
+      const int idx_in_2  = IDX321(        PS2, idx_flux_0, idx_flux_1, NFlux, NFlux );
 //    y-face
-      const int idx_flux_3  = IDX321( idx_in_0,        0, idx_in_1, NFlux, NFlux );
-      const int idx_flux_4  = IDX321( idx_in_0,      PS1, idx_in_1, NFlux, NFlux );
-      const int idx_flux_5  = IDX321( idx_in_0,      PS2, idx_in_1, NFlux, NFlux );
+      const int idx_in_3  = IDX321( idx_flux_0,          0, idx_flux_1, NFlux, NFlux );
+      const int idx_in_4  = IDX321( idx_flux_0,        PS1, idx_flux_1, NFlux, NFlux );
+      const int idx_in_5  = IDX321( idx_flux_0,        PS2, idx_flux_1, NFlux, NFlux );
 //    z-face
-      const int idx_flux_6  = IDX321( idx_in_0, idx_in_1,        0, NFlux, NFlux );
-      const int idx_flux_7  = IDX321( idx_in_0, idx_in_1,      PS1, NFlux, NFlux );
-      const int idx_flux_8  = IDX321( idx_in_0, idx_in_1,      PS2, NFlux, NFlux );
+      const int idx_in_6  = IDX321( idx_flux_0, idx_flux_1,          0, NFlux, NFlux );
+      const int idx_in_7  = IDX321( idx_flux_0, idx_flux_1,        PS1, NFlux, NFlux );
+      const int idx_in_8  = IDX321( idx_flux_0, idx_flux_1,        PS2, NFlux, NFlux );
 
 //    store the flux
       for (int v=0; v<NCOMP_TOTAL; v++) {
 //       x-face
-         g_IntFlux[0][v][idx_out] = g_FC_Flux[0][v][idx_flux_0];
-         g_IntFlux[1][v][idx_out] = g_FC_Flux[0][v][idx_flux_1];
-         g_IntFlux[2][v][idx_out] = g_FC_Flux[0][v][idx_flux_2];
+         g_IntFlux[0][v][idx_out] = g_FC_Flux[0][v][idx_in_0];
+         g_IntFlux[1][v][idx_out] = g_FC_Flux[0][v][idx_in_1];
+         g_IntFlux[2][v][idx_out] = g_FC_Flux[0][v][idx_in_2];
 //       y-face
-         g_IntFlux[3][v][idx_out] = g_FC_Flux[1][v][idx_flux_3];
-         g_IntFlux[4][v][idx_out] = g_FC_Flux[1][v][idx_flux_4];
-         g_IntFlux[5][v][idx_out] = g_FC_Flux[1][v][idx_flux_5];
+         g_IntFlux[3][v][idx_out] = g_FC_Flux[1][v][idx_in_3];
+         g_IntFlux[4][v][idx_out] = g_FC_Flux[1][v][idx_in_4];
+         g_IntFlux[5][v][idx_out] = g_FC_Flux[1][v][idx_in_5];
 //       z-face
-         g_IntFlux[6][v][idx_out] = g_FC_Flux[2][v][idx_flux_6];
-         g_IntFlux[7][v][idx_out] = g_FC_Flux[2][v][idx_flux_7];
-         g_IntFlux[8][v][idx_out] = g_FC_Flux[2][v][idx_flux_8];
+         g_IntFlux[6][v][idx_out] = g_FC_Flux[2][v][idx_in_6];
+         g_IntFlux[7][v][idx_out] = g_FC_Flux[2][v][idx_in_7];
+         g_IntFlux[8][v][idx_out] = g_FC_Flux[2][v][idx_in_8];
       }
 
    } // CGPU_LOOP( idx_out, SQR(PS2) )
