@@ -54,9 +54,9 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                         const real dt, const real dh, const double Time, const bool UsePot,
                         const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
                         const real MinDens, const real MinPres, const EoS_t *EoS );
-void Hydro_StoreFixFlux( const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+void Hydro_StoreIntFlux( const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
-                         const int NFlux, const int NSkip_N, const int NSkip_T );
+                         const int NFlux );
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
@@ -498,7 +498,7 @@ void CPU_FluidSolver_MHM(
 
 
             if ( StoreFlux )
-               Hydro_StoreFixFlux( g_FC_Flux_1PG, g_Flux_Array[P], N_FL_FLUX, NSkip_N, NSkip_T );
+               Hydro_StoreIntFlux( g_FC_Flux_1PG, g_Flux_Array[P], N_FL_FLUX );
 
 
 //          3. evaluate electric field and update B field at the full time-step
