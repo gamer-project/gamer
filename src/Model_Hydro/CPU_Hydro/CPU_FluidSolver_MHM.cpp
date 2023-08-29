@@ -40,6 +40,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                      real g_PriVar   [][ CUBE(FLU_NXT) ],
                                      real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                                      real g_Slope_PPM[][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ],
+                                     real g_EC_Ele   [][ CUBE(N_EC_ELE) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
                                const real MinDens, const real MinPres, const real MinEint,
@@ -52,8 +53,10 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                         const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[],
                         const real dt, const real dh, const double Time, const bool UsePot,
                         const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
-                        const real MinDens, const real MinPres, const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
-                        const EoS_t *EoS );
+                        const real MinDens, const real MinPres, const EoS_t *EoS );
+void Hydro_StoreIntFlux( const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                               real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
+                         const int NFlux );
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
@@ -96,6 +99,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
                     const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                     const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut );
+#endif // #if ( FLU_SCHEME == MHM_RP )
 #ifdef MHD
 void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                           const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
@@ -111,7 +115,6 @@ void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out
                          const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                          const real dt, const real dh, const int NOut, const int NEle, const int Offset_B_In );
 #endif // #ifdef MHD
-#endif // #if ( FLU_SCHEME == MHM_RP )
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -288,7 +291,7 @@ void CPU_FluidSolver_MHM(
 #  elif ( FLU_SCHEME == MHM_RP )
    const bool Con2Pri_No           = false;
 #  endif
-#  ifdef MHD
+#  if ( defined MHD  &&  FLU_SCHEME == MHM_RP )
    const bool CorrHalfVel_No       = false;
    const bool StoreElectric_No     = false;
 #  endif
@@ -336,6 +339,18 @@ void CPU_FluidSolver_MHM(
       real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = NULL;
 #     endif
 #     endif // if ( FLU_SCHEME == MHM_RP )
+
+#     if ( FLU_SCHEME == MHM )
+//    half-step array size is over-estimated here as it only needs CUBE(N_FC_VAR)
+//    --> we use the same array size as the half-step variables of MHM_RP to avoid
+//        changing the MHM_RP full-step MHD_ComputeElectric()
+      real (*const g_PriVar_Half_1PG )[ CUBE(FLU_NXT)  ] = g_PriVar_1PG;
+#     ifdef MHD
+      real (*const g_EC_Ele_1PG      )[ CUBE(N_EC_ELE) ] = g_EC_Ele[array_idx];
+#     else
+      real (*const g_EC_Ele_1PG      )[ CUBE(N_EC_ELE) ] = NULL;
+#     endif
+#     endif // #if ( FLU_SCHEME == MHM )
 
 
 //    loop over all patch groups
@@ -432,7 +447,7 @@ void CPU_FluidSolver_MHM(
 //          1-a-5. evaluate the face-centered values by data reconstruction
 //                 --> note that g_PriVar_Half_1PG[] returned by Hydro_RiemannPredict() stores the primitive variables
             Hydro_DataReconstruction( NULL, g_FC_Mag_Half_1PG, g_PriVar_Half_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
-                                      Con2Pri_No, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
+                                      NULL, Con2Pri_No, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
                                       MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
                                       JeansMinPres, JeansMinPres_Coeff, &EoS );
 
@@ -459,8 +474,8 @@ void CPU_FluidSolver_MHM(
 
 
 //          evaluate the face-centered values by data reconstruction
-            Hydro_DataReconstruction( g_Flu_Array_In[P], NULL, g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
-                                      Con2Pri_Yes, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
+            Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_Half_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
+                                      g_EC_Ele_1PG, Con2Pri_Yes, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
                                       MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
                                       JeansMinPres, JeansMinPres_Coeff, &EoS );
 
@@ -479,21 +494,30 @@ void CPU_FluidSolver_MHM(
             Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T,
                                CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P],
                                dt, dh, Time, UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
-                               MinDens, MinPres, StoreFlux, g_Flux_Array[P], &EoS );
+                               MinDens, MinPres, &EoS );
+
+            if ( StoreFlux )
+               Hydro_StoreIntFlux( g_FC_Flux_1PG, g_Flux_Array[P], N_FL_FLUX );
 
 
 //          3. evaluate electric field and update B field at the full time-step
 //             --> must update B field before Hydro_FullStepUpdate() since the latter requires
 //                 the updated magnetic energy when adopting the dual-energy formalism
 #           ifdef MHD
+#           if ( FLU_SCHEME == MHM )
+            const int OffsetPri = 0;
+#           else
+            const int OffsetPri = LR_GHOST_SIZE;
+#           endif
+
             MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_Half_1PG, N_FL_ELE, N_FL_FLUX,
-                                 N_HF_VAR, LR_GHOST_SIZE, dt, dh, StoreElectric, g_Ele_Array[P],
+                                 N_HF_VAR, OffsetPri, dt, dh, StoreElectric, g_Ele_Array[P],
                                  CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P], Time,
                                  UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray );
 
             MHD_UpdateMagnetic( g_Mag_Array_Out[P][0], g_Mag_Array_Out[P][1], g_Mag_Array_Out[P][2],
                                 g_Mag_Array_In[P], g_EC_Ele_1PG, dt, dh, PS2, N_FL_ELE, FLU_GHOST_SIZE );
-#           endif
+#           endif // #ifdef MHD
 
 
 //          4. full-step evolution
