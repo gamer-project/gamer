@@ -372,27 +372,29 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 // Function    :  Hydro_StoreIntFlux
 // Description :  Store the inter-patch fluxes in g_IntFlux[]
 //
-// Note        :  1. No need to store the magnetic components since this array is only for the fluid flux fix-up operation.
+// Note        :  1. No need to store the magnetic components since this array is only for the fluid flux fix-up operation
 //
-// Parameter   :  g_FC_Flux       : Array storing the face-centered fluxes
-//                g_IntFlux       : Array to store the face-center fluxes at the patch interface
-//                NFlux           : Stride for accessing g_FC_Flux[]
+// Parameter   :  g_FC_Flux : Array storing the face-centered fluxes
+//                g_IntFlux : Array to store the face-center fluxes at the patch interfaces
+//                NFlux     : Stride for accessing g_FC_Flux[]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_StoreIntFlux( const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
                          const int NFlux )
 {
+
 // check
 #  ifdef GAMER_DEBUG
    if ( NFlux > N_FC_FLUX )
       printf( "ERROR : NFlux (%d) > N_FC_FLUX (%d) !!\n", NFlux, N_FC_FLUX );
-#  endif // #ifdef GAMER_DEBUG
+#  endif
+
 
    CGPU_LOOP( idx_out, SQR(PS2) )
    {
 //    indices of the 2 transverse directions
-//    for MHD, one additional flux is evaluated along each transverse direction for computing the CT electric field
+//    --> for MHD, one additional flux is evaluated along each transverse direction for computing the CT electric field
 #     ifdef MHD
       const int idx_flux_0  = idx_out % PS2 + 1;
       const int idx_flux_1  = idx_out / PS2 + 1;
@@ -430,7 +432,6 @@ void Hydro_StoreIntFlux( const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC
          g_IntFlux[7][v][idx_out] = g_FC_Flux[2][v][idx_in_7];
          g_IntFlux[8][v][idx_out] = g_FC_Flux[2][v][idx_in_8];
       }
-
    } // CGPU_LOOP( idx_out, SQR(PS2) )
 
 #  ifdef __CUDACC__

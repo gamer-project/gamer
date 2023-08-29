@@ -496,7 +496,6 @@ void CPU_FluidSolver_MHM(
                                dt, dh, Time, UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
                                MinDens, MinPres, &EoS );
 
-
             if ( StoreFlux )
                Hydro_StoreIntFlux( g_FC_Flux_1PG, g_Flux_Array[P], N_FL_FLUX );
 
