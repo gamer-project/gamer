@@ -19,7 +19,6 @@ args=parser.parse_args()
 # take note
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
-for t in range( len(sys.argv) ):
 print( ' '.join(map(str, sys.argv)) )
 print( '-------------------------------------------------------------------\n' )
 
