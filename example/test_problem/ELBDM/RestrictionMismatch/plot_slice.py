@@ -61,23 +61,21 @@ args=parser.parse_args()
 # take note
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
-for t in range( len(sys.argv) ):
-    print( str(sys.argv[t]) ),
-print( '' )
+print( ' '.join(map(str, sys.argv)) )
 print( '-------------------------------------------------------------------\n' )
 
 
 idx_start   = args.idx_start
 idx_end     = args.idx_end
-didx            = args.didx
+didx        = args.didx
 prefix      = args.prefix
 
-plot_grid    = args.plot_grid
-use_phase    = args.use_phase
-make_3d_plot = args.make_3d_plot
+plot_grid      = args.plot_grid
+use_phase      = args.use_phase
+make_3d_plot   = args.make_3d_plot
 make_reim_plot = args.plot_reim
 
-colormap        = 'arbre'
+colormap    = 'arbre'
 center_mode = 'c'
 dpi         = 150
 
