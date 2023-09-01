@@ -16,7 +16,12 @@ parser.add_argument( '-d', action='store', required=False, type=int, dest='didx'
 
 args=parser.parse_args()
 
-
+# take note
+print( '\nCommand-line arguments:' )
+print( '-------------------------------------------------------------------' )
+for t in range( len(sys.argv) ):
+print( ' '.join(map(str, sys.argv)) )
+print( '-------------------------------------------------------------------\n' )
 
 idx_start   = args.idx_start
 idx_end     = args.idx_end

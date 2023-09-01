@@ -20,9 +20,7 @@ args=parser.parse_args()
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
 for t in range( len(sys.argv) ):
-#   print str(sys.argv[t]), # for python2.X
-   print(str(sys.argv[t]),end=', ') # for python3.X
-print( '' )
+print( ' '.join(map(str, sys.argv)) )
 print( '-------------------------------------------------------------------\n' )
 
 
