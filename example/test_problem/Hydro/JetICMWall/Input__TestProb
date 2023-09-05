@@ -1,16 +1,16 @@
 # problem-specific runtime parameters
 
-ICM_Density				    5.66e-26         # ICM density [in cgs]
-Jump_Position_x                                   3.0         # boundary position [in kpc]
+ICM_Density				   5.66e-26         # ICM density [in cgs]
+Jump_Position_x                                 3.0         # boundary position [in kpc]
 Jump_Position_y				       10.0         # boundary position [in kpc]
 Jump_Angle				       25.0	    # angle of interface [in degrees]
-Jump_Width				       0.02
+Jump_Width				       0.02	    # width of jump in [in kpc]
 Amb_Pressure	 			    8.6e-10	    # ambient pressure [in cgs]
-Lobe_ICM_Ratio				      1.0e-6
-Jet_Lobe_Ratio				       10.0
-Jet_Fire				          1
+Lobe_ICM_Ratio				     1.0e-6         # ratio of lobe and ICM densities
+Jet_Lobe_Ratio				       10.0         # ratio of jet and lobe densities
+Jet_Fire				          1	    # whether or not to fire the jet
 Jet_Position			                3.0	    # position of jet [in kpc]
 Jet_Velocity				      4.482	    # y-component of 4-velocity [gamma*beta]
-Jet_VelSlope				      -1.0
-Jet_VelCenter				      1.6381982712782834
-Jet_Radius				       0.25	    # radius of jet [in kpc]
+Jet_VelSlope				      -1.0          #
+Jet_VelCenter				      1.638198      # 
+Jet_Radius				      0.25	    # radius of jet [in kpc]
