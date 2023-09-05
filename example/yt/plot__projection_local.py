@@ -47,7 +47,7 @@ prefix_out = args.prefix_out
 
 
 yt.enable_parallelism()
-ts = yt.load( [ prefix_in+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
+ts = yt.DatasetSeries( [ prefix_in+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 
 for ds in ts.piter():
 
