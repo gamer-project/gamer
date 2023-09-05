@@ -204,9 +204,12 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut, real* LorentzFactorPtr )
 {
 
-   const real _Rho             = (real)1.0/In[0];
 #  ifndef SRHD
    const bool CheckMinPres_Yes = true;
+   const real LorentzFactor    = 1.0;
+   const real _Rho             = (real)1.0/In[0];
+#  endif
+   
 #  ifdef MHD
    const real Bx               = In[ MAG_OFFSET + 0 ];
    const real By               = In[ MAG_OFFSET + 1 ];
@@ -215,8 +218,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 #  else
    const real Emag             = NULL_REAL;
 #  endif
-#  endif
-
+      
 #  ifdef SRHD
    real HTilde, Factor, Temp, LorentzFactor;
 
@@ -225,7 +227,6 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 #  endif
 
    HTilde = Hydro_Con2HTilde( In, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
-
    Factor = In[0]*((real)1.0 + HTilde);
 
    Out[1] = In[1]/Factor;
@@ -236,9 +237,10 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 
    if ( LorentzFactorPtr != NULL )   *LorentzFactorPtr = LorentzFactor;
 
-
    Out[0] = In[0]/LorentzFactor;
 
+   const real _Rho = (real)1.0/Out[0];
+   
    EoS_HTilde2Temp( HTilde, &Temp, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
    Out[4] = Out[0]*Temp;
@@ -268,13 +270,18 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 
 
 // passive scalars
+   
 #  if ( NCOMP_PASSIVE > 0 )
+   const int inSize = sizeof(In)/sizeof(In[0]);
 // copy all passive scalars
-   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
+   if ( inSize == NCOMP_TOTAL )
+   {
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v]/LorentzFactor;
 
 // convert the mass density of target passive scalars to mass fraction
-   if ( FracPassive )
-      for (int v=0; v<NFrac; v++)   Out[ NCOMP_FLUID + FracIdx[v] ] *= _Rho;
+      if ( FracPassive )
+	 for (int v=0; v<NFrac; v++)   Out[ NCOMP_FLUID + FracIdx[v] ] *= _Rho;
+   }
 #  endif
 
 
@@ -335,12 +342,16 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const i
 //     instead of mass fraction of passive scalars
 #  ifndef SRHD
 #  if ( NCOMP_PASSIVE > 0 )
+   const int inSize = sizeof(In)/sizeof(In[0]);
+   if ( inSize == NCOMP_TOTAL )
+   {   
 // copy all passive scalars
-   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
 
 // convert the mass fraction of target passive scalars back to mass density
-   if ( FracPassive )
-      for (int v=0; v<NFrac; v++)   Out[ NCOMP_FLUID + FracIdx[v] ] *= In[0];
+      if ( FracPassive )
+         for (int v=0; v<NFrac; v++)   Out[ NCOMP_FLUID + FracIdx[v] ] *= In[0];
+   }
 #  endif
 #  endif
 
@@ -366,6 +377,20 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const i
    Out[4]  = MSqr_DSqr + HTildeFunction;
    Out[4] /= (real)1.0 + SQRT( (real)1.0 + MSqr_DSqr + HTildeFunction );
    Out[4] *= Out[0];
+
+#  if ( NCOMP_PASSIVE > 0 )
+// copy all passive scalars
+   const int inSize = sizeof(In)/sizeof(In[0]);
+   if ( inSize == NCOMP_TOTAL )
+   {
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v]*LorentzFactor;
+
+// convert the mass fraction of target passive scalars back to mass density
+      if ( FracPassive )
+         for (int v=0; v<NFrac; v++)   Out[ NCOMP_FLUID + FracIdx[v] ] *= In[0];
+   }
+#  endif
+
 #  else
 // primitive --> conserved
    Out[0] = In[0];
@@ -383,8 +408,7 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const i
                                                     EoS_AuxArray_Int, EoS_Table )
                                : *EintIn;
    Out[4] = Hydro_ConEint2Etot( Out[0], Out[1], Out[2], Out[3], Eint, Emag );
-
-
+   
 // B field
 #  ifdef MHD
    for (int v=NCOMP_TOTAL; v<NCOMP_TOTAL_PLUS_MAG; v++)  Out[v] = In[v];
