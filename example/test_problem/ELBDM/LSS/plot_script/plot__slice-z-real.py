@@ -19,9 +19,7 @@ args=parser.parse_args()
 # take note
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
-for t in range( len(sys.argv) ):
-   print str(sys.argv[t]),
-print( '' )
+print( ' '.join(map(str, sys.argv)) )
 print( '-------------------------------------------------------------------\n' )
 
 
@@ -43,6 +41,7 @@ for ds in ts.piter():
    sz_dens = yt.SlicePlot( ds, 'z', field, center=center_mode )
 
    sz_dens.set_zlim( field, -1.0e0, +1.0e0 )
+   sz.set_log( field, False )
    sz_dens.set_cmap( field, colormap_dens )
    sz_dens.annotate_timestamp( time_unit='Gyr', corner='upper_right' )
    sz_dens.annotate_grids()
