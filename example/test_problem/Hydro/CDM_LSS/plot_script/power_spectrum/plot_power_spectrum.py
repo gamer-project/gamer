@@ -11,7 +11,7 @@ particle_lv      = 7
 a_dump           = np.genfromtxt("../../Input__DumpTable", skip_header=1, skip_footer=1)
 a_dump           = a_dump[:,1]
 
-data_music       = np.loadtxt("/work1/koarakawaii/music/bin/GENERATE_GADGET_for_CDM/input_powerspec.txt")
+data_music       = np.loadtxt("/work1/koarakawaii/music/bin/GENERATE_GADGET_for_CDM/box_length=30.0/input_powerspec.txt")
 k_music          = data_music[:,0]
 PS_music         = data_music[:,-2]
 
