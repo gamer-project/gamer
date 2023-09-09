@@ -295,6 +295,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #                    endif // HYDRO
                      Aux_Message( stderr, ", INT_MONO_COEFF %13.7e (min %13.7e)\n", IntMonoCoeff_Failed, AUTO_REDUCE_INT_MONO_MIN );
                      Aux_Message( stderr, "   --> Apply floor values with the original dt and interpolation coefficients as the last resort ...\n" );
+                     Aux_Message( stderr, "   --> Consider setting AUTO_REDUCE_DT_FACTOR < 1.0 in Input__Parameter if not done yet\n" );
                   }
                } // if ( AutoReduceDtCoeff >= AUTO_REDUCE_DT_FACTOR_MIN  && ... ) ... else ...
 
