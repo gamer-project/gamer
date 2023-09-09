@@ -1977,6 +1977,9 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
    bool reset_cell = false;
    for (int f=0; f<6; f++)
    {
+//    check the negative, inf or nan density, energy, and pressure
+      if ( fc[f][0] <= (real)0.0 || fc[f][0] >= HUGE_NUMBER || fc[f][0] != fc[f][0] ) reset_cell = true;
+#     ifndef BAROTROPIC_EOS
 #     ifdef MHD
       const real Emag = (real)0.5*( SQR(fc[f][MAG_OFFSET+0]) + SQR(fc[f][MAG_OFFSET+1]) + SQR(fc[f][MAG_OFFSET+2]) );
 #     else
@@ -1985,22 +1988,18 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
       const real Pres = Hydro_Con2Pres( fc[f][DENS], fc[f][MOMX], fc[f][MOMY], fc[f][MOMZ], fc[f][ENGY], fc[f]+NCOMP_FLUID,
                                         true, MinPres, Emag, EoS->DensEint2Pres_FuncPtr, EoS->AuxArrayDevPtr_Flt,
                                         EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
-
-//    check the negative, inf or nan density, energy, and pressure
-      if ( fc[f][0] <= (real)0.0 || fc[f][0] >= HUGE_NUMBER || fc[f][0] != fc[f][0] ) reset_cell = true;
-#     ifndef BAROTROPIC_EOS
-      if ( fc[f][4] <= (real)0.0 || fc[f][4] >= HUGE_NUMBER || fc[f][4] != fc[f][0] ) reset_cell = true;
-      if ( Pres     <= (real)0.0 || Pres     >= HUGE_NUMBER || Pres     != fc[f][0] ) reset_cell = true;
+      if ( fc[f][4] <= (real)0.0 || fc[f][4] >= HUGE_NUMBER || fc[f][4] != fc[f][4] ) reset_cell = true;
+      if ( Pres     <= (real)0.0 || Pres     >= HUGE_NUMBER || Pres     != Pres     ) reset_cell = true;
 #     endif
 
 //    set to the cell-centered values before update
       if ( reset_cell )
       {
-         for (int f=0; f<6; f++)
+         for (int face=0; face<6; face++)
          for (int v=0; v<NCOMP_TOTAL; v++)
-            fc[f][v] = g_cc_array[v][cc_idx];
+            fc[face][v] = g_cc_array[v][cc_idx];
 
-         break;  // no need to apply the floors since the input values should already applied
+         break;  // no need to apply the floors since the input values should already satisfy these constraints
       }
 
 //    apply density and internal energy floors
@@ -2013,7 +2012,6 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
 #     endif
 
    } // for (int f=0; f<6; f++)
-
 
 } // FUNCTION : Hydro_HancockPredict
 
