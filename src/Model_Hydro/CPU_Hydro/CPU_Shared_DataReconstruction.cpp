@@ -1974,10 +1974,12 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
    MHD_UpdateMagnetic_Half( fc, g_EC_Ele, dt, dh, cc_i-NGhost, cc_j-NGhost, cc_k-NGhost, NEle );
 #  endif
 
+
+// check negative, inf, and nan in density, energy, and pressure
+#  ifdef MHM_CHECK_PREDICT
    bool reset_cell = false;
    for (int f=0; f<6; f++)
    {
-//    check the negative, inf or nan density, energy, and pressure
       if ( fc[f][0] <= (real)0.0 || fc[f][0] >= HUGE_NUMBER || fc[f][0] != fc[f][0] ) reset_cell = true;
 #     ifndef BAROTROPIC_EOS
 #     ifdef MHD
@@ -1990,7 +1992,7 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
                                         EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
       if ( fc[f][4] <= (real)0.0 || fc[f][4] >= HUGE_NUMBER || fc[f][4] != fc[f][4] ) reset_cell = true;
       if ( Pres     <= (real)0.0 || Pres     >= HUGE_NUMBER || Pres     != Pres     ) reset_cell = true;
-#     endif
+#     endif // #ifndef BAROTROPIC_EOS
 
 //    set to the cell-centered values before update
       if ( reset_cell )
@@ -2010,8 +2012,8 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
 #     if ( NCOMP_PASSIVE > 0 )
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) fc[f][v] = FMAX( fc[f][v], TINY_NUMBER );
 #     endif
-
    } // for (int f=0; f<6; f++)
+#  endif // #ifdef MHM_CHECK_PREDICT
 
 } // FUNCTION : Hydro_HancockPredict
 

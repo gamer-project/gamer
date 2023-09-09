@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2468)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2469)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -241,6 +241,7 @@ Procedure for outputting new variables:
 //                2466 : 2023/05/08 --> output OPT__FFTW_STARTUP
 //                2467 : 2023/05/18 --> replace OPT__INIT_BFIELD_BYFILE by OPT__INIT_BFIELD_BYVECPOT
 //                2468 : 2023/06/24 --> output OPT__SORT_PATCH_BY_LBIDX
+//                2469 : 2023/09/09 --> output MHM_CHECK_PREDICT
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1414,7 +1415,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2468;
+   KeyInfo.FormatVersion        = 2469;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1952,6 +1953,11 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.EulerY               = 0;
 #  endif
 #  endif // MHD
+#  ifdef MHM_CHECK_PREDICT
+   SymConst.MHM_CheckPredict     = 1;
+#  else
+   SymConst.MHM_CheckPredict     = 0;
+#  endif
    SymConst.EoSNAuxMax           = EOS_NAUX_MAX;
    SymConst.EoSNTableMax         = EOS_NTABLE_MAX;
 
@@ -2799,6 +2805,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 #  ifdef MHD
    H5Tinsert( H5_TypeID, "EulerY",               HOFFSET(SymConst_t,EulerY              ), H5T_NATIVE_INT    );
 #  endif
+   H5Tinsert( H5_TypeID, "MHM_CheckPredict",     HOFFSET(SymConst_t,MHM_CheckPredict    ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "EoSNAuxMax",           HOFFSET(SymConst_t,EoSNAuxMax          ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "EoSNTableMax",         HOFFSET(SymConst_t,EoSNTableMax        ), H5T_NATIVE_INT    );
 
