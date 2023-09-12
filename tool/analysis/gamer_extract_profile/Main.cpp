@@ -257,7 +257,7 @@ void GetRMS()
 #  warning : WAIT MHD !!!
 
 #  elif ( MODEL == ELBDM )
-   const int NGhost  = (ELBDM_GetVir) ? 1 : 0;
+   const int NGhost  = (ELBDM_GetVir) ? 2 : 0;
    const real _Eta   = 1.0/ELBDM_ETA;
    const real _2Eta  = 0.5*_Eta;
    const real _2Eta2 = _Eta*_2Eta;
@@ -278,6 +278,7 @@ void GetRMS()
    const NSide_t NSide = NSIDE_26;
 
    int    ShellID, Var, i, j, k, im, jm, km, ip, jp, kp, POTE, PAR_DENS, NextIdx;
+   int    imm, jmm, kmm, ipp, jpp, kpp;
    long   TVar;
    double Radius, scale, dv;
    double x, x1, x2, y, y1, y2, z, z1, z2;   // (x,y,z) : relative coordinates to the vector "Center"
@@ -333,14 +334,17 @@ void GetRMS()
                                                    z2 = amr.patch[lv][PID]->corner[2] + (kk+0.5)*scale - Center_Map[2];
                                                    z  = ( fabs(z1) <= fabs(z2) ) ? z1 : z2;
                                                    k  = kk + NGhost;   km = k - 1;   kp = k + 1;
+                                                   kmm = k - 2; kpp = k + 2;
             for (int jj=0; jj<PATCH_SIZE; jj++) {  y1 = amr.patch[lv][PID]->corner[1] + (jj+0.5)*scale - Center    [1];
                                                    y2 = amr.patch[lv][PID]->corner[1] + (jj+0.5)*scale - Center_Map[1];
                                                    y  = ( fabs(y1) <= fabs(y2) ) ? y1 : y2;
                                                    j  = jj + NGhost;   jm = j - 1;   jp = j + 1;
+                                                   jmm = j - 2; jpp = j + 2;
             for (int ii=0; ii<PATCH_SIZE; ii++) {  x1 = amr.patch[lv][PID]->corner[0] + (ii+0.5)*scale - Center    [0];
                                                    x2 = amr.patch[lv][PID]->corner[0] + (ii+0.5)*scale - Center_Map[0];
                                                    x  = ( fabs(x1) <= fabs(x2) ) ? x1 : x2;
                                                    i  = ii + NGhost;   im = i - 1;   ip = i + 1;
+                                                   imm = i - 2; ipp = i + 2;
 
                Radius = sqrt( x*x + y*y + z*z );
 
@@ -413,24 +417,37 @@ void GetRMS()
 
                   if ( ELBDM_GetVir )
                   {
-                     GradD[0] = _2dh*( Field[p][DENS][k ][j ][ip] - Field[p][DENS][k ][j ][im] );
-                     GradD[1] = _2dh*( Field[p][DENS][k ][jp][i ] - Field[p][DENS][k ][jm][i ] );
-                     GradD[2] = _2dh*( Field[p][DENS][kp][j ][i ] - Field[p][DENS][km][j ][i ] );
+                     // Richardson extrapolation 2 order
+                     GradD[0] = ( 4*_2dh*( Field[p][DENS][k ][j ][ip] - Field[p][DENS][k ][j ][im] ) 
+                                  - 0.5*_2dh*( Field[p][DENS][k ][j ][ipp] - Field[p][DENS][k ][j ][imm] ))/3;
+                     GradD[1] = ( 4*_2dh*( Field[p][DENS][k ][jp][i ] - Field[p][DENS][k ][jm][i ] )
+                                  - 0.5*_2dh*( Field[p][DENS][k ][jpp][i ] - Field[p][DENS][k ][jmm][i ] ))/3;
+                     GradD[2] = ( 4*_2dh*( Field[p][DENS][kp][j ][i ] - Field[p][DENS][km][j ][i ] )
+                                  - 0.5*_2dh*( Field[p][DENS][kpp][j ][i ] - Field[p][DENS][kmm][j ][i ] ))/3;
 
-                     GradR[0] = _2dh*( Field[p][REAL][k ][j ][ip] - Field[p][REAL][k ][j ][im] );
-                     GradR[1] = _2dh*( Field[p][REAL][k ][jp][i ] - Field[p][REAL][k ][jm][i ] );
-                     GradR[2] = _2dh*( Field[p][REAL][kp][j ][i ] - Field[p][REAL][km][j ][i ] );
+                     GradR[0] = ( 4*_2dh*( Field[p][REAL][k ][j ][ip] - Field[p][REAL][k ][j ][im] )
+                                  - 0.5*_2dh*( Field[p][REAL][k ][j ][ipp] - Field[p][REAL][k ][j ][imm] ))/3;
+                     GradR[1] = ( 4*_2dh*( Field[p][REAL][k ][jp][i ] - Field[p][REAL][k ][jm][i ] )
+                                  - 0.5*_2dh*( Field[p][REAL][k ][jpp][i ] - Field[p][REAL][k ][jmm][i ] ))/3;
+                     GradR[2] = ( 4*_2dh*( Field[p][REAL][kp][j ][i ] - Field[p][REAL][km][j ][i ] )
+                                  - 0.5*_2dh*( Field[p][REAL][kpp][j ][i ] - Field[p][REAL][kmm][j ][i ] ))/3;
 
-                     GradI[0] = _2dh*( Field[p][IMAG][k ][j ][ip] - Field[p][IMAG][k ][j ][im] );
-                     GradI[1] = _2dh*( Field[p][IMAG][k ][jp][i ] - Field[p][IMAG][k ][jm][i ] );
-                     GradI[2] = _2dh*( Field[p][IMAG][kp][j ][i ] - Field[p][IMAG][km][j ][i ] );
+                     GradI[0] = ( 4*_2dh*( Field[p][IMAG][k ][j ][ip] - Field[p][IMAG][k ][j ][im] )
+                                  - 0.5*_2dh*( Field[p][IMAG][k ][j ][ipp] - Field[p][IMAG][k ][j ][imm] ))/3;
+                     GradI[1] = ( 4*_2dh*( Field[p][IMAG][k ][jp][i ] - Field[p][IMAG][k ][jm][i ] )
+                                  - 0.5*_2dh*( Field[p][IMAG][k ][jpp][i ] - Field[p][IMAG][k ][jmm][i ] ))/3;
+                     GradI[2] = ( 4*_2dh*( Field[p][IMAG][kp][j ][i ] - Field[p][IMAG][km][j ][i ] )
+                                  - 0.5*_2dh*( Field[p][IMAG][kpp][j ][i ] - Field[p][IMAG][kmm][j ][i ] ))/3;
 
-                     LapR     = ( Field[p][REAL][k ][j ][ip] + Field[p][REAL][k ][jp][i ] + Field[p][REAL][kp][j ][i ] +
-                                  Field[p][REAL][k ][j ][im] + Field[p][REAL][k ][jm][i ] + Field[p][REAL][km][j ][i ] -
-                                  6.0*Real )*_dh2;
-                     LapI     = ( Field[p][IMAG][k ][j ][ip] + Field[p][IMAG][k ][jp][i ] + Field[p][IMAG][kp][j ][i ] +
-                                  Field[p][IMAG][k ][j ][im] + Field[p][IMAG][k ][jm][i ] + Field[p][IMAG][km][j ][i ] -
-                                  6.0*Imag )*_dh2;
+                     LapR     = ( 4*_dh2*( Field[p][REAL][k ][j ][ip] + Field[p][REAL][k ][jp][i ] + Field[p][REAL][kp][j ][i ] +
+                                  Field[p][REAL][k ][j ][im] + Field[p][REAL][k ][jm][i ] + Field[p][REAL][km][j ][i ] - 6.0*Real) 
+                                  - 0.25*_dh2*( ( Field[p][REAL][k ][j ][ipp] + Field[p][REAL][k ][jpp][i ] + Field[p][REAL][kpp][j ][i ] +
+                                  Field[p][REAL][k ][j ][imm] + Field[p][REAL][k ][jmm][i ] + Field[p][REAL][kmm][j ][i ] - 6.0*Real )))/3;
+
+                     LapI     = ( 4*_dh2*( Field[p][IMAG][k ][j ][ip] + Field[p][IMAG][k ][jp][i ] + Field[p][IMAG][kp][j ][i ] +
+                                  Field[p][IMAG][k ][j ][im] + Field[p][IMAG][k ][jm][i ] + Field[p][IMAG][km][j ][i ] - 6.0*Imag) 
+                                  - 0.25*_dh2*( ( Field[p][IMAG][k ][j ][ipp] + Field[p][IMAG][k ][jpp][i ] + Field[p][IMAG][kpp][j ][i ] +
+                                  Field[p][IMAG][k ][j ][imm] + Field[p][IMAG][k ][jmm][i ] + Field[p][IMAG][kmm][j ][i ] - 6.0*Imag )))/3;
 
                      Ek_Lap = -_2Eta2*( Real*LapR + Imag*LapI );
                      Ek_Gra = +_2Eta2*( SQR(GradR[0]) + SQR(GradR[1]) + SQR(GradR[2]) +
@@ -521,7 +538,7 @@ void ShellAverage()
 #  warning : WAIT MHD !!!
 
 #  elif ( MODEL == ELBDM )
-   const int  NGhost = (ELBDM_GetVir) ? 1 : 0;
+   const int  NGhost = (ELBDM_GetVir) ? 2 : 0;
    const real _Eta   = 1.0/ELBDM_ETA;
    const real _2Eta  = 0.5*_Eta;
    const real _2Eta2 = _Eta*_2Eta;
@@ -543,6 +560,7 @@ void ShellAverage()
    const NSide_t NSide = NSIDE_26;
 
    int    ShellID, Var, i, j, k, im, jm, km, ip, jp, kp, POTE, PAR_DENS, NextIdx;
+   int    imm, jmm, kmm, ipp, jpp, kpp;
    long   TVar;
    double Radius, scale, dv;
    double x, x1, x2, y, y1, y2, z, z1, z2;   // (x,y,z) : relative coordinates to the vector "Center"
@@ -599,14 +617,17 @@ void ShellAverage()
                                                    z2 = amr.patch[lv][PID]->corner[2] + (kk+0.5)*scale - Center_Map[2];
                                                    z  = ( fabs(z1) <= fabs(z2) ) ? z1 : z2;
                                                    k  = kk + NGhost;   km = k - 1;   kp = k + 1;
+                                                   kmm = k - 2; kpp = k + 2;
             for (int jj=0; jj<PATCH_SIZE; jj++) {  y1 = amr.patch[lv][PID]->corner[1] + (jj+0.5)*scale - Center    [1];
                                                    y2 = amr.patch[lv][PID]->corner[1] + (jj+0.5)*scale - Center_Map[1];
                                                    y  = ( fabs(y1) <= fabs(y2) ) ? y1 : y2;
                                                    j  = jj + NGhost;   jm = j - 1;   jp = j + 1;
+                                                   jmm = j - 2; jpp = j + 2;
             for (int ii=0; ii<PATCH_SIZE; ii++) {  x1 = amr.patch[lv][PID]->corner[0] + (ii+0.5)*scale - Center    [0];
                                                    x2 = amr.patch[lv][PID]->corner[0] + (ii+0.5)*scale - Center_Map[0];
                                                    x  = ( fabs(x1) <= fabs(x2) ) ? x1 : x2;
                                                    i  = ii + NGhost;   im = i - 1;   ip = i + 1;
+                                                   imm = i - 2; ipp = i + 2;
 
                Radius = sqrt( x*x + y*y + z*z );
 
@@ -717,24 +738,37 @@ void ShellAverage()
 
                   if ( ELBDM_GetVir )
                   {
-                     GradD[0] = _2dh*( Field[p][DENS][k ][j ][ip] - Field[p][DENS][k ][j ][im] );
-                     GradD[1] = _2dh*( Field[p][DENS][k ][jp][i ] - Field[p][DENS][k ][jm][i ] );
-                     GradD[2] = _2dh*( Field[p][DENS][kp][j ][i ] - Field[p][DENS][km][j ][i ] );
+                     // Richardson extrapolation 2 order
+                     GradD[0] = (4*_2dh*( Field[p][DENS][k ][j ][ip] - Field[p][DENS][k ][j ][im] ) 
+                                 - 0.5*_2dh*( Field[p][DENS][k ][j ][ipp] - Field[p][DENS][k ][j ][imm] ))/3;
+                     GradD[1] = (4*_2dh*( Field[p][DENS][k ][jp][i ] - Field[p][DENS][k ][jm][i ] )
+                                 - 0.5*_2dh*( Field[p][DENS][k ][jpp][i ] - Field[p][DENS][k ][jmm][i ] ))/3;
+                     GradD[2] = (4*_2dh*( Field[p][DENS][kp][j ][i ] - Field[p][DENS][km][j ][i ] )
+                                 - 0.5*_2dh*( Field[p][DENS][kpp][j ][i ] - Field[p][DENS][kmm][j ][i ] ))/3;
 
-                     GradR[0] = _2dh*( Field[p][REAL][k ][j ][ip] - Field[p][REAL][k ][j ][im] );
-                     GradR[1] = _2dh*( Field[p][REAL][k ][jp][i ] - Field[p][REAL][k ][jm][i ] );
-                     GradR[2] = _2dh*( Field[p][REAL][kp][j ][i ] - Field[p][REAL][km][j ][i ] );
+                     GradR[0] = (4*_2dh*( Field[p][REAL][k ][j ][ip] - Field[p][REAL][k ][j ][im] )
+                                 - 0.5*_2dh*( Field[p][REAL][k ][j ][ipp] - Field[p][REAL][k ][j ][imm] ))/3;
+                     GradR[1] = (4*_2dh*( Field[p][REAL][k ][jp][i ] - Field[p][REAL][k ][jm][i ] )
+                                 - 0.5*_2dh*( Field[p][REAL][k ][jpp][i ] - Field[p][REAL][k ][jmm][i ] ))/3;
+                     GradR[2] = (4*_2dh*( Field[p][REAL][kp][j ][i ] - Field[p][REAL][km][j ][i ] )
+                                 - 0.5*_2dh*( Field[p][REAL][kpp][j ][i ] - Field[p][REAL][kmm][j ][i ] ))/3;
 
-                     GradI[0] = _2dh*( Field[p][IMAG][k ][j ][ip] - Field[p][IMAG][k ][j ][im] );
-                     GradI[1] = _2dh*( Field[p][IMAG][k ][jp][i ] - Field[p][IMAG][k ][jm][i ] );
-                     GradI[2] = _2dh*( Field[p][IMAG][kp][j ][i ] - Field[p][IMAG][km][j ][i ] );
+                     GradI[0] = (4*_2dh*( Field[p][IMAG][k ][j ][ip] - Field[p][IMAG][k ][j ][im] )
+                                 - 0.5*_2dh*( Field[p][IMAG][k ][j ][ipp] - Field[p][IMAG][k ][j ][imm] ))/3;
+                     GradI[1] = (4*_2dh*( Field[p][IMAG][k ][jp][i ] - Field[p][IMAG][k ][jm][i ] )
+                                 - 0.5*_2dh*( Field[p][IMAG][k ][jpp][i ] - Field[p][IMAG][k ][jmm][i ] ))/3;
+                     GradI[2] = (4*_2dh*( Field[p][IMAG][kp][j ][i ] - Field[p][IMAG][km][j ][i ] )
+                                 - 0.5*_2dh*( Field[p][IMAG][kpp][j ][i ] - Field[p][IMAG][kmm][j ][i ] ))/3;
 
-                     LapR     = ( Field[p][REAL][k ][j ][ip] + Field[p][REAL][k ][jp][i ] + Field[p][REAL][kp][j ][i ] +
-                                  Field[p][REAL][k ][j ][im] + Field[p][REAL][k ][jm][i ] + Field[p][REAL][km][j ][i ] -
-                                  6.0*Real )*_dh2;
-                     LapI     = ( Field[p][IMAG][k ][j ][ip] + Field[p][IMAG][k ][jp][i ] + Field[p][IMAG][kp][j ][i ] +
-                                  Field[p][IMAG][k ][j ][im] + Field[p][IMAG][k ][jm][i ] + Field[p][IMAG][km][j ][i ] -
-                                  6.0*Imag )*_dh2;
+                     LapR     = ( 4*_dh2*( Field[p][REAL][k ][j ][ip] + Field[p][REAL][k ][jp][i ] + Field[p][REAL][kp][j ][i ] +
+                                  Field[p][REAL][k ][j ][im] + Field[p][REAL][k ][jm][i ] + Field[p][REAL][km][j ][i ] - 6.0*Real) 
+                                  - 0.25*_dh2*( ( Field[p][REAL][k ][j ][ipp] + Field[p][REAL][k ][jpp][i ] + Field[p][REAL][kpp][j ][i ] +
+                                  Field[p][REAL][k ][j ][imm] + Field[p][REAL][k ][jmm][i ] + Field[p][REAL][kmm][j ][i ] - 6.0*Real )))/3;
+
+                     LapI     = ( 4*_dh2*( Field[p][IMAG][k ][j ][ip] + Field[p][IMAG][k ][jp][i ] + Field[p][IMAG][kp][j ][i ] +
+                                  Field[p][IMAG][k ][j ][im] + Field[p][IMAG][k ][jm][i ] + Field[p][IMAG][km][j ][i ] - 6.0*Imag) 
+                                  - 0.25*_dh2*( ( Field[p][IMAG][k ][j ][ipp] + Field[p][IMAG][k ][jpp][i ] + Field[p][IMAG][kpp][j ][i ] +
+                                  Field[p][IMAG][k ][j ][imm] + Field[p][IMAG][k ][jmm][i ] + Field[p][IMAG][kmm][j ][i ] - 6.0*Imag )))/3;
 
                      Ek_Lap = -_2Eta2*( Real*LapR + Imag*LapI );
                      Ek_Gra = +_2Eta2*( SQR(GradR[0]) + SQR(GradR[1]) + SQR(GradR[2]) +
