@@ -20,6 +20,7 @@ extern double      NewtonG;
 #if ( MODEL == ELBDM )
 extern bool        ELBDM_GetVir;
 extern double      ELBDM_ETA;
+extern int         ELBDM_Scheme;
 #endif
 
 

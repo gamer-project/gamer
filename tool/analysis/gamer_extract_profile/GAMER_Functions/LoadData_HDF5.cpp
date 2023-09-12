@@ -94,7 +94,7 @@ void LoadData_HDF5( const char *FileName )
    double ELBDM_PlanckConst;
 #  endif
 
-   hid_t  H5_FileID, H5_SetID_KeyInfo, H5_TypeID_KeyInfo, H5_SetID_InputPara, H5_TypeID_InputPara;
+   hid_t  H5_FileID, H5_SetID_KeyInfo, H5_TypeID_KeyInfo, H5_SetID_InputPara, H5_TypeID_InputPara, H5_SetID_Makefile, H5_TypeID_Makefile;
    hid_t  H5_SetID_Cr, H5_SetID_Son;
    herr_t H5_Status;
 
@@ -105,7 +105,7 @@ void LoadData_HDF5( const char *FileName )
       Aux_Error( ERROR_INFO, "failed to open the restart HDF5 file \"%s\" !!\n", FileName );
 
 
-// 1-2. load the dataset and datatype of KeyInfo and InputPara
+// 1-2. load the dataset and datatype of KeyInfo and InputPara and Makefile
    H5_SetID_KeyInfo  = H5Dopen( H5_FileID, "Info/KeyInfo", H5P_DEFAULT );
    if ( H5_SetID_KeyInfo < 0 )
       Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", "Info/KeyInfo" );
@@ -122,6 +122,13 @@ void LoadData_HDF5( const char *FileName )
    if ( H5_TypeID_InputPara < 0 )
       Aux_Error( ERROR_INFO, "failed to open the datatype of \"%s\" !!\n", "Info/InputPara" );
 
+   H5_SetID_Makefile  = H5Dopen( H5_FileID, "Info/Makefile", H5P_DEFAULT );
+   if ( H5_SetID_Makefile < 0 )
+      Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", "Info/Makefile" );
+
+   H5_TypeID_Makefile = H5Dget_type( H5_SetID_Makefile );
+   if ( H5_TypeID_Makefile < 0 )
+      Aux_Error( ERROR_INFO, "failed to open the datatype of \"%s\" !!\n", "Info/Makefile" );
 
 // 1-3. load all target fields in KeyInfo and InputPara one-by-one (by all ranks)
    LoadField( "FormatVersion",  &FormatVersion,  H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
@@ -160,6 +167,7 @@ void LoadData_HDF5( const char *FileName )
 #  elif ( MODEL == ELBDM )
    LoadField( "ELBDM_Mass",           &ELBDM_Mass,           H5_SetID_InputPara, H5_TypeID_InputPara, Fatal,  NullPtr,        -1, NonFatal );
    LoadField( "ELBDM_PlanckConst",    &ELBDM_PlanckConst,    H5_SetID_InputPara, H5_TypeID_InputPara, Fatal,  NullPtr,        -1, NonFatal );
+   LoadField( "ELBDMScheme",          &ELBDM_Scheme,         H5_SetID_Makefile,  H5_TypeID_Makefile, NonFatal, NullPtr,        -1, NonFatal );
 
    ELBDM_ETA = ELBDM_Mass / ELBDM_PlanckConst;
 #  endif
@@ -183,7 +191,14 @@ void LoadData_HDF5( const char *FileName )
          char Key[MaxString];
          sprintf( Key, "FieldLabel%02d", v );
 
+#        if ( MODEL == ELBDM)
+            if (ELBDM_Scheme == 2)
+               LoadField( Key, &FieldName_In[v], H5_SetID_InputPara, H5_TypeID_InputPara, NonFatal, NullPtr, -1, NonFatal );
+            else
+               LoadField( Key, &FieldName_In[v], H5_SetID_InputPara, H5_TypeID_InputPara, Fatal, NullPtr, -1, NonFatal );
+#        else
          LoadField( Key, &FieldName_In[v], H5_SetID_InputPara, H5_TypeID_InputPara, Fatal, NullPtr, -1, NonFatal );
+#  endif
       }
    }
 
@@ -383,7 +398,12 @@ void LoadData_HDF5( const char *FileName )
    if ( FormatVersion >= 2300 )
    {
       for (int v=0; v<NCOMP_TOTAL; v++)
-      sprintf( FieldName[v], "%s", FieldName_In[v] );
+      {
+#        if ( MODEL == ELBDM )
+            if (ELBDM_Scheme==2 && v==2) continue;
+#        endif
+         sprintf( FieldName[v], "%s", FieldName_In[v] );
+      }
    }
 
    else
@@ -441,6 +461,9 @@ void LoadData_HDF5( const char *FileName )
 
    for (int v=0; v<NCOMP_TOTAL; v++)
    {
+#     if ( MODEL == ELBDM )
+         if (ELBDM_Scheme==2 && v==2) continue;
+#     endif
       H5_SetID_Field[v] = H5Dopen( H5_GroupID_GridData, FieldName[v], H5P_DEFAULT );
       if ( H5_SetID_Field[v] < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", FieldName[v] );
    }
@@ -768,13 +791,36 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab for the grid data !!\n" );
 
 //    load the fluid data
+#     if ( MODEL == ELBDM )
       for (int v=0; v<NCOMP_TOTAL; v++)
-      {
+      {  
+         // Hybrid Scheme : Only has dens and phase parts
+         if ( ELBDM_Scheme==2 && v==2 ) continue;
          H5_Status = H5Dread( H5_SetID_Field[v], H5T_GAMER_REAL, H5_MemID_Field, H5_SpaceID_Field, H5P_DEFAULT,
                               amr.patch[lv][PID]->fluid[v] );
          if ( H5_Status < 0 )
             Aux_Error( ERROR_INFO, "failed to load a field variable (lv %d, GID %d, v %d) !!\n", lv, GID, v );
       }
+      // Transfer dens and phase to real and imag
+      if (ELBDM_Scheme == 2 )
+      {  
+         for (int i=0; i<PATCH_SIZE; i++)
+            for (int j=0; j<PATCH_SIZE; j++)
+               for (int k=0; k<PATCH_SIZE; k++)
+               {
+                  amr.patch[lv][PID]->fluid[IMAG][i][j][k] = sqrt(amr.patch[lv][PID]->fluid[0][i][j][k]) * sin(amr.patch[lv][PID]->fluid[1][i][j][k]);
+                  amr.patch[lv][PID]->fluid[REAL][i][j][k] = sqrt(amr.patch[lv][PID]->fluid[0][i][j][k]) * cos(amr.patch[lv][PID]->fluid[1][i][j][k]);
+               }
+      }
+#     else
+         for (int v=0; v<NCOMP_TOTAL; v++)
+         {
+            H5_Status = H5Dread( H5_SetID_Field[v], H5T_GAMER_REAL, H5_MemID_Field, H5_SpaceID_Field, H5P_DEFAULT,
+                                 amr.patch[lv][PID]->fluid[v] );
+            if ( H5_Status < 0 )
+               Aux_Error( ERROR_INFO, "failed to load a field variable (lv %d, GID %d, v %d) !!\n", lv, GID, v );
+         }
+#     endif
 
 //    load the potential data
       if ( OutputPot )

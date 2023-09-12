@@ -47,6 +47,7 @@ double      INT_MONO_COEFF    = 2.0;
 bool        ELBDM_IntPhase    = true;
 bool        ELBDM_GetVir      = false;    // analyze the ELBDM virial condition (output vel, Ek, and virial surface terms)
 double      ELBDM_ETA         = NULL_REAL;
+int         ELBDM_Scheme;
 IntScheme_t IntScheme         = INT_CQUAR;
 double    (*ELBDM_Mom)[3]     = NULL;     // momentum used for subtracting the CM Ek in ELBDM_GetVir
 double     *ELBDM_RhoUr2      = NULL;     // Rho*(vr^2 + wr^2) in the virial surface terms
@@ -2047,6 +2048,7 @@ void TakeNote( int argc, char **argv )
    printf( "ELBDM_IntPhase   =  %s\n",      (ELBDM_IntPhase)?"YES":"NO" );
    printf( "ELBDM_GetVir     =  %s\n",      (ELBDM_GetVir  )?"YES":"NO" );
    printf( "ELBDM_ETA        = %14.7e\n",   ELBDM_ETA );
+   printf( "ELBDMScheme      =  %d\n",      ELBDM_Scheme   );
 #  endif
    printf( "INT_MONO_COEFF   = %14.7e\n",   INT_MONO_COEFF );
    printf( "GetAvePot        =  %s\n",      (GetAvePot)?"YES":"NO"      );
