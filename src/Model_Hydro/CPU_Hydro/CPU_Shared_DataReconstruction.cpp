@@ -1974,42 +1974,46 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
    MHD_UpdateMagnetic_Half( fc, g_EC_Ele, dt, dh, cc_i-NGhost, cc_j-NGhost, cc_k-NGhost, NEle );
 #  endif
 
-// check the negative density and energy
+
+// check negative, inf, and nan in density, energy, and pressure
+#  ifdef MHM_CHECK_PREDICT
+   bool reset_cell = false;
    for (int f=0; f<6; f++)
    {
-#     ifdef BAROTROPIC_EOS
-      if ( fc[f][0] <= (real)0.0 )
-#     else
-      if ( fc[f][0] <= (real)0.0  ||  fc[f][4] <= (real)0.0 )
-#     endif
-      {
-//       set to the cell-centered values before update
-         for (int f=0; f<6; f++)
-         for (int v=0; v<NCOMP_TOTAL; v++)
-            fc[f][v] = g_cc_array[v][cc_idx];
-
-         break;
-      }
-   }
-
-// apply density and internal energy floors
-   for (int f=0; f<6; f++)
-   {
-      fc[f][0] = FMAX( fc[f][0], MinDens );
+      if ( fc[f][0] <= (real)0.0 || fc[f][0] >= HUGE_NUMBER || fc[f][0] != fc[f][0] ) reset_cell = true;
 #     ifndef BAROTROPIC_EOS
 #     ifdef MHD
       const real Emag = (real)0.5*( SQR(fc[f][MAG_OFFSET+0]) + SQR(fc[f][MAG_OFFSET+1]) + SQR(fc[f][MAG_OFFSET+2]) );
 #     else
       const real Emag = NULL_REAL;
 #     endif
-      fc[f][4] = Hydro_CheckMinEintInEngy( fc[f][0], fc[f][1], fc[f][2], fc[f][3], fc[f][4],
-                                           MinEint, Emag );
+      const real Pres = Hydro_Con2Pres( fc[f][DENS], fc[f][MOMX], fc[f][MOMY], fc[f][MOMZ], fc[f][ENGY], fc[f]+NCOMP_FLUID,
+                                        true, MinPres, Emag, EoS->DensEint2Pres_FuncPtr, EoS->AuxArrayDevPtr_Flt,
+                                        EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
+      if ( fc[f][4] <= (real)0.0 || fc[f][4] >= HUGE_NUMBER || fc[f][4] != fc[f][4] ) reset_cell = true;
+      if ( Pres     <= (real)0.0 || Pres     >= HUGE_NUMBER || Pres     != Pres     ) reset_cell = true;
 #     endif // #ifndef BAROTROPIC_EOS
-#     if ( NCOMP_PASSIVE > 0 )
-      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
-      fc[f][v] = FMAX( fc[f][v], TINY_NUMBER );
+
+//    set to the cell-centered values before update
+      if ( reset_cell )
+      {
+         for (int face=0; face<6; face++)
+         for (int v=0; v<NCOMP_TOTAL; v++)
+            fc[face][v] = g_cc_array[v][cc_idx];
+
+         break;  // no need to apply the floors since the input values should already satisfy these constraints
+      }
+
+//    apply density and internal energy floors
+      fc[f][0] = FMAX( fc[f][0], MinDens );
+#     ifndef BAROTROPIC_EOS
+      fc[f][4] = Hydro_CheckMinEintInEngy( fc[f][0], fc[f][1], fc[f][2], fc[f][3], fc[f][4], MinEint, Emag );
 #     endif
-   }
+#     if ( NCOMP_PASSIVE > 0 )
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) fc[f][v] = FMAX( fc[f][v], TINY_NUMBER );
+#     endif
+   } // for (int f=0; f<6; f++)
+#  endif // #ifdef MHM_CHECK_PREDICT
 
 } // FUNCTION : Hydro_HancockPredict
 
