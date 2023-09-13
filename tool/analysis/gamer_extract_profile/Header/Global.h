@@ -21,6 +21,7 @@ extern double      NewtonG;
 extern bool        ELBDM_GetVir;
 extern double      ELBDM_ETA;
 extern int         ELBDM_Scheme;
+extern bool        OutputSphere;
 #endif
 
 

@@ -274,6 +274,7 @@ void LoadData_HDF5( const char *FileName )
 #     elif ( MODEL == MHD )
 #     elif ( MODEL == ELBDM )
       if ( ELBDM_GetVir )  NOut += 8;
+      if (  OutputSphere ) NOut += 6;
 #     else
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL

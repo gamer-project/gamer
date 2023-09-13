@@ -54,6 +54,7 @@ double    (*ELBDM_Mom)[3]     = NULL;     // momentum used for subtracting the C
 double     *ELBDM_RhoUr2      = NULL;     // Rho*(vr^2 + wr^2) in the virial surface terms
 double     *ELBDM_dRho_dr     = NULL;     // dRho/dr in the virial surface terms
 double     *ELBDM_LapRho      = NULL;     // Lap(Rho) in the virial surface terms
+bool        OutputSphere      = false;    // output the sphere coordinate (r, theta, phi) velocity
 #else
 IntScheme_t IntScheme         = INT_CQUAD;
 #endif
@@ -515,6 +516,7 @@ void GetRMS()
    real Dens, Real, Imag, Pot, _Dens, ParDens;
    real Ek_Lap, Ek_Gra, GradR[3], GradI[3], LapR, LapI, _2dh, _dh2;
    real v[3], w[3], vr, vr_abs, vt_abs, wr, wr_abs, wt_abs, GradD[3];
+   real v_sph[3], w_sph[3];
 
 #  else
 #  error : ERROR : unsupported MODEL !!
@@ -719,6 +721,14 @@ void GetRMS()
                      wr     = ( x*w[0] + y*w[1] + z*w[2] ) / Radius;
                      wr_abs = fabs( wr );
                      wt_abs = sqrt(  fabs( w[0]*w[0] + w[1]*w[1] + w[2]*w[2] - wr*wr )  );
+
+                     v_sph[0] = vr;
+                     v_sph[1] = ( z*x*v[0] + z*y*v[1] - (x*x+y*y)*v[2] ) /sqrt(x*x+y*y) / Radius;
+                     v_sph[2] = ( -y*v[0] + x*v[1]) /sqrt(x*x+y*y);
+
+                     w_sph[0] = wr;
+                     w_sph[1] = ( z*x*w[0] + z*y*w[1] - (x*x+y*y)*w[2] ) /sqrt(x*x+y*y) / Radius;
+                     w_sph[2] = ( -y*w[0] + x*w[1]) /sqrt(x*x+y*y);
                   } // if ( ELBDM_GetVir )
 
 
@@ -747,6 +757,14 @@ void GetRMS()
                   RMS[ShellID][Var] += dv*pow( double(wr_abs )-Average[ShellID][Var], 2.0 );  Var++;
                   RMS[ShellID][Var] += dv*pow( double(wt_abs )-Average[ShellID][Var], 2.0 );  Var++; }
 
+                  if ( OutputSphere ) {
+                  RMS[ShellID][Var] += dv*Dens*pow( double(v_sph[0])-Average[ShellID][Var], 2.0 );  Var++;
+                  RMS[ShellID][Var] += dv*Dens*pow( double(v_sph[1])-Average[ShellID][Var], 2.0 );  Var++;
+                  RMS[ShellID][Var] += dv*Dens*pow( double(v_sph[2])-Average[ShellID][Var], 2.0 );  Var++;
+                  RMS[ShellID][Var] += dv*Dens*pow( double(w_sph[0])-Average[ShellID][Var], 2.0 );  Var++;
+                  RMS[ShellID][Var] += dv*Dens*pow( double(w_sph[1])-Average[ShellID][Var], 2.0 );  Var++;
+                  RMS[ShellID][Var] += dv*Dens*pow( double(w_sph[2])-Average[ShellID][Var], 2.0 );  Var++; }
+
 #                 else
 #                 error : ERROR : unsupported MODEL !!
 #                 endif // MODEL
@@ -764,6 +782,9 @@ void GetRMS()
 // get the root-mean-square at each level
    for (int n=0; n<NShell; n++)
    for (int v=0; v<NOut; v++)    RMS[n][v] = sqrt( RMS[n][v]/Volume[n] );
+
+   for (int n=0; n<NShell; n++)
+   for (int v=NOut-6; v<NOut; v++)    RMS[n][v] = RMS[n][v]/sqrt(Average[n][0]);
 
    delete [] Field1D;
 
@@ -797,6 +818,7 @@ void ShellAverage()
    real Dens, Real, Imag, Pot, _Dens, ParDens;
    real Ek_Lap, Ek_Gra, GradR[3], GradI[3], LapR, LapI, _2dh, _dh2, dv_Eta;
    real v[3], w[3], vr, vr1, vr2, vt1, vt2, wr, wr1, wr2, wt1, wt2, GradD[3], dR_dr, dI_dr;
+   real v_sph[3], w_sph[3];
 
 #  else
 #  error : ERROR : unsupported MODEL !!
@@ -1044,6 +1066,14 @@ void ShellAverage()
                      wt2 = fabs( w[0]*w[0] + w[1]*w[1] + w[2]*w[2] - wr2 );
                      wr1 = fabs( wr );
                      wt1 = sqrt( wt2 );
+
+                     v_sph[0] = vr;
+                     v_sph[1] = ( z*x*v[0] + z*y*v[1] - (x*x+y*y)*v[2] ) /sqrt(x*x+y*y) / Radius;
+                     v_sph[2] = ( -y*v[0] + x*v[1]) /sqrt(x*x+y*y);
+
+                     w_sph[0] = wr;
+                     w_sph[1] = ( z*x*w[0] + z*y*w[1] - (x*x+y*y)*w[2] ) /sqrt(x*x+y*y) / Radius;
+                     w_sph[2] = ( -y*w[0] + x*w[1]) /sqrt(x*x+y*y);
                   } // if ( ELBDM_GetVir )
 
 
@@ -1071,6 +1101,14 @@ void ShellAverage()
                   Average[ShellID][Var++] += (double)(dv*Dens*wr  );
                   Average[ShellID][Var++] += (double)(dv*Dens*wr2 );
                   Average[ShellID][Var++] += (double)(dv*Dens*wt2 );
+
+                  if ( OutputSphere ) {
+                  Average[ShellID][Var++] += (double)(dv*Dens*v_sph[0] );
+                  Average[ShellID][Var++] += (double)(dv*Dens*v_sph[1] );
+                  Average[ShellID][Var++] += (double)(dv*Dens*v_sph[2] );
+                  Average[ShellID][Var++] += (double)(dv*Dens*w_sph[0] );
+                  Average[ShellID][Var++] += (double)(dv*Dens*w_sph[1] );
+                  Average[ShellID][Var++] += (double)(dv*Dens*w_sph[2] ); }
 
                   for (int d=0; d<3; d++)    ELBDM_Mom[ShellID][d] += (double)( Real*GradI[d] - Imag*GradR[d] )*dv_Eta;
 
@@ -1109,6 +1147,14 @@ void ShellAverage()
                   if ( wr1     > Max[ShellID][Var] )  Max[ShellID][Var] = wr1;      Var++;
                   if ( wt1     > Max[ShellID][Var] )  Max[ShellID][Var] = wt1;      Var++; }
 
+                  if ( OutputSphere ) {
+                  if ( v_sph[0] > Max[ShellID][Var] )  Max[ShellID][Var] = v_sph[0];  Var++;
+                  if ( v_sph[1] > Max[ShellID][Var] )  Max[ShellID][Var] = v_sph[1];  Var++;
+                  if ( v_sph[2] > Max[ShellID][Var] )  Max[ShellID][Var] = v_sph[2];  Var++;
+                  if ( w_sph[0] > Max[ShellID][Var] )  Max[ShellID][Var] = w_sph[0];  Var++;
+                  if ( w_sph[1] > Max[ShellID][Var] )  Max[ShellID][Var] = w_sph[1];  Var++;
+                  if ( w_sph[2] > Max[ShellID][Var] )  Max[ShellID][Var] = w_sph[2];  Var++; }
+
                   Var = 0;
                   if ( Dens    < Min[ShellID][Var] )  Min[ShellID][Var] = Dens;     Var++;
                   if ( Real    < Min[ShellID][Var] )  Min[ShellID][Var] = Real;     Var++;
@@ -1132,6 +1178,14 @@ void ShellAverage()
                   if ( wr      < Min[ShellID][Var] )  Min[ShellID][Var] = wr;       Var++;
                   if ( wr1     < Min[ShellID][Var] )  Min[ShellID][Var] = wr1;      Var++;
                   if ( wt1     < Min[ShellID][Var] )  Min[ShellID][Var] = wt1;      Var++; }
+
+                  if ( OutputSphere ) {
+                  if ( v_sph[0] < Min[ShellID][Var] )  Min[ShellID][Var] = v_sph[0];  Var++;
+                  if ( v_sph[1] < Min[ShellID][Var] )  Min[ShellID][Var] = v_sph[1];  Var++;
+                  if ( v_sph[2] < Min[ShellID][Var] )  Min[ShellID][Var] = v_sph[2];  Var++;
+                  if ( w_sph[0] < Min[ShellID][Var] )  Min[ShellID][Var] = w_sph[0];  Var++;
+                  if ( w_sph[1] < Min[ShellID][Var] )  Min[ShellID][Var] = w_sph[1];  Var++;
+                  if ( w_sph[2] < Min[ShellID][Var] )  Min[ShellID][Var] = w_sph[2];  Var++; }
 
 #                 else
 #                 error : ERROR : unsupported MODEL !!
@@ -1186,7 +1240,7 @@ void ShellAverage()
       for (int n=0; n<NShell; n++)
       {
 //       <v> = <Rho*v>/<Rho>, <|v|> = sqrt( <Rho*v^2>/<Rho> )
-         for (int t=0; t<6; t++)    Average[n][Idx_v+t] /= Average[n][0];
+         for (int t=0; t<12; t++)    Average[n][Idx_v+t] /= Average[n][0];
 
          Average[n][Idx_v+1] = sqrt( Average[n][Idx_v+1] );
          Average[n][Idx_v+2] = sqrt( Average[n][Idx_v+2] );
@@ -1216,7 +1270,7 @@ void ReadOption( int argc, char **argv )
 
    int c;
 
-   while ( (c = getopt(argc, argv, "hpsSMPVTDcgi:o:n:x:y:z:r:t:m:a:L:R:u:I:e:G:")) != -1 )
+   while ( (c = getopt(argc, argv, "hpsSMPVTDcgOi:o:n:x:y:z:r:t:m:a:L:R:u:I:e:G:")) != -1 )
    {
       switch ( c )
       {
@@ -1273,6 +1327,8 @@ void ReadOption( int argc, char **argv )
          case 'g': GetAvePot        = true;
                    break;
          case 'G': NewtonG          = atof(optarg);
+                   break;
+         case 'O': OutputSphere     = true;
                    break;
          case 'h':
          case '?': cerr << endl << "usage: " << argv[0]
@@ -1514,6 +1570,15 @@ void Output_ShellAve()
                         sprintf( FileName[Var++], "%s", "AveWr-N"  );
                         sprintf( FileName[Var++], "%s", "AveWr-A"  );
                         sprintf( FileName[Var++], "%s", "AveWt-A"  );
+   }
+   if ( OutputSphere )
+   {
+                        sprintf( FileName[Var++], "%s", "AveVr"    );
+                        sprintf( FileName[Var++], "%s", "AveVtheta");
+                        sprintf( FileName[Var++], "%s", "AveVphi"  );
+                        sprintf( FileName[Var++], "%s", "AveWr"    );
+                        sprintf( FileName[Var++], "%s", "AveWtheta");
+                        sprintf( FileName[Var++], "%s", "AveWphi"  );
    }
 
 #  else
