@@ -132,10 +132,10 @@ void Poi_GetAverageDensity()
 
 // add particle mass
 #  ifdef PARTICLE
-   long    NPar_AcPlusInac_AllRank[MPI_NRank], NPar_AcPlusInac_Sum;
-   int     Count[MPI_NRank];
-   double  ParMassSum;
-   real   *ParMass_AllRank = NULL;
+   long        NPar_AcPlusInac_AllRank[MPI_NRank], NPar_AcPlusInac_Sum;
+   int         Count[MPI_NRank];
+   double      ParMassSum;
+   real_par   *ParMass_AllRank = NULL;
 
 // get the total number of active + inactive particles in each rank
    MPI_Gather( &amr->Par->NPar_AcPlusInac, 1, MPI_LONG, NPar_AcPlusInac_AllRank, 1, MPI_LONG, 0, MPI_COMM_WORLD );
@@ -145,7 +145,7 @@ void Poi_GetAverageDensity()
       NPar_AcPlusInac_Sum = 0;
       for (int r=0; r<MPI_NRank; r++)  NPar_AcPlusInac_Sum += NPar_AcPlusInac_AllRank[r];
 
-      ParMass_AllRank = new real [NPar_AcPlusInac_Sum];
+      ParMass_AllRank = new real_par [NPar_AcPlusInac_Sum];
 
 //    here we have assumed that "integer" type is enough !!
       for (int r=0; r<MPI_NRank; r++)  Count[r] = NPar_AcPlusInac_AllRank[r];
@@ -155,13 +155,8 @@ void Poi_GetAverageDensity()
    }
 
 // collect particle mass from all ranks
-#  ifdef FLOAT8
-   MPI_Gatherv( amr->Par->Mass, amr->Par->NPar_AcPlusInac, MPI_DOUBLE,
-                ParMass_AllRank, Count, Disp, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-#  else
-   MPI_Gatherv( amr->Par->Mass, amr->Par->NPar_AcPlusInac, MPI_FLOAT,
-                ParMass_AllRank, Count, Disp, MPI_FLOAT,  0, MPI_COMM_WORLD );
-#  endif
+   MPI_Gatherv( amr->Par->Mass, amr->Par->NPar_AcPlusInac, MPI_GAMER_REAL_PAR,
+                ParMass_AllRank, Count, Disp, MPI_GAMER_REAL_PAR, 0, MPI_COMM_WORLD );
 
    if ( MPI_Rank == 0 )
    {
@@ -173,7 +168,7 @@ void Poi_GetAverageDensity()
       for (long p=0; p<NPar_AcPlusInac_Sum; p++)
       {
 //       skip inactive and massless particles
-         if ( ParMass_AllRank[p] > (real)0.0 )  ParMassSum += (double)ParMass_AllRank[p];
+         if ( ParMass_AllRank[p] > (real_par)0.0 )  ParMassSum += (double)ParMass_AllRank[p];
       }
 
       AveDensity_Init += ParMassSum / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
@@ -242,7 +237,7 @@ void Poi_GetAverageDensity()
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
 //    skip inactive and massless particles
-      if ( amr->Par->Mass[p] > (real)0.0 )   ParMassSum_local += (double)amr->Par->Mass[p];
+      if ( amr->Par->Mass[p] > (real_par)0.0 )   ParMassSum_local += (double)amr->Par->Mass[p];
    }
 
 // sum over all MPI ranks

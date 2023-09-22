@@ -26,8 +26,8 @@
 void Par_Aux_Check_Particle( const char *comment )
 {
 
-   const int   NCheck    = 11;
-   const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   const int   NCheck        = 11;
+   const real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
 
    int     PassAll    = true;
    long    NParInLeaf = 0;
@@ -147,7 +147,7 @@ void Par_Aux_Check_Particle( const char *comment )
                   bool CheckTypePass = true;
 
 //                particle types must be recognizable
-                  if ( amr->Par->Type[ParID] < (real)0  ||  amr->Par->Type[ParID] >= (real)PAR_NTYPE )
+                  if ( amr->Par->Type[ParID] < (real_par)0  ||  amr->Par->Type[ParID] >= (real_par)PAR_NTYPE )
                      CheckTypePass = false;
 
 //                only support tracer particles when disabling GRAVITY
@@ -164,7 +164,7 @@ void Par_Aux_Check_Particle( const char *comment )
 
 //                tracer particles must be massless
 #                 ifdef TRACER
-                  if ( amr->Par->Type[ParID] == PTYPE_TRACER  &&  amr->Par->Mass[ParID] != (real)0.0 )
+                  if ( amr->Par->Type[ParID] == PTYPE_TRACER  &&  amr->Par->Mass[ParID] != (real_par)0.0 )
                      CheckTypePass = false;
 #                 endif
 

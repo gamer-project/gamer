@@ -169,7 +169,8 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
    int  *SendBuf_NParEachPatch = new int  [Real_NPatchTotal];
    long *SendBuf_Offset        = new long [Real_NPatchTotal];
 
-   int PID, NParThisPatch, NSendParTotal = 0;
+   int PID, NParThisPatch = 0;
+   long     NSendParTotal = 0;
 
 // loop over all target real patches
 #  pragma omp parallel for private( PID, NParThisPatch ) reduction( +:NSendParTotal ) schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )
@@ -187,8 +188,8 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
                     NParThisPatch, lv, PID );
 #     endif
 
-      NSendParTotal            += NParThisPatch;
-      SendBuf_NParEachPatch[t]  = NParThisPatch;
+      NSendParTotal            += (long)NParThisPatch;
+      SendBuf_NParEachPatch[t]  =       NParThisPatch;
    } // for (int t=0; t<Real_NPatchTotal; t++)
 
 // get the array offset of each patch (mainly for the OpenMP parallelization)
@@ -198,12 +199,12 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
 
 // 2. prepare the particle data to be sent
 // reuse the MPI send buffer declared in LB_GetBufferData() for better MPI performance
-   real *SendBuf_ParDataEachPatch = LB_GetBufferData_MemAllocate_Send( NSendParTotal*NAtt );
+   real_par  *SendBuf_ParDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)NAtt*sizeof(real_par) );
 
-   real  *SendPtr     = NULL;
-   long  *ParList     = NULL;
-   real **ParAtt_Copy = NULL;
-   long   ParID;
+   real_par  *SendPtr     = NULL;
+   long      *ParList     = NULL;
+   real_par **ParAtt_Copy = NULL;
+   long       ParID;
 
 #  pragma omp parallel for private( PID, NParThisPatch, SendPtr, ParList, ParAtt_Copy, ParID ) \
                            schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )
@@ -272,16 +273,17 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
    const bool Exchange_LBIdxEachRank_No    = false;
    const bool Exchange_ParDataEachRank_Yes = true;
 
-   int  *SendBuf_NPatchEachRank   = Real_NPatchEachRank;
-   int  *RecvBuf_NPatchEachRank   = Buff_NPatchEachRank;
-   int  *RecvBuf_NParEachPatch    = NULL;   // will be allocated by Par_LB_SendParticleData and must be free'd later
-   real *RecvBuf_ParDataEachPatch = NULL;   // a pointer to the MPI recv buffer declared in LB_GetBufferData
-                                            // --> don't have to be free'd here
+   int      *SendBuf_NPatchEachRank   = Real_NPatchEachRank;
+   int      *RecvBuf_NPatchEachRank   = Buff_NPatchEachRank;
+   int      *RecvBuf_NParEachPatch    = NULL;   // will be allocated by Par_LB_SendParticleData and must be free'd later
+   real_par *RecvBuf_ParDataEachPatch = NULL;   // a pointer to the MPI recv buffer declared in LB_GetBufferData
+                                                // --> don't have to be free'd here
 
-   long *SendBuf_LBIdxEachRank    = NULL;   // useless and does not need to be allocated
-   long *RecvBuf_LBIdxEachRank    = NULL;   // useless and will not be allocated by Par_LB_SendParticleData
+   long     *SendBuf_LBIdxEachRank    = NULL;   // useless and does not need to be allocated
+   long     *RecvBuf_LBIdxEachRank    = NULL;   // useless and will not be allocated by Par_LB_SendParticleData
 
-   int NRecvPatchTotal, NRecvParTotal;  // returned from Par_LB_SendParticleData
+   int NRecvPatchTotal;                         // returned from Par_LB_SendParticleData
+   long  NRecvParTotal;                         // returned from Par_LB_SendParticleData
 
 // note that we don't exchange NPatchEachRank (which is already known) and LBIdxEachRank (which is useless here)
    Par_LB_SendParticleData(
@@ -303,7 +305,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
 
 
 // 4. store the received particle data to each patch
-   const real *RecvPtr = NULL;
+   const real_par *RecvPtr = NULL;
 
 // 4-0. get the array offset of each patch (mainly for the OpenMP parallelization)
    long *RecvBuf_Offset = new long [Buff_NPatchTotal];
@@ -324,7 +326,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
       {
 //       4-2. allocate ParAtt_Copy[]
          for (int v=0; v<NAtt; v++)
-            amr->patch[0][lv][PID]->ParAtt_Copy[ AttIntIdx[v] ] = new real [NParThisPatch];
+            amr->patch[0][lv][PID]->ParAtt_Copy[ AttIntIdx[v] ] = new real_par [NParThisPatch];
 
          for (int p=0; p<NParThisPatch; p++)
          {
@@ -336,7 +338,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
 #           ifdef DEBUG_PARTICLE
 //          we do not transfer inactive particles
             if ( AttBitIdx & _PAR_MASS )
-            if ( amr->patch[0][lv][PID]->ParAtt_Copy[PAR_MASS][p] < (real)0.0 )
+            if ( amr->patch[0][lv][PID]->ParAtt_Copy[PAR_MASS][p] < (real_par)0.0 )
                Aux_Error( ERROR_INFO, "found inactive particle (lv %d, PID %d, Mass %14.7e, particle %d) !!\n",
                           lv, PID, amr->patch[0][lv][PID]->ParAtt_Copy[PAR_MASS][p], p );
 
@@ -346,11 +348,11 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
 //             always assume periodic B.C. in this check since we don't allocate buffer patches lying outside
 //             the simulation domain for non-periodic B.C.
 //             --> we can use EdgeL/R stored in each patch directly since they assume periodicity as well
-               const double *EdgeL     = amr->patch[0][lv][PID]->EdgeL;
-               const double *EdgeR     = amr->patch[0][lv][PID]->EdgeR;
-               const real    ParPos[3] = { amr->patch[0][lv][PID]->ParAtt_Copy[PAR_POSX][p],
-                                           amr->patch[0][lv][PID]->ParAtt_Copy[PAR_POSY][p],
-                                           amr->patch[0][lv][PID]->ParAtt_Copy[PAR_POSZ][p] };
+               const double     *EdgeL     = amr->patch[0][lv][PID]->EdgeL;
+               const double     *EdgeR     = amr->patch[0][lv][PID]->EdgeR;
+               const real_par    ParPos[3] = { amr->patch[0][lv][PID]->ParAtt_Copy[PAR_POSX][p],
+                                               amr->patch[0][lv][PID]->ParAtt_Copy[PAR_POSY][p],
+                                               amr->patch[0][lv][PID]->ParAtt_Copy[PAR_POSZ][p] };
 
                for (int d=0; d<3; d++)
                {

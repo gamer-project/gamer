@@ -314,10 +314,10 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #              ifdef PARTICLE
                if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL )
                {
-                  long  *ParList = NULL;
-                  int    NParThisPatch;
-                  bool   UseInputMassPos;
-                  real **InputMassPos = NULL;
+                  long      *ParList = NULL;
+                  int        NParThisPatch;
+                  bool       UseInputMassPos;
+                  real_par **InputMassPos = NULL;
 
 //                determine the number of particles and the particle list
                   if ( amr->patch[0][lv][PID]->son == -1 )

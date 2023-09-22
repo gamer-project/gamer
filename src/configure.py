@@ -23,7 +23,8 @@ PYTHON_VER = [sys.version_info.major, sys.version_info.minor]
 
 GAMER_CONFIG_DIR  = "../configs"
 GAMER_MAKE_BASE   = "Makefile_base"
-GAMER_MAKE_OUT    = "Makefile"
+#GAMER_MAKE_OUT    = "Makefile"
+GAMER_MAKE_OUT    = "Makefile_mixed_precision_strict_spock"
 GAMER_DESCRIPTION = "Prepare a customized Makefile for GAMER.\nDefault values are marked by '*'.\nUse -lh to show a detailed help message.\n"
 GAMER_EPILOG      = "2023 Computational Astrophysics Lab, NTU. All rights reserved.\n"
 
@@ -466,6 +467,11 @@ def load_arguments():
                          help="Set the number of user-defined particle attributes.\n"
                        )
 
+    parser.add_argument( "--double_par", type=str2bool, metavar="BOOLEAN", gamer_name="FLOAT8_PAR",
+                         default=None,
+                         depend={"particle":True},
+                         help="Enable double precision for particle attributes.\n"
+                       )
     # A.5 grackle
     parser.add_argument( "--grackle", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_GRACKLE",
                          default=False,
@@ -514,6 +520,7 @@ def load_arguments():
                          default=False,
                          help="Enable double precision.\n"
                        )
+
 
     parser.add_argument( "--laohu", type=str2bool, metavar="BOOLEAN", gamer_name="LAOHU",
                          default=False,

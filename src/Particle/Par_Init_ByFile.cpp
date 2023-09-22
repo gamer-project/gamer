@@ -76,7 +76,7 @@ void Par_Init_ByFile()
 
    fseek( FileTemp, 0, SEEK_END );
 
-   const long ExpectSize = long(NParAtt)*NParAllRank*sizeof(real);
+   const long ExpectSize = long(NParAtt)*NParAllRank*sizeof(real_par);
    const long FileSize   = ftell( FileTemp );
    if ( FileSize != ExpectSize )
       Aux_Error( ERROR_INFO, "size of the file <%s> = %ld != expect = %ld !!\n",
@@ -97,21 +97,21 @@ void Par_Init_ByFile()
    if ( NPar_Check != NParAllRank )
       Aux_Error( ERROR_INFO, "total number of particles found (%ld) != expect (%ld) !!\n", NPar_Check, NParAllRank );
 
-   for (int r=0; r<MPI_Rank; r++)   FileOffset = FileOffset + long(NParAttPerLoad)*NPar_EachRank[r]*sizeof(real);
+   for (int r=0; r<MPI_Rank; r++)   FileOffset = FileOffset + long(NParAttPerLoad)*NPar_EachRank[r]*sizeof(real_par);
 
 
 // load data
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading data ... " );
 
-   real *ParData_ThisRank = new real [ NParThisRank*NParAtt ];
+   real_par *ParData_ThisRank = new real_par [ NParThisRank*NParAtt ];
 
 // note that fread() may fail for large files if sizeof(size_t) == 4 instead of 8
    FILE *File = fopen( FileName, "rb" );
 
    for (int v=0; v<NParAtt; v+=NParAttPerLoad)
    {
-      fseek( File, FileOffset+v*NParAllRank*sizeof(real), SEEK_SET );
-      fread( ParData_ThisRank+v*NParThisRank, sizeof(real), long(NParAttPerLoad)*NParThisRank, File );
+      fseek( File, FileOffset+v*NParAllRank*sizeof(real_par), SEEK_SET );
+      fread( ParData_ThisRank+v*NParThisRank, sizeof(real_par), long(NParAttPerLoad)*NParThisRank, File );
    }
 
    fclose( File );
@@ -122,14 +122,14 @@ void Par_Init_ByFile()
 // store data into the particle repository
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Storing data into particle repository ... " );
 
-   real *ParData1 = new real [NParAtt];
+   real_par *ParData1 = new real_par [NParAtt];
 
    for (long p=0; p<NParThisRank; p++)
    {
 //    collect data for the target particle
 //    [id][att]
       if ( amr->Par->ParICFormat == PAR_IC_FORMAT_ID_ATT )
-         memcpy( ParData1, ParData_ThisRank+p*NParAtt, NParAtt*sizeof(real) );
+         memcpy( ParData1, ParData_ThisRank+p*NParAtt, NParAtt*sizeof(real_par) );
 
 //    [att][id]
       else

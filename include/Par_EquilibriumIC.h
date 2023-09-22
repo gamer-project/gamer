@@ -54,7 +54,7 @@ class Par_EquilibriumIC
       void Read_Filenames( const char *filename_para);
       void Load_Physical_Params(const FP filenames,const int cloud_idx, const long NPar_AllRank);
       void Init();
-      void Par_SetEquilibriumIC(real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3],const long Par_Idx);
+      void Par_SetEquilibriumIC(real_par *Mass_AllRank, real_par *Pos_AllRank[3], real_par *Vel_AllRank[3],const long Par_Idx);
 
 
       PhysP params;

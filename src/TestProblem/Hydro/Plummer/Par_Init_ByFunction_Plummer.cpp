@@ -58,15 +58,15 @@ static void   RanVec_FixRadius( const double r, double RanVec[] );
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttribute
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllRank,
-                                  real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                  real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                  real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
+                                  real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                  real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                  real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-   real *ParData_AllRank[PAR_NATT_TOTAL];
+   real_par *ParData_AllRank[PAR_NATT_TOTAL];
    for (int v=0; v<PAR_NATT_TOTAL; v++)   ParData_AllRank[v] = NULL;
 
 // only the master rank will construct the initial condition
@@ -81,13 +81,13 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
       double  TotM, ParM, dr, RanM, RanR, EstM, ErrM, ErrM_Max=-1.0, RanVec[3];
       double  Vmax, RanV, RanProb, Prob;
 
-      ParData_AllRank[PAR_MASS] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_POSX] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_POSY] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_POSZ] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_VELX] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_VELY] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_VELZ] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_MASS] = new real_par [NPar_AllRank];
+      ParData_AllRank[PAR_POSX] = new real_par [NPar_AllRank];
+      ParData_AllRank[PAR_POSY] = new real_par [NPar_AllRank];
+      ParData_AllRank[PAR_POSZ] = new real_par [NPar_AllRank];
+      ParData_AllRank[PAR_VELX] = new real_par [NPar_AllRank];
+      ParData_AllRank[PAR_VELY] = new real_par [NPar_AllRank];
+      ParData_AllRank[PAR_VELZ] = new real_par [NPar_AllRank];
 
 
 //    initialize the random number generator
@@ -137,17 +137,17 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
 //       randomly set the position vector with a given radius
          RanVec_FixRadius( RanR, RanVec );
-         for (int d=0; d<3; d++)    ParData_AllRank[PAR_POSX+d][p] = RanVec[d] + Plummer_Center[d];
+         for (int d=0; d<3; d++)    ParData_AllRank[PAR_POSX+d][p] = real_par(RanVec[d] + Plummer_Center[d]);
 
 //       set position offset for the Plummer collision test
          if ( Plummer_Collision )
-         for (int d=0; d<3; d++)    ParData_AllRank[PAR_POSX+d][p] += Coll_Offset*( (p<NPar_AllRank/2)?-1.0:+1.0 );
+         for (int d=0; d<3; d++)    ParData_AllRank[PAR_POSX+d][p] += real_par(Coll_Offset*( (p<NPar_AllRank/2)?-1.0:+1.0 ));
 
 //       check periodicity
          for (int d=0; d<3; d++)
          {
             if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )
-               ParData_AllRank[PAR_POSX+d][p] = FMOD( ParData_AllRank[PAR_POSX+d][p]+(real)amr->BoxSize[d], (real)amr->BoxSize[d] );
+               ParData_AllRank[PAR_POSX+d][p] = FMOD( ParData_AllRank[PAR_POSX+d][p]+(real_par)amr->BoxSize[d], (real_par)amr->BoxSize[d] );
          }
 
 
@@ -166,7 +166,7 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
 //       randomly set the velocity vector with the given amplitude (RanV*Vmax)
          RanVec_FixRadius( RanV*Vmax, RanVec );
-         for (int d=0; d<3; d++)    ParData_AllRank[PAR_VELX+d][p] = RanVec[d] + Plummer_BulkVel[d];
+         for (int d=0; d<3; d++)    ParData_AllRank[PAR_VELX+d][p] = real_par(RanVec[d] + Plummer_BulkVel[d]);
 
       } // for (long p=0; p<NPar_AllRank; p++)
 
@@ -188,8 +188,8 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 // synchronize all particles to the physical time on the base level,
 // set generic particle type
    for (long p=0; p<NPar_ThisRank; p++) {
-      ParTime[p] = Time[0];
-      ParType[p] = PTYPE_GENERIC_MASSIVE;
+      ParTime[p] = (real_par)Time[0];
+      ParType[p] = (real_par)PTYPE_GENERIC_MASSIVE;
    }
 
 // free resource

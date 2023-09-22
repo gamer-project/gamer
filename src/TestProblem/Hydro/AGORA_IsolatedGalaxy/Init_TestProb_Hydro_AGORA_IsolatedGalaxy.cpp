@@ -38,9 +38,9 @@ double GaussianQuadratureIntegrate( const double dx, const double dy, const doub
 bool Flag_AGORA( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 #ifdef PARTICLE
 void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRank,
-                                real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
+                                real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
 #endif
 
 

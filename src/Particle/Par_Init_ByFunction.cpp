@@ -4,15 +4,15 @@
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 static void Par_Init_ByFunction_Template( const long NPar_ThisRank, const long NPar_AllRank,
-                                          real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                          real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                          real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
+                                          real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                          real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                          real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
 
 // this function pointer must be set by a test problem initializer
 void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
-                                 real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                 real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                 real *ParType, real *AllAttribute[PAR_NATT_TOTAL] ) = NULL;
+                                 real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                 real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                 real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] ) = NULL;
 
 
 
@@ -49,9 +49,9 @@ void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRa
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttribute
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFunction_Template( const long NPar_ThisRank, const long NPar_AllRank,
-                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                   real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
+                                   real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                   real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                   real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -75,31 +75,31 @@ void Par_Init_ByFunction_Template( const long NPar_ThisRank, const long NPar_All
 
 // set other particle attributes
 // ============================================================================================================
-   real *ParPos[3] = { ParPosX, ParPosY, ParPosZ };
-   real *ParVel[3] = { ParVelX, ParVelY, ParVelZ };
+   real_par *ParPos[3] = { ParPosX, ParPosY, ParPosZ };
+   real_par *ParVel[3] = { ParVelX, ParVelY, ParVelZ };
 
 // example : randomly initialize
    /*
-   const uint RSeed     = 2;                                         // random seed
-   const real MassMin   = 1.0e-2;                                    // minimum value of particle mass
-   const real MassMax   = 1.0;                                       // maximum value of particle mass
-   const real PosMin[3] = { 0.0, 0.0, 0.0 };                         // minimum value of particle position
-   const real PosMax[3] = { real( amr->BoxSize[0]*(1.0-1.0e-5) ),    // maximum value of particle position
-                            real( amr->BoxSize[1]*(1.0-1.0e-5) ),
-                            real( amr->BoxSize[2]*(1.0-1.0e-5) ) };
-   const real VelMin[3] = { -1.0, -1.0, -1.0 };                      // minimum value of particle velocity
-   const real VelMax[3] = { +1.0, +1.0, +1.0 };                      // maximum value of particle velocity
+   const uint RSeed         = 2;                                         // random seed
+   const real_par MassMin   = 1.0e-2;                                    // minimum value of particle mass
+   const real_par MassMax   = 1.0;                                       // maximum value of particle mass
+   const real_par PosMin[3] = { 0.0, 0.0, 0.0 };                         // minimum value of particle position
+   const real_par PosMax[3] = { real_par( amr->BoxSize[0]*(1.0-1.0e-5) ),    // maximum value of particle position
+                                real_par( amr->BoxSize[1]*(1.0-1.0e-5) ),
+                                real_par( amr->BoxSize[2]*(1.0-1.0e-5) ) };
+   const real_par VelMin[3] = { -1.0, -1.0, -1.0 };                      // minimum value of particle velocity
+   const real_par VelMax[3] = { +1.0, +1.0, +1.0 };                      // maximum value of particle velocity
 
    srand( RSeed );
 
    for (long p=0; p<NPar_ThisRank; p++)
    {
-      ParMass[p] = ( (real)rand()/RAND_MAX )*( MassMax - MassMin ) + MassMin;
+      ParMass[p] = ( (real_par)rand()/RAND_MAX )*( MassMax - MassMin ) + MassMin;
 
       for (int d=0; d<3; d++)
       {
-         ParPos[d][p] = ( (real)rand()/RAND_MAX )*( PosMax[d] - PosMin[d] ) + PosMin[d];
-         ParVel[d][p] = ( (real)rand()/RAND_MAX )*( VelMax[d] - VelMin[d] ) + VelMin[d];
+         ParPos[d][p] = ( (real_par)rand()/RAND_MAX )*( PosMax[d] - PosMin[d] ) + PosMin[d];
+         ParVel[d][p] = ( (real_par)rand()/RAND_MAX )*( VelMax[d] - VelMin[d] ) + VelMin[d];
       }
    }
    */

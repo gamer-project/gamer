@@ -68,9 +68,9 @@ extern void (*End_ExtPot_Ptr)();
 #endif
 #ifdef PARTICLE
 extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
-                                        real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                        real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                        real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
+                                        real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                        real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                        real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
 extern void (*Par_Init_Attribute_User_Ptr)();
 #endif
 #if ( MODEL == HYDRO )
