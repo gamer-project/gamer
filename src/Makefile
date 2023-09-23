@@ -1013,6 +1013,8 @@ else
 	fi)
 endif
 	@rm -f ./*.linkinfo
+
+# force re-compiling Aux_TakeNote.cpp to get the correct compilation time
 	$(ECHO)mv $(OBJ_PATH)/$(PREFIX_CPU)Aux_TakeNote.o $(OBJ_PATH)/$(PREFIX_CPU)Aux_TakeNote_backup.o
 
 
