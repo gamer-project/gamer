@@ -1013,6 +1013,7 @@ else
 	fi)
 endif
 	@rm -f ./*.linkinfo
+	$(ECHO)mv $(OBJ_PATH)/$(PREFIX_CPU)Aux_TakeNote.o $(OBJ_PATH)/$(PREFIX_CPU)Aux_TakeNote_backup.o
 
 
 # clean
