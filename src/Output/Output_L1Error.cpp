@@ -157,7 +157,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
          if ( TRank == 0 )
          {
             for (int v=0; v<NERR; v++)
-               fprintf( File[v], "#%20s %20s %20s %20s\n", "Coord.", "Numerical", "Analytical", "Error" );
+               fprintf( File[v], "#%*s %*s %*s %*s\n", DE_LEN, "Coord.", E_LEN, "Numerical", E_LEN, "Analytical", E_LEN, "Error" );
          }
 
 
@@ -245,25 +245,24 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
       if ( FirstTime )
       {
 #        if   ( MODEL == HYDRO )
-         fprintf( File_L1, "#%5s %13s %19s %19s %19s %19s %19s",
-                  "NGrid", "Time", "Error(Dens)", "Error(MomX)", "Error(MomY)", "Error(MomZ)", "Error(Pres)" );
+         fprintf( File_L1, "#%5s %13s %*s %*s %*s %*s %*s",
+                  "NGrid", "Time", E_LEN, "Error(Dens)", E_LEN, "Error(MomX)", E_LEN, "Error(MomY)", E_LEN, "Error(MomZ)", E_LEN, "Error(Pres)" );
 
          for (int v=0; v<NCOMP_PASSIVE; v++)
          fprintf( File_L1, "    Error(Passive%02d)", v );
 
 #        ifdef MHD
-         fprintf( File_L1, " %19s %19s %19s",
-                  "Error(MagX)", "Error(MagY)", "Error(MagZ)" );
+         fprintf( File_L1, " %*s %*s %*s",
+                  E_LEN, "Error(MagX)", E_LEN, "Error(MagY)", E_LEN, "Error(MagZ)" );
 #        endif
 
-         fprintf( File_L1, " %19s",
-                  "Error(Temp)" );
+         fprintf( File_L1, " %*s", E_LEN, "Error(Temp)" );
 
          fprintf( File_L1, "\n" );
 
 #        elif ( MODEL == ELBDM )
-         fprintf( File_L1, "#%5s %13s %19s %19s %19s\n",
-                  "NGrid", "Time", "Error(Dens)", "Error(Real)", "Error(Imag)" );
+         fprintf( File_L1, "#%5s %13s %*s %*s %*s\n",
+                  "NGrid", "Time", E_LEN, "Error(Dens)", E_LEN, "Error(Real)", E_LEN, "Error(Imag)" );
 
 #        else
 #        error : unsupported MODEL !!
@@ -276,7 +275,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
       fprintf( File_L1, "%6d %13.7e", (Part==OUTPUT_DIAG)?NX0_TOT[0]:NX0_TOT[Part-OUTPUT_X], Time[0] );
 
       for (int v=0; v<NERR; v++)
-      fprintf( File_L1, " %19.12e", L1_Err_Sum[v] );
+      fprintf( File_L1, " %*.*e", E_LEN, E_TAIL, L1_Err_Sum[v] );
 
       fprintf( File_L1, "\n" );
 
@@ -398,7 +397,7 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
       Err   [v]  = FABS( Anal[v] - Nume[v] );
       L1_Err[v] += Err[v]*dh;
 
-      fprintf( File[v], " %20.13e %20.13e %20.13e %20.13e\n", r, Nume[v], Anal[v], Err[v] );
+      fprintf( File[v], " %*.*e %*.*e %*.*e %*.*e\n", DE_LEN, DE_TAIL, r, E_LEN, E_TAIL, Nume[v], E_LEN, E_TAIL, Anal[v], E_LEN, E_TAIL, Err[v] );
    }
 
 } // FUNCTION : WriteFile

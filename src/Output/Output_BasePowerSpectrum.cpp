@@ -149,12 +149,12 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
       const double WaveK0 = 2.0*M_PI/amr->BoxSize[0];
       FILE *File = fopen( FileName, "w" );
 
-      fprintf( File, "# average value (DC) used for normalization = %13.7e\n", NormDC );
+      fprintf( File, "# average value (DC) used for normalization = %*.*e\n", DE_LEN, DE_TAIL, NormDC );
       fprintf( File, "\n" );
-      fprintf( File, "#%12s%4s%13s\n", "k", "", "Power" );
+      fprintf( File, "#%*s%4s%*s\n", DE_LEN-1, "k", "", DE_LEN, "Power" );
 
 //    DC mode is not output
-      for (int b=1; b<Nx_Padded; b++)     fprintf( File, "%13.6e%4s%13.6e\n", WaveK0*b, "", PS_total[b] );
+      for (int b=1; b<Nx_Padded; b++)     fprintf( File, "%*.*e%4s%*.*e\n", DE_LEN, DE_TAIL, WaveK0*b, "", DE_LEN, DE_TAIL, PS_total[b] );
 
       fclose( File );
    } // if ( MPI_Rank == 0 )
