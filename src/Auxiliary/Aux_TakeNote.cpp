@@ -1347,6 +1347,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_TOTAL               %d\n",      OPT__OUTPUT_TOTAL      );
       fprintf( Note, "OPT__OUTPUT_PART                %d\n",      OPT__OUTPUT_PART       );
       fprintf( Note, "OPT__OUTPUT_USER                %d\n",      OPT__OUTPUT_USER       );
+      fprintf( Note, "OPT__OUTPUT_DATA_FORMAT         %s\n",      OPT__OUTPUT_DATA_FORMAT);
 #     ifdef PARTICLE
       fprintf( Note, "OPT__OUTPUT_PAR_MODE            %d\n",      OPT__OUTPUT_PAR_MODE   );
 #     endif
