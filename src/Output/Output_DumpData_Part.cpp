@@ -289,7 +289,6 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
             ii, jj, kk, (ii+scale_2)*dh_min, (jj+scale_2)*dh_min, (kk+scale_2)*dh_min );
 
 // output all variables in the fluid array
-   // for (int v=0; v<NCOMP_TOTAL; v++) { fprintf(File, " "); fprintf( File, OPT__OUTPUT_DATA_FORMAT, u[v] ); }
    for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, BlankPlusFormat, u[v] );
 
 // magnetic field
