@@ -16,9 +16,9 @@ public:
 
     __device__ complex(T r = 0, T i = 0) : re(r), im(i) {}
  // constructor to allow explicit conversion from Complex<float> to Complex<double>
-    explicit complex(const complex<float>& other) : re(static_cast<T>(other.re)), im(static_cast<T>(other.im)) {}
+    __device__ complex(const complex<float>& other) : re(static_cast<T>(other.re)), im(static_cast<T>(other.im)) {}
  // constructor to allow conversion from complex<double> to Complex<float>
-    explicit complex(const complex<double>& other) : re(static_cast<T>(other.re)), im(static_cast<T>(other.im)) {}
+    __device__ complex(const complex<double>& other) : re(static_cast<T>(other.re)), im(static_cast<T>(other.im)) {}
 
     __device__ complex<T> operator+(const complex<T>& other) const {
         return complex<T>(re + other.re, im + other.im);
