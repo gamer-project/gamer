@@ -888,28 +888,6 @@
 #define TOP_LEVEL          ( NLEVEL - 1 )
 
 
-// print digits formatting
-// example: -1.23456789e+01
-//          ***########@@@@ => *: front digits, #: tail digits, @: exponent digits
-#define E_FRONT            3
-
-#define DE_TAIL            16
-#define DE_EXP             5
-#define DE_LEN             E_FRONT + DE_TAIL + DE_EXP
-
-#define SE_TAIL            8
-#define SE_EXP             4
-#define SE_LEN             E_FRONT + SE_TAIL + SE_EXP
-
-#ifdef FLOAT8
-#  define E_LEN            DE_LEN
-#  define E_TAIL           DE_TAIL
-#else
-#  define E_LEN            SE_LEN
-#  define E_TAIL           SE_TAIL
-#endif
-
-
 // maximum length for strings
 #define MAX_STRING         512
 

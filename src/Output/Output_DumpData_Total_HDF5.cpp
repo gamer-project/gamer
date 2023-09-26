@@ -2425,6 +2425,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Output_Restart     = OPT__OUTPUT_RESTART;
    InputPara.Opt__Output_Step        = OUTPUT_STEP;
    InputPara.Opt__Output_Dt          = OUTPUT_DT;
+   InputPara.Opt__Output_Data_Format = OPT__OUTPUT_DATA_FORMAT;
    InputPara.Output_PartX            = OUTPUT_PART_X;
    InputPara.Output_PartY            = OUTPUT_PART_Y;
    InputPara.Output_PartZ            = OUTPUT_PART_Z;

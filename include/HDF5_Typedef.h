@@ -702,6 +702,7 @@ struct InputPara_t
    int    Opt__Output_Restart;
    int    Opt__Output_Step;
    double Opt__Output_Dt;
+   char  *Opt__Output_Data_Format;
    double Output_PartX;
    double Output_PartY;
    double Output_PartZ;

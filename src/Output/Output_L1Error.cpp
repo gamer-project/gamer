@@ -133,6 +133,13 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
    double L1_Err[NERR];
    static bool FirstTime = true;
 
+// data string length
+   const int S_LEN = MAX( abs(atoi(OPT__OUTPUT_DATA_FORMAT+1)), abs(atoi(OPT__OUTPUT_DATA_FORMAT+2)) );
+
+// data string formatting
+   char BlankPlusFormat[MAX_STRING];
+   sprintf( BlankPlusFormat, " %s", OPT__OUTPUT_DATA_FORMAT );
+
    for (int v=0; v<NERR; v++)    L1_Err[v] = 0.0;
 
    switch ( Part )
@@ -157,7 +164,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
          if ( TRank == 0 )
          {
             for (int v=0; v<NERR; v++)
-               fprintf( File[v], "#%*s %*s %*s %*s\n", DE_LEN, "Coord.", E_LEN, "Numerical", E_LEN, "Analytical", E_LEN, "Error" );
+               fprintf( File[v], "#%*s %*s %*s %*s\n", S_LEN, "Coord.", S_LEN, "Numerical", S_LEN, "Analytical", S_LEN, "Error" );
          }
 
 
@@ -246,23 +253,26 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
       {
 #        if   ( MODEL == HYDRO )
          fprintf( File_L1, "#%5s %13s %*s %*s %*s %*s %*s",
-                  "NGrid", "Time", E_LEN, "Error(Dens)", E_LEN, "Error(MomX)", E_LEN, "Error(MomY)", E_LEN, "Error(MomZ)", E_LEN, "Error(Pres)" );
+                  "NGrid", "Time", S_LEN, "Error(Dens)", S_LEN, "Error(MomX)", S_LEN, "Error(MomY)", S_LEN, "Error(MomZ)", S_LEN, "Error(Pres)" );
 
-         for (int v=0; v<NCOMP_PASSIVE; v++)
-         fprintf( File_L1, "    Error(Passive%02d)", v );
+         for (int v=0; v<NCOMP_PASSIVE; v++) {
+            char tmp_str[16];
+            sprintf(tmp_str, "Error(Passive%02d)", v);
+            fprintf( File_L1, " %*s", S_LEN, tmp_str );
+         }
 
 #        ifdef MHD
          fprintf( File_L1, " %*s %*s %*s",
-                  E_LEN, "Error(MagX)", E_LEN, "Error(MagY)", E_LEN, "Error(MagZ)" );
+                  S_LEN, "Error(MagX)", S_LEN, "Error(MagY)", S_LEN, "Error(MagZ)" );
 #        endif
 
-         fprintf( File_L1, " %*s", E_LEN, "Error(Temp)" );
+         fprintf( File_L1, " %*s", S_LEN, "Error(Temp)" );
 
          fprintf( File_L1, "\n" );
 
 #        elif ( MODEL == ELBDM )
          fprintf( File_L1, "#%5s %13s %*s %*s %*s\n",
-                  "NGrid", "Time", E_LEN, "Error(Dens)", E_LEN, "Error(Real)", E_LEN, "Error(Imag)" );
+                  "NGrid", "Time", S_LEN, "Error(Dens)", S_LEN, "Error(Real)", S_LEN, "Error(Imag)" );
 
 #        else
 #        error : unsupported MODEL !!
@@ -274,8 +284,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 //    output data
       fprintf( File_L1, "%6d %13.7e", (Part==OUTPUT_DIAG)?NX0_TOT[0]:NX0_TOT[Part-OUTPUT_X], Time[0] );
 
-      for (int v=0; v<NERR; v++)
-      fprintf( File_L1, " %*.*e", E_LEN, E_TAIL, L1_Err_Sum[v] );
+      for (int v=0; v<NERR; v++)   fprintf( File_L1, BlankPlusFormat, L1_Err_Sum[v] );
 
       fprintf( File_L1, "\n" );
 
@@ -378,6 +387,10 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 #  endif
 
 
+// data string formatting
+   char BlankPlusFormat[MAX_STRING];
+   sprintf( BlankPlusFormat, " %s", OPT__OUTPUT_DATA_FORMAT );
+
 // record the physical coordinate
    double r;
 
@@ -397,7 +410,11 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
       Err   [v]  = FABS( Anal[v] - Nume[v] );
       L1_Err[v] += Err[v]*dh;
 
-      fprintf( File[v], " %*.*e %*.*e %*.*e %*.*e\n", DE_LEN, DE_TAIL, r, E_LEN, E_TAIL, Nume[v], E_LEN, E_TAIL, Anal[v], E_LEN, E_TAIL, Err[v] );
+      fprintf( File[v], BlankPlusFormat, r       );
+      fprintf( File[v], BlankPlusFormat, Nume[v] );
+      fprintf( File[v], BlankPlusFormat, Anal[v] );
+      fprintf( File[v], BlankPlusFormat, Err[v]  );
+      fprintf( File[v], "\n");
    }
 
 } // FUNCTION : WriteFile

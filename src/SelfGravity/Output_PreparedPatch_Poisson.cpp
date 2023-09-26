@@ -110,29 +110,40 @@ void Output_PreparedPatch_Poisson( const int TLv, const int TPID, const int TCom
       const int N           = 8*TID + LocalID;
       int I, J, K;
 
+//    data string length
+      const int S_LEN = MAX( abs(atoi(OPT__OUTPUT_DATA_FORMAT+1)), abs(atoi(OPT__OUTPUT_DATA_FORMAT+2)) );
+
+//    data string formatting
+      char BlankPlusFormat[MAX_STRING];
+      sprintf( BlankPlusFormat, " %s", OPT__OUTPUT_DATA_FORMAT );
+
       switch ( TComp )
       {
          case 0:
-            fprintf( File, "(%3s,%3s,%3s ) %*s\n", "i", "j", "k", E_LEN, "Density" );
+            fprintf( File, "(%3s,%3s,%3s ) %*s\n", "i", "j", "k", S_LEN, "Density" );
 
             for (int k=0; k<RHO_NXT; k++)    {  K = k - RHO_GHOST_SIZE;
             for (int j=0; j<RHO_NXT; j++)    {  J = j - RHO_GHOST_SIZE;
             for (int i=0; i<RHO_NXT; i++)    {  I = i - RHO_GHOST_SIZE;
 
-               fprintf( File, "(%3d,%3d,%3d ) %*.*e\n", I, J, K, E_LEN, E_TAIL, h_Rho_Array_P[N][k][j][i] );
+               fprintf( File, "(%3d,%3d,%3d )", I, J, K );
+               fprintf( File, BlankPlusFormat, h_Rho_Array_P[N][k][j][i] );
+               fprintf( File, "\n" );
 
             }}}
             break;
 
 
          case 1:
-            fprintf( File, "(%3s,%3s,%3s ) %*s\n", "i", "j", "k", E_LEN, "Potential_In" );
+            fprintf( File, "(%3s,%3s,%3s ) %*s\n", "i", "j", "k", S_LEN, "Potential_In" );
 
             for (int k=0; k<POT_NXT; k++)    {  K = k - PotCGhost;
             for (int j=0; j<POT_NXT; j++)    {  J = j - PotCGhost;
             for (int i=0; i<POT_NXT; i++)    {  I = i - PotCGhost;
 
-               fprintf( File, "(%3d,%3d,%3d ) %*.*e\n", I, J, K, E_LEN, E_TAIL, h_Pot_Array_P_In[N][k][j][i] );
+               fprintf( File, "(%3d,%3d,%3d )", I, J, K );
+               fprintf( File, BlankPlusFormat, h_Pot_Array_P_In[N][k][j][i] );
+               fprintf( File, "\n" );
 
             }}}
             break;
