@@ -13,7 +13,7 @@ using gramfe_input_complex_type  = complex<real>;
 #include <complex.h>
 #include "GSL.h"
 using gramfe_matmul_complex_type = std::complex<gramfe_matmul_float>;
-using gramfe_input_complex_type  = std::complex<real>;
+using gramfe_input_complex_type  = std::complex<gramfe_matmul_float>;
 
 // precision of matrix multiplication
 #ifdef GRAMFE_MATMUL_FLOAT8
@@ -135,20 +135,15 @@ void CPU_ELBDMSolver_GramFE_MATMUL(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NX
 #  endif // #  ifdef __CUDACC__ ... else
 
 // time evolution matrix
-#  ifdef __CUDACC__
-   __shared__ gramfe_matmul_complex_type s_TimeEvo[PS2 * FLU_NXT];
-#  else // #  ifdef __CUDACC__
-              gramfe_matmul_complex_type s_TimeEvo[PS2 * FLU_NXT];
-#  endif // #  ifdef __CUDACC__ ... else
-
-// cast 2D float array with re/im to 1D float array of complex numbers
-   gramfe_matmul_complex_type* g_TimeEvo_1D = (gramfe_matmul_complex_type *) g_TimeEvo;
-   uint row, col;
-
-// time evolution matrix
 // GPU: transpose input evolution matrix from PS2 x FLU_NXT to FLU_NXT x PS2 for it to be in row-major order
 // CPU: no transposition since matrix already is in column-major order
 #  ifdef __CUDACC__
+   __shared__ gramfe_matmul_complex_type s_TimeEvo[PS2 * FLU_NXT];
+
+   gramfe_matmul_complex_type* s_LinEvolve = (gramfe_matmul_complex_type *) s_TimeEvo;
+   gramfe_matmul_complex_type* g_LinEvolve = (gramfe_matmul_complex_type *) g_TimeEvo;
+   uint row, col;
+
    const uint tx           = threadIdx.x;
    const uint ty           = threadIdx.y;
    const uint tid          = ty * CGPU_FLU_BLOCK_SIZE_X + tx;                // thread ID within block
@@ -157,17 +152,12 @@ void CPU_ELBDMSolver_GramFE_MATMUL(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NX
    for (uint i = tid; i < PS2 * FLU_NXT; i += NThread) {
       row = i / FLU_NXT;
       col = i % FLU_NXT;
-      s_TimeEvo[col * PS2 + row] = g_TimeEvo_1D[i];
+      s_LinEvolve[col * PS2 + row] = g_LinEvolve[i];
    }
 
    __syncthreads();
 #  else // #  ifdef __CUDACC__
-// copy data to convert between single/double/quadruple precision
-   for (uint i = 0; i < PS2 * FLU_NXT; ++i) {
-      row = i / FLU_NXT;
-      col = i % FLU_NXT;
-      s_TimeEvo[col * PS2 + row] = g_TimeEvo_1D[i];
-   }
+   gramfe_matmul_complex_type* s_TimeEvo = (gramfe_matmul_complex_type *) g_TimeEvo;
 #  endif // #  ifdef __CUDACC__ ... else
 
 
