@@ -21,15 +21,22 @@
 //                comm:          MPI communicator
 //-------------------------------------------------------------------------------------------------------
 template<typename T> 
-void MPI_Alltoallv_GAMER(T *SendBuf, int *Send_NCount, long *Send_NDisp, MPI_Datatype Send_Datatype, T *RecvBuf, int *Recv_NCount, long *Recv_NDisp, MPI_Datatype Recv_Datatype, MPI_Comm comm)
+void MPI_Alltoallv_GAMER(T *SendBuf, long *Send_NCount, long *Send_NDisp, MPI_Datatype Send_Datatype, T *RecvBuf, long *Recv_NCount, long *Recv_NDisp, MPI_Datatype Recv_Datatype, MPI_Comm comm)
 {
+   // sanity check for Send_NCount and Recv_NCount
+   for ( int r=0; r<MPI_NRank; r++ )
+   {
+      if ( Send_NCount[r] > __INT_MAX__ ) Aux_Error(ERROR_INFO, "Send_NCount[%d] (%ld) > __INT_MAX__ (%ld)!!\n", r, Send_NCount[r], (long)__INT_MAX__ );
+      if ( Recv_NCount[r] > __INT_MAX__ ) Aux_Error(ERROR_INFO, "Recv_NCount[%d] (%ld) > __INT_MAX__ (%ld)!!\n", r, Recv_NCount[r], (long)__INT_MAX__ );
+   }
+
    bool use_mpi_gamer_flag = false;
    if ( (Send_NDisp[MPI_NRank-1] > __INT_MAX__) || ( Recv_NDisp[MPI_NRank-1] > __INT_MAX__ ) )  use_mpi_gamer_flag = true;
    MPI_Allreduce(MPI_IN_PLACE, &use_mpi_gamer_flag , 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD);
 
    // ********************************purely for testing purpose!! Remember to comment this out for distribution!! ********************************
-   Aux_Message( stdout, "  Use MPI_Alltoallv_GAMER wrapper..." );
-   use_mpi_gamer_flag = true;
+//   Aux_Message( stdout, "  Use MPI_Alltoallv_GAMER wrapper..." );
+//   use_mpi_gamer_flag = true;
    //
 
    if ( use_mpi_gamer_flag )
@@ -47,18 +54,24 @@ void MPI_Alltoallv_GAMER(T *SendBuf, int *Send_NCount, long *Send_NDisp, MPI_Dat
    }
    else
    {
+      int *Send_NCount_int = new int [MPI_NRank];
+      int *Recv_NCount_int = new int [MPI_NRank];
       int *Send_NDisp_int  = new int [MPI_NRank];
       int *Recv_NDisp_int  = new int [MPI_NRank];
 
       for (int r=0; r<MPI_NRank; r++)
       {
+         Send_NCount_int[r] = (int)Send_NCount[r];
+         Recv_NCount_int[r] = (int)Recv_NCount[r];
          Send_NDisp_int[r]  = (int)Send_NDisp[r];
          Recv_NDisp_int[r]  = (int)Recv_NDisp[r];
       }
 
-      MPI_Alltoallv( SendBuf, Send_NCount, Send_NDisp_int, Send_Datatype,
-                     RecvBuf, Recv_NCount, Recv_NDisp_int, Recv_Datatype, comm );   
+      MPI_Alltoallv( SendBuf, Send_NCount_int, Send_NDisp_int, Send_Datatype,
+                     RecvBuf, Recv_NCount_int, Recv_NDisp_int, Recv_Datatype, comm );   
 
+      delete [] Send_NCount_int;
+      delete [] Recv_NCount_int;
       delete [] Send_NDisp_int;
       delete [] Recv_NDisp_int;
    }
@@ -67,8 +80,8 @@ void MPI_Alltoallv_GAMER(T *SendBuf, int *Send_NCount, long *Send_NDisp, MPI_Dat
 
 
 // explicit template instantiation
-template void MPI_Alltoallv_GAMER <float>    ( float  *SendBuf, int *Send_NCount, long *Send_NDisp, MPI_Datatype Send_Datatype, float  *RecvBuf, int *Recv_NCount, long *Recv_NDisp, MPI_Datatype Recv_Datatype, MPI_Comm comm );
-template void MPI_Alltoallv_GAMER <double>   ( double *SendBuf, int *Send_NCount, long *Send_NDisp, MPI_Datatype Send_Datatype, double *RecvBuf, int *Recv_NCount, long *Recv_NDisp, MPI_Datatype Recv_Datatype, MPI_Comm comm );
+template void MPI_Alltoallv_GAMER <float>    ( float  *SendBuf, long *Send_NCount, long *Send_NDisp, MPI_Datatype Send_Datatype, float  *RecvBuf, long *Recv_NCount, long *Recv_NDisp, MPI_Datatype Recv_Datatype, MPI_Comm comm );
+template void MPI_Alltoallv_GAMER <double>   ( double *SendBuf, long *Send_NCount, long *Send_NDisp, MPI_Datatype Send_Datatype, double *RecvBuf, long *Recv_NCount, long *Recv_NDisp, MPI_Datatype Recv_Datatype, MPI_Comm comm );
 
 #endif // #ifndef SERIAL
 

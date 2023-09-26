@@ -232,7 +232,7 @@ void End_FFTW()
 //                AddExtraMass   : Adding an extra density field for computing gravitational potential (only works with ForPoisson)
 //-------------------------------------------------------------------------------------------------------
 void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf_SIdx, long *RecvBuf_SIdx,
-                 int **List_PID, int **List_k, int *List_NSend_Var, int *List_NRecv_Var,
+                 int **List_PID, int **List_k, long *List_NSend_Var, long *List_NRecv_Var,
                  const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
                  const double PrepTime, const long TVar, const bool InPlacePad, const bool ForPoisson, const bool AddExtraMass )
 {
@@ -410,8 +410,8 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
    for (int r=0; r<MPI_NRank; r++)
    {
-      List_NSend_Var[r] = List_NSend_SIdx[r]*PSSize;
-      List_NRecv_Var[r] = List_NRecv_SIdx[r]*PSSize;
+      List_NSend_Var[r] = (long)List_NSend_SIdx[r]*(long)PSSize;
+      List_NRecv_Var[r] = (long)List_NRecv_SIdx[r]*(long)PSSize;
    }
 
 // 3.2 calculate the displacement
@@ -423,14 +423,14 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
    {
       Send_Disp_SIdx[r] = Send_Disp_SIdx[r-1] + List_NSend_SIdx[r-1];
       Recv_Disp_SIdx[r] = Recv_Disp_SIdx[r-1] + List_NRecv_SIdx[r-1];
-      Send_Disp_Var [r] = Send_Disp_Var [r-1] + (long)List_NSend_Var [r-1];
-      Recv_Disp_Var [r] = Recv_Disp_Var [r-1] + (long)List_NRecv_Var [r-1];
+      Send_Disp_Var [r] = Send_Disp_Var [r-1] + List_NSend_Var [r-1];
+      Recv_Disp_Var [r] = Recv_Disp_Var [r-1] + List_NRecv_Var [r-1];
    }
 
 // check
 #  ifdef GAMER_DEBUG
-   const long NSend_Total  = Send_Disp_Var[MPI_NRank-1] + (long)List_NSend_Var[MPI_NRank-1];
-   const long NRecv_Total  = Recv_Disp_Var[MPI_NRank-1] + (long)List_NRecv_Var[MPI_NRank-1];
+   const long NSend_Total  = Send_Disp_Var[MPI_NRank-1] + List_NSend_Var[MPI_NRank-1];
+   const long NRecv_Total  = Recv_Disp_Var[MPI_NRank-1] + List_NRecv_Var[MPI_NRank-1];
    const long NSend_Expect = (long)amr->NPatchComma[0][1]*(long)CUBE(PS1);
    const long NRecv_Expect = (long)NX0_TOT[0]*(long)NX0_TOT[1]*(long)NRecvSlice;
 
@@ -552,7 +552,7 @@ int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Gues
 //                InPlacePad : Whether or not to pad the array size for in-place real-to-complex FFT
 //-------------------------------------------------------------------------------------------------------
 void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
-                 int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
+                 int **List_PID, int **List_k, long *List_NSend, long *List_NRecv, const int local_nz, const int FFT_Size[],
                  const int NSendSlice, const long TVar, const bool InPlacePad )
 {
 
@@ -612,8 +612,8 @@ void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveS
    Recv_Disp[0] = 0L;
    for (int r=1; r<MPI_NRank; r++)
    {
-      Send_Disp[r] = Send_Disp[r-1] + (long)List_NSend[r-1];
-      Recv_Disp[r] = Recv_Disp[r-1] + (long)List_NRecv[r-1];
+      Send_Disp[r] = Send_Disp[r-1] + List_NSend[r-1];
+      Recv_Disp[r] = Recv_Disp[r-1] + List_NRecv[r-1];
    }
 
    MPI_Alltoallv_GAMER( SendBuf, List_NSend, Send_Disp, MPI_GAMER_REAL,
@@ -626,7 +626,7 @@ void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveS
 
    for (int r=0; r<MPI_NRank; r++)
    {
-      NRecvSlice = List_NRecv[r]/PSSize;
+      NRecvSlice = int(List_NRecv[r]/(long)PSSize);
 
       for (int t=0; t<NRecvSlice; t++)
       {

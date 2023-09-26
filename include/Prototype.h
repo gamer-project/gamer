@@ -218,11 +218,11 @@ void Init_ByRestart_HDF5( const char *FileName );
 void End_FFTW();
 void Init_FFTW();
 void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf_SIdx, long *RecvBuf_SIdx,
-                 int **List_PID, int **List_k, int *List_NSend_Var, int *List_NRecv_Var,
+                 int **List_PID, int **List_k, long *List_NSend_Var, long *List_NRecv_Var,
                  const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
                  const double PrepTime, const long TVar, const bool InPlacePad, const bool ForPoisson, const bool AddExtraMass );
 void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
-                 int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
+                 int **List_PID, int **List_k, long *List_NSend, long *List_NRecv, const int local_nz, const int FFT_Size[],
                  const int NSendSlice, const long TVar, const bool InPlacePad );
 #endif // #ifdef SUPPORT_FFTW
 
@@ -239,13 +239,13 @@ void Int_Table( const IntScheme_t IntScheme, int &NSide, int &NGhost );
 
 // Miscellaneous
 template <typename T> void  Mis_Idx1D2Idx3D( const int Size[], const T Idx1D, int Idx3D[] );
-template <typename T> int   Mis_BinarySearch( const T Array[], int Min, int Max, const T Key );
+template <typename U, typename T> U Mis_BinarySearch( const T Array[], U Min, U Max, const T Key );
 template <typename T> int   Mis_BinarySearch_Real( const T Array[], int Min, int Max, const T Key );
 template <typename T> T     Mis_InterpolateFromTable( const int N, const T Table_x[], const T Table_y[], const T x );
 template <typename T> ulong Mis_Idx3D2Idx1D( const int Size[], const int Idx3D[] );
-template <typename T> void  Mis_Heapsort( const int N, T Array[], int IdxTable[] );
+template <typename U, typename T> void  Mis_Heapsort( const U N, T Array[], U IdxTable[] );
 template <typename T> int   Mis_Matching_char( const int N, const T Array[], const int M, const T Key[], char Match[] );
-template <typename T> int   Mis_Matching_int( const int N, const T Array[], const int M, const T Key[], int Match[] );
+template <typename U, typename T> int Mis_Matching_int( const U N, const T Array[], const U M, const T Key[], U Match[] );
 template <typename T> bool  Mis_CompareRealValue( const T Input1, const T Input2, const char *comment, const bool Verbose );
 ulong  Mis_Idx3D2Idx1D( const int Size[], const int Idx3D[] );
 double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double AutoReduceDtCoeff );
@@ -278,7 +278,7 @@ void MPI_ExchangeBufferPosition( int NSend[26], int NRecv[26], int *Send_PosList
 void MPI_ExchangeData( const int TargetRank[2], const int SendSize[2], const int RecvSize[2],
                        real *SendBuffer[2], real *RecvBuffer[2] );
 void MPI_Exit();
-template <typename T> void MPI_Alltoallv_GAMER( T * SendBuf, int *Send_NCount, long *Send_NDisp, MPI_Datatype Send_Datatype, T *RecvBuf, int *Recv_NCount, long *Recv_NDisp, MPI_Datatype Recv_DataType, MPI_Comm comm );
+template <typename T> void MPI_Alltoallv_GAMER( T * SendBuf, long *Send_NCount, long *Send_NDisp, MPI_Datatype Send_Datatype, T *RecvBuf, long *Recv_NCount, long *Recv_NDisp, MPI_Datatype Recv_DataType, MPI_Comm comm );
 #endif // #ifndef SERIAL
 
 
@@ -644,7 +644,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
                          const int RhoSize, const double *EdgeL, const double dh, const bool PredictPos,
                          const double TargetTime, const bool InitZero, const bool Periodic[], const int PeriodicSize[3],
                          const bool UnitDens, const bool CheckFarAway, const bool UseInputMassPos, real **InputMassPos );
-void Par_SortByPos( const long NPar, const real *PosX, const real *PosY, const real *PosZ, int *IdxTable );
+void Par_SortByPos( const long NPar, const real *PosX, const real *PosY, const real *PosZ, long *IdxTable );
 void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOld, const ParUpStep_t UpdateStep,
                          const bool StoreAcc, const bool UseStoredAcc );
 void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double TimeOld,

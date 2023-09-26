@@ -317,8 +317,8 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 
    int    New_Send_Disp[MPI_NRank], New_Recv_Disp[MPI_NRank], NNew_Recv[MPI_NRank], NNew_Send_Total, NNew_Recv_Total;
    int    Del_Send_Disp[MPI_NRank], Del_Recv_Disp[MPI_NRank], NDel_Recv[MPI_NRank], NDel_Send_Total, NDel_Recv_Total;
-   int    NNew_Send_CData[MPI_NRank], NNew_Recv_CData[MPI_NRank];
    int    Counter;
+   long   NNew_Send_CData[MPI_NRank], NNew_Recv_CData[MPI_NRank];
    long   New_Send_Disp_CData[MPI_NRank], New_Recv_Disp_CData[MPI_NRank];
    ulong *New_SendBuf_Cr1D=NULL, *New_RecvBuf_Cr1D=NULL, *Del_SendBuf_Cr1D=NULL, *Del_RecvBuf_Cr1D=NULL;
    real  *New_SendBuf_CData=NULL, *New_RecvBuf_CData=NULL;
@@ -354,8 +354,8 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 
    for (int r=0; r<MPI_NRank; r++)
    {
-      NNew_Send_CData        [r] = PSize*NNew_Send    [r];
-      NNew_Recv_CData        [r] = PSize*NNew_Recv    [r];
+      NNew_Send_CData        [r] = (long)PSize*(long)NNew_Send    [r];
+      NNew_Recv_CData        [r] = (long)PSize*(long)NNew_Recv    [r];
       New_Send_Disp_CData    [r] = (long)PSize*(long)New_Send_Disp[r];
       New_Recv_Disp_CData    [r] = (long)PSize*(long)New_Recv_Disp[r];
 #     ifdef MHD
@@ -456,7 +456,7 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 // 3. sort *Cr1D_Away[] and CFB_SibLBIdx_Away[]
 // ============================================================================================================
    Mis_Heapsort( NNew_Away, NewCr1D_Away, NewCr1D_Away_IdxTable );
-   Mis_Heapsort( NDel_Away, DelCr1D_Away, NULL                  );
+   Mis_Heapsort<int,ulong>( NDel_Away, DelCr1D_Away, NULL       );
 
 // must ensure that CFB_SibLBIdx_Away[] and Cr1D_Away[] are sorted consistently
 // --> so that the coarse-fine interface B field data received in MHD_LB_Refine_GetCoarseFineInterfaceBField()

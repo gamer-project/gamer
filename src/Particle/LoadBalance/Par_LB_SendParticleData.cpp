@@ -148,8 +148,8 @@ void Par_LB_SendParticleData( const int NParAtt, int *SendBuf_NPatchEachRank, in
 // 4. collect particle attributes from all ranks
    if ( Exchange_ParDataEachRank )
    {
-      int  *SendCount_ParDataEachPatch = new int  [MPI_NRank];
-      int  *RecvCount_ParDataEachPatch = new int  [MPI_NRank];
+      long *SendCount_ParDataEachPatch = new long [MPI_NRank];
+      long *RecvCount_ParDataEachPatch = new long [MPI_NRank];
       long *SendDisp_ParDataEachPatch  = new long [MPI_NRank];
       long *RecvDisp_ParDataEachPatch  = new long [MPI_NRank];
 
@@ -159,19 +159,19 @@ void Par_LB_SendParticleData( const int NParAtt, int *SendBuf_NPatchEachRank, in
 
       for (int r=0; r<MPI_NRank; r++)
       {
-         SendCount_ParDataEachPatch[r] = 0;
-         RecvCount_ParDataEachPatch[r] = 0;
+         SendCount_ParDataEachPatch[r] = 0L;
+         RecvCount_ParDataEachPatch[r] = 0L;
 
          SendPtr = SendBuf_NParEachPatch + SendDisp_NParEachPatch[r];
          RecvPtr = RecvBuf_NParEachPatch + RecvDisp_NParEachPatch[r];
 
-         for (int p=0; p<SendBuf_NPatchEachRank[r]; p++)    SendCount_ParDataEachPatch[r] += SendPtr[p];
-         for (int p=0; p<RecvBuf_NPatchEachRank[r]; p++)    RecvCount_ParDataEachPatch[r] += RecvPtr[p];
+         for (int p=0; p<SendBuf_NPatchEachRank[r]; p++)    SendCount_ParDataEachPatch[r] += (long)SendPtr[p];
+         for (int p=0; p<RecvBuf_NPatchEachRank[r]; p++)    RecvCount_ParDataEachPatch[r] += (long)RecvPtr[p];
 
          NRecvParTotal += RecvCount_ParDataEachPatch[r];
 
-         SendCount_ParDataEachPatch[r] *= NParAtt;
-         RecvCount_ParDataEachPatch[r] *= NParAtt;
+         SendCount_ParDataEachPatch[r] *= (long)NParAtt;
+         RecvCount_ParDataEachPatch[r] *= (long)NParAtt;
       }
 
 //    send/recv displacement
@@ -179,8 +179,8 @@ void Par_LB_SendParticleData( const int NParAtt, int *SendBuf_NPatchEachRank, in
       RecvDisp_ParDataEachPatch[0] = 0L;
       for (int r=1; r<MPI_NRank; r++)
       {
-         SendDisp_ParDataEachPatch[r] = SendDisp_ParDataEachPatch[r-1] + (long)SendCount_ParDataEachPatch[r-1];
-         RecvDisp_ParDataEachPatch[r] = RecvDisp_ParDataEachPatch[r-1] + (long)RecvCount_ParDataEachPatch[r-1];
+         SendDisp_ParDataEachPatch[r] = SendDisp_ParDataEachPatch[r-1] + SendCount_ParDataEachPatch[r-1];
+         RecvDisp_ParDataEachPatch[r] = RecvDisp_ParDataEachPatch[r-1] + RecvCount_ParDataEachPatch[r-1];
       }
 
 //    reuse the MPI recv buffer declared in LB_GetBufferData for better MPI performance
