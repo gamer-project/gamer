@@ -400,7 +400,8 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
 
 // 3. prepare the send buffer
-   int   Send_Disp_Var[MPI_NRank], Recv_Disp_Var[MPI_NRank], Send_Disp_SIdx[MPI_NRank], Recv_Disp_SIdx[MPI_NRank];
+   int   Send_Disp_SIdx[MPI_NRank], Recv_Disp_SIdx[MPI_NRank];
+   long  Send_Disp_Var[MPI_NRank], Recv_Disp_Var[MPI_NRank];
    long *SendPtr_SIdx = NULL;
    real *SendPtr_Var  = NULL;
 
@@ -416,27 +417,27 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 // 3.2 calculate the displacement
    Send_Disp_SIdx[0] = 0;
    Recv_Disp_SIdx[0] = 0;
-   Send_Disp_Var [0] = 0;
-   Recv_Disp_Var [0] = 0;
+   Send_Disp_Var [0] = 0L;
+   Recv_Disp_Var [0] = 0L;
    for (int r=1; r<MPI_NRank; r++)
    {
       Send_Disp_SIdx[r] = Send_Disp_SIdx[r-1] + List_NSend_SIdx[r-1];
       Recv_Disp_SIdx[r] = Recv_Disp_SIdx[r-1] + List_NRecv_SIdx[r-1];
-      Send_Disp_Var [r] = Send_Disp_Var [r-1] + List_NSend_Var [r-1];
-      Recv_Disp_Var [r] = Recv_Disp_Var [r-1] + List_NRecv_Var [r-1];
+      Send_Disp_Var [r] = Send_Disp_Var [r-1] + (long)List_NSend_Var [r-1];
+      Recv_Disp_Var [r] = Recv_Disp_Var [r-1] + (long)List_NRecv_Var [r-1];
    }
 
 // check
 #  ifdef GAMER_DEBUG
-   const int NSend_Total  = Send_Disp_Var[MPI_NRank-1] + List_NSend_Var[MPI_NRank-1];
-   const int NRecv_Total  = Recv_Disp_Var[MPI_NRank-1] + List_NRecv_Var[MPI_NRank-1];
-   const int NSend_Expect = amr->NPatchComma[0][1]*CUBE(PS1);
-   const int NRecv_Expect = NX0_TOT[0]*NX0_TOT[1]*NRecvSlice;
+   const long NSend_Total  = Send_Disp_Var[MPI_NRank-1] + (long)List_NSend_Var[MPI_NRank-1];
+   const long NRecv_Total  = Recv_Disp_Var[MPI_NRank-1] + (long)List_NRecv_Var[MPI_NRank-1];
+   const int NSend_Expect  = (long)amr->NPatchComma[0][1]*(long)CUBE(PS1);
+   const int NRecv_Expect  = (long)NX0_TOT[0]*(long)NX0_TOT[1]*(long)NRecvSlice;
 
-   if ( NSend_Total != NSend_Expect )  Aux_Error( ERROR_INFO, "NSend_Total = %d != expected value = %d !!\n",
+   if ( NSend_Total != NSend_Expect )  Aux_Error( ERROR_INFO, "NSend_Total = %ld != expected value = %ld !!\n",
                                                   NSend_Total, NSend_Expect );
 
-   if ( NRecv_Total != NRecv_Expect )  Aux_Error( ERROR_INFO, "NRecv_Total = %d != expected value = %d !!\n",
+   if ( NRecv_Total != NRecv_Expect )  Aux_Error( ERROR_INFO, "NRecv_Total = %ld != expected value = %ld !!\n",
                                                   NRecv_Total, NRecv_Expect );
 #  endif
 
@@ -461,13 +462,8 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
    MPI_Alltoallv( SendBuf_SIdx, List_NSend_SIdx, Send_Disp_SIdx, MPI_LONG,
                   RecvBuf_SIdx, List_NRecv_SIdx, Recv_Disp_SIdx, MPI_LONG,   MPI_COMM_WORLD );
 
-#  ifdef FLOAT8
-   MPI_Alltoallv( SendBuf_Var,  List_NSend_Var,  Send_Disp_Var,  MPI_DOUBLE,
-                  RecvBuf_Var,  List_NRecv_Var,  Recv_Disp_Var,  MPI_DOUBLE, MPI_COMM_WORLD );
-#  else
-   MPI_Alltoallv( SendBuf_Var,  List_NSend_Var,  Send_Disp_Var,  MPI_FLOAT,
-                  RecvBuf_Var,  List_NRecv_Var,  Recv_Disp_Var,  MPI_FLOAT,  MPI_COMM_WORLD );
-#  endif
+   MPI_Alltoallv_GAMER( SendBuf_Var,  List_NSend_Var,  Send_Disp_Var,  MPI_GAMER_REAL,
+                        RecvBuf_Var,  List_NRecv_Var,  Recv_Disp_Var,  MPI_GAMER_REAL, MPI_COMM_WORLD );
 
 
 // 5. store the received data to the padded array "VarS" for FFTW
@@ -610,23 +606,18 @@ void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveS
 
 
 // 2. calculate the displacement and exchange data by MPI
-   int Send_Disp[MPI_NRank], Recv_Disp[MPI_NRank];
+   long Send_Disp[MPI_NRank], Recv_Disp[MPI_NRank];
 
-   Send_Disp[0] = 0;
-   Recv_Disp[0] = 0;
+   Send_Disp[0] = 0L;
+   Recv_Disp[0] = 0L;
    for (int r=1; r<MPI_NRank; r++)
    {
-      Send_Disp[r] = Send_Disp[r-1] + List_NSend[r-1];
-      Recv_Disp[r] = Recv_Disp[r-1] + List_NRecv[r-1];
+      Send_Disp[r] = Send_Disp[r-1] + (long)List_NSend[r-1];
+      Recv_Disp[r] = Recv_Disp[r-1] + (long)List_NRecv[r-1];
    }
 
-#  ifdef FLOAT8
-   MPI_Alltoallv( SendBuf, List_NSend, Send_Disp, MPI_DOUBLE,
-                  RecvBuf, List_NRecv, Recv_Disp, MPI_DOUBLE, MPI_COMM_WORLD );
-#  else
-   MPI_Alltoallv( SendBuf, List_NSend, Send_Disp, MPI_FLOAT,
-                  RecvBuf, List_NRecv, Recv_Disp, MPI_FLOAT,  MPI_COMM_WORLD );
-#  endif
+   MPI_Alltoallv_GAMER( SendBuf, List_NSend, Send_Disp, MPI_GAMER_REAL,
+                        RecvBuf, List_NRecv, Recv_Disp, MPI_GAMER_REAL, MPI_COMM_WORLD );
 
 
 // 3. store the received data to different patch objects

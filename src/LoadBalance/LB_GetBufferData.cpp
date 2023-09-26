@@ -175,22 +175,22 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
    const int ParaBufP1     = ParaBuf + 1;
 #  endif
 
-   int   NSend_Total, NRecv_Total;
    int   DataUnit_Buf[27], LoopStart[27][3], LoopEnd[27][3];
    int   LoopStart_X[6][3], LoopEnd_X[6][3];
    int  *Send_NList=NULL, *Recv_NList=NULL, *Send_NResList=NULL, *Recv_NResList=NULL;
    int **Send_IDList=NULL, **Recv_IDList=NULL, **Send_IDList_IdxTable=NULL, **Recv_IDList_IdxTable=NULL;
    int **Send_SibList=NULL, **Recv_SibList=NULL;
+   long  NSend_Total, NRecv_Total;
 
 #  ifdef MHD
    int  *SendY_NList=NULL, **SendY_IDList=NULL, **SendY_SibList=NULL;
    int  *RecvY_NList=NULL, **RecvY_IDList=NULL, **RecvY_SibList=NULL;
 #  endif
 
-   int *Send_NCount = new int [MPI_NRank];
-   int *Recv_NCount = new int [MPI_NRank];
-   int *Send_NDisp  = new int [MPI_NRank];
-   int *Recv_NDisp  = new int [MPI_NRank];
+   int  *Send_NCount = new int  [MPI_NRank];
+   int  *Recv_NCount = new int  [MPI_NRank];
+   long *Send_NDisp  = new long [MPI_NRank];
+   long *Recv_NDisp  = new long [MPI_NRank];
 
 
 // 1. set up the number of elements to be sent and received in each cell and the send/recv lists
@@ -570,17 +570,17 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 
 
 // MPI displacement array
-   Send_NDisp[0] = 0;
-   Recv_NDisp[0] = 0;
+   Send_NDisp[0] = 0L;
+   Recv_NDisp[0] = 0L;
 
    for (int r=1; r<MPI_NRank; r++)
    {
-      Send_NDisp[r] = Send_NDisp[r-1] + Send_NCount[r-1];
-      Recv_NDisp[r] = Recv_NDisp[r-1] + Recv_NCount[r-1];
+      Send_NDisp[r] = Send_NDisp[r-1] + (long)Send_NCount[r-1];
+      Recv_NDisp[r] = Recv_NDisp[r-1] + (long)Recv_NCount[r-1];
    }
 
-   NSend_Total = Send_NDisp[ MPI_NRank-1 ] + Send_NCount[ MPI_NRank-1 ];
-   NRecv_Total = Recv_NDisp[ MPI_NRank-1 ] + Recv_NCount[ MPI_NRank-1 ];
+   NSend_Total = Send_NDisp[ MPI_NRank-1 ] + (long)Send_NCount[ MPI_NRank-1 ];
+   NRecv_Total = Recv_NDisp[ MPI_NRank-1 ] + (long)Recv_NCount[ MPI_NRank-1 ];
 
 
 // allocate send/recv buffers (only when the current buffer size is not large enough --> improve performance)
@@ -1111,13 +1111,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
    if ( OPT__TIMING_MPI )  Timer_MPI[1]->Start();
 #  endif
 
-#  ifdef FLOAT8
-   MPI_Alltoallv( SendBuf, Send_NCount, Send_NDisp, MPI_DOUBLE,
-                  RecvBuf, Recv_NCount, Recv_NDisp, MPI_DOUBLE, MPI_COMM_WORLD );
-#  else
-   MPI_Alltoallv( SendBuf, Send_NCount, Send_NDisp, MPI_FLOAT,
-                  RecvBuf, Recv_NCount, Recv_NDisp, MPI_FLOAT,  MPI_COMM_WORLD );
-#  endif
+   MPI_Alltoallv_GAMER( SendBuf, Send_NCount, Send_NDisp, MPI_GAMER_REAL,
+                        RecvBuf, Recv_NCount, Recv_NDisp, MPI_GAMER_REAL, MPI_COMM_WORLD );
 
 #  ifdef TIMING
    if ( OPT__TIMING_MPI )  Timer_MPI[1]->Stop();

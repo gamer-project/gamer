@@ -278,6 +278,7 @@ void MPI_ExchangeBufferPosition( int NSend[26], int NRecv[26], int *Send_PosList
 void MPI_ExchangeData( const int TargetRank[2], const int SendSize[2], const int RecvSize[2],
                        real *SendBuffer[2], real *RecvBuffer[2] );
 void MPI_Exit();
+template <typename T> void MPI_Alltoallv_GAMER( T * SendBuf, int *Send_NCount, long *Send_NDisp, MPI_Datatype Send_Datatype, T *RecvBuf, int *Recv_NCount, long *Recv_NDisp, MPI_Datatype Recv_DataType, MPI_Comm comm );
 #endif // #ifndef SERIAL
 
 
@@ -691,9 +692,9 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
                                           const int Recv_NPatchTotal, const int *Recv_PIDList, int *Recv_NPatchEachRank,
                                           Timer_t *Timer, const char *Timer_Comment );
 void Par_LB_SendParticleData( const int NParAtt, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
-                              long *SendBuf_LBIdxEachPatch, real *SendBuf_ParDataEachPatch, const int NSendParTotal,
+                              long *SendBuf_LBIdxEachPatch, real *SendBuf_ParDataEachPatch, const long NSendParTotal,
                               int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
-                              real *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, int &NRecvParTotal,
+                              real *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, long &NRecvParTotal,
                               const bool Exchange_NPatchEachRank, const bool Exchange_LBIdxEachRank,
                               const bool Exchange_ParDataEachRank, Timer_t *Timer, const char *Timer_Comment );
 void Par_LB_RecordExchangeParticlePatchID( const int MainLv );

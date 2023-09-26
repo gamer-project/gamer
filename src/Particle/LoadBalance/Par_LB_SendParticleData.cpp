@@ -50,9 +50,9 @@
 //                NRecvPatchTotal, NRecvPatchTotal
 //-------------------------------------------------------------------------------------------------------
 void Par_LB_SendParticleData( const int NParAtt, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
-                              long *SendBuf_LBIdxEachPatch, real *SendBuf_ParDataEachPatch, const int NSendParTotal,
+                              long *SendBuf_LBIdxEachPatch, real *SendBuf_ParDataEachPatch, const long NSendParTotal,
                               int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
-                              real *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, int &NRecvParTotal,
+                              real *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, long &NRecvParTotal,
                               const bool Exchange_NPatchEachRank, const bool Exchange_LBIdxEachRank,
                               const bool Exchange_ParDataEachRank, Timer_t *Timer, const char *Timer_Comment )
 {
@@ -148,14 +148,14 @@ void Par_LB_SendParticleData( const int NParAtt, int *SendBuf_NPatchEachRank, in
 // 4. collect particle attributes from all ranks
    if ( Exchange_ParDataEachRank )
    {
-      int *SendCount_ParDataEachPatch = new int [MPI_NRank];
-      int *RecvCount_ParDataEachPatch = new int [MPI_NRank];
-      int *SendDisp_ParDataEachPatch  = new int [MPI_NRank];
-      int *RecvDisp_ParDataEachPatch  = new int [MPI_NRank];
+      int  *SendCount_ParDataEachPatch = new int  [MPI_NRank];
+      int  *RecvCount_ParDataEachPatch = new int  [MPI_NRank];
+      long *SendDisp_ParDataEachPatch  = new long [MPI_NRank];
+      long *RecvDisp_ParDataEachPatch  = new long [MPI_NRank];
 
 //    send/recv count
       const int *SendPtr = NULL, *RecvPtr = NULL;
-      NRecvParTotal = 0;
+      NRecvParTotal = 0L;
 
       for (int r=0; r<MPI_NRank; r++)
       {
@@ -175,25 +175,20 @@ void Par_LB_SendParticleData( const int NParAtt, int *SendBuf_NPatchEachRank, in
       }
 
 //    send/recv displacement
-      SendDisp_ParDataEachPatch[0] = 0;
-      RecvDisp_ParDataEachPatch[0] = 0;
+      SendDisp_ParDataEachPatch[0] = 0L;
+      RecvDisp_ParDataEachPatch[0] = 0L;
       for (int r=1; r<MPI_NRank; r++)
       {
-         SendDisp_ParDataEachPatch[r] = SendDisp_ParDataEachPatch[r-1] + SendCount_ParDataEachPatch[r-1];
-         RecvDisp_ParDataEachPatch[r] = RecvDisp_ParDataEachPatch[r-1] + RecvCount_ParDataEachPatch[r-1];
+         SendDisp_ParDataEachPatch[r] = SendDisp_ParDataEachPatch[r-1] + (long)SendCount_ParDataEachPatch[r-1];
+         RecvDisp_ParDataEachPatch[r] = RecvDisp_ParDataEachPatch[r-1] + (long)RecvCount_ParDataEachPatch[r-1];
       }
 
 //    reuse the MPI recv buffer declared in LB_GetBufferData for better MPI performance
       RecvBuf_ParDataEachPatch = LB_GetBufferData_MemAllocate_Recv( NRecvParTotal*NParAtt );
 
 //    exchange data
-#     ifdef FLOAT8
-      MPI_Alltoallv( SendBuf_ParDataEachPatch, SendCount_ParDataEachPatch, SendDisp_ParDataEachPatch, MPI_DOUBLE,
-                     RecvBuf_ParDataEachPatch, RecvCount_ParDataEachPatch, RecvDisp_ParDataEachPatch, MPI_DOUBLE, MPI_COMM_WORLD );
-#     else
-      MPI_Alltoallv( SendBuf_ParDataEachPatch, SendCount_ParDataEachPatch, SendDisp_ParDataEachPatch, MPI_FLOAT,
-                     RecvBuf_ParDataEachPatch, RecvCount_ParDataEachPatch, RecvDisp_ParDataEachPatch, MPI_FLOAT,  MPI_COMM_WORLD );
-#     endif
+      MPI_Alltoallv_GAMER( SendBuf_ParDataEachPatch, SendCount_ParDataEachPatch, SendDisp_ParDataEachPatch, MPI_GAMER_REAL,
+                           RecvBuf_ParDataEachPatch, RecvCount_ParDataEachPatch, RecvDisp_ParDataEachPatch, MPI_GAMER_REAL, MPI_COMM_WORLD );
 
 //    free memory
       delete [] SendCount_ParDataEachPatch;

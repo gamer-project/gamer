@@ -94,8 +94,10 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
 
 
 // 2. set the parameters for sending fine-grid B field to other ranks
-   int   Send_Disp[MPI_NRank], Recv_Disp[MPI_NRank], Send_NList[MPI_NRank], Recv_NList[MPI_NRank];
-   int   Send_NTotal, Recv_NTotal, Counter;
+   int   Send_NList[MPI_NRank], Recv_NList[MPI_NRank];
+   int   Counter;
+   long  Send_NTotal, Recv_NTotal;
+   long  Send_Disp[MPI_NRank], Recv_Disp[MPI_NRank];
    int  *SendBuf_SibID=NULL, *RecvBuf_SibID=NULL;
    long *SendBuf_LBIdx=NULL, *RecvBuf_LBIdx=NULL;
 
@@ -105,15 +107,15 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
    memcpy( Send_NList, RecvEachRank_N, MPI_NRank*sizeof(int) );
    memcpy( Recv_NList, SendEachRank_N, MPI_NRank*sizeof(int) );
 
-   Send_Disp[0] = 0;
-   Recv_Disp[0] = 0;
+   Send_Disp[0] = 0L;
+   Recv_Disp[0] = 0L;
    for (int r=1; r<MPI_NRank; r++)
    {
-      Send_Disp[r] = Send_Disp[r-1] + Send_NList[r-1];
-      Recv_Disp[r] = Recv_Disp[r-1] + Recv_NList[r-1];
+      Send_Disp[r] = Send_Disp[r-1] + (long)Send_NList[r-1];
+      Recv_Disp[r] = Recv_Disp[r-1] + (long)Recv_NList[r-1];
    }
-   Send_NTotal = Send_Disp[MPI_NRank-1] + Send_NList[MPI_NRank-1];
-   Recv_NTotal = Recv_Disp[MPI_NRank-1] + Recv_NList[MPI_NRank-1];
+   Send_NTotal = Send_Disp[MPI_NRank-1] + (long)Send_NList[MPI_NRank-1];
+   Recv_NTotal = Recv_Disp[MPI_NRank-1] + (long)Recv_NList[MPI_NRank-1];
 
    SendBuf_SibID = new int  [Send_NTotal];
    RecvBuf_SibID = new int  [Recv_NTotal];
@@ -201,17 +203,17 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
        Recv_NList[r] = RecvEachRank_N[r]*SQR( PS2 );
    }
 
-   Send_Disp[0] = 0;
-   Recv_Disp[0] = 0;
+   Send_Disp[0] = 0L;
+   Recv_Disp[0] = 0L;
 
    for (int r=1; r<MPI_NRank; r++)
    {
-      Send_Disp[r] = Send_Disp[r-1] + Send_NList[r-1];
-      Recv_Disp[r] = Recv_Disp[r-1] + Recv_NList[r-1];
+      Send_Disp[r] = Send_Disp[r-1] + (long)Send_NList[r-1];
+      Recv_Disp[r] = Recv_Disp[r-1] + (long)Recv_NList[r-1];
    }
 
-   Send_NTotal = Send_Disp[ MPI_NRank-1 ] + Send_NList[ MPI_NRank-1 ];
-   Recv_NTotal = Recv_Disp[ MPI_NRank-1 ] + Recv_NList[ MPI_NRank-1 ];
+   Send_NTotal = Send_Disp[ MPI_NRank-1 ] + (long)Send_NList[ MPI_NRank-1 ];
+   Recv_NTotal = Recv_Disp[ MPI_NRank-1 ] + (long)Recv_NList[ MPI_NRank-1 ];
 
    SendBuf_FineB = new real [Send_NTotal];
    RecvBuf_FineB = new real [Recv_NTotal];
@@ -275,13 +277,8 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
 
 
 // 3.3. invoke MPI
-#  ifdef FLOAT8
-   MPI_Alltoallv( SendBuf_FineB, Send_NList, Send_Disp, MPI_DOUBLE,
-                  RecvBuf_FineB, Recv_NList, Recv_Disp, MPI_DOUBLE, MPI_COMM_WORLD );
-#  else
-   MPI_Alltoallv( SendBuf_FineB, Send_NList, Send_Disp, MPI_FLOAT,
-                  RecvBuf_FineB, Recv_NList, Recv_Disp, MPI_FLOAT,  MPI_COMM_WORLD );
-#  endif
+   MPI_Alltoallv_GAMER( SendBuf_FineB, Send_NList, Send_Disp, MPI_GAMER_REAL,
+                        RecvBuf_FineB, Recv_NList, Recv_Disp, MPI_GAMER_REAL, MPI_COMM_WORLD );
 
 
 // 3.4. set the data to be returned by this function

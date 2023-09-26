@@ -201,8 +201,9 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly,
    real *Mass   = NULL;
    real *Pos[3] = { NULL, NULL, NULL };
 
-   int Send_Count[MPI_NRank], Recv_Count[MPI_NRank], Send_Disp[MPI_NRank], Recv_Disp[MPI_NRank];
-   int Send_Count_Sum, Recv_Count_Sum;
+   int  Send_Count[MPI_NRank], Recv_Count[MPI_NRank];
+   long Send_Disp[MPI_NRank], Recv_Disp[MPI_NRank];
+   long Send_Count_Sum, Recv_Count_Sum;
 
    if ( OldParOnly )
    {
@@ -256,21 +257,21 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly,
 // 2. construct the MPI send and recv data list
    MPI_Alltoall( Send_Count, 1, MPI_INT, Recv_Count, 1, MPI_INT, MPI_COMM_WORLD );
 
-   Send_Disp[0] = 0;
-   Recv_Disp[0] = 0;
+   Send_Disp[0] = 0L;
+   Recv_Disp[0] = 0L;
 
    for (int r=1; r<MPI_NRank; r++)
    {
-      Send_Disp[r] = Send_Disp[r-1] + Send_Count[r-1];
-      Recv_Disp[r] = Recv_Disp[r-1] + Recv_Count[r-1];
+      Send_Disp[r] = Send_Disp[r-1] + (long)Send_Count[r-1];
+      Recv_Disp[r] = Recv_Disp[r-1] + (long)Recv_Count[r-1];
    }
 
-   Send_Count_Sum = Send_Disp[ MPI_NRank-1 ] + Send_Count[ MPI_NRank-1 ];
-   Recv_Count_Sum = Recv_Disp[ MPI_NRank-1 ] + Recv_Count[ MPI_NRank-1 ];
+   Send_Count_Sum = Send_Disp[ MPI_NRank-1 ] + (long)Send_Count[ MPI_NRank-1 ];
+   Recv_Count_Sum = Recv_Disp[ MPI_NRank-1 ] + (long)Recv_Count[ MPI_NRank-1 ];
 
 #  ifdef DEBUG_PARTICLE
    if ( OldParOnly  &&  Send_Count_Sum != amr->Par->NPar_Active )
-      Aux_Error( ERROR_INFO, "Send_Count_Sum (%d) != NPar_Active (%ld) !!\n", Send_Count_Sum, amr->Par->NPar_Active );
+      Aux_Error( ERROR_INFO, "Send_Count_Sum (%ld) != NPar_Active (%ld) !!\n", Send_Count_Sum, amr->Par->NPar_Active );
 #  endif
 
 
@@ -278,7 +279,7 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly,
    const long NOldPar            = ( OldParOnly ) ?       NULL_INT : amr->Par->NPar_AcPlusInac;
    const long UpdatedParListSize = ( OldParOnly ) ? Recv_Count_Sum : amr->Par->NPar_AcPlusInac + Recv_Count_Sum;
 
-   int Offset[MPI_NRank];
+   long Offset[MPI_NRank];
 
    real *SendBuf = new real [Send_Count_Sum];
    real *RecvBuf = NULL;
@@ -317,11 +318,7 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly,
       }
 
 //    3-5. redistribute data
-#     ifdef FLOAT8
-      MPI_Alltoallv( SendBuf, Send_Count, Send_Disp, MPI_DOUBLE, RecvBuf, Recv_Count, Recv_Disp, MPI_DOUBLE, MPI_COMM_WORLD );
-#     else
-      MPI_Alltoallv( SendBuf, Send_Count, Send_Disp, MPI_FLOAT,  RecvBuf, Recv_Count, Recv_Disp, MPI_FLOAT,  MPI_COMM_WORLD );
-#     endif
+      MPI_Alltoallv_GAMER( SendBuf, Send_Count, Send_Disp, MPI_GAMER_REAL, RecvBuf, Recv_Count, Recv_Disp, MPI_GAMER_REAL, MPI_COMM_WORLD );
    } // for (int v=0; v<PAR_NATT_TOTAL; v++)
 
 
