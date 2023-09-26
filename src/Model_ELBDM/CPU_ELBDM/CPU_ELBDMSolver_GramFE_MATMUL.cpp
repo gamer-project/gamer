@@ -11,37 +11,38 @@
 template <typename T>
 class complex {
 public:
-    T re;
-    T im;
+   T re;
+   T im;
 
-    __device__ complex() : re(0), im(0) {}
-    __device__ complex(T r, T i) : re(r), im(i) {}
- // constructor to allow explicit conversion from Complex<float> to Complex<double>
-    __device__ complex(const complex<float>& other) : re(static_cast<T>(other.re)), im(static_cast<T>(other.im)) {}
- // constructor to allow conversion from complex<double> to Complex<float>
-    __device__ complex(const complex<double>& other) : re(static_cast<T>(other.re)), im(static_cast<T>(other.im)) {}
+//  avoid compiler warnings about dynamic initialisation with default constructor
+   __device__ complex() = default();
+   __device__ complex(T r, T i) : re(r), im(i) {}
+//  constructor to allow explicit conversion from Complex<float> to Complex<double>
+   __device__ complex(const complex<float>& other) : re(static_cast<T>(other.re)), im(static_cast<T>(other.im)) {}
+//  constructor to allow conversion from complex<double> to Complex<float>
+   __device__ complex(const complex<double>& other) : re(static_cast<T>(other.re)), im(static_cast<T>(other.im)) {}
 
-    __device__ complex<T> operator+(const complex<T>& other) const {
-        return complex<T>(re + other.re, im + other.im);
-    }
+   __device__ complex<T> operator+(const complex<T>& other) const {
+      return complex<T>(re + other.re, im + other.im);
+   }
 
-    __device__ complex<T> operator*(const complex<T>& other) const {
-        return complex<T>(
-            re * other.re - im * other.im,
-            re * other.im + im * other.re
-        );
-    }
+   __device__ complex<T> operator*(const complex<T>& other) const {
+      return complex<T>(
+         re * other.re - im * other.im,
+         re * other.im + im * other.re
+      );
+   }
 
-    __device__ complex<T>& operator+=(const complex<T>& other) {
-        re += other.re;
-        im += other.im;
-        return *this;
-    }
+   __device__ complex<T>& operator+=(const complex<T>& other) {
+      re += other.re;
+      im += other.im;
+      return *this;
+   }
 
-    __device__ T real() const {return re;}
-    __device__ T imag() const {return im;}
-    __device__ void real(T r) {re = r;}
-    __device__ void imag(T i) {im = i;}
+   __device__ T real() const {return re;}
+   __device__ T imag() const {return im;}
+   __device__ void real(T r) {re = r;}
+   __device__ void imag(T i) {im = i;}
 };
 
 using gramfe_matmul_complex_type = complex<gramfe_matmul_float>;
