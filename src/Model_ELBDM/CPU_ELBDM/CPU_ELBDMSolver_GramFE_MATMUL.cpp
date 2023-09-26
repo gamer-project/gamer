@@ -347,13 +347,13 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
             CELL_LOOP(FLU_NXT, FLU_GHOST_SIZE, FLU_GHOST_SIZE)
             {
                Psi_New = {0, 0};
-               Psi_In  = {s_In[sj][t].real(), s_In[sj][t].imag()};
+               Psi_In  = {(gramfe_matmul_float)s_In[sj][t].real(), (gramfe_matmul_float)s_In[sj][t].imag()};
 
                for (int t=0; t < FLU_NXT; t++) {
                   Psi_New += s_TimeEvo[(si - FLU_GHOST_SIZE) + t * PS2] * Psi_In;
                } // for t
 
-               s_Out[sj][si - FLU_GHOST_SIZE] = {Psi_New.real(), Psi_New.imag()};
+               s_Out[sj][si - FLU_GHOST_SIZE] = {(real) Psi_New.real(), (real) Psi_New.imag()};
             }
 
             __syncthreads();
