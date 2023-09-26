@@ -40,6 +40,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                          const double PrepTime );
 void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int MinLv, const int MaxLv,
                       const PatchType_t PatchType );
+void Aux_FindCenterOfMass( const double CM_Old[], double CM_New[], const double CM_MaxR );
 #ifndef SERIAL
 void Aux_Record_BoundaryPatch( const int lv, int *NList, int **IDList, int **PosList );
 #endif
