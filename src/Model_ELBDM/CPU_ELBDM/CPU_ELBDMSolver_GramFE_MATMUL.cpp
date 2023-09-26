@@ -6,12 +6,61 @@
 #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 #ifdef __CUDACC__
-#include "cuda_complex.h"
+
+// implement a complex type with the required operations for matrix multiplication
+template <typename T>
+class complex {
+public:
+    T real;
+    T imag;
+
+    __device__ complex(T r = 0, T i = 0) : real(r), imag(i) {}
+
+    __device__ complex<T> operator+(const complex<T>& other) const {
+        return complex<T>(real + other.real, imag + other.imag);
+    }
+
+    __device__ complex<T> operator*(const complex<T>& other) const {
+        return complex<T>(
+            real * other.real - imag * other.imag,
+            real * other.imag + imag * other.real
+        );
+    }
+
+    __device__ complex<T>& operator+=(const complex<T>& other) {
+        real += other.real;
+        imag += other.imag;
+        return *this;
+    }
+
+    __device__ T real() const {
+        return real;
+    }
+
+    __device__ void real(T r) {
+        real = r;
+    }
+
+    __device__ T imag() const {
+        return imag;
+    }
+
+    __device__ void imag(T i) {
+        imag = i;
+    }
+};
+
 using gramfe_matmul_complex_type = complex<gramfe_matmul_float>;
+// matrix-multiplication is carried out manually
+// therefore the types of the input vector (gramfe_input_complex_type) and the matrix (gramfe_matmul_complex_type) can be different
 using gramfe_input_complex_type  = complex<real>;
 #else
 #include <complex.h>
 #include "GSL.h"
+
+
+// for matrix-multiplication via GSL using BLAS the types of the input vector (gramfe_input_complex_type)
+// and the matrix (gramfe_matmul_complex_type) must be the same
 using gramfe_matmul_complex_type = std::complex<gramfe_matmul_float>;
 using gramfe_input_complex_type  = std::complex<gramfe_matmul_float>;
 
