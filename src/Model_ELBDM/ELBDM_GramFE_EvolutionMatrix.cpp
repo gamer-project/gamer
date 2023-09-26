@@ -147,7 +147,7 @@ void ELBDM_GramFE_ComputeTimeEvolutionMatrix(gramfe_matmul_float (*output)[2 * F
 
 #  ifdef GPU 
 // copy time evolution matrix to GPU only once per level per timestep
-   CUAPI_ELBDM_GramFE_MatrixToGPU(output);
+   CUAPI_SendGramFEMatrix2GPU(output);
 #  endif
 } // FUNCTION : ELBDM_GramFE_ComputeTimeEvolutionMatrix
 

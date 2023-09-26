@@ -549,10 +549,11 @@ endif # LOAD_BALANCE
 endif # MHD
 
 
-# ELBDM source files (included only inf "MODEL=ELBDM")
+# ELBDM source files (included only if "MODEL=ELBDM")
 # -------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
-GPU_FILE    += CUFLU_ELBDMSolver_FD.cu  CUFLU_ELBDMSolver_GramFE_FFT.cu  CUFLU_ELBDMSolver_GramFE_MATMUL.cu  CUFLU_ELBDMSolver_HJ.cu
+GPU_FILE    += CUFLU_ELBDMSolver_FD.cu  CUFLU_ELBDMSolver_GramFE_FFT.cu  CUFLU_ELBDMSolver_GramFE_MATMUL.cu  CUFLU_ELBDMSolver_HJ.cu \
+               CUAPI_SendGramFEMatrix2GPU.cu
 
 CPU_FILE    += CPU_ELBDMSolver_FD.cpp  CPU_ELBDMSolver_FFT.cpp  CPU_ELBDMSolver_GramFE_FFT.cpp  CPU_ELBDMSolver_GramFE_MATMUL.cpp  CPU_ELBDMSolver_HJ.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
                ELBDM_GetTimeStep_Fluid.cpp  ELBDM_GetTimeStep_Hybrid.cpp  ELBDM_Flag_EngyDensity.cpp  ELBDM_Flag_Interference.cpp  ELBDM_Flag_Spectral.cpp  ELBDM_UnwrapPhase.cpp \

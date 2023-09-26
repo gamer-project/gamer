@@ -656,7 +656,7 @@ void CUAPI_SendExtPotTable2GPU( const real *h_Table );
 void CUAPI_MemFree_PoissonGravity();
 #endif // #ifdef GRAVITY
 #if ( GRAMFE_SCHEME == GRAMFE_MATMUL ) 
-void CUAPI_ELBDM_GramFE_MatrixToGPU( gramfe_matmul_float (*h_GramFE_TimeEvo)[2 * FLU_NXT] ); 
+void CUAPI_SendGramFEMatrix2GPU( gramfe_matmul_float (*h_GramFE_TimeEvo)[2 * FLU_NXT] ); 
 #endif // #if ( GRAMFE_SCHEME == GRAMFE_MATMUL ) 
 #endif // #ifdef GPU
 
