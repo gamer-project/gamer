@@ -174,8 +174,6 @@ static bool (*d_IsCompletelyRefined) = NULL;
 
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 extern bool (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ];
-#else
-static bool (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ] = NULL;
 #endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
