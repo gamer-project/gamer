@@ -156,6 +156,16 @@ GPU_DEVICE_VARIABLE
 const static double FLUX_COEFFS[N_TIME_LEVELS]                = {1.0/6.0, 1.0/6.0, 2.0/3.0};
 #endif
 
+// density floor for computation of quantum pressure from input density
+// should be small so as to not affect the accuracy of the quantum pressure
+// must be positive and larger than machine precision to ensure that density close to machine precision
+// does not lead to nan in logarithm  
+#ifdef FLOAT8 
+#define QP_DENSITY_FLOOR 1e-13
+#else 
+#define QP_DENSITY_FLOOR 1e-6
+#endif 
+
 GPU_DEVICE
 static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NXT) ],
                            #ifdef GAMER_DEBUG
@@ -384,7 +394,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
             __syncthreads();
 #           endif // # ifdef __CUDACC_
 
-//          first order update
+//          first-order (in time and space) upwind update in completely refine patches
+//          ensures that information from wave patches only propagates one cell per time step
+//          part of several efforts to ensure stability of the solver when vortices form in wave patches
             if ( IsCompletelyRefined )
             {
                const uint time_level = 0;
@@ -393,9 +405,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                {
 
 //                compute quantum pressure
-                  const real LogRho_c   = LOG(MAX(s_In[sj][time_level][DENS][si    ], 1e-10));
-                  const real LogRho_p1  = LOG(MAX(s_In[sj][time_level][DENS][si + 1], 1e-10));
-                  const real LogRho_m1  = LOG(MAX(s_In[sj][time_level][DENS][si - 1], 1e-10));
+                  const real LogRho_c   = LOG(MAX(s_In[sj][time_level][DENS][si    ], QP_DENSITY_FLOOR));
+                  const real LogRho_p1  = LOG(MAX(s_In[sj][time_level][DENS][si + 1], QP_DENSITY_FLOOR));
+                  const real LogRho_m1  = LOG(MAX(s_In[sj][time_level][DENS][si - 1], QP_DENSITY_FLOOR));
                   const real LogRho_Vel = LogRho_p1 - LogRho_m1;
                   const real LogRho_Lap = LogRho_p1 - 2 * LogRho_c + LogRho_m1;
                   const real QP         = real(1.0/2.0) * LogRho_Lap  + real(1.0/16.0) * SQR(LogRho_Vel);
@@ -440,9 +452,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                      real De_New, Ph_New, vp, vm, fm, fp;
 
 //                   compute quantum pressure
-                     const real LogRho_c   = LOG(MAX(s_In[sj][time_level][DENS][si    ], 1e-10));
-                     const real LogRho_p1  = LOG(MAX(s_In[sj][time_level][DENS][si + 1], 1e-10));
-                     const real LogRho_m1  = LOG(MAX(s_In[sj][time_level][DENS][si - 1], 1e-10));
+                     const real LogRho_c   = LOG(MAX(s_In[sj][time_level][DENS][si    ], QP_DENSITY_FLOOR));
+                     const real LogRho_p1  = LOG(MAX(s_In[sj][time_level][DENS][si + 1], QP_DENSITY_FLOOR));
+                     const real LogRho_m1  = LOG(MAX(s_In[sj][time_level][DENS][si - 1], QP_DENSITY_FLOOR));
                      const real LogRho_Vel = LogRho_p1 - LogRho_m1;
                      const real LogRho_Lap = LogRho_p1 - 2 * LogRho_c + LogRho_m1;
                      const real QP         = real(1.0/2.0) * LogRho_Lap  + real(1.0/16.0) * SQR(LogRho_Vel);
