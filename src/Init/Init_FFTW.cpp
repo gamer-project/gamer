@@ -431,8 +431,8 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 #  ifdef GAMER_DEBUG
    const long NSend_Total  = Send_Disp_Var[MPI_NRank-1] + (long)List_NSend_Var[MPI_NRank-1];
    const long NRecv_Total  = Recv_Disp_Var[MPI_NRank-1] + (long)List_NRecv_Var[MPI_NRank-1];
-   const int NSend_Expect  = (long)amr->NPatchComma[0][1]*(long)CUBE(PS1);
-   const int NRecv_Expect  = (long)NX0_TOT[0]*(long)NX0_TOT[1]*(long)NRecvSlice;
+   const long NSend_Expect = (long)amr->NPatchComma[0][1]*(long)CUBE(PS1);
+   const long NRecv_Expect = (long)NX0_TOT[0]*(long)NX0_TOT[1]*(long)NRecvSlice;
 
    if ( NSend_Total != NSend_Expect )  Aux_Error( ERROR_INFO, "NSend_Total = %ld != expected value = %ld !!\n",
                                                   NSend_Total, NSend_Expect );
