@@ -202,8 +202,6 @@ void LB_Refine( const int FaLv )
 //       set use_wave_flag
          amr->use_wave_flag[ChildLv] = true;
 
-
-//       convert patches
 //       iterate over real and buffer patches
          for (int PID=0; PID < amr->NPatchComma[ChildLv][27]; PID++)
          {
@@ -213,6 +211,39 @@ void LB_Refine( const int FaLv )
 //             convert both sandglasses
                for ( int FluSg = 0; FluSg < 2; ++FluSg )
                {
+
+//                check whether dB wavelength is resolved after conversion to wave patch
+#                 ifdef GAMER_DEBUG
+                  for (int k=0; k<PS1; k++)  {
+                  for (int j=0; j<PS1; j++)  {
+                  for (int i=0; i<PS1; i++)  {
+                     int kk  =  k;
+                     int kkp = (kk + 1) < PS1  ? kk + 1 : kk    ;
+                     int kkm = (kk - 1) < 0    ? kk     : kk - 1;
+                     int ii  =  i;
+                     int iip = (ii + 1) < PS1  ? ii + 1 : ii    ;
+                     int iim = (ii - 1) < 0    ? ii     : ii - 1;
+                     int jj  =  j;
+                     int jjp = (jj + 1) < PS1  ? jj + 1 : jj    ;
+                     int jjm = (jj - 1) < 0    ? jj     : jj - 1;
+
+                     //check whether dB wavelength is resolved within the newly converted patch
+                     real dPhase = MAX(MAX(MAX(MAX(MAX(
+                     FABS(amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][iip] - amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][ii ]),
+                     FABS(amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][ii ] - amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][iim])),
+                     FABS(amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jjp][ii ] - amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][ii ])),
+                     FABS(amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][ii ] - amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jjm][ii ])),
+                     FABS(amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kkp][jj ][ii ] - amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][ii ])),
+                     FABS(amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][ii ] - amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kkm][jj ][ii ]));
+
+//                   currently, the selection of the first wave level is fixed as a runtime parameter
+//                   ideally, the code should be able to adaptively increase the first wave level by 1 when this happens
+                     if ( dPhase > M_PI ) {
+                        Aux_Message ( stderr, "WARNING: Phase jump = %d > PI when converting patch from fluid to wave scheme on lv %d!", dPhase, ChildLv);
+                     }
+                  }}}
+#                 endif // # ifdef GAMER_DEBUG
+
 //                check fluid != NULL for buffer patches
                   if ( amr->patch[FluSg][ChildLv][PID]->fluid != NULL && amr->FluSgTime[ChildLv][FluSg] >= 0.0 )
                   {
