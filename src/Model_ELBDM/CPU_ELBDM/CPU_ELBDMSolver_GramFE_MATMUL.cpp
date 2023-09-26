@@ -15,12 +15,10 @@ public:
     T im;
 
     __device__ complex(T r = 0, T i = 0) : re(r), im(i) {}
-
- // Constructor to allow explicit conversion from Complex<float> to Complex<double>
-    explicit Complex(const Complex<float>& other) : real(static_cast<T>(other.re)), imag(static_cast<T>(other.im)) {}
- 
- // Constructor to allow conversion from Complex<double> to Complex<float>
-    explicit Complex(const Complex<double>& other) : real(static_cast<T>(other.re)), imag(static_cast<T>(other.im)) {}
+ // constructor to allow explicit conversion from Complex<float> to Complex<double>
+    explicit complex(const complex<float>& other) : re(static_cast<T>(other.re)), im(static_cast<T>(other.im)) {}
+ // constructor to allow conversion from complex<double> to Complex<float>
+    explicit complex(const complex<double>& other) : re(static_cast<T>(other.re)), im(static_cast<T>(other.im)) {}
 
     __device__ complex<T> operator+(const complex<T>& other) const {
         return complex<T>(re + other.re, im + other.im);
@@ -39,21 +37,10 @@ public:
         return *this;
     }
 
-    __device__ T real() const {
-        return re;
-    }
-
-    __device__ void real(T r) {
-        re = r;
-    }
-
-    __device__ T imag() const {
-        return im;
-    }
-
-    __device__ void imag(T i) {
-        im = i;
-    }
+    __device__ T real() const {return re;}
+    __device__ T imag() const {return im;}
+    __device__ void real(T r) {re = r;}
+    __device__ void imag(T i) {im = i;}
 };
 
 using gramfe_matmul_complex_type = complex<gramfe_matmul_float>;
