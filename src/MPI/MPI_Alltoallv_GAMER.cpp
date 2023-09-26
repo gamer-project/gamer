@@ -35,13 +35,13 @@ void MPI_Alltoallv_GAMER(T *SendBuf, long *Send_NCount, long *Send_NDisp, MPI_Da
    MPI_Allreduce(MPI_IN_PLACE, &use_mpi_gamer_flag , 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD);
 
    // ********************************purely for testing purpose!! Remember to comment this out for distribution!! ********************************
-   use_mpi_gamer_flag = true;
+//   use_mpi_gamer_flag = true;
    //
 
    if ( use_mpi_gamer_flag )
    {
       // ********************************purely for testing purpose!! Remember to comment this out for distribution!! ********************************
-      Aux_Message( stdout, "  Use MPI_Alltoallv_GAMER wrapper..." );
+//      Aux_Message( stdout, "  Use MPI_Alltoallv_GAMER wrapper..." );
       //
       MPI_Request *req_send_and_recv = new MPI_Request[2*MPI_NRank];
 
