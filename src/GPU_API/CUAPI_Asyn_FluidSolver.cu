@@ -386,10 +386,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 
 #  elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-
-   size_t h_FluTimeEvo_MemSize = 2 * FLU_NXT * PS2 * sizeof(gramfe_matmul_float);
-   CUDA_CHECK_ERROR( cudaMemcpyAsync( d_Flu_TimeEvo, h_GramFE_TimeEvo, h_FluTimeEvo_MemSize, cudaMemcpyHostToDevice) );
-
+// time evolution matrix is copied to GPU in InvokeSolver
 #  else
 #     error : ERROR : unsupported GRAMFE_SCHEME !!
 #  endif // GRAMFE_SCHEME
