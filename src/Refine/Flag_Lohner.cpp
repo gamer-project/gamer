@@ -31,6 +31,9 @@ bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t F
                   const real *Slope1D, const int NVar, const double Threshold, const double Filter, const double Soften )
 {
 
+// return if there are not target variables (e.g. for fluid levels in ELBDM hybrid scheme)
+   if ( NVar == 0 ) return false; 
+
 // check
 #  ifdef GAMER_DEBUG
    if (  i < 0  ||  i >= PS1  ||  j < 0  ||  j >= PS1  ||  k < 0  ||  k >= PS1  )
