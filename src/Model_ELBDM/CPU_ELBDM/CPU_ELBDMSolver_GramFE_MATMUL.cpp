@@ -7,6 +7,11 @@
 
 #ifdef __CUDACC__
 #include "cuda_complex.h"
+
+class CudaComplex 
+{
+
+}
 using gramfe_matmul_complex_type = complex<gramfe_matmul_float>;
 using gramfe_input_complex_type  = complex<real>;
 #else
@@ -135,11 +140,17 @@ void CPU_ELBDMSolver_GramFE_MATMUL(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NX
 #  endif // #  ifdef __CUDACC__ ... else
 
 // time evolution matrix
+#  ifdef __CUDACC__
+   __shared__ gramfe_matmul_complex_type s_TimeEvo[PS2 * FLU_NXT];
+#  else // #  ifdef __CUDACC__
+              gramfe_matmul_complex_type s_TimeEvo[PS2 * FLU_NXT];
+#  endif // #  ifdef __CUDACC__ ... else
+
+
+// time evolution matrix
 // GPU: transpose input evolution matrix from PS2 x FLU_NXT to FLU_NXT x PS2 for it to be in row-major order
 // CPU: no transposition since matrix already is in column-major order
 #  ifdef __CUDACC__
-   __shared__ gramfe_matmul_complex_type s_TimeEvo[PS2 * FLU_NXT];
-
    gramfe_matmul_complex_type* s_LinEvolve = (gramfe_matmul_complex_type *) s_TimeEvo;
    gramfe_matmul_complex_type* g_LinEvolve = (gramfe_matmul_complex_type *) g_TimeEvo;
    uint row, col;
@@ -157,7 +168,12 @@ void CPU_ELBDMSolver_GramFE_MATMUL(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NX
 
    __syncthreads();
 #  else // #  ifdef __CUDACC__
-   gramfe_matmul_complex_type* s_TimeEvo = (gramfe_matmul_complex_type *) g_TimeEvo;
+// copy data to convert between single/double/quadruple precision
+   for (uint i = 0; i < PS2 * FLU_NXT; ++i) {
+      row = i / FLU_NXT;
+      col = i % FLU_NXT;
+      s_LinEvolve[col * PS2 + row] = (gramfe_matmul_complex_type) g_LinEvolve[i];
+   }
 #  endif // #  ifdef __CUDACC__ ... else
 
 
