@@ -7,6 +7,7 @@
 
 #ifdef __CUDACC__
 
+
 // implement a complex type with the required operations for matrix multiplication
 template <typename T>
 class complex {
@@ -14,14 +15,8 @@ public:
    T re;
    T im;
 
-//  avoid compiler warnings about dynamic initialisation with default constructor
-   complex() = default();
-   
-   __device__ complex(T r, T i) : re(r), im(i) {};
-//  constructor to allow explicit conversion from Complex<float> to Complex<double>
-   __device__ complex(const complex<float>& other) : re(static_cast<T>(other.re)), im(static_cast<T>(other.im)) {}
-//  constructor to allow conversion from complex<double> to Complex<float>
-   __device__ complex(const complex<double>& other) : re(static_cast<T>(other.re)), im(static_cast<T>(other.im)) {}
+// unfortunately, we cannot defined custom constructors here
+// otherwise, CUDA will complain about unsupported dynamic initialisation of shared arrays 
 
    __device__ complex<T> operator+(const complex<T>& other) const {
       return complex<T>(re + other.re, im + other.im);
@@ -294,6 +289,13 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //       use two-dimensional thread blocks in GPU mode
          const uint tx            = threadIdx.x;
          const uint ty            = threadIdx.y;
+
+
+         // define register variables for conversion of complex types
+         gramfe_input_complex_type  Psi_Out; 
+         gramfe_matmul_complex_type Psi_In;
+         gramfe_matmul_complex_type Psi_New;
+
 #        else  // # ifdef __CUDACC__
 //       every block just has a single thread with temporary memory on the stack in CPU mode
          const uint tx            = 0;
@@ -318,7 +320,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
          uint NColumnOnce = MIN( NColumnTotal, CGPU_FLU_BLOCK_SIZE_Y );     // number of columns updated per iteration
 
-         gramfe_matmul_complex_type Psi_New;             // buffer for left and right Gram coefficients
          real Amp_New, Re_New, Im_New;  // store density, real and imaginary part to apply minimum density check
 
 //       loop over all data columns
@@ -346,12 +347,13 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
             CELL_LOOP(FLU_NXT, FLU_GHOST_SIZE, FLU_GHOST_SIZE)
             {
                Psi_New = {0, 0};
+               Psi_In  = {s_In[sj][t].real(), s_In[sj][t].imag()}
 
                for (int t=0; t < FLU_NXT; t++) {
-                  Psi_New += s_TimeEvo[(si - FLU_GHOST_SIZE) + t * PS2] * (gramfe_matmul_complex_type) s_In[sj][t];
+                  Psi_New += s_TimeEvo[(si - FLU_GHOST_SIZE) + t * PS2] * Psi_In;
                } // for t
 
-               s_Out[sj][si - FLU_GHOST_SIZE] = (gramfe_input_complex_type) Psi_New;
+               s_Out[sj][si - FLU_GHOST_SIZE] = {Psi_New.real(), Psi_New.imag()};
             }
 
             __syncthreads();
