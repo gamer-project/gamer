@@ -228,7 +228,8 @@ void CPU_ELBDMSolver_HamiltonJacobi(   real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NX
 #endif
 {
 #  ifdef __CUDACC__
-   const int NPatchGroup = 0;
+// parameter useless when GPU is used
+   const int NPatchGroup = NULL_INT;
 #  else // #  ifdef __CUDACC__
    const real _dh = real(1.0)/dh;
 #  endif
@@ -518,6 +519,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                real Ph_New       = s_In[sj][N_TIME_LEVELS][PHAS][si];
 
 //             detect failure of fluid scheme
+//             if cell has wave counterpart and density is negative or there is nan, use second-order finite-difference forward-in-time discretisation of wave equation
+//             if cell does not have wave counterpart, unphysical field values are unexpected and should lead to the termination of the run 
                if ( s_HasWaveCounterpart[sj][si] && (De_New < 0 || De_New != De_New || Ph_New != Ph_New || FABS(Ph_New - Ph_Old) > M_PI )) {
 //                   compute real and imaginary parts
                      const real Re_c       = SQRT(s_In[sj][0][DENS][si    ]) * COS(s_In[sj][0][PHAS][si    ]);
@@ -532,7 +535,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 //                   second-order centered in space forward in time wave equation update
                      const real Re_New     = Re_c - Coeff2 * Im_Lap;
                      const real Im_New     = Im_c + Coeff2 * Re_Lap;
-//                   convert back to phase, match to old phase and then subtract it to get dPhase with NewPhase = OldPhase + dPhase
+//                   convert back to phase and match to old phase
                      Ph_New                = EQUALISE( Ph_Old, SATAN2(Im_New, Re_New) );
                      De_New                = SQR(Re_New) + SQR(Im_New);
                }
