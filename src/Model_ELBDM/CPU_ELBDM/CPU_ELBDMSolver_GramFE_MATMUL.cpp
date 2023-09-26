@@ -23,10 +23,10 @@ public:
    }
 
    __device__ complex<T> operator*(const complex<T>& other) const {
-      return complex<T>(
-         re * other.re - im * other.im,
-         re * other.im + im * other.re
-      );
+      complex<T> out; 
+      out.real(re * other.re - im * other.im);
+      out.imag(re * other.im + im * other.re);
+      return out; 
    }
 
    __device__ complex<T>& operator+=(const complex<T>& other) {
@@ -290,11 +290,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
          const uint tx            = threadIdx.x;
          const uint ty            = threadIdx.y;
 
-
          // define register variables for conversion of complex types
-         gramfe_input_complex_type  Psi_Out; 
-         gramfe_matmul_complex_type Psi_In;
-         gramfe_matmul_complex_type Psi_New;
+         gramfe_matmul_complex_type Psi_In, Psi_New;
 
 #        else  // # ifdef __CUDACC__
 //       every block just has a single thread with temporary memory on the stack in CPU mode
@@ -347,9 +344,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
             CELL_LOOP(FLU_NXT, FLU_GHOST_SIZE, FLU_GHOST_SIZE)
             {
                Psi_New = {0, 0};
-               Psi_In  = {(gramfe_matmul_float)s_In[sj][t].real(), (gramfe_matmul_float)s_In[sj][t].imag()};
 
                for (int t=0; t < FLU_NXT; t++) {
+                  Psi_In  = {(gramfe_matmul_float) s_In[sj][t].real(), (gramfe_matmul_float) s_In[sj][t].imag()};
                   Psi_New += s_TimeEvo[(si - FLU_GHOST_SIZE) + t * PS2] * Psi_In;
                } // for t
 
