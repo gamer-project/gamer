@@ -275,10 +275,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
    int NCompStore = NCOMP_TOTAL;
 
-// do not store STUB field unless we are in debug mode without bitwise reproducibility
-#  if ( ELBDM_SCHEME == ELBDM_HYBRID && ( !defined( GAMER_DEBUG ) || defined( BITWISE_REPRODUCIBILITY ) ) )
+// do not store STUB field unless we are in debug mode
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID && !defined( GAMER_DEBUG ) )
    NCompStore = NCOMP_TOTAL - 1;
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID && ( !defined( GAMER_DEBUG ) || defined( BITWISE_REPRODUCIBILITY ) )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID && !defined( GAMER_DEBUG ) )
 
    NFieldStored += NCompStore;
 
