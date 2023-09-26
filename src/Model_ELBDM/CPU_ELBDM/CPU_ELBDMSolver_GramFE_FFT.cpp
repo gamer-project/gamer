@@ -461,7 +461,10 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
          uint NColumnOnce = MIN( NColumnTotal, CGPU_FLU_BLOCK_SIZE_Y );     // number of columns updated per iteration
 
+//       use register variables Al, Ar and Psi_Ext to speed up summation
          complex_type Al, Ar;             // buffer for left and right Gram coefficients
+         complex_type Psi_Ext;            // buffer for wave function in extension region 
+         
          real   Amp_New, Re_New, Im_New;  // store density, real and imaginary part to apply minimum density check
 
 //       loop over all data columns
@@ -509,13 +512,15 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //          2.2 function values in extension domain given as linear combinations of extended Gram polynomials
             CELL_LOOP(GRAMFE_FLU_NXT, FLU_NXT, 0)
             {
-               s_In[sj][si].real(0);
-               s_In[sj][si].imag(0);
+               Psi_Ext.real(0);
+               Psi_Ext.imag(0);
 
                for (int order=0; order < GRAMFE_ORDER; order++) {
-                  s_In[sj][si] += s_Ae[sj][order] *  Fe[order][si - FLU_NXT];
-                  s_In[sj][si] += s_Ao[sj][order] *  Fo[order][si - FLU_NXT];
+                  Psi_Ext += s_Ae[sj][order] *  Fe[order][si - FLU_NXT];
+                  Psi_Ext += s_Ao[sj][order] *  Fo[order][si - FLU_NXT];
                } // for (int order=0; order < GRAMFE_ORDER; order++)
+
+               s_In[sj][si] = Psi_Ext; 
             } // CELL_LOOP(GRAMFE_FLU_NXT, FLU_NXT, 0)
 
 #           ifdef __CUDACC__
