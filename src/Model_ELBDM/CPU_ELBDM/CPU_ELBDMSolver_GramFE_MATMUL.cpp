@@ -11,42 +11,48 @@
 template <typename T>
 class complex {
 public:
-    T real;
-    T imag;
+    T re;
+    T im;
 
-    __device__ complex(T r = 0, T i = 0) : real(r), imag(i) {}
+    __device__ complex(T r = 0, T i = 0) : re(r), im(i) {}
+
+ // Constructor to allow explicit conversion from Complex<float> to Complex<double>
+    explicit Complex(const Complex<float>& other) : real(static_cast<T>(other.re)), imag(static_cast<T>(other.im)) {}
+ 
+ // Constructor to allow conversion from Complex<double> to Complex<float>
+    explicit Complex(const Complex<double>& other) : real(static_cast<T>(other.re)), imag(static_cast<T>(other.im)) {}
 
     __device__ complex<T> operator+(const complex<T>& other) const {
-        return complex<T>(real + other.real, imag + other.imag);
+        return complex<T>(re + other.re, im + other.im);
     }
 
     __device__ complex<T> operator*(const complex<T>& other) const {
         return complex<T>(
-            real * other.real - imag * other.imag,
-            real * other.imag + imag * other.real
+            re * other.re - im * other.im,
+            re * other.im + im * other.re
         );
     }
 
     __device__ complex<T>& operator+=(const complex<T>& other) {
-        real += other.real;
-        imag += other.imag;
+        re += other.re;
+        im += other.im;
         return *this;
     }
 
     __device__ T real() const {
-        return real;
+        return re;
     }
 
     __device__ void real(T r) {
-        real = r;
+        re = r;
     }
 
     __device__ T imag() const {
-        return imag;
+        return im;
     }
 
     __device__ void imag(T i) {
-        imag = i;
+        im = i;
     }
 };
 
