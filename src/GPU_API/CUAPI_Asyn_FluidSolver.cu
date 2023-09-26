@@ -167,15 +167,15 @@ static real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 #endif // #if ( MODEL == HYDRO )
 
 #if ( MODEL == ELBDM )
-extern bool                (*d_IsCompletelyRefined);
+extern bool (*d_IsCompletelyRefined);
 #else
-static bool                (*d_IsCompletelyRefined) = NULL;
+static bool (*d_IsCompletelyRefined) = NULL;
 #endif // #if ( MODEL == ELBDM )
 
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
-extern bool                (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ];
+extern bool (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ];
 #else
-static bool                (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ] = NULL;
+static bool (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ] = NULL;
 #endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )

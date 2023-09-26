@@ -208,13 +208,6 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 // evaluate time evolution matrix ( once per level per timestep )
    ELBDM_GramFE_ComputeTimeEvolutionMatrix( h_GramFE_TimeEvo, dt, amr->dh[lv], ELBDM_ETA );
-
-#  ifdef GPU 
-// copy time evolution matrix to GPU only once per level per timestep
-// use synchronous memory copy to ensure that matrix is on GPU when solver starts
-   size_t h_FluTimeEvo_MemSize = 2 * FLU_NXT * PS2 * sizeof(gramfe_matmul_float);
-   CUDA_CHECK_ERROR( cudaMemcpy( d_Flu_TimeEvo, h_GramFE_TimeEvo, h_FluTimeEvo_MemSize, cudaMemcpyHostToDevice) );
-#  endif
 #  endif
 
 //-------------------------------------------------------------------------------------------------------------

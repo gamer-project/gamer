@@ -65,6 +65,8 @@ static long double SineTaylorExpansion(const long double x, const int Nterms) {
 //-------------------------------------------------------------------------------------------------------
 // Function    :  GramFE_ComputeTimeEvolutionMatrix
 // Description :  Compute the time evolution matrix for the Schrödinger equation and store result in output
+//                Transfer it to GPU using synchronous memory copy
+//
 // Parameter   :  output  : Complex PS2 x 2 * FLU_NXT matrix (contiguous memory block of size 2 * FLU_NXT * PS2 * sizeof(gramfe_matmul_float) bytes)
 //                dt      : Time step
 //                dh      : Grid spacing
@@ -142,6 +144,11 @@ void ELBDM_GramFE_ComputeTimeEvolutionMatrix(gramfe_matmul_float (*output)[2 * F
          Out[i][j].imag((gramfe_matmul_float) Evolution[i][j].imag());
       }
    }
-}
+
+#  ifdef GPU 
+// copy time evolution matrix to GPU only once per level per timestep
+   CUAPI_ELBDM_GramFE_MatrixToGPU(output);
+#  endif
+} // FUNCTION : ELBDM_GramFE_ComputeTimeEvolutionMatrix
 
 #endif // #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
