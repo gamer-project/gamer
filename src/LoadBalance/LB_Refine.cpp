@@ -195,7 +195,7 @@ void LB_Refine( const int FaLv )
 
 
 
-// (c1.3.6) convert density/Phase to density/real part/imaginary part in hybrid scheme if we switch the level from Phase to wave
+// (c1.3.6) convert density/phase to density/real part/imaginary part in hybrid scheme if we switch the level from Phase to wave
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( SwitchFinerLevelsToWaveScheme ) {
       for (int ChildLv = SonLv; ChildLv <= TOP_LEVEL; ++ChildLv) {

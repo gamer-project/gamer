@@ -1198,7 +1198,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 // get the total number of patches at lv+1
    Mis_GetTotalPatchNumber( lv+1 );
 
-// convert density/Phase to density/real part/imaginary part in hybrid scheme if we switch the level from Phase to wave
+// convert density/phase to density/real part/imaginary part in hybrid scheme if we switch the level from Phase to wave
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( SwitchFinerLevelsToWaveScheme ) {
       for (int ChildLv = lv + 1; ChildLv <= TOP_LEVEL; ++ChildLv) {
