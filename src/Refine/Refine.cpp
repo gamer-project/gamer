@@ -853,7 +853,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             real Amp, Phase, Re, Im;
 
 #           ifdef GAMER_DEBUG
-//          Check whether dB wavelength is resolved
+//          check whether dB wavelength is resolved within the newly converted patch
             for (int k=0; k<FSize_CC; k++) {
             for (int j=0; j<FSize_CC; j++) {
             for (int i=0; i<FSize_CC; i++) {
@@ -867,7 +867,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                   int jjp = (jj + 1) < FSize_CC  ? jj + 1 : jj    ;
                   int jjm = (jj - 1) < 0         ? jj     : jj - 1;
 
-                  //check whether dB wavelength is resolved within the newly converted patch
+//                compute maximum phase difference in x-, y- and z-direction
                   real dPhase = MAX(MAX(MAX(MAX(MAX(
                   FABS(Flu_FData[PHAS][kk ][jj ][iip] - Flu_FData[PHAS][kk ][jj ][ii ]),
                   FABS(Flu_FData[PHAS][kk ][jj ][ii ] - Flu_FData[PHAS][kk ][jj ][iim])),
@@ -876,6 +876,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                   FABS(Flu_FData[PHAS][kkp][jj ][ii ] - Flu_FData[PHAS][kk ][jj ][ii ])),
                   FABS(Flu_FData[PHAS][kk ][jj ][ii ] - Flu_FData[PHAS][kkm][jj ][ii ]));
 
+//                currently, the selection of the first wave level is fixed as a runtime parameter
+//                ideally, the code should be able to adaptively increase the first wave level by 1 when this happens
                   if ( dPhase > M_PI ) {
                      Aux_Message ( stderr, "WARNING: Phase jump = %d > PI when refining patch from fluid (lv %d) to wave (lv %d) scheme!", dPhase, lv, lv + 1);
                   }
