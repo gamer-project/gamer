@@ -1151,6 +1151,9 @@ void Aux_Check_Parameter()
    if ( MAX_LEVEL > 0 && !OPT__FIXUP_RESTRICT )
       Aux_Error(  ERROR_INFO, "ELBDM_HYBRID with AMR requires the option OPT__FIXUP_RESTRICT !!\n");
 
+   if ( MAX_LEVEL > 0 && !OPT__INIT_RESTRICT )
+      Aux_Error(  ERROR_INFO, "ELBDM_HYBRID with AMR requires the option OPT__INIT_RESTRICT !!\n");
+
 #  ifdef LOAD_BALANCE
    if ( !OPT__LB_EXCHANGE_FATHER )
       Aux_Error(  ERROR_INFO, "ELBDM_HYBRID requires the option OPT__LB_EXCHANGE_FATHER for load balancing !!\n");
@@ -1270,10 +1273,8 @@ void Aux_Check_Parameter()
                 NCOMP_PASSIVE );
 #  endif
 
-
    if ( DT__PHASE > 1.0 )
       Aux_Message( stderr, "WARNING : DT__PHASE (%13.7e) is not within the normal range [0...1] !!\n", DT__PHASE );
-
 
    if ( OPT__CK_FLUX_ALLOCATE  &&  !OPT__FIXUP_FLUX )
       Aux_Message( stderr, "WARNING : %s is useless since %s is off !!\n",
@@ -1303,7 +1304,7 @@ void Aux_Check_Parameter()
 #  elif ( WAVE_SCHEME == WAVE_GRAMFE ) // #  if ( WAVE_SCHEME == WAVE_FD )
 
    if ( OPT__FIXUP_FLUX )
-      Aux_Message( stderr, "WARNING : OPT__FIXUP_FLUX will not be applied when %s is on !!\n",
+      Aux_Message( stderr, "WARNING : OPT__FIXUP_FLUX will not be applied on wave levels when %s is on !!\n",
                    "WAVE_SCHEME == WAVE_GRAMFE" );
 
 #  ifdef CONSERVE_MASS
