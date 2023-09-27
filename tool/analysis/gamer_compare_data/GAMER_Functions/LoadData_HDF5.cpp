@@ -157,9 +157,9 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
       if ( Float8_Par_check_flag != 0 )
       {
 	 if      ( sizeof(real) < sizeof(real_par) )
-            Aux_Error( ERROR_INFO, "Must use same precision for fluid data and particle attribute when Float8_Par is not stored in snapshot!! But fluid dat is in %s and particle attribute is in %s\n", "single", "double");
+            Aux_Error( ERROR_INFO, "Must use same precision for fluid data and particle attribute when Float8_Par is not stored in snapshot!! But fluid data is in %s and particle attribute is in %s\n", "SINGLE", "DOUBLE");
 	 else if ( sizeof(real) > sizeof(real_par) )
-            Aux_Error( ERROR_INFO, "Must use same precision for fluid data and particle attribute when Float8_Par is not stored in snapshot!! But fluid dat is in %s and particle attribute is in %s\n", "double", "single");
+            Aux_Error( ERROR_INFO, "Must use same precision for fluid data and particle attribute when Float8_Par is not stored in snapshot!! But fluid data is in %s and particle attribute is in %s\n", "DOUBLE", "SINGLE");
       }  
    }
    else {
