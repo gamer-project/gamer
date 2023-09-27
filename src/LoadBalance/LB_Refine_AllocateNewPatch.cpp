@@ -1065,11 +1065,11 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
             FABS(FData_Flu[PHAS][kk ][jj ][ii ] - FData_Flu[PHAS][kk ][jjm][ii ])),
             FABS(FData_Flu[PHAS][kkp][jj ][ii ] - FData_Flu[PHAS][kk ][jj ][ii ])),
             FABS(FData_Flu[PHAS][kk ][jj ][ii ] - FData_Flu[PHAS][kkm][jj ][ii ]));
-            
+
 //          currently, the selection of the first wave level is fixed as a runtime parameter
 //          ideally, the code should be able to adaptively increase the first wave level by 1 when this happens
             if ( dPhase > M_PI ) {
-               Aux_Message ( stderr, "WARNING: Phase jump = %d > PI when refining patch from fluid (lv %d) to wave (lv %d) scheme!", dPhase, lv, lv + 1);
+               Aux_Message ( stderr, "WARNING: Phase jump = %d > PI when refining patch from fluid (lv %d) to wave (lv %d) scheme!", dPhase, FaLv, SonLv);
             }
       }}}
 #     endif   // # ifdef GAMER_DEBUG
