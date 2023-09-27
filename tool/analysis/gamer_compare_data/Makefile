@@ -51,8 +51,8 @@ vpath %.cpp ./ GAMER_Functions
 
 # rules and targets
 #######################################################################################################
-#HDF5_PATH := /software/hdf5/default
-HDF5_PATH := /software/hdf5/1.10.6-intel-2023.1.0
+HDF5_PATH := /software/hdf5/default
+#HDF5_PATH := /software/hdf5/1.10.6-intel-2023.1.0
 
 CC    := icpc
 CFLAG := -O3 -w1 -g -diag-disable=10441
