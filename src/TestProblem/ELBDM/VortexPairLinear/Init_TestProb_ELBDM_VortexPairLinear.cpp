@@ -55,7 +55,7 @@ void Validate()
 // -> when switching from wave scheme back to fluid scheme
 //    real and imaginary part need to be converted back to phase
 // -> the two vortices are connected with a two pi phase jump
-//    while the wave scheme does not see this jump, the fluid scheme does 
+//    while the wave scheme does not see this jump, the fluid scheme does
 // -> the wave physics is invariant under deformations of this jump contour.
 //    as a result, reconstruction of the phase with and without ELBDM_MATCH_PHASE
 //    leads to different jump line contours
@@ -98,6 +98,10 @@ void SetParameter()
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
+   int VorPairLin_kx_int;
+   int VorPairLin_ky_int;
+   int VorPairLin_kz_int;
+
 // (1-1) add parameters in the following format:
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
@@ -108,9 +112,9 @@ void SetParameter()
    ReadPara->Add( "VorPairLin_WaveAmp",   &VorPairLin_WaveAmp,    -1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "VorPairLin_ZWaveAmp",  &VorPairLin_ZWaveAmp,    0.0,           0.0,              NoMax_double      );
    ReadPara->Add( "VorPairLin_Phase0",    &VorPairLin_Phase0,      0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "VorPairLin_kx",        &VorPairLin_kx,          1,             1,                NoMax_int         );
-   ReadPara->Add( "VorPairLin_ky",        &VorPairLin_ky,          1,             1,                NoMax_int         );
-   ReadPara->Add( "VorPairLin_kz",        &VorPairLin_kz,          1,             1,                NoMax_int         );
+   ReadPara->Add( "VorPairLin_kx",        &VorPairLin_kx_int,        1,             1,                NoMax_int         );
+   ReadPara->Add( "VorPairLin_ky",        &VorPairLin_ky_int,        1,             1,                NoMax_int         );
+   ReadPara->Add( "VorPairLin_kz",        &VorPairLin_kz_int,        1,             1,                NoMax_int         );
 
    ReadPara->Read( FileName );
 
@@ -122,20 +126,21 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
-   VorPairLin_kx        *= 2.0*M_PI/amr->BoxSize[0];   // by default we set wavelength equal to multiples of the box size
-   VorPairLin_ky        *= 2.0*M_PI/amr->BoxSize[1];
-   VorPairLin_kz        *= 2.0*M_PI/amr->BoxSize[2];
+   VorPairLin_kx         = VorPairLin_kx_int * 2.0*M_PI/amr->BoxSize[0];   // by default we set wavelength equal to multiples of the box size
+   VorPairLin_ky         = VorPairLin_ky_int * 2.0*M_PI/amr->BoxSize[1];
+   VorPairLin_kz         = VorPairLin_kz_int * 2.0*M_PI/amr->BoxSize[2];
    VorPairLin_Omega      = 0.5/ELBDM_ETA*( SQR(VorPairLin_kx) + SQR(VorPairLin_ky) );
    VorPairLin_ZWaveOmega = 0.5/ELBDM_ETA*  SQR(VorPairLin_kz);
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
-   const long   End_Step_Default = __INT_MAX__;
-   double End_T_Default    = 1.0*2.0*M_PI/VorPairLin_Omega;    // 1 period
+   const long End_Step_Default = __INT_MAX__;
+   double End_T_Default = 1.0*2.0*M_PI/VorPairLin_Omega;    // 1 period for 2D test
 
 // in 3D test choose 1 period of the z-wave or x-y-wave depending on which is longer
-   if (VorPairLin_ZWaveAmp > 0)
+   if (VorPairLin_ZWaveAmp > 0) {
       End_T_Default    = FMAX(End_T_Default, 1.0*2.0*M_PI/VorPairLin_ZWaveOmega);
+   }
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -157,9 +162,9 @@ void SetParameter()
       Aux_Message( stdout, "  VorPairLin_WaveAmp    = %13.7e\n", VorPairLin_WaveAmp    );
       Aux_Message( stdout, "  VorPairLin_Phase0     = %13.7e\n", VorPairLin_Phase0     );
       Aux_Message( stdout, "  VorPairLin_ZWaveAmp   = %13.7e\n", VorPairLin_ZWaveAmp   );
-      Aux_Message( stdout, "  VorPairLin_kx         = %13.7e\n", VorPairLin_kx         );
-      Aux_Message( stdout, "  VorPairLin_ky         = %13.7e\n", VorPairLin_ky         );
-      Aux_Message( stdout, "  VorPairLin_kz         = %13.7e\n", VorPairLin_kz         );
+      Aux_Message( stdout, "  VorPairLin_kx         = %d\n",     VorPairLin_kx_int     );
+      Aux_Message( stdout, "  VorPairLin_ky         = %d\n",     VorPairLin_ky_int     );
+      Aux_Message( stdout, "  VorPairLin_kz         = %d\n",     VorPairLin_kz_int     );
       Aux_Message( stdout, "  VorPairLin_Omega      = %13.7e\n", VorPairLin_Omega      );
       Aux_Message( stdout, "  VorPairLin_ZWaveOmega = %13.7e\n", VorPairLin_ZWaveOmega );
       Aux_Message( stdout, "=============================================================================\n" );
@@ -193,10 +198,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   const double phase   = VorPairLin_kx*x - VorPairLin_Omega*Time + VorPairLin_Phase0;
-   const double amp     = VorPairLin_WaveAmp*cos( VorPairLin_ky*y );
-   const double zphase  = VorPairLin_kz*z - VorPairLin_ZWaveOmega*Time;
-   const double zamp    = VorPairLin_ZWaveAmp;
+   const double phase  = VorPairLin_kx*x - VorPairLin_Omega*Time + VorPairLin_Phase0;
+   const double amp    = VorPairLin_WaveAmp*cos( VorPairLin_ky*y );
+   const double zphase = VorPairLin_kz*z - VorPairLin_ZWaveOmega*Time;
+   const double zamp   = VorPairLin_ZWaveAmp;
    const double Re     = VorPairLin_BgAmp + amp*cos( phase ) + zamp*cos( zphase );
    const double Im     =                  + amp*sin( phase ) + zamp*sin( zphase );
    fluid[DENS] = SQR( Re ) + SQR( Im );
