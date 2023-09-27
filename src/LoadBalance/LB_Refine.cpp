@@ -260,9 +260,9 @@ void LB_Refine( const int FaLv )
 
 //    sync flags across all MPI ranks after conversion
 //    note that they should be in sync since SwitchFinerLevelsToWaveScheme has been synced earlier
-      for (int ChildLv = SonLv; ChildLv <= TOP_LEVEL; ++ChildLv) {
+      for (int ChildLv = SonLv; ChildLv <= TOP_LEVEL; ++ChildLv)
       {
-         Sync_UseWaveFlag(lv);
+         Sync_UseWaveFlag(ChildLv);
       } // for (int ChildLv = SonLv; ChildLv <= TOP_LEVEL; ++ChildLv) {
    } // if ( SwitchFinerLevelsToWaveScheme )
 #   endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
