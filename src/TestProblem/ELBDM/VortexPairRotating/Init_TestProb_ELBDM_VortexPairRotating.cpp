@@ -47,7 +47,7 @@ void Validate()
 // -> when switching from wave scheme back to fluid scheme
 //    real and imaginary part need to be converted back to phase
 // -> the two vortices are connected with a two pi phase jump
-//    while the wave scheme does not see this jump, the fluid scheme does 
+//    while the wave scheme does not see this jump, the fluid scheme does
 // -> the wave physics is invariant under deformations of this jump contour.
 //    as a result, reconstruction of the phase with and without ELBDM_MATCH_PHASE
 //    leads to different jump line contours
