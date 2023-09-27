@@ -1,5 +1,5 @@
 # problem-specific runtime parameters
-VorPairLin_BgAmp     1.0   #  psi_vortex_pair(x,y) = BgAmp + WaveAmp*cos(ky*y)*exp( i*(kx*x-Omega*t+Phase0) ) + ZWaveAmp * exp( i*(kz*z-ZWaveOmega*t) )
+VorPairLin_BgAmp     1.0   #  psi_vortex_pair(x,y,z) = BgAmp + WaveAmp*cos(ky*y)*exp( i*(kx*x-Omega*t+Phase0) ) + ZWaveAmp * exp( i*(kz*z-ZWaveOmega*t) )
 VorPairLin_WaveAmp   2.0   #
 VorPairLin_ZWaveAmp  0.0   # [0.0]
 VorPairLin_Phase0    0.0   # [0.0]

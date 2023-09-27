@@ -19,6 +19,6 @@ Note:
        where A is a constant on the order of background, kx and ky are wavenumbers,
        Omega=0.5/ELBDM_ETA*(kx^2+ky^2), and Phase0 is a phase constant
 2. Optionally: Add wave in z direction
-    -->   psi(x, y) = psi_vorpair(x,y) + background_z * exp( i*(kz*z-ZWaveOmega*t) )
+    -->   psi(x, y, z) = psi_vorpair(x,y) + background_z * exp( i*(kz*z-ZWaveOmega*t) )
        where background_z is a constant on the order of background, kz is a wavenumber and
        Omega=0.5/ELBDM_ETA*(kz^2)
