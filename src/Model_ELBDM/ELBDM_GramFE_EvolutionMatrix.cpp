@@ -11,7 +11,10 @@
 
 // require at least 128 bit precision in order for calculation of evolution matrix to have an error below single precision
 // this is because the extension matrix has a high condition number of 10^15 or higher
-// ideally, gramfe_evo_float should be a 256 bit type
+// ideally, gramfe_evo_float should be changed to a 256 bit type in the future
+// in that case, the GramFE_ExtensionTables should be updated to include more significant digits as well
+// also note that some routines use the long double type in the following instead of the quadmath version
+// they do not require higher than double precision
 #define gramfe_evo_float __float128
 
 using gramfe_matmul_complex_type = std::complex<gramfe_matmul_float>;
