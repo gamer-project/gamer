@@ -321,7 +321,7 @@ extern int  FB_ParaBuf;
 #ifdef SUPPORT_SPECTRAL_INT
 extern char SPEC_INT_TABLE_PATH[MAX_STRING];
 class InterpolationHandler;
-extern InterpolationHandler INTERPOLATION_HANDLER;
+extern InterpolationHandler Int_InterpolationHandler;
 #endif // #ifdef SUPPORT_SPECTRAL_INT
 
 

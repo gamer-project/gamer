@@ -49,13 +49,13 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 
 // add interpolation contexts (make sure that everything is thread-safe in AddInterpolationContext)
    for (size_t i = 0; i < 3; ++i) {
-      INTERPOLATION_HANDLER.AddInterpolationContext( CRange[i] +  2 * CGhost, CGhost );
+      Int_InterpolationHandler.AddInterpolationContext( CRange[i] +  2 * CGhost, CGhost );
    }
 
 // determine workspace size
    size_t WorkspaceSize = 0;
    for (size_t i = 0; i < 3; ++i) {
-      WorkspaceSize = MAX(WorkspaceSize, INTERPOLATION_HANDLER.GetWorkspaceSize( CRange[i] +  2 * CGhost, CGhost ));
+      WorkspaceSize = MAX(WorkspaceSize, Int_InterpolationHandler.GetWorkspaceSize( CRange[i] +  2 * CGhost, CGhost ));
    }
 
 // allocate workspace using fftw_malloc for contiguous memory used in FFT
@@ -182,8 +182,8 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
                const size_t IdxIn = ii * InStride[Pi][XYZ] + ji * InStride[Pj][XYZ] + ki * InStride[Pk][XYZ];
 
                InPtr1D[ko] = InPtr3D[IdxIn];
-            }
-         } // ki
+            } // ki
+         } // v
 
 
 #        if ( MODEL == ELBDM )
@@ -196,24 +196,6 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 
 //          unwrap phase
             for (int i = 1;  i < InSize[XYZ];  i++) Imag[i] = ELBDM_UnwrapPhase( Imag[i-1], Imag[i] );
-
-//          store density
-            //for (int i = 0;  i < InSize[XYZ];  i++)
-            //{
-            //   DensInput[i] = Real[i];
-            ////   PhasInput[i] = Imag[i];
-            //}
-//
-            //for (int i = 1;  i < InSize[XYZ] - 1;  i++)
-            //{
-            //   const real c1 = SLOPE_RATIO(Imag[i-1], Imag[i], Imag[i+1]);
-            //   const real c2 = FABS(Imag[i-1] - Imag[i]) / M_PI;
-            //   //const real c3 = FABS((SQRT(Real[i-1]) - 2 * SQRT(Real[i]) + SQRT(Real[i+1]))/(SQRT(Real[i])));
-            //   if (c2 > 0.7 && c1 < 0) {
-            //      UsePhaseInt = false;//printf("Discont: c1 %3.3e c2 %3.3e c3 %3.3e S: %2.2e %2.2e %2.2e D: %2.2e %2.2e %2.2e\n", c1, c2, c3, Imag[i-1], Imag[i], Imag[i+1], Real[i-1], Real[i], Real[i+1]);
-            //      break;
-            //   }
-            //}
 
             UsePhaseInt = false;
 
@@ -233,14 +215,14 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
          {
             InPtr1D  = Input  + v * InputDisp;
             OutPtr1D = Output + v * OutputDisp;
-            INTERPOLATION_HANDLER.InterpolateReal(InPtr1D, OutPtr1D, InSize[XYZ], CGhost, Workspace, Monotonic[v], MonoCoeff, OppSign0thOrder);
+            Int_InterpolationHandler.InterpolateReal(InPtr1D, OutPtr1D, InSize[XYZ], CGhost, Workspace, Monotonic[v], MonoCoeff, OppSign0thOrder);
          }
 
 #        if ( MODEL == ELBDM )
          if ( UnwrapPhase && !UsePhaseInt )
          {
-            //INTERPOLATION_HANDLER.InterpolateReal(DensInput, DensOutput, InSize[XYZ], CGhost, Workspace, Monotonic[0], MonoCoeff, OppSign0thOrder);
-            //INTERPOLATION_HANDLER.InterpolateReal(PhasInput, PhasOutput, InSize[XYZ], CGhost, Workspace, Monotonic[0], MonoCoeff, OppSign0thOrder);
+            //Int_InterpolationHandler.InterpolateReal(DensInput, DensOutput, InSize[XYZ], CGhost, Workspace, Monotonic[0], MonoCoeff, OppSign0thOrder);
+            //Int_InterpolationHandler.InterpolateReal(PhasInput, PhasOutput, InSize[XYZ], CGhost, Workspace, Monotonic[0], MonoCoeff, OppSign0thOrder);
 
             real* Re = Output  + 0 * OutputDisp;
             real* Im = Output  + 1 * OutputDisp;
@@ -248,27 +230,8 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 
 
             for (int i = 0;  i < OutSize[XYZ];  i++) {
-
-               //real Rescale;
-
-               const real RhoWrong   = SQR(Im[i]) + SQR(Re[i]);
-               const real PhaseWrong = SATAN2(Im[i], Re[i]) * WavelengthMagnifier;
-               //const real ReWrong    = SQRT(RhoWrong) * COS(PhaseWrong);
-               //const real ImWrong    = SQRT(RhoWrong) * SIN(PhaseWrong);
-               //const real RhoCorrect = DensOutput[i];
-//
-//             //be careful about the negative density introduced from the round-off errors
-               //if ( RhoCorrect <= (real)0.0 )
-               //   Rescale = (real) 0.0;
-               //else
-               //   Rescale = SQRT( RhoCorrect/RhoWrong );
-//
-               //const real ReCorrect = ReWrong * Rescale;
-               //const real ImCorrect = ImWrong * Rescale;
-               //Re[i] = SQR(ReCorrect) + SQR(ImCorrect);
-               //Im[i] = SATAN2(ImCorrect, ReCorrect);
-               Re[i] = RhoWrong;
-               Im[i] = PhaseWrong;
+               Re[i] = SQR(Im[i]) + SQR(Re[i]);
+               Im[i] = SATAN2(Im[i], Re[i]) * WavelengthMagnifier;
             }
 
             if ( XYZ == 2)
@@ -303,16 +266,6 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
    delete [] Output;
    delete [] TDataX;
    delete [] TDataY;
-
-#  if ( MODEL == ELBDM )
-   //if ( UnwrapPhase )
-   //{
-   //   delete [] DensInput;
-   //   delete [] PhasInput;
-   //   delete [] DensOutput;
-   //   delete [] PhasOutput;
-   //}
-#  endif
 
    gamer_fftw::fft_free(Workspace);
 
