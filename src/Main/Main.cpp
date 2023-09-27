@@ -133,7 +133,6 @@ double               ELBDM_LAMBDA;
 #endif
 ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
 bool                 ELBDM_BASE_SPECTRAL;
-double               ELBDM_VORTEX_THRESHOLD;
 #else
 #error : unsupported MODEL !!
 #endif // MODEL

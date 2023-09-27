@@ -138,7 +138,6 @@ extern double           FlagTable_Spectral[NLEVEL-1][2];
 
 extern ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
 extern bool             ELBDM_BASE_SPECTRAL;
-extern double           ELBDM_VORTEX_THRESHOLD;
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL

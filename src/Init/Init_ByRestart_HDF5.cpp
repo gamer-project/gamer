@@ -1998,7 +1998,6 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "ELBDM_Taylor3_Auto",      &RS.ELBDM_Taylor3_Auto,      SID, TID, NonFatal, &RT.ELBDM_Taylor3_Auto,       1, NonFatal );
    LoadField( "ELBDM_RemoveMotionCM",    &RS.ELBDM_RemoveMotionCM,    SID, TID, NonFatal, &RT.ELBDM_RemoveMotionCM,     1, NonFatal );
    LoadField( "ELBDM_BaseSpectral",      &RS.ELBDM_BaseSpectral,      SID, TID, NonFatal, &RT.ELBDM_BaseSpectral,       1, NonFatal );
-   LoadField( "ELBDM_VortexThreshold",   &RS.ELBDM_VortexThreshold,   SID, TID, NonFatal, &RT.ELBDM_VortexThreshold,    1, NonFatal );
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    LoadField( "ELBDM_FirstWaveLevel",    &RS.ELBDM_FirstWaveLevel,    SID, TID, NonFatal, &RT.ELBDM_FirstWaveLevel,     1, NonFatal );
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )

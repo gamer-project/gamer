@@ -245,7 +245,7 @@ Procedure for outputting new variables:
 //                2469 : 2023/05/18 --> replace OPT__INIT_BFIELD_BYFILE by OPT__INIT_BFIELD_BYVECPOT
 //                2470 : 2023/06/24 --> output OPT__SORT_PATCH_BY_LBIDX
 //                2471 : 2023/07/17 --> output OPT__FLAG_INTERFERENCE, ELBDM_MATCH_PHASE
-//                                             ELBDM_VORTEX_THRESHOLD, ELBDM_FIRST_WAVE_LEVEL, OPT__LB_EXCHANGE_FATHER, FlagTable_Interference
+//                                             ELBDM_FIRST_WAVE_LEVEL, OPT__LB_EXCHANGE_FATHER, FlagTable_Interference
 //                                             DENS and PHAS for hybrid scheme,
 //                                             use_wave_flag[lv] for AMR structure
 //-------------------------------------------------------------------------------------------------------
@@ -2269,7 +2269,6 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.ELBDM_Taylor3_Auto      = ELBDM_TAYLOR3_AUTO;
    InputPara.ELBDM_RemoveMotionCM    = ELBDM_REMOVE_MOTION_CM;
    InputPara.ELBDM_BaseSpectral      = ELBDM_BASE_SPECTRAL;
-   InputPara.ELBDM_VortexThreshold   = ELBDM_VORTEX_THRESHOLD;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    InputPara.ELBDM_FirstWaveLevel    = ELBDM_FIRST_WAVE_LEVEL;
 #  endif // ELBDM_SCHEME
@@ -3213,7 +3212,6 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "ELBDM_Taylor3_Auto",      HOFFSET(InputPara_t,ELBDM_Taylor3_Auto     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "ELBDM_RemoveMotionCM",    HOFFSET(InputPara_t,ELBDM_RemoveMotionCM   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "ELBDM_BaseSpectral",      HOFFSET(InputPara_t,ELBDM_BaseSpectral     ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "ELBDM_VortexThreshold",   HOFFSET(InputPara_t,ELBDM_VortexThreshold  ), H5T_NATIVE_DOUBLE  );
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    H5Tinsert( H5_TypeID, "ELBDM_FirstWaveLevel",    HOFFSET(InputPara_t,ELBDM_FirstWaveLevel   ), H5T_NATIVE_INT     );
