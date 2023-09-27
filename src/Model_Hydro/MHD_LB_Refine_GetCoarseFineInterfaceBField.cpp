@@ -37,9 +37,9 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
 
    int   MemSize              [MPI_NRank];
    long  RecvEachRank_N       [MPI_NRank];
-   long  SendEachRank_N       [MPI_NRank];
    int  *RecvEachRank_SibID   [MPI_NRank];
    long *RecvEachRank_SibLBIdx[MPI_NRank];
+   long  SendEachRank_N       [MPI_NRank];
    int  *SendEachRank_SibID   [MPI_NRank];
    int  *SendEachRank_PID     [MPI_NRank];
 
@@ -133,11 +133,11 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
 
 
 // 2.2. send --> recv
-   MPI_Alltoallv( SendBuf_SibID, Send_NList, Send_Disp, MPI_INT,
-                  RecvBuf_SibID, Recv_NList, Recv_Disp, MPI_INT,  MPI_COMM_WORLD );
+   MPI_Alltoallv_GAMER( SendBuf_SibID, Send_NList, Send_Disp, MPI_INT,
+                        RecvBuf_SibID, Recv_NList, Recv_Disp, MPI_INT,  MPI_COMM_WORLD );
 
-   MPI_Alltoallv( SendBuf_LBIdx, Send_NList, Send_Disp, MPI_LONG,
-                  RecvBuf_LBIdx, Recv_NList, Recv_Disp, MPI_LONG, MPI_COMM_WORLD );
+   MPI_Alltoallv_GAMER( SendBuf_LBIdx, Send_NList, Send_Disp, MPI_LONG,
+                        RecvBuf_LBIdx, Recv_NList, Recv_Disp, MPI_LONG, MPI_COMM_WORLD );
 
 
 // 2.3. record the received info
@@ -160,7 +160,7 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
 //    all target patches must be found
 #     ifdef GAMER_DEBUG
       for (long t=0; long<SendEachRank_N[r]; t++)
-         if ( Match[t] == -1 )
+         if ( Match[t] == -1L )
             Aux_Error( ERROR_INFO, "SonLv %d, TRank %d, LBIdx %ld found no matching patches !!\n",
                        SonLv, r, RecvPtr_LBIdx[t] );
 #     endif

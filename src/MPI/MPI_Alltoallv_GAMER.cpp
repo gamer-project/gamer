@@ -84,6 +84,8 @@ void MPI_Alltoallv_GAMER(T *SendBuf, long *Send_NCount, long *Send_NDisp, MPI_Da
 // explicit template instantiation
 template void MPI_Alltoallv_GAMER <float>    ( float  *SendBuf, long *Send_NCount, long *Send_NDisp, MPI_Datatype Send_Datatype, float  *RecvBuf, long *Recv_NCount, long *Recv_NDisp, MPI_Datatype Recv_Datatype, MPI_Comm comm );
 template void MPI_Alltoallv_GAMER <double>   ( double *SendBuf, long *Send_NCount, long *Send_NDisp, MPI_Datatype Send_Datatype, double *RecvBuf, long *Recv_NCount, long *Recv_NDisp, MPI_Datatype Recv_Datatype, MPI_Comm comm );
+template void MPI_Alltoallv_GAMER <int>      ( int    *SendBuf, long *Send_NCount, long *Send_NDisp, MPI_Datatype Send_Datatype, int    *RecvBuf, long *Recv_NCount, long *Recv_NDisp, MPI_Datatype Recv_Datatype, MPI_Comm comm );
+template void MPI_Alltoallv_GAMER <long>     ( long   *SendBuf, long *Send_NCount, long *Send_NDisp, MPI_Datatype Send_Datatype, long   *RecvBuf, long *Recv_NCount, long *Recv_NDisp, MPI_Datatype Recv_Datatype, MPI_Comm comm );
 
 #endif // #ifndef SERIAL
 
