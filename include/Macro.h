@@ -1084,7 +1084,7 @@
    {                                                                                                     \
       if ( MPI_Rank == 0 )                                                                               \
          Aux_Message( stderr, "WARNING : parameter [%-28s] is reset to [" EXPAND_AND_QUOTE(format) "] "  \
-                              "%s", #name, name, reason );                                               \
+                              "%s\n", #name, name, reason );                                               \
    }
 
 
