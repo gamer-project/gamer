@@ -66,7 +66,7 @@ int Mis_Matching_int( const U N, const T Array[], const U M, const T Key[], U Ma
    U Min      = 0;
    int NMatch = 0;
 
-   for (long t=0; t<M; t++)
+   for (U t=0; t<M; t++)
    {
       Match[t] = Mis_BinarySearch( Array, Min, N-1, Key[t] );
 
