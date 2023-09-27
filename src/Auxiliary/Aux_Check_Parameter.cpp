@@ -1156,9 +1156,9 @@ void Aux_Check_Parameter()
    const double dt_hybrid_max   = 0.49;
    const double dt_velocity_max = 3.50;
 
-   if ( DT__HYBRID_FLUID > dt_hybrid_max )
-      Aux_Error(  ERROR_INFO, "DT__HYBRID_FLUID (%13.7e) > %13.7e is unstable !!\n",
-                   DT__HYBRID_FLUID, dt_hybrid_max );
+   if ( DT__HYBRID_CFL > dt_hybrid_max )
+      Aux_Error(  ERROR_INFO, "DT__HYBRID_CFL (%13.7e) > %13.7e is unstable !!\n",
+                   DT__HYBRID_CFL, dt_hybrid_max );
    if ( DT__HYBRID_VELOCITY > dt_velocity_max )
       Aux_Error(  ERROR_INFO, "DT__HYBRID_VELOCITY (%13.7e) > %13.7e is unstable !!\n",
                    DT__HYBRID_VELOCITY, dt_velocity_max );

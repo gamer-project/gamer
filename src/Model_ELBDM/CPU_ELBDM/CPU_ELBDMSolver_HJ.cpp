@@ -118,42 +118,23 @@ static uint get1D2(uint k, uint j, uint i, int XYZ) {
 
 # define GHOST_ZONE_PER_STAGE     2 // ghost zone per Runge-Kutta stage
 
-//Osher-Sethian flux for Hamilton-Jacobi equation
+// Osher-Sethian flux for Hamilton-Jacobi equation
 # define OSHER_SETHIAN_FLUX(Vel_p, Vel_m) ((real) 0.5 * (pow(MIN(Vel_p, 0), 2) + pow(MAX(Vel_m, 0), 2)))
 
 
-//Options for different Runge-Kutta schemes
-/*
- First-order method (DT_HYBRID < 0.01 ):
-#define N_TIME_LEVELS 1
-const real TIME_COEFFS[N_TIME_LEVELS]                = {1.0};
-const real RK_COEFFS  [N_TIME_LEVELS][N_TIME_LEVELS] = {{1.0}};
-#ifdef CONSERVE_MASS
-const static real FLUX_COEFFS[N_TIME_LEVELS]         = {1.0};
-#endif
- Second-order method (DT_HYBRID = 0.05 instead of 0.4):
-#define N_TIME_LEVELS 2
+// use third-order Runge-Kutta scheme since it provides a good compromise between the required ghost zone (6 for the second-order spatial discretisation)
+// and the achievable time steps (close to finite-difference scheme) 
+// lower-order Runge-Kutta methods suffer from small time steps (CFL condition < 0.01 for first-order and <= 0.05 for second-order methods according to empirical tests)
+#define ELBDM_HJ_RK_ORDER 3
 GPU_DEVICE_VARIABLE
-const static real TIME_COEFFS[N_TIME_LEVELS]                = {1.0/2.0, 1.0};#
+const static double TIME_COEFFS[ELBDM_HJ_RK_ORDER]                    = {1.0, 1.0/4.0, 2.0/3.0};
+
 GPU_DEVICE_VARIABLE
-const static real RK_COEFFS  [N_TIME_LEVELS][N_TIME_LEVELS] = {{1.0, 0.0}, {1.0, 0.0}};
+const static double RK_COEFFS  [ELBDM_HJ_RK_ORDER][ELBDM_HJ_RK_ORDER] = {{1.0, 0.0, 0.0}, {3.0/4.0, 1.0/4.0, 0.0}, {1.0/3.0, 0.0, 2.0/3.0}};
 
 #ifdef CONSERVE_MASS
 GPU_DEVICE_VARIABLE
-const static real FLUX_COEFFS[N_TIME_LEVELS]                = {0.0, 1.0};
-#endif
-*/
-
-#define N_TIME_LEVELS 3
-GPU_DEVICE_VARIABLE
-const static double TIME_COEFFS[N_TIME_LEVELS]                = {1.0, 1.0/4.0, 2.0/3.0};
-
-GPU_DEVICE_VARIABLE
-const static double RK_COEFFS  [N_TIME_LEVELS][N_TIME_LEVELS] = {{1.0, 0.0, 0.0}, {3.0/4.0, 1.0/4.0, 0.0}, {1.0/3.0, 0.0, 2.0/3.0}};
-
-#ifdef CONSERVE_MASS
-GPU_DEVICE_VARIABLE
-const static double FLUX_COEFFS[N_TIME_LEVELS]                = {1.0/6.0, 1.0/6.0, 2.0/3.0};
+const static double FLUX_COEFFS[ELBDM_HJ_RK_ORDER]                    = {1.0/6.0, 1.0/6.0, 2.0/3.0};
 #endif
 
 // density floor for computation of quantum pressure from input density
@@ -331,7 +312,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 #  endif
    {
 //    create memories for columns of various intermediate fields on stack or shared GPU memory
-      CGPU_SHARED real  s_In                 [CGPU_FLU_BLOCK_SIZE_Y][N_TIME_LEVELS + 1][FLU_NIN][HYB_NXT];
+      CGPU_SHARED real  s_In                 [CGPU_FLU_BLOCK_SIZE_Y][ELBDM_HJ_RK_ORDER + 1][FLU_NIN][HYB_NXT];
       CGPU_SHARED int   s_HasWaveCounterpart [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT];        // booleans indicating where to switch to first-order
 
 #     ifdef CONSERVE_MASS
@@ -433,15 +414,15 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 #                 ifdef CONSERVE_MASS
                   s_Flux[sj][si]        = fm;
 #                 endif
-                  s_In[sj][N_TIME_LEVELS][DENS][si] = s_In[sj][0][DENS][si] + Coeff1 * ( fm - fp );
-                  s_In[sj][N_TIME_LEVELS][PHAS][si] = s_In[sj][0][PHAS][si] + Coeff2 * ( - SQR(MIN(vp, 0)) - SQR(MAX(vm, 0)) + QP );
+                  s_In[sj][ELBDM_HJ_RK_ORDER][DENS][si] = s_In[sj][0][DENS][si] + Coeff1 * ( fm - fp );
+                  s_In[sj][ELBDM_HJ_RK_ORDER][PHAS][si] = s_In[sj][0][PHAS][si] + Coeff2 * ( - SQR(MIN(vp, 0)) - SQR(MAX(vm, 0)) + QP );
                }
 #              ifdef  __CUDACC__
                __syncthreads();
 #              endif
             } else {
 //             2. Runge-Kutta iterations
-               for (uint time_level = 0; time_level < N_TIME_LEVELS; ++time_level)
+               for (uint time_level = 0; time_level < ELBDM_HJ_RK_ORDER; ++time_level)
                {
                   const uint ghost = GHOST_ZONE_PER_STAGE * ( time_level + 1 ) ;
 
@@ -499,7 +480,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                      De_New *= TIME_COEFFS[time_level];
                      Ph_New *= TIME_COEFFS[time_level];
 
-//                   3.3 use N_TIME_LEVELS-stages RK-algorithm
+//                   3.3 use ELBDM_HJ_RK_ORDER-stages RK-algorithm
                      for (uint tl = 0; tl < time_level + 1; ++tl) {
                         De_New += RK_COEFFS[time_level][tl] * s_In[sj][tl][DENS][si];
                         Ph_New += RK_COEFFS[time_level][tl] * s_In[sj][tl][PHAS][si];
@@ -514,7 +495,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                   __syncthreads();
 #                 endif
 
-               } // if ( time_level < N_TIME_LEVELS - 1 ) {
+               } // if ( time_level < ELBDM_HJ_RK_ORDER - 1 ) {
             } // if ( isCompletelyRefined ) ... else
 
 //          4. write back final results to g_Fluid_In or g_Fluid_Out to save memory
@@ -527,8 +508,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                k = k_gap + ( sj + Column0 ) / size_j;
 
                const real Ph_Old = s_In[sj][0][PHAS][si];
-               real De_New       = s_In[sj][N_TIME_LEVELS][DENS][si];
-               real Ph_New       = s_In[sj][N_TIME_LEVELS][PHAS][si];
+               real De_New       = s_In[sj][ELBDM_HJ_RK_ORDER][DENS][si];
+               real Ph_New       = s_In[sj][ELBDM_HJ_RK_ORDER][PHAS][si];
 
 //             detect failure of fluid scheme
 //             if cell has wave counterpart and density is negative or there is nan, use second-order finite-difference forward-in-time discretisation of wave equation

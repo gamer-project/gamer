@@ -121,15 +121,15 @@ void Init_ResetParameter()
 
 // hybrid dt (empirically determined CFL condition)
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( DT__HYBRID_FLUID < 0.0 )
+   if ( DT__HYBRID_CFL < 0.0 )
    {
 #     ifdef GRAVITY
-      DT__HYBRID_FLUID = 0.20;
+      DT__HYBRID_CFL 0.20;
 #     else
-      DT__HYBRID_FLUID = 0.40;
+      DT__HYBRID_CFL = 0.40;
 #     endif
-      PRINT_WARNING( DT__HYBRID_FLUID, FORMAT_FLT, "" );
-   } // if ( DT__HYBRID_FLUID < 0.0 )
+      PRINT_WARNING( DT__HYBRID_CFL, FORMAT_FLT, "" );
+   } // if ( DT__HYBRID_CFL < 0.0 )
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 // gravity dt

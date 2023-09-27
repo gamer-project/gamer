@@ -28,7 +28,7 @@ double ELBDM_GetTimeStep_Hybrid( const int lv )
 
    dt = ELBDM_ETA*SQR(dh);
 
-   dt *= DT__HYBRID_FLUID;
+   dt *= DT__HYBRID_CFL;
 
    return dt;
 
