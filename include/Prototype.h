@@ -33,6 +33,7 @@ void Aux_Record_Timing();
 void Aux_Record_PatchCount();
 void Aux_Record_Performance( const double ElapsedTime );
 void Aux_Record_CorrUnphy();
+void Aux_Record_Center();
 int  Aux_CountRow( const char *FileName );
 void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
                          const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const long TVarBitIdx[],

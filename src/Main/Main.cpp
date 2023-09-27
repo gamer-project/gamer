@@ -533,6 +533,8 @@ int main( int argc, char *argv[] )
          Aux_Error( ERROR_INFO, "Aux_Record_User_Ptr == NULL for OPT__RECORD_USER !!\n" );
    }
 
+   Aux_Record_Center();
+
 #  ifdef PARTICLE
    if ( OPT__PARTICLE_COUNT > 0 )         Par_Aux_Record_ParticleCount();
 #  endif
@@ -619,6 +621,8 @@ int main( int argc, char *argv[] )
       if ( OPT__PARTICLE_COUNT == 1 )
       TIMING_FUNC(   Par_Aux_Record_ParticleCount(),  Timer_Main[4],   TIMER_ON   );
 #     endif
+      
+      TIMING_FUNC(   Aux_Record_Center(),             Timer_Main[4],   TIMER_ON   );
 
       TIMING_FUNC(   Aux_Check(),                     Timer_Main[4],   TIMER_ON   );
 //    ---------------------------------------------------------------------------------------------------

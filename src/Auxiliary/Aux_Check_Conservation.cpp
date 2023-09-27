@@ -295,15 +295,6 @@ void Aux_Check_Conservation( const char *comment )
 #  endif
 
 
-// compute the center of mass
-   const double CenterOfBox[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
-   const double CM_MaxR    = SQRT( SQR(amr->BoxSize[0]) + SQR(amr->BoxSize[1]) + SQR(amr->BoxSize[2]) ); // maximum radius for determining CM
-   double CenterOfMass[3];
-
-   // set an initial guess by the center of the box
-   Aux_FindCenterOfMass( CenterOfBox, CenterOfMass, CM_MaxR );
-
-
 // output
    if ( MPI_Rank == 0 )
    {
@@ -312,7 +303,6 @@ void Aux_Check_Conservation( const char *comment )
 #     ifdef MASSIVE_PARTICLES
       static double Mass_Par_Ref, MomX_Par_Ref, MomY_Par_Ref, MomZ_Par_Ref, Ekin_Par_Ref, Epot_Par_Ref, Etot_Par_Ref;
 #     endif
-      static double CenterOfMass_Ref[3];
       double AbsErr[NVar], RelErr[NVar];
 
       if ( FirstTime )
@@ -330,7 +320,6 @@ void Aux_Check_Conservation( const char *comment )
          Etot_Par_Ref = Etot_Par;
 #        endif
 
-         for (int d=0; d<3; d++)    CenterOfMass_Ref[d] = CenterOfMass[d];
 
 //       output header
          FILE *File = fopen( FileName, "a" );
@@ -378,7 +367,6 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "# Etot_All     : sum of the total HYDRO/ELBDM + PARTICLE energy\n" );
 #        endif // if ( MODEL != PAR_ONLY )
 #        endif // #ifdef MASSIVE_PARTICLES
-         Aux_Message( File, "# CoM_X/Y/Z    : center of mass (total density)\n" );
 
          Aux_Message( File, "\n" );
          Aux_Message( File, "# AErr         : absolute error --> (now - ref)\n" );
@@ -440,10 +428,6 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "  %14s  %14s  %14s", "Etot_All", "Etot_All_AErr", "Etot_All_RErr" );
 #        endif // if ( MODEL != PAR_ONLY )
 #        endif // #ifdef PARTICLE
-
-         Aux_Message( File, "  %14s  %14s  %14s", "CoM_X",    "CoM_X_AErr",    "CoM_X_RErr"    );
-         Aux_Message( File, "  %14s  %14s  %14s", "CoM_Y",    "CoM_Y_AErr",    "CoM_Y_RErr"    );
-         Aux_Message( File, "  %14s  %14s  %14s", "CoM_Z",    "CoM_Z_AErr",    "CoM_Z_RErr"    );
 
          Aux_Message( File, "\n" );
 
@@ -510,10 +494,6 @@ void Aux_Check_Conservation( const char *comment )
       Aux_Message( File, "  %14.7e  %14.7e  %14.7e", Etot_All, Etot_All-Etot_All_Ref, (Etot_All-Etot_All_Ref)/fabs(Etot_All_Ref) );
 #     endif // if ( MODEL != PAR_ONLY )
 #     endif // #ifdef MASSIVE_PARTICLES
-
-      Aux_Message( File, "  %14.7e  %14.7e  %14.7e", CenterOfMass[0], CenterOfMass[0]-CenterOfMass_Ref[0], (CenterOfMass[0]-CenterOfMass_Ref[0])/fabs(CenterOfMass_Ref[0])  );
-      Aux_Message( File, "  %14.7e  %14.7e  %14.7e", CenterOfMass[1], CenterOfMass[1]-CenterOfMass_Ref[1], (CenterOfMass[1]-CenterOfMass_Ref[1])/fabs(CenterOfMass_Ref[1])  );
-      Aux_Message( File, "  %14.7e  %14.7e  %14.7e", CenterOfMass[2], CenterOfMass[2]-CenterOfMass_Ref[2], (CenterOfMass[2]-CenterOfMass_Ref[2])/fabs(CenterOfMass_Ref[2])  );
 
       Aux_Message( File, "\n" );
 
