@@ -131,7 +131,7 @@ void Init_ResetParameter()
       PRINT_WARNING( DT__HYBRID_CFL, FORMAT_FLT, "" );
    } // if ( DT__HYBRID_CFL < 0.0 )
 
-   if ( DT__HYBRID_CFL < 0.0 )
+   if ( DT__HYBRID_CFL_INIT < 0.0 )
    {
       DT__HYBRID_CFL_INIT = DT__HYBRID_CFL;
       PRINT_WARNING( DT__HYBRID_CFL_INIT, FORMAT_FLT, "" );
