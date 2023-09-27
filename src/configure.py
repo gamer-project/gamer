@@ -26,7 +26,8 @@ GAMER_MAKE_BASE   = "Makefile_base"
 #GAMER_MAKE_OUT    = "Makefile"
 #GAMER_MAKE_OUT    = "Makefile_mixed_precision_strict_spock"
 #GAMER_MAKE_OUT    = "Makefile_mixed_precision_spock"
-GAMER_MAKE_OUT    = "Makefile_mixed_precision_libyt_spock"
+#GAMER_MAKE_OUT    = "Makefile_mixed_precision_libyt_spock"
+GAMER_MAKE_OUT    = "Makefile_mixed_precision_feedback_spock"
 GAMER_DESCRIPTION = "Prepare a customized Makefile for GAMER.\nDefault values are marked by '*'.\nUse -lh to show a detailed help message.\n"
 GAMER_EPILOG      = "2023 Computational Astrophysics Lab, NTU. All rights reserved.\n"
 
@@ -641,6 +642,9 @@ def set_conditional_defaults( args ):
 
     if args["bitwise_reproducibility"] == None:
         args["bitwise_reproducibility"] = True if args["debug"] else False
+
+    if args["double_par"] == None:
+      args["double_par"] = args["double"]
 
     if args["flux"] == None:
         args["flux"] = "HLLD" if args["mhd"] else "HLLC"
