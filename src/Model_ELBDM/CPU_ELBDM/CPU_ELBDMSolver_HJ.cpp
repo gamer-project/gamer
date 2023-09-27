@@ -123,7 +123,7 @@ static uint get1D2(uint k, uint j, uint i, int XYZ) {
 
 
 // use third-order Runge-Kutta scheme since it provides a good compromise between the required ghost zone (6 for the second-order spatial discretisation)
-// and the achievable time steps (close to finite-difference scheme) 
+// and the achievable time steps (close to finite-difference scheme)
 // lower-order Runge-Kutta methods suffer from small time steps (CFL condition < 0.01 for first-order and <= 0.05 for second-order methods according to empirical tests)
 #define ELBDM_HJ_RK_ORDER 3
 GPU_DEVICE_VARIABLE
@@ -140,12 +140,8 @@ const static double FLUX_COEFFS[ELBDM_HJ_RK_ORDER]                    = {1.0/6.0
 // density floor for computation of quantum pressure from input density
 // should be small so as to not affect the accuracy of the quantum pressure
 // must be positive and larger than machine precision to ensure that density close to machine precision
-// does not lead to nan in logarithm  
-#ifdef FLOAT8 
-#define QP_DENSITY_FLOOR 1e-13
-#else 
-#define QP_DENSITY_FLOOR 1e-6
-#endif 
+// does not lead to nan in logarithm
+#define QP_DENSITY_FLOOR TINY_NUMBER
 
 GPU_DEVICE
 static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NXT) ],
@@ -311,6 +307,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 #  pragma omp parallel
 #  endif
    {
+//    ###OPTIMIZATION: change the order of different dimensions to [N_TIME_LEVELS + 1][FLU_NIN][CGPU_FLU_BLOCK_SIZE_Y][HYB_NXT]
 //    create memories for columns of various intermediate fields on stack or shared GPU memory
       CGPU_SHARED real  s_In                 [CGPU_FLU_BLOCK_SIZE_Y][ELBDM_HJ_RK_ORDER + 1][FLU_NIN][HYB_NXT];
       CGPU_SHARED int   s_HasWaveCounterpart [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT];        // booleans indicating where to switch to first-order
@@ -513,7 +510,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 
 //             detect failure of fluid scheme
 //             if cell has wave counterpart and density is negative or there is nan, use second-order finite-difference forward-in-time discretisation of wave equation
-//             if cell does not have wave counterpart, unphysical field values are unexpected and should lead to the termination of the run 
+//             if cell does not have wave counterpart, unphysical field values are unexpected and should lead to the termination of the run
                if ( s_HasWaveCounterpart[sj][si] && (De_New < 0 || De_New != De_New || Ph_New != Ph_New || FABS(Ph_New - Ph_Old) > M_PI )) {
 //                   compute real and imaginary parts
                      const real Re_c       = SQRT(s_In[sj][0][DENS][si    ]) * COS(s_In[sj][0][PHAS][si    ]);
