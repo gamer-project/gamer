@@ -1882,6 +1882,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    LoadField( "Dt__Velocity",            &RS.Dt__Velocity,            SID, TID, NonFatal, &RT.Dt__Velocity,             1, NonFatal );
    LoadField( "Dt__Hybrid",              &RS.Dt__Hybrid,              SID, TID, NonFatal, &RT.Dt__Hybrid,               1, NonFatal );
+   LoadField( "Dt__HybridInit",          &RS.Dt__HybridInit,          SID, TID, NonFatal, &RT.Dt__HybridInit,               1, NonFatal );
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
 #  ifdef PARTICLE

@@ -421,6 +421,7 @@ struct InputPara_t
    double Dt__Phase;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    double Dt__Hybrid;
+   double Dt__HybridInit;
    double Dt__Velocity;
 #  endif //  # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
