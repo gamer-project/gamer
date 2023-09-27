@@ -155,9 +155,13 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
 #     if (ELBDM_SCHEME == ELBDM_HYBRID)
       } else { // if ( amr->use_wave_flag[lv] )
 
-      //Rescale density for subsampling
+/*********************************************************
+//    ###REVISE: support rescaling phase for subsampling
+/*********************************************************/
+
+//    rescale density for subsampling
       fluid[DENS]  *= SQR(_NSub3);
-      //    check minimum density (but keep phase fixed)
+//    check minimum density (but keep phase fixed)
       if ( fluid[DENS] < (real)MIN_DENS )
       {
          fluid[DENS]  = (real)MIN_DENS;
