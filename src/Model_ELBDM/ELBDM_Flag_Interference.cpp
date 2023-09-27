@@ -6,7 +6,9 @@
 // Function    :  ELBDM_Flag_Interference
 // Description :  Flag according to the interference criterion
 //
-// Note        :  1. Flag the input cell if either (minimum density + quantum pressure + local extremum in density field or second derivative in phase + local extremum in phase field) are met
+// Note        :  1. Flag the input cell if on of the following criteria is met:
+//                   - minimum density + quantum pressure + local extremum in density field
+//                   - second derivative in phase + local extremum in phase field
 //                2. Size of the input array "Var" should be 2*(PS1+2)^3
 //
 // Parameter   :  i,j,k             : Indices of the target cell in the array "Var1D"
@@ -37,12 +39,12 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
 #  endif
 
    const int NGhost = 1;
-   const int NCell  = PS1 + 2 * NGhost;   // size of the array Var
+   const int NCell  = PS1 + 2 * NGhost; // size of the array Var
 
    int ii, jj, kk, iim, jjm, kkm, iip, jjp, kkp;
 
 // convert the 1D array
-   real (*Var)  [NCell][NCell][NCell] = ( real(*) [NCell][NCell][NCell] )  Var1D;
+   real (*Var)[NCell][NCell][NCell] = ( real(*)[NCell][NCell][NCell] )  Var1D;
 
    kk = k + NGhost;   kkp = kk + 1;   kkm = kk - 1;
    jj = j + NGhost;   jjp = jj + 1;   jjm = jj - 1;
@@ -52,23 +54,23 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
    const bool DensCond = Var[0][kk][jj][ii] > DensThreshold;
 
 // check whether density and phase fields have local extrema
-   const bool DChangeSignX = ( !OnlyAtExtrema ) || (( Var[0][kk ][jj ][iip] - Var[0][kk][jj][ii] ) * ( Var[0][kk][jj][ii] - Var[0][kk ][jj ][iim] ) < 0.0);
-   const bool DChangeSignY = ( !OnlyAtExtrema ) || (( Var[0][kk ][jjp][ii ] - Var[0][kk][jj][ii] ) * ( Var[0][kk][jj][ii] - Var[0][kk ][jjm][ii ] ) < 0.0);
-   const bool DChangeSignZ = ( !OnlyAtExtrema ) || (( Var[0][kkp][jj ][ii ] - Var[0][kk][jj][ii] ) * ( Var[0][kk][jj][ii] - Var[0][kkm][jj ][ii ] ) < 0.0);
-   const bool SChangeSignX = ( !OnlyAtExtrema ) || (( Var[1][kk ][jj ][iip] - Var[1][kk][jj][ii] ) * ( Var[1][kk][jj][ii] - Var[1][kk ][jj ][iim] ) < 0.0);
-   const bool SChangeSignY = ( !OnlyAtExtrema ) || (( Var[1][kk ][jjp][ii ] - Var[1][kk][jj][ii] ) * ( Var[1][kk][jj][ii] - Var[1][kk ][jjm][ii ] ) < 0.0);
-   const bool SChangeSignZ = ( !OnlyAtExtrema ) || (( Var[1][kkp][jj ][ii ] - Var[1][kk][jj][ii] ) * ( Var[1][kk][jj][ii] - Var[1][kkm][jj ][ii ] ) < 0.0);
+   const bool DensChangeSignX  = ( !OnlyAtExtrema ) || (( Var[0][kk ][jj ][iip] - Var[0][kk][jj][ii] ) * ( Var[0][kk][jj][ii] - Var[0][kk ][jj ][iim] ) < 0.0 );
+   const bool DensChangeSignY  = ( !OnlyAtExtrema ) || (( Var[0][kk ][jjp][ii ] - Var[0][kk][jj][ii] ) * ( Var[0][kk][jj][ii] - Var[0][kk ][jjm][ii ] ) < 0.0 );
+   const bool DensChangeSignZ  = ( !OnlyAtExtrema ) || (( Var[0][kkp][jj ][ii ] - Var[0][kk][jj][ii] ) * ( Var[0][kk][jj][ii] - Var[0][kkm][jj ][ii ] ) < 0.0 );
+   const bool PhaseChangeSignX = ( !OnlyAtExtrema ) || (( Var[1][kk ][jj ][iip] - Var[1][kk][jj][ii] ) * ( Var[1][kk][jj][ii] - Var[1][kk ][jj ][iim] ) < 0.0 );
+   const bool PhaseChangeSignY = ( !OnlyAtExtrema ) || (( Var[1][kk ][jjp][ii ] - Var[1][kk][jj][ii] ) * ( Var[1][kk][jj][ii] - Var[1][kk ][jjm][ii ] ) < 0.0 );
+   const bool PhaseChangeSignZ = ( !OnlyAtExtrema ) || (( Var[1][kkp][jj ][ii ] - Var[1][kk][jj][ii] ) * ( Var[1][kk][jj][ii] - Var[1][kkm][jj ][ii ] ) < 0.0 );
 
    const real SqrtRhoC = SQRT(Var[0][kk][jj][ii]);
 
 // compute second derivative of phase field
-   const bool LapPhaseX = SChangeSignX && ( FABS( Var[1][kk ][jj ][iip] - 2 * Var[1][kk][jj][ii] + Var[1][kk ][jj ][iim] ) > LapPhaseThreshold );
-   const bool LapPhaseY = SChangeSignY && ( FABS( Var[1][kk ][jjp][ii ] - 2 * Var[1][kk][jj][ii] + Var[1][kk ][jjm][ii ] ) > LapPhaseThreshold );
-   const bool LapPhaseZ = SChangeSignZ && ( FABS( Var[1][kkp][jj ][ii ] - 2 * Var[1][kk][jj][ii] + Var[1][kkm][jj ][ii ] ) > LapPhaseThreshold );
+   const bool LapPhaseX = PhaseChangeSignX && ( FABS( Var[1][kk ][jj ][iip] - 2 * Var[1][kk][jj][ii] + Var[1][kk ][jj ][iim] ) > LapPhaseThreshold );
+   const bool LapPhaseY = PhaseChangeSignY && ( FABS( Var[1][kk ][jjp][ii ] - 2 * Var[1][kk][jj][ii] + Var[1][kk ][jjm][ii ] ) > LapPhaseThreshold );
+   const bool LapPhaseZ = PhaseChangeSignZ && ( FABS( Var[1][kkp][jj ][ii ] - 2 * Var[1][kk][jj][ii] + Var[1][kkm][jj ][ii ] ) > LapPhaseThreshold );
 // compute quantum pressure
-   const bool QPX = DensCond && DChangeSignX && (FABS( SQRT(Var[0][kk ][jj ][iip]) - 2 * SqrtRhoC + SQRT(Var[0][kk ][jj ][iim]) ) / SqrtRhoC > QPThreshold );
-   const bool QPY = DensCond && DChangeSignY && (FABS( SQRT(Var[0][kk ][jjp][ii ]) - 2 * SqrtRhoC + SQRT(Var[0][kk ][jjm][ii ]) ) / SqrtRhoC > QPThreshold );
-   const bool QPZ = DensCond && DChangeSignZ && (FABS( SQRT(Var[0][kkp][jj ][ii ]) - 2 * SqrtRhoC + SQRT(Var[0][kkm][jj ][ii ]) ) / SqrtRhoC > QPThreshold );
+   const bool QPX = DensCond && DensChangeSignX && ( FABS( SQRT(Var[0][kk ][jj ][iip]) - 2 * SqrtRhoC + SQRT(Var[0][kk ][jj ][iim]) ) / SqrtRhoC > QPThreshold );
+   const bool QPY = DensCond && DensChangeSignY && ( FABS( SQRT(Var[0][kk ][jjp][ii ]) - 2 * SqrtRhoC + SQRT(Var[0][kk ][jjm][ii ]) ) / SqrtRhoC > QPThreshold );
+   const bool QPZ = DensCond && DensChangeSignZ && ( FABS( SQRT(Var[0][kkp][jj ][ii ]) - 2 * SqrtRhoC + SQRT(Var[0][kkm][jj ][ii ]) ) / SqrtRhoC > QPThreshold );
 
    return QPX || QPY || QPZ || LapPhaseX || LapPhaseY || LapPhaseZ;
 } // FUNCTION : ELBDM_Flag_Interference
