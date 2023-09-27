@@ -490,10 +490,6 @@ void Aux_Check_Parameter()
 #     error : ERROR : currently GAMER only supports "LOAD_BALANCE == HILBERT" !!
 #  endif
 
-// for sending fluid data fixed by coarse-fine fluxes correctly
-   if ( OPT__FIXUP_FLUX  &&  Flu_ParaBuf > PATCH_SIZE )
-      Aux_Error( ERROR_INFO, "\"%s\" is required for \"%s\" in LOAD_BALANCE --> check LB_RecordExchangeFixUpDataPatchID() !!\n",
-                 "Flu_ParaBuf <= PATCH_SIZE", "OPT__FIXUP_FLUX" );
 
 // ensure that the variable "PaddedCr1D" will not overflow
    const int Padded              = 1<<NLEVEL;
@@ -1134,14 +1130,23 @@ void Aux_Check_Parameter()
 // bitwise reproducibility currently fails in hybrid scheme because of conversion from RE/IM to DENS/PHAS when storing fields in HDF5
 // possible solution could be to convert RE/IM <-> DENS/PHAS using high-precision routines to ensure bitwise identity for significant digits
 #  ifdef BITWISE_REPRODUCIBILITY
-      Aux_Message( stderr, "WARNING : BITWISE_REPRODUCIBILITY currently for ELBDM_SCHEME == ELBDM_HYBRID !!\n" );
+      Aux_Message( stderr, "WARNING : BITWISE_REPRODUCIBILITY currently unsupported for ELBDM_SCHEME == ELBDM_HYBRID !!\n" );
 #  endif
 
    if ( ELBDM_BASE_SPECTRAL )
       Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL incompatible with ELBDM_SCHEME == ELBDM_HYBRID !!\n" );
 
-   if ( MAX_LEVEL > 0 && FLAG_BUFFER_SIZE != PATCH_SIZE )
-      Aux_Error(  ERROR_INFO, "ELBDM_HYBRID with AMR requires that the flag buffer size equal the patch size!!\n");
+   const int ELBDM_LAST_FLUID_LEVEL = ELBDM_FIRST_WAVE_LEVEL - 1; 
+
+// for stability of hybrid scheme with wave levels, all fluid levels require that the flag buffer >= PATCH_SIZE 
+   if ( MAX_LEVEL > 0 && ELBDM_FIRST_WAVE_LEVEL <= MAX_LEVEL && (FLAG_BUFFER_SIZE < PATCH_SIZE ) )
+      Aux_Error(  ERROR_INFO, "ELBDM_HYBRID with AMR requires that the FLAG_BUFFER_SIZE size is equal or greater than patch size on fluid levels!!\n");
+
+   if ( MAX_LEVEL > 0 && ELBDM_LAST_FLUID_LEVEL >= (MAX_LEVEL - 1) && FLAG_BUFFER_SIZE_MAXM1_LV < PATCH_SIZE )
+      Aux_Error(  ERROR_INFO, "ELBDM_HYBRID with AMR requires that the FLAG_BUFFER_SIZE_MAXM1_LV size is equal or greater than patch size on fluid levels!!\n");
+
+   if ( MAX_LEVEL > 1 && ELBDM_LAST_FLUID_LEVEL >= (MAX_LEVEL - 2) && FLAG_BUFFER_SIZE_MAXM2_LV < PATCH_SIZE )
+      Aux_Error(  ERROR_INFO, "ELBDM_HYBRID with AMR requires that the FLAG_BUFFER_SIZE_MAXM2_LV size is equal or greater than patch size on fluid levels!!\n");
 
    if ( MAX_LEVEL > 0 && !OPT__FIXUP_RESTRICT )
       Aux_Error(  ERROR_INFO, "ELBDM_HYBRID with AMR requires the option OPT__FIXUP_RESTRICT !!\n");
