@@ -139,28 +139,28 @@ void SetParameter()
 
 
 // (3) reset other general-purpose parameters
-//     --> a helper macro PRINT_WARNING is defined in TestProb.h
+//     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const long   End_Step_Default = 0;
    const double End_T_Default    = 0.0;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
-      PRINT_WARNING( "END_STEP", END_STEP, FORMAT_LONG );
+      PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
    if ( END_T < 0.0 ) {
       END_T = End_T_Default;
-      PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
+      PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
 
    if ( Gra_NIterPerf > 0  &&  !OPT__RECORD_USER ) {
       OPT__RECORD_USER = true;
-      PRINT_WARNING( "OPT__RECORD_USER", OPT__RECORD_USER, FORMAT_BOOL );
+      PRINT_RESET_PARA( OPT__RECORD_USER, FORMAT_BOOL, "" );
    }
 
    else if ( Gra_NIterPerf == 0  &&  OPT__RECORD_USER ) {
       OPT__RECORD_USER = false;
-      PRINT_WARNING( "OPT__RECORD_USER", OPT__RECORD_USER, FORMAT_BOOL );
+      PRINT_RESET_PARA( OPT__RECORD_USER, FORMAT_BOOL, "" );
    }
 
 
