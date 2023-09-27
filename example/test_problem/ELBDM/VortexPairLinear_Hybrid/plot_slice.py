@@ -36,21 +36,20 @@ idx_end    = args.idx_end
 didx       = args.didx
 prefix     = args.prefix
 
-colormap    = 'arbre'
-center_mode = 'c'
+colormap    = 'viridis'
 dpi         = 150
 
 yt.enable_parallelism()
 
-   
+
 for idx in range(idx_start, idx_end+1, didx):
           ds = yt.load("Data_%06d"%idx)# ds = yt.load('t_%06d'%idx)
           ds.force_periodicity()
-          
+
           axes = ["z"]
 
           for myax in axes:
-                     fig = plt.figure(dpi = 120, figsize=(24, 12))
+                     fig = plt.figure(dpi = dpi, figsize=(24, 12))
 
                      # See http://matplotlib.org/mpl_toolkits/axes_grid/api/axes_grid_api.html
                      # These choices of keyword arguments produce a four panel plot that includes
@@ -76,14 +75,14 @@ for idx in range(idx_start, idx_end+1, didx):
                           ("gas", "density"),
                           ("gamer", "Phase"),
                          ]
-                     
+
 
                      pz = yt.SlicePlot( ds, myax, fields)
                      pz.set_log(("gamer", "Phase"), False)
 
                      pz.annotate_grids( periodic=False )
 
-                     pz.set_cmap( fields, "viridis" )
+                     pz.set_cmap( fields, colormap )
 
                      # For each plotted field, force the SlicePlot to redraw itself onto the AxesGrid
                      # axes.
@@ -95,7 +94,7 @@ for idx in range(idx_start, idx_end+1, didx):
 
                      pz2 = yt.SlicePlot( ds, myax, fields)
                      pz2.set_log(("gamer", "Phase"), False)
-                     pz2.set_cmap( fields, "viridis" )
+                     pz2.set_cmap( fields, colormap )
                      # For each plotted field, force the SlicePlot to redraw itself onto the AxesGrid
                      # axes.
                      for i, field in enumerate(fields):
