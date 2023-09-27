@@ -1,10 +1,12 @@
 import argparse
 import sys
 import yt
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-
 from mpl_toolkits.axes_grid1 import AxesGrid
+
+matplotlib.use('Agg')
 
 # load the command-line parameters
 parser = argparse.ArgumentParser( description='Plot slices of wave function for the ELBDM test' )

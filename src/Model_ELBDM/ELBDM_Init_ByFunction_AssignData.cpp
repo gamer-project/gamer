@@ -155,9 +155,9 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
 #     if (ELBDM_SCHEME == ELBDM_HYBRID)
       } else { // if ( amr->use_wave_flag[lv] )
 
-/*********************************************************
+//*********************************************************
 //    ###REVISE: support rescaling phase for subsampling
-/*********************************************************/
+//*********************************************************
 
 //    rescale density for subsampling
       fluid[DENS]  *= SQR(_NSub3);
