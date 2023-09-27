@@ -3,7 +3,6 @@
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 static real GetMaxVelocity( const int lv, const bool ExcludeWaveCells);
-static void GetMaxLevel(patch_t *patch, int lv, int& maxlv);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_GetTimeStep_Hybrid_Velocity
@@ -25,7 +24,7 @@ double ELBDM_GetTimeStep_Hybrid_Velocity( const int lv )
 {
    const bool ExcludeWaveCells = true;
 
-// get the velocity dS/dx as first derivative of phase
+// get the velocity dS/dx * hbar/m as first derivative of phase
    const real MaxV  = GetMaxVelocity( lv, ExcludeWaveCells);
 
 // get the time-step
@@ -40,18 +39,19 @@ double ELBDM_GetTimeStep_Hybrid_Velocity( const int lv )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  GetMaxVelocity
-// Description :  Evaluate the maximum first spatial derivative of phase for the time-step estimation
+// Description :  Evaluate the maximum first spatial derivative of phase for the time step estimation
 //
 // Note        :  1. Invoked by ELBDM_GetTimeStep_Hybrid_Velocity()
 //
-// Parameter   :  lv : Target refinement level
+// Parameter   :  lv               : Target refinement level
+//                ExcludeWaveCells : Do not include cells with refined wave counterpart in time step estimation if set to True
 //
 // Return      :  Maximum velocity across all ranks
 //-------------------------------------------------------------------------------------------------------
 real GetMaxVelocity( const int lv, const bool ExcludeWaveCells )
 {
-   // Maximum velocity for calculation of time step zero for wave patches
-   // since we are only concerned with a velocity dependent time step criterion for the fluid solver
+   // Maximum velocity for calculation of time step is zero for wave patches
+   // since we are only concerned with a velocity-dependent time step criterion for the fluid solver
    if ( amr->use_wave_flag[lv] )
       return 0;
 
@@ -65,8 +65,8 @@ real GetMaxVelocity( const int lv, const bool ExcludeWaveCells )
    const int  NGhost            = 1;               // number of ghost zones to calculate V
    const int  Size_Flu          = PS2 + 2*NGhost;  // size of the array Flu_Array
    const int  NPG               = 1;               // number of patch groups (must be ONE here)
-   const int  NCOMP1            = 1;               // we only need to retrieve phase for velocity criterion
-   real (*Flu_Array)[NCOMP1][Size_Flu][Size_Flu][Size_Flu] = NULL;
+   const int  NComp1            = 1;               // we only need to retrieve phase for velocity criterion
+   real (*Flu_Array)[NComp1][Size_Flu][Size_Flu][Size_Flu] = NULL;
 
    real V, MaxV, _dh, _dh2, GradS[3];
    int im, ip, jm, jp, km, kp, I, J, K;
@@ -81,7 +81,7 @@ real GetMaxVelocity( const int lv, const bool ExcludeWaveCells )
 #  pragma omp parallel private( Flu_Array, V, GradS, \
                                 im, ip, jm, jp, km, kp, I, J, K)
    {
-      Flu_Array = new real [NPG][NCOMP1][Size_Flu][Size_Flu][Size_Flu];
+      Flu_Array = new real [NPG][NComp1][Size_Flu][Size_Flu][Size_Flu];
 
 //    loop over all patches
 #     pragma omp for reduction( max:MaxV ) schedule( runtime )
