@@ -37,14 +37,14 @@ void Init_Set_Default_SOR_Parameter()
    {
       SOR_MAX_ITER = Default_MaxIter;
 
-      PRINT_RESER_PARA( SOR_MAX_ITER, FORMAT_INT, "" );
+      PRINT_RESET_PARA( SOR_MAX_ITER, FORMAT_INT, "" );
    }
 
    if ( SOR_MIN_ITER < 0 )
    {
       SOR_MIN_ITER = Default_MinIter;
 
-      PRINT_RESER_PARA( SOR_MIN_ITER, FORMAT_INT, "" );
+      PRINT_RESET_PARA( SOR_MIN_ITER, FORMAT_INT, "" );
    }
 
 } // FUNCTION : Init_Set_Default_SOR_Parameter
