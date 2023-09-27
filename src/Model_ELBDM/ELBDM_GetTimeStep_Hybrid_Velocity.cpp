@@ -2,14 +2,14 @@
 
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
-static real GetMaxVelocity( const int lv, bool ExcludeWaveCells);
+static real GetMaxVelocity( const int lv, const bool ExcludeWaveCells);
 static void GetMaxLevel(patch_t *patch, int lv, int& maxlv);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_GetTimeStep_Hybrid_Velocity
-// Description :  Estimate the evolution time-step by via the CFL condition from the Hamilton-Jacobi equation
+// Description :  Estimate the evolution time-step via the CFL condition from the Hamilton-Jacobi equation
 //
-// Note        :  1. This function should be applied to both physical and comoving Coordinates and always
+// Note        :  1. This function should be applied to both physical and comoving coordinates and always
 //                   return the evolution time-step (dt) actually used in various solvers
 //                   --> Physical Coordinates : dt = physical time interval
 //                       Comoving Coordinates : dt = delta(scale_factor) / ( Hubble_parameter*scale_factor^3 )
@@ -25,11 +25,11 @@ double ELBDM_GetTimeStep_Hybrid_Velocity( const int lv )
 {
    const bool ExcludeWaveCells = true;
 
-// get the velocity dS/dx / dx as first derivative of phase
-   const real MaxdS_dx     = GetMaxVelocity( lv, ExcludeWaveCells) + 1e-8;
+// get the velocity dS/dx as first derivative of phase
+   const real MaxV  = GetMaxVelocity( lv, ExcludeWaveCells);
 
 // get the time-step
-   const double dt  = 1.0 / MaxdS_dx * 0.5 * ELBDM_ETA * DT__HYBRID_VELOCITY;
+   const double dt  = 0.5 * amr->dh[lv] / MaxV * DT__HYBRID_VELOCITY;
 
    return dt;
 
@@ -46,9 +46,9 @@ double ELBDM_GetTimeStep_Hybrid_Velocity( const int lv )
 //
 // Parameter   :  lv : Target refinement level
 //
-// Return      :  MaxdS_dx
+// Return      :  Maximum velocity across all ranks
 //-------------------------------------------------------------------------------------------------------
-real GetMaxVelocity( const int lv, bool ExcludeWaveCells )
+real GetMaxVelocity( const int lv, const bool ExcludeWaveCells )
 {
    // Maximum velocity for calculation of time step zero for wave patches
    // since we are only concerned with a velocity dependent time step criterion for the fluid solver
@@ -62,29 +62,29 @@ real GetMaxVelocity( const int lv, bool ExcludeWaveCells )
    const real MinPres_No        = -1.0;
    const real MinTemp_No        = -1.0;
    const real MinEntr_No        = -1.0;
-   const int  NGhost            = 1;               // number of ghost zones to calculate dS_dx
+   const int  NGhost            = 1;               // number of ghost zones to calculate V
    const int  Size_Flu          = PS2 + 2*NGhost;  // size of the array Flu_Array
    const int  NPG               = 1;               // number of patch groups (must be ONE here)
    const int  NCOMP1            = 1;               // we only need to retrieve phase for velocity criterion
    real (*Flu_Array)[NCOMP1][Size_Flu][Size_Flu][Size_Flu] = NULL;
 
-   real dS_dx, MaxdS_dx, _dh, _dh2, GradS[3];
+   real V, MaxV, _dh, _dh2, GradS[3];
    int im, ip, jm, jp, km, kp, I, J, K;
 
-   MaxdS_dx = 0.0;
+   MaxV = 0.0;
    _dh      = (real)1.0/amr->dh[lv];
    _dh2     = (real)0.5*_dh;
 
 // construct global tree structure
    LB_GlobalTree GlobalTree;
 
-#  pragma omp parallel private( Flu_Array, dS_dx, GradS, \
+#  pragma omp parallel private( Flu_Array, V, GradS, \
                                 im, ip, jm, jp, km, kp, I, J, K)
    {
       Flu_Array = new real [NPG][NCOMP1][Size_Flu][Size_Flu][Size_Flu];
 
 //    loop over all patches
-#     pragma omp for reduction( max:MaxdS_dx ) schedule( runtime )
+#     pragma omp for reduction( max:MaxV ) schedule( runtime )
       for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=NPG*8)
       {
 
@@ -120,8 +120,8 @@ real GetMaxVelocity( const int lv, bool ExcludeWaveCells )
                GradS[1]   = _dh2 * ( Flu_Array[0][0][k ][jp][i ] - Flu_Array[0][0][k ][jm][i ] );
                GradS[2]   = _dh2 * ( Flu_Array[0][0][kp][j ][i ] - Flu_Array[0][0][km][j ][i ] );
 
-               dS_dx      = _dh * (FABS(GradS[0]) + FABS(GradS[1]) + FABS(GradS[2]));
-               MaxdS_dx   = MAX( MaxdS_dx, dS_dx );
+               V    = FABS(GradS[0]) + FABS(GradS[1]) + FABS(GradS[2]);
+               MaxV = MAX( MaxV, V );
 
             }
 
@@ -132,20 +132,20 @@ real GetMaxVelocity( const int lv, bool ExcludeWaveCells )
    } // OpenMP parallel region
 
 // get the maximum potential in all ranks
-   real MaxdS_dx_AllRank;
+   real MaxV_AllRank;
 #  ifdef FLOAT8
-   MPI_Allreduce( &MaxdS_dx, &MaxdS_dx_AllRank, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
+   MPI_Allreduce( &MaxV, &MaxV_AllRank, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
 #  else
-   MPI_Allreduce( &MaxdS_dx, &MaxdS_dx_AllRank, 1, MPI_FLOAT,  MPI_MAX, MPI_COMM_WORLD );
+   MPI_Allreduce( &MaxV, &MaxV_AllRank, 1, MPI_FLOAT,  MPI_MAX, MPI_COMM_WORLD );
 #  endif
 
 
 // check
-   if ( MaxdS_dx_AllRank == 0.0  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MaxdS_dx == 0.0 at lv %d !!\n", lv );
+   if ( MaxV_AllRank == 0.0  &&  MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : MaxV == 0.0 at lv %d !!\n", lv );
 
 
-   return MaxdS_dx_AllRank;
+   return MaxV_AllRank / ELBDM_ETA;
 
 } // FUNCTION : GetMaxVelocity
 
