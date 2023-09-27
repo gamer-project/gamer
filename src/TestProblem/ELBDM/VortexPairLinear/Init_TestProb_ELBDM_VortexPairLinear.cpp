@@ -10,13 +10,13 @@ static double VorPairLin_WaveAmp;
 static double VorPairLin_Phase0;
 
 
-static int    VorPairLin_kx;
-static int    VorPairLin_ky;
+static double VorPairLin_kx;
+static double VorPairLin_ky;
 static double VorPairLin_Omega;
 
 // optional:
 static double VorPairLin_ZWaveAmp; // psi(x, y, z) = psi_vorpair(x,y) + ZWaveAmp * exp( i*(kz*z-ZWaveOmega*t) )
-static int    VorPairLin_kz;
+static double VorPairLin_kz;
 static double VorPairLin_ZWaveOmega;
 // =======================================================================================
 
@@ -98,10 +98,6 @@ void SetParameter()
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-   int VorPairLin_kx_int;
-   int VorPairLin_ky_int;
-   int VorPairLin_kz_int;
-
 // (1-1) add parameters in the following format:
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
@@ -112,9 +108,9 @@ void SetParameter()
    ReadPara->Add( "VorPairLin_WaveAmp",   &VorPairLin_WaveAmp,    -1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "VorPairLin_ZWaveAmp",  &VorPairLin_ZWaveAmp,    0.0,           0.0,              NoMax_double      );
    ReadPara->Add( "VorPairLin_Phase0",    &VorPairLin_Phase0,      0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "VorPairLin_kx",        &VorPairLin_kx_int,        1,             1,                NoMax_int         );
-   ReadPara->Add( "VorPairLin_ky",        &VorPairLin_ky_int,        1,             1,                NoMax_int         );
-   ReadPara->Add( "VorPairLin_kz",        &VorPairLin_kz_int,        1,             1,                NoMax_int         );
+   ReadPara->Add( "VorPairLin_kx",        &VorPairLin_kx,          1.0,           1.0,              NoMax_double      );
+   ReadPara->Add( "VorPairLin_ky",        &VorPairLin_ky,          1.0,           1.0,              NoMax_double      );
+   ReadPara->Add( "VorPairLin_kz",        &VorPairLin_kz,          1.0,           1.0,              NoMax_double      );
 
    ReadPara->Read( FileName );
 
@@ -126,9 +122,9 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
-   VorPairLin_kx         = VorPairLin_kx_int * 2.0*M_PI/amr->BoxSize[0];   // by default we set wavelength equal to multiples of the box size
-   VorPairLin_ky         = VorPairLin_ky_int * 2.0*M_PI/amr->BoxSize[1];
-   VorPairLin_kz         = VorPairLin_kz_int * 2.0*M_PI/amr->BoxSize[2];
+   VorPairLin_kx        *= 2.0*M_PI/amr->BoxSize[0];   // by default we set wavelength equal to multiples of the box size
+   VorPairLin_ky        *= 2.0*M_PI/amr->BoxSize[1];
+   VorPairLin_kz        *= 2.0*M_PI/amr->BoxSize[2];
    VorPairLin_Omega      = 0.5/ELBDM_ETA*( SQR(VorPairLin_kx) + SQR(VorPairLin_ky) );
    VorPairLin_ZWaveOmega = 0.5/ELBDM_ETA*  SQR(VorPairLin_kz);
 
@@ -162,9 +158,9 @@ void SetParameter()
       Aux_Message( stdout, "  VorPairLin_WaveAmp    = %13.7e\n", VorPairLin_WaveAmp    );
       Aux_Message( stdout, "  VorPairLin_Phase0     = %13.7e\n", VorPairLin_Phase0     );
       Aux_Message( stdout, "  VorPairLin_ZWaveAmp   = %13.7e\n", VorPairLin_ZWaveAmp   );
-      Aux_Message( stdout, "  VorPairLin_kx         = %d\n",     VorPairLin_kx_int     );
-      Aux_Message( stdout, "  VorPairLin_ky         = %d\n",     VorPairLin_ky_int     );
-      Aux_Message( stdout, "  VorPairLin_kz         = %d\n",     VorPairLin_kz_int     );
+      Aux_Message( stdout, "  VorPairLin_kx         = %13.7e\n", VorPairLin_kx         );
+      Aux_Message( stdout, "  VorPairLin_ky         = %13.7e\n", VorPairLin_ky         );
+      Aux_Message( stdout, "  VorPairLin_kz         = %13.7e\n", VorPairLin_kz         );
       Aux_Message( stdout, "  VorPairLin_Omega      = %13.7e\n", VorPairLin_Omega      );
       Aux_Message( stdout, "  VorPairLin_ZWaveOmega = %13.7e\n", VorPairLin_ZWaveOmega );
       Aux_Message( stdout, "=============================================================================\n" );
