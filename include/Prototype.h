@@ -560,8 +560,8 @@ double ELBDM_GetTimeStep_Fluid( const int lv );
 double ELBDM_GetTimeStep_Gravity( const int lv );
 double ELBDM_GetTimeStep_Phase( const int lv );
 #if   ( ELBDM_SCHEME == ELBDM_HYBRID )
-double ELBDM_GetTimeStep_Hybrid( const int lv );        // for CFL condition of SPS in phase form
-double ELBDM_GetTimeStep_Velocity( const int lv );      // for velocity dependence of Hamilton-Jacobi equation
+double ELBDM_GetTimeStep_Hybrid_CFL( const int lv );        // for CFL condition of SPS in phase form
+double ELBDM_GetTimeStep_Hybrid_Velocity( const int lv );      // for velocity dependence of Hamilton-Jacobi equation
 bool   ELBDM_HasWaveCounterpart( const int I, const int J, const int K, const long GID0, const long GID, const LB_GlobalTree& GlobalTree);
 #endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 

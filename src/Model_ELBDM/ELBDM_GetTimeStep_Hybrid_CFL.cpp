@@ -4,7 +4,7 @@
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  ELBDM_GetTimeStep_Hybrid
+// Function    :  ELBDM_GetTimeStep_Hybrid_CFL
 // Description :  Estimate the evolution time-step from the CFL condition of the Hamilton-Jacobi solver
 //
 // Note        :  1. This function should be applied to both physical and comoving coordinates and always
@@ -20,7 +20,7 @@
 //
 // Return      :  dt
 //-------------------------------------------------------------------------------------------------------
-double ELBDM_GetTimeStep_Hybrid( const int lv )
+double ELBDM_GetTimeStep_Hybrid_CFL( const int lv )
 {
 
    const double dh = amr->dh[lv];
@@ -32,7 +32,7 @@ double ELBDM_GetTimeStep_Hybrid( const int lv )
 
    return dt;
 
-} // FUNCTION : ELBDM_GetTimeStep_Hybrid
+} // FUNCTION : ELBDM_GetTimeStep_Hybrid_CFL
 
 
 

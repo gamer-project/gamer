@@ -79,7 +79,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    if ( amr->use_wave_flag[lv] ) {
       dTime[NdTime] = HUGE_NUMBER;
    } else { // if ( amr->use_wave_flag[lv] )
-      dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Hybrid( lv );
+      dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Hybrid_CFL( lv );
    } // if ( amr->use_wave_flag[lv] ) ... else
    sprintf( dTime_Name[NdTime++], "%s", "Hybrid_CFL" );
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID ) ... else
@@ -224,7 +224,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    if ( amr->use_wave_flag[lv] ) {
       dTime[NdTime] = HUGE_NUMBER;
    } else { // if ( amr->use_wave_flag[lv] )
-      dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Velocity( lv );
+      dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Hybrid_Velocity( lv );
    } // if ( amr->use_wave_flag[lv] ) ... else
 
    sprintf( dTime_Name[NdTime++], "%s", "Hybrid_Velocity" );

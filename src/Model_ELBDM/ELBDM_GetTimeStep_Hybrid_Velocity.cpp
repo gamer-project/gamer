@@ -6,7 +6,7 @@ static real GetMaxVelocity( const int lv, bool ExcludeWaveCells);
 static void GetMaxLevel(patch_t *patch, int lv, int& maxlv);
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  ELBDM_GetTimeStep_Velocity
+// Function    :  ELBDM_GetTimeStep_Hybrid_Velocity
 // Description :  Estimate the evolution time-step by via the CFL condition from the Hamilton-Jacobi equation
 //
 // Note        :  1. This function should be applied to both physical and comoving Coordinates and always
@@ -21,7 +21,7 @@ static void GetMaxLevel(patch_t *patch, int lv, int& maxlv);
 //
 // Return      :  dt
 //-------------------------------------------------------------------------------------------------------
-double ELBDM_GetTimeStep_Velocity( const int lv )
+double ELBDM_GetTimeStep_Hybrid_Velocity( const int lv )
 {
    const bool ExcludeWaveCells = true;
 
@@ -33,7 +33,7 @@ double ELBDM_GetTimeStep_Velocity( const int lv )
 
    return dt;
 
-} // FUNCTION : ELBDM_GetTimeStep_Velocity
+} // FUNCTION : ELBDM_GetTimeStep_Hybrid_Velocity
 
 
 
@@ -42,7 +42,7 @@ double ELBDM_GetTimeStep_Velocity( const int lv )
 // Function    :  GetMaxVelocity
 // Description :  Evaluate the maximum first spatial derivative of phase for the time-step estimation
 //
-// Note        :  1. Invoked by ELBDM_GetTimeStep_Velocity()
+// Note        :  1. Invoked by ELBDM_GetTimeStep_Hybrid_Velocity()
 //
 // Parameter   :  lv : Target refinement level
 //
