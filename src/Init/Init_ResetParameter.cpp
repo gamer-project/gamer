@@ -1016,7 +1016,7 @@ void Init_ResetParameter()
 #  endif
 
 
-// must set OPT__FFTW_STARTUP = FFTW_STARTUP_ESTIMATE for BITWISE_REPRODUCIBILITY 
+// must set OPT__FFTW_STARTUP = FFTW_STARTUP_ESTIMATE for BITWISE_REPRODUCIBILITY
 // --> even when disabling BITWISE_REPRODUCIBILITY, we still use FFTW_STARTUP_ESTIMATE
 //     by default since otherwise the FFT results can vary in each run on the level
 //     of machine precision, which can be confusing
@@ -1033,12 +1033,6 @@ void Init_ResetParameter()
 #     endif
    }
 #  endif
-
-
-// remove symbolic constants and macros only used in this structure
-#  undef FORMAT_INT
-#  undef FORMAT_FLT
-#  undef QUOTE
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
