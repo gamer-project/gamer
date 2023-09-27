@@ -38,7 +38,7 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
       Aux_Error( ERROR_INFO, "incorrect index (i,j,k) = (%d,%d,%d) !!\n", i, j, k );
 #  endif
 
-   const int NGhost = 1
+   const int NGhost = 1;
    const int NCell  = PS1 + 2 * NGhost;   // size of the array Var
 
    int ii, jj, kk, iim, jjm, kkm, iip, jjp, kkp;
