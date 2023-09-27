@@ -380,8 +380,8 @@ void Init_ExtAccPot();
 void End_ExtAccPot();
 void Init_LoadExtPotTable();
 void Init_MemAllocate_PoissonGravity( const int Pot_NPatchGroup );
-void Init_Set_Default_MG_Parameter( int &Max_Iter, int &NPre_Smooth, int &NPost_Smooth, double &Tolerated_Error );
-void Init_Set_Default_SOR_Parameter( double &SOR_Omega, int &SOR_Max_Iter, int &SOR_Min_Iter );
+void Init_Set_Default_MG_Parameter();
+void Init_Set_Default_SOR_Parameter();
 void Output_PreparedPatch_Poisson( const int TLv, const int TPID, const int TComp,
                                    const real h_Rho_Array_P   [][RHO_NXT][RHO_NXT][RHO_NXT],
                                    const real h_Pot_Array_P_In[][POT_NXT][POT_NXT][POT_NXT],

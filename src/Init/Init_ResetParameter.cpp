@@ -116,9 +116,9 @@ void Init_ResetParameter()
 // Poisson solver parameters
 #  ifdef GRAVITY
 #  if   ( POT_SCHEME == SOR )
-   Init_Set_Default_SOR_Parameter( SOR_OMEGA, SOR_MAX_ITER, SOR_MIN_ITER );
+   Init_Set_Default_SOR_Parameter();
 #  elif ( POT_SCHEME == MG  )
-   Init_Set_Default_MG_Parameter( MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH, MG_TOLERATED_ERROR );
+   Init_Set_Default_MG_Parameter();
 #  endif
 #  endif // GRAVITY
 
