@@ -42,11 +42,11 @@ dpi         = 150
 
 yt.enable_parallelism()
 
-   
+
 for idx in range(idx_start, idx_end+1, didx):
-          ds = yt.load("Data_%06d"%idx)# ds = yt.load('t_%06d'%idx)
+          ds = yt.load("Data_%06d"%idx)
           ds.force_periodicity()
-          
+
           axes = ["z"]
 
           for myax in axes:
@@ -76,7 +76,7 @@ for idx in range(idx_start, idx_end+1, didx):
                           ("gas", "density"),
                           ("gamer", "Phase"),
                          ]
-                     
+
 
                      pz = yt.SlicePlot( ds, myax, fields)
                      pz.set_log(("gamer", "Phase"), False)
