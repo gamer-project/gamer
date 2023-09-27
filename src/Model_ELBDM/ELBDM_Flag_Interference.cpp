@@ -9,12 +9,23 @@
 // Note        :  1. Flag the input cell if all the interference criteria are met (minimum density, local extrema in phase and density fields, quantum pressure, phase curvature)
 //                2. Size of the input array "Var" should be 2*(PS1+2)^3
 //
-// Parameter   :  i,j,k             : Indices of the target cell in the arrays "Cond_Array"
+// Parameter   :  i,j,k             : Indices of the target cell in the array "Var1D"
 //                Var               : Input array holding the density and phase field
 //                QPThreshold       : Refinement Threshold for quantum pressure
+//                                    Refines when dimensionless quantum pressure / NDim exceeds QPThreshold
+//                                    Ensure stability and correctness of hybrid scheme by refining regions where fluid approach produces high errors and fails to wave scheme
+//                                    QPThreshold <= 0.03 avoids spurious halos and yields good agreement with wave-only simulations
 //                DensThreshold     : Minimum density at which to check quantum pressure threshold
-//                LapPhaseThreshold : Refinement Threshold for second derivative of phase field
-//                OnlyAtExtrema     : Boolean flag indicating whether only extrema are refined
+//                                    Should be set to zero by default, but can be used to avoid refinement of low-density regions with small density oscillations
+//                                    Use values > 0 with care since they may lead to instability.                                    Use values > 0 with care since they may lead to instability.
+//                LapPhaseThreshold : Refinement Threshold for second derivative of phase field in addition to QPThreshold
+//                                    Should be set to zero by default, but can be used to avoid refinement of of regions with high quantum pressure without destructive interference
+//                                    The motivation behind this flag is that destructive interference coincides with a high second derivative of the phase field
+//                                    Use with care since it has been shown to lead to instability in some cases 
+//                OnlyAtExtrema     : Boolean flag indicating whether only extrema are refined  
+//                                    Should be set to False, but can be used to avoid refinement of regions with high quantum pressure without destructive interference
+//                                    The motivation behind this flag is that destructive interference where the fluid scheme fails happens at extrema of the density and phase fields
+//                                    Use with care since it has been shown to lead to instability in some cases 
 //
 // Return      :  "true"  if the flag criterion is     fulfilled
 //                "false" if the flag criterion is NOT fulfilled
@@ -27,16 +38,17 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
       Aux_Error( ERROR_INFO, "incorrect index (i,j,k) = (%d,%d,%d) !!\n", i, j, k );
 #  endif
 
-   const int NCell  = PS1 + 2;   // size of the array Var
+   const int NGhost = 1
+   const int NCell  = PS1 + 2 * NGhost;   // size of the array Var
 
    int ii, jj, kk, iim, jjm, kkm, iip, jjp, kkp;
 
 // convert the 1D array
    real (*Var)  [NCell][NCell][NCell] = ( real(*) [NCell][NCell][NCell] )  Var1D;
 
-   kk = k + 1;   kkp = kk + 1;   kkm = kk - 1;
-   jj = j + 1;   jjp = jj + 1;   jjm = jj - 1;
-   ii = i + 1;   iip = ii + 1;   iim = ii - 1;
+   kk = k + NGhost;   kkp = kk + 1;   kkm = kk - 1;
+   jj = j + NGhost;   jjp = jj + 1;   jjm = jj - 1;
+   ii = i + NGhost;   iip = ii + 1;   iim = ii - 1;
 
 // check minimum density
    const bool DensCond = Var[0][kk][jj][ii] > DensThreshold;

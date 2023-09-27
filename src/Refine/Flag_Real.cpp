@@ -116,27 +116,34 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #  elif ( MODEL == ELBDM )
    if ( OPT__FLAG_LOHNER_DENS )
    {
+//    use Lohner criterion on wave levels
       if ( amr->use_wave_flag[lv] ) {
       Lohner_NVar = 2;
       Lohner_TVar = _REAL | _IMAG;
+//    do not use Lohner criterion on fluid levels
       } else {
-//    turn off the Lohner criterion for the levels using the phase scheme
       Lohner_NVar = 0;
       }
    }
 
    if ( OPT__FLAG_SPECTRAL )
    {
+//    use spectral criterion on wave levels
       if ( amr->use_wave_flag[lv] ) {
-      Spectral_NVar = 2;
+         Spectral_NVar = 2;
+//    do not use spectral criterion on fluid levels
+      } else { 
+         Spectral_NVar = 0; 
       }
    }
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( OPT__FLAG_INTERFERENCE )
    {
+//    use interference criterion on fluid levels
       if ( !amr->use_wave_flag[lv] ) {
          Interf_NVar = 2;
+//    do not use interference criterion on wave levels 
       } else {
          Interf_NVar = 0;
       }
@@ -525,6 +532,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                            if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
 
 #                          if ( ELBDM_SCHEME == ELBDM_HYBRID )
+//                         switch_to_wave_flag should be consistent with the flag buffer
                            if ( amr->patch[0][lv][PID]->switch_to_wave_flag && SibPID >= 0 )
                               amr->patch[0][lv][SibPID]->switch_to_wave_flag = true;
 #                          endif

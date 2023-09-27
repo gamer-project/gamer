@@ -108,7 +108,7 @@ const static flag_spectral_float  Flag_Spectral_Pr[FLAG_SPECTRAL_ORDER][FLAG_SPE
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond1D)
+void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
 {
 // set the stride to a small value to sample the wave function evenly
 // 1, 2, 4 should all work, but higher values are faster
@@ -189,7 +189,7 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond1D)
 // values in Input__Flag_Spectral look more reasonable
    const real Normalise = 1.0e18;
 
-   Cond1D = (ExtensionMass / (PhysicalMass + Eps )) / (Normalise);
+   Cond = (ExtensionMass / (PhysicalMass + Eps )) / (Normalise);
 
 } // FUNCTION : Flag_Spectral_Prepare_for_Spectral_Criterion
 
