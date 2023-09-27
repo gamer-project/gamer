@@ -144,7 +144,12 @@ void SetParameter()
 //                   --> The function pointer may be reset by various test problem initializers, in which case
 //                       this funtion will become useless
 //                2. One can use LSS_InitMode to support different data formats
-//
+//                3. On wave levels this function expects:
+//                       LSS_InitMode == 1: Density
+//                       LSS_InitMode == 2: Real and imaginary part
+//                   On fluid levels this function expects:
+//                       LSS_InitMode == 1: Density
+//                       LSS_InitMode == 2: Density and phase
 // Parameter   :  fluid_out : Fluid field to be set
 //                fluid_in  : Fluid field loaded from the uniform-mesh array (UM_IC)
 //                nvar_in   : Number of variables in fluid_in
@@ -170,7 +175,7 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
          const double AveDens     = 1.0;        // assuming background density = 1.0
          const double GrowingFrac = 3.0/5.0;    // growing-mode amplitude = total amplitude * 3/5
 
-         Re = sqrt( (fluid_in[0]-AveDens )/GrowingFrac + AveDens );
+         Re = sqrt( (fluid_in[0]-AveDens )/GrowingFrac + AveDens ); // note that this is always the density
          Im = 0.0;  // constant phase
          break;
       }
@@ -179,8 +184,8 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
       {
          if ( nvar_in != 2 )  Aux_Error( ERROR_INFO, "nvar_in (%d) != 2 for LSS_InitMode 2 !!\n", nvar_in );
 
-         Re = fluid_in[0];
-         Im = fluid_in[1];
+         Re = fluid_in[0]; // note that this is the density on fluid levels in hybrid scheme
+         Im = fluid_in[1]; // note that this is the phase on fluid levels in hybrid scheme
          break;
       }
 
