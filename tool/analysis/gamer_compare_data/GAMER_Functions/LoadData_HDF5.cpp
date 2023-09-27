@@ -150,9 +150,18 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
 #  else
    const int  Float8_Par_RT    = 0;
 #  endif   
+   int Float8_Par_check_flag;
    LoadField( "Par_NAttStored",       &NParAtt,             H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
    LoadField( "Par_NPar",             &NPar,                H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
-   LoadField( "Float8_Par",           &Float8_Par_RS,       H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  &Float8_Par_RT,    1,    Fatal ); }
+   Float8_Par_check_flag = LoadField( "Float8_Par",           &Float8_Par_RS,       H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  &Float8_Par_RT,    1, NonFatal );
+      if ( Float8_Par_check_flag != 0 )
+      {
+	 if      ( sizeof(real) < sizeof(real_par) )
+            Aux_Error( ERROR_INFO, "Must use same precision for fluid data and particle attribute when Float8_Par is not stored in snapshot!! But fluid dat is in %s and particle attribute is in %s\n", "single", "double");
+	 else if ( sizeof(real) > sizeof(real_par) )
+            Aux_Error( ERROR_INFO, "Must use same precision for fluid data and particle attribute when Float8_Par is not stored in snapshot!! But fluid dat is in %s and particle attribute is in %s\n", "double", "single");
+      }  
+   }
    else {
    NParAtt = 0;
    NPar    = 0; }
