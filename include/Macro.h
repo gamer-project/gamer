@@ -610,7 +610,7 @@
 #endif // MODEL
 
 // define fluid ghost boundary size for hybrid scheme
-// it must be smaller than FLU_GHOST_SIZE because the same fluid arrays are used for both the wave and fluid solvers
+// it must be smaller than or equal to FLU_GHOST_SIZE because the same fluid arrays are used for both the wave and fluid solvers
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #       define HYB_GHOST_SIZE         6
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )

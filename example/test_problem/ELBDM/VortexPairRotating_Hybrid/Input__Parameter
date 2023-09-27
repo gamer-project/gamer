@@ -24,7 +24,7 @@ END_STEP                     -1           # end step (<0=auto -> must be set by 
 
 
 # test problems
-TESTPROB_ID                   1005        # 1005: ELBDM vortex rotating
+TESTPROB_ID                   1005        # 1005: ELBDM rotating vortex pair
 
 
 # code units (in cgs)
