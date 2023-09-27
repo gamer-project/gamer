@@ -158,7 +158,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 
       fprintf( File, "# average value (DC) used for normalization = %20.14e\n", NormDC );
       fprintf( File, "\n" );
-      fprintf( File, "#%*s %*s\n", S_LEN-1, "k", S_LEN, "Power" );
+      fprintf( File, "#%*s %*s\n", S_LEN, "k", S_LEN, "Power" );
 
 //    DC mode is not output
       for (int b=1; b<Nx_Padded; b++) {
