@@ -67,7 +67,6 @@ real GetMaxVelocity( const int lv, bool ExcludeWaveCells )
    const int  NPG               = 1;               // number of patch groups (must be ONE here)
    const int  NCOMP1            = 1;               // we only need to retrieve phase for velocity criterion
    real (*Flu_Array)[NCOMP1][Size_Flu][Size_Flu][Size_Flu] = NULL;
-   real (*Wave_Patch_Array)[NCOMP1][Size_Flu][Size_Flu][Size_Flu] = NULL;
 
    real dS_dx, MaxdS_dx, _dh, _dh2, GradS[3];
    int im, ip, jm, jp, km, kp, I, J, K;
@@ -101,29 +100,30 @@ real GetMaxVelocity( const int lv, bool ExcludeWaveCells )
          for (int j=NGhost; j<Size_Flu-NGhost; j++)    {  jm = j - 1;    jp = j + 1;   J = j - NGhost;
          for (int i=NGhost; i<Size_Flu-NGhost; i++)    {  im = i - 1;    ip = i + 1;   I = i - NGhost;
 
-//       skip velocities of cells that have a wave counterpart on the refined levels
-
-         long GID0                   = GlobalTree.PID2GID(PID0, lv);
-         bool DoNotCalculateVelocity = false;
-         if ( ExcludeWaveCells )
-         {
-            for (int LocalID=0; LocalID<8; LocalID++ )
+//          skip velocities of cells that have a wave counterpart on the refined levels
+            long GID0                   = GlobalTree.PID2GID(PID0, lv);
+            bool DoNotCalculateVelocity = false;
+            if ( ExcludeWaveCells )
             {
-               DoNotCalculateVelocity |= ELBDM_HasWaveCounterpart(I, J, K, GID0, GID0 + LocalID, GlobalTree );
+//             in principle, we only need to check the single patch (I, J, K) belongs to 
+//             however, ELBDM_HasWaveCounterpart automatically returns False if (I, J, K) is outside of the patch GID0 + LocalID
+               for (int LocalID=0; LocalID<8; LocalID++ )
+               {
+                  DoNotCalculateVelocity |= ELBDM_HasWaveCounterpart( I, J, K, GID0, GID0 + LocalID, GlobalTree );
+               }
             }
-         }
 
-//       check whether leave node corresponding to cell uses phase scheme
-         if ( !DoNotCalculateVelocity ) {
+//          check whether leave node corresponding to cell using fluid scheme
+            if ( !DoNotCalculateVelocity ) {
 
-            GradS[0]   = _dh2 * ( Flu_Array[0][0][k ][j ][ip] - Flu_Array[0][0][k ][j ][im] );
-            GradS[1]   = _dh2 * ( Flu_Array[0][0][k ][jp][i ] - Flu_Array[0][0][k ][jm][i ] );
-            GradS[2]   = _dh2 * ( Flu_Array[0][0][kp][j ][i ] - Flu_Array[0][0][km][j ][i ] );
+               GradS[0]   = _dh2 * ( Flu_Array[0][0][k ][j ][ip] - Flu_Array[0][0][k ][j ][im] );
+               GradS[1]   = _dh2 * ( Flu_Array[0][0][k ][jp][i ] - Flu_Array[0][0][k ][jm][i ] );
+               GradS[2]   = _dh2 * ( Flu_Array[0][0][kp][j ][i ] - Flu_Array[0][0][km][j ][i ] );
 
-            dS_dx      = _dh * (FABS(GradS[0]) + FABS(GradS[1]) + FABS(GradS[2]));
-            MaxdS_dx   = MAX( MaxdS_dx, dS_dx );
+               dS_dx      = _dh * (FABS(GradS[0]) + FABS(GradS[1]) + FABS(GradS[2]));
+               MaxdS_dx   = MAX( MaxdS_dx, dS_dx );
 
-         }
+            }
 
          }}} // i,j,k
       } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=NPG*8)
