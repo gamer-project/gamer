@@ -4,6 +4,9 @@ import yt
 import matplotlib.pyplot as plt
 import numpy as np
 
+# ref: https://yt-project.org/doc/examining/low_level_inspection.html#examining-grid-data-in-a-fixed-resolution-array
+
+
 # load the command-line parameters
 parser = argparse.ArgumentParser( description='Extract uniform grids from GAMER AMR data.' )
 
