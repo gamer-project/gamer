@@ -149,7 +149,7 @@ void SetParameter()
    amr->Par->NPar_Active_AllRank = 0;
    if ( ParTest_Use_Massive )    amr->Par->NPar_Active_AllRank += 2;
    if ( ParTest_Use_Tracers )    amr->Par->NPar_Active_AllRank += ParTest_NPar[0]*ParTest_NPar[1]*ParTest_NPar[2];
-   PRINT_RESET_PARA( amr->Par->NPar_Active_AllRank, FORMAT_LONG, "This is PAR_NPAR in Input__Parameter" );
+   PRINT_RESET_PARA( amr->Par->NPar_Active_AllRank, FORMAT_LONG, "(PAR_NPAR in Input__Parameter)" );
 #  endif
 
 

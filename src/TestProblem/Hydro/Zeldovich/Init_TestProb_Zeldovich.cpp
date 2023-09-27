@@ -226,7 +226,7 @@ void SetParameter()
    else if ( Gas_Par_Setup == 2 )   // overwrite the total number of particles in particle-only setup
       amr->Par->NPar_Active_AllRank = (long)NPar_X*SQR((long)NPar_YZ);
 
-   PRINT_RESET_PARA( amr->Par->NPar_Active_AllRank, FORMAT_LONG, "This is PAR_NPAR in Input__Parameter" );
+   PRINT_RESET_PARA( amr->Par->NPar_Active_AllRank, FORMAT_LONG, "(PAR_NPAR in Input__Parameter)" );
 #  endif
 
 

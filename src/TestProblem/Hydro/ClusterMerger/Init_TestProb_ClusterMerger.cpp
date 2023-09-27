@@ -384,7 +384,7 @@ void SetParameter()
 
       // overwrite the total number of particles
       amr->Par->NPar_Active_AllRank = NPar_AllCluster;
-      PRINT_RESET_PARA( amr->Par->NPar_Active_AllRank, FORMAT_LONG, "This is PAR_NPAR in Input__Parameter." );
+      PRINT_RESET_PARA( amr->Par->NPar_Active_AllRank, FORMAT_LONG, "(PAR_NPAR in Input__Parameter)" );
 
    } // if ( OPT__INIT != INIT_BY_RESTART )
 
