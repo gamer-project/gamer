@@ -10,13 +10,13 @@ static double VorPairLin_WaveAmp;
 static double VorPairLin_Phase0;
 
 
-static double VorPairLin_kx;
-static double VorPairLin_ky;
+static int    VorPairLin_kx;
+static int    VorPairLin_ky;
 static double VorPairLin_Omega;
 
 // optional:
-static double VorPairLin_ZWaveAmp; // psi(x, y) = psi_vorpair(x,y) + ZWaveAmp * exp( i*(kz*z-ZWaveOmega*t) )
-static double VorPairLin_kz;
+static double VorPairLin_ZWaveAmp; // psi(x, y, z) = psi_vorpair(x,y) + ZWaveAmp * exp( i*(kz*z-ZWaveOmega*t) )
+static int    VorPairLin_kz;
 static double VorPairLin_ZWaveOmega;
 // =======================================================================================
 
@@ -52,9 +52,18 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
+// -> when switching from wave scheme back to fluid scheme
+//    real and imaginary part need to be converted back to phase
+// -> the two vortices are connected with a two pi phase jump
+//    while the wave scheme does not see this jump, the fluid scheme does 
+// -> the wave physics is invariant under deformations of this jump contour.
+//    as a result, reconstruction of the phase with and without ELBDM_MATCH_PHASE
+//    leads to different jump line contours
+// -> when ELBDM_MATCH_PHASE is enabled the jump line contour leads to overrefinement
+//    which is why we should disable this option for the vortex pair tests
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( ELBDM_MATCH_PHASE )
-      Aux_Error( ERROR_INFO, "ELBDM_MATCH_PHASE must be disabled !!\n" );
+      Aux_Message( stderr, "WARNING: ELBDM_MATCH_PHASE should be disabled in vortex pair tests !!\n" );
 #  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
@@ -99,9 +108,9 @@ void SetParameter()
    ReadPara->Add( "VorPairLin_WaveAmp",   &VorPairLin_WaveAmp,    -1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "VorPairLin_ZWaveAmp",  &VorPairLin_ZWaveAmp,    0.0,           0.0,              NoMax_double      );
    ReadPara->Add( "VorPairLin_Phase0",    &VorPairLin_Phase0,      0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "VorPairLin_kx",        &VorPairLin_kx,          1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "VorPairLin_ky",        &VorPairLin_ky,          1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "VorPairLin_kz",        &VorPairLin_kz,          1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "VorPairLin_kx",        &VorPairLin_kx,          1,             1,                NoMax_int         );
+   ReadPara->Add( "VorPairLin_ky",        &VorPairLin_ky,          1,             1,                NoMax_int         );
+   ReadPara->Add( "VorPairLin_kz",        &VorPairLin_kz,          1,             1,                NoMax_int         );
 
    ReadPara->Read( FileName );
 
