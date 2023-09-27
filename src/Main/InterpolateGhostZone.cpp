@@ -340,8 +340,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //       --> for IntPhase, apply temporal interpolation to density/phase instead of real/imaginary parts for better accuracy
 #        if ( MODEL == ELBDM )
 #        if ( ELBDM_SCHEME == ELBDM_HYBRID )
-         // for fluid patches, we do not require the IntPhase flag and therefore only check whether FluIntTime is set
-         if (   (amr->use_wave_flag[lv] == true  && FluIntTime  &&  !IntPhase ) \
+//       for fluid patches, we do not require the IntPhase flag and therefore only check whether FluIntTime is set
+         if (   (amr->use_wave_flag[lv] == true  && FluIntTime  &&  !IntPhase )
              || (amr->use_wave_flag[lv] == false && FluIntTime) )
 #        else // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
          if ( FluIntTime  &&  !IntPhase )
@@ -741,7 +741,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //             --> for IntPhase, apply temporal interpolation to density/phase instead of real/imaginary parts for better accuracy
 #              if ( MODEL == ELBDM )
 #              if ( ELBDM_SCHEME == ELBDM_HYBRID )
-               if (   (amr->use_wave_flag[lv] == true  && FluIntTime  &&  !IntPhase ) \
+               if (   (amr->use_wave_flag[lv] == true  && FluIntTime  &&  !IntPhase )
                    || (amr->use_wave_flag[lv] == false && FluIntTime) )
 #              else // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
                if ( FluIntTime  &&  !IntPhase )
@@ -1321,8 +1321,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #     elif ( MODEL == ELBDM )
 //    apply monotonic interpolation to density and all passive scalars
 #     if (ELBDM_SCHEME == ELBDM_HYBRID)
-      if (   (TVarCCIdx_Flu != REAL  &&  TVarCCIdx_Flu != IMAG && amr->use_wave_flag[lv] == true  )\
-          || (TVarCCIdx_Flu != PHAS  &&  TVarCCIdx_Flu != STUB && amr->use_wave_flag[lv] == false ) )
+      if (   ( TVarCCIdx_Flu != REAL  &&  TVarCCIdx_Flu != IMAG && amr->use_wave_flag[lv] == true )
+          || ( TVarCCIdx_Flu != PHAS  &&  TVarCCIdx_Flu != STUB && amr->use_wave_flag[lv] == false ) )
 #     else
       if ( TVarCCIdx_Flu != REAL  &&  TVarCCIdx_Flu != IMAG )
 #     endif
@@ -1384,7 +1384,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    real *FData_Dens = NULL;
    real *FData_Phas = NULL;
 
-// parameter IntPhase in hybrid scheme only relevant where wave scheme is used
+// parameter IntPhase in hybrid scheme is only relevant where wave scheme is used
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( IntPhase && amr->use_wave_flag[lv] == true)
 #  else // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
@@ -1426,7 +1426,6 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //    otherwise store density in the DENS component and phase in the REAL component
 //    this ensure the two arrays are consecutive in memory
       } else {
-         printf("Does this happen?\n");
          CData_Real = CData_CC   + RealIdx*CSize3D_CC;
          CData_Imag = CData_CC   + ImagIdx*CSize3D_CC;
          CData_Dens = CData_CC   + DensIdx*CSize3D_CC;
@@ -1456,14 +1455,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          if ( DensIdx == -1 ) // only need to recalculate density if it's not prepared already
          CData_Dens[t] = Re*Re + Im*Im;
       }
-   } // if ( IntPhase )
-
-#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( IntPhase && amr->use_wave_flag[lv] )
-#  else // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( IntPhase )
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID ) ... # else
-   {
+      
       if ( IntScheme_CC == INT_SPECTRAL ) {
 //    interpolate density & phase
 //    INT_SPECTRAL with PhaseUnwrapping_Yes assumes that the density and phase fields are stored consecutively in memory
@@ -1678,10 +1670,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    else if ( !amr->use_wave_flag[lv] )
    {
-      real *CData_Dens = NULL;
-      real *CData_Phas = NULL;
-      real *FData_Dens = NULL;
-      real *FData_Phas = NULL;
+      CData_Dens = NULL;
+      CData_Phas = NULL;
+      FData_Dens = NULL;
+      FData_Phas = NULL;
 
       const int NVar = 1;
       int DensIdx=-1, PhasIdx=-1;
