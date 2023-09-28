@@ -1,113 +1,113 @@
+from __future__ import print_function, division, absolute_import
+
 import argparse
 import sys
 import yt
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Agg')  # Use Agg backend for non-interactive plotting
 
 import matplotlib.pyplot as plt
 import numpy as np
+
 from mpl_toolkits.axes_grid1 import AxesGrid
 
+# Load the command-line parameters
+parser = argparse.ArgumentParser(description='Plot slices of wave function for the ELBDM test')
 
-# load the command-line parameters
-parser = argparse.ArgumentParser( description='Plot slices of wave function for the ELBDM test' )
+# Define command-line arguments
+parser.add_argument('-s', action='store', required=True, type=int, dest='idx_start',
+                    help='first data index')
+parser.add_argument('-e', action='store', required=True, type=int, dest='idx_end',
+                    help='last data index')
+parser.add_argument('-d', action='store', required=False, type=int, dest='didx',
+                    help='delta data index [%(default)d]', default=1)
+parser.add_argument('-i', action='store', required=False, type=str, dest='prefix',
+                    help='data path prefix [%(default)s]', default='./')
 
-parser.add_argument( '-s', action='store', required=True,  type=int, dest='idx_start',
-                            help='first data index' )
-parser.add_argument( '-e', action='store', required=True,  type=int, dest='idx_end',
-                            help='last data index' )
-parser.add_argument( '-d', action='store', required=False, type=int, dest='didx',
-                            help='delta data index [%(default)d]', default=1 )
-parser.add_argument( '-i', action='store', required=False,  type=str, dest='prefix',
-                      help='data path prefix [%(default)s]', default='./' )
+args = parser.parse_args()  # Parse the command-line arguments
 
+# Print the command-line arguments for reference
+print('\nCommand-line arguments:')
+print('-------------------------------------------------------------------')
+for t in range(len(sys.argv)):
+    print(str(sys.argv[t]), end=' ')
+print('')
+print('-------------------------------------------------------------------\n')
 
-###
-args=parser.parse_args()
+# Extract arguments from the parsed command-line arguments
+idx_start = args.idx_start
+idx_end = args.idx_end
+didx = args.didx
+prefix = args.prefix
 
-# take note
-print( '\nCommand-line arguments:' )
-print( '-------------------------------------------------------------------' )
-for t in range( len(sys.argv) ):
-    print( str(sys.argv[t]) ),
-print( '' )
-print( '-------------------------------------------------------------------\n' )
+colormap = 'viridis'  # Define the colormap for the plots
+dpi = 150  # Define the DPI (dots per inch) for the saved plots
 
+# Create a series of datasets based on data files with indices in the specified range
+dataset_series = yt.DatasetSeries([prefix + '/Data_%06d' % idx for idx in range(idx_start, idx_end + 1, didx)])
 
-idx_start  = args.idx_start
-idx_end    = args.idx_end
-didx       = args.didx
-prefix     = args.prefix
+# Loop through each dataset in the series
+for dataset in dataset_series.piter():
+    axes = ["z"]  # Specify the axes for slicing (e.g., "z" for z-axis slices)
 
-colormap    = 'viridis'
-dpi         = 150
+    for current_axis in axes:
+        # Create a new figure for the current slice
+        fig = plt.figure(dpi=dpi, figsize=(24, 12))
 
-yt.enable_parallelism()
-ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
+        # Create a grid of axes for multiple plots
+        grid = AxesGrid(
+            fig,
+            (0.075, 0.075, 0.85, 0.85),
+            nrows_ncols=(2, 2),
+            axes_pad=(0.2, 0.0),
+            label_mode="L",
+            share_all=True,
+            cbar_location="right",
+            cbar_mode="edge",
+            direction="row",
+            cbar_size="3%",
+            cbar_pad="0%",
+        )
 
-for ds in ts.piter():
+        # Define the fields to plot
+        fields_to_plot = [
+            ("gas", "density"),
+            ("gamer", "Phase"),
+        ]
 
-     axes = ["z"]
+        # Create a slice plot for the current dataset and field
+        slice_plot = yt.SlicePlot(dataset, current_axis, fields_to_plot)
+        slice_plot.set_log(("gamer", "Phase"), False)  # Set logarithmic scale for Phase field
 
-     for myax in axes:
-          fig = plt.figure(dpi = dpi, figsize=(24, 12))
+        slice_plot.annotate_grids(periodic=False)  # Annotate the grids
 
-          # See http://matplotlib.org/mpl_toolkits/axes_grid/api/axes_grid_api.html
-          # These choices of keyword arguments produce a four panel plot that includes
-          # four narrow colorbars, one for each plot.  Axes labels are only drawn on the
-          # bottom left hand plot to avoid repeating information and make the plot less
-          # cluttered.
-          grid = AxesGrid(
-               fig,
-               (0.075, 0.075, 0.85, 0.85),
-               nrows_ncols=(2, 2),
-               axes_pad=(0.2, 0.0),
-               label_mode="L",
-               share_all=True,
-               cbar_location="right",
-               cbar_mode="edge",
-               direction="row",
-               cbar_size="3%",
-               cbar_pad="0%",
-          )
+        slice_plot.set_cmap(fields_to_plot, colormap)  # Set the colormap for the fields
 
+        # For each plotted field, associate it with the corresponding AxesGrid axes
+        for i, field in enumerate(fields_to_plot):
+            plot = slice_plot.plots[field]
+            plot.figure = fig
+            plot.axes = grid[2 * i].axes
+            plot.cax = grid.cbar_axes[i]
 
-          fields = [
-               ("gas", "density"),
-               ("gamer", "Phase"),
-          ]
+        # Create a second slice plot for comparison
+        slice_plot_2 = yt.SlicePlot(dataset, current_axis, fields_to_plot)
+        slice_plot_2.set_log(("gamer", "Phase"), False)
+        slice_plot_2.set_cmap(fields_to_plot, colormap)
 
+        # Associate the second slice plot with the AxesGrid axes
+        for i, field in enumerate(fields_to_plot):
+            plot = slice_plot_2.plots[field]
+            plot.figure = fig
+            plot.axes = grid[2 * i + 1].axes
 
-          pz = yt.SlicePlot( ds, myax, fields)
-          pz.set_log(("gamer", "Phase"), False)
+        # Redraw the plot on the AxesGrid axes
+        slice_plot._setup_plots()
+        slice_plot_2._setup_plots()
 
-          pz.annotate_grids( periodic=False )
+        # Get the DumpID from dataset parameters and save the plot with a descriptive filename
+        dump_id = dataset.parameters["DumpID"]
+        plt.savefig("Data_%06d_%s_axis.png" % (dump_id, current_axis))
 
-          pz.set_cmap( fields, colormap )
-
-          # For each plotted field, force the SlicePlot to redraw itself onto the AxesGrid
-          # axes.
-          for i, field in enumerate(fields):
-               plot = pz.plots[field]
-               plot.figure = fig
-               plot.axes = grid[2*i].axes
-               plot.cax = grid.cbar_axes[i]
-
-          pz2 = yt.SlicePlot( ds, myax, fields)
-          pz2.set_log(("gamer", "Phase"), False)
-          pz2.set_cmap( fields, colormap )
-          # For each plotted field, force the SlicePlot to redraw itself onto the AxesGrid
-          # axes.
-          for i, field in enumerate(fields):
-               plot = pz2.plots[field]
-               plot.figure = fig
-               plot.axes = grid[2*i+1].axes
-
-          # Finally, redraw the plot on the AxesGrid axes.
-          pz._setup_plots()
-          pz2._setup_plots()
-
-          DumpID = ds.parameters["DumpID"]
-          plt.savefig("Data_%06d_%s_axis.png" % (DumpID, myax))
-
-          plt.close()
+        # Close the current figure to release resources
+        plt.close()
