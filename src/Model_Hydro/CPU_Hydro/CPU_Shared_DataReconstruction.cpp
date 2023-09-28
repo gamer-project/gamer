@@ -1677,6 +1677,673 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 //       3. get the face-centered primitive variables
          const int faceL      = 2*d;      // left and right face indices
          const int faceR      = faceL+1;
+         const int idx_ccLL   = idx_cc - 2*didx_cc[d];
+         const int idx_ccL    = idx_cc - didx_cc[d];
+         const int idx_ccC    = idx_cc;
+         const int idx_ccR    = idx_cc + didx_cc[d];
+         const int idx_ccRR   = idx_cc + 2*didx_cc[d];
+
+         const real C_factor = 1.25;
+         const real round_err = 1.e-12;
+
+         for (int v=0; v<NCOMP_LR; v++)
+         {
+            real tmp, rho, cc_abs_max;
+
+            real fc_L, fc_R;            // face center value
+            real cc_LL, cc_L, cc_C, cc_R, cc_RR; // cell center value
+            real d_LL, d_L, d_R, d_RR;  // slope at face center
+            real dd_L, dd_C, dd_R;      // curverture at cell center
+
+//          3-1. get all the value needed
+            cc_LL = g_PriVar[v][idx_ccLL];
+            cc_L  = g_PriVar[v][idx_ccL ];
+            cc_C  = g_PriVar[v][idx_cc  ];
+            cc_R  = g_PriVar[v][idx_ccR ];
+            cc_RR = g_PriVar[v][idx_ccRR];
+
+            d_LL  = cc_L  - cc_LL;
+            d_L   = cc_C  - cc_L ;
+            d_R   = cc_R  - cc_C ;
+            d_RR  = cc_RR - cc_R ;
+
+            dd_L  = cc_LL - (real)2.*cc_L + cc_C ;
+            dd_C  = cc_L  - (real)2.*cc_C + cc_R ;
+            dd_R  = cc_C  - (real)2.*cc_R + cc_RR;
+
+            cc_abs_max = MAX( FABS(cc_LL),
+                              MAX( FABS(cc_L),
+                                   MAX( FABS(cc_C),
+                                        MAX( FABS(cc_R), FABS(cc_RR) )
+                                      )
+                                 )
+                            );
+
+//          3-2. interpolate the face value
+            fc_L = ( -cc_LL + (real)7.*cc_L + (real)7.*cc_C - cc_R  ) / (real)12.0;
+            fc_R = ( -cc_L  + (real)7.*cc_C + (real)7.*cc_R - cc_RR ) / (real)12.0;
+            // fc_L = ((real)6.*(cc_L + cc_C) + cc_C - cc_LL - cc_R  + cc_L ) / (real)12.;
+            // fc_R = ((real)6.*(cc_C + cc_R) + cc_R - cc_L  - cc_RR + cc_C ) / (real)12.;
+
+
+//          3-3. prepare half value
+            real dh_LL, dh_L, dh_R, dh_RR;
+            real ddh_L, ddh_C, ddh_R;
+
+            dh_LL = fc_L - cc_L;
+            dh_L  = cc_C - fc_L;
+            dh_R  = fc_R - cc_C;
+            dh_RR = cc_R - fc_R;
+
+            ddh_L = cc_L - (real)2.*fc_L + cc_C;
+            ddh_C = fc_L - (real)2.*cc_C + fc_R;
+            ddh_R = cc_C - (real)2.*fc_R + cc_R;
+
+//          3-4. limit slope of L&R
+            if ( dh_LL*dh_L < 0.0 ) {
+               if ( SIGN(dd_L) == SIGN(ddh_L) && SIGN(ddh_L) == SIGN(dd_C) ) {
+                  tmp = SIGN(dd_C) * MIN( C_factor*FABS(dd_L),
+                                          MIN( (real)3.*FABS(ddh_L), C_factor*FABS(dd_C) )
+                                        );
+               } else {
+                  tmp = 0.0;
+               } // if ( SIGN(dd_L) == SIGN(ddh_L) && SIGN(ddh_L) == SIGN(dd_C) ) ... else ...
+               fc_L = (real)0.5*(cc_L+cc_C) - tmp/(real)6.0;
+
+//             update the slope
+               dh_LL = fc_L - cc_L;
+               dh_L  = cc_C - fc_L;
+            } // if ( dh_LL*dh_L < 0.0 )
+
+            if ( dh_R*dh_RR < 0.0 ) {
+               if ( SIGN(dd_C) == SIGN(ddh_R) && SIGN(ddh_R) == SIGN(dd_R) ) {
+                  tmp = SIGN(dd_C) * MIN( C_factor*FABS(dd_C),
+                                          MIN( (real)3.*FABS(ddh_R), C_factor*FABS(dd_R) )
+                                        );
+               } else {
+                  tmp = 0.0;
+               } // if ( SIGN(dd_C) == SIGN(ddh_R) && SIGN(ddh_R) == SIGN(dd_R) ) ... else ...
+               fc_R = (real)0.5*(cc_C+cc_R) - tmp/(real)6.0;
+
+//             update the slope
+               dh_R  = fc_R - cc_C;
+               dh_RR = cc_R - fc_R;
+            } // if ( dh_R*dh_RR < 0.0 )
+
+//          3-5. reduce error to round-off error
+            if ( SIGN(dd_L) == SIGN(dd_C) && SIGN(dd_C) == SIGN(dd_R) && SIGN(dd_R) == SIGN(ddh_C) ) {
+               tmp = SIGN(dd_C) * MIN( C_factor*FABS(dd_L),
+                                       MIN( C_factor*FABS(dd_C),
+                                            MIN( C_factor*FABS(dd_L), (real)6.0*FABS(ddh_C))
+                                          )
+                                     );
+            } else {
+               tmp = 0.0;
+            } // if ( SIGN(dd_L) == SIGN(dd_C) && SIGN(dd_C) == SIGN(dd_R) && SIGN(dd_R) == SIGN(ddh_C) ) ... else ...
+
+            if ( (real)6.*FABS(ddh_C) > round_err*cc_abs_max ) {
+               rho = tmp / ddh_C / (real)6.;
+            } else {
+               rho = 0.0;
+            } // if ( FABS(ddh_C) > round_error*cc_abs_max ) ... else ...
+
+            if ( dh_L*dh_R < 0.0 || d_L*d_R < 0.0 ) {
+               if ( rho < 1.-round_err )   fc_L = cc_C - rho * dh_L;
+               if ( rho < 1.-round_err )   fc_R = cc_C + rho * dh_R;
+            } else {
+               if ( FABS(dh_L) >= (real)2.*FABS(dh_R) )   fc_L = cc_C - (real)2.*dh_R;
+               if ( FABS(dh_R) >= (real)2.*FABS(dh_L) )   fc_R = cc_C + (real)2.*dh_L;
+            } // if ( dh_L*dh_R < 0.0 && d_L*d_R < 0.0 )
+
+//          3-6. store the value
+            fc[faceL][v] = fc_L;
+            fc[faceR][v] = fc_R;
+
+         } // for (int v=0; v<NCOMP_LR; v++)
+
+
+//       4. advance the face-centered variables by half time-step for the CTU integrator
+#        if ( FLU_SCHEME == CTU )
+
+#        ifdef LR_EINT
+#           error : CTU does NOT support LR_EINT !!
+#        endif
+
+         real Coeff_L, Coeff_R;
+         real Correct_L[NCOMP_LR], Correct_R[NCOMP_LR];
+
+//       4-1. compute the PPM coefficient (for the passive scalars as well)
+         for (int v=0; v<NCOMP_LR; v++)
+         {
+            dfc [v] = fc[faceR][v] - fc[faceL][v];
+            dfc6[v] = (real)6.0*(  cc_C_ncomp[v] - (real)0.5*( fc[faceL][v] + fc[faceR][v] )  );
+         }
+
+//       4-2. re-order variables for the y/z directions
+         Hydro_Rotate3D( dfc,  d, true, MAG_OFFSET );
+         Hydro_Rotate3D( dfc6, d, true, MAG_OFFSET );
+
+
+//       =====================================================================================
+//       a. for the HLL solvers (HLLE/HLLC/HLLD)
+//       =====================================================================================
+#        if (  ( RSOLVER == HLLE || RSOLVER == HLLC || RSOLVER == HLLD )  &&  defined HLL_NO_REF_STATE  )
+
+//       4-2-a1. evaluate the corrections to the left and right face-centered variables
+         for (int v=0; v<NWAVE; v++)
+         {
+            Correct_L[ idx_wave[v] ] = (real)0.0;
+            Correct_R[ idx_wave[v] ] = (real)0.0;
+         }
+
+         for (int Mode=0; Mode<NWAVE; Mode++)
+         {
+            Coeff_L = (real)0.0;
+            Coeff_R = (real)0.0;
+
+            if ( HLL_Include_All_Waves  ||  EigenVal[d][Mode] <= (real)0.0 )
+            {
+               const real Coeff_C = -dt_dh2*EigenVal[d][Mode];
+               const real Coeff_D = real(-4.0/3.0)*SQR(Coeff_C);
+
+               for (int v=0; v<NWAVE; v++)
+                  Coeff_L += LEigenVec[Mode][v]*(  Coeff_C*( dfc[ idx_wave[v] ] + dfc6[ idx_wave[v] ] ) +
+                                                   Coeff_D*( dfc6[ idx_wave[v] ]                      )  );
+
+               for (int v=0; v<NWAVE; v++)
+                  Correct_L[ idx_wave[v] ] += Coeff_L*REigenVec[Mode][v];
+            }
+
+            if ( HLL_Include_All_Waves  ||  EigenVal[d][Mode] >= (real)0.0 )
+            {
+               const real Coeff_A = -dt_dh2*EigenVal[d][Mode];
+               const real Coeff_B = real(-4.0/3.0)*SQR(Coeff_A);
+
+               for (int v=0; v<NWAVE; v++)
+                  Coeff_R += LEigenVec[Mode][v]*(  Coeff_A*( dfc[ idx_wave[v] ] - dfc6[ idx_wave[v] ] ) +
+                                                   Coeff_B*( dfc6[ idx_wave[v] ]                      )  );
+
+               for (int v=0; v<NWAVE; v++)
+                  Correct_R[ idx_wave[v] ] += Coeff_R*REigenVec[Mode][v];
+            }
+         } // for (int Mode=0; Mode<NWAVE; Mode++)
+
+
+//       =====================================================================================
+//       b. for the Roe's and exact solvers
+//       =====================================================================================
+#        else // ( RSOLVER == ROE/EXACT || ifndef HLL_NO_REF_STATE )
+
+//       4-2-b1. evaluate the reference states
+         Coeff_L = -dt_dh2*FMIN( EigenVal[d][       0 ], (real)0.0 );
+         Coeff_R = -dt_dh2*FMAX( EigenVal[d][ NWAVE-1 ], (real)0.0 );
+
+         for (int v=0; v<NWAVE; v++)
+         {
+            Correct_L[ idx_wave[v] ] = Coeff_L*(  dfc[ idx_wave[v] ] + ( (real)1.0 - real(4.0/3.0)*Coeff_L )*dfc6[ idx_wave[v] ]  );
+            Correct_R[ idx_wave[v] ] = Coeff_R*(  dfc[ idx_wave[v] ] - ( (real)1.0 + real(4.0/3.0)*Coeff_R )*dfc6[ idx_wave[v] ]  );
+         }
+
+
+//       4-2-b2. evaluate the corrections to the left and right face-centered variables
+         for (int Mode=0; Mode<NWAVE; Mode++)
+         {
+            Coeff_L = (real)0.0;
+            Coeff_R = (real)0.0;
+
+            if ( EigenVal[d][Mode] <= (real)0.0 )
+            {
+               const real Coeff_C = dt_dh2*( EigenVal[d][0] - EigenVal[d][Mode] );
+//             write as (a-b)*(a+b) instead of a^2-b^2 to ensure that Coeff_D=0 when Coeff_C=0
+//             Coeff_D = real(4.0/3.0)*dt_dh2*dt_dh2* ( EigenVal[d][   0]*EigenVal[d][   0] -
+//                                                      EigenVal[d][Mode]*EigenVal[d][Mode]   );
+               const real Coeff_D = real(4.0/3.0)*dt_dh2*Coeff_C*( EigenVal[d][0] + EigenVal[d][Mode] );
+
+               for (int v=0; v<NWAVE; v++)
+                  Coeff_L += LEigenVec[Mode][v]*(  Coeff_C*( dfc[ idx_wave[v] ] + dfc6[ idx_wave[v] ] ) +
+                                                   Coeff_D*( dfc6[ idx_wave[v] ]                      )  );
+
+               for (int v=0; v<NWAVE; v++)
+                  Correct_L[ idx_wave[v] ] += Coeff_L*REigenVec[Mode][v];
+            }
+
+            if ( EigenVal[d][Mode] >= (real)0.0 )
+            {
+               const real Coeff_A = dt_dh2*( EigenVal[d][ NWAVE-1 ] - EigenVal[d][Mode] );
+//             write as (a-b)*(a+b) instead of a^2-b^2 to ensure that Coeff_B=0 when Coeff_A=0
+//             Coeff_B = real(4.0/3.0)*dt_dh2*dt_dh2* ( EigenVal[d][NWAVE-1]*EigenVal[d][NWAVE-1] -
+//                                                      EigenVal[d][Mode   ]*EigenVal[d][Mode   ]   );
+               const real Coeff_B = real(4.0/3.0)*dt_dh2*Coeff_A*( EigenVal[d][ NWAVE-1 ] + EigenVal[d][Mode] );
+
+               for (int v=0; v<NWAVE; v++)
+                  Coeff_R += LEigenVec[Mode][v]*(  Coeff_A*( dfc[ idx_wave[v] ] - dfc6[ idx_wave[v] ] ) +
+                                                   Coeff_B*( dfc6[ idx_wave[v] ]                      )  );
+
+               for (int v=0; v<NWAVE; v++)
+                  Correct_R[ idx_wave[v] ] += Coeff_R*REigenVec[Mode][v];
+            }
+         } // for (int Mode=0; Mode<NWAVE; Mode++)
+
+#        endif // if (  ( RSOLVER == HLLE || RSOLVER == HLLC || RSOLVER == HLLD )  &&  defined HLL_NO_REF_STATE  ) ... else ...
+
+
+//       4-3. evaluate the corrections to the left and right face-centered passive scalars
+//            --> passive scalars travel with fluid velocity (i.e., entropy mode)
+#        if ( NCOMP_PASSIVE > 0 )
+         Coeff_L = -dt_dh2*FMIN( EigenVal[d][1], (real)0.0 );
+         Coeff_R = -dt_dh2*FMAX( EigenVal[d][1], (real)0.0 );
+
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+         {
+            Correct_L[v] = Coeff_L*(  dfc[v] + ( (real)1.0 - real(4.0/3.0)*Coeff_L )*dfc6[v]  );
+            Correct_R[v] = Coeff_R*(  dfc[v] - ( (real)1.0 + real(4.0/3.0)*Coeff_R )*dfc6[v]  );
+         }
+#        endif
+
+
+//       4-4. add the MHD source terms
+#        ifdef MHD
+         const int t1 = (d+1)%3;    // transverse direction 1
+         const int t2 = (d+2)%3;    // transverse direction 2
+         real B_nL, B_nR, B_t1L, B_t1R, B_t2L, B_t2R;
+         real dB_n, dB_t1, dB_t2, v_t1, v_t2, src_t1, src_t2;
+
+         B_nL   = g_FC_B[d ][ idx_B[d ] ];
+         B_t1L  = g_FC_B[t1][ idx_B[t1] ];
+         B_t2L  = g_FC_B[t2][ idx_B[t2] ];
+         B_nR   = g_FC_B[d ][ idx_B[d ] + didx_cc[d ] ];
+         B_t1R  = g_FC_B[t1][ idx_B[t1] + didx_cc[t1] ];
+         B_t2R  = g_FC_B[t2][ idx_B[t2] + didx_cc[t2] ];
+
+         dB_n   = B_nR  - B_nL;
+         dB_t1  = B_t1R - B_t1L;
+         dB_t2  = B_t2R - B_t2L;
+
+         v_t1   = cc_C_ncomp[ 1 + t1 ];
+         v_t2   = cc_C_ncomp[ 1 + t2 ];
+
+         src_t1 = dt_dh2*v_t1*MINMOD( dB_n, -dB_t1 );
+         src_t2 = dt_dh2*v_t2*MINMOD( dB_n, -dB_t2 );
+
+         Correct_L[ MAG_OFFSET + 1 ] += src_t1;
+         Correct_R[ MAG_OFFSET + 1 ] += src_t1;
+         Correct_L[ MAG_OFFSET + 2 ] += src_t2;
+         Correct_R[ MAG_OFFSET + 2 ] += src_t2;
+#        endif // #ifdef MHD
+
+
+//       4-5. evaluate the face-centered variables at the half time-step
+         Hydro_Rotate3D( Correct_L, d, false, MAG_OFFSET );
+         Hydro_Rotate3D( Correct_R, d, false, MAG_OFFSET );
+
+         for (int v=0; v<NCOMP_LR; v++)
+         {
+            fc[faceL][v] += Correct_L[v];
+            fc[faceR][v] += Correct_R[v];
+         }
+
+
+//       4-6. apply density and pressure floors
+         fc[faceL][0] = FMAX( fc[faceL][0], MinDens );
+         fc[faceR][0] = FMAX( fc[faceR][0], MinDens );
+
+         fc[faceL][4] = Hydro_CheckMinPres( fc[faceL][4], MinPres );
+         fc[faceR][4] = Hydro_CheckMinPres( fc[faceR][4], MinPres );
+
+#        if ( NCOMP_PASSIVE > 0 )
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) {
+         fc[faceL][v] = FMAX( fc[faceL][v], TINY_NUMBER );
+         fc[faceR][v] = FMAX( fc[faceR][v], TINY_NUMBER ); }
+#        endif
+
+#        endif // #if ( FLU_SCHEME == CTU )
+
+
+//       5. reset the longitudinal B field to the input face-centered values
+//          --> actually no data reconstruction is required for that
+//###OPTIMIZARION: do not perform data reconstruction for the longitudinal B field
+#        ifdef MHD
+#        if ( FLU_SCHEME != CTU )
+         const real B_nL = g_FC_B[d][ idx_B[d]              ];
+         const real B_nR = g_FC_B[d][ idx_B[d] + didx_cc[d] ];
+#        endif
+         fc[faceL][ MAG_OFFSET + d ] = B_nL;
+         fc[faceR][ MAG_OFFSET + d ] = B_nR;
+#        endif // #ifdef MHD
+
+
+//       6. primitive variables --> conserved variables
+//          --> When LR_EINT is on, use the reconstructed internal energy instead of pressure in Hydro_Pri2Con()
+//              to skip expensive EoS conversion
+         real tmp[NCOMP_LR];  // input and output arrays must not overlap for Pri2Con()
+#        ifdef LR_EINT
+         real* const EintPtr = tmp + NCOMP_TOTAL_PLUS_MAG;
+#        else
+         real* const EintPtr = NULL;
+#        endif
+
+         for (int v=0; v<NCOMP_LR; v++)   tmp[v] = fc[faceL][v];
+         Hydro_Pri2Con( tmp, fc[faceL], FracPassive, NFrac, FracIdx, EoS->DensPres2Eint_FuncPtr,
+                        EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr );
+
+         for (int v=0; v<NCOMP_LR; v++)   tmp[v] = fc[faceR][v];
+         Hydro_Pri2Con( tmp, fc[faceR], FracPassive, NFrac, FracIdx, EoS->DensPres2Eint_FuncPtr,
+                        EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr );
+
+      } // for (int d=0; d<3; d++)
+
+
+#     if ( FLU_SCHEME == MHM )
+//    7. advance the face-centered variables by half time-step for the MHM integrator
+      Hydro_HancockPredict( fc, dt, dh, g_ConVar, idx_cc, i_cc, j_cc, k_cc, g_FC_B, g_EC_Ele, NGhost, N_HF_ELE,
+                            MinDens, MinPres, MinEint, EoS );
+#     endif // # if ( FLU_SCHEME == MHM )
+
+
+//    8. store the face-centered values to the output array
+//       --> use NCOMP_TOTAL_PLUS_MAG instead of LR_EINT since we don't need to store internal energy in g_FC_Var[]
+      for (int f=0; f<6; f++)
+      for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
+         g_FC_Var[f][v][idx_fc] = fc[f][v];
+
+   } // CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) )
+
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
+
+#  if ( FLU_SCHEME == MHM  &&  defined MHD )
+// 9. Store the half-step primitive variables for MHM+MHD
+//    --> must be done after the CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) ) loop since it will update g_PriVar[]
+   Hydro_ConFC2PriCC_MHM( g_PriVar, g_FC_Var, MinDens, MinPres, MinEint, FracPassive, NFrac, FracIdx,
+                          JeansMinPres, JeansMinPres_Coeff, EoS );
+
+#  endif // #if ( FLU_SCHEME == MHM  &&  defined MHD )
+
+} // FUNCTION : Hydro_DataReconstruction (PPM)
+#endif // #if ( LR_SCHEME == PPM )
+
+
+
+#if ( LR_SCHEME == PPM_OLD )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_DataReconstruction
+// Description :  Reconstruct the face-centered variables by the piecewise-parabolic method (PPM)
+//
+// Note        :  See the PLM routine
+//
+// Parameter   :  See the PLM routine
+//------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
+                               const real g_FC_B     [][ SQR(FLU_NXT)*FLU_NXT_P1 ],
+                                     real g_PriVar   [][ CUBE(FLU_NXT) ],
+                                     real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+                                     real g_Slope_PPM[][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ],
+                                     real g_EC_Ele   [][ CUBE(N_EC_ELE) ],
+                               const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                               const real dt, const real dh,
+                               const real MinDens, const real MinPres, const real MinEint,
+                               const bool FracPassive, const int NFrac, const int FracIdx[],
+                               const bool JeansMinPres, const real JeansMinPres_Coeff,
+                               const EoS_t *EoS )
+{
+
+//### NOTE: temporary solution to the bug in cuda 10.1 and 10.2 that incorrectly overwrites didx_cc[]
+#  if   ( FLU_SCHEME == MHM )
+   const int NIn    = FLU_NXT;
+#  elif ( FLU_SCHEME == MHM_RP )
+   const int NIn    = N_HF_VAR;
+#  elif ( FLU_SCHEME == CTU )
+   const int NIn    = FLU_NXT;
+#  else
+#  error : ERROR : unsupported FLU_SCHEME !!
+#  endif
+   const int NGhost = LR_GHOST_SIZE;
+
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( NIn - 2*NGhost != N_FC_VAR )
+      printf( "ERROR : NIn - 2*NGhost != N_FC_VAR (NIn %d, NGhost %d, N_FC_VAR %d) !!\n",
+              NIn, NGhost, N_FC_VAR );
+
+#  if ( N_SLOPE_PPM != N_FC_VAR + 2 )
+#     error : ERROR : N_SLOPE_PPM != N_FC_VAR + 2 !!
+#  endif
+
+#  if ( defined LR_EINT  &&  FLU_SCHEME == CTU )
+#     error : CTU does NOT support LR_EINT !!
+#  endif
+#  endif // GAMER_DEBUG
+
+
+   const int  didx_cc   [3]  = { 1, NIn, SQR(NIn) };
+   const int  didx_slope[3]  = { 1, N_SLOPE_PPM, SQR(N_SLOPE_PPM) };
+
+#  if ( FLU_SCHEME == CTU )
+   const real dt_dh2         = (real)0.5*dt/dh;
+
+// index mapping between arrays with size NWAVE and NCOMP_TOTAL_PLUS_MAG/NCOMP_LR
+#  ifdef MHD
+   const int idx_wave[NWAVE] = { 0, 1, 2, 3, 4, MAG_OFFSET+1, MAG_OFFSET+2 };
+#  else
+   const int idx_wave[NWAVE] = { 0, 1, 2, 3, 4 };
+#  endif
+
+// include waves both from left and right directions during the data reconstruction, as suggested in ATHENA
+#  if (  ( RSOLVER == HLLE || RSOLVER == HLLC || RSOLVER == HLLD )  &&  defined HLL_NO_REF_STATE  )
+#  ifdef HLL_INCLUDE_ALL_WAVES
+   const bool HLL_Include_All_Waves = true;
+#  else
+   const bool HLL_Include_All_Waves = false;
+#  endif
+#  endif // if (  ( RSOLVER == HLLE || RSOLVER == HLLC || RSOLVER == HLLD )  &&  defined HLL_NO_REF_STATE  )
+#  endif // #if ( FLU_SCHEME == CTU )
+
+// eigenvalues and eigenvectors
+// --> constant components of the left and right eigenvector matrices must be initialized
+#  if ( FLU_SCHEME == CTU )
+   real EigenVal[3][NWAVE];
+#  ifdef MHD
+   real REigenVec[NWAVE][NWAVE] = { { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    {       0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    {       1.0,       0.0,       0.0,       0.0,       0.0,       0.0,       0.0 },
+                                    { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    {       0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL } };
+   real LEigenVec[NWAVE][NWAVE] = { { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    { 0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    { 1.0,       0.0,       0.0,       0.0, NULL_REAL,       0.0,       0.0 },
+                                    { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    { 0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL } };
+
+#  else
+   real LEigenVec[NWAVE][NWAVE] = { { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
+                                    { 1.0,       0.0, 0.0, 0.0, NULL_REAL },
+                                    { 0.0,       0.0, 1.0, 0.0,       0.0 },
+                                    { 0.0,       0.0, 0.0, 1.0,       0.0 },
+                                    { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
+
+   real REigenVec[NWAVE][NWAVE] = { { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
+                                    { 1.0,       0.0, 0.0, 0.0,       0.0 },
+                                    { 0.0,       0.0, 1.0, 0.0,       0.0 },
+                                    { 0.0,       0.0, 0.0, 1.0,       0.0 },
+                                    { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
+#  endif // #ifdef MHD ... else ...
+
+#  elif ( defined MHD  &&  defined CHAR_RECONSTRUCTION ) // #if ( FLU_SCHEME == CTU )
+   real EigenVal[3][NWAVE];
+   real REigenVec[NWAVE][NWAVE] = { { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    {       0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    {       1.0,       0.0,       0.0,       0.0,       0.0,       0.0,       0.0 },
+                                    { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    {       0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL } };
+   real LEigenVec[NWAVE][NWAVE] = { { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    { 0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    { 1.0,       0.0,       0.0,       0.0, NULL_REAL,       0.0,       0.0 },
+                                    { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    { 0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL } };
+
+#  else // #if ( FLU_SCHEME == CTU ) ... elif ...
+   real (*const REigenVec)[NWAVE] = NULL;
+   real (*const LEigenVec)[NWAVE] = NULL;
+#  endif // #if ( FLU_SCHEME ==  CTU ) ... elif ... else ...
+
+
+// 0. conserved --> primitive variables
+   if ( Con2Pri )
+   {
+      real ConVar_1Cell[NCOMP_TOTAL_PLUS_MAG], PriVar_1Cell[NCOMP_TOTAL_PLUS_MAG];
+#     ifdef LR_EINT
+      real Eint;
+      real* const EintPtr = &Eint;
+#     else
+      real* const EintPtr = NULL;
+#     endif
+
+      CGPU_LOOP( idx, CUBE(NIn) )
+      {
+         for (int v=0; v<NCOMP_TOTAL; v++)   ConVar_1Cell[v] = g_ConVar[v][idx];
+
+#        ifdef MHD
+//       assuming that g_FC_B[] is accessed with the strides NIn/NIn+1 along the transverse/longitudinal directions
+         const int size_ij = SQR( NIn );
+         const int i       = idx % NIn;
+         const int j       = idx % size_ij / NIn;
+         const int k       = idx / size_ij;
+
+         MHD_GetCellCenteredBField( ConVar_1Cell+NCOMP_TOTAL, g_FC_B[0], g_FC_B[1], g_FC_B[2], NIn, NIn, NIn, i, j, k );
+#        endif
+
+         Hydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, MinPres, FracPassive, NFrac, FracIdx,
+                        JeansMinPres, JeansMinPres_Coeff, EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr,
+                        EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr );
+
+         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_PriVar[v][idx] = PriVar_1Cell[v];
+
+#        ifdef LR_EINT
+         g_PriVar[NCOMP_TOTAL_PLUS_MAG][idx] = Hydro_CheckMinEint( Eint, MinEint ); // store Eint in the last variable
+#        endif
+      } // CGPU_LOOP( idx, CUBE(NIn) )
+
+#     ifdef __CUDACC__
+      __syncthreads();
+#     endif
+   } // if ( Con2Pri )
+
+
+// 1. evaluate the monotonic slope of all cells
+   const int N_SLOPE_PPM2 = SQR( N_SLOPE_PPM );
+   CGPU_LOOP( idx_slope, CUBE(N_SLOPE_PPM) )
+   {
+      const int i_cc   = NGhost - 1 + idx_slope%N_SLOPE_PPM;
+      const int j_cc   = NGhost - 1 + idx_slope%N_SLOPE_PPM2/N_SLOPE_PPM;
+      const int k_cc   = NGhost - 1 + idx_slope/N_SLOPE_PPM2;
+      const int idx_cc = IDX321( i_cc, j_cc, k_cc, NIn, NIn );
+
+//    cc_C/L/R: cell-centered variables of the Central/Left/Right cells
+      real cc_C[NCOMP_LR], cc_L[NCOMP_LR], cc_R[NCOMP_LR], Slope_Limiter[NCOMP_LR];
+
+      for (int v=0; v<NCOMP_LR; v++)   cc_C[v] = g_PriVar[v][idx_cc];
+
+//    loop over different spatial directions
+      for (int d=0; d<3; d++)
+      {
+         const int idx_ccL = idx_cc - didx_cc[d];
+         const int idx_ccR = idx_cc + didx_cc[d];
+
+#        if ( defined MHD  &&  defined CHAR_RECONSTRUCTION )
+         MHD_GetEigenSystem( cc_C, EigenVal[d], LEigenVec, REigenVec, EoS, d );
+#        endif
+
+         for (int v=0; v<NCOMP_LR; v++)
+         {
+            cc_L[v] = g_PriVar[v][idx_ccL];
+            cc_R[v] = g_PriVar[v][idx_ccR];
+         }
+
+         Hydro_LimitSlope( cc_L, cc_C, cc_R, LR_Limiter, MinMod_Coeff, d,
+                           LEigenVec, REigenVec, Slope_Limiter, EoS );
+
+//       store the results to g_Slope_PPM[]
+         for (int v=0; v<NCOMP_LR; v++)   g_Slope_PPM[d][v][idx_slope] = Slope_Limiter[v];
+
+      } // for (int d=0; d<3; d++)
+   } // CGPU_LOOP( idx_slope, CUBE(N_SLOPE_PPM) )
+
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
+
+
+// compute electric field for MHM
+#  if ( FLU_SCHEME == MHM  &&  defined MHD )
+   MHD_ComputeElectric_Half( g_EC_Ele, g_ConVar, g_FC_B, N_HF_ELE, NIn, NGhost );
+#  endif
+
+
+// data reconstruction
+   const int N_FC_VAR2 = SQR( N_FC_VAR );
+#  ifdef MHD
+   const int NIn_p1    = NIn + 1;
+   int idx_B[NCOMP_MAG];
+#  endif
+
+   CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) )
+   {
+      const int i_fc      = idx_fc%N_FC_VAR;
+      const int j_fc      = idx_fc%N_FC_VAR2/N_FC_VAR;
+      const int k_fc      = idx_fc/N_FC_VAR2;
+
+      const int i_cc      = i_fc + NGhost;
+      const int j_cc      = j_fc + NGhost;
+      const int k_cc      = k_fc + NGhost;
+      const int idx_cc    = IDX321( i_cc, j_cc, k_cc, NIn, NIn );
+
+      const int i_slope   = i_fc + 1;   // because N_SLOPE_PPM = N_FC_VAR + 2
+      const int j_slope   = j_fc + 1;
+      const int k_slope   = k_fc + 1;
+      const int idx_slope = IDX321( i_slope, j_slope, k_slope, N_SLOPE_PPM, N_SLOPE_PPM );
+
+#     ifdef MHD
+//    assuming that g_FC_B[] is accessed with the strides NIn/NIn+1 along the transverse/longitudinal directions
+      idx_B[0] = IDX321( i_cc, j_cc, k_cc, NIn_p1, NIn    );
+      idx_B[1] = IDX321( i_cc, j_cc, k_cc, NIn,    NIn_p1 );
+      idx_B[2] = IDX321( i_cc, j_cc, k_cc, NIn,    NIn    );
+#     endif
+
+ //   cc/fc: cell/face-centered variables; _C_ncomp: central cell with all NCOMP_LR variables
+      real cc_C_ncomp[NCOMP_LR], fc[6][NCOMP_LR], dfc[NCOMP_LR], dfc6[NCOMP_LR];
+
+      for (int v=0; v<NCOMP_LR; v++)   cc_C_ncomp[v] = g_PriVar[v][idx_cc];
+
+
+//    2-a. evaluate the eigenvalues and eigenvectors along all three directions for the pure-hydro CTU integrator
+#     if ( !defined MHD  &&  FLU_SCHEME == CTU )
+      Hydro_GetEigenSystem( cc_C_ncomp, EigenVal, LEigenVec, REigenVec, EoS );
+#     endif
+
+
+//    loop over different spatial directions
+      for (int d=0; d<3; d++)
+      {
+//       2-b. evaluate the eigenvalues and eigenvectors along the target direction for the MHD CTU integrator
+#        if (  defined MHD  &&  ( FLU_SCHEME == CTU || defined CHAR_RECONSTRUCTION )  )
+         MHD_GetEigenSystem( cc_C_ncomp, EigenVal[d], LEigenVec, REigenVec, EoS, d );
+#        endif
+
+
+//       3. get the face-centered primitive variables
+         const int faceL      = 2*d;      // left and right face indices
+         const int faceR      = faceL+1;
          const int idx_ccL    = idx_cc - didx_cc[d];
          const int idx_ccR    = idx_cc + didx_cc[d];
          const int idx_slopeL = idx_slope - didx_slope[d];
@@ -2612,6 +3279,9 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
                Slope_Limiter[v]  = FMIN(  FABS( Slope_C[v] ), Slope_Limiter[v]  );
                Slope_Limiter[v]  = FMIN(  FABS( Slope_A[v] ), Slope_Limiter[v]  );
                Slope_Limiter[v] *= SIGN( Slope_C[v] );
+               break;
+            
+            case LR_LIMITER_ATHENA:   // ATHENA++ limiter
                break;
 
             default :

@@ -867,7 +867,8 @@ void Aux_Check_Parameter()
 
    if ( OPT__LR_LIMITER != LR_LIMITER_VANLEER     &&  OPT__LR_LIMITER != LR_LIMITER_GMINMOD  &&
         OPT__LR_LIMITER != LR_LIMITER_ALBADA      &&  OPT__LR_LIMITER != LR_LIMITER_EXTPRE   &&
-        OPT__LR_LIMITER != LR_LIMITER_VL_GMINMOD  &&  OPT__LR_LIMITER != LR_LIMITER_CENTRAL    )
+        OPT__LR_LIMITER != LR_LIMITER_VL_GMINMOD  &&  OPT__LR_LIMITER != LR_LIMITER_CENTRAL  &&
+        OPT__LR_LIMITER != LR_LIMITER_ATHENA )
       Aux_Error( ERROR_INFO, "unsupported data reconstruction limiter (OPT__LR_IMITER = %d) !!\n",
                  OPT__LR_LIMITER );
 
