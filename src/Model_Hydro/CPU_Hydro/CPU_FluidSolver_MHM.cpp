@@ -352,6 +352,7 @@ void CPU_FluidSolver_MHM(
 #     endif
 #     endif // #if ( FLU_SCHEME == MHM )
 
+      const bool debug = false;
 
 //    loop over all patch groups
 //    --> CPU/GPU solver: use different (OpenMP threads) / (CUDA thread blocks)
@@ -389,6 +390,17 @@ void CPU_FluidSolver_MHM(
             g_PriVar_1PG[1][idx] = g_Flu_Array_In[P][1][idx]*_Dens;
             g_PriVar_1PG[2][idx] = g_Flu_Array_In[P][2][idx]*_Dens;
             g_PriVar_1PG[3][idx] = g_Flu_Array_In[P][3][idx]*_Dens;
+
+            //if ( j==8 && k==8 && debug )
+            //{
+            //   printf( "i=%02d, j=%02d, k=%02d", i, j, k);
+            //   printf( "| %+.16e %+.16e %+.16e | ", g_Flu_Array_In[P][0][idx], g_Flu_Array_In[P][0][idx], g_Flu_Array_In[P][0][idx] );
+            //   printf( "| %+.16e %+.16e %+.16e | ", g_Flu_Array_In[P][1][idx], g_Flu_Array_In[P][1][idx], g_Flu_Array_In[P][1][idx] );
+            //   printf( "| %+.16e %+.16e %+.16e | ", g_Flu_Array_In[P][2][idx], g_Flu_Array_In[P][2][idx], g_Flu_Array_In[P][2][idx] );
+            //   printf( "| %+.16e %+.16e %+.16e | ", g_Flu_Array_In[P][3][idx], g_Flu_Array_In[P][3][idx], g_Flu_Array_In[P][3][idx] );
+            //   printf( "| %+.16e %+.16e %+.16e | ", g_Flu_Array_In[P][4][idx], g_Flu_Array_In[P][4][idx], g_Flu_Array_In[P][4][idx] );
+            //   printf("\n");
+            //}
 
 //          magnetic field
             MHD_GetCellCenteredBField( CC_B, g_Mag_Array_In[P][0], g_Mag_Array_In[P][1], g_Mag_Array_In[P][2],
@@ -572,6 +584,37 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
    const int didx_cvar[3] = { 1, FLU_NXT, SQR(FLU_NXT) };
    real ConVar_L[NCOMP_TOTAL_PLUS_MAG], ConVar_R[NCOMP_TOTAL_PLUS_MAG], Flux_1Face[NCOMP_TOTAL_PLUS_MAG];
+   const bool debug = false;
+   // if (debug) printf("PCM (con, pri, pri) : \n");
+   CGPU_LOOP( idx, CUBE(FLU_NXT) )
+   {
+      const int i_cvar   = idx % FLU_NXT;
+      const int j_cvar   = idx % SQR(FLU_NXT) / FLU_NXT;
+      const int k_cvar   = idx / SQR(FLU_NXT);
+
+      // if ( j_cvar == 8 && k_cvar == 8 && debug )
+      // {
+      //    real out_con[NCOMP_TOTAL_PLUS_MAG], out_pri[NCOMP_TOTAL_PLUS_MAG];
+      //    for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   out_con[v] = g_ConVar[v][idx];
+      //    Hydro_Con2Pri( out_con, out_pri, MinPres, false, NULL, NULL, NULL, NULL,
+      //                EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
+      //                EoS->Table, NULL );
+      //    real Dens = out_pri[0];
+      //    real Velx = out_pri[1];
+      //    real Vely = out_pri[2];
+      //    real Velz = out_pri[3];
+      //    real Pres = out_pri[4];
+      //    printf( "i=%02d, j=%02d, k=%02d", i_cvar, j_cvar, k_cvar);
+      //    printf( "| %+.16e %+.16e %+.16e | ", g_ConVar[0][idx], Dens, Dens );
+      //    printf( "| %+.16e %+.16e %+.16e | ", g_ConVar[1][idx], Velx, Velx );
+      //    printf( "| %+.16e %+.16e %+.16e | ", g_ConVar[2][idx], Vely, Vely );
+      //    printf( "| %+.16e %+.16e %+.16e | ", g_ConVar[3][idx], Velz, Velz );
+      //    printf( "| %+.16e %+.16e %+.16e | ", g_ConVar[4][idx], Pres, Pres );
+      //    printf("\n");
+      // }
+   }
+
+
 
 // loop over different spatial directions
    for (int d=0; d<3; d++)
@@ -787,6 +830,43 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
    const real dt_dh2       = (real)0.5*dt/dh;
 
    const int N_HF_VAR2 = SQR(N_HF_VAR);
+   const bool debug = false;
+   // if (debug) printf("Half flux laft and right\n");
+   CGPU_LOOP( idx_out, CUBE(N_HF_VAR) )
+   {
+      const int i_out    = idx_out % N_HF_VAR;
+      const int j_out    = idx_out % N_HF_VAR2 / N_HF_VAR;
+      const int k_out    = idx_out / N_HF_VAR2;
+
+//    for MHD, one additional flux is evaluated along each transverse direction for computing the CT electric field
+#     ifdef MHD
+      const int i_flux   = i_out + 1;
+      const int j_flux   = j_out + 1;
+      const int k_flux   = k_out + 1;
+#     else
+      const int i_flux   = i_out;
+      const int j_flux   = j_out;
+      const int k_flux   = k_out;
+#     endif
+      const int idx_flux = IDX321( i_flux, j_flux, k_flux, N_HF_FLUX, N_HF_FLUX );
+
+      const int i_in     = i_out + 1;
+      const int j_in     = j_out + 1;
+      const int k_in     = k_out + 1;
+      const int idx_in   = IDX321( i_in, j_in, k_in, FLU_NXT, FLU_NXT );
+
+      //if ( j_in == 8 && k_in == 8 && debug )
+      //{
+      //   printf("%02d ", i_in);
+      //   printf("%+.16e %+.16e ", g_Flux_Half[0][DENS][idx_flux], g_Flux_Half[0][DENS][idx_flux + didx_flux[0]]);
+      //   printf("%+.16e %+.16e ", g_Flux_Half[0][MOMX][idx_flux], g_Flux_Half[0][MOMX][idx_flux + didx_flux[0]]);
+      //   printf("%+.16e %+.16e ", g_Flux_Half[0][MOMY][idx_flux], g_Flux_Half[0][MOMY][idx_flux + didx_flux[0]]);
+      //   printf("%+.16e %+.16e ", g_Flux_Half[0][MOMZ][idx_flux], g_Flux_Half[0][MOMZ][idx_flux + didx_flux[0]]);
+      //   printf("%+.16e %+.16e ", g_Flux_Half[0][ENGY][idx_flux], g_Flux_Half[0][ENGY][idx_flux + didx_flux[0]]);
+      //   printf("\n");
+      //}
+   }
+
    CGPU_LOOP( idx_out, CUBE(N_HF_VAR) )
    {
       const int i_out    = idx_out % N_HF_VAR;
