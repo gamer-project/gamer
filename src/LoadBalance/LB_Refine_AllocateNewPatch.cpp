@@ -1042,11 +1042,12 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    if ( !amr->use_wave_flag[FaLv] && amr->use_wave_flag[SonLv] ) {
       real Amp, Phase, Re, Im;
 
-#     ifdef GAMER_DEBUG
-//    check whether dB wavelength is resolved within the newly converted patch
       for (int k=0; k<FSize_CC; k++) {
       for (int j=0; j<FSize_CC; j++) {
       for (int i=0; i<FSize_CC; i++) {
+
+//          check whether dB wavelength is resolved within the newly converted patch
+#           ifdef GAMER_DEBUG
             int kk  =  k;
             int kkp = (kk + 1) < FSize_CC  ? kk + 1 : kk    ;
             int kkm = (kk - 1) < 0         ? kk     : kk - 1;
@@ -1071,12 +1072,8 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
             if ( dPhase > M_PI ) {
                Aux_Message ( stderr, "WARNING: Phase jump = %d > PI when refining patch from fluid (lv %d) to wave (lv %d) scheme!", dPhase, FaLv, SonLv);
             }
-      }}}
-#     endif   // # ifdef GAMER_DEBUG
+#           endif   // # ifdef GAMER_DEBUG
 
-      for (int k=0; k<FSize_CC; k++) {
-      for (int j=0; j<FSize_CC; j++) {
-      for (int i=0; i<FSize_CC; i++) {
             Amp   = SQRT( FData_Flu[DENS][k][j][i] );
             Phase =       FData_Flu[PHAS][k][j][i] ;
             FData_Flu[REAL][k][j][i] = Amp * COS( Phase );

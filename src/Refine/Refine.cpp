@@ -852,11 +852,12 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          if ( Pedigree->flag && !amr->use_wave_flag[lv] && amr->use_wave_flag[lv+1] ) {
             real Amp, Phase, Re, Im;
 
-#           ifdef GAMER_DEBUG
-//          check whether dB wavelength is resolved within the newly converted patch
             for (int k=0; k<FSize_CC; k++) {
             for (int j=0; j<FSize_CC; j++) {
             for (int i=0; i<FSize_CC; i++) {
+
+//                check whether dB wavelength is resolved within the newly converted patch
+#                 ifdef GAMER_DEBUG
                   int kk  =  k;
                   int kkp = (kk + 1) < FSize_CC  ? kk + 1 : kk    ;
                   int kkm = (kk - 1) < 0         ? kk     : kk - 1;
@@ -881,12 +882,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                   if ( dPhase > M_PI ) {
                      Aux_Message ( stderr, "WARNING: Phase jump = %d > PI when refining patch from fluid (lv %d) to wave (lv %d) scheme!", dPhase, lv, lv+1);
                   }
-            }}}
-#           endif   // # ifdef GAMER_DEBUG
+#                 endif // #ifdef GAMER_DEBUG
 
-            for (int k=0; k<FSize_CC; k++) {
-            for (int j=0; j<FSize_CC; j++) {
-            for (int i=0; i<FSize_CC; i++) {
                   Amp   = SQRT( Flu_FData[DENS][k][j][i] );
                   Phase =       Flu_FData[PHAS][k][j][i] ;
                   Flu_FData[REAL][k][j][i] = Amp * COS( Phase );
@@ -1208,39 +1205,6 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //       iterate over real and buffer patches
          for (int PID=0; PID < amr->NPatchComma[ChildLv][27]; PID++)
          {
-#           ifdef GAMER_DEBUG
-
-//          check whether dB wavelength is resolved after conversion to wave patch
-            for (int k=0; k<PS1; k++)  {
-            for (int j=0; j<PS1; j++)  {
-            for (int i=0; i<PS1; i++)  {
-               int kk  =  k;
-               int kkp = (kk + 1) < PS1  ? kk + 1 : kk    ;
-               int kkm = (kk - 1) < 0    ? kk     : kk - 1;
-               int ii  =  i;
-               int iip = (ii + 1) < PS1  ? ii + 1 : ii    ;
-               int iim = (ii - 1) < 0    ? ii     : ii - 1;
-               int jj  =  j;
-               int jjp = (jj + 1) < PS1  ? jj + 1 : jj    ;
-               int jjm = (jj - 1) < 0    ? jj     : jj - 1;
-
-//             compute maximum phase difference in x-, y- and z-direction
-               real dPhase = MAX(MAX(MAX(MAX(MAX(
-               FABS(amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][iip] - amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][ii ]),
-               FABS(amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][ii ] - amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][iim])),
-               FABS(amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jjp][ii ] - amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][ii ])),
-               FABS(amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][ii ] - amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jjm][ii ])),
-               FABS(amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kkp][jj ][ii ] - amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][ii ])),
-               FABS(amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][ii ] - amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kkm][jj ][ii ]));
-
-//             currently, the selection of the first wave level is fixed as a runtime parameter
-//             ideally, the code should be able to adaptively increase the first wave level by 1 when this happens
-               if ( dPhase > M_PI ) {
-                  Aux_Message ( stderr, "WARNING: Phase jump = %d > PI when converting patch from fluid to wave scheme on lv %d!", dPhase, ChildLv);
-               }
-            }}}
-#           endif // # ifdef GAMER_DEBUG
-
             for (int k=0; k<PS1; k++)  {
             for (int j=0; j<PS1; j++)  {
             for (int i=0; i<PS1; i++)  {
@@ -1250,6 +1214,34 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //                check fluid != NULL for buffer patches
                   if ( amr->patch[FluSg][ChildLv][PID]->fluid != NULL && amr->FluSgTime[ChildLv][FluSg] >= 0.0 )
                   {
+//                   check whether dB wavelength is resolved after conversion to wave patch
+#                    ifdef GAMER_DEBUG
+                     int kk  =  k;
+                     int kkp = (kk + 1) < PS1  ? kk + 1 : kk    ;
+                     int kkm = (kk - 1) < 0    ? kk     : kk - 1;
+                     int ii  =  i;
+                     int iip = (ii + 1) < PS1  ? ii + 1 : ii    ;
+                     int iim = (ii - 1) < 0    ? ii     : ii - 1;
+                     int jj  =  j;
+                     int jjp = (jj + 1) < PS1  ? jj + 1 : jj    ;
+                     int jjm = (jj - 1) < 0    ? jj     : jj - 1;
+
+//                   compute maximum phase difference in x-, y- and z-direction
+                     real dPhase = MAX(MAX(MAX(MAX(MAX(
+                     FABS(amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][iip] - amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][ii ]),
+                     FABS(amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][ii ] - amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][iim])),
+                     FABS(amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jjp][ii ] - amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][ii ])),
+                     FABS(amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][ii ] - amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jjm][ii ])),
+                     FABS(amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kkp][jj ][ii ] - amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][ii ])),
+                     FABS(amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kk ][jj ][ii ] - amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][kkm][jj ][ii ]));
+
+//                   currently, the selection of the first wave level is fixed as a runtime parameter
+//                   ideally, the code should be able to adaptively increase the first wave level by 1 when this happens
+                     if ( dPhase > M_PI ) {
+                        Aux_Message ( stderr, "WARNING: Phase jump = %d > PI when converting patch from fluid to wave scheme on lv %d!", dPhase, ChildLv);
+                     }
+#                    endif // #ifdef GAMER_DEBUG
+
                      const real Amp   = SQRT(amr->patch[FluSg][ChildLv][PID]->fluid[DENS][k][j][i]);
                      const real Phase = amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][k][j][i];
                      amr->patch[FluSg][ChildLv][PID]->fluid[REAL][k][j][i] = Amp * COS(Phase);

@@ -211,12 +211,11 @@ void LB_Refine( const int FaLv )
 //             convert both sandglasses
                for ( int FluSg = 0; FluSg < 2; ++FluSg )
                {
-
-//                check whether dB wavelength is resolved after conversion to wave patch
-#                 ifdef GAMER_DEBUG
-                  for (int k=0; k<PS1; k++)  {
-                  for (int j=0; j<PS1; j++)  {
-                  for (int i=0; i<PS1; i++)  {
+//                check fluid != NULL for buffer patches
+                  if ( amr->patch[FluSg][ChildLv][PID]->fluid != NULL && amr->FluSgTime[ChildLv][FluSg] >= 0.0 )
+                  {
+//                   check whether dB wavelength is resolved after conversion to wave patch
+#                    ifdef GAMER_DEBUG
                      int kk  =  k;
                      int kkp = (kk + 1) < PS1  ? kk + 1 : kk    ;
                      int kkm = (kk - 1) < 0    ? kk     : kk - 1;
@@ -241,12 +240,8 @@ void LB_Refine( const int FaLv )
                      if ( dPhase > M_PI ) {
                         Aux_Message ( stderr, "WARNING: Phase jump = %d > PI when converting patch from fluid to wave scheme on lv %d!", dPhase, ChildLv);
                      }
-                  }}}
-#                 endif // # ifdef GAMER_DEBUG
+#                    endif // # ifdef GAMER_DEBUG
 
-//                check fluid != NULL for buffer patches
-                  if ( amr->patch[FluSg][ChildLv][PID]->fluid != NULL && amr->FluSgTime[ChildLv][FluSg] >= 0.0 )
-                  {
                      const real Amp   = SQRT(amr->patch[FluSg][ChildLv][PID]->fluid[DENS][k][j][i]);
                      const real Phase = amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][k][j][i];
                      amr->patch[FluSg][ChildLv][PID]->fluid[REAL][k][j][i] = Amp * COS(Phase);
