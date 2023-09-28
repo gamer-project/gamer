@@ -1,7 +1,6 @@
 from __future__ import print_function, division  # Ensure Python 2/3 compatibility
 
 import numpy as np
-import scipy
 import sys
 import argparse
 
@@ -16,8 +15,6 @@ parser.add_argument('-n_in', action='store', required=True, type=int, dest='n_in
                     help='input file resolution')
 parser.add_argument('-n_out', action='store', required=True, type=int, dest='n_out',
                     help='output file resolution')
-parser.add_argument('-n_thread', action='store', required=False, type=int, dest='n_thread',
-                    help='number of threads to use', default=-1)
 parser.add_argument('-input', action='store', required=False, type=str, dest='input',
                     help='input file [%(default)s]', default='./UM_IC_lr')
 parser.add_argument('-output', action='store', required=False, type=str, dest='output',
@@ -39,7 +36,6 @@ input_file  = args.input
 output_file = args.output
 n_in        = args.n_in
 n_out       = args.n_out
-n_threads   = args.n_thread  # -1 wraps around from os.cpu_count()
 float8      = args.float8  # Enable double precision
 
 if float8:
@@ -62,9 +58,12 @@ def interp(psi, n_in, n_out, n_threads):
         print("n_in == n_out, no rescaling necessary!")
         return psi
 
+    n_total = np.prod(psi.shape)
+
     # Compute fft of array
     print("Computing FFT... ", end="")
-    psihat = scipy.fft.fftn(psi, workers=n_threads, norm="forward")
+    # Divide by n_total for forward normalisation
+    psihat = np.fft.fftn(psi) / n_total
     print("done!")
 
     # Free input arrays to save memory
@@ -86,11 +85,12 @@ def interp(psi, n_in, n_out, n_threads):
 
     # Shift zero frequencies back to outside of cube
     print("Computing IFFT... ", end="")
-    psihat = np.fft.fftshift(psihat)
+    # Multiply by n_total to undo backward normalisation
+    psihat = np.fft.fftshift(psihat) * n_total
     print("done!")
 
     # Inverse FFT
-    psihr = scipy.fft.ifftn(psihat, workers=n_threads, norm="forward")
+    psihr = np.fft.ifftn(psihat)
 
     # Delete large array in frequency domain to save memory
     del psihat
