@@ -43,71 +43,71 @@ colormap    = 'viridis'
 dpi         = 150
 
 yt.enable_parallelism()
+ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
+
+for ds in ts.piter():
+
+     axes = ["z"]
+
+     for myax in axes:
+          fig = plt.figure(dpi = dpi, figsize=(24, 12))
+
+          # See http://matplotlib.org/mpl_toolkits/axes_grid/api/axes_grid_api.html
+          # These choices of keyword arguments produce a four panel plot that includes
+          # four narrow colorbars, one for each plot.  Axes labels are only drawn on the
+          # bottom left hand plot to avoid repeating information and make the plot less
+          # cluttered.
+          grid = AxesGrid(
+               fig,
+               (0.075, 0.075, 0.85, 0.85),
+               nrows_ncols=(2, 2),
+               axes_pad=(0.2, 0.0),
+               label_mode="L",
+               share_all=True,
+               cbar_location="right",
+               cbar_mode="edge",
+               direction="row",
+               cbar_size="3%",
+               cbar_pad="0%",
+          )
 
 
-for idx in range(idx_start, idx_end+1, didx):
-          ds = yt.load("Data_%06d"%idx)# ds = yt.load('t_%06d'%idx)
-          ds.force_periodicity()
-
-          axes = ["z"]
-
-          for myax in axes:
-                     fig = plt.figure(dpi = dpi, figsize=(24, 12))
-
-                     # See http://matplotlib.org/mpl_toolkits/axes_grid/api/axes_grid_api.html
-                     # These choices of keyword arguments produce a four panel plot that includes
-                     # four narrow colorbars, one for each plot.  Axes labels are only drawn on the
-                     # bottom left hand plot to avoid repeating information and make the plot less
-                     # cluttered.
-                     grid = AxesGrid(
-                          fig,
-                          (0.075, 0.075, 0.85, 0.85),
-                          nrows_ncols=(2, 2),
-                          axes_pad=(0.2, 0.0),
-                          label_mode="L",
-                          share_all=True,
-                          cbar_location="right",
-                          cbar_mode="edge",
-                          direction="row",
-                          cbar_size="3%",
-                          cbar_pad="0%",
-                     )
+          fields = [
+               ("gas", "density"),
+               ("gamer", "Phase"),
+          ]
 
 
-                     fields = [
-                          ("gas", "density"),
-                          ("gamer", "Phase"),
-                         ]
+          pz = yt.SlicePlot( ds, myax, fields)
+          pz.set_log(("gamer", "Phase"), False)
 
+          pz.annotate_grids( periodic=False )
 
-                     pz = yt.SlicePlot( ds, myax, fields)
-                     pz.set_log(("gamer", "Phase"), False)
+          pz.set_cmap( fields, colormap )
 
-                     pz.annotate_grids( periodic=False )
+          # For each plotted field, force the SlicePlot to redraw itself onto the AxesGrid
+          # axes.
+          for i, field in enumerate(fields):
+               plot = pz.plots[field]
+               plot.figure = fig
+               plot.axes = grid[2*i].axes
+               plot.cax = grid.cbar_axes[i]
 
-                     pz.set_cmap( fields, colormap )
+          pz2 = yt.SlicePlot( ds, myax, fields)
+          pz2.set_log(("gamer", "Phase"), False)
+          pz2.set_cmap( fields, colormap )
+          # For each plotted field, force the SlicePlot to redraw itself onto the AxesGrid
+          # axes.
+          for i, field in enumerate(fields):
+               plot = pz2.plots[field]
+               plot.figure = fig
+               plot.axes = grid[2*i+1].axes
 
-                     # For each plotted field, force the SlicePlot to redraw itself onto the AxesGrid
-                     # axes.
-                     for i, field in enumerate(fields):
-                          plot = pz.plots[field]
-                          plot.figure = fig
-                          plot.axes = grid[2*i].axes
-                          plot.cax = grid.cbar_axes[i]
+          # Finally, redraw the plot on the AxesGrid axes.
+          pz._setup_plots()
+          pz2._setup_plots()
 
-                     pz2 = yt.SlicePlot( ds, myax, fields)
-                     pz2.set_log(("gamer", "Phase"), False)
-                     pz2.set_cmap( fields, colormap )
-                     # For each plotted field, force the SlicePlot to redraw itself onto the AxesGrid
-                     # axes.
-                     for i, field in enumerate(fields):
-                          plot = pz2.plots[field]
-                          plot.figure = fig
-                          plot.axes = grid[2*i+1].axes
+          DumpID = ds.parameters["DumpID"]
+          plt.savefig("Data_%06d_%s_axis.png" % (DumpID, myax))
 
-                     # Finally, redraw the plot on the AxesGrid axes.
-                     pz._setup_plots()
-                     pz2._setup_plots()
-                     plt.savefig("Data_%06d_density_%s_axis.png" % (idx, myax))
-
-                     plt.close()
+          plt.close()
