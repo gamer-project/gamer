@@ -908,7 +908,6 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
    int idx_B[NCOMP_MAG];
 #  endif
 
-   // printf("PPM (con, pri, con)\n");
    CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) )
    {
       const int i_fc      = idx_fc%N_FC_VAR;
@@ -1000,11 +999,6 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                  )
                             );
 
-           // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf(" CC: %+.16e %+.16e %+.16e %+.16e %+.16e\n", cc_LL, cc_L, cc_C, cc_R, cc_RR);
-           // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf(" dC: %+.16e %+.16e %+.16e %+.16e\n", d_LL, d_L, d_R, d_RR);
-           // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("ddC: %+.16e %+.16e %+.16e\n", dd_L, dd_C, dd_R);
-           // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("cc_abs_max: %+.16e\n", cc_abs_max);
-
 //          3-2. interpolate the face value
             fc_L = ( -cc_LL + (real)7.*cc_L + (real)7.*cc_C - cc_R  ) / (real)12.0;
             fc_R = ( -cc_L  + (real)7.*cc_C + (real)7.*cc_R - cc_RR ) / (real)12.0;
@@ -1017,8 +1011,6 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
             // real dd_ip1 = (cc_RR - cc_R) / (real)2. + qb / (real)2.;
             // fc_L = cc_L/(real)2. + cc_C/(real)2. + dd_im1/(real)6. - dd    /(real)6.;
             // fc_R = cc_C/(real)2. + cc_R/(real)2. + dd    /(real)6. - dd_ip1/(real)6.;
-
-           // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("1 => %02d: %+.16e %+.16e\n", i_cc, fc_L, fc_R);
 
 //          3-3. prepare half value
             real dh_LL, dh_L, dh_R, dh_RR;
@@ -1033,9 +1025,6 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
             ddh_C = fc_L - (real)2.*cc_C + fc_R;
             ddh_R = cc_C - (real)2.*fc_R + cc_R;
 
-            // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf(" dh: %+.16e %+.16e %+.16e %+.16e\n", dh_LL, dh_L, dh_R, dh_RR);
-            // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("ddh: %+.16e %+.16e %+.16e\n", ddh_L, ddh_C, ddh_R);
-
 //          3-4. limit slope of L&R
             if ( dh_LL*dh_L < 0.0 ) {
                if ( SIGN(dd_L) == SIGN(ddh_L) && SIGN(ddh_L) == SIGN(dd_C) ) {
@@ -1045,8 +1034,6 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                } else {
                   tmp = 0.0;
                } // if ( SIGN(dd_L) == SIGN(ddh_L) && SIGN(ddh_L) == SIGN(dd_C) ) ... else ...
-               // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("extrma at i-1/2, %+.16e => %+.16e ", fc_L, (real)0.5*(cc_L+cc_C) - tmp/(real)6.0);
-               // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("tmp = %+.16e\n", tmp);
                fc_L = (real)0.5*(cc_L+cc_C) - tmp/(real)6.0;
             } // if ( dh_LL*dh_L < 0.0 )
 
@@ -1058,12 +1045,8 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                } else {
                   tmp = 0.0;
                } // if ( SIGN(dd_C) == SIGN(ddh_R) && SIGN(ddh_R) == SIGN(dd_R) ) ... else ...
-               // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("extrma at i+1/2, %+.16e => %+.16e ", fc_R, (real)0.5*(cc_R+cc_C) - tmp/(real)6.0);
-               // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("tmp = %+.16e\n", tmp);
                fc_R = (real)0.5*(cc_C+cc_R) - tmp/(real)6.0;
             } // if ( dh_R*dh_RR < 0.0 )
-
-           // if (debug)  if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("2 => %02d: %+.16e %+.16e\n", i_cc, fc_L, fc_R);
 
 //          3.4.1 test update the half value
             dh_LL = fc_L - cc_L;
@@ -1073,7 +1056,6 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 //          3-5. reduce error to round-off error
             if ( SIGN(dd_L) == SIGN(dd_C) && SIGN(dd_C) == SIGN(dd_R) && SIGN(dd_R) == SIGN(ddh_C) ) {
-               // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("same dd at i => ");
                tmp = SIGN(dd_C) * MIN( C_factor*FABS(dd_L),
                                        MIN( C_factor*FABS(dd_C),
                                             MIN( C_factor*FABS(dd_L), (real)6.0*FABS(ddh_C))
@@ -1082,44 +1064,32 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
             } else {
                tmp = 0.0;
             } // if ( SIGN(dd_L) == SIGN(dd_C) && SIGN(dd_C) == SIGN(dd_R) && SIGN(dd_R) == SIGN(ddh_C) ) ... else ...
-            // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("tmp = %+.16e\n", tmp);
 
             if ( (real)6.*FABS(ddh_C) > round_err*cc_abs_max ) {
-               // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("big dd => ");
                rho = tmp / ddh_C / (real)6.;
             } else {
                rho = 0.0;
             } // if ( FABS(ddh_C) > round_error*cc_abs_max ) ... else ...
-            // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("rho = %+.16e\n", rho);
 
             if ( dh_L*dh_R < 0.0 || d_L*d_R < 0.0 ) {
-               // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("Extrema at i: ");
                if ( rho < 1.-round_err )   {
                   fc_L = cc_C - rho * dh_L;
-                  // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("fix left ");
                }
                if ( rho < 1.-round_err )   {
                   fc_R = cc_C + rho * dh_R;
-                  // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("fix right ");
                }
-               // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("\n");
             } else {
-               // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("No extrema at i: ");
                if ( FABS(dh_L) >= (real)2.*FABS(dh_R) )   {
                   fc_L = cc_C - (real)2.*dh_R;
-                  // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("fix left ");
                }
                if ( FABS(dh_R) >= (real)2.*FABS(dh_L) )   {
                   fc_R = cc_C + (real)2.*dh_L;
-                  // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("fix right ");
                }
-               // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("\n");
             } // if ( dh_L*dh_R < 0.0 && d_L*d_R < 0.0 )
 
 //          3-6. store the value
             fc[faceL][v] = fc_L;
             fc[faceR][v] = fc_R;
-            // if (debug) if (v==0 && d==0 && j_cc==8 && k_cc==8) printf("Final: %+.16e %+.16e\n", fc_L, fc_R);
 
          } // for (int v=0; v<NCOMP_LR; v++)
 
@@ -1367,17 +1337,6 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
       for (int f=0; f<6; f++)
       for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
          g_FC_Var[f][v][idx_fc] = fc[f][v];
-
-      // if ( j_cc == 8 && k_cc == 8 )
-      // {
-      //    printf( "i=%02d, j=%02d, k=%02d", i_cc, j_cc, k_cc);
-      //    printf( "| %+.16e %+.16e %+.16e | ", fc[0][0], g_PriVar[0][idx_cc], fc[1][0] );
-      //    printf( "| %+.16e %+.16e %+.16e | ", fc[0][1], g_PriVar[1][idx_cc], fc[1][1] );
-      //    printf( "| %+.16e %+.16e %+.16e | ", fc[0][2], g_PriVar[2][idx_cc], fc[1][2] );
-      //    printf( "| %+.16e %+.16e %+.16e | ", fc[0][3], g_PriVar[3][idx_cc], fc[1][3] );
-      //    printf( "| %+.16e %+.16e %+.16e | ", fc[0][4], g_PriVar[4][idx_cc], fc[1][4] );
-      //    printf("\n");
-      // }
 
    } // CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) )
 
