@@ -124,7 +124,7 @@ void Init_ResetParameter()
    if ( DT__HYBRID_CFL < 0.0 )
    {
 #     ifdef GRAVITY
-      DT__HYBRID_CFL 0.20;
+      DT__HYBRID_CFL = 0.20;
 #     else
       DT__HYBRID_CFL = 0.40;
 #     endif
