@@ -160,30 +160,6 @@ void Aux_Record_Center()
 
       if ( min_pote_rank < 0  ||  min_pote_rank >= MPI_NRank )
          Aux_Error( ERROR_INFO, "incorrect min_pote_rank (%d) !!\n", min_pote_rank );
-
-      static bool FirstTime = true;
-
-      if ( FirstTime )
-      {
-         if ( Aux_CheckFileExist(filename_center) )
-            Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", filename_center );
-         else
-         {
-            FILE *file_center = fopen( filename_center, "w" );
-            fprintf( file_center, "#%19s  %10s  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %10s  %14s  %14s  %14s\n",
-                     "Time", "Step", "Dens", "Dens_x", "Dens_y", "Dens_z", "Pote", "Pote_x", "Pote_y", "Pote_z",
-                     "NIter", "CM_x", "CM_y", "CM_z" );
-            fclose( file_center );
-         }
-
-         FirstTime = false;
-      }
-
-      FILE *file_center = fopen( filename_center, "a" );
-      fprintf( file_center, "%20.14e  %10ld  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e",
-               Time[0], Step, recv[max_dens_rank][0], recv[max_dens_rank][1], recv[max_dens_rank][2], recv[max_dens_rank][3],
-                              recv[min_pote_rank][4], recv[min_pote_rank][5], recv[min_pote_rank][6], recv[min_pote_rank][7] );
-      fclose( file_center );
    } // if ( MPI_Rank == 0 )
 
 
@@ -220,11 +196,37 @@ void Aux_Record_Center()
 
    if ( MPI_Rank == 0 )
    {
+
       if ( dR2 > TolErrR2 )
          Aux_Message( stderr, "WARNING : dR (%13.7e) > CM_TolErrR (%13.7e) !!\n", sqrt(dR2), CM_TolErrR );
+   }
+
+   if ( MPI_Rank == 0 )
+   {
+
+      static bool FirstTime = true;
+
+      if ( FirstTime )
+      {
+         if ( Aux_CheckFileExist(filename_center) )
+            Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", filename_center );
+         else
+         {
+            FILE *file_center = fopen( filename_center, "w" );
+            fprintf( file_center, "#%19s  %10s  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %10s  %14s  %14s  %14s\n",
+                     "Time", "Step", "Dens", "Dens_x", "Dens_y", "Dens_z", "Pote", "Pote_x", "Pote_y", "Pote_z",
+                     "NIter", "CM_x", "CM_y", "CM_z" );
+            fclose( file_center );
+         }
+
+         FirstTime = false;
+      }
 
       FILE *file_center = fopen( filename_center, "a" );
-      fprintf( file_center, "  %10d  %14.7e  %14.7e  %14.7e\n", NIter, CM_New[0], CM_New[1], CM_New[2] );
+      fprintf( file_center, "%20.14e  %10ld  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e  %10d  %14.7e  %14.7e  %14.7e\n",
+               Time[0], Step, recv[max_dens_rank][0], recv[max_dens_rank][1], recv[max_dens_rank][2], recv[max_dens_rank][3],
+                              recv[min_pote_rank][4], recv[min_pote_rank][5], recv[min_pote_rank][6], recv[min_pote_rank][7],
+                              NIter, CM_New[0], CM_New[1], CM_New[2] );
       fclose( file_center );
    }
 
