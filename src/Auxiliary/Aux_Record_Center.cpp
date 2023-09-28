@@ -189,6 +189,7 @@ void Aux_Record_Center()
 
 // compute the center of mass until convergence
    const double CM_MaxR    = SQRT( SQR(amr->BoxSize[0]) + SQR(amr->BoxSize[1]) + SQR(amr->BoxSize[2]) ); // maximum radius for determining CM
+   const double CM_MinRho  = 0.0;
    const double CM_TolErrR = amr->dh[0];                      // maximum allowed errors for determining CM
    const double TolErrR2 = SQR( CM_TolErrR );
    const int    NIterMax = 10;
@@ -204,7 +205,7 @@ void Aux_Record_Center()
 
    while ( true )
    {
-      Aux_FindCenterOfMass( CM_Old, CM_New, CM_MaxR );
+      Aux_FindWeightedCenter( CM_New, CM_Old, CM_MaxR, CM_MinRho, 1, _TOTAL_DENS );
 
       dR2 = SQR( CM_Old[0] - CM_New[0] )
           + SQR( CM_Old[1] - CM_New[1] )
