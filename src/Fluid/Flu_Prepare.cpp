@@ -156,17 +156,29 @@ void Flu_Prepare( const int lv, const double PrepTime,
       {
          real fluid[FLU_NIN];
 
-//       a. fluid
-         for (int k=0; k<FLU_NXT; k++)
-         for (int j=0; j<FLU_NXT; j++)
-         for (int i=0; i<FLU_NXT; i++)
+         int flu_nxt = FLU_NXT;
+
+//       distinguish between FLU_NXT and HYB_NXT
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         if ( !amr->use_wave_flag[lv] )
          {
+            flu_nxt = HYB_NXT;
+         }
+#        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+//       a. fluid
+         for (int k=0; k<flu_nxt; k++)
+         for (int j=0; j<flu_nxt; j++)
+         for (int i=0; i<flu_nxt; i++)
+         {
+
 #           if ( ELBDM_SCHEME == ELBDM_HYBRID )
             if ( amr->use_wave_flag[lv] ) {
 #           endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
             const int t = IDX321( i, j, k, FLU_NXT, FLU_NXT );
             for (int v=0; v<FLU_NIN; v++)    fluid[v] = h_Flu_Array_F_In[TID][v][t];
+
 
 #           if ( ELBDM_SCHEME == ELBDM_HYBRID )
             } else { // if ( amr->use_wave_flag[lv] ) {
@@ -177,7 +189,6 @@ void Flu_Prepare( const int lv, const double PrepTime,
             for (int v=0; v<FLU_NIN; v++)    fluid[v] = smaller_h_Flu_Array_F_In[TID][v][t];
             } // if ( amr->use_wave_flag[lv] ) { ... else
 #           endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-
 
 //          HYDRO
 #           if ( MODEL == HYDRO )
