@@ -142,17 +142,7 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
    const real WavelengthMagnifier = 100.0;
 
    real *DensInput  = NULL;
-   //real *PhasInput  = NULL;
    real *DensOutput = NULL;
-   //real *PhasOutput = NULL;
-//
-   if ( UnwrapPhase )
-   {
-      //DensInput  = new real [ InputDisp  ];
-   //   PhasInput  = new real [ InputDisp  ];
-      //DensOutput = new real [ OutputDisp ];
-   //   PhasOutput = new real [ OutputDisp ];
-   }
 #  endif
 
    for (size_t XYZ=0; XYZ<3; ++XYZ)
