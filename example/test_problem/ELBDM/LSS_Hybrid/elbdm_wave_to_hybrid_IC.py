@@ -11,7 +11,7 @@ import argparse
 # Load the command-line parameters
 parser = argparse.ArgumentParser(description='Convert GAMER ELBDM wave (RE/IM) IC to hybrid (DENS/PHASE) IC. \n \
                                  Example usage: python elbdm_wave_to_hybrid_IC.py -resolution 256 -input UM_IC_wave -output UM_IC_hybrid.\n\
-                                 Conversion only well-defined if IC do not contain vortices, i.e. at high redshift for cosmological IC.')
+                                 Conversion is well-defined only if initial conditions do not contain vortices, i.e. at high redshift for cosmological IC.')
 
 # Define command-line arguments
 parser.add_argument('-float8', action='store', required=False, type=bool, dest='float8',

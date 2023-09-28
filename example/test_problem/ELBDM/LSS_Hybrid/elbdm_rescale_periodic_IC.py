@@ -6,7 +6,7 @@ import sys
 import argparse
 
 # Load the command-line parameters
-parser = argparse.ArgumentParser(description='Upscale periodic GAMER ELBDM initial conditions. \n\
+parser = argparse.ArgumentParser(description='Rescale periodic GAMER ELBDM initial conditions. \n\
                                  Example usage: ./elbdm_rescale_periodic_ic.py -n_in 256 -n_out 64 -input UM_IC_high_resolution -output UM_IC_low_resolution')
 
 # Define command-line arguments
