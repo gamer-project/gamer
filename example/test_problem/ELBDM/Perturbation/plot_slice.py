@@ -44,11 +44,11 @@ yt.enable_parallelism()
 ts = yt.load([prefix + '/Data_%06d' % idx for idx in range(idx_start, idx_end + 1, didx)])
 
 for ds in ts.piter():
-    # Create a slice plot
-    sz = yt.SlicePlot(ds, 'z', field, center=center_mode)
-    # Configure plot settings
-    sz.set_log(field, False)
-    sz.set_cmap(field, colormap)
-    sz.annotate_timestamp(corner='upper_right', time_format='t = {time:.4f} {units}')
-    # Save the plot
-    sz.save(mpl_kwargs={"dpi": dpi})
+   # Create a slice plot
+   sz = yt.SlicePlot(ds, 'z', field, center=center_mode)
+   # Configure plot settings
+   sz.set_log(field, False)
+   sz.set_cmap(field, colormap)
+   sz.annotate_timestamp(corner='upper_right', time_format='t = {time:.4f} {units}')
+   # Save the plot
+   sz.save(mpl_kwargs={"dpi": dpi})
