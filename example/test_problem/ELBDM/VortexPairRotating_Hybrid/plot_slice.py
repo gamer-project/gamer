@@ -48,66 +48,69 @@ dataset_series = yt.DatasetSeries([prefix + '/Data_%06d' % idx for idx in range(
 
 # Loop through each dataset in the series
 for dataset in dataset_series.piter():
-    axes = ["z"]  # Specify the axes for slicing (e.g., "z" for z-axis slices)
+     axes = ["z"]  # Specify the axes for slicing (e.g., "z" for z-axis slices)
 
-    for current_axis in axes:
-        # Create a new figure for the current slice
-        fig = plt.figure(dpi=dpi, figsize=(24, 12))
+     for current_axis in axes:
+          # Create a new figure for the current slice
+          fig = plt.figure(dpi=dpi, figsize=(24, 12))
 
-        # Create a grid of axes for multiple plots
-        grid = AxesGrid(
-            fig,
-            (0.075, 0.075, 0.85, 0.85),
-            nrows_ncols=(2, 2),
-            axes_pad=(0.2, 0.0),
-            label_mode="L",
-            share_all=True,
-            cbar_location="right",
-            cbar_mode="edge",
-            direction="row",
-            cbar_size="3%",
-            cbar_pad="0%",
-        )
+          # Create a grid of axes for multiple plots
+          grid = AxesGrid(
+               fig,
+               (0.075, 0.075, 0.85, 0.85),
+               nrows_ncols=(2, 2),
+               axes_pad=(0.2, 0.0),
+               label_mode="L",
+               share_all=True,
+               cbar_location="right",
+               cbar_mode="edge",
+               direction="row",
+               cbar_size="3%",
+               cbar_pad="0%",
+          )
 
-        # Define the fields to plot
-        fields_to_plot = [
-            ("gas", "density"),
-            ("gamer", "Phase"),
-        ]
+          # Define the fields to plot
+          fields_to_plot = [
+               ("gas", "density"),
+               ("gamer", "Phase"),
+          ]
 
-        # Create a slice plot for the current dataset and field
-        slice_plot = yt.SlicePlot(dataset, current_axis, fields_to_plot)
-        slice_plot.set_log(("gamer", "Phase"), False)  # Set logarithmic scale for Phase field
+          # Create a slice plot for the current dataset and field
+          slice_plot = yt.SlicePlot(dataset, current_axis, fields_to_plot)
+          slice_plot.set_log(("gamer", "Phase"), False)
 
-        slice_plot.annotate_grids(periodic=False)  # Annotate the grids
+          slice_plot.annotate_grids(periodic=False)
 
-        slice_plot.set_cmap(fields_to_plot, colormap)  # Set the colormap for the fields
+          for field in fields_to_plot:
+               slice_plot.set_cmap(field, colormap)
 
-        # For each plotted field, associate it with the corresponding AxesGrid axes
-        for i, field in enumerate(fields_to_plot):
-            plot = slice_plot.plots[field]
-            plot.figure = fig
-            plot.axes = grid[2 * i].axes
-            plot.cax = grid.cbar_axes[i]
+          # For each plotted field, associate it with the corresponding AxesGrid axes
+          for i, field in enumerate(fields_to_plot):
+               plot = slice_plot.plots[field]
+               plot.figure = fig
+               plot.axes = grid[2 * i].axes
+               plot.cax = grid.cbar_axes[i]
 
-        # Create a second slice plot for comparison
-        slice_plot_2 = yt.SlicePlot(dataset, current_axis, fields_to_plot)
-        slice_plot_2.set_log(("gamer", "Phase"), False)
-        slice_plot_2.set_cmap(fields_to_plot, colormap)
+          # Create a second slice plot for comparison
+          slice_plot_2 = yt.SlicePlot(dataset, current_axis, fields_to_plot)
+          slice_plot_2.set_log(("gamer", "Phase"), False)
 
-        # Associate the second slice plot with the AxesGrid axes
-        for i, field in enumerate(fields_to_plot):
-            plot = slice_plot_2.plots[field]
-            plot.figure = fig
-            plot.axes = grid[2 * i + 1].axes
+          for field in fields_to_plot:
+               slice_plot_2.set_cmap(field, colormap)
 
-        # Redraw the plot on the AxesGrid axes
-        slice_plot._setup_plots()
-        slice_plot_2._setup_plots()
+          # Associate the second slice plot with the AxesGrid axes
+          for i, field in enumerate(fields_to_plot):
+               plot = slice_plot_2.plots[field]
+               plot.figure = fig
+               plot.axes = grid[2 * i + 1].axes
 
-        # Get the DumpID from dataset parameters and save the plot with a descriptive filename
-        dump_id = dataset.parameters["DumpID"]
-        plt.savefig("Data_%06d_%s_axis.png" % (dump_id, current_axis))
+          # Redraw the plot on the AxesGrid axes
+          slice_plot._setup_plots()
+          slice_plot_2._setup_plots()
 
-        # Close the current figure to release resources
-        plt.close()
+          # Get the DumpID from dataset parameters and save the plot
+          dump_id = dataset.parameters["DumpID"]
+          plt.savefig("Data_%06d_%s_axis.png" % (dump_id, current_axis))
+
+          # Close the current figure to release resources
+          plt.close()
