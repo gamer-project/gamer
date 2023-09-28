@@ -131,7 +131,8 @@ const LR_Limiter_t
    LR_LIMITER_ALBADA     = 3,
    LR_LIMITER_VL_GMINMOD = 4,
    LR_LIMITER_EXTPRE     = 5,
-   LR_LIMITER_CENTRAL    = 6;
+   LR_LIMITER_CENTRAL    = 6,
+   LR_LIMITER_ATHENA     = 7;
 
 
 // data output formats
