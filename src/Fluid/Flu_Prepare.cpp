@@ -231,7 +231,14 @@ void Flu_Prepare( const int lv, const double PrepTime,
 
             for (int v=0; v<FLU_NIN; v++)
             {
-               if (  !Aux_IsFinite( fluid[v] )  )
+               bool isDataInvalid = !Aux_IsFinite( fluid[v] );
+
+//             check for negative densities
+#              if ( MODEL == ELBDM )
+               isDataInvalid |= (v == DENS) && fluid[DENS] < 0;
+#              endif // # if ( MODEL == ELBDM )
+
+               if (  isDataInvalid  )
                {
                   Aux_Message( stderr, "Invalid input fluid data:\n" );
                   Aux_Message( stderr, "Fluid: " );
