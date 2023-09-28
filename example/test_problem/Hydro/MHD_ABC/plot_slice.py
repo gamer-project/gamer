@@ -19,9 +19,7 @@ args=parser.parse_args()
 # take note
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
-for t in range( len(sys.argv) ):
-   print( str(sys.argv[t]) ),
-print( '' )
+print( ' '.join(map(str, sys.argv)) )
 print( '-------------------------------------------------------------------\n' )
 
 
@@ -31,7 +29,8 @@ didx        = args.didx
 prefix      = args.prefix
 
 colormap    = 'arbre'
-field       = 'magnetic_energy'  # to change the target field, one must modify set_unit() accordingly
+# to change the target field, one must modify set_unit() accordingly
+field       = ('gas', 'magnetic_energy_density') if yt.__version__.split(".")[0] == "4" else ('gas', 'magnetic_energy')
 center_mode = 'c'
 dpi         = 150
 

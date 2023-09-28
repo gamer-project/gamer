@@ -54,7 +54,7 @@ SIMU_OPTION += -DMODEL=HYDRO
 ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
 # hydrodynamic scheme: RTVD/MHM/MHM_RP/CTU
 # --> must be set when MODEL=HYDRO
-# --> MHD only supports MHM_RP and CTU
+# --> MHD only supports MHM, MHM_RP and CTU
 SIMU_OPTION += -DFLU_SCHEME=CTU
 
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
@@ -538,7 +538,7 @@ CPU_FILE    += MHD_GetCellCenteredBInPatch.cpp  MHD_InterpolateBField.cpp  MHD_A
                MHD_Aux_Check_InterfaceB.cpp  MHD_FixUp_Electric.cpp  MHD_Aux_Check_DivergenceB.cpp \
                MHD_BoundaryCondition_Outflow.cpp  MHD_BoundaryCondition_Reflecting.cpp  MHD_BoundaryCondition_User.cpp \
                MHD_BoundaryCondition_Diode.cpp  MHD_CopyPatchInterfaceBField.cpp  MHD_Init_BField_ByVecPot_File.cpp \
-               MHD_SameInterfaceB.cpp  MHD_Init_BField_ByVecPot_Function.cpp
+               MHD_SameInterfaceB.cpp  MHD_Init_BField_ByVecPot_Function.cpp  MHD_ResetByUser.cpp
 
 CPU_FILE    += CPU_Shared_ConstrainedTransport.cpp  CPU_Shared_RiemannSolver_HLLD.cpp
 
@@ -1074,6 +1074,9 @@ else
 	fi)
 endif
 	@rm -f ./*.linkinfo
+
+# force re-compiling Aux_TakeNote.cpp to get the correct compilation time
+	$(ECHO)mv $(OBJ_PATH)/$(PREFIX_CPU)Aux_TakeNote.o $(OBJ_PATH)/$(PREFIX_CPU)Aux_TakeNote_backup.o
 
 
 # clean

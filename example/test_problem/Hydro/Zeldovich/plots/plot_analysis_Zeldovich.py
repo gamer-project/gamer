@@ -36,9 +36,7 @@ args=parser.parse_args()
 # take note
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
-for t in range( len(sys.argv) ):
-   print( str(sys.argv[t]) )
-print( '' )
+print( ' '.join(map(str, sys.argv)) )
 print( '-------------------------------------------------------------------\n' )
 
 idx_start = args.idx_start
@@ -82,7 +80,7 @@ Pert_Wave_Len          = BoxSize_x/n_Pert_Wave_Len
 if (Gas_Par_Setup == 1): # gas-only setup
     Molecular_Weight       = ts0.parameters["MolecularWeight"]
     base_level_cell_num_3D = ts0.domain_dimensions             # [base_level_cell_num, base_level_cell_num, base_level_cell_num]
-    base_level_mid_index   = base_level_cell_num_3D/2          # mid-point (x,y,z) grid indices
+    base_level_mid_index   = base_level_cell_num_3D//2         # mid-point (x,y,z) grid indices
     Const_amu              = 1.660539040e-24                   # in cgs
     Const_kB               = 1.38064852e-16                    # in cgs
     # import data columns from GAMER "Output_L1Error()" output files
@@ -120,7 +118,7 @@ elif (Gas_Par_Setup == 2): # particle-only setup
 for ds in ts.piter():
     # load data frame cosmological parameters
     DumpID_now       = ds.parameters["DumpID"]
-    current_time_a   = ds.current_time                          # scale factor
+    current_time_a   = ds.scale_factor                          # scale factor
     current_time_z   = (1.0/float(current_time_a)) - 1.0        # redshift
 
     # -------------------------------------------------------------------------------------------------------------------------

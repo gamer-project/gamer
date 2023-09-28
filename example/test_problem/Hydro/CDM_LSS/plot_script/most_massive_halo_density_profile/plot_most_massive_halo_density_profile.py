@@ -23,9 +23,7 @@ prefix      = args.prefix
 # take note
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
-for t in range( len(sys.argv) ):
-   print(sys.argv[t]),
-print( '' )
+print( ' '.join(map(str, sys.argv)) )
 print( '-------------------------------------------------------------------' )
 
 # load input data frames
@@ -53,7 +51,7 @@ for sto, ds in ts.piter(storage=storage):
     # cosmological parameters in the current data frame
     Data_ID_Now    = ds.parameters["DumpID"]
     density_filter = ds.all_data()
-    current_time_a = ds.current_time                          # scale factor
+    current_time_a = ds.scale_factor                          # scale factor
     current_time_z = (1.0/float(current_time_a)) - 1.0        # redshift
 
     # [Part I] Identify the Soliton-halo CM Coordinates

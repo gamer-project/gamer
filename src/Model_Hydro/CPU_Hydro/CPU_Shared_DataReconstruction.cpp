@@ -14,6 +14,10 @@
 
 #include "CUFLU_Shared_FluUtility.cu"
 
+#if ( FLU_SCHEME == MHM  &&  defined MHD )
+#include "CUFLU_Shared_ConstrainedTransport.cu"
+#endif
+
 #else
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
@@ -30,7 +34,18 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const i
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
                      const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX], const real* const PresIn );
-#endif
+#ifdef MHD
+void MHD_ComputeElectric_Half(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
+                               const real g_ConVar[][ CUBE(FLU_NXT) ],
+                               const real g_FC_B  [][SQR(FLU_NXT)*FLU_NXT_P1],
+                               const int NEle, const int NCon, const int OffsetCon );
+void MHD_UpdateMagnetic_Half(       real fc[][NCOMP_LR],
+                              const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
+                              const real dt, const real dh,
+                              const int idx_i, const int idx_j, const int idx_k,
+                              const int NEle );
+#endif // #ifdef MHD
+#endif // #if ( FLU_SCHEME == MHM )
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -53,14 +68,27 @@ static void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
                                   real LEigenVec[][NWAVE], real REigenVec[][NWAVE],
                                   const EoS_t *EoS );
 #endif
-#endif
+#endif // #if (  FLU_SCHEME == CTU  ||  ( defined MHD && defined CHAR_RECONSTRUCTION )  )
 #if ( FLU_SCHEME == MHM )
 GPU_DEVICE
 static void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
                                   const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
+                                  const int cc_i, const int cc_j, const int cc_k,
+                                  const real g_FC_B[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                  const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
+                                  const int NGhost, const int NEle,
                                   const real MinDens, const real MinPres, const real MinEint,
                                   const EoS_t *EoS );
+#ifdef MHD
+GPU_DEVICE
+void Hydro_ConFC2PriCC_MHM(       real g_PriVar[][ CUBE(FLU_NXT) ],
+                            const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+                            const real MinDens, const real MinPres, const real MinEint,
+                            const bool FracPassive, const int NFrac, const int FracIdx[],
+                            const bool JeansMinPres, const real JeansMinPres_Coeff,
+                            const EoS_t *EoS );
 #endif
+#endif // #if ( FLU_SCHEME == MHM )
 #ifdef CHAR_RECONSTRUCTION
 GPU_DEVICE
 static void Hydro_Pri2Char( real InOut[], const real Dens, const real Pres, const real LEigenVec[][NWAVE],
@@ -122,6 +150,7 @@ static void Hydro_Char2Pri( real InOut[], const real Dens, const real Pres, cons
 //                                     --> Should contain NCOMP_LR variables
 //                                         --> Store internal energy as the last variable when LR_EINT is on
 //                                     --> Useless for PLM
+//                g_EC_Ele           : Array to store the edge-centered electric field at the half step
 //                Con2Pri            : Convert conserved variables in g_ConVar[] to primitive variables and
 //                                     store the results in g_PriVar[]
 //                NIn                : Size of g_PriVar[] along each direction
@@ -150,6 +179,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                      real g_PriVar   [][ CUBE(FLU_NXT) ],
                                      real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                                      real g_Slope_PPM[][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ],
+                                     real g_EC_Ele   [][ CUBE(N_EC_ELE) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
                                const real MinDens, const real MinPres, const real MinEint,
@@ -293,6 +323,12 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
       __syncthreads();
 #     endif
    } // if ( Con2Pri )
+
+
+// compute electric field for MHM
+#  if ( FLU_SCHEME == MHM  &&  defined MHD )
+   MHD_ComputeElectric_Half( g_EC_Ele, g_ConVar, g_FC_B, N_HF_ELE, NIn, NGhost );
+#  endif
 
 
 // data reconstruction
@@ -608,8 +644,9 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 #     if ( FLU_SCHEME == MHM )
 //    7. advance the face-centered variables by half time-step for the MHM integrator
-      Hydro_HancockPredict( fc, dt, dh, g_ConVar, idx_cc, MinDens, MinPres, MinEint, EoS );
-#     endif
+      Hydro_HancockPredict( fc, dt, dh, g_ConVar, idx_cc, i_cc, j_cc, k_cc, g_FC_B, g_EC_Ele, NGhost, N_HF_ELE,
+                            MinDens, MinPres, MinEint, EoS );
+#     endif // # if ( FLU_SCHEME == MHM )
 
 
 //    8. store the face-centered values to the output array
@@ -624,6 +661,15 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #  ifdef __CUDACC__
    __syncthreads();
 #  endif
+
+
+#  if ( FLU_SCHEME == MHM  &&  defined MHD )
+// 9. store the half-step primitive variables for MHM+MHD
+//    --> must be done after the CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) ) loop since it will update g_PriVar[]
+   Hydro_ConFC2PriCC_MHM( g_PriVar, g_FC_Var, MinDens, MinPres, MinEint, FracPassive, NFrac, FracIdx,
+                          JeansMinPres, JeansMinPres_Coeff, EoS );
+
+#  endif // #if ( FLU_SCHEME == MHM  &&  defined MHD )
 
 } // FUNCTION : Hydro_DataReconstruction (PLM)
 #endif // #if ( LR_SCHEME == PLM )
@@ -645,6 +691,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                      real g_PriVar   [][ CUBE(FLU_NXT) ],
                                      real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                                      real g_Slope_PPM[][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ],
+                                     real g_EC_Ele   [][ CUBE(N_EC_ELE) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
                                const real MinDens, const real MinPres, const real MinEint,
@@ -845,6 +892,12 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 #  ifdef __CUDACC__
    __syncthreads();
+#  endif
+
+
+// compute electric field for MHM
+#  if ( FLU_SCHEME == MHM  &&  defined MHD )
+   MHD_ComputeElectric_Half( g_EC_Ele, g_ConVar, g_FC_B, N_HF_ELE, NIn, NGhost );
 #  endif
 
 
@@ -1197,8 +1250,9 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 #     if ( FLU_SCHEME == MHM )
 //    7. advance the face-centered variables by half time-step for the MHM integrator
-      Hydro_HancockPredict( fc, dt, dh, g_ConVar, idx_cc, MinDens, MinPres, MinEint, EoS );
-#     endif
+      Hydro_HancockPredict( fc, dt, dh, g_ConVar, idx_cc, i_cc, j_cc, k_cc, g_FC_B, g_EC_Ele, NGhost, N_HF_ELE,
+                            MinDens, MinPres, MinEint, EoS );
+#     endif // # if ( FLU_SCHEME == MHM )
 
 
 //    8. store the face-centered values to the output array
@@ -1209,10 +1263,17 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
    } // CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) )
 
-
 #  ifdef __CUDACC__
    __syncthreads();
 #  endif
+
+#  if ( FLU_SCHEME == MHM  &&  defined MHD )
+// 9. Store the half-step primitive variables for MHM+MHD
+//    --> must be done after the CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) ) loop since it will update g_PriVar[]
+   Hydro_ConFC2PriCC_MHM( g_PriVar, g_FC_Var, MinDens, MinPres, MinEint, FracPassive, NFrac, FracIdx,
+                          JeansMinPres, JeansMinPres_Coeff, EoS );
+
+#  endif // #if ( FLU_SCHEME == MHM  &&  defined MHD )
 
 } // FUNCTION : Hydro_DataReconstruction (PPM)
 #endif // #if ( LR_SCHEME == PPM )
@@ -1872,20 +1933,28 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
 //                                    negative density and pressure
 //                                    --> It is just the input array Flu_Array_In[]
 //                cc_idx            : Index for accessing g_cc_array[]
+//                cc_{i,j,k}        : Index for accessing g_cc_array[] for MHD_UpdateMagnetic_Half()
+//                g_FC_B            : Array storing the face-centered magnetic field
+//                g_EC_Ele          : Array storing the input edge-centered electric field
+//                NGhost            : Ghost zone size of data reconstruction
+//                NEle              : Stride for accessing g_EC_Ele[]
 //                MinDens/Pres/Eint : Density, pressure, and internal energy floors
 //                EoS               : EoS object
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
                            const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
+                           const int cc_i, const int cc_j, const int cc_k,
+                           const real g_FC_B[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                           const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
+                           const int NGhost, const int NEle,
                            const real MinDens, const real MinPres, const real MinEint,
                            const EoS_t *EoS )
 {
 
    const real dt_dh2 = (real)0.5*dt/dh;
 
-   real Flux[6][NCOMP_TOTAL], dFlux;
-
+   real Flux[6][NCOMP_TOTAL_PLUS_MAG], dFlux;
 
 // calculate flux
    for (int f=0; f<6; f++)
@@ -1897,48 +1966,124 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
    {
       dFlux = dt_dh2*( Flux[1][v] - Flux[0][v] + Flux[3][v] - Flux[2][v] + Flux[5][v] - Flux[4][v] );
 
-      for (int f=0; f<6; f++)    fc[f][v] -= dFlux;
+      for (int f=0; f<6; f++)  fc[f][v] -= dFlux;
    }
 
-// check the negative density and energy
+#  ifdef MHD
+// update the magnetic field
+   MHD_UpdateMagnetic_Half( fc, g_EC_Ele, dt, dh, cc_i-NGhost, cc_j-NGhost, cc_k-NGhost, NEle );
+#  endif
+
+
+// check negative, inf, and nan in density, energy, and pressure
+#  ifdef MHM_CHECK_PREDICT
+   bool reset_cell = false;
    for (int f=0; f<6; f++)
    {
-#     ifdef BAROTROPIC_EOS
-      if ( fc[f][0] <= (real)0.0 )
-#     else
-      if ( fc[f][0] <= (real)0.0  ||  fc[f][4] <= (real)0.0 )
-#     endif
-      {
-//       set to the cell-centered values before update
-         for (int f=0; f<6; f++)
-         for (int v=0; v<NCOMP_TOTAL; v++)
-            fc[f][v] = g_cc_array[v][cc_idx];
-
-         break;
-      }
-   }
-
-// apply density and internal energy floors
-   for (int f=0; f<6; f++)
-   {
-      fc[f][0] = FMAX( fc[f][0], MinDens );
+      if ( fc[f][0] <= (real)0.0 || fc[f][0] >= HUGE_NUMBER || fc[f][0] != fc[f][0] ) reset_cell = true;
 #     ifndef BAROTROPIC_EOS
 #     ifdef MHD
-#     error : ERROR : MHD is not supported here !!!
-      const real Emag = NULL_REAL;
+      const real Emag = (real)0.5*( SQR(fc[f][MAG_OFFSET+0]) + SQR(fc[f][MAG_OFFSET+1]) + SQR(fc[f][MAG_OFFSET+2]) );
 #     else
       const real Emag = NULL_REAL;
 #     endif
-      fc[f][4] = Hydro_CheckMinEintInEngy( fc[f][0], fc[f][1], fc[f][2], fc[f][3], fc[f][4],
-                                           MinEint, Emag );
+      const real Pres = Hydro_Con2Pres( fc[f][DENS], fc[f][MOMX], fc[f][MOMY], fc[f][MOMZ], fc[f][ENGY], fc[f]+NCOMP_FLUID,
+                                        true, MinPres, Emag, EoS->DensEint2Pres_FuncPtr, EoS->AuxArrayDevPtr_Flt,
+                                        EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
+      if ( fc[f][4] <= (real)0.0 || fc[f][4] >= HUGE_NUMBER || fc[f][4] != fc[f][4] ) reset_cell = true;
+      if ( Pres     <= (real)0.0 || Pres     >= HUGE_NUMBER || Pres     != Pres     ) reset_cell = true;
 #     endif // #ifndef BAROTROPIC_EOS
-#     if ( NCOMP_PASSIVE > 0 )
-      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
-      fc[f][v] = FMAX( fc[f][v], TINY_NUMBER );
+
+//    set to the cell-centered values before update
+      if ( reset_cell )
+      {
+         for (int face=0; face<6; face++)
+         for (int v=0; v<NCOMP_TOTAL; v++)
+            fc[face][v] = g_cc_array[v][cc_idx];
+
+         break;  // no need to apply the floors since the input values should already satisfy these constraints
+      }
+
+//    apply density and internal energy floors
+      fc[f][0] = FMAX( fc[f][0], MinDens );
+#     ifndef BAROTROPIC_EOS
+      fc[f][4] = Hydro_CheckMinEintInEngy( fc[f][0], fc[f][1], fc[f][2], fc[f][3], fc[f][4], MinEint, Emag );
 #     endif
-   }
+#     if ( NCOMP_PASSIVE > 0 )
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) fc[f][v] = FMAX( fc[f][v], TINY_NUMBER );
+#     endif
+   } // for (int f=0; f<6; f++)
+#  endif // #ifdef MHM_CHECK_PREDICT
 
 } // FUNCTION : Hydro_HancockPredict
+
+
+
+#ifdef MHD
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_ConFC2PriCC_MHM
+// Description :  Convert the face-centered conserved variables to cell-centered primitive variables for MHM+MHD
+//
+// Note        :  1. Work for the MHM scheme
+//                2. Do NOT require data in the neighboring cells
+//                3. Input variables must be conserved variables
+//                4. This function does NOT store Eint in the last variable for LR_EINT
+//
+// Parameter   :  g_PriVar           : Array to store the cell-centered primitive variables
+//                g_FC_Var           : Array storing the face-centered conserved variables
+//                                     --> Should contain NCOMP_TOTAL_PLUS_MAG variables
+//                MinDens/Pres/Eint  : Density, pressure, and internal energy floors
+//                FracPassive        : true --> convert passive scalars to mass fraction during data reconstruction
+//                NFrac              : Number of passive scalars for the option "FracPassive"
+//                FracIdx            : Target variable indices for the option "FracPassive"
+//                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
+//                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
+//                EoS                : EoS object
+//
+// Return      : g_PriVar[][ CUBE(FLU_NXT) ]
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+void Hydro_ConFC2PriCC_MHM(       real g_PriVar[][ CUBE(FLU_NXT) ],
+                            const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+                            const real MinDens, const real MinPres, const real MinEint,
+                            const bool FracPassive, const int NFrac, const int FracIdx[],
+                            const bool JeansMinPres, const real JeansMinPres_Coeff,
+                            const EoS_t *EoS )
+{
+
+   CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) )
+   {
+      real ConCC[NCOMP_TOTAL_PLUS_MAG], PriCC[NCOMP_TOTAL_PLUS_MAG];
+
+      for (int v=0; v<NCOMP_TOTAL; v++)
+      {
+         ConCC[v] = (real)0.0;
+         for (int f=0; f<6; f++)   ConCC[v] += g_FC_Var[f][v][idx_fc];
+         ConCC[v] *= (real)1./(real)6.;
+      }
+
+      for (int d=0; d<3; d++)
+      {
+         const int faceL = 2*d;
+         const int faceR = faceL + 1;
+         ConCC[MAG_OFFSET+d] = (real)0.5*( g_FC_Var[faceL][MAG_OFFSET+d][idx_fc] +
+                                           g_FC_Var[faceR][MAG_OFFSET+d][idx_fc] );
+      }
+
+      Hydro_Con2Pri( ConCC, PriCC, MinPres, FracPassive, NFrac, FracIdx,
+                     JeansMinPres, JeansMinPres_Coeff, EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr,
+                     EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
+
+      for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_PriVar[v][idx_fc] = PriCC[v];
+   } // CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) )
+
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
+
+} // FUNCTION : Hydro_ConFC2PriCC_MHM
+#endif // #ifdef MHD
+
 #endif // #if ( FLU_SCHEME == MHM )
 
 

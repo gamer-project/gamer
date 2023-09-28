@@ -81,10 +81,7 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 //                       (i,j,k) in g_FC_Flux_y[] is defined on the +y surface of the cell (i+NSkip_T, j+NSkip_N, k+NSkip_T) in g_FC_Var[]
 //                       (i,j,k) in g_FC_Flux_z[] is defined on the +z surface of the cell (i+NSkip_T, j+NSkip_T, k+NSkip_N) in g_FC_Var[]
 //                4. This function is shared by MHM, MHM_RP, and CTU schemes
-//                5. For the performance consideration, this function will also be responsible for storing the
-//                   inter-patch fluxes
-//                   --> Option "DumpIntFlux"
-//                6. For the unsplitting scheme in gravity (i.e., UNSPLIT_GRAVITY), this function also corrects the half-step
+//                5. For the unsplitting scheme in gravity (i.e., UNSPLIT_GRAVITY), this function also corrects the half-step
 //                   velocity by gravity when CorrHalfVel==true
 //
 // Parameter   :  g_FC_Var        : Array storing the input face-centered conserved variables
@@ -105,8 +102,6 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 //                ExtAcc_Func     : Function pointer to the external acceleration routine    (for UNSPLIT_GRAVITY only)
 //                ExtAcc_AuxArray : Auxiliary array for external acceleration                (for UNSPLIT_GRAVITY only)
 //                MinDens/Pres    : Density and pressure floors
-//                DumpIntFlux     : true --> store the inter-patch fluxes in g_IntFlux[]
-//                g_IntFlux       : Array for DumpIntFlux
 //                EoS             : EoS object
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
@@ -116,9 +111,7 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                         const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[],
                         const real dt, const real dh, const double Time, const bool UsePot,
                         const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
-                        const real MinDens, const real MinPres, const bool DumpIntFlux,
-                        real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
-                        const EoS_t *EoS )
+                        const real MinDens, const real MinPres, const EoS_t *EoS )
 {
 
 // check
@@ -363,65 +356,6 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 //       4. store the fluxes of all cells in g_FC_Flux[]
 //       --> including the magnetic components since they are required for CT
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_FC_Flux[d][v][idx_flux] = Flux_1Face[v];
-
-
-//       5. store the inter-patch fluxes in g_IntFlux[]
-//       --> no need to store the magnetic components since this array is only for the flux fix-up operation
-         if ( DumpIntFlux )
-         {
-            int int_face, int_idx;
-
-//          we have assumed N_FC_VAR=PS2+2 for pure hydro
-//          --> for MHD, one additional flux is evaluated along each transverse direction for computing the CT electric field
-//          --> must exclude it when storing the inter-patch fluxes
-            if (  d == 0  &&  ( i_flux == 0 || i_flux == PS1 || i_flux == PS2 )  )
-            {
-#              ifdef MHD
-               if ( j_flux > 0  &&  j_flux < PS2+1  &&  k_flux > 0  &&  k_flux < PS2+1 )
-#              endif
-               {
-                  int_face = i_flux/PS1;
-#                 ifdef MHD
-                  int_idx  = (k_flux-1)*PS2 + j_flux-1;
-#                 else
-                  int_idx  = (k_flux  )*PS2 + j_flux;
-#                 endif
-                  for (int v=0; v<NCOMP_TOTAL; v++)   g_IntFlux[int_face][v][int_idx] = Flux_1Face[v];
-               }
-            }
-
-            else if (  d == 1  &&  ( j_flux == 0 || j_flux == PS1 || j_flux == PS2 )  )
-            {
-#              ifdef MHD
-               if ( i_flux > 0  &&  i_flux < PS2+1  &&  k_flux > 0  &&  k_flux < PS2+1 )
-#              endif
-               {
-                  int_face = j_flux/PS1 + 3;
-#                 ifdef MHD
-                  int_idx  = (k_flux-1)*PS2 + i_flux-1;
-#                 else
-                  int_idx  = (k_flux  )*PS2 + i_flux;
-#                 endif
-                  for (int v=0; v<NCOMP_TOTAL; v++)   g_IntFlux[int_face][v][int_idx] = Flux_1Face[v];
-               }
-            }
-
-            else if (  d == 2  &&  ( k_flux == 0 || k_flux == PS1 || k_flux == PS2 )  )
-            {
-#              ifdef MHD
-               if ( i_flux > 0  &&  i_flux < PS2+1  &&  j_flux > 0  &&  j_flux < PS2+1 )
-#              endif
-               {
-                  int_face = k_flux/PS1 + 6;
-#                 ifdef MHD
-                  int_idx  = (j_flux-1)*PS2 + i_flux-1;
-#                 else
-                  int_idx  = (j_flux  )*PS2 + i_flux;
-#                 endif
-                  for (int v=0; v<NCOMP_TOTAL; v++)   g_IntFlux[int_face][v][int_idx] = Flux_1Face[v];
-               }
-            }
-         } // if ( DumpIntFlux )
       } // i,j,k
    } // for (int d=0; d<3; d++)
 
@@ -431,6 +365,80 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 #  endif
 
 } // FUNCTION : Hydro_ComputeFlux
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_StoreIntFlux
+// Description :  Store the inter-patch fluxes in g_IntFlux[]
+//
+// Note        :  1. No need to store the magnetic components since this array is only for the fluid flux fix-up operation
+//
+// Parameter   :  g_FC_Flux : Array storing the face-centered fluxes
+//                g_IntFlux : Array to store the face-center fluxes at the patch interfaces
+//                NFlux     : Stride for accessing g_FC_Flux[]
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+void Hydro_StoreIntFlux( const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                               real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
+                         const int NFlux )
+{
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( NFlux > N_FC_FLUX )
+      printf( "ERROR : NFlux (%d) > N_FC_FLUX (%d) !!\n", NFlux, N_FC_FLUX );
+#  endif
+
+
+   CGPU_LOOP( idx_out, SQR(PS2) )
+   {
+//    indices of the 2 transverse directions
+//    --> for MHD, one additional flux is evaluated along each transverse direction for computing the CT electric field
+#     ifdef MHD
+      const int idx_flux_0  = idx_out % PS2 + 1;
+      const int idx_flux_1  = idx_out / PS2 + 1;
+#     else
+      const int idx_flux_0  = idx_out % PS2;
+      const int idx_flux_1  = idx_out / PS2;
+#     endif
+
+//    flux index
+//    x-face
+      const int idx_in_0  = IDX321(          0, idx_flux_0, idx_flux_1, NFlux, NFlux );
+      const int idx_in_1  = IDX321(        PS1, idx_flux_0, idx_flux_1, NFlux, NFlux );
+      const int idx_in_2  = IDX321(        PS2, idx_flux_0, idx_flux_1, NFlux, NFlux );
+//    y-face
+      const int idx_in_3  = IDX321( idx_flux_0,          0, idx_flux_1, NFlux, NFlux );
+      const int idx_in_4  = IDX321( idx_flux_0,        PS1, idx_flux_1, NFlux, NFlux );
+      const int idx_in_5  = IDX321( idx_flux_0,        PS2, idx_flux_1, NFlux, NFlux );
+//    z-face
+      const int idx_in_6  = IDX321( idx_flux_0, idx_flux_1,          0, NFlux, NFlux );
+      const int idx_in_7  = IDX321( idx_flux_0, idx_flux_1,        PS1, NFlux, NFlux );
+      const int idx_in_8  = IDX321( idx_flux_0, idx_flux_1,        PS2, NFlux, NFlux );
+
+//    store the flux
+      for (int v=0; v<NCOMP_TOTAL; v++) {
+//       x-face
+         g_IntFlux[0][v][idx_out] = g_FC_Flux[0][v][idx_in_0];
+         g_IntFlux[1][v][idx_out] = g_FC_Flux[0][v][idx_in_1];
+         g_IntFlux[2][v][idx_out] = g_FC_Flux[0][v][idx_in_2];
+//       y-face
+         g_IntFlux[3][v][idx_out] = g_FC_Flux[1][v][idx_in_3];
+         g_IntFlux[4][v][idx_out] = g_FC_Flux[1][v][idx_in_4];
+         g_IntFlux[5][v][idx_out] = g_FC_Flux[1][v][idx_in_5];
+//       z-face
+         g_IntFlux[6][v][idx_out] = g_FC_Flux[2][v][idx_in_6];
+         g_IntFlux[7][v][idx_out] = g_FC_Flux[2][v][idx_in_7];
+         g_IntFlux[8][v][idx_out] = g_FC_Flux[2][v][idx_in_8];
+      }
+   } // CGPU_LOOP( idx_out, SQR(PS2) )
+
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
+
+} // FUNCTION : Hydro_StoreIntFlux
 
 
 

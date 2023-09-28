@@ -231,7 +231,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
 //###NOTE: faster version can only be applied to the Hilbert space-filling curve
 #     if ( LOAD_BALANCE == HILBERT )
-      const long LB_Idx = amr->patch[0][lv][PID]->LB_Idx / ( 1 << (3*(lv-FaLv)) );
+      const long LB_Idx = amr->patch[0][lv][PID]->LB_Idx / ( 1L << (3L*(lv-FaLv)) );
 #     else
       int FaCr[3];
       for (int d=0; d<3; d++)    FaCr[d] = amr->patch[0][lv][PID]->corner[d] - amr->patch[0][lv][PID]->corner[d]%PatchScaleFaLv;

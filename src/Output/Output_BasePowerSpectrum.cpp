@@ -58,11 +58,24 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 #  endif // #  if ( SUPPORT_FFTW == FFTW3 ) ... # else
 #  endif // #  ifdef SERIAL ... # else
 
+// check integer overflow (assuming local_nx*local_ny*local_nz ~ total_local_size)
+   const long local_nxyz = (long)local_nx*(long)local_ny*(long)local_nz;
+
+   if ( local_nx < 0 || local_ny < 0 || local_nz < 0 )
+      Aux_Error( ERROR_INFO, "local_nx/y/z (%ld, %ld, %ld) < 0 for FFT !!", local_nx, local_ny, local_nz );
+
+   if (  ( sizeof(mpi_index_int) == sizeof(int) && local_nxyz > __INT_MAX__ )  ||  total_local_size < 0  )
+      Aux_Error( ERROR_INFO, "local_nx*local_ny*local_nz = %d*%d*%d = %ld > __INT_MAX__ (%d)\n"
+                     "        and/or total_local_size (%ld) < 0 for FFT, suggesting integer overflow !!\n"
+                     "        --> Try using more MPI processes\n",
+                 local_nx, local_ny, local_nz, local_nxyz, __INT_MAX__, total_local_size );
+
 // collect "local_nz" from all ranks and set the corresponding list "List_z_start"
    int List_nz     [MPI_NRank  ];   // slab thickness of each rank in the FFTW slab decomposition
    int List_z_start[MPI_NRank+1];   // starting z coordinate of each rank in the FFTW slab decomposition
 
-   MPI_Allgather( &local_nz, 1, MPI_INT, List_nz, 1, MPI_INT, MPI_COMM_WORLD );
+   const int local_nz_int = local_nz;  // necessary since "mpi_index_int" maps to "long int" for FFTW3
+   MPI_Allgather( &local_nz_int, 1, MPI_INT, List_nz, 1, MPI_INT, MPI_COMM_WORLD );
 
    List_z_start[0] = 0;
    for (int r=0; r<MPI_NRank; r++)  List_z_start[r+1] = List_z_start[r] + List_nz[r];
@@ -76,11 +89,11 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    const int NRecvSlice = MIN( List_z_start[MPI_Rank]+local_nz, NX0_TOT[2] ) - MIN( List_z_start[MPI_Rank], NX0_TOT[2] );
 
    double *PS_total     = NULL;
-   real   *VarK         = (real*) root_fftw::fft_malloc(sizeof(real) * total_local_size);                         // array storing data
-   real   *SendBuf      = new real [ amr->NPatchComma[0][1]*CUBE(PS1) ];         // MPI send buffer for data
-   real   *RecvBuf      = new real [ NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];         // MPI recv buffer for data
-   long   *SendBuf_SIdx = new long [ amr->NPatchComma[0][1]*PS1 ];               // MPI send buffer for 1D coordinate in slab
-   long   *RecvBuf_SIdx = new long [ NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/SQR(PS1) ];// MPI recv buffer for 1D coordinate in slab
+   real   *VarK         = (real*) root_fftw::fft_malloc(sizeof(real) * total_local_size); // array storing data
+   real   *SendBuf      = new real [ (long)amr->NPatchComma[0][1]*CUBE(PS1) ];            // MPI send buffer for data
+   real   *RecvBuf      = new real [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];            // MPI recv buffer for data
+   long   *SendBuf_SIdx = new long [ (long)amr->NPatchComma[0][1]*PS1 ];                  // MPI send buffer for 1D coordinate in slab
+   long   *RecvBuf_SIdx = new long [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/SQR(PS1) ];   // MPI recv buffer for 1D coordinate in slab
 
    int  *List_PID    [MPI_NRank];   // PID of each patch slice sent to each rank
    int  *List_k      [MPI_NRank];   // local z coordinate of each patch slice sent to each rank

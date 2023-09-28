@@ -12,6 +12,9 @@
 //                        --> Since particles just crossing coarse-fine boundaries may not be synchronized
 //                            with the grid data
 //                        --> Must work with STORE_PAR_ACC
+//                        --> Also important for bitwise reproducibility when restarting simulations, for which
+//                            we have implicitly assumed that all particles have been synchronized (as snapshots
+//                            do not store the time of individual particles)
 //                   1-2. Restrict data
 //                        --> This is mainly for bitwise reproducibility when restarting simulations from
 //                            C binary outputs

@@ -51,7 +51,9 @@
 #  elif ( GPU_ARCH == TURING )
    #define GPU_COMPUTE_CAPABILITY 750
 #  elif ( GPU_ARCH == AMPERE )
-   #define GPU_COMPUTE_CAPABILITY 800
+// #define GPU_COMPUTE_CAPABILITY 800
+   #define GPU_COMPUTE_CAPABILITY 860
+// #define GPU_COMPUTE_CAPABILITY 870
 #  else
 #  error : ERROR : Please add GPU_COMPUTE_CAPABILITY for GPU_ARCH!
 #  endif // GPU_ARCH
@@ -101,8 +103,16 @@
 #  if   ( FLU_SCHEME == MHM )
 
 #     define N_FC_VAR            ( PS2 + 2 )
+#    ifdef MHD
+#     define N_HF_VAR            ( N_FC_VAR )
+#     define N_FL_FLUX           ( PS2 + 2 )
+//    MHM doesn't have the half-step flux actually; this is only for calculating the half-step electric field
+#     define N_HF_FLUX           ( N_FL_FLUX+2 )
+#    else
 #     define N_FL_FLUX           ( PS2 + 1 )
-#     define N_FC_FLUX           ( N_FL_FLUX )
+//    MHM doesn't have the half-step flux actually; this is only for defining N_FC_FLUX
+#     define N_HF_FLUX           ( N_FL_FLUX )
+#    endif
 
 #  elif ( FLU_SCHEME == MHM_RP )
 
@@ -115,7 +125,6 @@
 #     define N_FL_FLUX           ( PS2 + 1 )
 #     define N_HF_FLUX           ( FLU_NXT - 1 )
 #    endif
-#     define N_FC_FLUX           ( N_HF_FLUX )
 #     define N_HF_VAR            ( FLU_NXT - 2 )
 
 #  elif ( FLU_SCHEME == CTU )
@@ -129,18 +138,19 @@
 #     define N_FL_FLUX           ( N_FC_VAR )
 #    endif
 #     define N_HF_FLUX           ( N_FC_VAR )
-#     define N_FC_FLUX           ( N_HF_FLUX )
 
 #  endif // FLU_SCHEME
 
 #  define N_SLOPE_PPM            ( N_FC_VAR + 2 )
 
+#   define N_FC_FLUX             ( N_HF_FLUX )
 #  ifdef MHD
-#   define N_HF_ELE              ( N_FC_FLUX - 1 )
+#   define N_HF_ELE              ( N_HF_FLUX - 1 )
 #   define N_FL_ELE              ( N_FL_FLUX - 1 )
 #   define N_EC_ELE              ( N_FC_FLUX - 1 )
 #  else
 #   define N_EC_ELE              0
+#   define N_HF_ELE              0
 #  endif
 
 #endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
@@ -268,6 +278,13 @@
 //#  define HLLE_WAVESPEED   HLL_WAVESPEED_PVRS
 #endif
 #  define HLLD_WAVESPEED   HLL_WAVESPEED_DAVIS
+
+
+// check unphysical results in the MHM half-step prediction
+#if ( FLU_SCHEME == MHM )
+#  define MHM_CHECK_PREDICT
+#endif
+
 
 
 // 2. ELBDM macro
