@@ -16,17 +16,17 @@ public:
    T im;
 
 // unfortunately, we cannot defined custom constructors here
-// otherwise, CUDA will complain about unsupported dynamic initialisation of shared arrays 
+// otherwise, CUDA will complain about unsupported dynamic initialisation of shared arrays
 
    __device__ complex<T> operator+(const complex<T>& other) const {
       return complex<T>(re + other.re, im + other.im);
    }
 
    __device__ complex<T> operator*(const complex<T>& other) const {
-      complex<T> out; 
+      complex<T> out;
       out.real(re * other.re - im * other.im);
       out.imag(re * other.im + im * other.re);
-      return out; 
+      return out;
    }
 
    __device__ complex<T>& operator+=(const complex<T>& other) {
@@ -169,9 +169,9 @@ void CPU_ELBDMSolver_GramFE_MATMUL(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NX
    const int NPatchGroup = NULL_INT;
 
 #  else // #  ifdef __CUDACC__
-// allocate memory on heap within loop for CPU run
-   gramfe_input_complex_type (*s_In)        [FLU_NXT] = NULL;
-   gramfe_input_complex_type (*s_Out)       [PS2]     = NULL;
+// create arrays for columns of various intermediate fields on the heap
+   gramfe_input_complex_type (*s_In)  [FLU_NXT] = (gramfe_input_complex_type (*)[FLU_NXT]) malloc( omp_get_num_threads() * FLU_NXT * sizeof(gramfe_input_complex_type) );
+   gramfe_input_complex_type (*s_Out) [PS2]     = (gramfe_input_complex_type (*)[PS2])     malloc( omp_get_num_threads() *     PS2 * sizeof(gramfe_input_complex_type) );
 #  endif // #  ifdef __CUDACC__ ... else
 
 // time evolution matrix
@@ -217,6 +217,12 @@ void CPU_ELBDMSolver_GramFE_MATMUL(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NX
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, NPatchGroup,
                      FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_Out, s_TimeEvo, true,  0, MinDens);
    }
+
+#  ifndef __CUDAC__
+// free fields on heap in CPU mode
+   free(s_In);
+   free(s_Out);
+#  endif
 
 } // FUNCTION : CUFLU_ELBDMSolver_GramFE_MATMUL
 
@@ -271,13 +277,13 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 #     ifdef __CUDACC__
       const int bx = blockIdx.x;
 #     else
-//    create arrays for columns of various intermediate fields on the heap
-      gramfe_matmul_complex_type* s_In_1PG  = (gramfe_matmul_complex_type* ) malloc( FLU_NXT * sizeof(gramfe_matmul_complex_type) );
-      gramfe_matmul_complex_type* s_Out_1PG = (gramfe_matmul_complex_type* ) malloc(     PS2 * sizeof(gramfe_matmul_complex_type) );
 
-      gramfe_matmul_gsl::vector_complex_const_view Input_view  = gramfe_matmul_gsl::vector_complex_const_view_array ((gramfe_matmul_gsl::gsl_real*) s_In_1PG ,      FLU_NXT);
-      gramfe_matmul_gsl::vector_complex_view       Output_view = gramfe_matmul_gsl::vector_complex_view_array       ((gramfe_matmul_gsl::gsl_real*) s_Out_1PG, PS2         );
-      gramfe_matmul_gsl::matrix_complex_const_view Evo_view    = gramfe_matmul_gsl::matrix_complex_const_view_array ((gramfe_matmul_gsl::gsl_real*) s_TimeEvo, PS2, FLU_NXT);
+//    get thread number within enclosing omp parallel block
+      int thread_num = omp_get_thread_num();
+
+      gramfe_matmul_gsl::vector_complex_const_view Input_view  = gramfe_matmul_gsl::vector_complex_const_view_array ((gramfe_matmul_gsl::gsl_real*) s_In[thread_num],  FLU_NXT     );
+      gramfe_matmul_gsl::vector_complex_view       Output_view = gramfe_matmul_gsl::vector_complex_view_array       ((gramfe_matmul_gsl::gsl_real*) s_Out[thread_num], PS2         );
+      gramfe_matmul_gsl::matrix_complex_const_view Evo_view    = gramfe_matmul_gsl::matrix_complex_const_view_array ((gramfe_matmul_gsl::gsl_real*) s_TimeEvo,         PS2, FLU_NXT);
 
 //    in CPU mode, every thread works on one patch group at a time and corresponds to one block in the grid of the GPU solver
 #     pragma omp for schedule( runtime ) private ( s_In, s_Out )
@@ -297,11 +303,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //       every block just has a single thread with temporary memory on the stack in CPU mode
          const uint tx            = 0;
          const uint ty            = 0;
-
-
-         s_In     = (gramfe_input_complex_type (*)[FLU_NXT]) s_In_1PG;
-         s_Out    = (gramfe_input_complex_type (*)[PS2])    s_Out_1PG;
-
 #        endif // # ifdef __CUDACC__ ... # else
 
          const uint tid          = ty * CGPU_FLU_BLOCK_SIZE_X + tx;                // thread ID within block
@@ -413,10 +414,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
          } // while ( Column0 < NColumnTotal )
       } // # pragma  for (int bx=0; bx<NPatchGroup; bx++)
-#     ifndef __CUDACC__
-      free(s_In_1PG);
-      free(s_Out_1PG);
-#     endif
    } // # pragma omp parallel
 } // FUNCTION : CUFLU_Advance
 
