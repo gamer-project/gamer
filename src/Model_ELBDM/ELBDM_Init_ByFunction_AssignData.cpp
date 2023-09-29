@@ -83,7 +83,9 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
 
 // set the number of OpenMP threads
 #  ifdef OPENMP
-   const int OMP_NThread = ( OPT__INIT_GRID_WITH_OMP ) ? OMP_NTHREAD : 1;
+   const int OMP_NT = ( OPT__INIT_GRID_WITH_OMP ) ? OMP_NTHREAD : 1;
+#  else
+   const int OMP_NT = 1;
 #  endif
 
 
@@ -96,7 +98,7 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
    double x, y, z, x0, y0, z0;
 
 
-#  pragma omp parallel for private( fluid, fluid_sub, x, y, z, x0, y0, z0 ) schedule( runtime ) num_threads( OMP_NThread )
+#  pragma omp parallel for private( fluid, fluid_sub, x, y, z, x0, y0, z0 ) schedule( runtime ) num_threads( OMP_NT )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    for (int k=0; k<PS1; k++)  {  z0 = amr->patch[0][lv][PID]->EdgeL[2] + k*dh + 0.5*dh_sub;
    for (int j=0; j<PS1; j++)  {  y0 = amr->patch[0][lv][PID]->EdgeL[1] + j*dh + 0.5*dh_sub;
