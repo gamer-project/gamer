@@ -155,13 +155,14 @@ INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initiali
 # interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar, 8=Spectral)
 OPT__INT_TIME                 1           # perform "temporal" interpolation for OPT__DT_LEVEL == 2/3 [1]
 OPT__INT_PHASE                0           # interpolation on phase (does not support MinMod-1D) [1] ##ELBDM ONLY##
-OPT__FLU_INT_SCHEME           6           # ghost-zone fluid variables for the fluid solver [-1]
-OPT__REF_FLU_INT_SCHEME       6           # newly allocated fluid variables during grid refinement [-1]
-OPT__POT_INT_SCHEME           5           # ghost-zone potential for the Poisson solver (only supports 4 & 5) [5]
+OPT__FLU_INT_SCHEME          -1           # ghost-zone fluid variables for the fluid solver [-1]
+OPT__REF_FLU_INT_SCHEME      -1           # newly allocated fluid variables during grid refinement [-1]
+OPT__POT_INT_SCHEME           4           # ghost-zone potential for the Poisson solver (only supports 4 & 5) [4]
 OPT__RHO_INT_SCHEME           4           # ghost-zone mass density for the Poisson solver [4]
-OPT__GRA_INT_SCHEME           5           # ghost-zone potential for the gravity solver (for UNSPLIT_GRAVITY as well) [5]
-OPT__REF_POT_INT_SCHEME       5           # newly allocated potential during grid refinement [5]
+OPT__GRA_INT_SCHEME           4           # ghost-zone potential for the gravity solver (for UNSPLIT_GRAVITY as well) [4]
+OPT__REF_POT_INT_SCHEME       4           # newly allocated potential during grid refinement [4]
 INT_MONO_COEFF                2.0         # coefficient for ensuring the interpolation monotonicity (1.0~4.0) [2.0]
+SPEC_INT_TABLE_PATH           ./          # path to tables for spectral interpolation ##ELBDM & SUPPORT_SPECTRAL_INT ONLY ##
 
 
 # data dump
@@ -181,7 +182,6 @@ OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-
 OUTPUT_PART_Y                -1.0         # y coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Z                -1.0         # z coordinate for OPT__OUTPUT_PART [-1.0]
 INIT_DUMPID                  -1           # set the first dump ID (<0=auto) [-1]
-
 
 # miscellaneous
 OPT__VERBOSE                  0           # output the simulation progress in detail [0]
