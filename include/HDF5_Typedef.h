@@ -282,6 +282,7 @@ struct SymConst_t
 #  ifdef MHD
    int    EulerY;
 #  endif
+   int    MHM_CheckPredict;
    int    EoSNAuxMax;
    int    EoSNTableMax;
 

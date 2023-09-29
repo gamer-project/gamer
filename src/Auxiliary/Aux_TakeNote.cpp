@@ -507,6 +507,12 @@ void Aux_TakeNote()
 #     endif
 #     endif // #ifdef MHD
 
+#     ifdef MHM_CHECK_PREDICT
+      fprintf( Note, "MHM_CHECK_PREDICT               ON\n" );
+#     else
+      fprintf( Note, "MHM_CHECK_PREDICT               OFF\n" );
+#     endif
+
 #     elif ( MODEL == ELBDM )
 
 #     else

@@ -55,6 +55,20 @@ void Init_GAMER( int *argc, char ***argv )
    Init_ResetParameter();
 
 
+// load the tables of the flag criteria from the input files "Input__Flag_XXX"
+   Init_Load_FlagCriteria();
+
+
+// load the dump table from the input file "Input__DumpTable"
+   if ( OPT__OUTPUT_MODE == OUTPUT_USE_TABLE )
+#  ifdef PARTICLE
+   if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_MODE )
+#  else
+   if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS )
+#  endif
+   Init_Load_DumpTable();
+
+
 // initialize OpenMP settings
 #  ifdef OPENMP
    Init_OpenMP();
@@ -155,21 +169,6 @@ void Init_GAMER( int *argc, char ***argv )
 #  ifdef TIMING
    Aux_CreateTimer();
 #  endif
-
-
-// load the tables of the flag criteria from the input files "Input__Flag_XXX"
-   Init_Load_FlagCriteria();
-
-
-// load the dump table from the input file "Input__DumpTable"
-//###NOTE: unit has not been converted into internal unit
-   if ( OPT__OUTPUT_MODE == OUTPUT_USE_TABLE )
-#  ifdef PARTICLE
-   if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_MODE )
-#  else
-   if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS )
-#  endif
-   Init_Load_DumpTable();
 
 
 // initialize memory pool

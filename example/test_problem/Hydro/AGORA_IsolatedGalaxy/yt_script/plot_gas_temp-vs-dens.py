@@ -17,9 +17,7 @@ args=parser.parse_args()
 # take note
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
-for t in range( len(sys.argv) ):
-   print str(sys.argv[t]),
-print( '' )
+print( ' '.join(map(str, sys.argv)) )
 print( '-------------------------------------------------------------------\n' )
 
 
@@ -42,12 +40,12 @@ ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx
 for ds in ts.piter():
 
 #  define center as the location of peak gas density within 1 kpc from the center of gas mass
-   v, cen1 = ds.h.find_max( ("gas", "density") )
+   v, cen1 = ds.find_max( ("gas", "density") )
    sp1  = ds.sphere( cen1, (30.0, "kpc") )
    cen2 = sp1.quantities.center_of_mass( use_gas=True, use_particles=False ).in_units( "kpc" )
    sp2  = ds.sphere( cen2, (1.0, "kpc") )
-   cen3 = sp2.quantities.max_location( ("gas", "density") )
-   cen  = ds.arr( [cen3[1].d, cen3[2].d, cen3[3].d], 'code_length' )
+   cen3 = sp2.quantities.max_location( ("gas", "density") )[1:]         # first value is not position
+   cen  = cen3
 
 
 #  only include the data within a sphere with a radius of width_kpc
