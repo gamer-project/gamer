@@ -777,11 +777,10 @@ const size_t fastNExtended[NFast] = {16, 18, 24, 32, 36, 40, 48, 54, 60, 64, 72,
 
 void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostBoundary)
 {
+// ensure thread safety when adding new interpolation contexts
+// only one thread in OMP enviroment may add a new interpolation context
    #pragma omp critical
    if (contexts.find(nInput) == contexts.end()) {
-//    ensure thread safety when adding new interpolation contexts
-//    only one thread in OMP enviroment may add a new interpolation context
-
       {
 //       for small N <= 32 pick precomputed interpolation with cost of N^2
          if ( nInput <= 32 ) {
@@ -803,7 +802,8 @@ void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostB
          }
       }
    }
-} // FUNCTION : AddContext
+} // FUNCTION : AddInterpolationContext
+
 
 size_t InterpolationHandler::GetWorkspaceSize(size_t nInput, size_t nGhostBoundary) const
 {

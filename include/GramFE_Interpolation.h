@@ -179,7 +179,7 @@ public:
 
 //-------------------------------------------------------------------------------------------------------
 // Class       :  InterpolationHandler
-// Description :  Data structure to switch between depending spectral interpolation schemes depending on the input size
+// Description :  Data structure to switch between spectral interpolation schemes depending on the input size
 //
 // Data Member :  contexts                        : Unordered map that holds interpolation contexts for different interpolations sizes
 //
