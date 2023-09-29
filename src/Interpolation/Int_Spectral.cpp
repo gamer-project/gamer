@@ -14,7 +14,7 @@
 // Description :  Perform spatial interpolation based on the Gram-Fourier extension method
 //
 // Note        :  1. The interpolation is spectrally accurate
-//                2. The interpolation result is neither  nor monotonic
+//                2. The interpolation result is neither conservative nor monotonic
 //                3. 3D interpolation is achieved by performing interpolation along x, y, and z directions
 //                   in order
 //
@@ -26,6 +26,7 @@
 //                FStart          : (x,y,z) starting indcies to store the interpolation results
 //                NComp           : Number of components in the CData and FData array
 //                UnwrapPhase     : Unwrap phase when OPT__INT_PHASE is on (for ELBDM only)
+//                                  This option requires that the input field includes only the density and the phase field in this order
 //                Monotonic       : Ensure that all interpolation results are monotonic
 //                MonoCoeff       : Slope limiter coefficient for the option "Monotonic"
 //                OppSign0thOrder : See Int_MinMod1D()
@@ -48,14 +49,14 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
    const size_t OutputDisp = 2 * MaxSize;
 
 // add interpolation contexts (make sure that everything is thread-safe in AddInterpolationContext)
-   for (size_t i = 0; i < 3; ++i) {
-      Int_InterpolationHandler.AddInterpolationContext( CRange[i] +  2 * CGhost, CGhost );
+   for (size_t dim = 0; dim < 3; ++dim) {
+      Int_InterpolationHandler.AddInterpolationContext( CRange[dim] +  2 * CGhost, CGhost );
    }
 
 // determine workspace size
    size_t WorkspaceSize = 0;
-   for (size_t i = 0; i < 3; ++i) {
-      WorkspaceSize = MAX(WorkspaceSize, Int_InterpolationHandler.GetWorkspaceSize( CRange[i] +  2 * CGhost, CGhost ));
+   for (size_t dim = 0; dim < 3; ++dim) {
+      WorkspaceSize = MAX(WorkspaceSize, Int_InterpolationHandler.GetWorkspaceSize( CRange[dim] +  2 * CGhost, CGhost ));
    }
 
 // allocate workspace using fftw_malloc for contiguous memory used in FFT
@@ -115,8 +116,6 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 
 // output sizes [x, y, z] (2*coarse array)
    const int OutSize[3]    = { CRange[0] + CRange[0],  CRange[1] + CRange[1],  CRange[2] + CRange[2]};
-
-
 
 
    real *Input    = new real [ NComp * InputDisp  ];  // hold one column of input data
@@ -185,17 +184,22 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
             real* Imag = Input  + 1 * InputDisp;
 
 //          unwrap phase
-            for (int i = 1;  i < InSize[XYZ];  i++) Imag[i] = ELBDM_UnwrapPhase( Imag[i-1], Imag[i] );
+            for (int k = 1;  k < InSize[XYZ];  k++)
+            {
+               Imag[k] = ELBDM_UnwrapPhase( Imag[k-1], Imag[k] );
+            }
 
             UsePhaseInt = false;
 
 //          convert density and phase to real and imaginary part
             if ( !UsePhaseInt )
-            for (int i = 0;  i < InSize[XYZ];  i++)
             {
-               const real SqrtDens = SQRT(Real[i]);
-               Real[i] = SqrtDens * COS( Imag[i] / WavelengthMagnifier);
-               Imag[i] = SqrtDens * SIN( Imag[i] / WavelengthMagnifier);
+               for (int k = 0;  k < InSize[XYZ];  k++)
+               {
+                  const real SqrtDens = SQRT(Real[k]);
+                  Real[k] = SqrtDens * COS( Imag[k] / WavelengthMagnifier);
+                  Imag[k] = SqrtDens * SIN( Imag[k] / WavelengthMagnifier);
+               }
             }
          }
 #        endif
@@ -211,21 +215,22 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 #        if ( MODEL == ELBDM )
          if ( UnwrapPhase && !UsePhaseInt )
          {
-            //Int_InterpolationHandler.InterpolateReal(DensInput, DensOutput, InSize[XYZ], CGhost, Workspace, Monotonic[0], MonoCoeff, OppSign0thOrder);
-            //Int_InterpolationHandler.InterpolateReal(PhasInput, PhasOutput, InSize[XYZ], CGhost, Workspace, Monotonic[0], MonoCoeff, OppSign0thOrder);
-
             real* Re = Output  + 0 * OutputDisp;
             real* Im = Output  + 1 * OutputDisp;
 
-
-
-            for (int i = 0;  i < OutSize[XYZ];  i++) {
-               Re[i] = SQR(Im[i]) + SQR(Re[i]);
-               Im[i] = SATAN2(Im[i], Re[i]) * WavelengthMagnifier;
+            for (int k = 0;  k < OutSize[XYZ];  k++)
+            {
+               Re[k] = SQR(Im[k]) + SQR(Re[k]);
+               Im[k] = SATAN2(Im[k], Re[k]) * WavelengthMagnifier;
             }
 
             if ( XYZ == 2)
-            for (int i = 1;  i < OutSize[XYZ];  i++) Im[i]      = ELBDM_UnwrapPhase( Im[i - 1], Im[i] );
+            {
+               for (int k = 1;  k < OutSize[XYZ];  k++)
+               {
+                  Im[k] = ELBDM_UnwrapPhase( Im[k-1], Im[k] );
+               }
+            }
          }
 #        endif
 
@@ -507,11 +512,12 @@ GramFEInterpolationContext::~GramFEInterpolationContext()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  GramFEInterpolationContext:GetWorkspaceSize
-// Description :  Allocate block of memory using fftw_malloc
+// Description :  Return size of workspace in bytes
 //
 // Parameter   :  nInput         : Size of input array
 //                nGhostBoundary : Size of ghost boundary
 //
+// Return      :  Workspace size in bytes as unsigned integer
 //-------------------------------------------------------------------------------------------------------
 size_t GramFEInterpolationContext::GetWorkspaceSize() const {
    size_t total_size = 0;
@@ -636,8 +642,9 @@ PrecomputedInterpolationContext::~PrecomputedInterpolationContext()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  PrecomputedInterpolationContext::GetWorkspaceSize
-// Description :  Return NULL since PrecomputedInterpolationContext does not require a workspace
+// Description :  Return 0 since PrecomputedInterpolationContext does not require a workspace
 //
+// Return      :  Returns the unsigned integer 0
 //-------------------------------------------------------------------------------------------------------
 size_t PrecomputedInterpolationContext::GetWorkspaceSize() const {
    return 0;
@@ -685,6 +692,7 @@ QuarticInterpolationContext::QuarticInterpolationContext(size_t nInput, size_t n
 // Function    :  QuarticInterpolationContext::GetWorkspaceSize
 // Description :  Return 0 since QuarticInterpolationContext does not require a workspace
 //
+// Return      :  Returns the unsigned integer 0
 //-------------------------------------------------------------------------------------------------------
 size_t QuarticInterpolationContext::GetWorkspaceSize() const
 {
@@ -735,6 +743,7 @@ CQuarticInterpolationContext::CQuarticInterpolationContext(size_t nInput, size_t
 // Function    :  CQuarticInterpolationContext::GetWorkspaceSize
 // Description :  Return 0 since CQuarticInterpolationContext does not require a workspace
 //
+// Return      :  Returns the unsigned integer 0
 //-------------------------------------------------------------------------------------------------------
 size_t CQuarticInterpolationContext::GetWorkspaceSize() const
 {
@@ -775,8 +784,7 @@ void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostB
 
       {
 //       for small N <= 32 pick precomputed interpolation with cost of N^2
-         if ( nInput <= 15 ) {
-               //contexts.emplace(nInput, new CQuarticInterpolationContext(nInput, nGhostBoundary));
+         if ( nInput <= 32 ) {
                contexts.emplace(nInput, new PrecomputedInterpolationContext(nInput, nGhostBoundary));
 //       for large N >  32 use Gram-Fourier extension scheme with cost of N log(N)
          } else {
@@ -790,9 +798,7 @@ void InterpolationHandler::AddInterpolationContext(size_t nInput, size_t nGhostB
                      break;
                   }
                }
-               contexts.emplace(nInput, new CQuarticInterpolationContext(nInput, nGhostBoundary));
-
-               //contexts.emplace(nInput, new GramFEInterpolationContext(nInput, nGhostBoundary, nExtension, nDelta));
+               contexts.emplace(nInput, new GramFEInterpolationContext(nInput, nGhostBoundary, nExtension, nDelta));
 
          }
       }

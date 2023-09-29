@@ -255,7 +255,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if (((  (TVarCC & _REAL)  &&  !(TVarCC & _IMAG) )  || ( !(TVarCC & _REAL)  &&  (TVarCC & _IMAG) )) && amr->use_wave_flag[lv])
-      Aux_Error( ERROR_INFO, "Prepare_PatchData() for hybrid scheme currently requires that the real and imaginary parts of the wave function together are prepared together !!\n" );
+      Aux_Error( ERROR_INFO, "Prepare_PatchData() for hybrid scheme currently requires that the real and imaginary parts of the wave function are prepared together !!\n\
+                              This is probably due to operation (b2-3-1) and can probably be easily fixed.\n" );
 #  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
    if ( IntPhase )
@@ -272,7 +273,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 //    we have assumed in InterpolateGhostZone() that when adopting IntPhase this function will NOT prepare
 //    anything other than wave function and, optionally, density
-//    or density and phase for the fluid patches in the hybrid scheme
 //    --> e.g., one cannot prepare wave function and potential at the same time when enabling IntPhase
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( amr->use_wave_flag[lv] )
