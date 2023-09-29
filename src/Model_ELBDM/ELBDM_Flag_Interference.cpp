@@ -61,7 +61,7 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
    const bool PhaseChangeSignY = ( !OnlyAtExtrema ) || (( Var[1][kk ][jjp][ii ] - Var[1][kk][jj][ii] ) * ( Var[1][kk][jj][ii] - Var[1][kk ][jjm][ii ] ) < 0.0 );
    const bool PhaseChangeSignZ = ( !OnlyAtExtrema ) || (( Var[1][kkp][jj ][ii ] - Var[1][kk][jj][ii] ) * ( Var[1][kk][jj][ii] - Var[1][kkm][jj ][ii ] ) < 0.0 );
 
-   const real SqrtRhoC = SQRT(Var[0][kk][jj][ii]);
+   const real SqrtRhoC = SQRT(MAX(Var[0][kk][jj][ii], TINY_NUMBER));
 
 // compute second derivative of phase field
    const bool LapPhaseX = PhaseChangeSignX && ( FABS( Var[1][kk ][jj ][iip] - 2 * Var[1][kk][jj][ii] + Var[1][kk ][jj ][iim] ) > LapPhaseThreshold );
