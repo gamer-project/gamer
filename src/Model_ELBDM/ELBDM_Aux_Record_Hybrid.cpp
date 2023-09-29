@@ -27,10 +27,10 @@ void ELBDM_Aux_Record_Hybrid()
 
 
 // compute number of wave patches on all levels
-   long WavePatchCount   = 0;
-   long TotalPatchCount  = 0;
-   real WaveVolume       = 0;
-   real TotalVolume      = 0;
+   real WavePatchCount   = 0.0;
+   real TotalPatchCount  = 0.0;
+   real WaveVolume       = 0.0;
+   real TotalVolume      = 0.0;
    int  WaveLevel        = -1;
 
    for (int lv=0; lv<NLEVEL; lv++)
@@ -51,7 +51,7 @@ void ELBDM_Aux_Record_Hybrid()
 
    // output to file
    FILE *File = fopen( FileName, "a" );
-   fprintf( File, "Time = %13.7e,  Step = %7ld,  NPatch = %10ld,  FirstWaveLevel %2d,  WavePatchFrac = %6.2f,  WaveVolFrac = %6.2f\n\n", Time[0], Step, TotalPatchCount, WaveLevel, WavePatchCount / TotalPatchCount, WaveVolume / TotalVolume );
+   fprintf( File, "Time = %13.7e,  Step = %7ld,  NPatch = %10ld,  FirstWaveLevel %2d,  WavePatchFrac = %6.2f,  WaveVolFrac = %6.2f\n", Time[0], Step, TotalPatchCount, WaveLevel, WavePatchCount / TotalPatchCount, WaveVolume / TotalVolume );
    fclose( File );
 
 } // FUNCTION : ELBDM_Aux_Record_Hybrid
