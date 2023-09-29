@@ -23,6 +23,8 @@ parser.add_argument('-d', action='store', required=False, type=int, dest='didx',
                     help='delta data index [%(default)d]', default=1)
 parser.add_argument('-i', action='store', required=False, type=str, dest='prefix',
                     help='data path prefix [%(default)s]', default='./')
+parser.add_argument('-c', action='store', required=False, type=int, dest='convert_reim_to_phase',
+                    help='convert real and imaginary part to phase for wave scheme [%(default)d]', default=0)
 
 args = parser.parse_args()  # Parse the command-line arguments
 
@@ -35,10 +37,18 @@ print('')
 print('-------------------------------------------------------------------\n')
 
 # Extract arguments from the parsed command-line arguments
-idx_start = args.idx_start
-idx_end = args.idx_end
-didx = args.didx
-prefix = args.prefix
+idx_start             = args.idx_start
+idx_end               = args.idx_end
+didx                  = args.didx
+prefix                = args.prefix
+convert_reim_to_phase = args.convert_reim_to_phase
+
+if convert_reim_to_phase:
+
+   def reim2phase(field, data):
+      return np.arctan2(data["gamer", "Imag"], data["gamer", "Real"])
+
+   yt.add_field(("gamer", "Phase"), function=reim2phase, sampling_type="local", units="")
 
 colormap = 'viridis'  # Define the colormap for the plots
 dpi = 150  # Define the DPI (dots per inch) for the saved plots
