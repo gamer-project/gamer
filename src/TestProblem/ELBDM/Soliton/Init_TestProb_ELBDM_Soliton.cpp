@@ -388,17 +388,15 @@ void BC( real fluid[], const double x, const double y, const double z, const dou
 
 # if (ELBDM_SCHEME == ELBDM_HYBRID)
    if ( amr->use_wave_flag[lv] ) {
-#  endif 
-   fluid[REAL] = (real)0.0;
-   fluid[IMAG] = (real)0.0;
-   fluid[DENS] = (real)0.0;
+#  endif
+      fluid[DENS] = (real)0.0;
+      fluid[REAL] = (real)0.0;
+      fluid[IMAG] = (real)0.0;
 # if (ELBDM_SCHEME == ELBDM_HYBRID)
    } else {
-# endif
-   fluid[DENS] = (real)TINY_NUMBER;
-   fluid[PHAS] = (real)0.0;
-   fluid[STUB] = (real)0.0;
-# if (ELBDM_SCHEME == ELBDM_HYBRID)
+      fluid[DENS] = (real)TINY_NUMBER;
+      fluid[PHAS] = (real)0.0;
+      fluid[STUB] = (real)0.0;
    }
 # endif
 } // FUNCTION : BC
