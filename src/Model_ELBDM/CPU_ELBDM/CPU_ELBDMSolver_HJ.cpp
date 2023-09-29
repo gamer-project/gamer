@@ -533,7 +533,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 #                    ifdef CONSERVE_MASS
 //                   4.1.2 set fluxes of cells where fluid scheme fails to zero
                      s_Flux[sj][si] = 0;
-                     if ( si == HYB_NXT - ghost - 1) {
+                     if ( si == HYB_NXT - HYB_GHOST_SIZE - 1) {
                         s_Flux[sj][si + 1] = 0;
                      }
 #                    endif
