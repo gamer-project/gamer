@@ -75,5 +75,4 @@ for ds in ts.piter():
         plt.close()
 
         # store spectra in array
-        to_save = np.hstack([k_values, power_spectrum[:N//2]])
-        np.savetxt('power_spectrum_%s_%06d_lv_%02d_%d.txt' % f, to_save)
+        np.savetxt('power_spectrum_%s_%06d_lv_%02d_%d.txt' % f, np.column_stack([k_values, power_spectrum[:N//2]]))
