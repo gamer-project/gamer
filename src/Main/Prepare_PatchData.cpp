@@ -3681,6 +3681,29 @@ void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const real Tole
 
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Prepare_PatchData_HasWaveCounterpart
+// Description :  Prepare a uniform array indicating which cells have a refined wave counterpart including ghost zones for the target patches or patch groups
+//
+// Note        :  1. If "GhostSize != 0" --> use InterpolateGhostZone() to fill out the
+//                   ghost-zone values by spatial interpolation if the corresponding sibling patches do
+//                   NOT exist
+//                2. Use "patch group" as the preparation unit
+//                   --> The data of all patches within the same patch group will be prepared
+//                3. Patches stored in PID0_List must be real patches (cannot NOT be buffer patches)
+//
+// Parameter   :  lv                    : Target refinement level
+//                h_HasWaveCounterpart  : Array to store the prepared booleans indicating which cells have wave counterparts on refined levels
+//                GhostSize             : Number of ghost zones to be prepared
+//                NPG                   : Number of patch groups prepared at a time
+//                PID0_List             : List recording the patch indices with LocalID==0 to be prepared
+//                NSide                 : Number of sibling directions to prepare data
+//                                        --> NSIDE_00 (=  0) : do not prepare any sibling direction (equivalent to GhostSize=0)
+//                                            NSIDE_06 (=  6) : prepare only sibling directions 0~5
+//                                            NSIDE_26 (= 26) : prepare all sibling directions 0~25
+//                GlobalTree            : LB_GlobalTree object for indexing patches with their GID
+//
+//-------------------------------------------------------------------------------------------------------
 void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ], const int GhostSize, const int NPG, const int *PID0_List, const NSide_t NSide, LB_GlobalTree* GlobalTree )
 {
 
@@ -3738,7 +3761,9 @@ void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpa
 
             const long SibGID0 = Table_03( lv, GID0, Side, *GlobalTree );    // the 0th patch of the sibling patch group
 
-//          (b1) if the target sibling patch exists --> just copy data from the nearby patches at the same level
+//          if the target sibling patch exists --> just copy data from the nearby patches at the same level
+//          if it does not exist, the respective cells do not have any children or lie outside the simulation domain
+//          in both cases, we leave h_HasWaveCounterpart as false
             if ( SibGID0 >= 0 )
             {
                int loop[3], disp2[3];
