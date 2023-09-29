@@ -105,7 +105,7 @@ real GetMaxVelocity( const int lv, const bool ExcludeWaveCells )
             bool DoNotCalculateVelocity = false;
             if ( ExcludeWaveCells )
             {
-//             in principle, we only need to check the single patch (I, J, K) belongs to 
+//             in principle, we only need to check the single patch (I, J, K) belongs to
 //             however, ELBDM_HasWaveCounterpart automatically returns False if (I, J, K) is outside of the patch GID0 + LocalID
                for (int LocalID=0; LocalID<8; LocalID++ )
                {
@@ -138,12 +138,6 @@ real GetMaxVelocity( const int lv, const bool ExcludeWaveCells )
 #  else
    MPI_Allreduce( &MaxV, &MaxV_AllRank, 1, MPI_FLOAT,  MPI_MAX, MPI_COMM_WORLD );
 #  endif
-
-
-// check
-   if ( MaxV_AllRank == 0.0  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MaxV == 0.0 at lv %d !!\n", lv );
-
 
    return MaxV_AllRank / ELBDM_ETA;
 
