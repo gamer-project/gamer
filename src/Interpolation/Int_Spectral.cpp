@@ -138,8 +138,6 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
    }
 #  endif
 
-   const real WavelengthMagnifier = 100.0;
-
    real *DensInput  = NULL;
    real *DensOutput = NULL;
 #  endif
@@ -176,7 +174,6 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 
 
 #        if ( MODEL == ELBDM )
-         bool UsePhaseInt = UnwrapPhase;
 
          if ( UnwrapPhase )
          {
@@ -189,16 +186,14 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
                Imag[k] = ELBDM_UnwrapPhase( Imag[k-1], Imag[k] );
             }
 
-            UsePhaseInt = false;
-
 //          convert density and phase to real and imaginary part
-            if ( !UsePhaseInt )
+            if ( SPEC_INT_XY_INSTEAD_DEPHA )
             {
                for (int k = 0;  k < InSize[XYZ];  k++)
                {
                   const real SqrtDens = SQRT(Real[k]);
-                  Real[k] = SqrtDens * COS( Imag[k] / WavelengthMagnifier);
-                  Imag[k] = SqrtDens * SIN( Imag[k] / WavelengthMagnifier);
+                  Real[k] = SqrtDens * COS( Imag[k] / SPEC_INT_WAVELENGTH_MAGNIFIER );
+                  Imag[k] = SqrtDens * SIN( Imag[k] / SPEC_INT_WAVELENGTH_MAGNIFIER );
                }
             }
          }
@@ -213,7 +208,7 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
          }
 
 #        if ( MODEL == ELBDM )
-         if ( UnwrapPhase && !UsePhaseInt )
+         if ( UnwrapPhase && SPEC_INT_XY_INSTEAD_DEPHA )
          {
             real* Re = Output  + 0 * OutputDisp;
             real* Im = Output  + 1 * OutputDisp;
@@ -221,10 +216,11 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
             for (int k = 0;  k < OutSize[XYZ];  k++)
             {
                Re[k] = SQR(Im[k]) + SQR(Re[k]);
-               Im[k] = SATAN2(Im[k], Re[k]) * WavelengthMagnifier;
+               Im[k] = SATAN2(Im[k], Re[k]) * SPEC_INT_WAVELENGTH_MAGNIFIER;
             }
 
-            if ( XYZ == 2)
+//          unwrap phase to be consistent with UnwrapPhase in other interpolation modes
+            if ( XYZ == 2 )
             {
                for (int k = 1;  k < OutSize[XYZ];  k++)
                {
@@ -536,7 +532,7 @@ size_t GramFEInterpolationContext::GetWorkspaceSize() const {
 // Note        :  This method might suffer from large round-off errors because the extension matrix has a high-condition number.
 //                Tests of using the Gram-Fourier extension method with precomputed extension matrices indicate that the matrix has a condition number of
 //                roughly 1e11. This implies that the extension should be computed with quadruple precision in order to be accurate.
-//                However, tests of this interpolation function in single precision indicate that the roundoff error may not be acceptable
+//                However, tests of this interpolation function in single precision indicate that the roundoff error may be acceptable
 //                for interpolation because it does not accumulate over time. Use with care.
 //
 // Parameter   :  input          : Real input  array of size nInput

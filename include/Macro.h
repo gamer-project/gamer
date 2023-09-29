@@ -671,6 +671,15 @@
 
 # endif // # if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
 
+#ifdef SUPPORT_SPECTRAL_INT
+// if this constant is true, spectral interpolation interpolates
+// x = density^0.5*cos(phase/SPEC_INT_WAVELENGTH_MAGNIFIER), y = density^0.5*sin(phase/SPEC_INT_WAVELENGTH_MAGNIFIER)
+// instead of density and phase
+# define SPEC_INT_XY_INSTEAD_DEPHA true
+// stretching factor for wavelength in xy interpolation
+// for SPEC_INT_WAVELENGTH_MAGNIFIER = 1, x = real part and y = imaginary part
+# define SPEC_INT_WAVELENGTH_MAGNIFIER 100.0
+#endif
 
 // self-gravity constants
 #ifdef GRAVITY
