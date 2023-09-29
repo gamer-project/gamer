@@ -497,7 +497,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 
 //          4. write back final results to g_Fluid_In or g_Fluid_Out to save memory
 
-//          4.1 write shared memory array back to global memory
+//          4.1 write shared memory fluid arrays back to global memory
             CELL_LOOP(HYB_NXT, HYB_GHOST_SIZE, HYB_GHOST_SIZE)
             {
 
@@ -508,7 +508,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                real De_New       = s_In[sj][ELBDM_HJ_RK_ORDER][DENS][si];
                real Ph_New       = s_In[sj][ELBDM_HJ_RK_ORDER][PHAS][si];
 
-//             detect failure of fluid scheme
+//             4.1.1 detect failure of fluid scheme
 //             if cell has wave counterpart and density is negative or there is nan, use second-order finite-difference forward-in-time discretisation of wave equation
 //             if cell does not have wave counterpart, unphysical field values are unexpected and should lead to the termination of the run
                if ( s_HasWaveCounterpart[sj][si] && (De_New < 0 || De_New != De_New || Ph_New != Ph_New || FABS(Ph_New - Ph_Old) > M_PI )) {
@@ -528,6 +528,15 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 //                   convert back to phase and match to old phase
                      Ph_New                = EQUALISE( Ph_Old, SATAN2(Im_New, Re_New) );
                      De_New                = SQR(Re_New) + SQR(Im_New);
+
+
+#                    ifdef CONSERVE_MASS
+//                   4.1.2 set fluxes of cells where fluid scheme fails to zero
+                     s_Flux[sj][si] = 0;
+                     if ( si == HYB_NXT - ghost - 1) {
+                        s_Flux[sj][si + 1] = 0;
+                     }
+#                    endif
                }
 
                if ( FinalOut )
@@ -549,9 +558,17 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                   g_Fluid_In[bx][PHAS][Idx1] = Ph_New;
                }
 
+            } // CELL_LOOP(HYB_NXT, HYB_GHOST_SIZE, HYB_GHOST_SIZE)
 
-//             4.2 fluxes (for the flux-correction operation)
-#              ifdef CONSERVE_MASS
+
+#           ifdef  __CUDACC__
+            __syncthreads();
+#           endif
+
+//          4.2 write shared memory flux arrays back to global memory
+#           ifdef CONSERVE_MASS
+            CELL_LOOP(HYB_NXT, HYB_GHOST_SIZE, HYB_GHOST_SIZE)
+            {
                if ( StoreFlux  &&  tx == 0 )
                if ( k >= HYB_GHOST_SIZE  &&  k < HYB_NXT-HYB_GHOST_SIZE )
                if ( j >= HYB_GHOST_SIZE  &&  j < HYB_NXT-HYB_GHOST_SIZE )
@@ -562,12 +579,9 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                   g_Flux[bx][XYZ+1][0][Idx3] = s_Flux[ty][PS1 + HYB_GHOST_SIZE] / Eta;
                   g_Flux[bx][XYZ+2][0][Idx3] = s_Flux[ty][PS2 + HYB_GHOST_SIZE] / Eta;
                }
-#              endif // # ifdef CONSERVE_MASS
-            }
+            } // CELL_LOOP(HYB_NXT, HYB_GHOST_SIZE, HYB_GHOST_SIZE)
+#           endif // # ifdef CONSERVE_MASS
 
-#           ifdef __CUDACC__
-            __syncthreads();
-#           endif
 
 //          4.3 update remaining number of columns
             Column0     += NColumnOnce;
