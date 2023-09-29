@@ -841,6 +841,9 @@ void Aux_Check_Parameter()
    else
       Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
 
+   if ( OPT__OPTIMIZE_AGGRESSIVE )
+      Aux_Message( stderr, "WARNING : Input density for fluid solvers does not respect MIN_DENS when OPT__OPTIMIZE_AGGRESSIVE is on!!\n" );
+
    if ( MIN_PRES == 0.0 )
       Aux_Message( stderr, "WARNING : MIN_PRES == 0.0 could be dangerous and is mainly for debugging only !!\n" );
    else
