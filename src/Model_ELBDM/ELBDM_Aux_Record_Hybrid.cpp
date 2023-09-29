@@ -26,27 +26,32 @@ void ELBDM_Aux_Record_Hybrid()
    }
 
 
-   // compute number of wave patches on all levels
+// compute number of wave patches on all levels
    long WavePatchCount   = 0;
-   real WavePatchVolume  = 0;
+   long TotalPatchCount  = 0;
+   real WaveVolume       = 0;
    real TotalVolume      = 0;
+   int  WaveLevel        = -1;
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
-      const real dv = CUBE( amr->dh[lv] );
-      const NPatch  = NPatchTotal[lv];
+      const real dv      = CUBE( amr->dh[lv] );
+      const long NPatch  = NPatchTotal[lv];
 
       if ( amr->use_wave_flag[lv] ) {
+//       store first level using wave scheme in WaveLevel
+         if ( WaveLevel == -1 ) WaveLevel = lv;
          WavePatchCount   += NPatch;
-         WavePatchVolume  += NPatch * dv;
+         WaveVolume       += NPatch * dv;
       }
 
-      TotalVolume += NPatch * dv;
+      TotalPatchCount += NPatch;
+      TotalVolume     += NPatch * dv;
    }
 
    // output to file
    FILE *File = fopen( FileName, "a" );
-   fprintf( File, "Time = %13.7e,  Step = %7ld,  NPatch = %10ld,  WavePatchFrac = %6.2f,  WaveVolFrac = %6.2f\n\n", Time[0], Step, NPatchAllLevel, WavePatchCount / NPatchAllLevel, WaveVolume / TotalVolume );
+   fprintf( File, "Time = %13.7e,  Step = %7ld,  NPatch = %10ld,  FirstWaveLevel %2d,  WavePatchFrac = %6.2f,  WaveVolFrac = %6.2f\n\n", Time[0], Step, TotalPatchCount, WaveLevel, WavePatchCount / TotalPatchCount, WaveVolume / TotalVolume );
    fclose( File );
 
 } // FUNCTION : ELBDM_Aux_Record_Hybrid
