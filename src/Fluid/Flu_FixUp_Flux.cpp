@@ -245,6 +245,13 @@ void Flu_FixUp_Flux( const int lv )
                   )
 
 #              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
+//             throw error if corrected density is NaN
+               if ( CorrVal[DENS] != CorrVal[DENS] )
+               {
+                  Aux_Error( ERROR_INFO, "Flux-corrected density is NaN in patch with PID %d on level %d for the option OPT__FIXUP_FLUX !!\n", PID, lv);
+               }
+
+
                if ( CorrVal[DENS] <= MIN_DENS )
 
 #              else
