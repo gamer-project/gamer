@@ -104,14 +104,20 @@ void Aux_Check_Restrict( const int lv, const char *comment )
 #                 if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //                two components required to convert from wave to fluid
 //                store the phase in the REAL component of the wave and ignore the imaginary part
-                  if ( ConvertWaveToFluid && v == REAL && v == PHAS) {
+                  if ( ConvertWaveToFluid && v == REAL && v == PHAS ) {
                      ResData[v][k][j][i] = ELBDM_UnwrapPhase(u, SATAN2(ResData[IMAG][k][j][i], ResData[REAL][k][j][i]));
-                  } else if ( ConvertWaveToFluid && v == IMAG && v == STUB ) {
-                     ResData[v][k][j][i] = 0;
                   }
 #                 endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
                   Err = fabs(  ( u - ResData[v][k][j][i] ) / ResData[v][k][j][i]  );
+
+#                 if ( ELBDM_SCHEME == ELBDM_HYBRID )
+//                skip stub component
+                  if ( ConvertWaveToFluid && v == IMAG && v == STUB )
+                  {
+                     Err = 0;
+                  }
+#                 endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
                   if ( Err > TolErr )
                   {
