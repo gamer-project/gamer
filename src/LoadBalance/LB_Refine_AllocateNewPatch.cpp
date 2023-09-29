@@ -924,8 +924,9 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       if ( OPT__REF_FLU_INT_SCHEME == INT_SPECTRAL ) {
 //    interpolate density & phase
 //    INT_SPECTRAL with PhaseUnwrapping_Yes assumes that the density and phase fields are stored consecutively in memory
+      const bool Monotonicity_Spec[2] = { true, false };
       Interpolate( CData_Flu, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[DENS][0][0][0],
-                   FSize_CC3, FStart_CC, 2, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, Monotonicity,
+                   FSize_CC3, FStart_CC, 2, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, Monotonicity_Spec,
                    IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
       } else {
 //    interpolate density

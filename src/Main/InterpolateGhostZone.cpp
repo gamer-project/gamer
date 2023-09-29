@@ -1424,7 +1424,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          FData_Dens = FData_Real;
          FData_Phas = FData_Imag;
 //    otherwise store density in the DENS component and phase in the REAL component
-//    this ensure the two arrays are consecutive in memory
+//    this ensure the two arrays are consecutive in memory which is a necessary requirement for INT_SPECTRAL
       } else {
          CData_Real = CData_CC   + RealIdx*CSize3D_CC;
          CData_Imag = CData_CC   + ImagIdx*CSize3D_CC;
@@ -1455,13 +1455,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          if ( DensIdx == -1 ) // only need to recalculate density if it's not prepared already
          CData_Dens[t] = Re*Re + Im*Im;
       }
-      
+
       if ( IntScheme_CC == INT_SPECTRAL ) {
 //    interpolate density & phase
 //    INT_SPECTRAL with PhaseUnwrapping_Yes assumes that the density and phase fields are stored consecutively in memory
+      const bool Monotonicity_Spec[2] = { true, false };
       Interpolate( CData_CC, CSize_CC, CStart_CC, CRange_CC,
                    IntData_CC, FSize_CC, FStart_CC,
-                   2, IntScheme_CC, PhaseUnwrapping_Yes, Monotonicity_CC, IntOppSign0thOrder_No,
+                   2, IntScheme_CC, PhaseUnwrapping_Yes, Monotonicity_Spec, IntOppSign0thOrder_No,
                    ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
       } else {
 //    interpolate density
@@ -1612,9 +1613,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          if ( IntScheme_CC == INT_SPECTRAL ) {
 //       interpolate density & phase
 //       INT_SPECTRAL with PhaseUnwrapping_Yes assumes that the density and phase fields are stored consecutively in memory
+         const bool Monotonicity_Spec[2] = { true, false };
          Interpolate( CData_CC, CSize_CC, CStart_CC, CRange_CC,
                       IntData_CC_IntTime, FSize_CC, FStart_CC,
-                      2, IntScheme_CC, PhaseUnwrapping_Yes, Monotonicity_CC, IntOppSign0thOrder_No,
+                      2, IntScheme_CC, PhaseUnwrapping_Yes, Monotonicity_Spec, IntOppSign0thOrder_No,
                       ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
          } else {
 //       interpolate density
@@ -1667,49 +1669,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          FData_Imag[t] = Amp*SIN( Phase );
       }
    } // if ( IntPhase ) || if ( IntPhase && amr->use_wave_flag[lv] == true ) in hybrid scheme
-#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   else if ( !amr->use_wave_flag[lv] )
-   {
-      CData_Dens = NULL;
-      CData_Phas = NULL;
-      FData_Dens = NULL;
-      FData_Phas = NULL;
-
-      const int NVar = 1;
-      int DensIdx=-1, PhasIdx=-1;
-
-      for (int v=0; v<NVarCC_Flu; v++)
-      {
-         TVarCCIdx_Flu = TVarCCIdxList_Flu[v];
-
-         if      ( TVarCCIdx_Flu == DENS )   DensIdx = v;
-         else if ( TVarCCIdx_Flu == PHAS )   PhasIdx = v;
-      }
-
-
-//    interpolate density
-      if (DensIdx != -1) {
-         CData_Dens = CData_CC   + DensIdx*CSize3D_CC;
-         FData_Dens = IntData_CC + DensIdx*FSize3D_CC;
-
-         Interpolate( CData_Dens, CSize_CC, CStart_CC, CRange_CC, FData_Dens, FSize_CC, FStart_CC, NVar,
-                      IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes, IntOppSign0thOrder_No,
-                      ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
-      }
-
-//    interpolate phase
-      if (PhasIdx != -1) {
-         CData_Phas = CData_CC   + PhasIdx*CSize3D_CC;
-         FData_Phas = IntData_CC + PhasIdx*FSize3D_CC;
-
-         Interpolate( CData_Phas, CSize_CC, CStart_CC, CRange_CC, FData_Phas, FSize_CC, FStart_CC, NVar,
-                      IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_No, IntOppSign0thOrder_No,
-                      ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
-      }
-   }
-#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 // c3. interpolation on original variables
-   else // if ( IntPhase || ( IntPhase && amr->use_wave_flag[lv] == true) ) ... else if ( amr->use_wave_flag[lv] == false )
+   else // if ( IntPhase || ( IntPhase && amr->use_wave_flag[lv] == true) )
 #  endif // if ( MODEL == ELBDM )
    {
 //    c3-1. prepare the fine-grid, cell-centered B field for IntIter
