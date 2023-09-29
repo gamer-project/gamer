@@ -672,6 +672,10 @@ int main( int argc, char *argv[] )
       TIMING_FUNC(   Par_Aux_Record_ParticleCount(),  Timer_Main[4],   TIMER_ON   );
 #     endif
 
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      TIMING_FUNC(   ELBDM_Aux_Record_Hybrid(),       Timer_Main[4],   TIMER_ON   );
+#     endif
+
       TIMING_FUNC(   Aux_Check(),                     Timer_Main[4],   TIMER_ON   );
 
 #     if ( MODEL == ELBDM )
