@@ -1,6 +1,15 @@
+from __future__ import print_function, division, absolute_import
+
 import argparse
 import sys
 import yt
+import matplotlib
+matplotlib.use('Agg')  # Use Agg backend for non-interactive plotting
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+from mpl_toolkits.axes_grid1 import AxesGrid
 
 # Load the command-line parameters
 parser = argparse.ArgumentParser(description='Plot slices of wave function for the ELBDM test')
@@ -15,7 +24,7 @@ parser.add_argument('-d', action='store', required=False, type=int, dest='didx',
 parser.add_argument('-i', action='store', required=False, type=str, dest='prefix',
                     help='data path prefix [%(default)s]', default='./')
 
-args = parser.parse_args()
+args = parser.parse_args()  # Parse the command-line arguments
 
 # Print the command-line arguments for reference
 print('\nCommand-line arguments:')
@@ -25,30 +34,83 @@ for t in range(len(sys.argv)):
 print('')
 print('-------------------------------------------------------------------\n')
 
-# Extract command-line arguments
+# Extract arguments from the parsed command-line arguments
 idx_start = args.idx_start
 idx_end = args.idx_end
 didx = args.didx
 prefix = args.prefix
 
-# Constants
-colormap = 'arbre'
-field = 'Dens'
-center_mode = 'c'
-dpi = 150
+colormap = 'viridis'  # Define the colormap for the plots
+dpi = 150  # Define the DPI (dots per inch) for the saved plots
 
-# Enable parallelism
-yt.enable_parallelism()
+# Create a series of datasets based on data files with indices in the specified range
+dataset_series = yt.DatasetSeries([prefix + '/Data_%06d' % idx for idx in range(idx_start, idx_end + 1, didx)])
 
-# Load dataset series
-ts = yt.load([prefix + '/Data_%06d' % idx for idx in range(idx_start, idx_end + 1, didx)])
+# Loop through each dataset in the series
+for dataset in dataset_series.piter():
+     axes = ["z"]  # Specify the axes for slicing (e.g., "z" for z-axis slices)
 
-for ds in ts.piter():
-   # Create a slice plot
-   sz = yt.SlicePlot(ds, 'z', field, center=center_mode)
-   # Configure plot settings
-   sz.set_log(field, False)
-   sz.set_cmap(field, colormap)
-   sz.annotate_timestamp(corner='upper_right', time_format='t = {time:.4f} {units}')
-   # Save the plot
-   sz.save(mpl_kwargs={"dpi": dpi})
+     for current_axis in axes:
+          # Create a new figure for the current slice
+          fig = plt.figure(dpi=dpi, figsize=(24, 12))
+
+          # Create a grid of axes for multiple plots
+          grid = AxesGrid(
+               fig,
+               (0.075, 0.075, 0.85, 0.85),
+               nrows_ncols=(2, 2),
+               axes_pad=(0.2, 0.0),
+               label_mode="L",
+               share_all=True,
+               cbar_location="right",
+               cbar_mode="edge",
+               direction="row",
+               cbar_size="3%",
+               cbar_pad="0%",
+          )
+
+          # Define the fields to plot
+          fields_to_plot = [
+               ("gas", "density"),
+               ("gamer", "Phase"),
+          ]
+
+          # Create a slice plot for the current dataset and field
+          slice_plot = yt.SlicePlot(dataset, current_axis, fields_to_plot)
+          slice_plot.set_log(("gamer", "Phase"), False)
+
+          slice_plot.annotate_grids(periodic=False)
+
+          for field in fields_to_plot:
+               slice_plot.set_cmap(field, colormap)
+
+          # For each plotted field, associate it with the corresponding AxesGrid axes
+          for i, field in enumerate(fields_to_plot):
+               plot = slice_plot.plots[field]
+               plot.figure = fig
+               plot.axes = grid[2 * i].axes
+               plot.cax = grid.cbar_axes[i]
+
+          # Create a second slice plot for comparison
+          slice_plot_2 = yt.SlicePlot(dataset, current_axis, fields_to_plot)
+          slice_plot_2.set_log(("gamer", "Phase"), False)
+
+          for field in fields_to_plot:
+               slice_plot_2.set_cmap(field, colormap)
+
+          # Associate the second slice plot with the AxesGrid axes
+          for i, field in enumerate(fields_to_plot):
+               plot = slice_plot_2.plots[field]
+               plot.figure = fig
+               plot.axes = grid[2 * i + 1].axes
+
+          # Redraw the plot on the AxesGrid axes
+          slice_plot._setup_plots()
+          slice_plot_2._setup_plots()
+
+          # Get the DumpID from dataset parameters and save the plot
+          dump_id = dataset.parameters["DumpID"]
+          plt.savefig("Data_%06d_%s_axis.png" % (dump_id, current_axis))
+
+          # Close the current figure to release resources
+          plt.close()
