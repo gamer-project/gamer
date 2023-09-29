@@ -237,7 +237,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
 
                if (  isDataInvalid  )
                {
-                  Aux_Message( stderr, "Invalid input fluid data:\n" );
+                  Aux_Message( stderr, "Invalid input fluid data on level %d:\n", lv);
                   Aux_Message( stderr, "Fluid: " );
                   for (int v=0; v<FLU_NIN; v++)    Aux_Message( stderr, " [%d]=%14.7e", v, fluid[v] );
                   Aux_Message( stderr, "\n" );
