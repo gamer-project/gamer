@@ -25,12 +25,44 @@ sub_directories = ["fft_tables", "ifft_tables", "boundary2extension_tables", "in
 
 for sub_dir in sub_directories:
     try:
-        os.mkdir(base_path + sub_dir)
+        os.mkdir(base_path + "/" + sub_dir)
     except OSError as error:
         print(error)
 
-# Implement the Gram Schmidt orthogonalisation algorithm using mpmath
 class GramSchmidt:
+    """
+    Implements the Gram-Schmidt orthogonalization algorithm using mpmath.
+
+    Args:
+        x (list): List of x-values.
+        m (int): Maximum polynomial degree for orthogonalization.
+
+    Attributes:
+        x (list): List of x-values.
+        m (int): Maximum polynomial degree.
+        A (matrix): Linear map for polynomial scalar product.
+        V (matrix): Basis vectors as columns of matrix V.
+        U (matrix): Orthogonalized basis vectors.
+
+    Methods:
+        evaluateBasis(x, basis_element):
+            Evaluates a basis element at given x-values.
+        sp(u, v):
+            Computes the scalar product of two vectors u and v.
+        proj(u, v):
+            Computes the projection of vector u onto vector v.
+        norm(u):
+            Computes the norm of a vector u.
+        modifiedGramSchmidt(V):
+            Performs modified Gram-Schmidt orthogonalization.
+        projectFunction(f):
+            Projects a function onto the orthogonal basis.
+        reconstructFunction(coeffs, x=None):
+            Reconstructs a function from coefficients and x-values.
+        debug():
+            Displays debug plots and information about orthogonal polynomials.
+    """
+
     def __init__(self, x, m):
         self.x = x
         self.m = m
@@ -131,6 +163,7 @@ class GramSchmidt:
             print(f"i = {i} u_ij = {u_ij[i, :]}")
 
 class SVDFourierExtension:
+
     # Implement the SVD Fourier continuation algorithm using mpmath
     M_ALL_K  = 0
     M_EVEN_K = 1
