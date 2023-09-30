@@ -615,13 +615,16 @@
 #       define HYB_GHOST_SIZE         6
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
-// set default parameters of gram extension scheme
-# if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
+# if ( WAVE_SCHEME == WAVE_GRAMFE || SUPPORT_SPECTRAL_INT )
 //  number of evaluation points of Gram polynomials for computing FC(SVD) continuation
 #   define GRAMFE_GAMMA  150
 //  number of Fourier modes used in the FC(SVD) continuation
 //  roughly GRAMFE_G = GRAMFE_GAMMA/2
 #   define GRAMFE_G      63
+# endif
+
+// set default parameters of gram extension scheme
+# if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
 //  number of boundary points used for Gram polynomial space on boundary
 #   define GRAMFE_NDELTA 14
 //  maximum order of Gram polynomials on boundary
