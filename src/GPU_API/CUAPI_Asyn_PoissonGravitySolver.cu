@@ -20,6 +20,14 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
                                         const real dh_Min, const int Max_Iter, const int NPre_Smooth,
                                         const int NPost_Smooth, const real Tolerated_Error, const real Poi_Coeff,
                                         const IntScheme_t IntScheme );
+
+#elif ( POT_SCHEME == DST  )
+__global__ void CUPOT_PoissonSolver_DST(      real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
+					      real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
+					      real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
+					const real Const, 
+					const IntScheme_t IntScheme);
+
 #endif // POT_SCHEME
 
 __global__
@@ -173,11 +181,14 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
    const dim3 Poi_Block_Dim( RHO_NXT/2, RHO_NXT, POT_BLOCK_SIZE_Z );
 #  elif ( POT_SCHEME == MG )
    const dim3 Poi_Block_Dim( POT_BLOCK_SIZE_X, 1, 1 );
+#  elif   ( POT_SCHEME == DST )
+   const uint DST_size_bytes = (RHO_NXT*RHO_NXT*RHO_NXT/2 + RHO_NXT)* sizeof(real);
+   const dim3 DST_block(RHO_NXT,RHO_NXT);
 #  endif
    const dim3 ExtPot_Block_Dim( EXTPOT_BLOCK_SIZE );
    const dim3 Gra_Block_Dim( GRA_BLOCK_SIZE );
    const int  NPatch      = NPatchGroup*8;
-#  if   ( POT_SCHEME == SOR )
+#  if   ( POT_SCHEME == SOR || POT_SCHEME == DST)
    const real Poi_Const   = Poi_Coeff*dh*dh;
    const real SOR_Omega_6 = SOR_Omega/6.0;
 #  endif
@@ -406,6 +417,15 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                       d_Pot_Array_P_Out + UsedPatch[s],
                                       dh, MG_Max_Iter, MG_NPre_Smooth, MG_NPost_Smooth, MG_Tolerated_Error,
                                       Poi_Coeff, IntScheme );
+
+#           elif ( POT_SCHEME == DST  )
+
+	    CUPOT_PoissonSolver_DST <<< NPatch_per_Stream[s], DST_block, DST_size_bytes, Stream[s] >>>
+	                            ( d_Rho_Array_P     + UsedPatch[s],
+	    			      d_Pot_Array_P_In  + UsedPatch[s],
+	    			      d_Pot_Array_P_Out + UsedPatch[s],
+	    			      Poi_Const, 
+	    			      IntScheme);
 
 #           else
 

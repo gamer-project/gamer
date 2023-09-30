@@ -117,6 +117,13 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ CUBE(RHO_N
                                         const real dh_Min, const int Max_Iter, const int NPre_Smooth,
                                         const int NPost_Smooth, const real Tolerated_Error, const real Poi_Coeff,
                                         const IntScheme_t IntScheme );
+#elif ( POT_SCHEME == DST  )
+__global__ void CUPOT_PoissonSolver_DST(      real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
+					      real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
+					      real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
+					const real Const, 
+					const IntScheme_t IntScheme);
+
 #endif // POT_SCHEME
 
 
