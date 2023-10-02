@@ -77,7 +77,11 @@ void Aux_Record_Center()
 
 // set an initial guess by the peak density position
    if ( MPI_Rank == 0 )
+#     ifdef PARTICLE
+      for (int d=0; d<3; d++)    CoM_Old[d] = Max_TotDens.Coord[d];
+#     else
       for (int d=0; d<3; d++)    CoM_Old[d] = Max_Dens.Coord[d];
+#     endif
 
    MPI_Bcast( CoM_Old, 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
 
