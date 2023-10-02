@@ -324,9 +324,9 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
             Aux_Error( ERROR_INFO, "OffsetEachPatch_Patch[%d] (%d) >= max (%d) !!\n",
                        AccIdx, OffsetEachPatch_Patch[AccIdx], NSendPatchTotal );
 
-         if ( OffsetEachPatch_ParData[AccIdx] + NAtt > NSendParTotal*(long)NAtt )
+         if ( OffsetEachPatch_ParData[AccIdx] + (long)NAtt > NSendParTotal*(long)NAtt )
             Aux_Error( ERROR_INFO, "OffsetEachPatch_ParData[%d] + NAtt (%ld) > max (%ld) !!\n",
-                       AccIdx, OffsetEachPatch_ParData[AccIdx] + NAtt, NSendParTotal*NAtt );
+                       AccIdx, OffsetEachPatch_ParData[AccIdx] + (long)NAtt, NSendParTotal*(long)NAtt );
 #        endif
 
          SendBuf_NParEachPatch [ OffsetEachPatch_Patch[AccIdx] ] = NParThisPatch;
@@ -523,8 +523,8 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 //       check if the received particle lies within the target patch (may not when PredictPos is on)
          if ( !PredictPos  &&  ( AttBitIdx & _PAR_POSX )  &&  ( AttBitIdx & _PAR_POSY )  &&  ( AttBitIdx & _PAR_POSZ ) )
          {
-            const double *EdgeL         = amr->patch[0][FaLv][FaPID_Match]->EdgeL;
-            const double *EdgeR         = amr->patch[0][FaLv][FaPID_Match]->EdgeR;
+            const double     *EdgeL     = amr->patch[0][FaLv][FaPID_Match]->EdgeL;
+            const double     *EdgeR     = amr->patch[0][FaLv][FaPID_Match]->EdgeR;
             const real_par    ParPos[3] = { amr->patch[0][FaLv][FaPID_Match]->ParAtt_Copy[PAR_POSX][p],
                                             amr->patch[0][FaLv][FaPID_Match]->ParAtt_Copy[PAR_POSY][p],
                                             amr->patch[0][FaLv][FaPID_Match]->ParAtt_Copy[PAR_POSZ][p] };

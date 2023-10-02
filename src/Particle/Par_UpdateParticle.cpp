@@ -380,7 +380,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 #                    ifdef DEBUG_PARTICLE
                      if (  ! Mis_CompareRealValue( (real)ParPos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
                      Aux_Error( ERROR_INFO, "index outside the acc array (pos[%d] %14.7e, EdgeL %14.7e, idx %d) !!\n",
-                                d, ParPos[d][ParID], amr->patch[0][lv][PID]->EdgeL[d], idx[d] );
+                                d, (real)ParPos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeL[d], idx[d] );
 #                    endif
 
                      idx[d] = 0;
@@ -391,7 +391,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 #                    ifdef DEBUG_PARTICLE
                      if (  ! Mis_CompareRealValue( (real)ParPos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
                         Aux_Error( ERROR_INFO, "index outside the acc array (pos[%d] %14.7e, EdgeR %14.7e, idx %d) !!\n",
-                                   d, ParPos[d][ParID], amr->patch[0][lv][PID]->EdgeR[d], idx[d] );
+                                   d, (real)ParPos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeR[d], idx[d] );
 #                    endif
 
                      idx[d] = AccSize - 1;
@@ -438,7 +438,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 #                    ifdef DEBUG_PARTICLE
                      if (  ! Mis_CompareRealValue( (real)ParPos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
                      Aux_Error( ERROR_INFO, "index outside the acc array (pos[%d] %14.7e, EdgeL %14.7e, idxL %d, idxR %d) !!\n",
-                                d, ParPos[d][ParID], amr->patch[0][lv][PID]->EdgeL[d], idxLR[0][d], idxLR[1][d] );
+                                d, (real)ParPos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeL[d], idxLR[0][d], idxLR[1][d] );
 #                    endif
 
                      idxLR[0][d] = 0;
@@ -450,7 +450,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 #                    ifdef DEBUG_PARTICLE
                      if (  ! Mis_CompareRealValue( (real)ParPos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
                      Aux_Error( ERROR_INFO, "index outside the acc array (pos[%d] %14.7e, EdgeR %14.7e, idxL %d, idxR %d) !!\n",
-                                d, ParPos[d][ParID], amr->patch[0][lv][PID]->EdgeR[d], idxLR[0][d], idxLR[1][d] );
+                                d, (real)ParPos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeR[d], idxLR[0][d], idxLR[1][d] );
 #                    endif
 
                      idxLR[0][d] = AccSize - 2;
@@ -511,7 +511,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 #                    ifdef DEBUG_PARTICLE
                      if (  ! Mis_CompareRealValue( (real)ParPos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
                      Aux_Error( ERROR_INFO, "index outside the acc array (pos[%d] %14.7e, EdgeL %14.7e, idxL %d, idxR %d) !!\n",
-                                d, ParPos[d][ParID], amr->patch[0][lv][PID]->EdgeL[d], idxLCR[0][d], idxLCR[2][d] );
+                                d, (real)ParPos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeL[d], idxLCR[0][d], idxLCR[2][d] );
 #                    endif
 
                      idxLCR[0][d] = 0;
@@ -524,7 +524,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 #                    ifdef DEBUG_PARTICLE
                      if (  ! Mis_CompareRealValue( (real)ParPos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
                      Aux_Error( ERROR_INFO, "index outside the acc array (pos[%d] %14.7e, EdgeR %14.7e, idxL %d, idxR %d) !!\n",
-                                d, ParPos[d][ParID], amr->patch[0][lv][PID]->EdgeR[d], idxLCR[0][d], idxLCR[2][d] );
+                                d, (real)ParPos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeR[d], idxLCR[0][d], idxLCR[2][d] );
 #                    endif
 
                      idxLCR[0][d] = AccSize - 3;
