@@ -370,4 +370,4 @@ void Aux_FindExtrema_ParDens( Extrema_t *Extrema, const ExtremaMode_t Mode, cons
    MPI_Type_free( &MPI_Extrema_t );
 #  endif // #ifndef SERIAL
 
-} // FUNCTION : Aux_FindExtrema
+} // FUNCTION : Aux_FindExtrema_ParDens
