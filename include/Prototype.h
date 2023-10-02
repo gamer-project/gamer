@@ -43,7 +43,7 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
                       const PatchType_t PatchType );
 void Aux_FindExtrema_ParDens( Extrema_t *Extrema, const ExtremaMode_t Mode, const int MinLv, const int MaxLv,
                               const PatchType_t PatchType );
-void Aux_FindWeightedCenter( double WeightedCenter[], const double Center_ref[], const double MaxR, const double MinRho, const int Mode, const long WeightingDensityField );
+void Aux_FindWeightedCenter( double WeightedCenter[], const double Center_ref[], const double MaxR, const double MinWD, const int Mode, const long WeightingDensityField );
 #ifndef SERIAL
 void Aux_Record_BoundaryPatch( const int lv, int *NList, int **IDList, int **PosList );
 #endif
