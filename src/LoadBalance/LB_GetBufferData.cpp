@@ -8,8 +8,8 @@ const real BufSizeFactor = 1.05;    // Send/RecvBufSize = int(NSend/NRecv*BufSiz
 // MPI buffers are shared by some particle routines
 static void *MPI_SendBuf_Shared = NULL;
 static void *MPI_RecvBuf_Shared = NULL;
-static long  SendBufSize        = 0L;
-static long  RecvBufSize        = 0L;
+static long  SendBufSize        = -1L;
+static long  RecvBufSize        = -1L;
 
 #ifdef TIMING
 extern Timer_t *Timer_MPI[3];
@@ -577,8 +577,6 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
    {
       Send_NDisp[r] = Send_NDisp[r-1] + Send_NCount[r-1];
       Recv_NDisp[r] = Recv_NDisp[r-1] + Recv_NCount[r-1];
-      if ( Send_NDisp[r] < Send_NDisp[r-1] )   Aux_Error(ERROR_INFO, "Send_NDisp[%d] = %d ; Send_NCount[%d] = %d ; Send_NDisp[%d] = %d.\n", r-1, Send_NDisp[r-1], r-1, Send_NCount[r-1], r, Send_NDisp[r]);
-      if ( Recv_NDisp[r] < Recv_NDisp[r-1] )   Aux_Error(ERROR_INFO, "Recv_NDisp[%d] = %d ; Recv_NCount[%d] = %d ; Recv_NDisp[%d] = %d.\n", r-1, Recv_NDisp[r-1], r-1, Recv_NCount[r-1], r, Recv_NDisp[r]);
    }
 
    NSend_Total = (long)Send_NDisp[ MPI_NRank-1 ] + (long)Send_NCount[ MPI_NRank-1 ];
