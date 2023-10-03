@@ -8,10 +8,11 @@
 // Function    :  Aux_Record_Center
 // Description :  Record various center coordinates
 //
-// Note        :
-//                2. For the center coordinates, it will record the position of maximum density, minimum potential,
-//                   and center-of-mass
-//                3. Output filename is fixed to "Record__Center"
+// Note        :  1. Invoked by main()
+//                2. Enabled by the runtime option "OPT__RECORD_CENTER"
+//                3. This function will be called both during the program initialization and after each full update
+//                4. It will record the position of maximum density, minimum potential, and center of mass
+//                5. Output filename is fixed to "Record__Center"
 //
 // Parameter   :  None
 //

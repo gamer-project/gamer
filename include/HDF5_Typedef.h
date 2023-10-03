@@ -717,6 +717,7 @@ struct InputPara_t
    int    Opt__RecordMemory;
    int    Opt__RecordPerformance;
    int    Opt__ManualControl;
+   int    Opt__RecordCenter;
    int    Opt__RecordUser;
    int    Opt__OptimizeAggressive;
    int    Opt__SortPatchByLBIdx;

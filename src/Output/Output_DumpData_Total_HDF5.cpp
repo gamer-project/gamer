@@ -242,6 +242,7 @@ Procedure for outputting new variables:
 //                2467 : 2023/05/18 --> replace OPT__INIT_BFIELD_BYFILE by OPT__INIT_BFIELD_BYVECPOT
 //                2468 : 2023/06/24 --> output OPT__SORT_PATCH_BY_LBIDX
 //                2469 : 2023/09/09 --> output MHM_CHECK_PREDICT
+//                2470 : 2023/10/03 --> output OPT__RECORD_CENTER
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -2440,6 +2441,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__RecordMemory       = OPT__RECORD_MEMORY;
    InputPara.Opt__RecordPerformance  = OPT__RECORD_PERFORMANCE;
    InputPara.Opt__ManualControl      = OPT__MANUAL_CONTROL;
+   InputPara.Opt__RecordCenter       = OPT__RECORD_CENTER;
    InputPara.Opt__RecordUser         = OPT__RECORD_USER;
    InputPara.Opt__OptimizeAggressive = OPT__OPTIMIZE_AGGRESSIVE;
    InputPara.Opt__SortPatchByLBIdx   = OPT__SORT_PATCH_BY_LBIDX;
@@ -3324,6 +3326,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__RecordMemory",       HOFFSET(InputPara_t,Opt__RecordMemory      ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__RecordPerformance",  HOFFSET(InputPara_t,Opt__RecordPerformance ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__ManualControl",      HOFFSET(InputPara_t,Opt__ManualControl     ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__RecordCenter",       HOFFSET(InputPara_t,Opt__RecordCenter      ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__RecordUser",         HOFFSET(InputPara_t,Opt__RecordUser        ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__OptimizeAggressive", HOFFSET(InputPara_t,Opt__OptimizeAggressive), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__SortPatchByLBIdx",   HOFFSET(InputPara_t,Opt__SortPatchByLBIdx  ), H5T_NATIVE_INT              );

@@ -62,7 +62,7 @@ bool                 OPT__INT_TIME, OPT__OUTPUT_USER, OPT__OUTPUT_BASE, OPT__OUT
 bool                 OPT__OUTPUT_BASEPS, OPT__CK_REFINE, OPT__CK_PROPER_NESTING, OPT__CK_FINITE, OPT__RECORD_PERFORMANCE;
 bool                 OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE, OPT__CK_NORMALIZE_PASSIVE;
 bool                 OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
-bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__FREEZE_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
+bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__FREEZE_FLUID, OPT__RECORD_CENTER, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 bool                 OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 bool                 OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
 bool                 OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID, OPT__SORT_PATCH_BY_LBIDX;
@@ -532,8 +532,7 @@ int main( int argc, char *argv[] )
       else
          Aux_Error( ERROR_INFO, "Aux_Record_User_Ptr == NULL for OPT__RECORD_USER !!\n" );
    }
-
-   Aux_Record_Center();
+   if ( OPT__RECORD_CENTER )              Aux_Record_Center();
 
 #  ifdef PARTICLE
    if ( OPT__PARTICLE_COUNT > 0 )         Par_Aux_Record_ParticleCount();
@@ -622,6 +621,7 @@ int main( int argc, char *argv[] )
       TIMING_FUNC(   Par_Aux_Record_ParticleCount(),  Timer_Main[4],   TIMER_ON   );
 #     endif
       
+      if ( OPT__RECORD_CENTER )
       TIMING_FUNC(   Aux_Record_Center(),             Timer_Main[4],   TIMER_ON   );
 
       TIMING_FUNC(   Aux_Check(),                     Timer_Main[4],   TIMER_ON   );

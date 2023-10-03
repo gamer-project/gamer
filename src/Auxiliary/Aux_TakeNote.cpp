@@ -1424,6 +1424,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__RECORD_UNPHY               %d\n",      OPT__RECORD_UNPHY        );
       fprintf( Note, "OPT__RECORD_MEMORY              %d\n",      OPT__RECORD_MEMORY       );
       fprintf( Note, "OPT__RECORD_PERFORMANCE         %d\n",      OPT__RECORD_PERFORMANCE  );
+      fprintf( Note, "OPT__RECORD_CENTER              %d\n",      OPT__RECORD_CENTER       );
       fprintf( Note, "OPT__MANUAL_CONTROL             %d\n",      OPT__MANUAL_CONTROL      );
       fprintf( Note, "OPT__RECORD_USER                %d\n",      OPT__RECORD_USER         );
       fprintf( Note, "OPT__OPTIMIZE_AGGRESSIVE        %d\n",      OPT__OPTIMIZE_AGGRESSIVE );

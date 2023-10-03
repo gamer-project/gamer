@@ -2142,6 +2142,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__RecordMemory",       &RS.Opt__RecordMemory,       SID, TID, NonFatal, &RT.Opt__RecordMemory,        1, NonFatal );
    LoadField( "Opt__RecordPerformance",  &RS.Opt__RecordPerformance,  SID, TID, NonFatal, &RT.Opt__RecordPerformance,   1, NonFatal );
    LoadField( "Opt__ManualControl",      &RS.Opt__ManualControl,      SID, TID, NonFatal, &RT.Opt__ManualControl,       1, NonFatal );
+   LoadField( "Opt__RecordCenter",       &RS.Opt__RecordCenter,       SID, TID, NonFatal, &RT.Opt__RecordCenter,        1, NonFatal );
    LoadField( "Opt__RecordUser",         &RS.Opt__RecordUser,         SID, TID, NonFatal, &RT.Opt__RecordUser,          1, NonFatal );
    LoadField( "Opt__OptimizeAggressive", &RS.Opt__OptimizeAggressive, SID, TID, NonFatal, &RT.Opt__OptimizeAggressive,  1, NonFatal );
    LoadField( "Opt__SortPatchByLBIdx",   &RS.Opt__SortPatchByLBIdx,   SID, TID, NonFatal, &RT.Opt__SortPatchByLBIdx,    1, NonFatal );
