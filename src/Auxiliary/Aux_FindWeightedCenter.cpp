@@ -16,8 +16,7 @@
 //                Center_ref[]           : the coordinate of center of reference
 //                MaxR                   : Maximum radius to specify the region to compute the weighted center
 //                MinWD                  : Minimum weighting density to specify the region to compute the weighted center
-//                Mode                   : How to select the target region
-//                                         (0: all region, 1: by MaxR, 2: by MinWD)
+//                Mode                   : How to select the target region (0 = all region; 1 = by MaxR; 2 = by MinWD)
 //                WeightingDensityField  : the weighting density field used for compuation as the w(x,y,z) in the above Note
 //
 // Return      :  WeightedCenter[]
@@ -99,7 +98,6 @@ void Aux_FindWeightedCenter( double WeightedCenter[], const double Center_ref[],
    WX_ThisRank = 0.0;
    WY_ThisRank = 0.0;
    WZ_ThisRank = 0.0;
-   for (int d=0; d<3; d++)    WR_ThisRank[d] = 0.0;
 
 
 // loop over all levels
@@ -138,7 +136,7 @@ void Aux_FindWeightedCenter( double WeightedCenter[], const double Center_ref[],
       const double dh = amr->dh[lv];
       const double dv = CUBE( dh );
 
-#     pragma omp parallel for reduction (+: W_ThisRank, WX_ThisRank, WY_ThisRank, WZ_ThisRank ) schedule( runtime )
+#     pragma omp parallel for reduction ( +:W_ThisRank, WX_ThisRank, WY_ThisRank, WZ_ThisRank ) schedule( runtime )
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
 //       skip non-leaf patches
@@ -183,13 +181,16 @@ void Aux_FindWeightedCenter( double WeightedCenter[], const double Center_ref[],
             switch( Mode )
             {
                case 0:
+                   // include all region
                    isIncluded = true;
                    break;
                case 1:
+                   // only include cells within a sphere with raius MaxR
                    const double R2 = SQR(dx) + SQR(dy) + SQR(dz);
                    isIncluded = ( R2 < MaxR2 );
                    break;
                case 2:
+                   // only include cells with weighting density larger than MinMD
                    const double WD = WeightingDensity[PID][k][j][i];
                    isIncluded = ( WD > MinWD );
                    break;
@@ -209,7 +210,9 @@ void Aux_FindWeightedCenter( double WeightedCenter[], const double Center_ref[],
             }
          }}} // i,j,k
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+
       delete [] WeightingDensity;
+
    } // for (int lv=0; lv<NLEVEL; lv++)
 
    WR_ThisRank[0] = WX_ThisRank;
