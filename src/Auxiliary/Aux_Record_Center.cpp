@@ -87,7 +87,7 @@ void Aux_Record_Center()
 
    while ( true )
    {
-      Aux_FindWeightedCenter( CoM_New, CoM_Old, CoM_MaxR, CoM_MinRho, 1, _TOTAL_DENS );
+      Aux_FindWeightedCenter( CoM_New, CoM_Old, CoM_MaxR, CoM_MinRho, _TOTAL_DENS );
 
       dR2 = SQR( CoM_Old[0] - CoM_New[0] )
           + SQR( CoM_Old[1] - CoM_New[1] )

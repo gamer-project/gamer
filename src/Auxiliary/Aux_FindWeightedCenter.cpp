@@ -16,12 +16,11 @@
 //                Center_ref[]           : the coordinate of center of reference
 //                MaxR                   : Maximum radius to specify the region to compute the weighted center
 //                MinWD                  : Minimum weighting density to specify the region to compute the weighted center
-//                Mode                   : How to select the target region (0 = all region; 1 = by MaxR; 2 = by MinWD)
 //                WeightingDensityField  : the weighting density field used for compuation as the w(x,y,z) in the above Note
 //
 // Return      :  WeightedCenter[]
 //-------------------------------------------------------------------------------------------------------
-void Aux_FindWeightedCenter( double WeightedCenter[], const double Center_ref[], const double MaxR, const double MinWD, const int Mode, const long WeightingDensityField )
+void Aux_FindWeightedCenter( double WeightedCenter[], const double Center_ref[], const double MaxR, const double MinWD, const long WeightingDensityField )
 {
 
 // check
@@ -36,11 +35,8 @@ void Aux_FindWeightedCenter( double WeightedCenter[], const double Center_ref[],
    if ( WeightingDensityField & ~SupportedField )
       Aux_Error( ERROR_INFO, "unsupported WeightingDensityField (%ld) !!\n", WeightingDensityField );
 
-   if ( Mode < 0  ||  Mode > 2 )
-      Aux_Error( ERROR_INFO, "incorrect Mode (%d) !!\n", Mode );
-
-   if ( Mode == 1  &&  MaxR <= 0.0 )
-      Aux_Error( ERROR_INFO, "Mode == %d and MaxR (%14.7e) <= 0.0 !!\n", Mode, MaxR );
+   if ( MaxR <= 0.0 )
+      Aux_Error( ERROR_INFO, "MaxR (%14.7e) <= 0.0 !!\n", MaxR );
 
    for (int d=0; d<3; d++) {
       if ( Center_ref[d] < amr->BoxEdgeL[d]  ||  Center_ref[d] > amr->BoxEdgeR[d] )
@@ -176,30 +172,11 @@ void Aux_FindWeightedCenter( double WeightedCenter[], const double Center_ref[],
                                           else if ( dx < -HalfBox[0] )  {  x += amr->BoxSize[0];  dx += amr->BoxSize[0];  }
                                        }
 
-            bool isIncluded = false;
-
-            switch( Mode )
-            {
-               case 0:
-                   // include all region
-                   isIncluded = true;
-                   break;
-               case 1:
-                   // only include cells within a sphere with raius MaxR
-                   const double R2 = SQR(dx) + SQR(dy) + SQR(dz);
-                   isIncluded = ( R2 < MaxR2 );
-                   break;
-               case 2:
-                   // only include cells with weighting density larger than MinMD
-                   const double WD = WeightingDensity[PID][k][j][i];
-                   isIncluded = ( WD > MinWD );
-                   break;
-               default:
-                   Aux_Error( ERROR_INFO, "Invalid mode !!\n");
-            }
-
-//          only include cells satisfying conditions
-            if ( isIncluded )
+            const double R2 = SQR(dx) + SQR(dy) + SQR(dz);
+            const double WD = WeightingDensity[PID][k][j][i];
+//          only include cells that are
+//          within a sphere with radius MaxR and with the weighting density larger than MinWD
+            if ( R2 < MaxR2  &&  WD > MinWD )
             {
                const double dw = WeightingDensity[PID][k][j][i]*dv; // weighting
 
