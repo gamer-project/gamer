@@ -67,35 +67,42 @@ void Aux_Record_Center()
 
 
 // compute the center of mass until convergence
-   const double CoM_MaxR    = HUGE_NUMBER; // maximum radius for determining center of mass
-   const double CoM_MinRho  = 0.0;         // minimum density for determing center of mass
-   const double CoM_TolErrR = amr->dh[0];  // maximum allowed errors for determining center of mass
-   const double TolErrR2 = SQR( CoM_TolErrR );
-   const int    NIterMax = 10;            // maximum number of iteration
+   const double TolErrR2 = SQR( COM_TOL_ERR_R );
 
    double dR2, CoM_Old[3], CoM_New[3];
    int NIter = 0;
 
-// set an initial guess by the peak density position
+// set an initial guess by the peak density position or the user-specified center
    if ( MPI_Rank == 0 )
-#     ifdef PARTICLE
-      for (int d=0; d<3; d++)    CoM_Old[d] = Max_TotDens.Coord[d];
-#     else
-      for (int d=0; d<3; d++)    CoM_Old[d] = Max_Dens.Coord[d];
-#     endif
+   {
+      if ( COM_CEN_X < 0  ||  COM_CEN_Y < 0  ||  COM_CEN_Z < 0 )
+      {
+#        ifdef PARTICLE
+         for (int d=0; d<3; d++) CoM_Old[d] = Max_TotDens.Coord[d];
+#        else
+         for (int d=0; d<3; d++) CoM_Old[d] = Max_Dens.Coord[d];
+#        endif
+      }
+      else
+      {
+         CoM_Old[0] = COM_CEN_X;
+         CoM_Old[1] = COM_CEN_Y;
+         CoM_Old[2] = COM_CEN_Z;
+      }
+   }
 
    MPI_Bcast( CoM_Old, 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
 
    while ( true )
    {
-      Aux_FindWeightedCenter( CoM_New, CoM_Old, CoM_MaxR, CoM_MinRho, _TOTAL_DENS );
+      Aux_FindWeightedCenter( CoM_New, CoM_Old, COM_MAX_R, COM_MIN_RHO, _TOTAL_DENS );
 
       dR2 = SQR( CoM_Old[0] - CoM_New[0] )
           + SQR( CoM_Old[1] - CoM_New[1] )
           + SQR( CoM_Old[2] - CoM_New[2] );
-      NIter ++;
+      NIter++;
 
-      if ( dR2 <= TolErrR2  ||  NIter >= NIterMax )
+      if ( dR2 <= TolErrR2  ||  NIter >= COM_N_ITER_MAX )
          break;
       else
          memcpy( CoM_Old, CoM_New, sizeof(double)*3 );
@@ -103,9 +110,8 @@ void Aux_Record_Center()
 
    if ( MPI_Rank == 0 )
    {
-
       if ( dR2 > TolErrR2 )
-         Aux_Message( stderr, "WARNING : dR (%13.7e) > CoM_TolErrR (%13.7e) !!\n", sqrt(dR2), CoM_TolErrR );
+         Aux_Message( stderr, "WARNING : dR (%13.7e) > COM_TOL_ERR_R (%13.7e) !!\n", sqrt(dR2), COM_TOL_ERR_R );
    }
 
 

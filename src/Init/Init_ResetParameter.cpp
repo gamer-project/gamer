@@ -645,6 +645,45 @@ void Init_ResetParameter()
 #  endif
 
 
+// set default value for OPT__RECORD_CENTER
+   if ( OPT__RECORD_CENTER )
+   {
+      if ( COM_CEN_X < 0.0  ||  COM_CEN_Y < 0.0  ||  COM_CEN_Z < 0.0 )
+      {
+         COM_CEN_X = -1.0;
+         COM_CEN_Y = -1.0;
+         COM_CEN_Z = -1.0;
+         PRINT_WARNING( COM_CEN_X, FORMAT_FLT, "and it will be reset to the coordinate of the peak total density" );
+         PRINT_WARNING( COM_CEN_Y, FORMAT_FLT, "and it will be reset to the coordinate of the peak total density" );
+         PRINT_WARNING( COM_CEN_Z, FORMAT_FLT, "and it will be reset to the coordinate of the peak total density" );
+      }
+
+      if ( COM_MAX_R < 0.0 )
+      {
+         COM_MAX_R = HUGE_NUMBER;
+         PRINT_WARNING( COM_MAX_R, FORMAT_FLT, "by default" );
+      }
+
+      if ( COM_MIN_RHO < 0.0 )
+      {
+         COM_MIN_RHO = 0.0;
+         PRINT_WARNING( COM_MIN_RHO, FORMAT_FLT, "by default" );
+      }
+
+      if ( COM_TOL_ERR_R < 0.0 )
+      {
+         COM_TOL_ERR_R = amr->dh[0];
+         PRINT_WARNING( COM_TOL_ERR_R, FORMAT_FLT, "by default" );
+      }
+
+      if ( COM_N_ITER_MAX < 0 )
+      {
+         COM_N_ITER_MAX = 10;
+         PRINT_WARNING( COM_N_ITER_MAX, FORMAT_INT, "by default" );
+      }
+   }
+
+
 // OPT__LR_LIMITER
 #  if ( MODEL == HYDRO )
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )

@@ -486,6 +486,13 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__RECORD_MEMORY",         &OPT__RECORD_MEMORY,              true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RECORD_PERFORMANCE",    &OPT__RECORD_PERFORMANCE,         true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RECORD_CENTER",         &OPT__RECORD_CENTER,              false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "COM_CEN_X",                  &COM_CEN_X,                      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_CEN_Y",                  &COM_CEN_Y,                      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_CEN_Z",                  &COM_CEN_Z,                      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_MAX_R",                  &COM_MAX_R,                      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_MIN_RHO",                &COM_MIN_RHO,                    -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_TOL_ERR_R",              &COM_TOL_ERR_R,                  -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_N_ITER_MAX",             &COM_N_ITER_MAX,                 -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "OPT__MANUAL_CONTROL",        &OPT__MANUAL_CONTROL,             true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RECORD_USER",           &OPT__RECORD_USER,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OPTIMIZE_AGGRESSIVE",   &OPT__OPTIMIZE_AGGRESSIVE,        false,           Useless_bool,  Useless_bool   );
