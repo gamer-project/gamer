@@ -672,7 +672,7 @@ void Init_ResetParameter()
 
       if ( COM_TOL_ERR_R < 0.0 )
       {
-         COM_TOL_ERR_R = amr->dh[0];
+         COM_TOL_ERR_R = 0.1*COM_MAX_R;
          PRINT_WARNING( COM_TOL_ERR_R, FORMAT_FLT, "by default" );
       }
 
