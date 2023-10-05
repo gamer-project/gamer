@@ -251,7 +251,7 @@ void Aux_FindWeightedCenter( double WeightedCenter[], const double Center_ref[],
       if ( W_AllRank == 0.0 )
       {
          if ( MPI_Rank == 0 )
-            Aux_Message( stderr, "WARNING : Weighted center cannot be found because the total weightging (W_AllRank) = %14.7e !!\n", W_AllRank );
+            Aux_Message( stderr, "WARNING : Weighted center cannot be found because the total weighting (W_AllRank) = %14.7e !!\n", W_AllRank );
 
          break;
       }
