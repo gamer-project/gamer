@@ -156,7 +156,6 @@ void Aux_FindExtrema_ParDens( Extrema_t *Extrema, const ExtremaMode_t Mode, cons
       RegMin_Img[d] = Center_Img[d] - MaxR;
    }
 
-
    const bool   IntPhase_No       = false;
    const real   MinDens_No        = -1.0;
    const real   MinPres_No        = -1.0;
@@ -177,10 +176,15 @@ void Aux_FindExtrema_ParDens( Extrema_t *Extrema, const ExtremaMode_t Mode, cons
 #  endif // #ifdef PARTICLE
 
 
-   real (*FluidPtr[MaxLv+1])[PS1][PS1][PS1];
+// initialize the extrema
+   for (int TID=0; TID<NT; TID++) OMP_Extrema[TID].Value = ( Mode == EXTREMA_MIN ) ? HUGE_NUMBER : -HUGE_NUMBER;
 
-   for (int lv=0; lv<=MaxLv; lv++)
+
+// loop over all target levels
+   for (int lv=MinLv; lv<=MaxLv; lv++)
    {
+      const double dh = amr->dh[lv];
+
 //    initialize the particle density array (rho_ext) and collect particles to the target level
 #     ifdef PARTICLE
       Prepare_PatchData_InitParticleDensityArray( lv );
@@ -189,18 +193,120 @@ void Aux_FindExtrema_ParDens( Extrema_t *Extrema, const ExtremaMode_t Mode, cons
                                     SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
 #     endif
 
-//    get the field on grids
-      FluidPtr[lv]                     = new real [ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
-      int   *PID0List                  = new int  [ amr->NPatchComma[lv][1]/8 ];
 
-      for (int PID0=0, t=0; PID0<amr->NPatchComma[lv][1]; PID0+=8, t++)    PID0List[t] = PID0;
+#     pragma omp parallel
+      {
+#        ifdef OPENMP
+         const int TID = omp_get_thread_num();
+#        else
+         const int TID = 0;
+#        endif
 
-      Prepare_PatchData( lv, Time[lv], FluidPtr[lv][0][0][0], NULL, 0, amr->NPatchComma[lv][1]/8, PID0List, Field, _NONE,
-                         OPT__RHO_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                         MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+         real (*FluidPtr)[PS1][PS1][PS1]  = new real [8][PS1][PS1][PS1]; // 8: number of local patches
 
-      delete [] PID0List;
+#        pragma omp for schedule( runtime )
+         for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+         {
+#           pragma omp critical
+            {
+               Prepare_PatchData( lv, Time[lv], FluidPtr[0][0][0], NULL, 0, 1, &PID0, Field, _NONE,
+                                  OPT__RHO_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
+                                  MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+            }
 
+            for (int LocalID=0; LocalID<8; LocalID++)
+            {
+               const int PID = PID0 + LocalID;
+
+//             skip untargeted patches
+               if ( amr->patch[0][lv][PID]->son != -1 )
+               {
+                  if ( PatchType == PATCH_LEAF )                                    continue;
+                  if ( PatchType == PATCH_LEAF_PLUS_MAXNONLEAF  &&  lv != MaxLv )   continue;
+               }
+
+               else
+               {
+                  if ( PatchType == PATCH_NONLEAF )                                 continue;
+               }
+
+
+//             skip distant patches
+               const double *EdgeL = amr->patch[0][lv][PID]->EdgeL;
+               const double *EdgeR = amr->patch[0][lv][PID]->EdgeR;
+
+               if (   (  ( EdgeL[0]>RegMax[0] || EdgeR[0]<RegMin[0] )  &&  ( EdgeL[0]>RegMax_Img[0] || EdgeR[0]<RegMin_Img[0] )  )   ||
+                      (  ( EdgeL[1]>RegMax[1] || EdgeR[1]<RegMin[1] )  &&  ( EdgeL[1]>RegMax_Img[1] || EdgeR[1]<RegMin_Img[1] )  )   ||
+                      (  ( EdgeL[2]>RegMax[2] || EdgeR[2]<RegMin[2] )  &&  ( EdgeL[2]>RegMax_Img[2] || EdgeR[2]<RegMin_Img[2] )  )    )
+                  continue;
+
+
+//             loop over all cells
+               //const real (*FluidPtr)[PS1][PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid;
+#              ifdef GRAVITY
+               //const real (*PotPtr  )[PS1][PS1]      = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot;
+#              endif
+               const double x0  = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
+               const double y0  = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
+               const double z0  = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
+
+               for (int k=0; k<PS1; k++)  {  const double z = z0 + k*dh;
+                                             double dz = z - Center[2];
+                                             if ( Periodic[2] ) {
+                                                if      ( dz > +HalfBox[2] )  {  dz -= amr->BoxSize[2];  }
+                                                else if ( dz < -HalfBox[2] )  {  dz += amr->BoxSize[2];  }
+                                             }
+               for (int j=0; j<PS1; j++)  {  const double y = y0 + j*dh;
+                                             double dy = y - Center[1];
+                                             if ( Periodic[1] ) {
+                                                if      ( dy > +HalfBox[1] )  {  dy -= amr->BoxSize[1];  }
+                                                else if ( dy < -HalfBox[1] )  {  dy += amr->BoxSize[1];  }
+                                             }
+               for (int i=0; i<PS1; i++)  {  const double x = x0 + i*dh;
+                                             double dx = x - Center[0];
+                                             if ( Periodic[0] ) {
+                                                if      ( dx > +HalfBox[0] )  {  dx -= amr->BoxSize[0];  }
+                                                else if ( dx < -HalfBox[0] )  {  dx += amr->BoxSize[0];  }
+                                             }
+
+                  const double r2 = SQR(dx) + SQR(dy) + SQR(dz);
+
+//                only include cells within the target sphere
+                  if ( r2 < MaxR2 )
+                  {
+                     //real Value;
+                     const real Value = FluidPtr[LocalID][k][j][i];
+//                     if ( TFluIntIdx != FluIdxUndef || Extrema->Field & _PAR_DENS || Extrema->Field & _TOTAL_DENS )
+                        //Value = FluidPtr[TFluIntIdx][k][j][i];
+#                    ifdef GRAVITY
+//                     else if ( Extrema->Field & _POTE )
+//                        Value = PotPtr[k][j][i];
+#                    endif
+//                     else
+//                        Aux_Error( ERROR_INFO, "unsupported field (%ld) !!\n", Extrema->Field );
+
+                     if (  ( Mode == EXTREMA_MAX && Value > OMP_Extrema[TID].Value )  ||
+                           ( Mode == EXTREMA_MIN && Value < OMP_Extrema[TID].Value )   )
+                     {
+                        OMP_Extrema[TID].Value    = Value;
+                        OMP_Extrema[TID].Coord[0] = x;
+                        OMP_Extrema[TID].Coord[1] = y;
+                        OMP_Extrema[TID].Coord[2] = z;
+                        OMP_Extrema[TID].Rank     = MPI_Rank;
+                        OMP_Extrema[TID].Level    = lv;
+                        OMP_Extrema[TID].PID      = PID;
+                        OMP_Extrema[TID].Cell[0]  = i;
+                        OMP_Extrema[TID].Cell[1]  = j;
+                        OMP_Extrema[TID].Cell[2]  = k;
+                     }
+                  } // if ( r2 < MaxR2 )
+               }}} // i,j,k
+            } // for (int LocalID=0; LocalID<8; LocalID++)
+         } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+
+         delete [] FluidPtr;
+
+      } // OpenMP parallel region
 
 //    free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
 #     ifdef PARTICLE
@@ -209,117 +315,8 @@ void Aux_FindExtrema_ParDens( Extrema_t *Extrema, const ExtremaMode_t Mode, cons
       Prepare_PatchData_FreeParticleDensityArray( lv );
 #     endif
 
-   }
+   } // for (int lv=MinLv; lv<=MaxLv; lv++)
 
-
-#  pragma omp parallel
-   {
-#     ifdef OPENMP
-      const int TID = omp_get_thread_num();
-#     else
-      const int TID = 0;
-#     endif
-
-//    initialize the extrema
-      OMP_Extrema[TID].Value = ( Mode == EXTREMA_MIN ) ? HUGE_NUMBER : -HUGE_NUMBER;
-
-//    loop over all target levels
-      for (int lv=MinLv; lv<=MaxLv; lv++)
-      {
-         const double dh = amr->dh[lv];
-
-#        pragma omp for schedule( runtime )
-         for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-         {
-//          skip untargeted patches
-            if ( amr->patch[0][lv][PID]->son != -1 )
-            {
-               if ( PatchType == PATCH_LEAF )                                    continue;
-               if ( PatchType == PATCH_LEAF_PLUS_MAXNONLEAF  &&  lv != MaxLv )   continue;
-            }
-
-            else
-            {
-               if ( PatchType == PATCH_NONLEAF )                                 continue;
-            }
-
-
-//          skip distant patches
-            const double *EdgeL = amr->patch[0][lv][PID]->EdgeL;
-            const double *EdgeR = amr->patch[0][lv][PID]->EdgeR;
-
-            if (   (  ( EdgeL[0]>RegMax[0] || EdgeR[0]<RegMin[0] )  &&  ( EdgeL[0]>RegMax_Img[0] || EdgeR[0]<RegMin_Img[0] )  )   ||
-                   (  ( EdgeL[1]>RegMax[1] || EdgeR[1]<RegMin[1] )  &&  ( EdgeL[1]>RegMax_Img[1] || EdgeR[1]<RegMin_Img[1] )  )   ||
-                   (  ( EdgeL[2]>RegMax[2] || EdgeR[2]<RegMin[2] )  &&  ( EdgeL[2]>RegMax_Img[2] || EdgeR[2]<RegMin_Img[2] )  )    )
-               continue;
-
-
-//          loop over all cells
-#           ifdef GRAVITY
-            const real (*PotPtr  )[PS1][PS1]      = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot;
-#           endif
-            const double x0  = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
-            const double y0  = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
-            const double z0  = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
-
-            for (int k=0; k<PS1; k++)  {  const double z = z0 + k*dh;
-                                          double dz = z - Center[2];
-                                          if ( Periodic[2] ) {
-                                             if      ( dz > +HalfBox[2] )  {  dz -= amr->BoxSize[2];  }
-                                             else if ( dz < -HalfBox[2] )  {  dz += amr->BoxSize[2];  }
-                                          }
-            for (int j=0; j<PS1; j++)  {  const double y = y0 + j*dh;
-                                          double dy = y - Center[1];
-                                          if ( Periodic[1] ) {
-                                             if      ( dy > +HalfBox[1] )  {  dy -= amr->BoxSize[1];  }
-                                             else if ( dy < -HalfBox[1] )  {  dy += amr->BoxSize[1];  }
-                                          }
-            for (int i=0; i<PS1; i++)  {  const double x = x0 + i*dh;
-                                          double dx = x - Center[0];
-                                          if ( Periodic[0] ) {
-                                             if      ( dx > +HalfBox[0] )  {  dx -= amr->BoxSize[0];  }
-                                             else if ( dx < -HalfBox[0] )  {  dx += amr->BoxSize[0];  }
-                                          }
-
-               const double r2 = SQR(dx) + SQR(dy) + SQR(dz);
-
-//             only include cells within the target sphere
-               if ( r2 < MaxR2 )
-               {
-                  real Value;
-                  if ( TFluIntIdx != FluIdxUndef || Extrema->Field & _PAR_DENS || Extrema->Field & _TOTAL_DENS )
-                     Value = FluidPtr[lv][PID][k][j][i];
-#                 ifdef GRAVITY
-                  else if ( Extrema->Field & _POTE )
-                     Value = PotPtr[k][j][i];
-#                 endif
-                  else
-                     Aux_Error( ERROR_INFO, "unsupported field (%ld) !!\n", Extrema->Field );
-
-                  if (  ( Mode == EXTREMA_MAX && Value > OMP_Extrema[TID].Value )  ||
-                        ( Mode == EXTREMA_MIN && Value < OMP_Extrema[TID].Value )   )
-                  {
-                     OMP_Extrema[TID].Value    = Value;
-                     OMP_Extrema[TID].Coord[0] = x;
-                     OMP_Extrema[TID].Coord[1] = y;
-                     OMP_Extrema[TID].Coord[2] = z;
-                     OMP_Extrema[TID].Rank     = MPI_Rank;
-                     OMP_Extrema[TID].Level    = lv;
-                     OMP_Extrema[TID].PID      = PID;
-                     OMP_Extrema[TID].Cell[0]  = i;
-                     OMP_Extrema[TID].Cell[1]  = j;
-                     OMP_Extrema[TID].Cell[2]  = k;
-                  }
-               } // if ( r2 < MaxR2 )
-            }}} // i,j,k
-         } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-      } // for (int lv=MinLv; lv<=MaxLv; lv++)
-   } // OpenMP parallel region
-
-   for (int lv=0; lv<=MaxLv; lv++)
-   {
-      delete [] FluidPtr[lv];
-   }
 
 // find the extrema over all OpenMP threads
    Extrema->Value = ( Mode == EXTREMA_MIN ) ? HUGE_NUMBER : -HUGE_NUMBER;
