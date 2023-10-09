@@ -157,7 +157,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 // 3-1/2: sort particles by their position to fix the order of mass assignment
 //        --> necessary for achieving bitwise reproducibility
 #  ifdef BITWISE_REPRODUCIBILITY
-   int *Sort_IdxTable = new int [NPar];   // it will fail if "long" is actually required for NPar
+   long *Sort_IdxTable = new long [NPar];   // it will fail if "long" is actually required for NPar
 
    Par_SortByPos( NPar, Pos[0], Pos[1], Pos[2], Sort_IdxTable );
 #  endif
