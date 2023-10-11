@@ -20,8 +20,7 @@
 //                       Extrema->Level  : AMR level of the extrema
 //                       Extrema->PID    : Local Patch index of the extrema
 //                       Extrema->Cell   : Cell indices within a patch of the extrema
-//                3. Only support intrinsic fluid fields and gravitational potential for now
-//                   --> Does not support magnetic field, derived fields
+//                3. Support fields that are supported by Prepare_PatchData()
 //                4. Does not support computing multiple fields at once
 //                5. Support periodic BC
 //                6. Support finding either the maximum or minimum value
@@ -75,15 +74,11 @@ void Aux_FindExtrema_ParDens( Extrema_t *Extrema, const ExtremaMode_t Mode, cons
    if ( Extrema == NULL )
       Aux_Error( ERROR_INFO, "Extrema == NULL !!\n" );
 
-   long SupportedField = _TOTAL|_PAR_DENS|_TOTAL_DENS;
-#  ifdef GRAVITY
-   SupportedField |= _POTE;
-#  endif
    if ( Extrema->Field == _NONE )
       Aux_Error( ERROR_INFO, "Field == _NONE !!\n" );
 
-   if ( Extrema->Field & ~SupportedField )
-      Aux_Error( ERROR_INFO, "unsupported field (%ld) !!\n", Extrema->Field );
+   if ( Extrema->Field == 0  ||  Extrema->Field & (Extrema->Field-1) )
+      Aux_Error( ERROR_INFO, "not support multiple fields (%ld) at once!!\n", Extrema->Field );
 
    if ( Extrema->Radius <= 0.0 )
       Aux_Error( ERROR_INFO, "Radius (%14.7e) <= 0.0 !!\n", Extrema->Radius );
@@ -114,13 +109,19 @@ void Aux_FindExtrema_ParDens( Extrema_t *Extrema, const ExtremaMode_t Mode, cons
 // get the integer index of the target intrinsic fluid field
    const int FluIdxUndef = -1;
    int TFluIntIdx = FluIdxUndef;
+   bool UsePrepare = true;
 
    for (int v=0; v<NCOMP_TOTAL; v++) {
       if ( Extrema->Field & BIDX(v) ) {
          TFluIntIdx = v;
+         UsePrepare = false;
          break;
       }
    }
+
+#  ifdef GRAVITY
+   if ( Extrema->Field & _POTE ) UsePrepare = false;
+#  endif
 
 
    const long   Field       = Extrema->Field;
@@ -187,10 +188,13 @@ void Aux_FindExtrema_ParDens( Extrema_t *Extrema, const ExtremaMode_t Mode, cons
 
 //    initialize the particle density array (rho_ext) and collect particles to the target level
 #     ifdef PARTICLE
-      Prepare_PatchData_InitParticleDensityArray( lv );
+      if ( UsePrepare  &&  ( Extrema->Field & _PAR_DENS  ||  Extrema->Field & _TOTAL_DENS ) )
+      {
+         Prepare_PatchData_InitParticleDensityArray( lv );
 
-      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos_No, NULL_REAL,
-                                    SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
+         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos_No, NULL_REAL,
+                                       SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
+      }
 #     endif
 
 
@@ -202,16 +206,23 @@ void Aux_FindExtrema_ParDens( Extrema_t *Extrema, const ExtremaMode_t Mode, cons
          const int TID = 0;
 #        endif
 
-         real (*FluidPtr)[PS1][PS1][PS1]  = new real [8][PS1][PS1][PS1]; // 8: number of local patches
+         real (*FluidPtr)[PS1][PS1][PS1]  = NULL;
+         if ( UsePrepare )
+         {
+            FluidPtr  = new real [8][PS1][PS1][PS1]; // 8: number of local patches
+         }
 
 #        pragma omp for schedule( runtime )
          for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
          {
-#           pragma omp critical
+            if ( UsePrepare )
             {
-               Prepare_PatchData( lv, Time[lv], FluidPtr[0][0][0], NULL, 0, 1, &PID0, Field, _NONE,
-                                  OPT__RHO_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                                  MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+#              pragma omp critical
+               {
+                  Prepare_PatchData( lv, Time[lv], FluidPtr[0][0][0], NULL, 0, 1, &PID0, Field, _NONE,
+                                     OPT__RHO_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
+                                     MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+               }
             }
 
             for (int LocalID=0; LocalID<8; LocalID++)
@@ -242,10 +253,6 @@ void Aux_FindExtrema_ParDens( Extrema_t *Extrema, const ExtremaMode_t Mode, cons
 
 
 //             loop over all cells
-               //const real (*FluidPtr)[PS1][PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid;
-#              ifdef GRAVITY
-               //const real (*PotPtr  )[PS1][PS1]      = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot;
-#              endif
                const double x0  = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
                const double y0  = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
                const double z0  = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
@@ -274,16 +281,17 @@ void Aux_FindExtrema_ParDens( Extrema_t *Extrema, const ExtremaMode_t Mode, cons
 //                only include cells within the target sphere
                   if ( r2 < MaxR2 )
                   {
-                     //real Value;
-                     const real Value = FluidPtr[LocalID][k][j][i];
-//                     if ( TFluIntIdx != FluIdxUndef || Extrema->Field & _PAR_DENS || Extrema->Field & _TOTAL_DENS )
-                        //Value = FluidPtr[TFluIntIdx][k][j][i];
+                     real Value;
+                     if ( TFluIntIdx != FluIdxUndef )
+                        Value = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[TFluIntIdx][k][j][i];
 #                    ifdef GRAVITY
-//                     else if ( Extrema->Field & _POTE )
-//                        Value = PotPtr[k][j][i];
+                     else if ( Extrema->Field & _POTE )
+                        Value = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot[k][j][i];
 #                    endif
-//                     else
-//                        Aux_Error( ERROR_INFO, "unsupported field (%ld) !!\n", Extrema->Field );
+                     else if ( UsePrepare )
+                        Value = FluidPtr[LocalID][k][j][i];
+                     else
+                        Aux_Error( ERROR_INFO, "unsupported field (%ld) !!\n", Extrema->Field );
 
                      if (  ( Mode == EXTREMA_MAX && Value > OMP_Extrema[TID].Value )  ||
                            ( Mode == EXTREMA_MIN && Value < OMP_Extrema[TID].Value )   )
@@ -304,15 +312,21 @@ void Aux_FindExtrema_ParDens( Extrema_t *Extrema, const ExtremaMode_t Mode, cons
             } // for (int LocalID=0; LocalID<8; LocalID++)
          } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
 
-         delete [] FluidPtr;
+         if ( UsePrepare )
+         {
+            delete [] FluidPtr;
+         }
 
       } // OpenMP parallel region
 
 //    free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
 #     ifdef PARTICLE
-      Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
+      if ( UsePrepare  &&  ( Extrema->Field & _PAR_DENS  ||  Extrema->Field & _TOTAL_DENS ) )
+      {
+         Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
 
-      Prepare_PatchData_FreeParticleDensityArray( lv );
+         Prepare_PatchData_FreeParticleDensityArray( lv );
+      }
 #     endif
 
    } // for (int lv=MinLv; lv<=MaxLv; lv++)
