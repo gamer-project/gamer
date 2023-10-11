@@ -32,7 +32,7 @@ void Aux_Record_Center()
    Max_Dens.Center[1] = amr->BoxCenter[1];
    Max_Dens.Center[2] = amr->BoxCenter[2];
 
-   Aux_FindExtrema( &Max_Dens, EXTREMA_MAX, 0, TOP_LEVEL, PATCH_LEAF );
+   Aux_FindExtrema_ParDens( &Max_Dens, EXTREMA_MAX, 0, TOP_LEVEL, PATCH_LEAF );
 
 
 #  ifdef PARTICLE
