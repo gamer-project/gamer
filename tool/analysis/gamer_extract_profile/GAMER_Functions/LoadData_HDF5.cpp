@@ -809,8 +809,8 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
             for (int j=0; j<PATCH_SIZE; j++)
                for (int k=0; k<PATCH_SIZE; k++)
                {
-                  amr.patch[lv][PID]->fluid[IMAG][i][j][k] = sqrt(amr.patch[lv][PID]->fluid[0][i][j][k]) * sin(amr.patch[lv][PID]->fluid[1][i][j][k]);
-                  amr.patch[lv][PID]->fluid[REAL][i][j][k] = sqrt(amr.patch[lv][PID]->fluid[0][i][j][k]) * cos(amr.patch[lv][PID]->fluid[1][i][j][k]);
+                  amr.patch[lv][PID]->fluid[IMAG][i][j][k] = sqrt(amr.patch[lv][PID]->fluid[0][i][j][k]) * SIN(amr.patch[lv][PID]->fluid[1][i][j][k]);
+                  amr.patch[lv][PID]->fluid[REAL][i][j][k] = sqrt(amr.patch[lv][PID]->fluid[0][i][j][k]) * COS(amr.patch[lv][PID]->fluid[1][i][j][k]);
                }
       }
 #     else

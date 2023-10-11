@@ -392,6 +392,8 @@ void Get_CMVel()
                   Real    = Field[p][REAL    ][k][j][i];
                   Imag    = Field[p][IMAG    ][k][j][i];
 
+                  if (Dens == 0) continue;
+
 
                   if ( ELBDM_GetVir )
                   {
@@ -677,6 +679,8 @@ void GetRMS()
                   Real    = Field[p][REAL    ][k][j][i];
                   Imag    = Field[p][IMAG    ][k][j][i];
 
+                  if (Dens == 0) continue;
+
                   for (int u=0, uu=NCOMP_FLUID; u<NCOMP_PASSIVE; u++, uu++)
                   pass[u] = Field[p][uu      ][k][j][i];
 
@@ -685,6 +689,7 @@ void GetRMS()
 
                   if ( OutputParDens )
                   ParDens = Field[p][PAR_DENS][k][j][i];
+
 
                   if ( ELBDM_GetVir )
                   {
@@ -753,7 +758,7 @@ void GetRMS()
                      for (int d=0; d<3; d++)
                      {
                         v[d] = _Eta*_Dens*( Real*GradI[d] - Imag*GradR[d] ) - CMV[d];
-                        w[d] = _2Eta*_Dens*GradD[d] - CMV[d];
+                        w[d] = _2Eta*_Dens*GradD[d];
                      }
 
                      vr     = ( x*v[0] + y*v[1] + z*v[2] ) / Radius;
@@ -1042,6 +1047,8 @@ void ShellAverage()
                   Real    = Field[p][REAL    ][k][j][i];
                   Imag    = Field[p][IMAG    ][k][j][i];
 
+                  if (Dens == 0) continue;
+
                   for (int u=0, uu=NCOMP_FLUID; u<NCOMP_PASSIVE; u++, uu++)
                   pass[u] = Field[p][uu      ][k][j][i];
 
@@ -1118,7 +1125,7 @@ void ShellAverage()
                      for (int d=0; d<3; d++)
                      {
                         v[d] = _Eta*_Dens*( Real*GradI[d] - Imag*GradR[d] ) - CMV[d];
-                        w[d] = _2Eta*_Dens*GradD[d] - CMV[d];
+                        w[d] = _2Eta*_Dens*GradD[d];
                      }
 
                      vr  = ( x*v[0] + y*v[1] + z*v[2] ) / Radius;
