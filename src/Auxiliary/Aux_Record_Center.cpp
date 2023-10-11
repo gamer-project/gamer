@@ -32,7 +32,7 @@ void Aux_Record_Center()
    Max_Dens.Center[1] = amr->BoxCenter[1];
    Max_Dens.Center[2] = amr->BoxCenter[2];
 
-   Aux_FindExtrema_ParDens( &Max_Dens, EXTREMA_MAX, 0, TOP_LEVEL, PATCH_LEAF );
+   Aux_FindExtrema( &Max_Dens, EXTREMA_MAX, 0, TOP_LEVEL, PATCH_LEAF );
 
 
 #  ifdef PARTICLE
@@ -44,7 +44,7 @@ void Aux_Record_Center()
    Max_ParDens.Center[1] = amr->BoxCenter[1];
    Max_ParDens.Center[2] = amr->BoxCenter[2];
 
-   Aux_FindExtrema_ParDens( &Max_ParDens, EXTREMA_MAX, 0, TOP_LEVEL, PATCH_LEAF );
+   Aux_FindExtrema( &Max_ParDens, EXTREMA_MAX, 0, TOP_LEVEL, PATCH_LEAF );
 
 
 // 3. Maximun total density including fluid density and particle density
@@ -55,7 +55,7 @@ void Aux_Record_Center()
    Max_TotDens.Center[1] = amr->BoxCenter[1];
    Max_TotDens.Center[2] = amr->BoxCenter[2];
 
-   Aux_FindExtrema_ParDens( &Max_TotDens, EXTREMA_MAX, 0, TOP_LEVEL, PATCH_LEAF );
+   Aux_FindExtrema( &Max_TotDens, EXTREMA_MAX, 0, TOP_LEVEL, PATCH_LEAF );
 #  endif
 
 
@@ -67,7 +67,7 @@ void Aux_Record_Center()
    Min_Pote.Center[1] = amr->BoxCenter[1];
    Min_Pote.Center[2] = amr->BoxCenter[2];
 
-   Aux_FindExtrema_ParDens( &Min_Pote, EXTREMA_MIN, 0, TOP_LEVEL, PATCH_LEAF );
+   Aux_FindExtrema( &Min_Pote, EXTREMA_MIN, 0, TOP_LEVEL, PATCH_LEAF );
 
 
 // 5. Center of mass for the total density field
