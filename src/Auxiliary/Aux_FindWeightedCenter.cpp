@@ -30,15 +30,11 @@ void Aux_FindWeightedCenter( double WeightedCenter[], const double Center_ref[],
 
 // check
 #  ifdef GAMER_DEBUG
-   long SupportedField = _TOTAL|_PAR_DENS|_TOTAL_DENS;
-#  ifdef GRAVITY
-   SupportedField |= _POTE;
-#  endif
    if ( WeightingDensityField == _NONE )
       Aux_Error( ERROR_INFO, "WeightingDensityField == _NONE !!\n" );
 
-   if ( WeightingDensityField & ~SupportedField )
-      Aux_Error( ERROR_INFO, "unsupported WeightingDensityField (%ld) !!\n", WeightingDensityField );
+   if ( WeightingDensityField & (WeightingDensityField-1) )
+      Aux_Error( ERROR_INFO, "not support multiple fields (%ld) at once!!\n", WeightingDensityField );
 
    if ( MaxR <= 0.0 )
       Aux_Error( ERROR_INFO, "MaxR (%14.7e) <= 0.0 !!\n", MaxR );
@@ -116,10 +112,13 @@ void Aux_FindWeightedCenter( double WeightedCenter[], const double Center_ref[],
       {
 //       initialize the particle density array (rho_ext) and collect particles to the target level
 #        ifdef PARTICLE
-         Prepare_PatchData_InitParticleDensityArray( lv );
+         if ( WeightingDensityField & _PAR_DENS  ||  WeightingDensityField & _TOTAL_DENS )
+         {
+            Prepare_PatchData_InitParticleDensityArray( lv );
 
-         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos_No, NULL_REAL,
-                                       SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
+            Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos_No, NULL_REAL,
+                                          SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
+         }
 #        endif
 
 //       get the weighting density on grids
@@ -137,9 +136,12 @@ void Aux_FindWeightedCenter( double WeightedCenter[], const double Center_ref[],
 
 //       free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
 #        ifdef PARTICLE
-         Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
+         if ( WeightingDensityField & _PAR_DENS  ||  WeightingDensityField & _TOTAL_DENS )
+         {
+            Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
 
-         Prepare_PatchData_FreeParticleDensityArray( lv );
+            Prepare_PatchData_FreeParticleDensityArray( lv );
+         }
 #        endif
 
 
