@@ -77,7 +77,7 @@ void Aux_FindExtrema_ParDens( Extrema_t *Extrema, const ExtremaMode_t Mode, cons
    if ( Extrema->Field == _NONE )
       Aux_Error( ERROR_INFO, "Field == _NONE !!\n" );
 
-   if ( Extrema->Field == 0  ||  Extrema->Field & (Extrema->Field-1) )
+   if ( Extrema->Field & (Extrema->Field-1) )
       Aux_Error( ERROR_INFO, "not support multiple fields (%ld) at once!!\n", Extrema->Field );
 
    if ( Extrema->Radius <= 0.0 )
