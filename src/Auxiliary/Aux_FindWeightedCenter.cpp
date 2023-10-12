@@ -128,7 +128,7 @@ void Aux_FindWeightedCenter( double WeightedCenter[], const double Center_ref[],
          for (int PID0=0, t=0; PID0<amr->NPatchComma[lv][1]; PID0+=8, t++)    PID0List[t] = PID0;
 
          Prepare_PatchData( lv, Time[lv], WeightingDensity[0][0][0], NULL, 0, amr->NPatchComma[lv][1]/8, PID0List, WeightingDensityField, _NONE,
-                            OPT__RHO_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
+                            OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                             MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
          delete [] PID0List;

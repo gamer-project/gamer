@@ -59,6 +59,7 @@ void Aux_Record_Center()
 #  endif
 
 
+#  ifdef GRAVITY
 // 4. Minimun gravitational potential
    Extrema_t Min_Pote;
    Min_Pote.Field     = _POTE;
@@ -68,6 +69,7 @@ void Aux_Record_Center()
    Min_Pote.Center[2] = amr->BoxCenter[2];
 
    Aux_FindExtrema( &Min_Pote, EXTREMA_MIN, 0, TOP_LEVEL, PATCH_LEAF );
+#  endif
 
 
 // 5. Center of mass for the total density field
@@ -107,18 +109,25 @@ void Aux_Record_Center()
          {
             FILE *File = fopen( FileName, "w" );
             fprintf( File, "#%19s  %10s", "Time", "Step" );
+
             fprintf( File, "  %14s  %14s  %14s  %14s",
                            "MaxDens", "MaxDens_x", "MaxDens_y", "MaxDens_z" );
+
 #           ifdef PARTICLE
             fprintf( File, "  %14s  %14s  %14s  %14s",
                            "MaxParDens", "MaxParDens_x", "MaxParDens_y", "MaxParDens_z" );
             fprintf( File, "  %14s  %14s  %14s  %14s",
                            "MaxTotalDens", "MaxTotalDens_x", "MaxTotalDens_y", "MaxTotalDens_z" );
 #           endif
+
+#           ifdef GRAVITY
             fprintf( File, "  %14s  %14s  %14s  %14s",
                            "MinPote", "MinPote_x", "MinPote_y", "MinPote_z" );
+#           endif
+
             fprintf( File, "  %14s  %14s  %14s  %14s  %14s",
                            "Final_NIter", "Final_dR", "CoM_x", "CoM_y", "CoM_z" );
+
             fprintf( File, "\n" );
             fclose( File );
          }
@@ -128,18 +137,25 @@ void Aux_Record_Center()
 
       FILE *File = fopen( FileName, "a" );
       fprintf( File, "%20.14e  %10ld", Time[0], Step );
+
       fprintf( File, "  %14.7e  %14.7e  %14.7e  %14.7e",
                      Max_Dens.Value, Max_Dens.Coord[0], Max_Dens.Coord[1], Max_Dens.Coord[2] );
+
 #     ifdef PARTICLE
       fprintf( File, "  %14.7e  %14.7e  %14.7e  %14.7e",
                      Max_ParDens.Value, Max_ParDens.Coord[0], Max_ParDens.Coord[1], Max_ParDens.Coord[2] );
       fprintf( File, "  %14.7e  %14.7e  %14.7e  %14.7e",
                      Max_TotDens.Value, Max_TotDens.Coord[0], Max_TotDens.Coord[1], Max_TotDens.Coord[2] );
 #     endif
+
+#     ifdef GRAVITY
       fprintf( File, "  %14.7e  %14.7e  %14.7e  %14.7e",
                      Min_Pote.Value, Min_Pote.Coord[0], Min_Pote.Coord[1], Min_Pote.Coord[2] );
+#     endif
+
       fprintf( File, "  %14d  %14.7e  %14.7e  %14.7e  %14.7e",
                      FinalNIter, FinaldR, CoM_Coord[0], CoM_Coord[1], CoM_Coord[2] );
+
       fprintf( File, "\n" );
       fclose( File );
    }
