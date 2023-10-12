@@ -41,8 +41,8 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                          const double PrepTime );
 void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int MinLv, const int MaxLv,
                       const PatchType_t PatchType );
-void Aux_FindWeightedCenter( double WeightedCenter[], const double Center_ref[], const double MaxR, const double MinWD,
-                             const long WeightingDensityField, const double TolErrR, const int NIterMax, double *FinaldR, int *FinalNIter );
+void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double Center_ref[], const double MaxR, const double MinWD,
+                                    const long WeightingDensityField, const double TolErrR, const int NIterMax, double *FinaldR, int *FinalNIter );
 #ifndef SERIAL
 void Aux_Record_BoundaryPatch( const int lv, int *NList, int **IDList, int **PosList );
 #endif

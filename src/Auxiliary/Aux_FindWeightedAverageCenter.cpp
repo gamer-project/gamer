@@ -4,28 +4,28 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Aux_FindWeightedCenter
-// Description :  Find the location of the weighted-by-field center within a target region
+// Function    :  Aux_FindWeightedAverageCenter
+// Description :  Find the location of the weighted-by-field average center within a target region
 //
-// Note        :  The weighted center is defined as
+// Note        :  The weighted average center is defined as
 //                  ( \int w(x,y,z)*r(x,y,z) dxdydz ) / ( \int w(x,y,z) dxdydz ),
 //                where w is the weighting density field and r is a vector of the position coordinate.
-//                If weighting density field is the mass density, the weighted center is the center of mass.
+//                If weighting density field is the mass density, the weighted average center is the center of mass.
 //
-// Parameter   :  WeightedCenter         : Coordinate of the weighted center to be returned
+// Parameter   :  WeightedAverageCenter  : Coordinate of the weighted average center to be returned
 //                Center_ref[]           : Coordinate of center of reference
-//                MaxR                   : Maximum radius to specify the region to compute the weighted center
-//                MinWD                  : Minimum weighting density to specify the region to compute the weighted center
+//                MaxR                   : Maximum radius to specify the region to compute the weighted average center
+//                MinWD                  : Minimum weighting density to specify the region to compute the weighted average center
 //                WeightingDensityField  : Weighting density field used for compuation as the w(x,y,z) in the above Note
 //                TolErrR                : Maximum error of distance to tolerate during the iteration 
 //                NIterMax               : Maximum number of iterations to find the center of mass
 //                FinaldR                : Record of the dR in the last time of iteration
 //                FinalNIter             : Record of the total numer of iterations
 //
-// Return      :  WeightedCenter[], FinaldR, FinalNIter
+// Return      :  WeightedAverageCenter[], FinaldR, FinalNIter
 //-------------------------------------------------------------------------------------------------------
-void Aux_FindWeightedCenter( double WeightedCenter[], const double Center_ref[], const double MaxR, const double MinWD,
-                             const long WeightingDensityField, const double TolErrR, const int NIterMax, double *FinaldR, int *FinalNIter )
+void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double Center_ref[], const double MaxR, const double MinWD,
+                                    const long WeightingDensityField, const double TolErrR, const int NIterMax, double *FinaldR, int *FinalNIter )
 {
 
 // check
@@ -145,7 +145,7 @@ void Aux_FindWeightedCenter( double WeightedCenter[], const double Center_ref[],
 #        endif
 
 
-//       calculate the weighted-average center
+//       calculate the weighted average center
          const double dh = amr->dh[lv];
          const double dv = CUBE( dh );
 
@@ -214,46 +214,46 @@ void Aux_FindWeightedCenter( double WeightedCenter[], const double Center_ref[],
       WR_ThisRank[2] = WZ_ThisRank;
 
 
-//    collect data from all ranks to calculate the weighted center
-//    --> note that all ranks will get WeightedCenter[]
+//    collect data from all ranks to calculate the weighted average center
+//    --> note that all ranks will get WeightedAverageCenter[]
       MPI_Allreduce( &W_ThisRank, &W_AllRank, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
       MPI_Allreduce( WR_ThisRank, WR_AllRank, 3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
 
-      for (int d=0; d<3; d++) WeightedCenter[d] = WR_AllRank[d] / W_AllRank;
+      for (int d=0; d<3; d++) WeightedAverageCenter[d] = WR_AllRank[d] / W_AllRank;
 
 //    map the new center back to the simulation domain
       for (int d=0; d<3; d++)
       {
          if ( Periodic[d] )
          {
-            if      ( WeightedCenter[d] >= amr->BoxSize[d] ) WeightedCenter[d] -= amr->BoxSize[d];
-            else if ( WeightedCenter[d] < 0.0              ) WeightedCenter[d] += amr->BoxSize[d];
+            if      ( WeightedAverageCenter[d] >= amr->BoxSize[d] ) WeightedAverageCenter[d] -= amr->BoxSize[d];
+            else if ( WeightedAverageCenter[d] < 0.0              ) WeightedAverageCenter[d] += amr->BoxSize[d];
          }
 
       }
 
       for (int d=0; d<3; d++)
-         if ( WeightedCenter[d] >= amr->BoxSize[d]  ||  WeightedCenter[d] < 0.0 )
-            Aux_Error( ERROR_INFO, "WeightedCenter[%d] = %14.7e lies outside the domain !!\n", d, WeightedCenter[d] );
+         if ( WeightedAverageCenter[d] >= amr->BoxSize[d]  ||  WeightedAverageCenter[d] < 0.0 )
+            Aux_Error( ERROR_INFO, "WeightedAverageCenter[%d] = %14.7e lies outside the domain !!\n", d, WeightedAverageCenter[d] );
 
 
-      dR2 = SQR( Center_ref_OldIter[0] - WeightedCenter[0] )
-          + SQR( Center_ref_OldIter[1] - WeightedCenter[1] )
-          + SQR( Center_ref_OldIter[2] - WeightedCenter[2] );
+      dR2 = SQR( Center_ref_OldIter[0] - WeightedAverageCenter[0] )
+          + SQR( Center_ref_OldIter[1] - WeightedAverageCenter[1] )
+          + SQR( Center_ref_OldIter[2] - WeightedAverageCenter[2] );
       NIter++;
 
 //    check the convergence and number of iteration to decide whether to end the iteration
       if ( dR2 <= TolErrR2  ||  NIter >= NIterMax )
          break;
       else
-//       use the weighted center as the refereced center in the next iteration
-         memcpy( Center_ref_OldIter, WeightedCenter, sizeof(double)*3 );
+//       use the weighted average center as the refereced center in the next iteration
+         memcpy( Center_ref_OldIter, WeightedAverageCenter, sizeof(double)*3 );
 
 
       if ( W_AllRank == 0.0 )
       {
          if ( MPI_Rank == 0 )
-            Aux_Message( stderr, "WARNING : Weighted center cannot be found because the total weighting (W_AllRank) = %14.7e !!\n", W_AllRank );
+            Aux_Message( stderr, "WARNING : Weighted average center cannot be found because the total weighting (W_AllRank) = %14.7e !!\n", W_AllRank );
 
          break;
       }
@@ -264,11 +264,11 @@ void Aux_FindWeightedCenter( double WeightedCenter[], const double Center_ref[],
    if ( MPI_Rank == 0 )
    {
       if ( dR2 > TolErrR2 )
-         Aux_Message( stderr, "WARNING : dR (%13.7e) > TolErrR (%13.7e), the weighted center may not have converged yet when the iteration stopped !!\n", sqrt(dR2), TolErrR );
+         Aux_Message( stderr, "WARNING : dR (%13.7e) > TolErrR (%13.7e), the weighted average center may not have converged yet when the iteration stopped !!\n", sqrt(dR2), TolErrR );
    }
 
 // return the information about the iteration
    *FinaldR    = sqrt(dR2);
    *FinalNIter = NIter;
 
-} // FUNCTION : Aux_FindWeightedCenter
+} // FUNCTION : Aux_FindWeightedAverageCenter

@@ -94,7 +94,7 @@ void Aux_Record_Center()
    double CoM_Coord[3];
    double FinaldR;
    int    FinalNIter;
-   Aux_FindWeightedCenter( CoM_Coord, CoM_ref, COM_MAX_R, COM_MIN_RHO, _TOTAL_DENS, COM_TOL_ERR_R, COM_N_ITER_MAX, &FinaldR, &FinalNIter );
+   Aux_FindWeightedAverageCenter( CoM_Coord, CoM_ref, COM_MAX_R, COM_MIN_RHO, _TOTAL_DENS, COM_TOL_ERR_R, COM_N_ITER_MAX, &FinaldR, &FinalNIter );
 
 
 // Output the center to file
