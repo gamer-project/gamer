@@ -553,7 +553,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 
 //    2.6 particle
 #     ifdef PARTICLE
-      SendBuf_NPar[ Send_NDisp_Patch[TRank] + NDone_Patch[TRank] ] = amr->patch[0][lv][PID]->NPar;
+      SendBuf_NPar[ Send_NDisp_Patch[TRank] + (long)NDone_Patch[TRank] ] = amr->patch[0][lv][PID]->NPar;
 
       SendPtr = SendBuf_ParData + Send_NDisp_ParData[TRank] + NDone_ParData[TRank];
 
@@ -715,7 +715,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 // check: for RemoveParFromRepo == false, the size of particle repository should be exactly equal to the received particles
 // --> see LB_RedistributeParticle_Init()
 #  ifdef DEBUG_PARTICLE
-   const long NParExpect = amr->Par->NPar_AcPlusInac + NRecv_Total_ParData/PAR_NATT_TOTAL;
+   const long NParExpect = amr->Par->NPar_AcPlusInac + NRecv_Total_ParData/(long)PAR_NATT_TOTAL;
    if ( !RemoveParFromRepo  &&  NParExpect > amr->Par->ParListSize )
       Aux_Error( ERROR_INFO, "NParExpect (%ld) > ParListSize (%ld) !!\n", NParExpect, amr->Par->ParListSize );
 #  endif
