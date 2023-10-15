@@ -155,11 +155,11 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
 //    --> but it's not a real issue since the mapped PID is deterministic
       Mis_Heapsort( SendEachRank_N[r], RecvPtr_LBIdx, RecvPtr_LBIdx_IdxTable );
 
-      Mis_Matching_int( amr->NPatchComma[SonLv][1], amr->LB->IdxList_Real[SonLv], SendEachRank_N[r], RecvPtr_LBIdx, Match );
+      Mis_Matching_int( (long)amr->NPatchComma[SonLv][1], amr->LB->IdxList_Real[SonLv], SendEachRank_N[r], RecvPtr_LBIdx, Match );
 
 //    all target patches must be found
 #     ifdef GAMER_DEBUG
-      for (long t=0; long<SendEachRank_N[r]; t++)
+      for (long t=0; t<SendEachRank_N[r]; t++)
          if ( Match[t] == -1L )
             Aux_Error( ERROR_INFO, "SonLv %d, TRank %d, LBIdx %ld found no matching patches !!\n",
                        SonLv, r, RecvPtr_LBIdx[t] );
