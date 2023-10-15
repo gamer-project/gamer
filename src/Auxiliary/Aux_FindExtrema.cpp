@@ -157,6 +157,7 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
       RegMin_Img[d] = Center_Img[d] - MaxR;
    }
 
+   const int    NPG_Max           = FLU_GPU_NPGROUP;
    const bool   IntPhase_No       = false;
    const real   MinDens_No        = -1.0;
    const real   MinPres_No        = -1.0;
@@ -184,7 +185,11 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
 // loop over all target levels
    for (int lv=MinLv; lv<=MaxLv; lv++)
    {
-      const double dh = amr->dh[lv];
+      const double dh  = amr->dh[lv];
+      const int NTotal = amr->NPatchComma[lv][1] / 8;
+
+      int   *PID0_List = new int [NTotal];
+      for (int t=0; t<NTotal; t++)  PID0_List[t] = 8*t;
 
 //    initialize the particle density array (rho_ext) and collect particles to the target level
 #     ifdef PARTICLE
@@ -197,37 +202,31 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
       }
 #     endif
 
-
-#     pragma omp parallel
+      for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
       {
-#        ifdef OPENMP
-         const int TID = omp_get_thread_num();
-#        else
-         const int TID = 0;
-#        endif
+         int NPG = ( NPG_Max < NTotal-Disp ) ? NPG_Max : NTotal-Disp;
 
-         real (*FluidPtr)[PS1][PS1][PS1]  = NULL;
+         real (*FieldPtr)[PS1][PS1][PS1] = NULL;
          if ( UsePrepare )
          {
-            FluidPtr  = new real [8][PS1][PS1][PS1]; // 8: number of local patches
+            FieldPtr  = new real [8*NPG][PS1][PS1][PS1]; // 8: number of local patches
+            Prepare_PatchData( lv, Time[lv], FieldPtr[0][0][0], NULL, 0, NPG, PID0_List+Disp, Field, _NONE,
+                               OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
+                               MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
          }
 
-#        pragma omp for schedule( runtime )
-         for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+#        pragma omp parallel
          {
-            if ( UsePrepare )
-            {
-#              pragma omp critical
-               {
-                  Prepare_PatchData( lv, Time[lv], FluidPtr[0][0][0], NULL, 0, 1, &PID0, Field, _NONE,
-                                     OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                                     MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
-               }
-            }
+#           ifdef OPENMP
+            const int TID = omp_get_thread_num();
+#           else
+            const int TID = 0;
+#           endif
 
-            for (int LocalID=0; LocalID<8; LocalID++)
+#           pragma omp for schedule( runtime )
+            for (int PID_IDX=0; PID_IDX<8*NPG; PID_IDX++)
             {
-               const int PID = PID0 + LocalID;
+               const int PID = 8*Disp + PID_IDX;
 
 //             skip untargeted patches
                if ( amr->patch[0][lv][PID]->son != -1 )
@@ -289,7 +288,7 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
                         Value = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot[k][j][i];
 #                    endif
                      else if ( UsePrepare )
-                        Value = FluidPtr[LocalID][k][j][i];
+                        Value = FieldPtr[PID_IDX][k][j][i];
                      else
                         Aux_Error( ERROR_INFO, "unsupported field (%ld) !!\n", Extrema->Field );
 
@@ -309,15 +308,15 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
                      }
                   } // if ( r2 < MaxR2 )
                }}} // i,j,k
-            } // for (int LocalID=0; LocalID<8; LocalID++)
-         } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+            } // for (int PID_IDX=0; PID_IDX<8*NPG; PID_IDX++)
+         } // OpenMP parallel region
 
          if ( UsePrepare )
          {
-            delete [] FluidPtr;
+            delete [] FieldPtr;
          }
 
-      } // OpenMP parallel region
+      } // for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
 
 //    free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
 #     ifdef PARTICLE
@@ -328,6 +327,8 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
          Prepare_PatchData_FreeParticleDensityArray( lv );
       }
 #     endif
+
+      delete [] PID0_List;
 
    } // for (int lv=MinLv; lv<=MaxLv; lv++)
 
