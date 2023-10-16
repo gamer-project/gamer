@@ -1083,8 +1083,8 @@
 #  define PRINT_RESET_PARA( name, format, reason )                                                       \
    {                                                                                                     \
       if ( MPI_Rank == 0 )                                                                               \
-         Aux_Message( stderr, "WARNING : parameter [%-28s] is reset to [" EXPAND_AND_QUOTE(format) "] "  \
-                              "%s\n", #name, name, reason );                                               \
+         Aux_Message( stderr, "WARNING : parameter [%-30s] is reset to [" EXPAND_AND_QUOTE(format) "] "  \
+                              "%s\n", #name, name, reason );                                             \
    }
 
 
