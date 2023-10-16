@@ -30,7 +30,7 @@ void Init_Set_Default_SOR_Parameter()
    {
       SOR_OMEGA = Default_Omega;
 
-      PRINT_RESET_PARA( SOR_OMEGA, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( SOR_OMEGA, FORMAT_REAL, "" );
    }
 
    if ( SOR_MAX_ITER < 0 )

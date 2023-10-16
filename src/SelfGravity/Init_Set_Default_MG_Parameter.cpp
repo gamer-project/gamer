@@ -49,7 +49,7 @@ void Init_Set_Default_MG_Parameter()
    {
       MG_TOLERATED_ERROR = Default_Tolerated_Error;
 
-      PRINT_RESET_PARA( MG_TOLERATED_ERROR, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( MG_TOLERATED_ERROR, FORMAT_REAL, "" );
    }
 
 } // FUNCTION : Init_Set_Default_MG_Parameter
