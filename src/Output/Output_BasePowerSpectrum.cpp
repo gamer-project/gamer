@@ -146,11 +146,11 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
          Aux_Message( stderr, "WARNING : file \"%s\" already exists and will be overwritten !!\n", FileName );
 
 //    data string length
-      const int S_LEN = MAX( abs(atoi(OPT__OUTPUT_DATA_FORMAT+1)), abs(atoi(OPT__OUTPUT_DATA_FORMAT+2)) );
+      const int S_LEN = MAX( abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+1)), abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+2)) );
 
 //    data string formatting
       char BlankPlusFormat[MAX_STRING];
-      sprintf( BlankPlusFormat, " %s", OPT__OUTPUT_DATA_FORMAT );
+      sprintf( BlankPlusFormat, " %s", OPT__OUTPUT_TEXT_FORMAT_FLT );
 
 //    output the power spectrum
       const double WaveK0 = 2.0*M_PI/amr->BoxSize[0];

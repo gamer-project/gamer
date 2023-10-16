@@ -134,11 +134,11 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
    static bool FirstTime = true;
 
 // data string length
-   const int S_LEN = MAX( abs(atoi(OPT__OUTPUT_DATA_FORMAT+1)), abs(atoi(OPT__OUTPUT_DATA_FORMAT+2)) );
+   const int S_LEN = MAX( abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+1)), abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+2)) );
 
 // data string formatting
    char BlankPlusFormat[MAX_STRING];
-   sprintf( BlankPlusFormat, " %s", OPT__OUTPUT_DATA_FORMAT );
+   sprintf( BlankPlusFormat, " %s", OPT__OUTPUT_TEXT_FORMAT_FLT );
 
    for (int v=0; v<NERR; v++)    L1_Err[v] = 0.0;
 
@@ -389,7 +389,7 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 
 // data string formatting
    char BlankPlusFormat[MAX_STRING];
-   sprintf( BlankPlusFormat, " %s", OPT__OUTPUT_DATA_FORMAT );
+   sprintf( BlankPlusFormat, " %s", OPT__OUTPUT_TEXT_FORMAT_FLT );
 
 // record the physical coordinate
    double r;

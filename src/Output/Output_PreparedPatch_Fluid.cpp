@@ -88,11 +88,11 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
 
 
 //    data string length
-      const int S_LEN = MAX( abs(atoi(OPT__OUTPUT_DATA_FORMAT+1)), abs(atoi(OPT__OUTPUT_DATA_FORMAT+2)) );
+      const int S_LEN = MAX( abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+1)), abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+2)) );
 
 //    data string formatting
       char BlankPlusFormat[MAX_STRING];
-      sprintf( BlankPlusFormat, " %s", OPT__OUTPUT_DATA_FORMAT );
+      sprintf( BlankPlusFormat, " %s", OPT__OUTPUT_TEXT_FORMAT_FLT );
 
 //    output cell-centered fluid data
       fprintf( File, "\n" );

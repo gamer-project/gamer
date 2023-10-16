@@ -30,7 +30,7 @@ void Par_Output_TextFile( const char *FileName )
       FILE *File = fopen( FileName, "w" );
 
 //    data string length
-      const int S_LEN = MAX( abs(atoi(OPT__OUTPUT_DATA_FORMAT+1)), abs(atoi(OPT__OUTPUT_DATA_FORMAT+2)) );
+      const int S_LEN = MAX( abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+1)), abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+2)) );
 
       fprintf( File, "#Time %20.14e   Step %13ld   Active Particles %13ld\n\n",
                Time[0], Step, amr->Par->NPar_Active_AllRank );
@@ -55,7 +55,7 @@ void Par_Output_TextFile( const char *FileName )
 
 //       data string formatting
          char BlankPlusFormat[MAX_STRING];
-         sprintf( BlankPlusFormat, " %s", OPT__OUTPUT_DATA_FORMAT );
+         sprintf( BlankPlusFormat, " %s", OPT__OUTPUT_TEXT_FORMAT_FLT );
 
          for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
          {

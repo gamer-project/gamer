@@ -125,11 +125,11 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 
 // 2. output physical data
 // data string length
-   const int S_LEN = MAX( abs(atoi(OPT__OUTPUT_DATA_FORMAT+1)), abs(atoi(OPT__OUTPUT_DATA_FORMAT+2)) );
+   const int S_LEN = MAX( abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+1)), abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+2)) );
 
 // data string formatting
    char BlankPlusFormat[MAX_STRING];
-   sprintf( BlankPlusFormat, " %s", OPT__OUTPUT_DATA_FORMAT );
+   sprintf( BlankPlusFormat, " %s", OPT__OUTPUT_TEXT_FORMAT_FLT );
 
 // header
    fprintf( File, "(%2s,%2s,%2s)", "i", "j", "k" );
