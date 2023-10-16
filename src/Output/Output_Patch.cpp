@@ -124,24 +124,17 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 
 
 // 2. output physical data
-// data string length
-   const int S_LEN = MAX( abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+1)), abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+2)) );
-
-// data string formatting
-   char BlankPlusFormat[MAX_STRING];
-   sprintf( BlankPlusFormat, " %s", OPT__OUTPUT_TEXT_FORMAT_FLT );
-
 // header
    fprintf( File, "(%2s,%2s,%2s)", "i", "j", "k" );
 
-   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %*s", S_LEN, FieldLabel[v] );
+   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %*s", StrLen_Flt, FieldLabel[v] );
 
 #  if   ( MODEL == HYDRO )
 #  ifdef MHD
-   for (int v=0; v<NCOMP_MAG; v++)   fprintf( File, " %*s", S_LEN, MagLabel[v] );
-   fprintf( File, " %*s", S_LEN, "MagEngy" );
+   for (int v=0; v<NCOMP_MAG; v++)   fprintf( File, " %*s", StrLen_Flt, MagLabel[v] );
+   fprintf( File, " %*s", StrLen_Flt, "MagEngy" );
 #  endif
-   fprintf( File, " %*s", S_LEN, "Pressure" );
+   fprintf( File, " %*s", StrLen_Flt, "Pressure" );
 #  ifdef DUAL_ENERGY
    fprintf( File, " %13s", "DE-status" );
 #  endif
@@ -153,7 +146,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 #  endif // MODEL
 
 #  ifdef GRAVITY
-   fprintf( File, " %*s", S_LEN, PotLabel );
+   fprintf( File, " %*s", StrLen_Flt, PotLabel );
 #  endif
 
    fprintf( File, "\n" );
@@ -175,7 +168,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
             u[v] = fluid[v][k][j][i];
-            fprintf( File, BlankPlusFormat, u[v] );
+            fprintf( File, BlankPlusFormat_Flt, u[v] );
          }
 
 #        if   ( MODEL == HYDRO )
@@ -186,10 +179,10 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
                            MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
          real B[3] = { NULL_REAL, NULL_REAL, NULL_REAL };
          if ( magnetic != NULL )    MHD_GetCellCenteredBFieldInPatch( B, lv, PID, i, j, k, MagSg );
-         fprintf( File, BlankPlusFormat, B[MAGX] );
-         fprintf( File, BlankPlusFormat, B[MAGY] );
-         fprintf( File, BlankPlusFormat, B[MAGZ] );
-         fprintf( File, BlankPlusFormat, Emag    );
+         fprintf( File, BlankPlusFormat_Flt, B[MAGX] );
+         fprintf( File, BlankPlusFormat_Flt, B[MAGY] );
+         fprintf( File, BlankPlusFormat_Flt, B[MAGZ] );
+         fprintf( File, BlankPlusFormat_Flt, Emag    );
 #        endif
 
 //       pressure
@@ -206,7 +199,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
                                            CheckMinPres_No, NULL_REAL, NULL_REAL,
                                            EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 #        endif
-         fprintf( File, BlankPlusFormat, Pres );
+         fprintf( File, BlankPlusFormat_Flt, Pres );
 
 //       dual-energy variable
 #        ifdef DUAL_ENERGY
@@ -223,13 +216,13 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
       else
       {
 //       output empty strings if the fluid array is not allocated
-         for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %*s", S_LEN, "" );
+         for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %*s", StrLen_Flt, "" );
 
 #        if ( MODEL == HYDRO )
 #        ifdef MHD
-         fprintf( File, " %*s %*s %*s %*s", S_LEN, "", S_LEN, "", S_LEN, "", S_LEN, "" );
+         fprintf( File, " %*s %*s %*s %*s", StrLen_Flt, "", StrLen_Flt, "", StrLen_Flt, "", StrLen_Flt, "" );
 #        endif
-         fprintf( File, " %*s", S_LEN, "" );
+         fprintf( File, " %*s", StrLen_Flt, "" );
 #        ifdef DUAL_ENERGY
          fprintf( File, " %13s", "" );
 #        endif
@@ -243,8 +236,8 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 
 //    potential
 #     ifdef GRAVITY
-      if ( pot != NULL )   fprintf( File, BlankPlusFormat, pot[k][j][i] );
-      else                 fprintf( File, " %*s", S_LEN, "" );
+      if ( pot != NULL )   fprintf( File, BlankPlusFormat_Flt, pot[k][j][i] );
+      else                 fprintf( File, " %*s", StrLen_Flt, "" );
 #     endif
 
       fprintf( File, "\n" );
@@ -263,7 +256,8 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
    if ( magnetic != NULL )
    {
 //    header
-      fprintf( File, "(%2s,%2s,%2s) %*s %*s %*s\n", "i", "j", "k", S_LEN, MagLabel[MAGX], S_LEN, MagLabel[MAGY], S_LEN, MagLabel[MAGZ] );
+      fprintf( File, "(%2s,%2s,%2s) %*s %*s %*s\n", "i", "j", "k",
+               StrLen_Flt, MagLabel[MAGX], StrLen_Flt, MagLabel[MAGY], StrLen_Flt, MagLabel[MAGZ] );
 
       for (int k=0; k<PS1P1; k++)
       for (int j=0; j<PS1P1; j++)
@@ -273,16 +267,16 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
          fprintf( File, "(%2d,%2d,%2d)", i, j, k );
 
 //       B_X
-         if ( j < PS1  &&  k < PS1 )   fprintf( File, BlankPlusFormat, magnetic[MAGX][ IDX321_BX(i,j,k,PS1,PS1) ] );
-         else                          fprintf( File, " %*s", S_LEN, "" );
+         if ( j < PS1  &&  k < PS1 )   fprintf( File, BlankPlusFormat_Flt, magnetic[MAGX][ IDX321_BX(i,j,k,PS1,PS1) ] );
+         else                          fprintf( File, " %*s", StrLen_Flt, "" );
 
 //       B_Y
-         if ( i < PS1  &&  k < PS1 )   fprintf( File, BlankPlusFormat, magnetic[MAGY][ IDX321_BY(i,j,k,PS1,PS1) ] );
-         else                          fprintf( File, " %*s", S_LEN, "" );
+         if ( i < PS1  &&  k < PS1 )   fprintf( File, BlankPlusFormat_Flt, magnetic[MAGY][ IDX321_BY(i,j,k,PS1,PS1) ] );
+         else                          fprintf( File, " %*s", StrLen_Flt, "" );
 
 //       B_Z
-         if ( i < PS1  &&  j < PS1 )  fprintf( File, BlankPlusFormat, magnetic[MAGZ][ IDX321_BZ(i,j,k,PS1,PS1) ] );
-         else                         fprintf( File, " %*s", S_LEN, "" );
+         if ( i < PS1  &&  j < PS1 )  fprintf( File, BlankPlusFormat_Flt, magnetic[MAGZ][ IDX321_BZ(i,j,k,PS1,PS1) ] );
+         else                         fprintf( File, " %*s", StrLen_Flt, "" );
 
          fprintf( File, "\n" );
       } // i,j,k
@@ -300,7 +294,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
    fprintf( File, "===================\n" );
    fprintf( File, "\n" );
    fprintf( File, "%5s  %10s", "No.", "ParID" );
-   for (int v=0; v<PAR_NATT_TOTAL; v++)   fprintf( File, " %*s", S_LEN, ParAttLabel[v] );
+   for (int v=0; v<PAR_NATT_TOTAL; v++)   fprintf( File, " %*s", StrLen_Flt, ParAttLabel[v] );
    fprintf( File, "\n" );
 
    for (int p=0; p<Relation->NPar; p++)
@@ -308,7 +302,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
       ParID = Relation->ParList[p];
 
       fprintf( File, "%5d  %10ld", p, ParID );
-      for (int v=0; v<PAR_NATT_TOTAL; v++)   fprintf( File, BlankPlusFormat, amr->Par->Attribute[v][ParID] );
+      for (int v=0; v<PAR_NATT_TOTAL; v++)   fprintf( File, BlankPlusFormat_Flt, amr->Par->Attribute[v][ParID] );
 
       fprintf( File, "\n" );
    }

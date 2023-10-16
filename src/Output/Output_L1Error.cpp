@@ -133,13 +133,6 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
    double L1_Err[NERR];
    static bool FirstTime = true;
 
-// data string length
-   const int S_LEN = MAX( abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+1)), abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+2)) );
-
-// data string formatting
-   char BlankPlusFormat[MAX_STRING];
-   sprintf( BlankPlusFormat, " %s", OPT__OUTPUT_TEXT_FORMAT_FLT );
-
    for (int v=0; v<NERR; v++)    L1_Err[v] = 0.0;
 
    switch ( Part )
@@ -164,7 +157,8 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
          if ( TRank == 0 )
          {
             for (int v=0; v<NERR; v++)
-               fprintf( File[v], "#%*s %*s %*s %*s\n", S_LEN, "Coord.", S_LEN, "Numerical", S_LEN, "Analytical", S_LEN, "Error" );
+               fprintf( File[v], "#%*s %*s %*s %*s\n", StrLen_Flt, "Coord.", StrLen_Flt, "Numerical",
+                        StrLen_Flt, "Analytical", StrLen_Flt, "Error" );
          }
 
 
@@ -252,27 +246,27 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
       if ( FirstTime )
       {
 #        if   ( MODEL == HYDRO )
-         fprintf( File_L1, "#%5s %13s %*s %*s %*s %*s %*s",
-                  "NGrid", "Time", S_LEN, "Error(Dens)", S_LEN, "Error(MomX)", S_LEN, "Error(MomY)", S_LEN, "Error(MomZ)", S_LEN, "Error(Pres)" );
+         fprintf( File_L1, "#%5s %13s %*s %*s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
+                  StrLen_Flt, "Error(MomX)", StrLen_Flt, "Error(MomY)", StrLen_Flt, "Error(MomZ)", StrLen_Flt, "Error(Pres)" );
 
          for (int v=0; v<NCOMP_PASSIVE; v++) {
             char tmp_str[MAX_STRING];
             sprintf(tmp_str, "Error(Passive%02d)", v);
-            fprintf( File_L1, " %*s", S_LEN, tmp_str );
+            fprintf( File_L1, " %*s", StrLen_Flt, tmp_str );
          }
 
 #        ifdef MHD
          fprintf( File_L1, " %*s %*s %*s",
-                  S_LEN, "Error(MagX)", S_LEN, "Error(MagY)", S_LEN, "Error(MagZ)" );
+                  StrLen_Flt, "Error(MagX)", StrLen_Flt, "Error(MagY)", StrLen_Flt, "Error(MagZ)" );
 #        endif
 
-         fprintf( File_L1, " %*s", S_LEN, "Error(Temp)" );
+         fprintf( File_L1, " %*s", StrLen_Flt, "Error(Temp)" );
 
          fprintf( File_L1, "\n" );
 
 #        elif ( MODEL == ELBDM )
-         fprintf( File_L1, "#%5s %13s %*s %*s %*s\n",
-                  "NGrid", "Time", S_LEN, "Error(Dens)", S_LEN, "Error(Real)", S_LEN, "Error(Imag)" );
+         fprintf( File_L1, "#%5s %13s %*s %*s %*s\n", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
+                  StrLen_Flt, "Error(Real)", StrLen_Flt, "Error(Imag)" );
 
 #        else
 #        error : unsupported MODEL !!
@@ -284,7 +278,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 //    output data
       fprintf( File_L1, "%6d %13.7e", (Part==OUTPUT_DIAG)?NX0_TOT[0]:NX0_TOT[Part-OUTPUT_X], Time[0] );
 
-      for (int v=0; v<NERR; v++)   fprintf( File_L1, BlankPlusFormat, L1_Err_Sum[v] );
+      for (int v=0; v<NERR; v++)   fprintf( File_L1, BlankPlusFormat_Flt, L1_Err_Sum[v] );
 
       fprintf( File_L1, "\n" );
 
@@ -387,10 +381,6 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 #  endif
 
 
-// data string formatting
-   char BlankPlusFormat[MAX_STRING];
-   sprintf( BlankPlusFormat, " %s", OPT__OUTPUT_TEXT_FORMAT_FLT );
-
 // record the physical coordinate
    double r;
 
@@ -410,10 +400,10 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
       Err   [v]  = FABS( Anal[v] - Nume[v] );
       L1_Err[v] += Err[v]*dh;
 
-      fprintf( File[v], BlankPlusFormat, r       );
-      fprintf( File[v], BlankPlusFormat, Nume[v] );
-      fprintf( File[v], BlankPlusFormat, Anal[v] );
-      fprintf( File[v], BlankPlusFormat, Err[v]  );
+      fprintf( File[v], BlankPlusFormat_Flt, r       );
+      fprintf( File[v], BlankPlusFormat_Flt, Nume[v] );
+      fprintf( File[v], BlankPlusFormat_Flt, Anal[v] );
+      fprintf( File[v], BlankPlusFormat_Flt, Err[v]  );
       fprintf( File[v], "\n");
    }
 

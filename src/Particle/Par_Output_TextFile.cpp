@@ -29,16 +29,13 @@ void Par_Output_TextFile( const char *FileName )
    {
       FILE *File = fopen( FileName, "w" );
 
-//    data string length
-      const int S_LEN = MAX( abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+1)), abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+2)) );
-
       fprintf( File, "#Time %20.14e   Step %13ld   Active Particles %13ld\n\n",
                Time[0], Step, amr->Par->NPar_Active_AllRank );
 
       fprintf( File, "#" );
 
       for (int v=0; v<PAR_NATT_TOTAL; v++)
-      fprintf( File, " %*s", (v==0)?S_LEN-1:S_LEN, ParAttLabel[v] );
+      fprintf( File, " %*s", (v==0)?StrLen_Flt-1:StrLen_Flt, ParAttLabel[v] );
 
       fprintf( File, "\n" );
 
@@ -53,16 +50,12 @@ void Par_Output_TextFile( const char *FileName )
       {
          FILE *File = fopen( FileName, "a" );
 
-//       data string formatting
-         char BlankPlusFormat[MAX_STRING];
-         sprintf( BlankPlusFormat, " %s", OPT__OUTPUT_TEXT_FORMAT_FLT );
-
          for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
          {
 //          skip inactive particles
             if ( amr->Par->Mass[p] < 0.0 )   continue;
 
-            for (int v=0; v<PAR_NATT_TOTAL; v++)   fprintf( File, BlankPlusFormat, amr->Par->Attribute[v][p] );
+            for (int v=0; v<PAR_NATT_TOTAL; v++)   fprintf( File, BlankPlusFormat_Flt, amr->Par->Attribute[v][p] );
 
             fprintf( File, "\n" );
          }

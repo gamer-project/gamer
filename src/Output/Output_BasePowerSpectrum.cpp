@@ -145,25 +145,18 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
       if ( Aux_CheckFileExist(FileName) )
          Aux_Message( stderr, "WARNING : file \"%s\" already exists and will be overwritten !!\n", FileName );
 
-//    data string length
-      const int S_LEN = MAX( abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+1)), abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+2)) );
-
-//    data string formatting
-      char BlankPlusFormat[MAX_STRING];
-      sprintf( BlankPlusFormat, " %s", OPT__OUTPUT_TEXT_FORMAT_FLT );
-
 //    output the power spectrum
       const double WaveK0 = 2.0*M_PI/amr->BoxSize[0];
       FILE *File = fopen( FileName, "w" );
 
       fprintf( File, "# average value (DC) used for normalization = %20.14e\n", NormDC );
       fprintf( File, "\n" );
-      fprintf( File, "#%*s %*s\n", S_LEN, "k", S_LEN, "Power" );
+      fprintf( File, "#%*s %*s\n", StrLen_Flt, "k", StrLen_Flt, "Power" );
 
 //    DC mode is not output
       for (int b=1; b<Nx_Padded; b++) {
-         fprintf( File, BlankPlusFormat, WaveK0*b );
-         fprintf( File, BlankPlusFormat, PS_total[b] );
+         fprintf( File, BlankPlusFormat_Flt, WaveK0*b );
+         fprintf( File, BlankPlusFormat_Flt, PS_total[b] );
          fprintf( File, "\n");
       }
 
