@@ -45,11 +45,31 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
    }
 #  endif // #ifdef GAMER_DEBUG
 
+
+// get the integer index of the target intrinsic fluid field
+   const int FluIdxUndef = -1;
+   int TFluIntIdx = FluIdxUndef;
+   bool UsePrepare = true;
+
+   for (int v=0; v<NCOMP_TOTAL; v++) {
+      if ( WeightingDensityField & BIDX(v) ) {
+         TFluIntIdx = v;
+         UsePrepare = false;
+         break;
+      }
+   }
+
+#  ifdef GRAVITY
+   if ( WeightingDensityField & _POTE ) UsePrepare = false;
+#  endif
+
+
    const double HalfBox[3]        = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
    const bool   Periodic[3]       = { OPT__BC_FLU[0] == BC_FLU_PERIODIC,
                                       OPT__BC_FLU[2] == BC_FLU_PERIODIC,
                                       OPT__BC_FLU[4] == BC_FLU_PERIODIC };
 
+   const int    NPG_Max           = FLU_GPU_NPGROUP;
    const bool   IntPhase_No       = false;
    const real   MinDens_No        = -1.0;
    const real   MinPres_No        = -1.0;
@@ -96,8 +116,6 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
          RegMin_Img[d] = Center_Img        [d] - MaxR;
       }
 
-      real (*WeightingDensity)[PS1][PS1][PS1];
-      int   *PID0List = NULL;
       double W_ThisRank, WR_ThisRank[3], W_AllRank, WR_AllRank[3];
       double WX_ThisRank, WY_ThisRank, WZ_ThisRank;
 
@@ -110,9 +128,13 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
 //    loop over all levels
       for (int lv=0; lv<NLEVEL; lv++)
       {
+         const int NTotal = amr->NPatchComma[lv][1] / 8;
+         int   *PID0_List = new int [NTotal];
+         for (int t=0; t<NTotal; t++)  PID0_List[t] = 8*t;
+
 //       initialize the particle density array (rho_ext) and collect particles to the target level
 #        ifdef PARTICLE
-         if ( WeightingDensityField & _PAR_DENS  ||  WeightingDensityField & _TOTAL_DENS )
+         if ( UsePrepare  &&  ( WeightingDensityField & _PAR_DENS  ||  WeightingDensityField & _TOTAL_DENS ) )
          {
             Prepare_PatchData_InitParticleDensityArray( lv );
 
@@ -121,22 +143,106 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
          }
 #        endif
 
-//       get the weighting density on grids
-         WeightingDensity = new real [ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
-         PID0List         = new int  [ amr->NPatchComma[lv][1]/8 ];
+//       calculate the weighted average center
+         const double dh = amr->dh[lv];
+         const double dv = CUBE( dh );
 
-         for (int PID0=0, t=0; PID0<amr->NPatchComma[lv][1]; PID0+=8, t++)    PID0List[t] = PID0;
+         for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
+         {
+            int NPG = ( NPG_Max < NTotal-Disp ) ? NPG_Max : NTotal-Disp;
 
-         Prepare_PatchData( lv, Time[lv], WeightingDensity[0][0][0], NULL, 0, amr->NPatchComma[lv][1]/8, PID0List, WeightingDensityField, _NONE,
-                            OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                            MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+//          get the weighting density on grids
+            real (*WeightingDensity)[PS1][PS1][PS1] = NULL;
+            if ( UsePrepare )
+            {
+               WeightingDensity = new real [8*NPG][PS1][PS1][PS1];
+               Prepare_PatchData( lv, Time[lv], WeightingDensity[0][0][0], NULL, 0, NPG, PID0_List+Disp, WeightingDensityField, _NONE,
+                                  OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
+                                  MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+            }
 
-         delete [] PID0List;
+#           pragma omp parallel for reduction ( +:W_ThisRank, WX_ThisRank, WY_ThisRank, WZ_ThisRank ) schedule( runtime )
+            for (int PID_IDX=0; PID_IDX<8*NPG; PID_IDX++)
+            {
+               const int PID = 8*Disp + PID_IDX;
 
+//             skip non-leaf patches
+               if ( amr->patch[0][lv][PID]->son != -1 )  continue;
+
+//             skip distant patches
+               const double *EdgeL = amr->patch[0][lv][PID]->EdgeL;
+               const double *EdgeR = amr->patch[0][lv][PID]->EdgeR;
+
+               if (   (  ( EdgeL[0]>RegMax[0] || EdgeR[0]<RegMin[0] )  &&  ( EdgeL[0]>RegMax_Img[0] || EdgeR[0]<RegMin_Img[0] )  )   ||
+                      (  ( EdgeL[1]>RegMax[1] || EdgeR[1]<RegMin[1] )  &&  ( EdgeL[1]>RegMax_Img[1] || EdgeR[1]<RegMin_Img[1] )  )   ||
+                      (  ( EdgeL[2]>RegMax[2] || EdgeR[2]<RegMin[2] )  &&  ( EdgeL[2]>RegMax_Img[2] || EdgeR[2]<RegMin_Img[2] )  )    )
+                  continue;
+
+
+//             loop over all cells
+               const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
+               const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
+               const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
+
+               for (int k=0; k<PS1; k++)  {  double z = z0 + k*dh;
+                                             double dz = z - Center_ref_OldIter[2];
+                                             if ( Periodic[2] ) {
+                                                if      ( dz > +HalfBox[2] )  {  z -= amr->BoxSize[2];  dz -= amr->BoxSize[2];  }
+                                                else if ( dz < -HalfBox[2] )  {  z += amr->BoxSize[2];  dz += amr->BoxSize[2];  }
+                                             }
+               for (int j=0; j<PS1; j++)  {  double y = y0 + j*dh;
+                                             double dy = y - Center_ref_OldIter[1];
+                                             if ( Periodic[1] ) {
+                                                if      ( dy > +HalfBox[1] )  {  y -= amr->BoxSize[1];  dy -= amr->BoxSize[1];  }
+                                                else if ( dy < -HalfBox[1] )  {  y += amr->BoxSize[1];  dy += amr->BoxSize[1];  }
+                                             }
+               for (int i=0; i<PS1; i++)  {  double x = x0 + i*dh;
+                                             double dx = x - Center_ref_OldIter[0];
+                                             if ( Periodic[0] ) {
+                                                if      ( dx > +HalfBox[0] )  {  x -= amr->BoxSize[0];  dx -= amr->BoxSize[0];  }
+                                                else if ( dx < -HalfBox[0] )  {  x += amr->BoxSize[0];  dx += amr->BoxSize[0];  }
+                                             }
+
+                  const double R2 = SQR(dx) + SQR(dy) + SQR(dz);
+//                only include cells that are
+//                within a sphere with radius MaxR and with the weighting density larger than MinWD
+                  if ( R2 < MaxR2 )
+                  {
+                     double WD;
+                     if ( TFluIntIdx != FluIdxUndef )
+                        WD = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[TFluIntIdx][k][j][i];
+#                    ifdef GRAVITY
+                     else if ( WeightingDensityField & _POTE )
+                        WD = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot[k][j][i];
+#                    endif
+                     else if ( UsePrepare )
+                        WD =  WeightingDensity[PID_IDX][k][j][i];
+                     else
+                        Aux_Error( ERROR_INFO, "unsupported field (%ld) !!\n", WeightingDensityField );
+
+                     if ( WD > MinWD )
+                     {
+                        const double dw = WD*dv; // weighting
+
+                        W_ThisRank  += dw;
+                        WX_ThisRank += dw*x;
+                        WY_ThisRank += dw*y;
+                        WZ_ThisRank += dw*z;
+                     }
+                  }
+               }}} // i,j,k
+            } // for (int PID_IDX=0; PID_IDX<8*NPG; PID_IDX++)
+
+            if ( UsePrepare )
+            {
+               delete [] WeightingDensity;
+            }
+
+         } // for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
 
 //       free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
 #        ifdef PARTICLE
-         if ( WeightingDensityField & _PAR_DENS  ||  WeightingDensityField & _TOTAL_DENS )
+         if ( UsePrepare  &&  ( WeightingDensityField & _PAR_DENS  ||  WeightingDensityField & _TOTAL_DENS ) )
          {
             Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
 
@@ -144,68 +250,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
          }
 #        endif
 
-
-//       calculate the weighted average center
-         const double dh = amr->dh[lv];
-         const double dv = CUBE( dh );
-
-#        pragma omp parallel for reduction ( +:W_ThisRank, WX_ThisRank, WY_ThisRank, WZ_ThisRank ) schedule( runtime )
-         for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-         {
-//          skip non-leaf patches
-            if ( amr->patch[0][lv][PID]->son != -1 )  continue;
-
-//          skip distant patches
-            const double *EdgeL = amr->patch[0][lv][PID]->EdgeL;
-            const double *EdgeR = amr->patch[0][lv][PID]->EdgeR;
-
-            if (   (  ( EdgeL[0]>RegMax[0] || EdgeR[0]<RegMin[0] )  &&  ( EdgeL[0]>RegMax_Img[0] || EdgeR[0]<RegMin_Img[0] )  )   ||
-                   (  ( EdgeL[1]>RegMax[1] || EdgeR[1]<RegMin[1] )  &&  ( EdgeL[1]>RegMax_Img[1] || EdgeR[1]<RegMin_Img[1] )  )   ||
-                   (  ( EdgeL[2]>RegMax[2] || EdgeR[2]<RegMin[2] )  &&  ( EdgeL[2]>RegMax_Img[2] || EdgeR[2]<RegMin_Img[2] )  )    )
-               continue;
-
-
-//          loop over all cells
-            const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
-            const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
-            const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
-
-            for (int k=0; k<PS1; k++)  {  double z = z0 + k*dh;
-                                          double dz = z - Center_ref_OldIter[2];
-                                          if ( Periodic[2] ) {
-                                             if      ( dz > +HalfBox[2] )  {  z -= amr->BoxSize[2];  dz -= amr->BoxSize[2];  }
-                                             else if ( dz < -HalfBox[2] )  {  z += amr->BoxSize[2];  dz += amr->BoxSize[2];  }
-                                          }
-            for (int j=0; j<PS1; j++)  {  double y = y0 + j*dh;
-                                          double dy = y - Center_ref_OldIter[1];
-                                          if ( Periodic[1] ) {
-                                             if      ( dy > +HalfBox[1] )  {  y -= amr->BoxSize[1];  dy -= amr->BoxSize[1];  }
-                                             else if ( dy < -HalfBox[1] )  {  y += amr->BoxSize[1];  dy += amr->BoxSize[1];  }
-                                          }
-            for (int i=0; i<PS1; i++)  {  double x = x0 + i*dh;
-                                          double dx = x - Center_ref_OldIter[0];
-                                          if ( Periodic[0] ) {
-                                             if      ( dx > +HalfBox[0] )  {  x -= amr->BoxSize[0];  dx -= amr->BoxSize[0];  }
-                                             else if ( dx < -HalfBox[0] )  {  x += amr->BoxSize[0];  dx += amr->BoxSize[0];  }
-                                          }
-
-               const double R2 = SQR(dx) + SQR(dy) + SQR(dz);
-               const double WD = WeightingDensity[PID][k][j][i];
-//             only include cells that are
-//             within a sphere with radius MaxR and with the weighting density larger than MinWD
-               if ( R2 < MaxR2  &&  WD > MinWD )
-               {
-                  const double dw = WeightingDensity[PID][k][j][i]*dv; // weighting
-
-                  W_ThisRank  += dw;
-                  WX_ThisRank += dw*x;
-                  WY_ThisRank += dw*y;
-                  WZ_ThisRank += dw*z;
-               }
-            }}} // i,j,k
-         } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-
-         delete [] WeightingDensity;
+         delete [] PID0_List;
 
       } // for (int lv=0; lv<NLEVEL; lv++)
 
