@@ -246,6 +246,11 @@ void Init_ResetParameter()
 #  endif
 
 
+// text format parameters
+   StrLen_Flt = MAX( abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+1)), abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+2)) );
+   sprintf( BlankPlusFormat_Flt, " %s", OPT__OUTPUT_TEXT_FORMAT_FLT );
+
+
 // ELBDM parameters
 #  if ( MODEL == ELBDM )
    ELBDM_ETA = ELBDM_MASS / ELBDM_PLANCK_CONST;
