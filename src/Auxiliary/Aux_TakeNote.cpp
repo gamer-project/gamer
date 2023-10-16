@@ -733,7 +733,7 @@ void Aux_TakeNote()
       fprintf( Note, "UNIT_E (energy)                 %20.14e g*cm^2/s^2 (*)\n", UNIT_E                        );
       fprintf( Note, "UNIT_P (energy density)         %20.14e g/cm/s^2   (*)\n", UNIT_P                        );
 #     ifdef MHD
-#     error : ERROR : MHD is not supported here !!!
+#     warning : ERROR : MHD is not supported here !!!
 #     endif
 
 #     else

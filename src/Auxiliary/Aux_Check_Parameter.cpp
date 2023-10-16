@@ -544,6 +544,10 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "GAMMA must be equal to 5.0/3.0 for COMOVING !!\n" );
 #  endif
 
+#  ifdef MHD
+      Aux_Error( ERROR_INFO, "MHD doesn't support COMOVING yet !!\n" );
+#  endif
+
 
 // warnings
 // ------------------------------
