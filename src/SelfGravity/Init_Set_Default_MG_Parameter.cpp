@@ -11,9 +11,12 @@
 //
 // Note        :  1. Work only when the corresponding input parameters are negative
 //                2. Default values are determined empirically
+//
+// Return      :  MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH, MG_TOLERATED_ERROR
 //-------------------------------------------------------------------------------------------------------
 void Init_Set_Default_MG_Parameter()
 {
+
 #  ifdef FLOAT8
    const int    Default_Max_Iter        = 20;
    const double Default_Tolerated_Error = 1.e-15;
@@ -23,6 +26,7 @@ void Init_Set_Default_MG_Parameter()
 #  endif
    const int    Default_NPre_Smooth     = 3;
    const int    Default_NPost_Smooth    = 3;
+
 
    if ( MG_MAX_ITER < 0 )
    {
