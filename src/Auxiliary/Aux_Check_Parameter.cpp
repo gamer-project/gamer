@@ -335,6 +335,10 @@ void Aux_Check_Parameter()
 #  endif
       Aux_Message( stderr, "WARNING : all output options are turned off --> no data will be output !!\n" );
 
+   if ( StrLen_Flt <= 0 )
+      Aux_Message( stderr, "WARNING : StrLen_Flt (%d) <= 0 !! The format length before '.' sign is not given. The text output might not be align !!\n", StrLen_Flt );
+
+
    if ( OPT__CK_REFINE )
       Aux_Message( stderr, "WARNING : \"%s\" check may fail due to the proper-nesting constraint !!\n",
                    "OPT__CK_REFINE" );
