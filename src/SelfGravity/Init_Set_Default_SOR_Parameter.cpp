@@ -11,9 +11,12 @@
 //
 // Note        :  1. Work only when the corresponding input parameters are negative
 //                2. The default values are determined empirically from the cosmological simulations
+//
+// Return      :  SOR_OMEGA, SOR_MAX_ITER, SOR_MIN_ITER
 //-------------------------------------------------------------------------------------------------------
 void Init_Set_Default_SOR_Parameter()
 {
+
 // reference to the optimum relaxation parameter: Yang & Gobbert, Appl. Math. Lett. 22, 325 (2009)
 // --> Eq. [1.3] and the last paragraph in Sec. 3
 // --> further confirmed with the test problem "Hydro/Gravity" using different PATCH_SIZE and POT_GHOST_SIZE
@@ -25,6 +28,7 @@ void Init_Set_Default_SOR_Parameter()
    const int    Default_MaxIter = int( 40 + 3*NCell );   // add a factor of 2 buffer to the empirically determined maximum iteration
 #  endif
    const int    Default_MinIter = Default_MaxIter / 5;   // 20% of the maximum iteration (determined empirically)
+
 
    if ( SOR_OMEGA < 0.0 )
    {
