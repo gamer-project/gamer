@@ -235,6 +235,15 @@ void Init_ResetParameter()
 #  endif
 
 
+// text format parameters
+// --> The current strategy is to read the integer in between % and . to determine the string length.
+//     For example, the format %20.16e will give a length of 20. However, if only checking the string after %,
+//     the format %+-20.16e (align to the left and also add a + sign for a positive value) will give a zero string length
+//     since +- is not an integer. This is why checking OPT__OUTPUT_DATA_FORMAT+2 is necessary.
+   StrLen_Flt = MAX( abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+1)), abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+2)) );
+   sprintf( BlankPlusFormat_Flt, " %s", OPT__OUTPUT_TEXT_FORMAT_FLT );
+
+
 // ELBDM parameters
 #  if ( MODEL == ELBDM )
    ELBDM_ETA = ELBDM_MASS / ELBDM_PLANCK_CONST;
