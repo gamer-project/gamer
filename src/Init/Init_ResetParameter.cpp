@@ -84,14 +84,14 @@ void Init_ResetParameter()
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
 
-      PRINT_RESET_PARA( DT__FLUID, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( DT__FLUID, FORMAT_REAL, "" );
    } // if ( DT__FLUID < 0.0 )
 
    if ( DT__FLUID_INIT < 0.0 )
    {
       DT__FLUID_INIT = DT__FLUID;
 
-      PRINT_RESET_PARA( DT__FLUID_INIT, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( DT__FLUID_INIT, FORMAT_REAL, "" );
    }
 
 
@@ -107,7 +107,7 @@ void Init_ResetParameter()
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
 
-      PRINT_RESET_PARA( DT__GRAVITY, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( DT__GRAVITY, FORMAT_REAL, "" );
    } // if ( DT__GRAVITY < 0.0 )
 #  endif
 
@@ -118,7 +118,7 @@ void Init_ResetParameter()
    {
       DT__PARACC = 0.0;    // disable it
 
-      PRINT_RESET_PARA( DT__PARACC, FORMAT_FLT, "since STORE_PAR_ACC is disabled" );
+      PRINT_RESET_PARA( DT__PARACC, FORMAT_REAL, "since STORE_PAR_ACC is disabled" );
    }
 #  endif
 
@@ -249,7 +249,7 @@ void Init_ResetParameter()
 #  if ( MODEL == ELBDM )
    ELBDM_ETA = ELBDM_MASS / ELBDM_PLANCK_CONST;
 
-   PRINT_RESET_PARA( ELBDM_ETA, FORMAT_FLT, "" );
+   PRINT_RESET_PARA( ELBDM_ETA, FORMAT_REAL, "" );
 
 #  ifdef COMOVING
    if ( MPI_Rank == 0 )
@@ -264,7 +264,7 @@ void Init_ResetParameter()
    {
       ELBDM_TAYLOR3_COEFF = NULL_REAL;
 
-      PRINT_RESET_PARA( ELBDM_TAYLOR3_COEFF, FORMAT_FLT, "since ELBDM_TAYLOR3_AUTO is enabled" );
+      PRINT_RESET_PARA( ELBDM_TAYLOR3_COEFF, FORMAT_REAL, "since ELBDM_TAYLOR3_AUTO is enabled" );
    }
 
 // must disable ELBDM_TAYLOR3_AUTO for OPT__FREEZE_FLUID since ELBDM_SetTaylor3Coeff() doesn't support dt=0.0
@@ -355,7 +355,7 @@ void Init_ResetParameter()
       }
 
       const double PAR_REMOVE_CELL = amr->Par->RemoveCell;
-      PRINT_RESET_PARA( PAR_REMOVE_CELL, FORMAT_FLT, "for the adopted PAR_INTERP scheme" );
+      PRINT_RESET_PARA( PAR_REMOVE_CELL, FORMAT_REAL, "for the adopted PAR_INTERP scheme" );
    }
 
 // RemoveCell is useless for the periodic B.C.
@@ -364,7 +364,7 @@ void Init_ResetParameter()
       amr->Par->RemoveCell = -1.0;
 
       const double PAR_REMOVE_CELL = amr->Par->RemoveCell;
-      PRINT_RESET_PARA( PAR_REMOVE_CELL, FORMAT_FLT, "since the periodic BC is adopted along all directions" );
+      PRINT_RESET_PARA( PAR_REMOVE_CELL, FORMAT_REAL, "since the periodic BC is adopted along all directions" );
    }
 
 // number of ghost zones for the particle interpolation scheme
@@ -417,7 +417,7 @@ void Init_ResetParameter()
 
       GFUNC_COEFF0 = 3.8;  // empirically determined value for minimizing the center-of-mass drift
 
-      PRINT_RESET_PARA( GFUNC_COEFF0, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( GFUNC_COEFF0, FORMAT_REAL, "" );
    }
 #  endif
 
@@ -857,14 +857,14 @@ void Init_ResetParameter()
    {
       MIN_EINT = MIN_PRES*1.5;
 
-      PRINT_RESET_PARA( MIN_EINT, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( MIN_EINT, FORMAT_REAL, "" );
    }
 
    else if ( MIN_EINT > 0.0  &&  MIN_PRES == 0.0 )
    {
       MIN_PRES = MIN_EINT/1.5;
 
-      PRINT_RESET_PARA( MIN_PRES, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( MIN_PRES, FORMAT_REAL, "" );
    }
 #  endif
 
@@ -895,14 +895,14 @@ void Init_ResetParameter()
    {
       MU_NORM = Const_mH;
 
-      PRINT_RESET_PARA( MU_NORM, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( MU_NORM, FORMAT_REAL, "" );
    }
 
    else if ( MU_NORM == 0.0 )
    {
       MU_NORM = Const_amu;
 
-      PRINT_RESET_PARA( MU_NORM, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( MU_NORM, FORMAT_REAL, "" );
    }
 #  endif
 
@@ -982,13 +982,13 @@ void Init_ResetParameter()
 // SF_CREATE_STAR_MIN_GAS_DENS: HI count/cm^3 --> mass density in code units
    SF_CREATE_STAR_MIN_GAS_DENS *= Const_mH / UNIT_D;
 
-   PRINT_RESET_PARA( SF_CREATE_STAR_MIN_GAS_DENS, FORMAT_FLT, "to be consistent with the code units" );
+   PRINT_RESET_PARA( SF_CREATE_STAR_MIN_GAS_DENS, FORMAT_REAL, "to be consistent with the code units" );
 
 
 // SF_CREATE_STAR_MIN_STAR_MASS: Msun --> code units
    SF_CREATE_STAR_MIN_STAR_MASS *= Const_Msun / UNIT_M;
 
-   PRINT_RESET_PARA( SF_CREATE_STAR_MIN_STAR_MASS, FORMAT_FLT, "to be consistent with the code units" );
+   PRINT_RESET_PARA( SF_CREATE_STAR_MIN_STAR_MASS, FORMAT_REAL, "to be consistent with the code units" );
 #  endif // #ifdef STAR_FORMATION
 
 
