@@ -53,6 +53,7 @@ const TestProbID_t
    TESTPROB_HYDRO_PARTICLE_EQUILIBRIUM_IC      =   17,
    TESTPROB_HYDRO_PARTICLE_TEST                =   18,
    TESTPROB_HYDRO_ENERGY_POWER_SPECTRUM        =   19,
+   TESTPROB_HYDRO_DYNAMICAL_FRICTION           =   20,
    TESTPROB_HYDRO_BARRED_POT                   =   51,
    TESTPROB_HYDRO_CDM_LSS                      =  100,
    TESTPROB_HYDRO_ZELDOVICH                    =  101,
