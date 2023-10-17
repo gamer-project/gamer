@@ -46,7 +46,7 @@ void Init_Unit()
    UNIT_E    = -1.0;
    UNIT_P    = -1.0;
 #  ifdef MHD
-#  error : ERROR : MHD is not supported here !!!
+#  warning : ERROR : MHD is not supported here !!!
 #  endif
 
    if ( MPI_Rank == 0 )

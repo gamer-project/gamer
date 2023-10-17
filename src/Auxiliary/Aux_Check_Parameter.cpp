@@ -335,6 +335,10 @@ void Aux_Check_Parameter()
 #  endif
       Aux_Message( stderr, "WARNING : all output options are turned off --> no data will be output !!\n" );
 
+   if ( StrLen_Flt <= 0 )
+      Aux_Message( stderr, "WARNING : StrLen_Flt (%d) <= 0 (OPT__OUTPUT_TEXT_FORMAT_FLT=%s) --> text output might be misaligned !!\n",
+                   StrLen_Flt, OPT__OUTPUT_TEXT_FORMAT_FLT );
+
    if ( OPT__CK_REFINE )
       Aux_Message( stderr, "WARNING : \"%s\" check may fail due to the proper-nesting constraint !!\n",
                    "OPT__CK_REFINE" );
@@ -538,6 +542,10 @@ void Aux_Check_Parameter()
 #  if ( MODEL == HYDRO )
    if ( fabs(GAMMA-5.0/3.0) > 1.0e-4 )
       Aux_Error( ERROR_INFO, "GAMMA must be equal to 5.0/3.0 for COMOVING !!\n" );
+#  endif
+
+#  ifdef MHD
+      Aux_Error( ERROR_INFO, "MHD doesn't support COMOVING yet !!\n" );
 #  endif
 
 

@@ -1000,6 +1000,21 @@
 #define BIDX( idx )     ( 1L << (idx) )
 
 
+// helper macro for printing warning messages when resetting parameters
+#  define FORMAT_INT       %- 21d
+#  define FORMAT_LONG      %- 21ld
+#  define FORMAT_UINT      %- 21u
+#  define FORMAT_ULONG     %- 21lu
+#  define FORMAT_BOOL      %- 21d
+#  define FORMAT_REAL      %- 21.14e
+#  define PRINT_RESET_PARA( name, format, reason )                                                       \
+   {                                                                                                     \
+      if ( MPI_Rank == 0 )                                                                               \
+         Aux_Message( stderr, "WARNING : parameter [%-30s] is reset to [" EXPAND_AND_QUOTE(format) "] "  \
+                              "%s\n", #name, name, reason );                                             \
+   }
+
+
 // ################################
 // ## Remove useless definitions ##
 // ################################

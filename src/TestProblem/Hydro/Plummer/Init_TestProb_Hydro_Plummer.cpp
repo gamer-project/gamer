@@ -190,17 +190,13 @@ void SetParameter()
    if ( !OPT__EXT_ACC  &&  Plummer_ExtAccMFrac != 0.0 )
    {
       Plummer_ExtAccMFrac = 0.0;
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : \"Plummer_ExtAccMFrac\" is reset to 0.0 since OPT__EXT_ACC is disabled !!\n" );
+      PRINT_RESET_PARA( Plummer_ExtAccMFrac, FORMAT_REAL, "since OPT__EXT_ACC is disabled" );
    }
 
    if ( !OPT__EXT_POT  &&  Plummer_ExtPotMFrac != 0.0 )
    {
       Plummer_ExtPotMFrac = 0.0;
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : \"Plummer_ExtPotMFrac\" is reset to 0.0 since OPT__EXT_POT is disabled !!\n" );
+      PRINT_RESET_PARA( Plummer_ExtPotMFrac, FORMAT_REAL, "since OPT__EXT_POT is disabled" );
    }
 #  endif
 
@@ -226,9 +222,7 @@ void SetParameter()
       if (  ! Mis_CompareRealValue( NonParMFrac, 1.0, NULL, false )  )
       {
          Plummer_GasMFrac = 1.0 - Plummer_ExtAccMFrac - Plummer_ExtPotMFrac;
-
-         if ( MPI_Rank == 0 )
-            Aux_Message( stderr, "WARNING : \"Plummer_GasMFrac\" is reset to %13.7e !!\n", Plummer_GasMFrac );
+         PRINT_RESET_PARA( Plummer_GasMFrac, FORMAT_REAL, "" );
       }
 #     endif
    } // if ( OPT__SELF_GRAVITY )
@@ -248,9 +242,7 @@ void SetParameter()
       if (  ! Mis_CompareRealValue( Plummer_GasMFrac, 1.0, NULL, false )  )
       {
          Plummer_GasMFrac = 1.0;
-
-         if ( MPI_Rank == 0 )
-            Aux_Message( stderr, "WARNING : \"Plummer_GasMFrac\" is reset to %13.7e !!\n", Plummer_GasMFrac );
+         PRINT_RESET_PARA( Plummer_GasMFrac, FORMAT_REAL, "" );
       }
 #     endif
 
@@ -262,9 +254,7 @@ void SetParameter()
             if (  ! Mis_CompareRealValue( Plummer_ExtAccMFrac+Plummer_ExtPotMFrac, 1.0, NULL, false )  )
             {
                Plummer_ExtPotMFrac = 1.0 - Plummer_ExtAccMFrac;
-
-               if ( MPI_Rank == 0 )
-                  Aux_Message( stderr, "WARNING : \"Plummer_ExtPotMFrac\" is reset to %13.7e !!\n", Plummer_ExtPotMFrac );
+               PRINT_RESET_PARA( Plummer_ExtPotMFrac, FORMAT_REAL, "" );
             }
          }
 
@@ -273,9 +263,7 @@ void SetParameter()
             if (  ! Mis_CompareRealValue( Plummer_ExtPotMFrac, 1.0, NULL, false )  )
             {
                Plummer_ExtPotMFrac = 1.0;
-
-               if ( MPI_Rank == 0 )
-                  Aux_Message( stderr, "WARNING : \"Plummer_ExtPotMFrac\" is reset to %13.7e !!\n", Plummer_ExtPotMFrac );
+               PRINT_RESET_PARA( Plummer_ExtPotMFrac, FORMAT_REAL, "" );
             }
          }
       } // if ( OPT__EXT_POT )
@@ -287,9 +275,7 @@ void SetParameter()
             if (  ! Mis_CompareRealValue( Plummer_ExtAccMFrac, 1.0, NULL, false )  )
             {
                Plummer_ExtAccMFrac = 1.0;
-
-               if ( MPI_Rank == 0 )
-                  Aux_Message( stderr, "WARNING : \"Plummer_ExtAccMFrac\" is reset to %13.7e !!\n", Plummer_ExtAccMFrac );
+               PRINT_RESET_PARA( Plummer_ExtAccMFrac, FORMAT_REAL, "" );
             }
          }
 
@@ -331,18 +317,18 @@ void SetParameter()
 
 
 // (3) reset other general-purpose parameters
-//     --> a helper macro PRINT_WARNING is defined in TestProb.h
+//     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const long   End_Step_Default = __INT_MAX__;
    const double End_T_Default    = (Plummer_Collision) ? 50.0 : 20.0*Plummer_FreeT;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
-      PRINT_WARNING( "END_STEP", END_STEP, FORMAT_LONG );
+      PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
    if ( END_T < 0.0 ) {
       END_T = End_T_Default;
-      PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
+      PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
 
 
