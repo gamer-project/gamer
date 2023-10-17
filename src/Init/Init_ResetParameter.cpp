@@ -283,7 +283,7 @@ void Init_ResetParameter()
    {
       ELBDM_TAYLOR3_AUTO = false;
 
-      PRINT_WARNING( ELBDM_TAYLOR3_AUTO, FORMAT_INT, "since OPT__FREEZE_FLUID is enabled" );
+      PRINT_RESET_PARA( ELBDM_TAYLOR3_AUTO, FORMAT_INT, "since OPT__FREEZE_FLUID is enabled" );
    }
 #  endif // #if ( MODEL == ELBDM )
 
