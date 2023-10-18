@@ -553,7 +553,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 
 //    2.6 particle
 #     ifdef PARTICLE
-      SendBuf_NPar[ Send_NDisp_Patch[TRank] + (long)NDone_Patch[TRank] ] = amr->patch[0][lv][PID]->NPar;
+      SendBuf_NPar[ Send_NDisp_Patch[TRank] + NDone_Patch[TRank] ] = amr->patch[0][lv][PID]->NPar;
 
       SendPtr = SendBuf_ParData + Send_NDisp_ParData[TRank] + NDone_ParData[TRank];
 
