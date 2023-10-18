@@ -240,12 +240,12 @@ void Int_Table( const IntScheme_t IntScheme, int &NSide, int &NGhost );
 // Miscellaneous
 template <typename T> void  Mis_Idx1D2Idx3D( const int Size[], const T Idx1D, int Idx3D[] );
 template <typename U, typename T> U Mis_BinarySearch( const T Array[], U Min, U Max, const T Key );
-template <typename T> int   Mis_BinarySearch_Real( const T Array[], int Min, int Max, const T Key );
+template <typename U, typename T> U Mis_BinarySearch_Real( const T Array[], U Min, U Max, const T Key );
 template <typename T> T     Mis_InterpolateFromTable( const int N, const T Table_x[], const T Table_y[], const T x );
 template <typename T> ulong Mis_Idx3D2Idx1D( const int Size[], const int Idx3D[] );
 template <typename U, typename T> void  Mis_Heapsort( const U N, T Array[], U IdxTable[] );
 template <typename T> int   Mis_Matching_char( const int N, const T Array[], const int M, const T Key[], char Match[] );
-template <typename U, typename T> int Mis_Matching_int( const U N, const T Array[], const U M, const T Key[], U Match[] );
+template <typename U, typename T> U Mis_Matching_int( const U N, const T Array[], const U M, const T Key[], U Match[] );
 template <typename T> bool  Mis_CompareRealValue( const T Input1, const T Input2, const char *comment, const bool Verbose );
 ulong  Mis_Idx3D2Idx1D( const int Size[], const int Idx3D[] );
 double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double AutoReduceDtCoeff );
