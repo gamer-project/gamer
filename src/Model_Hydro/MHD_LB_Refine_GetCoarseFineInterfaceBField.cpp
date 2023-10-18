@@ -175,7 +175,7 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
          SendEachRank_SibID[r][t] = RecvPtr_SibID[t];
 
 //       use index table since RecvPtr_LBIdx[] has been sorted
-         const int sorted_idx = RecvPtr_LBIdx_IdxTable[t];
+         const long sorted_idx = RecvPtr_LBIdx_IdxTable[t];
          SendEachRank_PID[r][sorted_idx]  = amr->LB->IdxList_Real_IdxTable[SonLv][ Match[t] ];
          SendEachRank_PID[r][sorted_idx] -= SendEachRank_PID[r][sorted_idx] % 8; // store the PID with LocalID=0
       }
