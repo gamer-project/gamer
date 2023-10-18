@@ -100,11 +100,11 @@ void Heapsort_SiftDown( const U L, const U R, T Array[], U IdxTable[] )
 
 
 // explicit template instantiation
-template void Mis_Heapsort <int,int>     ( const int N, int    Array[], int IdxTable[] );
-template void Mis_Heapsort <int,long>    ( const int N, long   Array[], int IdxTable[] );
-template void Mis_Heapsort <int,ulong>   ( const int N, ulong  Array[], int IdxTable[] );
-template void Mis_Heapsort <int,float>   ( const int N, float  Array[], int IdxTable[] );
-template void Mis_Heapsort <int,double>  ( const int N, double Array[], int IdxTable[] );
+template void Mis_Heapsort <int,int>     ( const int  N, int    Array[], int  IdxTable[] );
+template void Mis_Heapsort <int,long>    ( const int  N, long   Array[], int  IdxTable[] );
+template void Mis_Heapsort <int,ulong>   ( const int  N, ulong  Array[], int  IdxTable[] );
+template void Mis_Heapsort <int,float>   ( const int  N, float  Array[], int  IdxTable[] );
+template void Mis_Heapsort <int,double>  ( const int  N, double Array[], int  IdxTable[] );
 
 template void Mis_Heapsort <long,int>    ( const long N, int    Array[], long IdxTable[] );
 template void Mis_Heapsort <long,long>   ( const long N, long   Array[], long IdxTable[] );

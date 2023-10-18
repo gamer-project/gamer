@@ -71,8 +71,8 @@ U Mis_BinarySearch_Real( const T Array[], U Min, U Max, const T Key )
 
 
 // explicit template instantiation
-template int  Mis_BinarySearch_Real <int,float>   ( const float  Array[], int Min,  int Max,  const float  Key );
-template int  Mis_BinarySearch_Real <int,double>  ( const double Array[], int Min,  int Max,  const double Key );
+template int  Mis_BinarySearch_Real <int,float>   ( const float  Array[], int  Min, int  Max, const float  Key );
+template int  Mis_BinarySearch_Real <int,double>  ( const double Array[], int  Min, int  Max, const double Key );
 
 template long Mis_BinarySearch_Real <long,float>  ( const float  Array[], long Min, long Max, const float  Key );
 template long Mis_BinarySearch_Real <long,double> ( const double Array[], long Min, long Max, const double Key );
