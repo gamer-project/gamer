@@ -31,7 +31,7 @@ template <typename U, typename T>
 U Mis_BinarySearch_Real( const T Array[], U Min, U Max, const T Key )
 {
 
-// initial check
+// initial check; force print format as long since typename U can be "int" or "long" 
 #  ifdef GAMER_DEBUG
    if ( Min < 0 )    Aux_Error( ERROR_INFO, "incorrect input parameter \"Min (%ld) < 0\" !!\n", (long)Min );
    if ( Max <= Min ) Aux_Error( ERROR_INFO, "incorrect input parameters \"Max (%ld) <= Min (%ld)\" !!\n", (long)Max, (long)Min );
@@ -53,7 +53,7 @@ U Mis_BinarySearch_Real( const T Array[], U Min, U Max, const T Key )
    }
 
 
-// check whether the found array index is correct
+// check whether the found array index is correct; force print format as long since typename U can be "int" or "long"
 #  ifdef GAMER_DEBUG
    if ( Idx < Min  ||  Idx >= Max )
       Aux_Error( ERROR_INFO, "incorrect output index (Idx %ld, Min %ld, Max%ld) !!\n", (long)Idx, (long)Min, (long)Max );
