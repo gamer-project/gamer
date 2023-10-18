@@ -114,18 +114,18 @@ void SetParameter()
 
 
 // (3) reset other general-purpose parameters
-//     --> a helper macro PRINT_WARNING is defined in TestProb.h
+//     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const double End_T_Default    = 0.0;
    const long   End_Step_Default = 0;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
-      PRINT_WARNING( "END_STEP", END_STEP, FORMAT_LONG );
+      PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
    if ( END_T < 0.0 ) {
       END_T = End_T_Default;
-      PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
+      PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
 
 
