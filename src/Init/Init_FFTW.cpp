@@ -459,8 +459,8 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
 
 // 4. exchange data by MPI
-   MPI_Alltoallv( SendBuf_SIdx, List_NSend_SIdx, Send_Disp_SIdx, MPI_LONG,
-                  RecvBuf_SIdx, List_NRecv_SIdx, Recv_Disp_SIdx, MPI_LONG,   MPI_COMM_WORLD );
+   MPI_Alltoallv      ( SendBuf_SIdx, List_NSend_SIdx, Send_Disp_SIdx, MPI_LONG,
+                        RecvBuf_SIdx, List_NRecv_SIdx, Recv_Disp_SIdx, MPI_LONG,       MPI_COMM_WORLD );
 
    MPI_Alltoallv_GAMER( SendBuf_Var,  List_NSend_Var,  Send_Disp_Var,  MPI_GAMER_REAL,
                         RecvBuf_Var,  List_NRecv_Var,  Recv_Disp_Var,  MPI_GAMER_REAL, MPI_COMM_WORLD );
