@@ -49,8 +49,8 @@ void Par_SortByPos( const long NPar, const real *PosX, const real *PosY, const r
 
       if ( NParSameX > 1 )
       {
-         long *SortByX_IdxTable = new long [NParSameX];  // it will fail if "long" is actually required
-         long *SortByY_IdxTable = new long [NParSameX];  // it will fail if "long" is actually required
+         long *SortByX_IdxTable = new long [NParSameX];
+         long *SortByY_IdxTable = new long [NParSameX];
          real *PosY_Sorted      = new real [NParSameX];
 
          for (long y=0; y<NParSameX; y++)
@@ -74,7 +74,7 @@ void Par_SortByPos( const long NPar, const real *PosX, const real *PosY, const r
 
             if ( NParSameY > 1 )
             {
-               long *SortByZ_IdxTable = new long [NParSameY];  // it will fail if "long" is actually required
+               long *SortByZ_IdxTable = new long [NParSameY];
                real *PosZ_Sorted      = new real [NParSameY];
 
                for (long z=0; z<NParSameY; z++)

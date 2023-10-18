@@ -250,7 +250,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
          for (int v=0; v<PAR_NATT_TOTAL; v++)
             if ( ParAttBitIdx_In & BIDX(v) )    ParAtt_Local[v] = new real [NParMax];
 
-         ParSortID = new long [NParMax];
+         ParSortID = new long [NParMax];  // it will fail if "long" is actually required for NParMax
       }
 
 
