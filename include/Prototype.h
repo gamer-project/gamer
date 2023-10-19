@@ -387,8 +387,8 @@ void Init_ExtAccPot();
 void End_ExtAccPot();
 void Init_LoadExtPotTable();
 void Init_MemAllocate_PoissonGravity( const int Pot_NPatchGroup );
-void Init_Set_Default_MG_Parameter( int &Max_Iter, int &NPre_Smooth, int &NPost_Smooth, double &Tolerated_Error );
-void Init_Set_Default_SOR_Parameter( double &SOR_Omega, int &SOR_Max_Iter, int &SOR_Min_Iter );
+void Init_Set_Default_MG_Parameter();
+void Init_Set_Default_SOR_Parameter();
 void Output_PreparedPatch_Poisson( const int TLv, const int TPID, const int TComp,
                                    const real h_Rho_Array_P   [][RHO_NXT][RHO_NXT][RHO_NXT],
                                    const real h_Pot_Array_P_In[][POT_NXT][POT_NXT][POT_NXT],
@@ -533,6 +533,12 @@ void MHD_BoundaryCondition_User( real **Array, const int BC_Face, const int NVar
                                  const double Time, const double dh, const double *Corner, const int lv );
 void MHD_Init_BField_ByVecPot_File( const int B_lv );
 void MHD_Init_BField_ByVecPot_Function( const int B_lv );
+real MHD_ResetByUser_A2Bx( const real *Ax, const real *Ay, const real *Az,
+                           const int i, const int j, const int k, const double dh );
+real MHD_ResetByUser_A2By( const real *Ax, const real *Ay, const real *Az,
+                           const int i, const int j, const int k, const double dh );
+real MHD_ResetByUser_A2Bz( const real *Ax, const real *Ay, const real *Az,
+                           const int i, const int j, const int k, const double dh );
 #ifdef LOAD_BALANCE
 void MHD_LB_EnsureBFieldConsistencyAfterRestrict( const int lv );
 void MHD_LB_AllocateElectricArray( const int FaLv );

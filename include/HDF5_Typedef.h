@@ -293,6 +293,7 @@ struct SymConst_t
 #  ifdef MHD
    int    EulerY;
 #  endif
+   int    MHM_CheckPredict;
    int    EoSNAuxMax;
    int    EoSNTableMax;
 
@@ -732,6 +733,7 @@ struct InputPara_t
    int    Opt__Output_Restart;
    int    Opt__Output_Step;
    double Opt__Output_Dt;
+   char  *Opt__Output_Text_Format_Flt;
    double Output_PartX;
    double Output_PartY;
    double Output_PartZ;

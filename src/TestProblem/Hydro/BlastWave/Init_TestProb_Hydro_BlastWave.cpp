@@ -5,15 +5,31 @@
 
 // problem-specific global variables
 // =======================================================================================
-static double Blast_Dens_Bg;       // background mass density
-static double Blast_Pres_Bg;       // background pressure
-static double Blast_Pres_Exp;      // explosion pressure
-static double Blast_Radius;        // explosion radius
-static double Blast_Center[3];     // explosion center
+static double Blast_Dens_Bg;        // background mass density
+static double Blast_Pres_Bg;        // background pressure
+static double Blast_Pres_Exp;       // explosion pressure
+static double Blast_Radius;         // explosion radius
+static double Blast_Center[3];      // explosion center
 #ifdef MHD
-static double Blast_BField;        // magnetic field strength along the diagonal direction
+static double Blast_BField;         // magnetic field strength along the diagonal direction
+       double Blast_ResetB_amp;     // amplitude (for resetting magnetic field)
+       double Blast_ResetB_r0;      // scale radius
+       double Blast_ResetB_tmin;    // starting time
+       double Blast_ResetB_tmax;    // ending time
+static bool   Blast_ResetB_VecPot;  // use vector potential to reset magnetic field (recommended)
 #endif
 // =======================================================================================
+
+// problem-specific function prototypes
+bool Flag_BlastWave( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
+#ifdef MHD
+double MHD_ResetByUser_VecPot_BlastWave( const double x, const double y, const double z, const double Time,
+                                         const double dt, const int lv, const char Component, double AuxArray[] );
+double MHD_ResetByUser_BField_BlastWave( const double x, const double y, const double z, const double Time,
+                                         const double dt, const int lv, const char Component, double AuxArray[], const double B_in,
+                                         const bool UseVecPot, const real *Ax, const real *Ay, const real *Az,
+                                         const int i, const int j, const int k );
+#endif
 
 
 
@@ -90,17 +106,22 @@ void SetParameter()
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
 // ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE_ADDRESS,      DEFAULT,       MIN,              MAX               );
+// ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE_ADDRESS,      DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Blast_Dens_Bg",     &Blast_Dens_Bg,         -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Blast_Pres_Bg",     &Blast_Pres_Bg,         -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Blast_Pres_Exp",    &Blast_Pres_Exp,        -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Blast_Radius",      &Blast_Radius,          -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Blast_Center_X",    &Blast_Center[0],       -1.0,          NoMin_double,     amr->BoxSize[0]   );
-   ReadPara->Add( "Blast_Center_Y",    &Blast_Center[1],       -1.0,          NoMin_double,     amr->BoxSize[1]   );
-   ReadPara->Add( "Blast_Center_Z",    &Blast_Center[2],       -1.0,          NoMin_double,     amr->BoxSize[2]   );
+   ReadPara->Add( "Blast_Dens_Bg",        &Blast_Dens_Bg,         -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_Pres_Bg",        &Blast_Pres_Bg,         -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_Pres_Exp",       &Blast_Pres_Exp,        -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_Radius",         &Blast_Radius,          -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_Center_X",       &Blast_Center[0],       -1.0,          NoMin_double,     amr->BoxSize[0]   );
+   ReadPara->Add( "Blast_Center_Y",       &Blast_Center[1],       -1.0,          NoMin_double,     amr->BoxSize[1]   );
+   ReadPara->Add( "Blast_Center_Z",       &Blast_Center[2],       -1.0,          NoMin_double,     amr->BoxSize[2]   );
 #  ifdef MHD
-   ReadPara->Add( "Blast_BField",      &Blast_BField,           5.0e-2,       NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Blast_BField",         &Blast_BField,           5.0e-2,       NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Blast_ResetB_amp",     &Blast_ResetB_amp,       1.0e2,        0.0,              NoMax_double      );
+   ReadPara->Add( "Blast_ResetB_r0",      &Blast_ResetB_r0,        1.0e-2,       Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_ResetB_tmin",    &Blast_ResetB_tmin,      1.0e-3,       0.0,              NoMax_double      );
+   ReadPara->Add( "Blast_ResetB_tmax",    &Blast_ResetB_tmax,      2.0e-3,       0.0,              NoMax_double      );
+   ReadPara->Add( "Blast_ResetB_VecPot",  &Blast_ResetB_VecPot,    true,         Useless_bool,     Useless_bool      );
 #  endif
 
    ReadPara->Read( FileName );
@@ -116,18 +137,18 @@ void SetParameter()
 
 
 // (3) reset other general-purpose parameters
-//     --> a helper macro PRINT_WARNING is defined in TestProb.h
+//     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const double End_T_Default    = 5.0e-3;
    const long   End_Step_Default = __INT_MAX__;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
-      PRINT_WARNING( "END_STEP", END_STEP, FORMAT_LONG );
+      PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
    if ( END_T < 0.0 ) {
       END_T = End_T_Default;
-      PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
+      PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
 
 
@@ -152,6 +173,14 @@ void SetParameter()
                                                                                        Blast_Center[2] );
 #     ifdef MHD
       Aux_Message( stdout, "  magnetic field strength   = %13.7e\n", Blast_BField );
+      Aux_Message( stdout, "  resetting magnetic field  = %d\n",     OPT__RESET_FLUID );
+      if ( OPT__RESET_FLUID ) {
+      Aux_Message( stdout, "     amplitude              = %13.7e\n", Blast_ResetB_amp );
+      Aux_Message( stdout, "     scale radius           = %13.7e\n", Blast_ResetB_r0 );
+      Aux_Message( stdout, "     starting time          = %13.7e\n", Blast_ResetB_tmin );
+      Aux_Message( stdout, "     ending time            = %13.7e\n", Blast_ResetB_tmax );
+      Aux_Message( stdout, "     use vector potential   = %s\n",     (Blast_ResetB_VecPot)?"YES":"NO" );
+      }
 #     endif
       Aux_Message( stdout, "=============================================================================\n" );
    }
@@ -269,7 +298,10 @@ void Init_TestProb_Hydro_BlastWave()
    Init_Function_User_Ptr        = SetGridIC;
 #  ifdef MHD
    Init_Function_BField_User_Ptr = SetBFieldIC;
+   MHD_ResetByUser_BField_Ptr    = MHD_ResetByUser_BField_BlastWave;
+   MHD_ResetByUser_VecPot_Ptr    = (Blast_ResetB_VecPot) ? MHD_ResetByUser_VecPot_BlastWave : NULL;
 #  endif
+   Flag_User_Ptr                 = Flag_BlastWave;
 #  endif // #if ( MODEL == HYDRO )
 
 

@@ -48,6 +48,14 @@ extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double
 #endif
 extern int (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
                                         const double dt, const int lv, double AuxArray[] );
+#ifdef MHD
+extern double (*MHD_ResetByUser_VecPot_Ptr)( const double x, const double y, const double z, const double Time,
+                                             const double dt, const int lv, const char Component, double AuxArray[] );
+extern double (*MHD_ResetByUser_BField_Ptr)( const double x, const double y, const double z, const double Time,
+                                             const double dt, const int lv, const char Component, double AuxArray[], const double B_in,
+                                             const bool UseVecPot, const real *Ax, const real *Ay, const real *Az,
+                                             const int i, const int j, const int k );
+#endif
 extern void (*End_User_Ptr)();
 #ifdef GRAVITY
 extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,
@@ -74,21 +82,6 @@ extern void (*Init_DerivedField_User_Ptr)();
 #ifdef FEEDBACK
 extern void (*FB_Init_User_Ptr)();
 #endif
-
-
-// helper macro for printing warning messages when resetting parameters
-#  define FORMAT_INT       %- 21d
-#  define FORMAT_LONG      %- 21ld
-#  define FORMAT_UINT      %- 21u
-#  define FORMAT_ULONG     %- 21lu
-#  define FORMAT_BOOL      %- 21d
-#  define FORMAT_REAL      %- 21.14e
-#  define PRINT_WARNING( name, var, format )                                                             \
-   {                                                                                                     \
-      if ( MPI_Rank == 0 )                                                                               \
-         Aux_Message( stderr, "WARNING : parameter [%-25s] is reset to [" EXPAND_AND_QUOTE(format) "] "  \
-                              "for the adopted test problem\n", name, var );                             \
-   }
 
 
 
