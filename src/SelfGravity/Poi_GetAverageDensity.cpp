@@ -155,13 +155,8 @@ void Poi_GetAverageDensity()
    }
 
 // collect particle mass from all ranks
-#  ifdef FLOAT8
-   MPI_Gatherv( amr->Par->Mass, amr->Par->NPar_AcPlusInac, MPI_DOUBLE,
-                ParMass_AllRank, Count, Disp, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-#  else
-   MPI_Gatherv( amr->Par->Mass, amr->Par->NPar_AcPlusInac, MPI_FLOAT,
-                ParMass_AllRank, Count, Disp, MPI_FLOAT,  0, MPI_COMM_WORLD );
-#  endif
+   MPI_Gatherv( amr->Par->Mass, amr->Par->NPar_AcPlusInac, MPI_GAMER_REAL,
+                ParMass_AllRank, Count, Disp, MPI_GAMER_REAL, 0, MPI_COMM_WORLD );
 
    if ( MPI_Rank == 0 )
    {
