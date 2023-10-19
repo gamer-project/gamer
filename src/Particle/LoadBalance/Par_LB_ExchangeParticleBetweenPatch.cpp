@@ -132,7 +132,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 #     endif
 
       NSendParTotal            += (long)NParThisPatch;
-      SendBuf_NParEachPatch[t]  = NParThisPatch;
+      SendBuf_NParEachPatch[t]  =       NParThisPatch;
    } // for (int t=0; t<Send_NPatchTotal; t++)
 
 

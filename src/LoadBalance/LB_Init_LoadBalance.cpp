@@ -411,7 +411,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 #  endif
 
 // 1.2 receive count
-   MPI_Alltoall( Send_NCount_Patch,   1, MPI_INT , Recv_NCount_Patch,   1, MPI_INT , MPI_COMM_WORLD );
+   MPI_Alltoall( Send_NCount_Patch,   1, MPI_INT,  Recv_NCount_Patch,   1, MPI_INT,  MPI_COMM_WORLD );
 #  ifdef PARTICLE
    MPI_Alltoall( Send_NCount_ParData, 1, MPI_LONG, Recv_NCount_ParData, 1, MPI_LONG, MPI_COMM_WORLD );
 #  endif

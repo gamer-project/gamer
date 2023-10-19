@@ -169,7 +169,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
    int  *SendBuf_NParEachPatch = new int  [Real_NPatchTotal];
    long *SendBuf_Offset        = new long [Real_NPatchTotal];
 
-   int PID, NParThisPatch;
+   int  PID, NParThisPatch;
    long NSendParTotal = 0L;
 
 // loop over all target real patches
@@ -189,7 +189,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
 #     endif
 
       NSendParTotal            += (long)NParThisPatch;
-      SendBuf_NParEachPatch[t]  = NParThisPatch;
+      SendBuf_NParEachPatch[t]  =       NParThisPatch;
    } // for (int t=0; t<Real_NPatchTotal; t++)
 
 // get the array offset of each patch (mainly for the OpenMP parallelization)

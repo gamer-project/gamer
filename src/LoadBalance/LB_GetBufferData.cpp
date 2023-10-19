@@ -187,10 +187,10 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
    int  *RecvY_NList=NULL, **RecvY_IDList=NULL, **RecvY_SibList=NULL;
 #  endif
 
-   long *Send_NCount  = new long [MPI_NRank];
-   long *Recv_NCount  = new long [MPI_NRank];
-   long *Send_NDisp   = new long [MPI_NRank];
-   long *Recv_NDisp   = new long [MPI_NRank];
+   long *Send_NCount = new long [MPI_NRank];
+   long *Recv_NCount = new long [MPI_NRank];
+   long *Send_NDisp  = new long [MPI_NRank];
+   long *Recv_NDisp  = new long [MPI_NRank];
 
 
 // 1. set up the number of elements to be sent and received in each cell and the send/recv lists

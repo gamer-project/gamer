@@ -39,7 +39,7 @@ void MPI_Alltoallv_GAMER(T *SendBuf, long *Send_NCount, long *Send_NDisp, MPI_Da
       MPI_Request *req_send_and_recv = new MPI_Request[2*MPI_NRank];
 
 // for numbering the MPI_Isend/Irecv tags: since there are total MPI_NRank*MPI_NRank data-transferring tasks, we tag the data-transferring task between rank r_1(send) <--> rank r_2(recv) by number: r_1*MPI_NRank+r_2 
-      for(int r=0; r<MPI_NRank; r++)
+      for (int r=0; r<MPI_NRank; r++)
       {
           MPI_Isend(SendBuf+Send_NDisp[r], (int)Send_NCount[r], Send_Datatype, r, MPI_Rank*MPI_NRank + r       , comm, &req_send_and_recv[2*r  ]);
           MPI_Irecv(RecvBuf+Recv_NDisp[r], (int)Recv_NCount[r], Recv_Datatype, r,        r*MPI_NRank + MPI_Rank, comm, &req_send_and_recv[2*r+1]);
@@ -82,5 +82,3 @@ template void MPI_Alltoallv_GAMER <int>      ( int    *SendBuf, long *Send_NCoun
 template void MPI_Alltoallv_GAMER <long>     ( long   *SendBuf, long *Send_NCount, long *Send_NDisp, MPI_Datatype Send_Datatype, long   *RecvBuf, long *Recv_NCount, long *Recv_NDisp, MPI_Datatype Recv_Datatype, MPI_Comm comm );
 
 #endif // #ifndef SERIAL
-
-

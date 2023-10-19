@@ -43,9 +43,9 @@ U Mis_BinarySearch( const T Array[], U Min, U Max, const T Key )
 
 
 // explicit template instantiation
-template int Mis_BinarySearch <int,int>    ( const int   Array[], int Min, int Max, const int   Key );
-template int Mis_BinarySearch <int,long>   ( const long  Array[], int Min, int Max, const long  Key );
-template int Mis_BinarySearch <int,ulong>  ( const ulong Array[], int Min, int Max, const ulong Key );
+template int  Mis_BinarySearch <int,int>    ( const int   Array[], int  Min, int  Max, const int   Key );
+template int  Mis_BinarySearch <int,long>   ( const long  Array[], int  Min, int  Max, const long  Key );
+template int  Mis_BinarySearch <int,ulong>  ( const ulong Array[], int  Min, int  Max, const ulong Key );
 
 template long Mis_BinarySearch <long,int>   ( const int   Array[], long Min, long Max, const int   Key );
 template long Mis_BinarySearch <long,long>  ( const long  Array[], long Min, long Max, const long  Key );

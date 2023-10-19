@@ -455,8 +455,8 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 
 // 3. sort *Cr1D_Away[] and CFB_SibLBIdx_Away[]
 // ============================================================================================================
-   Mis_Heapsort( NNew_Away, NewCr1D_Away, NewCr1D_Away_IdxTable );
-   Mis_Heapsort<int,ulong>( NDel_Away, DelCr1D_Away, NULL       );
+   Mis_Heapsort           ( NNew_Away, NewCr1D_Away, NewCr1D_Away_IdxTable );
+   Mis_Heapsort<int,ulong>( NDel_Away, DelCr1D_Away, NULL                  );
 
 // must ensure that CFB_SibLBIdx_Away[] and Cr1D_Away[] are sorted consistently
 // --> so that the coarse-fine interface B field data received in MHD_LB_Refine_GetCoarseFineInterfaceBField()

@@ -255,8 +255,8 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
    for (int r=0; r<MPI_NRank; r++)
    {
-      NSendPatchTotal += NPatchForEachRank[r];
-      NSendParTotal   += (long)NParForEachRank[r];
+      NSendPatchTotal +=       NPatchForEachRank[r];
+      NSendParTotal   += (long)NParForEachRank  [r];
    }
 
    SendBuf_NParEachPatch  = new int  [NSendPatchTotal];
