@@ -218,10 +218,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    WaveW = 2.0*M_PI/(Acoustic_WaveLength/Acoustic_Cs);
    Phase = WaveK*r - Acoustic_Sign*WaveW*Time + Acoustic_Phase0;
 
-   // Dens  = 1.0 + Acoustic_RhoAmp*cos(Phase);
-   Dens  = 1.0 + Acoustic_RhoAmp*sin(Phase);
-   // Mom   = Dens*( v1*cos(Phase) + Acoustic_v0 );
-   Mom   = 1.0*( v1*sin(Phase) + Acoustic_v0 );
+   Dens  = 1.0 + Acoustic_RhoAmp*cos(Phase);
+   Mom   = Dens*( v1*cos(Phase) + Acoustic_v0 );
 
    switch ( Acoustic_Dir ) {
       case 0:  MomX = Mom;            MomY = 0.0;   MomZ = 0.0;   break;
@@ -230,12 +228,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       case 3:  MomX = Mom/sqrt(3.0);  MomY = MomX;  MomZ = MomX;  break;
    }
 
-   // Pres  = P0 + P1*cos(Phase);
-   // Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
-   //                                   EoS_AuxArray_Int, h_EoS_Table );   // assuming EoS requires no passive scalars
-   // Etot  = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );     // do NOT include magnetic energy here
-   const real h0 = P0/(GAMMA-1.0) + 0.5 * 1.0 * Acoustic_v0 * Acoustic_v0 + P0;
-   Etot = P0 / (GAMMA-1.0) + 0.5 * 1.0 * Acoustic_v0 * Acoustic_v0 + Acoustic_RhoAmp * sin(Phase) * h0;
+   Pres  = P0 + P1*cos(Phase);
+   Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
+                                     EoS_AuxArray_Int, h_EoS_Table );   // assuming EoS requires no passive scalars
+   Etot  = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );     // do NOT include magnetic energy here
 
 // set the output array
    fluid[DENS] = Dens;
