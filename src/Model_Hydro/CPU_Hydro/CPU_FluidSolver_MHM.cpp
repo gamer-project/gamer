@@ -352,6 +352,7 @@ void CPU_FluidSolver_MHM(
 #     endif
 #     endif // #if ( FLU_SCHEME == MHM )
 
+
 //    loop over all patch groups
 //    --> CPU/GPU solver: use different (OpenMP threads) / (CUDA thread blocks)
 //        to work on different patch groups

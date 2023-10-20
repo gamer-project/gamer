@@ -242,8 +242,8 @@
 //       MHD on : 3 for all EoS
 //       MHD off: none
 
-//#  define HLLC_WAVESPEED   HLL_WAVESPEED_DAVIS
-#  define HLLC_WAVESPEED   HLL_WAVESPEED_PVRS
+#  define HLLC_WAVESPEED   HLL_WAVESPEED_DAVIS
+//#  define HLLC_WAVESPEED   HLL_WAVESPEED_PVRS
 #ifdef MHD
 #  define HLLE_WAVESPEED   HLL_WAVESPEED_DAVIS
 #else
