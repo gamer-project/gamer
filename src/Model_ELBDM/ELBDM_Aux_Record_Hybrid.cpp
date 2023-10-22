@@ -27,8 +27,8 @@ void ELBDM_Aux_Record_Hybrid()
 
 
 // compute number of wave patches on all levels
-   real WavePatchCount   = 0.0;
-   real TotalPatchCount  = 0.0;
+   long WavePatchCount   = 0;
+   long TotalPatchCount  = 0;
    real WaveVolume       = 0.0;
    real TotalVolume      = 0.0;
    int  WaveLevel        = -1;
