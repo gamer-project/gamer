@@ -84,13 +84,17 @@ def interp(psi, n_in, n_out):
         psihat = unpad(psihat, ((n_pad, n_pad), (n_pad, n_pad), (n_pad, n_pad)))
 
     # Shift zero frequencies back to outside of cube
-    print("Computing IFFT... ", end="")
-    # Multiply by n_total to undo backward normalisation
     psihat = np.fft.fftshift(psihat) * n_total
-    print("done!")
+
+    print("Computing IFFT... ", end="")
 
     # Inverse FFT
     psihr = np.fft.ifftn(psihat)
+
+    # Multiply by new n_total to undo backward normalisation
+    psihr *= np.prod(psihr.shape)
+
+    print("done!")
 
     # Delete large array in frequency domain to save memory
     del psihat
