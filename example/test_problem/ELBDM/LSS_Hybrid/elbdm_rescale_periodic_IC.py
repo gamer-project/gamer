@@ -53,7 +53,7 @@ def unpad(x, pad_width):
         slices.append(slice(c[0], e))
     return x[tuple(slices)]
 
-def interp(psi, n_in, n_out, n_threads):
+def interp(psi, n_in, n_out):
     if n_in == n_out:
         print("n_in == n_out, no rescaling necessary!")
         return psi
@@ -106,7 +106,7 @@ del lr
 print("done!")
 
 # Interpolate data
-psihr = interp(psi, n_in, n_out, n_threads).astype(cprec)
+psihr = interp(psi, n_in, n_out).astype(cprec)
 
 # Write data to disk
 print("Writing wave function to binary file... ", end="")
