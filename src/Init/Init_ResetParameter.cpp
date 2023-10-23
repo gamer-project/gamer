@@ -64,7 +64,7 @@ void Init_ResetParameter()
       DT__FLUID = 0.40;
 #     elif ( FLU_SCHEME == MHM_RP )
 //    CFL factor is recommened to be larger than 0.4 for the Athena limiter
-      DT__FLUID = ( OPT__LR_LIMITER == LR_ATHENA ) 0.4 : 0.3;
+      DT__FLUID = ( OPT__LR_LIMITER == LR_LIMITER_ATHENA ) 0.4 : 0.3;
 #     elif ( FLU_SCHEME == CTU )
       DT__FLUID = 0.50;
 #     else
