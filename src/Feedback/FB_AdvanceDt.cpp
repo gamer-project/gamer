@@ -6,14 +6,14 @@
 
 // prototypes of built-in feedbacks
 int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
-            const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
+            const int NPar, const long *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
             real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
             const int TID, RandomNumber_t *RNG );
 
 
 // user-specified feedback to be set by a test problem initializer
 int (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                    const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
+                    const int NPar, const long *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
                     real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
                     const int TID, RandomNumber_t *RNG ) = NULL;
 
@@ -196,8 +196,8 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 //    5.2. sort PID by position
 //         --> necessary for fixing the order of particles in different patches
-      int *NearbyPIDList_IdxTable = new int [NNearbyPatch];
-      int *NearbyPIDList_Old      = new int [NNearbyPatch];
+      long *NearbyPIDList_IdxTable = new long [NNearbyPatch];
+      int  *NearbyPIDList_Old      = new int  [NNearbyPatch];
       real **PCr = NULL;
       Aux_AllocateArray2D( PCr, 3, NNearbyPatch );
 
@@ -231,7 +231,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //       --> allocate the **maximum** required size among all nearby patches of a given patch group **just once**
 //           for better performance
       real *ParAtt_Local[PAR_NATT_TOTAL];
-      int  *ParSortID = NULL;
+      long *ParSortID = NULL;
       int   NParMax   = -1;
 
       for (int v=0; v<PAR_NATT_TOTAL; v++)   ParAtt_Local[v] = NULL;
@@ -250,7 +250,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
          for (int v=0; v<PAR_NATT_TOTAL; v++)
             if ( ParAttBitIdx_In & BIDX(v) )    ParAtt_Local[v] = new real [NParMax];
 
-         ParSortID = new int [NParMax];   // it will fail if "long" is actually required for NParMax
+         ParSortID = new long [NParMax];  // it will fail if "long" is actually required for NParMax
       }
 
 

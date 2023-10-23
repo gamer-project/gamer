@@ -250,12 +250,13 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
 // 1-2. allocate the send buffers
 // both NSendPatchTotal and NSendParTotal do NOT include patches without particles
-   int NSendPatchTotal=0, NSendParTotal=0;
+   int  NSendPatchTotal = 0;
+   long NSendParTotal   = 0L;
 
    for (int r=0; r<MPI_NRank; r++)
    {
-      NSendPatchTotal += NPatchForEachRank[r];
-      NSendParTotal   += NParForEachRank  [r];
+      NSendPatchTotal +=       NPatchForEachRank[r];
+      NSendParTotal   += (long)NParForEachRank  [r];
    }
 
    SendBuf_NParEachPatch  = new int  [NSendPatchTotal];
@@ -385,7 +386,8 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
    const bool Exchange_NPatchEachRank_Yes = true;
    const bool Exchange_LBIdxEachRank_Yes  = true;
    const bool Exchange_ParDataEachRank    = !JustCountNPar;
-   int  NRecvPatchTotal, NRecvParTotal;
+   int  NRecvPatchTotal;
+   long NRecvParTotal;
 
    char Timer_Comment[50];
    sprintf( Timer_Comment, "%3d %15s", FaLv, "Par_Collect" );
