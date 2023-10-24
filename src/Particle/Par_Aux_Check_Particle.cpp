@@ -26,7 +26,7 @@
 void Par_Aux_Check_Particle( const char *comment )
 {
 
-   const int   NCheck        = 11;
+   const int       NCheck    = 11;
    const real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
 
    int     PassAll    = true;

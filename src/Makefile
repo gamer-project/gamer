@@ -601,7 +601,7 @@ CPU_FILE    += Buf_AllocateBufferPatch.cpp  Buf_AllocateBufferPatch_Base.cpp  Bu
                Buf_ResetBufferFlux.cpp
 
 CPU_FILE    += MPI_ExchangeBoundaryFlag.cpp  MPI_ExchangeBufferPosition.cpp  MPI_ExchangeData.cpp \
-               Init_MPI.cpp  MPI_Exit.cpp
+               Init_MPI.cpp  MPI_Exit.cpp  MPI_Alltoallv_GAMER.cpp
 
 CPU_FILE    += Output_BoundaryFlagList.cpp  Output_ExchangeDataPatchList.cpp  Output_ExchangeFluxPatchList.cpp \
                Output_ExchangePatchMap.cpp
@@ -1013,6 +1013,9 @@ else
 	fi)
 endif
 	@rm -f ./*.linkinfo
+
+# force re-compiling Aux_TakeNote.cpp to get the correct compilation time
+	$(ECHO)mv $(OBJ_PATH)/$(PREFIX_CPU)Aux_TakeNote.o $(OBJ_PATH)/$(PREFIX_CPU)Aux_TakeNote_backup.o
 
 
 # clean

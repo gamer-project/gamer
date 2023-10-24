@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2469)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2471)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -242,6 +242,8 @@ Procedure for outputting new variables:
 //                2467 : 2023/05/18 --> replace OPT__INIT_BFIELD_BYFILE by OPT__INIT_BFIELD_BYVECPOT
 //                2468 : 2023/06/24 --> output OPT__SORT_PATCH_BY_LBIDX
 //                2469 : 2023/09/09 --> output MHM_CHECK_PREDICT
+//                2470 : 2023/10/16 --> output OPT__OUTPUT_TEXT_FORMAT_FLT
+//                2470 : 2023/10/23 --> output particle attribute with assigned precision set by FLOAT8_PAR in Makefile; record value of FLOAT8_PAR as Makefile.Float8_Par and KeyInfo.Float8_Par
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1415,7 +1417,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2469;
+   KeyInfo.FormatVersion        = 2471;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2402,43 +2404,44 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.IntOppSign0thOrder      = INT_OPP_SIGN_0TH_ORDER;
 
 // data dump
-   InputPara.Opt__Output_Total       = OPT__OUTPUT_TOTAL;
-   InputPara.Opt__Output_Part        = OPT__OUTPUT_PART;
-   InputPara.Opt__Output_User        = OPT__OUTPUT_USER;
+   InputPara.Opt__Output_Total           = OPT__OUTPUT_TOTAL;
+   InputPara.Opt__Output_Part            = OPT__OUTPUT_PART;
+   InputPara.Opt__Output_User            = OPT__OUTPUT_USER;
 #  ifdef PARTICLE
-   InputPara.Opt__Output_Par_Mode    = OPT__OUTPUT_PAR_MODE;
+   InputPara.Opt__Output_Par_Mode        = OPT__OUTPUT_PAR_MODE;
 #  endif
-   InputPara.Opt__Output_BasePS      = OPT__OUTPUT_BASEPS;
-   InputPara.Opt__Output_Base        = OPT__OUTPUT_BASE;
+   InputPara.Opt__Output_BasePS          = OPT__OUTPUT_BASEPS;
+   InputPara.Opt__Output_Base            = OPT__OUTPUT_BASE;
 #  ifdef GRAVITY
-   InputPara.Opt__Output_Pot         = OPT__OUTPUT_POT;
+   InputPara.Opt__Output_Pot             = OPT__OUTPUT_POT;
 #  endif
 #  ifdef PARTICLE
-   InputPara.Opt__Output_ParDens     = OPT__OUTPUT_PAR_DENS;
+   InputPara.Opt__Output_ParDens         = OPT__OUTPUT_PAR_DENS;
 #  endif
 #  ifdef MHD
-   InputPara.Opt__Output_CC_Mag      = OPT__OUTPUT_CC_MAG;
+   InputPara.Opt__Output_CC_Mag          = OPT__OUTPUT_CC_MAG;
 #  endif
 #  if ( MODEL == HYDRO )
-   InputPara.Opt__Output_Pres        = OPT__OUTPUT_PRES;
-   InputPara.Opt__Output_Temp        = OPT__OUTPUT_TEMP;
-   InputPara.Opt__Output_Entr        = OPT__OUTPUT_ENTR;
-   InputPara.Opt__Output_Cs          = OPT__OUTPUT_CS;
-   InputPara.Opt__Output_DivVel      = OPT__OUTPUT_DIVVEL;
-   InputPara.Opt__Output_Mach        = OPT__OUTPUT_MACH;
+   InputPara.Opt__Output_Pres            = OPT__OUTPUT_PRES;
+   InputPara.Opt__Output_Temp            = OPT__OUTPUT_TEMP;
+   InputPara.Opt__Output_Entr            = OPT__OUTPUT_ENTR;
+   InputPara.Opt__Output_Cs              = OPT__OUTPUT_CS;
+   InputPara.Opt__Output_DivVel          = OPT__OUTPUT_DIVVEL;
+   InputPara.Opt__Output_Mach            = OPT__OUTPUT_MACH;
 #  ifdef MHD
-   InputPara.Opt__Output_DivMag      = OPT__OUTPUT_DIVMAG;
+   InputPara.Opt__Output_DivMag          = OPT__OUTPUT_DIVMAG;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
-   InputPara.Opt__Output_UserField   = OPT__OUTPUT_USER_FIELD;
-   InputPara.Opt__Output_Mode        = OPT__OUTPUT_MODE;
-   InputPara.Opt__Output_Restart     = OPT__OUTPUT_RESTART;
-   InputPara.Opt__Output_Step        = OUTPUT_STEP;
-   InputPara.Opt__Output_Dt          = OUTPUT_DT;
-   InputPara.Output_PartX            = OUTPUT_PART_X;
-   InputPara.Output_PartY            = OUTPUT_PART_Y;
-   InputPara.Output_PartZ            = OUTPUT_PART_Z;
-   InputPara.InitDumpID              = INIT_DUMPID;
+   InputPara.Opt__Output_UserField       = OPT__OUTPUT_USER_FIELD;
+   InputPara.Opt__Output_Mode            = OPT__OUTPUT_MODE;
+   InputPara.Opt__Output_Restart         = OPT__OUTPUT_RESTART;
+   InputPara.Opt__Output_Step            = OUTPUT_STEP;
+   InputPara.Opt__Output_Dt              = OUTPUT_DT;
+   InputPara.Opt__Output_Text_Format_Flt = OPT__OUTPUT_TEXT_FORMAT_FLT;
+   InputPara.Output_PartX                = OUTPUT_PART_X;
+   InputPara.Output_PartY                = OUTPUT_PART_Y;
+   InputPara.Output_PartZ                = OUTPUT_PART_Z;
+   InputPara.InitDumpID                  = INIT_DUMPID;
 
 // miscellaneous
    InputPara.Opt__Verbose            = OPT__VERBOSE;
@@ -2641,6 +2644,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 #ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Float8_Par",             HOFFSET(Makefile_t,Float8_Par             ), H5T_NATIVE_INT );
 #endif
+
    H5Tinsert( H5_TypeID, "UseGPU",                 HOFFSET(Makefile_t,UseGPU                 ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "GAMER_Debug",            HOFFSET(Makefile_t,GAMER_Debug            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "BitwiseReproducibility", HOFFSET(Makefile_t,BitwiseReproducibility ), H5T_NATIVE_INT );
@@ -3289,43 +3293,44 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "IntOppSign0thOrder",      HOFFSET(InputPara_t,IntOppSign0thOrder     ), H5T_NATIVE_INT              );
 
 // data dump
-   H5Tinsert( H5_TypeID, "Opt__Output_Total",       HOFFSET(InputPara_t,Opt__Output_Total      ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_Part",        HOFFSET(InputPara_t,Opt__Output_Part       ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_User",        HOFFSET(InputPara_t,Opt__Output_User       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Total",           HOFFSET(InputPara_t,Opt__Output_Total          ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Part",            HOFFSET(InputPara_t,Opt__Output_Part           ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_User",            HOFFSET(InputPara_t,Opt__Output_User           ), H5T_NATIVE_INT              );
 #  ifdef PARTICLE
-   H5Tinsert( H5_TypeID, "Opt__Output_Par_Mode",    HOFFSET(InputPara_t,Opt__Output_Par_Mode   ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Par_Mode",        HOFFSET(InputPara_t,Opt__Output_Par_Mode       ), H5T_NATIVE_INT              );
 #  endif
-   H5Tinsert( H5_TypeID, "Opt__Output_BasePS",      HOFFSET(InputPara_t,Opt__Output_BasePS     ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_Base",        HOFFSET(InputPara_t,Opt__Output_Base       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_BasePS",          HOFFSET(InputPara_t,Opt__Output_BasePS         ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Base",            HOFFSET(InputPara_t,Opt__Output_Base           ), H5T_NATIVE_INT              );
 #  ifdef GRAVITY
-   H5Tinsert( H5_TypeID, "Opt__Output_Pot",         HOFFSET(InputPara_t,Opt__Output_Pot        ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Pot",             HOFFSET(InputPara_t,Opt__Output_Pot            ), H5T_NATIVE_INT              );
 #  endif
 #  ifdef PARTICLE
-   H5Tinsert( H5_TypeID, "Opt__Output_ParDens",     HOFFSET(InputPara_t,Opt__Output_ParDens    ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_ParDens",         HOFFSET(InputPara_t,Opt__Output_ParDens        ), H5T_NATIVE_INT              );
 #  endif
 #  ifdef MHD
-   H5Tinsert( H5_TypeID, "Opt__Output_CC_Mag",      HOFFSET(InputPara_t,Opt__Output_CC_Mag     ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_CC_Mag",          HOFFSET(InputPara_t,Opt__Output_CC_Mag         ), H5T_NATIVE_INT              );
 #  endif
 #  if ( MODEL == HYDRO )
-   H5Tinsert( H5_TypeID, "Opt__Output_Pres",        HOFFSET(InputPara_t,Opt__Output_Pres       ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_Temp",        HOFFSET(InputPara_t,Opt__Output_Temp       ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_Entr",        HOFFSET(InputPara_t,Opt__Output_Entr       ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_Cs",          HOFFSET(InputPara_t,Opt__Output_Cs         ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_DivVel",      HOFFSET(InputPara_t,Opt__Output_DivVel     ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_Mach",        HOFFSET(InputPara_t,Opt__Output_Mach       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Pres",            HOFFSET(InputPara_t,Opt__Output_Pres           ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Temp",            HOFFSET(InputPara_t,Opt__Output_Temp           ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Entr",            HOFFSET(InputPara_t,Opt__Output_Entr           ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Cs",              HOFFSET(InputPara_t,Opt__Output_Cs             ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_DivVel",          HOFFSET(InputPara_t,Opt__Output_DivVel         ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Mach",            HOFFSET(InputPara_t,Opt__Output_Mach           ), H5T_NATIVE_INT              );
 #  ifdef MHD
-   H5Tinsert( H5_TypeID, "Opt__Output_DivMag",      HOFFSET(InputPara_t,Opt__Output_DivMag     ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_DivMag",          HOFFSET(InputPara_t,Opt__Output_DivMag         ), H5T_NATIVE_INT              );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
-   H5Tinsert( H5_TypeID, "Opt__Output_UserField",   HOFFSET(InputPara_t,Opt__Output_UserField  ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_Mode",        HOFFSET(InputPara_t,Opt__Output_Mode       ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_Restart",     HOFFSET(InputPara_t,Opt__Output_Restart    ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_Step",        HOFFSET(InputPara_t,Opt__Output_Step       ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_Dt",          HOFFSET(InputPara_t,Opt__Output_Dt         ), H5T_NATIVE_DOUBLE           );
-   H5Tinsert( H5_TypeID, "Output_PartX",            HOFFSET(InputPara_t,Output_PartX           ), H5T_NATIVE_DOUBLE           );
-   H5Tinsert( H5_TypeID, "Output_PartY",            HOFFSET(InputPara_t,Output_PartY           ), H5T_NATIVE_DOUBLE           );
-   H5Tinsert( H5_TypeID, "Output_PartZ",            HOFFSET(InputPara_t,Output_PartZ           ), H5T_NATIVE_DOUBLE           );
-   H5Tinsert( H5_TypeID, "InitDumpID",              HOFFSET(InputPara_t,InitDumpID             ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_UserField",       HOFFSET(InputPara_t,Opt__Output_UserField      ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Mode",            HOFFSET(InputPara_t,Opt__Output_Mode           ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Restart",         HOFFSET(InputPara_t,Opt__Output_Restart        ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Step",            HOFFSET(InputPara_t,Opt__Output_Step           ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Dt",              HOFFSET(InputPara_t,Opt__Output_Dt             ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "Opt__Output_Text_Format_Flt", HOFFSET(InputPara_t,Opt__Output_Text_Format_Flt), H5_TypeID_VarStr            );
+   H5Tinsert( H5_TypeID, "Output_PartX",                HOFFSET(InputPara_t,Output_PartX               ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "Output_PartY",                HOFFSET(InputPara_t,Output_PartY               ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "Output_PartZ",                HOFFSET(InputPara_t,Output_PartZ               ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "InitDumpID",                  HOFFSET(InputPara_t,InitDumpID                 ), H5T_NATIVE_INT              );
 
 // miscellaneous
    H5Tinsert( H5_TypeID, "Opt__Verbose",            HOFFSET(InputPara_t,Opt__Verbose           ), H5T_NATIVE_INT              );

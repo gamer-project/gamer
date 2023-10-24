@@ -97,7 +97,7 @@ void LB_ExchangeFlaggedBuffer( const int lv )
    int *Match = new int [NRecv_Total];
 
 // 3.1 sort the received list
-   Mis_Heapsort( NRecv_Total, RecvBuf, NULL );
+   Mis_Heapsort<int,long>( NRecv_Total, RecvBuf, NULL );
 
 // 3.2 match the corresponding PID
    Mis_Matching_int( amr->NPatchComma[lv][1], amr->LB->IdxList_Real[lv], NRecv_Total, RecvBuf, Match );

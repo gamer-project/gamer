@@ -59,13 +59,14 @@ int Mis_Matching_char( const int N, const T Array[], const int M, const T Key[],
 //-------------------------------------------------------------------------------------------------------
 // for int Match[]
 //-------------------------------------------------------------------------------------------------------
-template <typename T>
-int Mis_Matching_int( const int N, const T Array[], const int M, const T Key[], int Match[] )
+template <typename U, typename T>
+U Mis_Matching_int( const U N, const T Array[], const U M, const T Key[], U Match[] )
 {
 
-   int Min = 0, NMatch = 0;
+   U Min    = 0;
+   U NMatch = 0;
 
-   for (int t=0; t<M; t++)
+   for (U t=0; t<M; t++)
    {
       Match[t] = Mis_BinarySearch( Array, Min, N-1, Key[t] );
 
@@ -83,9 +84,13 @@ int Mis_Matching_int( const int N, const T Array[], const int M, const T Key[], 
 
 
 // explicit template instantiation
-template int Mis_Matching_char <int>   ( const int N, const int   Array[], const int M, const int   Key[], char Match[] );
-template int Mis_Matching_char <long>  ( const int N, const long  Array[], const int M, const long  Key[], char Match[] );
-template int Mis_Matching_char <ulong> ( const int N, const ulong Array[], const int M, const ulong Key[], char Match[] );
-template int Mis_Matching_int  <int>   ( const int N, const int   Array[], const int M, const int   Key[], int  Match[] );
-template int Mis_Matching_int  <long>  ( const int N, const long  Array[], const int M, const long  Key[], int  Match[] );
-template int Mis_Matching_int  <ulong> ( const int N, const ulong Array[], const int M, const ulong Key[], int  Match[] );
+template int  Mis_Matching_char <int>        ( const int N,  const int   Array[], const int  M, const int   Key[], char Match[] );
+template int  Mis_Matching_char <long>       ( const int N,  const long  Array[], const int  M, const long  Key[], char Match[] );
+template int  Mis_Matching_char <ulong>      ( const int N,  const ulong Array[], const int  M, const ulong Key[], char Match[] );
+template int  Mis_Matching_int  <int,int>    ( const int N,  const int   Array[], const int  M, const int   Key[], int  Match[] );
+template int  Mis_Matching_int  <int,long>   ( const int N,  const long  Array[], const int  M, const long  Key[], int  Match[] );
+template int  Mis_Matching_int  <int,ulong>  ( const int N,  const ulong Array[], const int  M, const ulong Key[], int  Match[] );
+
+template long Mis_Matching_int  <long,int>   ( const long N, const int   Array[], const long M, const int   Key[], long Match[] );
+template long Mis_Matching_int  <long,long>  ( const long N, const long  Array[], const long M, const long  Key[], long Match[] );
+template long Mis_Matching_int  <long,ulong> ( const long N, const ulong Array[], const long M, const ulong Key[], long Match[] );

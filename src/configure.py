@@ -520,7 +520,6 @@ def load_arguments():
                          help="Enable double precision.\n"
                        )
 
-
     parser.add_argument( "--laohu", type=str2bool, metavar="BOOLEAN", gamer_name="LAOHU",
                          default=False,
                          help="Work on the NAOC Laohu GPU cluster.\n"

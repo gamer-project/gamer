@@ -116,8 +116,8 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 // 1. get the number of particles to be sent
    int *SendBuf_NParEachPatch = new int [Send_NPatchTotal];
 
-   int PID, NParThisPatch = 0;
-   long     NSendParTotal = 0;
+   int  PID, NParThisPatch;
+   long NSendParTotal = 0L;
 
 // loop over all target send patches
    for (int t=0; t<Send_NPatchTotal; t++)
@@ -189,7 +189,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
    int      *RecvBuf_NPatchEachRank   = Recv_NPatchEachRank;
    int      *RecvBuf_NParEachPatch    = NULL;    // will be allocated by Par_LB_SendParticleData and must be free'd later
    real_par *RecvBuf_ParDataEachPatch = NULL;    // a pointer to the MPI recv buffer declared in LB_GetBufferData
-                                             // --> don't have to be free'd here
+                                                 // --> don't have to be free'd here
 
    long     *SendBuf_LBIdxEachRank    = NULL;    // useless and does not need to be allocated
    long     *RecvBuf_LBIdxEachRank    = NULL;    // useless and will not be allocated by Par_LB_SendParticleData

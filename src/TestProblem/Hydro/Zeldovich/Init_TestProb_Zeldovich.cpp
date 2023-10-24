@@ -205,18 +205,18 @@ void SetParameter()
 
 
 // (3) reset other general-purpose parameters
-//     --> a helper macro PRINT_WARNING is defined in TestProb.h
+//     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const long   End_Step_Default = __INT_MAX__;
    const double End_T_Default    = 1.0;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
-      PRINT_WARNING( "END_STEP", END_STEP, FORMAT_LONG );
+      PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
    if ( END_T < 0.0 ) {
       END_T = End_T_Default;
-      PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
+      PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
 
 #  ifdef PARTICLE
@@ -226,7 +226,7 @@ void SetParameter()
    else if ( Gas_Par_Setup == 2 )   // overwrite the total number of particles in particle-only setup
       amr->Par->NPar_Active_AllRank = (long)NPar_X*SQR((long)NPar_YZ);
 
-   PRINT_WARNING( "PAR_NPAR", amr->Par->NPar_Active_AllRank, FORMAT_LONG );
+   PRINT_RESET_PARA( amr->Par->NPar_Active_AllRank, FORMAT_LONG, "(PAR_NPAR in Input__Parameter)" );
 #  endif
 
 

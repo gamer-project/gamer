@@ -553,7 +553,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
       int *TempIDList = new int [ LB_RecvH_NList[r] ];
       memcpy( TempIDList, LB_RecvH_IDList[r], LB_RecvH_NList[r]*sizeof(int) );
 
-      Mis_Heapsort( LB_RecvH_NList[r], TempIDList, NULL );
+      Mis_Heapsort<int,int>( LB_RecvH_NList[r], TempIDList, NULL );
 
       for (int t=1; t<LB_RecvH_NList[r]; t++)
          if ( TempIDList[t] == TempIDList[t-1] )
@@ -658,7 +658,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
       int *TempIDList = new int [ LB_RecvG_NList[r] ];
       memcpy( TempIDList, LB_RecvG_IDList[r], LB_RecvG_NList[r]*sizeof(int) );
 
-      Mis_Heapsort( LB_RecvG_NList[r], TempIDList, NULL );
+      Mis_Heapsort<int,int>( LB_RecvG_NList[r], TempIDList, NULL );
 
       for (int t=1; t<LB_RecvG_NList[r]; t++)
          if ( TempIDList[t] == TempIDList[t-1] )

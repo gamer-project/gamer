@@ -24,7 +24,7 @@
 //
 // Return      :  IdxTable
 //-------------------------------------------------------------------------------------------------------
-void Par_SortByPos( const long NPar, const real_par *PosX, const real_par *PosY, const real_par *PosZ, int *IdxTable )
+void Par_SortByPos( const long NPar, const real_par *PosX, const real_par *PosY, const real_par *PosZ, long *IdxTable )
 {
 
    long NParSameX, NParSameY;
@@ -49,8 +49,8 @@ void Par_SortByPos( const long NPar, const real_par *PosX, const real_par *PosY,
 
       if ( NParSameX > 1 )
       {
-         int      *SortByX_IdxTable = new int      [NParSameX];  // it will fail if "long" is actually required
-         int      *SortByY_IdxTable = new int      [NParSameX];  // it will fail if "long" is actually required
+         long     *SortByX_IdxTable = new long [NParSameX];
+         long     *SortByY_IdxTable = new long [NParSameX];
          real_par *PosY_Sorted      = new real_par [NParSameX];
 
          for (long y=0; y<NParSameX; y++)
@@ -74,7 +74,7 @@ void Par_SortByPos( const long NPar, const real_par *PosX, const real_par *PosY,
 
             if ( NParSameY > 1 )
             {
-               int      *SortByZ_IdxTable = new int      [NParSameY];  // it will fail if "long" is actually required
+               long     *SortByZ_IdxTable = new long [NParSameY];
                real_par *PosZ_Sorted      = new real_par [NParSameY];
 
                for (long z=0; z<NParSameY; z++)
