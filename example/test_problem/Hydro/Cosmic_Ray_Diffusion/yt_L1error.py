@@ -1,7 +1,10 @@
-"""
-"""
+#!/bin/python3
+import sys
 import numpy as np
 import matplotlib.pylab as plt
+
+
+sys.dont_write_bytecode = True
 import ana_solution as ana
 
 

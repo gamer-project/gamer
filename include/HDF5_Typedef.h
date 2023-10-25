@@ -643,9 +643,9 @@ struct InputPara_t
 // microphysics
 #  ifdef MICROPHYSICS
    #ifdef CR_DIFFUSION
-   double CR_Diff_Para;
-   double CR_Diff_Perp;
-   double Dt_Diffusion;
+   double CR_Diffusion_ParaCoeff;
+   double CR_Diffusion_PerpCoeff;
+   double CR_Diffusion_Dt;
    #endif
 #  endif
 
