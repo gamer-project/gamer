@@ -30,6 +30,8 @@
         {   for (int ssss=0; ssss<(SCount); ssss++)   (RBuf)[ssss] = (SBuf)[ssss];  }
 #define MPI_Scatterv( SBuf, SCount, SDisp, SType, RBuf, RCount, RType, Root, MPI_COMM ) \
         {   for (int ssss=0; ssss<((SCount)[0]); ssss++)    (RBuf)[ssss] = (SBuf)[ssss];  }
+#define MPI_Alltoallv_GAMER( SBuf, SCount, SDisp, SType, RBuf, RCount, RDisp, RType, MPI_COMM ) \
+        {   for (long ssss=0; ssss<((SCount)[0]); ssss++)    (RBuf)[ssss] = (SBuf)[ssss];  }
 
 
 #define Buf_AllocateBufferPatch( Tpatch, lv ) {}

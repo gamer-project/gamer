@@ -244,8 +244,8 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 
    int  *List_PID    [MPI_NRank];   // PID of each patch slice sent to each rank
    int  *List_k      [MPI_NRank];   // local z coordinate of each patch slice sent to each rank
-   int   List_NSend  [MPI_NRank];   // size of data (density/potential) sent to each rank
-   int   List_NRecv  [MPI_NRank];   // size of data (density/potential) received from each rank
+   long  List_NSend  [MPI_NRank];   // size of data (density/potential) sent to each rank
+   long  List_NRecv  [MPI_NRank];   // size of data (density/potential) received from each rank
    const bool ForPoisson  = true;   // preparing the density field for the Poisson solver
    const bool InPlacePad  = true;   // pad the array for in-place real-to-complex FFT
 

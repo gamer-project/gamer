@@ -97,8 +97,8 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 
    int  *List_PID    [MPI_NRank];   // PID of each patch slice sent to each rank
    int  *List_k      [MPI_NRank];   // local z coordinate of each patch slice sent to each rank
-   int   List_NSend  [MPI_NRank];   // size of data sent to each rank
-   int   List_NRecv  [MPI_NRank];   // size of data received from each rank
+   long  List_NSend  [MPI_NRank];   // size of data sent to each rank
+   long  List_NRecv  [MPI_NRank];   // size of data received from each rank
    const bool ForPoisson  = false;  // preparing the density field for the Poisson solver
    const bool InPlacePad  = true;   // pad the array for in-place real-to-complex FFT
 
