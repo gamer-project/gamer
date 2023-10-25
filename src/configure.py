@@ -482,7 +482,7 @@ def load_arguments():
     parser.add_argument( "--cr_diffusion", type=str2bool, metavar="BOOLEAN", gamer_name="CR_DIFFUSION",
                          default=False,
                          depend={"microphysics":True},
-                         constraint={ True:{"cosmic_ray":True, "MHD":True} },
+                         constraint={ True:{"cosmic_ray":True, "mhd":True} },
                          help="Enable cosmic rays diffusion. Must enable <--mhd> and <--cosmic_ray>.\n"
                        )
 
