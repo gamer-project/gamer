@@ -439,7 +439,9 @@ void Get_CMVel()
                      for (int d=0; d<3; d++)
                      {
                         v[d] = _Eta*_Dens*( Real*GradI[d] - Imag*GradR[d] );
-                        w[d] = _2Eta*_Dens*GradD[d];
+                        // w[d] = _2Eta*_Dens*GradD[d]; // This would cause jumped velocity sometimes
+                        w[d] = _Eta*_Dens*SQRT(Dens)*GradD[d];
+
                      }
 
 //                   sum up velocity for CMV
@@ -799,7 +801,8 @@ void GetRMS()
                      for (int d=0; d<3; d++)
                      {
                         v[d] = _Eta*_Dens*( Real*GradI[d] - Imag*GradR[d] );
-                        w[d] = _2Eta*_Dens*GradD[d];
+                        // w[d] = _2Eta*_Dens*GradD[d]; // This would cause jumped velocity sometimes
+                        w[d] = _Eta*_Dens*SQRT(Dens)*GradD[d];
                      }
 
                      vr     = ( x*v[0] + y*v[1] + z*v[2] ) / Radius;
@@ -1166,7 +1169,8 @@ void ShellAverage()
                      for (int d=0; d<3; d++)
                      {
                         v[d] = _Eta*_Dens*( Real*GradI[d] - Imag*GradR[d] );
-                        w[d] = _2Eta*_Dens*GradD[d];
+                        // w[d] = _2Eta*_Dens*GradD[d]; // This would cause jumped velocity sometimes
+                        w[d] = _Eta*_Dens*SQRT(Dens)*GradD[d];
                      }
 
                      vr  = ( x*v[0] + y*v[1] + z*v[2] ) / Radius;
@@ -1783,7 +1787,7 @@ void Output_ShellAve()
       fprintf( File, "#%19s  %10s  %13s  %13s  %13s  %13s", "Radius", "NCount", "Ave", "RMS", "Max", "Min" );
 
       if ( OutputAccMass )
-      fprintf( File, "  %13s  %13s", "AccMass", "AveDens" );
+      fprintf( File, "  %13s  %13s  %13s  %13s","ShellMass", "ShellVol", "AccMass", "AveDens" );
 
 #     if ( MODEL == ELBDM )
       if ( ELBDM_OutputAccEk )
@@ -1815,7 +1819,7 @@ void Output_ShellAve()
             AccMass   += Average[n][v]*Volume[n];
             AccVolume += Volume[n];
 
-            fprintf( File, "  %13.6e  %13.6e", AccMass, AccMass/AccVolume );
+            fprintf( File, "  %13.6e  %13.6e  %13.6e  %13.6e", Average[n][v]*Volume[n], Volume[n], AccMass, AccMass/AccVolume );
          }
 
 
