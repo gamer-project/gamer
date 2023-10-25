@@ -544,7 +544,7 @@ void CPU_FluidSolver_MHM(
 
 
             if ( StoreFlux )
-               Hydro_StoreIntFlux( g_FC_Flux_1PG, g_Flux_Array[P], N_FL_FLUX, NSkip_N, NSkip_T );
+               Hydro_StoreIntFlux( g_FC_Flux_1PG, g_Flux_Array[P], N_FL_FLUX );
 
 
 //          3. evaluate electric field and update B field at the full time-step
