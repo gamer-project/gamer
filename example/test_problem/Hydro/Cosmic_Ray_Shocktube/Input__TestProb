@@ -5,5 +5,5 @@ CR_Shocktube_Pres_R             240.0           # gas pressure on the Right stat
 CR_Shocktube_Pres_L             67000.0         # gas pressure on the Left state
 CR_Shocktube_PresCR_R           240.0           # cosmic ray pressure on the Right state
 CR_Shocktube_PresCR_L           130000.0        # cosmic ray pressure on the Left state
-CR_Shocktube_Dir                0               # shock tube direction [0/1] --> [x/diagonal] (only 0 is supported)
+CR_Shocktube_Dir                0               # shock tube direction [0/1/2] --> [x/y/z]
 

@@ -43,9 +43,12 @@ void Validate()
 #  endif // #ifndef COSMIC_RAY
 
 #  if ( EOS != EOS_COSMIC_RAY )
-   Aux_Error( ERROR_INFO, "EOS != EOS_COSMIC_RAY when enable COSMIC_RAY!!\n" );
+   Aux_Error( ERROR_INFO, "EOS != EOS_COSMIC_RAY when enable COSMIC_RAY !!\n" );
 #  endif
 
+#  ifdef CR_DIFFUSION
+   Aux_Error( ERROR_INFO, "CR_DIFFUSION must be disabled !!\n" );
+#  endif
 
 // warnings
 
@@ -95,7 +98,7 @@ void SetParameter()
    ReadPara->Add( "CR_Shocktube_Pres_L",   &CR_Shocktube_Pres_L,       0.0,           0.0,              NoMax_double);
    ReadPara->Add( "CR_Shocktube_PresCR_R", &CR_Shocktube_PresCR_R,     0.0,           0.0,              NoMax_double);
    ReadPara->Add( "CR_Shocktube_PresCR_L", &CR_Shocktube_PresCR_L,     0.0,           0.0,              NoMax_double);
-   ReadPara->Add( "CR_Shocktube_Dir",      &CR_Shocktube_Dir,            0,             0,                 NoMax_int);
+   ReadPara->Add( "CR_Shocktube_Dir",      &CR_Shocktube_Dir,            0,             0,                         2);
 
    ReadPara->Read( FileName );
 
@@ -121,6 +124,14 @@ void SetParameter()
    if ( END_T < 0.0 ) {
       END_T = End_T_Default;
       PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
+   }
+
+   if (  ( CR_Shocktube_Dir == 0 && OPT__OUTPUT_PART != OUTPUT_X )  ||
+         ( CR_Shocktube_Dir == 1 && OPT__OUTPUT_PART != OUTPUT_Y )  ||
+         ( CR_Shocktube_Dir == 2 && OPT__OUTPUT_PART != OUTPUT_Z )    )
+   {
+      OPT__OUTPUT_PART = ( CR_Shocktube_Dir == 0 ) ? OUTPUT_X : ( CR_Shocktube_Dir == 1 ) ? OUTPUT_Y : OUTPUT_Z;
+      PRINT_RESET_PARA( OPT__OUTPUT_PART, FORMAT_INT, "" );
    }
 
 
@@ -172,44 +183,37 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
    double Dens, MomX, MomY, MomZ, Pres, Eint, Etot, P_cr, CRay;
+   double r;
 
-   if ( CR_Shocktube_Dir == 0 )
+   switch ( CR_Shocktube_Dir )
    {
-      if (x < 0.5)
-      {
-         Dens = CR_Shocktube_Rho_L;
-         MomX = 0.0;
-         MomY = 0.0;
-         MomZ = 0.0;
-         Pres = CR_Shocktube_Pres_L;
-         P_cr = CR_Shocktube_PresCR_L;
-      } else if (x > 0.5)
-      {
-         Dens = CR_Shocktube_Rho_R;
-         MomX = 0.0;
-         MomY = 0.0;
-         MomZ = 0.0;
-         Pres = CR_Shocktube_Pres_R;
-         P_cr = CR_Shocktube_PresCR_R;
-      } else
-      {
-         Dens = 0.5*( CR_Shocktube_Rho_L + CR_Shocktube_Rho_R );
-         MomX = 0.0;
-         MomY = 0.0;
-         MomZ = 0.0;
-         Pres = 0.5*( CR_Shocktube_Pres_L + CR_Shocktube_Pres_R );
-         P_cr = 0.5*( CR_Shocktube_PresCR_L + CR_Shocktube_PresCR_R );
-      } // if (x < 0.5) ... else if ... else
+      case 0: r=x; break;
+      case 1: r=y; break;
+      case 2: r=z; break;
+   } // switch ( CR_Shocktube_Dir )
+
+   if ( r < amr->BoxCenter[CR_Shocktube_Dir] )
+   {
+      Dens = CR_Shocktube_Rho_L;
+      Pres = CR_Shocktube_Pres_L;
+      P_cr = CR_Shocktube_PresCR_L;
    }
-   else if ( CR_Shocktube_Dir == 1 )
+   else if ( r > amr->BoxCenter[CR_Shocktube_Dir] )
    {
-
-      Aux_Error( ERROR_INFO, "CR_Shocktube_Dir = %d is NOT supported [0] !!\n", CR_Shocktube_Dir );
+      Dens = CR_Shocktube_Rho_R;
+      Pres = CR_Shocktube_Pres_R;
+      P_cr = CR_Shocktube_PresCR_R;
    }
    else
    {
-      Aux_Error( ERROR_INFO, "CR_Shocktube_Dir = %d is NOT supported [0] !!\n", CR_Shocktube_Dir );
-   } // if ( CR_Shocktube_Dir == 0 )
+      Dens = 0.5*( CR_Shocktube_Rho_L + CR_Shocktube_Rho_R );
+      Pres = 0.5*( CR_Shocktube_Pres_L + CR_Shocktube_Pres_R );
+      P_cr = 0.5*( CR_Shocktube_PresCR_L + CR_Shocktube_PresCR_R );
+   }
+
+   MomX = 0.0;
+   MomY = 0.0;
+   MomZ = 0.0;
 
 #ifdef COSMIC_RAY
    double GAMMA_CR_m1_inv = 1.0 / (GAMMA_CR - 1.0);
@@ -231,6 +235,37 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[ENGY] = Etot;
 
 } // FUNCTION : SetGridIC
+
+
+
+#ifdef MHD
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetBFieldIC
+// Description :  Set the problem-specific initial condition of magnetic field
+//
+// Note        :  1. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
+//                   --> Please ensure that everything here is thread-safe
+//
+// Parameter   :  magnetic : Array to store the output magnetic field
+//                x/y/z    : Target physical coordinates
+//                Time     : Target physical time
+//                lv       : Target refinement level
+//                AuxArray : Auxiliary array
+//
+// Return      :  magnetic
+//-------------------------------------------------------------------------------------------------------
+void SetBFieldIC( real magnetic[], const double x, const double y, const double z, const double Time,
+                  const int lv, double AuxArray[] )
+{
+
+   magnetic[MAGX] = 0.0;
+   magnetic[MAGY] = 0.0;
+   magnetic[MAGZ] = 0.0;
+
+} // FUNCTION : SetBFieldIC
+#endif // #ifdef MHD
+
 
 
 #endif // #if ( MODEL == HYDRO )
@@ -265,6 +300,9 @@ void Init_TestProb_Hydro_Cosmic_Ray_Shocktube()
 
 // procedure to enable a problem-specific function:
    Init_Function_User_Ptr         = SetGridIC;
+#  ifdef MHD
+   Init_Function_BField_User_Ptr  = SetBFieldIC;
+#  endif
 
 #  endif // #if ( MODEL == HYDRO )
 
