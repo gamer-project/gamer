@@ -301,7 +301,7 @@ double FlagTable_CRay[NLEVEL-1];
 #ifdef MICROPHYSICS
 MicroPhy_t MicroPhy;
 
-#ifdef COSMIC_RAY
+#ifdef CR_DIFFUSION
 double CR_DIFF_PARA;
 double CR_DIFF_PERP;
 double DT_DIFFUSION;
