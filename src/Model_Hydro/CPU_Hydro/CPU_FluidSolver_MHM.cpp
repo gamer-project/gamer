@@ -119,6 +119,7 @@ void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out
                          const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                          const real dt, const real dh, const int NOut, const int NEle, const int Offset_B_In );
 #endif // #ifdef MHD
+
 #ifdef CR_DIFFUSION
 void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
                                     real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
@@ -130,7 +131,6 @@ void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                               const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                               const int NFlux, const real dh, const MicroPhy_t *Mic );
 #endif // #ifdef CR_DIFFUSION
-#endif // #if ( FLU_SCHEME == MHM_RP )
 
 #endif // #ifdef __CUDACC__ ... else ...
 
