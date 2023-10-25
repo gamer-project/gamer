@@ -31,7 +31,6 @@ double      **Average         = NULL;     // the shell average in each shell ( H
 double      **RMS             = NULL;     // the standard deviation (root-mean-squre) in each shell
 real        **Max             = NULL;     // the maximum value in each shell
 real        **Min             = NULL;     // the minimum value in each shell
-double      CMV[6]            = {};       // center of mass velocity
 long int    *NCount           = NULL;     // the total number of grids in each shell
 double      *Volume           = NULL;     // the total volume in each shell
 double      ShellWidth;                   // the width of each shell (or minimum shell widith if LogBin is enabled)
@@ -251,7 +250,20 @@ void Get_CMVel()
 {
    
    cout << "Get center of mass velocity ..." << endl;
+   double CMV[3] = {};
+   const double dh_min = amr.dh[NLEVEL-1];
 
+   long int *nCount     = new long int [NShell];
+   double   *volume     = new double   [NShell];
+   double   *average_dens    = new double   [NShell];
+
+// initialize variables for storing average data
+   for (int n=0; n<NShell; n++)
+   {
+      average_dens[n] = 0.0;
+      nCount[n] = 0;
+      volume[n] = 0.0;
+   } // for (int n=0; n<NShell; n++)
 
 #  if   ( MODEL == HYDRO )
    const int NGhost = 0;
@@ -287,7 +299,6 @@ void Get_CMVel()
    long   TVar;
    double Radius, scale, dv;
    double x, x1, x2, y, y1, y2, z, z1, z2;   // (x,y,z) : relative coordinates to the vector "Center"
-   real   pass[NCOMP_PASSIVE];
    double massAll = 0.0;
 
    real *Field1D = new real [NPG*8*NIn*ArraySize*ArraySize*ArraySize];
@@ -368,20 +379,7 @@ void Get_CMVel()
 
 #                 if   ( MODEL == HYDRO )
 //                evaluate the values on the shell
-                  rho     = Field[p][DENS    ][k][j][i];
-                  px      = Field[p][MOMX    ][k][j][i];
-                  py      = Field[p][MOMY    ][k][j][i];
-                  pz      = Field[p][MOMZ    ][k][j][i];
-
-//                sum up values at the same shell
-                  Var = 0;
-                  Average[ShellID][Var++] += (double)(dv*rho     );
-
-//                sum up velocity for CMV
-                  CMV[0] += (double)(dv*px);
-                  CMV[1] += (double)(dv*py);
-                  CMV[2] += (double)(dv*pz);
-
+#                 warning : WAIT HYDRO !!!
 
 #                 elif ( MODEL == MHD )
 #                 warning : WAIT MHD !!!
@@ -448,23 +446,20 @@ void Get_CMVel()
                      CMV[0] += (double)(dv*Dens*v[0]);
                      CMV[1] += (double)(dv*Dens*v[1]);
                      CMV[2] += (double)(dv*Dens*v[2]);
-                     CMV[3] += (double)(dv*Dens*w[0]);
-                     CMV[4] += (double)(dv*Dens*w[1]);
-                     CMV[5] += (double)(dv*Dens*w[2]);
 
                   } // if ( ELBDM_GetVir )
 
 //                sum up values at the same shell
                   Var = 0;
-                  Average[ShellID][Var++] += (double)(dv*Dens     );
+                  average_dens[ShellID] += (double)(dv*Dens     );
 
 
 #                 else
 #                 error : ERROR : unsupported MODEL !!
 #                 endif // MODEL
 
-                  Volume[ShellID] += dv;
-                  NCount[ShellID] ++;
+                  volume[ShellID] += dv;
+                  nCount[ShellID] ++;
 
                } // if ( Radius < MaxRadius )
             }}} // kk, jj, ii
@@ -476,14 +471,11 @@ void Get_CMVel()
    } // for (int lv=0; lv<NLEVEL; lv++)
 
 // get the average values
-   for (int n=0; n<NShell; n++)    Average[n][0] /= Volume[n];
+   for (int n=0; n<NShell; n++)    average_dens[n] /= volume[n];
 
 // get the average velocity
 #  if   ( MODEL == HYDRO )
-   for (int n=0; n<NShell; n++)
-      if (NCount[n]!=0)  massAll += Volume[n]*Average[n][0];
-
-   for (int t=0; t<3; t++) CMV[t] = CMV[t]/massAll;
+#  warning : WAIT HYDRO !!!
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -492,8 +484,8 @@ void Get_CMVel()
    if ( ELBDM_GetVir )
    {
       for (int n=0; n<NShell; n++)
-         if (NCount[n]!=0)  massAll += Volume[n]*Average[n][0];
-      for (int t=0; t<6; t++) CMV[t] = CMV[t]/massAll;
+         if (nCount[n]!=0)  massAll += volume[n]*average_dens[n];
+      for (int t=0; t<3; t++) CMV[t] = CMV[t]/massAll;
    }
 
 #  else
@@ -502,10 +494,59 @@ void Get_CMVel()
 
 
    delete [] Field1D;
-   if ( Volume        != NULL )  delete [] Volume;
-   if ( NCount        != NULL )  delete [] NCount;
-   if ( Average[0]    != NULL )  delete [] Average[0];
+   if ( volume        != NULL )  delete [] volume;
+   if ( nCount        != NULL )  delete [] nCount;
+   if ( average_dens  != NULL )  delete [] average_dens;
    cout << " Bulk CoM velocity = ("<< CMV[0]<< ", "<< CMV[1] << ", "<<CMV[2]<< ")" << endl;
+
+   cout << "Remove the motion of center-of-mass by phase shift" << endl;
+
+   for (int lv=0; lv<NLEVEL; lv++)
+   {
+      scale = (double)amr.scale[lv];
+      cout << "   Level " << lv << " ... ";
+
+      for (int PID=0; PID<amr.num[lv]; PID++)
+      {
+         if ( amr.patch[lv][PID]->fluid == NULL )   continue;
+
+         for (int k=0; k<PATCH_SIZE; k++) {  z1 = amr.patch[lv][PID]->corner[2] + (k+0.5)*scale - Center    [2];
+                                             z2 = amr.patch[lv][PID]->corner[2] + (k+0.5)*scale - Center_Map[2];
+                                             z  = ( fabs(z1) <= fabs(z2) ) ?  z1 : z2;
+         for (int j=0; j<PATCH_SIZE; j++) {  y1 = amr.patch[lv][PID]->corner[1] + (j+0.5)*scale - Center    [1];
+                                             y2 = amr.patch[lv][PID]->corner[1] + (j+0.5)*scale - Center_Map[1];
+                                             y  = ( fabs(y1) <= fabs(y2) ) ?  y1 : y2;
+         for (int i=0; i<PATCH_SIZE; i++) {  x1 = amr.patch[lv][PID]->corner[0] + (i+0.5)*scale - Center    [0];
+                                             x2 = amr.patch[lv][PID]->corner[0] + (i+0.5)*scale - Center_Map[0];
+                                             x  = ( fabs(x1) <= fabs(x2) ) ?  x1 : x2;
+
+            Radius = sqrt( x*x + y*y + z*z );
+
+#           if   ( MODEL == HYDRO )
+#           warning : WAIT HYDRO !!!
+
+#           elif ( MODEL == MHD )
+#           warning : WAIT MHD !!!
+
+#           elif ( MODEL == ELBDM )
+
+            real S = (x*CMV[0]+y*CMV[1]+z*CMV[2])*ELBDM_ETA*(dh_min);
+            Dens = amr.patch[lv][PID]->fluid[DENS][k][j][i];
+            Real = amr.patch[lv][PID]->fluid[REAL][k][j][i];
+            Imag = amr.patch[lv][PID]->fluid[IMAG][k][j][i];
+
+            amr.patch[lv][PID]->fluid[REAL][k][j][i] = +Real*COS(S) + Imag*SIN(S);
+            amr.patch[lv][PID]->fluid[IMAG][k][j][i] = -Real*SIN(S) + Imag*COS(S);
+
+#           else
+#           error : ERROR : unsupported MODEL !!
+#           endif // MODEL
+         }}} // k, j, i
+      } // for (int PID=0; PID<amr.num[lv]; PID++)
+
+      cout << "done" << endl;
+
+   } // for (int lv=0; lv<NLEVEL; lv++)
 
 } // FUNCTION : Get_CMVel 
 
@@ -757,7 +798,7 @@ void GetRMS()
 
                      for (int d=0; d<3; d++)
                      {
-                        v[d] = _Eta*_Dens*( Real*GradI[d] - Imag*GradR[d] ) - CMV[d];
+                        v[d] = _Eta*_Dens*( Real*GradI[d] - Imag*GradR[d] );
                         w[d] = _2Eta*_Dens*GradD[d];
                      }
 
@@ -1124,7 +1165,7 @@ void ShellAverage()
 
                      for (int d=0; d<3; d++)
                      {
-                        v[d] = _Eta*_Dens*( Real*GradI[d] - Imag*GradR[d] ) - CMV[d];
+                        v[d] = _Eta*_Dens*( Real*GradI[d] - Imag*GradR[d] );
                         w[d] = _2Eta*_Dens*GradD[d];
                      }
 
@@ -2706,8 +2747,6 @@ int main( int argc, char ** argv )
 
    if ( Mode_ShellAve )
    {
-      Init_ShellAve();
-
       Get_CMVel();
 
       Init_ShellAve();
