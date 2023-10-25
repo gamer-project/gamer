@@ -15,12 +15,12 @@
 
 # simulation scale
 BOX_SIZE                      1.0         # box size along the longest side (in Mpc/h if COMOVING is adopted)
-NX0_TOT_X                     128         # number of base-level cells along x
-NX0_TOT_Y                     16         # number of base-level cells along y
-NX0_TOT_Z                     16         # number of base-level cells along z
+NX0_TOT_X                     64          # number of base-level cells along x
+NX0_TOT_Y                     64          # number of base-level cells along y
+NX0_TOT_Z                     64          # number of base-level cells along z
 OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
-END_T                         0.2886751   # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
-END_STEP                      100000      # end step (<0=auto -> must be set by test problems or restart) [-1]
+END_T                        -1           # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
+END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
 # test problems
 TESTPROB_ID                   20          # test problem ID [0]
                                           #    0: none
@@ -277,8 +277,8 @@ INT_OPP_SIGN_0TH_ORDER        1           # switch to 0th-order interpolation if
 
 
 # data dump
-OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
-OPT__OUTPUT_PART              4           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
+OPT__OUTPUT_TOTAL             0           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
+OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
 OPT__OUTPUT_USER              1           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_PAR_TEXT          0           # output the particle text file [0] ##PARTICLE ONLY##
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
@@ -289,7 +289,7 @@ OPT__OUTPUT_PAR_DENS          1           # output the particle or total mass de
 OPT__OUTPUT_CC_MAG            1           # output **cell-centered** magnetic field (necessary for yt analysis) [1] ##MHD ONLY##
 OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
-OUTPUT_DT                     0.5         # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
+OUTPUT_DT                     0.05         # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
 OUTPUT_PART_X                 0.0         # x coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Y                 0.0         # y coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Z                 0.0         # z coordinate for OPT__OUTPUT_PART [-1.0]

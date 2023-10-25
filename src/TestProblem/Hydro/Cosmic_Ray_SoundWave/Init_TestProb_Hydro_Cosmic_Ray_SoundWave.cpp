@@ -15,7 +15,10 @@ static double CR_Acoustic_Pres_CR0;     // background pressure of cosmic rays
 static double CR_Acoustic_V0;           // background velocity
 static double CR_Acoustic_Sign;         // (+1/-1) --> (right/left-moving wave)
 static double CR_Acoustic_Phase;        // initial phase shift
-static int    CR_Acoustic_Dir;          // wave direction (0/1) --> (x/diagonal)
+static int    CR_Acoustic_Dir;          // wave direction (0/1/2/3) --> (x/y/z/diagonal)
+
+static double CR_Acoustic_WaveSpeed;    // wave speed
+static double CR_Acoustic_WaveL;        // wavelength
 // =======================================================================================
 
 
@@ -50,8 +53,19 @@ void Validate()
    Aux_Error( ERROR_INFO, "EOS != EOS_COSMIC_RAY when enable COSMIC_RAY!!\n" );
 #  endif
 
+   if ( CR_Acoustic_Dir == 3  &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )
+      Aux_Error( ERROR_INFO, "simulation domain must be cubic for CR_Acoustic_Dir = %d !!\n", CR_Acoustic_Dir );
+
+   for (int f=0; f<6; f++)
+   if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
+      Aux_Error( ERROR_INFO, "please set \"OPT__BC_FLU_* = 1\" (i.e., periodic BC) !!\n" );
+
 
 // warnings
+   if ( MPI_Rank == 0 )
+   {
+      if ( !OPT__OUTPUT_USER )   Aux_Message( stdout, "WARNING : OPT__OUTPUT_USER is off !!\n" );
+   }
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
@@ -91,17 +105,16 @@ void SetParameter()
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
 // ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
+// ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,           MIN,              MAX         );
 // ********************************************************************************************************************************
-//   ReadPara->Add( "GAMMA_CR",             &GAMMA_CR,                  0.0,           0.0,              NoMax_double);
    ReadPara->Add( "CR_Acoustic_Delta",    &CR_Acoustic_Delta,         0.0,           0.0,              NoMax_double);
    ReadPara->Add( "CR_Acoustic_Rho0",     &CR_Acoustic_Rho0,          0.0,           0.0,              NoMax_double);
    ReadPara->Add( "CR_Acoustic_Pres0",    &CR_Acoustic_Pres0,         0.0,           0.0,              NoMax_double);
    ReadPara->Add( "CR_Acoustic_Pres_CR0", &CR_Acoustic_Pres_CR0,      0.0,           0.0,              NoMax_double);
-   ReadPara->Add( "CR_Acoustic_V0",       &CR_Acoustic_V0,            0.0,           0.0,              NoMax_double);
-   ReadPara->Add( "CR_Acoustic_Sign",     &CR_Acoustic_Sign,          0.0,           0.0,              NoMax_double);
-   ReadPara->Add( "CR_Acoustic_Phase",    &CR_Acoustic_Phase,         0.0,           0.0,              NoMax_double);
-   ReadPara->Add( "CR_Acoustic_Dir",      &CR_Acoustic_Dir,             0,             0,                 NoMax_int);
+   ReadPara->Add( "CR_Acoustic_V0",       &CR_Acoustic_V0,            0.0,  NoMin_double,              NoMax_double);
+   ReadPara->Add( "CR_Acoustic_Sign",     &CR_Acoustic_Sign,          0.0,  NoMin_double,              NoMax_double);
+   ReadPara->Add( "CR_Acoustic_Phase",    &CR_Acoustic_Phase,         0.0,  NoMin_double,              NoMax_double);
+   ReadPara->Add( "CR_Acoustic_Dir",      &CR_Acoustic_Dir,             0,             0,              3           );
 
    ReadPara->Read( FileName );
 
@@ -116,11 +129,18 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
+#  ifdef COSMIC_RAY
+   CR_Acoustic_WaveSpeed = SQRT( ( GAMMA * CR_Acoustic_Pres0 + GAMMA_CR * CR_Acoustic_Pres_CR0 ) / CR_Acoustic_Rho0 );
+#  else
+   CR_Acoustic_WaveSpeed = SQRT( ( GAMMA * CR_Acoustic_Pres0 ) / CR_Acoustic_Rho0 );
+#  endif
+
+   CR_Acoustic_WaveL     = ( CR_Acoustic_Dir == 3 ) ? amr->BoxSize[0]/sqrt(3.0) : amr->BoxSize[CR_Acoustic_Dir];
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default    = __FLT_MAX__;
+   const double End_T_Default    = CR_Acoustic_WaveL / CR_Acoustic_WaveSpeed;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -146,6 +166,8 @@ void SetParameter()
       Aux_Message( stdout, "  CR_Acoustic_Sign          = %14.7e\n",     CR_Acoustic_Sign );
       Aux_Message( stdout, "  CR_Acoustic_Phase         = %14.7e\n",     CR_Acoustic_Phase );
       Aux_Message( stdout, "  CR_Acoustic_Dir           = %d\n",         CR_Acoustic_Dir );
+      Aux_Message( stdout, "  CR_Acoustic_WaveSpeed     = %14.7e\n",     CR_Acoustic_WaveSpeed );
+      Aux_Message( stdout, "  CR_Acoustic_WaveL         = %14.7e\n",     CR_Acoustic_WaveL );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -182,46 +204,35 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
    double Dens, MomX, MomY, MomZ, Pres, Eint, Etot, P_cr, CRay;
-#  ifdef COSMIC_RAY
-   double cs = SQRT( ( GAMMA * CR_Acoustic_Pres0 + GAMMA_CR * CR_Acoustic_Pres_CR0 ) / CR_Acoustic_Rho0 );
-#  else
-   double cs = SQRT( ( GAMMA * CR_Acoustic_Pres0 ) / CR_Acoustic_Rho0 );
-#  endif
-   double delta_cs = CR_Acoustic_Delta / cs;
+   double cs         = CR_Acoustic_WaveSpeed;
+   double delta_cs   = CR_Acoustic_Delta / cs;
+   double wavelength = CR_Acoustic_WaveL;
+   double WaveK, WaveW, r, wave, Mom;
 
-   double wavelength, WaveK, WaveW, r, wave;
-   if ( CR_Acoustic_Dir == 0 )
-   {
-      wavelength = 0.5;
-      WaveK = 2.0*M_PI/wavelength;
-      WaveW = WaveK * cs;
-      r = x - CR_Acoustic_V0 * Time;
-      wave = SIN( WaveK * r - CR_Acoustic_Sign * WaveW * Time + CR_Acoustic_Phase );
+   WaveK = 2.0*M_PI/wavelength;
+   WaveW = WaveK * cs;
 
-      Dens = ( 1.0 + delta_cs * wave ) * CR_Acoustic_Rho0;
-      MomX = Dens * ( CR_Acoustic_Sign * CR_Acoustic_Delta * wave + CR_Acoustic_V0);
-      MomY = 1.0 + Dens * 1.e-16 * sin( 8. * M_PI * y );
-      MomZ = 0.0;
-      Pres = ( 1.0 + delta_cs * wave * GAMMA ) * CR_Acoustic_Pres0;
+   switch ( CR_Acoustic_Dir ) {
+      case 0:  r = x;                        break;
+      case 1:  r = y;                        break;
+      case 2:  r = z;                        break;
+      case 3:  r = ( x + y + z )/sqrt(3.0);  break;
    }
-   else if ( CR_Acoustic_Dir == 1 )
-   {
-      wavelength = SQRT(3.0) / 3.;
-      WaveK = 2.0*M_PI/wavelength;
-      WaveW = WaveK * cs;
-      r = (x + y + z) / SQRT(3.) - CR_Acoustic_V0 * Time;
-      wave = SIN( WaveK * r - CR_Acoustic_Sign * WaveW * Time + CR_Acoustic_Phase );
+   r    -= CR_Acoustic_V0 * Time;
+   wave  = sin( WaveK*r - CR_Acoustic_Sign*WaveW*Time + CR_Acoustic_Phase );
 
-      Dens = ( 1.0 + delta_cs * wave ) * CR_Acoustic_Rho0;
-      MomX = Dens * ( CR_Acoustic_Sign * CR_Acoustic_Delta * wave + CR_Acoustic_V0) / SQRT(3.0);
-      MomY = MomX;
-      MomZ = MomX;
-      Pres = ( 1.0 + delta_cs * wave * GAMMA ) * CR_Acoustic_Pres0;
+
+   Dens = ( 1.0 + delta_cs * wave ) * CR_Acoustic_Rho0;
+   Mom  = Dens * ( CR_Acoustic_Sign * CR_Acoustic_Delta * wave + CR_Acoustic_V0 );
+
+   switch ( CR_Acoustic_Dir ) {
+      case 0:  MomX = Mom;            MomY = 0.0;   MomZ = 0.0;   break;
+      case 1:  MomX = 0.0;            MomY = Mom;   MomZ = 0.0;   break;
+      case 2:  MomX = 0.0;            MomY = 0.0;   MomZ = Mom;   break;
+      case 3:  MomX = Mom/sqrt(3.0);  MomY = MomX;  MomZ = MomX;  break;
    }
-   else
-   {
-      Aux_Error( ERROR_INFO, "CR_Acoustic_Dir = %d is NOT supported [0/1] !!\n", CR_Acoustic_Dir );
-   }
+
+   Pres = ( 1.0 + delta_cs * wave * GAMMA ) * CR_Acoustic_Pres0;
 
 #  ifdef COSMIC_RAY
    double GAMMA_CR_m1_inv = 1.0 / (GAMMA_CR - 1.0);
@@ -292,21 +303,13 @@ void OutputError()
 {
 
    const char Prefix[100]     = "CosmicRay_Acousticwave";
-   if ( CR_Acoustic_Dir == 0 ){
-      const OptOutputPart_t Part = OUTPUT_X;
-#     ifdef MHD
-      Output_L1Error( SetGridIC, SetBFieldIC, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
-#     else
-      Output_L1Error( SetGridIC, NULL,        Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
-#     endif
-   } else if ( CR_Acoustic_Dir == 1 ){
-      const OptOutputPart_t Part = OUTPUT_DIAG;
-#     ifdef MHD
-      Output_L1Error( SetGridIC, SetBFieldIC, Prefix, Part, NULL_REAL, NULL_REAL, NULL_REAL );
-#     else
-      Output_L1Error( SetGridIC, NULL,        Prefix, Part, NULL_REAL, NULL_REAL, NULL_REAL );
-#     endif
-   }
+   const OptOutputPart_t Part = OUTPUT_X + CR_Acoustic_Dir;
+
+#  ifdef MHD
+   Output_L1Error( SetGridIC, SetBFieldIC, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
+#  else
+   Output_L1Error( SetGridIC, NULL,        Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
+#  endif
 
 } // FUNCTION : OutputError
 #endif // #if ( MODEL == HYDRO )
