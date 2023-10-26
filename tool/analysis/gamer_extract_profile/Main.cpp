@@ -440,7 +440,7 @@ void Get_CMVel()
                      {
                         v[d] = _Eta*_Dens*( Real*GradI[d] - Imag*GradR[d] );
                         // w[d] = _2Eta*_Dens*GradD[d]; // This would cause jumped velocity sometimes
-                        w[d] = _Eta*_Dens*SQRT(Dens)*GradD[d];
+                        w[d] = _Eta*_Dens*( Real*GradR[d] + Imag*GradI[d] );
 
                      }
 
@@ -802,7 +802,7 @@ void GetRMS()
                      {
                         v[d] = _Eta*_Dens*( Real*GradI[d] - Imag*GradR[d] );
                         // w[d] = _2Eta*_Dens*GradD[d]; // This would cause jumped velocity sometimes
-                        w[d] = _Eta*_Dens*SQRT(Dens)*GradD[d];
+                        w[d] = _Eta*_Dens*( Real*GradR[d] + Imag*GradI[d] );
                      }
 
                      vr     = ( x*v[0] + y*v[1] + z*v[2] ) / Radius;
@@ -1170,7 +1170,7 @@ void ShellAverage()
                      {
                         v[d] = _Eta*_Dens*( Real*GradI[d] - Imag*GradR[d] );
                         // w[d] = _2Eta*_Dens*GradD[d]; // This would cause jumped velocity sometimes
-                        w[d] = _Eta*_Dens*SQRT(Dens)*GradD[d];
+                        w[d] = _Eta*_Dens*( Real*GradR[d] + Imag*GradI[d] );
                      }
 
                      vr  = ( x*v[0] + y*v[1] + z*v[2] ) / Radius;
