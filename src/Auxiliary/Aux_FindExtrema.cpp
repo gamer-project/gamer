@@ -283,12 +283,12 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
                      real Value;
                      if ( TFluIntIdx != FluIdxUndef )
                         Value = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[TFluIntIdx][k][j][i];
+                     else if ( UsePrepare )
+                        Value = FieldPtr[PID_IDX][k][j][i];
 #                    ifdef GRAVITY
                      else if ( Extrema->Field & _POTE )
                         Value = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot[k][j][i];
 #                    endif
-                     else if ( UsePrepare )
-                        Value = FieldPtr[PID_IDX][k][j][i];
                      else
                         Aux_Error( ERROR_INFO, "unsupported field (%ld) !!\n", Extrema->Field );
 

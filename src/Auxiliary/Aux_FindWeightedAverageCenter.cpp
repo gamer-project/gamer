@@ -211,12 +211,12 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
                      double WD;
                      if ( TFluIntIdx != FluIdxUndef )
                         WD = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[TFluIntIdx][k][j][i];
+                     else if ( UsePrepare )
+                        WD =  WeightingDensity[PID_IDX][k][j][i];
 #                    ifdef GRAVITY
                      else if ( WeightingDensityField & _POTE )
                         WD = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot[k][j][i];
 #                    endif
-                     else if ( UsePrepare )
-                        WD =  WeightingDensity[PID_IDX][k][j][i];
                      else
                         Aux_Error( ERROR_INFO, "unsupported field (%ld) !!\n", WeightingDensityField );
 
