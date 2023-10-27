@@ -26,7 +26,7 @@ void Aux_Record_Center()
 // 1. Maximum fluid density in HYDRO/ELBDM
    Extrema_t Max_Dens;
    Max_Dens.Field     = _DENS;
-   Max_Dens.Radius    = HUGE_NUMBER; // entire domain
+   Max_Dens.Radius    = __FLT_MAX__; // entire domain
    Max_Dens.Center[0] = amr->BoxCenter[0];
    Max_Dens.Center[1] = amr->BoxCenter[1];
    Max_Dens.Center[2] = amr->BoxCenter[2];
@@ -38,7 +38,7 @@ void Aux_Record_Center()
 // 2. Maximum particle density
    Extrema_t Max_ParDens;
    Max_ParDens.Field     = _PAR_DENS;
-   Max_ParDens.Radius    = HUGE_NUMBER; // entire domain
+   Max_ParDens.Radius    = __FLT_MAX__; // entire domain
    Max_ParDens.Center[0] = amr->BoxCenter[0];
    Max_ParDens.Center[1] = amr->BoxCenter[1];
    Max_ParDens.Center[2] = amr->BoxCenter[2];
@@ -49,7 +49,7 @@ void Aux_Record_Center()
 // 3. Maximum total density including fluid density and particle density
    Extrema_t Max_TotDens;
    Max_TotDens.Field     = _TOTAL_DENS;
-   Max_TotDens.Radius    = HUGE_NUMBER; // entire domain
+   Max_TotDens.Radius    = __FLT_MAX__; // entire domain
    Max_TotDens.Center[0] = amr->BoxCenter[0];
    Max_TotDens.Center[1] = amr->BoxCenter[1];
    Max_TotDens.Center[2] = amr->BoxCenter[2];
@@ -62,7 +62,7 @@ void Aux_Record_Center()
 // 4. Minimum gravitational potential
    Extrema_t Min_Pote;
    Min_Pote.Field     = _POTE;
-   Min_Pote.Radius    = HUGE_NUMBER; // entire domain
+   Min_Pote.Radius    = __FLT_MAX__; // entire domain
    Min_Pote.Center[0] = amr->BoxCenter[0];
    Min_Pote.Center[1] = amr->BoxCenter[1];
    Min_Pote.Center[2] = amr->BoxCenter[2];

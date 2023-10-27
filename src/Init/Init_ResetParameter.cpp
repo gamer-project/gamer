@@ -658,7 +658,7 @@ void Init_ResetParameter()
 
       if ( COM_MAX_R < 0.0 )
       {
-         COM_MAX_R = HUGE_NUMBER;
+         COM_MAX_R = __FLT_MAX__;
          PRINT_RESET_PARA( COM_MAX_R, FORMAT_REAL, "by default" );
       }
 
