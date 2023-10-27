@@ -122,6 +122,15 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "currently the check \"%s\" must work with \"%s\" !!\n",
                  "OPT__CK_REFINE", "OPT__FLAG_RHO" );
 
+   if ( OPT__RECORD_CENTER  &&  COM_CEN_X > amr->BoxSize[0] )
+      Aux_Error( ERROR_INFO, "incorrect COM_CEN_X (out of range [X<=%lf]) !!\n", amr->BoxSize[0] );
+
+   if ( OPT__RECORD_CENTER  &&  COM_CEN_Y > amr->BoxSize[1] )
+      Aux_Error( ERROR_INFO, "incorrect COM_CEN_Y (out of range [Y<=%lf]) !!\n", amr->BoxSize[1] );
+
+   if ( OPT__RECORD_CENTER  &&  COM_CEN_Z > amr->BoxSize[2] )
+      Aux_Error( ERROR_INFO, "incorrect COM_CEN_Z (out of range [Z<=%lf]) !!\n", amr->BoxSize[2] );
+
 #  if   ( MODEL == HYDRO )
    if (  ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR )
          &&  Flu_ParaBuf < 2  )
