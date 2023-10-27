@@ -242,7 +242,7 @@ Procedure for outputting new variables:
 //                2467 : 2023/05/18 --> replace OPT__INIT_BFIELD_BYFILE by OPT__INIT_BFIELD_BYVECPOT
 //                2468 : 2023/06/24 --> output OPT__SORT_PATCH_BY_LBIDX
 //                2469 : 2023/09/09 --> output MHM_CHECK_PREDICT
-//                2470 : 2023/10/** --> output OPT__OUTPUT_TEXT_FORMAT_FLT
+//                2470 : 2023/10/16 --> output OPT__OUTPUT_TEXT_FORMAT_FLT
 //                2471 : 2023/10/27 --> output OPT__RECORD_CENTER, COM_CEN_X, COM_CEN_Y, COM_CEN_Z,
 //                                             COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R, COM_NITER_MAX
 //-------------------------------------------------------------------------------------------------------
