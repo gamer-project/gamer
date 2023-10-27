@@ -371,13 +371,13 @@ OPT__RECORD_PERFORMANCE       1           # record the code performance [1]
 OPT__MANUAL_CONTROL           1           # support manually dump data, stop run, or pause run during the runtime
                                           # (by generating the file DUMP_GAMER_DUMP, STOP_GAMER_STOP, PAUSE_GAMER_PAUSE, respectively) [1]
 OPT__RECORD_CENTER            0           # record the position of maximum density, minimum potential, and center of mass [0]
-COM_CEN_X                    -1.0         # x coordinate as an initial guess for determing center of mass
-COM_CEN_Y                    -1.0         # y coordinate as an initial guess for determing center of mass
-COM_CEN_Z                    -1.0         # z coordinate as an initial guess for determing center of mass
-COM_MAX_R                    -1.0         # maximum radius for determining center of mass
-COM_MIN_RHO                  -1.0         # minimum density for determing center of mass
-COM_TOL_ERR_R                -1.0         # maximum allowed errors for determining center of mass
-COM_N_ITER_MAX               -1           # maximum number of iteration for determing center of mass
+COM_CEN_X                    -1.0         # x coordinate as an initial guess for determining center of mass (if one of COM_CEN_X/Y/Z < 0 -> peak density position x) [-1.0]
+COM_CEN_Y                    -1.0         # y coordinate as an initial guess for determining center of mass (if one of COM_CEN_X/Y/Z < 0 -> peak density position y) [-1.0]
+COM_CEN_Z                    -1.0         # z coordinate as an initial guess for determining center of mass (if one of COM_CEN_X/Y/Z < 0 -> peak density position z) [-1.0]
+COM_MAX_R                    -1.0         # maximum radius for determining center of mass (<0=auto) [-1.0]
+COM_MIN_RHO                   0.0         # minimum density for determining center of mass (must >= 0.0) [0.0]
+COM_TOLERR_R                 -1.0         # maximum allowed error for deviation in radius during iteration for determining center of mass (<0=auto -> 0.1*COM_MAX_R) [-1.0]
+COM_NITER_MAX                 10          # maximum number of iteration for determining center of mass (must >= 1) [10]
 OPT__RECORD_USER              0           # record the user-specified info -> edit "Aux_Record_User.cpp" [0]
 OPT__OPTIMIZE_AGGRESSIVE      0           # apply aggressive optimizations (experimental) [0]
 OPT__SORT_PATCH_BY_LBIDX      1           # sort patches to improve bitwise reproducibility [SERIAL:0, LOAD_BALACNE:1]

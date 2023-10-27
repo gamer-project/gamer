@@ -662,22 +662,10 @@ void Init_ResetParameter()
          PRINT_RESET_PARA( COM_MAX_R, FORMAT_REAL, "by default" );
       }
 
-      if ( COM_MIN_RHO < 0.0 )
+      if ( COM_TOLERR_R < 0.0 )
       {
-         COM_MIN_RHO = 0.0;
-         PRINT_RESET_PARA( COM_MIN_RHO, FORMAT_REAL, "by default" );
-      }
-
-      if ( COM_TOL_ERR_R < 0.0 )
-      {
-         COM_TOL_ERR_R = 0.1*COM_MAX_R;
-         PRINT_RESET_PARA( COM_TOL_ERR_R, FORMAT_REAL, "by default" );
-      }
-
-      if ( COM_N_ITER_MAX < 0 )
-      {
-         COM_N_ITER_MAX = 10;
-         PRINT_RESET_PARA( COM_N_ITER_MAX, FORMAT_INT, "by default" );
+         COM_TOLERR_R = 0.1*COM_MAX_R;
+         PRINT_RESET_PARA( COM_TOLERR_R, FORMAT_REAL, "by default" );
       }
    }
 

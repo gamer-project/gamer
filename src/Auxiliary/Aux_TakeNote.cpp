@@ -1433,8 +1433,8 @@ void Aux_TakeNote()
       fprintf( Note, "COM_CEN_Z                       %13.7e\n",  COM_CEN_Z                );
       fprintf( Note, "COM_MAX_R                       %13.7e\n",  COM_MAX_R                );
       fprintf( Note, "COM_MIN_RHO                     %13.7e\n",  COM_MIN_RHO              );
-      fprintf( Note, "COM_TOL_ERR_R                   %13.7e\n",  COM_TOL_ERR_R            );
-      fprintf( Note, "COM_N_ITER_MAX                  %d\n",      COM_N_ITER_MAX           );
+      fprintf( Note, "COM_TOLERR_R                    %13.7e\n",  COM_TOLERR_R             );
+      fprintf( Note, "COM_NITER_MAX                   %d\n",      COM_NITER_MAX            );
       }
       fprintf( Note, "OPT__MANUAL_CONTROL             %d\n",      OPT__MANUAL_CONTROL      );
       fprintf( Note, "OPT__RECORD_USER                %d\n",      OPT__RECORD_USER         );

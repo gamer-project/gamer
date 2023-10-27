@@ -244,7 +244,7 @@ Procedure for outputting new variables:
 //                2469 : 2023/09/09 --> output MHM_CHECK_PREDICT
 //                2470 : 2023/10/** --> output OPT__OUTPUT_TEXT_FORMAT_FLT 
 //                2470 : 2023/10/17 --> output OPT__RECORD_CENTER, COM_CEN_X, COM_CEN_Y, COM_CEN_Z,
-//                                             COM_MAX_R, COM_MIN_RHO, COM_TOL_ERR_R, COM_N_ITER_MAX
+//                                             COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R, COM_NITER_MAX
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -2450,8 +2450,8 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.COM_CenZ                = COM_CEN_Z;
    InputPara.COM_MaxR                = COM_MAX_R;
    InputPara.COM_MinRho              = COM_MIN_RHO;
-   InputPara.COM_TolErrR             = COM_TOL_ERR_R;
-   InputPara.COM_NIterMax            = COM_N_ITER_MAX;
+   InputPara.COM_TolErrR             = COM_TOLERR_R;
+   InputPara.COM_NIterMax            = COM_NITER_MAX;
    InputPara.Opt__RecordUser         = OPT__RECORD_USER;
    InputPara.Opt__OptimizeAggressive = OPT__OPTIMIZE_AGGRESSIVE;
    InputPara.Opt__SortPatchByLBIdx   = OPT__SORT_PATCH_BY_LBIDX;
