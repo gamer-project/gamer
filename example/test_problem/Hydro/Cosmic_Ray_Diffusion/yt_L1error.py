@@ -1,4 +1,5 @@
 #!/bin/python3
+import yt
 import sys
 import numpy as np
 import matplotlib.pylab as plt
