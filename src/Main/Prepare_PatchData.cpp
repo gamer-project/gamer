@@ -335,7 +335,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    if ( ( TVarCC & _PAR_DENS || TVarCC & _TOTAL_DENS )  &&  omp_get_num_threads() > 1 )
       Aux_Error( ERROR_INFO, "omp_get_num_threads() = %d !! OpenMP parallelization should not be applied outside Prepare_PachData() for preparing particle density !!\n", omp_get_num_threads() );
 #  endif // #ifdef PARTICLE
-#  endif // #indef OPENMP
+#  endif // #ifdef OPENMP
 
 
    const double dh               = amr->dh[lv];

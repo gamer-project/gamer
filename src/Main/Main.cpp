@@ -625,7 +625,7 @@ int main( int argc, char *argv[] )
       if ( OPT__PARTICLE_COUNT == 1 )
       TIMING_FUNC(   Par_Aux_Record_ParticleCount(),  Timer_Main[4],   TIMER_ON   );
 #     endif
-      
+
       if ( OPT__RECORD_CENTER )
       TIMING_FUNC(   Aux_Record_Center(),             Timer_Main[4],   TIMER_ON   );
 

@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -47,7 +46,7 @@ void Aux_Record_Center()
    Aux_FindExtrema( &Max_ParDens, EXTREMA_MAX, 0, TOP_LEVEL, PATCH_LEAF );
 
 
-// 3. Maximun total density including fluid density and particle density
+// 3. Maximum total density including fluid density and particle density
    Extrema_t Max_TotDens;
    Max_TotDens.Field     = _TOTAL_DENS;
    Max_TotDens.Radius    = HUGE_NUMBER; // entire domain
@@ -60,7 +59,7 @@ void Aux_Record_Center()
 
 
 #  ifdef GRAVITY
-// 4. Minimun gravitational potential
+// 4. Minimum gravitational potential
    Extrema_t Min_Pote;
    Min_Pote.Field     = _POTE;
    Min_Pote.Radius    = HUGE_NUMBER; // entire domain

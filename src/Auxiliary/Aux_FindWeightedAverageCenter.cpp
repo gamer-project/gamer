@@ -16,11 +16,11 @@
 //                Center_ref[]           : Coordinate of center of reference
 //                MaxR                   : Maximum radius to specify the region to compute the weighted average center
 //                MinWD                  : Minimum weighting density to specify the region to compute the weighted average center
-//                WeightingDensityField  : Weighting density field used for compuation as the w(x,y,z) in the above Note
-//                TolErrR                : Maximum error of distance to tolerate during the iteration 
+//                WeightingDensityField  : Weighting density field used for computation as the w(x,y,z) in the above Note
+//                TolErrR                : Maximum error of distance to tolerate during the iteration
 //                NIterMax               : Maximum number of iterations to find the center of mass
 //                FinaldR                : Record of the dR in the last time of iteration
-//                FinalNIter             : Record of the total numer of iterations
+//                FinalNIter             : Record of the total number of iterations
 //
 // Return      :  WeightedAverageCenter[], FinaldR, FinalNIter
 //-------------------------------------------------------------------------------------------------------
@@ -291,7 +291,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
       if ( dR2 <= TolErrR2  ||  NIter >= NIterMax )
          break;
       else
-//       use the weighted average center as the refereced center in the next iteration
+//       use the weighted average center as the referenced center in the next iteration
          memcpy( Center_ref_OldIter, WeightedAverageCenter, sizeof(double)*3 );
 
 
