@@ -10,7 +10,7 @@ CR_Diffusion_PGas0       1.666666666667 # Background gas pressure
 CR_Diffusion_E0_CR       1.0e+2         # Cosmic ray energy amplitude
 CR_Diffusion_BG_CR       1.0e-1         # Cosmic ray background energy
 #=========================================================================
-CR_Diffusion_Type        0              # Initial condition of cosmic ray [0/1/2/3/4]
+CR_Diffusion_Type        4              # Initial condition of cosmic ray [0/1/2/3/4]
 # 0: Gaussian distribution ball (only supported CR_Diffusion_Mag_Type==0)
 CR_Diffusion_R02_CR      40.0           # Inverse of variance of the Gaussian distribution ball
 # 1: Step function ring (2D only)
