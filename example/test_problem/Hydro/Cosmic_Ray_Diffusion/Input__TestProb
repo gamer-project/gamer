@@ -26,7 +26,7 @@ CR_Diffusion_delPhi      0.5            # Standard deviation of the Gaussian dis
 CR_Diffusion_R0_CR       0.02        # The energy core radius
 # cosmic ray energy amplitude shared with "CR_Diffusion_E0_CR"
 #=========================================================================
-CR_Diffusion_Mag_Type    0              # Magnetic field type [0/1/2/3/4]
+CR_Diffusion_Mag_Type    4              # Magnetic field type [0/1/2/3/4]
 # 0: uniform
 CR_Diffusion_MagX        5.0            # Magnitude of x component
 CR_Diffusion_MagY        5.0            # Magnitude of y component
