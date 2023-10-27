@@ -266,6 +266,19 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
       MPI_Allreduce( &W_ThisRank, &W_AllRank, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
       MPI_Allreduce( WR_ThisRank, WR_AllRank, 3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
 
+      if ( W_AllRank == 0.0 )
+      {
+         if ( MPI_Rank == 0 )
+            Aux_Message( stderr, "WARNING : Weighted average center cannot be found because the total weighting (W_AllRank) = %14.7e !!\n", W_AllRank );
+
+//       return a huge number to indicate this routine fails to the center
+         for (int d=0; d<3; d++) WeightedAverageCenter[d] = HUGE_NUMBER;
+         dR2 = HUGE_NUMBER;
+         NIter++;
+
+         break;
+      }
+
       for (int d=0; d<3; d++) WeightedAverageCenter[d] = WR_AllRank[d] / W_AllRank;
 
 //    map the new center back to the simulation domain
@@ -296,16 +309,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
 //       use the weighted average center as the referenced center in the next iteration
          memcpy( Center_ref_OldIter, WeightedAverageCenter, sizeof(double)*3 );
 
-
-      if ( W_AllRank == 0.0 )
-      {
-         if ( MPI_Rank == 0 )
-            Aux_Message( stderr, "WARNING : Weighted average center cannot be found because the total weighting (W_AllRank) = %14.7e !!\n", W_AllRank );
-
-         break;
-      }
-
-   }
+   } // while ( true )
 
 
    if ( MPI_Rank == 0 )
