@@ -71,23 +71,23 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
 
 // 2. potential energy
 #  ifdef GRAVITY
-   const ParInterp_t IntScheme  = amr->Par->Interp;
-   const bool UsePot            = ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT );
-   const bool IntPhase_No       = false;
-   const bool DE_Consistency_No = false;
-   const real MinDens_No        = -1.0;
-   const real MinPres_No        = -1.0;
-   const real MinTemp_No        = -1.0;
-   const real MinEntr_No        = -1.0;
+   const ParInterp_t IntScheme      = amr->Par->Interp;
+   const bool UsePot                = ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT );
+   const bool IntPhase_No           = false;
+   const bool DE_Consistency_No     = false;
+   const real MinDens_No            = -1.0;
+   const real MinPres_No            = -1.0;
+   const real MinTemp_No            = -1.0;
+   const real MinEntr_No            = -1.0;
 
-   const int  PotGhost          = amr->Par->GhostSize;
-   const int  PotSize           = PS1 + 2*PotGhost;
+   const int  PotGhost              = amr->Par->GhostSize;
+   const int  PotSize               = PS1 + 2*PotGhost;
 
    const real_par *Pos[3]           = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    const real_par *Mass             = amr->Par->Mass;
    const real_par *PType            = amr->Par->Type;
 
-   double Ep_ThisRank = 0.0;
+   double Ep_ThisRank               = 0.0;
    double PrepPotTime, dh, _dh, Ep_Coeff;
    int    PotSg;
 

@@ -370,11 +370,11 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
    long NSend_Total_ParData, NRecv_Total_ParData;
    long ParID;
 
+   long *NDone_ParData       = new long [MPI_NRank];
    long *Send_NCount_ParData = new long [MPI_NRank];
    long *Recv_NCount_ParData = new long [MPI_NRank];
    long *Send_NDisp_ParData  = new long [MPI_NRank];
    long *Recv_NDisp_ParData  = new long [MPI_NRank];
-   long *NDone_ParData       = new long [MPI_NRank];
 
 #  ifdef DEBUG_PARTICLE
    if ( ParAtt_Old  == NULL )    Aux_Error( ERROR_INFO, "ParAtt_Old == NULL !!\n" );
