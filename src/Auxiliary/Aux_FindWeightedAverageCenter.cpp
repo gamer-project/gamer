@@ -89,13 +89,15 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
 #  endif
 #  endif // #ifdef PARTICLE
 
-// initial the referenced center in the first iteration as the input Center_ref
+// initialize the referenced center in the first iteration as the input Center_ref
    const double MaxR2             = SQR( MaxR );
    const double TolErrR2          = SQR( TolErrR );
    double dR2, Center_ref_OldIter[3];
    for (int d=0; d<3; d++) Center_ref_OldIter[d] = Center_ref[d];
    int NIter = 0;
 
+// if the target region is the entire domain, then there is no need to iterate
+   const bool   isWholeBox        = ( MaxR2 >= (SQR(amr->BoxSize[0]) + SQR(amr->BoxSize[1]) + SQR(amr->BoxSize[2])) );
 
 // start the iteration to find the center until convergence
    while ( true )
@@ -288,7 +290,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
       NIter++;
 
 //    check the convergence and number of iteration to decide whether to end the iteration
-      if ( dR2 <= TolErrR2  ||  NIter >= NIterMax )
+      if ( dR2 <= TolErrR2  ||  NIter >= NIterMax  ||  isWholeBox )
          break;
       else
 //       use the weighted average center as the referenced center in the next iteration
@@ -308,8 +310,8 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
 
    if ( MPI_Rank == 0 )
    {
-      if ( dR2 > TolErrR2 )
-         Aux_Message( stderr, "WARNING : dR (%13.7e) > TolErrR (%13.7e), the weighted average center may not have converged yet when the iteration stopped !!\n", sqrt(dR2), TolErrR );
+      if ( ! isWholeBox  &&  dR2 > TolErrR2 )
+         Aux_Message( stderr, "WARNING : target region is not the entire domain and dR (%13.7e) > TolErrR (%13.7e), the weighted average center may not have converged yet when the iteration stopped !!\n", sqrt(dR2), TolErrR );
    }
 
 // return the information about the iteration
