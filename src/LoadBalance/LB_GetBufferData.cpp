@@ -1836,7 +1836,7 @@ void *LB_GetBufferData_MemAllocate_Send( const long SendSize )
 //                3. We reallocate send/recv buffers only when the current buffer size is not large enough
 //                   --> It greatly improves MPI performance
 //
-// Parameter   :  RecvSize : Number of bytes for total elements to be receive
+// Parameter   :  RecvSize : Number of bytes for total elements to be received
 //
 // Return      :  Pointer to the MPI recv buffer
 //-------------------------------------------------------------------------------------------------------
