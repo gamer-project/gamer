@@ -107,15 +107,12 @@ void Aux_Record_Center()
          else
          {
             FILE *File = fopen( FileName, "w" );
-            fprintf( File, "#%19s  %10s", "Time", "Step" );
-
-            fprintf( File, "  %14s  %14s  %14s  %14s",
-                           "MaxDens", "MaxDens_x", "MaxDens_y", "MaxDens_z" );
+            fprintf( File, "#%19s  %10s  %14s  %14s  %14s  %14s",
+                           "Time", "Step", "MaxDens", "MaxDens_x", "MaxDens_y", "MaxDens_z" );
 
 #           ifdef PARTICLE
-            fprintf( File, "  %14s  %14s  %14s  %14s",
-                           "MaxParDens", "MaxParDens_x", "MaxParDens_y", "MaxParDens_z" );
-            fprintf( File, "  %14s  %14s  %14s  %14s",
+            fprintf( File, "  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s",
+                           "MaxParDens", "MaxParDens_x", "MaxParDens_y", "MaxParDens_z",
                            "MaxTotalDens", "MaxTotalDens_x", "MaxTotalDens_y", "MaxTotalDens_z" );
 #           endif
 
@@ -135,15 +132,12 @@ void Aux_Record_Center()
       }
 
       FILE *File = fopen( FileName, "a" );
-      fprintf( File, "%20.14e  %10ld", Time[0], Step );
-
-      fprintf( File, "  %14.7e  %14.7e  %14.7e  %14.7e",
-                     Max_Dens.Value, Max_Dens.Coord[0], Max_Dens.Coord[1], Max_Dens.Coord[2] );
+      fprintf( File, "%20.14e  %10ld  %14.7e  %14.7e  %14.7e  %14.7e",
+                     Time[0], Step, Max_Dens.Value, Max_Dens.Coord[0], Max_Dens.Coord[1], Max_Dens.Coord[2] );
 
 #     ifdef PARTICLE
-      fprintf( File, "  %14.7e  %14.7e  %14.7e  %14.7e",
-                     Max_ParDens.Value, Max_ParDens.Coord[0], Max_ParDens.Coord[1], Max_ParDens.Coord[2] );
-      fprintf( File, "  %14.7e  %14.7e  %14.7e  %14.7e",
+      fprintf( File, "  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e",
+                     Max_ParDens.Value, Max_ParDens.Coord[0], Max_ParDens.Coord[1], Max_ParDens.Coord[2],
                      Max_TotDens.Value, Max_TotDens.Coord[0], Max_TotDens.Coord[1], Max_TotDens.Coord[2] );
 #     endif
 
