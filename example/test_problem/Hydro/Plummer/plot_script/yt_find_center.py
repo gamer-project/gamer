@@ -30,7 +30,7 @@ prefix      = args.prefix
 
 
 def _TotDens(field, data):
-   return data["Dens"]+data["ParDens"]
+    return data["Dens"]+data["ParDens"]
 
 yt.add_field( ("gamer","TotDens"),
               function=_TotDens, units="code_mass/code_length**3",
