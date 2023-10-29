@@ -55,6 +55,7 @@ double     *ELBDM_dRho_dr     = NULL;     // dRho/dr in the virial surface terms
 double     *ELBDM_LapRho      = NULL;     // Lap(Rho) in the virial surface terms
 bool        OutputSphere      = false;    // output the sphere coordinate (r, theta, phi) velocity
 bool        Richardson        = true;     // Richardson extrapolation for the velocity
+bool        RemoveCMV         = false;    // remove the center-of-mass velocity 
 #else
 IntScheme_t IntScheme         = INT_CQUAD;
 #endif
@@ -246,7 +247,7 @@ void GetMaxRho()
 // Description :  Output center of mass velocity
 //-------------------------------------------------------------------------------------------------------
 
-void Get_CMVel()
+void Remove_CMVel()
 {
    
    cout << "Get center of mass velocity ..." << endl;
@@ -1388,7 +1389,7 @@ void ReadOption( int argc, char **argv )
 
    int c;
 
-   while ( (c = getopt(argc, argv, "hpsSMPVTDcgObi:o:n:x:y:z:r:t:m:a:L:R:u:I:e:G:")) != -1 )
+   while ( (c = getopt(argc, argv, "hpsSMPVTDcgObCi:o:n:x:y:z:r:t:m:a:L:R:u:I:e:G:")) != -1 )
    {
       switch ( c )
       {
@@ -1449,6 +1450,8 @@ void ReadOption( int argc, char **argv )
          case 'O': OutputSphere     = true;
                    break;
          case 'b': Richardson       = false;
+                   break;
+         case 'C': RemoveCMV        = true;
                    break;
          case 'h':
          case '?': cerr << endl << "usage: " << argv[0]
@@ -2751,7 +2754,8 @@ int main( int argc, char ** argv )
 
    if ( Mode_ShellAve )
    {
-      Get_CMVel();
+      
+      if ( RemoveCMV )   Remove_CMVel();
 
       Init_ShellAve();
 
