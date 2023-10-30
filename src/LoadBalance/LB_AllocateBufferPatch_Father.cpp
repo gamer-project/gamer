@@ -209,7 +209,7 @@ void LB_AllocateBufferPatch_Father( const int SonLv, const bool SearchAllSon, co
 
 
 // 2. sort the candidate list and remove duplicates (with the same FaCr1D)
-   Mis_Heapsort( NFaBuf_Dup, FaCr1D_List, NULL );
+   Mis_Heapsort<int,ulong>( NFaBuf_Dup, FaCr1D_List, NULL );
 
    NFaBuf = ( NFaBuf_Dup > 0 ) ? 1 : 0;
 

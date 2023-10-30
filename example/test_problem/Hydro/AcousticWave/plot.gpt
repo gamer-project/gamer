@@ -46,6 +46,7 @@ PAUSE           = -1.0  # <= 0.0 --> mouse
 # set the output file extension automatically
 # -----------------------------------------------------------
 if      ( GPVAL_TERM eq 'pngcairo'   ) FILE_OUT_EXT='png'; \
+else if ( GPVAL_TERM eq 'png'        ) FILE_OUT_EXT='png'; \
 else if ( GPVAL_TERM eq 'postscript' ) FILE_OUT_EXT='eps'; \
 else if ( GPVAL_TERM ne 'x11'        ) print 'Unkown terminal for settting the output file extension !!'; quit
 

@@ -647,7 +647,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 
 //    sort PID list and remove duplicate patches
-      Mis_Heapsort( ParMass_NPatch_Dup, ParMass_PID_List, NULL );
+      Mis_Heapsort<int,int>( ParMass_NPatch_Dup, ParMass_PID_List, NULL );
 
       ParMass_NPatch = ( ParMass_NPatch_Dup > 0 ) ? 1 : 0;
 

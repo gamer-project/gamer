@@ -12,24 +12,10 @@
 // Note        :  1. Work only when the corresponding input parameters are negative
 //                2. Default values are determined empirically
 //
-// Parameter   :  Max_Iter        : Maximum number of iterations
-//                NPre_Smooth     : Number of pre-smoothing steps
-//                NPos_tSmooth    : Number of post-smoothing steps
-//                Tolerated_Error : Maximum tolerated error
+// Return      :  MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH, MG_TOLERATED_ERROR
 //-------------------------------------------------------------------------------------------------------
-void Init_Set_Default_MG_Parameter( int &Max_Iter, int &NPre_Smooth, int &NPost_Smooth, double &Tolerated_Error )
+void Init_Set_Default_MG_Parameter()
 {
-
-// helper macro for printing warning messages
-#  define FORMAT_INT    %- 21d
-#  define FORMAT_FLT    %- 21.14e
-#  define PRINT_WARNING( name, value, format, reason )                                                         \
-   {                                                                                                           \
-      if ( MPI_Rank == 0 )                                                                                     \
-         Aux_Message( stderr, "WARNING : parameter [%-28s] is reset to [" EXPAND_AND_QUOTE(format) "] %s\n",   \
-                      #name, value, reason );                                                                  \
-   }
-
 
 #  ifdef FLOAT8
    const int    Default_Max_Iter        = 20;
@@ -41,39 +27,34 @@ void Init_Set_Default_MG_Parameter( int &Max_Iter, int &NPre_Smooth, int &NPost_
    const int    Default_NPre_Smooth     = 3;
    const int    Default_NPost_Smooth    = 3;
 
-   if ( Max_Iter < 0 )
-   {
-      Max_Iter = Default_Max_Iter;
 
-      PRINT_WARNING( MG_MAX_ITER, Max_Iter, FORMAT_INT, "" );
+   if ( MG_MAX_ITER < 0 )
+   {
+      MG_MAX_ITER = Default_Max_Iter;
+
+      PRINT_RESET_PARA( MG_MAX_ITER, FORMAT_INT, "" );
    }
 
-   if ( NPre_Smooth < 0 )
+   if ( MG_NPRE_SMOOTH < 0 )
    {
-      NPre_Smooth = Default_NPre_Smooth;
+      MG_NPRE_SMOOTH = Default_NPre_Smooth;
 
-      PRINT_WARNING( MG_NPRE_SMOOTH, NPre_Smooth, FORMAT_INT, "" );
+      PRINT_RESET_PARA( MG_NPRE_SMOOTH, FORMAT_INT, "" );
    }
 
-   if ( NPost_Smooth < 0 )
+   if ( MG_NPOST_SMOOTH < 0 )
    {
-      NPost_Smooth = Default_NPost_Smooth;
+      MG_NPOST_SMOOTH = Default_NPost_Smooth;
 
-      PRINT_WARNING( MG_NPOST_SMOOTH, NPost_Smooth, FORMAT_INT, "" );
+      PRINT_RESET_PARA( MG_NPOST_SMOOTH, FORMAT_INT, "" );
    }
 
-   if ( Tolerated_Error < 0.0 )
+   if ( MG_TOLERATED_ERROR < 0.0 )
    {
-      Tolerated_Error = Default_Tolerated_Error;
+      MG_TOLERATED_ERROR = Default_Tolerated_Error;
 
-      PRINT_WARNING( MG_TOLERATED_ERROR, Tolerated_Error, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( MG_TOLERATED_ERROR, FORMAT_REAL, "" );
    }
-
-
-// remove symbolic constants and macros only used in this structure
-#  undef FORMAT_INT
-#  undef FORMAT_FLT
-#  undef QUOTE
 
 } // FUNCTION : Init_Set_Default_MG_Parameter
 

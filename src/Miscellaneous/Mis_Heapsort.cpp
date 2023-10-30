@@ -1,7 +1,7 @@
 #include "GAMER.h"
 
-template <typename T>
-static void Heapsort_SiftDown( const int L, const int R, T Array[], int IdxTable[] );
+template <typename U, typename T>
+static void Heapsort_SiftDown( const U L, const U R, T Array[], U IdxTable[] );
 
 
 
@@ -20,20 +20,20 @@ static void Heapsort_SiftDown( const int L, const int R, T Array[], int IdxTable
 //                Array    :  Array to be sorted into ascending numerical order
 //                IdxTable :  Index table
 //-------------------------------------------------------------------------------------------------------
-template <typename T>
-void Mis_Heapsort( const int N, T Array[], int IdxTable[] )
+template <typename U, typename T>
+void Mis_Heapsort( const U N, T Array[], U IdxTable[] )
 {
 
 // initialize the IdxTable
    if ( IdxTable != NULL )
-      for (int t=0; t<N; t++)    IdxTable[t] = t;
+      for (U t=0; t<N; t++)    IdxTable[t] = t;
 
 // heap creation
-   for (int L=N/2-1; L>=0; L--)  Heapsort_SiftDown( L, N-1, Array, IdxTable );
+   for (U L=N/2-1; L>=0; L--)  Heapsort_SiftDown<U,T>( L, N-1, Array, IdxTable );
 
 // retirement-and-promotion
    T Buf;
-   for (int R=N-1; R>0; R--)
+   for (U R=N-1; R>0; R--)
    {
       Buf      = Array[R];
       Array[R] = Array[0];
@@ -46,7 +46,7 @@ void Mis_Heapsort( const int N, T Array[], int IdxTable[] )
          IdxTable[0] = Buf;
       }
 
-      Heapsort_SiftDown( 0, R-1, Array, IdxTable );
+      Heapsort_SiftDown<U,T>( 0, R-1, Array, IdxTable );
    }
 
 } // FUNCTION : Mis_Heapsort
@@ -65,14 +65,14 @@ void Mis_Heapsort( const int N, T Array[], int IdxTable[] )
 //                Array    :  Array to be sorted into ascending numerical order
 //                IdxTable :  Index table
 //-------------------------------------------------------------------------------------------------------
-template <typename T>
-void Heapsort_SiftDown( const int L, const int R, T Array[], int IdxTable[] )
+template <typename U, typename T>
+void Heapsort_SiftDown( const U L, const U R, T Array[], U IdxTable[] )
 {
 
-   int  Idx_up    = L;
-   int  Idx_down  = 2*Idx_up + 1;
-   T    Target    = Array[Idx_up];
-   int  TargetIdx = ( IdxTable == NULL ) ? -1 : IdxTable[Idx_up];
+   U  Idx_up    = L;
+   U  Idx_down  = 2*Idx_up + 1;
+   T  Target    = Array[Idx_up];
+   U  TargetIdx = ( IdxTable == NULL ) ? -1 : IdxTable[Idx_up];
 
    while ( Idx_down <= R )
    {
@@ -100,9 +100,15 @@ void Heapsort_SiftDown( const int L, const int R, T Array[], int IdxTable[] )
 
 
 // explicit template instantiation
-template void Mis_Heapsort <int>    ( const int N, int    Array[], int IdxTable[] );
-template void Mis_Heapsort <long>   ( const int N, long   Array[], int IdxTable[] );
-template void Mis_Heapsort <ulong>  ( const int N, ulong  Array[], int IdxTable[] );
-template void Mis_Heapsort <float>  ( const int N, float  Array[], int IdxTable[] );
-template void Mis_Heapsort <double> ( const int N, double Array[], int IdxTable[] );
+template void Mis_Heapsort <int,int>     ( const int  N, int    Array[], int  IdxTable[] );
+template void Mis_Heapsort <int,long>    ( const int  N, long   Array[], int  IdxTable[] );
+template void Mis_Heapsort <int,ulong>   ( const int  N, ulong  Array[], int  IdxTable[] );
+template void Mis_Heapsort <int,float>   ( const int  N, float  Array[], int  IdxTable[] );
+template void Mis_Heapsort <int,double>  ( const int  N, double Array[], int  IdxTable[] );
+
+template void Mis_Heapsort <long,int>    ( const long N, int    Array[], long IdxTable[] );
+template void Mis_Heapsort <long,long>   ( const long N, long   Array[], long IdxTable[] );
+template void Mis_Heapsort <long,ulong>  ( const long N, ulong  Array[], long IdxTable[] );
+template void Mis_Heapsort <long,float>  ( const long N, float  Array[], long IdxTable[] );
+template void Mis_Heapsort <long,double> ( const long N, double Array[], long IdxTable[] );
 

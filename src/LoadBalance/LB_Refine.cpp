@@ -14,7 +14,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
                                  int NDel_Home, int *DelPID_Home, int NDel_Away, ulong *DelCr1D_Away,
                                  int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList,
                                  const int (*CFB_SibRank_Home)[6], const int (*CFB_SibRank_Away)[6],
-                                 const real *CFB_BField, const int *CFB_NSibEachRank );
+                                 const real *CFB_BField, const long *CFB_NSibEachRank );
 #ifdef PARTICLE
 void Par_LB_Refine_SendParticle2Father( const int FaLv, const int RefineS2F_Send_NPatchTotal, int *RefineS2F_Send_PIDList );
 #endif
@@ -23,7 +23,7 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
    const int FaLv, const int NNew_Home, const int NNew_Away,
    const long (*CFB_SibLBIdx_Home)[6], const long (*CFB_SibLBIdx_Away)[6],
    int (*&CFB_SibRank_Home)[6], int (*&CFB_SibRank_Away)[6],
-   real *&CFB_BField, int *CFB_NSibEachRank );
+   real *&CFB_BField, long *CFB_NSibEachRank );
 #endif
 
 
@@ -88,7 +88,7 @@ void LB_Refine( const int FaLv )
 // CFB = Coarse-Fine interface B field (for MHD only)
    int  (*CFB_SibRank_Home)[6]=NULL, (*CFB_SibRank_Away)[6]=NULL;
    long (*CFB_SibLBIdx_Home)[6]=NULL, (*CFB_SibLBIdx_Away)[6]=NULL;
-   int    CFB_NSibEachRank[MPI_NRank];
+   long   CFB_NSibEachRank[MPI_NRank];
    real  *CFB_BField=NULL;
 
    LB_Refine_GetNewRealPatchList( FaLv, NNew_Home, NewPID_Home, NNew_Away, NewCr1D_Away, NewCr1D_Away_IdxTable, NewCData_Away,
