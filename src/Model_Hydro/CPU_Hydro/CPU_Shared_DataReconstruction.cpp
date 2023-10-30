@@ -862,42 +862,45 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 // 1. evaluate the monotonic slope of all cells
    const int N_SLOPE_PPM2 = SQR( N_SLOPE_PPM );
-   CGPU_LOOP( idx_slope, CUBE(N_SLOPE_PPM) )
+   if ( LR_Limiter != LR_LIMITER_ATHENA )
    {
-      const int i_cc   = NGhost - 1 + idx_slope%N_SLOPE_PPM;
-      const int j_cc   = NGhost - 1 + idx_slope%N_SLOPE_PPM2/N_SLOPE_PPM;
-      const int k_cc   = NGhost - 1 + idx_slope/N_SLOPE_PPM2;
-      const int idx_cc = IDX321( i_cc, j_cc, k_cc, NIn, NIn );
-
-//    cc_C/L/R: cell-centered variables of the Central/Left/Right cells
-      real cc_C[NCOMP_LR], cc_L[NCOMP_LR], cc_R[NCOMP_LR], Slope_Limiter[NCOMP_LR];
-
-      for (int v=0; v<NCOMP_LR; v++)   cc_C[v] = g_PriVar[v][idx_cc];
-
-//    loop over different spatial directions
-      for (int d=0; d<3; d++)
+      CGPU_LOOP( idx_slope, CUBE(N_SLOPE_PPM) )
       {
-         const int idx_ccL = idx_cc - didx_cc[d];
-         const int idx_ccR = idx_cc + didx_cc[d];
+         const int i_cc   = NGhost - 1 + idx_slope%N_SLOPE_PPM;
+         const int j_cc   = NGhost - 1 + idx_slope%N_SLOPE_PPM2/N_SLOPE_PPM;
+         const int k_cc   = NGhost - 1 + idx_slope/N_SLOPE_PPM2;
+         const int idx_cc = IDX321( i_cc, j_cc, k_cc, NIn, NIn );
 
-#        if ( defined MHD  &&  defined CHAR_RECONSTRUCTION )
-         MHD_GetEigenSystem( cc_C, EigenVal[d], LEigenVec, REigenVec, EoS, d );
-#        endif
+//       cc_C/L/R: cell-centered variables of the Central/Left/Right cells
+         real cc_C[NCOMP_LR], cc_L[NCOMP_LR], cc_R[NCOMP_LR], Slope_Limiter[NCOMP_LR];
 
-         for (int v=0; v<NCOMP_LR; v++)
+         for (int v=0; v<NCOMP_LR; v++)   cc_C[v] = g_PriVar[v][idx_cc];
+
+//       loop over different spatial directions
+         for (int d=0; d<3; d++)
          {
-            cc_L[v] = g_PriVar[v][idx_ccL];
-            cc_R[v] = g_PriVar[v][idx_ccR];
-         }
+            const int idx_ccL = idx_cc - didx_cc[d];
+            const int idx_ccR = idx_cc + didx_cc[d];
 
-         Hydro_LimitSlope( cc_L, cc_C, cc_R, LR_Limiter, MinMod_Coeff, d,
-                           LEigenVec, REigenVec, Slope_Limiter, EoS );
+#           if ( defined MHD  &&  defined CHAR_RECONSTRUCTION )
+            MHD_GetEigenSystem( cc_C, EigenVal[d], LEigenVec, REigenVec, EoS, d );
+#           endif
 
-//       store the results to g_Slope_PPM[]
-         for (int v=0; v<NCOMP_LR; v++)   g_Slope_PPM[d][v][idx_slope] = Slope_Limiter[v];
+            for (int v=0; v<NCOMP_LR; v++)
+            {
+               cc_L[v] = g_PriVar[v][idx_ccL];
+               cc_R[v] = g_PriVar[v][idx_ccR];
+            }
 
-      } // for (int d=0; d<3; d++)
-   } // CGPU_LOOP( idx_slope, CUBE(N_SLOPE_PPM) )
+            Hydro_LimitSlope( cc_L, cc_C, cc_R, LR_Limiter, MinMod_Coeff, d,
+                              LEigenVec, REigenVec, Slope_Limiter, EoS );
+
+//          store the results to g_Slope_PPM[]
+            for (int v=0; v<NCOMP_LR; v++)   g_Slope_PPM[d][v][idx_slope] = Slope_Limiter[v];
+
+         } // for (int d=0; d<3; d++)
+      } // CGPU_LOOP( idx_slope, CUBE(N_SLOPE_PPM) )
+   } // if ( LR_Limiter != LR_LIMITER_ATHENA )
 
 #  ifdef __CUDACC__
    __syncthreads();
@@ -971,8 +974,12 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          const int idx_slopeL = idx_slope - didx_slope[d];
          const int idx_slopeR = idx_slope + didx_slope[d];
 
-         const real C_factor = 1.25;
+         const real C_factor  = 1.25;
+#        ifdef FLOAT8
          const real round_err = 1.e-12;
+#        else
+         const real round_err = 1.e-6;
+#        endif
 
          for (int v=0; v<NCOMP_LR; v++)
          {
@@ -1019,33 +1026,29 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 //             3-4. limit slope of L&R
                if ( dh_LL*dh_L < (real)0.0 ) {
                   if ( SIGN(dd_L) == SIGN(ddh_L)  &&  SIGN(ddh_L) == SIGN(dd_C) ) {
-                     tmp = SIGN(dd_C) * FMIN(C_factor*FABS(dd_L), FMIN( (real)3.*FABS(ddh_L), C_factor*FABS(dd_C)));
+                     tmp = SIGN(dd_C) * FMIN(C_factor*FABS(dd_L), FMIN((real)3.*FABS(ddh_L), C_factor*FABS(dd_C)));
                   } else {
                      tmp = (real)0.0;
                   } // if ( SIGN(dd_L) == SIGN(ddh_L)  &&  SIGN(ddh_L) == SIGN(dd_C) ) ... else ...
                   fc_L  = (real)0.5*(cc_L+cc_C) - tmp/(real)6.0;
                   dh_LL = fc_L - cc_L;
-                  dh_L  = cc_C - fc_L;
+                  ddh_C = fc_L - (real)2.*cc_C + fc_R;
                } // if ( dh_LL*dh_L < (real)0.0 )
 
                if ( dh_R*dh_RR < (real)0.0 ) {
                   if ( SIGN(dd_C) == SIGN(ddh_R)  &&  SIGN(ddh_R) == SIGN(dd_R) ) {
-                     tmp = SIGN(dd_C) * FMIN(C_factor*FABS(dd_C), FMIN( (real)3.*FABS(ddh_R), C_factor*FABS(dd_R)));
+                     tmp = SIGN(dd_C) * FMIN(C_factor*FABS(dd_C), FMIN((real)3.*FABS(ddh_R), C_factor*FABS(dd_R)));
                   } else {
                      tmp = (real)0.0;
                   } // if ( SIGN(dd_C) == SIGN(ddh_R)  &&  SIGN(ddh_R) == SIGN(dd_R) ) ... else ...
                   fc_R  = (real)0.5*(cc_C+cc_R) - tmp/(real)6.0;
                   dh_R  = fc_R - cc_C;
-                  dh_RR = cc_R - fc_R;
+                  ddh_C = fc_L - (real)2.*cc_C + fc_R;
                } // if ( dh_R*dh_RR < (real)0.0 )
-
-//             preparation for the CTU (not in athena++)
-               dfc [v] = fc_R - fc_L;
-               dfc6[v] = (real)6.0*( cc_C - (real)0.5*(fc_L + fc_R) );
 
 //             3-5. reduce error to round-off error
                if ( SIGN(dd_L) == SIGN(dd_C)  &&  SIGN(dd_C) == SIGN(dd_R)  &&  SIGN(dd_R) == SIGN(ddh_C) ) {
-                  tmp = SIGN(dd_C) * FMIN( C_factor*FABS(dd_L), FMIN( C_factor*FABS(dd_C), FMIN( C_factor*FABS(dd_R), (real)6.0*FABS(ddh_C))));
+                  tmp = SIGN(dd_C) * FMIN(C_factor*FABS(dd_L), FMIN(C_factor*FABS(dd_C), FMIN(C_factor*FABS(dd_R), (real)6.0*FABS(ddh_C))));
                } else {
                   tmp = (real)0.0;
                } // if ( SIGN(dd_L) == SIGN(dd_C)  &&  SIGN(dd_C) == SIGN(dd_R)  &&  SIGN(dd_R) == SIGN(ddh_C) ) ... else ...
