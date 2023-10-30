@@ -1999,10 +1999,6 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
                Slope_Limiter[v] *= SIGN( Slope_C[v] );
                break;
 
-            case LR_LIMITER_ATHENA:   // ATHENA++ limiter
-               Slope_Limiter[v] = Slope_C[v];
-               break;
-
             default :
 #              ifdef GAMER_DEBUG
                printf( "ERROR : incorrect parameter %s = %d !!\n", "LR_Limiter", LR_Limiter );
