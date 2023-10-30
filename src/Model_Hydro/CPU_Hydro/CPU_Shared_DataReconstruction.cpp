@@ -1047,12 +1047,12 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                   rho = (real)0.0;
                } // if ( FABS(ddh_C) > round_error*cc_abs_max ) ... else ...
 
-               if ( dh_L*dh_R < (real)0.0 || d_L*d_R < (real)0.0 ) {
+               if ( dh_L*dh_R < (real)0.0  ||  d_L*d_R < (real)0.0 ) {
                   if ( rho < (real)1.-round_err ) { fc_L = cc_C - rho * dh_L; fc_R = cc_C + rho * dh_R; }
                } else {
                   if ( FABS(dh_L) >= (real)2.*FABS(dh_R) ) fc_L = cc_C - (real)2.*dh_R;
                   if ( FABS(dh_R) >= (real)2.*FABS(dh_L) ) fc_R = cc_C + (real)2.*dh_L;
-               } // if ( dh_L*dh_R < 0.0 && d_L*d_R < 0.0 )
+               } // if ( dh_L*dh_R < (real)0.0  ||  d_L*d_R < (real)0.0 )
 
             } else // if ( LR_Limiter == LR_LIMITER_ATHENA )
             {
