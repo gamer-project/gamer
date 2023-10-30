@@ -133,6 +133,15 @@ static void Hydro_Char2Pri( real InOut[], const real Dens, const real Pres, cons
 //                9. Support applying data reconstruction to internal energy and using that instead of pressure
 //                   for converting primitive variables to conserved variables
 //                   --> Controlled by the option "LR_EINT" in CUFLU.h; see the description thereof for details
+//                10. (PPM) Reference:
+//                   a. The Athena++ Adaptive Mesh Refinement Framework: Design and Magnetohydrodynamic Solvers
+//                      Stone J. M., Tomida K., White C. J., Felker K. G., 2020, ApJS, 249, 4.
+//                   b. The Piecewise Parabolic Method (PPM) for gas-dynamical simulations
+//                      Colella P., Woodward P. R., 1984, JCoPh, 54, 174. doi:10.1016/0021-9991(84)90143-8
+//                   c. A limiter for PPM that preserves accuracy at smooth extrema
+//                      Colella P., Sekora M. D., 2008, JCoPh, 227, 7069. doi:10.1016/j.jcp.2008.03.034
+//                   d. A high-order finite-volume method for conservation laws on locally refined grids
+//                      Peter McCorquodale. Phillip Colella. Commun. Appl. Math. Comput. Sci. 6 (1) 1 - 25, 2011.
 //
 // Parameter   :  g_ConVar           : Array storing the input cell-centered conserved variables
 //                                     --> Should contain NCOMP_TOTAL variables
