@@ -1989,18 +1989,15 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], real fcPri[][NCOMP_LR], const
 #     ifdef SRHD  
       if ( Hydro_CheckUnphysical( UNPHY_MODE_CONS, fcCon[f], NULL, ERROR_INFO, UNPHY_SILENCE ) ) reset_cell = true;
 #     else
-      if ( fcCon[f][0] <= (real)0.0 || fcCon[f][0] >= HUGE_NUMBER || fcCon[f][0] != fcCon[f][0] ) reset_cell = true;
+      if ( fcCon[f][DENS] <= (real)0.0 || fcCon[f][DENS] >= HUGE_NUMBER || fcCon[f][DENS] != fcCon[f][DENS] ) reset_cell = true;
 #     ifndef BAROTROPIC_EOS
 #     ifdef MHD
       const real Emag = (real)0.5*( SQR(fcCon[f][MAG_OFFSET+0]) + SQR(fcCon[f][MAG_OFFSET+1]) + SQR(fcCon[f][MAG_OFFSET+2]) );
 #     else
       const real Emag = NULL_REAL;
 #     endif
-      const real Pres = Hydro_Con2Pres( fc[f][DENS], fc[f][MOMX], fc[f][MOMY], fc[f][MOMZ], fc[f][ENGY], fc[f]+NCOMP_FLUID,
-                                        true, MinPres, Emag, EoS->DensEint2Pres_FuncPtr, EoS->AuxArrayDevPtr_Flt,
-                                        EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
-      if ( fc[f][4] <= (real)0.0 || fc[f][4] >= HUGE_NUMBER || fc[f][4] != fc[f][4] ) reset_cell = true;
-      if ( Pres     <= (real)0.0 || Pres     >= HUGE_NUMBER || Pres     != Pres     ) reset_cell = true;
+      if ( fcCon[f][ENGY] <= (real)0.0 || fcCon[f][ENGY] >= HUGE_NUMBER || fcCon[f][ENGY] != fcCon[f][ENGY] ) reset_cell = true;
+      if ( fcPri[f][PRES] <= (real)0.0 || fcPri[f][PRES] >= HUGE_NUMBER || fcPri[f][PRES] != fcPri[f][PRES] ) reset_cell = true;
 #     endif // #ifndef BAROTROPIC_EOS
 #     endif // #ifdef SRHD
 
@@ -2027,8 +2024,8 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], real fcPri[][NCOMP_LR], const
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) fcCon[f][v] = FMAX( fcCon[f][v], TINY_NUMBER );
 #     endif
    } // for (int f=0; f<6; f++)
+#  endif // #ifndef SRHD
 #  endif // #ifdef MHM_CHECK_PREDICT
-#endif // #ifndef SRHD
 
 } // FUNCTION : Hydro_HancockPredict
 
@@ -2087,6 +2084,7 @@ void Hydro_ConFC2PriCC_MHM(       real g_PriVar[][ CUBE(FLU_NXT) ],
 
       Hydro_Con2Pri( ConCC, PriCC, MinPres, FracPassive, NFrac, FracIdx,
                      JeansMinPres, JeansMinPres_Coeff, EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr,
+                     EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                      EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
       for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_PriVar[v][idx_fc] = PriCC[v];

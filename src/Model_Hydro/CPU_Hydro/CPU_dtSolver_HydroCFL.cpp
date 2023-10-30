@@ -108,7 +108,7 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
          Bz2  = SQR( B[MAGZ] );
          B2   = Bx2 + By2 + Bz2;
          Emag = (real)0.5*B2;
-#        elif ( !defined SRHD )
+#        else
          Emag = NULL_REAL;
 #        endif
 

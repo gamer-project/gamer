@@ -123,7 +123,7 @@ static real EoS_GuessHTilde_TaubMathews( const real Con[], real* const Constant,
 // Note        :  Eq. 16 in "Tseng et al. 2021, MNRAS, 504, 3298"
 //
 // Parameter   :  HTilde     : Reduced enthalpy
-//                Temp       : Temperature (kT/mc**)
+//                Temp       : Temperature (kT/mc**2)
 //                DiffTemp   : The derivitive of a reduced enthalpy with respect to temperature
 //                Passive    : Passive scalars (must not used here)
 //                AuxArray_* : Auxiliary arrays (see the Note above)

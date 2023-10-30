@@ -2,6 +2,6 @@
 
 PYTHON=python3
 
-${PYTHON} configure.py --machine=pleiades --mpi=true --hdf5=true --gpu=true --model=HYDRO \
+${PYTHON} configure.py --machine=eureka --mpi=true --hdf5=true --gpu=true --model=HYDRO \
 	               --srhd=true --eos=TAUBMATHEWS --flux=HLLC --flu_scheme=MHM \
-	               --gpu_arch=VOLTA --passive=4
+	               --passive=4
