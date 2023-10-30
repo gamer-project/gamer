@@ -34,7 +34,7 @@ void Flu_DerivedField_DivVel( real Out[], const real FluIn[], const real MagIn[]
 {
 
 #  ifdef SRHD
-   Aux_Error( ERROR_INFO, "SRHD does not support div(V) evalation !!\n" );
+   Aux_Error( ERROR_INFO, "SRHD does not support div(V) evaluation !!\n" );
 #  endif
 
 

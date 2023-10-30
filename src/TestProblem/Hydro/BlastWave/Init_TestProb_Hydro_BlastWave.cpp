@@ -226,9 +226,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #  ifdef SRHD
    real Prim[NCOMP_TOTAL];
    Prim[0] = Dens;
-   Prim[1] = MomX;
-   Prim[2] = MomY;
-   Prim[3] = MomZ;
+   Prim[1] = 0.0;
+   Prim[2] = 0.0;
+   Prim[3] = 0.0;
    Prim[4] = Pres;
    Hydro_Pri2Con( Prim, fluid, NULL_BOOL, NULL_INT, NULL,
                   EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,

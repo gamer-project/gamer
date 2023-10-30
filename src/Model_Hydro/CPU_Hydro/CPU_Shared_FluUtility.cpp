@@ -1279,10 +1279,10 @@ real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const re
 
 #  if (  defined SRHD  &&  defined  GAMER_DEBUG )
 #  ifdef __CUDACC__
-   printf( "ERROR : SRHD does not support entropy evalation at file <%s>, line <%d>, function <%s> !!\n",
+   printf( "ERROR : SRHD does not support entropy evaluation at file <%s>, line <%d>, function <%s> !!\n",
            ERROR_INFO );
 #  else
-   Aux_Error( ERROR_INFO, "SRHD does not support entropy evalation !!\n" );
+   Aux_Error( ERROR_INFO, "SRHD does not support entropy evaluation !!\n" );
 #  endif
 #  endif
 

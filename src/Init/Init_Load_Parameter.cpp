@@ -511,7 +511,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__CK_FINITE",             &OPT__CK_FINITE,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_PATCH_ALLOCATE",     &OPT__CK_PATCH_ALLOCATE,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_FLUX_ALLOCATE",      &OPT__CK_FLUX_ALLOCATE,           false,           Useless_bool,  Useless_bool   );
-#  if ( MODEL == HYDRO && defined SRHD )
+#  if ( MODEL == HYDRO )
    ReadPara->Add( "OPT__CK_NEGATIVE",           &OPT__CK_NEGATIVE,                0,               0,             3              );
 #  endif
    ReadPara->Add( "OPT__CK_MEMFREE",            &OPT__CK_MEMFREE,                 1.0,             0.0,           NoMax_double   );

@@ -104,12 +104,12 @@ static real EoS_GuessHTilde_TaubMathews( const real Con[], real* const Constant,
   if ( *Constant >= Discrimination )
   {
      // Eq. A6 in "Tseng et al. 2021, MNRAS, 504, 3298"
-     GuessHTilde = (real)1.3333333 * SQRT( *Constant );
+     GuessHTilde = (real)4./3. * SQRT( *Constant );
   }
   else
   {
      // Eq. A4 in "Tseng et al. 2021, MNRAS, 504, 3298"
-     GuessHTilde  = (real)11.18 * SQRT( B*C* (*Constant) + (real)45.0*B*B );
+     GuessHTilde  = (real)1.1180339887498949e1 * SQRT( B*C* (*Constant) + (real)45.0*B*B );
 	 GuessHTilde -= (real)75.0 * B;
 	 GuessHTilde /= C;
   }
