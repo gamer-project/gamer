@@ -871,6 +871,11 @@ void Aux_Check_Parameter()
         OPT__LR_LIMITER != LR_LIMITER_ATHENA )
       Aux_Error( ERROR_INFO, "unsupported data reconstruction limiter (OPT__LR_IMITER = %d) !!\n",
                  OPT__LR_LIMITER );
+#  if ( LR_SCHEME == PLM )
+   if ( OPT__LR_LIMITER == LR_LIMITER_ATHENA )
+      Aux_Error( ERROR, "ERROR : OPT__LR_LIMITER = %d (LR_LIMITER_ATHENA) is not supported for PLM !!\n",
+                   OPT__LR_ATHENA );
+#  endif
 
 
 // warnings
@@ -881,6 +886,12 @@ void Aux_Check_Parameter()
       if ( OPT__LR_LIMITER != LR_LIMITER_CENTRAL )
          Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (LR_LIMITER_CENTRAL) is recommended for MHM_RP+PPM !!\n",
                       LR_LIMITER_CENTRAL );
+#     endif
+
+#     if ( FLU_SCHEME == MHM  &&  defined MHD )
+      if ( OPT__LR_LIMITER == LR_LIMITER_ATHENA )
+         Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (LR_LIMITER_ATHENA) is not recommended for MHM+MHD !!\n",
+                      LR_LIMITER_ATHENA );
 #     endif
 
 #     if ( LR_SCHEME == PLM )
