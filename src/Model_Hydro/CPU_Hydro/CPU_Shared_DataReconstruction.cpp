@@ -956,8 +956,8 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          const int faceL      = 2*d;      // left and right face indices
          const int faceR      = faceL+1;
          const int idx_ccLL   = idx_cc - 2*didx_cc[d];
-         const int idx_ccL    = idx_cc - didx_cc[d];
-         const int idx_ccR    = idx_cc + didx_cc[d];
+         const int idx_ccL    = idx_cc -   didx_cc[d];
+         const int idx_ccR    = idx_cc +   didx_cc[d];
          const int idx_ccRR   = idx_cc + 2*didx_cc[d];
          const int idx_slopeL = idx_slope - didx_slope[d];
          const int idx_slopeR = idx_slope + didx_slope[d];
@@ -967,17 +967,17 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
          for (int v=0; v<NCOMP_LR; v++)
          {
-//          fc: face-centered value
+//          fc_*: face-centered value
             real fc_L, fc_R;
             if ( LR_Limiter == LR_LIMITER_ATHENA )
             {
                real tmp, rho, cc_abs_max;
-//             cc: cell-centered value; cc_*: cell-centered value; d_*: face-centered slope; dd_*: cell-centered curvature
+//             cc_*: cell-centered value; d_*: face-centered slope; dd_*: cell-centered curvature
                real cc_LL, cc_L, cc_C, cc_R, cc_RR, d_L, d_R, dd_L, dd_C, dd_R;
 //             dh_*: face-centered slope (half increment); ddh_*: cell-centered curvature (half increment)
                real dh_LL, dh_L, dh_R, dh_RR, ddh_L, ddh_C, ddh_R;
 
-//             3-1. get all the value needed
+//             3-1. get all the values needed
                cc_LL = g_PriVar[v][idx_ccLL];
                cc_L  = g_PriVar[v][idx_ccL ];
                cc_C  = g_PriVar[v][idx_cc  ];
@@ -987,17 +987,17 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                d_L   = cc_C - cc_L;
                d_R   = cc_R - cc_C;
 
-               dd_L  = cc_LL - (real)2.*cc_L + cc_C ;
-               dd_C  = cc_L  - (real)2.*cc_C + cc_R ;
+               dd_L  = cc_LL - (real)2.*cc_L + cc_C;
+               dd_C  = cc_L  - (real)2.*cc_C + cc_R;
                dd_R  = cc_C  - (real)2.*cc_R + cc_RR;
 
-               cc_abs_max = MAX(FABS(cc_LL), MAX(FABS(cc_L), MAX(FABS(cc_C), MAX(FABS(cc_R), FABS(cc_RR)))));
+               cc_abs_max = FMAX(FABS(cc_LL), FMAX(FABS(cc_L), FMAX(FABS(cc_C), FMAX(FABS(cc_R), FABS(cc_RR)))));
 
-//             3-2. interpolate the face value
+//             3-2. interpolate the face values
                fc_L = ( -cc_LL + (real)7.*cc_L + (real)7.*cc_C - cc_R  ) / (real)12.0;
                fc_R = ( -cc_L  + (real)7.*cc_C + (real)7.*cc_R - cc_RR ) / (real)12.0;
 
-//             3-3. prepare half increment value
+//             3-3. prepare half increment values
                dh_LL = fc_L - cc_L;
                dh_L  = cc_C - fc_L;
                dh_R  = fc_R - cc_C;
@@ -1008,27 +1008,27 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                ddh_R = cc_C - (real)2.*fc_R + cc_R;
 
 //             3-4. limit slope of L&R
-               if ( dh_LL*dh_L < 0.0 ) {
+               if ( dh_LL*dh_L < (real)0.0 ) {
                   if ( SIGN(dd_L) == SIGN(ddh_L)  &&  SIGN(ddh_L) == SIGN(dd_C) ) {
-                     tmp = SIGN(dd_C) * MIN(C_factor*FABS(dd_L), MIN( (real)3.*FABS(ddh_L), C_factor*FABS(dd_C)));
+                     tmp = SIGN(dd_C) * FMIN(C_factor*FABS(dd_L), FMIN( (real)3.*FABS(ddh_L), C_factor*FABS(dd_C)));
                   } else {
-                     tmp = 0.0;
+                     tmp = (real)0.0;
                   } // if ( SIGN(dd_L) == SIGN(ddh_L)  &&  SIGN(ddh_L) == SIGN(dd_C) ) ... else ...
                   fc_L  = (real)0.5*(cc_L+cc_C) - tmp/(real)6.0;
                   dh_LL = fc_L - cc_L;
                   dh_L  = cc_C - fc_L;
-               } // if ( dh_LL*dh_L < 0.0 )
+               } // if ( dh_LL*dh_L < (real)0.0 )
 
-               if ( dh_R*dh_RR < 0.0 ) {
+               if ( dh_R*dh_RR < (real)0.0 ) {
                   if ( SIGN(dd_C) == SIGN(ddh_R)  &&  SIGN(ddh_R) == SIGN(dd_R) ) {
-                     tmp = SIGN(dd_C) * MIN(C_factor*FABS(dd_C), MIN( (real)3.*FABS(ddh_R), C_factor*FABS(dd_R)));
+                     tmp = SIGN(dd_C) * FMIN(C_factor*FABS(dd_C), FMIN( (real)3.*FABS(ddh_R), C_factor*FABS(dd_R)));
                   } else {
-                     tmp = 0.0;
+                     tmp = (real)0.0;
                   } // if ( SIGN(dd_C) == SIGN(ddh_R)  &&  SIGN(ddh_R) == SIGN(dd_R) ) ... else ...
                   fc_R  = (real)0.5*(cc_C+cc_R) - tmp/(real)6.0;
                   dh_R  = fc_R - cc_C;
                   dh_RR = cc_R - fc_R;
-               } // if ( dh_R*dh_RR < 0.0 )
+               } // if ( dh_R*dh_RR < (real)0.0 )
 
 //             preparation for the CTU (not in athena++)
                dfc [v] = fc_R - fc_L;
@@ -1036,20 +1036,19 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 //             3-5. reduce error to round-off error
                if ( SIGN(dd_L) == SIGN(dd_C)  &&  SIGN(dd_C) == SIGN(dd_R)  &&  SIGN(dd_R) == SIGN(ddh_C) ) {
-                  tmp = SIGN(dd_C) * MIN( C_factor*FABS(dd_L), MIN( C_factor*FABS(dd_C), MIN( C_factor*FABS(dd_L), (real)6.0*FABS(ddh_C))));
+                  tmp = SIGN(dd_C) * FMIN( C_factor*FABS(dd_L), FMIN( C_factor*FABS(dd_C), FMIN( C_factor*FABS(dd_R), (real)6.0*FABS(ddh_C))));
                } else {
-                  tmp = 0.0;
+                  tmp = (real)0.0;
                } // if ( SIGN(dd_L) == SIGN(dd_C)  &&  SIGN(dd_C) == SIGN(dd_R)  &&  SIGN(dd_R) == SIGN(ddh_C) ) ... else ...
 
                if ( (real)6.*FABS(ddh_C) > round_err*cc_abs_max ) {
                   rho = tmp / ddh_C / (real)6.;
                } else {
-                  rho = 0.0;
+                  rho = (real)0.0;
                } // if ( FABS(ddh_C) > round_error*cc_abs_max ) ... else ...
 
-               if ( dh_L*dh_R < 0.0 || d_L*d_R < 0.0 ) {
-                  if ( rho < 1.-round_err ) fc_L = cc_C - rho * dh_L;
-                  if ( rho < 1.-round_err ) fc_R = cc_C + rho * dh_R;
+               if ( dh_L*dh_R < (real)0.0 || d_L*d_R < (real)0.0 ) {
+                  if ( rho < (real)1.-round_err ) { fc_L = cc_C - rho * dh_L; fc_R = cc_C + rho * dh_R; }
                } else {
                   if ( FABS(dh_L) >= (real)2.*FABS(dh_R) ) fc_L = cc_C - (real)2.*dh_R;
                   if ( FABS(dh_R) >= (real)2.*FABS(dh_L) ) fc_R = cc_C + (real)2.*dh_L;
@@ -1093,6 +1092,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                   fc_L = (real)3.0*cc_C - (real)2.0*fc_R;
                else if ( dfc[v]*dfc6[v] < -dfc[v]*dfc[v] )
                   fc_R = (real)3.0*cc_C - (real)2.0*fc_L;
+
 
 //             3-3. ensure the face-centered variables lie between neighboring cell-centered values
                Min  = ( cc_C < cc_L ) ? cc_C : cc_L;
