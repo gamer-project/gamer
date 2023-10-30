@@ -967,11 +967,13 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
          for (int v=0; v<NCOMP_LR; v++)
          {
+//          fc: face-centered value
+            real fc_L, fc_R;
             if ( LR_Limiter == LR_LIMITER_ATHENA )
             {
                real tmp, rho, cc_abs_max;
-//             fc/cc: face/cell-centered value; cc_*: ceell-centered value; d_*: face-centered slope; dd_*: cell-centered curvature
-               real fc_L, fc_R, cc_LL, cc_L, cc_C, cc_R, cc_RR, d_L, d_R, dd_L, dd_C, dd_R;
+//             cc: cell-centered value; cc_*: cell-centered value; d_*: face-centered slope; dd_*: cell-centered curvature
+               real cc_LL, cc_L, cc_C, cc_R, cc_RR, d_L, d_R, dd_L, dd_C, dd_R;
 //             dh_*: face-centered slope (half increment); ddh_*: cell-centered curvature (half increment)
                real dh_LL, dh_L, dh_R, dh_RR, ddh_L, ddh_C, ddh_R;
 
@@ -1055,8 +1057,8 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
             } else // if ( LR_Limiter == LR_LIMITER_ATHENA )
             {
-//             cc/fc: cell/face-centered variables; _C/L/R: Central/Left/Right cells
-               real cc_C, cc_L, cc_R, dcc_L, dcc_R, dcc_C, fc_L, fc_R, Max, Min;
+//             cc: cell-centered variables; _C/L/R: Central/Left/Right cells
+               real cc_C, cc_L, cc_R, dcc_L, dcc_R, dcc_C, Max, Min;
 
 //             3-1. parabolic interpolation
                cc_L  = g_PriVar[v][idx_ccL];
