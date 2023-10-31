@@ -29,7 +29,6 @@ void Init_TestProb_Hydro_EnergyPowerSpectrum();
 void Init_TestProb_Hydro_Cosmic_Ray_SoundWave();
 void Init_TestProb_Hydro_Cosmic_Ray_Shocktube();
 void Init_TestProb_Hydro_Cosmic_Ray_Diffusion();
-void Init_TestProb_Hydro_Cosmic_Ray_AMR();
 
 void Init_TestProb_ELBDM_ExtPot();
 
