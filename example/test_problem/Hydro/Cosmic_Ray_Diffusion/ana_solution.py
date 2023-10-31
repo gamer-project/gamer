@@ -133,7 +133,7 @@ def ana_gaussian_ring( x, y, t ):
         r   = np.sqrt(y**2 + z**2)
         phi = np.arctan2(z, y)
     else:
-        raise ValueError( "PLANE can only be one of [xy, xz, yz]. PLANE: %s"%(PLANE) )
+        raise ValueError( "PLANE can only be one of [xy/xz/yz]. PLANE: %s"%(PLANE) )
 
     del_r2 = DEL_R**2
     del_phi2 = DEL_PHI**2 + 2 * K_PARA * t / r**2

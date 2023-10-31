@@ -16,17 +16,17 @@ import ana_solution as ana
 # 1. gaussian ball
 K_PARA   = 0.05                         # parallel diffusion coefficient
 K_PERP   = 0.5                          # perpendicular diffusion coefficient
-MAG      = np.array([1., 2., 3.])       # magnetic field
-CR_BG    = 0.1                          # cosmic ray energy density background value
-CR_E0    = 0.1                          # cosmic ray energy dendity amplitude
+MAG      = np.array([5., 5., 5.])       # magnetic field
+CR_BG    = 1.e-1                        # cosmic ray energy density background value
+CR_E0    = 1.e+2                        # cosmic ray energy density amplitude
 CR_R2    = 40                           # inverse of variance of Gaussian distribution
 ANA_FUNC = ana.ana_ball                 # analytical solution function
 all_args = {"K_PARA":K_PARA, "K_PERP":K_PERP, "MAG":MAG, "CR_BG":CR_BG, "CR_E0":CR_E0, "CR_R2":CR_R2}
 
 # 2. step function ring
 # K_PARA   = 0.05                         # parallel diffusion coefficient
-# CR_BG    = 0.1                          # cosmic ray energy density background value
-# CR_E0    = 0.1                          # cosmic ray energy dendity amplitude
+# CR_BG    = 1.e-1                        # cosmic ray energy density background value
+# CR_E0    = 1.e-1                        # cosmic ray energy density amplitude
 # R_IN     = 0.5                          # inner radius of the ring
 # R_OUT    = 0.7                          # outer radius of the ring
 # PLANE    = "xy"                         # the plane where the ring exist [xy/xz/yz]
@@ -36,7 +36,7 @@ all_args = {"K_PARA":K_PARA, "K_PERP":K_PERP, "MAG":MAG, "CR_BG":CR_BG, "CR_E0":
 # 3. gaussian distribution ring
 # K_PARA   = 0.05                         # parallel diffusion coefficient
 # CR_BG    = 0.1                          # cosmic ray energy density background value
-# CR_E0    = 0.1                          # cosmic ray energy dendity amplitude
+# CR_E0    = 0.1                          # cosmic ray energy density amplitude
 # R        = 0.6                          # center radius of the ring
 # DEL_R    = 0.05                         # the standard deviation on r direction
 # DEL_PHI  = 0.5                          # the standard deviation on phi direction
@@ -47,7 +47,7 @@ all_args = {"K_PARA":K_PARA, "K_PERP":K_PERP, "MAG":MAG, "CR_BG":CR_BG, "CR_E0":
 # 4. gaussian distribution plane
 # K_PARA   = 0.05                         # parallel diffusion coefficient
 # CR_BG    = 0.1                          # cosmic ray energy density background value
-# CR_E0    = 0.1                          # cosmic ray energy dendity amplitude
+# CR_E0    = 0.1                          # cosmic ray energy density amplitude
 # CR_R2    = 40                           # inverse of variance of Gaussian distribution
 # DIR      = "x"                          # the direction of gaussian and magnetic field. [x/y/z/xy/xz/yz/xyz]
 # ANA_FUNC = ana.ana_plane                # analytical solution function
@@ -58,10 +58,10 @@ all_args = {"K_PARA":K_PARA, "K_PERP":K_PERP, "MAG":MAG, "CR_BG":CR_BG, "CR_E0":
 #====================================================================================================
 # Main
 #====================================================================================================
-N_res      = 4  # number of resolutions
-base_res   = 6  # base resolution N=2**base_res
-center     = 8. # center coordinate of the box
-data_index = 10 # the data dump index to be analyzed
+N_res      = 4          # number of resolutions
+base_res   = 6          # base resolution N=2**base_res
+center     = 0.5        # center coordinate of the box
+data_index = 10         # the data dump index to be analyzed
 
 all_res    = np.array([ int(2**i) for i in range(base_res, base_res+N_res) ], dtype=np.int32)
 all_err    = np.ones(N_res)

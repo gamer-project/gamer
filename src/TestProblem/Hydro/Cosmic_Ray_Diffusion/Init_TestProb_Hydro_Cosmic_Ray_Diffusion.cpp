@@ -106,7 +106,7 @@ void Validate()
       Aux_Error( ERROR_INFO, "We only support the uniform magnetic field ( CR_Diffusion_Mag_Type = 0 ) for this test problem type (%d).\n", CR_Diffusion_Type );
 
 #  ifdef CR_DIFFUSION
-   if ( CR_DIFF_PERP != 0.0 )
+   if ( CR_Diffusion_Type == 3  &&  CR_DIFF_PERP != 0.0 )
       Aux_Error( ERROR_INFO, "CR_DIFF_PERP must be 0.0 for this test problem type (%d).\n", CR_Diffusion_Type );
 #  endif
 
@@ -170,19 +170,19 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",           &VARIABLE,                       DEFAULT,       MIN,              MAX         );
 // ********************************************************************************************************************************
-   ReadPara->Add( "CR_Diffusion_CenterX",      &CR_Diffusion_CenterX,           0.5,           0.0,              NoMax_double);
-   ReadPara->Add( "CR_Diffusion_CenterY",      &CR_Diffusion_CenterY,           0.5,           0.0,              NoMax_double);
-   ReadPara->Add( "CR_Diffusion_CenterZ",      &CR_Diffusion_CenterZ,           0.5,           0.0,              NoMax_double);
+   ReadPara->Add( "CR_Diffusion_CenterX",      &CR_Diffusion_CenterX,          -1.0,           NoMin_double,     amr->BoxSize[0]);
+   ReadPara->Add( "CR_Diffusion_CenterY",      &CR_Diffusion_CenterY,          -1.0,           NoMin_double,     amr->BoxSize[1]);
+   ReadPara->Add( "CR_Diffusion_CenterZ",      &CR_Diffusion_CenterZ,          -1.0,           NoMin_double,     amr->BoxSize[2]);
    ReadPara->Add( "CR_Diffusion_Vx",           &CR_Diffusion_Vx,                0.0,           NoMin_double,     NoMax_double);
    ReadPara->Add( "CR_Diffusion_Vy",           &CR_Diffusion_Vy,                0.0,           NoMin_double,     NoMax_double);
    ReadPara->Add( "CR_Diffusion_Vz",           &CR_Diffusion_Vz,                0.0,           NoMin_double,     NoMax_double);
-   ReadPara->Add( "CR_Diffusion_Rho0",         &CR_Diffusion_Rho0,              1.0,           0.0,              NoMax_double);
-   ReadPara->Add( "CR_Diffusion_PGas0",        &CR_Diffusion_PGas0,             1.0,           0.0,              NoMax_double);
+   ReadPara->Add( "CR_Diffusion_Rho0",         &CR_Diffusion_Rho0,              1.0,           Eps_double,       NoMax_double);
+   ReadPara->Add( "CR_Diffusion_PGas0",        &CR_Diffusion_PGas0,             1.0,           Eps_double,       NoMax_double);
    ReadPara->Add( "CR_Diffusion_E0_CR",        &CR_Diffusion_E0_CR,             0.1,           0.0,              NoMax_double);
    ReadPara->Add( "CR_Diffusion_BG_CR",        &CR_Diffusion_BG_CR,             0.1,           0.0,              NoMax_double);
    ReadPara->Add( "CR_Diffusion_R02_CR",       &CR_Diffusion_R02_CR,            0.05,          0.0,              NoMax_double);
-   ReadPara->Add( "CR_Diffusion_Type",         &CR_Diffusion_Type,              0,             0,                NoMax_int);
-   ReadPara->Add( "CR_Diffusion_Mag_Type",     &CR_Diffusion_Mag_Type,          0,             0,                NoMax_int);
+   ReadPara->Add( "CR_Diffusion_Type",         &CR_Diffusion_Type,              0,             0,                4);
+   ReadPara->Add( "CR_Diffusion_Mag_Type",     &CR_Diffusion_Mag_Type,          0,             0,                4);
    ReadPara->Add( "CR_Diffusion_MagX",         &CR_Diffusion_MagX,              0.0,           NoMin_double,     NoMax_double);
    ReadPara->Add( "CR_Diffusion_MagY",         &CR_Diffusion_MagY,              0.0,           NoMin_double,     NoMax_double);
    ReadPara->Add( "CR_Diffusion_MagZ",         &CR_Diffusion_MagZ,              0.0,           NoMin_double,     NoMax_double);
@@ -221,6 +221,9 @@ void SetParameter()
    }
 
 // (1-2) set the default values
+   if ( CR_Diffusion_CenterX < 0.0 )  CR_Diffusion_CenterX = 0.5*amr->BoxSize[0];
+   if ( CR_Diffusion_CenterY < 0.0 )  CR_Diffusion_CenterY = 0.5*amr->BoxSize[1];
+   if ( CR_Diffusion_CenterZ < 0.0 )  CR_Diffusion_CenterZ = 0.5*amr->BoxSize[2];
 
 // (1-3) check the runtime parameters
 
@@ -755,6 +758,8 @@ void Init_TestProb_Hydro_Cosmic_Ray_Diffusion()
 #  ifdef MHD
    Init_Function_BField_User_Ptr  = SetBFieldIC;
 #  endif
+
+   Output_User_Ptr                = OutputError;
 
 #  endif // #if ( MODEL == HYDRO )
 
