@@ -2517,17 +2517,6 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Ck_InputFluid      = OPT__CK_INPUT_FLUID;
 
 // flag tables
-#  if   ( MODEL == HYDRO )
-   const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES ||
-                                  OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR
-#                                 ifdef COSMIC_RAY
-                                  || OPT__FLAG_LOHNER_CRAY
-#                                 endif
-                                  );
-#  elif ( MODEL == ELBDM )
-   const bool Opt__FlagLohner = OPT__FLAG_LOHNER_DENS;
-#  endif
-
    for (int lv=0; lv<NLEVEL-1; lv++)
    {
       InputPara.FlagTable_Rho         [lv]    = FlagTable_Rho         [lv];
