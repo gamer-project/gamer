@@ -18,7 +18,9 @@ void CR_ComputeDiffusivity( real &diff_cr_para, real &diff_cr_perp, const MicroP
 
 
 // internal funciton
+GPU_DEVICE
 real MC_limiter(real a, real b);
+GPU_DEVICE
 real minmod(real a, real b);
 
 
@@ -405,6 +407,7 @@ void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 // Return      :
 // Reference   :
 //-----------------------------------------------------------------------------------------
+GPU_DEVICE
 real MC_limiter( real a, real b )
 {
     return minmod( 2.0*minmod(a, b), 0.5*(a+b) );
@@ -421,6 +424,7 @@ real MC_limiter( real a, real b )
 // Return      :
 // Reference   :
 //-----------------------------------------------------------------------------------------
+GPU_DEVICE
 real minmod( real a, real b )
 {
     if ( a > 0.0 && b > 0.0 ) return MIN(a, b);
