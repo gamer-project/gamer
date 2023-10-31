@@ -69,9 +69,9 @@ struct KeyInfo_t
    int    Par_NAttStored;           // PAR_NATT_STORED
 #  endif
 #  ifdef MICROPHYSICS
-   #ifdef COSMIC_RAY
+#  ifdef COSMIC_RAY
    int    CR_Diffusion;
-   #endif
+#  endif
 #  endif
 
    double BoxSize[3];
@@ -642,11 +642,11 @@ struct InputPara_t
 
 // microphysics
 #  ifdef MICROPHYSICS
-   #ifdef CR_DIFFUSION
+#  ifdef CR_DIFFUSION
    double CR_Diffusion_ParaCoeff;
    double CR_Diffusion_PerpCoeff;
    double CR_Diffusion_Dt;
-   #endif
+#  endif
 #  endif
 
 // initialization

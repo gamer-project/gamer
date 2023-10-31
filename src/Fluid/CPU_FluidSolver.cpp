@@ -51,9 +51,9 @@ void CPU_FluidSolver_MHM(
    const bool FracPassive, const int NFrac, const int c_FracIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff,
    const EoS_t EoS
-   #ifdef MICROPHYSICS
+#  ifdef MICROPHYSICS
    , const MicroPhy_t Mic
-   #endif
+#  endif
    );
 #elif ( FLU_SCHEME == CTU )
 void CPU_FluidSolver_CTU(
@@ -224,9 +224,9 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                             UsePot, ExtAcc, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, MinEint,
                             DualEnergySwitch, NormPassive, NNorm, NormIdx, FracPassive, NFrac, FracIdx,
                             JeansMinPres, JeansMinPres_Coeff, EoS
-                            #ifdef MICROPHYSICS
+#                           ifdef MICROPHYSICS
                             , MicroPhy
-                            #endif
+#                           endif
                             );
 
 #     elif ( FLU_SCHEME == CTU )

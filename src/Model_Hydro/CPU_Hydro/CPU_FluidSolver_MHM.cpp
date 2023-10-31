@@ -275,9 +275,9 @@ void CUFLU_FluidSolver_MHM(
    const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
    const EoS_t EoS
-   #ifdef MICROPHYSICS
+#  ifdef MICROPHYSICS
    , const MicroPhy_t Mic
-   #endif
+#  endif
    )
 #else
 void CPU_FluidSolver_MHM(
@@ -308,9 +308,9 @@ void CPU_FluidSolver_MHM(
    const bool FracPassive, const int NFrac, const int c_FracIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff,
    const EoS_t EoS
-   #ifdef MICROPHYSICS
+#  ifdef MICROPHYSICS
    , const MicroPhy_t Mic
-   #endif
+#  endif
    )
 #endif // #ifdef __CUDACC__ ... else ...
 {

@@ -124,9 +124,9 @@ void Aux_Check_Parameter()
 
 #  if   ( MODEL == HYDRO )
    if (  ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR
-           #ifdef COSMIC_RAY
-           || OPT__FLAG_LOHNER_CRAY
-           #endif
+#          ifdef COSMIC_RAY
+           || OPT__FLAG_LOHNER_CRA#endif
+#          endif
          )
          &&  Flu_ParaBuf < 2  )
       Aux_Error( ERROR_INFO, "Lohner error estimator does NOT work when Flu_ParaBuf (%d) < 2 !!\n", Flu_ParaBuf );
@@ -1193,7 +1193,7 @@ void Aux_Check_Parameter()
 #  endif
 
 #  if ( POT_GHOST_SIZE <= GRA_GHOST_SIZE )
-      #error : ERROR : POT_GHOST_SIZE <= GRA_GHOST_SIZE !!
+#     error : ERROR : POT_GHOST_SIZE <= GRA_GHOST_SIZE !!
 #  endif
 
 #  if ( POT_GHOST_SIZE < 1 )

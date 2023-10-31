@@ -44,9 +44,9 @@ void CUFLU_FluidSolver_MHM(
    const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
    const EoS_t EoS
-   #ifdef MICROPHYSICS
+#  ifdef MICROPHYSICS
    , const MicroPhy_t Mic
-   #endif
+#  endif
    );
 #elif ( FLU_SCHEME == CTU )
 __global__
@@ -412,9 +412,9 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               Time, UsePot, ExtAcc, GPUExtAcc_Ptr, MinDens, MinPres, MinEint,
               DualEnergySwitch, NormPassive, NNorm, FracPassive, NFrac,
               JeansMinPres, JeansMinPres_Coeff, EoS
-              #ifdef MICROPHYSICS
+#             ifdef MICROPHYSICS
               , MicroPhy
-              #endif
+#             endif
               );
 
 #        elif ( FLU_SCHEME == CTU )
