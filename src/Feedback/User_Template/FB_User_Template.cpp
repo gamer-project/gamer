@@ -98,7 +98,7 @@ int FB_User_Template( const int lv, const double TimeNew, const double TimeOld, 
 
    for (int t=0; t<NPar; t++)
    {
-      const int    p      = ParSortID[t];
+      const long   p      = ParSortID[t];
       const double xyz[3] = { ParAtt[PAR_POSX][p], ParAtt[PAR_POSY][p], ParAtt[PAR_POSZ][p] };
 
       int idx[3];
