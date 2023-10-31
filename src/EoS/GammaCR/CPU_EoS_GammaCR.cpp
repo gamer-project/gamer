@@ -337,15 +337,12 @@ static real EoS_DensEint2Entr_GammaCR( const real Dens, const real Eint, const r
 
 #  endif // GAMER_DEBUG
 
-   printf( "EoS_DenEint2Entr_GammaCR is not supported now. \n" );
-
    const real Gamma_m1   = (real)AuxArray_Flt[1];
-   const real GammaCR_m1 = (real)AuxArray_Flt[5];
    const real small_val  = (real)AuxArray_Flt[6];
    real Pres, Entr;
 
-   Pres = Gamma_m1*MAX( Eint - Passive[CRAY-NCOMP_FLUID], small_val ) + GammaCR_m1*Passive[CRAY-NCOMP_FLUID];
-   Entr = Pres * POW( Dens, -Gamma_m1 );
+   Pres_Gas = Gamma_m1*MAX( Eint - Passive[CRAY-NCOMP_FLUID], small_val );
+   Entr     = Pres_Gas * POW( Dens, -Gamma_m1 );
 
    return Entr;
 
