@@ -1,8 +1,7 @@
 #include "Macro.h"
 #include "CUFLU.h"
 
-#if ( defined GPU  &&  MODEL == HYDRO  &&  FLU_SCHEME == RTVD )
-
+#if ( defined GPU  &&  MODEL == HYDRO  &&  FLU_SCHEME == RTVD  &&  !defined SRHD )
 
 // check before compiling anything else
 #if ( NCOMP_PASSIVE != 0 )
@@ -417,4 +416,4 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
 
 
 
-#endif // #if ( defined GPU  &&  MODEL == HYDRO  &&  FLU_SCHEME == RTVD )
+#endif // #if ( defined GPU  &&  MODEL == HYDRO  &&  FLU_SCHEME == RTVD  &&  !defined SRHD )

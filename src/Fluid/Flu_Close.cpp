@@ -15,6 +15,7 @@ static void CorrectFlux( const int SonLv, const real Flux_Array[][9][NFLUX_TOTAL
                          const int NPG, const int *PID0_List, const real dt );
 #if ( MODEL == HYDRO )
 static bool Unphysical( const real Fluid[], const int CheckMode, const real Emag );
+#ifndef SRHD
 static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                const real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                                real h_Flu_Array_F_Out[][FLU_NOUT][ CUBE(PS2) ],
@@ -23,6 +24,7 @@ static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List
                                const real h_Mag_Array_F_In[][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                const real h_Mag_Array_F_Out[][NCOMP_MAG][ PS2P1*SQR(PS2) ],
                                const real dt );
+#endif
 #ifdef MHD
 void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                     const int NPG, const int *PID0_List, const real dt );

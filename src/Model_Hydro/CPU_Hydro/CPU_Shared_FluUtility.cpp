@@ -483,14 +483,11 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 #  endif
 
 #  ifdef SRHD
+   const real Pres = PriRot[4];
    const real LorentzFactor = SQRT((real)1.0 + SQR(PriRot[1]) + SQR(PriRot[2]) + SQR(PriRot[3]));
    const real Vx = PriRot[1] / LorentzFactor;
 
    Flux[0] = Vx*InRot[0];
-   Flux[1] = Vx*InRot[1] + PriRot[4];
-   Flux[2] = Vx*InRot[2];
-   Flux[3] = Vx*InRot[3];
-   Flux[4] = Vx*( InRot[4] + PriRot[4] );
 #  else
    const real Pres = ( AuxArray == NULL ) ? Hydro_Con2Pres( InRot[0], InRot[1], InRot[2], InRot[3], InRot[4], In+NCOMP_FLUID,
                                                           CheckMinPres_Yes, MinPres, Emag, EoS_DensEint2Pres,
@@ -501,11 +498,12 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
    const real Vx   = _Rho*InRot[1];
 
    Flux[0] = InRot[1];
+#  endif
+
    Flux[1] = Vx*InRot[1] + Pres;
    Flux[2] = Vx*InRot[2];
    Flux[3] = Vx*InRot[3];
    Flux[4] = Vx*( InRot[4] + Pres );
-#  endif
 
 // passive scalars
 #  if ( NCOMP_PASSIVE > 0 )

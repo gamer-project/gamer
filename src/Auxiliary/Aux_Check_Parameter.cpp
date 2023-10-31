@@ -663,13 +663,6 @@ void Aux_Check_Parameter()
 #   if ( RSOLVER_RESCUE != NONE  &&  RSOLVER_RESCUE != ROE  &&  RSOLVER_RESCUE != HLLE  &&  RSOLVER_RESCUE != HLLD )
 #     error : ERROR : unsupported RSOLVER_RESCUE for MHD (ROE/HLLE/HLLD) !!
 #   endif
-#  elif SRHD 
-#   if ( defined RSOLVER  &&  RSOLVER != HLLC  &&  RSOLVER != HLLE )
-#     error : ERROR : unsupported Riemann solver for SRHD (HLLC/HLLE) !!
-#   endif
-#   if ( defined FLU_SCHEME  &&  FLU_SCHEME != MHM_RP && FLU_SCHEME != MHM )
-#     error : ERROR : unsupported FLU_SCHEME for SRHD (MHM_RP/MHM) !!
-#   endif
 #  else
 #   if ( RSOLVER != NONE  &&  RSOLVER != EXACT  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLC )
 #     error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC) !!
@@ -677,7 +670,16 @@ void Aux_Check_Parameter()
 #   if ( RSOLVER_RESCUE != NONE  &&  RSOLVER_RESCUE != EXACT  &&  RSOLVER_RESCUE != ROE  &&  RSOLVER_RESCUE != HLLE  &&  RSOLVER_RESCUE != HLLC )
 #     error : ERROR : unsupported RSOLVER_RESCUE (EXACT/ROE/HLLE/HLLC) !!
 #   endif
-#  endif // MHD/SRHD
+#  endif // MHD
+
+#  ifdef SRHD 
+#   if ( defined RSOLVER  &&  RSOLVER != HLLC  &&  RSOLVER != HLLE )
+#     error : ERROR : unsupported Riemann solver for SRHD (HLLC/HLLE) !!
+#   endif
+#   if ( defined FLU_SCHEME  &&  FLU_SCHEME != MHM_RP && FLU_SCHEME != MHM )
+#     error : ERROR : unsupported FLU_SCHEME for SRHD (MHM_RP/MHM) !!
+#   endif
+#  endif // SRHD
 
 #  ifdef DUAL_ENERGY
 #   if ( FLU_SCHEME == RTVD )
@@ -698,6 +700,18 @@ void Aux_Check_Parameter()
 #  endif // #ifdef DUAL_ENERGY
 
 #  ifdef SRHD
+#  if ( defined MHD )
+#     error: ERROR : SRHD does not support MHD !!
+#  endif 
+#  if ( defined GRAVITY )
+#     error: ERROR : SRHD does not support GRAVITY !!
+#  endif 
+#  if ( defined COMOVING )
+#     error: ERROR : SRHD does not support COMOVING !!
+#  endif 
+#  if ( defined PARTICLE )
+#     error: ERROR : SRHD does not support PARTICLE !!
+#  endif 
 #  if ( EOS != EOS_TAUBMATHEWS )
 #     error: ERROR : unsupported EOS !!
 #  endif
