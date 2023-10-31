@@ -882,9 +882,9 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_LOHNER_PRES           %d\n",      OPT__FLAG_LOHNER_PRES     );
       fprintf( Note, "OPT__FLAG_LOHNER_TEMP           %d\n",      OPT__FLAG_LOHNER_TEMP     );
       fprintf( Note, "OPT__FLAG_LOHNER_ENTR           %d\n",      OPT__FLAG_LOHNER_ENTR     );
-      #ifdef COSMIC_RAY
+#     ifdef COSMIC_RAY
       fprintf( Note, "OPT__FLAG_LOHNER_CRAY           %d\n",      OPT__FLAG_LOHNER_CRAY     );
-      #endif
+#     endif
 #     endif
       fprintf( Note, "OPT__FLAG_LOHNER_FORM           %s\n",      (OPT__FLAG_LOHNER_FORM==LOHNER_FLASH1   ) ? "LOHNER_FLASH1"    :
                                                                   (OPT__FLAG_LOHNER_FORM==LOHNER_FLASH2   ) ? "LOHNER_FLASH2"    :
@@ -1583,9 +1583,9 @@ void Aux_TakeNote()
 
 #     if   ( MODEL == HYDRO )
       if ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR
-      #ifdef COSMIC_RAY
+#     ifdef COSMIC_RAY
            || OPT__FLAG_LOHNER_CRAY
-      #endif
+#     endif
          )
 #     elif ( MODEL == ELBDM )
       if ( OPT__FLAG_LOHNER_DENS )
