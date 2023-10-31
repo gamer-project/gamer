@@ -143,7 +143,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
-// initialize the micerophysics
+// initialize the microphysics
 #  ifdef MICROPHYSICS
    Microphysics_Init();
 #  endif

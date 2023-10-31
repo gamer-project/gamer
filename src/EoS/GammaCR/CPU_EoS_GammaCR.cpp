@@ -10,7 +10,7 @@
 
 
 /********************************************************
-1. Ideal gas Eos with cosmic rays component (GAMMA_CR)
+1. Ideal gas EoS with cosmic-ray component (GAMMA_CR)
 
 2. This file is shared by both CPU and GPU
 
@@ -18,7 +18,7 @@
 
 3. Three steps are required to implement an EoS
 
-   I.   Set an EoS auxiliary arrays
+   I.   Set EoS auxiliary arrays
    II.  Implement EoS conversion functions
    III. Set EoS initialization functions
 
@@ -40,12 +40,15 @@
 // Function    :  EoS_SetAuxArray_GammaCR
 // Description :  Set the auxiliary arrays AuxArray_Flt/Int[]
 //
-//                AuxArray_Flt[0] = gamma_gas
-//                AuxArray_Flt[1] = gamma_gas - 1
-//                AuxArray_Flt[2] = 1/(gamma_gas - 1)
-//                AuxArray_Flt[3] = 1/gamma_gas
-//                AuxArray_Flt[4] = gamma_cr    (Set it as 4/3 for now)
-//                AuxArray_Flt[5] = gamma_cr - 1
+//                   AuxArray_Flt[0] = gamma_gas
+//                   AuxArray_Flt[1] = gamma_gas - 1
+//                   AuxArray_Flt[2] = 1/(gamma_gas - 1)
+//                   AuxArray_Flt[3] = 1/gamma_gas
+//                   AuxArray_Flt[4] = gamma_cr
+//                   AuxArray_Flt[5] = gamma_cr - 1
+//                   AuxArray_Flt[6] = minimum pressure
+//                   AuxArray_Flt[7] = (mean molecular weight)*(atomic mass unit)/(Boltzmann constant)*(UNIT_E/UNIT_M)
+//                   AuxArray_Flt[8] = 1/AuxArray_Flt[4]
 //
 // Note        :  1. Invoked by EoS_Init_GammaCR()
 //                2. AuxArray_Flt/Int[] have the size of EOS_NAUX_MAX defined in Macro.h (default = 20)
@@ -92,14 +95,14 @@ void EoS_SetAuxArray_GammaCR( double AuxArray_Flt[], int AuxArray_Int[] )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_DensEint2Pres_GammaCR
-// Description :  Convert gas mass density and internal energy density to gas pressure
+// Description :  Convert gas mass density and internal energy density to total pressure
 //
 // Note        :  1. Internal energy density here is per unit volume instead of per unit mass
 //                2. See EoS_SetAuxArray_GammaCR() for the values stored in AuxArray_Flt/Int[]
 //
 // Parameter   :  Dens       : Gas mass density
-//                Eint       : Gas internal energy density with cosmic ray energy density
-//                Passive    : Passive scalars (cosmic ray energy density here)
+//                Eint       : Total energy density (gas + cosmic ray)
+//                Passive    : Passive scalars (Passive[CRAY-NCOMP_FLUID] gives the cosmic-ray energy density)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
 //
@@ -135,17 +138,17 @@ static real EoS_DensEint2Pres_GammaCR( const real Dens, const real Eint, const r
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_DensPres2Eint_GammaCR
-// Description :  Convert gas mass density and pressure to gas internal energy density
+// Description :  Convert gas mass density and total pressure to total energy density
 //
 // Note        :  1. See EoS_DensEint2Pres_GammaCR()
 //
 // Parameter   :  Dens       : Gas mass density
-//                Pres       : Total pressure (gas + coamic ray)
-//                Passive    : Passive scalars (cosmic ray energy density here)
+//                Pres       : Total pressure (gas + cosmic ray)
+//                Passive    : Passive scalars (Passive[CRAY-NCOMP_FLUID] gives the cosmic-ray energy density)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
 //
-// Return      :  Gas internal energy density with cosmic ray energy density
+// Return      :  Total energy density (gas + cosmic ray)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensPres2Eint_GammaCR( const real Dens, const real Pres, const real Passive[],
@@ -166,7 +169,7 @@ static real EoS_DensPres2Eint_GammaCR( const real Dens, const real Pres, const r
    const real small_val    = (real)AuxArray_Flt[6];
    real Eint;
 
-   Eint = MAX(Pres - Passive[CRAY-NCOMP_FLUID] * GammaCR_m1, small_val) * Gamma_m1_inv + Passive[CRAY-NCOMP_FLUID];
+   Eint = MAX(Pres - Passive[CRAY-NCOMP_FLUID] * GammaCR_m1, small_val ) * Gamma_m1_inv + Passive[CRAY-NCOMP_FLUID];
 
    return Eint;
 
@@ -176,17 +179,17 @@ static real EoS_DensPres2Eint_GammaCR( const real Dens, const real Pres, const r
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_DensPres2CSqr_GammaCR
-// Description :  Convert gas mass density and pressure to sound speed squared
+// Description :  Convert gas mass density and total pressure to effective sound speed squared
 //
 // Note        :  1. See EoS_DensEint2Pres_GammaCR()
 //
 // Parameter   :  Dens       : Gas mass density
 //                Pres       : Total pressure (gas + cosmic ray)
-//                Passive    : Passive scalars (cosmic ray energy density here)
+//                Passive    : Passive scalars (Passive[CRAY-NCOMP_FLUID] gives the cosmic-ray energy density)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
 //
-// Return      :  Sound speed squared
+// Return      :  Effective sound speed squared
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensPres2CSqr_GammaCR( const real Dens, const real Pres, const real Passive[],
@@ -220,15 +223,15 @@ static real EoS_DensPres2CSqr_GammaCR( const real Dens, const real Pres, const r
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_DensEint2Temp_GammaCR
-// Description :  Convert gas mass density and internal energy density to gas temperature
+// Description :  Convert gas mass density and total energy density to gas temperature
 //
 // Note        :  1. Internal energy density here is per unit volume instead of per unit mass
 //                2. See EoS_SetAuxArray_GammaCR() for the values stored in AuxArray_Flt/Int[]
 //                3. Temperature is in kelvin
 //
 // Parameter   :  Dens       : Gas mass density
-//                Eint       : Gas internal energy density
-//                Passive    : Passive scalars (cosmic ray energy density here)
+//                Eint       : Total energy density (gas + cosmic ray)
+//                Passive    : Passive scalars (Passive[CRAY-NCOMP_FLUID] gives the cosmic-ray energy density)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
 //
@@ -254,7 +257,7 @@ static real EoS_DensEint2Temp_GammaCR( const real Dens, const real Eint, const r
    const real m_kB      = (real)AuxArray_Flt[7];
    real Gas_Pres, Temp;
 
-   Gas_Pres = MAX( Eint - Passive[CRAY-NCOMP_FLUID] , small_val) * Gamma_m1;
+   Gas_Pres = MAX( Eint - Passive[CRAY-NCOMP_FLUID] , small_val ) * Gamma_m1;
    Temp = m_kB * Gas_Pres / Dens;
 
    return Temp;
@@ -264,14 +267,14 @@ static real EoS_DensEint2Temp_GammaCR( const real Dens, const real Eint, const r
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_DensTemp2Pres_GammaCR
-// Description :  Convert gas mass density and temperature to gas pressure
+// Description :  Convert gas mass density and temperature to total pressure
 //
 // Note        :  1. See EoS_SetAuxArray_GammaCR() for the values stored in AuxArray_Flt/Int[]
 //                2. Temperature is in kelvin
 //
 // Parameter   :  Dens       : Gas mass density
 //                Temp       : Gas temperature in kelvin
-//                Passive    : Passive scalars (cosmic ray energy density here)
+//                Passive    : Passive scalars (Passive[CRAY-NCOMP_FLUID] gives the cosmic-ray energy density)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
 //
@@ -306,14 +309,14 @@ static real EoS_DensTemp2Pres_GammaCR( const real Dens, const real Temp, const r
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_DensEint2Entr_GammaCR
-// Description :  Convert gas mass density and internal energy density to gas entropy
-//                --> Here entropy is defined as "pressure / density^(Gamma-1)" (i.e., entropy per volume)
+// Description :  Convert gas mass density and total energy density to gas entropy
+//                --> Here entropy is defined as "pressure_gas / density^(Gamma_gas-1)" (i.e., entropy per volume)
 //
-// Note        :  1. See EoS_SetAuxArray_Gamma() for the values stored in AuxArray_Flt/Int[]
+// Note        :  1. See EoS_SetAuxArray_GammaCR() for the values stored in AuxArray_Flt/Int[]
 //
 // Parameter   :  Dens       : Gas mass density
-//                Eint       : Gas internal energy density
-//                Passive    : Passive scalars (cosmic ray energy density here)
+//                Eint       : Total energy density (gas + cosmic ray)
+//                Passive    : Passive scalars (Passive[CRAY-NCOMP_FLUID] gives the cosmic-ray energy density)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
 //
@@ -379,12 +382,12 @@ static void EoS_General_GammaCR( const int Mode, real Out[], const real In_Flt[]
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_CREint2CRPres_GammaCR
-// Description :  Convert cosmic ray energy density to cosmic ray pressure
+// Description :  Convert cosmic-ray energy density to cosmic ray pressure
 //
 // Note        :  1. Internal energy density here is per unit volume instead of per unit mass
 //                2. See EoS_SetAuxArray_GammaCR() for the values stored in AuxArray_Flt/Int[]
 //
-// Parameter   :  Passive    : Passive scalars (cosmic ray energy density here)
+// Parameter   :  Passive    : Passive scalars (Passive[CRAY-NCOMP_FLUID] gives the cosmic-ray energy density)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //
 // Return      :  Cosmic ray pressure
@@ -422,6 +425,7 @@ static real EoS_CREint2CRPres_GammaCR( const real Passive[],
    return Pres_CR;
 
 } // FUNCTION : EoS_CREint2CRPres_GammaCR
+
 
 
 // =============================================
@@ -479,14 +483,14 @@ void EoS_SetGPUFunc_GammaCR( EoS_DE2P_t    &EoS_DensEint2Pres_GPUPtr,
                              EoS_DT2P_t    &EoS_DensTemp2Pres_GPUPtr,
                              EoS_DE2S_t    &EoS_DensEint2Entr_GPUPtr,
                              EoS_GENE_t    &EoS_General_GPUPtr,
-                             EoS_CRE2CRP_t &EoS_CREint2CRPres_GPUPtr)
+                             EoS_CRE2CRP_t &EoS_CREint2CRPres_GPUPtr )
 {
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Pres_GPUPtr, EoS_DensEint2Pres_Ptr, sizeof(EoS_DE2P_t   ) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensPres2Eint_GPUPtr, EoS_DensPres2Eint_Ptr, sizeof(EoS_DP2E_t   ) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensPres2CSqr_GPUPtr, EoS_DensPres2CSqr_Ptr, sizeof(EoS_DP2C_t   ) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Temp_GPUPtr, EoS_DensEint2Temp_Ptr, sizeof(EoS_DE2T_t   ) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensTemp2Pres_GPUPtr, EoS_DensTemp2Pres_Ptr, sizeof(EoS_DT2P_t   ) )  );
-   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Entr_GPUPtr, EoS_DensEint2Entr_Ptr, sizeof(EoS_DE2S_t) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Entr_GPUPtr, EoS_DensEint2Entr_Ptr, sizeof(EoS_DE2S_t   ) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_General_GPUPtr,       EoS_General_Ptr,       sizeof(EoS_GENE_t   ) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_CREint2CRPres_GPUPtr, EoS_CREint2CRPres_Ptr, sizeof(EoS_CRE2CRP_t) )  );
 }
@@ -546,13 +550,13 @@ void EoS_Init_GammaCR()
    EoS_SetAuxArray_GammaCR( EoS_AuxArray_Flt, EoS_AuxArray_Int );
    EoS_SetCPUFunc_GammaCR( EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
                            EoS_DensPres2CSqr_CPUPtr, EoS_DensEint2Temp_CPUPtr,
-                          EoS_DensTemp2Pres_CPUPtr, EoS_DensEint2Entr_CPUPtr,
-                          EoS_General_CPUPtr, EoS_CREint2CRPres_CPUPtr);
+                           EoS_DensTemp2Pres_CPUPtr, EoS_DensEint2Entr_CPUPtr,
+                           EoS_General_CPUPtr, EoS_CREint2CRPres_CPUPtr );
 #  ifdef GPU
    EoS_SetGPUFunc_GammaCR( EoS_DensEint2Pres_GPUPtr, EoS_DensPres2Eint_GPUPtr,
                            EoS_DensPres2CSqr_GPUPtr, EoS_DensEint2Temp_GPUPtr,
-                         EoS_DensTemp2Pres_GPUPtr, EoS_DensEint2Entr_GPUPtr,
-                         EoS_General_GPUPtr, EoS_CREint2CRPres_GPUPtr);
+                           EoS_DensTemp2Pres_GPUPtr, EoS_DensEint2Entr_GPUPtr,
+                           EoS_General_GPUPtr, EoS_CREint2CRPres_GPUPtr );
 #  endif
 
 } // FUNCTION : EoS_Init_GammaCR

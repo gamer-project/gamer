@@ -85,7 +85,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    const int  CR_Diffusion         = 1;
 #  else
    const int  CR_Diffusion         = 0;
-#  endif
+#  endif // #ifdef CR_DIFFUSION
 #  else
    const int  Microphysics         = 0;
 #  endif

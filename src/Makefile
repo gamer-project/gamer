@@ -43,8 +43,8 @@ SIMU_OPTION += -DMODEL=HYDRO
 #SIMU_OPTION += -DPARTICLE
 
 # enable microphysics
-# # --> must enable HYDRO
-# #  Including: Cosmic Ray Diffusion
+# --> must enable HYDRO
+#     including: cosmic-ray diffusion (CR_DIFFUSION)
 # SIMU_OPTION += -DMICROPHYSICS
 
 # support Grackle, a chemistry and radiative cooling library
@@ -162,7 +162,7 @@ endif # PARTICLE
 # (b-5) microphysics options
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DMICROPHYSICS, $(SIMU_OPTION))" "-DMICROPHYSICS"
-# enable the cosmic ray diffusion
+# enable cosmic-ray diffusion
 SIMU_OPTION += -DCR_DIFFUSION
 endif # MICROPHYSICS
 

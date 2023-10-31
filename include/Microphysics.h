@@ -10,7 +10,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Structure   :  MicroPhy_t
-// Description :  Data structure storing the Microphysics variables (e.g. diffusion, heat condution) to be passed to the CPU/GPU solvers
+// Description :  Data structure storing the microphysics variables (e.g. diffusion, heat condution) to be passed to the CPU/GPU solvers
 //
 // Data Member :  safety          :
 //                diff_coeff_para : Diffusion coefficient of cosmic ray along magnetic field.

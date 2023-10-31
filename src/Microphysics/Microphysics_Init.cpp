@@ -14,7 +14,7 @@
 //-------------------------------------------------------------------------------------------------------
 void Microphysics_Init()
 {
-// check if Microphysics has been initialized already
+// check if microphysics has been initialized already
    static bool MicroPhy_Initialized = false;
 
    if ( MicroPhy_Initialized )  return;

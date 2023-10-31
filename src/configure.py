@@ -361,7 +361,7 @@ def load_arguments():
                          default=False,
                          depend={"model":"HYDRO"},
                          constraint={ True:{"dual":[NONE_STR], "eos":"COSMIC_RAY"} },
-                         help="Enable cosmic rays physics. Must use <--eos=COSMIC_RAY>.\n"
+                         help="Enable cosmic ray. Must use <--eos=COSMIC_RAY>.\n"
                        )
 
     parser.add_argument( "--eos", type=str, metavar="TYPE", gamer_name="EOS",
@@ -476,14 +476,14 @@ def load_arguments():
     # A.6 microphysics
     parser.add_argument( "--microphysics", type=str2bool, metavar="BOOLEAN", gamer_name="MICROPHYSICS",
                          default=False,
-                         help="Enable microphysics, including cosmic rays diffusion.\n"
+                         help="Enable microphysics, including cosmic-ray diffusion.\n"
                        )
 
     parser.add_argument( "--cr_diffusion", type=str2bool, metavar="BOOLEAN", gamer_name="CR_DIFFUSION",
                          default=False,
                          depend={"microphysics":True},
                          constraint={ True:{"cosmic_ray":True, "mhd":True} },
-                         help="Enable cosmic rays diffusion. Must enable <--mhd> and <--cosmic_ray>.\n"
+                         help="Enable cosmic-ray diffusion. Must enable <--mhd> and <--cosmic_ray>.\n"
                        )
 
     # B. miscellaneous options

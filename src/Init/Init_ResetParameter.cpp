@@ -968,7 +968,7 @@ void Init_ResetParameter()
 #  endif // #ifdef FEEDBACK
 
 
-// cosmic ray options
+// cosmic-ray options
 #  ifdef COSMIC_RAY
 // nothing yet
 #  endif // #ifdef COSMIC_RAY
