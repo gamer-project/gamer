@@ -706,10 +706,19 @@ void Aux_Check_Parameter()
 
 #  ifdef COSMIC_RAY
 #  if ( EOS != EOS_COSMIC_RAY )
-#     error: ERROR: COSMIC_RAY must use EOS_COSMIC_RAY !!
+#     error: ERROR : COSMIC_RAY must use EOS_COSMIC_RAY !!
 #  endif
 #  if ( defined DUAL_ENERGY )
-#     error: ERROR: DUAL_ENERGY is not supported for COSMIC_RAY !!
+#     error: ERROR : DUAL_ENERGY is not supported for COSMIC_RAY !!
+#  endif
+#  endif
+
+#  ifdef CR_DIFFUSION
+#  ifndef COSMIC_RAY
+#     error: ERROR : COSMIC_RAY must be enabled with CR_DIFFUSION !!
+#  endif
+#  ifndef MHD
+#     error: ERROR : MHD must be enabled with CR_DIFFUSION !!
 #  endif
 #  endif
 
