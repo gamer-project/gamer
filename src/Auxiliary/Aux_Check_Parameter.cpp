@@ -708,6 +708,9 @@ void Aux_Check_Parameter()
 #  if ( EOS != EOS_COSMIC_RAY )
 #     error: ERROR: COSMIC_RAY must use EOS_COSMIC_RAY !!
 #  endif
+#  if ( defined DUAL_ENERGY )
+#     error: ERROR: DUAL_ENERGY is not supported for COSMIC_RAY !!
+#  endif
 #  endif
 
 #  if ( defined LR_EINT  &&  FLU_SCHEME == CTU )
@@ -761,6 +764,10 @@ void Aux_Check_Parameter()
 
 #  if ( EOS == EOS_TABULAR )
       Aux_Error( ERROR_INFO, "EOS_TABULAR is not supported yet !!\n" );
+#  endif
+
+#  if ( EOS == EOS_COSMIC_RAY  &&  !defined COSMIC_RAY )
+#     error : ERROR : COSMIC_RAY must be enabled with EOS_COSMIC_RAY !!
 #  endif
 
 #  ifdef BAROTROPIC_EOS
@@ -1567,6 +1574,12 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
+#  ifndef COSMIC_RAY
+#     error : COSMIC_RAY must be enabled with CR_DIFFUSION !!
+#  endif
+#  ifndef MHD
+#     error : MHD must be enabled with CR_DIFFUSION !!
+#  endif
 
 // warning
 // ------------------------------
