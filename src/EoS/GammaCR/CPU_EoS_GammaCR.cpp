@@ -126,9 +126,10 @@ static real EoS_DensEint2Pres_GammaCR( const real Dens, const real Eint, const r
    const real Gamma_m1   = (real)AuxArray_Flt[1];
    const real GammaCR_m1 = (real)AuxArray_Flt[5];
    const real small_val  = (real)AuxArray_Flt[6];
+   const real E_CR       = Passive[ CRAY-NCOMP_FLUID ];
    real Pres;
 
-   Pres = Gamma_m1*FMAX( Eint - Passive[CRAY-NCOMP_FLUID], small_val ) + GammaCR_m1*Passive[CRAY-NCOMP_FLUID];
+   Pres = Gamma_m1*FMAX( Eint - E_CR, small_val ) + GammaCR_m1 * E_CR;
 
    return Pres;
 
@@ -167,9 +168,10 @@ static real EoS_DensPres2Eint_GammaCR( const real Dens, const real Pres, const r
    const real Gamma_m1_inv = (real)AuxArray_Flt[2];
    const real GammaCR_m1   = (real)AuxArray_Flt[5];
    const real small_val    = (real)AuxArray_Flt[6];
+   const real E_CR         = Passive[ CRAY-NCOMP_FLUID ];
    real Eint;
 
-   Eint = FMAX(Pres - Passive[CRAY-NCOMP_FLUID] * GammaCR_m1, small_val ) * Gamma_m1_inv + Passive[CRAY-NCOMP_FLUID];
+   Eint = FMAX( Pres - E_CR * GammaCR_m1, small_val ) * Gamma_m1_inv + E_CR;
 
    return Eint;
 
@@ -210,10 +212,11 @@ static real EoS_DensPres2CSqr_GammaCR( const real Dens, const real Pres, const r
    const real GammaCR    = (real)AuxArray_Flt[4];
    const real GammaCR_m1 = (real)AuxArray_Flt[5];
    const real small_val  = (real)AuxArray_Flt[6];
+   const real E_CR       = Passive[ CRAY-NCOMP_FLUID ];
    real Cs2;
 
-   real P_cr = GammaCR_m1 * Passive[CRAY-NCOMP_FLUID];
-   Cs2 = ( GammaCR * P_cr + Gamma * FMAX( Pres - P_cr, small_val ) ) / Dens;
+   real Pres_CR = GammaCR_m1 * E_CR;
+   Cs2 = ( GammaCR * Pres_CR + Gamma * FMAX( Pres - Pres_CR, small_val ) ) / Dens;
 
    return Cs2;
 
@@ -255,10 +258,11 @@ static real EoS_DensEint2Temp_GammaCR( const real Dens, const real Eint, const r
    const real Gamma_m1  = (real)AuxArray_Flt[1];
    const real small_val = (real)AuxArray_Flt[6];
    const real m_kB      = (real)AuxArray_Flt[7];
-   real Gas_Pres, Temp;
+   const real E_CR      = Passive[ CRAY-NCOMP_FLUID ];
+   real Pres_Gas, Temp;
 
-   Gas_Pres = FMAX( Eint - Passive[CRAY-NCOMP_FLUID] , small_val ) * Gamma_m1;
-   Temp = m_kB * Gas_Pres / Dens;
+   Pres_Gas = FMAX( Eint - E_CR , small_val ) * Gamma_m1;
+   Temp     = m_kB * Pres_Gas / Dens;
 
    return Temp;
 
@@ -297,9 +301,10 @@ static real EoS_DensTemp2Pres_GammaCR( const real Dens, const real Temp, const r
 
    const real GammaCR_m1 = (real)AuxArray_Flt[5];
    const real _m_kB      = (real)AuxArray_Flt[8];
+   const real E_CR       = Passive[ CRAY-NCOMP_FLUID ];
    real Pres;
 
-   Pres = Temp * Dens * _m_kB + GammaCR_m1 * Passive[CRAY-NCOMP_FLUID];
+   Pres = Temp * Dens * _m_kB + GammaCR_m1 * E_CR;
 
    return Pres;
 
@@ -339,9 +344,10 @@ static real EoS_DensEint2Entr_GammaCR( const real Dens, const real Eint, const r
 
    const real Gamma_m1   = (real)AuxArray_Flt[1];
    const real small_val  = (real)AuxArray_Flt[6];
+   const real E_CR       = Passive[ CRAY-NCOMP_FLUID ];
    real Pres, Entr;
 
-   Pres_Gas = Gamma_m1*FMAX( Eint - Passive[CRAY-NCOMP_FLUID], small_val );
+   Pres_Gas = Gamma_m1 * FMAX( Eint - E_CR, small_val );
    Entr     = Pres_Gas * POW( Dens, -Gamma_m1 );
 
    return Entr;
@@ -401,16 +407,17 @@ static real EoS_CREint2CRPres_GammaCR( const real Passive[],
 #  endif // GAMER_DEBUG
 
    const real GammaCR_m1 = (real)AuxArray_Flt[5];
+   const real E_CR       = Passive[ CRAY-NCOMP_FLUID ];
    real Pres_CR;
 
-   Pres_CR = GammaCR_m1*Passive[CRAY-NCOMP_FLUID];
+   Pres_CR = GammaCR_m1 * E_CR;
 
 // check
 #  ifdef GAMER_DEBUG
    if ( Pres_CR < (real)0.0 )
    {
       printf( "ERROR : invalid output cosmic ray pressure (%13.7e) in %s() !!\n", Pres_CR, __FUNCTION__ );
-      printf( "        CRay=%13.7e\n", Passive[CRAY-NCOMP_FLUID] );
+      printf( "        CRay=%13.7e\n",E_CR);
 #     if ( NCOMP_PASSIVE > 0 )
       printf( "        Passive scalars:" );
       for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%13.7e", v, Passive[v] );
