@@ -1031,7 +1031,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                      tmp = (real)0.0;
                   } // if ( SIGN(dd_L) == SIGN(ddh_L)  &&  SIGN(ddh_L) == SIGN(dd_C) ) ... else ...
                   fc_L  = (real)0.5*(cc_L+cc_C) - tmp/(real)6.0;
-                  dh_LL = fc_L - cc_L;
+                  dh_L  = cc_C - fc_L;
                   ddh_C = fc_L - (real)2.*cc_C + fc_R;
                } // if ( dh_LL*dh_L < (real)0.0 )
 
