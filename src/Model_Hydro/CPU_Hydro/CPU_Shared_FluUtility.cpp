@@ -1418,9 +1418,10 @@ void  NewtonRaphsonSolver( void (*FuncPtr)( real Unknown, void *Params, real *Fu
 #     endif
 
        Delta = Func/DiffFunc;
-       *Root = *Root - Delta;
 
        Tolerance =  EpsRel * FABS(*Root) + EpsAbs;
+
+       *Root = *Root - Delta;
 
   }while ( fabs(Delta) >= Tolerance && Iter < MaxIter );
 
