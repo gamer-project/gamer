@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 #include "Par_EquilibriumIC.h"
 #include "string"
 

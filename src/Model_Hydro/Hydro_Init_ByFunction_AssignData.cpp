@@ -10,9 +10,6 @@ static void Init_Function_User_Template( real fluid[], const double x, const dou
 void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                                 const int lv, double AuxArray[] ) = NULL;
 
-extern int (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
-                                        const double dt, const int lv, double AuxArray[] );
-
 #ifdef MHD
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 static void Init_Function_BField_User_Template( real magnetic[], const double x, const double y, const double z, const double Time,
@@ -21,13 +18,6 @@ static void Init_Function_BField_User_Template( real magnetic[], const double x,
 // this function pointer must be set by a test problem initializer
 void (*Init_Function_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
                                        const int lv, double AuxArray[] ) = NULL;
-
-extern double (*MHD_ResetByUser_VecPot_Ptr)( const double x, const double y, const double z, const double Time,
-                                             const double dt, const int lv, const char Component, double AuxArray[] );
-extern double (*MHD_ResetByUser_BField_Ptr)( const double x, const double y, const double z, const double Time,
-                                             const double dt, const int lv, const char Component, double AuxArray[], const double B_in,
-                                             const bool UseVecPot, const real *Ax, const real *Ay, const real *Az,
-                                             const int i, const int j, const int k );
 #endif
 
 

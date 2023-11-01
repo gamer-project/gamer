@@ -16,8 +16,6 @@ static void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, c
 static void Load_RefineRegion( const char Filename[] );
 static void Flag_RefineRegion( const int lv, const int FlagPatch[6] );
 
-extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
-
 
 
 

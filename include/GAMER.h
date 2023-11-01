@@ -82,6 +82,7 @@ extern "C" {
 #include "PhysicalConstant.h"
 #include "GatherTree.h"
 #include "FFTW.h"
+#include "TestProb.h"
 
 #ifdef SERIAL
 #  include "Serial.h"
