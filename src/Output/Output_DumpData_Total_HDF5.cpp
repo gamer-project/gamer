@@ -1447,11 +1447,6 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    KeyInfo.Par_NPar             = amr->Par->NPar_Active_AllRank;
    KeyInfo.Par_NAttStored       = PAR_NATT_STORED;
 #  endif
-#  ifdef CR_DIFFUSION
-   KeyInfo.CR_Diffusion         = 1;
-#  else
-   KeyInfo.CR_Diffusion         = 0;
-#  endif
 #  if ( MODEL == HYDRO )
 #  ifdef MHD
    KeyInfo.Magnetohydrodynamics = 1;
@@ -1460,6 +1455,11 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 #  endif
 #  ifdef COSMIC_RAY
    KeyInfo.CosmicRay            = 1;
+#  ifdef CR_DIFFUSION
+   KeyInfo.CR_Diffusion         = 1;
+#  else
+   KeyInfo.CR_Diffusion         = 0;
+#  endif
 #  else
    KeyInfo.CosmicRay            = 0;
 #  endif
@@ -1762,11 +1762,13 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.Par_NAttUser           = PAR_NATT_USER;
 #  endif // #ifdef PARTICLE
 
+#  ifdef COSMIC_RAY
 #  ifdef CR_DIFFUSION
    Makefile.CR_Diffusion           = 1;
 #  else
    Makefile.CR_Diffusion           = 0;
-#  endif // #ifdef CR_DIFFUSION
+#  endif
+#  endif // #ifdef COSMIC_RAY
 
 
 } // FUNCTION : FillIn_Makefile
