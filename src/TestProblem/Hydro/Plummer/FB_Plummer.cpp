@@ -88,7 +88,6 @@ extern void (*FB_End_User_Ptr)();
 //-------------------------------------------------------------------------------------------------------
 int FB_Plummer( const int lv, const double TimeNew, const double TimeOld, const double dt,
                 const int NPar, const long *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-//                const long NPar, const float *ParSortID, double *ParAtt[PAR_NATT_TOTAL],
                 real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
                 const int TID, RandomNumber_t *RNG )
 {
