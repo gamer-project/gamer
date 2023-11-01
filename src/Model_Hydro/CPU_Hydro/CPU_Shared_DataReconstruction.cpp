@@ -900,11 +900,12 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
          } // for (int d=0; d<3; d++)
       } // CGPU_LOOP( idx_slope, CUBE(N_SLOPE_PPM) )
+
+#     ifdef __CUDACC__
+      __syncthreads();
+#     endif
    } // if ( LR_Limiter != LR_LIMITER_ATHENA )
 
-#  ifdef __CUDACC__
-   __syncthreads();
-#  endif
 
 
 // compute electric field for MHM
