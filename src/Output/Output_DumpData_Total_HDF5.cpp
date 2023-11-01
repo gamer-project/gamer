@@ -2587,7 +2587,6 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Float8",               HOFFSET(KeyInfo_t,Float8              ), H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "Gravity",              HOFFSET(KeyInfo_t,Gravity             ), H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "Particle",             HOFFSET(KeyInfo_t,Particle            ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "Microphysics",         HOFFSET(KeyInfo_t,Microphysics        ), H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "NLevel",               HOFFSET(KeyInfo_t,NLevel              ), H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "NCompFluid",           HOFFSET(KeyInfo_t,NCompFluid          ), H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "NCompPassive",         HOFFSET(KeyInfo_t,NCompPassive        ), H5T_NATIVE_INT          );
@@ -2661,7 +2660,6 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Gravity",                HOFFSET(Makefile_t,Gravity                ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Comoving",               HOFFSET(Makefile_t,Comoving               ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Particle",               HOFFSET(Makefile_t,Particle               ), H5T_NATIVE_INT );
-   H5Tinsert( H5_TypeID, "Microphysics",           HOFFSET(Makefile_t,Microphysics           ), H5T_NATIVE_INT );
 
    H5Tinsert( H5_TypeID, "UseGPU",                 HOFFSET(Makefile_t,UseGPU                 ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "GAMER_Debug",            HOFFSET(Makefile_t,GAMER_Debug            ), H5T_NATIVE_INT );

@@ -345,12 +345,12 @@ static real EoS_DensEint2Entr_GammaCR( const real Dens, const real Eint, const r
    const real Gamma_m1   = (real)AuxArray_Flt[1];
    const real small_val  = (real)AuxArray_Flt[6];
    const real E_CR       = Passive[ CRAY-NCOMP_FLUID ];
-   real Pres, Entr;
+   real Pres_Gas, Entr_Gas;
 
    Pres_Gas = Gamma_m1 * FMAX( Eint - E_CR, small_val );
-   Entr     = Pres_Gas * POW( Dens, -Gamma_m1 );
+   Entr_Gas = Pres_Gas * POW( Dens, -Gamma_m1 );
 
-   return Entr;
+   return Entr_Gas;
 
 } // FUNCTION : EoS_DensEint2Entr_GammaCR
 
