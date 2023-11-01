@@ -1,4 +1,3 @@
-#include <random>
 #include "GAMER.h"
 #include "TestProb.h"
 
@@ -177,18 +176,18 @@ void SetParameter()
    Jet_Sine = sin(Jet_PrecessAngle*M_PI/180.0);
 
 // (3) reset other general-purpose parameters
-//     --> a helper macro PRINT_WARNING is defined in TestProb.h
+//     --> a helper macro PRINT_RESET_PARA is defined in TestProb.h
    const long   End_Step_Default = __INT_MAX__;
    const double End_T_Default    = 100.0*Const_kyr / UNIT_T;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
-      PRINT_WARNING( "END_STEP", END_STEP, FORMAT_LONG );
+      PRINT_RESET_PARA(END_STEP, FORMAT_LONG, "" );
    }
 
    if ( END_T < 0.0 ) {
       END_T = End_T_Default;
-      PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
+      PRINT_RESET_PARA(END_T, FORMAT_REAL, "" );
    }
 
 // (4) make a note
@@ -240,7 +239,7 @@ void SetParameter()
 // Parameter   :  fluid    : Fluid field to be initialized
 //                x/y/z    : Physical coordinates
 //                Time     : Physical time
-//                lv       : Target ref    inement level
+//                lv       : Target refinement level
 //                AuxArray : Auxiliary array
 //
 // Return      :  fluid

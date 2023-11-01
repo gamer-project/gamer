@@ -2011,6 +2011,8 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], real fcPri[][NCOMP_LR], const
          break;  // no need to apply the floors since the input values should already satisfy these constraints
       }
 
+   }
+   
 #ifndef SRHD
    for (int f=0; f<6; f++)
    {
