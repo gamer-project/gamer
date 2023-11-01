@@ -214,10 +214,8 @@ void Init_ByRestart_HDF5( const char *FileName )
    } // if ( ReenablePar ) ... else ...
 #  endif
 
-#  ifdef GRAVITY
 #  ifdef CR_DIFFUSION
    LoadField( "CR_Diffusion",         &KeyInfo.CR_Diffusion,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &CR_diffusion,         -1, NonFatal );
-#  endif
 #  endif
 
    LoadField( "BoxSize",               KeyInfo.BoxSize,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  amr->BoxSize,          3,    Fatal );
