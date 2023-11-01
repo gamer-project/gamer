@@ -298,16 +298,12 @@ double FlagTable_CRay[NLEVEL-1];
 #endif
 
 // (2-14) microphysics
-#ifdef MICROPHYSICS
 MicroPhy_t MicroPhy;
-
 #ifdef CR_DIFFUSION
 double CR_DIFF_PARA;
 double CR_DIFF_PERP;
 double DT_DIFFUSION;
 #endif
-
-#endif // #ifdef MICROPHYSICS
 
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU

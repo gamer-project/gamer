@@ -1016,7 +1016,6 @@ void Aux_TakeNote()
 
 
 //    record the parameters of Microphysics
-#     ifdef MICROPHYSICS
       fprintf( Note, "Parameters of Microphysics\n" );
       fprintf( Note, "***********************************************************************************\n" );
 #     ifdef CR_DIFFUSION
@@ -1026,7 +1025,6 @@ void Aux_TakeNote()
 #     endif // #ifdef CR_DIFFUSION
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
-#     endif // #ifdef MICROPHYSICS
 
 
 //    record the parameters of Fluid solver in different models

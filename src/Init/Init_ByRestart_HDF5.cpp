@@ -79,16 +79,11 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  else
    const int  Particle             = 0;
 #  endif
-#  ifdef MICROPHYSICS
-   const int  Microphysics         = 1;
 #  ifdef CR_DIFFUSION
    const int  CR_Diffusion         = 1;
 #  else
    const int  CR_Diffusion         = 0;
 #  endif // #ifdef CR_DIFFUSION
-#  else
-   const int  Microphysics         = 0;
-#  endif
 #  if ( MODEL == HYDRO )
 #  ifdef MHD
    const int  Magnetohydrodynamics = 1;
@@ -162,7 +157,6 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "Model",          &KeyInfo.Model,          H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Model,         1,    Fatal );
    LoadField( "Gravity",        &KeyInfo.Gravity,        H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Gravity,       1,    Fatal );
    LoadField( "Particle",       &KeyInfo.Particle,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Particle,      1, NonFatal );
-   LoadField( "Microphysics",   &KeyInfo.Microphysics,   H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Microphysics,  1, NonFatal );
    LoadField( "NLevel",         &KeyInfo.NLevel,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
    LoadField( "NCompFluid",     &KeyInfo.NCompFluid,     H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &NCompFluid,    1,    Fatal );
    LoadField( "NCompPassive",   &KeyInfo.NCompPassive,   H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &NCompPassive,  1,    Fatal );
@@ -1460,7 +1454,6 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "Gravity",                &RS.Gravity,                SID, TID, NonFatal, &RT.Gravity,                1,    Fatal );
    LoadField( "Comoving",               &RS.Comoving,               SID, TID, NonFatal, &RT.Comoving,               1,    Fatal );
    LoadField( "Particle",               &RS.Particle,               SID, TID, NonFatal, &RT.Particle,               1, NonFatal );
-   LoadField( "Microphysics",           &RS.Microphysics,           SID, TID, NonFatal, &RT.Microphysics,           1, NonFatal );
 
    LoadField( "UseGPU",                 &RS.UseGPU,                 SID, TID, NonFatal, &RT.UseGPU,                 1, NonFatal );
    LoadField( "GAMER_Debug",            &RS.GAMER_Debug,            SID, TID, NonFatal, &RT.GAMER_Debug,            1, NonFatal );
@@ -1529,10 +1522,8 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "Par_NAttUser",           &RS.Par_NAttUser,           SID, TID, NonFatal, &RT.Par_NAttUser,           1, NonFatal );
 #  endif
 
-#  ifdef MICROPHYSICS
 #  ifdef CR_DIFFUSION
    LoadField( "CR_Diffusion",           &RS.CR_Diffusion,           SID, TID, NonFatal, &RT.CR_Diffusion,           1, NonFatal );
-#  endif
 #  endif
 
 
@@ -2071,12 +2062,10 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  endif
 
 // microphysics
-#  ifdef MICROPHYSICS
 #  ifdef CR_DIFFUSION
    LoadField( "CR_DIFF_PARA",            &RS.CR_Diffusion_ParaCoeff,  SID, TID, NonFatal, &RT.CR_Diffusion_ParaCoeff,   1, NonFatal );
    LoadField( "CR_DIFF_PERP",            &RS.CR_Diffusion_PerpCoeff,  SID, TID, NonFatal, &RT.CR_Diffusion_PerpCoeff,   1, NonFatal );
    LoadField( "DT_DIFFUSION",            &RS.CR_Diffusion_Dt,         SID, TID, NonFatal, &RT.CR_Diffusion_Dt,          1, NonFatal );
-#  endif
 #  endif
 
 // initialization

@@ -49,9 +49,7 @@ void End_GAMER()
    FB_End();
 #  endif
 
-#  ifdef MICROPHYSICS
    Microphysics_End();
-#  endif
 
 #  ifdef GRAVITY
    End_ExtAccPot();

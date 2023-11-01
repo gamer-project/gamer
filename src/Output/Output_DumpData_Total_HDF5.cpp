@@ -243,7 +243,7 @@ Procedure for outputting new variables:
 //                2468 : 2023/06/24 --> output OPT__SORT_PATCH_BY_LBIDX
 //                2469 : 2023/09/09 --> output MHM_CHECK_PREDICT
 //                2470 : 2023/10/16 --> output OPT__OUTPUT_TEXT_FORMAT_FLT
-//                2471 : 2023/11/09 --> COSMIC_RAY and MICROPHYSICS
+//                2471 : 2023/11/09 --> COSMIC_RAY and CR_DIFFUSION
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1436,11 +1436,6 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 #  else
    KeyInfo.Particle             = 0;
 #  endif
-#  ifdef MICROPHYSICS
-   KeyInfo.Microphysics         = 1;
-#  else
-   KeyInfo.Microphysics         = 0;
-#  endif
 #  ifdef FLOAT8
    KeyInfo.Float8               = 1;
 #  else
@@ -1452,12 +1447,10 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    KeyInfo.Par_NPar             = amr->Par->NPar_Active_AllRank;
    KeyInfo.Par_NAttStored       = PAR_NATT_STORED;
 #  endif
-#  ifdef MICROPHYSICS
 #  ifdef CR_DIFFUSION
    KeyInfo.CR_Diffusion         = 1;
 #  else
    KeyInfo.CR_Diffusion         = 0;
-#  endif
 #  endif
 #  if ( MODEL == HYDRO )
 #  ifdef MHD
@@ -1534,12 +1527,6 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.Particle               = 1;
 #  else
    Makefile.Particle               = 0;
-#  endif
-
-#  ifdef MICROPHYSICS
-   Makefile.Microphysics           = 1;
-#  else
-   Makefile.Microphysics           = 0;
 #  endif
 
 #  ifdef GPU
@@ -1775,13 +1762,11 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.Par_NAttUser           = PAR_NATT_USER;
 #  endif // #ifdef PARTICLE
 
-#  ifdef MICROPHYSICS
 #  ifdef CR_DIFFUSION
    Makefile.CR_Diffusion           = 1;
 #  else
    Makefile.CR_Diffusion           = 0;
-#  endif
-#  endif // #ifdef MICROPHYSICS
+#  endif // #ifdef CR_DIFFUSION
 
 
 } // FUNCTION : FillIn_Makefile
@@ -2364,12 +2349,10 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  endif
 
 // microphysics
-#  ifdef MICROPHYSICS
 #  ifdef CR_DIFFUSION
    InputPara.CR_Diffusion_ParaCoeff  = CR_DIFF_PARA;
    InputPara.CR_Diffusion_PerpCoeff  = CR_DIFF_PERP;
    InputPara.CR_Diffusion_Dt         = DT_DIFFUSION;
-#  endif
 #  endif
 
 // initialization
@@ -2628,7 +2611,7 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Par_NAttStored",       HOFFSET(KeyInfo_t,Par_NAttStored      ), H5T_NATIVE_INT          );
 #  endif
 
-#  ifdef MICROPHYSICS
+#  ifdef COSMIC_RAY
    H5Tinsert( H5_TypeID, "CR_Diffusion",         HOFFSET(KeyInfo_t,CR_Diffusion        ), H5T_NATIVE_INT          );
 #  endif
 
@@ -2744,8 +2727,8 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Par_NAttUser",           HOFFSET(Makefile_t,Par_NAttUser           ), H5T_NATIVE_INT );
 #  endif
 
-#  ifdef MICROPHYSICS
-   H5Tinsert( H5_TypeID, "CR_DIFFUSION",           HOFFSET(Makefile_t,CR_Diffusion           ), H5T_NATIVE_INT );
+#  ifdef COSMIC_RAY
+   H5Tinsert( H5_TypeID, "CR_Diffusion",           HOFFSET(Makefile_t,CR_Diffusion           ), H5T_NATIVE_INT );
 #  endif
 
 } // FUNCTION : GetCompound_Makefile
@@ -3291,12 +3274,10 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  endif
 
 // microphysics
-#  ifdef MICROPHYSICS
 #  ifdef CR_DIFFUSION
    H5Tinsert( H5_TypeID, "CR_Diffusion_ParaCoeff", HOFFSET(InputPara_t,CR_Diffusion_ParaCoeff ), H5T_NATIVE_DOUBLE            );
    H5Tinsert( H5_TypeID, "CR_Diffusion_PerpCoeff", HOFFSET(InputPara_t,CR_Diffusion_PerpCoeff ), H5T_NATIVE_DOUBLE            );
    H5Tinsert( H5_TypeID, "CR_Diffusion_Dt",        HOFFSET(InputPara_t,CR_Diffusion_Dt        ), H5T_NATIVE_DOUBLE            );
-#  endif
 #  endif
 
 // initialization

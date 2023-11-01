@@ -144,9 +144,7 @@ void Init_GAMER( int *argc, char ***argv )
 
 
 // initialize the microphysics
-#  ifdef MICROPHYSICS
    Microphysics_Init();
-#  endif
 
 
 // initialize the user-defined derived fields

@@ -42,11 +42,6 @@ SIMU_OPTION += -DMODEL=HYDRO
 # enable particles
 #SIMU_OPTION += -DPARTICLE
 
-# enable microphysics
-# --> must enable HYDRO
-#     including: cosmic-ray diffusion (CR_DIFFUSION)
-# SIMU_OPTION += -DMICROPHYSICS
-
 # support Grackle, a chemistry and radiative cooling library
 # --> must set NCOMP_PASSIVE_USER according to the primordial chemistry network set by GRACKLE_PRIMORDIAL
 # --> please enable OpenMP when compiling Grackle (by "make omp-on")
@@ -161,10 +156,10 @@ endif # PARTICLE
 
 # (b-5) microphysics options
 # ------------------------------------------------------------------------------------
-ifeq "$(filter -DMICROPHYSICS, $(SIMU_OPTION))" "-DMICROPHYSICS"
+ifeq "$(filter -DCOSMIC_RAY, $(SIMU_OPTION))" "-DCOSMIC_RAY"
 # enable cosmic-ray diffusion
 SIMU_OPTION += -DCR_DIFFUSION
-endif # MICROPHYSICS
+endif # COSMIC_RAY
 
 
 # (c) miscellaneous options (AMR, GPU, parallelization, optimizations, ...)
@@ -701,28 +696,26 @@ vpath %.cpp    Feedback  Feedback/User_Template  Feedback/SNe
 endif # FEEDBACK
 
 
-# cosmic rays source files (included only if "COSMIC_RAY" is turned on)
+# microphysics source files
 # ------------------------------------------------------------------------------------
-ifeq "$(filter -DCOSMIC_RAY, $(SIMU_OPTION))" "-DCOSMIC_RAY"
+CPU_FILE    += Microphysics_Init.cpp  Microphysics_End.cpp
+
+vpath %.cpp    Microphysics
+vpath %.cu     Microphysics
+
+
+# cosmic-ray diffusion source files (included only if "CR_DIFFUSION" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DCR_DIFFUSION, $(SIMU_OPTION))" "-DCR_DIFFUSION"
 CPU_FILE    += CPU_AddCosmicRayDiffuseFlux.cpp  CPU_ComputeCosmicRayDiffusivity.cpp \
                CPU_CosmicRayMaxDiffusivity.cpp
 
 GPU_FILE    += CUFLU_AddCosmicRayDiffuseFlux.cu  CUFLU_ComputeCosmicRayDiffusivity.cu \
                CUFLU_CosmicRayMaxDiffusivity.cu
 
-vpath %.cpp    Microphysics  Microphysics/CosmicRayDiffusivity
-vpath %.cu     Microphysics  Microphysics/CosmicRayDiffusivity
-endif # COSMIC_RAY
-
-
-# microphysics source files (included only if "MICROPHYSICS" is turned on)
-# ------------------------------------------------------------------------------------
-ifeq "$(filter -DMICROPHYSICS, $(SIMU_OPTION))" "-DMICROPHYSICS"
-CPU_FILE    += Microphysics_Init.cpp  Microphysics_End.cpp
-
-vpath %.cpp    Microphysics
-vpath %.cu     Microphysics
-endif # MICROPHYSICS
+vpath %.cpp    Microphysics/CosmicRayDiffusivity
+vpath %.cu     Microphysics/CosmicRayDiffusivity
+endif # CR_DIFFUSION
 
 
 # test problem source files

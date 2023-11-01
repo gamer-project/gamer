@@ -326,17 +326,12 @@ extern double FlagTable_CRay[NLEVEL-1];
 
 // (2-14) microphysics
 // =======================================================================================================
-#ifdef MICROPHYSICS
 extern MicroPhy_t MicroPhy;
-
 #ifdef CR_DIFFUSION
 extern double CR_DIFF_PARA;
 extern double CR_DIFF_PERP;
 extern double DT_DIFFUSION;
 #endif
-
-#endif // #ifdef MICROPHYSICS
-
 
 
 

@@ -3,7 +3,7 @@
 
 #include "CUFLU.h"
 
-#if ( ( MODEL == HYDRO ) && defined COSMIC_RAY && defined MICROPHYSICS && defined CR_DIFFUSION )
+#ifdef CR_DIFFUSION
 
 //external functions
 #ifdef __CUDACC__
@@ -36,6 +36,6 @@ void CR_MaxDiffusivity( real &max_diff, const MicroPhy_t *Mic )
 
 } // FUNCTION : CR_MaxDiffusivity
 
-#endif // #if ( ( MODEL == HYDRO ) && defined COSMIC_RAY && defined MICROPHYSICS && defined CR_DIFFUSION )
+#endif // #ifdef CR_DIFFUSION
 
 #endif // #ifndef __COMPUTE_COSMICRAYMAXDIFFUSIVITY__

@@ -474,14 +474,8 @@ def load_arguments():
                        )
 
     # A.6 microphysics
-    parser.add_argument( "--microphysics", type=str2bool, metavar="BOOLEAN", gamer_name="MICROPHYSICS",
-                         default=False,
-                         help="Enable microphysics, including cosmic-ray diffusion.\n"
-                       )
-
     parser.add_argument( "--cr_diffusion", type=str2bool, metavar="BOOLEAN", gamer_name="CR_DIFFUSION",
                          default=False,
-                         depend={"microphysics":True},
                          constraint={ True:{"cosmic_ray":True, "mhd":True} },
                          help="Enable cosmic-ray diffusion. Must enable <--mhd> and <--cosmic_ray>.\n"
                        )

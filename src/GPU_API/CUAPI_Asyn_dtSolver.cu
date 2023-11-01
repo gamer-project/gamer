@@ -12,11 +12,8 @@
 __global__
 void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
-                              const real dh, const real Safety, const real MinPres, const EoS_t EoS
-#                             ifdef MICROPHYSICS
-                              , const MicroPhy_t Mic
-#                             endif
-                              );
+                              const real dh, const real Safety, const real MinPres, const EoS_t EoS,
+                              const MicroPhy_t Mic );
 #ifdef GRAVITY
 __global__
 void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ CUBE(GRA_NXT) ],
@@ -87,11 +84,8 @@ extern cudaStream_t *Stream;
 void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                           const real h_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real h_Pot_Array[][ CUBE(GRA_NXT) ],
                           const double h_Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
-#                         ifdef MICROPHYSICS
-                          const MicroPhy_t Mic,
-#                         endif
-                          const real MinPres, const bool P5_Gradient, const bool UsePot, const OptExtAcc_t ExtAcc,
-                          const double TargetTime, const int GPU_NStream )
+                          const MicroPhy_t Mic, const real MinPres, const bool P5_Gradient, const bool UsePot,
+                          const OptExtAcc_t ExtAcc, const double TargetTime, const int GPU_NStream )
 {
 
 // check
@@ -256,11 +250,7 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
                                     ( d_dt_Array_T  + UsedPatch[s],
                                       d_Flu_Array_T + UsedPatch[s],
                                       d_Mag_Array_T + UsedPatch[s],
-                                      dh, Safety, MinPres, EoS
-#                                     ifdef MICROPHYSICS
-                                      , Mic
-#                                     endif
-                                      );
+                                      dh, Safety, MinPres, EoS, Mic );
          break;
 
 #        ifdef GRAVITY

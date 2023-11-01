@@ -45,7 +45,6 @@ struct KeyInfo_t
    int    Float8;
    int    Gravity;
    int    Particle;
-   int    Microphysics;
    int    NLevel;
    int    NCompFluid;               // NCOMP_FLUID
    int    NCompPassive;             // NCOMP_PASSIVE
@@ -68,10 +67,8 @@ struct KeyInfo_t
    long   Par_NPar;                 // amr->Par->NPar_Active_AllRank
    int    Par_NAttStored;           // PAR_NATT_STORED
 #  endif
-#  ifdef MICROPHYSICS
 #  ifdef COSMIC_RAY
    int    CR_Diffusion;
-#  endif
 #  endif
 
    double BoxSize[3];
@@ -105,7 +102,6 @@ struct Makefile_t
    int Gravity;
    int Comoving;
    int Particle;
-   int Microphysics;
    int NLevel;
    int MaxPatch;
 
@@ -170,7 +166,7 @@ struct Makefile_t
    int Par_NAttUser;
 #  endif
 
-#  ifdef MICROPHYSICS
+#  ifdef COSMIC_RAY
    int CR_Diffusion;
 #  endif
 
@@ -641,12 +637,10 @@ struct InputPara_t
 #  endif
 
 // microphysics
-#  ifdef MICROPHYSICS
 #  ifdef CR_DIFFUSION
    double CR_Diffusion_ParaCoeff;
    double CR_Diffusion_PerpCoeff;
    double CR_Diffusion_Dt;
-#  endif
 #  endif
 
 // initialization

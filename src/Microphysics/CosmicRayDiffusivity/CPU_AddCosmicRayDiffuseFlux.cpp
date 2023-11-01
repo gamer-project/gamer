@@ -3,7 +3,7 @@
 
 #include "CUFLU.h"
 
-#if ( ( MODEL == HYDRO ) && defined COSMIC_RAY && defined MICROPHYSICS && defined CR_DIFFUSION )
+#ifdef CR_DIFFUSION
 
 //external functions
 #ifdef __CUDACC__
@@ -30,7 +30,7 @@ real minmod(real a, real b);
 //
 // Description : Compute the half-step cosmic ray diffusive flux.
 //
-// Note        : 1. Must enable MHD and MICROPHYSICS.
+// Note        : 1. Must enable MHD and COSMIC_RAY.
 //
 // Reference   : Yang, H.-Y.~K., Ruszkowski, M., Ricker, P.~M., et al. 2012, apj, 761, 185. doi:10.1088/0004-637X/761/2/185
 //
@@ -211,7 +211,7 @@ void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //
 // Description : Compute the full-step cosmic ray diffusive flux.
 //
-// Note        : 1. Must enable MHD and MICROPHYSICS.
+// Note        : 1. Must enable MHD and COSMIC_RAY.
 //
 // Reference   : Yang, H.-Y.~K., Ruszkowski, M., Ricker, P.~M., et al. 2012, apj, 761, 185. doi:10.1088/0004-637X/761/2/185
 //
@@ -432,6 +432,6 @@ real minmod( real a, real b )
     if ( a * b <= 0.0 )       return 0.0;
 } // FUNCTION : minmod
 
-#endif // #if ( ( MODEL == HYDRO ) && defined COSMIC_RAY && defined MICROPHYSICS && defined CR_DIFFUSION )
+#endif // #ifdef CR_DIFFUSION
 
 #endif // #ifndef __CPU_COSMICRAYDIFFUSE_FLUXES__
