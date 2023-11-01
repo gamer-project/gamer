@@ -13,14 +13,6 @@ extern double Plummer_FB_AccMMax;
 extern double Plummer_FB_Like;
 
 
-// function pointers to be set by FB_Init_Plummer()
-extern int (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                           const int NPar, const long *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                           real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
-                           const int TID, RandomNumber_t *RNG );
-extern void (*FB_End_User_Ptr)();
-
-
 
 
 //-------------------------------------------------------------------------------------------------------

@@ -2,9 +2,6 @@
 
 #ifdef GRAVITY
 
-extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,
-                                               const int lv, double AuxArray[] );
-
 
 
 

@@ -48,6 +48,7 @@ extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double
 #endif
 extern int (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
                                         const double dt, const int lv, double AuxArray[] );
+extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
 #ifdef MHD
 extern double (*MHD_ResetByUser_VecPot_Ptr)( const double x, const double y, const double z, const double Time,
                                              const double dt, const int lv, const char Component, double AuxArray[] );
@@ -78,9 +79,17 @@ extern void (*EoS_Init_Ptr)();
 extern void (*EoS_End_Ptr)();
 #endif
 extern void (*Src_Init_User_Ptr)();
+extern void (*Src_End_User_Ptr)();
+extern void (*Src_WorkBeforeMajorFunc_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                                                 double AuxArray_Flt[], int AuxArray_Int[] );
 extern void (*Init_DerivedField_User_Ptr)();
 #ifdef FEEDBACK
 extern void (*FB_Init_User_Ptr)();
+extern void (*FB_End_User_Ptr)();
+extern int (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                           const int NPar, const long *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
+                           real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
+                           const int TID, RandomNumber_t *RNG );
 #endif
 
 

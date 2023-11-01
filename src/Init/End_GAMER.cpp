@@ -1,7 +1,5 @@
 #include "GAMER.h"
 
-extern void (*End_User_Ptr)();
-
 
 
 

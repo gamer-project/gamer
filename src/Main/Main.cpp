@@ -490,10 +490,6 @@ Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 Timer_t  Timer_OutputWalltime;
 
 
-// function pointer for recording the user-specified info
-extern void (*Aux_Record_User_Ptr)();
-
-
 
 
 //-------------------------------------------------------------------------------------------------------
