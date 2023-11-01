@@ -1,5 +1,5 @@
 #include "GAMER.h"
-#include "TestProb.h"
+
 
 
 // problem-specific global variables

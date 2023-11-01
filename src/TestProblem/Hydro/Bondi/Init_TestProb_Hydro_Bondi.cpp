@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -181,8 +180,8 @@ void SetParameter()
    ReadPara_t *ReadPara  = new ReadPara_t;
 
 // (1-1) add parameters in the following format:
-// add parameters in the following format (some handy constants are defined in TestProb.h):
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,                  DEFAULT,      MIN,              MAX               );
 // ********************************************************************************************************************************

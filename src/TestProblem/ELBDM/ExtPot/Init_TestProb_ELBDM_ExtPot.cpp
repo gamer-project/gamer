@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 static void BC( real fluid[], const double x, const double y, const double z, const double Time,
