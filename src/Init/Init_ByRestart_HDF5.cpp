@@ -79,11 +79,13 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  else
    const int  Particle             = 0;
 #  endif
+#  ifdef COSMIC_RAY
 #  ifdef CR_DIFFUSION
    const int  CR_Diffusion         = 1;
 #  else
    const int  CR_Diffusion         = 0;
-#  endif // #ifdef CR_DIFFUSION
+#  endif
+#  endif // #ifdef COSMIC_RAY
 #  if ( MODEL == HYDRO )
 #  ifdef MHD
    const int  Magnetohydrodynamics = 1;
@@ -1520,9 +1522,11 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "Par_NAttUser",           &RS.Par_NAttUser,           SID, TID, NonFatal, &RT.Par_NAttUser,           1, NonFatal );
 #  endif
 
+#  ifdef COSMIC_RAY
 #  ifdef CR_DIFFUSION
    LoadField( "CR_Diffusion",           &RS.CR_Diffusion,           SID, TID, NonFatal, &RT.CR_Diffusion,           1, NonFatal );
 #  endif
+#  endif // #ifdef COSMIC_RAY
 
 
 // 5. close all objects
@@ -2061,9 +2065,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 // microphysics
 #  ifdef CR_DIFFUSION
-   LoadField( "CR_DIFF_PARA",            &RS.CR_Diffusion_ParaCoeff,  SID, TID, NonFatal, &RT.CR_Diffusion_ParaCoeff,   1, NonFatal );
-   LoadField( "CR_DIFF_PERP",            &RS.CR_Diffusion_PerpCoeff,  SID, TID, NonFatal, &RT.CR_Diffusion_PerpCoeff,   1, NonFatal );
-   LoadField( "DT_DIFFUSION",            &RS.CR_Diffusion_Dt,         SID, TID, NonFatal, &RT.CR_Diffusion_Dt,          1, NonFatal );
+   LoadField( "CR_Diffusion_ParaCoeff",  &RS.CR_Diffusion_ParaCoeff,  SID, TID, NonFatal, &RT.CR_Diffusion_ParaCoeff,   1, NonFatal );
+   LoadField( "CR_Diffusion_PerpCoeff",  &RS.CR_Diffusion_PerpCoeff,  SID, TID, NonFatal, &RT.CR_Diffusion_PerpCoeff,   1, NonFatal );
+   LoadField( "CR_Diffusion_Dt",         &RS.CR_Diffusion_Dt,         SID, TID, NonFatal, &RT.CR_Diffusion_Dt,          1, NonFatal );
 #  endif
 
 // initialization
