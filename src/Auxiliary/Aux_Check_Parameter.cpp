@@ -871,10 +871,11 @@ void Aux_Check_Parameter()
         OPT__LR_LIMITER != LR_LIMITER_ATHENA )
       Aux_Error( ERROR_INFO, "unsupported data reconstruction limiter (OPT__LR_IMITER = %d) !!\n",
                  OPT__LR_LIMITER );
+
 #  if ( LR_SCHEME == PLM )
    if ( OPT__LR_LIMITER == LR_LIMITER_ATHENA )
-      Aux_Error( ERROR, "ERROR : OPT__LR_LIMITER = %d (LR_LIMITER_ATHENA) is not supported for PLM !!\n",
-                   OPT__LR_ATHENA );
+      Aux_Error( ERROR_INFO, "ERROR : OPT__LR_LIMITER = %d (LR_LIMITER_ATHENA) is not supported for PLM !!\n",
+                 OPT__LR_LIMITER );
 #  endif
 
 
