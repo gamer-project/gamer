@@ -276,7 +276,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 // copy all passive scalars
    if ( inSize == NCOMP_TOTAL )
    {
-      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v]/LorentzFactor;
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
 
 // convert the mass density of target passive scalars to mass fraction
       if ( FracPassive )
@@ -383,7 +383,7 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const i
    const int inSize = sizeof(In)/sizeof(In[0]);
    if ( inSize == NCOMP_TOTAL )
    {
-      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v]*LorentzFactor;
+     for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
 
 // convert the mass fraction of target passive scalars back to mass density
       if ( FracPassive )
@@ -880,14 +880,14 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
          {
             printf( "ERROR: unphysical conserved variables at file <%s>, line <%d>, function <%s> !!\n",
                     File, Line, Function );
-            printf( "D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
+            printf( "D=%14.7e\nMx=%14.7e\nMy=%14.7e\nMz=%14.7e\nE=%14.7e\n",
                     Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY] );
 #           ifdef SRHD
             printf( "E^2+2*E*D-|M|^2=%14.7e\n", Discriminant );
 #           endif
 #           if ( NCOMP_PASSIVE > 0 )
-            printf( "Passive:" );
-            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  printf( " [%d]=%13.7e", v-NCOMP_FLUID, Fields[v] );
+            printf( "Passive:\n" );
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  printf( " [%d]=%13.7e\n", v-NCOMP_FLUID, Fields[v] );
             printf( "\n" );
 #           endif
          }
