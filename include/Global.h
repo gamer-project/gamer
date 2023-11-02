@@ -330,7 +330,7 @@ extern MicroPhy_t MicroPhy;
 #ifdef CR_DIFFUSION
 extern double CR_DIFF_PARA;
 extern double CR_DIFF_PERP;
-extern double DT_DIFFUSION;
+extern double DT_CR_DIFFUSION;
 #endif
 
 

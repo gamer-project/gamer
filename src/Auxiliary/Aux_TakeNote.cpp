@@ -1021,7 +1021,7 @@ void Aux_TakeNote()
 #     ifdef CR_DIFFUSION
       fprintf( Note, "CR_DIFF_PARA                    %13.7e\n",           CR_DIFF_PARA                      );
       fprintf( Note, "CR_DIFF_PERP                    %13.7e\n",           CR_DIFF_PERP                      );
-      fprintf( Note, "DT_DIFFUSION                    %13.7e\n",           DT_DIFFUSION                      );
+      fprintf( Note, "DT_CR_DIFFUSION                 %13.7e\n",           DT_CR_DIFFUSION                   );
 #     endif // #ifdef CR_DIFFUSION
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");

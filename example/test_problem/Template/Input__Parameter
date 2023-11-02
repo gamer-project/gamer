@@ -213,7 +213,7 @@ GAMMA_CR                      1.333333333 # adiabatic index of the cosmic rays [
 # --> cosmic rays (CR_DIFFUSION only)
 CR_DIFF_PARA                  0.05        # parallel      diffusion coefficient of cosmic rays
 CR_DIFF_PERP                  0.00        # perpendicular diffusion coefficient of cosmic rays
-DT_DIFFUSION                  0.3         # dt criterion: fluid solver CFL factor of diffusion
+DT_CR_DIFFUSION               0.3         # dt criterion: fluid solver CFL factor of diffusion
 
 
 # fluid solver in HYDRO (MODEL==HYDRO only)

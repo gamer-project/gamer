@@ -2354,7 +2354,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  ifdef CR_DIFFUSION
    InputPara.CR_Diffusion_ParaCoeff  = CR_DIFF_PARA;
    InputPara.CR_Diffusion_PerpCoeff  = CR_DIFF_PERP;
-   InputPara.CR_Diffusion_Dt         = DT_DIFFUSION;
+   InputPara.CR_Diffusion_Dt         = DT_CR_DIFFUSION;
 #  endif
 
 // initialization
