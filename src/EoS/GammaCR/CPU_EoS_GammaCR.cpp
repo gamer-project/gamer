@@ -8,6 +8,16 @@
 
 #ifdef COSMIC_RAY
 
+#ifdef __CUDACC__
+__device__ static real EoS_CREint2CRPres_GammaCR( const real E_CR,
+                                                  const double AuxArray_Flt[], const int AuxArray_Int[],
+                                                  const real *const Table[EOS_NTABLE_MAX] );
+#else // #ifdef __CUDACC__
+static real EoS_CREint2CRPres_GammaCR( const real E_CR,
+                                       const double AuxArray_Flt[], const int AuxArray_Int[],
+                                       const real *const Table[EOS_NTABLE_MAX] );
+#endif // #ifdef __CUDACC__ ... else ...
+
 
 /********************************************************
 1. Ideal gas EoS with cosmic-ray component (GAMMA_CR)
@@ -124,12 +134,12 @@ static real EoS_DensEint2Pres_GammaCR( const real Dens, const real Eint, const r
 
 
    const real Gamma_m1   = (real)AuxArray_Flt[1];
-   const real GammaCR_m1 = (real)AuxArray_Flt[5];
    const real small_val  = (real)AuxArray_Flt[6];
    const real E_CR       = Passive[ CRAY-NCOMP_FLUID ];
+   const real Pres_CR    = EoS_CREint2CRPres_GammaCR( E_CR, AuxArray_Flt, AuxArray_Int, Table );
    real Pres;
 
-   Pres = Gamma_m1*FMAX( Eint - E_CR, small_val ) + GammaCR_m1 * E_CR;
+   Pres = Gamma_m1*FMAX( Eint - E_CR, small_val ) + Pres_CR;
 
    return Pres;
 
@@ -166,12 +176,12 @@ static real EoS_DensPres2Eint_GammaCR( const real Dens, const real Pres, const r
 #  endif // GAMER_DEBUG
 
    const real Gamma_m1_inv = (real)AuxArray_Flt[2];
-   const real GammaCR_m1   = (real)AuxArray_Flt[5];
    const real small_val    = (real)AuxArray_Flt[6];
    const real E_CR         = Passive[ CRAY-NCOMP_FLUID ];
+   const real Pres_CR      = EoS_CREint2CRPres_GammaCR( E_CR, AuxArray_Flt, AuxArray_Int, Table );
    real Eint;
 
-   Eint = FMAX( Pres - E_CR * GammaCR_m1, small_val ) * Gamma_m1_inv + E_CR;
+   Eint = FMAX( Pres - Pres_CR, small_val ) * Gamma_m1_inv + E_CR;
 
    return Eint;
 
@@ -210,12 +220,11 @@ static real EoS_DensPres2CSqr_GammaCR( const real Dens, const real Pres, const r
 
    const real Gamma      = (real)AuxArray_Flt[0];
    const real GammaCR    = (real)AuxArray_Flt[4];
-   const real GammaCR_m1 = (real)AuxArray_Flt[5];
    const real small_val  = (real)AuxArray_Flt[6];
    const real E_CR       = Passive[ CRAY-NCOMP_FLUID ];
+   const real Pres_CR    = EoS_CREint2CRPres_GammaCR( E_CR, AuxArray_Flt, AuxArray_Int, Table );
    real Cs2;
 
-   real Pres_CR = GammaCR_m1 * E_CR;
    Cs2 = ( GammaCR * Pres_CR + Gamma * FMAX( Pres - Pres_CR, small_val ) ) / Dens;
 
    return Cs2;
@@ -299,12 +308,12 @@ static real EoS_DensTemp2Pres_GammaCR( const real Dens, const real Temp, const r
 #  endif // GAMER_DEBUG
 
 
-   const real GammaCR_m1 = (real)AuxArray_Flt[5];
    const real _m_kB      = (real)AuxArray_Flt[8];
    const real E_CR       = Passive[ CRAY-NCOMP_FLUID ];
+   const real Pres_CR    = EoS_CREint2CRPres_GammaCR( E_CR, AuxArray_Flt, AuxArray_Int, Table );
    real Pres;
 
-   Pres = Temp * Dens * _m_kB + GammaCR_m1 * E_CR;
+   Pres = Temp * Dens * _m_kB + Pres_CR;
 
    return Pres;
 

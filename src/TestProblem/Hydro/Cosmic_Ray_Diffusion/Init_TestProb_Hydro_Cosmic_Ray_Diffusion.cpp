@@ -554,7 +554,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    CRay = CRay + CR_Diffusion_BG_CR;
 
 #ifdef COSMIC_RAY
-   P_cr = CRay * ( GAMMA_CR - 1.0 );
+   P_cr = EoS_CREint2CRPres_CPUPtr( CRay, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    Pres = Pres + P_cr;
 
 // set the output array of passive scaler
