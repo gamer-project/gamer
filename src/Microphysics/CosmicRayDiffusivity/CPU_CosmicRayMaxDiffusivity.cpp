@@ -12,7 +12,7 @@
 
 #else // #ifdef __CUDACC__
 
-void CR_ComputeDiffusivity( real &diff_cr_para, real &diff_cr_perp, const MicroPhy_t *Mic );
+void CR_ComputeDiffusivity( real &diff_cr_para, real &diff_cr_perp, const MicroPhy_t *MicroPhy );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -25,13 +25,13 @@ void CR_ComputeDiffusivity( real &diff_cr_para, real &diff_cr_perp, const MicroP
 // Note        :
 //
 // Parameter   : max_diff : Variable to store the maximum diffusion coefficient.
-//               Mic      : Microphysics object
+//               MicroPhy : Microphysics object
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
-void CR_MaxDiffusivity( real &max_diff, const MicroPhy_t *Mic )
+void CR_MaxDiffusivity( real &max_diff, const MicroPhy_t *MicroPhy )
 {
    real diff_cr_para, diff_cr_perp;
-   CR_ComputeDiffusivity( diff_cr_para, diff_cr_perp, Mic );
+   CR_ComputeDiffusivity( diff_cr_para, diff_cr_perp, MicroPhy );
    max_diff = MAX(diff_cr_para, diff_cr_perp);
 
 } // FUNCTION : CR_MaxDiffusivity

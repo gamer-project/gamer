@@ -14,13 +14,13 @@
 //
 // Parameter   : diff_cr_para : Variable to store the parallel      diffusion coefficient
 //               diff_cr_perp : Variable to store the perpendicular diffusion coefficient
-//               Mic          : Microphysics object
+//               MicroPhy     : Microphysics object
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
-void CR_ComputeDiffusivity( real &diff_cr_para, real &diff_cr_perp, const MicroPhy_t *Mic )
+void CR_ComputeDiffusivity( real &diff_cr_para, real &diff_cr_perp, const MicroPhy_t *MicroPhy )
 {
-   diff_cr_para = Mic->CR_diff_coeff_para;
-   diff_cr_perp = Mic->CR_diff_coeff_perp;
+   diff_cr_para = MicroPhy->CR_diff_coeff_para;
+   diff_cr_perp = MicroPhy->CR_diff_coeff_perp;
 
 } // FUNCTION : CR_ComputeDiffusivity
 

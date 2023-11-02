@@ -125,11 +125,11 @@ void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
                                     real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                               const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                               const real g_CC_B[][ CUBE(FLU_NXT) ],
-                              const real dh, const MicroPhy_t *Mic );
+                              const real dh, const MicroPhy_t *MicroPhy );
 void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                               real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                               const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                              const int NFlux, const real dh, const MicroPhy_t *Mic );
+                              const int NFlux, const real dh, const MicroPhy_t *MicroPhy );
 #endif // #ifdef CR_DIFFUSION
 
 #endif // #ifdef __CUDACC__ ... else ...
@@ -245,7 +245,7 @@ static void CosmicRay_Update( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 //                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //                EoS                : EoS object
-//                Mic                : Microphysics object
+//                MicroPhy           : Microphysics object
 //-------------------------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __global__
@@ -274,7 +274,7 @@ void CUFLU_FluidSolver_MHM(
    const bool NormPassive, const int NNorm,
    const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_t EoS, const MicroPhy_t Mic )
+   const EoS_t EoS, const MicroPhy_t MicroPhy )
 #else
 void CPU_FluidSolver_MHM(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -303,7 +303,7 @@ void CPU_FluidSolver_MHM(
    const bool NormPassive, const int NNorm, const int c_NormIdx[],
    const bool FracPassive, const int NFrac, const int c_FracIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_t EoS, const MicroPhy_t Mic )
+   const EoS_t EoS, const MicroPhy_t MicroPhy )
 #endif // #ifdef __CUDACC__ ... else ...
 {
 
@@ -436,7 +436,7 @@ void CPU_FluidSolver_MHM(
 
 //       add extra flux of cosmic ray
 #        ifdef CR_DIFFUSION
-         CR_DiffuseFlux_HalfStep( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P], g_PriVar_1PG+MAG_OFFSET, dh, &Mic );
+         CR_DiffuseFlux_HalfStep( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P], g_PriVar_1PG+MAG_OFFSET, dh, &MicroPhy );
 #        endif
 
 
@@ -531,7 +531,7 @@ void CPU_FluidSolver_MHM(
 
 //          add extra flux of cosmic ray
 #           ifdef CR_DIFFUSION
-            CR_DiffuseFlux_FullStep( g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_FL_FLUX, dh, &Mic );
+            CR_DiffuseFlux_FullStep( g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_FL_FLUX, dh, &MicroPhy );
 #           endif
 
 

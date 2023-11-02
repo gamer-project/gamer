@@ -12,7 +12,7 @@
 
 #else // #ifdef __CUDACC__
 
-void CR_ComputeDiffusivity( real &diff_cr_para, real &diff_cr_perp, const MicroPhy_t *Mic );
+void CR_ComputeDiffusivity( real &diff_cr_para, real &diff_cr_perp, const MicroPhy_t *MicroPhy );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -39,14 +39,14 @@ real minmod(real a, real b);
 //               g_FC_B         : Array storing the face-centered input B field
 //               g_CC_B         : Array storing the cell-centered input B field
 //               dh             : Cell size
-//               Mic            : Microphysics object
+//               MicroPhy       : Microphysics object
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
 void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
                                     real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                               const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                               const real g_CC_B[][ CUBE(FLU_NXT) ],
-                              const real dh, const MicroPhy_t *Mic )
+                              const real dh, const MicroPhy_t *MicroPhy )
 {
    const int didx_cvar[3] = { 1, FLU_NXT, SQR(FLU_NXT) };
    const int flux_offset = 1;
@@ -107,7 +107,7 @@ void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
 //       1. get the diffusivity
          real diff_cr_eff_para, diff_cr_eff_perp;
-         CR_ComputeDiffusivity( diff_cr_eff_para, diff_cr_eff_perp, Mic );
+         CR_ComputeDiffusivity( diff_cr_eff_para, diff_cr_eff_perp, MicroPhy );
 
 //       2. compute the mean magnetic field
 //       ---------------------
@@ -220,13 +220,13 @@ void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //               g_FC_B_Half    : Array storing the half-step face-centered magnetic field
 //               NFlux          : Stride for accessing g_FC_Flux
 //               dh             : Cell size
-//               Mic            : Microphysics object
+//               MicroPhy       : Microphysics object
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
 void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                                     real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                               const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                              const int NFlux, const real dh, const MicroPhy_t *Mic )
+                              const int NFlux, const real dh, const MicroPhy_t *MicroPhy )
 {
 
    const int didx_half[3] = { 1, N_HF_VAR, SQR(N_HF_VAR) };
@@ -296,7 +296,7 @@ void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 
 //       1. get the diffusivity
          real diff_cr_eff_para, diff_cr_eff_perp;
-         CR_ComputeDiffusivity( diff_cr_eff_para, diff_cr_eff_perp, Mic );
+         CR_ComputeDiffusivity( diff_cr_eff_para, diff_cr_eff_perp, MicroPhy );
 
 //       2. compute the mean magnetic field
 //       ---------------------

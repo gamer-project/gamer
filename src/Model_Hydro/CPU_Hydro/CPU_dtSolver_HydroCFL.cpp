@@ -47,7 +47,7 @@
 //                Safety      : dt safety factor
 //                MinPres     : Minimum allowed pressure
 //                EoS         : EoS object
-//                Mic         : Microphysics object
+//                MicroPhy    : Microphysics object
 //
 // Return      :  g_dt_Array
 //-----------------------------------------------------------------------------------------
@@ -56,19 +56,19 @@ __global__
 void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
                               const real dh, const real Safety, const real MinPres, const EoS_t EoS,
-                              const MicroPhy_t Mic )
+                              const MicroPhy_t MicroPhy )
 #else
 void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,
                               const real dh, const real Safety, const real MinPres, const EoS_t EoS,
-                              const MicroPhy_t Mic )
+                              const MicroPhy_t MicroPhy )
 #endif
 {
 
    const bool CheckMinPres_Yes = true;
    const real dhSafety         = Safety*dh;
 #  ifdef CR_DIFFUSION
-   const real dh2Safety = Mic.CR_safety*0.5*dh*dh;
+   const real dh2Safety = MicroPhy.CR_safety*0.5*dh*dh;
 #  endif
 
 // loop over all patches
@@ -174,8 +174,8 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
 
       CGPU_LOOP( t, CUBE(PS1) )
       {
-        MaxCFL = FMAX( Mic.CR_diff_coeff_para, MaxCFL );
-        MaxCFL = FMAX( Mic.CR_diff_coeff_perp, MaxCFL );
+        MaxCFL = FMAX( MicroPhy.CR_diff_coeff_para, MaxCFL );
+        MaxCFL = FMAX( MicroPhy.CR_diff_coeff_perp, MaxCFL );
       } // CGPU_LOOP( t, CUBE(PS1) )
 
 #     ifdef __CUDACC__
