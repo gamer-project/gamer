@@ -882,12 +882,11 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 #     ifdef COSMIC_RAY
       const EoS_CRE2CRP_t EoS_CREint2CRPres = EoS->CREint2CRPres_FuncPtr;
       const double *EoS_AuxArray_Flt  = EoS->AuxArrayDevPtr_Flt;
-      real div_V[3], Input_1Cell[NCOMP_TOTAL_PLUS_MAG];
+      real div_V[3];
       const int idx_fc = idx_in;
 
 //    1. store the cosmic ray and calculate the pressure
-      Input_1Cell[CRAY]  = g_ConVar_In[CRAY][idx_in];
-      real pCR_old = EoS_CREint2CRPres( Input_1Cell+NCOMP_FLUID,  EoS_AuxArray_Flt, NULL, NULL );
+      const real pCR_old = EoS_CREint2CRPres( g_ConVar_In[CRAY][idx_in],  EoS_AuxArray_Flt, NULL, NULL );
 
 //    2. \div V term, reference: "Simple Method to Track Pressure Accurately", S. Li, Astronum Proceeding, 2007
       for (int d=0; d<3; d++)
@@ -994,7 +993,7 @@ void CosmicRay_Update( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
    const EoS_CRE2CRP_t EoS_CREint2CRPres = EoS->CREint2CRPres_FuncPtr;
    const double *EoS_AuxArray_Flt  = EoS->AuxArrayDevPtr_Flt;
 
-   real div_V[3], Input_Half_1Cell[NCOMP_TOTAL_PLUS_MAG], Output_1Cell[NCOMP_TOTAL_PLUS_MAG];
+   real div_V[3], Output_1Cell[NCOMP_TOTAL_PLUS_MAG];
 
    const int size_ij = SQR(PS2);
    CGPU_LOOP( idx_out, CUBE(PS2) )
@@ -1028,9 +1027,8 @@ void CosmicRay_Update( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
       const int idx_fc   = IDX321( i_fc, j_fc, k_fc, N_FC_VAR, N_FC_VAR);
 
 //    1. store the cosmic ray and calculate the pressure
-      Input_Half_1Cell[CRAY] = g_PriVar_Half[CRAY][idx_hf];
       Output_1Cell[CRAY]     = g_Output[CRAY][idx_out];
-      real pCR_half = EoS_CREint2CRPres( Input_Half_1Cell+NCOMP_FLUID,  EoS_AuxArray_Flt, NULL, NULL );
+      const real pCR_half = EoS_CREint2CRPres( g_PriVar_Half[CRAY][idx_hf],  EoS_AuxArray_Flt, NULL, NULL );
 
 //    2. \div V term, reference: "Simple Method to Track Pressure Accurately", S. Li, Astronum Proceeding, 2007
       for (int d=0; d<3; d++)

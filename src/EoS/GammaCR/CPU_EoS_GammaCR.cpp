@@ -390,24 +390,24 @@ static void EoS_General_GammaCR( const int Mode, real Out[], const real In_Flt[]
 // Note        :  1. Internal energy density here is per unit volume instead of per unit mass
 //                2. See EoS_SetAuxArray_GammaCR() for the values stored in AuxArray_Flt/Int[]
 //
-// Parameter   :  Passive    : Passive scalars (Passive[CRAY-NCOMP_FLUID] gives the cosmic-ray energy density)
+// Parameter   :  E_CR       : Cosmic-ray energy density
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //
 // Return      :  Cosmic ray pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_CREint2CRPres_GammaCR( const real Passive[],
+static real EoS_CREint2CRPres_GammaCR( const real E_CR,
                                        const double AuxArray_Flt[], const int AuxArray_Int[],
                                        const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
 #  ifdef GAMER_DEBUG
-   Hydro_CheckUnphysical( UNPHY_MODE_PASSIVE_ONLY, Passive, "input passive", ERROR_INFO, UNPHY_VERBOSE );
+   if ( E_CR < (real)0.0 )
+      printf( "ERROR : invalid input cosmic ray energy density (%13.7e) in %s() !!\n", E_CR, __FUNCTION__ );
 #  endif // GAMER_DEBUG
 
    const real GammaCR_m1 = (real)AuxArray_Flt[5];
-   const real E_CR       = Passive[ CRAY-NCOMP_FLUID ];
    real Pres_CR;
 
    Pres_CR = GammaCR_m1 * E_CR;
@@ -418,11 +418,6 @@ static real EoS_CREint2CRPres_GammaCR( const real Passive[],
    {
       printf( "ERROR : invalid output cosmic ray pressure (%13.7e) in %s() !!\n", Pres_CR, __FUNCTION__ );
       printf( "        CRay=%13.7e\n",E_CR);
-#     if ( NCOMP_PASSIVE > 0 )
-      printf( "        Passive scalars:" );
-      for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%13.7e", v, Passive[v] );
-      printf( "\n" );
-#     endif
    }
 #  endif // GAMER_DEBUG
 

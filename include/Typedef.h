@@ -505,7 +505,7 @@ typedef real (*EoS_DE2S_t)     ( const real Dens, const real Eint, const real Pa
                                  const double AuxArray_Flt[], const int AuxArray_Int[],
                                  const real *const Table[EOS_NTABLE_MAX] );
 #ifdef COSMIC_RAY
-typedef real (*EoS_CRE2CRP_t)  ( const real Passive[],
+typedef real (*EoS_CRE2CRP_t)  ( const real E_CR,
                                  const double AuxArray_Flt[], const int AuxArray_Int[],
                                  const real *const Table[EOS_NTABLE_MAX] );
 #endif
