@@ -365,9 +365,9 @@ def load_arguments():
                        )
 
     parser.add_argument( "--eos", type=str, metavar="TYPE", gamer_name="EOS",
-                         default="GAMMA", choices=["GAMMA", "ISOTHERMAL", "NUCLEAR", "TABULAR", "COSMIC_RAY", "USER"],
+                         default=None, choices=["GAMMA", "ISOTHERMAL", "NUCLEAR", "TABULAR", "COSMIC_RAY", "USER"],
                          depend={"model":"HYDRO"},
-                         constraint={ "ISOTHERMAL":{"barotropic":True} },
+                         constraint={ "ISOTHERMAL":{"barotropic":True}, "COSMIC_RAY":{"cosmic_ray":True} },
                          help="Equation of state. Must be set when <--model=HYDRO>. Must enable <--barotropic> for ISOTHERMAL.\n"
                        )
 
@@ -476,6 +476,7 @@ def load_arguments():
     # A.6 microphysics
     parser.add_argument( "--cr_diffusion", type=str2bool, metavar="BOOLEAN", gamer_name="CR_DIFFUSION",
                          default=False,
+                         depend={"cosmic_ray":True},
                          constraint={ True:{"cosmic_ray":True, "mhd":True} },
                          help="Enable cosmic-ray diffusion. Must enable <--mhd> and <--cosmic_ray>.\n"
                        )
@@ -642,6 +643,9 @@ def set_conditional_defaults( args ):
 
     if args["flux"] == None:
         args["flux"] = "HLLD" if args["mhd"] else "HLLC"
+
+    if args["eos"] == None:
+        args["eos"] = "COSMIC_RAY" if args["cosmic_ray"] else "GAMMA"
 
     return args
 
