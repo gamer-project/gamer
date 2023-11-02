@@ -48,7 +48,7 @@
 //                   AuxArray_Flt[5] = gamma_cr - 1
 //                   AuxArray_Flt[6] = minimum pressure
 //                   AuxArray_Flt[7] = (mean molecular weight)*(atomic mass unit)/(Boltzmann constant)*(UNIT_E/UNIT_M)
-//                   AuxArray_Flt[8] = 1/AuxArray_Flt[4]
+//                   AuxArray_Flt[8] = 1/AuxArray_Flt[7]
 //
 // Note        :  1. Invoked by EoS_Init_GammaCR()
 //                2. AuxArray_Flt/Int[] have the size of EOS_NAUX_MAX defined in Macro.h (default = 20)
