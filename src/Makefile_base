@@ -340,6 +340,15 @@ vpath %.cpp    Feedback  Feedback/User_Template  Feedback/SNe
 endif # FEEDBACK
 
 
+# cosmic-ray source files (included only if "COSMIC_RAY" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DCOSMIC_RAY, $(SIMU_OPTION))" "-DCOSMIC_RAY"
+CPU_FILE    += CPU_CosmicRay.cpp
+
+GPU_FILE    += CUFLU_CosmicRay.cu
+endif # COSMIC_RAY
+
+
 # microphysics source files
 # ------------------------------------------------------------------------------------
 CPU_FILE    += Microphysics_Init.cpp  Microphysics_End.cpp

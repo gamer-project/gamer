@@ -33,9 +33,12 @@
 
 #include "CUDA_ConstMemory.h"
 
+#ifdef COSMIC_RAY
+# include "CUFLU_CosmicRay.cu"
 #ifdef CR_DIFFUSION
 # include "../../Microphysics/CosmicRayDiffusivity/CUFLU_AddCosmicRayDiffuseFlux.cu"
 #endif
+#endif // #ifdef COSMIC_RAY
 
 #else // #ifdef __CUDACC__
 
@@ -120,6 +123,18 @@ void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out
                          const real dt, const real dh, const int NOut, const int NEle, const int Offset_B_In );
 #endif // #ifdef MHD
 
+#ifdef COSMIC_RAY
+void CR_AdiabaticWork_HalfStepUpdate(       real OneCell[NCOMP_TOTAL_PLUS_MAG],
+                                      const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                                      const real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                      const int idx_fc, const int didx_fc[3],
+                                      const int idx_flux, const int didx_flux[3],
+                                      const real dt_dh2, const EoS_t *EoS );
+void CR_AdiabaticWork_FullStepUpdate( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
+                                            real g_Output[][ CUBE(PS2) ],
+                                      const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                      const real g_FC_Var[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+                                      const real dt, const real dh, const EoS_t *EoS );
 #ifdef CR_DIFFUSION
 void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
                                     real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
@@ -131,6 +146,7 @@ void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                               const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                               const int NFlux, const real dh, const MicroPhy_t *MicroPhy );
 #endif // #ifdef CR_DIFFUSION
+#endif // #ifdef COSMIC_RAY
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -154,15 +170,6 @@ static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                                   const bool FracPassive, const int NFrac, const int FracIdx[],
                                   const bool JeansMinPres, const real JeansMinPres_Coeff,
                                   const EoS_t *EoS );
-#ifdef COSMIC_RAY
-GPU_DEVICE
-static void CosmicRay_Update( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
-                                    real g_Output[][ CUBE(PS2) ],
-                              const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                              const real g_FC_Var[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
-                              const real dt, const real dh,
-                              const EoS_t *EoS );
-#endif // #ifdef COSMIC_RAY
 #endif
 
 
@@ -566,7 +573,8 @@ void CPU_FluidSolver_MHM(
 
 
 #           ifdef COSMIC_RAY
-            CosmicRay_Update( g_PriVar_Half_1PG, g_Flu_Array_Out[P], g_FC_Flux_1PG, g_FC_Var_1PG, dt, dh, &EoS );
+            CR_AdiabaticWork_FullStepUpdate( g_PriVar_Half_1PG, g_Flu_Array_Out[P], g_FC_Flux_1PG, g_FC_Var_1PG,
+                                             dt, dh, &EoS );
 #           endif
 
 
@@ -878,42 +886,10 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
       for (int v=0; v<NCOMP_TOTAL; v++)
          out_con[v] = g_ConVar_In[v][idx_in] - dt_dh2*( dflux[0][v] + dflux[1][v] + dflux[2][v] );
 
-//    cosmic ray half-step adiabatic work down update
 #     ifdef COSMIC_RAY
-      const EoS_CRE2CRP_t EoS_CREint2CRPres = EoS->CREint2CRPres_FuncPtr;
-      const double *EoS_AuxArray_Flt  = EoS->AuxArrayDevPtr_Flt;
-      real div_V[3];
-      const int idx_fc = idx_in;
-
-//    1. store the cosmic ray and calculate the pressure
-      const real pCR_old = EoS_CREint2CRPres( g_ConVar_In[CRAY][idx_in],  EoS_AuxArray_Flt, NULL, NULL );
-
-//    2. \div V term, reference: "Simple Method to Track Pressure Accurately", S. Li, Astronum Proceeding, 2007
-      for (int d=0; d<3; d++)
-      {
-#        ifdef MHD
-         div_V[d]  = ( g_Flux_Half[d][DENS][ idx_flux                ] > 0 ) ?
-                     ( g_Flux_Half[d][DENS][ idx_flux                ] / g_ConVar_In[DENS][ idx_fc              ] ) :
-                     ( g_Flux_Half[d][DENS][ idx_flux                ] / g_ConVar_In[DENS][ idx_fc + didx_fc[d] ] );
-
-         div_V[d] -= ( g_Flux_Half[d][DENS][ idx_flux - didx_flux[d] ] > 0 ) ?
-                     ( g_Flux_Half[d][DENS][ idx_flux - didx_flux[d] ] / g_ConVar_In[DENS][ idx_fc - didx_fc[d] ] ) :
-                     ( g_Flux_Half[d][DENS][ idx_flux - didx_flux[d] ] / g_ConVar_In[DENS][ idx_fc              ] );
-#        else
-         div_V[d]  = ( g_Flux_Half[d][DENS][ idx_flux + didx_flux[d] ] > 0 ) ?
-                     ( g_Flux_Half[d][DENS][ idx_flux + didx_flux[d] ] / g_ConVar_In[DENS][ idx_fc              ] ) :
-                     ( g_Flux_Half[d][DENS][ idx_flux + didx_flux[d] ] / g_ConVar_In[DENS][ idx_fc + didx_fc[d] ] );
-
-         div_V[d] -= ( g_Flux_Half[d][DENS][ idx_flux                ] > 0 ) ?
-                     ( g_Flux_Half[d][DENS][ idx_flux                ] / g_ConVar_In[DENS][ idx_fc - didx_fc[d] ] ) :
-                     ( g_Flux_Half[d][DENS][ idx_flux                ] / g_ConVar_In[DENS][ idx_fc              ] );
-#        endif
-
-      } // for (int d=0; d<3; d++)
-
-//    3. update the cosmic ray
-      out_con[CRAY] = out_con[CRAY] - pCR_old * dt_dh2 * ( div_V[0] + div_V[1] + div_V[2] );
-#     endif // # ifdef COSMIC_RAY
+      CR_AdiabaticWork_HalfStepUpdate( out_con, g_ConVar_In, g_Flux_Half, idx_in, didx_fc,
+                                       idx_flux, didx_flux, dt_dh2, EoS );
+#     endif
 
 //    compute the cell-centered half-step B field
 #     ifdef MHD
@@ -956,118 +932,6 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 #  endif
 
 } // FUNCTION : Hydro_RiemannPredict
-
-
-
-#ifdef COSMIC_RAY
-//-------------------------------------------------------------------------------------------------------
-// Function    : CosmicRay_Update
-//
-// Description : Update the adiabatic work done term of cosmic ray
-//
-// Note        :
-//
-// Reference   : Yang, H.-Y.~K., Ruszkowski, M., Ricker, P.~M., et al. 2012, apj, 761, 185. doi:10.1088/0004-637X/761/2/185
-//
-// Parameter   : g_PriVar_Half : Array to store the output primitive variables
-//                               --> Accessed with the stride N_HF_VAR
-//                               --> Although its actually allocated size is FLU_NXT^3 since it points to g_PriVar_1PG[]
-//               g_Output      : Array to store the updated fluid data
-//               g_Flux        : Array to store the output fluxes
-//               g_FC_Var      : Array to store the half-step variables
-//               dt            : Time interval to advance solution
-//               dh            : Cell size
-//               EoS           : EoS object
-//-------------------------------------------------------------------------------------------------------
-GPU_DEVICE
-void CosmicRay_Update( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
-                             real g_Output[][ CUBE(PS2) ],
-                       const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                       const real g_FC_Var[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
-                       const real dt, const real dh,
-                       const EoS_t *EoS)
-{
-   const int didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
-   const int didx_fc[3]   = { 1, N_FC_VAR,  SQR(N_FC_VAR)  };
-   const real dt_dh       = dt/dh;
-   const EoS_CRE2CRP_t EoS_CREint2CRPres = EoS->CREint2CRPres_FuncPtr;
-   const double *EoS_AuxArray_Flt  = EoS->AuxArrayDevPtr_Flt;
-
-   real div_V[3], Output_1Cell[NCOMP_TOTAL_PLUS_MAG];
-
-   const int size_ij = SQR(PS2);
-   CGPU_LOOP( idx_out, CUBE(PS2) )
-   {
-      const int i_out    = idx_out % PS2;
-      const int j_out    = idx_out % size_ij / PS2;
-      const int k_out    = idx_out / size_ij;
-
-//    for MHD, one additional flux is evaluated along each transverse direction for computing the CT electric field
-#     ifdef MHD
-      const int i_flux   = i_out + 1;
-      const int j_flux   = j_out + 1;
-      const int k_flux   = k_out + 1;
-#     else
-      const int i_flux   = i_out;
-      const int j_flux   = j_out;
-      const int k_flux   = k_out;
-#     endif
-      const int idx_flux = IDX321( i_flux, j_flux, k_flux, N_FL_FLUX, N_FL_FLUX );
-
-//    index of the half step variable
-      const int i_hf     = i_out + (N_HF_VAR-PS2)/2;
-      const int j_hf     = j_out + (N_HF_VAR-PS2)/2;
-      const int k_hf     = k_out + (N_HF_VAR-PS2)/2;
-      const int idx_hf   = IDX321( i_hf, j_hf, k_hf, N_HF_VAR, N_HF_VAR );
-
-//    index for the face center velocity
-      const int i_fc     = i_out + 1;
-      const int j_fc     = j_out + 1;
-      const int k_fc     = k_out + 1;
-      const int idx_fc   = IDX321( i_fc, j_fc, k_fc, N_FC_VAR, N_FC_VAR);
-
-//    1. store the cosmic ray and calculate the pressure
-      Output_1Cell[CRAY]     = g_Output[CRAY][idx_out];
-      const real pCR_half = EoS_CREint2CRPres( g_PriVar_Half[CRAY][idx_hf],  EoS_AuxArray_Flt, NULL, NULL );
-
-//    2. \div V term, reference: "Simple Method to Track Pressure Accurately", S. Li, Astronum Proceeding, 2007
-      for (int d=0; d<3; d++)
-      {
-         const int faceL = 2*d;
-         const int faceR = faceL+1;
-
-#        ifdef MHD
-         div_V[d]  = ( g_Flux[d][DENS][ idx_flux                ] > 0 ) ?
-                     ( g_Flux[d][DENS][ idx_flux                ] / g_FC_Var[faceR][DENS][ idx_fc              ] ) :
-                     ( g_Flux[d][DENS][ idx_flux                ] / g_FC_Var[faceL][DENS][ idx_fc + didx_fc[d] ] );
-
-         div_V[d] -= ( g_Flux[d][DENS][ idx_flux - didx_flux[d] ] > 0 ) ?
-                     ( g_Flux[d][DENS][ idx_flux - didx_flux[d] ] / g_FC_Var[faceR][DENS][ idx_fc - didx_fc[d] ] ) :
-                     ( g_Flux[d][DENS][ idx_flux - didx_flux[d] ] / g_FC_Var[faceL][DENS][ idx_fc              ] );
-#        else
-         div_V[d]  = ( g_Flux[d][DENS][ idx_flux + didx_flux[d] ] > 0 ) ?
-                     ( g_Flux[d][DENS][ idx_flux + didx_flux[d] ] / g_FC_Var[faceR][DENS][ idx_fc              ] ) :
-                     ( g_Flux[d][DENS][ idx_flux + didx_flux[d] ] / g_FC_Var[faceL][DENS][ idx_fc + didx_fc[d] ] );
-
-         div_V[d] -= ( g_Flux[d][DENS][ idx_flux                ] > 0 ) ?
-                     ( g_Flux[d][DENS][ idx_flux                ] / g_FC_Var[faceR][DENS][ idx_fc - didx_fc[d] ] ) :
-                     ( g_Flux[d][DENS][ idx_flux                ] / g_FC_Var[faceL][DENS][ idx_fc              ] );
-#        endif
-
-      } // for (int d=0; d<3; d++)
-
-//    3. update the cosmic ray
-      Output_1Cell[CRAY] = Output_1Cell[CRAY] - pCR_half * dt_dh * ( div_V[0] + div_V[1] + div_V[2] );
-      g_Output[CRAY][idx_out] = Output_1Cell[CRAY];
-
-      } // CGPU_LOOP( idx_out, CUBE(PS2) )
-
-#  ifdef __CUDACC__
-   __syncthreads();
-#  endif
-
-} // FUNCTION : CosmicRay_Update
-#endif // #ifdef COSMIC_RAY
 
 
 
