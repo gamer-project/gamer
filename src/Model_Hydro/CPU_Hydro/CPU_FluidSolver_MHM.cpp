@@ -837,7 +837,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 
    const int  didx_flux[3] = { 1, N_HF_FLUX, SQR(N_HF_FLUX) };
 #  ifdef COSMIC_RAY
-   const int  didx_fc[3]   = { 1, FLU_NXT, SQR(FLU_NXT) };
+   const int  didx_in[3]   = { 1, FLU_NXT, SQR(FLU_NXT) };
 #  endif
    const real dt_dh2       = (real)0.5*dt/dh;
 
@@ -889,7 +889,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
          out_con[v] = g_ConVar_In[v][idx_in] - dt_dh2*( dflux[0][v] + dflux[1][v] + dflux[2][v] );
 
 #     ifdef COSMIC_RAY
-      CR_AdiabaticWork_HalfStepUpdate( out_con, g_ConVar_In, g_Flux_Half, idx_in, didx_fc,
+      CR_AdiabaticWork_HalfStepUpdate( out_con, g_ConVar_In, g_Flux_Half, idx_in, didx_in,
                                        idx_flux, didx_flux, dt_dh2, EoS );
 #     endif
 
