@@ -57,7 +57,8 @@ void CPU_dtSolver_HydroGravity( real g_dt_Array[],
 void CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                    const real Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real Pot_Array[][ CUBE(GRA_NXT) ],
                    const double Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
-                   const MicroPhy_t MicroPhy, const real MinPres, const bool P5_Gradient,
+//                   const MicroPhy_t MicroPhy, const real MinPres, const bool P5_Gradient,
+                   const real MinPres, const bool P5_Gradient,
                    const bool UsePot, const OptExtAcc_t ExtAcc, const double TargetTime )
 {
 

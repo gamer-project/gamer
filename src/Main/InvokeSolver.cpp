@@ -541,7 +541,8 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  NPG, dt, dh, OPT__FIXUP_FLUX, OPT__FIXUP_ELECTRIC, Flu_XYZ,
                                  OPT__LR_LIMITER, MINMOD_COEFF, MINMOD_MAX_ITER,
                                  ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
-                                 TimeOld, (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, MicroPhy,
+//                                  TimeOld, (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, MicroPhy,
+                                 TimeOld, (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC,
                                  MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar,
                                  OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar,
@@ -555,7 +556,8 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  NPG, dt, dh, OPT__FIXUP_FLUX, OPT__FIXUP_ELECTRIC, Flu_XYZ,
                                  OPT__LR_LIMITER, MINMOD_COEFF, MINMOD_MAX_ITER,
                                  ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
-                                 TimeOld, (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, MicroPhy,
+//                                 TimeOld, (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, MicroPhy,
+                                 TimeOld, (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC,
                                  MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, PassiveNorm_VarIdx,
                                  OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
@@ -665,14 +667,16 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
          CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID],
                               h_Mag_Array_T[ArrayID], NULL, NULL,
                               NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID,
-                              MicroPhy, MIN_PRES, NULL_BOOL,
+//                              MicroPhy, MIN_PRES, NULL_BOOL,
+                              MIN_PRES, NULL_BOOL,
                               EXT_POT_NONE, EXT_ACC_NONE, NULL_REAL,
                               GPU_NSTREAM );
 #        else
          CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID],
                               h_Mag_Array_T[ArrayID], NULL, NULL,
                               NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID,
-                              MicroPhy, MIN_PRES, NULL_BOOL,
+//                              MicroPhy, MIN_PRES, NULL_BOOL,
+                              MIN_PRES, NULL_BOOL,
                               EXT_POT_NONE, EXT_ACC_NONE, NULL_REAL );
 #        endif
       break;
