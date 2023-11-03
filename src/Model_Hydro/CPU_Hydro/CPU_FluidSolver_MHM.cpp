@@ -836,7 +836,9 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 {
 
    const int  didx_flux[3] = { 1, N_HF_FLUX, SQR(N_HF_FLUX) };
+#  ifdef COSMIC_RAY
    const int  didx_fc[3]   = { 1, FLU_NXT, SQR(FLU_NXT) };
+#  endif
    const real dt_dh2       = (real)0.5*dt/dh;
 
    const int N_HF_VAR2 = SQR(N_HF_VAR);
