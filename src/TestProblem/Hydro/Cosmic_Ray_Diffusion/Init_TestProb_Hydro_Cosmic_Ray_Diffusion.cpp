@@ -99,36 +99,8 @@ void Validate()
 
 #  endif // #ifndef COSMIC_RAY
 
-   if ( CR_Diffusion_Type == 0  ||  CR_Diffusion_Type == 1  ||  CR_Diffusion_Type == 2  ||  CR_Diffusion_Type == 3 )
-      Aux_Error( ERROR_INFO, "CR_Diffusion_Type (%d) is not supported yet !! (Unless you have fixed the all the fluid except cosmic ray.)\n", CR_Diffusion_Type );
-
-   if ( (CR_Diffusion_Type == 0  ||  CR_Diffusion_Type == 3)  &&  CR_Diffusion_Mag_Type != 0 )
-      Aux_Error( ERROR_INFO, "We only support the uniform magnetic field ( CR_Diffusion_Mag_Type = 0 ) for this test problem type (%d).\n", CR_Diffusion_Type );
-
-#  ifdef CR_DIFFUSION
-   if ( CR_Diffusion_Type == 3  &&  CR_DIFF_PERP != 0.0 )
-      Aux_Error( ERROR_INFO, "CR_DIFF_PERP must be 0.0 for this test problem type (%d).\n", CR_Diffusion_Type );
-#  endif
-
 
 // warnings
-   if ( CR_Diffusion_Type == 0  ||  CR_Diffusion_Type == 1  ||  CR_Diffusion_Type == 2  ||  CR_Diffusion_Type == 3 )
-      Aux_Message( stderr, "WARNING : All the fluid except cosmic ray should be fixed to follow the analytical solution. The adiabatic work done term should be disable also.\n" );
-
-   if ( CR_Diffusion_Type == 1 )
-      Aux_Message( stderr, "WARNING : The analytical solution is only worked for the short time evolution." );
-
-   if ( CR_Diffusion_Mag_Type == 1 )
-      Aux_Message( stderr, "WARNING : CR_Diffusion_MagY and CR_Diffusion_MagZ is useless in this type of magnetic field.\n" );
-   if ( CR_Diffusion_Mag_Type == 2 )
-      Aux_Message( stderr, "WARNING : This type of magnetic field is not divergence free.\n" );
-   if ( CR_Diffusion_Mag_Type == 3 )
-   {
-      Aux_Message( stderr, "WARNING : CR_Diffusion_MagY and CR_Diffusion_MagZ is useless in this type of magnetic field.\n" );
-      Aux_Message( stderr, "WARNING : This type of magnetic field is not divergence free.\n" );
-   }
-   else if ( CR_Diffusion_Mag_Type == 4 )
-      Aux_Message( stderr, "WARNING : CR_Diffusion_MagY and CR_Diffusion_MagZ is useless in this type of magnetic field.\n" );
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
@@ -226,6 +198,36 @@ void SetParameter()
    if ( CR_Diffusion_CenterZ < 0.0 )  CR_Diffusion_CenterZ = 0.5*amr->BoxSize[2];
 
 // (1-3) check the runtime parameters
+   if ( CR_Diffusion_Type == 0  ||  CR_Diffusion_Type == 1  ||  CR_Diffusion_Type == 2  ||  CR_Diffusion_Type == 3 )
+      Aux_Error( ERROR_INFO, "CR_Diffusion_Type (%d) is not supported yet !! (Unless you have fixed the all the fluid except cosmic ray.)\n", CR_Diffusion_Type );
+
+   if ( (CR_Diffusion_Type == 0  ||  CR_Diffusion_Type == 3)  &&  CR_Diffusion_Mag_Type != 0 )
+      Aux_Error( ERROR_INFO, "We only support the uniform magnetic field ( CR_Diffusion_Mag_Type = 0 ) for this test problem type (%d).\n", CR_Diffusion_Type );
+
+#  ifdef CR_DIFFUSION
+   if ( CR_Diffusion_Type == 3  &&  CR_DIFF_PERP != 0.0 )
+      Aux_Error( ERROR_INFO, "CR_DIFF_PERP must be 0.0 for this test problem type (%d).\n", CR_Diffusion_Type );
+#  endif
+
+
+   if ( CR_Diffusion_Type == 0  ||  CR_Diffusion_Type == 1  ||  CR_Diffusion_Type == 2  ||  CR_Diffusion_Type == 3 )
+      Aux_Message( stderr, "WARNING : All the fluid except cosmic ray should be fixed to follow the analytical solution. The adiabatic work done term should be disable also.\n" );
+
+   if ( CR_Diffusion_Type == 1 )
+      Aux_Message( stderr, "WARNING : The analytical solution is only worked for the short time evolution." );
+
+   if ( CR_Diffusion_Mag_Type == 1 )
+      Aux_Message( stderr, "WARNING : CR_Diffusion_MagY and CR_Diffusion_MagZ is useless in this type of magnetic field.\n" );
+   if ( CR_Diffusion_Mag_Type == 2 )
+      Aux_Message( stderr, "WARNING : This type of magnetic field is not divergence free.\n" );
+   if ( CR_Diffusion_Mag_Type == 3 )
+   {
+      Aux_Message( stderr, "WARNING : CR_Diffusion_MagY and CR_Diffusion_MagZ is useless in this type of magnetic field.\n" );
+      Aux_Message( stderr, "WARNING : This type of magnetic field is not divergence free.\n" );
+   }
+   else if ( CR_Diffusion_Mag_Type == 4 )
+      Aux_Message( stderr, "WARNING : CR_Diffusion_MagY and CR_Diffusion_MagZ is useless in this type of magnetic field.\n" );
+
 
 
 // (2) set the problem-specific derived parameters
