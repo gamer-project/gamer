@@ -32,7 +32,7 @@ void CR_MaxDiffusivity( real &max_diff, const MicroPhy_t *MicroPhy )
 {
    real diff_cr_para, diff_cr_perp;
    CR_ComputeDiffusivity( diff_cr_para, diff_cr_perp, MicroPhy );
-   max_diff = MAX(diff_cr_para, diff_cr_perp);
+   max_diff = FMAX( diff_cr_para, diff_cr_perp );
 
 } // FUNCTION : CR_MaxDiffusivity
 

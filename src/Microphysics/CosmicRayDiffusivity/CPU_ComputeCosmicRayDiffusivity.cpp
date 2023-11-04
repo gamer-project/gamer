@@ -10,7 +10,7 @@
 //
 // Description : Compute the diffusion coefficients of cosmic ray.
 //
-// Note        : This is a constant for now. The coefficient should depend on the cell condition.
+// Note        : This is a constant for now. The coefficient should depend on the gas and CR properties.
 //
 // Parameter   : diff_cr_para : Variable to store the parallel      diffusion coefficient
 //               diff_cr_perp : Variable to store the perpendicular diffusion coefficient
