@@ -298,7 +298,10 @@ double FlagTable_CRay[NLEVEL-1];
 #endif
 
 // (2-14) microphysics
+// a. data structure for the CPU/GPU solvers
 MicroPhy_t MicroPhy;
+
+// b. cosmic-ray diffusion
 #ifdef CR_DIFFUSION
 double CR_DIFF_PARA;
 double CR_DIFF_PERP;
