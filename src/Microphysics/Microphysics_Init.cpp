@@ -20,7 +20,7 @@ void Microphysics_Init()
    if ( MicroPhy_Initialized )  return;
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
-
+   MicroPhy.useless = true; // to avoid the empty structure issue
 #  ifdef CR_DIFFUSION
    MicroPhy.CR_safety          = DT_CR_DIFFUSION;
    MicroPhy.CR_diff_coeff_para = CR_DIFF_PARA;

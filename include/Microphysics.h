@@ -20,7 +20,9 @@
 //-------------------------------------------------------------------------------------------------------
 struct MicroPhy_t
 {
-
+// Somehow the structure itself can not be empty, so I declare a useless bool to avoid the issue.
+// Error msg from valgrind: Address 0x176aa160 is 0 bytes after a block of size 0 alloc'd
+   bool useless;
 #  ifdef CR_DIFFUSION
    real CR_safety;
    real CR_diff_coeff_para;
