@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 static double RandomNumber(RandomNumber_t *RNG, const double Min, const double Max );
 

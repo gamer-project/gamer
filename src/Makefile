@@ -84,10 +84,10 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 # special relativistic hydrodynamics
 #SIMU_OPTION += -DSRHD
 
-# cosmic rays (not supported yet)
+# cosmic rays
 #SIMU_OPTION += -DCOSMIC_RAY
 
-# equation of state: EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_USER/EOS_TAUBMATHEWS
+# equation of state: EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_COSMIC_RAY/EOS_TAUBMATHEWS/EOS_USER
 # --> must be set when MODEL=HYDRO; must also enable BAROTROPIC_EOS for EOS_ISOTHERMAL
 SIMU_OPTION += -DEOS=EOS_GAMMA
 
@@ -157,6 +157,14 @@ SIMU_OPTION += -DSTORE_PAR_ACC
 # --> set it to 0 or comment it out if none is required
 SIMU_OPTION += -DPAR_NATT_USER=0
 endif # PARTICLE
+
+
+# (b-5) microphysics options
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DCOSMIC_RAY, $(SIMU_OPTION))" "-DCOSMIC_RAY"
+# enable cosmic-ray diffusion
+SIMU_OPTION += -DCR_DIFFUSION
+endif # COSMIC_RAY
 
 
 # (c) miscellaneous options (AMR, GPU, parallelization, optimizations, ...)
@@ -472,21 +480,21 @@ vpath %.cpp    Main  Init  Refine  Fluid  Interpolation  Tables  Output  Miscell
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
 GPU_FILE    += CUFLU_dtSolver_HydroCFL.cu  CUFLU_FluidSolver_RTVD.cu  CUFLU_FluidSolver_MHM.cu  CUFLU_FluidSolver_CTU.cu \
-               GPU_EoS_Gamma.cu  GPU_EoS_User_Template.cu  GPU_EoS_Isothermal.cu GPU_EoS_TaubMathews.cu
+               GPU_EoS_Gamma.cu  GPU_EoS_User_Template.cu  GPU_EoS_Isothermal.cu  GPU_EoS_GammaCR.cu  GPU_EoS_TaubMathews.cu
 
 CPU_FILE    += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_MHM.cpp  CPU_FluidSolver_CTU.cpp \
                CPU_Shared_DataReconstruction.cpp  CPU_Shared_FluUtility.cpp  CPU_Shared_ComputeFlux.cpp \
                CPU_Shared_FullStepUpdate.cpp  CPU_Shared_RiemannSolver_Exact.cpp  CPU_Shared_RiemannSolver_Roe.cpp \
                CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_RiemannSolver_HLLC.cpp  CPU_Shared_DualEnergy.cpp \
                CPU_dtSolver_HydroCFL.cpp  CPU_EoS_Gamma.cpp  CPU_EoS_User_Template.cpp  CPU_EoS_Isothermal.cpp \
-	       CPU_EoS_TaubMathews.cpp
+	             CPU_EoS_GammaCR.cpp  CPU_EoS_TaubMathews.cpp
 
 CPU_FILE    += Hydro_Init_ByFunction_AssignData.cpp  Hydro_Aux_Check_Negative.cpp \
                Hydro_BoundaryCondition_Reflecting.cpp  Hydro_BoundaryCondition_Outflow.cpp \
                Hydro_BoundaryCondition_Diode.cpp  EoS_Init.cpp  EoS_End.cpp
 
-vpath %.cu     Model_Hydro/GPU_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal  EoS/TaubMathews
-vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal  EoS/TaubMathews
+vpath %.cu     Model_Hydro/GPU_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal  EoS/GammaCR  EoS/TaubMathews
+vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal  EoS/GammaCR  EoS/TaubMathews
 
 ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
 GPU_FILE    += CUPOT_HydroGravitySolver.cu  CUPOT_dtSolver_HydroGravity.cu
@@ -691,6 +699,37 @@ CPU_FILE    += FB_AdvanceDt.cpp  FB_Init.cpp  FB_End.cpp  FB_Auxiliary.cpp  FB_U
 
 vpath %.cpp    Feedback  Feedback/User_Template  Feedback/SNe
 endif # FEEDBACK
+
+
+# cosmic-ray source files (included only if "COSMIC_RAY" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DCOSMIC_RAY, $(SIMU_OPTION))" "-DCOSMIC_RAY"
+CPU_FILE    += CPU_CosmicRay.cpp
+
+GPU_FILE    += CUFLU_CosmicRay.cu
+endif # COSMIC_RAY
+
+
+# microphysics source files
+# ------------------------------------------------------------------------------------
+CPU_FILE    += Microphysics_Init.cpp  Microphysics_End.cpp
+
+vpath %.cpp    Microphysics
+vpath %.cu     Microphysics
+
+
+# cosmic-ray diffusion source files (included only if "CR_DIFFUSION" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DCR_DIFFUSION, $(SIMU_OPTION))" "-DCR_DIFFUSION"
+CPU_FILE    += CPU_AddCosmicRayDiffuseFlux.cpp  CPU_ComputeCosmicRayDiffusivity.cpp \
+               CPU_CosmicRayMaxDiffusivity.cpp
+
+GPU_FILE    += CUFLU_AddCosmicRayDiffuseFlux.cu  CUFLU_ComputeCosmicRayDiffusivity.cu \
+               CUFLU_CosmicRayMaxDiffusivity.cu
+
+vpath %.cpp    Microphysics/CosmicRayDiffusivity
+vpath %.cu     Microphysics/CosmicRayDiffusivity
+endif # CR_DIFFUSION
 
 
 # test problem source files

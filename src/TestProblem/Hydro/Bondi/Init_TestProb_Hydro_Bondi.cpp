@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -86,10 +85,6 @@ int Flu_ResetByUser_Func_Bondi( real fluid[], const double Emag, const double x,
                                 const double dt, const int lv, double AuxArray[] );
 void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
 static void HSE_SetDensProfileTable();
-
-// this test problem needs to reset both Flu_ResetByUser_API_Ptr and Flu_ResetByUser_Func_Ptr, while
-// the former is not defined in TestProb.h (because it's rarely required)
-extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
 
 
 
@@ -185,8 +180,8 @@ void SetParameter()
    ReadPara_t *ReadPara  = new ReadPara_t;
 
 // (1-1) add parameters in the following format:
-// add parameters in the following format (some handy constants are defined in TestProb.h):
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,                  DEFAULT,      MIN,              MAX               );
 // ********************************************************************************************************************************

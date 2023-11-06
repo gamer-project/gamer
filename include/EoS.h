@@ -41,6 +41,9 @@ struct EoS_t
    EoS_DT2P_t DensTemp2Pres_FuncPtr;
    EoS_DE2S_t DensEint2Entr_FuncPtr;
    EoS_GENE_t General_FuncPtr;
+#  ifdef COSMIC_RAY
+   EoS_CRE2CRP_t CREint2CRPres_FuncPtr;
+#  endif
 
 // table pointers
    real **Table;

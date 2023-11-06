@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 static void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,

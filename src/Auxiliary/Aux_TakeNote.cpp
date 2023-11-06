@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 #include "CUFLU.h"
 #ifdef GRAVITY
 #include "CUPOT.h"
@@ -191,6 +190,8 @@ void Aux_TakeNote()
       fprintf( Note, "EOS                             EOS_TAUBMATHEWS\n" );
 #     elif ( EOS == EOS_TABULAR )
       fprintf( Note, "EOS                             EOS_TABULAR\n" );
+#     elif ( EOS == EOS_COSMIC_RAY )
+      fprintf( Note, "EOS                             EOS_COSMIC_RAY\n" );
 #     elif ( EOS == EOS_USER )
       fprintf( Note, "EOS                             EOS_USER\n" );
 #     else
@@ -894,6 +895,9 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_LOHNER_PRES           %d\n",      OPT__FLAG_LOHNER_PRES     );
       fprintf( Note, "OPT__FLAG_LOHNER_TEMP           %d\n",      OPT__FLAG_LOHNER_TEMP     );
       fprintf( Note, "OPT__FLAG_LOHNER_ENTR           %d\n",      OPT__FLAG_LOHNER_ENTR     );
+#     ifdef COSMIC_RAY
+      fprintf( Note, "OPT__FLAG_LOHNER_CRAY           %d\n",      OPT__FLAG_LOHNER_CRAY     );
+#     endif
 #     endif
       fprintf( Note, "OPT__FLAG_LOHNER_FORM           %s\n",      (OPT__FLAG_LOHNER_FORM==LOHNER_FLASH1   ) ? "LOHNER_FLASH1"    :
                                                                   (OPT__FLAG_LOHNER_FORM==LOHNER_FLASH2   ) ? "LOHNER_FLASH2"    :
@@ -907,6 +911,9 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_NPAR_PATCH            %d\n",      OPT__FLAG_NPAR_PATCH      );
       fprintf( Note, "OPT__FLAG_NPAR_CELL             %d\n",      OPT__FLAG_NPAR_CELL       );
       fprintf( Note, "OPT__FLAG_PAR_MASS_CELL         %d\n",      OPT__FLAG_PAR_MASS_CELL   );
+#     endif
+#     ifdef COSMIC_RAY
+      fprintf( Note, "OPT__FLAG_CRAY                  %d\n",      OPT__FLAG_CRAY            );
 #     endif
       fprintf( Note, "OPT__NO_FLAG_NEAR_BOUNDARY      %d\n",      OPT__NO_FLAG_NEAR_BOUNDARY);
       fprintf( Note, "OPT__PATCH_COUNT                %d\n",      OPT__PATCH_COUNT          );
@@ -1011,6 +1018,27 @@ void Aux_TakeNote()
       fprintf( Note, "\n\n");
 #     endif // #ifdef FEEDBACK
 
+//    record the parameters of cosmic ray
+#     ifdef COSMIC_RAY
+      fprintf( Note, "Parameters of Cosmic Ray\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "GAMMA_CR                        %13.7e\n",           GAMMA_CR                          );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
+#     endif // #ifdef COSMIC_RAY
+
+
+//    record the parameters of Microphysics
+      fprintf( Note, "Parameters of Microphysics\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+#     ifdef CR_DIFFUSION
+      fprintf( Note, "CR_DIFF_PARA                    %13.7e\n",           CR_DIFF_PARA                      );
+      fprintf( Note, "CR_DIFF_PERP                    %13.7e\n",           CR_DIFF_PERP                      );
+      fprintf( Note, "DT_CR_DIFFUSION                 %13.7e\n",           DT_CR_DIFFUSION                   );
+#     endif // #ifdef CR_DIFFUSION
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
+
 
 //    record the parameters of Fluid solver in different models
       fprintf( Note, "Parameters of Fluid Solver (in different models)\n" );
@@ -1028,6 +1056,7 @@ void Aux_TakeNote()
                                                                   ( OPT__LR_LIMITER == LR_LIMITER_VL_GMINMOD ) ? "VL_GMINMOD" :
                                                                   ( OPT__LR_LIMITER == LR_LIMITER_EXTPRE     ) ? "EXTPRE"     :
                                                                   ( OPT__LR_LIMITER == LR_LIMITER_CENTRAL    ) ? "CENTRAL"    :
+                                                                  ( OPT__LR_LIMITER == LR_LIMITER_ATHENA     ) ? "ATHENA"     :
                                                                   ( OPT__LR_LIMITER == LR_LIMITER_NONE       ) ? "NONE"       :
                                                                                                                  "UNKNOWN" );
       fprintf( Note, "OPT__1ST_FLUX_CORR              %s\n",      ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D   ) ? "3D"   :
@@ -1541,12 +1570,24 @@ void Aux_TakeNote()
 #     ifdef SRHD
       if ( OPT__FLAG_LRTZ_GRADIENT )
       {
-	  fprintf( Note, "Flag Criterion (Lorentz Factor Gradient in HYDRO)\n" );
-	  fprintf( Note, "***********************************************************************************\n" );
-	  fprintf( Note, "  Level   Lorentz Factor Gradient\n" );
-	  for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_LrtzGradient[lv] );
-	  fprintf( Note, "***********************************************************************************\n" );
-	  fprintf( Note, "\n\n");
+	       fprintf( Note, "Flag Criterion (Lorentz Factor Gradient in HYDRO)\n" );
+	       fprintf( Note, "***********************************************************************************\n" );
+	       fprintf( Note, "  Level             Lorentz Factor Gradient\n" );
+	       for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_LrtzGradient[lv] );
+	       fprintf( Note, "***********************************************************************************\n" );
+	       fprintf( Note, "\n\n");
+      }
+#     endif
+
+#     ifdef COSMIC_RAY
+      if ( OPT__FLAG_CRAY )
+      {
+         fprintf( Note, "Flag Criterion (Cosmic Ray Energy)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level             Cosmic Ray Energy\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_CRay[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
       }
 #     endif
 
@@ -1566,7 +1607,11 @@ void Aux_TakeNote()
 #     endif
 
 #     if   ( MODEL == HYDRO )
-      if ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR )
+#     ifndef COSMIC_RAY
+      const bool OPT__FLAG_LOHNER_CRAY = false;
+#     endif
+      if ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP ||
+           OPT__FLAG_LOHNER_ENTR || OPT__FLAG_LOHNER_CRAY )
 #     elif ( MODEL == ELBDM )
       if ( OPT__FLAG_LOHNER_DENS )
 #     endif

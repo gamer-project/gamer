@@ -35,6 +35,11 @@ void Init_Load_FlagCriteria()
    const bool OPT__FLAG_LRTZ_GRADIENT = false;
    double *FlagTable_LrtzGradient     = NULL;
 #  endif
+#  ifndef COSMIC_RAY
+   const bool OPT__FLAG_LOHNER_CRAY  = false;
+   const bool OPT__FLAG_CRAY         = false;
+   double *FlagTable_CRay            = NULL;
+#  endif
 
 #  if ( MODEL != ELBDM )
    const bool OPT__FLAG_ENGY_DENSITY  = false;
@@ -54,7 +59,7 @@ void Init_Load_FlagCriteria()
 
 #  if   ( MODEL == HYDRO )
    const bool OPT__FLAG_LOHNER = ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES ||
-                                   OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR );
+                                   OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR || OPT__FLAG_LOHNER_CRAY );
 #  elif ( MODEL == ELBDM )
    const bool OPT__FLAG_LOHNER = OPT__FLAG_LOHNER_DENS;
 #  else
@@ -65,18 +70,22 @@ void Init_Load_FlagCriteria()
    const bool Flag[NFlagMode]   = { OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_PRES_GRADIENT,
                                     OPT__FLAG_ENGY_DENSITY, OPT__FLAG_LOHNER, OPT__FLAG_USER,
                                     (bool)OPT__FLAG_NPAR_PATCH, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL,
-                                    OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, OPT__FLAG_CURRENT, OPT__FLAG_LRTZ_GRADIENT };
+                                    OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, OPT__FLAG_CURRENT, OPT__FLAG_CRAY, 
+                                    OPT__FLAG_LRTZ_GRADIENT };
    const char ModeName[][100]   = { "OPT__FLAG_RHO", "OPT__FLAG_RHO_GRADIENT", "OPT__FLAG_PRES_GRADIENT",
                                     "OPT__FLAG_ENGY_DENSITY", "OPT__FLAG_LOHNER", "OPT__FLAG_USER",
                                     "OPT__FLAG_NPAR_PATCH", "OPT__FLAG_NPAR_CELL", "OPT__FLAG_PAR_MASS_CELL",
-                                    "OPT__FLAG_VORTICITY", "OPT__FLAG_JEANS", "OPT__FLAG_CURRENT", "OPT__FLAG_LRTZ_GRADIENT" };
+                                    "OPT__FLAG_VORTICITY", "OPT__FLAG_JEANS", "OPT__FLAG_CURRENT",
+                                    "OPT__FLAG_CRAY", "OPT__FLAG_LRTZ_GRADIENT" };
    const char FileName[][100]   = { "Input__Flag_Rho", "Input__Flag_RhoGradient", "Input__Flag_PresGradient",
                                     "Input__Flag_EngyDensity", "Input__Flag_Lohner", "Input__Flag_User",
                                     "Input__Flag_NParPatch", "Input__Flag_NParCell", "Input__Flag_ParMassCell",
-                                    "Input__Flag_Vorticity", "Input__Flag_Jeans", "Input__Flag_Current", "Input__Flag_LrtzGradient" };
+                                    "Input__Flag_Vorticity", "Input__Flag_Jeans", "Input__Flag_Current",
+                                    "Input__Flag_CRay", "Input__Flag_LrtzGradient" };
    double *FlagTable[NFlagMode] = { FlagTable_Rho, FlagTable_RhoGradient, FlagTable_PresGradient,
                                     NULL, NULL, NULL, NULL, NULL, FlagTable_ParMassCell,
-                                    FlagTable_Vorticity, FlagTable_Jeans, FlagTable_Current, FlagTable_LrtzGradient };
+                                    FlagTable_Vorticity, FlagTable_Jeans, FlagTable_Current,
+                                    FlagTable_CRay, FlagTable_LrtzGradient };
 
    FILE *File;
    char *input_line = NULL, TargetName[100];
@@ -106,6 +115,9 @@ void Init_Load_FlagCriteria()
 #     endif
 #     ifdef SRHD
       FlagTable_LrtzGradient[lv]    = -1.0;
+#     endif
+#     ifdef COSMIC_RAY
+      FlagTable_CRay        [lv]    = -1.0;
 #     endif
 
 #     elif ( MODEL == ELBDM )

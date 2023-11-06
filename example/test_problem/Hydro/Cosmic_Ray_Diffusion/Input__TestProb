@@ -1,0 +1,65 @@
+# problem-specific runtime parameters
+CR_Diffusion_CenterX     0.5            # Center location on x-axis
+CR_Diffusion_CenterY     0.5            # Center location on y-axis
+CR_Diffusion_CenterZ     0.5            # Center location on z-axis
+CR_Diffusion_Vx          0.0            # Background x-velocity
+CR_Diffusion_Vy          0.0            # Background y-velocity
+CR_Diffusion_Vz          0.0            # Background z-velocity
+CR_Diffusion_Rho0        1.0            # Background density
+CR_Diffusion_PGas0       1.666666666667 # Background gas pressure
+CR_Diffusion_E0_CR       1.0e+2         # Cosmic ray energy amplitude
+CR_Diffusion_BG_CR       1.0e-1         # Cosmic ray background energy
+
+CR_Diffusion_Type        4              # Initial condition of cosmic ray
+                                        # 0: Gaussian distribution ball (only supported CR_Diffusion_Mag_Type==0)
+                                        # 1: Step function ring (2D only)
+                                        # 2: Gaussian distribution ring (2D only)
+                                        # 3: Gaussian distribution plane
+                                        # 4: CR blast wave
+
+CR_Diffusion_Mag_Type    4              # Magnetic field type
+                                        # 0: Uniform
+                                        # 1: Circular
+                                        # 2: Random (-1.0 < B_i < +1.0) (NOT divergence free)
+                                        # 3: Radial (NOT divergence free)
+                                        # 4: Suwa+ 2007
+
+# simulation dimension
+CR_Diffusion_GX          1              # Include x direction or not [0/1]
+CR_Diffusion_GY          1              # Include y direction or not [0/1]
+CR_Diffusion_GZ          1              # Include z direction or not [0/1]
+
+#=========================================================================
+# CR_Diffusion_Type specific parameters
+#=========================================================================
+# 0: Gaussian distribution ball (only supported CR_Diffusion_Mag_Type==0)
+CR_Diffusion_R02_CR      40.0           # Inverse of variance of the Gaussian distribution ball
+# 1: Step function ring (2D only)
+CR_Diffusion_R_In        0.5            # Inner radius
+CR_Diffusion_R_Out       0.7            # Outer radius
+# 2: Gaussian distribution ring (2D only)
+CR_Diffusion_CenterR     0.6            # Center radius of the ring
+CR_Diffusion_delR        0.05           # Standard deviation of the Gaussian distribution on radial direction
+CR_Diffusion_delPhi      0.5            # Standard deviation of the Gaussian distribution of azimuthal direction
+# 3: Gaussian distribution plane
+# parameter is the same as Gaussian distribution ball [0]
+# 4: CR blast wave
+CR_Diffusion_R0_CR       0.02        # The energy core radius
+# cosmic ray energy amplitude shared with "CR_Diffusion_E0_CR"
+
+#=========================================================================
+# CR_Diffusion_Mag_Type specific parameters
+#=========================================================================
+# 0: uniform
+CR_Diffusion_MagX        5.0            # Magnitude of x component
+CR_Diffusion_MagY        5.0            # Magnitude of y component
+CR_Diffusion_MagZ        5.0            # Magnitude of z component
+# 1: circular
+# Use CR_Diffusion_MagX as the magnitude
+# 2: random (-1.0 < B_i < +1.0)
+CR_Diffusion_Seed        0              # random seed of magnetic field
+# 3: radial
+# Share CR_Diffusion_MagX as the magnitude
+# 4: Suwa+ 2007
+# Share CR_Diffusion_MagX as the magnitude
+CR_Diffusion_R0_B        3.5e+9         # Magnetic field characteristic length

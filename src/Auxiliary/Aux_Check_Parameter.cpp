@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 #include "CUFLU.h"
 #ifdef GRAVITY
 #include "CUPOT.h"
@@ -123,7 +122,11 @@ void Aux_Check_Parameter()
                  "OPT__CK_REFINE", "OPT__FLAG_RHO" );
 
 #  if   ( MODEL == HYDRO )
-   if (  ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR )
+#  ifndef COSMIC_RAY
+   const bool OPT__FLAG_LOHNER_CRAY = false;
+#  endif
+   if (  ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP ||
+           OPT__FLAG_LOHNER_ENTR || OPT__FLAG_LOHNER_CRAY )
          &&  Flu_ParaBuf < 2  )
       Aux_Error( ERROR_INFO, "Lohner error estimator does NOT work when Flu_ParaBuf (%d) < 2 !!\n", Flu_ParaBuf );
 #  elif ( MODEL == ELBDM )
@@ -371,6 +374,10 @@ void Aux_Check_Parameter()
 #  endif
 #  ifdef SRHD
    Flag |= OPT__FLAG_LRTZ_GRADIENT;
+#  endif
+#  ifdef COSMIC_RAY
+   Flag |= OPT__FLAG_CRAY;
+   Flag |= OPT__FLAG_LOHNER_CRAY;
 #  endif
 #  endif
 #  if ( MODEL == ELBDM )
@@ -729,15 +736,29 @@ void Aux_Check_Parameter()
 #  endif // MHD
 
 #  ifdef COSMIC_RAY
-#     error : ERROR : COSMIC_RAY is NOT supported yet !!
+#  if ( EOS != EOS_COSMIC_RAY )
+#     error: ERROR : COSMIC_RAY must use EOS_COSMIC_RAY !!
+#  endif
+#  if ( defined DUAL_ENERGY )
+#     error: ERROR : DUAL_ENERGY is not supported for COSMIC_RAY !!
+#  endif
+#  endif
+
+#  ifdef CR_DIFFUSION
+#  ifndef COSMIC_RAY
+#     error: ERROR : COSMIC_RAY must be enabled with CR_DIFFUSION !!
+#  endif
+#  ifndef MHD
+#     error: ERROR : MHD must be enabled with CR_DIFFUSION !!
+#  endif
 #  endif
 
 #  if ( defined LR_EINT  &&  FLU_SCHEME == CTU )
 #     error : ERROR : CTU does NOT support LR_EINT in CUFLU.h !!
 #  endif
 
-#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TAUBMATHEWS  &&  EOS != EOS_TABULAR  &&  EOS != EOS_USER )
-#     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TAUBMATHEWS/EOS_TABULAR/EOS_USER) !!
+#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR  &&  EOS != EOS_COSMIC_RAY  &&  EOS != EOS_TAUBMATHEWS  &&  EOS != EOS_USER )
+#     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_COSMIC_RAY/EOS_TAUBMATHEWS/EOS_USER) !!
 #  endif
 
 #  if ( EOS != EOS_GAMMA )
@@ -783,6 +804,10 @@ void Aux_Check_Parameter()
 
 #  if ( EOS == EOS_TABULAR )
       Aux_Error( ERROR_INFO, "EOS_TABULAR is not supported yet !!\n" );
+#  endif
+
+#  if ( EOS == EOS_COSMIC_RAY  &&  !defined COSMIC_RAY )
+#     error : ERROR : COSMIC_RAY must be enabled with EOS_COSMIC_RAY !!
 #  endif
 
 #  ifdef BAROTROPIC_EOS
@@ -907,9 +932,16 @@ void Aux_Check_Parameter()
 
    if ( OPT__LR_LIMITER != LR_LIMITER_VANLEER     &&  OPT__LR_LIMITER != LR_LIMITER_GMINMOD  &&
         OPT__LR_LIMITER != LR_LIMITER_ALBADA      &&  OPT__LR_LIMITER != LR_LIMITER_EXTPRE   &&
-        OPT__LR_LIMITER != LR_LIMITER_VL_GMINMOD  &&  OPT__LR_LIMITER != LR_LIMITER_CENTRAL    )
+        OPT__LR_LIMITER != LR_LIMITER_VL_GMINMOD  &&  OPT__LR_LIMITER != LR_LIMITER_CENTRAL  &&
+        OPT__LR_LIMITER != LR_LIMITER_ATHENA )
       Aux_Error( ERROR_INFO, "unsupported data reconstruction limiter (OPT__LR_IMITER = %d) !!\n",
                  OPT__LR_LIMITER );
+
+#  if ( LR_SCHEME == PLM )
+   if ( OPT__LR_LIMITER == LR_LIMITER_ATHENA )
+      Aux_Error( ERROR_INFO, "ERROR : OPT__LR_LIMITER = %d (LR_LIMITER_ATHENA) is not supported for PLM !!\n",
+                 OPT__LR_LIMITER );
+#  endif
 
 
 // warnings
@@ -920,6 +952,12 @@ void Aux_Check_Parameter()
       if ( OPT__LR_LIMITER != LR_LIMITER_CENTRAL )
          Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (LR_LIMITER_CENTRAL) is recommended for MHM_RP+PPM !!\n",
                       LR_LIMITER_CENTRAL );
+#     endif
+
+#     if ( FLU_SCHEME == MHM  &&  defined MHD )
+      if ( OPT__LR_LIMITER == LR_LIMITER_ATHENA )
+         Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (LR_LIMITER_ATHENA) is not recommended for MHM+MHD !!\n",
+                      LR_LIMITER_ATHENA );
 #     endif
 
 #     if ( LR_SCHEME == PLM )
@@ -1214,7 +1252,7 @@ void Aux_Check_Parameter()
 #  endif
 
 #  if ( POT_GHOST_SIZE <= GRA_GHOST_SIZE )
-      #error : ERROR : POT_GHOST_SIZE <= GRA_GHOST_SIZE !!
+#     error : ERROR : POT_GHOST_SIZE <= GRA_GHOST_SIZE !!
 #  endif
 
 #  if ( POT_GHOST_SIZE < 1 )
@@ -1581,6 +1619,29 @@ void Aux_Check_Parameter()
    } // if ( MPI_Rank == 0 )
 
 #endif // #ifdef FEEDBACK
+
+
+// cosmic-ray diffusion
+// =======================================================================================
+#ifdef CR_DIFFUSION
+
+// errors
+// ------------------------------
+#  ifndef COSMIC_RAY
+#     error : COSMIC_RAY must be enabled with CR_DIFFUSION !!
+#  endif
+#  ifndef MHD
+#     error : MHD must be enabled with CR_DIFFUSION !!
+#  endif
+
+// warning
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
+      if ( DT_CR_DIFFUSION < 0.0  ||  DT_CR_DIFFUSION > 1.0 )
+         Aux_Message( stderr, "WARNING : DT_CR_DIFFUSION (%14.7e) is not within the normal range [0...1] !!\n", DT_CR_DIFFUSION );
+   } // if ( MPI_Rank == 0 )
+
+#endif // ifdef CR_DIFFUSION
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ... done\n" );

@@ -68,6 +68,9 @@ struct KeyInfo_t
    long   Par_NPar;                 // amr->Par->NPar_Active_AllRank
    int    Par_NAttStored;           // PAR_NATT_STORED
 #  endif
+#  ifdef COSMIC_RAY
+   int    CR_Diffusion;
+#  endif
 
    double BoxSize[3];
    double Time       [NLEVEL];
@@ -163,6 +166,10 @@ struct Makefile_t
    int StarFormation;
    int Feedback;
    int Par_NAttUser;
+#  endif
+
+#  ifdef COSMIC_RAY
+   int CR_Diffusion;
 #  endif
 
 }; // struct Makefile_t
@@ -448,6 +455,9 @@ struct InputPara_t
 #  ifdef SRHD
    int    Opt__Flag_LrtzGradient;
 #  endif
+#  ifdef COSMIC_RAY
+   int    Opt__Flag_CRay;
+#  endif
 #  endif
 #  if ( MODEL == ELBDM )
    int    Opt__Flag_EngyDensity;
@@ -458,6 +468,9 @@ struct InputPara_t
    int    Opt__Flag_LohnerPres;
    int    Opt__Flag_LohnerTemp;
    int    Opt__Flag_LohnerEntr;
+#  ifdef COSMIC_RAY
+   int    Opt__Flag_LohnerCRay;
+#  endif
 #  endif
    int    Opt__Flag_LohnerForm;
    int    Opt__Flag_User;
@@ -623,6 +636,18 @@ struct InputPara_t
    int   FB_User;
 #  endif
 
+// cosmic ray
+#  ifdef COSMIC_RAY
+   double CR_Gamma;
+#  endif
+
+// microphysics
+#  ifdef CR_DIFFUSION
+   double CR_Diffusion_ParaCoeff;
+   double CR_Diffusion_PerpCoeff;
+   double CR_Diffusion_Dt;
+#  endif
+
 // initialization
    int    Opt__Init;
    int    RestartLoadNRank;
@@ -763,6 +788,9 @@ struct InputPara_t
 #  endif
 #  ifdef SRHD
    double FlagTable_LrtzGradient[NLEVEL-1];
+#  endif
+#  ifdef COSMIC_RAY
+   double FlagTable_CRay        [NLEVEL-1];
 #  endif
 #  elif ( MODEL == ELBDM )
    double FlagTable_EngyDensity [NLEVEL-1][2];

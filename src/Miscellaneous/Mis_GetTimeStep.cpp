@@ -1,7 +1,5 @@
 #include "GAMER.h"
 
-extern double (*Mis_GetTimeStep_User_Ptr)( const int lv, const double dTime_dt );
-
 
 
 

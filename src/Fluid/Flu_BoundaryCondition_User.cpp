@@ -10,11 +10,6 @@ void (*BC_User_Ptr)( real Array[], const int ArraySize[], real fluid[], const in
 		     const int GhostSize, const int idx[], const double pos[], const double Time,
 		     const int lv, const int TFluVarIdxList[], double AuxArray[] ) = NULL;
 
-#ifdef MHD
-extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
-                                   const int lv, double AuxArray[] );
-#endif
-
 
 
 
