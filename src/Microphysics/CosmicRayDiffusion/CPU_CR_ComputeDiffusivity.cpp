@@ -1,9 +1,14 @@
 #ifndef __COMPUTE_COSMICRAYDIFFUSIVITY__
 #define __COMPUTE_COSMICRAYDIFFUSIVITY__
 
+
+
 #include "CUFLU.h"
 
 #ifdef CR_DIFFUSION
+
+
+
 
 //-----------------------------------------------------------------------------------------
 // Function    : CR_ComputeDiffusivity
@@ -24,6 +29,10 @@ void CR_ComputeDiffusivity( real &diff_cr_para, real &diff_cr_perp, const MicroP
 
 } // FUNCTION : CR_ComputeDiffusivity
 
+
+
 #endif // #ifdef CR_DIFFUSION
+
+
 
 #endif // #ifndef __COMPUTE_COSMICRAYDIFFUSIVITY__

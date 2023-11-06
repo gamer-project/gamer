@@ -1,14 +1,18 @@
 #ifndef __CPU_COSMICRAYDIFFUSE_FLUXES__
 #define __CPU_COSMICRAYDIFFUSE_FLUXES__
 
+
+
 #include "CUFLU.h"
 
 #ifdef CR_DIFFUSION
 
-//external functions
+
+
+// external functions
 #ifdef __CUDACC__
 
-# include "CUFLU_ComputeCosmicRayDiffusivity.cu"
+# include "CUFLU_CR_ComputeDiffusivity.cu"
 
 #else // #ifdef __CUDACC__
 
@@ -17,7 +21,7 @@ void CR_ComputeDiffusivity( real &diff_cr_para, real &diff_cr_perp, const MicroP
 #endif // #ifdef __CUDACC__ ... else ...
 
 
-// internal funciton
+// internal funcitons
 GPU_DEVICE
 static real MC_limiter(real a, real b);
 GPU_DEVICE
@@ -25,8 +29,9 @@ static real minmod(real a, real b);
 
 
 
+
 //-----------------------------------------------------------------------------------------
-// Function    : CR_DiffuseFlux_HalfStep
+// Function    : CR_AddDiffuseFlux_HalfStep
 //
 // Description : Compute the half-step cosmic ray diffusive flux.
 //
@@ -34,23 +39,23 @@ static real minmod(real a, real b);
 //
 // Reference   : Yang et al., ApJ 761, 185 (2012); doi:10.1088/0004-637X/761/2/185
 //
-// Parameter   : g_Con_Var      : Array storing the input conserved fluid variables
-//               g_Flux_Half    : Array with hydrodynamic fluxes for adding the cosmic-ray diffusive fluxes
-//               g_FC_B         : Array storing the face-centered input B field
-//               g_CC_B         : Array storing the cell-centered input B field
-//               dh             : Cell size
-//               MicroPhy       : Microphysics object
+// Parameter   : g_Con_Var   : Array storing the input conserved fluid variables
+//               g_Flux_Half : Array with hydrodynamic fluxes for adding the cosmic-ray diffusive fluxes
+//               g_FC_B      : Array storing the face-centered input B field
+//               g_CC_B      : Array storing the cell-centered input B field
+//               dh          : Cell size
+//               MicroPhy    : Microphysics object
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
-void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
-                                    real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                              const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
-                              const real g_CC_B[][ CUBE(FLU_NXT) ],
-                              const real dh, const MicroPhy_t *MicroPhy )
+void CR_AddDiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
+                                       real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                 const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
+                                 const real g_CC_B[][ CUBE(FLU_NXT) ],
+                                 const real dh, const MicroPhy_t *MicroPhy )
 {
    const int didx_cvar[3] = { 1, FLU_NXT, SQR(FLU_NXT) };
    const int flux_offset  = 1;
-   const real small_B     = 1.e-30;
+// const real small_B     = 1.e-30;
 
    for ( int d=0; d<3; d++ )
    {
@@ -193,16 +198,15 @@ void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
    } // for (int d=0; d<3; d++)
 
 #  ifdef __CUDACC__
-     __syncthreads();
+   __syncthreads();
 #  endif
 
-} // FUNCTION : CR_DiffuseFlux_HalfStep
-
+} // FUNCTION : CR_AddDiffuseFlux_HalfStep
 
 
 
 //-----------------------------------------------------------------------------------------
-// Function    : CR_DiffuseFlux_FullStep
+// Function    : CR_AddDiffuseFlux_FullStep
 //
 // Description : Compute the full-step cosmic ray diffusive flux.
 //
@@ -210,24 +214,24 @@ void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //
 // Reference   : Yang et al., ApJ 761, 185 (2012); doi:10.1088/0004-637X/761/2/185
 //
-// Parameter   : g_PriVar_Half  : Array storing the half-step primitive fluid variables.
-//               g_FC_Flux      : Array with hydrodynamic fluxes for adding the cosmic-ray diffusive fluxes
-//               g_FC_B_Half    : Array storing the half-step face-centered magnetic field
-//               NFlux          : Stride for accessing g_FC_Flux
-//               dh             : Cell size
-//               MicroPhy       : Microphysics object
+// Parameter   : g_PriVar_Half : Array storing the half-step primitive fluid variables.
+//               g_FC_Flux     : Array with hydrodynamic fluxes for adding the cosmic-ray diffusive fluxes
+//               g_FC_B_Half   : Array storing the half-step face-centered magnetic field
+//               NFlux         : Stride for accessing g_FC_Flux
+//               dh            : Cell size
+//               MicroPhy      : Microphysics object
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
-void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
-                                    real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                              const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                              const int NFlux, const real dh, const MicroPhy_t *MicroPhy )
+void CR_AddDiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
+                                       real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                 const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                 const int NFlux, const real dh, const MicroPhy_t *MicroPhy )
 {
 
    const int didx_half[3] = { 1, N_HF_VAR, SQR(N_HF_VAR) };
    const int mag_offset  = (N_HF_VAR - PS2)/2;
    const int half_offset = (N_HF_VAR - N_FC_VAR)/2;
-   const real small_B    = 1.e-30;
+// const real small_B    = 1.e-30;
 
    for ( int d=0; d<3; d++ )
    {
@@ -382,10 +386,10 @@ void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
    } // for (int d=0; d<3; d++)
 
 #  ifdef __CUDACC__
-     __syncthreads();
+   __syncthreads();
 #  endif
 
-} // FUNCTION : CR_DiffuseFlux_FullStep
+} // FUNCTION : CR_AddDiffuseFlux_FullStep
 
 
 
@@ -423,6 +427,10 @@ static real minmod( real a, real b )
     else                                       return (real)0.0;
 } // FUNCTION : minmod
 
+
+
 #endif // #ifdef CR_DIFFUSION
+
+
 
 #endif // #ifndef __CPU_COSMICRAYDIFFUSE_FLUXES__

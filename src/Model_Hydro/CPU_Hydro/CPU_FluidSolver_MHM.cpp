@@ -36,7 +36,7 @@
 #ifdef COSMIC_RAY
 # include "CUFLU_CosmicRay.cu"
 #ifdef CR_DIFFUSION
-# include "../../Microphysics/CosmicRayDiffusivity/CUFLU_AddCosmicRayDiffuseFlux.cu"
+# include "../../Microphysics/CosmicRayDiffusion/CUFLU_CR_AddDiffuseFlux.cu"
 #endif
 #endif // #ifdef COSMIC_RAY
 
@@ -136,15 +136,15 @@ void CR_AdiabaticWork_FullStepUpdate( const real g_PriVar_Half[][ CUBE(FLU_NXT) 
                                       const real g_FC_Var[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                                       const real dt, const real dh, const EoS_t *EoS );
 #ifdef CR_DIFFUSION
-void CR_DiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
-                                    real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                              const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
-                              const real g_CC_B[][ CUBE(FLU_NXT) ],
-                              const real dh, const MicroPhy_t *MicroPhy );
-void CR_DiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
-                              real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                              const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                              const int NFlux, const real dh, const MicroPhy_t *MicroPhy );
+void CR_AddDiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
+                                       real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                 const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
+                                 const real g_CC_B[][ CUBE(FLU_NXT) ],
+                                 const real dh, const MicroPhy_t *MicroPhy );
+void CR_AddDiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
+                                       real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                 const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                 const int NFlux, const real dh, const MicroPhy_t *MicroPhy );
 #endif // #ifdef CR_DIFFUSION
 #endif // #ifdef COSMIC_RAY
 
@@ -443,7 +443,7 @@ void CPU_FluidSolver_MHM(
 
 //       add extra flux of cosmic ray
 #        ifdef CR_DIFFUSION
-         CR_DiffuseFlux_HalfStep( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P], g_PriVar_1PG+MAG_OFFSET, dh, &MicroPhy );
+         CR_AddDiffuseFlux_HalfStep( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P], g_PriVar_1PG+MAG_OFFSET, dh, &MicroPhy );
 #        endif
 
 
@@ -538,7 +538,7 @@ void CPU_FluidSolver_MHM(
 
 //          add extra flux of cosmic ray
 #           ifdef CR_DIFFUSION
-            CR_DiffuseFlux_FullStep( g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_FL_FLUX, dh, &MicroPhy );
+            CR_AddDiffuseFlux_FullStep( g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_FL_FLUX, dh, &MicroPhy );
 #           endif
 
 
