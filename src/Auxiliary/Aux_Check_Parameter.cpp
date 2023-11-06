@@ -917,9 +917,9 @@ void Aux_Check_Parameter()
    if ( MPI_Rank == 0 ) {
 
 #     if ( FLU_SCHEME == MHM_RP  &&  LR_SCHEME == PPM )
-      if ( OPT__LR_LIMITER != LR_LIMITER_CENTRAL )
-         Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (LR_LIMITER_CENTRAL) is recommended for MHM_RP+PPM !!\n",
-                      LR_LIMITER_CENTRAL );
+      if ( OPT__LR_LIMITER != LR_LIMITER_ATHENA )
+         Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (LR_LIMITER_ATHENA) is recommended for MHM_RP+PPM !!\n",
+                      LR_LIMITER_ATHENA );
 #     endif
 
 #     if ( FLU_SCHEME == MHM  &&  defined MHD )
