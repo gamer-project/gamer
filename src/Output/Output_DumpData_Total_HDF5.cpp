@@ -1460,9 +1460,9 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 #  else
    KeyInfo.CR_Diffusion         = 0;
 #  endif
-#  else
+#  else // #ifdef COSMIC_RAY
    KeyInfo.CosmicRay            = 0;
-#  endif
+#  endif // #ifdef COSMIC_RAY .. else ...
 #  endif // #if ( MODEL == HYDRO )
 
    for (int d=0; d<3; d++)
@@ -1691,12 +1691,6 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.Magnetohydrodynamics   = 0;
 #  endif
 
-#  ifdef COSMIC_RAY
-   Makefile.CosmicRay              = 1;
-#  else
-   Makefile.CosmicRay              = 0;
-#  endif
-
    Makefile.EoS                    = EOS;
 
 #  ifdef BAROTROPIC_EOS
@@ -1763,12 +1757,15 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  endif // #ifdef PARTICLE
 
 #  ifdef COSMIC_RAY
+   Makefile.CosmicRay              = 1;
 #  ifdef CR_DIFFUSION
    Makefile.CR_Diffusion           = 1;
 #  else
    Makefile.CR_Diffusion           = 0;
 #  endif
-#  endif // #ifdef COSMIC_RAY
+#  else // #ifdef COSMIC_RAY
+   Makefile.CosmicRay              = 0;
+#  endif // #ifdef COSMIC_RAY .. else ...
 
 
 } // FUNCTION : FillIn_Makefile
@@ -2351,13 +2348,11 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 // cosmic ray
 #  ifdef COSMIC_RAY
    InputPara.CR_Gamma                = GAMMA_CR;
-#  endif
-
-// microphysics
 #  ifdef CR_DIFFUSION
    InputPara.CR_Diffusion_ParaCoeff  = CR_DIFF_PARA;
    InputPara.CR_Diffusion_PerpCoeff  = CR_DIFF_PERP;
 #  endif
+#  endif // #ifdef COSMIC_RAY
 
 // initialization
    InputPara.Opt__Init               = OPT__INIT;

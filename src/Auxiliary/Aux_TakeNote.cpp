@@ -170,9 +170,14 @@ void Aux_TakeNote()
 
 #     ifdef COSMIC_RAY
       fprintf( Note, "COSMIC_RAY                      ON\n" );
+#     ifdef CR_DIFFUSION
+      fprintf( Note, "CR_DIFFUSION                    ON\n" );
 #     else
-      fprintf( Note, "COSMIC_RAY                      OFF\n" );
+      fprintf( Note, "CR_DIFFUSION                    OFF\n" );
 #     endif
+#     else // #ifdef COSMIC_RAY
+      fprintf( Note, "COSMIC_RAY                      OFF\n" );
+#     endif // #ifdef COSMIC_RAY ... else ...
 
 #     if   ( EOS == EOS_GAMMA )
       fprintf( Note, "EOS                             EOS_GAMMA\n" );
