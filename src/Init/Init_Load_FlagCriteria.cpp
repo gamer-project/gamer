@@ -66,7 +66,7 @@ void Init_Load_FlagCriteria()
 #  error : unsupported MODEL !!
 #  endif
 
-   const int  NFlagMode         = 13;
+   const int  NFlagMode         = 14;
    const bool Flag[NFlagMode]   = { OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_PRES_GRADIENT,
                                     OPT__FLAG_ENGY_DENSITY, OPT__FLAG_LOHNER, OPT__FLAG_USER,
                                     (bool)OPT__FLAG_NPAR_PATCH, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL,
