@@ -1,5 +1,5 @@
-#ifndef __COMPUTE_COSMICRAYDIFFUSIVITY__
-#define __COMPUTE_COSMICRAYDIFFUSIVITY__
+#ifndef __CUFLU_CR_COMPUTEDIFFUSIVITY__
+#define __CUFLU_CR_COMPUTEDIFFUSIVITY__
 
 
 
@@ -35,4 +35,4 @@ void CR_ComputeDiffusivity( real &diff_cr_para, real &diff_cr_perp, const MicroP
 
 
 
-#endif // #ifndef __COMPUTE_COSMICRAYDIFFUSIVITY__
+#endif // #ifndef __CUFLU_CR_COMPUTEDIFFUSIVITY__

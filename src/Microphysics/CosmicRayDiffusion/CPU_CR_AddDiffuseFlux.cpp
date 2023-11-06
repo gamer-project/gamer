@@ -1,5 +1,5 @@
-#ifndef __CPU_COSMICRAYDIFFUSE_FLUXES__
-#define __CPU_COSMICRAYDIFFUSE_FLUXES__
+#ifndef __CUFLU_CR_ADDDIFFUSEFLUX__
+#define __CUFLU_CR_ADDDIFFUSEFLUX__
 
 
 
@@ -433,4 +433,4 @@ static real minmod( real a, real b )
 
 
 
-#endif // #ifndef __CPU_COSMICRAYDIFFUSE_FLUXES__
+#endif // #ifndef __CUFLU_CR_ADDDIFFUSEFLUX__
