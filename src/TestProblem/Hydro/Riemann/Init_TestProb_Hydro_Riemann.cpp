@@ -349,7 +349,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    double r, Pres, Eint;
    int    MomIdx[3];
-   double Prim[NCOMP_FLUID];
+   real Prim[NCOMP_FLUID];
 
    switch ( Riemann_XYZ )
    {
@@ -372,11 +372,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double dPre = 0.5*( Riemann_PreR    - Riemann_PreL    );
    const double aPre = 0.5*( Riemann_PreR    + Riemann_PreL    );
 
-   Prim[ DENS      ] = aRho + dRho*Tanh;
-   Prim[ MomIdx[0] ] = aVel + dVel*Tanh;
-   Prim[ MomIdx[1] ] = aVT1 + dVT1*Tanh;
-   Prim[ MomIdx[2] ] = aVT2 + dVT2*Tanh;
-   Prim[ ENGY      ] = aPre + dPre*Tanh; // pressure
+   Prim[ DENS      ] = (real)(aRho + dRho*Tanh);
+   Prim[ MomIdx[0] ] = (real)(aVel + dVel*Tanh);
+   Prim[ MomIdx[1] ] = (real)(aVT1 + dVT1*Tanh);
+   Prim[ MomIdx[2] ] = (real)(aVT2 + dVT2*Tanh);
+   Prim[ ENGY      ] = (real)(aPre + dPre*Tanh); // pressure
 
 #  ifdef SRHD
    Hydro_Pri2Con( Prim, fluid, NULL_BOOL, NULL_INT, NULL, NULL,
