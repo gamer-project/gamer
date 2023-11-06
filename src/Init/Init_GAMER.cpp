@@ -134,6 +134,10 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
+// initialize the microphysics
+   Microphysics_Init();
+
+
 // initialize the user-defined derived fields
    if ( OPT__OUTPUT_USER_FIELD )
    {

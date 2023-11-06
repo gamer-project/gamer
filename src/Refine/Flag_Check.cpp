@@ -129,6 +129,17 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #  endif
 
 
+// check cosmic ray
+// ===========================================================================================
+#  ifdef COSMIC_RAY
+   if ( OPT__FLAG_CRAY )
+   {
+      Flag |= ( Fluid[CRAY][k][j][i] > FlagTable_CRay[lv] );
+      if ( Flag )    return Flag;
+   }
+#  endif
+
+
 // check Jeans length
 // ===========================================================================================
 #  if ( MODEL == HYDRO  &&  defined GRAVITY )

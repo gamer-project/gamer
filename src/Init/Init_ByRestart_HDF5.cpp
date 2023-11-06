@@ -79,6 +79,13 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  else
    const int  Particle             = 0;
 #  endif
+#  ifdef COSMIC_RAY
+#  ifdef CR_DIFFUSION
+   const int  CR_Diffusion         = 1;
+#  else
+   const int  CR_Diffusion         = 0;
+#  endif
+#  endif // #ifdef COSMIC_RAY
 #  if ( MODEL == HYDRO )
 #  ifdef MHD
    const int  Magnetohydrodynamics = 1;
@@ -207,6 +214,10 @@ void Init_ByRestart_HDF5( const char *FileName )
    else
    LoadField( "Par_NAttStored",       &KeyInfo.Par_NAttStored,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttStored,        1, NonFatal );
    } // if ( ReenablePar ) ... else ...
+#  endif
+
+#  ifdef COSMIC_RAY
+   LoadField( "CR_Diffusion",         &KeyInfo.CR_Diffusion,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &CR_Diffusion,         -1, NonFatal );
 #  endif
 
    LoadField( "BoxSize",               KeyInfo.BoxSize,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  amr->BoxSize,          3,    Fatal );
@@ -1511,6 +1522,12 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "Par_NAttUser",           &RS.Par_NAttUser,           SID, TID, NonFatal, &RT.Par_NAttUser,           1, NonFatal );
 #  endif
 
+#  ifdef COSMIC_RAY
+#  ifdef CR_DIFFUSION
+   LoadField( "CR_Diffusion",           &RS.CR_Diffusion,           SID, TID, NonFatal, &RT.CR_Diffusion,           1, NonFatal );
+#  endif
+#  endif // #ifdef COSMIC_RAY
+
 
 // 5. close all objects
    Status = H5Tclose( TID );
@@ -1864,6 +1881,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  ifdef MHD
    LoadField( "Opt__Flag_Current",       &RS.Opt__Flag_Current,       SID, TID, NonFatal, &RT.Opt__Flag_Current,        1, NonFatal );
 #  endif
+#  ifdef COSMIC_RAY
+   LoadField( "Opt__Flag_CRay",          &RS.Opt__Flag_CRay,          SID, TID, NonFatal, &RT.Opt__Flag_CRay,           1, NonFatal );
+#  endif
 #  endif
 #  if ( MODEL == ELBDM )
    LoadField( "Opt__Flag_EngyDensity",   &RS.Opt__Flag_EngyDensity,   SID, TID, NonFatal, &RT.Opt__Flag_EngyDensity,    1, NonFatal );
@@ -1874,6 +1894,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Flag_LohnerPres",    &RS.Opt__Flag_LohnerPres,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerPres,     1, NonFatal );
    LoadField( "Opt__Flag_LohnerTemp",    &RS.Opt__Flag_LohnerTemp,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerTemp,     1, NonFatal );
    LoadField( "Opt__Flag_LohnerEntr",    &RS.Opt__Flag_LohnerEntr,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerEntr,     1, NonFatal );
+#  ifdef COSMIC_RAY
+   LoadField( "Opt__Flag_Lohner_CRay",   &RS.Opt__Flag_LohnerCRay,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerCRay,     1, NonFatal );
+#  endif
 #  endif
    LoadField( "Opt__Flag_LohnerForm",    &RS.Opt__Flag_LohnerForm,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerForm,     1, NonFatal );
    LoadField( "Opt__Flag_User",          &RS.Opt__Flag_User,          SID, TID, NonFatal, &RT.Opt__Flag_User,           1, NonFatal );
@@ -2035,6 +2058,18 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "FB_User",                 &RS.FB_User,                 SID, TID, NonFatal, &RT.FB_User,                  1, NonFatal );
 #  endif
 
+// cosmic ray
+#  ifdef COSMIC_RAY
+   LoadField( "GAMMA_CR",                &RS.CR_Gamma,                SID, TID, NonFatal, &RT.CR_Gamma,                 1, NonFatal );
+#  endif
+
+// microphysics
+#  ifdef CR_DIFFUSION
+   LoadField( "CR_Diffusion_ParaCoeff",  &RS.CR_Diffusion_ParaCoeff,  SID, TID, NonFatal, &RT.CR_Diffusion_ParaCoeff,   1, NonFatal );
+   LoadField( "CR_Diffusion_PerpCoeff",  &RS.CR_Diffusion_PerpCoeff,  SID, TID, NonFatal, &RT.CR_Diffusion_PerpCoeff,   1, NonFatal );
+   LoadField( "CR_Diffusion_Dt",         &RS.CR_Diffusion_Dt,         SID, TID, NonFatal, &RT.CR_Diffusion_Dt,          1, NonFatal );
+#  endif
+
 // initialization
    LoadField( "Opt__Init",               &RS.Opt__Init,               SID, TID, NonFatal, &RT.Opt__Init,                1, NonFatal );
    LoadField( "RestartLoadNRank",        &RS.RestartLoadNRank,        SID, TID, NonFatal, &RT.RestartLoadNRank,         1, NonFatal );
@@ -2172,8 +2207,11 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 // flag tables
 #  if   ( MODEL == HYDRO )
+#  ifndef COSMIC_RAY
+   const bool OPT__FLAG_LOHNER_CRAY = false;
+#  endif
    const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES ||
-                                  OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR );
+                                  OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR || OPT__FLAG_LOHNER_CRAY );
 #  elif ( MODEL == ELBDM )
    const bool Opt__FlagLohner = OPT__FLAG_LOHNER_DENS;
 #  else
@@ -2200,6 +2238,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
       RS.FlagTable_Jeans       [lv]    = -1.0;
 #     ifdef MHD
       RS.FlagTable_Current     [lv]    = -1.0;
+#     endif
+#     ifdef COSMIC_RAY
+      RS.FlagTable_CRay        [lv]    = -1.0;
 #     endif
 
 #     elif ( MODEL == ELBDM )
@@ -2258,6 +2299,11 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  ifdef MHD
    if ( OPT__FLAG_CURRENT )
    LoadField( "FlagTable_Current",        RS.FlagTable_Current,       SID, TID, NonFatal,  RT.FlagTable_Current,       N1, NonFatal );
+#  endif
+
+#  ifdef COSMIC_RAY
+   if ( OPT__FLAG_CRAY )
+   LoadField( "FlagTable_CRay",           RS.FlagTable_CRay,          SID, TID, NonFatal,  RT.FlagTable_CRay,          N1, NonFatal );
 #  endif
 
 #  elif ( MODEL == ELBDM )
