@@ -115,6 +115,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "DT__PARVEL_MAX",             &DT__PARVEL_MAX,                 -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "DT__PARACC",                 &DT__PARACC,                      0.5,             0.0,           NoMax_double   );
 #  endif
+#  ifdef CR_DIFFUSION
+   ReadPara->Add( "DT__CR_DIFFUSION",           &DT__CR_DIFFUSION,                3.0e-1,          0.0,           NoMax_double   );
+#  endif
 #  ifdef COMOVING
    ReadPara->Add( "DT__MAX_DELTA_A",            &DT__MAX_DELTA_A,                 0.01,            0.0,           NoMax_double   );
 #  endif
@@ -252,7 +255,6 @@ void Init_Load_Parameter()
 #  ifdef CR_DIFFUSION
    ReadPara->Add( "CR_DIFF_PARA",               &CR_DIFF_PARA,                    0.0,             0.0,           NoMax_double   );
    ReadPara->Add( "CR_DIFF_PERP",               &CR_DIFF_PERP,                    0.0,             0.0,           NoMax_double   );
-   ReadPara->Add( "DT_CR_DIFFUSION",            &DT_CR_DIFFUSION,                 3.e-1,           0.0,           NoMax_double   );
 #  endif
 
 

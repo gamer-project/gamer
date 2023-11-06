@@ -94,6 +94,7 @@ DT__PHASE                     0.0         # dt criterion: phase rotation safety 
 DT__PARVEL                    0.5         # dt criterion: particle velocity safety factor [0.5]
 DT__PARVEL_MAX               -1.0         # dt criterion: maximum allowed dt from particle velocity (<0=off) [-1.0]
 DT__PARACC                    0.5         # dt criterion: particle acceleration safety factor (0=off) [0.5] ##STORE_PAR_ACC ONLY##
+DT__CR_DIFFUSION              0.3         # dt criterion: cosmic-ray diffusion CFL factor [0.3] ##CR_DIFFUSION only##
 DT__MAX_DELTA_A               0.01        # dt criterion: maximum variation of the cosmic scale factor [0.01]
 DT__SYNC_PARENT_LV            0.1         # dt criterion: allow dt to adjust by (1.0+DT__SYNC_PARENT) in order to synchronize
                                           #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
@@ -194,7 +195,6 @@ DUAL_ENERGY_SWITCH            2.0e-2      # apply dual-energy if E_int/E_kin < D
 GAMMA_CR                      1.333333333 # effective adiabatic index of cosmic rays [4.0/3.0]
 CR_DIFF_PARA                  0.05        # cosmic-ray diffusion coefficients parallel/perpendicular to the
 CR_DIFF_PERP                  0.00        # magnetic field [0.0] ##CR_DIFFUSION only##
-DT_CR_DIFFUSION               0.3         # dt criterion: cosmic-ray diffusion CFL factor [0.3] ##CR_DIFFUSION only##
 
 
 # fluid solver in ELBDM (MODEL==ELBDM only)

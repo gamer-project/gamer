@@ -305,7 +305,7 @@ MicroPhy_t MicroPhy;
 #ifdef CR_DIFFUSION
 double CR_DIFF_PARA;
 double CR_DIFF_PERP;
-double DT_CR_DIFFUSION;
+double DT__CR_DIFFUSION;
 #endif
 
 

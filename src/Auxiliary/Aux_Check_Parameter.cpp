@@ -1605,8 +1605,8 @@ void Aux_Check_Parameter()
 // warning
 // ------------------------------
    if ( MPI_Rank == 0 ) {
-      if ( DT_CR_DIFFUSION < 0.0  ||  DT_CR_DIFFUSION > 1.0 )
-         Aux_Message( stderr, "WARNING : DT_CR_DIFFUSION (%14.7e) is not within the normal range [0...1] !!\n", DT_CR_DIFFUSION );
+      if ( DT__CR_DIFFUSION < 0.0  ||  DT__CR_DIFFUSION > 1.0 )
+         Aux_Message( stderr, "WARNING : DT__CR_DIFFUSION (%14.7e) is not within the normal range [0...1] !!\n", DT__CR_DIFFUSION );
    } // if ( MPI_Rank == 0 )
 
 #endif // ifdef CR_DIFFUSION

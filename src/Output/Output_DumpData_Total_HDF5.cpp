@@ -2115,6 +2115,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Dt__ParVelMax           = DT__PARVEL_MAX;
    InputPara.Dt__ParAcc              = DT__PARACC;
 #  endif
+#  ifdef CR_DIFFUSION
+   InputPara.Dt__CR_Diffusion        = DT__CR_DIFFUSION;
+#  endif
 #  ifdef COMOVING
    InputPara.Dt__MaxDeltaA           = DT__MAX_DELTA_A;
 #  endif
@@ -2354,7 +2357,6 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  ifdef CR_DIFFUSION
    InputPara.CR_Diffusion_ParaCoeff  = CR_DIFF_PARA;
    InputPara.CR_Diffusion_PerpCoeff  = CR_DIFF_PERP;
-   InputPara.CR_Diffusion_Dt         = DT_CR_DIFFUSION;
 #  endif
 
 // initialization
@@ -3277,7 +3279,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  ifdef CR_DIFFUSION
    H5Tinsert( H5_TypeID, "CR_Diffusion_ParaCoeff", HOFFSET(InputPara_t,CR_Diffusion_ParaCoeff ), H5T_NATIVE_DOUBLE            );
    H5Tinsert( H5_TypeID, "CR_Diffusion_PerpCoeff", HOFFSET(InputPara_t,CR_Diffusion_PerpCoeff ), H5T_NATIVE_DOUBLE            );
-   H5Tinsert( H5_TypeID, "CR_Diffusion_Dt",        HOFFSET(InputPara_t,CR_Diffusion_Dt        ), H5T_NATIVE_DOUBLE            );
+   H5Tinsert( H5_TypeID, "Dt__CR_Diffusion",       HOFFSET(InputPara_t,Dt__CR_Diffusion       ), H5T_NATIVE_DOUBLE            );
 #  endif
 
 // initialization

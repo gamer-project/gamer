@@ -1846,6 +1846,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Dt__ParVelMax",           &RS.Dt__ParVelMax,           SID, TID, NonFatal, &RT.Dt__ParVelMax,            1, NonFatal );
    LoadField( "Dt__ParAcc",              &RS.Dt__ParAcc,              SID, TID, NonFatal, &RT.Dt__ParAcc,               1, NonFatal );
 #  endif
+#  ifdef CR_DIFFUSION
+   LoadField( "Dt__CR_Diffusion",        &RS.Dt__CR_Diffusion,        SID, TID, NonFatal, &RT.Dt__CR_Diffusion,         1, NonFatal );
+#  endif
 #  ifdef COMOVING
    LoadField( "Dt__MaxDeltaA",           &RS.Dt__MaxDeltaA,           SID, TID, NonFatal, &RT.Dt__MaxDeltaA,            1, NonFatal );
 #  endif
@@ -2067,7 +2070,6 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  ifdef CR_DIFFUSION
    LoadField( "CR_Diffusion_ParaCoeff",  &RS.CR_Diffusion_ParaCoeff,  SID, TID, NonFatal, &RT.CR_Diffusion_ParaCoeff,   1, NonFatal );
    LoadField( "CR_Diffusion_PerpCoeff",  &RS.CR_Diffusion_PerpCoeff,  SID, TID, NonFatal, &RT.CR_Diffusion_PerpCoeff,   1, NonFatal );
-   LoadField( "CR_Diffusion_Dt",         &RS.CR_Diffusion_Dt,         SID, TID, NonFatal, &RT.CR_Diffusion_Dt,          1, NonFatal );
 #  endif
 
 // initialization
