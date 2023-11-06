@@ -3,7 +3,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Microphysics_End
-// Description :  Free the resources used by the EoS routines
+// Description :  Free the resources used by the microphysics routines
 //
 // Note        :  1. Invoked by End_GAMER()
 //
