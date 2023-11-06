@@ -4,7 +4,6 @@ Enable :
         MODEL=HYDRO
         EOS=EOS_GAMMA_CR
         COSMIC_RAY
-        MICROPHYSICS
         CR_DIFFUSION
 Disable:
         COMOVING

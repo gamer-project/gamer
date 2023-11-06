@@ -116,13 +116,13 @@ OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag
 OPT__FLAG_VORTICITY           0           # flag: vorticity (Input__Flag_Vorticity) [0] ##HYDRO ONLY##
 OPT__FLAG_JEANS               0           # flag: Jeans length (Input__Flag_Jeans) [0] ##HYDRO ONLY##
 OPT__FLAG_CURRENT             0           # flag: current density in MHD (Input__Flag_Current) [0] ##MHD ONLY##
-OPT__FLAG_CRAY                0           # flag: Lohner for cosmic ray (Input__Flag_CRay) [0] ##HYDRO ONLY##
+OPT__FLAG_CRAY                0           # flag: cosmic-ray energy (Input__Flag_CRay) [0] ##COSMIC_RAY ONLY##
 OPT__FLAG_ENGY_DENSITY        0           # flag: energy density (Input_Flag_EngyDensity) [0] ##ELBDM ONLY##
-OPT__FLAG_LOHNER_DENS         0           # flag: Lohner for mass density   (Input__Flag_Lohner) [0] ##BOTH HYDRO AND ELBDM##
-OPT__FLAG_LOHNER_ENGY         0           # flag: Lohner for energy density (Input__Flag_Lohner) [0] ##HYDRO ONLY##
-OPT__FLAG_LOHNER_PRES         0           # flag: Lohner for pressure       (Input__Flag_Lohner) [0] ##HYDRO ONLY##
-OPT__FLAG_LOHNER_TEMP         0           # flag: Lohner for temperature    (Input__Flag_Lohner) [0] ##HYDRO ONLY##
-OPT__FLAG_LOHNER_CRAY         0           # flag: Lohner for cosmic ray     (Input__Flag_Lohner) [0] ##HYDRO ONLY##
+OPT__FLAG_LOHNER_DENS         0           # flag: Lohner for mass density      (Input__Flag_Lohner) [0] ##BOTH HYDRO AND ELBDM##
+OPT__FLAG_LOHNER_ENGY         0           # flag: Lohner for energy density    (Input__Flag_Lohner) [0] ##HYDRO ONLY##
+OPT__FLAG_LOHNER_PRES         0           # flag: Lohner for pressure          (Input__Flag_Lohner) [0] ##HYDRO ONLY##
+OPT__FLAG_LOHNER_TEMP         0           # flag: Lohner for temperature       (Input__Flag_Lohner) [0] ##HYDRO ONLY##
+OPT__FLAG_LOHNER_CRAY         0           # flag: Lohner for cosmic-ray energy (Input__Flag_Lohner) [0] ##COSMIC_RAY ONLY##
 OPT__FLAG_LOHNER_FORM         2           # form of Lohner: (1=FLASH-1, 2=FLASH-2, 3=form-invariant-1, 4=form-invariant-2) [2]
 OPT__FLAG_USER                0           # flag: user-defined (Input__Flag_User) -> edit "Flag_User.cpp" [0]
 OPT__FLAG_USER_NUM            1           # number of threshold values in user-defined table (Input__Flag_User) [1]
@@ -174,15 +174,11 @@ SF_CREATE_STAR_MIN_STAR_MASS  0.0         # minimum star particle mass for the s
 SF_CREATE_STAR_MAX_STAR_MFRAC 0.5         # maximum gas mass fraction allowed to convert to stars per substep [0.5]
 
 
-# cosmic ray (COSMIC_RAY only)
-GAMMA_CR                      1.333333333 # adiabatic index of the cosmic rays [4.0/3.0] ##EOS_COSMIC_RAY ONLY##
-
-
-# microphysics (MICROPHYSICS only)
-# --> cosmic rays (CR_DIFFUSION only)
-CR_DIFF_PARA                  0.05        # parallel      diffusion coefficient of cosmic rays
-CR_DIFF_PERP                  0.00        # perpendicular diffusion coefficient of cosmic rays
-DT_CR_DIFFUSION               0.3         # dt criterion: fluid solver CFL factor of diffusion
+# cosmic rays (COSMIC_RAY only)
+GAMMA_CR                      1.333333333 # effective adiabatic index of cosmic rays [4.0/3.0]
+CR_DIFF_PARA                  0.05        # cosmic-ray diffusion coefficients parallel/perpendicular to the
+CR_DIFF_PERP                  0.00        # magnetic field [0.0] ##CR_DIFFUSION only##
+DT_CR_DIFFUSION               0.3         # dt criterion: cosmic-ray diffusion CFL factor [0.3] ##CR_DIFFUSION only##
 
 
 # fluid solver in HYDRO (MODEL==HYDRO only)
