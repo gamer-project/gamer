@@ -1264,7 +1264,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //                   currently, the selection of the first wave level is fixed as a runtime parameter
 //                   ideally, the code should be able to adaptively increase the first wave level by 1 when this happens
                      if ( dPhase > M_PI ) {
-                        Aux_Message ( stderr, "WARNING: Phase jump = %d > PI when converting patch from fluid to wave scheme on lv %d!", dPhase, ChildLv);
+                        Aux_Message ( stderr, "WARNING: Phase jump = %13.7e > PI when converting patch from fluid to wave scheme on lv %d!", dPhase, ChildLv);
                      }
 #                    endif // #ifdef GAMER_DEBUG
 
