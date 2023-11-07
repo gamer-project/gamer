@@ -205,12 +205,12 @@ void LB_Refine( const int FaLv )
 //       iterate over real and buffer patches
          for (int PID=0; PID < amr->NPatchComma[ChildLv][27]; PID++)
          {
-            for (int k=0; k<PS1; k++)  {
-            for (int j=0; j<PS1; j++)  {
-            for (int i=0; i<PS1; i++)  {
-//             convert both sandglasses
-               for ( int FluSg = 0; FluSg < 2; ++FluSg )
-               {
+//          convert both sandglasses
+            for ( int FluSg = 0; FluSg < 2; ++FluSg )
+            {
+               for (int k=0; k<PS1; k++)  {
+               for (int j=0; j<PS1; j++)  {
+               for (int i=0; i<PS1; i++)  {
 //                check fluid != NULL for buffer patches
                   if ( amr->patch[FluSg][ChildLv][PID]->fluid != NULL && amr->FluSgTime[ChildLv][FluSg] >= 0.0 )
                   {
