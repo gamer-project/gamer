@@ -84,7 +84,7 @@ def interp(psi, n_in, n_out):
         psihat = unpad(psihat, ((n_pad, n_pad), (n_pad, n_pad), (n_pad, n_pad)))
 
     # Shift zero frequencies back to outside of cube
-    psihat = np.fft.fftshift(psihat) * n_total
+    psihat = np.fft.fftshift(psihat)
 
     print("Computing IFFT... ", end="")
 
