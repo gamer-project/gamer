@@ -1045,6 +1045,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                {
 
 //                convert real/imag to density/phase in hybrid scheme
+//                bitwise reproducibility currently fails in hybrid scheme because of conversion from RE/IM to DENS/PHAS when storing fields in HDF5
+//                possible solution could be to convert RE/IM <-> DENS/PHAS using high-precision routines to ensure bitwise identity for significant digits
 #                 if ( ELBDM_SCHEME == ELBDM_HYBRID )
                   if ( amr->use_wave_flag[lv] && (v == REAL || v == IMAG) ) {
                      real Re, Im;
