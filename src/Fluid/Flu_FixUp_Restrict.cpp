@@ -108,6 +108,11 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
       return;
    }
 
+
+// set correct restriction options for wave-wave, fluid-wave and fluid-fluid level phase restriction
+// wave-wave:   phase restriction on if OPT__RES_PHASE is set
+// fluid-wave:  always use phase restriction
+// fluid-fluid: treat phase restriction the same as normal restriction
 #  if ( MODEL == ELBDM )
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 // restrict phase during wave-wave-level restriction if OPT__RES_PHAS is enabled
