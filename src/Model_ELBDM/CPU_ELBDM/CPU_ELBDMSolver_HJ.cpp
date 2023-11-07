@@ -580,6 +580,11 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                   g_Flux[bx][XYZ+2][0][Idx3] = s_Flux[ty][PS2 + HYB_GHOST_SIZE] / Eta;
                }
             } // CELL_LOOP(HYB_NXT, HYB_GHOST_SIZE, HYB_GHOST_SIZE)
+
+
+#           ifdef  __CUDACC__
+            __syncthreads();
+#           endif
 #           endif // # ifdef CONSERVE_MASS
 
 
