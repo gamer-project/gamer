@@ -113,7 +113,6 @@ real GetMaxVelocity( const int lv, const bool ExcludeWaveCells )
                }
             }
 
-//          check whether leave node corresponding to cell using fluid scheme
             if ( !DoNotCalculateVelocity ) {
 
                GradS[0]   = _dh2 * ( Flu_Array[0][0][k ][j ][ip] - Flu_Array[0][0][k ][j ][im] );

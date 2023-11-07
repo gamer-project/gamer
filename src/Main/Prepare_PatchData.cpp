@@ -3685,12 +3685,9 @@ void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const real Tole
 // Function    :  Prepare_PatchData_HasWaveCounterpart
 // Description :  Prepare a uniform array indicating which cells have a refined wave counterpart including ghost zones for the target patches or patch groups
 //
-// Note        :  1. If "GhostSize != 0" --> use InterpolateGhostZone() to fill out the
-//                   ghost-zone values by spatial interpolation if the corresponding sibling patches do
-//                   NOT exist
-//                2. Use "patch group" as the preparation unit
+// Note        :  1. Use "patch group" as the preparation unit
 //                   --> The data of all patches within the same patch group will be prepared
-//                3. Patches stored in PID0_List must be real patches (cannot NOT be buffer patches)
+//                2. Patches stored in PID0_List must be real patches (cannot NOT be buffer patches)
 //
 // Parameter   :  lv                    : Target refinement level
 //                h_HasWaveCounterpart  : Array to store the prepared booleans indicating which cells have wave counterparts on refined levels
