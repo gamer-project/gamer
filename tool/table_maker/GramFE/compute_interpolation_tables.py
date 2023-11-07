@@ -7,62 +7,56 @@ import os
 
 from mpmath import *
 
-mp.dps = 128
-eps    = 1e-128
+
+# This script computes the tables required for the spectral interpolation in GAMER
+#
+# No OpenMP parallelisation, launch with as many MPI nodes as desired, e.g. with 2 nodes and
+# mpirun -map-by ppr:16:socket:pe=1 python3 compute_interpolation_tables.py
+#
+# Spectral interpolation for the psidm branch can be enabled
+# via the compile time option SUPPORT_SPECTRAL_INT
+
+# The spectral interpolation algorithm requires two kinds of tables
+# 1. Interpolation matrices that map an input vector of size N to an interpolated vector at 2 * (N - 2) with high accuracy
+#    Given a vector with values f(x_i) with x_0 = 0, x_1 = 1, x_2 = 2 and N = 3
+#    Multiplication with the interpolation matrices yields an output vector with the interpolated values
+#    f(y_j) with y_0 = 0.75 and y_1 = 1.25
+#
+#    The respective tables are stored as binary files in double precision in the folder interpolation_tables
+#
+# 2. Tables that given an input function, compute its periodic Gram-Fourier extension
+#    This is because for large N, the interpolation algorithm uses a Gram FE extension at runtime and interpolates the input function using the FFT algorithm
+#
+#    The respective tables are stored as binary files in double precision in the folder boundary2extension_tables
+
+mp.dps = 256
+eps    = 1e-256
 comm   = MPI.COMM_WORLD
 rank   = comm.Get_rank()
 nprocs = comm.Get_size()
 
-# Avoid race conflicts by giving every rank their own base path
-# base_path = "rank_%d/" % rank
-base_path = "output"
-try:
-    os.mkdir(base_path)
-except OSError as error:
-    print(error)
+base_path = "./"
 
-sub_directories = ["fft_tables", "ifft_tables", "boundary2extension_tables", "interpolation_tables"]
+sub_directories = ["boundary2extension_tables", "interpolation_tables"]
 
-for sub_dir in sub_directories:
+
+if rank == 0:
     try:
-        os.mkdir(base_path + "/" + sub_dir)
+        os.mkdir(base_path)
     except OSError as error:
         print(error)
 
+    for sub_dir in sub_directories:
+        try:
+            os.mkdir(base_path + "/" + sub_dir)
+        except OSError as error:
+            print(error)
+
+# Make other ranks wait for rank 0
+comm.barrier()
+
+# Implement the Gram Schmidt orthogonalisation algorithm using mpmath
 class GramSchmidt:
-    """
-    Implements the Gram-Schmidt orthogonalization algorithm using mpmath.
-
-    Args:
-        x (list): List of x-values.
-        m (int): Maximum polynomial degree for orthogonalization.
-
-    Attributes:
-        x (list): List of x-values.
-        m (int): Maximum polynomial degree.
-        A (matrix): Linear map for polynomial scalar product.
-        V (matrix): Basis vectors as columns of matrix V.
-        U (matrix): Orthogonalized basis vectors.
-
-    Methods:
-        evaluateBasis(x, basis_element):
-            Evaluates a basis element at given x-values.
-        sp(u, v):
-            Computes the scalar product of two vectors u and v.
-        proj(u, v):
-            Computes the projection of vector u onto vector v.
-        norm(u):
-            Computes the norm of a vector u.
-        modifiedGramSchmidt(V):
-            Performs modified Gram-Schmidt orthogonalization.
-        projectFunction(f):
-            Projects a function onto the orthogonal basis.
-        reconstructFunction(coeffs, x=None):
-            Reconstructs a function from coefficients and x-values.
-        debug():
-            Displays debug plots and information about orthogonal polynomials.
-    """
-
     def __init__(self, x, m):
         self.x = x
         self.m = m
@@ -163,7 +157,6 @@ class GramSchmidt:
             print(f"i = {i} u_ij = {u_ij[i, :]}")
 
 class SVDFourierExtension:
-
     # Implement the SVD Fourier continuation algorithm using mpmath
     M_ALL_K  = 0
     M_EVEN_K = 1
@@ -517,6 +510,7 @@ class GramFEFixedSizeExtension:
         print(f"Difference between f and inverse f: {np.mean(np.abs((self.numpyIFFTMatrix @ fhat2)[:len(f)] - f))}")
 
 
+
 class GramFEInterpolation:
 
     def __init__(self, N, m, nDelta, nd, Gamma, g):
@@ -585,19 +579,41 @@ class GramFEInterpolation:
         plt.show()
 
 
+# Fixed parameters of Gram FE algorithn
 Gamma  = 150
 g      = 63
-nd     = 32
-m      = 8
+
+# Input sizes for interpolation tables
 N_min  = 4
-M_max  = 33
-# Compute the tables in interpolation_tables
-for N in range(rank + N_min, M_max, nprocs):
-    if N < 15:
-        # Let polynomial order be size of interpolation domain up to N = 14
+N_max  = 32
+interpolation_table_iterations = N_max + 1 - N_min
+
+# Extension sizes for extension tables
+nd_min = 24
+nd_max = 36
+extension_table_iterations = nd_max + 1 - nd_min
+
+total_iterations = interpolation_table_iterations + extension_table_iterations
+
+# Compute the interpolation and extension tables in parallel loop
+for i in range(rank, total_iterations + 1, nprocs):
+    if i < interpolation_table_iterations:
+        N  = i + N_min
+        nd = 32
+        m  = 8
+
         print(f"Rank {rank}: Computing interpolation table for N = {N}")
-        GramFEInterpolation(N, N, N, nd, Gamma, g)
-    else:
+        # Let polynomial order be size of interpolation domain
+        if N <= m:
+            GramFEInterpolation(N = N, m = N, nDelta = N, nd = nd, Gamma = Gamma, g = g)
         # Keep polynomial order fixed for larger domain sizes for stability
-        print(f"Rank {rank}: Computing fixed size extension table for N = {N}")
-        GramFEFixedSizeExtension(N, m, m, nd, Gamma, g)
+        else:
+            GramFEInterpolation(N = N, m = m, nDelta = N, nd = nd, Gamma = Gamma, g = g)
+    else:
+        # Compute extension tables with different sizes for fast FFTs
+        nd = i - interpolation_table_iterations + nd_min
+        m  = 8
+
+        print(f"Rank {rank}: Computing fixed extension for nd = {nd}")
+        # Keyword N not used for computing extension tables, 16 is placeholder
+        GramFEFixedSizeExtension(N = 16, m = m, nDelta = m, nd = nd, Gamma = Gamma, g = g)
