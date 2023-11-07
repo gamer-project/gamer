@@ -20,9 +20,9 @@
 /**  folder "boundary2extension_tables". The respective constructors take the parameters              **/
 /**  Gamma (number of sampling points), g (number of Fourier modes), nd (size of extension region),   **/
 /**  and m (the order of boundary polynomials).                                                       **/
-/**  The tables use the Gram Fourier extension algorithm to find a periodic extension of a given     **/
+/**  The tables use the Gram Fourier extension algorithm to find a periodic extension of a given      **/
 /**  non-periodic function - the interpolant. This periodic function can then be interpolated using   **/
-/**  a DFT. This interpolation is not monotonic and not conservative, but highly accurate.             **/
+/**  a DFT. This interpolation is not monotonic and not conservative, but highly accurate.            **/
 /**  Its accuracy is determined by the quality of the periodic extension.                             **/
 /**  Gamma = 150, g = 63, nd = 32 and m = 8 have been found to be a good compromise between stability **/
 /**  and accuracy for interpolation. Higher values of m led to interpolation artifacts in some tests. **/
@@ -32,12 +32,12 @@
 /**     The tables are named N.bin where N is the input interpolation size.                           **/
 /**     They contain double-precision 2D matrices that represent the complete interpolation           **/
 /**     GramFE extension * DFT * shift in k space * IDFT as a matrix.                                 **/
-/**     It is an efficient way to implement the Gram FE interpolation for small N          **/
+/**     It is an efficient way to implement the Gram FE interpolation for small N                     **/
 /**     with a cost of N^2 operations for a single matrix multiplication.                             **/
 /**     For m = N, this interpolation is equivalent to interpolating with a polynomial of             **/
 /**     order N (as observed in numerical tests).                                                     **/
 /**                                                                                                   **/
-/** boundary2extension_tables:                                                                        **/
+/**  boundary2extension_tables:                                                                       **/
 /**     The tables are named %ld_%ld_%d_%d.bin with the arguments nd, m, Gamma, g.                    **/
 /**     They contain double-precision 2D matrices that represent GramFE extension as a matrix.        **/
 /**     The interpolation itself is carried out using the FFTW library which is faster for larger     **/
