@@ -13,17 +13,21 @@
 //-----------------------------------------------------------------------------------------
 // Function    : CR_ComputeDiffusivity
 //
-// Description : Compute the diffusion coefficients of cosmic ray.
+// Description : Compute the diffusion coefficients of cosmic rays
 //
-// Note        : This is a constant for now. The coefficient should depend on the gas and CR properties.
+// Note        : This is a constant for now. In general, the coefficients should depend on the
+//               gas and CR properties.
 //
-// Parameter   : diff_cr_para : Variable to store the parallel      diffusion coefficient
-//               diff_cr_perp : Variable to store the perpendicular diffusion coefficient
+// Parameter   : diff_cr_para : Variables to store the parallel/perpendicular diffusion coefficients
+//               diff_cr_perp   --> Call-by-reference
 //               MicroPhy     : Microphysics object
+//
+// Return      : diff_cr_para, diff_cr_perp
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
 void CR_ComputeDiffusivity( real &diff_cr_para, real &diff_cr_perp, const MicroPhy_t *MicroPhy )
 {
+
    diff_cr_para = MicroPhy->CR_diff_coeff_para;
    diff_cr_perp = MicroPhy->CR_diff_coeff_perp;
 

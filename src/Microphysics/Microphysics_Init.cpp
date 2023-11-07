@@ -2,9 +2,10 @@
 
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Microphysics_Init
-// Description :  Initialize the microphysics
+// Description :  Initialize the microphysics routines
 //
 // Note        :  1. Invoked by Init_GAMER()
 //

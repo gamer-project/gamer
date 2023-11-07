@@ -23,9 +23,9 @@ void CR_ComputeDiffusivity( real &diff_cr_para, real &diff_cr_perp, const MicroP
 
 // internal funcitons
 GPU_DEVICE
-static real MC_limiter(real a, real b);
+static real MC_limiter( const real a, const real b );
 GPU_DEVICE
-static real minmod(real a, real b);
+static real minmod( const real a, const real b );
 
 
 
@@ -33,18 +33,21 @@ static real minmod(real a, real b);
 //-----------------------------------------------------------------------------------------
 // Function    : CR_AddDiffuseFlux_HalfStep
 //
-// Description : Compute the half-step cosmic ray diffusive flux.
+// Description : Compute the half-step cosmic-ray diffusive fluxes
 //
-// Note        : 1. Must enable MHD and COSMIC_RAY.
+// Note        : 1. Must enable MHD, COSMIC_RAY, and CR_DIFFUSION
+//               2. Invoked by CPU/CUFLU_FluidSolver_MHM()
 //
 // Reference   : Yang et al., ApJ 761, 185 (2012); doi:10.1088/0004-637X/761/2/185
 //
-// Parameter   : g_Con_Var   : Array storing the input conserved fluid variables
+// Parameter   : g_Con_Var   : Array storing the input cell-centered conserved fluid variables
 //               g_Flux_Half : Array with hydrodynamic fluxes for adding the cosmic-ray diffusive fluxes
-//               g_FC_B      : Array storing the face-centered input B field
-//               g_CC_B      : Array storing the cell-centered input B field
+//               g_FC_B      : Array storing the input face-centered B field
+//               g_CC_B      : Array storing the input cell-centered B field
 //               dh          : Cell size
 //               MicroPhy    : Microphysics object
+//
+// Return      : g_Flux_Half[]
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
 void CR_AddDiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
@@ -53,38 +56,41 @@ void CR_AddDiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
                                  const real g_CC_B[][ CUBE(FLU_NXT) ],
                                  const real dh, const MicroPhy_t *MicroPhy )
 {
-   const int didx_cvar[3] = { 1, FLU_NXT, SQR(FLU_NXT) };
-   const int flux_offset  = 1;
-// const real small_B     = 1.e-30;
 
-   for ( int d=0; d<3; d++ )
+   const int  didx_cvar[3] = { 1, FLU_NXT, SQR(FLU_NXT) };
+   const int  flux_offset  = 1;
+   const real _dh          = (real)1.0 / dh;
+// const real small_B      = 1.e-30;
+
+   for (int d=0; d<3; d++)
    {
-      const int TDir1          = (d+1)%3;    // transverse direction 1
-      const int TDir2          = (d+2)%3;    // transverse direction 2
-      int sizeB_i, sizeB_j;
+      const int TDir1 = (d+1)%3;    // transverse direction 1
+      const int TDir2 = (d+2)%3;    // transverse direction 2
 
+      int sizeB_i, sizeB_j, stride_fc_B;
       int size_i, size_j, size_k;
-      int i_offset, j_offset, k_offset, stride_fc_B;
+      int i_offset, j_offset, k_offset;
 
       switch ( d )
       {
-         case 0 : size_i   = N_HF_FLUX-1; size_j   = N_HF_FLUX-2*flux_offset; size_k      = N_HF_FLUX-2*flux_offset;
-                  i_offset = 0;           j_offset = flux_offset;             k_offset    = flux_offset;
-                  sizeB_i  = FLU_NXT_P1;  sizeB_j  = FLU_NXT;                 stride_fc_B = 1;
+         case 0 : size_i   = N_HF_FLUX-1;              size_j   = N_HF_FLUX-2*flux_offset;  size_k      = N_HF_FLUX-2*flux_offset;
+                  i_offset = 0;                        j_offset = flux_offset;              k_offset    = flux_offset;
+                  sizeB_i  = FLU_NXT_P1;               sizeB_j  = FLU_NXT;                  stride_fc_B = 1;
                   break;
 
-         case 1 : size_i   = N_HF_FLUX-2*flux_offset; size_j  = N_HF_FLUX-1; size_k      = N_HF_FLUX-2*flux_offset;
-                  i_offset = flux_offset;             j_offset = 0;          k_offset    = flux_offset;
-                  sizeB_i  = FLU_NXT;                 sizeB_j = FLU_NXT_P1;  stride_fc_B = FLU_NXT;
+         case 1 : size_i   = N_HF_FLUX-2*flux_offset;  size_j   = N_HF_FLUX-1;              size_k      = N_HF_FLUX-2*flux_offset;
+                  i_offset = flux_offset;              j_offset = 0;                        k_offset    = flux_offset;
+                  sizeB_i  = FLU_NXT;                  sizeB_j  = FLU_NXT_P1;               stride_fc_B = FLU_NXT;
                   break;
 
-         case 2 : size_i   = N_HF_FLUX-2*flux_offset; size_j   = N_HF_FLUX-2*flux_offset; size_k      = N_HF_FLUX-1;
-                  i_offset = flux_offset;             j_offset = flux_offset;             k_offset    = 0;
-                  sizeB_i  = FLU_NXT;                 sizeB_j  = FLU_NXT;                 stride_fc_B = SQR(FLU_NXT);
+         case 2 : size_i   = N_HF_FLUX-2*flux_offset;  size_j   = N_HF_FLUX-2*flux_offset;  size_k      = N_HF_FLUX-1;
+                  i_offset = flux_offset;              j_offset = flux_offset;              k_offset    = 0;
+                  sizeB_i  = FLU_NXT;                  sizeB_j  = FLU_NXT;                  stride_fc_B = SQR(FLU_NXT);
                   break;
       } // switch ( d )
 
       const int size_ij = size_i*size_j;
+
       CGPU_LOOP( idx, size_i*size_j*size_k )
       {
 //       flux index
@@ -104,9 +110,9 @@ void CR_AddDiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
 
 //       1. get the diffusivity
-//       ###REVISE: diffusion coefficients are assumed to be constant for now
-//                  --> for non-constant diffusion coefficients, we should take the spatial average along the normal direction
-//                      to get the face-centered coefficients (cf. Eq. [A9] in Yang et al. 2012)
+//###REVISE: diffusion coefficients are assumed to be constant for now
+//           --> for non-constant diffusion coefficients, we should take the spatial average along the normal direction
+//               to get the face-centered coefficients (cf. Eq. [A9] in Yang et al. 2012)
          real diff_cr_eff_para, diff_cr_eff_perp;
          CR_ComputeDiffusivity( diff_cr_eff_para, diff_cr_eff_perp, MicroPhy );
 
@@ -128,9 +134,9 @@ void CR_AddDiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
          real B_N_mean, B_T1_mean, B_T2_mean, B_amp;
          B_N_mean  =             g_FC_B[    d][ idx_fc_B                ];
          B_T1_mean = (real)0.5*( g_CC_B[TDir1][ idx_cvar                ] +
-                                 g_CC_B[TDir1][ idx_cvar + didx_cvar[d] ] );
+                                 g_CC_B[TDir1][ idx_cvar + didx_cvar[d] ]   );
          B_T2_mean = (real)0.5*( g_CC_B[TDir2][ idx_cvar                ] +
-                                 g_CC_B[TDir2][ idx_cvar + didx_cvar[d] ] );
+                                 g_CC_B[TDir2][ idx_cvar + didx_cvar[d] ]   );
          B_amp     = SQRT( SQR(B_N_mean) + SQR(B_T1_mean) + SQR(B_T2_mean) );
 
          //if ( B_amp < small_B && diff_cr_eff_perp != diff_cr_eff_para ) {
@@ -144,7 +150,7 @@ void CR_AddDiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
          B_T2_mean /= B_amp;
 
 
-//       3. compute slope
+//       3. compute cosmic-ray slope
 //       ---------------------
 //       |         |         |
 //       ----bl--------br-----
@@ -158,37 +164,39 @@ void CR_AddDiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
          real al, bl, ar, br;
 
 //       normal direction
-         N_slope = ( g_ConVar[CRAY][ idx_cvar + didx_cvar[d] ] -  g_ConVar[CRAY][ idx_cvar ] ) / dh;
+         N_slope = ( g_ConVar[CRAY][ idx_cvar + didx_cvar[d] ] - g_ConVar[CRAY][ idx_cvar ] ) * _dh;
 
 //       transverse direction 1
          al = g_ConVar[CRAY][ idx_cvar                                   ] -
-              g_ConVar[CRAY][ idx_cvar                - didx_cvar[TDir1] ]   ;
+              g_ConVar[CRAY][ idx_cvar                - didx_cvar[TDir1] ];
          bl = g_ConVar[CRAY][ idx_cvar                + didx_cvar[TDir1] ] -
-              g_ConVar[CRAY][ idx_cvar                                   ]   ;
+              g_ConVar[CRAY][ idx_cvar                                   ];
          ar = g_ConVar[CRAY][ idx_cvar + didx_cvar[d]                    ] -
-              g_ConVar[CRAY][ idx_cvar + didx_cvar[d] - didx_cvar[TDir1] ]   ;
+              g_ConVar[CRAY][ idx_cvar + didx_cvar[d] - didx_cvar[TDir1] ];
          br = g_ConVar[CRAY][ idx_cvar + didx_cvar[d] + didx_cvar[TDir1] ] -
-              g_ConVar[CRAY][ idx_cvar + didx_cvar[d]                    ]   ;
-         T1_slope = ( MC_limiter( MC_limiter(al, bl), MC_limiter(ar, br) ) ) / dh;
+              g_ConVar[CRAY][ idx_cvar + didx_cvar[d]                    ];
+         T1_slope = (  MC_limiter( MC_limiter(al,bl), MC_limiter(ar,br) )  ) * _dh;
 
 //       transverse direction 2
          al = g_ConVar[CRAY][ idx_cvar                                   ] -
-              g_ConVar[CRAY][ idx_cvar                - didx_cvar[TDir2] ]   ;
+              g_ConVar[CRAY][ idx_cvar                - didx_cvar[TDir2] ];
          bl = g_ConVar[CRAY][ idx_cvar                + didx_cvar[TDir2] ] -
-              g_ConVar[CRAY][ idx_cvar                                   ]   ;
+              g_ConVar[CRAY][ idx_cvar                                   ];
          ar = g_ConVar[CRAY][ idx_cvar + didx_cvar[d]                    ] -
-              g_ConVar[CRAY][ idx_cvar + didx_cvar[d] - didx_cvar[TDir2] ]   ;
+              g_ConVar[CRAY][ idx_cvar + didx_cvar[d] - didx_cvar[TDir2] ];
          br = g_ConVar[CRAY][ idx_cvar + didx_cvar[d] + didx_cvar[TDir2] ] -
-              g_ConVar[CRAY][ idx_cvar + didx_cvar[d]                    ]   ;
-         T2_slope = ( MC_limiter( MC_limiter(al, bl), MC_limiter(ar, br) ) ) / dh;
+              g_ConVar[CRAY][ idx_cvar + didx_cvar[d]                    ];
+         T2_slope = (  MC_limiter( MC_limiter(al,bl), MC_limiter(ar,br) )  ) * _dh;
 
 
 //       4. compute CR diffusive flux
-         real Flux_Total, Flux_Para, Flux_Perp;
-         real common = -B_N_mean * ( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
-         Flux_Para   =  diff_cr_eff_para * ( common );
-         Flux_Perp   = -diff_cr_eff_perp * ( N_slope + common );
-         Flux_Total  = Flux_Para + Flux_Perp;
+         real Flux_Total, Flux_Para, Flux_Perp, common;
+
+         common     = -B_N_mean*( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
+         Flux_Para  =  diff_cr_eff_para*( common );
+         Flux_Perp  = -diff_cr_eff_perp*( common + N_slope );
+         Flux_Total = Flux_Para + Flux_Perp;
+
 
 //       5. flux add-up
          g_Flux_Half[d][CRAY][idx_flux] += Flux_Total;
@@ -208,18 +216,21 @@ void CR_AddDiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //-----------------------------------------------------------------------------------------
 // Function    : CR_AddDiffuseFlux_FullStep
 //
-// Description : Compute the full-step cosmic ray diffusive flux.
+// Description : Compute the full-step cosmic-ray diffusive fluxes
 //
-// Note        : 1. Must enable MHD and COSMIC_RAY.
+// Note        : 1. Must enable MHD, COSMIC_RAY, and CR_DIFFUSION
+//               2. Invoked by CPU/CUFLU_FluidSolver_MHM()
 //
 // Reference   : Yang et al., ApJ 761, 185 (2012); doi:10.1088/0004-637X/761/2/185
 //
-// Parameter   : g_PriVar_Half : Array storing the half-step primitive fluid variables.
+// Parameter   : g_PriVar_Half : Array storing the input cell-centered, half-step primitive fluid variables
 //               g_FC_Flux     : Array with hydrodynamic fluxes for adding the cosmic-ray diffusive fluxes
-//               g_FC_B_Half   : Array storing the half-step face-centered magnetic field
-//               NFlux         : Stride for accessing g_FC_Flux
+//               g_FC_B_Half   : Array storing the input face-centered, half-step magnetic field
+//               NFlux         : Stride for accessing g_FC_Flux[]
 //               dh            : Cell size
 //               MicroPhy      : Microphysics object
+//
+// Return      : g_FC_Flux[]
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
 void CR_AddDiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
@@ -228,42 +239,43 @@ void CR_AddDiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                                  const int NFlux, const real dh, const MicroPhy_t *MicroPhy )
 {
 
-   const int didx_half[3] = { 1, N_HF_VAR, SQR(N_HF_VAR) };
-   const int mag_offset  = (N_HF_VAR - PS2)/2;
-   const int half_offset = (N_HF_VAR - N_FC_VAR)/2;
+   const int  didx_half[3] = { 1, N_HF_VAR, SQR(N_HF_VAR) };
+   const int  mag_offset   = ( N_HF_VAR - PS2 ) / 2;
+   const int  half_offset  = ( N_HF_VAR - N_FC_VAR ) / 2;
+   const real _dh          = (real)1.0 / dh;
 // const real small_B    = 1.e-30;
 
-   for ( int d=0; d<3; d++ )
+   for (int d=0; d<3; d++)
    {
-      const int TDir1          = (d+1)%3;    // transverse direction 1
-      const int TDir2          = (d+2)%3;    // transverse direction 2
+      const int TDir1 = (d+1)%3;    // transverse direction 1
+      const int TDir2 = (d+2)%3;    // transverse direction 2
+
       int sizeB_i, sizeB_j, sizeB_k;
       int mag_offset_i, mag_offset_j, mag_offset_k;
-
       int idx_flux_e[3];
 
       switch ( d )
       {
-         case 0 : idx_flux_e[0] = N_FC_VAR-1;   idx_flux_e[1] = N_FC_VAR;     idx_flux_e[2] = N_FC_VAR;
-                  sizeB_i       = N_HF_VAR+1;   sizeB_j       = N_HF_VAR;     sizeB_k       = N_HF_VAR;
-                  mag_offset_i  = mag_offset;   mag_offset_j  = mag_offset-1; mag_offset_k  = mag_offset-1;
+         case 0 : idx_flux_e[0] = N_FC_VAR-1;    idx_flux_e[1] = N_FC_VAR;      idx_flux_e[2] = N_FC_VAR;
+                  sizeB_i       = N_HF_VAR+1;    sizeB_j       = N_HF_VAR;      sizeB_k       = N_HF_VAR;
+                  mag_offset_i  = mag_offset;    mag_offset_j  = mag_offset-1;  mag_offset_k  = mag_offset-1;
                   break;
 
-         case 1 : idx_flux_e[0] = N_FC_VAR;     idx_flux_e[1] = N_FC_VAR-1;   idx_flux_e[2] = N_FC_VAR;
-                  sizeB_i       = N_HF_VAR;     sizeB_j       = N_HF_VAR+1;   sizeB_k       = N_HF_VAR;
-                  mag_offset_i  = mag_offset-1; mag_offset_j  = mag_offset;   mag_offset_k  = mag_offset-1;
+         case 1 : idx_flux_e[0] = N_FC_VAR;      idx_flux_e[1] = N_FC_VAR-1;    idx_flux_e[2] = N_FC_VAR;
+                  sizeB_i       = N_HF_VAR;      sizeB_j       = N_HF_VAR+1;    sizeB_k       = N_HF_VAR;
+                  mag_offset_i  = mag_offset-1;  mag_offset_j  = mag_offset;    mag_offset_k  = mag_offset-1;
                   break;
 
-         case 2 : idx_flux_e[0] = N_FC_VAR;     idx_flux_e[1] = N_FC_VAR;     idx_flux_e[2] = N_FC_VAR-1;
-                  sizeB_i       = N_HF_VAR;     sizeB_j       = N_HF_VAR;     sizeB_k       = N_HF_VAR+1;
-                  mag_offset_i  = mag_offset-1; mag_offset_j  = mag_offset-1; mag_offset_k  = mag_offset;
+         case 2 : idx_flux_e[0] = N_FC_VAR;      idx_flux_e[1] = N_FC_VAR;      idx_flux_e[2] = N_FC_VAR-1;
+                  sizeB_i       = N_HF_VAR;      sizeB_j       = N_HF_VAR;      sizeB_k       = N_HF_VAR+1;
+                  mag_offset_i  = mag_offset-1;  mag_offset_j  = mag_offset-1;  mag_offset_k  = mag_offset;
                   break;
       } // switch ( d )
 
       const int stride_fc_BT1[3] = { 1, sizeB_k, sizeB_k*sizeB_i };
       const int stride_fc_BT2[3] = { 1, sizeB_j, sizeB_j*sizeB_k };
+      const int size_ij          = idx_flux_e[0]*idx_flux_e[1];
 
-      const int size_ij = idx_flux_e[0]*idx_flux_e[1];
       CGPU_LOOP( idx, idx_flux_e[0]*idx_flux_e[1]*idx_flux_e[2] )
       {
 //       flux index
@@ -288,9 +300,9 @@ void CR_AddDiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 
 
 //       1. get the diffusivity
-//       ###REVISE: diffusion coefficients are assumed to be constant for now
-//                  --> for non-constant diffusion coefficients, we should take the spatial average along the normal direction
-//                      to get the face-centered coefficients (cf. Eq. [A9] in Yang et al. 2012)
+//###REVISE: diffusion coefficients are assumed to be constant for now
+//           --> for non-constant diffusion coefficients, we should take the spatial average along the normal direction
+//               to get the face-centered coefficients (cf. Eq. [A9] in Yang et al. 2012)
          real diff_cr_eff_para, diff_cr_eff_perp;
          CR_ComputeDiffusivity( diff_cr_eff_para, diff_cr_eff_perp, MicroPhy );
 
@@ -314,11 +326,11 @@ void CR_AddDiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
          B_T1_mean = (real)0.25*( g_FC_B_Half[TDir1][ idx_fc_BT1                                           ] +
                                   g_FC_B_Half[TDir1][ idx_fc_BT1                    + stride_fc_BT1[TDir1] ] +
                                   g_FC_B_Half[TDir1][ idx_fc_BT1 - stride_fc_BT1[d]                        ] +
-                                  g_FC_B_Half[TDir1][ idx_fc_BT1 - stride_fc_BT1[d] + stride_fc_BT1[TDir1] ] );
+                                  g_FC_B_Half[TDir1][ idx_fc_BT1 - stride_fc_BT1[d] + stride_fc_BT1[TDir1] ]   );
          B_T2_mean = (real)0.25*( g_FC_B_Half[TDir2][ idx_fc_BT2                                           ] +
                                   g_FC_B_Half[TDir2][ idx_fc_BT2                    + stride_fc_BT2[TDir2] ] +
                                   g_FC_B_Half[TDir2][ idx_fc_BT2 - stride_fc_BT2[d]                        ] +
-                                  g_FC_B_Half[TDir2][ idx_fc_BT2 - stride_fc_BT2[d] + stride_fc_BT2[TDir2] ] );
+                                  g_FC_B_Half[TDir2][ idx_fc_BT2 - stride_fc_BT2[d] + stride_fc_BT2[TDir2] ]   );
          B_amp     = SQRT( SQR(B_N_mean) + SQR(B_T1_mean) + SQR(B_T2_mean) );
 
          //if ( B_amp < small_B && diff_cr_eff_perp != diff_cr_eff_para ) {
@@ -332,7 +344,7 @@ void CR_AddDiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
          B_T2_mean /= B_amp;
 
 
-//       3. compute cosmic ray slope
+//       3. compute cosmic-ray slope
 //       ---------------------
 //       |         |         |
 //       ----bl--------br-----
@@ -346,39 +358,41 @@ void CR_AddDiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
          real al, bl, ar, br;
 
 //       normal direction
-         N_slope = ( g_PriVar_Half[CRAY][ idx_half + didx_half[d] ] -  g_PriVar_Half[CRAY][ idx_half ] ) / dh;
+         N_slope = ( g_PriVar_Half[CRAY][ idx_half + didx_half[d] ] - g_PriVar_Half[CRAY][ idx_half ] ) * _dh;
 
 //       transverse direction 1
          al = g_PriVar_Half[CRAY][ idx_half                                   ] -
-              g_PriVar_Half[CRAY][ idx_half                - didx_half[TDir1] ]   ;
+              g_PriVar_Half[CRAY][ idx_half                - didx_half[TDir1] ];
          bl = g_PriVar_Half[CRAY][ idx_half                + didx_half[TDir1] ] -
-              g_PriVar_Half[CRAY][ idx_half                                   ]   ;
+              g_PriVar_Half[CRAY][ idx_half                                   ];
          ar = g_PriVar_Half[CRAY][ idx_half + didx_half[d]                    ] -
-              g_PriVar_Half[CRAY][ idx_half + didx_half[d] - didx_half[TDir1] ]   ;
+              g_PriVar_Half[CRAY][ idx_half + didx_half[d] - didx_half[TDir1] ];
          br = g_PriVar_Half[CRAY][ idx_half + didx_half[d] + didx_half[TDir1] ] -
-              g_PriVar_Half[CRAY][ idx_half + didx_half[d]                    ]   ;
-         T1_slope = ( MC_limiter( MC_limiter(al, bl), MC_limiter(ar, br) ) ) / dh;
+              g_PriVar_Half[CRAY][ idx_half + didx_half[d]                    ];
+         T1_slope = (  MC_limiter( MC_limiter(al,bl), MC_limiter(ar,br) )  ) * _dh;
 
 //       transverse direction 2
          al = g_PriVar_Half[CRAY][ idx_half                                   ] -
-              g_PriVar_Half[CRAY][ idx_half                - didx_half[TDir2] ]   ;
+              g_PriVar_Half[CRAY][ idx_half                - didx_half[TDir2] ];
          bl = g_PriVar_Half[CRAY][ idx_half                + didx_half[TDir2] ] -
-              g_PriVar_Half[CRAY][ idx_half                                   ]   ;
+              g_PriVar_Half[CRAY][ idx_half                                   ];
          ar = g_PriVar_Half[CRAY][ idx_half + didx_half[d]                    ] -
-              g_PriVar_Half[CRAY][ idx_half + didx_half[d] - didx_half[TDir2] ]   ;
+              g_PriVar_Half[CRAY][ idx_half + didx_half[d] - didx_half[TDir2] ];
          br = g_PriVar_Half[CRAY][ idx_half + didx_half[d] + didx_half[TDir2] ] -
-              g_PriVar_Half[CRAY][ idx_half + didx_half[d]                    ]   ;
-         T2_slope = ( MC_limiter( MC_limiter(al, bl), MC_limiter(ar, br) ) ) / dh;
+              g_PriVar_Half[CRAY][ idx_half + didx_half[d]                    ];
+         T2_slope = (  MC_limiter( MC_limiter(al,bl), MC_limiter(ar,br) )  ) * _dh;
 
 
 //       4. compute CR diffusive flux
-         real Flux_Total, Flux_Para, Flux_Perp;
-         real common = -B_N_mean * ( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
-         Flux_Para   =  diff_cr_eff_para * ( common );
-         Flux_Perp   = -diff_cr_eff_perp * ( N_slope + common );
-         Flux_Total  = Flux_Para + Flux_Perp;
+         real Flux_Total, Flux_Para, Flux_Perp, common;
 
-//       5. Flux add-up
+         common     = -B_N_mean*( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
+         Flux_Para  =  diff_cr_eff_para*( common );
+         Flux_Perp  = -diff_cr_eff_perp*( common + N_slope );
+         Flux_Total = Flux_Para + Flux_Perp;
+
+
+//       5. flux add-up
          g_FC_Flux[d][CRAY][idx_flux] += Flux_Total;
          g_FC_Flux[d][ENGY][idx_flux] += Flux_Total;
 
@@ -395,36 +409,38 @@ void CR_AddDiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 
 //-----------------------------------------------------------------------------------------
 // Function    : MC_limiter
-// Description :
-// Note        :
-// Parameter   : a :
-//               b :
-// Return      :
-// Reference   :
+// Description : Monotonized central (MC) slope limiter
+//
+// Parameter   : a, b : Input slopes
+//
+// Return      : Limited slope
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
-static real MC_limiter( real a, real b )
+static real MC_limiter( const real a, const real b )
 {
-    return minmod( (real)2.0*minmod(a, b), (real)0.5*(a+b) );
+
+   return minmod( (real)2.0*minmod(a,b), (real)0.5*(a+b) );
+
 } // FUNCTION : MC_limiter
 
 
 
 //-----------------------------------------------------------------------------------------
 // Function    : minmod
-// Description :
-// Note        :
-// Parameter   : a :
-//               b :
-// Return      :
-// Reference   :
+// Description : Minmod slope limiter
+//
+// Parameter   : a, b : Input slopes
+//
+// Return      : Limited slope
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
-static real minmod( real a, real b )
+static real minmod( const real a, const real b )
 {
-    if      ( a > (real)0.0 && b > (real)0.0 ) return FMIN(a, b);
-    else if ( a < (real)0.0 && b < (real)0.0 ) return FMAX(a, b);
-    else                                       return (real)0.0;
+
+   if      ( a > (real)0.0  &&  b > (real)0.0 )    return FMIN(a, b);
+   else if ( a < (real)0.0  &&  b < (real)0.0 )    return FMAX(a, b);
+   else                                            return (real)0.0;
+
 } // FUNCTION : minmod
 
 

@@ -437,11 +437,11 @@ void CPU_FluidSolver_MHM(
 
 
 //       1-a-2. evaluate the half-step first-order fluxes by Riemann solver
+//       hydrodynamic fluxes
          Hydro_RiemannPredict_Flux( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P], g_PriVar_1PG+MAG_OFFSET,
                                     MinDens, MinPres, &EoS );
 
-
-//       add extra flux of cosmic ray
+//       add cosmic-ray fluxes
 #        ifdef CR_DIFFUSION
          CR_AddDiffuseFlux_HalfStep( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P], g_PriVar_1PG+MAG_OFFSET, dh, &MicroPhy );
 #        endif
@@ -530,13 +530,13 @@ void CPU_FluidSolver_MHM(
             const int NSkip_T = 1;
 #           endif
 
+//          hydrodynamic fluxes
             Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T,
                                CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P],
                                dt, dh, Time, UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
                                MinDens, MinPres, &EoS );
 
-
-//          add extra flux of cosmic ray
+//          add cosmic-ray fluxes
 #           ifdef CR_DIFFUSION
             CR_AddDiffuseFlux_FullStep( g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_FL_FLUX, dh, &MicroPhy );
 #           endif
@@ -571,7 +571,7 @@ void CPU_FluidSolver_MHM(
                                   g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
                                   NormPassive, NNorm, c_NormIdx, &EoS, &s_FullStepFailure, Iteration, MinMod_MaxIter );
 
-
+//          add the cosmic-ray source term of adiabatic work
 #           ifdef COSMIC_RAY
             CR_AdiabaticWork_FullStepUpdate( g_PriVar_Half_1PG, g_Flu_Array_Out[P], g_FC_Flux_1PG, g_FC_Var_1PG,
                                              dt, dh, &EoS );
@@ -580,8 +580,6 @@ void CPU_FluidSolver_MHM(
 
 //          5. counter increment
             Iteration++;
-
-
 
          } while ( s_FullStepFailure  &&  Iteration <= MinMod_MaxIter );
 
@@ -888,10 +886,13 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
       for (int v=0; v<NCOMP_TOTAL; v++)
          out_con[v] = g_ConVar_In[v][idx_in] - dt_dh2*( dflux[0][v] + dflux[1][v] + dflux[2][v] );
 
+
+//    add the cosmic-ray source term of adiabatic work
 #     ifdef COSMIC_RAY
       CR_AdiabaticWork_HalfStepUpdate( out_con, g_ConVar_In, g_Flux_Half, idx_in, didx_in,
                                        idx_flux, didx_flux, dt_dh2, EoS );
 #     endif
+
 
 //    compute the cell-centered half-step B field
 #     ifdef MHD
