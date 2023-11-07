@@ -108,6 +108,11 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
       return;
    }
 
+
+// set correct restriction options for wave-wave, fluid-wave and fluid-fluid level phase restriction
+// wave-wave:   phase restriction on if OPT__RES_PHASE is set
+// fluid-wave:  always use phase restriction
+// fluid-fluid: treat phase restriction the same as normal restriction
 #  if ( MODEL == ELBDM )
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 // restrict phase during wave-wave-level restriction if OPT__RES_PHAS is enabled
@@ -122,8 +127,24 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #  endif // # if ( MODEL == ELBDM )
 
 
+
+// update the components to be restricted depending on whether phase restriction is enabled
+#  if ( MODEL == ELBDM )
+
+   NFluVar = 0;
+
+   for (int v=0; v<NCOMP_TOTAL; v++) {
+      if ( ResPha ) {
+            if ( TVarCC & (1L<<v) && v != DENS && v != REAL && v != IMAG )    TFluVarIdxList[ NFluVar ++ ] = v;
+      } else {
+            if ( TVarCC & (1L<<v)                                        )    TFluVarIdxList[ NFluVar ++ ] = v;
+      }
+   }
+
+#  endif // # if ( MODEL == ELBDM )
+
 // restrict
-#  pragma omp parallel for private( NFluVar, TFluVarIdxList ) schedule( runtime )
+#  pragma omp parallel for schedule( runtime )
    for (int SonPID0=0; SonPID0<amr->NPatchComma[SonLv][1]; SonPID0+=8)
    {
       const int FaPID = amr->patch[0][SonLv][SonPID0]->father;
@@ -150,22 +171,6 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                     FaMagSg, FaLv, FaPID );
 #     endif
 #     endif // #ifdef GAMER_DEBUG
-
-
-#     if ( MODEL == ELBDM )
-
-//    update the components to be restricted depending on whether phase restriction is enabled
-      NFluVar = 0;
-
-      for (int v=0; v<NCOMP_TOTAL; v++) {
-         if ( ResPha ) {
-               if (  TVarCC & (1L<<v) && v != DENS && v != REAL && v != IMAG )    TFluVarIdxList[ NFluVar ++ ] = v;
-         } else {
-               if (  TVarCC & (1L<<v)                                        )    TFluVarIdxList[ NFluVar ++ ] = v;
-         }
-      }
-
-#     endif // # if ( MODEL == ELBDM )
 
 //    loop over eight sons
       for (int LocalID=0; LocalID<8; LocalID++)
