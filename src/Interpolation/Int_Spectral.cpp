@@ -7,9 +7,10 @@
 /*******************************************************************************************************/
 /**  How to recreate the tables used in the below interpolation routines?                             **/
 /**                                                                                                   **/
-/**  They were created using the Jupyter notebook GramFE.ipynb that can be                            **/
-/**  found under tool/table_maker/GramFE/GramFE.ipynb                                                 **/
-/**  The notebook implements the Gram Fourier extension algorithm using arbitrary precision           **/
+/**  They were created using the Python script                                                        **/
+/**  tool/table_maker/GramFE/compute_interpolation_tables.py. The script can benefit from up to 42    **/
+/**  MPI ranks in parallel and requires the mpi4py library.                                           **/
+/**  The Python code implements the Gram Fourier extension algorithm using arbitrary precision        **/
 /**  arithmetic and outputs interpolation and extension tables. The idea is to periodically extend    **/
 /**  the interpolant and then interpolate it using a DFT - either precomputed as matrix               **/
 /**  (PrecomputedInterpolationContext) or via the FFT algorithm (GramFEInterpolationContext)          **/
