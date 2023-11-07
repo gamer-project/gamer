@@ -164,7 +164,11 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
                             const double x, const double y, const double z, const double Time,
                             const int lv, double AuxArray[] )
 {
-   double Re, Im;
+   double Re, Im, De;
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   double Ph;
+#  endif
 
    switch ( LSS_InitMode )
    {
@@ -175,8 +179,14 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
          const double AveDens     = 1.0;        // assuming background density = 1.0
          const double GrowingFrac = 3.0/5.0;    // growing-mode amplitude = total amplitude * 3/5
 
-         Re = sqrt( (fluid_in[0]-AveDens )/GrowingFrac + AveDens ); // note that this is always the density
+         Re = sqrt( (fluid_in[0]-AveDens )/GrowingFrac + AveDens );
          Im = 0.0;  // constant phase
+         De = SQR(Re) + SQR(Im);
+
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         Ph = 0.0;
+#        endif
+
          break;
       }
 
@@ -184,8 +194,20 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
       {
          if ( nvar_in != 2 )  Aux_Error( ERROR_INFO, "nvar_in (%d) != 2 for LSS_InitMode 2 !!\n", nvar_in );
 
-         Re = fluid_in[0]; // note that this is the density on fluid levels in hybrid scheme
-         Im = fluid_in[1]; // note that this is the phase on fluid levels in hybrid scheme
+         // wave scheme expects real and imaginary parts
+         // fluid scheme expects density and phase
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         if ( amr->use_wave_flag[lv] ) {
+#        endif
+         Re = fluid_in[0];
+         Im = fluid_in[1];
+         De = SQR(Re) + SQR(Im);
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         } else { // if ( amr->use_wave_flag[lv] )
+         De = fluid_in[0]; // note that this is the density on fluid levels in hybrid scheme
+         Ph = fluid_in[1]; // note that this is the phase on fluid levels in hybrid scheme
+         } // if ( amr->use_wave_flag[lv] ) ... else
+#        endif
          break;
       }
 
@@ -198,13 +220,13 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( amr->use_wave_flag[lv] ) {
 #  endif
-   fluid_out[DENS] = SQR( Re ) + SQR( Im );
+   fluid_out[DENS] = De;
    fluid_out[REAL] = Re;
    fluid_out[IMAG] = Im;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    } else { // if ( amr->use_wave_flag[lv] )
-   fluid_out[DENS] = Re;
-   fluid_out[PHAS] = Im;
+   fluid_out[DENS] = De;
+   fluid_out[PHAS] = Ph;
    fluid_out[STUB] = 0.0;
    } // if ( amr->use_wave_flag[lv] ) ... else
 #  endif
