@@ -184,7 +184,7 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
       }
    } // XYZ, k,j
 
-// compute density ratio
+// compute average density ratio
 // add to safeguard against vanishing density
 // should not trigger refinement for vanishing physical density and therefore be much bigger than the typical refinement thresholds
    const real Eps = 1e-4;
@@ -192,7 +192,7 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
 // values in Input__Flag_Spectral look more reasonable
    const real Normalise = 1.0e18;
 
-// compute densities from masses to be independent of patch and extension sizes
+// compute average densities from masses to be independent of patch and extension sizes
    if ( PhysicalCellCount > 0 ) PhysicalMass /= PhysicalCellCount;
    if ( ExtensionCellCount > 0 ) ExtensionMass /= ExtensionCellCount;
 
