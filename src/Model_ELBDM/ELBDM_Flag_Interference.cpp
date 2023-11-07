@@ -6,21 +6,21 @@
 // Function    :  ELBDM_Flag_Interference
 // Description :  Flag according to the interference criterion
 //
-// Note        :  1. Flag the input cell if on of the following criteria is met:
+// Note        :  1. Flag the input cell if one of the following criteria is met:
 //                   - minimum density + quantum pressure + local extremum in density field
 //                   - second derivative in phase + local extremum in phase field
-//                2. Size of the input array "Var" should be 2*(PS1+2)^3
+//                2. Size of the input array "Var1D" should be 2*(PS1+2)^3
 //
 // Parameter   :  i,j,k             : Indices of the target cell in the array "Var1D"
-//                Var               : Input array holding the density and phase field
-//                QPThreshold       : Refinement Threshold for quantum pressure
+//                Var1D             : Input array holding the density and phase field
+//                QPThreshold       : Refinement threshold for quantum pressure
 //                                    Refines when dimensionless quantum pressure in any dimension exceeds QPThreshold + (DensThreshold and OnlyAtExtrema if set)
 //                                    Ensure stability and correctness of hybrid scheme by refining regions where fluid approach produces high errors and fails to wave scheme
 //                                    QPThreshold <= 0.03 avoids spurious halos and yields good agreement with wave-only simulations
 //                DensThreshold     : Minimum density at which to check quantum pressure threshold
 //                                    Should be set to zero by default, but can be used to avoid refinement of low-density regions with small density oscillations
 //                                    Use values > 0 with care since they may lead to instability.
-//                LapPhaseThreshold : Refinement Threshold for second derivative of phase field
+//                LapPhaseThreshold : Refinement threshold for second derivative of phase field
 //                                    Refines when dimensionless second derivative of phase in any dimension exceeds LapPhaseThreshold
 //                OnlyAtExtrema     : Boolean flag indicating whether only extrema are refined
 //                                    Should be set to False, but can be used to avoid refinement of regions with high quantum pressure and phase curvature without destructive interference
