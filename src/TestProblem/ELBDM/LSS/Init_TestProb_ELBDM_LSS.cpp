@@ -202,10 +202,13 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
          Re = fluid_in[0];
          Im = fluid_in[1];
          De = SQR(Re) + SQR(Im);
+         Ph = 0.0; // set to zero for easier debugging
 #        if ( ELBDM_SCHEME == ELBDM_HYBRID )
          } else { // if ( amr->use_wave_flag[lv] )
          De = fluid_in[0]; // note that this is the density on fluid levels in hybrid scheme
          Ph = fluid_in[1]; // note that this is the phase on fluid levels in hybrid scheme
+         Re = 0.0; // set to zero for easier debugging
+         Im = 0.0; // set to zero for easier debugging
          } // if ( amr->use_wave_flag[lv] ) ... else
 #        endif
          break;
