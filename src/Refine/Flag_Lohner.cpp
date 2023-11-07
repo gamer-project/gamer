@@ -32,7 +32,7 @@ bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t F
 {
 
 // return if there are not target variables (e.g. for fluid levels in ELBDM hybrid scheme)
-   if ( NVar == 0 ) return false; 
+   if ( NVar == 0 ) return false;
 
 // check
 #  ifdef GAMER_DEBUG
