@@ -54,7 +54,7 @@ void ELBDM_Aux_Record_Hybrid()
    if ( WaveLevel == -1 )
       fprintf( File, "Time = %13.7e,  Step = %7ld,  NPatch = %10ld,  No wave scheme used\n", Time[0], Step, TotalPatchCount );
    else
-      fprintf( File, "Time = %13.7e,  Step = %7ld,  NPatch = %10ld,  Wave scheme on lv %2d,  NWavePatch/NPatch = %6.2f,  WaveVolume/Volume = %6.2f\n", Time[0], Step, TotalPatchCount, WaveLevel, (double) WavePatchCount / (double) TotalPatchCount, WaveVolume / TotalVolume );
+      fprintf( File, "Time = %13.7e,  Step = %7ld,  NPatch = %10ld,  Wave scheme on lv %2d,  NWavePatch/NPatch = %6.2f,  WaveVolume/Volume = %6.2f\n", Time[0], Step, TotalPatchCount, WaveLevel, (real) WavePatchCount / (real) TotalPatchCount, WaveVolume / TotalVolume );
    fclose( File );
 
    if ( FirstTime )  FirstTime = false;
