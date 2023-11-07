@@ -78,10 +78,10 @@ void Init_Refine( const int lv )
                amr->use_wave_flag[lv + 1] = true;
             }
 
-//          if coarse level uses wave flag, also use wave solver on refined levels
-            if ( lv > 0)
-               if ( amr->use_wave_flag[lv-1] )
-                  amr->use_wave_flag[lv] = true;
+//          if father level uses wave flag, also use wave solver on son level
+            if ( amr->use_wave_flag[lv] ) {
+               amr->use_wave_flag[lv+1] = true;
+            }
 #           endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
          } // if ( amr->patch[0][lv][PID]->flag )

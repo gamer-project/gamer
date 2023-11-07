@@ -62,19 +62,17 @@ void LB_Init_Refine( const int FaLv, const bool AllocData )
          Par_PassParticle2Son_SinglePatch( FaLv, FaPID );
 #        endif
 
-#       if ( ELBDM_SCHEME == ELBDM_HYBRID )
-        if ( amr->patch[0][FaLv][FaPID]->switch_to_wave_flag ) {
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         if ( amr->patch[0][FaLv][FaPID]->switch_to_wave_flag ) {
+             amr->use_wave_flag[SonLv] = true;
+         }
+
+//       if father level uses wave flag, also use wave solver on son level
+         if ( amr->use_wave_flag[FaLv] ) {
             amr->use_wave_flag[SonLv] = true;
-        }
-//      if coarse level uses wave flag, also use wave solver on refined levels
-        if ( FaLv > 0)
-        {
-           if ( amr->use_wave_flag[FaLv-1] )
-           {
-              amr->use_wave_flag[FaLv] = true;
-           }
-        }
-#       endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         }
+
+#        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
       } // if ( amr->patch[0][FaLv][FaPID]->flag )
    } // for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
