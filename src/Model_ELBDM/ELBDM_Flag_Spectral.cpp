@@ -87,16 +87,16 @@ const static flag_spectral_float  Flag_Spectral_Pr[FLAG_SPECTRAL_ORDER][FLAG_SPE
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flag_Spectral_Prepare_for_Spectral_Criterion
-// Description :  Evaluate ratio of mass of wave function in patch group and mass of wave function in extension domain
+// Description :  Evaluate ratio of average density of wave function in patch group and average density of wave function in extension domain
 //                The logic behind this comparison is as follows:
 //                The Gram-Fourier extension is computed by expanding the wave function at the patch boundaries in terms of orthogonal polynomials.
 //                The extension is then computed via the weighted sum of periodic extensions of these polynomials.
 //                The coefficients of the boundary polynomials can be shown to decay exponentially for a well-resolved function.
 //                If the function is not well-resolved the polynomials decay more slowly.
 //                As a result, the higher-order polynomials will have a higher weight.
-//                The higher-order polynomials also have much more massive extensions  ( empirically mass roughly 10^(polynomial order) ).
-//                Therefore, a less well-resolved function will have a extension with a higher mass.
-//                As a consequence, the extension mass can be used to estimate the resolution of the wave function in the physical domain.
+//                The higher-order polynomials also have much more massive extensions  ( empirically density roughly 10^(polynomial order) ).
+//                Therefore, a less well-resolved function will have a extension with a higher average density.
+//                As a consequence, the average extension density can be used to estimate the resolution of the wave function in the physical domain.
 //
 // Note        :  1. This function is called once per patch group
 //                2. The size of the array Var1D must be FLU_NXT^3
@@ -104,7 +104,7 @@ const static flag_spectral_float  Flag_Spectral_Pr[FLAG_SPECTRAL_ORDER][FLAG_SPE
 //                   This is required in order to compute the same extensions that are also computed in the GramFE wave solver
 //
 // Parameter   :  Var1D     : Array storing the input re & im
-//                Cond      : Reference to floating point variable where mass ratio is stored
+//                Cond      : Reference to floating point variable where density ratio is stored
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
@@ -118,6 +118,7 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
    const real* Im1D = Var1D + CUBE(FLU_NXT);
 
    real PhysicalMass = 0, ExtensionMass = 0;
+   int  PhysicalCellCount = 0, ExtensionCellCount = 0;
 
    flag_spectral_complex_type Psi, Al, Ar;
    flag_spectral_complex_type Ae[FLAG_SPECTRAL_ORDER];
@@ -152,7 +153,8 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
 
          Row[i] = {Re, Im};
 
-         PhysicalMass += SQR(Re) + SQR(Im);
+         PhysicalMass      += SQR(Re) + SQR(Im);
+         PhysicalCellCount += 1;
       }
 
       for (int i = 0; i < FLAG_SPECTRAL_ORDER; ++i)
@@ -177,17 +179,22 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
             Psi += Ao[order] *  Flag_Spectral_Fo[order][i];
          }
 
-         ExtensionMass += SQR(Psi.real()) + SQR(Psi.imag());
+         ExtensionMass      += SQR(Psi.real()) + SQR(Psi.imag());
+         ExtensionCellCount += 1;
       }
    } // XYZ, k,j
 
-// compute mass ratio
-// add to safeguard against vanishing physical mass
-// should not trigger refinement for vanishing physical mass and therefore be much bigger than the typical refinement thresholds
+// compute density ratio
+// add to safeguard against vanishing density
+// should not trigger refinement for vanishing physical density and therefore be much bigger than the typical refinement thresholds
    const real Eps = 1e-4;
 // divide by a typical mass ratio at which one might want to refine in order to make
 // values in Input__Flag_Spectral look more reasonable
    const real Normalise = 1.0e18;
+
+// compute densities from masses to be independent of patch and extension sizes
+   if ( PhysicalCellCount > 0 ) PhysicalMass /= PhysicalCellCount;
+   if ( ExtensionCellCount > 0 ) ExtensionMass /= ExtensionCellCount;
 
    Cond = (ExtensionMass / (PhysicalMass + Eps )) / (Normalise);
 
