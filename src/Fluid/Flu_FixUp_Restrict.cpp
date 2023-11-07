@@ -12,6 +12,7 @@
 //                2. For MHD, this routine currently always restrict all three B field components
 //                   --> Do not distinguish _MAGX, _MAGY, _MAGZ, and _MAG in TVarFC
 //                3. Invoked by EvolveLevel()
+//                4. ELBDM_HYBRID + LOAD_BALANCING: Backward matching of phase field for ELBDM_MATCH_PHASE requires OPT__LB_EXCHANGE_FATHER
 //
 // Parameter   :  FaLv     : Target refinement level at which the data are going to be replaced
 //                SonFluSg : Fluid sandglass at level "FaLv+1"
