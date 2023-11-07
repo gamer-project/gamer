@@ -54,3 +54,7 @@ Note:
    --> Can only marginally resolve a central soliton
 
 4. Some yt visualization scripts are put in "plot_script"
+
+5. Enable spectral interpolation by choosing interpolation option "8" in runtime parameter file.
+   Download spectral interpolation tables with sh download_spectral_interpolation_tables.sh or recreate by calling mpirun -n 16 python3 tool/table_maker/GramFE/compute_interpolation_tables.py
+   And set INT_SPEC_TABLE_PATH to folder containing folders "interpolation_tables" and "boundary2extension_tables"
