@@ -608,7 +608,7 @@ for i in range(rank, total_iterations + 1, nprocs):
             GramFEInterpolation(N = N, m = N, nDelta = N, nd = nd, Gamma = Gamma, g = g)
         # Keep polynomial order fixed for larger domain sizes for stability
         else:
-            GramFEInterpolation(N = N, m = m, nDelta = N, nd = nd, Gamma = Gamma, g = g)
+            GramFEInterpolation(N = N, m = m, nDelta = m, nd = nd, Gamma = Gamma, g = g)
     else:
         # Compute extension tables with different sizes for fast FFTs
         nd = i - interpolation_table_iterations + nd_min
