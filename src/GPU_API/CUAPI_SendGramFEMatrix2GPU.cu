@@ -8,8 +8,8 @@ extern gramfe_matmul_float (*d_Flu_TimeEvo)[2 * FLU_NXT];
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUAPI_SendGramFEMatrix2GPU
-// Description :  Transfer time evolution matrix used in ELBDM GramFE matrix multiplication scheme to GPU 
-//                Uses synchronous copy to ensure matrix is on GPU when solver starts 
+// Description :  Transfer time evolution matrix used in ELBDM GramFE matrix multiplication scheme to GPU
+//                Uses synchronous copy to ensure matrix is on GPU when solver starts
 //
 // Note        :  1. Prefix "d" : for pointers pointing to the "Device" memory space
 //                   Prefix "h" : for pointers pointing to the "Host"   memory space
