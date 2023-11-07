@@ -150,7 +150,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //       A: lv & lv+1 both use wave scheme or lv & lv+1 both use phase scheme and switch_to_wave_flag = false
 //          1. no modification
 //
-//       B: lv & lv+1 both use phase scheme & switch_to_wave_flag on lv + 1:
+//       B: lv & lv+1 both use phase scheme & switch_to_wave_flag on lv:
 //          1. switch to wave scheme on level lv+1
 //          2. no modification for interpolation
 //          3. convert DENS/PHAS to IM/RE after refinement for all patches on levels greater than lv
