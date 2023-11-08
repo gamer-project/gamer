@@ -103,7 +103,7 @@ void Init_ResetParameter()
    {
       DT__HYBRID_VELOCITY = 1.00;
 
-      PRINT_WARNING( DT__HYBRID_VELOCITY, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( DT__HYBRID_VELOCITY, FORMAT_REAL, "" );
    } // if ( DT__HYBRID_VELOCITY < 0.0 )
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
@@ -117,13 +117,13 @@ void Init_ResetParameter()
 #     else
       DT__HYBRID_CFL = 0.40;
 #     endif
-      PRINT_WARNING( DT__HYBRID_CFL, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( DT__HYBRID_CFL, FORMAT_REAL, "" );
    } // if ( DT__HYBRID_CFL < 0.0 )
 
    if ( DT__HYBRID_CFL_INIT < 0.0 )
    {
       DT__HYBRID_CFL_INIT = DT__HYBRID_CFL;
-      PRINT_WARNING( DT__HYBRID_CFL_INIT, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( DT__HYBRID_CFL_INIT, FORMAT_REAL, "" );
    } // if ( DT__HYBRID_CFL < 0.0 )
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
