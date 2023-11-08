@@ -1,9 +1,5 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
-
-
-static void OutputError();
 
 
 // problem-specific global variables
@@ -20,6 +16,10 @@ static int    CR_Acoustic_Dir;          // wave direction (0/1/2/3) --> (x/y/z/d
 static double CR_Acoustic_WaveSpeed;    // wave speed
 static double CR_Acoustic_WaveL;        // wavelength
 // =======================================================================================
+
+
+// problem-specific function prototypes
+static void OutputError();
 
 
 
@@ -49,7 +49,7 @@ void Validate()
    Aux_Error( ERROR_INFO, "COSMIC_RAY must be enabled !!\n" );
 #  endif // #ifndef COSMIC_RAY
 
-#  if ( defined COSMIC_ARY && EOS != EOS_COSMIC_RAY )
+#  if ( defined COSMIC_ARY  &&  EOS != EOS_COSMIC_RAY )
    Aux_Error( ERROR_INFO, "EOS != EOS_COSMIC_RAY when enable COSMIC_RAY!!\n" );
 #  endif
 
@@ -74,8 +74,7 @@ void Validate()
 
 
 
-// replace HYDRO by the target model (e.g., MHD/ELBDM) and also check other compilation flags if necessary (e.g., GRAVITY/PARTICLE)
-#if ( MODEL == HYDRO )
+#if ( MODEL == HYDRO  &&  defined COSMIC_RAY )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -129,12 +128,7 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
-#  ifdef COSMIC_RAY
-   CR_Acoustic_WaveSpeed = SQRT( ( GAMMA * CR_Acoustic_Pres0 + GAMMA_CR * CR_Acoustic_Pres_CR0 ) / CR_Acoustic_Rho0 );
-#  else
-   CR_Acoustic_WaveSpeed = SQRT( ( GAMMA * CR_Acoustic_Pres0 ) / CR_Acoustic_Rho0 );
-#  endif
-
+   CR_Acoustic_WaveSpeed = SQRT(  ( GAMMA*CR_Acoustic_Pres0 + GAMMA_CR*CR_Acoustic_Pres_CR0 ) / CR_Acoustic_Rho0  );
    CR_Acoustic_WaveL     = ( CR_Acoustic_Dir == 3 ) ? amr->BoxSize[0]/sqrt(3.0) : amr->BoxSize[CR_Acoustic_Dir];
 
 // (3) reset other general-purpose parameters
@@ -157,17 +151,17 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID           = %d\n",         TESTPROB_ID );
-      Aux_Message( stdout, "  CR_Acoustic_Delta         = %14.7e\n",     CR_Acoustic_Delta );
-      Aux_Message( stdout, "  CR_Acoustic_Rho0          = %14.7e\n",     CR_Acoustic_Rho0 );
-      Aux_Message( stdout, "  CR_Acoustic_Pres0         = %14.7e\n",     CR_Acoustic_Pres0 );
-      Aux_Message( stdout, "  CR_Acoustic_Pres_CR0      = %14.7e\n",     CR_Acoustic_Pres_CR0 );
-      Aux_Message( stdout, "  CR_Acoustic_V0            = %14.7e\n",     CR_Acoustic_V0 );
-      Aux_Message( stdout, "  CR_Acoustic_Sign          = %14.7e\n",     CR_Acoustic_Sign );
-      Aux_Message( stdout, "  CR_Acoustic_Phase         = %14.7e\n",     CR_Acoustic_Phase );
-      Aux_Message( stdout, "  CR_Acoustic_Dir           = %d\n",         CR_Acoustic_Dir );
-      Aux_Message( stdout, "  CR_Acoustic_WaveSpeed     = %14.7e\n",     CR_Acoustic_WaveSpeed );
-      Aux_Message( stdout, "  CR_Acoustic_WaveL         = %14.7e\n",     CR_Acoustic_WaveL );
+      Aux_Message( stdout, "  test problem ID       = %d\n",     TESTPROB_ID           );
+      Aux_Message( stdout, "  CR_Acoustic_Delta     = %14.7e\n", CR_Acoustic_Delta     );
+      Aux_Message( stdout, "  CR_Acoustic_Rho0      = %14.7e\n", CR_Acoustic_Rho0      );
+      Aux_Message( stdout, "  CR_Acoustic_Pres0     = %14.7e\n", CR_Acoustic_Pres0     );
+      Aux_Message( stdout, "  CR_Acoustic_Pres_CR0  = %14.7e\n", CR_Acoustic_Pres_CR0  );
+      Aux_Message( stdout, "  CR_Acoustic_V0        = %14.7e\n", CR_Acoustic_V0        );
+      Aux_Message( stdout, "  CR_Acoustic_Sign      = %14.7e\n", CR_Acoustic_Sign      );
+      Aux_Message( stdout, "  CR_Acoustic_Phase     = %14.7e\n", CR_Acoustic_Phase     );
+      Aux_Message( stdout, "  CR_Acoustic_Dir       = %d\n",     CR_Acoustic_Dir       );
+      Aux_Message( stdout, "  CR_Acoustic_WaveSpeed = %14.7e\n", CR_Acoustic_WaveSpeed );
+      Aux_Message( stdout, "  CR_Acoustic_WaveL     = %14.7e\n", CR_Acoustic_WaveL     );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -203,11 +197,14 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
+
+   const double cs         = CR_Acoustic_WaveSpeed;
+   const double delta_cs   = CR_Acoustic_Delta / cs;
+   const double wavelength = CR_Acoustic_WaveL;
+
    double Dens, MomX, MomY, MomZ, Pres, Eint, Etot, P_cr, CRay;
-   double cs         = CR_Acoustic_WaveSpeed;
-   double delta_cs   = CR_Acoustic_Delta / cs;
-   double wavelength = CR_Acoustic_WaveL;
    double WaveK, WaveW, r, wave, Mom;
+
 
    WaveK = 2.0*M_PI/wavelength;
    WaveW = WaveK * cs;
@@ -218,12 +215,13 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       case 2:  r = z;                        break;
       case 3:  r = ( x + y + z )/sqrt(3.0);  break;
    }
+
    r    -= CR_Acoustic_V0 * Time;
    wave  = sin( WaveK*r - CR_Acoustic_Sign*WaveW*Time + CR_Acoustic_Phase );
 
 
-   Dens = ( 1.0 + delta_cs * wave ) * CR_Acoustic_Rho0;
-   Mom  = Dens * ( CR_Acoustic_Sign * CR_Acoustic_Delta * wave + CR_Acoustic_V0 );
+   Dens = ( 1.0 + delta_cs*wave )*CR_Acoustic_Rho0;
+   Mom  = Dens*( CR_Acoustic_Sign*CR_Acoustic_Delta*wave + CR_Acoustic_V0 );
 
    switch ( CR_Acoustic_Dir ) {
       case 0:  MomX = Mom;            MomY = 0.0;   MomZ = 0.0;   break;
@@ -232,17 +230,15 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       case 3:  MomX = Mom/sqrt(3.0);  MomY = MomX;  MomZ = MomX;  break;
    }
 
-   Pres = ( 1.0 + delta_cs * wave * GAMMA ) * CR_Acoustic_Pres0;
+   Pres = ( 1.0 + delta_cs*wave*GAMMA )*CR_Acoustic_Pres0;
 
-#  ifdef COSMIC_RAY
    double GAMMA_CR_m1_inv = 1.0 / (GAMMA_CR - 1.0);
-   P_cr = ( 1.0 + delta_cs * wave * GAMMA_CR ) * CR_Acoustic_Pres_CR0;
+   P_cr = ( 1.0 + delta_cs*wave*GAMMA_CR )*CR_Acoustic_Pres_CR0;
    Pres = Pres + P_cr;
-   CRay = GAMMA_CR_m1_inv * P_cr;
+   CRay = GAMMA_CR_m1_inv*P_cr;
 
 // set the output array of passive scaler
    fluid[CRAY] = CRay;
-#  endif
 
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, fluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
@@ -302,7 +298,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 void OutputError()
 {
 
-   const char Prefix[100]     = "CosmicRay_Acousticwave";
+   const char Prefix[100]     = "CosmicRay_SoundWave";
    const OptOutputPart_t Part = OUTPUT_X + CR_Acoustic_Dir;
 
 #  ifdef MHD
@@ -312,7 +308,7 @@ void OutputError()
 #  endif
 
 } // FUNCTION : OutputError
-#endif // #if ( MODEL == HYDRO )
+#endif // #if ( MODEL == HYDRO  &&  defined COSMIC_RAY )
 
 
 
@@ -336,21 +332,19 @@ void Init_TestProb_Hydro_Cosmic_Ray_SoundWave()
    Validate();
 
 
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO  &&  defined COSMIC_RAY )
 // set the problem-specific runtime parameters
    SetParameter();
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr         = SetGridIC;
-
+   Init_Function_User_Ptr        = SetGridIC;
 #  ifdef MHD
-   Init_Function_BField_User_Ptr  = SetBFieldIC;
+   Init_Function_BField_User_Ptr = SetBFieldIC;
 #  endif
+   Output_User_Ptr               = OutputError;
+#  endif // #if ( MODEL == HYDRO  &&  defined COSMIC_RAY )
 
-   Output_User_Ptr                = OutputError;
-
-#  endif // #if ( MODEL == HYDRO )
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 

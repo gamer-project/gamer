@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -59,8 +58,7 @@ void Validate()
 
 
 
-// replace HYDRO by the target model (e.g., MHD/ELBDM) and also check other compilation flags if necessary (e.g., GRAVITY/PARTICLE)
-#if ( MODEL == HYDRO )
+#if ( MODEL == HYDRO  &&  defined COSMIC_RAY )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -139,14 +137,14 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID           = %d\n",         TESTPROB_ID );
-      Aux_Message( stdout, "  CR_Shocktube_Rho_R        = %14.7e\n",     CR_Shocktube_Rho_R );
-      Aux_Message( stdout, "  CR_Shocktube_RhoR_L       = %14.7e\n",     CR_Shocktube_Rho_L );
-      Aux_Message( stdout, "  CR_Shocktube_Pres_R       = %14.7e\n",     CR_Shocktube_Pres_R );
-      Aux_Message( stdout, "  CR_Shocktube_Pres_L       = %14.7e\n",     CR_Shocktube_Pres_L );
-      Aux_Message( stdout, "  CR_Shocktube_PresCR_R     = %14.7e\n",     CR_Shocktube_PresCR_R );
-      Aux_Message( stdout, "  CR_Shocktube_PresCR_L     = %14.7e\n",     CR_Shocktube_PresCR_L );
-      Aux_Message( stdout, "  CR_Shocktube_Dir          = %d\n",         CR_Shocktube_Dir );
+      Aux_Message( stdout, "  test problem ID       = %d\n",     TESTPROB_ID           );
+      Aux_Message( stdout, "  CR_Shocktube_Rho_R    = %14.7e\n", CR_Shocktube_Rho_R    );
+      Aux_Message( stdout, "  CR_Shocktube_RhoR_L   = %14.7e\n", CR_Shocktube_Rho_L    );
+      Aux_Message( stdout, "  CR_Shocktube_Pres_R   = %14.7e\n", CR_Shocktube_Pres_R   );
+      Aux_Message( stdout, "  CR_Shocktube_Pres_L   = %14.7e\n", CR_Shocktube_Pres_L   );
+      Aux_Message( stdout, "  CR_Shocktube_PresCR_R = %14.7e\n", CR_Shocktube_PresCR_R );
+      Aux_Message( stdout, "  CR_Shocktube_PresCR_L = %14.7e\n", CR_Shocktube_PresCR_L );
+      Aux_Message( stdout, "  CR_Shocktube_Dir      = %d\n",     CR_Shocktube_Dir      );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -182,6 +180,7 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
+
    double Dens, MomX, MomY, MomZ, Pres, Eint, Etot, P_cr, CRay;
    double r;
 
@@ -192,18 +191,20 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       case 2: r=z; break;
    } // switch ( CR_Shocktube_Dir )
 
-   if ( r < amr->BoxCenter[CR_Shocktube_Dir] )
+   if      ( r < amr->BoxCenter[CR_Shocktube_Dir] )
    {
       Dens = CR_Shocktube_Rho_L;
       Pres = CR_Shocktube_Pres_L;
       P_cr = CR_Shocktube_PresCR_L;
    }
+
    else if ( r > amr->BoxCenter[CR_Shocktube_Dir] )
    {
       Dens = CR_Shocktube_Rho_R;
       Pres = CR_Shocktube_Pres_R;
       P_cr = CR_Shocktube_PresCR_R;
    }
+
    else
    {
       Dens = 0.5*( CR_Shocktube_Rho_L + CR_Shocktube_Rho_R );
@@ -215,14 +216,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    MomY = 0.0;
    MomZ = 0.0;
 
-#ifdef COSMIC_RAY
-   double GAMMA_CR_m1_inv = 1.0 / (GAMMA_CR - 1.0);
+   const double GAMMA_CR_m1_inv = 1.0 / (GAMMA_CR - 1.0);
    Pres = Pres + P_cr;
-   CRay = GAMMA_CR_m1_inv * P_cr;
+   CRay = GAMMA_CR_m1_inv*P_cr;
 
 // set the output array of passive scaler
    fluid[CRAY] = CRay;
-#endif
 
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, fluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table);
    Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
@@ -265,10 +264,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 
 } // FUNCTION : SetBFieldIC
 #endif // #ifdef MHD
-
-
-
-#endif // #if ( MODEL == HYDRO )
+#endif // #if ( MODEL == HYDRO  &&  defined COSMIC_RAY )
 
 
 
@@ -292,19 +288,18 @@ void Init_TestProb_Hydro_Cosmic_Ray_Shocktube()
    Validate();
 
 
-// replace HYDRO by the target model (e.g., MHD/ELBDM) and also check other compilation flags if necessary (e.g., GRAVITY/PARTICLE)
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO  &&  defined COSMIC_RAY )
 // set the problem-specific runtime parameters
    SetParameter();
 
 
 // procedure to enable a problem-specific function:
-   Init_Function_User_Ptr         = SetGridIC;
+   Init_Function_User_Ptr        = SetGridIC;
 #  ifdef MHD
-   Init_Function_BField_User_Ptr  = SetBFieldIC;
+   Init_Function_BField_User_Ptr = SetBFieldIC;
 #  endif
+#  endif // #if ( MODEL == HYDRO  &&  defined COSMIC_RAY )
 
-#  endif // #if ( MODEL == HYDRO )
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
