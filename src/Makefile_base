@@ -508,15 +508,6 @@ endif
 # common flags
 NVCCFLAG_COM := $(COMMONFLAG) -O3 # -Xcompiler #-Xopencc -OPT:Olimit=0
 
-# enable C++ 17 support for ELBDM GPU Gram-Fourier extension scheme
-ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
-   ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
-      ifeq "$(filter -DGRAMFE_SCHEME=GRAMFE_FFT, $(SIMU_OPTION))" "-DGRAMFE_SCHEME=GRAMFE_FFT"
-         NVCCFLAG_COM += -std=c++17
-      endif
-   endif
-endif
-
 ifeq      "$(filter -DGPU_ARCH=FERMI,   $(SIMU_OPTION))" "-DGPU_ARCH=FERMI"
    NVCCFLAG_ARCH += -gencode arch=compute_20,code=\"compute_20,sm_20\"
 #  NVCCFLAG_ARCH += -gencode arch=compute_20,code=\"compute_20,sm_21\"
@@ -548,6 +539,15 @@ ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
 endif
 
 #NVCCFLAG_COM += -use_fast_math
+
+# enable C++ 17 support for ELBDM GPU Gram-Fourier extension scheme
+ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
+   ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
+      ifeq "$(filter -DGRAMFE_SCHEME=GRAMFE_FFT, $(SIMU_OPTION))" "-DGRAMFE_SCHEME=GRAMFE_FFT"
+         NVCCFLAG_COM += -std=c++17
+      endif
+   endif
+endif
 
 # fluid solver flags
 NVCCFLAG_FLU += -Xptxas -dlcm=ca -prec-div=false -ftz=true
