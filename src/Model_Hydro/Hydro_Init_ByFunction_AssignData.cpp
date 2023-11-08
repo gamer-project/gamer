@@ -182,6 +182,8 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 // set the number of OpenMP threads
 #  ifdef OPENMP
    const int    OMP_NT             = ( OPT__INIT_GRID_WITH_OMP ) ? OMP_NTHREAD : 1;
+#  else
+   const int    OMP_NT             = 1;
 #  endif
    const int    NSub               = ( INIT_SUBSAMPLING_NCELL <= 0 ) ? 1 : INIT_SUBSAMPLING_NCELL;
    const double dh                 = amr->dh[lv];

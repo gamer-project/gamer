@@ -245,7 +245,8 @@ Procedure for outputting new variables:
 //                2469 : 2023/05/18 --> replace OPT__INIT_BFIELD_BYFILE by OPT__INIT_BFIELD_BYVECPOT
 //                2470 : 2023/06/24 --> output OPT__SORT_PATCH_BY_LBIDX
 //                2471 : 2023/09/09 --> output MHM_CHECK_PREDICT
-//                2472 : 2023/09/17 --> output OPT__FLAG_INTERFERENCE, ELBDM_MATCH_PHASE
+//                2472 : 2023/10/16 --> output OPT__OUTPUT_TEXT_FORMAT_FLT
+//                2473 : 2023/11/08 --> output OPT__FLAG_INTERFERENCE, ELBDM_MATCH_PHASE
 //                                             ELBDM_FIRST_WAVE_LEVEL, OPT__LB_EXCHANGE_FATHER, FlagTable_Interference
 //                                             DENS and PHAS for hybrid scheme,
 //                                             use_wave_flag[lv] for AMR structure
@@ -254,7 +255,7 @@ Procedure for outputting new variables:
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d)     ...\n", __FUNCTION__, DumpID );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ...\n", __FUNCTION__, DumpID );
 
 
 // check the synchronization
@@ -292,15 +293,15 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    const int PotDumpIdx = ( OPT__OUTPUT_POT ) ? NFieldStored++ : -1;
    if ( PotDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_POT )  sprintf( FieldLabelOut[PotDumpIdx], "%s", PotLabel );
+   if ( OPT__OUTPUT_POT )  sprintf( FieldLabelOut[PotDumpIdx], PotLabel );
 #  endif
 
-#  ifdef MASSIVE_PARTICLES
+#  ifdef PARTICLE
    const int ParDensDumpIdx = ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE ) ? NFieldStored++ : -1;
    if ( ParDensDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if      ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY )   sprintf( FieldLabelOut[ParDensDumpIdx], "%s", "ParDens"   );
-   else if ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_TOTAL    )   sprintf( FieldLabelOut[ParDensDumpIdx], "%s", "TotalDens" );
+   if      ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY )   sprintf( FieldLabelOut[ParDensDumpIdx], "ParDens"   );
+   else if ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_TOTAL    )   sprintf( FieldLabelOut[ParDensDumpIdx], "TotalDens" );
 #  endif
 
 #  ifdef MHD
@@ -310,9 +311,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    if ( OPT__OUTPUT_CC_MAG )
    {
       NFieldStored += NCOMP_MAG;
-      sprintf( FieldLabelOut[ CCMagDumpIdx0 + MAGX ], "%s", "CCMagX" );
-      sprintf( FieldLabelOut[ CCMagDumpIdx0 + MAGY ], "%s", "CCMagY" );
-      sprintf( FieldLabelOut[ CCMagDumpIdx0 + MAGZ ], "%s", "CCMagZ" );
+      sprintf( FieldLabelOut[ CCMagDumpIdx0 + MAGX ], "CCMagX" );
+      sprintf( FieldLabelOut[ CCMagDumpIdx0 + MAGY ], "CCMagY" );
+      sprintf( FieldLabelOut[ CCMagDumpIdx0 + MAGZ ], "CCMagZ" );
    }
 #  endif
 
@@ -320,39 +321,39 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    const int PresDumpIdx   = ( OPT__OUTPUT_PRES   ) ? NFieldStored++ : -1;
    if ( PresDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_PRES   )  sprintf( FieldLabelOut[PresDumpIdx  ], "%s", "Pres"   );
+   if ( OPT__OUTPUT_PRES   )  sprintf( FieldLabelOut[PresDumpIdx  ], "Pres"   );
 
    const int TempDumpIdx   = ( OPT__OUTPUT_TEMP   ) ? NFieldStored++ : -1;
    if ( TempDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_TEMP   )  sprintf( FieldLabelOut[TempDumpIdx  ], "%s", "Temp"   );
+   if ( OPT__OUTPUT_TEMP   )  sprintf( FieldLabelOut[TempDumpIdx  ], "Temp"   );
 
    const int EntrDumpIdx   = ( OPT__OUTPUT_ENTR   ) ? NFieldStored++ : -1;
    if ( EntrDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_ENTR   )  sprintf( FieldLabelOut[EntrDumpIdx  ], "%s", "Entr"   );
+   if ( OPT__OUTPUT_ENTR   )  sprintf( FieldLabelOut[EntrDumpIdx  ], "Entr"   );
 
    const int CsDumpIdx     = ( OPT__OUTPUT_CS     ) ? NFieldStored++ : -1;
    if ( CsDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_CS     )  sprintf( FieldLabelOut[CsDumpIdx    ], "%s", "Cs"     );
+   if ( OPT__OUTPUT_CS     )  sprintf( FieldLabelOut[CsDumpIdx    ], "Cs"     );
 
    const int DivVelDumpIdx = ( OPT__OUTPUT_DIVVEL ) ? NFieldStored++ : -1;
    if ( DivVelDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_DIVVEL )  sprintf( FieldLabelOut[DivVelDumpIdx], "%s", "DivVel" );
+   if ( OPT__OUTPUT_DIVVEL )  sprintf( FieldLabelOut[DivVelDumpIdx], "DivVel" );
 
    const int MachDumpIdx   = ( OPT__OUTPUT_MACH   ) ? NFieldStored++ : -1;
    if ( MachDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_MACH   )  sprintf( FieldLabelOut[MachDumpIdx  ], "%s", "Mach"   );
+   if ( OPT__OUTPUT_MACH   )  sprintf( FieldLabelOut[MachDumpIdx  ], "Mach"   );
 #  endif
 
 #  ifdef MHD
    const int DivMagDumpIdx = ( OPT__OUTPUT_DIVMAG ) ? NFieldStored++ : -1;
    if ( DivMagDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_DIVMAG )  sprintf( FieldLabelOut[DivMagDumpIdx], "%s", "DivMag" );
+   if ( OPT__OUTPUT_DIVMAG )  sprintf( FieldLabelOut[DivMagDumpIdx], "DivMag" );
 #  endif
 
 
@@ -362,14 +363,33 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    if ( OPT__OUTPUT_USER_FIELD )
    {
       NFieldStored += UserDerField_Num;
-      for (int v=0; v<UserDerField_Num; v++)    sprintf( FieldLabelOut[ UserDumpIdx0 + v ], "%s", UserDerField_Label[v] );
+      for (int v=0; v<UserDerField_Num; v++)    sprintf( FieldLabelOut[ UserDumpIdx0 + v ], UserDerField_Label[v] );
    }
 
 
 
 // 1. gather the number of patches at different MPI ranks and set the corresponding GID offset
-   LB_PatchCount pc;
-   LB_AllgatherPatchCount( pc );
+   int (*NPatchAllRank)[NLEVEL] = new int [MPI_NRank][NLEVEL];
+   int NPatchLocal[NLEVEL], NPatchAllLv=0, GID_Offset[NLEVEL], GID_LvStart[NLEVEL];
+
+   for (int lv=0; lv<NLEVEL; lv++)  NPatchLocal[lv] = amr->NPatchComma[lv][1];
+
+   MPI_Allgather( NPatchLocal, NLEVEL, MPI_INT, NPatchAllRank[0], NLEVEL, MPI_INT, MPI_COMM_WORLD );
+
+   for (int lv=0; lv<NLEVEL; lv++)
+   {
+      GID_Offset[lv] = 0;
+
+      for (int r=0; r<MPI_Rank; r++)      GID_Offset[lv] += NPatchAllRank[r][lv];
+
+      for (int FaLv=0; FaLv<lv; FaLv++)   GID_Offset[lv] += NPatchTotal[FaLv];
+
+      NPatchAllLv += NPatchTotal[lv];
+
+      GID_LvStart[lv] = ( lv == 0 ) ? 0 : GID_LvStart[lv-1] + NPatchTotal[lv-1];
+   }
+
+
 
 // 2. prepare all HDF5 variables
    hsize_t H5_SetDims_LBIdx, H5_SetDims_Cr[2], H5_SetDims_Fa, H5_SetDims_Son, H5_SetDims_Sib[2], H5_SetDims_Field[4];
@@ -470,20 +490,303 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 
 // 4. output the AMR tree structure (father, son, sibling, LBIdx, corner, and the number of particles --> sorted by GID)
-   int root = 0;
+   long *LBIdxList_Local[NLEVEL], *LBIdxList_AllLv;
+   int  (*CrList_Local[NLEVEL])[3], (*CrList_AllLv)[3];
+   int  *FaList_Local[NLEVEL], *FaList_AllLv;
+   int  *SonList_Local[NLEVEL], *SonList_AllLv;
+   int  (*SibList_Local[NLEVEL])[26], (*SibList_AllLv)[26];
+#  ifdef PARTICLE
+   int  *NParList_Local[NLEVEL], *NParList_AllLv;
+#  endif
+
+   long *LBIdxList_Sort[NLEVEL];
+   int  *LBIdxList_Sort_IdxTable[NLEVEL];
+
+   int   MyGID, FaPID, FaGID, FaLv, SonPID, SonGID, SonLv, SibPID, SibGID, MatchIdx;
+   long  FaLBIdx, SonLBIdx, SibLBIdx;
+   int  *SonCr=NULL, *SibCr=NULL;
+
+   int   RecvCount_LBIdx[MPI_NRank], RecvDisp_LBIdx[MPI_NRank], RecvCount_Cr[MPI_NRank], RecvDisp_Cr[MPI_NRank];
+   int   RecvCount_Fa[MPI_NRank], RecvDisp_Fa[MPI_NRank], RecvCount_Son[MPI_NRank], RecvDisp_Son[MPI_NRank];
+   int   RecvCount_Sib[MPI_NRank], RecvDisp_Sib[MPI_NRank];
+#  ifdef PARTICLE
+   int   RecvCount_NPar[MPI_NRank], RecvDisp_NPar[MPI_NRank];
+#  endif
 
 // 4-1. allocate lists
-   LB_LocalPatchExchangeList  lel;
-   LB_GlobalPatchExchangeList gel( pc, root );
+   if ( MPI_Rank == 0 )
+   {
+      LBIdxList_AllLv = new long [ NPatchAllLv ];
+      CrList_AllLv    = new int  [ NPatchAllLv ][3];
+      FaList_AllLv    = new int  [ NPatchAllLv ];
+      SonList_AllLv   = new int  [ NPatchAllLv ];
+      SibList_AllLv   = new int  [ NPatchAllLv ][26];
+#     ifdef PARTICLE
+      NParList_AllLv  = new int  [ NPatchAllLv ];
+#     endif
+   }
+
+   for (int lv=0; lv<NLEVEL; lv++)
+   {
+      LBIdxList_Local        [lv] = new long [ amr->NPatchComma[lv][1] ];
+      CrList_Local           [lv] = new int  [ amr->NPatchComma[lv][1] ][3];
+      FaList_Local           [lv] = new int  [ amr->NPatchComma[lv][1] ];
+      SonList_Local          [lv] = new int  [ amr->NPatchComma[lv][1] ];
+      SibList_Local          [lv] = new int  [ amr->NPatchComma[lv][1] ][26];
+#     ifdef PARTICLE
+      NParList_Local         [lv] = new int  [ amr->NPatchComma[lv][1] ];
+#     endif
+
+      LBIdxList_Sort         [lv] = new long [ NPatchTotal[lv] ];
+      LBIdxList_Sort_IdxTable[lv] = new int  [ NPatchTotal[lv] ];
+   }
+
 
 // 4-2. collect and sort LBIdx from all ranks
-   LB_AllgatherLBIdx( pc, lel, &gel );
+   for (int lv=0; lv<NLEVEL; lv++)
+   {
+      for (int r=0; r<MPI_NRank; r++)
+      {
+         RecvCount_LBIdx[r] = NPatchAllRank[r][lv];
+         RecvDisp_LBIdx [r] = ( r == 0 ) ? 0 : RecvDisp_LBIdx[r-1] + RecvCount_LBIdx[r-1];
+      }
+
+      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+         LBIdxList_Local[lv][PID] = amr->patch[0][lv][PID]->LB_Idx;
+
+//    all ranks need to get LBIdxList_Sort since we will use it to calculate GID
+      MPI_Allgatherv( LBIdxList_Local[lv], amr->NPatchComma[lv][1], MPI_LONG,
+                      LBIdxList_Sort[lv], RecvCount_LBIdx, RecvDisp_LBIdx, MPI_LONG,
+                      MPI_COMM_WORLD );
+   } // for (int lv=0; lv<NLEVEL; lv++)
+
+// store in the AllLv array BEFORE sorting
+   if ( MPI_Rank == 0 )
+   {
+      MyGID = 0;
+
+      for (int lv=0; lv<NLEVEL; lv++)
+      for (int PID=0; PID<NPatchTotal[lv]; PID++)
+         LBIdxList_AllLv[ MyGID++ ] = LBIdxList_Sort[lv][PID];
+   }
+
+// sort list and get the corresponding index table (for calculating GID later)
+   for (int lv=0; lv<NLEVEL; lv++)
+      Mis_Heapsort( NPatchTotal[lv], LBIdxList_Sort[lv], LBIdxList_Sort_IdxTable[lv] );
+
 
 // 4-3. store the local tree
-   LB_FillLocalPatchExchangeList( pc, lel );
+   for (int lv=0; lv<NLEVEL; lv++)
+   {
+      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+      {
+//       4-3-1. LBIdx (set already)
+//       LBIdxList_Local[lv][PID] = amr->patch[0][lv][PID]->LB_Idx;
+
+
+//       4-3-2. corner
+         for (int d=0; d<3; d++)
+         CrList_Local[lv][PID][d] = amr->patch[0][lv][PID]->corner[d];
+
+
+//       4-3-3. father GID
+         FaPID = amr->patch[0][lv][PID]->father;
+         FaLv  = lv - 1;
+
+//       no father (only possible for the root patches)
+         if ( FaPID < 0 )
+         {
+#           ifdef DEBUG_HDF5
+            if ( lv != 0 )       Aux_Error( ERROR_INFO, "Lv %d, PID %d, FaPID %d < 0 !!\n", lv, PID, FaPID );
+            if ( FaPID != -1 )   Aux_Error( ERROR_INFO, "Lv %d, PID %d, FaPID %d < 0 but != -1 !!\n", lv, PID, FaPID );
+#           endif
+
+            FaGID = FaPID;
+         }
+
+//       father patch is a real patch
+         else if ( FaPID < amr->NPatchComma[FaLv][1] )
+            FaGID = FaPID + GID_Offset[FaLv];
+
+//       father patch is a buffer patch (only possible in LOAD_BALANCE)
+         else // (FaPID >= amr->NPatchComma[FaLv][1] )
+         {
+#           ifdef DEBUG_HDF5
+#           ifndef LOAD_BALANCE
+            Aux_Error( ERROR_INFO, "Lv %d, PID %d, FaPID %d >= NRealFaPatch %d (only possible in LOAD_BALANCE) !!\n",
+                       lv, PID, FaPID, amr->NPatchComma[FaLv][1] );
+#           endif
+
+            if ( FaPID >= amr->num[FaLv] )
+            Aux_Error( ERROR_INFO, "Lv %d, PID %d, FaPID %d >= total number of patches %d !!\n",
+                       lv, PID, FaPID, amr->num[FaLv] );
+#           endif // DEBUG_HDF5
+
+            FaLBIdx = amr->patch[0][FaLv][FaPID]->LB_Idx;
+
+            Mis_Matching_int( NPatchTotal[FaLv], LBIdxList_Sort[FaLv], 1, &FaLBIdx, &MatchIdx );
+
+#           ifdef DEBUG_HDF5
+            if ( MatchIdx < 0 )
+            Aux_Error( ERROR_INFO, "Lv %d, PID %d, FaPID %d, FaLBIdx %ld, couldn't find a matching patch !!\n",
+                       lv, PID, FaPID, FaLBIdx );
+#           endif
+
+            FaGID = LBIdxList_Sort_IdxTable[FaLv][MatchIdx] + GID_LvStart[FaLv];
+         } // if ( FaPID >= amr->NPatchComma[FaLv][1] )
+
+         FaList_Local[lv][PID] = FaGID;
+
+
+//       4-3-4. son GID
+         SonPID = amr->patch[0][lv][PID]->son;
+         SonLv  = lv + 1;
+
+//       no son (must check this first since SonLv may be out of range --> == NLEVEL)
+         if      ( SonPID == -1 )
+            SonGID = SonPID;
+
+//       son patch is a real patch at home
+         else if ( SonPID >= 0  &&  SonPID < amr->NPatchComma[SonLv][1] )
+            SonGID = SonPID + GID_Offset[SonLv];
+
+//       son patch lives abroad (only possible in LOAD_BALANCE)
+         else if ( SonPID < -1 )
+         {
+#           ifdef DEBUG_HDF5
+#           ifdef LOAD_BALANCE
+            const int SonRank = SON_OFFSET_LB - SonPID;
+            if ( SonRank < 0  ||  SonRank == MPI_Rank  ||  SonRank >= MPI_NRank )
+            Aux_Error( ERROR_INFO, "Lv %d, PID %d, SonPID %d, incorrect SonRank %d (MyRank %d, NRank %d) !!\n",
+                       lv, PID, SonPID, SonRank, MPI_Rank, MPI_NRank );
+#           else
+            Aux_Error( ERROR_INFO, "Lv %d, PID %d, SonPID %d < -1 (only possible in LOAD_BALANCE) !!\n",
+                       lv, PID, SonPID );
+#           endif // LOAD_BALANCE
+#           endif // DEBUG_HDF5
+
+//          get the SonGID by "father corner = son corner -> son LB_Idx -> son GID"
+//          --> didn't assume any relation between son's and father's LB_Idx
+//          (although for Hilbert curve we have "SonLBIdx-SonLBIdx%8 = 8*MyLBIdx")
+            SonCr    = amr->patch[0][lv][PID]->corner;
+            SonLBIdx = LB_Corner2Index( SonLv, SonCr, CHECK_ON );
+
+#           if ( defined DEBUG_HDF5  &&  LOAD_BALANCE == HILBERT )
+            if ( SonLBIdx - SonLBIdx%8 != 8*amr->patch[0][lv][PID]->LB_Idx )
+            Aux_Error( ERROR_INFO, "Lv %d, PID %d, SonPID %d, SonCr (%d,%d,%d), incorret SonLBIdx %ld, (MyLBIdx %ld) !!\n",
+                       lv, PID, SonPID, SonCr[0], SonCr[1], SonCr[2], SonLBIdx, amr->patch[0][lv][PID]->LB_Idx );
+#           endif
+
+            Mis_Matching_int( NPatchTotal[SonLv], LBIdxList_Sort[SonLv], 1, &SonLBIdx, &MatchIdx );
+
+#           ifdef DEBUG_HDF5
+            if ( MatchIdx < 0 )
+            Aux_Error( ERROR_INFO, "Lv %d, PID %d, SonPID %d, SonLBIdx %ld, couldn't find a matching patch !!\n",
+                       lv, PID, SonPID, SonLBIdx );
+#           endif
+
+            SonGID = LBIdxList_Sort_IdxTable[SonLv][MatchIdx] + GID_LvStart[SonLv];
+         } // else if ( SonPID < -1 )
+
+//       son patch is a buffer patch (SonPID >= amr->NPatchComma[SonLv][1]) --> impossible
+         else // ( SonPID >= amr->NPatchComma[SonLv][1] )
+            Aux_Error( ERROR_INFO, "Lv %d, PID %d, SonPID %d is a buffer patch (NRealSonPatch %d) !!\n",
+                       lv, PID, SonPID, amr->NPatchComma[SonLv][1] );
+
+         SonList_Local[lv][PID] = SonGID;
+
+
+//       4-3-5. sibling GID
+         for (int s=0; s<26; s++)
+         {
+            SibPID = amr->patch[0][lv][PID]->sibling[s];
+
+//          no sibling (SibPID can be either -1 or SIB_OFFSET_NONPERIODIC-BoundaryDirection)
+            if      ( SibPID < 0 )
+               SibGID = SibPID;
+
+//          sibling patch is a real patch
+            else if ( SibPID < amr->NPatchComma[lv][1] )
+               SibGID = SibPID + GID_Offset[lv];
+
+//          sibling patch is a buffer patch (which may lie outside the simulation domain)
+            else
+            {
+#              ifdef DEBUG_HDF5
+               if ( SibPID >= amr->num[lv] )
+               Aux_Error( ERROR_INFO, "Lv %d, PID %d, SibPID %d >= total number of patches %d !!\n",
+                          lv, PID, SibPID, amr->num[lv] );
+#              endif
+
+//             get the SibGID by "sibling corner -> sibling LB_Idx -> sibling GID"
+               SibCr    = amr->patch[0][lv][SibPID]->corner;
+               SibLBIdx = LB_Corner2Index( lv, SibCr, CHECK_OFF );   // periodicity has been assumed here
+
+               Mis_Matching_int( NPatchTotal[lv], LBIdxList_Sort[lv], 1, &SibLBIdx, &MatchIdx );
+
+#              ifdef DEBUG_HDF5
+               if ( MatchIdx < 0 )
+               Aux_Error( ERROR_INFO, "Lv %d, PID %d, SibPID %d, SibLBIdx %ld, couldn't find a matching patch !!\n",
+                          lv, PID, SibPID, SibLBIdx );
+#              endif
+
+               SibGID = LBIdxList_Sort_IdxTable[lv][MatchIdx] + GID_LvStart[lv];
+            } // if ( SibPID >= amr->NPatchComma[lv][1] )
+
+            SibList_Local[lv][PID][s] = SibGID;
+
+         } // for (int s=0; s<26; s++)
+
+
+#        ifdef PARTICLE
+//       4-3-6. NPar
+         NParList_Local[lv][PID] = amr->patch[0][lv][PID]->NPar;
+#        endif
+      } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+   } // for (int lv=0; lv<NLEVEL; lv++)
+
 
 // 4-4. gather data from all ranks
-   LB_FillGlobalPatchExchangeList( pc, lel, gel, root );
+   for (int lv=0; lv<NLEVEL; lv++)
+   {
+      for (int r=0; r<MPI_NRank; r++)
+      {
+         RecvCount_Fa  [r] = NPatchAllRank[r][lv];
+         RecvCount_Son [r] = RecvCount_Fa[r];
+         RecvCount_Sib [r] = RecvCount_Fa[r]*26;
+         RecvCount_Cr  [r] = RecvCount_Fa[r]*3;
+#        ifdef PARTICLE
+         RecvCount_NPar[r] = RecvCount_Fa[r];
+#        endif
+
+         RecvDisp_Fa   [r] = ( r == 0 ) ? 0 : RecvDisp_Fa[r-1] + RecvCount_Fa[r-1];
+         RecvDisp_Son  [r] = RecvDisp_Fa[r];
+         RecvDisp_Sib  [r] = RecvDisp_Fa[r]*26;
+         RecvDisp_Cr   [r] = RecvDisp_Fa[r]*3;
+#        ifdef PARTICLE
+         RecvDisp_NPar [r] = RecvDisp_Fa[r];
+#        endif
+      }
+
+//    note that we collect data at one level at a time
+      MPI_Gatherv( FaList_Local[lv],     amr->NPatchComma[lv][1],    MPI_INT,
+                   FaList_AllLv+GID_LvStart[lv],       RecvCount_Fa,   RecvDisp_Fa,   MPI_INT, 0, MPI_COMM_WORLD );
+
+      MPI_Gatherv( SonList_Local[lv],    amr->NPatchComma[lv][1],    MPI_INT,
+                   SonList_AllLv+GID_LvStart[lv],      RecvCount_Son,  RecvDisp_Son,  MPI_INT, 0, MPI_COMM_WORLD );
+
+      MPI_Gatherv( SibList_Local[lv][0], amr->NPatchComma[lv][1]*26, MPI_INT,
+                   (SibList_AllLv+GID_LvStart[lv])[0], RecvCount_Sib,  RecvDisp_Sib,  MPI_INT, 0, MPI_COMM_WORLD );
+
+      MPI_Gatherv( CrList_Local[lv][0],  amr->NPatchComma[lv][1]*3,  MPI_INT,
+                   (CrList_AllLv+GID_LvStart[lv])[0],  RecvCount_Cr,   RecvDisp_Cr,   MPI_INT, 0, MPI_COMM_WORLD );
+
+#     ifdef PARTICLE
+      MPI_Gatherv( NParList_Local[lv],    amr->NPatchComma[lv][1],    MPI_INT,
+                   NParList_AllLv+GID_LvStart[lv],     RecvCount_NPar, RecvDisp_NPar, MPI_INT, 0, MPI_COMM_WORLD );
+#     endif
+   } // for (int lv=0; lv<NLEVEL; lv++)
+
 
 // 4-5. dump the tree info
    if ( MPI_Rank == 0 )
@@ -496,19 +799,19 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       if ( H5_GroupID_Tree < 0 )    Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "Tree" );
 
 //    4-5-1. LBIdx
-      H5_SetDims_LBIdx = pc.NPatchAllLv;
+      H5_SetDims_LBIdx = NPatchAllLv;
       H5_SpaceID_LBIdx = H5Screate_simple( 1, &H5_SetDims_LBIdx, NULL );
       H5_SetID_LBIdx   = H5Dcreate( H5_GroupID_Tree, "LBIdx", H5T_NATIVE_LONG, H5_SpaceID_LBIdx,
                                     H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
 
       if ( H5_SetID_LBIdx < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "LBIdx" );
 
-      H5_Status = H5Dwrite( H5_SetID_LBIdx, H5T_NATIVE_LONG, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.LBIdxList_AllLv );
+      H5_Status = H5Dwrite( H5_SetID_LBIdx, H5T_NATIVE_LONG, H5S_ALL, H5S_ALL, H5P_DEFAULT, LBIdxList_AllLv );
       H5_Status = H5Dclose( H5_SetID_LBIdx );
       H5_Status = H5Sclose( H5_SpaceID_LBIdx );
 
 //    4-5-2. corner
-      H5_SetDims_Cr[0] = pc.NPatchAllLv;
+      H5_SetDims_Cr[0] = NPatchAllLv;
       H5_SetDims_Cr[1] = 3;
       H5_SpaceID_Cr    = H5Screate_simple( 2, H5_SetDims_Cr, NULL );
       H5_SetID_Cr      = H5Dcreate( H5_GroupID_Tree, "Corner", H5T_NATIVE_INT, H5_SpaceID_Cr,
@@ -525,36 +828,36 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       H5_Status = H5Awrite( H5_AttID_Cvt2Phy, H5T_NATIVE_DOUBLE, &amr->dh[TOP_LEVEL] );
       H5_Status = H5Aclose( H5_AttID_Cvt2Phy );
 
-      H5_Status = H5Dwrite( H5_SetID_Cr, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.CrList_AllLv );
+      H5_Status = H5Dwrite( H5_SetID_Cr, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, CrList_AllLv );
       H5_Status = H5Dclose( H5_SetID_Cr );
       H5_Status = H5Sclose( H5_SpaceID_Cr );
 
 //    4-5-3. father
-      H5_SetDims_Fa = pc.NPatchAllLv;
+      H5_SetDims_Fa = NPatchAllLv;
       H5_SpaceID_Fa = H5Screate_simple( 1, &H5_SetDims_Fa, NULL );
       H5_SetID_Fa   = H5Dcreate( H5_GroupID_Tree, "Father", H5T_NATIVE_INT, H5_SpaceID_Fa,
                                  H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
 
       if ( H5_SetID_Fa < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "Father" );
 
-      H5_Status = H5Dwrite( H5_SetID_Fa, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.FaList_AllLv );
+      H5_Status = H5Dwrite( H5_SetID_Fa, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, FaList_AllLv );
       H5_Status = H5Dclose( H5_SetID_Fa );
       H5_Status = H5Sclose( H5_SpaceID_Fa );
 
 //    4-5-4. son
-      H5_SetDims_Son = pc.NPatchAllLv;
+      H5_SetDims_Son = NPatchAllLv;
       H5_SpaceID_Son = H5Screate_simple( 1, &H5_SetDims_Son, NULL );
       H5_SetID_Son   = H5Dcreate( H5_GroupID_Tree, "Son", H5T_NATIVE_INT, H5_SpaceID_Son,
                                   H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
 
       if ( H5_SetID_Son < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "Son" );
 
-      H5_Status = H5Dwrite( H5_SetID_Son, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.SonList_AllLv );
+      H5_Status = H5Dwrite( H5_SetID_Son, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, SonList_AllLv );
       H5_Status = H5Dclose( H5_SetID_Son );
       H5_Status = H5Sclose( H5_SpaceID_Son );
 
 //    4-5-5. sibling
-      H5_SetDims_Sib[0] = pc.NPatchAllLv;
+      H5_SetDims_Sib[0] = NPatchAllLv;
       H5_SetDims_Sib[1] = 26;
       H5_SpaceID_Sib    = H5Screate_simple( 2, H5_SetDims_Sib, NULL );
       H5_SetID_Sib      = H5Dcreate( H5_GroupID_Tree, "Sibling", H5T_NATIVE_INT, H5_SpaceID_Sib,
@@ -562,20 +865,20 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
       if ( H5_SetID_Sib < 0 )    Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "Sibling" );
 
-      H5_Status = H5Dwrite( H5_SetID_Sib, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.SibList_AllLv );
+      H5_Status = H5Dwrite( H5_SetID_Sib, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, SibList_AllLv );
       H5_Status = H5Dclose( H5_SetID_Sib );
       H5_Status = H5Sclose( H5_SpaceID_Sib );
 
 //    4-5-6. NPar
 #     ifdef PARTICLE
-      H5_SetDims_NPar = pc.NPatchAllLv;
+      H5_SetDims_NPar = NPatchAllLv;
       H5_SpaceID_NPar = H5Screate_simple( 1, &H5_SetDims_NPar, NULL );
       H5_SetID_NPar   = H5Dcreate( H5_GroupID_Tree, "NPar", H5T_NATIVE_INT, H5_SpaceID_NPar,
                                    H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
 
       if ( H5_SetID_NPar < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "NPar" );
 
-      H5_Status = H5Dwrite( H5_SetID_NPar, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.NParList_AllLv );
+      H5_Status = H5Dwrite( H5_SetID_NPar, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, NParList_AllLv );
       H5_Status = H5Dclose( H5_SetID_NPar );
       H5_Status = H5Sclose( H5_SpaceID_NPar );
 #     endif
@@ -597,7 +900,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #  endif
 
 // 5-1. initialize the "GridData" group and the datasets of all fields and magnetic field
-   H5_SetDims_Field[0] = pc.NPatchAllLv;
+   H5_SetDims_Field[0] = NPatchAllLv;
    H5_SetDims_Field[1] = PS1;
    H5_SetDims_Field[2] = PS1;
    H5_SetDims_Field[3] = PS1;
@@ -608,7 +911,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #  ifdef MHD
    for (int v=0; v<NCOMP_MAG; v++)
    {
-      H5_SetDims_FCMag[0] = pc.NPatchAllLv;
+      H5_SetDims_FCMag[0] = NPatchAllLv;
       for (int t=1; t<4; t++)
       H5_SetDims_FCMag[t] = ( 3-t == v ) ? PS1P1 : PS1;
 
@@ -703,13 +1006,13 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       for (int PID0=0, t=0; PID0<amr->NPatchComma[lv][1]; PID0+=8, t++)    PID0List[t] = PID0;
 
 //    5-2-0. initialize the particle density array (rho_ext) and collect particles from higher levels for outputting particle density
-#     ifdef MASSIVE_PARTICLES
+#     ifdef PARTICLE
       if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
       {
          Prepare_PatchData_InitParticleDensityArray( lv );
 
-         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos_No,
-                                       NULL_REAL, SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
+         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, PredictParPos_No, NULL_REAL,
+                                       SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
       }
 #     endif
 
@@ -740,7 +1043,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 
 //          5-2-1-2. determine the subset of the dataspace
-            H5_Offset_Field[0] = pc.GID_Offset[lv];
+            H5_Offset_Field[0] = GID_Offset[lv];
             H5_Offset_Field[1] = 0;
             H5_Offset_Field[2] = 0;
             H5_Offset_Field[3] = 0;
@@ -771,7 +1074,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #              endif
 
 //             b. particle density on grids
-#              ifdef MASSIVE_PARTICLES
+#              ifdef PARTICLE
                if ( v == ParDensDumpIdx )
                {
 //                we do not check minimum density here (just because it's unnecessary)
@@ -1092,7 +1395,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
             H5_Status = H5Sclose( H5_MemID_Field );
 
 //          free memory used for outputting particle density
-#           ifdef MASSIVE_PARTICLES
+#           ifdef PARTICLE
             if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
             {
                Prepare_PatchData_FreeParticleDensityArray( lv );
@@ -1120,7 +1423,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 
 //             5-2-2-2. determine the subset of the dataspace
-               H5_Offset_FCMag[0] = pc.GID_Offset[lv];
+               H5_Offset_FCMag[0] = GID_Offset[lv];
                H5_Offset_FCMag[1] = 0;
                H5_Offset_FCMag[2] = 0;
                H5_Offset_FCMag[3] = 0;
@@ -1340,53 +1643,53 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //    7-1. validate the father-son relation
 //    7-1-1. load data
       char SetName[MAX_STRING];
-      sprintf( SetName, "%s", "Tree/Father" );
+      sprintf( SetName, "Tree/Father" );
       H5_SetID_Fa = H5Dopen( H5_FileID, SetName, H5P_DEFAULT );
 
       if ( H5_SetID_Fa < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", SetName );
 
-      H5_Status = H5Dread( H5_SetID_Fa, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.FaList_AllLv );
+      H5_Status = H5Dread( H5_SetID_Fa, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, FaList_AllLv );
       H5_Status = H5Dclose( H5_SetID_Fa );
 
-      sprintf( SetName, "%s", "Tree/Son" );
+      sprintf( SetName, "Tree/Son" );
       H5_SetID_Son = H5Dopen( H5_FileID, SetName, H5P_DEFAULT );
 
       if ( H5_SetID_Son < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", SetName );
 
-      H5_Status = H5Dread( H5_SetID_Son, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.SonList_AllLv );
+      H5_Status = H5Dread( H5_SetID_Son, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, SonList_AllLv );
       H5_Status = H5Dclose( H5_SetID_Son );
 
-      sprintf( SetName, "%s", "Tree/Sibling" );
+      sprintf( SetName, "Tree/Sibling" );
       H5_SetID_Sib = H5Dopen( H5_FileID, SetName, H5P_DEFAULT );
 
       if ( H5_SetID_Sib < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", SetName );
 
-      H5_Status = H5Dread( H5_SetID_Sib, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, gel.SibList_AllLv );
+      H5_Status = H5Dread( H5_SetID_Sib, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, SibList_AllLv );
       H5_Status = H5Dclose( H5_SetID_Sib );
 
 
       for (int lv=0; lv<NLEVEL; lv++)
-      for (int GID=pc.GID_LvStart[lv]; GID<pc.GID_LvStart[lv]+NPatchTotal[lv]; GID++)
+      for (int GID=GID_LvStart[lv]; GID<GID_LvStart[lv]+NPatchTotal[lv]; GID++)
       {
 //       7-1-2. root patches have no father
          if ( lv == 0 )
-         if ( gel.FaList_AllLv[GID] != -1 )
-            Aux_Error( ERROR_INFO, "Lv %d, GID %d, FaGID %d != -1 !!\n", lv, GID, gel.FaList_AllLv[GID] );
+         if ( FaList_AllLv[GID] != -1 )
+            Aux_Error( ERROR_INFO, "Lv %d, GID %d, FaGID %d != -1 !!\n", lv, GID, FaList_AllLv[GID] );
 
 //       7-1-3. all patches at refinement levels have fathers
          if ( lv > 0 )
-         if ( gel.FaList_AllLv[GID] < 0  ||  gel.FaList_AllLv[GID] >= pc.GID_LvStart[lv] )
+         if ( FaList_AllLv[GID] < 0  ||  FaList_AllLv[GID] >= GID_LvStart[lv] )
             Aux_Error( ERROR_INFO, "Lv %d, GID %d, FaGID %d < 0 (or > max = %d) !!\n",
-                       lv, GID, gel.FaList_AllLv[GID], pc.GID_LvStart[lv]-1 );
+                       lv, GID, FaList_AllLv[GID], GID_LvStart[lv]-1 );
 
 //       7-1-4. father->son == itself
          if ( lv > 0 )
-         if ( gel.SonList_AllLv[ gel.FaList_AllLv[GID] ] + GID%8 != GID )
+         if ( SonList_AllLv[ FaList_AllLv[GID] ] + GID%8 != GID )
             Aux_Error( ERROR_INFO, "Lv %d, GID %d, FaGID %d, FaGID->Son %d ==> inconsistent !!\n",
-                       lv, GID, gel.FaList_AllLv[GID], gel.SonList_AllLv[ gel.FaList_AllLv[GID] ] );
+                       lv, GID, FaList_AllLv[GID], SonList_AllLv[ FaList_AllLv[GID] ] );
 
 //       7-1-5. son->father == itself
-         const int SonGID = gel.SonList_AllLv[GID];
+         SonGID = SonList_AllLv[GID];
          if ( SonGID != -1 )
          {
             if ( lv >= MAX_LEVEL )
@@ -1395,30 +1698,30 @@ void Output_DumpData_Total_HDF5( const char *FileName )
             if ( SonGID < -1 )
                Aux_Error( ERROR_INFO, "Lv %d, GID %d, SonGID %d < -1 !!\n", lv, GID, SonGID );
 
-            if ( lv < NLEVEL-1  &&  SonGID >= pc.GID_LvStart[lv+1]+NPatchTotal[lv+1] )
+            if ( lv < NLEVEL-1  &&  SonGID >= GID_LvStart[lv+1]+NPatchTotal[lv+1] )
                Aux_Error( ERROR_INFO, "Lv %d, GID %d, SonGID %d > max %d !!\n", lv, GID, SonGID,
-                          pc.GID_LvStart[lv+1]+NPatchTotal[lv+1]-1 );
+                          GID_LvStart[lv+1]+NPatchTotal[lv+1]-1 );
 
             for (int LocalID=0; LocalID<8; LocalID++)
-            if ( gel.FaList_AllLv[SonGID+LocalID] != GID )
+            if ( FaList_AllLv[SonGID+LocalID] != GID )
                Aux_Error( ERROR_INFO, "Lv %d, GID %d, SonGID %d, SonGID->Father %d ==> inconsistent !!\n",
-                          lv, GID, SonGID+LocalID, gel.FaList_AllLv[SonGID+LocalID] );
+                          lv, GID, SonGID+LocalID, FaList_AllLv[SonGID+LocalID] );
          }
 
 //       7-1-6. sibling->sibling_mirror = itself
          for (int s=0; s<26; s++)
          {
-            const int SibGID = gel.SibList_AllLv[GID][s];
+            SibGID = SibList_AllLv[GID][s];
 
             if ( SibGID >= 0 )
             {
-               if ( SibGID < pc.GID_LvStart[lv]  ||  SibGID >= pc.GID_LvStart[lv]+NPatchTotal[lv] )
+               if ( SibGID < GID_LvStart[lv]  ||  SibGID >= GID_LvStart[lv]+NPatchTotal[lv] )
                   Aux_Error( ERROR_INFO, "Lv %d, GID %d, sib %d, SibGID %d lies outside the correct range (%d <= SibGID < %d) !!\n",
-                             lv, GID, s, SibGID, pc.GID_LvStart[lv], pc.GID_LvStart[lv]+NPatchTotal[lv] );
+                             lv, GID, s, SibGID, GID_LvStart[lv], GID_LvStart[lv]+NPatchTotal[lv] );
 
-               if ( gel.SibList_AllLv[SibGID][ MirrorSib[s] ] != GID )
+               if ( SibList_AllLv[SibGID][ MirrorSib[s] ] != GID )
                   Aux_Error( ERROR_INFO, "Lv %d, GID %d, sib %d, SibGID %d != SibGID->sibling %d !!\n",
-                             lv, GID, s, SibGID, gel.SibList_AllLv[SibGID][ MirrorSib[s] ] );
+                             lv, GID, s, SibGID, SibList_AllLv[SibGID][ MirrorSib[s] ] );
             }
          }
       } // for (int lv=0; lv<NLEVEL; lv++)
@@ -1437,7 +1740,37 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    H5_Status = H5Sclose( H5_SpaceID_Scalar );
    H5_Status = H5Pclose( H5_DataCreatePropList );
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d)     ... done\n", __FUNCTION__, DumpID );
+   delete [] NPatchAllRank;
+
+   if ( MPI_Rank == 0 )
+   {
+      delete [] LBIdxList_AllLv;
+      delete []    CrList_AllLv;
+      delete []    FaList_AllLv;
+      delete []   SonList_AllLv;
+      delete []   SibList_AllLv;
+#     ifdef PARTICLE
+      delete []  NParList_AllLv;
+#     endif
+   }
+
+   for (int lv=0; lv<NLEVEL; lv++)
+   {
+      delete [] LBIdxList_Local[lv];
+      delete []    CrList_Local[lv];
+      delete []    FaList_Local[lv];
+      delete []   SonList_Local[lv];
+      delete []   SibList_Local[lv];
+#     ifdef PARTICLE
+      delete []  NParList_Local[lv];
+#     endif
+
+      delete [] LBIdxList_Sort[lv];
+      delete [] LBIdxList_Sort_IdxTable[lv];
+   }
+
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ... done\n", __FUNCTION__, DumpID );
 
 } // FUNCTION : Output_DumpData_Total_HDF5
 
@@ -1458,7 +1791,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2472;
+   KeyInfo.FormatVersion        = 2473;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1568,6 +1901,7 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  else
    Makefile.Particle               = 0;
 #  endif
+
 
 #  ifdef GPU
    Makefile.UseGPU                 = 1;
@@ -1781,16 +2115,6 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  endif // MODEL
 
 #  ifdef PARTICLE
-#  ifdef MASSIVE_PARTICLES
-   Makefile.MassiveParticles       = 1;
-#  else
-   Makefile.MassiveParticles       = 0;
-#  endif
-#  ifdef TRACER
-   Makefile.Tracer                 = 1;
-#  else
-   Makefile.Tracer                 = 0;
-#  endif
 #  ifdef STORE_PAR_ACC
    Makefile.StoreParAcc            = 1;
 #  else
@@ -1803,14 +2127,8 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.StarFormation          = 0;
 #  endif
 
-#  ifdef FEEDBACK
-   Makefile.Feedback               = 1;
-#  else
-   Makefile.Feedback               = 0;
-#  endif
-
    Makefile.Par_NAttUser           = PAR_NATT_USER;
-#  endif // #ifdef PARTICLE
+#  endif
 
 } // FUNCTION : FillIn_Makefile
 
@@ -1881,6 +2199,11 @@ void FillIn_SymConst( SymConst_t &SymConst )
 
 #  if   ( POT_SCHEME == SOR )
    SymConst.Pot_BlockSize_z      = POT_BLOCK_SIZE_Z;
+#  ifdef USE_PSOLVER_10TO14
+   SymConst.UsePSolver_10to14    = 1;
+#  else
+   SymConst.UsePSolver_10to14    = 0;
+#  endif
 #  ifdef SOR_RHO_SHARED
    SymConst.SOR_RhoShared        = 1;
 #  else
@@ -1911,10 +2234,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
 
 #  ifdef PARTICLE
    SymConst.Par_NAttStored       = PAR_NATT_STORED;
-   SymConst.Par_NType            = PAR_NTYPE;
-#  ifdef GRAVITY
    SymConst.RhoExt_GhostSize     = RHOEXT_GHOST_SIZE;
-#  endif
 
 #  ifdef DEBUG_PARTICLE
    SymConst.Debug_Particle       = 1;
@@ -1924,7 +2244,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
 
    SymConst.ParList_GrowthFactor = PARLIST_GROWTH_FACTOR;
    SymConst.ParList_ReduceFactor = PARLIST_REDUCE_FACTOR;
-#  endif // #ifdef PARTICLE
+#  endif
 
 
 #  ifdef BIT_REP_FLUX
@@ -1940,18 +2260,6 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.BitRep_Electric      = 0;
 #  endif
 #  endif // #ifdef MHD
-
-#  ifdef INTERP_MASK
-   SymConst.InterpMask           = 1;
-#  else
-   SymConst.InterpMask           = 0;
-#  endif
-
-#  ifdef FB_SEP_FLUOUT
-   SymConst.FB_SepFluOut         = 1;
-#  else
-   SymConst.FB_SepFluOut         = 0;
-#  endif
 
 
 #  if   ( MODEL == HYDRO )
@@ -1976,11 +2284,6 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.CheckIntermediate    = CHECK_INTERMEDIATE;
 #  else
    SymConst.CheckIntermediate    = 0;
-#  endif
-#  ifdef RSOLVER_RESCUE
-   SymConst.RSolverRescue        = RSOLVER_RESCUE;
-#  else
-   SymConst.RSolverRescue        = 0;
 #  endif
 #  ifdef HLL_NO_REF_STATE
    SymConst.HLL_NoRefState       = 1;
@@ -2010,11 +2313,6 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.EulerY               = 0;
 #  endif
 #  endif // MHD
-#  ifdef MHM_CHECK_PREDICT
-   SymConst.MHM_CheckPredict     = 1;
-#  else
-   SymConst.MHM_CheckPredict     = 0;
-#  endif
    SymConst.EoSNAuxMax           = EOS_NAUX_MAX;
    SymConst.EoSNTableMax         = EOS_NTABLE_MAX;
 
@@ -2062,11 +2360,6 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.Der_GhostSize        = DER_GHOST_SIZE;
    SymConst.Der_Nxt              = DER_NXT;
    SymConst.Der_NOut_Max         = DER_NOUT_MAX;
-
-#  ifdef FEEDBACK
-   SymConst.FB_GhostSize         = FB_GHOST_SIZE;
-   SymConst.FB_Nxt               = FB_NXT;
-#  endif
 
    SymConst.NFieldStoredMax      = NFIELD_STORED_MAX;
 
@@ -2128,18 +2421,13 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Par_Init                = amr->Par->Init;
    InputPara.Par_ICFormat            = amr->Par->ParICFormat;
    InputPara.Par_ICMass              = amr->Par->ParICMass;
-   InputPara.Par_ICType              = amr->Par->ParICType;
    InputPara.Par_Interp              = amr->Par->Interp;
-   InputPara.Par_InterpTracer        = amr->Par->InterpTracer;
    InputPara.Par_Integ               = amr->Par->Integ;
-   InputPara.Par_IntegTracer         = amr->Par->IntegTracer;
    InputPara.Par_ImproveAcc          = amr->Par->ImproveAcc;
    InputPara.Par_PredictPos          = amr->Par->PredictPos;
-   InputPara.Par_TracerVelCorr       = amr->Par->TracerVelCorr;
    InputPara.Par_RemoveCell          = amr->Par->RemoveCell;
    InputPara.Opt__FreezePar          = OPT__FREEZE_PAR;
    InputPara.Par_GhostSize           = amr->Par->GhostSize;
-   InputPara.Par_GhostSizeTracer     = amr->Par->GhostSizeTracer;
    for (int v=0; v<PAR_NATT_TOTAL; v++)
    InputPara.ParAttLabel[v]          = ParAttLabel[v];
 #  endif
@@ -2182,16 +2470,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.AutoReduceDt            = AUTO_REDUCE_DT;
    InputPara.AutoReduceDtFactor      = AUTO_REDUCE_DT_FACTOR;
    InputPara.AutoReduceDtFactorMin   = AUTO_REDUCE_DT_FACTOR_MIN;
-#  if ( MODEL == HYDRO )
-   InputPara.AutoReduceMinModFactor  = AUTO_REDUCE_MINMOD_FACTOR;
-   InputPara.AutoReduceMinModMin     = AUTO_REDUCE_MINMOD_MIN;
-#  endif
-   InputPara.AutoReduceIntMonoFactor = AUTO_REDUCE_INT_MONO_FACTOR;
-   InputPara.AutoReduceIntMonoMin    = AUTO_REDUCE_INT_MONO_MIN;
 
 // domain refinement
    InputPara.RegridCount             = REGRID_COUNT;
-   InputPara.RefineNLevel            = REFINE_NLEVEL;
    InputPara.FlagBufferSize          = FLAG_BUFFER_SIZE;
    InputPara.FlagBufferSizeMaxM1Lv   = FLAG_BUFFER_SIZE_MAXM1_LV;
    InputPara.FlagBufferSizeMaxM2Lv   = FLAG_BUFFER_SIZE_MAXM2_LV;
@@ -2252,20 +2533,13 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  if ( MODEL == HYDRO )
    InputPara.Gamma                   = GAMMA;
    InputPara.MolecularWeight         = MOLECULAR_WEIGHT;
-   InputPara.MuNorm                  = MU_NORM;
    InputPara.IsoTemp                 = ISO_TEMP;
    InputPara.MinMod_Coeff            = MINMOD_COEFF;
    InputPara.MinMod_MaxIter          = MINMOD_MAX_ITER;
    InputPara.Opt__LR_Limiter         = OPT__LR_LIMITER;
    InputPara.Opt__1stFluxCorr        = OPT__1ST_FLUX_CORR;
    InputPara.Opt__1stFluxCorrScheme  = OPT__1ST_FLUX_CORR_SCHEME;
-#  ifdef DUAL_ENERGY
-   InputPara.DualEnergySwitch        = DUAL_ENERGY_SWITCH;
 #  endif
-#  ifdef MHD
-   InputPara.Opt__SameInterfaceB     = OPT__SAME_INTERFACE_B;
-#  endif
-#  endif // HYDRO
 
 // ELBDM solvers
 #  if ( MODEL == ELBDM )
@@ -2316,7 +2590,6 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 
    InputPara.Opt__OverlapMPI         = OPT__OVERLAP_MPI;
    InputPara.Opt__ResetFluid         = OPT__RESET_FLUID;
-   InputPara.Opt__ResetFluidInit     = OPT__RESET_FLUID_INIT;
    InputPara.Opt__FreezeFluid        = OPT__FREEZE_FLUID;
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    InputPara.MinDens                 = MIN_DENS;
@@ -2331,6 +2604,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.JeansMinPres            = JEANS_MIN_PRES;
    InputPara.JeansMinPres_Level      = JEANS_MIN_PRES_LEVEL;
    InputPara.JeansMinPres_NCell      = JEANS_MIN_PRES_NCELL;
+#  endif
+#  ifdef DUAL_ENERGY
+   InputPara.DualEnergySwitch        = DUAL_ENERGY_SWITCH;
 #  endif
 
 // self-gravity
@@ -2397,14 +2673,6 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.SF_CreateStar_MaxStarMFrac = SF_CREATE_STAR_MAX_STAR_MFRAC;
 #  endif
 
-// feedback
-#  ifdef FEEDBACK
-   InputPara.FB_Level                = FB_LEVEL;
-   InputPara.FB_RSeed                = FB_RSEED;
-   InputPara.FB_SNe                  = FB_SNE;
-   InputPara.FB_User                 = FB_USER;
-#  endif
-
 // initialization
    InputPara.Opt__Init               = OPT__INIT;
    InputPara.RestartLoadNRank        = RESTART_LOAD_NRANK;
@@ -2441,16 +2709,11 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__GPUID_Select       = OPT__GPUID_SELECT;
    InputPara.Init_Subsampling_NCell  = INIT_SUBSAMPLING_NCELL;
 #  ifdef MHD
-   InputPara.Opt__InitBFieldByVecPot = OPT__INIT_BFIELD_BYVECPOT;
+   InputPara.Opt__InitBFieldByFile   = OPT__INIT_BFIELD_BYFILE;
 #  endif
-#  ifdef SUPPORT_FFTW
-   InputPara.Opt__FFTW_Startup       = OPT__FFTW_STARTUP;
-#  endif
+
 // interpolation schemes
    InputPara.Opt__Int_Time           = OPT__INT_TIME;
-#  if ( MODEL == HYDRO )
-   InputPara.Opt__Int_Prim           = OPT__INT_PRIM;
-#  endif
 #  if ( MODEL == ELBDM )
    InputPara.Opt__Int_Phase          = OPT__INT_PHASE;
    InputPara.Opt__Res_Phase          = OPT__RES_PHASE;
@@ -2471,44 +2734,40 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__RefPot_IntScheme   = OPT__REF_POT_INT_SCHEME;
 #  endif
    InputPara.IntMonoCoeff            = INT_MONO_COEFF;
-#  ifdef MHD
-   InputPara.IntMonoCoeffB           = INT_MONO_COEFF_B;
-#  endif
    InputPara.Mono_MaxIter            = MONO_MAX_ITER;
    InputPara.IntOppSign0thOrder      = INT_OPP_SIGN_0TH_ORDER;
 
 // data dump
-   InputPara.Opt__Output_Total       = OPT__OUTPUT_TOTAL;
-   InputPara.Opt__Output_Part        = OPT__OUTPUT_PART;
-   InputPara.Opt__Output_User        = OPT__OUTPUT_USER;
+   InputPara.Opt__Output_Total           = OPT__OUTPUT_TOTAL;
+   InputPara.Opt__Output_Part            = OPT__OUTPUT_PART;
+   InputPara.Opt__Output_User            = OPT__OUTPUT_USER;
 #  ifdef PARTICLE
-   InputPara.Opt__Output_Par_Mode    = OPT__OUTPUT_PAR_MODE;
+   InputPara.Opt__Output_Par_Mode        = OPT__OUTPUT_PAR_MODE;
 #  endif
-   InputPara.Opt__Output_BasePS      = OPT__OUTPUT_BASEPS;
-   InputPara.Opt__Output_Base        = OPT__OUTPUT_BASE;
+   InputPara.Opt__Output_BasePS          = OPT__OUTPUT_BASEPS;
+   InputPara.Opt__Output_Base            = OPT__OUTPUT_BASE;
 #  ifdef GRAVITY
-   InputPara.Opt__Output_Pot         = OPT__OUTPUT_POT;
+   InputPara.Opt__Output_Pot             = OPT__OUTPUT_POT;
 #  endif
 #  ifdef PARTICLE
-   InputPara.Opt__Output_ParDens     = OPT__OUTPUT_PAR_DENS;
+   InputPara.Opt__Output_ParDens         = OPT__OUTPUT_PAR_DENS;
 #  endif
 #  ifdef MHD
-   InputPara.Opt__Output_CC_Mag      = OPT__OUTPUT_CC_MAG;
+   InputPara.Opt__Output_CC_Mag          = OPT__OUTPUT_CC_MAG;
 #  endif
 #  if ( MODEL == HYDRO )
-   InputPara.Opt__Output_Pres        = OPT__OUTPUT_PRES;
-   InputPara.Opt__Output_Temp        = OPT__OUTPUT_TEMP;
-   InputPara.Opt__Output_Entr        = OPT__OUTPUT_ENTR;
-   InputPara.Opt__Output_Cs          = OPT__OUTPUT_CS;
-   InputPara.Opt__Output_DivVel      = OPT__OUTPUT_DIVVEL;
-   InputPara.Opt__Output_Mach        = OPT__OUTPUT_MACH;
+   InputPara.Opt__Output_Pres            = OPT__OUTPUT_PRES;
+   InputPara.Opt__Output_Temp            = OPT__OUTPUT_TEMP;
+   InputPara.Opt__Output_Entr            = OPT__OUTPUT_ENTR;
+   InputPara.Opt__Output_Cs              = OPT__OUTPUT_CS;
+   InputPara.Opt__Output_DivVel          = OPT__OUTPUT_DIVVEL;
+   InputPara.Opt__Output_Mach            = OPT__OUTPUT_MACH;
 #  ifdef MHD
-   InputPara.Opt__Output_DivMag      = OPT__OUTPUT_DIVMAG;
+   InputPara.Opt__Output_DivMag          = OPT__OUTPUT_DIVMAG;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
    InputPara.Opt__Output_UserField   = OPT__OUTPUT_USER_FIELD;
    InputPara.Opt__Output_Mode        = OPT__OUTPUT_MODE;
-   InputPara.Opt__Output_Restart     = OPT__OUTPUT_RESTART;
    InputPara.Opt__Output_Step        = OUTPUT_STEP;
    InputPara.Opt__Output_Dt          = OUTPUT_DT;
    InputPara.Output_PartX            = OUTPUT_PART_X;
@@ -2528,7 +2787,6 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__ManualControl      = OPT__MANUAL_CONTROL;
    InputPara.Opt__RecordUser         = OPT__RECORD_USER;
    InputPara.Opt__OptimizeAggressive = OPT__OPTIMIZE_AGGRESSIVE;
-   InputPara.Opt__SortPatchByLBIdx   = OPT__SORT_PATCH_BY_LBIDX;
 
 // simulation checks
    InputPara.Opt__Ck_Refine          = OPT__CK_REFINE;
@@ -2550,7 +2808,6 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Ck_InterfaceB      = OPT__CK_INTERFACE_B;
    InputPara.Opt__Ck_DivergenceB     = OPT__CK_DIVERGENCE_B;
 #  endif
-   InputPara.Opt__Ck_InputFluid      = OPT__CK_INPUT_FLUID;
 
 // flag tables
 #  if   ( MODEL == HYDRO )
@@ -2565,7 +2822,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
       InputPara.FlagTable_Rho         [lv]    = FlagTable_Rho         [lv];
       InputPara.FlagTable_RhoGradient [lv]    = FlagTable_RhoGradient [lv];
 
-      for (int t=0; t<5; t++)
+      for (int t=0; t<4; t++)
       InputPara.FlagTable_Lohner      [lv][t] = FlagTable_Lohner      [lv][t];
 
       InputPara.FlagTable_User        [lv].p   = malloc( OPT__FLAG_USER_NUM*sizeof(double) );
@@ -2786,11 +3043,8 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 #  endif // MODEL
 
 #  ifdef PARTICLE
-   H5Tinsert( H5_TypeID, "MassiveParticles",       HOFFSET(Makefile_t,MassiveParticles       ), H5T_NATIVE_INT );
-   H5Tinsert( H5_TypeID, "Tracer",                 HOFFSET(Makefile_t,Tracer                 ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "StoreParAcc",            HOFFSET(Makefile_t,StoreParAcc            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "StarFormation",          HOFFSET(Makefile_t,StarFormation          ), H5T_NATIVE_INT );
-   H5Tinsert( H5_TypeID, "Feedback",               HOFFSET(Makefile_t,Feedback               ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Par_NAttUser",           HOFFSET(Makefile_t,Par_NAttUser           ), H5T_NATIVE_INT );
 #  endif
 
@@ -2855,6 +3109,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "ExtPotNGeneMax",       HOFFSET(SymConst_t,ExtPotNGeneMax      ), H5T_NATIVE_INT    );
 #  if   ( POT_SCHEME == SOR )
    H5Tinsert( H5_TypeID, "Pot_BlockSize_z",      HOFFSET(SymConst_t,Pot_BlockSize_z     ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "UsePSolver_10to14",    HOFFSET(SymConst_t,UsePSolver_10to14   ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "SOR_RhoShared",        HOFFSET(SymConst_t,SOR_RhoShared       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "SOR_CPotShared",       HOFFSET(SymConst_t,SOR_CPotShared      ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "SOR_UseShuffle",       HOFFSET(SymConst_t,SOR_UseShuffle      ), H5T_NATIVE_INT    );
@@ -2867,21 +3122,16 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Par_NAttStored",       HOFFSET(SymConst_t,Par_NAttStored      ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "Par_NType",            HOFFSET(SymConst_t,Par_NType           ), H5T_NATIVE_INT    );
-#  ifdef GRAVITY
    H5Tinsert( H5_TypeID, "RhoExt_GhostSize",     HOFFSET(SymConst_t,RhoExt_GhostSize    ), H5T_NATIVE_INT    );
-#  endif
    H5Tinsert( H5_TypeID, "Debug_Particle",       HOFFSET(SymConst_t,Debug_Particle      ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "ParList_GrowthFactor", HOFFSET(SymConst_t,ParList_GrowthFactor), H5T_NATIVE_DOUBLE );
    H5Tinsert( H5_TypeID, "ParList_ReduceFactor", HOFFSET(SymConst_t,ParList_ReduceFactor), H5T_NATIVE_DOUBLE );
-#  endif // #ifdef PARTICLE
+#  endif
 
    H5Tinsert( H5_TypeID, "BitRep_Flux",          HOFFSET(SymConst_t,BitRep_Flux         ), H5T_NATIVE_INT    );
 #  ifdef MHD
    H5Tinsert( H5_TypeID, "BitRep_Electric",      HOFFSET(SymConst_t,BitRep_Electric     ), H5T_NATIVE_INT    );
 #  endif
-   H5Tinsert( H5_TypeID, "InterpMask",           HOFFSET(SymConst_t,InterpMask          ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "FB_SepFluOut",         HOFFSET(SymConst_t,FB_SepFluOut        ), H5T_NATIVE_INT    );
 
 #  if   ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Flu_BlockSize_x",      HOFFSET(SymConst_t,Flu_BlockSize_x     ), H5T_NATIVE_INT    );
@@ -2890,7 +3140,6 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "CharReconstruction",   HOFFSET(SymConst_t,CharReconstruction  ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "LR_Eint",              HOFFSET(SymConst_t,LR_Eint             ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "CheckIntermediate",    HOFFSET(SymConst_t,CheckIntermediate   ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "RSolverRescue",        HOFFSET(SymConst_t,RSolverRescue       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "HLL_NoRefState",       HOFFSET(SymConst_t,HLL_NoRefState      ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "HLL_IncludeAllWaves",  HOFFSET(SymConst_t,HLL_IncludeAllWaves ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "HLLC_WaveSpeed",       HOFFSET(SymConst_t,HLLC_WaveSpeed      ), H5T_NATIVE_INT    );
@@ -2907,7 +3156,6 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 #  ifdef MHD
    H5Tinsert( H5_TypeID, "EulerY",               HOFFSET(SymConst_t,EulerY              ), H5T_NATIVE_INT    );
 #  endif
-   H5Tinsert( H5_TypeID, "MHM_CheckPredict",     HOFFSET(SymConst_t,MHM_CheckPredict    ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "EoSNAuxMax",           HOFFSET(SymConst_t,EoSNAuxMax          ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "EoSNTableMax",         HOFFSET(SymConst_t,EoSNTableMax        ), H5T_NATIVE_INT    );
 
@@ -2949,11 +3197,6 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Der_GhostSize",        HOFFSET(SymConst_t,Der_GhostSize       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Der_Nxt",              HOFFSET(SymConst_t,Der_Nxt             ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Der_NOut_Max",         HOFFSET(SymConst_t,Der_NOut_Max        ), H5T_NATIVE_INT    );
-
-#  ifdef FEEDBACK
-   H5Tinsert( H5_TypeID, "FB_GhostSize",         HOFFSET(SymConst_t,FB_GhostSize        ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "FB_Nxt",               HOFFSET(SymConst_t,FB_Nxt              ), H5T_NATIVE_INT    );
-#  endif
 
    H5Tinsert( H5_TypeID, "NFieldStoredMax",      HOFFSET(SymConst_t,NFieldStoredMax     ), H5T_NATIVE_INT    );
 
@@ -3063,18 +3306,13 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Par_Init",                HOFFSET(InputPara_t,Par_Init               ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ICFormat",            HOFFSET(InputPara_t,Par_ICFormat           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ICMass",              HOFFSET(InputPara_t,Par_ICMass             ), H5T_NATIVE_DOUBLE  );
-   H5Tinsert( H5_TypeID, "Par_ICType",              HOFFSET(InputPara_t,Par_ICType             ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_Interp",              HOFFSET(InputPara_t,Par_Interp             ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Par_InterpTracer",        HOFFSET(InputPara_t,Par_InterpTracer       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_Integ",               HOFFSET(InputPara_t,Par_Integ              ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Par_IntegTracer",         HOFFSET(InputPara_t,Par_IntegTracer        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ImproveAcc",          HOFFSET(InputPara_t,Par_ImproveAcc         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_PredictPos",          HOFFSET(InputPara_t,Par_PredictPos         ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Par_TracerVelCorr",       HOFFSET(InputPara_t,Par_TracerVelCorr      ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_RemoveCell",          HOFFSET(InputPara_t,Par_RemoveCell         ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Opt__FreezePar",          HOFFSET(InputPara_t,Opt__FreezePar         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_GhostSize",           HOFFSET(InputPara_t,Par_GhostSize          ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Par_GhostSizeTracer",     HOFFSET(InputPara_t,Par_GhostSizeTracer    ), H5T_NATIVE_INT     );
 
 // store the name of all particle attributes
    for (int v=0; v<PAR_NATT_TOTAL; v++)
@@ -3125,17 +3363,10 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "AutoReduceDt",            HOFFSET(InputPara_t,AutoReduceDt           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "AutoReduceDtFactor",      HOFFSET(InputPara_t,AutoReduceDtFactor     ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "AutoReduceDtFactorMin",   HOFFSET(InputPara_t,AutoReduceDtFactorMin  ), H5T_NATIVE_DOUBLE  );
-#  if ( MODEL == HYDRO )
-   H5Tinsert( H5_TypeID, "AutoReduceMinModFactor",  HOFFSET(InputPara_t,AutoReduceMinModFactor ), H5T_NATIVE_DOUBLE  );
-   H5Tinsert( H5_TypeID, "AutoReduceMinModMin",     HOFFSET(InputPara_t,AutoReduceMinModMin    ), H5T_NATIVE_DOUBLE  );
-#  endif
-   H5Tinsert( H5_TypeID, "AutoReduceIntMonoFactor", HOFFSET(InputPara_t,AutoReduceIntMonoFactor), H5T_NATIVE_DOUBLE  );
-   H5Tinsert( H5_TypeID, "AutoReduceIntMonoMin",    HOFFSET(InputPara_t,AutoReduceIntMonoMin   ), H5T_NATIVE_DOUBLE  );
 
 
 // domain refinement
    H5Tinsert( H5_TypeID, "RegridCount",             HOFFSET(InputPara_t,RegridCount            ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "RefineNLevel",            HOFFSET(InputPara_t,RefineNLevel           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "FlagBufferSize",          HOFFSET(InputPara_t,FlagBufferSize         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "FlagBufferSizeMaxM1Lv",   HOFFSET(InputPara_t,FlagBufferSizeMaxM1Lv  ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "FlagBufferSizeMaxM2Lv",   HOFFSET(InputPara_t,FlagBufferSizeMaxM2Lv  ), H5T_NATIVE_INT     );
@@ -3196,20 +3427,13 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  if ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Gamma",                   HOFFSET(InputPara_t,Gamma                  ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "MolecularWeight",         HOFFSET(InputPara_t,MolecularWeight        ), H5T_NATIVE_DOUBLE  );
-   H5Tinsert( H5_TypeID, "MuNorm",                  HOFFSET(InputPara_t,MuNorm                 ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "IsoTemp",                 HOFFSET(InputPara_t,IsoTemp                ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "MinMod_Coeff",            HOFFSET(InputPara_t,MinMod_Coeff           ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "MinMod_MaxIter",          HOFFSET(InputPara_t,MinMod_MaxIter         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__LR_Limiter",         HOFFSET(InputPara_t,Opt__LR_Limiter        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__1stFluxCorr",        HOFFSET(InputPara_t,Opt__1stFluxCorr       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__1stFluxCorrScheme",  HOFFSET(InputPara_t,Opt__1stFluxCorrScheme ), H5T_NATIVE_INT     );
-#  ifdef DUAL_ENERGY
-   H5Tinsert( H5_TypeID, "DualEnergySwitch",        HOFFSET(InputPara_t,DualEnergySwitch       ), H5T_NATIVE_DOUBLE  );
 #  endif
-#  ifdef MHD
-   H5Tinsert( H5_TypeID, "Opt__SameInterfaceB",     HOFFSET(InputPara_t,Opt__SameInterfaceB    ), H5T_NATIVE_INT     );
-#  endif
-#  endif // HYDRO
 
 // ELBDM solvers
 #  if ( MODEL == ELBDM )
@@ -3271,7 +3495,6 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 
    H5Tinsert( H5_TypeID, "Opt__OverlapMPI",         HOFFSET(InputPara_t,Opt__OverlapMPI        ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__ResetFluid",         HOFFSET(InputPara_t,Opt__ResetFluid        ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__ResetFluidInit",     HOFFSET(InputPara_t,Opt__ResetFluidInit    ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__FreezeFluid",        HOFFSET(InputPara_t,Opt__FreezeFluid       ), H5T_NATIVE_INT              );
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "MinDens",                 HOFFSET(InputPara_t,MinDens                ), H5T_NATIVE_DOUBLE           );
@@ -3286,6 +3509,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "JeansMinPres",            HOFFSET(InputPara_t,JeansMinPres           ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "JeansMinPres_Level",      HOFFSET(InputPara_t,JeansMinPres_Level     ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "JeansMinPres_NCell",      HOFFSET(InputPara_t,JeansMinPres_NCell     ), H5T_NATIVE_INT              );
+#  endif
+#  ifdef DUAL_ENERGY
+   H5Tinsert( H5_TypeID, "DualEnergySwitch",        HOFFSET(InputPara_t,DualEnergySwitch       ), H5T_NATIVE_DOUBLE           );
 #  endif
 
 // self-gravity
@@ -3349,44 +3575,30 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "SF_CreateStar_MaxStarMFrac", HOFFSET(InputPara_t,SF_CreateStar_MaxStarMFrac ), H5T_NATIVE_DOUBLE    );
 #  endif
 
-// feedback
-#  ifdef FEEDBACK
-   H5Tinsert( H5_TypeID, "FB_Level",                HOFFSET(InputPara_t,FB_Level               ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "FB_RSeed",                HOFFSET(InputPara_t,FB_RSeed               ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "FB_SNe",                  HOFFSET(InputPara_t,FB_SNe                 ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "FB_User",                 HOFFSET(InputPara_t,FB_User                ), H5T_NATIVE_INT              );
-#  endif
-
 // initialization
-   H5Tinsert( H5_TypeID, "Opt__Init",               HOFFSET(InputPara_t,Opt__Init               ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "RestartLoadNRank",        HOFFSET(InputPara_t,RestartLoadNRank        ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__RestartReset",       HOFFSET(InputPara_t,Opt__RestartReset       ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__UM_IC_Level",        HOFFSET(InputPara_t,Opt__UM_IC_Level        ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__UM_IC_NLevel",       HOFFSET(InputPara_t,Opt__UM_IC_NLevel       ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__UM_IC_NVar",         HOFFSET(InputPara_t,Opt__UM_IC_NVar         ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__UM_IC_Format",       HOFFSET(InputPara_t,Opt__UM_IC_Format       ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__UM_IC_Downgrade",    HOFFSET(InputPara_t,Opt__UM_IC_Downgrade    ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__UM_IC_Refine",       HOFFSET(InputPara_t,Opt__UM_IC_Refine       ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__UM_IC_LoadNRank",    HOFFSET(InputPara_t,Opt__UM_IC_LoadNRank    ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Init",               HOFFSET(InputPara_t,Opt__Init              ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "RestartLoadNRank",        HOFFSET(InputPara_t,RestartLoadNRank       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__RestartReset",       HOFFSET(InputPara_t,Opt__RestartReset      ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__UM_IC_Level",        HOFFSET(InputPara_t,Opt__UM_IC_Level       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__UM_IC_NLevel",       HOFFSET(InputPara_t,Opt__UM_IC_NLevel      ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__UM_IC_NVar",         HOFFSET(InputPara_t,Opt__UM_IC_NVar        ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__UM_IC_Format",       HOFFSET(InputPara_t,Opt__UM_IC_Format      ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__UM_IC_Downgrade",    HOFFSET(InputPara_t,Opt__UM_IC_Downgrade   ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__UM_IC_Refine",       HOFFSET(InputPara_t,Opt__UM_IC_Refine      ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__UM_IC_LoadNRank",    HOFFSET(InputPara_t,Opt__UM_IC_LoadNRank   ), H5T_NATIVE_INT              );
 #  if ( NLEVEL > 1 )
-   H5Tinsert( H5_TypeID, "UM_IC_RefineRegion",      HOFFSET(InputPara_t,UM_IC_RefineRegion      ), H5_TypeID_Arr_NLvM1_6Int    );
+   H5Tinsert( H5_TypeID, "UM_IC_RefineRegion",      HOFFSET(InputPara_t,UM_IC_RefineRegion     ), H5_TypeID_Arr_NLvM1_6Int    );
 #  endif
-   H5Tinsert( H5_TypeID, "Opt__InitRestrict",       HOFFSET(InputPara_t,Opt__InitRestrict       ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__InitGridWithOMP",    HOFFSET(InputPara_t,Opt__InitGridWithOMP    ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__GPUID_Select",       HOFFSET(InputPara_t,Opt__GPUID_Select       ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Init_Subsampling_NCell",  HOFFSET(InputPara_t,Init_Subsampling_NCell  ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__InitRestrict",       HOFFSET(InputPara_t,Opt__InitRestrict      ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__InitGridWithOMP",    HOFFSET(InputPara_t,Opt__InitGridWithOMP   ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__GPUID_Select",       HOFFSET(InputPara_t,Opt__GPUID_Select      ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Init_Subsampling_NCell",  HOFFSET(InputPara_t,Init_Subsampling_NCell ), H5T_NATIVE_INT              );
 #  ifdef MHD
-   H5Tinsert( H5_TypeID, "Opt__InitBFieldByVecPot", HOFFSET(InputPara_t,Opt__InitBFieldByVecPot ), H5T_NATIVE_INT              );
-#  endif
-#  ifdef SUPPORT_FFTW
-   H5Tinsert( H5_TypeID, "Opt__FFTW_Startup",       HOFFSET(InputPara_t,Opt__FFTW_Startup       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__InitBFieldByFile",   HOFFSET(InputPara_t,Opt__InitBFieldByFile  ), H5T_NATIVE_INT              );
 #  endif
 
 // interpolation schemes
    H5Tinsert( H5_TypeID, "Opt__Int_Time",           HOFFSET(InputPara_t,Opt__Int_Time          ), H5T_NATIVE_INT              );
-#  if ( MODEL == HYDRO )
-   H5Tinsert( H5_TypeID, "Opt__Int_Prim",           HOFFSET(InputPara_t,Opt__Int_Prim          ), H5T_NATIVE_INT              );
-#  endif
 #  if ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "Opt__Int_Phase",          HOFFSET(InputPara_t,Opt__Int_Phase         ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Res_Phase",          HOFFSET(InputPara_t,Opt__Res_Phase         ), H5T_NATIVE_INT              );
@@ -3407,9 +3619,6 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__RefPot_IntScheme",   HOFFSET(InputPara_t,Opt__RefPot_IntScheme  ), H5T_NATIVE_INT              );
 #  endif
    H5Tinsert( H5_TypeID, "IntMonoCoeff",            HOFFSET(InputPara_t,IntMonoCoeff           ), H5T_NATIVE_DOUBLE           );
-#  ifdef MHD
-   H5Tinsert( H5_TypeID, "IntMonoCoeffB",           HOFFSET(InputPara_t,IntMonoCoeffB          ), H5T_NATIVE_DOUBLE           );
-#  endif
    H5Tinsert( H5_TypeID, "Mono_MaxIter",            HOFFSET(InputPara_t,Mono_MaxIter           ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "IntOppSign0thOrder",      HOFFSET(InputPara_t,IntOppSign0thOrder     ), H5T_NATIVE_INT              );
 
@@ -3420,37 +3629,38 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Opt__Output_Par_Mode",    HOFFSET(InputPara_t,Opt__Output_Par_Mode   ), H5T_NATIVE_INT              );
 #  endif
-   H5Tinsert( H5_TypeID, "Opt__Output_BasePS",      HOFFSET(InputPara_t,Opt__Output_BasePS     ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_Base",        HOFFSET(InputPara_t,Opt__Output_Base       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_BasePS",          HOFFSET(InputPara_t,Opt__Output_BasePS         ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Base",            HOFFSET(InputPara_t,Opt__Output_Base           ), H5T_NATIVE_INT              );
 #  ifdef GRAVITY
-   H5Tinsert( H5_TypeID, "Opt__Output_Pot",         HOFFSET(InputPara_t,Opt__Output_Pot        ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Pot",             HOFFSET(InputPara_t,Opt__Output_Pot            ), H5T_NATIVE_INT              );
 #  endif
 #  ifdef PARTICLE
-   H5Tinsert( H5_TypeID, "Opt__Output_ParDens",     HOFFSET(InputPara_t,Opt__Output_ParDens    ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_ParDens",         HOFFSET(InputPara_t,Opt__Output_ParDens        ), H5T_NATIVE_INT              );
 #  endif
 #  ifdef MHD
-   H5Tinsert( H5_TypeID, "Opt__Output_CC_Mag",      HOFFSET(InputPara_t,Opt__Output_CC_Mag     ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_CC_Mag",          HOFFSET(InputPara_t,Opt__Output_CC_Mag         ), H5T_NATIVE_INT              );
 #  endif
 #  if ( MODEL == HYDRO )
-   H5Tinsert( H5_TypeID, "Opt__Output_Pres",        HOFFSET(InputPara_t,Opt__Output_Pres       ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_Temp",        HOFFSET(InputPara_t,Opt__Output_Temp       ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_Entr",        HOFFSET(InputPara_t,Opt__Output_Entr       ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_Cs",          HOFFSET(InputPara_t,Opt__Output_Cs         ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_DivVel",      HOFFSET(InputPara_t,Opt__Output_DivVel     ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_Mach",        HOFFSET(InputPara_t,Opt__Output_Mach       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Pres",            HOFFSET(InputPara_t,Opt__Output_Pres           ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Temp",            HOFFSET(InputPara_t,Opt__Output_Temp           ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Entr",            HOFFSET(InputPara_t,Opt__Output_Entr           ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Cs",              HOFFSET(InputPara_t,Opt__Output_Cs             ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_DivVel",          HOFFSET(InputPara_t,Opt__Output_DivVel         ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Mach",            HOFFSET(InputPara_t,Opt__Output_Mach           ), H5T_NATIVE_INT              );
 #  ifdef MHD
-   H5Tinsert( H5_TypeID, "Opt__Output_DivMag",      HOFFSET(InputPara_t,Opt__Output_DivMag     ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_DivMag",          HOFFSET(InputPara_t,Opt__Output_DivMag         ), H5T_NATIVE_INT              );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
-   H5Tinsert( H5_TypeID, "Opt__Output_UserField",   HOFFSET(InputPara_t,Opt__Output_UserField  ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_Mode",        HOFFSET(InputPara_t,Opt__Output_Mode       ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_Restart",     HOFFSET(InputPara_t,Opt__Output_Restart    ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_Step",        HOFFSET(InputPara_t,Opt__Output_Step       ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__Output_Dt",          HOFFSET(InputPara_t,Opt__Output_Dt         ), H5T_NATIVE_DOUBLE           );
-   H5Tinsert( H5_TypeID, "Output_PartX",            HOFFSET(InputPara_t,Output_PartX           ), H5T_NATIVE_DOUBLE           );
-   H5Tinsert( H5_TypeID, "Output_PartY",            HOFFSET(InputPara_t,Output_PartY           ), H5T_NATIVE_DOUBLE           );
-   H5Tinsert( H5_TypeID, "Output_PartZ",            HOFFSET(InputPara_t,Output_PartZ           ), H5T_NATIVE_DOUBLE           );
-   H5Tinsert( H5_TypeID, "InitDumpID",              HOFFSET(InputPara_t,InitDumpID             ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_UserField",       HOFFSET(InputPara_t,Opt__Output_UserField      ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Mode",            HOFFSET(InputPara_t,Opt__Output_Mode           ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Restart",         HOFFSET(InputPara_t,Opt__Output_Restart        ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Step",            HOFFSET(InputPara_t,Opt__Output_Step           ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Dt",              HOFFSET(InputPara_t,Opt__Output_Dt             ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "Opt__Output_Text_Format_Flt", HOFFSET(InputPara_t,Opt__Output_Text_Format_Flt), H5_TypeID_VarStr            );
+   H5Tinsert( H5_TypeID, "Output_PartX",                HOFFSET(InputPara_t,Output_PartX               ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "Output_PartY",                HOFFSET(InputPara_t,Output_PartY               ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "Output_PartZ",                HOFFSET(InputPara_t,Output_PartZ               ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "InitDumpID",                  HOFFSET(InputPara_t,InitDumpID                 ), H5T_NATIVE_INT              );
 
 // miscellaneous
    H5Tinsert( H5_TypeID, "Opt__Verbose",            HOFFSET(InputPara_t,Opt__Verbose           ), H5T_NATIVE_INT              );
@@ -3464,7 +3674,6 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__ManualControl",      HOFFSET(InputPara_t,Opt__ManualControl     ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__RecordUser",         HOFFSET(InputPara_t,Opt__RecordUser        ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__OptimizeAggressive", HOFFSET(InputPara_t,Opt__OptimizeAggressive), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "Opt__SortPatchByLBIdx",   HOFFSET(InputPara_t,Opt__SortPatchByLBIdx  ), H5T_NATIVE_INT              );
 
 // simulation checks
    H5Tinsert( H5_TypeID, "Opt__Ck_Refine",          HOFFSET(InputPara_t,Opt__Ck_Refine         ), H5T_NATIVE_INT              );
@@ -3486,13 +3695,12 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Ck_InterfaceB",      HOFFSET(InputPara_t,Opt__Ck_InterfaceB     ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Ck_DivergenceB",     HOFFSET(InputPara_t,Opt__Ck_DivergenceB    ), H5T_NATIVE_INT              );
 #  endif
-   H5Tinsert( H5_TypeID, "Opt__Ck_InputFluid",      HOFFSET(InputPara_t,Opt__Ck_InputFluid     ), H5T_NATIVE_INT              );
 
 // flag tables
 #  if ( NLEVEL > 1 )
    H5Tinsert( H5_TypeID, "FlagTable_Rho",          HOFFSET(InputPara_t,FlagTable_Rho           ), H5_TypeID_Arr_NLvM1Double   );
    H5Tinsert( H5_TypeID, "FlagTable_RhoGradient",  HOFFSET(InputPara_t,FlagTable_RhoGradient   ), H5_TypeID_Arr_NLvM1Double   );
-   H5Tinsert( H5_TypeID, "FlagTable_Lohner",       HOFFSET(InputPara_t,FlagTable_Lohner        ), H5_TypeID_Arr_NLvM1_5Double );
+   H5Tinsert( H5_TypeID, "FlagTable_Lohner",       HOFFSET(InputPara_t,FlagTable_Lohner        ), H5_TypeID_Arr_NLvM1_4Double );
 
 // store the user-defined thresholds at all levels
    for (int lv=0; lv<MAX_LEVEL; lv++)
