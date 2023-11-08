@@ -105,13 +105,13 @@ void EoS_SetAuxArray_GammaCR( double AuxArray_Flt[], int AuxArray_Int[] )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_DensEint2Pres_GammaCR
-// Description :  Convert gas mass density and internal energy density to total pressure
+// Description :  Convert gas mass density and total internal energy density (gas + cosmic ray) to total pressure
 //
 // Note        :  1. Internal energy density here is per unit volume instead of per unit mass
 //                2. See EoS_SetAuxArray_GammaCR() for the values stored in AuxArray_Flt/Int[]
 //
 // Parameter   :  Dens       : Gas mass density
-//                Eint       : Total energy density (gas + cosmic ray)
+//                Eint       : Total internal energy density (gas + cosmic ray)
 //                Passive    : Passive scalars (Passive[CRAY-NCOMP_FLUID] gives the cosmic-ray energy density)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
@@ -133,13 +133,13 @@ static real EoS_DensEint2Pres_GammaCR( const real Dens, const real Eint, const r
 #  endif // GAMER_DEBUG
 
 
-   const real Gamma_m1   = (real)AuxArray_Flt[1];
-   const real small_val  = (real)AuxArray_Flt[6];
-   const real E_CR       = Passive[ CRAY-NCOMP_FLUID ];
-   const real Pres_CR    = EoS_CREint2CRPres_GammaCR( E_CR, AuxArray_Flt, AuxArray_Int, Table );
+   const real Gamma_m1  = (real)AuxArray_Flt[1];
+   const real small_val = (real)AuxArray_Flt[6];
+   const real E_CR      = Passive[ CRAY-NCOMP_FLUID ];
+   const real Pres_CR   = EoS_CREint2CRPres_GammaCR( E_CR, AuxArray_Flt, AuxArray_Int, Table );
    real Pres;
 
-   Pres = Gamma_m1*FMAX( Eint - E_CR, small_val ) + Pres_CR;
+   Pres = Gamma_m1*FMAX( Eint-E_CR, small_val ) + Pres_CR;
 
    return Pres;
 
@@ -149,7 +149,7 @@ static real EoS_DensEint2Pres_GammaCR( const real Dens, const real Eint, const r
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_DensPres2Eint_GammaCR
-// Description :  Convert gas mass density and total pressure to total energy density
+// Description :  Convert gas mass density and total pressure to total internal energy density (gas + cosmic ray)
 //
 // Note        :  1. See EoS_DensEint2Pres_GammaCR()
 //
@@ -159,7 +159,7 @@ static real EoS_DensEint2Pres_GammaCR( const real Dens, const real Eint, const r
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
 //
-// Return      :  Total energy density (gas + cosmic ray)
+// Return      :  Total internal energy density (gas + cosmic ray)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensPres2Eint_GammaCR( const real Dens, const real Pres, const real Passive[],
@@ -181,7 +181,7 @@ static real EoS_DensPres2Eint_GammaCR( const real Dens, const real Pres, const r
    const real Pres_CR      = EoS_CREint2CRPres_GammaCR( E_CR, AuxArray_Flt, AuxArray_Int, Table );
    real Eint;
 
-   Eint = FMAX( Pres - Pres_CR, small_val ) * Gamma_m1_inv + E_CR;
+   Eint = FMAX( Pres-Pres_CR, small_val )*Gamma_m1_inv + E_CR;
 
    return Eint;
 
@@ -218,14 +218,14 @@ static real EoS_DensPres2CSqr_GammaCR( const real Dens, const real Pres, const r
 #  endif // GAMER_DEBUG
 
 
-   const real Gamma      = (real)AuxArray_Flt[0];
-   const real GammaCR    = (real)AuxArray_Flt[4];
-   const real small_val  = (real)AuxArray_Flt[6];
-   const real E_CR       = Passive[ CRAY-NCOMP_FLUID ];
-   const real Pres_CR    = EoS_CREint2CRPres_GammaCR( E_CR, AuxArray_Flt, AuxArray_Int, Table );
+   const real Gamma     = (real)AuxArray_Flt[0];
+   const real GammaCR   = (real)AuxArray_Flt[4];
+   const real small_val = (real)AuxArray_Flt[6];
+   const real E_CR      = Passive[ CRAY-NCOMP_FLUID ];
+   const real Pres_CR   = EoS_CREint2CRPres_GammaCR( E_CR, AuxArray_Flt, AuxArray_Int, Table );
    real Cs2;
 
-   Cs2 = ( GammaCR * Pres_CR + Gamma * FMAX( Pres - Pres_CR, small_val ) ) / Dens;
+   Cs2 = (  GammaCR*Pres_CR + Gamma*FMAX( Pres-Pres_CR, small_val )  ) / Dens;
 
    return Cs2;
 
@@ -235,14 +235,14 @@ static real EoS_DensPres2CSqr_GammaCR( const real Dens, const real Pres, const r
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_DensEint2Temp_GammaCR
-// Description :  Convert gas mass density and total energy density to gas temperature
+// Description :  Convert gas mass density and total internal energy density (gas + cosmic ray) to gas temperature
 //
 // Note        :  1. Internal energy density here is per unit volume instead of per unit mass
 //                2. See EoS_SetAuxArray_GammaCR() for the values stored in AuxArray_Flt/Int[]
 //                3. Temperature is in kelvin
 //
 // Parameter   :  Dens       : Gas mass density
-//                Eint       : Total energy density (gas + cosmic ray)
+//                Eint       : Total internal energy density (gas + cosmic ray)
 //                Passive    : Passive scalars (Passive[CRAY-NCOMP_FLUID] gives the cosmic-ray energy density)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
@@ -270,8 +270,8 @@ static real EoS_DensEint2Temp_GammaCR( const real Dens, const real Eint, const r
    const real E_CR      = Passive[ CRAY-NCOMP_FLUID ];
    real Pres_Gas, Temp;
 
-   Pres_Gas = FMAX( Eint - E_CR , small_val ) * Gamma_m1;
-   Temp     = m_kB * Pres_Gas / Dens;
+   Pres_Gas = FMAX( Eint-E_CR, small_val )*Gamma_m1;
+   Temp     = m_kB*Pres_Gas/Dens;
 
    return Temp;
 
@@ -308,12 +308,12 @@ static real EoS_DensTemp2Pres_GammaCR( const real Dens, const real Temp, const r
 #  endif // GAMER_DEBUG
 
 
-   const real _m_kB      = (real)AuxArray_Flt[8];
-   const real E_CR       = Passive[ CRAY-NCOMP_FLUID ];
-   const real Pres_CR    = EoS_CREint2CRPres_GammaCR( E_CR, AuxArray_Flt, AuxArray_Int, Table );
+   const real _m_kB   = (real)AuxArray_Flt[8];
+   const real E_CR    = Passive[ CRAY-NCOMP_FLUID ];
+   const real Pres_CR = EoS_CREint2CRPres_GammaCR( E_CR, AuxArray_Flt, AuxArray_Int, Table );
    real Pres;
 
-   Pres = Temp * Dens * _m_kB + Pres_CR;
+   Pres = Temp*Dens*_m_kB + Pres_CR;
 
    return Pres;
 
@@ -323,13 +323,13 @@ static real EoS_DensTemp2Pres_GammaCR( const real Dens, const real Temp, const r
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_DensEint2Entr_GammaCR
-// Description :  Convert gas mass density and total energy density to gas entropy
+// Description :  Convert gas mass density and total internal energy density (gas + cosmic ray) to gas entropy
 //                --> Here entropy is defined as "pressure_gas / density^(Gamma_gas-1)" (i.e., entropy per volume)
 //
 // Note        :  1. See EoS_SetAuxArray_GammaCR() for the values stored in AuxArray_Flt/Int[]
 //
 // Parameter   :  Dens       : Gas mass density
-//                Eint       : Total energy density (gas + cosmic ray)
+//                Eint       : Total internal energy density (gas + cosmic ray)
 //                Passive    : Passive scalars (Passive[CRAY-NCOMP_FLUID] gives the cosmic-ray energy density)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
@@ -351,13 +351,14 @@ static real EoS_DensEint2Entr_GammaCR( const real Dens, const real Eint, const r
 
 #  endif // GAMER_DEBUG
 
-   const real Gamma_m1   = (real)AuxArray_Flt[1];
-   const real small_val  = (real)AuxArray_Flt[6];
-   const real E_CR       = Passive[ CRAY-NCOMP_FLUID ];
+
+   const real Gamma_m1  = (real)AuxArray_Flt[1];
+   const real small_val = (real)AuxArray_Flt[6];
+   const real E_CR      = Passive[ CRAY-NCOMP_FLUID ];
    real Pres_Gas, Entr_Gas;
 
-   Pres_Gas = Gamma_m1 * FMAX( Eint - E_CR, small_val );
-   Entr_Gas = Pres_Gas * POW( Dens, -Gamma_m1 );
+   Pres_Gas = Gamma_m1*FMAX( Eint-E_CR, small_val );
+   Entr_Gas = Pres_Gas*POW( Dens, -Gamma_m1 );
 
    return Entr_Gas;
 
@@ -392,9 +393,10 @@ static void EoS_General_GammaCR( const int Mode, real Out[], const real In_Flt[]
 } // FUNCTION : EoS_General_GammaCR
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_CREint2CRPres_GammaCR
-// Description :  Convert cosmic-ray energy density to cosmic ray pressure
+// Description :  Convert cosmic-ray energy density to cosmic-ray pressure
 //
 // Note        :  1. Internal energy density here is per unit volume instead of per unit mass
 //                2. See EoS_SetAuxArray_GammaCR() for the values stored in AuxArray_Flt/Int[]
@@ -413,22 +415,25 @@ static real EoS_CREint2CRPres_GammaCR( const real E_CR,
 // check
 #  ifdef GAMER_DEBUG
    if ( E_CR < (real)0.0 )
-      printf( "ERROR : invalid input cosmic ray energy density (%13.7e) in %s() !!\n", E_CR, __FUNCTION__ );
+      printf( "ERROR : invalid input cosmic-ray energy density (%13.7e) in %s() !!\n", E_CR, __FUNCTION__ );
 #  endif // GAMER_DEBUG
+
 
    const real GammaCR_m1 = (real)AuxArray_Flt[5];
    real Pres_CR;
 
-   Pres_CR = GammaCR_m1 * E_CR;
+   Pres_CR = GammaCR_m1*E_CR;
+
 
 // check
 #  ifdef GAMER_DEBUG
    if ( Pres_CR < (real)0.0 )
    {
-      printf( "ERROR : invalid output cosmic ray pressure (%13.7e) in %s() !!\n", Pres_CR, __FUNCTION__ );
-      printf( "        CRay=%13.7e\n",E_CR);
+      printf( "ERROR : invalid output cosmic-ray pressure (%13.7e) in %s() !!\n", Pres_CR, __FUNCTION__ );
+      printf( "        CRay=%13.7e\n", E_CR );
    }
 #  endif // GAMER_DEBUG
+
 
    return Pres_CR;
 
@@ -574,6 +579,5 @@ void EoS_Init_GammaCR()
 
 
 #endif // #ifdef COSMIC_RAY
-
 
 #endif // #if ( MODEL == HYDRO )
