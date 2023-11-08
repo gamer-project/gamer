@@ -10,8 +10,9 @@ from mpmath import *
 
 # This script computes the tables required for the spectral interpolation in GAMER
 #
-# No OpenMP parallelisation, launch with as many MPI nodes as desired, e.g. with 2 nodes and
+# No OpenMP parallelisation, launch with as many MPI nodes as desired, e.g. with 3 nodes and
 # mpirun -map-by ppr:16:socket:pe=1 python3 compute_interpolation_tables.py
+# The script takes a few hours to run and will not output any log messages during that time.
 #
 # Spectral interpolation for the psidm branch can be enabled
 # via the compile time option SUPPORT_SPECTRAL_INT
