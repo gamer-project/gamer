@@ -52,17 +52,10 @@ void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
 #     ifdef MHD
       const real DensFlux_L = g_Flux_Half[d][DENS][ idx_flux - didx_flux[d] ];
       const real DensFlux_R = g_Flux_Half[d][DENS][ idx_flux                ];
-
-      div_V[d]  = ( DensFlux_R > (real)0.0 ) ?
-                  ( DensFlux_R / g_ConVar_In[DENS][ idx_in              ] ) :
-                  ( DensFlux_R / g_ConVar_In[DENS][ idx_in + didx_in[d] ] );
-
-      div_V[d] -= ( DensFlux_L > (real)0.0 ) ?
-                  ( DensFlux_L / g_ConVar_In[DENS][ idx_in - didx_in[d] ] ) :
-                  ( DensFlux_L / g_ConVar_In[DENS][ idx_in              ] );
 #     else
       const real DensFlux_L = g_Flux_Half[d][DENS][ idx_flux                ];
       const real DensFlux_R = g_Flux_Half[d][DENS][ idx_flux + didx_flux[d] ];
+#     endif
 
       div_V[d]  = ( DensFlux_R > (real)0.0 ) ?
                   ( DensFlux_R / g_ConVar_In[DENS][ idx_in              ] ) :
@@ -71,7 +64,6 @@ void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
       div_V[d] -= ( DensFlux_L > (real)0.0 ) ?
                   ( DensFlux_L / g_ConVar_In[DENS][ idx_in - didx_in[d] ] ) :
                   ( DensFlux_L / g_ConVar_In[DENS][ idx_in              ] );
-#     endif
    } // for (int d=0; d<3; d++)
 
 
@@ -172,17 +164,10 @@ void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 #        ifdef MHD
          const real DensFlux_L = g_Flux[d][DENS][ idx_flux - didx_flux[d] ];
          const real DensFlux_R = g_Flux[d][DENS][ idx_flux                ];
-
-         div_V[d]  = ( DensFlux_R > (real)0.0 ) ?
-                     ( DensFlux_R / g_FC_Var[faceR][DENS][ idx_fc              ] ) :
-                     ( DensFlux_R / g_FC_Var[faceL][DENS][ idx_fc + didx_fc[d] ] );
-
-         div_V[d] -= ( DensFlux_L > (real)0.0 ) ?
-                     ( DensFlux_L / g_FC_Var[faceR][DENS][ idx_fc - didx_fc[d] ] ) :
-                     ( DensFlux_L / g_FC_Var[faceL][DENS][ idx_fc              ] );
 #        else
          const real DensFlux_L = g_Flux[d][DENS][ idx_flux                ];
          const real DensFlux_R = g_Flux[d][DENS][ idx_flux + didx_flux[d] ];
+#        endif
 
          div_V[d]  = ( DensFlux_R > (real)0.0 ) ?
                      ( DensFlux_R / g_FC_Var[faceR][DENS][ idx_fc              ] ) :
@@ -191,7 +176,6 @@ void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
          div_V[d] -= ( DensFlux_L > (real)0.0 ) ?
                      ( DensFlux_L / g_FC_Var[faceR][DENS][ idx_fc - didx_fc[d] ] ) :
                      ( DensFlux_L / g_FC_Var[faceL][DENS][ idx_fc              ] );
-#        endif
       } // for (int d=0; d<3; d++)
 
 
