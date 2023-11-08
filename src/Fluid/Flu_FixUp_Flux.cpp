@@ -69,7 +69,7 @@ void Flu_FixUp_Flux( const int lv )
 #  endif
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
-   if ( amr->use_wave_flag[lv] )
+   if ( lv != TOP_LEVEL  &&  amr->use_wave_flag[lv+1] )
       Aux_Error( ERROR_INFO, "WAVE_GRAMFE does not support the option OPT__FIXUP_FLUX !!\n" );
 #  endif
 
