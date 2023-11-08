@@ -323,7 +323,7 @@ OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2
 INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
 OPT__FFTW_STARTUP            -1           # initialise fftw plans: (-1=auto, 0=ESTIMATE, 1=MEASURE, 2=PATIENT (only FFTW3)) [-1]
 
-# interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar)
+# interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar, 8=Spectral (##ELBDM & SUPPORT_SPECTRAL_INT ONLY ##))
 OPT__INT_TIME                 1           # perform "temporal" interpolation for OPT__DT_LEVEL == 2/3 [1]
 OPT__INT_PRIM                 1           # switch to primitive variables when the interpolation on conserved variables fails [1] ##HYDRO ONLY##
 OPT__INT_PHASE                1           # interpolation on phase (does not support MinMod-1D) [1] ##ELBDM ONLY##
@@ -340,6 +340,7 @@ INT_MONO_COEFF                2.0         # coefficient for ensuring the interpo
 INT_MONO_COEFF_B              2.0         # coefficient for ensuring the interpolation monotonicity of B field (1.0~4.0) [2.0] ##MHD ONLY##
 MONO_MAX_ITER                 10          # maximum number of iterations to reduce INT_MONO_COEFF when interpolation fails (0=off) [10]
 INT_OPP_SIGN_0TH_ORDER        1           # switch to 0th-order interpolation if adjacent values change signs [HYDRO:1; ELBDM:0]
+SPEC_INT_TABLE_PATH           ./          # path to tables for spectral interpolation ##ELBDM & SUPPORT_SPECTRAL_INT ONLY ##
 
 
 # data dump
