@@ -2199,11 +2199,6 @@ void FillIn_SymConst( SymConst_t &SymConst )
 
 #  if   ( POT_SCHEME == SOR )
    SymConst.Pot_BlockSize_z      = POT_BLOCK_SIZE_Z;
-#  ifdef USE_PSOLVER_10TO14
-   SymConst.UsePSolver_10to14    = 1;
-#  else
-   SymConst.UsePSolver_10to14    = 0;
-#  endif
 #  ifdef SOR_RHO_SHARED
    SymConst.SOR_RhoShared        = 1;
 #  else
