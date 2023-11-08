@@ -280,7 +280,7 @@ namespace gramfe_fftw = fftw2;
 #else // #if ( SUPPORT_FFTW == FFTW3 )
 #define gramfe_fftw_c2c(plan, arr)                                           gramfe_fftw::execute_dft_c2c_1d ( plan, (gramfe_fftw::fft_complex*) arr, NULL )
 #define gramfe_fftw_r2c(plan, arr)                                           gramfe_fftw::execute_dft_r2c_1d ( plan, (gramfe_fftw::fft_real*)    arr, NULL )
-#define gramfe_fftw_c2r(plan, arr)                                           gramfe_fftw::execute_dft_c2r_1d ( plan, (gramfe_fftw::fft_complex*) arr, NULL )
+#define gramfe_fftw_c2r(plan, arr)                                           gramfe_fftw::execute_dft_c2r_1d ( plan, (gramfe_fftw::fft_real*)    arr, NULL )
 #define gramfe_fftw_create_1d_forward_c2c_plan(size, arr, startup)           gramfe_fftw::plan_dft_c2c_1d    ( size, FFTW_FORWARD , startup | FFTW_IN_PLACE )
 #define gramfe_fftw_create_1d_backward_c2c_plan(size, arr, startup)          gramfe_fftw::plan_dft_c2c_1d    ( size, FFTW_BACKWARD, startup | FFTW_IN_PLACE )
 #endif // #if ( SUPPORT_FFTW == FFTW3 ) ... # else
