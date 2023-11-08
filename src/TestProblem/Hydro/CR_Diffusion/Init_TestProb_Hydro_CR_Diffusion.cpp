@@ -672,7 +672,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 void OutputError()
 {
 
-   const char Prefix[100] = "CosmicRay_Diffusion";
+   const char Prefix[100] = "CR_Diffusion";
    OptOutputPart_t Part;
 
    switch ( CR_Diffusion_Space )
@@ -720,7 +720,7 @@ double RandomNumber( RandomNumber_t *RNG, const double Min, const double Max )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_Hydro_Cosmic_Ray_Diffusion
+// Function    :  Init_TestProb_Hydro_CR_Diffusion
 // Description :  Test problem initializer
 //
 // Note        :  None
@@ -729,7 +729,7 @@ double RandomNumber( RandomNumber_t *RNG, const double Min, const double Max )
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_Hydro_Cosmic_Ray_Diffusion()
+void Init_TestProb_Hydro_CR_Diffusion()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -754,4 +754,4 @@ void Init_TestProb_Hydro_Cosmic_Ray_Diffusion()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_TestProb_Hydro_Cosmic_Ray_Diffusion
+} // FUNCTION : Init_TestProb_Hydro_CR_Diffusion
