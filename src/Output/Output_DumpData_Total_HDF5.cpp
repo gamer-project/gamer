@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2472)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2473)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -246,7 +246,6 @@ Procedure for outputting new variables:
 //                2470 : 2023/06/24 --> output OPT__SORT_PATCH_BY_LBIDX
 //                2471 : 2023/09/09 --> output MHM_CHECK_PREDICT
 //                2472 : 2023/10/16 --> output OPT__OUTPUT_TEXT_FORMAT_FLT
-
 //                2473 : 2023/11/08 --> output OPT__FLAG_INTERFERENCE, ELBDM_MATCH_PHASE
 //                                             ELBDM_FIRST_WAVE_LEVEL, OPT__LB_EXCHANGE_FATHER, FlagTable_Interference
 //                                             DENS and PHAS for hybrid scheme,
@@ -1460,7 +1459,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2472;
+   KeyInfo.FormatVersion        = 2473;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
