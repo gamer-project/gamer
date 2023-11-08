@@ -271,7 +271,6 @@ void Init_ByRestart_HDF5( const char *FileName )
 #     ifdef GRAVITY
       AveDensity_Init = KeyInfo.AveDens_Init;
 #     endif
-
    }
 
 
@@ -656,7 +655,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 
 
 // 3-1. set the names of all grid fields and particle attributes
-   for (int v=0; v<NCompStore; v++)      sprintf( FieldName[v], "%s", FieldLabel[v] );
+   for (int v=0; v<NCompStore; v++)       sprintf( FieldName[v], "%s", FieldLabel[v] );
 
 #  ifdef MHD
    for (int v=0; v<NCOMP_MAG; v++)        sprintf( FCMagName[v], "%s", MagLabel[v] );
@@ -1265,7 +1264,6 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
    NCompStore -= 1 ;
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
-
 // allocate patch
    amr->pnew( lv, CrList[GID][0], CrList[GID][1], CrList[GID][2], -1, WithData_Yes, WithData_Yes, WithData_Yes );
 
@@ -1285,7 +1283,6 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
 
    H5_Status = H5Sselect_hyperslab( H5_SpaceID_Field, H5S_SELECT_SET, H5_Offset_Field, NULL, H5_Count_Field, NULL );
    if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab for the grid data !!\n" );
-
 
 
 // load cell-centered intrinsic variables from disk
@@ -1315,7 +1312,6 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       }}}
    }
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-
 
 // load face-centered magnetic field from disk
 #  ifdef MHD
