@@ -51,6 +51,7 @@ HUBBLE0                       0.6732117      # dimensionless Hubble parameter (c
 DT__MAX                      -1.0         # dt criterion: maximum allowed dt (<0=off) [-1.0]
 DT__FLUID                    -1.0         # dt criterion: fluid solver CFL factor (<0=auto) [-1.0]
 DT__FLUID_INIT               -1.0         # dt criterion: DT__FLUID at the first step (<0=auto) [-1.0]
+DT__GRAVITY                  -1.0         # dt criterion: gravity solver safety factor (<0=auto) [-1.0]
 DT__HYBRID_CFL               -1.0         # dt criterion: hybrid solver CFL factor (<0=auto) (diffusion) [-1.0] ## HYBRID ELBDM ONLY##
 DT__HYBRID_CFL_INIT          -1.0         # dt criterion: DT__HYBRID_CFL in the first step (<0=auto) [-1.0] ## HYBRID ELBDM ONLY##
 DT__HYBRID_VELOCITY          -1.0         # dt criterion: hybrid solver CFL factor (<0=auto) (Hamilton-Jacobi) [-1.0] ## HYBRID ELBDM ONLY##
