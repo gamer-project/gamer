@@ -144,10 +144,10 @@ void SetParameter()
 //                   --> The function pointer may be reset by various test problem initializers, in which case
 //                       this funtion will become useless
 //                2. One can use LSS_InitMode to support different data formats
-//                3. On wave levels this function expects:
+//                3. For ELBDM_SCHEME == ELBDM_WAVE this function expects:
 //                       LSS_InitMode == 1: Density
 //                       LSS_InitMode == 2: Real and imaginary part
-//                   On fluid levels this function expects:
+//                   For ELBDM_SCHEME == ELBDM_HYBRID this function expects:
 //                       LSS_InitMode == 1: Density
 //                       LSS_InitMode == 2: Density and phase
 // Parameter   :  fluid_out : Fluid field to be set
@@ -194,22 +194,19 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
       {
          if ( nvar_in != 2 )  Aux_Error( ERROR_INFO, "nvar_in (%d) != 2 for LSS_InitMode 2 !!\n", nvar_in );
 
-         // wave scheme expects real and imaginary parts
-         // fluid scheme expects density and phase
-#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
-         if ( amr->use_wave_flag[lv] ) {
-#        endif
+         // ELBDM_WAVE   expects real and imaginary parts
+         // ELBDM_HYBRID expects density and phase
+#        if ( ELBDM_SCHEME == ELBDM_WAVE )
          Re = fluid_in[0];
          Im = fluid_in[1];
          De = SQR(Re) + SQR(Im);
-         Ph = 0.0; // set to zero for easier debugging
-#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
-         } else { // if ( amr->use_wave_flag[lv] )
-         De = fluid_in[0]; // note that this is the density on fluid levels in hybrid scheme
-         Ph = fluid_in[1]; // note that this is the phase on fluid levels in hybrid scheme
-         Re = 0.0; // set to zero for easier debugging
-         Im = 0.0; // set to zero for easier debugging
-         } // if ( amr->use_wave_flag[lv] ) ... else
+#        elif ( ELBDM_SCHEME == ELBDM_HYBRID )
+         De = fluid_in[0];
+         Ph = fluid_in[1];
+         Re = SQRT(De) * COS(Ph);
+         Im = SQRT(De) * SIN(Ph);
+#        else
+#        error : ERROR : Unsupported ELBDM_SCHEME!!
 #        endif
          break;
       }
