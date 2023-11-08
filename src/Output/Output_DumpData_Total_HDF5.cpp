@@ -3104,7 +3104,6 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "ExtPotNGeneMax",       HOFFSET(SymConst_t,ExtPotNGeneMax      ), H5T_NATIVE_INT    );
 #  if   ( POT_SCHEME == SOR )
    H5Tinsert( H5_TypeID, "Pot_BlockSize_z",      HOFFSET(SymConst_t,Pot_BlockSize_z     ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "UsePSolver_10to14",    HOFFSET(SymConst_t,UsePSolver_10to14   ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "SOR_RhoShared",        HOFFSET(SymConst_t,SOR_RhoShared       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "SOR_CPotShared",       HOFFSET(SymConst_t,SOR_CPotShared      ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "SOR_UseShuffle",       HOFFSET(SymConst_t,SOR_UseShuffle      ), H5T_NATIVE_INT    );
