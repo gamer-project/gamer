@@ -6,7 +6,7 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    : CR_AdiabaticWork_HalfStepUpdate
+// Function    : CR_AdiabaticWork_HalfStep_MHM_RP
 //
 // Description : Add the adiabatic work term to update the cosmic-ray energy for the half-step solution of MHM_RP
 //
@@ -31,12 +31,12 @@
 // Return      : OneCell[CRAY]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void CR_AdiabaticWork_HalfStepUpdate(       real OneCell[NCOMP_TOTAL_PLUS_MAG],
-                                      const real g_ConVar_In[][ CUBE(FLU_NXT) ],
-                                      const real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                                      const int idx_in, const int didx_in[3],
-                                      const int idx_flux, const int didx_flux[3],
-                                      const real dt_dh2, const EoS_t *EoS )
+void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
+                                       const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                                       const real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                       const int idx_in, const int didx_in[3],
+                                       const int idx_flux, const int didx_flux[3],
+                                       const real dt_dh2, const EoS_t *EoS )
 {
 
 // 1. calculate the cosmic-ray pressure
@@ -78,13 +78,13 @@ void CR_AdiabaticWork_HalfStepUpdate(       real OneCell[NCOMP_TOTAL_PLUS_MAG],
 // 3. update the cosmic-ray energy
    OneCell[CRAY] -= pCR_old*dt_dh2*( div_V[0] + div_V[1] + div_V[2] );
 
-} // FUMCTION : CR_AdiabaticWork_HalfStepUpdate
+} // FUMCTION : CR_AdiabaticWork_HalfStep_MHM_RP
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    : CR_AdiabaticWork_FullStepUpdate
+// Function    : CR_AdiabaticWork_FullStep
 //
 // Description : Add the adiabatic work term to update the cosmic-ray energy for the full-step solution of MHM_RP/MHM
 //
@@ -111,11 +111,11 @@ void CR_AdiabaticWork_HalfStepUpdate(       real OneCell[NCOMP_TOTAL_PLUS_MAG],
 // Return      : g_Output[CRAY][]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void CR_AdiabaticWork_FullStepUpdate( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
-                                            real g_Output[][ CUBE(PS2) ],
-                                      const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                                      const real g_FC_Var[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
-                                      const real dt, const real dh, const EoS_t *EoS )
+void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
+                                      real g_Output[][ CUBE(PS2) ],
+                                const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                const real g_FC_Var[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+                                const real dt, const real dh, const EoS_t *EoS )
 {
 
    const int didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
@@ -204,7 +204,7 @@ void CR_AdiabaticWork_FullStepUpdate( const real g_PriVar_Half[][ CUBE(FLU_NXT) 
    __syncthreads();
 #  endif
 
-} // FUNCTION : CR_AdiabaticWork_FullStepUpdate
+} // FUNCTION : CR_AdiabaticWork_FullStep
 
 
 

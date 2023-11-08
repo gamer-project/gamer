@@ -124,17 +124,17 @@ void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out
 #endif // #ifdef MHD
 
 #ifdef COSMIC_RAY
-void CR_AdiabaticWork_HalfStepUpdate(       real OneCell[NCOMP_TOTAL_PLUS_MAG],
-                                      const real g_ConVar_In[][ CUBE(FLU_NXT) ],
-                                      const real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                                      const int idx_fc, const int didx_fc[3],
-                                      const int idx_flux, const int didx_flux[3],
-                                      const real dt_dh2, const EoS_t *EoS );
-void CR_AdiabaticWork_FullStepUpdate( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
-                                            real g_Output[][ CUBE(PS2) ],
-                                      const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                                      const real g_FC_Var[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
-                                      const real dt, const real dh, const EoS_t *EoS );
+void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
+                                       const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                                       const real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                       const int idx_fc, const int didx_fc[3],
+                                       const int idx_flux, const int didx_flux[3],
+                                       const real dt_dh2, const EoS_t *EoS );
+void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
+                                      real g_Output[][ CUBE(PS2) ],
+                                const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                const real g_FC_Var[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+                                const real dt, const real dh, const EoS_t *EoS );
 #ifdef CR_DIFFUSION
 void CR_AddDiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
                                        real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
@@ -573,8 +573,8 @@ void CPU_FluidSolver_MHM(
 
 //          add the cosmic-ray source term of adiabatic work
 #           ifdef COSMIC_RAY
-            CR_AdiabaticWork_FullStepUpdate( g_PriVar_Half_1PG, g_Flu_Array_Out[P], g_FC_Flux_1PG, g_FC_Var_1PG,
-                                             dt, dh, &EoS );
+            CR_AdiabaticWork_FullStep( g_PriVar_Half_1PG, g_Flu_Array_Out[P], g_FC_Flux_1PG, g_FC_Var_1PG,
+                                       dt, dh, &EoS );
 #           endif
 
 
@@ -889,8 +889,8 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 
 //    add the cosmic-ray source term of adiabatic work
 #     ifdef COSMIC_RAY
-      CR_AdiabaticWork_HalfStepUpdate( out_con, g_ConVar_In, g_Flux_Half, idx_in, didx_in,
-                                       idx_flux, didx_flux, dt_dh2, EoS );
+      CR_AdiabaticWork_HalfStep_MHM_RP( out_con, g_ConVar_In, g_Flux_Half, idx_in, didx_in,
+                                        idx_flux, didx_flux, dt_dh2, EoS );
 #     endif
 
 
