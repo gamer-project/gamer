@@ -661,8 +661,8 @@
 //  for GRAMFE_MATMUL extension size is irrelevant since matrix multiplication works for all sizes
 #     define GRAMFE_ND     32  // GRAMFE_FLU_NXT = 2^6
 
-#     if ( PATCH_SIZE != 8 && PATCH_SIZE != 16 && PATCH_SIZE != 32 )
-#       error : ERROR : Unsupported PATCH_SIZE for GRAMFE_MATMUL!!
+#     if ( PATCH_SIZE != 8 && PATCH_SIZE != 16 )
+#       error : ERROR : Unsupported PATCH_SIZE for GRAMFE_MATMUL!! Consider switching to GRAMFE_FFT.
 #     endif // PATCH_SIZE
 
 #   else
