@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser(description='Power Spectrum Analysis')
 
 # Define command-line arguments
 parser.add_argument('-i', action='store', required=False, type=str, dest='data_path',
-                    help='data path prefix [%(default)s]', default='../')
+                    help='data path prefix [%(default)s]', default='./')
 parser.add_argument('-s', action='store', required=True, type=int, dest='start_index',
                     help='start data index')
 parser.add_argument('-e', action='store', required=True, type=int, dest='end_index',

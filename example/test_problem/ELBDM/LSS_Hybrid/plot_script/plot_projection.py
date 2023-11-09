@@ -14,7 +14,7 @@ center_mode   = 'c'
 parser = argparse.ArgumentParser( description='Projection of mass density' )
 
 parser.add_argument( '-i', action='store', required=False, type=str, dest='prefix',
-                     help='path prefix [%(default)s]', default='../' )
+                     help='path prefix [%(default)s]', default='./' )
 parser.add_argument( '-s', action='store', required=True,  type=int, dest='idx_start',
                      help='first data index' )
 parser.add_argument( '-e', action='store', required=True,  type=int, dest='idx_end',
