@@ -9,7 +9,7 @@ axes          = ["x", "y", "z"]  # Directions
 zoom_levels   = [1, 3, 10]  # Zoom levels
 max_amr_level = 10  # Maximum level for sampling AMR grid
 dpi           = 300
-colormap      = 'algae'
+colormap      = 'viridis'
 
 
 # Load the command-line parameters

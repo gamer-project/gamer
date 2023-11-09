@@ -7,7 +7,7 @@ field         = ('gas', 'density')
 axes          = ["x", "y", "z"]                            # directions
 lv            = 10                                         # maximum level for sampling AMR grid
 dpi           = 300
-colormap_dens = 'algae'
+colormap_dens = 'viridis'
 center_mode   = 'c'
 
 # load the command-line parameters
