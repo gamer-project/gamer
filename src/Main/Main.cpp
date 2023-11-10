@@ -306,6 +306,7 @@ MicroPhy_t MicroPhy;
 double CR_DIFF_PARA;
 double CR_DIFF_PERP;
 double DT__CR_DIFFUSION;
+double CR_DIFF_MIN_B;
 #endif
 
 

@@ -331,6 +331,7 @@ extern MicroPhy_t MicroPhy;
 extern double CR_DIFF_PARA;
 extern double CR_DIFF_PERP;
 extern double DT__CR_DIFFUSION;
+extern double CR_DIFF_MIN_B;
 #endif
 
 

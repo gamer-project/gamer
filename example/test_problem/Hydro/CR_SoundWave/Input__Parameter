@@ -180,7 +180,8 @@ SF_CREATE_STAR_MAX_STAR_MFRAC 0.5         # maximum gas mass fraction allowed to
 # cosmic rays (COSMIC_RAY only)
 GAMMA_CR                      1.333333333 # effective adiabatic index of cosmic rays [4.0/3.0]
 CR_DIFF_PARA                  0.05        # cosmic-ray diffusion coefficients parallel/perpendicular to the
-CR_DIFF_PERP                  0.00        # magnetic field [0.0] ##CR_DIFFUSION only##
+CR_DIFF_PERP                  0.0         # magnetic field [0.0] ##CR_DIFFUSION only##
+CR_DIFF_MIN_B                 0.0         # disable diffusion locally when B field amplitude is smaller than this threshold (<=0=off) [0.0] ##CR_DIFFUSION only##
 
 
 # fluid solver in HYDRO (MODEL==HYDRO only)

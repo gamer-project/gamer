@@ -30,6 +30,7 @@ void Microphysics_Init()
    MicroPhy.CR_safety          = DT__CR_DIFFUSION;
    MicroPhy.CR_diff_coeff_para = CR_DIFF_PARA;
    MicroPhy.CR_diff_coeff_perp = CR_DIFF_PERP;
+   MicroPhy.CR_diff_min_b      = CR_DIFF_MIN_B;
 #  endif // #ifdef CR_DIFFUSION
 
    MicroPhy_Initialized = true;

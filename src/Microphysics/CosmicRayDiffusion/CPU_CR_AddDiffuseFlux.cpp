@@ -60,7 +60,6 @@ void CR_AddDiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
    const int  didx_cvar[3] = { 1, FLU_NXT, SQR(FLU_NXT) };
    const int  flux_offset  = 1;
    const real _dh          = (real)1.0 / dh;
-// const real small_B      = 1.e-30;
 
    for (int d=0; d<3; d++)
    {
@@ -139,11 +138,6 @@ void CR_AddDiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
                                  g_CC_B[TDir2][ idx_cvar + didx_cvar[d] ]   );
          B_amp     = SQRT( SQR(B_N_mean) + SQR(B_T1_mean) + SQR(B_T2_mean) );
 
-         //if ( B_amp < small_B && diff_cr_eff_perp != diff_cr_eff_para ) {
-            // Error
-            // xFlux = 0;
-         //}
-
 //       normalize magnetic field
          B_N_mean  /= B_amp;
          B_T1_mean /= B_amp;
@@ -198,7 +192,11 @@ void CR_AddDiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
          Flux_Total = Flux_Para + Flux_Perp;
 
 
-//       5. flux add-up
+//       5. disable diffusion locally when B field amplitude is smaller than the given minimum threshold
+         if ( B_amp < MicroPhy->CR_diff_min_b )    Flux_Total = (real)0.0;
+
+
+//       6. flux add-up
          g_Flux_Half[d][CRAY][idx_flux] += Flux_Total;
          g_Flux_Half[d][ENGY][idx_flux] += Flux_Total;
 
@@ -243,7 +241,6 @@ void CR_AddDiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
    const int  mag_offset   = ( N_HF_VAR - PS2 ) / 2;
    const int  half_offset  = ( N_HF_VAR - N_FC_VAR ) / 2;
    const real _dh          = (real)1.0 / dh;
-// const real small_B    = 1.e-30;
 
    for (int d=0; d<3; d++)
    {
@@ -333,11 +330,6 @@ void CR_AddDiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                                   g_FC_B_Half[TDir2][ idx_fc_BT2 - stride_fc_BT2[d] + stride_fc_BT2[TDir2] ]   );
          B_amp     = SQRT( SQR(B_N_mean) + SQR(B_T1_mean) + SQR(B_T2_mean) );
 
-         //if ( B_amp < small_B && diff_cr_eff_perp != diff_cr_eff_para ) {
-            // Error
-            // xFlux = 0;
-         //}
-
 //       normalize magnetic field
          B_N_mean  /= B_amp;
          B_T1_mean /= B_amp;
@@ -392,7 +384,11 @@ void CR_AddDiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
          Flux_Total = Flux_Para + Flux_Perp;
 
 
-//       5. flux add-up
+//       5. disable diffusion locally when B field amplitude is smaller than the given minimum threshold
+         if ( B_amp < MicroPhy->CR_diff_min_b )    Flux_Total = (real)0.0;
+
+
+//       6. flux add-up
          g_FC_Flux[d][CRAY][idx_flux] += Flux_Total;
          g_FC_Flux[d][ENGY][idx_flux] += Flux_Total;
 
