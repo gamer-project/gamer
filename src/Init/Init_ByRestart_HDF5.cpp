@@ -2063,6 +2063,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  ifdef CR_DIFFUSION
    LoadField( "CR_Diffusion_ParaCoeff",  &RS.CR_Diffusion_ParaCoeff,  SID, TID, NonFatal, &RT.CR_Diffusion_ParaCoeff,   1, NonFatal );
    LoadField( "CR_Diffusion_PerpCoeff",  &RS.CR_Diffusion_PerpCoeff,  SID, TID, NonFatal, &RT.CR_Diffusion_PerpCoeff,   1, NonFatal );
+   LoadField( "CR_Diffusion_MinB",       &RS.CR_Diffusion_MinB,       SID, TID, NonFatal, &RT.CR_Diffusion_MinB,        1, NonFatal );
 #  endif
 #  endif // #ifdef COSMIC_RAY
 

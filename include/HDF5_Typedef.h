@@ -643,6 +643,7 @@ struct InputPara_t
 #  ifdef CR_DIFFUSION
    double CR_Diffusion_ParaCoeff;
    double CR_Diffusion_PerpCoeff;
+   double CR_Diffusion_MinB;
 #  endif
 
 // initialization
