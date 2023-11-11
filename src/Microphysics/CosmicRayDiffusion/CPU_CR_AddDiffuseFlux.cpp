@@ -58,7 +58,7 @@ void CR_AddDiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
 {
 
    const int  didx_cvar[3] = { 1, FLU_NXT, SQR(FLU_NXT) };
-   const int  flux_offset  = 1;
+   const int  flux_offset  = 1;  // skip the additional fluxes along the transverse directions for computing the CT electric field
    const real _dh          = (real)1.0 / dh;
 
    for (int d=0; d<3; d++)
@@ -239,7 +239,8 @@ void CR_AddDiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 
    const int  didx_half[3] = { 1, N_HF_VAR, SQR(N_HF_VAR) };
    const int  mag_offset   = ( N_HF_VAR - PS2 ) / 2;
-   const int  half_offset  = ( N_HF_VAR - N_FC_VAR ) / 2;
+   const int  half_offset  = ( N_HF_VAR - NFlux ) / 2;
+   const int  flux_offset  = 1;  // skip the additional fluxes along the transverse directions for computing the CT electric field
    const real _dh          = (real)1.0 / dh;
 
    for (int d=0; d<3; d++)
@@ -249,36 +250,40 @@ void CR_AddDiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 
       int sizeB_i, sizeB_j, sizeB_k;
       int mag_offset_i, mag_offset_j, mag_offset_k;
-      int idx_flux_e[3];
+      int size_i, size_j, size_k;
+      int i_offset, j_offset, k_offset;
 
       switch ( d )
       {
-         case 0 : idx_flux_e[0] = N_FC_VAR-1;    idx_flux_e[1] = N_FC_VAR;      idx_flux_e[2] = N_FC_VAR;
-                  sizeB_i       = N_HF_VAR+1;    sizeB_j       = N_HF_VAR;      sizeB_k       = N_HF_VAR;
-                  mag_offset_i  = mag_offset;    mag_offset_j  = mag_offset-1;  mag_offset_k  = mag_offset-1;
+         case 0 : size_i       = NFlux-1;               size_j        = NFlux-2*flux_offset;  size_k        = NFlux-2*flux_offset;
+                  sizeB_i      = N_HF_VAR+1;            sizeB_j       = N_HF_VAR;             sizeB_k       = N_HF_VAR;
+                  mag_offset_i = mag_offset;            mag_offset_j  = mag_offset-1;         mag_offset_k  = mag_offset-1;
+                  i_offset     = 0;                     j_offset      = flux_offset;          k_offset      = flux_offset;
                   break;
 
-         case 1 : idx_flux_e[0] = N_FC_VAR;      idx_flux_e[1] = N_FC_VAR-1;    idx_flux_e[2] = N_FC_VAR;
-                  sizeB_i       = N_HF_VAR;      sizeB_j       = N_HF_VAR+1;    sizeB_k       = N_HF_VAR;
-                  mag_offset_i  = mag_offset-1;  mag_offset_j  = mag_offset;    mag_offset_k  = mag_offset-1;
+         case 1 : size_i        = NFlux-2*flux_offset;  size_j        = NFlux-1;              size_k        = NFlux-2*flux_offset;
+                  sizeB_i       = N_HF_VAR;             sizeB_j       = N_HF_VAR+1;           sizeB_k       = N_HF_VAR;
+                  mag_offset_i  = mag_offset-1;         mag_offset_j  = mag_offset;           mag_offset_k  = mag_offset-1;
+                  i_offset      = flux_offset;          j_offset      = 0;                    k_offset      = flux_offset;
                   break;
 
-         case 2 : idx_flux_e[0] = N_FC_VAR;      idx_flux_e[1] = N_FC_VAR;      idx_flux_e[2] = N_FC_VAR-1;
-                  sizeB_i       = N_HF_VAR;      sizeB_j       = N_HF_VAR;      sizeB_k       = N_HF_VAR+1;
-                  mag_offset_i  = mag_offset-1;  mag_offset_j  = mag_offset-1;  mag_offset_k  = mag_offset;
+         case 2 : size_i        = NFlux-2*flux_offset;  size_j        = NFlux-2*flux_offset;  size_k        = NFlux-1;
+                  sizeB_i       = N_HF_VAR;             sizeB_j       = N_HF_VAR;             sizeB_k       = N_HF_VAR+1;
+                  mag_offset_i  = mag_offset-1;         mag_offset_j  = mag_offset-1;         mag_offset_k  = mag_offset;
+                  i_offset      = flux_offset;          j_offset      = flux_offset;          k_offset      = 0;
                   break;
       } // switch ( d )
 
       const int stride_fc_BT1[3] = { 1, sizeB_k, sizeB_k*sizeB_i };
       const int stride_fc_BT2[3] = { 1, sizeB_j, sizeB_j*sizeB_k };
-      const int size_ij          = idx_flux_e[0]*idx_flux_e[1];
+      const int size_ij          = size_i*size_j;
 
-      CGPU_LOOP( idx, idx_flux_e[0]*idx_flux_e[1]*idx_flux_e[2] )
+      CGPU_LOOP( idx, size_i*size_j*size_k )
       {
 //       flux index
-         const int i_flux     = idx % idx_flux_e[0];
-         const int j_flux     = idx % size_ij / idx_flux_e[0];
-         const int k_flux     = idx / size_ij;
+         const int i_flux     = idx % size_i           + i_offset;
+         const int j_flux     = idx % size_ij / size_i + j_offset;
+         const int k_flux     = idx / size_ij          + k_offset;
          const int idx_flux   = IDX321( i_flux, j_flux, k_flux, NFlux, NFlux );
 
 //       half-step primitive variable index
@@ -392,7 +397,7 @@ void CR_AddDiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
          g_FC_Flux[d][CRAY][idx_flux] += Flux_Total;
          g_FC_Flux[d][ENGY][idx_flux] += Flux_Total;
 
-      } // CGPU_LOOP( idx, idx_flux_e[0]*idx_flux_e[1]*idx_flux_e[2] )
+      } // CGPU_LOOP( idx, size_i*size_j*size_k )
    } // for (int d=0; d<3; d++)
 
 #  ifdef __CUDACC__
