@@ -682,13 +682,15 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #        ifdef GPU
          CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], NULL,
                               NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_PGT[ArrayID],
-                              NPG, dh, DT__GRAVITY, NULL_REAL, OPT__GRA_P5_GRADIENT,
+                              NPG, dh, DT__GRAVITY,
+                              MicroPhy, NULL_REAL, OPT__GRA_P5_GRADIENT,
                               (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, TimeNew,
                               GPU_NSTREAM );
 #        else
          CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], NULL,
                               NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_PGT[ArrayID],
-                              NPG, dh, DT__GRAVITY, NULL_REAL, OPT__GRA_P5_GRADIENT,
+                              NPG, dh, DT__GRAVITY,
+                              MicroPhy, NULL_REAL, OPT__GRA_P5_GRADIENT,
                               (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, TimeNew );
 #        endif
       break;

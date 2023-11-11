@@ -360,7 +360,7 @@ def load_arguments():
     parser.add_argument( "--cosmic_ray", type=str2bool, metavar="BOOLEAN", gamer_name="COSMIC_RAY",
                          default=False,
                          depend={"model":"HYDRO"},
-                         constraint={ True:{"dual":[NONE_STR], "eos":"COSMIC_RAY"} },
+                         constraint={ True:{"dual":[NONE_STR], "eos":"COSMIC_RAY", "comoving":False} },
                          help="Enable cosmic ray. Must use <--eos=COSMIC_RAY>.\n"
                        )
 
@@ -469,7 +469,7 @@ def load_arguments():
     # A.5 grackle
     parser.add_argument( "--grackle", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_GRACKLE",
                          default=False,
-                         constraint={ True:{"model":"HYDRO", "eos":"GAMMA"} },
+                         constraint={ True:{"model":"HYDRO", "eos":["GAMMA", "COSMIC_RAY"], "comoving":False} },
                          help="Enable Grackle, a chemistry and radiative cooling library. Must set <--passive> according to the primordial chemistry network set by GRACKLE_PRIMORDIAL. Please enable OpenMP when compiling Grackle (by 'make omp-on').\n"
                        )
 

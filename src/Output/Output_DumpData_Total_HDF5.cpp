@@ -243,7 +243,7 @@ Procedure for outputting new variables:
 //                2468 : 2023/06/24 --> output OPT__SORT_PATCH_BY_LBIDX
 //                2469 : 2023/09/09 --> output MHM_CHECK_PREDICT
 //                2470 : 2023/10/16 --> output OPT__OUTPUT_TEXT_FORMAT_FLT
-//                2471 : 2023/11/09 --> COSMIC_RAY and CR_DIFFUSION
+//                2471 : 2023/11/09 --> output cosmic-ray options
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1460,9 +1460,9 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 #  else
    KeyInfo.CR_Diffusion         = 0;
 #  endif
-#  else
+#  else // #ifdef COSMIC_RAY
    KeyInfo.CosmicRay            = 0;
-#  endif
+#  endif // #ifdef COSMIC_RAY .. else ...
 #  endif // #if ( MODEL == HYDRO )
 
    for (int d=0; d<3; d++)
@@ -1691,12 +1691,6 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.Magnetohydrodynamics   = 0;
 #  endif
 
-#  ifdef COSMIC_RAY
-   Makefile.CosmicRay              = 1;
-#  else
-   Makefile.CosmicRay              = 0;
-#  endif
-
    Makefile.EoS                    = EOS;
 
 #  ifdef BAROTROPIC_EOS
@@ -1763,12 +1757,15 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  endif // #ifdef PARTICLE
 
 #  ifdef COSMIC_RAY
+   Makefile.CosmicRay              = 1;
 #  ifdef CR_DIFFUSION
    Makefile.CR_Diffusion           = 1;
 #  else
    Makefile.CR_Diffusion           = 0;
 #  endif
-#  endif // #ifdef COSMIC_RAY
+#  else // #ifdef COSMIC_RAY
+   Makefile.CosmicRay              = 0;
+#  endif // #ifdef COSMIC_RAY .. else ...
 
 
 } // FUNCTION : FillIn_Makefile
@@ -2115,6 +2112,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Dt__ParVelMax           = DT__PARVEL_MAX;
    InputPara.Dt__ParAcc              = DT__PARACC;
 #  endif
+#  ifdef CR_DIFFUSION
+   InputPara.Dt__CR_Diffusion        = DT__CR_DIFFUSION;
+#  endif
 #  ifdef COMOVING
    InputPara.Dt__MaxDeltaA           = DT__MAX_DELTA_A;
 #  endif
@@ -2348,14 +2348,12 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 // cosmic ray
 #  ifdef COSMIC_RAY
    InputPara.CR_Gamma                = GAMMA_CR;
-#  endif
-
-// microphysics
 #  ifdef CR_DIFFUSION
    InputPara.CR_Diffusion_ParaCoeff  = CR_DIFF_PARA;
    InputPara.CR_Diffusion_PerpCoeff  = CR_DIFF_PERP;
-   InputPara.CR_Diffusion_Dt         = DT_CR_DIFFUSION;
+   InputPara.CR_Diffusion_MinB       = CR_DIFF_MIN_B;
 #  endif
+#  endif // #ifdef COSMIC_RAY
 
 // initialization
    InputPara.Opt__Init               = OPT__INIT;
@@ -3030,6 +3028,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Dt__ParVelMax",           HOFFSET(InputPara_t,Dt__ParVelMax          ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Dt__ParAcc",              HOFFSET(InputPara_t,Dt__ParAcc             ), H5T_NATIVE_DOUBLE  );
 #  endif
+#  ifdef CR_DIFFUSION
+   H5Tinsert( H5_TypeID, "Dt__CR_Diffusion",        HOFFSET(InputPara_t,Dt__CR_Diffusion       ), H5T_NATIVE_DOUBLE  );
+#  endif
 #  ifdef COMOVING
    H5Tinsert( H5_TypeID, "Dt__MaxDeltaA",           HOFFSET(InputPara_t,Dt__MaxDeltaA          ), H5T_NATIVE_DOUBLE  );
 #  endif
@@ -3271,14 +3272,12 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 // cosmic ray
 #  ifdef COSMIC_RAY
    H5Tinsert( H5_TypeID, "CR_Gamma",               HOFFSET(InputPara_t,CR_Gamma               ), H5T_NATIVE_DOUBLE            );
-#  endif
-
-// microphysics
 #  ifdef CR_DIFFUSION
    H5Tinsert( H5_TypeID, "CR_Diffusion_ParaCoeff", HOFFSET(InputPara_t,CR_Diffusion_ParaCoeff ), H5T_NATIVE_DOUBLE            );
    H5Tinsert( H5_TypeID, "CR_Diffusion_PerpCoeff", HOFFSET(InputPara_t,CR_Diffusion_PerpCoeff ), H5T_NATIVE_DOUBLE            );
-   H5Tinsert( H5_TypeID, "CR_Diffusion_Dt",        HOFFSET(InputPara_t,CR_Diffusion_Dt        ), H5T_NATIVE_DOUBLE            );
+   H5Tinsert( H5_TypeID, "CR_Diffusion_MinB",      HOFFSET(InputPara_t,CR_Diffusion_MinB      ), H5T_NATIVE_DOUBLE            );
 #  endif
+#  endif // #ifdef COSMIC_RAY
 
 // initialization
    H5Tinsert( H5_TypeID, "Opt__Init",               HOFFSET(InputPara_t,Opt__Init               ), H5T_NATIVE_INT              );

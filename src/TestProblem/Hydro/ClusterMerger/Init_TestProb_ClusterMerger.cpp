@@ -59,6 +59,7 @@ static FieldIdx_t ColorField3Idx = Idx_Undefined;
 
 // =======================================================================================
 
+
 // problem-specific function prototypes
 #ifdef MASSIVE_PARTICLES
 long Read_Particle_Number_ClusterMerger(std::string filename);
@@ -73,6 +74,9 @@ int Read_Num_Points_ClusterMerger(std::string filename);
 void Read_Profile_ClusterMerger(std::string filename, std::string fieldname,
                                 double field[]);
 void AddNewField_ClusterMerger();
+
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate

@@ -8,6 +8,7 @@
 
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Structure   :  EoS_t
 // Description :  Data structure storing the EoS variables to be passed to the CPU/GPU solvers

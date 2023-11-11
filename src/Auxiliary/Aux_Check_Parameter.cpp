@@ -686,10 +686,6 @@ void Aux_Check_Parameter()
 #  if ( DUAL_ENERGY == DE_ENPY  &&  EOS != EOS_GAMMA )
 #     error : ERROR : DUAL_ENERGY=DE_ENPY only supports EOS_GAMMA !!
 #  endif
-
-#   if ( DUAL_ENERGY == DE_ENPY  &&  defined COSMIC_RAY )
-#     error : COSMIC_RAY does NOT support DUAL_ENERGY=DE_ENPY !!
-#   endif
 #  endif // #ifdef DUAL_ENERGY
 
 #  ifdef MHD
@@ -704,22 +700,22 @@ void Aux_Check_Parameter()
 #  endif // MHD
 
 #  ifdef COSMIC_RAY
-#  if ( EOS != EOS_COSMIC_RAY )
-#     error: ERROR : COSMIC_RAY must use EOS_COSMIC_RAY !!
-#  endif
-#  if ( defined DUAL_ENERGY )
-#     error: ERROR : DUAL_ENERGY is not supported for COSMIC_RAY !!
-#  endif
-#  endif
+#   if ( FLU_SCHEME != MHM_RP )
+#     error : ERROR : COSMIC_RAY currently only supports the MHM_RP fluid scheme !!
+#   endif
 
-#  ifdef CR_DIFFUSION
-#  ifndef COSMIC_RAY
-#     error: ERROR : COSMIC_RAY must be enabled with CR_DIFFUSION !!
-#  endif
-#  ifndef MHD
-#     error: ERROR : MHD must be enabled with CR_DIFFUSION !!
-#  endif
-#  endif
+#   if ( EOS != EOS_COSMIC_RAY )
+#     error: ERROR : COSMIC_RAY must use EOS_COSMIC_RAY !!
+#   endif
+
+#   if ( defined DUAL_ENERGY )
+#     error: ERROR : DUAL_ENERGY is not supported for COSMIC_RAY !!
+#   endif
+
+#   ifdef COMOVING
+#     error : ERROR : COSMIC_RAY currently does not support COMOVING !!
+#   endif
+#  endif // COSMIC_RAY
 
 #  if ( defined LR_EINT  &&  FLU_SCHEME == CTU )
 #     error : ERROR : CTU does NOT support LR_EINT in CUFLU.h !!
@@ -775,12 +771,12 @@ void Aux_Check_Parameter()
 #  endif
 
 #  if ( EOS == EOS_COSMIC_RAY  &&  !defined COSMIC_RAY )
-#     error : ERROR : COSMIC_RAY must be enabled with EOS_COSMIC_RAY !!
+#     error : ERROR : must enable COSMIC_RAY for EOS_COSMIC_RAY !!
 #  endif
 
 #  ifdef BAROTROPIC_EOS
-#     if ( EOS == EOS_GAMMA  ||  EOS == EOS_NUCLEAR )
-#        error : ERROR : BAROTROPIC_EOS is incompatible with EOS_GAMMA/EOS_NUCLEAR !!
+#     if ( EOS == EOS_GAMMA  ||  EOS == EOS_COSMIC_RAY  ||  EOS == EOS_NUCLEAR )
+#        error : ERROR : BAROTROPIC_EOS is incompatible with EOS_GAMMA/EOS_COSMIC_RAY/EOS_NUCLEAR !!
 #     endif
 #  else
 #     if ( EOS == EOS_ISOTHERMAL )
@@ -917,9 +913,9 @@ void Aux_Check_Parameter()
    if ( MPI_Rank == 0 ) {
 
 #     if ( FLU_SCHEME == MHM_RP  &&  LR_SCHEME == PPM )
-      if ( OPT__LR_LIMITER != LR_LIMITER_CENTRAL )
-         Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (LR_LIMITER_CENTRAL) is recommended for MHM_RP+PPM !!\n",
-                      LR_LIMITER_CENTRAL );
+      if ( OPT__LR_LIMITER != LR_LIMITER_ATHENA )
+         Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (LR_LIMITER_ATHENA) is recommended for MHM_RP+PPM !!\n",
+                      LR_LIMITER_ATHENA );
 #     endif
 
 #     if ( FLU_SCHEME == MHM  &&  defined MHD )
@@ -1480,8 +1476,8 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-#  if ( EOS != EOS_GAMMA )
-#     error : ERROR : SUPPORT_GRACKLE must work with EOS_GAMMA !!
+#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_COSMIC_RAY )
+#     error : ERROR : SUPPORT_GRACKLE must work with EOS_GAMMA/EOS_COSMIC_RAY !!
 #  endif
 
 // warning
@@ -1596,17 +1592,18 @@ void Aux_Check_Parameter()
 // errors
 // ------------------------------
 #  ifndef COSMIC_RAY
-#     error : COSMIC_RAY must be enabled with CR_DIFFUSION !!
+#     error : ERROR : must enable COSMIC_RAY for CR_DIFFUSION !!
 #  endif
+
 #  ifndef MHD
-#     error : MHD must be enabled with CR_DIFFUSION !!
+#     error : ERROR : must enable MHD for CR_DIFFUSION !!
 #  endif
 
 // warning
 // ------------------------------
    if ( MPI_Rank == 0 ) {
-      if ( DT_CR_DIFFUSION < 0.0  ||  DT_CR_DIFFUSION > 1.0 )
-         Aux_Message( stderr, "WARNING : DT_CR_DIFFUSION (%14.7e) is not within the normal range [0...1] !!\n", DT_CR_DIFFUSION );
+      if ( DT__CR_DIFFUSION < 0.0  ||  DT__CR_DIFFUSION > 1.0 )
+         Aux_Message( stderr, "WARNING : DT__CR_DIFFUSION (%14.7e) is not within the normal range [0...1] !!\n", DT__CR_DIFFUSION );
    } // if ( MPI_Rank == 0 )
 
 #endif // ifdef CR_DIFFUSION

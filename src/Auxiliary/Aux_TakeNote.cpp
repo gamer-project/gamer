@@ -170,9 +170,14 @@ void Aux_TakeNote()
 
 #     ifdef COSMIC_RAY
       fprintf( Note, "COSMIC_RAY                      ON\n" );
+#     ifdef CR_DIFFUSION
+      fprintf( Note, "CR_DIFFUSION                    ON\n" );
 #     else
-      fprintf( Note, "COSMIC_RAY                      OFF\n" );
+      fprintf( Note, "CR_DIFFUSION                    OFF\n" );
 #     endif
+#     else // #ifdef COSMIC_RAY
+      fprintf( Note, "COSMIC_RAY                      OFF\n" );
+#     endif // #ifdef COSMIC_RAY ... else ...
 
 #     if   ( EOS == EOS_GAMMA )
       fprintf( Note, "EOS                             EOS_GAMMA\n" );
@@ -832,6 +837,9 @@ void Aux_TakeNote()
       fprintf( Note, "DT__PARVEL_MAX                 %14.7e\n",   DT__PARVEL_MAX              );
       fprintf( Note, "DT__PARACC                      %13.7e\n",  DT__PARACC                  );
 #     endif
+#     ifdef CR_DIFFUSION
+      fprintf( Note, "DT__CR_DIFFUSION                %13.7e\n",  DT__CR_DIFFUSION            );
+#     endif
 #     ifdef COMOVING
       fprintf( Note, "DT__MAX_DELTA_A                 %13.7e\n",  DT__MAX_DELTA_A             );
 #     endif
@@ -1004,26 +1012,20 @@ void Aux_TakeNote()
       fprintf( Note, "\n\n");
 #     endif // #ifdef FEEDBACK
 
+
 //    record the parameters of cosmic ray
 #     ifdef COSMIC_RAY
-      fprintf( Note, "Parameters of Cosmic Ray\n" );
+      fprintf( Note, "Parameters of Cosmic Rays\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "GAMMA_CR                        %13.7e\n",           GAMMA_CR                          );
-      fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "\n\n");
-#     endif // #ifdef COSMIC_RAY
-
-
-//    record the parameters of Microphysics
-      fprintf( Note, "Parameters of Microphysics\n" );
-      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "GAMMA_CR                        %13.7e\n",  GAMMA_CR                );
 #     ifdef CR_DIFFUSION
-      fprintf( Note, "CR_DIFF_PARA                    %13.7e\n",           CR_DIFF_PARA                      );
-      fprintf( Note, "CR_DIFF_PERP                    %13.7e\n",           CR_DIFF_PERP                      );
-      fprintf( Note, "DT_CR_DIFFUSION                 %13.7e\n",           DT_CR_DIFFUSION                   );
+      fprintf( Note, "CR_DIFF_PARA                    %13.7e\n",  CR_DIFF_PARA            );
+      fprintf( Note, "CR_DIFF_PERP                    %13.7e\n",  CR_DIFF_PERP            );
+      fprintf( Note, "CR_DIFF_MIN_B                   %13.7e\n",  CR_DIFF_MIN_B           );
 #     endif // #ifdef CR_DIFFUSION
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
+#     endif // #ifdef COSMIC_RAY
 
 
 //    record the parameters of Fluid solver in different models
