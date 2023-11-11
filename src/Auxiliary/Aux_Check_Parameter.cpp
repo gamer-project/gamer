@@ -703,12 +703,17 @@ void Aux_Check_Parameter()
 #   if ( FLU_SCHEME != MHM_RP )
 #     error : ERROR : COSMIC_RAY currently only supports the MHM_RP fluid scheme !!
 #   endif
+
 #   if ( EOS != EOS_COSMIC_RAY )
 #     error: ERROR : COSMIC_RAY must use EOS_COSMIC_RAY !!
 #   endif
 
 #   if ( defined DUAL_ENERGY )
 #     error: ERROR : DUAL_ENERGY is not supported for COSMIC_RAY !!
+#   endif
+
+#   ifdef COMOVING
+#     error : ERROR : COSMIC_RAY currently does not support COMOVING !!
 #   endif
 #  endif // COSMIC_RAY
 

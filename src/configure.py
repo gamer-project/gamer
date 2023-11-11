@@ -360,7 +360,7 @@ def load_arguments():
     parser.add_argument( "--cosmic_ray", type=str2bool, metavar="BOOLEAN", gamer_name="COSMIC_RAY",
                          default=False,
                          depend={"model":"HYDRO"},
-                         constraint={ True:{"dual":[NONE_STR], "eos":"COSMIC_RAY"} },
+                         constraint={ True:{"dual":[NONE_STR], "eos":"COSMIC_RAY", "comoving":False} },
                          help="Enable cosmic ray. Must use <--eos=COSMIC_RAY>.\n"
                        )
 
