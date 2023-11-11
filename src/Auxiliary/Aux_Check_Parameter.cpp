@@ -770,8 +770,8 @@ void Aux_Check_Parameter()
 #  endif
 
 #  ifdef BAROTROPIC_EOS
-#     if ( EOS == EOS_GAMMA  ||  EOS == EOS_NUCLEAR )
-#        error : ERROR : BAROTROPIC_EOS is incompatible with EOS_GAMMA/EOS_NUCLEAR !!
+#     if ( EOS == EOS_GAMMA  ||  EOS == EOS_COSMIC_RAY  ||  EOS == EOS_NUCLEAR )
+#        error : ERROR : BAROTROPIC_EOS is incompatible with EOS_GAMMA/EOS_COSMIC_RAY/EOS_NUCLEAR !!
 #     endif
 #  else
 #     if ( EOS == EOS_ISOTHERMAL )
@@ -1471,8 +1471,8 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-#  if ( EOS != EOS_GAMMA )
-#     error : ERROR : SUPPORT_GRACKLE must work with EOS_GAMMA !!
+#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_COSMIC_RAY )
+#     error : ERROR : SUPPORT_GRACKLE must work with EOS_GAMMA/EOS_COSMIC_RAY !!
 #  endif
 
 // warning
