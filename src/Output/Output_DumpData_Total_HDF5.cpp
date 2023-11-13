@@ -2234,7 +2234,6 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  endif
    InputPara.Opt__FixUp_Restrict     = OPT__FIXUP_RESTRICT;
    InputPara.FixUpRestrict_Var       = FixUpVar_Restrict;
-
    InputPara.Opt__CorrAfterAllSync   = OPT__CORR_AFTER_ALL_SYNC;
    InputPara.Opt__NormalizePassive   = OPT__NORMALIZE_PASSIVE;
 
