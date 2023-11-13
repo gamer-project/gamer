@@ -29,9 +29,8 @@ void ELBDM_Aux_Record_Hybrid()
 // compute number of wave patches on all levels
    long WavePatchCount   = 0;
    long TotalPatchCount  = 0;
-   real WaveVolume       = 0.0;
-   real TotalVolume      = 0.0;
    int  WaveLevel        = -1;
+
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
@@ -42,12 +41,14 @@ void ELBDM_Aux_Record_Hybrid()
 //       store first level using wave scheme in WaveLevel
          if ( WaveLevel == -1 ) WaveLevel = lv;
          WavePatchCount   += NPatch;
-         WaveVolume       += NPatch * dv;
       }
 
       TotalPatchCount += NPatch;
-      TotalVolume     += NPatch * dv;
    }
+
+
+   const real TotalVolume = NPatchTotal[0] * CUBE( amr->dh[0] );
+   const real WaveVolume  = (WaveLevel == -1) ? 0.0 : NPatchTotal[WaveLevel] * CUBE( amr->dh[WaveLevel] );
 
    // output to file
    FILE *File = fopen( FileName, "a" );
