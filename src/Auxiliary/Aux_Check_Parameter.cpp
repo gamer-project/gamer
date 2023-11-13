@@ -1148,7 +1148,7 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "ELBDM_HYBRID currently does not support OPT__OUTPUT_TOTAL == 2 !!\n" );
 
 #  if ( FLU_GHOST_SIZE < HYB_GHOST_SIZE )
-#  error : ERROR : FLU_GHOST_SIZE needs to be bigger than HYB_GHOST_SIZE !! Please enable LAPLACIAN_4TH when using WAVE_SCHEME=WAVE_FD for ELBDM_HYBRID.
+#  error : ERROR : FLU_GHOST_SIZE needs to be bigger than HYB_GHOST_SIZE !!
 #  endif // # if ( FLU_GHOST_SIZE < HYB_GHOST_SIZE )
 
 // bitwise reproducibility currently fails in hybrid scheme because of conversion from RE/IM to DENS/PHAS when storing fields in HDF5

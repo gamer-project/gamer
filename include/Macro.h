@@ -594,7 +594,12 @@
 #     ifdef LAPLACIAN_4TH
 #        define FLU_GHOST_SIZE         6
 #     else
-#        define FLU_GHOST_SIZE         3
+//       ensure FLU_GHOST_SIZE >= HYB_GHOST_SIZE for hybrid scheme
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#             define FLU_GHOST_SIZE    6
+#        else
+#             define FLU_GHOST_SIZE    3
+#        endif
 #     endif
 #  elif ( WAVE_SCHEME == WAVE_GRAMFE )
 // the accuracy of the local spectral method increases with larger FLU_GHOST_SIZE.
