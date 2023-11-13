@@ -21,6 +21,7 @@ parser.add_argument( '-d', action='store', required=False, type=int, dest='didx'
 parser.add_argument( '-i', action='store', required=False,  type=str, dest='prefix',
                       help='data path prefix [%(default)s]', default='./' )
 parser.add_argument( '-lv', action='store', required=False,  type=int, dest='lv',  help='sampling level [%(default)d]', default=0 )
+parser.add_argument( '-L_box', action='store', required=True,  type=float, dest='L_box',  help='box size in [Mpc/h]' )
 
 
 args=parser.parse_args()
@@ -38,6 +39,7 @@ idx_end     = args.idx_end
 didx        = args.didx
 prefix      = args.prefix
 lv          = args.lv
+L_box       = args.L_box
 
 fields      = [("gas", "density")]   # fields for which to compute power spectrum
 
@@ -57,16 +59,42 @@ for ds in ts.piter():
 
         d = data[field]
 
-        # compute fft and take average
-        power_spectrum = np.mean(np.mean(np.abs(np.fft.fftn(d))**2, axis=1), axis=1)
+        # Compute the 3D Fourier transform of the density data
+        density_fft = np.fft.rfftn(d)
+
+
+        # Compute the power spectrum
+        power_spectrum = np.abs(density_fft)**2
+
+        # Calculate the k values, with rfftn last axis undergoes real transform
+        kx_lin, ky_lin, kz_lin = np.fft.fftfreq(d.shape[0]), np.fft.fftfreq(d.shape[1]), np.fft.rfftfreq(d.shape[2])
+
+        # Create a grid of k values
+        kx, ky, kz = np.meshgrid(kx_lin, ky_lin, kz_lin, indexing='ij')
+        k          = np.sqrt(kx**2 + ky**2 + kz**2)
+
+
+        bins = kz_lin
+        bins += (bins[1] - bins[0])/2
+
+        counts, bin_edges = np.histogram(k, bins)
+        totals, bin_edges = np.histogram(k, bins, weights=power_spectrum)
+
+        hist     = totals/counts
+        volume   = L_box ** 3
+        dc_mode  = np.abs(hist[0])
+        ave_dens = np.sqrt(dc_mode) / volume
+        Norm     = volume / (ave_dens**2 * volume**2)
+        spectrum = hist * Norm
+
+        ks       = (bins + 0.5 * (bins[1] - bins[0])) * 2 * np.pi / L_box * N
+        ks       = ks[:-1]
 
         # Create a log-log plot of the power spectrum
         plt.figure(figsize=(8, 6))
-        k_values = np.fft.fftfreq(N)  # Assuming isotropic grid
-        k_values = k_values[:N//2]   # Only use positive k-values
-        plt.loglog(k_values, power_spectrum[:N//2], label='Power Spectrum')
-        plt.xlabel('k (Wavenumber)')
-        plt.ylabel('Power Spectrum')
+        plt.loglog(ks, spectrum, label='Power Spectrum')
+        plt.xlabel('k in [h/Mpc]')
+        plt.ylabel('P(k)')
         plt.title('%s Power Spectrum' % field[1].capitalize())
         plt.grid()
         plt.legend()
@@ -75,4 +103,6 @@ for ds in ts.piter():
         plt.close()
 
         # store spectra in array
-        np.savetxt('power_spectrum_%s_%06d_lv_%02d_%d.txt' % f, np.column_stack([k_values, power_spectrum[:N//2]]))
+        to_save = np.hstack([ks, spectrum])
+        np.savetxt('power_spectrum_%s_%06d_lv_%02d_%d.txt' % f, to_save)
+
