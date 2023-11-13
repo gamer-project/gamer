@@ -128,8 +128,7 @@ void Aux_Check_PatchAllocate( const int lv, const char *comment )
                {
                   for (int d=0; d<3; d++)
                   {
-                     int corner_ck = amr->patch[0][lv][PID]->corner[d] + TABLE_01( s, 'x'+d, -PScale, 0, PScale );
-                         corner_ck = ( corner_ck + amr->BoxScale[d] ) % amr->BoxScale[d];    // take care of periodic BC
+                     const int corner_ck = amr->patch[0][lv][PID]->corner[d] + TABLE_01( s, 'x'+d, -PScale, 0, PScale );
 
                      if ( corner_ck != amr->patch[0][lv][SibPID]->corner[d] )
                      {
@@ -156,7 +155,7 @@ void Aux_Check_PatchAllocate( const int lv, const char *comment )
 
 //       check 3
          memcpy( Cr1D_Sort, Cr1D, NTot*sizeof(ulong) );
-         Mis_Heapsort( NTot, Cr1D_Sort, NULL );
+         Mis_Heapsort<int,ulong>( NTot, Cr1D_Sort, NULL );
          for (int t=0; t<NTot-1; t++)
          {
             if ( Cr1D_Sort[t] == Cr1D_Sort[t+1] )
@@ -247,8 +246,8 @@ void Aux_Check_PatchAllocate( const int lv, const char *comment )
 
 
 //    sort all real and buffer patches
-      Mis_Heapsort( NReal_Tot, Cr1D_Real, NULL );
-      Mis_Heapsort( NBuff_Tot, Cr1D_Buff, NULL );
+      Mis_Heapsort<int,ulong>( NReal_Tot, Cr1D_Real, NULL );
+      Mis_Heapsort<int,ulong>( NBuff_Tot, Cr1D_Buff, NULL );
 
 
 //    check 4

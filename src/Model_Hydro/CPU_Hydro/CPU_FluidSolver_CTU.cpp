@@ -25,6 +25,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                      real g_PriVar   [][ CUBE(FLU_NXT) ],
                                      real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                                      real g_Slope_PPM[][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ],
+                                     real g_EC_Ele   [][ CUBE(N_EC_ELE) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
                                const real MinDens, const real MinPres, const real MinEint,
@@ -37,8 +38,10 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                         const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[],
                         const real dt, const real dh, const double Time, const bool UsePot,
                         const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
-                        const real MinDens, const real MinPres, const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
-                        const EoS_t *EoS );
+                        const real MinDens, const real MinPres, const EoS_t *EoS );
+void Hydro_StoreIntFlux( const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                               real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
+                         const int NFlux );
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
@@ -213,7 +216,6 @@ void CPU_FluidSolver_CTU(
    const bool CorrHalfVel          = false;
 #  endif
    const bool CorrHalfVel_No       = false;
-   const bool StoreFlux_No         = false;
    const bool Con2Pri_Yes          = true;
 #  ifdef MHD
    const bool StoreElectric_No     = false;
@@ -269,7 +271,7 @@ void CPU_FluidSolver_CTU(
       {
 //       1. evaluate the face-centered values at the half time-step
          Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
-                                   Con2Pri_Yes, LR_Limiter, MinMod_Coeff, dt, dh,
+                                   NULL, Con2Pri_Yes, LR_Limiter, MinMod_Coeff, dt, dh,
                                    MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
                                    JeansMinPres, JeansMinPres_Coeff, &EoS );
 
@@ -278,7 +280,7 @@ void CPU_FluidSolver_CTU(
          Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_HF_FLUX, 0, 0, CorrHalfVel_No,
                             NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL,
                             EXT_POT_NONE, EXT_ACC_NONE, NULL, NULL,
-                            MinDens, MinPres, StoreFlux_No, NULL, &EoS );
+                            MinDens, MinPres, &EoS );
 
 
 //       3. evaluate electric field and update B field at the half time-step
@@ -316,7 +318,10 @@ void CPU_FluidSolver_CTU(
          Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T, CorrHalfVel,
                             g_Pot_Array_USG[P], g_Corner_Array[P], dt, dh, Time,
                             UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
-                            MinDens, MinPres, StoreFlux, g_Flux_Array[P], &EoS );
+                            MinDens, MinPres, &EoS );
+
+         if ( StoreFlux )
+            Hydro_StoreIntFlux( g_FC_Flux_1PG, g_Flux_Array[P], N_FL_FLUX );
 
 
 //       7. evaluate electric field and update B field at the full time-step

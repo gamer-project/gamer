@@ -54,7 +54,7 @@ SIMU_OPTION += -DMODEL=HYDRO
 ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
 # hydrodynamic scheme: RTVD/MHM/MHM_RP/CTU
 # --> must be set when MODEL=HYDRO
-# --> MHD only supports MHM_RP and CTU
+# --> MHD only supports MHM, MHM_RP and CTU
 SIMU_OPTION += -DFLU_SCHEME=CTU
 
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
@@ -79,10 +79,14 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 # magnetohydrodynamics
 #SIMU_OPTION += -DMHD
 
-# cosmic rays (not supported yet)
+# cosmic rays
 #SIMU_OPTION += -DCOSMIC_RAY
 
-# equation of state: EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_USER
+# cosmic-ray diffusion
+# --> must enable COSMIC_RAY and MHD
+#SIMU_OPTION += -DCR_DIFFUSION
+
+# equation of state: EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_COSMIC_RAY/EOS_USER
 # --> must be set when MODEL=HYDRO; must also enable BAROTROPIC_EOS for EOS_ISOTHERMAL
 SIMU_OPTION += -DEOS=EOS_GAMMA
 
@@ -467,20 +471,21 @@ vpath %.cpp    Main  Init  Refine  Fluid  Interpolation  Tables  Output  Miscell
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
 GPU_FILE    += CUFLU_dtSolver_HydroCFL.cu  CUFLU_FluidSolver_RTVD.cu  CUFLU_FluidSolver_MHM.cu  CUFLU_FluidSolver_CTU.cu \
-               GPU_EoS_Gamma.cu  GPU_EoS_User_Template.cu  GPU_EoS_Isothermal.cu
+               GPU_EoS_Gamma.cu  GPU_EoS_User_Template.cu  GPU_EoS_Isothermal.cu  GPU_EoS_GammaCR.cu
 
 CPU_FILE    += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_MHM.cpp  CPU_FluidSolver_CTU.cpp \
                CPU_Shared_DataReconstruction.cpp  CPU_Shared_FluUtility.cpp  CPU_Shared_ComputeFlux.cpp \
                CPU_Shared_FullStepUpdate.cpp  CPU_Shared_RiemannSolver_Exact.cpp  CPU_Shared_RiemannSolver_Roe.cpp \
                CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_RiemannSolver_HLLC.cpp  CPU_Shared_DualEnergy.cpp \
-               CPU_dtSolver_HydroCFL.cpp  CPU_EoS_Gamma.cpp  CPU_EoS_User_Template.cpp  CPU_EoS_Isothermal.cpp
+               CPU_dtSolver_HydroCFL.cpp  CPU_EoS_Gamma.cpp  CPU_EoS_User_Template.cpp  CPU_EoS_Isothermal.cpp \
+	       CPU_EoS_GammaCR.cpp
 
 CPU_FILE    += Hydro_Init_ByFunction_AssignData.cpp  Hydro_Aux_Check_Negative.cpp \
                Hydro_BoundaryCondition_Reflecting.cpp  Hydro_BoundaryCondition_Outflow.cpp \
                Hydro_BoundaryCondition_Diode.cpp  EoS_Init.cpp  EoS_End.cpp
 
-vpath %.cu     Model_Hydro/GPU_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal
-vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal
+vpath %.cu     Model_Hydro/GPU_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal  EoS/GammaCR
+vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal  EoS/GammaCR
 
 ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
 GPU_FILE    += CUPOT_HydroGravitySolver.cu  CUPOT_dtSolver_HydroGravity.cu
@@ -496,7 +501,7 @@ CPU_FILE    += MHD_GetCellCenteredBInPatch.cpp  MHD_InterpolateBField.cpp  MHD_A
                MHD_Aux_Check_InterfaceB.cpp  MHD_FixUp_Electric.cpp  MHD_Aux_Check_DivergenceB.cpp \
                MHD_BoundaryCondition_Outflow.cpp  MHD_BoundaryCondition_Reflecting.cpp  MHD_BoundaryCondition_User.cpp \
                MHD_BoundaryCondition_Diode.cpp  MHD_CopyPatchInterfaceBField.cpp  MHD_Init_BField_ByVecPot_File.cpp \
-               MHD_SameInterfaceB.cpp  MHD_Init_BField_ByVecPot_Function.cpp
+               MHD_SameInterfaceB.cpp  MHD_Init_BField_ByVecPot_Function.cpp  MHD_ResetByUser.cpp
 
 CPU_FILE    += CPU_Shared_ConstrainedTransport.cpp  CPU_Shared_RiemannSolver_HLLD.cpp
 
@@ -601,7 +606,7 @@ CPU_FILE    += Buf_AllocateBufferPatch.cpp  Buf_AllocateBufferPatch_Base.cpp  Bu
                Buf_ResetBufferFlux.cpp
 
 CPU_FILE    += MPI_ExchangeBoundaryFlag.cpp  MPI_ExchangeBufferPosition.cpp  MPI_ExchangeData.cpp \
-               Init_MPI.cpp  MPI_Exit.cpp
+               Init_MPI.cpp  MPI_Exit.cpp  MPI_Alltoallv_GAMER.cpp
 
 CPU_FILE    += Output_BoundaryFlagList.cpp  Output_ExchangeDataPatchList.cpp  Output_ExchangeFluxPatchList.cpp \
                Output_ExchangePatchMap.cpp
@@ -687,6 +692,35 @@ vpath %.cpp    Feedback  Feedback/User_Template  Feedback/SNe
 endif # FEEDBACK
 
 
+# cosmic-ray source files (included only if "COSMIC_RAY" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DCOSMIC_RAY, $(SIMU_OPTION))" "-DCOSMIC_RAY"
+CPU_FILE    += CPU_CosmicRay.cpp
+
+GPU_FILE    += CUFLU_CosmicRay.cu
+endif # COSMIC_RAY
+
+
+# microphysics source files
+# ------------------------------------------------------------------------------------
+CPU_FILE    += Microphysics_Init.cpp  Microphysics_End.cpp
+
+vpath %.cpp    Microphysics
+vpath %.cu     Microphysics
+
+
+# cosmic-ray diffusion source files (included only if "CR_DIFFUSION" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DCR_DIFFUSION, $(SIMU_OPTION))" "-DCR_DIFFUSION"
+CPU_FILE    += CPU_CR_AddDiffuseFlux.cpp  CPU_CR_ComputeDiffusivity.cpp
+
+GPU_FILE    += CUFLU_CR_AddDiffuseFlux.cu  CUFLU_CR_ComputeDiffusivity.cu
+
+vpath %.cpp    Microphysics/CosmicRayDiffusion
+vpath %.cu     Microphysics/CosmicRayDiffusion
+endif # CR_DIFFUSION
+
+
 # test problem source files
 # --> just compile all .cpp and .cu files under TestProblem/*/*/
 # ------------------------------------------------------------------------------------
@@ -717,7 +751,7 @@ endif
 # -------------------------------------------------------------------------------
 ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
 LIB += -L$(CUDA_PATH)/lib64
-#LIB += -L$(CUDA_PATH)/lib
+LIB += -Wl,-rpath=$(CUDA_PATH)/lib64
 LIB += -lcudart
 endif
 
@@ -727,6 +761,7 @@ endif
 
 ifeq "$(filter -DSUPPORT_FFTW=FFTW3, $(SIMU_OPTION))" "-DSUPPORT_FFTW=FFTW3"
    LIB += -L$(FFTW3_PATH)/lib
+   LIB += -Wl,-rpath=$(FFTW3_PATH)/lib
    ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" "-DSERIAL"
       LIB += -lfftw3 -lfftw3f -lm
    else
@@ -740,6 +775,7 @@ endif
 
 ifeq "$(filter -DSUPPORT_FFTW=FFTW2, $(SIMU_OPTION))" "-DSUPPORT_FFTW=FFTW2"
    LIB += -L$(FFTW2_PATH)/lib
+   LIB += -Wl,-rpath=$(FFTW2_PATH)/lib
    ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
       ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" "-DSERIAL"
          LIB += -ldrfftw -ldfftw
@@ -757,18 +793,22 @@ endif
 
 ifeq "$(filter -DSUPPORT_GRACKLE, $(SIMU_OPTION))" "-DSUPPORT_GRACKLE"
 LIB += -L$(GRACKLE_PATH)/lib -lgrackle
+LIB += -Wl,-rpath=$(GRACKLE_PATH)/lib
 endif
 
 ifeq "$(filter -DSUPPORT_HDF5, $(SIMU_OPTION))" "-DSUPPORT_HDF5"
 LIB += -L$(HDF5_PATH)/lib -lhdf5
+LIB += -Wl,-rpath=$(HDF5_PATH)/lib
 endif
 
 ifeq "$(filter -DSUPPORT_GSL, $(SIMU_OPTION))" "-DSUPPORT_GSL"
 LIB += -L$(GSL_PATH)/lib -lgsl -lgslcblas
+LIB += -Wl,-rpath=$(GSL_PATH)/lib
 endif
 
 ifeq "$(filter -DSUPPORT_LIBYT, $(SIMU_OPTION))" "-DSUPPORT_LIBYT"
 LIB += -L$(LIBYT_PATH)/lib -lyt
+LIB += -Wl,-rpath=$(LIBYT_PATH)/lib
 endif
 
 
@@ -1007,6 +1047,9 @@ else
 	fi)
 endif
 	@rm -f ./*.linkinfo
+
+# force re-compiling Aux_TakeNote.cpp to get the correct compilation time
+	$(ECHO)mv $(OBJ_PATH)/$(PREFIX_CPU)Aux_TakeNote.o $(OBJ_PATH)/$(PREFIX_CPU)Aux_TakeNote_backup.o
 
 
 # clean

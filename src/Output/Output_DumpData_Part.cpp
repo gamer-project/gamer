@@ -79,7 +79,6 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
       }
    }
 
-
    const double dh_min = amr->dh[NLEVEL-1];
    const int    NLv    = ( BaseOnly ) ? 1 : NLEVEL;
 
@@ -133,33 +132,33 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
             fprintf( File, "#%10s %10s %10s %20s %20s %20s", "i", "j", "k", "x", "y", "z" );
 
             for (int v=0; v<NCOMP_TOTAL; v++)
-            fprintf( File, "%14s", FieldLabel[v] );
+            fprintf( File, " %*s", StrLen_Flt, FieldLabel[v] );
 
 #           ifdef MHD
             for (int v=0; v<NCOMP_MAG; v++)
-            fprintf( File, "%14s", MagLabel[v] );
+            fprintf( File, " %*s", StrLen_Flt, MagLabel[v] );
 
-            fprintf( File, "%14s", "MagEngy" );
+            fprintf( File, " %*s", StrLen_Flt, "MagEngy" );
 #           endif
 
 #           ifdef GRAVITY
-            if ( OPT__OUTPUT_POT )     fprintf( File, "%14s", PotLabel );
+            if ( OPT__OUTPUT_POT )     fprintf( File, " %*s", StrLen_Flt, PotLabel );
 #           endif
 
 //          derived fields
 #           if ( MODEL == HYDRO )
-            if ( OPT__OUTPUT_PRES )    fprintf( File, "%14s", "Pressure" );
-            if ( OPT__OUTPUT_TEMP )    fprintf( File, "%14s", "Temperature" );
-            if ( OPT__OUTPUT_ENTR )    fprintf( File, "%14s", "Entropy" );
-            if ( OPT__OUTPUT_CS )      fprintf( File, "%14s", "Sound speed" );
-            if ( OPT__OUTPUT_DIVVEL )  fprintf( File, "%14s", "Div(Vel)" );
-            if ( OPT__OUTPUT_MACH   )  fprintf( File, "%14s", "Mach" );
+            if ( OPT__OUTPUT_PRES )    fprintf( File, " %*s", StrLen_Flt, "Pressure" );
+            if ( OPT__OUTPUT_TEMP )    fprintf( File, " %*s", StrLen_Flt, "Temperature" );
+            if ( OPT__OUTPUT_ENTR )    fprintf( File, " %*s", StrLen_Flt, "Entropy" );
+            if ( OPT__OUTPUT_CS )      fprintf( File, " %*s", StrLen_Flt, "Sound speed" );
+            if ( OPT__OUTPUT_DIVVEL )  fprintf( File, " %*s", StrLen_Flt, "Div(Vel)" );
+            if ( OPT__OUTPUT_MACH   )  fprintf( File, " %*s", StrLen_Flt, "Mach" );
 #           endif
 #           ifdef MHD
-            if ( OPT__OUTPUT_DIVMAG )  fprintf( File, "%14s", "Div(Mag)" );
+            if ( OPT__OUTPUT_DIVMAG )  fprintf( File, " %*s", StrLen_Flt, "Div(Mag)" );
 #           endif
             if ( OPT__OUTPUT_USER_FIELD ) {
-               for (int v=0; v<UserDerField_Num; v++)    fprintf( File, "%14s", UserDerField_Label[v] );
+               for (int v=0; v<UserDerField_Num; v++)    fprintf( File, " %*s", StrLen_Flt, UserDerField_Label[v] );
             }
 
             fprintf( File, "\n" );
@@ -283,7 +282,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
             ii, jj, kk, (ii+scale_2)*dh_min, (jj+scale_2)*dh_min, (kk+scale_2)*dh_min );
 
 // output all variables in the fluid array
-   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %13.6e", u[v] );
+   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, BlankPlusFormat_Flt, u[v] );
 
 // magnetic field
 #  if ( MODEL == HYDRO )
@@ -291,7 +290,10 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
    real B[3];
    MHD_GetCellCenteredBFieldInPatch( B, lv, PID, i, j, k, amr->MagSg[lv] );
-   fprintf( File, " %13.6e %13.6e %13.6e %13.6e", B[MAGX], B[MAGY], B[MAGZ], Emag );
+   fprintf( File, BlankPlusFormat_Flt, B[MAGX] );
+   fprintf( File, BlankPlusFormat_Flt, B[MAGY] );
+   fprintf( File, BlankPlusFormat_Flt, B[MAGZ] );
+   fprintf( File, BlankPlusFormat_Flt, Emag    );
 #  else
    const real Emag = NULL_REAL;
 #  endif
@@ -300,7 +302,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 // output potential
 #  ifdef GRAVITY
    if ( OPT__OUTPUT_POT )
-      fprintf( File, " %13.6e", amr->patch[ amr->PotSg[lv] ][lv][PID]->pot[k][j][i] );
+      fprintf( File, BlankPlusFormat_Flt, amr->patch[ amr->PotSg[lv] ][lv][PID]->pot[k][j][i] );
 #  endif
 
 // output derived fields
@@ -318,21 +320,21 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
       Pres = Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                              CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-      fprintf( File, " %13.6e", Pres );
+      fprintf( File, BlankPlusFormat_Flt, Pres );
    }
 
    if ( OPT__OUTPUT_TEMP ) {
       Temp = Hydro_Con2Temp( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                              CheckMinTemp_No, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-      fprintf( File, " %13.6e", Temp );
+      fprintf( File, BlankPlusFormat_Flt, Temp );
    }
 
    if ( OPT__OUTPUT_ENTR ) {
       Entr = Hydro_Con2Entr( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                              CheckMinEntr_No, NULL_REAL, Emag, EoS_DensEint2Entr_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-      fprintf( File, " %13.6e", Entr );
+      fprintf( File, BlankPlusFormat_Flt, Entr );
    }
 
    if ( OPT__OUTPUT_CS ) {
@@ -343,26 +345,26 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
       Cs   = SQRT(  EoS_DensPres2CSqr_CPUPtr( u[DENS], Pres, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                               h_EoS_Table )  );
-      fprintf( File, " %13.6e", Cs );
+      fprintf( File, BlankPlusFormat_Flt, Cs );
    }
 
    if ( OPT__OUTPUT_DIVVEL )
-      fprintf( File, " %13.6e", DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
+      fprintf( File, BlankPlusFormat_Flt, DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
 
    if ( OPT__OUTPUT_MACH )
-      fprintf( File, " %13.6e", DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
+      fprintf( File, BlankPlusFormat_Flt, DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
 #  endif // #if ( MODEL == HYDRO )
 
 #  ifdef MHD
    if ( OPT__OUTPUT_DIVMAG ) {
       const real DivB = MHD_GetCellCenteredDivBInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
-      fprintf( File, " %13.6e", DivB );
+      fprintf( File, BlankPlusFormat_Flt, DivB );
    }
 #  endif
 
    if ( OPT__OUTPUT_USER_FIELD ) {
       for (int v=0; v<UserDerField_Num; v++)
-      fprintf( File, " %13.6e", DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
+      fprintf( File, BlankPlusFormat_Flt, DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
    }
 
    fprintf( File, "\n" );

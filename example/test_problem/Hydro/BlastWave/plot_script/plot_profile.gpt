@@ -3,7 +3,7 @@ reset
 
 # target files
 # -----------------------------------------------------------
-FILE_IN_PREFIX  = 'Diag'
+FILE_IN_PREFIX  = '../Diag'
 FILE_IN_SUFFIX  = ''
 FILE_OUT_PREFIX = 'Fig__BlastWave'
 START_ID        = 0

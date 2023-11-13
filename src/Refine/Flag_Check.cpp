@@ -4,8 +4,6 @@ static bool Check_Gradient( const int i, const int j, const int k, const real In
 static bool Check_Curl( const int i, const int j, const int k,
                         const real vx[][PS1][PS1], const real vy[][PS1][PS1], const real vz[][PS1][PS1],
                         const double Threshold );
-extern bool (*Flag_Region_Ptr)( const int i, const int j, const int k, const int lv, const int PID );
-extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 
 
 
@@ -126,6 +124,17 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    if ( OPT__FLAG_CURRENT )
    {
       Flag |= Check_Curl( i, j, k, MagCC[0], MagCC[1], MagCC[2], FlagTable_Current[lv] );
+      if ( Flag )    return Flag;
+   }
+#  endif
+
+
+// check cosmic ray
+// ===========================================================================================
+#  ifdef COSMIC_RAY
+   if ( OPT__FLAG_CRAY )
+   {
+      Flag |= ( Fluid[CRAY][k][j][i] > FlagTable_CRay[lv] );
       if ( Flag )    return Flag;
    }
 #  endif

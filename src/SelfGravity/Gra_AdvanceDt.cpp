@@ -8,8 +8,6 @@ extern Timer_t *Timer_GetBuf     [NLEVEL][8];
 extern Timer_t *Timer_Par_Collect[NLEVEL];
 #endif
 
-extern void (*Poi_UserWorkBeforePoisson_Ptr)( const double Time, const int lv );
-
 
 
 

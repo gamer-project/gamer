@@ -85,7 +85,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const bool StoreFlux, const bool StoreElectric,
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter,
                       const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
-                      const double Time, const bool UsePot, const OptExtAcc_t ExtAcc,
+                      const double Time, const bool UsePot, const OptExtAcc_t ExtAcc, const MicroPhy_t MicroPhy,
                       const real MinDens, const real MinPres, const real MinEint,
                       const real DualEnergySwitch,
                       const bool NormPassive, const int NNorm, const int NormIdx[],
@@ -218,13 +218,15 @@ void Init_ByRestart_HDF5( const char *FileName );
 void End_FFTW();
 void Init_FFTW();
 void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf_SIdx, long *RecvBuf_SIdx,
-                 int **List_PID, int **List_k, int *List_NSend_Var, int *List_NRecv_Var,
+                 int **List_PID, int **List_k, long *List_NSend_Var, long *List_NRecv_Var,
                  const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
                  const double PrepTime, const long TVar, const bool InPlacePad, const bool ForPoisson, const bool AddExtraMass );
 void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
-                 int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
+                 int **List_PID, int **List_k, long *List_NSend, long *List_NRecv, const int local_nz, const int FFT_Size[],
                  const int NSendSlice, const long TVar, const bool InPlacePad );
 #endif // #ifdef SUPPORT_FFTW
+void Microphysics_Init();
+void Microphysics_End();
 
 
 // Interpolation
@@ -239,13 +241,13 @@ void Int_Table( const IntScheme_t IntScheme, int &NSide, int &NGhost );
 
 // Miscellaneous
 template <typename T> void  Mis_Idx1D2Idx3D( const int Size[], const T Idx1D, int Idx3D[] );
-template <typename T> int   Mis_BinarySearch( const T Array[], int Min, int Max, const T Key );
-template <typename T> int   Mis_BinarySearch_Real( const T Array[], int Min, int Max, const T Key );
+template <typename U, typename T> U Mis_BinarySearch( const T Array[], U Min, U Max, const T Key );
+template <typename U, typename T> U Mis_BinarySearch_Real( const T Array[], U Min, U Max, const T Key );
 template <typename T> T     Mis_InterpolateFromTable( const int N, const T Table_x[], const T Table_y[], const T x );
 template <typename T> ulong Mis_Idx3D2Idx1D( const int Size[], const int Idx3D[] );
-template <typename T> void  Mis_Heapsort( const int N, T Array[], int IdxTable[] );
+template <typename U, typename T> void  Mis_Heapsort( const U N, T Array[], U IdxTable[] );
 template <typename T> int   Mis_Matching_char( const int N, const T Array[], const int M, const T Key[], char Match[] );
-template <typename T> int   Mis_Matching_int( const int N, const T Array[], const int M, const T Key[], int Match[] );
+template <typename U, typename T> U Mis_Matching_int( const U N, const T Array[], const U M, const T Key[], U Match[] );
 template <typename T> bool  Mis_CompareRealValue( const T Input1, const T Input2, const char *comment, const bool Verbose );
 ulong  Mis_Idx3D2Idx1D( const int Size[], const int Idx3D[] );
 double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double AutoReduceDtCoeff );
@@ -266,7 +268,7 @@ void   dt_Close( const real h_dt_Array_T[], const int NPG );
 void   CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                      const real Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real Pot_Array[][ CUBE(GRA_NXT) ],
                      const double Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
-                     const real MinPres, const bool P5_Gradient,
+                     const MicroPhy_t MicroPhy, const real MinPres, const bool P5_Gradient,
                      const bool UsePot, const OptExtAcc_t ExtAcc, const double TargetTime );
 
 
@@ -278,6 +280,7 @@ void MPI_ExchangeBufferPosition( int NSend[26], int NRecv[26], int *Send_PosList
 void MPI_ExchangeData( const int TargetRank[2], const int SendSize[2], const int RecvSize[2],
                        real *SendBuffer[2], real *RecvBuffer[2] );
 void MPI_Exit();
+template <typename T> void MPI_Alltoallv_GAMER( T * SendBuf, long *Send_NCount, long *Send_NDisp, MPI_Datatype Send_Datatype, T *RecvBuf, long *Recv_NCount, long *Recv_NDisp, MPI_Datatype Recv_DataType, MPI_Comm comm );
 #endif // #ifndef SERIAL
 
 
@@ -380,8 +383,8 @@ void Init_ExtAccPot();
 void End_ExtAccPot();
 void Init_LoadExtPotTable();
 void Init_MemAllocate_PoissonGravity( const int Pot_NPatchGroup );
-void Init_Set_Default_MG_Parameter( int &Max_Iter, int &NPre_Smooth, int &NPost_Smooth, double &Tolerated_Error );
-void Init_Set_Default_SOR_Parameter( double &SOR_Omega, int &SOR_Max_Iter, int &SOR_Min_Iter );
+void Init_Set_Default_MG_Parameter();
+void Init_Set_Default_SOR_Parameter();
 void Output_PreparedPatch_Poisson( const int TLv, const int TPID, const int TComp,
                                    const real h_Rho_Array_P   [][RHO_NXT][RHO_NXT][RHO_NXT],
                                    const real h_Pot_Array_P_In[][POT_NXT][POT_NXT][POT_NXT],
@@ -526,6 +529,12 @@ void MHD_BoundaryCondition_User( real **Array, const int BC_Face, const int NVar
                                  const double Time, const double dh, const double *Corner, const int lv );
 void MHD_Init_BField_ByVecPot_File( const int B_lv );
 void MHD_Init_BField_ByVecPot_Function( const int B_lv );
+real MHD_ResetByUser_A2Bx( const real *Ax, const real *Ay, const real *Az,
+                           const int i, const int j, const int k, const double dh );
+real MHD_ResetByUser_A2By( const real *Ax, const real *Ay, const real *Az,
+                           const int i, const int j, const int k, const double dh );
+real MHD_ResetByUser_A2Bz( const real *Ax, const real *Ay, const real *Az,
+                           const int i, const int j, const int k, const double dh );
 #ifdef LOAD_BALANCE
 void MHD_LB_EnsureBFieldConsistencyAfterRestrict( const int lv );
 void MHD_LB_AllocateElectricArray( const int FaLv );
@@ -567,7 +576,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              const bool StoreFlux, const bool StoreElectric,
                              const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter,
                              const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
-                             const double Time, const bool UsePot, const OptExtAcc_t ExtAcc,
+                             const double Time, const bool UsePot, const OptExtAcc_t ExtAcc, const MicroPhy_t MicroPhy,
                              const real MinDens, const real MinPres, const real MinEint,
                              const real DualEnergySwitch,
                              const bool NormPassive, const int NNorm,
@@ -577,8 +586,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                           const real h_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real h_Pot_Array[][ CUBE(GRA_NXT) ],
                           const double h_Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
-                          const real MinPres, const bool P5_Gradient, const bool UsePot, const OptExtAcc_t ExtAcc,
-                          const double TargetTime, const int GPU_NStream );
+                          const MicroPhy_t MicroPhy, const real MinPres, const bool P5_Gradient, const bool UsePot,
+                          const OptExtAcc_t ExtAcc, const double TargetTime, const int GPU_NStream );
 void CUAPI_Asyn_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)           ],
                                  real h_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)               ],
                            const real h_Mag_Array_In [][NCOMP_MAG ][ SRC_NXT_P1*SQR(SRC_NXT) ],
@@ -637,7 +646,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
                          const int RhoSize, const double *EdgeL, const double dh, const bool PredictPos,
                          const double TargetTime, const bool InitZero, const bool Periodic[], const int PeriodicSize[3],
                          const bool UnitDens, const bool CheckFarAway, const bool UseInputMassPos, real **InputMassPos );
-void Par_SortByPos( const long NPar, const real *PosX, const real *PosY, const real *PosZ, int *IdxTable );
+void Par_SortByPos( const long NPar, const real *PosX, const real *PosY, const real *PosZ, long *IdxTable );
 void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOld, const ParUpStep_t UpdateStep,
                          const bool StoreAcc, const bool UseStoredAcc );
 void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double TimeOld,
@@ -685,9 +694,9 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
                                           const int Recv_NPatchTotal, const int *Recv_PIDList, int *Recv_NPatchEachRank,
                                           Timer_t *Timer, const char *Timer_Comment );
 void Par_LB_SendParticleData( const int NParAtt, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
-                              long *SendBuf_LBIdxEachPatch, real *SendBuf_ParDataEachPatch, const int NSendParTotal,
+                              long *SendBuf_LBIdxEachPatch, real *SendBuf_ParDataEachPatch, const long NSendParTotal,
                               int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
-                              real *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, int &NRecvParTotal,
+                              real *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, long &NRecvParTotal,
                               const bool Exchange_NPatchEachRank, const bool Exchange_LBIdxEachRank,
                               const bool Exchange_ParDataEachRank, Timer_t *Timer, const char *Timer_Comment );
 void Par_LB_RecordExchangeParticlePatchID( const int MainLv );

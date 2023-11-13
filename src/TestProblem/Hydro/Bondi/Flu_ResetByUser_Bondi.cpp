@@ -96,10 +96,11 @@ int Flu_ResetByUser_Func_Bondi( real fluid[], const double Emag, const double x,
 //
 // Parameter   :  lv      : Target refinement level
 //                FluSg   : Target fluid sandglass
+//                MagSg   : Target B field sandglass
 //                TimeNew : Current physical time (system has been updated from TimeOld to TimeNew in EvolveLevel())
 //                dt      : Time interval to advance solution (can be different from TimeNew-TimeOld in COMOVING)
 //-------------------------------------------------------------------------------------------------------
-void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TimeNew, const double dt )
+void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt )
 {
 
    const double dh       = amr->dh[lv];

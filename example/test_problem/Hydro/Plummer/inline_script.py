@@ -1,10 +1,11 @@
+import yt_libyt
 import yt
 
 yt.enable_parallelism()
 
 def yt_inline():
     # Get data
-    ds = yt.frontends.libyt.libytDataset()
+    ds = yt_libyt.libytDataset()
 
     # Do ProjectionPlot to field Cloud0.
     sz = yt.ProjectionPlot(ds, 'z', ('gamer', 'Cloud0'), center='c')
@@ -17,11 +18,4 @@ def yt_inline():
         par.save()
 
 def yt_inline_inputArg( fields ):
-    # Get data
-    ds = yt.frontends.libyt.libytDataset()
-
-    # Do ProjectionPlot to fields input by gamer
-    sz = yt.ProjectionPlot(ds, 'z', fields, center='c')
-
-    if yt.is_root():
-        sz.save()
+    pass

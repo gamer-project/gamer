@@ -28,8 +28,8 @@ FileOut = 'fig__profile_merging-cluster.png'
 f, ax = plt.subplots( 2, 2 )
 #f.subplots_adjust( hspace=0.0, wspace=0.0 )
 f.subplots_adjust( wspace=0.5 )
-[ f.axes[t].set_xscale( 'log', nonposy='clip' ) for t in range(0,4,1) ]
-[ f.axes[t].set_yscale( 'log', nonposy='clip' ) for t in range(0,4,1) ]
+[ f.axes[t].set_xscale( 'log', nonpositive='clip' ) for t in range(0,4,1) ]
+[ f.axes[t].set_yscale( 'log', nonpositive='clip' ) for t in range(0,4,1) ]
 [ f.axes[t].set_xlim( 5.0e+0, 2.0e+3 ) for t in range(0,4,1) ]
 ax[1][0].set_xlabel( '$r\ [\mathrm{kpc}]$', fontsize=16 )
 ax[1][1].set_xlabel( '$r\ [\mathrm{kpc}]$', fontsize=16 )

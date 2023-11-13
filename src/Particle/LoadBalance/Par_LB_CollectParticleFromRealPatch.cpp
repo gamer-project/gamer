@@ -169,7 +169,8 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
    int  *SendBuf_NParEachPatch = new int  [Real_NPatchTotal];
    long *SendBuf_Offset        = new long [Real_NPatchTotal];
 
-   int PID, NParThisPatch, NSendParTotal = 0;
+   int  PID, NParThisPatch;
+   long NSendParTotal = 0L;
 
 // loop over all target real patches
 #  pragma omp parallel for private( PID, NParThisPatch ) reduction( +:NSendParTotal ) schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )
@@ -187,8 +188,8 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
                     NParThisPatch, lv, PID );
 #     endif
 
-      NSendParTotal            += NParThisPatch;
-      SendBuf_NParEachPatch[t]  = NParThisPatch;
+      NSendParTotal            += (long)NParThisPatch;
+      SendBuf_NParEachPatch[t]  =       NParThisPatch;
    } // for (int t=0; t<Real_NPatchTotal; t++)
 
 // get the array offset of each patch (mainly for the OpenMP parallelization)
@@ -281,7 +282,8 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
    long *SendBuf_LBIdxEachRank    = NULL;   // useless and does not need to be allocated
    long *RecvBuf_LBIdxEachRank    = NULL;   // useless and will not be allocated by Par_LB_SendParticleData
 
-   int NRecvPatchTotal, NRecvParTotal;  // returned from Par_LB_SendParticleData
+   int  NRecvPatchTotal;                    // returned from Par_LB_SendParticleData
+   long NRecvParTotal;                      // returned from Par_LB_SendParticleData
 
 // note that we don't exchange NPatchEachRank (which is already known) and LBIdxEachRank (which is useless here)
    Par_LB_SendParticleData(
