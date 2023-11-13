@@ -753,7 +753,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                            Timer_GetBuf[lv][6],   TIMER_ON   );
 #           endif
 
-            TIMING_FUNC(   Flu_FixUp_Flux( lv ),
+            TIMING_FUNC(   Flu_FixUp_Flux( lv, FixUpVar_Flux ),
                            Timer_FixUp[lv],   TIMER_ON   );
          }
 

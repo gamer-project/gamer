@@ -12,9 +12,14 @@
 //                   Buf_GetBufferData()
 //                2. Invoked by EvolveLevel()
 //
-// Parameter   :  lv : Target coarse level
+// Parameter   :  lv   : Target coarse level
+//                TVar : Target variables
+//                       --> Supported variables in different models:
+//                           HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY
+//                           ELBDM : _DENS
+//                       --> _FLUID, _PASSIVE, and _TOTAL apply to all models
 //-------------------------------------------------------------------------------------------------------
-void Flu_FixUp_Flux( const int lv )
+void Flu_FixUp_Flux( const int lv, const long TVar )
 {
 
    const bool CheckMinPres_No = false;
@@ -290,8 +295,10 @@ void Flu_FixUp_Flux( const int lv )
 
 
 //                store the corrected results
-                  for (int v=0; v<NFLUX_FLUID;       v++)   *FluidPtr1D[v] = CorrVal[v];
-                  for (int v=0; v<PassiveFixUp_NVar; v++)   *FluidPtr1D[ PassiveFixUp_VarIdx[v] ] = CorrVal[ PassiveFixUp_VarIdx[v] ];
+                  for (int v=0; v<NFLUX_TOTAL; v++)
+                  {
+                     if ( TVar & (1L<<v) )   *FluidPtr1D[v] = CorrVal[v];
+                  }
 
 
 //                rescale the real and imaginary parts to be consistent with the corrected amplitude
