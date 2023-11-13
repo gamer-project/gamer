@@ -158,6 +158,7 @@ struct AMR_t
          PotSgTime[lv][ 1-PotSg[lv] ] = -__FLT_MAX__;
 #        endif
 
+#        if ( MODEL == ELBDM )
 //       use fluid solver by default for hybrid scheme
 #        if ( ELBDM_SCHEME == ELBDM_WAVE )
          use_wave_flag[lv] = true;
@@ -166,6 +167,7 @@ struct AMR_t
 #        else
 #        error : UNKNOWN ELBDM_SCHEME !!
 #        endif // # if ELBDM_SCHEME
+#        endif // #if ( MODEL == ELBDM )
       }
 
       for (int Sg=0; Sg<2; Sg++)
