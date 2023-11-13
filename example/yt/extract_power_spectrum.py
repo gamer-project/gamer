@@ -10,7 +10,7 @@ import numpy as np
 
 
 # load the command-line parameters
-parser = argparse.ArgumentParser( description='Extract power spectrum from GAMER AMR data.' )
+parser = argparse.ArgumentParser( description='Extract power spectrum from GAMER AMR data. Supports 2D (x-y-plane) and 1D simulations (x-line) stored as 3D AMR data.' )
 
 parser.add_argument( '-s', action='store', required=True,  type=int, dest='idx_start',
                             help='first data index' )
@@ -21,7 +21,8 @@ parser.add_argument( '-d', action='store', required=False, type=int, dest='didx'
 parser.add_argument( '-i', action='store', required=False,  type=str, dest='prefix',
                       help='data path prefix [%(default)s]', default='./' )
 parser.add_argument( '-lv', action='store', required=False,  type=int, dest='lv',  help='sampling level [%(default)d]', default=0 )
-parser.add_argument( '-L_box', action='store', required=True,  type=float, dest='L_box',  help='box size in [Mpc/h]' )
+parser.add_argument( '-L', action='store', required=True,  type=float, dest='L_box',  help='box size in [Mpc/h]' )
+parser.add_argument( '-ndim', action='store', required=False,  type=int, dest='ndim',  help='number of dimensions for power spectrum [%(default)d]', default=3 )
 
 
 args=parser.parse_args()
@@ -40,6 +41,8 @@ didx        = args.didx
 prefix      = args.prefix
 lv          = args.lv
 L_box       = args.L_box
+ndim        = args.ndim
+
 
 fields      = [("gas", "density")]   # fields for which to compute power spectrum
 
@@ -57,38 +60,71 @@ for ds in ts.piter():
     for field in fields:
         N = data[field].shape[0]
 
-        d = data[field]
+        # x-line at 0, 0
+        if ndim == 1:
+            d = data[field][:, 0, 0]
+        # xy-plane
+        elif ndim == 2:
+            d = data[field][:, :, 0]
+        else:
+            d = data[field]
+
 
         # Compute the 3D Fourier transform of the density data
         density_fft = np.fft.rfftn(d)
 
-
         # Compute the power spectrum
         power_spectrum = np.abs(density_fft)**2
 
-        # Calculate the k values, with rfftn last axis undergoes real transform
-        kx_lin, ky_lin, kz_lin = np.fft.fftfreq(d.shape[0]), np.fft.fftfreq(d.shape[1]), np.fft.rfftfreq(d.shape[2])
 
-        # Create a grid of k values
-        kx, ky, kz = np.meshgrid(kx_lin, ky_lin, kz_lin, indexing='ij')
-        k          = np.sqrt(kx**2 + ky**2 + kz**2)
+        if ndim == 1:
+            kx_lin = np.fft.rfftfreq(d.shape[0])
+            k      = kx_lin
+            k_lin  = kx_lin
 
+        elif ndim == 2:
+            # Calculate the k values, with rfftn last axis undergoes real transform
+            kx_lin, ky_lin = np.fft.fftfreq(d.shape[0]), np.fft.rfftfreq(d.shape[1])
 
-        bins = kz_lin
+            # Create a grid of k values
+            kx, ky = np.meshgrid(kx_lin, ky_lin, indexing='ij')
+            k      = np.sqrt(kx**2 + ky**2)
+
+            k_lin  = ky_lin
+
+        else:
+            # Calculate the k values, with rfftn last axis undergoes real transform
+            kx_lin, ky_lin, kz_lin = np.fft.fftfreq(d.shape[0]), np.fft.fftfreq(d.shape[1]), np.fft.rfftfreq(d.shape[2])
+
+            # Create a grid of k values
+            kx, ky, kz = np.meshgrid(kx_lin, ky_lin, kz_lin, indexing='ij')
+            k          = np.sqrt(kx**2 + ky**2 + kz**2)
+
+            k_lin      = kz_lin
+
+        # np.histogram expects list with bin edges
+        # k_lin contains centers of positive frequency bins
+        bins = k_lin
+        # bin shift centers to right bin boundaries
         bins += (bins[1] - bins[0])/2
+        # add leftmost bin boundary
+        bins = np.concatenate([[0], bins])
+
 
         counts, bin_edges = np.histogram(k, bins)
         totals, bin_edges = np.histogram(k, bins, weights=power_spectrum)
 
-        hist     = totals/counts
-        volume   = L_box ** 3
+        hist     = totals/(counts + (counts == 0))
+        volume   = L_box ** ndim
         dc_mode  = np.abs(hist[0])
-        ave_dens = np.sqrt(dc_mode) / volume
-        Norm     = volume / (ave_dens**2 * volume**2)
-        spectrum = hist * Norm
+        dc_mode += dc_mode == 0
+        AveVar   = np.sqrt(dc_mode) / np.prod(d.shape)
+        Norm     = volume / (AveVar * np.prod(d.shape)) ** 2
 
-        ks       = (bins + 0.5 * (bins[1] - bins[0])) * 2 * np.pi / L_box * N
-        ks       = ks[:-1]
+        # Obtain bin centers from boundaries and make dimensional
+        ks       = (bins[1:-1] + (bins[2] - bins[1])/2) * 2 * np.pi / L_box * N
+        spectrum = hist * Norm
+        spectrum = spectrum[1:] # do not output DC mode used for normalisation
 
         # Create a log-log plot of the power spectrum
         plt.figure(figsize=(8, 6))
@@ -98,11 +134,11 @@ for ds in ts.piter():
         plt.title('%s Power Spectrum' % field[1].capitalize())
         plt.grid()
         plt.legend()
-        f = (np.char.capitalize(field[1]), num, lv, N)
-        plt.savefig('power_spectrum_%s_%06d_lv_%02d_%d.png' % f)
+        f = (np.char.capitalize(field[1]), num, lv, N, ndim)
+        plt.savefig('power_spectrum_%s_%06d_lv_%02d_%d_ndim_%d.png' % f)
         plt.close()
 
         # store spectra in array
         to_save = np.hstack([ks, spectrum])
-        np.savetxt('power_spectrum_%s_%06d_lv_%02d_%d.txt' % f, to_save)
+        np.savetxt('power_spectrum_%s_%06d_lv_%02d_%d_ndim_%d.txt' % f, to_save)
 
