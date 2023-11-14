@@ -118,7 +118,7 @@ void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_
 
 
 //    assuming that the orders of the particle attributes stored on the disk and in Par->Attribute[] are the same
-      
+
       ParMass[p] = ParData1[0];
       ParPosX[p] = ParData1[1];
       ParPosY[p] = ParData1[2];
@@ -128,7 +128,7 @@ void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_
       ParVelZ[p] = ParData1[6];
       ParType[p] = ParData1[7];
       AllAttribute[ParTypeIdx_DiskHeating][p] = ParData1[7];
- 
+
 //    synchronize all particles to the physical time at the base level
       amr->Par->Time[p] = Time[0];
    }

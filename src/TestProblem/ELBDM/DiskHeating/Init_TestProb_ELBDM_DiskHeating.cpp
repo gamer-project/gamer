@@ -28,18 +28,18 @@ static double G = 6.67408E-8;
 static double CM_MaxR;      // maximum radius for determining CM
 static double CM_TolErrR;   // maximum allowed errors for determining CM
        double Cen[3];       // center
-static bool AddFixedHalo;  // add a fixed halo, must enable OPT__FREEZE_FLUID 
+static bool AddFixedHalo;  // add a fixed halo, must enable OPT__FREEZE_FLUID
 static bool HaloUseTable;   // 0 = from analytical profile, 1 = from table
        double m_22;         // ELBDM particle mass, used for soliton profile of the fixed halo
        double CoreRadius;   // soliton radius of the fixed halo (in kpc)
 static double Rho_0;        // halo rho_0 (in 1.0e+10 Msun*kpc^-3)
-static double Rs;           // halo Rs (in kpc) 
-static double Alpha;        // dimensionless    
-static double Beta;         // dimensionless 
-static double Gamma;        // dimensionless 
+static double Rs;           // halo Rs (in kpc)
+static double Alpha;        // dimensionless
+static double Beta;         // dimensionless
+static double Gamma;        // dimensionless
 static char   DensTableFile[1000];   // fixed halo density profile filename
 static int    DensNbin;              // Nbins of density table
-static double *DensTable_r = NULL;   // radius of density table 
+static double *DensTable_r = NULL;   // radius of density table
 static double *DensTable_d = NULL;   // density of density table
 static bool   AddParWhenRestart;        // add a new disk to an existing snapshot, must enable OPT__RESTART_RESET
 static bool   AddParWhenRestartByfile;  // add a new disk via PAR_IC
@@ -48,7 +48,7 @@ static double Disk_Mass;                // total mass of the new disk
 static double Disk_R;                   // scale radius of the new disk
 static char   DispTableFile[1000];   // velocity dispersion filename
 static int    DispNbin;              // Nbins of velocity dispersion table
-static double *DispTable_r = NULL;   // radius of velocity dispersion table 
+static double *DispTable_r = NULL;   // radius of velocity dispersion table
 static double *DispTable_d = NULL;   // velocity dispersion of velocity dispersion table
 
 // =======================================================================================
@@ -207,7 +207,7 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
-   // use density table as background fixed halo profile  
+   // use density table as background fixed halo profile
    if ( HaloUseTable == 1 ) {
       if ( DensNbin == 0){
          if ( MPI_Rank == 0 )    Aux_Error( ERROR_INFO, "DensNbin should be set!\n" );
@@ -221,7 +221,7 @@ void SetParameter()
       DensTable_d = new double [DensNbin];
 
       // read the density table
-      if ( MPI_Rank == 0 ) 
+      if ( MPI_Rank == 0 )
       {
          counter = 0;
          input_table = fopen(DensTableFile,"r");
@@ -242,11 +242,11 @@ void SetParameter()
                counter ++;
             }
             memset(buff, '\0', STR_SIZE);
-         } 
+         }
          fclose(input_table);
       }
       MPI_Bcast(DensTable_r, DensNbin, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-      MPI_Bcast(DensTable_d, DensNbin, MPI_DOUBLE, 0, MPI_COMM_WORLD);   
+      MPI_Bcast(DensTable_d, DensNbin, MPI_DOUBLE, 0, MPI_COMM_WORLD);
    }
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
@@ -302,14 +302,14 @@ void SetParameter()
 
 // analytical density profile for fixed background halo
 double halo_density(double r) {
-   
+ 
    double rho_halo = Rho_0/pow(r/Rs, Alpha)/pow(1 + pow(r/Rs,Beta),(Gamma-Alpha)/Beta);
    if ( fabs(rho_halo) <  __FLT_MIN__) rho_halo = 0;
 
    double rho_soliton =  0.0019 / m_22 / m_22 * pow(1.0 / CoreRadius/ pow(1 + 0.091 * pow(r / CoreRadius, 2), 2), 4);
    if ( fabs(rho_soliton) <  __FLT_MIN__) rho_soliton = 0;
 
-   double rho_max =  0.0019 / m_22 / m_22 * pow(1.0 / CoreRadius, 4); 
+   double rho_max =  0.0019 / m_22 / m_22 * pow(1.0 / CoreRadius, 4);
    if ((rho_halo + rho_soliton) > rho_max) return rho_max;
    else return(rho_halo + rho_soliton);
 
@@ -357,11 +357,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       {
          if (r_in_kpc < DensTable_r[0]) dens = DensTable_d[0];
          else if (r_in_kpc > DensTable_r[DensNbin-1]) dens = 0;
-         else dens = get_value_from_interpolation_log(r_in_kpc, DensTable_r, DensTable_d);   
+         else dens = get_value_from_interpolation_log(r_in_kpc, DensTable_r, DensTable_d);
       }
-      else dens = halo_density(r_in_kpc)*Unit_D_GALIC/UNIT_D; 
+      else dens = halo_density(r_in_kpc)*Unit_D_GALIC/UNIT_D;
    }
-   
+ 
 //ELBDM example
    fluid[DENS] = (real)dens;
    fluid[REAL] = sqrt( fluid[DENS] );
@@ -763,7 +763,7 @@ void End_DiskHeating()
 ////-------------------------------------------------------------------------------------------------------
 void AddNewParticleAttribute()
 {
-   
+
    // "Idx_ParLabel" has been predefined in Field.h
    if ( ParTypeIdx_DiskHeating == Idx_Undefined )  ParTypeIdx_DiskHeating = AddParticleAttribute( "ParNumber" );
 
@@ -772,7 +772,7 @@ void AddNewParticleAttribute()
 
 //-------------------------------------------------------------------------------------------------------
 //// Function    :  Init_NewDiskRestart()
-//// Description :  Add a new disk from an existing snapshot 
+//// Description :  Add a new disk from an existing snapshot
 //// Note        :  Must enable OPT__RESTART_RESET and AddParWhenRestart
 ////-------------------------------------------------------------------------------------------------------
 void Init_NewDiskRestart()
@@ -796,7 +796,7 @@ void Init_NewDiskRestart()
 
    if ( AddParWhenRestartByfile ) // add new disk via PAR_IC
    {
-//    load data   
+//    load data
       if ( MPI_Rank == 0 ){
          const char FileName[]     = "PAR_IC";
          const int  NParAtt        = 8;             // mass, pos*3, vel*3, type
@@ -805,7 +805,7 @@ void Init_NewDiskRestart()
 //       check
          if ( !Aux_CheckFileExist(FileName) )
             Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", FileName );
- 
+
          FILE *FileTemp = fopen( FileName, "rb" );
 
          fseek( FileTemp, 0, SEEK_END );
@@ -831,7 +831,7 @@ void Init_NewDiskRestart()
          }
 
          fclose( File );
-         Aux_Message( stdout, "done\n" ); 
+         Aux_Message( stdout, "done\n" );
          Aux_Message( stdout, "   Storing data into particle repository ... " );
 
          real *ParData1 = new real [NParAtt];
@@ -847,7 +847,7 @@ void Init_NewDiskRestart()
 //          mass
             Mass_AllRank[p] = ParData1[0];
 //          label
-            Type_AllRank[p] = ParData1[7]; 
+            Type_AllRank[p] = ParData1[7];
             Label_AllRank[p] = ParData1[7];
 //          position
             Pos_AllRank[0][p] = ParData1[1];
@@ -856,10 +856,10 @@ void Init_NewDiskRestart()
 //          velocity
             Vel_AllRank[0][p] = ParData1[4];
             Vel_AllRank[1][p] = ParData1[5];
-            Vel_AllRank[2][p] = ParData1[6];            
+            Vel_AllRank[2][p] = ParData1[6];
 
          } // for ( long p = 0; p < NPar_AllRank; p++)
-         Aux_Message( stdout, "done\n" ); 
+         Aux_Message( stdout, "done\n" );
 
       } // if ( MPI_Rank == 0 )
    }// if ( AddParWhenRestartByfile )
@@ -869,7 +869,7 @@ void Init_NewDiskRestart()
 
 #     ifndef SUPPORT_GSL
       Aux_Error( ERROR_INFO, "SUPPORT_GSL must be enabled when AddParWhenRestart=1 and AddParWhenRestartByfile=0 !!\n" );
-#     endif 
+#     endif
 
       // read velocity dispersion table
       if ( DispNbin == 0){
@@ -884,7 +884,7 @@ void Init_NewDiskRestart()
       DispTable_d = new double [DispNbin];
 
       // velocity dispersion table for thin disk
-      if ( MPI_Rank == 0 ) 
+      if ( MPI_Rank == 0 )
       {
          counter = 0;
          input_table = fopen(DispTableFile,"r");
@@ -905,12 +905,12 @@ void Init_NewDiskRestart()
                counter ++;
             }
             memset(buff, '\0', STR_SIZE);
-         } 
+         }
          fclose(input_table);
       }
       MPI_Bcast(DispTable_r, DispNbin, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-      MPI_Bcast(DispTable_d, DispNbin, MPI_DOUBLE, 0, MPI_COMM_WORLD);   
-      
+      MPI_Bcast(DispTable_d, DispNbin, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
       if ( MPI_Rank == 0 )
       {
          Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -929,7 +929,7 @@ void Init_NewDiskRestart()
 //          mass
             Mass_AllRank[p] = ParM;
 //          label
-            Type_AllRank[p] = 3; 
+            Type_AllRank[p] = 3;
             Label_AllRank[p] = 3;
 
 //          position
@@ -957,7 +957,7 @@ void Init_NewDiskRestart()
             Vel_AllRank[0][p] = - V_acc*sin(phi);
             Vel_AllRank[1][p] =   V_acc*cos(phi);
             Vel_AllRank[2][p] =   0;
-   
+
          } // for ( long p = 0; p < NPar_AllRank; p++)
 
       } //if ( MPI_Rank == 0 )
@@ -998,7 +998,7 @@ void Init_NewDiskRestart()
     } // for (int lv=OPT__UM_IC_LEVEL; lv<MAX_LEVEL; lv++)
 
     if ( !AddParWhenRestartByfile )
-    {   
+    {
 //    evaluate the initial average density if it is not set yet (may already be set in Init_ByRestart)
       if ( AveDensity_Init <= 0.0 )    Poi_GetAverageDensity();
 
@@ -1010,9 +1010,9 @@ void Init_NewDiskRestart()
          if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d ... ", lv );
 
          Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _DENS, _NONE, Rho_ParaBuf, USELB_YES );
- 
+
          Gra_AdvanceDt( lv, Time[lv], NULL_REAL, NULL_REAL, NULL_INT, amr->PotSg[lv], true, false, false, false, false );
- 
+
          if ( lv > 0 )
 
          Buf_GetBufferData( lv, NULL_INT, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES );
@@ -1089,7 +1089,7 @@ void Par_AfterAcceleration(const long NPar_ThisRank, const long NPar_AllRank, re
          RanV[0] = gsl_ran_gaussian(random_generator, sigma);
          RanV[1] = gsl_ran_gaussian(random_generator, sigma);
          RanV[2] = gsl_ran_gaussian(random_generator, sigma);
- 
+
          ParVel[0][p] = - V_acc*NormParRadius[1]+RanV[0];
          ParVel[1][p] =   V_acc*NormParRadius[0]+RanV[1];
          ParVel[2][p] =   RanV[2];
@@ -1108,9 +1108,9 @@ double get_dispersion(double r){
    const double r_in_kpc = r*UNIT_L/3.085678e21;
    if (r_in_kpc < DispTable_r[0]) disp = DispTable_d[0];
    else if (r_in_kpc > DispTable_r[DispNbin-1]) disp = DispTable_d[DispNbin-1];
-   else disp = get_value_from_interpolation(r_in_kpc, DispTable_r, DispTable_d);   
-   
-   return disp; 
+   else disp = get_value_from_interpolation(r_in_kpc, DispTable_r, DispTable_d);
+
+   return disp;
 } // FUNCTION : get_dispersion
 
 

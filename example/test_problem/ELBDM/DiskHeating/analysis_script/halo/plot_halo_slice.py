@@ -50,7 +50,7 @@ for idx in range(idx_start, idx_end+1, didx):
       ds.periodicity = (True, True, True)
    current_step   = ds.parameters["Step"]
    print("Current Simulation Time = %.5e [code units]"%ds.parameters["Time"][0])
-   print("Current Simulation Step = %i "%current_step)
+   print("Current Simulation Step = %i"%current_step)
 
    dens = yt.SlicePlot( ds, 0, fields = field, center = Center[current_step,3:6], width = (60 ,'kpc'))
    dens.set_background_color( field )

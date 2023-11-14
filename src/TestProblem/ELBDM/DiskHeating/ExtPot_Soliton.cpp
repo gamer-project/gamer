@@ -7,7 +7,7 @@
 
 extern double m_22;
 extern double CoreRadius;
-extern double Cen[3]; 
+extern double Cen[3];
 
 
 // =================================
@@ -38,7 +38,7 @@ void SetExtPotAuxArray_Soliton( double AuxArray_Flt[], int AuxArray_Int[], const
    AuxArray_Flt[0] = Cen[0];    // x coordinate of the external potential center
    AuxArray_Flt[1] = Cen[1];    // y ...
    AuxArray_Flt[2] = Cen[2];    // z ...
-   AuxArray_Flt[3] = CoreRadius; 
+   AuxArray_Flt[3] = CoreRadius;
    AuxArray_Flt[4] = A;
    AuxArray_Flt[5] = B;
    AuxArray_Flt[6] = G;
@@ -108,7 +108,7 @@ static real ExtPot_Soliton( const double x, const double y, const double z, cons
    const real  unit_l  = (real)UserArray_Flt[7];
    const real    r     = SQRT( dx*dx + dy*dy + dz*dz )*unit_l/3.085678e21;
    const real    pi    = 3.1415926;
-   real soliton_potential = -pi*POW(r_sol,3.)*A*G/53760./POW(B,1.5)*(r_sol*POW(B,0.5)/POW((POW(r_sol,2.)+B*POW(r,2.)),6.) 
+   real soliton_potential = -pi*POW(r_sol,3.)*A*G/53760./POW(B,1.5)*(r_sol*POW(B,0.5)/POW((POW(r_sol,2.)+B*POW(r,2.)),6.)
                             *(11895.*POW(r_sol,10.)+36685.*POW(r_sol,8.)*B*POW(r,2.)+55638.*POW(r_sol,6.)*POW(B,2.)*POW(r,4.)
                             +45738.*POW(r_sol,4.)*POW(B,3)*POW(r,6.)+19635.*POW(r_sol,2.)*POW(B,4.)*POW(r,8.)+3465.*POW(B,5.)
                             *POW(r,10.))+3465.*ATAN(POW(B,0.5)*r/r_sol)/r);

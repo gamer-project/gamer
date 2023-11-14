@@ -48,7 +48,7 @@ for idx in range(idx_start, idx_end+1, didx):
    MaxLevel       = ds.parameters["MaxLevel"]
    Resolution     = CellSize[MaxLevel]*ds.parameters["Unit_L"]/3.08568e+21 # spatial resolution in kpc
    print("Current Simulation Time = %.5e [code units]"%ds.parameters["Time"][0])
-   print("Current Simulation Step = %i "%current_step)
+   print("Current Simulation Step = %i"%current_step)
 
    sp = ds.sphere( Center[current_step,3:6], 0.5*ds.domain_width.to_value().max() )
    prof = yt.ProfilePlot( sp, 'radius', field, weight_field='cell_volume', n_bins=nbin, x_log=True, y_log={field:False} )

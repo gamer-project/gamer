@@ -17,13 +17,13 @@ def SearchIndex(x, A, N):
    j = N - 1
    while(i <= j):
       mid = int(i + (j - i)/2)
-      if(A[mid] == x):     
+      if(A[mid] == x):
          i = mid
-         break 
-      elif(A[mid] > x): 
+         break
+      elif(A[mid] > x):
          j = mid - 1
-      else: i = mid + 1  
-   return i  
+      else: i = mid + 1
+   return i
 
 with h5py.File(filename, "r") as f:
     N_Disk = f['PartType2']['Masses'].size
@@ -56,7 +56,7 @@ sortR_kpc = np.sort(disk_r)*UNIT_L/UNIT_L_GALIC
 #print(sortR_kpc[0])
 #print(sortR_kpc[-1])
 
-indexR = np.argsort(disk_r) 
+indexR = np.argsort(disk_r)
 
 # exclude particles with r > 70 kpc
 num = SearchIndex( 70, sortR_kpc, N_Disk )
@@ -71,14 +71,14 @@ disk_velz = disk_velz[ indexR[:num] ]
 disk_type = np.full(num, 2)
 disk_mass = np.full(num, mass)
 with open('PAR_IC', 'wb') as output:
-    output.write(disk_mass.astype('f').tostring())
-    output.write(disk_posx.astype('f').tostring())
-    output.write(disk_posy.astype('f').tostring())
-    output.write(disk_posz.astype('f').tostring())
-    output.write(disk_velx.astype('f').tostring())
-    output.write(disk_vely.astype('f').tostring())
-    output.write(disk_velz.astype('f').tostring()) 
-    output.write(disk_type.astype('f').tostring()) 
+    output.write(disk_mass.astype('f').tobytes())
+    output.write(disk_posx.astype('f').tobytes())
+    output.write(disk_posy.astype('f').tobytes())
+    output.write(disk_posz.astype('f').tobytes())
+    output.write(disk_velx.astype('f').tobytes())
+    output.write(disk_vely.astype('f').tobytes())
+    output.write(disk_velz.astype('f').tobytes())
+    output.write(disk_type.astype('f').tobytes())
 output.close()
 #print('Disk particles = '+ str(len(disk_posx)))
 print('Disk particles = '+ str(num))
