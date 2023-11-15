@@ -1720,12 +1720,6 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.SRHydrodynamics        = 0;
 #  endif
 
-#  ifdef COSMIC_RAY
-   Makefile.CosmicRay              = 1;
-#  else
-   Makefile.CosmicRay              = 0;
-#  endif
-
    Makefile.EoS                    = EOS;
 
 #  ifdef BAROTROPIC_EOS
