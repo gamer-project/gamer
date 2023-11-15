@@ -93,8 +93,6 @@ static real EoS_GuessHTilde_TaubMathews( const real Con[], real* const Constant,
 
   real A = (real)437.0 * M_Dsqr + (real)117.0;
   real B = (real)1.0 + M_Dsqr;
-  real C = (real)43.0*M_Dsqr + (real)63.0;
-
 
   // Eq. A7 in "Tseng et al. 2021, MNRAS, 504, 3298"
   Discrimination  = (real)3240000.0 * SQR( B );
@@ -104,14 +102,16 @@ static real EoS_GuessHTilde_TaubMathews( const real Con[], real* const Constant,
   if ( *Constant >= Discrimination )
   {
      // Eq. A6 in "Tseng et al. 2021, MNRAS, 504, 3298"
-     GuessHTilde = (real)4./3. * SQRT( *Constant );
+     GuessHTilde  = (real)4./3. * SQRT( *Constant );
   }
   else
   {
      // Eq. A4 in "Tseng et al. 2021, MNRAS, 504, 3298"
-     GuessHTilde  = (real)1.1180339887498949e1 * SQRT( B*C* (*Constant) + (real)45.0*B*B );
-	 GuessHTilde -= (real)75.0 * B;
-	 GuessHTilde /= C;
+     real C       = (real)43.0*M_Dsqr + (real)63.0;
+     real F       = (real)75.0*B;
+     real G       = (real)125.0*B*C*(*Constant);  
+     GuessHTilde  = SQRT(G);
+     GuessHTilde /= C*(F+SQRT(G+F*F));
   }
 
   return GuessHTilde;
@@ -120,11 +120,11 @@ static real EoS_GuessHTilde_TaubMathews( const real Con[], real* const Constant,
 // Function    :  EoS_HTilde2Temp_TaubMathews
 // Description :  Convert reduced enthalpy to temperature
 //
-// Note        :  Eq. 16 in "Tseng et al. 2021, MNRAS, 504, 3298"
+// Note        :  Eqs. 16, A2 in "Tseng et al. 2021, MNRAS, 504, 3298"
 //
 // Parameter   :  HTilde     : Reduced enthalpy
 //                Temp       : Temperature (kT/mc**2)
-//                DiffTemp   : The derivitive of a reduced enthalpy with respect to temperature
+//                DiffTemp   : The derivative of a reduced enthalpy with respect to temperature
 //                Passive    : Passive scalars (must not used here)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
