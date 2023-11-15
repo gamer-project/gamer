@@ -239,7 +239,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 
    Out[0] = In[0]/LorentzFactor;
 
-   const real _Rho = (real)1.0/Out[0];
+   const real _Rho = (real)1.0/In[0];
    
    EoS_HTilde2Temp( HTilde, &Temp, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
@@ -387,7 +387,7 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const i
 
 // convert the mass fraction of target passive scalars back to mass density
       if ( FracPassive )
-         for (int v=0; v<NFrac; v++)   Out[ NCOMP_FLUID + FracIdx[v] ] *= In[0];
+         for (int v=0; v<NFrac; v++)   Out[ NCOMP_FLUID + FracIdx[v] ] *= Out[0];
    }
 #  endif
 
