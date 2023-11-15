@@ -360,14 +360,12 @@ vpath %.cu     Microphysics
 # cosmic-ray diffusion source files (included only if "CR_DIFFUSION" is turned on)
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DCR_DIFFUSION, $(SIMU_OPTION))" "-DCR_DIFFUSION"
-CPU_FILE    += CPU_AddCosmicRayDiffuseFlux.cpp  CPU_ComputeCosmicRayDiffusivity.cpp \
-               CPU_CosmicRayMaxDiffusivity.cpp
+CPU_FILE    += CPU_CR_AddDiffuseFlux.cpp  CPU_CR_ComputeDiffusivity.cpp
 
-GPU_FILE    += CUFLU_AddCosmicRayDiffuseFlux.cu  CUFLU_ComputeCosmicRayDiffusivity.cu \
-               CUFLU_CosmicRayMaxDiffusivity.cu
+GPU_FILE    += CUFLU_CR_AddDiffuseFlux.cu  CUFLU_CR_ComputeDiffusivity.cu
 
-vpath %.cpp    Microphysics/CosmicRayDiffusivity
-vpath %.cu     Microphysics/CosmicRayDiffusivity
+vpath %.cpp    Microphysics/CosmicRayDiffusion
+vpath %.cu     Microphysics/CosmicRayDiffusion
 endif # CR_DIFFUSION
 
 

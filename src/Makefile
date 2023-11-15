@@ -87,6 +87,10 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 # cosmic rays
 #SIMU_OPTION += -DCOSMIC_RAY
 
+# cosmic-ray diffusion
+# --> must enable COSMIC_RAY and MHD
+#SIMU_OPTION += -DCR_DIFFUSION
+
 # equation of state: EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_COSMIC_RAY/EOS_TAUBMATHEWS/EOS_USER
 # --> must be set when MODEL=HYDRO; must also enable BAROTROPIC_EOS for EOS_ISOTHERMAL
 SIMU_OPTION += -DEOS=EOS_GAMMA
@@ -157,14 +161,6 @@ SIMU_OPTION += -DSTORE_PAR_ACC
 # --> set it to 0 or comment it out if none is required
 SIMU_OPTION += -DPAR_NATT_USER=0
 endif # PARTICLE
-
-
-# (b-5) microphysics options
-# ------------------------------------------------------------------------------------
-ifeq "$(filter -DCOSMIC_RAY, $(SIMU_OPTION))" "-DCOSMIC_RAY"
-# enable cosmic-ray diffusion
-SIMU_OPTION += -DCR_DIFFUSION
-endif # COSMIC_RAY
 
 
 # (c) miscellaneous options (AMR, GPU, parallelization, optimizations, ...)
@@ -721,14 +717,12 @@ vpath %.cu     Microphysics
 # cosmic-ray diffusion source files (included only if "CR_DIFFUSION" is turned on)
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DCR_DIFFUSION, $(SIMU_OPTION))" "-DCR_DIFFUSION"
-CPU_FILE    += CPU_AddCosmicRayDiffuseFlux.cpp  CPU_ComputeCosmicRayDiffusivity.cpp \
-               CPU_CosmicRayMaxDiffusivity.cpp
+CPU_FILE    += CPU_CR_AddDiffuseFlux.cpp  CPU_CR_ComputeDiffusivity.cpp
 
-GPU_FILE    += CUFLU_AddCosmicRayDiffuseFlux.cu  CUFLU_ComputeCosmicRayDiffusivity.cu \
-               CUFLU_CosmicRayMaxDiffusivity.cu
+GPU_FILE    += CUFLU_CR_AddDiffuseFlux.cu  CUFLU_CR_ComputeDiffusivity.cu
 
-vpath %.cpp    Microphysics/CosmicRayDiffusivity
-vpath %.cu     Microphysics/CosmicRayDiffusivity
+vpath %.cpp    Microphysics/CosmicRayDiffusion
+vpath %.cu     Microphysics/CosmicRayDiffusion
 endif # CR_DIFFUSION
 
 

@@ -418,6 +418,9 @@ struct InputPara_t
    double Dt__ParVelMax;
    double Dt__ParAcc;
 #  endif
+#  ifdef CR_DIFFUSION
+   double Dt__CR_Diffusion;
+#  endif
 #  ifdef COMOVING
    double Dt__MaxDeltaA;
 #  endif
@@ -645,7 +648,7 @@ struct InputPara_t
 #  ifdef CR_DIFFUSION
    double CR_Diffusion_ParaCoeff;
    double CR_Diffusion_PerpCoeff;
-   double CR_Diffusion_Dt;
+   double CR_Diffusion_MinB;
 #  endif
 
 // initialization

@@ -306,7 +306,7 @@ int  FB_ParaBuf;
 // (2-13) cosmic ray
 #ifdef COSMIC_RAY
 double GAMMA_CR;
-bool  OPT__FLAG_CRAY, OPT__FLAG_LOHNER_CRAY;
+bool   OPT__FLAG_CRAY, OPT__FLAG_LOHNER_CRAY;
 double FlagTable_CRay[NLEVEL-1];
 #endif
 
@@ -318,7 +318,8 @@ MicroPhy_t MicroPhy;
 #ifdef CR_DIFFUSION
 double CR_DIFF_PARA;
 double CR_DIFF_PERP;
-double DT_CR_DIFFUSION;
+double DT__CR_DIFFUSION;
+double CR_DIFF_MIN_B;
 #endif
 
 
