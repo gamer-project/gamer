@@ -343,7 +343,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
    if ( OPT__OUTPUT_CS ) {
 #     ifdef SRHD
-      real Prim[NCOMP_FLUID];
+      real Prim[NCOMP_TOTAL];
       Hydro_Con2Pri( u, Prim, NULL_REAL, NULL_BOOL, NULL_INT, NULL,
                      NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
                      EoS_DensPres2Eint_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,

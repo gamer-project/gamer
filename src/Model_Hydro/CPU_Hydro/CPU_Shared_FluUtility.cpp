@@ -195,7 +195,7 @@ void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int 
 // Return      :  Out[], EintOut (optional)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
+void Hydro_Con2Pri( const real In[], real Out[], const real MinPres, 
                     const bool FracPassive, const int NFrac, const int FracIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
@@ -272,16 +272,12 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 // passive scalars
    
 #  if ( NCOMP_PASSIVE > 0 )
-   const int inSize = sizeof(In)/sizeof(In[0]);
 // copy all passive scalars
-   if ( inSize == NCOMP_TOTAL )
-   {
-      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
+   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
 
 // convert the mass density of target passive scalars to mass fraction
-      if ( FracPassive )
-	 for (int v=0; v<NFrac; v++)   Out[ NCOMP_FLUID + FracIdx[v] ] *= _Rho;
-   }
+   if ( FracPassive )
+      for (int v=0; v<NFrac; v++)   Out[ NCOMP_FLUID + FracIdx[v] ] *= _Rho;
 #  endif
 
 
@@ -325,9 +321,10 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 // Return      :  Out[]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const int NFrac, const int FracIdx[],
-                    const EoS_DP2E_t EoS_DensPres2Eint, const EoS_TEM2H_t EoS_Temp2HTilde,
-                    const EoS_H2TEM_t EoS_HTilde2Temp, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive,
+		    const int NFrac, const int FracIdx[], const EoS_DP2E_t EoS_DensPres2Eint,
+		    const EoS_TEM2H_t EoS_Temp2HTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+		    const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                     const real *const EoS_Table[EOS_NTABLE_MAX], const real* const EintIn )
 {
 
@@ -342,16 +339,12 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const i
 //     instead of mass fraction of passive scalars
 #  ifndef SRHD
 #  if ( NCOMP_PASSIVE > 0 )
-   const int inSize = sizeof(In)/sizeof(In[0]);
-   if ( inSize == NCOMP_TOTAL )
-   {   
 // copy all passive scalars
-      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
+   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
 
 // convert the mass fraction of target passive scalars back to mass density
-      if ( FracPassive )
-         for (int v=0; v<NFrac; v++)   Out[ NCOMP_FLUID + FracIdx[v] ] *= In[0];
-   }
+   if ( FracPassive )
+      for (int v=0; v<NFrac; v++)   Out[ NCOMP_FLUID + FracIdx[v] ] *= In[0];
 #  endif
 #  endif
 
@@ -380,15 +373,11 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const i
 
 #  if ( NCOMP_PASSIVE > 0 )
 // copy all passive scalars
-   const int inSize = sizeof(In)/sizeof(In[0]);
-   if ( inSize == NCOMP_TOTAL )
-   {
-     for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
+   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
 
 // convert the mass fraction of target passive scalars back to mass density
-      if ( FracPassive )
-         for (int v=0; v<NFrac; v++)   Out[ NCOMP_FLUID + FracIdx[v] ] *= Out[0];
-   }
+   if ( FracPassive )
+      for (int v=0; v<NFrac; v++)   Out[ NCOMP_FLUID + FracIdx[v] ] *= Out[0];
 #  endif
 
 #  else
@@ -1034,8 +1023,14 @@ real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const re
    real Pres;
 
 #  ifdef SRHD
-   real Cons[NCOMP_FLUID] = { Dens, MomX, MomY, MomZ, Engy };
-   real Prim[NCOMP_FLUID];
+   real Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL];
+
+   Cons[0] = Dens;
+   Cons[1] = MomX;
+   Cons[2] = MomY;
+   Cons[3] = MomZ;
+   Cons[4] = Engy;
+
    Hydro_Con2Pri( Cons, Prim, (real)NULL_REAL, false, NULL_INT, NULL,
                   NULL_BOOL, (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
@@ -1217,8 +1212,14 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
    real Temp;
 
 #  ifdef SRHD
-   real Cons[NCOMP_FLUID] =  {Dens, MomX, MomY, MomZ, Engy};
-   real Prim[NCOMP_FLUID];
+   real Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL];
+
+   Cons[0] = Dens;
+   Cons[1] = MomX;
+   Cons[2] = MomY;
+   Cons[3] = MomZ;
+   Cons[4] = Engy;
+
    Hydro_Con2Pri( Cons, Prim, (real)NULL_REAL, false, NULL_INT, NULL,
                   NULL_BOOL, (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );

@@ -234,7 +234,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    WaveW = 2.0*M_PI/(Acoustic_WaveLength/Acoustic_Cs);
 
 #ifdef SRHD
-   real Prim[NCOMP_FLUID];
+   real Prim[NCOMP_TOTAL];
 
    double LorentzFactor;
 

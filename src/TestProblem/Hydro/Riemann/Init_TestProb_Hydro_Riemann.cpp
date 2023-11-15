@@ -349,7 +349,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    double r, Pres, Eint;
    int    MomIdx[3];
-   real Prim[NCOMP_FLUID];
+   real Prim[NCOMP_TOTAL];
 
    switch ( Riemann_XYZ )
    {

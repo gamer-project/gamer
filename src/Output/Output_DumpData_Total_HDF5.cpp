@@ -876,7 +876,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #                    endif
 
 #                    ifdef SRHD
-                     real Prim[NCOMP_FLUID];
+                     real Prim[NCOMP_TOTAL];
                      Hydro_Con2Pri( u, Prim, NULL_REAL, NULL_BOOL, NULL_INT, NULL,
                                     NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
                                     EoS_DensPres2Eint_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,

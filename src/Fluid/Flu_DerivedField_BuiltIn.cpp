@@ -178,7 +178,7 @@ void Flu_DerivedField_Mach( real Out[], const real FluIn[], const real MagIn[], 
 
 
 #     ifdef SRHD
-      real Prim[NCOMP_FLUID], FourCs, U, Cs;
+      real Prim[NCOMP_TOTAL], FourCs, U, Cs;
       Hydro_Con2Pri( fluid, Prim, NULL_REAL, NULL_BOOL, NULL_INT, NULL,
                      NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
                      EoS_DensPres2Eint_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
