@@ -338,15 +338,14 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
       PriReal[2] = (real)u_jet_y;
       PriReal[3] = (real)0.0;
       PriReal[4] = (real)Amb_Pressure;
-
+      PriReal[JetFieldIdx] = (real)Jet_Density;
+      PriReal[ICMFieldIdx] = (real)0.0;
+      PriReal[LobeFieldIdx] = (real)0.0;
+      PriReal[IntFieldIdx] = (real)0.0;
+      
       Hydro_Pri2Con( PriReal, BVal, false, PassiveNorm_NVar, PassiveNorm_VarIdx, 
 		     EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
 		     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-
-      BVal[JetFieldIdx] = (real)(LntzFact*Jet_Density);
-      BVal[ICMFieldIdx] = 0.0;
-      BVal[LobeFieldIdx] = 0.0;
-      BVal[IntFieldIdx] = 0.0;
 
     }
     else 
