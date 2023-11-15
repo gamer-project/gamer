@@ -285,17 +285,28 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  BC
-// Description :  Set the extenral boundary condition to the analytical solution
+// Description :  Set the external boundary condition for the JetICMWall problem. On the -y 
+//                boundary, inside the jet region, the jet inflows with the jet density and a 
+//                velocity profile that peaks in the jet center and linearly falls off to the 
+//                edge of the jet. The jet passive scalar density is set to the jet density 
+//                within this region. Outside the jet region, the boundary condition is "diode", 
+//                meaning outflow-only.
 //
 // Note        :  1. Linked to the function pointer "BC_User_Ptr"
 //
-// Parameter   :  fluid    : Fluid field to be set
-//                x/y/z    : Physical coordinates
-//                Time     : Physical time
-//                lv       : Refinement level
-//                AuxArray : Auxiliary array
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
+//                ArraySize      : Size of Array including the ghost zones on each side
+//                fluid          : Fluid fields to be set
+//                NVar_Flu       : Number of fluid variables to be prepared
+//                GhostSize      : Number of ghost zones
+//                idx            : Array indices
+//                pos            : Physical coordinates
+//                Time           : Physical time
+//                lv             : Refinement level
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
+//                AuxArray       : Auxiliary array
 //
-// Return      :  fluid
+// Return                        : fluid
 //-------------------------------------------------------------------------------------------------------
 void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
 	 const int GhostSize, const int idx[], const double pos[], const double Time,

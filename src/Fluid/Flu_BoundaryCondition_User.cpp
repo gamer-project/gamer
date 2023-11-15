@@ -25,13 +25,19 @@ void (*BC_User_Ptr)( real Array[], const int ArraySize[], real fluid[], const in
 //                   --> It will be added automatically later
 //                   --> Just like the fluid initialization routine
 //
-// Parameter   :  fluid    : Fluid field to be set
-//                x/y/z    : Physical coordinates
-//                Time     : Physical time
-//                lv       : Refinement level
-//                AuxArray : Auxiliary array
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
+//                ArraySize      : Size of Array including the ghost zones on each side
+//                fluid          : Fluid fields to be set
+//                NVar_Flu       : Number of fluid variables to be prepared
+//                GhostSize      : Number of ghost zones
+//                idx            : Array indices
+//                pos            : Physical coordinates
+//                Time           : Physical time
+//                lv             : Refinement level
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
+//                AuxArray       : Auxiliary array
 //
-// Return      :  fluid
+// Return                        : fluid
 //-------------------------------------------------------------------------------------------------------
 void BC_User_Template( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
 		       const int GhostSize, const int idx[], const double pos[], const double Time,
