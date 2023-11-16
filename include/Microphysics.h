@@ -36,10 +36,6 @@ struct MicroPhy_t
 #  endif
 
 #  ifdef CONDUCTION
-#  define CONSTANT_CONDUCTION 1
-#  define SPITZER_CONDUCTION 2
-#  define ISOTROPIC_CONDUCTION 1
-#  define ANISOTROPIC_CONDUCTION 2
    int  CondType;
    int  CondFluxType;
    real Cond_safety;
@@ -51,18 +47,11 @@ struct MicroPhy_t
 #  endif // #ifdef CONDUCTION
 
 #  ifdef VISCOSITY
-#  define CONSTANT_VISCOSITY 1
-#  define SPITZER_VISCOSITY 2
-#  define VISCOSITY_KINETIC_COEFF 1
-#  define VISCOSITY_DYNAMIC_COEFF 2
-#  define ISOTROPIC_VISCOSITY 1
-#  define ANISOTROPIC_VISCOSITY 2
    int  ViscType;
    int  ViscFluxType;
    int  ViscCoeffType;
    real Visc_safety;
-   real ViscKineticCoeff;
-   real ViscDynamicCoeff;
+   real ViscConstCoeff;
    real ViscMaxDiffusivity;
    real ViscSpitzerFraction;
    real ViscPrefactor;

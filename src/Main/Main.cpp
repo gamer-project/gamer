@@ -324,15 +324,27 @@ double DT__CR_DIFFUSION;
 double CR_DIFF_MIN_B;
 #endif
 
-// (2-15) viscosity 
+// c. viscosity
 #ifdef VISCOSITY
-int                   VISCOSITY_TYPE;
-int                   VISCOSITY_DIRECTION;
-int                   VISCOSITY_COEFF_TYPE;
-double                VISCOSITY_COEFF;
-double                VISCOSITY_COEFF_MIN;
-double                VISCOSITY_COEFF_MAX;
-double                VISCOSITY_SPITZER_FRACTION;
+int    VISCOSITY_TYPE;
+int    VISCOSITY_FLUX_TYPE;
+int    VISCOSITY_COEFF_TYPE;
+double DT__VISCOSITY;
+double VISCOSITY_CONST_COEFF;
+double VISCOSITY_SPITZER_FRACTION;
+double VISCOSITY_COULOMB_LOG;
+double VISCOSITY_MAX_DIFFUSIVITY;
+#endif
+
+// d. conduction
+#ifdef CONDUCTION
+int    CONDUCTION_TYPE;
+int    CONDUCTION_FLUX_TYPE;
+double DT__CONDUCTION;
+double CONDUCTION_CONSTANT_COEFF;
+double CONDUCTION_SPITZER_FRACTION;
+double CONDUCTION_COULOMB_LOG;
+double CONDUCTION_MAX_DIFFUSIVITY;
 #endif
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU

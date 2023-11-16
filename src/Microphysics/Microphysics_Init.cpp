@@ -35,7 +35,6 @@ void Microphysics_Init()
 #  endif // #ifdef CR_DIFFUSION
 
 #  ifdef CONDUCTION
-   // Runtime parameters
    MicroPhy.CondType = CONDUCTION_TYPE;
    MicroPhy.CondFluxType = CONDUCTION_FLUX_TYPE;
    MicroPhy.Cond_safety = DT__CONDUCTION;
@@ -44,38 +43,73 @@ void Microphysics_Init()
    MicroPhy.CondCoulombLog = CONDUCTION_COULOMB_LOG;
    MicroPhy.CondMaxDiffusivity = CONDUCTION_MAX_DIFFUSIVITY;
 
-   // Compute the prefactor for the Spitzer conducitivity
-   // This prefactor is in CGS (erg/s/cm/K), assuming input temperature in
-   // units of 10^7 K, and we must convert it to code units per K. To avoid precision 
-   // errors, we do this one step at a time. Still need to correct for differences 
-   // in mean molecular weight
-   MicroPhy.CondPrefactor = (real)5818590894709.818/MicroPhy.CondCoulombLog;
-   MicroPhy.CondPrefactor /= UNIT_E;
-   MicroPhy.CondPrefactor *= UNIT_L;
-   MicroPhy.CondPrefactor *= UNIT_T;
+   if ( MicroPhy.CondType == CONSTANT_CONDUCTION ) 
+   {
+      // This coefficient is in CGS (erg/s/cm/K), and we must convert it to code 
+      // units per K. To avoid precision errors, we do this one step at a time.
+      MicroPhy.CondConstCoeff /= UNIT_E;
+      MicroPhy.CondConstCoeff *= UNIT_L;
+      MicroPhy.CondConstCoeff *= UNIT_T;
+   }
+   else if ( MicroPhy.CondType == SPITZER_CONDUCTION ) 
+   {
+      // Compute the prefactor for the Spitzer conducitivity
+      // This prefactor is in CGS (erg/s/cm/K), assuming input temperature in
+      // units of 10^7 K, and we must convert it to code units per K. To avoid precision 
+      // errors, we do this one step at a time. Still need to correct for differences 
+      // in mean molecular weight
+      MicroPhy.CondPrefactor = (real)5818590894709.818/MicroPhy.CondCoulombLog;
+      MicroPhy.CondPrefactor /= UNIT_E;
+      MicroPhy.CondPrefactor *= UNIT_L;
+      MicroPhy.CondPrefactor *= UNIT_T;
+      MicroPhy.CondPrefactor *= MicroPhy.CondSpitzerFraction;
+   } 
+   else 
+   {
+      Aux_Error( ERROR_INFO, "unsupported conduction type (%d) !!\n", MicroPhy.CondType );
+   }
+
 #  endif // #ifdef CONDUCTION
 
 #  ifdef VISCOSITY
-   // Runtime parameters
    MicroPhy.ViscType = VISCOSITY_TYPE;
-   MicroPhy.ViscDiffType = VISCOSITY_DIFF_TYPE;
+   MicroPhy.ViscFluxType = VISCOSITY_FLUX_TYPE;
    MicroPhy.ViscCoeffType = VISCOSITY_COEFF_TYPE;
    MicroPhy.Visc_safety = DT__VISCOSITY;
-   MicroPhy.ViscKineticCoeff = VISCOSITY_KINETIC_COEFF;
-   MicroPhy.ViscDynamicCoeff = VISCOSITY_DYNAMIC_COEFF;
+   MicroPhy.ViscConstCoeff = VISCOSITY_CONST_COEFF;
    MicroPhy.ViscSpitzerFraction = VISCOSITY_SPITZER_FRACTION;
    MicroPhy.ViscCoulombLog = VISCOSITY_COULOMB_LOG;
    MicroPhy.ViscMaxDiffusivity = VISCOSITY_MAX_DIFFUSIVITY;
 
-   // Compute the prefactor for the Spitzer viscosity
-   // This prefactor is in CGS (g/cm/s), assuming input temperature in units 
-   // of 10^7 K, and we must convert it to code units. To avoid precision errors, 
-   // we do this one step at a time. Still need to correct for differences in mean 
-   // molecular weight
-   MicroPhy.ViscPrefactor = (real)695.7010852370435/MicroPhy.ViscCoulombLog;
-   MicroPhy.ViscPrefactor /= UNIT_M;
-   MicroPhy.ViscPrefactor *= UNIT_L;
-   MicroPhy.ViscPrefactor *= UNIT_T;
+   if ( MicroPhy.CondType == CONSTANT_VISCOSITY ) 
+   {
+      // We must convert the viscosity coefficient to code units. To avoid 
+      // precision errors, we do this one step at a time. 
+      if ( MicroPhy.ViscCoeffType == VISCOSITY_KINETIC_COEFF ) {
+         // This coefficient is in units of cm^2/s
+         MicroPhy.ViscConstCoeff /= UNIT_L;
+         MicroPhy.ViscConstCoeff /= UNIT_L;
+         MicroPhy.ViscConstCoeff *= UNIT_T;
+      } else if ( MicroPhy.ViscCoeffType == VISCOSITY_DYNAMIC_COEFF ) {
+         // This coefficient is in units of g/cm/s
+         MicroPhy.ViscConstCoeff /= UNIT_M;
+         MicroPhy.ViscConstCoeff *= UNIT_L;
+         MicroPhy.ViscConstCoeff *= UNIT_T;
+      }
+   } 
+   else if ( MicroPhy.ViscType == SPITZER_VISCOSITY ) 
+   {
+      // Compute the prefactor for the Spitzer viscosity
+      // This prefactor is in CGS (g/cm/s), assuming input temperature in units 
+      // of 10^7 K, and we must convert it to code units. To avoid precision errors, 
+      // we do this one step at a time. Still need to correct for differences in mean 
+      // molecular weight
+      MicroPhy.ViscPrefactor = (real)695.7010852370435/MicroPhy.ViscCoulombLog;
+      MicroPhy.ViscPrefactor /= UNIT_M;
+      MicroPhy.ViscPrefactor *= UNIT_L;
+      MicroPhy.ViscPrefactor *= UNIT_T;
+      MicroPhy.ViscPrefactor *= MicroPhy.ViscSpitzerFraction;
+   }
 #  endif // #ifdef VISCOSITY
 
    MicroPhy_Initialized = true;

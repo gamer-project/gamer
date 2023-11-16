@@ -71,6 +71,12 @@ struct KeyInfo_t
 #  ifdef COSMIC_RAY
    int    CR_Diffusion;
 #  endif
+#  ifdef VISCOSITY
+   int    Viscosity;
+#  endif
+#  ifdef CONDUCTION
+   int    Conduction;
+#  endif
 
    double BoxSize[3];
    double Time       [NLEVEL];
@@ -170,6 +176,12 @@ struct Makefile_t
 
 #  ifdef COSMIC_RAY
    int CR_Diffusion;
+#  endif
+#  ifdef VISCOSITY
+   int Viscosity;
+#  endif
+#  ifdef CONDUCTION
+   int Conduction;
 #  endif
 
 }; // struct Makefile_t
@@ -421,6 +433,12 @@ struct InputPara_t
 #  ifdef CR_DIFFUSION
    double Dt__CR_Diffusion;
 #  endif
+#  ifdef VISCOSITY
+   double Dt__Viscosity;
+#  endif
+#  ifdef CONDUCTION
+   double Dt__Conduction;
+#  endif
 #  ifdef COMOVING
    double Dt__MaxDeltaA;
 #  endif
@@ -655,6 +673,25 @@ struct InputPara_t
    double CR_Diffusion_PerpCoeff;
    double CR_Diffusion_MinB;
 #  endif
+
+#  ifdef CONDUCTION
+   int    Cond_Type;
+   int    Cond_FluxType;
+   double Cond_ConstCoeff;
+   double Cond_MaxDiffusivity;
+   double Cond_SpitzerFraction;
+   double Cond_CoulombLog;
+#  endif // #ifdef CONDUCTION
+
+#  ifdef VISCOSITY
+   int    Visc_Type;
+   int    Visc_FluxType;
+   int    Visc_CoeffType;
+   double Visc_ConstCoeff;
+   double Visc_MaxDiffusivity;
+   double Visc_SpitzerFraction;
+   double Visc_CoulombLog;
+#  endif // #ifdef VISCOSITY
 
 // initialization
    int    Opt__Init;
