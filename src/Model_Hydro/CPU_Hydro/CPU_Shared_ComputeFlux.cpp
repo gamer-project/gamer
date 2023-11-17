@@ -30,12 +30,6 @@
 
 #else // #ifdef __CUDACC__
 
-#ifdef MICROPHYSICS
-void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
-                    const bool NormPassive, const int NNorm, const int NormIdx[],
-                    const bool JeansMinPres, const real JeansMinPres_Coeff );
-#endif
-
 #if ( RSOLVER == EXACT  ||  RSOLVER_RESCUE == EXACT )
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                 const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
