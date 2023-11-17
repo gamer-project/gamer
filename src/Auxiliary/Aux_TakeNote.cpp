@@ -185,6 +185,18 @@ void Aux_TakeNote()
       fprintf( Note, "COSMIC_RAY                      OFF\n" );
 #     endif // #ifdef COSMIC_RAY ... else ...
 
+#     ifdef VISCOSITY
+      fprintf( Note, "VISCOSITY                       ON\n" );
+#     else
+      fprintf( Note, "VISCOSITY                       OFF\n" );
+#     endif
+
+#     ifdef CONDUCTION
+      fprintf( Note, "CONDUCITON                      ON\n" );
+#     else
+      fprintf( Note, "CONDUCTION                      OFF\n" );
+#     endif
+
 #     if   ( EOS == EOS_GAMMA )
       fprintf( Note, "EOS                             EOS_GAMMA\n" );
 #     elif ( EOS == EOS_ISOTHERMAL )
@@ -851,6 +863,12 @@ void Aux_TakeNote()
 #     ifdef CR_DIFFUSION
       fprintf( Note, "DT__CR_DIFFUSION                %13.7e\n",  DT__CR_DIFFUSION            );
 #     endif
+#     ifdef VISCOSITY
+      fprintf( Note, "DT__VISCOSITY                   %13.7e\n",  DT__VISCOSITY               );
+#     endif
+#     ifdef CONDUCTION
+      fprintf( Note, "DT__CONDUCTION                  %13.7e\n",  DT__CONDUCTION              );
+#     endif
 #     ifdef COMOVING
       fprintf( Note, "DT__MAX_DELTA_A                 %13.7e\n",  DT__MAX_DELTA_A             );
 #     endif
@@ -1041,6 +1059,34 @@ void Aux_TakeNote()
       fprintf( Note, "\n\n");
 #     endif // #ifdef COSMIC_RAY
 
+//    record the parameters of viscosity
+#     ifdef VISCOSITY
+      fprintf( Note, "Parameters of Viscosity\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "VISCOSITY_TYPE                  %d\n",      VISCOSITY_TYPE          );
+      fprintf( Note, "VISCOSITY_FLUX_TYPE             %d\n",      VISCOSITY_FLUX_TYPE     );
+      fprintf( Note, "VISCOSITY_COEFF_TYPE            %d\n",      VISCOSITY_COEFF_TYPE    );
+      fprintf( Note, "VISCOSITY_CONST_COEFF           %13.7e\n",  VISCOSITY_CONST_COEFF   );
+      fprintf( Note, "VISCOSITY_SPITZER_FRACTION      %13.7e\n",  VISCOSITY_SPITZER_FRACTION );
+      fprintf( Note, "VISCOSITY_COULOMB_LOG           %13.7e\n",  VISCOSITY_COULOMB_LOG   );
+      fprintf( Note, "VISCOSITY_MAX_DIFFUSIVITY       %13.7e\n",  VISCOSITY_MAX_DIFFUSIVITY  );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
+#     endif // #ifdef VISCOSITY
+
+//    record the parameters of conduction
+#     ifdef CONDUCTION
+      fprintf( Note, "Parameters of Conduction\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "CONDUCTION_TYPE                 %d\n",      CONDUCTION_TYPE         );
+      fprintf( Note, "CONDUCTION_FLUX_TYPE            %d\n",      CONDUCTION_FLUX_TYPE    );
+      fprintf( Note, "CONDUCTION_CONST_COEFF          %13.7e\n",  CONDUCTION_CONST_COEFF  );
+      fprintf( Note, "CONDUCTION_SPITZER_FRACTION     %13.7e\n",  CONDUCTION_SPITZER_FRACTION );
+      fprintf( Note, "CONDUCTION_COULOMB_LOG          %13.7e\n",  CONDUCTION_COULOMB_LOG  );
+      fprintf( Note, "CONDUCTION_MAX_DIFFUSIVITY      %13.7e\n",  CONDUCTION_MAX_DIFFUSIVITY  );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
+#     endif // #ifdef CONDUCTION
 
 //    record the parameters of Fluid solver in different models
       fprintf( Note, "Parameters of Fluid Solver (in different models)\n" );

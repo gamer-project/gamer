@@ -1661,44 +1661,88 @@ void Aux_Check_Parameter()
 
 #endif // #ifdef FEEDBACK
 
-// viscosity
+// conduction
 // =======================================================================================
-#ifdef VISCOSITY
+#ifdef CONDUCTION
 
-#  if ( !defined HYDRO || !defined MHD )
-#     error : HYDRO or MHD is required for VISCOSITY!!
+// errors
+// ------------------------------
+#  ifndef HYDRO
+#     error : HYDRO is required for CONDUCTION!!
 #  endif
 
-# ifndef MHD
-  if ( VISCOSITY_DIRECTION == ANISOTROPIC_VISCOSITY )
-     Aux_Error( ERROR_INFO, "ANISOTROPIC_VISCOSITY requires MHD !!\n" );
-# endif
+#  ifndef MHD
+   if ( CONDUCTION_FLUX_TYPE == ANISOTROPIC_CONDUCTION )
+      Aux_Error( ERROR_INFO, "ANISOTROPIC_CONDUCTION requires MHD !!\n" );
+#  endif
 
-  if ( VISCOSITY_TYPE == CONSTANT_VISCOSITY && VISCOSITY_COEFF <= 0.0 ) 
-     Aux_Error( ERROR_INFO, "VISCOSITY_COEFF <= 0 !!\n" );
-
-  if ( VISCOSITY_COEFF_MAX <= VISCOSITY_COEFF_MIN )
-     Aux_Error( ERROR_INFO, "VISCOSITY_COEFF_MAX <= VISCOSITY_COEFF_MIN !!\n" );
+   if ( CONDUCTION_TYPE == CONSTANT_CONDUCTION && CONDUCTION_CONST_COEFF <= 0.0 ) 
+      Aux_Error( ERROR_INFO, "CONDUCTION_CONST_COEFF <= 0 !!\n" );
  
-  if ( VISCOSITY_TYPE == SPITZER_VISCOSITY && VISCOSITY_SPITZER_FRACTION <= 0.0)
-     Aux_Error( ERROR_INFO, "VISCOSITY_SPITZER_FRACTION <= 0 !!\n" );
+   if ( CONDUCTION_TYPE == SPITZER_CONDUCTION && CONDUCTION_COULOMB_LOG <= 0.0 ) 
+      Aux_Error( ERROR_INFO, "CONDUCTION_COULOMB_LOG <= 0 !!\n" );
+
+   if ( CONDUCTION_TYPE == SPITZER_CONDUCTION && CONDUCTION_SPITZER_FRACTION <= 0.0)
+      Aux_Error( ERROR_INFO, "CONDUCTION_SPITZER_FRACTION <= 0 !!\n" );
 
 // warning
 // ------------------------------
    if ( MPI_Rank == 0 ) {
 
-   if ( VISCOSITY_TYPE == CONSTANT_VISCOSITY && 
-        VISCOSITY_COEFF_TYPE == VISCOSITY_KINETIC_COEFF && 
-        ( VISCOSITY_COEFF < VISCOSITY_COEFF_MIN ) || 
-        ( VISCOSITY_COEFF > VISCOSITY_COEFF_MAX ) )
-   {
-      Aux_Message( stderr, "WARNING : VISCOSITY_COEFF is constant and is outside bounds \n" );
-      Aux_Message( stderr, "          of VISCOSITY_COEFF_MAX and VISCOSITY_COEFF_MAX !! \n" );
-   }
+      if ( DT__CONDUCTION < 0.0  ||  DT__CONDUCTION > 1.0 )
+         Aux_Message( stderr, "WARNING : DT__CONDUCTION (%14.7e) is not within the normal range [0...1] !!\n", DT__CONDUCTION );
+
+      if ( CONDUCTION_TYPE == SPITZER_CONDUCTION &&
+           ( CONDUCTION_COULOMB_LOG < 10.0 ) || ( CONDUCTION_COULOMB_LOG > 100.0 ) )
+         Aux_Message( stderr, "WARNING : CONDUCTION_COULOMB_LOG (%14.7e) is not within the normal range [10...100] !! Please ensure this value is reasonable!\n", CONDUCTION_COULOMB_LOG );
 
    } // if ( MPI_Rank == 0 )
 
-#endif // ifdef VISCOSITY
+#endif // #ifdef CONDUCTION
+
+// viscosity
+// =======================================================================================
+#ifdef VISCOSITY
+
+// errors
+// ------------------------------
+#  ifndef HYDRO
+#     error : HYDRO is required for VISCOSITY!!
+#  endif
+
+#  ifndef MHD
+   if ( VISCOSITY_FLUX_TYPE == ANISOTROPIC_VISCOSITY )
+      Aux_Error( ERROR_INFO, "ANISOTROPIC_VISCOSITY requires MHD !!\n" );
+#  endif
+
+   if ( VISCOSITY_TYPE == CONSTANT_VISCOSITY && VISCOSITY_CONST_COEFF <= 0.0 ) 
+      Aux_Error( ERROR_INFO, "VISCOSITY_CONST_COEFF <= 0 !!\n" );
+ 
+   if ( VISCOSITY_TYPE == SPITZER_VISCOSITY && VISCOSITY_COULOMB_LOG <= 0.0 ) 
+      Aux_Error( ERROR_INFO, "VISCOSITY_COULOMB_LOG <= 0 !!\n" );
+
+   if ( VISCOSITY_TYPE == SPITZER_VISCOSITY && VISCOSITY_SPITZER_FRACTION <= 0.0)
+      Aux_Error( ERROR_INFO, "VISCOSITY_SPITZER_FRACTION <= 0 !!\n" );
+
+// warning
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
+
+      if ( VISCOSITY_TYPE == CONSTANT_VISCOSITY && 
+         VISCOSITY_COEFF_TYPE == VISCOSITY_KINETIC_COEFF &&  
+         VISCOSITY_COEFF > VISCOSITY_COEFF_MAX ) 
+         Aux_Message( stderr, "WARNING : VISCOSITY_CONST_COEFF is greater than VISCOSITY_COEFF_MAX !!\n" );
+
+      if ( DT__VISCOSITY < 0.0  ||  DT__VISCOSITY > 1.0 )
+         Aux_Message( stderr, "WARNING : DT__VISCOSITY (%14.7e) is not within the normal range [0...1] !!\n", DT__VISCOSITY );
+
+      if ( VISCOSITY_TYPE == SPITZER_VISCOSITY &&
+           ( VISCOSITY_COULOMB_LOG < 10.0 ) || ( VISCOSITY_COULOMB_LOG > 100.0 ) )
+         Aux_Message( stderr, "WARNING : VISCOSITY_COULOMB_LOG (%14.7e) is not within the normal range [10...100] !! Please ensure this value is reasonable!\n", VISCOSITY_COULOMB_LOG );
+
+   } // if ( MPI_Rank == 0 )
+
+#endif // #ifdef VISCOSITY
 
 // cosmic-ray diffusion
 // =======================================================================================
@@ -1721,7 +1765,7 @@ void Aux_Check_Parameter()
          Aux_Message( stderr, "WARNING : DT__CR_DIFFUSION (%14.7e) is not within the normal range [0...1] !!\n", DT__CR_DIFFUSION );
    } // if ( MPI_Rank == 0 )
 
-#endif // ifdef CR_DIFFUSION
+#endif // #ifdef CR_DIFFUSION
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ... done\n" );

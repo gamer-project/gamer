@@ -1,56 +1,32 @@
-#ifndef __COMPUTE_CONDUCTION__
-#define __COMPUTE_CONDUCTION__
+#ifndef __CUFLU_COMPUTECONDUCTION__
+#define __CUFLU_COMPUTECONDUCTION__
 
-#include "Microphysics.h"
+#include "CUFLU.h"
 
 #if ( ( MODEL == HYDRO ) && defined CONDUCTION )
 
 GPU_DEVICE
-real Hydro_ComputeConduction( const real fluid[NCOMP_FLUID],
-                              const real Gamma_m1, const real MinPres )
+void Hydro_ComputeConduction( real &conda_kappa, real &cond_chi, const MicroPhy_t *MicroPhy, 
+                              const real Dens, const real Temp )
 {
-    const bool CheckMinPres_Yes = true;
 
-    real chi, _Rho;
+    real _Rho  = (real)1.0 / Dens;
 
-    _Rho  = (real)1.0 / fluid[DENS];
+    if ( CONDUCTION_TYPE == CONSTANT_CONUDCTIVITY ) 
+        // Constant conductivity
+        cond_kappa = MicroPhy->CondConstCoeff;
+    else if ( VISCOSITY_TYPE == SPITZER_VISCOSITY ) 
+        // Spitzer conductivity, dependent on T
+        cond_kappa = MicroPhy->CondPrefactor*POW( Temp, (real)2.5 );
 
-    if ( VISCOSITY_TYPE == CONSTANT_CONDUCTION ) {
+    cond_kappa = FMIN( cond_kappa, MicroPhy->CondMaxDiffusivity*Dens );
+    cond_chi = cond_kappa*_Rho;
 
-        // Constant conduction
-        if ( CONDUCTION_COEFF_TYPE == CONDUCTION_KINETIC_COEFF ) {
-
-            nu = (real)CONDUCTION_COEFF;
-
-        } else if ( VISCOSITY_COEFF_TYPE == CONDUCTION_DYNAMIC_COEFF ) {
-
-            nu = (real)CONDUCTION_COEFF*_Rho;
-
-        }
-
-    } else if ( CONDUCTION_TYPE == SPITZER_CONDUCTION ) { 
-
-        // Spitzer conduction
-        real Pres, Temp, Freq_ii;
-
-        Pres = Hydro_GetPressure( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], 
-                                  fluid[ENGY], Gamma_m1, CheckMinPres_Yes, MinPres );
-        
-        Temp = Pres*_Rho;
-
-        Freq_ii = FreqPrefactor*fluid[DENS]*POW( Temp, (real)-1.5 );
-
-        chi = CONDUCTION_SPITZER_FRACTION*0.96*Pres/Freq_ii;
-
-    }
-
-    chi = FMIN( FMAX( chi, CONDUCTION_COEFF_MIN ), CONDUCTION_COEFF_MAX );
-
-    return nu;
+    return;
 
 } // FUNCTION : Hydro_ComputeConduction
 
 #endif // #if ( ( MODEL == HYDRO ) && defined CONDUCTION )
 
-#endif // #ifndef __COMPUTE_CONDUCTION__
+#endif // #ifndef __CUFLU_COMPUTECONDUCTION__
 
