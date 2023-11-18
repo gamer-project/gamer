@@ -196,14 +196,6 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
    NPG[ArrayID] = ( NPG_Max < NTotal ) ? NPG_Max : NTotal;
 
 
-   LB_GlobalTree* GlobalTree = NULL;
-
-#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-// construct global tree structure
-   LB_GlobalTree GlobalTreeObject;
-
-   GlobalTree = &GlobalTreeObject;
-#  endif
 
 #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 // evaluate time evolution matrix ( once per level per timestep )

@@ -110,6 +110,7 @@ void LB_Refine( const int FaLv )
    SwitchFinerLevelsToWaveScheme = Recv;
 # endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
+
 // 3. get the magnetic field on the coarse-fine interfaces for the divergence-free interpolation
 // ==========================================================================================
 #  ifdef MHD
@@ -194,8 +195,8 @@ void LB_Refine( const int FaLv )
 #  endif
 
 
-
-// (c1.3.6) convert density/phase to density/real part/imaginary part in hybrid scheme if we switch the level from Phase to wave
+// 7. convert density/phase to density/real part/imaginary part in hybrid scheme if we switch the level from fluid to wave
+// ==========================================================================================
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( SwitchFinerLevelsToWaveScheme ) {
       for (int ChildLv = SonLv; ChildLv <= TOP_LEVEL; ++ChildLv) {
@@ -254,13 +255,14 @@ void LB_Refine( const int FaLv )
    } // if ( SwitchFinerLevelsToWaveScheme )
 #   endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
 
-// 7. miscellaneous
+
+// 8. miscellaneous
 // ==========================================================================================
-// 7.1 reset LB_CutPoint to the default values (-1) if SonLv has been totally removed
+// 8.1 reset LB_CutPoint to the default values (-1) if SonLv has been totally removed
    if ( NPatchTotal[SonLv] == 0 )
       for (int r=0; r<MPI_NRank+1; r++)   amr->LB->CutPoint[SonLv][r] = -1;
 
-// 7.2 free memory
+// 8.2 free memory
    if ( NewPID_Home == NULL  &&  NNew_Home != 0 )
       Aux_Error( ERROR_INFO, "%s has not been allocated !!\n", "NewPID_Home"   );
 
@@ -316,6 +318,14 @@ void LB_Refine( const int FaLv )
 #  ifdef PARTICLE
    delete [] RefineS2F_Send_PIDList;
    delete [] RefineF2S_Send_PIDList;
+#  endif
+
+
+// 9. construct the global AMR structure if required
+// ==========================================================================================
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   delete GlobalTree;   // in case it has been allocated already
+   GlobalTree = new LB_GlobalTree;
 #  endif
 
 } // FUNCTION : LB_Refine
