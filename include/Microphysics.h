@@ -44,6 +44,7 @@ struct MicroPhy_t
    real CondSpitzerFraction;
    real CondPrefactor;
    real CondCoulombLog;
+   real CondDiffuseFactor;
 #  endif // #ifdef CONDUCTION
 
 #  ifdef VISCOSITY

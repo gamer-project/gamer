@@ -33,7 +33,7 @@ void Hydro_ComputeViscosity( real &visc_mu, real &visc_nu, const MicroPhy_t *Mic
 
         // Spitzer viscosity, dependent on T
     
-        visc_mu = MicroPhy->ViscPrefactor*POW( Temp, (real)2.5 );
+        visc_mu = MicroPhy->ViscPrefactor*POW( (real)1.0e-7*Temp, (real)2.5 );
 
     }
 

@@ -210,7 +210,7 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
          Temp  = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                  fluid+NCOMP_FLUID, CheckMinTemp_Yes, MinTemp, Emag,
                                  EoS.DensEint2Temp_FuncPtr, EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );
-         Temp *= (real)1.0e-7; // diffusion routines take temperature in units of 10^7 K
+#        endif
 
 #        ifdef VISCOSITY
          real mu_visc, nu_visc;
@@ -224,7 +224,6 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
          MaxCondCFL = FMAX( chi_cond, MaxCondCFL );
 #        endif
 
-#        endif // #if defined VISCOSITY || defined CONDUCTION
 #        endif // #ifdef SRHD ... else ...
 
       } // CGPU_LOOP( t, CUBE(PS1) )
