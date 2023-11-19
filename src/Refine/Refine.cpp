@@ -761,7 +761,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #           endif
 
             if ( OPT__REF_FLU_INT_SCHEME == INT_SPECTRAL ) {
-//          spectral interpolation currently does not! respect monotonicity
+//          spectral interpolation currently does not respect monotonicity
             const bool Monotonicity_Spec[2] = { true, false };
 
 //          interpolate density & phase

@@ -922,7 +922,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       for (int t=0; t<CSize_Flu1v; t++)   CData_Real[t] = SATAN2( CData_Imag[t], CData_Real[t] );
 
       if ( OPT__REF_FLU_INT_SCHEME == INT_SPECTRAL ) {
-//    spectral interpolation currently does not! respect monotonicity
+//    spectral interpolation currently does not respect monotonicity
       const bool Monotonicity_Spec[2] = { true, false };
 
 //    interpolate density & phase
