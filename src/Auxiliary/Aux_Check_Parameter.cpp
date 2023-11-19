@@ -1139,8 +1139,7 @@ void Aux_Check_Parameter()
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
    if ( OPT__INIT == INIT_BY_FILE && OPT__UM_IC_LEVEL >= ELBDM_FIRST_WAVE_LEVEL && ELBDM_MATCH_PHASE )
-      Aux_Error( ERROR_INFO, "ELBDM_HYBRID currently does not support loading both fluid and wave levels from UM_IC because of phase matching !!\n" );
-
+      Aux_Error( ERROR_INFO, "ELBDM_HYBRID currently does not support OPT__UM_IC_LEVEL (%d) >= ELBDM_FIRST_WAVE_LEVEL (%d) from UM_IC because of phase matching (ELBDM_MATCH_PHASE) !!\n", OPT__UM_IC_LEVEL, ELBDM_FIRST_WAVE_LEVEL );
    if ( INIT_SUBSAMPLING_NCELL > 1 )
       Aux_Error( ERROR_INFO, "ELBDM_HYBRID currently does not support INIT_SUBSAMPLING_NCELL > 1 !!\n" );
 
