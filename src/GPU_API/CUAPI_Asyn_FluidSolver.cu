@@ -226,7 +226,6 @@ extern cudaStream_t *Stream;
 //                h_Pot_Array_USG       : Host array storing the input potential for UNSPLIT_GRAVITY
 //                h_IsCompletelyRefined : Host array storing which patch groups are completely refined ( ELBDM only )
 //                h_HasWaveCounterpart  : Host array storing which cells have wave counterpart ( ELBDM_HYBRID only )
-//                h_GramFE_TimeEvo      : Host array storing time evolution matrix ( GRAMFE_MATMUL only )
 //                NPatchGroup           : Number of patch groups evaluated simultaneously by GPU
 //                dt                    : Time interval to advance solution
 //                dh                    : Cell size
@@ -309,10 +308,6 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( h_HasWaveCounterpart  == NULL )  Aux_Error( ERROR_INFO, "h_HasWaveCounterpart  == NULL !!\n" );
 #  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-
-#  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-   if ( h_GramFE_TimeEvo      == NULL )  Aux_Error( ERROR_INFO, "h_GramFE_TimeEvo      == NULL !!\n" );
-#  endif // #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 #  else
 #  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
