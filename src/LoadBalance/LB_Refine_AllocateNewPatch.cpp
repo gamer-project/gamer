@@ -1048,35 +1048,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       for (int k=0; k<FSize_CC; k++) {
       for (int j=0; j<FSize_CC; j++) {
       for (int i=0; i<FSize_CC; i++) {
-
-//          check whether dB wavelength is resolved within the newly converted patch
-#           ifdef GAMER_DEBUG
-            int kk  =  k;
-            int kkp = (kk + 1) < FSize_CC  ? kk + 1 : kk    ;
-            int kkm = (kk - 1) < 0         ? kk     : kk - 1;
-            int ii  =  i;
-            int iip = (ii + 1) < FSize_CC  ? ii + 1 : ii    ;
-            int iim = (ii - 1) < 0         ? ii     : ii - 1;
-            int jj  =  j;
-            int jjp = (jj + 1) < FSize_CC  ? jj + 1 : jj    ;
-            int jjm = (jj - 1) < 0         ? jj     : jj - 1;
-
-//          compute maximum phase difference in x-, y- and z-direction
-            real dPhase = MAX(MAX(MAX(MAX(MAX(
-            FABS(FData_Flu[PHAS][kk ][jj ][iip] - FData_Flu[PHAS][kk ][jj ][ii ]),
-            FABS(FData_Flu[PHAS][kk ][jj ][ii ] - FData_Flu[PHAS][kk ][jj ][iim])),
-            FABS(FData_Flu[PHAS][kk ][jjp][ii ] - FData_Flu[PHAS][kk ][jj ][ii ])),
-            FABS(FData_Flu[PHAS][kk ][jj ][ii ] - FData_Flu[PHAS][kk ][jjm][ii ])),
-            FABS(FData_Flu[PHAS][kkp][jj ][ii ] - FData_Flu[PHAS][kk ][jj ][ii ])),
-            FABS(FData_Flu[PHAS][kk ][jj ][ii ] - FData_Flu[PHAS][kkm][jj ][ii ]));
-
-//          currently, the selection of the first wave level is fixed as a runtime parameter
-//          ideally, the code should be able to adaptively increase the first wave level by 1 when this happens
-            if ( dPhase > M_PI ) {
-               Aux_Message ( stderr, "WARNING: Phase jump = %13.7e > PI when refining patch from fluid (lv %d) to wave (lv %d) scheme!", dPhase, FaLv, SonLv);
-            }
-#           endif   // # ifdef GAMER_DEBUG
-
+//          IMPROVEMENT: at this point, we should check whether dB wavelength is resolved after conversion to wave representation
             Amp   = SQRT( FData_Flu[DENS][k][j][i] );
             Phase =       FData_Flu[PHAS][k][j][i] ;
             FData_Flu[REAL][k][j][i] = Amp * COS( Phase );
