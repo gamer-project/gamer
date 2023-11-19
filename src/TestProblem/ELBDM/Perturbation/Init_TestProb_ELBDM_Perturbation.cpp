@@ -130,7 +130,7 @@ void SetParameter()
       Aux_Error( ERROR_INFO, "Runtime parameter \"Perturbation_Amplitude\" is not set !!\n" );
 
 // (4) reset other general-purpose parameters
-//     --> a helper macro PRINT_WARNING is defined in TestProb.h
+//     --> a helper macro PRINT_RESET_PARA is defined in TestProb.h
    const long   End_Step_Default = __INT_MAX__;
    const double End_T_Default    = 2.0;
 

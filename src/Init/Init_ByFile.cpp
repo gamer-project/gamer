@@ -52,7 +52,7 @@ extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const int
 //                                     and calculate the density field from the input wave function
 //                                     directly instead of loading it from the disk.
 //                                  ELBDM_SCHEME == ELBDM_HYBRID
-//                                     We will load the density and phase fields from the disk on all fluid levels.
+//                                     We will load the density and phase fields from the disk on all levels.
 //                                     There is no need to separately calculate the density field.
 //                4. The data format of the UM_IC file is controlled by the runtime parameter OPT__UM_IC_FORMAT
 //                5. Does not work with rectangular domain decomposition anymore
