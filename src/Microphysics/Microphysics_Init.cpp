@@ -42,8 +42,15 @@ void Microphysics_Init()
    MicroPhy.CondSpitzerFraction = CONDUCTION_SPITZER_FRACTION;
    MicroPhy.CondCoulombLog = CONDUCTION_COULOMB_LOG;
    MicroPhy.CondMaxDiffusivity = CONDUCTION_MAX_DIFFUSIVITY;
+   MicroPhy.CondSaturation = CONDUCTION_SATURATION;
    MicroPhy.CondDiffuseFactor = ( OPT__UNIT ) ? MOLECULAR_WEIGHT * MU_NORM / Const_kB * (UNIT_E/UNIT_M) : MOLECULAR_WEIGHT;
-   
+
+   if ( MicroPhy.CondSaturation ) 
+   {
+      MicroPhy.CondSaturationConst = (real)0.4*SQRT( (real)2.0*Const_kB / ( PI*Const_me ) * (UNIT_M/UNIT_E)); 
+      MicroPhy.CondSaturationConst *= (real)0.88 * (Const_kB / Const_amu) * (UNIT_M/UNIT_E);
+   }
+
    if ( MicroPhy.CondType == CONSTANT_CONDUCTION ) 
    {
       // This coefficient is in CGS (erg/s/cm/K), and we must convert it to code 

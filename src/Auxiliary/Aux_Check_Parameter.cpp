@@ -1685,6 +1685,9 @@ void Aux_Check_Parameter()
    if ( CONDUCTION_TYPE == SPITZER_CONDUCTION && CONDUCTION_SPITZER_FRACTION <= 0.0)
       Aux_Error( ERROR_INFO, "CONDUCTION_SPITZER_FRACTION <= 0 !!\n" );
 
+   if ( CONDUCTION_SATURATION && !OPT_UNIT )
+      Aux_Error( ERROR_INFO, "CONDUCTION_SATURATION only works with OPT__UNIT !!\n" );
+      
 // warning
 // ------------------------------
    if ( MPI_Rank == 0 ) {

@@ -36,6 +36,7 @@ struct MicroPhy_t
 #  endif
 
 #  ifdef CONDUCTION
+   bool CondSaturation;
    int  CondType;
    int  CondFluxType;
    real Cond_safety;
@@ -45,6 +46,7 @@ struct MicroPhy_t
    real CondPrefactor;
    real CondCoulombLog;
    real CondDiffuseFactor;
+   real CondSaturationConst;
 #  endif // #ifdef CONDUCTION
 
 #  ifdef VISCOSITY

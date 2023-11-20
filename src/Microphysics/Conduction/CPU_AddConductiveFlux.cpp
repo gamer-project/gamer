@@ -142,18 +142,20 @@ void Hydro_AddConductiveFlux_HalfStep( const real Dens[], const real Temp[],
 //       |    |    |    |    |
 //       |         |         |
 //       ---------------------
-         real B_N_mean, B_T1_mean, B_T2_mean, B_amp;
-         B_N_mean  =             g_FC_B[    d][ idx_fc_B                ];
-         B_T1_mean = (real)0.5*( g_CC_B[TDir1][ idx_cvar                ] +
-                                 g_CC_B[TDir1][ idx_cvar + didx_cvar[d] ]   );
-         B_T2_mean = (real)0.5*( g_CC_B[TDir2][ idx_cvar                ] +
-                                 g_CC_B[TDir2][ idx_cvar + didx_cvar[d] ]   );
-         B_amp     = SQRT( SQR(B_N_mean) + SQR(B_T1_mean) + SQR(B_T2_mean) );
-
-//       normalize magnetic field
-         B_N_mean  /= B_amp;
-         B_T1_mean /= B_amp;
-         B_T2_mean /= B_amp;
+         if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION ) 
+         {
+            real B_N_mean, B_T1_mean, B_T2_mean, B_amp;
+            B_N_mean  =             g_FC_B[    d][ idx_fc_B                ];
+            B_T1_mean = (real)0.5*( g_CC_B[TDir1][ idx_cvar                ] +
+                                    g_CC_B[TDir1][ idx_cvar + didx_cvar[d] ]   );
+            B_T2_mean = (real)0.5*( g_CC_B[TDir2][ idx_cvar                ] +
+                                    g_CC_B[TDir2][ idx_cvar + didx_cvar[d] ]   );
+            B_amp     = SQRT( SQR(B_N_mean) + SQR(B_T1_mean) + SQR(B_T2_mean) );
+//          normalize magnetic field
+            B_N_mean  /= B_amp;
+            B_T1_mean /= B_amp;
+            B_T2_mean /= B_amp;
+         }
 #        endif // #ifdef MHD
 
 //       3. compute temperature slope
@@ -198,14 +200,32 @@ void Hydro_AddConductiveFlux_HalfStep( const real Dens[], const real Temp[],
          }
 
 //       4. compute conductive flux
-         real gradient;
+         real gradient, Total_Flux;
          if ( MicroPhy.CondFluxType == ISOTROPIC_CONDUCTION ) 
             gradient = -N_slope;
          else if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION ) 
             gradient = -B_N_mean*( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
+         Total_Flux = kappa*gradient;
+
+//       5. Check for conduction saturation
+         real Q_l, Q_r, Q_sat; 
+         Q_l = Dens[ idx_cvar ]*POW( Temp[ idx_cvar ], (real)1.5 );
+         Q_r = Dens[ idx_cvar + didx_cvar[d] ]*POW( Temp[ idx_cvar + didx_cvar[d] ], (real)1.5 );
+         Q_sat = MicroPhy.CondSaturationConst * 0.5 * ( Q_l + Q_r );
+#        ifdef MHD
+         real mod_gT, gr;
+         if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION )
+         {
+            gr      = B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope;
+            mod_gT  = SQRT( SQR(N_slope) + SQR(T1_slope) + SQR(T2_slope) );
+            Q_sat  *= - gr / mod_gT;
+         }
+#        endif
+         if ( FABS(Total_Flux) > FABS(Q_sat) ) 
+            Total_Flux = Q_sat;
 
 //       6. flux add-up
-         g_Flux_Half[d][ENGY][idx_flux] += kappa*gradient;
+         g_Flux_Half[d][ENGY][idx_flux] += Total_Flux;
 
       } // CGPU_LOOP( idx, size_i*size_j*size_k )
    } // for (int d=0; d<3; d++)
@@ -310,12 +330,15 @@ void Hydro_AddConductiveFlux_FullStep( const real Dens[], const real Temp[],
 
 #        ifdef MHD
 //       magnetic field indices
-         const int i_fc       = i_flux + mag_offset_i;
-         const int j_fc       = j_flux + mag_offset_j;
-         const int k_fc       = k_flux + mag_offset_k;
-         const int idx_fc_BN  = IDX321( i_fc, j_fc, k_fc, sizeB_i, sizeB_j );
-         const int idx_fc_BT1 = IDX321( i_fc, j_fc, k_fc, sizeB_k, sizeB_i );
-         const int idx_fc_BT2 = IDX321( i_fc, j_fc, k_fc, sizeB_j, sizeB_k );
+         if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION ) 
+         {
+            const int i_fc       = i_flux + mag_offset_i;
+            const int j_fc       = j_flux + mag_offset_j;
+            const int k_fc       = k_flux + mag_offset_k;
+            const int idx_fc_BN  = IDX321( i_fc, j_fc, k_fc, sizeB_i, sizeB_j );
+            const int idx_fc_BT1 = IDX321( i_fc, j_fc, k_fc, sizeB_k, sizeB_i );
+            const int idx_fc_BT2 = IDX321( i_fc, j_fc, k_fc, sizeB_j, sizeB_k );
+         }
 #        endif
 
 //       1. get the conductivity
@@ -343,22 +366,25 @@ void Hydro_AddConductiveFlux_FullStep( const real Dens[], const real Temp[],
 //       |    |    |    |    |
 //       |         |         |
 //       ---------------------
-         real B_N_mean, B_T1_mean, B_T2_mean, B_amp;
-         B_N_mean  =              g_FC_B_Half[    d][ idx_fc_BN                                            ];
-         B_T1_mean = (real)0.25*( g_FC_B_Half[TDir1][ idx_fc_BT1                                           ] +
-                                  g_FC_B_Half[TDir1][ idx_fc_BT1                    + stride_fc_BT1[TDir1] ] +
-                                  g_FC_B_Half[TDir1][ idx_fc_BT1 - stride_fc_BT1[d]                        ] +
-                                  g_FC_B_Half[TDir1][ idx_fc_BT1 - stride_fc_BT1[d] + stride_fc_BT1[TDir1] ]   );
-         B_T2_mean = (real)0.25*( g_FC_B_Half[TDir2][ idx_fc_BT2                                           ] +
-                                  g_FC_B_Half[TDir2][ idx_fc_BT2                    + stride_fc_BT2[TDir2] ] +
-                                  g_FC_B_Half[TDir2][ idx_fc_BT2 - stride_fc_BT2[d]                        ] +
-                                  g_FC_B_Half[TDir2][ idx_fc_BT2 - stride_fc_BT2[d] + stride_fc_BT2[TDir2] ]   );
-         B_amp     = SQRT( SQR(B_N_mean) + SQR(B_T1_mean) + SQR(B_T2_mean) );
+         if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION ) 
+         {
+            real B_N_mean, B_T1_mean, B_T2_mean, B_amp;
+            B_N_mean  =              g_FC_B_Half[    d][ idx_fc_BN                                            ];
+            B_T1_mean = (real)0.25*( g_FC_B_Half[TDir1][ idx_fc_BT1                                           ] +
+                                     g_FC_B_Half[TDir1][ idx_fc_BT1                    + stride_fc_BT1[TDir1] ] +
+                                     g_FC_B_Half[TDir1][ idx_fc_BT1 - stride_fc_BT1[d]                        ] +
+                                     g_FC_B_Half[TDir1][ idx_fc_BT1 - stride_fc_BT1[d] + stride_fc_BT1[TDir1] ]   );
+            B_T2_mean = (real)0.25*( g_FC_B_Half[TDir2][ idx_fc_BT2                                           ] +
+                                     g_FC_B_Half[TDir2][ idx_fc_BT2                    + stride_fc_BT2[TDir2] ] +
+                                     g_FC_B_Half[TDir2][ idx_fc_BT2 - stride_fc_BT2[d]                        ] +
+                                     g_FC_B_Half[TDir2][ idx_fc_BT2 - stride_fc_BT2[d] + stride_fc_BT2[TDir2] ]   );
+            B_amp     = SQRT( SQR(B_N_mean) + SQR(B_T1_mean) + SQR(B_T2_mean) );
 
-//       normalize magnetic field
-         B_N_mean  /= B_amp;
-         B_T1_mean /= B_amp;
-         B_T2_mean /= B_amp;
+//          normalize magnetic field
+            B_N_mean  /= B_amp;
+            B_T1_mean /= B_amp;
+            B_T2_mean /= B_amp;
+         }
 #        endif
 
 //       3. compute temperature slope
@@ -403,14 +429,32 @@ void Hydro_AddConductiveFlux_FullStep( const real Dens[], const real Temp[],
          }
 
 //       4. compute conductive flux
-         real gradient;
+         real gradient, Total_Flux;
          if ( MicroPhy.CondFluxType == ISOTROPIC_CONDUCTION ) 
             gradient = -N_slope;
          else if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION ) 
             gradient = -B_N_mean*( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
+         Total_Flux = kappa*gradient;
 
-//       5. flux add-up
-         g_FC_Flux[d][ENGY][idx_flux] += kappa*gradient;
+//       5. Check for conduction saturation
+         real Q_l, Q_r, Q_sat; 
+         Q_l = Dens[ idx_half ]*POW( Temp[ idx_half ], (real)1.5 );
+         Q_r = Dens[ idx_half + didx_half[d] ]*POW( Temp[ idx_half + didx_half[d] ], (real)1.5 );
+         Q_sat = MicroPhy.CondSaturationConst * 0.5 * ( Q_l + Q_r );
+#        ifdef MHD
+         real mod_gT, gr;
+         if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION )
+         {
+            gr      = B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope;
+            mod_gT  = SQRT( SQR(N_slope) + SQR(T1_slope) + SQR(T2_slope) );
+            Q_sat  *= - gr / mod_gT;
+         }
+#        endif
+         if ( FABS(Total_Flux) > FABS(Q_sat) ) 
+            Total_Flux = Q_sat;
+
+//       6. flux add-up
+         g_FC_Flux[d][ENGY][idx_flux] += Total_Flux;
 
       } // CGPU_LOOP( idx, size_i*size_j*size_k )
    } // for (int d=0; d<3; d++)
