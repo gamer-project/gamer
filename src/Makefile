@@ -91,6 +91,12 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 # --> must enable COSMIC_RAY and MHD
 #SIMU_OPTION += -DCR_DIFFUSION
 
+# viscosity
+#SIMU_OPTION += -DVISCOSITY
+
+# conduction
+#SIMU_OPTION += -DCONDUCTION
+
 # equation of state: EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_COSMIC_RAY/EOS_TAUBMATHEWS/EOS_USER
 # --> must be set when MODEL=HYDRO; must also enable BAROTROPIC_EOS for EOS_ISOTHERMAL; must enable SRHD for EOS_TAUBMATHEWS
 SIMU_OPTION += -DEOS=EOS_GAMMA
@@ -161,11 +167,6 @@ SIMU_OPTION += -DSTORE_PAR_ACC
 # --> set it to 0 or comment it out if none is required
 SIMU_OPTION += -DPAR_NATT_USER=0
 endif # PARTICLE
-
-# (b-6) microphysics options
-# ------------------------------------------------------------------------------------
-# viscosity
-#SIMU_OPTION += -DVISCOSITY
 
 # (c) miscellaneous options (AMR, GPU, parallelization, optimizations, ...)
 # ------------------------------------------------------------------------------------
@@ -729,15 +730,24 @@ vpath %.cpp    Microphysics/CosmicRayDiffusion
 vpath %.cu     Microphysics/CosmicRayDiffusion
 endif # CR_DIFFUSION
 
+# conduction source files (included only if "CONDUCTION" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DCONDUCTION, $(SIMU_OPTION))" "-DCONDUCTION"
+CPU_FILE    += CPU_ComputeConduction.cpp CPU_AddConductiveFlux.cpp
+
+GPU_FILE    += CUFLU_ComputeConduction.cu CUFLU_AddConductiveFlux.cu
+
+vpath %.cpp    Microphysics/Conduction
+vpath %.cu     Microphysics/Conduction
+endif # CONDUCTION
+
 
 # viscosity source files (included only if "VISCOSITY" is turned on)
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DVISCOSITY, $(SIMU_OPTION))" "-DVISCOSITY"
-CPU_FILE    += Viscosity_Init.cpp CPU_ComputeViscosity.cpp CPU_ComputeViscousFluxes.cpp \
-               CPU_dtSolver_ViscousCFL.cpp
+CPU_FILE    += CPU_ComputeViscosity.cpp CPU_AddViscousFlux.cpp
 
-GPU_FILE    += CUFLU_ComputeViscosity.cu CUFLU_ComputeViscousFluxes.cu \
-               CUFLU_dtSolver_ViscousCFL.cu
+GPU_FILE    += CUFLU_ComputeViscosity.cu CUFLU_AddViscousFlux.cu
 
 vpath %.cpp    Microphysics/Viscosity
 vpath %.cu     Microphysics/Viscosity
