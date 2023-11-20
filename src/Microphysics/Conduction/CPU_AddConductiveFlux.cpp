@@ -216,7 +216,7 @@ void Hydro_AddConductiveFlux_HalfStep( const real Dens[], const real Temp[],
          real mod_gT, gr;
          if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION )
          {
-            gr      = B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope;
+            gr      = B_N_mean*( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
             mod_gT  = SQRT( SQR(N_slope) + SQR(T1_slope) + SQR(T2_slope) );
             Q_sat  *= - gr / mod_gT;
          }
@@ -445,7 +445,7 @@ void Hydro_AddConductiveFlux_FullStep( const real Dens[], const real Temp[],
          real mod_gT, gr;
          if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION )
          {
-            gr      = B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope;
+            gr      = B_N_mean*( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
             mod_gT  = SQRT( SQR(N_slope) + SQR(T1_slope) + SQR(T2_slope) );
             Q_sat  *= - gr / mod_gT;
          }
