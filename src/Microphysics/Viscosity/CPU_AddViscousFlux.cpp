@@ -2,33 +2,25 @@
 #define __CUFLU_ADDVISCOUSFLUX__
 
 
-
 #include "CUFLU.h"
 
 #ifdef VISCOSITY
-
 
 
 // external functions
 #ifdef __CUDACC__
 
 # include "CUFLU_ComputeViscosity.cu"
+# include "../CUFLU_Microphysics_SharedUtility.cu"
 
 #else // #ifdef __CUDACC__
 
 void Hydro_ComputeViscosity( real &visc_mu, real &visc_nu, const MicroPhy_t *MicroPhy, 
-                             const real Dens, const real Temp )
-
-#endif // #ifdef __CUDACC__ ... else ...
-
-
-// internal funcitons
-GPU_DEVICE
+                             const real Dens, const real Temp );
 static real MC_limiter( const real a, const real b );
-GPU_DEVICE
 static real minmod( const real a, const real b );
 
-
+#endif // #ifdef __CUDACC__ ... else ...
 
 
 //-----------------------------------------------------------------------------------------
@@ -431,47 +423,6 @@ void Hydro_AddViscousFlux_FullStep( const real Dens[], const real Temp[],
 } // FUNCTION : Hydro_AddViscousFlux_FullStep
 
 
-
-//-----------------------------------------------------------------------------------------
-// Function    : MC_limiter
-// Description : Monotonized central (MC) slope limiter
-//
-// Parameter   : a, b : Input slopes
-//
-// Return      : Limited slope
-//-----------------------------------------------------------------------------------------
-GPU_DEVICE
-static real MC_limiter( const real a, const real b )
-{
-
-   return minmod( (real)2.0*minmod(a,b), (real)0.5*(a+b) );
-
-} // FUNCTION : MC_limiter
-
-
-
-//-----------------------------------------------------------------------------------------
-// Function    : minmod
-// Description : Minmod slope limiter
-//
-// Parameter   : a, b : Input slopes
-//
-// Return      : Limited slope
-//-----------------------------------------------------------------------------------------
-GPU_DEVICE
-static real minmod( const real a, const real b )
-{
-
-   if      ( a > (real)0.0  &&  b > (real)0.0 )    return FMIN(a, b);
-   else if ( a < (real)0.0  &&  b < (real)0.0 )    return FMAX(a, b);
-   else                                            return (real)0.0;
-
-} // FUNCTION : minmod
-
-
-
 #endif // #ifdef VISCOSITY
-
-
 
 #endif // #ifndef __CUFLU_ADDVISCOUSFLUX__

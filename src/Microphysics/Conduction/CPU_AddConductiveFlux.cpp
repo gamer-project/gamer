@@ -13,11 +13,14 @@
 #ifdef __CUDACC__
 
 # include "CUFLU_ComputeConduction.cu"
+# include "../CUFLU_Microphysics_SharedUtility.cu"
 
 #else // #ifdef __CUDACC__
 
 void Hydro_ComputeConduction( real &cond_kappa, real &cond_chi, const MicroPhy_t *MicroPhy, 
-                              const real Dens, const real Temp )
+                              const real Dens, const real Temp );
+static real MC_limiter( const real a, const real b );
+static real minmod( const real a, const real b );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -456,45 +459,6 @@ void Hydro_AddConductiveFlux_FullStep( const real Dens[], const real Temp[],
 #  endif
 
 } // FUNCTION : Hydro_AddConductiveFlux_FullStep
-
-
-
-//-----------------------------------------------------------------------------------------
-// Function    : MC_limiter
-// Description : Monotonized central (MC) slope limiter
-//
-// Parameter   : a, b : Input slopes
-//
-// Return      : Limited slope
-//-----------------------------------------------------------------------------------------
-GPU_DEVICE
-static real MC_limiter( const real a, const real b )
-{
-
-   return minmod( (real)2.0*minmod(a,b), (real)0.5*(a+b) );
-
-} // FUNCTION : MC_limiter
-
-
-
-//-----------------------------------------------------------------------------------------
-// Function    : minmod
-// Description : Minmod slope limiter
-//
-// Parameter   : a, b : Input slopes
-//
-// Return      : Limited slope
-//-----------------------------------------------------------------------------------------
-GPU_DEVICE
-static real minmod( const real a, const real b )
-{
-
-   if      ( a > (real)0.0  &&  b > (real)0.0 )    return FMIN(a, b);
-   else if ( a < (real)0.0  &&  b < (real)0.0 )    return FMAX(a, b);
-   else                                            return (real)0.0;
-
-} // FUNCTION : minmod
-
 
 
 #endif // #ifdef CONDUCTION
