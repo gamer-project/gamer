@@ -117,18 +117,8 @@ void Hydro_AddConductiveFlux_HalfStep( const real Dens[], const real Temp[],
          const int idx_fc_B = IDX321( i_cvar, j_cvar, k_cvar, sizeB_i, sizeB_j ) + stride_fc_B;
 #        endif
 
-//       1. get the conductivity
-//           --> for non-constant conduction coefficients, take the spatial average along the normal direction
-//               to get the face-centered coefficients
-         real kappa_l, kappa_r, kappa, chi;
-         Hydro_ComputeConduction( kappa_l, cond_chi, MicroPhy, Dens[ idx_cvar ], 
-                                  Temp[ idx_cvar ] );
-         Hydro_ComputeConduction( kappa_r, cond_chi, MicroPhy, Dens[ idx_cvar + didx_cvar[d] ], 
-                                  Temp[ idx_cvar + didx_cvar[d] ] );
-         kappa = 0.5*(kappa_l + kappa_r);
-
 #        ifdef MHD
-//       2. compute the mean magnetic field
+//       1. compute the mean magnetic field
 //       ---------------------
 //       |         |         |
 //       |    ^    |    ^    |
@@ -158,7 +148,7 @@ void Hydro_AddConductiveFlux_HalfStep( const real Dens[], const real Temp[],
          }
 #        endif // #ifdef MHD
 
-//       3. compute temperature slope
+//       2. compute temperature slope
 //       ---------------------
 //       |         |         |
 //       ----bl--------br-----
@@ -197,34 +187,40 @@ void Hydro_AddConductiveFlux_HalfStep( const real Dens[], const real Temp[],
             br = Temp[ idx_cvar + didx_cvar[d] + didx_cvar[TDir2] ] -
                  Temp[ idx_cvar + didx_cvar[d]                    ];
             T2_slope = (  MC_limiter( MC_limiter(al,bl), MC_limiter(ar,br) )  ) * _dh;
+         } else if ( CONDUCTION_SATURATION ) {
+            T1_slope = ( Temp[ idx_cvar + didx_cvar[TDir1] ] -
+                         Temp[ idx_cvar                    ] ) * _dh;
+            T2_slope = ( Temp[ idx_cvar + didx_cvar[TDir2] ] -
+                         Temp[ idx_cvar                    ] ) * _dh;
          }
 
-//       4. compute conductive flux
-         real gradient, Total_Flux;
+//       3. compute conductive flux
+         real gradient, gradT, Total_Flux;
          if ( MicroPhy.CondFluxType == ISOTROPIC_CONDUCTION ) 
             gradient = -N_slope;
          else if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION ) 
             gradient = -B_N_mean*( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
+//       get the conductivity
+//       --> for non-constant conduction coefficients, take the spatial average along the normal direction
+//           to get the face-centered coefficients
+         real kappa_l, kappa_r, kappa, chi;
+         
+         Hydro_ComputeConduction( kappa_l, cond_chi, MicroPhy, Dens[ idx_cvar ], 
+                                  Temp[ idx_cvar ] );
+         Hydro_ComputeConduction( kappa_r, cond_chi, MicroPhy, Dens[ idx_cvar + didx_cvar[d] ], 
+                                  Temp[ idx_cvar + didx_cvar[d] ] );
+         kappa = 0.5*( kappa_l + kappa_r );
+         if ( CONDUCTION_SATURATION ) {
+            real gradT = SQRT( SQR(N_slope) + SQR(T1_slope) + SQR(T2_slope) );
+            real Thalf = 0.5*( Temp[ idx_cvar ] + Temp[ idx_cvar + didx_cvar[d] ] );
+            real Dhalf = 0.5*( Dens[ idx_cvar ] + Dens[ idx_cvar + didx_cvar[d] ] );
+            real l_e = MicroPhy->CondMFPConst * Thalf * Thalf / Dhalf; 
+            real l_T = Thalf/gradT;
+            kappa /= 1.0+4.2*l_e/l_T;
+         }
          Total_Flux = kappa*gradient;
 
-//       5. Check for conduction saturation
-         real Q_l, Q_r, Q_sat; 
-         Q_l = Dens[ idx_cvar ]*POW( Temp[ idx_cvar ], (real)1.5 );
-         Q_r = Dens[ idx_cvar + didx_cvar[d] ]*POW( Temp[ idx_cvar + didx_cvar[d] ], (real)1.5 );
-         Q_sat = MicroPhy.CondSaturationConst * 0.5 * ( Q_l + Q_r );
-#        ifdef MHD
-         real mod_gT, gr;
-         if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION )
-         {
-            gr      = B_N_mean*( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
-            mod_gT  = SQRT( SQR(N_slope) + SQR(T1_slope) + SQR(T2_slope) );
-            Q_sat  *= - gr / mod_gT;
-         }
-#        endif
-         if ( FABS(Total_Flux) > FABS(Q_sat) ) 
-            Total_Flux = Q_sat;
-
-//       6. flux add-up
+//       5. flux add-up
          g_Flux_Half[d][ENGY][idx_flux] += Total_Flux;
 
       } // CGPU_LOOP( idx, size_i*size_j*size_k )
@@ -341,18 +337,8 @@ void Hydro_AddConductiveFlux_FullStep( const real Dens[], const real Temp[],
          }
 #        endif
 
-//       1. get the conductivity
-//           --> for non-constant conduction coefficients, take the spatial average along the normal direction
-//               to get the face-centered coefficients
-         real kappa_l, kappa_r, kappa, chi;
-         Hydro_ComputeConduction( kappa_l, chi, MicroPhy, Dens[ idx_half ], 
-                                  Temp[ idx_half ] );
-         Hydro_ComputeConduction( kappa_r, chi, MicroPhy, Dens[ idx_half + didx_half[d] ], 
-                                  Temp[ idx_half + didx_half[d] ] );
-         kappa = 0.5*(kappa_l + kappa_r);
-
 #        ifdef MHD
-//       2. compute the mean magnetic field
+//       1. compute the mean magnetic field
 //       ---------------------
 //       |         |         |
 //       |    ^    |    ^    |
@@ -387,7 +373,7 @@ void Hydro_AddConductiveFlux_FullStep( const real Dens[], const real Temp[],
          }
 #        endif
 
-//       3. compute temperature slope
+//       2. compute temperature slope
 //       ---------------------
 //       |         |         |
 //       ----bl--------br-----
@@ -426,34 +412,40 @@ void Hydro_AddConductiveFlux_FullStep( const real Dens[], const real Temp[],
             br = Temp[ idx_half + didx_half[d] + didx_half[TDir2] ] -
                  Temp[ idx_half + didx_half[d]                    ];
             T2_slope = (  MC_limiter( MC_limiter(al,bl), MC_limiter(ar,br) )  ) * _dh;
+         } else if ( CONDUCTION_SATURATION ) {
+            T1_slope = ( Temp[ idx_half + didx_half[TDir1] ] -
+                         Temp[ idx_half                    ] ) * _dh;
+            T2_slope = ( Temp[ idx_half + didx_half[TDir2] ] -
+                         Temp[ idx_half                    ] ) * _dh;
          }
 
-//       4. compute conductive flux
+//       3. compute conductive flux
          real gradient, Total_Flux;
          if ( MicroPhy.CondFluxType == ISOTROPIC_CONDUCTION ) 
             gradient = -N_slope;
          else if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION ) 
             gradient = -B_N_mean*( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
+//       get the conductivity
+//       --> for non-constant conduction coefficients, take the spatial average along the normal direction
+//           to get the face-centered coefficients
+         real kappa_l, kappa_r, kappa, chi;
+         Hydro_ComputeConduction( kappa_l, chi, MicroPhy, Dens[ idx_half ], 
+                                  Temp[ idx_half ] );
+         Hydro_ComputeConduction( kappa_r, chi, MicroPhy, Dens[ idx_half + didx_half[d] ], 
+                                  Temp[ idx_half + didx_half[d] ] );
+         kappa = 0.5*( kappa_l + kappa_r );
+         if ( CONDUCTION_SATURATION ) {
+            real gradT = SQRT( SQR(N_slope) + SQR(T1_slope) + SQR(T2_slope) );
+            real Thalf = 0.5*( Temp[ idx_half ] + Temp[ idx_half + didx_half[d] ] );
+            real Dhalf = 0.5*( Dens[ idx_half ] + Dens[ idx_half + didx_half[d] ] );
+            real l_e = MicroPhy->CondMFPConst * Thalf * Thalf / Dhalf; 
+            real l_T = Thalf/gradT;
+            kappa /= 1.0+4.2*l_e/l_T;
+         }
+ 
          Total_Flux = kappa*gradient;
 
-//       5. Check for conduction saturation
-         real Q_l, Q_r, Q_sat; 
-         Q_l = Dens[ idx_half ]*POW( Temp[ idx_half ], (real)1.5 );
-         Q_r = Dens[ idx_half + didx_half[d] ]*POW( Temp[ idx_half + didx_half[d] ], (real)1.5 );
-         Q_sat = MicroPhy.CondSaturationConst * 0.5 * ( Q_l + Q_r );
-#        ifdef MHD
-         real mod_gT, gr;
-         if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION )
-         {
-            gr      = B_N_mean*( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
-            mod_gT  = SQRT( SQR(N_slope) + SQR(T1_slope) + SQR(T2_slope) );
-            Q_sat  *= - gr / mod_gT;
-         }
-#        endif
-         if ( FABS(Total_Flux) > FABS(Q_sat) ) 
-            Total_Flux = Q_sat;
-
-//       6. flux add-up
+//       4. flux add-up
          g_FC_Flux[d][ENGY][idx_flux] += Total_Flux;
 
       } // CGPU_LOOP( idx, size_i*size_j*size_k )

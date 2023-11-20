@@ -1671,6 +1671,10 @@ void Aux_Check_Parameter()
 #     error : HYDRO is required for CONDUCTION!!
 #  endif
 
+#  if ( EOS != EOS_GAMMA || EOS != EOS_COSMIC_RAY )
+#     error : EOS_GAMMA or EOS_COSMIC_RAY is required for CONDUCTION!!
+#  endif 
+
 #  ifndef MHD
    if ( CONDUCTION_FLUX_TYPE == ANISOTROPIC_CONDUCTION )
       Aux_Error( ERROR_INFO, "ANISOTROPIC_CONDUCTION requires MHD !!\n" );
@@ -1682,12 +1686,18 @@ void Aux_Check_Parameter()
    if ( CONDUCTION_TYPE == SPITZER_CONDUCTION && CONDUCTION_COULOMB_LOG <= 0.0 ) 
       Aux_Error( ERROR_INFO, "CONDUCTION_COULOMB_LOG <= 0 !!\n" );
 
-   if ( CONDUCTION_TYPE == SPITZER_CONDUCTION && CONDUCTION_SPITZER_FRACTION <= 0.0)
+   if ( CONDUCTION_TYPE == SPITZER_CONDUCTION && CONDUCTION_SPITZER_FRACTION <= 0.0 )
       Aux_Error( ERROR_INFO, "CONDUCTION_SPITZER_FRACTION <= 0 !!\n" );
 
-   if ( CONDUCTION_SATURATION && !OPT_UNIT )
-      Aux_Error( ERROR_INFO, "CONDUCTION_SATURATION only works with OPT__UNIT !!\n" );
-      
+   if ( CONDUCTION_MUE <= 0.0 )
+      Aux_Error( ERROR_INFO, "CONDUCTION_MUE <= 0 !!\n" );
+
+   if ( CONDUCTION_TYPE == SPITZER_CONDUCTION && !OPT_UNIT )
+      Aux_Error( ERROR_INFO, "SPITZER_CONDUCTION only works with OPT__UNIT !!\n" );
+ 
+   if ( CONDUCTION_TYPE == CONSTANT_CONDUCTION && CONDUCTION_SATURATION )
+      Aux_Error( ERROR_INFO, "CONDUCTION_SATURATION only works with SPITZER_CONDUCTION !!\n" );
+
 // warning
 // ------------------------------
    if ( MPI_Rank == 0 ) {
@@ -1726,6 +1736,9 @@ void Aux_Check_Parameter()
 
    if ( VISCOSITY_TYPE == SPITZER_VISCOSITY && VISCOSITY_SPITZER_FRACTION <= 0.0)
       Aux_Error( ERROR_INFO, "VISCOSITY_SPITZER_FRACTION <= 0 !!\n" );
+
+   if ( VISCOSITY_TYPE == SPITZER_VISCOSITY && !OPT_UNIT )
+      Aux_Error( ERROR_INFO, "SPITZER_VISCOSITY only works with OPT__UNIT !!\n" );
 
 // warning
 // ------------------------------

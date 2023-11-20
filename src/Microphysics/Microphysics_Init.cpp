@@ -43,13 +43,21 @@ void Microphysics_Init()
    MicroPhy.CondCoulombLog = CONDUCTION_COULOMB_LOG;
    MicroPhy.CondMaxDiffusivity = CONDUCTION_MAX_DIFFUSIVITY;
    MicroPhy.CondSaturation = CONDUCTION_SATURATION;
-   MicroPhy.CondDiffuseFactor = ( OPT__UNIT ) ? MOLECULAR_WEIGHT * MU_NORM / Const_kB * (UNIT_E/UNIT_M) : MOLECULAR_WEIGHT;
+   MicroPhy.CondMue = CONDUCTION_MUE;
+   if ( OPT_UNIT )
+      MicroPhy.CondSpecificHeat = Const_kB / ( MOLECULAR_WEIGHT * MU_NORM ) * (UNIT_M/UNIT_E);
+   else
+      MicroPhy.CondSpecificHeat = (real)1.0/MOLECULAR_WEIGHT;
+   MicroPhy.CondSpecificHeat /= ( GAMMA - (real)1.0 );
 
    if ( MicroPhy.CondSaturation ) 
    {
-      MicroPhy.CondSaturationConst = (real)0.4*SQRT( (real)2.0*Const_kB / ( PI*Const_me ) * (UNIT_M/UNIT_E)); 
-      MicroPhy.CondSaturationConst *= (real)0.88 * (Const_kB / Const_amu) * (UNIT_M/UNIT_E);
-   }
+      // This calculates the prefactor for the electron MFP
+      // Note that this assumes CGS units for the electron charge
+      MicroPhy.CondMFPConst = (real)0.7329037678543799 * Const_kB * Const_kB / ( UNIT_E * UNIT_E );
+      MicroPhy.CondMFPConst /= POW( Const_e / SQRT( UNIT_E*UNIT_L ), (real)4.0 ) * MicroPhy.CondCoulombLog;
+      MicroPhy.CondMFPConst *= CONDUCTION_MUE * Const_amu / UNIT_M;
+   }      
 
    if ( MicroPhy.CondType == CONSTANT_CONDUCTION ) 
    {
@@ -118,6 +126,11 @@ void Microphysics_Init()
       MicroPhy.ViscPrefactor *= UNIT_T;
       MicroPhy.ViscPrefactor *= MicroPhy.ViscSpitzerFraction;
    }
+   else 
+   {
+      Aux_Error( ERROR_INFO, "unsupported viscosity type (%d) !!\n", MicroPhy.ViscType );
+   }
+
 #  endif // #ifdef VISCOSITY
 
    MicroPhy_Initialized = true;

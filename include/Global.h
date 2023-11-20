@@ -361,6 +361,7 @@ extern double VISCOSITY_MAX_DIFFUSIVITY;
 #endif
 
 #ifdef CONDUCTION
+extern bool   CONDUCTION_SATURATION;
 extern int    CONDUCTION_TYPE;
 extern int    CONDUCTION_FLUX_TYPE;
 extern double DT__CONDUCTION;
@@ -368,6 +369,7 @@ extern double CONDUCTION_CONSTANT_COEFF;
 extern double CONDUCTION_SPITZER_FRACTION;
 extern double CONDUCTION_COULOMB_LOG;
 extern double CONDUCTION_MAX_DIFFUSIVITY;
+extern double CONDUCTION_MUE;
 #endif
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
