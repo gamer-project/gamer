@@ -1678,6 +1678,8 @@ void Aux_Check_Parameter()
 #  ifndef MHD
    if ( CONDUCTION_FLUX_TYPE == ANISOTROPIC_CONDUCTION )
       Aux_Error( ERROR_INFO, "ANISOTROPIC_CONDUCTION requires MHD !!\n" );
+   if ( CONDUCTION_SAT_WHISTLER )
+      Aux_Error( ERROR_INFO, "CONDUCTION_SAT_WHISTLER requires MHD !!\n" );
 #  endif
 
    if ( CONDUCTION_TYPE == CONSTANT_CONDUCTION && CONDUCTION_CONST_COEFF <= 0.0 ) 

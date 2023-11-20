@@ -362,6 +362,7 @@ extern double VISCOSITY_MAX_DIFFUSIVITY;
 
 #ifdef CONDUCTION
 extern bool   CONDUCTION_SATURATION;
+extern bool   CONDUCTION_SAT_WHISTLER;
 extern int    CONDUCTION_TYPE;
 extern int    CONDUCTION_FLUX_TYPE;
 extern double DT__CONDUCTION;

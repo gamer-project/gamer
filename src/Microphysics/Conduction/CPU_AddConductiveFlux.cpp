@@ -207,19 +207,27 @@ void Hydro_AddConductiveFlux_HalfStep( const real Dens[], const real Temp[],
 //       --> for non-constant conduction coefficients, take the spatial average along the normal direction
 //           to get the face-centered coefficients
          real kappa_l, kappa_r, kappa, chi;
-         
          Hydro_ComputeConduction( kappa_l, cond_chi, MicroPhy, Dens[ idx_cvar ], 
                                   Temp[ idx_cvar ] );
          Hydro_ComputeConduction( kappa_r, cond_chi, MicroPhy, Dens[ idx_cvar + didx_cvar[d] ], 
                                   Temp[ idx_cvar + didx_cvar[d] ] );
          kappa = 0.5*( kappa_l + kappa_r );
-         if ( CONDUCTION_SATURATION ) {
+         if ( MicroPhy.CondSaturation ) {
             real gradT = SQRT( SQR(N_slope) + SQR(T1_slope) + SQR(T2_slope) );
             real Thalf = 0.5*( Temp[ idx_cvar ] + Temp[ idx_cvar + didx_cvar[d] ] );
             real Dhalf = 0.5*( Dens[ idx_cvar ] + Dens[ idx_cvar + didx_cvar[d] ] );
             real l_e = MicroPhy->CondMFPConst * Thalf * Thalf / Dhalf; 
             real l_T = Thalf/gradT;
-            kappa /= 1.0+4.2*l_e/l_T;
+            real sat_factor = 4.0;
+#           ifdef MHD
+            if ( MicroPhy.CondSatWhistler ) 
+            {
+               real Phalf = MicroPhy.CondPresConv*Dhalf*Thalf;
+               real beta = (real)2.0*Phalf/( B_amp * B_amp );
+               sat_factor += beta/(real)3.0;
+            } 
+#           endif
+            kappa /= 1.0+sat_factor*l_e/l_T;
          }
          Total_Flux = kappa*gradient;
 
@@ -437,13 +445,22 @@ void Hydro_AddConductiveFlux_FullStep( const real Dens[], const real Temp[],
          Hydro_ComputeConduction( kappa_r, chi, MicroPhy, Dens[ idx_half + didx_half[d] ], 
                                   Temp[ idx_half + didx_half[d] ] );
          kappa = 0.5*( kappa_l + kappa_r );
-         if ( CONDUCTION_SATURATION ) {
+         if ( MicroPhy.CondSaturation ) {
             real gradT = SQRT( SQR(N_slope) + SQR(T1_slope) + SQR(T2_slope) );
             real Thalf = 0.5*( Temp[ idx_half ] + Temp[ idx_half + didx_half[d] ] );
             real Dhalf = 0.5*( Dens[ idx_half ] + Dens[ idx_half + didx_half[d] ] );
             real l_e = MicroPhy->CondMFPConst * Thalf * Thalf / Dhalf; 
             real l_T = Thalf/gradT;
-            kappa /= 1.0+4.2*l_e/l_T;
+            real sat_factor = 4.0;
+#           ifdef MHD
+            if ( MicroPhy.CondSatWhistler ) 
+            {
+               real Phalf = MicroPhy.CondPresConv*Dhalf*Thalf;
+               real beta = (real)2.0*Phalf/( B_amp * B_amp );
+               sat_factor += beta/(real)3.0;
+            } 
+#           endif
+            kappa /= 1.0+sat_factor*l_e/l_T;
          }
  
          Total_Flux = kappa*gradient;

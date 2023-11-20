@@ -43,11 +43,13 @@ void Microphysics_Init()
    MicroPhy.CondCoulombLog = CONDUCTION_COULOMB_LOG;
    MicroPhy.CondMaxDiffusivity = CONDUCTION_MAX_DIFFUSIVITY;
    MicroPhy.CondSaturation = CONDUCTION_SATURATION;
+   MicroPhy.CondSatWhistler = CONDUCTION_SAT_WHISTLER;
    MicroPhy.CondMue = CONDUCTION_MUE;
    if ( OPT_UNIT )
       MicroPhy.CondSpecificHeat = Const_kB / ( MOLECULAR_WEIGHT * MU_NORM ) * (UNIT_M/UNIT_E);
    else
       MicroPhy.CondSpecificHeat = (real)1.0/MOLECULAR_WEIGHT;
+   MicroPhy.CondPresConv = MicroPhy.CondSpecificHeat;
    MicroPhy.CondSpecificHeat /= ( GAMMA - (real)1.0 );
 
    if ( MicroPhy.CondSaturation ) 
