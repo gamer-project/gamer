@@ -4,6 +4,9 @@
 
 static real GetMaxVelocity( const int lv, const bool ExcludeWaveCells);
 
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_GetTimeStep_Hybrid_Velocity
 // Description :  Estimate the evolution time-step via the CFL condition from the Hamilton-Jacobi equation
@@ -75,9 +78,6 @@ real GetMaxVelocity( const int lv, const bool ExcludeWaveCells )
    _dh      = (real)1.0/amr->dh[lv];
    _dh2     = (real)0.5*_dh;
 
-// construct global tree structure
-   LB_GlobalTree GlobalTree;
-
 #  pragma omp parallel private( Flu_Array, V, GradS, \
                                 im, ip, jm, jp, km, kp, I, J, K)
    {
@@ -101,7 +101,7 @@ real GetMaxVelocity( const int lv, const bool ExcludeWaveCells )
          for (int i=NGhost; i<Size_Flu-NGhost; i++)    {  im = i - 1;    ip = i + 1;   I = i - NGhost;
 
 //          skip velocities of cells that have a wave counterpart on the refined levels
-            long GID0                   = GlobalTree.PID2GID(PID0, lv);
+            long GID0                   = GlobalTree->PID2GID(PID0, lv);
             bool DoNotCalculateVelocity = false;
             if ( ExcludeWaveCells )
             {
@@ -109,7 +109,7 @@ real GetMaxVelocity( const int lv, const bool ExcludeWaveCells )
 //             however, ELBDM_HasWaveCounterpart automatically returns False if (I, J, K) is outside of the patch GID0 + LocalID
                for (int LocalID=0; LocalID<8; LocalID++ )
                {
-                  DoNotCalculateVelocity |= ELBDM_HasWaveCounterpart( I, J, K, GID0, GID0 + LocalID, GlobalTree );
+                  DoNotCalculateVelocity |= ELBDM_HasWaveCounterpart( I, J, K, GID0, GID0 + LocalID, *GlobalTree );
                }
             }
 

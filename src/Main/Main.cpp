@@ -17,6 +17,7 @@
 // 1. common global variables
 // =======================================================================================================
 AMR_t               *amr = NULL;
+LB_GlobalTree       *GlobalTree = NULL;
 
 double               Time[NLEVEL]           = { 0.0 };
 double               dTime_AllLv[NLEVEL]    = { 0.0 };

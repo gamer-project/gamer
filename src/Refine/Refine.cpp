@@ -1123,8 +1123,6 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
 
-
-
 // free memory
    delete [] Flu_CData1D;
    delete [] Flu_FData1D;
@@ -1144,6 +1142,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    for (int m=1; m<28; m++)   amr->NPatchComma[lv+1][m] = amr->num[lv+1];
 
 
+
 // d. refine buffer patches
 // ------------------------------------------------------------------------------------------------
    Refine_Buffer( lv, BufSonTable, BufGrandTable );
@@ -1154,6 +1153,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
       delete [] BufGrandTable;
       delete [] BufSonTable;
    }
+
 
 
 // e. re-construct tables and sibling relations
@@ -1196,7 +1196,9 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 // get the total number of patches at lv+1
    Mis_GetTotalPatchNumber( lv+1 );
 
-// convert density/phase to density/real part/imaginary part in hybrid scheme when we switch the level from fluid to wave
+
+// f. convert density/phase to density/real part/imaginary part in hybrid scheme when we switch the level from fluid to wave
+// ------------------------------------------------------------------------------------------------
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( SwitchFinerLevelsToWaveScheme ) {
       for (int ChildLv = lv + 1; ChildLv <= TOP_LEVEL; ++ChildLv) {
@@ -1226,8 +1228,16 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          } // for (int PID=0; PID < amr->NPatchComma[ChildLv][27]; PID++)
       } // for (int ChildLv = lv + 1; ChildLv <= TOP_LEVEL; ++ChildLv)
    } // if ( SwitchFinerToWaveScheme )
+#  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
-#   endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
+
+
+// g. construct the global AMR structure if required
+// ------------------------------------------------------------------------------------------------
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   delete GlobalTree;   // in case it has been allocated already
+   GlobalTree = new LB_GlobalTree;
+#  endif
 
 } // FUNCTION : Refine
 

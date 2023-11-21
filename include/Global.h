@@ -8,6 +8,7 @@
 #ifdef SUPPORT_LIBYT
 #include <libyt.h>
 #endif
+#include "GatherTree.h"
 
 
 // **********************************************************************************************************
@@ -18,7 +19,8 @@
 
 // 1. common global variables
 // ============================================================================================================
-extern AMR_t     *amr;                                // AMR tree structure
+extern AMR_t     *amr;                                // local AMR tree structure
+extern LB_GlobalTree *GlobalTree;                     // global AMR tree structure
 extern double     Time[NLEVEL];                       // "present"  physical time at each level
 extern double     Time_Prev[NLEVEL];                  // "previous" physical time at each level
 extern double     dTime_AllLv[NLEVEL];                // current evolution physical time interval at each level
