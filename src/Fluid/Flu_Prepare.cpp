@@ -230,9 +230,12 @@ void Flu_Prepare( const int lv, const double PrepTime,
             {
                bool isDataInvalid = !Aux_IsFinite( fluid[v] );
 
-//             check for negative densities
+//             check for negative densities on fluid levels
 #              if ( MODEL == ELBDM )
-               isDataInvalid |= (v == DENS) && fluid[DENS] < 0;
+               if ( !amr->use_wave_flag[lv] )
+               {
+                  isDataInvalid |= (v == DENS) && fluid[DENS] < 0;
+               }
 #              endif // # if ( MODEL == ELBDM )
 
                if (  isDataInvalid  )
