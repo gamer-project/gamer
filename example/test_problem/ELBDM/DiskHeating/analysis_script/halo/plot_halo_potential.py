@@ -51,14 +51,17 @@ for idx in range(idx_start, idx_end+1, didx):
    print("Current Simulation Step = %i"%current_step)
 
    sp = ds.sphere( Center[current_step,3:6], 0.5*ds.domain_width.to_value().max() )
-   prof = yt.ProfilePlot( sp, 'radius', field, weight_field='cell_volume', n_bins=nbin, x_log=True, y_log={field:False} )
-   prof.set_unit( 'radius', 'kpc' )
-   prof.set_unit( field, 'cm**2/s**2' )
-   prof.set_xlim( xmin=Resolution/2. )
-   prof.save( mpl_kwargs={"dpi":dpi} )
-
-   A = prof.profiles[0].x.d
-   B = prof.profiles[0][field].d
+   prof = yt.create_profile( sp, 'radius', field,
+                             weight_field='cell_volume',
+                             n_bins=nbin,
+                             units={"radius":"kpc", field:"cm**2/s**2"},
+                             logs={"radius":True, field:False},
+                             extrema={"radius":((Resolution/2., "kpc"), (0.5*ds.domain_width.to_value().max(), "code_length"))})
+   plot = yt.ProfilePlot.from_profiles(prof)
+   plot.set_log(field, False)
+   plot.save( mpl_kwargs={"dpi":dpi} )
+   A = prof.x
+   B = prof[field]
    C = [A,B]
    Data = np.asarray(C)
    Data = np.delete(Data,  np.nonzero(Data[1]==0)[0] , axis = 1)
