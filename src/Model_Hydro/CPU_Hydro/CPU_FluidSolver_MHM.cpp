@@ -309,7 +309,7 @@ void CUFLU_FluidSolver_MHM(
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter, const double Time,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real MinEint,
-   const real DualEnergySwitch,
+   const real MinTemp, const real DualEnergySwitch,
    const bool NormPassive, const int NNorm,
    const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -338,7 +338,7 @@ void CPU_FluidSolver_MHM(
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const double c_ExtAcc_AuxArray[],
    const real MinDens, const real MinPres, const real MinEint,
-   const real DualEnergySwitch,
+   const real MinTemp, const real DualEnergySwitch,
    const bool NormPassive, const int NNorm, const int c_NormIdx[],
    const bool FracPassive, const int NFrac, const int c_FracIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -437,8 +437,9 @@ void CPU_FluidSolver_MHM(
 #        if ( defined MHD ) || ( defined VISCOSITY ) || ( defined CONDUCTION )
 //       1-a-1. evaluate the cell-centered B field and store in g_PriVar[]
 //              --> also copy density and compute velocity for MHD_ComputeElectric()
+#        ifdef MHD
          real CC_B[NCOMP_MAG];
-
+#        endif
          CGPU_LOOP( idx, CUBE(FLU_NXT) )
          {
             const int size_ij = SQR( FLU_NXT );
@@ -455,17 +456,34 @@ void CPU_FluidSolver_MHM(
             g_PriVar_1PG[2][idx] = g_Flu_Array_In[P][2][idx]*_Dens;
             g_PriVar_1PG[3][idx] = g_Flu_Array_In[P][3][idx]*_Dens;
 
+#           ifdef MHD
 //          magnetic field
             MHD_GetCellCenteredBField( CC_B, g_Mag_Array_In[P][0], g_Mag_Array_In[P][1], g_Mag_Array_In[P][2],
                                        FLU_NXT, FLU_NXT, FLU_NXT, i, j, k );
 
             for (int v=0; v<NCOMP_MAG; v++)  g_PriVar_1PG[ MAG_OFFSET + v ][idx] = CC_B[v];
+            const real Emag = 0.5*( SQR(CC_B[0]) + SQR(CC_B[1]) + SQR(CC_B[2]) );
+#           else
+            const real Emag = NULL_REAL;
+#           endif // #ifdef MHD
+
+#           if ( defined VISCOSITY ) || ( defined CONDUCTION )
+//          temperature
+            real fluid[NCOMP_TOTAL];
+            const bool CheckMinTemp_Yes = true;
+            for (int v=0; v<NCOMP_TOTAL; v++)  fluid[v] = g_Flu_Array_In[P][v][idx];
+            g_PriVar_1PG[4][idx] = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], 
+                                                   fluid[ENGY], fluid+NCOMP_FLUID, CheckMinTemp_Yes, 
+                                                   MinTemp, Emag, EoS.DensEint2Temp_FuncPtr, 
+                                                   EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );
+#           endif
+
          }
 
 #        ifdef __CUDACC__
          __syncthreads();
 #        endif
-#        endif // #ifdef MHD
+#        endif // #if ( defined MHD ) || ( defined VISCOSITY ) || ( defined CONDUCTION )
 
 
 //       1-a-2. evaluate the half-step first-order fluxes by Riemann solver
@@ -480,7 +498,7 @@ void CPU_FluidSolver_MHM(
 
 //       add conductive fluxes
 #        ifdef CONDUCTION
-         Hydro_AddConductiveFlux_HalfStep( g_Flu_Array_In[P][DENS], Temp, g_Flux_Half_1PG, g_Mag_Array_In[P], 
+         Hydro_AddConductiveFlux_HalfStep( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P], 
                                            g_PriVar_1PG+MAG_OFFSET, dh, &MicroPhy );
 #        endif
 

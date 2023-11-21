@@ -1668,11 +1668,11 @@ void Aux_Check_Parameter()
 // errors
 // ------------------------------
 #  ifndef HYDRO
-#     error : HYDRO is required for CONDUCTION!!
+#     error : ERROR : HYDRO is required for CONDUCTION!!
 #  endif
 
 #  if ( EOS != EOS_GAMMA || EOS != EOS_COSMIC_RAY )
-#     error : EOS_GAMMA or EOS_COSMIC_RAY is required for CONDUCTION!!
+#     error : ERROR : CONDUCTION must work with EOS_GAMMA/EOS_COSMIC_RAY !!
 #  endif 
 
 #  ifndef MHD
@@ -1722,7 +1722,7 @@ void Aux_Check_Parameter()
 // errors
 // ------------------------------
 #  ifndef HYDRO
-#     error : HYDRO is required for VISCOSITY!!
+#     error : ERROR : HYDRO is required for VISCOSITY!!
 #  endif
 
 #  ifndef MHD

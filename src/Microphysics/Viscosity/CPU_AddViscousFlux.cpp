@@ -200,6 +200,9 @@ void Hydro_AddViscousFlux_HalfStep( const real Dens[], const real Temp[],
          Total_Flux = kappa*gradient;
 
 //       5. flux add-up
+         g_Flux_Half[d][MOMX][idx_flux] += Total_Flux;
+         g_Flux_Half[d][MOMY][idx_flux] += Total_Flux;
+         g_Flux_Half[d][MOMZ][idx_flux] += Total_Flux;
          g_Flux_Half[d][ENGY][idx_flux] += Total_Flux;
 
       } // CGPU_LOOP( idx, size_i*size_j*size_k )

@@ -266,7 +266,7 @@ void Hydro_AddConductiveFlux_HalfStep( const real Dens[], const real Temp[],
 // Return      : g_FC_Flux[]
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_AddConductiveFlux_FullStep( const real Dens[], const real Temp[],
+void Hydro_AddConductiveFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                                        real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                        const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                        const int NFlux, const real dh, const MicroPhy_t *MicroPhy )
