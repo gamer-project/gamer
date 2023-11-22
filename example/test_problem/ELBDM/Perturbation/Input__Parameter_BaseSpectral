@@ -99,7 +99,7 @@ LB_INPUT__PAR_WEIGHT          0.0         # load-balance weighting of one partic
 OPT__RECORD_LOAD_BALANCE      1           # record the load-balance info [1]
 OPT__MINIMIZE_MPI_BARRIER     0           # minimize MPI barriers to improve load balance, especially with particles [0]
                                           # (STORE_POT_GHOST, PAR_IMPROVE_ACC=1, OPT__TIMING_BARRIER=0 only; recommend AUTO_REDUCE_DT=0)
-OPT__LB_EXCHANGE_FATHER       1           # exchange all cells of all father patches during load balancing (must enable for hybrid scheme + MPI) [0 usually, 1 for ELBDM_HYBRID] ## HYBRID ELBDM ONLY###
+OPT__LB_EXCHANGE_FATHER       1           # exchange all cells of all father patches during load balancing (must enable for hybrid scheme + MPI) [0 usually, 1 for ELBDM_HYBRID] ## ELBDM_HYBRID ONLY###
 
 # fluid solver in ELBDM (MODEL==ELBDM only)
 ELBDM_MASS                    1.0         # particle mass in ev/c^2 (input unit is fixed even when OPT__UNIT or COMOVING is on)
@@ -108,7 +108,7 @@ ELBDM_TAYLOR3_COEFF           0.166666667 # 3rd Taylor expansion coefficient [1.
 ELBDM_TAYLOR3_AUTO            0           # Optimize ELBDM_TAYLOR3_COEFF automatically to minimize the damping at kmax [0]
 ELBDM_REMOVE_MOTION_CM        0           # remove the motion of center-of-mass (must enable OPT__CK_CONSERVATION):
                                           # (0=off, 1=init, 2=every step) [0]
-ELBDM_FIRST_WAVE_LEVEL       -1           # level at which to start using the wave solver, if set to -1, an error is thrown [-1] ##HYBRID ELBDM ONLY##
+ELBDM_FIRST_WAVE_LEVEL       -1           # level at which to switch to the wave solver (must >=1) [-1] ##ELBDM_HYBRID ONLY##
 ELBDM_BASE_SPECTRAL           1           # adopt the spectral method to evolve base-level wave function (must enable SUPPORT_FFTW) [0]
 
 # fluid solvers in all models
