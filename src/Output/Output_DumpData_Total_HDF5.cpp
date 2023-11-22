@@ -2447,36 +2447,42 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  ifdef SUPPORT_FFTW
    InputPara.Opt__FFTW_Startup       = OPT__FFTW_STARTUP;
 #  endif
+
 // interpolation schemes
-   InputPara.Opt__Int_Time           = OPT__INT_TIME;
+   InputPara.Opt__Int_Time               = OPT__INT_TIME;
 #  if ( MODEL == HYDRO )
-   InputPara.Opt__Int_Prim           = OPT__INT_PRIM;
+   InputPara.Opt__Int_Prim               = OPT__INT_PRIM;
 #  endif
 #  if ( MODEL == ELBDM )
-   InputPara.Opt__Int_Phase          = OPT__INT_PHASE;
-   InputPara.Opt__Res_Phase          = OPT__RES_PHASE;
+   InputPara.Opt__Int_Phase              = OPT__INT_PHASE;
+   InputPara.Opt__Res_Phase              = OPT__RES_PHASE;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   InputPara.Opt__Hybrid_Match_Phase = ELBDM_MATCH_PHASE;
+   InputPara.Opt__Hybrid_Match_Phase     = ELBDM_MATCH_PHASE;
 #  endif //#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
-   InputPara.Opt__Flu_IntScheme      = OPT__FLU_INT_SCHEME;
-   InputPara.Opt__RefFlu_IntScheme   = OPT__REF_FLU_INT_SCHEME;
+   InputPara.Opt__Flu_IntScheme          = OPT__FLU_INT_SCHEME;
+   InputPara.Opt__RefFlu_IntScheme       = OPT__REF_FLU_INT_SCHEME;
 #  ifdef MHD
-   InputPara.Opt__Mag_IntScheme      = OPT__MAG_INT_SCHEME;
-   InputPara.Opt__RefMag_IntScheme   = OPT__REF_MAG_INT_SCHEME;
+   InputPara.Opt__Mag_IntScheme          = OPT__MAG_INT_SCHEME;
+   InputPara.Opt__RefMag_IntScheme       = OPT__REF_MAG_INT_SCHEME;
 #  endif
 #  ifdef GRAVITY
-   InputPara.Opt__Pot_IntScheme      = OPT__POT_INT_SCHEME;
-   InputPara.Opt__Rho_IntScheme      = OPT__RHO_INT_SCHEME;
-   InputPara.Opt__Gra_IntScheme      = OPT__GRA_INT_SCHEME;
-   InputPara.Opt__RefPot_IntScheme   = OPT__REF_POT_INT_SCHEME;
+   InputPara.Opt__Pot_IntScheme          = OPT__POT_INT_SCHEME;
+   InputPara.Opt__Rho_IntScheme          = OPT__RHO_INT_SCHEME;
+   InputPara.Opt__Gra_IntScheme          = OPT__GRA_INT_SCHEME;
+   InputPara.Opt__RefPot_IntScheme       = OPT__REF_POT_INT_SCHEME;
 #  endif
-   InputPara.IntMonoCoeff            = INT_MONO_COEFF;
+   InputPara.IntMonoCoeff                = INT_MONO_COEFF;
 #  ifdef MHD
-   InputPara.IntMonoCoeffB           = INT_MONO_COEFF_B;
+   InputPara.IntMonoCoeffB               = INT_MONO_COEFF_B;
 #  endif
-   InputPara.Mono_MaxIter            = MONO_MAX_ITER;
-   InputPara.IntOppSign0thOrder      = INT_OPP_SIGN_0TH_ORDER;
+   InputPara.Mono_MaxIter                = MONO_MAX_ITER;
+   InputPara.IntOppSign0thOrder          = INT_OPP_SIGN_0TH_ORDER;
+#  ifdef SUPPORT_SPECTRAL_INT
+   InputPara.SpecInt_TablePath           = SPEC_INT_TABLE_PATH;
+   InputPara.SpecInt_XY_Instead_DePha    = SPEC_INT_XY_INSTEAD_DEPHA;
+   InputPara.SpecInt_WavelengthMagnifier = SPEC_INT_WAVELENGTH_MAGNIFIER;
+#  endif
 
 // data dump
    InputPara.Opt__Output_Total           = OPT__OUTPUT_TOTAL;
@@ -3414,6 +3420,11 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  endif
    H5Tinsert( H5_TypeID, "Mono_MaxIter",            HOFFSET(InputPara_t,Mono_MaxIter           ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "IntOppSign0thOrder",      HOFFSET(InputPara_t,IntOppSign0thOrder     ), H5T_NATIVE_INT              );
+#  ifdef SUPPORT_SPECTRAL_INT
+   H5Tinsert( H5_TypeID, "SpecInt_TablePath",           HOFFSET(InputPara_t,SpecInt_TablePath           ), H5_TypeID_VarStr   );
+   H5Tinsert( H5_TypeID, "SpecInt_XY_Instead_DePha",    HOFFSET(InputPara_t,SpecInt_XY_Instead_DePha    ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "SpecInt_WavelengthMagnifier", HOFFSET(InputPara_t,SpecInt_WavelengthMagnifier ), H5T_NATIVE_DOUBLE  );
+#  endif
 
 // data dump
    H5Tinsert( H5_TypeID, "Opt__Output_Total",           HOFFSET(InputPara_t,Opt__Output_Total          ), H5T_NATIVE_INT              );

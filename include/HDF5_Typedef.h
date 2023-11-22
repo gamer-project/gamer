@@ -703,6 +703,11 @@ struct InputPara_t
 #  endif
    int    Mono_MaxIter;
    int    IntOppSign0thOrder;
+#  ifdef SUPPORT_SPECTRAL_INT
+   char  *SpecInt_TablePath;
+   int    SpecInt_XY_Instead_DePha; 
+   double SpecInt_WavelengthMagnifier;
+#  endif
 
 // data dump
    int    Opt__Output_Total;

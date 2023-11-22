@@ -1362,11 +1362,6 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__INT_PHASE                  %d\n",      OPT__INT_PHASE                );
       fprintf( Note, "OPT__RES_PHASE                  %d\n",      OPT__RES_PHASE                );
 #     endif
-#     ifdef SUPPORT_SPECTRAL_INT
-      fprintf( Note, "SPEC_INT_TABLE_PATH             %s\n",      SPEC_INT_TABLE_PATH           );
-      fprintf( Note, "SPEC_INT_XY_INSTEAD_DEPHA       %d\n",      SPEC_INT_XY_INSTEAD_DEPHA     );
-      fprintf( Note, "SPEC_INT_WAVELENGTH_MAGNIFIER   %13.7e\n",  SPEC_INT_WAVELENGTH_MAGNIFIER );
-#     endif
       fprintf( Note, "OPT__FLU_INT_SCHEME             %s\n",      ( OPT__FLU_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
                                                                   ( OPT__FLU_INT_SCHEME == INT_MINMOD1D ) ? "MINMOD1D" :
                                                                   ( OPT__FLU_INT_SCHEME == INT_VANLEER  ) ? "VANLEER"  :
@@ -1453,6 +1448,11 @@ void Aux_TakeNote()
 #     endif
       fprintf( Note, "MONO_MAX_ITER                   %d\n",      MONO_MAX_ITER                 );
       fprintf( Note, "INT_OPP_SIGN_0TH_ORDER          %d\n",      INT_OPP_SIGN_0TH_ORDER        );
+#     ifdef SUPPORT_SPECTRAL_INT
+      fprintf( Note, "SPEC_INT_TABLE_PATH             %s\n",      SPEC_INT_TABLE_PATH           );
+      fprintf( Note, "SPEC_INT_XY_INSTEAD_DEPHA       %d\n",      SPEC_INT_XY_INSTEAD_DEPHA     );
+      fprintf( Note, "SPEC_INT_WAVELENGTH_MAGNIFIER   %13.7e\n",  SPEC_INT_WAVELENGTH_MAGNIFIER );
+#     endif
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
