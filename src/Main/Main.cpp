@@ -587,6 +587,10 @@ int main( int argc, char *argv[] )
    if ( OPT__PARTICLE_COUNT > 0 )         Par_Aux_Record_ParticleCount();
 #  endif
 
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   ELBDM_Aux_Record_Hybrid();
+#  endif
+
    Aux_Check();
 
 #  if ( MODEL == ELBDM )
