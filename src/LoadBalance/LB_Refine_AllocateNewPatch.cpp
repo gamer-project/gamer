@@ -1048,7 +1048,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       for (int k=0; k<FSize_CC; k++) {
       for (int j=0; j<FSize_CC; j++) {
       for (int i=0; i<FSize_CC; i++) {
-//          IMPROVEMENT: at this point, we should check whether dB wavelength is resolved after conversion to wave representation
+//###REVISE: at this point, we should check whether dB wavelength is resolved after conversion to wave representation
             Amp   = SQRT( FData_Flu[DENS][k][j][i] );
             Phase =       FData_Flu[PHAS][k][j][i] ;
             FData_Flu[REAL][k][j][i] = Amp * COS( Phase );

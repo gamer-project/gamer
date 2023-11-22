@@ -96,7 +96,7 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
 #           if ( ELBDM_SCHEME == ELBDM_HYBRID )
             } else { // if ( amr->use_wave_flag[lv] ) {
 //          in fluid scheme, send both density and phase fields ( v )
-//          ###OPTIMIZATION: no need to transfer and update the density field
+//###OPTIMIZATION: no need to transfer and update the density field
             amr->patch[SaveSg][lv][PID]->fluid[v][k][j][i] = h_Flu_Array_G[N][v][k][j][i];
             } // if ( amr->use_wave_flag[lv] ) { ... else
 #           endif  // # if ( ELBDM_SCHEME == ELBDM_HYBRID )

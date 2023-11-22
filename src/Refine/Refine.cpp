@@ -876,7 +876,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             for (int k=0; k<FSize_CC; k++) {
             for (int j=0; j<FSize_CC; j++) {
             for (int i=0; i<FSize_CC; i++) {
-//                IMPROVEMENT: at this point, we should check whether dB wavelength is resolved after conversion to wave representation
+//###REVISE: at this point, we should check whether dB wavelength is resolved after conversion to wave representation
                   Amp   = SQRT( Flu_FData[DENS][k][j][i] );
                   Phase =       Flu_FData[PHAS][k][j][i] ;
                   Flu_FData[REAL][k][j][i] = Amp * COS( Phase );
@@ -1217,7 +1217,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //                check fluid != NULL for buffer patches
                   if ( amr->patch[FluSg][ChildLv][PID]->fluid != NULL && amr->FluSgTime[ChildLv][FluSg] >= 0.0 )
                   {
-//                   IMPROVEMENT: at this point, we should check whether dB wavelength is resolved after conversion to wave representation
+//###REVISE: at this point, we should check whether dB wavelength is resolved after conversion to wave representation
                      const real Amp   = SQRT(amr->patch[FluSg][ChildLv][PID]->fluid[DENS][k][j][i]);
                      const real Phase = amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][k][j][i];
                      amr->patch[FluSg][ChildLv][PID]->fluid[REAL][k][j][i] = Amp * COS(Phase);

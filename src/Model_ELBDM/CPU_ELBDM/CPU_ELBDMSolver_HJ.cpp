@@ -307,7 +307,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 #  pragma omp parallel
 #  endif
    {
-//    ###OPTIMIZATION: change the order of different dimensions to [N_TIME_LEVELS + 1][FLU_NIN][CGPU_FLU_BLOCK_SIZE_Y][HYB_NXT]
+//###OPTIMIZATION: change the order of different dimensions to [N_TIME_LEVELS + 1][FLU_NIN][CGPU_FLU_BLOCK_SIZE_Y][HYB_NXT]
 //    create memories for columns of various intermediate fields on stack or shared GPU memory
       CGPU_SHARED real  s_In                 [CGPU_FLU_BLOCK_SIZE_Y][ELBDM_HJ_RK_ORDER + 1][FLU_NIN][HYB_NXT];
       CGPU_SHARED int   s_HasWaveCounterpart [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT];        // booleans indicating where to switch to first-order

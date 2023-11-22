@@ -72,8 +72,8 @@ void LB_Refine( const int FaLv )
 
 // 1. construct LB_CutPoint for the newly-created level
 // ==========================================================================================
-//###NOTE : here we have assumed that the newly-created son patches will have LB_Idx ~ 8*(father LB_Idx)
-//          --> hold for Hilbert curve method, but may not hold for other methods
+//###NOTE: here we have assumed that the newly-created son patches will have LB_Idx ~ 8*(father LB_Idx)
+//         --> hold for Hilbert curve method, but may not hold for other methods
    if ( NPatchTotal[SonLv] == 0 )
       for (int r=0; r<MPI_NRank+1; r++)   amr->LB->CutPoint[SonLv][r] = amr->LB->CutPoint[FaLv][r]*8;
 
@@ -215,7 +215,7 @@ void LB_Refine( const int FaLv )
 //                check fluid != NULL for buffer patches
                   if ( amr->patch[FluSg][ChildLv][PID]->fluid != NULL && amr->FluSgTime[ChildLv][FluSg] >= 0.0 )
                   {
-//                   IMPROVEMENT: at this point, we should check whether dB wavelength is resolved after conversion to wave representation
+//###REVISE: at this point, we should check whether dB wavelength is resolved after conversion to wave representation
                      const real Amp   = SQRT(amr->patch[FluSg][ChildLv][PID]->fluid[DENS][k][j][i]);
                      const real Phase = amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][k][j][i];
                      amr->patch[FluSg][ChildLv][PID]->fluid[REAL][k][j][i] = Amp * COS(Phase);

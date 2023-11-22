@@ -158,7 +158,7 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
       } else { // if ( amr->use_wave_flag[lv] )
 
 //*********************************************************
-//    ###REVISE: support rescaling phase for subsampling
+//###REVISE: support rescaling phase for subsampling
 //*********************************************************
 
 //    rescale density for subsampling

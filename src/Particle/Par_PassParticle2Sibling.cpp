@@ -246,7 +246,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
 //          SibPID can be negative for non-periodic BC.
             if ( SibPID >= 0  &&  amr->patch[0][lv][SibPID]->NPar_Escp[ MirSib[s] ] > 0 )
             {
-//###NOTE : No OpenMP since AddParticle will modify amr->Par->NPar_Lv[]
+//###NOTE: No OpenMP since AddParticle will modify amr->Par->NPar_Lv[]
 #              ifdef DEBUG_PARTICLE
                if ( SibPID >= amr->NPatchComma[lv][1] )
                   Aux_Error( ERROR_INFO, "buffer patch cannot have escaping particles (PID %d, s %d, SibPID %d, NPar_Escp %d) !!\n",
@@ -274,7 +274,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
 
-//###NOTE : NO OpenMP since particles from different patches can enter the same father-sibling patch
+//###NOTE: NO OpenMP since particles from different patches can enter the same father-sibling patch
 //    6. pass particles to the father-sibling patches (fine --> coarse)
       if ( lv > 0 )
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -315,7 +315,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
 
 
 //          add particles to the target father->sibling patch (which can be real of buffer patches)
-//###NOTE : No OpenMP since AddParticle will modify amr->Par->NPar_Lv[]
+//###NOTE: No OpenMP since AddParticle will modify amr->Par->NPar_Lv[]
 #           ifdef DEBUG_PARTICLE
             char Comment[100];
             sprintf( Comment, "%s F->C", __FUNCTION__ );
