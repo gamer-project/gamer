@@ -597,7 +597,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
       if ( UseWaveFlag ) {
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
-#     if ( WAVE_SCHEME == WAVE_FD )
+#     if   ( WAVE_SCHEME == WAVE_FD )
 
          CUFLU_ELBDMSolver_FD <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
             ( d_Flu_Array_F_In  + UsedPatch[s],

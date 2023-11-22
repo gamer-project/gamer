@@ -195,7 +195,7 @@ void CUFLU_ELBDMSolver_HamiltonJacobi( real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NX
                                        real g_Fluid_Out[][FLU_NIN ][ CUBE(PS2) ],
                                        #endif
                                        real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                       const bool g_IsCompletelyRefined [],
+                                       const bool g_IsCompletelyRefined[],
                                        const bool g_HasWaveCounterpart[][ CUBE(HYB_NXT) ],
                                        const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                        const bool XYZ, const real MinDens )
@@ -207,7 +207,7 @@ void CPU_ELBDMSolver_HamiltonJacobi(   real g_Fluid_In [][FLU_NIN ][ CUBE(HYB_NX
                                        real g_Fluid_Out[][FLU_NIN ][ CUBE(PS2) ],
                                        #endif
                                        real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                       const bool g_IsCompletelyRefined [],
+                                       const bool g_IsCompletelyRefined[],
                                        const bool g_HasWaveCounterpart[][ CUBE(HYB_NXT) ],
                                        const int NPatchGroup,
                                        const real dt, const real dh, const real Eta, const bool StoreFlux,
