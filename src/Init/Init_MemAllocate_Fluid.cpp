@@ -15,9 +15,6 @@ extern real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif
 #endif // FLU_SCHEME
 
-
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_MemAllocate_Fluid
 // Description :  Allocate memory for the fluid solver
@@ -76,8 +73,22 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
 #     endif
       h_Corner_Array_S [t] = new double [Src_NPatch][3];
       }
+
+
+#     if ( MODEL == ELBDM )
+      h_IsCompletelyRefined [t] = new bool [Flu_NPatchGroup];
+#     endif // #  if ( MODEL == ELBDM )
+
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      h_HasWaveCounterpart  [t] = new bool [Flu_NPatchGroup][ CUBE(HYB_NXT) ];
+#     endif // // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
    } // for (int t=0; t<2; t++)
 
+
+#  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+   h_GramFE_TimeEvo = new gramfe_matmul_float [PS2][2 * FLU_NXT];
+#  endif // #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
    h_FC_Var      = new real [Flu_NPatchGroup][6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ];

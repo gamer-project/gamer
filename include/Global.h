@@ -8,6 +8,7 @@
 #ifdef SUPPORT_LIBYT
 #include <libyt.h>
 #endif
+#include "GatherTree.h"
 
 
 // **********************************************************************************************************
@@ -18,7 +19,8 @@
 
 // 1. common global variables
 // ============================================================================================================
-extern AMR_t     *amr;                                // AMR tree structure
+extern AMR_t     *amr;                                // local AMR tree structure
+extern LB_GlobalTree *GlobalTree;                     // global AMR tree structure
 extern double     Time[NLEVEL];                       // "present"  physical time at each level
 extern double     Time_Prev[NLEVEL];                  // "previous" physical time at each level
 extern double     dTime_AllLv[NLEVEL];                // current evolution physical time interval at each level
@@ -129,9 +131,19 @@ extern double           ELBDM_TAYLOR3_COEFF, ELBDM_MASS, ELBDM_PLANCK_CONST, ELB
 #ifdef QUARTIC_SELF_INTERACTION
 extern double           ELBDM_LAMBDA;
 #endif
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
+extern bool             OPT__FLAG_INTERFERENCE;
+extern double           FlagTable_Interference[NLEVEL-1][4];
+extern double           DT__HYBRID_CFL, DT__HYBRID_CFL_INIT, DT__HYBRID_VELOCITY;
+extern bool             ELBDM_MATCH_PHASE;
+extern int              ELBDM_FIRST_WAVE_LEVEL;
+#endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+extern bool             OPT__FLAG_SPECTRAL;
+extern double           FlagTable_Spectral[NLEVEL-1][2];
+
 extern ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
 extern bool             ELBDM_BASE_SPECTRAL;
-
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
@@ -189,6 +201,7 @@ extern double     LB_INPUT__WLI_MAX;                  // LB->WLI_Max loaded from
 extern double     LB_INPUT__PAR_WEIGHT;               // LB->Par_Weight loaded from "Input__Parameter"
 #endif
 extern bool       OPT__RECORD_LOAD_BALANCE;
+extern bool       OPT__LB_EXCHANGE_FATHER;
 #endif
 extern bool       OPT__MINIMIZE_MPI_BARRIER;
 #ifdef SUPPORT_FFTW
@@ -310,6 +323,12 @@ extern bool FB_Any;
 extern int  FB_ParaBuf;
 #endif
 
+// (2-13) spectral interpolation
+#ifdef SUPPORT_SPECTRAL_INT
+extern char SPEC_INT_TABLE_PATH[MAX_STRING];
+class InterpolationHandler;
+extern InterpolationHandler Int_InterpolationHandler;
+#endif // #ifdef SUPPORT_SPECTRAL_INT
 
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
@@ -381,6 +400,18 @@ extern double     (*h_Corner_Array_S[2])[3];
 extern real       (*h_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX];
 extern real        *h_SrcDlepProf_Radius;
 #endif
+
+#if ( MODEL == ELBDM )
+extern bool       (*h_IsCompletelyRefined[2]);
+#endif // #if ( MODEL == ELBDM )
+
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
+extern bool       (*h_HasWaveCounterpart[2])[ CUBE(HYB_NXT) ];
+#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+extern gramfe_matmul_float (*h_GramFE_TimeEvo)[2 * FLU_NXT];
+#endif // #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 
 

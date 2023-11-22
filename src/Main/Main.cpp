@@ -17,6 +17,7 @@
 // 1. common global variables
 // =======================================================================================================
 AMR_t               *amr = NULL;
+LB_GlobalTree       *GlobalTree = NULL;
 
 double               Time[NLEVEL]           = { 0.0 };
 double               dTime_AllLv[NLEVEL]    = { 0.0 };
@@ -119,12 +120,23 @@ bool                 OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, OPT__RES_PHASE;
 bool                 ELBDM_TAYLOR3_AUTO;
 double               ELBDM_TAYLOR3_COEFF;
 double               ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
+
+bool                 OPT__FLAG_SPECTRAL;
+double               FlagTable_Spectral[NLEVEL-1][2];
+
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
+bool                 OPT__FLAG_INTERFERENCE;
+double               FlagTable_Interference[NLEVEL-1][4];
+int                  ELBDM_FIRST_WAVE_LEVEL;
+bool                 ELBDM_MATCH_PHASE;
+double               DT__HYBRID_CFL, DT__HYBRID_CFL_INIT, DT__HYBRID_VELOCITY;
+#endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
 #ifdef QUARTIC_SELF_INTERACTION
 double               ELBDM_LAMBDA;
 #endif
 ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
 bool                 ELBDM_BASE_SPECTRAL;
-
 #else
 #error : unsupported MODEL !!
 #endif // MODEL
@@ -179,6 +191,7 @@ double               LB_INPUT__WLI_MAX;
 double               LB_INPUT__PAR_WEIGHT;
 #endif
 bool                 OPT__RECORD_LOAD_BALANCE;
+bool                 OPT__LB_EXCHANGE_FATHER;
 #endif
 bool                 OPT__MINIMIZE_MPI_BARRIER;
 #ifdef SUPPORT_FFTW
@@ -286,6 +299,12 @@ bool FB_Any;
 int  FB_ParaBuf;
 #endif
 
+// (2-13) spectral interpolation
+#ifdef SUPPORT_SPECTRAL_INT
+char                 SPEC_INT_TABLE_PATH[MAX_STRING];
+InterpolationHandler Int_InterpolationHandler;
+#endif // #ifdef SUPPORT_SPECTRAL_INT
+
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // =======================================================================================================
@@ -312,6 +331,14 @@ real (*h_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]        = NULL;
 real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 #endif
 #endif // FLU_SCHEME
+
+#if ( MODEL == ELBDM )
+bool  (*h_IsCompletelyRefined[2])                                  = { NULL, NULL };
+#endif // #if ( MODEL == ELBDM )
+
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
+bool (*h_HasWaveCounterpart[2])[ CUBE(HYB_NXT) ]                   = { NULL, NULL };
+#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #ifdef GRAVITY
 // (3-2) Poisson and gravity solver
@@ -371,6 +398,11 @@ real (*h_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX]                  = NULL;
 real  *h_SrcDlepProf_Radius                                        = NULL;
 #endif
 
+#  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+gramfe_matmul_float (*h_GramFE_TimeEvo) [2 * FLU_NXT]              = NULL;
+#  endif // #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+
+
 
 // 4. GPU (device) global memory arrays
 // =======================================================================================================
@@ -397,7 +429,20 @@ real (*d_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ]  = NULL;
 real (*d_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]        = NULL;
 real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 #endif
+
 #endif // FLU_SCHEME
+
+#if ( MODEL == ELBDM )
+bool  (*d_IsCompletelyRefined)                                     = NULL;
+#endif // #if ( MODEL == ELBDM )
+
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
+bool (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ]                      = NULL;
+#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+gramfe_matmul_float (*d_Flu_TimeEvo)[2 * FLU_NXT]                  = NULL;
+#endif // #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 #ifdef GRAVITY
 // (4-2) Poisson and gravity solver
@@ -629,6 +674,10 @@ int main( int argc, char *argv[] )
 #     ifdef PARTICLE
       if ( OPT__PARTICLE_COUNT == 1 )
       TIMING_FUNC(   Par_Aux_Record_ParticleCount(),  Timer_Main[4],   TIMER_ON   );
+#     endif
+
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      TIMING_FUNC(   ELBDM_Aux_Record_Hybrid(),       Timer_Main[4],   TIMER_ON   );
 #     endif
 
       TIMING_FUNC(   Aux_Check(),                     Timer_Main[4],   TIMER_ON   );

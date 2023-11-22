@@ -34,6 +34,9 @@ void Int_CQuartic  ( real CData[], const int CSize[3], const int CStart[3], cons
 void Int_Quartic   ( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                      real FData[], const int FSize[3], const int FStart[3], const int NComp,
                      const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
+void Int_Spectral  ( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
+                     real FData[], const int FSize[3], const int FStart[3], const int NComp,
+                     const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
 
 
 
@@ -537,6 +540,9 @@ static IntSchemeFunc_t Int_SelectScheme( const IntScheme_t IntScheme )
       case INT_QUAD     :  return Int_Quadratic;   break;
       case INT_CQUAR    :  return Int_CQuartic;    break;
       case INT_QUAR     :  return Int_Quartic;     break;
+#     ifdef SUPPORT_SPECTRAL_INT
+      case INT_SPECTRAL :  return Int_Spectral;    break;
+#     endif // # ifdef SUPPORT_SPECTRAL_INT
       default           :  Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "IntScheme", IntScheme );
    }
 

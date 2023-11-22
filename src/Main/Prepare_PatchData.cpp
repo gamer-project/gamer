@@ -11,8 +11,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                            const int BC_Face[], const real MinPres, const real MinTemp, const real MinEntr,
                            const bool DE_Consistency, const real *FInterface[6] );
 static void SetTargetSibling( int NTSib[], int *TSib[] );
-static int Table_01( const int SibID, const char dim, const int Count, const int GhostSize );
-static int Table_02( const int lv, const int PID, const int Side );
+static int  Table_01( const int SibID, const char dim, const int Count, const int GhostSize );
+static int  Table_02( const int lv, const int PID, const int Side );
+static long Table_03( const int lv, const long GID, const int Side, LB_GlobalPatch* Tree );
 void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, const double Time0, const double Time1,
                      bool &IntTime, int &Sg, int &Sg_IntT, real &Weighting, real &Weighting_IntT );
 #ifdef MHD
@@ -103,9 +104,10 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                PID0_List      : List recording the patch indices with LocalID==0 to be prepared
 //                TVarCC         : Target cell-centered variables to be prepared
 //                                 --> Supported variables in different models:
-//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP, _ENTR
-//                                             [, _POTE] [, _MAGX_CC, _MAGY_CC, _MAGZ_CC, _MAGE_CC]
-//                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
+//                                     HYDRO        : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP, _ENTR
+//                                                    [, _POTE] [, _MAGX_CC, _MAGY_CC, _MAGZ_CC, _MAGE_CC]
+//                                     ELBDM_WAVE   : _DENS, _REAL, _IMAG [, _POTE]
+//                                     ELBDM_HYBRID : _DENS, _PHAS [, _POTE]
 //                                 --> _FLUID, _PASSIVE, _TOTAL, and _DERIVED apply to all models
 //                TVarFC         : Target face-centered variables to be prepared
 //                                 --> Supported variables in different models:
@@ -120,6 +122,7 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                                     INT_QUAD     : quadratic
 //                                     INT_CQUAR    : conservative quartic
 //                                     INT_QUAR     : quartic
+//                                     INT_SPECTRAL : spectral
 //                IntScheme_FC   : Interpolation scheme for the face-centered variables
 //                                 --> Supported schemes include
 //                                     INT_MINMOD1D : MinMod-1D
@@ -133,8 +136,13 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                                 --> NSIDE_00 (=  0) : do not prepare any sibling direction (equivalent to GhostSize=0)
 //                                     NSIDE_06 (=  6) : prepare only sibling directions 0~5
 //                                     NSIDE_26 (= 26) : prepare all sibling directions 0~25
-//                IntPhase       : true --> Perform interpolation on rho/phase instead of real/imag parts in ELBDM
-//                                      --> TVarCC must contain _REAL and _IMAG
+//                IntPhase       : true --> ELBDM_WAVE: Perform interpolation on rho/phase instead of real/imag parts
+//                                                      --> TVarCC must contain _REAL and _IMAG
+//                                      --> ELBDM_HYBRID:
+//                                                      Perform interpolation on rho/phase instead of real/imag parts on wave levels
+//                                                      --> TVarCC must contain _REAL and _IMAG
+//                                                      Perform interpolation on rho/phase regardless of IntPhase on fluid levels
+//                                                      --> TVarCC must contain _DENS and _PHAS
 //                FluBC          : Fluid boundary condition
 //                PotBC          : Gravity boundary condition
 //                MinDens        : See MinEntr
@@ -207,9 +215,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #     endif
 
 #     if ( MODEL == ELBDM )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID)
+      if ( amr->use_wave_flag[lv] )
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID)
       if (  ( TVarCC & _REAL )  ||  ( TVarCC & _IMAG )  )
          Aux_Message( stderr, "WARNING : real and imaginary parts are NOT rescaled after applying the minimum density check !!\n" );
-#     endif
+#     endif // # if ( MODEL == ELBDM )
    }
 
    if ( MinPres >= (real)0.0  &&  MPI_Rank == 0 )
@@ -242,20 +253,35 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #     endif
    }
 
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if (((  (TVarCC & _REAL)  &&  !(TVarCC & _IMAG) )  || ( !(TVarCC & _REAL)  &&  (TVarCC & _IMAG) )) && amr->use_wave_flag[lv])
+      Aux_Error( ERROR_INFO, "Prepare_PatchData() for hybrid scheme currently requires that the real and imaginary parts of the wave function are prepared together !!\n\
+                              This is probably due to operation (b2-3-1) and can probably be easily fixed.\n" );
+#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
    if ( IntPhase )
    {
-#     if ( MODEL == ELBDM )
-      if (  !(TVarCC & _REAL)  ||  !(TVarCC & _IMAG)  )
+#  if   ( MODEL == ELBDM)
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID)
+      if ( amr->use_wave_flag[lv] ) {
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID)
+      if (  (!(TVarCC & _REAL)  ||  !(TVarCC & _IMAG)) )
       Aux_Error( ERROR_INFO, "real and/or imag parts are not found for phase interpolation in ELBDM !!\n" );
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID)
+      } // if ( amr->use_wave_flag[lv] ) {
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID)
 
 //    we have assumed in InterpolateGhostZone() that when adopting IntPhase this function will NOT prepare
 //    anything other than wave function and, optionally, density
 //    --> e.g., one cannot prepare wave function and potential at the same time when enabling IntPhase
-      if (  TVarCC & ~( _REAL | _IMAG | _DENS )  )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      if ( amr->use_wave_flag[lv] )
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      if (  TVarCC & ~( _REAL | _IMAG | _DENS ))
       Aux_Error( ERROR_INFO, "unsupported parameter %s = %d for IntPhase !!\n", "TVarCC", TVarCC );
-#     else
+#  else
       Aux_Error( ERROR_INFO, "\"interpolation on phase\" is useful only in ELBDM !!\n" );
-#     endif
+#  endif
    }
 
    if ( FluBC == NULL )    Aux_Error( ERROR_INFO, "FluBC == NULL !!\n" );
@@ -1675,17 +1701,38 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                   MagSg, MagSg_IntT, MagIntTime, MagWeighting, MagWeighting_IntT );
 #              endif
 
+               long TVarCCBuffer = TVarCC;
+               int NVarCC_FluBuffer = NVarCC_Flu;
+               int TVarCCIdxList_FluBuffer[NCOMP_TOTAL];
+               memcpy( TVarCCIdxList_FluBuffer, TVarCCIdxList_Flu, sizeof(TVarCCIdxList_FluBuffer) );
+
+
+#              if ( ELBDM_SCHEME == ELBDM_HYBRID )
+//             if fluid scheme is used on level lv - 1 and wave scheme is used on level lv
+//             set target variable for lv - 1 to dens and phase and later convert to real and imaginary parts
+//             for preparing patch with real and imaginary part on level lv
+               const bool ConvertWaveToFluid = amr->use_wave_flag[lv] && !amr->use_wave_flag[lv - 1] && (TVarCC & (_REAL | _IMAG));
+               if ( ConvertWaveToFluid ) {
+                  TVarCCBuffer     = _DENS|_PHAS|_PASSIVE;
+                  NVarCC_FluBuffer = 0;
+                  for (int v=0; v<NCOMP_TOTAL; v++)
+                     if ( TVarCCBuffer & (1L<<v) )
+                        TVarCCIdxList_FluBuffer[ NVarCC_FluBuffer++ ] = v;
+               }
+#              endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 //             (b2-3) perform interpolation and store the results in IntData_CC[] and IntData_FC[]
                InterpolateGhostZone( lv-1, FaSibPID, IntData_CC, IntData_FC, IntData_CC_IntTime, Side, PrepTime, GhostSize,
-                                     IntScheme_CC, IntScheme_FC, NTSib, TSib, TVarCC, NVarCC_Tot, NVarCC_Flu,
-                                     TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der, TVarFC, NVarFC_Tot, TVarFCIdxList,
+                                     IntScheme_CC, IntScheme_FC, NTSib, TSib, TVarCCBuffer, NVarCC_Tot, NVarCC_FluBuffer,
+                                     TVarCCIdxList_FluBuffer, NVarCC_Der, TVarCCList_Der, TVarFC, NVarFC_Tot, TVarFCIdxList,
                                      IntPhase, FluBC, PotBC, BC_Face, MinPres, MinTemp, MinEntr, DE_Consistency,
                                      (const real **)FInterface_Ptr );
 
 
-//             (b2-4) copy cell-centered data from IntData_CC[] to Data1PG_CC[]
-//             --> must get rid of NUseless-cell-wide useless data returned by InterpolateGhostZone()
+
+//             (b2-3-1) convert density and phase in IntData_CC[] in hybrid scheme if we interpolate from fluid to wave scheme
+//             --> do not convert NUseless-cell-wide useless data returned by InterpolateGhostZone()
+
                const int NUseless = GhostSize & 1;
                int loop[3], disp1[3], disp2[3];
 
@@ -1699,6 +1746,31 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                Data1PG_CC_Ptr = Data1PG_CC;
                IntData_CC_Ptr = IntData_CC;
 
+#              if ( ELBDM_SCHEME == ELBDM_HYBRID )
+//             set target variables correctly convert density and phase to real and imaginary parts
+               if ( ConvertWaveToFluid ) {
+//                density and phase --> real and imaginary parts
+                  real Dens, Phase, Amp;
+                  int FSize3D_CC = FSize[0]*FSize[1]*FSize[2];
+
+                  for (int k=0; k<loop[2]; k++) {  K2 = k + disp2[2];
+                  for (int j=0; j<loop[1]; j++) {  J2 = j + disp2[1];
+                                                   Idx2 = IDX321( disp2[0], J2, K2, FSize[0], FSize[1] );
+                  for (int i=0; i<loop[0]; i++) {
+                     Dens  = IntData_CC_Ptr[ Idx2 ];
+                     Phase = IntData_CC_Ptr[ Idx2 + FSize3D_CC ];
+
+                     Amp   = SQRT(Dens);
+
+                     IntData_CC_Ptr[ Idx2               ] = Amp * COS( Phase );
+                     IntData_CC_Ptr[ Idx2  + FSize3D_CC ] = Amp * SIN( Phase );
+                     Idx2 ++;
+                  }}}
+               }
+#              endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+//             (b2-4) copy cell-centered data from IntData_CC[] to Data1PG_CC[]
+//             --> must get rid of NUseless-cell-wide useless data returned by InterpolateGhostZone()
                for (int v=0; v<NVarCC_Tot; v++)
                {
                   for (int k=0; k<loop[2]; k++) {  K = k + disp1[2];  K2 = k + disp2[2];
@@ -2249,7 +2321,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    } // end of OpenMP parallel region
 
 
-// free memroy
+// free memory
    for (int s=0; s<26; s++)   delete [] TSib[s];
 
 #  ifdef MASSIVE_PARTICLES
@@ -2686,6 +2758,164 @@ int Table_02( const int lv, const int PID, const int Side )
 
 } // FUNCTION : Table_02
 
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Table_03
+// Description :  Return the patch GID of the 0th patch (local ID = 0) of the sibling patch group
+//
+// Note        :  Work for Prepare_PatchData_HasWaveCounterpart()
+//
+// Parameter   :  lv   : Target refinement level
+//                GID  : Target patch GID to find its sibling patches
+//                Side : Sibling index (0~25)
+//                Tree : Array of LB_GlobalPatches with GID information
+//-------------------------------------------------------------------------------------------------------
+long Table_03( const int lv, const long GID, const int Side, LB_GlobalTree& Tree)
+{
+
+   int Sib;
+
+   switch ( Side )
+   {
+      case 0:
+         Sib = Tree[GID  ].sibling[0];
+         if ( Sib >= 0 )  return Sib-1;
+         else             return Sib;
+
+      case 1:
+         Sib = Tree[GID+1].sibling[1];
+         if ( Sib >= 0 )  return Sib;
+         else             return Sib;
+
+      case 2:
+         Sib = Tree[GID  ].sibling[2];
+         if ( Sib >= 0 )  return Sib-2;
+         else             return Sib;
+
+      case 3:
+         Sib = Tree[GID+2].sibling[3];
+         if ( Sib >= 0 )  return Sib;
+         else             return Sib;
+
+      case 4:
+         Sib = Tree[GID  ].sibling[4];
+         if ( Sib >= 0 )  return Sib-3;
+         else             return Sib;
+
+      case 5:
+         Sib = Tree[GID+3].sibling[5];
+         if ( Sib >= 0 )  return Sib;
+         else             return Sib;
+
+      case 6:
+         Sib = Tree[GID  ].sibling[6];
+         if ( Sib >= 0 )  return Sib-4;
+         else             return Sib;
+
+      case 7:
+         Sib = Tree[GID+1].sibling[7];
+         if ( Sib >= 0 )  return Sib-2;
+         else             return Sib;
+
+      case 8:
+         Sib = Tree[GID+2].sibling[8];
+         if ( Sib >= 0 )  return Sib-1;
+         else             return Sib;
+
+      case 9:
+         Sib = Tree[GID+4].sibling[9];
+         if ( Sib >= 0 )  return Sib;
+         else             return Sib;
+
+      case 10:
+         Sib = Tree[GID  ].sibling[10];
+         if ( Sib >= 0 )  return Sib-5;
+         else             return Sib;
+
+      case 11:
+         Sib = Tree[GID+2].sibling[11];
+         if ( Sib >= 0 )  return Sib-3;
+         else             return Sib;
+
+      case 12:
+         Sib = Tree[GID+3].sibling[12];
+         if ( Sib >= 0 )  return Sib-2;
+         else             return Sib;
+
+      case 13:
+         Sib = Tree[GID+5].sibling[13];
+         if ( Sib >= 0 )  return Sib;
+         else             return Sib;
+
+      case 14:
+         Sib = Tree[GID  ].sibling[14];
+         if ( Sib >= 0 )  return Sib-6;
+         else             return Sib;
+
+      case 15:
+         Sib = Tree[GID+3].sibling[15];
+         if ( Sib >= 0 )  return Sib-1;
+         else             return Sib;
+
+      case 16:
+         Sib = Tree[GID+1].sibling[16];
+         if ( Sib >= 0 )  return Sib-3;
+         else             return Sib;
+
+      case 17:
+         Sib = Tree[GID+6].sibling[17];
+         if ( Sib >= 0 )  return Sib;
+         else             return Sib;
+
+      case 18:
+         Sib = Tree[GID  ].sibling[18];
+         if ( Sib >= 0 )  return Sib-7;
+         else             return Sib;
+
+      case 19:
+         Sib = Tree[GID+1].sibling[19];
+         if ( Sib >= 0 )  return Sib-5;
+         else             return Sib;
+
+      case 20:
+         Sib = Tree[GID+2].sibling[20];
+         if ( Sib >= 0 )  return Sib-6;
+         else             return Sib;
+
+      case 21:
+         Sib = Tree[GID+4].sibling[21];
+         if ( Sib >= 0 )  return Sib-3;
+         else             return Sib;
+
+      case 22:
+         Sib = Tree[GID+3].sibling[22];
+         if ( Sib >= 0 )  return Sib-4;
+         else             return Sib;
+
+      case 23:
+         Sib = Tree[GID+6].sibling[23];
+         if ( Sib >= 0 )  return Sib-2;
+         else             return Sib;
+
+      case 24:
+         Sib = Tree[GID+5].sibling[24];
+         if ( Sib >= 0 )  return Sib-1;
+         else             return Sib;
+
+      case 25:
+         Sib = Tree[GID+7].sibling[25];
+         if ( Sib >= 0 )  return Sib;
+         else             return Sib;
+
+      default:
+         Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Side", Side );
+         exit(1);
+
+   } // switch ( Side )
+
+   return NULL_INT;
+
+} // FUNCTION : Table_03
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -3448,3 +3678,119 @@ void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const real Tole
 #endif // #ifdef MHD_CHECK_DIV_B
 
 #endif // #ifdef MHD
+
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Prepare_PatchData_HasWaveCounterpart
+// Description :  Prepare a uniform array indicating which cells have a refined wave counterpart including ghost zones for the target patches or patch groups
+//
+// Note        :  1. Use "patch group" as the preparation unit
+//                   --> The data of all patches within the same patch group will be prepared
+//                2. Patches stored in PID0_List must be real patches (cannot NOT be buffer patches)
+//
+// Parameter   :  lv                    : Target refinement level
+//                h_HasWaveCounterpart  : Array to store the prepared booleans indicating which cells have wave counterparts on refined levels
+//                GhostSize             : Number of ghost zones to be prepared
+//                NPG                   : Number of patch groups prepared at a time
+//                PID0_List             : List recording the patch indices with LocalID==0 to be prepared
+//                NSide                 : Number of sibling directions to prepare data
+//                                        --> NSIDE_00 (=  0) : do not prepare any sibling direction (equivalent to GhostSize=0)
+//                                            NSIDE_06 (=  6) : prepare only sibling directions 0~5
+//                                            NSIDE_26 (= 26) : prepare all sibling directions 0~25
+//                GlobalTree            : LB_GlobalTree object for indexing patches with their GID
+//
+//-------------------------------------------------------------------------------------------------------
+void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ], const int GhostSize, const int NPG, const int *PID0_List, const NSide_t NSide, LB_GlobalTree* GlobalTree )
+{
+
+// nothing to do if there is no target patch group
+   if ( NPG == 0 )   return;
+
+   const double dh               = amr->dh[lv];
+   const int    PGSize1D_CC      = 2*( PS1 + GhostSize );   // width of a single patch group including ghost zones
+
+#  pragma omp parallel
+   {
+//    thread-private variables
+      int    J, K, I2, J2, K2, Idx1, Idx2, PID0;
+      long   GID0;
+
+//    prepare eight nearby patches (one patch group) at a time
+#     pragma omp for schedule( runtime )
+      for (int TID=0; TID<NPG; TID++)
+      {
+         PID0 = PID0_List[TID];
+         GID0 = GlobalTree->PID2GID(PID0, lv);
+
+//       0. reset h_HasWaveCounterpart
+         for (int i=0; i<CUBE(HYB_NXT); i++)  {
+               h_HasWaveCounterpart[TID][i] = false;
+         }
+
+//       a. fill out the central region of h_HasWaveCounterpart
+// ------------------------------------------------------------------------------------------------------------
+         for (int LocalID=0; LocalID<8; LocalID++ )
+         {
+            const long GID   = GID0 + LocalID;
+            const int Disp_i = TABLE_02( LocalID, 'x', GhostSize, GhostSize+PS1 );
+            const int Disp_j = TABLE_02( LocalID, 'y', GhostSize, GhostSize+PS1 );
+            const int Disp_k = TABLE_02( LocalID, 'z', GhostSize, GhostSize+PS1 );
+
+            for (int k=0; k<PS1; k++)  {  K    = k + Disp_k;
+            for (int j=0; j<PS1; j++)  {  J    = j + Disp_j;
+                                          Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
+            for (int i=0; i<PS1; i++)  {
+               h_HasWaveCounterpart[TID][Idx1] = ELBDM_HasWaveCounterpart( i, j, k, GID, GID, *GlobalTree );
+               Idx1 ++;
+            }}}
+
+         } // for (int LocalID=0; LocalID<8; LocalID++ )
+
+
+//       b. fill out the ghost zones of h_HasWaveCounterpart
+// ------------------------------------------------------------------------------------------------------------
+//       direct memory copy
+         for (int Side=0; Side<NSide; Side++)
+         {
+//          nothing to do if no ghost zone is required
+            if ( GhostSize == 0 )   break;
+
+            const long SibGID0 = Table_03( lv, GID0, Side, *GlobalTree );    // the 0th patch of the sibling patch group
+
+//          if the target sibling patch exists --> just copy data from the nearby patches at the same level
+//          if it does not exist, the respective cells do not have any children or lie outside the simulation domain
+//          in both cases, we leave h_HasWaveCounterpart as false
+            if ( SibGID0 >= 0 )
+            {
+               int loop[3], disp2[3];
+               for (int d=0; d<3; d++)
+               {
+                  loop [d] = TABLE_01( Side, 'x'+d, GhostSize, PS1, GhostSize );
+                  disp2[d] = TABLE_01( Side, 'x'+d, PS1-GhostSize, 0, 0 );
+               }
+
+               for (int Count=0; Count<TABLE_04( Side ); Count++)
+               {
+                  const int  LocalID = TABLE_03( Side, Count );
+                  const long SibGID  = SibGID0 + LocalID;
+
+                  int disp[3];
+                  for (int d=0; d<3; d++)    disp[d] = Table_01( Side, 'x'+d, Count, GhostSize );
+
+                  for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
+                  for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
+                                                   Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
+                  for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
+                     h_HasWaveCounterpart[TID][Idx1] = ELBDM_HasWaveCounterpart( I2, J2, K2, SibGID, SibGID, *GlobalTree );
+                     Idx1 ++;
+                  }}}
+
+               } // for (int Count=0; Count<TABLE_04( Side ); Count++)
+            } // if ( SibPID0 >= 0 )
+         } // for (int Side=0; Side<NSide; Side++)
+      } // for (int TID=0; TID<NPG; TID++)
+   } // end of OpenMP parallel region
+} // FUNCTION : Prepare_PatchData_HasWaveCounterpart
+
+#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )

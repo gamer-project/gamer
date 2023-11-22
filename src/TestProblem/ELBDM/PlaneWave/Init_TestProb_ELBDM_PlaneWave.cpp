@@ -215,7 +215,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   double r, PhaseR, PhaseL;
+   double r, PhaseR, PhaseL, Real, Imag, Phase;
    switch ( PWave_XYZ )
    {
       case 0 : r = x;                              break;
@@ -231,23 +231,38 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 // set the real and imaginary parts
    if ( PWave_LSR > 0 ) {      // Right-moving wave
-      fluid[REAL] = PWave_Amp*cos( PhaseR );
-      fluid[IMAG] = PWave_Amp*sin( PhaseR );
+      Real  = PWave_Amp*cos( PhaseR );
+      Imag  = PWave_Amp*sin( PhaseR );
+      Phase = PhaseR;
    }
    else if ( PWave_LSR < 0 ) { // Left-moving wave
-      fluid[REAL] = PWave_Amp*cos( PhaseL );
-      fluid[IMAG] = PWave_Amp*sin( PhaseL );
+      Real  = PWave_Amp*cos( PhaseL );
+      Imag  = PWave_Amp*sin( PhaseL );
+      Phase = PhaseL;
    }
    else { //( PWave_LSR == 0 ) // Standing wave
-      fluid[REAL] = 0.5*( PWave_Amp*cos( PhaseR ) + PWave_Amp*cos( PhaseL ) );
-      fluid[IMAG] = 0.5*( PWave_Amp*sin( PhaseR ) + PWave_Amp*sin( PhaseL ) );
+      Real  = 0.5*( PWave_Amp*cos( PhaseR ) + PWave_Amp*cos( PhaseL ) );
+      Imag  = 0.5*( PWave_Amp*sin( PhaseR ) + PWave_Amp*sin( PhaseL ) );
+      Phase = SATAN2 ( Imag, Real );
    }
 
 // set the density
-   fluid[DENS] = SQR( fluid[REAL] ) + SQR( fluid[IMAG] );
+   fluid[DENS] = SQR( Real ) + SQR( Imag );
 
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif
+   fluid[REAL] = Real;
+   fluid[IMAG] = Imag;
 // set the unwrapped phase
-   fluid[PWave_Idx_Phase] = ATAN2( fluid[IMAG], fluid[REAL] );
+   fluid[PWave_Idx_Phase] = SATAN2( Imag, Real );
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } else { // if ( amr->use_wave_flag[lv] )
+   fluid[PHAS] = Phase;
+   fluid[STUB] = 0.0;
+   } // if ( amr->use_wave_flag[lv] ) ... else
+#  endif
+
 
 } // FUNCTION : SetGridIC
 

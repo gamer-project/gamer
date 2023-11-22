@@ -52,9 +52,10 @@ void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, const d
 //                TSib               : Target sibling indices along different sibling directions
 //                TVarCC             : Target cell-centered variables to be prepared
 //                                     --> Supported variables in different models:
-//                                         HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP, _ENTR,
-//                                                 [, _POTE] [, _MAGX_CC, _MAGY_CC, _MAGZ_CC, _MAGE_CC]
-//                                         ELBDM : _DENS, _REAL, _IMAG [, _POTE]
+//                                         HYDRO        : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP, _ENTR,
+//                                                         [, _POTE] [, _MAGX_CC, _MAGY_CC, _MAGZ_CC, _MAGE_CC]
+//                                         ELBDM_WAVE   : _DENS, _REAL, _IMAG [, _POTE]
+//                                         ELBDM_HYBRID : _DENS, _PHAS [, _POTE]
 //                                     --> _FLUID, _PASSIVE, _TOTAL, and _DERIVED apply to all models
 //                NVarCC_Tot         : Total number of cell-centered variables to be prepared
 //                NVarCC_Flu         : Number of cell-centered fluid variables to be prepared
@@ -74,6 +75,7 @@ void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, const d
 //                TVarFCIdxList      : List recording the target face-centered variable indices
 //                                     ( = [0 ... NCOMP_MAG-1] )
 //                IntPhase           : true --> Perform interpolation on rho/phase instead of real/imag parts in ELBDM
+//                                     This is done irregardless of IntPhase for the fluid patches in the ELBDM hybrid solver
 //                FluBC              : Fluid boundary condition
 //                PotBC              : Gravity boundary condition (not used currently)
 //                BC_Face            : Priority of the B.C. along different boundary faces (z>y>x)
@@ -337,7 +339,13 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //       temporal interpolation
 //       --> for IntPhase, apply temporal interpolation to density/phase instead of real/imaginary parts for better accuracy
 #        if ( MODEL == ELBDM )
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+//       for fluid patches, we do not require the IntPhase flag and therefore only check whether FluIntTime is set
+         if (   (amr->use_wave_flag[lv] == true  && FluIntTime  &&  !IntPhase )
+             || (amr->use_wave_flag[lv] == false && FluIntTime) )
+#        else // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
          if ( FluIntTime  &&  !IntPhase )
+#        endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID ) .. # else
 #        else
          if ( FluIntTime )
 #        endif
@@ -732,7 +740,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //             temporal interpolation
 //             --> for IntPhase, apply temporal interpolation to density/phase instead of real/imaginary parts for better accuracy
 #              if ( MODEL == ELBDM )
+#              if ( ELBDM_SCHEME == ELBDM_HYBRID )
+               if (   (amr->use_wave_flag[lv] == true  && FluIntTime  &&  !IntPhase )
+                   || (amr->use_wave_flag[lv] == false && FluIntTime) )
+#              else // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
                if ( FluIntTime  &&  !IntPhase )
+#              endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID ) .. # else
 #              else
                if ( FluIntTime )
 #              endif
@@ -1307,10 +1320,16 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 #     elif ( MODEL == ELBDM )
 //    apply monotonic interpolation to density and all passive scalars
+#     if (ELBDM_SCHEME == ELBDM_HYBRID)
+      if (   ( TVarCCIdx_Flu != REAL  &&  TVarCCIdx_Flu != IMAG && amr->use_wave_flag[lv] == true )
+          || ( TVarCCIdx_Flu != PHAS  &&  TVarCCIdx_Flu != STUB && amr->use_wave_flag[lv] == false ) )
+#     else
       if ( TVarCCIdx_Flu != REAL  &&  TVarCCIdx_Flu != IMAG )
+#     endif
          Monotonicity_CC[v] = Monotonicity_Yes;
       else
          Monotonicity_CC[v] = Monotonicity_No;
+
 
 #     else
 #     error : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION IN THIS NEW MODEL ??
@@ -1354,18 +1373,25 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 // c2. interpolation on phase in ELBDM
 #  if ( MODEL == ELBDM )
+
+   real *CData_Real = NULL;
+   real *CData_Imag = NULL;
+   real *CData_Dens = NULL;
+   real *CData_Phas = NULL;
+
+   real *FData_Real = NULL;
+   real *FData_Imag = NULL;
+   real *FData_Dens = NULL;
+   real *FData_Phas = NULL;
+
+// parameter IntPhase in hybrid scheme is only relevant where wave scheme is used
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( IntPhase && amr->use_wave_flag[lv] == true)
+#  else // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( IntPhase )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID ) ... # else
    {
 //    determine the array indices
-      real *CData_Real = NULL;
-      real *CData_Imag = NULL;
-      real *CData_Dens = NULL;
-      real *CData_Phas = NULL;
-
-      real *FData_Real = NULL;
-      real *FData_Imag = NULL;
-      real *FData_Dens = NULL;
-      real *FData_Phas = NULL;
 
       int DensIdx=-1, RealIdx=-1, ImagIdx=-1;
 
@@ -1384,17 +1410,32 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          Aux_Error( ERROR_INFO, "real and/or imag parts are not found for phase interpolation in ELBDM !!\n" );
 #     endif
 
-//    store density in the REAL component (if we are not actually preparing the density field) and
-//    phase in the IMAG component
-      CData_Real = CData_CC   + RealIdx*CSize3D_CC;
-      CData_Imag = CData_CC   + ImagIdx*CSize3D_CC;
-      CData_Dens = CData_CC   + ( (DensIdx==-1) ? RealIdx : DensIdx )*CSize3D_CC;
-      CData_Phas = CData_Imag;
+//    if we are not preparing the density field:
+//    store density in the REAL component and phase in the IMAG component
+      if ( DensIdx == -1 )
+      {
+         CData_Real = CData_CC   + RealIdx*CSize3D_CC;
+         CData_Imag = CData_CC   + ImagIdx*CSize3D_CC;
+         CData_Dens = CData_Real;
+         CData_Phas = CData_Imag;
 
-      FData_Real = IntData_CC + RealIdx*FSize3D_CC;
-      FData_Imag = IntData_CC + ImagIdx*FSize3D_CC;
-      FData_Dens = IntData_CC + ( (DensIdx==-1) ? RealIdx : DensIdx )*FSize3D_CC;
-      FData_Phas = FData_Imag;
+         FData_Real = IntData_CC + RealIdx*FSize3D_CC;
+         FData_Imag = IntData_CC + ImagIdx*FSize3D_CC;
+         FData_Dens = FData_Real;
+         FData_Phas = FData_Imag;
+//    otherwise store density in the DENS component and phase in the REAL component
+//    this ensure the two arrays are consecutive in memory which is a necessary requirement for INT_SPECTRAL
+      } else {
+         CData_Real = CData_CC   + RealIdx*CSize3D_CC;
+         CData_Imag = CData_CC   + ImagIdx*CSize3D_CC;
+         CData_Dens = CData_CC   + DensIdx*CSize3D_CC;
+         CData_Phas = CData_Real;
+
+         FData_Real = IntData_CC + RealIdx*FSize3D_CC;
+         FData_Imag = IntData_CC + ImagIdx*FSize3D_CC;
+         FData_Dens = IntData_CC + DensIdx*FSize3D_CC;
+         FData_Phas = FData_Real;
+      }
 
 //    get the density and wrapped phase
       real Re, Im;
@@ -1415,6 +1456,15 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          CData_Dens[t] = Re*Re + Im*Im;
       }
 
+      if ( IntScheme_CC == INT_SPECTRAL ) {
+//    interpolate density & phase
+//    INT_SPECTRAL with PhaseUnwrapping_Yes assumes that the density and phase fields are stored consecutively in memory
+      const bool Monotonicity_Spec[2] = { true, false };
+      Interpolate( CData_CC, CSize_CC, CStart_CC, CRange_CC,
+                   IntData_CC, FSize_CC, FStart_CC,
+                   2, IntScheme_CC, PhaseUnwrapping_Yes, Monotonicity_Spec, IntOppSign0thOrder_No,
+                   ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
+      } else {
 //    interpolate density
       Interpolate( CData_Dens, CSize_CC, CStart_CC, CRange_CC, FData_Dens, FSize_CC, FStart_CC,
                    1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes, IntOppSign0thOrder_No,
@@ -1425,6 +1475,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                    1, IntScheme_CC, PhaseUnwrapping_Yes, &Monotonicity_No, IntOppSign0thOrder_No,
                    ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
 
+      }
 
 //    temporal interpolation
 //    --> apply it to density/phase instead of real/imaginary parts for better accuracy
@@ -1542,6 +1593,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          real *FData_Dens_IntTime = IntData_CC_IntTime + 0*FSize3D_CC;
          real *FData_Phas_IntTime = IntData_CC_IntTime + 1*FSize3D_CC;
 
+         real Re, Im;
+
          for (int t=0; t<CSize3D_CC; t++)
          {
             Re = CData_Real_IntTime[t];
@@ -1557,6 +1610,15 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             CData_Dens_IntTime[t] = Re*Re + Im*Im;
          }
 
+         if ( IntScheme_CC == INT_SPECTRAL ) {
+//       interpolate density & phase
+//       INT_SPECTRAL with PhaseUnwrapping_Yes assumes that the density and phase fields are stored consecutively in memory
+         const bool Monotonicity_Spec[2] = { true, false };
+         Interpolate( CData_CC, CSize_CC, CStart_CC, CRange_CC,
+                      IntData_CC_IntTime, FSize_CC, FStart_CC,
+                      2, IntScheme_CC, PhaseUnwrapping_Yes, Monotonicity_Spec, IntOppSign0thOrder_No,
+                      ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
+         } else {
 //       interpolate density
          Interpolate( CData_Dens_IntTime, CSize_CC, CStart_CC, CRange_CC,
                       FData_Dens_IntTime, FSize_CC, FStart_CC,
@@ -1568,6 +1630,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                       FData_Phas_IntTime, FSize_CC, FStart_CC,
                       1, IntScheme_CC, PhaseUnwrapping_Yes, &Monotonicity_No, IntOppSign0thOrder_No,
                       ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
+
+         }
 
 
 //       temporal interpolation
@@ -1604,11 +1668,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          FData_Real[t] = Amp*COS( Phase );
          FData_Imag[t] = Amp*SIN( Phase );
       }
-   } // if ( IntPhase )
-
-
+   } // if ( IntPhase ) || if ( IntPhase && amr->use_wave_flag[lv] == true ) in hybrid scheme
 // c3. interpolation on original variables
-   else // if ( IntPhase )
+   else // if ( IntPhase || ( IntPhase && amr->use_wave_flag[lv] == true) )
 #  endif // if ( MODEL == ELBDM )
    {
 //    c3-1. prepare the fine-grid, cell-centered B field for IntIter

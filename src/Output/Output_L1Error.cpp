@@ -19,8 +19,6 @@ static void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const
 #define NERR      ( NBASIC + NEXTRA )
 
 
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_L1Error
 // Description :  Compare the numerical and analytical solutions and output the L1 errors
@@ -92,15 +90,23 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
    sprintf( FileName[     NBASIC+0], "%s_Temp_%06d", Prefix, DumpID );
 
 #  elif ( MODEL == ELBDM )
+#  if ( ELBDM_SCHEME == ELBDM_WAVE )
    sprintf( FileName[            0], "%s_Dens_%06d", Prefix, DumpID );
    sprintf( FileName[            1], "%s_Real_%06d", Prefix, DumpID );
    sprintf( FileName[            2], "%s_Imag_%06d", Prefix, DumpID );
+#  elif ( ELBDM_SCHEME == ELBDM_HYBRID )
+   sprintf( FileName[            0], "%s_Dens_%06d", Prefix, DumpID );
+   sprintf( FileName[            1], "%s_Phas_%06d", Prefix, DumpID );
+   sprintf( FileName[            2], "%s_Stub_%06d", Prefix, DumpID );
+#  else
+#  error : ERROR : unsupported ELBDM_SCHEME !!
+#  endif
 
    for (int v=0; v<NCOMP_PASSIVE; v++)
    sprintf( FileName[NCOMP_FLUID+v], "%s_Passive%02d_%06d", Prefix, v, DumpID );
 
 #  else
-#  error : unsupported MODEL !!
+#  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
 
 
@@ -268,8 +274,16 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
          fprintf( File_L1, "\n" );
 
 #        elif ( MODEL == ELBDM )
+#        if ( ELBDM_SCHEME == ELBDM_WAVE )
+
          fprintf( File_L1, "#%5s %13s %*s %*s %*s\n", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
                   StrLen_Flt, "Error(Real)", StrLen_Flt, "Error(Imag)" );
+#        elif ( ELBDM_SCHEME == ELBDM_HYBRID )
+         fprintf( File_L1, "#%5s %13s %*s %*s %*s\n", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
+                  StrLen_Flt, "Error(Phas)", StrLen_Flt, "Stub" );
+#        else
+#        error : ERROR : unsupported ELBDM_SCHEME !!
+#        endif
 
          for (int v=0; v<NCOMP_PASSIVE; v++)
          fprintf( File_L1, "    Error(Passive%02d)", v );
@@ -277,7 +291,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
          fprintf( File_L1, "\n" );
 
 #        else
-#        error : unsupported MODEL !!
+#        error : ERROR : unsupported MODEL !!
 #        endif // MODEL
 
          FirstTime = false;
@@ -336,6 +350,7 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
    for (int v=0; v<NCOMP_TOTAL; v++)
       Nume[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
+
 // note that we use the cell-centered B field to compute errors
 #  ifdef MHD
    MHD_GetCellCenteredBFieldInPatch( Nume+NCOMP_TOTAL, lv, PID, i, j, k, amr->MagSg[lv] );
@@ -363,6 +378,7 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 #  endif // #if ( MODEL == HYDRO )
 
 
+
 // get the analytical solution
    const double dh = amr->dh[lv];
    const double x  = amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh;
@@ -388,6 +404,15 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
    Anal[NBASIC+0] = Temp_Anal;
 #  endif
 
+// convert real and imaginary part to phase for wave patches in hybrid scheme
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+      Anal[PHAS] = SATAN2(Anal[IMAG], Anal[REAL]);
+      Nume[PHAS] = SATAN2(Nume[IMAG], Nume[REAL]);
+      Anal[STUB] = 0;
+      Nume[STUB] = 0;
+   } // if ( amr->use_wave_flag[lv] ) {
+#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 // record the physical coordinate
    double r;

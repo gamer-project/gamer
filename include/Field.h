@@ -47,10 +47,20 @@ SET_GLOBAL( FieldIdx_t Idx_Metal,         Idx_Undefined );
 
 
 #elif ( MODEL == ELBDM )
+
+#if ( ELBDM_SCHEME == ELBDM_WAVE )
 SET_GLOBAL( FieldIdx_t Idx_Dens,          Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_Real,          Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_Imag,          Idx_Undefined );
-
+#elif ( ELBDM_SCHEME == ELBDM_HYBRID )
+SET_GLOBAL( FieldIdx_t Idx_Dens,          Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_Real,          Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_Imag,          Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_Phas,          Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_Stub,          Idx_Undefined );
+#else
+#  error : ERROR : unsupported ELBDM_SCHEME !!
+#endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #else
 #  error : ERROR : unsupported MODEL !!

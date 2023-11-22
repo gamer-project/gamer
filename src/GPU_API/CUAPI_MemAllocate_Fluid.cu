@@ -44,6 +44,18 @@ extern real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif
 #endif // FLU_SCHEME
 
+#if ( MODEL == ELBDM )
+extern bool (*d_IsCompletelyRefined);
+#endif // # if ( MODEL == ELBDM )
+
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
+extern bool (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ];
+#endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+extern gramfe_matmul_float (*d_Flu_TimeEvo)[2 * FLU_NXT];
+#endif // # if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+
 #if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
 #endif
@@ -113,6 +125,18 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
 #  endif
 #  endif // FLU_SCHEME
 
+#  if ( MODEL == ELBDM )
+   const long Flu_MemSize_IsCompletelyRefined = sizeof(bool ) * Flu_NPG;
+#  endif // #if ( MODEL == ELBDM )
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   const long Flu_MemSize_HasWaveCounterpart  = sizeof(bool ) * Flu_NPG * CUBE(HYB_NXT);
+#  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+#  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+   const long GramFE_TimeEvo_MemSize          = sizeof(gramfe_matmul_float) * 2 * PS2 * FLU_NXT;
+#  endif // #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #     warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
 #  endif
@@ -153,6 +177,18 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
    TotalSize += FC_Mag_Half_MemSize + EC_Ele_MemSize;
 #  endif
 #  endif // MHM/MHM_RP/CTU
+
+#  if ( MODEL == ELBDM )
+   TotalSize += Flu_MemSize_IsCompletelyRefined;
+#  endif // #  if ( MODEL == ELBDM )
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   TotalSize += Flu_MemSize_HasWaveCounterpart;
+#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+#  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+   TotalSize += GramFE_TimeEvo_MemSize;
+#  endif // #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #     warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
@@ -227,6 +263,20 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
    CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_Corner_Array_S,       Corner_MemSize_S     )  );
    }
 
+
+#  if ( MODEL == ELBDM )
+   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_IsCompletelyRefined,  Flu_MemSize_IsCompletelyRefined )  );
+#  endif // #if ( MODEL == ELBDM )
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_HasWaveCounterpart,   Flu_MemSize_HasWaveCounterpart  )  );
+#  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+#  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_Flu_TimeEvo,          GramFE_TimeEvo_MemSize          )  );
+#  endif // #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+
+
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #     warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
 #  endif
@@ -273,8 +323,20 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
 #     endif
       CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_Corner_Array_S [t],  Corner_MemSize_S     )  );
       }
+
+#     if ( MODEL == ELBDM )
+      CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_IsCompletelyRefined [t],  Flu_MemSize_IsCompletelyRefined  )  );
+#     endif // #if ( MODEL == ELBDM )
+
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_HasWaveCounterpart  [t],  Flu_MemSize_HasWaveCounterpart   )  );
+#     endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
    } // for (int t=0; t<2; t++)
 
+#  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+   CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_GramFE_TimeEvo,  GramFE_TimeEvo_MemSize )  );
+#  endif // #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 // create streams
    Stream = new cudaStream_t [GPU_NStream];

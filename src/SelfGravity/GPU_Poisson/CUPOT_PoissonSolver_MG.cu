@@ -880,7 +880,7 @@ __device__ void Prolongate_and_Correct( const real *CData, real *FData, const ui
 //                RHS      : 1D array storing the RHS of the Poisson equation
 //                dh       : Grid size
 //                s_Error  : Shared-memory array to store the L1 error
-//                s_SolSum : Shared-memroy array to store the sum of solution
+//                s_SolSum : Shared-memory array to store the sum of solution
 //                tid      : Thread index
 //-------------------------------------------------------------------------------------------------------
 __device__ void EstimateError( const real *Sol, const real *RHS, const real dh, real *s_Error, real *s_SolSum,

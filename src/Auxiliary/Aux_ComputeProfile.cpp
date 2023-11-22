@@ -41,9 +41,10 @@ extern void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, 
 //                                        Data[empty_bin]=Weight[empty_bin]=NCell[empty_bin]=0
 //                TVarBitIdx  : Bitwise indices of target variables for computing the profiles
 //                              --> Supported indices (defined in Macro.h):
-//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELR, _PRES, _EINT
-//                                             [, _DUAL, _POTE]
-//                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
+//                                     HYDRO        : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELR, _PRES, _EINT
+//                                                    [, _DUAL, _POTE]
+//                                     ELBDM_WAVE   : _DENS, _REAL, _IMAG [, _POTE]
+//                                     ELBDM_HYBRID : _DENS [, _POTE]
 //                              --> For a passive scalar with an integer field index FieldIdx returned by AddField(),
 //                                  one can convert it to a bitwise field index by BIDX(FieldIdx)
 //                NProf       : Number of Profile_t objects in Prof
@@ -144,6 +145,18 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
       if ( TVarBitIdx[p] & _POTE )   InclPot = true;
 #  endif
 
+// check whether phase field is accessed in hybrid scheme
+// currently computing the profile of the phase field is not supported
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
+   bool UsePhaseStub = false;
+   for (int p=0; p<NProf; p++)
+      if ( TVarBitIdx[p] & _PHAS ||  TVarBitIdx[p] & _STUB ) UsePhaseStub = true;
+
+   if ( UsePhaseStub )
+      for (int lv=MinLv; lv<=MaxLv; lv++)
+         if ( !amr->use_wave_flag[lv] )
+            Aux_Error( ERROR_INFO, "Retrieving PHAS and STUB to compute profile in hybrid scheme is not supported !!\n" );
+#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
 
 // initialize the profile objects
    for (int p=0; p<NProf; p++)

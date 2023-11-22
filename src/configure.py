@@ -379,6 +379,12 @@ def load_arguments():
                        )
 
     # A.2 ELBDM scheme
+    parser.add_argument( "--elbdm_scheme", type=str, metavar="TYPE", gamer_name="ELBDM_SCHEME",
+                         default="ELBDM_WAVE", choices=["ELBDM_WAVE", "ELBDM_HYBRID"],
+                         depend={"model":"ELBDM"},
+                         help="Scheme type for <--model=ELBDM> (ELBDM_WAVE: wave-only, ELBDM_HYBRID: fluid-wave-hybrid-scheme).\n"
+                       )
+
     parser.add_argument( "--wave_scheme", type=str, metavar="TYPE", gamer_name="WAVE_SCHEME",
                          default="WAVE_FD", choices=["WAVE_FD", "WAVE_GRAMFE"],
                          depend={"model":"ELBDM"},
@@ -398,11 +404,17 @@ def load_arguments():
                          help="Enable the fourth-order Laplacian for <--model=ELBDM> (for <--wave_scheme=WAVE_FD> only).\n"
                        )
 
-    parser.add_argument( "--gramfe_gpu", type=str2bool, metavar="BOOLEAN", gamer_name="GRAMFE_ENABLE_GPU",
-                         default=False,
-                         depend={"model":"ELBDM", "wave_scheme":"WAVE_GRAMFE"},
-                         constraint={ True:{"gpu":True} },
-                         help="Enable GPU for <--wave_scheme=WAVE_GRAMFE> (using CPU by default because it is faster). Must enable <--gpu>.\n"
+    parser.add_argument( "--gramfe_scheme", type=str, metavar="TYPE", gamer_name="GRAMFE_SCHEME",
+                         default="GRAMFE_MATMUL", choices=["GRAMFE_MATMUL", "GRAMFE_FFT"],
+                         depend={"model":"ELBDM", "wave_scheme": "WAVE_GRAMFE"},
+                         constraint={ "GRAMFE_MATMUL":{"gsl":True} },
+                         help="GramFE scheme for <--wave_scheme=WAVE_GRAMFE> (GRAMFE_MATMUL: faster for PATCH_SIZE=8, GRAMFE_FFT: faster for larger patch sizes).\n"
+                       )
+
+    parser.add_argument( "--hybrid_scheme", type=str, metavar="TYPE", gamer_name="HYBRID_SCHEME",
+                         default="HYBRID_MUSCL", choices=["HYBRID_UPWIND", "HYBRID_FROMM", "HYBRID_MUSCL"],
+                         depend={"model":"ELBDM", "elbdm_scheme": "ELBDM_HYBRID"},
+                         help="Fluid scheme for <--elbdm_scheme=ELBDM_HYBRID> (HYBRID_UPWIND: first-order, diffusive, HYBRID_FROMM: second-order, no limiter, unstable for fluid-only simulations, HYBRID_MUSCL: second-order, with limiter, useful for zoom-in and fluid-only simulations).\n"
                        )
 
     parser.add_argument( "--self_interaction", type=str2bool, metavar="BOOLEAN", gamer_name="QUARTIC_SELF_INTERACTION",
@@ -547,6 +559,12 @@ def load_arguments():
     parser.add_argument( "--fftw", type=str, metavar="TYPE", gamer_name="SUPPORT_FFTW",
                          default=NONE_STR, choices=[NONE_STR, "FFTW2", "FFTW3"],
                          help="Support FFTW library.\n"
+                       )
+
+    parser.add_argument( "--spectral_interpolation", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_SPECTRAL_INT",
+                         default=False,
+                         constraint={ True:{"gsl":True} },
+                         help="Support spectral interpolation.\n"
                        )
 
     parser.add_argument( "--libyt", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_LIBYT",
@@ -822,6 +840,10 @@ def warning( paths, **kwargs ):
     if kwargs["libyt"]:
         if paths.setdefault("LIBYT_PATH", "") == "":
             color_print("Warning: LIBYT_PATH is not given in %s.config when enabling <--libyt>."%(kwargs["machine"]), BCOLOR.WARNING)
+
+    if kwargs["model"] == "ELBDM" and kwargs["gpu"] and kwargs["wave_scheme"] == "WAVE_GRAMFE" and kwargs["gramfe_scheme"] == "GRAMFE_FFT":
+        if paths.setdefault("CUFFTDX_PATH", "") == "":
+            color_print("Warning: CUFFTDX_PATH is not given in %s.config when enabling <--gramfe_scheme=GRAMFE_FFT>."%(kwargs["machine"]), BCOLOR.WARNING)
 
     return
 

@@ -230,12 +230,22 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double r       = 1.0/sqrt(3.0)*( x + y + z );
    const double Jeans_y = SQR(Jeans_WaveK)/ELBDM_ETA*pow( Time, -0.5 );
    const double Phase   = Jeans_WaveK*r + Jeans_Phase0;
+   const double Re = 1.0 + Jeans_RealAmp( Jeans_RealAmp0, Jeans_y )*cos( Phase );
+   const double Im =       Jeans_ImagAmp( Jeans_ImagAmp0, Jeans_y )*cos( Phase );
 
-   fluid[REAL] = 1.0 + Jeans_RealAmp( Jeans_RealAmp0, Jeans_y )*cos( Phase );
-   fluid[IMAG] =       Jeans_ImagAmp( Jeans_ImagAmp0, Jeans_y )*cos( Phase );
+   fluid[DENS] = SQR(Re) + SQR(Im);
 
-   fluid[DENS] = SQR(fluid[REAL]) + SQR(fluid[IMAG]);
-
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif // if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   fluid[REAL] = Re;
+   fluid[IMAG] = Im;
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } else { // if ( amr->use_wave_flag[lv] == true )
+   fluid[PHAS] = SATAN2(Im, Re);
+   fluid[STUB] = 0.0;
+   } // if ( amr->use_wave_flag[lv] == true ) ... else
+#  endif // if ( ELBDM_SCHEME == ELBDM_HYBRID )
 } // FUNCTION : SetGridIC
 
 

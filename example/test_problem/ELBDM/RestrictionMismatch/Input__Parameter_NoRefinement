@@ -45,8 +45,9 @@ OPT__BC_FLU_ZP                4           # fluid boundary condition at the +z f
 DT__FLUID                    -1.0         # dt criterion: fluid solver CFL factor (<0=auto) [-1.0]
 DT__FLUID_INIT               -1.0         # dt criterion: DT__FLUID at the first step (<0=auto) [-1.0]
 DT__PHASE                     0.0         # dt criterion: phase rotation safety factor (0=off) [0.0] ##ELBDM ONLY##
-DT__HYBRID                   -1.0         # dt criterion: hybrid solver CFL factor (<0=auto) (diffusion) [-1.0] ## HYBRID ELBDM ONLY##
-DT__VELOCITY                  0.9         # dt criterion: hybrid solver CFL factor (<0=auto) (Hamilton-Jacobi) [-1.0] ## HYBRID ELBDM ONLY##
+DT__HYBRID_CFL               -1.0         # dt criterion: hybrid solver CFL factor (<0=auto) (diffusion) [-1.0] ## HYBRID ELBDM ONLY##
+DT__HYBRID_CFL_INIT          -1.0         # dt criterion: DT__HYBRID_CFL in the first step (<0=auto) [-1.0] ## HYBRID ELBDM ONLY##
+DT__HYBRID_VELOCITY          -1.0         # dt criterion: hybrid solver CFL factor (<0=auto) (Hamilton-Jacobi) [-1.0] ## HYBRID ELBDM ONLY##
 DT__SYNC_PARENT_LV            0.1         # dt criterion: allow dt to adjust by (1.0+DT__SYNC_PARENT) in order to synchronize
                                           #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
 DT__SYNC_CHILDREN_LV          0.1         # dt criterion: allow dt to adjust by (1.0-DT__SYNC_CHILDREN) in order to synchronize
@@ -119,7 +120,8 @@ OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2
 INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
 
 
-# interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar)
+# interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar, 8=Spectral (##ELBDM & SUPPORT_SPECTRAL_INT ONLY ##))
+
 OPT__INT_TIME                 0           # perform "temporal" interpolation for OPT__DT_LEVEL == 2/3 [1]
 OPT__INT_PHASE                1           # interpolation on phase (does not support MinMod-1D) [1] ##ELBDM ONLY##
 OPT__RES_PHASE                0           # restriction on phase [1] ##ELBDM ONLY##
@@ -130,6 +132,7 @@ OPT__RHO_INT_SCHEME           4           # ghost-zone mass density for the Pois
 OPT__GRA_INT_SCHEME           5           # ghost-zone potential for the gravity solver (for UNSPLIT_GRAVITY as well) [5]
 OPT__REF_POT_INT_SCHEME       5           # newly allocated potential during grid refinement [5]
 INT_MONO_COEFF                2.0         # coefficient for ensuring the interpolation monotonicity (1.0~4.0) [2.0]
+SPEC_INT_TABLE_PATH           ./          # path to tables for spectral interpolation ##ELBDM & SUPPORT_SPECTRAL_INT ONLY ##
 
 
 # data dump

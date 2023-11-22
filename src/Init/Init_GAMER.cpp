@@ -222,7 +222,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif // #ifdef PARTICLE
 
 
-// initialize the AMR structure and fluid field
+// initialize the local AMR structure and grid fields
    switch ( OPT__INIT )
    {
       case INIT_BY_FUNCTION :    Init_ByFunction();   break;
@@ -233,6 +233,13 @@ void Init_GAMER( int *argc, char ***argv )
 
       default : Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "OPT__INIT", OPT__INIT );
    }
+
+
+// initialize the global AMR structure if required
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   delete GlobalTree;   // in case it has been allocated already
+   GlobalTree = new LB_GlobalTree;
+#  endif
 
 
 // ensure B field consistency on the shared interfaces between sibling patches

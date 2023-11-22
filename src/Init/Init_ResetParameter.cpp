@@ -60,6 +60,7 @@ void Init_ResetParameter()
 #     endif
 
 #     elif  ( MODEL == ELBDM )
+
 #     if ( WAVE_SCHEME == WAVE_FD )
 #     ifdef GRAVITY
       DT__FLUID = 0.20;                   // 1D k-max mode rotates 0.20*2*PI
@@ -70,11 +71,12 @@ void Init_ResetParameter()
       DT__FLUID = SQRT(3.0)*M_PI/8.0;     // stability limit (~0.68)
 #     endif // # ifdef LAPLACIAN_4TH ... # else
 #     endif // # ifdef GRAVITY ... # else
+
 #     elif ( WAVE_SCHEME == WAVE_GRAMFE )
 #     ifdef GRAVITY
       DT__FLUID = 0.20;                   // 1D k-max mode rotates 0.20*2*PI
 #     else // # ifdef GRAVITY
-      DT__FLUID = 0.30;                   // stability limit depends on ghost boundary and extension order
+      DT__FLUID = 0.20;                   // stability limit depends on ghost boundary and extension order
 #     endif // # ifdef GRAVITY ... # else
 #     else // #  if (WAVE_SCHEME == WAVE_FD )
 #        error : ERROR : unsupported WAVE_SCHEME !!
@@ -94,6 +96,36 @@ void Init_ResetParameter()
       PRINT_RESET_PARA( DT__FLUID_INIT, FORMAT_REAL, "" );
    }
 
+
+// hybrid velocity dt (empirically determined CFL condition)
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( DT__HYBRID_VELOCITY < 0.0 )
+   {
+      DT__HYBRID_VELOCITY = 1.00;
+
+      PRINT_RESET_PARA( DT__HYBRID_VELOCITY, FORMAT_REAL, "" );
+   } // if ( DT__HYBRID_VELOCITY < 0.0 )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+
+// hybrid dt (empirically determined CFL condition)
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( DT__HYBRID_CFL < 0.0 )
+   {
+#     ifdef GRAVITY
+      DT__HYBRID_CFL = 0.20;
+#     else
+      DT__HYBRID_CFL = 0.40;
+#     endif
+      PRINT_RESET_PARA( DT__HYBRID_CFL, FORMAT_REAL, "" );
+   } // if ( DT__HYBRID_CFL < 0.0 )
+
+   if ( DT__HYBRID_CFL_INIT < 0.0 )
+   {
+      DT__HYBRID_CFL_INIT = DT__HYBRID_CFL;
+      PRINT_RESET_PARA( DT__HYBRID_CFL_INIT, FORMAT_REAL, "" );
+   } // if ( DT__HYBRID_CFL < 0.0 )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 // gravity dt
 #  ifdef GRAVITY
@@ -283,8 +315,8 @@ void Init_ResetParameter()
 
       PRINT_RESET_PARA( ELBDM_TAYLOR3_AUTO, FORMAT_INT, "since OPT__FREEZE_FLUID is enabled" );
    }
-#  endif // #if ( MODEL == ELBDM )
 
+#  endif //  #if ( MODEL == ELBDM )
 
 // interpolation schemes for the fluid variables
 #  if   ( MODEL == HYDRO )

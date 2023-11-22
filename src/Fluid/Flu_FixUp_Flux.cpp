@@ -69,7 +69,8 @@ void Flu_FixUp_Flux( const int lv )
 #  endif
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
-   Aux_Error( ERROR_INFO, "WAVE_GRAMFE does not support the option OPT__FIXUP_FLUX !!\n" );
+   if ( lv != TOP_LEVEL  &&  amr->use_wave_flag[lv+1] )
+      Aux_Error( ERROR_INFO, "WAVE_GRAMFE does not support the option OPT__FIXUP_FLUX !!\n" );
 #  endif
 
 // if "NCOMP_TOTAL != NFLUX_TOTAL", one must specify how to correct cell data from the flux arrays
@@ -244,6 +245,13 @@ void Flu_FixUp_Flux( const int lv )
                   )
 
 #              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
+//             throw error if corrected density is NaN
+               if ( CorrVal[DENS] != CorrVal[DENS] )
+               {
+                  Aux_Error( ERROR_INFO, "Flux-corrected density is NaN in patch with PID %d on level %d for the option OPT__FIXUP_FLUX !!\n", PID, lv);
+               }
+
+
                if ( CorrVal[DENS] <= MIN_DENS )
 
 #              else
@@ -301,7 +309,10 @@ void Flu_FixUp_Flux( const int lv )
 
 //                rescale the real and imaginary parts to be consistent with the corrected amplitude
 //                --> must NOT use CorrVal[REAL] and CorrVal[IMAG] below since NFLUX_TOTAL == 1 for ELBDM
-#                 if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
+#                 if ( MODEL == ELBDM &&  defined CONSERVE_MASS )
+#                 if ( ELBDM_SCHEME == ELBDM_HYBRID )
+                  if ( amr->use_wave_flag[lv] ) {
+#                 endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
                   real Re, Im, Rho_Corr, Rho_Wrong, Rescale;
 
                   Re        = *FluidPtr1D[REAL];
@@ -320,7 +331,10 @@ void Flu_FixUp_Flux( const int lv )
 
                   *FluidPtr1D[REAL] *= Rescale;
                   *FluidPtr1D[IMAG] *= Rescale;
-#                 endif
+#                 if ( ELBDM_SCHEME == ELBDM_HYBRID )
+                  } // if ( amr->use_wave_flag[lv] )
+#                 endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#                 endif // # if ( MODEL == ELBDM &&  defined CONSERVE_MASS )
                } // if ( ApplyFix )
 
 

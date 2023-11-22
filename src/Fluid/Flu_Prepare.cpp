@@ -15,6 +15,8 @@
 //                h_Mag_Array_F_In     : Host array to store the prepared B field (for MHD onlhy)
 //                h_Pot_Array_USG_F    : Host array to store the prepared potential data (for UNSPLIT_GRAVITY only)
 //                h_Corner_Array_USG_F : Host array to store the prepared corner data (for UNSPLIT_GRAVITY only)
+//                h_IsCompletelyRefined: Host array storing which patch groups are completely refined ( ELBDM only )
+//                h_HasWaveCounterpart : Host array storing which cells have wave counterpart ( ELBDM_HYBRID only )
 //                NPG                  : Number of patch groups to be prepared at a time
 //                PID0_List            : List recording the patch indices with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
@@ -22,7 +24,11 @@ void Flu_Prepare( const int lv, const double PrepTime,
                   real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                   real h_Mag_Array_F_In[][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
                   real h_Pot_Array_USG_F[][ CUBE(USG_NXT_F) ],
-                  double h_Corner_Array_F[][3], const int NPG, const int *PID0_List )
+                  double h_Corner_Array_F[][3],
+                  bool h_IsCompletelyRefined[],
+                  bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ],
+                  const int NPG, const int *PID0_List,
+                  LB_GlobalTree* GlobalTree )
 {
 
 // check
@@ -37,9 +43,6 @@ void Flu_Prepare( const int lv, const double PrepTime,
 #  endif
 
 
-#  if ( MODEL != HYDRO )
-   const double MIN_DENS            = -1.0;  // set to an arbitrarily negative value to disable it
-#  endif
 #  ifndef MHD
    const int    OPT__MAG_INT_SCHEME = INT_NONE;
 #  endif
@@ -53,13 +56,24 @@ void Flu_Prepare( const int lv, const double PrepTime,
    const bool   DE_Consistency      = ( OPT__OPTIMIZE_AGGRESSIVE ) ? DE_Consistency_No : DE_Consistency_Yes;
    const real   MinDens             = ( OPT__OPTIMIZE_AGGRESSIVE ) ? MinDens_No : MIN_DENS;
 
-
 // prepare the fluid array
 #  if ( MODEL == ELBDM )
-   Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In[0][0], NULL,
-                      FLU_GHOST_SIZE, NPG, PID0_List, _REAL|_IMAG|_PASSIVE, _NONE,
-                      OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, OPT__INT_PHASE,
-                      OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In[0][0], NULL,
+                        FLU_GHOST_SIZE, NPG, PID0_List, _REAL|_IMAG|_PASSIVE, _NONE,
+                        OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, OPT__INT_PHASE,
+                        OPT__BC_FLU, BC_POT_NONE, MinDens, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } else  { // if ( amr->use_wave_flag[lv] )
+      Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In[0][0], NULL,
+                        HYB_GHOST_SIZE, NPG, PID0_List, _DENS|_PHAS|_PASSIVE, _NONE,
+                        OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, OPT__INT_PHASE,
+                        OPT__BC_FLU, BC_POT_NONE, MinDens, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+   } // if (amr->use_wave_flag[lv] ) ... else
+#  endif //  #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  else
 #  ifdef MHD
    real *Mag_Array = h_Mag_Array_F_In[0][0];
@@ -69,7 +83,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
    Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In[0][0], Mag_Array,
                       FLU_GHOST_SIZE, NPG, PID0_List, _TOTAL, _MAG,
                       OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
-                      OPT__BC_FLU, BC_POT_NONE, MinDens,    MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency );
+                      OPT__BC_FLU, BC_POT_NONE, MinDens, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency );
 #  endif
 
 #  ifdef UNSPLIT_GRAVITY
@@ -98,6 +112,36 @@ void Flu_Prepare( const int lv, const double PrepTime,
    }
 #  endif // #ifdef UNSPLIT_GRAVITY
 
+// prepare boolean array that indicates whether patch group is fully refined (in other words has 8 * 8 = 64 children)
+#  if ( MODEL == ELBDM )
+#  pragma omp parallel for schedule( runtime )
+   for (int TID=0; TID<NPG; TID++)
+   {
+
+      bool PGIsCompletelyRefined = true;
+
+      const int PID0 = PID0_List[TID];
+      for (int LocalID=0; LocalID<8; LocalID++)
+      {
+         const int PID = PID0 + LocalID;
+         if ( amr->patch[0][lv][PID]->son == -1 )
+         {
+            PGIsCompletelyRefined = false;
+            break;
+         }
+      }
+
+      h_IsCompletelyRefined[TID] = PGIsCompletelyRefined;
+   }
+#  endif
+
+// prepare h_HasWaveCounterpart with information which cells have wave counterparts
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( !amr->use_wave_flag[lv] )
+   {
+      Prepare_PatchData_HasWaveCounterpart(lv, h_HasWaveCounterpart, HYB_GHOST_SIZE, NPG, PID0_List, NSIDE_26, GlobalTree);
+   }
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 // validate input arrays for debugging purposes
    if ( OPT__CK_INPUT_FLUID )
@@ -109,14 +153,39 @@ void Flu_Prepare( const int lv, const double PrepTime,
       {
          real fluid[FLU_NIN];
 
-//       a. fluid
-         for (int k=0; k<FLU_NXT; k++)
-         for (int j=0; j<FLU_NXT; j++)
-         for (int i=0; i<FLU_NXT; i++)
-         {
-            const int t = IDX321( i, j, k, FLU_NXT, FLU_NXT );
+         int flu_nxt = FLU_NXT;
 
+//       distinguish between FLU_NXT and HYB_NXT
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         if ( !amr->use_wave_flag[lv] )
+         {
+            flu_nxt = HYB_NXT;
+         }
+#        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+//       a. fluid
+         for (int k=0; k<flu_nxt; k++)
+         for (int j=0; j<flu_nxt; j++)
+         for (int i=0; i<flu_nxt; i++)
+         {
+
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
+            if ( amr->use_wave_flag[lv] ) {
+#           endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+            const int t = IDX321( i, j, k, FLU_NXT, FLU_NXT );
             for (int v=0; v<FLU_NIN; v++)    fluid[v] = h_Flu_Array_F_In[TID][v][t];
+
+
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
+            } else { // if ( amr->use_wave_flag[lv] ) {
+//          convert to smaller array for HYB_GHOST_SIZE ghost zones
+            real (*smaller_h_Flu_Array_F_In   )[FLU_NIN ][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) h_Flu_Array_F_In;
+            const int t = IDX321( i, j, k, HYB_NXT, HYB_NXT );
+
+            for (int v=0; v<FLU_NIN; v++)    fluid[v] = smaller_h_Flu_Array_F_In[TID][v][t];
+            } // if ( amr->use_wave_flag[lv] ) { ... else
+#           endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 //          HYDRO
 #           if ( MODEL == HYDRO )
@@ -159,9 +228,19 @@ void Flu_Prepare( const int lv, const double PrepTime,
 
             for (int v=0; v<FLU_NIN; v++)
             {
-               if (  !Aux_IsFinite( fluid[v] )  )
+               bool isDataInvalid = !Aux_IsFinite( fluid[v] );
+
+//             check for negative densities on fluid levels
+#              if ( MODEL == ELBDM )
+               if ( !amr->use_wave_flag[lv] )
                {
-                  Aux_Message( stderr, "Invalid input fluid data:\n" );
+                  isDataInvalid |= (v == DENS) && fluid[DENS] < 0;
+               }
+#              endif // # if ( MODEL == ELBDM )
+
+               if (  isDataInvalid  )
+               {
+                  Aux_Message( stderr, "Invalid input fluid data on level %d:\n", lv);
                   Aux_Message( stderr, "Fluid: " );
                   for (int v=0; v<FLU_NIN; v++)    Aux_Message( stderr, " [%d]=%14.7e", v, fluid[v] );
                   Aux_Message( stderr, "\n" );

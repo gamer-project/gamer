@@ -64,6 +64,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                               --> Do not take into account the number of patches and particles at each level
 //                               --> Mainly used for estimating the weighted load-imbalance factor to determine
 //                                   when to redistribute all patches (when LOAD_BALANCE is on)
+//                use_wave_flag: Flag that determines whether hybrid ELBDM scheme uses fluid or wave scheme at given AMR level
 //
 // Method      :  AMR_t    : Constructor
 //               ~AMR_t    : Destructor
@@ -115,7 +116,9 @@ struct AMR_t
 #  endif
    long   NUpdateLv   [NLEVEL];
 
-
+#  if ( MODEL == ELBDM )
+   bool   use_wave_flag[NLEVEL];
+#  endif // #if ( MODEL == ELBDM )
 
    //===================================================================================
    // Constructor :  AMR_t
@@ -131,6 +134,8 @@ struct AMR_t
          num  [lv] = 0;
          scale[lv] = 1<<(NLEVEL-1-lv);
          FluSg[lv] = 0;
+
+
 #        ifdef MHD
          MagSg[lv] = FluSg[lv];
 #        else
@@ -152,6 +157,17 @@ struct AMR_t
          PotSgTime[lv][   PotSg[lv] ] = -__FLT_MAX__;
          PotSgTime[lv][ 1-PotSg[lv] ] = -__FLT_MAX__;
 #        endif
+
+#        if ( MODEL == ELBDM )
+//       use fluid solver by default for hybrid scheme
+#        if ( ELBDM_SCHEME == ELBDM_WAVE )
+         use_wave_flag[lv] = true;
+#        elif ( ELBDM_SCHEME == ELBDM_HYBRID )
+         use_wave_flag[lv] = false;
+#        else
+#        error : UNKNOWN ELBDM_SCHEME !!
+#        endif // # if ELBDM_SCHEME
+#        endif // #if ( MODEL == ELBDM )
       }
 
       for (int Sg=0; Sg<2; Sg++)
@@ -179,6 +195,7 @@ struct AMR_t
 #     ifdef MHD
       WithElectric = false;
 #     endif
+
 
    } // METHOD : AMR_t
 

@@ -16,6 +16,7 @@
 //                                INT_QUAD     : quadratic
 //                                INT_CQUAR    : conservative quartic
 //                                INT_QUAR     : quartic
+//                                INT_SPECTRAL : spectral
 //
 // Return      :  NSide, NGhost
 //-------------------------------------------------------------------------------------------------------
@@ -31,6 +32,7 @@ void Int_Table( const IntScheme_t IntScheme, int &NSide, int &NGhost )
       case INT_QUAD     :  NSide = 26;    NGhost = 1;    break;
       case INT_CQUAR    :  NSide = 26;    NGhost = 2;    break;
       case INT_QUAR     :  NSide = 26;    NGhost = 2;    break;
+      case INT_SPECTRAL :  NSide = 26;    NGhost = 2;    break;
 
       default           :  Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "IntScheme", IntScheme );
                            exit(1);

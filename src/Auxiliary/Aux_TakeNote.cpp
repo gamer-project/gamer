@@ -198,29 +198,46 @@ void Aux_TakeNote()
 //    c. options in ELBDM
 #     elif ( MODEL == ELBDM )
 
-//    c.1 options in WAVE_GRAMFE
+//    c.1 options in ELBDM_HYBRID
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      fprintf( Note, "ELBDM_SCHEME                    ELBDM_HYBRID\n" );
+#     elif ( ELBDM_SCHEME == ELBDM_WAVE )
+      fprintf( Note, "ELBDM_SCHEME                    ELBDM_WAVE\n" );
+#     else
+#     error : ERROR : unsupported ELBDM_SCHEME !!
+#     endif
+
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+#     if ( HYBRID_SCHEME == HYBRID_UPWIND )
+      fprintf( Note, "HYBRID_SCHEME                   UPWIND\n" );
+#     elif ( HYBRID_SCHEME == HYBRID_FROMM )
+      fprintf( Note, "HYBRID_SCHEME                   FROMM\n" );
+#     elif ( HYBRID_SCHEME == HYBRID_MUSCL )
+      fprintf( Note, "HYBRID_SCHEME                   MUSCL\n" );
+#     else
+#     error : ERROR : unsupported HYBRID_SCHEME !!
+#     endif
+
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+//    c.2 options in WAVE_GRAMFE
 #     if ( WAVE_SCHEME == WAVE_GRAMFE )
       fprintf( Note, "WAVE_SCHEME                     GRAM FE\n" );
 
-      fprintf( Note, "GRAMFE_GAMMA                    %d\n",      GRAMFE_GAMMA );
-      fprintf( Note, "GRAMFE_G                        %d\n",      GRAMFE_G );
-      fprintf( Note, "GRAMFE_NDELTA                   %d\n",      GRAMFE_NDELTA);
-      fprintf( Note, "GRAMFE_ND                       %d\n",      GRAMFE_ND);
-      fprintf( Note, "GRAMFE_ORDER                    %d\n",      GRAMFE_ORDER);
-#     ifdef GRAMFE_FLOAT8
-      fprintf( Note, "GRAMFE_FLOAT8                   ON\n" );
-#     else // # ifdef GRAMFE_FLOAT8
-      fprintf( Note, "GRAMFE_FLOAT8                   OFF\n" );
-#     endif // # ifdef GRAMFE_FLOAT8 ... # else
-#     ifdef GRAMFE_ENABLE_GPU
-      fprintf( Note, "GRAMFE_ENABLE_GPU               ON\n" );
-#     else // # ifdef GRAMFE_ENABLE_GPU
-      fprintf( Note, "GRAMFE_ENABLE_GPU               OFF\n" );
-#     endif // # ifdef GRAMFE_ENABLE_GPU ... # else
+#     if ( GRAMFE_SCHEME == GRAMFE_FFT )
+      fprintf( Note, "GRAMFE_SCHEME                   FFT\n" );
 
-//    c.1 options in WAVE_FD
+#     elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+      fprintf( Note, "GRAMFE_SCHEME                   MATMUL\n" );
+#     else
+#     error : ERROR : unsupported GRAMFE_SCHEME !!
+#     endif // GRAMFE_SCHEME
+
+
+//    c.3 options in WAVE_FD
 #     elif ( WAVE_SCHEME == WAVE_FD )
-      fprintf( Note, "WAVE_SCHEME                     FD\n ");
+      fprintf( Note, "WAVE_SCHEME                     FD\n");
 
 #     ifdef LAPLACIAN_4TH
       fprintf( Note, "LAPLACIAN_4TH                   ON\n" );
@@ -231,6 +248,8 @@ void Aux_TakeNote()
 #     else // #  if (WAVE_SCHEME == WAVE_GRAMFE )
 #     error : ERROR : unsupported WAVE_SCHEME !!
 #     endif // WAVE_SCHEME
+
+//    c.4 general ELBDM options
 
 #     ifdef CONSERVE_MASS
       fprintf( Note, "CONSERVE_MASS                   ON\n" );
@@ -429,6 +448,12 @@ void Aux_TakeNote()
       fprintf( Note, "RANDOM_NUMBER                   UNKNOWN\n" );
 #     endif
 
+#     ifdef SUPPORT_SPECTRAL_INT
+      fprintf( Note, "SUPPORT_SPECTRAL_INT            ON\n" );
+#     else
+      fprintf( Note, "SUPPORT_SPECTRAL_INT            OFF\n" );
+#     endif
+
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
@@ -544,6 +569,31 @@ void Aux_TakeNote()
 
 #     elif ( MODEL == ELBDM )
 
+#     if ( WAVE_SCHEME == WAVE_GRAMFE )
+      fprintf( Note, "GRAMFE_GAMMA                    %d\n",      GRAMFE_GAMMA );
+      fprintf( Note, "GRAMFE_G                        %d\n",      GRAMFE_G );
+      fprintf( Note, "GRAMFE_NDELTA                   %d\n",      GRAMFE_NDELTA);
+      fprintf( Note, "GRAMFE_ND                       %d\n",      GRAMFE_ND);
+      fprintf( Note, "GRAMFE_ORDER                    %d\n",      GRAMFE_ORDER);
+      fprintf( Note, "GRAMFE_FLU_NXT                  %d\n",      GRAMFE_FLU_NXT);
+
+#     if ( GRAMFE_SCHEME == GRAMFE_FFT )
+#     ifdef GRAMFE_FFT_FLOAT8
+      fprintf( Note, "GRAMFE_FFT_FLOAT8               ON\n" );
+#     else // # ifdef GRAMFE_FFT_FLOAT8
+      fprintf( Note, "GRAMFE_FFT_FLOAT8               OFF\n" );
+#     endif // # ifdef GRAMFE_FFT_FLOAT8 ... # else
+#     endif // # if ( GRAMFE_SCHEME == GRAMFE_FFT )
+
+#     if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+#     ifdef GRAMFE_MATMUL_FLOAT8
+      fprintf( Note, "GRAMFE_MATMUL_FLOAT8            ON\n" );
+#     else // # ifdef GRAMFE_MATMUL_FLOAT8
+      fprintf( Note, "GRAMFE_MATMUL_FLOAT8            OFF\n" );
+#     endif // # ifdef GRAMFE_MATMUL_FLOAT8 ... # else
+#     endif // # if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+#     endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
+
 #     else
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
@@ -642,6 +692,9 @@ void Aux_TakeNote()
 #     ifdef FEEDBACK
       fprintf( Note, "#define FB_GHOST_SIZE           %d\n",      FB_GHOST_SIZE         );
 #     endif
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      fprintf( Note, "#define HYB_GHOST_SIZE          %d\n",      HYB_GHOST_SIZE        );
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
       fprintf( Note, "#define FLU_NXT                 %d\n",      FLU_NXT               );
 #     ifdef GRAVITY
       fprintf( Note, "#define POT_NXT                 %d\n",      POT_NXT               );
@@ -653,13 +706,16 @@ void Aux_TakeNote()
 #     endif
 #     endif // #ifdef GRAVITY
 #     ifdef MASSIVE_PARTICLES
-      fprintf( Note, "#define RHOEXT_NXT              %d\n",      RHOEXT_NXT          );
+      fprintf( Note, "#define RHOEXT_NXT              %d\n",      RHOEXT_NXT            );
 #     endif
       fprintf( Note, "#define SRC_NXT                 %d\n",      SRC_NXT               );
       fprintf( Note, "#define DER_NXT                 %d\n",      DER_NXT               );
 #     ifdef FEEDBACK
       fprintf( Note, "#define FB_NXT                  %d\n",      FB_NXT                );
 #     endif
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      fprintf( Note, "#define HYB_NXT                 %d\n",      HYB_NXT               );
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #     if ( MODEL == HYDRO )
       fprintf( Note, "#define EOS_NAUX_MAX            %d\n",      EOS_NAUX_MAX          );
       fprintf( Note, "#define EOS_NTABLE_MAX          %d\n",      EOS_NTABLE_MAX        );
@@ -856,7 +912,12 @@ void Aux_TakeNote()
 #     endif
 #     if ( MODEL == ELBDM )
       fprintf( Note, "DT__PHASE                       %13.7e\n",  DT__PHASE                   );
-#     endif
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      fprintf( Note, "DT__HYBRID_VELOCITY             %13.7e\n",  DT__HYBRID_VELOCITY         );
+      fprintf( Note, "DT__HYBRID_CFL                  %13.7e\n",  DT__HYBRID_CFL              );
+      fprintf( Note, "DT__HYBRID_CFL_INIT             %13.7e\n",  DT__HYBRID_CFL_INIT         );
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#     endif // # if ( MODEL == ELBDM )
 #     ifdef PARTICLE
       fprintf( Note, "DT__PARVEL                      %13.7e\n",  DT__PARVEL                  );
       fprintf( Note, "DT__PARVEL_MAX                 %14.7e\n",   DT__PARVEL_MAX              );
@@ -904,7 +965,11 @@ void Aux_TakeNote()
 #     endif
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__FLAG_ENGY_DENSITY          %d\n",      OPT__FLAG_ENGY_DENSITY    );
-#     endif
+      fprintf( Note, "OPT__FLAG_SPECTRAL              %d\n",      OPT__FLAG_SPECTRAL        );
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      fprintf( Note, "OPT__FLAG_INTERFERENCE          %d\n",      OPT__FLAG_INTERFERENCE    );
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#     endif // # if ( MODEL == ELBDM )
       fprintf( Note, "OPT__FLAG_LOHNER_DENS           %d\n",      OPT__FLAG_LOHNER_DENS     );
 #     if ( MODEL == HYDRO )
       fprintf( Note, "OPT__FLAG_LOHNER_ENGY           %d\n",      OPT__FLAG_LOHNER_ENGY     );
@@ -954,6 +1019,7 @@ void Aux_TakeNote()
       fprintf( Note, "LB_PAR_WEIGHT                   %13.7e\n",  amr->LB->Par_Weight       );
 #     endif
       fprintf( Note, "OPT__RECORD_LOAD_BALANCE        %d\n",      OPT__RECORD_LOAD_BALANCE  );
+      fprintf( Note, "OPT__LB_EXCHANGE_FATHER         %d\n",      OPT__LB_EXCHANGE_FATHER   );
 #     endif // #ifdef LOAD_BALANCE
       fprintf( Note, "OPT__MINIMIZE_MPI_BARRIER       %d\n",      OPT__MINIMIZE_MPI_BARRIER );
       fprintf( Note, "***********************************************************************************\n" );
@@ -1094,7 +1160,9 @@ void Aux_TakeNote()
       fprintf( Note, "ELBDM_TAYLOR3_AUTO              %d\n",         ELBDM_TAYLOR3_AUTO     );
       fprintf( Note, "ELBDM_REMOVE_MOTION_CM          %d\n",         ELBDM_REMOVE_MOTION_CM );
       fprintf( Note, "ELBDM_BASE_SPECTRAL             %d\n",         ELBDM_BASE_SPECTRAL    );
-
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      fprintf( Note, "ELBDM_FIRST_WAVE_LEVEL          %d\n",         ELBDM_FIRST_WAVE_LEVEL );
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #     else
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
@@ -1292,6 +1360,13 @@ void Aux_TakeNote()
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__INT_PHASE                  %d\n",      OPT__INT_PHASE          );
       fprintf( Note, "OPT__RES_PHASE                  %d\n",      OPT__RES_PHASE          );
+
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      fprintf( Note, "ELBDM_MATCH_PHASE               %d\n",      ELBDM_MATCH_PHASE );
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#     endif
+#     ifdef SUPPORT_SPECTRAL_INT
+      fprintf( Note, "SPEC_INT_TABLE_PATH             %s\n",      SPEC_INT_TABLE_PATH     );
 #     endif
       fprintf( Note, "OPT__FLU_INT_SCHEME             %s\n",      ( OPT__FLU_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
                                                                   ( OPT__FLU_INT_SCHEME == INT_MINMOD1D ) ? "MINMOD1D" :
@@ -1300,6 +1375,7 @@ void Aux_TakeNote()
                                                                   ( OPT__FLU_INT_SCHEME == INT_QUAD     ) ? "QUAD"     :
                                                                   ( OPT__FLU_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
                                                                   ( OPT__FLU_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
+                                                                  ( OPT__FLU_INT_SCHEME == INT_SPECTRAL ) ? "SPECTRAL" :
                                                                                                             "UNKNOWN" );
 #     ifdef MHD
       fprintf( Note, "OPT__MAG_INT_SCHEME             %s\n",      ( OPT__MAG_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
@@ -1309,6 +1385,7 @@ void Aux_TakeNote()
                                                                   ( OPT__MAG_INT_SCHEME == INT_QUAD     ) ? "QUAD"     :
                                                                   ( OPT__MAG_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
                                                                   ( OPT__MAG_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
+                                                                  ( OPT__MAG_INT_SCHEME == INT_SPECTRAL ) ? "SPECTRAL" :
                                                                                                             "UNKNOWN" );
 #     endif
 #     ifdef GRAVITY
@@ -1319,6 +1396,7 @@ void Aux_TakeNote()
                                                                   ( OPT__POT_INT_SCHEME == INT_QUAD     ) ? "QUAD"     :
                                                                   ( OPT__POT_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
                                                                   ( OPT__POT_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
+                                                                  ( OPT__POT_INT_SCHEME == INT_SPECTRAL ) ? "SPECTRAL" :
                                                                                                             "UNKNOWN" );
       fprintf( Note, "OPT__RHO_INT_SCHEME             %s\n",      ( OPT__RHO_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
                                                                   ( OPT__RHO_INT_SCHEME == INT_MINMOD1D ) ? "MINMOD1D" :
@@ -1327,6 +1405,7 @@ void Aux_TakeNote()
                                                                   ( OPT__RHO_INT_SCHEME == INT_QUAD     ) ? "QUAD"     :
                                                                   ( OPT__RHO_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
                                                                   ( OPT__RHO_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
+                                                                  ( OPT__RHO_INT_SCHEME == INT_SPECTRAL ) ? "SPECTRAL" :
                                                                                                             "UNKNOWN" );
       fprintf( Note, "OPT__GRA_INT_SCHEME             %s\n",      ( OPT__GRA_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
                                                                   ( OPT__GRA_INT_SCHEME == INT_MINMOD1D ) ? "MINMOD1D" :
@@ -1335,6 +1414,7 @@ void Aux_TakeNote()
                                                                   ( OPT__GRA_INT_SCHEME == INT_QUAD     ) ? "QUAD"     :
                                                                   ( OPT__GRA_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
                                                                   ( OPT__GRA_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
+                                                                  ( OPT__GRA_INT_SCHEME == INT_SPECTRAL ) ? "SPECTRAL" :
                                                                                                             "UNKNOWN" );
 #     endif
       fprintf( Note, "OPT__REF_FLU_INT_SCHEME         %s\n",   ( OPT__REF_FLU_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
@@ -1344,6 +1424,7 @@ void Aux_TakeNote()
                                                                ( OPT__REF_FLU_INT_SCHEME == INT_QUAD     ) ? "QUAD"     :
                                                                ( OPT__REF_FLU_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
                                                                ( OPT__REF_FLU_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
+                                                               ( OPT__REF_FLU_INT_SCHEME == INT_SPECTRAL ) ? "SPECTRAL" :
                                                                                                              "UNKNOWN" );
 #     ifdef MHD
       fprintf( Note, "OPT__REF_MAG_INT_SCHEME         %s\n",   ( OPT__REF_MAG_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
@@ -1353,6 +1434,7 @@ void Aux_TakeNote()
                                                                ( OPT__REF_MAG_INT_SCHEME == INT_QUAD     ) ? "QUAD"     :
                                                                ( OPT__REF_MAG_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
                                                                ( OPT__REF_MAG_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
+                                                               ( OPT__REF_MAG_INT_SCHEME == INT_SPECTRAL ) ? "SPECTRAL" :
                                                                                                              "UNKNOWN" );
 #     endif
 #     ifdef GRAVITY
@@ -1363,6 +1445,7 @@ void Aux_TakeNote()
                                                                ( OPT__REF_POT_INT_SCHEME == INT_QUAD     ) ? "QUAD"     :
                                                                ( OPT__REF_POT_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
                                                                ( OPT__REF_POT_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
+                                                               ( OPT__REF_POT_INT_SCHEME == INT_SPECTRAL ) ? "SPECTRAL" :
                                                                                                              "UNKNOWN" );
 #     endif
       fprintf( Note, "INT_MONO_COEFF                  %13.7e\n",  INT_MONO_COEFF          );
@@ -1570,6 +1653,31 @@ void Aux_TakeNote()
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }
+
+      if ( OPT__FLAG_SPECTRAL )
+      {
+         fprintf( Note, "Flag Criterion (Spectral)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level     Refinement     Derefinement\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)
+            fprintf( Note, "%7d    %10.3e  %10.3e\n", lv, FlagTable_Spectral[lv][0], FlagTable_Spectral[lv][1] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      if ( OPT__FLAG_INTERFERENCE )
+      {
+         fprintf( Note, "Flag Criterion (Interference Threshold)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level     QP          Density      LapPhase     OnlyAtMaximum\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)
+            fprintf( Note, "%7d   %10.2e  %10.2e   %10.2e     %d\n", lv, FlagTable_Interference[lv][0], FlagTable_Interference[lv][1], FlagTable_Interference[lv][2], (int) (FlagTable_Interference[lv][3] > 0.5));
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
 #     endif
 
 #     if   ( MODEL == HYDRO )

@@ -15,9 +15,6 @@ extern real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif
 #endif // FLU_SCHEME
 
-
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  End_MemFree_Fluid
 // Description :  Free memory previously allocated by Init_MemAllocate_Fluid()
@@ -51,7 +48,21 @@ void End_MemFree_Fluid()
       delete [] h_Mag_Array_T    [t];  h_Mag_Array_T    [t] = NULL;
       delete [] h_Mag_Array_S_In [t];  h_Mag_Array_S_In [t] = NULL;
 #     endif
+
+
+#     if ( MODEL == ELBDM )
+      delete [] h_IsCompletelyRefined[t]; h_IsCompletelyRefined[t] = NULL;
+#     endif // # if ( MODEL == ELBDM )
+
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      delete [] h_HasWaveCounterpart [t]; h_HasWaveCounterpart [t] = NULL;
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
    } // for (int t=0; t<2; t++)
+
+#  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+   delete [] h_GramFE_TimeEvo;       h_GramFE_TimeEvo     = NULL;
+#  endif // # if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
    delete [] h_FC_Var;               h_FC_Var             = NULL;

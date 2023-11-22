@@ -331,10 +331,17 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       fluid[DENS] += dens_ref*Soliton_ScaleD[t];
    } // for (int t=0; t<Soliton_N; t++)
 
-
-// set the real and imaginary parts
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif
    fluid[REAL] = sqrt( fluid[DENS] );
-   fluid[IMAG] = 0.0;                  // imaginary part is always zero --> no initial velocity
+   fluid[IMAG] = 0.0;                  // imaginary part is always zero --> initial phase zero
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } else { // if ( amr->use_wave_flag[lv] )
+   fluid[PHAS] = 0.0;
+   fluid[STUB] = 0.0;
+   } // if ( amr->use_wave_flag[lv] ) ... else
+#  endif
 
 } // FUNCTION : SetGridIC
 
@@ -379,10 +386,19 @@ void BC( real fluid[], const double x, const double y, const double z, const dou
          const int lv, double AuxArray[] )
 {
 
-   fluid[REAL] = (real)0.0;
-   fluid[IMAG] = (real)0.0;
-   fluid[DENS] = (real)0.0;
-
+# if (ELBDM_SCHEME == ELBDM_HYBRID)
+   if ( amr->use_wave_flag[lv] ) {
+#  endif
+      fluid[DENS] = (real)0.0;
+      fluid[REAL] = (real)0.0;
+      fluid[IMAG] = (real)0.0;
+# if (ELBDM_SCHEME == ELBDM_HYBRID)
+   } else {
+      fluid[DENS] = (real)TINY_NUMBER;
+      fluid[PHAS] = (real)0.0;
+      fluid[STUB] = (real)0.0;
+   }
+# endif
 } // FUNCTION : BC
 #endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 

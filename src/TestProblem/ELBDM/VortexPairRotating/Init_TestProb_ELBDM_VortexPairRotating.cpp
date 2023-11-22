@@ -44,6 +44,20 @@ void Validate()
 #  endif
 
 
+// -> when switching from wave scheme back to fluid scheme
+//    real and imaginary part need to be converted back to phase
+// -> the two vortices are connected with a two pi phase jump
+//    while the wave scheme does not see this jump, the fluid scheme does
+// -> the wave physics is invariant under deformations of this jump contour.
+//    as a result, reconstruction of the phase with and without ELBDM_MATCH_PHASE
+//    leads to different jump line contours
+// -> when ELBDM_MATCH_PHASE is enabled the jump line contour leads to overrefinement
+//    which is why we should disable this option for the vortex pair tests
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( ELBDM_MATCH_PHASE )
+      Aux_Message( stderr, "WARNING: ELBDM_MATCH_PHASE should be disabled in vortex pair tests !!\n" );
+#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
 
 } // FUNCTION : Validate
@@ -160,15 +174,48 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double phase = atan2( dy, dx ) - VorPairRot_Omega*Time + VorPairRot_Phase0;
    const double R     = sqrt( SQR(dx) + SQR(dy) );
    const double J1    = VorPairRot_J1Amp*j1( sqrt(2.0*ELBDM_ETA*VorPairRot_Omega)*R );
+   const double Re    = VorPairRot_BgAmp - J1*cos( phase );
+   const double Im    =                  - J1*sin( phase );
 
-   fluid[REAL] = VorPairRot_BgAmp - J1*cos( phase );
-   fluid[IMAG] =                  - J1*sin( phase );
-   fluid[DENS] = SQR( fluid[REAL] ) + SQR( fluid[IMAG] );
+   fluid[DENS] = SQR( Re ) + SQR( Im );
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif
+   fluid[REAL] = Re;
+   fluid[IMAG] = Im;
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } else { // if ( amr->use_wave_flag[lv] )
+   fluid[PHAS] = SATAN2(Im, Re);
+   fluid[STUB] = 0.0;
+   } // if ( amr->use_wave_flag[lv] ) ... else
+#  endif
 
 } // FUNCTION : SetGridIC
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  OutputVortexPairRotatingError
+// Description :  Output the L1 error
+//
+// Note        :  1. Invoke Output_L1Error()
+//                2. Use SetGridIC() to provide the analytical solution at any given time
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void OutputVortexPairRotatingError()
+{
+
+   const char Prefix[100]     = "VortexPairRotating";
+   const OptOutputPart_t Part = OUTPUT_X;
+
+   Output_L1Error( SetGridIC, NULL, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
+
+} // FUNCTION : OutputVortexPairRotatingError
+
 #endif // #if ( MODEL == ELBDM )
-
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_ELBDM_VortexPairRotating
@@ -197,6 +244,7 @@ void Init_TestProb_ELBDM_VortexPairRotating()
 
    Init_Function_User_Ptr = SetGridIC;
    BC_User_Ptr            = SetGridIC;
+   Output_User_Ptr        = OutputVortexPairRotatingError;
 #  endif // #if ( MODEL == ELBDM )
 
 

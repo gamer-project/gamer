@@ -138,6 +138,11 @@ void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
          int I, J, K, KJI;
 
 //       fluid variables
+#        if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && !defined(GAMER_DEBUG) )
+//       hybrid scheme in debug mode on fluid levels transfers 3 fields back from GPU: DENS, PHAS and STUB
+//       in debug mode, STUB contains information about the cells that were updated using a first-order scheme where the fluid scheme fails
+         if ( amr->use_wave_flag[lv] ) {
+#        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
          for (int v=0; v<FLU_NOUT; v++)      {
          for (int k=0; k<PATCH_SIZE; k++)    {  K = Table_z + k;
          for (int j=0; j<PATCH_SIZE; j++)    {  J = Table_y + j;
@@ -148,6 +153,24 @@ void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
             amr->patch[SaveSg_Flu][lv][PID]->fluid[v][k][j][i] = h_Flu_Array_F_Out[TID][v][KJI];
 
          }}}}
+#        if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && !defined(GAMER_DEBUG) )
+//       when not in debug mode, only the fields DENS and PHAS need to be transferred back from GPU on fluid levels
+//       the number of fields equals FLU_NIN and not FLU_NOUT in this case
+         } else {
+         for (int v=0; v<FLU_NIN; v++)      {
+         for (int k=0; k<PATCH_SIZE; k++)    {  K = Table_z + k;
+         for (int j=0; j<PATCH_SIZE; j++)    {  J = Table_y + j;
+         for (int i=0; i<PATCH_SIZE; i++)    {  I = Table_x + i;
+
+            KJI = IDX321( I, J, K, PS2, PS2 );
+            real (*smaller_h_Flu_Array_F_Out)[FLU_NIN][CUBE(PS2)] = (real (*)[FLU_NIN][CUBE(PS2)]) h_Flu_Array_F_Out;
+
+            amr->patch[SaveSg_Flu][lv][PID]->fluid[v][k][j][i] = smaller_h_Flu_Array_F_Out[TID][v][KJI];
+
+         }}}}
+         }
+#        endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && !defined(GAMER_DEBUG) )
+
 
 //       dual-energy status
 #        ifdef DUAL_ENERGY

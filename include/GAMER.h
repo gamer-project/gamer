@@ -87,6 +87,9 @@ extern "C" {
 #  include "Serial.h"
 #endif
 
+#ifdef SUPPORT_SPECTRAL_INT
+#include "GramFE_Interpolation.h"
+#endif
 
 
 #endif // #ifndef __GAMER_H__

@@ -8,7 +8,8 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
                                     ulong *&NewCr1D_Away, int *&NewCr1D_Away_IdxTable, real *&NewCData_Away,
                                     int &NDel_Home, int *&DelPID_Home, int &NDel_Away, ulong *&DelCr1D_Away,
                                     int &RefineF2S_Send_NPatchTotal, int *&RefineF2S_Send_PIDList,
-                                    long (*&CFB_SibLBIdx_Home)[6], long (*&CFB_SibLBIdx_Away)[6] );
+                                    long (*&CFB_SibLBIdx_Home)[6], long (*&CFB_SibLBIdx_Away)[6],
+                                    bool &convertLevelsToWaveScheme );
 void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home, int NNew_Away,
                                  const ulong *NewCr1D_Away, const int *NewCr1D_Away_IdxTable, real *NewCData_Away,
                                  int NDel_Home, int *DelPID_Home, int NDel_Away, ulong *DelCr1D_Away,
@@ -91,10 +92,23 @@ void LB_Refine( const int FaLv )
    int    CFB_NSibEachRank[MPI_NRank];
    real  *CFB_BField=NULL;
 
+   bool SwitchFinerLevelsToWaveScheme = false;
+
    LB_Refine_GetNewRealPatchList( FaLv, NNew_Home, NewPID_Home, NNew_Away, NewCr1D_Away, NewCr1D_Away_IdxTable, NewCData_Away,
                                   NDel_Home, DelPID_Home, NDel_Away, DelCr1D_Away,
                                   RefineF2S_Send_NPatchTotal, RefineF2S_Send_PIDList,
-                                  CFB_SibLBIdx_Home, CFB_SibLBIdx_Away );
+                                  CFB_SibLBIdx_Home, CFB_SibLBIdx_Away,
+                                  SwitchFinerLevelsToWaveScheme );
+
+# if ( ELBDM_SCHEME == ELBDM_HYBRID )
+// sync information whether refined levels are switched to wave scheme
+   bool Send = SwitchFinerLevelsToWaveScheme;
+   bool Recv;
+
+   MPI_Allreduce(&Send, &Recv, 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD);
+
+   SwitchFinerLevelsToWaveScheme = Recv;
+# endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 // 3. get the magnetic field on the coarse-fine interfaces for the divergence-free interpolation
@@ -181,13 +195,47 @@ void LB_Refine( const int FaLv )
 #  endif
 
 
-// 7. miscellaneous
+// 7. convert density/phase to density/real part/imaginary part in hybrid scheme if we switch the level from fluid to wave
 // ==========================================================================================
-// 7.1 reset LB_CutPoint to the default values (-1) if SonLv has been totally removed
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( SwitchFinerLevelsToWaveScheme ) {
+      for (int ChildLv = SonLv; ChildLv <= TOP_LEVEL; ++ChildLv) {
+//       set use_wave_flag
+         amr->use_wave_flag[ChildLv] = true;
+
+//       iterate over real and buffer patches
+         for (int PID=0; PID < amr->NPatchComma[ChildLv][27]; PID++)
+         {
+//          convert both sandglasses
+            for ( int FluSg = 0; FluSg < 2; ++FluSg )
+            {
+               for (int k=0; k<PS1; k++)  {
+               for (int j=0; j<PS1; j++)  {
+               for (int i=0; i<PS1; i++)  {
+//                check fluid != NULL for buffer patches
+                  if ( amr->patch[FluSg][ChildLv][PID]->fluid != NULL && amr->FluSgTime[ChildLv][FluSg] >= 0.0 )
+                  {
+//                   IMPROVEMENT: at this point, we should check whether dB wavelength is resolved after conversion to wave representation
+                     const real Amp   = SQRT(amr->patch[FluSg][ChildLv][PID]->fluid[DENS][k][j][i]);
+                     const real Phase = amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][k][j][i];
+                     amr->patch[FluSg][ChildLv][PID]->fluid[REAL][k][j][i] = Amp * COS(Phase);
+                     amr->patch[FluSg][ChildLv][PID]->fluid[IMAG][k][j][i] = Amp * SIN(Phase);
+                  }
+               } // FluSg
+            }}} // k,j,i
+         } // for (int PID=0; PID < amr->NPatchComma[ChildLv][27]; PID++)
+      } // for (int ChildLv = SonLv; ChildLv <= TOP_LEVEL; ++ChildLv)
+   } // if ( SwitchFinerLevelsToWaveScheme )
+#   endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
+
+
+// 8. miscellaneous
+// ==========================================================================================
+// 8.1 reset LB_CutPoint to the default values (-1) if SonLv has been totally removed
    if ( NPatchTotal[SonLv] == 0 )
       for (int r=0; r<MPI_NRank+1; r++)   amr->LB->CutPoint[SonLv][r] = -1;
 
-// 7.2 free memory
+// 8.2 free memory
    if ( NewPID_Home == NULL  &&  NNew_Home != 0 )
       Aux_Error( ERROR_INFO, "%s has not been allocated !!\n", "NewPID_Home"   );
 
@@ -243,6 +291,14 @@ void LB_Refine( const int FaLv )
 #  ifdef PARTICLE
    delete [] RefineS2F_Send_PIDList;
    delete [] RefineF2S_Send_PIDList;
+#  endif
+
+
+// 9. construct the global AMR structure if required
+// ==========================================================================================
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   delete GlobalTree;   // in case it has been allocated already
+   GlobalTree = new LB_GlobalTree;
 #  endif
 
 } // FUNCTION : LB_Refine

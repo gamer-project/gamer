@@ -22,11 +22,21 @@ typedef double real;
 typedef float  real;
 #endif
 
-#ifdef GRAMFE_FLOAT8
-typedef double gramfe_float;
+#if ( GRAMFE_SCHEME == GRAMFE_FFT )
+#ifdef GRAMFE_FFT_FLOAT8
+typedef double gramfe_fft_float;
 #else
-typedef float  gramfe_float;
-#endif
+typedef float  gramfe_fft_float;
+#endif // #ifdef GRAMFE_FFT_FLOAT8
+#endif // #if ( GRAMFE_SCHEME == GRAMFE_FFT )
+
+
+#ifdef GRAMFE_MATMUL_FLOAT8
+typedef double gramfe_matmul_float;
+#else // #ifdef GRAMFE_MATMUL_FLOAT8
+typedef float  gramfe_matmul_float;
+#endif // #ifdef GRAMFE_MATMUL_FLOAT8 ... # else
+
 
 // short names for unsigned type
 typedef unsigned short     ushort;
@@ -71,7 +81,8 @@ const TestProbID_t
    TESTPROB_ELBDM_ISOLATED_HALO                = 1007,
    TESTPROB_ELBDM_GAUSSIAN_WAVE_PACKET         = 1008,
    TESTPROB_ELBDM_LSS                          = 1009,
-   TESTPROB_ELBDM_PLANE_WAVE                   = 1010;
+   TESTPROB_ELBDM_PLANE_WAVE                   = 1010,
+   TESTPROB_ELBDM_PERTURBATION                 = 1011;
 
 
 // program initialization options
@@ -133,7 +144,8 @@ const IntScheme_t
    INT_CQUAD    = 4,
    INT_QUAD     = 5,
    INT_CQUAR    = 6,
-   INT_QUAR     = 7;
+   INT_QUAR     = 7,
+   INT_SPECTRAL = 8;
 
 
 // data reconstruction TVD limiters

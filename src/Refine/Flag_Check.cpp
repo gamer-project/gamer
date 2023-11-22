@@ -8,8 +8,6 @@ extern bool (*Flag_Region_Ptr)( const int i, const int j, const int k, const int
 extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 
 
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flag_Check
 // Description :  Check if the target cell (i,j,k) satisfies the refinement criteria
@@ -18,23 +16,25 @@ extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int l
 //                2. For OPT__FLAG_USER, the function pointer "Flag_User_Ptr" must be set by a
 //                   test problem initializer
 //
-// Parameter   :  lv           : Target refinement level
-//                PID          : Target patch ID
-//                i,j,k        : Indices of the target cell
-//                dv           : Cell volume at the target level
-//                Fluid        : Input fluid array (with NCOMP_TOTAL components)
-//                Pot          : Input potential array
-//                MagCC        : Input cell-centered B field array
-//                Vel          : Input velocity array
-//                Pres         : Input pressure array
-//                Lohner_Ave   : Input array storing the averages for the Lohner error estimator
-//                Lohner_Slope : Input array storing the slopes for the Lohner error estimator
-//                Lohner_NVar  : Number of variables stored in Lohner_Ave and Lohner_Slope
-//                ParCount     : Input array storing the number of particles on each cell
-//                               (note that it has the **real** type)
-//                ParDens      : Input array storing the particle mass density on each cell
-//                JeansCoeff   : Pi*GAMMA/(SafetyFactor^2*G), where SafetyFactor = FlagTable_Jeans[lv]
-//                               --> Flag if dh^2 > JeansCoeff*Pres/Dens^2
+// Parameter   :  lv            : Target refinement level
+//                PID           : Target patch ID
+//                i,j,k         : Indices of the target cell
+//                dv            : Cell volume at the target level
+//                Fluid         : Input fluid array (with NCOMP_TOTAL components)
+//                Pot           : Input potential array
+//                MagCC         : Input cell-centered B field array
+//                Vel           : Input velocity array
+//                Pres          : Input pressure array
+//                Lohner_Ave    : Input array storing the averages for the Lohner error estimator
+//                Lohner_Slope  : Input array storing the slopes for the Lohner error estimator
+//                Lohner_NVar   : Number of variables stored in Lohner_Ave and Lohner_Slope
+//                ParCount      : Input array storing the number of particles on each cell
+//                                (note that it has the **real** type)
+//                ParDens       : Input array storing the particle mass density on each cell
+//                JeansCoeff    : Pi*GAMMA/(SafetyFactor^2*G), where SafetyFactor = FlagTable_Jeans[lv]
+//                                --> Flag if dh^2 > JeansCoeff*Pres/Dens^2
+//                Interf_Var    : Input array storing the density and phase for the interference condition
+//                Spectral_Cond : Input variable storing the normalised average density ratio between the average extension density and the average physical density
 //
 // Return      :  "true"  if any  of the refinement criteria is satisfied
 //                "false" if none of the refinement criteria is satisfied
@@ -43,7 +43,8 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
                  const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real MagCC[][PS1][PS1][PS1],
                  const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1],
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
-                 const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff )
+                 const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff,
+                 const real *Interf_Var, const real Spectral_Cond)
 {
 
    bool Flag = false;
@@ -56,6 +57,28 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
       if (  !Flag_Region_Ptr( i, j, k, lv, PID )  )    return false;
    }
+
+
+// check ELBDM interference
+// must be performed before any other checks in order to set switch_to_wave_flag correctly
+// ===========================================================================================
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( OPT__FLAG_INTERFERENCE && !amr->use_wave_flag[lv] )
+   {
+
+      Flag |=  ELBDM_Flag_Interference( i, j, k, Interf_Var, FlagTable_Interference[lv][0], FlagTable_Interference[lv][1], FlagTable_Interference[lv][2], FlagTable_Interference[lv][3] > 0.5);
+
+//    switch to wave solver when refining to ELBDM_FIRST_WAVE_LEVEL
+      if ( Flag && lv + 1 >= ELBDM_FIRST_WAVE_LEVEL )
+      {
+         amr->patch[0][lv][PID]->switch_to_wave_flag =  true;
+      }
+
+      if ( Flag )
+            return Flag;
+   }
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 #  ifdef PARTICLE
@@ -81,7 +104,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #  ifdef DENS
 // check density magnitude
 // ===========================================================================================
-   if ( OPT__FLAG_RHO )
+if ( OPT__FLAG_RHO )
    {
       Flag |= ( Fluid[DENS][k][j][i] > FlagTable_Rho[lv] );
       if ( Flag )    return Flag;
@@ -152,17 +175,43 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 // check ELBDM energy density
 // ===========================================================================================
 #  if ( MODEL == ELBDM )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( OPT__FLAG_ENGY_DENSITY )
    {
       Flag |= ELBDM_Flag_EngyDensity( i, j, k, &Fluid[REAL][0][0][0], &Fluid[IMAG][0][0][0],
                                       FlagTable_EngyDensity[lv][0], FlagTable_EngyDensity[lv][1] );
       if ( Flag )    return Flag;
    }
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } // if ( amr->use_wave_flag[lv] ) {
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif
+
+// check ELBDM spectral criterion
+// ===========================================================================================
+#  if ( MODEL == ELBDM )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( OPT__FLAG_SPECTRAL )
+   {
+      Flag |= Spectral_Cond > FlagTable_Spectral[lv][0];
+      if ( Flag )    return Flag;
+   }
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } // if ( amr->use_wave_flag[lv] ) {
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
 
 
 // check Lohner's error estimator
 // ===========================================================================================
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( Lohner_NVar > 0 )
    {
 //    check Lohner only if density is greater than the minimum threshold
@@ -173,6 +222,9 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
                            FlagTable_Lohner[lv][0], FlagTable_Lohner[lv][2], FlagTable_Lohner[lv][3] );
       if ( Flag )    return Flag;
    }
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } // if ( amr->use_wave_flag[lv] ) {
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 // check user-defined criteria

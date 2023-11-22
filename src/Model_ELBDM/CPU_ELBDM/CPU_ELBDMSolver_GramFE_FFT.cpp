@@ -1,10 +1,11 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-#if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || ( defined(__CUDACC__) && defined(GRAMFE_ENABLE_GPU) ) )
+#if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || defined(__CUDACC__) )
 
-#if ( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE )
-#include "GramExtensionTables.h"
+#if ( GRAMFE_SCHEME == GRAMFE_FFT )
+
+#include "GramFE_ExtensionTables.h"
 
 // useful macros
 
@@ -64,16 +65,16 @@ extern gramfe_fftw::complex_plan_1d FFTW_Plan_ExtPsi, FFTW_Plan_ExtPsi_Inv;
 
 #include <complex.h>
 
-using complex_type = std::complex<gramfe_float>;
+using complex_type = std::complex<gramfe_fft_float>;
 
 #else // #if ( SUPPORT_FFTW == FFTW3 )
 
-//derive from gramfe_fftw::fft_complex which is an alias for FFTW2's complex_type in gramfe_float precision to allow for complex arithmetic operations
+//derive from gramfe_fftw::fft_complex which is an alias for FFTW2's complex_type in gramfe_fft_float precision to allow for complex arithmetic operations
 struct complex_type : public gramfe_fftw::fft_complex {
    complex_type() {
    }
 
-   complex_type(gramfe_float re, gramfe_float im) {
+   complex_type(gramfe_fft_float re, gramfe_fft_float im) {
       real(re);
       imag(im);
    }
@@ -84,19 +85,19 @@ struct complex_type : public gramfe_fftw::fft_complex {
       return *this;
    }
 
-   gramfe_float real() const {
+   gramfe_fft_float real() const {
       return c_re(*this);
    }
 
-   gramfe_float imag() const {
+   gramfe_fft_float imag() const {
       return c_im(*this);
    }
 
-   void real(gramfe_float re) {
+   void real(gramfe_fft_float re) {
       c_re(*this) = re;
    }
 
-   void imag(gramfe_float im) {
+   void imag(gramfe_fft_float im) {
       c_im(*this) = im;
    }
 
@@ -185,16 +186,16 @@ static uint get1D2(uint k, uint j, uint i, int XYZ) {
 
 
 GPU_DEVICE
-static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+static void CUFLU_Advance( real g_Fluid_In [][FLU_NIN  ][ CUBE(FLU_NXT) ],
                            real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
                            int NPatchGroup,
-                           const gramfe_float dt, const gramfe_float _dh, const gramfe_float Eta,
+                           const gramfe_fft_float dt, const gramfe_fft_float _dh, const gramfe_fft_float Eta,
                            const uint j_gap, const uint k_gap,
                            complex_type s_In       [][GRAMFE_FLU_NXT],
                            complex_type s_Ae       [][GRAMFE_NDELTA],
                            complex_type s_Ao       [][GRAMFE_NDELTA],
                            complex_type ExpCoeff   [],
-                           const bool FinalOut, const int XYZ, const gramfe_float MinDens,
+                           const bool FinalOut, const int XYZ, const gramfe_fft_float MinDens,
                            forward_workspace_type Workspace,
                            inverse_workspace_type WorkspaceInv );
 
@@ -211,17 +212,17 @@ int Factorial(int n) {
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CosineTaylorExpansion
-// Description :  Compute the taylor expansion of the cosine function at the point x with Nterms terms
+// Description :  Compute the Taylor expansion of the cosine function at the point x with Nterms terms
 // Parameter   :  x       : Point at which to evaluate Taylor expansion
 //                NTerms  : Number of terms to retain in expansion
 // Return      :  Value of expansion
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-gramfe_float CosineTaylorExpansion(gramfe_float x, int Nterms) {
-   gramfe_float result = 0;
+gramfe_fft_float CosineTaylorExpansion(gramfe_fft_float x, int Nterms) {
+   gramfe_fft_float result = 0;
 
    for (int i = 0; i  < Nterms; ++i) {
-      result += pow(-1, i) * (1 / ((gramfe_float) Factorial(2 * i))) * pow(x, 2 * i   );
+      result += pow(-1, i) * (1 / ((gramfe_fft_float) Factorial(2 * i))) * pow(x, 2 * i   );
    }
 
    return result;
@@ -229,24 +230,24 @@ gramfe_float CosineTaylorExpansion(gramfe_float x, int Nterms) {
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SineTaylorExpansion
-// Description :  Compute the taylor expansion of the sine function at the point x with Nterms terms
+// Description :  Compute the Taylor expansion of the sine function at the point x with Nterms terms
 // Parameter   :  x       : Point at which to evaluate Taylor expansion
 //                NTerms  : Number of terms to retain in expansion
 // Return      :  Value of expansion
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-gramfe_float SineTaylorExpansion(gramfe_float x, int Nterms) {
-   gramfe_float result = 0;
+gramfe_fft_float SineTaylorExpansion(gramfe_fft_float x, int Nterms) {
+   gramfe_fft_float result = 0;
 
    for (int i = 0; i  < Nterms; ++i) {
-      result += pow(-1, i) * ( 1 / ((gramfe_float) Factorial(2 * i + 1)) ) * pow(x, 2 * i + 1);
+      result += pow(-1, i) * ( 1 / ((gramfe_fft_float) Factorial(2 * i + 1)) ) * pow(x, 2 * i + 1);
    }
 
    return result;
 } // FUNCTION : SineTaylorExpansion
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CUFLU_ELBDMSolver_GramFE
+// Function    :  CUFLU_ELBDMSolver_GramFE_FFT
 // Description :  CPU and GPU ELBDM kinematic solver based on computing Gram (FE) extension and evolving wave function using pseudo-spectral method on extended domain
 //
 // Note        :  1. The three-dimensional evolution is achieved by applying x, y, and z operators successively.
@@ -273,19 +274,19 @@ gramfe_float SineTaylorExpansion(gramfe_float x, int Nterms) {
 #ifdef __CUDACC__
 __launch_bounds__(FFT::max_threads_per_block)
 __global__
-void CUFLU_ELBDMSolver_GramFE(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                                  real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
-                                  real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                  const real dt, const real _dh, const real Eta, const bool StoreFlux,
-                                  const bool XYZ, const real MinDens,
-                                  typename FFT::workspace_type  Workspace,
-                                  typename IFFT::workspace_type WorkspaceInv  )
+void CUFLU_ELBDMSolver_GramFE_FFT(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                                    real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
+                                    real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                    const real dt, const real _dh, const real Eta, const bool StoreFlux,
+                                    const bool XYZ, const real MinDens,
+                                    typename FFT::workspace_type  Workspace,
+                                    typename IFFT::workspace_type WorkspaceInv  )
 #else
-void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                                  real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
-                                  real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                  const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
-                                  const bool XYZ, const real MinDens )
+void CPU_ELBDMSolver_GramFE_FFT(    real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                                    real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
+                                    real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                    const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
+                                    const bool XYZ, const real MinDens )
 #endif
 {
 
@@ -302,28 +303,28 @@ void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
    const int NPatchGroup                   = NULL_INT;
 
 #  else // #  ifdef __CUDACC__
-// allocate memory on stack within loop for CPU run
+// allocate memory on heap within loop for CPU run
    complex_type (*s_In)   [GRAMFE_FLU_NXT] = NULL;
    complex_type (*s_Ae)   [GRAMFE_NDELTA]  = NULL;
    complex_type (*s_Ao)   [GRAMFE_NDELTA]  = NULL;
-   const gramfe_float _dh                  = gramfe_float(1.0)/dh;
+   const gramfe_fft_float _dh                  = gramfe_fft_float(1.0)/dh;
    bool Workspace                          = NULL_BOOL;
    bool WorkspaceInv                       = NULL_BOOL;
 #  endif // #  ifdef __CUDACC__ ... else
 
 
 // set up time evolution operator and filter
-   gramfe_float K;
-   gramfe_float Filter;                                                                      // exp(-filterDecay * (k/kMax)**(2*filterDegree))
-   gramfe_float Coeff;                                                                       // dT * k^2
+   gramfe_fft_float K;
+   gramfe_fft_float Filter;                                                                      // exp(-filterDecay * (k/kMax)**(2*filterDegree))
+   gramfe_fft_float Coeff;                                                                       // dT * k^2
    complex_type ExpCoeff[GRAMFE_FLU_NXT];                                                    // exp(- 1j * dt/(2*ELBDM_ETA) * k^2)
 
-   const gramfe_float filterDecay  = (gramfe_float) 32.0 * (gramfe_float) 2.302585092994046; // decay of k-space filter ( 32 * log(10) )
-   const gramfe_float filterDegree = (gramfe_float) 100;                                     // degree of k-space filter
-   const gramfe_float kmax         = (gramfe_float) M_PI * _dh;                              // maximum value of k
-   const gramfe_float dk           = (gramfe_float) + 2.0 * kmax / GRAMFE_FLU_NXT;           // k steps in k-space
-   const gramfe_float dT           = (gramfe_float) - 0.5 * dt / Eta;                        // coefficient in time evolution operator
-   const gramfe_float Norm         = (gramfe_float) + 1.0 / GRAMFE_FLU_NXT;                  // norm for inverse Fourier transform
+   const gramfe_fft_float filterDecay  = (gramfe_fft_float) 32.0 * (gramfe_fft_float) 2.302585092994046; // decay of k-space filter ( 32 * log(10) )
+   const gramfe_fft_float filterDegree = (gramfe_fft_float) 100;                                     // degree of k-space filter
+   const gramfe_fft_float kmax         = (gramfe_fft_float) M_PI * _dh;                              // maximum value of k
+   const gramfe_fft_float dk           = (gramfe_fft_float) + 2.0 * kmax / GRAMFE_FLU_NXT;           // k steps in k-space
+   const gramfe_fft_float dT           = (gramfe_fft_float) - 0.5 * dt / Eta;                        // coefficient in time evolution operator
+   const gramfe_fft_float Norm         = (gramfe_fft_float) + 1.0 / GRAMFE_FLU_NXT;                  // norm for inverse Fourier transform
 
 // naively "exp(1j * Coeff)" should give the exact time evolution of the free Schrödinger equation
 // however, the time-evolution operator depends on higher-order derivatives
@@ -360,7 +361,7 @@ void CPU_ELBDMSolver_GramFE(      real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_Ae, s_Ao, ExpCoeff, true,  0, MinDens, Workspace, WorkspaceInv );
    }
 
-} // FUNCTION : CUFLU_ELBDMSolver_GramFE
+} // FUNCTION : CUFLU_ELBDMSolver_GramFE_FFT
 
 
 
@@ -395,14 +396,14 @@ GPU_DEVICE
 void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                      real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
                      int NPatchGroup,
-                     const gramfe_float dt, const gramfe_float _dh, const gramfe_float Eta,
+                     const gramfe_fft_float dt, const gramfe_fft_float _dh, const gramfe_fft_float Eta,
                      const uint j_gap, const uint k_gap,
                      complex_type s_In       [][GRAMFE_FLU_NXT],
                      complex_type s_Ae       [][GRAMFE_NDELTA],
                      complex_type s_Ao       [][GRAMFE_NDELTA],
                      complex_type ExpCoeff   [],
                      const bool FinalOut,
-                     const int XYZ, const gramfe_float MinDens,
+                     const int XYZ, const gramfe_fft_float MinDens,
                      forward_workspace_type Workspace,
                      inverse_workspace_type WorkspaceInv  )
 {
@@ -460,7 +461,10 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
          uint NColumnOnce = MIN( NColumnTotal, CGPU_FLU_BLOCK_SIZE_Y );     // number of columns updated per iteration
 
+//       use register variables Al, Ar and Psi_Ext to speed up summation
          complex_type Al, Ar;             // buffer for left and right Gram coefficients
+         complex_type Psi_Ext;            // buffer for wave function in extension region 
+         
          real   Amp_New, Re_New, Im_New;  // store density, real and imaginary part to apply minimum density check
 
 //       loop over all data columns
@@ -497,8 +501,8 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   Ar += Pr[si][t] * s_In[sj][FLU_NXT - GRAMFE_NDELTA + t]; // right boundary
                } // for t
 
-               s_Ae[sj][si] = (gramfe_float) 0.5 * (Ar + Al);
-               s_Ao[sj][si] = (gramfe_float) 0.5 * (Ar - Al);
+               s_Ae[sj][si] = (gramfe_fft_float) 0.5 * (Ar + Al);
+               s_Ao[sj][si] = (gramfe_fft_float) 0.5 * (Ar - Al);
             } // CELL_LOOP(GRAMFE_ORDER, 0, 0)
 
 #           ifdef __CUDACC__
@@ -508,16 +512,15 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 //          2.2 function values in extension domain given as linear combinations of extended Gram polynomials
             CELL_LOOP(GRAMFE_FLU_NXT, FLU_NXT, 0)
             {
-//             reuse Al and sum up result in local register for higher speed
-               Al.real(0);
-               Al.imag(0);
+               Psi_Ext.real(0);
+               Psi_Ext.imag(0);
 
                for (int order=0; order < GRAMFE_ORDER; order++) {
-                  Al += s_Ae[sj][order] *  Fe[order][si - FLU_NXT];
-                  Al += s_Ao[sj][order] *  Fo[order][si - FLU_NXT];
+                  Psi_Ext += s_Ae[sj][order] *  Fe[order][si - FLU_NXT];
+                  Psi_Ext += s_Ao[sj][order] *  Fo[order][si - FLU_NXT];
                } // for (int order=0; order < GRAMFE_ORDER; order++)
 
-               s_In[sj][si] = Al;
+               s_In[sj][si] = Psi_Ext; 
             } // CELL_LOOP(GRAMFE_FLU_NXT, FLU_NXT, 0)
 
 #           ifdef __CUDACC__
@@ -612,5 +615,6 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
    } // # pragma omp parallel
 } // FUNCTION : CUFLU_Advance
 
-#endif // #if ( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE)
-#endif // #if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || ( defined(__CUDACC__) && defined(GRAMFE_ENABLE_GPU) ) )
+
+#endif // #if ( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
+#endif // #if ( ( !defined(__CUDACC__) && defined(SUPPORT_FFTW) ) || defined(__CUDACC__) )

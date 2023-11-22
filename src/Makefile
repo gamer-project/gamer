@@ -106,8 +106,10 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 # enforce the mass conservation (only partly enforced by local spectral method)
 SIMU_OPTION += -DCONSERVE_MASS
 
+# choose elbdm scheme ELBDM_SCHEME as ELBDM_WAVE (wave-solver only), ELBDM_HYBRID (fluid solver on coarse levels, wave solver on refined levels)
+SIMU_OPTION += -DELBDM_SCHEME=ELBDM_WAVE
+
 # choose wave scheme WAVE_FD (finite difference), WAVE_GRAMFE (local spectral method)
-# --> must turn on (SUPPORT_FFTW=FFTW2 and FLOAT8) or (SUPPORT_FFTW=FFTW3) or (GPU and GRAMFE_ENABLE_GPU) for WAVE_GRAMFE
 SIMU_OPTION += -DWAVE_SCHEME=WAVE_FD
 
 # (b-2-1) WAVE_FD options
@@ -119,10 +121,29 @@ SIMU_OPTION += -DLAPLACIAN_4TH
 # (b-2-2) WAVE_GRAMFE options
 # ------------------------------------------------------------------------------------
 else ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
-# enable for GPU support of Gram-Fourier extension algorithm in GPU mode (CPU is used by default because it is faster)
-# --> must turn on GPU
-#SIMU_OPTION += -DGRAMFE_ENABLE_GPU
+
+# choose gramfe scheme GRAMFE_FFT (uses fast fourier transform, faster for larger patch sizes), GRAMFE_MATMUL (uses matrix multiplication, faster for smaller patches)
+# --> must turn on (SUPPORT_FFTW=FFTW2 and FLOAT8) or (SUPPORT_FFTW=FFTW3) or GPU for GRAMFE_SCHEME == GRAMFE_FFT
+SIMU_OPTION += -DGRAMFE_SCHEME=GRAMFE_MATMUL
+
 endif # WAVE_SCHEME
+
+# (b-2-3) ELBDM_HYBRID options
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DELBDM_SCHEME=ELBDM_HYBRID, $(SIMU_OPTION))" "-DELBDM_SCHEME=ELBDM_HYBRID"
+
+# choose fluid scheme HYBRID_SCHEME = [HYBRID_UPWIND, HYBRID_FROMM, HYBRID_MUSCL]
+# default is HYBRID_MUSCL
+# HYBRID_FROMM is a second-order scheme without limiter that fails for fluid-only simulations but may be the better choice for hybrid simulations
+# HYBRID_MUSCL is a second-order scheme with limiter and is required in order for the regions that we do not zoom into to be stable.
+# HYBRID_UPWIND is a diffusive first-order scheme that can be used to debug instabilities
+# --> must be set when ELBDM_SCHEME=ELBDM_HYBRID
+SIMU_OPTION += -DHYBRID_SCHEME=HYBRID_MUSCL
+
+
+endif # ELBDM_SCHEME
+
+
 endif # MODEL
 
 
@@ -236,6 +257,10 @@ SIMU_OPTION += -DOPENMP
 #     use FFTW2 for fftw2 support
 #SIMU_OPTION += -DSUPPORT_FFTW=FFTW3
 
+# support spectral interpolation
+# --> must enable SUPPORT_FFTW (if FFTW2 must also enable FLOAT8)
+# --> must enable SUPPORT_GSL
+#SIMU_OPTION += -DSUPPORT_SPECTRAL_INT
 
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT
@@ -339,6 +364,7 @@ GRACKLE_PATH :=
 GSL_PATH     :=
 LIBYT_PATH   :=
 CUFFTDX_PATH :=
+
 
 # NTU-eureka (default: openmpi-intel)
 #CUDA_PATH    := /software/cuda/default
@@ -456,7 +482,7 @@ CPU_FILE    += End_GAMER.cpp  End_MemFree.cpp  End_MemFree_Fluid.cpp  End_StopMa
                Init_Unit.cpp  Init_UniformGrid.cpp  Init_Field.cpp  Init_User.cpp  Init_FFTW.cpp
 
 CPU_FILE    += Interpolate.cpp  Int_CQuadratic.cpp  Int_MinMod1D.cpp  Int_MinMod3D.cpp  Int_vanLeer.cpp \
-               Int_Quadratic.cpp  Int_Table.cpp  Int_CQuartic.cpp  Int_Quartic.cpp
+               Int_Quadratic.cpp  Int_Table.cpp  Int_CQuartic.cpp  Int_Quartic.cpp  Int_Spectral.cpp
 
 CPU_FILE    += Mis_CompareRealValue.cpp  Mis_GetTotalPatchNumber.cpp  Mis_GetTimeStep.cpp  Mis_Heapsort.cpp \
                Mis_BinarySearch.cpp  Mis_1D3DIdx.cpp  Mis_Matching.cpp  Mis_GetTimeStep_User.cpp \
@@ -470,7 +496,7 @@ CPU_FILE    += Output_DumpData_Total.cpp  Output_DumpData.cpp  Output_DumpManual
                Output_DumpData_Total_HDF5.cpp  Output_L1Error.cpp  Output_UserWorkBeforeOutput.cpp
 
 CPU_FILE    += Flag_Real.cpp  Refine.cpp   SiblingSearch.cpp  SiblingSearch_Base.cpp  FindFather.cpp \
-               Flag_User.cpp  Flag_Check.cpp  Flag_Lohner.cpp  Flag_Region.cpp
+               Flag_User.cpp  Flag_Check.cpp  Flag_Lohner.cpp  Flag_Region.cpp  Sync_UseWaveFlag.cpp
 
 CPU_FILE    += Table_01.cpp  Table_02.cpp  Table_03.cpp  Table_04.cpp  Table_05.cpp  Table_06.cpp \
                Table_07.cpp  Table_SiblingSharingSameEdge.cpp  Table_SiblingPatch.cpp
@@ -523,22 +549,24 @@ endif # LOAD_BALANCE
 endif # MHD
 
 
-# ELBDM source files (included only inf "MODEL=ELBDM")
+# ELBDM source files (included only if "MODEL=ELBDM")
 # -------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
-GPU_FILE    += CUFLU_ELBDMSolver_FD.cu CUFLU_ELBDMSolver_GramFE.cu
+GPU_FILE    += CUFLU_ELBDMSolver_FD.cu  CUFLU_ELBDMSolver_GramFE_FFT.cu  CUFLU_ELBDMSolver_GramFE_MATMUL.cu  CUFLU_ELBDMSolver_HJ.cu \
+               CUAPI_SendGramFEMatrix2GPU.cu
 
-CPU_FILE    += CPU_ELBDMSolver_FD.cpp  CPU_ELBDMSolver_FFT.cpp  CPU_ELBDMSolver_GramFE.cpp ELBDM_Init_ByFunction_AssignData.cpp \
-               ELBDM_GetTimeStep_Fluid.cpp  ELBDM_Flag_EngyDensity.cpp  ELBDM_UnwrapPhase.cpp \
-               ELBDM_GetTimeStep_Phase.cpp  ELBDM_SetTaylor3Coeff.cpp  ELBDM_RemoveMotionCM.cpp
+CPU_FILE    += CPU_ELBDMSolver_FD.cpp  CPU_ELBDMSolver_FFT.cpp  CPU_ELBDMSolver_GramFE_FFT.cpp  CPU_ELBDMSolver_GramFE_MATMUL.cpp  CPU_ELBDMSolver_HJ.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
+               ELBDM_GetTimeStep_Fluid.cpp  ELBDM_GetTimeStep_Hybrid_CFL.cpp  ELBDM_Flag_EngyDensity.cpp  ELBDM_Flag_Interference.cpp  ELBDM_Flag_Spectral.cpp  ELBDM_UnwrapPhase.cpp \
+               ELBDM_GetTimeStep_Phase.cpp  ELBDM_GetTimeStep_Hybrid_Velocity.cpp  ELBDM_HasWaveCounterpart.cpp  ELBDM_SetTaylor3Coeff.cpp  ELBDM_GramFE_EvolutionMatrix.cpp  ELBDM_RemoveMotionCM.cpp \
+               ELBDM_Aux_Record_Hybrid.cpp
 
 vpath %.cu     Model_ELBDM/GPU_ELBDM
 vpath %.cpp    Model_ELBDM/CPU_ELBDM  Model_ELBDM
 
 ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
-GPU_FILE    += CUPOT_ELBDMGravitySolver.cu
+GPU_FILE    += CUPOT_ELBDMGravitySolver.cu  CUPOT_ELBDMGravitySolver_HJ.cu
 
-CPU_FILE    += CPU_ELBDMGravitySolver.cpp  ELBDM_GetTimeStep_Gravity.cpp
+CPU_FILE    += CPU_ELBDMGravitySolver.cpp  CPU_ELBDMGravitySolver_HJ.cpp  ELBDM_GetTimeStep_Gravity.cpp
 
 vpath %.cu     Model_ELBDM/GPU_ELBDMGravity
 vpath %.cpp    Model_ELBDM/CPU_ELBDMGravity
@@ -832,7 +860,7 @@ endif
 
 ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
    ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
-      ifeq "$(filter -DGRAMFE_ENABLE_GPU, $(SIMU_OPTION))" "-DGRAMFE_ENABLE_GPU"
+      ifeq "$(filter -DGRAMFE_SCHEME=GRAMFE_FFT, $(SIMU_OPTION))" "-DGRAMFE_SCHEME=GRAMFE_FFT"
          INCLUDE += -I$(CUFFTDX_PATH)/include
       endif
    endif
@@ -904,7 +932,7 @@ endif
 # enable C++ 17 support for ELBDM GPU Gram-Fourier extension scheme
 ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
    ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
-      ifeq "$(filter -DGRAMFE_ENABLE_GPU, $(SIMU_OPTION))" "-DGRAMFE_ENABLE_GPU"
+      ifeq "$(filter -DGRAMFE_SCHEME=GRAMFE_FFT, $(SIMU_OPTION))" "-DGRAMFE_SCHEME=GRAMFE_FFT"
          NVCCFLAG_COM += -std=c++17
       endif
    endif
@@ -981,6 +1009,7 @@ HDF5_PATH    := $(strip $(HDF5_PATH))
 GRACKLE_PATH := $(strip $(GRACKLE_PATH))
 GSL_PATH     := $(strip $(GSL_PATH))
 LIBYT_PATH   := $(strip $(LIBYT_PATH))
+CUFFTDX_PATH := $(strip $(CUFFTDX_PATH))
 
 
 # implicit rules (do NOT modify the order of the following rules)

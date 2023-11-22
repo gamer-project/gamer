@@ -8,10 +8,11 @@
 // Description :  Replace the data at level "FaLv" by the average data at level "FaLv+1"
 //
 // Note        :  1. Use the input parameters "TVarCC" and "TVarFC" to determine the target cell- and
-//                   face-centered variables, respectively
+//                   face-centered variables on level "FaLv", respectively
 //                2. For MHD, this routine currently always restrict all three B field components
 //                   --> Do not distinguish _MAGX, _MAGY, _MAGZ, and _MAG in TVarFC
 //                3. Invoked by EvolveLevel()
+//                4. ELBDM_HYBRID + LOAD_BALANCING: Backward matching of phase field for ELBDM_MATCH_PHASE requires OPT__LB_EXCHANGE_FATHER
 //
 // Parameter   :  FaLv     : Target refinement level at which the data are going to be replaced
 //                SonFluSg : Fluid sandglass at level "FaLv+1"
@@ -20,12 +21,13 @@
 //                FaMagSg  : B field sandglass at level "FaLv"
 //                SonPotSg : Potential sandglass at level "FaLv+1"
 //                FaPotSg  : Potential sandglass at level "FaLv"
-//                TVarCC   : Target cell-centered variables
+//                TVarCC   : Target cell-centered variables on level "FaLv"
 //                           --> Supported variables in different models:
-//                               HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY,[, _POTE]
-//                               ELBDM : _DENS, _REAL, _IMAG, [, _POTE]
+//                               HYDRO        : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY,[, _POTE]
+//                               ELBDM_WAVE   : _DENS, _REAL, _IMAG, [, _POTE]
+//                               ELBDM_HYBRID : _DENS, _PHAS [, _POTE]
 //                           --> _FLUID, _PASSIVE, and _TOTAL apply to all models
-//                TVarFC   : Target face-centered variables
+//                TVarFC   : Target face-centered variables on level "FaLv"
 //                            --> Supported variables in different models:
 //                                HYDRO with MHD : _MAGX, _MAGY, _MAGZ, _MAG
 //                                ELBDM          : none
@@ -72,7 +74,6 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "FaMagSg", FaMagSg );
 #  endif
 
-
 // nothing to do if there are no real patches at lv+1
    if ( amr->NPatchComma[SonLv][1] == 0 )    return;
 
@@ -108,17 +109,40 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
       return;
    }
 
-// reset NFluVar and TFluVarIdxList to exclude density, real and imaginary part if phase restriction is on
-#  if ( MODEL == ELBDM )
-   const bool ResPha = ResFlu && OPT__RES_PHASE && (TVarCC & (_REAL) || TVarCC & (_IMAG));
-   if ( ResPha ) {
-      NFluVar=0;
-      for (int v=0; v<NCOMP_TOTAL; v++)
-//       only add field if it is neither density nor real or imaginary part
-         if ( TVarCC & (1L<<v)  &&  v != DENS  &&  v != REAL  &&  v != IMAG )    TFluVarIdxList[ NFluVar ++ ] = v;
-   }
-#  endif
 
+// set correct restriction options for wave-wave, fluid-wave and fluid-fluid level phase restriction
+// wave-wave:   phase restriction on if OPT__RES_PHASE is set
+// fluid-wave:  always use phase restriction
+// fluid-fluid: treat phase restriction the same as normal restriction
+#  if ( MODEL == ELBDM )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+// restrict phase during wave-wave-level restriction if OPT__RES_PHAS is enabled
+   const bool ResWWPha = ResFlu && OPT__RES_PHASE && ( TVarCC & (_REAL) || TVarCC & (_IMAG) ) &&   amr->use_wave_flag[FaLv] && amr->use_wave_flag[SonLv];
+// always restrict phase during fluid-wave-level restriction
+   const bool ResWFPha = ResFlu &&                   ( TVarCC & (_REAL) || TVarCC & (_IMAG) ) && ! amr->use_wave_flag[FaLv] && amr->use_wave_flag[SonLv];
+   const bool ResPha   = ResWWPha || ResWFPha;
+#  else // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+// restrict phase if OPT__RES_PHAS is enabled
+   const bool ResPha   = ResFlu && OPT__RES_PHASE && (TVarCC & (_REAL) || TVarCC & (_IMAG));
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID ) ... else
+#  endif // # if ( MODEL == ELBDM )
+
+
+
+// update the components to be restricted depending on whether phase restriction is enabled
+#  if ( MODEL == ELBDM )
+
+   NFluVar = 0;
+
+   for (int v=0; v<NCOMP_TOTAL; v++) {
+      if ( ResPha ) {
+            if ( TVarCC & (1L<<v) && v != DENS && v != REAL && v != IMAG )    TFluVarIdxList[ NFluVar ++ ] = v;
+      } else {
+            if ( TVarCC & (1L<<v)                                        )    TFluVarIdxList[ NFluVar ++ ] = v;
+      }
+   }
+
+#  endif // # if ( MODEL == ELBDM )
 
 // restrict
 #  pragma omp parallel for schedule( runtime )
@@ -149,7 +173,6 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #     endif
 #     endif // #ifdef GAMER_DEBUG
 
-
 //    loop over eight sons
       for (int LocalID=0; LocalID<8; LocalID++)
       {
@@ -178,16 +201,25 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #        endif // #ifdef GAMER_DEBUG
 
 #        if ( MODEL == ELBDM )
-//       average phase instead of real and imaginary part if option OPT__RES_PHASE is on
+//       average phase instead of real and imaginary part if ResPha is set
          if ( ResPha ) {
-
-//          D = DENS, R = REAL, I = IMAG
+//          D = DENS, R = REAL, I = IMAG, P = PHAS, S = STUB
             const real (*DSonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[DENS];
             const real (*RSonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[REAL];
             const real (*ISonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[IMAG];
+
                   real (*DFaPtr) [PS1][PS1] = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[DENS];
                   real (*RFaPtr) [PS1][PS1] = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[REAL];
                   real (*IFaPtr) [PS1][PS1] = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[IMAG];
+
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
+                  real (*PFaPtr)   [PS1][PS1]  = amr->patch[  FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
+                  real (*OldPFaPtr)[PS1][PS1]  = amr->patch[1-FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
+//                handle that we do not have data of previous time step during initialisation corresponding to a negative time
+                  if ( amr->FluSgTime[FaLv][1-FaFluSg ] < 0.0 ) {
+                     OldPFaPtr = PFaPtr;
+                  }
+#           endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
             int ii, jj, kk, I, J, K, Ip, Jp, Kp;
             real refphase, avgphase, avgdens;
@@ -197,35 +229,50 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
             for (int i=0; i<PS1_half; i++)  {  I = i*2;  Ip = I+1;  ii = i + Disp_i;
 
 //             take care to match the child phases before averaging
-               refphase   = SATAN2(ISonPtr[K ][J ][I ], RSonPtr[K ][J ][I ]);
-               avgphase   = 0.125*(                   refphase                                                    +
-                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[K ][J ][Ip], RSonPtr[K ][J ][Ip])) +
-                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[K ][Jp][I ], RSonPtr[K ][Jp][I ])) +
-                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][J ][I ], RSonPtr[Kp][J ][I ])) +
-                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[K ][Jp][Ip], RSonPtr[K ][Jp][Ip])) +
-                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][Jp][I ], RSonPtr[Kp][Jp][I ])) +
-                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][J ][Ip], RSonPtr[Kp][J ][Ip])) +
-                                    ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][Jp][Ip], RSonPtr[Kp][Jp][Ip])) );
-               avgdens    = 0.125* ( DSonPtr[K ][J ][I ] + DSonPtr[K ][J ][Ip] +
-                                     DSonPtr[K ][Jp][I ] + DSonPtr[Kp][J ][I ] +
-                                     DSonPtr[K ][Jp][Ip] + DSonPtr[Kp][Jp][I ] +
-                                     DSonPtr[Kp][J ][Ip] + DSonPtr[Kp][Jp][Ip] );
+               refphase    = SATAN2  ( ISonPtr[K ][J ][I ], RSonPtr[K ][J ][I ]  );
+               avgphase    = 0.125 * (                   refphase                                                    +
+                                       ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[K ][J ][Ip], RSonPtr[K ][J ][Ip])) +
+                                       ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[K ][Jp][I ], RSonPtr[K ][Jp][I ])) +
+                                       ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][J ][I ], RSonPtr[Kp][J ][I ])) +
+                                       ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[K ][Jp][Ip], RSonPtr[K ][Jp][Ip])) +
+                                       ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][Jp][I ], RSonPtr[Kp][Jp][I ])) +
+                                       ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][J ][Ip], RSonPtr[Kp][J ][Ip])) +
+                                       ELBDM_UnwrapPhase(refphase, SATAN2(ISonPtr[Kp][Jp][Ip], RSonPtr[Kp][Jp][Ip])) );
+               avgdens     = 0.125 * ( DSonPtr[K ][J ][I ] + DSonPtr[K ][J ][Ip] +
+                                       DSonPtr[K ][Jp][I ] + DSonPtr[Kp][J ][I ] +
+                                       DSonPtr[K ][Jp][Ip] + DSonPtr[Kp][Jp][I ] +
+                                       DSonPtr[Kp][J ][Ip] + DSonPtr[Kp][Jp][Ip] );
 
-               if (TVarCC & _DENS) DFaPtr[kk][jj][ii] = avgdens;
-               if (TVarCC & _REAL) RFaPtr[kk][jj][ii] = SQRT(avgdens) * COS(avgphase);
-               if (TVarCC & _IMAG) IFaPtr[kk][jj][ii] = SQRT(avgdens) * SIN(avgphase);
+#              if ( ELBDM_SCHEME == ELBDM_HYBRID )
+//             if father level uses fluid scheme and ELBDM_MATCH_PHASE is on, unwrap average phase to match parent phase
+               if ( !amr->use_wave_flag[FaLv] && ELBDM_MATCH_PHASE ) {
+                  avgphase    = ELBDM_UnwrapPhase(OldPFaPtr[kk][jj][ii], avgphase);
+               }
 
+               if ( !amr->use_wave_flag[FaLv] ) {
+                  if (TVarCC & _DENS)        DFaPtr[kk][jj][ii] = avgdens;
+                  if (TVarCC & _PHAS)        PFaPtr[kk][jj][ii] = avgphase;
+               } else { // if ( !amr->use_wave_flag[FaLv] ) {
+#              endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+                  if (TVarCC & _DENS)        DFaPtr[kk][jj][ii] = avgdens;
+                  if (TVarCC & _REAL)        RFaPtr[kk][jj][ii] = SQRT(avgdens) * COS(avgphase);
+                  if (TVarCC & _IMAG)        IFaPtr[kk][jj][ii] = SQRT(avgdens) * SIN(avgphase);
+#              if ( ELBDM_SCHEME == ELBDM_HYBRID )
+               } // if ( !amr->use_wave_flag[FaLv] ) { ... else
+#              endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
             }}}
          } // if ( ResPha )
-
-#        endif
+#        endif // #if ( MODEL == ELBDM )
 //       restrict the fluid data
+//       ELBDM: only restrict fluid data that has not yet been restricted using phase restriction
          if ( ResFlu ) {
          for (int v=0; v<NFluVar; v++)
          {
             const int TFluVarIdx = TFluVarIdxList[v];
             const real (*SonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[TFluVarIdx];
                   real (* FaPtr)[PS1][PS1] = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[TFluVarIdx];
+
+
 
             int ii, jj, kk, I, J, K, Ip, Jp, Kp;
 
@@ -240,7 +287,6 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
             }}}
          }
          } // if ( ResFlu )
-
 
 //       restrict the potential data
 #        ifdef GRAVITY
@@ -327,7 +373,6 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #        endif // ifdef MHD
       } // for (int LocalID=0; LocalID<8; LocalID++)
 
-
 //    apply the same B field restriction to the data of father-sibling patches on the coarse-fine boundaries
 #     ifdef MHD
       for (int s=0; s<6; s++)
@@ -402,6 +447,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
 //    rescale real and imaginary parts to get the correct density in ELBDM
 #     if ( MODEL == ELBDM )
+      if ( amr->use_wave_flag[FaLv] ) {
       real Real, Imag, Rho_Wrong, Rho_Corr, Rescale;
 
       if (  ( TVarCC & _DENS )  &&  ( TVarCC & _REAL )  &&  (TVarCC & _IMAG )  )
@@ -426,7 +472,9 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
          amr->patch[FaFluSg][FaLv][FaPID]->fluid[REAL][k][j][i] *= Rescale;
          amr->patch[FaFluSg][FaLv][FaPID]->fluid[IMAG][k][j][i] *= Rescale;
       }
-#     endif
+
+      } // if ( amr->use_wave_flag[FaLv] )
+#     endif // # if ( MODEL == ELBDM )
 
    } // for (int SonPID0=0; SonPID0<amr->NPatchComma[SonLv][1]; SonPID0+=8)
 
