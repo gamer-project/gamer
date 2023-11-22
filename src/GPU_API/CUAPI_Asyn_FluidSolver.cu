@@ -75,11 +75,11 @@ void CUFLU_FluidSolver_CTU(
 #elif ( MODEL == ELBDM )
 
 #if ( WAVE_SCHEME == WAVE_FD )
-__global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                                   real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
-                                   real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                   const real dt, const real _dh, const real Eta, const bool StoreFlux,
-                                   const real Taylor3_Coeff, const bool XYZ, const real MinDens );
+__global__ void CUFLU_ELBDMSolver_FD( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                                      real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
+                                      real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                      const real dt, const real _dh, const real Eta, const bool StoreFlux,
+                                      const real Taylor3_Coeff, const bool XYZ, const real MinDens );
 real ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 # elif ( WAVE_SCHEME == WAVE_GRAMFE )
 # if ( GRAMFE_SCHEME == GRAMFE_FFT )
@@ -95,12 +95,12 @@ void CUFLU_ELBDMSolver_GramFE_FFT(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) 
 #  elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 void   ELBDM_GramFE_ComputeTimeEvolutionMatrix(gramfe_matmul_float (*output)[2 * FLU_NXT], const real dt, const real dh, const real Eta);
 __global__
-void CUFLU_ELBDMSolver_GramFE_MATMUL(  real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                                       real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
-                                       real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                       gramfe_matmul_float g_Evolve   [][FLU_NXT * 2],
-                                       const real dt, const real _dh, const real Eta, const bool StoreFlux,
-                                       const bool XYZ, const real MinDens);
+void CUFLU_ELBDMSolver_GramFE_MATMUL( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                                      real g_Fluid_Out[][FLU_NOUT ][ CUBE(PS2) ],
+                                      real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                      gramfe_matmul_float g_Evolve   [][FLU_NXT * 2],
+                                      const real dt, const real _dh, const real Eta, const bool StoreFlux,
+                                      const bool XYZ, const real MinDens );
 #  else
 #   error : ERROR : unsupported GRAMFE_SCHEME !!
 #  endif // GRAMFE_SCHEME
@@ -196,7 +196,7 @@ extern cudaStream_t *Stream;
 // Description :  1. MODEL == HYDRO : use GPU to solve the Euler equations by different schemes
 //                                    --> invoke the kernel "CUFLU_FluidSolver_XXX"
 //                2. MODEL == ELBDM : use GPU to solve the kinematic operator in the Schrodinger's equations
-//                                    --> invoke the kernel "CUFLU_ELBDMSolver"
+//                                    --> invoke the kernel "CUFLU_ELBDMSolver_XXX"
 //
 //                ***********************************************************
 //                **                Asynchronous Function                  **
@@ -599,7 +599,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 #     if ( WAVE_SCHEME == WAVE_FD )
 
-         CUFLU_ELBDMSolver <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
+         CUFLU_ELBDMSolver_FD <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
             ( d_Flu_Array_F_In  + UsedPatch[s],
               d_Flu_Array_F_Out + UsedPatch[s],
               d_Flux_Array      + UsedPatch[s],

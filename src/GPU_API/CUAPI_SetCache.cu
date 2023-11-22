@@ -90,11 +90,11 @@ void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ C
 #endif
 
 #elif ( MODEL == ELBDM )
-__global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                                   real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
-                                   real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                   const real dt, const real _dh, const real Eta, const bool StoreFlux,
-                                   const real Taylor3_Coeff, const bool XYZ, const real MinDens );
+__global__ void CUFLU_ELBDMSolver_FD( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                                      real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
+                                      real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                      const real dt, const real _dh, const real Eta, const bool StoreFlux,
+                                      const real Taylor3_Coeff, const bool XYZ, const real MinDens );
 
 #else
 #error : ERROR : unsupported MODEL !!
@@ -191,7 +191,7 @@ void CUAPI_SetCache()
 #  endif
 
 #  elif ( MODEL == ELBDM )
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_ELBDMSolver,                  cudaFuncCachePreferShared )  );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_ELBDMSolver_FD,               cudaFuncCachePreferShared )  );
 
 #  else
 #  error : ERROR : unsupported MODEL !!
