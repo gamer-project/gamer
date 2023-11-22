@@ -424,6 +424,7 @@ struct InputPara_t
    double Dt__HybridCFL;
    double Dt__HybridCFLInit;
    double Dt__HybridVelocity;
+   double Dt__HybridVelocityInit;
 #  endif //  # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
 #  ifdef PARTICLE

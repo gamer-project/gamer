@@ -2165,6 +2165,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Dt__HybridCFL           = DT__HYBRID_CFL;
    InputPara.Dt__HybridCFLInit       = DT__HYBRID_CFL_INIT;
    InputPara.Dt__HybridVelocity      = DT__HYBRID_VELOCITY;
+   InputPara.Dt__HybridVelocityInit  = DT__HYBRID_VELOCITY_INIT;
 #  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
 #  ifdef PARTICLE
@@ -3117,6 +3118,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Dt__HybridCFL",           HOFFSET(InputPara_t,Dt__HybridCFL          ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Dt__HybridCFLInit",       HOFFSET(InputPara_t,Dt__HybridCFLInit      ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Dt__HybridVelocity",      HOFFSET(InputPara_t,Dt__HybridVelocity     ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "Dt__HybridVelocityInit",  HOFFSET(InputPara_t,Dt__HybridVelocityInit ), H5T_NATIVE_DOUBLE  );
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
 #  ifdef PARTICLE

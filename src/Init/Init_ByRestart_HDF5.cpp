@@ -1880,6 +1880,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Dt__HybridCFL",           &RS.Dt__HybridCFL,           SID, TID, NonFatal, &RT.Dt__HybridCFL,            1, NonFatal );
    LoadField( "Dt__HybridCFLInit",       &RS.Dt__HybridCFLInit,       SID, TID, NonFatal, &RT.Dt__HybridCFLInit,        1, NonFatal );
    LoadField( "Dt__HybridVelocity",      &RS.Dt__HybridVelocity,      SID, TID, NonFatal, &RT.Dt__HybridVelocity,       1, NonFatal );
+   LoadField( "Dt__HybridVelocityInit",  &RS.Dt__HybridVelocityInit,  SID, TID, NonFatal, &RT.Dt__HybridVelocityInit,   1, NonFatal );
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
 #  ifdef PARTICLE
