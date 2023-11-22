@@ -25,13 +25,15 @@ static real GetMaxVelocity( const int lv, const bool ExcludeWaveCells);
 //-------------------------------------------------------------------------------------------------------
 double ELBDM_GetTimeStep_Hybrid_Velocity( const int lv )
 {
+
    const bool ExcludeWaveCells = true;
 
 // get the velocity dS/dx * hbar/m as first derivative of phase
-   const real MaxV  = GetMaxVelocity( lv, ExcludeWaveCells);
+   const real MaxV = GetMaxVelocity( lv, ExcludeWaveCells);
 
 // get the time-step
-   const double dt  = 0.5 * amr->dh[lv] / MaxV * DT__HYBRID_VELOCITY;
+   double dt = 0.5 * amr->dh[lv] / MaxV;
+   dt *= (Step==0) ? DT__HYBRID_VELOCITY_INIT : DT__HYBRID_VELOCITY;
 
    return dt;
 

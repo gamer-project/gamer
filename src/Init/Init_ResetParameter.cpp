@@ -97,17 +97,6 @@ void Init_ResetParameter()
    }
 
 
-// hybrid velocity dt (empirically determined CFL condition)
-#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( DT__HYBRID_VELOCITY < 0.0 )
-   {
-      DT__HYBRID_VELOCITY = 1.00;
-
-      PRINT_RESET_PARA( DT__HYBRID_VELOCITY, FORMAT_REAL, "" );
-   } // if ( DT__HYBRID_VELOCITY < 0.0 )
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-
-
 // hybrid dt (empirically determined CFL condition)
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( DT__HYBRID_CFL < 0.0 )
@@ -117,15 +106,36 @@ void Init_ResetParameter()
 #     else
       DT__HYBRID_CFL = 0.40;
 #     endif
+
       PRINT_RESET_PARA( DT__HYBRID_CFL, FORMAT_REAL, "" );
    } // if ( DT__HYBRID_CFL < 0.0 )
 
    if ( DT__HYBRID_CFL_INIT < 0.0 )
    {
       DT__HYBRID_CFL_INIT = DT__HYBRID_CFL;
+
       PRINT_RESET_PARA( DT__HYBRID_CFL_INIT, FORMAT_REAL, "" );
    } // if ( DT__HYBRID_CFL < 0.0 )
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+
+// hybrid velocity dt (empirically determined CFL condition)
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( DT__HYBRID_VELOCITY < 0.0 )
+   {
+      DT__HYBRID_VELOCITY = 1.00;
+
+      PRINT_RESET_PARA( DT__HYBRID_VELOCITY, FORMAT_REAL, "" );
+   } // if ( DT__HYBRID_VELOCITY < 0.0 )
+
+   if ( DT__HYBRID_VELOCITY_INIT < 0.0 )
+   {
+      DT__HYBRID_VELOCITY_INIT = DT__HYBRID_VELOCITY;
+
+      PRINT_RESET_PARA( DT__HYBRID_VELOCITY_INIT, FORMAT_REAL, "" );
+   } // if ( DT__HYBRID_VELOCITY < 0.0 )
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
 
 // gravity dt
 #  ifdef GRAVITY

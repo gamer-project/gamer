@@ -1188,12 +1188,18 @@ void Aux_Check_Parameter()
    if ( DT__HYBRID_CFL > dt_hybrid_max )
       Aux_Error(  ERROR_INFO, "DT__HYBRID_CFL (%13.7e) > %13.7e is unstable !!\n",
                    DT__HYBRID_CFL, dt_hybrid_max );
+
    if ( DT__HYBRID_CFL_INIT > dt_hybrid_max )
       Aux_Error(  ERROR_INFO, "DT__HYBRID_CFL_INIT (%13.7e) > %13.7e is unstable !!\n",
                    DT__HYBRID_CFL_INIT, dt_hybrid_max );
+
    if ( DT__HYBRID_VELOCITY > dt_velocity_max )
       Aux_Error(  ERROR_INFO, "DT__HYBRID_VELOCITY (%13.7e) > %13.7e is unstable !!\n",
                    DT__HYBRID_VELOCITY, dt_velocity_max );
+
+   if ( DT__HYBRID_VELOCITY_INIT > dt_velocity_max )
+      Aux_Error(  ERROR_INFO, "DT__HYBRID_VELOCITY_INIT (%13.7e) > %13.7e is unstable !!\n",
+                   DT__HYBRID_VELOCITY_INIT, dt_velocity_max );
 
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 

@@ -129,7 +129,7 @@ bool                 OPT__FLAG_INTERFERENCE;
 double               FlagTable_Interference[NLEVEL-1][4];
 int                  ELBDM_FIRST_WAVE_LEVEL;
 bool                 ELBDM_MATCH_PHASE;
-double               DT__HYBRID_CFL, DT__HYBRID_CFL_INIT, DT__HYBRID_VELOCITY;
+double               DT__HYBRID_CFL, DT__HYBRID_CFL_INIT, DT__HYBRID_VELOCITY, DT__HYBRID_VELOCITY_INIT;
 #endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #ifdef QUARTIC_SELF_INTERACTION

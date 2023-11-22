@@ -916,6 +916,7 @@ void Aux_TakeNote()
       fprintf( Note, "DT__HYBRID_CFL                  %13.7e\n",  DT__HYBRID_CFL              );
       fprintf( Note, "DT__HYBRID_CFL_INIT             %13.7e\n",  DT__HYBRID_CFL_INIT         );
       fprintf( Note, "DT__HYBRID_VELOCITY             %13.7e\n",  DT__HYBRID_VELOCITY         );
+      fprintf( Note, "DT__HYBRID_VELOCITY_INIT        %13.7e\n",  DT__HYBRID_VELOCITY_INIT    );
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #     endif // # if ( MODEL == ELBDM )
 #     ifdef PARTICLE

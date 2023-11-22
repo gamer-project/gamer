@@ -227,7 +227,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
       dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Hybrid_Velocity( lv );
    } // if ( amr->use_wave_flag[lv] ) ... else
 
-   sprintf( dTime_Name[NdTime++], "%s", "Hybrid_Velocity" );
+   sprintf( dTime_Name[NdTime++], "%s", "Hybrid_Vel" );
 #  endif //  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
 
 
