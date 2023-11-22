@@ -481,6 +481,11 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : INT_OPP_SIGN_0TH_ORDER is not recommended for ELBDM !!\n" );
 #  endif
 
+#  if ( defined SUPPORT_SPECTRAL_INT  &&  MODEL != ELBDM )
+#     warning : WARNING : SUPPORT_SPECTRAL_INT has not been well tested for MODEL != ELBDM !!
+      Aux_Message( stderr, "WARNING : SUPPORT_SPECTRAL_INT has not been well tested for MODEL != ELBDM !!\n" );
+#  endif
+
    } // if ( MPI_Rank == 0 )
 
 
