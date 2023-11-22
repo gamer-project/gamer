@@ -1161,6 +1161,7 @@ void Aux_TakeNote()
       fprintf( Note, "ELBDM_REMOVE_MOTION_CM          %d\n",         ELBDM_REMOVE_MOTION_CM );
       fprintf( Note, "ELBDM_BASE_SPECTRAL             %d\n",         ELBDM_BASE_SPECTRAL    );
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      fprintf( Note, "ELBDM_MATCH_PHASE               %d\n",         ELBDM_MATCH_PHASE      );
       fprintf( Note, "ELBDM_FIRST_WAVE_LEVEL          %d\n",         ELBDM_FIRST_WAVE_LEVEL );
 #     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #     else
@@ -1353,20 +1354,18 @@ void Aux_TakeNote()
 //    record the parameters of interpolation schemes
       fprintf( Note, "Parameters of Interpolation Schemes\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "OPT__INT_TIME                   %d\n",      OPT__INT_TIME           );
+      fprintf( Note, "OPT__INT_TIME                   %d\n",      OPT__INT_TIME                 );
 #     if ( MODEL == HYDRO )
-      fprintf( Note, "OPT__INT_PRIM                   %d\n",      OPT__INT_PRIM           );
+      fprintf( Note, "OPT__INT_PRIM                   %d\n",      OPT__INT_PRIM                 );
 #     endif
 #     if ( MODEL == ELBDM )
-      fprintf( Note, "OPT__INT_PHASE                  %d\n",      OPT__INT_PHASE          );
-      fprintf( Note, "OPT__RES_PHASE                  %d\n",      OPT__RES_PHASE          );
-
-#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      fprintf( Note, "ELBDM_MATCH_PHASE               %d\n",      ELBDM_MATCH_PHASE );
-#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      fprintf( Note, "OPT__INT_PHASE                  %d\n",      OPT__INT_PHASE                );
+      fprintf( Note, "OPT__RES_PHASE                  %d\n",      OPT__RES_PHASE                );
 #     endif
 #     ifdef SUPPORT_SPECTRAL_INT
-      fprintf( Note, "SPEC_INT_TABLE_PATH             %s\n",      SPEC_INT_TABLE_PATH     );
+      fprintf( Note, "SPEC_INT_TABLE_PATH             %s\n",      SPEC_INT_TABLE_PATH           );
+      fprintf( Note, "SPEC_INT_XY_INSTEAD_DEPHA       %d\n",      SPEC_INT_XY_INSTEAD_DEPHA     );
+      fprintf( Note, "SPEC_INT_WAVELENGTH_MAGNIFIER   %13.7e\n",  SPEC_INT_WAVELENGTH_MAGNIFIER );
 #     endif
       fprintf( Note, "OPT__FLU_INT_SCHEME             %s\n",      ( OPT__FLU_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
                                                                   ( OPT__FLU_INT_SCHEME == INT_MINMOD1D ) ? "MINMOD1D" :
@@ -1448,12 +1447,12 @@ void Aux_TakeNote()
                                                                ( OPT__REF_POT_INT_SCHEME == INT_SPECTRAL ) ? "SPECTRAL" :
                                                                                                              "UNKNOWN" );
 #     endif
-      fprintf( Note, "INT_MONO_COEFF                  %13.7e\n",  INT_MONO_COEFF          );
+      fprintf( Note, "INT_MONO_COEFF                  %13.7e\n",  INT_MONO_COEFF                );
 #     ifdef MHD
-      fprintf( Note, "INT_MONO_COEFF_B                %13.7e\n",  INT_MONO_COEFF_B        );
+      fprintf( Note, "INT_MONO_COEFF_B                %13.7e\n",  INT_MONO_COEFF_B              );
 #     endif
-      fprintf( Note, "MONO_MAX_ITER                   %d\n",      MONO_MAX_ITER           );
-      fprintf( Note, "INT_OPP_SIGN_0TH_ORDER          %d\n",      INT_OPP_SIGN_0TH_ORDER  );
+      fprintf( Note, "MONO_MAX_ITER                   %d\n",      MONO_MAX_ITER                 );
+      fprintf( Note, "INT_OPP_SIGN_0TH_ORDER          %d\n",      INT_OPP_SIGN_0TH_ORDER        );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 

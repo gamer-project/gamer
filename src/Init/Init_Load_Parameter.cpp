@@ -298,7 +298,8 @@ void Init_Load_Parameter()
    ReadPara->Add( "ELBDM_REMOVE_MOTION_CM",     &ELBDM_REMOVE_MOTION_CM,          ELBDM_REMOVE_MOTION_CM_NONE, 0, 2              );
    ReadPara->Add( "ELBDM_BASE_SPECTRAL",        &ELBDM_BASE_SPECTRAL,             false,           Useless_bool,  Useless_bool   );
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   ReadPara->Add( "ELBDM_FIRST_WAVE_LEVEL",     &ELBDM_FIRST_WAVE_LEVEL,           -1,             1,             NLEVEL         );
+   ReadPara->Add( "ELBDM_MATCH_PHASE",          &ELBDM_MATCH_PHASE,               true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "ELBDM_FIRST_WAVE_LEVEL",     &ELBDM_FIRST_WAVE_LEVEL,         -1,               1,             NLEVEL         );
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif // #if ( MODEL == ELBDM )
 
@@ -420,9 +421,6 @@ void Init_Load_Parameter()
 #  if ( MODEL == ELBDM )
    ReadPara->Add( "OPT__INT_PHASE",             &OPT__INT_PHASE,                  true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RES_PHASE",             &OPT__RES_PHASE,                  false,           Useless_bool,  Useless_bool   );
-#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   ReadPara->Add( "ELBDM_MATCH_PHASE",          &ELBDM_MATCH_PHASE,               true,            Useless_bool,  Useless_bool   );
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
 // do not check OPT__FLU_INT_SCHEME and OPT__REF_FLU_INT_SCHEME since they may be reset by Init_ResetDefaultParameter()
    ReadPara->Add( "OPT__FLU_INT_SCHEME",        &OPT__FLU_INT_SCHEME,             INT_DEFAULT,     NoMin_int,     NoMax_int      );
