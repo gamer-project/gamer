@@ -705,8 +705,10 @@ struct InputPara_t
    int    IntOppSign0thOrder;
 #  ifdef SUPPORT_SPECTRAL_INT
    char  *SpecInt_TablePath;
+#  if ( MODEL == ELBDM )
    int    SpecInt_XY_Instead_DePha; 
    double SpecInt_WavelengthMagnifier;
+#  endif
 #  endif
 
 // data dump

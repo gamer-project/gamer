@@ -301,7 +301,11 @@ int  FB_ParaBuf;
 
 // (2-13) spectral interpolation
 #ifdef SUPPORT_SPECTRAL_INT
-char                 SPEC_INT_TABLE_PATH[MAX_STRING];
+char   SPEC_INT_TABLE_PATH[MAX_STRING];
+#if ( MODEL == ELBDM )
+bool   SPEC_INT_XY_INSTEAD_DEPHA;
+double SPEC_INT_WAVELENGTH_MAGNIFIER;
+#endif
 InterpolationHandler Int_InterpolationHandler;
 #endif // #ifdef SUPPORT_SPECTRAL_INT
 

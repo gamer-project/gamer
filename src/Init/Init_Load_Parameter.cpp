@@ -413,6 +413,7 @@ void Init_Load_Parameter()
 #  endif // #  if ( SUPPORT_FFTW == FFTW2 ) ... # else
 #  endif // # ifdef SUPPORT_FFTW
 
+
 // interpolation schemes
    ReadPara->Add( "OPT__INT_TIME",              &OPT__INT_TIME,                   true,            Useless_bool,  Useless_bool   );
 #  if ( MODEL == HYDRO )
@@ -447,6 +448,13 @@ void Init_Load_Parameter()
 #  else
 #  error : unsupported MODEL !!
 #  endif
+#  ifdef SUPPORT_SPECTRAL_INT
+   ReadPara->Add( "SPEC_INT_TABLE_PATH",            SPEC_INT_TABLE_PATH,          NoDef_str,       Useless_str,   Useless_str    );
+#  if ( MODEL == ELBDM )
+   ReadPara->Add( "SPEC_INT_XY_INSTEAD_DEPHA",     &SPEC_INT_XY_INSTEAD_DEPHA,    true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "SPEC_INT_WAVELENGTH_MAGNIFIER", &SPEC_INT_WAVELENGTH_MAGNIFIER,1.0e2,           1.0,           NoMax_double   );
+#  endif
+#  endif // #ifdef SUPPORT_SPECTRAL_INT
 
 
 // data dump
@@ -499,11 +507,6 @@ void Init_Load_Parameter()
    ReadPara->Add( "YT_SCRIPT",                   YT_SCRIPT,                       NoDef_str,       Useless_str,   Useless_str    );
    ReadPara->Add( "YT_VERBOSE",           (int*)&YT_VERBOSE,                      1,               0,             3              );
    ReadPara->Add( "YT_FIG_BASENAME",             YT_FIG_BASENAME,                 NoDef_str,       Useless_str,   Useless_str    );
-#  endif
-
-// GramFE tables
-#  ifdef SUPPORT_SPECTRAL_INT
-   ReadPara->Add( "SPEC_INT_TABLE_PATH",         SPEC_INT_TABLE_PATH,             NoDef_str,       Useless_str,   Useless_str    );
 #  endif
 
 // miscellaneous

@@ -55,7 +55,7 @@ void Aux_Check_Parameter()
 #  ifndef SUPPORT_FFTW
 #     error : ERROR : SUPPORT_SPECTRAL_INT requires SUPPORT_FFTW!!
 #  endif // # ifndef SUPPORT_FFTW
-#  if ( SUPPORT_FFTW == FFTW2 && !defined FLOAT8 )
+#  if ( SUPPORT_FFTW == FFTW2  &&  !defined FLOAT8 )
 #     error : ERROR : SUPPORT_SPECTRAL_INT with SUPPORT_FFTW=FFTW2 requires FLOAT8!!
 #  endif // # if ( SUPPORT_FFTW == FFTW2 && !defined FLOAT8 )
 #  endif // # ifdef SUPPORT_SPECTRAL_INT
