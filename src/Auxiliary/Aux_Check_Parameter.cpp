@@ -1140,6 +1140,7 @@ void Aux_Check_Parameter()
 
    if ( OPT__INIT == INIT_BY_FILE && OPT__UM_IC_LEVEL >= ELBDM_FIRST_WAVE_LEVEL && ELBDM_MATCH_PHASE )
       Aux_Error( ERROR_INFO, "ELBDM_HYBRID currently does not support OPT__UM_IC_LEVEL (%d) >= ELBDM_FIRST_WAVE_LEVEL (%d) from UM_IC because of phase matching (ELBDM_MATCH_PHASE) !!\n", OPT__UM_IC_LEVEL, ELBDM_FIRST_WAVE_LEVEL );
+
    if ( INIT_SUBSAMPLING_NCELL > 1 )
       Aux_Error( ERROR_INFO, "ELBDM_HYBRID currently does not support INIT_SUBSAMPLING_NCELL > 1 !!\n" );
 
@@ -1150,12 +1151,6 @@ void Aux_Check_Parameter()
 #  error : ERROR : FLU_GHOST_SIZE needs to be bigger than HYB_GHOST_SIZE !!
 #  endif // # if ( FLU_GHOST_SIZE < HYB_GHOST_SIZE )
 
-// bitwise reproducibility currently fails in hybrid scheme because of conversion from RE/IM to DENS/PHAS when storing fields in HDF5
-// possible solution could be to convert RE/IM <-> DENS/PHAS using high-precision routines to ensure bitwise identity for significant digits
-#  ifdef BITWISE_REPRODUCIBILITY
-      Aux_Message( stderr, "WARNING : BITWISE_REPRODUCIBILITY currently unsupported for ELBDM_SCHEME == ELBDM_HYBRID !!\n" );
-#  endif
-
    if ( ELBDM_BASE_SPECTRAL )
       Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL incompatible with ELBDM_SCHEME == ELBDM_HYBRID !!\n" );
 
@@ -1163,16 +1158,16 @@ void Aux_Check_Parameter()
 
 // for stability of hybrid scheme with wave levels, all fluid levels require that the flag buffer >= PATCH_SIZE
 // furthermore, the restriction operation needs to be enabled
-   if ( MAX_LEVEL > 0 && ELBDM_FIRST_WAVE_LEVEL > 0 && ELBDM_FIRST_WAVE_LEVEL <= MAX_LEVEL )
+   if ( MAX_LEVEL > 0  &&  ELBDM_FIRST_WAVE_LEVEL > 0  &&  ELBDM_FIRST_WAVE_LEVEL <= MAX_LEVEL )
    {
-   if ( FLAG_BUFFER_SIZE < PATCH_SIZE )
-      Aux_Error(  ERROR_INFO, "ELBDM_HYBRID with AMR requires that the FLAG_BUFFER_SIZE size is equal or greater than patch size on fluid levels to enforce refinement!!\n");
+      if ( FLAG_BUFFER_SIZE < PATCH_SIZE )
+         Aux_Error(  ERROR_INFO, "ELBDM_HYBRID with AMR requires that the FLAG_BUFFER_SIZE size is equal or greater than patch size on fluid levels to enforce refinement!!\n");
 
-   if ( !OPT__FIXUP_RESTRICT )
-      Aux_Error(  ERROR_INFO, "ELBDM_HYBRID with AMR requires the option OPT__FIXUP_RESTRICT !!\n");
+      if ( !OPT__FIXUP_RESTRICT )
+         Aux_Error(  ERROR_INFO, "ELBDM_HYBRID with AMR requires the option OPT__FIXUP_RESTRICT !!\n");
 
-   if ( !OPT__INIT_RESTRICT )
-      Aux_Error(  ERROR_INFO, "ELBDM_HYBRID with AMR requires the option OPT__INIT_RESTRICT !!\n");
+      if ( !OPT__INIT_RESTRICT )
+         Aux_Error(  ERROR_INFO, "ELBDM_HYBRID with AMR requires the option OPT__INIT_RESTRICT !!\n");
    }
 
 #  ifdef LOAD_BALANCE
@@ -1285,6 +1280,7 @@ void Aux_Check_Parameter()
 #  error : ERROR : unsupported WAVE_SCHEME
 #  endif  // # WAVE_SCHEME
 
+
 // warnings
 // ------------------------------
    if ( MPI_Rank == 0 ) {
@@ -1319,8 +1315,18 @@ void Aux_Check_Parameter()
    if ( OPT__INIT == INIT_BY_FILE )
       Aux_Message( stderr, "WARNING : currently we don't check MIN_DENS for the initial data loaded from UM_IC !!\n" );
 
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+// bitwise reproducibility currently fails in hybrid scheme because of conversion from RE/IM to DENS/PHAS when storing fields in HDF5
+// --> possible solution could be to converting RE/IM <-> DENS/PHAS using high-precision routines to ensure bitwise identity for significant digits
+#  ifdef BITWISE_REPRODUCIBILITY
+      Aux_Message( stderr, "WARNING : BITWISE_REPRODUCIBILITY is currently not unsupported for ELBDM_HYBRID during restart !!\n" );
+#  endif
 
-#  if ( WAVE_SCHEME == WAVE_FD )
+   if ( ! OPT__FLAG_INTERFERENCE )
+      Aux_Message( stderr, "WARNING : OPT__FLAG_INTERFERENCE is off for ELBDM_HYBRID so simulations will never switch to the wave scheme !!\n" );
+#  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+#  if   ( WAVE_SCHEME == WAVE_FD )
 
 #  elif ( WAVE_SCHEME == WAVE_GRAMFE ) // #  if ( WAVE_SCHEME == WAVE_FD )
 
@@ -1335,7 +1341,7 @@ void Aux_Check_Parameter()
 
 #  else
 #  error : ERROR : unsupported WAVE_SCHEME
-#  endif //
+#  endif // WAVE_SCHEME
 
    } // if ( MPI_Rank == 0 )
 #  else
