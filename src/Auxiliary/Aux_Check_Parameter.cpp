@@ -1138,8 +1138,10 @@ void Aux_Check_Parameter()
 // check hybrid scheme parameters for errors
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
-   if ( OPT__INIT == INIT_BY_FILE && OPT__UM_IC_LEVEL >= ELBDM_FIRST_WAVE_LEVEL && ELBDM_MATCH_PHASE )
-      Aux_Error( ERROR_INFO, "ELBDM_HYBRID currently does not support OPT__UM_IC_LEVEL (%d) >= ELBDM_FIRST_WAVE_LEVEL (%d) from UM_IC because of phase matching (ELBDM_MATCH_PHASE) !!\n", OPT__UM_IC_LEVEL, ELBDM_FIRST_WAVE_LEVEL );
+   if ( OPT__INIT == INIT_BY_FILE  &&  OPT__UM_IC_LEVEL >= ELBDM_FIRST_WAVE_LEVEL  &&  ELBDM_MATCH_PHASE )
+      Aux_Error( ERROR_INFO, "ELBDM_HYBRID currently does not support OPT__UM_IC_LEVEL (%d) >= ELBDM_FIRST_WAVE_LEVEL (%d)\n"
+                             "        from UM_IC because of phase matching (ELBDM_MATCH_PHASE) !!\n",
+                 OPT__UM_IC_LEVEL, ELBDM_FIRST_WAVE_LEVEL );
 
    if ( INIT_SUBSAMPLING_NCELL > 1 )
       Aux_Error( ERROR_INFO, "ELBDM_HYBRID currently does not support INIT_SUBSAMPLING_NCELL > 1 !!\n" );
@@ -1161,7 +1163,7 @@ void Aux_Check_Parameter()
    if ( MAX_LEVEL > 0  &&  ELBDM_FIRST_WAVE_LEVEL > 0  &&  ELBDM_FIRST_WAVE_LEVEL <= MAX_LEVEL )
    {
       if ( FLAG_BUFFER_SIZE < PATCH_SIZE )
-         Aux_Error(  ERROR_INFO, "ELBDM_HYBRID with AMR requires that the FLAG_BUFFER_SIZE size is equal or greater than patch size on fluid levels to enforce refinement!!\n");
+         Aux_Error(  ERROR_INFO, "ELBDM_HYBRID with AMR requires that the FLAG_BUFFER_SIZE size is equal to or greater than patch size on fluid levels to enforce refinement!!\n");
 
       if ( !OPT__FIXUP_RESTRICT )
          Aux_Error(  ERROR_INFO, "ELBDM_HYBRID with AMR requires the option OPT__FIXUP_RESTRICT !!\n");
@@ -1324,6 +1326,10 @@ void Aux_Check_Parameter()
 
    if ( ! OPT__FLAG_INTERFERENCE )
       Aux_Message( stderr, "WARNING : OPT__FLAG_INTERFERENCE is off for ELBDM_HYBRID so simulations will never switch to the wave scheme !!\n" );
+
+   if (  OPT__INIT == INIT_BY_FILE  &&  ( !OPT__UM_IC_DOWNGRADE || !OPT__UM_IC_REFINE )  )
+      Aux_Message( stderr, "WARNING : please enable both OPT__UM_IC_DOWNGRADE and OPT__UM_IC_REFINE to properly switch to\n"
+                           "          the wave scheme during initialization !!\n" );
 #  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #  if   ( WAVE_SCHEME == WAVE_FD )
