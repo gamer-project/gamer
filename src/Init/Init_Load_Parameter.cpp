@@ -35,7 +35,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "MPI_NRANK_X",                &MPI_NRank_X[0],                 -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "MPI_NRANK_Y",                &MPI_NRank_X[1],                 -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "MPI_NRANK_Z",                &MPI_NRank_X[2],                 -1,               NoMin_int,     NoMax_int      );
-// do not check OMP_NTHREAD since it may be reset by Init_ResetDefaultParameter()
+// do not check OMP_NTHREAD since it may be reset by Init_ResetParameter()
    ReadPara->Add( "OMP_NTHREAD",                &OMP_NTHREAD,                    -1,               NoMin_int,     NoMax_int      );
 // do not check END_T and END_STEP since they may be reset by test problems or restart
    ReadPara->Add( "END_T",                      &END_T,                          -1.0,             NoMin_double,  NoMax_double   );
@@ -65,7 +65,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__BC_FLU_ZP",             &OPT__BC_FLU[5],                 -1,               1,             5              );
 #  ifdef GRAVITY
    ReadPara->Add( "OPT__BC_POT",                &OPT__BC_POT,                    -1,               1,             2              );
-// do not check GFUNC_COEFF0 since it may be reset by Init_ResetDefaultParameter()
+// do not check GFUNC_COEFF0 since it may be reset by Init_ResetParameter()
    ReadPara->Add( "GFUNC_COEFF0",               &GFUNC_COEFF0,                   -1.0,             NoMin_double,  NoMax_double   );
 #  endif
 
@@ -84,7 +84,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "PAR_TR_INTEG",               &amr->Par->IntegTracer,           TRACER_INTEG_RK2, 1,             2              );
    ReadPara->Add( "PAR_IMPROVE_ACC",            &amr->Par->ImproveAcc,            true,             Useless_bool,  Useless_bool   );
    ReadPara->Add( "PAR_PREDICT_POS",            &amr->Par->PredictPos,            true,             Useless_bool,  Useless_bool   );
-// do not check PAR_REMOVE_CELL since it may be reset by Init_ResetDefaultParameter()
+// do not check PAR_REMOVE_CELL since it may be reset by Init_ResetParameter()
    ReadPara->Add( "PAR_REMOVE_CELL",            &amr->Par->RemoveCell,           -1.0,              NoMin_double,  NoMax_double   );
    ReadPara->Add( "OPT__FREEZE_PAR",            &OPT__FREEZE_PAR,                 false,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "PAR_TR_VEL_CORR",            &amr->Par->TracerVelCorr,         false,            Useless_bool,  Useless_bool   );
@@ -101,7 +101,7 @@ void Init_Load_Parameter()
 
 // time-step
    ReadPara->Add( "DT__MAX",                    &DT__MAX,                        -1.0,             NoMin_double,  NoMax_double   );
-// do not check DT__FLUID/FLUID_INIT/GRAVITY/PARVEL_MAX/ELBDM_HYBRID/VELOCITY since they may be reset by Init_ResetDefaultParameter()
+// do not check DT__FLUID/FLUID_INIT/GRAVITY/PARVEL_MAX/ELBDM_HYBRID/VELOCITY since they may be reset by Init_ResetParameter()
    ReadPara->Add( "DT__FLUID",                  &DT__FLUID,                      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "DT__FLUID_INIT",             &DT__FLUID_INIT,                 -1.0,             NoMin_double,  NoMax_double   );
 #  ifdef GRAVITY
@@ -207,7 +207,7 @@ void Init_Load_Parameter()
 // source terms
    ReadPara->Add( "SRC_DELEPTONIZATION",        &SrcTerms.Deleptonization,        false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "SRC_USER",                   &SrcTerms.User,                   false,           Useless_bool,  Useless_bool   );
-// do not check SRC_GPU_NPGROUP since it may be reset by either Init_ResetDefaultParameter() or CUAPI_SetMemSize()
+// do not check SRC_GPU_NPGROUP since it may be reset by either Init_ResetParameter() or CUAPI_SetMemSize()
    ReadPara->Add( "SRC_GPU_NPGROUP",            &SRC_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
 
 
@@ -226,7 +226,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "GRACKLE_THREE_BODY_RATE",    &GRACKLE_THREE_BODY_RATE,         0,               0,             5              );
    ReadPara->Add( "GRACKLE_CIE_COOLING",        &GRACKLE_CIE_COOLING,             false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "GRACKLE_H2_OPA_APPROX",      &GRACKLE_H2_OPA_APPROX,           0,               0,             1              );
-// do not check CHE_GPU_NPGROUP since it may be reset by either Init_ResetDefaultParameter() or CUAPI_SetMemSize()
+// do not check CHE_GPU_NPGROUP since it may be reset by either Init_ResetParameter() or CUAPI_SetMemSize()
    ReadPara->Add( "CHE_GPU_NPGROUP",            &CHE_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
 #  endif
 
@@ -306,7 +306,7 @@ void Init_Load_Parameter()
 
 
 // fluid solvers in all models
-// do not check FLU_GPU_NPGROUP and GPU_NSTREAM since they may be reset by either Init_ResetDefaultParameter() or CUAPI_SetMemSize()
+// do not check FLU_GPU_NPGROUP and GPU_NSTREAM since they may be reset by either Init_ResetParameter() or CUAPI_SetMemSize()
    ReadPara->Add( "FLU_GPU_NPGROUP",            &FLU_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "GPU_NSTREAM",                &GPU_NSTREAM,                    -1,               NoMin_int,     NoMax_int      );
 #  if ( MODEL == ELBDM && ELBDM_SCHEME != ELBDM_HYBRID && WAVE_SCHEME == WAVE_GRAMFE )
@@ -318,7 +318,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__FIXUP_ELECTRIC",        &OPT__FIXUP_ELECTRIC,             true,            Useless_bool,  Useless_bool   );
 #  endif
    ReadPara->Add( "OPT__FIXUP_RESTRICT",        &OPT__FIXUP_RESTRICT,             true,            Useless_bool,  Useless_bool   );
-// do not check OPT__CORR_AFTER_ALL_SYNC since it may be reset by Init_ResetDefaultParameter()
+// do not check OPT__CORR_AFTER_ALL_SYNC since it may be reset by Init_ResetParameter()
    ReadPara->Add( "OPT__CORR_AFTER_ALL_SYNC",   &OPT__CORR_AFTER_ALL_SYNC,       -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "OPT__NORMALIZE_PASSIVE",     &OPT__NORMALIZE_PASSIVE,          true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__INT_FRAC_PASSIVE_LR",   &OPT__INT_FRAC_PASSIVE_LR,        true,            Useless_bool,  Useless_bool   );
@@ -357,7 +357,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "MG_NPRE_SMOOTH",             &MG_NPRE_SMOOTH,                 -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "MG_NPOST_SMOOTH",            &MG_NPOST_SMOOTH,                -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "MG_TOLERATED_ERROR",         &MG_TOLERATED_ERROR,             -1.0,             NoMin_double,  NoMax_double   );
-// do not check POT_GPU_NPGROUP since it may be reset by either Init_ResetDefaultParameter() or CUAPI_SetMemSize()
+// do not check POT_GPU_NPGROUP since it may be reset by either Init_ResetParameter() or CUAPI_SetMemSize()
    ReadPara->Add( "POT_GPU_NPGROUP",            &POT_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "OPT__GRA_P5_GRADIENT",       &OPT__GRA_P5_GRADIENT,            false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__SELF_GRAVITY",          &OPT__SELF_GRAVITY,               true,            Useless_bool,  Useless_bool   );
@@ -424,7 +424,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__INT_PHASE",             &OPT__INT_PHASE,                  true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RES_PHASE",             &OPT__RES_PHASE,                  false,           Useless_bool,  Useless_bool   );
 #  endif
-// do not check OPT__FLU_INT_SCHEME and OPT__REF_FLU_INT_SCHEME since they may be reset by Init_ResetDefaultParameter()
+// do not check OPT__FLU_INT_SCHEME and OPT__REF_FLU_INT_SCHEME since they may be reset by Init_ResetParameter()
    ReadPara->Add( "OPT__FLU_INT_SCHEME",        &OPT__FLU_INT_SCHEME,             INT_DEFAULT,     NoMin_int,     NoMax_int      );
    ReadPara->Add( "OPT__REF_FLU_INT_SCHEME",    &OPT__REF_FLU_INT_SCHEME,         INT_DEFAULT,     NoMin_int,     NoMax_int      );
 #  ifdef MHD
