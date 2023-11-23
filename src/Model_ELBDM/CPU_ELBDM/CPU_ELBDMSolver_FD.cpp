@@ -1,7 +1,7 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-#if ( !defined GPU  &&  MODEL == ELBDM )
+#if ( !defined GPU  &&  MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_FD )
 
 
 
@@ -375,4 +375,4 @@ void TransposeXZ( real u[][ CUBE(FLU_NXT) ] )
 
 
 
-#endif // #if ( !defined GPU  &&  MODEL == ELBDM )
+#endif // #if ( !defined GPU  &&  MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_FD )

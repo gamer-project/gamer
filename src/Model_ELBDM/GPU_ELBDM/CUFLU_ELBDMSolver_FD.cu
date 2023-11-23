@@ -1,7 +1,7 @@
 #include "Macro.h"
 #include "CUFLU.h"
 
-#if ( defined GPU  &&  MODEL == ELBDM )
+#if ( defined GPU  &&  MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_FD )
 
 
 
@@ -421,4 +421,4 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 
 
-#endif // #if ( defined GPU  &&  MODEL == ELBDM )
+#endif // #if ( defined GPU  &&  MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_FD )
