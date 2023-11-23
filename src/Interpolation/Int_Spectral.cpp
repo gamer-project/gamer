@@ -336,39 +336,47 @@ InterpolationContext::InterpolationContext(size_t nInput, size_t nGhostBoundary)
 #  endif
 } // CONSTRUCTOR : InterpolationContext
 
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  InterpolationContext::ReadBinaryFile
 // Description :  Read "size" doubles from binary file "filename" into memory at pointer "array"
 //
 // Note        :  Array must be preallocated, e.g. via array = (double*) malloc(sizeof(double) * size);
 //
-// Parameter   :  filename    : Input filename
-//                array       : Pointer to preallocated memory with sizeof(double) * size bytes
-//                size        : Number of double precision values to load
+// Parameter   :  filename : Input filename
+//                array    : Pointer to preallocated memory with sizeof(double) * size bytes
+//                size     : Number of double-precision values to load
 //
+// Return      :  array
 //-------------------------------------------------------------------------------------------------------
-void InterpolationContext::ReadBinaryFile(const char* filename, double* array, int size) const
+void InterpolationContext::ReadBinaryFile( const char* filename, double* array, const int size ) const
 {
-   FILE* file = fopen(filename, "rb");
-   if (file == NULL) {
-      Aux_Error(ERROR_INFO, "Error opening interpolation file %s.\n", filename);
+
+   FILE* file = fopen( filename, "rb" );
+   if ( file == NULL ) {
+      Aux_Error( ERROR_INFO, "Error opening interpolation file %s !!\n"
+                 "        --> See https://github.com/gamer-project/gamer/wiki/ELBDM-Spectral-Interpolation#obtaining-interpolation-tables\n",
+                 filename );
       return;
    }
 
 // read the array from the binary file
-   int num = fread(array, sizeof(double), size, file);
+   int num = fread( array, sizeof(double), size, file );
 
    if ( num != size ) {
        /* fread failed */
-      if ( ferror(file) )    /* possibility 1 */
-        Aux_Error(ERROR_INFO, "Error reading interpolation file %s.\n", filename);
-      else if ( feof(file))  /* possibility 2 */
-        Aux_Error(ERROR_INFO, "EOF found in interpolation file %s.\n", filename);
+      if      ( ferror(file) )   /* possibility 1 */
+        Aux_Error( ERROR_INFO, "Error reading interpolation file %s (num %d, size %d) !!\n", filename, num, size );
+      else if ( feof(file) )     /* possibility 2 */
+        Aux_Error( ERROR_INFO, "EOF found in interpolation file %s (num %d, size %d) !!\n", filename, num, size );
    }
 
 // close the file
-   fclose(file);
+   fclose( file );
+
 } // FUNCTION : ReadBinaryFile
+
 
 
 //-------------------------------------------------------------------------------------------------------

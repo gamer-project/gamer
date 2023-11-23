@@ -51,14 +51,13 @@ namespace pi_gsl  = gsl_single_precision;
 //                ReadBinaryFile            : Read "size" doubles from binary file "filename" into double array "array"
 //                GetWorkspaceSize          : Purely virtual; Return size of interpolation workspace in bytes
 //                InterpolateReal           : Purely virtual; Interpolate input array of size nInput and store interpolation results of size 2 * (nInput - nGhostBoundary) in output array
-//
 //-------------------------------------------------------------------------------------------------------
 class InterpolationContext {
 public:
     InterpolationContext(size_t nInput, size_t nGhostBoundary);
     virtual void   Preprocess       (real* input, const bool UnwrapPhase) const;
     virtual void   Postprocess      (const real* input, real* output, const bool Monotonic, const real MonoCoeff, const bool OppSign0thOrder) const;
-    void           ReadBinaryFile   (const char* filename, double* array, int size) const;
+    void           ReadBinaryFile   (const char* filename, double* array, const int size) const;
 
     virtual size_t GetWorkspaceSize () const = 0;
     virtual void   InterpolateReal  (const real* input, real *output, char* workspace) const = 0;
