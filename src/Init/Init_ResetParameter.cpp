@@ -805,9 +805,9 @@ void Init_ResetParameter()
    {
 //    set OPT__UM_IC_FLOAT8 = FLOAT8 by default
 #     ifdef FLOAT8
-      OPT__UM_IC_FLOAT8 = true;
+      OPT__UM_IC_FLOAT8 = 1;
 #     else
-      OPT__UM_IC_FLOAT8 = false;
+      OPT__UM_IC_FLOAT8 = 0;
 #     endif
 
       PRINT_RESET_PARA( OPT__UM_IC_FLOAT8, FORMAT_INT, "to be consistent with FLOAT8" );
@@ -842,9 +842,9 @@ void Init_ResetParameter()
    {
       //    set OPT__UM_IC_FLOAT8 = FLOAT8 by default
 #     ifdef FLOAT8
-      PAR_IC_FLOAT8 = true;
+      PAR_IC_FLOAT8 = 1;
 #     else
-      PAR_IC_FLOAT8 = false;
+      PAR_IC_FLOAT8 = 0;
 #     endif
                     
       PRINT_RESET_PARA( PAR_IC_FLOAT8, FORMAT_INT, "to be consistent with FLOAT8" );
