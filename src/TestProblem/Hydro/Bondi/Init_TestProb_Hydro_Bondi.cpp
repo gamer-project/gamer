@@ -614,17 +614,17 @@ void BondiBC( real Array[], const int ArraySize[], real fluid[], const int NVar_
 //
 // Note        :  1. Linked to the function pointer "BC_User_Ptr"
 //
-// Parameter   :  Array     : Array to store the prepared data including ghost zones
-//                ArraySize : Size of Array including the ghost zones on each side
-//                fluid     : Fluid field to be set
-//                NVar_Flu  : Number of fluid variables to be prepared (derived variables are NOT included)
-//                GhostSize : Number of ghost zones
-//                Idx       : Index into array
-//                pos       : Physical coordinates
-//                Time      : Physical time
-//                lv        : Refinement level
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
+//                ArraySize      : Size of Array including the ghost zones on each side
+//                fluid          : Fluid fields to be set
+//                NVar_Flu       : Number of fluid variables to be prepared
+//                GhostSize      : Number of ghost zones
+//                idx            : Array indices
+//                pos            : Physical coordinates
+//                Time           : Physical time
+//                lv             : Refinement level
 //                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
-//                AuxArray  : Auxiliary array
+//                AuxArray       : Auxiliary array
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
