@@ -734,6 +734,9 @@ void Aux_TakeNote()
 #     ifdef GPU
       fprintf( Note, "#define FLU_BLOCK_SIZE_X        %d\n",      FLU_BLOCK_SIZE_X      );
       fprintf( Note, "#define FLU_BLOCK_SIZE_Y        %d\n",      FLU_BLOCK_SIZE_Y      );
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      fprintf( Note, "#define FLU_HJ_BLOCK_SIZE_Y     %d\n",      FLU_HJ_BLOCK_SIZE_Y   );
+#     endif
 #     ifdef GRAVITY
 #     if   ( POT_SCHEME == SOR )
       fprintf( Note, "#define POT_BLOCK_SIZE_Z        %d\n",      POT_BLOCK_SIZE_Z      );

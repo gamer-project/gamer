@@ -494,10 +494,18 @@
 #  endif
 
 
+// to get rid of the "uses too much shared data" error message in the ELBDM HJ solver
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#     if ( PATCH_SIZE == 8  &&  NCOMP_PASSIVE == 0 )
+#        define FLU_HJ_BLOCK_SIZE_Y    ( FLU_BLOCK_SIZE_Y   )  // not optimized yet
+#     else
+#        define FLU_HJ_BLOCK_SIZE_Y    ( FLU_BLOCK_SIZE_Y/2 )  // not optimized yet
+#     endif
+#  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
-// set number of threads and blocks used in GRAMFE GPU scheme
-# if ( defined(__CUDACC__) && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
 
+// set number of threads and blocks used in GRAMFE_FFT GPU scheme
+# if ( defined(__CUDACC__)  &&  WAVE_SCHEME == WAVE_GRAMFE  &&  GRAMFE_SCHEME == GRAMFE_FFT )
 
 // cuFFTdx supports the following GPU architectures at the time of writing (23.05.23)
 //

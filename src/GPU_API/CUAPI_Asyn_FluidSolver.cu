@@ -339,7 +339,10 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 #  if (  !( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE  &&  ELBDM_SCHEME != ELBDM_HYBRID  && \
             GRAMFE_SCHEME == GRAMFE_FFT )  )
-   const dim3 BlockDim_FluidSolver ( FLU_BLOCK_SIZE_X, FLU_BLOCK_SIZE_Y, 1 ); // for the fluid solvers
+   const dim3 BlockDim_FluidSolver    ( FLU_BLOCK_SIZE_X, FLU_BLOCK_SIZE_Y,    1 ); // for the fluid solvers
+#  endif
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   const dim3 BlockDim_FluidSolver_HJ ( FLU_BLOCK_SIZE_X, FLU_HJ_BLOCK_SIZE_Y, 1 ); // for the HJ solver
 #  endif
 
 // model-dependent operations
@@ -647,7 +650,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
          real (*smaller_d_Flu_Array_F_Out)[FLU_NIN] [CUBE(PS2)]     = (real (*)[FLU_NIN][CUBE(PS2)]    ) d_Flu_Array_F_Out;
 #        endif // # ifdef GAMER_DEBUG ... else
 
-         CUFLU_ELBDMSolver_HamiltonJacobi <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
+         CUFLU_ELBDMSolver_HamiltonJacobi <<< NPatch_per_Stream[s], BlockDim_FluidSolver_HJ, 0, Stream[s] >>>
             (  smaller_d_Flu_Array_F_In  + UsedPatch[s],
                smaller_d_Flu_Array_F_Out + UsedPatch[s],
                d_Flux_Array              + UsedPatch[s],

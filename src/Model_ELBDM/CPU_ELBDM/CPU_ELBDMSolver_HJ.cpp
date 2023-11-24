@@ -11,11 +11,11 @@
 # define to1D3(z,y,x) (  (z) * PS2     * PS2                     +  (y) * PS2                     +  (x)                  )
 
 #ifdef __CUDACC__
-# define CGPU_FLU_BLOCK_SIZE_X FLU_BLOCK_SIZE_X
-# define CGPU_FLU_BLOCK_SIZE_Y FLU_BLOCK_SIZE_Y
+# define CGPU_FLU_BLOCK_SIZE_X   FLU_BLOCK_SIZE_X
+# define CGPU_FLU_BLOCK_SIZE_Y   FLU_HJ_BLOCK_SIZE_Y
 #else
-# define CGPU_FLU_BLOCK_SIZE_X 1
-# define CGPU_FLU_BLOCK_SIZE_Y 1
+# define CGPU_FLU_BLOCK_SIZE_X   1
+# define CGPU_FLU_BLOCK_SIZE_Y   1
 #endif
 
 #ifdef __CUDACC__
