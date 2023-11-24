@@ -143,9 +143,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
 // prepare h_HasWaveCounterpart with information which cells have wave counterparts
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( !amr->use_wave_flag[lv] )
-   {
       Prepare_PatchData_HasWaveCounterpart( lv, h_HasWaveCounterpart, HYB_GHOST_SIZE, NPG, PID0_List, NSIDE_26, GlobalTree );
-   }
 #  endif
 
 
