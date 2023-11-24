@@ -27,15 +27,15 @@ typedef float  real;
 typedef double gramfe_fft_float;
 #else
 typedef float  gramfe_fft_float;
-#endif // #ifdef GRAMFE_FFT_FLOAT8
+#endif
 #endif // #if ( GRAMFE_SCHEME == GRAMFE_FFT )
 
 
 #ifdef GRAMFE_MATMUL_FLOAT8
 typedef double gramfe_matmul_float;
-#else // #ifdef GRAMFE_MATMUL_FLOAT8
+#else
 typedef float  gramfe_matmul_float;
-#endif // #ifdef GRAMFE_MATMUL_FLOAT8 ... # else
+#endif
 
 
 // short names for unsigned type

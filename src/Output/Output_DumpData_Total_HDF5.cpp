@@ -1511,16 +1511,15 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
-      KeyInfo.Time          [lv] = Time          [lv];
-      KeyInfo.CellSize      [lv] = amr->dh       [lv];
-      KeyInfo.CellScale     [lv] = amr->scale    [lv];
-      KeyInfo.NPatch        [lv] = NPatchTotal   [lv];
-      KeyInfo.AdvanceCounter[lv] = AdvanceCounter[lv];
-      KeyInfo.dTime_AllLv   [lv] = dTime_AllLv   [lv];
-
+      KeyInfo.Time          [lv] = Time              [lv];
+      KeyInfo.CellSize      [lv] = amr->dh           [lv];
+      KeyInfo.CellScale     [lv] = amr->scale        [lv];
+      KeyInfo.NPatch        [lv] = NPatchTotal       [lv];
+      KeyInfo.AdvanceCounter[lv] = AdvanceCounter    [lv];
+      KeyInfo.dTime_AllLv   [lv] = dTime_AllLv       [lv];
 #     if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
-      KeyInfo.UseWaveScheme [lv] = amr->use_wave_flag [lv];
-#     endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
+      KeyInfo.UseWaveScheme [lv] = amr->use_wave_flag[lv];
+#     endif
    }
 
    KeyInfo.CodeVersion  = (char*)VERSION;
@@ -2697,10 +2696,9 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
 #  ifdef GRAVITY
    H5Tinsert( H5_TypeID, "AveDens_Init",         HOFFSET(KeyInfo_t,AveDens_Init        ), H5T_NATIVE_DOUBLE       );
 #  endif
-
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   H5Tinsert( H5_TypeID, "UseWaveScheme",         HOFFSET(KeyInfo_t,UseWaveScheme      ), H5_TypeID_Arr_NLvInt    );
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   H5Tinsert( H5_TypeID, "UseWaveScheme",        HOFFSET(KeyInfo_t,UseWaveScheme       ), H5_TypeID_Arr_NLvInt    );
+#  endif
 
    H5Tinsert( H5_TypeID, "CodeVersion",          HOFFSET(KeyInfo_t,CodeVersion         ), H5_TypeID_VarStr        );
    H5Tinsert( H5_TypeID, "DumpWallTime",         HOFFSET(KeyInfo_t,DumpWallTime        ), H5_TypeID_VarStr        );

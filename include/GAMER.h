@@ -88,7 +88,7 @@ extern "C" {
 #endif
 
 #ifdef SUPPORT_SPECTRAL_INT
-#include "GramFE_Interpolation.h"
+#  include "GramFE_Interpolation.h"
 #endif
 
 

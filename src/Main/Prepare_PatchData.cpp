@@ -3679,8 +3679,9 @@ void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const real Tole
 
 #endif // #ifdef MHD
 
-#if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
+
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Prepare_PatchData_HasWaveCounterpart
 // Description :  Prepare a uniform array indicating which cells have a refined wave counterpart including ghost zones for the target patches or patch groups
@@ -3701,7 +3702,9 @@ void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const real Tole
 //                GlobalTree            : LB_GlobalTree object for indexing patches with their GID
 //
 //-------------------------------------------------------------------------------------------------------
-void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ], const int GhostSize, const int NPG, const int *PID0_List, const NSide_t NSide, LB_GlobalTree* GlobalTree )
+void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ],
+                                           const int GhostSize, const int NPG, const int *PID0_List,
+                                           const NSide_t NSide, LB_GlobalTree* GlobalTree )
 {
 
 // nothing to do if there is no target patch group
@@ -3792,5 +3795,4 @@ void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpa
       } // for (int TID=0; TID<NPG; TID++)
    } // end of OpenMP parallel region
 } // FUNCTION : Prepare_PatchData_HasWaveCounterpart
-
 #endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )

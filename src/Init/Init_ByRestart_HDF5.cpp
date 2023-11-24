@@ -216,10 +216,9 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  ifdef GRAVITY
    LoadField( "AveDens_Init",         &KeyInfo.AveDens_Init,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 #  endif
-
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    LoadField( "UseWaveScheme",         KeyInfo.UseWaveScheme,        H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif
 
 // must initialize all char* pointers as NULL so that we can safely free them later
 // --> in case they do not exist in the restart file
@@ -244,11 +243,10 @@ void Init_ByRestart_HDF5( const char *FileName )
 // 1-5-1. parameters must be reset
    for (int lv=0; lv<KeyInfo.NLevel; lv++)
    {
-      NPatchTotal[lv] = KeyInfo.NPatch[lv];
-
+      NPatchTotal       [lv] = KeyInfo.NPatch       [lv];
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       amr->use_wave_flag[lv] = KeyInfo.UseWaveScheme[lv];
-#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#     endif
    }
 
 #  ifdef PARTICLE

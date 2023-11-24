@@ -75,10 +75,9 @@ struct KeyInfo_t
 #  ifdef GRAVITY
    double AveDens_Init;             // AveDensity_Init
 #  endif
-
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   int UseWaveScheme[NLEVEL];       // AMR levels where wave solver is used
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   int    UseWaveScheme[NLEVEL];    // AMR levels where wave solver is used
+#  endif
 
    char  *CodeVersion;
    char  *DumpWallTime;
@@ -160,6 +159,7 @@ struct Makefile_t
 #  else
 #  error : unsupported MODEL !!
 #  endif // MODEL
+
 #  ifdef PARTICLE
    int MassiveParticles;
    int Tracer;
@@ -306,7 +306,7 @@ struct SymConst_t
    int    GramFEOrder;
    int    GramFEND;
    int    GramFEFluNxt;
-#  endif // #  if ( WAVE_SCHEME == WAVE_GRAMFE )
+#  endif
 
 #  else
 #  error : ERROR : unsupported MODEL !!
@@ -428,8 +428,8 @@ struct InputPara_t
    double Dt__HybridCFLInit;
    double Dt__HybridVelocity;
    double Dt__HybridVelocityInit;
-#  endif //  # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
+#  endif // #if ( MODEL == ELBDM )
 #  ifdef PARTICLE
    double Dt__ParVel;
    double Dt__ParVelMax;
@@ -469,14 +469,14 @@ struct InputPara_t
 #  ifdef MHD
    int    Opt__Flag_Current;
 #  endif
-#  endif
+#  endif // #if ( MODEL == HYDRO )
 #  if ( MODEL == ELBDM )
    int    Opt__Flag_EngyDensity;
    int    Opt__Flag_Spectral;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    int    Opt__Flag_Interference;
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-#  endif // # if ( MODEL == ELBDM )
+#  endif
+#  endif // #if ( MODEL == ELBDM )
    int    Opt__Flag_LohnerDens;
 #  if ( MODEL == HYDRO )
    int    Opt__Flag_LohnerEngy;
@@ -544,7 +544,7 @@ struct InputPara_t
    int    ELBDM_BaseSpectral;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    int    ELBDM_FirstWaveLevel;
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif
 #  endif // ELBDM
 
 // fluid solvers in different models
@@ -687,8 +687,8 @@ struct InputPara_t
    int    Opt__Res_Phase;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    int    Opt__Hybrid_Match_Phase;
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
+#  endif // #if ( MODEL == ELBDM )
    int    Opt__Flu_IntScheme;
    int    Opt__RefFlu_IntScheme;
 #  ifdef MHD
@@ -710,7 +710,7 @@ struct InputPara_t
 #  ifdef SUPPORT_SPECTRAL_INT
    char  *SpecInt_TablePath;
 #  if ( MODEL == ELBDM )
-   int    SpecInt_XY_Instead_DePha; 
+   int    SpecInt_XY_Instead_DePha;
    double SpecInt_WavelengthMagnifier;
 #  endif
 #  endif
@@ -807,9 +807,9 @@ struct InputPara_t
    double FlagTable_EngyDensity [NLEVEL-1][2];
    double FlagTable_Spectral    [NLEVEL-1][2];
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   double FlagTable_Interference [NLEVEL-1][4];
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   double FlagTable_Interference[NLEVEL-1][4];
 #  endif
+#  endif // MODEL
 #  ifdef PARTICLE
    int    FlagTable_NParPatch   [NLEVEL-1];
    int    FlagTable_NParCell    [NLEVEL-1];

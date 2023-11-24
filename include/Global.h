@@ -144,6 +144,7 @@ extern double           FlagTable_Spectral[NLEVEL-1][2];
 
 extern ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
 extern bool             ELBDM_BASE_SPECTRAL;
+
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
@@ -407,15 +408,15 @@ extern real        *h_SrcDlepProf_Radius;
 
 #if ( MODEL == ELBDM )
 extern bool       (*h_IsCompletelyRefined[2]);
-#endif // #if ( MODEL == ELBDM )
+#endif
 
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 extern bool       (*h_HasWaveCounterpart[2])[ CUBE(HYB_NXT) ];
-#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#endif
 
 #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-extern gramfe_matmul_float (*h_GramFE_TimeEvo)[2 * FLU_NXT];
-#endif // #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+extern gramfe_matmul_float (*h_GramFE_TimeEvo)[ 2*FLU_NXT ];
+#endif
 
 
 
