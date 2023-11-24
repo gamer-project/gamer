@@ -295,6 +295,9 @@ struct SymConst_t
 #  elif  ( MODEL == ELBDM )
    int    Flu_BlockSize_x;
    int    Flu_BlockSize_y;
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   int    Flu_HJ_BlockSize_y;
+#  endif
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
    int    GramFEScheme;
    int    GramFEGamma;

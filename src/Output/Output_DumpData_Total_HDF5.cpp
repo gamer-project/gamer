@@ -2022,6 +2022,9 @@ void FillIn_SymConst( SymConst_t &SymConst )
 #  elif  ( MODEL == ELBDM )
    SymConst.Flu_BlockSize_x      = FLU_BLOCK_SIZE_X;
    SymConst.Flu_BlockSize_y      = FLU_BLOCK_SIZE_Y;
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   SymConst.Flu_HJ_BlockSize_y   = FLU_HJ_BLOCK_SIZE_Y;
+#  endif
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
    SymConst.GramFEScheme         = GRAMFE_SCHEME;
    SymConst.GramFEGamma          = GRAMFE_GAMMA;
@@ -2925,6 +2928,9 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 #  elif  ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "Flu_BlockSize_x",      HOFFSET(SymConst_t,Flu_BlockSize_x     ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Flu_BlockSize_y",      HOFFSET(SymConst_t,Flu_BlockSize_y     ), H5T_NATIVE_INT    );
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   H5Tinsert( H5_TypeID, "Flu_HJ_BlockSize_y",   HOFFSET(SymConst_t,Flu_HJ_BlockSize_y  ), H5T_NATIVE_INT    );
+#  endif
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
    H5Tinsert( H5_TypeID, "GramFEScheme",         HOFFSET(SymConst_t,GramFEScheme        ), H5T_NATIVE_INT    );

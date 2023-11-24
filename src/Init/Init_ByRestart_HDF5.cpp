@@ -1711,6 +1711,9 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
 #  elif  ( MODEL == ELBDM )
    LoadField( "Flu_BlockSize_x",      &RS.Flu_BlockSize_x,      SID, TID, NonFatal, &RT.Flu_BlockSize_x,       1, NonFatal );
    LoadField( "Flu_BlockSize_y",      &RS.Flu_BlockSize_y,      SID, TID, NonFatal, &RT.Flu_BlockSize_y,       1, NonFatal );
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   LoadField( "Flu_HJ_BlockSize_y",   &RS.Flu_HJ_BlockSize_y,   SID, TID, NonFatal, &RT.Flu_HJ_BlockSize_y,    1, NonFatal );
+#  endif
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
    LoadField( "GramFEScheme",         &RS.GramFEScheme,         SID, TID, NonFatal, &RT.GramFEScheme,          1, NonFatal );
