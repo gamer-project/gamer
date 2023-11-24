@@ -309,11 +309,11 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
    {
 //###OPTIMIZATION: change the order of different dimensions to [N_TIME_LEVELS + 1][FLU_NIN][CGPU_FLU_BLOCK_SIZE_Y][HYB_NXT]
 //    create memories for columns of various intermediate fields on stack or shared GPU memory
-      CGPU_SHARED real  s_In                 [CGPU_FLU_BLOCK_SIZE_Y][ELBDM_HJ_RK_ORDER + 1][FLU_NIN][HYB_NXT];
-      CGPU_SHARED int   s_HasWaveCounterpart [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT];        // booleans indicating where to switch to first-order
+      CGPU_SHARED real s_In                [CGPU_FLU_BLOCK_SIZE_Y][ELBDM_HJ_RK_ORDER+1][FLU_NIN][HYB_NXT];
+      CGPU_SHARED int  s_HasWaveCounterpart[CGPU_FLU_BLOCK_SIZE_Y]                              [HYB_NXT];  // booleans indicating where to switch to first-order
 
 #     ifdef CONSERVE_MASS
-      CGPU_SHARED real  s_Flux               [CGPU_FLU_BLOCK_SIZE_Y]                            [HYB_NXT];         // the average density fluxes
+      CGPU_SHARED real s_Flux              [CGPU_FLU_BLOCK_SIZE_Y]                              [HYB_NXT];  // the average density fluxes
 #     endif // #  ifdef CONSERVE_MASS ... # else
 
 #     ifdef __CUDACC__

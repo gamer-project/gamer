@@ -337,18 +337,19 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  endif
 #  endif // #ifdef GAMER_DEBUG
 
-#  if ( !( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && ELBDM_SCHEME != ELBDM_HYBRID && GRAMFE_SCHEME == GRAMFE_FFT) )
-   const dim3 BlockDim_FluidSolver ( FLU_BLOCK_SIZE_X, FLU_BLOCK_SIZE_Y, 1 ); // for the fluidsolvers
-#  endif // #  if ( !( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && ELBDM_SCHEME != ELBDM_HYBRID && GRAMFE_SCHEME == GRAMFE_FFT) )
+#  if (  !( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE  &&  ELBDM_SCHEME != ELBDM_HYBRID  && \
+            GRAMFE_SCHEME == GRAMFE_FFT )  )
+   const dim3 BlockDim_FluidSolver ( FLU_BLOCK_SIZE_X, FLU_BLOCK_SIZE_Y, 1 ); // for the fluid solvers
+#  endif
 
 // model-dependent operations
 #  if   ( MODEL == HYDRO )
 
 #  elif ( MODEL == ELBDM )
 
-#  if ( WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
+#  if ( WAVE_SCHEME == WAVE_GRAMFE  &&  GRAMFE_SCHEME == GRAMFE_FFT )
    uint cufftdx_shared_memory_size;
-#  endif // #  #  if ( WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
+#  endif
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( UseWaveFlag ) {
