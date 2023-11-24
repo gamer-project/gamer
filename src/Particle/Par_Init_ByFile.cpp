@@ -102,12 +102,12 @@ void Par_Init_ByFile()
 
    for (int r=0; r<MPI_Rank; r++)   FileOffset = FileOffset + long(NParAttPerLoad)*NPar_EachRank[r]*load_data_size;
 
-// allocate buffer for loading PAR_IC
-   char* ParData_ThisRank = new char [NParThisRank*NParAtt*load_data_size];
 
 // load data
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading data ... " );
 
+// allocate buffer for loading PAR_IC
+   char* ParData_ThisRank = new char [NParThisRank*NParAtt*load_data_size];
 
 // note that fread() may fail for large files if sizeof(size_t) == 4 instead of 8
    FILE *File = fopen( FileName, "rb" );
