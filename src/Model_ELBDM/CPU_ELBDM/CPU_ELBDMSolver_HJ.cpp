@@ -127,14 +127,14 @@ static uint get1D2(uint k, uint j, uint i, int XYZ) {
 // lower-order Runge-Kutta methods suffer from small time steps (CFL condition < 0.01 for first-order and <= 0.05 for second-order methods according to empirical tests)
 #define ELBDM_HJ_RK_ORDER 3
 GPU_DEVICE_VARIABLE
-const static double TIME_COEFFS[ELBDM_HJ_RK_ORDER]                    = {1.0, 1.0/4.0, 2.0/3.0};
+const static real TIME_COEFFS[ELBDM_HJ_RK_ORDER]                    = {1.0, 1.0/4.0, 2.0/3.0};
 
 GPU_DEVICE_VARIABLE
-const static double RK_COEFFS  [ELBDM_HJ_RK_ORDER][ELBDM_HJ_RK_ORDER] = {{1.0, 0.0, 0.0}, {3.0/4.0, 1.0/4.0, 0.0}, {1.0/3.0, 0.0, 2.0/3.0}};
+const static real RK_COEFFS  [ELBDM_HJ_RK_ORDER][ELBDM_HJ_RK_ORDER] = { {1.0, 0.0, 0.0}, {3.0/4.0, 1.0/4.0, 0.0}, {1.0/3.0, 0.0, 2.0/3.0} };
 
 #ifdef CONSERVE_MASS
 GPU_DEVICE_VARIABLE
-const static double FLUX_COEFFS[ELBDM_HJ_RK_ORDER]                    = {1.0/6.0, 1.0/6.0, 2.0/3.0};
+const static real FLUX_COEFFS[ELBDM_HJ_RK_ORDER]                    = {1.0/6.0, 1.0/6.0, 2.0/3.0};
 #endif
 
 // density floor for computation of quantum pressure from input density
