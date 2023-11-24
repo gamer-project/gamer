@@ -126,7 +126,7 @@ __global__ void CUFLU_ELBDMSolver_HamiltonJacobi( real g_Fluid_In [][FLU_NIN ][ 
 #error : ERROR : unsupported MODEL !!
 #endif // MODEL
 
-#ifndef GRAVITY
+#if ( !defined GRAVITY  &&  MODEL == HYDRO )
 static ExtAcc_t GPUExtAcc_Ptr = NULL;
 #endif
 
@@ -168,9 +168,7 @@ static real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 
 #if ( MODEL == ELBDM )
 extern bool (*d_IsCompletelyRefined);
-#else
-static bool (*d_IsCompletelyRefined) = NULL;
-#endif // #if ( MODEL == ELBDM )
+#endif
 
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 extern bool (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ];
@@ -641,6 +639,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #     else // #  if (WAVE_SCHEME == WAVE_FD )
 #        error : ERROR : unsupported WAVE_SCHEME !!
 #     endif // WAVE_SCHEME
+
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       } else { // if ( UseWaveFlag ) {
          real (*smaller_d_Flu_Array_F_In) [FLU_NIN] [CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) d_Flu_Array_F_In;
@@ -659,7 +658,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                dt, 1.0/dh, ELBDM_Eta, StoreFlux, XYZ, MinDens );
 
       } // if ( UseWaveFlag ) { ... else
-#     endif // #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #     else
 
