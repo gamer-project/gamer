@@ -109,9 +109,9 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 #  endif
 
    Hydro_Con2Pri( Con_L, Pri_L, MinPres, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                  EoS_DensEint2Pres, NULL, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
+                  EoS_DensEint2Pres, NULL, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
    Hydro_Con2Pri( Con_R, Pri_R, MinPres, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                  EoS_DensEint2Pres, NULL, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
+                  EoS_DensEint2Pres, NULL, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
 
    real tmp_1, tmp_2, crit, crit_Bx;
    real _RhoL, _RhoR;

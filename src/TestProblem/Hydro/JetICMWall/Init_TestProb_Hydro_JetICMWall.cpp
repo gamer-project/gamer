@@ -3,9 +3,9 @@
 
 #if ( MODEL == HYDRO )
 
-static void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
-		const int GhostSize, const int idx[], const double pos[], const double Time,
-		const int lv, const int TFluVarIdxList[], double AuxArray[] );
+static void JetBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+		   const int GhostSize, const int idx[], const double pos[], const double Time,
+		   const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 static FieldIdx_t JetFieldIdx = Idx_Undefined;
 static FieldIdx_t ICMFieldIdx = Idx_Undefined;
@@ -284,7 +284,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  BC
+// Function    :  JetBC
 // Description :  Set the external boundary condition for the JetICMWall problem. On the -y 
 //                boundary, inside the jet region, the jet inflows with the jet density and a 
 //                velocity profile that peaks in the jet center and linearly falls off to the 
@@ -308,9 +308,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return                        : fluid
 //-------------------------------------------------------------------------------------------------------
-void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
-	 const int GhostSize, const int idx[], const double pos[], const double Time,
-	 const int lv, const int TFluVarIdxList[], double AuxArray[] )
+void JetBC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
+	    const int GhostSize, const int idx[], const double pos[], const double Time,
+	    const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
 // check
 
@@ -375,7 +375,7 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
 
     }
 
-} // FUNCTION : BC
+} // FUNCTION : JetBC
 
 
 void AddNewField_JetICMWall()
@@ -421,7 +421,7 @@ void Init_TestProb_Hydro_JetICMWall()
    Flag_User_Ptr            = NULL;
    Flag_Region_Ptr          = NULL;
    Mis_GetTimeStep_User_Ptr = NULL;
-   BC_User_Ptr              = BC;
+   BC_User_Ptr              = JetBC;
    Flu_ResetByUser_Func_Ptr = NULL;
    Output_User_Ptr          = NULL;
    Aux_Record_User_Ptr      = NULL;

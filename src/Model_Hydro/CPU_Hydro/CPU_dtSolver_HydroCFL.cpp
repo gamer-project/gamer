@@ -170,7 +170,9 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
          CFLz             = CFLx;
 #        endif // #ifdef MHD ... else ...
 
-#        ifndef SRHD
+#        ifdef SRHD
+         MaxCFL = FMAX( Us_Max * LorentzFactor_Max + LorentzFactor_s_Max * U_Max, MaxCFL );
+#        else
          CFLx += Vx;
          CFLy += Vy;
          CFLz += Vz;
@@ -186,7 +188,6 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
          MaxCFL = FMAX( CFLx+CFLy+CFLz, MaxCFL );
          */
 #        endif
-         MaxCFL = FMAX( Us_Max * LorentzFactor_Max + LorentzFactor_s_Max * U_Max, MaxCFL );
 #        endif
       } // CGPU_LOOP( t, CUBE(PS1) )
 
