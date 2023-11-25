@@ -101,7 +101,7 @@ void Init_Load_Parameter()
 
 // time-step
    ReadPara->Add( "DT__MAX",                    &DT__MAX,                        -1.0,             NoMin_double,  NoMax_double   );
-// do not check DT__FLUID/FLUID_INIT/GRAVITY/PARVEL_MAX/ELBDM_HYBRID/VELOCITY since they may be reset by Init_ResetParameter()
+// do not check DT__FLUID/FLUID_INIT/GRAVITY/PARVEL_MAX/HYBRID_* since they may be reset by Init_ResetParameter()
    ReadPara->Add( "DT__FLUID",                  &DT__FLUID,                      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "DT__FLUID_INIT",             &DT__FLUID_INIT,                 -1.0,             NoMin_double,  NoMax_double   );
 #  ifdef GRAVITY
@@ -114,8 +114,8 @@ void Init_Load_Parameter()
    ReadPara->Add( "DT__HYBRID_CFL_INIT",        &DT__HYBRID_CFL_INIT,            -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "DT__HYBRID_VELOCITY",        &DT__HYBRID_VELOCITY,            -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "DT__HYBRID_VELOCITY_INIT",   &DT__HYBRID_VELOCITY_INIT,       -1.0,             NoMin_double,  NoMax_double   );
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
+#  endif // #if ( MODEL == ELBDM )
 #  ifdef PARTICLE
    ReadPara->Add( "DT__PARVEL",                 &DT__PARVEL,                      0.5,             0.0,           NoMax_double   );
    ReadPara->Add( "DT__PARVEL_MAX",             &DT__PARVEL_MAX,                 -1.0,             NoMin_double,  NoMax_double   );
@@ -167,8 +167,8 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__FLAG_SPECTRAL",         &OPT__FLAG_SPECTRAL,              false,           Useless_bool,  Useless_bool   );
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    ReadPara->Add( "OPT__FLAG_INTERFERENCE",     &OPT__FLAG_INTERFERENCE,          false,           Useless_bool,  Useless_bool   );
-#  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  endif
+#  endif // #if ( MODEL == ELBDM )
    ReadPara->Add( "OPT__FLAG_LOHNER_FORM",      &OPT__FLAG_LOHNER_FORM,           LOHNER_FLASH2,   1,             4              );
    ReadPara->Add( "OPT__FLAG_USER",             &OPT__FLAG_USER,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_USER_NUM",         &OPT__FLAG_USER_NUM,              1,               1,             NoMax_int      );
@@ -197,10 +197,10 @@ void Init_Load_Parameter()
 // exchange father pathes for hybrid scheme with MPI
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    ReadPara->Add( "OPT__LB_EXCHANGE_FATHER",    &OPT__LB_EXCHANGE_FATHER,         true,            Useless_bool,  Useless_bool   );
-#  else // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  else
    ReadPara->Add( "OPT__LB_EXCHANGE_FATHER",    &OPT__LB_EXCHANGE_FATHER,         false,           Useless_bool,  Useless_bool   );
-#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID ) ... # else
-#  endif // #  ifdef LOAD_BALANCE
+#  endif // ELBDM_SCHEME
+#  endif // #ifdef LOAD_BALANCE
    ReadPara->Add( "OPT__MINIMIZE_MPI_BARRIER",  &OPT__MINIMIZE_MPI_BARRIER,       false,           Useless_bool,  Useless_bool   );
 
 
@@ -300,8 +300,8 @@ void Init_Load_Parameter()
    ReadPara->Add( "ELBDM_BASE_SPECTRAL",        &ELBDM_BASE_SPECTRAL,             false,           Useless_bool,  Useless_bool   );
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    ReadPara->Add( "ELBDM_MATCH_PHASE",          &ELBDM_MATCH_PHASE,               true,            Useless_bool,  Useless_bool   );
-   ReadPara->Add( "ELBDM_FIRST_WAVE_LEVEL",     &ELBDM_FIRST_WAVE_LEVEL,         -1,               1,             NLEVEL         );
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   ReadPara->Add( "ELBDM_FIRST_WAVE_LEVEL",     &ELBDM_FIRST_WAVE_LEVEL,         -1,               1,             NoMax_int      );
+#  endif
 #  endif // #if ( MODEL == ELBDM )
 
 
@@ -309,11 +309,11 @@ void Init_Load_Parameter()
 // do not check FLU_GPU_NPGROUP and GPU_NSTREAM since they may be reset by either Init_ResetParameter() or CUAPI_SetMemSize()
    ReadPara->Add( "FLU_GPU_NPGROUP",            &FLU_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "GPU_NSTREAM",                &GPU_NSTREAM,                    -1,               NoMin_int,     NoMax_int      );
-#  if ( MODEL == ELBDM && ELBDM_SCHEME != ELBDM_HYBRID && WAVE_SCHEME == WAVE_GRAMFE )
+#  if ( MODEL == ELBDM  &&  ELBDM_SCHEME != ELBDM_HYBRID  &&  WAVE_SCHEME == WAVE_GRAMFE )
    ReadPara->Add( "OPT__FIXUP_FLUX",            &OPT__FIXUP_FLUX,                 false,           Useless_bool,  Useless_bool   );
-#  else // #  if ( MODEL == ELBDM && ELBDM_SCHEME != ELBDM_HYBRID && WAVE_SCHEME == WAVE_GRAMFE )
+#  else
    ReadPara->Add( "OPT__FIXUP_FLUX",            &OPT__FIXUP_FLUX,                 true,            Useless_bool,  Useless_bool   );
-#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME != ELBDM_HYBRID && WAVE_SCHEME == WAVE_GRAMFE ) ... # else
+#  endif
 #  ifdef MHD
    ReadPara->Add( "OPT__FIXUP_ELECTRIC",        &OPT__FIXUP_ELECTRIC,             true,            Useless_bool,  Useless_bool   );
 #  endif

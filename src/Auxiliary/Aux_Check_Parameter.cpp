@@ -1151,8 +1151,6 @@ void Aux_Check_Parameter()
    if ( ELBDM_BASE_SPECTRAL )
       Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL is incompatible with ELBDM_SCHEME == ELBDM_HYBRID !!\n" );
 
-   const int ELBDM_LAST_FLUID_LEVEL = ELBDM_FIRST_WAVE_LEVEL - 1;
-
 // for stability of hybrid scheme with wave levels, all fluid levels require that the flag buffer >= PATCH_SIZE
 // furthermore, the restriction operation needs to be enabled
    if ( MAX_LEVEL > 0  &&  ELBDM_FIRST_WAVE_LEVEL > 0  &&  ELBDM_FIRST_WAVE_LEVEL <= MAX_LEVEL )

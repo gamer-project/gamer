@@ -47,13 +47,14 @@ extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const int
 //                               --> Only NCOMP_TOTAL-1 (which equals 2+NCOMP_PASSIVE_USER currently) fields
 //                                   should be stored in "UM_IC"
 //
-//                                  ELBDM_SCHEME == ELBDM_WAVE:
-//                                     We will load the real and imaginary parts from the disk on all levels
-//                                     and calculate the density field from the input wave function
-//                                     directly instead of loading it from the disk.
-//                                  ELBDM_SCHEME == ELBDM_HYBRID
-//                                     We will load the density and phase fields from the disk on all levels.
-//                                     There is no need to separately calculate the density field.
+//                               ELBDM_SCHEME == ELBDM_WAVE:
+//                               --> We will load the real and imaginary parts from the disk on all levels
+//                                   and calculate the density field from the input wave function
+//                                   directly instead of loading it from the disk.
+//
+//                               ELBDM_SCHEME == ELBDM_HYBRID:
+//                               --> We will load the density and phase fields from the disk on all levels.
+//                                   There is no need to separately calculate the density field.
 //                4. The data format of the UM_IC file is controlled by the runtime parameter OPT__UM_IC_FORMAT
 //                5. Does not work with rectangular domain decomposition anymore
 //                   --> Must enable either SERIAL or LOAD_BALANCE
@@ -625,11 +626,11 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
 //                       variable
 //                4. ELBDM:
 //                   ELBDM_SCHEME == ELBDM_WAVE:
-//                       Calculate the density field automatically instead of loading it from the disk for ELBDM
-//                       --> For ELBDM, the input uniform-mesh array must NOT include the density field
-//                   ELBDM_SCHEME == ELBDM_HYBRID
-//                       We will load the density and phase fields from the disk on all levels
-//                       There is no need to separately calculate the density field.
+//                   --> Calculate the density field automatically instead of loading it from the disk for ELBDM
+//                   --> The input uniform-mesh array must NOT include the density field
+//                   ELBDM_SCHEME == ELBDM_HYBRID:
+//                   --> We will load the density and phase fields from the disk on all levels
+//                   --> There is no need to separately calculate the density field
 //                5. Assuming nvar_in (i.e., OPT__UM_IC_NVAR) == NCOMP_TOTAL
 //                   --> Unless either DUAL_ENERGY or ELBDM is adopted, for which it assumes nvar_in == NCOMP_TOTAL-1
 //
@@ -675,7 +676,7 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
 #     elif ( MODEL == ELBDM )
 #     if ( ELBDM_SCHEME == ELBDM_WAVE )
       if ( v_out == DENS )    v_out ++;
-#     endif // ELBDM_SCHEME
+#     endif
 #     endif // MODEL
 
       fluid_out[v_out] = fluid_in[v_in];
@@ -697,21 +698,23 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
 #  endif
 
 #  elif ( MODEL == ELBDM )
+
+#  if   ( ELBDM_SCHEME == ELBDM_WAVE )
 // calculate the density field for ELBDM wave scheme
-#  if ( ELBDM_SCHEME == ELBDM_WAVE )
    fluid_out[DENS] = SQR( fluid_out[REAL] ) + SQR( fluid_out[IMAG] );
+
 #  elif ( ELBDM_SCHEME == ELBDM_HYBRID )
 // convert density and phase to real and imaginary part on wave levels for hybrid scheme
    if ( amr->use_wave_flag[lv] ) {
       const real Phase = fluid_out[PHAS];
-      const real Amp   = SQRT(fluid_out[DENS]);
-      fluid_out[REAL] = Amp * COS(Phase);
-      fluid_out[IMAG] = Amp * SIN(Phase);
+      const real Amp   = SQRT( fluid_out[DENS] );
+      fluid_out[REAL] = Amp * COS( Phase );
+      fluid_out[IMAG] = Amp * SIN( Phase );
    } else {
-      fluid_out[STUB] = 0.0;
+      fluid_out[STUB] = (real)0.0;
    }
-#  endif // # if ELBDM_SCHEME
-#  endif
+#  endif // ELBDM_SCHEME
+#  endif // MODEL
 
 } // FUNCTION : Init_ByFile_Default
 
