@@ -47,6 +47,7 @@ void Init_ResetParameter()
    if ( DT__FLUID < 0.0 )
    {
 #     if   ( MODEL == HYDRO )
+
 #     if   ( FLU_SCHEME == RTVD )
       DT__FLUID = 0.50;
 #     elif ( FLU_SCHEME == MHM )
@@ -61,7 +62,7 @@ void Init_ResetParameter()
 
 #     elif  ( MODEL == ELBDM )
 
-#     if ( WAVE_SCHEME == WAVE_FD )
+#     if   ( WAVE_SCHEME == WAVE_FD )
 #     ifdef GRAVITY
       DT__FLUID = 0.20;                   // 1D k-max mode rotates 0.20*2*PI
 #     else // # ifdef GRAVITY
@@ -69,16 +70,17 @@ void Init_ResetParameter()
       DT__FLUID = SQRT(27.0)*M_PI/32.0;   // stability limit (~0.51)
 #     else // # ifdef LAPLACIAN_4TH
       DT__FLUID = SQRT(3.0)*M_PI/8.0;     // stability limit (~0.68)
-#     endif // # ifdef LAPLACIAN_4TH ... # else
-#     endif // # ifdef GRAVITY ... # else
+#     endif // # ifdef LAPLACIAN_4TH ... else ...
+#     endif // # ifdef GRAVITY ... else ...
 
 #     elif ( WAVE_SCHEME == WAVE_GRAMFE )
 #     ifdef GRAVITY
       DT__FLUID = 0.20;                   // 1D k-max mode rotates 0.20*2*PI
 #     else // # ifdef GRAVITY
       DT__FLUID = 0.20;                   // stability limit depends on ghost boundary and extension order
-#     endif // # ifdef GRAVITY ... # else
-#     else // #  if (WAVE_SCHEME == WAVE_FD )
+#     endif // # ifdef GRAVITY ... else ...
+
+#     else // WAVE_SCHEME
 #        error : ERROR : unsupported WAVE_SCHEME !!
 #     endif // WAVE_SCHEME
 
@@ -108,15 +110,15 @@ void Init_ResetParameter()
 #     endif
 
       PRINT_RESET_PARA( DT__HYBRID_CFL, FORMAT_REAL, "" );
-   } // if ( DT__HYBRID_CFL < 0.0 )
+   }
 
    if ( DT__HYBRID_CFL_INIT < 0.0 )
    {
       DT__HYBRID_CFL_INIT = DT__HYBRID_CFL;
 
       PRINT_RESET_PARA( DT__HYBRID_CFL_INIT, FORMAT_REAL, "" );
-   } // if ( DT__HYBRID_CFL < 0.0 )
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   }
+#  endif
 
 
 // hybrid velocity dt (empirically determined CFL condition)
@@ -126,15 +128,15 @@ void Init_ResetParameter()
       DT__HYBRID_VELOCITY = 1.00;
 
       PRINT_RESET_PARA( DT__HYBRID_VELOCITY, FORMAT_REAL, "" );
-   } // if ( DT__HYBRID_VELOCITY < 0.0 )
+   }
 
    if ( DT__HYBRID_VELOCITY_INIT < 0.0 )
    {
       DT__HYBRID_VELOCITY_INIT = DT__HYBRID_VELOCITY;
 
       PRINT_RESET_PARA( DT__HYBRID_VELOCITY_INIT, FORMAT_REAL, "" );
-   } // if ( DT__HYBRID_VELOCITY < 0.0 )
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   }
+#  endif
 
 
 // gravity dt
@@ -325,8 +327,8 @@ void Init_ResetParameter()
 
       PRINT_RESET_PARA( ELBDM_TAYLOR3_AUTO, FORMAT_INT, "since OPT__FREEZE_FLUID is enabled" );
    }
+#  endif // #if ( MODEL == ELBDM )
 
-#  endif //  #if ( MODEL == ELBDM )
 
 // interpolation schemes for the fluid variables
 #  if   ( MODEL == HYDRO )
