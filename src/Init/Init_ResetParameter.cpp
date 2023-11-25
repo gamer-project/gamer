@@ -33,41 +33,40 @@ void Init_ResetParameter()
       FILE *fp;
 
 //    determine if the PBS/SLURM software is used
-      fp = popen("echo ${PBS_NUM_NODES:-0}", "r");
-      fscanf(fp, "%d", &NNode_PBS);
+      fp = popen( "echo ${PBS_NUM_NODES:-0}", "r" );
+      fscanf( fp, "%d", &NNode_PBS );
 
-      fp = popen("echo ${SLURM_JOB_NUM_NODES:-0}", "r");
-      fscanf(fp, "%d", &NNode_SLURM);
+      fp = popen( "echo ${SLURM_JOB_NUM_NODES:-0}", "r" );
+      fscanf( fp, "%d", &NNode_SLURM );
 
-
-//    set up the number of OpenMP thread
+//    set up the number of OpenMP threads
       if ( NNode_PBS ) // PBS system
       {
-         fp = popen("echo $PBS_NUM_PPN", "r");
-         fscanf(fp, "%d", &NCPU_Node);
+         fp = popen( "echo $PBS_NUM_PPN", "r" );
+         fscanf( fp, "%d", &NCPU_Node );
 
          OMP_NTHREAD = NCPU_Node * NNode_PBS / MPI_NRank;
       }
 
       else if ( NNode_SLURM ) // SLURM system
       {
-         fp = popen("echo $SLURM_CPUS_ON_NODE", "r");
-         fscanf(fp, "%d", &NCPU_Node);
+         fp = popen( "echo $SLURM_CPUS_ON_NODE", "r" );
+         fscanf( fp, "%d", &NCPU_Node );
 
          OMP_NTHREAD = NCPU_Node * NNode_SLURM / MPI_NRank;
       }
 
-      else
+      else // default
       {
          OMP_NTHREAD = omp_get_max_threads();
       }
 
-
-      pclose(fp);
+      pclose( fp );
 
       PRINT_RESET_PARA( OMP_NTHREAD, FORMAT_INT, "" );
-   }
-#  else
+   } // if ( OMP_NTHREAD <= 0 )
+
+#  else // #ifdef OPENMP
    if ( OMP_NTHREAD != 1 )
    {
       OMP_NTHREAD = 1;
