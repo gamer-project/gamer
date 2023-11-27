@@ -297,8 +297,19 @@ void LB_Refine( const int FaLv )
 // 9. construct the global AMR structure if required
 // ==========================================================================================
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   delete GlobalTree;   // in case it has been allocated already
-   GlobalTree = new LB_GlobalTree;
+// update the global tree only after updating the first wave level
+// --> the fluid scheme currently only uses the global tree in two places:
+//     (a) velocity time-step calculation
+//     (b) fluid solver itself
+// --> in both cases, we only need information about which fluid cells have refined wave counterparts
+// --> only need to update the global tree if the patches on the first wave level have changed and
+//     don't care what happens on higher refinement levels
+//###NOTE: this criterion must be adjusted if another part of GAMER wants to use the global tree
+   if ( SonLv == ELBDM_FIRST_WAVE_LEVEL )
+   {
+      delete GlobalTree;   // in case it has been allocated already
+      GlobalTree = new LB_GlobalTree;
+   }
 #  endif
 
 } // FUNCTION : LB_Refine
