@@ -508,7 +508,7 @@ void CPU_FluidSolver_MHM(
 
 //       add viscous fluxes
 #        ifdef VISCOSITY
-         Hydro_AddViscousFlux_HalfStep( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P], 
+         Hydro_AddViscousFlux_HalfStep( g_PriVar_1PG, g_Flux_Half_1PG, g_Mag_Array_In[P], 
                                         g_PriVar_1PG+MAG_OFFSET, dh, &MicroPhy );
 #        endif
 

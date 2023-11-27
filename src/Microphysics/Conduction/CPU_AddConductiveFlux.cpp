@@ -127,9 +127,9 @@ void Hydro_AddConductiveFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //       |    |    |    |    |
 //       |         |         |
 //       ---------------------
+         real B_N_mean, B_T1_mean, B_T2_mean, B_amp;
          if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION ) 
          {
-            real B_N_mean, B_T1_mean, B_T2_mean, B_amp;
             B_N_mean  =             g_FC_B[    d][ idx_fc_B                ];
             B_T1_mean = (real)0.5*( g_CC_B[TDir1][ idx_cvar                ] +
                                     g_CC_B[TDir1][ idx_cvar + didx_cvar[d] ]   );
@@ -356,9 +356,9 @@ void Hydro_AddConductiveFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT)
 //       |    |    |    |    |
 //       |         |         |
 //       ---------------------
+         real B_N_mean, B_T1_mean, B_T2_mean, B_amp;
          if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION ) 
          {
-            real B_N_mean, B_T1_mean, B_T2_mean, B_amp;
             B_N_mean  =              g_FC_B_Half[    d][ idx_fc_BN                                            ];
             B_T1_mean = (real)0.25*( g_FC_B_Half[TDir1][ idx_fc_BT1                                           ] +
                                      g_FC_B_Half[TDir1][ idx_fc_BT1                    + stride_fc_BT1[TDir1] ] +

@@ -34,7 +34,7 @@ static real minmod( const real a, const real b );
 //
 // Reference   : 
 //
-// Parameter   : g_Con_Var   : Array storing the input cell-centered temperature
+// Parameter   : g_PriVar    : Array storing the input cell-centered primitive variables
 //               g_Flux_Half : Array with hydrodynamic fluxes for adding the viscous fluxes
 //               g_FC_B      : Array storing the input face-centered B field
 //               g_CC_B      : Array storing the input cell-centered B field
@@ -44,8 +44,9 @@ static real minmod( const real a, const real b );
 // Return      : g_Flux_Half[]
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_AddViscousFlux_HalfStep( const real Dens[], const real Temp[],
-                                    real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+void Hydro_AddViscousFlux_HalfStep( const real g_PriVar[][ CUBE(FLU_NXT) ],
+                                    const real Temp[],
+                                          real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                     const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                                     const real g_CC_B[][ CUBE(FLU_NXT) ],
                                     const real dh, const MicroPhy_t *MicroPhy )
@@ -124,9 +125,9 @@ void Hydro_AddViscousFlux_HalfStep( const real Dens[], const real Temp[],
 //       |    |    |    |    |
 //       |         |         |
 //       ---------------------
+         real B_N_mean, B_T1_mean, B_T2_mean, B_amp;
          if ( MicroPhy.ViscFluxType == ANISOTROPIC_VISCOSITY ) 
          {
-            real B_N_mean, B_T1_mean, B_T2_mean, B_amp;
             B_N_mean  =             g_FC_B[    d][ idx_fc_B                ];
             B_T1_mean = (real)0.5*( g_CC_B[TDir1][ idx_cvar                ] +
                                     g_CC_B[TDir1][ idx_cvar + didx_cvar[d] ]   );
@@ -150,8 +151,14 @@ void Hydro_AddViscousFlux_HalfStep( const real Dens[], const real Temp[],
 //       ----al--------ar-----
 //       |         |         |
 //       ---------------------
+         real v_N, v_T1, v_T2;
          real N_slope, T1_slope, T2_slope;
          real al, bl, ar, br;
+
+//       face-centered velocities
+         v_N  = 0.5*( g_PriVar[d+1][ idx_cvar ] + g_PriVar[d+1][ idx_cvar + didx_cvar[d] ] );
+         v_T1 = 0.5*( g_PriVar[TDir1+1][ idx_cvar ] + g_PriVar[TDir1+1][ idx_cvar + didx_cvar[d] ] );
+         v_T2 = 0.5*( g_PriVar[TDIr2+1][ idx_cvar ] + g_PriVar[TDir2+1][ idx_cvar + didx_cvar[d] ] );
 
 //       normal direction
          N_slope = ( Temp[ idx_cvar + didx_cvar[d] ] - Temp[ idx_cvar ] ) * _dh;
@@ -192,9 +199,9 @@ void Hydro_AddViscousFlux_HalfStep( const real Dens[], const real Temp[],
 //           to get the face-centered coefficients
          real mu_l, mu_r, mu, visc_nu;
          
-         Hydro_ComputeViscosity( mu_l, visc_nu, MicroPhy, Dens[ idx_cvar ], 
+         Hydro_ComputeViscosity( mu_l, visc_nu, MicroPhy, g_PriVar[DENS][ idx_cvar ], 
                                  Temp[ idx_cvar ] );
-         Hydro_ComputeViscosity( mu_r, visc_nu, MicroPhy, Dens[ idx_cvar + didx_cvar[d] ], 
+         Hydro_ComputeViscosity( mu_r, visc_nu, MicroPhy, g_PriVar[DENS][ idx_cvar + didx_cvar[d] ], 
                                  Temp[ idx_cvar + didx_cvar[d] ] );
          mu = 0.5*( mu_l + mu_r );
          Total_Flux = kappa*gradient;
@@ -237,8 +244,9 @@ void Hydro_AddViscousFlux_HalfStep( const real Dens[], const real Temp[],
 // Return      : g_FC_Flux[]
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_AddViscousFlux_FullStep( const real Dens[], const real Temp[],
-                                    real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+void Hydro_AddViscousFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],`
+                                    const real Temp[],
+                                          real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                     const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                     const int NFlux, const real dh, const MicroPhy_t *MicroPhy )
 {
@@ -334,9 +342,9 @@ void Hydro_AddViscousFlux_FullStep( const real Dens[], const real Temp[],
 //       |    |    |    |    |
 //       |         |         |
 //       ---------------------
-         if ( MicroPhy.CondFluxType == ANISOTROPIC_VISCOSITY ) 
+         real B_N_mean, B_T1_mean, B_T2_mean, B_amp;
+         if ( MicroPhy.ViscFluxType == ANISOTROPIC_VISCOSITY ) 
          {
-            real B_N_mean, B_T1_mean, B_T2_mean, B_amp;
             B_N_mean  =              g_FC_B_Half[    d][ idx_fc_BN                                            ];
             B_T1_mean = (real)0.25*( g_FC_B_Half[TDir1][ idx_fc_BT1                                           ] +
                                      g_FC_B_Half[TDir1][ idx_fc_BT1                    + stride_fc_BT1[TDir1] ] +
@@ -365,13 +373,19 @@ void Hydro_AddViscousFlux_FullStep( const real Dens[], const real Temp[],
 //       ----al--------ar-----
 //       |         |         |
 //       ---------------------
+         real v_N, v_T1, v_T2;
          real N_slope, T1_slope, T2_slope;
          real al, bl, ar, br;
+
+//       face-centered velocities
+         v_N  = 0.5*( g_PriVar_Half[d+1][ idx_half ] + g_PriVar_Half[d+1][ idx_half + didx_half[d] ] );
+         v_T1 = 0.5*( g_PriVar_Half[TDir1+1][ idx_half ] + g_PriVar_Half[TDir1+1][ idx_half + didx_half[d] ] );
+         v_T2 = 0.5*( g_PriVar_Half[TDir2+1][ idx_half ] + g_PriVar_Half[TDir2+1][ idx_half + didx_half[d] ] );
 
 //       normal direction
          N_slope = ( Temp[ idx_half + didx_half[d] ] - Temp[ idx_half ] ) * _dh;
 
-         if ( MicroPhy.CondFluxType == ANISOTROPIC_VISCOSITY ) 
+         if ( MicroPhy.ViscFluxType == ANISOTROPIC_VISCOSITY ) 
          {
 //          transverse direction 1
             al = Temp[ idx_half                                   ] -
@@ -406,14 +420,17 @@ void Hydro_AddViscousFlux_FullStep( const real Dens[], const real Temp[],
 //       --> for non-constant viscosity coefficients, take the spatial average along the normal direction
 //           to get the face-centered coefficients
          real mu_l, mu_r, mu, visc_nu;
-         Hydro_ComputeViscosity( mu_l, visc_nu, MicroPhy, Dens[ idx_half ], 
+         Hydro_ComputeViscosity( mu_l, visc_nu, MicroPhy, g_PriVar_Half[DENS][ idx_half ], 
                                  Temp[ idx_half ] );
-         Hydro_ComputeViscosity( mu_r, visc_nu, MicroPhy, Dens[ idx_half + didx_half[d] ], 
+         Hydro_ComputeViscosity( mu_r, visc_nu, MicroPhy, g_PriVar_Half[DENS][ idx_half + didx_half[d] ], 
                                  Temp[ idx_half + didx_half[d] ] );
          mu = 0.5*( mu_l + mu_r ); 
          Total_Flux = kappa*gradient;
 
 //       4. flux add-up
+         g_FC_Flux[d][MOMX][idx_flux] += Total_Flux;
+         g_FC_Flux[d][MOMY][idx_flux] += Total_Flux;
+         g_FC_Flux[d][MOMZ][idx_flux] += Total_Flux;
          g_FC_Flux[d][ENGY][idx_flux] += Total_Flux;
 
       } // CGPU_LOOP( idx, size_i*size_j*size_k )
