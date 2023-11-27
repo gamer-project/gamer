@@ -350,6 +350,7 @@ extern double CR_DIFF_MIN_B;
 #endif
 
 #ifdef VISCOSITY
+extern bool   VISCOSITY_BOUNDS;
 extern int    VISCOSITY_TYPE;
 extern int    VISCOSITY_FLUX_TYPE;
 extern int    VISCOSITY_COEFF_TYPE;

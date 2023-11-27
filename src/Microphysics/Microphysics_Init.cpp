@@ -98,6 +98,7 @@ void Microphysics_Init()
    MicroPhy.ViscSpitzerFraction = VISCOSITY_SPITZER_FRACTION;
    MicroPhy.ViscCoulombLog = VISCOSITY_COULOMB_LOG;
    MicroPhy.ViscMaxDiffusivity = VISCOSITY_MAX_DIFFUSIVITY;
+   MicroPhy.ViscBounds = VISCOSITY_BOUNDS;
 
    if ( MicroPhy.CondType == CONSTANT_VISCOSITY ) 
    {

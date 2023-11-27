@@ -326,6 +326,7 @@ double CR_DIFF_MIN_B;
 
 // c. viscosity
 #ifdef VISCOSITY
+bool   VISCOSITY_BOUNDS;
 int    VISCOSITY_TYPE;
 int    VISCOSITY_FLUX_TYPE;
 int    VISCOSITY_COEFF_TYPE;

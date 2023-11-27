@@ -53,6 +53,7 @@ struct MicroPhy_t
 #  endif // #ifdef CONDUCTION
 
 #  ifdef VISCOSITY
+   bool ViscBounds;
    int  ViscType;
    int  ViscFluxType;
    int  ViscCoeffType;

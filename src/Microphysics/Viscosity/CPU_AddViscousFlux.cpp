@@ -125,7 +125,7 @@ void Hydro_AddViscousFlux_HalfStep( const real g_PriVar[][ CUBE(FLU_NXT) ],
 //       |    |    |    |    |
 //       |         |         |
 //       ---------------------
-         real B_N_mean, B_T1_mean, B_T2_mean, B_amp;
+         real B_N_mean, B_T1_mean, B_T2_mean, B_amp, B2;
          if ( MicroPhy.ViscFluxType == ANISOTROPIC_VISCOSITY ) 
          {
             B_N_mean  =             g_FC_B[    d][ idx_fc_B                ];
@@ -133,7 +133,8 @@ void Hydro_AddViscousFlux_HalfStep( const real g_PriVar[][ CUBE(FLU_NXT) ],
                                     g_CC_B[TDir1][ idx_cvar + didx_cvar[d] ]   );
             B_T2_mean = (real)0.5*( g_CC_B[TDir2][ idx_cvar                ] +
                                     g_CC_B[TDir2][ idx_cvar + didx_cvar[d] ]   );
-            B_amp     = SQRT( SQR(B_N_mean) + SQR(B_T1_mean) + SQR(B_T2_mean) );
+            B2        = SQR(B_N_mean) + SQR(B_T1_mean) + SQR(B_T2_mean);
+            B_amp     = SQRT( B2 );
 //          normalize magnetic field
             B_N_mean  /= B_amp;
             B_T1_mean /= B_amp;
@@ -152,16 +153,19 @@ void Hydro_AddViscousFlux_HalfStep( const real g_PriVar[][ CUBE(FLU_NXT) ],
 //       |         |         |
 //       ---------------------
          real v_N, v_T1, v_T2;
-         real N_slope, T1_slope, T2_slope;
-         real al, bl, ar, br;
+         real N_slope_N, T1_slope_N, T2_slope_N;
+         real N_slope_T1, T1_slope_T1, T2_slope_T1;
+         real N_slope_T2, T1_slope_T2, T2_slope_T2;
 
 //       face-centered velocities
          v_N  = 0.5*( g_PriVar[d+1][ idx_cvar ] + g_PriVar[d+1][ idx_cvar + didx_cvar[d] ] );
          v_T1 = 0.5*( g_PriVar[TDir1+1][ idx_cvar ] + g_PriVar[TDir1+1][ idx_cvar + didx_cvar[d] ] );
          v_T2 = 0.5*( g_PriVar[TDIr2+1][ idx_cvar ] + g_PriVar[TDir2+1][ idx_cvar + didx_cvar[d] ] );
-
+         
 //       normal direction
-         N_slope = ( Temp[ idx_cvar + didx_cvar[d] ] - Temp[ idx_cvar ] ) * _dh;
+         N_slope_N  = ( g_PriVar[d+1][ idx_cvar ] - g_PriVar[d+1][ idx_cvar + didx_cvar[d] ] ) * _dh;
+         T1_slope_N = ( g_PriVar[TDir1+1][ idx_cvar ] - g_PriVar[TDir1+1][ idx_cvar + didx_cvar[d] ] ) * _dh;
+         T2_slope_N = ( g_PriVar[TDIr2+1][ idx_cvar ] - g_PriVar[TDir2+1][ idx_cvar + didx_cvar[d] ] ) * _dh;
 
          if ( MicroPhy.ViscFluxType == ANISOTROPIC_VISCOSITY ) 
          {
@@ -189,27 +193,34 @@ void Hydro_AddViscousFlux_HalfStep( const real g_PriVar[][ CUBE(FLU_NXT) ],
          } 
 
 //       3. compute viscous flux
-         real gradient, Total_Flux;
-         if ( MicroPhy.ViscFluxType == ISOTROPIC_VISCOSITY ) 
-            gradient = -N_slope;
-         else if ( MicroPhy.ViscFluxType == ANISOTROPIC_VISCOSITY ) 
-            gradient = -B_N_mean*( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
 //       get the viscosity
 //       --> for non-constant viscosity coefficients, take the spatial average along the normal direction
 //           to get the face-centered coefficients
-         real mu_l, mu_r, mu, visc_nu;
+         real mu_l, mu_r, mu, visc_nu, delta_p, Total_Flux;
          
          Hydro_ComputeViscosity( mu_l, visc_nu, MicroPhy, g_PriVar[DENS][ idx_cvar ], 
                                  Temp[ idx_cvar ] );
          Hydro_ComputeViscosity( mu_r, visc_nu, MicroPhy, g_PriVar[DENS][ idx_cvar + didx_cvar[d] ], 
                                  Temp[ idx_cvar + didx_cvar[d] ] );
          mu = 0.5*( mu_l + mu_r );
-         Total_Flux = kappa*gradient;
+
+         real BBdV, stress_N, stress_T1, stress_T2, delta_p;
+         if ( MicroPhy.ViscFluxType == ISOTROPIC_VISCOSITY ) 
+            gradient = -N_slope;
+         else if ( MicroPhy.ViscFluxType == ANISOTROPIC_VISCOSITY ) 
+            delta_p = mu*(3.0*BBdV - divV);
+            if ( MicroPhy.ViscFluxType == ANISOTROPIC_VISCOSITY && MicroPhy.ViscBounds ) 
+               delta_p = FMIN( FMAX( delta_p, -B2 ) 0.5*B2 );
+            stress_N  = -delta_p*(B_N_mean*B_N_mean - 1./3.);
+            stress_T1 = -delta_p*B_T1_mean*B_N_mean;
+            stress_T2 = -delta_p*B_T2_mean*B_N_mean;
+     
+         Total_Flux = stress_N*v_N + stress_T1*v_T1 + stress_T2*v_T2;
 
 //       5. flux add-up
-         g_Flux_Half[d][MOMX][idx_flux] += Total_Flux;
-         g_Flux_Half[d][MOMY][idx_flux] += Total_Flux;
-         g_Flux_Half[d][MOMZ][idx_flux] += Total_Flux;
+         g_Flux_Half[d][d+1][idx_flux] += stress_N;
+         g_Flux_Half[d][TDir1+1][idx_flux] += stress_T1;
+         g_Flux_Half[d][TDir2+1][idx_flux] += stress_T2;
          g_Flux_Half[d][ENGY][idx_flux] += Total_Flux;
 
       } // CGPU_LOOP( idx, size_i*size_j*size_k )
@@ -342,7 +353,7 @@ void Hydro_AddViscousFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 //       |    |    |    |    |
 //       |         |         |
 //       ---------------------
-         real B_N_mean, B_T1_mean, B_T2_mean, B_amp;
+         real B_N_mean, B_T1_mean, B_T2_mean, B_amp, B2;
          if ( MicroPhy.ViscFluxType == ANISOTROPIC_VISCOSITY ) 
          {
             B_N_mean  =              g_FC_B_Half[    d][ idx_fc_BN                                            ];
@@ -354,7 +365,8 @@ void Hydro_AddViscousFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                                      g_FC_B_Half[TDir2][ idx_fc_BT2                    + stride_fc_BT2[TDir2] ] +
                                      g_FC_B_Half[TDir2][ idx_fc_BT2 - stride_fc_BT2[d]                        ] +
                                      g_FC_B_Half[TDir2][ idx_fc_BT2 - stride_fc_BT2[d] + stride_fc_BT2[TDir2] ]   );
-            B_amp     = SQRT( SQR(B_N_mean) + SQR(B_T1_mean) + SQR(B_T2_mean) );
+            B2        = SQR(B_N_mean) + SQR(B_T1_mean) + SQR(B_T2_mean);
+            B_amp     = SQRT( B2 );
 
 //          normalize magnetic field
             B_N_mean  /= B_amp;
@@ -363,7 +375,7 @@ void Hydro_AddViscousFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
          }
 #        endif
 
-//       2. compute temperature slope
+//       2. compute jacobian matrix for velocity gradients
 //       ---------------------
 //       |         |         |
 //       ----bl--------br-----
@@ -374,8 +386,9 @@ void Hydro_AddViscousFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 //       |         |         |
 //       ---------------------
          real v_N, v_T1, v_T2;
-         real N_slope, T1_slope, T2_slope;
-         real al, bl, ar, br;
+         real N_slope_N, T1_slope_N, T2_slope_N;
+         real N_slope_T1, T1_slope_T1, T2_slope_T1;
+         real N_slope_T2, T1_slope_T2, T2_slope_T2;
 
 //       face-centered velocities
          v_N  = 0.5*( g_PriVar_Half[d+1][ idx_half ] + g_PriVar_Half[d+1][ idx_half + didx_half[d] ] );
@@ -411,11 +424,6 @@ void Hydro_AddViscousFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
          } 
 
 //       3. compute viscous flux
-         real gradient, Total_Flux;
-         if ( MicroPhy.ViscFluxType == ISOTROPIC_VISCOSITY ) 
-            gradient = -N_slope;
-         else if ( MicroPhy.ViscFluxType == ANISOTROPIC_VISCOSITY ) 
-            gradient = -B_N_mean*( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
 //       get the viscosity
 //       --> for non-constant viscosity coefficients, take the spatial average along the normal direction
 //           to get the face-centered coefficients
@@ -425,12 +433,23 @@ void Hydro_AddViscousFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
          Hydro_ComputeViscosity( mu_r, visc_nu, MicroPhy, g_PriVar_Half[DENS][ idx_half + didx_half[d] ], 
                                  Temp[ idx_half + didx_half[d] ] );
          mu = 0.5*( mu_l + mu_r ); 
-         Total_Flux = kappa*gradient;
+         real BBdV, stress_N, stress_T1, stress_T2, delta_p;
+         if ( MicroPhy.ViscFluxType == ISOTROPIC_VISCOSITY ) 
+            gradient = -N_slope;
+         else if ( MicroPhy.ViscFluxType == ANISOTROPIC_VISCOSITY ) 
+            delta_p = mu*(3.0*BBdV - divV);
+            if ( MicroPhy.ViscFluxType == ANISOTROPIC_VISCOSITY && MicroPhy.ViscBounds ) 
+               delta_p = FMIN( FMAX( delta_p, -B2 ) 0.5*B2 );
+            stress_N  = -delta_p*(B_N_mean*B_N_mean - 1./3.);
+            stress_T1 = -delta_p*B_T1_mean*B_N_mean;
+            stress_T2 = -delta_p*B_T2_mean*B_N_mean;
+     
+         Total_Flux = stress_N*v_N + stress_T1*v_T1 + stress_T2*v_T2;
 
 //       4. flux add-up
-         g_FC_Flux[d][MOMX][idx_flux] += Total_Flux;
-         g_FC_Flux[d][MOMY][idx_flux] += Total_Flux;
-         g_FC_Flux[d][MOMZ][idx_flux] += Total_Flux;
+         g_FC_Flux[d][d+1][idx_flux] += stress_N;
+         g_FC_Flux[d][TDir1+1][idx_flux] += stress_T1;
+         g_FC_Flux[d][TDir2+1][idx_flux] += stress_T2;
          g_FC_Flux[d][ENGY][idx_flux] += Total_Flux;
 
       } // CGPU_LOOP( idx, size_i*size_j*size_k )
