@@ -601,6 +601,24 @@ void CPU_FluidSolver_MHM(
                                dt, dh, Time, UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
                                MinDens, MinPres, &EoS );
 
+#           if ( defined VISCOSITY ) || ( defined CONDUCTION )
+            // Need to compute temperature for thermal conduction and viscosity
+            CGPU_LOOP( idx, CUBE(FLU_NXT) )
+            {
+               real fluid[NCOMP_TOTAL], Eint;
+               for (int v=0; v<NCOMP_TOTAL; v++)  fluid[v] = g_PriVar_Half_1PG[v][idx];
+               Eint = EoS.DensPres2Eint_FuncPtr( fluid[DENS], fluid[ENGY], fluid+NCOMP_FLUID, EoS.AuxArrayDevPtr_Flt, 
+                                                 EoS.AuxArrayDevPtr_Int, EoS.Table );
+               Temp[idx] = EoS.DensEint2Temp_FuncPtr( fluid[DENS], Eint, fluid+NCOMP_FLUID, EoS.AuxArrayDevPtr_Flt, 
+                                                      EoS.AuxArrayDevPtr_Int, EoS.Table );
+               Temp[idx] = Hydro_CheckMinTemp( Temp[idx], MinTemp );
+            }
+
+#           ifdef __CUDACC__
+             __syncthreads();
+#           endif
+#           endif // #if ( defined VISCOSITY ) || ( defined CONDUCTION )
+
 //          add cosmic-ray fluxes
 #           ifdef CR_DIFFUSION
             CR_AddDiffuseFlux_FullStep( g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_FL_FLUX, dh, &MicroPhy );
