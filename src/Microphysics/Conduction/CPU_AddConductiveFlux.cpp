@@ -25,15 +25,6 @@ static real minmod( const real a, const real b );
 #endif // #ifdef __CUDACC__ ... else ...
 
 
-// internal funcitons
-GPU_DEVICE
-static real MC_limiter( const real a, const real b );
-GPU_DEVICE
-static real minmod( const real a, const real b );
-
-
-
-
 //-----------------------------------------------------------------------------------------
 // Function    : Hydro_AddConductiveFlux_HalfStep
 //
@@ -55,8 +46,9 @@ static real minmod( const real a, const real b );
 // Return      : g_Flux_Half[]
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_AddConductiveFlux_HalfStep( const real Dens[], const real Temp[],
-                                       real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+void Hydro_AddConductiveFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
+                                       const real Temp[ CUBE(FLU_NXT) ],
+                                             real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                        const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                                        const real g_CC_B[][ CUBE(FLU_NXT) ],
                                        const real dh, const MicroPhy_t *MicroPhy )
@@ -207,15 +199,15 @@ void Hydro_AddConductiveFlux_HalfStep( const real Dens[], const real Temp[],
 //       --> for non-constant conduction coefficients, take the spatial average along the normal direction
 //           to get the face-centered coefficients
          real kappa_l, kappa_r, kappa, chi;
-         Hydro_ComputeConduction( kappa_l, cond_chi, MicroPhy, Dens[ idx_cvar ], 
+         Hydro_ComputeConduction( kappa_l, cond_chi, MicroPhy, g_ConVar[DENS][ idx_cvar ], 
                                   Temp[ idx_cvar ] );
-         Hydro_ComputeConduction( kappa_r, cond_chi, MicroPhy, Dens[ idx_cvar + didx_cvar[d] ], 
+         Hydro_ComputeConduction( kappa_r, cond_chi, MicroPhy, g_ConVar[DENS][ idx_cvar + didx_cvar[d] ], 
                                   Temp[ idx_cvar + didx_cvar[d] ] );
          kappa = 0.5*( kappa_l + kappa_r );
          if ( MicroPhy.CondSaturation ) {
             real gradT = SQRT( SQR(N_slope) + SQR(T1_slope) + SQR(T2_slope) );
             real Thalf = 0.5*( Temp[ idx_cvar ] + Temp[ idx_cvar + didx_cvar[d] ] );
-            real Dhalf = 0.5*( Dens[ idx_cvar ] + Dens[ idx_cvar + didx_cvar[d] ] );
+            real Dhalf = 0.5*( g_ConVar[DENS][ idx_cvar ] + g_ConVar[DENS][ idx_cvar + didx_cvar[d] ] );
             real l_e = MicroPhy->CondMFPConst * Thalf * Thalf / Dhalf; 
             real l_T = Thalf/gradT;
             real sat_factor = 4.0;
@@ -267,7 +259,8 @@ void Hydro_AddConductiveFlux_HalfStep( const real Dens[], const real Temp[],
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_AddConductiveFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
-                                       real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                       const real Temp[ CUBE(FLU_NXT) ],
+                                             real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                        const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                        const int NFlux, const real dh, const MicroPhy_t *MicroPhy )
 {
@@ -440,15 +433,15 @@ void Hydro_AddConductiveFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT)
 //       --> for non-constant conduction coefficients, take the spatial average along the normal direction
 //           to get the face-centered coefficients
          real kappa_l, kappa_r, kappa, chi;
-         Hydro_ComputeConduction( kappa_l, chi, MicroPhy, Dens[ idx_half ], 
+         Hydro_ComputeConduction( kappa_l, chi, MicroPhy, g_PriVar_Half[DENS][ idx_half ], 
                                   Temp[ idx_half ] );
-         Hydro_ComputeConduction( kappa_r, chi, MicroPhy, Dens[ idx_half + didx_half[d] ], 
+         Hydro_ComputeConduction( kappa_r, chi, MicroPhy, g_PriVar_Half[DENS][ idx_half + didx_half[d] ], 
                                   Temp[ idx_half + didx_half[d] ] );
          kappa = 0.5*( kappa_l + kappa_r );
          if ( MicroPhy.CondSaturation ) {
             real gradT = SQRT( SQR(N_slope) + SQR(T1_slope) + SQR(T2_slope) );
             real Thalf = 0.5*( Temp[ idx_half ] + Temp[ idx_half + didx_half[d] ] );
-            real Dhalf = 0.5*( Dens[ idx_half ] + Dens[ idx_half + didx_half[d] ] );
+            real Dhalf = 0.5*( g_PriVar_Half[DENS][ idx_half ] + g_PriVar_Half[DENS][ idx_half + didx_half[d] ] );
             real l_e = MicroPhy->CondMFPConst * Thalf * Thalf / Dhalf; 
             real l_T = Thalf/gradT;
             real sat_factor = 4.0;
