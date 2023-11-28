@@ -1546,6 +1546,16 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 #  else // #ifdef COSMIC_RAY
    KeyInfo.CosmicRay            = 0;
 #  endif // #ifdef COSMIC_RAY .. else ...
+#  ifdef VISCOSITY
+   KeyInfo.Viscosity            = 1;
+#  else
+   KeyInfo.Viscosity            = 0;
+#  endif
+#  ifdef CONDUCTION
+   KeyInfo.Conduction           = 1;
+#  else
+   KeyInfo.Conduction           = 0;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
 
    for (int d=0; d<3; d++)
@@ -1855,7 +1865,16 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  else // #ifdef COSMIC_RAY
    Makefile.CosmicRay              = 0;
 #  endif // #ifdef COSMIC_RAY .. else ...
-
+#  ifdef VISCOSITY
+   Makefile.Viscosity              = 1;
+#  else
+   Makefile.Viscosity              = 0;
+#  endif
+#  ifdef CONDUCTION
+   Makefile.Conduction             = 1;
+#  else
+   Makefile.Conduction             = 0;
+#  endif
 
 } // FUNCTION : FillIn_Makefile
 
@@ -2204,6 +2223,12 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  ifdef CR_DIFFUSION
    InputPara.Dt__CR_Diffusion        = DT__CR_DIFFUSION;
 #  endif
+#  ifdef VISCOSITY
+   InputPara.Dt__Viscosity           = DT__VISCOSITY;
+#  endif
+#  ifdef CONDUCTION
+   InputPara.Dt__Conduction          = DT__CONDUCTION;
+#  endif
 #  ifdef COMOVING
    InputPara.Dt__MaxDeltaA           = DT__MAX_DELTA_A;
 #  endif
@@ -2449,6 +2474,31 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.CR_Diffusion_MinB       = CR_DIFF_MIN_B;
 #  endif
 #  endif // #ifdef COSMIC_RAY
+
+// viscosity
+#  ifdef VISCOSITY
+   InputPara.Visc_Type               = VISCOSITY_TYPE;
+   InputPara.Visc_FluxType           = VISCOSITY_FLUX_TYPE;
+   InputPara.Visc_CoeffType          = VISCOSITY_COEFF_TYPE;
+   InputPara.Visc_Bounds             = VISCOSITY_BOUNDS;
+   InputPara.Visc_ConstCoeff         = VISCOSITY_CONST_COEFF;
+   InputPara.Visc_MaxDiffusivity     = VISCOSITY_MAX_DIFFUSIVITY;
+   InputPara.Visc_SpitzerFraction    = VISCOSITY_SPITZER_FRAC;
+   InputPara.Visc_CoulombLog         = VISCOSITY_COULOMB_LOG;
+#  endif // #ifdef VISCOSITY
+
+// conduction
+#  ifdef CONDUCTION
+   InputPara.Cond_Type               = CONDUCTION_TYPE;
+   InputPara.Cond_FluxType           = CONDUCTION_FLUX_TYPE;
+   InputPara.Cond_Saturation         = CONDUCTION_SATURATION;
+   InputPara.Cond_SatWhistler        = CONDUCTION_SAT_WHISTLER;
+   InputPara.Cond_ConstCoeff         = CONDUCTION_CONST_COEFF;
+   InputPara.Cond_MaxDiffusivity     = CONDUCTION_MAX_DIFFUSIVITY;
+   InputPara.Cond_SpitzerFraction    = CONDUCTION_SPITZER_FRAC;
+   InputPara.Cond_CoulombLog         = CONDUCTION_COULOMB_LOG;
+   InputPara.Cond_Mue                = CONDUCTION_MUE;
+#  endif // #ifdef CONDUCTION
 
 // initialization
    InputPara.Opt__Init               = OPT__INIT;
@@ -2718,6 +2768,14 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "CR_Diffusion",         HOFFSET(KeyInfo_t,CR_Diffusion        ), H5T_NATIVE_INT          );
 #  endif
 
+#  ifdef VISCOSITY
+   H5Tinsert( H5_TypeID, "Viscosity",            HOFFSET(KeyInfo_t,Viscosity           ), H5T_NATIVE_INT          );
+#  endif
+
+#  ifdef CONDUCTION
+   H5Tinsert( H5_TypeID, "Conduction",           HOFFSET(KeyInfo_t,Conduction          ), H5T_NATIVE_INT          );
+#  endif
+
    H5Tinsert( H5_TypeID, "BoxSize",              HOFFSET(KeyInfo_t,BoxSize             ), H5_TypeID_Arr_3Double   );
    H5Tinsert( H5_TypeID, "Time",                 HOFFSET(KeyInfo_t,Time                ), H5_TypeID_Arr_NLvDouble );
    H5Tinsert( H5_TypeID, "CellSize",             HOFFSET(KeyInfo_t,CellSize            ), H5_TypeID_Arr_NLvDouble );
@@ -2833,6 +2891,15 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 #  ifdef COSMIC_RAY
    H5Tinsert( H5_TypeID, "CR_Diffusion",           HOFFSET(Makefile_t,CR_Diffusion           ), H5T_NATIVE_INT );
 #  endif
+
+#  ifdef VISCOSITY
+   H5Tinsert( H5_TypeID, "Viscosity",              HOFFSET(Makefile_t,Viscosity              ), H5T_NATIVE_INT );
+#  endif
+
+#  ifdef CONDUCTION
+   H5Tinsert( H5_TypeID, "Conduction",             HOFFSET(Makefile_t,Conduction             ), H5T_NATIVE_INT );
+#  endif
+
 
 } // FUNCTION : GetCompound_Makefile
 
@@ -3139,6 +3206,12 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  ifdef CR_DIFFUSION
    H5Tinsert( H5_TypeID, "Dt__CR_Diffusion",        HOFFSET(InputPara_t,Dt__CR_Diffusion       ), H5T_NATIVE_DOUBLE  );
 #  endif
+#  ifdef VISCOSITY
+   H5Tinsert( H5_TypeID, "Dt__Viscosity",           HOFFSET(InputPara_t,Dt__Viscosity          ), H5T_NATIVE_DOUBLE  );
+#  endif
+#  ifdef CONDUCTION
+   H5Tinsert( H5_TypeID, "Dt__Conduction",          HOFFSET(InputPara_t,Dt__Conduction         ), H5T_NATIVE_DOUBLE  );
+#  endif
 #  ifdef COMOVING
    H5Tinsert( H5_TypeID, "Dt__MaxDeltaA",           HOFFSET(InputPara_t,Dt__MaxDeltaA          ), H5T_NATIVE_DOUBLE  );
 #  endif
@@ -3391,6 +3464,31 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "CR_Diffusion_MinB",      HOFFSET(InputPara_t,CR_Diffusion_MinB      ), H5T_NATIVE_DOUBLE            );
 #  endif
 #  endif // #ifdef COSMIC_RAY
+
+// conduction
+#  ifdef CONDUCTION
+   H5Tinsert( H5_TypeID, "Cond_Type",              HOFFSET(InputPara_t,Cond_Type              ), H5T_NATIVE_INT               );
+   H5Tinsert( H5_TypeID, "Cond_FluxType",          HOFFSET(InputPara_t,Cond_FluxType          ), H5T_NATIVE_INT               );
+   H5Tinsert( H5_TypeID, "Cond_Saturation",        HOFFSET(InputPara_t,Cond_Saturation        ), H5T_NATIVE_INT               );
+   H5Tinsert( H5_TypeID, "Cond_SatWhistler",       HOFFSET(InputPara_t,Cond_SatWhistler       ), H5T_NATIVE_INT               );
+   H5Tinsert( H5_TypeID, "Cond_ConstCoeff",        HOFFSET(InputPara_t,Cond_ConstCoeff        ), H5T_NATIVE_DOUBLE            );
+   H5Tinsert( H5_TypeID, "Cond_MaxDiffusivity",    HOFFSET(InputPara_t,Cond_MaxDiffusivity    ), H5T_NATIVE_DOUBLE            );
+   H5Tinsert( H5_TypeID, "Cond_SpitzerFraction",   HOFFSET(InputPara_t,Cond_SpitzerFraction   ), H5T_NATIVE_DOUBLE            );
+   H5Tinsert( H5_TypeID, "Cond_CoulombLog",        HOFFSET(InputPara_t,Cond_CoulombLog        ), H5T_NATIVE_DOUBLE            );
+   H5Tinsert( H5_TypeID, "Cond_Mue",               HOFFSET(InputPara_t,Cond_Mue               ), H5T_NATIVE_DOUBLE            );
+#  endif // #ifdef CONDUCTION
+
+// viscosity
+#  ifdef VISCOSITY
+   H5Tinsert( H5_TypeID, "Visc_Type",              HOFFSET(InputPara_t,Visc_Type              ), H5T_NATIVE_INT               );
+   H5Tinsert( H5_TypeID, "Visc_FluxType",          HOFFSET(InputPara_t,Visc_FluxType          ), H5T_NATIVE_INT               );
+   H5Tinsert( H5_TypeID, "Visc_CoeffType",         HOFFSET(InputPara_t,Visc_CoeffType         ), H5T_NATIVE_INT               );
+   H5Tinsert( H5_TypeID, "Visc_Bounds",            HOFFSET(InputPara_t,Visc_Bounds            ), H5T_NATIVE_INT               );
+   H5Tinsert( H5_TypeID, "Visc_ConstCoeff",        HOFFSET(InputPara_t,Visc_ConstCoeff        ), H5T_NATIVE_DOUBLE            );
+   H5Tinsert( H5_TypeID, "Visc_MaxDiffusivity",    HOFFSET(InputPara_t,Visc_MaxDiffusivity    ), H5T_NATIVE_DOUBLE            );
+   H5Tinsert( H5_TypeID, "Visc_SpitzerFraction",   HOFFSET(InputPara_t,Visc_SpitzerFraction   ), H5T_NATIVE_DOUBLE            );
+   H5Tinsert( H5_TypeID, "Visc_CoulombLog",        HOFFSET(InputPara_t,Visc_CoulombLog        ), H5T_NATIVE_DOUBLE            );
+#  endif // #ifdef VISCOSITY
 
 // initialization
    H5Tinsert( H5_TypeID, "Opt__Init",               HOFFSET(InputPara_t,Opt__Init               ), H5T_NATIVE_INT              );
