@@ -206,10 +206,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 
 #  ifndef SRHD
    const bool CheckMinPres_Yes = true;
-   const real LorentzFactor    = 1.0;
    const real _Rho             = (real)1.0/In[0];
-#  endif
-   
 #  ifdef MHD
    const real Bx               = In[ MAG_OFFSET + 0 ];
    const real By               = In[ MAG_OFFSET + 1 ];
@@ -218,7 +215,8 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 #  else
    const real Emag             = NULL_REAL;
 #  endif
-      
+#  endif // #ifndef SRHD
+
 #  ifdef SRHD
    real HTilde, Factor, Temp, LorentzFactor;
 

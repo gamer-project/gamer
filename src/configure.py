@@ -361,7 +361,7 @@ def load_arguments():
                          default=False,
                          depend={"model":"HYDRO"},
                          constraint={ True:{"flu_scheme":["MHM", "MHM_RP"], "flux":["HLLE", "HLLC"], "eos":["TAUBMATHEWS"]},
-                                     False:{"eos":["GAMMA", "ISOTHERMAL", "NUCLEAR", "TABULAR", "USER"]} },
+                                     False:{"eos":["GAMMA", "ISOTHERMAL", "NUCLEAR", "TABULAR", "USER", "COSMIC_RAY"]} },
                          help="Special Relativistic Hydrodynamics.\n"
                        )
 
