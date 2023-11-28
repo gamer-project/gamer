@@ -1508,8 +1508,8 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    KeyInfo.CodeVersion  = (char*)VERSION;
    KeyInfo.DumpWallTime = ctime( &CalTime );
    KeyInfo.DumpWallTime[ strlen(KeyInfo.DumpWallTime)-1 ] = '\0';  // remove the last character '\n'
-   KeyInfo.GitBranch    = EXPAND_AND_QUOTE( GIT_BRANCH );
-   KeyInfo.GitCommit    = EXPAND_AND_QUOTE( GIT_COMMIT );
+   KeyInfo.GitBranch    = (char*)EXPAND_AND_QUOTE( GIT_BRANCH );
+   KeyInfo.GitCommit    = (char*)EXPAND_AND_QUOTE( GIT_COMMIT );
 
 //###REVISE: replace rand() by UUID
    srand( time(NULL) );

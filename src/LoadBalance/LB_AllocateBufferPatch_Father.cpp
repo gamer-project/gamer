@@ -150,7 +150,9 @@ void LB_AllocateBufferPatch_Father( const int SonLv, const bool SearchAllSon, co
             FaCr1D0     -= dr[d];
 
 #           ifdef GAMER_DEBUG
-            if ( FaCr1D0 < 0 )   Aux_Error( ERROR_INFO, "FaCr1D0 (%lu) < 0 (dr[%d] = %lu) !!\n", FaCr1D0, d, dr[d] );
+            if ( FaCr1D0 >= amr->patch[0][SonLv][SonPID0]->PaddedCr1D )
+               Aux_Error( ERROR_INFO, "FaCr1D0 (%lu) underflow (dr[%d] = %lu, PaddedCr1D = %lu) !!\n",
+                          FaCr1D0, d, dr[d], amr->patch[0][SonLv][SonPID0]->PaddedCr1D );
 #           endif
          }
          else

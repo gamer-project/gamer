@@ -577,7 +577,7 @@ def load_arguments():
     # C. parallelization and flags
     parser.add_argument( "--openmp", type=str2bool, metavar="BOOLEAN", gamer_name="OPENMP",
                          default=True,
-                         help="Enable OpenMP parallization.\n"
+                         help="Enable OpenMP parallelization.\n"
                        )
 
     parser.add_argument( "--mpi", type=str2bool, metavar="BOOLEAN", gamer_name="LOAD_BALANCE=HILBERT",
