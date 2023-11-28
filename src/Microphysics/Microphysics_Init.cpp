@@ -39,7 +39,7 @@ void Microphysics_Init()
    MicroPhy.CondFluxType = CONDUCTION_FLUX_TYPE;
    MicroPhy.Cond_safety = DT__CONDUCTION;
    MicroPhy.CondConstCoeff = CONDUCTION_CONSTANT_COEFF;
-   MicroPhy.CondSpitzerFraction = CONDUCTION_SPITZER_FRACTION;
+   MicroPhy.CondSpitzerFraction = CONDUCTION_SPITZER_FRAC;
    MicroPhy.CondCoulombLog = CONDUCTION_COULOMB_LOG;
    MicroPhy.CondMaxDiffusivity = CONDUCTION_MAX_DIFFUSIVITY;
    MicroPhy.CondSaturation = CONDUCTION_SATURATION;
@@ -95,7 +95,7 @@ void Microphysics_Init()
    MicroPhy.ViscCoeffType = VISCOSITY_COEFF_TYPE;
    MicroPhy.Visc_safety = DT__VISCOSITY;
    MicroPhy.ViscConstCoeff = VISCOSITY_CONST_COEFF;
-   MicroPhy.ViscSpitzerFraction = VISCOSITY_SPITZER_FRACTION;
+   MicroPhy.ViscSpitzerFraction = VISCOSITY_SPITZER_FRAC;
    MicroPhy.ViscCoulombLog = VISCOSITY_COULOMB_LOG;
    MicroPhy.ViscMaxDiffusivity = VISCOSITY_MAX_DIFFUSIVITY;
    MicroPhy.ViscBounds = VISCOSITY_BOUNDS;

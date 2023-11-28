@@ -677,16 +677,20 @@ struct InputPara_t
 #  ifdef CONDUCTION
    int    Cond_Type;
    int    Cond_FluxType;
+   int    Cond_Saturation;
+   int    Cond_SatWhistler;
    double Cond_ConstCoeff;
    double Cond_MaxDiffusivity;
    double Cond_SpitzerFraction;
    double Cond_CoulombLog;
+   double Cond_Mue;
 #  endif // #ifdef CONDUCTION
 
 #  ifdef VISCOSITY
    int    Visc_Type;
    int    Visc_FluxType;
    int    Visc_CoeffType;
+   int    Visc_Bounds;
    double Visc_ConstCoeff;
    double Visc_MaxDiffusivity;
    double Visc_SpitzerFraction;

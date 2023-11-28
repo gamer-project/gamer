@@ -356,7 +356,7 @@ extern int    VISCOSITY_FLUX_TYPE;
 extern int    VISCOSITY_COEFF_TYPE;
 extern double DT__VISCOSITY;
 extern double VISCOSITY_CONST_COEFF;
-extern double VISCOSITY_SPITZER_FRACTION;
+extern double VISCOSITY_SPITZER_FRAC;
 extern double VISCOSITY_COULOMB_LOG;
 extern double VISCOSITY_MAX_DIFFUSIVITY;
 #endif
@@ -368,7 +368,7 @@ extern int    CONDUCTION_TYPE;
 extern int    CONDUCTION_FLUX_TYPE;
 extern double DT__CONDUCTION;
 extern double CONDUCTION_CONSTANT_COEFF;
-extern double CONDUCTION_SPITZER_FRACTION;
+extern double CONDUCTION_SPITZER_FRAC;
 extern double CONDUCTION_COULOMB_LOG;
 extern double CONDUCTION_MAX_DIFFUSIVITY;
 extern double CONDUCTION_MUE;
