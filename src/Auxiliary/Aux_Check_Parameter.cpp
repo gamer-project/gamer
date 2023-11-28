@@ -1730,6 +1730,11 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "ANISOTROPIC_VISCOSITY requires MHD !!\n" );
 #  endif
 
+#  ifdef BAROTROPIC_EOS
+   if ( VISCOSITY_TYPE == SPITZER_VISCOSITY )
+      Aux_Error( ERROR_INFO, "SPITZER_VISCOSITY does not work with BAROTROPIC_EOS !!\n" );
+#  endif 
+
    if ( VISCOSITY_TYPE == CONSTANT_VISCOSITY && VISCOSITY_CONST_COEFF <= 0.0 ) 
       Aux_Error( ERROR_INFO, "VISCOSITY_CONST_COEFF <= 0 !!\n" );
  
