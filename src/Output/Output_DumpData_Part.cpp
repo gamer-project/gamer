@@ -352,7 +352,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
 #  ifdef SRHD 
    real Prim[NCOMP_TOTAL], LorentzFactor;
-   if ( OPT__OUTPUT_CS || OPT_OUTPUT_LORENTZ || OPT_OUTPUT_VELOCITY )
+   if ( OPT__OUTPUT_CS || OPT__OUTPUT_LORENTZ || OPT__OUTPUT_VELOCITY )
       Hydro_Con2Pri( u, Prim, NULL_REAL, NULL_BOOL, NULL_INT, NULL,
                      NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
                      EoS_DensPres2Eint_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,

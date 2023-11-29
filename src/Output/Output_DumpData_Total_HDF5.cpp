@@ -1023,12 +1023,12 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      for (int v=0; v<NCOMP_TOTAL; v++)  Cons[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
                      Hydro_Con2Pri( Cons, Prim, (real)NULL_REAL, false, NULL_INT, NULL,
-                                    NULL_BOOL, (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
-                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &LorentzFactor );
+                                    NULL_BOOL, (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
 
                      if ( v >= VelDumpIdx0  &&  v < VelDumpIdx0+3 )
                         FieldData[PID][k][j][i] = Prim[vv] / LorentzFactor;
-                     elif ( v == LorentzDumpIdx )
+                     else if ( v == LorentzDumpIdx )
                         FieldData[PID][k][j][i] = LorentzFactor;
                   }
                }
