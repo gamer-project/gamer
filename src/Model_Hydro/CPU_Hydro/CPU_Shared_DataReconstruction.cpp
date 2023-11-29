@@ -133,6 +133,15 @@ static void Hydro_Char2Pri( real InOut[], const real Dens, const real Pres, cons
 //                9. Support applying data reconstruction to internal energy and using that instead of pressure
 //                   for converting primitive variables to conserved variables
 //                   --> Controlled by the option "LR_EINT" in CUFLU.h; see the description thereof for details
+//                10. (PPM) Reference:
+//                   a. The Athena++ Adaptive Mesh Refinement Framework: Design and Magnetohydrodynamic Solvers
+//                      Stone J. M., Tomida K., White C. J., Felker K. G., 2020, ApJS, 249, 4.
+//                   b. The Piecewise Parabolic Method (PPM) for gas-dynamical simulations
+//                      Colella P., Woodward P. R., 1984, JCoPh, 54, 174. doi:10.1016/0021-9991(84)90143-8
+//                   c. A limiter for PPM that preserves accuracy at smooth extrema
+//                      Colella P., Sekora M. D., 2008, JCoPh, 227, 7069. doi:10.1016/j.jcp.2008.03.034
+//                   d. A high-order finite-volume method for conservation laws on locally refined grids
+//                      Peter McCorquodale. Phillip Colella. Commun. Appl. Math. Comput. Sci. 6 (1) 1 - 25, 2011.
 //
 // Parameter   :  g_ConVar           : Array storing the input cell-centered conserved variables
 //                                     --> Should contain NCOMP_TOTAL variables
@@ -853,46 +862,50 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 // 1. evaluate the monotonic slope of all cells
    const int N_SLOPE_PPM2 = SQR( N_SLOPE_PPM );
-   CGPU_LOOP( idx_slope, CUBE(N_SLOPE_PPM) )
+   if ( LR_Limiter != LR_LIMITER_ATHENA )
    {
-      const int i_cc   = NGhost - 1 + idx_slope%N_SLOPE_PPM;
-      const int j_cc   = NGhost - 1 + idx_slope%N_SLOPE_PPM2/N_SLOPE_PPM;
-      const int k_cc   = NGhost - 1 + idx_slope/N_SLOPE_PPM2;
-      const int idx_cc = IDX321( i_cc, j_cc, k_cc, NIn, NIn );
-
-//    cc_C/L/R: cell-centered variables of the Central/Left/Right cells
-      real cc_C[NCOMP_LR], cc_L[NCOMP_LR], cc_R[NCOMP_LR], Slope_Limiter[NCOMP_LR];
-
-      for (int v=0; v<NCOMP_LR; v++)   cc_C[v] = g_PriVar[v][idx_cc];
-
-//    loop over different spatial directions
-      for (int d=0; d<3; d++)
+      CGPU_LOOP( idx_slope, CUBE(N_SLOPE_PPM) )
       {
-         const int idx_ccL = idx_cc - didx_cc[d];
-         const int idx_ccR = idx_cc + didx_cc[d];
+         const int i_cc   = NGhost - 1 + idx_slope%N_SLOPE_PPM;
+         const int j_cc   = NGhost - 1 + idx_slope%N_SLOPE_PPM2/N_SLOPE_PPM;
+         const int k_cc   = NGhost - 1 + idx_slope/N_SLOPE_PPM2;
+         const int idx_cc = IDX321( i_cc, j_cc, k_cc, NIn, NIn );
 
-#        if ( defined MHD  &&  defined CHAR_RECONSTRUCTION )
-         MHD_GetEigenSystem( cc_C, EigenVal[d], LEigenVec, REigenVec, EoS, d );
-#        endif
+//       cc_C/L/R: cell-centered variables of the Central/Left/Right cells
+         real cc_C[NCOMP_LR], cc_L[NCOMP_LR], cc_R[NCOMP_LR], Slope_Limiter[NCOMP_LR];
 
-         for (int v=0; v<NCOMP_LR; v++)
+         for (int v=0; v<NCOMP_LR; v++)   cc_C[v] = g_PriVar[v][idx_cc];
+
+//       loop over different spatial directions
+         for (int d=0; d<3; d++)
          {
-            cc_L[v] = g_PriVar[v][idx_ccL];
-            cc_R[v] = g_PriVar[v][idx_ccR];
-         }
+            const int idx_ccL = idx_cc - didx_cc[d];
+            const int idx_ccR = idx_cc + didx_cc[d];
 
-         Hydro_LimitSlope( cc_L, cc_C, cc_R, LR_Limiter, MinMod_Coeff, d,
-                           LEigenVec, REigenVec, Slope_Limiter, EoS );
+#           if ( defined MHD  &&  defined CHAR_RECONSTRUCTION )
+            MHD_GetEigenSystem( cc_C, EigenVal[d], LEigenVec, REigenVec, EoS, d );
+#           endif
 
-//       store the results to g_Slope_PPM[]
-         for (int v=0; v<NCOMP_LR; v++)   g_Slope_PPM[d][v][idx_slope] = Slope_Limiter[v];
+            for (int v=0; v<NCOMP_LR; v++)
+            {
+               cc_L[v] = g_PriVar[v][idx_ccL];
+               cc_R[v] = g_PriVar[v][idx_ccR];
+            }
 
-      } // for (int d=0; d<3; d++)
-   } // CGPU_LOOP( idx_slope, CUBE(N_SLOPE_PPM) )
+            Hydro_LimitSlope( cc_L, cc_C, cc_R, LR_Limiter, MinMod_Coeff, d,
+                              LEigenVec, REigenVec, Slope_Limiter, EoS );
 
-#  ifdef __CUDACC__
-   __syncthreads();
-#  endif
+//          store the results to g_Slope_PPM[]
+            for (int v=0; v<NCOMP_LR; v++)   g_Slope_PPM[d][v][idx_slope] = Slope_Limiter[v];
+
+         } // for (int d=0; d<3; d++)
+      } // CGPU_LOOP( idx_slope, CUBE(N_SLOPE_PPM) )
+
+#     ifdef __CUDACC__
+      __syncthreads();
+#     endif
+   } // if ( LR_Limiter != LR_LIMITER_ATHENA )
+
 
 
 // compute electric field for MHM
@@ -955,61 +968,156 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 //       3. get the face-centered primitive variables
          const int faceL      = 2*d;      // left and right face indices
          const int faceR      = faceL+1;
-         const int idx_ccL    = idx_cc - didx_cc[d];
-         const int idx_ccR    = idx_cc + didx_cc[d];
+         const int idx_ccLL   = idx_cc - 2*didx_cc[d];
+         const int idx_ccL    = idx_cc -   didx_cc[d];
+         const int idx_ccR    = idx_cc +   didx_cc[d];
+         const int idx_ccRR   = idx_cc + 2*didx_cc[d];
          const int idx_slopeL = idx_slope - didx_slope[d];
          const int idx_slopeR = idx_slope + didx_slope[d];
 
+         const real C_factor  = 1.25;
+#        ifdef FLOAT8
+         const real round_err = 1.e-12;
+#        else
+         const real round_err = 1.e-6;
+#        endif
+
          for (int v=0; v<NCOMP_LR; v++)
          {
-//          cc/fc: cell/face-centered variables; _C/L/R: Central/Left/Right cells
-            real cc_C, cc_L, cc_R, dcc_L, dcc_R, dcc_C, fc_L, fc_R, Max, Min;
-
-//          3-1. parabolic interpolation
-            cc_L  = g_PriVar[v][idx_ccL];
-            cc_R  = g_PriVar[v][idx_ccR];
-            cc_C  = cc_C_ncomp[v];
-
-            dcc_L = g_Slope_PPM[d][v][idx_slopeL];
-            dcc_R = g_Slope_PPM[d][v][idx_slopeR];
-            dcc_C = g_Slope_PPM[d][v][idx_slope ];
-
-            fc_L  = (real)0.5*( cc_C + cc_L ) - (real)1.0/(real)6.0*( dcc_C - dcc_L );
-            fc_R  = (real)0.5*( cc_C + cc_R ) - (real)1.0/(real)6.0*( dcc_R - dcc_C );
-
-
-//          3-2. monotonicity constraint
-//          extra monotonicity check for the CENTRAL limiter since it's not TVD
-            if ( LR_Limiter == LR_LIMITER_CENTRAL )
+//          fc_*: face-centered value
+            real fc_L, fc_R;
+            if ( LR_Limiter == LR_LIMITER_ATHENA )
             {
-               if ( (cc_C-fc_L)*(fc_L-cc_L) < (real)0.0 )   fc_L = (real)0.5*( cc_C + cc_L );
-               if ( (cc_R-fc_R)*(fc_R-cc_C) < (real)0.0 )   fc_R = (real)0.5*( cc_C + cc_R );
-            }
+               real tmp, rho, cc_abs_max;
+//             cc_*: cell-centered value; d_*: face-centered slope; dd_*: cell-centered curvature
+               real cc_LL, cc_L, cc_C, cc_R, cc_RR, d_L, d_R, dd_L, dd_C, dd_R;
+//             dh_*: face-centered slope (half increment); ddh_*: cell-centered curvature (half increment)
+               real dh_LL, dh_L, dh_R, dh_RR, ddh_L, ddh_C, ddh_R;
 
-            dfc [v] = fc_R - fc_L;
-            dfc6[v] = (real)6.0*(  cc_C - (real)0.5*( fc_L + fc_R )  );
+//             3-1. get all the values needed
+               cc_LL = g_PriVar[v][idx_ccLL];
+               cc_L  = g_PriVar[v][idx_ccL ];
+               cc_C  = g_PriVar[v][idx_cc  ];
+               cc_R  = g_PriVar[v][idx_ccR ];
+               cc_RR = g_PriVar[v][idx_ccRR];
 
-            if (  ( fc_R - cc_C )*( cc_C - fc_L ) <= (real)0.0  )
+               d_L   = cc_C - cc_L;
+               d_R   = cc_R - cc_C;
+
+               dd_L  = cc_LL - (real)2.*cc_L + cc_C;
+               dd_C  = cc_L  - (real)2.*cc_C + cc_R;
+               dd_R  = cc_C  - (real)2.*cc_R + cc_RR;
+
+               cc_abs_max = FMAX(FABS(cc_LL), FMAX(FABS(cc_L), FMAX(FABS(cc_C), FMAX(FABS(cc_R), FABS(cc_RR)))));
+
+//             3-2. interpolate the face values
+               fc_L = ( -cc_LL + (real)7.*cc_L + (real)7.*cc_C - cc_R  ) / (real)12.0;
+               fc_R = ( -cc_L  + (real)7.*cc_C + (real)7.*cc_R - cc_RR ) / (real)12.0;
+
+//             3-3. prepare half increment values
+               dh_LL = fc_L - cc_L;
+               dh_L  = cc_C - fc_L;
+               dh_R  = fc_R - cc_C;
+               dh_RR = cc_R - fc_R;
+
+               ddh_L = cc_L - (real)2.*fc_L + cc_C;
+               ddh_C = fc_L - (real)2.*cc_C + fc_R;
+               ddh_R = cc_C - (real)2.*fc_R + cc_R;
+
+//             3-4. limit slope of L&R
+               if ( dh_LL*dh_L < (real)0.0 ) {
+                  if ( SIGN(dd_L) == SIGN(ddh_L)  &&  SIGN(ddh_L) == SIGN(dd_C) ) {
+                     tmp = SIGN(dd_C) * FMIN(C_factor*FABS(dd_L), FMIN((real)3.*FABS(ddh_L), C_factor*FABS(dd_C)));
+                  } else {
+                     tmp = (real)0.0;
+                  } // if ( SIGN(dd_L) == SIGN(ddh_L)  &&  SIGN(ddh_L) == SIGN(dd_C) ) ... else ...
+                  fc_L  = (real)0.5*(cc_L+cc_C) - tmp/(real)6.0;
+                  dh_L  = cc_C - fc_L;
+                  ddh_C = fc_L - (real)2.*cc_C + fc_R;
+               } // if ( dh_LL*dh_L < (real)0.0 )
+
+               if ( dh_R*dh_RR < (real)0.0 ) {
+                  if ( SIGN(dd_C) == SIGN(ddh_R)  &&  SIGN(ddh_R) == SIGN(dd_R) ) {
+                     tmp = SIGN(dd_C) * FMIN(C_factor*FABS(dd_C), FMIN((real)3.*FABS(ddh_R), C_factor*FABS(dd_R)));
+                  } else {
+                     tmp = (real)0.0;
+                  } // if ( SIGN(dd_C) == SIGN(ddh_R)  &&  SIGN(ddh_R) == SIGN(dd_R) ) ... else ...
+                  fc_R  = (real)0.5*(cc_C+cc_R) - tmp/(real)6.0;
+                  dh_R  = fc_R - cc_C;
+                  ddh_C = fc_L - (real)2.*cc_C + fc_R;
+               } // if ( dh_R*dh_RR < (real)0.0 )
+
+//             3-5. reduce error to round-off error
+               if ( SIGN(dd_L) == SIGN(dd_C)  &&  SIGN(dd_C) == SIGN(dd_R)  &&  SIGN(dd_R) == SIGN(ddh_C) ) {
+                  tmp = SIGN(dd_C) * FMIN(C_factor*FABS(dd_L), FMIN(C_factor*FABS(dd_C), FMIN(C_factor*FABS(dd_R), (real)6.0*FABS(ddh_C))));
+               } else {
+                  tmp = (real)0.0;
+               } // if ( SIGN(dd_L) == SIGN(dd_C)  &&  SIGN(dd_C) == SIGN(dd_R)  &&  SIGN(dd_R) == SIGN(ddh_C) ) ... else ...
+
+               if ( (real)6.*FABS(ddh_C) > round_err*cc_abs_max ) {
+                  rho = tmp / ddh_C / (real)6.;
+               } else {
+                  rho = (real)0.0;
+               } // if ( FABS(ddh_C) > round_error*cc_abs_max ) ... else ...
+
+               if ( dh_L*dh_R < (real)0.0  ||  d_L*d_R < (real)0.0 ) {
+                  if ( rho < (real)1.-round_err ) { fc_L = cc_C - rho * dh_L; fc_R = cc_C + rho * dh_R; }
+               } else {
+                  if ( FABS(dh_L) >= (real)2.*FABS(dh_R) ) fc_L = cc_C - (real)2.*dh_R;
+                  if ( FABS(dh_R) >= (real)2.*FABS(dh_L) ) fc_R = cc_C + (real)2.*dh_L;
+               } // if ( dh_L*dh_R < (real)0.0  ||  d_L*d_R < (real)0.0 )
+
+            } else // if ( LR_Limiter == LR_LIMITER_ATHENA )
             {
-               fc_L = cc_C;
-               fc_R = cc_C;
-            }
-            else if ( dfc[v]*dfc6[v] > +dfc[v]*dfc[v] )
-               fc_L = (real)3.0*cc_C - (real)2.0*fc_R;
-            else if ( dfc[v]*dfc6[v] < -dfc[v]*dfc[v] )
-               fc_R = (real)3.0*cc_C - (real)2.0*fc_L;
+//             cc: cell-centered variables; _C/L/R: Central/Left/Right cells
+               real cc_C, cc_L, cc_R, dcc_L, dcc_R, dcc_C, Max, Min;
+
+//             3-1. parabolic interpolation
+               cc_L  = g_PriVar[v][idx_ccL];
+               cc_R  = g_PriVar[v][idx_ccR];
+               cc_C  = cc_C_ncomp[v];
+
+               dcc_L = g_Slope_PPM[d][v][idx_slopeL];
+               dcc_R = g_Slope_PPM[d][v][idx_slopeR];
+               dcc_C = g_Slope_PPM[d][v][idx_slope ];
+
+               fc_L  = (real)0.5*( cc_C + cc_L ) - (real)1.0/(real)6.0*( dcc_C - dcc_L );
+               fc_R  = (real)0.5*( cc_C + cc_R ) - (real)1.0/(real)6.0*( dcc_R - dcc_C );
 
 
-//          3-3. ensure the face-centered variables lie between neighboring cell-centered values
-            Min  = ( cc_C < cc_L ) ? cc_C : cc_L;
-            Max  = ( cc_C > cc_L ) ? cc_C : cc_L;
-            fc_L = ( fc_L > Min  ) ? fc_L : Min;
-            fc_L = ( fc_L < Max  ) ? fc_L : Max;
+//             3-2. monotonicity constraint
+//             extra monotonicity check for the CENTRAL limiter since it's not TVD
+               if ( LR_Limiter == LR_LIMITER_CENTRAL )
+               {
+                  if ( (cc_C-fc_L)*(fc_L-cc_L) < (real)0.0 )   fc_L = (real)0.5*( cc_C + cc_L );
+                  if ( (cc_R-fc_R)*(fc_R-cc_C) < (real)0.0 )   fc_R = (real)0.5*( cc_C + cc_R );
+               }
 
-            Min  = ( cc_C < cc_R ) ? cc_C : cc_R;
-            Max  = ( cc_C > cc_R ) ? cc_C : cc_R;
-            fc_R = ( fc_R > Min  ) ? fc_R : Min;
-            fc_R = ( fc_R < Max  ) ? fc_R : Max;
+               dfc [v] = fc_R - fc_L;
+               dfc6[v] = (real)6.0*(  cc_C - (real)0.5*( fc_L + fc_R )  );
+
+               if (  ( fc_R - cc_C )*( cc_C - fc_L ) <= (real)0.0  )
+               {
+                  fc_L = cc_C;
+                  fc_R = cc_C;
+               }
+               else if ( dfc[v]*dfc6[v] > +dfc[v]*dfc[v] )
+                  fc_L = (real)3.0*cc_C - (real)2.0*fc_R;
+               else if ( dfc[v]*dfc6[v] < -dfc[v]*dfc[v] )
+                  fc_R = (real)3.0*cc_C - (real)2.0*fc_L;
+
+
+//             3-3. ensure the face-centered variables lie between neighboring cell-centered values
+               Min  = ( cc_C < cc_L ) ? cc_C : cc_L;
+               Max  = ( cc_C > cc_L ) ? cc_C : cc_L;
+               fc_L = ( fc_L > Min  ) ? fc_L : Min;
+               fc_L = ( fc_L < Max  ) ? fc_L : Max;
+
+               Min  = ( cc_C < cc_R ) ? cc_C : cc_R;
+               Max  = ( cc_C > cc_R ) ? cc_C : cc_R;
+               fc_R = ( fc_R > Min  ) ? fc_R : Min;
+               fc_R = ( fc_R < Max  ) ? fc_R : Max;
+            } // if ( LR_Limiter == LR_LIMITER_ATHENA ) ... else ...
 
             fc[faceL][v] = fc_L;
             fc[faceR][v] = fc_R;

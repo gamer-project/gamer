@@ -4,7 +4,6 @@
 
 
 #include "GAMER.h"
-#include "TestProb.h"
 #include "vector"
 #include <iostream>
 #include <fstream>

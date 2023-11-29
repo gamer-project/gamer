@@ -115,6 +115,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "DT__PARVEL_MAX",             &DT__PARVEL_MAX,                 -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "DT__PARACC",                 &DT__PARACC,                      0.5,             0.0,           NoMax_double   );
 #  endif
+#  ifdef CR_DIFFUSION
+   ReadPara->Add( "DT__CR_DIFFUSION",           &DT__CR_DIFFUSION,                3.0e-1,          0.0,           NoMax_double   );
+#  endif
 #  ifdef COMOVING
    ReadPara->Add( "DT__MAX_DELTA_A",            &DT__MAX_DELTA_A,                 0.01,            0.0,           NoMax_double   );
 #  endif
@@ -151,10 +154,16 @@ void Init_Load_Parameter()
 #  ifdef MHD
    ReadPara->Add( "OPT__FLAG_CURRENT",          &OPT__FLAG_CURRENT,               false,           Useless_bool,  Useless_bool   );
 #  endif
+#  ifdef COSMIC_RAY
+   ReadPara->Add( "OPT__FLAG_CRAY",             &OPT__FLAG_CRAY,                  false,           Useless_bool,  Useless_bool   );
+#  endif
    ReadPara->Add( "OPT__FLAG_LOHNER_ENGY",      &OPT__FLAG_LOHNER_ENGY,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_LOHNER_PRES",      &OPT__FLAG_LOHNER_PRES,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_LOHNER_TEMP",      &OPT__FLAG_LOHNER_TEMP,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_LOHNER_ENTR",      &OPT__FLAG_LOHNER_ENTR,           false,           Useless_bool,  Useless_bool   );
+#  ifdef COSMIC_RAY
+   ReadPara->Add( "OPT__FLAG_LOHNER_CRAY",      &OPT__FLAG_LOHNER_CRAY,           false,           Useless_bool,  Useless_bool   );
+#  endif
 #  endif
 #  if ( MODEL == ELBDM )
    ReadPara->Add( "OPT__FLAG_ENGY_DENSITY",     &OPT__FLAG_ENGY_DENSITY,          false,           Useless_bool,  Useless_bool   );
@@ -237,6 +246,18 @@ void Init_Load_Parameter()
    ReadPara->Add( "FB_USER",                    &FB_USER,                         false,           Useless_bool,  Useless_bool   );
 #  endif
 
+// cosmic ray
+#  ifdef COSMIC_RAY
+   ReadPara->Add( "GAMMA_CR",                   &GAMMA_CR,                        4.0/3.0,         1.0,           NoMax_double   );
+#  endif
+
+// microphysics
+#  ifdef CR_DIFFUSION
+   ReadPara->Add( "CR_DIFF_PARA",               &CR_DIFF_PARA,                    0.0,             0.0,           NoMax_double   );
+   ReadPara->Add( "CR_DIFF_PERP",               &CR_DIFF_PERP,                    0.0,             0.0,           NoMax_double   );
+   ReadPara->Add( "CR_DIFF_MIN_B",              &CR_DIFF_MIN_B,                   0.0,             NoMin_double,  NoMax_double   );
+#  endif
+
 
 // fluid solvers in HYDRO
 #  if ( MODEL == HYDRO )
@@ -254,7 +275,7 @@ void Init_Load_Parameter()
 #  endif
    ReadPara->Add( "MINMOD_COEFF",               &MINMOD_COEFF,                    1.5,             1.0,           2.0            );
    ReadPara->Add( "MINMOD_MAX_ITER",            &MINMOD_MAX_ITER,                   0,               0,           NoMax_int      );
-   ReadPara->Add( "OPT__LR_LIMITER",            &OPT__LR_LIMITER,             LR_LIMITER_DEFAULT, -1,             6              );
+   ReadPara->Add( "OPT__LR_LIMITER",            &OPT__LR_LIMITER,             LR_LIMITER_DEFAULT, -1,             7              );
    ReadPara->Add( "OPT__1ST_FLUX_CORR",         &OPT__1ST_FLUX_CORR,               -1,             NoMin_int,     2              );
 #  ifdef MHD
    ReadPara->Add( "OPT__1ST_FLUX_CORR_SCHEME",  &OPT__1ST_FLUX_CORR_SCHEME,   RSOLVER_1ST_DEFAULT, NoMin_int,     4              );

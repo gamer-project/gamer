@@ -8,11 +8,6 @@ static void BC_User_Template( real fluid[], const double x, const double y, cons
 void (*BC_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                      const int lv, double AuxArray[] ) = NULL;
 
-#ifdef MHD
-extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
-                                   const int lv, double AuxArray[] );
-#endif
-
 
 
 

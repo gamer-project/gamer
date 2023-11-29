@@ -29,11 +29,44 @@ void Init_ResetParameter()
 #  ifdef OPENMP
    if ( OMP_NTHREAD <= 0 )
    {
-      OMP_NTHREAD = omp_get_max_threads();
+      int  NCPU_Node, NNode_PBS, NNode_SLURM;
+      FILE *fp;
+
+//    determine if the PBS/SLURM software is used
+      fp = popen( "echo ${PBS_NUM_NODES:-0}", "r" );
+      fscanf( fp, "%d", &NNode_PBS );
+
+      fp = popen( "echo ${SLURM_JOB_NUM_NODES:-0}", "r" );
+      fscanf( fp, "%d", &NNode_SLURM );
+
+//    set up the number of OpenMP threads
+      if ( NNode_PBS ) // PBS system
+      {
+         fp = popen( "echo $PBS_NUM_PPN", "r" );
+         fscanf( fp, "%d", &NCPU_Node );
+
+         OMP_NTHREAD = NCPU_Node * NNode_PBS / MPI_NRank;
+      }
+
+      else if ( NNode_SLURM ) // SLURM system
+      {
+         fp = popen( "echo $SLURM_CPUS_ON_NODE", "r" );
+         fscanf( fp, "%d", &NCPU_Node );
+
+         OMP_NTHREAD = NCPU_Node * NNode_SLURM / MPI_NRank;
+      }
+
+      else // default
+      {
+         OMP_NTHREAD = omp_get_max_threads();
+      }
+
+      pclose( fp );
 
       PRINT_RESET_PARA( OMP_NTHREAD, FORMAT_INT, "" );
-   }
-#  else
+   } // if ( OMP_NTHREAD <= 0 )
+
+#  else // #ifdef OPENMP
    if ( OMP_NTHREAD != 1 )
    {
       OMP_NTHREAD = 1;
@@ -52,7 +85,8 @@ void Init_ResetParameter()
 #     elif ( FLU_SCHEME == MHM )
       DT__FLUID = 0.40;
 #     elif ( FLU_SCHEME == MHM_RP )
-      DT__FLUID = 0.30;
+//    CFL factor is recommended to be larger than 0.4 for the Athena limiter
+      DT__FLUID = ( OPT__LR_LIMITER == LR_LIMITER_ATHENA ) ? 0.4 : 0.3;
 #     elif ( FLU_SCHEME == CTU )
       DT__FLUID = 0.50;
 #     else
@@ -993,6 +1027,12 @@ void Init_ResetParameter()
       PRINT_RESET_PARA( FB_LEVEL, FORMAT_INT, "" );
    }
 #  endif // #ifdef FEEDBACK
+
+
+// cosmic-ray options
+#  ifdef COSMIC_RAY
+// nothing yet
+#  endif // #ifdef COSMIC_RAY
 
 
 // convert to code units
