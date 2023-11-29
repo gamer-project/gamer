@@ -271,7 +271,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
          if ( MPI_Rank == 0 )
             Aux_Message( stderr, "WARNING : Weighted average center cannot be found because the total weighting (W_AllRank) = %14.7e !!\n", W_AllRank );
 
-//       return a huge number to indicate this routine fails to the center
+//       return a huge number to indicate this routine fails to find the center
          for (int d=0; d<3; d++) WeightedAverageCenter[d] = HUGE_NUMBER;
          dR2 = HUGE_NUMBER;
          NIter++;
