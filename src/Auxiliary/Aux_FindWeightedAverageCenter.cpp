@@ -22,6 +22,41 @@
 //                FinaldR                : Record of the dR in the last time of iteration
 //                FinalNIter             : Record of the total number of iterations
 //
+// Example     :  double CoM_Coord[3];   // To find the location of center of mass
+//                double CoM_FinaldR;
+//                int    CoM_FinalNIter;
+//
+//                double CoM_ref[3];
+//                CoM_ref[0]           = amr->BoxCenter[0];
+//                CoM_ref[1]           = amr->BoxCenter[1];
+//                CoM_ref[2]           = amr->BoxCenter[2];
+//                double CoM_MaxR      = __FLT_MAX__; // entire domain
+//                double CoM_MinRho    = 0.0;
+//                long   CoM_Field     = _TOTAL_DENS;
+//                double CoM_TolErrR   = 0.1*CoM_MaxR;
+//                int    CoM_NIterMax  = 10;
+//
+//                Aux_FindWeightedAverageCenter( CoM_Coord, CoM_ref, CoM_MaxR, CoM_MinRho,
+//                                               CoM_Field, CoM_TolErrR, CoM_NIterMax, &CoM_FinaldR, &CoM_FinalNIter );
+//
+//                if ( MPI_Rank == 0 )
+//                {
+//                   char Filename[MAX_STRING];
+//                   sprintf( Filename, "%s", "CoM.txt" );
+//                   FILE *File = fopen( Filename, "w" );
+//                   fprintf( File, "#%13s%14s%3s%14s %15s %14s %14s %14s %14s %14s %14s %14s %15s %14s %14s %14s %14s\n",
+//                                    "Time", "Step", "", "dt",
+//                                    "CoM_Field", "CoM_MaxR", "CoM_MinRho", "CoM_TolErrR", "CoM_NIterMax",
+//                                    "CoM_ref[x]", "CoM_ref[y]", "CoM_ref[z]",
+//                                    "CoM_FinalNIter", "CoM_FinaldR", "CoM_Coord[x]", "CoM_Coord[y]", "CoM_Coord[z]" );
+//                   fprintf( File, "%14.7e%14ld%3s%14.7e  %14ld %14.7e %14.7e %14.7e %14d %14.7e %14.7e %14.7e %15d %14.7e %14.7e %14.7e %14.7e\n",
+//                                    Time[0], Step, "", dTime_Base,
+//                                    CoM_Field, CoM_MaxR, CoM_MinRho, CoM_TolErrR, CoM_NIterMax,
+//                                    CoM_ref[0], CoM_ref[1], CoM_ref[2],
+//                                    CoM_FinalNIter, CoM_FinaldR, CoM_Coord[0], CoM_Coord[1], CoM_Coord[2] );
+//                   fclose( File );
+//                }
+//
 // Return      :  WeightedAverageCenter[], FinaldR, FinalNIter
 //-------------------------------------------------------------------------------------------------------
 void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double Center_ref[], const double MaxR, const double MinWD,
