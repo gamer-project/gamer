@@ -39,6 +39,12 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
    if ( MaxR <= 0.0 )
       Aux_Error( ERROR_INFO, "MaxR (%14.7e) <= 0.0 !!\n", MaxR );
 
+   if ( !Aux_IsFinite( SQR(MaxR) ) )
+      Aux_Error( ERROR_INFO, "SQR(MaxR) (%14.7e) overflow !!\n", SQR(MaxR) );
+
+   if ( !Aux_IsFinite( SQR(TolErrR) ) )
+      Aux_Error( ERROR_INFO, "SQR(TolErrR) (%14.7e) overflow !!\n", SQR(TolErrR) );
+
    for (int d=0; d<3; d++) {
       if ( Center_ref[d] < amr->BoxEdgeL[d]  ||  Center_ref[d] > amr->BoxEdgeR[d] )
          Aux_Error( ERROR_INFO, "Center_ref[%d] (%14.7e) lies outside the simulation box !!\n", d, Center_ref[d] );

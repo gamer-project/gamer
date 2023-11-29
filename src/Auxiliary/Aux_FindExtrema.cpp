@@ -40,7 +40,7 @@
 //
 // Example     :  Extrema_t Extrema;
 //                Extrema.Field     = _DENS;
-//                Extrema.Radius    = HUGE_NUMBER; // entire domain
+//                Extrema.Radius    = __FLT_MAX__; // entire domain
 //                Extrema.Center[0] = amr->BoxCenter[0];
 //                Extrema.Center[1] = amr->BoxCenter[1];
 //                Extrema.Center[2] = amr->BoxCenter[2];
@@ -82,6 +82,9 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
 
    if ( Extrema->Radius <= 0.0 )
       Aux_Error( ERROR_INFO, "Radius (%14.7e) <= 0.0 !!\n", Extrema->Radius );
+
+   if ( !Aux_IsFinite( SQR(Extrema->Radius) ) )
+      Aux_Error( ERROR_INFO, "SQR(Extrema->Radius) (%14.7e) overflow !!\n", SQR(Extrema->Radius) );
 
    for (int d=0; d<3; d++) {
       if ( Extrema->Center[d] < amr->BoxEdgeL[d]  ||  Extrema->Center[d] > amr->BoxEdgeR[d] )
