@@ -340,6 +340,24 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    if ( OPT__OUTPUT_DIVMAG )  sprintf( FieldLabelOut[DivMagDumpIdx], "%s", "DivMag" );
 #  endif
 
+#  ifdef SRHD
+   const int LorentzDumpIdx = ( OPT__OUTPUT_LORENTZ ) ? NFieldStored++ : -1;
+   if ( LorentzDumpIdx >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_LORENTZ )  sprintf( FieldLabelOut[LorentzDumpIdx], "%s", "Lrtz" );
+
+   const int VelDumpIdx0 = ( OPT__OUTPUT_VELOCITY ) ? NFieldStored : -1;
+   if ( VelDumpIdx0+2 >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_VELOCITY )
+   {
+      NFieldStored += 3;
+      sprintf( FieldLabelOut[ VelDumpIdx0 ],     "%s", "VelX" );
+      sprintf( FieldLabelOut[ VelDumpIdx0 + 1 ], "%s", "VelY" );
+      sprintf( FieldLabelOut[ VelDumpIdx0 + 2 ], "%s", "VelZ" );
+   }
+#  endif
+
    const int UserDumpIdx0 = ( OPT__OUTPUT_USER_FIELD ) ? NFieldStored : -1;
    if ( UserDumpIdx0+UserDerField_Num-1 >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
@@ -823,7 +841,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                                             EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                             EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #                    ifdef SRHD
-		     Temp *= EoS_AuxArray_Flt[1];
+		               Temp *= EoS_AuxArray_Flt[1];
 #                    endif
                      FieldData[PID][k][j][i] = Temp;
                   }
@@ -991,7 +1009,37 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                else
 #              endif
 
-//             d-8. user-defined derived fields
+#              ifdef SRHD
+               if ( ( v >= VelDumpIdx0  &&  v < VelDumpIdx0+3 ) || v == LorentzDumpIdx ) 
+               {
+                  const int vv = v - VelDumpIdx0;
+                  real Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL], LorentzFactor;
+
+                  for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+                     for (int v=0; v<NCOMP_TOTAL; v++)  Cons[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+
+                     Hydro_Con2Pri( Cons, Prim, (real)NULL_REAL, false, NULL_INT, NULL,
+                                    NULL_BOOL, (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
+                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &LorentzFactor );
+
+                     if ( v >= VelDumpIdx0  &&  v < VelDumpIdx0+3 )
+                        FieldData[PID][k][j][i] = Prim[vv] / LorentzFactor;
+                     elif ( v == LorentzDumpIdx )
+                        FieldData[PID][k][j][i] = LorentzFactor;
+                  }
+               }
+
+//             d-8. 3-velocity
+
+//             d-9. Lorentz factor
+
+#              endif
+
+//             d-10. user-defined derived fields
 //             the following check also works for OPT__OUTPUT_USER_FIELD==false since UserDerField_Num is initialized as -1
                if ( v >= UserDumpIdx0  &&  v < UserDumpIdx0 + UserDerField_Num )
                {
@@ -2483,6 +2531,10 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  ifdef MHD
    InputPara.Opt__Output_DivMag          = OPT__OUTPUT_DIVMAG;
 #  endif
+#  ifdef SRHD
+   InputPara.Opt__Output_Velocity        = OPT__OUTPUT_VELOCITY;
+   InputPara.Opt__Output_Lorentz         = OPT__OUTPUT_LORENTZ;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
    InputPara.Opt__Output_UserField       = OPT__OUTPUT_USER_FIELD;
    InputPara.Opt__Output_Mode            = OPT__OUTPUT_MODE;
@@ -3395,6 +3447,10 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Output_Mach",            HOFFSET(InputPara_t,Opt__Output_Mach           ), H5T_NATIVE_INT              );
 #  ifdef MHD
    H5Tinsert( H5_TypeID, "Opt__Output_DivMag",          HOFFSET(InputPara_t,Opt__Output_DivMag         ), H5T_NATIVE_INT              );
+#  endif
+#  ifdef SRHD
+   H5Tinsert( H5_TypeID, "Opt__Output_Velocity",        HOFFSET(InputPara_t,Opt__Output_Velocity       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Lorentz",         HOFFSET(InputPara_t,Opt__Output_Lorentz        ), H5T_NATIVE_INT              );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Opt__Output_UserField",       HOFFSET(InputPara_t,Opt__Output_UserField      ), H5T_NATIVE_INT              );

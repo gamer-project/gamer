@@ -157,6 +157,15 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 #           ifdef MHD
             if ( OPT__OUTPUT_DIVMAG )  fprintf( File, " %*s", StrLen_Flt, "Div(Mag)" );
 #           endif
+#           ifdef SRHD
+            if ( OPT__OUTPUT_LORENTZ ) fprintf( File, " %*s", StrLen_Flt, "Lorentz" );
+            if ( OPT__OUTPUT_VELOCITY ) 
+            {
+               fprintf( File, " %*s", StrLen_Flt, "Velocity X" );
+               fprintf( File, " %*s", StrLen_Flt, "Velocity Y" );
+               fprintf( File, " %*s", StrLen_Flt, "Velocity Z" );
+            }
+#           endif 
             if ( OPT__OUTPUT_USER_FIELD ) {
                for (int v=0; v<UserDerField_Num; v++)    fprintf( File, " %*s", StrLen_Flt, UserDerField_Label[v] );
             }
@@ -341,14 +350,17 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    }
 #  endif
 
-   if ( OPT__OUTPUT_CS ) {
-#     ifdef SRHD
-      real Prim[NCOMP_TOTAL];
+#  ifdef SRHD 
+   real Prim[NCOMP_TOTAL], LorentzFactor;
+   if ( OPT__OUTPUT_CS || OPT_OUTPUT_LORENTZ || OPT_OUTPUT_VELOCITY )
       Hydro_Con2Pri( u, Prim, NULL_REAL, NULL_BOOL, NULL_INT, NULL,
                      NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
                      EoS_DensPres2Eint_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, NULL );
+                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
+#  endif
 
+   if ( OPT__OUTPUT_CS ) {
+#     ifdef SRHD
       Cs = SQRT( EoS_Temper2CSqr_CPUPtr( Prim[0], Prim[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ) );
 #     else
 //    compute pressure if it is not done yet
@@ -376,6 +388,16 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
       fprintf( File, BlankPlusFormat_Flt, DivB );
    }
 #  endif
+
+#  ifdef SRHD
+   if ( OPT__OUTPUT_LORENTZ ) fprintf( File, BlankPlusFormat_Flt, LorentzFactor );
+   if ( OPT__OUTPUT_VELOCITY ) 
+   {
+      fprintf( File, BlankPlusFormat_Flt, Prim[0] / LorentzFactor );
+      fprintf( File, BlankPlusFormat_Flt, Prim[1] / LorentzFactor );
+      fprintf( File, BlankPlusFormat_Flt, Prim[2] / LorentzFactor );
+   }
+#  endif 
 
    if ( OPT__OUTPUT_USER_FIELD ) {
       for (int v=0; v<UserDerField_Num; v++)

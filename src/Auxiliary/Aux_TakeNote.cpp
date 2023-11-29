@@ -1419,6 +1419,10 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_DIVMAG              %d\n",      OPT__OUTPUT_DIVMAG          );
 #     endif
       fprintf( Note, "OPT__OUTPUT_USER_FIELD          %d\n",      OPT__OUTPUT_USER_FIELD      );
+#     ifdef SRHD
+      fprintf( Note, "OPT__OUTPUT_VELOCITY            %d\n",      OPT__OUTPUT_VELOCITY        );
+      fprintf( Note, "OPT__OUTPUT_LORENTZ             %d\n",      OPT__OUTPUT_LORENTZ         );
+#     endif
 
 //    user-defined derived fields
       if ( OPT__OUTPUT_USER_FIELD ) {

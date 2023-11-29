@@ -729,6 +729,10 @@ struct InputPara_t
 #  ifdef MHD
    int    Opt__Output_DivMag;
 #  endif
+#  ifdef SRHD
+   int    Opt__Output_Lorentz;
+   int    Opt__Output_Velocity;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
    int    Opt__Output_UserField;
    int    Opt__Output_Mode;
