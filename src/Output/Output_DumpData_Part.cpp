@@ -338,6 +338,9 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
                              CheckMinTemp_No, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
                              EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#     ifdef SRHD
+      Temp *= EoS_AuxArray_Flt[1];
+#     endif
       fprintf( File, BlankPlusFormat_Flt, Temp );
    }
 
@@ -393,9 +396,9 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    if ( OPT__OUTPUT_LORENTZ ) fprintf( File, BlankPlusFormat_Flt, LorentzFactor );
    if ( OPT__OUTPUT_VELOCITY ) 
    {
-      fprintf( File, BlankPlusFormat_Flt, Prim[0] / LorentzFactor );
       fprintf( File, BlankPlusFormat_Flt, Prim[1] / LorentzFactor );
       fprintf( File, BlankPlusFormat_Flt, Prim[2] / LorentzFactor );
+      fprintf( File, BlankPlusFormat_Flt, Prim[3] / LorentzFactor );
    }
 #  endif 
 
