@@ -1020,7 +1020,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   for (int j=0; j<PS1; j++)
                   for (int i=0; i<PS1; i++)
                   {
-                     for (int v=0; v<NCOMP_TOTAL; v++)  Cons[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+                     for (int fv=0; fv<NCOMP_TOTAL; fv++)  Cons[fv] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[fv][k][j][i];
 
                      Hydro_Con2Pri( Cons, Prim, (real)NULL_REAL, false, NULL_INT, NULL,
                                     NULL_BOOL, (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
