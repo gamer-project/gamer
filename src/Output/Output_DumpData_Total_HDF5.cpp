@@ -244,6 +244,7 @@ Procedure for outputting new variables:
 //                2469 : 2023/09/09 --> output MHM_CHECK_PREDICT
 //                2470 : 2023/10/16 --> output OPT__OUTPUT_TEXT_FORMAT_FLT
 //                2471 : 2023/11/09 --> output cosmic-ray options
+//                2472 : 2023/11/29 --> output SRHD options and fields
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -991,7 +992,6 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                } // if ( v == MachDumpIdx )
                else
-#              endif // #if ( MODEL == HYDRO )
 
 //             d-7. divergence(B field)
 #              ifdef MHD
@@ -1012,7 +1012,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #              ifdef SRHD
                if ( ( v >= VelDumpIdx0  &&  v < VelDumpIdx0+3 ) || v == LorentzDumpIdx ) 
                {
-                  const int vv = v - VelDumpIdx0;
+                  const int vv = v - VelDumpIdx0 + 1;
                   real Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL], LorentzFactor;
 
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -1026,19 +1026,18 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                                     NULL_BOOL, (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
 
-                     if ( v >= VelDumpIdx0  &&  v < VelDumpIdx0+3 )
-                        FieldData[PID][k][j][i] = Prim[vv] / LorentzFactor;
-                     else if ( v == LorentzDumpIdx )
-                        FieldData[PID][k][j][i] = LorentzFactor;
+		     if ( v == LorentzDumpIdx )
+//                      d-8. Lorentz factor
+	  	        FieldData[PID][k][j][i] = LorentzFactor;
+                     else if ( v >= VelDumpIdx0  &&  v < VelDumpIdx0+3 )
+//                      d-9. 3-velocity
+		        FieldData[PID][k][j][i] = Prim[vv] / LorentzFactor;
                   }
                }
 
-//             d-8. 3-velocity
-
-//             d-9. Lorentz factor
-
-#              endif
-
+               else
+#              endif // #ifdef SRHD
+#              endif // #if ( MODEL == HYDRO )
 //             d-10. user-defined derived fields
 //             the following check also works for OPT__OUTPUT_USER_FIELD==false since UserDerField_Num is initialized as -1
                if ( v >= UserDumpIdx0  &&  v < UserDumpIdx0 + UserDerField_Num )
@@ -1483,7 +1482,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2471;
+   KeyInfo.FormatVersion        = 2472;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
