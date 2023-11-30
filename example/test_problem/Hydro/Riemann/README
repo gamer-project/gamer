@@ -21,3 +21,9 @@ Note:
 4. The analytical solution of ReferenceSolution/Gamma_1.67/BrioWu adopts a
    regular solution (a rotational wave) at x~0.495 while numerical simulations
    usually lead to a non-regular solution (a compound wave)
+5. For SRHD Riemann problem:
+      - Compilation options are provided in generate_make_Riemann_SRHD.sh
+      - Runtime options are provided in Input__Parameter_SRHD and Input__TestProb_SRHD
+      - Plotting scripts: plot__srhd.gpt and plot__srhd.py
+      - The analytical solution: ReferenceSolution/Gamma_1.67/SRHD
+      - Reference: Figure 4. in "Tseng et al. 2021, MNRAS, 504, 3298"
