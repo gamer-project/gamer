@@ -18,7 +18,11 @@ const Riemann_t
   ,BRIO_WU        =  8
 #endif
   ,NOH            =  9
-  ,USER_DEFINED   = 10
+#ifdef SRHD
+  ,SRHD_UR        = 10
+  ,SRHD_MIXED     = 11
+#endif
+  ,USER_DEFINED   = 12
   ;
 
 static Riemann_t Riemann_Prob;         // target Riemann problem
@@ -122,7 +126,7 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Riemann_Prob",      &Riemann_Prob,          -1,            0,                11                );
+   ReadPara->Add( "Riemann_Prob",      &Riemann_Prob,          -1,            0,                12                );
    ReadPara->Add( "Riemann_LR",        &Riemann_LR,             1,            NoMin_int,        NoMax_int         );
    ReadPara->Add( "Riemann_XYZ",       &Riemann_XYZ,            0,            0,                2                 );
    ReadPara->Add( "Riemann_RhoL",      &Riemann_RhoL,           __DBL_MAX__,  __DBL_MIN__,      __DBL_MAX__       );
@@ -242,6 +246,20 @@ void SetParameter()
 #                           endif
                             sprintf( Riemann_Name, "Noh's strong shock" );
                             break;
+
+#     ifdef SRHD
+      case SRHD_UR        : Riemann_RhoL = 1.0e-5;  Riemann_VelL = +1.0e+6;  Riemann_PreL = 1.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
+                            Riemann_RhoR = 1.0e-5;  Riemann_VelR = -1.0e+6;  Riemann_PreR = 1.0;  Riemann_VelR_T1 = 0.0;  Riemann_VelR_T2 = 0.0;
+                            Riemann_EndT = 1.0;     Riemann_Pos  = 0.5;
+                            sprintf( Riemann_Name, "SRHD Ultra-relativistic limit" );
+                            break;
+
+      case SRHD_MIXED     : Riemann_RhoL = 1.0e+2;   Riemann_VelL = +1.0e-3;  Riemann_PreL = 1.0e-4;   Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
+                            Riemann_RhoR = 1.0e-12;  Riemann_VelR = -1.0e+2;  Riemann_PreR = 1.0e-10;  Riemann_VelR_T1 = 0.0;  Riemann_VelR_T2 = 0.0;
+                            Riemann_EndT = 80.0;     Riemann_Pos  = 0.05;
+                            sprintf( Riemann_Name, "SRHD Mixed limits" );
+                            break;
+#     endif // #ifdef SRHD
 
       case USER_DEFINED   : sprintf( Riemann_Name, "user defined" );
                             break;

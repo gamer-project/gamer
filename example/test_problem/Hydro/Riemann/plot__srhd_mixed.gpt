@@ -3,11 +3,11 @@ reset
 
 # target files
 # -----------------------------------------------------------
-FILE_REF        = 'ReferenceSolution/Gamma_1.67/SRHD'
+FILE_REF        = 'ReferenceSolution/TM_EoS/SRHD_Mixed'
 FILE_IN_PREFIX  = 'Xline_y0.000_z0.000'
 FILE_IN_SUFFIX  = ''
 FILE_OUT_PREFIX = 'Fig__Riemann_SRHD'
-DATA_ID         = 100
+DATA_ID         = 160
 
 
 # terminal
@@ -22,7 +22,7 @@ DATA_ID         = 100
  set xlabel "r"
  set pointsize 1.0
 #set size square
- set xrange [-0.01:1.01]
+ set xrange [0.01:100.0]
 #set yrange [0.0:1.1]
 
 
@@ -39,6 +39,7 @@ FILE_IN = sprintf( '%s_%06d%s', FILE_IN_PREFIX, DATA_ID, FILE_IN_SUFFIX )
 
 # Rho
 set ylabel "Rho"
+set log x
 set log y
 if ( GPVAL_TERM ne 'x11' ) { set output sprintf( '%s_%06d_Rho.%s', FILE_OUT_PREFIX, DATA_ID, FILE_OUT_EXT ) }
 plot FILE_IN  u 4:($7/$13) w p lc  7 pt 6 tit 'Simulation' \
@@ -47,6 +48,7 @@ if ( GPVAL_TERM eq 'x11' ) { pause mouse }
 
 # Ux/c
 set ylabel "Ux/c"
+set log x
 unset log y
 if ( GPVAL_TERM ne 'x11' ) { set output sprintf( '%s_%06d_UX.%s', FILE_OUT_PREFIX, DATA_ID, FILE_OUT_EXT ) }
 plot FILE_IN  u 4:($14*$13) w p lc  7 pt 6 tit 'Simulation' \
@@ -55,6 +57,7 @@ if ( GPVAL_TERM eq 'x11' ) { pause mouse }
 
 # Uy/c
 set ylabel "Uy/c"
+set log x
 unset log y
 if ( GPVAL_TERM ne 'x11' ) { set output sprintf( '%s_%06d_UY.%s', FILE_OUT_PREFIX, DATA_ID, FILE_OUT_EXT ) }
 plot FILE_IN  u 4:($15*$13) w p lc  7 pt 6 tit 'Simulation' \
@@ -63,6 +66,7 @@ if ( GPVAL_TERM eq 'x11' ) { pause mouse }
 
 # Uz/c
 set ylabel "Uz/c"
+set log x
 unset log y
 if ( GPVAL_TERM ne 'x11' ) { set output sprintf( '%s_%06d_UZ.%s', FILE_OUT_PREFIX, DATA_ID, FILE_OUT_EXT ) }
 plot FILE_IN  u 4:($16*$13) w p lc  7 pt 6 tit 'Simulation' \
@@ -71,6 +75,7 @@ if ( GPVAL_TERM eq 'x11' ) { pause mouse }
 
 # pressure
 set ylabel "Pressure"
+set log x
 set log y
 if ( GPVAL_TERM ne 'x11' ) { set output sprintf( '%s_%06d_Pres.%s', FILE_OUT_PREFIX, DATA_ID, FILE_OUT_EXT ) }
 plot FILE_IN  u 4:12 w p lc  7 pt 6 tit 'Simulation' \

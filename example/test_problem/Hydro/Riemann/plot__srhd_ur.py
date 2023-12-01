@@ -4,7 +4,7 @@ import matplotlib.pylab as plt
 # target files
 DATA_ID   = 100
 data      = np.loadtxt("Xline_y0.000_z0.000_%06d"%DATA_ID)
-anal      = np.loadtxt("ReferenceSolution/Gamma_1.67/SRHD")
+anal      = np.loadtxt("ReferenceSolution/TM_EoS/SRHD_UR")
 
 # data variables
 X         = data[:, 3 ]
