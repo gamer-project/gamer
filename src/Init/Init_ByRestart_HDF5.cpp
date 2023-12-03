@@ -1458,6 +1458,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "Laohu",                  &RS.Laohu,                  SID, TID, NonFatal, &RT.Laohu,                  1, NonFatal );
    LoadField( "SupportHDF5",            &RS.SupportHDF5,            SID, TID, NonFatal, &RT.SupportHDF5,            1, NonFatal );
    LoadField( "SupportGSL",             &RS.SupportGSL,             SID, TID, NonFatal, &RT.SupportGSL,             1, NonFatal );
+   LoadField( "SupportFFTW",            &RS.SupportFFTW,            SID, TID, NonFatal, &RT.SupportFFTW,            1, NonFatal );
    LoadField( "SupportLibYT",           &RS.SupportLibYT,           SID, TID, NonFatal, &RT.SupportLibYT,           1, NonFatal );
 #  ifdef SUPPORT_LIBYT
    LoadField( "LibYTUsePatchGroup",     &RS.LibYTUsePatchGroup,     SID, TID, NonFatal, &RT.LibYTUsePatchGroup,     1, NonFatal );
@@ -1634,6 +1635,7 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "BitRep_Electric",      &RS.BitRep_Electric,      SID, TID, NonFatal, &RT.BitRep_Electric,       1, NonFatal );
 #  endif
    LoadField( "InterpMask",           &RS.InterpMask,           SID, TID, NonFatal, &RT.InterpMask,            1, NonFatal );
+   LoadField( "FB_SepFluOut",         &RS.FB_SepFluOut,         SID, TID, NonFatal, &RT.FB_SepFluOut,          1, NonFatal );
 
 #  if   ( MODEL == HYDRO )
    LoadField( "Flu_BlockSize_x",      &RS.Flu_BlockSize_x,      SID, TID, NonFatal, &RT.Flu_BlockSize_x,       1, NonFatal );
@@ -1688,6 +1690,11 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Der_GhostSize",        &RS.Der_GhostSize,        SID, TID, NonFatal, &RT.Der_GhostSize,         1, NonFatal );
    LoadField( "Der_Nxt",              &RS.Der_Nxt,              SID, TID, NonFatal, &RT.Der_Nxt,               1, NonFatal );
    LoadField( "Der_NOut_Max",         &RS.Der_NOut_Max,         SID, TID, NonFatal, &RT.Der_NOut_Max,          1, NonFatal );
+
+#  ifdef FEEDBACK
+   LoadField( "FB_GhostSize",         &RS.FB_GhostSize,         SID, TID, NonFatal, &RT.FB_GhostSize,          1, NonFatal );
+   LoadField( "FB_Nxt",               &RS.FB_Nxt,               SID, TID, NonFatal, &RT.FB_Nxt,                1, NonFatal );
+#  endif
 
    LoadField( "NFieldStoredMax",      &RS.NFieldStoredMax,      SID, TID, NonFatal, &RT.NFieldStoredMax,       1, NonFatal );
 
@@ -1841,6 +1848,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 // domain refinement
    LoadField( "RegridCount",             &RS.RegridCount,             SID, TID, NonFatal, &RT.RegridCount,              1, NonFatal );
+   LoadField( "RefineNLevel",            &RS.RefineNLevel,            SID, TID, NonFatal, &RT.RefineNLevel,             1, NonFatal );
    LoadField( "FlagBufferSize",          &RS.FlagBufferSize,          SID, TID, NonFatal, &RT.FlagBufferSize,           1, NonFatal );
    LoadField( "FlagBufferSizeMaxM1Lv",   &RS.FlagBufferSizeMaxM1Lv,   SID, TID, NonFatal, &RT.FlagBufferSizeMaxM1Lv,    1, NonFatal );
    LoadField( "FlagBufferSizeMaxM2Lv",   &RS.FlagBufferSizeMaxM2Lv,   SID, TID, NonFatal, &RT.FlagBufferSizeMaxM2Lv,    1, NonFatal );
@@ -1938,6 +1946,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "IntFracPassive_VarIdx",    RS.IntFracPassive_VarIdx,   SID, TID, NonFatal,  RT.IntFracPassive_VarIdx,   NP, NonFatal );
    LoadField( "Opt__OverlapMPI",         &RS.Opt__OverlapMPI,         SID, TID, NonFatal, &RT.Opt__OverlapMPI,          1, NonFatal );
    LoadField( "Opt__ResetFluid",         &RS.Opt__ResetFluid,         SID, TID, NonFatal, &RT.Opt__ResetFluid,          1, NonFatal );
+   LoadField( "Opt__ResetFluidInit",     &RS.Opt__ResetFluidInit,     SID, TID, NonFatal, &RT.Opt__ResetFluidInit,      1, NonFatal );
    LoadField( "Opt__FreezeFluid",        &RS.Opt__FreezeFluid,        SID, TID, NonFatal, &RT.Opt__FreezeFluid,         1, NonFatal );
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    LoadField( "MinDens",                 &RS.MinDens,                 SID, TID, NonFatal, &RT.MinDens,                  1, NonFatal );

@@ -278,6 +278,7 @@ void Init_TestProb_Template()
 // comment out Init_ByFile_User_Ptr to use the default
 // Init_ByFile_User_Ptr              = NULL; // option: OPT__INIT=3;             example: Init/Init_ByFile.cpp -> Init_ByFile_Default()
    Init_Field_User_Ptr               = NULL; // set NCOMP_PASSIVE_USER;          example: TestProblem/Hydro/Plummer/Init_TestProb_Hydro_Plummer.cpp --> AddNewField()
+   Flag_Region_Ptr                   = NULL; // option: OPT__FLAG_REGION;        example: Refing/Flag_Region.cpp
    Flag_User_Ptr                     = NULL; // option: OPT__FLAG_USER;          example: Refine/Flag_User.cpp
    Mis_GetTimeStep_User_Ptr          = NULL; // option: OPT__DT_USER;            example: Miscellaneous/Mis_GetTimeStep_User.cpp
    Mis_UserWorkBeforeNextLevel_Ptr   = NULL; //                                  example: Miscellaneous/Mis_UserWorkBeforeNextLevel.cpp
@@ -289,6 +290,7 @@ void Init_TestProb_Template()
    Flu_ResetByUser_Func_Ptr          = NULL; // option: OPT__RESET_FLUID;        example: Fluid/Flu_ResetByUser.cpp
    Init_DerivedField_User_Ptr        = NULL; // option: OPT__OUTPUT_USER_FIELD;  example: Fluid/Flu_DerivedField_User.cpp
    Output_User_Ptr                   = NULL; // option: OPT__OUTPUT_USER;        example: TestProblem/Hydro/AcousticWave/Init_TestProb_Hydro_AcousticWave.cpp --> OutputError()
+   Output_UserWorkBeforeOutput_Ptr   = NULL; // option: none;                    example: Output/Output_UserWorkBeforeOutput.cpp
    Aux_Record_User_Ptr               = NULL; // option: OPT__RECORD_USER;        example: Auxiliary/Aux_Record_User.cpp
    Init_User_Ptr                     = NULL; // option: none;                    example: none
    End_User_Ptr                      = NULL; // option: none;                    example: TestProblem/Hydro/ClusterMerger_vs_Flash/Init_TestProb_ClusterMerger_vs_Flash.cpp --> End_ClusterMerger()
@@ -310,6 +312,9 @@ void Init_TestProb_Template()
 #  endif
 #  endif // #if ( MODEL == HYDRO )
    Src_Init_User_Ptr                 = NULL; // option: SRC_USER;                example: SourceTerms/User_Template/CPU_Src_User_Template.cpp
+#  ifdef FEEDBACK
+   FB_Init_User_Ptr                  = NULL; // option: FB_USER;                 example: TestProblem/Hydro/Plummer/FB_Plummer.cpp
+#  endif
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

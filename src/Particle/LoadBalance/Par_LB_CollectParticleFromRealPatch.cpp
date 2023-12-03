@@ -14,11 +14,8 @@
 //                   and the corresponding real patches "Real_NPatchTotal, Real_PIDList, Real_NPatchEachRank" must be
 //                   provided. The information of real patches can be calculated in advance by using Par_LB_MapBuffer2RealPatch()
 //                2. All Target patches (those in Buff_PIDList[] and Real_PIDList[]) must be patches at the same level "lv"
-//                3. Currently this function only collects particle mass and position
-//                   --> For particle mass assignment only
-//                   --> But it should be generalized to work with arbitrary particle attributes in the future
-//                4. This function is called by Par_LB_CollectParticle2OneLevel()
-//                5. ParAtt_Copy[] will be allocated for all target buffer patches with particles in the
+//                3. This function is called by Par_LB_CollectParticle2OneLevel()
+//                4. ParAtt_Copy[] will be allocated for all target buffer patches with particles in the
 //                   corresponding real patches
 //                   --> Must be deallocated afterward by calling Par_LB_CollectParticle2OneLevel_FreeMemory()
 //
@@ -50,6 +47,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
 
 // nothing to do for levels above MAX_LEVEL
    if ( lv > MAX_LEVEL )  return;
+
 
 
 // 0. determine the target particle attributes
@@ -194,7 +192,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
    } // for (int t=0; t<Real_NPatchTotal; t++)
 
 // get the array offset of each patch (mainly for the OpenMP parallelization)
-   SendBuf_Offset[0] = 0L;
+   if ( Real_NPatchTotal > 0 )   SendBuf_Offset[0] = 0L;
    for (int t=0; t<Real_NPatchTotal-1; t++)  SendBuf_Offset[t+1] = SendBuf_Offset[t] + long(SendBuf_NParEachPatch[t]*NAtt);
 
 
@@ -309,7 +307,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
 
 // 4-0. get the array offset of each patch (mainly for the OpenMP parallelization)
    long *RecvBuf_Offset = new long [Buff_NPatchTotal];
-   RecvBuf_Offset[0] = 0L;
+   if ( Buff_NPatchTotal > 0 )   RecvBuf_Offset[0] = 0L;
    for (int t=0; t<Buff_NPatchTotal-1; t++)  RecvBuf_Offset[t+1] = RecvBuf_Offset[t] + long(RecvBuf_NParEachPatch[t]*NAtt);
 
 #  pragma omp parallel for private( PID, NParThisPatch, RecvPtr ) schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )

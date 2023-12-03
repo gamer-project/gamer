@@ -116,6 +116,7 @@ struct Makefile_t
    int Laohu;
    int SupportHDF5;
    int SupportGSL;
+   int SupportFFTW;
    int SupportLibYT;
 #  ifdef SUPPORT_LIBYT
    int LibYTUsePatchGroup;
@@ -253,6 +254,7 @@ struct SymConst_t
 #  endif
 
    int    InterpMask;
+   int    FB_SepFluOut;
 
 
 #  if   ( MODEL == HYDRO )
@@ -309,6 +311,11 @@ struct SymConst_t
    int    Der_GhostSize;
    int    Der_Nxt;
    int    Der_NOut_Max;
+
+#  ifdef FEEDBACK
+   int    FB_GhostSize;
+   int    FB_Nxt;
+#  endif
 
    int    NFieldStoredMax;
 
@@ -420,6 +427,7 @@ struct InputPara_t
 
 // domain refinement
    int    RegridCount;
+   int    RefineNLevel;
    int    FlagBufferSize;
    int    FlagBufferSizeMaxM1Lv;
    int    FlagBufferSizeMaxM2Lv;
@@ -521,6 +529,7 @@ struct InputPara_t
 #  endif
    int    Opt__OverlapMPI;
    int    Opt__ResetFluid;
+   int    Opt__ResetFluidInit;
    int    Opt__FreezeFluid;
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    double MinDens;

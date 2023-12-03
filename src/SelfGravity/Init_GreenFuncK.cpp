@@ -1,11 +1,11 @@
 #include "GAMER.h"
 
-#ifdef GRAVITY
+#if ( defined GRAVITY  &&  defined SUPPORT_FFTW )
 
 #ifdef SERIAL
-extern rfftwnd_plan     FFTW_Plan;
+extern rfftwnd_plan     FFTW_Plan_Poi;
 #else
-extern rfftwnd_mpi_plan FFTW_Plan;
+extern rfftwnd_mpi_plan FFTW_Plan_Poi;
 #endif
 
 
@@ -47,7 +47,7 @@ void Init_GreenFuncK()
    local_y_start_after_transpose = NULL_INT;
    total_local_size              = local_nx*local_ny*local_nz;
 #  else
-   rfftwnd_mpi_local_sizes( FFTW_Plan, &local_nz, &local_z_start, &local_ny_after_transpose,
+   rfftwnd_mpi_local_sizes( FFTW_Plan_Poi, &local_nz, &local_z_start, &local_ny_after_transpose,
                             &local_y_start_after_transpose, &total_local_size );
 
 #  endif
@@ -82,9 +82,9 @@ void Init_GreenFuncK()
 
 // 4. convert the Green's function to the k space
 #  ifdef SERIAL
-   rfftwnd_one_real_to_complex( FFTW_Plan, GreenFuncK, NULL );
+   rfftwnd_one_real_to_complex( FFTW_Plan_Poi, GreenFuncK, NULL );
 #  else
-   rfftwnd_mpi( FFTW_Plan, 1, GreenFuncK, NULL, FFTW_TRANSPOSED_ORDER );
+   rfftwnd_mpi( FFTW_Plan_Poi, 1, GreenFuncK, NULL, FFTW_TRANSPOSED_ORDER );
 #  endif
 
 
@@ -94,4 +94,4 @@ void Init_GreenFuncK()
 
 
 
-#endif // #ifdef GRAVITY
+#endif // #if ( defined GRAVITY  &&  defined SUPPORT_FFTW )

@@ -364,6 +364,12 @@ void Aux_TakeNote()
       fprintf( Note, "SUPPORT_GSL                     OFF\n" );
 #     endif
 
+#     ifdef SUPPORT_FFTW
+      fprintf( Note, "SUPPORT_FFTW                    ON\n" );
+#     else
+      fprintf( Note, "SUPPORT_FFTW                    OFF\n" );
+#     endif
+
 #     ifdef SUPPORT_LIBYT
       fprintf( Note, "SUPPORT_LIBYT                   ON\n" );
 #     else
@@ -390,8 +396,8 @@ void Aux_TakeNote()
       fprintf( Note, "\n\n");
 
 
-//    record the simulation options in CUFLU.h and CUPOT.h
-      fprintf( Note, "Other Options (in CUFLU.h and CUPOT.h)\n" );
+//    record the simulation options in Macro.h, CUFLU.h and CUPOT.h
+      fprintf( Note, "Other Options (in Macro.h, CUFLU.h and CUPOT.h)\n" );
       fprintf( Note, "***********************************************************************************\n" );
 
 #     ifdef BIT_REP_FLUX
@@ -412,6 +418,12 @@ void Aux_TakeNote()
       fprintf( Note, "INTERP_MASK                     ON\n" );
 #     else
       fprintf( Note, "INTERP_MASK                     OFF\n" );
+#     endif
+
+#     ifdef FB_SEP_FLUOUT
+      fprintf( Note, "FB_SEP_FLUOUT                   ON\n" );
+#     else
+      fprintf( Note, "FB_SEP_FLUOUT                   OFF\n" );
 #     endif
 
 #     if   ( MODEL == HYDRO )
@@ -584,6 +596,9 @@ void Aux_TakeNote()
 #     endif // #ifdef GRAVITY
       fprintf( Note, "#define SRC_GHOST_SIZE          %d\n",      SRC_GHOST_SIZE        );
       fprintf( Note, "#define DER_GHOST_SIZE          %d\n",      DER_GHOST_SIZE        );
+#     ifdef FEEDBACK
+      fprintf( Note, "#define FB_GHOST_SIZE           %d\n",      FB_GHOST_SIZE         );
+#     endif
       fprintf( Note, "#define FLU_NXT                 %d\n",      FLU_NXT               );
 #     ifdef GRAVITY
       fprintf( Note, "#define POT_NXT                 %d\n",      POT_NXT               );
@@ -599,6 +614,9 @@ void Aux_TakeNote()
 #     endif
       fprintf( Note, "#define SRC_NXT                 %d\n",      SRC_NXT               );
       fprintf( Note, "#define DER_NXT                 %d\n",      DER_NXT               );
+#     ifdef FEEDBACK
+      fprintf( Note, "#define FB_NXT                  %d\n",      FB_NXT                );
+#     endif
 #     if ( MODEL == HYDRO )
       fprintf( Note, "#define EOS_NAUX_MAX            %d\n",      EOS_NAUX_MAX          );
       fprintf( Note, "#define EOS_NTABLE_MAX          %d\n",      EOS_NTABLE_MAX        );
@@ -824,6 +842,7 @@ void Aux_TakeNote()
       fprintf( Note, "Parameters of Domain Refinement\n" );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "REGRID_COUNT                    %d\n",      REGRID_COUNT              );
+      fprintf( Note, "REFINE_NLEVEL                   %d\n",      REFINE_NLEVEL             );
       fprintf( Note, "FLAG_BUFFER_SIZE                %d\n",      FLAG_BUFFER_SIZE          );
       fprintf( Note, "FLAG_BUFFER_SIZE_MAXM1_LV       %d\n",      FLAG_BUFFER_SIZE_MAXM1_LV );
       fprintf( Note, "FLAG_BUFFER_SIZE_MAXM2_LV       %d\n",      FLAG_BUFFER_SIZE_MAXM2_LV );
@@ -852,7 +871,7 @@ void Aux_TakeNote()
                                                                   (OPT__FLAG_LOHNER_FORM==LOHNER_FLASH2   ) ? "LOHNER_FLASH2"    :
                                                                   (OPT__FLAG_LOHNER_FORM==LOHNER_FORM_INV1) ? "LOHNER_FORM_INV1" :
                                                                   (OPT__FLAG_LOHNER_FORM==LOHNER_FORM_INV2) ? "LOHNER_FORM_INV2" :
-                                                                                                               "UNKNOWN" );
+                                                                                                              "UNKNOWN" );
       fprintf( Note, "OPT__FLAG_USER                  %d\n",      OPT__FLAG_USER            );
       fprintf( Note, "OPT__FLAG_USER_NUM              %d\n",      OPT__FLAG_USER_NUM        );
       fprintf( Note, "OPT__FLAG_REGION                %d\n",      OPT__FLAG_REGION          );
@@ -880,6 +899,9 @@ void Aux_TakeNote()
 #     ifdef GRAVITY
       fprintf( Note, "Pot_ParaBuf                     %d\n",      Pot_ParaBuf               );
       fprintf( Note, "Rho_ParaBuf                     %d\n",      Rho_ParaBuf               );
+#     endif
+#     ifdef FEEDBACK
+      fprintf( Note, "FB_ParaBuf                      %d\n",      FB_ParaBuf                );
 #     endif
 #     ifdef LOAD_BALANCE
       fprintf( Note, "LB_WLI_MAX                      %13.7e\n",  amr->LB->WLI_Max          );
@@ -1069,6 +1091,7 @@ void Aux_TakeNote()
 
       fprintf( Note, "OPT__OVERLAP_MPI                %d\n",      OPT__OVERLAP_MPI         );
       fprintf( Note, "OPT__RESET_FLUID                %d\n",      OPT__RESET_FLUID         );
+      fprintf( Note, "OPT__RESET_FLUID_INIT           %d\n",      OPT__RESET_FLUID_INIT    );
       fprintf( Note, "OPT__FREEZE_FLUID               %d\n",      OPT__FREEZE_FLUID        );
 #     if ( MODEL == HYDRO  ||  MODEL == ELBDM )
       fprintf( Note, "MIN_DENS                        %13.7e\n",  MIN_DENS                 );
@@ -1331,6 +1354,8 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_RESTART             %d\n",      OPT__OUTPUT_RESTART    );
       fprintf( Note, "OUTPUT_STEP                     %d\n",      OUTPUT_STEP            );
       fprintf( Note, "OUTPUT_DT                       %20.14e\n", OUTPUT_DT              );
+      fprintf( Note, "OUTPUT_WALLTIME                 %20.14e\n", OUTPUT_WALLTIME        );
+      fprintf( Note, "OUTPUT_WALLTIME_UNIT            %d\n",      OUTPUT_WALLTIME_UNIT   );
       fprintf( Note, "OUTPUT_PART_X                   %20.14e\n", OUTPUT_PART_X          );
       fprintf( Note, "OUTPUT_PART_Y                   %20.14e\n", OUTPUT_PART_Y          );
       fprintf( Note, "OUTPUT_PART_Z                   %20.14e\n", OUTPUT_PART_Z          );

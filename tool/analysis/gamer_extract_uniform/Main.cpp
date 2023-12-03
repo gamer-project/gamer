@@ -649,13 +649,13 @@ void Output()
 
    switch ( OutputXYZ )
    {
-      case 1:  sprintf( FileName_Out, "SliceX" );     break;
-      case 2:  sprintf( FileName_Out, "SliceY" );     break;
-      case 3:  sprintf( FileName_Out, "SliceZ" );     break;
-      case 4:  sprintf( FileName_Out, "ProjX"  );     break;
-      case 5:  sprintf( FileName_Out, "ProjY"  );     break;
-      case 6:  sprintf( FileName_Out, "ProjZ"  );     break;
-      case 7:  sprintf( FileName_Out, "Cube"   );     break;
+      case 1:  sprintf( FileName_Out, "%s", "SliceX" );  break;
+      case 2:  sprintf( FileName_Out, "%s", "SliceY" );  break;
+      case 3:  sprintf( FileName_Out, "%s", "SliceZ" );  break;
+      case 4:  sprintf( FileName_Out, "%s", "ProjX"  );  break;
+      case 5:  sprintf( FileName_Out, "%s", "ProjY"  );  break;
+      case 6:  sprintf( FileName_Out, "%s", "ProjZ"  );  break;
+      case 7:  sprintf( FileName_Out, "%s", "Cube"   );  break;
    }
 
 

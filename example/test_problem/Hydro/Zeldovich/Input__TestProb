@@ -1,0 +1,7 @@
+# problem-specific runtime parameters
+Gas_Par_Setup        1              # 1=gas-only, 2=particle-only [1]
+n_Pert_Wave_Len      1              # must be a positive integer; "Pert_Wave_Len = BOX_SIZE_x/n_Pert_Wave_Len" [1]
+z_Collapse           1.0            # Zeldovich pancake collapse redshift [1.0]
+                                    # needs to be smaller than "z_Initial  = (1/A_INIT) - 1"
+GasTemp_Init         100            # gas initial temperature in Kelvin; applicable for only "Gas_Par_Setup = 1" [100]
+#NPar_X               64             # 1D number of particles along the x-axis (axis of perturbation)

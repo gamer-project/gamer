@@ -66,13 +66,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  ifdef GPU
    CUAPI_SetDevice( OPT__GPUID_SELECT );
 
-#  ifndef GRAVITY
-   int POT_GPU_NPGROUP = NULL_INT;
-#  endif
-#  ifndef SUPPORT_GRACKLE
-   int CHE_GPU_NPGROUP = NULL_INT;
-#  endif
-   CUAPI_Set_Default_GPU_Parameter( GPU_NSTREAM, FLU_GPU_NPGROUP, POT_GPU_NPGROUP, CHE_GPU_NPGROUP, SRC_GPU_NPGROUP );
+   CUAPI_SetCache();
 #  endif // #ifdef GPU
 
 
@@ -88,7 +82,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
-#  ifdef GRAVITY
+#  ifdef SUPPORT_FFTW
 // initialize FFTW
    Init_FFTW();
 #  endif
@@ -104,7 +98,7 @@ void Init_GAMER( int *argc, char ***argv )
 
 
 // initialize all fields and particle attributes
-// --> Init_Field() must be called before CUAPI_Set_Default_GPU_Parameter()
+// --> Init_Field() must be called before CUAPI_SetConstMemory()
    Init_Field();
 #  ifdef PARTICLE
    Par_Init_Attribute();
@@ -182,7 +176,11 @@ void Init_GAMER( int *argc, char ***argv )
    if ( OPT__MEMORY_POOL )    Init_MemoryPool();
 
 
-// allocate memory for several global arrays
+// allocate memory for several CPU/GPU global arrays
+#  ifdef GPU
+   CUAPI_MemAllocate();
+#  endif
+
    Init_MemAllocate();
 
 
@@ -258,8 +256,10 @@ void Init_GAMER( int *argc, char ***argv )
 #  ifdef GRAVITY
    if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
    {
+#     ifdef SUPPORT_FFTW
 //    initialize the k-space Green's function for the isolated BC.
       if ( OPT__SELF_GRAVITY  &&  OPT__BC_POT == BC_POT_ISOLATED )    Init_GreenFuncK();
+#     endif
 
 
 //    evaluate the initial average density if it is not set yet (may already be set in Init_ByRestart)

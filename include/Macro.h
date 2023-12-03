@@ -657,9 +657,11 @@
 
 
 // number of ghost zones for feedback
-#  ifdef FEEDBACK
-#	 define FB_GHOST_SIZE	    1
-#  endif
+// --> can be changed manually
+// --> set to 0 if applicable to improve performance
+#ifdef FEEDBACK
+#        define FB_GHOST_SIZE       3
+#endif
 
 
 // patch size (number of cells of a single patch in the x/y/z directions)
@@ -696,7 +698,7 @@
 #  define SRC_NXT_P1    ( SRC_NXT + 1 )
 #  define DER_NXT       ( PS1 + 2*DER_GHOST_SIZE )                // use patch as the unit
 #ifdef FEEDBACK
-#  define FB_NXT        ( PS2 + 2*FB_GHOST_SIZE )
+#  define FB_NXT        ( PS2 + 2*FB_GHOST_SIZE )                 // use patch group as the unit
 #endif
 
 
@@ -744,6 +746,12 @@
 // used by INTERP_MASK for now but can be applied to other places in the future
 #define MASKED                   true
 #define UNMASKED                 false
+
+
+// in FB_AdvanceDt(), store the updated fluid data in a separate array to avoid data racing among different patch groups
+#if ( defined FEEDBACK  &&  FB_GHOST_SIZE > 0 )
+#  define FB_SEP_FLUOUT
+#endif
 
 
 // extreme values
@@ -862,6 +870,7 @@
 
 
 // GAMER status
+// --> if we ever want to swap the following values, must check all MPI functions using MPI_BAND or MPI_BOR
 #define GAMER_SUCCESS      1
 #define GAMER_FAILED       0
 
@@ -936,6 +945,10 @@
 // max/min functions
 #define MAX( a, b )     (  ( (a) > (b) ) ? (a) : (b)  )
 #define MIN( a, b )     (  ( (a) < (b) ) ? (a) : (b)  )
+
+
+// safe ATAN2 that does not return nan when a = b = 0
+#define SATAN2( a, b )   (  ( (a) == (real)0.0  &&  (b) == (real)0.0 ) ? (real)0.0 : ATAN2( (a), (b) )  )
 
 
 // square/cube function

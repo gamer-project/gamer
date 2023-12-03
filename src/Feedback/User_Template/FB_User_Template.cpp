@@ -14,10 +14,10 @@ using std::string;
 
 
 // function pointers to be set by FB_Init_User_Template()
-extern void (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                            const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                            real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh,
-			    bool CoarseFine[], const int TID, RandomNumber_t *RNG );
+extern int (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                           const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
+                           real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
+                           const int TID, RandomNumber_t *RNG );
 extern void (*FB_End_User_Ptr)();
 
 
@@ -56,6 +56,9 @@ void FB_SNeMomentumFeedback( real (*Fluid)[PS2][PS2][PS2], const int particleExp
 // Description :  Template of a user-defined feedback
 //
 // Note        :  1. Input and output fluid and particle data are stored in Fluid[] and ParAtt[], respectively
+//                   --> This function is responsible for updating gas and particles within
+//                       ** FB_GHOST_SIZE <= cell indices i,j,k < FB_GHOST_SIZE+PS2 ** 
+//                   --> Updating gas and particles outside this range is fine but will have no effect at all
 //                2. Must use ParSortID[] to access ParAtt[]
 //                   --> ParAtt[PAR_MASS/PAR_POSX/etc][ ParSortID[...] ]
 //                3. Particles may be outside the target region
@@ -77,7 +80,16 @@ void FB_SNeMomentumFeedback( real (*Fluid)[PS2][PS2][PS2], const int particleExp
 //                   --->x    18  10  19
 //                7. Invoked by FB_AdvanceDt()
 //                8. Must NOT change particle positions
-//                9. Linked to FB_User_Ptr in FB_Init_User_Template()
+//                9. Since Fluid[] stores both the input and output data, the order of particles may affect the
+//                   final output results
+//                   --> For example, particle 2 may use the data updated by particle 1 as the input data
+//                   --> Actually, even if we separate Fluid[] to input and output arrays, the final output results
+//                       may still depend on the order of particles for non-local feedback since different particles
+//                       may update the same cell
+//                10. In general, it is recommended to have the maximum feedback radius no larger than half of the patch size
+//                    (i.e., PATCH_SIZE/2=4 cells for PATCH_SIZE=8)
+//                    --> Increase PATCH_SIZE if necessary
+//                11. Linked to FB_User_Ptr in FB_Init_User_Template()
 //
 // Parameter   :  lv         : Target refinement level
 //                TimeNew    : Target physical time to reach
@@ -88,9 +100,9 @@ void FB_SNeMomentumFeedback( real (*Fluid)[PS2][PS2][PS2], const int particleExp
 //                ParSortID  : Sorted particle IDs
 //                ParAtt     : Particle attribute arrays
 //                Fluid      : Array to store the input/output fluid data
-//                             --> Array size is fixed to PS2^3
+//                             --> Array size is fixed to (FB_NXT)^3=(PS2+2*FB_GHOST_SIZE)^3
 //                EdgeL      : Left edge of Fluid[]
-//                             --> Right edge is given by EdgeL[]+PS2*dh
+//                             --> Right edge is given by EdgeL[]+FB_NXT*dh
 //                dh         : Cell size of Fluid[]
 //                CoarseFine : Coarse-fine boundaries along the 26 sibling directions
 //                TID        : Thread ID
@@ -100,12 +112,10 @@ void FB_SNeMomentumFeedback( real (*Fluid)[PS2][PS2][PS2], const int particleExp
 //
 // Return      :  Fluid, ParAtt
 //-------------------------------------------------------------------------------------------------------
-
-
-void FB_User_Template( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                       const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                       real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
-                       const int TID, RandomNumber_t *RNG )
+int FB_User_Template( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                      const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
+                      real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
+                      const int TID, RandomNumber_t *RNG )
 {
 
 // check
@@ -159,7 +169,9 @@ void FB_User_Template( const int lv, const double TimeNew, const double TimeOld,
    }; // const double p_mass[10] 
 
 
-   int n = 0;
+// for a complete example, see src/TestProblem/Hydro/Plummer/FB_Plummer.cpp
+   /*
+   const double _dh  = 1.0 / dh;
 
    for ( n = 0; n < NPar; n++ )
    {
@@ -446,6 +458,17 @@ void FB_User_Template( const int lv, const double TimeNew, const double TimeOld,
 //   delete[] explosionFlagIa;
 //   delete[] willExplode;
 //   delete[] soonestExplosion;
+      const int    p      = ParSortID[t];
+      const double xyz[3] = { ParAtt[PAR_POSX][p], ParAtt[PAR_POSY][p], ParAtt[PAR_POSZ][p] };
+
+      int idx[3];
+      for (int d=0; d<3; d++)    idx[d] = (int)FLOOR( ( xyz[d] - EdgeL[d] )*_dh );
+
+   } // for (int t=0; t<NPar; t++)
+   */
+
+
+   return GAMER_SUCCESS;
 
 } // FUNCTION : FB_User_Template
 

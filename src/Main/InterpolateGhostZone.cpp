@@ -1405,9 +1405,11 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          Im = CData_Imag[t];
 
 //###ISSUE: atan2() sometimes returns NaN when both inputs are zero, not sure why ...
-//          --> this seems to provide a temporary fix (but needs to be checked further)
+//          --> using SATAN2() in Macro.h seems to provide a temporary fix (but needs to be checked further)
+//          --> in principle we don't need this fix since atan2(y,x) should be able to handle
+//              y=+0/-0, x=+0/-0 (https://en.cppreference.com/w/c/numeric/math/atan2)
          if ( Re == (real)0.0  &&  Im == (real)0.0 )  CData_Phas[t] = (real)0.0;
-         else                                         CData_Phas[t] = ATAN2( Im, Re );
+         else                                         CData_Phas[t] = SATAN2( Im, Re );
 
          if ( DensIdx == -1 ) // only need to recalculate density if it's not prepared already
          CData_Dens[t] = Re*Re + Im*Im;
@@ -1546,9 +1548,11 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             Im = CData_Imag_IntTime[t];
 
 //###ISSUE: atan2() sometimes returns NaN when both inputs are zero, not sure why ...
-//          --> this seems to provide a temporary fix (but needs to be checked further)
+//          --> using SATAN2() in Macro.h seems to provide a temporary fix (but needs to be checked further)
+//          --> in principle we don't need this fix since atan2(y,x) should be able to handle
+//              y=+0/-0, x=+0/-0 (https://en.cppreference.com/w/c/numeric/math/atan2)
             if ( Re == (real)0.0  &&  Im == (real)0.0 )  CData_Phas_IntTime[t] = (real)0.0;
-            else                                         CData_Phas_IntTime[t] = ATAN2( Im, Re );
+            else                                         CData_Phas_IntTime[t] = SATAN2( Im, Re );
 
             CData_Dens_IntTime[t] = Re*Re + Im*Im;
          }

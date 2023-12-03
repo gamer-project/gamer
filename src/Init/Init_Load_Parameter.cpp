@@ -136,6 +136,7 @@ void Init_Load_Parameter()
 
 // grid refinement
    ReadPara->Add( "REGRID_COUNT",               &REGRID_COUNT,                    4,               1,             NoMax_int      );
+   ReadPara->Add( "REFINE_NLEVEL",              &REFINE_NLEVEL,                   1,               1,             NoMax_int      );
    ReadPara->Add( "FLAG_BUFFER_SIZE",           &FLAG_BUFFER_SIZE,               -1,               NoMin_int,     PS1            );
    ReadPara->Add( "FLAG_BUFFER_SIZE_MAXM1_LV",  &FLAG_BUFFER_SIZE_MAXM1_LV,      -1,               NoMin_int,     PS1            );
    ReadPara->Add( "FLAG_BUFFER_SIZE_MAXM2_LV",  &FLAG_BUFFER_SIZE_MAXM2_LV,      -1,               NoMin_int,     PS1            );
@@ -190,6 +191,7 @@ void Init_Load_Parameter()
 // source terms
    ReadPara->Add( "SRC_DELEPTONIZATION",        &SrcTerms.Deleptonization,        false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "SRC_USER",                   &SrcTerms.User,                   false,           Useless_bool,  Useless_bool   );
+// do not check SRC_GPU_NPGROUP since it may be reset by either Init_ResetDefaultParameter() or CUAPI_SetMemSize()
    ReadPara->Add( "SRC_GPU_NPGROUP",            &SRC_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
 
 
@@ -208,7 +210,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "GRACKLE_THREE_BODY_RATE",    &GRACKLE_THREE_BODY_RATE,         0,               0,             5              );
    ReadPara->Add( "GRACKLE_CIE_COOLING",        &GRACKLE_CIE_COOLING,             false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "GRACKLE_H2_OPA_APPROX",      &GRACKLE_H2_OPA_APPROX,           0,               0,             1              );
-// do not check CHE_GPU_NPGROUP since it may be reset by either Init_ResetDefaultParameter() or CUAPI_Set_Default_GPU_Parameter()
+// do not check CHE_GPU_NPGROUP since it may be reset by either Init_ResetDefaultParameter() or CUAPI_SetMemSize()
    ReadPara->Add( "CHE_GPU_NPGROUP",            &CHE_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
 #  endif
 
@@ -281,7 +283,7 @@ void Init_Load_Parameter()
 
 
 // fluid solvers in all models
-// do not check FLU_GPU_NPGROUP and GPU_NSTREAM since they may be reset by either Init_ResetDefaultParameter() or CUAPI_Set_Default_GPU_Parameter()
+// do not check FLU_GPU_NPGROUP and GPU_NSTREAM since they may be reset by either Init_ResetDefaultParameter() or CUAPI_SetMemSize()
    ReadPara->Add( "FLU_GPU_NPGROUP",            &FLU_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "GPU_NSTREAM",                &GPU_NSTREAM,                    -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "OPT__FIXUP_FLUX",            &OPT__FIXUP_FLUX,                 true,            Useless_bool,  Useless_bool   );
@@ -295,6 +297,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__INT_FRAC_PASSIVE_LR",   &OPT__INT_FRAC_PASSIVE_LR,        true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OVERLAP_MPI",           &OPT__OVERLAP_MPI,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RESET_FLUID",           &OPT__RESET_FLUID,                false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__RESET_FLUID_INIT",      &OPT__RESET_FLUID_INIT,          -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "OPT__FREEZE_FLUID",          &OPT__FREEZE_FLUID,               false,           Useless_bool,  Useless_bool   );
 #  if ( MODEL == HYDRO )
    ReadPara->Add( "OPT__CHECK_PRES_AFTER_FLU",  &OPT__CHECK_PRES_AFTER_FLU,      -1,               NoMin_int,     1              );
@@ -327,7 +330,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "MG_NPRE_SMOOTH",             &MG_NPRE_SMOOTH,                 -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "MG_NPOST_SMOOTH",            &MG_NPOST_SMOOTH,                -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "MG_TOLERATED_ERROR",         &MG_TOLERATED_ERROR,             -1.0,             NoMin_double,  NoMax_double   );
-// do not check POT_GPU_NPGROUP since it may be reset by either Init_ResetDefaultParameter() or CUAPI_Set_Default_GPU_Parameter()
+// do not check POT_GPU_NPGROUP since it may be reset by either Init_ResetDefaultParameter() or CUAPI_SetMemSize()
    ReadPara->Add( "POT_GPU_NPGROUP",            &POT_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "OPT__GRA_P5_GRADIENT",       &OPT__GRA_P5_GRADIENT,            false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__SELF_GRAVITY",          &OPT__SELF_GRAVITY,               true,            Useless_bool,  Useless_bool   );
@@ -445,6 +448,8 @@ void Init_Load_Parameter()
 // do not check OUTPUT_STEP and OUTPUT_DT since they depend on OPT__OUTPUT_MODE
    ReadPara->Add( "OUTPUT_STEP",                &OUTPUT_STEP,                    -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "OUTPUT_DT",                  &OUTPUT_DT,                      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "OUTPUT_WALLTIME",            &OUTPUT_WALLTIME,                -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "OUTPUT_WALLTIME_UNIT",       &OUTPUT_WALLTIME_UNIT,            0,               0,             3              );
 // do not check OUTPUT_PART_X/Y/Z since they depend on OPT__OUTPUT_PART
    ReadPara->Add( "OUTPUT_PART_X",              &OUTPUT_PART_X,                  -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "OUTPUT_PART_Y",              &OUTPUT_PART_Y,                  -1.0,             NoMin_double,  NoMax_double   );
