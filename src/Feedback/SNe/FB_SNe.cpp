@@ -175,7 +175,7 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
       const double dh 	      = amr->dh[lv];
       const double _dh	      = 1.0 / dh;
       const double Msun       = Const_Msun;
-      const double MinParMass = 3.2e4;     //in unit of M_sun
+      const double MinParMass = 3.2e4;     //in unit of M_sun. Should be as much as minimum mass in star formation
       const bool NoFloor      = false;
       const double Emag	      = 0.0;
       const int distcells     = 26;  //number of cells that receive feedback
@@ -200,8 +200,6 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
       for ( int d = 0; d < 3; d++ ) {
 	idx[d] = (int)FLOOR( ( par_pos[d] - EdgeL[d] )*_dh );
       } // for ( int d = 0; d < 3; d++ )
-
-      // if ( idx[0] > 0 && idx[1] > 0 && idx[2] > 0 && idx[0] < 17 && idx[1] < 17 && idx[2] < 17 ) totalSNenumber += 1;
 
       double flu_dens      = Fluid[DENS][idx[2]][idx[1]][idx[0]];      // density of this cell
       double flu_energy    = Fluid[ENGY][idx[2]][idx[1]][idx[0]];      // energy of this cell
