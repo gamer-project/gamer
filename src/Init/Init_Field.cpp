@@ -7,7 +7,7 @@ static void Init_Field_User_Template();
 void (*Init_Field_User_Ptr)() = NULL;
 
 
-static int NDefinedField;  // total number of defined fields --> for debug only
+static int NDefinedField;  // total number of defined fields
 
 
 

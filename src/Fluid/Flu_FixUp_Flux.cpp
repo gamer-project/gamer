@@ -15,7 +15,7 @@
 // Parameter   :  lv   : Target coarse level
 //                TVar : Target variables
 //                       --> Supported variables in different models:
-//                           HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY
+//                           HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY [, BIDX(field_index)]
 //                           ELBDM : _DENS
 //                       --> _FLUID, _PASSIVE, and _TOTAL apply to all models
 //-------------------------------------------------------------------------------------------------------
