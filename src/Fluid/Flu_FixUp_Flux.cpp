@@ -149,7 +149,11 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
 //             calculate the corrected results
 //             --> do NOT **store** these results yet since we want to skip the cells with unphysical results
                real CorrVal[NFLUX_TOTAL];    // values after applying the flux correction
-               for (int v=0; v<NFLUX_TOTAL; v++)   CorrVal[v] = *FluidPtr1D[v] + FluxPtr[v][m][n]*Const[s];
+               for (int v=0; v<NFLUX_TOTAL; v++)
+               {
+                  if ( TVar & BIDX(v) )   CorrVal[v] = *FluidPtr1D[v] + FluxPtr[v][m][n]*Const[s];
+                  else                    CorrVal[v] = *FluidPtr1D[v];
+               }
 
 
 //             calculate the internal energy density and pressure
@@ -262,7 +266,8 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
                {
 //                floor and normalize the passive scalars
 #                 if ( NCOMP_PASSIVE > 0  &&  MODEL == HYDRO )
-                  for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+                  for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+                     if ( TVar & BIDX(v) )   CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
 
                   if ( OPT__NORMALIZE_PASSIVE )
                      Hydro_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
