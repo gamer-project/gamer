@@ -302,7 +302,7 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
 //                store the corrected results
                   for (int v=0; v<NFLUX_TOTAL; v++)
                   {
-                     if ( TVar & (1L<<v) )   *FluidPtr1D[v] = CorrVal[v];
+                     if ( TVar & BIDX(v) )   *FluidPtr1D[v] = CorrVal[v];
                   }
 
 
