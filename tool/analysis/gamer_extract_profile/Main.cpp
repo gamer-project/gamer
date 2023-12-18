@@ -53,14 +53,14 @@ double    (*ELBDM_Mom)[3]     = NULL;     // momentum used for subtracting the C
 double     *ELBDM_RhoUr2      = NULL;     // Rho*(vr^2 + wr^2) in the virial surface terms
 double     *ELBDM_dRho_dr     = NULL;     // dRho/dr in the virial surface terms
 double     *ELBDM_LapRho      = NULL;     // Lap(Rho) in the virial surface terms
-bool        OutputSphere      = false;    // output the sphere coordinate (r, theta, phi) velocity
 bool        Richardson        = true;     // Richardson extrapolation for the velocity
-bool        RemoveCMV         = false;    // remove the center-of-mass velocity 
 #else
 IntScheme_t IntScheme         = INT_CQUAD;
 #endif
 bool        GetAvePot         = false;    // calculate the spherically symmetric gravitational potential
 double      NewtonG           = WRONG;    // gravitational constant (must be set if it cannot be determined from the input data)
+bool        RemoveCMV         = false;    // remove the center-of-mass velocity 
+bool        OutputSphere      = false;    // output the sphere coordinate (r, theta, phi) velocity
 
 
 // variables for the mode "maximum density"
@@ -267,8 +267,7 @@ void Remove_CMVel()
    } // for (int n=0; n<NShell; n++)
 
 #  if   ( MODEL == HYDRO )
-   const int NGhost = 0;
-   real px, py, pz, pr, pt, vr, vt, pres, rho, egy, Pot, ParDens;
+#  warning : WAIT HYDRO !!!
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -291,6 +290,13 @@ void Remove_CMVel()
    const bool ELBDM_IntPhase = false;
 #  endif
 
+#  if   ( MODEL == HYDRO )
+#  warning : WAIT HYDRO !!!
+
+#  elif ( MODEL == MHD )
+#  warning : WAIT MHD !!!
+
+#  elif ( MODEL == ELBDM )
    const int ArraySize = PATCH_SIZE + 2*NGhost;
    const int NPG       = 1;
    const NSide_t NSide = NSIDE_26;
@@ -472,6 +478,10 @@ void Remove_CMVel()
       cout << "done" << endl;
 
    } // for (int lv=0; lv<NLEVEL; lv++)
+   delete [] Field1D;
+#  else
+#  error : ERROR : unsupported MODEL !!
+#  endif // MODEL
 
 // get the average values
    for (int n=0; n<NShell; n++)    average_dens[n] /= volume[n];
@@ -496,7 +506,6 @@ void Remove_CMVel()
 #  endif // MODEL
 
 
-   delete [] Field1D;
    if ( volume        != NULL )  delete [] volume;
    if ( nCount        != NULL )  delete [] nCount;
    if ( average_dens  != NULL )  delete [] average_dens;
@@ -504,6 +513,13 @@ void Remove_CMVel()
 
    cout << "Remove the motion of center-of-mass by phase shift" << endl;
 
+#  if   ( MODEL == HYDRO )
+#  warning : WAIT HYDRO !!!
+
+#  elif ( MODEL == MHD )
+#  warning : WAIT MHD !!!
+
+#  elif ( MODEL == ELBDM )
    for (int lv=0; lv<NLEVEL; lv++)
    {
       scale = (double)amr.scale[lv];
@@ -525,13 +541,9 @@ void Remove_CMVel()
 
             Radius = sqrt( x*x + y*y + z*z );
 
-#           if   ( MODEL == HYDRO )
-#           warning : WAIT HYDRO !!!
 
-#           elif ( MODEL == MHD )
-#           warning : WAIT MHD !!!
 
-#           elif ( MODEL == ELBDM )
+
 
             real S = (x*CMV[0]+y*CMV[1]+z*CMV[2])*ELBDM_ETA*(dh_min);
             Dens = amr.patch[lv][PID]->fluid[DENS][k][j][i];
@@ -541,16 +553,15 @@ void Remove_CMVel()
             amr.patch[lv][PID]->fluid[REAL][k][j][i] = +Real*COS(S) + Imag*SIN(S);
             amr.patch[lv][PID]->fluid[IMAG][k][j][i] = -Real*SIN(S) + Imag*COS(S);
 
-#           else
-#           error : ERROR : unsupported MODEL !!
-#           endif // MODEL
          }}} // k, j, i
       } // for (int PID=0; PID<amr.num[lv]; PID++)
 
       cout << "done" << endl;
 
    } // for (int lv=0; lv<NLEVEL; lv++)
-
+#   else
+#   error : ERROR : unsupported MODEL !!
+#   endif // MODEL
 } // FUNCTION : Get_CMVel 
 
 
@@ -1438,6 +1449,8 @@ void ReadOption( int argc, char **argv )
                    break;
          case 'V': ELBDM_GetVir     = true;
                    break;
+         case 'b': Richardson       = false;
+                   break;
 #        endif
          case 'u': INT_MONO_COEFF   = atof(optarg);
                    break;
@@ -1448,8 +1461,6 @@ void ReadOption( int argc, char **argv )
          case 'G': NewtonG          = atof(optarg);
                    break;
          case 'O': OutputSphere     = true;
-                   break;
-         case 'b': Richardson       = false;
                    break;
          case 'C': RemoveCMV        = true;
                    break;
@@ -2754,7 +2765,7 @@ int main( int argc, char ** argv )
 
    if ( Mode_ShellAve )
    {
-      
+
       if ( RemoveCMV )   Remove_CMVel();
 
       Init_ShellAve();
