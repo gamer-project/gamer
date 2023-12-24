@@ -87,9 +87,14 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  endif
 #  ifdef COSMIC_RAY
    const int  CosmicRay            = 1;
+#  ifdef CR_DIFFUSION
+   const int  CR_Diffusion         = 1;
 #  else
-   const int  CosmicRay            = 0;
+   const int  CR_Diffusion         = 0;
 #  endif
+#  else // #ifdef COSMIC_RAY
+   const int  CosmicRay            = 0;
+#  endif // #ifdef COSMIC_RAY ... else ...
 #  endif // #if ( MODEL == HYDRO )
 
    KeyInfo_t KeyInfo;
@@ -207,6 +212,10 @@ void Init_ByRestart_HDF5( const char *FileName )
    else
    LoadField( "Par_NAttStored",       &KeyInfo.Par_NAttStored,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttStored,        1, NonFatal );
    } // if ( ReenablePar ) ... else ...
+#  endif
+
+#  ifdef COSMIC_RAY
+   LoadField( "CR_Diffusion",         &KeyInfo.CR_Diffusion,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &CR_Diffusion,         -1, NonFatal );
 #  endif
 
    LoadField( "BoxSize",               KeyInfo.BoxSize,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  amr->BoxSize,          3,    Fatal );
@@ -1511,6 +1520,10 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "Par_NAttUser",           &RS.Par_NAttUser,           SID, TID, NonFatal, &RT.Par_NAttUser,           1, NonFatal );
 #  endif
 
+#  ifdef COSMIC_RAY
+   LoadField( "CR_Diffusion",           &RS.CR_Diffusion,           SID, TID, NonFatal, &RT.CR_Diffusion,           1, NonFatal );
+#  endif // #ifdef COSMIC_RAY
+
 
 // 5. close all objects
    Status = H5Tclose( TID );
@@ -1829,6 +1842,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Dt__ParVelMax",           &RS.Dt__ParVelMax,           SID, TID, NonFatal, &RT.Dt__ParVelMax,            1, NonFatal );
    LoadField( "Dt__ParAcc",              &RS.Dt__ParAcc,              SID, TID, NonFatal, &RT.Dt__ParAcc,               1, NonFatal );
 #  endif
+#  ifdef CR_DIFFUSION
+   LoadField( "Dt__CR_Diffusion",        &RS.Dt__CR_Diffusion,        SID, TID, NonFatal, &RT.Dt__CR_Diffusion,         1, NonFatal );
+#  endif
 #  ifdef COMOVING
    LoadField( "Dt__MaxDeltaA",           &RS.Dt__MaxDeltaA,           SID, TID, NonFatal, &RT.Dt__MaxDeltaA,            1, NonFatal );
 #  endif
@@ -1864,6 +1880,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  ifdef MHD
    LoadField( "Opt__Flag_Current",       &RS.Opt__Flag_Current,       SID, TID, NonFatal, &RT.Opt__Flag_Current,        1, NonFatal );
 #  endif
+#  ifdef COSMIC_RAY
+   LoadField( "Opt__Flag_CRay",          &RS.Opt__Flag_CRay,          SID, TID, NonFatal, &RT.Opt__Flag_CRay,           1, NonFatal );
+#  endif
 #  endif
 #  if ( MODEL == ELBDM )
    LoadField( "Opt__Flag_EngyDensity",   &RS.Opt__Flag_EngyDensity,   SID, TID, NonFatal, &RT.Opt__Flag_EngyDensity,    1, NonFatal );
@@ -1874,6 +1893,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Flag_LohnerPres",    &RS.Opt__Flag_LohnerPres,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerPres,     1, NonFatal );
    LoadField( "Opt__Flag_LohnerTemp",    &RS.Opt__Flag_LohnerTemp,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerTemp,     1, NonFatal );
    LoadField( "Opt__Flag_LohnerEntr",    &RS.Opt__Flag_LohnerEntr,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerEntr,     1, NonFatal );
+#  ifdef COSMIC_RAY
+   LoadField( "Opt__Flag_LohnerCRay",    &RS.Opt__Flag_LohnerCRay,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerCRay,     1, NonFatal );
+#  endif
 #  endif
    LoadField( "Opt__Flag_LohnerForm",    &RS.Opt__Flag_LohnerForm,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerForm,     1, NonFatal );
    LoadField( "Opt__Flag_User",          &RS.Opt__Flag_User,          SID, TID, NonFatal, &RT.Opt__Flag_User,           1, NonFatal );
@@ -1936,10 +1958,12 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Flu_GPU_NPGroup",         &RS.Flu_GPU_NPGroup,         SID, TID, NonFatal, &RT.Flu_GPU_NPGroup,          1, NonFatal );
    LoadField( "GPU_NStream",             &RS.GPU_NStream,             SID, TID, NonFatal, &RT.GPU_NStream,              1, NonFatal );
    LoadField( "Opt__FixUp_Flux",         &RS.Opt__FixUp_Flux,         SID, TID, NonFatal, &RT.Opt__FixUp_Flux,          1, NonFatal );
+   LoadField( "FixUpFlux_Var",           &RS.FixUpFlux_Var,           SID, TID, NonFatal, &RT.FixUpFlux_Var,            1, NonFatal );
 #  ifdef MHD
    LoadField( "Opt__FixUp_Electric",     &RS.Opt__FixUp_Electric,     SID, TID, NonFatal, &RT.Opt__FixUp_Electric,      1, NonFatal );
 #  endif
    LoadField( "Opt__FixUp_Restrict",     &RS.Opt__FixUp_Restrict,     SID, TID, NonFatal, &RT.Opt__FixUp_Restrict,      1, NonFatal );
+   LoadField( "FixUpRestrict_Var",       &RS.FixUpRestrict_Var,       SID, TID, NonFatal, &RT.FixUpRestrict_Var,        1, NonFatal );
    LoadField( "Opt__CorrAfterAllSync",   &RS.Opt__CorrAfterAllSync,   SID, TID, NonFatal, &RT.Opt__CorrAfterAllSync,    1, NonFatal );
    LoadField( "Opt__NormalizePassive",   &RS.Opt__NormalizePassive,   SID, TID, NonFatal, &RT.Opt__NormalizePassive,    1, NonFatal );
    LoadField( "NormalizePassive_NVar",   &RS.NormalizePassive_NVar,   SID, TID, NonFatal, &RT.NormalizePassive_NVar,    1, NonFatal );
@@ -2035,6 +2059,16 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "FB_User",                 &RS.FB_User,                 SID, TID, NonFatal, &RT.FB_User,                  1, NonFatal );
 #  endif
 
+// cosmic rays
+#  ifdef COSMIC_RAY
+   LoadField( "CR_Gamma",                &RS.CR_Gamma,                SID, TID, NonFatal, &RT.CR_Gamma,                 1, NonFatal );
+#  ifdef CR_DIFFUSION
+   LoadField( "CR_Diffusion_ParaCoeff",  &RS.CR_Diffusion_ParaCoeff,  SID, TID, NonFatal, &RT.CR_Diffusion_ParaCoeff,   1, NonFatal );
+   LoadField( "CR_Diffusion_PerpCoeff",  &RS.CR_Diffusion_PerpCoeff,  SID, TID, NonFatal, &RT.CR_Diffusion_PerpCoeff,   1, NonFatal );
+   LoadField( "CR_Diffusion_MinB",       &RS.CR_Diffusion_MinB,       SID, TID, NonFatal, &RT.CR_Diffusion_MinB,        1, NonFatal );
+#  endif
+#  endif // #ifdef COSMIC_RAY
+
 // initialization
    LoadField( "Opt__Init",               &RS.Opt__Init,               SID, TID, NonFatal, &RT.Opt__Init,                1, NonFatal );
    LoadField( "RestartLoadNRank",        &RS.RestartLoadNRank,        SID, TID, NonFatal, &RT.RestartLoadNRank,         1, NonFatal );
@@ -2085,52 +2119,53 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "IntOppSign0thOrder",      &RS.IntOppSign0thOrder,      SID, TID, NonFatal, &RT.IntOppSign0thOrder,       1, NonFatal );
 
 // data dump
-   LoadField( "Opt__Output_Total",       &RS.Opt__Output_Total,       SID, TID, NonFatal, &RT.Opt__Output_Total,        1, NonFatal );
-   LoadField( "Opt__Output_Part",        &RS.Opt__Output_Part,        SID, TID, NonFatal, &RT.Opt__Output_Part,         1, NonFatal );
-   LoadField( "Opt__Output_User",        &RS.Opt__Output_User,        SID, TID, NonFatal, &RT.Opt__Output_User,         1, NonFatal );
+   LoadField( "Opt__Output_Total",           &RS.Opt__Output_Total,           SID, TID, NonFatal, &RT.Opt__Output_Total,           1, NonFatal );
+   LoadField( "Opt__Output_Part",            &RS.Opt__Output_Part,            SID, TID, NonFatal, &RT.Opt__Output_Part,            1, NonFatal );
+   LoadField( "Opt__Output_User",            &RS.Opt__Output_User,            SID, TID, NonFatal, &RT.Opt__Output_User,            1, NonFatal );
 #  ifdef PARTICLE
-   LoadField( "Opt__Output_Par_Mode",    &RS.Opt__Output_Par_Mode,    SID, TID, NonFatal, &RT.Opt__Output_Par_Mode,     1, NonFatal );
+   LoadField( "Opt__Output_Par_Mode",        &RS.Opt__Output_Par_Mode,        SID, TID, NonFatal, &RT.Opt__Output_Par_Mode,        1, NonFatal );
 #  endif
-   LoadField( "Opt__Output_BasePS",      &RS.Opt__Output_BasePS,      SID, TID, NonFatal, &RT.Opt__Output_BasePS,       1, NonFatal );
+   LoadField( "Opt__Output_BasePS",          &RS.Opt__Output_BasePS,          SID, TID, NonFatal, &RT.Opt__Output_BasePS,          1, NonFatal );
    if ( OPT__OUTPUT_PART )
-   LoadField( "Opt__Output_Base",        &RS.Opt__Output_Base,        SID, TID, NonFatal, &RT.Opt__Output_Base,         1, NonFatal );
+   LoadField( "Opt__Output_Base",            &RS.Opt__Output_Base,            SID, TID, NonFatal, &RT.Opt__Output_Base,            1, NonFatal );
 #  ifdef GRAVITY
-   LoadField( "Opt__Output_Pot",         &RS.Opt__Output_Pot,         SID, TID, NonFatal, &RT.Opt__Output_Pot,          1, NonFatal );
+   LoadField( "Opt__Output_Pot",             &RS.Opt__Output_Pot,             SID, TID, NonFatal, &RT.Opt__Output_Pot,             1, NonFatal );
 #  endif
 #  ifdef PARTICLE
-   LoadField( "Opt__Output_ParDens",     &RS.Opt__Output_ParDens,     SID, TID, NonFatal, &RT.Opt__Output_ParDens,      1, NonFatal );
+   LoadField( "Opt__Output_ParDens",         &RS.Opt__Output_ParDens,         SID, TID, NonFatal, &RT.Opt__Output_ParDens,         1, NonFatal );
 #  endif
 #  ifdef MHD
-   LoadField( "Opt__Output_CC_Mag",      &RS.Opt__Output_CC_Mag,      SID, TID, NonFatal, &RT.Opt__Output_CC_Mag,       1, NonFatal );
+   LoadField( "Opt__Output_CC_Mag",          &RS.Opt__Output_CC_Mag,          SID, TID, NonFatal, &RT.Opt__Output_CC_Mag,          1, NonFatal );
 #  endif
 #  if ( MODEL == HYDRO )
-   LoadField( "Opt__Output_Pres",        &RS.Opt__Output_Pres,        SID, TID, NonFatal, &RT.Opt__Output_Pres,         1, NonFatal );
-   LoadField( "Opt__Output_Temp",        &RS.Opt__Output_Temp,        SID, TID, NonFatal, &RT.Opt__Output_Temp,         1, NonFatal );
-   LoadField( "Opt__Output_Entr",        &RS.Opt__Output_Entr,        SID, TID, NonFatal, &RT.Opt__Output_Entr,         1, NonFatal );
-   LoadField( "Opt__Output_Cs",          &RS.Opt__Output_Cs,          SID, TID, NonFatal, &RT.Opt__Output_Cs,           1, NonFatal );
-   LoadField( "Opt__Output_DivVel",      &RS.Opt__Output_DivVel,      SID, TID, NonFatal, &RT.Opt__Output_DivVel,       1, NonFatal );
-   LoadField( "Opt__Output_Mach",        &RS.Opt__Output_Mach,        SID, TID, NonFatal, &RT.Opt__Output_Mach,         1, NonFatal );
+   LoadField( "Opt__Output_Pres",            &RS.Opt__Output_Pres,            SID, TID, NonFatal, &RT.Opt__Output_Pres,            1, NonFatal );
+   LoadField( "Opt__Output_Temp",            &RS.Opt__Output_Temp,            SID, TID, NonFatal, &RT.Opt__Output_Temp,            1, NonFatal );
+   LoadField( "Opt__Output_Entr",            &RS.Opt__Output_Entr,            SID, TID, NonFatal, &RT.Opt__Output_Entr,            1, NonFatal );
+   LoadField( "Opt__Output_Cs",              &RS.Opt__Output_Cs,              SID, TID, NonFatal, &RT.Opt__Output_Cs,              1, NonFatal );
+   LoadField( "Opt__Output_DivVel",          &RS.Opt__Output_DivVel,          SID, TID, NonFatal, &RT.Opt__Output_DivVel,          1, NonFatal );
+   LoadField( "Opt__Output_Mach",            &RS.Opt__Output_Mach,            SID, TID, NonFatal, &RT.Opt__Output_Mach,            1, NonFatal );
 #  ifdef MHD
-   LoadField( "Opt__Output_DivMag",      &RS.Opt__Output_DivMag,      SID, TID, NonFatal, &RT.Opt__Output_DivMag,       1, NonFatal );
+   LoadField( "Opt__Output_DivMag",          &RS.Opt__Output_DivMag,          SID, TID, NonFatal, &RT.Opt__Output_DivMag,          1, NonFatal );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
-   LoadField( "Opt__Output_UserField",   &RS.Opt__Output_UserField,   SID, TID, NonFatal, &RT.Opt__Output_UserField,    1, NonFatal );
+   LoadField( "Opt__Output_UserField",       &RS.Opt__Output_UserField,       SID, TID, NonFatal, &RT.Opt__Output_UserField,       1, NonFatal );
 #  ifdef PARTICLE
    if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_MODE ) {
 #  else
    if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS ) {
 #  endif
-   LoadField( "Opt__Output_Mode",        &RS.Opt__Output_Mode,        SID, TID, NonFatal, &RT.Opt__Output_Mode,         1, NonFatal );
-   LoadField( "Opt__Output_Restart",     &RS.Opt__Output_Restart,     SID, TID, NonFatal, &RT.Opt__Output_Restart,      1, NonFatal );
-   LoadField( "Opt__Output_Step",        &RS.Opt__Output_Step,        SID, TID, NonFatal, &RT.Opt__Output_Step,         1, NonFatal );
-   LoadField( "Opt__Output_Dt",          &RS.Opt__Output_Dt,          SID, TID, NonFatal, &RT.Opt__Output_Dt,           1, NonFatal );
+   LoadField( "Opt__Output_Mode",            &RS.Opt__Output_Mode,            SID, TID, NonFatal, &RT.Opt__Output_Mode,            1, NonFatal );
+   LoadField( "Opt__Output_Restart",         &RS.Opt__Output_Restart,         SID, TID, NonFatal, &RT.Opt__Output_Restart,         1, NonFatal );
+   LoadField( "Opt__Output_Step",            &RS.Opt__Output_Step,            SID, TID, NonFatal, &RT.Opt__Output_Step,            1, NonFatal );
+   LoadField( "Opt__Output_Dt",              &RS.Opt__Output_Dt,              SID, TID, NonFatal, &RT.Opt__Output_Dt,              1, NonFatal );
+   LoadField( "Opt__Output_Text_Format_Flt", &RS.Opt__Output_Text_Format_Flt, SID, TID, NonFatal,  RT.Opt__Output_Text_Format_Flt, 1, NonFatal );
    }
    if ( OPT__OUTPUT_PART ) {
-   LoadField( "Output_PartX",            &RS.Output_PartX,            SID, TID, NonFatal, &RT.Output_PartX,             1, NonFatal );
-   LoadField( "Output_PartY",            &RS.Output_PartY,            SID, TID, NonFatal, &RT.Output_PartY,             1, NonFatal );
-   LoadField( "Output_PartZ",            &RS.Output_PartZ,            SID, TID, NonFatal, &RT.Output_PartZ,             1, NonFatal );
+   LoadField( "Output_PartX",                &RS.Output_PartX,                SID, TID, NonFatal, &RT.Output_PartX,                1, NonFatal );
+   LoadField( "Output_PartY",                &RS.Output_PartY,                SID, TID, NonFatal, &RT.Output_PartY,                1, NonFatal );
+   LoadField( "Output_PartZ",                &RS.Output_PartZ,                SID, TID, NonFatal, &RT.Output_PartZ,                1, NonFatal );
    }
-   LoadField( "InitDumpID",              &RS.InitDumpID,              SID, TID, NonFatal, &RT.InitDumpID,               1, NonFatal );
+   LoadField( "InitDumpID",                  &RS.InitDumpID,                  SID, TID, NonFatal, &RT.InitDumpID,                  1, NonFatal );
 
 // miscellaneous
    LoadField( "Opt__Verbose",            &RS.Opt__Verbose,            SID, TID, NonFatal, &RT.Opt__Verbose,             1, NonFatal );
@@ -2171,8 +2206,11 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 // flag tables
 #  if   ( MODEL == HYDRO )
+#  ifndef COSMIC_RAY
+   const bool OPT__FLAG_LOHNER_CRAY = false;
+#  endif
    const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES ||
-                                  OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR );
+                                  OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR || OPT__FLAG_LOHNER_CRAY );
 #  elif ( MODEL == ELBDM )
    const bool Opt__FlagLohner = OPT__FLAG_LOHNER_DENS;
 #  else
@@ -2199,6 +2237,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
       RS.FlagTable_Jeans       [lv]    = -1.0;
 #     ifdef MHD
       RS.FlagTable_Current     [lv]    = -1.0;
+#     endif
+#     ifdef COSMIC_RAY
+      RS.FlagTable_CRay        [lv]    = -1.0;
 #     endif
 
 #     elif ( MODEL == ELBDM )
@@ -2257,6 +2298,11 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  ifdef MHD
    if ( OPT__FLAG_CURRENT )
    LoadField( "FlagTable_Current",        RS.FlagTable_Current,       SID, TID, NonFatal,  RT.FlagTable_Current,       N1, NonFatal );
+#  endif
+
+#  ifdef COSMIC_RAY
+   if ( OPT__FLAG_CRAY )
+   LoadField( "FlagTable_CRay",           RS.FlagTable_CRay,          SID, TID, NonFatal,  RT.FlagTable_CRay,          N1, NonFatal );
 #  endif
 
 #  elif ( MODEL == ELBDM )

@@ -76,7 +76,8 @@
 #define EOS_ISOTHERMAL  2
 #define EOS_NUCLEAR     3
 #define EOS_TABULAR     4
-#define EOS_USER        5
+#define EOS_COSMIC_RAY  5
+#define EOS_USER        6
 
 
 // Poisson solvers
@@ -999,6 +1000,21 @@
 
 // macro converting an array index (e.g., DENS) to bitwise index (e.g., _DENS=(1L<<DENS))
 #define BIDX( idx )     ( 1L << (idx) )
+
+
+// helper macro for printing warning messages when resetting parameters
+#  define FORMAT_INT       %- 21d
+#  define FORMAT_LONG      %- 21ld
+#  define FORMAT_UINT      %- 21u
+#  define FORMAT_ULONG     %- 21lu
+#  define FORMAT_BOOL      %- 21d
+#  define FORMAT_REAL      %- 21.14e
+#  define PRINT_RESET_PARA( name, format, reason )                                                       \
+   {                                                                                                     \
+      if ( MPI_Rank == 0 )                                                                               \
+         Aux_Message( stderr, "WARNING : parameter [%-30s] is reset to [" EXPAND_AND_QUOTE(format) "] "  \
+                              "%s\n", #name, name, reason );                                             \
+   }
 
 
 // ################################

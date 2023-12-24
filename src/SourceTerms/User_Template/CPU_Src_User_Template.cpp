@@ -268,11 +268,6 @@ void Src_SetConstMemory_User_Template( const double AuxArray_Flt[], const int Au
 
 #ifndef __CUDACC__
 
-// function pointer
-extern void (*Src_WorkBeforeMajorFunc_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                                                 double AuxArray_Flt[], int AuxArray_Int[] );
-extern void (*Src_End_User_Ptr)();
-
 //-----------------------------------------------------------------------------------------
 // Function    :  Src_Init_User_Template
 // Description :  Initialize a user-specified source term

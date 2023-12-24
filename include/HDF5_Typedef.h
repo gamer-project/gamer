@@ -67,6 +67,9 @@ struct KeyInfo_t
    long   Par_NPar;                 // amr->Par->NPar_Active_AllRank
    int    Par_NAttStored;           // PAR_NATT_STORED
 #  endif
+#  ifdef COSMIC_RAY
+   int    CR_Diffusion;
+#  endif
 
    double BoxSize[3];
    double Time       [NLEVEL];
@@ -161,6 +164,10 @@ struct Makefile_t
    int StarFormation;
    int Feedback;
    int Par_NAttUser;
+#  endif
+
+#  ifdef COSMIC_RAY
+   int CR_Diffusion;
 #  endif
 
 }; // struct Makefile_t
@@ -409,6 +416,9 @@ struct InputPara_t
    double Dt__ParVelMax;
    double Dt__ParAcc;
 #  endif
+#  ifdef CR_DIFFUSION
+   double Dt__CR_Diffusion;
+#  endif
 #  ifdef COMOVING
    double Dt__MaxDeltaA;
 #  endif
@@ -443,6 +453,9 @@ struct InputPara_t
 #  ifdef MHD
    int    Opt__Flag_Current;
 #  endif
+#  ifdef COSMIC_RAY
+   int    Opt__Flag_CRay;
+#  endif
 #  endif
 #  if ( MODEL == ELBDM )
    int    Opt__Flag_EngyDensity;
@@ -453,6 +466,9 @@ struct InputPara_t
    int    Opt__Flag_LohnerPres;
    int    Opt__Flag_LohnerTemp;
    int    Opt__Flag_LohnerEntr;
+#  ifdef COSMIC_RAY
+   int    Opt__Flag_LohnerCRay;
+#  endif
 #  endif
    int    Opt__Flag_LohnerForm;
    int    Opt__Flag_User;
@@ -515,10 +531,12 @@ struct InputPara_t
    int    Flu_GPU_NPGroup;
    int    GPU_NStream;
    int    Opt__FixUp_Flux;
+   long   FixUpFlux_Var;
 #  ifdef MHD
    int    Opt__FixUp_Electric;
 #  endif
    int    Opt__FixUp_Restrict;
+   long   FixUpRestrict_Var;
    int    Opt__CorrAfterAllSync;
    int    Opt__NormalizePassive;
    int    NormalizePassive_NVar;
@@ -618,6 +636,18 @@ struct InputPara_t
    int   FB_User;
 #  endif
 
+// cosmic ray
+#  ifdef COSMIC_RAY
+   double CR_Gamma;
+#  endif
+
+// microphysics
+#  ifdef CR_DIFFUSION
+   double CR_Diffusion_ParaCoeff;
+   double CR_Diffusion_PerpCoeff;
+   double CR_Diffusion_MinB;
+#  endif
+
 // initialization
    int    Opt__Init;
    int    RestartLoadNRank;
@@ -702,6 +732,7 @@ struct InputPara_t
    int    Opt__Output_Restart;
    int    Opt__Output_Step;
    double Opt__Output_Dt;
+   char  *Opt__Output_Text_Format_Flt;
    double Output_PartX;
    double Output_PartY;
    double Output_PartZ;
@@ -754,6 +785,9 @@ struct InputPara_t
    double FlagTable_Jeans       [NLEVEL-1];
 #  ifdef MHD
    double FlagTable_Current     [NLEVEL-1];
+#  endif
+#  ifdef COSMIC_RAY
+   double FlagTable_CRay        [NLEVEL-1];
 #  endif
 #  elif ( MODEL == ELBDM )
    double FlagTable_EngyDensity [NLEVEL-1][2];

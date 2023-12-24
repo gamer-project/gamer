@@ -97,8 +97,8 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 
    int  *List_PID    [MPI_NRank];   // PID of each patch slice sent to each rank
    int  *List_k      [MPI_NRank];   // local z coordinate of each patch slice sent to each rank
-   int   List_NSend  [MPI_NRank];   // size of data sent to each rank
-   int   List_NRecv  [MPI_NRank];   // size of data received from each rank
+   long  List_NSend  [MPI_NRank];   // size of data sent to each rank
+   long  List_NRecv  [MPI_NRank];   // size of data received from each rank
    const bool ForPoisson  = false;  // preparing the density field for the Poisson solver
    const bool InPlacePad  = true;   // pad the array for in-place real-to-complex FFT
 
@@ -149,12 +149,16 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
       const double WaveK0 = 2.0*M_PI/amr->BoxSize[0];
       FILE *File = fopen( FileName, "w" );
 
-      fprintf( File, "# average value (DC) used for normalization = %13.7e\n", NormDC );
+      fprintf( File, "# average value (DC) used for normalization = %20.14e\n", NormDC );
       fprintf( File, "\n" );
-      fprintf( File, "#%12s%4s%13s\n", "k", "", "Power" );
+      fprintf( File, "#%*s %*s\n", StrLen_Flt, "k", StrLen_Flt, "Power" );
 
 //    DC mode is not output
-      for (int b=1; b<Nx_Padded; b++)     fprintf( File, "%13.6e%4s%13.6e\n", WaveK0*b, "", PS_total[b] );
+      for (int b=1; b<Nx_Padded; b++) {
+         fprintf( File, BlankPlusFormat_Flt, WaveK0*b );
+         fprintf( File, BlankPlusFormat_Flt, PS_total[b] );
+         fprintf( File, "\n");
+      }
 
       fclose( File );
    } // if ( MPI_Rank == 0 )

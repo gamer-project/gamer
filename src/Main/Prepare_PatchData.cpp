@@ -381,7 +381,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 // TVarCCIdxList_Flu: list recording the target cell-centered fluid and passive variable indices (e.g., [0 ... NCOMP_TOTAL-1] )
 // TVarCCList_Der   : list recording the target cell-centered derived variable (e.g., _VELX, _PRES)
 // TVarFCIdxList    : list recording the target face-centered variable indices (e.g., [0 ... NCOMP_MAG-1])
-   int NTSib[26], *TSib[26], NVarCC_Flu, NVarCC_Der, NVarCC_Tot, TVarCCIdxList_Flu[NCOMP_TOTAL];
+   const int NVarCC_Der_Max = 20;   // increase it when the maximum number of derived fields exceeds it
+   long TVarCCList_Der[NVarCC_Der_Max];
+   int  NTSib[26], *TSib[26], NVarCC_Flu, NVarCC_Der, NVarCC_Tot, TVarCCIdxList_Flu[NCOMP_TOTAL];
 
 // set up the target sibling indices for InterpolateGhostZone()
    SetTargetSibling( NTSib, TSib );
@@ -396,9 +398,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    NVarCC_Der = 0;
 
 #  if   ( MODEL == HYDRO )
-   const int NVarCC_Der_Max = 9;
-   long TVarCCList_Der[NVarCC_Der_Max];
-
    if ( PrepVx      )   TVarCCList_Der[ NVarCC_Der ++ ] = _VELX;
    if ( PrepVy      )   TVarCCList_Der[ NVarCC_Der ++ ] = _VELY;
    if ( PrepVz      )   TVarCCList_Der[ NVarCC_Der ++ ] = _VELZ;
@@ -414,12 +413,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
-   const int NVarCC_Der_Max = 0;
-   long *TVarCCList_Der = NULL;
 
 #  else
 #  error : unsupported MODEL !!
 #  endif
+
+   if ( NVarCC_Der > NVarCC_Der_Max )  Aux_Error( ERROR_INFO, "NVarCC_Der (%d) > NVarCC_Der_Max (%d) !!\n", NVarCC_Der, NVarCC_Der_Max );
 
    NVarCC_Tot = NVarCC_Flu + NVarCC_Der;
 
@@ -647,7 +646,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 
 //    sort PID list and remove duplicate patches
-      Mis_Heapsort( ParMass_NPatch_Dup, ParMass_PID_List, NULL );
+      Mis_Heapsort<int,int>( ParMass_NPatch_Dup, ParMass_PID_List, NULL );
 
       ParMass_NPatch = ( ParMass_NPatch_Dup > 0 ) ? 1 : 0;
 

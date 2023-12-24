@@ -86,10 +86,11 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
       fprintf( File, "\n" );
 
 
+
 //    output cell-centered fluid data
       fprintf( File, "\n" );
       fprintf( File, "===========================\n" );
-      fprintf( File, "== FLUID (cell-centered) == \n" );
+      fprintf( File, "== FLUID (cell-centered) ==\n" );
       fprintf( File, "===========================\n" );
       fprintf( File, "\n" );
 
@@ -97,13 +98,13 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
       fprintf( File, "(%3s,%3s,%3s )", "i", "j", "k" );
 
 #     if ( MODEL == ELBDM )
-      fprintf( File, "%16s%16s", FieldLabel[REAL], FieldLabel[IMAG] );
+      fprintf( File, " %*s %*s", StrLen_Flt, FieldLabel[REAL], StrLen_Flt, FieldLabel[IMAG] );
 
 #     else
-      for (int v=0; v<FLU_NIN; v++)    fprintf( File, "%16s", FieldLabel[v] );
+      for (int v=0; v<FLU_NIN; v++)    fprintf( File, " %*s", StrLen_Flt, FieldLabel[v] );
 
 #     if ( MODEL == HYDRO )
-      fprintf( File, "%16s", "Pressure" );
+      fprintf( File, " %*s", StrLen_Flt, "Pressure" );
 #     endif
 #     endif // MODEL
 
@@ -128,7 +129,7 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
          fprintf( File, "(%3d,%3d,%3d )", i, j, k );
 
 //       all variables in the prepared fluid array
-         for (int v=0; v<FLU_NIN; v++)    fprintf( File, "  %14.7e", u[v] );
+         for (int v=0; v<FLU_NIN; v++)   fprintf( File, BlankPlusFormat_Flt, u[v] );
 
 //       pressure in HYDRO
 #        if ( MODEL == HYDRO )
@@ -141,10 +142,10 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
 #        else
          const real Emag = NULL_REAL;
 #        endif
-         fprintf( File, "  %14.7e", Hydro_Con2Pres(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],u+NCOMP_FLUID,
-                                                   CheckMinPres_No,NULL_REAL,Emag,
-                                                   EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                                   h_EoS_Table, NULL) );
+         fprintf( File, BlankPlusFormat_Flt, Hydro_Con2Pres(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],u+NCOMP_FLUID,
+                                                            CheckMinPres_No,NULL_REAL,Emag,
+                                                            EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                            h_EoS_Table, NULL) );
 #        endif // #if ( MODEL == HYDRO )
 
          fprintf( File, "\n" );
@@ -155,13 +156,13 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
 #     ifdef MHD
       fprintf( File, "\n" );
       fprintf( File, "====================================\n" );
-      fprintf( File, "== MAGNETIC FIELD (face-centered) == \n" );
+      fprintf( File, "== MAGNETIC FIELD (face-centered) ==\n" );
       fprintf( File, "====================================\n" );
       fprintf( File, "\n" );
 
 //    header
       fprintf( File, "(%3s,%3s,%3s )", "i", "j", "k" );
-      for (int v=0; v<NCOMP_MAG; v++)  fprintf( File, "%16s", MagLabel[v] );
+      for (int v=0; v<NCOMP_MAG; v++)  fprintf( File, " %*s", StrLen_Flt, MagLabel[v] );
       fprintf( File, "\n" );
 
       for (int k=-FLU_GHOST_SIZE; k<FLU_GHOST_SIZE+PS1P1; k++)  {  K = k + Disp_k;
@@ -173,21 +174,21 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
 
 //       B_X
          if ( j != FLU_GHOST_SIZE+PS1  &&  k != FLU_GHOST_SIZE+PS1 )
-            fprintf( File, "  %14.7e", h_Mag_Array[TID][MAGX][ IDX321_BX(I,J,K,FLU_NXT,FLU_NXT) ] );
+            fprintf( File, BlankPlusFormat_Flt, h_Mag_Array[TID][MAGX][ IDX321_BX(I,J,K,FLU_NXT,FLU_NXT) ] );
          else
-            fprintf( File, "  %14s", "" );
+            fprintf( File, " %*s", StrLen_Flt, "" );
 
 //       B_Y
          if ( i != FLU_GHOST_SIZE+PS1  &&  k != FLU_GHOST_SIZE+PS1 )
-            fprintf( File, "  %14.7e", h_Mag_Array[TID][MAGY][ IDX321_BY(I,J,K,FLU_NXT,FLU_NXT) ] );
+            fprintf( File, BlankPlusFormat_Flt, h_Mag_Array[TID][MAGY][ IDX321_BY(I,J,K,FLU_NXT,FLU_NXT) ] );
          else
-            fprintf( File, "  %14s", "" );
+            fprintf( File, " %*s", StrLen_Flt, "" );
 
 //       B_Z
          if ( i != FLU_GHOST_SIZE+PS1  &&  j != FLU_GHOST_SIZE+PS1 )
-            fprintf( File, "  %14.7e", h_Mag_Array[TID][MAGZ][ IDX321_BZ(I,J,K,FLU_NXT,FLU_NXT) ] );
+            fprintf( File, BlankPlusFormat_Flt, h_Mag_Array[TID][MAGZ][ IDX321_BZ(I,J,K,FLU_NXT,FLU_NXT) ] );
          else
-            fprintf( File, "  %14s", "" );
+            fprintf( File, " %*s", StrLen_Flt, "" );
 
          fprintf( File, "\n" );
       }}} // i,j,k
