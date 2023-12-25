@@ -155,6 +155,12 @@ void Init_ByRestart_HDF5( const char *FileName )
       if ( KeyInfo.FormatVersion < 2400 )
          Aux_Error( ERROR_INFO, "unsupported data format version for MHD (only support version >= 2400) !!\n" );
 #     endif
+
+#     ifdef SRHD
+      if ( KeyInfo.FormatVersion < 2473 )
+         Aux_Error( ERROR_INFO, "unsupported data format version for SRHD (only support version >= 2473) !!\n" );
+#     endif
+
    }
 
    MPI_Barrier( MPI_COMM_WORLD );
@@ -197,6 +203,9 @@ void Init_ByRestart_HDF5( const char *FileName )
    if ( KeyInfo.FormatVersion >= 2400 )
    {
       LoadField( "Magnetohydrodynamics", &KeyInfo.Magnetohydrodynamics, H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Magnetohydrodynamics,  1,    Fatal );
+   }
+   if ( KeyInfo.FormatVersion >= 2473 )
+   {
       LoadField( "SRHydrodynamics",      &KeyInfo.SRHydrodynamics,      H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &SRHydrodynamics,       1,    Fatal );
    }
 

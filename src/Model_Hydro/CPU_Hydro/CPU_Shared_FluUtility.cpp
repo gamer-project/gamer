@@ -43,8 +43,6 @@ real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, cons
                        const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                        const real *const EoS_Table[EOS_NTABLE_MAX] );
 
-GPU_DEVICE
-void Hydro_HTildeFunction (real HTilde, void *params, real *Func, real *DiffFunc );
 #endif
 #endif
 
@@ -64,6 +62,8 @@ struct Hydro_HTildeFunction_params_s{
    const int *EoS_AuxArray_Int;     // Auxiliary arrays for EoS_HTilde2Temp
    const real *const *EoS_Table;    // EoS tables for EoS_HTilde2Temp
 };
+GPU_DEVICE
+void Hydro_HTildeFunction (real HTilde, void *params, real *Func, real *DiffFunc );
 #endif
 
 

@@ -2227,6 +2227,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Flag_Current       = OPT__FLAG_CURRENT;
 #  endif
 #  ifdef SRHD
+   InputPara.Dt__SpeedOfLight        = DT__SPEED_OF_LIGHT;
    InputPara.Opt__Flag_LrtzGradient  = OPT__FLAG_LRTZ_GRADIENT;
 #  endif
 #  ifdef COSMIC_RAY

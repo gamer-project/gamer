@@ -424,6 +424,9 @@ struct InputPara_t
 #  ifdef COMOVING
    double Dt__MaxDeltaA;
 #  endif
+#  ifdef SRHD
+   double Dt__SpeedOfLight;
+#  endif
    double Dt__SyncParentLv;
    double Dt__SyncChildrenLv;
    int    Opt__DtUser;
