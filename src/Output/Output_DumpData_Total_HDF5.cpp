@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2471)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2472)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -244,7 +244,8 @@ Procedure for outputting new variables:
 //                2469 : 2023/09/09 --> output MHM_CHECK_PREDICT
 //                2470 : 2023/10/16 --> output OPT__OUTPUT_TEXT_FORMAT_FLT
 //                2471 : 2023/11/09 --> output cosmic-ray options
-//                2472 : 2023/11/29 --> output SRHD options and fields
+//                2472 : 2023/11/11 --> output FixUpVar_Flux and FixUpVar_Restrict
+//                2473 : 2023/11/29 --> output SRHD options and fields
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -2306,10 +2307,12 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Flu_GPU_NPGroup         = FLU_GPU_NPGROUP;
    InputPara.GPU_NStream             = GPU_NSTREAM;
    InputPara.Opt__FixUp_Flux         = OPT__FIXUP_FLUX;
+   InputPara.FixUpFlux_Var           = FixUpVar_Flux;
 #  ifdef MHD
    InputPara.Opt__FixUp_Electric     = OPT__FIXUP_ELECTRIC;
 #  endif
    InputPara.Opt__FixUp_Restrict     = OPT__FIXUP_RESTRICT;
+   InputPara.FixUpRestrict_Var       = FixUpVar_Restrict;
    InputPara.Opt__CorrAfterAllSync   = OPT__CORR_AFTER_ALL_SYNC;
    InputPara.Opt__NormalizePassive   = OPT__NORMALIZE_PASSIVE;
 
@@ -3232,10 +3235,12 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Flu_GPU_NPGroup",         HOFFSET(InputPara_t,Flu_GPU_NPGroup        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "GPU_NStream",             HOFFSET(InputPara_t,GPU_NStream            ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__FixUp_Flux",         HOFFSET(InputPara_t,Opt__FixUp_Flux        ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "FixUpFlux_Var",           HOFFSET(InputPara_t,FixUpFlux_Var          ), H5T_NATIVE_LONG    );
 #  ifdef MHD
    H5Tinsert( H5_TypeID, "Opt__FixUp_Electric",     HOFFSET(InputPara_t,Opt__FixUp_Electric    ), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__FixUp_Restrict",     HOFFSET(InputPara_t,Opt__FixUp_Restrict    ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "FixUpRestrict_Var",       HOFFSET(InputPara_t,FixUpRestrict_Var      ), H5T_NATIVE_LONG    );
    H5Tinsert( H5_TypeID, "Opt__CorrAfterAllSync",   HOFFSET(InputPara_t,Opt__CorrAfterAllSync  ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__NormalizePassive",   HOFFSET(InputPara_t,Opt__NormalizePassive  ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "NormalizePassive_NVar",   HOFFSET(InputPara_t,NormalizePassive_NVar  ), H5T_NATIVE_INT     );

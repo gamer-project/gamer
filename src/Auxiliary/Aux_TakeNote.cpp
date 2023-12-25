@@ -1120,10 +1120,28 @@ void Aux_TakeNote()
       fprintf( Note, "FLU_GPU_NPGROUP                 %d\n",      FLU_GPU_NPGROUP          );
       fprintf( Note, "GPU_NSTREAM                     %d\n",      GPU_NSTREAM              );
       fprintf( Note, "OPT__FIXUP_FLUX                 %d\n",      OPT__FIXUP_FLUX          );
+
+//    target scalars to be applied fix-up flux operations
+      if ( OPT__FIXUP_FLUX ) {
+      fprintf( Note, "   Target fields               "                                     );
+      for (int v=0; v<NCOMP_TOTAL; v++)
+      if ( FixUpVar_Flux & (1L<<v) )
+      fprintf( Note, " %s",                                       FieldLabel[v]            );
+      fprintf( Note, "\n" ); }
+
 #     ifdef MHD
       fprintf( Note, "OPT__FIXUP_ELECTRIC             %d\n",      OPT__FIXUP_ELECTRIC      );
 #     endif
       fprintf( Note, "OPT__FIXUP_RESTRICT             %d\n",      OPT__FIXUP_RESTRICT      );
+
+//    target scalars to be applied fix-up restrict operations
+      if ( OPT__FIXUP_RESTRICT ) {
+      fprintf( Note, "   Target fields               "                                     );
+      for (int v=0; v<NCOMP_TOTAL; v++)
+      if ( FixUpVar_Restrict & (1L<<v) )
+      fprintf( Note, " %s",                                       FieldLabel[v]            );
+      fprintf( Note, "\n" ); }
+
       fprintf( Note, "OPT__CORR_AFTER_ALL_SYNC        %d\n",      OPT__CORR_AFTER_ALL_SYNC );
       fprintf( Note, "OPT__NORMALIZE_PASSIVE          %d\n",      OPT__NORMALIZE_PASSIVE   );
 

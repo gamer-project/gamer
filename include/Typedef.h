@@ -431,6 +431,16 @@ const OptTimeStepLevel_t
 
 
 // AddField() options
+typedef int FixUpFlux_t;
+const FixUpFlux_t
+   FIXUP_FLUX_NO  = 0,
+   FIXUP_FLUX_YES = 1;
+
+typedef int FixUpRestrict_t;
+const FixUpRestrict_t
+   FIXUP_REST_NO  = 0,
+   FIXUP_REST_YES = 1;
+
 typedef int NormPassive_t;
 const NormPassive_t
    NORMALIZE_NO  = 0,

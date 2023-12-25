@@ -12,9 +12,14 @@
 //                   Buf_GetBufferData()
 //                2. Invoked by EvolveLevel()
 //
-// Parameter   :  lv : Target coarse level
+// Parameter   :  lv   : Target coarse level
+//                TVar : Target variables
+//                       --> Supported variables in different models:
+//                           HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY [, BIDX(field_index)]
+//                           ELBDM : _DENS
+//                       --> _FLUID, _PASSIVE, and _TOTAL apply to all models
 //-------------------------------------------------------------------------------------------------------
-void Flu_FixUp_Flux( const int lv )
+void Flu_FixUp_Flux( const int lv, const long TVar )
 {
 
    const bool CheckMinPres_No = false;
@@ -144,7 +149,11 @@ void Flu_FixUp_Flux( const int lv )
 //             calculate the corrected results
 //             --> do NOT **store** these results yet since we want to skip the cells with unphysical results
                real CorrVal[NFLUX_TOTAL];    // values after applying the flux correction
-               for (int v=0; v<NFLUX_TOTAL; v++)   CorrVal[v] = *FluidPtr1D[v] + FluxPtr[v][m][n]*Const[s];
+               for (int v=0; v<NFLUX_TOTAL; v++)
+               {
+                  if ( TVar & BIDX(v) )   CorrVal[v] = *FluidPtr1D[v] + FluxPtr[v][m][n]*Const[s];
+                  else                    CorrVal[v] = *FluidPtr1D[v];
+               }
 
 
 //             calculate the internal energy density and pressure
@@ -262,7 +271,8 @@ void Flu_FixUp_Flux( const int lv )
                {
 //                floor and normalize the passive scalars
 #                 if ( NCOMP_PASSIVE > 0  &&  MODEL == HYDRO )
-                  for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+                  for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+                     if ( TVar & BIDX(v) )   CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
 
                   if ( OPT__NORMALIZE_PASSIVE )
                      Hydro_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
@@ -295,7 +305,10 @@ void Flu_FixUp_Flux( const int lv )
 
 
 //                store the corrected results
-                  for (int v=0; v<NFLUX_TOTAL; v++)   *FluidPtr1D[v] = CorrVal[v];
+                  for (int v=0; v<NFLUX_TOTAL; v++)
+                  {
+                     if ( TVar & BIDX(v) )   *FluidPtr1D[v] = CorrVal[v];
+                  }
 
 
 //                rescale the real and imaginary parts to be consistent with the corrected amplitude

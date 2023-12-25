@@ -491,8 +491,8 @@ void AddNewField_Plummer()
 
    if ( Plummer_AddColor )
    {
-      Plummer_Idx_Cloud0 = AddField( "Cloud0", NORMALIZE_YES, INTERP_FRAC_YES );
-      Plummer_Idx_Cloud1 = AddField( "Cloud1", NORMALIZE_YES, INTERP_FRAC_YES );
+      Plummer_Idx_Cloud0 = AddField( "Cloud0", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+      Plummer_Idx_Cloud1 = AddField( "Cloud1", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_YES, INTERP_FRAC_YES );
    }
 
 } // FUNCTION : AddNewField_Plummer
