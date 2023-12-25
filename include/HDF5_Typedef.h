@@ -425,7 +425,7 @@ struct InputPara_t
    double Dt__MaxDeltaA;
 #  endif
 #  ifdef SRHD
-   double Dt__SpeedOfLight;
+   int    Dt__SpeedOfLight;
 #  endif
    double Dt__SyncParentLv;
    double Dt__SyncChildrenLv;

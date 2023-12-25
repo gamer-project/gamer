@@ -82,12 +82,12 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  if ( MODEL == HYDRO )
 #  ifdef MHD
    const int  Magnetohydrodynamics = 1;
-   const int  SRHydrodynamics      = 0;
-#  elif ( defined SRHD )
-   const int  Magnetohydrodynamics = 0;
-   const int  SRHydrodynamics      = 1;
 #  else
    const int  Magnetohydrodynamics = 0;
+#  endif
+#  ifdef SRHD
+   const int  SRHydrodynamics      = 1;
+#  else
    const int  SRHydrodynamics      = 0;
 #  endif
 #  ifdef COSMIC_RAY
