@@ -2036,6 +2036,7 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
 //                3. Input variables must be conserved variables
 //
 // Parameter   :  fcCon             : Face-centered conserved variables to be updated
+//                fcPri             : Face-centered primitive variables to be updated
 //                dt                : Time interval to advance solution
 //                dh                : Cell size
 //                g_cc_array        : Array storing the cell-centered conserved variables for checking

@@ -153,7 +153,6 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #     endif
 #     ifdef SRHD
       if ( OPT__FLAG_LRTZ_GRADIENT )         Lrtz     = new real    [PS1][PS1][PS1];
-      NeedPres = true;
 #     endif
       if ( OPT__FLAG_VORTICITY )             Vel      = new real [3][PS1][PS1][PS1];
       if ( NeedPres )                        Pres     = new real    [PS1][PS1][PS1];

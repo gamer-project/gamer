@@ -789,6 +789,13 @@
 #  define __DBL_MIN__            2.22507386e-308
 #endif
 
+#ifndef __FLT_EPSILON__
+#  define __FLT_EPSILON__ 1.19209290e-07F
+#endif
+
+#ifndef __DBL_EPSILON__
+#  define __DBL_EPSILON__ 2.2204460492503131e-16
+#endif
 
 // extreme value used for various purposes (e.g., floor value for passive scalars)
 #ifdef FLOAT8

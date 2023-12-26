@@ -76,47 +76,52 @@ GPU_DEVICE_NOINLINE
 static real EoS_GuessHTilde_TaubMathews( const real Con[], real* const Constant, const double AuxArray_Flt[],
                                          const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
 {
-  real GuessHTilde, Discrimination;
+   real GuessHTilde, Discrimination;
 
-  real Msqr = SQR(Con[1]) + SQR(Con[2]) + SQR(Con[3]);
-  real Dsqr = SQR(Con[0]);
-  real abc = (real)1.0 / Dsqr;
-  real E_D = Con[4] / Con[0];
-  real M_Dsqr = abc * Msqr;
-  real M_D = SQRT( M_Dsqr );
+   real Msqr = SQR(Con[1]) + SQR(Con[2]) + SQR(Con[3]);
+   real Dsqr = SQR(Con[0]);
+   real abc = (real)1.0 / Dsqr;
+   real E_D = Con[4] / Con[0];
+   real M_Dsqr = abc * Msqr;
+   real M_D = SQRT( M_Dsqr );
 
-  // note that replacing a^2-b^2 with (a+b)*(a-b) helps alleviate a catastrophic cancellation
-  real X = SQRT( E_D*E_D + (real)2.0*E_D );
-  real Y = X + M_D;
-  real Z = X - M_D;
-  *Constant = Y * Z;
+   // note that replacing a^2-b^2 with (a+b)*(a-b) helps alleviate a catastrophic cancellation
+   real X = SQRT( E_D*E_D + (real)2.0*E_D );
+   real Y = X + M_D;
+   real Z = X - M_D;
+   *Constant = Y * Z;
 
+#  ifdef GAMER_DEBUG
+   if ( *Constant <= (real)TINY_NUMBER )
+      printf( "ERROR : f(HTilde) = %14.7e <= %13.7e (D %13.7e, E_D %13.7e, M_D %13.7e) in %s !!\n",
+              *Constant, TINY_NUMBER, Con[0], E_D, M_D, __FUNCTION__ );
+#  endif
 
-  real A = (real)437.0 * M_Dsqr + (real)117.0;
-  real B = (real)1.0 + M_Dsqr;
+   real A = (real)437.0 * M_Dsqr + (real)117.0;
+   real B = (real)1.0 + M_Dsqr;
 
-  // Eq. A7 in "Tseng et al. 2021, MNRAS, 504, 3298"
-  Discrimination  = (real)3240000.0 * SQR( B );
-  Discrimination /= SQR( A );
+   // Eq. A7 in "Tseng et al. 2021, MNRAS, 504, 3298"
+   Discrimination  = (real)3240000.0 * SQR( B );
+   Discrimination /= SQR( A );
 
+   if ( *Constant >= Discrimination )
+   {
+      // Eq. A6 in "Tseng et al. 2021, MNRAS, 504, 3298"
+      GuessHTilde  = (real)4./3. * SQRT( *Constant );
+   }
+   else
+   {
+      // Eq. A4 in "Tseng et al. 2021, MNRAS, 504, 3298"
+      real C       = (real)43.0*M_Dsqr + (real)63.0;
+      real F       = (real)75.0*B;
+      real G       = (real)125.0*B*C*(*Constant);  
+      GuessHTilde  = SQRT(G);
+      GuessHTilde /= C*(F+SQRT(G+F*F));
+   }
 
-  if ( *Constant >= Discrimination )
-  {
-     // Eq. A6 in "Tseng et al. 2021, MNRAS, 504, 3298"
-     GuessHTilde  = (real)4./3. * SQRT( *Constant );
-  }
-  else
-  {
-     // Eq. A4 in "Tseng et al. 2021, MNRAS, 504, 3298"
-     real C       = (real)43.0*M_Dsqr + (real)63.0;
-     real F       = (real)75.0*B;
-     real G       = (real)125.0*B*C*(*Constant);  
-     GuessHTilde  = SQRT(G);
-     GuessHTilde /= C*(F+SQRT(G+F*F));
-  }
-
-  return GuessHTilde;
+   return GuessHTilde;
 }
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_HTilde2Temp_TaubMathews
 // Description :  Convert reduced enthalpy to temperature
@@ -213,6 +218,11 @@ static real EoS_Temper2CSqr_TaubMathews( const real Rho, const real Pres, const 
    Cs2  = (real) 4.5*SQR(Temp) + (real) 5.0 * Temp * factor;
    Cs2 /= (real)18.0*SQR(Temp) + (real)12.0 * Temp * factor + (real)3.0;
 
+#  ifdef GAMER_DEBUG
+   if ( Cs2 >= (real)1.0  ||  Cs2 < (real)0.0 )
+      printf( "ERROR : incorrect sound speed squared %14.7e (Dens %13.7e, Pres %13.7e) in %s !!\n",
+              Cs2, Rho, Pres, __FUNCTION__ );
+#  endif
 
    return Cs2;
 
