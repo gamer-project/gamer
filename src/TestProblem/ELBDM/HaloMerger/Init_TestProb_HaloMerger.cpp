@@ -27,6 +27,10 @@ static real    *IC1_Data = NULL;
 // =======================================================================================
 
 
+static void HaloMerger_Add_Velocity( double *RealPart, double *ImagPart,
+                                     const double Velocity_X, const double Velocity_Y, const double Velocity_Z,
+                                     const double Position_X, const double Position_Y, const double Position_Z );
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -436,10 +440,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
             double Imag_zyx = Imag_zy0 + ( Imag_zy1- Imag_zy0)/(Interpolation_x1 - Interpolation_x0)*(x - Interpolation_x0);
 
             // add velocity
-            double Phase = ELBDM_ETA*( HaloMerger_Halo_Velocity[0][0]*x + HaloMerger_Halo_Velocity[0][1]*y + HaloMerger_Halo_Velocity[0][2]*z );
+            HaloMerger_Add_Velocity( &Real_zyx, &Imag_zyx, HaloMerger_Halo_Velocity[0][0], HaloMerger_Halo_Velocity[0][1], HaloMerger_Halo_Velocity[0][2], x, y, z );
 
-            Real += Real_zyx * cos(Phase) - Imag_zyx * sin(Phase);
-            Imag += Real_zyx * sin(Phase) + Imag_zyx * cos(Phase);
+            // add the wavefunction to the box
+            Real += Real_zyx;
+            Imag += Imag_zyx;
          }
 
          break;
@@ -528,3 +533,44 @@ void Init_TestProb_ELBDM_HaloMerger()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_TestProb_ELBDM_HaloMerger
+
+
+
+#if ( MODEL == ELBDM )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  HaloMerger_Add_Velocity
+// Description :  Multiply the wave function by a plane wave wave function with a specific velocity
+//
+// Note        :  1.
+//
+// Parameter   :  RealPart
+//                ImagPart
+//                Velocity_X
+//                Velocity_Y
+//                Velocity_Z
+//                Position_X
+//                Position_Y
+//                Position_Z
+// Return      :  RealPart
+//                ImagPart
+//-------------------------------------------------------------------------------------------------------
+void HaloMerger_Add_Velocity( double *RealPart, double *ImagPart,
+                              const double Velocity_X, const double Velocity_Y, const double Velocity_Z,
+                              const double Position_X, const double Position_Y, const double Position_Z )
+{
+   const double Real_Old = *RealPart;
+   const double Imag_Old = *ImagPart;
+
+   // Phase = kx = (m*v/hbar)*x = eta*v*x
+   const double Phase = ELBDM_ETA*( Velocity_X*Position_X + Velocity_Y*Position_Y + Velocity_Z*Position_Z );
+
+   // psi_new = psi_old * exp(i*Phase) = (R_old + i*I_old)*(cos(Phase) + i*sin(Phase))
+   const double Real_New = Real_Old * cos(Phase) - Imag_Old * sin(Phase);
+   const double Imag_New = Real_Old * sin(Phase) + Imag_Old * cos(Phase);
+
+   // return the updated wave function
+   *RealPart = Real_New;
+   *ImagPart = Imag_New;
+
+} // FUNCTION : HaloMerger_Add_Velocity
+#  endif // if ( MODEL == ELBDM )
