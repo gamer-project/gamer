@@ -39,6 +39,7 @@ void Init_TestProb_ELBDM_GaussianWavePacket();
 void Init_TestProb_ELBDM_LSS();
 void Init_TestProb_ELBDM_PlaneWave();
 void Init_TestProb_ELBDM_Perturbation();
+void Init_TestProb_ELBDM_HaloMerger();
 
 
 
@@ -99,6 +100,7 @@ void Init_TestProb()
       case TESTPROB_ELBDM_LSS :                          Init_TestProb_ELBDM_LSS();                         break;
       case TESTPROB_ELBDM_PLANE_WAVE :                   Init_TestProb_ELBDM_PlaneWave();                   break;
       case TESTPROB_ELBDM_PERTURBATION :                 Init_TestProb_ELBDM_Perturbation();                break;
+      case TESTPROB_ELBDM_HALO_MERGER :                  Init_TestProb_ELBDM_HaloMerger();                  break;
 
       default: Aux_Error( ERROR_INFO, "unsupported TESTPROB_ID (%d) !!\n", TESTPROB_ID );
    } // switch( TESTPROB_ID )
