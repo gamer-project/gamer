@@ -716,7 +716,7 @@ void Aux_Check_Parameter()
 #     error: ERROR : SRHD does not support PARTICLE !!
 #  endif 
 #  if ( EOS != EOS_TAUBMATHEWS )
-#     error: ERROR : unsupported EOS !!
+#     error: ERROR : EOS != EOS_TAUBMATHEWS for SRHD !!
 #  endif
 #  endif
 

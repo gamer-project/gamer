@@ -68,7 +68,7 @@ void Validate()
 #  endif
 
 #  if ( EOS != EOS_TAUBMATHEWS && defined SRHD )
-   Aux_Error( ERROR_INFO, "EOS != EOS_TAUBMATHEWS !!\n" );
+   Aux_Error( ERROR_INFO, "EOS != EOS_TAUBMATHEWS for SRHD !!\n" );
 #  endif
 
    if ( Acoustic_Dir == 3  &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )

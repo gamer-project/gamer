@@ -57,6 +57,7 @@ void EoS_SetAuxArray_TaubMathews( double AuxArray_Flt[], int AuxArray_Int[] )
 //     (1) EoS_HTilde2Temp_*
 //     (2) EoS_Temp2HTilde_*
 //     (3) EoS_Temper2CSqr_*
+//     (4) EoS_GuessHTilde_*
 // =============================================
 
 
@@ -84,7 +85,7 @@ static real EoS_GuessHTilde_TaubMathews( const real Con[], real* const Constant,
   real M_Dsqr = abc * Msqr;
   real M_D = SQRT( M_Dsqr );
 
-
+  // note that replacing a^2-b^2 with (a+b)*(a-b) helps alleviate a catastrophic cancellation
   real X = SQRT( E_D*E_D + (real)2.0*E_D );
   real Y = X + M_D;
   real Z = X - M_D;
@@ -235,7 +236,7 @@ FUNC_SPACE EoS_TEM2H_t  EoS_Temp2HTilde_Ptr = EoS_Temp2HTilde_TaubMathews;
 FUNC_SPACE EoS_TEM2C_t  EoS_Temper2CSqr_Ptr = EoS_Temper2CSqr_TaubMathews;
 
 //-----------------------------------------------------------------------------------------
-// Function    :  EoS_InitCPU/GPUFunc_TaubMathews
+// Function    :  EoS_SetCPU/GPUFunc_TaubMathews
 // Description :  Return the function pointers of the CPU/GPU EoS routines
 //
 // Note        :  1. Invoked by EoS_Init_TaubMathews()

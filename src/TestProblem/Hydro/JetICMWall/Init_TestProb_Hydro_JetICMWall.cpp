@@ -66,6 +66,10 @@ void Validate()
 
 
 // errors
+#  ifndef SRHD
+   Aux_Error( ERROR_INFO, "SRHD must be enabled !!\n" );
+#  endif
+
 #  ifdef PARTICLE
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif

@@ -434,6 +434,10 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                               PassiveIntFrac_VarIdx, EoS_DensPres2Eint_CPUPtr,
                               EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, 
                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+#              ifdef GAMER_DEBUG
+               if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Cons[ENGY], "interpolated energy", ERROR_INFO, UNPHY_VERBOSE )  )
+                  Aux_Error( ERROR_INFO, "unphysical interpolated energy in %s() !!\n", __FUNCTION__ );
+#              endif
             }
 
             else {

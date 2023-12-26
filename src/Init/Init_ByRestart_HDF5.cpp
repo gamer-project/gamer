@@ -2266,7 +2266,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #     ifdef COSMIC_RAY
       RS.FlagTable_CRay        [lv]    = -1.0;
 #     endif
-
+#     ifdef SRHD
+      RS.FlagTable_LrtzGradient[lv]    = -1.0;
+#     endif
 #     elif ( MODEL == ELBDM )
       for (int t=0; t<2; t++)
       RS.FlagTable_EngyDensity [lv][t] = -1.0;
@@ -2328,6 +2330,11 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  ifdef COSMIC_RAY
    if ( OPT__FLAG_CRAY )
    LoadField( "FlagTable_CRay",           RS.FlagTable_CRay,          SID, TID, NonFatal,  RT.FlagTable_CRay,          N1, NonFatal );
+#  endif
+
+#  ifdef SRHD
+   if ( OPT__FLAG_LRTZ_GRADIENT )
+   LoadField( "FlagTable_LrtzGradient",   RS.FlagTable_LrtzGradient,  SID, TID, NonFatal,  RT.FlagTable_LrtzGradient,       N1, NonFatal );
 #  endif
 
 #  elif ( MODEL == ELBDM )
