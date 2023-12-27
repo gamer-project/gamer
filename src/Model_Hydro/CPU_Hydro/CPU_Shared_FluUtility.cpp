@@ -1050,7 +1050,7 @@ real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const re
    Cons[3] = MomZ;
    Cons[4] = Engy;
 
-   Hydro_Con2Pri( Cons, Prim, (real)NULL_REAL, false, NULL_INT, NULL,
+   Hydro_Con2Pri( Cons, Prim, (CheckMinPres)?MinPres:(real)-HUGE_NUMBER, false, NULL_INT, NULL,
                   NULL_BOOL, (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
    Pres = Prim[4];
@@ -1070,12 +1070,12 @@ real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const re
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
    if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "output pressure", ERROR_INFO, UNPHY_VERBOSE )  )
    {
+      printf( "Input: Dens %14.7e MomX %14.7e MomY %14.7e MomZ %14.7e Engy %14.7e",
+              Dens, MomX, MomY, MomZ, Engy );
 #     ifdef SRHD
-      printf( "Input: Dens %14.7e MomX %14.7e MomY %14.7e MomZ %14.7e Engy %14.7e Pres %14.7e",
-              Dens, MomX, MomY, MomZ, Engy, Pres );
+      printf( " Pres %14.7e", Pres );
 #     else
-      printf( "Input: Dens %14.7e MomX %14.7e MomY %14.7e MomZ %14.7e Engy %14.7e Eint %14.7e",
-              Dens, MomX, MomY, MomZ, Engy, Eint );
+      printf( " Eint %14.7e", Eint );
 #     endif
 #     ifdef MHD
       printf( " Emag %14.7e", Emag );
@@ -1244,7 +1244,7 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
    Cons[3] = MomZ;
    Cons[4] = Engy;
 
-   Hydro_Con2Pri( Cons, Prim, (real)NULL_REAL, false, NULL_INT, NULL,
+   Hydro_Con2Pri( Cons, Prim, (real)-HUGE_NUMBER, false, NULL_INT, NULL,
                   NULL_BOOL, (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
    Temp = Prim[4]/Prim[0];
