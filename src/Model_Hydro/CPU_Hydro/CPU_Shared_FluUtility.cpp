@@ -33,23 +33,24 @@ static real Hydro_CheckMinTemp( const real InTemp, const real MinTemp );
 GPU_DEVICE
 static real Hydro_CheckMinEntr( const real InEntr, const real MinEntr );
 GPU_DEVICE
-bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], const char SingleFieldName[],
-                            const char File[], const int Line, const char Function[], const CheckUnphysical_t Verbose );
+static bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], const char SingleFieldName[],
+                                   const char File[], const int Line, const char Function[], 
+                                   const CheckUnphysical_t Verbose );
 
 #ifdef SRHD
 
 GPU_DEVICE
-real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
-                       const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                       const real *const EoS_Table[EOS_NTABLE_MAX] );
+static real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                              const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                              const real *const EoS_Table[EOS_NTABLE_MAX] );
 
 #endif
 #endif
 
 
 GPU_DEVICE
-void  NewtonRaphsonSolver( void (*FuncPtr)( real, void*, real*, real* ), void * params, const real guess,
-                           const real epsabs, const real epsrel, real *root );
+void NewtonRaphsonSolver( void (*FuncPtr)( real, void*, real*, real* ), void * params, const real guess,
+                          const real epsabs, const real epsrel, real *root );
 
 
 #ifdef SRHD
@@ -63,7 +64,7 @@ struct Hydro_HTildeFunction_params_s{
    const real *const *EoS_Table;    // EoS tables for EoS_HTilde2Temp
 };
 GPU_DEVICE
-void Hydro_HTildeFunction (real HTilde, void *params, real *Func, real *DiffFunc );
+static void Hydro_HTildeFunction (real HTilde, void *params, real *Func, real *DiffFunc );
 #endif
 
 
@@ -205,8 +206,6 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 {
 
 #  ifndef SRHD
-   const bool CheckMinPres_Yes = true;
-   const real _Rho             = (real)1.0/In[0];
 #  ifdef MHD
    const real Bx               = In[ MAG_OFFSET + 0 ];
    const real By               = In[ MAG_OFFSET + 1 ];
@@ -242,7 +241,11 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
    EoS_HTilde2Temp( HTilde, &Temp, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
    Out[4] = Out[0]*Temp;
+   Out[4] = Hydro_CheckMinPres( Out[4], MinPres );
+
 #  else
+   const bool CheckMinPres_Yes = true;
+   const real _Rho             = (real)1.0/In[0];
 // conserved --> primitive
    Out[0] = In[0];
    Out[1] = In[1]*_Rho;
@@ -251,8 +254,6 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
    Out[4] = Hydro_Con2Pres( In[0], In[1], In[2], In[3], In[4], In+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag,
                             EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                             EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, EintOut );
-#  endif
-
 
 // pressure floor required to resolve the Jeans length
 // --> note that currently we do not modify the dual-energy variable (e.g., entropy) accordingly
@@ -266,6 +267,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
          *EintOut = EoS_DensPres2Eint( Out[0], Out[4], In+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
    }
 
+#  endif
 
 // passive scalars
    
@@ -326,12 +328,6 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive,
                     const real *const EoS_Table[EOS_NTABLE_MAX], const real* const EintIn )
 {
 
-#  ifdef SRHD
-   real LorentzFactor, Temperature, HTilde, MSqr_DSqr, HTildeFunction, Factor;
-#  else
-   real Eint, Emag=NULL_REAL;
-#  endif
-
 // passive scalars
 // --> do it before invoking EoS_DensPres2Eint() since the latter requires the mass density
 //     instead of mass fraction of passive scalars
@@ -348,6 +344,7 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive,
 
 
 #  ifdef SRHD
+   real LorentzFactor, Temperature, HTilde, MSqr_DSqr, HTildeFunction, Factor;
    LorentzFactor = SQRT( (real)1.0 + SQR(In[1]) + SQR(In[2]) + SQR(In[3]) );
    Temperature = In[4]/In[0];
    HTilde = EoS_Temp2HTilde( Temperature, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
@@ -386,6 +383,7 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive,
    Out[3] = In[0]*In[3];
 
 #  ifdef MHD
+   real Eint, Emag=NULL_REAL;
    const real Bx = In[ MAG_OFFSET + 0 ];
    const real By = In[ MAG_OFFSET + 1 ];
    const real Bz = In[ MAG_OFFSET + 2 ];
@@ -435,6 +433,12 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
                      const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX], const real* const AuxArray )
 {
+
+#  if ( defined GAMER_DEBUG  &&  defined SRHD )
+   if ( AuxArray == NULL )
+      printf( stderr, "ERROR : AuxArray == NULL at file <%s>, line <%d>, function <%s> !!\n",
+              __FILE__, __LINE__, __FUNCTION__ );
+#  endif
 
    real InRot[ NCOMP_FLUID + NCOMP_MAG ];    // no need to include passive scalars since they don't have to be rotated
 #  ifdef SRHD
@@ -526,8 +530,8 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 // Parameter   : Con             : conserved variables
 //               EoS_GuessHTilde : EoS routine to compute guessed reduced enthalpy
 //               EoS_HTilde2Temp : EoS routine to compute temperature
-//               EoS_AuxArray_*  : Auxiliary arrays for EoS_DensEint2Pres()
-//               EoS_Table       : EoS tables for EoS_DensEint2Pres()
+//               EoS_AuxArray_*  : Auxiliary arrays
+//               EoS_Table       : EoS tables
 //
 // Return      : HTilde          : reduced enthalpy
 //-------------------------------------------------------------------------------------------------------
@@ -537,28 +541,38 @@ real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, cons
                        const real *const EoS_Table[EOS_NTABLE_MAX] )
 {
 
-  real HTilde, GuessHTilde, MSqr_DSqr, Constant;
+   real HTilde, GuessHTilde, MSqr_DSqr, Constant;
 
-  MSqr_DSqr  = SQR(Con[1])+SQR(Con[2])+SQR(Con[3]);
-  MSqr_DSqr /= SQR(Con[0]);
+   MSqr_DSqr  = SQR(Con[1])+SQR(Con[2])+SQR(Con[3]);
+   MSqr_DSqr /= SQR(Con[0]);
 
-  GuessHTilde = EoS_GuessHTilde( Con, &Constant, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table);
+   GuessHTilde = EoS_GuessHTilde( Con, &Constant, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table);
 
-  void (*FuncPtr)( real HTilde, void *params, real *Func, real *DiffFunc ) = &Hydro_HTildeFunction;
+   void (*FuncPtr)( real HTilde, void *params, real *Func, real *DiffFunc ) = &Hydro_HTildeFunction;
 
-  struct Hydro_HTildeFunction_params_s params =
-  { MSqr_DSqr, NAN, -Constant, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table };
+// set params->Temp=NAN to force re-computing temperature from the given HTilde
+// set params->Constant=-A3_LHS (i.e., negative of the LHS of Eq. A3) since we want to find the root of f(HTilde) - A3_LHS
 
-  NewtonRaphsonSolver( FuncPtr, &params, GuessHTilde, (real)TINY_NUMBER, (real)MACHINE_EPSILON, &HTilde );
+   struct Hydro_HTildeFunction_params_s params =
+   { MSqr_DSqr, NAN, -Constant, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table };
 
-  return HTilde;
+   NewtonRaphsonSolver( FuncPtr, &params, GuessHTilde, (real)TINY_NUMBER, (real)MACHINE_EPSILON, &HTilde );
+
+#  ifdef GAMER_DEBUG
+   if ( HTilde <= (real)TINY_NUMBER )
+      printf( "ERROR : HTilde = %14.7e <= %13.7e (Constant %14.7e, GuessHTilde %14.7e) in %s !!\n",
+              HTilde, TINY_NUMBER, Constant, GuessHTilde, __FUNCTION__ );
+
+#  endif
+
+   return HTilde;
 
 }
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    : Hydro_HTildeFunction
-// Description : Right side of Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298"
+// Description : Right side of Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298" plus Params->Constant
 //
 // Note        :
 //
@@ -575,37 +589,44 @@ GPU_DEVICE
 void Hydro_HTildeFunction (real HTilde, void *Params, real *Func, real *DiffFunc )
 {
 
-  struct Hydro_HTildeFunction_params_s *parameters = (struct Hydro_HTildeFunction_params_s *) Params;
+   struct Hydro_HTildeFunction_params_s *parameters = (struct Hydro_HTildeFunction_params_s *) Params;
 
-  real MSqr_DSqr                    = parameters->MSqr_DSqr;
-  real Temp                         = parameters->Temp;
-  real Constant                     = parameters->Constant;
-  const EoS_H2TEM_t EoS_HTilde2Temp = parameters->EoS_HTilde2Temp;
-  const double *EoS_AuxArray_Flt    = parameters->EoS_AuxArray_Flt;
-  const int *EoS_AuxArray_Int       = parameters->EoS_AuxArray_Int;
-  const real *const *EoS_Table      = parameters->EoS_Table;
-  real DiffTemp;
+   real MSqr_DSqr                    = parameters->MSqr_DSqr;
+   real Temp                         = parameters->Temp;
+   real Constant                     = parameters->Constant;
+   const EoS_H2TEM_t EoS_HTilde2Temp = parameters->EoS_HTilde2Temp;
+   const double *EoS_AuxArray_Flt    = parameters->EoS_AuxArray_Flt;
+   const int *EoS_AuxArray_Int       = parameters->EoS_AuxArray_Int;
+   const real *const *EoS_Table      = parameters->EoS_Table;
+   real DiffTemp;
 
-  if ( Temp != Temp )
-  EoS_HTilde2Temp( HTilde, &Temp, &DiffTemp, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+// DiffTemp required by DiffFunc is only computed when Temp == NAN
+#  ifdef GAMER_DEBUG
+   if ( Temp == Temp  &&  DiffFunc != NULL )
+      printf( "ERROR : Temp (%13.7e) != NAN but DiffFunc != NULL at file <%s>, line <%d>, function <%s> !!\n",
+              Temp, File, Line, Function );            
+#  endif
+
+// recompute temperature only when the input Temp is NAN, which is used in Hydro_Con2HTilde()
+   if ( Temp != Temp )
+   EoS_HTilde2Temp( HTilde, &Temp, &DiffTemp, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
 
-  real H =  HTilde + (real)1.0;
-  real Factor0 = SQR( H ) + MSqr_DSqr;
+   real H =  HTilde + (real)1.0;
+   real Factor0 = SQR( H ) + MSqr_DSqr;
 
-  if ( Func != NULL )
+   if ( Func != NULL )
 
-  *Func = SQR( HTilde ) + (real)2.0*HTilde - (real)2.0*Temp - (real)2.0*Temp*HTilde
-	    + SQR( Temp * H ) / Factor0 + Constant;
+   *Func = SQR( HTilde ) + (real)2.0*HTilde - (real)2.0*Temp - (real)2.0*Temp*HTilde
+	     + SQR( Temp * H ) / Factor0 + Constant;
 
-  if ( DiffFunc != NULL )
+   if ( DiffFunc != NULL )
 
-  *DiffFunc = (real)2.0*H - (real)2.0*Temp - (real)2.0*H*DiffTemp +
-	        ( (real)2.0*Temp*DiffTemp*H*H - (real)2.0*Temp*Temp*H ) / SQR( Factor0 );
+   *DiffFunc = (real)2.0*H - (real)2.0*Temp - (real)2.0*H*DiffTemp +
+	         ( (real)2.0*Temp*DiffTemp*H*H - (real)2.0*Temp*Temp*H ) / SQR( Factor0 );
 
 }
-#endif
-
+#endif // #ifdef SRHD
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -867,14 +888,14 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
          {
             printf( "ERROR: unphysical conserved variables at file <%s>, line <%d>, function <%s> !!\n",
                     File, Line, Function );
-            printf( "D=%14.7e\nMx=%14.7e\nMy=%14.7e\nMz=%14.7e\nE=%14.7e\n",
+            printf( "D=%14.7e Mx=%14.7e My=%14.7e Mz=%14.7e E=%14.7e\n",
                     Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY] );
 #           ifdef SRHD
             printf( "E^2+2*E*D-|M|^2=%14.7e\n", Discriminant );
 #           endif
 #           if ( NCOMP_PASSIVE > 0 )
-            printf( "Passive:\n" );
-            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  printf( " [%d]=%13.7e\n", v-NCOMP_FLUID, Fields[v] );
+            printf( "Passive:" );
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  printf( " [%d]=%13.7e", v-NCOMP_FLUID, Fields[v] );
             printf( "\n" );
 #           endif
          }
@@ -1370,7 +1391,7 @@ void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm
 // Description : The one-dimensional root-finder using the Newton's method
 //
 // Note        : 1. Solving arbitrary one-dimensional function with N parameters (a1,..,aN)
-//                  --> i.e. f(a1,..,aN; x) = constant
+//                  --> i.e. f(a1,..,aN; x) + constant = 0, where constant = Params->Constant
 //               2. Iteration stops when either |x1-x0| < EpsAbs + EpsRel*x0 or number of iterations > threshold
 //                  --> x1/x0          : the estimated solution in current/previous iteration
 //                  --> EpsAbs, EpsRel : See below
@@ -1390,23 +1411,24 @@ void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm
 // Return      : Root
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void  NewtonRaphsonSolver( void (*FuncPtr)( real Unknown, void *Params, real *Func, real *DiffFunc ),
-                           void * Params, const real Guess, const real EpsAbs, const real EpsRel, real *Root )
+void NewtonRaphsonSolver( void (*FuncPtr)( real Unknown, void *Params, real *Func, real *DiffFunc ),
+                          void * Params, const real Guess, const real EpsAbs, const real EpsRel, real *Root )
 {
 
-  int Iter = 0;
+   int Iter = 0;
 
-# ifdef FLOAT8
-  int MaxIter = 20;
-# else
-  int MaxIter = 10;
-# endif
+#  ifdef FLOAT8
+   int MaxIter = 20;
+#  else
+   int MaxIter = 10;
+#  endif
 
-  real Func, DiffFunc, Delta, Tolerance;
+   real Func, DiffFunc, Delta, Tolerance;
 
-  *Root = Guess;
+   *Root = Guess;
 
-  do{
+   do 
+   {
 
       Iter++;
 
@@ -1421,14 +1443,13 @@ void  NewtonRaphsonSolver( void (*FuncPtr)( real Unknown, void *Params, real *Fu
          printf( "ERROR : derivative value is not finite at file <%s>, line <%d>, function <%s> !!\n", ERROR_INFO );
 #     endif
 
-       Delta = Func/DiffFunc;
+      Delta = Func/DiffFunc;
 
-       Tolerance =  EpsRel * FABS(*Root) + EpsAbs;
+      Tolerance =  EpsRel * FABS(*Root) + EpsAbs;
 
-       *Root = *Root - Delta;
+      *Root = *Root - Delta;
 
-  }while ( fabs(Delta) >= Tolerance && Iter < MaxIter );
-
+   } while ( FABS(Delta) >= Tolerance && Iter < MaxIter );
 
 }
 
