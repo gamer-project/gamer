@@ -156,9 +156,6 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
          CFLy             = SQRT( CFLy );
          CFLz             = SQRT( CFLz );
 #        elif ( defined SRHD )
-         Pri[1] /= LorentzFactor;
-         Pri[2] /= LorentzFactor;
-         Pri[3] /= LorentzFactor;
          U_Max = FABS(Pri[1]) + FABS(Pri[2]) + FABS(Pri[3]);
          Us = SQRT( a2 ) / SQRT( (real)1.0 - a2 );
          Us_Max = (real)3.0 * Us;
