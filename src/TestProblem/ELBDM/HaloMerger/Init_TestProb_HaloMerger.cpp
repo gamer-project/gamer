@@ -30,6 +30,9 @@ static real    *IC1_Data = NULL;
 static void HaloMerger_Add_Velocity( double *RealPart, double *ImagPart,
                                      const double Velocity_X, const double Velocity_Y, const double Velocity_Z,
                                      const double Position_X, const double Position_Y, const double Position_Z );
+static double Trilinear_Interpolation( const double Target_X, const double Target_Y, const double Target_Z,
+                                       const double Ref_Value[2][2][2],
+                                       const double Ref_X[2], const double Ref_Y[2], const double Ref_Z[2] );
 
 
 
@@ -279,22 +282,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
             const int Target_i = (int)floor( (x - IC1_Range_x0)/IC1_dh - 0.5 );
             const int Target_j = (int)floor( (y - IC1_Range_y0)/IC1_dh - 0.5 );
             const int Target_k = (int)floor( (z - IC1_Range_z0)/IC1_dh - 0.5 );
-            double Real_000;
-            double Real_001;
-            double Real_010;
-            double Real_011;
-            double Real_100;
-            double Real_101;
-            double Real_110;
-            double Real_111;
-            double Imag_000;
-            double Imag_001;
-            double Imag_010;
-            double Imag_011;
-            double Imag_100;
-            double Imag_101;
-            double Imag_110;
-            double Imag_111;
+            double Interpolation_Ref_Real[2][2][2];
+            double Interpolation_Ref_Imag[2][2][2];
 
             for (int IC_k=0; IC_k<2; IC_k++)
             for (int IC_j=0; IC_j<2; IC_j++)
@@ -304,147 +293,33 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                const int j = Target_j + IC_j;
                const int k = Target_k + IC_k;
 
-               if ( IC_k == 0 && IC_j== 0 && IC_i == 0 )
+               if ( i < 0 ||  i >= HaloMerger_Halo_IC1_N_X  ||  j < 0 ||  j >= HaloMerger_Halo_IC1_N_Y  ||  k < 0 ||  k >= HaloMerger_Halo_IC1_N_Z )
                {
-                  if ( i < 0 ||  i >= HaloMerger_Halo_IC1_N_X  ||  j < 0 ||  j >= HaloMerger_Halo_IC1_N_Y  ||  k < 0 ||  k >= HaloMerger_Halo_IC1_N_Z )
-                  {
-                     Real_000 = 0.0;
-                     Imag_000 = 0.0;
-                  }
-                  else
-                  {
-                     Real_000 = IC1_Data[(long)0*HaloMerger_Halo_IC1_N_X*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_Z + (long)k*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_X + (long)j*HaloMerger_Halo_IC1_N_X + (long)i];
-                     Imag_000 = IC1_Data[(long)1*HaloMerger_Halo_IC1_N_X*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_Z + (long)k*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_X + (long)j*HaloMerger_Halo_IC1_N_X + (long)i];
-                  }
+                  Interpolation_Ref_Real[IC_k][IC_j][IC_i] = 0.0;
+                  Interpolation_Ref_Imag[IC_k][IC_j][IC_i] = 0.0;
                }
-               if ( IC_k == 0 && IC_j== 0 && IC_i == 1 )
+               else
                {
-                  if ( i < 0 ||  i >= HaloMerger_Halo_IC1_N_X  ||  j < 0 ||  j >= HaloMerger_Halo_IC1_N_Y  ||  k < 0 ||  k >= HaloMerger_Halo_IC1_N_Z )
-                  {
-                     Real_001 = 0.0;
-                     Imag_001 = 0.0;
-                  }
-                  else
-                  {
-                     Real_001 = IC1_Data[(long)0*HaloMerger_Halo_IC1_N_X*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_Z + (long)k*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_X + (long)j*HaloMerger_Halo_IC1_N_X + (long)i];
-                     Imag_001 = IC1_Data[(long)1*HaloMerger_Halo_IC1_N_X*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_Z + (long)k*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_X + (long)j*HaloMerger_Halo_IC1_N_X + (long)i];
-                  }
-               }
-               if ( IC_k == 0 && IC_j== 1 && IC_i == 0 )
-               {
-                  if ( i < 0 ||  i >= HaloMerger_Halo_IC1_N_X  ||  j < 0 ||  j >= HaloMerger_Halo_IC1_N_Y  ||  k < 0 ||  k >= HaloMerger_Halo_IC1_N_Z )
-                  {
-                     Real_010 = 0.0;
-                     Imag_010 = 0.0;
-                  }
-                  else
-                  {
-                     Real_010 = IC1_Data[(long)0*HaloMerger_Halo_IC1_N_X*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_Z + (long)k*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_X + (long)j*HaloMerger_Halo_IC1_N_X + (long)i];
-                     Imag_010 = IC1_Data[(long)1*HaloMerger_Halo_IC1_N_X*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_Z + (long)k*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_X + (long)j*HaloMerger_Halo_IC1_N_X + (long)i];
-                  }
-               }
-               if ( IC_k == 0 && IC_j== 1 && IC_i == 1 )
-               {
-                  if ( i < 0 ||  i >= HaloMerger_Halo_IC1_N_X  ||  j < 0 ||  j >= HaloMerger_Halo_IC1_N_Y  ||  k < 0 ||  k >= HaloMerger_Halo_IC1_N_Z )
-                  {
-                     Real_011 = 0.0;
-                     Imag_011 = 0.0;
-                  }
-                  else
-                  {
-                     Real_011 = IC1_Data[(long)0*HaloMerger_Halo_IC1_N_X*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_Z + (long)k*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_X + (long)j*HaloMerger_Halo_IC1_N_X + (long)i];
-                     Imag_011 = IC1_Data[(long)1*HaloMerger_Halo_IC1_N_X*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_Z + (long)k*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_X + (long)j*HaloMerger_Halo_IC1_N_X + (long)i];
-                  }
-               }
-               if ( IC_k == 1 && IC_j== 0 && IC_i == 0 )
-               {
-                  if ( i < 0 ||  i >= HaloMerger_Halo_IC1_N_X  ||  j < 0 ||  j >= HaloMerger_Halo_IC1_N_Y  ||  k < 0 ||  k >= HaloMerger_Halo_IC1_N_Z )
-                  {
-                     Real_100 = 0.0;
-                     Imag_100 = 0.0;
-                  }
-                  else
-                  {
-                     Real_100 = IC1_Data[(long)0*HaloMerger_Halo_IC1_N_X*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_Z + (long)k*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_X + (long)j*HaloMerger_Halo_IC1_N_X + (long)i];
-                     Imag_100 = IC1_Data[(long)1*HaloMerger_Halo_IC1_N_X*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_Z + (long)k*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_X + (long)j*HaloMerger_Halo_IC1_N_X + (long)i];
-                  }
-               }
-               if ( IC_k == 1 && IC_j== 0 && IC_i == 1 )
-               {
-                  if ( i < 0 ||  i >= HaloMerger_Halo_IC1_N_X  ||  j < 0 ||  j >= HaloMerger_Halo_IC1_N_Y  ||  k < 0 ||  k >= HaloMerger_Halo_IC1_N_Z )
-                  {
-                     Real_101 = 0.0;
-                     Imag_101 = 0.0;
-                  }
-                  else
-                  {
-                     Real_101 = IC1_Data[(long)0*HaloMerger_Halo_IC1_N_X*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_Z + (long)k*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_X + (long)j*HaloMerger_Halo_IC1_N_X + (long)i];
-                     Imag_101 = IC1_Data[(long)1*HaloMerger_Halo_IC1_N_X*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_Z + (long)k*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_X + (long)j*HaloMerger_Halo_IC1_N_X + (long)i];
-                  }
-               }
-               if ( IC_k == 1 && IC_j== 1 && IC_i == 0 )
-               {
-                  if ( i < 0 ||  i >= HaloMerger_Halo_IC1_N_X  ||  j < 0 ||  j >= HaloMerger_Halo_IC1_N_Y  ||  k < 0 ||  k >= HaloMerger_Halo_IC1_N_Z )
-                  {
-                     Real_110 = 0.0;
-                     Imag_110 = 0.0;
-                  }
-                  else
-                  {
-                     Real_110 = IC1_Data[(long)0*HaloMerger_Halo_IC1_N_X*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_Z + (long)k*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_X + (long)j*HaloMerger_Halo_IC1_N_X + (long)i];
-                     Imag_110 = IC1_Data[(long)1*HaloMerger_Halo_IC1_N_X*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_Z + (long)k*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_X + (long)j*HaloMerger_Halo_IC1_N_X + (long)i];
-                  }
-               }
-               if ( IC_k == 1 && IC_j== 1 && IC_i == 1 )
-               {
-                  if ( i < 0 ||  i >= HaloMerger_Halo_IC1_N_X  ||  j < 0 ||  j >= HaloMerger_Halo_IC1_N_Y  ||  k < 0 ||  k >= HaloMerger_Halo_IC1_N_Z )
-                  {
-                     Real_111 = 0.0;
-                     Imag_111 = 0.0;
-                  }
-                  else
-                  {
-                     Real_111 = IC1_Data[(long)0*HaloMerger_Halo_IC1_N_X*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_Z + (long)k*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_X + (long)j*HaloMerger_Halo_IC1_N_X + (long)i];
-                     Imag_111 = IC1_Data[(long)1*HaloMerger_Halo_IC1_N_X*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_Z + (long)k*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_X + (long)j*HaloMerger_Halo_IC1_N_X + (long)i];
-                  }
+                  Interpolation_Ref_Real[IC_k][IC_j][IC_i] = IC1_Data[(long)0*HaloMerger_Halo_IC1_N_X*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_Z + (long)k*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_X + (long)j*HaloMerger_Halo_IC1_N_X + (long)i];
+                  Interpolation_Ref_Real[IC_k][IC_j][IC_i] = IC1_Data[(long)1*HaloMerger_Halo_IC1_N_X*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_Z + (long)k*HaloMerger_Halo_IC1_N_Y*HaloMerger_Halo_IC1_N_X + (long)j*HaloMerger_Halo_IC1_N_X + (long)i];
                }
             }
 
-            const double Interpolation_x0 =  IC1_Range_x0 + (Target_i + 0.5)*IC1_dh;
-            const double Interpolation_y0 =  IC1_Range_y0 + (Target_j + 0.5)*IC1_dh;
-            const double Interpolation_z0 =  IC1_Range_z0 + (Target_k + 0.5)*IC1_dh;
-            const double Interpolation_x1 =  IC1_Range_x0 + (Target_i + 1.5)*IC1_dh;
-            const double Interpolation_y1 =  IC1_Range_y0 + (Target_j + 1.5)*IC1_dh;
-            const double Interpolation_z1 =  IC1_Range_z0 + (Target_k + 1.5)*IC1_dh;
+            const double Interpolation_Ref_X[2] = {IC1_Range_x0 + (Target_i + 0.5)*IC1_dh, IC1_Range_x0 + (Target_i + 1.5)*IC1_dh};
+            const double Interpolation_Ref_Y[2] = {IC1_Range_y0 + (Target_j + 0.5)*IC1_dh, IC1_Range_y0 + (Target_j + 1.5)*IC1_dh};
+            const double Interpolation_Ref_Z[2] = {IC1_Range_z0 + (Target_k + 0.5)*IC1_dh, IC1_Range_z0 + (Target_k + 1.5)*IC1_dh};
 
             // linear interpolation
-
-            double Real_z00 = Real_000 + ( Real_100- Real_000)/(Interpolation_z1 - Interpolation_z0)*(z - Interpolation_z0);
-            double Real_z01 = Real_001 + ( Real_101- Real_001)/(Interpolation_z1 - Interpolation_z0)*(z - Interpolation_z0);
-            double Real_z10 = Real_010 + ( Real_110- Real_010)/(Interpolation_z1 - Interpolation_z0)*(z - Interpolation_z0);
-            double Real_z11 = Real_011 + ( Real_111- Real_011)/(Interpolation_z1 - Interpolation_z0)*(z - Interpolation_z0);
-
-            double Real_zy0 = Real_z00 + ( Real_z10- Real_z00)/(Interpolation_y1 - Interpolation_y0)*(y - Interpolation_y0);
-            double Real_zy1 = Real_z01 + ( Real_z11- Real_z01)/(Interpolation_y1 - Interpolation_y0)*(y - Interpolation_y0);
-
-            double Real_zyx = Real_zy0 + ( Real_zy1- Real_zy0)/(Interpolation_x1 - Interpolation_x0)*(x - Interpolation_x0);
-
-            double Imag_z00 = Imag_000 + ( Imag_100- Imag_000)/(Interpolation_z1 - Interpolation_z0)*(z - Interpolation_z0);
-            double Imag_z01 = Imag_001 + ( Imag_101- Imag_001)/(Interpolation_z1 - Interpolation_z0)*(z - Interpolation_z0);
-            double Imag_z10 = Imag_010 + ( Imag_110- Imag_010)/(Interpolation_z1 - Interpolation_z0)*(z - Interpolation_z0);
-            double Imag_z11 = Imag_011 + ( Imag_111- Imag_011)/(Interpolation_z1 - Interpolation_z0)*(z - Interpolation_z0);
-
-            double Imag_zy0 = Imag_z00 + ( Imag_z10- Imag_z00)/(Interpolation_y1 - Interpolation_y0)*(y - Interpolation_y0);
-            double Imag_zy1 = Imag_z01 + ( Imag_z11- Imag_z01)/(Interpolation_y1 - Interpolation_y0)*(y - Interpolation_y0);
-
-            double Imag_zyx = Imag_zy0 + ( Imag_zy1- Imag_zy0)/(Interpolation_x1 - Interpolation_x0)*(x - Interpolation_x0);
+            double Real_halo, Imag_halo;
+            Real_halo = Trilinear_Interpolation( x, y, z, Interpolation_Ref_Real, Interpolation_Ref_X, Interpolation_Ref_Y, Interpolation_Ref_Z );
+            Imag_halo = Trilinear_Interpolation( x, y, z, Interpolation_Ref_Imag, Interpolation_Ref_X, Interpolation_Ref_Y, Interpolation_Ref_Z );
 
             // add velocity
-            HaloMerger_Add_Velocity( &Real_zyx, &Imag_zyx, HaloMerger_Halo_Velocity[0][0], HaloMerger_Halo_Velocity[0][1], HaloMerger_Halo_Velocity[0][2], x, y, z );
+            HaloMerger_Add_Velocity( &Real_halo, &Imag_halo, HaloMerger_Halo_Velocity[0][0], HaloMerger_Halo_Velocity[0][1], HaloMerger_Halo_Velocity[0][2], x, y, z );
 
             // add the wavefunction to the box
-            Real += Real_zyx;
-            Imag += Imag_zyx;
+            Real += Real_halo;
+            Imag += Imag_halo;
          }
 
          break;
@@ -574,3 +449,38 @@ void HaloMerger_Add_Velocity( double *RealPart, double *ImagPart,
 
 } // FUNCTION : HaloMerger_Add_Velocity
 #  endif // if ( MODEL == ELBDM )
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Trilinear_Interpolation
+// Description :  Linear interpolation the desired value from the 3D eigth corners
+//
+// Note        :  1. Ref_Value is in the order zyx (i.e. Ref_Value[z][y][z] )
+//
+// Parameter   :  Target_X
+//                Target_Y
+//                Target_Z
+//                Ref_Value
+//                Ref_X
+//                Ref_Y
+//                Ref_Z
+// Return      :  Value_ZYX
+//-------------------------------------------------------------------------------------------------------
+double Trilinear_Interpolation( const double Target_X, const double Target_Y, const double Target_Z,
+                                const double Ref_Value[2][2][2],
+                                const double Ref_X[2], const double Ref_Y[2], const double Ref_Z[2] )
+{
+    double Value_Z00 = Ref_Value[0][0][0] + ( Ref_Value[1][0][0] - Ref_Value[0][0][0])/(Ref_Z[1] - Ref_Z[0])*(Target_Z - Ref_Z[0]);
+    double Value_Z01 = Ref_Value[0][0][1] + ( Ref_Value[1][0][1] - Ref_Value[0][0][1])/(Ref_Z[1] - Ref_Z[0])*(Target_Z - Ref_Z[0]);
+    double Value_Z10 = Ref_Value[0][1][0] + ( Ref_Value[1][1][0] - Ref_Value[0][1][0])/(Ref_Z[1] - Ref_Z[0])*(Target_Z - Ref_Z[0]);
+    double Value_Z11 = Ref_Value[0][1][1] + ( Ref_Value[1][1][1] - Ref_Value[0][1][1])/(Ref_Z[1] - Ref_Z[0])*(Target_Z - Ref_Z[0]);
+
+    double Value_ZY0 = Value_Z00          + ( Value_Z10          - Value_Z00         )/(Ref_Y[1] - Ref_Y[0])*(Target_Y - Ref_Y[0]);
+    double Value_ZY1 = Value_Z01          + ( Value_Z11          - Value_Z01         )/(Ref_Y[1] - Ref_Y[0])*(Target_Y - Ref_Y[0]);
+
+    double Value_ZYX = Value_ZY0          + ( Value_ZY1          - Value_ZY0         )/(Ref_X[1] - Ref_X[0])*(Target_X - Ref_X[0]);
+
+    return Value_ZYX;
+
+}
