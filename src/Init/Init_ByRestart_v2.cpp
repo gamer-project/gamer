@@ -899,7 +899,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    bool   opt__flag_engy_density, opt__flag_user, opt__fixup_flux, opt__fixup_restrict, opt__overlap_mpi;
    bool   opt__gra_p5_gradient, opt__int_time, opt__output_user, opt__output_base, opt__output_pot;
    bool   opt__output_baseps, opt__timing_balance, opt__int_phase, opt__1st_flux_corr, opt__unit;
-   bool   opt__output_cc_mag, opt__flag_lrtz_gradient;
+   bool   opt__output_cc_mag;
    int    nx0_tot[3], mpi_nrank, mpi_nrank_x[3], omp_nthread, regrid_count, opt__output_par_dens;
    int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter_useless, flu_gpu_npgroup, gpu_nstream;
    int    sor_max_iter, sor_min_iter, mg_max_iter, mg_npre_smooth, mg_npost_smooth, pot_gpu_npgroup;
@@ -934,7 +934,6 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &opt__flag_rho,              sizeof(bool),                    1,             File );
    fread( &opt__flag_rho_gradient,     sizeof(bool),                    1,             File );
    fread( &opt__flag_pres_gradient,    sizeof(bool),                    1,             File );
-   fread( &opt__flag_lrtz_gradient,    sizeof(bool),                    1,             File );
    fread( &opt__flag_engy_density,     sizeof(bool),                    1,             File );
    fread( &opt__flag_user,             sizeof(bool),                    1,             File );
    fread( &lb_wli_max,                 sizeof(double),                  1,             File );
@@ -1501,9 +1500,6 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "UNIT_B",                  unit_b,                       UNIT_B,                    NonFatal );
 #     endif
 
-#     ifdef SRHD
-      CompareVar( "OPT__FLAG_LRTZ_GRADIENT", opt__flag_lrtz_gradient,      OPT__FLAG_LRTZ_GRADIENT,   NonFatal );
-#     endif
       Aux_Message( stdout, "   Checking loaded parameters ... done\n" );
 
    } // if ( MPI_Rank == 0 )

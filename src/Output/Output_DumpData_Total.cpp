@@ -617,10 +617,6 @@ void Output_DumpData_Total( const char *FileName )
       const double UNIT_B                    = NULL_REAL;
 #     endif
 
-#     ifndef SRHD
-      const bool   OPT__FLAG_LRTZ_GRADIENT   = NULL_BOOL;
-#     endif
-
       const bool   dummy_bool                = false;
 
       fwrite( &BOX_SIZE,                  sizeof(double),                  1,             File );
@@ -644,7 +640,6 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &OPT__FLAG_RHO_GRADIENT,    sizeof(bool),                    1,             File );
       fwrite( &OPT__FLAG_PRES_GRADIENT,   sizeof(bool),                    1,             File );
       fwrite( &OPT__FLAG_ENGY_DENSITY,    sizeof(bool),                    1,             File );
-      fwrite( &OPT__FLAG_LRTZ_GRADIENT,   sizeof(bool),                    1,             File );
       fwrite( &OPT__FLAG_USER,            sizeof(bool),                    1,             File );
       fwrite( &lb_wli_max,                sizeof(double),                  1,             File );
       fwrite( &GAMMA,                     sizeof(double),                  1,             File );
