@@ -2122,20 +2122,20 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], real fcPri[][NCOMP_LR], const
 
    }
    
-#ifndef SRHD
    for (int f=0; f<6; f++)
    {
 //    apply density and internal energy floors
       fcCon[f][0] = FMAX( fcCon[f][0], MinDens );
+#     ifndef SRHD
 #     ifndef BAROTROPIC_EOS
       fcCon[f][4] = Hydro_CheckMinEintInEngy( fcCon[f][0], fcCon[f][1], fcCon[f][2], fcCon[f][3], fcCon[f][4], 
                                               MinEint, Emag );
 #     endif
+#     endif // #ifndef SRHD
 #     if ( NCOMP_PASSIVE > 0 )
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) fcCon[f][v] = FMAX( fcCon[f][v], TINY_NUMBER );
 #     endif
    } // for (int f=0; f<6; f++)
-#  endif // #ifndef SRHD
 #  endif // #ifdef MHM_CHECK_PREDICT
 
 } // FUNCTION : Hydro_HancockPredict
