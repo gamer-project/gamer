@@ -88,134 +88,136 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
    real lV1, rV1, lV2, rV2, lV3, rV3;
    real lFactor,rFactor; /* Lorentz factor */
 
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
+   Hydro_CheckUnphysical( UNPHY_MODE_CONS, L, NULL, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_CONS, R, NULL, ERROR_INFO, UNPHY_VERBOSE );
+#  endif
 
 /*  1. compute primitive vars. from conserved vars. */
-    Hydro_Con2Pri( L, PL, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+   Hydro_Con2Pri( L, PL, MinPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                   (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &lFactor );
 
-    Hydro_Con2Pri( R, PR, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+   Hydro_Con2Pri( R, PR, MinPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                   (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &rFactor );
 
 /*  2. Transform 4-velocity to 3-velocity */
-    lV1=PL[1]/lFactor;
-    lV2=PL[2]/lFactor;
-    lV3=PL[3]/lFactor;
+   const real _lFactor = (real)1.0 / lFactor;
+   lV1=PL[1]*_lFactor;
+   lV2=PL[2]*_lFactor;
+   lV3=PL[3]*_lFactor;
 
-    rV1=PR[1]/rFactor;
-    rV2=PR[2]/rFactor;
-    rV3=PR[3]/rFactor;
+   const real _rFactor = (real)1.0 / rFactor;
+   rV1=PR[1]*_rFactor;
+   rV2=PR[2]*_rFactor;
+   rV3=PR[3]*_rFactor;
 
-/*  3. Compute the max and min wave speeds used in Mignone */
-    //cslsq = SoundSpeedSquare( PL[4]/PL[0], Gamma);
-    //csrsq = SoundSpeedSquare( PR[4]/PR[0], Gamma);
-    cslsq = EoS_Temper2CSqr( PL[0], PL[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
-    csrsq = EoS_Temper2CSqr( PR[0], PR[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+// 3. Compute the max and min wave speeds used in Mignone
+   cslsq = EoS_Temper2CSqr( PL[0], PL[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+   csrsq = EoS_Temper2CSqr( PR[0], PR[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
-#   ifdef CHECK_UNPHYSICAL_IN_FLUID
-    if ( cslsq >= 1.0 || csrsq >= 1.0 || cslsq < 0.0 || csrsq < 0.0 )
-      printf( "cslsq=%10.7e, cslrq=%10.7e\n", cslsq, csrsq);
-#   endif
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
+   if ( cslsq >= (real)1.0 || csrsq >= (real)1.0 || cslsq < (real)0.0 || csrsq < (real)0.0 )
+      printf( "cslsq=%14.7e, cslrq=%14.7e\n", cslsq, csrsq);
+#  endif
 
-//  square of Lorentz factor
-    gammasql = SQR(lFactor);
-    gammasqr = SQR(rFactor);
+// square of Lorentz factor
+   gammasql = SQR(lFactor);
+   gammasqr = SQR(rFactor);
 
-    ssl = cslsq / ( - gammasql * cslsq + gammasql ); /* Mignone Eq 22.5 */
-    ssr = csrsq / ( - gammasqr * csrsq + gammasqr ); /* Mignone Eq 22.5 */
+   ssl = cslsq / ( - gammasql * cslsq + gammasql ); /* Mignone Eq 22.5 */
+   ssr = csrsq / ( - gammasqr * csrsq + gammasqr ); /* Mignone Eq 22.5 */
 
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
+   if ( ( ssl < (real)0.0 ) || ( ssr < (real)0.0 ) ) printf("ssl = %14.7e, ssr = %14.7e\n", ssl, ssr);
+#  endif
 
-#   ifdef CHECK_UNPHYSICAL_IN_FLUID
-    if ( ( ssl < 0.0 ) || ( ssr < 0.0 ) ) printf("ssl = %14.7e, ssr = %14.7e\n", ssl, ssr);
-#   endif
+   real lV2s = lV2*lV2;
+   real rV2s = rV2*rV2;
 
-    real lV2s = lV2*lV2;
-    real rV2s = rV2*rV2;
+   real lV3s = lV3*lV3;
+   real rV3s = rV3*rV3;
 
-    real lV3s = lV3*lV3;
-    real rV3s = rV3*rV3;
+   real __gammasql = (real)1.0 / gammasql;
+   real __gammasqr = (real)1.0 / gammasqr;
 
-    real __gammasql = (real)1.0 / gammasql;
-    real __gammasqr = (real)1.0 / gammasqr;
+   real deltal = ssl*ssl + ssl*( __gammasql + lV2s + lV3s );
+   real deltar = ssr*ssr + ssr*( __gammasqr + rV2s + rV3s );
 
-    real deltal = ssl*ssl + ssl*( __gammasql + lV2s + lV3s );
-    real deltar = ssr*ssr + ssr*( __gammasqr + rV2s + rV3s );
+   real ssl__ = (real)1.0 + ssl;
+   real ssr__ = (real)1.0 + ssr;
 
-    real ssl__ = (real)1.0 + ssl;
-    real ssr__ = (real)1.0 + ssr;
+   lmdapl = ( lV1 + SQRT(deltal) ) / ssl__ ;
+   lmdaml = ( lV1 - SQRT(deltal) ) / ssl__ ;
 
+   lmdapr = ( rV1 + SQRT(deltar) ) / ssr__ ;
+   lmdamr = ( rV1 - SQRT(deltar) ) / ssr__ ;
 
-    lmdapl = ( lV1 + SQRT(deltal) ) / ssl__ ;
-    lmdaml = ( lV1 - SQRT(deltal) ) / ssl__ ;
+   lmdal = FMIN(lmdaml, lmdamr); /* Mignone Eq 21 */
+   lmdar = FMAX(lmdapl, lmdapr);
 
-    lmdapr = ( rV1 + SQRT(deltar) ) / ssr__ ;
-    lmdamr = ( rV1 - SQRT(deltar) ) / ssr__ ;
-
-    lmdal = FMIN(lmdaml, lmdamr); /* Mignone Eq 21 */
-    lmdar = FMAX(lmdapl, lmdapr);
-
-/*  4. compute HLL flux using Mignone Eq 11 (necessary for computing lmdas (Eq 18)
+/* 4. compute HLL flux using Mignone Eq 11 (necessary for computing lmdas (Eq 18)
  *     compute HLL conserved quantities using Mignone eq 9
  *  */
-      Fl[0] = L[0] * lV1;
-      Fl[1] = L[1] * lV1 + PL[4];
-      Fl[2] = L[2] * lV1;
-      Fl[3] = L[3] * lV1;
-      Fl[4] = lV1 * ( L[4] + PL[4] );
+   Fl[0] = L[0] * lV1;
+   Fl[1] = L[1] * lV1 + PL[4];
+   Fl[2] = L[2] * lV1;
+   Fl[3] = L[3] * lV1;
+   Fl[4] = lV1 * ( L[4] + PL[4] );
 
-      Fr[0] = R[0] * rV1;
-      Fr[1] = R[1] * rV1 + PR[4];
-      Fr[2] = R[2] * rV1;
-      Fr[3] = R[3] * rV1;
-      Fr[4] = rV1 * ( R[4] + PR[4] );
+   Fr[0] = R[0] * rV1;
+   Fr[1] = R[1] * rV1 + PR[4];
+   Fr[2] = R[2] * rV1;
+   Fr[3] = R[3] * rV1;
+   Fr[4] = rV1 * ( R[4] + PR[4] );
 // * 7. Determine intercell flux according to Mignone 13
 //
-   if( lmdal >= (real)0.0 ){ /* Fl */
-     /* intercell flux is left flux */
-     Flux_Out[0] = Fl[0];
-     Flux_Out[1] = Fl[1];
-     Flux_Out[2] = Fl[2];
-     Flux_Out[3] = Fl[3];
-     Flux_Out[4] = Fl[4];
+   if ( lmdal >= (real)0.0 ){ /* Fl */
+      /* intercell flux is left flux */
+      Flux_Out[0] = Fl[0];
+      Flux_Out[1] = Fl[1];
+      Flux_Out[2] = Fl[2];
+      Flux_Out[3] = Fl[3];
+      Flux_Out[4] = Fl[4];
 
-    Hydro_Rotate3D( Flux_Out, XYZ, false, MAG_OFFSET  );
-    return;
+      Hydro_Rotate3D( Flux_Out, XYZ, false, MAG_OFFSET  );
+      return;
    }
-   else if( lmdal < (real)0.0 && lmdar > (real)0.0 ){ /* Fs */
+   else if ( lmdal < (real)0.0 && lmdar > (real)0.0 ) { /* Fs */
 //  5. Compute HLL flux using Mignone Eq 11 (necessary for computing lmdas (Eq 18)
-//      Compute HLL conserved quantities using Mignone eq 9
+//     Compute HLL conserved quantities using Mignone eq 9
 
-     ovlrmll = (real)1.0 / ( lmdar - lmdal );
-     lmdatlmda = lmdal*lmdar;
+      ovlrmll = (real)1.0 / ( lmdar - lmdal );
+      lmdatlmda = lmdal*lmdar;
 
-     Fhll[0] = ( lmdatlmda * (R[0] - L[0]) + ( lmdar * Fl[0] - lmdal*Fr[0] ) ) * ovlrmll;
-     Fhll[1] = ( lmdatlmda * (R[1] - L[1]) + ( lmdar * Fl[1] - lmdal*Fr[1] ) ) * ovlrmll;
-     Fhll[2] = ( lmdatlmda * (R[2] - L[2]) + ( lmdar * Fl[2] - lmdal*Fr[2] ) ) * ovlrmll;
-     Fhll[3] = ( lmdatlmda * (R[3] - L[3]) + ( lmdar * Fl[3] - lmdal*Fr[3] ) ) * ovlrmll;
-     Fhll[4] = ( lmdatlmda * (R[4] - L[4]) + ( lmdar * Fl[4] - lmdal*Fr[4] ) ) * ovlrmll;
+      Fhll[0] = ( lmdatlmda * (R[0] - L[0]) + ( lmdar * Fl[0] - lmdal*Fr[0] ) ) * ovlrmll;
+      Fhll[1] = ( lmdatlmda * (R[1] - L[1]) + ( lmdar * Fl[1] - lmdal*Fr[1] ) ) * ovlrmll;
+      Fhll[2] = ( lmdatlmda * (R[2] - L[2]) + ( lmdar * Fl[2] - lmdal*Fr[2] ) ) * ovlrmll;
+      Fhll[3] = ( lmdatlmda * (R[3] - L[3]) + ( lmdar * Fl[3] - lmdal*Fr[3] ) ) * ovlrmll;
+      Fhll[4] = ( lmdatlmda * (R[4] - L[4]) + ( lmdar * Fl[4] - lmdal*Fr[4] ) ) * ovlrmll;
 
-     /* calculate Fs */
-     Flux_Out[0] = Fhll[0];
-     Flux_Out[1] = Fhll[1];
-     Flux_Out[2] = Fhll[2];
-     Flux_Out[3] = Fhll[3];
-     Flux_Out[4] = Fhll[4];
+      /* calculate Fs */
+      Flux_Out[0] = Fhll[0];
+      Flux_Out[1] = Fhll[1];
+      Flux_Out[2] = Fhll[2];
+      Flux_Out[3] = Fhll[3];
+      Flux_Out[4] = Fhll[4];
 
-     Hydro_Rotate3D( Flux_Out, XYZ, false, MAG_OFFSET  );
-     return;
+      Hydro_Rotate3D( Flux_Out, XYZ, false, MAG_OFFSET  );
+      return;
    }
-   else{ /* Fr */
+   else { /* Fr */
      /* intercell flux is right flux */
 
-     Flux_Out[0] = Fr[0];
-     Flux_Out[1] = Fr[1];
-     Flux_Out[2] = Fr[2];
-     Flux_Out[3] = Fr[3];
-     Flux_Out[4] = Fr[4];
+      Flux_Out[0] = Fr[0];
+      Flux_Out[1] = Fr[1];
+      Flux_Out[2] = Fr[2];
+      Flux_Out[3] = Fr[3];
+      Flux_Out[4] = Fr[4];
 
-     Hydro_Rotate3D( Flux_Out, XYZ, false, MAG_OFFSET  );
-     return;
+      Hydro_Rotate3D( Flux_Out, XYZ, false, MAG_OFFSET  );
+      return;
    }
 #  else
 // 2. estimate the maximum wave speeds

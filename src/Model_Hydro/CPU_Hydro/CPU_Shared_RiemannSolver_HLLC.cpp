@@ -85,17 +85,14 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
    Hydro_CheckUnphysical( UNPHY_MODE_CONS, L,    NULL, ERROR_INFO, UNPHY_VERBOSE );
    Hydro_CheckUnphysical( UNPHY_MODE_CONS, R,    NULL, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_CONS, L_In, NULL, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_CONS, R_In, NULL, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
-
 /* 1. compute primitive vars. from conserved vars. */
-    Hydro_Con2Pri( L, PL, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+   Hydro_Con2Pri( L, PL, MinPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                   (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &lFactor );
 
-    Hydro_Con2Pri( R, PR, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+   Hydro_Con2Pri( R, PR, MinPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                   (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &rFactor );
 
@@ -105,25 +102,24 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 #  endif
 
 /* 2. Transform 4-velocity to 3-velocity */
-   lV1=PL[1]/lFactor;
-   lV2=PL[2]/lFactor;
-   lV3=PL[3]/lFactor;
+   const real _lFactor = (real)1.0 / lFactor;
+   lV1=PL[1]*_lFactor;
+   lV2=PL[2]*_lFactor;
+   lV3=PL[3]*_lFactor;
 
-   rV1=PR[1]/rFactor;
-   rV2=PR[2]/rFactor;
-   rV3=PR[3]/rFactor;
-
-
+   const real _rFactor = (real)1.0 / rFactor;
+   rV1=PR[1]*_rFactor;
+   rV2=PR[2]*_rFactor;
+   rV3=PR[3]*_rFactor;
 
 /* 3. Compute the max and min wave speeds used in Mignone */
    cslsq = EoS_Temper2CSqr( PL[0], PL[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
    csrsq = EoS_Temper2CSqr( PR[0], PR[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   if ( cslsq >= 1.0 || csrsq >= 1.0 || cslsq < 0.0 || csrsq < 0.0 )
-     printf( "cslsq=%10.7e, cslrq=%10.7e\n", cslsq, csrsq);
+   if ( cslsq >= (real)1.0 || csrsq >= (real)1.0 || cslsq < (real)0.0 || csrsq < (real)0.0 )
+      printf( "cslsq=%14.7e, cslrq=%14.7e\n", cslsq, csrsq );
 #  endif
-
 
 // square of Lorentz factor
    gammasql = SQR(lFactor);
@@ -151,7 +147,6 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    real ssl__ = (real)1.0 + ssl;
    real ssr__ = (real)1.0 + ssr;
 
-
    lmdapl = ( lV1 + SQRT(deltal) ) / ssl__ ;
    lmdaml = ( lV1 - SQRT(deltal) ) / ssl__ ;
 
@@ -170,7 +165,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Fl[3] = L[3] * lV1;
    Fl[4] = ( L[4] + PL[4] ) * lV1;
 
-   if( lmdal >= (real)0.0)
+   if( lmdal >= (real)0.0 )
    { /* Fl */
      /* intercell flux is left flux */
      Flux_Out[0] = Fl[0];
@@ -181,7 +176,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
      // evaluate the fluxes of passive scalars
      #  if ( NCOMP_PASSIVE > 0 )
-        if ( Flux_Out[FLUX_DENS] >= 0.0 )
+        if ( Flux_Out[FLUX_DENS] >= (real)0.0 )
         {
            const real vx = Flux_Out[FLUX_DENS]/L[0];
 
@@ -217,7 +212,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
      // evaluate the fluxes of passive scalars
      #  if ( NCOMP_PASSIVE > 0 )
-        if ( Flux_Out[FLUX_DENS] >= 0.0 )
+        if ( Flux_Out[FLUX_DENS] >= (real)0.0 )
         {
            const real vx = Flux_Out[FLUX_DENS]/L[0];
 
@@ -258,7 +253,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    real delta = b * b - (real)4.0*a*c;
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   if (delta < (real) 0.0) printf("delta=%f\n", delta);
+   if (delta < (real)0.0 ) printf("delta=%14.7e\n", delta);
 #  endif
 
    lmdas = - ((real)2.0 * c) / ( b + SIGN(b) * SQRT( delta ) );
@@ -297,7 +292,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
     // evaluate the fluxes of passive scalars
     #  if ( NCOMP_PASSIVE > 0 )
-       if ( Flux_Out[FLUX_DENS] >= 0.0 )
+       if ( Flux_Out[FLUX_DENS] >= (real)0.0 )
        {
           const real vx = Flux_Out[FLUX_DENS]/L[0];
 
@@ -339,7 +334,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
     // evaluate the fluxes of passive scalars
     #  if ( NCOMP_PASSIVE > 0 )
-       if ( Flux_Out[FLUX_DENS] >= 0.0 )
+       if ( Flux_Out[FLUX_DENS] >= (real)0.0 )
        {
           const real vx = Flux_Out[FLUX_DENS]/L[0];
 
