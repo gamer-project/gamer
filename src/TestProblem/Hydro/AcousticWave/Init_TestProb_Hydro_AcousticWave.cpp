@@ -141,6 +141,10 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
+
+// must initialize EoS first
+   EoS_Init();
+
    Acoustic_WaveLength = ( Acoustic_Dir == 3 ) ? amr->BoxSize[0]/sqrt(3.0) : amr->BoxSize[Acoustic_Dir];
 
 // force Acoustic_Sign to be +1.0/-1.0
@@ -148,10 +152,10 @@ void SetParameter()
    else                          Acoustic_Sign = -1.0;
 
 # ifdef SRHD
-  Acoustic_Rho_Bg = 1.0;
-  Acoustic_Cs2 = EoS_Temper2CSqr_CPUPtr(Acoustic_Rho_Bg, Acoustic_Rho_Bg*Acoustic_Temp_Bg,
+   Acoustic_Rho_Bg = 1.0;
+   Acoustic_Cs2 = EoS_Temper2CSqr_CPUPtr( Acoustic_Rho_Bg, Acoustic_Rho_Bg*Acoustic_Temp_Bg,
                                           NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-  Acoustic_Cs  = sqrt(Acoustic_Cs2);
+   Acoustic_Cs  = sqrt(Acoustic_Cs2);
 # endif
 
 
