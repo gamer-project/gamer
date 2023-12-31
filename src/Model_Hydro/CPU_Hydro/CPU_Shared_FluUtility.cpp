@@ -192,8 +192,11 @@ void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int 
 //                EintOut            : Pointer to store the output internal energy
 //                                     --> Do nothing if it is NULL
 //                                     --> Internal energy floor is not applied
+//                LorentzFactorPtr   : Pointer to store the Lorentz factor value
+//                                     --> Do nothing if it is NULL
+//                                     --> Only used for SRHD
 //
-// Return      :  Out[], EintOut (optional)
+// Return      :  Out[], EintOut (optional), LorentzFactorPtr (optional)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_Con2Pri( const real In[], real Out[], const real MinPres, 
