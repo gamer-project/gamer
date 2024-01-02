@@ -7,7 +7,7 @@ import os
 
 params = read_parameters("../Input__TestProb")
 
-nbin = 5000
+nbin = 2500
 # Assign the parameters to variables
 Center_Halo = params["Cloud_CenterX"], params["Cloud_CenterY"], params["Cloud_CenterZ"] #Units: pc, pc, pc
 Halo = params["HALO_Rs"], params["HALO_RHO_0"], params["HALO_Rt"],params["HALO_TYPE"] #Units: pc, Msun/pc^3, pc, None
@@ -18,9 +18,10 @@ r_cutoff = max(params["HALO_Rt"], params["STELLAR_Rt"]) #Units: pc
 
 PURE_TABLE = params["PURE_TABLE"]
 if PURE_TABLE: pure_table_path = params["Chandrasekhar_DF_Table_Name"]
+else : pure_table_path = ""
 
 
-G = 4.302e-3  # gravitational constant in pc^3 / (Myr^2 Msun)
+G = 4.492e-3  # gravitational constant in pc^3 / (Myr^2 Msun)
 # # print all the assigned parameters to check
 # print("Center_Halo:", Center_Halo)
 # print("Halo:", Halo)
@@ -84,6 +85,56 @@ def clustermass(rho_s, r0, r, model_name):
     f = integrate.nquad(massbase, [[0, x]])[0] * rho_s
     return f
 
+def smooth_transition(r_value, start, end, scale):
+    """
+    A smooth transition function using a sigmoid-like curve.
+    - r_value: the current radius
+    - start: radius where decay starts
+    - end: radius where decay is fully applied
+    - scale: controls the smoothness of the transition
+    """
+    if r_value < start:
+        # print('1')
+        return 1
+    elif r_value > end:
+        return np.exp(-(r_value - start) / scale)
+    else:
+        # Transition range
+        x = (r_value - start) / (end - start)
+        # Sigmoid function for smooth transition
+        sigmoid = 1 / (1 + np.exp(-10 * (x - 0.5)))
+        result = 1 - sigmoid * (1 - np.exp(-(r_value - start) / scale))
+        # if r_value > 6000:
+        #     print(result)
+        return result
+
+def clustermass_soft(rho_s, r0, r, model_name, begin_smooth_r, end_smooth_r):
+
+
+    x = r/r0
+
+    def massbase(x):
+
+        smooth_transition_factor_ = smooth_transition(x*r0,begin_smooth_r, end_smooth_r, GC_ri)
+
+        if model_name == "Burkert":
+            # return 1e9
+            return 4*np.pi*x*x*(r0**3) * smooth_transition_factor_ * Burkert_dens(x)
+        elif model_name == "NFW":
+            return 4*np.pi*x*x*(r0**3) * smooth_transition_factor_* NFW_dens(x)
+        elif model_name == "Plummer":
+            return 4*np.pi*x*x*(r0**3) * smooth_transition_factor_* Plummer_dens(x)
+        elif model_name == "LC":
+            return 4*np.pi*x*x*(r0**3) * smooth_transition_factor_* LC_dens(x)
+        elif model_name == "King":
+            return 4*np.pi*x*x*(r0**3) * smooth_transition_factor_* King_dens(x)
+        else:
+            return 0
+    f = integrate.nquad(massbase, [[0, x]])[0] * rho_s
+
+
+    return f
+
 
 def getrho(mass, r0, rt, model_name):
     if model_name == "None":
@@ -105,6 +156,19 @@ def create_table(table_filename, r, dens, mass):
 
     f.close()
 
+
+# halo_rs = 0.25
+# halo_mass = 318
+# halo_rt = 6
+# halo_type = "Burkert"
+# # Halo = halo_rs, halo_mass, halo_rt, halo_type
+# rho = getrho(halo_mass, halo_rs, halo_rt, halo_type)
+# print("rho:", rho)
+# print("clustermass:", clustermass(rho, halo_rs, 2, halo_type))
+# exit()
+
+
+
 def SetICs(Halo, Stellar, r_orbit, r_cutoff, center_position):
     
     center_x, center_y, center_z = center_position #[pc]
@@ -113,27 +177,70 @@ def SetICs(Halo, Stellar, r_orbit, r_cutoff, center_position):
     rho_halo = halo_rho0
     rho_stellar = stellar_rho0
 
-
+    r,dens = [],[]
     # create the table
     if PURE_TABLE == False:
         print('A-1-1. Create the table...')
         table_filename = Halo[3]+'_table_'+datetime.datetime.now().strftime("%Y%m%d")
         r = np.logspace(np.log10(halo_rs/100), np.log10(r_cutoff), nbin)
+        dr = r[1]-r[0]
+        # create the original table (Hard truncated)
         if Stellar == (0, 0, 0, "None"):
-            dens = np.array([density(rho_halo, halo_rs, r[i], halo_type) for i in range(len(r))])
-            mass = np.array([clustermass(rho_halo, halo_rs, r[i], halo_type) for i in range(len(r))])
-            create_table(table_filename+'.txt', r, dens, mass)
+            begin_smooth_r = GC_ri * 1
+            end_smooth_r = r_cutoff
+            # decay_factor = lambda r_value: np.exp(-(r_value - begin_smooth_r) / GC_ri) if r_value > begin_smooth_r else 1
+
+            dens = np.array([density(rho_halo, halo_rs, r[i], halo_type) * smooth_transition(r[i], begin_smooth_r, end_smooth_r, GC_ri) for i in range(len(r))])
+            
+
+
+            # split r into two parts
+            # r_original = r[r <= begin_smooth_r]
+            # r_smooth = r[r > begin_smooth_r]
+
+
+            # mass_original = np.array([clustermass(rho_halo, halo_rs, r_original[i], halo_type) for i in range(len(r_original))])
+            # mass_smooth = np.array([clustermass_soft(rho_halo, halo_rs, r_smooth[i], halo_type, \
+                                                    #  smooth_transition(r_smooth[i], begin_smooth_r, end_smooth_r, GC_ri)) for i in range(len(r_smooth))])
+            # 
+            # combine the two parts
+            # mass = np.concatenate((mass_original, mass_smooth), axis=0)
+            # print('haha') 
+
+            mass = np.array([clustermass_soft(rho_halo, halo_rs, r[i], halo_type, begin_smooth_r, end_smooth_r) for i in range(len(r))])
+
+            # mass = np.array([clustermass(rho_halo, halo_rs, r[i], halo_type) * smooth_transition(r[i], begin_smooth_r, end_smooth_r, GC_ri) for i in range(len(r))])
+            
+            
+
         else:
             dens = np.array([density(rho_halo, halo_rs, r[i], halo_type)+density(
                 rho_stellar, stellar_rs, r[i], stellar_type) for i in range(len(r))])
             mass = np.array([clustermass(rho_halo, halo_rs, r[i], halo_type) + clustermass(
                 rho_stellar, stellar_rs, r[i], stellar_type) for i in range(len(r))])
-            create_table(table_filename+'.txt', r, dens, mass)
+        
+        # # Smooth the table with exponential decay profile
+        # begin_smooth_r = GC_ri * 2.5
+        # end_smooth_r = r_cutoff
+        # smooth_r = np.logspace(np.log10(begin_smooth_r), np.log10(end_smooth_r), nbin)
+        # smooth_dens = np.array([density(rho_halo, halo_rs, smooth_r[i], halo_type) for i in range(len(smooth_r))])*np.exp(-(smooth_r-begin_smooth_r)/GC_ri)
+        # smooth_mass = np.array([clustermass(rho_halo, halo_rs, smooth_r[i], halo_type) for i in range(len(smooth_r))])*np.exp(-(smooth_r-begin_smooth_r)/GC_ri)
+        
+        # # replace the smooth part to the original table
+        # for i in range(len(r)):
+        #     if r[i] > begin_smooth_r:
+        #         dens[i] = smooth_dens[i]
+        #         mass[i] = smooth_mass[i]
+
+        create_table(table_filename+'.txt', r, dens, mass)
         print('A-1-1. Create the table...Done : '+table_filename+' is created')
     elif PURE_TABLE == True:
         print('A-1-2. Pure Table (Still need to specify rho0 and Rs manually in Input__Testprob)...') 
         table_filename, file_extension = os.path.splitext(pure_table_path)
         print('A-1-2. Pure Table...Done : '+table_filename+' is read')
+    else: 
+        table_filename = "None"
+        
 
     print('A-2. Extract the table for simulation need...')
     if PURE_TABLE == False:
@@ -178,14 +285,21 @@ def SetICs(Halo, Stellar, r_orbit, r_cutoff, center_position):
 
     # set the GC velocity (counterclockwise)
     halo_cutoff_mass = accumulated_mass_from_file(r_cutoff)
-    GC_v = [-v_initial*np.sin(theta), v_initial*np.cos(theta), 0]
-
-
+    ## not consider relative speed
+    #GC_v = [-v_initial*np.sin(theta), v_initial*np.cos(theta), 0]
+    #Halo_v = [0,0,0]
+    # consider relative speed
+    GC_v = [-v_initial*np.sin(theta)*halo_cutoff_mass/(halo_cutoff_mass+GC_mass), v_initial*np.cos(theta)*halo_cutoff_mass/(halo_cutoff_mass+GC_mass), 0]
+    Halo_v = [v_initial*np.sin(theta)*GC_mass/(halo_cutoff_mass+GC_mass),-v_initial*np.cos(theta)*GC_mass/(halo_cutoff_mass+GC_mass), 0]
+    
     
     if Stellar == (0, 0, 0, "None"):
         print("!!!!!!!!REMINDER : No stellar component!!!!!!!!")
 
-    
+    halo_cutoff_mass_ = accumulated_mass_from_file(GC_ri)
+
+    print(f"mass portion : {GC_mass/halo_cutoff_mass_}")
+#    exit()    
 
     print('--------------------------------')
     print('scaling density:')
@@ -193,18 +307,21 @@ def SetICs(Halo, Stellar, r_orbit, r_cutoff, center_position):
     print("Stellar Density (rho0):{:>15.10f} [Msun/pc^3]".format( rho_stellar))
     print("Total Peak density    :{:>15.10f} [Msun/pc^3]".format( rho_halo + rho_stellar))
 
-    # if Stellar == (0, 0, 0, "None"):
-    #     enclosed_mass = clustermass(rho_halo, halo_rs, ri, halo_type)
-    #     halo_cutoff_mass = clustermass(rho_halo, halo_rs, r_cutoff, halo_type)
-    # else:
-    #     enclosed_mass = clustermass(rho_halo, halo_rs, ri, halo_type) +  clustermass(rho_stellar, stellar_rs, ri, stellar_type)
-    #     halo_cutoff_mass = clustermass(rho_halo, halo_rs, r_cutoff, halo_type)+clustermass(rho_stellar, stellar_rs, r_cutoff, stellar_type)
-        
+#    if Stellar == (0, 0, 0, "None"):
+#         enclosed_mass = clustermass(rho_halo, halo_rs, GC_ri, halo_type)
+#         halo_cutoff_mass = clustermass(rho_halo, halo_rs, GC_ri, halo_type)
+#    else:
+#         enclosed_mass = clustermass(rho_halo, halo_rs, ri, halo_type) +  clustermass(rho_stellar, stellar_rs, ri, stellar_type)
+#         halo_cutoff_mass = clustermass(rho_halo, halo_rs, r_cutoff, halo_type)+clustermass(rho_stellar, stellar_rs, r_cutoff, stellar_type)
+#        
     
     # v = (G*enclosed_mass/ri)**0.5
     # theta = 0
     # print('--------------------------------')
-    # print("Enclosed Mass from ri :{:>15.1f} [Msun]".format(enclosed_mass))
+#    print("Enclosed Mass from ri :{:>15.1f} [Msun]".format(enclosed_mass))
+#    print("Portion :{:>15.10f}".format(GC_mass/enclosed_mass))
+#    print(GC_mass)
+#    exit()
     # print('intial x,y:')
     print("GC mass               :{:>15.1f} [Msun]".format(GC_mass))
     print("GC x                  :{:>15.1f} [pc]".format(GC_pos[0]))
@@ -213,8 +330,8 @@ def SetICs(Halo, Stellar, r_orbit, r_cutoff, center_position):
     # print('intial velocity (No Consider relative speed between halo and GC):')
     print("GC Vx                 :{:>15.10f} [pc/Myr]".format(GC_v[0]))
     print("GC Vy                 :{:>15.10f} [pc/Myr]".format(GC_v[1]))
-    print("Halo Vx               :{:>15.10f} [pc/Myr]".format(0))
-    print("Halo Vy               :{:>15.10f} [pc/Myr]".format(0))
+    print("Halo Vx               :{:>15.10f} [pc/Myr]".format(Halo_v[0]))
+    print("Halo Vy               :{:>15.10f} [pc/Myr]".format(Halo_v[1]))
     print("Halo,GC Vz            :{:>15.10f} [pc/Myr]".format(0))
     print('--------------------------------')
     print("A-3. Calculate the initial conditions...Done")
@@ -245,9 +362,9 @@ def SetICs(Halo, Stellar, r_orbit, r_cutoff, center_position):
             elif line.startswith("Chandrasekhar_DF_Table_Name"):
                 f.write("Chandrasekhar_DF_Table_Name   "+table_filename+'.txt'+" #+ if PURE_TABLE = 0; *if PURE_TABLE=1 the table must contains radius, density and enclosed mass\n")
             elif line.startswith("Cloud_BulkVelX"):
-                f.write("Cloud_BulkVelX        "+str(0)+"                             #+ Bulk Velocity for the whole cloud\n")
+                f.write("Cloud_BulkVelX        "+str(Halo_v[0])+"                             #+ Bulk Velocity for the whole cloud\n")
             elif line.startswith("Cloud_BulkVelY"):
-                f.write("Cloud_BulkVelY        "+str(0)+"                             #+ Bulk Velocity for the whole cloud\n")
+                f.write("Cloud_BulkVelY        "+str(Halo_v[1])+"                             #+ Bulk Velocity for the whole cloud\n")
             elif line.startswith("Cloud_BulkVelZ"):
                 f.write("Cloud_BulkVelZ        0.0"+"                           #+ Bulk Velocity for the whole cloudn\n")
             elif line.startswith("Cloud_Rho0"):

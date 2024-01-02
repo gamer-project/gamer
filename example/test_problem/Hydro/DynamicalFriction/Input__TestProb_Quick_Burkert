@@ -4,6 +4,12 @@
 # +: will update by running A_SET_IC.py 
 # !:Please don't change if neccessary
 
+# (0) Simulation configuration
+FIX_CENTER	      0				    #*Fix the center to be the halo center [1] or dynamically adjust it base on potential minimum [0]
+SEARCH_RADIUS         2                             #*search radius for the potential minimum search (unit:spatial resolution)  If FIX_CENTER = 1, this parameter is useless
+
+
+
 # (1) HALO and STELLAR Parameters
 HALO_TYPE             Burkert                       #* [Burkert]
 HALO_RHO_0            665.3026853292199e-3          #* [Msun/pc^3][665.3026853292199e-3]
@@ -31,8 +37,8 @@ Cloud_Par_Num_Ratio   1.0                           #!particle number ratio [1.0
 Cloud_RSeed           123                           #!random seed for setting particle position and velocity (>=0) [123]
 
 PURE_TABLE            0                             #* Determine whether using (1) to create the table or using user specified table to calculate initial condition [0]
-Chandrasekhar_DF_Table_Name   Burkert_table_20231015.txt #+ if PURE_TABLE = 0; *if PURE_TABLE=1 the table must contains radius, density and enclosed mass
-Density_Table_Name     Burkert_table_20231015_wo_mass.txt #+ The table only contains radius and density for sumulation need
+Chandrasekhar_DF_Table_Name   Burkert_table_20240102.txt #+ if PURE_TABLE = 0; *if PURE_TABLE=1 the table must contains radius, density and enclosed mass
+Density_Table_Name     Burkert_table_20240102_wo_mass.txt #+ The table only contains radius and density for sumulation need
 
 # (3) GC/Massive Object Parameters
 GC_MASS               0.75e6                        #* The Global cluster (Massive object) mass [Msun][0.75e6]
@@ -41,7 +47,7 @@ GC_POSX               12524.3                       #+
 GC_POSY               10000.0                       #+
 GC_POSZ               10000.0                       #+
 GC_VELX               -0.0                          #+
-GC_VELY               19.026035959773473            #+
+GC_VELY               19.44071085126753            #+
 GC_VELZ               0.0                           #+
 
 # (4) Inherit from ParticleEquilibrium (basically NO CHANGE NEEDED) 

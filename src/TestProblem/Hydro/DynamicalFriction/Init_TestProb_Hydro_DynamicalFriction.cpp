@@ -10,11 +10,18 @@ using namespace std;
 // negligibly small uniform density and energy
 double GC_SmallGas;
 
+// parameter for center setting
+double FixCenter;
+double SearchRadius;
+
+
 // GC position
 double GC_xx = 100000000.0;
 double GC_yy = 100000000.0;
 double GC_zz = 100000000.0;
 
+// declare the potential minimum last step
+double min_pot_last[3] ;
 
 
 // problem-specific function prototypes
@@ -120,12 +127,12 @@ void SetParameter()
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
-      PRINT_WARNING( "END_STEP", END_STEP, FORMAT_LONG );
+      PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
    if ( END_T < 0.0 ) {
       END_T = End_T_Default;
-      PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
+      PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
 
 // load run-time parameters
@@ -140,10 +147,14 @@ void SetParameter()
    ReadPara->Add( "GC_POSY",                 &GC_yy,               NoDef_double,  NoMin_double,     NoMax_double      );
    ReadPara->Add( "GC_POSZ",                 &GC_zz,               NoDef_double,  NoMin_double,     NoMax_double      );
    
+   ReadPara->Add( "FIX_CENTER",              &FixCenter,           NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "SEARCH_RADIUS",           &SearchRadius,        NoDef_double,  NoMin_double,     NoMax_double      );
+
    ReadPara->Read( FileName );
    if ( MPI_Rank == 0)
    {
    Aux_Message(stdout, "Setparameter(): %7.5f %7.5f %7.5f \n",GC_xx,GC_yy,GC_zz);
+   Aux_Message(stdout, "Setparameter(): %7.1f %7.1f \n",FixCenter,SearchRadius);
    }
    delete ReadPara;
 
@@ -164,15 +175,47 @@ void SetParameter()
 void Aux_Record_User_GC()
 {
 
+// set the center finding method base on Input__TestProb
+if (FixCenter == 1.0){
+
+if ( MPI_Rank == 0)
+{
+	char Filename[MAX_STRING];
+	sprintf( Filename, "%s", "Record__RESULT_Center.txt" );
+	FILE *File = fopen( Filename, "a" );
+        if (Time[0]==0.0){
+        fprintf(File, "%15s%15s%15s%15s\n", "Time", "CenterX", "CenterY", "CenterZ");
+	}
+	fprintf(File, "%13.7f\t%13.7e\t%13.7e\t%13.7e\n",
+           Time[0]  ,amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2]);
+	fclose ( File );	
+}
+}else{
 // 1. Find the minimum potential position
+// Extrema.Radius    = HUGE_NUMBER; // entire domain
 Extrema_t Extrema;
 Extrema.Field     = _POTE;
-Extrema.Radius    = HUGE_NUMBER; // entire domain
-Extrema.Center[0] = amr->BoxCenter[0];
-Extrema.Center[1] = amr->BoxCenter[1];
-Extrema.Center[2] = amr->BoxCenter[2];
+Extrema.Radius = SearchRadius*amr->dh[MAX_LEVEL]; //the cell width of the finest level of resolution in the AMR grid multiply by the searchRadius setting
 
+if (Time[0]==0.0)
+{
+  Extrema.Center[0] = amr->BoxCenter[0];
+  Extrema.Center[1] = amr->BoxCenter[1];
+  Extrema.Center[2] = amr->BoxCenter[2];
+  min_pot_last[0] = amr->BoxCenter[0];
+  min_pot_last[1] = amr->BoxCenter[1];
+  min_pot_last[2] = amr->BoxCenter[2];
+}
+else{
+Extrema.Center[0] = min_pot_last[0];
+Extrema.Center[1] = min_pot_last[1];
+Extrema.Center[2] = min_pot_last[2];
+}
 Aux_FindExtrema( &Extrema, EXTREMA_MIN, 0, TOP_LEVEL, PATCH_LEAF );
+
+min_pot_last[0] = Extrema.Coord[0];
+min_pot_last[1] = Extrema.Coord[1];
+min_pot_last[2] = Extrema.Coord[2];
 
 // 2. write them into a .txt file
 
@@ -186,17 +229,30 @@ if ( MPI_Rank == 0)
 	}
 	fprintf(File, "%13.7f\t%13.7e\t%13.7e\t%13.7e\n",
            Time[0]  ,Extrema.Coord[0], Extrema.Coord[1], Extrema.Coord[2]);
-	fclose ( File );	
-//        Aux_Message( stdout, "Output Minimum potential pos... done(Data_%04d)\n",DumpID);
+	fclose ( File );
+	
+	char Filename_[MAX_STRING];
+	sprintf( Filename_, "%s", "Record__Previous_Center.txt" );
+	FILE *File_ = fopen( Filename_, "a" );
+        if (Time[0]==0.0){
+        fprintf(File_, "%15s%15s%15s%15s%15s\n", "Time", "CenterX", "CenterY", "CenterZ","Search R");
+	}
+	fprintf(File_, "%13.7f\t%13.7e\t%13.7e\t%13.7e\t%13.7e\n",
+           Time[0]  ,min_pot_last[0], min_pot_last[1], min_pot_last[2],Extrema.Radius);
+	fclose ( File_ );
 }
+};
 // 2. Find the GC's position
-
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// !!!!! This routine assume there is only one GC particle !!!!!
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 double GC_x=99999.9;
 double GC_y=99999.9;
 double GC_z=99999.9;
 
 for (long p=0; p<amr->Par->NPar_AcPlusInac; p++) {
-   if ( amr->Par->Type[p] == real(4)) {
+if ( amr->Par->Mass[p] < PTYPE_GC )  continue;
+   if ( amr->Par->Type[p] == PTYPE_GC) {
       GC_x = amr->Par->PosX[p]; 
       GC_y = amr->Par->PosY[p]; 
       GC_z = amr->Par->PosZ[p];

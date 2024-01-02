@@ -160,7 +160,6 @@ void Par_Init_ByFunction_GC( const long NPar_ThisRank, const long NPar_AllRank,
 // and assign particle type
    for (long p=0; p<NPar_ThisRank; p++) {
       ParTime[p] = Time[0];
-//      ParType[p] = PTYPE_GENERIC_MASSIVE;
    }
 
 
@@ -170,7 +169,6 @@ void Par_Init_ByFunction_GC( const long NPar_ThisRank, const long NPar_AllRank,
       delete RNG;
       for (int v=0; v<PAR_NATT_TOTAL; v++){
          delete [] ParData_AllRank[v];
-//         delete [] new_ParData_AllRank[v];
       }
    }
 

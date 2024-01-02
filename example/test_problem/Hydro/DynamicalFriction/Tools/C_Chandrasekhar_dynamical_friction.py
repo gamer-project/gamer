@@ -51,7 +51,7 @@ WRITE_TO_FILE = True
 
 GC_softening = 12.5  # softening length in [pc] -> For softening the gravitational acceleration
 dt = 0.01   # time step in [Gyr]
-G = 4.302e-6  # gravitational constant in [kpc^3 / (Gyr^2 Msun)]
+G = 4.492e-6  # gravitational constant in [kpc^3 / (Gyr^2 Msun)]
 UPDATE_METHOD = 'RK4'  # ['RK4'] : 'RK4', 'Euler' or 'RK2'
 
 

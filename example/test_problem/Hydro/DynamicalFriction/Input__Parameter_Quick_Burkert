@@ -15,18 +15,18 @@
 
 # simulation scale
 BOX_SIZE                      20e+03         # box size along the longest side (in Mpc/h if COMOVING is adopted)
-NX0_TOT_X                     320          # number of base-level cells along x
-NX0_TOT_Y                     320          # number of base-level cells along y
-NX0_TOT_Z                     320          # number of base-level cells along z all 720 2023/10/09
+NX0_TOT_X                     208          # number of base-level cells along x
+NX0_TOT_Y                     208          # number of base-level cells along y
+NX0_TOT_Z                     208          # number of base-level cells along z all 720 2023/10/09
 OMP_NTHREAD                   1           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
 END_T                         18000        # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
 END_STEP                      -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
 
 
 # test problems
-TESTPROB_ID                   20         # test problem ID [0]
+TESTPROB_ID                   25         # test problem ID [0]
                                           #   17: HYDRO particle in equilibrium (+GRAVITY & PARTICLE)
-
+					 #    25: Dynamical Friction TestProblem	
 
 # code units (in cgs)
 OPT__UNIT                     1           # specify code units -> must set exactly 3 basic units below [0] ##USELESS FOR COMOVING##
