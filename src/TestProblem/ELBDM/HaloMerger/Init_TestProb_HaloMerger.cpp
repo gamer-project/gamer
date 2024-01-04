@@ -5,42 +5,42 @@
 
 // problem-specific global variables
 // =======================================================================================
-static double   HaloMerger_Background_Density;                             // background density in the box
+static double   HaloMerger_Background_Density;                             // background density in the box (OPT__BC_POT == 1 only) [0.0]
 
-static int      HaloMerger_Halo_Num;                                       // total number of halos
-static int      HaloMerger_Halo_InitMode;                                  // halo initialization mode
+static int      HaloMerger_Halo_Num;                                       // total number of halos [2]
+static int      HaloMerger_Halo_InitMode;                                  // halo initialization mode [1]
                                                                            //   (1=UM_IC real and imaginary parts, 2=UM_IC density-only)
-static int      HaloMerger_Soliton_Num;                                    // total number of solitons
-static int      HaloMerger_Soliton_InitMode;                               // soliton initialization mode
+static int      HaloMerger_Soliton_Num;                                    // total number of solitons [0]
+static int      HaloMerger_Soliton_InitMode;                               // soliton initialization mode [1]
                                                                            //   (1=table of density profile, 2=analytical function of density profile)
 
 // Halo, parameters to read from input
-static char     HaloMerger_Halo_i_CenCoordX[MAX_STRING];                   // x coordinate of center of i-th halo
-static char     HaloMerger_Halo_i_CenCoordY[MAX_STRING];                   // y coordinate of center of i-th halo
-static char     HaloMerger_Halo_i_CenCoordZ[MAX_STRING];                   // z coordinate of center of i-th halo
-static char     HaloMerger_Halo_i_VelocityX[MAX_STRING];                   // x component of bulk velocity of i-th halo
-static char     HaloMerger_Halo_i_VelocityY[MAX_STRING];                   // y component of bulk velocity of i-th halo
-static char     HaloMerger_Halo_i_VelocityZ[MAX_STRING];                   // z component of bulk velocity of i-th halo
-static char     HaloMerger_Halo_i_UM_IC_Filename[MAX_STRING];              // filename of UM_IC for i-th halo (binary file in VZYX order) (HaloMerger_Halo_InitMode <= 2 only)
-static char     HaloMerger_Halo_i_UM_IC_BoxLenX[MAX_STRING];               // physical length of box in x-direction of UM_IC for i-th halo (HaloMerger_Halo_InitMode <= 2 only)
-static char     HaloMerger_Halo_i_UM_IC_BoxLenY[MAX_STRING];               // physical length of box in y-direction of UM_IC for i-th halo (HaloMerger_Halo_InitMode <= 2 only)
-static char     HaloMerger_Halo_i_UM_IC_BoxLenZ[MAX_STRING];               // physical length of box in z-direction of UM_IC for i-th halo (HaloMerger_Halo_InitMode <= 2 only)
-static char     HaloMerger_Halo_i_UM_IC_NCellsX[MAX_STRING];               // number of cells of box in x-direction of UM_IC for i-th halo (HaloMerger_Halo_InitMode <= 2 only)
-static char     HaloMerger_Halo_i_UM_IC_NCellsY[MAX_STRING];               // number of cells of box in y-direction of UM_IC for i-th halo (HaloMerger_Halo_InitMode <= 2 only)
-static char     HaloMerger_Halo_i_UM_IC_NCellsZ[MAX_STRING];               // number of cells of box in z-direction of UM_IC for i-th halo (HaloMerger_Halo_InitMode <= 2 only)
-static char     HaloMerger_Halo_i_UM_IC_Float8[MAX_STRING];                // data precision of UM_IC for i-th halo (0=float, 1=double) (HaloMerger_Halo_InitMode <= 2 only)
+static char     HaloMerger_Halo_i_CenCoordX[MAX_STRING];                   // x coordinate of center of the i-th halo [-1.0]
+static char     HaloMerger_Halo_i_CenCoordY[MAX_STRING];                   // y coordinate of center of the i-th halo [-1.0]
+static char     HaloMerger_Halo_i_CenCoordZ[MAX_STRING];                   // z coordinate of center of the i-th halo [-1.0]
+static char     HaloMerger_Halo_i_VelocityX[MAX_STRING];                   // x component of bulk velocity of the i-th halo [0.0]
+static char     HaloMerger_Halo_i_VelocityY[MAX_STRING];                   // y component of bulk velocity of the i-th halo [0.0]
+static char     HaloMerger_Halo_i_VelocityZ[MAX_STRING];                   // z component of bulk velocity of the i-th halo [0.0]
+static char     HaloMerger_Halo_i_UM_IC_Filename[MAX_STRING];              // filename of UM_IC for the i-th halo (binary file in VZYX order) (HaloMerger_Halo_InitMode <= 2 only)
+static char     HaloMerger_Halo_i_UM_IC_BoxLenX[MAX_STRING];               // physical length of box in x-direction of UM_IC for the i-th halo (HaloMerger_Halo_InitMode <= 2 only)
+static char     HaloMerger_Halo_i_UM_IC_BoxLenY[MAX_STRING];               // physical length of box in y-direction of UM_IC for the i-th halo (HaloMerger_Halo_InitMode <= 2 only)
+static char     HaloMerger_Halo_i_UM_IC_BoxLenZ[MAX_STRING];               // physical length of box in z-direction of UM_IC for the i-th halo (HaloMerger_Halo_InitMode <= 2 only)
+static char     HaloMerger_Halo_i_UM_IC_NCellsX[MAX_STRING];               // number of cells of box in x-direction of UM_IC for the i-th halo (HaloMerger_Halo_InitMode <= 2 only)
+static char     HaloMerger_Halo_i_UM_IC_NCellsY[MAX_STRING];               // number of cells of box in y-direction of UM_IC for the i-th halo (HaloMerger_Halo_InitMode <= 2 only)
+static char     HaloMerger_Halo_i_UM_IC_NCellsZ[MAX_STRING];               // number of cells of box in z-direction of UM_IC for the i-th halo (HaloMerger_Halo_InitMode <= 2 only)
+static char     HaloMerger_Halo_i_UM_IC_Float8[MAX_STRING];                // data precision of UM_IC for the i-th halo (0=float, 1=double) (HaloMerger_Halo_InitMode <= 2 only) [0]
 
 // Soliton, parameter to read from input
-static char     HaloMerger_Soliton_i_CoreRadius[MAX_STRING];               // core radius of i-th soliton (<0.0: set by HaloMerger_Soliton_i_CoreRho)
-static char     HaloMerger_Soliton_i_CoreRho[MAX_STRING];                  // peak density of i-th soliton (will be overwritten if HaloMerger_Soliton_i_CoreRadius > 0.0)
-static char     HaloMerger_Soliton_i_CenCoordX[MAX_STRING];                // x coordinate of center of i-th soliton
-static char     HaloMerger_Soliton_i_CenCoordY[MAX_STRING];                // y coordinate of center of i-th soliton
-static char     HaloMerger_Soliton_i_CenCoordZ[MAX_STRING];                // z coordinate of center of i-th soliton
-static char     HaloMerger_Soliton_i_VelocityX[MAX_STRING];                // x component of bulk velocity of i-th soliton
-static char     HaloMerger_Soliton_i_VelocityY[MAX_STRING];                // y component of bulk velocity of i-th soliton
-static char     HaloMerger_Soliton_i_VelocityZ[MAX_STRING];                // z component of bulk velocity of i-th soliton
-static char     HaloMerger_Soliton_i_DensProf_Filename[MAX_STRING];        // filename of density profile table for i-th soliton (HaloMerger_Soliton_InitMode == 1 only)
-static char     HaloMerger_Soliton_i_OuterSlope[MAX_STRING];               // outer slope of i-th soliton (HaloMerger_Soliton_InitMode == 2 only)
+static char     HaloMerger_Soliton_i_CoreRadius[MAX_STRING];               // core radius of the i-th soliton (<0.0: set by HaloMerger_Soliton_i_CoreRho) [-1.0]
+static char     HaloMerger_Soliton_i_CoreRho[MAX_STRING];                  // peak density of the i-th soliton (will be overwritten if HaloMerger_Soliton_i_CoreRadius > 0.0) [-1.0]
+static char     HaloMerger_Soliton_i_CenCoordX[MAX_STRING];                // x coordinate of center of the i-th soliton [-1.0]
+static char     HaloMerger_Soliton_i_CenCoordY[MAX_STRING];                // y coordinate of center of the i-th soliton [-1.0]
+static char     HaloMerger_Soliton_i_CenCoordZ[MAX_STRING];                // z coordinate of center of the i-th soliton [-1.0]
+static char     HaloMerger_Soliton_i_VelocityX[MAX_STRING];                // x component of bulk velocity of the i-th soliton [0.0]
+static char     HaloMerger_Soliton_i_VelocityY[MAX_STRING];                // y component of bulk velocity of the i-th soliton [0.0]
+static char     HaloMerger_Soliton_i_VelocityZ[MAX_STRING];                // z component of bulk velocity of the i-th soliton [0.0]
+static char     HaloMerger_Soliton_i_DensProf_Filename[MAX_STRING];        // filename of density profile table for the i-th soliton (HaloMerger_Soliton_InitMode == 1 only)
+static char     HaloMerger_Soliton_i_OuterSlope[MAX_STRING];               // outer slope of the i-th soliton (HaloMerger_Soliton_InitMode == 2 only) [-8.0]
 
 // Halo
 static double (*HaloMerger_Halo_CenCoord)[3]                      = NULL;  // center coordinates of each halo
@@ -114,6 +114,9 @@ void Validate()
    if ( !OPT__UNIT )
       Aux_Error( ERROR_INFO, "OPT__UNIT must be enabled !!\n" );
 
+   for (int f=0; f<6; f++)
+   if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
+      Aux_Error( ERROR_INFO, "must adopt periodic BC for fluid --> reset OPT__BC_FLU* !!\n" );
 
 // warnings
    if ( MPI_Rank == 0 )
@@ -151,7 +154,7 @@ void SetParameter()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ...\n" );
 
 
-// (1) load the problem-specific runtime parameters
+// (1-1) load the problem-specific runtime parameters
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
@@ -162,14 +165,18 @@ void SetParameter()
 // ReadPara->Add( "KEY_IN_THE_FILE",                       &VARIABLE,                                   DEFAULT,          MIN,           MAX            );
 // ********************************************************************************************************************************
    ReadPara->Add( "HaloMerger_Background_Density",         &HaloMerger_Background_Density,              0.0,              0.0,           NoMax_double   );
-   ReadPara->Add( "HaloMerger_Halo_Num",                   &HaloMerger_Halo_Num,                        1,                0,             NoMax_int      );
+   ReadPara->Add( "HaloMerger_Halo_Num",                   &HaloMerger_Halo_Num,                        2,                0,             NoMax_int      );
    ReadPara->Add( "HaloMerger_Halo_InitMode",              &HaloMerger_Halo_InitMode,                   1,                1,             2              );
-   ReadPara->Add( "HaloMerger_Soliton_Num",                &HaloMerger_Soliton_Num,                     1,                0,             NoMax_int      );
+   ReadPara->Add( "HaloMerger_Soliton_Num",                &HaloMerger_Soliton_Num,                     0,                0,             NoMax_int      );
    ReadPara->Add( "HaloMerger_Soliton_InitMode",           &HaloMerger_Soliton_InitMode,                1,                1,             2              );
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
+
+   if ( HaloMerger_Background_Density > 0.0  &&  OPT__BC_POT != BC_POT_PERIODIC )
+      Aux_Error( ERROR_INFO, "must adopt periodic BC for gravity if HaloMerger_Background_Density > 0.0 --> reset OPT__BC_POT !!\n" );
+
 
 // (1-2) load the runtime parameters for halos
    if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Halo_Num > 0 )
@@ -761,7 +768,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    {
       for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
       {
-         double Real_halo, Imag_halo;
+         double Real_halo = 0.0;
+         double Imag_halo = 0.0;
 
          // when the (x,y,z) is inside the range of this halo
          if ( x >= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][0]  &&
@@ -810,7 +818,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
       {
          // density and wave function of this soliton
-         double Dens_soliton, Real_soliton, Imag_soliton;
+         double Dens_soliton = 0.0;
+         double Real_soliton = 0.0;
+         double Imag_soliton = 0.0;
 
          // target radius
          const double r_tar = sqrt( SQR(x - HaloMerger_Soliton_CenCoord[index_soliton][0]) +
