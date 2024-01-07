@@ -87,16 +87,10 @@ const static flag_spectral_float  Flag_Spectral_Pr[FLAG_SPECTRAL_ORDER][FLAG_SPE
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flag_Spectral_Prepare_for_Spectral_Criterion
-// Description :  Evaluate ratio of average density of wave function in patch group and average density of wave function in extension domain
-//                The logic behind this comparison is as follows:
-//                The Gram-Fourier extension is computed by expanding the wave function at the patch boundaries in terms of orthogonal polynomials.
-//                The extension is then computed via the weighted sum of periodic extensions of these polynomials.
-//                The coefficients of the boundary polynomials can be shown to decay exponentially for a well-resolved function.
-//                If the function is not well-resolved the polynomials decay more slowly.
-//                As a result, the higher-order polynomials will have a higher weight.
-//                The higher-order polynomials also have much more massive extensions  ( empirically density roughly 10^(polynomial order) ).
-//                Therefore, a less well-resolved function will have a extension with a higher average density.
-//                As a consequence, the average extension density can be used to estimate the resolution of the wave function in the physical domain.
+// Description :  Evaluate decay of the coefficients of a polynomial expansion of the wave function.
+//                The coefficients of the polynomials can be shown to decay exponentially for a well-resolved function.
+//                Therefore, one can check the slope of a least-squares linear fit to log(polynomial order) x log(weight).
+//                If the function is not well-resolved the polynomials decay more slowly and the slope is smaller.
 //
 // Note        :  1. This function is called once per patch group
 //                2. The size of the array Var1D must be FLU_NXT^3
