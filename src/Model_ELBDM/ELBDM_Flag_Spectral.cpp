@@ -87,10 +87,13 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
    const real* Re1D = Var1D;
    const real* Im1D = Var1D + CUBE(FLU_NXT);
 
-   flag_spectral_float Orders[FLAG_SPECTRAL_ORDER]
-   flag_spectral_float Al_Re[FLAG_SPECTRAL_ORDER], Al_Im[FLAG_SPECTRAL_ORDER];
-   flag_spectral_float Ar_Re[FLAG_SPECTRAL_ORDER], Ar_Im[FLAG_SPECTRAL_ORDER];
-   real Row_Re[FLU_NXT], Row_Im[FLU_NXT];
+   flag_spectral_float Order[FLAG_SPECTRAL_ORDER];
+   flag_spectral_float Al_Re[FLAG_SPECTRAL_ORDER];
+   flag_spectral_float Al_Im[FLAG_SPECTRAL_ORDER];
+   flag_spectral_float Ar_Re[FLAG_SPECTRAL_ORDER];
+   flag_spectral_float Ar_Im[FLAG_SPECTRAL_ORDER];
+   real Row_Re[FLU_NXT];
+   real Row_Im[FLU_NXT];
    flag_spectral_float Slope, Intercept;
 
 // initialise with large negative number
@@ -143,18 +146,18 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
          Al_Im[i]  = log(abs(Al_Im[i]));
          Ar_Re[i]  = log(abs(Ar_Re[i]));
          Ar_Im[i]  = log(abs(Ar_Im[i]));
-         Orders[i] = i;
+         Order[i] = i;
       }
 
 //    Find maximum slope to determine whether refinement is necessary
 //    Large negative slopes indicate that wavefunction is well-resolved
-      Least_Squares_Regression(Orders, Al_Re, FLAG_SPECTRAL_ORDER, Slope, Intercept);
+      Least_Squares_Regression(Order, Al_Re, FLAG_SPECTRAL_ORDER, Slope, Intercept);
       Cond = MAX(Cond, Slope);
-      Least_Squares_Regression(Orders, Al_Im, FLAG_SPECTRAL_ORDER, Slope, Intercept);
+      Least_Squares_Regression(Order, Al_Im, FLAG_SPECTRAL_ORDER, Slope, Intercept);
       Cond = MAX(Cond, Slope);
-      Least_Squares_Regression(Orders, Ar_Re, FLAG_SPECTRAL_ORDER, Slope, Intercept);
+      Least_Squares_Regression(Order, Ar_Re, FLAG_SPECTRAL_ORDER, Slope, Intercept);
       Cond = MAX(Cond, Slope);
-      Least_Squares_Regression(Orders, Ar_Im, FLAG_SPECTRAL_ORDER, Slope, Intercept);
+      Least_Squares_Regression(Order, Ar_Im, FLAG_SPECTRAL_ORDER, Slope, Intercept);
       Cond = MAX(Cond, Slope);
 
    } // XYZ, k,j
