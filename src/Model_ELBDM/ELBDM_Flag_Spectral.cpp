@@ -151,13 +151,13 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
 
 //    Find maximum slope to determine whether refinement is necessary
 //    Large negative slopes indicate that wavefunction is well-resolved
-      Least_Squares_Regression(Order, Al_Re, FLAG_SPECTRAL_ORDER, Slope, Intercept);
+      Least_Squares_Regression(Order, Al_Re, FLAG_SPECTRAL_ORDER, &Slope, &Intercept);
       Cond = MAX(Cond, Slope);
-      Least_Squares_Regression(Order, Al_Im, FLAG_SPECTRAL_ORDER, Slope, Intercept);
+      Least_Squares_Regression(Order, Al_Im, FLAG_SPECTRAL_ORDER, &Slope, &Intercept);
       Cond = MAX(Cond, Slope);
-      Least_Squares_Regression(Order, Ar_Re, FLAG_SPECTRAL_ORDER, Slope, Intercept);
+      Least_Squares_Regression(Order, Ar_Re, FLAG_SPECTRAL_ORDER, &Slope, &Intercept);
       Cond = MAX(Cond, Slope);
-      Least_Squares_Regression(Order, Ar_Im, FLAG_SPECTRAL_ORDER, Slope, Intercept);
+      Least_Squares_Regression(Order, Ar_Im, FLAG_SPECTRAL_ORDER, &Slope, &Intercept);
       Cond = MAX(Cond, Slope);
 
    } // XYZ, k,j
