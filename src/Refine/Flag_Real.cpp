@@ -132,8 +132,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       if ( amr->use_wave_flag[lv] ) {
          Spectral_NVar = 2;
 //    do not use spectral criterion on fluid levels
-      } else { 
-         Spectral_NVar = 0; 
+      } else {
+         Spectral_NVar = 0;
       }
    }
 
@@ -143,7 +143,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 //    use interference criterion on fluid levels
       if ( !amr->use_wave_flag[lv] ) {
          Interf_NVar = 2;
-//    do not use interference criterion on wave levels 
+//    do not use interference criterion on wave levels
       } else {
          Interf_NVar = 0;
       }
@@ -253,7 +253,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                Spectral_IntScheme, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
 
-//          evaluate the ratio of the GramFE extension masses and the physical wave function
+//          evaluate spectral refinement criterion
             Prepare_for_Spectral_Criterion(Spectral_Var, Spectral_Cond);
          }
 #        endif // # if ( MODEL == ELBDM )
