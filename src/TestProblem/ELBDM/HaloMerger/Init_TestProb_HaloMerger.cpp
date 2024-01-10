@@ -9,10 +9,20 @@ static double   HaloMerger_Background_Density;                             // ba
 
 static int      HaloMerger_Halo_Num;                                       // total number of halos [2]
 static int      HaloMerger_Halo_InitMode;                                  // halo initialization mode [1]
-                                                                           //   (1=UM_IC real and imaginary parts, 2=UM_IC density-only)
+                                                                           //   (1=UM_IC real and imaginary parts, 2=UM_IC density and phase)
 static int      HaloMerger_Soliton_Num;                                    // total number of solitons [0]
 static int      HaloMerger_Soliton_InitMode;                               // soliton initialization mode [1]
                                                                            //   (1=table of density profile, 2=analytical function of density profile)
+
+       double   HaloMerger_ExtPot_UniDenSph_M;                             // mass of the uniform-density-sphere external potential
+       double   HaloMerger_ExtPot_UniDenSph_R;                             // radius of the uniform-density-sphere external potential
+       double   HaloMerger_ExtPot_UniDenSph_CenCoordX;                     // x coordinate of center of the uniform-density-sphere external potential
+       double   HaloMerger_ExtPot_UniDenSph_CenCoordY;                     // y coordinate of center of the uniform-density-sphere external potential
+       double   HaloMerger_ExtPot_UniDenSph_CenCoordZ;                     // z coordinate of center of the uniform-density-sphere external potential
+       double   HaloMerger_ExtPot_UniDenSph_VelocityX;                     // x component of velocity of the uniform-density-sphere external potential
+       double   HaloMerger_ExtPot_UniDenSph_VelocityY;                     // y component of velocity of the uniform-density-sphere external potential
+       double   HaloMerger_ExtPot_UniDenSph_VelocityZ;                     // z component of velocity of the uniform-density-sphere external potential
+static double   HaloMerger_ExtPot_UniDenSph_Rho;                           // density of the uniform-density-sphere external potential
 
 // Halo, parameters to read from input
 static char     HaloMerger_Halo_i_CenCoordX[MAX_STRING];                   // x coordinate of center of the i-th halo [-1.0]
@@ -21,7 +31,7 @@ static char     HaloMerger_Halo_i_CenCoordZ[MAX_STRING];                   // z 
 static char     HaloMerger_Halo_i_VelocityX[MAX_STRING];                   // x component of bulk velocity of the i-th halo [0.0]
 static char     HaloMerger_Halo_i_VelocityY[MAX_STRING];                   // y component of bulk velocity of the i-th halo [0.0]
 static char     HaloMerger_Halo_i_VelocityZ[MAX_STRING];                   // z component of bulk velocity of the i-th halo [0.0]
-static char     HaloMerger_Halo_i_UM_IC_Filename[MAX_STRING];              // filename of UM_IC for the i-th halo (binary file in VZYX order) (HaloMerger_Halo_InitMode <= 2 only)
+static char     HaloMerger_Halo_i_UM_IC_Filename[MAX_STRING];              // filename of UM_IC for the i-th halo (binary file in VZYX format) (HaloMerger_Halo_InitMode <= 2 only)
 static char     HaloMerger_Halo_i_UM_IC_BoxLenX[MAX_STRING];               // physical length of box in x-direction of UM_IC for the i-th halo (HaloMerger_Halo_InitMode <= 2 only)
 static char     HaloMerger_Halo_i_UM_IC_BoxLenY[MAX_STRING];               // physical length of box in y-direction of UM_IC for the i-th halo (HaloMerger_Halo_InitMode <= 2 only)
 static char     HaloMerger_Halo_i_UM_IC_BoxLenZ[MAX_STRING];               // physical length of box in z-direction of UM_IC for the i-th halo (HaloMerger_Halo_InitMode <= 2 only)
@@ -67,6 +77,9 @@ static double  *HaloMerger_Soliton_DensProf_ScaleL                = NULL;  // L/
 static double  *HaloMerger_Soliton_DensProf_ScaleD                = NULL;  //      (defined as the ratio between the core radii/peak
                                                                            //      density of the target and reference soliton profiles)
 // =======================================================================================
+
+// external potential routines
+void Init_ExtPot_ELBDM_HaloMerger();
 
 
 // problem-specific functions
@@ -169,6 +182,14 @@ void SetParameter()
    ReadPara->Add( "HaloMerger_Halo_InitMode",              &HaloMerger_Halo_InitMode,                   1,                1,             2              );
    ReadPara->Add( "HaloMerger_Soliton_Num",                &HaloMerger_Soliton_Num,                     0,                0,             NoMax_int      );
    ReadPara->Add( "HaloMerger_Soliton_InitMode",           &HaloMerger_Soliton_InitMode,                1,                1,             2              );
+   ReadPara->Add( "HaloMerger_ExtPot_UniDenSph_M",         &HaloMerger_ExtPot_UniDenSph_M,              0.0,              0.0,           NoMax_double   );
+   ReadPara->Add( "HaloMerger_ExtPot_UniDenSph_R",         &HaloMerger_ExtPot_UniDenSph_R,             -1.0,              NoMin_double,  NoMax_double   );
+   ReadPara->Add( "HaloMerger_ExtPot_UniDenSph_CenCoordX", &HaloMerger_ExtPot_UniDenSph_CenCoordX,     -1.0,              NoMin_double,  NoMax_double   );
+   ReadPara->Add( "HaloMerger_ExtPot_UniDenSph_CenCoordY", &HaloMerger_ExtPot_UniDenSph_CenCoordY,     -1.0,              NoMin_double,  NoMax_double   );
+   ReadPara->Add( "HaloMerger_ExtPot_UniDenSph_CenCoordZ", &HaloMerger_ExtPot_UniDenSph_CenCoordZ,     -1.0,              NoMin_double,  NoMax_double   );
+   ReadPara->Add( "HaloMerger_ExtPot_UniDenSph_VelocityX", &HaloMerger_ExtPot_UniDenSph_VelocityX,      0.0,              NoMin_double,  NoMax_double   );
+   ReadPara->Add( "HaloMerger_ExtPot_UniDenSph_VelocityY", &HaloMerger_ExtPot_UniDenSph_VelocityY,      0.0,              NoMin_double,  NoMax_double   );
+   ReadPara->Add( "HaloMerger_ExtPot_UniDenSph_VelocityZ", &HaloMerger_ExtPot_UniDenSph_VelocityZ,      0.0,              NoMin_double,  NoMax_double   );
 
    ReadPara->Read( FileName );
 
@@ -176,6 +197,39 @@ void SetParameter()
 
    if ( HaloMerger_Background_Density > 0.0  &&  OPT__BC_POT != BC_POT_PERIODIC )
       Aux_Error( ERROR_INFO, "must adopt periodic BC for gravity if HaloMerger_Background_Density > 0.0 --> reset OPT__BC_POT !!\n" );
+
+   if ( HaloMerger_ExtPot_UniDenSph_M != 0.0  &&  OPT__EXT_POT != EXT_POT_FUNC )
+      Aux_Error( ERROR_INFO, "OPT__EXT_POT must be EXT_POT_FUNC (%d) to add the uniform-density-sphere external potential !!\n", EXT_POT_FUNC );
+
+   if ( OPT__EXT_POT == EXT_POT_FUNC )
+   {
+      // set the center
+      if ( HaloMerger_ExtPot_UniDenSph_CenCoordX < 0.0  ||
+           HaloMerger_ExtPot_UniDenSph_CenCoordY < 0.0  ||
+           HaloMerger_ExtPot_UniDenSph_CenCoordZ < 0.0 )
+      {
+         // put at the ceneter by default
+         HaloMerger_ExtPot_UniDenSph_CenCoordX = amr->BoxCenter[0];
+         HaloMerger_ExtPot_UniDenSph_CenCoordY = amr->BoxCenter[1];
+         HaloMerger_ExtPot_UniDenSph_CenCoordZ = amr->BoxCenter[2];
+      }
+      else if ( HaloMerger_ExtPot_UniDenSph_CenCoordX > amr->BoxSize[0]  ||
+                HaloMerger_ExtPot_UniDenSph_CenCoordY > amr->BoxSize[1]  ||
+                HaloMerger_ExtPot_UniDenSph_CenCoordZ > amr->BoxSize[2] )
+      {
+         // check whether the center is outside of the box
+         Aux_Error( ERROR_INFO, "HaloMerger_ExtPot_UniDenSph_CenCoord [%13.6e, %13.6e, %13.6e] is outside of simulation box !!\n",
+                    HaloMerger_ExtPot_UniDenSph_CenCoordX, HaloMerger_ExtPot_UniDenSph_CenCoordY, HaloMerger_ExtPot_UniDenSph_CenCoordZ );
+      }
+
+      // check the radius
+      if ( HaloMerger_ExtPot_UniDenSph_R <= 0.0 )
+         Aux_Error( ERROR_INFO, "HaloMerger_ExtPot_UniDenSph_R (%13.6e) is not positive !!\n", HaloMerger_ExtPot_UniDenSph_R );
+
+      // set the rho
+      HaloMerger_ExtPot_UniDenSph_Rho = HaloMerger_ExtPot_UniDenSph_M/( 4.0*M_PI*CUBE(HaloMerger_ExtPot_UniDenSph_R)/3.0 );
+   }
+
 
 
 // (1-2) load the runtime parameters for halos
@@ -422,7 +476,7 @@ void SetParameter()
          case 1:
          case 2:
          {
-            const long UM_IC_NVar = ( HaloMerger_Halo_InitMode == 1 ) ? 2 : 1; // 1:(Real part & Imag part), 2:(Density)
+            const long UM_IC_NVar = 2; // (Real part & Imag part) or (Density & Phase)
 
             for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
             {
@@ -655,6 +709,16 @@ void SetParameter()
       Aux_Message( stdout, "  halo initialization mode    = %d\n",           HaloMerger_Halo_InitMode        );
       Aux_Message( stdout, "  total number of solitons    = %d\n",           HaloMerger_Soliton_Num          );
       Aux_Message( stdout, "  soliton initialization mode = %d\n",           HaloMerger_Soliton_InitMode     );
+      if ( OPT__EXT_POT == EXT_POT_FUNC )
+      {
+         Aux_Message( stdout, "  uniform-density-sphere external potential information:\n" );
+         Aux_Message( stdout, "  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s\n",
+                      "Mass", "Radius", "Rho", "CenCoord_X", "CenCoord_Y", "CenCoord_Z", "Velocity_X", "Velocity_Y", "Velocity_Z"  );
+         Aux_Message( stdout, "  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e\n",
+                      HaloMerger_ExtPot_UniDenSph_M, HaloMerger_ExtPot_UniDenSph_R, HaloMerger_ExtPot_UniDenSph_Rho,
+                      HaloMerger_ExtPot_UniDenSph_CenCoordX, HaloMerger_ExtPot_UniDenSph_CenCoordY, HaloMerger_ExtPot_UniDenSph_CenCoordZ,
+                      HaloMerger_ExtPot_UniDenSph_VelocityX, HaloMerger_ExtPot_UniDenSph_VelocityY, HaloMerger_ExtPot_UniDenSph_VelocityZ );
+      }
 
       if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Halo_Num > 0 )
       {
@@ -788,10 +852,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
             }
             else if ( HaloMerger_Halo_InitMode == 2 )
             {
-               double Dens_halo;
-               Dens_halo = HaloMerger_Get_Value_From_Halo_UM_IC_Data( x, y, z, 0, index_halo );
-               Real_halo = sqrt(Dens_halo);
-               Imag_halo = 0.0;
+               // assume density first and then phase
+               double Dens_halo, Phase_halo;
+               Dens_halo  = HaloMerger_Get_Value_From_Halo_UM_IC_Data( x, y, z, 0, index_halo );
+               Phase_halo = HaloMerger_Get_Value_From_Halo_UM_IC_Data( x, y, z, 1, index_halo );
+               Real_halo = sqrt(Dens_halo)*cos(Phase_halo);
+               Imag_halo = sqrt(Dens_halo)*sin(Phase_halo);
             }
             else
                 Aux_Error( ERROR_INFO, "unsupported halo initialization mode (%s = %d) !!\n",
@@ -1014,6 +1080,7 @@ void Init_TestProb_ELBDM_HaloMerger()
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr         = SetGridIC;
    End_User_Ptr                   = End_HaloMerger;
+   Init_ExtPot_Ptr                = Init_ExtPot_ELBDM_HaloMerger;
 #  endif // if ( MODEL == ELBDM  &&  defined GRAVITY )
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
@@ -1120,7 +1187,7 @@ double HaloMerger_Get_Value_From_Halo_UM_IC_Data( const double x, const double y
     const int UM_IC_Nx          = HaloMerger_Halo_UM_IC_NCells[index_halo][0];
     const int UM_IC_Ny          = HaloMerger_Halo_UM_IC_NCells[index_halo][1];
     const int UM_IC_Nz          = HaloMerger_Halo_UM_IC_NCells[index_halo][2];
-    const int UM_IC_NVar        = ( HaloMerger_Halo_InitMode == 1 ) ? 2 : 1; // 1:(Real part & Imag part), 2:(Density)
+    const int UM_IC_NVar        = 2; // (Real part & Imag part) or (Density & Phase)
     const int UM_IC_Float8      = HaloMerger_Halo_UM_IC_Float8[index_halo];
     size_t load_data_size       = ( UM_IC_Float8 ) ? sizeof(double) : sizeof(float);
 
