@@ -1144,7 +1144,8 @@ real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const re
 
 #  ifdef SRHD
    real Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL];
-
+   real HTilde;
+   
    Cons[0] = Dens;
    Cons[1] = MomX;
    Cons[2] = MomY;
@@ -1172,8 +1173,6 @@ real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const re
 } // FUNCTION : Hydro_Con2Eint
 
 
-#ifndef SRHD
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_ConEint2Etot
 // Description :  Evaluate total energy from the input conserved variables and internal energy
@@ -1193,6 +1192,15 @@ real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, cons
                          const real Emag )
 {
 
+#  if (  defined SRHD  &&  defined  GAMER_DEBUG )
+#  ifdef __CUDACC__
+   printf( "ERROR :  SRHD does not support Hydro_ConEint2Etot at file <%s>, line <%d>, function <%s> !!\n",
+           ERROR_INFO );
+#  else
+   Aux_Error( ERROR_INFO, "SRHD does not support Hydro_ConEint2Etot !!\n" );
+#  endif
+#  endif
+  
 //###NOTE: assuming Etot = Eint + Ekin + Emag
    real Etot;
 
@@ -1206,7 +1214,6 @@ real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, cons
 
 } // FUNCTION : Hydro_ConEint2Etot
 
-#endif // #ifndef SRHD
 
 
 

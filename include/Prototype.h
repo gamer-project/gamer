@@ -103,9 +103,7 @@ real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const re
                      const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp, 
                      const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[], 
                      const real *const EoS_Table[EOS_NTABLE_MAX] );
-#ifndef SRHD
 real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint, const real Emag );
-#endif
 real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Passive[], const bool CheckMinTemp, const real MinTemp, const real Emag,
                      const EoS_DE2T_t EoS_DensEint2Temp, const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
@@ -134,6 +132,11 @@ real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Gamma_m1,
                           const bool CheckMinPres, const real MinPres );
 #endif // #ifdef DUAL_ENERGY
 #endif // #if ( MODEL == HYDRO )
+#ifdef SRHD
+real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                      const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                      const real *const EoS_Table[EOS_NTABLE_MAX] );
+#endif
 int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
                    const int SaveSg_Flu, const int SaveSg_Mag, const bool OverlapMPI, const bool Overlap_Sync );
 void Flu_AllocateFluxArray( const int lv );
