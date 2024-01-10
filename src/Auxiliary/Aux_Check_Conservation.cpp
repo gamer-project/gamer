@@ -181,11 +181,17 @@ void Aux_Check_Conservation( const char *comment )
                   Fluid_lv[6] += Epot;
 #                 endif
 
-                  Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag );
+                  Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag,
+                                                 EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr, 
+                                                 EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );
                   Fluid_lv[5] += Eint;
 
 //###NOTE: assuming Etot = Eint + Ekin + Emag
                   Ekin         = Etot - Eint;
+#                 ifdef SRHD
+//                total energy density also includes rest mass energy density in relativistic hydro
+                  Ekin        -= Dens;
+#                 endif
 #                 ifdef MHD
                   Ekin        -= Emag;
 #                 endif

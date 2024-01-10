@@ -78,7 +78,8 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 // --> Enth (i.e., non-thermal energy) includes both kinetic and magnetic energies
    real Enth, Eint, Pres;
 
-   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag );
+   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag,
+                          NULL, NULL, NULL, NULL, NULL );
    Enth = Etot - Eint;
 
 

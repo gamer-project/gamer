@@ -516,19 +516,28 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                                                                                     FluidPtr     [MOMY][k][j][i],
                                                                                     FluidPtr     [MOMZ][k][j][i],
                                                                                     FluidPtr     [ENGY][k][j][i],
-                                                                                    CheckMinEint_No, NULL_REAL, Emag )
+                                                                                    CheckMinEint_No, NULL_REAL, Emag,
+                                                                                    EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                                                    EoS_AuxArray_Flt,
+                                                                                    EoS_AuxArray_Int, h_EoS_Table )
                                                 + FluWeighting_IntT*Hydro_Con2Eint( FluidPtr_IntT[DENS][k][j][i],
                                                                                     FluidPtr_IntT[MOMX][k][j][i],
                                                                                     FluidPtr_IntT[MOMY][k][j][i],
                                                                                     FluidPtr_IntT[MOMZ][k][j][i],
                                                                                     FluidPtr_IntT[ENGY][k][j][i],
-                                                                                    CheckMinEint_No, NULL_REAL, Emag_IntT )
+                                                                                    CheckMinEint_No, NULL_REAL, Emag_IntT,
+                                                                                    EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                                                    EoS_AuxArray_Flt,
+                                                                                    EoS_AuxArray_Int, h_EoS_Table )
                                               :                     Hydro_Con2Eint( FluidPtr     [DENS][k][j][i],
                                                                                     FluidPtr     [MOMX][k][j][i],
                                                                                     FluidPtr     [MOMY][k][j][i],
                                                                                     FluidPtr     [MOMZ][k][j][i],
                                                                                     FluidPtr     [ENGY][k][j][i],
-                                                                                    CheckMinEint_No, NULL_REAL, Emag );
+                                                                                    CheckMinEint_No, NULL_REAL, Emag,
+                                                                                    EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                                                    EoS_AuxArray_Flt,
+                                                                                    EoS_AuxArray_Int, h_EoS_Table );
 #                             endif // #ifdef DUAL_ENERGY ... else
 
                               OMP_Data  [p][TID][bin] += Eint*Weight;

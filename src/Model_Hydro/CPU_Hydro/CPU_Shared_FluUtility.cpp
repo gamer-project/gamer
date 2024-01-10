@@ -20,7 +20,10 @@ static real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, c
                             const real *const EoS_Table[EOS_NTABLE_MAX], real *EintOut );
 GPU_DEVICE
 static real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                            const bool CheckMinEint, const real MinEint, const real Emag );
+                            const bool CheckMinEint, const real MinEint, const real Emag, 
+                            const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp, 
+                            const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[], 
+                            const real *const EoS_Table[EOS_NTABLE_MAX] );
 GPU_DEVICE
 static real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint,
                                 const real Emag );
@@ -764,7 +767,8 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
    const bool CheckMinEint_No = false;
    real InEint, OutEint, OutEngy;
 
-   InEint  = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, InEngy, CheckMinEint_No, NULL_REAL, Emag );
+   InEint  = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, InEngy, CheckMinEint_No, NULL_REAL, Emag,
+                             NULL, NULL, NULL, NULL, NULL );
    OutEint = Hydro_CheckMinEint( InEint, MinEint );
 
 // do not modify energy (even the round-off errors) if the input data pass the check
@@ -1061,7 +1065,8 @@ real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const re
    const bool CheckMinEint_No = false;
    real Eint;
 
-   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag );
+   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag,
+                          NULL, NULL, NULL, NULL, NULL );
    Pres = EoS_DensEint2Pres( Dens, Eint, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
    if ( CheckMinPres )   Pres = Hydro_CheckMinPres( Pres, MinPres );
@@ -1111,28 +1116,53 @@ real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const re
 //                   and thus one must provide Emag to subtract it
 //                2. Internal energy density is energy per volume instead of per mass
 //
-// Parameter   :  Dens         : Mass density
-//                MomX/Y/Z     : Momentum density
-//                Engy         : Energy density (including the magnetic energy density for MHD)
-//                CheckMinEint : Apply internal energy floor by invoking Hydro_CheckMinEint()
-//                               --> In some cases we actually want to check if internal energy becomes unphysical,
-//                                   for which this option should be disabled
-//                MinEint      : Internal energy floor
-//                Emag         : Magnetic energy density (0.5*B^2) --> For MHD only
+// Parameter   :  Dens            : Mass density
+//                MomX/Y/Z        : Momentum density
+//                Engy            : Energy density (including the magnetic energy density for MHD)
+//                CheckMinEint    : Apply internal energy floor by invoking Hydro_CheckMinEint()
+//                                  --> In some cases we actually want to check if internal energy 
+//                                      becomes unphysical, for which this option should be disabled
+//                MinEint         : Internal energy floor
+//                Emag            : Magnetic energy density (0.5*B^2) --> For MHD only
+//                EoS_GuessHTilde : EoS routine to compute guessed reduced enthalpy
+//                EoS_HTilde2Temp : EoS routine to compute temperature
+//                EoS_AuxArray_*  : Auxiliary arrays for EoS_DensEint2Pres()
+//                EoS_Table       : EoS tables for EoS_DensEint2Pres()
 //
 // Return      :  Gas internal energy density (Eint)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const bool CheckMinEint, const real MinEint, const real Emag )
+                     const bool CheckMinEint, const real MinEint, const real Emag, 
+                     const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp, 
+                     const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[], 
+                     const real *const EoS_Table[EOS_NTABLE_MAX] )
 {
 
 //###NOTE: assuming Etot = Eint + Ekin + Emag
    real Eint;
 
-   Eint  = Engy - (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) / Dens;
+#  ifdef SRHD
+   real Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL];
+
+   Cons[0] = Dens;
+   Cons[1] = MomX;
+   Cons[2] = MomY;
+   Cons[3] = MomZ;
+   Cons[4] = Engy;
+
+   Hydro_Con2Pri( Cons, Prim, (real)-HUGE_NUMBER, false, NULL_INT, NULL,
+                  NULL_BOOL, (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
+
+   HTilde  = Hydro_Con2HTilde( Cons, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, 
+                               EoS_AuxArray_Int, EoS_Table );   
+   Eint    = HTilde*Prim[0] - Prim[4]; 
+#  else
+   Eint    = Engy - (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) / Dens;
+#  endif
 #  ifdef MHD
-   Eint -= Emag;
+   Eint   -= Emag;
 #  endif
 
    if ( CheckMinEint )   Eint = Hydro_CheckMinEint( Eint, MinEint );
@@ -1142,6 +1172,7 @@ real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const re
 } // FUNCTION : Hydro_Con2Eint
 
 
+#ifndef SRHD
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_ConEint2Etot
@@ -1175,7 +1206,7 @@ real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, cons
 
 } // FUNCTION : Hydro_ConEint2Etot
 
-
+#endif // #ifndef SRHD
 
 
 
@@ -1257,7 +1288,8 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
    const bool CheckMinEint_No = false;
    real Eint;
 
-   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag );
+   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag,
+                          NULL, NULL, NULL, NULL, NULL );
    Temp = EoS_DensEint2Temp( Dens, Eint, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #  endif
 
@@ -1329,7 +1361,8 @@ real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const re
    const bool CheckMinEint_No = false;
    real Eint, Entr;
 
-   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag );
+   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag,
+                          NULL, NULL, NULL, NULL, NULL );
    Entr = EoS_DensEint2Entr( Dens, Eint, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
    if ( CheckMinEntr )   Entr = Hydro_CheckMinEntr( Entr, MinEntr );
