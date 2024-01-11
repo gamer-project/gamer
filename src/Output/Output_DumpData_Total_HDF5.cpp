@@ -1036,7 +1036,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 		               if ( v == LorentzDumpIdx )
 //                      d-8. Lorentz factor
 	  	                  FieldData[PID][k][j][i] = LorentzFactor;
-                     else ( v == EnthalpyDumpIdx )
+                     else if ( v == EnthalpyDumpIdx )
 //                      d-9. reduced enthalpy
                         HTilde = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, 
                                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );   
