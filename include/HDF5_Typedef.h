@@ -737,6 +737,7 @@ struct InputPara_t
 #  ifdef SRHD
    int    Opt__Output_Lorentz;
    int    Opt__Output_Velocity;
+   int    Opt__Output_Enthalpy;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
    int    Opt__Output_UserField;
