@@ -402,7 +402,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    }
    if ( OPT__OUTPUT_ENTHALPY ) 
    {
-      HTilde = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, 
+      HTilde = Hydro_Con2HTilde( u, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, 
                                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       fprintf( File, BlankPlusFormat_Flt, HTilde );
    }
