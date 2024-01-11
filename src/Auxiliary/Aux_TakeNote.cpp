@@ -1440,6 +1440,7 @@ void Aux_TakeNote()
 #     ifdef SRHD
       fprintf( Note, "OPT__OUTPUT_VELOCITY            %d\n",      OPT__OUTPUT_VELOCITY        );
       fprintf( Note, "OPT__OUTPUT_LORENTZ             %d\n",      OPT__OUTPUT_LORENTZ         );
+      fprintf( Note, "OPT__OUTPUT_ENTHALPY            %d\n",      OPT__OUTPUT_ENTHALPY        );
 #     endif
 
 //    user-defined derived fields

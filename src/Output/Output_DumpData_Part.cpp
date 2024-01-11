@@ -354,7 +354,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 #  endif
 
 #  ifdef SRHD 
-   real Prim[NCOMP_TOTAL], LorentzFactor;
+   real Prim[NCOMP_TOTAL], LorentzFactor=-1.0, HTilde=-1.0;
    if ( OPT__OUTPUT_CS || OPT__OUTPUT_LORENTZ || OPT__OUTPUT_VELOCITY )
       Hydro_Con2Pri( u, Prim, (real)-HUGE_NUMBER, NULL_BOOL, NULL_INT, NULL,
                      NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
@@ -399,6 +399,12 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
       fprintf( File, BlankPlusFormat_Flt, Prim[1] / LorentzFactor );
       fprintf( File, BlankPlusFormat_Flt, Prim[2] / LorentzFactor );
       fprintf( File, BlankPlusFormat_Flt, Prim[3] / LorentzFactor );
+   }
+   if ( OPT__OUTPUT_ENTHALPY ) 
+   {
+      HTilde = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, 
+                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      fprintf( File, BlankPlusFormat_Flt, HTilde );
    }
 #  endif 
 

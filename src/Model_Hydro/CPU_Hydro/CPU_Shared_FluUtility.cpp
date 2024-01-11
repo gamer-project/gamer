@@ -1290,7 +1290,6 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
    Temp = Prim[4]/Prim[0];
 
-   Temp *= EoS_AuxArray_Flt[0];
 #  else
    const bool CheckMinEint_No = false;
    real Eint;
