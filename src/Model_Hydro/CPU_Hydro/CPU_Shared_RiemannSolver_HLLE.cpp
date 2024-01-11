@@ -181,6 +181,23 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
       Flux_Out[3] = Fl[3];
       Flux_Out[4] = Fl[4];
 
+      // evaluate the fluxes of passive scalars
+      #  if ( NCOMP_PASSIVE > 0 )
+         if ( Flux_Out[FLUX_DENS] >= (real)0.0 )
+         {
+            const real vx = Flux_Out[FLUX_DENS]/L[0];
+
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = L[v]*vx;
+         }
+
+         else
+         {
+            const real vx = Flux_Out[FLUX_DENS]/R[0];
+
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = R[v]*vx;
+         }
+      #  endif
+
       Hydro_Rotate3D( Flux_Out, XYZ, false, MAG_OFFSET  );
       return;
    }
@@ -204,6 +221,23 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
       Flux_Out[3] = Fhll[3];
       Flux_Out[4] = Fhll[4];
 
+      // evaluate the fluxes of passive scalars
+      #  if ( NCOMP_PASSIVE > 0 )
+         if ( Flux_Out[FLUX_DENS] >= (real)0.0 )
+         {
+            const real vx = Flux_Out[FLUX_DENS]/L[0];
+
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = L[v]*vx;
+         }
+
+         else
+         {
+            const real vx = Flux_Out[FLUX_DENS]/R[0];
+
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = R[v]*vx;
+         }
+      #  endif
+
       Hydro_Rotate3D( Flux_Out, XYZ, false, MAG_OFFSET  );
       return;
    }
@@ -215,6 +249,23 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
       Flux_Out[2] = Fr[2];
       Flux_Out[3] = Fr[3];
       Flux_Out[4] = Fr[4];
+
+      // evaluate the fluxes of passive scalars
+      #  if ( NCOMP_PASSIVE > 0 )
+         if ( Flux_Out[FLUX_DENS] >= (real)0.0 )
+         {
+            const real vx = Flux_Out[FLUX_DENS]/L[0];
+
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = L[v]*vx;
+         }
+
+         else
+         {
+            const real vx = Flux_Out[FLUX_DENS]/R[0];
+
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = R[v]*vx;
+         }
+      #  endif
 
       Hydro_Rotate3D( Flux_Out, XYZ, false, MAG_OFFSET  );
       return;
