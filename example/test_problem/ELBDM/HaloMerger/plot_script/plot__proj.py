@@ -3,7 +3,7 @@ import sys
 import yt
 
 # load the command-line parameters
-parser = argparse.ArgumentParser( description='Density profile' )
+parser = argparse.ArgumentParser( description='Projection of mass density' )
 
 parser.add_argument( '-p', action='store', required=False, type=str, dest='prefix',
                      help='path prefix [%(default)s]', default='../' )
@@ -28,21 +28,25 @@ idx_end   = args.idx_end
 didx      = args.didx
 prefix    = args.prefix
 
-field       = 'density'
-center_mode = 'max'
-dpi         = 150
-nbin        = 32
+colormap_dens = 'algae'
+center_mode   = 'c'
+dpi           = 150
 
 yt.enable_parallelism()
 ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 
 for ds in ts.piter():
+   for direction in ['y', 'z']:
+      for field in [('gamer', 'Dens'), ('gas','density')]:
 
-   sp = ds.sphere( center_mode, 0.5*ds.domain_width.to_value().max() )
+         pz_dens = yt.ProjectionPlot( ds, direction, field, center=center_mode )
 
-   prof = yt.ProfilePlot( sp, 'radius', field, weight_field='cell_volume', n_bins=nbin )
-   prof.set_unit( 'radius', 'kpc' )
-   prof.set_xlim( 5.0e-1, 1.0e2 )
-#  prof.set_ylim( field, 1.0e-6, 1.0e0 )
+         pz_dens.set_axes_unit( 'kpc' )
+         pz_dens.set_unit( field, "Msun/kpc**2" )
+         pz_dens.set_zlim( field, 1.0e+3, 1.0e8 )
+         pz_dens.set_cmap( field, colormap_dens )
+         pz_dens.annotate_timestamp( time_unit='Gyr', corner='upper_right' )
 
-   prof.save( mpl_kwargs={"dpi":dpi} )
+         pz_dens.save("%s"%(ds), mpl_kwargs={"dpi":dpi} )
+         pz_dens.annotate_grids()
+         pz_dens.save( "%s_with_grids"%(ds), mpl_kwargs={"dpi":dpi} )

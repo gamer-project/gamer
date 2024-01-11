@@ -1,8 +1,18 @@
 # problem-specific runtime parameters
-HaloMerger_Background_Density        0.0                # background density in the box
-HaloMerger_Halo_Num                  1                  # total number of halos
-HaloMerger_Halo_InitMode             1                  # halo initialization mode
-                                                        #   (1=UM_IC real and imaginary parts, 2=UM_IC density-only)
-HaloMerger_Soliton_Num               0                  # total number of solitons
-HaloMerger_Soliton_InitMode          1                  # soliton initialization mode:
+HaloMerger_Background_Density           0.0             # background density in the box (OPT__BC_POT == 1 only) [0.0]
+HaloMerger_Halo_Num                     2               # total number of halos [2]
+HaloMerger_Halo_InitMode                1               # halo initialization mode [1]
+                                                        #   (1=UM_IC real and imaginary parts, 2=UM_IC density and phase)
+                                                        # -> edit Input_TestProb_Halo to specify the paramters for halos
+HaloMerger_Soliton_Num                  0               # total number of solitons [0]
+HaloMerger_Soliton_InitMode             1               # soliton initialization mode [1]
                                                         #   (1=table of density profile, 2=analytical function of density profile)
+                                                        # -> edit Input_TestProb_Soliton to specify the paramters for solitons
+HaloMerger_ExtPot_UniDenSph_M           0.0             # mass of the uniform-density-sphere external potential [0.0]
+HaloMerger_ExtPot_UniDenSph_R          -1.0             # radius of the uniform-density-sphere external potential [-1.0]
+HaloMerger_ExtPot_UniDenSph_CenCoordX  -1.0             # x coordinate of center of the uniform-density-sphere external potential [-1.0]
+HaloMerger_ExtPot_UniDenSph_CenCoordY  -1.0             # y coordinate of center of the uniform-density-sphere external potential [-1.0]
+HaloMerger_ExtPot_UniDenSph_CenCoordZ  -1.0             # z coordinate of center of the uniform-density-sphere external potential [-1.0]
+HaloMerger_ExtPot_UniDenSph_VelocityX   0.0             # x component of velocity of the uniform-density-sphere external potential [0.0]
+HaloMerger_ExtPot_UniDenSph_VelocityY   0.0             # y component of velocity of the uniform-density-sphere external potential [0.0]
+HaloMerger_ExtPot_UniDenSph_VelocityZ   0.0             # z component of velocity of the uniform-density-sphere external potential [0.0]

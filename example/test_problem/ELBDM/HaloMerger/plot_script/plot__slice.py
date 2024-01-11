@@ -22,27 +22,29 @@ print( '-------------------------------------------------------------------' )
 print( ' '.join(map(str, sys.argv)) )
 print( '-------------------------------------------------------------------\n' )
 
-
 idx_start = args.idx_start
 idx_end   = args.idx_end
 didx      = args.didx
 prefix    = args.prefix
 
-field         = 'density'
 colormap_dens = 'algae'
-center_mode   = 'c'
 dpi           = 150
 
 yt.enable_parallelism()
+
 ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
-
 for ds in ts.piter():
+   for center_mode in ['c','m']:
+      for direction in ['y', 'z']:
+         for field in [('gamer', 'Dens'), ('gas','density')]:
+           sz_dens = yt.SlicePlot( ds, direction, field, center=center_mode )
 
-   sz_dens = yt.SlicePlot( ds, 'z', field, center=center_mode )
+           sz_dens.set_unit( field, "code_density" )
+           sz_dens.set_zlim( field, 1.0e0, 1.0e6   )
+           sz_dens.set_axes_unit( 'kpc' )
+           sz_dens.set_cmap( field, colormap_dens )
+           sz_dens.annotate_timestamp( time_unit='Gyr', corner='upper_right' )
 
-   sz_dens.set_zlim( field, 1.0e-31, 1.0e-24 )
-   sz_dens.set_cmap( field, colormap_dens )
-   sz_dens.annotate_timestamp( time_unit='Gyr', corner='upper_right' )
-   sz_dens.annotate_grids()
-
-   sz_dens.save( mpl_kwargs={"dpi":dpi} )
+           sz_dens.save("%s_%s"%(ds, center_mode), mpl_kwargs={"dpi":dpi} )
+           sz_dens.annotate_grids()
+           sz_dens.save( "%s_%s_with_grids"%(ds, center_mode), mpl_kwargs={"dpi":dpi} )
