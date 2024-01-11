@@ -14,14 +14,14 @@ static int      HaloMerger_Soliton_Num;                                    // to
 static int      HaloMerger_Soliton_InitMode;                               // soliton initialization mode [1]
                                                                            //   (1=table of density profile, 2=analytical function of density profile)
 
-       double   HaloMerger_ExtPot_UniDenSph_M;                             // mass of the uniform-density-sphere external potential
-       double   HaloMerger_ExtPot_UniDenSph_R;                             // radius of the uniform-density-sphere external potential
-       double   HaloMerger_ExtPot_UniDenSph_CenCoordX;                     // x coordinate of center of the uniform-density-sphere external potential
-       double   HaloMerger_ExtPot_UniDenSph_CenCoordY;                     // y coordinate of center of the uniform-density-sphere external potential
-       double   HaloMerger_ExtPot_UniDenSph_CenCoordZ;                     // z coordinate of center of the uniform-density-sphere external potential
-       double   HaloMerger_ExtPot_UniDenSph_VelocityX;                     // x component of velocity of the uniform-density-sphere external potential
-       double   HaloMerger_ExtPot_UniDenSph_VelocityY;                     // y component of velocity of the uniform-density-sphere external potential
-       double   HaloMerger_ExtPot_UniDenSph_VelocityZ;                     // z component of velocity of the uniform-density-sphere external potential
+       double   HaloMerger_ExtPot_UniDenSph_M;                             // mass of the uniform-density-sphere external potential [0.0]
+       double   HaloMerger_ExtPot_UniDenSph_R;                             // radius of the uniform-density-sphere external potential [-1.0]
+       double   HaloMerger_ExtPot_UniDenSph_CenCoordX;                     // x coordinate of center of the uniform-density-sphere external potential [-1.0]
+       double   HaloMerger_ExtPot_UniDenSph_CenCoordY;                     // y coordinate of center of the uniform-density-sphere external potential [-1.0]
+       double   HaloMerger_ExtPot_UniDenSph_CenCoordZ;                     // z coordinate of center of the uniform-density-sphere external potential [-1.0]
+       double   HaloMerger_ExtPot_UniDenSph_VelocityX;                     // x component of velocity of the uniform-density-sphere external potential [0.0]
+       double   HaloMerger_ExtPot_UniDenSph_VelocityY;                     // y component of velocity of the uniform-density-sphere external potential [0.0]
+       double   HaloMerger_ExtPot_UniDenSph_VelocityZ;                     // z component of velocity of the uniform-density-sphere external potential [0.0]
 static double   HaloMerger_ExtPot_UniDenSph_Rho;                           // density of the uniform-density-sphere external potential
 
 // Halo, parameters to read from input
@@ -87,6 +87,7 @@ void Init_ExtPot_ELBDM_HaloMerger();
 static void HaloMerger_Add_Velocity( double *RealPart, double *ImagPart,
                                      const double Velocity_X, const double Velocity_Y, const double Velocity_Z,
                                      const double Position_X, const double Position_Y, const double Position_Z );
+
 static double HaloMerger_Trilinear_Interpolation( const double Target_X, const double Target_Y, const double Target_Z,
                                                   const double Ref_Value[2][2][2],
                                                   const double Ref_X[2], const double Ref_Y[2], const double Ref_Z[2] );
@@ -194,43 +195,6 @@ void SetParameter()
    ReadPara->Read( FileName );
 
    delete ReadPara;
-
-   if ( HaloMerger_Background_Density > 0.0  &&  OPT__BC_POT != BC_POT_PERIODIC )
-      Aux_Error( ERROR_INFO, "must adopt periodic BC for gravity if HaloMerger_Background_Density > 0.0 --> reset OPT__BC_POT !!\n" );
-
-   if ( HaloMerger_ExtPot_UniDenSph_M != 0.0  &&  OPT__EXT_POT != EXT_POT_FUNC )
-      Aux_Error( ERROR_INFO, "OPT__EXT_POT must be EXT_POT_FUNC (%d) to add the uniform-density-sphere external potential !!\n", EXT_POT_FUNC );
-
-   if ( OPT__EXT_POT == EXT_POT_FUNC )
-   {
-      // set the center
-      if ( HaloMerger_ExtPot_UniDenSph_CenCoordX < 0.0  ||
-           HaloMerger_ExtPot_UniDenSph_CenCoordY < 0.0  ||
-           HaloMerger_ExtPot_UniDenSph_CenCoordZ < 0.0 )
-      {
-         // put at the ceneter by default
-         HaloMerger_ExtPot_UniDenSph_CenCoordX = amr->BoxCenter[0];
-         HaloMerger_ExtPot_UniDenSph_CenCoordY = amr->BoxCenter[1];
-         HaloMerger_ExtPot_UniDenSph_CenCoordZ = amr->BoxCenter[2];
-      }
-      else if ( HaloMerger_ExtPot_UniDenSph_CenCoordX > amr->BoxSize[0]  ||
-                HaloMerger_ExtPot_UniDenSph_CenCoordY > amr->BoxSize[1]  ||
-                HaloMerger_ExtPot_UniDenSph_CenCoordZ > amr->BoxSize[2] )
-      {
-         // check whether the center is outside of the box
-         Aux_Error( ERROR_INFO, "HaloMerger_ExtPot_UniDenSph_CenCoord [%13.6e, %13.6e, %13.6e] is outside of simulation box !!\n",
-                    HaloMerger_ExtPot_UniDenSph_CenCoordX, HaloMerger_ExtPot_UniDenSph_CenCoordY, HaloMerger_ExtPot_UniDenSph_CenCoordZ );
-      }
-
-      // check the radius
-      if ( HaloMerger_ExtPot_UniDenSph_R <= 0.0 )
-         Aux_Error( ERROR_INFO, "HaloMerger_ExtPot_UniDenSph_R (%13.6e) is not positive !!\n", HaloMerger_ExtPot_UniDenSph_R );
-
-      // set the rho
-      HaloMerger_ExtPot_UniDenSph_Rho = HaloMerger_ExtPot_UniDenSph_M/( 4.0*M_PI*CUBE(HaloMerger_ExtPot_UniDenSph_R)/3.0 );
-   }
-
-
 
 // (1-2) load the runtime parameters for halos
    if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Halo_Num > 0 )
@@ -386,10 +350,46 @@ void SetParameter()
    } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Soliton_Num > 0 )
 
 
-// (2) For halos
+// (2-1) For general parameters and external potential
+   if ( HaloMerger_Background_Density > 0.0  &&  OPT__BC_POT != BC_POT_PERIODIC )
+      Aux_Error( ERROR_INFO, "must adopt periodic BC for gravity if HaloMerger_Background_Density > 0.0 --> reset OPT__BC_POT !!\n" );
+
+   if ( HaloMerger_ExtPot_UniDenSph_M != 0.0  &&  OPT__EXT_POT != EXT_POT_FUNC )
+      Aux_Error( ERROR_INFO, "OPT__EXT_POT must be EXT_POT_FUNC (%d) to add the uniform-density-sphere external potential !!\n", EXT_POT_FUNC );
+
+   if ( OPT__EXT_POT == EXT_POT_FUNC )
+   {
+      // set the center
+      if ( HaloMerger_ExtPot_UniDenSph_CenCoordX < 0.0  ||
+           HaloMerger_ExtPot_UniDenSph_CenCoordY < 0.0  ||
+           HaloMerger_ExtPot_UniDenSph_CenCoordZ < 0.0 )
+      {
+         // put at the ceneter by default
+         HaloMerger_ExtPot_UniDenSph_CenCoordX = amr->BoxCenter[0];
+         HaloMerger_ExtPot_UniDenSph_CenCoordY = amr->BoxCenter[1];
+         HaloMerger_ExtPot_UniDenSph_CenCoordZ = amr->BoxCenter[2];
+      }
+      else if ( HaloMerger_ExtPot_UniDenSph_CenCoordX > amr->BoxSize[0]  ||
+                HaloMerger_ExtPot_UniDenSph_CenCoordY > amr->BoxSize[1]  ||
+                HaloMerger_ExtPot_UniDenSph_CenCoordZ > amr->BoxSize[2] )
+      {
+         // check whether the center is outside of the box
+         Aux_Error( ERROR_INFO, "HaloMerger_ExtPot_UniDenSph_CenCoord [%13.6e, %13.6e, %13.6e] is outside of simulation box !!\n",
+                    HaloMerger_ExtPot_UniDenSph_CenCoordX, HaloMerger_ExtPot_UniDenSph_CenCoordY, HaloMerger_ExtPot_UniDenSph_CenCoordZ );
+      }
+
+      // check the radius
+      if ( HaloMerger_ExtPot_UniDenSph_R <= 0.0 )
+         Aux_Error( ERROR_INFO, "HaloMerger_ExtPot_UniDenSph_R (%13.6e) is not positive !!\n", HaloMerger_ExtPot_UniDenSph_R );
+
+      // set the rho
+      HaloMerger_ExtPot_UniDenSph_Rho = HaloMerger_ExtPot_UniDenSph_M/( 4.0*M_PI*CUBE(HaloMerger_ExtPot_UniDenSph_R)/3.0 );
+   }
+
+// (2-2) For halos
    if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Halo_Num > 0 )
    {
-      // (2-1) check the runtime parameters and set the problem-specific derived parameters
+      // (2-2-1) check the runtime parameters and set the problem-specific derived parameters
       for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
       {
          // set the center
@@ -428,7 +428,9 @@ void SetParameter()
                           HaloMerger_Halo_UM_IC_BoxLen[index_halo][1], HaloMerger_Halo_UM_IC_BoxLen[index_halo][2] );
 
             // check the input UM_IC N cells
-            if ( HaloMerger_Halo_UM_IC_NCells[index_halo][0] <= 0  ||  HaloMerger_Halo_UM_IC_NCells[index_halo][1] <= 0  ||  HaloMerger_Halo_UM_IC_NCells[index_halo][2] <= 0 )
+            if ( HaloMerger_Halo_UM_IC_NCells[index_halo][0] <= 0  ||
+                 HaloMerger_Halo_UM_IC_NCells[index_halo][1] <= 0  ||
+                 HaloMerger_Halo_UM_IC_NCells[index_halo][2] <= 0 )
                Aux_Error( ERROR_INFO, "HaloMerger_Halo_%d_UM_IC_NCells [%d, %d, %d] is not set properly !!\n",
                           index_halo+1, HaloMerger_Halo_UM_IC_NCells[index_halo][0],
                           HaloMerger_Halo_UM_IC_NCells[index_halo][1], HaloMerger_Halo_UM_IC_NCells[index_halo][2] );
@@ -470,7 +472,7 @@ void SetParameter()
          } // if ( HaloMerger_Halo_InitMode <= 2 )
       } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
 
-      // (2-2) load the UM_IC data for halos
+      // (2-2-2) load the UM_IC data for halos
       switch ( HaloMerger_Halo_InitMode )
       {
          case 1:
@@ -517,12 +519,12 @@ void SetParameter()
    } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Halo_Num > 0 )
 
 
-// (3) For solitons
+// (2-3) For solitons
    if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Soliton_Num > 0 )
    {
       for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
       {
-         // (3-1) set the density profile related parameters
+         // (2-3-1) set the density profile related parameters
 
          // the density profile from table
          if ( HaloMerger_Soliton_InitMode == 1 )
@@ -612,7 +614,7 @@ void SetParameter()
             }
          } // if ( HaloMerger_Soliton_InitMode == 2 )
 
-         // (3-2) check the runtime parameters and set the problem-specific derived parameters
+         // (2-3-2) check the runtime parameters and set the problem-specific derived parameters
 
          // set the center
          if ( HaloMerger_Soliton_CenCoord[index_soliton][0] < 0.0  ||
@@ -629,7 +631,7 @@ void SetParameter()
          {
             // check whether the center is outside of box
             Aux_Error( ERROR_INFO, "HaloMerger_Soliton_%d_CenCoord [%13.6e, %13.6e, %13.6e] is outside of simulation box !!\n",
-                       index_soliton, HaloMerger_Soliton_CenCoord[index_soliton][0], HaloMerger_Soliton_CenCoord[index_soliton][1], HaloMerger_Soliton_CenCoord[index_soliton][2] );
+                       index_soliton+1, HaloMerger_Soliton_CenCoord[index_soliton][0], HaloMerger_Soliton_CenCoord[index_soliton][1], HaloMerger_Soliton_CenCoord[index_soliton][2] );
          }
 
          // check whether the soliton touches the boundary of box
@@ -638,8 +640,11 @@ void SetParameter()
             // check whether the input solitons cross the boundary
             if ( HaloMerger_Soliton_CenCoord[index_soliton][d] + 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] > amr->BoxSize[d]  ||
                  HaloMerger_Soliton_CenCoord[index_soliton][d] - 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] < 0.0 )
-               Aux_Error( ERROR_INFO, "The Soliton_%d range is outside of simulation box in direction-%d  !!\n",
-                          index_soliton+1, d );
+               Aux_Error( ERROR_INFO, "The Soliton_%d 3-r_c-range [%13.6e, %13.6e] is outside of simulation box in direction-%d  !!\n",
+                          index_soliton+1,
+                          HaloMerger_Soliton_CenCoord[index_soliton][d] - 3.0*HaloMerger_Soliton_CoreRadius[index_soliton],
+                          HaloMerger_Soliton_CenCoord[index_soliton][d] + 3.0*HaloMerger_Soliton_CoreRadius[index_soliton],
+                          d );
          } // for (int d=0; d<3; d++)
 
          // check whether the input solitons overlap with each other
@@ -650,12 +655,17 @@ void SetParameter()
             if ( sqrt( SQR(HaloMerger_Soliton_CenCoord[index_soliton][0]-HaloMerger_Soliton_CenCoord[index2_soliton][0])
                      + SQR(HaloMerger_Soliton_CenCoord[index_soliton][1]-HaloMerger_Soliton_CenCoord[index2_soliton][1])
                      + SQR(HaloMerger_Soliton_CenCoord[index_soliton][2]-HaloMerger_Soliton_CenCoord[index2_soliton][2]) )
-                 > 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] )
+                 > 3.0*(HaloMerger_Soliton_CoreRadius[index_soliton]+HaloMerger_Soliton_CoreRadius[index2_soliton]) )
                isOverlap = false;
 
             if ( isOverlap )
-               Aux_Error( ERROR_INFO, "Soliton_%d range overlaps with the Soliton_%d range !!\n",
-                          index_soliton+1, index2_soliton+1 );
+               Aux_Error( ERROR_INFO, "Soliton_%d 3-r_c-range (center: [%13.6e, %13.6e, %13.6e], r_c: %13.6e) overlaps with the Soliton_%d 3-r_c-range (center: [%13.6e, %13.6e, %13.6e], r_c: %13.6e) !!\n",
+                          index_soliton+1,
+                          HaloMerger_Soliton_CenCoord[index_soliton][0], HaloMerger_Soliton_CenCoord[index_soliton][1],
+                          HaloMerger_Soliton_CenCoord[index_soliton][2], HaloMerger_Soliton_CoreRadius[index_soliton],
+                          index2_soliton+1,
+                          HaloMerger_Soliton_CenCoord[index2_soliton][0], HaloMerger_Soliton_CenCoord[index2_soliton][1],
+                          HaloMerger_Soliton_CenCoord[index2_soliton][2], HaloMerger_Soliton_CoreRadius[index2_soliton] );
 
          } // for (int index2_soliton=0; index2_soliton<index_soliton; index2_soliton++)
 
@@ -668,14 +678,17 @@ void SetParameter()
 
                for (int d=0; d<3; d++)
                {
-                  if (HaloMerger_Soliton_CenCoord[index_soliton][d] - 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] >= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][d] ||
-                      HaloMerger_Soliton_CenCoord[index_soliton][d] + 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] <= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][d] )
+                  if ( HaloMerger_Soliton_CenCoord[index_soliton][d] - 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] >= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][d] ||
+                       HaloMerger_Soliton_CenCoord[index_soliton][d] + 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] <= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][d] )
                      isOverlap = false;
                } // for (int d=0; d<3; d++)
 
                if ( isOverlap )
-                  Aux_Error( ERROR_INFO, "Soliton_%d range overlaps with the Halo_%d UM_IC range !!\n",
-                             index_soliton+1, index_halo+1 );
+                  Aux_Error( ERROR_INFO, "Soliton_%d 3-r_c-range (center: [%13.6e, %13.6e, %13.6e], r_c: %13.6e) overlaps with the Halo_%d UM_IC range !!\n",
+                             index_soliton+1,
+                             HaloMerger_Soliton_CenCoord[index_soliton][0], HaloMerger_Soliton_CenCoord[index_soliton][1],
+                             HaloMerger_Soliton_CenCoord[index_soliton][2], HaloMerger_Soliton_CoreRadius[index_soliton],
+                             index_halo+1 );
 
             } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
          } // if ( HaloMerger_Halo_Num > 0 )
@@ -683,10 +696,10 @@ void SetParameter()
    } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Soliton_Num > 0 )
 
 
-// (4) reset other general-purpose parameters
+// (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default    = 14.0*Const_Gyr/UNIT_T;
+   const double End_T_Default    = 0.25;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -699,7 +712,7 @@ void SetParameter()
    }
 
 
-// (5) make a note
+// (4) make a note
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
@@ -756,7 +769,7 @@ void SetParameter()
 
       if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Soliton_Num > 0 )
       {
-         Aux_Message( stdout, " soliton information:\n" );
+         Aux_Message( stdout, "  soliton information:\n" );
          Aux_Message( stdout, "  %7s  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s\n",
                       "ID", "CoreRadius", "CoreRho", "CenCoord_X", "CenCoord_Y", "CenCoord_Z", "Velocity_X", "Velocity_Y", "Velocity_Z" );
 
@@ -974,7 +987,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    } else { // if ( amr->use_wave_flag[lv] )
    fluid[DENS] = SQR(Real) + SQR(Imag);
-   fluid[PHAS] = SATAN2( Imag, Real );
+   fluid[PHAS] = SATAN2( Imag, Real ); // TODO: how to add objects with phase? how to make sure the phase is continuous?
    fluid[STUB] = 0.0;
    } // if ( amr->use_wave_flag[lv] ) ... else
 #  endif
