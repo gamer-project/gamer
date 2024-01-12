@@ -338,9 +338,6 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
                              CheckMinTemp_No, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
                              EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-#     ifdef SRHD
-      Temp *= EoS_AuxArray_Flt[1];
-#     endif
       fprintf( File, BlankPlusFormat_Flt, Temp );
    }
 
