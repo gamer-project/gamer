@@ -79,7 +79,7 @@ void Init_Unit()
 
 //    velocity in SRHD is fixed at the speed of light
 #     ifdef SRHD
-      if ( UNIT_V > 0.0  &&  UNIT_V != Const_c )
+      if ( UNIT_V > 0.0 )
          Aux_Error( ERROR_INFO, "Must set UNIT_V <= 0.0 for SRHD since the velocity unit is fixed to the speed of light !!\n" );
       UNIT_V = Const_c;
 #     endif
