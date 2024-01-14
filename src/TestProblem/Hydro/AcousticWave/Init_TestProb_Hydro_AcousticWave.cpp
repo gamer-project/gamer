@@ -142,8 +142,10 @@ void SetParameter()
 
 // (2) set the problem-specific derived parameters
 
+#  ifdef SRHD
 // must initialize EoS first
    EoS_Init();
+#  endif 
 
    Acoustic_WaveLength = ( Acoustic_Dir == 3 ) ? amr->BoxSize[0]/sqrt(3.0) : amr->BoxSize[Acoustic_Dir];
 

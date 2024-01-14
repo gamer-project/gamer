@@ -165,6 +165,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
                fprintf( File, " %*s", StrLen_Flt, "Velocity Y" );
                fprintf( File, " %*s", StrLen_Flt, "Velocity Z" );
             }
+            if ( OPT__OUTPUT_ENTHALPY ) fprintf( File, " %*s", StrLen_Flt, "Reduced enthalpy" );
 #           endif 
             if ( OPT__OUTPUT_USER_FIELD ) {
                for (int v=0; v<UserDerField_Num; v++)    fprintf( File, " %*s", StrLen_Flt, UserDerField_Label[v] );

@@ -1014,7 +1014,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #              endif
 
 #              ifdef SRHD
-               if ( ( v >= VelDumpIdx0  &&  v < VelDumpIdx0+3 ) || v == LorentzDumpIdx || v == EnthalpyDumpIdx ) 
+               if ( ( v >= VelDumpIdx0  &&  v < VelDumpIdx0+3 ) || v == LorentzDumpIdx ) 
                {
                   const int vv = v - VelDumpIdx0 + 1;
                   real Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL], LorentzFactor, HTilde;
@@ -1033,20 +1033,31 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 		     if ( v == LorentzDumpIdx )
 //                      d-8. Lorentz factor
 	  	        FieldData[PID][k][j][i] = LorentzFactor;
-                     else if ( v == EnthalpyDumpIdx )
-		     {  
-//                      d-9. reduced enthalpy
-                        HTilde = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, 
-                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );   
-     	                FieldData[PID][k][j][i] = HTilde;
-		     }
                      else if ( v >= VelDumpIdx0  &&  v < VelDumpIdx0+3 )
-//                      d-10. 3-velocity
+//                      d-9. 3-velocity
 		        FieldData[PID][k][j][i] = Prim[vv] / LorentzFactor;
                   }
                }
 
-               else
+               else if ( v == EnthalpyDumpIdx ) 
+               {
+                  real Cons[NCOMP_TOTAL], HTilde;
+
+                  for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+                     for (int fv=0; fv<NCOMP_TOTAL; fv++)  Cons[fv] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[fv][k][j][i];
+
+//                   d-10. reduced enthalpy
+                     HTilde = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, 
+                                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );   
+     	               FieldData[PID][k][j][i] = HTilde;
+
+                  }
+               }
+
 #              endif // #ifdef SRHD
 #              endif // #if ( MODEL == HYDRO )
 //             d-11. user-defined derived fields
@@ -2547,6 +2558,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  ifdef SRHD
    InputPara.Opt__Output_Velocity        = OPT__OUTPUT_VELOCITY;
    InputPara.Opt__Output_Lorentz         = OPT__OUTPUT_LORENTZ;
+   InputPara.Opt__Output_Enthalpy        = OPT__OUTPUT_ENTHALPY;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
    InputPara.Opt__Output_UserField       = OPT__OUTPUT_USER_FIELD;

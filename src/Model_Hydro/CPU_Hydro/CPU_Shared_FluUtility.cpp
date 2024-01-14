@@ -211,7 +211,6 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut, real* LorentzFactorPtr )
 {
 
-#  ifndef SRHD
 #  ifdef MHD
    const real Bx               = In[ MAG_OFFSET + 0 ];
    const real By               = In[ MAG_OFFSET + 1 ];
@@ -220,7 +219,6 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 #  else
    const real Emag             = NULL_REAL;
 #  endif
-#  endif // #ifndef SRHD
 
 #  ifdef SRHD
    real HTilde, Factor, Temp, LorentzFactor;
@@ -391,8 +389,8 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive,
    Out[2] = In[0]*In[2];
    Out[3] = In[0]*In[3];
 
-#  ifdef MHD
    real Eint, Emag=NULL_REAL;
+#  ifdef MHD
    const real Bx = In[ MAG_OFFSET + 0 ];
    const real By = In[ MAG_OFFSET + 1 ];
    const real Bz = In[ MAG_OFFSET + 2 ];
@@ -446,8 +444,8 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 
 #  if ( defined GAMER_DEBUG  &&  defined SRHD )
    if ( AuxArray == NULL )
-      printf( stderr, "ERROR : AuxArray == NULL at file <%s>, line <%d>, function <%s> !!\n",
-              __FILE__, __LINE__, __FUNCTION__ );
+      printf( "ERROR : AuxArray == NULL at file <%s>, line <%d>, function <%s> !!\n",
+              ERROR_INFO );
 #  endif
 
    real InRot[ NCOMP_FLUID + NCOMP_MAG ];    // no need to include passive scalars since they don't have to be rotated
@@ -614,7 +612,7 @@ void Hydro_HTildeFunction (real HTilde, void *Params, real *Func, real *DiffFunc
 #  ifdef GAMER_DEBUG
    if ( Temp == Temp  &&  DiffFunc != NULL )
       printf( "ERROR : Temp (%13.7e) != NAN but DiffFunc != NULL at file <%s>, line <%d>, function <%s> !!\n",
-              Temp, File, Line, Function );            
+              Temp, ERROR_INFO );            
 #  endif
 
 // recompute temperature only when the input Temp is NAN, which is used in Hydro_Con2HTilde()
@@ -1084,9 +1082,7 @@ real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const re
    {
       printf( "Input: Dens %14.7e MomX %14.7e MomY %14.7e MomZ %14.7e Engy %14.7e",
               Dens, MomX, MomY, MomZ, Engy );
-#     ifdef SRHD
-      printf( " Pres %14.7e", Pres );
-#     else
+#     ifndef SRHD
       printf( " Eint %14.7e", Eint );
 #     endif
 #     ifdef MHD
