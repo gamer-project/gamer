@@ -46,7 +46,7 @@ OPT__BC_FLU_ZP                2           # fluid boundary condition at the +z f
 # time-step
 DT__FLUID                     -1          # dt criterion: fluid solver CFL factor (<0=auto) [-1.0]
 DT__FLUID_INIT                -1          # dt criterion: DT__FLUID at the first step (<0=auto) [-1.0]
-DT__SPEED_OF_LIGHT             1          # compute time step based on speed of light ## SRHD ONLY ##
+DT__SPEED_OF_LIGHT             1          # compute time step based on speed of light [0] ## SRHD ONLY ##
 DT__SYNC_PARENT_LV            0.1         # dt criterion: allow dt to adjust by (1.0+DT__SYNC_PARENT) in order to synchronize
                                           #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
 DT__SYNC_CHILDREN_LV          0.1         # dt criterion: allow dt to adjust by (1.0-DT__SYNC_CHILDREN) in order to synchronize
@@ -139,7 +139,17 @@ OPT__OUTPUT_USER              0           # output the user-specified data -> ed
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
 OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
-OPT__OUTPUT_TEMP	      1
+OPT__OUTPUT_TEMP	          1           # output gas temperature [0] ##HYDRO ONLY##
+OPT__OUTPUT_ENTR              0           # output gas entropy [0] ##HYDRO ONLY##
+OPT__OUTPUT_CS                0           # output sound speed [0] ##HYDRO ONLY##
+OPT__OUTPUT_DIVVEL            0           # output divergence(velocity) [0] ##HYDRO ONLY##
+OPT__OUTPUT_MACH              0           # output mach number [0] ##HYDRO ONLY##
+OPT__OUTPUT_DIVMAG            0           # output |divergence(B)*dh/|B|| [0] ##MHD ONLY##
+OPT__OUTPUT_LORENTZ           0           # output Lorentz factor [0] ##SRHD ONLY##
+OPT__OUTPUT_VELOCITY          0           # output 3-velocities [0] ##SRHD ONLY##
+OPT__OUTPUT_ENTHALPY          1           # output reduced enthalpy [1] ##SRHD ONLY##
+OPT__OUTPUT_USER_FIELD        0           # output user-defined derived fields [0] -> edit "Flu_DerivedField_User.cpp"
+OPT__OUTPUT_CC_MAG            1           # output **cell-centered** magnetic field (necessary for yt analysis) [1] 
 OUTPUT_STEP                   0           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
 OUTPUT_DT                     0.06132028  # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
 OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-1.0]
