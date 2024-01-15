@@ -139,7 +139,7 @@ OPT__OUTPUT_USER              0           # output the user-specified data -> ed
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
 OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
-OPT__OUTPUT_TEMP	          1           # output gas temperature [0] ##HYDRO ONLY##
+OPT__OUTPUT_TEMP	          1           # output gas temperature [1] ##HYDRO ONLY##
 OPT__OUTPUT_ENTR              0           # output gas entropy [0] ##HYDRO ONLY##
 OPT__OUTPUT_CS                0           # output sound speed [0] ##HYDRO ONLY##
 OPT__OUTPUT_DIVVEL            0           # output divergence(velocity) [0] ##HYDRO ONLY##
