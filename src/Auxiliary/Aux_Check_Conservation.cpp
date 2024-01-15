@@ -186,14 +186,30 @@ void Aux_Check_Conservation( const char *comment )
                                                  EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );
                   Fluid_lv[5] += Eint;
 
+#                 ifdef SRHD
+                  real HTilde, Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL], Lrtz, Lrtz_m1;
+                  Cons[0]      = Dens;
+                  Cons[1]      = MomX;
+                  Cons[2]      = MomY;
+                  Cons[3]      = MomZ;
+                  Cons[4]      = Etot;
+                  for (v = NCOMP_FLUID; v < NCOMP_TOTAL; v++) Cons[v] = 0.0;
+                  Hydro_Con2Pri( Cons, Prim, (real)-HUGE_NUMBER, NULL_BOOL, NULL_INT, NULL,
+                                 NULL_BOOL, NULL_REAL, EoS.DensEint2Pres_FuncPtr,
+                                 EoS.DensPres2Eint_FuncPtr, EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr, 
+                                 EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL, &Lrtz );
+
+                  HTilde       = Hydro_Con2HTilde( Cons, EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr, 
+                                                   EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );   
+
+                  Lrtz_m1      = ( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) ) / ( Lrtz + 1.0 );
+                  Ekin         = Lrtz_m1*Dens*( HTilde+1.0 + Prim[4] );
+#                 else
 //###NOTE: assuming Etot = Eint + Ekin + Emag
                   Ekin         = Etot - Eint;
-#                 ifdef SRHD
-//                total energy density also includes rest mass energy density in relativistic hydro
-                  Ekin        -= Dens;
-#                 endif
 #                 ifdef MHD
                   Ekin        -= Emag;
+#                 endif
 #                 endif
                   Fluid_lv[4] += Ekin;
                } // i,j,k
