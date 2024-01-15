@@ -1,5 +1,5 @@
 filename=UM_IC_halo_m22_1_Mh_4e9
-link=http://use.yt/upload/8812b7bf
+link=http://use.yt/upload/7e5d8729
 
 
 curl ${link} -o ${filename}.tar.gz

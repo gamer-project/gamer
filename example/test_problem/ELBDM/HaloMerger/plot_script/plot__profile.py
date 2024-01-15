@@ -30,7 +30,7 @@ didx      = args.didx
 prefix    = args.prefix
 
 center_mode = 'max'
-r_sphere     = 0.05822289
+r_sphere    = 0.06
 dpi         = 150
 nbin        = 32
 
@@ -38,7 +38,7 @@ yt.enable_parallelism()
 ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 
 for ds in ts.piter():
-   for field in [('gamer', 'Dens'), ('gas','density')]:
+   for field in ['density']:
 
       center_pos  = ds.find_max(field)[1].in_units("code_length")  # return maximum value and position, here use [1] to take peak position only
       sp = ds.sphere(center_pos, (r_sphere, "code_length") )
@@ -56,4 +56,4 @@ for ds in ts.piter():
                                      weight_field='cell_volume', n_bins=nbin ,
                                      units={'radius': 'kpc',field: 'code_density'})
 
-      np.savetxt('%s_%s_density_profile'%(ds,field[1]), np.column_stack( (prof_dens.x.in_units("kpc").d, prof_dens[field].in_units("code_density").d)              ), fmt='  %9.8e        ',  header='        r (kpc)  density (code_density)'              )
+      np.savetxt('%s_%s_profile'%(ds,field), np.column_stack( (prof_dens.x.in_units("kpc").d, prof_dens[field].in_units("code_density").d)              ), fmt='          %9.8e',  header='                r (kpc)  density (code_density)'              )
