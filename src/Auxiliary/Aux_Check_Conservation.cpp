@@ -201,7 +201,8 @@ void Aux_Check_Conservation( const char *comment )
 
                   HTilde       = Hydro_Con2HTilde( Cons, EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr, 
                                                    EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );   
-
+                                                   
+//                Compute gamma - 1 this way to avoid catastrophic cancellation 
                   Lrtz_m1      = ( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) ) / ( Lrtz + 1.0 );
                   Ekin         = Lrtz_m1*Dens*( HTilde+1.0 + Prim[4] );
 #                 else
