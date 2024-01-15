@@ -1017,7 +1017,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                if ( ( v >= VelDumpIdx0  &&  v < VelDumpIdx0+3 ) || v == LorentzDumpIdx ) 
                {
                   const int vv = v - VelDumpIdx0 + 1;
-                  real Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL], LorentzFactor, HTilde;
+                  real Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL], LorentzFactor;
 
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                   for (int k=0; k<PS1; k++)
