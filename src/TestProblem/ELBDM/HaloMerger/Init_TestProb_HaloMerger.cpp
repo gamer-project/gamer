@@ -77,6 +77,7 @@ static double  *HaloMerger_Soliton_DensProf_ScaleD                = NULL;  //   
 static double **HaloMerger_Soliton_DensProf                       = NULL;  // array to store the density profile read from table
 // =======================================================================================
 
+#if ( MODEL == ELBDM  &&  defined GRAVITY )
 // external potential routines
 // =======================================================================================
 void Init_ExtPot_ELBDM_HaloMerger();
@@ -93,6 +94,7 @@ static double HaloMerger_Trilinear_Interpolation( const double Target_X, const d
 
 static double HaloMerger_Get_Value_From_Halo_UM_IC_Data( const double x, const double y, const double z, const int v, const int index_halo );
 // =======================================================================================
+#endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
 
 
@@ -1069,48 +1071,9 @@ void End_HaloMerger()
    } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Soliton_Num > 0 )
 
 } // FUNCTION : End_HaloMerger
-#endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
 
 
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_ELBDM_HaloMerger
-// Description :  Test problem initializer
-//
-// Note        :  None
-//
-// Parameter   :  None
-//
-// Return      :  None
-//-------------------------------------------------------------------------------------------------------
-void Init_TestProb_ELBDM_HaloMerger()
-{
-
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
-
-
-// validate the compilation flags and runtime parameters
-   Validate();
-
-
-#  if ( MODEL == ELBDM  &&  defined GRAVITY )
-// set the problem-specific runtime parameters
-   SetParameter();
-
-
-// set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr = SetGridIC;
-   End_User_Ptr           = End_HaloMerger;
-   Init_ExtPot_Ptr        = Init_ExtPot_ELBDM_HaloMerger;
-#  endif // if ( MODEL == ELBDM  &&  defined GRAVITY )
-
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
-
-} // FUNCTION : Init_TestProb_ELBDM_HaloMerger
-
-
-
-#if ( MODEL == ELBDM )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  HaloMerger_Add_Velocity
 // Description :  Multiply the wave function by a plane wave wave function with a given velocity
@@ -1148,7 +1111,6 @@ void HaloMerger_Add_Velocity( double *RealPart, double *ImagPart,
    *ImagPart = Imag_New;
 
 } // FUNCTION : HaloMerger_Add_Velocity
-#  endif // if ( MODEL == ELBDM )
 
 
 
@@ -1264,3 +1226,41 @@ double HaloMerger_Get_Value_From_Halo_UM_IC_Data( const double x, const double y
     return Interpolated_Value;
 
 } // FUNCTION : HaloMerger_Get_Value_From_Halo_UM_IC_Data
+#endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_TestProb_ELBDM_HaloMerger
+// Description :  Test problem initializer
+//
+// Note        :  None
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Init_TestProb_ELBDM_HaloMerger()
+{
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
+
+
+// validate the compilation flags and runtime parameters
+   Validate();
+
+
+#  if ( MODEL == ELBDM  &&  defined GRAVITY )
+// set the problem-specific runtime parameters
+   SetParameter();
+
+
+// set the function pointers of various problem-specific routines
+   Init_Function_User_Ptr = SetGridIC;
+   End_User_Ptr           = End_HaloMerger;
+   Init_ExtPot_Ptr        = Init_ExtPot_ELBDM_HaloMerger;
+#  endif // if ( MODEL == ELBDM  &&  defined GRAVITY )
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
+
+} // FUNCTION : Init_TestProb_ELBDM_HaloMerger
