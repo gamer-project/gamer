@@ -270,7 +270,9 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
       Hydro_Rotate3D( Flux_Out, XYZ, false, MAG_OFFSET  );
       return;
    }
-#  else
+
+#  else  // #ifdef SRHD ... else ...
+
 // 2. estimate the maximum wave speeds
 // 2-1. compute the left/right states
    const real ZERO             = (real)0.0;

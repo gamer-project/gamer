@@ -352,7 +352,8 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
     Hydro_Rotate3D( Flux_Out, XYZ, false, MAG_OFFSET  );
     return;
    }
-#  else
+
+#  else // #ifdef SRHD ... else ...
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
    Hydro_CheckUnphysical( UNPHY_MODE_SING, &L[0], "density", ERROR_INFO, UNPHY_VERBOSE );
