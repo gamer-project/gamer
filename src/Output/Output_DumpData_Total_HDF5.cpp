@@ -1057,7 +1057,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
                   }
                }
-
+               else
 #              endif // #ifdef SRHD
 #              endif // #if ( MODEL == HYDRO )
 //             d-11. user-defined derived fields
