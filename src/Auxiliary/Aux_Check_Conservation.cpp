@@ -193,7 +193,7 @@ void Aux_Check_Conservation( const char *comment )
                   Cons[2]      = MomY;
                   Cons[3]      = MomZ;
                   Cons[4]      = Etot;
-                  for (v = NCOMP_FLUID; v < NCOMP_TOTAL; v++) Cons[v] = 0.0;
+                  for ( int v = NCOMP_FLUID; v < NCOMP_TOTAL; v++ ) Cons[v] = 0.0;
                   Hydro_Con2Pri( Cons, Prim, (real)-HUGE_NUMBER, NULL_BOOL, NULL_INT, NULL,
                                  NULL_BOOL, NULL_REAL, EoS.DensEint2Pres_FuncPtr,
                                  EoS.DensPres2Eint_FuncPtr, EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr, 

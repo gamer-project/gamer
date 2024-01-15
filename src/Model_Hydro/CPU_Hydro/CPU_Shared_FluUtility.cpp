@@ -211,15 +211,6 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut, real* LorentzFactorPtr )
 {
 
-#  ifdef MHD
-   const real Bx               = In[ MAG_OFFSET + 0 ];
-   const real By               = In[ MAG_OFFSET + 1 ];
-   const real Bz               = In[ MAG_OFFSET + 2 ];
-   const real Emag             = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
-#  else
-   const real Emag             = NULL_REAL;
-#  endif
-
 #  ifdef SRHD
    real HTilde, Factor, Temp, LorentzFactor;
 
@@ -247,8 +238,19 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
    Out[4] = Hydro_CheckMinPres( Out[4], MinPres );
 
 #  else
+
    const bool CheckMinPres_Yes = true;
    const real _Rho             = (real)1.0/In[0];
+
+#  ifdef MHD
+   const real Bx               = In[ MAG_OFFSET + 0 ];
+   const real By               = In[ MAG_OFFSET + 1 ];
+   const real Bz               = In[ MAG_OFFSET + 2 ];
+   const real Emag             = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
+#  else
+   const real Emag             = NULL_REAL;
+#  endif
+
 // conserved --> primitive
    Out[0] = In[0];
    Out[1] = In[1]*_Rho;
