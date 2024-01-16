@@ -62,7 +62,7 @@ SIMU_OPTION += -DFLU_SCHEME=CTU
 SIMU_OPTION += -DLR_SCHEME=PPM
 
 # Riemann solver: EXACT/ROE/HLLE/HLLC/HLLD
-# --> pure hydro: EXACT/ROE/HLLE/HLLC(*); 
+# --> pure hydro: EXACT/ROE/HLLE/HLLC(*);
 #		  MHD: ROE/HLLE/HLLD(*);
 #	          SRHD: HLLE/HLLC(*);
 #                 (recommended solvers are highlighted by *)

@@ -629,15 +629,15 @@ void BondiBC( real Array[], const int ArraySize[], real fluid[], const int NVar_
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
 {
-  
-   // Simply call the IC function
-  
+
+// Simply call the IC function
+
    SetGridIC( fluid, pos[0], pos[1], pos[2], Time, lv, AuxArray );
-       
+
    return;
-  
+
 } // FUNCTION : BondiBC
- 
+
 
 #endif // #if ( MODEL == HYDRO  &&  defined GRAVITY )
 

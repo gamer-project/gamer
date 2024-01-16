@@ -196,10 +196,10 @@ void Aux_Check_Conservation( const char *comment )
                   Hydro_Con2Pri( Cons, Prim, (real)-HUGE_NUMBER, NULL_BOOL, NULL_INT, NULL,
                                  NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
                                  EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, &Lrtz );
-                  HTilde       = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,          
-                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );   
-                                                   
-//                Compute gamma - 1 this way to avoid catastrophic cancellation 
+                  HTilde       = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+//                Compute gamma - 1 this way to avoid catastrophic cancellation
                   Lrtz_m1      = ( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) ) / ( Lrtz + 1.0 );
                   Ekin         = Lrtz_m1*( Dens*(HTilde+1.0) + Prim[4] );
 #                 else

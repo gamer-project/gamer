@@ -679,7 +679,7 @@ void Aux_Check_Parameter()
 #   endif
 #  endif // MHD
 
-#  ifdef SRHD 
+#  ifdef SRHD
 #   if ( defined RSOLVER  &&  RSOLVER != HLLC  &&  RSOLVER != HLLE )
 #     error : ERROR : unsupported Riemann solver for SRHD (HLLC/HLLE) !!
 #   endif
@@ -705,16 +705,16 @@ void Aux_Check_Parameter()
 #  ifdef SRHD
 #  if ( defined MHD )
 #     error: ERROR : SRHD does not support MHD !!
-#  endif 
+#  endif
 #  if ( defined GRAVITY )
 #     error: ERROR : SRHD does not support GRAVITY !!
-#  endif 
+#  endif
 #  if ( defined COMOVING )
 #     error: ERROR : SRHD does not support COMOVING !!
-#  endif 
+#  endif
 #  if ( defined PARTICLE )
 #     error: ERROR : SRHD does not support PARTICLE !!
-#  endif 
+#  endif
 #  if ( EOS != EOS_TAUBMATHEWS )
 #     error: ERROR : EOS != EOS_TAUBMATHEWS for SRHD !!
 #  endif

@@ -131,7 +131,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       real (*MagCC)[PS1][PS1][PS1]       = NULL;
       real (*Vel)[PS1][PS1][PS1]         = NULL;
       real (*Pres)[PS1][PS1]             = NULL;
-      real (*Lrtz)[PS1][PS1]             = NULL; 
+      real (*Lrtz)[PS1][PS1]             = NULL;
       real (*ParCount)[PS1][PS1]         = NULL;   // declare as **real** to be consistent with Par_MassAssignment()
       real (*ParDens )[PS1][PS1]         = NULL;
       real (*Lohner_Var)                 = NULL;   // array storing the variables for Lohner
@@ -313,7 +313,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 #              ifdef SRHD
 //             evaluate lorentz factor
-	       if ( OPT__FLAG_LRTZ_GRADIENT ) 
+	       if ( OPT__FLAG_LRTZ_GRADIENT )
 	       {
 		  for (int k=0; k<PS1; k++)
 		  for (int j=0; j<PS1; j++)

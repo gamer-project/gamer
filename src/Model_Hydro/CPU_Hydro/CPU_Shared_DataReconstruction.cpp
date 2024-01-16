@@ -2052,7 +2052,7 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
 //                EoS               : EoS object
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR], const real dt, 
+void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR], const real dt,
                            const real dh, const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                            const int cc_i, const int cc_j, const int cc_k,
                            const real g_FC_B[][ FLU_NXT_P1*SQR(FLU_NXT) ],
@@ -2095,7 +2095,7 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
    bool reset_cell = false;
    for (int f=0; f<6; f++)
    {
-#     ifdef SRHD  
+#     ifdef SRHD
       if ( Hydro_CheckUnphysical( UNPHY_MODE_CONS, fcCon[f], NULL, ERROR_INFO, UNPHY_SILENCE ) ) reset_cell = true;
 #     else
       if ( fcCon[f][DENS] <= (real)0.0 || fcCon[f][DENS] >= HUGE_NUMBER || fcCon[f][DENS] != fcCon[f][DENS] ) reset_cell = true;
@@ -2124,7 +2124,7 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
       fcCon[f][0] = FMAX( fcCon[f][0], MinDens );
 #     ifndef SRHD
 #     ifndef BAROTROPIC_EOS
-      fcCon[f][4] = Hydro_CheckMinEintInEngy( fcCon[f][0], fcCon[f][1], fcCon[f][2], fcCon[f][3], fcCon[f][4], 
+      fcCon[f][4] = Hydro_CheckMinEintInEngy( fcCon[f][0], fcCon[f][1], fcCon[f][2], fcCon[f][3], fcCon[f][4],
                                               MinEint, Emag );
 #     endif
 #     endif // #ifndef SRHD

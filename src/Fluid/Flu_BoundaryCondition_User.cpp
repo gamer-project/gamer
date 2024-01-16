@@ -1,8 +1,8 @@
 #include "GAMER.h"
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-static void BC_User_Template( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu, 
-			      const int GhostSize, const int idx[], const double pos[], const double Time, 
+static void BC_User_Template( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+			      const int GhostSize, const int idx[], const double pos[], const double Time,
 			      const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 // this function pointer must be set by a test problem initializer
@@ -215,7 +215,7 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Ghos
 //    store results to the output array
       for (int v=0; v<NVar_Flu; v++)
         Array3D[v][k][j][i] = BVal[ TFluVarIdxList[v] ];
-        
+
 
 
 //    2. derived variables

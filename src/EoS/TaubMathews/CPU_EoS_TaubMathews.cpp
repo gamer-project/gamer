@@ -114,7 +114,7 @@ static real EoS_GuessHTilde_TaubMathews( const real Con[], real* const Constant,
       // Eq. A4 in "Tseng et al. 2021, MNRAS, 504, 3298"
       real C       = (real)43.0*M_Dsqr + (real)63.0;
       real F       = (real)75.0*B;
-      real G       = (real)125.0*B*C*(*Constant);  
+      real G       = (real)125.0*B*C*(*Constant);
       GuessHTilde  = G;
       GuessHTilde /= C*(F+SQRT(G+F*F));
    }

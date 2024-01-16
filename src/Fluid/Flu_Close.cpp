@@ -989,7 +989,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   fprintf( File, "input        = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
                            Hydro_Con2Eint( In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
-                                           CheckMinEint_No, NULL_REAL, Emag_In, 
+                                           CheckMinEint_No, NULL_REAL, Emag_In,
                                            EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
@@ -1003,8 +1003,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   fprintf( File, "output (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
                            Hydro_Con2Eint( Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
-                                           CheckMinEint_No, NULL_REAL, Emag_Out, EoS_GuessHTilde_CPUPtr, 
-                                           EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, 
+                                           CheckMinEint_No, NULL_REAL, Emag_Out, EoS_GuessHTilde_CPUPtr,
+                                           EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                            h_EoS_Table ) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Out[DUAL] );
@@ -1023,7 +1023,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   fprintf( File, "output (new) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                            Hydro_Con2Eint(Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                                          CheckMinEint_No, NULL_REAL, Emag_Update, EoS_GuessHTilde_CPUPtr, 
+                                          CheckMinEint_No, NULL_REAL, Emag_Update, EoS_GuessHTilde_CPUPtr,
                                           EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Update[DUAL] );
@@ -1066,7 +1066,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                    endif
 
                      fprintf( File, " %14.7e", Hydro_Con2Eint(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4],
-                                                              CheckMinEint_No, NULL_REAL, Emag_tmp, 
+                                                              CheckMinEint_No, NULL_REAL, Emag_tmp,
                                                               EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table) );
 #                    ifdef MHD

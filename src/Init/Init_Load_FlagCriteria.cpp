@@ -70,7 +70,7 @@ void Init_Load_FlagCriteria()
    const bool Flag[NFlagMode]   = { OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_PRES_GRADIENT,
                                     OPT__FLAG_ENGY_DENSITY, OPT__FLAG_LOHNER, OPT__FLAG_USER,
                                     (bool)OPT__FLAG_NPAR_PATCH, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL,
-                                    OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, OPT__FLAG_CURRENT, OPT__FLAG_CRAY, 
+                                    OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, OPT__FLAG_CURRENT, OPT__FLAG_CRAY,
                                     OPT__FLAG_LRTZ_GRADIENT };
    const char ModeName[][100]   = { "OPT__FLAG_RHO", "OPT__FLAG_RHO_GRADIENT", "OPT__FLAG_PRES_GRADIENT",
                                     "OPT__FLAG_ENGY_DENSITY", "OPT__FLAG_LOHNER", "OPT__FLAG_USER",
