@@ -60,7 +60,7 @@ void NewtonRaphsonSolver( void (*FuncPtr)( real, void*, real*, real* ), void * p
 struct Hydro_HTildeFunction_params_s{
    real MSqr_DSqr;                  // (|Momentum|/Dens)**2
    real Temp;                       // Temperature
-   real Constant;                   // Left side of Eq. A3 in "Tseng et al. 2021, MNRAS, 504, 3298"
+   real Constant;                   // LHS of Eq. A3 in "Tseng et al. 2021, MNRAS, 504, 3298"
    EoS_H2TEM_t EoS_HTilde2Temp;     // EoS routine to compute the temperature
    const double *EoS_AuxArray_Flt;  // Auxiliary arrays for EoS_HTilde2Temp
    const int *EoS_AuxArray_Int;     // Auxiliary arrays for EoS_HTilde2Temp
@@ -582,7 +582,7 @@ real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, cons
 
 //-------------------------------------------------------------------------------------------------------
 // Function    : Hydro_HTildeFunction
-// Description : Right side of Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298" plus Params->Constant
+// Description : RHS of Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298" plus Params->Constant
 //
 // Note        :
 //

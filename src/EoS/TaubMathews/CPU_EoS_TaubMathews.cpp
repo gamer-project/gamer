@@ -67,7 +67,7 @@ void EoS_SetAuxArray_TaubMathews( double AuxArray_Flt[], int AuxArray_Int[] )
 // Description :  Guess a reduced enthalpy for Newton-Raphson iteration
 // Note        :
 // Parameter   :  Con         : Conservative variables
-//                Constant    : The constant on the left side of Eq. A3 in "Tseng et al. 2021, MNRAS, 504, 3298"
+//                Constant    : The constant on the LHS of Eq. A3 in "Tseng et al. 2021, MNRAS, 504, 3298"
 //                AuxArray_*  : Auxiliary arrays (see the Note above)
 //                Table       : EoS tables
 // Return      :  GuessHTilde : guessed reduced enthalpy
