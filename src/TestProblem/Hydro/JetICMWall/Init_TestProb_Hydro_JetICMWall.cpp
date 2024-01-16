@@ -4,8 +4,8 @@
 #if ( MODEL == HYDRO )
 
 static void JetBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
-		   const int GhostSize, const int idx[], const double pos[], const double Time,
-		   const int lv, const int TFluVarIdxList[], double AuxArray[] );
+                   const int GhostSize, const int idx[], const double pos[], const double Time,
+                   const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 static FieldIdx_t JetFieldIdx = Idx_Undefined;
 static FieldIdx_t ICMFieldIdx = Idx_Undefined;
@@ -269,8 +269,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    PriReal[4] = (real)Amb_Pressure;
 
    Hydro_Pri2Con( PriReal, fluid, false, PassiveNorm_NVar, PassiveNorm_VarIdx,
-		  EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-		  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+                  EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
    double ICM_x = (d-0.4*ICM_Density)/(0.4*ICM_Density);
    double lobe_x = (2.5*Lobe_Density-d)/(1.25*Lobe_Density);
@@ -313,8 +313,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // Return                        : fluid
 //-------------------------------------------------------------------------------------------------------
 void JetBC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
-	    const int GhostSize, const int idx[], const double pos[], const double Time,
-	    const int lv, const int TFluVarIdxList[], double AuxArray[] )
+            const int GhostSize, const int idx[], const double pos[], const double Time,
+            const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
 // check
 
@@ -359,8 +359,8 @@ void JetBC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu
       PriReal[IntFieldIdx] = (real)0.0;
 
       Hydro_Pri2Con( PriReal, BVal, false, PassiveNorm_NVar, PassiveNorm_VarIdx,
-		     EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-		     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+                     EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
     }
     else
@@ -368,12 +368,12 @@ void JetBC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu
 
       for (int v=0; v<NVar_Flu; v++) {
 
-	TFluVarIdx = TFluVarIdxList[v];
+        TFluVarIdx = TFluVarIdxList[v];
 
-	if ( TFluVarIdx == MOMY )
-	  BVal[TFluVarIdx] = MIN(Array3D[v][k][j_ref][i], 0.0);
-	else
-	  BVal[TFluVarIdx] = Array3D[v][k][j_ref][i];
+        if ( TFluVarIdx == MOMY )
+          BVal[TFluVarIdx] = MIN(Array3D[v][k][j_ref][i], 0.0);
+        else
+          BVal[TFluVarIdx] = Array3D[v][k][j_ref][i];
 
       }
 
@@ -387,16 +387,16 @@ void AddNewField_JetICMWall()
 
   if ( JetFieldIdx == Idx_Undefined )
     JetFieldIdx = AddField( "JetField", FIXUP_FLUX_YES, FIXUP_REST_YES,
-			    NORMALIZE_YES, INTERP_FRAC_NO );
+                            NORMALIZE_YES, INTERP_FRAC_NO );
   if ( ICMFieldIdx == Idx_Undefined )
     ICMFieldIdx = AddField( "ICMField", FIXUP_FLUX_YES, FIXUP_REST_YES,
-			    NORMALIZE_YES, INTERP_FRAC_NO );
+                            NORMALIZE_YES, INTERP_FRAC_NO );
   if ( LobeFieldIdx == Idx_Undefined )
     LobeFieldIdx = AddField( "LobeField", FIXUP_FLUX_YES, FIXUP_REST_YES,
-			     NORMALIZE_YES, INTERP_FRAC_NO );
+                             NORMALIZE_YES, INTERP_FRAC_NO );
   if ( IntFieldIdx == Idx_Undefined )
     IntFieldIdx = AddField( "IntField", FIXUP_FLUX_YES, FIXUP_REST_YES,
-			    NORMALIZE_YES, INTERP_FRAC_NO );
+                            NORMALIZE_YES, INTERP_FRAC_NO );
 }
 
 //-------------------------------------------------------------------------------------------------------

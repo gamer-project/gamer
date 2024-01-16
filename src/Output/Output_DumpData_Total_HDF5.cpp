@@ -1030,12 +1030,12 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                                     NULL_BOOL, (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
 
-		     if ( v == LorentzDumpIdx )
+                     if ( v == LorentzDumpIdx )
 //                      d-8. Lorentz factor
-	  	        FieldData[PID][k][j][i] = LorentzFactor;
+                        FieldData[PID][k][j][i] = LorentzFactor;
                      else if ( v >= VelDumpIdx0  &&  v < VelDumpIdx0+3 )
 //                      d-9. 3-velocity
-		        FieldData[PID][k][j][i] = Prim[vv] / LorentzFactor;
+                        FieldData[PID][k][j][i] = Prim[vv] / LorentzFactor;
                   }
                }
 
@@ -1053,7 +1053,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //                   d-10. reduced enthalpy
                      HTilde = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-     	             FieldData[PID][k][j][i] = HTilde;
+                     FieldData[PID][k][j][i] = HTilde;
                   }
                }
                else

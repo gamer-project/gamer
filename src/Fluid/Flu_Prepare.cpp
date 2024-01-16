@@ -136,7 +136,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
             Pres = Hydro_Con2Pres( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                    fluid+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, Emag,
                                    EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-				   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
             Cs2  = EoS_DensPres2CSqr_CPUPtr( fluid[DENS], Pres, fluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
             if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, fluid, NULL, ERROR_INFO, UNPHY_VERBOSE )  ||

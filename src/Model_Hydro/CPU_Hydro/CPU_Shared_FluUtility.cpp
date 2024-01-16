@@ -333,9 +333,9 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive,
-		    const int NFrac, const int FracIdx[], const EoS_DP2E_t EoS_DensPres2Eint,
-		    const EoS_TEM2H_t EoS_Temp2HTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
-		    const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                    const int NFrac, const int FracIdx[], const EoS_DP2E_t EoS_DensPres2Eint,
+                    const EoS_TEM2H_t EoS_Temp2HTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                    const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                     const real *const EoS_Table[EOS_NTABLE_MAX], const real* const EintIn )
 {
 
@@ -628,12 +628,12 @@ void Hydro_HTildeFunction (real HTilde, void *Params, real *Func, real *DiffFunc
    if ( Func != NULL )
 
    *Func = SQR( HTilde ) + (real)2.0*HTilde - (real)2.0*Temp - (real)2.0*Temp*HTilde
-	     + SQR( Temp * H ) / Factor0 + Constant;
+             + SQR( Temp * H ) / Factor0 + Constant;
 
    if ( DiffFunc != NULL )
 
    *DiffFunc = (real)2.0*H - (real)2.0*Temp - (real)2.0*H*DiffTemp +
-	         (real)2.0*Temp*H*( DiffTemp*H*Factor0 + Temp*MSqr_DSqr ) / SQR( Factor0 );
+                 (real)2.0*Temp*H*( DiffTemp*H*Factor0 + Temp*MSqr_DSqr ) / SQR( Factor0 );
 
 }
 #endif // #ifdef SRHD

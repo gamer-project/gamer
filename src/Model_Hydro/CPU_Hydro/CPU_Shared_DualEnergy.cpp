@@ -155,7 +155,7 @@ real Hydro_Con2Dual( const real Dens, const real MomX, const real MomY, const re
 // --> note that DE_ENPY only works with EOS_GAMMA, which does not involve passive scalars
    Pres = Hydro_Con2Pres( Dens, MomX, MomY, MomZ, Engy, NULL, CheckMinPres_No, NULL_REAL, Emag,
                           EoS_DensEint2Pres, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-			  EoS_Table, NULL );
+                          EoS_Table, NULL );
    Dual = Hydro_DensPres2Dual( Dens, Pres, EoS_AuxArray_Flt[1] );
 
    return Dual;

@@ -2,13 +2,13 @@
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 static void BC_User_Template( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
-			      const int GhostSize, const int idx[], const double pos[], const double Time,
-			      const int lv, const int TFluVarIdxList[], double AuxArray[] );
+                              const int GhostSize, const int idx[], const double pos[], const double Time,
+                              const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 // this function pointer must be set by a test problem initializer
 void (*BC_User_Ptr)( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
-		     const int GhostSize, const int idx[], const double pos[], const double Time,
-		     const int lv, const int TFluVarIdxList[], double AuxArray[] ) = NULL;
+                     const int GhostSize, const int idx[], const double pos[], const double Time,
+                     const int lv, const int TFluVarIdxList[], double AuxArray[] ) = NULL;
 
 
 
@@ -40,8 +40,8 @@ void (*BC_User_Ptr)( real Array[], const int ArraySize[], real fluid[], const in
 // Return                        : fluid
 //-------------------------------------------------------------------------------------------------------
 void BC_User_Template( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
-		       const int GhostSize, const int idx[], const double pos[], const double Time,
-		       const int lv, const int TFluVarIdxList[], double AuxArray[] )
+                       const int GhostSize, const int idx[], const double pos[], const double Time,
+                       const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
 
 // put your B.C. here
