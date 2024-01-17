@@ -187,7 +187,7 @@ void Aux_Check_Conservation( const char *comment )
 						 EoS_AuxArray_Int, h_EoS_Table );
 #                 else
 		  Eint = 0.0;
-#                 endif		  
+#                 endif
                   Fluid_lv[5] += Eint;
 
 #                 ifdef SRHD
