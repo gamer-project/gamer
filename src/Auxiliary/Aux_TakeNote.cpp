@@ -1597,8 +1597,8 @@ void Aux_TakeNote()
       {
 	       fprintf( Note, "Flag Criterion (Lorentz Factor Gradient in SRHD)\n" );
 	       fprintf( Note, "***********************************************************************************\n" );
-	       fprintf( Note, "  Level             Lorentz Factor Gradient\n" );
-	       for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_LrtzGradient[lv] );
+             fprintf( Note, "  Level   Lorentz Factor Gradient\n" );                                                  
+             for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%26.7e\n", lv, FlagTable_LrtzGradient[lv] );
 	       fprintf( Note, "***********************************************************************************\n" );
 	       fprintf( Note, "\n\n");
       }
