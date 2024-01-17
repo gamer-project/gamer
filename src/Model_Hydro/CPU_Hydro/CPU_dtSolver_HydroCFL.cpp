@@ -88,7 +88,7 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
 
       CGPU_LOOP( t, CUBE(PS1) )
       {
-	 real fluid[FLU_NIN_T], Pres, a2;
+	real fluid[FLU_NIN_T], Pres, a2, Emag;
 #        ifdef MHD
          int  i, j, k;
          real B[3], Bx2, By2, Bz2, B2, Ca2_plus_a2, Ca2_min_a2, Ca2_min_a2_sqr, four_a2_over_Rho;
@@ -97,7 +97,7 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
 #        ifdef SRHD
          real Pri[FLU_NIN_T], LorentzFactor, U_Max, Us_Max, LorentzFactor_Max, LorentzFactor_s_Max, Us;
 #        else
-         real _Rho, CFLx, CFLy, CFLz, Vx, Vy, Vz, Emag;
+         real _Rho, CFLx, CFLy, CFLz, Vx, Vy, Vz;
 #        endif
 
          for (int v=0; v<FLU_NIN_T; v++)  fluid[v] = g_Flu_Array[p][v][t];
