@@ -288,8 +288,10 @@ void Aux_Check_Parameter()
    } // if ( OPT__OUTPUT_USER_FIELD )
 
 #  if ( MODEL == HYDRO )
+#  ifndef SRHD
    if (  OPT__OUTPUT_TEMP  &&  EoS_DensEint2Temp_CPUPtr == NULL )
       Aux_Error( ERROR_INFO, "EoS_DensEint2Temp_CPUPtr == NULL for OPT__OUTPUT_TEMP !!\n" );
+#  endif
 
 #  if ( EOS == EOS_ISOTHERMAL )
    if ( OPT__OUTPUT_ENTR )
@@ -369,6 +371,9 @@ void Aux_Check_Parameter()
    Flag |= OPT__FLAG_LOHNER_ENTR;
 #  ifdef MHD
    Flag |= OPT__FLAG_CURRENT;
+#  endif
+#  ifdef SRHD
+   Flag |= OPT__FLAG_LRTZ_GRADIENT;
 #  endif
 #  ifdef COSMIC_RAY
    Flag |= OPT__FLAG_CRAY;
@@ -674,6 +679,15 @@ void Aux_Check_Parameter()
 #   endif
 #  endif // MHD
 
+#  ifdef SRHD 
+#   if ( defined RSOLVER  &&  RSOLVER != HLLC  &&  RSOLVER != HLLE )
+#     error : ERROR : unsupported Riemann solver for SRHD (HLLC/HLLE) !!
+#   endif
+#   if ( defined FLU_SCHEME  &&  FLU_SCHEME != MHM_RP && FLU_SCHEME != MHM )
+#     error : ERROR : unsupported FLU_SCHEME for SRHD (MHM_RP/MHM) !!
+#   endif
+#  endif // SRHD
+
 #  ifdef DUAL_ENERGY
 #   if ( FLU_SCHEME == RTVD )
 #     error : RTVD does NOT support DUAL_ENERGY !!
@@ -687,6 +701,24 @@ void Aux_Check_Parameter()
 #     error : ERROR : DUAL_ENERGY=DE_ENPY only supports EOS_GAMMA !!
 #  endif
 #  endif // #ifdef DUAL_ENERGY
+
+#  ifdef SRHD
+#  if ( defined MHD )
+#     error: ERROR : SRHD does not support MHD !!
+#  endif 
+#  if ( defined GRAVITY )
+#     error: ERROR : SRHD does not support GRAVITY !!
+#  endif 
+#  if ( defined COMOVING )
+#     error: ERROR : SRHD does not support COMOVING !!
+#  endif 
+#  if ( defined PARTICLE )
+#     error: ERROR : SRHD does not support PARTICLE !!
+#  endif 
+#  if ( EOS != EOS_TAUBMATHEWS )
+#     error: ERROR : EOS != EOS_TAUBMATHEWS for SRHD !!
+#  endif
+#  endif
 
 #  ifdef MHD
 #   if ( defined CHECK_INTERMEDIATE  &&  CHECK_INTERMEDIATE != HLLE  &&  CHECK_INTERMEDIATE != HLLD )
@@ -721,8 +753,8 @@ void Aux_Check_Parameter()
 #     error : ERROR : CTU does NOT support LR_EINT in CUFLU.h !!
 #  endif
 
-#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR  &&  EOS != EOS_COSMIC_RAY  &&  EOS != EOS_USER )
-#     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_COSMIC_RAY/EOS_USER) !!
+#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR  &&  EOS != EOS_COSMIC_RAY  &&  EOS != EOS_TAUBMATHEWS  &&  EOS != EOS_USER )
+#     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_COSMIC_RAY/EOS_TAUBMATHEWS/EOS_USER) !!
 #  endif
 
 #  if ( EOS != EOS_GAMMA )

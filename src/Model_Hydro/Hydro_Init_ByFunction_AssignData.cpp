@@ -84,7 +84,7 @@ void Init_Function_User_Template( real fluid[], const double x, const double y, 
    MomZ = Dens*Vz;
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, Emag0 );
-
+   
 // store the results
    fluid[DENS] = Dens;
    fluid[MOMX] = MomX;
@@ -363,8 +363,10 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
 //       apply density and internal energy floors
          fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
+#        ifndef SRHD
          fluid[ENGY] = Hydro_CheckMinEintInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                                  MIN_EINT, Emag );
+#        endif
 
 //       calculate the dual-energy variable (entropy or internal energy)
 #        ifdef DUAL_ENERGY

@@ -285,8 +285,10 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
 #           if ( MODEL == HYDRO )
 //          apply density and internal energy floors
             fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
+#           ifndef SRHD
             fluid[ENGY] = Hydro_CheckMinEintInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                                     MIN_EINT, Emag );
+#           endif
 
 //          calculate the dual-energy variable (entropy or internal energy)
 #           ifdef DUAL_ENERGY

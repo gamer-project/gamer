@@ -344,12 +344,17 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
    const real  Emag_Nume       = NULL_REAL;
 #  endif
 
-   const real  Pres_Nume       = Hydro_Con2Pres( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ], Nume[ENGY], Nume+NCOMP_FLUID,
+   const real  Pres_Nume       = Hydro_Con2Pres( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ], 
+                                                 Nume[ENGY], Nume+NCOMP_FLUID,
                                                  CheckMinPres_No, NULL_REAL, Emag_Nume,
-                                                 EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-   const real  Temp_Nume       = Hydro_Con2Temp( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ], Nume[ENGY], Nume+NCOMP_FLUID,
+                                                 EoS_DensEint2Pres_CPUPtr, 
+                                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+   const real  Temp_Nume       = Hydro_Con2Temp( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ], 
+                                                 Nume[ENGY], Nume+NCOMP_FLUID,
                                                  CheckMinTemp_No, NULL_REAL, Emag_Nume,
-                                                 EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                                                 EoS_DensEint2Temp_CPUPtr, 
+                                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    Nume[ENGY    ] = Pres_Nume;
    Nume[NBASIC+0] = Temp_Nume;
 #  endif // #if ( MODEL == HYDRO )
@@ -368,16 +373,21 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 
 // get pressure and temperature
 #  if ( MODEL == HYDRO )
-   const real Emag_Zero = 0.0;   // Anal[ENGY] set by AnalFunc_Flu() does NOT include magentic energy
+   const real Emag_Zero = 0.0;   // Anal[ENGY] set by AnalFunc_Flu() does NOT include magnetic energy
 
-   const real Pres_Anal = Hydro_Con2Pres( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY], Anal+NCOMP_FLUID,
-                                          CheckMinPres_No, NULL_REAL, Emag_Zero,
-                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-   const real Temp_Anal = Hydro_Con2Temp( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY], Anal+NCOMP_FLUID,
-                                          CheckMinTemp_No, NULL_REAL, Emag_Zero,
-                                          EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+   const real Pres_Anal = Hydro_Con2Pres( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY], 
+                                          Anal+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, Emag_Zero,
+                                          EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, 
+                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+
+   const real Temp_Anal = Hydro_Con2Temp( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY], 
+                                          Anal+NCOMP_FLUID, CheckMinTemp_No, NULL_REAL, Emag_Zero,
+                                          EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, 
+                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
    Anal[ENGY    ] = Pres_Anal;
    Anal[NBASIC+0] = Temp_Anal;
+
 #  endif
 
 

@@ -57,6 +57,7 @@ const TestProbID_t
    TESTPROB_HYDRO_CR_SHOCKTUBE                 =   21,
    TESTPROB_HYDRO_CR_DIFFUSION                 =   23,
    TESTPROB_HYDRO_BARRED_POT                   =   51,
+   TESTPROB_HYDRO_JET_ICM_WALL                 =   52,
    TESTPROB_HYDRO_CDM_LSS                      =  100,
    TESTPROB_HYDRO_ZELDOVICH                    =  101,
    TESTPROB_ELBDM_EXTPOT                       = 1000;
@@ -494,6 +495,15 @@ const ExtremaMode_t
 
 
 // function pointers
+typedef real (*EoS_GUESS_t)    ( const real Con[], real* const Constant, const double AuxArray_Flt[],
+                                 const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
+typedef void (*EoS_H2TEM_t)    ( const real HTilde, real* const Temp, real* const DiffTemp,
+                                 const real Passive[], const double AuxArray_Flt[],
+                                 const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_TEM2H_t)    ( const real Temp, const real Passive[], const double AuxArray_Flt[],
+                                 const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_TEM2C_t)    ( const real Rho, const real Pres, const real Passive[], const double AuxArray_Flt[],
+                                 const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
 typedef real (*EoS_DE2P_t)     ( const real Dens, const real Eint, const real Passive[],
                                  const double AuxArray_Flt[], const int AuxArray_Int[],
                                  const real *const Table[EOS_NTABLE_MAX] );
@@ -503,9 +513,6 @@ typedef real (*EoS_DP2E_t)     ( const real Dens, const real Pres, const real Pa
 typedef real (*EoS_DP2C_t)     ( const real Dens, const real Pres, const real Passive[],
                                  const double AuxArray_Flt[], const int AuxArray_Int[],
                                  const real *const Table[EOS_NTABLE_MAX] );
-typedef void (*EoS_GENE_t)     ( const int Mode, real Out[], const real In_Flt[], const int In_Int[],
-                                 const double AuxArray_Flt[], const int AuxArray_Int[],
-                                 const real *const Table[EOS_NTABLE_MAX] );
 typedef real (*EoS_DE2T_t)     ( const real Dens, const real Eint, const real Passive[],
                                  const double AuxArray_Flt[], const int AuxArray_Int[],
                                  const real *const Table[EOS_NTABLE_MAX] );
@@ -513,6 +520,9 @@ typedef real (*EoS_DT2P_t)     ( const real Dens, const real Temp, const real Pa
                                  const double AuxArray_Flt[], const int AuxArray_Int[],
                                  const real *const Table[EOS_NTABLE_MAX] );
 typedef real (*EoS_DE2S_t)     ( const real Dens, const real Eint, const real Passive[],
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef void (*EoS_GENE_t)     ( const int Mode, real Out[], const real In_Flt[], const int In_Int[],
                                  const double AuxArray_Flt[], const int AuxArray_Int[],
                                  const real *const Table[EOS_NTABLE_MAX] );
 #ifdef COSMIC_RAY

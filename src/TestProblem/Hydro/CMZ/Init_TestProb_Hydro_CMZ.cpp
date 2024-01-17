@@ -23,8 +23,9 @@ void Par_Init_ByFunction_BarredPot( const long NPar_ThisRank, const long NPar_Al
                                     real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                     real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
 #endif
-static void IsolatedBC( real fluid[], const double x, const double y, const double z, const double Time,
-                const int lv, double AuxArray[] );
+static void IsolatedBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+			const int GhostSize, const int idx[], const double pos[], const double Time,
+			const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 //void Init_ExtAcc_BarredPot();
 //void Init_ExtPot_BarredPot();
@@ -296,8 +297,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void IsolatedBC( real fluid[], const double x, const double y, const double z, const double Time,
-         const int lv, double AuxArray[] )
+void IsolatedBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+		 const int GhostSize, const int idx[], const double pos[], const double Time,
+		 const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
 
 //   real Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
@@ -316,7 +318,7 @@ void IsolatedBC( real fluid[], const double x, const double y, const double z, c
 //   fluid[MOMZ] = MomZ;
 //   fluid[ENGY] = Etot;
 
-   SetGridIC( fluid, x, y, z, Time, lv, AuxArray );
+   SetGridIC( fluid, pos[0], pos[1], pos[2], Time, lv, AuxArray );
 
 } // FUNCTION : BC
 
