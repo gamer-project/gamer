@@ -192,7 +192,7 @@
 
 // number of input fluid variables in the dt solver
 // --> EOS_GAMMA/EOS_ISOTHERMAL do not require passive scalars
-#if (  MODEL == HYDRO  && ( !defined SRHD ) && ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
+#if (  MODEL == HYDRO  &&  !defined SRHD  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
 #  define FLU_NIN_T           NCOMP_FLUID
 #else
 #  define FLU_NIN_T           NCOMP_TOTAL
@@ -790,11 +790,11 @@
 #endif
 
 #ifndef __FLT_EPSILON__
-#  define __FLT_EPSILON__ 1.19209290e-07F
+#  define __FLT_EPSILON__        1.19209290e-07F
 #endif
 
 #ifndef __DBL_EPSILON__
-#  define __DBL_EPSILON__ 2.2204460492503131e-16
+#  define __DBL_EPSILON__        2.2204460492503131e-16
 #endif
 
 // extreme value used for various purposes (e.g., floor value for passive scalars)
@@ -808,15 +808,15 @@
 
 
 // maximum allowed error for various purposes (e.g., exact Riemann solver, MHD routines, Mis_CompareRealValue())
-#define MAX_ERROR_DBL      1.0e-14
-#define MAX_ERROR_FLT      1.0e-06f
+#define MAX_ERROR_DBL            1.0e-14
+#define MAX_ERROR_FLT            1.0e-06f
 
 #ifdef FLOAT8
-#  define MACHINE_EPSILON  __DBL_EPSILON__
-#  define MAX_ERROR        MAX_ERROR_DBL
+#  define MACHINE_EPSILON        __DBL_EPSILON__
+#  define MAX_ERROR              MAX_ERROR_DBL
 #else
-#  define MACHINE_EPSILON  __FLT_EPSILON__
-#  define MAX_ERROR        MAX_ERROR_FLT
+#  define MACHINE_EPSILON        __FLT_EPSILON__
+#  define MAX_ERROR              MAX_ERROR_FLT
 #endif
 
 

@@ -98,7 +98,7 @@ HUBBLE0                       0.70        # dimensionless Hubble parameter (curr
 DT__MAX                      -1.0         # dt criterion: maximum allowed dt (<0=off) [-1.0]
 DT__FLUID                    -1.0         # dt criterion: fluid solver CFL factor (<0=auto) [-1.0]
 DT__FLUID_INIT               -1.0         # dt criterion: DT__FLUID at the first step (<0=auto) [-1.0]
-DT__SPEED_OF_LIGHT              0         # compute time step based on speed of light [0] ## SRHD ONLY ##
+DT__SPEED_OF_LIGHT            0           # compute time-step based on speed of light [0] ##SRHD ONLY##
 DT__GRAVITY                  -1.0         # dt criterion: gravity solver safety factor (<0=auto) [-1.0]
 DT__PHASE                     0.0         # dt criterion: phase rotation safety factor (0=off) [0.0] ##ELBDM ONLY##
 DT__PARVEL                    0.5         # dt criterion: particle velocity safety factor [0.5]
@@ -132,7 +132,7 @@ MAX_LEVEL                     0           # maximum refinement level (0~NLEVEL-1
 OPT__FLAG_RHO                 0           # flag: density (Input__Flag_Rho) [0]
 OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_RhoGradient) [0]
 OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag_PresGradient) [0] ##HYDRO ONLY##
-OPT__FLAG_LRTZ_GRADIENT       0           # flag: Lorentz factor gradient (Input__Flag_LorentzGradient) [0] ##SRHD ONLY##
+OPT__FLAG_LRTZ_GRADIENT       0           # flag: Lorentz factor gradient (Input__Flag_LrtzGradient) [0] ##SRHD ONLY##
 OPT__FLAG_VORTICITY           0           # flag: vorticity (Input__Flag_Vorticity) [0] ##HYDRO ONLY##
 OPT__FLAG_JEANS               0           # flag: Jeans length (Input__Flag_Jeans) [0] ##HYDRO ONLY##
 OPT__FLAG_CURRENT             0           # flag: current density in MHD (Input__Flag_Current) [0] ##MHD ONLY##

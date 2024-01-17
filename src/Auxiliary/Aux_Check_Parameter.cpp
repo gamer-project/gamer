@@ -683,7 +683,7 @@ void Aux_Check_Parameter()
 #   if ( defined RSOLVER  &&  RSOLVER != HLLC  &&  RSOLVER != HLLE )
 #     error : ERROR : unsupported Riemann solver for SRHD (HLLC/HLLE) !!
 #   endif
-#   if ( defined FLU_SCHEME  &&  FLU_SCHEME != MHM_RP && FLU_SCHEME != MHM )
+#   if ( defined FLU_SCHEME  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != MHM )
 #     error : ERROR : unsupported FLU_SCHEME for SRHD (MHM_RP/MHM) !!
 #   endif
 #  endif // SRHD
@@ -697,28 +697,28 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
 #   endif
 
-#  if ( DUAL_ENERGY == DE_ENPY  &&  EOS != EOS_GAMMA )
+#   if ( DUAL_ENERGY == DE_ENPY  &&  EOS != EOS_GAMMA )
 #     error : ERROR : DUAL_ENERGY=DE_ENPY only supports EOS_GAMMA !!
-#  endif
+#   endif
 #  endif // #ifdef DUAL_ENERGY
 
 #  ifdef SRHD
-#  if ( defined MHD )
+#   if ( defined MHD )
 #     error: ERROR : SRHD does not support MHD !!
-#  endif
-#  if ( defined GRAVITY )
+#   endif
+#   ifdef GRAVITY
 #     error: ERROR : SRHD does not support GRAVITY !!
-#  endif
-#  if ( defined COMOVING )
+#   endif
+#   ifdef COMOVING
 #     error: ERROR : SRHD does not support COMOVING !!
-#  endif
-#  if ( defined PARTICLE )
+#   endif
+#   ifdef PARTICLE
 #     error: ERROR : SRHD does not support PARTICLE !!
-#  endif
-#  if ( EOS != EOS_TAUBMATHEWS )
+#   endif
+#   if ( EOS != EOS_TAUBMATHEWS )
 #     error: ERROR : EOS != EOS_TAUBMATHEWS for SRHD !!
-#  endif
-#  endif
+#   endif
+#  endif // #ifdef SRHD
 
 #  ifdef MHD
 #   if ( defined CHECK_INTERMEDIATE  &&  CHECK_INTERMEDIATE != HLLE  &&  CHECK_INTERMEDIATE != HLLD )

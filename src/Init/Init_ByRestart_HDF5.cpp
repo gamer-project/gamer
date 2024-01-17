@@ -201,13 +201,10 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "CellScale",             KeyInfo.CellScale,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 #  if ( MODEL == HYDRO )
    if ( KeyInfo.FormatVersion >= 2400 )
-   {
-      LoadField( "Magnetohydrodynamics", &KeyInfo.Magnetohydrodynamics, H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Magnetohydrodynamics,  1,    Fatal );
-   }
+   LoadField( "Magnetohydrodynamics", &KeyInfo.Magnetohydrodynamics, H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Magnetohydrodynamics,  1,    Fatal );
+
    if ( KeyInfo.FormatVersion >= 2473 )
-   {
-      LoadField( "SRHydrodynamics",      &KeyInfo.SRHydrodynamics,      H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &SRHydrodynamics,       1,    Fatal );
-   }
+   LoadField( "SRHydrodynamics",      &KeyInfo.SRHydrodynamics,      H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &SRHydrodynamics,       1,    Fatal );
 
    if ( KeyInfo.FormatVersion >= 2421 )
    LoadField( "CosmicRay",            &KeyInfo.CosmicRay,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &CosmicRay,             1,    Fatal );
@@ -2270,6 +2267,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #     ifdef SRHD
       RS.FlagTable_LrtzGradient[lv]    = -1.0;
 #     endif
+
 #     elif ( MODEL == ELBDM )
       for (int t=0; t<2; t++)
       RS.FlagTable_EngyDensity [lv][t] = -1.0;
@@ -2335,7 +2333,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 #  ifdef SRHD
    if ( OPT__FLAG_LRTZ_GRADIENT )
-   LoadField( "FlagTable_LrtzGradient",   RS.FlagTable_LrtzGradient,  SID, TID, NonFatal,  RT.FlagTable_LrtzGradient,       N1, NonFatal );
+   LoadField( "FlagTable_LrtzGradient",   RS.FlagTable_LrtzGradient,  SID, TID, NonFatal,  RT.FlagTable_LrtzGradient,  N1, NonFatal );
 #  endif
 
 #  elif ( MODEL == ELBDM )
@@ -2349,7 +2347,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
          Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                        "FlagTable_EngyDensity", lv, t, RS.FlagTable_EngyDensity[lv][t],  RT.FlagTable_EngyDensity[lv][t] );
    }}
-#  endif
+#  endif // MODEL
 
 #  ifdef PARTICLE
    if ( OPT__FLAG_NPAR_PATCH )

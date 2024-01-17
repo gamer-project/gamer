@@ -36,9 +36,9 @@ void Init_Load_FlagCriteria()
    double *FlagTable_LrtzGradient     = NULL;
 #  endif
 #  ifndef COSMIC_RAY
-   const bool OPT__FLAG_LOHNER_CRAY  = false;
-   const bool OPT__FLAG_CRAY         = false;
-   double *FlagTable_CRay            = NULL;
+   const bool OPT__FLAG_LOHNER_CRAY   = false;
+   const bool OPT__FLAG_CRAY          = false;
+   double *FlagTable_CRay             = NULL;
 #  endif
 
 #  if ( MODEL != ELBDM )

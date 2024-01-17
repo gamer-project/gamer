@@ -54,8 +54,10 @@ extern void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real
                                       const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                                       const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
 #endif
-
 #endif // #if ( MODEL == HYDRO )
+
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_Close
@@ -92,7 +94,7 @@ void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
 
 // try to correct the unphysical results in h_Flu_Array_F_Out (e.g., negative density)
 // --> must be done BEFORE invoking both StoreFlux() and CorrectFlux() since CorrectUnphysical() might modify the flux array
-#  if ( MODEL == HYDRO && !defined SRHD )
+#  if ( MODEL == HYDRO  &&  !defined SRHD )
    CorrectUnphysical( lv, NPG, PID0_List, h_Flu_Array_F_In, h_Flu_Array_F_Out, h_DE_Array_F_Out, h_Flux_Array,
                       h_Mag_Array_F_In, h_Mag_Array_F_Out, dt );
 #  endif
@@ -454,8 +456,8 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
 } // FUNCTION : Unphysical
 
 
-#ifndef SRHD
 
+#ifndef SRHD
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CorrectUnphysical
 // Description :  Check if any cell in the output array of Fluid solver contains unphysical results
@@ -1198,8 +1200,9 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
    }
 
 } // FUNCTION : CorrectUnphysical
-
 #endif // #ifndef SRHD
+
+
 
 #ifdef MHD
 //-------------------------------------------------------------------------------------------------------

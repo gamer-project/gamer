@@ -62,9 +62,9 @@ SIMU_OPTION += -DFLU_SCHEME=CTU
 SIMU_OPTION += -DLR_SCHEME=PPM
 
 # Riemann solver: EXACT/ROE/HLLE/HLLC/HLLD
-# --> pure hydro: EXACT/ROE/HLLE/HLLC(*);
-#		  MHD: ROE/HLLE/HLLD(*);
-#	          SRHD: HLLE/HLLC(*);
+# --> pure hydro: EXACT/ROE/HLLE/HLLC(*)
+#            MHD: ROE/HLLE/HLLD(*)
+#           SRHD: HLLE/HLLC(*)
 #                 (recommended solvers are highlighted by *)
 # --> useless for RTVD
 SIMU_OPTION += -DRSOLVER=ROE
@@ -483,7 +483,7 @@ CPU_FILE    += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_MHM.cpp  CPU_FluidSolve
                CPU_Shared_FullStepUpdate.cpp  CPU_Shared_RiemannSolver_Exact.cpp  CPU_Shared_RiemannSolver_Roe.cpp \
                CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_RiemannSolver_HLLC.cpp  CPU_Shared_DualEnergy.cpp \
                CPU_dtSolver_HydroCFL.cpp  CPU_EoS_Gamma.cpp  CPU_EoS_User_Template.cpp  CPU_EoS_Isothermal.cpp \
-	             CPU_EoS_GammaCR.cpp  CPU_EoS_TaubMathews.cpp
+               CPU_EoS_GammaCR.cpp  CPU_EoS_TaubMathews.cpp
 
 CPU_FILE    += Hydro_Init_ByFunction_AssignData.cpp  Hydro_Aux_Check_Negative.cpp \
                Hydro_BoundaryCondition_Reflecting.cpp  Hydro_BoundaryCondition_Outflow.cpp \

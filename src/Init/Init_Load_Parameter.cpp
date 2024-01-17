@@ -471,7 +471,7 @@ void Init_Load_Parameter()
 #  endif
 #  if ( MODEL == HYDRO )
    ReadPara->Add( "OPT__OUTPUT_PRES",           &OPT__OUTPUT_PRES,                false,           Useless_bool,  Useless_bool   );
-   bool OutTempDefault = EOS == EOS_TAUBMATHEWS ? true : false;
+   const bool OutTempDefault = ( EOS == EOS_TAUBMATHEWS ) ? true : false;
    ReadPara->Add( "OPT__OUTPUT_TEMP",           &OPT__OUTPUT_TEMP,                OutTempDefault,  Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_ENTR",           &OPT__OUTPUT_ENTR,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_CS",             &OPT__OUTPUT_CS,                  false,           Useless_bool,  Useless_bool   );

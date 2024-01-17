@@ -37,7 +37,7 @@ void (*BC_User_Ptr)( real Array[], const int ArraySize[], real fluid[], const in
 //                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                AuxArray       : Auxiliary array
 //
-// Return                        : fluid
+// Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
 void BC_User_Template( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
                        const int GhostSize, const int idx[], const double pos[], const double Time,
@@ -182,9 +182,9 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Ghos
    {
 //    1. primary variables
 //    get the boundary values of all NCOMP_TOTAL fields
-      const int ArraySize[3] = { ArraySizeX, ArraySizeY, ArraySizeZ };
-      const int idx[3] = { i, j, k };
-      const double pos[3] = { x, y, z };
+      const int    ArraySize[3] = { ArraySizeX, ArraySizeY, ArraySizeZ };
+      const int    idx[3]       = { i, j, k };
+      const double pos[3]       = { x, y, z };
       BC_User_Ptr( Array, ArraySize, BVal, NVar_Flu, GhostSize, idx, pos,
                    Time, lv, TFluVarIdxList, NULL );
 
@@ -215,7 +215,6 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Ghos
 //    store results to the output array
       for (int v=0; v<NVar_Flu; v++)
         Array3D[v][k][j][i] = BVal[ TFluVarIdxList[v] ];
-
 
 
 //    2. derived variables
