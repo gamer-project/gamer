@@ -41,8 +41,8 @@ extern void (*Mis_UserWorkBeforeNextLevel_Ptr)( const int lv, const double TimeN
 extern void (*Mis_UserWorkBeforeNextSubstep_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt );
 extern void (*Aux_Record_User_Ptr)();
 extern void (*BC_User_Ptr)( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
-           		    const int GhostSize, const int idx[], const double pos[], const double Time,
-			    const int lv, const int TFluVarIdxList[], double AuxArray[] );
+                            const int GhostSize, const int idx[], const double pos[], const double Time,
+                            const int lv, const int TFluVarIdxList[], double AuxArray[] );
 #ifdef MHD
 extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
                                    const int lv, double AuxArray[] );

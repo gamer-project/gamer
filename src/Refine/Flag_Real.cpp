@@ -131,7 +131,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       real (*MagCC)[PS1][PS1][PS1]       = NULL;
       real (*Vel)[PS1][PS1][PS1]         = NULL;
       real (*Pres)[PS1][PS1]             = NULL;
-      real (*Lrtz)[PS1][PS1]             = NULL; 
+      real (*Lrtz)[PS1][PS1]             = NULL;
       real (*ParCount)[PS1][PS1]         = NULL;   // declare as **real** to be consistent with Par_MassAssignment()
       real (*ParDens )[PS1][PS1]         = NULL;
       real (*Lohner_Var)                 = NULL;   // array storing the variables for Lohner
@@ -313,35 +313,35 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 #              ifdef SRHD
 //             evaluate lorentz factor
-	       if ( OPT__FLAG_LRTZ_GRADIENT ) 
-	       {
-		  for (int k=0; k<PS1; k++)
-		  for (int j=0; j<PS1; j++)
-		  for (int i=0; i<PS1; i++)
-		  {
+               if ( OPT__FLAG_LRTZ_GRADIENT )
+               {
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
 
-		     real HTilde, Factor;
-		     real Cons[NCOMP_FLUID] = { Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
-						Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i] };
-		     real U1, U2, U3;
+                     real HTilde, Factor;
+                     real Cons[NCOMP_FLUID] = { Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
+                                                Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i] };
+                     real U1, U2, U3;
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-		     Hydro_CheckUnphysical( UNPHY_MODE_CONS, Cons, NULL, ERROR_INFO, UNPHY_VERBOSE );
+                     Hydro_CheckUnphysical( UNPHY_MODE_CONS, Cons, NULL, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
-		     HTilde = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-						EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                     HTilde = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
-		     Factor = Cons[0]*((real)1.0 + HTilde);
+                     Factor = Cons[0]*((real)1.0 + HTilde);
 
-		     U1 = Cons[1]/Factor;
-		     U2 = Cons[2]/Factor;
-		     U3 = Cons[3]/Factor;
+                     U1 = Cons[1]/Factor;
+                     U2 = Cons[2]/Factor;
+                     U3 = Cons[3]/Factor;
 
-		     Lrtz[k][j][i] = SQRT( (real)1.0 + SQR(U1) + SQR(U2) + SQR(U3) );
+                     Lrtz[k][j][i] = SQRT( (real)1.0 + SQR(U1) + SQR(U2) + SQR(U3) );
 
-		  }
-	       } // if ( OPT__FLAG_LRTZ_GRADIENT )
+                  }
+               } // if ( OPT__FLAG_LRTZ_GRADIENT )
 #              endif // #ifdef SRHD
 #              endif // #if ( MODEL == HYDRO )
 
@@ -452,7 +452,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                              i_end   = ( i + FlagBuf >= PS1 ) ? 2 : 1;
 
 //                check if the target cell satisfies the refinement criteria (useless pointers are always == NULL)
-		  if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, MagCC, Vel, Pres, Lrtz,
+                  if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, MagCC, Vel, Pres, Lrtz,
                                                         Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope, Lohner_NVar,
                                                         ParCount, ParDens, JeansCoeff )  )
                   {

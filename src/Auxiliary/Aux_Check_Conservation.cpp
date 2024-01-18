@@ -181,17 +181,18 @@ void Aux_Check_Conservation( const char *comment )
                   Fluid_lv[6] += Epot;
 #                 endif
 #                 ifndef SRHD
-		  // Hydro_Con2Eint calculates Eint for both HD and SRHD but we disable SRHD for now
+//                Hydro_Con2Eint() calculates Eint for both HD and SRHD but we disable SRHD for now
                   Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag,
 		  			         EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
 						 EoS_AuxArray_Int, h_EoS_Table );
 #                 else
 		  Eint = 0.0;
-#                 endif		  
+#                 endif
                   Fluid_lv[5] += Eint;
 
 #                 ifdef SRHD
-		  // For now we disable the calculation of Ekin for SRHD
+//                For now we disable the calculation of Ekin for SRHD
+//                Also, note that the following is equivalent to "Etot - Dens - Lrtz*Eint"
 		  /*
                   real HTilde, Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL], Lrtz, Lrtz_m1;
                   Cons[0]      = Dens;
@@ -203,10 +204,10 @@ void Aux_Check_Conservation( const char *comment )
                   Hydro_Con2Pri( Cons, Prim, (real)-HUGE_NUMBER, NULL_BOOL, NULL_INT, NULL,
                                  NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
                                  EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, &Lrtz );
-                  HTilde       = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,          
-                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );   
-                                                   
-//                Compute gamma - 1 this way to avoid catastrophic cancellation 
+                  HTilde       = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+//                Compute gamma - 1 this way to avoid catastrophic cancellation
                   Lrtz_m1      = ( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) ) / ( Lrtz + 1.0 );
                   Ekin         = Lrtz_m1*( Dens*(HTilde+1.0) + Prim[4] );
                   */

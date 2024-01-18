@@ -1014,7 +1014,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #              endif
 
 #              ifdef SRHD
-               if ( ( v >= VelDumpIdx0  &&  v < VelDumpIdx0+3 ) || v == LorentzDumpIdx ) 
+               if ( ( v >= VelDumpIdx0  &&  v < VelDumpIdx0+3 ) || v == LorentzDumpIdx )
                {
                   const int vv = v - VelDumpIdx0 + 1;
                   real Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL], LorentzFactor;
@@ -1030,16 +1030,16 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                                     NULL_BOOL, (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
 
-		     if ( v == LorentzDumpIdx )
+                     if ( v == LorentzDumpIdx )
 //                      d-8. Lorentz factor
-	  	        FieldData[PID][k][j][i] = LorentzFactor;
+                        FieldData[PID][k][j][i] = LorentzFactor;
                      else if ( v >= VelDumpIdx0  &&  v < VelDumpIdx0+3 )
 //                      d-9. 3-velocity
-		        FieldData[PID][k][j][i] = Prim[vv] / LorentzFactor;
+                        FieldData[PID][k][j][i] = Prim[vv] / LorentzFactor;
                   }
                }
 
-               else if ( v == EnthalpyDumpIdx ) 
+               else if ( v == EnthalpyDumpIdx )
                {
                   real Cons[NCOMP_TOTAL], HTilde;
 
@@ -1051,10 +1051,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      for (int fv=0; fv<NCOMP_TOTAL; fv++)  Cons[fv] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[fv][k][j][i];
 
 //                   d-10. reduced enthalpy
-                     HTilde = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, 
-                                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );   
-     	               FieldData[PID][k][j][i] = HTilde;
-
+                     HTilde = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                     FieldData[PID][k][j][i] = HTilde;
                   }
                }
                else

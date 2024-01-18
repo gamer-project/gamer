@@ -64,7 +64,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 #  else
    dTime[NdTime] = dt_InvokeSolver( DT_FLU_SOLVER, lv );
 #  endif
-   dTime[NdTime] *= dTime_dt; 
+   dTime[NdTime] *= dTime_dt;
    sprintf( dTime_Name[NdTime++], "%s", "Hydro_CFL" );
 
 #  elif ( MODEL == ELBDM )

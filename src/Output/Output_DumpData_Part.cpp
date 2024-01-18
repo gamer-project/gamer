@@ -159,14 +159,14 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 #           endif
 #           ifdef SRHD
             if ( OPT__OUTPUT_LORENTZ ) fprintf( File, " %*s", StrLen_Flt, "Lorentz" );
-            if ( OPT__OUTPUT_VELOCITY ) 
+            if ( OPT__OUTPUT_VELOCITY )
             {
                fprintf( File, " %*s", StrLen_Flt, "Velocity X" );
                fprintf( File, " %*s", StrLen_Flt, "Velocity Y" );
                fprintf( File, " %*s", StrLen_Flt, "Velocity Z" );
             }
             if ( OPT__OUTPUT_ENTHALPY ) fprintf( File, " %*s", StrLen_Flt, "Reduced enthalpy" );
-#           endif 
+#           endif
             if ( OPT__OUTPUT_USER_FIELD ) {
                for (int v=0; v<UserDerField_Num; v++)    fprintf( File, " %*s", StrLen_Flt, UserDerField_Label[v] );
             }
@@ -351,7 +351,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    }
 #  endif
 
-#  ifdef SRHD 
+#  ifdef SRHD
    real Prim[NCOMP_TOTAL], LorentzFactor=-1.0, HTilde=-1.0;
    if ( OPT__OUTPUT_CS || OPT__OUTPUT_LORENTZ || OPT__OUTPUT_VELOCITY )
       Hydro_Con2Pri( u, Prim, (real)-HUGE_NUMBER, NULL_BOOL, NULL_INT, NULL,
@@ -392,19 +392,19 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
 #  ifdef SRHD
    if ( OPT__OUTPUT_LORENTZ ) fprintf( File, BlankPlusFormat_Flt, LorentzFactor );
-   if ( OPT__OUTPUT_VELOCITY ) 
+   if ( OPT__OUTPUT_VELOCITY )
    {
       fprintf( File, BlankPlusFormat_Flt, Prim[1] / LorentzFactor );
       fprintf( File, BlankPlusFormat_Flt, Prim[2] / LorentzFactor );
       fprintf( File, BlankPlusFormat_Flt, Prim[3] / LorentzFactor );
    }
-   if ( OPT__OUTPUT_ENTHALPY ) 
+   if ( OPT__OUTPUT_ENTHALPY )
    {
-      HTilde = Hydro_Con2HTilde( u, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, 
+      HTilde = Hydro_Con2HTilde( u, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       fprintf( File, BlankPlusFormat_Flt, HTilde );
    }
-#  endif 
+#  endif
 
    if ( OPT__OUTPUT_USER_FIELD ) {
       for (int v=0; v<UserDerField_Num; v++)

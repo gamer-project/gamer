@@ -10,9 +10,9 @@ Riemann_Prob         0              # target Riemann problem
                                     #    7 : Torrilhon (MHD only)
                                     #    8 : Brio & Wu (MHD only)
                                     #    9 : Noh's strong shock
-                                    #   10 : SRHD Ultra-relativistic limit (SRHD only)
-                                    #   11 : SRHD Mixed limits (SRHD only)
-                                    #   12 : user defined
+                                    #   10 : SRHD ultra-relativistic limit (SRHD only)
+                                    #   11 : SRHD mixed limits (SRHD only)
+                                    #   12 : user-defined
 Riemann_LR          +1              # wave propagation direction (>0/<0 --> positive/negative direction) [1]
 Riemann_XYZ          0              # wave propagation axis (0/1/2 --> x/y/z) [0]
 Riemann_Pos          0.5            # position of discontinuity [box center]

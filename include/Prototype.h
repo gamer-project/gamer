@@ -134,8 +134,8 @@ real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Gamma_m1,
 #endif // #if ( MODEL == HYDRO )
 #ifdef SRHD
 real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
-                      const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                      const real *const EoS_Table[EOS_NTABLE_MAX] );
+                       const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                       const real *const EoS_Table[EOS_NTABLE_MAX] );
 #endif
 int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
                    const int SaveSg_Flu, const int SaveSg_Mag, const bool OverlapMPI, const bool Overlap_Sync );

@@ -4,8 +4,8 @@
 #if ( MODEL == HYDRO )
 
 static void JetBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
-		   const int GhostSize, const int idx[], const double pos[], const double Time,
-		   const int lv, const int TFluVarIdxList[], double AuxArray[] );
+                   const int GhostSize, const int idx[], const double pos[], const double Time,
+                   const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 static FieldIdx_t JetFieldIdx = Idx_Undefined;
 static FieldIdx_t ICMFieldIdx = Idx_Undefined;
@@ -268,10 +268,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    PriReal[3] = 0.0;
    PriReal[4] = (real)Amb_Pressure;
 
-   Hydro_Pri2Con( PriReal, fluid, false, PassiveNorm_NVar, PassiveNorm_VarIdx, 
-		  EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-		  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-   
+   Hydro_Pri2Con( PriReal, fluid, false, PassiveNorm_NVar, PassiveNorm_VarIdx,
+                  EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+
    double ICM_x = (d-0.4*ICM_Density)/(0.4*ICM_Density);
    double lobe_x = (2.5*Lobe_Density-d)/(1.25*Lobe_Density);
    if ( ICM_x < 0.0 ) ICM_x = 0.0;
@@ -289,11 +289,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  JetBC
-// Description :  Set the external boundary condition for the JetICMWall problem. On the -y 
-//                boundary, inside the jet region, the jet inflows with the jet density and a 
-//                velocity profile that peaks in the jet center and linearly falls off to the 
-//                edge of the jet. The jet passive scalar density is set to the jet density 
-//                within this region. Outside the jet region, the boundary condition is "diode", 
+// Description :  Set the external boundary condition for the JetICMWall problem. On the -y
+//                boundary, inside the jet region, the jet inflows with the jet density and a
+//                velocity profile that peaks in the jet center and linearly falls off to the
+//                edge of the jet. The jet passive scalar density is set to the jet density
+//                within this region. Outside the jet region, the boundary condition is "diode",
 //                meaning outflow-only.
 //
 // Note        :  1. Linked to the function pointer "BC_User_Ptr"
@@ -313,8 +313,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // Return                        : fluid
 //-------------------------------------------------------------------------------------------------------
 void JetBC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
-	    const int GhostSize, const int idx[], const double pos[], const double Time,
-	    const int lv, const int TFluVarIdxList[], double AuxArray[] )
+            const int GhostSize, const int idx[], const double pos[], const double Time,
+            const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
 // check
 
@@ -328,7 +328,7 @@ void JetBC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu
 
     const int j_ref = GhostSize;  // reference j index
 
-    int TFluVarIdx; 
+    int TFluVarIdx;
 
     double rad = sqrt( SQR(pos[0]-Jet_Center[0]) + SQR(pos[2]-Jet_Center[1]) );
 
@@ -357,23 +357,23 @@ void JetBC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu
       PriReal[ICMFieldIdx] = (real)0.0;
       PriReal[LobeFieldIdx] = (real)0.0;
       PriReal[IntFieldIdx] = (real)0.0;
-      
-      Hydro_Pri2Con( PriReal, BVal, false, PassiveNorm_NVar, PassiveNorm_VarIdx, 
-		     EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-		     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+
+      Hydro_Pri2Con( PriReal, BVal, false, PassiveNorm_NVar, PassiveNorm_VarIdx,
+                     EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
     }
-    else 
-    { 
-     
+    else
+    {
+
       for (int v=0; v<NVar_Flu; v++) {
 
-	TFluVarIdx = TFluVarIdxList[v];
+        TFluVarIdx = TFluVarIdxList[v];
 
-	if ( TFluVarIdx == MOMY ) 
-	  BVal[TFluVarIdx] = MIN(Array3D[v][k][j_ref][i], 0.0);
-	else
-	  BVal[TFluVarIdx] = Array3D[v][k][j_ref][i];
+        if ( TFluVarIdx == MOMY )
+          BVal[TFluVarIdx] = MIN(Array3D[v][k][j_ref][i], 0.0);
+        else
+          BVal[TFluVarIdx] = Array3D[v][k][j_ref][i];
 
       }
 
@@ -387,16 +387,16 @@ void AddNewField_JetICMWall()
 
   if ( JetFieldIdx == Idx_Undefined )
     JetFieldIdx = AddField( "JetField", FIXUP_FLUX_YES, FIXUP_REST_YES,
-			    NORMALIZE_YES, INTERP_FRAC_NO );
+                            NORMALIZE_YES, INTERP_FRAC_NO );
   if ( ICMFieldIdx == Idx_Undefined )
     ICMFieldIdx = AddField( "ICMField", FIXUP_FLUX_YES, FIXUP_REST_YES,
-			    NORMALIZE_YES, INTERP_FRAC_NO );
+                            NORMALIZE_YES, INTERP_FRAC_NO );
   if ( LobeFieldIdx == Idx_Undefined )
     LobeFieldIdx = AddField( "LobeField", FIXUP_FLUX_YES, FIXUP_REST_YES,
-			     NORMALIZE_YES, INTERP_FRAC_NO );
+                             NORMALIZE_YES, INTERP_FRAC_NO );
   if ( IntFieldIdx == Idx_Undefined )
     IntFieldIdx = AddField( "IntField", FIXUP_FLUX_YES, FIXUP_REST_YES,
-			    NORMALIZE_YES, INTERP_FRAC_NO );
+                            NORMALIZE_YES, INTERP_FRAC_NO );
 }
 
 //-------------------------------------------------------------------------------------------------------

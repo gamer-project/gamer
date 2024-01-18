@@ -145,7 +145,7 @@ void SetParameter()
 #  ifdef SRHD
 // must initialize EoS first
    EoS_Init();
-#  endif 
+#  endif
 
    Acoustic_WaveLength = ( Acoustic_Dir == 3 ) ? amr->BoxSize[0]/sqrt(3.0) : amr->BoxSize[Acoustic_Dir];
 

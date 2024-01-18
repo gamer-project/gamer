@@ -546,7 +546,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
       CData_CC_Ptr += CSize3D_CC;
    } // if ( PrepEntr )
-#  endif
+#  endif // #ifndef SRHD
 
 #  ifdef MHD
    if ( PrepMagCC || IntIter )
@@ -946,7 +946,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
             CData_CC_Ptr += CSize3D_CC;
          } // if ( PrepEntr )
-#        endif
+#        endif // #ifndef SRHD
 
 #        ifdef MHD
          if ( PrepMagCC || IntIter )
@@ -1152,14 +1152,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                break;
 
                case BC_FLU_DIODE:
-                  Hydro_BoundaryCondition_Diode     ( CData_CC_Ptr, BC_Face[BC_Sibling], NVarCC_Flu,          CGhost_CC,
+                  Hydro_BoundaryCondition_Diode     ( CData_CC_Ptr, BC_Face[BC_Sibling], NVarCC_Flu,            CGhost_CC,
                                                       CSize_CC[0], CSize_CC[1], CSize_CC[2], BC_Idx_Start, BC_Idx_End,
                                                       TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der );
                break;
 #              endif
 
                case BC_FLU_USER:
-                  Flu_BoundaryCondition_User        ( CData_CC_Ptr,                      NVarCC_Flu,          CGhost_CC,
+                  Flu_BoundaryCondition_User        ( CData_CC_Ptr,                      NVarCC_Flu,            CGhost_CC,
                                                       CSize_CC[0], CSize_CC[1], CSize_CC[2], BC_Idx_Start, BC_Idx_End,
                                                       TVarCCIdxList_Flu, PrepTime, dh, xyz_flu, TVarCC, lv );
                break;

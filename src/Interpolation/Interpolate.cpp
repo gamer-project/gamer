@@ -339,8 +339,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
          {
             if ( FData_is_Prim )
             {
-
-	       if ( EoS_DensPres2Eint_CPUPtr != NULL ) { 
+               if ( EoS_DensPres2Eint_CPUPtr != NULL ) {
 //                convert passive scalars from mass fraction back to mass density
 #                 if ( NCOMP_PASSIVE > 0 )
                   real Passive[NCOMP_PASSIVE];
@@ -358,9 +357,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
                   if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint, "interpolated internal energy", ERROR_INFO, UNPHY_SILENCE )  )
                      Fail_ThisCell = true;
-
-	       } // if ( EoS_DensPres2Eint_CPUPtr !=NULL )
-
+               } // if ( EoS_DensPres2Eint_CPUPtr != NULL )
             } // if ( FData_is_Prim )
 
             else
@@ -430,9 +427,9 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
          {
 //          primitive --> conserved
             if ( FData_is_Prim ) {
-               Hydro_Pri2Con( Temp, Cons, OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, 
+               Hydro_Pri2Con( Temp, Cons, OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar,
                               PassiveIntFrac_VarIdx, EoS_DensPres2Eint_CPUPtr,
-                              EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, 
+                              EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 #              ifdef GAMER_DEBUG
                if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Cons[ENGY], "interpolated energy", ERROR_INFO, UNPHY_VERBOSE )  )
@@ -497,7 +494,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
 
 //    8. counter increment
-      Iteration++;
+      Iteration ++;
 
    } while ( ContinueIteration );
 

@@ -31,17 +31,17 @@ struct EoS_t
    int    *AuxArrayDevPtr_Int;
 
 // function pointers
-   EoS_GUESS_t GuessHTilde_FuncPtr;
-   EoS_H2TEM_t HTilde2Temp_FuncPtr;
-   EoS_TEM2H_t Temp2HTilde_FuncPtr;
-   EoS_TEM2C_t Temper2CSqr_FuncPtr;
-   EoS_DE2P_t DensEint2Pres_FuncPtr;
-   EoS_DP2E_t DensPres2Eint_FuncPtr;
-   EoS_DP2C_t DensPres2CSqr_FuncPtr;
-   EoS_DE2T_t DensEint2Temp_FuncPtr;
-   EoS_DT2P_t DensTemp2Pres_FuncPtr;
-   EoS_DE2S_t DensEint2Entr_FuncPtr;
-   EoS_GENE_t General_FuncPtr;
+   EoS_GUESS_t   GuessHTilde_FuncPtr;
+   EoS_H2TEM_t   HTilde2Temp_FuncPtr;
+   EoS_TEM2H_t   Temp2HTilde_FuncPtr;
+   EoS_TEM2C_t   Temper2CSqr_FuncPtr;
+   EoS_DE2P_t    DensEint2Pres_FuncPtr;
+   EoS_DP2E_t    DensPres2Eint_FuncPtr;
+   EoS_DP2C_t    DensPres2CSqr_FuncPtr;
+   EoS_DE2T_t    DensEint2Temp_FuncPtr;
+   EoS_DT2P_t    DensTemp2Pres_FuncPtr;
+   EoS_DE2S_t    DensEint2Entr_FuncPtr;
+   EoS_GENE_t    General_FuncPtr;
 #  ifdef COSMIC_RAY
    EoS_CRE2CRP_t CREint2CRPres_FuncPtr;
 #  endif
