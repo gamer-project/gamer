@@ -78,7 +78,7 @@ void Init_Function_User_Template( real fluid[], const double x, const double y, 
 // Passive[X] = ...;
 #  endif
 
-// convert primitive variables to conservative variables
+// convert primitive variables to conserved variables
    MomX = Dens*Vx;
    MomY = Dens*Vy;
    MomZ = Dens*Vz;

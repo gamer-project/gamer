@@ -150,7 +150,7 @@ OPT__OUTPUT_LORENTZ           0           # output Lorentz factor [0] ##SRHD ONL
 OPT__OUTPUT_VELOCITY          0           # output 3-velocities [0] ##SRHD ONLY##
 OPT__OUTPUT_ENTHALPY          1           # output reduced enthalpy [1] ##SRHD ONLY##
 OPT__OUTPUT_USER_FIELD        0           # output user-defined derived fields [0] -> edit "Flu_DerivedField_User.cpp"
-OPT__OUTPUT_CC_MAG            1           # output **cell-centered** magnetic field (necessary for yt analysis) [1] 
+OPT__OUTPUT_CC_MAG            1           # output **cell-centered** magnetic field (necessary for yt analysis) [1]
 OUTPUT_STEP                   0           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
 OUTPUT_DT                     0.06132028  # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
 OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-1.0]

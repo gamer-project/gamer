@@ -365,7 +365,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #     endif
 
 //    cc_C/L/R: cell-centered variables of the Central/Left/Right cells
-//    fcCon/fcPri: face-centered conservative/primitive variables of the central cell
+//    fcCon/fcPri: face-centered conserved/primitive variables of the central cell
       real cc_C[NCOMP_LR], cc_L[NCOMP_LR], cc_R[NCOMP_LR];
       real fcCon[6][NCOMP_LR], fcPri[6][NCOMP_LR], Slope_Limiter[NCOMP_LR];
 
@@ -665,6 +665,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
       for (int f=0; f<6; f++)
       for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
          g_FC_Var[f][v][idx_fc] = fcCon[f][v];
+
    } // CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) )
 
 

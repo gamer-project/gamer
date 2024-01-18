@@ -183,17 +183,17 @@ void Aux_Check_Conservation( const char *comment )
 #                 ifndef SRHD
 //                Hydro_Con2Eint() calculates Eint for both HD and SRHD but we disable SRHD for now
                   Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag,
-		  			         EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
-						 EoS_AuxArray_Int, h_EoS_Table );
+                                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
+                                                 EoS_AuxArray_Int, h_EoS_Table );
 #                 else
-		  Eint = 0.0;
+                  Eint = 0.0;
 #                 endif
                   Fluid_lv[5] += Eint;
 
 #                 ifdef SRHD
 //                For now we disable the calculation of Ekin for SRHD
 //                Also, note that the following is equivalent to "Etot - Dens - Lrtz*Eint"
-		  /*
+                  /*
                   real HTilde, Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL], Lrtz, Lrtz_m1;
                   Cons[0]      = Dens;
                   Cons[1]      = MomX;
@@ -211,7 +211,7 @@ void Aux_Check_Conservation( const char *comment )
                   Lrtz_m1      = ( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) ) / ( Lrtz + 1.0 );
                   Ekin         = Lrtz_m1*( Dens*(HTilde+1.0) + Prim[4] );
                   */
-		  Ekin = 0.0;
+                  Ekin = 0.0;
 #                 else
 //###NOTE: assuming Etot = Eint + Ekin + Emag
                   Ekin         = Etot - Eint;

@@ -1,6 +1,6 @@
 #include "CUFLU.h"
 
-#if ( MODEL == HYDRO  &&  FLU_SCHEME == CTU && !defined SRHD )
+#if ( MODEL == HYDRO  &&  FLU_SCHEME == CTU  &&  !defined SRHD )
 
 
 
