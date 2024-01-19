@@ -652,7 +652,9 @@ def set_conditional_defaults( args ):
         args["flux"] = "HLLD" if args["mhd"] else "HLLC"
 
     if args["eos"] == None:
-        args["eos"] = "COSMIC_RAY" if args["cosmic_ray"] else "GAMMA"
+        if   args["cosmic_ray"]: args["eos"] = "COSMIC_RAY"
+        elif args["srhd"]      : args["eos"] = "TAUBMATHEWS"
+        else                   : args["eos"] = "GAMMA"
 
     return args
 
