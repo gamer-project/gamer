@@ -608,13 +608,13 @@ void Hydro_HTildeFunction( real HTilde, void *Params, real *Func, real *DiffFunc
 
    struct Hydro_HTildeFunction_params_s *parameters = (struct Hydro_HTildeFunction_params_s *) Params;
 
-   const real MSqr_DSqr              = parameters->MSqr_DSqr;
-   const real Temp                   = parameters->Temp;
-   const real Constant               = parameters->Constant;
-   const EoS_H2TEM_t EoS_HTilde2Temp = parameters->EoS_HTilde2Temp;
-   const double *EoS_AuxArray_Flt    = parameters->EoS_AuxArray_Flt;
-   const int *EoS_AuxArray_Int       = parameters->EoS_AuxArray_Int;
-   const real *const *EoS_Table      = parameters->EoS_Table;
+   const real         MSqr_DSqr        = parameters->MSqr_DSqr;
+   const real         Constant         = parameters->Constant;
+   const EoS_H2TEM_t  EoS_HTilde2Temp  = parameters->EoS_HTilde2Temp;
+   const double      *EoS_AuxArray_Flt = parameters->EoS_AuxArray_Flt;
+   const int         *EoS_AuxArray_Int = parameters->EoS_AuxArray_Int;
+   const real *const *EoS_Table        = parameters->EoS_Table;
+   real Temp                           = parameters->Temp;
    real DiffTemp;
 
 // DiffTemp required by DiffFunc is only computed when Temp == NAN
