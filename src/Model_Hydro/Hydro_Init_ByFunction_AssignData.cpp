@@ -78,13 +78,13 @@ void Init_Function_User_Template( real fluid[], const double x, const double y, 
 // Passive[X] = ...;
 #  endif
 
-// convert primitive variables to conservative variables
+// convert primitive variables to conserved variables
    MomX = Dens*Vx;
    MomY = Dens*Vy;
    MomZ = Dens*Vz;
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, Emag0 );
-   
+
 // store the results
    fluid[DENS] = Dens;
    fluid[MOMX] = MomX;

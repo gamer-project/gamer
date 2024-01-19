@@ -3,5 +3,5 @@
 PYTHON=python3
 
 ${PYTHON} configure.py --machine=eureka_intel --mpi=true --hdf5=true --gpu=true --model=HYDRO \
-	               --srhd=true --eos=TAUBMATHEWS --flux=HLLC --flu_scheme=MHM \
-	               --passive=4
+                       --srhd=true --eos=TAUBMATHEWS --flux=HLLC --flu_scheme=MHM \
+                       --passive=4

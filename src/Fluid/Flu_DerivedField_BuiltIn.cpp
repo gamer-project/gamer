@@ -4,7 +4,6 @@
 
 
 #if ( MODEL == HYDRO )
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_DerivedField_DivVel
 // Description :  Define the built-in derived field "divergence(velocity)"
@@ -33,11 +32,6 @@ void Flu_DerivedField_DivVel( real Out[], const real FluIn[], const real MagIn[]
                               const int NGhost, const double dh )
 {
 
-#  ifdef SRHD
-   Aux_Error( ERROR_INFO, "SRHD does not support div(V) evaluation !!\n" );
-#  endif
-
-
 // determine the output array size
    const int NCellOutX = NCellInX - 2*NGhost;
    const int NCellOutY = NCellInY - 2*NGhost;
@@ -61,6 +55,9 @@ void Flu_DerivedField_DivVel( real Out[], const real FluIn[], const real MagIn[]
    if ( NGhost < 1 )                Aux_Error( ERROR_INFO, "NGhost (%d) < 1 !!\n", NGhost );
    if ( NFieldOut != 1 )            Aux_Error( ERROR_INFO, "NFieldOut (%d) != 1 !!\n", NFieldOut );
 #  endif // #ifdef GAMER_DEBUG
+#  ifdef SRHD
+   Aux_Error( ERROR_INFO, "SRHD does not support div(V) evaluation !!\n" );
+#  endif
 
 
 // 1D arrays -> 3D arrays
@@ -176,7 +173,6 @@ void Flu_DerivedField_Mach( real Out[], const real FluIn[], const real MagIn[], 
       Emag  = NULL_REAL;
 #     endif
 
-
 #     ifdef SRHD
       real Prim[NCOMP_TOTAL], FourCs, U, Cs;
       Hydro_Con2Pri( fluid, Prim, MIN_PRES, NULL_BOOL, NULL_INT, NULL,
@@ -184,11 +180,13 @@ void Flu_DerivedField_Mach( real Out[], const real FluIn[], const real MagIn[], 
                      EoS_DensPres2Eint_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                      EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, NULL );
 
-      Cs = SQRT( EoS_Temper2CSqr_CPUPtr( Prim[0], Prim[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ) );
+      Cs     = SQRT(  EoS_Temper2CSqr_CPUPtr( Prim[0], Prim[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table )  );
       FourCs = Cs / SQRT( (real)1.0 - Cs*Cs );
-      U = SQRT( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) );
-      Mach  = SQRT( U / FourCs );
-#     else
+      U      = SQRT( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) );
+      Mach   = SQRT( U / FourCs );
+
+#     else // #ifdef SRHD
+
       _Dens = (real)1.0 / fluid[DENS];
       Vx    = fluid[MOMX] * _Dens;
       Vy    = fluid[MOMY] * _Dens;
@@ -202,9 +200,7 @@ void Flu_DerivedField_Mach( real Out[], const real FluIn[], const real MagIn[], 
       Cs2   = EoS_DensPres2CSqr_CPUPtr( fluid[DENS], Pres, fluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                         h_EoS_Table );
       Mach  = SQRT( V2 / Cs2 );
-#     endif
-
-
+#     endif // #ifdef SRHD ... else ...
 
       Out3D[0][ko][jo][io] = Mach;
 

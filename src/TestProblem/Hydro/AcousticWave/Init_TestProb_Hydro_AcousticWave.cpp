@@ -63,11 +63,11 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
-#  if ( EOS != EOS_GAMMA && ! defined SRHD )
+#  if ( EOS != EOS_GAMMA  &&  !defined SRHD )
    Aux_Error( ERROR_INFO, "EOS != EOS_GAMMA !!\n" );
 #  endif
 
-#  if ( EOS != EOS_TAUBMATHEWS && defined SRHD )
+#  if ( EOS != EOS_TAUBMATHEWS  &&  defined SRHD )
    Aux_Error( ERROR_INFO, "EOS != EOS_TAUBMATHEWS for SRHD !!\n" );
 #  endif
 
@@ -141,11 +141,10 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
-
 #  ifdef SRHD
 // must initialize EoS first
    EoS_Init();
-#  endif 
+#  endif
 
    Acoustic_WaveLength = ( Acoustic_Dir == 3 ) ? amr->BoxSize[0]/sqrt(3.0) : amr->BoxSize[Acoustic_Dir];
 
@@ -153,13 +152,12 @@ void SetParameter()
    if ( Acoustic_Sign >= 0.0 )   Acoustic_Sign = +1.0;
    else                          Acoustic_Sign = -1.0;
 
-# ifdef SRHD
+#  ifdef SRHD
    Acoustic_Rho_Bg = 1.0;
-   Acoustic_Cs2 = EoS_Temper2CSqr_CPUPtr( Acoustic_Rho_Bg, Acoustic_Rho_Bg*Acoustic_Temp_Bg,
-                                          NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-   Acoustic_Cs  = sqrt(Acoustic_Cs2);
-# endif
-
+   Acoustic_Cs2    = EoS_Temper2CSqr_CPUPtr( Acoustic_Rho_Bg, Acoustic_Rho_Bg*Acoustic_Temp_Bg,
+                                             NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+   Acoustic_Cs     = sqrt( Acoustic_Cs2 );
+#  endif
 
 
 // (3) reset other general-purpose parameters
@@ -239,18 +237,16 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    WaveK = 2.0*M_PI/Acoustic_WaveLength;
    WaveW = 2.0*M_PI/(Acoustic_WaveLength/Acoustic_Cs);
 
-#ifdef SRHD
+#  ifdef SRHD
    real Prim[NCOMP_TOTAL];
-
    double LorentzFactor;
 
    LorentzFactor = 1.0/sqrt( 1.0 - Acoustic_Cs2 );
+   Phase         = WaveK*r - Acoustic_Sign*WaveW*Time + Acoustic_Phase0;
+   v             = Acoustic_Sign*Acoustic_Cs;
 
-   Phase = WaveK*r - Acoustic_Sign*WaveW*Time + Acoustic_Phase0;
+#  else // #ifdef SRHD
 
-   v = Acoustic_Sign*Acoustic_Cs;
-
-#  else
 // assuming EOS_GAMMA
    const double _Gamma_m1 = 1.0/(GAMMA-1.0);
    double v1, P0, P1, Dens, Mom, MomX, MomY, MomZ, Pres, Eint, Etot;
@@ -268,8 +264,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Pres  = P0 + P1*cos(Phase);
 
    v = v1*cos(Phase) + Acoustic_v0;
-
-#  endif
+#  endif // #ifdef SRHD ... else ...
 
    switch ( Acoustic_Dir ) {
       case 0:  vx = v;            vy = 0.0;   vz = 0.0;   break;
@@ -279,21 +274,23 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    }
 
 #  ifdef SRHD
-   Prim[0] = Acoustic_Rho_Bg + Acoustic_RhoAmp * sin( Phase );
+   Prim[0] = Acoustic_Rho_Bg + Acoustic_RhoAmp*sin( Phase );
    Prim[1] = LorentzFactor*vx;
    Prim[2] = LorentzFactor*vy;
    Prim[3] = LorentzFactor*vz;
-   Prim[4] = Acoustic_Temp_Bg * Acoustic_Rho_Bg;
+   Prim[4] = Acoustic_Temp_Bg*Acoustic_Rho_Bg;
 
    Hydro_Pri2Con( Prim, fluid, NULL_BOOL, NULL_INT, NULL,
                   EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-#  else
-   MomX  = Dens*vx; MomY = Dens*vy; MomZ = Dens*vz;
 
-   Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
-                                     EoS_AuxArray_Int, h_EoS_Table );   // assuming EoS requires no passive scalars
-   Etot  = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );     // do NOT include magnetic energy here
+#  else // #ifdef SRHD
+
+   MomX = Dens*vx; MomY = Dens*vy; MomZ = Dens*vz;
+
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
+                                    EoS_AuxArray_Int, h_EoS_Table ); // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );   // do NOT include magnetic energy here
 
 // set the output array
    fluid[DENS] = Dens;
@@ -301,8 +298,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[MOMY] = MomY;
    fluid[MOMZ] = MomZ;
    fluid[ENGY] = Etot;
-#  endif
-
+#  endif // #ifdef SRHD ... else ...
 
 } // FUNCTION : SetGridIC
 

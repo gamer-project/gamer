@@ -251,17 +251,17 @@ void SetParameter()
       case SRHD_UR        : Riemann_RhoL = 1.0e-5;  Riemann_VelL = +1.0e+6;  Riemann_PreL = 1.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
                             Riemann_RhoR = 1.0e-5;  Riemann_VelR = -1.0e+6;  Riemann_PreR = 1.0;  Riemann_VelR_T1 = 0.0;  Riemann_VelR_T2 = 0.0;
                             Riemann_EndT = 1.0;     Riemann_Pos  = 0.5;
-                            sprintf( Riemann_Name, "SRHD Ultra-relativistic limit" );
+                            sprintf( Riemann_Name, "SRHD ultra-relativistic limit" );
                             break;
 
       case SRHD_MIXED     : Riemann_RhoL = 1.0e+2;   Riemann_VelL = +1.0e-3;  Riemann_PreL = 1.0e-4;   Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
                             Riemann_RhoR = 1.0e-12;  Riemann_VelR = -1.0e+2;  Riemann_PreR = 1.0e-10;  Riemann_VelR_T1 = 0.0;  Riemann_VelR_T2 = 0.0;
                             Riemann_EndT = 80.0;     Riemann_Pos  = 0.05;
-                            sprintf( Riemann_Name, "SRHD Mixed limits" );
+                            sprintf( Riemann_Name, "SRHD mixed limits" );
                             break;
 #     endif // #ifdef SRHD
 
-      case USER_DEFINED   : sprintf( Riemann_Name, "user defined" );
+      case USER_DEFINED   : sprintf( Riemann_Name, "user-defined" );
                             break;
 
       default : Aux_Error( ERROR_INFO, "unsupported Riemann problem (%d) !!\n", Riemann_Prob );
@@ -367,7 +367,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    double r, Pres, Eint;
    int    MomIdx[3];
-   real Prim[NCOMP_TOTAL];
+   real   Prim[NCOMP_TOTAL];
 
    switch ( Riemann_XYZ )
    {
@@ -400,11 +400,13 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Hydro_Pri2Con( Prim, fluid, NULL_BOOL, NULL_INT, NULL, NULL,
                   EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
                   EoS_AuxArray_Int, h_EoS_Table, NULL );
-#  else
+
+#  else // #ifdef SRHD
+
    fluid[ DENS      ] = Prim[ DENS      ];
-   fluid[ MomIdx[0] ] = Prim[ MomIdx[0] ] * fluid[DENS];
-   fluid[ MomIdx[1] ] = Prim[ MomIdx[1] ] * fluid[DENS];
-   fluid[ MomIdx[2] ] = Prim[ MomIdx[2] ] * fluid[DENS];
+   fluid[ MomIdx[0] ] = Prim[ MomIdx[0] ]*fluid[DENS];
+   fluid[ MomIdx[1] ] = Prim[ MomIdx[1] ]*fluid[DENS];
+   fluid[ MomIdx[2] ] = Prim[ MomIdx[2] ]*fluid[DENS];
    Pres               = Prim[ ENGY      ];
 
 // compute and store the total gas energy
@@ -413,7 +415,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 // do NOT include magnetic energy here
    fluid[ENGY] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint, 0.0 );
-#  endif
+#  endif // #ifdef SRHD ... else ...
 
    if ( Riemann_LR < 0 )
    {

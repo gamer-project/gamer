@@ -365,7 +365,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #     endif
 
 //    cc_C/L/R: cell-centered variables of the Central/Left/Right cells
-//    fcCon/fcPri: face-centered conservative/primitive variables of the central cell
+//    fcCon/fcPri: face-centered conserved/primitive variables of the central cell
       real cc_C[NCOMP_LR], cc_L[NCOMP_LR], cc_R[NCOMP_LR];
       real fcCon[6][NCOMP_LR], fcPri[6][NCOMP_LR], Slope_Limiter[NCOMP_LR];
 
@@ -665,6 +665,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
       for (int f=0; f<6; f++)
       for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
          g_FC_Var[f][v][idx_fc] = fcCon[f][v];
+
    } // CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) )
 
 
@@ -2052,7 +2053,7 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
 //                EoS               : EoS object
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR], const real dt, 
+void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR], const real dt,
                            const real dh, const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                            const int cc_i, const int cc_j, const int cc_k,
                            const real g_FC_B[][ FLU_NXT_P1*SQR(FLU_NXT) ],
@@ -2095,7 +2096,7 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
    bool reset_cell = false;
    for (int f=0; f<6; f++)
    {
-#     ifdef SRHD  
+#     ifdef SRHD
       if ( Hydro_CheckUnphysical( UNPHY_MODE_CONS, fcCon[f], NULL, ERROR_INFO, UNPHY_SILENCE ) ) reset_cell = true;
 #     else
       if ( fcCon[f][DENS] <= (real)0.0 || fcCon[f][DENS] >= HUGE_NUMBER || fcCon[f][DENS] != fcCon[f][DENS] ) reset_cell = true;
@@ -2124,7 +2125,7 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
       fcCon[f][0] = FMAX( fcCon[f][0], MinDens );
 #     ifndef SRHD
 #     ifndef BAROTROPIC_EOS
-      fcCon[f][4] = Hydro_CheckMinEintInEngy( fcCon[f][0], fcCon[f][1], fcCon[f][2], fcCon[f][3], fcCon[f][4], 
+      fcCon[f][4] = Hydro_CheckMinEintInEngy( fcCon[f][0], fcCon[f][1], fcCon[f][2], fcCon[f][3], fcCon[f][4],
                                               MinEint, Emag );
 #     endif
 #     endif // #ifndef SRHD
@@ -2192,7 +2193,7 @@ void Hydro_ConFC2PriCC_MHM(       real g_PriVar[][ CUBE(FLU_NXT) ],
       Hydro_Con2Pri( ConCC, PriCC, MinPres, FracPassive, NFrac, FracIdx,
                      JeansMinPres, JeansMinPres_Coeff, EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr,
                      EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
-                     EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
+                     EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL, NULL );
 
       for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_PriVar[v][idx_fc] = PriCC[v];
    } // CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) )

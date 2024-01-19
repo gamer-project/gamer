@@ -354,7 +354,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    if ( OPT__OUTPUT_VELOCITY )
    {
       NFieldStored += 3;
-      sprintf( FieldLabelOut[ VelDumpIdx0 ],     "%s", "VelX" );
+      sprintf( FieldLabelOut[ VelDumpIdx0     ], "%s", "VelX" );
       sprintf( FieldLabelOut[ VelDumpIdx0 + 1 ], "%s", "VelY" );
       sprintf( FieldLabelOut[ VelDumpIdx0 + 2 ], "%s", "VelZ" );
    }
@@ -363,8 +363,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    if ( EnthalpyDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
    if ( OPT__OUTPUT_ENTHALPY )  sprintf( FieldLabelOut[EnthalpyDumpIdx], "%s", "Enth" );
-
-#  endif
+#  endif // #ifdef SRHD
 
    const int UserDumpIdx0 = ( OPT__OUTPUT_USER_FIELD ) ? NFieldStored : -1;
    if ( UserDumpIdx0+UserDerField_Num-1 >= NFIELD_STORED_MAX )
@@ -777,12 +776,11 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                      memcpy( FieldData[PID], amr->patch[ amr->PotSg[lv] ][lv][PID]->pot, FieldSizeOnePatch );
                }
-               else
 #              endif
 
 //             b. particle density on grids
 #              ifdef MASSIVE_PARTICLES
-               if ( v == ParDensDumpIdx )
+               else if ( v == ParDensDumpIdx )
                {
 //                we do not check minimum density here (just because it's unnecessary)
                   Prepare_PatchData( lv, Time[lv], FieldData[0][0][0], NULL, 0, amr->NPatchComma[lv][1]/8, PID0List,
@@ -790,12 +788,11 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                                      OPT__RHO_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                                      MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
                }
-               else
 #              endif
 
 //             c. cell-centered magnetic field
 #              ifdef MHD
-               if ( v >= CCMagDumpIdx0  &&  v < CCMagDumpIdx0+NCOMP_MAG )
+               else if ( v >= CCMagDumpIdx0  &&  v < CCMagDumpIdx0+NCOMP_MAG )
                {
                   const int Bv = v - CCMagDumpIdx0;
                   real CCMag_1Cell[NCOMP_MAG];
@@ -811,13 +808,12 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      FieldData[PID][k][j][i] = CCMag_1Cell[Bv];
                   }
                }
-               else
 #              endif
 
 //             d. derived fields
 #              if ( MODEL == HYDRO )
 //             d-1. gas pressure
-               if ( v == PresDumpIdx )
+               else if ( v == PresDumpIdx )
                {
 //                we do not check minimum pressure here
                   Prepare_PatchData( lv, Time[lv], FieldData[0][0][0], NULL, 0, amr->NPatchComma[lv][1]/8, PID0List,
@@ -825,10 +821,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                                      IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
                                      DE_Consistency_No );
                }
-               else
 
 //             d-2. gas temperature
-               if ( v == TempDumpIdx )
+               else if ( v == TempDumpIdx )
                {
                   const bool CheckMinTemp_No = false;
 
@@ -851,11 +846,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      FieldData[PID][k][j][i] = Temp;
                   }
                } // if ( v == TempDumpIdx )
-               else
 
 #              ifndef SRHD
 //             d-3. gas entropy
-               if ( v == EntrDumpIdx )
+               else if ( v == EntrDumpIdx )
                {
                   const bool CheckMinEntr_No = false;
 
@@ -877,11 +871,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      FieldData[PID][k][j][i] = Entr;
                   }
                } // if ( v == EntrDumpIdx )
-               else
 #              endif
 
 //             d-4. sound speed
-               if ( v == CsDumpIdx )
+               else if ( v == CsDumpIdx )
                {
                   const bool CheckMinPres_No = false;
 
@@ -917,10 +910,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      FieldData[PID][k][j][i] = SQRT( Cs2 );
                   }
                } // if ( v == CsDumpIdx )
-               else
 
 //             d-5. divergence(velocity)
-               if ( v == DivVelDumpIdx )
+               else if ( v == DivVelDumpIdx )
                {
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                   {
@@ -953,10 +945,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      }
                   } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                } // if ( v == DivVelDumpIdx )
-               else
 
 //             d-6. Mach number
-               if ( v == MachDumpIdx )
+               else if ( v == MachDumpIdx )
                {
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                   {
@@ -995,11 +986,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      } // for (int LocalID=0; LocalID<8; LocalID++)
                   } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                } // if ( v == MachDumpIdx )
-               else
 
 //             d-7. divergence(B field)
 #              ifdef MHD
-               if ( v == DivMagDumpIdx )
+               else if ( v == DivMagDumpIdx )
                {
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                   for (int k=0; k<PS1; k++)
@@ -1010,11 +1000,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      FieldData[PID][k][j][i] = DivB;
                   }
                }
-               else
 #              endif
 
 #              ifdef SRHD
-               if ( ( v >= VelDumpIdx0  &&  v < VelDumpIdx0+3 ) || v == LorentzDumpIdx ) 
+               else if (  ( v >= VelDumpIdx0 && v < VelDumpIdx0+3 )  ||  v == LorentzDumpIdx )
                {
                   const int vv = v - VelDumpIdx0 + 1;
                   real Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL], LorentzFactor;
@@ -1030,16 +1019,18 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                                     NULL_BOOL, (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
 
-		     if ( v == LorentzDumpIdx )
-//                      d-8. Lorentz factor
-	  	        FieldData[PID][k][j][i] = LorentzFactor;
+//                   d-8. Lorentz factor
+                     if      ( v == LorentzDumpIdx )
+                        FieldData[PID][k][j][i] = LorentzFactor;
+
+//                   d-9. 3-velocity
                      else if ( v >= VelDumpIdx0  &&  v < VelDumpIdx0+3 )
-//                      d-9. 3-velocity
-		        FieldData[PID][k][j][i] = Prim[vv] / LorentzFactor;
+                        FieldData[PID][k][j][i] = Prim[vv] / LorentzFactor;
                   }
                }
 
-               else if ( v == EnthalpyDumpIdx ) 
+//             d-10. reduced enthalpy
+               else if ( v == EnthalpyDumpIdx )
                {
                   real Cons[NCOMP_TOTAL], HTilde;
 
@@ -1050,19 +1041,17 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   {
                      for (int fv=0; fv<NCOMP_TOTAL; fv++)  Cons[fv] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[fv][k][j][i];
 
-//                   d-10. reduced enthalpy
-                     HTilde = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, 
-                                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );   
-     	               FieldData[PID][k][j][i] = HTilde;
-
+                     HTilde = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                     FieldData[PID][k][j][i] = HTilde;
                   }
                }
-               else
 #              endif // #ifdef SRHD
 #              endif // #if ( MODEL == HYDRO )
+
 //             d-11. user-defined derived fields
 //             the following check also works for OPT__OUTPUT_USER_FIELD==false since UserDerField_Num is initialized as -1
-               if ( v >= UserDumpIdx0  &&  v < UserDumpIdx0 + UserDerField_Num )
+               else if ( v >= UserDumpIdx0  &&  v < UserDumpIdx0 + UserDerField_Num )
                {
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                   {
@@ -1109,10 +1098,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      } // for (int LocalID=0; LocalID<8; LocalID++)
                   } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                } // if ( v >= UserDumpIdx0  &&  v < UserDumpIdx0 + UserDerField_Num )
-               else
 
 //             e. fluid variables
-               if ( v >= FluDumpIdx0  &&  v < FluDumpIdx0+NCOMP_TOTAL )
+               else if ( v >= FluDumpIdx0  &&  v < FluDumpIdx0+NCOMP_TOTAL )
                {
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                      memcpy( FieldData[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
@@ -1541,9 +1529,9 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    KeyInfo.Magnetohydrodynamics = 0;
 #  endif
 #  ifdef SRHD
-   KeyInfo.SRHydrodynamics = 1;
+   KeyInfo.SRHydrodynamics      = 1;
 #  else
-   KeyInfo.SRHydrodynamics = 0;
+   KeyInfo.SRHydrodynamics      = 0;
 #  endif
 #  ifdef COSMIC_RAY
    KeyInfo.CosmicRay            = 1;

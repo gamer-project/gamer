@@ -91,6 +91,7 @@ static void BondiBC( real Array[], const int ArraySize[], real fluid[], const in
 
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
 // Description :  Validate the compilation flags and runtime parameters for this test problem
@@ -605,9 +606,6 @@ void End_Bondi()
 
 
 
-void BondiBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
-              const int GhostSize, const int idx[], const double pos[], const double Time,
-              const int lv, const int TFluVarIdxList[], double AuxArray[] )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  BondiBC
 // Description :  Set the external boundary condition to the IC condition
@@ -628,18 +626,18 @@ void BondiBC( real Array[], const int ArraySize[], real fluid[], const int NVar_
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
+void BondiBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+              const int GhostSize, const int idx[], const double pos[], const double Time,
+              const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
-  
-   // Simply call the IC function
-  
-   SetGridIC( fluid, pos[0], pos[1], pos[2], Time, lv, AuxArray );
-       
-   return;
-  
-} // FUNCTION : BondiBC
- 
 
+// simply call the IC function
+   SetGridIC( fluid, pos[0], pos[1], pos[2], Time, lv, AuxArray );
+
+} // FUNCTION : BondiBC
 #endif // #if ( MODEL == HYDRO  &&  defined GRAVITY )
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_Hydro_Bondi

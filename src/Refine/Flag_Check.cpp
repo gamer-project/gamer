@@ -107,15 +107,17 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    }
 #  endif
 
+
 // check Lorentz factor gradient in SRHD
 // ===========================================================================================
-#  if ( MODEL == HYDRO && defined SRHD )
+#  if ( MODEL == HYDRO  &&  defined SRHD )
    if ( OPT__FLAG_LRTZ_GRADIENT )
    {
       Flag |= Check_Gradient( i, j, k, &Lrtz[0][0][0], FlagTable_LrtzGradient[lv] );
       if ( Flag )    return Flag;
    }
 #  endif
+
 
 // check vorticity
 // ===========================================================================================

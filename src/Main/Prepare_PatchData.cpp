@@ -1071,7 +1071,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
                Data1PG_CC_Ptr += PGSize3D_CC;
             } // if ( PrepEntr )
-#           endif
+#           endif // #ifndef SRHD
 
 #           ifdef MHD
             if ( PrepMagCC )
@@ -1475,7 +1475,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
                      Data1PG_CC_Ptr += PGSize3D_CC;
                   } // if ( PrepEntr )
-#                endif
+#                endif // #ifndef SRHD
 
 #                 ifdef MHD
                   if ( PrepMagCC )

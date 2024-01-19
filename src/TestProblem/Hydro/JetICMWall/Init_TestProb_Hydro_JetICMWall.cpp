@@ -4,13 +4,13 @@
 #if ( MODEL == HYDRO )
 
 static void JetBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
-		   const int GhostSize, const int idx[], const double pos[], const double Time,
-		   const int lv, const int TFluVarIdxList[], double AuxArray[] );
+                   const int GhostSize, const int idx[], const double pos[], const double Time,
+                   const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
-static FieldIdx_t JetFieldIdx = Idx_Undefined;
-static FieldIdx_t ICMFieldIdx = Idx_Undefined;
+static FieldIdx_t JetFieldIdx  = Idx_Undefined;
+static FieldIdx_t ICMFieldIdx  = Idx_Undefined;
 static FieldIdx_t LobeFieldIdx = Idx_Undefined;
-static FieldIdx_t IntFieldIdx = Idx_Undefined;
+static FieldIdx_t IntFieldIdx  = Idx_Undefined;
 
 // problem-specific global variables
 // =======================================================================================
@@ -126,7 +126,7 @@ void SetParameter()
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
 // ************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",  &VARIABLE,        DEFAULT,       MIN,            MAX    );
+// ReadPara->Add( "KEY_IN_THE_FILE",    &VARIABLE,          DEFAULT,       MIN,            MAX          );
 // ************************************************************************************************************************
 
 // background parameters
@@ -156,28 +156,28 @@ void SetParameter()
    Jet_Gamma = sqrt(1.0+SQR(Jet_Velocity));
 
 // (1-2) convert to code unit
-   Jet_Velocity  *= Const_c   / UNIT_V;
-   ICM_Density   *= 1.0       / UNIT_D;
-   Jet_Radius    *= Const_kpc / UNIT_L;
-   Jet_Position  *= Const_kpc / UNIT_L;
-   Jump_Position_x *= Const_kpc / UNIT_L;
-   Jump_Position_y *= Const_kpc / UNIT_L;
-   Amb_Pressure  *= 1.0       / UNIT_P;
-   Jump_Width    *= Const_kpc / UNIT_L;
+   Jet_Velocity      *= Const_c   / UNIT_V;
+   ICM_Density       *= 1.0       / UNIT_D;
+   Jet_Radius        *= Const_kpc / UNIT_L;
+   Jet_Position      *= Const_kpc / UNIT_L;
+   Jump_Position_x   *= Const_kpc / UNIT_L;
+   Jump_Position_y   *= Const_kpc / UNIT_L;
+   Amb_Pressure      *= 1.0       / UNIT_P;
+   Jump_Width        *= Const_kpc / UNIT_L;
    Jet_PrecessPeriod *= 1000.0*Const_yr / UNIT_T;
 
 // (2) set the problem-specific derived parameters
 
-   Jump_Tangent  = tan(Jump_Angle*M_PI/180.0);
-   Jump_Sine = sin(Jump_Angle*M_PI/180.0);
-   Jump_Cosine = cos(Jump_Angle*M_PI/180.0);
-   Lobe_Density  = Lobe_ICM_Ratio*ICM_Density;
-   Jet_Density   = Jet_Lobe_Ratio*Lobe_Density;
-   Jet_Center[0] = Jet_Position;
-   Jet_Center[1] = amr->BoxCenter[2];
+   Jump_Tangent     = tan( Jump_Angle*M_PI/180.0 );
+   Jump_Sine        = sin( Jump_Angle*M_PI/180.0 );
+   Jump_Cosine      = cos( Jump_Angle*M_PI/180.0 );
+   Lobe_Density     = Lobe_ICM_Ratio*ICM_Density;
+   Jet_Density      = Jet_Lobe_Ratio*Lobe_Density;
+   Jet_Center[0]    = Jet_Position;
+   Jet_Center[1]    = amr->BoxCenter[2];
    Jet_PrecessOmega = 2.0*M_PI/Jet_PrecessPeriod;
-   Jet_Cosine = cos(Jet_PrecessAngle*M_PI/180.0);
-   Jet_Sine = sin(Jet_PrecessAngle*M_PI/180.0);
+   Jet_Cosine       = cos( Jet_PrecessAngle*M_PI/180.0 );
+   Jet_Sine         = sin( Jet_PrecessAngle*M_PI/180.0 );
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in TestProb.h
@@ -198,36 +198,35 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
      Aux_Message( stdout, "=============================================================================\n " );
-     Aux_Message( stdout, "  test problem ID          = %d\n",                TESTPROB_ID                    );
-     Aux_Message( stdout, "  ICM_Density              = %14.7e g/cm^3\n",     ICM_Density*UNIT_D             );
-     Aux_Message( stdout, "  Jump_Position_x          = %14.7e kpc\n",        Jump_Position_x*UNIT_L/Const_kpc );
-     Aux_Message( stdout, "  Jump_Position_y          = %14.7e kpc\n",        Jump_Position_y*UNIT_L/Const_kpc );
-     Aux_Message( stdout, "  Jump_Angle               = %14.7e degree\n",     Jump_Angle                     );
-     Aux_Message( stdout, "  Jump_Width               = %14.7e kpc\n",        Jump_Width*UNIT_L/Const_kpc    );
-     Aux_Message( stdout, "  Amb_Pressure             = %14.7e erg/cm^3\n",   Amb_Pressure*UNIT_P            );
-     Aux_Message( stdout, "  Lobe_ICM_Ratio           = %14.7e\n",            Lobe_ICM_Ratio                 );
-     Aux_Message( stdout, "  Lobe_Density             = %14.7e g/cm^3\n",     Lobe_Density*UNIT_D            );
+     Aux_Message( stdout, "  test problem ID = %d\n",              TESTPROB_ID                      );
+     Aux_Message( stdout, "  ICM_Density     = %14.7e g/cm^3\n",   ICM_Density*UNIT_D               );
+     Aux_Message( stdout, "  Jump_Position_x = %14.7e kpc\n",      Jump_Position_x*UNIT_L/Const_kpc );
+     Aux_Message( stdout, "  Jump_Position_y = %14.7e kpc\n",      Jump_Position_y*UNIT_L/Const_kpc );
+     Aux_Message( stdout, "  Jump_Angle      = %14.7e degree\n",   Jump_Angle                       );
+     Aux_Message( stdout, "  Jump_Width      = %14.7e kpc\n",      Jump_Width*UNIT_L/Const_kpc      );
+     Aux_Message( stdout, "  Amb_Pressure    = %14.7e erg/cm^3\n", Amb_Pressure*UNIT_P              );
+     Aux_Message( stdout, "  Lobe_ICM_Ratio  = %14.7e\n",          Lobe_ICM_Ratio                   );
+     Aux_Message( stdout, "  Lobe_Density    = %14.7e g/cm^3\n",   Lobe_Density*UNIT_D              );
    }
 
    if ( Jet_Fire && MPI_Rank == 0 )
    {
-     Aux_Message( stdout, "  Jet_Radius               = %14.7e kpc\n",        Jet_Radius*UNIT_L/Const_kpc    );
-     Aux_Message( stdout, "  Jet_Position             = %14.7e kpc\n",        Jet_Position*UNIT_L/Const_kpc  );
-     Aux_Message( stdout, "  Jet_Velocity             = %14.7e c\n",          Jet_Velocity*UNIT_V/Const_c    );
-     Aux_Message( stdout, "  Jet_VelSlope             = %14.7e\n",            Jet_VelSlope                   );
-     Aux_Message( stdout, "  Jet_Density              = %14.7e g/cm^3\n",     Jet_Density*UNIT_D             );
-     Aux_Message( stdout, "  Jet_Lobe_Ratio           = %14.7e\n",            Jet_Lobe_Ratio                 );
+     Aux_Message( stdout, "  Jet_Radius      = %14.7e kpc\n",      Jet_Radius*UNIT_L/Const_kpc      );
+     Aux_Message( stdout, "  Jet_Position    = %14.7e kpc\n",      Jet_Position*UNIT_L/Const_kpc    );
+     Aux_Message( stdout, "  Jet_Velocity    = %14.7e c\n",        Jet_Velocity*UNIT_V/Const_c      );
+     Aux_Message( stdout, "  Jet_VelSlope    = %14.7e\n",          Jet_VelSlope                     );
+     Aux_Message( stdout, "  Jet_Density     = %14.7e g/cm^3\n",   Jet_Density*UNIT_D               );
+     Aux_Message( stdout, "  Jet_Lobe_Ratio  = %14.7e\n",          Jet_Lobe_Ratio                   );
    }
 
    if ( MPI_Rank == 0 )
    {
-     Aux_Message( stdout, "=============================================================================\n"                   );
+     Aux_Message( stdout, "=============================================================================\n" );
    }
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n"                                    );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
 
 } // FUNCTION : SetParameter
-
 
 
 
@@ -251,10 +250,11 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
+
 // variables for jet
    real PriReal[NCOMP_TOTAL];
 
-   double xx =  (x - Jump_Position_x)*Jump_Cosine - (y - Jump_Position_y)*Jump_Sine;
+   double xx = (x - Jump_Position_x)*Jump_Cosine - (y - Jump_Position_y)*Jump_Sine;
    double d;
 
    double xw = xx/Jump_Width;
@@ -262,38 +262,40 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
      d = Lobe_Density;
    else
      d = (ICM_Density + Lobe_Density*exp(xw)) / (1.0 + exp(xw));
+
    PriReal[0] = (real)d;
    PriReal[1] = 0.0;
    PriReal[2] = 0.0;
    PriReal[3] = 0.0;
    PriReal[4] = (real)Amb_Pressure;
 
-   Hydro_Pri2Con( PriReal, fluid, false, PassiveNorm_NVar, PassiveNorm_VarIdx, 
-		  EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-		  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-   
+   Hydro_Pri2Con( PriReal, fluid, false, PassiveNorm_NVar, PassiveNorm_VarIdx,
+                  EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+
    double ICM_x = (d-0.4*ICM_Density)/(0.4*ICM_Density);
    double lobe_x = (2.5*Lobe_Density-d)/(1.25*Lobe_Density);
-   if ( ICM_x < 0.0 ) ICM_x = 0.0;
+   if ( ICM_x  < 0.0 ) ICM_x  = 0.0;
    if ( lobe_x < 0.0 ) lobe_x = 0.0;
-   if ( ICM_x > 1.0 ) ICM_x = 1.0;
+   if ( ICM_x  > 1.0 ) ICM_x  = 1.0;
    if ( lobe_x > 1.0 ) lobe_x = 1.0;
 
-   fluid[JetFieldIdx] = 0.0;
-   fluid[ICMFieldIdx] = (real)(ICM_x*d);
+   fluid[JetFieldIdx ] = 0.0;
+   fluid[ICMFieldIdx ] = (real)(ICM_x*d);
    fluid[LobeFieldIdx] = (real)(lobe_x*d);
-   fluid[IntFieldIdx] = (real)((1-ICM_x-lobe_x)*d);
+   fluid[IntFieldIdx ] = (real)((1-ICM_x-lobe_x)*d);
 
 } // FUNCTION : SetGridIC
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  JetBC
-// Description :  Set the external boundary condition for the JetICMWall problem. On the -y 
-//                boundary, inside the jet region, the jet inflows with the jet density and a 
-//                velocity profile that peaks in the jet center and linearly falls off to the 
-//                edge of the jet. The jet passive scalar density is set to the jet density 
-//                within this region. Outside the jet region, the boundary condition is "diode", 
+// Description :  Set the external boundary condition for the JetICMWall problem. On the -y
+//                boundary, inside the jet region, the jet inflows with the jet density and a
+//                velocity profile that peaks in the jet center and linearly falls off to the
+//                edge of the jet. The jet passive scalar density is set to the jet density
+//                within this region. Outside the jet region, the boundary condition is "diode",
 //                meaning outflow-only.
 //
 // Note        :  1. Linked to the function pointer "BC_User_Ptr"
@@ -313,91 +315,103 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // Return                        : fluid
 //-------------------------------------------------------------------------------------------------------
 void JetBC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
-	    const int GhostSize, const int idx[], const double pos[], const double Time,
-	    const int lv, const int TFluVarIdxList[], double AuxArray[] )
+            const int GhostSize, const int idx[], const double pos[], const double Time,
+            const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
-// check
 
-    int i, j, k;
+   int i, j, k;
 
-    i = idx[0];
-    j = idx[1];
-    k = idx[2];
+   i = idx[0];
+   j = idx[1];
+   k = idx[2];
 
-    real PriReal[NCOMP_TOTAL];
+   real PriReal[NCOMP_TOTAL];
 
-    const int j_ref = GhostSize;  // reference j index
+   const int j_ref = GhostSize;  // reference j index
 
-    int TFluVarIdx; 
+   int TFluVarIdx;
 
-    double rad = sqrt( SQR(pos[0]-Jet_Center[0]) + SQR(pos[2]-Jet_Center[1]) );
+   double rad = sqrt( SQR(pos[0]-Jet_Center[0]) + SQR(pos[2]-Jet_Center[1]) );
 
-    // 1D array -> 3D array
-    real (*Array3D)[ArraySize[2]][ArraySize[1]][ArraySize[0]] = ( real (*)[ArraySize[2]][ArraySize[1]][ArraySize[0]] )Array;
+// 1D array -> 3D array
+   real (*Array3D)[ArraySize[2]][ArraySize[1]][ArraySize[0]] = ( real (*)[ArraySize[2]][ArraySize[1]][ArraySize[0]] )Array;
 
-    double x = rad/Jet_Radius;
+   double x = rad/Jet_Radius;
 
-    if ( Jet_Fire && x <= 1.0 )
-    {
-      double u_jet = Jet_Velocity*(Jet_VelSlope*x+Jet_VelCenter);
-      double cos_phi = cos( Jet_PrecessOmega*Time );
-      double sin_phi = sin( Jet_PrecessOmega*Time );
+   if ( Jet_Fire  &&  x <= 1.0 )
+   {
+      double u_jet    = Jet_Velocity*( Jet_VelSlope*x+Jet_VelCenter );
+      double cos_phi  = cos( Jet_PrecessOmega*Time );
+      double sin_phi  = sin( Jet_PrecessOmega*Time );
       double LntzFact = sqrt( 1.0 + u_jet*u_jet );
-      double u_jet_x = 0.0;
-      double u_jet_y = u_jet;
-      double u_jet_z = 0.0;
+      double u_jet_x  = 0.0;
+      double u_jet_y  = u_jet;
+      double u_jet_z  = 0.0;
 
-      // set fluid variable inside source
-      PriReal[0] = (real)Jet_Density;
-      PriReal[1] = (real)0.0;
-      PriReal[2] = (real)u_jet_y;
-      PriReal[3] = (real)0.0;
-      PriReal[4] = (real)Amb_Pressure;
-      PriReal[JetFieldIdx] = (real)Jet_Density;
-      PriReal[ICMFieldIdx] = (real)0.0;
+//    set fluid variable inside source
+      PriReal[0           ] = (real)Jet_Density;
+      PriReal[1           ] = (real)0.0;
+      PriReal[2           ] = (real)u_jet_y;
+      PriReal[3           ] = (real)0.0;
+      PriReal[4           ] = (real)Amb_Pressure;
+      PriReal[JetFieldIdx ] = (real)Jet_Density;
+      PriReal[ICMFieldIdx ] = (real)0.0;
       PriReal[LobeFieldIdx] = (real)0.0;
-      PriReal[IntFieldIdx] = (real)0.0;
-      
-      Hydro_Pri2Con( PriReal, BVal, false, PassiveNorm_NVar, PassiveNorm_VarIdx, 
-		     EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-		     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+      PriReal[IntFieldIdx ] = (real)0.0;
 
-    }
-    else 
-    { 
-     
+      Hydro_Pri2Con( PriReal, BVal, false, PassiveNorm_NVar, PassiveNorm_VarIdx,
+                     EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+   } // if ( Jet_Fire  &&  x <= 1.0 )
+
+   else
+   {
       for (int v=0; v<NVar_Flu; v++) {
+         TFluVarIdx = TFluVarIdxList[v];
 
-	TFluVarIdx = TFluVarIdxList[v];
-
-	if ( TFluVarIdx == MOMY ) 
-	  BVal[TFluVarIdx] = MIN(Array3D[v][k][j_ref][i], 0.0);
-	else
-	  BVal[TFluVarIdx] = Array3D[v][k][j_ref][i];
-
-      }
-
-    }
+         if ( TFluVarIdx == MOMY )
+            BVal[TFluVarIdx] = MIN( Array3D[v][k][j_ref][i], 0.0 );
+         else
+            BVal[TFluVarIdx] = Array3D[v][k][j_ref][i];
+     }
+   } // if ( Jet_Fire  &&  x <= 1.0 ) ... else ...
 
 } // FUNCTION : JetBC
 
 
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AddNewField_JetICMWall
+// Description :  Add the problem-specific fields
+//
+// Note        :  1. Ref: https://github.com/gamer-project/gamer/wiki/Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes
+//                2. Invoke AddField() for each of the problem-specific field:
+//                   --> Field label sent to AddField() will be used as the output name of the field
+//                   --> Field index returned by AddField() can be used to access the field data
+//                3. Pre-declared field indices are put in Field.h
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
 void AddNewField_JetICMWall()
 {
 
   if ( JetFieldIdx == Idx_Undefined )
     JetFieldIdx = AddField( "JetField", FIXUP_FLUX_YES, FIXUP_REST_YES,
-			    NORMALIZE_YES, INTERP_FRAC_NO );
+                            NORMALIZE_YES, INTERP_FRAC_NO );
   if ( ICMFieldIdx == Idx_Undefined )
     ICMFieldIdx = AddField( "ICMField", FIXUP_FLUX_YES, FIXUP_REST_YES,
-			    NORMALIZE_YES, INTERP_FRAC_NO );
+                            NORMALIZE_YES, INTERP_FRAC_NO );
   if ( LobeFieldIdx == Idx_Undefined )
     LobeFieldIdx = AddField( "LobeField", FIXUP_FLUX_YES, FIXUP_REST_YES,
-			     NORMALIZE_YES, INTERP_FRAC_NO );
+                             NORMALIZE_YES, INTERP_FRAC_NO );
   if ( IntFieldIdx == Idx_Undefined )
     IntFieldIdx = AddField( "IntField", FIXUP_FLUX_YES, FIXUP_REST_YES,
-			    NORMALIZE_YES, INTERP_FRAC_NO );
+                            NORMALIZE_YES, INTERP_FRAC_NO );
 }
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_Hydro_JetICMWall
@@ -439,5 +453,4 @@ void Init_TestProb_Hydro_JetICMWall()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_TestProb_SRHydro_JetICMWall
-
-#endif
+#endif // #if ( MODEL == HYDRO )

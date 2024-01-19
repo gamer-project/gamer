@@ -80,6 +80,8 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed squared
 //                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
 //                EoS_Table         : EoS tables
+//
+// Return      :  Flux_Out[]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
