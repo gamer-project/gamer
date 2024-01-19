@@ -833,7 +833,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             }
 
 
-#           if ( MODEL == HYDRO && !defined SRHD )
+#           if ( MODEL == HYDRO  &&  !defined SRHD )
 //          compute magnetic energy
 #           ifdef MHD
             const real Emag = MHD_GetCellCenteredBEnergy( Mag_FData[MAGX], Mag_FData[MAGY], Mag_FData[MAGZ],

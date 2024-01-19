@@ -229,7 +229,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Hydro_Pri2Con( Prim, fluid, NULL_BOOL, NULL_INT, NULL,
                   EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-#  else
+
+#  else // #ifdef SRHD
+
    MomX = 0.0;
    MomY = 0.0;
    MomZ = 0.0;
@@ -243,7 +245,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[MOMY] = MomY;
    fluid[MOMZ] = MomZ;
    fluid[ENGY] = Etot;
-#  endif
+#  endif // #ifdef SRHD ... else ...
 
 } // FUNCTION : SetGridIC
 
