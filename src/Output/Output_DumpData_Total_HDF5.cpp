@@ -776,6 +776,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                      memcpy( FieldData[PID], amr->patch[ amr->PotSg[lv] ][lv][PID]->pot, FieldSizeOnePatch );
                }
+#              else
+               if ( false ) {}
 #              endif
 
 //             b. particle density on grids
