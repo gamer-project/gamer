@@ -159,7 +159,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 #           endif
 #           ifdef SRHD
             if ( OPT__OUTPUT_LORENTZ ) fprintf( File, " %*s", StrLen_Flt, "Lorentz" );
-            if ( OPT__OUTPUT_VELOCITY )
+            if ( OPT__OUTPUT_3VELOCITY )
             {
                                        fprintf( File, " %*s", StrLen_Flt, "Velocity X" );
                                        fprintf( File, " %*s", StrLen_Flt, "Velocity Y" );
@@ -355,7 +355,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
 #  ifdef SRHD
    real Prim[NCOMP_TOTAL], LorentzFactor=-1.0, HTilde=-1.0;
-   if ( OPT__OUTPUT_CS || OPT__OUTPUT_LORENTZ || OPT__OUTPUT_VELOCITY )
+   if ( OPT__OUTPUT_CS || OPT__OUTPUT_LORENTZ || OPT__OUTPUT_3VELOCITY )
       Hydro_Con2Pri( u, Prim, (real)-HUGE_NUMBER, NULL_BOOL, NULL_INT, NULL,
                      NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
                      EoS_DensPres2Eint_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
@@ -396,7 +396,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    if ( OPT__OUTPUT_LORENTZ )
       fprintf( File, BlankPlusFormat_Flt, LorentzFactor );
 
-   if ( OPT__OUTPUT_VELOCITY )
+   if ( OPT__OUTPUT_3VELOCITY )
    {
       fprintf( File, BlankPlusFormat_Flt, Prim[1] / LorentzFactor );
       fprintf( File, BlankPlusFormat_Flt, Prim[2] / LorentzFactor );

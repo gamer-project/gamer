@@ -128,7 +128,7 @@ extern double           FlagTable_LrtzGradient[NLEVEL-1];
 extern int              DT__SPEED_OF_LIGHT;
 extern bool             OPT__FLAG_LRTZ_GRADIENT;
 extern bool             OPT__OUTPUT_LORENTZ;
-extern bool             OPT__OUTPUT_VELOCITY;
+extern bool             OPT__OUTPUT_3VELOCITY;
 extern bool             OPT__OUTPUT_ENTHALPY;
 #endif
 
