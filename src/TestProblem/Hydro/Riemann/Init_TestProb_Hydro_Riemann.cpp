@@ -33,18 +33,18 @@ static double    Riemann_Width;        // width of discontinuity
 
 static char      Riemann_Name[100];    // name of the target Riemann problem
 static double    Riemann_RhoL;         // left-state density
-static double    Riemann_VelL;         // left-state longitidual velocity
+static double    Riemann_VelL;         // left-state longitudinal velocity
 static double    Riemann_VelL_T1;      // left-state transverse velocity 1
 static double    Riemann_VelL_T2;      // left-state transverse velocity 2
 static double    Riemann_PreL;         // left-state pressure
 static double    Riemann_RhoR;         // right-state density
-static double    Riemann_VelR;         // right-state longitidual velocity
+static double    Riemann_VelR;         // right-state longitudinal velocity
 static double    Riemann_VelR_T1;      // right-state transverse velocity 1
 static double    Riemann_VelR_T2;      // right-state transverse velocity 2
 static double    Riemann_PreR;         // right-state pressure
 static double    Riemann_EndT;         // end physical time
 #ifdef MHD
-static double    Riemann_Mag;          // longitidual B field
+static double    Riemann_Mag;          // longitudinal B field
 static double    Riemann_MagL_T1;      // left-state transverse B field 1
 static double    Riemann_MagL_T2;      // left-state transverse B field 2
 static double    Riemann_MagR_T1;      // right-state transverse B field 1
@@ -142,6 +142,13 @@ void SetParameter()
    ReadPara->Add( "Riemann_Pos",       &Riemann_Pos,            NoDef_double, NoMin_double,     NoMax_double      );
    ReadPara->Add( "Riemann_Width",     &Riemann_Width,          NoDef_double, Eps_double,       NoMax_double      );
    ReadPara->Add( "Riemann_EndT",      &Riemann_EndT,           __DBL_MAX__, -__DBL_MIN__,      __DBL_MAX__       );
+#  ifdef MHD
+   ReadPara->Add( "Riemann_Mag",       &Riemann_Mag,            __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+   ReadPara->Add( "Riemann_MagL_T1",   &Riemann_MagL_T1,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+   ReadPara->Add( "Riemann_MagL_T2",   &Riemann_MagL_T2,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+   ReadPara->Add( "Riemann_MagR_T1",   &Riemann_MagR_T1,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+   ReadPara->Add( "Riemann_MagR_T2",   &Riemann_MagR_T2,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+#  endif
 
    ReadPara->Read( FileName );
 
