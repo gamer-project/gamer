@@ -364,7 +364,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
    if ( OPT__OUTPUT_CS ) {
 #     ifdef SRHD
-      Cs = SQRT(  EoS_Temper2CSqr_CPUPtr( Prim[0], Prim[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table )  );
+      Cs = SQRT(  EoS_DensPres2CSqr_CPUPtr( Prim[0], Prim[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table )  );
 #     else
 //    compute pressure if it is not done yet
       if ( Pres < 0.0 )

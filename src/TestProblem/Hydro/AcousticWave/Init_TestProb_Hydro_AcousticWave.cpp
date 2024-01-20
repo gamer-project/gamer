@@ -154,8 +154,8 @@ void SetParameter()
 
 #  ifdef SRHD
    Acoustic_Rho_Bg = 1.0;
-   Acoustic_Cs2    = EoS_Temper2CSqr_CPUPtr( Acoustic_Rho_Bg, Acoustic_Rho_Bg*Acoustic_Temp_Bg,
-                                             NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+   Acoustic_Cs2    = EoS_DensPres2CSqr_CPUPtr( Acoustic_Rho_Bg, Acoustic_Rho_Bg*Acoustic_Temp_Bg,
+                                               NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    Acoustic_Cs     = sqrt( Acoustic_Cs2 );
 #  endif
 

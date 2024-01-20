@@ -95,7 +95,6 @@ void EoS_Init()
    EoS.GuessHTilde_FuncPtr   = EoS_GuessHTilde_GPUPtr;
    EoS.HTilde2Temp_FuncPtr   = EoS_HTilde2Temp_GPUPtr;
    EoS.Temp2HTilde_FuncPtr   = EoS_Temp2HTilde_GPUPtr;
-   EoS.Temper2CSqr_FuncPtr   = EoS_Temper2CSqr_GPUPtr;
    EoS.General_FuncPtr       = EoS_General_GPUPtr;
 #  ifdef COSMIC_RAY
    EoS.CREint2CRPres_FuncPtr = EoS_CREint2CRPres_GPUPtr;
@@ -114,7 +113,6 @@ void EoS_Init()
    EoS.GuessHTilde_FuncPtr   = EoS_GuessHTilde_CPUPtr;
    EoS.HTilde2Temp_FuncPtr   = EoS_HTilde2Temp_CPUPtr;
    EoS.Temp2HTilde_FuncPtr   = EoS_Temp2HTilde_CPUPtr;
-   EoS.Temper2CSqr_FuncPtr   = EoS_Temper2CSqr_CPUPtr;
    EoS.General_FuncPtr       = EoS_General_CPUPtr;
 #  ifdef COSMIC_RAY
    EoS.CREint2CRPres_FuncPtr = EoS_CREint2CRPres_CPUPtr;

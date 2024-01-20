@@ -100,7 +100,7 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
                         EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL, &LorentzFactor );
          Rho   = Pri[0];
          Pres  = Pri[4];
-         a2    = EoS.Temper2CSqr_FuncPtr( Rho, Pres, fluid+NCOMP_FLUID, EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table ); // sound speed squared
+         a2    = EoS.DensPres2CSqr_FuncPtr( Rho, Pres, fluid+NCOMP_FLUID, EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table ); // sound speed squared
 
 #        else // #ifdef SRHD
 

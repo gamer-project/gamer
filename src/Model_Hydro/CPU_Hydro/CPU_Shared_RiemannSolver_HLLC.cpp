@@ -59,7 +59,7 @@ GPU_DEVICE
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
-                               const EoS_H2TEM_t EoS_HTilde2Temp, const EoS_TEM2C_t EoS_Temper2CSqr,
+                               const EoS_H2TEM_t EoS_HTilde2Temp,
                                const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                                const real* const EoS_Table[EOS_NTABLE_MAX] )
 {
@@ -122,8 +122,8 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 
 // 4. compute the max and min wave speeds used in Mignone
-   cslsq = EoS_Temper2CSqr( PL[0], PL[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
-   csrsq = EoS_Temper2CSqr( PR[0], PR[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+   cslsq = EoS_DensPres2CSqr( PL[0], PL[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+   csrsq = EoS_DensPres2CSqr( PR[0], PR[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
    if ( cslsq >= (real)1.0  ||  csrsq >= (real)1.0  ||  cslsq < (real)0.0  ||  csrsq < (real)0.0 )
@@ -379,7 +379,7 @@ GPU_DEVICE
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
-                               const EoS_H2TEM_t EoS_HTilde2Temp, const EoS_TEM2C_t EoS_Temper2CSqr,
+                               const EoS_H2TEM_t EoS_HTilde2Temp,
                                const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                                const real* const EoS_Table[EOS_NTABLE_MAX] )
 {
