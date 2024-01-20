@@ -125,7 +125,7 @@ extern OptInitMagByVecPot_t OPT__INIT_BFIELD_BYVECPOT;
 
 #ifdef SRHD
 extern double           FlagTable_LrtzGradient[NLEVEL-1];
-extern int              DT__SPEED_OF_LIGHT;
+extern bool             DT__SPEED_OF_LIGHT;
 extern bool             OPT__FLAG_LRTZ_GRADIENT;
 extern bool             OPT__OUTPUT_LORENTZ;
 extern bool             OPT__OUTPUT_3VELOCITY;
