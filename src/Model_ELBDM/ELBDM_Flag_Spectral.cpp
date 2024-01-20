@@ -13,7 +13,6 @@ typedef std::complex<flag_spectral_float> flag_spectral_complex_type;
 #define FLAG_SPECTRAL_ORDER   14
 #define FLAG_SPECTRAL_NDELTA  14
 #define FLAG_SPECTRAL_ND      32
-#define FLAG_SPECTRAL_FLU_NXT (FLU_NXT + FLAG_SPECTRAL_ND)
 
 const static flag_spectral_float  Flag_Spectral_Polynomials[FLAG_SPECTRAL_ORDER][FLAG_SPECTRAL_NDELTA] = {
 {0.2672612419124243965384835064469370990991592407226562500000000000, 0.2672612419124243965384835064469370990991592407226562500000000000, 0.2672612419124243965384835064469370990991592407226562500000000000, 0.2672612419124243965384835064469370990991592407226562500000000000, 0.2672612419124243965384835064469370990991592407226562500000000000, 0.2672612419124243965384835064469370990991592407226562500000000000, 0.2672612419124243965384835064469370990991592407226562500000000000, 0.2672612419124243965384835064469370990991592407226562500000000000, 0.2672612419124243965384835064469370990991592407226562500000000000, 0.2672612419124243965384835064469370990991592407226562500000000000, 0.2672612419124243965384835064469370990991592407226562500000000000, 0.2672612419124243965384835064469370990991592407226562500000000000, 0.2672612419124243965384835064469370990991592407226562500000000000, 0.2672612419124243965384835064469370990991592407226562500000000000},
@@ -62,16 +61,15 @@ void Least_Squares_Regression(flag_spectral_float x[], flag_spectral_float y[], 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Flag_Spectral_Prepare_for_Spectral_Criterion
+// Function    :  Prepare_for_Spectral_Criterion
 // Description :  Evaluate decay of the coefficients of a polynomial expansion of the wave function.
 //                The coefficients of the polynomials can be shown to decay exponentially for a well-resolved function.
 //                Therefore, one can check the slope via a linear least-squares fit to (polynomial order, log(abs(polynomial coefficient)).
 //                If the function is not well-resolved the polynomials decay more slowly and the slope is smaller.
 //
 // Note        :  1. This function is called once per patch group
-//                2. The size of the array Var1D must be FLU_NXT^3
-//                3. Assume a ghost size of FLU_GHOST_SIZE in order to match the GramFE extension algorithm
-//                   This is required in order to compute the same extensions that are also computed in the GramFE wave solver
+//                2. The size of the array Var1D must be PS2 + 2
+//                3. Assume a ghost size of 1
 //
 // Parameter   :  Var1D     : Array storing the input re & im
 //                Cond      : Reference to floating point variable where density ratio is stored
@@ -82,43 +80,46 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
 {
 // set the stride to a small value to sample the wave function evenly
 // 1, 2, 4 should all work, but higher values are faster
-   const size_t Stride = 1;
+   const size_t Stride    = 1;
+   const size_t GhostSize = 1;
+   const size_t Size1D    = PS2 + 2 * GhostSize;
+   const size_t MaxOrder  = 9;
 
    const real* Re1D = Var1D;
-   const real* Im1D = Var1D + CUBE(FLU_NXT);
+   const real* Im1D = Var1D + CUBE(Size1D);
 
-   flag_spectral_float Order[FLAG_SPECTRAL_ORDER];
-   flag_spectral_float Al_Re[FLAG_SPECTRAL_ORDER];
-   flag_spectral_float Al_Im[FLAG_SPECTRAL_ORDER];
-   flag_spectral_float Ar_Re[FLAG_SPECTRAL_ORDER];
-   flag_spectral_float Ar_Im[FLAG_SPECTRAL_ORDER];
-   real Row_Re[FLU_NXT];
-   real Row_Im[FLU_NXT];
+   flag_spectral_float Order[MaxOrder];
+   flag_spectral_float Al_Re[MaxOrder];
+   flag_spectral_float Al_Im[MaxOrder];
+   flag_spectral_float Ar_Re[MaxOrder];
+   flag_spectral_float Ar_Im[MaxOrder];
+   real Row_Re[Size1D];
+   real Row_Im[Size1D];
    flag_spectral_float Slope, Intercept;
 
 // initialise with large negative number
    Cond = -__FLT_MAX__;
 
 // iterate over 3 dimensions and sample the physical 2D arrays with a stride
-// for FLU_NXT = 32, FLU_GHOST_SIZE = 8, Stride = 4, compute (16 / 4)^3 = 64 extensions
+// for PS2 = 16, GhostSize = 8, Stride = 4, compute (16 / 4)^3 = 64 extensions
    for (size_t XYZ = 0; XYZ < 3; ++XYZ)
-   for (size_t k=FLU_GHOST_SIZE; k<FLU_NXT-FLU_GHOST_SIZE; k+=Stride)
-   for (size_t j=FLU_GHOST_SIZE; j<FLU_NXT-FLU_GHOST_SIZE; j+=Stride)
+   for (size_t k=GhostSize; k<Size1D-GhostSize; k+=Stride)
+   for (size_t j=GhostSize; j<Size1D-GhostSize; j+=Stride)
    {
 //    read one column of data from 3D block
-      for (size_t i = 0; i < FLU_NXT; ++i) {
+      for (size_t i = 0; i < Size1D; ++i) {
          size_t index;
 
          switch (XYZ)
          {
             case 0:
-               index = IDX321(k, j, i, FLU_NXT, FLU_NXT);
+               index = IDX321(k, j, i, Size1D, Size1D);
                break;
             case 1:
-               index = IDX321(k, i, j, FLU_NXT, FLU_NXT);
+               index = IDX321(k, i, j, Size1D, Size1D);
                break;
             case 2:
-               index = IDX321(i, k, j, FLU_NXT, FLU_NXT);
+               index = IDX321(i, k, j, Size1D, Size1D);
                break;
          }
 
@@ -126,7 +127,7 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
          Row_Im[i] = Im1D[index];
       }
 
-      for (int i = 0; i < FLAG_SPECTRAL_ORDER; ++i)
+      for (int i = 0; i < MaxOrder; ++i)
       {
          Al_Re[i] = 0;
          Al_Im[i] = 0;
@@ -134,35 +135,34 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
          Ar_Im[i] = 0;
 
 //       Compute polynomial expansions of real and imaginary parts
-         for (int t = 0; t < FLAG_SPECTRAL_NDELTA; t++) {
+         for (int t = 0; t < MaxOrder; t++) {
             Al_Re[i] += Flag_Spectral_Polynomials[i][t] * Row_Re[t];                                  // left boundary
             Al_Im[i] += Flag_Spectral_Polynomials[i][t] * Row_Im[t];                                  // left boundary
-            Ar_Re[i] += Flag_Spectral_Polynomials[i][t] * Row_Re[FLU_NXT - FLAG_SPECTRAL_NDELTA + t]; // right boundary
-            Ar_Im[i] += Flag_Spectral_Polynomials[i][t] * Row_Im[FLU_NXT - FLAG_SPECTRAL_NDELTA + t]; // right boundary
+            Ar_Re[i] += Flag_Spectral_Polynomials[i][t] * Row_Re[Size1D - MaxOrder + t]; // right boundary
+            Ar_Im[i] += Flag_Spectral_Polynomials[i][t] * Row_Im[Size1D - MaxOrder + t]; // right boundary
          } // t
 
-//       Prepare linear fit to presumably exponential function
-         Al_Re[i]  = log(abs(Al_Re[i]));
-         Al_Im[i]  = log(abs(Al_Im[i]));
-         Ar_Re[i]  = log(abs(Ar_Re[i]));
-         Ar_Im[i]  = log(abs(Ar_Im[i]));
+//       Prepare linear fit to logarithm of polynomial coefficients
          Order[i] = i;
+         Al_Re[i] = log(abs(Al_Re[i]) + 1e-14);
+         Al_Im[i] = log(abs(Al_Im[i]) + 1e-14);
+         Ar_Re[i] = log(abs(Ar_Re[i]) + 1e-14);
+         Ar_Im[i] = log(abs(Ar_Im[i]) + 1e-14);
       }
 
 //    Find maximum slope to determine whether refinement is necessary
 //    Large negative slopes indicate that wavefunction is well-resolved
-      Least_Squares_Regression(Order, Al_Re, FLAG_SPECTRAL_ORDER, &Slope, &Intercept);
+      Least_Squares_Regression(Order, Al_Re, MaxOrder, &Slope, &Intercept);
       Cond = MAX(Cond, Slope);
-      Least_Squares_Regression(Order, Al_Im, FLAG_SPECTRAL_ORDER, &Slope, &Intercept);
+      Least_Squares_Regression(Order, Al_Im, MaxOrder, &Slope, &Intercept);
       Cond = MAX(Cond, Slope);
-      Least_Squares_Regression(Order, Ar_Re, FLAG_SPECTRAL_ORDER, &Slope, &Intercept);
+      Least_Squares_Regression(Order, Ar_Re, MaxOrder, &Slope, &Intercept);
       Cond = MAX(Cond, Slope);
-      Least_Squares_Regression(Order, Ar_Im, FLAG_SPECTRAL_ORDER, &Slope, &Intercept);
+      Least_Squares_Regression(Order, Ar_Im, MaxOrder, &Slope, &Intercept);
       Cond = MAX(Cond, Slope);
 
    } // XYZ, k,j
-} // FUNCTION : Flag_Spectral_Prepare_for_Spectral_Criterion
-
+} // FUNCTION : Prepare_for_Spectral_Criterion
 
 
 #endif // #if ( MODEL == ELBDM )
