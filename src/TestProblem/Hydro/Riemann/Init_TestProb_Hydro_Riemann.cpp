@@ -276,6 +276,13 @@ void SetParameter()
                    Riemann_Name, Riemann_Prob );
 #  endif
 
+#  ifdef SRHD
+#  ifndef FLOAT8
+   if ( Riemann_Prob == SRHD_UR  ||  Riemann_Prob == SRHD_MIXED )
+      Aux_Error( ERROR_INFO, "must enable double precision (--double=true) for Riemann_Prob %d !!\n", Riemann_Prob );
+#  endif
+#  endif // #ifdef SRHD
+
 
 // (2) set the problem-specific derived parameters
 
