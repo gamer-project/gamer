@@ -295,7 +295,7 @@ int        Src_User_AuxArray_Int[SRC_NAUX_USER];
 
 // (2-11) user-defined derived fields
 bool OPT__OUTPUT_USER_FIELD;
-int  UserDerField_Num                  = -1;    // must be negative for Output_DumpData_Total_HDF5()
+int  UserDerField_Num                  = 0;     // must be zero for Output_DumpData_Total_HDF5()
 char (*UserDerField_Label)[MAX_STRING] = NULL;
 char (*UserDerField_Unit )[MAX_STRING] = NULL;
 
