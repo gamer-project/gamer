@@ -13,13 +13,14 @@
 // Structure   :  EoS_t
 // Description :  Data structure storing the EoS variables to be passed to the CPU/GPU solvers
 //
+// Note        :  This object stores the GPU addresses and thus should never be used in CPU codes
+//                (except for codes shared by both CPU and GPU with a function parameter EoS_t EoS)
+//                --> For CPU-only codes, use the global variables EoS_AuxArray_Flt/Int, EoS_*_CPUPtr,
+//                    and h_EoS_Table[] instead
+//
 // Data Member :  *_AuxArrayDevPtr_* : Auxiliary array pointers
-//                                     --> For GPU, we store the addresses of constant memory arrays, which
-//                                         should NOT be used by host
 //                *_FuncPtr          : Function pointers to the major EoS functions
 //                Table              : Pointer arrays to the EoS tables
-//                                     --> For GPU, we store the addresses of global memory arrays, which
-//                                         should NOT be used by host
 //
 // Method      :  None --> It seems that CUDA does not support functions in a struct
 //-------------------------------------------------------------------------------------------------------
