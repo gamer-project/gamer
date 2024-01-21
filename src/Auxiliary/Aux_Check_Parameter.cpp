@@ -750,9 +750,6 @@ void Aux_Check_Parameter()
 
     if ( OPT__FLAG_JEANS )
       Aux_Error( ERROR_INFO, "SRHD does not support OPT__FLAG_JEANS !!\n" );
-
-   if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
-      Aux_Error( ERROR_INFO, "SRHD does not support OPT__1ST_FLUX_CORR !!\n" );
 #  endif // #ifdef SRHD
 
 #  ifdef MHD
@@ -947,6 +944,14 @@ void Aux_Check_Parameter()
 #  if (  defined LR_EINT  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
       Aux_Message( stderr, "WARNING : LR_EINT is not recommended for EOS_GAMMA/EOS_ISOTHERMAL !!\n" );
 #  endif
+
+#  ifdef SRHD
+   if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
+      Aux_Message( stderr, "WARNING : OPT__1ST_FLUX_CORR (%d) currently has no effect on SRHD !!\n", OPT__1ST_FLUX_CORR );
+
+   if ( AUTO_REDUCE_DT )
+      Aux_Message( stderr, "WARNING : AUTO_REDUCE_DT currently has no effect on SRHD !!\n" );
+#  endif // #ifdef SRHD
    } // if ( MPI_Rank == 0 )
 
 
