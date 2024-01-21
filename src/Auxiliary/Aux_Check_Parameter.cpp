@@ -703,21 +703,53 @@ void Aux_Check_Parameter()
 #  endif // #ifdef DUAL_ENERGY
 
 #  ifdef SRHD
-#   if ( defined MHD )
-#     error: ERROR : SRHD does not support MHD !!
+#   ifdef MHD
+#     error : ERROR : SRHD does not support MHD !!
 #   endif
+
 #   ifdef GRAVITY
-#     error: ERROR : SRHD does not support GRAVITY !!
+#     error : ERROR : SRHD does not support GRAVITY !!
 #   endif
+
 #   ifdef COMOVING
-#     error: ERROR : SRHD does not support COMOVING !!
+#     error : ERROR : SRHD does not support COMOVING !!
 #   endif
+
 #   ifdef PARTICLE
-#     error: ERROR : SRHD does not support PARTICLE !!
+#     error : ERROR : SRHD does not support PARTICLE !!
 #   endif
+
 #   if ( EOS != EOS_TAUBMATHEWS )
-#     error: ERROR : EOS != EOS_TAUBMATHEWS for SRHD !!
+#     error : ERROR : EOS != EOS_TAUBMATHEWS for SRHD !!
 #   endif
+
+#   ifdef COSMIC_RAY
+#     error : ERROR : SRHD does not support COSMIC_RAY !!
+#   endif
+
+#   ifdef DUAL_ENERGY
+#     error : ERROR : SRHD does not support DUAL_ENERGY !!
+#   endif
+
+#   ifdef SUPPORT_GRACKLE
+#     error : ERROR : SRHD does not support SUPPORT_GRACKLE !!
+#   endif
+
+#   ifdef LR_EINT
+#     error : ERROR : SRHD does not support LR_EINT !!
+#   endif
+
+    if ( OPT__OUTPUT_ENTR )
+      Aux_Error( ERROR_INFO, "SRHD does not support OPT__OUTPUT_ENTR !!\n" );
+
+    if ( OPT__FLAG_LOHNER_ENTR )
+      Aux_Error( ERROR_INFO, "SRHD does not support OPT__FLAG_LOHNER_ENTR !!\n" );
+
+    if ( JEANS_MIN_PRES )
+      Aux_Error( ERROR_INFO, "SRHD does not support JEANS_MIN_PRES !!\n" );
+
+    if ( OPT__FLAG_JEANS )
+      Aux_Error( ERROR_INFO, "SRHD does not support OPT__FLAG_JEANS !!\n" );
 #  endif // #ifdef SRHD
 
 #  ifdef MHD
@@ -737,11 +769,11 @@ void Aux_Check_Parameter()
 #   endif
 
 #   if ( EOS != EOS_COSMIC_RAY )
-#     error: ERROR : COSMIC_RAY must use EOS_COSMIC_RAY !!
+#     error : ERROR : COSMIC_RAY must use EOS_COSMIC_RAY !!
 #   endif
 
-#   if ( defined DUAL_ENERGY )
-#     error: ERROR : DUAL_ENERGY is not supported for COSMIC_RAY !!
+#   ifdef DUAL_ENERGY
+#     error : ERROR : DUAL_ENERGY is not supported for COSMIC_RAY !!
 #   endif
 
 #   ifdef COMOVING
@@ -807,15 +839,14 @@ void Aux_Check_Parameter()
 #  endif
 
 #  ifdef BAROTROPIC_EOS
-#     if ( EOS == EOS_GAMMA  ||  EOS == EOS_COSMIC_RAY  ||  EOS == EOS_NUCLEAR )
-#        error : ERROR : BAROTROPIC_EOS is incompatible with EOS_GAMMA/EOS_COSMIC_RAY/EOS_NUCLEAR !!
+#     if ( EOS == EOS_GAMMA  ||  EOS == EOS_COSMIC_RAY  ||  EOS == EOS_NUCLEAR  ||  EOS == EOS_TAUBMATHEWS )
+#        error : ERROR : BAROTROPIC_EOS is incompatible with EOS_GAMMA/EOS_COSMIC_RAY/EOS_NUCLEAR/EOS_TAUBMATHEWS !!
 #     endif
 #  else
 #     if ( EOS == EOS_ISOTHERMAL )
 #        error : ERROR : must enable BAROTROPIC_EOS for EOS_ISOTHERMAL !!
 #     endif
 #  endif // #ifdef BAROTROPIC_EOS ... else ...
-
 
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
    {
