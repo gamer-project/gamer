@@ -750,6 +750,9 @@ void Aux_Check_Parameter()
 
     if ( OPT__FLAG_JEANS )
       Aux_Error( ERROR_INFO, "SRHD does not support OPT__FLAG_JEANS !!\n" );
+
+   if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
+      Aux_Error( ERROR_INFO, "SRHD does not support OPT__1ST_FLUX_CORR !!\n" );
 #  endif // #ifdef SRHD
 
 #  ifdef MHD
