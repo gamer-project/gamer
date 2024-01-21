@@ -349,10 +349,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
    if ( OPT__OUTPUT_LORENTZ )  sprintf( FieldLabelOut[LorentzDumpIdx], "%s", "Lrtz" );
 
-   const int VelDumpIdx0 = ( OPT__OUTPUT_VELOCITY ) ? NFieldStored : NoDump;
+   const int VelDumpIdx0 = ( OPT__OUTPUT_3VELOCITY ) ? NFieldStored : NoDump;
    if ( VelDumpIdx0+2 >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_VELOCITY )
+   if ( OPT__OUTPUT_3VELOCITY )
    {
       NFieldStored += 3;
       sprintf( FieldLabelOut[ VelDumpIdx0     ], "%s", "VelX" );
@@ -901,7 +901,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                                     EoS_DensPres2Eint_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, NULL );
 
-                     Cs2 = EoS_Temper2CSqr_CPUPtr( Prim[0], Prim[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                     Cs2 = EoS_DensPres2CSqr_CPUPtr( Prim[0], Prim[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #                    else
                      Pres = Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                                             CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
@@ -2547,7 +2547,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Output_DivMag          = OPT__OUTPUT_DIVMAG;
 #  endif
 #  ifdef SRHD
-   InputPara.Opt__Output_Velocity        = OPT__OUTPUT_VELOCITY;
+   InputPara.Opt__Output_3Velocity       = OPT__OUTPUT_3VELOCITY;
    InputPara.Opt__Output_Lorentz         = OPT__OUTPUT_LORENTZ;
    InputPara.Opt__Output_Enthalpy        = OPT__OUTPUT_ENTHALPY;
 #  endif
@@ -3473,7 +3473,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Output_DivMag",          HOFFSET(InputPara_t,Opt__Output_DivMag         ), H5T_NATIVE_INT              );
 #  endif
 #  ifdef SRHD
-   H5Tinsert( H5_TypeID, "Opt__Output_Velocity",        HOFFSET(InputPara_t,Opt__Output_Velocity       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_3Velocity",       HOFFSET(InputPara_t,Opt__Output_3Velocity      ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Lorentz",         HOFFSET(InputPara_t,Opt__Output_Lorentz        ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Enthalpy",        HOFFSET(InputPara_t,Opt__Output_Enthalpy       ), H5T_NATIVE_INT              );
 #  endif

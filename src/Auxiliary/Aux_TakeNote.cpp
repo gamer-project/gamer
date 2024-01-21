@@ -1438,7 +1438,7 @@ void Aux_TakeNote()
 #     endif
       fprintf( Note, "OPT__OUTPUT_USER_FIELD          %d\n",      OPT__OUTPUT_USER_FIELD      );
 #     ifdef SRHD
-      fprintf( Note, "OPT__OUTPUT_VELOCITY            %d\n",      OPT__OUTPUT_VELOCITY        );
+      fprintf( Note, "OPT__OUTPUT_3VELOCITY           %d\n",      OPT__OUTPUT_3VELOCITY       );
       fprintf( Note, "OPT__OUTPUT_LORENTZ             %d\n",      OPT__OUTPUT_LORENTZ         );
       fprintf( Note, "OPT__OUTPUT_ENTHALPY            %d\n",      OPT__OUTPUT_ENTHALPY        );
 #     endif

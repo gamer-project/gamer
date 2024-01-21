@@ -502,8 +502,6 @@ typedef void (*EoS_H2TEM_t)    ( const real HTilde, real* const Temp, real* cons
                                  const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
 typedef real (*EoS_TEM2H_t)    ( const real Temp, const real Passive[], const double AuxArray_Flt[],
                                  const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
-typedef real (*EoS_TEM2C_t)    ( const real Rho, const real Pres, const real Passive[], const double AuxArray_Flt[],
-                                 const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
 typedef real (*EoS_DE2P_t)     ( const real Dens, const real Eint, const real Passive[],
                                  const double AuxArray_Flt[], const int AuxArray_Int[],
                                  const real *const Table[EOS_NTABLE_MAX] );

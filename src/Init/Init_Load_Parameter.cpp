@@ -105,7 +105,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "DT__FLUID",                  &DT__FLUID,                      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "DT__FLUID_INIT",             &DT__FLUID_INIT,                 -1.0,             NoMin_double,  NoMax_double   );
 #  ifdef SRHD
-   ReadPara->Add( "DT__SPEED_OF_LIGHT",         &DT__SPEED_OF_LIGHT,                0,             0,             1              );
+   ReadPara->Add( "DT__SPEED_OF_LIGHT",         &DT__SPEED_OF_LIGHT,              false,           Useless_bool,  Useless_bool   );
 #  endif
 #  ifdef GRAVITY
    ReadPara->Add( "DT__GRAVITY",                &DT__GRAVITY,                    -1.0,             NoMin_double,  NoMax_double   );
@@ -483,7 +483,7 @@ void Init_Load_Parameter()
 #  endif
 #  ifdef SRHD
    ReadPara->Add( "OPT__OUTPUT_LORENTZ",        &OPT__OUTPUT_LORENTZ,             false,           Useless_bool,  Useless_bool   );
-   ReadPara->Add( "OPT__OUTPUT_VELOCITY",       &OPT__OUTPUT_VELOCITY,            false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_3VELOCITY",      &OPT__OUTPUT_3VELOCITY,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_ENTHALPY",       &OPT__OUTPUT_ENTHALPY,            true,            Useless_bool,  Useless_bool   );
 #  endif
    ReadPara->Add( "OPT__OUTPUT_USER_FIELD",     &OPT__OUTPUT_USER_FIELD,          false,           Useless_bool,  Useless_bool   );

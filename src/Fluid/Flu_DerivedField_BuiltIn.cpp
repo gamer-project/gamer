@@ -180,7 +180,7 @@ void Flu_DerivedField_Mach( real Out[], const real FluIn[], const real MagIn[], 
                      EoS_DensPres2Eint_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                      EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, NULL );
 
-      Cs     = SQRT(  EoS_Temper2CSqr_CPUPtr( Prim[0], Prim[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table )  );
+      Cs     = SQRT(  EoS_DensPres2CSqr_CPUPtr( Prim[0], Prim[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table )  );
       FourCs = Cs / SQRT( (real)1.0 - Cs*Cs );
       U      = SQRT( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) );
       Mach   = SQRT( U / FourCs );

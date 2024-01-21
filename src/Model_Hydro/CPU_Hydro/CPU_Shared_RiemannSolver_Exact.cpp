@@ -91,9 +91,9 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
 
 // convert conserved variables to primitive variables
    Hydro_Con2Pri( L_In, L, MinPres, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                  EoS_DensEint2Pres, NULL, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
+                  EoS_DensEint2Pres, NULL, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
    Hydro_Con2Pri( R_In, R, MinPres, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                  EoS_DensEint2Pres, NULL, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
+                  EoS_DensEint2Pres, NULL, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
 
 
 // reorder the input variables for different spatial directions

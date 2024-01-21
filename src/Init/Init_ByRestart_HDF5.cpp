@@ -2167,7 +2167,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  endif
 #  ifdef SRHD
    LoadField( "Opt__Output_Lorentz",         &RS.Opt__Output_Lorentz,         SID, TID, NonFatal, &RT.Opt__Output_Lorentz,         1, NonFatal );
-   LoadField( "Opt__Output_Velocity",        &RS.Opt__Output_Velocity,        SID, TID, NonFatal, &RT.Opt__Output_Velocity,        1, NonFatal );
+   LoadField( "Opt__Output_3Velocity",       &RS.Opt__Output_3Velocity,       SID, TID, NonFatal, &RT.Opt__Output_3Velocity,       1, NonFatal );
    LoadField( "Opt__Output_Enthalpy",        &RS.Opt__Output_Enthalpy,        SID, TID, NonFatal, &RT.Opt__Output_Enthalpy,        1, NonFatal );
 #  endif
 #  endif // #if ( MODEL == HYDRO )

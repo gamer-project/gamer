@@ -897,7 +897,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
          E_D          = Fields[ENGY] / Fields[DENS];
          M_D          = SQRT( Msqr / Dsqr );
          Temp         = SQRT( E_D*E_D + (real)2.0*E_D );
-         Discriminant = ( Temp + M_D )*( Temp - M_D );
+         Discriminant = ( Temp + M_D )*( Temp - M_D );   // replace a^2-b^2 with (a+b)*(a-b) to alleviate a catastrophic cancellation
 
          if ( Discriminant <= TINY_NUMBER )  FailCell = true;
 #        endif

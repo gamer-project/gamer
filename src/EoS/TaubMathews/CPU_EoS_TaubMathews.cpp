@@ -66,7 +66,7 @@ void EoS_SetAuxArray_TaubMathews( double AuxArray_Flt[], int AuxArray_Int[] )
 // II. Implement EoS conversion functions
 //     (1) EoS_HTilde2Temp_*
 //     (2) EoS_Temp2HTilde_*
-//     (3) EoS_Temper2CSqr_*
+//     (3) EoS_DensPres2CSqr_*
 //     (4) EoS_GuessHTilde_*
 // =============================================
 
@@ -211,27 +211,28 @@ static real EoS_Temp2HTilde_TaubMathews( const real Temp, const real Passive[], 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  EoS_Temper2CSqr_TaubMathews
-// Description :  Convert gas temperature to sound speed squared
+// Function    :  EoS_DensPres2CSqr_TaubMathews
+// Description :  Convert gas proper mass density and pressure to sound speed squared
 //
 // Note        :  Eq. 14 in "Tseng et al. 2021, MNRAS, 504, 3298"
 //
-// Parameter   :  Rho        : Gas proper mass density
+// Parameter   :  Dens       : Gas proper mass density
 //                Pres       : Gas pressure
 //                Passive    : Passive scalars (must not used here)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
 //
-// Return      :  Sound speed square
+// Return      :  Sound speed squared
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_Temper2CSqr_TaubMathews( const real Rho, const real Pres, const real Passive[], const double AuxArray_Flt[],
-                                         const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
+static real EoS_DensPres2CSqr_TaubMathews( const real Dens, const real Pres, const real Passive[],
+                                           const double AuxArray_Flt[], const int AuxArray_Int[],
+                                           const real *const Table[EOS_NTABLE_MAX] )
 {
 
    real Cs2, Temp, factor;
 
-   Temp   = Pres/Rho;
+   Temp   = Pres/Dens;
    factor = SQRT( (real)2.25*Temp*Temp + (real)1.0 );
    Cs2    = (real) 4.5*SQR(Temp) + (real) 5.0*Temp*factor;
    Cs2   /= (real)18.0*SQR(Temp) + (real)12.0*Temp*factor + (real)3.0;
@@ -239,12 +240,12 @@ static real EoS_Temper2CSqr_TaubMathews( const real Rho, const real Pres, const 
 #  ifdef GAMER_DEBUG
    if ( Cs2 >= (real)1.0  ||  Cs2 < (real)0.0 )
       printf( "ERROR : incorrect sound speed squared %14.7e (Dens %13.7e, Pres %13.7e) in %s !!\n",
-              Cs2, Rho, Pres, __FUNCTION__ );
+              Cs2, Dens, Pres, __FUNCTION__ );
 #  endif
 
    return Cs2;
 
-} // FUNCTION : EoS_Temper2CSqr_TaubMathews
+} // FUNCTION : EoS_DensPres2CSqr_TaubMathews 
 
 
 
@@ -258,10 +259,10 @@ static real EoS_Temper2CSqr_TaubMathews( const real Rho, const real Pres, const 
 #  define FUNC_SPACE            static
 #endif
 
-FUNC_SPACE EoS_GUESS_t  EoS_GuessHTilde_Ptr = EoS_GuessHTilde_TaubMathews;
-FUNC_SPACE EoS_H2TEM_t  EoS_HTilde2Temp_Ptr = EoS_HTilde2Temp_TaubMathews;
-FUNC_SPACE EoS_TEM2H_t  EoS_Temp2HTilde_Ptr = EoS_Temp2HTilde_TaubMathews;
-FUNC_SPACE EoS_TEM2C_t  EoS_Temper2CSqr_Ptr = EoS_Temper2CSqr_TaubMathews;
+FUNC_SPACE EoS_GUESS_t  EoS_GuessHTilde_Ptr   = EoS_GuessHTilde_TaubMathews;
+FUNC_SPACE EoS_H2TEM_t  EoS_HTilde2Temp_Ptr   = EoS_HTilde2Temp_TaubMathews;
+FUNC_SPACE EoS_TEM2H_t  EoS_Temp2HTilde_Ptr   = EoS_Temp2HTilde_TaubMathews;
+FUNC_SPACE EoS_DP2C_t   EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_TaubMathews;
 
 //-----------------------------------------------------------------------------------------
 // Function    :  EoS_SetCPU/GPUFunc_TaubMathews
@@ -276,23 +277,23 @@ FUNC_SPACE EoS_TEM2C_t  EoS_Temper2CSqr_Ptr = EoS_Temper2CSqr_TaubMathews;
 //
 //                3. Call-by-reference
 //
-// Parameter   :  EoS_HTilde2Temp_CPU/GPUPtr : CPU/GPU function pointers to be set
-//                EoS_Temp2HTilde_CPU/GPUPtr : ...
-//                EoS_Temper2CSqr_CPU/GPUPtr : ...
+// Parameter   :  EoS_HTilde2Temp_CPU/GPUPtr   : CPU/GPU function pointers to be set
+//                EoS_Temp2HTilde_CPU/GPUPtr   : ...
+//                EoS_DensPres2CSqr_CPU/GPUPtr : ...
 //
-// Return      :  EoS_HTilde2Temp_CPU, EoS_Temp2HTilde_CPU/GPUPtr, EoS_Temper2CSqr_CPU/GPUPtr
+// Return      :  EoS_HTilde2Temp_CPU, EoS_Temp2HTilde_CPU/GPUPtr, EoS_DensPres2CSqr_CPU/GPUPtr
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __host__
 void EoS_SetGPUFunc_TaubMathews( EoS_GUESS_t &EoS_GuessHTilde_GPUPtr,
                                  EoS_H2TEM_t &EoS_HTilde2Temp_GPUPtr,
                                  EoS_TEM2H_t &EoS_Temp2HTilde_GPUPtr,
-                                 EoS_TEM2C_t &EoS_Temper2CSqr_GPUPtr )
+                                 EoS_DP2C_t  &EoS_DensPres2CSqr_GPUPtr )
 {
-   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_GuessHTilde_GPUPtr, EoS_GuessHTilde_Ptr, sizeof(EoS_GUESS_t) )  );
-   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_HTilde2Temp_GPUPtr, EoS_HTilde2Temp_Ptr, sizeof(EoS_H2TEM_t) )  );
-   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_Temp2HTilde_GPUPtr, EoS_Temp2HTilde_Ptr, sizeof(EoS_TEM2H_t) )  );
-   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_Temper2CSqr_GPUPtr, EoS_Temper2CSqr_Ptr, sizeof(EoS_TEM2C_t) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_GuessHTilde_GPUPtr,   EoS_GuessHTilde_Ptr,   sizeof(EoS_GUESS_t) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_HTilde2Temp_GPUPtr,   EoS_HTilde2Temp_Ptr,   sizeof(EoS_H2TEM_t) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_Temp2HTilde_GPUPtr,   EoS_Temp2HTilde_Ptr,   sizeof(EoS_TEM2H_t) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensPres2CSqr_GPUPtr, EoS_DensPres2CSqr_Ptr, sizeof(EoS_DP2C_t ) )  );
 }
 
 #else // #ifdef __CUDACC__
@@ -300,12 +301,12 @@ void EoS_SetGPUFunc_TaubMathews( EoS_GUESS_t &EoS_GuessHTilde_GPUPtr,
 void EoS_SetCPUFunc_TaubMathews( EoS_GUESS_t &EoS_GuessHTilde_CPUPtr,
                                  EoS_H2TEM_t &EoS_HTilde2Temp_CPUPtr,
                                  EoS_TEM2H_t &EoS_Temp2HTilde_CPUPtr,
-                                 EoS_TEM2C_t &EoS_Temper2CSqr_CPUPtr )
+                                 EoS_DP2C_t  &EoS_DensPres2CSqr_CPUPtr )
 {
-   EoS_GuessHTilde_CPUPtr = EoS_GuessHTilde_Ptr;
-   EoS_HTilde2Temp_CPUPtr = EoS_HTilde2Temp_Ptr;
-   EoS_Temp2HTilde_CPUPtr = EoS_Temp2HTilde_Ptr;
-   EoS_Temper2CSqr_CPUPtr = EoS_Temper2CSqr_Ptr;
+   EoS_GuessHTilde_CPUPtr   = EoS_GuessHTilde_Ptr;
+   EoS_HTilde2Temp_CPUPtr   = EoS_HTilde2Temp_Ptr;
+   EoS_Temp2HTilde_CPUPtr   = EoS_Temp2HTilde_Ptr;
+   EoS_DensPres2CSqr_CPUPtr = EoS_DensPres2CSqr_Ptr;
 }
 
 #endif // #ifdef __CUDACC__ ... else ...
@@ -316,9 +317,9 @@ void EoS_SetCPUFunc_TaubMathews( EoS_GUESS_t &EoS_GuessHTilde_CPUPtr,
 
 // local function prototypes
 void EoS_SetAuxArray_TaubMathews( double [] );
-void EoS_SetCPUFunc_TaubMathews(EoS_GUESS_t &, EoS_H2TEM_t &, EoS_TEM2H_t &, EoS_TEM2C_t & );
+void EoS_SetCPUFunc_TaubMathews(EoS_GUESS_t &, EoS_H2TEM_t &, EoS_TEM2H_t &, EoS_DP2C_t & );
 #ifdef GPU
-void EoS_SetGPUFunc_TaubMathews(EoS_GUESS_t &, EoS_H2TEM_t &, EoS_TEM2H_t &, EoS_TEM2C_t & );
+void EoS_SetGPUFunc_TaubMathews(EoS_GUESS_t &, EoS_H2TEM_t &, EoS_TEM2H_t &, EoS_DP2C_t & );
 #endif
 
 //-----------------------------------------------------------------------------------------
@@ -340,9 +341,9 @@ void EoS_Init_TaubMathews()
 {
 
    EoS_SetAuxArray_TaubMathews( EoS_AuxArray_Flt, EoS_AuxArray_Int );
-   EoS_SetCPUFunc_TaubMathews( EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_Temper2CSqr_CPUPtr );
+   EoS_SetCPUFunc_TaubMathews( EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_DensPres2CSqr_CPUPtr );
 #  ifdef GPU
-   EoS_SetGPUFunc_TaubMathews( EoS_GuessHTilde_GPUPtr, EoS_HTilde2Temp_GPUPtr, EoS_Temp2HTilde_GPUPtr, EoS_Temper2CSqr_GPUPtr );
+   EoS_SetGPUFunc_TaubMathews( EoS_GuessHTilde_GPUPtr, EoS_HTilde2Temp_GPUPtr, EoS_Temp2HTilde_GPUPtr, EoS_DensPres2CSqr_GPUPtr );
 #  endif
 
 } // FUNCTION : EoS_Init_TaubMathews
