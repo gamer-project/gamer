@@ -85,6 +85,9 @@ int Flu_ResetByUser_Func_Bondi( real fluid[], const double Emag, const double x,
                                 const double dt, const int lv, double AuxArray[] );
 void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
 static void HSE_SetDensProfileTable();
+static void BondiBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                     const int GhostSize, const int idx[], const double pos[], const double Time,
+                     const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 
 
@@ -600,6 +603,38 @@ void End_Bondi()
    }
 
 } // FUNCTION : End_Bondi
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  BondiBC
+// Description :  Set the external boundary condition to the IC condition
+//
+// Note        :  1. Linked to the function pointer "BC_User_Ptr"
+//
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
+//                ArraySize      : Size of Array including the ghost zones on each side
+//                fluid          : Fluid fields to be set
+//                NVar_Flu       : Number of fluid variables to be prepared
+//                GhostSize      : Number of ghost zones
+//                idx            : Array indices
+//                pos            : Physical coordinates
+//                Time           : Physical time
+//                lv             : Refinement level
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
+//                AuxArray       : Auxiliary array
+//
+// Return      :  fluid
+//-------------------------------------------------------------------------------------------------------
+void BondiBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+              const int GhostSize, const int idx[], const double pos[], const double Time,
+              const int lv, const int TFluVarIdxList[], double AuxArray[] )
+{
+
+// simply call the IC function
+   SetGridIC( fluid, pos[0], pos[1], pos[2], Time, lv, AuxArray );
+
+} // FUNCTION : BondiBC
 #endif // #if ( MODEL == HYDRO  &&  defined GRAVITY )
 
 
@@ -633,7 +668,7 @@ void Init_TestProb_Hydro_Bondi()
    Init_Function_User_Ptr   = SetGridIC;
    Flag_User_Ptr            = Flag_Bondi;
    Aux_Record_User_Ptr      = Record_Bondi;
-   BC_User_Ptr              = SetGridIC;
+   BC_User_Ptr              = BondiBC;
    Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Func_Bondi;
    Flu_ResetByUser_API_Ptr  = Flu_ResetByUser_API_Bondi;
    End_User_Ptr             = End_Bondi;

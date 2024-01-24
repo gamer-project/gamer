@@ -288,8 +288,10 @@ void Aux_Check_Parameter()
    } // if ( OPT__OUTPUT_USER_FIELD )
 
 #  if ( MODEL == HYDRO )
+#  ifndef SRHD
    if (  OPT__OUTPUT_TEMP  &&  EoS_DensEint2Temp_CPUPtr == NULL )
       Aux_Error( ERROR_INFO, "EoS_DensEint2Temp_CPUPtr == NULL for OPT__OUTPUT_TEMP !!\n" );
+#  endif
 
 #  if ( EOS == EOS_ISOTHERMAL )
    if ( OPT__OUTPUT_ENTR )
@@ -369,6 +371,9 @@ void Aux_Check_Parameter()
    Flag |= OPT__FLAG_LOHNER_ENTR;
 #  ifdef MHD
    Flag |= OPT__FLAG_CURRENT;
+#  endif
+#  ifdef SRHD
+   Flag |= OPT__FLAG_LRTZ_GRADIENT;
 #  endif
 #  ifdef COSMIC_RAY
    Flag |= OPT__FLAG_CRAY;
@@ -674,6 +679,15 @@ void Aux_Check_Parameter()
 #   endif
 #  endif // MHD
 
+#  ifdef SRHD
+#   if ( defined RSOLVER  &&  RSOLVER != HLLC  &&  RSOLVER != HLLE )
+#     error : ERROR : unsupported Riemann solver for SRHD (HLLC/HLLE) !!
+#   endif
+#   if ( defined FLU_SCHEME  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != MHM )
+#     error : ERROR : unsupported FLU_SCHEME for SRHD (MHM_RP/MHM) !!
+#   endif
+#  endif // SRHD
+
 #  ifdef DUAL_ENERGY
 #   if ( FLU_SCHEME == RTVD )
 #     error : RTVD does NOT support DUAL_ENERGY !!
@@ -683,10 +697,60 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
 #   endif
 
-#  if ( DUAL_ENERGY == DE_ENPY  &&  EOS != EOS_GAMMA )
+#   if ( DUAL_ENERGY == DE_ENPY  &&  EOS != EOS_GAMMA )
 #     error : ERROR : DUAL_ENERGY=DE_ENPY only supports EOS_GAMMA !!
-#  endif
+#   endif
 #  endif // #ifdef DUAL_ENERGY
+
+#  ifdef SRHD
+#   ifdef MHD
+#     error : ERROR : SRHD does not support MHD !!
+#   endif
+
+#   ifdef GRAVITY
+#     error : ERROR : SRHD does not support GRAVITY !!
+#   endif
+
+#   ifdef COMOVING
+#     error : ERROR : SRHD does not support COMOVING !!
+#   endif
+
+#   ifdef PARTICLE
+#     error : ERROR : SRHD does not support PARTICLE !!
+#   endif
+
+#   if ( EOS != EOS_TAUBMATHEWS )
+#     error : ERROR : EOS != EOS_TAUBMATHEWS for SRHD !!
+#   endif
+
+#   ifdef COSMIC_RAY
+#     error : ERROR : SRHD does not support COSMIC_RAY !!
+#   endif
+
+#   ifdef DUAL_ENERGY
+#     error : ERROR : SRHD does not support DUAL_ENERGY !!
+#   endif
+
+#   ifdef SUPPORT_GRACKLE
+#     error : ERROR : SRHD does not support SUPPORT_GRACKLE !!
+#   endif
+
+#   ifdef LR_EINT
+#     error : ERROR : SRHD does not support LR_EINT !!
+#   endif
+
+    if ( OPT__OUTPUT_ENTR )
+      Aux_Error( ERROR_INFO, "SRHD does not support OPT__OUTPUT_ENTR !!\n" );
+
+    if ( OPT__FLAG_LOHNER_ENTR )
+      Aux_Error( ERROR_INFO, "SRHD does not support OPT__FLAG_LOHNER_ENTR !!\n" );
+
+    if ( JEANS_MIN_PRES )
+      Aux_Error( ERROR_INFO, "SRHD does not support JEANS_MIN_PRES !!\n" );
+
+    if ( OPT__FLAG_JEANS )
+      Aux_Error( ERROR_INFO, "SRHD does not support OPT__FLAG_JEANS !!\n" );
+#  endif // #ifdef SRHD
 
 #  ifdef MHD
 #   if ( defined CHECK_INTERMEDIATE  &&  CHECK_INTERMEDIATE != HLLE  &&  CHECK_INTERMEDIATE != HLLD )
@@ -705,11 +769,11 @@ void Aux_Check_Parameter()
 #   endif
 
 #   if ( EOS != EOS_COSMIC_RAY )
-#     error: ERROR : COSMIC_RAY must use EOS_COSMIC_RAY !!
+#     error : ERROR : COSMIC_RAY must use EOS_COSMIC_RAY !!
 #   endif
 
-#   if ( defined DUAL_ENERGY )
-#     error: ERROR : DUAL_ENERGY is not supported for COSMIC_RAY !!
+#   ifdef DUAL_ENERGY
+#     error : ERROR : DUAL_ENERGY is not supported for COSMIC_RAY !!
 #   endif
 
 #   ifdef COMOVING
@@ -721,8 +785,8 @@ void Aux_Check_Parameter()
 #     error : ERROR : CTU does NOT support LR_EINT in CUFLU.h !!
 #  endif
 
-#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR  &&  EOS != EOS_COSMIC_RAY  &&  EOS != EOS_USER )
-#     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_COSMIC_RAY/EOS_USER) !!
+#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR  &&  EOS != EOS_COSMIC_RAY  &&  EOS != EOS_TAUBMATHEWS  &&  EOS != EOS_USER )
+#     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_COSMIC_RAY/EOS_TAUBMATHEWS/EOS_USER) !!
 #  endif
 
 #  if ( EOS != EOS_GAMMA )
@@ -775,15 +839,14 @@ void Aux_Check_Parameter()
 #  endif
 
 #  ifdef BAROTROPIC_EOS
-#     if ( EOS == EOS_GAMMA  ||  EOS == EOS_COSMIC_RAY  ||  EOS == EOS_NUCLEAR )
-#        error : ERROR : BAROTROPIC_EOS is incompatible with EOS_GAMMA/EOS_COSMIC_RAY/EOS_NUCLEAR !!
+#     if ( EOS == EOS_GAMMA  ||  EOS == EOS_COSMIC_RAY  ||  EOS == EOS_NUCLEAR  ||  EOS == EOS_TAUBMATHEWS )
+#        error : ERROR : BAROTROPIC_EOS is incompatible with EOS_GAMMA/EOS_COSMIC_RAY/EOS_NUCLEAR/EOS_TAUBMATHEWS !!
 #     endif
 #  else
 #     if ( EOS == EOS_ISOTHERMAL )
 #        error : ERROR : must enable BAROTROPIC_EOS for EOS_ISOTHERMAL !!
 #     endif
 #  endif // #ifdef BAROTROPIC_EOS ... else ...
-
 
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
    {
@@ -881,6 +944,14 @@ void Aux_Check_Parameter()
 #  if (  defined LR_EINT  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
       Aux_Message( stderr, "WARNING : LR_EINT is not recommended for EOS_GAMMA/EOS_ISOTHERMAL !!\n" );
 #  endif
+
+#  ifdef SRHD
+   if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
+      Aux_Message( stderr, "WARNING : OPT__1ST_FLUX_CORR (%d) currently has no effect on SRHD !!\n", OPT__1ST_FLUX_CORR );
+
+   if ( AUTO_REDUCE_DT )
+      Aux_Message( stderr, "WARNING : AUTO_REDUCE_DT currently has no effect on SRHD !!\n" );
+#  endif // #ifdef SRHD
    } // if ( MPI_Rank == 0 )
 
 

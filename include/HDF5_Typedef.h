@@ -56,6 +56,7 @@ struct KeyInfo_t
    int    CellScale[NLEVEL];        // amr->scale[lv]
 #  if ( MODEL == HYDRO )
    int    Magnetohydrodynamics;
+   int    SRHydrodynamics;
    int    CosmicRay;
 #  endif
 
@@ -144,6 +145,7 @@ struct Makefile_t
 #  endif
    int DualEnergy;
    int Magnetohydrodynamics;
+   int SRHydrodynamics;
    int CosmicRay;
    int EoS;
    int BarotropicEoS;
@@ -422,6 +424,9 @@ struct InputPara_t
 #  ifdef COMOVING
    double Dt__MaxDeltaA;
 #  endif
+#  ifdef SRHD
+   int    Dt__SpeedOfLight;
+#  endif
    double Dt__SyncParentLv;
    double Dt__SyncChildrenLv;
    int    Opt__DtUser;
@@ -452,6 +457,9 @@ struct InputPara_t
    int    Opt__Flag_Jeans;
 #  ifdef MHD
    int    Opt__Flag_Current;
+#  endif
+#  ifdef SRHD
+   int    Opt__Flag_LrtzGradient;
 #  endif
 #  ifdef COSMIC_RAY
    int    Opt__Flag_CRay;
@@ -726,6 +734,11 @@ struct InputPara_t
 #  ifdef MHD
    int    Opt__Output_DivMag;
 #  endif
+#  ifdef SRHD
+   int    Opt__Output_Lorentz;
+   int    Opt__Output_3Velocity;
+   int    Opt__Output_Enthalpy;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
    int    Opt__Output_UserField;
    int    Opt__Output_Mode;
@@ -785,6 +798,9 @@ struct InputPara_t
    double FlagTable_Jeans       [NLEVEL-1];
 #  ifdef MHD
    double FlagTable_Current     [NLEVEL-1];
+#  endif
+#  ifdef SRHD
+   double FlagTable_LrtzGradient[NLEVEL-1];
 #  endif
 #  ifdef COSMIC_RAY
    double FlagTable_CRay        [NLEVEL-1];

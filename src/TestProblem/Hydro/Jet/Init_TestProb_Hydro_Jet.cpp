@@ -34,6 +34,9 @@ static int     Jet_HSE_BgTable_NBin;               // for Jet_HSE: number of bin
 #ifdef GRAVITY
 void Init_ExtAcc_Jet();
 #endif
+static void IsolatedBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                        const int GhostSize, const int idx[], const double pos[], const double Time,
+                        const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 
 
@@ -431,6 +434,32 @@ void End_Jet()
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  IsolatedBC
+// Description :  Isolated boundary condition for galaxies, only allow outflow velocities
+//
+// Note        :  1. Linked to the function pointer "BC_User_Ptr"
+//
+// Parameter   :  fluid    : Fluid field to be set
+//                x/y/z    : Physical coordinates
+//                Time     : Physical time
+//                lv       : Refinement level
+//                AuxArray : Auxiliary array
+//
+// Return      :  fluid
+//-------------------------------------------------------------------------------------------------------
+void IsolatedBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                 const int GhostSize, const int idx[], const double pos[], const double Time,
+                 const int lv, const int TFluVarIdxList[], double AuxArray[] )
+{
+
+// simply call the IC function
+   SetGridIC( fluid, pos[0], pos[1], pos[2], Time, lv, AuxArray );
+
+} // FUNCTION : IsolatedBC
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_ResetByUser_Jet
 // Description :  Function to reset the fluid field
 //
@@ -561,7 +590,7 @@ void Init_TestProb_Hydro_Jet()
    Init_Function_User_Ptr   = SetGridIC;
    Flag_User_Ptr            = NULL;
    Mis_GetTimeStep_User_Ptr = NULL;
-   BC_User_Ptr              = SetGridIC;
+   BC_User_Ptr              = IsolatedBC;
    Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Jet;
    Output_User_Ptr          = NULL;
    Aux_Record_User_Ptr      = NULL;

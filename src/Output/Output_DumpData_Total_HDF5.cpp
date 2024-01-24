@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2472)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2473)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -245,6 +245,7 @@ Procedure for outputting new variables:
 //                2470 : 2023/10/16 --> output OPT__OUTPUT_TEXT_FORMAT_FLT
 //                2471 : 2023/11/09 --> output cosmic-ray options
 //                2472 : 2023/11/11 --> output FixUpVar_Flux and FixUpVar_Restrict
+//                2473 : 2023/11/29 --> output SRHD options and fields
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -265,6 +266,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 // 0. determine all the fields to be stored
 //    --> must do it before calling GetCompound_* and FillIn_*
+   const int NoDump = -__INT_MAX__; // must set the dump index to an extremely negative value (not -1) to disable it
    char FieldLabelOut[NFIELD_STORED_MAX][MAX_STRING];
    int  NFieldStored = 0;
 
@@ -275,14 +277,14 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    for (int v=0; v<NCOMP_TOTAL; v++)   sprintf( FieldLabelOut[ FluDumpIdx0 + v ], "%s", FieldLabel[v] );
 
 #  ifdef GRAVITY
-   const int PotDumpIdx = ( OPT__OUTPUT_POT ) ? NFieldStored++ : -1;
+   const int PotDumpIdx = ( OPT__OUTPUT_POT ) ? NFieldStored++ : NoDump;
    if ( PotDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
    if ( OPT__OUTPUT_POT )  sprintf( FieldLabelOut[PotDumpIdx], "%s", PotLabel );
 #  endif
 
 #  ifdef MASSIVE_PARTICLES
-   const int ParDensDumpIdx = ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE ) ? NFieldStored++ : -1;
+   const int ParDensDumpIdx = ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE ) ? NFieldStored++ : NoDump;
    if ( ParDensDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
    if      ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY )   sprintf( FieldLabelOut[ParDensDumpIdx], "%s", "ParDens"   );
@@ -290,7 +292,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #  endif
 
 #  ifdef MHD
-   const int CCMagDumpIdx0 = ( OPT__OUTPUT_CC_MAG ) ? NFieldStored : -1;
+   const int CCMagDumpIdx0 = ( OPT__OUTPUT_CC_MAG ) ? NFieldStored : NoDump;
    if ( CCMagDumpIdx0+NCOMP_MAG-1 >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
    if ( OPT__OUTPUT_CC_MAG )
@@ -303,45 +305,68 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #  endif
 
 #  if ( MODEL == HYDRO )
-   const int PresDumpIdx   = ( OPT__OUTPUT_PRES   ) ? NFieldStored++ : -1;
+   const int PresDumpIdx   = ( OPT__OUTPUT_PRES ) ? NFieldStored++ : NoDump;
    if ( PresDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
    if ( OPT__OUTPUT_PRES   )  sprintf( FieldLabelOut[PresDumpIdx  ], "%s", "Pres"   );
 
-   const int TempDumpIdx   = ( OPT__OUTPUT_TEMP   ) ? NFieldStored++ : -1;
+   const int TempDumpIdx   = ( OPT__OUTPUT_TEMP ) ? NFieldStored++ : NoDump;
    if ( TempDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
    if ( OPT__OUTPUT_TEMP   )  sprintf( FieldLabelOut[TempDumpIdx  ], "%s", "Temp"   );
 
-   const int EntrDumpIdx   = ( OPT__OUTPUT_ENTR   ) ? NFieldStored++ : -1;
+   const int EntrDumpIdx   = ( OPT__OUTPUT_ENTR ) ? NFieldStored++ : NoDump;
    if ( EntrDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
    if ( OPT__OUTPUT_ENTR   )  sprintf( FieldLabelOut[EntrDumpIdx  ], "%s", "Entr"   );
 
-   const int CsDumpIdx     = ( OPT__OUTPUT_CS     ) ? NFieldStored++ : -1;
+   const int CsDumpIdx     = ( OPT__OUTPUT_CS ) ? NFieldStored++ : NoDump;
    if ( CsDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
    if ( OPT__OUTPUT_CS     )  sprintf( FieldLabelOut[CsDumpIdx    ], "%s", "Cs"     );
 
-   const int DivVelDumpIdx = ( OPT__OUTPUT_DIVVEL ) ? NFieldStored++ : -1;
+   const int DivVelDumpIdx = ( OPT__OUTPUT_DIVVEL ) ? NFieldStored++ : NoDump;
    if ( DivVelDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
    if ( OPT__OUTPUT_DIVVEL )  sprintf( FieldLabelOut[DivVelDumpIdx], "%s", "DivVel" );
 
-   const int MachDumpIdx   = ( OPT__OUTPUT_MACH   ) ? NFieldStored++ : -1;
+   const int MachDumpIdx   = ( OPT__OUTPUT_MACH ) ? NFieldStored++ : NoDump;
    if ( MachDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
    if ( OPT__OUTPUT_MACH   )  sprintf( FieldLabelOut[MachDumpIdx  ], "%s", "Mach"   );
 #  endif
 
 #  ifdef MHD
-   const int DivMagDumpIdx = ( OPT__OUTPUT_DIVMAG ) ? NFieldStored++ : -1;
+   const int DivMagDumpIdx = ( OPT__OUTPUT_DIVMAG ) ? NFieldStored++ : NoDump;
    if ( DivMagDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
    if ( OPT__OUTPUT_DIVMAG )  sprintf( FieldLabelOut[DivMagDumpIdx], "%s", "DivMag" );
 #  endif
 
-   const int UserDumpIdx0 = ( OPT__OUTPUT_USER_FIELD ) ? NFieldStored : -1;
+#  ifdef SRHD
+   const int LorentzDumpIdx = ( OPT__OUTPUT_LORENTZ ) ? NFieldStored++ : NoDump;
+   if ( LorentzDumpIdx >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_LORENTZ )  sprintf( FieldLabelOut[LorentzDumpIdx], "%s", "Lrtz" );
+
+   const int VelDumpIdx0 = ( OPT__OUTPUT_3VELOCITY ) ? NFieldStored : NoDump;
+   if ( VelDumpIdx0+2 >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_3VELOCITY )
+   {
+      NFieldStored += 3;
+      sprintf( FieldLabelOut[ VelDumpIdx0     ], "%s", "VelX" );
+      sprintf( FieldLabelOut[ VelDumpIdx0 + 1 ], "%s", "VelY" );
+      sprintf( FieldLabelOut[ VelDumpIdx0 + 2 ], "%s", "VelZ" );
+   }
+
+   const int EnthalpyDumpIdx = ( OPT__OUTPUT_ENTHALPY ) ? NFieldStored++ : NoDump;
+   if ( EnthalpyDumpIdx >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_ENTHALPY )  sprintf( FieldLabelOut[EnthalpyDumpIdx], "%s", "Enth" );
+#  endif // #ifdef SRHD
+
+   const int UserDumpIdx0 = ( OPT__OUTPUT_USER_FIELD ) ? NFieldStored : NoDump;
    if ( UserDumpIdx0+UserDerField_Num-1 >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
    if ( OPT__OUTPUT_USER_FIELD )
@@ -752,12 +777,13 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                      memcpy( FieldData[PID], amr->patch[ amr->PotSg[lv] ][lv][PID]->pot, FieldSizeOnePatch );
                }
-               else
+#              else
+               if ( false ) {}
 #              endif
 
 //             b. particle density on grids
 #              ifdef MASSIVE_PARTICLES
-               if ( v == ParDensDumpIdx )
+               else if ( v == ParDensDumpIdx )
                {
 //                we do not check minimum density here (just because it's unnecessary)
                   Prepare_PatchData( lv, Time[lv], FieldData[0][0][0], NULL, 0, amr->NPatchComma[lv][1]/8, PID0List,
@@ -765,12 +791,11 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                                      OPT__RHO_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                                      MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
                }
-               else
 #              endif
 
 //             c. cell-centered magnetic field
 #              ifdef MHD
-               if ( v >= CCMagDumpIdx0  &&  v < CCMagDumpIdx0+NCOMP_MAG )
+               else if ( v >= CCMagDumpIdx0  &&  v < CCMagDumpIdx0+NCOMP_MAG )
                {
                   const int Bv = v - CCMagDumpIdx0;
                   real CCMag_1Cell[NCOMP_MAG];
@@ -786,13 +811,12 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      FieldData[PID][k][j][i] = CCMag_1Cell[Bv];
                   }
                }
-               else
 #              endif
 
 //             d. derived fields
 #              if ( MODEL == HYDRO )
 //             d-1. gas pressure
-               if ( v == PresDumpIdx )
+               else if ( v == PresDumpIdx )
                {
 //                we do not check minimum pressure here
                   Prepare_PatchData( lv, Time[lv], FieldData[0][0][0], NULL, 0, amr->NPatchComma[lv][1]/8, PID0List,
@@ -800,10 +824,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                                      IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
                                      DE_Consistency_No );
                }
-               else
 
 //             d-2. gas temperature
-               if ( v == TempDumpIdx )
+               else if ( v == TempDumpIdx )
                {
                   const bool CheckMinTemp_No = false;
 
@@ -821,14 +844,15 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #                    endif
                      Temp = Hydro_Con2Temp( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                                             CheckMinTemp_No, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
+                                            EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                             EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                      FieldData[PID][k][j][i] = Temp;
                   }
                } // if ( v == TempDumpIdx )
-               else
 
+#              ifndef SRHD
 //             d-3. gas entropy
-               if ( v == EntrDumpIdx )
+               else if ( v == EntrDumpIdx )
                {
                   const bool CheckMinEntr_No = false;
 
@@ -850,10 +874,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      FieldData[PID][k][j][i] = Entr;
                   }
                } // if ( v == EntrDumpIdx )
-               else
+#              endif
 
 //             d-4. sound speed
-               if ( v == CsDumpIdx )
+               else if ( v == CsDumpIdx )
                {
                   const bool CheckMinPres_No = false;
 
@@ -869,18 +893,29 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #                    ifdef MHD
                      Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #                    endif
+
+#                    ifdef SRHD
+                     real Prim[NCOMP_TOTAL];
+                     Hydro_Con2Pri( u, Prim, (real)-HUGE_NUMBER, NULL_BOOL, NULL_INT, NULL,
+                                    NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
+                                    EoS_DensPres2Eint_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, NULL );
+
+                     Cs2 = EoS_DensPres2CSqr_CPUPtr( Prim[0], Prim[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#                    else
                      Pres = Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                                             CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
+                                            EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                             EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
                      Cs2  = EoS_DensPres2CSqr_CPUPtr( u[DENS], Pres, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                       h_EoS_Table );
+#                    endif
                      FieldData[PID][k][j][i] = SQRT( Cs2 );
                   }
                } // if ( v == CsDumpIdx )
-               else
 
 //             d-5. divergence(velocity)
-               if ( v == DivVelDumpIdx )
+               else if ( v == DivVelDumpIdx )
                {
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                   {
@@ -913,10 +948,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      }
                   } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                } // if ( v == DivVelDumpIdx )
-               else
 
 //             d-6. Mach number
-               if ( v == MachDumpIdx )
+               else if ( v == MachDumpIdx )
                {
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                   {
@@ -955,12 +989,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      } // for (int LocalID=0; LocalID<8; LocalID++)
                   } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                } // if ( v == MachDumpIdx )
-               else
-#              endif // #if ( MODEL == HYDRO )
 
 //             d-7. divergence(B field)
 #              ifdef MHD
-               if ( v == DivMagDumpIdx )
+               else if ( v == DivMagDumpIdx )
                {
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                   for (int k=0; k<PS1; k++)
@@ -971,12 +1003,58 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      FieldData[PID][k][j][i] = DivB;
                   }
                }
-               else
 #              endif
 
-//             d-8. user-defined derived fields
-//             the following check also works for OPT__OUTPUT_USER_FIELD==false since UserDerField_Num is initialized as -1
-               if ( v >= UserDumpIdx0  &&  v < UserDumpIdx0 + UserDerField_Num )
+#              ifdef SRHD
+               else if (  ( v >= VelDumpIdx0 && v < VelDumpIdx0+3 )  ||  v == LorentzDumpIdx )
+               {
+                  const int vv = v - VelDumpIdx0 + 1;
+                  real Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL], LorentzFactor;
+
+                  for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+                     for (int fv=0; fv<NCOMP_TOTAL; fv++)  Cons[fv] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[fv][k][j][i];
+
+                     Hydro_Con2Pri( Cons, Prim, (real)-HUGE_NUMBER, false, NULL_INT, NULL,
+                                    NULL_BOOL, (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
+
+//                   d-8. Lorentz factor
+                     if      ( v == LorentzDumpIdx )
+                        FieldData[PID][k][j][i] = LorentzFactor;
+
+//                   d-9. 3-velocity
+                     else if ( v >= VelDumpIdx0  &&  v < VelDumpIdx0+3 )
+                        FieldData[PID][k][j][i] = Prim[vv] / LorentzFactor;
+                  }
+               }
+
+//             d-10. reduced enthalpy
+               else if ( v == EnthalpyDumpIdx )
+               {
+                  real Cons[NCOMP_TOTAL], HTilde;
+
+                  for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+                     for (int fv=0; fv<NCOMP_TOTAL; fv++)  Cons[fv] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[fv][k][j][i];
+
+                     HTilde = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                     FieldData[PID][k][j][i] = HTilde;
+                  }
+               }
+#              endif // #ifdef SRHD
+#              endif // #if ( MODEL == HYDRO )
+
+//             d-11. user-defined derived fields
+//             the following check also works for OPT__OUTPUT_USER_FIELD==false since UserDerField_Num is initialized as 0
+               else if ( v >= UserDumpIdx0  &&  v < UserDumpIdx0 + UserDerField_Num )
                {
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                   {
@@ -1023,10 +1101,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      } // for (int LocalID=0; LocalID<8; LocalID++)
                   } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                } // if ( v >= UserDumpIdx0  &&  v < UserDumpIdx0 + UserDerField_Num )
-               else
 
 //             e. fluid variables
-               if ( v >= FluDumpIdx0  &&  v < FluDumpIdx0+NCOMP_TOTAL )
+               else if ( v >= FluDumpIdx0  &&  v < FluDumpIdx0+NCOMP_TOTAL )
                {
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                      memcpy( FieldData[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
@@ -1418,7 +1495,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2472;
+   KeyInfo.FormatVersion        = 2473;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1453,6 +1530,11 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    KeyInfo.Magnetohydrodynamics = 1;
 #  else
    KeyInfo.Magnetohydrodynamics = 0;
+#  endif
+#  ifdef SRHD
+   KeyInfo.SRHydrodynamics      = 1;
+#  else
+   KeyInfo.SRHydrodynamics      = 0;
 #  endif
 #  ifdef COSMIC_RAY
    KeyInfo.CosmicRay            = 1;
@@ -1690,6 +1772,12 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.Magnetohydrodynamics   = 1;
 #  else
    Makefile.Magnetohydrodynamics   = 0;
+#  endif
+
+#  ifdef SRHD
+   Makefile.SRHydrodynamics        = 1;
+#  else
+   Makefile.SRHydrodynamics        = 0;
 #  endif
 
    Makefile.EoS                    = EOS;
@@ -2150,6 +2238,10 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  ifdef MHD
    InputPara.Opt__Flag_Current       = OPT__FLAG_CURRENT;
 #  endif
+#  ifdef SRHD
+   InputPara.Dt__SpeedOfLight        = DT__SPEED_OF_LIGHT;
+   InputPara.Opt__Flag_LrtzGradient  = OPT__FLAG_LRTZ_GRADIENT;
+#  endif
 #  ifdef COSMIC_RAY
    InputPara.Opt__Flag_CRay          = OPT__FLAG_CRAY;
 #  endif
@@ -2454,6 +2546,11 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  ifdef MHD
    InputPara.Opt__Output_DivMag          = OPT__OUTPUT_DIVMAG;
 #  endif
+#  ifdef SRHD
+   InputPara.Opt__Output_3Velocity       = OPT__OUTPUT_3VELOCITY;
+   InputPara.Opt__Output_Lorentz         = OPT__OUTPUT_LORENTZ;
+   InputPara.Opt__Output_Enthalpy        = OPT__OUTPUT_ENTHALPY;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
    InputPara.Opt__Output_UserField       = OPT__OUTPUT_USER_FIELD;
    InputPara.Opt__Output_Mode            = OPT__OUTPUT_MODE;
@@ -2522,6 +2619,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
       InputPara.FlagTable_Jeans       [lv]    = FlagTable_Jeans       [lv];
 #     ifdef MHD
       InputPara.FlagTable_Current     [lv]    = FlagTable_Current     [lv];
+#     endif
+#     ifdef SRHD
+      InputPara.FlagTable_LrtzGradient[lv]    = FlagTable_LrtzGradient[lv];
 #     endif
 #     ifdef COSMIC_RAY
       InputPara.FlagTable_CRay        [lv]    = FlagTable_CRay        [lv];
@@ -2601,6 +2701,7 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "CellScale",            HOFFSET(KeyInfo_t,CellScale           ), H5_TypeID_Arr_NLvInt    );
 #  if ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Magnetohydrodynamics", HOFFSET(KeyInfo_t,Magnetohydrodynamics), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "SRHydrodynamics",      HOFFSET(KeyInfo_t,SRHydrodynamics),      H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "CosmicRay",            HOFFSET(KeyInfo_t,CosmicRay),            H5T_NATIVE_INT          );
 #  endif
 
@@ -2706,6 +2807,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 #  endif
    H5Tinsert( H5_TypeID, "DualEnergy",             HOFFSET(Makefile_t,DualEnergy             ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Magnetohydrodynamics",   HOFFSET(Makefile_t,Magnetohydrodynamics   ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "SRHydrodynamics",        HOFFSET(Makefile_t,SRHydrodynamics        ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "CosmicRay",              HOFFSET(Makefile_t,CosmicRay              ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "EoS",                    HOFFSET(Makefile_t,EoS                    ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "BarotropicEoS",          HOFFSET(Makefile_t,BarotropicEoS          ), H5T_NATIVE_INT );
@@ -3031,6 +3133,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Dt__ParVelMax",           HOFFSET(InputPara_t,Dt__ParVelMax          ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Dt__ParAcc",              HOFFSET(InputPara_t,Dt__ParAcc             ), H5T_NATIVE_DOUBLE  );
 #  endif
+#  ifdef SRHD
+   H5Tinsert( H5_TypeID, "Dt__SpeedOfLight",        HOFFSET(InputPara_t,Dt__SpeedOfLight       ), H5T_NATIVE_INT     );
+#  endif
 #  ifdef CR_DIFFUSION
    H5Tinsert( H5_TypeID, "Dt__CR_Diffusion",        HOFFSET(InputPara_t,Dt__CR_Diffusion       ), H5T_NATIVE_DOUBLE  );
 #  endif
@@ -3068,6 +3173,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Flag_Jeans",         HOFFSET(InputPara_t,Opt__Flag_Jeans        ), H5T_NATIVE_INT     );
 #  ifdef MHD
    H5Tinsert( H5_TypeID, "Opt__Flag_Current",       HOFFSET(InputPara_t,Opt__Flag_Current      ), H5T_NATIVE_INT     );
+#  endif
+#  ifdef SRHD
+   H5Tinsert( H5_TypeID, "Opt__Flag_LrtzGradient",  HOFFSET(InputPara_t,Opt__Flag_LrtzGradient ), H5T_NATIVE_INT     );
 #  endif
 #  ifdef COSMIC_RAY
    H5Tinsert( H5_TypeID, "Opt__Flag_CRay",          HOFFSET(InputPara_t,Opt__Flag_CRay         ), H5T_NATIVE_INT     );
@@ -3364,6 +3472,11 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  ifdef MHD
    H5Tinsert( H5_TypeID, "Opt__Output_DivMag",          HOFFSET(InputPara_t,Opt__Output_DivMag         ), H5T_NATIVE_INT              );
 #  endif
+#  ifdef SRHD
+   H5Tinsert( H5_TypeID, "Opt__Output_3Velocity",       HOFFSET(InputPara_t,Opt__Output_3Velocity      ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Lorentz",         HOFFSET(InputPara_t,Opt__Output_Lorentz        ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Enthalpy",        HOFFSET(InputPara_t,Opt__Output_Enthalpy       ), H5T_NATIVE_INT              );
+#  endif
 #  endif // #if ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Opt__Output_UserField",       HOFFSET(InputPara_t,Opt__Output_UserField      ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Mode",            HOFFSET(InputPara_t,Opt__Output_Mode           ), H5T_NATIVE_INT              );
@@ -3434,6 +3547,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "FlagTable_Jeans",        HOFFSET(InputPara_t,FlagTable_Jeans         ), H5_TypeID_Arr_NLvM1Double   );
 #  ifdef MHD
    H5Tinsert( H5_TypeID, "FlagTable_Current",      HOFFSET(InputPara_t,FlagTable_Current       ), H5_TypeID_Arr_NLvM1Double   );
+#  endif
+#  ifdef SRHD
+   H5Tinsert( H5_TypeID, "FlagTable_LrtzGradient", HOFFSET(InputPara_t,FlagTable_LrtzGradient  ), H5_TypeID_Arr_NLvM1Double   );
 #  endif
 #  ifdef COSMIC_RAY
    H5Tinsert( H5_TypeID, "FlagTable_CRay",         HOFFSET(InputPara_t,FlagTable_CRay          ), H5_TypeID_Arr_NLvM1Double   );
