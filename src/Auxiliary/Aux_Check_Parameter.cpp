@@ -951,6 +951,12 @@ void Aux_Check_Parameter()
 
    if ( AUTO_REDUCE_DT )
       Aux_Message( stderr, "WARNING : AUTO_REDUCE_DT currently has no effect on SRHD !!\n" );
+
+   if ( !OPT__OUTPUT_TEMP )
+      Aux_Message( stderr, "WARNING : OPT__OUTPUT_TEMP is off, which will make most SRHD fields in yt unavailable !!\n" );
+
+   if ( !OPT__OUTPUT_ENTHALPY )
+      Aux_Message( stderr, "WARNING : OPT__OUTPUT_ENTHALPY is off, which will make most SRHD fields in yt unavailable !!\n" );
 #  endif // #ifdef SRHD
    } // if ( MPI_Rank == 0 )
 
