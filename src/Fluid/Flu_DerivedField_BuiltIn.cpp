@@ -174,16 +174,16 @@ void Flu_DerivedField_Mach( real Out[], const real FluIn[], const real MagIn[], 
 #     endif
 
 #     ifdef SRHD
-      real Prim[NCOMP_TOTAL], FourCs, U, Cs;
+      real Prim[NCOMP_TOTAL], FourCs2, U2;
       Hydro_Con2Pri( fluid, Prim, MIN_PRES, NULL_BOOL, NULL_INT, NULL,
                      NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
                      EoS_DensPres2Eint_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                      EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, NULL );
 
-      Cs     = SQRT(  EoS_DensPres2CSqr_CPUPtr( Prim[0], Prim[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table )  );
-      FourCs = Cs / SQRT( (real)1.0 - Cs*Cs );
-      U      = SQRT( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) );
-      Mach   = SQRT( U / FourCs );
+      Cs2     = EoS_DensPres2CSqr_CPUPtr( Prim[0], Prim[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      FourCs2 = Cs2 / ( (real)1.0 - Cs2 );
+      U2      = SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]);
+      Mach    = SQRT( U2 / FourCs2 );
 
 #     else // #ifdef SRHD
 
