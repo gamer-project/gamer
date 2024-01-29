@@ -10,7 +10,7 @@ void Par_Init_Attribute_User_Template();
 void (*Par_Init_Attribute_User_Ptr)() = NULL;
 
 
-static int NDefinedAtt;    // total number of defined attributes --> for debug only
+static int NDefinedAtt;    // total number of defined attributes
 
 
 

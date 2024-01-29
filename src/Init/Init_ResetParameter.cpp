@@ -451,7 +451,12 @@ void Init_ResetParameter()
 #  if ( MODEL == HYDRO )
    if ( OPT__1ST_FLUX_CORR < 0 )
    {
-#     ifdef MHD
+#     ifdef SRHD
+      OPT__1ST_FLUX_CORR = FIRST_FLUX_CORR_NONE;
+
+      PRINT_RESET_PARA( OPT__1ST_FLUX_CORR, FORMAT_INT, "for SRHD" );
+
+#     elif ( defined MHD )
       OPT__1ST_FLUX_CORR = FIRST_FLUX_CORR_3D;
 
       PRINT_RESET_PARA( OPT__1ST_FLUX_CORR, FORMAT_INT, "for MHD" );
@@ -465,7 +470,7 @@ void Init_ResetParameter()
 #     endif
 
       PRINT_RESET_PARA( OPT__1ST_FLUX_CORR, FORMAT_INT, "for HYDRO" );
-#     endif // #ifdef MHD ... else ...
+#     endif // #ifdef SRHD ... elif MHD ... else ...
    }
 
    if      ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_NONE )

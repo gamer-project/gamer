@@ -35,6 +35,7 @@ double              *FlagTable_User       [NLEVEL-1];
 double              *DumpTable = NULL;
 int                  DumpTable_NDump;
 int                 *UM_IC_RefineRegion = NULL;
+long                 FixUpVar_Flux, FixUpVar_Restrict;
 int                  PassiveNorm_NVar, PassiveNorm_VarIdx[NCOMP_PASSIVE];
 int                  PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 int                  StrLen_Flt;
@@ -113,6 +114,14 @@ double               UNIT_B;
 bool                 OPT__SAME_INTERFACE_B;
 
 OptInitMagByVecPot_t OPT__INIT_BFIELD_BYVECPOT;
+#endif
+#ifdef SRHD
+double               FlagTable_LrtzGradient[NLEVEL-1];
+bool                 DT__SPEED_OF_LIGHT;
+bool                 OPT__FLAG_LRTZ_GRADIENT;
+bool                 OPT__OUTPUT_LORENTZ;
+bool                 OPT__OUTPUT_3VELOCITY;
+bool                 OPT__OUTPUT_ENTHALPY;
 #endif
 
 #elif ( MODEL == ELBDM )
@@ -242,6 +251,9 @@ double EoS_AuxArray_Flt[EOS_NAUX_MAX];
 int    EoS_AuxArray_Int[EOS_NAUX_MAX];
 
 // b. function pointers
+EoS_GUESS_t   EoS_GuessHTilde_CPUPtr   = NULL;
+EoS_H2TEM_t   EoS_HTilde2Temp_CPUPtr   = NULL;
+EoS_TEM2H_t   EoS_Temp2HTilde_CPUPtr   = NULL;
 EoS_DE2P_t    EoS_DensEint2Pres_CPUPtr = NULL;
 EoS_DP2E_t    EoS_DensPres2Eint_CPUPtr = NULL;
 EoS_DP2C_t    EoS_DensPres2CSqr_CPUPtr = NULL;
@@ -253,6 +265,9 @@ EoS_GENE_t    EoS_General_CPUPtr       = NULL;
 EoS_CRE2CRP_t EoS_CREint2CRPres_CPUPtr = NULL;
 #endif
 #ifdef GPU
+EoS_GUESS_t   EoS_GuessHTilde_GPUPtr   = NULL;
+EoS_H2TEM_t   EoS_HTilde2Temp_GPUPtr   = NULL;
+EoS_TEM2H_t   EoS_Temp2HTilde_GPUPtr   = NULL;
 EoS_DE2P_t    EoS_DensEint2Pres_GPUPtr = NULL;
 EoS_DP2E_t    EoS_DensPres2Eint_GPUPtr = NULL;
 EoS_DP2C_t    EoS_DensPres2CSqr_GPUPtr = NULL;
@@ -280,7 +295,7 @@ int        Src_User_AuxArray_Int[SRC_NAUX_USER];
 
 // (2-11) user-defined derived fields
 bool OPT__OUTPUT_USER_FIELD;
-int  UserDerField_Num                  = -1;    // must be negative for Output_DumpData_Total_HDF5()
+int  UserDerField_Num                  = 0;     // must be zero for Output_DumpData_Total_HDF5()
 char (*UserDerField_Label)[MAX_STRING] = NULL;
 char (*UserDerField_Unit )[MAX_STRING] = NULL;
 

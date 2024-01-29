@@ -391,7 +391,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 // TVarCCIdxList_Flu: list recording the target cell-centered fluid and passive variable indices (e.g., [0 ... NCOMP_TOTAL-1] )
 // TVarCCList_Der   : list recording the target cell-centered derived variable (e.g., _VELX, _PRES)
 // TVarFCIdxList    : list recording the target face-centered variable indices (e.g., [0 ... NCOMP_MAG-1])
-   int NTSib[26], *TSib[26], NVarCC_Flu, NVarCC_Der, NVarCC_Tot, TVarCCIdxList_Flu[NCOMP_TOTAL];
+   const int NVarCC_Der_Max = 20;   // increase it when the maximum number of derived fields exceeds it
+   long TVarCCList_Der[NVarCC_Der_Max];
+   int  NTSib[26], *TSib[26], NVarCC_Flu, NVarCC_Der, NVarCC_Tot, TVarCCIdxList_Flu[NCOMP_TOTAL];
 
 // set up the target sibling indices for InterpolateGhostZone()
    SetTargetSibling( NTSib, TSib );
@@ -406,9 +408,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    NVarCC_Der = 0;
 
 #  if   ( MODEL == HYDRO )
-   const int NVarCC_Der_Max = 9;
-   long TVarCCList_Der[NVarCC_Der_Max];
-
    if ( PrepVx      )   TVarCCList_Der[ NVarCC_Der ++ ] = _VELX;
    if ( PrepVy      )   TVarCCList_Der[ NVarCC_Der ++ ] = _VELY;
    if ( PrepVz      )   TVarCCList_Der[ NVarCC_Der ++ ] = _VELZ;
@@ -424,12 +423,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
-   const int NVarCC_Der_Max = 0;
-   long *TVarCCList_Der = NULL;
 
 #  else
 #  error : unsupported MODEL !!
 #  endif
+
+   if ( NVarCC_Der > NVarCC_Der_Max )  Aux_Error( ERROR_INFO, "NVarCC_Der (%d) > NVarCC_Der_Max (%d) !!\n", NVarCC_Der, NVarCC_Der_Max );
 
    NVarCC_Tot = NVarCC_Flu + NVarCC_Der;
 
@@ -965,7 +964,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   Data1PG_CC_Ptr[Idx1] = Hydro_Con2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                          FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
                                                          (MinPres>=(real)0.0), MinPres, Emag,
-                                                         EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                         EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                         EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                          h_EoS_Table, NULL );
 
                   if ( FluIntTime ) // temporal interpolation
@@ -982,7 +982,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                       + FluWeighting_IntT*Hydro_Con2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                           FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
                                                           (MinPres>=(real)0.0), MinPres, Emag,
-                                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                          EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                          EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                           h_EoS_Table, NULL );
                   }
 
@@ -1009,8 +1010,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   Data1PG_CC_Ptr[Idx1] = Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                          FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
                                                          (MinTemp>=(real)0.0), MinTemp, Emag,
-                                                         EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                                         h_EoS_Table );
+                                                         EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                         EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
@@ -1026,8 +1027,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                       + FluWeighting_IntT*Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                           FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
                                                           (MinTemp>=(real)0.0), MinTemp, Emag,
-                                                          EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                                          h_EoS_Table );
+                                                          EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                   }
 
                   Idx1 ++;
@@ -1036,6 +1037,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                Data1PG_CC_Ptr += PGSize3D_CC;
             } // if ( PrepTemp )
 
+#           ifndef SRHD
             if ( PrepEntr )
             {
                for (int k=0; k<PS1; k++)  {  K    = k + Disp_k;
@@ -1079,6 +1081,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
                Data1PG_CC_Ptr += PGSize3D_CC;
             } // if ( PrepEntr )
+#           endif // #ifndef SRHD
 
 #           ifdef MHD
             if ( PrepMagCC )
@@ -1365,7 +1368,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         Data1PG_CC_Ptr[Idx1] = Hydro_Con2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                                FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
                                                                (MinPres>=(real)0.0), MinPres, Emag,
-                                                               EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                               EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                               EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                                h_EoS_Table, NULL );
 
                         if ( FluIntTime ) // temporal interpolation
@@ -1382,7 +1386,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                             + FluWeighting_IntT*Hydro_Con2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                                 FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
                                                                 (MinPres>=(real)0.0), MinPres, Emag,
-                                                                EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                                EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                                EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                                 h_EoS_Table, NULL );
                         }
 
@@ -1409,8 +1414,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         Data1PG_CC_Ptr[Idx1] = Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                                FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
                                                                (MinTemp>=(real)0.0), MinTemp, Emag,
-                                                               EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                                               h_EoS_Table );
+                                                               EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
@@ -1426,8 +1431,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                             + FluWeighting_IntT*Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                                 FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
                                                                 (MinTemp>=(real)0.0), MinTemp, Emag,
-                                                                EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                                                h_EoS_Table );
+                                                                EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                         }
 
                         Idx1 ++;
@@ -1436,6 +1441,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      Data1PG_CC_Ptr += PGSize3D_CC;
                   } // if ( PrepTemp )
 
+#                 ifndef SRHD
                   if ( PrepEntr )
                   {
                      for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
@@ -1479,6 +1485,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
                      Data1PG_CC_Ptr += PGSize3D_CC;
                   } // if ( PrepEntr )
+#                endif // #ifndef SRHD
 
 #                 ifdef MHD
                   if ( PrepMagCC )
@@ -1835,7 +1842,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                    endif
 
                      case BC_FLU_USER:
-                        Flu_BoundaryCondition_User        ( Data1PG_CC_Ptr,                      NVarCC_Flu,
+                        Flu_BoundaryCondition_User        ( Data1PG_CC_Ptr,                      NVarCC_Flu,            GhostSize,
                                                             PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
                                                             TVarCCIdxList_Flu, PrepTime, dh, xyz0, TVarCC, lv );
                      break;

@@ -168,6 +168,12 @@ void Aux_TakeNote()
       fprintf( Note, "MHD                             OFF\n" );
 #     endif
 
+#     ifdef SRHD
+      fprintf( Note, "SRHD                            ON\n" );
+#     else
+      fprintf( Note, "SRHD                            OFF\n" );
+#     endif
+
 #     ifdef COSMIC_RAY
       fprintf( Note, "COSMIC_RAY                      ON\n" );
 #     ifdef CR_DIFFUSION
@@ -185,6 +191,8 @@ void Aux_TakeNote()
       fprintf( Note, "EOS                             EOS_ISOTHERMAL\n" );
 #     elif ( EOS == EOS_NUCLEAR )
       fprintf( Note, "EOS                             EOS_NUCLEAR\n" );
+#     elif ( EOS == EOS_TAUBMATHEWS )
+      fprintf( Note, "EOS                             EOS_TAUBMATHEWS\n" );
 #     elif ( EOS == EOS_TABULAR )
       fprintf( Note, "EOS                             EOS_TABULAR\n" );
 #     elif ( EOS == EOS_COSMIC_RAY )
@@ -826,6 +834,9 @@ void Aux_TakeNote()
       fprintf( Note, "DT__MAX                        %14.7e\n",   DT__MAX                     );
       fprintf( Note, "DT__FLUID                       %13.7e\n",  DT__FLUID                   );
       fprintf( Note, "DT__FLUID_INIT                  %13.7e\n",  DT__FLUID_INIT              );
+#     ifdef SRHD
+      fprintf( Note, "DT__SPEED_OF_LIGHT              %d\n",      DT__SPEED_OF_LIGHT          );
+#     endif
 #     ifdef GRAVITY
       fprintf( Note, "DT__GRAVITY                     %13.7e\n",  DT__GRAVITY                 );
 #     endif
@@ -878,6 +889,9 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_JEANS                 %d\n",      OPT__FLAG_JEANS           );
 #     ifdef MHD
       fprintf( Note, "OPT__FLAG_CURRENT               %d\n",      OPT__FLAG_CURRENT         );
+#     endif
+#     ifdef SRHD
+      fprintf( Note, "OPT__FLAG_LRTZ_GRADIENT         %d\n",      OPT__FLAG_LRTZ_GRADIENT   );
 #     endif
 #     endif
 #     if ( MODEL == ELBDM )
@@ -1106,10 +1120,28 @@ void Aux_TakeNote()
       fprintf( Note, "FLU_GPU_NPGROUP                 %d\n",      FLU_GPU_NPGROUP          );
       fprintf( Note, "GPU_NSTREAM                     %d\n",      GPU_NSTREAM              );
       fprintf( Note, "OPT__FIXUP_FLUX                 %d\n",      OPT__FIXUP_FLUX          );
+
+//    target scalars to be applied fix-up flux operations
+      if ( OPT__FIXUP_FLUX ) {
+      fprintf( Note, "   Target fields               "                                     );
+      for (int v=0; v<NCOMP_TOTAL; v++)
+      if ( FixUpVar_Flux & (1L<<v) )
+      fprintf( Note, " %s",                                       FieldLabel[v]            );
+      fprintf( Note, "\n" ); }
+
 #     ifdef MHD
       fprintf( Note, "OPT__FIXUP_ELECTRIC             %d\n",      OPT__FIXUP_ELECTRIC      );
 #     endif
       fprintf( Note, "OPT__FIXUP_RESTRICT             %d\n",      OPT__FIXUP_RESTRICT      );
+
+//    target scalars to be applied fix-up restrict operations
+      if ( OPT__FIXUP_RESTRICT ) {
+      fprintf( Note, "   Target fields               "                                     );
+      for (int v=0; v<NCOMP_TOTAL; v++)
+      if ( FixUpVar_Restrict & (1L<<v) )
+      fprintf( Note, " %s",                                       FieldLabel[v]            );
+      fprintf( Note, "\n" ); }
+
       fprintf( Note, "OPT__CORR_AFTER_ALL_SYNC        %d\n",      OPT__CORR_AFTER_ALL_SYNC );
       fprintf( Note, "OPT__NORMALIZE_PASSIVE          %d\n",      OPT__NORMALIZE_PASSIVE   );
 
@@ -1405,6 +1437,11 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_DIVMAG              %d\n",      OPT__OUTPUT_DIVMAG          );
 #     endif
       fprintf( Note, "OPT__OUTPUT_USER_FIELD          %d\n",      OPT__OUTPUT_USER_FIELD      );
+#     ifdef SRHD
+      fprintf( Note, "OPT__OUTPUT_3VELOCITY           %d\n",      OPT__OUTPUT_3VELOCITY       );
+      fprintf( Note, "OPT__OUTPUT_LORENTZ             %d\n",      OPT__OUTPUT_LORENTZ         );
+      fprintf( Note, "OPT__OUTPUT_ENTHALPY            %d\n",      OPT__OUTPUT_ENTHALPY        );
+#     endif
 
 //    user-defined derived fields
       if ( OPT__OUTPUT_USER_FIELD ) {
@@ -1561,6 +1598,18 @@ void Aux_TakeNote()
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level             Current\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_Current[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+#     endif
+
+#     ifdef SRHD
+      if ( OPT__FLAG_LRTZ_GRADIENT )
+      {
+         fprintf( Note, "Flag Criterion (Lorentz Factor Gradient in SRHD)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level   Lorentz Factor Gradient\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%26.7e\n", lv, FlagTable_LrtzGradient[lv] );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }
