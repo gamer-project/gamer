@@ -155,6 +155,18 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
    }
 
 
+// record whether particle density is requested
+#  ifdef PARTICLE
+   bool NeedPar = false;
+   for (int p=0; p<NProf; p++) {
+      if ( TVarBitIdx[p] == _PAR_DENS  ||  TVarBitIdx[p] == _TOTAL_DENS ) {
+         NeedPar = true;
+         break;
+      }
+   }
+#  endif
+
+
 // initialize the profile objects
    for (int p=0; p<NProf; p++)
    {
@@ -289,6 +301,30 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
          SetTempIntPara( lv, FluSg0, PrepTime, amr->FluSgTime[lv][FluSg0], amr->FluSgTime[lv][1-FluSg0],
                          FluIntTime, FluSg, FluSg_IntT, FluWeighting, FluWeighting_IntT );
+
+
+//       initialize the particle density array (rho_ext) and collect particles to the target level
+#        ifdef PARTICLE
+         const bool TimingSendPar_No = false;
+         const bool JustCountNPar_No = false;
+#        ifdef LOAD_BALANCE
+         const bool PredictPos       = amr->Par->PredictPos;
+         const bool SibBufPatch      = true;
+         const bool FaSibBufPatch    = true;
+#        else
+         const bool PredictPos       = false;
+         const bool SibBufPatch      = NULL_BOOL;
+         const bool FaSibBufPatch    = NULL_BOOL;
+#        endif
+
+         if ( NeedPar )
+         {
+            Prepare_PatchData_InitParticleDensityArray( lv );
+
+            Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos,
+                                          PrepTime, SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
+         } // if ( NeedPar )
+#        endif // #ifdef PARTICLE
 
 
 //       use the "static" schedule for reproducibility
@@ -500,8 +536,19 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                } // for (int LocalID=0; LocalID<8; LocalID++)
             } // for (int p=0; p<NProf; p++)
          } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+
+//       free particle resources
+#        ifdef PARTICLE
+         if ( NeedPar )
+         {
+            Prepare_PatchData_FreeParticleDensityArray( lv );
+
+            Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
+         }
+#        endif
       } // for (int lv=MinLv; lv<=MaxLv; lv++)
 
+//    free per-thread arrays
       delete [] Patch_Data;
       delete [] Patch_Bin;
 

@@ -3008,7 +3008,8 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
 } // FUNCTION : SetTargetSibling
 
 
-#  ifdef MASSIVE_PARTICLES
+
+#ifdef MASSIVE_PARTICLES
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Prepare_PatchData_InitParticleDensityArray
 // Description :  Initialize rho_ext[] by setting rho_ext[0][0][0] = RHO_EXT_NEED_INIT
@@ -3042,7 +3043,8 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv )
 // Function    :  Prepare_PatchData_FreeParticleDensityArray
 // Description :  Free rho_ext[] allocated by Prepare_PatchData() temporarily for storing the partice mass density
 //
-// Note        :  1. Currently this function is called by Gra_AdvanceDt(), Main(), and Output_DumpData_Total()
+// Note        :  1. Currently this function is called by Gra_AdvanceDt(), Output_DumpData_Total(),
+//                   Output_DumpData_Total_HDF5(), Output_BasePowerSpectrum(), and Aux_ComputeProfile()
 //                2. Apply to buffer patches as well
 //                3. Do not free memory if OPT__REUSE_MEMORY is on
 //
