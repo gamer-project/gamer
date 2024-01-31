@@ -442,7 +442,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 // nothing to do if no target variable is found
    if ( NVarCC_Tot == 0  &&  NVarFC_Tot == 0  &&  MPI_Rank == 0 )
    {
-      Aux_Message( stderr, "WARNING : no target variable is found !!\n" );
+      Aux_Message( stderr, "WARNING : no target variable is found in %s() !!\n", __FUNCTION__ );
       return;
    }
 
