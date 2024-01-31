@@ -28,6 +28,9 @@ extern void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, 
 //                   --> Will support more weighting fields in the future
 //                5. Support computing multiple fields
 //                   --> The order of fields to be returned follows TVarBitIdx[]
+//                6. This routine is thread-unsafe when the temporal interpolation set by PrepTime and OPT__INT_TIME
+//                   are inconsistent with each other
+//                   --> But it shouldn't be a big issue since this routine itself has been parallelized with OpenMP
 //
 // Parameter   :  Prof        : Profile_t object array to store the results
 //                Center      : Target center coordinates
@@ -126,6 +129,12 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
         PatchType != PATCH_BOTH  &&  PatchType != PATCH_LEAF_PLUS_MAXNONLEAF )
       Aux_Error( ERROR_INFO, "incorrect PatchType (%d) !!\n", PatchType );
 
+#  ifdef OPENMP
+   if (  omp_in_parallel()  &&  ( (PrepTimeIn >= 0.0 && !OPT__INT_TIME) ||
+                                  (PrepTimeIn <  0.0 &&  OPT__INT_TIME) )  )
+      Aux_Error( ERROR_INFO, "this routine is thread-unsafe when the temporal interpolation set "
+                             "by PrepTimeIn and OPT__INT_TIME are inconsistent !!\n" );
+#  endif
 #  endif // #ifdef GAMER_DEBUG
 
 
@@ -213,6 +222,8 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 // temporarily overwrite OPT__INT_TIME
 // --> necessary because SetTempIntPara() called by Prepare_PatchData() relies on OPT__INT_TIME
 // --> must restore it before exiting this routine
+// --> note that modifying OPT__INT_TIME renders this routine thread-unsafe
+//###REVISE: make temporal interpolation a function parameter in Prepare_PatchData() to solve this thread-safety issue
    const bool IntTimeBackup = OPT__INT_TIME;
    OPT__INT_TIME = ( PrepTimeIn >= 0.0 ) ? true : false;
 
