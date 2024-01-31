@@ -174,8 +174,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 
 // check
-#  ifdef GAMER_DEBUG
-
+// --> do it even when disabling GAMER_DEBUG since this routine is critical and the check is inexpensive
    long AllVarCC = ( _TOTAL | _DERIVED );
 #  ifdef GRAVITY
    AllVarCC |= _POTE;
@@ -324,8 +323,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    if (  ( TVarCC & _ENTR )  &&  EoS_DensEint2Entr_CPUPtr == NULL )
       Aux_Error( ERROR_INFO, "EoS_DensEint2Entr_CPUPtr == NULL !!\n" );
 #  endif
-
-#  endif // #ifdef GAMER_DEBUG
 
 
    const double dh               = amr->dh[lv];
