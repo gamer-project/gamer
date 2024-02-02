@@ -2915,9 +2915,26 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv, const double Prep
          }
 
 #        ifdef DEBUG_PARTICLE
-         if ( NPar < 0 )   Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, PID %d) !!\n",
+         if ( NPar < 0 )
+         {
+            bool Pass = true;
+
+//          exclude buffer patches not adjacent to a real patch
+#           ifdef LOAD_BALANCE
+            for (int p=0; p<amr->Par->R2B_Buff_NPatchTotal[lv][0]; p++) {
+               if ( PID == amr->Par->R2B_Buff_PIDList[lv][0][p] ) {
+                  Pass = false;
+                  break;
+               }
+            }
+#           else
+            Pass = false;
+#           endif
+
+            if ( !Pass )   Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, PID %d) !!\n",
                                       NPar, lv, PID );
-#        endif
+         } // if ( NPar < 0 )
+#        endif // #ifdef DEBUG_PARTICLE
 
          if ( NPar > 0 )
          {
