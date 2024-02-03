@@ -50,6 +50,7 @@ bool Particle_Collected = false;
 //                   --> Do NOT collect particle indices
 //                       --> ParList_Copy will NOT be allocated
 //                   --> Particle count is stored in NPar_Copy
+//                9. Only the master thread in OpenMP is allowed to call this routine
 //
 // Parameter   :  FaLv          : Target refinement leve
 //                AttBitIdx     : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
@@ -73,6 +74,13 @@ void Par_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, const b
                                    const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
                                    const bool TimingSendPar )
 {
+
+// check
+#  ifdef OPENMP
+   const int TID = omp_get_thread_num();
+   if ( TID != 0 )   Aux_Error( ERROR_INFO, "only the master thread is allowed to call %s() (thread ID %d) !!\n", __FUNCTION__, TID );
+#  endif
+
 
 // set this flag to true to indicate that this function has been called
 // --> must be set before invoking the load-balance alternative routine Par_LB_CollectParticle2OneLevel()
@@ -178,6 +186,7 @@ void Par_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, const b
 // Note        :  1. Invoded by Gra_AdvanceDt (and Main when DEBUG is on)
 //                2. For LOAD_BALANCE, this function will call the alternative function
 //                   "Par_LB_CollectParticle2OneLevel_FreeMemory"
+//                3. Only the master thread in OpenMP is allowed to call this routine
 //
 // Parameter   :  FaLv          : Target refinement leve
 //                SibBufPatch   : true --> Release memory for sibling-buffer patches at FaLv as well (for LOAD_BALANCE only)
@@ -188,6 +197,13 @@ void Par_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, const b
 //-------------------------------------------------------------------------------------------------------
 void Par_CollectParticle2OneLevel_FreeMemory( const int FaLv, const bool SibBufPatch, const bool FaSibBufPatch )
 {
+
+// check
+#  ifdef OPENMP
+   const int TID = omp_get_thread_num();
+   if ( TID != 0 )   Aux_Error( ERROR_INFO, "only the master thread is allowed to call %s() (thread ID %d) !!\n", __FUNCTION__, TID );
+#  endif
+
 
 // set this flag to false to indicate that Par_CollectParticle2OneLevel() has NOT been called
 // --> must be set before invoking the load-balance alternative routine Par_LB_CollectParticle2OneLevel_FreeMemory()

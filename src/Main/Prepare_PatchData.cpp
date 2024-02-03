@@ -2854,6 +2854,7 @@ extern bool Particle_Collected;
 //                   approach, would prevent from applying OpenMP parallelization *outside* Prepare_PatchData().
 //                   This is the major reason why we switch to pre-compute rho_ext[] of all patches here instead of in
 //                   Prepare_PatchData().
+//                9. Only the master thread in OpenMP is allowed to call this routine
 //
 // Parameter   :  lv       : Target refinement level
 //                PrepTime : Target physical time for predicting particle position
@@ -2865,6 +2866,11 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv, const double Prep
 // check
    if ( ! Particle_Collected )
       Aux_Error( ERROR_INFO, "must call Par_CollectParticle2OneLevel() in advance !!\n" );
+
+#  ifdef OPENMP
+   const int TID = omp_get_thread_num();
+   if ( TID != 0 )   Aux_Error( ERROR_INFO, "only the master thread is allowed to call %s() (thread ID %d) !!\n", __FUNCTION__, TID );
+#  endif
 
 
 // constant settings used by Par_MassAssignment()
@@ -2999,11 +3005,17 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv, const double Prep
 //                2. Apply to buffer patches as well
 //                3. Do not free memory if OPT__REUSE_MEMORY is on
 //                   --> rho_ext[] will only be free'd together with other data arrays (e.g., fluid, pot)
+//                4. Only the master thread in OpenMP is allowed to call this routine
 //
 // Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
 void Prepare_PatchData_FreeParticleDensityArray( const int lv )
 {
+
+#  ifdef OPENMP
+   const int TID = omp_get_thread_num();
+   if ( TID != 0 )   Aux_Error( ERROR_INFO, "only the master thread is allowed to call %s() (thread ID %d) !!\n", __FUNCTION__, TID );
+#  endif
 
 // free memory for all patches (both real and buffer) if OPT__REUSE_MEMORY is off
    if ( ! OPT__REUSE_MEMORY ) {
