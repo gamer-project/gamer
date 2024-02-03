@@ -219,6 +219,19 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
    Aux_AllocateArray3D( OMP_Weight, NProf, NT, Prof[0]->NBin );
    Aux_AllocateArray3D( OMP_NCell,  NProf, NT, Prof[0]->NBin );
 
+// initialize profile arrays
+   for (int p=0; p<NProf; p++)
+   for (int t=0; t<NT; t++)
+   for (int b=0; b<Prof[0]->NBin; b++)
+   {
+      OMP_Data  [p][t][b] = 0.0;
+      OMP_Weight[p][t][b] = 0.0;
+      OMP_NCell [p][t][b] = 0;
+   }
+
+   real (*Patch_Data)[8][PS1][PS1][PS1] = new real [NT][8][PS1][PS1][PS1];  // field data of each cell
+   int  (*Patch_Bin )[8][PS1][PS1][PS1] = new int  [NT][8][PS1][PS1][PS1];  // radial bin of each cell
+
 
 // set global constants
    const double r_max2         = SQR( Prof[0]->MaxRadius );
@@ -258,74 +271,60 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 #  endif
 
 
-// different OpenMP threads and MPI processes first compute profiles independently
-// --> their data will be combined later
-#  pragma omp parallel
+// loop over all target levels
+   for (int lv=MinLv; lv<=MaxLv; lv++)
    {
-#     ifdef OPENMP
-      const int TID = omp_get_thread_num();
+      const double dh = amr->dh[lv];
+      const double dv = CUBE( dh );
+
+
+//    determine the temporal interpolation parameters
+//    --> mainly for computing cell mass for weighting; Prepare_PatchData() needs PrepTime
+      const int    FluSg0 = amr->FluSg[lv];
+      const double PrepTime = ( PrepTimeIn >= 0.0 ) ? PrepTimeIn : amr->FluSgTime[lv][FluSg0];
+
+      bool FluIntTime;
+      int  FluSg, FluSg_IntT;
+      real FluWeighting, FluWeighting_IntT;
+
+      SetTempIntPara( lv, FluSg0, PrepTime, amr->FluSgTime[lv][FluSg0], amr->FluSgTime[lv][1-FluSg0],
+                      FluIntTime, FluSg, FluSg_IntT, FluWeighting, FluWeighting_IntT );
+
+
+//    initialize the particle density array (rho_ext) and collect particles to the target level
+#     ifdef PARTICLE
+      const bool TimingSendPar_No = false;
+      const bool JustCountNPar_No = false;
+#     ifdef LOAD_BALANCE
+      const bool PredictPos       = amr->Par->PredictPos;
+      const bool SibBufPatch      = true;
+      const bool FaSibBufPatch    = true;
 #     else
-      const int TID = 0;
+      const bool PredictPos       = false;
+      const bool SibBufPatch      = NULL_BOOL;
+      const bool FaSibBufPatch    = NULL_BOOL;
 #     endif
 
-//    initialize profile arrays
-      for (int p=0; p<NProf; p++)
-      for (int b=0; b<Prof[0]->NBin; b++)
+      if ( NeedPar )
       {
-         OMP_Data  [p][TID][b] = 0.0;
-         OMP_Weight[p][TID][b] = 0.0;
-         OMP_NCell [p][TID][b] = 0;
-      }
+//       these two routines should NOT be put inside an OpenMP parallel region
+         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos,
+                                       PrepTime, SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
+
+         Prepare_PatchData_InitParticleDensityArray( lv, PrepTime );
+      } // if ( NeedPar )
+#     endif // #ifdef PARTICLE
 
 
-//    allocate other per-thread arrays
-      real (*Patch_Data)[PS1][PS1][PS1] = new real [8][PS1][PS1][PS1];  // field data of each cell
-      int  (*Patch_Bin )[PS1][PS1][PS1] = new int  [8][PS1][PS1][PS1];  // radial bin of each cell
-
-
-//    loop over all target levels
-      for (int lv=MinLv; lv<=MaxLv; lv++)
+//    different OpenMP threads and MPI processes first compute profiles independently
+//    --> their data will be combined later
+#     pragma omp parallel
       {
-         const double dh = amr->dh[lv];
-         const double dv = CUBE( dh );
-
-
-//       determine the temporal interpolation parameters
-//       --> mainly for computing cell mass for weighting; Prepare_PatchData() needs PrepTime
-         const int    FluSg0 = amr->FluSg[lv];
-         const double PrepTime = ( PrepTimeIn >= 0.0 ) ? PrepTimeIn : amr->FluSgTime[lv][FluSg0];
-
-         bool FluIntTime;
-         int  FluSg, FluSg_IntT;
-         real FluWeighting, FluWeighting_IntT;
-
-         SetTempIntPara( lv, FluSg0, PrepTime, amr->FluSgTime[lv][FluSg0], amr->FluSgTime[lv][1-FluSg0],
-                         FluIntTime, FluSg, FluSg_IntT, FluWeighting, FluWeighting_IntT );
-
-
-//       initialize the particle density array (rho_ext) and collect particles to the target level
-#        ifdef PARTICLE
-         const bool TimingSendPar_No = false;
-         const bool JustCountNPar_No = false;
-#        ifdef LOAD_BALANCE
-         const bool PredictPos       = amr->Par->PredictPos;
-         const bool SibBufPatch      = true;
-         const bool FaSibBufPatch    = true;
+#        ifdef OPENMP
+         const int TID = omp_get_thread_num();
 #        else
-         const bool PredictPos       = false;
-         const bool SibBufPatch      = NULL_BOOL;
-         const bool FaSibBufPatch    = NULL_BOOL;
+         const int TID = 0;
 #        endif
-
-         if ( NeedPar )
-         {
-            Prepare_PatchData_InitParticleDensityArray( lv );
-
-            Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos,
-                                          PrepTime, SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
-         } // if ( NeedPar )
-#        endif // #ifdef PARTICLE
-
 
 //       use the "static" schedule for reproducibility
 #        pragma omp for schedule( static )
@@ -391,8 +390,8 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                      const int    bin = ( LogBin ) ? (  (r<dr_min) ? 0 : int( log(r/dr_min)/log(LogBinRatio) ) + 1  )
                                                    : int( r/dr_min );
 //                   prevent from round-off errors
-                     if ( bin >= Prof[0]->NBin )   Patch_Bin[LocalID][k][j][i] = CellSkip;
-                     else                          Patch_Bin[LocalID][k][j][i] = bin;
+                     if ( bin >= Prof[0]->NBin )   Patch_Bin[TID][LocalID][k][j][i] = CellSkip;
+                     else                          Patch_Bin[TID][LocalID][k][j][i] = bin;
 
 //                   check
 #                    ifdef GAMER_DEBUG
@@ -401,7 +400,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                   }
 
                   else
-                     Patch_Bin[LocalID][k][j][i] = CellSkip;
+                     Patch_Bin[TID][LocalID][k][j][i] = CellSkip;
                }}} // i,j,k
             } // for (int LocalID=0; LocalID<8; LocalID++)
 
@@ -441,7 +440,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                                                       else if ( dx < -HalfBox[0] )  {  dx += amr->BoxSize[0];  }
                                                    }
 
-                        if ( Patch_Bin[LocalID][k][j][i] == CellSkip )  continue;
+                        if ( Patch_Bin[TID][LocalID][k][j][i] == CellSkip )   continue;
 
                         const double r        = sqrt( SQR(dx) + SQR(dy) + SQR(dz) );
                         const real _Dens      =                  (real)1.0 / FluidPtr     [DENS][k][j][i];
@@ -456,7 +455,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                                               :                     ( FluidPtr     [MOMX][k][j][i]*dx +
                                                                       FluidPtr     [MOMY][k][j][i]*dy +
                                                                       FluidPtr     [MOMZ][k][j][i]*dz )*_Dens / r;
-                        Patch_Data[LocalID][k][j][i] = VelR;
+                        Patch_Data[TID][LocalID][k][j][i] = VelR;
                      }}} // i,j,k
                   } // for (int LocalID=0; LocalID<8; LocalID++)
                } // if ( TVarBitIdx[p] == _VELR )
@@ -472,7 +471,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                   const real MinEntr_No         = -1.0;
                   const bool DE_Consistency_Yes = true;
 
-                  Prepare_PatchData( lv, PrepTime, Patch_Data[0][0][0], NULL, NGhost, NPG, &PID0,
+                  Prepare_PatchData( lv, PrepTime, &Patch_Data[TID][0][0][0][0], NULL, NGhost, NPG, &PID0,
                                      TVarBitIdx[p], _NONE, INT_NONE, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No,
                                      OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
                                      DE_Consistency_Yes );
@@ -505,7 +504,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                   for (int j=0; j<PS1; j++)
                   for (int i=0; i<PS1; i++)
                   {
-                     if ( Patch_Bin[LocalID][k][j][i] == CellSkip )  continue;
+                     if ( Patch_Bin[TID][LocalID][k][j][i] == CellSkip )   continue;
 
 //                   compute the weight
                      real Weight;
@@ -527,32 +526,29 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
 
 //                   update the profile
-                     const int bin = Patch_Bin[LocalID][k][j][i];
+                     const int bin = Patch_Bin[TID][LocalID][k][j][i];
 
-                     OMP_Data  [p][TID][bin] += Patch_Data[LocalID][k][j][i]*Weight;
+                     OMP_Data  [p][TID][bin] += Patch_Data[TID][LocalID][k][j][i]*Weight;
                      OMP_Weight[p][TID][bin] += Weight;
                      OMP_NCell [p][TID][bin] ++;
                   } // i,j,k
                } // for (int LocalID=0; LocalID<8; LocalID++)
             } // for (int p=0; p<NProf; p++)
          } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+      } // OpenMP parallel region
 
-//       free particle resources
-#        ifdef PARTICLE
-         if ( NeedPar )
-         {
-            Prepare_PatchData_FreeParticleDensityArray( lv );
 
-            Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
-         }
-#        endif
-      } // for (int lv=MinLv; lv<=MaxLv; lv++)
+//    free particle resources
+//    --> these two routines should NOT be put inside an OpenMP parallel region
+#     ifdef PARTICLE
+      if ( NeedPar )
+      {
+         Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
 
-//    free per-thread arrays
-      delete [] Patch_Data;
-      delete [] Patch_Bin;
-
-   } // OpenMP parallel region
+         Prepare_PatchData_FreeParticleDensityArray( lv );
+      }
+#     endif
+   } // for (int lv=MinLv; lv<=MaxLv; lv++)
 
 
 // sum over all OpenMP threads
@@ -574,10 +570,14 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
       }
    }
 
+
 // free per-thread arrays
    Aux_DeallocateArray3D( OMP_Data );
    Aux_DeallocateArray3D( OMP_Weight );
    Aux_DeallocateArray3D( OMP_NCell );
+
+   delete [] Patch_Data;
+   delete [] Patch_Bin;
 
 
 // collect data from all ranks (in-place reduction)
