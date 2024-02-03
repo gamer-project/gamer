@@ -2855,6 +2855,9 @@ extern bool Particle_Collected;
 //                   This is the major reason why we switch to pre-compute rho_ext[] of all patches here instead of in
 //                   Prepare_PatchData().
 //                9. Only the master thread in OpenMP is allowed to call this routine
+//                   --> Also note that adding "#pragma omp master" when calling this routine may significantly impact
+//                       its performance since nested parallelism is disabled by default in Init_OpenMP()
+//                   --> Therefore, in general, we do not recommend calling this routine within an OpenMP parallel region
 //
 // Parameter   :  lv       : Target refinement level
 //                PrepTime : Target physical time for predicting particle position
