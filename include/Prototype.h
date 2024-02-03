@@ -677,7 +677,7 @@ void Par_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, const b
 void Par_CollectParticle2OneLevel_FreeMemory( const int FaLv, const bool SibBufPatch, const bool FaSibBufPatch );
 int  Par_Synchronize( const double SyncTime, const ParSync_t SyncOption );
 void Par_Synchronize_Restore( const double SyncTime );
-void Prepare_PatchData_InitParticleDensityArray( const int lv );
+void Prepare_PatchData_InitParticleDensityArray( const int lv, const double PrepTime );
 void Prepare_PatchData_FreeParticleDensityArray( const int lv );
 void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *ParPosY, real *ParPosZ,
                      const double TargetTime );

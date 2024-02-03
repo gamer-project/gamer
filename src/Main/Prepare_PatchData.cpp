@@ -21,10 +21,9 @@ static void MHD_SetFInterface( real *FInt_Data, real *FInt_Ptr[6], const real *D
                                const bool MagIntTime, const real MagWeighting, const real MagWeighting_IntT );
 #endif
 
-// flags for checking whether (1) Prepare_PatchData_InitParticleDensityArray() and (2) Par_CollectParticle2OneLevel()
-// are properly called before preparing either _PAR_DENS or _TOTAL_DENS
+// flag for checking whether Prepare_PatchData_InitParticleDensityArray() has been called
+// before preparing either _PAR_DENS or _TOTAL_DENS
 #ifdef PARTICLE
-bool Particle_Collected       = false;
 bool ParDensArray_Initialized = false;
 #endif
 
@@ -69,15 +68,10 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                   _FLUID (where _DENS may be replaced by _TOTAL_DENS) -> _PASSIVE -> _DERIVED --> _POTE --> _PAR_DENS
 //                   ** DERIVED must be prepared immediately after FLU and PASSIVE so that both FLU, PASSIVE, and DERIVED
 //                      can be prepared at the same time for the non-periodic BC. **
-//                7. For _PAR_DENS and _TOTAL_DENS (for PARTICLE only), the rho_ext[] arrays of patches at Lv=lv will be
-//                   allocated to store the partice mass density
-//                   --> amr->patch[0][lv][PID]->rho_ext
+//                7. For _PAR_DENS and _TOTAL_DENS (for PARTICLE only), the rho_ext[] arrays of patches at Lv=lv must be
+//                   pre-computed by calling Prepare_PatchData_InitParticleDensityArray() to store the partice mass density
+//                   --> amr->patch[0][lv][PID]->rho_ext[]
 //                   --> These arrays must be deallocated manually by calling Prepare_PatchData_FreeParticleDensityArray()
-//                       --> If OPT__REUSE_MEMORY is on, Prepare_PatchData_FreeParticleDensityArray() will NOT free memory
-//                           for rho_ext[]. Instead, rho_ext[] will be free'd together with other data arrays (e.g., fluid, pot)
-//                   --> Note that this array does NOT necessary store the correct particle mass density
-//                       (especially for cells adjacent to the C-C and C-F boundaries) and thus should NOT be used outside
-//                       Prepare_PatchData)
 //                   --> Before calling this function, one must call
 //                       (1) Par_CollectParticle2OneLevel() --> to collect particles from higher levels and from other MPI ranks
 //                       (2) Prepare_PatchData_InitParticleDensityArray() --> to initialize all rho_ext[] arrays
@@ -174,8 +168,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 
 // check
-#  ifdef GAMER_DEBUG
-
+// --> do it even when disabling GAMER_DEBUG since this routine is critical and the check is inexpensive
    long AllVarCC = ( _TOTAL | _DERIVED );
 #  ifdef GRAVITY
    AllVarCC |= _POTE;
@@ -287,18 +280,15 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
       Aux_Message( stderr, "WARNING : inconsistent NSide (%d) and GhostSize (%d) !!\n", NSide, GhostSize );
 
 #  ifdef PARTICLE
-   if (  TVarCC & _PAR_DENS  ||  TVarCC & _TOTAL_DENS )
+   if ( TVarCC & _PAR_DENS  ||  TVarCC & _TOTAL_DENS )
    {
 //    because we only collect particles from nearby 26 sibling patches
       if ( GhostSize > PS1 - amr->Par->GhostSize )
          Aux_Error( ERROR_INFO, "GhostSize (%d) > maximum allowed (%d) when preparing mass density with particles!!\n",
                     GhostSize, PS1 - amr->Par->GhostSize );
 
-      if ( ! Particle_Collected )
-         Aux_Error( ERROR_INFO, "please call \"Par_CollectParticle2OneLevel\" in advance !!\n" );
-
       if ( ! ParDensArray_Initialized )
-         Aux_Error( ERROR_INFO, "please call \"Prepare_PatchData_InitParticleDensityArray\" in advance !!\n" );
+         Aux_Error( ERROR_INFO, "must call Prepare_PatchData_InitParticleDensityArray() in advance !!\n" );
    }
 
 // _DENS, _PAR_DENS, and _TOTAL_DENS do not work together (actually we should be able to support _DENS + _PAR_DENS)
@@ -324,8 +314,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    if (  ( TVarCC & _ENTR )  &&  EoS_DensEint2Entr_CPUPtr == NULL )
       Aux_Error( ERROR_INFO, "EoS_DensEint2Entr_CPUPtr == NULL !!\n" );
 #  endif
-
-#  endif // #ifdef GAMER_DEBUG
 
 
    const double dh               = amr->dh[lv];
@@ -454,7 +442,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 // nothing to do if no target variable is found
    if ( NVarCC_Tot == 0  &&  NVarFC_Tot == 0  &&  MPI_Rank == 0 )
    {
-      Aux_Message( stderr, "WARNING : no target variable is found !!\n" );
+      Aux_Message( stderr, "WARNING : no target variable is found in %s() !!\n", __FUNCTION__ );
       return;
    }
 
@@ -555,117 +543,16 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    }
 
 
+// constant settings used by Par_MassAssignment()
 #  ifdef MASSIVE_PARTICLES
-// determine the patch list for assigning particle mass
-   const int NNearByPatchMax   = 64;   // maximum number of neaby patches of a patch group (including 8 local patches)
-   const int ParMass_NPatchMax = NPG*NNearByPatchMax;
-
-   int *ParMass_PID_List   = NULL;
-   int  ParMass_NPatch_Dup = 0;        // number of patches (including duplicates) for the particle mass assignment
-   int  ParMass_NPatch;
-
-// constant settings related to particle mass assignment
-   const bool InitZero_Yes     = true;
-   const bool InitZero_No      = false;
-   const bool Periodic_No[3]   = { false, false, false };
-   const bool Periodic_Check[3]= { FluBC[0]==BC_FLU_PERIODIC, FluBC[2]==BC_FLU_PERIODIC, FluBC[4]==BC_FLU_PERIODIC };
-   const bool UnitDens_No      = false;
-   const bool CheckFarAway_Yes = true;
-   const bool CheckFarAway_No  = false;
-   const int  PeriodicNCell[3] = { NX0_TOT[0]*(1<<lv),
-                                   NX0_TOT[1]*(1<<lv),
-                                   NX0_TOT[2]*(1<<lv) };
-
-   if ( PrepParOnlyDens || PrepTotalDens )
-   {
-      int NearBy_PID_List[NNearByPatchMax];
-      int NPar, NNearByPatch;
-
-      ParMass_PID_List = new int [ParMass_NPatchMax];
-
-      for (int TID=0; TID<NPG; TID++)
-      {
-//       collect nearby patches
-         NNearByPatch = 0;
-
-         for (int PID=PID0_List[TID]; PID<PID0_List[TID]+8; PID++)
-            NearBy_PID_List[ NNearByPatch ++ ] = PID;
-
-         if ( amr->Par->GhostSize > 0  ||  GhostSize > 0  ||  amr->Par->PredictPos )
-         for (int Side=0; Side<26; Side++)
-         {
-            const int SibPID0 = Table_02( lv, PID0_List[TID], Side );   // the 0th patch of the sibling patch group
-
-            if ( SibPID0 >= 0 )
-            {
-               for (int Count=0; Count<TABLE_04(Side); Count++)
-               {
-#                 ifdef DEBUG_PARTICLE
-                  if ( NNearByPatch >= NNearByPatchMax )
-                     Aux_Error( ERROR_INFO, "NNearByPatch (%d) >= NNearByPatchMax (%d) !!\n",
-                                NNearByPatch, NNearByPatchMax );
-#                 endif
-
-                  NearBy_PID_List[ NNearByPatch ++ ] = TABLE_03( Side, Count ) + SibPID0;
-               }
-            }
-         }
-
-
-//       collect patches whose particles have not been assigned onto grids
-         for (int t=0; t<NNearByPatch; t++)
-         {
-            const int PID = NearBy_PID_List[t];
-
-//          get the number of particles (note that PID can be a buffer patch)
-            if ( amr->patch[0][lv][PID]->son == -1  &&  PID < amr->NPatchComma[lv][1] )
-               NPar = amr->patch[0][lv][PID]->NPar;
-            else
-               NPar = amr->patch[0][lv][PID]->NPar_Copy;
-
-#           ifdef DEBUG_PARTICLE
-            if ( NPar < 0 )   Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, PID %d) !!\n",
-                                         NPar, lv, PID );
-#           endif
-
-//          record PID (exclude patches with no particles or with particles deposited onto rho_ext[] already)
-            if (  ( amr->patch[0][lv][PID]->rho_ext == NULL ||
-                    amr->patch[0][lv][PID]->rho_ext[0][0][0] == RHO_EXT_NEED_INIT )  &&  NPar > 0  )
-            {
-#              ifdef DEBUG_PARTICLE
-               if ( ParMass_NPatch_Dup >= ParMass_NPatchMax )
-                  Aux_Error( ERROR_INFO, "ParMass_NPatch_Dup (%d) >= ParMass_NPatchMax (%d) !!\n",
-                             ParMass_NPatch_Dup, ParMass_NPatchMax );
-#              endif
-
-               ParMass_PID_List[ ParMass_NPatch_Dup ++ ] = PID;
-            }
-
-         }
-      } // for (int TID=0; TID<NPG; TID++)
-
-
-//    sort PID list and remove duplicate patches
-      Mis_Heapsort<int,int>( ParMass_NPatch_Dup, ParMass_PID_List, NULL );
-
-      ParMass_NPatch = ( ParMass_NPatch_Dup > 0 ) ? 1 : 0;
-
-      for (int t=1; t<ParMass_NPatch_Dup; t++)
-         if ( ParMass_PID_List[t] != ParMass_PID_List[t-1] )
-            ParMass_PID_List[ ParMass_NPatch ++ ] = ParMass_PID_List[t];
-
-
-//    allocate temporary density arrays for all target patches
-//    (do not parallelize it with OpenMP since it would actually deteriorate performance)
-      for (int t=0; t<ParMass_NPatch; t++)
-      {
-         const int TPID = ParMass_PID_List[t];
-
-         if ( amr->patch[0][lv][TPID]->rho_ext == NULL )    amr->patch[0][lv][TPID]->dnew();
-      }
-
-   } //if ( PrepParOnlyDens || PrepTotalDens )
-#  endif // #ifdef MASSIVE_PARTICLES
+   const bool InitZero_No       = false;
+   const bool Periodic_Check[3] = { FluBC[0]==BC_FLU_PERIODIC, FluBC[2]==BC_FLU_PERIODIC, FluBC[4]==BC_FLU_PERIODIC };
+   const int  PeriodicNCell[3]  = { NX0_TOT[0]*(1<<lv),
+                                    NX0_TOT[1]*(1<<lv),
+                                    NX0_TOT[2]*(1<<lv) };
+   const bool UnitDens_No       = false;
+   const bool CheckFarAway_Yes  = true;
+#  endif
 
 
 // start to prepare data
@@ -718,103 +605,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #     else
       real *IntData_CC_IntTime = NULL;
 #     endif
-
-
-#     ifdef MASSIVE_PARTICLES
-//    assign particle mass onto grids
-      if ( PrepParOnlyDens || PrepTotalDens )
-      {
-//       thread-private variables
-         long  *ParList = NULL;
-         int    NPar, PID;
-         double EdgeL[3];
-         bool   UseInputMassPos;
-         real **InputMassPos = NULL;
-
-#        pragma omp for schedule( runtime )
-         for (int t=0; t<ParMass_NPatch; t++)
-         {
-            PID = ParMass_PID_List[t];
-
-#           ifdef DEBUG_PARTICLE
-            if ( amr->patch[0][lv][PID]->rho_ext == NULL  ||
-                 amr->patch[0][lv][PID]->rho_ext[0][0][0] != RHO_EXT_NEED_INIT )
-               Aux_Error( ERROR_INFO, "lv %d, PID %d, rho_ext == NULL (or has been calculated already) !!\n", lv, PID );
-#           endif
-
-//          determine the number of particles and the particle list
-            if ( amr->patch[0][lv][PID]->son == -1  &&  PID < amr->NPatchComma[lv][1] )
-            {
-               NPar            = amr->patch[0][lv][PID]->NPar;
-               ParList         = amr->patch[0][lv][PID]->ParList;
-               UseInputMassPos = false;
-               InputMassPos    = NULL;
-
-#              ifdef DEBUG_PARTICLE
-               if ( amr->patch[0][lv][PID]->NPar_Copy != -1 )
-                  Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Copy = %d != -1 !!\n",
-                             lv, PID, amr->patch[0][lv][PID]->NPar_Copy );
-#              endif
-            }
-
-            else
-            {
-//             note that amr->patch[0][lv][PID]->NPar>0 is still possible
-               NPar            = amr->patch[0][lv][PID]->NPar_Copy;
-#              ifdef LOAD_BALANCE
-               ParList         = NULL;
-               UseInputMassPos = true;
-               InputMassPos    = amr->patch[0][lv][PID]->ParAtt_Copy;
-#              else
-               ParList         = amr->patch[0][lv][PID]->ParList_Copy;
-               UseInputMassPos = false;
-               InputMassPos    = NULL;
-#              endif
-            }
-
-#           ifdef DEBUG_PARTICLE
-            if ( NPar <= 0 )
-               Aux_Error( ERROR_INFO, "NPar (%d) <= 0 (lv %d, PID %d) !!\n", NPar, lv, PID );
-
-            else
-            {
-               if ( UseInputMassPos )
-               {
-                  if ( InputMassPos[PAR_MASS] == NULL  ||  InputMassPos[PAR_POSX] == NULL  ||
-                       InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  ||
-                       InputMassPos[PAR_TYPE] == NULL )
-                     Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3/4] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
-                                NPar, lv, PID );
-               }
-
-               else if ( ParList == NULL )
-                  Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
-                             NPar, lv, PID );
-            }
-#           endif // #ifdef DEBUG_PARTICLE
-
-//          set the left edge of rho_ext[]
-            const double RhoExtGhostPhySize = RHOEXT_GHOST_SIZE*dh;
-            for (int d=0; d<3; d++)    EdgeL[d] = amr->patch[0][lv][PID]->EdgeL[d] - RhoExtGhostPhySize;
-
-
-//          deposit particle mass onto grids (**from particles in their home patch**)
-//          --> don't have to worry about the periodicity (even for external buffer patches) here since
-//              (1) all input particles should be close to the target patches even with position prediction
-//              (2) amr->patch[0][lv][PID]->EdgeL/R already assumes periodicity for external buffer patches
-//              --> Periodic_No, CheckFarAway_No
-//          --> remember to initialize rho_ext[] as zero (by InitZero_Yes)
-            Par_MassAssignment( ParList, NPar, amr->Par->Interp, amr->patch[0][lv][PID]->rho_ext[0][0], RHOEXT_NXT,
-                                EdgeL, dh, (amr->Par->PredictPos && !UseInputMassPos), PrepTime, InitZero_Yes,
-                                Periodic_No, NULL, UnitDens_No, CheckFarAway_No, UseInputMassPos, InputMassPos );
-         } // for (int t=0; t<ParMass_NPatch; t++)
-      } // if ( PrepParOnlyDens || PrepTotalDens )
-#     endif // #ifdef MASSIVE_PARTICLES
-
-
-//    note that the total density array needs rho_ext[] of nearby patches
-//    --> the next omp task must wait for the previous one
-//    --> but since there is an implicit barrier at the end of the **for** construct --> no need to call "pragma omp barrier"
 
 
 //    prepare eight nearby patches (one patch group) at a time
@@ -1978,7 +1768,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
             } // for (int LocalID=0; LocalID<8; LocalID++ )
 
 
-//          (c3) deposit particle mass in the sibling patches
+//          (c3) deposit particle mass from the sibling patches
             if ( amr->Par->GhostSize > 0  ||  GhostSize > 0  ||  amr->Par->PredictPos )
             for (int Side=0; Side<26; Side++)
             {
@@ -2113,6 +1903,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
             } // for (int Side=0; Side<26; Side++) if ( amr->Par->GhostSize > 0  ||  GhostSize > 0 )
          } // if ( PrepParOnlyDens || PrepTotalDens )
 #        endif // #ifdef MASSIVE_PARTICLES
+
 
 //       d. checks
 // ------------------------------------------------------------------------------------------------------------
@@ -2258,10 +2049,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 // free memroy
    for (int s=0; s<26; s++)   delete [] TSib[s];
-
-#  ifdef MASSIVE_PARTICLES
-   if ( PrepParOnlyDens || PrepTotalDens )   delete [] ParMass_PID_List;
-#  endif
 
 } // FUNCTION : Prepare_PatchData
 
@@ -3037,28 +2824,173 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
 } // FUNCTION : SetTargetSibling
 
 
-#  ifdef MASSIVE_PARTICLES
+
+#ifdef MASSIVE_PARTICLES
+
+// flag for checking whether Par_CollectParticle2OneLevel() has been called
+// --> declared in Par_CollectParticle2OneLevel.cpp
+extern bool Particle_Collected;
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Prepare_PatchData_InitParticleDensityArray
-// Description :  Initialize rho_ext[] by setting rho_ext[0][0][0] = RHO_EXT_NEED_INIT
+// Description :  Initialize rho_ext[] used by Prepare_PatchData() for preparing particle density on grids
 //
-// Note        :  1. Currently this function is called by Gra_AdvanceDt(), Main(), and Output_DumpData_Total()
-//                2. Apply to all (real and buffer) patches with rho_ext[] allocated already
-//                3. Do nothing if rho_ext == NULL. In this case, rho_ext[] will be allocated and initialized
-//                   as rho_ext[0][0][0] == RHO_EXT_NEED_INIT when calling Prepare_PatchData()
+// Note        :  1. This function is currently called by Gra_AdvanceDt(), Output_DumpData_Total(),
+//                   Output_DumpData_Total_HDF5(), and Output_BasePowerSpectrum()
+//                2. Apply to both real and buffer patches
+//                3. For patches without any particle, this routine ensures either rho_ext == NULL or
+//                   rho_ext[0][0][0] == RHO_EXT_NEED_INIT
 //                4. rho_ext[] is always stored in Sg==0
+//                5. Must call Par_CollectParticle2OneLevel() in advance to collect particles from higher levels
+//                   and from other MPI ranks
+//                6. Call Prepare_PatchData_FreeParticleDensityArray() to free resources after Prepare_PatchData()
+//                7. rho_ext[] does NOT necessary store the correct particle mass density,
+//                   especially for cells adjacent to the C-C and C-F boundaries
+//                   --> It's because this routine doesn't consider particles in nearby patches, which are handled
+//                       by Prepare_PatchData()
+//                   --> So rho_ext[] should only be used within Prepare_PatchData()
+//                8. Note that computing the particle density of a given patch requires computing rho_ext[] in
+//                   nearby patches too. As a result, computing rho_ext[] in Prepare_PatchData(), as in the previous
+//                   approach, would prevent from applying OpenMP parallelization *outside* Prepare_PatchData().
+//                   This is the major reason why we switch to pre-compute rho_ext[] of all patches here instead of in
+//                   Prepare_PatchData().
+//                9. Only the master thread in OpenMP is allowed to call this routine
+//                   --> Also note that adding "#pragma omp master" when calling this routine may significantly impact
+//                       its performance since nested parallelism is disabled by default in Init_OpenMP()
+//                   --> Therefore, in general, we do not recommend calling this routine within an OpenMP parallel region
 //
-// Parameter   :  lv : Target refinement level
+// Parameter   :  lv       : Target refinement level
+//                PrepTime : Target physical time for predicting particle position
+//                           --> Must pass the same value to Prepare_PatchData()
 //-------------------------------------------------------------------------------------------------------
-void Prepare_PatchData_InitParticleDensityArray( const int lv )
+void Prepare_PatchData_InitParticleDensityArray( const int lv, const double PrepTime )
 {
 
-// apply to buffer patches as well
-   for (int PID=0; PID<amr->NPatchComma[lv][27]; PID++)
+// check
+   if ( ! Particle_Collected )
+      Aux_Error( ERROR_INFO, "must call Par_CollectParticle2OneLevel() in advance !!\n" );
+
+#  ifdef OPENMP
+   const int TID = omp_get_thread_num();
+   if ( TID != 0 )   Aux_Error( ERROR_INFO, "only the master thread is allowed to call %s() (thread ID %d) !!\n", __FUNCTION__, TID );
+#  endif
+
+
+// constant settings used by Par_MassAssignment()
+   const double dh              = amr->dh[lv];
+   const bool   InitZero_Yes    = true;
+   const bool   Periodic_No[3]  = { false, false, false };
+   const bool   UnitDens_No     = false;
+   const bool   CheckFarAway_No = false;
+
+#  pragma omp parallel
    {
-      if ( amr->patch[0][lv][PID]->rho_ext != NULL )
-         amr->patch[0][lv][PID]->rho_ext[0][0][0] = RHO_EXT_NEED_INIT;
-   }
+//    thread-private variables
+      long  *ParList = NULL;
+      int    NPar;
+      double EdgeL[3];
+      bool   UseInputMassPos;
+      real **InputMassPos = NULL;
+
+//    loop over all patches including buffer patches
+#     pragma omp for schedule( runtime )
+      for (int PID=0; PID<amr->NPatchComma[lv][27]; PID++)
+      {
+//       determine the number of particles and the particle list
+         if ( amr->patch[0][lv][PID]->son == -1  &&  PID < amr->NPatchComma[lv][1] )
+         {
+            NPar            = amr->patch[0][lv][PID]->NPar;
+            ParList         = amr->patch[0][lv][PID]->ParList;
+            UseInputMassPos = false;
+            InputMassPos    = NULL;
+
+#           ifdef DEBUG_PARTICLE
+            if ( amr->patch[0][lv][PID]->NPar_Copy != -1 )
+               Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Copy = %d != -1 !!\n",
+                          lv, PID, amr->patch[0][lv][PID]->NPar_Copy );
+#           endif
+         }
+
+         else
+         {
+//          note that amr->patch[0][lv][PID]->NPar>0 is still possible
+            NPar            = amr->patch[0][lv][PID]->NPar_Copy;
+#           ifdef LOAD_BALANCE
+            ParList         = NULL;
+            UseInputMassPos = true;
+            InputMassPos    = amr->patch[0][lv][PID]->ParAtt_Copy;
+#           else
+            ParList         = amr->patch[0][lv][PID]->ParList_Copy;
+            UseInputMassPos = false;
+            InputMassPos    = NULL;
+#           endif
+         }
+
+#        ifdef DEBUG_PARTICLE
+         if ( NPar < 0 )
+         {
+            bool Pass = true;
+
+//          exclude buffer patches not adjacent to a real patch
+#           ifdef LOAD_BALANCE
+            for (int p=0; p<amr->Par->R2B_Buff_NPatchTotal[lv][0]; p++) {
+               if ( PID == amr->Par->R2B_Buff_PIDList[lv][0][p] ) {
+                  Pass = false;
+                  break;
+               }
+            }
+#           else
+            Pass = false;
+#           endif
+
+            if ( !Pass )   Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, PID %d) !!\n",
+                                      NPar, lv, PID );
+         } // if ( NPar < 0 )
+#        endif // #ifdef DEBUG_PARTICLE
+
+         if ( NPar > 0 )
+         {
+#           ifdef DEBUG_PARTICLE
+            if ( UseInputMassPos )
+            {
+               if ( InputMassPos[PAR_MASS] == NULL  ||  InputMassPos[PAR_POSX] == NULL  ||
+                    InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  ||
+                    InputMassPos[PAR_TYPE] == NULL )
+                  Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3/4] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
+                             NPar, lv, PID );
+            }
+
+            else if ( ParList == NULL )
+               Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
+                          NPar, lv, PID );
+#           endif
+
+//          set the left edge of rho_ext[]
+            const double RhoExtGhostPhySize = RHOEXT_GHOST_SIZE*dh;
+            for (int d=0; d<3; d++)    EdgeL[d] = amr->patch[0][lv][PID]->EdgeL[d] - RhoExtGhostPhySize;
+
+//          allocate rho_ext[]
+            if ( amr->patch[0][lv][PID]->rho_ext == NULL )    amr->patch[0][lv][PID]->dnew();
+
+//          deposit particle mass onto grids (**from particles in their home patch**)
+//          --> don't have to worry about the periodicity (even for external buffer patches) here since
+//              (1) all input particles should be close to the target patches even with position prediction
+//              (2) amr->patch[0][lv][PID]->EdgeL/R already assumes periodicity for external buffer patches
+//              --> Periodic_No, CheckFarAway_No
+//          --> must initialize rho_ext[] as zero by InitZero_Yes
+            Par_MassAssignment( ParList, NPar, amr->Par->Interp, amr->patch[0][lv][PID]->rho_ext[0][0], RHOEXT_NXT,
+                                EdgeL, dh, (amr->Par->PredictPos && !UseInputMassPos), PrepTime, InitZero_Yes,
+                                Periodic_No, NULL, UnitDens_No, CheckFarAway_No, UseInputMassPos, InputMassPos );
+         } // if ( NPar > 0 )
+
+         else
+         {
+//          set rho_ext[0][0][0] = RHO_EXT_NEED_INIT to indicate that it hasn't been set yet
+            if ( amr->patch[0][lv][PID]->rho_ext != NULL )
+               amr->patch[0][lv][PID]->rho_ext[0][0][0] = RHO_EXT_NEED_INIT;
+         } // if ( NPar > 0 ) ... else ...
+      } // for (int PID=0; PID<amr->NPatchComma[lv][27]; PID++)
+   } // end of OpenMP parallel region
 
 // set flag to true to indicate that this function has been called
    ParDensArray_Initialized = true;
@@ -3071,25 +3003,27 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv )
 // Function    :  Prepare_PatchData_FreeParticleDensityArray
 // Description :  Free rho_ext[] allocated by Prepare_PatchData() temporarily for storing the partice mass density
 //
-// Note        :  1. Currently this function is called by Gra_AdvanceDt(), Main(), and Output_DumpData_Total()
+// Note        :  1. This function is currently called by Gra_AdvanceDt(), Output_DumpData_Total(),
+//                   Output_DumpData_Total_HDF5(), and Output_BasePowerSpectrum()
 //                2. Apply to buffer patches as well
 //                3. Do not free memory if OPT__REUSE_MEMORY is on
+//                   --> rho_ext[] will only be free'd together with other data arrays (e.g., fluid, pot)
+//                4. Only the master thread in OpenMP is allowed to call this routine
 //
 // Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
 void Prepare_PatchData_FreeParticleDensityArray( const int lv )
 {
 
-// free memory for all patches (both real and buffer) if OPT__REUSE_MEMORY is off
-   if ( ! OPT__REUSE_MEMORY )
-   for (int PID=0; PID<amr->NPatchComma[lv][27]; PID++)
-   {
-      if ( amr->patch[0][lv][PID]->rho_ext != NULL )
-      {
-         delete [] amr->patch[0][lv][PID]->rho_ext;
+#  ifdef OPENMP
+   const int TID = omp_get_thread_num();
+   if ( TID != 0 )   Aux_Error( ERROR_INFO, "only the master thread is allowed to call %s() (thread ID %d) !!\n", __FUNCTION__, TID );
+#  endif
 
-         amr->patch[0][lv][PID]->rho_ext = NULL;
-      }
+// free memory for all patches (both real and buffer) if OPT__REUSE_MEMORY is off
+   if ( ! OPT__REUSE_MEMORY ) {
+      for (int PID=0; PID<amr->NPatchComma[lv][27]; PID++)
+         amr->patch[0][lv][PID]->ddelete();
    }
 
 // set flag to false to indicate that Prepare_PatchData_InitParticleDensityArray() has not been called
