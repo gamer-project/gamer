@@ -1785,7 +1785,7 @@ void Aux_TakeNote()
    int omp_nthread, omp_chunk_size, omp_nested;
    omp_sched_t omp_schedule;
 
-   omp_nested = omp_get_nested();
+   omp_nested = omp_get_max_active_levels();
    omp_get_schedule( &omp_schedule, &omp_chunk_size );
 
 #  pragma omp parallel
@@ -1797,12 +1797,12 @@ void Aux_TakeNote()
       Note = fopen( FileName, "a" );
       fprintf( Note, "OpenMP Diagnosis\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "OMP__SCHEDULE                   %s\n",      ( omp_schedule == omp_sched_static  ) ? "STATIC"  :
+      fprintf( Note, "Schedule                        %s\n",      ( omp_schedule == omp_sched_static  ) ? "STATIC"  :
                                                                   ( omp_schedule == omp_sched_dynamic ) ? "DYNAMIC" :
                                                                   ( omp_schedule == omp_sched_guided  ) ? "GUIDED"  :
                                                                   ( omp_schedule == omp_sched_auto    ) ? "AUTO"    : "UNKNOWN" );
-      fprintf( Note, "OMP__SCHEDULE_CHUNK_SIZE        %d\n",      omp_chunk_size          );
-      fprintf( Note, "OMP__NESTED                     %s\n",      ( omp_nested ) ? "ON" : "OFF" );
+      fprintf( Note, "Chunk size                      %d\n",      omp_chunk_size );
+      fprintf( Note, "Max number of nested levels     %d\n",      omp_nested );
       fprintf( Note, "\n" );
       fprintf( Note, "CPU core IDs of all OpenMP threads (tid == thread ID):\n" );
       fprintf( Note, "------------------------------------------------------------------------\n" );
