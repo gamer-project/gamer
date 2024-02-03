@@ -21,10 +21,9 @@ static void MHD_SetFInterface( real *FInt_Data, real *FInt_Ptr[6], const real *D
                                const bool MagIntTime, const real MagWeighting, const real MagWeighting_IntT );
 #endif
 
-// flags for checking whether (1) Prepare_PatchData_InitParticleDensityArray() and (2) Par_CollectParticle2OneLevel()
-// are properly called before preparing either _PAR_DENS or _TOTAL_DENS
+// flag for checking whether Prepare_PatchData_InitParticleDensityArray() has been called
+// before preparing either _PAR_DENS or _TOTAL_DENS
 #ifdef PARTICLE
-bool Particle_Collected       = false;
 bool ParDensArray_Initialized = false;
 #endif
 
@@ -289,11 +288,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
          Aux_Error( ERROR_INFO, "GhostSize (%d) > maximum allowed (%d) when preparing mass density with particles!!\n",
                     GhostSize, PS1 - amr->Par->GhostSize );
 
-      if ( ! Particle_Collected )
-         Aux_Error( ERROR_INFO, "please call \"Par_CollectParticle2OneLevel\" in advance !!\n" );
-
       if ( ! ParDensArray_Initialized )
-         Aux_Error( ERROR_INFO, "please call \"Prepare_PatchData_InitParticleDensityArray\" in advance !!\n" );
+         Aux_Error( ERROR_INFO, "must call Prepare_PatchData_InitParticleDensityArray() in advance !!\n" );
    }
 
 // _DENS, _PAR_DENS, and _TOTAL_DENS do not work together (actually we should be able to support _DENS + _PAR_DENS)
@@ -2833,6 +2829,11 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
 
 
 #ifdef MASSIVE_PARTICLES
+
+// flag for checking whether Par_CollectParticle2OneLevel() has been called
+// --> declared in Par_CollectParticle2OneLevel.cpp
+extern bool Particle_Collected;
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Prepare_PatchData_InitParticleDensityArray
 // Description :  Initialize rho_ext[] used by Prepare_PatchData() for preparing particle density on grids
@@ -2863,6 +2864,11 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
 //-------------------------------------------------------------------------------------------------------
 void Prepare_PatchData_InitParticleDensityArray( const int lv, const double PrepTime )
 {
+
+// check
+   if ( ! Particle_Collected )
+      Aux_Error( ERROR_INFO, "must call Par_CollectParticle2OneLevel() in advance !!\n" );
+
 
 // constant settings used by Par_MassAssignment()
    const double dh              = amr->dh[lv];
