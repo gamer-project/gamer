@@ -253,24 +253,6 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
    OPT__INT_TIME = ( PrepTimeIn >= 0.0 ) ? true : false;
 
 
-// set undefined fields to _NONE for simplicity
-#  ifndef _VELX
-#  define _VELX _NONE
-#  endif
-#  ifndef _VELY
-#  define _VELY _NONE
-#  endif
-#  ifndef _VELZ
-#  define _VELZ _NONE
-#  endif
-#  ifndef _VELR
-#  define _VELR _NONE
-#  endif
-#  ifndef _POTE
-#  define _POTE _NONE
-#  endif
-
-
 // loop over all target levels
    for (int lv=MinLv; lv<=MaxLv; lv++)
    {
@@ -409,86 +391,101 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
             for (int p=0; p<NProf; p++)
             {
 //             collect the data of the target field
-//             _VELR is currently not supported by Prepare_PatchData()
-               if ( TVarBitIdx[p] == _VELR )
+               switch ( TVarBitIdx[p] )
                {
-                  for (int LocalID=0; LocalID<8; LocalID++)
-                  {
-                     if ( SkipPatch[LocalID] )  continue;
+//                _VELR is currently not supported by Prepare_PatchData()
+#                 ifdef _VELR
+                  case _VELR:
+                     for (int LocalID=0; LocalID<8; LocalID++)
+                     {
+                        if ( SkipPatch[LocalID] )  continue;
 
-                     const int PID = PID0 + LocalID;
-                     const real (*FluidPtr     )[PS1][PS1][PS1] =                  amr->patch[ FluSg      ][lv][PID]->fluid;
-                     const real (*FluidPtr_IntT)[PS1][PS1][PS1] = ( FluIntTime ) ? amr->patch[ FluSg_IntT ][lv][PID]->fluid : NULL;
+                        const int PID = PID0 + LocalID;
+                        const real (*FluidPtr     )[PS1][PS1][PS1] =                  amr->patch[ FluSg      ][lv][PID]->fluid;
+                        const real (*FluidPtr_IntT)[PS1][PS1][PS1] = ( FluIntTime ) ? amr->patch[ FluSg_IntT ][lv][PID]->fluid : NULL;
 
-                     const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh - Center[0];
-                     const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh - Center[1];
-                     const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh - Center[2];
+                        const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh - Center[0];
+                        const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh - Center[1];
+                        const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh - Center[2];
 
-                     for (int k=0; k<PS1; k++)  {  double dz = z0 + k*dh;
-                                                   if ( Periodic[2] ) {
-                                                      if      ( dz > +HalfBox[2] )  {  dz -= amr->BoxSize[2];  }
-                                                      else if ( dz < -HalfBox[2] )  {  dz += amr->BoxSize[2];  }
-                                                   }
-                     for (int j=0; j<PS1; j++)  {  double dy = y0 + j*dh;
-                                                   if ( Periodic[1] ) {
-                                                      if      ( dy > +HalfBox[1] )  {  dy -= amr->BoxSize[1];  }
-                                                      else if ( dy < -HalfBox[1] )  {  dy += amr->BoxSize[1];  }
-                                                   }
-                     for (int i=0; i<PS1; i++)  {  double dx = x0 + i*dh;
-                                                   if ( Periodic[0] ) {
-                                                      if      ( dx > +HalfBox[0] )  {  dx -= amr->BoxSize[0];  }
-                                                      else if ( dx < -HalfBox[0] )  {  dx += amr->BoxSize[0];  }
-                                                   }
+                        for (int k=0; k<PS1; k++)  {  double dz = z0 + k*dh;
+                                                      if ( Periodic[2] ) {
+                                                         if      ( dz > +HalfBox[2] )  {  dz -= amr->BoxSize[2];  }
+                                                         else if ( dz < -HalfBox[2] )  {  dz += amr->BoxSize[2];  }
+                                                      }
+                        for (int j=0; j<PS1; j++)  {  double dy = y0 + j*dh;
+                                                      if ( Periodic[1] ) {
+                                                         if      ( dy > +HalfBox[1] )  {  dy -= amr->BoxSize[1];  }
+                                                         else if ( dy < -HalfBox[1] )  {  dy += amr->BoxSize[1];  }
+                                                      }
+                        for (int i=0; i<PS1; i++)  {  double dx = x0 + i*dh;
+                                                      if ( Periodic[0] ) {
+                                                         if      ( dx > +HalfBox[0] )  {  dx -= amr->BoxSize[0];  }
+                                                         else if ( dx < -HalfBox[0] )  {  dx += amr->BoxSize[0];  }
+                                                      }
 
-                        if ( Patch_Bin[TID][LocalID][k][j][i] == CellSkip )   continue;
+                           if ( Patch_Bin[TID][LocalID][k][j][i] == CellSkip )   continue;
 
-                        const double r        = sqrt( SQR(dx) + SQR(dy) + SQR(dz) );
-                        const real _Dens      =                  (real)1.0 / FluidPtr     [DENS][k][j][i];
-                        const real _Dens_IntT = ( FluIntTime ) ? (real)1.0 / FluidPtr_IntT[DENS][k][j][i] : NULL_REAL;
-                        const real VelR       = ( FluIntTime )
-                                              ? ( FluWeighting     *( FluidPtr     [MOMX][k][j][i]*dx +
-                                                                      FluidPtr     [MOMY][k][j][i]*dy +
-                                                                      FluidPtr     [MOMZ][k][j][i]*dz )*_Dens
-                                                + FluWeighting_IntT*( FluidPtr_IntT[MOMX][k][j][i]*dx +
-                                                                      FluidPtr_IntT[MOMY][k][j][i]*dy +
-                                                                      FluidPtr_IntT[MOMZ][k][j][i]*dz )*_Dens_IntT ) / r
-                                              :                     ( FluidPtr     [MOMX][k][j][i]*dx +
-                                                                      FluidPtr     [MOMY][k][j][i]*dy +
-                                                                      FluidPtr     [MOMZ][k][j][i]*dz )*_Dens / r;
-                        Patch_Data[TID][LocalID][k][j][i] = VelR;
-                     }}} // i,j,k
-                  } // for (int LocalID=0; LocalID<8; LocalID++)
-               } // if ( TVarBitIdx[p] == _VELR )
+                           const double r        = sqrt( SQR(dx) + SQR(dy) + SQR(dz) );
+                           const real _Dens      =                  (real)1.0 / FluidPtr     [DENS][k][j][i];
+                           const real _Dens_IntT = ( FluIntTime ) ? (real)1.0 / FluidPtr_IntT[DENS][k][j][i] : NULL_REAL;
+                           const real VelR       = ( FluIntTime )
+                                                 ? ( FluWeighting     *( FluidPtr     [MOMX][k][j][i]*dx +
+                                                                         FluidPtr     [MOMY][k][j][i]*dy +
+                                                                         FluidPtr     [MOMZ][k][j][i]*dz )*_Dens
+                                                   + FluWeighting_IntT*( FluidPtr_IntT[MOMX][k][j][i]*dx +
+                                                                         FluidPtr_IntT[MOMY][k][j][i]*dy +
+                                                                         FluidPtr_IntT[MOMZ][k][j][i]*dz )*_Dens_IntT ) / r
+                                                 :                     ( FluidPtr     [MOMX][k][j][i]*dx +
+                                                                         FluidPtr     [MOMY][k][j][i]*dy +
+                                                                         FluidPtr     [MOMZ][k][j][i]*dz )*_Dens / r;
+                           Patch_Data[TID][LocalID][k][j][i] = VelR;
+                        }}} // i,j,k
+                     } // for (int LocalID=0; LocalID<8; LocalID++)
+                  break; // _VELR
+#                 endif // #ifdef _VELR
 
-               else
-               {
-                  const int  NGhost             = 0;
-                  const int  NPG                = 1;
-                  const bool IntPhase_No        = false;
-                  const real MinDens_No         = -1.0;
-                  const real MinPres_No         = -1.0;
-                  const real MinTemp_No         = -1.0;
-                  const real MinEntr_No         = -1.0;
-                  const bool DE_Consistency_Yes = true;
+                  default:
+                     const int  NGhost             = 0;
+                     const int  NPG                = 1;
+                     const bool IntPhase_No        = false;
+                     const real MinDens_No         = -1.0;
+                     const real MinPres_No         = -1.0;
+                     const real MinTemp_No         = -1.0;
+                     const real MinEntr_No         = -1.0;
+                     const bool DE_Consistency_Yes = true;
 
-                  Prepare_PatchData( lv, PrepTime, &Patch_Data[TID][0][0][0][0], NULL, NGhost, NPG, &PID0,
-                                     TVarBitIdx[p], _NONE, INT_NONE, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No,
-                                     OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
-                                     DE_Consistency_Yes );
-               } // if ( TVarBitIdx[p] == _VELR ) ... else ...
+                     Prepare_PatchData( lv, PrepTime, &Patch_Data[TID][0][0][0][0], NULL, NGhost, NPG, &PID0,
+                                        TVarBitIdx[p], _NONE, INT_NONE, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No,
+                                        OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
+                                        DE_Consistency_Yes );
+                  break; // default
+               } // switch ( TVarBitIdx[p] )
 
 
 //             set the weight field
 //###REVISE: allow users to choose the weight field
                int WeightField=-1;
 
-               if ( TVarBitIdx[p] == _VELX  ||
-                    TVarBitIdx[p] == _VELY  ||
-                    TVarBitIdx[p] == _VELZ  ||
-                    TVarBitIdx[p] == _VELR  ||
-                    TVarBitIdx[p] == _POTE   )     WeightField = WeightByMass;
-
-               else                                WeightField = WeightByVolume;
+               switch ( TVarBitIdx[p] )
+               {
+#                 ifdef _VELX
+                  case _VELX : WeightField = WeightByMass;     break;
+#                 endif
+#                 ifdef _VELY
+                  case _VELY : WeightField = WeightByMass;     break;
+#                 endif
+#                 ifdef _VELZ
+                  case _VELZ : WeightField = WeightByMass;     break;
+#                 endif
+#                 ifdef _VELR
+                  case _VELR : WeightField = WeightByMass;     break;
+#                 endif
+#                 ifdef _POTE
+                  case _POTE : WeightField = WeightByMass;     break;
+#                 endif
+                  default    : WeightField = WeightByVolume;   break;
+               } // switch ( TVarBitIdx[p] )
 
 
 //             compute the radial profile
@@ -514,10 +511,10 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                                                        ? ( FluWeighting     *DensPtr     [k][j][i]
                                                          + FluWeighting_IntT*DensPtr_IntT[k][j][i] )*dv
                                                        :                     DensPtr     [k][j][i]  *dv;
-                           break;
+                        break;
 
                         case WeightByVolume :   Weight = dv;
-                           break;
+                        break;
 
                         default:
                            Aux_Error( ERROR_INFO, "unsupported weight field (%d) !!\n", WeightField );
