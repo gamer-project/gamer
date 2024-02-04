@@ -97,7 +97,7 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                PID0_List      : List recording the patch indices with LocalID==0 to be prepared
 //                TVarCC         : Target cell-centered variables to be prepared
 //                                 --> Supported variables in different models:
-//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP, _ENTR
+//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP, _ENTR, _EINT
 //                                             [, _POTE] [, _MAGX_CC, _MAGY_CC, _MAGZ_CC, _MAGE_CC]
 //                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
 //                                 --> _FLUID, _PASSIVE, _TOTAL, and _DERIVED apply to all models
@@ -169,6 +169,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 // check
 // --> do it even when disabling GAMER_DEBUG since this routine is critical and the check is inexpensive
+// -----------------------------------------
    long AllVarCC = ( _TOTAL | _DERIVED );
 #  ifdef GRAVITY
    AllVarCC |= _POTE;
@@ -315,6 +316,13 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
       Aux_Error( ERROR_INFO, "EoS_DensEint2Entr_CPUPtr == NULL !!\n" );
 #  endif
 
+#  ifdef SRHD
+   if ( TVarCC & _ENTR )
+      Aux_Error( ERROR_INFO, "SRHD does not support computing entropy !!\n" );
+#  endif
+// -----------------------------------------
+// end of check
+
 
    const double dh               = amr->dh[lv];
    const int    PGSize1D_CC      = 2*( PS1 + GhostSize );   // width of a single patch group including ghost zones
@@ -330,6 +338,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    const bool PrepPres         = ( TVarCC & _PRES    ) ? true : false;
    const bool PrepTemp         = ( TVarCC & _TEMP    ) ? true : false;
    const bool PrepEntr         = ( TVarCC & _ENTR    ) ? true : false;
+   const bool PrepEint         = ( TVarCC & _EINT    ) ? true : false;
 #  ifdef MHD
    const bool PrepMagX_CC      = ( TVarCC & _MAGX_CC ) ? true : false;
    const bool PrepMagY_CC      = ( TVarCC & _MAGY_CC ) ? true : false;
@@ -392,6 +401,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    if ( PrepPres    )   TVarCCList_Der[ NVarCC_Der ++ ] = _PRES;
    if ( PrepTemp    )   TVarCCList_Der[ NVarCC_Der ++ ] = _TEMP;
    if ( PrepEntr    )   TVarCCList_Der[ NVarCC_Der ++ ] = _ENTR;
+   if ( PrepEint    )   TVarCCList_Der[ NVarCC_Der ++ ] = _EINT;
 #  ifdef MHD
    if ( PrepMagX_CC )   TVarCCList_Der[ NVarCC_Der ++ ] = _MAGX_CC;
    if ( PrepMagY_CC )   TVarCCList_Der[ NVarCC_Der ++ ] = _MAGY_CC;
@@ -476,8 +486,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    int  MagSg, MagSg_IntT;
    real MagWeighting, MagWeighting_IntT;
 
-// check PrepPres, PrepTemp, and PrepEntr since they also require B field
-   if ( PrepMagFC || PrepMagCC || PrepPres || PrepTemp || PrepEntr )
+// check PrepPres, PrepTemp, PrepEntr, and PrepEint since they also require B field
+   if ( PrepMagFC || PrepMagCC || PrepPres || PrepTemp || PrepEntr || PrepEint )
    {
       const int Sg0 = amr->MagSg[lv];
       SetTempIntPara( lv, Sg0, PrepTime, amr->MagSgTime[lv][Sg0], amr->MagSgTime[lv][1-Sg0],
@@ -710,6 +720,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
                   for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
+//###REVISE: support dual energy
 #                 ifdef MHD
                   const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
 #                 else
@@ -756,6 +767,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
                   for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
+//###REVISE: support dual energy
 #                 ifdef MHD
                   const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
 #                 else
@@ -836,6 +848,52 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                Data1PG_CC_Ptr += PGSize3D_CC;
             } // if ( PrepEntr )
 #           endif // #ifndef SRHD
+
+            if ( PrepEint )
+            {
+               for (int k=0; k<PS1; k++)  {  K    = k + Disp_k;
+               for (int j=0; j<PS1; j++)  {  J    = j + Disp_j;
+                                             Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
+               for (int i=0; i<PS1; i++)  {
+
+                  for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
+
+//###REVISE: support dual energy
+#                 ifdef MHD
+                  const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
+#                 else
+                  const real Emag = NULL_REAL;
+#                 endif
+                  const bool CheckMinEint_No = false; // floor value is not supported for now
+                  Data1PG_CC_Ptr[Idx1] = Hydro_Con2Eint( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                         FluidForEoS[MOMZ], FluidForEoS[ENGY], 
+                                                         CheckMinEint_No, NULL_REAL, Emag,
+                                                         EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                         EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+                  if ( FluIntTime ) // temporal interpolation
+                  {
+                     for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
+
+#                    ifdef MHD
+                     const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT );
+#                    else
+                     const real Emag = NULL_REAL;
+#                    endif
+                     Data1PG_CC_Ptr[Idx1] =
+                        FluWeighting     *Data1PG_CC_Ptr[Idx1]
+                      + FluWeighting_IntT*Hydro_Con2Eint( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                          FluidForEoS[MOMZ], FluidForEoS[ENGY], 
+                                                          CheckMinEint_No, NULL_REAL, Emag,
+                                                          EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                  }
+
+                  Idx1 ++;
+               }}}
+
+               Data1PG_CC_Ptr += PGSize3D_CC;
+            } // if ( PrepEint )
 
 #           ifdef MHD
             if ( PrepMagCC )
@@ -1114,6 +1172,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
                         for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
+//###REVISE: support dual energy
 #                       ifdef MHD
                         const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg );
 #                       else
@@ -1160,6 +1219,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
                         for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
+//###REVISE: support dual energy
 #                       ifdef MHD
                         const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg );
 #                       else
@@ -1239,7 +1299,53 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
                      Data1PG_CC_Ptr += PGSize3D_CC;
                   } // if ( PrepEntr )
-#                endif // #ifndef SRHD
+#                 endif // #ifndef SRHD
+
+                  if ( PrepEint )
+                  {
+                     for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
+                     for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
+                                                      Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
+                     for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
+
+                        for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
+
+//###REVISE: support dual energy
+#                       ifdef MHD
+                        const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg );
+#                       else
+                        const real Emag = NULL_REAL;
+#                       endif
+                        const bool CheckMinEint_No = false; // floor value is not supported for now
+                        Data1PG_CC_Ptr[Idx1] = Hydro_Con2Eint( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                               FluidForEoS[MOMZ], FluidForEoS[ENGY], 
+                                                               CheckMinEint_No, NULL_REAL, Emag,
+                                                               EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+                        if ( FluIntTime ) // temporal interpolation
+                        {
+                           for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
+
+#                          ifdef MHD
+                           const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg_IntT );
+#                          else
+                           const real Emag = NULL_REAL;
+#                          endif
+                           Data1PG_CC_Ptr[Idx1] =
+                              FluWeighting     *Data1PG_CC_Ptr[Idx1]
+                            + FluWeighting_IntT*Hydro_Con2Eint( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                                FluidForEoS[MOMZ], FluidForEoS[ENGY], 
+                                                                CheckMinEint_No, NULL_REAL, Emag,
+                                                                EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                        }
+
+                        Idx1 ++;
+                     }}}
+
+                     Data1PG_CC_Ptr += PGSize3D_CC;
+                  } // if ( PrepEint )
 
 #                 ifdef MHD
                   if ( PrepMagCC )
