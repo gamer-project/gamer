@@ -179,10 +179,10 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
 #        ifdef PARTICLE
          if ( UsePrepare  &&  ( WeightingDensityField & _PAR_DENS  ||  WeightingDensityField & _TOTAL_DENS ) )
          {
-            Prepare_PatchData_InitParticleDensityArray( lv );
-
             Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos_No, NULL_REAL,
                                           SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
+
+            Prepare_PatchData_InitParticleDensityArray( lv, Time[lv] );
          }
 #        endif
 

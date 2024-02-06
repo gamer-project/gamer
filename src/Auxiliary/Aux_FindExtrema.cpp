@@ -198,10 +198,10 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
 #     ifdef PARTICLE
       if ( UsePrepare  &&  ( Extrema->Field & _PAR_DENS  ||  Extrema->Field & _TOTAL_DENS ) )
       {
-         Prepare_PatchData_InitParticleDensityArray( lv );
-
          Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos_No, NULL_REAL,
                                        SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
+
+         Prepare_PatchData_InitParticleDensityArray( lv, Time[lv] );
       }
 #     endif
 
