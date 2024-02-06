@@ -25,8 +25,8 @@ void Init_OpenMP()
 // numbef of OMP threads
    omp_set_num_threads( OMP_NTHREAD );
 
-// enable/disable nested parallelization
-   omp_set_nested( false );
+// maximum number of nested active parallel regions (1: disable nested parallelism)
+   omp_set_max_active_levels( 1 );
 
 // schedule
    const int chunk_size = 1;

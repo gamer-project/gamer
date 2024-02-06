@@ -782,10 +782,10 @@ void Output_DumpData_Total( const char *FileName )
 #     ifdef MASSIVE_PARTICLES
       if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
       {
-         Prepare_PatchData_InitParticleDensityArray( lv );
-
          Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos_No,
                                        NULL_REAL, SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
+
+         Prepare_PatchData_InitParticleDensityArray( lv, Time[lv] );
       }
 #     endif
 
