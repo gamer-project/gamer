@@ -2951,8 +2951,8 @@ extern bool Particle_Collected;
 // Function    :  Prepare_PatchData_InitParticleDensityArray
 // Description :  Initialize rho_ext[] used by Prepare_PatchData() for preparing particle density on grids
 //
-// Note        :  1. This function is currently called by Gra_AdvanceDt(), Output_DumpData_Total(),
-//                   Output_DumpData_Total_HDF5(), and Output_BasePowerSpectrum()
+// Note        :  1. This function is currently called by Aux_FindExtrema(), Aux_FindWeightedAverageCenter(),
+//                   Gra_AdvanceDt(), Output_DumpData_Total(), Output_DumpData_Total_HDF5(), and Output_BasePowerSpectrum()
 //                2. Apply to both real and buffer patches
 //                3. For patches without any particle, this routine ensures either rho_ext == NULL or
 //                   rho_ext[0][0][0] == RHO_EXT_NEED_INIT
@@ -3119,8 +3119,8 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv, const double Prep
 // Function    :  Prepare_PatchData_FreeParticleDensityArray
 // Description :  Free rho_ext[] allocated by Prepare_PatchData() temporarily for storing the partice mass density
 //
-// Note        :  1. This function is currently called by Gra_AdvanceDt(), Output_DumpData_Total(),
-//                   Output_DumpData_Total_HDF5(), and Output_BasePowerSpectrum()
+// Note        :  1. This function is currently called by Aux_FindExtrema(), Aux_FindWeightedAverageCenter(),
+//                   Gra_AdvanceDt(), Output_DumpData_Total(), Output_DumpData_Total_HDF5(), and Output_BasePowerSpectrum()
 //                2. Apply to buffer patches as well
 //                3. Do not free memory if OPT__REUSE_MEMORY is on
 //                   --> rho_ext[] will only be free'd together with other data arrays (e.g., fluid, pot)
