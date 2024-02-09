@@ -488,13 +488,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
       const int Sg0 = amr->FluSg[lv];
       SetTempIntPara( lv, Sg0, PrepTime, amr->FluSgTime[lv][Sg0], amr->FluSgTime[lv][1-Sg0],
                       FluIntTime, FluSg, FluSg_IntT, FluWeighting, FluWeighting_IntT );
-
-//    check: although temporal interpolation is allowed, currently PrepTime is expected to be equal to either
-//           amr->FluSgTime[lv][0] or amr->FluSgTime[lv][1]
-      if ( FluIntTime  &&  MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : cannot determine FluSg "
-                              "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
-                      lv, PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
    }
 
 // magnetic field
@@ -509,13 +502,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
       const int Sg0 = amr->MagSg[lv];
       SetTempIntPara( lv, Sg0, PrepTime, amr->MagSgTime[lv][Sg0], amr->MagSgTime[lv][1-Sg0],
                       MagIntTime, MagSg, MagSg_IntT, MagWeighting, MagWeighting_IntT );
-
-//    check: although temporal interpolation is allowed, currently PrepTime is expected to be equal to either
-//           amr->MagSgTime[lv][0] or amr->MagSgTime[lv][1]
-      if ( MagIntTime  &&  MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : cannot determine MagSg "
-                              "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
-                      lv, PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1] );
    }
 #  endif // #ifdef MHD
 
@@ -530,18 +516,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
       const int Sg0 = amr->PotSg[lv];
       SetTempIntPara( lv, Sg0, PrepTime, amr->PotSgTime[lv][Sg0], amr->PotSgTime[lv][1-Sg0],
                       PotIntTime, PotSg, PotSg_IntT, PotWeighting, PotWeighting_IntT );
-
-//    check: although temporal interpolation is allowed, currently PrepTime is expected to be equal to either
-//           amr->PotSgTime[lv][0] or amr->PotSgTime[lv][1]
-//           --> the only exception is when calling Par_UpdateParticle() to prepare the coarse-grid potential
-//               for correcting the velocity of particles just crossing from fine to coarse grids
-#     ifdef PARTICLE
-      if ( amr->Par->ImproveAcc )
-#     endif
-      if ( PotIntTime  &&  MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : cannot determine PotSg "
-                              "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
-                      lv, PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
    }
 #  endif // #ifdef GRAVITY
 
@@ -2951,8 +2925,9 @@ extern bool Particle_Collected;
 // Function    :  Prepare_PatchData_InitParticleDensityArray
 // Description :  Initialize rho_ext[] used by Prepare_PatchData() for preparing particle density on grids
 //
-// Note        :  1. This function is currently called by Aux_FindExtrema(), Aux_FindWeightedAverageCenter(),
-//                   Gra_AdvanceDt(), Output_DumpData_Total(), Output_DumpData_Total_HDF5(), and Output_BasePowerSpectrum()
+// Note        :  1. This function is currently called by Gra_AdvanceDt(), Output_DumpData_Total(),
+//                   Output_DumpData_Total_HDF5(), Output_BasePowerSpectrum(), Aux_FindExtrema(),
+//                   Aux_FindWeightedAverageCenter(), and Aux_ComputeProfile()
 //                2. Apply to both real and buffer patches
 //                3. For patches without any particle, this routine ensures either rho_ext == NULL or
 //                   rho_ext[0][0][0] == RHO_EXT_NEED_INIT
@@ -3119,8 +3094,9 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv, const double Prep
 // Function    :  Prepare_PatchData_FreeParticleDensityArray
 // Description :  Free rho_ext[] allocated by Prepare_PatchData() temporarily for storing the partice mass density
 //
-// Note        :  1. This function is currently called by Aux_FindExtrema(), Aux_FindWeightedAverageCenter(),
-//                   Gra_AdvanceDt(), Output_DumpData_Total(), Output_DumpData_Total_HDF5(), and Output_BasePowerSpectrum()
+// Note        :  1. This function is currently called by Gra_AdvanceDt(), Output_DumpData_Total(),
+//                   Output_DumpData_Total_HDF5(), Output_BasePowerSpectrum(), Aux_FindExtrema(),
+//                   Aux_FindWeightedAverageCenter(),  and Aux_ComputeProfile()
 //                2. Apply to buffer patches as well
 //                3. Do not free memory if OPT__REUSE_MEMORY is on
 //                   --> rho_ext[] will only be free'd together with other data arrays (e.g., fluid, pot)

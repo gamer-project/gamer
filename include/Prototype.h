@@ -38,7 +38,7 @@ int  Aux_CountRow( const char *FileName );
 void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
                          const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const long TVarBitIdx[],
                          const int NProf, const int MinLv, const int MaxLv, const PatchType_t PatchType,
-                         const double PrepTime );
+                         const double PrepTimeIn );
 void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int MinLv, const int MaxLv,
                       const PatchType_t PatchType );
 void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double Center_ref[], const double MaxR, const double MinWD,
