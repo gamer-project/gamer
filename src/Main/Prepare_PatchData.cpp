@@ -87,8 +87,6 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                           field on the coarse-fine interfaces of the central patch group
 //                       --> It's OK for the MHD solver since it will still guarantee that the updated B field within the patch group
 //                           is divergence free
-//               10. For _PAR_DENS and _TOTAL_DENS (for PARTICLE only), the OpenMP parallelization
-//                   must not be applied outside Prepare_PatchData() for preparing particle mass density
 //
 // Parameter   :  lv             : Target refinement level
 //                PrepTime       : Target physical time to prepare data
@@ -324,14 +322,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #  endif
 // -----------------------------------------
 // end of check
-
-// check the OpenMP parallelization
-#  ifdef OPENMP
-#  ifdef PARTICLE
-   if ( ( TVarCC & _PAR_DENS || TVarCC & _TOTAL_DENS )  &&  omp_get_num_threads() > 1 )
-      Aux_Error( ERROR_INFO, "omp_get_num_threads() = %d !! OpenMP parallelization should not be applied outside Prepare_PachData() for preparing particle density !!\n", omp_get_num_threads() );
-#  endif // #ifdef PARTICLE
-#  endif // #ifdef OPENMP
 
 
    const double dh               = amr->dh[lv];
