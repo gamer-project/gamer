@@ -78,7 +78,7 @@ void Init_Function_User_Template( real fluid[], const double x, const double y, 
 // Passive[X] = ...;
 #  endif
 
-// convert primitive variables to conservative variables
+// convert primitive variables to conserved variables
    MomX = Dens*Vx;
    MomY = Dens*Vy;
    MomZ = Dens*Vz;
@@ -363,8 +363,10 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
 //       apply density and internal energy floors
          fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
+#        ifndef SRHD
          fluid[ENGY] = Hydro_CheckMinEintInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                                  MIN_EINT, Emag );
+#        endif
 
 //       calculate the dual-energy variable (entropy or internal energy)
 #        ifdef DUAL_ENERGY

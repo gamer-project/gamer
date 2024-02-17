@@ -46,6 +46,7 @@ extern int       *BaseP;                              // table recording the IDs
 extern int        Flu_ParaBuf;                        // number of parallel buffers to exchange all fluid
                                                       // variables for the fluid solver and fluid refinement
 
+extern long       FixUpVar_Flux, FixUpVar_Restrict;
 extern int        PassiveNorm_NVar, PassiveNorm_VarIdx[NCOMP_PASSIVE];
 extern int        PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 
@@ -120,6 +121,15 @@ extern double           UNIT_B;
 extern bool             OPT__SAME_INTERFACE_B;
 
 extern OptInitMagByVecPot_t OPT__INIT_BFIELD_BYVECPOT;
+#endif
+
+#ifdef SRHD
+extern double           FlagTable_LrtzGradient[NLEVEL-1];
+extern bool             DT__SPEED_OF_LIGHT;
+extern bool             OPT__FLAG_LRTZ_GRADIENT;
+extern bool             OPT__OUTPUT_LORENTZ;
+extern bool             OPT__OUTPUT_3VELOCITY;
+extern bool             OPT__OUTPUT_ENTHALPY;
 #endif
 
 #elif ( MODEL == ELBDM )
@@ -256,6 +266,9 @@ extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 #if ( MODEL == HYDRO )
 extern double EoS_AuxArray_Flt[EOS_NAUX_MAX];
 extern int    EoS_AuxArray_Int[EOS_NAUX_MAX];
+extern EoS_GUESS_t   EoS_GuessHTilde_CPUPtr;
+extern EoS_H2TEM_t   EoS_HTilde2Temp_CPUPtr;
+extern EoS_TEM2H_t   EoS_Temp2HTilde_CPUPtr;
 extern EoS_DE2P_t    EoS_DensEint2Pres_CPUPtr;
 extern EoS_DP2E_t    EoS_DensPres2Eint_CPUPtr;
 extern EoS_DP2C_t    EoS_DensPres2CSqr_CPUPtr;
@@ -267,6 +280,9 @@ extern EoS_GENE_t    EoS_General_CPUPtr;
 extern EoS_CRE2CRP_t EoS_CREint2CRPres_CPUPtr;
 #endif
 #ifdef GPU
+extern EoS_GUESS_t   EoS_GuessHTilde_GPUPtr;
+extern EoS_H2TEM_t   EoS_HTilde2Temp_GPUPtr;
+extern EoS_TEM2H_t   EoS_Temp2HTilde_GPUPtr;
 extern EoS_DE2P_t    EoS_DensEint2Pres_GPUPtr;
 extern EoS_DP2E_t    EoS_DensPres2Eint_GPUPtr;
 extern EoS_DP2C_t    EoS_DensPres2CSqr_GPUPtr;
