@@ -1,8 +1,10 @@
 #include "GAMER.h"
 
 
-static void BC( real fluid[], const double x, const double y, const double z, const double Time,
-                const int lv, double AuxArray[] );
+static void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                const int GhostSize, const int idx[], const double pos[], const double Time,
+                const int lv, const int TFluVarIdxList[], double AuxArray[] );
+
 static void Init_ExtPot();
 
 
@@ -199,11 +201,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void BC( real fluid[], const double x, const double y, const double z, const double Time,
-         const int lv, double AuxArray[] )
+void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+         const int GhostSize, const int idx[], const double pos[], const double Time,
+         const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
 
-   SetGridIC( fluid, x, y, z, Time, lv, AuxArray );
+   SetGridIC( fluid, pos[0], pos[1], pos[2], Time, lv, AuxArray );
 
 } // FUNCTION : BC
 

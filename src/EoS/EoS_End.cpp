@@ -47,6 +47,8 @@ void EoS_End()
 #  error : ERROR : EOS_NUCLEAR is NOT supported yet !!
 #  elif ( EOS == EOS_COSMIC_RAY )
 // nothing to do
+#  elif ( EOS == EOS_TAUBMATHEWS )
+// nothing to do
 #  endif // # EOS
 
 

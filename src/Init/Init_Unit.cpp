@@ -71,8 +71,18 @@ void Init_Unit()
       if ( UNIT_V > 0.0 )    NBasicUnit ++;
       if ( UNIT_D > 0.0 )    NBasicUnit ++;
 
+#     ifdef SRHD
+      if ( NBasicUnit != 2 )  Aux_Error( ERROR_INFO, "Number of basic units set in Input__Parameter = %d != 2 for SRHD !!\n", NBasicUnit );
+#     else
       if ( NBasicUnit != 3 )  Aux_Error( ERROR_INFO, "Number of basic units set in Input__Parameter = %d != 3 !!\n", NBasicUnit );
+#     endif
 
+//    velocity in SRHD is fixed at the speed of light
+#     ifdef SRHD
+      if ( UNIT_V > 0.0 )
+         Aux_Error( ERROR_INFO, "Must set UNIT_V <= 0.0 for SRHD since the velocity unit is fixed to the speed of light !!\n" );
+      UNIT_V = Const_c;
+#     endif
 
 //    set all code units
 //    --> do NOT modify the following order of setting different units (otherwise some combinations may fail)
