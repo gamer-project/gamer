@@ -315,10 +315,10 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
          LoopEnd  [26][0] = LoopEnd  [26][1] = LoopEnd  [26][2] = PS1;
 
 //       MPI count array
-         for (int s= 0; s< 6; s++)  DataUnit_Buf[ s] = NVarCC_Tot * PS1     * PS1     * ParaBuf;   // sibling 0 ~ 5
-         for (int s= 6; s<18; s++)  DataUnit_Buf[ s] = NVarCC_Tot * PS1     * ParaBuf * ParaBuf;   // sibling 6 ~ 17
-         for (int s=18; s<26; s++)  DataUnit_Buf[ s] = NVarCC_Tot * ParaBuf * ParaBuf * ParaBuf;   // sibling 18 ~ 25
-                                    DataUnit_Buf[26] = NVarCC_Tot * PS1     * PS1     * PS1;       // entire patch
+         for (int s= 0; s< 6; s++)  { DataUnit_Buf[ s] = NVarCC_Tot * PS1     * PS1     * ParaBuf; }  // sibling 0 ~ 5
+         for (int s= 6; s<18; s++)  { DataUnit_Buf[ s] = NVarCC_Tot * PS1     * ParaBuf * ParaBuf; }  // sibling 6 ~ 17
+         for (int s=18; s<26; s++)  { DataUnit_Buf[ s] = NVarCC_Tot * ParaBuf * ParaBuf * ParaBuf; }  // sibling 18 ~ 25
+                                      DataUnit_Buf[26] = NVarCC_Tot * PS1     * PS1     * PS1;        // entire patch
 
 #        ifdef MHD
          for (int v=0; v<NVarFC_Mag; v++)
@@ -356,8 +356,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
             } // switch ( TMagVarIdx )
          } // for (int v=0; v<NVarFC_Mag; v++)
 
-         for (int s=18; s<26; s++)  DataUnit_Buf[ s] += NVarFC_Mag*ParaBufP1*SQR( ParaBuf );
-                                    DataUnit_Buf[26] += NVarFC_Mag*PS1P1*SQR( PS1 );
+         for (int s=18; s<26; s++)  { DataUnit_Buf[ s] += NVarFC_Mag*ParaBufP1*SQR( ParaBuf ); }
+                                      DataUnit_Buf[26] += NVarFC_Mag*PS1P1*SQR( PS1 );
 #        endif // #ifdef MHD
 
          for (int r=0; r<MPI_NRank; r++)
@@ -404,10 +404,10 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
          }
 
 //       MPI count array
-         for (int s= 0; s< 6; s++)  DataUnit_Buf[ s] = NVarCC_Tot * PS1     * PS1     * ParaBuf;   // sibling 0 ~ 5
-         for (int s= 6; s<18; s++)  DataUnit_Buf[ s] = NVarCC_Tot * PS1     * ParaBuf * ParaBuf;   // sibling 6 ~ 17
-         for (int s=18; s<26; s++)  DataUnit_Buf[ s] = NVarCC_Tot * ParaBuf * ParaBuf * ParaBuf;   // sibling 18 ~ 25
-                                    DataUnit_Buf[26] = NVarCC_Tot * PS1     * PS1     * PS1;       // entire patch
+         for (int s= 0; s< 6; s++)  { DataUnit_Buf[ s] = NVarCC_Tot * PS1     * PS1     * ParaBuf; }  // sibling 0 ~ 5
+         for (int s= 6; s<18; s++)  { DataUnit_Buf[ s] = NVarCC_Tot * PS1     * ParaBuf * ParaBuf; }  // sibling 6 ~ 17
+         for (int s=18; s<26; s++)  { DataUnit_Buf[ s] = NVarCC_Tot * ParaBuf * ParaBuf * ParaBuf; }  // sibling 18 ~ 25
+                                      DataUnit_Buf[26] = NVarCC_Tot * PS1     * PS1     * PS1;        // entire patch
 
 #        ifdef MHD
          for (int v=0; v<NVarFC_Mag; v++)
@@ -445,8 +445,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
             } // switch ( TMagVarIdx )
          } // for (int v=0; v<NVarFC_Mag; v++)
 
-         for (int s=18; s<26; s++)  DataUnit_Buf[ s] += NVarFC_Mag*ParaBufP1*SQR( ParaBuf );
-                                    DataUnit_Buf[26] += NVarFC_Mag*PS1P1*SQR( PS1 );
+         for (int s=18; s<26; s++)  { DataUnit_Buf[ s] += NVarFC_Mag*ParaBufP1*SQR( ParaBuf ); }
+                                      DataUnit_Buf[26] += NVarFC_Mag*PS1P1*SQR( PS1 );
 #        endif // #ifdef MHD
 
          for (int r=0; r<MPI_NRank; r++)
@@ -512,8 +512,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
             } // switch ( TMagVarIdx )
          } // for (int v=0; v<NVarFC_Mag; v++)
 
-         for (int s=18; s<26; s++)  DataUnit_Buf[ s] = NVarFC_Mag*ParaBufP1*SQR( ParaBuf );
-                                    DataUnit_Buf[26] = NVarFC_Mag*PS1P1*SQR( PS1 );
+         for (int s=18; s<26; s++)  { DataUnit_Buf[ s] = NVarFC_Mag*ParaBufP1*SQR( ParaBuf ); }
+                                      DataUnit_Buf[26] = NVarFC_Mag*PS1P1*SQR( PS1 );
 
          for (int r=0; r<MPI_NRank; r++)
          {

@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 #include <math.h>
 #ifdef SUPPORT_GSL
 #  include <gsl/gsl_errno.h>

@@ -1,17 +1,14 @@
 #include "GAMER.h"
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-static void BC_User_Template( real fluid[], const double x, const double y, const double z, const double Time,
-                              const int lv, double AuxArray[] );
+static void BC_User_Template( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                              const int GhostSize, const int idx[], const double pos[], const double Time,
+                              const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 // this function pointer must be set by a test problem initializer
-void (*BC_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
-                     const int lv, double AuxArray[] ) = NULL;
-
-#ifdef MHD
-extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
-                                   const int lv, double AuxArray[] );
-#endif
+void (*BC_User_Ptr)( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                     const int GhostSize, const int idx[], const double pos[], const double Time,
+                     const int lv, const int TFluVarIdxList[], double AuxArray[] ) = NULL;
 
 
 
@@ -28,16 +25,23 @@ extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double
 //                   --> It will be added automatically later
 //                   --> Just like the fluid initialization routine
 //
-// Parameter   :  fluid    : Fluid field to be set
-//                x/y/z    : Physical coordinates
-//                Time     : Physical time
-//                lv       : Refinement level
-//                AuxArray : Auxiliary array
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
+//                ArraySize      : Size of Array including the ghost zones on each side
+//                fluid          : Fluid fields to be set
+//                NVar_Flu       : Number of fluid variables to be prepared
+//                GhostSize      : Number of ghost zones
+//                idx            : Array indices
+//                pos            : Physical coordinates
+//                Time           : Physical time
+//                lv             : Refinement level
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
+//                AuxArray       : Auxiliary array
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void BC_User_Template( real fluid[], const double x, const double y, const double z, const double Time,
-                       const int lv, double AuxArray[] )
+void BC_User_Template( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                       const int GhostSize, const int idx[], const double pos[], const double Time,
+                       const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
 
 // put your B.C. here
@@ -50,6 +54,7 @@ void BC_User_Template( real fluid[], const double x, const double y, const doubl
    const real Vz    = 3.70e-1;
    const real Pres0 = 1.0;
    const real Emag0 = 0.0;    // must be zero here even for MHD
+   const double x, y, z;
 
    real Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
 #  if ( NCOMP_PASSIVE > 0 )
@@ -57,6 +62,10 @@ void BC_User_Template( real fluid[], const double x, const double y, const doubl
 #  else
    real *Passive = NULL;
 #  endif
+
+   x = pos[0];
+   y = pos[1];
+   z = pos[2];
 
    Dens       = Dens0 + 0.2*exp(  -(  SQR(1.1*x-0.5*amr->BoxSize[0])
                                      +SQR(2.2*y-0.5*amr->BoxSize[1])
@@ -112,10 +121,10 @@ void BC_User_Template( real fluid[], const double x, const double y, const doubl
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
-void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int ArraySizeX, const int ArraySizeY,
-                                 const int ArraySizeZ, const int Idx_Start[], const int Idx_End[],
-                                 const int TFluVarIdxList[], const double Time, const double dh, const double *Corner,
-                                 const long TVar, const int lv )
+void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int GhostSize, const int ArraySizeX,
+                                 const int ArraySizeY, const int ArraySizeZ, const int Idx_Start[],
+                                 const int Idx_End[], const int TFluVarIdxList[], const double Time,
+                                 const double dh, const double *Corner, const long TVar, const int lv )
 {
 
 // check
@@ -173,7 +182,11 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
    {
 //    1. primary variables
 //    get the boundary values of all NCOMP_TOTAL fields
-      BC_User_Ptr( BVal, x, y, z, Time, lv, NULL );
+      const int    ArraySize[3] = { ArraySizeX, ArraySizeY, ArraySizeZ };
+      const int    idx[3]       = { i, j, k };
+      const double pos[3]       = { x, y, z };
+      BC_User_Ptr( Array, ArraySize, BVal, NVar_Flu, GhostSize, idx, pos,
+                   Time, lv, TFluVarIdxList, NULL );
 
 //    add the magnetic energy for MHD
 #     if ( MODEL == HYDRO )
@@ -200,7 +213,8 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
 #     endif // #ifdef ( MODEL == HYDRO )
 
 //    store results to the output array
-      for (int v=0; v<NVar_Flu; v++)   Array3D[v][k][j][i] = BVal[ TFluVarIdxList[v] ];
+      for (int v=0; v<NVar_Flu; v++)
+        Array3D[v][k][j][i] = BVal[ TFluVarIdxList[v] ];
 
 
 //    2. derived variables
@@ -213,12 +227,16 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
       if ( PrepPres )   Array3D[ v2 ++ ][k][j][i] = Hydro_Con2Pres( BVal[DENS], BVal[MOMX], BVal[MOMY],
                                                                     BVal[MOMZ], BVal[ENGY], BVal+NCOMP_FLUID,
                                                                     CheckMinPres_Yes, MIN_PRES, Emag,
-                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt,
+                                                                    EoS_DensEint2Pres_CPUPtr,
+                                                                    EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                                    EoS_AuxArray_Flt,
                                                                     EoS_AuxArray_Int, h_EoS_Table, NULL );
       if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = Hydro_Con2Temp( BVal[DENS], BVal[MOMX], BVal[MOMY],
                                                                     BVal[MOMZ], BVal[ENGY], BVal+NCOMP_FLUID,
                                                                     CheckMinTemp_Yes, MIN_TEMP, Emag,
-                                                                    EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt,
+                                                                    EoS_DensEint2Temp_CPUPtr,
+                                                                    EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                                    EoS_AuxArray_Flt,
                                                                     EoS_AuxArray_Int, h_EoS_Table );
 
 #     elif ( MODEL == ELBDM )

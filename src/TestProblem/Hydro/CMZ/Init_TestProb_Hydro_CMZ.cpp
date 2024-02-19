@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -24,8 +23,9 @@ void Par_Init_ByFunction_BarredPot( const long NPar_ThisRank, const long NPar_Al
                                     real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
                                     real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
 #endif
-static void IsolatedBC( real fluid[], const double x, const double y, const double z, const double Time,
-                const int lv, double AuxArray[] );
+static void IsolatedBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                        const int GhostSize, const int idx[], const double pos[], const double Time,
+                        const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 //void Init_ExtAcc_BarredPot();
 //void Init_ExtPot_BarredPot();
@@ -283,6 +283,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 } // FUNCTION : SetGridIC
 
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  IsolatedBC
 // Description :  Isolated boundary condition for galaxies, only allow outflow velocities
@@ -297,29 +299,15 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void IsolatedBC( real fluid[], const double x, const double y, const double z, const double Time,
-         const int lv, double AuxArray[] )
+void IsolatedBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                 const int GhostSize, const int idx[], const double pos[], const double Time,
+                 const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
 
-//   real Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
-//
-//   Dens       = 1.0e-6*(Const_Msun/CUBE(Const_pc))/(UNIT_M/CUBE(UNIT_L));
-//   MomX       = Dens*Vx;
-//   MomY       = Dens*Vy;
-//   MomZ       = Dens*Vz;
-//   Pres       = Pres0*(  2.0 + sin( 2.0*M_PI*(4.5*x+5.5*y*6.5*z)/amr->BoxSize[2] )  );
-//   Eint       = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray );
-//   Etot       = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, Emag0 );
+   SetGridIC( fluid, pos[0], pos[1], pos[2], Time, lv, AuxArray );
 
-//   fluid[DENS] = Dens;
-//   fluid[MOMX] = MomX;
-//   fluid[MOMY] = MomY;
-//   fluid[MOMZ] = MomZ;
-//   fluid[ENGY] = Etot;
+} // FUNCTION : IsolatedBC
 
-   SetGridIC( fluid, x, y, z, Time, lv, AuxArray );
-
-} // FUNCTION : BC
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -342,7 +330,7 @@ void AddNewField_BarredPot()
 // --> since Grackle may already add this field automatically when GRACKLE_METAL is enabled
 // --> also note that "Idx_Metal" has been predefined in Field.h
    if ( Idx_Metal == Idx_Undefined )
-      Idx_Metal = AddField( "Metal", NORMALIZE_NO, INTERP_FRAC_YES );
+      Idx_Metal = AddField( "Metal", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_YES );
 
 
 } // FUNCTION : AddNewField_BarredPot

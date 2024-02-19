@@ -18,6 +18,7 @@
 #include "Timer.h"
 #include "SrcTerms.h"
 #include "EoS.h"
+#include "Microphysics.h"
 #include "Global.h"
 #include "PhysicalConstant.h"
 

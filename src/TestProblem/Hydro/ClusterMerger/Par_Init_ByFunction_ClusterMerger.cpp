@@ -119,9 +119,9 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       long NPar_Check = 0;
       for (int r=0; r<MPI_NRank; r++)
          NPar_Check += NPar_ThisCluster_EachRank[r];
-         if ( NPar_Check != NPar_EachCluster[c] )
-            Aux_Error( ERROR_INFO, "total number of particles in cluster %d: found (%ld) != expect (%ld) !!\n",
-                       c, NPar_Check, NPar_EachCluster[c] );
+      if ( NPar_Check != NPar_EachCluster[c] )
+         Aux_Error( ERROR_INFO, "total number of particles in cluster %d: found (%ld) != expect (%ld) !!\n",
+                    c, NPar_Check, NPar_EachCluster[c] );
 
       // set the file offset for this rank
       Offset[c] = 0;

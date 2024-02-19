@@ -1,14 +1,5 @@
 #include "GAMER.h"
 
-extern void (*Init_User_Ptr)();
-extern void (*Init_DerivedField_User_Ptr)();
-#ifdef PARTICLE
-extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
-                                        real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
-                                        real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                        real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
-#endif
-
 
 
 
@@ -141,6 +132,10 @@ void Init_GAMER( int *argc, char ***argv )
 #  ifdef FEEDBACK
    FB_Init();
 #  endif
+
+
+// initialize the microphysics
+   Microphysics_Init();
 
 
 // initialize the user-defined derived fields

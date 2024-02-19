@@ -46,6 +46,7 @@ extern int       *BaseP;                              // table recording the IDs
 extern int        Flu_ParaBuf;                        // number of parallel buffers to exchange all fluid
                                                       // variables for the fluid solver and fluid refinement
 
+extern long       FixUpVar_Flux, FixUpVar_Restrict;
 extern int        PassiveNorm_NVar, PassiveNorm_VarIdx[NCOMP_PASSIVE];
 extern int        PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 
@@ -75,7 +76,7 @@ extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__FREEZE_FLUID, OPT
 extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 extern bool       OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
 extern bool       OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID, OPT__SORT_PATCH_BY_LBIDX;
-extern char       OPT__OUTPUT_TEXT_FORMAT_FLT[MAX_STRING];
+extern char       OPT__OUTPUT_TEXT_FORMAT_FLT[MAX_STRING-1];
 
 extern UM_IC_Format_t     OPT__UM_IC_FORMAT;
 extern TestProbID_t       TESTPROB_ID;
@@ -120,6 +121,15 @@ extern double           UNIT_B;
 extern bool             OPT__SAME_INTERFACE_B;
 
 extern OptInitMagByVecPot_t OPT__INIT_BFIELD_BYVECPOT;
+#endif
+
+#ifdef SRHD
+extern double           FlagTable_LrtzGradient[NLEVEL-1];
+extern bool             DT__SPEED_OF_LIGHT;
+extern bool             OPT__FLAG_LRTZ_GRADIENT;
+extern bool             OPT__OUTPUT_LORENTZ;
+extern bool             OPT__OUTPUT_3VELOCITY;
+extern bool             OPT__OUTPUT_ENTHALPY;
 #endif
 
 #elif ( MODEL == ELBDM )
@@ -256,21 +266,33 @@ extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 #if ( MODEL == HYDRO )
 extern double EoS_AuxArray_Flt[EOS_NAUX_MAX];
 extern int    EoS_AuxArray_Int[EOS_NAUX_MAX];
-extern EoS_DE2P_t EoS_DensEint2Pres_CPUPtr;
-extern EoS_DP2E_t EoS_DensPres2Eint_CPUPtr;
-extern EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr;
-extern EoS_DE2T_t EoS_DensEint2Temp_CPUPtr;
-extern EoS_DT2P_t EoS_DensTemp2Pres_CPUPtr;
-extern EoS_DE2S_t EoS_DensEint2Entr_CPUPtr;
-extern EoS_GENE_t EoS_General_CPUPtr;
+extern EoS_GUESS_t   EoS_GuessHTilde_CPUPtr;
+extern EoS_H2TEM_t   EoS_HTilde2Temp_CPUPtr;
+extern EoS_TEM2H_t   EoS_Temp2HTilde_CPUPtr;
+extern EoS_DE2P_t    EoS_DensEint2Pres_CPUPtr;
+extern EoS_DP2E_t    EoS_DensPres2Eint_CPUPtr;
+extern EoS_DP2C_t    EoS_DensPres2CSqr_CPUPtr;
+extern EoS_DE2T_t    EoS_DensEint2Temp_CPUPtr;
+extern EoS_DT2P_t    EoS_DensTemp2Pres_CPUPtr;
+extern EoS_DE2S_t    EoS_DensEint2Entr_CPUPtr;
+extern EoS_GENE_t    EoS_General_CPUPtr;
+#ifdef COSMIC_RAY
+extern EoS_CRE2CRP_t EoS_CREint2CRPres_CPUPtr;
+#endif
 #ifdef GPU
-extern EoS_DE2P_t EoS_DensEint2Pres_GPUPtr;
-extern EoS_DP2E_t EoS_DensPres2Eint_GPUPtr;
-extern EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr;
-extern EoS_DE2T_t EoS_DensEint2Temp_GPUPtr;
-extern EoS_DT2P_t EoS_DensTemp2Pres_GPUPtr;
-extern EoS_DE2S_t EoS_DensEint2Entr_GPUPtr;
-extern EoS_GENE_t EoS_General_GPUPtr;
+extern EoS_GUESS_t   EoS_GuessHTilde_GPUPtr;
+extern EoS_H2TEM_t   EoS_HTilde2Temp_GPUPtr;
+extern EoS_TEM2H_t   EoS_Temp2HTilde_GPUPtr;
+extern EoS_DE2P_t    EoS_DensEint2Pres_GPUPtr;
+extern EoS_DP2E_t    EoS_DensPres2Eint_GPUPtr;
+extern EoS_DP2C_t    EoS_DensPres2CSqr_GPUPtr;
+extern EoS_DE2T_t    EoS_DensEint2Temp_GPUPtr;
+extern EoS_DT2P_t    EoS_DensTemp2Pres_GPUPtr;
+extern EoS_DE2S_t    EoS_DensEint2Entr_GPUPtr;
+extern EoS_GENE_t    EoS_General_GPUPtr;
+#ifdef COSMIC_RAY
+extern EoS_CRE2CRP_t EoS_CREint2CRPres_GPUPtr;
+#endif
 #endif
 extern EoS_t EoS;
 #endif // HYDRO
@@ -306,6 +328,26 @@ extern int  FB_LEVEL, FB_RSEED;
 extern bool FB_SNE, FB_USER;
 extern bool FB_Any;
 extern int  FB_ParaBuf;
+#endif
+
+
+// (2-13) cosmic ray
+// =======================================================================================================
+#ifdef COSMIC_RAY
+extern double GAMMA_CR;
+extern bool OPT__FLAG_CRAY, OPT__FLAG_LOHNER_CRAY;
+extern double FlagTable_CRay[NLEVEL-1];
+#endif
+
+
+// (2-14) microphysics
+// =======================================================================================================
+extern MicroPhy_t MicroPhy;
+#ifdef CR_DIFFUSION
+extern double CR_DIFF_PARA;
+extern double CR_DIFF_PERP;
+extern double DT__CR_DIFFUSION;
+extern double CR_DIFF_MIN_B;
 #endif
 
 

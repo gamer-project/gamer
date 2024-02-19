@@ -276,7 +276,8 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                            OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
                            JeansMinPres_No, NULL_REAL,
                            EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
-                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+                           EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, NULL );
 
 //          no need to copy the magnetic field here
             for (int v=0; v<NCOMP_TOTAL; v++)   CData[ CSize3D*v + i ] = Temp[v];
@@ -338,23 +339,25 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
          {
             if ( FData_is_Prim )
             {
-//             convert passive scalars from mass fraction back to mass density
-#              if ( NCOMP_PASSIVE > 0 )
-               real Passive[NCOMP_PASSIVE];
+               if ( EoS_DensPres2Eint_CPUPtr != NULL ) {
+//                convert passive scalars from mass fraction back to mass density
+#                 if ( NCOMP_PASSIVE > 0 )
+                  real Passive[NCOMP_PASSIVE];
 
-               for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Temp[ NCOMP_FLUID + v ];
+                  for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Temp[ NCOMP_FLUID + v ];
 
-               if ( OPT__INT_FRAC_PASSIVE_LR )
-                  for (int v=0; v<PassiveIntFrac_NVar; v++)    Passive[ PassiveIntFrac_VarIdx[v] ] *= Temp[DENS];
-#              else
-               const real *Passive = NULL;
-#              endif
+                  if ( OPT__INT_FRAC_PASSIVE_LR )
+                     for (int v=0; v<PassiveIntFrac_NVar; v++)    Passive[ PassiveIntFrac_VarIdx[v] ] *= Temp[DENS];
+#                 else
+                  const real *Passive = NULL;
+#                 endif
 
-               Eint = EoS_DensPres2Eint_CPUPtr( Temp[DENS], Temp[ENGY], Passive,
-                                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                  Eint = EoS_DensPres2Eint_CPUPtr( Temp[DENS], Temp[ENGY], Passive,
+                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
-               if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint, "interpolated internal energy", ERROR_INFO, UNPHY_SILENCE )  )
-                  Fail_ThisCell = true;
+                  if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint, "interpolated internal energy", ERROR_INFO, UNPHY_SILENCE )  )
+                     Fail_ThisCell = true;
+               } // if ( EoS_DensPres2Eint_CPUPtr != NULL )
             } // if ( FData_is_Prim )
 
             else
@@ -372,7 +375,8 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
                Pres = Hydro_Con2Pres( Temp[DENS], Temp[MOMX], Temp[MOMY], Temp[MOMZ], Temp[ENGY], Temp+NCOMP_FLUID,
                                       CheckMinPres_No, NULL_REAL, Emag,
-                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+                                      EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                      EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
                if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "interpolated pressure", ERROR_INFO, UNPHY_SILENCE )  )
                   Fail_ThisCell = true;
@@ -423,8 +427,14 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
          {
 //          primitive --> conserved
             if ( FData_is_Prim ) {
-               Hydro_Pri2Con( Temp, Cons, OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
-                              EoS_DensPres2Eint_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+               Hydro_Pri2Con( Temp, Cons, OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar,
+                              PassiveIntFrac_VarIdx, EoS_DensPres2Eint_CPUPtr,
+                              EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+#              ifdef GAMER_DEBUG
+               if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Cons[ENGY], "interpolated energy", ERROR_INFO, UNPHY_VERBOSE )  )
+                  Aux_Error( ERROR_INFO, "unphysical interpolated energy in %s() !!\n", __FUNCTION__ );
+#              endif
             }
 
             else {

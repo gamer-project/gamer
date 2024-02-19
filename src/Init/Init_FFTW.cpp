@@ -4,15 +4,9 @@
 
 static int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Guess );
 
-
+root_fftw::real_plan_nd FFTW_Plan_PS;                       // PS  : plan for calculating the power spectrum
 #ifdef GRAVITY
-extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,
-                                               const int lv, double AuxArray[] );
-#endif
-
-root_fftw::real_plan_nd     FFTW_Plan_PS;                        // PS  : plan for calculating the power spectrum
-#ifdef GRAVITY
-root_fftw::real_plan_nd     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for the self-gravity Poisson solver
+root_fftw::real_plan_nd FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;   // Poi : plan for the self-gravity Poisson solver
 #endif // #ifdef GRAVITY
 
 
