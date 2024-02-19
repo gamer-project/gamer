@@ -13,7 +13,8 @@
 // Parameter   :  Array : Pointer to be allocated
 //                J/I   : Array dimensions
 //-------------------------------------------------------------------------------------------------------
-void Aux_AllocateArray2D( real** &Array, const int J, const int I )
+template<typename T>
+void Aux_AllocateArray2D( T** &Array, const int J, const int I )
 {
 
    if ( J < 0  ||  I < 0 )    Aux_Error( ERROR_INFO, "incorrect array size (J = %d, I = %d) !!\n", J, I );
@@ -24,8 +25,8 @@ void Aux_AllocateArray2D( real** &Array, const int J, const int I )
       return;
    }
 
-   Array    = new real* [J  ];
-   Array[0] = new real  [J*I];
+   Array    = new T* [J  ];
+   Array[0] = new T  [J*I];
 
    for (int j=1; j<J; j++)    Array[j] = Array[j-1] + I;
 
@@ -42,7 +43,8 @@ void Aux_AllocateArray2D( real** &Array, const int J, const int I )
 //
 // Parameter   :  Array : Pointer to be deallocated
 //-------------------------------------------------------------------------------------------------------
-void Aux_DeallocateArray2D( real** &Array )
+template<typename T>
+void Aux_DeallocateArray2D( T** &Array )
 {
 
    if ( Array == NULL )    return;
@@ -53,3 +55,11 @@ void Aux_DeallocateArray2D( real** &Array )
    Array = NULL;
 
 } // FUNCTION : Aux_DeallocateArray2D
+
+
+// explicit template instantiation
+template void Aux_AllocateArray2D <float>  ( float**  &Array, const int J, const int I );
+template void Aux_AllocateArray2D <double> ( double** &Array, const int J, const int I );
+
+template void Aux_DeallocateArray2D <float>  ( float**  &Array );
+template void Aux_DeallocateArray2D <double> ( double** &Array );

@@ -10,6 +10,13 @@ typedef float  real;
 #endif
 
 
+#ifdef FLOAT8_PAR
+typedef double real_par;
+#else
+typedef float  real_par;
+#endif
+
+
 // models
 #define HYDRO              1
 #define ELBDM              3

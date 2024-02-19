@@ -1,7 +1,7 @@
 #include "CompareData.h"
 
-static void Mis_Heapsort( const long N, real Array[], long IdxTable[] );
-static void Heapsort_SiftDown( const long L, const long R, real Array[], long IdxTable[] );
+static void Mis_Heapsort( const long N, real_par Array[], long IdxTable[] );
+static void Heapsort_SiftDown( const long L, const long R, real_par Array[], long IdxTable[] );
 
 
 
@@ -10,15 +10,15 @@ static void Heapsort_SiftDown( const long L, const long R, real Array[], long Id
 // Function    :  SortParticle
 // Description :  Sort particles by their x, y, z, and vx
 //-------------------------------------------------------------------------------------------------------
-void SortParticle( const long NPar, const real *PosX, const real *PosY, const real *PosZ, const real *VelX, long *IdxTable )
+void SortParticle( const long NPar, const real_par *PosX, const real_par *PosY, const real_par *PosZ, const real_par *VelX, long *IdxTable )
 {
 
    long NParSameX, NParSameY, NParSameZ;
 
 // 0. back up the PosX array since we don't want to modify it during the sorting
-   real *PosX_Sorted = new real [NPar];
+   real_par *PosX_Sorted = new real_par [NPar];
 
-   memcpy( PosX_Sorted, PosX, sizeof(real)*NPar );
+   memcpy( PosX_Sorted, PosX, sizeof(real_par)*NPar );
 
 
 // 1. sort by x
@@ -35,9 +35,9 @@ void SortParticle( const long NPar, const real *PosX, const real *PosY, const re
 
       if ( NParSameX > 1 )
       {
-         long *SortByX_IdxTable = new long [NParSameX];
-         long *SortByY_IdxTable = new long [NParSameX];
-         real *PosY_Sorted      = new real [NParSameX];
+         long     *SortByX_IdxTable = new long     [NParSameX];
+         long     *SortByY_IdxTable = new long     [NParSameX];
+         real_par *PosY_Sorted      = new real_par [NParSameX];
 
          for (long y=0; y<NParSameX; y++)
          {
@@ -60,8 +60,8 @@ void SortParticle( const long NPar, const real *PosX, const real *PosY, const re
 
             if ( NParSameY > 1 )
             {
-               long *SortByZ_IdxTable = new long [NParSameY];
-               real *PosZ_Sorted      = new real [NParSameY];
+               long     *SortByZ_IdxTable = new long     [NParSameY];
+               real_par *PosZ_Sorted      = new real_par [NParSameY];
 
                for (long z=0; z<NParSameY; z++)
                {
@@ -84,8 +84,8 @@ void SortParticle( const long NPar, const real *PosX, const real *PosY, const re
 
                   if ( NParSameZ > 1 )
                   {
-                     long *SortByVx_IdxTable = new long [NParSameZ];
-                     real *VelX_Sorted       = new real [NParSameZ];
+                     long     *SortByVx_IdxTable = new long     [NParSameZ];
+                     real_par *VelX_Sorted       = new real_par [NParSameZ];
 
                      for (long w=0; w<NParSameZ; w++)
                      {
@@ -136,7 +136,7 @@ void SortParticle( const long NPar, const real *PosX, const real *PosY, const re
 //                Array    :  Array to be sorted into ascending numerical order
 //                IdxTable :  Index table
 //-------------------------------------------------------------------------------------------------------
-void Mis_Heapsort( const long N, real Array[], long IdxTable[] )
+void Mis_Heapsort( const long N, real_par Array[], long IdxTable[] )
 {
 
 // initialize the IdxTable
@@ -147,7 +147,7 @@ void Mis_Heapsort( const long N, real Array[], long IdxTable[] )
    for (long L=N/2-1; L>=0; L--)    Heapsort_SiftDown( L, N-1, Array, IdxTable );
 
 // retirement-and-promotion
-   real Buf;
+   real_par Buf;
    for (long R=N-1; R>0; R--)
    {
       Buf      = Array[R];
@@ -179,13 +179,13 @@ void Mis_Heapsort( const long N, real Array[], long IdxTable[] )
 //                Array    :  Array to be sorted into ascending numerical order
 //                IdxTable :  Index table
 //-------------------------------------------------------------------------------------------------------
-void Heapsort_SiftDown( const long L, const long R, real Array[], long IdxTable[] )
+void Heapsort_SiftDown( const long L, const long R, real_par Array[], long IdxTable[] )
 {
 
-   long Idx_up    = L;
-   long Idx_down  = 2*Idx_up + 1;
-   real Target    = Array[Idx_up];
-   long TargetIdx = ( IdxTable == NULL ) ? -1 : IdxTable[Idx_up];
+   long Idx_up        = L;
+   long Idx_down      = 2*Idx_up + 1;
+   real_par Target    = Array[Idx_up];
+   long TargetIdx     = ( IdxTable == NULL ) ? -1 : IdxTable[Idx_up];
 
    while ( Idx_down <= R )
    {
