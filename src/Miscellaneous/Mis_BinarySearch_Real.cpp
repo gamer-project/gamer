@@ -27,14 +27,14 @@
 //                Min-1 : if Key <  Array[Min]
 //                Max   : if Key >= Array[Max]
 //-------------------------------------------------------------------------------------------------------
-template <typename T>
-int Mis_BinarySearch_Real( const T Array[], int Min, int Max, const T Key )
+template <typename U, typename T>
+U Mis_BinarySearch_Real( const T Array[], U Min, U Max, const T Key )
 {
 
-// initial check
+// initial check; force print format as long since typename U can be "int" or "long"
 #  ifdef GAMER_DEBUG
-   if ( Min < 0 )    Aux_Error( ERROR_INFO, "incorrect input parameter \"Min (%d) < 0\" !!\n", Min );
-   if ( Max <= Min ) Aux_Error( ERROR_INFO, "incorrect input parameters \"Max (%d) <= Min (%d)\" !!\n", Max, Min );
+   if ( Min < 0 )    Aux_Error( ERROR_INFO, "incorrect input parameter \"Min (%ld) < 0\" !!\n", (long)Min );
+   if ( Max <= Min ) Aux_Error( ERROR_INFO, "incorrect input parameters \"Max (%ld) <= Min (%ld)\" !!\n", (long)Max, (long)Min );
 #  endif
 
 
@@ -44,7 +44,7 @@ int Mis_BinarySearch_Real( const T Array[], int Min, int Max, const T Key )
 
 
 // binary search
-   int Idx = -2;
+   U Idx = -2;
 
    while (  ( Idx=(Min+Max)/2 ) != Min  )
    {
@@ -53,14 +53,14 @@ int Mis_BinarySearch_Real( const T Array[], int Min, int Max, const T Key )
    }
 
 
-// check whether the found array index is correct
+// check whether the found array index is correct; force print format as long since typename U can be "int" or "long"
 #  ifdef GAMER_DEBUG
    if ( Idx < Min  ||  Idx >= Max )
-      Aux_Error( ERROR_INFO, "incorrect output index (Idx %d, Min %d, Max%d) !!\n", Idx, Min, Max );
+      Aux_Error( ERROR_INFO, "incorrect output index (Idx %ld, Min %ld, Max%ld) !!\n", (long)Idx, (long)Min, (long)Max );
 
    if (  Array[Idx] > Key  ||  Array[Idx+1] <= Key )
-      Aux_Error( ERROR_INFO, "incorrect output index (Idx %d, ValueL %14.7e, ValueR %14.7e, Key %14.7e) !!\n",
-                 Idx, Array[Idx], Array[Idx+1], Key );
+      Aux_Error( ERROR_INFO, "incorrect output index (Idx %ld, ValueL %14.7e, ValueR %14.7e, Key %14.7e) !!\n",
+                 (long)Idx, Array[Idx], Array[Idx+1], Key );
 #  endif
 
 
@@ -71,5 +71,8 @@ int Mis_BinarySearch_Real( const T Array[], int Min, int Max, const T Key )
 
 
 // explicit template instantiation
-template int Mis_BinarySearch_Real <float>  ( const float  Array[], int Min, int Max, const float  Key );
-template int Mis_BinarySearch_Real <double> ( const double Array[], int Min, int Max, const double Key );
+template int  Mis_BinarySearch_Real <int,float>   ( const float  Array[], int  Min, int  Max, const float  Key );
+template int  Mis_BinarySearch_Real <int,double>  ( const double Array[], int  Min, int  Max, const double Key );
+
+template long Mis_BinarySearch_Real <long,float>  ( const float  Array[], long Min, long Max, const float  Key );
+template long Mis_BinarySearch_Real <long,double> ( const double Array[], long Min, long Max, const double Key );

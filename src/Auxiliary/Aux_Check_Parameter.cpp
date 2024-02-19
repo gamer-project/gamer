@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 #include "CUFLU.h"
 #ifdef GRAVITY
 #include "CUPOT.h"
@@ -123,7 +122,11 @@ void Aux_Check_Parameter()
                  "OPT__CK_REFINE", "OPT__FLAG_RHO" );
 
 #  if   ( MODEL == HYDRO )
-   if (  ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR )
+#  ifndef COSMIC_RAY
+   const bool OPT__FLAG_LOHNER_CRAY = false;
+#  endif
+   if (  ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP ||
+           OPT__FLAG_LOHNER_ENTR || OPT__FLAG_LOHNER_CRAY )
          &&  Flu_ParaBuf < 2  )
       Aux_Error( ERROR_INFO, "Lohner error estimator does NOT work when Flu_ParaBuf (%d) < 2 !!\n", Flu_ParaBuf );
 #  elif ( MODEL == ELBDM )
@@ -285,8 +288,10 @@ void Aux_Check_Parameter()
    } // if ( OPT__OUTPUT_USER_FIELD )
 
 #  if ( MODEL == HYDRO )
+#  ifndef SRHD
    if (  OPT__OUTPUT_TEMP  &&  EoS_DensEint2Temp_CPUPtr == NULL )
       Aux_Error( ERROR_INFO, "EoS_DensEint2Temp_CPUPtr == NULL for OPT__OUTPUT_TEMP !!\n" );
+#  endif
 
 #  if ( EOS == EOS_ISOTHERMAL )
    if ( OPT__OUTPUT_ENTR )
@@ -335,6 +340,10 @@ void Aux_Check_Parameter()
 #  endif
       Aux_Message( stderr, "WARNING : all output options are turned off --> no data will be output !!\n" );
 
+   if ( StrLen_Flt <= 0 )
+      Aux_Message( stderr, "WARNING : StrLen_Flt (%d) <= 0 (OPT__OUTPUT_TEXT_FORMAT_FLT=%s) --> text output might be misaligned !!\n",
+                   StrLen_Flt, OPT__OUTPUT_TEXT_FORMAT_FLT );
+
    if ( OPT__CK_REFINE )
       Aux_Message( stderr, "WARNING : \"%s\" check may fail due to the proper-nesting constraint !!\n",
                    "OPT__CK_REFINE" );
@@ -362,6 +371,13 @@ void Aux_Check_Parameter()
    Flag |= OPT__FLAG_LOHNER_ENTR;
 #  ifdef MHD
    Flag |= OPT__FLAG_CURRENT;
+#  endif
+#  ifdef SRHD
+   Flag |= OPT__FLAG_LRTZ_GRADIENT;
+#  endif
+#  ifdef COSMIC_RAY
+   Flag |= OPT__FLAG_CRAY;
+   Flag |= OPT__FLAG_LOHNER_CRAY;
 #  endif
 #  endif
 #  if ( MODEL == ELBDM )
@@ -540,6 +556,10 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "GAMMA must be equal to 5.0/3.0 for COMOVING !!\n" );
 #  endif
 
+#  ifdef MHD
+      Aux_Error( ERROR_INFO, "MHD doesn't support COMOVING yet !!\n" );
+#  endif
+
 
 // warnings
 // ------------------------------
@@ -659,6 +679,15 @@ void Aux_Check_Parameter()
 #   endif
 #  endif // MHD
 
+#  ifdef SRHD
+#   if ( defined RSOLVER  &&  RSOLVER != HLLC  &&  RSOLVER != HLLE )
+#     error : ERROR : unsupported Riemann solver for SRHD (HLLC/HLLE) !!
+#   endif
+#   if ( defined FLU_SCHEME  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != MHM )
+#     error : ERROR : unsupported FLU_SCHEME for SRHD (MHM_RP/MHM) !!
+#   endif
+#  endif // SRHD
+
 #  ifdef DUAL_ENERGY
 #   if ( FLU_SCHEME == RTVD )
 #     error : RTVD does NOT support DUAL_ENERGY !!
@@ -668,14 +697,60 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
 #   endif
 
-#  if ( DUAL_ENERGY == DE_ENPY  &&  EOS != EOS_GAMMA )
+#   if ( DUAL_ENERGY == DE_ENPY  &&  EOS != EOS_GAMMA )
 #     error : ERROR : DUAL_ENERGY=DE_ENPY only supports EOS_GAMMA !!
-#  endif
-
-#   if ( DUAL_ENERGY == DE_ENPY  &&  defined COSMIC_RAY )
-#     error : COSMIC_RAY does NOT support DUAL_ENERGY=DE_ENPY !!
 #   endif
 #  endif // #ifdef DUAL_ENERGY
+
+#  ifdef SRHD
+#   ifdef MHD
+#     error : ERROR : SRHD does not support MHD !!
+#   endif
+
+#   ifdef GRAVITY
+#     error : ERROR : SRHD does not support GRAVITY !!
+#   endif
+
+#   ifdef COMOVING
+#     error : ERROR : SRHD does not support COMOVING !!
+#   endif
+
+#   ifdef PARTICLE
+#     error : ERROR : SRHD does not support PARTICLE !!
+#   endif
+
+#   if ( EOS != EOS_TAUBMATHEWS )
+#     error : ERROR : EOS != EOS_TAUBMATHEWS for SRHD !!
+#   endif
+
+#   ifdef COSMIC_RAY
+#     error : ERROR : SRHD does not support COSMIC_RAY !!
+#   endif
+
+#   ifdef DUAL_ENERGY
+#     error : ERROR : SRHD does not support DUAL_ENERGY !!
+#   endif
+
+#   ifdef SUPPORT_GRACKLE
+#     error : ERROR : SRHD does not support SUPPORT_GRACKLE !!
+#   endif
+
+#   ifdef LR_EINT
+#     error : ERROR : SRHD does not support LR_EINT !!
+#   endif
+
+    if ( OPT__OUTPUT_ENTR )
+      Aux_Error( ERROR_INFO, "SRHD does not support OPT__OUTPUT_ENTR !!\n" );
+
+    if ( OPT__FLAG_LOHNER_ENTR )
+      Aux_Error( ERROR_INFO, "SRHD does not support OPT__FLAG_LOHNER_ENTR !!\n" );
+
+    if ( JEANS_MIN_PRES )
+      Aux_Error( ERROR_INFO, "SRHD does not support JEANS_MIN_PRES !!\n" );
+
+    if ( OPT__FLAG_JEANS )
+      Aux_Error( ERROR_INFO, "SRHD does not support OPT__FLAG_JEANS !!\n" );
+#  endif // #ifdef SRHD
 
 #  ifdef MHD
 #   if ( defined CHECK_INTERMEDIATE  &&  CHECK_INTERMEDIATE != HLLE  &&  CHECK_INTERMEDIATE != HLLD )
@@ -689,15 +764,29 @@ void Aux_Check_Parameter()
 #  endif // MHD
 
 #  ifdef COSMIC_RAY
-#     error : ERROR : COSMIC_RAY is NOT supported yet !!
-#  endif
+#   if ( FLU_SCHEME != MHM_RP )
+#     error : ERROR : COSMIC_RAY currently only supports the MHM_RP fluid scheme !!
+#   endif
+
+#   if ( EOS != EOS_COSMIC_RAY )
+#     error : ERROR : COSMIC_RAY must use EOS_COSMIC_RAY !!
+#   endif
+
+#   ifdef DUAL_ENERGY
+#     error : ERROR : DUAL_ENERGY is not supported for COSMIC_RAY !!
+#   endif
+
+#   ifdef COMOVING
+#     error : ERROR : COSMIC_RAY currently does not support COMOVING !!
+#   endif
+#  endif // COSMIC_RAY
 
 #  if ( defined LR_EINT  &&  FLU_SCHEME == CTU )
 #     error : ERROR : CTU does NOT support LR_EINT in CUFLU.h !!
 #  endif
 
-#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR  &&  EOS != EOS_USER )
-#     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_USER) !!
+#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR  &&  EOS != EOS_COSMIC_RAY  &&  EOS != EOS_TAUBMATHEWS  &&  EOS != EOS_USER )
+#     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_COSMIC_RAY/EOS_TAUBMATHEWS/EOS_USER) !!
 #  endif
 
 #  if ( EOS != EOS_GAMMA )
@@ -745,16 +834,19 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "EOS_TABULAR is not supported yet !!\n" );
 #  endif
 
+#  if ( EOS == EOS_COSMIC_RAY  &&  !defined COSMIC_RAY )
+#     error : ERROR : must enable COSMIC_RAY for EOS_COSMIC_RAY !!
+#  endif
+
 #  ifdef BAROTROPIC_EOS
-#     if ( EOS == EOS_GAMMA  ||  EOS == EOS_NUCLEAR )
-#        error : ERROR : BAROTROPIC_EOS is incompatible with EOS_GAMMA/EOS_NUCLEAR !!
+#     if ( EOS == EOS_GAMMA  ||  EOS == EOS_COSMIC_RAY  ||  EOS == EOS_NUCLEAR  ||  EOS == EOS_TAUBMATHEWS )
+#        error : ERROR : BAROTROPIC_EOS is incompatible with EOS_GAMMA/EOS_COSMIC_RAY/EOS_NUCLEAR/EOS_TAUBMATHEWS !!
 #     endif
 #  else
 #     if ( EOS == EOS_ISOTHERMAL )
 #        error : ERROR : must enable BAROTROPIC_EOS for EOS_ISOTHERMAL !!
 #     endif
 #  endif // #ifdef BAROTROPIC_EOS ... else ...
-
 
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
    {
@@ -852,6 +944,20 @@ void Aux_Check_Parameter()
 #  if (  defined LR_EINT  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
       Aux_Message( stderr, "WARNING : LR_EINT is not recommended for EOS_GAMMA/EOS_ISOTHERMAL !!\n" );
 #  endif
+
+#  ifdef SRHD
+   if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
+      Aux_Message( stderr, "WARNING : OPT__1ST_FLUX_CORR (%d) currently has no effect on SRHD !!\n", OPT__1ST_FLUX_CORR );
+
+   if ( AUTO_REDUCE_DT )
+      Aux_Message( stderr, "WARNING : AUTO_REDUCE_DT currently has no effect on SRHD !!\n" );
+
+   if ( !OPT__OUTPUT_TEMP )
+      Aux_Message( stderr, "WARNING : OPT__OUTPUT_TEMP is off, which will make most SRHD fields in yt unavailable !!\n" );
+
+   if ( !OPT__OUTPUT_ENTHALPY )
+      Aux_Message( stderr, "WARNING : OPT__OUTPUT_ENTHALPY is off, which will make most SRHD fields in yt unavailable !!\n" );
+#  endif // #ifdef SRHD
    } // if ( MPI_Rank == 0 )
 
 
@@ -867,9 +973,16 @@ void Aux_Check_Parameter()
 
    if ( OPT__LR_LIMITER != LR_LIMITER_VANLEER     &&  OPT__LR_LIMITER != LR_LIMITER_GMINMOD  &&
         OPT__LR_LIMITER != LR_LIMITER_ALBADA      &&  OPT__LR_LIMITER != LR_LIMITER_EXTPRE   &&
-        OPT__LR_LIMITER != LR_LIMITER_VL_GMINMOD  &&  OPT__LR_LIMITER != LR_LIMITER_CENTRAL    )
+        OPT__LR_LIMITER != LR_LIMITER_VL_GMINMOD  &&  OPT__LR_LIMITER != LR_LIMITER_CENTRAL  &&
+        OPT__LR_LIMITER != LR_LIMITER_ATHENA )
       Aux_Error( ERROR_INFO, "unsupported data reconstruction limiter (OPT__LR_IMITER = %d) !!\n",
                  OPT__LR_LIMITER );
+
+#  if ( LR_SCHEME == PLM )
+   if ( OPT__LR_LIMITER == LR_LIMITER_ATHENA )
+      Aux_Error( ERROR_INFO, "ERROR : OPT__LR_LIMITER = %d (LR_LIMITER_ATHENA) is not supported for PLM !!\n",
+                 OPT__LR_LIMITER );
+#  endif
 
 
 // warnings
@@ -877,9 +990,15 @@ void Aux_Check_Parameter()
    if ( MPI_Rank == 0 ) {
 
 #     if ( FLU_SCHEME == MHM_RP  &&  LR_SCHEME == PPM )
-      if ( OPT__LR_LIMITER != LR_LIMITER_CENTRAL )
-         Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (LR_LIMITER_CENTRAL) is recommended for MHM_RP+PPM !!\n",
-                      LR_LIMITER_CENTRAL );
+      if ( OPT__LR_LIMITER != LR_LIMITER_ATHENA )
+         Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (LR_LIMITER_ATHENA) is recommended for MHM_RP+PPM !!\n",
+                      LR_LIMITER_ATHENA );
+#     endif
+
+#     if ( FLU_SCHEME == MHM  &&  defined MHD )
+      if ( OPT__LR_LIMITER == LR_LIMITER_ATHENA )
+         Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (LR_LIMITER_ATHENA) is not recommended for MHM+MHD !!\n",
+                      LR_LIMITER_ATHENA );
 #     endif
 
 #     if ( LR_SCHEME == PLM )
@@ -1174,7 +1293,7 @@ void Aux_Check_Parameter()
 #  endif
 
 #  if ( POT_GHOST_SIZE <= GRA_GHOST_SIZE )
-      #error : ERROR : POT_GHOST_SIZE <= GRA_GHOST_SIZE !!
+#     error : ERROR : POT_GHOST_SIZE <= GRA_GHOST_SIZE !!
 #  endif
 
 #  if ( POT_GHOST_SIZE < 1 )
@@ -1434,8 +1553,8 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-#  if ( EOS != EOS_GAMMA )
-#     error : ERROR : SUPPORT_GRACKLE must work with EOS_GAMMA !!
+#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_COSMIC_RAY )
+#     error : ERROR : SUPPORT_GRACKLE must work with EOS_GAMMA/EOS_COSMIC_RAY !!
 #  endif
 
 // warning
@@ -1541,6 +1660,30 @@ void Aux_Check_Parameter()
    } // if ( MPI_Rank == 0 )
 
 #endif // #ifdef FEEDBACK
+
+
+// cosmic-ray diffusion
+// =======================================================================================
+#ifdef CR_DIFFUSION
+
+// errors
+// ------------------------------
+#  ifndef COSMIC_RAY
+#     error : ERROR : must enable COSMIC_RAY for CR_DIFFUSION !!
+#  endif
+
+#  ifndef MHD
+#     error : ERROR : must enable MHD for CR_DIFFUSION !!
+#  endif
+
+// warning
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
+      if ( DT__CR_DIFFUSION < 0.0  ||  DT__CR_DIFFUSION > 1.0 )
+         Aux_Message( stderr, "WARNING : DT__CR_DIFFUSION (%14.7e) is not within the normal range [0...1] !!\n", DT__CR_DIFFUSION );
+   } // if ( MPI_Rank == 0 )
+
+#endif // ifdef CR_DIFFUSION
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ... done\n" );

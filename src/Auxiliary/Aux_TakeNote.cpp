@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 #include "CUFLU.h"
 #ifdef GRAVITY
 #include "CUPOT.h"
@@ -169,11 +168,22 @@ void Aux_TakeNote()
       fprintf( Note, "MHD                             OFF\n" );
 #     endif
 
+#     ifdef SRHD
+      fprintf( Note, "SRHD                            ON\n" );
+#     else
+      fprintf( Note, "SRHD                            OFF\n" );
+#     endif
+
 #     ifdef COSMIC_RAY
       fprintf( Note, "COSMIC_RAY                      ON\n" );
+#     ifdef CR_DIFFUSION
+      fprintf( Note, "CR_DIFFUSION                    ON\n" );
 #     else
-      fprintf( Note, "COSMIC_RAY                      OFF\n" );
+      fprintf( Note, "CR_DIFFUSION                    OFF\n" );
 #     endif
+#     else // #ifdef COSMIC_RAY
+      fprintf( Note, "COSMIC_RAY                      OFF\n" );
+#     endif // #ifdef COSMIC_RAY ... else ...
 
 #     if   ( EOS == EOS_GAMMA )
       fprintf( Note, "EOS                             EOS_GAMMA\n" );
@@ -181,8 +191,12 @@ void Aux_TakeNote()
       fprintf( Note, "EOS                             EOS_ISOTHERMAL\n" );
 #     elif ( EOS == EOS_NUCLEAR )
       fprintf( Note, "EOS                             EOS_NUCLEAR\n" );
+#     elif ( EOS == EOS_TAUBMATHEWS )
+      fprintf( Note, "EOS                             EOS_TAUBMATHEWS\n" );
 #     elif ( EOS == EOS_TABULAR )
       fprintf( Note, "EOS                             EOS_TABULAR\n" );
+#     elif ( EOS == EOS_COSMIC_RAY )
+      fprintf( Note, "EOS                             EOS_COSMIC_RAY\n" );
 #     elif ( EOS == EOS_USER )
       fprintf( Note, "EOS                             EOS_USER\n" );
 #     else
@@ -733,7 +747,7 @@ void Aux_TakeNote()
       fprintf( Note, "UNIT_E (energy)                 %20.14e g*cm^2/s^2 (*)\n", UNIT_E                        );
       fprintf( Note, "UNIT_P (energy density)         %20.14e g/cm/s^2   (*)\n", UNIT_P                        );
 #     ifdef MHD
-#     error : ERROR : MHD is not supported here !!!
+#     warning : ERROR : MHD is not supported here !!!
 #     endif
 
 #     else
@@ -820,6 +834,9 @@ void Aux_TakeNote()
       fprintf( Note, "DT__MAX                        %14.7e\n",   DT__MAX                     );
       fprintf( Note, "DT__FLUID                       %13.7e\n",  DT__FLUID                   );
       fprintf( Note, "DT__FLUID_INIT                  %13.7e\n",  DT__FLUID_INIT              );
+#     ifdef SRHD
+      fprintf( Note, "DT__SPEED_OF_LIGHT              %d\n",      DT__SPEED_OF_LIGHT          );
+#     endif
 #     ifdef GRAVITY
       fprintf( Note, "DT__GRAVITY                     %13.7e\n",  DT__GRAVITY                 );
 #     endif
@@ -830,6 +847,9 @@ void Aux_TakeNote()
       fprintf( Note, "DT__PARVEL                      %13.7e\n",  DT__PARVEL                  );
       fprintf( Note, "DT__PARVEL_MAX                 %14.7e\n",   DT__PARVEL_MAX              );
       fprintf( Note, "DT__PARACC                      %13.7e\n",  DT__PARACC                  );
+#     endif
+#     ifdef CR_DIFFUSION
+      fprintf( Note, "DT__CR_DIFFUSION                %13.7e\n",  DT__CR_DIFFUSION            );
 #     endif
 #     ifdef COMOVING
       fprintf( Note, "DT__MAX_DELTA_A                 %13.7e\n",  DT__MAX_DELTA_A             );
@@ -870,6 +890,9 @@ void Aux_TakeNote()
 #     ifdef MHD
       fprintf( Note, "OPT__FLAG_CURRENT               %d\n",      OPT__FLAG_CURRENT         );
 #     endif
+#     ifdef SRHD
+      fprintf( Note, "OPT__FLAG_LRTZ_GRADIENT         %d\n",      OPT__FLAG_LRTZ_GRADIENT   );
+#     endif
 #     endif
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__FLAG_ENGY_DENSITY          %d\n",      OPT__FLAG_ENGY_DENSITY    );
@@ -880,6 +903,9 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_LOHNER_PRES           %d\n",      OPT__FLAG_LOHNER_PRES     );
       fprintf( Note, "OPT__FLAG_LOHNER_TEMP           %d\n",      OPT__FLAG_LOHNER_TEMP     );
       fprintf( Note, "OPT__FLAG_LOHNER_ENTR           %d\n",      OPT__FLAG_LOHNER_ENTR     );
+#     ifdef COSMIC_RAY
+      fprintf( Note, "OPT__FLAG_LOHNER_CRAY           %d\n",      OPT__FLAG_LOHNER_CRAY     );
+#     endif
 #     endif
       fprintf( Note, "OPT__FLAG_LOHNER_FORM           %s\n",      (OPT__FLAG_LOHNER_FORM==LOHNER_FLASH1   ) ? "LOHNER_FLASH1"    :
                                                                   (OPT__FLAG_LOHNER_FORM==LOHNER_FLASH2   ) ? "LOHNER_FLASH2"    :
@@ -893,6 +919,9 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_NPAR_PATCH            %d\n",      OPT__FLAG_NPAR_PATCH      );
       fprintf( Note, "OPT__FLAG_NPAR_CELL             %d\n",      OPT__FLAG_NPAR_CELL       );
       fprintf( Note, "OPT__FLAG_PAR_MASS_CELL         %d\n",      OPT__FLAG_PAR_MASS_CELL   );
+#     endif
+#     ifdef COSMIC_RAY
+      fprintf( Note, "OPT__FLAG_CRAY                  %d\n",      OPT__FLAG_CRAY            );
 #     endif
       fprintf( Note, "OPT__NO_FLAG_NEAR_BOUNDARY      %d\n",      OPT__NO_FLAG_NEAR_BOUNDARY);
       fprintf( Note, "OPT__PATCH_COUNT                %d\n",      OPT__PATCH_COUNT          );
@@ -998,6 +1027,21 @@ void Aux_TakeNote()
 #     endif // #ifdef FEEDBACK
 
 
+//    record the parameters of cosmic ray
+#     ifdef COSMIC_RAY
+      fprintf( Note, "Parameters of Cosmic Rays\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "GAMMA_CR                        %13.7e\n",  GAMMA_CR                );
+#     ifdef CR_DIFFUSION
+      fprintf( Note, "CR_DIFF_PARA                    %13.7e\n",  CR_DIFF_PARA            );
+      fprintf( Note, "CR_DIFF_PERP                    %13.7e\n",  CR_DIFF_PERP            );
+      fprintf( Note, "CR_DIFF_MIN_B                   %13.7e\n",  CR_DIFF_MIN_B           );
+#     endif // #ifdef CR_DIFFUSION
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
+#     endif // #ifdef COSMIC_RAY
+
+
 //    record the parameters of Fluid solver in different models
       fprintf( Note, "Parameters of Fluid Solver (in different models)\n" );
       fprintf( Note, "***********************************************************************************\n" );
@@ -1014,6 +1058,7 @@ void Aux_TakeNote()
                                                                   ( OPT__LR_LIMITER == LR_LIMITER_VL_GMINMOD ) ? "VL_GMINMOD" :
                                                                   ( OPT__LR_LIMITER == LR_LIMITER_EXTPRE     ) ? "EXTPRE"     :
                                                                   ( OPT__LR_LIMITER == LR_LIMITER_CENTRAL    ) ? "CENTRAL"    :
+                                                                  ( OPT__LR_LIMITER == LR_LIMITER_ATHENA     ) ? "ATHENA"     :
                                                                   ( OPT__LR_LIMITER == LR_LIMITER_NONE       ) ? "NONE"       :
                                                                                                                  "UNKNOWN" );
       fprintf( Note, "OPT__1ST_FLUX_CORR              %s\n",      ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D   ) ? "3D"   :
@@ -1075,10 +1120,28 @@ void Aux_TakeNote()
       fprintf( Note, "FLU_GPU_NPGROUP                 %d\n",      FLU_GPU_NPGROUP          );
       fprintf( Note, "GPU_NSTREAM                     %d\n",      GPU_NSTREAM              );
       fprintf( Note, "OPT__FIXUP_FLUX                 %d\n",      OPT__FIXUP_FLUX          );
+
+//    target scalars to be applied fix-up flux operations
+      if ( OPT__FIXUP_FLUX ) {
+      fprintf( Note, "   Target fields               "                                     );
+      for (int v=0; v<NCOMP_TOTAL; v++)
+      if ( FixUpVar_Flux & (1L<<v) )
+      fprintf( Note, " %s",                                       FieldLabel[v]            );
+      fprintf( Note, "\n" ); }
+
 #     ifdef MHD
       fprintf( Note, "OPT__FIXUP_ELECTRIC             %d\n",      OPT__FIXUP_ELECTRIC      );
 #     endif
       fprintf( Note, "OPT__FIXUP_RESTRICT             %d\n",      OPT__FIXUP_RESTRICT      );
+
+//    target scalars to be applied fix-up restrict operations
+      if ( OPT__FIXUP_RESTRICT ) {
+      fprintf( Note, "   Target fields               "                                     );
+      for (int v=0; v<NCOMP_TOTAL; v++)
+      if ( FixUpVar_Restrict & (1L<<v) )
+      fprintf( Note, " %s",                                       FieldLabel[v]            );
+      fprintf( Note, "\n" ); }
+
       fprintf( Note, "OPT__CORR_AFTER_ALL_SYNC        %d\n",      OPT__CORR_AFTER_ALL_SYNC );
       fprintf( Note, "OPT__NORMALIZE_PASSIVE          %d\n",      OPT__NORMALIZE_PASSIVE   );
 
@@ -1344,59 +1407,65 @@ void Aux_TakeNote()
 //    record the parameters of data dump
       fprintf( Note, "Parameters of Data Dump\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "OPT__OUTPUT_TOTAL               %d\n",      OPT__OUTPUT_TOTAL      );
-      fprintf( Note, "OPT__OUTPUT_PART                %d\n",      OPT__OUTPUT_PART       );
-      fprintf( Note, "OPT__OUTPUT_USER                %d\n",      OPT__OUTPUT_USER       );
+      fprintf( Note, "OPT__OUTPUT_TOTAL               %d\n",      OPT__OUTPUT_TOTAL           );
+      fprintf( Note, "OPT__OUTPUT_PART                %d\n",      OPT__OUTPUT_PART            );
+      fprintf( Note, "OPT__OUTPUT_USER                %d\n",      OPT__OUTPUT_USER            );
+      fprintf( Note, "OPT__OUTPUT_TEXT_FORMAT_FLT     %s\n",      OPT__OUTPUT_TEXT_FORMAT_FLT );
 #     ifdef PARTICLE
-      fprintf( Note, "OPT__OUTPUT_PAR_MODE            %d\n",      OPT__OUTPUT_PAR_MODE   );
+      fprintf( Note, "OPT__OUTPUT_PAR_MODE            %d\n",      OPT__OUTPUT_PAR_MODE        );
 #     endif
-      fprintf( Note, "OPT__OUTPUT_BASEPS              %d\n",      OPT__OUTPUT_BASEPS     );
-      fprintf( Note, "OPT__OUTPUT_BASE                %d\n",      OPT__OUTPUT_BASE       );
+      fprintf( Note, "OPT__OUTPUT_BASEPS              %d\n",      OPT__OUTPUT_BASEPS          );
+      fprintf( Note, "OPT__OUTPUT_BASE                %d\n",      OPT__OUTPUT_BASE            );
 #     ifdef GRAVITY
-      fprintf( Note, "OPT__OUTPUT_POT                 %d\n",      OPT__OUTPUT_POT        );
+      fprintf( Note, "OPT__OUTPUT_POT                 %d\n",      OPT__OUTPUT_POT             );
 #     endif
 #     ifdef PARTICLE
-      fprintf( Note, "OPT__OUTPUT_PAR_DENS            %d\n",      OPT__OUTPUT_PAR_DENS   );
+      fprintf( Note, "OPT__OUTPUT_PAR_DENS            %d\n",      OPT__OUTPUT_PAR_DENS        );
 #     endif
 #     ifdef MHD
-      fprintf( Note, "OPT__OUTPUT_CC_MAG              %d\n",      OPT__OUTPUT_CC_MAG     );
+      fprintf( Note, "OPT__OUTPUT_CC_MAG              %d\n",      OPT__OUTPUT_CC_MAG          );
 #     endif
 #     if ( MODEL == HYDRO )
-      fprintf( Note, "OPT__OUTPUT_PRES                %d\n",      OPT__OUTPUT_PRES       );
-      fprintf( Note, "OPT__OUTPUT_TEMP                %d\n",      OPT__OUTPUT_TEMP       );
-      fprintf( Note, "OPT__OUTPUT_ENTR                %d\n",      OPT__OUTPUT_ENTR       );
-      fprintf( Note, "OPT__OUTPUT_CS                  %d\n",      OPT__OUTPUT_CS         );
-      fprintf( Note, "OPT__OUTPUT_DIVVEL              %d\n",      OPT__OUTPUT_DIVVEL     );
-      fprintf( Note, "OPT__OUTPUT_MACH                %d\n",      OPT__OUTPUT_MACH       );
+      fprintf( Note, "OPT__OUTPUT_PRES                %d\n",      OPT__OUTPUT_PRES            );
+      fprintf( Note, "OPT__OUTPUT_TEMP                %d\n",      OPT__OUTPUT_TEMP            );
+      fprintf( Note, "OPT__OUTPUT_ENTR                %d\n",      OPT__OUTPUT_ENTR            );
+      fprintf( Note, "OPT__OUTPUT_CS                  %d\n",      OPT__OUTPUT_CS              );
+      fprintf( Note, "OPT__OUTPUT_DIVVEL              %d\n",      OPT__OUTPUT_DIVVEL          );
+      fprintf( Note, "OPT__OUTPUT_MACH                %d\n",      OPT__OUTPUT_MACH            );
 #     endif
 #     ifdef MHD
-      fprintf( Note, "OPT__OUTPUT_DIVMAG              %d\n",      OPT__OUTPUT_DIVMAG     );
+      fprintf( Note, "OPT__OUTPUT_DIVMAG              %d\n",      OPT__OUTPUT_DIVMAG          );
 #     endif
-      fprintf( Note, "OPT__OUTPUT_USER_FIELD          %d\n",      OPT__OUTPUT_USER_FIELD );
+      fprintf( Note, "OPT__OUTPUT_USER_FIELD          %d\n",      OPT__OUTPUT_USER_FIELD      );
+#     ifdef SRHD
+      fprintf( Note, "OPT__OUTPUT_3VELOCITY           %d\n",      OPT__OUTPUT_3VELOCITY       );
+      fprintf( Note, "OPT__OUTPUT_LORENTZ             %d\n",      OPT__OUTPUT_LORENTZ         );
+      fprintf( Note, "OPT__OUTPUT_ENTHALPY            %d\n",      OPT__OUTPUT_ENTHALPY        );
+#     endif
 
 //    user-defined derived fields
       if ( OPT__OUTPUT_USER_FIELD ) {
-      fprintf( Note, "   Number of fields             %d\n",      UserDerField_Num       );
+      fprintf( Note, "   Number of fields             %d\n",      UserDerField_Num            );
       if ( UserDerField_Num > 0 ) {
-      fprintf( Note, "   Labels                      "                                   );
+      fprintf( Note, "   Labels                      "                                        );
       for (int v=0; v<UserDerField_Num; v++)
-      fprintf( Note, " %s",                                       UserDerField_Label[v]  );
+      fprintf( Note, " %s",                                       UserDerField_Label[v]       );
       fprintf( Note, "\n" );
-      fprintf( Note, "   Units                       "                                   );
+      fprintf( Note, "   Units                       "                                        );
       for (int v=0; v<UserDerField_Num; v++)
-      fprintf( Note, " %s",                                       UserDerField_Unit [v]  );
+      fprintf( Note, " %s",                                       UserDerField_Unit [v]       );
       fprintf( Note, "\n" ); } }
 
-      fprintf( Note, "OPT__OUTPUT_MODE                %d\n",      OPT__OUTPUT_MODE       );
-      fprintf( Note, "OPT__OUTPUT_RESTART             %d\n",      OPT__OUTPUT_RESTART    );
-      fprintf( Note, "OUTPUT_STEP                     %d\n",      OUTPUT_STEP            );
-      fprintf( Note, "OUTPUT_DT                       %20.14e\n", OUTPUT_DT              );
-      fprintf( Note, "OUTPUT_WALLTIME                 %20.14e\n", OUTPUT_WALLTIME        );
-      fprintf( Note, "OUTPUT_WALLTIME_UNIT            %d\n",      OUTPUT_WALLTIME_UNIT   );
-      fprintf( Note, "OUTPUT_PART_X                   %20.14e\n", OUTPUT_PART_X          );
-      fprintf( Note, "OUTPUT_PART_Y                   %20.14e\n", OUTPUT_PART_Y          );
-      fprintf( Note, "OUTPUT_PART_Z                   %20.14e\n", OUTPUT_PART_Z          );
-      fprintf( Note, "INIT_DUMPID                     %d\n",      INIT_DUMPID            );
+      fprintf( Note, "OPT__OUTPUT_MODE                %d\n",      OPT__OUTPUT_MODE            );
+      fprintf( Note, "OPT__OUTPUT_RESTART             %d\n",      OPT__OUTPUT_RESTART         );
+      fprintf( Note, "OUTPUT_STEP                     %d\n",      OUTPUT_STEP                 );
+      fprintf( Note, "OUTPUT_DT                       %20.14e\n", OUTPUT_DT                   );
+      fprintf( Note, "OUTPUT_WALLTIME                 %20.14e\n", OUTPUT_WALLTIME             );
+      fprintf( Note, "OUTPUT_WALLTIME_UNIT            %d\n",      OUTPUT_WALLTIME_UNIT        );
+      fprintf( Note, "OUTPUT_PART_X                   %20.14e\n", OUTPUT_PART_X               );
+      fprintf( Note, "OUTPUT_PART_Y                   %20.14e\n", OUTPUT_PART_Y               );
+      fprintf( Note, "OUTPUT_PART_Z                   %20.14e\n", OUTPUT_PART_Z               );
+      fprintf( Note, "INIT_DUMPID                     %d\n",      INIT_DUMPID                 );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
@@ -1522,6 +1591,30 @@ void Aux_TakeNote()
          fprintf( Note, "\n\n");
       }
 #     endif
+
+#     ifdef SRHD
+      if ( OPT__FLAG_LRTZ_GRADIENT )
+      {
+         fprintf( Note, "Flag Criterion (Lorentz Factor Gradient in SRHD)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level   Lorentz Factor Gradient\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%26.7e\n", lv, FlagTable_LrtzGradient[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+#     endif
+
+#     ifdef COSMIC_RAY
+      if ( OPT__FLAG_CRAY )
+      {
+         fprintf( Note, "Flag Criterion (Cosmic Ray Energy)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level             Cosmic Ray Energy\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_CRay[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+#     endif
 #     endif // #if ( MODEL == HYDRO )
 
 #     if ( MODEL == ELBDM )
@@ -1538,7 +1631,11 @@ void Aux_TakeNote()
 #     endif
 
 #     if   ( MODEL == HYDRO )
-      if ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR )
+#     ifndef COSMIC_RAY
+      const bool OPT__FLAG_LOHNER_CRAY = false;
+#     endif
+      if ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP ||
+           OPT__FLAG_LOHNER_ENTR || OPT__FLAG_LOHNER_CRAY )
 #     elif ( MODEL == ELBDM )
       if ( OPT__FLAG_LOHNER_DENS )
 #     endif
@@ -1688,7 +1785,7 @@ void Aux_TakeNote()
    int omp_nthread, omp_chunk_size, omp_nested;
    omp_sched_t omp_schedule;
 
-   omp_nested = omp_get_nested();
+   omp_nested = omp_get_max_active_levels();
    omp_get_schedule( &omp_schedule, &omp_chunk_size );
 
 #  pragma omp parallel
@@ -1700,12 +1797,12 @@ void Aux_TakeNote()
       Note = fopen( FileName, "a" );
       fprintf( Note, "OpenMP Diagnosis\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "OMP__SCHEDULE                   %s\n",      ( omp_schedule == omp_sched_static  ) ? "STATIC"  :
+      fprintf( Note, "Schedule                        %s\n",      ( omp_schedule == omp_sched_static  ) ? "STATIC"  :
                                                                   ( omp_schedule == omp_sched_dynamic ) ? "DYNAMIC" :
                                                                   ( omp_schedule == omp_sched_guided  ) ? "GUIDED"  :
                                                                   ( omp_schedule == omp_sched_auto    ) ? "AUTO"    : "UNKNOWN" );
-      fprintf( Note, "OMP__SCHEDULE_CHUNK_SIZE        %d\n",      omp_chunk_size          );
-      fprintf( Note, "OMP__NESTED                     %s\n",      ( omp_nested ) ? "ON" : "OFF" );
+      fprintf( Note, "Chunk size                      %d\n",      omp_chunk_size );
+      fprintf( Note, "Max number of nested levels     %d\n",      omp_nested );
       fprintf( Note, "\n" );
       fprintf( Note, "CPU core IDs of all OpenMP threads (tid == thread ID):\n" );
       fprintf( Note, "------------------------------------------------------------------------\n" );

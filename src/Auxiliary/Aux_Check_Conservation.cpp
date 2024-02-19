@@ -156,6 +156,11 @@ void Aux_Check_Conservation( const char *comment )
                   MomZ = amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i];
                   Etot = amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i];
 
+#                 ifdef SRHD
+//                total energy density also includes rest mass energy density in relativistic hydro
+                  Etot += Dens;
+#                 endif
+
                   Fluid_lv[0] += Dens;
                   Fluid_lv[1] += MomX;
                   Fluid_lv[2] += MomY;
@@ -175,14 +180,44 @@ void Aux_Check_Conservation( const char *comment )
                   else                                               Epot = 0.0;
                   Fluid_lv[6] += Epot;
 #                 endif
-
-                  Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag );
+#                 ifndef SRHD
+//                Hydro_Con2Eint() calculates Eint for both HD and SRHD but we disable SRHD for now
+                  Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag,
+                                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
+                                                 EoS_AuxArray_Int, h_EoS_Table );
+#                 else
+                  Eint = 0.0;
+#                 endif
                   Fluid_lv[5] += Eint;
 
+#                 ifdef SRHD
+//                For now we disable the calculation of Ekin for SRHD
+//                Also, note that the following is equivalent to "Etot - Dens - Lrtz*Eint"
+                  /*
+                  real HTilde, Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL], Lrtz, Lrtz_m1;
+                  Cons[0]      = Dens;
+                  Cons[1]      = MomX;
+                  Cons[2]      = MomY;
+                  Cons[3]      = MomZ;
+                  Cons[4]      = Etot;
+                  for ( int v = NCOMP_FLUID; v < NCOMP_TOTAL; v++ ) Cons[v] = 0.0;
+                  Hydro_Con2Pri( Cons, Prim, (real)-HUGE_NUMBER, NULL_BOOL, NULL_INT, NULL,
+                                 NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
+                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, &Lrtz );
+                  HTilde       = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+//                Compute gamma - 1 this way to avoid catastrophic cancellation
+                  Lrtz_m1      = ( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) ) / ( Lrtz + 1.0 );
+                  Ekin         = Lrtz_m1*( Dens*(HTilde+1.0) + Prim[4] );
+                  */
+                  Ekin = 0.0;
+#                 else
 //###NOTE: assuming Etot = Eint + Ekin + Emag
                   Ekin         = Etot - Eint;
 #                 ifdef MHD
                   Ekin        -= Emag;
+#                 endif
 #                 endif
                   Fluid_lv[4] += Ekin;
                } // i,j,k

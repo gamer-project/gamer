@@ -29,24 +29,24 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
    const int FaLv, const int NNew_Home, const int NNew_Away,
    const long (*CFB_SibLBIdx_Home)[6], const long (*CFB_SibLBIdx_Away)[6],
    int (*&CFB_SibRank_Home)[6], int (*&CFB_SibRank_Away)[6],
-   real *&CFB_BField, int *CFB_NSibEachRank )
+   real *&CFB_BField, long *CFB_NSibEachRank )
 {
 
    const int SonLv   = FaLv + 1;
    const int MemUnit = 1 + ( NNew_Home + NNew_Away )/MPI_NRank;
 
    int   MemSize              [MPI_NRank];
-   int   RecvEachRank_N       [MPI_NRank];
+   long  RecvEachRank_N       [MPI_NRank];
    int  *RecvEachRank_SibID   [MPI_NRank];
    long *RecvEachRank_SibLBIdx[MPI_NRank];
-   int   SendEachRank_N       [MPI_NRank];
+   long  SendEachRank_N       [MPI_NRank];
    int  *SendEachRank_SibID   [MPI_NRank];
    int  *SendEachRank_PID     [MPI_NRank];
 
    for (int r=0; r<MPI_NRank; r++)
    {
       MemSize              [r] = MemUnit;
-      RecvEachRank_N       [r] = 0;
+      RecvEachRank_N       [r] = 0L;
       RecvEachRank_SibID   [r] = (int* )malloc( MemSize[r]*sizeof(int ) );
       RecvEachRank_SibLBIdx[r] = (long*)malloc( MemSize[r]*sizeof(long) );
    }
@@ -74,7 +74,7 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
 
          CFB_SibRank_Both[g][t][s] = TRank;
 
-         if ( RecvEachRank_N[TRank] >= MemSize[TRank] )
+         if ( RecvEachRank_N[TRank] >= (long)MemSize[TRank] )
          {
              MemSize              [TRank] += MemUnit;
              RecvEachRank_SibID   [TRank]  = (int* )realloc( RecvEachRank_SibID   [TRank], MemSize[TRank]*sizeof(int ) );
@@ -94,19 +94,21 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
 
 
 // 2. set the parameters for sending fine-grid B field to other ranks
-   int   Send_Disp[MPI_NRank], Recv_Disp[MPI_NRank], Send_NList[MPI_NRank], Recv_NList[MPI_NRank];
-   int   Send_NTotal, Recv_NTotal, Counter;
+   int   Counter;
+   long  Send_NTotal, Recv_NTotal;
+   long  Send_NList[MPI_NRank], Recv_NList[MPI_NRank];
+   long  Send_Disp[MPI_NRank], Recv_Disp[MPI_NRank];
    int  *SendBuf_SibID=NULL, *RecvBuf_SibID=NULL;
    long *SendBuf_LBIdx=NULL, *RecvBuf_LBIdx=NULL;
 
 // 2.1. prepare the send info
-   MPI_Alltoall( RecvEachRank_N, 1, MPI_INT, SendEachRank_N, 1, MPI_INT, MPI_COMM_WORLD );
+   MPI_Alltoall( RecvEachRank_N, 1, MPI_LONG, SendEachRank_N, 1, MPI_LONG, MPI_COMM_WORLD );
 
-   memcpy( Send_NList, RecvEachRank_N, MPI_NRank*sizeof(int) );
-   memcpy( Recv_NList, SendEachRank_N, MPI_NRank*sizeof(int) );
+   memcpy( Send_NList, RecvEachRank_N, MPI_NRank*sizeof(long) );
+   memcpy( Recv_NList, SendEachRank_N, MPI_NRank*sizeof(long) );
 
-   Send_Disp[0] = 0;
-   Recv_Disp[0] = 0;
+   Send_Disp[0] = 0L;
+   Recv_Disp[0] = 0L;
    for (int r=1; r<MPI_NRank; r++)
    {
       Send_Disp[r] = Send_Disp[r-1] + Send_NList[r-1];
@@ -131,11 +133,11 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
 
 
 // 2.2. send --> recv
-   MPI_Alltoallv( SendBuf_SibID, Send_NList, Send_Disp, MPI_INT,
-                  RecvBuf_SibID, Recv_NList, Recv_Disp, MPI_INT,  MPI_COMM_WORLD );
+   MPI_Alltoallv_GAMER( SendBuf_SibID, Send_NList, Send_Disp, MPI_INT,
+                        RecvBuf_SibID, Recv_NList, Recv_Disp, MPI_INT,  MPI_COMM_WORLD );
 
-   MPI_Alltoallv( SendBuf_LBIdx, Send_NList, Send_Disp, MPI_LONG,
-                  RecvBuf_LBIdx, Recv_NList, Recv_Disp, MPI_LONG, MPI_COMM_WORLD );
+   MPI_Alltoallv_GAMER( SendBuf_LBIdx, Send_NList, Send_Disp, MPI_LONG,
+                        RecvBuf_LBIdx, Recv_NList, Recv_Disp, MPI_LONG, MPI_COMM_WORLD );
 
 
 // 2.3. record the received info
@@ -145,20 +147,20 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
       const int  *RecvPtr_SibID = RecvBuf_SibID + Recv_Disp[r];
             long *RecvPtr_LBIdx = RecvBuf_LBIdx + Recv_Disp[r];
 
-      int *Match                  = new int [ SendEachRank_N[r] ];
-      int *RecvPtr_LBIdx_IdxTable = new int [ SendEachRank_N[r] ];
+      long *Match                  = new long [ SendEachRank_N[r] ];
+      long *RecvPtr_LBIdx_IdxTable = new long [ SendEachRank_N[r] ];
 
 //    be aware that there may be duplicate LBIdx in RecvPtr_LBIdx[]
 //    --> RecvPtr_LBIdx_IdxTable[] is non-deterministic in that case
 //    --> but it's not a real issue since the mapped PID is deterministic
       Mis_Heapsort( SendEachRank_N[r], RecvPtr_LBIdx, RecvPtr_LBIdx_IdxTable );
 
-      Mis_Matching_int( amr->NPatchComma[SonLv][1], amr->LB->IdxList_Real[SonLv], SendEachRank_N[r], RecvPtr_LBIdx, Match );
+      Mis_Matching_int( (long)amr->NPatchComma[SonLv][1], amr->LB->IdxList_Real[SonLv], SendEachRank_N[r], RecvPtr_LBIdx, Match );
 
 //    all target patches must be found
 #     ifdef GAMER_DEBUG
-      for (int t=0; t<SendEachRank_N[r]; t++)
-         if ( Match[t] == -1 )
+      for (long t=0; t<SendEachRank_N[r]; t++)
+         if ( Match[t] == -1L )
             Aux_Error( ERROR_INFO, "SonLv %d, TRank %d, LBIdx %ld found no matching patches !!\n",
                        SonLv, r, RecvPtr_LBIdx[t] );
 #     endif
@@ -168,12 +170,12 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
       SendEachRank_SibID[r] = new int [ SendEachRank_N[r] ];
       SendEachRank_PID  [r] = new int [ SendEachRank_N[r] ];
 
-      for (int t=0; t<SendEachRank_N[r]; t++)
+      for (long t=0; t<SendEachRank_N[r]; t++)
       {
          SendEachRank_SibID[r][t] = RecvPtr_SibID[t];
 
 //       use index table since RecvPtr_LBIdx[] has been sorted
-         const int sorted_idx = RecvPtr_LBIdx_IdxTable[t];
+         const long sorted_idx = RecvPtr_LBIdx_IdxTable[t];
          SendEachRank_PID[r][sorted_idx]  = amr->LB->IdxList_Real_IdxTable[SonLv][ Match[t] ];
          SendEachRank_PID[r][sorted_idx] -= SendEachRank_PID[r][sorted_idx] % 8; // store the PID with LocalID=0
       }
@@ -197,12 +199,12 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
 
    for (int r=0; r<MPI_NRank; r++)
    {
-       Send_NList[r] = SendEachRank_N[r]*SQR( PS2 );
-       Recv_NList[r] = RecvEachRank_N[r]*SQR( PS2 );
+       Send_NList[r] = SendEachRank_N[r]*(long)SQR( PS2 );
+       Recv_NList[r] = RecvEachRank_N[r]*(long)SQR( PS2 );
    }
 
-   Send_Disp[0] = 0;
-   Recv_Disp[0] = 0;
+   Send_Disp[0] = 0L;
+   Recv_Disp[0] = 0L;
 
    for (int r=1; r<MPI_NRank; r++)
    {
@@ -228,7 +230,7 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
    {
       real *SendPtr0 = SendBuf_FineB + Send_Disp[r];
 
-      for (int t=0; t<SendEachRank_N[r]; t++)
+      for (long t=0; t<SendEachRank_N[r]; t++)
       {
          const int PID0 = SendEachRank_PID  [r][t];
          const int sib  = SendEachRank_SibID[r][t];
@@ -270,18 +272,13 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
                idx_B_out ++;
             }}
          } // for (int g=0; g<4; g++)
-      } // for (int t=0; t<SendEachRank_N[r]; t++)
+      } // for (long t=0; t<SendEachRank_N[r]; t++)
    } // for (int r=0; r<MPI_NRank; r++)
 
 
 // 3.3. invoke MPI
-#  ifdef FLOAT8
-   MPI_Alltoallv( SendBuf_FineB, Send_NList, Send_Disp, MPI_DOUBLE,
-                  RecvBuf_FineB, Recv_NList, Recv_Disp, MPI_DOUBLE, MPI_COMM_WORLD );
-#  else
-   MPI_Alltoallv( SendBuf_FineB, Send_NList, Send_Disp, MPI_FLOAT,
-                  RecvBuf_FineB, Recv_NList, Recv_Disp, MPI_FLOAT,  MPI_COMM_WORLD );
-#  endif
+   MPI_Alltoallv_GAMER( SendBuf_FineB, Send_NList, Send_Disp, MPI_GAMER_REAL,
+                        RecvBuf_FineB, Recv_NList, Recv_Disp, MPI_GAMER_REAL, MPI_COMM_WORLD );
 
 
 // 3.4. set the data to be returned by this function

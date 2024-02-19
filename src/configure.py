@@ -339,7 +339,7 @@ def load_arguments():
                          depend={"model":"HYDRO"},
                          constraint={ "ROE":{"eos":"GAMMA"},
                                       "EXACT":{"eos":"GAMMA"} },
-                         help="The Riemann solver. Pure hydro: EXACT/ROE/HLLE/HLLC^, MHD: ROE/HLLE/HLLD^ (^ indicates the recommended and default solvers). Useless for RTVD.\n"
+                         help="The Riemann solver. Pure hydro: EXACT/ROE/HLLE/HLLC^, MHD: ROE/HLLE/HLLD^, SRHD: HLLE/HLLC^, (^ indicates the recommended and default solvers). Useless for RTVD.\n"
                        )
 
     parser.add_argument( "--dual", type=str, metavar="TYPE", gamer_name="DUAL_ENERGY",
@@ -357,17 +357,24 @@ def load_arguments():
                          help="Magnetohydrodynamics.\n"
                        )
 
+    parser.add_argument( "--srhd", type=str2bool, metavar="BOOLEAN", gamer_name="SRHD",
+                         default=False,
+                         depend={"model":"HYDRO"},
+                         constraint={ True:{"flu_scheme":["MHM", "MHM_RP"], "flux":["HLLE", "HLLC"], "eos":["TAUBMATHEWS"], "dual":[NONE_STR], "mhd":False} },
+                         help="Special Relativistic Hydrodynamics.\n"
+                       )
+
     parser.add_argument( "--cosmic_ray", type=str2bool, metavar="BOOLEAN", gamer_name="COSMIC_RAY",
                          default=False,
                          depend={"model":"HYDRO"},
-                         constraint={ True:{"dual":[NONE_STR]} },
-                         help="Cosmic rays (not supported yet).\n"
+                         constraint={ True:{"dual":[NONE_STR], "eos":"COSMIC_RAY", "comoving":False} },
+                         help="Enable cosmic ray. Must use <--eos=COSMIC_RAY>.\n"
                        )
 
     parser.add_argument( "--eos", type=str, metavar="TYPE", gamer_name="EOS",
-                         default="GAMMA", choices=["GAMMA", "ISOTHERMAL", "NUCLEAR", "TABULAR", "USER"],
+                         default=None, choices=["GAMMA", "ISOTHERMAL", "NUCLEAR", "TABULAR", "COSMIC_RAY", "TAUBMATHEWS", "USER"],
                          depend={"model":"HYDRO"},
-                         constraint={ "ISOTHERMAL":{"barotropic":True} },
+                         constraint={ "ISOTHERMAL":{"barotropic":True}, "COSMIC_RAY":{"cosmic_ray":True}, "TAUBMATHEWS":{"srhd":True} },
                          help="Equation of state. Must be set when <--model=HYDRO>. Must enable <--barotropic> for ISOTHERMAL.\n"
                        )
 
@@ -469,8 +476,16 @@ def load_arguments():
     # A.5 grackle
     parser.add_argument( "--grackle", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_GRACKLE",
                          default=False,
-                         constraint={ True:{"model":"HYDRO", "eos":"GAMMA"} },
+                         constraint={ True:{"model":"HYDRO", "eos":["GAMMA", "COSMIC_RAY"], "comoving":False} },
                          help="Enable Grackle, a chemistry and radiative cooling library. Must set <--passive> according to the primordial chemistry network set by GRACKLE_PRIMORDIAL. Please enable OpenMP when compiling Grackle (by 'make omp-on').\n"
+                       )
+
+    # A.6 microphysics
+    parser.add_argument( "--cr_diffusion", type=str2bool, metavar="BOOLEAN", gamer_name="CR_DIFFUSION",
+                         default=False,
+                         depend={"cosmic_ray":True},
+                         constraint={ True:{"cosmic_ray":True, "mhd":True} },
+                         help="Enable cosmic-ray diffusion. Must enable <--mhd> and <--cosmic_ray>.\n"
                        )
 
     # B. miscellaneous options
@@ -561,7 +576,7 @@ def load_arguments():
     # C. parallelization and flags
     parser.add_argument( "--openmp", type=str2bool, metavar="BOOLEAN", gamer_name="OPENMP",
                          default=True,
-                         help="Enable OpenMP parallization.\n"
+                         help="Enable OpenMP parallelization.\n"
                        )
 
     parser.add_argument( "--mpi", type=str2bool, metavar="BOOLEAN", gamer_name="LOAD_BALANCE=HILBERT",
@@ -635,6 +650,11 @@ def set_conditional_defaults( args ):
 
     if args["flux"] == None:
         args["flux"] = "HLLD" if args["mhd"] else "HLLC"
+
+    if args["eos"] == None:
+        if   args["cosmic_ray"]: args["eos"] = "COSMIC_RAY"
+        elif args["srhd"]      : args["eos"] = "TAUBMATHEWS"
+        else                   : args["eos"] = "GAMMA"
 
     return args
 
@@ -713,10 +733,6 @@ def validation( paths, depends, constraints, **kwargs ):
 
         if kwargs["dual"] not in [NONE_STR, "DE_ENPY"]:
             color_print("ERROR: This dual energy form is not supported yet. Current: %s"%kwargs["dual"], BCOLOR.FAIL)
-            success = False
-
-        if kwargs["cosmic_ray"]:
-            color_print("ERROR: <--cosmic_ray> is not supported yet.", BCOLOR.FAIL)
             success = False
 
     elif kwargs["model"] == "ELBDM":

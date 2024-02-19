@@ -2,9 +2,6 @@
 
 #ifdef GRAVITY
 
-extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,
-                                               const int lv, double AuxArray[] );
-
 
 
 
@@ -166,7 +163,7 @@ void Poi_GetAverageDensity()
    if ( MPI_Rank == 0 )
    {
 //    sort
-      Mis_Heapsort( NPar_AcPlusInac_Sum, ParMass_AllRank, NULL );
+      Mis_Heapsort<long,real>( NPar_AcPlusInac_Sum, ParMass_AllRank, NULL );
 
 //    add average particle density
       ParMassSum = 0.0;
