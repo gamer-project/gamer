@@ -153,7 +153,7 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
    int Float8_Par_check_flag;
    LoadField( "Par_NAttStored",       &NParAtt,             H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
    LoadField( "Par_NPar",             &NPar,                H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
-   Float8_Par_check_flag = LoadField( "Float8_Par",           &Float8_Par_RS,       H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  &Float8_Par_RT,    1, NonFatal );
+   Float8_Par_check_flag = LoadField( "Float8_Par",           &Float8_Par_RS,       H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   NonFatal,  &Float8_Par_RT,    1, NonFatal );
       if ( Float8_Par_check_flag != 0 )
       {
 	 if      ( sizeof(real) < sizeof(real_par) )
