@@ -3,9 +3,7 @@
 
 # executable file
 #######################################################################################################
-#EXECUTABLE := GAMER_CompareData
-EXECUTABLE := GAMER_CompareData_hydro_mix-precision_float_real_double_real_par
-#EXECUTABLE := GAMER_CompareData_hydro_mix-precision_pure_double
+EXECUTABLE := GAMER_CompareData
 
 
 
