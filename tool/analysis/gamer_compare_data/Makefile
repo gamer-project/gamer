@@ -3,7 +3,9 @@
 
 # executable file
 #######################################################################################################
-EXECUTABLE := GAMER_CompareData
+#EXECUTABLE := GAMER_CompareData
+EXECUTABLE := GAMER_CompareData_hydro_mix-precision_float_real_double_real_par
+#EXECUTABLE := GAMER_CompareData_hydro_mix-precision_pure_double
 
 
 
@@ -16,7 +18,7 @@ SIMU_OPTION += -DMODEL=HYDRO
 #SIMU_OPTION += -DFLOAT8
 
 # double precision for particle attributes
-SIMU_OPTION += -DFLOAT8_PAR
+#SIMU_OPTION += -DFLOAT8_PAR
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
