@@ -7,7 +7,7 @@
 // =======================================================================================
 static int      HaloMerger_Halo_Num;                                       // total number of halos [2]
 static int      HaloMerger_Halo_InitMode;                                  // halo initialization mode [1]
-                                                                           //   (1=UM_IC of real and imaginary parts)
+                                                                           //   (1=UM_IC of real and imaginary parts, 2=density profile for CDM halo)
 static int      HaloMerger_Soliton_Num;                                    // total number of solitons [0]
 static int      HaloMerger_Soliton_InitMode;                               // soliton initialization mode [1]
                                                                            //   (1=table of the density profile, 2=analytical function of the density profile)
@@ -38,6 +38,7 @@ static char     HaloMerger_Halo_i_UM_IC_NCellsX[MAX_STRING];               // nu
 static char     HaloMerger_Halo_i_UM_IC_NCellsY[MAX_STRING];               // number of cells of the box in the y-direction of UM_IC for the i-th halo (HaloMerger_Halo_InitMode == 1 only)
 static char     HaloMerger_Halo_i_UM_IC_NCellsZ[MAX_STRING];               // number of cells of the box in the z-direction of UM_IC for the i-th halo (HaloMerger_Halo_InitMode == 1 only)
 static char     HaloMerger_Halo_i_UM_IC_Float8[MAX_STRING];                // data precision of UM_IC for the i-th halo (0=float, 1=double) (HaloMerger_Halo_InitMode == 1 only) [0]
+//TODO: Add parameters for CDM
 
 // Soliton-related parameters to read from the input
 static char     HaloMerger_Soliton_i_CoreRadius[MAX_STRING];               // core radius of the i-th soliton (<0.0: set by HaloMerger_Soliton_i_CoreRho) [-1.0]
@@ -93,6 +94,13 @@ static double HaloMerger_Trilinear_Interpolation( const double Target_X, const d
                                                   const double Ref_X[2], const double Ref_Y[2], const double Ref_Z[2] );
 
 static double HaloMerger_Get_Value_From_Halo_UM_IC_Data( const double x, const double y, const double z, const int v, const int index_halo );
+
+#ifdef MASSIVE_PARTICLES
+void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_AllRank,
+                                     real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
+                                     real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
+                                     real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
+#endif
 // =======================================================================================
 #endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
@@ -128,6 +136,15 @@ void Validate()
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
 
+#  ifdef PARTICLE
+   if ( OPT__INIT == INIT_BY_FUNCTION  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
+      Aux_Error( ERROR_INFO, "please set PAR_INIT = 1 (by FUNCTION) !!\n" );
+#  endif
+
+#  ifndef SUPPORT_GSL
+   Aux_Error( ERROR_INFO, "SUPPORT_GSL must be enabled !!\n" );
+#  endif
+
    if ( !OPT__UNIT )
       Aux_Error( ERROR_INFO, "OPT__UNIT must be enabled !!\n" );
 
@@ -140,6 +157,15 @@ void Validate()
    {
       if ( !OPT__INIT_RESTRICT )
          Aux_Message( stderr, "WARNING : it's recommended to enable OPT__INIT_RESTRICT !!\n" );
+
+//      for (int f=0; f<6; f++)
+//      if ( OPT__BC_FLU[f] == BC_FLU_PERIODIC )
+//         Aux_Message( stderr, "WARNING : periodic BC for fluid is not recommended for this test !!\n" );
+//
+//#     ifdef GRAVITY
+//      if ( OPT__BC_POT == BC_POT_PERIODIC )
+//         Aux_Message( stderr, "WARNING : periodic BC for gravity is not recommended for this test !!\n" );
+//#     endif
    }
 
 
@@ -182,7 +208,7 @@ void SetParameter()
 // ReadPara->Add( "KEY_IN_THE_FILE",                       &VARIABLE,                                   DEFAULT,          MIN,           MAX            );
 // ********************************************************************************************************************************
    ReadPara->Add( "HaloMerger_Halo_Num",                   &HaloMerger_Halo_Num,                        2,                0,             NoMax_int      );
-   ReadPara->Add( "HaloMerger_Halo_InitMode",              &HaloMerger_Halo_InitMode,                   1,                1,             1              );
+   ReadPara->Add( "HaloMerger_Halo_InitMode",              &HaloMerger_Halo_InitMode,                   1,                1,             2              );
    ReadPara->Add( "HaloMerger_Soliton_Num",                &HaloMerger_Soliton_Num,                     0,                0,             NoMax_int      );
    ReadPara->Add( "HaloMerger_Soliton_InitMode",           &HaloMerger_Soliton_InitMode,                1,                1,             2              );
    ReadPara->Add( "HaloMerger_ExtPot_UniDenSph_M",         &HaloMerger_ExtPot_UniDenSph_M,              0.0,              0.0,           NoMax_double   );
@@ -216,6 +242,10 @@ void SetParameter()
       HaloMerger_Halo_UM_IC_Range_EdgeR   = new double [HaloMerger_Halo_Num][3];
       HaloMerger_Halo_UM_IC_Data          = new char*  [HaloMerger_Halo_Num];
       } // if ( HaloMerger_Halo_InitMode == 1 )
+      else if ( HaloMerger_Halo_InitMode == 2 )
+      {
+      //TODO: Add parameters for CDM
+      }
 
       // (1-2-2) read the parameters for the halos
       const char FileName_Halo[] = "Input__TestProb_Halo";
@@ -241,6 +271,10 @@ void SetParameter()
          sprintf( HaloMerger_Halo_i_UM_IC_NCellsZ,  "HaloMerger_Halo_%d_UM_IC_NCellsZ",  index_halo+1 );
          sprintf( HaloMerger_Halo_i_UM_IC_Float8,   "HaloMerger_Halo_%d_UM_IC_Float8",   index_halo+1 );
          } // if ( HaloMerger_Halo_InitMode == 1 )
+         else if ( HaloMerger_Halo_InitMode == 2 )
+         {
+         // TODO: Add parameters for CDM
+         } // if ( HaloMerger_Halo_InitMode == 2 )
 
       // (1-2-3) add parameters in the following format:
       // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
@@ -266,6 +300,10 @@ void SetParameter()
          ReadPara_Halo->Add( HaloMerger_Halo_i_UM_IC_NCellsZ,         &HaloMerger_Halo_UM_IC_NCells[index_halo][2],  -1,                NoMin_int,     NoMax_int      );
          ReadPara_Halo->Add( HaloMerger_Halo_i_UM_IC_Float8,          &HaloMerger_Halo_UM_IC_Float8[index_halo],      0,                0,             1              );
          } // if ( HaloMerger_Halo_InitMode == 1 )
+         else if ( HaloMerger_Halo_InitMode == 2 )
+         {
+         // TODO: Add parameter for CDM
+         } // if ( HaloMerger_Halo_InitMode == 2 )
 
       } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
 
@@ -477,6 +515,13 @@ void SetParameter()
             } // for (int index2_halo=0; index2_halo<index_halo; index2_halo++)
 
          } // if ( HaloMerger_Halo_InitMode == 1 )
+         else if ( HaloMerger_Halo_InitMode == 2 )
+         {
+            // TODO: Add check for CDM parameters
+            // TODO: Add check for tuning on Particle
+            // TODO: Add check for freeze fluid
+            // TODO: Add check for no soliton
+         } // if ( HaloMerger_Halo_InitMode == 2 )
 
       } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
 
@@ -517,6 +562,12 @@ void SetParameter()
 
             break;
 
+         } // case 1
+
+         case 2:
+         {
+           // TODO: load the CDM density profile
+           // TODO: check the CDM density profile file exist
          } // case 1
 
          default:
@@ -776,6 +827,10 @@ void SetParameter()
                             HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][0], HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][1], HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][2]);
 
          } // if ( HaloMerger_Halo_InitMode == 1 )
+         else if ( HaloMerger_Halo_InitMode == 2 )
+         {
+            // TODO: Output CDM information
+         } // if ( HaloMerger_Halo_InitMode == 2 )
 
       } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Halo_Num > 0 )
 
@@ -879,6 +934,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                // assume real part first and then imaginary part
                Real_halo = HaloMerger_Get_Value_From_Halo_UM_IC_Data( x, y, z, 0, index_halo );
                Imag_halo = HaloMerger_Get_Value_From_Halo_UM_IC_Data( x, y, z, 1, index_halo );
+            }
+            if ( HaloMerger_Halo_InitMode == 2 )
+            {
+               Real_Halo = SmallGas; //TODO: define SmallGas
+               Imag_Halo = SamllGas;
             }
             else
                 Aux_Error( ERROR_INFO, "unsupported halo initialization mode (%s = %d) !!\n",
@@ -1036,6 +1096,10 @@ void End_HaloMerger()
          delete [] HaloMerger_Halo_UM_IC_Float8;
 
       } // if ( HaloMerger_Halo_InitMode == 1 )
+      else if ( HaloMerger_Halo_InitMode == 2 )
+      {
+        // TODO: free memory for CDM
+      } // if ( HaloMerger_Halo_InitMode == 2 )
 
    } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Halo_Num > 0 )
 
@@ -1256,9 +1320,12 @@ void Init_TestProb_ELBDM_HaloMerger()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr = SetGridIC;
-   End_User_Ptr           = End_HaloMerger;
-   Init_ExtPot_Ptr        = Init_ExtPot_ELBDM_HaloMerger;
+   Init_Function_User_Ptr  = SetGridIC;
+   End_User_Ptr            = End_HaloMerger;
+   Init_ExtPot_Ptr         = Init_ExtPot_ELBDM_HaloMerger;
+#  ifdef MASSIVE_PARTICLES
+   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_HaloMerger;
+#  endif // ifdef MASSIVE_PARTICLES
 #  endif // if ( MODEL == ELBDM  &&  defined GRAVITY )
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
