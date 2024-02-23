@@ -35,6 +35,8 @@ Note:
 2. Edit Input_TestProb_Halo to specify the parameters for the halos
    a. Add new parameters with increasing indexes if the number of halos is more than 2
    b. The initial condition of halos is constructed by reading the UM_IC file as a table and performing linear interpolation
+      - The UM_IC must be single AMR level.
+      - Note that HaloMerger_Halo_*_CenCoord* in Input__TestProb_Halo is the UM_IC box center, rather than the exact halo center.
 
 3. Edit Input_TestProb_Soliton to specify the parameters for the solitons
    a. Add new parameters with increasing indexes if the number of solitons is more than 2

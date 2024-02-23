@@ -7,30 +7,31 @@
 // =======================================================================================
 static int      HaloMerger_Halo_Num;                                       // total number of halos [2]
 static int      HaloMerger_Halo_InitMode;                                  // halo initialization mode [1]
-                                                                           //   (1=UM_IC of real and imaginary parts)
+                                                                           //   (1=single-level UM_IC of real and imaginary parts)
 static int      HaloMerger_Soliton_Num;                                    // total number of solitons [0]
 static int      HaloMerger_Soliton_InitMode;                               // soliton initialization mode [1]
                                                                            //   (1=table of the density profile, 2=analytical function of the density profile)
 
 // External Potential-related parameters to read from the input
-       double   HaloMerger_ExtPot_UniDenSph_M;                             // mass of the uniform-density sphere for the external potential [0.0]
-       double   HaloMerger_ExtPot_UniDenSph_R;                             // radius of the uniform-density sphere for the external potential [-1.0]
-       double   HaloMerger_ExtPot_UniDenSph_CenCoordX;                     // x-coordinate of the center of the uniform-density sphere for the external potential [-1.0]
-       double   HaloMerger_ExtPot_UniDenSph_CenCoordY;                     // y-coordinate of the center of the uniform-density sphere for the external potential [-1.0]
-       double   HaloMerger_ExtPot_UniDenSph_CenCoordZ;                     // z-coordinate of the center of the uniform-density sphere for the external potential [-1.0]
+       double   HaloMerger_ExtPot_UniDenSph_M;                             // mass of the uniform-density sphere for the external potential (must >= 0.0) [0.0]
+       double   HaloMerger_ExtPot_UniDenSph_R;                             // radius of the uniform-density sphere for the external potential (must > 0.0) [-1.0]
+       double   HaloMerger_ExtPot_UniDenSph_CenCoordX;                     // x-coordinate of the center of the uniform-density sphere for the external potential (<0.0=auto -> box center) [-1.0]
+       double   HaloMerger_ExtPot_UniDenSph_CenCoordY;                     // y-coordinate of the center of the uniform-density sphere for the external potential (<0.0=auto -> box center) [-1.0]
+       double   HaloMerger_ExtPot_UniDenSph_CenCoordZ;                     // z-coordinate of the center of the uniform-density sphere for the external potential (<0.0=auto -> box center) [-1.0]
        double   HaloMerger_ExtPot_UniDenSph_VelocityX;                     // x-component of the velocity of the uniform-density sphere for the external potential [0.0]
        double   HaloMerger_ExtPot_UniDenSph_VelocityY;                     // y-component of the velocity of the uniform-density sphere for the external potential [0.0]
        double   HaloMerger_ExtPot_UniDenSph_VelocityZ;                     // z-component of the velocity of the uniform-density sphere for the external potential [0.0]
 static double   HaloMerger_ExtPot_UniDenSph_Rho;                           // density of the uniform-density sphere for the external potential
 
 // Halo-related parameters to read from the input
-static char     HaloMerger_Halo_i_CenCoordX[MAX_STRING];                   // x-coordinate of the center of the i-th halo [-1.0]
-static char     HaloMerger_Halo_i_CenCoordY[MAX_STRING];                   // y-coordinate of the center of the i-th halo [-1.0]
-static char     HaloMerger_Halo_i_CenCoordZ[MAX_STRING];                   // z-coordinate of the center of the i-th halo [-1.0]
+static char     HaloMerger_Halo_i_CenCoordX[MAX_STRING];                   // x-coordinate of the center of the i-th halo (<0.0=auto -> box center) [-1.0]
+static char     HaloMerger_Halo_i_CenCoordY[MAX_STRING];                   // y-coordinate of the center of the i-th halo (<0.0=auto -> box center) [-1.0]
+static char     HaloMerger_Halo_i_CenCoordZ[MAX_STRING];                   // z-coordinate of the center of the i-th halo (<0.0=auto -> box center) [-1.0]
+                                                                           //  (Note that CenCordX/Y/Z denotes the UM_IC box center, not the exact halo center, when HaloMerger_Halo_InitMode == 1.)
 static char     HaloMerger_Halo_i_VelocityX[MAX_STRING];                   // x-component of the bulk velocity of the i-th halo [0.0]
 static char     HaloMerger_Halo_i_VelocityY[MAX_STRING];                   // y-component of the bulk velocity of the i-th halo [0.0]
 static char     HaloMerger_Halo_i_VelocityZ[MAX_STRING];                   // z-component of the bulk velocity of the i-th halo [0.0]
-static char     HaloMerger_Halo_i_UM_IC_Filename[MAX_STRING];              // filename of UM_IC (binary file in VZYX format) for the i-th halo (HaloMerger_Halo_InitMode == 1 only)
+static char     HaloMerger_Halo_i_UM_IC_Filename[MAX_STRING];              // filename of UM_IC (binary file in vzyx format; row-major and v=field) (single AMR level) for the i-th halo (HaloMerger_Halo_InitMode == 1 only)
 static char     HaloMerger_Halo_i_UM_IC_BoxLenX[MAX_STRING];               // physical length of the box in the x-direction of UM_IC for the i-th halo (HaloMerger_Halo_InitMode == 1 only)
 static char     HaloMerger_Halo_i_UM_IC_BoxLenY[MAX_STRING];               // physical length of the box in the y-direction of UM_IC for the i-th halo (HaloMerger_Halo_InitMode == 1 only)
 static char     HaloMerger_Halo_i_UM_IC_BoxLenZ[MAX_STRING];               // physical length of the box in the z-direction of UM_IC for the i-th halo (HaloMerger_Halo_InitMode == 1 only)
@@ -40,11 +41,11 @@ static char     HaloMerger_Halo_i_UM_IC_NCellsZ[MAX_STRING];               // nu
 static char     HaloMerger_Halo_i_UM_IC_Float8[MAX_STRING];                // data precision of UM_IC for the i-th halo (0=float, 1=double) (HaloMerger_Halo_InitMode == 1 only) [0]
 
 // Soliton-related parameters to read from the input
-static char     HaloMerger_Soliton_i_CoreRadius[MAX_STRING];               // core radius of the i-th soliton (<0.0: set by HaloMerger_Soliton_i_CoreRho) [-1.0]
+static char     HaloMerger_Soliton_i_CoreRadius[MAX_STRING];               // core radius of the i-th soliton (<0.0=set by HaloMerger_Soliton_i_CoreRho) [-1.0]
 static char     HaloMerger_Soliton_i_CoreRho[MAX_STRING];                  // peak density of the i-th soliton (will be overwritten if HaloMerger_Soliton_i_CoreRadius > 0.0) [-1.0]
-static char     HaloMerger_Soliton_i_CenCoordX[MAX_STRING];                // x-coordinate of the center of the i-th soliton [-1.0]
-static char     HaloMerger_Soliton_i_CenCoordY[MAX_STRING];                // y-coordinate of the center of the i-th soliton [-1.0]
-static char     HaloMerger_Soliton_i_CenCoordZ[MAX_STRING];                // z-coordinate of the center of the i-th soliton [-1.0]
+static char     HaloMerger_Soliton_i_CenCoordX[MAX_STRING];                // x-coordinate of the center of the i-th soliton (<0.0=auto -> box center) [-1.0]
+static char     HaloMerger_Soliton_i_CenCoordY[MAX_STRING];                // y-coordinate of the center of the i-th soliton (<0.0=auto -> box center) [-1.0]
+static char     HaloMerger_Soliton_i_CenCoordZ[MAX_STRING];                // z-coordinate of the center of the i-th soliton (<0.0=auto -> box center) [-1.0]
 static char     HaloMerger_Soliton_i_VelocityX[MAX_STRING];                // x-component of the bulk velocity of the i-th soliton [0.0]
 static char     HaloMerger_Soliton_i_VelocityY[MAX_STRING];                // y-component of the bulk velocity of the i-th soliton [0.0]
 static char     HaloMerger_Soliton_i_VelocityZ[MAX_STRING];                // z-component of the bulk velocity of the i-th soliton [0.0]
@@ -480,50 +481,40 @@ void SetParameter()
 
       } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
 
-      // load the UM_IC data for the halos
-      switch ( HaloMerger_Halo_InitMode )
+      // load the UM_IC data for the halos when HaloMerger_Halo_InitMode == 1
+      if ( HaloMerger_Halo_InitMode == 1 )
       {
-         case 1:
+         const long UM_IC_NVar = 2; // (Real part & Imag part)
+
+         for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
          {
-            const long UM_IC_NVar = 2; // (Real part & Imag part)
+             // UM_IC information
+             const long UM_IC_NCells3D = (long)HaloMerger_Halo_UM_IC_NCells[index_halo][0]*HaloMerger_Halo_UM_IC_NCells[index_halo][1]*HaloMerger_Halo_UM_IC_NCells[index_halo][2];
+             size_t load_data_size     = ( HaloMerger_Halo_UM_IC_Float8[index_halo] ) ? sizeof(double) : sizeof(float);
 
-            for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
-            {
-                // UM_IC information
-                const long UM_IC_NCells3D = (long)HaloMerger_Halo_UM_IC_NCells[index_halo][0]*HaloMerger_Halo_UM_IC_NCells[index_halo][1]*HaloMerger_Halo_UM_IC_NCells[index_halo][2];
-                size_t load_data_size     = ( HaloMerger_Halo_UM_IC_Float8[index_halo] ) ? sizeof(double) : sizeof(float);
+             // allocate the memory for the array to read the data
+             HaloMerger_Halo_UM_IC_Data[index_halo] = new char [ UM_IC_NVar*UM_IC_NCells3D*load_data_size ];
 
-                // allocate the memory for the array to read the data
-                HaloMerger_Halo_UM_IC_Data[index_halo] = new char [ UM_IC_NVar*UM_IC_NCells3D*load_data_size ];
+             // open the file
+             FILE *File = fopen( HaloMerger_Halo_UM_IC_Filename[index_halo], "rb" );
 
-                // open the file
-                FILE *File = fopen( HaloMerger_Halo_UM_IC_Filename[index_halo], "rb" );
+             // check the file size
+             fseek( File, 0, SEEK_END );
+             const long ExpectSize = UM_IC_NVar*UM_IC_NCells3D*load_data_size;
+             const long FileSize   = ftell( File );
+             if ( FileSize != ExpectSize )
+                Aux_Error( ERROR_INFO, "size of the UM_IC <%s> (%ld) != expect (%ld) !!\n", HaloMerger_Halo_UM_IC_Filename[index_halo], FileSize, ExpectSize );
 
-                // check the file size
-                fseek( File, 0, SEEK_END );
-                const long ExpectSize = UM_IC_NVar*UM_IC_NCells3D*load_data_size;
-                const long FileSize   = ftell( File );
-                if ( FileSize != ExpectSize )
-                   Aux_Error( ERROR_INFO, "size of the UM_IC <%s> (%ld) != expect (%ld) !!\n", HaloMerger_Halo_UM_IC_Filename[index_halo], FileSize, ExpectSize );
+             // load data from the file
+             fseek( File, 0, SEEK_SET );
+             fread( HaloMerger_Halo_UM_IC_Data[index_halo], 1, UM_IC_NVar*UM_IC_NCells3D*load_data_size, File );
 
-                // load data from the file
-                fseek( File, 0, SEEK_SET );
-                fread( HaloMerger_Halo_UM_IC_Data[index_halo], 1, UM_IC_NVar*UM_IC_NCells3D*load_data_size, File );
+             // close the file
+             fclose( File );
 
-                // close the file
-                fclose( File );
+         } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
 
-            } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
-
-            break;
-
-         } // case 1
-
-         default:
-            Aux_Error( ERROR_INFO, "unsupported halo initialization mode (%s = %d) !!\n",
-                       "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
-
-      } // switch ( HaloMerger_Halo_InitMode )
+      } // if ( HaloMerger_Halo_InitMode == 1 )
 
    } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Halo_Num > 0 )
 
@@ -861,36 +852,44 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    {
       for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
       {
-         // wavefunction for each halo
+         // wavefunction of each halo
          double Real_halo = 0.0;
          double Imag_halo = 0.0;
 
-         // when the (x,y,z) is inside the range of this halo
-         if ( x >= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][0]  &&
-              x <= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][0]  &&
-              y >= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][1]  &&
-              y <= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][1]  &&
-              z >= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][2]  &&
-              z <= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][2] )
+         // get the wave function of the soliton
+         switch ( HaloMerger_Halo_InitMode )
          {
             // read the value interpolated from the UM_IC data
-            if ( HaloMerger_Halo_InitMode == 1 )
+            case 1:
             {
-               // assume real part first and then imaginary part
-               Real_halo = HaloMerger_Get_Value_From_Halo_UM_IC_Data( x, y, z, 0, index_halo );
-               Imag_halo = HaloMerger_Get_Value_From_Halo_UM_IC_Data( x, y, z, 1, index_halo );
-            }
-            else
-                Aux_Error( ERROR_INFO, "unsupported halo initialization mode (%s = %d) !!\n",
-                           "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
-         }
+               // when the (x,y,z) is inside the range of this halo
+               if ( x >= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][0]  &&
+                    x <= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][0]  &&
+                    y >= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][1]  &&
+                    y <= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][1]  &&
+                    z >= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][2]  &&
+                    z <= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][2] )
+               {
+                  // assume real part first and then imaginary part
+                  Real_halo = HaloMerger_Get_Value_From_Halo_UM_IC_Data( x, y, z, 0, index_halo );
+                  Imag_halo = HaloMerger_Get_Value_From_Halo_UM_IC_Data( x, y, z, 1, index_halo );
 
-         // add the velocity
-         HaloMerger_Add_Velocity( &Real_halo, &Imag_halo,
-                                  HaloMerger_Halo_Velocity[index_halo][0],
-                                  HaloMerger_Halo_Velocity[index_halo][1],
-                                  HaloMerger_Halo_Velocity[index_halo][2],
-                                  x, y, z );
+                  // add the velocity
+                  HaloMerger_Add_Velocity( &Real_halo, &Imag_halo,
+                                           HaloMerger_Halo_Velocity[index_halo][0],
+                                           HaloMerger_Halo_Velocity[index_halo][1],
+                                           HaloMerger_Halo_Velocity[index_halo][2],
+                                           x, y, z );
+               }
+
+               break;
+            } // case 1
+
+            default:
+               Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
+                          "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
+
+         } // switch ( HaloMerger_Halo_InitMode )
 
          // add the wavefunction to the box
          Real += Real_halo;
@@ -910,19 +909,20 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          double Real_soliton = 0.0;
          double Imag_soliton = 0.0;
 
-         // target radius
-         const double r_tar = sqrt( SQR(x - HaloMerger_Soliton_CenCoord[index_soliton][0]) +
-                                    SQR(y - HaloMerger_Soliton_CenCoord[index_soliton][1]) +
-                                    SQR(z - HaloMerger_Soliton_CenCoord[index_soliton][2]) );
-
          // get the density and wave function of the soliton
          switch ( HaloMerger_Soliton_InitMode )
          {
+            // read from the density profile table
             case 1:
             {
                // density profile
                const double *Table_Radius  = HaloMerger_Soliton_DensProf[index_soliton] + 0*HaloMerger_Soliton_DensProf_NBin[index_soliton];  // radius
                const double *Table_Density = HaloMerger_Soliton_DensProf[index_soliton] + 1*HaloMerger_Soliton_DensProf_NBin[index_soliton];  // density
+
+               // target radius
+               const double r_tar = sqrt( SQR(x - HaloMerger_Soliton_CenCoord[index_soliton][0]) +
+                                          SQR(y - HaloMerger_Soliton_CenCoord[index_soliton][1]) +
+                                          SQR(z - HaloMerger_Soliton_CenCoord[index_soliton][2]) );
 
                // rescale radius (target radius --> reference radius)
                const double r_ref = r_tar / HaloMerger_Soliton_DensProf_ScaleL[index_soliton];
@@ -946,9 +946,17 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                Real_soliton  = sqrt( Dens_soliton );
                Imag_soliton  = 0.0;
 
+               // add the velocity
+               HaloMerger_Add_Velocity( &Real_soliton, &Imag_soliton,
+                                        HaloMerger_Soliton_Velocity[index_soliton][0],
+                                        HaloMerger_Soliton_Velocity[index_soliton][1],
+                                        HaloMerger_Soliton_Velocity[index_soliton][2],
+                                        x, y, z );
+
                break;
             } // case 1
 
+            // set from the analytical soliton density profile
             case 2:
             {
                // parameters for the analytical soliton density profile
@@ -956,11 +964,23 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                const double rc_kpc   = HaloMerger_Soliton_CoreRadius[index_soliton]*UNIT_L/Const_kpc;
                const double peak_rho = 1.945e7/SQR( m22*rc_kpc*rc_kpc )*Const_Msun/CUBE(Const_kpc)/(UNIT_M/CUBE(UNIT_L));
 
+               // target radius
+               const double r_tar = sqrt( SQR(x - HaloMerger_Soliton_CenCoord[index_soliton][0]) +
+                                          SQR(y - HaloMerger_Soliton_CenCoord[index_soliton][1]) +
+                                          SQR(z - HaloMerger_Soliton_CenCoord[index_soliton][2]) );
+
                // get the density of soliton
                Dens_soliton  = peak_rho*pow( 1.0+9.06e-2*SQR(r_tar/HaloMerger_Soliton_CoreRadius[index_soliton]),
                                              HaloMerger_Soliton_OuterSlope[index_soliton] );
                Real_soliton  = sqrt( Dens_soliton );
                Imag_soliton  = 0.0;
+
+               // add the velocity
+               HaloMerger_Add_Velocity( &Real_soliton, &Imag_soliton,
+                                        HaloMerger_Soliton_Velocity[index_soliton][0],
+                                        HaloMerger_Soliton_Velocity[index_soliton][1],
+                                        HaloMerger_Soliton_Velocity[index_soliton][2],
+                                        x, y, z );
 
                break;
             } // case 2
@@ -970,13 +990,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                           "HaloMerger_Soliton_InitMode", HaloMerger_Soliton_InitMode );
 
          } // switch ( HaloMerger_Soliton_InitMode )
-
-         // add the velocity
-         HaloMerger_Add_Velocity( &Real_soliton, &Imag_soliton,
-                                  HaloMerger_Soliton_Velocity[index_soliton][0],
-                                  HaloMerger_Soliton_Velocity[index_soliton][1],
-                                  HaloMerger_Soliton_Velocity[index_soliton][2],
-                                  x, y, z );
 
          // add the wavefunction to the box
          Real += Real_soliton;
@@ -1078,7 +1091,7 @@ void End_HaloMerger()
 // Function    :  HaloMerger_Add_Velocity
 // Description :  Multiply the wave function by a plane wave wave function with a given velocity
 //
-// Note        :  1.
+// Note        :  None
 //
 // Parameter   :  RealPart    : real part of the wavefunction
 //                ImagPart    : imaginary part of the wavefunction
@@ -1118,7 +1131,7 @@ void HaloMerger_Add_Velocity( double *RealPart, double *ImagPart,
 // Function    :  HaloMerger_Trilinear_Interpolation
 // Description :  Linear interpolation the desired value from the data at the eight corners of a 3D cube
 //
-// Note        :  1. Ref_Value is in the order zyx (i.e. Ref_Value[z][y][x] )
+// Note        :  1. Ref_Value is in the order zyx (i.e. Ref_Value[z][y][x])
 //
 // Parameter   :  Target_X   : target x-coordinate
 //                Target_Y   : target y-coordinate
@@ -1156,7 +1169,7 @@ double HaloMerger_Trilinear_Interpolation( const double Target_X, const double T
 // Function    :  HaloMerger_Get_Value_From_Halo_UM_IC_Data
 // Description :  Get the target value of field v at (x,y,z) by reading the UM_IC_Data and performing linear interpolation
 //
-// Note        :  1.
+// Note        :  None
 //
 // Parameter   :  x                  : target x-coordinate
 //                y                  : target y-coordinate
