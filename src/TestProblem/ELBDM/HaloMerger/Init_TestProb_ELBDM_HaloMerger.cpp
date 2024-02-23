@@ -726,9 +726,9 @@ void SetParameter()
       if ( OPT__EXT_POT == EXT_POT_FUNC )
       {
          Aux_Message( stdout, "  external potential of uniform-density sphere information:\n" );
-         Aux_Message( stdout, "  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s\n",
+         Aux_Message( stdout, "           %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s\n",
                       "Mass", "Radius", "Rho", "CenCoord_X", "CenCoord_Y", "CenCoord_Z", "Velocity_X", "Velocity_Y", "Velocity_Z"  );
-         Aux_Message( stdout, "  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e\n",
+         Aux_Message( stdout, "           %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e\n",
                       HaloMerger_ExtPot_UniDenSph_M, HaloMerger_ExtPot_UniDenSph_R, HaloMerger_ExtPot_UniDenSph_Rho,
                       HaloMerger_ExtPot_UniDenSph_CenCoordX, HaloMerger_ExtPot_UniDenSph_CenCoordY, HaloMerger_ExtPot_UniDenSph_CenCoordZ,
                       HaloMerger_ExtPot_UniDenSph_VelocityX, HaloMerger_ExtPot_UniDenSph_VelocityY, HaloMerger_ExtPot_UniDenSph_VelocityZ );
