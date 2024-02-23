@@ -69,7 +69,7 @@ void SetExtPotAuxArray_ELBDM_HaloMerger( double AuxArray_Flt[], int AuxArray_Int
 //                      UserArray_Flt[4] = y component of the velocity of the external potential center
 //                      UserArray_Flt[5] = z component of the velocity of the external potential center
 //                      UserArray_Flt[6] = gravitational_constant*sphere_mass
-//                      UserArray_Flt[7] = gravitational_constant*sphere_radius
+//                      UserArray_Flt[7] = sphere_radius
 //                3. Currently it does not support the soften length
 //                4. GenePtr has the size of EXT_POT_NGENE_MAX defined in Macro.h (default = 6)
 //
@@ -102,7 +102,8 @@ static real ExtPot_ELBDM_HaloMerger( const double x, const double y, const doubl
    const real   r      = SQRT( dx*dx + dy*dy + dz*dz );
    const real   _r     = 1.0/r;
    const real   GM_2R3 = GM/(2.0*CUBE(R));
-   const real   Offset = 0.75*(GM/R);
+   const real   Offset = 0.75*(GM/R);  // Shift the potential to reduce the absolute value of potential
+                                       // and thus increase the time step
 
    if ( r >= R )
       return -GM*_r + Offset;
@@ -161,7 +162,7 @@ void SetCPUExtPot_ELBDM_HaloMerger( ExtPot_t &CPUExtPot_Ptr )
 #ifndef __CUDACC__
 
 // local function prototypes
-void SetExtPotAuxArray_ELBDM_ExtPot( double [], int [], const double );
+void SetExtPotAuxArray_ELBDM_HaloMerger( double [], int [], const double );
 void SetCPUExtPot_ELBDM_HaloMerger( ExtPot_t & );
 #ifdef GPU
 void SetGPUExtPot_ELBDM_HaloMerger( ExtPot_t & );
