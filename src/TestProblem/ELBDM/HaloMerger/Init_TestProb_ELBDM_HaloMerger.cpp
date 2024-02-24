@@ -1046,7 +1046,7 @@ void End_HaloMerger()
          delete [] HaloMerger_Halo_UM_IC_BoxLen;
          delete [] HaloMerger_Halo_UM_IC_NCells;
          delete [] HaloMerger_Halo_UM_IC_Float8;
-         delete [] HaloMerger_Halo_UM_IC_dh; 
+         delete [] HaloMerger_Halo_UM_IC_dh;
          delete [] HaloMerger_Halo_UM_IC_Range_EdgeL;
          delete [] HaloMerger_Halo_UM_IC_Range_EdgeR;
          delete [] HaloMerger_Halo_UM_IC_Data;
