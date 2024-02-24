@@ -1042,11 +1042,14 @@ void End_HaloMerger()
              delete [] HaloMerger_Halo_UM_IC_Data[index_halo];
          }
 
-         delete [] HaloMerger_Halo_UM_IC_Data;
          delete [] HaloMerger_Halo_UM_IC_Filename;
          delete [] HaloMerger_Halo_UM_IC_BoxLen;
          delete [] HaloMerger_Halo_UM_IC_NCells;
          delete [] HaloMerger_Halo_UM_IC_Float8;
+         delete [] HaloMerger_Halo_UM_IC_dh; 
+         delete [] HaloMerger_Halo_UM_IC_Range_EdgeL;
+         delete [] HaloMerger_Halo_UM_IC_Range_EdgeR;
+         delete [] HaloMerger_Halo_UM_IC_Data;
 
       } // if ( HaloMerger_Halo_InitMode == 1 )
 
@@ -1067,8 +1070,8 @@ void End_HaloMerger()
              delete [] HaloMerger_Soliton_DensProf[index_soliton];
          }
 
-         delete [] HaloMerger_Soliton_DensProf;
          delete [] HaloMerger_Soliton_DensProf_Filename;
+         delete [] HaloMerger_Soliton_DensProf;
          delete [] HaloMerger_Soliton_DensProf_NBin;
          delete [] HaloMerger_Soliton_DensProf_ScaleL;
          delete [] HaloMerger_Soliton_DensProf_ScaleD;
