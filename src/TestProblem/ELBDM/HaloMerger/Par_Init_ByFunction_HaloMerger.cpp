@@ -46,7 +46,7 @@ extern double  *HaloMerger_Halo_Par_Num_Ratio;
 //
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttribute
 //-------------------------------------------------------------------------------------------------------
-void Par_Init_ByFunction_Halomerger( const long NPar_ThisRank, const long NPar_AllRank,
+void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_AllRank,
                                      real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                      real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                      real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
@@ -123,11 +123,12 @@ void Par_Init_ByFunction_Halomerger( const long NPar_ThisRank, const long NPar_A
 
          delete [] Cloud_Constructor.params.Cloud_Center ;
          delete [] Cloud_Constructor.params.Cloud_BulkVel;
-      Aux_Message( stdout, "   Total enclosed mass within MaxR  = %13.7e\n",  TotM );
-      Aux_Message( stdout, "   Total enclosed mass to inifinity = %13.7e\n",  TotM_Inf );
-      Aux_Message( stdout, "   Enclosed mass ratio              = %6.2f%%\n", 100.0*TotM/TotM_Inf );
-      Aux_Message( stdout, "   Particle mass                    = %13.7e\n",  ParM );
-      Aux_Message( stdout, "   Maximum mass interpolation error = %13.7e\n",  ErrM_Max );
+
+         //Aux_Message( stdout, "   Total enclosed mass within MaxR  = %13.7e\n",  TotM );
+         //Aux_Message( stdout, "   Total enclosed mass to inifinity = %13.7e\n",  TotM_Inf );
+         //Aux_Message( stdout, "   Enclosed mass ratio              = %6.2f%%\n", 100.0*TotM/TotM_Inf );
+         //Aux_Message( stdout, "   Particle mass                    = %13.7e\n",  ParM );
+         //Aux_Message( stdout, "   Maximum mass interpolation error = %13.7e\n",  ErrM_Max );
 
       } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
    } // if ( MPI_Rank == 0 )

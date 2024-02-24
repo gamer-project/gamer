@@ -319,9 +319,9 @@ void SetParameter()
          else if ( HaloMerger_Halo_InitMode == 2 )
          {
          ReadPara_Halo->Add( HaloMerger_Halo_i_Par_DensProf_Filename,  HaloMerger_Halo_Par_DensProf_Filename[index_halo], NoDef_str,    Useless_str,   Useless_str    );
-         ReadPara_Halo->Add( HaloMerger_Halo_i_Par_DensProf_MaxR,      HaloMerger_Halo_Par_DensProf_MaxR[index_halo],    -1.0,          NoMin_double,  NoMax_double   );
-         ReadPara_Halo->Add( HaloMerger_Halo_i_Par_RSeed,              HaloMerger_Halo_Par_RSeed[index_halo],             123,          NoMin_int,     NoMax_int      );
-         ReadPara_Halo->Add( HaloMerger_Halo_i_Par_Num_Ratio,          HaloMerger_Halo_Par_Num_Ratio[index_halo],         0.5,          0.0,           1.0            );
+         ReadPara_Halo->Add( HaloMerger_Halo_i_Par_DensProf_MaxR,     &HaloMerger_Halo_Par_DensProf_MaxR[index_halo],    -1.0,          NoMin_double,  NoMax_double   );
+         ReadPara_Halo->Add( HaloMerger_Halo_i_Par_RSeed,             &HaloMerger_Halo_Par_RSeed[index_halo],             123,          NoMin_int,     NoMax_int      );
+         ReadPara_Halo->Add( HaloMerger_Halo_i_Par_Num_Ratio,         &HaloMerger_Halo_Par_Num_Ratio[index_halo],         0.5,          0.0,           1.0            );
          } // if ( HaloMerger_Halo_InitMode == 2 )
 
       } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
@@ -559,7 +559,7 @@ void SetParameter()
                           index_halo+1, HaloMerger_Halo_Par_DensProf_Filename[index_halo] );
 
             if ( HaloMerger_Halo_Par_DensProf_MaxR[index_halo] < 0.0 )
-               HaloMerger_Halo_Par_DensProf_MaxR[index_halo] = 0.5*sqrt( SQR(amr->BoxSize[0]) + SQR(amr->BoxSize[1]) + SQR(amr->BoxSize[2]) )
+               HaloMerger_Halo_Par_DensProf_MaxR[index_halo] = 0.5*sqrt( SQR(amr->BoxSize[0]) + SQR(amr->BoxSize[1]) + SQR(amr->BoxSize[2]) );
 
          } // if ( HaloMerger_Halo_InitMode == 2 )
 
@@ -989,8 +989,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
             // CDM halo
             case 2:
             {
-               Real_Halo = 0.0;
-               Imag_Halo = 0.0;
+               Real_halo = 0.0;
+               Imag_halo = 0.0;
 
                break;
             } // case 2
