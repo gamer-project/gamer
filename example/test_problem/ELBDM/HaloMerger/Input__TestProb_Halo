@@ -15,6 +15,10 @@ HaloMerger_Halo_1_UM_IC_NCellsX         640             # number of cells of the
 HaloMerger_Halo_1_UM_IC_NCellsY         640             # number of cells of the box in the y-direction of UM_IC for the 1st halo (HaloMerger_Halo_InitMode == 1 only)
 HaloMerger_Halo_1_UM_IC_NCellsZ         640             # number of cells of the box in the z-direction of UM_IC for the 1st halo (HaloMerger_Halo_InitMode == 1 only)
 HaloMerger_Halo_1_UM_IC_Float8          0               # data precision of UM_IC for the 1st halo (0=float, 1=double) (HaloMerger_Halo_InitMode == 1 only) [0]
+HaloMerger_Halo_1_Par_DensProf_Filename DensProf_Halo1  # filename of density table for the 1st halo (HaloMerger_Halo_InitMode == 2 only)
+HaloMerger_Halo_1_Par_DensProf_MaxR     0.03234605475   # maximum radius for particles for the 1st halo (HaloMerger_Halo_InitMode == 2 only) [-1.0]
+HaloMerger_Halo_1_Par_Num_Ratio         0.5             # particle number ratio for the 1st halo (HaloMerger_Halo_InitMode == 2 only) [0.5]
+HaloMerger_Halo_1_Par_RSeed             123             # random seed for setting particle position and velocity for the 1st halo (>=0) (HaloMerger_Halo_InitMode == 2 only) [123]
 # the 2nd halo
 HaloMerger_Halo_2_CenCoordX             0.19407633      # x-coordinate of the center of the 2nd halo (<0.0=auto -> box center) [-1.0]
 HaloMerger_Halo_2_CenCoordY             0.12938422      # y-coordinate of the center of the 2nd halo (<0.0=auto -> box center) [-1.0]
@@ -31,3 +35,7 @@ HaloMerger_Halo_2_UM_IC_NCellsX         640             # number of cells of the
 HaloMerger_Halo_2_UM_IC_NCellsY         640             # number of cells of the box in the y-direction of UM_IC for the 2nd halo (HaloMerger_Halo_InitMode == 1 only)
 HaloMerger_Halo_2_UM_IC_NCellsZ         640             # number of cells of the box in the z-direction of UM_IC for the 2nd halo (HaloMerger_Halo_InitMode == 1 only)
 HaloMerger_Halo_2_UM_IC_Float8          0               # data precision of UM_IC for the 2nd halo (0=float, 1=double) (HaloMerger_Halo_InitMode == 1 only) [0]
+HaloMerger_Halo_2_Par_DensProf_Filename DensProf_Halo2  # filename of density table for the 2nd halo (HaloMerger_Halo_InitMode == 2 only)
+HaloMerger_Halo_2_Par_DensProf_MaxR     0.03234605475   # maximum radius for particles for the 2nd halo (HaloMerger_Halo_InitMode == 2 only) [-1.0]
+HaloMerger_Halo_2_Par_Num_Ratio         0.5             # particle number ratio for the 2nd halo (HaloMerger_Halo_InitMode == 2 only) [0.5]
+HaloMerger_Halo_2_Par_RSeed             123             # random seed for setting particle position and velocity for the 2nd halo (>=0) (HaloMerger_Halo_InitMode == 2 only) [123]

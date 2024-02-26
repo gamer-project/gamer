@@ -7,10 +7,10 @@
 // =======================================================================================
        int      HaloMerger_Halo_Num;                                       // total number of halos [2]
 static int      HaloMerger_Halo_InitMode;                                  // halo initialization mode [1]
-                                                                           //   (1=single-level UM_IC of real and imaginary parts, 2=density profile for CDM halo)
+                                                                           // (1=single-level UM_IC of real and imaginary parts, 2=density profile for CDM halo)
 static int      HaloMerger_Soliton_Num;                                    // total number of solitons [0]
 static int      HaloMerger_Soliton_InitMode;                               // soliton initialization mode [1]
-                                                                           //   (1=table of the density profile, 2=analytical function of the density profile)
+                                                                           // (1=table of the density profile, 2=analytical function of the density profile)
 
 // External Potential-related parameters to read from the input
        double   HaloMerger_ExtPot_UniDenSph_M;                             // mass of the uniform-density sphere for the external potential (must >= 0.0) [0.0]
@@ -39,10 +39,10 @@ static char     HaloMerger_Halo_i_UM_IC_NCellsX[MAX_STRING];               // nu
 static char     HaloMerger_Halo_i_UM_IC_NCellsY[MAX_STRING];               // number of cells of the box in the y-direction of UM_IC for the i-th halo (HaloMerger_Halo_InitMode == 1 only)
 static char     HaloMerger_Halo_i_UM_IC_NCellsZ[MAX_STRING];               // number of cells of the box in the z-direction of UM_IC for the i-th halo (HaloMerger_Halo_InitMode == 1 only)
 static char     HaloMerger_Halo_i_UM_IC_Float8[MAX_STRING];                // data precision of UM_IC for the i-th halo (0=float, 1=double) (HaloMerger_Halo_InitMode == 1 only) [0]
-static char     HaloMerger_Halo_i_Par_RSeed[MAX_STRING];
-static char     HaloMerger_Halo_i_Par_DensProf_MaxR[MAX_STRING];
-static char     HaloMerger_Halo_i_Par_Num_Ratio[MAX_STRING];
-static char     HaloMerger_Halo_i_Par_DensProf_Filename[MAX_STRING];
+static char     HaloMerger_Halo_i_Par_DensProf_Filename[MAX_STRING];       // filename of density table for the i-th halo (HaloMerger_Halo_InitMode == 2 only)
+static char     HaloMerger_Halo_i_Par_DensProf_MaxR[MAX_STRING];           // maximum radius for particles for the i-th halo (HaloMerger_Halo_InitMode == 2 only) [-1.0]
+static char     HaloMerger_Halo_i_Par_Num_Ratio[MAX_STRING];               // particle number ratio for the i-th halo (HaloMerger_Halo_InitMode == 2 only) [0.5]
+static char     HaloMerger_Halo_i_Par_RSeed[MAX_STRING];                   // random seed for setting particle position and velocity for the i-th halo (>=0) (HaloMerger_Halo_InitMode == 2 only) [123]
 
 // Soliton-related parameters to read from the input
 static char     HaloMerger_Soliton_i_CoreRadius[MAX_STRING];               // core radius of the i-th soliton (<0.0=set by HaloMerger_Soliton_i_CoreRho) [-1.0]
@@ -67,10 +67,10 @@ static double (*HaloMerger_Halo_UM_IC_dh)[3]                      = NULL;  // gr
 static double (*HaloMerger_Halo_UM_IC_Range_EdgeL)[3]             = NULL;  // left edge of the range of each halo
 static double (*HaloMerger_Halo_UM_IC_Range_EdgeR)[3]             = NULL;  // right edge of the range of each halo
 static char   **HaloMerger_Halo_UM_IC_Data                        = NULL;  // array to store the data read from UM_IC
-       char   (*HaloMerger_Halo_Par_DensProf_Filename)[MAX_STRING]= NULL;
-       double  *HaloMerger_Halo_Par_DensProf_MaxR                 = NULL;
-       int     *HaloMerger_Halo_Par_RSeed                         = NULL;
-       double  *HaloMerger_Halo_Par_Num_Ratio                     = NULL;
+       char   (*HaloMerger_Halo_Par_DensProf_Filename)[MAX_STRING]= NULL;  // density table filename of each halo
+       double  *HaloMerger_Halo_Par_DensProf_MaxR                 = NULL;  // particle maximum radius of each halo
+       double  *HaloMerger_Halo_Par_Num_Ratio                     = NULL;  // particle number ratio of each halo
+       int     *HaloMerger_Halo_Par_RSeed                         = NULL;  // particle random seed of each halo
 
 // Soliton-related internal variables
 static double  *HaloMerger_Soliton_CoreRadius                     = NULL;  // core radius of each soliton
@@ -256,8 +256,8 @@ void SetParameter()
       {
       HaloMerger_Halo_Par_DensProf_Filename = new char   [HaloMerger_Halo_Num][MAX_STRING];
       HaloMerger_Halo_Par_DensProf_MaxR     = new double [HaloMerger_Halo_Num];
-      HaloMerger_Halo_Par_RSeed             = new int    [HaloMerger_Halo_Num];
       HaloMerger_Halo_Par_Num_Ratio         = new double [HaloMerger_Halo_Num];
+      HaloMerger_Halo_Par_RSeed             = new int    [HaloMerger_Halo_Num];
       }
 
       // (1-2-2) read the parameters for the halos
@@ -288,8 +288,8 @@ void SetParameter()
          {
          sprintf( HaloMerger_Halo_i_Par_DensProf_Filename, "HaloMerger_Halo_%d_Par_DensProf_Filename", index_halo+1 );
          sprintf( HaloMerger_Halo_i_Par_DensProf_MaxR,     "HaloMerger_Halo_%d_Par_DensProf_MaxR",     index_halo+1 );
-         sprintf( HaloMerger_Halo_i_Par_RSeed,             "HaloMerger_Halo_%d_Par_RSeed",             index_halo+1 );
          sprintf( HaloMerger_Halo_i_Par_Num_Ratio,         "HaloMerger_Halo_%d_Par_Num_Ratio",         index_halo+1 );
+         sprintf( HaloMerger_Halo_i_Par_RSeed,             "HaloMerger_Halo_%d_Par_RSeed",             index_halo+1 );
          } // if ( HaloMerger_Halo_InitMode == 2 )
 
       // (1-2-3) add parameters in the following format:
@@ -320,8 +320,8 @@ void SetParameter()
          {
          ReadPara_Halo->Add( HaloMerger_Halo_i_Par_DensProf_Filename,  HaloMerger_Halo_Par_DensProf_Filename[index_halo], NoDef_str,    Useless_str,   Useless_str    );
          ReadPara_Halo->Add( HaloMerger_Halo_i_Par_DensProf_MaxR,     &HaloMerger_Halo_Par_DensProf_MaxR[index_halo],    -1.0,          NoMin_double,  NoMax_double   );
-         ReadPara_Halo->Add( HaloMerger_Halo_i_Par_RSeed,             &HaloMerger_Halo_Par_RSeed[index_halo],             123,          NoMin_int,     NoMax_int      );
          ReadPara_Halo->Add( HaloMerger_Halo_i_Par_Num_Ratio,         &HaloMerger_Halo_Par_Num_Ratio[index_halo],         0.5,          0.0,           1.0            );
+         ReadPara_Halo->Add( HaloMerger_Halo_i_Par_RSeed,             &HaloMerger_Halo_Par_RSeed[index_halo],             123,          NoMin_int,     NoMax_int      );
          } // if ( HaloMerger_Halo_InitMode == 2 )
 
       } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
@@ -558,6 +558,7 @@ void SetParameter()
                Aux_Error( ERROR_INFO, "Halo_%d CDM density profile file \"%s\" does not exist !!\n",
                           index_halo+1, HaloMerger_Halo_Par_DensProf_Filename[index_halo] );
 
+            // set default maximum radius for particles
             if ( HaloMerger_Halo_Par_DensProf_MaxR[index_halo] < 0.0 )
                HaloMerger_Halo_Par_DensProf_MaxR[index_halo] = 0.5*sqrt( SQR(amr->BoxSize[0]) + SQR(amr->BoxSize[1]) + SQR(amr->BoxSize[2]) );
 
@@ -854,18 +855,18 @@ void SetParameter()
          else if ( HaloMerger_Halo_InitMode == 2 )
          {
             Aux_Message( stdout, "  halo Par_DensProf information:\n" );
-            Aux_Message( stdout, "  %7s  %14s  %14s  %14s  %14s\n",
+            Aux_Message( stdout, "  %7s  %28s  %14s  %14s  %14s\n",
                          "ID", "Par_DensProf_Filename",
                                "Par_DensProf_MaxR",
-                               "Par_RSeed",
-                               "Par_Num_Ratio" );
+                               "Par_Num_Ratio",
+                               "Par_RSeed");
 
             for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
-               Aux_Message( stdout, "  %7d  %14s  %14.6e  %14d  %14.6e\n",
+               Aux_Message( stdout, "  %7d  %28s  %14.6e  %14.6e  %14d\n",
                             index_halo+1, HaloMerger_Halo_Par_DensProf_Filename[index_halo],
                             HaloMerger_Halo_Par_DensProf_MaxR[index_halo],
-                            HaloMerger_Halo_Par_RSeed[index_halo],
-                            HaloMerger_Halo_Par_Num_Ratio[index_halo]);
+                            HaloMerger_Halo_Par_Num_Ratio[index_halo],
+                            HaloMerger_Halo_Par_RSeed[index_halo]);
 
          } // if ( HaloMerger_Halo_InitMode == 2 )
 
@@ -1166,8 +1167,8 @@ void End_HaloMerger()
       {
          delete [] HaloMerger_Halo_Par_DensProf_Filename;
          delete [] HaloMerger_Halo_Par_DensProf_MaxR;
-         delete [] HaloMerger_Halo_Par_RSeed;
          delete [] HaloMerger_Halo_Par_Num_Ratio;
+         delete [] HaloMerger_Halo_Par_RSeed;
       } // if ( HaloMerger_Halo_InitMode == 2 )
 
    } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Halo_Num > 0 )
