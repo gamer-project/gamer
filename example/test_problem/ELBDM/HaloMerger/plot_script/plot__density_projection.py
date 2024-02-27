@@ -35,20 +35,27 @@ yt.enable_parallelism()
 
 ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 for ds in ts.piter():
-   for center_mode in ['c','m']:
+   for center_mode in ['c', 'm']:
       for direction in ['y', 'z']:
          for field in ['density']:
-            pz_dens = yt.ProjectionPlot( ds, direction, field, center=center_mode )
+            # ProjectionPlot
+            p_dens = yt.ProjectionPlot( ds, direction, field, center=center_mode )
 
-            pz_dens.set_axes_unit( 'kpc' )
-            pz_dens.set_unit( field, "Msun/kpc**2" )
-            pz_dens.set_zlim( field, 1.0e+3, 1.0e8 )
-            pz_dens.set_cmap( field, colormap_dens )
-            pz_dens.set_background_color( field )
-            pz_dens.annotate_timestamp( time_unit='Gyr', corner='upper_right' )
+            # setting for the figure
+            p_dens.set_axes_unit( 'kpc' )
+            p_dens.set_unit( field, 'Msun/kpc**2' )
+            p_dens.set_zlim( field, 1.0e+3, 1.0e8 )
+            p_dens.set_cmap( field, colormap_dens )
+            p_dens.set_background_color( field )
+            p_dens.annotate_timestamp( time_unit='Gyr', corner='upper_right' )
+
+            # zoom in
             if center_mode == 'm':
-               pz_dens.zoom(4)
+               p_dens.zoom(4)
 
-            pz_dens.save("%s_%s"%(ds, center_mode), mpl_kwargs={"dpi":dpi} )
-            pz_dens.annotate_grids()
-            pz_dens.save( "%s_%s_grids"%(ds, center_mode), mpl_kwargs={"dpi":dpi} )
+            # save the figure
+            p_dens.save( '%s_%s'%(ds, center_mode), mpl_kwargs={'dpi':dpi} )
+
+            # annotate the grids and save again
+            p_dens.annotate_grids()
+            p_dens.save( '%s_%s_grids'%(ds, center_mode), mpl_kwargs={'dpi':dpi} )

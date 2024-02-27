@@ -35,20 +35,27 @@ yt.enable_parallelism()
 
 ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 for ds in ts.piter():
-   for center_mode in ['c','m']:
+   for center_mode in ['c', 'm']:
       for direction in ['y', 'z']:
          for field in ['density']:
-            sz_dens = yt.SlicePlot( ds, direction, field, center=center_mode )
+            # SlicePlot
+            s_dens = yt.SlicePlot( ds, direction, field, center=center_mode )
 
-            sz_dens.set_axes_unit( 'kpc' )
-            sz_dens.set_unit( field, "code_density" )
-            sz_dens.set_zlim( field, 1.0e0, 1.0e6   )
-            sz_dens.set_cmap( field, colormap_dens )
-            sz_dens.set_background_color( field )
-            sz_dens.annotate_timestamp( time_unit='Gyr', corner='upper_right' )
+            # setting for the figure
+            s_dens.set_axes_unit( 'kpc' )
+            s_dens.set_unit( field, 'Msun/kpc**3' )
+            s_dens.set_zlim( field, 4.0e1, 4.0e7   )
+            s_dens.set_cmap( field, colormap_dens  )
+            s_dens.set_background_color( field )
+            s_dens.annotate_timestamp( time_unit='Gyr', corner='upper_right' )
+
+            # zoom in
             if center_mode == 'm':
-               sz_dens.zoom(4)
+               s_dens.zoom(4)
 
-            sz_dens.save("%s_%s"%(ds, center_mode), mpl_kwargs={"dpi":dpi} )
-            sz_dens.annotate_grids()
-            sz_dens.save( "%s_%s_grids"%(ds, center_mode), mpl_kwargs={"dpi":dpi} )
+            # save the figure
+            s_dens.save( '%s_%s'%(ds, center_mode), mpl_kwargs={'dpi':dpi} )
+
+            # annotate the grids and save again
+            s_dens.annotate_grids()
+            s_dens.save( '%s_%s_grids'%(ds, center_mode), mpl_kwargs={'dpi':dpi} )
