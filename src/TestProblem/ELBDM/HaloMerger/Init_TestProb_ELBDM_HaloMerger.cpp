@@ -150,10 +150,10 @@ void Validate()
 #  ifdef PARTICLE
    if ( OPT__INIT == INIT_BY_FUNCTION  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
       Aux_Error( ERROR_INFO, "please set PAR_INIT = 1 (by FUNCTION) !!\n" );
-#  endif
 
 #  ifndef SUPPORT_GSL
    Aux_Error( ERROR_INFO, "SUPPORT_GSL must be enabled !!\n" );
+#  endif
 #  endif
 
    if ( !OPT__UNIT )
@@ -643,6 +643,7 @@ void SetParameter()
    // overwrite the total number of particles
    #  ifdef MASSIVE_PARTICLES
    amr->Par->NPar_Active_AllRank = ( HaloMerger_Halo_InitMode == 2 ) ? HaloMerger_Halo_Par_NPar_Total : (long)0;
+
    PRINT_RESET_PARA( amr->Par->NPar_Active_AllRank, FORMAT_LONG, "(PAR_NPAR in Input__Parameter)" );
    #  endif
 

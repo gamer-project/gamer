@@ -1,6 +1,6 @@
 Compilation flags:
 ========================================
-Enable : MODEL=ELBDM, GRAVITY
+Enable : MODEL=ELBDM, GRAVITY (, PARTICLE, SUPPORT_GSL)
 Disable: COMOVING
 
 
@@ -41,10 +41,8 @@ Note:
    c. For HaloMerger_Halo_InitMode == 2
       - The initial condition of halos is constructed by reading the table of halo density profile and using Par_EquilibriumIC()
       - It is a particle-only simulation for the CDM halos
-      - Set the following parameters in Input__Parameter
-        - PAR_NPAR                      4000000
-        - OPT__FLAG_NPAR_PATCH          2
-        - OPT__FREEZE_FLUID             1
+      - Enable compilation options: PARTICLE, SUPPORT_GSL
+      - Set the parameter OPT__FREEZE_FLUID to 1 in Input__Parameter
 
 3. Edit Input_TestProb_Soliton to specify the parameters for the solitons
    a. Add new parameters with increasing indexes if the number of solitons is more than 2
