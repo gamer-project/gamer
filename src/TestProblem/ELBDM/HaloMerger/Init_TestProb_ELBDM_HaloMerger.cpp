@@ -7,7 +7,7 @@
 // =======================================================================================
        int      HaloMerger_Halo_Num;                                       // total number of halos [2]
        int      HaloMerger_Halo_InitMode;                                  // halo initialization mode [1]
-                                                                           // (1=single-level UM_IC of real and imaginary parts, 2=density profile for CDM halo)
+                                                                           // (1=single-level UM_IC of real and imaginary parts, 2=density profile for particle-only CDM halo)
 static int      HaloMerger_Soliton_Num;                                    // total number of solitons [0]
 static int      HaloMerger_Soliton_InitMode;                               // soliton initialization mode [1]
                                                                            // (1=table of the density profile, 2=analytical function of the density profile)
@@ -40,9 +40,9 @@ static char     HaloMerger_Halo_i_UM_IC_NCellsY[MAX_STRING];               // nu
 static char     HaloMerger_Halo_i_UM_IC_NCellsZ[MAX_STRING];               // number of cells of the box in the z-direction of UM_IC for the i-th halo (HaloMerger_Halo_InitMode == 1 only)
 static char     HaloMerger_Halo_i_UM_IC_Float8[MAX_STRING];                // data precision of UM_IC for the i-th halo (0=float, 1=double) (HaloMerger_Halo_InitMode == 1 only) [0]
 static char     HaloMerger_Halo_i_Par_DensProf_Filename[MAX_STRING];       // filename of density table for the i-th halo (HaloMerger_Halo_InitMode == 2 only)
-static char     HaloMerger_Halo_i_Par_DensProf_MaxR[MAX_STRING];           // maximum radius for particles for the i-th halo (HaloMerger_Halo_InitMode == 2 only) [-1.0]
-static char     HaloMerger_Halo_i_Par_Num_Ratio[MAX_STRING];               // particle number ratio for the i-th halo (HaloMerger_Halo_InitMode == 2 only) [0.5]
-static char     HaloMerger_Halo_i_Par_RSeed[MAX_STRING];                   // random seed for setting particle position and velocity for the i-th halo (>=0) (HaloMerger_Halo_InitMode == 2 only) [123]
+static char     HaloMerger_Halo_i_Par_DensProf_MaxR[MAX_STRING];           // maximum radius for particles for the i-th halo (must > 0.0) (HaloMerger_Halo_InitMode == 2 only) [-1.0]
+static char     HaloMerger_Halo_i_Par_Num_Ratio[MAX_STRING];               // particle number ratio for the i-th halo (between 0.0 and 1.0) (HaloMerger_Halo_InitMode == 2 only) [0.5]
+static char     HaloMerger_Halo_i_Par_RSeed[MAX_STRING];                   // random seed for setting particle position and velocity for the i-th halo (must >= 0) (HaloMerger_Halo_InitMode == 2 only) [123]
 
 // Soliton-related parameters to read from the input
 static char     HaloMerger_Soliton_i_CoreRadius[MAX_STRING];               // core radius of the i-th soliton (<0.0=set by HaloMerger_Soliton_i_CoreRho) [-1.0]
@@ -87,9 +87,18 @@ static double **HaloMerger_Soliton_DensProf                        = NULL; // ar
 // =======================================================================================
 
 #if ( MODEL == ELBDM  &&  defined GRAVITY )
-// external potential routines
+// external potential routine
 // =======================================================================================
 void Init_ExtPot_ELBDM_HaloMerger();
+
+// external particle initialization routine
+// =======================================================================================
+#ifdef MASSIVE_PARTICLES
+void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_AllRank,
+                                     real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
+                                     real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
+                                     real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
+#endif
 
 // problem-specific functions
 // =======================================================================================
@@ -102,13 +111,6 @@ static double HaloMerger_Trilinear_Interpolation( const double Target_X, const d
                                                   const double Ref_X[2], const double Ref_Y[2], const double Ref_Z[2] );
 
 static double HaloMerger_Get_Value_From_Halo_UM_IC_Data( const double x, const double y, const double z, const int v, const int index_halo );
-
-#ifdef MASSIVE_PARTICLES
-void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_AllRank,
-                                     real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                     real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                     real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
-#endif
 // =======================================================================================
 #endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
@@ -165,17 +167,6 @@ void Validate()
    {
       if ( !OPT__INIT_RESTRICT )
          Aux_Message( stderr, "WARNING : it's recommended to enable OPT__INIT_RESTRICT !!\n" );
-
-#     ifdef MASSIVE_PARTICLES
-      for (int f=0; f<6; f++)  // TODO: WHY?
-      if ( OPT__BC_FLU[f] == BC_FLU_PERIODIC )
-         Aux_Message( stderr, "WARNING : periodic BC for fluid is not recommended for this test !!\n" );
-
-#     ifdef GRAVITY
-      if ( OPT__BC_POT == BC_POT_PERIODIC )
-         Aux_Message( stderr, "WARNING : periodic BC for gravity is not recommended for this test !!\n" );
-#     endif
-#     endif
    }
 
 
@@ -324,7 +315,7 @@ void SetParameter()
          ReadPara_Halo->Add( HaloMerger_Halo_i_Par_DensProf_Filename,  HaloMerger_Halo_Par_DensProf_Filename[index_halo],  NoDef_str,        Useless_str,   Useless_str    );
          ReadPara_Halo->Add( HaloMerger_Halo_i_Par_DensProf_MaxR,     &HaloMerger_Halo_Par_DensProf_MaxR[index_halo],     -1.0,              NoMin_double,  NoMax_double   );
          ReadPara_Halo->Add( HaloMerger_Halo_i_Par_Num_Ratio,         &HaloMerger_Halo_Par_Num_Ratio[index_halo],          0.5,              0.0,           1.0            );
-         ReadPara_Halo->Add( HaloMerger_Halo_i_Par_RSeed,             &HaloMerger_Halo_Par_RSeed[index_halo],              123,              NoMin_int,     NoMax_int      );
+         ReadPara_Halo->Add( HaloMerger_Halo_i_Par_RSeed,             &HaloMerger_Halo_Par_RSeed[index_halo],              123,              0,             NoMax_int      );
          } // if ( HaloMerger_Halo_InitMode == 2 )
 
       } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
@@ -458,22 +449,22 @@ void SetParameter()
    if ( HaloMerger_Halo_InitMode != 2  &&  amr->Par->NPar_Active_AllRank > 0 )
       Aux_Error( ERROR_INFO, "PAR_NPAR must be 0 for HaloMerger_Halo_InitMode != 2 !!\n" );
 
-   // check there are particles because HaloMerger_Halo_InitMode == 2 is supposed to be a pure particle case
+   // check there are particles because HaloMerger_Halo_InitMode == 2 is supposed to be a particle-only case
    if ( HaloMerger_Halo_InitMode == 2  &&  amr->Par->NPar_Active_AllRank <= 0 )
       Aux_Error( ERROR_INFO, "PAR_NPAR must be >0 for HaloMerger_Halo_InitMode == 2 !!\n" );
    #  endif
 
    #  ifndef MASSIVE_PARTICLES
-   // check there are particles because HaloMerger_Halo_InitMode == 2 is supposed to be a pure particle case
+   // check there are particles because HaloMerger_Halo_InitMode == 2 is supposed to be a particle-only case
    if ( HaloMerger_Halo_InitMode == 2 )
       Aux_Error( ERROR_INFO, "MASSIVE_PARTICLES must be enabled for HaloMerger_Halo_InitMode == 2 !!\n" );
    #  endif
 
-   // check there fluid is freezed because HaloMerger_Halo_InitMode == 2 is supposed to be a pure particle case
+   // check there fluid is freezed because HaloMerger_Halo_InitMode == 2 is supposed to be a particle-only case
    if ( HaloMerger_Halo_InitMode == 2  &&  OPT__FREEZE_FLUID != 1 )
-      Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID must be on for HaloMerger_Halo_InitMode == 2 !!\n" );
+      Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID must be 1 for HaloMerger_Halo_InitMode == 2 !!\n" );
 
-   // check there is no soliton because HaloMerger_Halo_InitMode == 2 is supposed to be a pure particle case
+   // check there is no soliton because HaloMerger_Halo_InitMode == 2 is supposed to be a particle-only case
    if ( HaloMerger_Halo_InitMode == 2  &&  HaloMerger_Soliton_Num > 0 )
       Aux_Error( ERROR_INFO, "HaloMerger_Soliton_Num must be 0 for HaloMerger_Halo_InitMode == 2 !!\n" );
 
@@ -570,9 +561,9 @@ void SetParameter()
                Aux_Error( ERROR_INFO, "Halo_%d CDM density profile file \"%s\" does not exist !!\n",
                           index_halo+1, HaloMerger_Halo_Par_DensProf_Filename[index_halo] );
 
-            // set default maximum radius for particles
-            if ( HaloMerger_Halo_Par_DensProf_MaxR[index_halo] < 0.0 )
-               HaloMerger_Halo_Par_DensProf_MaxR[index_halo] = 0.5*MIN( amr->BoxSize[0], MIN( amr->BoxSize[1], amr->BoxSize[2] ) );
+            // check the maximum radius for particles
+            if ( HaloMerger_Halo_Par_DensProf_MaxR[index_halo] <= 0.0 )
+               Aux_Error( ERROR_INFO, "HaloMerger_Halo_%d_Par_DensProf_MaxR (%13.6e) is not positive !!\n", index_halo, HaloMerger_Halo_Par_DensProf_MaxR[index_halo] );
 
             // check whether the halo touches the boundary of box
             for (int d=0; d<3; d++)
@@ -596,7 +587,7 @@ void SetParameter()
                   isOverlap = false;
 
                if ( isOverlap )
-                  Aux_Error( ERROR_INFO, "The Halo_%d range overlaps with the Halo_%d UM_IC range !!\n",
+                  Aux_Error( ERROR_INFO, "The Halo_%d range overlaps with the Halo_%d range !!\n",
                              index_halo+1, index2_halo+1 );
 
             } // for (int index2_halo=0; index2_halo<index_halo; index2_halo++)
@@ -1025,7 +1016,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
             // CDM halo
             case 2:
             {
-               // the wavefunction is zero because HaloMerger_Halo_InitMode == 2 is supposed to be a pure particle case
+               // the wavefunction is zero because HaloMerger_Halo_InitMode == 2 is supposed to be a particle-only case
                Real_halo = 0.0;
                Imag_halo = 0.0;
 

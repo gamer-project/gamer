@@ -40,7 +40,7 @@ Note:
       - Note that HaloMerger_Halo_*_CenCoord* in Input__TestProb_Halo is the UM_IC box center, rather than the exact halo center
    c. For HaloMerger_Halo_InitMode == 2
       - The initial condition of halos is constructed by reading the table of halo density profile and using Par_EquilibriumIC()
-      - It is a pure particle simulation for the CDM halos
+      - It is a particle-only simulation for the CDM halos
       - Set the following parameters in Input__Parameter
         - PAR_NPAR                      4000000
         - OPT__FLAG_NPAR_PATCH          2
