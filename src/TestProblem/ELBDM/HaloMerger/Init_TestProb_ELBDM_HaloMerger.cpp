@@ -41,8 +41,8 @@ static char     HaloMerger_Halo_i_UM_IC_NCellsZ[MAX_STRING];               // nu
 static char     HaloMerger_Halo_i_UM_IC_Float8[MAX_STRING];                // data precision of UM_IC for the i-th halo (0=float, 1=double) (HaloMerger_Halo_InitMode == 1 only) [0]
 static char     HaloMerger_Halo_i_Par_DensProf_Filename[MAX_STRING];       // filename of density table for the i-th halo (HaloMerger_Halo_InitMode == 2 only)
 static char     HaloMerger_Halo_i_Par_DensProf_MaxR[MAX_STRING];           // maximum radius for particles for the i-th halo (must > 0.0) (HaloMerger_Halo_InitMode == 2 only) [-1.0]
-static char     HaloMerger_Halo_i_Par_Num_Ratio[MAX_STRING];               // particle number ratio for the i-th halo (between 0.0 and 1.0) (HaloMerger_Halo_InitMode == 2 only) [0.5]
 static char     HaloMerger_Halo_i_Par_RSeed[MAX_STRING];                   // random seed for setting particle position and velocity for the i-th halo (must >= 0) (HaloMerger_Halo_InitMode == 2 only) [123]
+static char     HaloMerger_Halo_i_Par_NPar[MAX_STRING];                    // number of particles for the i-th halo (must >= 0) (HaloMerger_Halo_InitMode == 2 only) [0]
 
 // Soliton-related parameters to read from the input
 static char     HaloMerger_Soliton_i_CoreRadius[MAX_STRING];               // core radius of the i-th soliton (<0.0=set by HaloMerger_Soliton_i_CoreRho) [-1.0]
@@ -69,8 +69,9 @@ static double (*HaloMerger_Halo_UM_IC_Range_EdgeR)[3]              = NULL; // ri
 static char   **HaloMerger_Halo_UM_IC_Data                         = NULL; // array to store the data read from UM_IC
        char   (*HaloMerger_Halo_Par_DensProf_Filename)[MAX_STRING] = NULL; // density table filename of each halo
        double  *HaloMerger_Halo_Par_DensProf_MaxR                  = NULL; // particle maximum radius of each halo
-       double  *HaloMerger_Halo_Par_Num_Ratio                      = NULL; // particle number ratio of each halo
        int     *HaloMerger_Halo_Par_RSeed                          = NULL; // particle random seed of each halo
+       long    *HaloMerger_Halo_Par_NPar                           = NULL; // number of particles of each halo
+static long     HaloMerger_Halo_Par_NPar_Total;                            // total number of particles in all halos
 
 // Soliton-related internal variables
 static double  *HaloMerger_Soliton_CoreRadius                      = NULL; // core radius of each soliton
@@ -248,8 +249,8 @@ void SetParameter()
       {
       HaloMerger_Halo_Par_DensProf_Filename = new char   [HaloMerger_Halo_Num][MAX_STRING];
       HaloMerger_Halo_Par_DensProf_MaxR     = new double [HaloMerger_Halo_Num];
-      HaloMerger_Halo_Par_Num_Ratio         = new double [HaloMerger_Halo_Num];
       HaloMerger_Halo_Par_RSeed             = new int    [HaloMerger_Halo_Num];
+      HaloMerger_Halo_Par_NPar              = new long   [HaloMerger_Halo_Num];
       } // if ( HaloMerger_Halo_InitMode == 2 )
 
       // (1-2-2) read the parameters for the halos
@@ -281,8 +282,8 @@ void SetParameter()
          {
          sprintf( HaloMerger_Halo_i_Par_DensProf_Filename, "HaloMerger_Halo_%d_Par_DensProf_Filename", index_halo+1 );
          sprintf( HaloMerger_Halo_i_Par_DensProf_MaxR,     "HaloMerger_Halo_%d_Par_DensProf_MaxR",     index_halo+1 );
-         sprintf( HaloMerger_Halo_i_Par_Num_Ratio,         "HaloMerger_Halo_%d_Par_Num_Ratio",         index_halo+1 );
          sprintf( HaloMerger_Halo_i_Par_RSeed,             "HaloMerger_Halo_%d_Par_RSeed",             index_halo+1 );
+         sprintf( HaloMerger_Halo_i_Par_NPar,              "HaloMerger_Halo_%d_Par_NPar",              index_halo+1 );
          } // if ( HaloMerger_Halo_InitMode == 2 )
 
       // (1-2-3) add parameters in the following format:
@@ -314,8 +315,8 @@ void SetParameter()
          {
          ReadPara_Halo->Add( HaloMerger_Halo_i_Par_DensProf_Filename,  HaloMerger_Halo_Par_DensProf_Filename[index_halo],  NoDef_str,        Useless_str,   Useless_str    );
          ReadPara_Halo->Add( HaloMerger_Halo_i_Par_DensProf_MaxR,     &HaloMerger_Halo_Par_DensProf_MaxR[index_halo],     -1.0,              NoMin_double,  NoMax_double   );
-         ReadPara_Halo->Add( HaloMerger_Halo_i_Par_Num_Ratio,         &HaloMerger_Halo_Par_Num_Ratio[index_halo],          0.5,              0.0,           1.0            );
          ReadPara_Halo->Add( HaloMerger_Halo_i_Par_RSeed,             &HaloMerger_Halo_Par_RSeed[index_halo],              123,              0,             NoMax_int      );
+         ReadPara_Halo->Add( HaloMerger_Halo_i_Par_NPar,              &HaloMerger_Halo_Par_NPar[index_halo],               (long)0,          (long)0,       NoMax_long     );
          } // if ( HaloMerger_Halo_InitMode == 2 )
 
       } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
@@ -444,18 +445,8 @@ void SetParameter()
    } // if ( OPT__EXT_POT == EXT_POT_FUNC )
 
 // (2-2) check the parameters for the halos
-   #  ifdef MASSIVE_PARTICLES
-   // check there is no particle except for HaloMerger_Halo_InitMode == 2
-   if ( HaloMerger_Halo_InitMode != 2  &&  amr->Par->NPar_Active_AllRank > 0 )
-      Aux_Error( ERROR_INFO, "PAR_NPAR must be 0 for HaloMerger_Halo_InitMode != 2 !!\n" );
-
-   // check there are particles because HaloMerger_Halo_InitMode == 2 is supposed to be a particle-only case
-   if ( HaloMerger_Halo_InitMode == 2  &&  amr->Par->NPar_Active_AllRank <= 0 )
-      Aux_Error( ERROR_INFO, "PAR_NPAR must be >0 for HaloMerger_Halo_InitMode == 2 !!\n" );
-   #  endif
-
    #  ifndef MASSIVE_PARTICLES
-   // check there are particles because HaloMerger_Halo_InitMode == 2 is supposed to be a particle-only case
+   // check the particle is enabled because HaloMerger_Halo_InitMode == 2 is supposed to be a particle-only case
    if ( HaloMerger_Halo_InitMode == 2 )
       Aux_Error( ERROR_INFO, "MASSIVE_PARTICLES must be enabled for HaloMerger_Halo_InitMode == 2 !!\n" );
    #  endif
@@ -631,7 +622,29 @@ void SetParameter()
 
       } // if ( HaloMerger_Halo_InitMode == 1 )
 
+      // Count the total number of particles for the halos when HaloMerger_Halo_InitMode == 2
+      if ( HaloMerger_Halo_InitMode == 2 )
+      {
+         HaloMerger_Halo_Par_NPar_Total = (long)0;
+
+         for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
+         {
+            HaloMerger_Halo_Par_NPar_Total += HaloMerger_Halo_Par_NPar[index_halo];
+         } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
+
+         // check there are particles because HaloMerger_Halo_InitMode == 2 is supposed to be a particle-only case
+         if ( HaloMerger_Halo_Par_NPar_Total <= 0 )
+            Aux_Error( ERROR_INFO, "Total number of particles (sum of HaloMerger_Halo_i_Par_NPar) must be >0 for HaloMerger_Halo_InitMode == 2 !!\n" );
+
+      } // if ( HaloMerger_Halo_InitMode == 2 )
+
    } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Halo_Num > 0 )
+
+   // overwrite the total number of particles
+   #  ifdef MASSIVE_PARTICLES
+   amr->Par->NPar_Active_AllRank = ( HaloMerger_Halo_InitMode == 2 ) ? HaloMerger_Halo_Par_NPar_Total : (long)0;
+   PRINT_RESET_PARA( amr->Par->NPar_Active_AllRank, FORMAT_LONG, "(PAR_NPAR in Input__Parameter)" );
+   #  endif
 
 // (2-3) check the parameters for the solitons
    if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Soliton_Num > 0 )
@@ -887,12 +900,14 @@ void SetParameter()
          {
             Aux_Message( stdout, "\n  halo Par_DensProf information:\n" );
             Aux_Message( stdout, "  %7s  %30s  %30s  %14s  %14s\n",
-                         "ID", "Par_DensProf_Filename", "Par_DensProf_MaxR", "Par_Num_Ratio", "Par_RSeed" );
+                         "ID", "Par_DensProf_Filename", "Par_DensProf_MaxR", "Par_RSeed", "Par_NPar" );
 
             for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
-               Aux_Message( stdout, "  %7d  %30s  %30.6e  %14.6e  %14d\n",
+               Aux_Message( stdout, "  %7d  %30s  %30.6e  %14d  %14ld\n",
                             index_halo+1, HaloMerger_Halo_Par_DensProf_Filename[index_halo], HaloMerger_Halo_Par_DensProf_MaxR[index_halo],
-                            HaloMerger_Halo_Par_Num_Ratio[index_halo], HaloMerger_Halo_Par_RSeed[index_halo] );
+                            HaloMerger_Halo_Par_RSeed[index_halo], HaloMerger_Halo_Par_NPar[index_halo] );
+
+            Aux_Message( stdout, "  %44s-> Total number of particles in all halos =  %14ld\n", "", HaloMerger_Halo_Par_NPar_Total );
 
          } // if ( HaloMerger_Halo_InitMode == 2 )
 
@@ -1197,8 +1212,8 @@ void End_HaloMerger()
       {
          delete [] HaloMerger_Halo_Par_DensProf_Filename;
          delete [] HaloMerger_Halo_Par_DensProf_MaxR;
-         delete [] HaloMerger_Halo_Par_Num_Ratio;
          delete [] HaloMerger_Halo_Par_RSeed;
+         delete [] HaloMerger_Halo_Par_NPar;
       } // if ( HaloMerger_Halo_InitMode == 2 )
 
    } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Halo_Num > 0 )

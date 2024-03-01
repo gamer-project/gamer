@@ -10,7 +10,7 @@ extern double (*HaloMerger_Halo_Velocity)[3];
 extern char   (*HaloMerger_Halo_Par_DensProf_Filename)[MAX_STRING];
 extern double  *HaloMerger_Halo_Par_DensProf_MaxR;
 extern int     *HaloMerger_Halo_Par_RSeed;
-extern double  *HaloMerger_Halo_Par_Num_Ratio;
+extern long    *HaloMerger_Halo_Par_NPar;
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -85,6 +85,8 @@ void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_A
          Cloud_Constructor.params.Cloud_BulkVel               = new double[3];
 
          // set the parameters for each halo
+         strcpy( Cloud_Constructor.params.Cloud_Type,           "Table" );
+         strcpy( Cloud_Constructor.params.Density_Table_Name,   HaloMerger_Halo_Par_DensProf_Filename[index_halo] );
          Cloud_Constructor.params.Cloud_Center[0]             = HaloMerger_Halo_CenCoord[index_halo][0];
          Cloud_Constructor.params.Cloud_Center[1]             = HaloMerger_Halo_CenCoord[index_halo][1];
          Cloud_Constructor.params.Cloud_Center[2]             = HaloMerger_Halo_CenCoord[index_halo][2];
@@ -93,12 +95,8 @@ void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_A
          Cloud_Constructor.params.Cloud_BulkVel[2]            = HaloMerger_Halo_Velocity[index_halo][2];
          Cloud_Constructor.params.Cloud_MaxR                  = HaloMerger_Halo_Par_DensProf_MaxR[index_halo];
          Cloud_Constructor.params.Cloud_RSeed                 = HaloMerger_Halo_Par_RSeed[index_halo];
-         Cloud_Constructor.params.Cloud_Par_Num               = long(NPar_AllRank*HaloMerger_Halo_Par_Num_Ratio[index_halo]);
-
-         strcpy( Cloud_Constructor.params.Cloud_Type,           "Table" );
-         strcpy( Cloud_Constructor.params.Density_Table_Name,   HaloMerger_Halo_Par_DensProf_Filename[index_halo] );
-
-         Cloud_Constructor.params.Cloud_R0                    = 1.0; // TODO: Check how to set this
+         Cloud_Constructor.params.Cloud_Par_Num               = HaloMerger_Halo_Par_NPar[index_halo];
+         Cloud_Constructor.params.Cloud_R0                    = 1.0;  // will have no effect as long as the value is positive
 
          // initialize the halo
          Cloud_Constructor.Init();
@@ -121,13 +119,19 @@ void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_A
          delete [] Cloud_Constructor.params.Cloud_BulkVel;
 
       } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
+
+      // check whether the total particle number is reasonable
+      if ( Par_Idx0 != NPar_AllRank )
+      {
+         Aux_Error( ERROR_INFO, "total particle number doesn't match (total = %ld > NPar_AllRank = %ld) !!\n", Par_Idx0, NPar_AllRank );
+      }
+
    } // if ( MPI_Rank == 0 )
 
 // send particle attributes from the master rank to all ranks
    Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, ParData_AllRank, AllAttribute );
 
-// synchronize all particles to the physical time on the base level,
-// and assign particle type
+// synchronize all particles to the physical time on the base level and assign particle type
    for (long p=0; p<NPar_ThisRank; p++)
    {
       ParTime[p] = Time[0];
