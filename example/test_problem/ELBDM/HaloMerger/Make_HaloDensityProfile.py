@@ -4,19 +4,13 @@ import matplotlib.pyplot as plt
 
 ###################################################################################################################
 # code units (in cgs)
-UNIT_L     = 4.436632034507549e+24
+UNIT_L     = 4.4366320345075490e+24
 UNIT_D     = 2.5758579724476994e-30
 
 # length units
 Const_cm   = 1.0;
-Const_m    = 1.0e2*Const_cm;
-Const_km   = 1.0e5*Const_cm;
 Const_pc   = 3.08567758149e18;
 Const_kpc  = 1.0e3*Const_pc;
-Const_Mpc  = 1.0e6*Const_pc;
-Const_Gpc  = 1.0e9*Const_pc;
-Const_au   = 1.495978707e13;
-Const_ly   = 9.46053e17;
 
 # mass units
 Const_g    = 1.0;
