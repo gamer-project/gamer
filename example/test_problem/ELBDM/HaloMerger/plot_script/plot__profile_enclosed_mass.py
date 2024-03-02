@@ -37,7 +37,10 @@ nbin         = 32
 
 # add the total density field, including the fluid density and the particle density
 def _TotDens(field, data):
-    return data['Dens']+data['ParDens']
+   if data.ds.parameters["Particle"] == 1:
+      return data['Dens']+data['ParDens']
+   else:
+      return data['Dens']
 
 yt.add_field( ('gamer', 'TotDens'),
               function=_TotDens, units='code_mass/code_length**3',
@@ -68,7 +71,7 @@ for ds in ts.piter():
                                      units={'radius':'code_length', field_mass:'code_mass'} )
 
       # save the profile to text file
-      np.savetxt( '%s_EnclosedMass_profile'%(ds),
+      np.savetxt( '%s_EnclosedTotalMass_profile'%(ds),
                   np.column_stack( (prof_mass.x.in_units('code_length').d, prof_mass[field_mass].in_units('code_mass').d) ),
                   fmt='          %9.8e',
                   header='       r (code_length)         mass (code_mass)' )
@@ -97,8 +100,8 @@ for ds in ts.piter():
       ax.set_ylabel( r'$M$'+' (%s)'%UNIT_M_PLOT )
       ax.legend()
       fig.suptitle( '$t$ = %7.6e Gyr'%ds.current_time.in_units('Gyr') )
-      ax.annotate( 'Total Mass = %7.6e Msun'%ds.sphere( center_pos, r_sphere ).quantities.total_quantity([field_mass]).in_units('Msun'),
-                   xy=(0.5,0.05), xycoords='axes fraction' )
+      ax.annotate( 'Enclosed Mass (at r = %7.6e %s)\n = %7.6e Msun'%(r_sphere[0], r_sphere[1], ds.sphere( center_pos, r_sphere ).quantities.total_quantity([field_mass]).in_units('Msun')),
+                   xy=(0.3,0.03), xycoords='axes fraction' )
 
       # set the grid and ticks
       ax.grid()
@@ -108,5 +111,5 @@ for ds in ts.piter():
 
       # save the figure
       plt.tight_layout( pad=0.1, h_pad=0.1, w_pad=0.1 )
-      fig.savefig( '%s_EnclosedMass_profile.png'%(ds), dpi=dpi )
+      fig.savefig( '%s_EnclosedTotalMass_profile.png'%(ds), dpi=dpi )
       fig.clear()
