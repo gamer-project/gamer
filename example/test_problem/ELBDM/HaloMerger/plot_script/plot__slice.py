@@ -3,7 +3,7 @@ import sys
 import yt
 
 # load the command-line parameters
-parser = argparse.ArgumentParser( description='Projection of mass density' )
+parser = argparse.ArgumentParser( description='Slice of mass density' )
 
 parser.add_argument( '-p', action='store', required=False, type=str, dest='prefix',
                      help='path prefix [%(default)s]', default='../' )
@@ -35,27 +35,41 @@ yt.enable_parallelism()
 
 ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 for ds in ts.piter():
+
+   fields_list = ['density']
+
+   if ds.parameters["Particle"] == 1:
+      if ds.parameters["Par_NPar"] > 0:
+         fields_list.append('ParDens')
+
    for center_mode in ['c', 'm']:
       for direction in ['y', 'z']:
-         for field in ['density']:
-            # ProjectionPlot
-            p_dens = yt.ProjectionPlot( ds, direction, field, center=center_mode )
+         for field in fields_list:
+
+            # decide the center
+            if center_mode == 'm':
+               center = ds.all_data().quantities.max_location(field)[1:]
+            elif center_mode == 'c':
+               center = ds.domain_center
+
+            # SlicePlot
+            s_dens = yt.SlicePlot( ds, direction, field, center=center )
 
             # setting for the figure
-            p_dens.set_axes_unit( 'kpc' )
-            p_dens.set_unit( field, 'Msun/kpc**2' )
-            p_dens.set_zlim( field, 1.0e+3, 1.0e8 )
-            p_dens.set_cmap( field, colormap_dens )
-            p_dens.set_background_color( field )
-            p_dens.annotate_timestamp( time_unit='Gyr', corner='upper_right' )
+            s_dens.set_axes_unit( 'kpc' )
+            s_dens.set_unit( field, 'Msun/kpc**3'  )
+            s_dens.set_zlim( field, 4.0e1, 4.0e7   )
+            s_dens.set_cmap( field, colormap_dens  )
+            s_dens.set_background_color( field )
+            s_dens.annotate_timestamp( time_unit='Gyr', corner='upper_right' )
 
             # zoom in
             if center_mode == 'm':
-               p_dens.zoom(4)
+               s_dens.zoom(4)
 
             # save the figure
-            p_dens.save( '%s_%s'%(ds, center_mode), mpl_kwargs={'dpi':dpi} )
+            s_dens.save( '%s_%s'%(ds, center_mode), mpl_kwargs={'dpi':dpi} )
 
             # annotate the grids and save again
-            p_dens.annotate_grids()
-            p_dens.save( '%s_%s_grids'%(ds, center_mode), mpl_kwargs={'dpi':dpi} )
+            s_dens.annotate_grids()
+            s_dens.save( '%s_%s_grids'%(ds, center_mode), mpl_kwargs={'dpi':dpi} )

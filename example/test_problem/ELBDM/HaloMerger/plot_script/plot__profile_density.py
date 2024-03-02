@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # load the command-line parameters
-parser = argparse.ArgumentParser( description='Particle density profile' )
+parser = argparse.ArgumentParser( description='Profiles' )
 
 parser.add_argument( '-p', action='store', required=False, type=str, dest='prefix',
                      help='path prefix [%(default)s]', default='../' )
@@ -30,7 +30,7 @@ idx_end      = args.idx_end
 didx         = args.didx
 prefix       = args.prefix
 
-r_sphere     = (0.06, 'code_length')
+r_sphere     = (100.0, 'kpc')
 dpi          = 150
 nbin         = 32
 
@@ -40,9 +40,16 @@ yt.enable_parallelism()
 ts = yt.DatasetSeries([ prefix+'Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ])
 
 for ds in ts.piter():
-   for field in ['ParDens']:
 
-      # set the center as the position of maximum density
+   fields_list = ['density']
+
+   if ds.parameters["Particle"] == 1:
+      if ds.parameters["Par_NPar"] > 0:
+         fields_list.append('ParDens')
+
+   for field in fields_list:
+
+      # set the center as the position of the maximum density
       center_pos  = ds.all_data().quantities.max_location(field)[1:]
       sp          = ds.sphere( center_pos, r_sphere )
 
@@ -50,7 +57,7 @@ for ds in ts.piter():
       prof = yt.ProfilePlot( sp, 'radius', field, weight_field='cell_volume', n_bins=nbin )
       prof.set_unit( 'radius', 'kpc' )
       prof.set_xlim(        1.0e-1, 1.0e+2 )
-      prof.set_ylim( field, 4.0e+1, 4.0e+6 )
+      prof.set_ylim( field, 1.0e+2, 2.0e+7 )
       prof.set_unit( field, 'Msun/kpc**3'  )
       prof.annotate_title( 't = %13.7e Gyr'%(ds.current_time.in_units('Gyr')) )
 
@@ -58,8 +65,8 @@ for ds in ts.piter():
 
       # create the arrays of profile
       prof_dens = yt.create_profile( sp, 'radius', fields=field,
-                                     weight_field='cell_volume', n_bins=nbin ,
-                                     units={'radius': 'code_length',field: 'code_density'} )
+                                     weight_field='cell_volume', n_bins=nbin,
+                                     units={'radius':'code_length', field:'code_density'} )
 
       # save the profile to text file
       np.savetxt( '%s_%s_profile'%(ds,field),
@@ -102,6 +109,7 @@ for ds in ts.piter():
       ax.set_xlabel( r'$r$'+' (%s)'%UNIT_L_PLOT    )
       ax.set_ylabel( r'$\rho$'+' (%s)'%UNIT_D_PLOT )
       ax.legend()
+      fig.suptitle( '$t$ = %7.6e Gyr'%ds.current_time.in_units('Gyr') )
 
       # set the grid and ticks
       ax.grid()
