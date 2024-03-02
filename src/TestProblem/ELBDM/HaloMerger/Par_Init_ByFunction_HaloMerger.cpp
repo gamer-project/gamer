@@ -97,6 +97,7 @@ void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_A
          Cloud_Constructor.params.Cloud_RSeed                 = HaloMerger_Halo_Par_RSeed[index_halo];
          Cloud_Constructor.params.Cloud_Par_Num               = HaloMerger_Halo_Par_NPar[index_halo];
          Cloud_Constructor.params.Cloud_R0                    = 1.0;  // will have no effect as long as the value is positive
+         Cloud_Constructor.params.AddExtPot                   = 0;    // no external potential
 
          // initialize the halo
          Cloud_Constructor.Init();
