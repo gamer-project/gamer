@@ -36,7 +36,7 @@ fitting_beta  =       4.002
 fitting_gamma =       0.000
 
 # parameters for the density profile sampling
-r_min         =       0.1   *(Const_kpc)/UNIT_L                 # in code_length
+r_min         =       0.01  *(Const_kpc)/UNIT_L                 # in code_length
 r_max         =     200.0   *(Const_kpc)/UNIT_L                 # in code_length
 nbins         =    4096
 ###################################################################################################################
