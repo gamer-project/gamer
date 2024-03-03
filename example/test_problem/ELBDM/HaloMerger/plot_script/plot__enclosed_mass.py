@@ -111,5 +111,5 @@ for ds in ts.piter():
 
       # save the figure
       plt.tight_layout( pad=0.1, h_pad=0.1, w_pad=0.1 )
-      fig.savefig( '%s_EnclosedTotalMass_profile.png'%(ds), dpi=dpi )
+      fig.savefig( 'fig_%s_Profile_EnclosedTotalMass.png'%(ds), dpi=dpi )
       fig.clear()

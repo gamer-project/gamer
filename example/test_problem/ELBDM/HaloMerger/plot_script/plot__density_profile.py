@@ -45,7 +45,7 @@ for ds in ts.piter():
 
    if ds.parameters["Particle"] == 1:
       if ds.parameters["Par_NPar"] > 0:
-         fields_list.append('ParDens')
+         fields_list.append('particle_density_on_grid')
 
    for field in fields_list:
 
@@ -61,7 +61,7 @@ for ds in ts.piter():
       prof.set_unit( field, 'Msun/kpc**3'  )
       prof.annotate_title( 't = %13.7e Gyr'%(ds.current_time.in_units('Gyr')) )
 
-      prof.save( mpl_kwargs={'dpi':dpi} )
+      prof.save( 'fig_%s.png'%(ds), mpl_kwargs={'dpi':dpi} )
 
       # create the arrays of profile
       prof_dens = yt.create_profile( sp, 'radius', fields=field,
@@ -119,5 +119,5 @@ for ds in ts.piter():
 
       # save the figure
       plt.tight_layout( pad=0.1, h_pad=0.1, w_pad=0.1 )
-      fig.savefig( '%s_%s_profiles_comparison.png'%(ds,field), dpi=dpi )
+      fig.savefig( 'fig_%s_Profile_%s.png'%(ds, field), dpi=dpi )
       fig.clear()

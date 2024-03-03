@@ -40,7 +40,7 @@ for ds in ts.piter():
 
    if ds.parameters["Particle"] == 1:
       if ds.parameters["Par_NPar"] > 0:
-         fields_list.append('ParDens')
+         fields_list.append('particle_density_on_grid')
 
    for center_mode in ['c', 'm']:
       for direction in ['y', 'z']:
@@ -53,7 +53,7 @@ for ds in ts.piter():
                center = ds.domain_center
 
             # ProjectionPlot
-            p_dens = yt.ProjectionPlot( ds, direction, field, center=center_mode )
+            p_dens = yt.ProjectionPlot( ds, direction, field, center=center )
 
             # setting for the figure
             p_dens.set_axes_unit( 'kpc' )
@@ -68,14 +68,14 @@ for ds in ts.piter():
                p_dens.zoom(4)
 
             # save the figure
-            p_dens.save( '%s_%s'%(ds, center_mode), mpl_kwargs={'dpi':dpi} )
+            p_dens.save( 'fig_%s_%s_Projection_%s_%s.png'%(ds, center_mode, direction, field), mpl_kwargs={'dpi':dpi} )
 
             # annotate the grids and save again
             p_dens.annotate_grids()
-            p_dens.save( '%s_%s_grids'%(ds, center_mode), mpl_kwargs={'dpi':dpi} )
+            p_dens.save( 'fig_%s_%s_Projection_%s_%s_withgrids.png'%(ds, center_mode, direction, field), mpl_kwargs={'dpi':dpi} )
 
             # additionally, plot the particles
-            if field == 'ParDens':
+            if field == 'particle_density_on_grid':
                # decide the direction
                if direction == 'z':
                   p_par = yt.ParticlePlot( ds, 'particle_position_x', 'particle_position_y', 'particle_mass', center=center )
@@ -95,4 +95,4 @@ for ds in ts.piter():
                   p_par.zoom(4)
 
                # save the figure
-               p_par.save( '%s_%s'%(ds, center_mode), mpl_kwargs={'dpi':dpi} )
+               p_par.save( 'fig_%s_%s_Particle_%s_particle_mass.png'%(ds, center_mode, direction), mpl_kwargs={'dpi':dpi} )

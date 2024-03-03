@@ -40,7 +40,7 @@ for ds in ts.piter():
 
    if ds.parameters["Particle"] == 1:
       if ds.parameters["Par_NPar"] > 0:
-         fields_list.append('ParDens')
+         fields_list.append('particle_density_on_grid')
 
    for center_mode in ['c', 'm']:
       for direction in ['y', 'z']:
@@ -57,9 +57,9 @@ for ds in ts.piter():
 
             # setting for the figure
             s_dens.set_axes_unit( 'kpc' )
-            s_dens.set_unit( field, 'Msun/kpc**3'  )
-            s_dens.set_zlim( field, 4.0e1, 4.0e7   )
-            s_dens.set_cmap( field, colormap_dens  )
+            s_dens.set_unit( field, 'Msun/kpc**3' )
+            s_dens.set_zlim( field, 4.0e1, 4.0e7  )
+            s_dens.set_cmap( field, colormap_dens )
             s_dens.set_background_color( field )
             s_dens.annotate_timestamp( time_unit='Gyr', corner='upper_right' )
 
@@ -68,8 +68,8 @@ for ds in ts.piter():
                s_dens.zoom(4)
 
             # save the figure
-            s_dens.save( '%s_%s'%(ds, center_mode), mpl_kwargs={'dpi':dpi} )
+            s_dens.save( 'fig_%s_%s_Slice_%s_%s.png'%(ds, center_mode, direction, field), mpl_kwargs={'dpi':dpi} )
 
             # annotate the grids and save again
             s_dens.annotate_grids()
-            s_dens.save( '%s_%s_grids'%(ds, center_mode), mpl_kwargs={'dpi':dpi} )
+            s_dens.save( 'fig_%s_%s_Slice_%s_%s_withgrids.png'%(ds, center_mode, direction, field), mpl_kwargs={'dpi':dpi} )
