@@ -805,7 +805,8 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 //                   UNPHY_MODE_PASSIVE_ONLY : Check if the input passive scalars are unphysical
 //                2. For UNPHY_MODE_CONS with SRHD, we also check if Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298"
 //                   has a positive root
-//                3. Mass and total energy density must be postive; pressure can be zero to tolerate round-off errors
+//                3. Mass and total energy density must be postive; allow pressure to be zero or even slightly
+//                   negative to tolerate round-off errors
 //
 // Parameter   :  Mode              : UNPHY_MODE_SING, UNPHY_MODE_CONS, UNPHY_MODE_PRIM, UNPHY_MODE_PASSIVE_ONLY
 //                                    --> See "Note" for details
@@ -910,15 +911,16 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 
 #        else
 
-//       check pressure (which can be zero)
+//       check pressure (which can be zero or slightly negative if it's within machine precision)
          const real CheckMinPres_No = false;
-         const real Pres = Hydro_Con2Pres( Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY], Fields+NCOMP_FLUID,
-                                           CheckMinPres_No, NULL_REAL, Emag,
-                                           EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
-                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
-         if ( Pres < (real)0.0  ||  Pres > HUGE_NUMBER  ||  Pres != Pres )
+         real Pres, Eint, Enth;
+         Pres = Hydro_Con2Pres( Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY], Fields+NCOMP_FLUID,
+                                CheckMinPres_No, NULL_REAL, Emag,
+                                EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
+                                EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, &Eint );
+         Enth = Fields[ENGY] - Eint;   // non-thermal energy including kinetic and magnetic energies
+         if ( Pres < (real)-2.0*Enth*MACHINE_EPSILON  ||  Pres > HUGE_NUMBER  ||  Pres != Pres )
             FailCell = true;
-
 #        endif // #ifdef SRHD ... else ...
 
 //       print out the unphysical values
@@ -933,6 +935,9 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
             printf( "E^2+2*E*D-|M|^2=%14.7e\n", Discriminant );
 #           else
             printf( "P=%14.7e\n", Pres );
+#           endif
+#           ifdef MHD
+            printf( "Emag=%14.7e\n", Emag );
 #           endif
 #           if ( NCOMP_PASSIVE > 0 )
             printf( "Passive:" );
@@ -968,7 +973,25 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
                   FailCell = true;
             }
 
-//          check pressure and passive scalars (which can be zero)
+//          check pressure (which can be zero or slightly negative if it's within machine precision)
+            else if ( v == ENGY )
+            {
+#              ifdef SRHD
+               if ( Pres < (real)0.0  ||  Pres > HUGE_NUMBER )
+                  FailCell = true;
+
+#              else
+
+               real Enth = (real)0.5*Fields[DENS]*( SQR(Fields[MOMX]) + SQR(Fields[MOMY]) + SQR(Fields[MOMZ]) );
+#              ifdef MHD
+               Enth += Emag;
+#              endif
+               if ( Pres < (real)-2.0*Enth*MACHINE_EPSILON  ||  Pres > HUGE_NUMBER )
+                  FailCell = true;
+#              endif // #ifdef SRHD ... else ...
+            }
+
+//          check passive scalars (which can be zero)
             else
             {
                if ( Fields[v] < (real)0.0  ||  Fields[v] > HUGE_NUMBER )
@@ -984,6 +1007,9 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
                     File, Line, Function );
             printf( "D=%14.7e, Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, P=%14.7e\n",
                     Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY] );
+#           ifdef MHD
+            printf( "Emag=%14.7e\n", Emag );
+#           endif
 #           if ( NCOMP_PASSIVE > 0 )
             printf( "Passive:" );
             for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  printf( " [%d]=%13.7e", v-NCOMP_FLUID, Fields[v] );
