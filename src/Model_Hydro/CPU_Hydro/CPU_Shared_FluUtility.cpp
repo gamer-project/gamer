@@ -977,7 +977,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
             else if ( v == ENGY )
             {
 #              ifdef SRHD
-               if ( Pres < (real)0.0  ||  Pres > HUGE_NUMBER )
+               if ( Fields[ENGY] < (real)0.0  ||  Fields[ENGY] > HUGE_NUMBER )
                   FailCell = true;
 
 #              else
@@ -986,7 +986,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 #              ifdef MHD
                Enth += Emag;
 #              endif
-               if ( Pres < (real)-2.0*Enth*MACHINE_EPSILON  ||  Pres > HUGE_NUMBER )
+               if ( Fields[ENGY] < (real)-2.0*Enth*MACHINE_EPSILON  ||  Fields[ENGY] > HUGE_NUMBER )
                   FailCell = true;
 #              endif // #ifdef SRHD ... else ...
             }
