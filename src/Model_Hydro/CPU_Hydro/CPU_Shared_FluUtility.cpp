@@ -841,8 +841,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 #  endif
 
 
-   bool FailCell = false;
-
+   bool UnphyCell = false;
 
    switch ( Mode )
    {
@@ -851,16 +850,15 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
       {
 //       check if the input single field is NAN or lies outside the accepted range
          if ( Fields[0] < Min  ||  Fields[0] > Max  ||  Fields[0] != Fields[0] )
-            FailCell = true;
+            UnphyCell = true;
 
 //       print out the unphysical value
 #        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
-         if ( FailCell && Verbose )
-            printf( "ERROR: invalid %s = %14.7e (min %14.7e, max %14.7e) at file <%s>, line <%d>, function <%s> !!\n",
+         if ( UnphyCell && Verbose )
+            printf( "ERROR : invalid %s = %14.7e (min %14.7e, max %14.7e) at file <%s>, line <%d>, function <%s> !!\n",
                     (SingleFieldName==NULL)?"unknown field":SingleFieldName, Fields[0], Min, Max,
                     File, Line, Function );
 #        endif
-
       } // case UNPHY_MODE_SING
       break;
 
@@ -872,27 +870,27 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
          {
 //          check NaN
             if ( Fields[v] != Fields[v] )
-                  FailCell = true;
+                  UnphyCell = true;
 
 //          check momentum densities
             if ( v == MOMX  ||  v == MOMY  ||  v == MOMZ )
             {
                if ( Fields[v] < -HUGE_NUMBER  ||  Fields[v] > HUGE_NUMBER )
-                  FailCell = true;
+                  UnphyCell = true;
             }
 
 //          check mass and energy densities (which cannot be zero)
             else if ( v < NCOMP_FLUID )
             {
                if ( Fields[v] <= (real)0.0  ||  Fields[v] > HUGE_NUMBER )
-                  FailCell = true;
+                  UnphyCell = true;
             }
 
 //          check passive scalars (which can be zero)
             else
             {
                if ( Fields[v] < (real)0.0  ||  Fields[v] > HUGE_NUMBER )
-                  FailCell = true;
+                  UnphyCell = true;
             }
          } // for (int v=0; v<NCOMP_TOTAL; v++)
 
@@ -906,8 +904,8 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
          const real Temp         = SQRT( E_D*E_D + (real)2.0*E_D );
          const real Discriminant = ( Temp + M_D )*( Temp - M_D ); // replace a^2-b^2 with (a+b)*(a-b) to alleviate a catastrophic cancellation
 
-         if ( Discriminant <= (real)0.0 )
-            FailCell = true;
+         if ( Discriminant <= (real)0.0  ||  Discriminant != Discriminant )
+            UnphyCell = true;
 
 #        else
 
@@ -920,25 +918,26 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, &Eint );
          Enth = Fields[ENGY] - Eint;   // non-thermal energy including kinetic and magnetic energies
          if ( Pres < (real)-2.0*Enth*MACHINE_EPSILON  ||  Pres > HUGE_NUMBER  ||  Pres != Pres )
-            FailCell = true;
+            UnphyCell = true;
 #        endif // #ifdef SRHD ... else ...
 
 //       print out the unphysical values
 #        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
-         if ( FailCell && Verbose )
+         if ( UnphyCell && Verbose )
          {
-            printf( "ERROR: unphysical conserved variables at file <%s>, line <%d>, function <%s> !!\n",
+            printf( "ERROR : unphysical conserved variables at file <%s>, line <%d>, function <%s> !!\n",
                     File, Line, Function );
-            printf( "D=%14.7e Mx=%14.7e My=%14.7e Mz=%14.7e E=%14.7e\n",
+            printf( "D=%14.7e Mx=%14.7e My=%14.7e Mz=%14.7e E=%14.7e",
                     Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY] );
 #           ifdef SRHD
-            printf( "E^2+2*E*D-|M|^2=%14.7e\n", Discriminant );
+            printf( " E^2+2*E*D-|M|^2=%14.7e", Discriminant );
 #           else
-            printf( "P=%14.7e\n", Pres );
+            printf( " P=%14.7e Enth=%14.7e", Pres, Enth );
 #           endif
 #           ifdef MHD
-            printf( "Emag=%14.7e\n", Emag );
+            printf( " Emag=%14.7e", Emag );
 #           endif
+            printf( "\n" );
 #           if ( NCOMP_PASSIVE > 0 )
             printf( "Passive:" );
             for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  printf( " [%d]=%13.7e", v-NCOMP_FLUID, Fields[v] );
@@ -953,24 +952,28 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 //    === check primitive variables, including passive scalars ===
       case UNPHY_MODE_PRIM:
       {
+#        ifndef SRHD
+         real Enth;
+#        endif
+
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
 //          check NaN
             if ( Fields[v] != Fields[v] )
-                  FailCell = true;
+                  UnphyCell = true;
 
 //          check velocities
             if ( v == MOMX  ||  v == MOMY  ||  v == MOMZ )
             {
                if ( Fields[v] < -HUGE_NUMBER  ||  Fields[v] > HUGE_NUMBER )
-                  FailCell = true;
+                  UnphyCell = true;
             }
 
 //          check mass density (which cannot be zero)
             else if ( v == DENS )
             {
                if ( Fields[v] <= (real)0.0  ||  Fields[v] > HUGE_NUMBER )
-                  FailCell = true;
+                  UnphyCell = true;
             }
 
 //          check pressure (which can be zero or slightly negative if it's within machine precision)
@@ -978,16 +981,17 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
             {
 #              ifdef SRHD
                if ( Fields[ENGY] < (real)0.0  ||  Fields[ENGY] > HUGE_NUMBER )
-                  FailCell = true;
+                  UnphyCell = true;
 
 #              else
 
-               real Enth = (real)0.5*Fields[DENS]*( SQR(Fields[MOMX]) + SQR(Fields[MOMY]) + SQR(Fields[MOMZ]) );
+//             non-thermal energy including kinetic and magnetic energies
+               Enth  = (real)0.5*Fields[DENS]*( SQR(Fields[MOMX]) + SQR(Fields[MOMY]) + SQR(Fields[MOMZ]) );
 #              ifdef MHD
                Enth += Emag;
 #              endif
                if ( Fields[ENGY] < (real)-2.0*Enth*MACHINE_EPSILON  ||  Fields[ENGY] > HUGE_NUMBER )
-                  FailCell = true;
+                  UnphyCell = true;
 #              endif // #ifdef SRHD ... else ...
             }
 
@@ -995,21 +999,25 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
             else
             {
                if ( Fields[v] < (real)0.0  ||  Fields[v] > HUGE_NUMBER )
-                  FailCell = true;
+                  UnphyCell = true;
             }
          } // for (int v=0; v<NCOMP_TOTAL; v++)
 
 //       print out the unphysical values
 #        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
-         if ( FailCell && Verbose )
+         if ( UnphyCell && Verbose )
          {
-            printf( "ERROR: unphysical primitive variables at file <%s>, line <%d>, function <%s> !!\n",
+            printf( "ERROR : unphysical primitive variables at file <%s>, line <%d>, function <%s> !!\n",
                     File, Line, Function );
-            printf( "D=%14.7e, Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, P=%14.7e\n",
+            printf( "D=%14.7e, Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, P=%14.7e",
                     Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY] );
-#           ifdef MHD
-            printf( "Emag=%14.7e\n", Emag );
+#           ifndef SRHD
+            printf( " Enth=%14.7e", Enth );
 #           endif
+#           ifdef MHD
+            printf( " Emag=%14.7e", Emag );
+#           endif
+            printf( "\n" );
 #           if ( NCOMP_PASSIVE > 0 )
             printf( "Passive:" );
             for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  printf( " [%d]=%13.7e", v-NCOMP_FLUID, Fields[v] );
@@ -1028,18 +1036,18 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
          {
 //          check NaN
             if ( Fields[v] != Fields[v] )
-               FailCell = true;
+               UnphyCell = true;
 
 //          check negative and infinity (passive scalars can be zero)
             if ( Fields[v] < (real)0.0  ||  Fields[v] > HUGE_NUMBER )
-               FailCell = true;
+               UnphyCell = true;
          }
 
 //       print out the unphysical values
 #        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
-         if ( FailCell && Verbose )
+         if ( UnphyCell && Verbose )
          {
-            printf( "ERROR: unphysical passive scalars at file <%s>, line <%d>, function <%s> !!\n",
+            printf( "ERROR : unphysical passive scalars at file <%s>, line <%d>, function <%s> !!\n",
                     File, Line, Function );
 #           if ( NCOMP_PASSIVE > 0 )
             printf( "Passive:" );
@@ -1064,7 +1072,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
    } // switch ( Mode )
 
 
-   return FailCell;
+   return UnphyCell;
 
 } // FUNCTION : Hydro_CheckUnphysical
 
