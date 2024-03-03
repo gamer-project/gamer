@@ -185,7 +185,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //       5-1. check
 //       --> allow pressure to be zero to tolerate round-off errors
          if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Output_1Cell, NULL, ERROR_INFO, UNPHY_SILENCE )  ||
-               Pres < (real)0.0  ||  Pres >= HUGE_NUMBER  ||  Pres != Pres  )
+               Pres < (real)0.0  ||  Pres > HUGE_NUMBER  ||  Pres != Pres  )
          {
 #           ifdef __CUDACC__  // GPU
 //          use atomicExch_block() on Pascal (or later) GPUs to avoid inter-block synchronization for better performance

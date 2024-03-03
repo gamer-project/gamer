@@ -576,9 +576,9 @@ real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, cons
    NewtonRaphsonSolver( FuncPtr, &params, GuessHTilde, TINY_NUMBER, MACHINE_EPSILON, &HTilde );
 
 #  ifdef GAMER_DEBUG
-   if ( HTilde <= TINY_NUMBER )
-      printf( "ERROR : HTilde = %14.7e <= %13.7e (Constant %14.7e, GuessHTilde %14.7e) in %s !!\n",
-              HTilde, TINY_NUMBER, Constant, GuessHTilde, __FUNCTION__ );
+   if ( HTilde <= (real)0.0 )
+      printf( "ERROR : HTilde = %14.7e <= 0.0 (Constant %14.7e, GuessHTilde %14.7e) in %s !!\n",
+              HTilde, Constant, GuessHTilde, __FUNCTION__ );
 #  endif
 
    return HTilde;
@@ -805,24 +805,31 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 //                   UNPHY_MODE_PASSIVE_ONLY : Check if the input passive scalars are unphysical
 //                2. For UNPHY_MODE_CONS with SRHD, we also check if Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298"
 //                   has a positive root
+//                3. Mass and total energy density must be postive; pressure can be zero to tolerate round-off errors
 //
-// Parameter   :  Mode            : UNPHY_MODE_SING, UNPHY_MODE_CONS, UNPHY_MODE_PRIM, UNPHY_MODE_PASSIVE_ONLY
-//                                  --> See "Note" for details
-//                Fields          : Field data to be checked
-//                SingleFieldName : Name of the target field for UNPHY_MODE_SING
-//                Min/Max         : Accepted range for UNPHY_MODE_SING
-//                File            : __FILE__
-//                Line            : __LINE__
-//                Function        : __FUNCTION__
-//                Verbose         : UNPHY_VERBOSE --> Show error messages
-//                                  UNPHY_SILENCE --> Show nothing
+// Parameter   :  Mode              : UNPHY_MODE_SING, UNPHY_MODE_CONS, UNPHY_MODE_PRIM, UNPHY_MODE_PASSIVE_ONLY
+//                                    --> See "Note" for details
+//                Fields            : Field data to be checked
+//                SingleFieldName   : Name of the target field for UNPHY_MODE_SING
+//                Min/Max           : Accepted range for UNPHY_MODE_SING
+//                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
+//                EoS_*             : EoS parameters
+//                File              : __FILE__
+//                Line              : __LINE__
+//                Function          : __FUNCTION__
+//                Verbose           : UNPHY_VERBOSE --> Show error messages
+//                                    UNPHY_SILENCE --> Show nothing
 //
 // Return      :  true  --> Input field is unphysical
 //                false --> Otherwise
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], const char SingleFieldName[],
-                            const real Min, const real Max,
+                            const real Min, const real Max, const real Emag,
+                            const EoS_DE2P_t EoS_DensEint2Pres,
+                            const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                            const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                            const real *const EoS_Table[EOS_NTABLE_MAX],
                             const char File[], const int Line, const char Function[], const CheckUnphysical_t Verbose )
 {
 
@@ -876,7 +883,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 //          check mass and energy densities (which cannot be zero)
             else if ( v < NCOMP_FLUID )
             {
-               if ( Fields[v] < TINY_NUMBER  ||  Fields[v] > HUGE_NUMBER )
+               if ( Fields[v] <= (real)0.0  ||  Fields[v] > HUGE_NUMBER )
                   FailCell = true;
             }
 
@@ -891,16 +898,28 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 //       check discriminant for SRHD
 //       --> positive if and only if Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298" has a positive root
 #        ifdef SRHD
-         real Msqr, Dsqr, E_D, M_D, Temp, Discriminant;
-         Msqr         = SQR(Fields[MOMX]) + SQR(Fields[MOMY]) + SQR(Fields[MOMZ]);
-         Dsqr         = SQR(Fields[DENS]);
-         E_D          = Fields[ENGY] / Fields[DENS];
-         M_D          = SQRT( Msqr / Dsqr );
-         Temp         = SQRT( E_D*E_D + (real)2.0*E_D );
-         Discriminant = ( Temp + M_D )*( Temp - M_D );   // replace a^2-b^2 with (a+b)*(a-b) to alleviate a catastrophic cancellation
+         const real Msqr         = SQR(Fields[MOMX]) + SQR(Fields[MOMY]) + SQR(Fields[MOMZ]);
+         const real Dsqr         = SQR(Fields[DENS]);
+         const real E_D          = Fields[ENGY] / Fields[DENS];
+         const real M_D          = SQRT( Msqr / Dsqr );
+         const real Temp         = SQRT( E_D*E_D + (real)2.0*E_D );
+         const real Discriminant = ( Temp + M_D )*( Temp - M_D ); // replace a^2-b^2 with (a+b)*(a-b) to alleviate a catastrophic cancellation
 
-         if ( Discriminant < TINY_NUMBER )   FailCell = true;
-#        endif
+         if ( Discriminant <= (real)0.0 )
+            FailCell = true;
+
+#        else
+
+//       check pressure (which can be zero)
+         const real CheckMinPres_No = false;
+         const real Pres = Hydro_Con2Pres( Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY], Fields+NCOMP_FLUID,
+                                           CheckMinPres_No, NULL_REAL, Emag,
+                                           EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
+                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+         if ( Pres < (real)0.0  ||  Pres > HUGE_NUMBER  ||  Pres != Pres )
+            FailCell = true;
+
+#        endif // #ifdef SRHD ... else ...
 
 //       print out the unphysical values
 #        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
@@ -912,6 +931,8 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
                     Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY] );
 #           ifdef SRHD
             printf( "E^2+2*E*D-|M|^2=%14.7e\n", Discriminant );
+#           else
+            printf( "P=%14.7e\n", Pres );
 #           endif
 #           if ( NCOMP_PASSIVE > 0 )
             printf( "Passive:" );
@@ -940,15 +961,14 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
                   FailCell = true;
             }
 
-//          check mass density
+//          check mass density (which cannot be zero)
             else if ( v == DENS )
             {
-               if ( Fields[v] < TINY_NUMBER  ||  Fields[v] > HUGE_NUMBER )
+               if ( Fields[v] <= (real)0.0  ||  Fields[v] > HUGE_NUMBER )
                   FailCell = true;
             }
 
 //          check pressure and passive scalars (which can be zero)
-//          --> allow pressure to be zero to tolerate round-off errors
             else
             {
                if ( Fields[v] < (real)0.0  ||  Fields[v] > HUGE_NUMBER )
@@ -982,7 +1002,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
          {
 //          check NaN
             if ( Fields[v] != Fields[v] )
-                  FailCell = true;
+               FailCell = true;
 
 //          check negative and infinity (passive scalars can be zero)
             if ( Fields[v] < (real)0.0  ||  Fields[v] > HUGE_NUMBER )

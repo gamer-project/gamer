@@ -2099,15 +2099,15 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
 #     ifdef SRHD
       if ( Hydro_CheckUnphysical( UNPHY_MODE_CONS, fcCon[f], NULL, ERROR_INFO, UNPHY_SILENCE ) ) reset_cell = true;
 #     else
-      if ( fcCon[f][DENS] <= (real)0.0 || fcCon[f][DENS] >= HUGE_NUMBER || fcCon[f][DENS] != fcCon[f][DENS] ) reset_cell = true;
+      if ( fcCon[f][DENS] <= (real)0.0 || fcCon[f][DENS] > HUGE_NUMBER || fcCon[f][DENS] != fcCon[f][DENS] ) reset_cell = true;
 #     ifndef BAROTROPIC_EOS
 #     ifdef MHD
       const real Emag = (real)0.5*( SQR(fcCon[f][MAG_OFFSET+0]) + SQR(fcCon[f][MAG_OFFSET+1]) + SQR(fcCon[f][MAG_OFFSET+2]) );
 #     else
       const real Emag = NULL_REAL;
 #     endif
-      if ( fcCon[f][4] <= (real)0.0 || fcCon[f][4] >= HUGE_NUMBER || fcCon[f][4] != fcCon[f][4] ) reset_cell = true;
-      if ( fcPri[f][4] <= (real)0.0 || fcPri[f][4] >= HUGE_NUMBER || fcPri[f][4] != fcPri[f][4] ) reset_cell = true;
+      if ( fcCon[f][4] <= (real)0.0 || fcCon[f][4] > HUGE_NUMBER || fcCon[f][4] != fcCon[f][4] ) reset_cell = true;
+      if ( fcPri[f][4] <= (real)0.0 || fcPri[f][4] > HUGE_NUMBER || fcPri[f][4] != fcPri[f][4] ) reset_cell = true;
 #     endif // #ifndef BAROTROPIC_EOS
 #     endif // #ifdef SRHD
 
