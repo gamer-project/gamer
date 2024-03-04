@@ -96,10 +96,10 @@ for ds in ts.piter():
       ax.set_yscale('log')
 
       # set the labels
+      ax.legend()
       ax.set_xlabel( r'$r$'+' (%s)'%UNIT_L_PLOT )
       ax.set_ylabel( r'$M$'+' (%s)'%UNIT_M_PLOT )
-      ax.legend()
-      fig.suptitle( '$t$ = %7.6e Gyr'%ds.current_time.in_units('Gyr') )
+      ax.set_title( '$t$ = %7.6e Gyr'%ds.current_time.in_units('Gyr') )
       ax.annotate( 'Enclosed Mass (at r = %7.6e %s)\n = %7.6e Msun'%(r_sphere[0], r_sphere[1], ds.sphere( center_pos, r_sphere ).quantities.total_quantity([field_mass]).in_units('Msun')),
                    xy=(0.3,0.03), xycoords='axes fraction' )
 

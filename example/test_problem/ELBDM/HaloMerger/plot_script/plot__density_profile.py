@@ -107,10 +107,10 @@ for ds in ts.piter():
       ax.set_yscale('log')
 
       # set the labels
+      ax.legend()
       ax.set_xlabel( r'$r$'+' (%s)'%UNIT_L_PLOT    )
       ax.set_ylabel( r'$\rho$'+' (%s)'%UNIT_D_PLOT )
-      ax.legend()
-      fig.suptitle( '$t$ = %7.6e Gyr'%ds.current_time.in_units('Gyr') )
+      ax.set_title( '$t$ = %7.6e Gyr'%ds.current_time.in_units('Gyr') )
 
       # set the grid and ticks
       ax.grid()
