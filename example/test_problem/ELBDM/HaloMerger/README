@@ -54,13 +54,13 @@ Note:
 4. Turn on OPT__EXT_POT == 1 to add external potential
    a. The external potential of a uniform-density sphere, which is proportional to r^2 inside and proportional to 1/r outside
 
-5. Download the default IC file: sh download_ic.sh
+5. Download the default UM_IC file: sh download_ic.sh
    a. Halo mass = 4.0960e+09 Msun
    b. Without soliton
    c. N = 640, L = 0.0646921095 Mpc/h, single-precision
 
 6. Generate the default HaloDensityProfile: python Make_HaloDensityProfile.py
-   a. The parameters for the density profile are used to fit the psiDM halo
+   a. The parameters for the density profile are used to fit the ELBDM halo
 
 7. Some examples of yt visualization scripts are put in "plot_script"
 
