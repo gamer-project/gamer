@@ -37,8 +37,12 @@ GPU_DEVICE
 static real Hydro_CheckMinEntr( const real InEntr, const real MinEntr );
 GPU_DEVICE
 static bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], const char SingleFieldName[],
-                                   const char File[], const int Line, const char Function[],
-                                   const CheckUnphysical_t Verbose );
+                                   const real Min, const real Max, const real Emag,
+                                   const EoS_DE2P_t EoS_DensEint2Pres,
+                                   const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                                   const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                                   const real *const EoS_Table[EOS_NTABLE_MAX],
+                                   const char File[], const int Line, const char Function[], const CheckUnphysical_t Verbose );
 #ifdef SRHD
 GPU_DEVICE
 static real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
@@ -213,7 +217,11 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
    real HTilde, Factor, Temp, LorentzFactor;
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( UNPHY_MODE_CONS, In, NULL, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_CONS, In, NULL,
+                          NULL_REAL, NULL_REAL, NULL_REAL,
+                          EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
+                          EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
+                          ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
    HTilde = Hydro_Con2HTilde( In, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
@@ -917,6 +925,10 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
                                 EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, &Eint );
          Enth = Fields[ENGY] - Eint;   // non-thermal energy including kinetic and magnetic energies
+
+         if ( Eint < (real)-2.0*Enth*MACHINE_EPSILON  ||  Eint > HUGE_NUMBER  ||  Eint != Eint )
+            UnphyCell = true;
+
          if ( Pres < (real)-2.0*Enth*MACHINE_EPSILON  ||  Pres > HUGE_NUMBER  ||  Pres != Pres )
             UnphyCell = true;
 #        endif // #ifdef SRHD ... else ...
@@ -932,7 +944,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 #           ifdef SRHD
             printf( " E^2+2*E*D-|M|^2=%14.7e", Discriminant );
 #           else
-            printf( " P=%14.7e Enth=%14.7e", Pres, Enth );
+            printf( " P=%14.7e Eint=%14.7e Enth=%14.7e", Pres, Eint, Enth );
 #           endif
 #           ifdef MHD
             printf( " Emag=%14.7e", Emag );
@@ -1147,7 +1159,9 @@ real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const re
 
 // check unphysical results
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "output pressure", ERROR_INFO, UNPHY_VERBOSE )  )
+   if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "output pressure",
+                                (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                ERROR_INFO, UNPHY_VERBOSE )  )
    {
       printf( "Input: Dens %14.7e MomX %14.7e MomY %14.7e MomZ %14.7e Engy %14.7e",
               Dens, MomX, MomY, MomZ, Engy );

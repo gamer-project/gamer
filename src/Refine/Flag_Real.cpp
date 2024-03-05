@@ -324,7 +324,11 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                                 Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i] };
 
 #                    ifdef CHECK_UNPHYSICAL_IN_FLUID
-                     Hydro_CheckUnphysical( UNPHY_MODE_CONS, Cons, NULL, ERROR_INFO, UNPHY_VERBOSE );
+                     Hydro_CheckUnphysical( UNPHY_MODE_CONS, Cons, NULL,
+                                            NULL_REAL, NULL_REAL, NULL_REAL,
+                                            EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                            ERROR_INFO, UNPHY_VERBOSE );
 #                    endif
 
                      HTilde = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,

@@ -325,20 +325,32 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
 
 //       5. check unphysical results
-//       5-1. check the interpolation results without EoS conversion
+//       5-1. abort if the fine-grid B field is unphysical
+#        ifdef MHD
+         const real Emag = (real)0.5*( SQR(FMag[i][MAGX]) + SQR(FMag[i][MAGY]) + SQR(FMag[i][MAGZ]) );
+         if ( ! Aux_IsFinite(Emag) )   Aux_Error( ERROR_INFO, "unphysical fine-grid B energy (%14.7e) !!\n", Emag );
+#        else
+         const real Emag = NULL_REAL;
+#        endif
+
+
+//       5-2. general check
          bool Fail_ThisCell
-            = Hydro_CheckUnphysical( (FData_is_Prim)?UNPHY_MODE_PRIM:UNPHY_MODE_CONS, Temp, NULL, ERROR_INFO, UNPHY_SILENCE );
+            = Hydro_CheckUnphysical( (FData_is_Prim)?UNPHY_MODE_PRIM:UNPHY_MODE_CONS, Temp, NULL,
+                                     NULL_REAL, NULL_REAL, Emag,
+                                     EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                     ERROR_INFO, UNPHY_SILENCE );
 
 
-//       5-2. check the interpolation results with EoS conversion
-//            --> only check either pressure or internal energy for now
-         const bool FailBeforeEoS = Fail_ThisCell;
-         real Eint=NULL_REAL, Pres=NULL_REAL;
+//       5-3. additional check
+         real Eint=NULL_REAL, Enth=NULL_REAL;
 
          if ( !Fail_ThisCell )
          {
             if ( FData_is_Prim )
             {
+//             check internal energy
                if ( EoS_DensPres2Eint_CPUPtr != NULL ) {
 //                convert passive scalars from mass fraction back to mass density
 #                 if ( NCOMP_PASSIVE > 0 )
@@ -352,34 +364,26 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                   const real *Passive = NULL;
 #                 endif
 
-                  Eint = EoS_DensPres2Eint_CPUPtr( Temp[DENS], Temp[ENGY], Passive,
-                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+//                non-thermal energy including kinetic and magnetic energies
+                  Enth  = (real)0.5*Temp[DENS]*( SQR(Temp[MOMX]) + SQR(Temp[MOMY]) + SQR(Temp[MOMZ]) );
+#                 ifdef MHD
+                  Enth += Emag;
+#                 endif
+                  Eint  = EoS_DensPres2Eint_CPUPtr( Temp[DENS], Temp[ENGY], Passive,
+                                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
-                  if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint, "interpolated internal energy", ERROR_INFO, UNPHY_SILENCE )  )
+//                allow internal energy to be slightly negative if it's within machine precision
+                  if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint, "interpolated internal energy",
+                                               (real)-2.0*Enth*MACHINE_EPSILON, HUGE_NUMBER, NULL_REAL,
+                                               NULL, NULL, NULL, NULL, NULL, NULL,
+                                               ERROR_INFO, UNPHY_SILENCE )  )
                      Fail_ThisCell = true;
                } // if ( EoS_DensPres2Eint_CPUPtr != NULL )
             } // if ( FData_is_Prim )
 
             else
             {
-               const bool CheckMinPres_No = false;
-#              ifdef MHD
-               const real Emag            = (real)0.5*( SQR(FMag[i][MAGX]) + SQR(FMag[i][MAGY]) + SQR(FMag[i][MAGZ]) );
-
-//             abort if the fine-grid B field is unphysical
-               if ( ! Aux_IsFinite(Emag) )   Aux_Error( ERROR_INFO, "unphysical fine-grid B energy (%14.7e) !!\n", Emag );
-
-#              else
-               const real Emag            = NULL_REAL;
-#              endif
-
-               Pres = Hydro_Con2Pres( Temp[DENS], Temp[MOMX], Temp[MOMY], Temp[MOMZ], Temp[ENGY], Temp+NCOMP_FLUID,
-                                      CheckMinPres_No, NULL_REAL, Emag,
-                                      EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                      EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-
-               if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "interpolated pressure", ERROR_INFO, UNPHY_SILENCE )  )
-                  Fail_ThisCell = true;
+//             one can add addtional checks for conserved variables here
             } // if ( FData_is_Prim ) ... else ...
          } // if ( !Fail_ThisCell )
 
@@ -407,11 +411,8 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                Aux_Message( stderr, "\n" );
 #              endif
 
-               if ( !FailBeforeEoS )
-               {
-                  if ( FData_is_Prim )    Aux_Message( stderr, "Eint=%14.7e\n", Eint );
-                  else                    Aux_Message( stderr, "Pres=%14.7e\n", Pres );
-               }
+//             output Eint only if it has been recalculated
+               if ( Eint != NULL_REAL )   Aux_Message( stderr, "Eint=%14.7e, Enth=%14.7e\n", Eint, Enth );
 
                MPI_Exit();    // abort the simulation if interpolation fails
             } // if ( Iteration == MaxIter )
@@ -431,8 +432,13 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                               PassiveIntFrac_VarIdx, EoS_DensPres2Eint_CPUPtr,
                               EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+
 #              ifdef GAMER_DEBUG
-               if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Cons[ENGY], "interpolated energy", ERROR_INFO, UNPHY_VERBOSE )  )
+               if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Cons, NULL,
+                                            NULL_REAL, NULL_REAL, Emag,
+                                            EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                            ERROR_INFO, UNPHY_VERBOSE )  )
                   Aux_Error( ERROR_INFO, "unphysical interpolated energy in %s() !!\n", __FUNCTION__ );
 #              endif
             }
