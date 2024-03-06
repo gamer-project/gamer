@@ -933,6 +933,11 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const ch
             UnphyCell = true;
 #        endif // #ifdef SRHD ... else ...
 
+#        ifdef MHD
+         if ( Emag < (real)0.0 )
+            UnphyCell = true;
+#        endif
+
 //       print out the unphysical values
 #        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
          if ( UnphyCell && Verbose )
@@ -1014,6 +1019,11 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const ch
                   UnphyCell = true;
             }
          } // for (int v=0; v<NCOMP_TOTAL; v++)
+
+#        ifdef MHD
+         if ( Emag < (real)0.0 )
+            UnphyCell = true;
+#        endif
 
 //       print out the unphysical values
 #        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
