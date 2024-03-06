@@ -336,11 +336,11 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
 //       5-2. general check
          bool Fail_ThisCell
-            = Hydro_CheckUnphysical( (FData_is_Prim)?UNPHY_MODE_PRIM:UNPHY_MODE_CONS, Temp, NULL,
-                                     NULL_REAL, NULL_REAL, Emag,
-                                     EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
-                                     ERROR_INFO, UNPHY_SILENCE );
+            = Hydro_IsUnphysical( (FData_is_Prim)?UNPHY_MODE_PRIM:UNPHY_MODE_CONS, Temp, NULL,
+                                  NULL_REAL, NULL_REAL, Emag,
+                                  EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                  ERROR_INFO, UNPHY_SILENCE );
 
 
 //       5-3. additional check
@@ -373,10 +373,10 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
 //                allow internal energy to be slightly negative if it's within machine precision
-                  if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint, "interpolated internal energy",
-                                               (real)-2.0*Enth*MACHINE_EPSILON, HUGE_NUMBER, NULL_REAL,
-                                               NULL, NULL, NULL, NULL, NULL, NULL,
-                                               ERROR_INFO, UNPHY_SILENCE )  )
+                  if (  Hydro_IsUnphysical( UNPHY_MODE_SING, &Eint, "interpolated internal energy",
+                                            (real)-2.0*Enth*MACHINE_EPSILON, HUGE_NUMBER, NULL_REAL,
+                                            NULL, NULL, NULL, NULL, NULL, NULL,
+                                            ERROR_INFO, UNPHY_SILENCE )  )
                      Fail_ThisCell = true;
                } // if ( EoS_DensPres2Eint_CPUPtr != NULL )
             } // if ( FData_is_Prim )
@@ -434,11 +434,11 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
 #              ifdef GAMER_DEBUG
-               if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Cons, NULL,
-                                            NULL_REAL, NULL_REAL, Emag,
-                                            EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
-                                            ERROR_INFO, UNPHY_VERBOSE )  )
+               if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, Cons, NULL,
+                                         NULL_REAL, NULL_REAL, Emag,
+                                         EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                         EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                         ERROR_INFO, UNPHY_VERBOSE )  )
                   Aux_Error( ERROR_INFO, "unphysical interpolated energy in %s() !!\n", __FUNCTION__ );
 #              endif
             }

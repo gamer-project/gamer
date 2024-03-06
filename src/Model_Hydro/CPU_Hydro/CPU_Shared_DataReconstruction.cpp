@@ -1425,12 +1425,12 @@ void Hydro_Pri2Char( real InOut[], const real Dens, const real Pres, const real 
 #  endif
 
 #  if ( defined CHECK_UNPHYSICAL_IN_FLUID  &&  !defined MHD )
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "pressure",
-                          (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "density",
-                          TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &Pres, "pressure",
+                       (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &Dens, "density",
+                       TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -1519,12 +1519,12 @@ void Hydro_Char2Pri( real InOut[], const real Dens, const real Pres, const real 
 #  endif
 
 #  if ( defined CHECK_UNPHYSICAL_IN_FLUID  &&  !defined MHD )
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "pressure",
-                          (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "density",
-                          TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &Pres, "pressure",
+                       (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &Dens, "density",
+                       TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -1626,12 +1626,12 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
 #  endif
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &CC_Var[4], "pressure",
-                          (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &CC_Var[0], "density",
-                          TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &CC_Var[4], "pressure",
+                       (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &CC_Var[0], "density",
+                       TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -1741,12 +1741,12 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
    }
    else {
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
-      Hydro_CheckUnphysical( UNPHY_MODE_SING, &a2_min_Cs2, "a2_min_Cs2",
-                             (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                             ERROR_INFO, UNPHY_VERBOSE );
-      Hydro_CheckUnphysical( UNPHY_MODE_SING, &Cf2_min_a2, "Cf2_min_a2",
-                             (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                             ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical( UNPHY_MODE_SING, &a2_min_Cs2, "a2_min_Cs2",
+                          (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                          ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical( UNPHY_MODE_SING, &Cf2_min_a2, "Cf2_min_a2",
+                          (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                          ERROR_INFO, UNPHY_VERBOSE );
 #     endif
 
       const real _Cf2_min_Cs2 = (real)1.0 / Cf2_min_Cs2;
@@ -2114,30 +2114,30 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
    for (int f=0; f<6; f++)
    {
 #     ifdef SRHD
-      if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, fcCon[f], NULL,
-                                   NULL_REAL, NULL_REAL, NULL_REAL,
-                                   EoS->DensEint2Pres_FuncPtr,
-                                   EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
-                                   EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
-                                   ERROR_INFO, UNPHY_SILENCE )  )
+      if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, fcCon[f], NULL,
+                                NULL_REAL, NULL_REAL, NULL_REAL,
+                                EoS->DensEint2Pres_FuncPtr,
+                                EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
+                                EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
+                                ERROR_INFO, UNPHY_SILENCE )  )
          reset_cell = true;
 
 #     else
 
-      if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &fcCon[f][DENS], "density",
-                                   TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                                   ERROR_INFO, UNPHY_SILENCE )  )
+      if (  Hydro_IsUnphysical( UNPHY_MODE_SING, &fcCon[f][DENS], "density",
+                                TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                ERROR_INFO, UNPHY_SILENCE )  )
          reset_cell = true;
 
 #     ifndef BAROTROPIC_EOS
-      if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &fcCon[f][4], "energy",
-                                   TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                                   ERROR_INFO, UNPHY_SILENCE )  )
+      if (  Hydro_IsUnphysical( UNPHY_MODE_SING, &fcCon[f][4], "energy",
+                                TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                ERROR_INFO, UNPHY_SILENCE )  )
          reset_cell = true;
 
-      if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &fcPri[f][4], "pressure",
-                                   (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                                   ERROR_INFO, UNPHY_SILENCE )  )
+      if (  Hydro_IsUnphysical( UNPHY_MODE_SING, &fcPri[f][4], "pressure",
+                                (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                ERROR_INFO, UNPHY_SILENCE )  )
          reset_cell = true;
 #     endif // #ifndef BAROTROPIC_EOS
 #     endif // #ifdef SRHD ... else ...
