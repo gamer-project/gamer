@@ -14,7 +14,7 @@ static void StoreFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][ SQ
 static void CorrectFlux( const int SonLv, const real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                          const int NPG, const int *PID0_List, const real dt );
 #if ( MODEL == HYDRO )
-static bool Unphysical( const real Fluid[], const int CheckMode, const real Emag );
+static bool Unphysical( const real Fluid[], const real Emag );
 #ifndef SRHD
 static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                const real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
@@ -364,92 +364,32 @@ void CorrectFlux( const int SonLv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQ
 #if ( MODEL == HYDRO )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Unphysical
-// Description :  Check whether the input variables are unphysical
+// Description :  Check whether the input fluid variables are unphysical
 //
-// Note        :  1. One can put arbitrary criteria here. Cells violating the conditions will be recalculated
+// Note        :  1. One can put arbitrary criteria here. Cells violating any criterion will be recalculated
 //                   in CorrectUnphysical()
-//                2. Currently only used for HYDRO to check whether the input mass density, internal energy/pressure,
-//                   or total energy is smaller than the given thresholds
-//                   --> It also checks if any variable is -inf, +inf, or nan
-//                   --> It does NOT check if passive scalars are negative
-//                       --> We already apply a floor value in Hydro_Shared_FullStepUpdate()
-//                3. When enabling the dual-energy formalism (with DE_ENPY), CheckMode=1 checks pressure
-//                   instead of internal energy
+//                2. Currently only used for HYDRO by calling Hydro_IsUnphysical()
 //
-// Parameter   :  Fluid     : Input fluid variable array with size FLU_NOUT
-//                CheckMode : (0/1) --> check (total energy/internal energy)
-//                Emag      : Magnetic energy (for MHD only)
+// Parameter   :  Fluid : Input fluid array with size FLU_NOUT
+//                Emag  : Magnetic energy (for MHD only)
 //
 // Return      :  true/false <--> input Fluid[] is unphysical/physical
 //-------------------------------------------------------------------------------------------------------
-bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
+bool Unphysical( const real Fluid[], const real Emag )
 {
-
-   const int  CheckMinEtot    = 0;
-   const int  CheckMinEint    = 1;
-   const bool CheckMinPres_No = false;
-   const bool NoFloor         = false;
-
 
 // if any check below fails, return true
 // =================================================
-// note that since MIN_DENS and MIN_PRES are declared as double, they must be converted to **real** before the comparison
-// --> otherwise LHS in the comparison will be converted from real to double, which is inconsistent with the assignment
-//     (e.g., "Update[DENS] = FMAX( Update[DENS], (real)MIN_DENS" )
-   if (  !Aux_IsFinite(Fluid[DENS])  ||  !Aux_IsFinite(Fluid[MOMX])  ||  !Aux_IsFinite(Fluid[MOMY])  ||
-         !Aux_IsFinite(Fluid[MOMZ])  ||  !Aux_IsFinite(Fluid[ENGY])  ||
-         Fluid[DENS] < (real)MIN_DENS  )
+   if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, Fluid, NULL, NULL_REAL, NULL_REAL, Emag,
+                             EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                             EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                             ERROR_INFO, UNPHY_SILENCE )  )
       return true;
 
-#  ifdef MHD
-   if ( !Aux_IsFinite(Emag) )
-      return true;
-#  endif
+// add extra checks below if required
+// =================================================
 
-#  ifndef BAROTROPIC_EOS
-   if ( CheckMode == CheckMinEtot  &&  ( Fluid[ENGY] < (real)MIN_EINT || Fluid[ENGY] != Fluid[ENGY] )  )
-      return true;
-
-   if ( CheckMode == CheckMinEint )
-   {
-//    when adopting the dual-energy formalism, do NOT calculate pressure from "Etot-Ekin" since it would suffer
-//    from large round-off errors
-//    --> currently we use TINY_NUMBER as the dual-energy floor and hence here we use 2.0*TINY_NUMBER to
-//        validate the dual-energy variable
-//    --> in general, MIN_PRES > 0.0 should be sufficient for detecting unphysical dual-energy variable
-//    --> however, the additional check "Fluid[DUAL] < (real)2.0*TINY_NUMBER" is necessary when MIN_PRES == 0.0
-#     ifdef DUAL_ENERGY
-      const real Pres = Hydro_DensDual2Pres( Fluid[DENS], Fluid[DUAL], EoS_AuxArray_Flt[1], NoFloor, NULL_REAL );
-      if ( Pres < (real)MIN_PRES  ||  !Aux_IsFinite(Pres)  ||
-           Fluid[DUAL] < (real)2.0*TINY_NUMBER  ||  !Aux_IsFinite(Fluid[DUAL]) )
-         return true;
-
-#     else // without DUAL_ENERGY
-      const real Eint = Hydro_Con2Eint( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                        NoFloor, NULL_REAL, Emag, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                        EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-      if ( Eint < (real)MIN_EINT  ||  !Aux_IsFinite(Eint) )
-         return true;
-#     endif // DUAL_ENERGY
-   } // f ( CheckMode == CheckMinEint )
-
-   if ( OPT__CHECK_PRES_AFTER_FLU )
-   {
-      const real Pres = Hydro_Con2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ],
-                                        Fluid[ENGY], Fluid+NCOMP_FLUID,
-                                        CheckMinPres_No, NULL_REAL, Emag,
-                                        EoS_DensEint2Pres_CPUPtr,
-                                        EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                        EoS_AuxArray_Flt,
-                                        EoS_AuxArray_Int, h_EoS_Table, NULL );
-
-      if ( !Aux_IsFinite(Pres)  ||  Pres < (real)MIN_PRES )
-         return true;
-   }
-#  endif // #ifndef BAROTROPIC_EOS
-
-
-// if all checks above pass, return false
+// if all checks pass, return false
 // =================================================
    return false;
 
@@ -464,11 +404,7 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
 //                --> For example, negative density
 //
 // Note        :  1. Define unphysical values in Unphysical()
-//                2. Currently only used for HYDRO to check whether the input mass density, internal energy/pressure,
-//                   or total energy is smaller than the minimum allowed values (i.e., MIN_DENS/MIN_PRES/MIN_EINT)
-//                   --> It also checks if any variable is -inf, +inf, and nan
-//                   --> But one can define arbitrary criteria in Unphysical() to trigger the correction
-//                3. Procedure:
+//                2. Procedure:
 //                   if ( found_unphysical )
 //                   {
 //                      if ( OPT__1ST_FLUX_CORR )
@@ -580,7 +516,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
          const real Emag_Out = NULL_REAL;
 #        endif
 
-         if ( Unphysical(Out, CheckMinEint, Emag_Out) )
+         if ( Unphysical(Out, Emag_Out) )
          {
             const int idx_in_i = ijk_out[0] + FLU_GHOST_SIZE;
             const int idx_in_j = ijk_out[1] + FLU_GHOST_SIZE;
@@ -766,7 +702,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                     CorrPres_No, NULL_REAL, DUAL_ENERGY_SWITCH, Emag_Out );
 #              endif
 
-               if ( Unphysical(Update, CheckMinEint, Emag_Out) )
+               if ( Unphysical(Update, Emag_Out) )
                {
 //                collect nearby input conserved variables
                   for (int k=0; k<Corr1D_NCell; k++)  { Corr1D_didx2[2] = (k-Corr1D_NBuf)*didx[2];
@@ -866,7 +802,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   for (int v=0; v<NCOMP_TOTAL; v++)
                      Update[v] = Corr1D_InOut[Corr1D_NBuf][Corr1D_NBuf][Corr1D_NBuf][v];
 
-               } // if ( Unphysical(Update, CheckMinEint, Emag_Out) )
+               } // if ( Unphysical(Update, Emag_Out) )
             } // if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D )
 
 
@@ -883,8 +819,6 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //          ensure positive density
 //          --> apply it only when AutoReduceDt_Continue is false
 //              --> otherwise AUTO_REDUCE_DT may not be triggered due to this density floor
-//          --> note that MIN_DENS is declared as double and must be converted to **real** before the comparison
-//              --> to be consistent with the check in Unphysical()
 //          --> do NOT check the minimum internal energy here since we want to apply the dual-energy correction first
             if ( ! AutoReduceDt_Continue  &&  OPT__LAST_RESORT_FLOOR )
                Update[DENS] = FMAX( Update[DENS], (real)MIN_DENS );
@@ -905,7 +839,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //          --> this might be redundant when OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D
 //              --> but it ensures the consistency between all fluid variables since we apply density floor AFTER
 //                  the 1st-order-flux correction
-//          --> we apply the minimum pressure check in Hydro_DualEnergyFix() here only when AutoReduceDt_Continue is false
+//          --> we apply the minimum pressure check in Hydro_DualEnergyFix() only when AutoReduceDt_Continue is false
 //              --> otherwise AUTO_REDUCE_DT may not be triggered due to this pressure floor
 #           ifdef DUAL_ENERGY
             Hydro_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[DUAL],
@@ -924,11 +858,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
 
 //          check if the newly updated values are still unphysical
-//          --> note that, when AutoReduceDt_Continue is false, we check Etot instead of Eint since even after calling
-//              Hydro_CheckMinEintInEngy() we may still have Eint < MIN_EINT due to round-off errors (especially when Eint << Ekin)
-//              --> it will not crash the code since we always apply MIN_EINT/MIN_PRES when calculating Eint/pressure
-//          --> when AutoReduceDt_Continue is true, we still check Eint instead of Etot
-            if ( Unphysical(Update, (AutoReduceDt_Continue)?CheckMinEint:CheckMinEtot, Emag_Out) )
+            if ( Unphysical(Update, Emag_Out) )
             {
 //             set CorrectUnphy = GAMER_FAILED if any cells fail
 //             --> use critical directive to avoid thread racing (may not be necessary here?)
@@ -1120,7 +1050,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                 endif
                   Output_Patch( lv, PID_Failed, amr->FluSg[lv], MagSg, PotSg, "Unphy" );
                } // if ( ! AutoReduceDt_Continue )
-            } // if ( Unphysical(Update, (AutoReduceDt_Continue)?CheckMinEint:CheckMinEtot, Emag_Out) )
+            } // if ( Unphysical(Update, Emag_Out) )
 
             else
             {
@@ -1169,7 +1099,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //             record the number of corrected cells
                NCorrThisTime ++;
 
-            } // if ( Unphysical(Update, (AutoReduceDt_Continue)?CheckMinEint:CheckMinEtot, Emag_Out) ) ... else ...
+            } // if ( Unphysical(Update, Emag_Out) ) ... else ...
          } // if need correction
       } // i,j,k
    } // for (int TID=0; TID<NPG; TID++)
