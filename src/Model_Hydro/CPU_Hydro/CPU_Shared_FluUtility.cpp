@@ -934,7 +934,7 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const ch
 #        endif // #ifdef SRHD ... else ...
 
 #        ifdef MHD
-         if ( Emag < (real)0.0 )
+         if ( Emag < (real)0.0  ||  Emag > HUGE_NUMBER  ||  Emag != Emag )
             UnphyCell = true;
 #        endif
 
@@ -1021,7 +1021,7 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const ch
          } // for (int v=0; v<NCOMP_TOTAL; v++)
 
 #        ifdef MHD
-         if ( Emag < (real)0.0 )
+         if ( Emag < (real)0.0  ||  Emag > HUGE_NUMBER  ||  Emag != Emag )
             UnphyCell = true;
 #        endif
 
