@@ -69,7 +69,9 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
    const int  didx_flux[3]    = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
    const real dt_dh           = dt/dh;
+#  if ( defined DUAL_ENERGY  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
    const bool CheckMinPres_No = false;
+#  endif
 
    real dFlux[3][NCOMP_TOTAL], Output_1Cell[NCOMP_TOTAL], Emag;
 
