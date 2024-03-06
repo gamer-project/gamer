@@ -344,7 +344,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
 
 //       5-3. additional check
-         real Eint=NULL_REAL, Enth=NULL_REAL;
+         real Eint=NULL_REAL, Enth=NULL_REAL, Pres=NULL_REAL;
 
          if ( !Fail_ThisCell )
          {
@@ -408,11 +408,27 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 #              ifdef MHD
                Aux_Message( stderr, "B field: " );
                for (int v=0; v<NCOMP_MAG; v++)     Aux_Message( stderr, " [%d]=%14.7e", v, FMag[i][v] );
-               Aux_Message( stderr, "\n" );
+               Aux_Message( stderr, " Emag=%14.7e\n", Emag );
 #              endif
 
-//             output Eint only if it has been recalculated
-               if ( Eint != NULL_REAL )   Aux_Message( stderr, "Eint=%14.7e, Enth=%14.7e\n", Eint, Enth );
+//             output additional information
+               if ( FData_is_Prim ) {
+//                output Eint only if it has been recalculated
+                  if ( Eint != NULL_REAL )   Aux_Message( stderr, "Eint=%14.7e, Enth=%14.7e\n", Eint, Enth );
+               }
+
+               else {
+                  const real CheckMinPres_No = false;
+                  Pres  = Hydro_Con2Pres( Temp[DENS], Temp[MOMX], Temp[MOMY], Temp[MOMZ], Temp[ENGY], Temp+NCOMP_FLUID,
+                                          CheckMinPres_No, NULL_REAL, Emag,
+                                          EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, &Eint );
+                  Enth  = Eint;
+#                 ifdef MHD
+                  Enth += Emag;
+#                 endif
+                  Aux_Message( stderr, "Eint=%14.7e, Enth=%14.7e, Pres=%14.7e\n", Eint, Enth, Pres );
+               }
 
                MPI_Exit();    // abort the simulation if interpolation fails
             } // if ( Iteration == MaxIter )
