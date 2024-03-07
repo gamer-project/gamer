@@ -918,12 +918,11 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const ch
 #        else // #ifdef SRHD
 
 #        ifndef BAROTROPIC_EOS
-         real Eint=NULL_REAL, Pres=NULL_REAL;
 //       check internal energy (which can be zero or slightly negative if it's within machine precision)
          const real CheckMinEint_No = false;
-         Eint = Hydro_Con2Eint( Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY],
-                                CheckMinEint_No, NULL_REAL, Emag,
-                                NULL, NULL, NULL, NULL, NULL );
+         const real Eint = Hydro_Con2Eint( Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY],
+                                           CheckMinEint_No, NULL_REAL, Emag,
+                                           NULL, NULL, NULL, NULL, NULL );
 
          if ( Eint < (real)-3.0*Fields[ENGY]*MACHINE_EPSILON  ||  Eint > HUGE_NUMBER  ||  Eint != Eint )
             UnphyCell = true;
@@ -932,9 +931,8 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const ch
 //       --> for trivial EoS like EOS_GAMMA, checking internal energy is sufficient (and pressure can also be
 //           slightly negative if it's within machine precision)
 #        if ( EOS != EOS_GAMMA )
-         const real CheckMinPres_No = false;
-         Pres = EoS_DensEint2Pres( Fields[DENS], Eint, Fields+NCOMP_FLUID,
-                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+         const real Pres = EoS_DensEint2Pres( Fields[DENS], Eint, Fields+NCOMP_FLUID,
+                                              EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
          if ( Pres < (real)0.0  ||  Pres > HUGE_NUMBER  ||  Pres != Pres )
             UnphyCell = true;
@@ -960,9 +958,11 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const ch
             printf( " E^2+2*E*D-|M|^2=%14.7e", Discriminant );
 #           else
 #           ifndef BAROTROPIC_EOS
-            if ( Eint != NULL_REAL )   printf( " Eint=%14.7e", Eint );
-            if ( Pres != NULL_REAL )   printf( " Pres=%14.7e", Pres );
+            printf( " Eint=%14.7e", Eint );
+#           if ( EOS != EOS_GAMMA )
+            printf( " Pres=%14.7e", Pres );
 #           endif
+#           endif // #ifndef BAROTROPIC_EOS
 #           endif // #ifdef SRHD ... else ...
 #           ifdef MHD
             printf( " Emag=%14.7e", Emag );
