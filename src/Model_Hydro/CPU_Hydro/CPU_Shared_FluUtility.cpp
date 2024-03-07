@@ -915,22 +915,32 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const ch
          if ( Discriminant <= (real)0.0  ||  Discriminant != Discriminant )
             UnphyCell = true;
 
-#        else
+#        else // #ifdef SRHD
 
-//       check pressure (which can be zero or slightly negative if it's within machine precision)
+#        ifndef BAROTROPIC_EOS
+         real Eint=NULL_REAL, Pres=NULL_REAL;
+//       check internal energy (which can be zero or slightly negative if it's within machine precision)
+         const real CheckMinEint_No = false;
+         Eint = Hydro_Con2Eint( Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY],
+                                CheckMinEint_No, NULL_REAL, Emag,
+                                NULL, NULL, NULL, NULL, NULL );
+
+         if ( Eint < (real)-3.0*Fields[ENGY]*MACHINE_EPSILON  ||  Eint > HUGE_NUMBER  ||  Eint != Eint )
+            UnphyCell = true;
+
+//       check pressure for non-trivial EoS (which cannot be negative)
+//       --> for trivial EoS like EOS_GAMMA, checking internal energy is sufficient (and pressure can also be
+//           slightly negative if it's within machine precision)
+#        if ( EOS != EOS_GAMMA )
          const real CheckMinPres_No = false;
-         real Pres, Eint, Enth;
-         Pres = Hydro_Con2Pres( Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY], Fields+NCOMP_FLUID,
-                                CheckMinPres_No, NULL_REAL, Emag,
-                                EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
-                                EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, &Eint );
-         Enth = Fields[ENGY] - Eint;   // non-thermal energy including kinetic and magnetic energies
+         Pres = EoS_DensEint2Pres( Fields[DENS], Eint, Fields+NCOMP_FLUID,
+                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
-         if ( Eint < (real)-2.0*Enth*MACHINE_EPSILON  ||  Eint > HUGE_NUMBER  ||  Eint != Eint )
+         if ( Pres < (real)0.0  ||  Pres > HUGE_NUMBER  ||  Pres != Pres )
             UnphyCell = true;
+#        endif // EOS
+#        endif // #ifndef BAROTROPIC_EOS
 
-         if ( Pres < (real)-2.0*Enth*MACHINE_EPSILON  ||  Pres > HUGE_NUMBER  ||  Pres != Pres )
-            UnphyCell = true;
 #        endif // #ifdef SRHD ... else ...
 
 #        ifdef MHD
@@ -949,8 +959,11 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const ch
 #           ifdef SRHD
             printf( " E^2+2*E*D-|M|^2=%14.7e", Discriminant );
 #           else
-            printf( " P=%14.7e Eint=%14.7e Enth=%14.7e", Pres, Eint, Enth );
+#           ifndef BAROTROPIC_EOS
+            if ( Eint != NULL_REAL )   printf( " Eint=%14.7e", Eint );
+            if ( Pres != NULL_REAL )   printf( " Pres=%14.7e", Pres );
 #           endif
+#           endif // #ifdef SRHD ... else ...
 #           ifdef MHD
             printf( " Emag=%14.7e", Emag );
 #           endif
@@ -969,10 +982,6 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const ch
 //    === check primitive variables, including passive scalars ===
       case UNPHY_MODE_PRIM:
       {
-#        ifndef SRHD
-         real Enth;
-#        endif
-
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
 //          check NaN
@@ -993,23 +1002,11 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const ch
                   UnphyCell = true;
             }
 
-//          check pressure (which can be zero or slightly negative if it's within machine precision)
+//          check pressure (which cannot be negative; a pressure floor should be applied in advance)
             else if ( v == ENGY )
             {
-#              ifdef SRHD
                if ( Fields[ENGY] < (real)0.0  ||  Fields[ENGY] > HUGE_NUMBER )
                   UnphyCell = true;
-
-#              else
-
-//             non-thermal energy including kinetic and magnetic energies
-               Enth  = (real)0.5*Fields[DENS]*( SQR(Fields[MOMX]) + SQR(Fields[MOMY]) + SQR(Fields[MOMZ]) );
-#              ifdef MHD
-               Enth += Emag;
-#              endif
-               if ( Fields[ENGY] < (real)-2.0*Enth*MACHINE_EPSILON  ||  Fields[ENGY] > HUGE_NUMBER )
-                  UnphyCell = true;
-#              endif // #ifdef SRHD ... else ...
             }
 
 //          check passive scalars (which can be zero)
@@ -1033,9 +1030,6 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const ch
                     File, Line, Function );
             printf( "D=%14.7e, Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, P=%14.7e",
                     Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY] );
-#           ifndef SRHD
-            printf( " Enth=%14.7e", Enth );
-#           endif
 #           ifdef MHD
             printf( " Emag=%14.7e", Emag );
 #           endif

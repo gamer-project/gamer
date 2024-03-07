@@ -344,7 +344,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
 
 //       5-3. additional check
-         real Eint=NULL_REAL, Enth=NULL_REAL, Pres=NULL_REAL;
+         real Eint=NULL_REAL;
 
          if ( !Fail_ThisCell )
          {
@@ -364,17 +364,13 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                   const real *Passive = NULL;
 #                 endif
 
-//                non-thermal energy including kinetic and magnetic energies
-                  Enth  = (real)0.5*Temp[DENS]*( SQR(Temp[MOMX]) + SQR(Temp[MOMY]) + SQR(Temp[MOMZ]) );
-#                 ifdef MHD
-                  Enth += Emag;
-#                 endif
-                  Eint  = EoS_DensPres2Eint_CPUPtr( Temp[DENS], Temp[ENGY], Passive,
-                                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                  Eint = EoS_DensPres2Eint_CPUPtr( Temp[DENS], Temp[ENGY], Passive,
+                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
-//                allow internal energy to be slightly negative if it's within machine precision
+//                internal energy cannot be negative (even within machine precision) since a pressure floor has been applied
+//                when calling Hydro_Con2Pri()
                   if (  Hydro_IsUnphysical( UNPHY_MODE_SING, &Eint, "interpolated internal energy",
-                                            (real)-2.0*Enth*MACHINE_EPSILON, HUGE_NUMBER, NULL_REAL,
+                                            (real)0.0, HUGE_NUMBER, NULL_REAL,
                                             NULL, NULL, NULL, NULL, NULL, NULL,
                                             ERROR_INFO, UNPHY_SILENCE )  )
                      Fail_ThisCell = true;
@@ -414,20 +410,16 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 //             output additional information
                if ( FData_is_Prim ) {
 //                output Eint only if it has been recalculated
-                  if ( Eint != NULL_REAL )   Aux_Message( stderr, "Eint=%14.7e, Enth=%14.7e\n", Eint, Enth );
+                  if ( Eint != NULL_REAL )   Aux_Message( stderr, "Eint=%14.7e\n", Eint );
                }
 
                else {
                   const real CheckMinPres_No = false;
-                  Pres  = Hydro_Con2Pres( Temp[DENS], Temp[MOMX], Temp[MOMY], Temp[MOMZ], Temp[ENGY], Temp+NCOMP_FLUID,
-                                          CheckMinPres_No, NULL_REAL, Emag,
-                                          EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, &Eint );
-                  Enth  = Eint;
-#                 ifdef MHD
-                  Enth += Emag;
-#                 endif
-                  Aux_Message( stderr, "Eint=%14.7e, Enth=%14.7e, Pres=%14.7e\n", Eint, Enth, Pres );
+                  const real Pres = Hydro_Con2Pres( Temp[DENS], Temp[MOMX], Temp[MOMY], Temp[MOMZ], Temp[ENGY], Temp+NCOMP_FLUID,
+                                                    CheckMinPres_No, NULL_REAL, Emag,
+                                                    EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, &Eint );
+                  Aux_Message( stderr, "Eint=%14.7e, Pres=%14.7e\n", Eint, Pres );
                }
 
                MPI_Exit();    // abort the simulation if interpolation fails
