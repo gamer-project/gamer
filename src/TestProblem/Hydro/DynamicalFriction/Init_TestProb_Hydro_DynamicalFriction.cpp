@@ -3,7 +3,6 @@
 #include "Par_EquilibriumIC.h"
 #include "string"
 #include <stdio.h>
-#include "global_var.h"
 
 using namespace std;
 
@@ -11,14 +10,15 @@ using namespace std;
 double GC_SmallGas;
 
 // parameter for center setting
-double FixCenter;
+bool FixCenter;
 double SearchRadius;
 
+// global variables
+double GC_xx;
+double GC_yy;
+double GC_zz;
 
-// GC position
-double GC_xx = 100000000.0;
-double GC_yy = 100000000.0;
-double GC_zz = 100000000.0;
+static char HaloType[MAX_STRING];
 
 // declare the potential minimum last step
 double min_pot_last[3] ;
@@ -26,21 +26,22 @@ double min_pot_last[3] ;
 
 // problem-specific function prototypes
 #ifdef MASSIVE_PARTICLES
-void Par_Init_ByFunction_GC( const long NPar_ThisRank, const long NPar_AllRank,
+void Par_Init_ByFunction_DynamicalFriction( const long NPar_ThisRank, const long NPar_AllRank,
                                    real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                    real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                    real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
+
+
 #endif
 
 // external potential routines
-void Init_ExtPot_GC();
+void Init_ExtPot_DynamicalFriction();
 
 void Mis_UserWorkBeforeNextLevel_Find_GC( const int lv, const double TimeNew, const double TimeOld, const double dt );
 
 void User_Output();
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-static void Aux_Record_User_GC();
-
+static void Aux_Record_User_DynamicalFriction();
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -147,14 +148,17 @@ void SetParameter()
    ReadPara->Add( "GC_POSY",                 &GC_yy,               NoDef_double,  NoMin_double,     NoMax_double      );
    ReadPara->Add( "GC_POSZ",                 &GC_zz,               NoDef_double,  NoMin_double,     NoMax_double      );
    
-   ReadPara->Add( "FIX_CENTER",              &FixCenter,           NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "FIX_CENTER",              &FixCenter,           Useless_bool,  Useless_bool,     Useless_bool      );
    ReadPara->Add( "SEARCH_RADIUS",           &SearchRadius,        NoDef_double,  NoMin_double,     NoMax_double      );
+   
+   ReadPara->Add( "HALO_TYPE",               HaloType,            "None",        Useless_str,   Useless_str          );
 
    ReadPara->Read( FileName );
    if ( MPI_Rank == 0)
    {
    Aux_Message(stdout, "Setparameter(): %7.5f %7.5f %7.5f \n",GC_xx,GC_yy,GC_zz);
-   Aux_Message(stdout, "Setparameter(): %7.1f %7.1f \n",FixCenter,SearchRadius);
+   Aux_Message(stdout, "Setparameter(): %d %7.1f \n",FixCenter,SearchRadius);
+   Aux_Message(stdout, "Setparameter(): %s \n",HaloType);
    }
    delete ReadPara;
 
@@ -162,113 +166,108 @@ void SetParameter()
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Aux_Record_User_GC
+// Function    :  Aux_Record_User_DynamicalFriction
 // Description :  Update the GC position and Halo position in each step
 //
 // Note        :  1. Invoked by main() using the function pointer "Aux_Record_User_Ptr",
 //                   which must be set by a test problem initializer
 //                2. Enabled by the runtime option "OPT__RECORD_USER"
 //                3. This function will be called both during the program initialization and after each full update
-//
+//                4. Notice that this function can only get "ONE" GC, multiple GCs are not supported. 
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
-void Aux_Record_User_GC()
+void Aux_Record_User_DynamicalFriction()
 {
 
-// set the center finding method base on Input__TestProb
-if (FixCenter == 1.0){
+   // A. Set the center finding method base on Input__TestProb
+   if ( FixCenter )
+   {
+      if ( MPI_Rank == 0 )
+         {
+         char Filename[MAX_STRING];
+         sprintf( Filename, "%s", "Record__Result_Center" );
+         FILE *File = fopen( Filename, "a" );
+         if ( Time[0]==0.0 )
+         {
+            fprintf(File, "%15s\t%15s\t%15s\t%15s\n", "#          Time", " CenterX", " CenterY", " CenterZ");
+         }
+         fprintf(File, "%15.7f\t%15.7e\t%15.7e\t%15.7e\n",Time[0]  ,amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2]);
+         fclose ( File );	
+      }
+   }
+   else
+   {
+   // 1. Find the minimum potential position
+      Extrema_t Extrema;
+      Extrema.Field     = _POTE;
+      Extrema.Radius    = SearchRadius*amr->dh[MAX_LEVEL]; 
 
-if ( MPI_Rank == 0)
-{
-	char Filename[MAX_STRING];
-	sprintf( Filename, "%s", "Record__RESULT_Center.txt" );
-	FILE *File = fopen( Filename, "a" );
-        if (Time[0]==0.0){
-        fprintf(File, "%15s%15s%15s%15s\n", "Time", "CenterX", "CenterY", "CenterZ");
-	}
-	fprintf(File, "%13.7f\t%13.7e\t%13.7e\t%13.7e\n",
-           Time[0]  ,amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2]);
-	fclose ( File );	
-}
-}else{
-// 1. Find the minimum potential position
-// Extrema.Radius    = HUGE_NUMBER; // entire domain
-Extrema_t Extrema;
-Extrema.Field     = _POTE;
-Extrema.Radius = SearchRadius*amr->dh[MAX_LEVEL]; //the cell width of the finest level of resolution in the AMR grid multiply by the searchRadius setting
+      if ( Time[0]==0.0 )
+      {
+         Extrema.Center[0] = amr->BoxCenter[0];
+         Extrema.Center[1] = amr->BoxCenter[1];
+         Extrema.Center[2] = amr->BoxCenter[2];
+         min_pot_last[0] = amr->BoxCenter[0];
+         min_pot_last[1] = amr->BoxCenter[1];
+         min_pot_last[2] = amr->BoxCenter[2];
+      }
+      else
+      {
+         Extrema.Center[0] = min_pot_last[0];
+         Extrema.Center[1] = min_pot_last[1];
+         Extrema.Center[2] = min_pot_last[2];
+      }
 
-if (Time[0]==0.0)
-{
-  Extrema.Center[0] = amr->BoxCenter[0];
-  Extrema.Center[1] = amr->BoxCenter[1];
-  Extrema.Center[2] = amr->BoxCenter[2];
-  min_pot_last[0] = amr->BoxCenter[0];
-  min_pot_last[1] = amr->BoxCenter[1];
-  min_pot_last[2] = amr->BoxCenter[2];
-}
-else{
-Extrema.Center[0] = min_pot_last[0];
-Extrema.Center[1] = min_pot_last[1];
-Extrema.Center[2] = min_pot_last[2];
-}
-Aux_FindExtrema( &Extrema, EXTREMA_MIN, 0, TOP_LEVEL, PATCH_LEAF );
+      Aux_FindExtrema( &Extrema, EXTREMA_MIN, 0, TOP_LEVEL, PATCH_LEAF );
+      
+      min_pot_last[0] = Extrema.Coord[0];
+      min_pot_last[1] = Extrema.Coord[1];
+      min_pot_last[2] = Extrema.Coord[2];
 
-min_pot_last[0] = Extrema.Coord[0];
-min_pot_last[1] = Extrema.Coord[1];
-min_pot_last[2] = Extrema.Coord[2];
+      // 2. write them into a .txt file
 
-// 2. write them into a .txt file
+      if ( MPI_Rank == 0 )
+      {
+         char Filename[MAX_STRING];
+         sprintf( Filename, "%s", "Record__Result_Center" );
+         FILE *File = fopen( Filename, "a" );
+         if (Time[0]==0.0)
+         {
+            fprintf(File, "%15s\t%15s\t%15s\t%15s\n", "#          Time", " CenterX", " CenterY", " CenterZ");
+         }
+         fprintf(File, "%15.7f\t%15.7e\t%15.7e\t%15.7e\n",
+            Time[0]  ,Extrema.Coord[0], Extrema.Coord[1], Extrema.Coord[2]);
+         fclose ( File );
+      }
+   };
 
-if ( MPI_Rank == 0)
-{
-	char Filename[MAX_STRING];
-	sprintf( Filename, "%s", "Record__RESULT_Center.txt" );
-	FILE *File = fopen( Filename, "a" );
-        if (Time[0]==0.0){
-        fprintf(File, "%15s%15s%15s%15s\n", "Time", "CenterX", "CenterY", "CenterZ");
-	}
-	fprintf(File, "%13.7f\t%13.7e\t%13.7e\t%13.7e\n",
-           Time[0]  ,Extrema.Coord[0], Extrema.Coord[1], Extrema.Coord[2]);
-	fclose ( File );
-	
-	char Filename_[MAX_STRING];
-	sprintf( Filename_, "%s", "Record__Previous_Center.txt" );
-	FILE *File_ = fopen( Filename_, "a" );
-        if (Time[0]==0.0){
-        fprintf(File_, "%15s%15s%15s%15s%15s\n", "Time", "CenterX", "CenterY", "CenterZ","Search R");
-	}
-	fprintf(File_, "%13.7f\t%13.7e\t%13.7e\t%13.7e\t%13.7e\n",
-           Time[0]  ,min_pot_last[0], min_pot_last[1], min_pot_last[2],Extrema.Radius);
-	fclose ( File_ );
-}
-};
-// 2. Find the GC's position
+// B. Find the GC's position
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // !!!!! This routine assume there is only one GC particle !!!!!
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-double GC_x=99999.9;
-double GC_y=99999.9;
-double GC_z=99999.9;
-
-for (long p=0; p<amr->Par->NPar_AcPlusInac; p++) {
-if ( amr->Par->Mass[p] < PTYPE_GC )  continue;
-   if ( amr->Par->Type[p] == PTYPE_GC) {
-      GC_x = amr->Par->PosX[p]; 
-      GC_y = amr->Par->PosY[p]; 
-      GC_z = amr->Par->PosZ[p];
-      
-      char Filename[MAX_STRING];
-      sprintf( Filename, "%s", "Record__RESULT_GC_position.txt" );
-      FILE *File = fopen( Filename, "a" );
-      if (Time[0]==0.0){
-        fprintf(File, "%15s%15s%15s%15s\n", "Time", "GCX", "GCY", "GCZ");
+   double GC_x, GC_y, GC_z;
+   
+   for (long p=0; p<amr->Par->NPar_AcPlusInac; p++) {
+   if ( amr->Par->Mass[p] < PTYPE_GC )  continue;
+      if ( amr->Par->Type[p] == PTYPE_GC)
+      {
+         GC_x = amr->Par->PosX[p]; 
+         GC_y = amr->Par->PosY[p]; 
+         GC_z = amr->Par->PosZ[p];
+         
+         char Filename[MAX_STRING];
+         sprintf( Filename, "%s", "Record__Result_GC_position" );
+         FILE *File = fopen( Filename, "a" );
+         if ( Time[0]==0.0 )
+         {
+           fprintf(File, "%15s\t%15s\t%15s\t%15s\n", "#          Time", " GCX", " GCY", " GCZ");
+         }
+         fprintf(File, "%15.7f\t%15.7e\t%15.7e\t%15.7e\n", Time[0],GC_x,GC_y,GC_z );
+         fclose ( File );	
       }
-      fprintf(File, "%13.7f\t%13.7e\t%13.7e\t%13.7e\n", Time[0],GC_x,GC_y,GC_z );
-      fclose ( File );	
    }
-}
 
-} // FUNCTION : Aux_Record_User_GC
+} // FUNCTION : Aux_Record_User_DynamicalFriction
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetGridIC
@@ -305,6 +304,19 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = 0.0;
 
 } // FUNCTION : SetGridIC
+
+
+
+
+
+
+
+
+
+
+
+
+
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -331,13 +343,14 @@ void Init_TestProb_Hydro_DynamicalFriction()
 // set the problem-specific runtime parameters
    SetParameter();
    Init_Function_User_Ptr  = SetGridIC;
-   Aux_Record_User_Ptr     = Aux_Record_User_GC;
+   Aux_Record_User_Ptr     = Aux_Record_User_DynamicalFriction;
+//   Init_User_Ptr	   = Init_User_DynamicalFriction;
 #  ifdef MASSIVE_PARTICLES
-   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_GC;
+   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_DynamicalFriction;
 #  endif
 #  ifdef GRAVITY
    if ( OPT__EXT_POT == EXT_POT_FUNC )
-   Init_ExtPot_Ptr         = Init_ExtPot_GC;
+   Init_ExtPot_Ptr         = Init_ExtPot_DynamicalFriction;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

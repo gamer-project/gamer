@@ -2,4 +2,4 @@
 
 PYTHON=python3
 
-${PYTHON} configure.py --machine=eureka_intel --model HYDRO --gravity True --particle True --max_patch 1000000 --hdf5 True --gsl True --fftw FFTW3 --gpu True --mpi True
+${PYTHON} configure.py --machine=eureka_intel --mpi=true --hdf5=true --fftw=FFTW3 --gpu=true --gsl=true --model=HYDRO --particle=true --gravity=true
