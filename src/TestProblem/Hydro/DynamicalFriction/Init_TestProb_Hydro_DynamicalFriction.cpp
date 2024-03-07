@@ -14,11 +14,17 @@ bool FixCenter;
 double SearchRadius;
 
 // global variables
-double GC_xx;
-double GC_yy;
-double GC_zz;
+//double GC_xx;
+//double GC_yy;
+//double GC_zz;
 
-static char HaloType[MAX_STRING];
+//static char HaloType[MAX_STRING];
+extern double aaaaaa;
+extern double GC_MASS;
+extern double GC_R;
+extern bool PURE_TABLE;
+extern double SEARCH_RADIUS;
+
 
 // declare the potential minimum last step
 double min_pot_last[3] ;
@@ -126,12 +132,14 @@ void SetParameter()
    const long   End_Step_Default = __INT_MAX__;
    const double End_T_Default    =  10;
 
-   if ( END_STEP < 0 ) {
+   if ( END_STEP < 0 ) 
+   {
       END_STEP = End_Step_Default;
       PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
-   if ( END_T < 0.0 ) {
+   if ( END_T < 0.0 ) 
+   {
       END_T = End_T_Default;
       PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
@@ -143,22 +151,27 @@ void SetParameter()
    // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
    // ********************************************************************************************************************************
    ReadPara->Add( "GC_SmallGas",             &GC_SmallGas,           1e-10,          0.,               NoMax_double      );
+   ReadPara->Add( "aaaaaa",                  &aaaaaa,                1e-10,          0.,               NoMax_double      ); // For testing
 
-   ReadPara->Add( "GC_POSX",                 &GC_xx,               NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "GC_POSY",                 &GC_yy,               NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "GC_POSZ",                 &GC_zz,               NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "GC_initial_R",            &GC_R,                  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "GC_MASS",                 &GC_MASS,               NoDef_double,  NoMin_double,     NoMax_double      );
    
-   ReadPara->Add( "FIX_CENTER",              &FixCenter,           Useless_bool,  Useless_bool,     Useless_bool      );
-   ReadPara->Add( "SEARCH_RADIUS",           &SearchRadius,        NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "FIX_CENTER",              &FixCenter,             Useless_bool,  Useless_bool,     Useless_bool      );
+   ReadPara->Add( "PURE_TABLE",              &PURE_TABLE,            Useless_bool,  Useless_bool,     Useless_bool      );
+   ReadPara->Add( "SEARCH_RADIUS",           &SearchRadius,          NoDef_double,  NoMin_double,     NoMax_double      );
    
-   ReadPara->Add( "HALO_TYPE",               HaloType,            "None",        Useless_str,   Useless_str          );
 
    ReadPara->Read( FileName );
    if ( MPI_Rank == 0)
    {
-   Aux_Message(stdout, "Setparameter(): %7.5f %7.5f %7.5f \n",GC_xx,GC_yy,GC_zz);
-   Aux_Message(stdout, "Setparameter(): %d %7.1f \n",FixCenter,SearchRadius);
-   Aux_Message(stdout, "Setparameter(): %s \n",HaloType);
+      Aux_Message( stdout, "=============================================================================\n" );
+      Aux_Message( stdout, "  test problem ID    = %d\n",     TESTPROB_ID );
+      Aux_Message( stdout, "  GC small Gas       = %13.5e\n", GC_SmallGas   ); 
+      Aux_Message( stdout, "  GC initial radius  = %13.5e\n", GC_R   ); 
+      Aux_Message( stdout, "  GC Mass            = %13.5e\n", GC_MASS   );
+      Aux_Message( stdout, "  Fix Center         = %d\n",     FixCenter );
+      Aux_Message( stdout, "  Pure Table         = %d\n",     PURE_TABLE );  
+      Aux_Message( stdout, "=============================================================================\n" );
    }
    delete ReadPara;
 

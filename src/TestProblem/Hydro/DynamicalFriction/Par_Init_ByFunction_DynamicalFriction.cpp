@@ -9,23 +9,24 @@ using namespace std;
 
 #ifdef MASSIVE_PARTICLES
 
-extern double GC_xx;
-extern double GC_yy;
-extern double GC_zz;
+//extern double GC_xx;
+//extern double GC_yy;
+//extern double GC_zz;
 
 static RandomNumber_t *RNG = NULL;
 
 static char Table_Name[MAX_STRING];
-static double GC_MASS;
-static double GC_POSX;
-static double GC_POSY;
-static double GC_POSZ;
-static double GC_VELX;
-static double GC_VELY;
-static double GC_VELZ;
+
+double GC_MASS;
+//static double GC_POSX;
+//static double GC_POSY;
+//static double GC_POSZ;
+//static double GC_VELX;
+//static double GC_VELY;
+//static double GC_VELZ;
 
 double GC_R;
-bool Pure_Table;
+bool PURE_TABLE;
 
 static char HaloType[MAX_STRING];
 double Halo_Rho0;
@@ -33,13 +34,13 @@ double Halo_Rs;
 double Halo_Rt;
 
 
-
+double aaaaaa;
 
 vector<double> GC_pos, GC_vel, Halo_vel;
 
 tuple<vector<double>, vector<double>, vector<double>> Calculate_IC( const char* HaloType, const double GC_MASS, const double GC_R,
 								    const double Halo_Rho0, const double Halo_Rs, const double Halo_Rt,
-								    const char* Table_Name, const bool Pure_Table);
+								    const char* Table_Name, const bool PURE_TABLE);
 
 //#include "global_var.h"
 
@@ -108,16 +109,16 @@ void Par_Init_ByFunction_DynamicalFriction( const long NPar_ThisRank, const long
     // ********************************************************************************************************************************
 
     // For GC
-       ReadPara->Add( "GC_MASS",                 &GC_MASS,               NoDef_double,  NoMin_double,     NoMax_double      );
-       ReadPara->Add( "GC_initial_R",            &GC_R,                  NoDef_double,  NoMin_double,     NoMax_double      );
+    //   ReadPara->Add( "GC_MASS",                 &GC_MASS,               NoDef_double,  NoMin_double,     NoMax_double      );
+    //   ReadPara->Add( "GC_initial_R",            &GC_R,                  NoDef_double,  NoMin_double,     NoMax_double      );
 
-       ReadPara->Add( "GC_POSX",                 &GC_POSX,               NoDef_double,  NoMin_double,     NoMax_double      );  
-       ReadPara->Add( "GC_POSY",                 &GC_POSY,               NoDef_double,  NoMin_double,     NoMax_double      );
-       ReadPara->Add( "GC_POSZ",                 &GC_POSZ,               NoDef_double,  NoMin_double,     NoMax_double      );
+     //  ReadPara->Add( "GC_POSX",                 &GC_POSX,               NoDef_double,  NoMin_double,     NoMax_double      );  
+     //  ReadPara->Add( "GC_POSY",                 &GC_POSY,               NoDef_double,  NoMin_double,     NoMax_double      );
+     //  ReadPara->Add( "GC_POSZ",                 &GC_POSZ,               NoDef_double,  NoMin_double,     NoMax_double      );
 
-       ReadPara->Add( "GC_VELX",                 &GC_VELX,               NoDef_double,  NoMin_double,     NoMax_double      );
-       ReadPara->Add( "GC_VELY",                 &GC_VELY,               NoDef_double,  NoMin_double,     NoMax_double      ); 
-       ReadPara->Add( "GC_VELZ",                 &GC_VELZ,               NoDef_double,  NoMin_double,     NoMax_double      );
+     //  ReadPara->Add( "GC_VELX",                 &GC_VELX,               NoDef_double,  NoMin_double,     NoMax_double      );
+      // ReadPara->Add( "GC_VELY",                 &GC_VELY,               NoDef_double,  NoMin_double,     NoMax_double      ); 
+     //  ReadPara->Add( "GC_VELZ",                 &GC_VELZ,               NoDef_double,  NoMin_double,     NoMax_double      );
     // Halo
        ReadPara->Add( "HALO_TYPE",               HaloType,            "None",        Useless_str,   Useless_str          );
        ReadPara->Add( "HALO_RHO_0",              &Halo_Rho0,             NoDef_double,  NoMin_double,     NoMax_double      );  
@@ -125,14 +126,14 @@ void Par_Init_ByFunction_DynamicalFriction( const long NPar_ThisRank, const long
        ReadPara->Add( "HALO_Rt",                 &Halo_Rt,               NoDef_double,  NoMin_double,     NoMax_double      );  
  
     // PURE_TABLE
-       ReadPara->Add( "PURE_TABLE",              &Pure_Table,            false,          Useless_bool,     Useless_bool      );  
+   //    ReadPara->Add( "PURE_TABLE",              &Pure_Table,            false,          Useless_bool,     Useless_bool      );  
        ReadPara->Add( "Density_Table_Name",      Table_Name,             "Profile_Table.txt",        Useless_str,   Useless_str          );
       
        ReadPara->Read( FileName );
 
     // call the function to calculate the velocity, generate density table,        
       
-       tie(GC_pos, GC_vel, Halo_vel) = Calculate_IC(HaloType, GC_MASS, GC_R,Halo_Rho0,Halo_Rs,Halo_Rt,Table_Name,Pure_Table);
+       tie(GC_pos, GC_vel, Halo_vel) = Calculate_IC(HaloType, GC_MASS, GC_R,Halo_Rho0,Halo_Rs,Halo_Rt,Table_Name,PURE_TABLE);
 
        Aux_Message(stdout, " GC_pos %f, %f, %f \n", GC_pos[0],GC_pos[1],GC_pos[2]);
        Aux_Message(stdout, " GC_vel %f, %f, %f \n", GC_vel[0],GC_vel[1],GC_vel[2]);
@@ -142,7 +143,7 @@ void Par_Init_ByFunction_DynamicalFriction( const long NPar_ThisRank, const long
 
 
 
-
+       Aux_Message(stdout, "TTTTTTTTTTT %f", aaaaaa);
 
 
 
@@ -238,11 +239,11 @@ void Par_Init_ByFunction_DynamicalFriction( const long NPar_ThisRank, const long
 
 // Broadcast the GC position from the root rank
 
-   MPI_Barrier(MPI_COMM_WORLD);
-   MPI_Bcast(&GC_xx,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
-   MPI_Bcast(&GC_yy,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
-   MPI_Bcast(&GC_zz,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
-   MPI_Barrier(MPI_COMM_WORLD);
+//   MPI_Barrier(MPI_COMM_WORLD);
+//   MPI_Bcast(&GC_xx,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+//  MPI_Bcast(&GC_yy,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+//   MPI_Bcast(&GC_zz,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+//   MPI_Barrier(MPI_COMM_WORLD);
    
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
