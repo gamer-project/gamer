@@ -29,10 +29,10 @@ def Halo_fitting_analytical_dens(r, rho_0, r_0, alpha, beta, gamma):
 
 ###################################################################################################################
 # parameters for the halo
-fitting_rho_0 = 1976031.787 *(Const_Msun/Const_kpc**3)/UNIT_D   # in code_density
-fitting_r_0   =       6.081 *(Const_kpc)/UNIT_L                 # in code_length
-fitting_alpha =       1.815
-fitting_beta  =       4.002
+fitting_rho_0 = 1633769.320 *(Const_Msun/Const_kpc**3)/UNIT_D   # in code_density
+fitting_r_0   =       4.461 *(Const_kpc)/UNIT_L                 # in code_length
+fitting_alpha =       4.800
+fitting_beta  =       3.098
 fitting_gamma =       0.000
 
 # parameters for the density profile sampling
