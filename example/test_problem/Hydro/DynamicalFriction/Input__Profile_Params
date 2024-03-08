@@ -1,0 +1,17 @@
+# Halo/Cloud Profile
+
+Cloud_CenterX             48E3                          # central x coordinate in [pc]
+Cloud_CenterY             48E3                          # central y coordinate in [pc]
+Cloud_CenterZ             48E3                          # central z coordinate in [pc]
+Cloud_MaxR                36000.0                       # Maximum radius for the particle 
+Cloud_Rho0                0.001976013787                # Maximum core density for the cloud
+Cloud_R0                  6081.0                        # Maximum core radius for the cloud/halo
+Cloud_MassProfNBin        1000                          # number of radial bins in the mass profile table [1000]
+Cloud_Par_Num_Ratio       1.0                           # particle number ratio [1.0]
+Cloud_RSeed               123                           # random seed for setting particle position and velocity (>=0) [123]
+
+Cloud_BulkVelX            0.000000                      # This will be updated by GAMER, so no adjustment needed
+Cloud_BulkVelY            -0.003605                     # This will be updated by GAMER, so no adjustment needed
+Cloud_BulkVelZ            0.000000                      # This will be updated by GAMER, so no adjustment needed 
+Cloud_Type	          Table                         # SHOULD NOT be modified, if one wants to change the halo/cloud type, please see "HALO_TYPE" [Table]
+
