@@ -899,6 +899,27 @@ void Init_ResetParameter()
 #  endif
 
 
+// OPT__CHECK_PRES_AFTER_FLU
+#  if ( MODEL == HYDRO )
+   if ( OPT__CHECK_PRES_AFTER_FLU < 0 )
+   {
+      if ( EOS == EOS_NUCLEAR  ||  EOS == EOS_TABULAR )
+      {
+         OPT__CHECK_PRES_AFTER_FLU = 1;
+
+         PRINT_RESET_PARA( OPT__CHECK_PRES_AFTER_FLU, FORMAT_INT, "" );
+      }
+
+      else
+      {
+         OPT__CHECK_PRES_AFTER_FLU = 0;
+
+         PRINT_RESET_PARA( OPT__CHECK_PRES_AFTER_FLU, FORMAT_INT, "" );
+      }
+   }
+#  endif
+
+
 #  if ( MODEL == HYDRO )
    if      ( MU_NORM < 0.0 )
    {
