@@ -49,7 +49,7 @@ for ds in ts.piter():
 
             # decide the center
             if center_mode == 'm':
-               center = ds.all_data().quantities.max_location(field)[1:]
+               center = ds.all_data().quantities.min_location(('gamer','Pote'))[1:]
             elif center_mode == 'c':
                center = ds.domain_center
 

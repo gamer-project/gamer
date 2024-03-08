@@ -50,8 +50,8 @@ for ds in ts.piter():
 
    for field in fields_list:
 
-      # set the center as the position of the maximum density
-      center_pos  = ds.all_data().quantities.max_location(field)[1:]
+      # set the center as the position of the gravitational potential minimum
+      center_pos  = ds.all_data().quantities.min_location(('gamer','Pote'))[1:]
       sp          = ds.sphere( center_pos, r_sphere )
 
       # ProfilePlot

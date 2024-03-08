@@ -61,8 +61,8 @@ ts = yt.DatasetSeries([ prefix+'Data_%06d'%idx for idx in range(idx_start, idx_e
 for ds in ts.piter():
    for field_mass in [('gamer', 'TotCellMass')]:
 
-      # set the center as the position of the maximum density
-      center_pos  = ds.all_data().quantities.max_location(('gamer', 'TotDens'))[1:]
+      # set the center as the position of the gravitational potential minimum
+      center_pos  = ds.all_data().quantities.min_location(('gamer', 'Pote'))[1:]
       sp          = ds.sphere( center_pos, r_sphere )
 
       # create the arrays of profile
