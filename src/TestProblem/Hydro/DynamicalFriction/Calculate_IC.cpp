@@ -144,27 +144,27 @@ tuple<vector<double>, vector<double>, vector<double>> Calculate_IC( const char* 
 
 // IF the halotype requires more parameters, then read the parameters in another file 
 
-   if (strcmp(HaloType, "DoublePowerLaw") == 0) {	
-   Aux_Message(stdout, "Table Name is %s \n", Table_Name);
-   
-   const char* FileName = "Input__Profile_Params";
-   ReadPara_t *ReadPara  = new ReadPara_t;
-   // ********************************************************************************************************************************
-   // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
-   // ********************************************************************************************************************************
-   ReadPara->Add( "Halo_Profile_Param_a",    &Halo_Profile_Param_a,    0.0,  NoMin_double,          NoMax_double      );
-
-   ReadPara->Add( "Halo_Profile_Param_b",    &Halo_Profile_Param_b,    0.0,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Halo_Profile_Param_c",    &Halo_Profile_Param_c,    0.0,  NoMin_double,     NoMax_double      );
+//   if (strcmp(HaloType, "DoublePowerLaw") == 0) {	
+//   Aux_Message(stdout, "Table Name is %s \n", Table_Name);
+//   
+//   const char* FileName = "Input__Profile_Params";
+//   ReadPara_t *ReadPara  = new ReadPara_t;
+//   // ********************************************************************************************************************************
+//   // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
+//   // ********************************************************************************************************************************
+//   ReadPara->Add( "Halo_Profile_Param_a",    &Halo_Profile_Param_a,    0.0,  NoMin_double,          NoMax_double      );
+//
+//   ReadPara->Add( "Halo_Profile_Param_b",    &Halo_Profile_Param_b,    0.0,  NoMin_double,     NoMax_double      );
+//   ReadPara->Add( "Halo_Profile_Param_c",    &Halo_Profile_Param_c,    0.0,  NoMin_double,     NoMax_double      );
 //   ReadPara->Add( "HALO_TYPE",               HaloType,            "None",     Useless_str,   Useless_str          );
 
-   ReadPara->Read( FileName );
+//   ReadPara->Read( FileName );
    if ( MPI_Rank == 0)
    {
    Aux_Message(stdout, "Input_Profile_Params: %7.5f %7.5f %7.5f \n",Halo_Profile_Param_a,Halo_Profile_Param_b,Halo_Profile_Param_c);
    }
-   delete ReadPara;
-}
+//   delete ReadPara;
+//}
 
 
    //double mass = clustermass_soft(Halo_Rho0, Halo_Rs, 10e3 , HaloType, GC_R, Halo_Rt, GC_R);

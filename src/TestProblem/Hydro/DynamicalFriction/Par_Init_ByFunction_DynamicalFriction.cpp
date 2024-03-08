@@ -9,32 +9,22 @@ using namespace std;
 
 #ifdef MASSIVE_PARTICLES
 
-//extern double GC_xx;
-//extern double GC_yy;
-//extern double GC_zz;
-
 static RandomNumber_t *RNG = NULL;
 
-static char Table_Name[MAX_STRING];
+//static char Table_Name[MAX_STRING];
 
 double GC_MASS;
-//static double GC_POSX;
-//static double GC_POSY;
-//static double GC_POSZ;
-//static double GC_VELX;
-//static double GC_VELY;
-//static double GC_VELZ;
-
 double GC_R;
 bool PURE_TABLE;
 
-static char HaloType[MAX_STRING];
+//static char HaloType[MAX_STRING];
+extern const char* HaloType_g;
+extern const char* TableName_g;
 double Halo_Rho0;
 double Halo_Rs;
 double Halo_Rt;
 
 
-double aaaaaa;
 
 vector<double> GC_pos, GC_vel, Halo_vel;
 
@@ -101,54 +91,25 @@ void Par_Init_ByFunction_DynamicalFriction( const long NPar_ThisRank, const long
    if ( MPI_Rank == 0 ) {
       
 
-// load run-time parameters
-       const char* FileName = "Input__TestProb";
-       ReadPara_t *ReadPara  = new ReadPara_t;
-    // ********************************************************************************************************************************
-    // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
-    // ********************************************************************************************************************************
+       Aux_Message(stdout, "%f, 999999999 %s \n", GC_MASS,HaloType_g);
 
-    // For GC
-    //   ReadPara->Add( "GC_MASS",                 &GC_MASS,               NoDef_double,  NoMin_double,     NoMax_double      );
-    //   ReadPara->Add( "GC_initial_R",            &GC_R,                  NoDef_double,  NoMin_double,     NoMax_double      );
+    // call the function to calculate the velocity and generate density table,        
+       Aux_Message(stdout,"GC_MASS %13.6e \n", GC_MASS); 
+       Aux_Message(stdout,"GC_R %13.6e \n", GC_R);
+       Aux_Message(stdout,"Halo_Rho0 %13.6e \n", Halo_Rho0);
+       Aux_Message(stdout,"Halo_Rs %13.6e \n", Halo_Rs);
 
-     //  ReadPara->Add( "GC_POSX",                 &GC_POSX,               NoDef_double,  NoMin_double,     NoMax_double      );  
-     //  ReadPara->Add( "GC_POSY",                 &GC_POSY,               NoDef_double,  NoMin_double,     NoMax_double      );
-     //  ReadPara->Add( "GC_POSZ",                 &GC_POSZ,               NoDef_double,  NoMin_double,     NoMax_double      );
-
-     //  ReadPara->Add( "GC_VELX",                 &GC_VELX,               NoDef_double,  NoMin_double,     NoMax_double      );
-      // ReadPara->Add( "GC_VELY",                 &GC_VELY,               NoDef_double,  NoMin_double,     NoMax_double      ); 
-     //  ReadPara->Add( "GC_VELZ",                 &GC_VELZ,               NoDef_double,  NoMin_double,     NoMax_double      );
-    // Halo
-       ReadPara->Add( "HALO_TYPE",               HaloType,            "None",        Useless_str,   Useless_str          );
-       ReadPara->Add( "HALO_RHO_0",              &Halo_Rho0,             NoDef_double,  NoMin_double,     NoMax_double      );  
-       ReadPara->Add( "HALO_Rs",                 &Halo_Rs,               NoDef_double,  NoMin_double,     NoMax_double      );  
-       ReadPara->Add( "HALO_Rt",                 &Halo_Rt,               NoDef_double,  NoMin_double,     NoMax_double      );  
+       Aux_Message(stdout,"Halo_Rt %13.6e \n", Halo_Rt);
  
-    // PURE_TABLE
-   //    ReadPara->Add( "PURE_TABLE",              &Pure_Table,            false,          Useless_bool,     Useless_bool      );  
-       ReadPara->Add( "Density_Table_Name",      Table_Name,             "Profile_Table.txt",        Useless_str,   Useless_str          );
-      
-       ReadPara->Read( FileName );
-
-    // call the function to calculate the velocity, generate density table,        
-      
-       tie(GC_pos, GC_vel, Halo_vel) = Calculate_IC(HaloType, GC_MASS, GC_R,Halo_Rho0,Halo_Rs,Halo_Rt,Table_Name,PURE_TABLE);
+       Aux_Message(stdout,"Table_Name  %s \n", TableName_g);
+       
+       Aux_Message(stdout,"PURE_TABLE %d \n", PURE_TABLE);
+       tie(GC_pos, GC_vel, Halo_vel) = Calculate_IC(HaloType_g, GC_MASS, GC_R,Halo_Rho0,Halo_Rs,Halo_Rt,TableName_g,PURE_TABLE);
 
        Aux_Message(stdout, " GC_pos %f, %f, %f \n", GC_pos[0],GC_pos[1],GC_pos[2]);
        Aux_Message(stdout, " GC_vel %f, %f, %f \n", GC_vel[0],GC_vel[1],GC_vel[2]);
        Aux_Message(stdout, " Halo_vel %f, %f, %f \n", Halo_vel[0],Halo_vel[1],Halo_vel[2]);
-       Aux_Message(stdout, "%f, %s \n", GC_MASS,HaloType);
-
-
-
-
-       Aux_Message(stdout, "TTTTTTTTTTT %f", aaaaaa);
-
-
-
-
-
+       Aux_Message(stdout, "%f, 999999999 %s \n", GC_MASS,HaloType_g);
 
 
 //    allocate memory for particle attribute arrays
@@ -161,11 +122,11 @@ void Par_Init_ByFunction_DynamicalFriction( const long NPar_ThisRank, const long
       ParData_AllRank[PAR_VELZ] = new real [NPar_AllRank];
       ParData_AllRank[PAR_TYPE] = new real [NPar_AllRank];
 //    input filenames as parameters into Filename_Loader
-      Filename_Loader.Read_Filenames( "Input__TestProb" );
+      Filename_Loader.Read_Filenames( "Input__Profile_Params" );
       long Par_Idx0 = 0;
 
 
-//       initialize Par_EquilibriumIC for each cloud // There is one cloud only, we're just using the ParticleEquilibriem Testprob and modify it
+//    initialize Par_EquilibriumIC for each cloud // There is one cloud only, we're just using the ParticleEquilibriem Testprob and modify it
          Par_EquilibriumIC Cloud_Constructor;
          Cloud_Constructor.Load_Physical_Params( Filename_Loader.filenames, 0, NPar_AllRank-1 );
          Cloud_Constructor.Init();
@@ -188,13 +149,6 @@ void Par_Init_ByFunction_DynamicalFriction( const long NPar_ThisRank, const long
 	for (int k=0;k<Par_Idx0;k++)ParData_AllRank[PAR_TYPE][k]=PTYPE_GENERIC_MASSIVE;    
 
 
-//       ParData_AllRank[PAR_MASS][Par_Idx0] = GC_MASS;
-//       ParData_AllRank[PAR_POSX][Par_Idx0] = GC_POSX;
-//       ParData_AllRank[PAR_POSY][Par_Idx0] = GC_POSY;
-//       ParData_AllRank[PAR_POSZ][Par_Idx0] = GC_POSZ;
-//       ParData_AllRank[PAR_VELX][Par_Idx0] = GC_VELX;
-//       ParData_AllRank[PAR_VELY][Par_Idx0] = GC_VELY;
-//       ParData_AllRank[PAR_VELZ][Par_Idx0] = GC_VELZ;
        ParData_AllRank[PAR_MASS][Par_Idx0] = GC_MASS;
        ParData_AllRank[PAR_POSX][Par_Idx0] = GC_pos[0];
        ParData_AllRank[PAR_POSY][Par_Idx0] = GC_pos[1];
@@ -203,14 +157,6 @@ void Par_Init_ByFunction_DynamicalFriction( const long NPar_ThisRank, const long
        ParData_AllRank[PAR_VELY][Par_Idx0] = GC_vel[1];
        ParData_AllRank[PAR_VELZ][Par_Idx0] = GC_vel[2];
        ParData_AllRank[PAR_TYPE][Par_Idx0] = PTYPE_GC;
-       // Broadcast the GC information from the root rank
-       //GC_xx = GC_POSX;
-       //GC_yy = GC_POSY;
-       //GC_zz = GC_POSZ;
-
-
-      
-
        
 
            
@@ -235,16 +181,7 @@ void Par_Init_ByFunction_DynamicalFriction( const long NPar_ThisRank, const long
       for (int v=0; v<PAR_NATT_TOTAL; v++){
          delete [] ParData_AllRank[v];
       }
-   }
-
-// Broadcast the GC position from the root rank
-
-//   MPI_Barrier(MPI_COMM_WORLD);
-//   MPI_Bcast(&GC_xx,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
-//  MPI_Bcast(&GC_yy,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
-//   MPI_Bcast(&GC_zz,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
-//   MPI_Barrier(MPI_COMM_WORLD);
-   
+   } 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 

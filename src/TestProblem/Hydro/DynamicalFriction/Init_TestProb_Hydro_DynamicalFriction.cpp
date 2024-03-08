@@ -13,19 +13,23 @@ double GC_SmallGas;
 bool FixCenter;
 double SearchRadius;
 
-// global variables
-//double GC_xx;
-//double GC_yy;
-//double GC_zz;
-
-//static char HaloType[MAX_STRING];
-extern double aaaaaa;
 extern double GC_MASS;
 extern double GC_R;
 extern bool PURE_TABLE;
 extern double SEARCH_RADIUS;
+extern double Halo_Rho0;
+extern double Halo_Rs;
+extern double Halo_Rt;
+
+extern double Halo_Profile_Param_a;
+extern double Halo_Profile_Param_b;
+extern double Halo_Profile_Param_c;
 
 
+static char HaloType[MAX_STRING];
+static char TableName[MAX_STRING];
+extern const char* HaloType_g = nullptr;
+extern const char* TableName_g = nullptr;
 // declare the potential minimum last step
 double min_pot_last[3] ;
 
@@ -151,14 +155,22 @@ void SetParameter()
    // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
    // ********************************************************************************************************************************
    ReadPara->Add( "GC_SmallGas",             &GC_SmallGas,           1e-10,          0.,               NoMax_double      );
-   ReadPara->Add( "aaaaaa",                  &aaaaaa,                1e-10,          0.,               NoMax_double      ); // For testing
 
    ReadPara->Add( "GC_initial_R",            &GC_R,                  NoDef_double,  NoMin_double,     NoMax_double      );
    ReadPara->Add( "GC_MASS",                 &GC_MASS,               NoDef_double,  NoMin_double,     NoMax_double      );
    
    ReadPara->Add( "FIX_CENTER",              &FixCenter,             Useless_bool,  Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Density_Table_Name",      TableName,               "None",        Useless_str,   Useless_str          );
    ReadPara->Add( "PURE_TABLE",              &PURE_TABLE,            Useless_bool,  Useless_bool,     Useless_bool      );
    ReadPara->Add( "SEARCH_RADIUS",           &SearchRadius,          NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "HALO_TYPE",               HaloType,               "None",        Useless_str,   Useless_str          );
+   ReadPara->Add( "HALO_RHO_0",              &Halo_Rho0,             NoDef_double,  NoMin_double,     NoMax_double      );  
+   ReadPara->Add( "HALO_Rs",                 &Halo_Rs,               NoDef_double,  NoMin_double,     NoMax_double      );  
+   ReadPara->Add( "HALO_Rt",                 &Halo_Rt,               NoDef_double,  NoMin_double,     NoMax_double      );  
+   ReadPara->Add( "Halo_Profile_Param_a",    &Halo_Profile_Param_a,  NoDef_double,  NoMin_double,          NoMax_double      );
+
+   ReadPara->Add( "Halo_Profile_Param_b",    &Halo_Profile_Param_b,  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Halo_Profile_Param_c",    &Halo_Profile_Param_c,  NoDef_double,  NoMin_double,     NoMax_double      );
    
 
    ReadPara->Read( FileName );
@@ -171,10 +183,20 @@ void SetParameter()
       Aux_Message( stdout, "  GC Mass            = %13.5e\n", GC_MASS   );
       Aux_Message( stdout, "  Fix Center         = %d\n",     FixCenter );
       Aux_Message( stdout, "  Pure Table         = %d\n",     PURE_TABLE );  
+      Aux_Message( stdout, "  Halo Type          = %s\n",     HaloType );  
+      Aux_Message( stdout, "  Density Table Name = %s\n",     TableName );
+      Aux_Message( stdout, "  HALO_RHO_0         = %13.5e\n", Halo_Rho0   );
+      Aux_Message( stdout, "  HALO_Rs            = %13.5e\n", Halo_Rs   );
+      Aux_Message( stdout, "  HALO_Rt            = %13.5e\n", Halo_Rt   );
+      Aux_Message( stdout, "  Halo_Profle_Param_a= %13.5f\n", Halo_Profile_Param_a   );
+      Aux_Message( stdout, "  Halo_Profle_Param_b= %13.5f\n", Halo_Profile_Param_b   );
+      Aux_Message( stdout, "  Halo_Profle_Param_c= %13.5f\n", Halo_Profile_Param_c   );
       Aux_Message( stdout, "=============================================================================\n" );
    }
    delete ReadPara;
-
+   HaloType_g = HaloType;
+   TableName_g = TableName;
+   //    Aux_Message(stdout, "88888899999 %s \n", HaloType_g);
 } // FUNCTION : SetParameter
 
 
@@ -355,6 +377,7 @@ void Init_TestProb_Hydro_DynamicalFriction()
 #  if ( MODEL == HYDRO )
 // set the problem-specific runtime parameters
    SetParameter();
+   const char* HaloType_g;
    Init_Function_User_Ptr  = SetGridIC;
    Aux_Record_User_Ptr     = Aux_Record_User_DynamicalFriction;
 //   Init_User_Ptr	   = Init_User_DynamicalFriction;
