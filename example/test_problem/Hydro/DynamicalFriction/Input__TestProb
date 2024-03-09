@@ -19,7 +19,6 @@ Halo_Profile_Param_b    4.002
 Halo_Profile_Param_c    0.0
 
 PURE_TABLE            0                             #* Determine whether using (1) to create the table or using user specified table to calculate initial condition [0]
-Density_Table_Name     Profile_Table.txt #+ The table only contains radius and density for sumulation need
 
 # (2) GC/Massive Object Parameters
 GC_MASS               1.0e7                        #* The Global cluster (Massive object) mass [Msun][0.75e6]
@@ -30,5 +29,3 @@ GC_initial_R          7.5e3			    #* The initial radius for GC (Massive object) 
 GC_SmallGas           1e-10                         #*The maximum tolerance gas density for the simulation [1e-10]
 ParEqmIC_Params_Filenames  Input__Profile_Params    #!The filenames of the cloud info (which wwe want to set the Equilibrium IC)
 ParEqmIC_Cloud_Num    1                             #!total number of cloud
-AddExtPot             0                             #!whether to add an external potential table [0]
-ExtPot_Table_Name     NONE                          #!External potential table filename.

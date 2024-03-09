@@ -11,29 +11,23 @@ using namespace std;
 
 static RandomNumber_t *RNG = NULL;
 
-//static char Table_Name[MAX_STRING];
 
 double GC_MASS;
 double GC_R;
 bool PURE_TABLE;
 
-//static char HaloType[MAX_STRING];
-extern const char* HaloType_g;
-extern const char* TableName_g;
 double Halo_Rho0;
 double Halo_Rs;
 double Halo_Rt;
 
-
+extern const char* HaloType_g;
+extern const char* TableName_g;
 
 vector<double> GC_pos, GC_vel, Halo_vel;
 
 tuple<vector<double>, vector<double>, vector<double>> Calculate_IC( const char* HaloType, const double GC_MASS, const double GC_R,
 								    const double Halo_Rho0, const double Halo_Rs, const double Halo_Rt,
 								    const char* Table_Name, const bool PURE_TABLE);
-
-//#include "global_var.h"
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Init_ByFunction_DynamicalFriction
 // Description :  User-specified function to initialize particle attributes
@@ -78,38 +72,34 @@ void Par_Init_ByFunction_DynamicalFriction( const long NPar_ThisRank, const long
 // define the particle attribute arrays
    real *ParData_AllRank[PAR_NATT_TOTAL];
    real *new_ParData_AllRank[PAR_NATT_TOTAL];
-   for (int v=0; v<PAR_NATT_TOTAL; v++){
-         ParData_AllRank[v] = NULL;
-         new_ParData_AllRank[v] = NULL;}
+   for (int v=0 ; v<PAR_NATT_TOTAL; v++)
+   {
+      ParData_AllRank[v] = NULL;
+      new_ParData_AllRank[v] = NULL;
+   }
 
 
 // define the particle IC constructor
    Par_EquilibriumIC Filename_Loader;
 
-
 // only the master rank will construct the initial condition
-   if ( MPI_Rank == 0 ) {
-      
-
-       Aux_Message(stdout, "%f, 999999999 %s \n", GC_MASS,HaloType_g);
-
+   if ( MPI_Rank == 0 )
+   { 
     // call the function to calculate the velocity and generate density table,        
-       Aux_Message(stdout,"GC_MASS %13.6e \n", GC_MASS); 
-       Aux_Message(stdout,"GC_R %13.6e \n", GC_R);
-       Aux_Message(stdout,"Halo_Rho0 %13.6e \n", Halo_Rho0);
-       Aux_Message(stdout,"Halo_Rs %13.6e \n", Halo_Rs);
-
-       Aux_Message(stdout,"Halo_Rt %13.6e \n", Halo_Rt);
- 
-       Aux_Message(stdout,"Table_Name  %s \n", TableName_g);
-       
-       Aux_Message(stdout,"PURE_TABLE %d \n", PURE_TABLE);
-       tie(GC_pos, GC_vel, Halo_vel) = Calculate_IC(HaloType_g, GC_MASS, GC_R,Halo_Rho0,Halo_Rs,Halo_Rt,TableName_g,PURE_TABLE);
-
-       Aux_Message(stdout, " GC_pos %f, %f, %f \n", GC_pos[0],GC_pos[1],GC_pos[2]);
-       Aux_Message(stdout, " GC_vel %f, %f, %f \n", GC_vel[0],GC_vel[1],GC_vel[2]);
-       Aux_Message(stdout, " Halo_vel %f, %f, %f \n", Halo_vel[0],Halo_vel[1],Halo_vel[2]);
-       Aux_Message(stdout, "%f, 999999999 %s \n", GC_MASS,HaloType_g);
+      tie(GC_pos, GC_vel, Halo_vel) = Calculate_IC(HaloType_g, GC_MASS, GC_R,Halo_Rho0,Halo_Rs,Halo_Rt,TableName_g,PURE_TABLE);
+      
+      Aux_Message( stdout, "=============================================================================\n" );
+      Aux_Message( stdout, "Initial condition : \n");
+      Aux_Message( stdout, "GC Position X       = %15.5e \n", GC_pos[0]);
+      Aux_Message( stdout, "GC Position Y       = %15.5e \n", GC_pos[1]);
+      Aux_Message( stdout, "GC Position Z       = %15.5e \n", GC_pos[2]);
+      Aux_Message( stdout, "GC Velocity X       = %15.5e \n", GC_vel[0]);
+      Aux_Message( stdout, "GC Velocity Y       = %15.5e \n", GC_vel[1]);
+      Aux_Message( stdout, "GC Velocity Z       = %15.5e \n", GC_vel[2]);
+      Aux_Message( stdout, "Halo Velocity X     = %15.5e \n", Halo_vel[0]);
+      Aux_Message( stdout, "Halo Velocity Y     = %15.5e \n", Halo_vel[1]);
+      Aux_Message( stdout, "Halo Velocity Z     = %15.5e \n", Halo_vel[2]);
+      Aux_Message( stdout, "=============================================================================\n" );
 
 
 //    allocate memory for particle attribute arrays
@@ -122,54 +112,51 @@ void Par_Init_ByFunction_DynamicalFriction( const long NPar_ThisRank, const long
       ParData_AllRank[PAR_VELZ] = new real [NPar_AllRank];
       ParData_AllRank[PAR_TYPE] = new real [NPar_AllRank];
 //    input filenames as parameters into Filename_Loader
-      Filename_Loader.Read_Filenames( "Input__Profile_Params" );
+      Filename_Loader.Read_Filenames( "Input__TestProb" );
       long Par_Idx0 = 0;
 
 
-//    initialize Par_EquilibriumIC for each cloud // There is one cloud only, we're just using the ParticleEquilibriem Testprob and modify it
+//       initialize Par_EquilibriumIC for each cloud // There is one cloud only, we're just using the ParticleEquilibriem Testprob and modify it
          Par_EquilibriumIC Cloud_Constructor;
          Cloud_Constructor.Load_Physical_Params( Filename_Loader.filenames, 0, NPar_AllRank-1 );
          Cloud_Constructor.Init();
 
-//      check whether the particle number of each cloud is reasonable
-        if ( (Par_Idx0 + Cloud_Constructor.params.Cloud_Par_Num) > NPar_AllRank-1 ) {
-           Aux_Error( ERROR_INFO, "particle number doesn't match (%ld + %ld = %ld > %ld) !!\n",
-                       Par_Idx0, Cloud_Constructor.params.Cloud_Par_Num, Par_Idx0+Cloud_Constructor.params.Cloud_Par_Num, NPar_AllRank-1 );
-        }
+//       check whether the particle number of each cloud is reasonable
+         if ( (Par_Idx0 + Cloud_Constructor.params.Cloud_Par_Num) > NPar_AllRank-1 )
+         {
+            Aux_Error( ERROR_INFO, "particle number doesn't match (%ld + %ld = %ld > %ld) !!\n",
+                        Par_Idx0, Cloud_Constructor.params.Cloud_Par_Num, Par_Idx0+Cloud_Constructor.params.Cloud_Par_Num, NPar_AllRank-1 );
+         }
    
 //       set an equilibrium initial condition for each cloud
          Cloud_Constructor.Par_SetEquilibriumIC( ParData_AllRank[PAR_MASS], ParData_AllRank+PAR_POSX, ParData_AllRank+PAR_VELX, Par_Idx0 );
 
-   
-//	set the particle type of the cloud
-
 //       update the particle index offset for the next cloud
          Par_Idx0 += Cloud_Constructor.params.Cloud_Par_Num; 
-//      set the particle type of the cloud
-	for (int k=0;k<Par_Idx0;k++)ParData_AllRank[PAR_TYPE][k]=PTYPE_GENERIC_MASSIVE;    
+//       set the particle type of the cloud
+	 for (int k=0;k<Par_Idx0;k++)ParData_AllRank[PAR_TYPE][k]=PTYPE_GENERIC_MASSIVE;    
 
 
-       ParData_AllRank[PAR_MASS][Par_Idx0] = GC_MASS;
-       ParData_AllRank[PAR_POSX][Par_Idx0] = GC_pos[0];
-       ParData_AllRank[PAR_POSY][Par_Idx0] = GC_pos[1];
-       ParData_AllRank[PAR_POSZ][Par_Idx0] = GC_pos[2];
-       ParData_AllRank[PAR_VELX][Par_Idx0] = GC_vel[0];
-       ParData_AllRank[PAR_VELY][Par_Idx0] = GC_vel[1];
-       ParData_AllRank[PAR_VELZ][Par_Idx0] = GC_vel[2];
-       ParData_AllRank[PAR_TYPE][Par_Idx0] = PTYPE_GC;
+         ParData_AllRank[PAR_MASS][Par_Idx0] = GC_MASS;
+         ParData_AllRank[PAR_POSX][Par_Idx0] = GC_pos[0];
+         ParData_AllRank[PAR_POSY][Par_Idx0] = GC_pos[1];
+         ParData_AllRank[PAR_POSZ][Par_Idx0] = GC_pos[2];
+         ParData_AllRank[PAR_VELX][Par_Idx0] = GC_vel[0];
+         ParData_AllRank[PAR_VELY][Par_Idx0] = GC_vel[1];
+         ParData_AllRank[PAR_VELZ][Par_Idx0] = GC_vel[2];
+         ParData_AllRank[PAR_TYPE][Par_Idx0] = PTYPE_GC;
        
 
            
 
-  } // if ( MPI_Rank == 0 )
+   } // if ( MPI_Rank == 0 )
 
 // send particle attributes from the master rank to all ranks
    Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL|_PAR_TYPE, ParData_AllRank, AllAttribute );
 
-
 // synchronize all particles to the physical time on the base level
-// and assign particle type
-   for (long p=0; p<NPar_ThisRank; p++) {
+   for (long p=0; p<NPar_ThisRank; p++)
+   {
       ParTime[p] = Time[0];
    }
 
@@ -178,7 +165,8 @@ void Par_Init_ByFunction_DynamicalFriction( const long NPar_ThisRank, const long
    if ( MPI_Rank == 0 )
    {
       delete RNG;
-      for (int v=0; v<PAR_NATT_TOTAL; v++){
+      for (int v=0; v<PAR_NATT_TOTAL; v++)
+      {
          delete [] ParData_AllRank[v];
       }
    } 
