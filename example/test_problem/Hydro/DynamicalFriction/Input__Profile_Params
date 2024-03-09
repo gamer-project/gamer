@@ -15,6 +15,4 @@ Cloud_BulkVelY            -0.003605                     # This will be updated b
 Cloud_BulkVelZ            0.000000                      # This will be updated by GAMER, so no adjustment needed 
 Cloud_Type	          Table                         # SHOULD NOT be modified, if one wants to change the halo/cloud type, please see "HALO_TYPE" [Table]
 
-AddExtPot                 0                             #!whether to add an external potential table [0]
-ExtPot_Table_Name         NONE                          #!External potential table filename.
 Density_Table_Name        Profile_Table  #+ The table only contains radius and density for sumulation need

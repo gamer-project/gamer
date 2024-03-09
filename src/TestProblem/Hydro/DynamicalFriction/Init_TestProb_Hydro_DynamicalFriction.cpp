@@ -44,8 +44,6 @@ void Par_Init_ByFunction_DynamicalFriction( const long NPar_ThisRank, const long
 
 #endif
 
-// external potential routines
-void Init_ExtPot_DynamicalFriction();
 
 void Mis_UserWorkBeforeNextLevel_Find_GC( const int lv, const double TimeNew, const double TimeOld, const double dt );
 
@@ -280,9 +278,6 @@ void Aux_Record_User_DynamicalFriction()
    };
 
 // B. Find the GC's position
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// !!!!! This routine assume there is only one GC particle !!!!!
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    double GC_x, GC_y, GC_z;
    
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++) {
@@ -334,24 +329,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[MOMX] = 0.0;
    fluid[MOMY] = 0.0;
    fluid[MOMZ] = 0.0;
-#  ifdef GRAVITY
    fluid[ENGY] = GC_SmallGas;
-#  endif
 
 // just set all passive scalars as zero
    for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = 0.0;
 
 } // FUNCTION : SetGridIC
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -380,16 +363,11 @@ void Init_TestProb_Hydro_DynamicalFriction()
 #  if ( MODEL == HYDRO )
 // set the problem-specific runtime parameters
    SetParameter();
-   const char* HaloType_g;
+//   const char* HaloType_g;
    Init_Function_User_Ptr  = SetGridIC;
    Aux_Record_User_Ptr     = Aux_Record_User_DynamicalFriction;
-//   Init_User_Ptr	   = Init_User_DynamicalFriction;
 #  ifdef MASSIVE_PARTICLES
    Par_Init_ByFunction_Ptr = Par_Init_ByFunction_DynamicalFriction;
-#  endif
-#  ifdef GRAVITY
-   if ( OPT__EXT_POT == EXT_POT_FUNC )
-   Init_ExtPot_Ptr         = Init_ExtPot_DynamicalFriction;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 
