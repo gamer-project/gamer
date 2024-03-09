@@ -813,8 +813,13 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 //                   UNPHY_MODE_PASSIVE_ONLY : Check if the input passive scalars are unphysical
 //                2. For UNPHY_MODE_CONS with SRHD, we also check if Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298"
 //                   has a positive root
-//                3. Mass and total energy density must be postive; allow pressure to be zero or even slightly
-//                   negative to tolerate round-off errors
+//                3. For UNPHY_MODE_CONS:
+//                   - Mass density and total energy density must be postive
+//                   - Internal energy can be zero or even slightly negative if it's within machine precision
+//                   - Pressure cannot be negative (only for non-trivial EoS)
+//                   For UNPHY_MODE_PRIM:
+//                   - Mass density must be postive
+//                   - Pressure cannot be negative
 //
 // Parameter   :  Mode              : UNPHY_MODE_SING, UNPHY_MODE_CONS, UNPHY_MODE_PRIM, UNPHY_MODE_PASSIVE_ONLY
 //                                    --> See "Note" for details
@@ -912,7 +917,7 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const ch
          const real Temp         = SQRT( E_D*E_D + (real)2.0*E_D );
          const real Discriminant = ( Temp + M_D )*( Temp - M_D ); // replace a^2-b^2 with (a+b)*(a-b) to alleviate a catastrophic cancellation
 
-         if ( Discriminant <= (real)0.0  ||  Discriminant != Discriminant )
+         if ( Discriminant <= (real)0.0  ||  Discriminant > HUGE_NUMBER  ||  Discriminant != Discriminant )
             UnphyCell = true;
 
 #        else // #ifdef SRHD
@@ -928,15 +933,15 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const ch
             UnphyCell = true;
 
 //       check pressure for non-trivial EoS (which cannot be negative)
-//       --> for trivial EoS like EOS_GAMMA, checking internal energy is sufficient (and pressure can also be
-//           slightly negative if it's within machine precision)
+//       --> for trivial EoS like EOS_GAMMA, checking internal energy is sufficient and pressure can be
+//           slightly negative if it's within machine precision
 #        if ( EOS != EOS_GAMMA )
          const real Pres = EoS_DensEint2Pres( Fields[DENS], Eint, Fields+NCOMP_FLUID,
                                               EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
          if ( Pres < (real)0.0  ||  Pres > HUGE_NUMBER  ||  Pres != Pres )
             UnphyCell = true;
-#        endif // EOS
+#        endif // #if ( EOS != EOS_GAMMA )
 #        endif // #ifndef BAROTROPIC_EOS
 
 #        endif // #ifdef SRHD ... else ...
@@ -1002,7 +1007,7 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const ch
                   UnphyCell = true;
             }
 
-//          check pressure (which cannot be negative; a pressure floor should be applied in advance)
+//          check pressure (which cannot be negative; a pressure floor should be applied prior to calling this routine)
             else if ( v == ENGY )
             {
                if ( Fields[ENGY] < (real)0.0  ||  Fields[ENGY] > HUGE_NUMBER )
