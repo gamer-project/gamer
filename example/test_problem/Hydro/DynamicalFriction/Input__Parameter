@@ -19,8 +19,8 @@ NX0_TOT_X                     256          # number of base-level cells along x
 NX0_TOT_Y                     256          # number of base-level cells along y
 NX0_TOT_Z                     256          # number of base-level cells along z all 720 2023/10/09
 OMP_NTHREAD                   1           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
-END_T                         12000        # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
-END_STEP                      20           # end step (<0=auto -> must be set by test problems or restart) [-1]
+END_T                         -1        # end physical time (<0=auto -> must be set by test problems or restart) [-1]
+END_STEP                      -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
 
 
 # test problems

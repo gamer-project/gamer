@@ -134,7 +134,7 @@ void SetParameter()
 {
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default    =  10;
+   const double End_T_Default    =  14000;
 
    if ( END_STEP < 0 ) 
    {
@@ -331,9 +331,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 {
 
    fluid[DENS] = GC_SmallGas;
-   fluid[MOMX] = 0;
-   fluid[MOMY] = 0;
-   fluid[MOMZ] = 0;
+   fluid[MOMX] = 0.0;
+   fluid[MOMY] = 0.0;
+   fluid[MOMZ] = 0.0;
 #  ifdef GRAVITY
    fluid[ENGY] = GC_SmallGas;
 #  endif
