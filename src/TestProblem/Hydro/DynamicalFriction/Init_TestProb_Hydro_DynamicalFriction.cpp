@@ -134,13 +134,13 @@ void SetParameter()
    const long   End_Step_Default = __INT_MAX__;
    const double End_T_Default    =  14000;
 
-   if ( END_STEP < 0 ) 
+   if ( END_STEP < 0 )
    {
       END_STEP = End_Step_Default;
       PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
-   if ( END_T < 0.0 ) 
+   if ( END_T < 0.0 )
    {
       END_T = End_T_Default;
       PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
@@ -156,41 +156,39 @@ void SetParameter()
 
    ReadPara->Add( "GC_initial_R",            &GC_R,                  NoDef_double,  NoMin_double,     NoMax_double      );
    ReadPara->Add( "GC_MASS",                 &GC_MASS,               NoDef_double,  NoMin_double,     NoMax_double      );
-   
+
    ReadPara->Add( "FIX_CENTER",              &FixCenter,             Useless_bool,  Useless_bool,     Useless_bool      );
    ReadPara->Add( "SEARCH_RADIUS",           &SearchRadius,          NoDef_double,  NoMin_double,     NoMax_double      );
-
    ReadPara->Add( "PURE_TABLE",              &PURE_TABLE,            Useless_bool,  Useless_bool,     Useless_bool      );
    ReadPara->Add( "Density_Table_Name",      TableName,              "None",        Useless_str,      Useless_str       );
 
    ReadPara->Add( "HALO_TYPE",               HaloType,               "None",        Useless_str,      Useless_str       );
-   ReadPara->Add( "HALO_RHO_0",              &Halo_Rho0,             NoDef_double,  NoMin_double,     NoMax_double      );  
-   ReadPara->Add( "HALO_Rs",                 &Halo_Rs,               NoDef_double,  NoMin_double,     NoMax_double      );  
-   ReadPara->Add( "HALO_Rt",                 &Halo_Rt,               NoDef_double,  NoMin_double,     NoMax_double      );  
- 
+   ReadPara->Add( "HALO_RHO_0",              &Halo_Rho0,             NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "HALO_Rs",                 &Halo_Rs,               NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "HALO_Rt",                 &Halo_Rt,               NoDef_double,  NoMin_double,     NoMax_double      );
    ReadPara->Add( "Halo_Profile_Param_a",    &Halo_Profile_Param_a,  NoDef_double,  NoMin_double,     NoMax_double      );
    ReadPara->Add( "Halo_Profile_Param_b",    &Halo_Profile_Param_b,  NoDef_double,  NoMin_double,     NoMax_double      );
    ReadPara->Add( "Halo_Profile_Param_c",    &Halo_Profile_Param_c,  NoDef_double,  NoMin_double,     NoMax_double      );
-   
+
    ReadPara->Read( FileName );
    if ( MPI_Rank == 0)
    {
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID     = %d\n",     TESTPROB_ID );
-      Aux_Message( stdout, "  GC small Gas        = %13.5e\n", GC_SmallGas   ); 
-      Aux_Message( stdout, "  GC initial radius   = %13.5e\n", GC_R   ); 
-      Aux_Message( stdout, "  GC Mass             = %13.5e\n", GC_MASS   );
+      Aux_Message( stdout, "  GC small Gas        = %13.5e\n", GC_SmallGas );
+      Aux_Message( stdout, "  GC initial radius   = %13.5e\n", GC_R );
+      Aux_Message( stdout, "  GC Mass             = %13.5e\n", GC_MASS );
       Aux_Message( stdout, "  Fix Center          = %d\n",     FixCenter );
       Aux_Message( stdout, "  Search Radius       = %d\n",     SearchRadius );
-      Aux_Message( stdout, "  Pure Table          = %d\n",     PURE_TABLE );  
+      Aux_Message( stdout, "  Pure Table          = %d\n",     PURE_TABLE );
       Aux_Message( stdout, "  Density Table Name  = %s\n",     TableName );
-      Aux_Message( stdout, "  Halo Type           = %s\n",     HaloType );  
-      Aux_Message( stdout, "  HALO_RHO_0          = %13.5e\n", Halo_Rho0   );
-      Aux_Message( stdout, "  HALO_Rs             = %13.5e\n", Halo_Rs   );
-      Aux_Message( stdout, "  HALO_Rt             = %13.5e\n", Halo_Rt   );
-      Aux_Message( stdout, "  Halo_Profle_Param_a = %13.5f\n", Halo_Profile_Param_a   );
-      Aux_Message( stdout, "  Halo_Profle_Param_b = %13.5f\n", Halo_Profile_Param_b   );
-      Aux_Message( stdout, "  Halo_Profle_Param_c = %13.5f\n", Halo_Profile_Param_c   );
+      Aux_Message( stdout, "  Halo Type           = %s\n",     HaloType );
+      Aux_Message( stdout, "  HALO_RHO_0          = %13.5e\n", Halo_Rho0 );
+      Aux_Message( stdout, "  HALO_Rs             = %13.5e\n", Halo_Rs );
+      Aux_Message( stdout, "  HALO_Rt             = %13.5e\n", Halo_Rt );
+      Aux_Message( stdout, "  Halo_Profle_Param_a = %13.5f\n", Halo_Profile_Param_a );
+      Aux_Message( stdout, "  Halo_Profle_Param_b = %13.5f\n", Halo_Profile_Param_b );
+      Aux_Message( stdout, "  Halo_Profle_Param_c = %13.5f\n", Halo_Profile_Param_c );
       Aux_Message( stdout, "=============================================================================\n" );
    }
    delete ReadPara;
@@ -209,7 +207,7 @@ void SetParameter()
 //                   which must be set by a test problem initializer
 //                2. Enabled by the runtime option "OPT__RECORD_USER"
 //                3. This function will be called both during the program initialization and after each full update
-//                4. Notice that this function can only get "ONE" GC, multiple GCs are not supported. 
+//                4. Notice that this function can only get "ONE" GC, multiple GCs are not supported.
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void Aux_Record_User_DynamicalFriction()
@@ -236,7 +234,7 @@ void Aux_Record_User_DynamicalFriction()
    // 1. Find the minimum potential position
       Extrema_t Extrema;
       Extrema.Field     = _POTE;
-      Extrema.Radius    = SearchRadius*amr->dh[MAX_LEVEL]; 
+      Extrema.Radius    = SearchRadius*amr->dh[MAX_LEVEL];
 
       if ( Time[0]==0.0 )
       {
@@ -255,7 +253,7 @@ void Aux_Record_User_DynamicalFriction()
       }
 
       Aux_FindExtrema( &Extrema, EXTREMA_MIN, 0, TOP_LEVEL, PATCH_LEAF );
-      
+
       min_pot_last[0] = Extrema.Coord[0];
       min_pot_last[1] = Extrema.Coord[1];
       min_pot_last[2] = Extrema.Coord[2];
@@ -279,15 +277,15 @@ void Aux_Record_User_DynamicalFriction()
 
 // B. Find the GC's position
    double GC_x, GC_y, GC_z;
-   
+
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++) {
    if ( amr->Par->Mass[p] < PTYPE_GC )  continue;
       if ( amr->Par->Type[p] == PTYPE_GC)
       {
-         GC_x = amr->Par->PosX[p]; 
-         GC_y = amr->Par->PosY[p]; 
+         GC_x = amr->Par->PosX[p];
+         GC_y = amr->Par->PosY[p];
          GC_z = amr->Par->PosZ[p];
-         
+
          char Filename[MAX_STRING];
          sprintf( Filename, "%s", "Record__Result_GC_position" );
          FILE *File = fopen( Filename, "a" );
