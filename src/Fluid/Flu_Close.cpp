@@ -373,6 +373,9 @@ void CorrectFlux( const int SonLv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQ
 //                   --> It also checks if any variable is -inf, +inf, or nan
 //                   --> It does NOT check if passive scalars are negative
 //                       --> We already apply a floor value in Hydro_Shared_FullStepUpdate()
+//                   --> It provides a stricter check than Hydro_IsUnphysical(), which is found to be necessary in some
+//                       extreme cases. For example, Hydro_IsUnphysical() allows the internal energy to be slightly negative
+//                       if it's within machine precision.
 //                3. When enabling the dual-energy formalism (with DE_ENPY), CheckMode=1 checks pressure
 //                   instead of internal energy
 //
@@ -443,7 +446,7 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
                                         EoS_AuxArray_Flt,
                                         EoS_AuxArray_Int, h_EoS_Table, NULL );
 
-      if ( !Aux_IsFinite(Pres)  ||  Pres < (real)MIN_PRES )
+      if ( Pres < (real)MIN_PRES  ||  !Aux_IsFinite(Pres) )
          return true;
    }
 #  endif // #ifndef BAROTROPIC_EOS
