@@ -814,11 +814,11 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 //                2. For UNPHY_MODE_CONS with SRHD, we also check if Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298"
 //                   has a positive root
 //                3. For UNPHY_MODE_CONS:
-//                   - Mass density and total energy density must be postive
+//                   - Mass density and total energy density must be positive
 //                   - Internal energy can be zero or even slightly negative if it's within machine precision
 //                   - Pressure cannot be negative (only for non-trivial EoS)
 //                   For UNPHY_MODE_PRIM:
-//                   - Mass density must be postive
+//                   - Mass density must be positive
 //                   - Pressure cannot be negative
 //
 // Parameter   :  Mode              : UNPHY_MODE_SING, UNPHY_MODE_CONS, UNPHY_MODE_PRIM, UNPHY_MODE_PASSIVE_ONLY
@@ -1033,7 +1033,7 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const ch
          {
             printf( "ERROR : unphysical primitive variables at file <%s>, line <%d>, function <%s> !!\n",
                     File, Line, Function );
-            printf( "D=%14.7e, Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, P=%14.7e",
+            printf( "D=%14.7e Vx=%14.7e Vy=%14.7e Vz=%14.7e P=%14.7e",
                     Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY] );
 #           ifdef MHD
             printf( " Emag=%14.7e", Emag );

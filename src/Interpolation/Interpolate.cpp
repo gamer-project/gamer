@@ -379,7 +379,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
             else
             {
-//             one can add addtional checks for conserved variables here
+//             one can add additional checks for conserved variables here
             } // if ( FData_is_Prim ) ... else ...
          } // if ( !Fail_ThisCell )
 
