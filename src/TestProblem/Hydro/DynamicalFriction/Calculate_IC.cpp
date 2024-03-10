@@ -187,7 +187,7 @@ tuple<vector<double>, vector<double>, vector<double>> Calculate_IC( const char* 
       {
          fprintf(File, "%15.7e\t%15.7e\t%15.7e\n", r[i],dens[i],mass[i]);
       }
-      fclose ( File );	
+      fclose ( File );
    }
 
 

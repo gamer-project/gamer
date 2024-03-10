@@ -226,7 +226,7 @@ void Aux_Record_User_DynamicalFriction()
             fprintf(File, "%15s\t%15s\t%15s\t%15s\n", "#          Time", " CenterX", " CenterY", " CenterZ");
          }
          fprintf(File, "%15.7f\t%15.7e\t%15.7e\t%15.7e\n",Time[0]  ,amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2]);
-         fclose ( File );	
+         fclose ( File );
       }
    }
    else
@@ -294,7 +294,7 @@ void Aux_Record_User_DynamicalFriction()
            fprintf(File, "%15s\t%15s\t%15s\t%15s\n", "#          Time", " GCX", " GCY", " GCZ");
          }
          fprintf(File, "%15.7f\t%15.7e\t%15.7e\t%15.7e\n", Time[0],GC_x,GC_y,GC_z );
-         fclose ( File );	
+         fclose ( File );
       }
    }
 

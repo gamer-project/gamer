@@ -87,7 +87,7 @@ void Par_Init_ByFunction_DynamicalFriction( const long NPar_ThisRank, const long
    { 
     // call the function to calculate the velocity and generate density table,        
       tie(GC_pos, GC_vel, Halo_vel) = Calculate_IC(HaloType_g, GC_MASS, GC_R,Halo_Rho0,Halo_Rs,Halo_Rt,TableName_g,PURE_TABLE);
-      
+
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "Initial condition : \n");
       Aux_Message( stdout, "GC Position X       = %15.5e \n", GC_pos[0]);
