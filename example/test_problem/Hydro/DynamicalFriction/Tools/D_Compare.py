@@ -13,9 +13,9 @@ def plot_rt():
     # 0.1 set up the desired resolution and particle number
     # 0.2 read the data
     folder = '../'
-    df_center = pd.read_csv(folder+'Record__RESULT_Center.txt',sep='\t', skiprows=1, header=None)
+    df_center = pd.read_csv(folder+'Record__Result_Center',sep='\t', skiprows=1, header=None)
     df_center.columns = ['Time', 'CenterX', 'CenterY', 'CenterZ']
-    df_GC = pd.read_csv(folder+'Record__RESULT_GC_position.txt',sep='\t', skiprows=1, header=None)
+    df_GC = pd.read_csv(folder+'Record__Result_GC_position',sep='\t', skiprows=1, header=None)
     df_GC.columns = ['Time', 'GCX', 'GCY', 'GCZ']
 
     # 1. calculate the radius

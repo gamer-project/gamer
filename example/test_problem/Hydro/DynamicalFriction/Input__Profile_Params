@@ -1,18 +1,23 @@
-# Halo/Cloud Profile
+# Halo/Cloud Profile Parameter 
+# ===============================================================================================================
+Cloud_CenterX             48E3                          # central x coordinate in [48E3]
+Cloud_CenterY             48E3                          # central y coordinate in [48E3]
+Cloud_CenterZ             48E3                          # central z coordinate in [48E3]
+Cloud_MaxR                36000.0                       # Maximum radius for the particle [36000.0] 
+Cloud_Rho0                0.001976013787                # Maximum core density for the cloud [0.001976013787]
+Cloud_R0                  6081.0                        # Maximum core radius for the cloud/halo [6081.0]
+# ===============================================================================================================
 
-Cloud_CenterX             48E3                          # central x coordinate in [pc]
-Cloud_CenterY             48E3                          # central y coordinate in [pc]
-Cloud_CenterZ             48E3                          # central z coordinate in [pc]
-Cloud_MaxR                36000.0                       # Maximum radius for the particle 
-Cloud_Rho0                0.001976013787                # Maximum core density for the cloud
-Cloud_R0                  6081.0                        # Maximum core radius for the cloud/halo
+# Bulk Velocity of the Halo/Cloud : These will be updated when running GAMER, so no adjustment needed 
+Cloud_BulkVelX            0.000000                      
+Cloud_BulkVelY            -0.003605                     
+Cloud_BulkVelZ            0.000000                      
+
 Cloud_MassProfNBin        1000                          # number of radial bins in the mass profile table [1000]
 Cloud_Par_Num_Ratio       1.0                           # particle number ratio [1.0]
 Cloud_RSeed               123                           # random seed for setting particle position and velocity (>=0) [123]
 
-Cloud_BulkVelX            0.000000                      # This will be updated by GAMER, so no adjustment needed
-Cloud_BulkVelY            -0.003605                     # This will be updated by GAMER, so no adjustment needed
-Cloud_BulkVelZ            0.000000                      # This will be updated by GAMER, so no adjustment needed 
-Cloud_Type	          Table                         # SHOULD NOT be modified, if one wants to change the halo/cloud type, please see "HALO_TYPE" [Table]
 
-Density_Table_Name        Profile_Table  #+ The table only contains radius and density for sumulation need
+Cloud_Type	          Table                         # SHOULD NOT be modified, if one wants to change the halo/cloud type, please see "HALO_TYPE" [Table]
+Density_Table_Name        Profile_Table                 # The table name which contains the radius, density and enclosed mass information. [Profile_Table]
+                                                        # If you want to use your own profile table rather than the GAMER calculated one, please change the name
