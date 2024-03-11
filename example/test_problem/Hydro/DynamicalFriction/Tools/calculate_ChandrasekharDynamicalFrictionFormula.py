@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import scipy.integrate as integrate
 from scipy.special import erf
 from tqdm import tqdm
-from some_function import read_selected_parameters,read_parameters,extract_parameters_from_logfile
+from read_parameters import read_selected_parameters,extract_parameters_from_logfile
 
 print("==========C. Calculating the dynamical friction using Chandrasekhar's DF formula v20231014==========")
 

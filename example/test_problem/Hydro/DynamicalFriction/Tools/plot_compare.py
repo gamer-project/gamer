@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from some_function import read_selected_parameters
+from read_parameters import read_selected_parameters
 
 Chandreasekhar_result_path = ''
 
