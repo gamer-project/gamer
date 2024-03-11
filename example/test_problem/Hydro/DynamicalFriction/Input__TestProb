@@ -18,6 +18,8 @@ Halo_Profile_Param_b       4.002
 Halo_Profile_Param_c       0.0
 
 PURE_TABLE                 0                             # Determine whether using (1) to create the table or using user specified table to calculate initial condition [0]
+Density_Table_Name         Profile_Table                 # The table name which contains the radius, density and enclosed mass information. [Profile_Table]
+                                                         # If you want to use your own profile table rather than the GAMER calculated one, please change the name
 
 # (2) GC/Massive Object Parameters
 GC_MASS                    2.5e6                         # The Global cluster (Massive object) mass [0.75e6]

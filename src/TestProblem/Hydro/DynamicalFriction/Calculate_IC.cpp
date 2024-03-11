@@ -83,7 +83,8 @@ double integrate(const function<double(double)>& f, double a, double b, int n = 
    double sum = 0.5 * (f(a) + f(b)); // Start with end points
    for (int i = 1; i < n; i++)
    {
-      sum += f(a + i * h);
+      double value = f(a + i * h);
+      sum += value;
    }
    return sum * h;
 }
@@ -133,7 +134,7 @@ double clustermass_soft(double rho_0, double rs, double r, const char* model_nam
       }
    };
  
-   double integrated_mass = integrate(massbase, 0, x) * rho_0; 
+   double integrated_mass = integrate(massbase, 1E-10, x) * rho_0; // start integrating from a small value to avoid singularity
    return integrated_mass;
 }    
 
@@ -157,6 +158,8 @@ tuple<vector<double>, vector<double>, vector<double>> Calculate_IC( const char* 
 								    const char* Table_Name, const bool Pure_Table){
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s -> HaloType \n", HaloType );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s -> Table_Name \n", Table_Name );
 
 
 // Generate the radius bin 

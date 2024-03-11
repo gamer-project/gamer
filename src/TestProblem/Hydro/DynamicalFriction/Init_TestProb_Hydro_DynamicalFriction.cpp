@@ -159,8 +159,8 @@ void SetParameter()
    ReadPara->Add( "GC_initial_R",            &GC_R,                  NoDef_double,  NoMin_double,     NoMax_double      );
    ReadPara->Add( "GC_MASS",                 &GC_MASS,               NoDef_double,  NoMin_double,     NoMax_double      );
 
-   ReadPara->Add( "FIX_CENTER",              &FixCenter,             Useless_bool,  Useless_bool,     Useless_bool      );
    ReadPara->Add( "SEARCH_RADIUS",           &SearchRadius,          NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "FIX_CENTER",              &FixCenter,             Useless_bool,  Useless_bool,     Useless_bool      );
    ReadPara->Add( "PURE_TABLE",              &PURE_TABLE,            Useless_bool,  Useless_bool,     Useless_bool      );
    ReadPara->Add( "Density_Table_Name",      TableName,              "None",        Useless_str,      Useless_str       );
 
@@ -181,7 +181,7 @@ void SetParameter()
       Aux_Message( stdout, "  GC initial radius   = %13.5e\n", GC_R );
       Aux_Message( stdout, "  GC Mass             = %13.5e\n", GC_MASS );
       Aux_Message( stdout, "  Fix Center          = %d\n",     FixCenter );
-      Aux_Message( stdout, "  Search Radius       = %d\n",     SearchRadius );
+      Aux_Message( stdout, "  Search Radius       = %13.5e\n",  SearchRadius );
       Aux_Message( stdout, "  Pure Table          = %d\n",     PURE_TABLE );
       Aux_Message( stdout, "  Density Table Name  = %s\n",     TableName );
       Aux_Message( stdout, "  Halo Type           = %s\n",     HaloType );
@@ -261,8 +261,6 @@ void AdjustGCPotential(const bool add, const double GC_x, const double GC_y, con
 void Aux_Record_User_DynamicalFriction()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
-
 // A. Find the GC's position
    double GC_x, GC_y, GC_z;
 
@@ -288,7 +286,7 @@ void Aux_Record_User_DynamicalFriction()
 
 
 
-   // A. Set the center finding method base on Input__TestProb
+   // B. Set the center finding method base on Input__TestProb
    if ( FixCenter )
    {
       if ( MPI_Rank == 0 )
@@ -308,11 +306,11 @@ void Aux_Record_User_DynamicalFriction()
    {
 
 
-// 1. subtract GC potential
+   // B-1. subtract GC potential
       AdjustGCPotential(false,GC_x,GC_y,GC_z);     
       
        
-   // 1. Find the minimum potential position
+   // B-2. Find the minimum potential position
       Extrema_t Extrema;
       Extrema.Field     = _POTE;
       Extrema.Radius    = SearchRadius*amr->dh[MAX_LEVEL];
@@ -339,7 +337,7 @@ void Aux_Record_User_DynamicalFriction()
       min_pot_last[1] = Extrema.Coord[1];
       min_pot_last[2] = Extrema.Coord[2];
 
-      // 2. write them into a .txt file
+   // B-3. write them into a file
 
       if ( MPI_Rank == 0 )
       {
@@ -354,7 +352,7 @@ void Aux_Record_User_DynamicalFriction()
             Time[0]  ,Extrema.Coord[0], Extrema.Coord[1], Extrema.Coord[2]);
          fclose ( File );
       }
-
+    // B-4 Add back the GC's potential
       AdjustGCPotential(true,GC_x,GC_y,GC_z);     
    };
 
