@@ -47,6 +47,8 @@ void Par_Init_ByFunction_DynamicalFriction( const long NPar_ThisRank, const long
 
 void Mis_UserWorkBeforeNextLevel_Find_GC( const int lv, const double TimeNew, const double TimeOld, const double dt );
 
+void AdjustGCPotential(const bool add, const double GC_x, const double GC_y, const double GC_z);
+
 void User_Output();
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 static void Aux_Record_User_DynamicalFriction();
@@ -198,6 +200,52 @@ void SetParameter()
 
 } // FUNCTION : SetParameter
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AdjustGCPotential()
+// Description :  Adjust the Potential
+//
+// Note        :  
+// Parameter   :  add : the booldean value that determines the action (subtraction or add back)
+//                GC_x,GC_y,GC_z : the current GC's position
+//-------------------------------------------------------------------------------------------------------
+void AdjustGCPotential(const bool add, const double GC_x, const double GC_y, const double GC_z)
+{
+
+   double sign = add ? 1.0 : -1.0;
+
+   for (int lv=0; lv<NLEVEL; lv++)
+   {
+      const double dh = amr->dh[lv];
+#  pragma omp for schedule( runtime )
+      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+      {
+         const double *EdgeL              = amr->patch[0][lv][PID]->EdgeL;
+         real   (*PotPtr)[PS1][PS1] = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot;
+         const double x0                  = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
+         const double y0                  = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
+         const double z0                  = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
+         for (int k=0; k<PS1; k++)
+         {
+            const double z  = z0 + k*dh;
+            const double dz = z - GC_z;
+            for (int j=0; j<PS1; j++)
+            {
+               const double y  = y0 + j*dh;
+               const double dy = y - GC_y;
+               for (int i=0; i<PS1; i++)
+               {
+                  const double x  = x0 + i*dh;
+                  const double dx = x - GC_x;
+                  const double r      = sqrt( SQR(dx) + SQR(dy) + SQR(dz) );
+                  const double GC_pot = -NEWTON_G*GC_MASS/r;
+         
+                  PotPtr[k][j][i] += sign * (real)GC_pot;
+               }
+            }
+          } 
+      } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+   } // for (int lv=0; lv<NLEVEL; lv++)
+}
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_Record_User_DynamicalFriction
@@ -212,6 +260,33 @@ void SetParameter()
 //-------------------------------------------------------------------------------------------------------
 void Aux_Record_User_DynamicalFriction()
 {
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
+
+// A. Find the GC's position
+   double GC_x, GC_y, GC_z;
+
+   for (long p=0; p<amr->Par->NPar_AcPlusInac; p++) {
+   if ( amr->Par->Mass[p] < PTYPE_GC )  continue;
+      if ( amr->Par->Type[p] == PTYPE_GC)
+      {
+         GC_x = amr->Par->PosX[p];
+         GC_y = amr->Par->PosY[p];
+         GC_z = amr->Par->PosZ[p];
+
+         char Filename[MAX_STRING];
+         sprintf( Filename, "%s", "Record__Result_GC_position" );
+         FILE *File = fopen( Filename, "a" );
+         if ( Time[0]==0.0 )
+         {
+           fprintf(File, "%15s\t%15s\t%15s\t%15s\n", "#          Time", " GCX", " GCY", " GCZ");
+         }
+         fprintf(File, "%15.7f\t%15.7e\t%15.7e\t%15.7e\n", Time[0],GC_x,GC_y,GC_z );
+         fclose ( File );
+      }
+   }
+
+
 
    // A. Set the center finding method base on Input__TestProb
    if ( FixCenter )
@@ -231,6 +306,12 @@ void Aux_Record_User_DynamicalFriction()
    }
    else
    {
+
+
+// 1. subtract GC potential
+      AdjustGCPotential(false,GC_x,GC_y,GC_z);     
+      
+       
    // 1. Find the minimum potential position
       Extrema_t Extrema;
       Extrema.Field     = _POTE;
@@ -273,30 +354,9 @@ void Aux_Record_User_DynamicalFriction()
             Time[0]  ,Extrema.Coord[0], Extrema.Coord[1], Extrema.Coord[2]);
          fclose ( File );
       }
+
+      AdjustGCPotential(true,GC_x,GC_y,GC_z);     
    };
-
-// B. Find the GC's position
-   double GC_x, GC_y, GC_z;
-
-   for (long p=0; p<amr->Par->NPar_AcPlusInac; p++) {
-   if ( amr->Par->Mass[p] < PTYPE_GC )  continue;
-      if ( amr->Par->Type[p] == PTYPE_GC)
-      {
-         GC_x = amr->Par->PosX[p];
-         GC_y = amr->Par->PosY[p];
-         GC_z = amr->Par->PosZ[p];
-
-         char Filename[MAX_STRING];
-         sprintf( Filename, "%s", "Record__Result_GC_position" );
-         FILE *File = fopen( Filename, "a" );
-         if ( Time[0]==0.0 )
-         {
-           fprintf(File, "%15s\t%15s\t%15s\t%15s\n", "#          Time", " GCX", " GCY", " GCZ");
-         }
-         fprintf(File, "%15.7f\t%15.7e\t%15.7e\t%15.7e\n", Time[0],GC_x,GC_y,GC_z );
-         fclose ( File );
-      }
-   }
 
 } // FUNCTION : Aux_Record_User_DynamicalFriction
 
