@@ -20,9 +20,12 @@ def read_selected_parameters(filename):
             if key in ["BOX_SIZE_X", "NX0_TOT[0]", "END_T"]:
                 # Convert the value to float if possible
                 try:
-                    value = float(value)
+                    value = int(value)
                 except ValueError:
-                    pass
+                    try:
+                        value = float(value)
+                    except ValueError:
+                        pass  # Keep as string if neither int nor float
                 
                 parameters[key] = value
 
@@ -60,3 +63,31 @@ def read_parameters(filename):
             
             parameters[key] = value
     return parameters
+
+def extract_parameters_from_logfile(file_path):
+    # Read the content of the file
+    with open(file_path, 'r') as file:
+        log_content = file.read()
+    
+    # Function to extract parameters, same as before
+    def extract_parameters(log_content):
+        lines = log_content.split('\n')
+        parameters = {}
+        for line in lines:
+           if '=' in line:
+                key, value = line.split('=', 1)
+                key = key.strip()
+                value = value.strip()
+                # Try converting to float first (also covers int and scientific notation)
+                try:
+                    value = float(value)
+                    # If the value is a whole number, convert it to int
+                    if value.is_integer():
+                        value = int(value)
+                except ValueError:
+                    pass  # Keep as string if conversion fails
+                parameters[key] = value
+        return parameters
+    
+    # Extract parameters from the log content
+    return extract_parameters(log_content)
