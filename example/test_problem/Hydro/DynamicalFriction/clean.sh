@@ -3,4 +3,4 @@ rm -f Record__Note Record__Timing Record__TimeStep Record__PatchCount Record__Du
       Diag* BaseXYslice* BaseYZslice* BaseXZslice* BaseXline* BaseYline* BaseZline* BaseDiag* \
       PowerSpec_* Particle_* nohup.out Record__Performance Record__TimingMPI_* \
       Record__ParticleCount Record__User Patch_* Record__NCorrUnphy FailedPatchGroup* *.pyc Record__LoadBalance \
-      gamer.* Record__RESULT_Center Record__RESULT_GC_position Density_Table
+      gamer.* Record__Result_Center Record__Result_GC_position Profile_Table
