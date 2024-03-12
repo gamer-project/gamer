@@ -112,6 +112,16 @@ void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_A
          // set an equilibrium initial condition for each particle cloud
          Cloud_Constructor.Par_SetEquilibriumIC( ParData_AllRank[PAR_MASS], ParData_AllRank+PAR_POSX, ParData_AllRank+PAR_VELX, Par_Idx0 );
 
+         // reset the given coordinate and velocity if there is only one particle
+         if ( Cloud_Constructor.params.Cloud_Par_Num == 1 )
+         {
+            for (int d=0; d<3; d++)
+            {
+               ParData_AllRank[PAR_POSX+d][Par_Idx0] = Cloud_Constructor.params.Cloud_Center[d];
+               ParData_AllRank[PAR_VELX+d][Par_Idx0] = Cloud_Constructor.params.Cloud_BulkVel[d];
+            }
+         }
+
          // update the particle index offset for the next particle cloud
          Par_Idx0 += Cloud_Constructor.params.Cloud_Par_Num;
 
