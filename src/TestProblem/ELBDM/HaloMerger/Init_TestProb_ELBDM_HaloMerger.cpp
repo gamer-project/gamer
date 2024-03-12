@@ -850,7 +850,7 @@ void SetParameter()
             // check the density profile file exists
             if ( !Aux_CheckFileExist(HaloMerger_ParCloud_DensProf_Filename[index_parcloud]) )
                Aux_Error( ERROR_INFO, "ParCloud_%d density profile file \"%s\" does not exist !!\n",
-                          index_particle+1, HaloMerger_ParCloud_DensProf_Filename[index_parcloud] );
+                          index_parcloud+1, HaloMerger_ParCloud_DensProf_Filename[index_parcloud] );
 
             // check the maximum radius for particles
             if ( HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] <= 0.0 )
@@ -1097,16 +1097,16 @@ void SetParameter()
 
          if ( HaloMerger_ParCloud_InitMode == 1 )
          {
-            Aux_Message( stdout, "\n  particle cloud DensProf information:\n" );
-            Aux_Message( stdout, "  %7s  %30s  %30s  %14s  %14s\n",
+            Aux_Message( stdout, "\n  particle cloud density profile information:\n" );
+            Aux_Message( stdout, "  %7s  %30s  %14s  %14s  %14s\n",
                          "ID", "DensProf_Filename", "DensProf_MaxR", "RSeed", "NPar" );
 
             for (int index_parcloud=0; index_parcloud<HaloMerger_ParCloud_Num; index_parcloud++)
-               Aux_Message( stdout, "  %7d  %30s  %30.6e  %14d  %14ld\n",
+               Aux_Message( stdout, "  %7d  %30s  %14.6e  %14d  %14ld\n",
                             index_parcloud+1, HaloMerger_ParCloud_DensProf_Filename[index_parcloud], HaloMerger_ParCloud_DensProf_MaxR[index_parcloud],
                             HaloMerger_ParCloud_RSeed[index_parcloud], HaloMerger_ParCloud_NPar[index_parcloud] );
 
-            Aux_Message( stdout, "  %34s-> Total number of particles in all particle clouds =  %14ld\n", "", HaloMerger_ParCloud_NPar_Total );
+            Aux_Message( stdout, "  %14s-> Total number of particles in all particle clouds =  %14ld\n", "", HaloMerger_ParCloud_NPar_Total );
 
          } // if ( HaloMerger_ParCloud_InitMode == 1 )
 

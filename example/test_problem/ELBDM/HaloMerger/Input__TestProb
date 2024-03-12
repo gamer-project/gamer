@@ -7,7 +7,7 @@ HaloMerger_Soliton_Num                  0               # total number of solito
 HaloMerger_Soliton_InitMode             1               # soliton initialization mode [1]
                                                         # (1=table of the density profile, 2=analytical function of the density profile)
                                                         # -> edit Input_TestProb_Soliton to specify the parameters for the solitons
-HaloMerger_ParCloud_Num                 2               # total number of particle clouds [0]
+HaloMerger_ParCloud_Num                 0               # total number of particle clouds [0]
 HaloMerger_ParCloud_InitMode            1               # particle cloud initialization mode [1]
                                                         # (1=density profile)
                                                         # -> edit Input_TestProb_ParCloud to specify the parameters for the particle clouds
