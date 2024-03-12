@@ -585,9 +585,12 @@ void SetParameter()
                      isOverlap = false;
                } // for (int d=0; d<3; d++)
 
-               if ( isOverlap )
-                  Aux_Error( ERROR_INFO, "Halo_%d UM_IC range overlaps with the Halo_%d UM_IC range !!\n",
-                             index_halo+1, index2_halo+1 );
+               if ( MPI_Rank == 0 )
+               {
+                  if ( isOverlap )
+                     Aux_Message( stderr, "WARNING : Halo_%d UM_IC range overlaps with the Halo_%d UM_IC range !!\n",
+                                  index_halo+1, index2_halo+1 );
+               }
 
             } // for (int index2_halo=0; index2_halo<index_halo; index2_halo++)
 
@@ -783,14 +786,17 @@ void SetParameter()
                  > 3.0*(HaloMerger_Soliton_CoreRadius[index_soliton]+HaloMerger_Soliton_CoreRadius[index2_soliton]) )
                isOverlap = false;
 
-            if ( isOverlap )
-               Aux_Error( ERROR_INFO, "Soliton_%d 3r_c-range (center: [%13.6e, %13.6e, %13.6e], r_c: %13.6e) overlaps with the Soliton_%d 3r_c-range (center: [%13.6e, %13.6e, %13.6e], r_c: %13.6e) !!\n",
-                          index_soliton+1,
-                          HaloMerger_Soliton_CenCoord[index_soliton][0], HaloMerger_Soliton_CenCoord[index_soliton][1],
-                          HaloMerger_Soliton_CenCoord[index_soliton][2], HaloMerger_Soliton_CoreRadius[index_soliton],
-                          index2_soliton+1,
-                          HaloMerger_Soliton_CenCoord[index2_soliton][0], HaloMerger_Soliton_CenCoord[index2_soliton][1],
-                          HaloMerger_Soliton_CenCoord[index2_soliton][2], HaloMerger_Soliton_CoreRadius[index2_soliton] );
+            if ( MPI_Rank == 0 )
+            {
+               if ( isOverlap )
+                  Aux_Message( stderr, "WARNING : Soliton_%d 3r_c-range (center: [%13.6e, %13.6e, %13.6e], r_c: %13.6e) overlaps with the Soliton_%d 3r_c-range (center: [%13.6e, %13.6e, %13.6e], r_c: %13.6e) !!\n",
+                               index_soliton+1,
+                               HaloMerger_Soliton_CenCoord[index_soliton][0], HaloMerger_Soliton_CenCoord[index_soliton][1],
+                               HaloMerger_Soliton_CenCoord[index_soliton][2], HaloMerger_Soliton_CoreRadius[index_soliton],
+                               index2_soliton+1,
+                               HaloMerger_Soliton_CenCoord[index2_soliton][0], HaloMerger_Soliton_CenCoord[index2_soliton][1],
+                               HaloMerger_Soliton_CenCoord[index2_soliton][2], HaloMerger_Soliton_CoreRadius[index2_soliton] );
+            }
 
          } // for (int index2_soliton=0; index2_soliton<index_soliton; index2_soliton++)
 
@@ -810,12 +816,15 @@ void SetParameter()
                         isOverlap = false;
                   } // for (int d=0; d<3; d++)
 
-                  if ( isOverlap )
-                     Aux_Error( ERROR_INFO, "Soliton_%d 3r_c-range (center: [%13.6e, %13.6e, %13.6e], r_c: %13.6e) overlaps with the Halo_%d UM_IC range !!\n",
-                                index_soliton+1,
-                                HaloMerger_Soliton_CenCoord[index_soliton][0], HaloMerger_Soliton_CenCoord[index_soliton][1],
-                                HaloMerger_Soliton_CenCoord[index_soliton][2], HaloMerger_Soliton_CoreRadius[index_soliton],
-                                index_halo+1 );
+                  if ( MPI_Rank == 0 )
+                  {
+                     if ( isOverlap )
+                        Aux_Message( stderr, "WARNING : Soliton_%d 3r_c-range (center: [%13.6e, %13.6e, %13.6e], r_c: %13.6e) overlaps with the Halo_%d UM_IC range !!\n",
+                                     index_soliton+1,
+                                     HaloMerger_Soliton_CenCoord[index_soliton][0], HaloMerger_Soliton_CenCoord[index_soliton][1],
+                                     HaloMerger_Soliton_CenCoord[index_soliton][2], HaloMerger_Soliton_CoreRadius[index_soliton],
+                                     index_halo+1 );
+                  }
 
                } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
             } // if ( HaloMerger_Halo_InitMode == 1 )
@@ -833,13 +842,9 @@ void SetParameter()
       Aux_Error( ERROR_INFO, "MASSIVE_PARTICLES must be enabled for HaloMerger_ParCloud_Num > 0 !!\n" );
    #  endif
 
-   // check there fluid is freezed because it is supposed to be a particle-only case
-   if ( HaloMerger_ParCloud_Num > 0  &&  OPT__FREEZE_FLUID != 1 )
-      Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID must be 1 for HaloMerger_ParCloud_Num > 0 !!\n" );
-
-   // check there is no ELBDM halo and soliton because it is supposed to be a particle-only case
-   if ( HaloMerger_ParCloud_Num > 0  &&  ( HaloMerger_Halo_Num + HaloMerger_Soliton_Num ) > 0 )
-      Aux_Error( ERROR_INFO, "HaloMerger_Halo_Num and HaloMerger_Soliton_Num must be 0 for HaloMerger_ParCloud_Num > 0 !!\n" );
+   // check there fluid is freezed if it is supposed to be a particle-only case
+   if ( HaloMerger_ParCloud_Num > 0  &&  (HaloMerger_Halo_Num + HaloMerger_Soliton_Num) == 0  &&  OPT__FREEZE_FLUID != 1 )
+      Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID should be 1 for particle-only simulations !!\n" );
 
    if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_ParCloud_Num > 0 )
    {
@@ -897,9 +902,12 @@ void SetParameter()
                     > (HaloMerger_ParCloud_DensProf_MaxR[index_parcloud]+HaloMerger_ParCloud_DensProf_MaxR[index2_parcloud]) )
                   isOverlap = false;
 
-               if ( isOverlap )
-                  Aux_Error( ERROR_INFO, "The ParCloud_%d range overlaps with the ParCloud_%d range !!\n",
-                             index_parcloud+1, index2_parcloud+1 );
+               if ( MPI_Rank == 0 )
+               {
+                  if ( isOverlap )
+                     Aux_Message( stderr, "WARNING : The ParCloud_%d range overlaps with the ParCloud_%d range !!\n",
+                                  index_parcloud+1, index2_parcloud+1 );
+               }
 
             } // for (int index2_parcloud=0; index2_parcloud<index_parcloud; index2_parcloud++)
 
@@ -919,12 +927,15 @@ void SetParameter()
                            isOverlap = false;
                      } // for (int d=0; d<3; d++)
 
-                     if ( isOverlap )
-                        Aux_Error( ERROR_INFO, "ParCloud_%d (center: [%13.6e, %13.6e, %13.6e], MaxR: %13.6e) overlaps with the Halo_%d UM_IC range !!\n",
-                                   index_parcloud+1,
-                                   HaloMerger_ParCloud_CenCoord[index_parcloud][0], HaloMerger_ParCloud_CenCoord[index_parcloud][1],
-                                   HaloMerger_ParCloud_CenCoord[index_parcloud][2], HaloMerger_ParCloud_DensProf_MaxR[index_parcloud],
-                                   index_halo+1 );
+                     if ( MPI_Rank == 0 )
+                     {
+                        if ( isOverlap )
+                           Aux_Message( stderr, "WARNING : ParCloud_%d (center: [%13.6e, %13.6e, %13.6e], MaxR: %13.6e) overlaps with the Halo_%d UM_IC range !!\n",
+                                        index_parcloud+1,
+                                        HaloMerger_ParCloud_CenCoord[index_parcloud][0], HaloMerger_ParCloud_CenCoord[index_parcloud][1],
+                                        HaloMerger_ParCloud_CenCoord[index_parcloud][2], HaloMerger_ParCloud_DensProf_MaxR[index_parcloud],
+                                        index_halo+1 );
+                     }
 
                   } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
                } // if ( HaloMerger_Halo_InitMode == 1 )
@@ -945,14 +956,17 @@ void SetParameter()
                         isOverlap = false;
                   } // for (int d=0; d<3; d++)
 
-                  if ( isOverlap )
-                     Aux_Error( ERROR_INFO, "ParCloud_%d (center: [%13.6e, %13.6e, %13.6e], MaxR: %13.6e) overlaps with the Soliton_%d 3r_c-range (center: [%13.6e, %13.6e, %13.6e], r_c: %13.6e) !!\n",
-                                index_parcloud+1,
-                                HaloMerger_ParCloud_CenCoord[index_parcloud][0], HaloMerger_ParCloud_CenCoord[index_parcloud][1],
-                                HaloMerger_ParCloud_CenCoord[index_parcloud][2], HaloMerger_ParCloud_DensProf_MaxR[index_parcloud],
-                                index_soliton+1,
-                                HaloMerger_Soliton_CenCoord[index_soliton][0], HaloMerger_Soliton_CenCoord[index_soliton][1],
-                                HaloMerger_Soliton_CenCoord[index_soliton][2], HaloMerger_Soliton_CoreRadius[index_soliton] );
+                  if ( MPI_Rank == 0 )
+                  {
+                     if ( isOverlap )
+                        Aux_Message( stderr, "WARNING : ParCloud_%d (center: [%13.6e, %13.6e, %13.6e], MaxR: %13.6e) overlaps with the Soliton_%d 3r_c-range (center: [%13.6e, %13.6e, %13.6e], r_c: %13.6e) !!\n",
+                                     index_parcloud+1,
+                                     HaloMerger_ParCloud_CenCoord[index_parcloud][0], HaloMerger_ParCloud_CenCoord[index_parcloud][1],
+                                     HaloMerger_ParCloud_CenCoord[index_parcloud][2], HaloMerger_ParCloud_DensProf_MaxR[index_parcloud],
+                                     index_soliton+1,
+                                     HaloMerger_Soliton_CenCoord[index_soliton][0], HaloMerger_Soliton_CenCoord[index_soliton][1],
+                                     HaloMerger_Soliton_CenCoord[index_soliton][2], HaloMerger_Soliton_CoreRadius[index_soliton] );
+                  }
 
                } // for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
 
@@ -1081,13 +1095,13 @@ void SetParameter()
          if ( HaloMerger_Soliton_InitMode == 1 )
          {
             Aux_Message( stdout, "\n  soliton density profile information:\n" );
-            Aux_Message( stdout, "  %7s  %32s  %14s  %17s  %16s  %16s\n",
-                         "ID", "DensProf_Filename", "DensProf_NBin",
-                               "DensProf_Rescale",
-                               "DensProf_ScaleL", "DensProf_ScaleD"  );
+            Aux_Message( stdout, "  %7s %31s  %14s  %14s  %14s  %14s\n",
+                         "ID", "DensProf_Filename", "NBin",
+                               "Rescale",
+                               "ScaleL", "ScaleD"  );
 
             for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
-               Aux_Message( stdout, "  %7d  %32s  %14d  %17d  %16.6e  %16.6e\n",
+               Aux_Message( stdout, "  %7d %31s  %14d  %14d  %14.6e  %14.6e\n",
                             index_soliton+1, HaloMerger_Soliton_DensProf_Filename[index_soliton], HaloMerger_Soliton_DensProf_NBin[index_soliton],
                             HaloMerger_Soliton_DensProf_Rescale[index_soliton],
                             HaloMerger_Soliton_DensProf_ScaleL[index_soliton], HaloMerger_Soliton_DensProf_ScaleD[index_soliton] );
