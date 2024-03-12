@@ -62,8 +62,8 @@ Note:
    b. Without soliton
    c. N = 640, L = 0.0646921095 Mpc/h, single-precision
 
-7. Generate the default HaloDensityProfile: python Make_HaloDensityProfile.py
-   a. The parameters for the density profile are used to fit the ELBDM halo
+7. Generate the default HaloDensityProfile and SolitonDensityProfile: python Make_DensityProfile.py
+   a. The parameters for the halo density profile are used to fit the ELBDM halo
 
 8. Some examples of yt visualization scripts are put in "plot_script"
 

@@ -47,9 +47,13 @@ soliton_fitting_rho_c =     ( 1.945e7/( soliton_fitting_m22**2 * (soliton_fittin
 
 
 # parameters for the density profile sampling
-r_min         =       0.01  *(Const_kpc)/UNIT_L                 # in code_length
-r_max         =     200.0   *(Const_kpc)/UNIT_L                 # in code_length
-nbins         =    4096
+halo_r_min            =       0.01  *(Const_kpc)/UNIT_L                 # in code_length
+halo_r_max            =     200.0   *(Const_kpc)/UNIT_L                 # in code_length
+halo_nbins            =    4096
+
+soliton_r_min         =       0.01  *(Const_kpc)/UNIT_L                 # in code_length
+soliton_r_max         =      30.0   *(Const_kpc)/UNIT_L                 # in code_length
+soliton_nbins         =    4096
 ###################################################################################################################
 
 
@@ -67,20 +71,24 @@ print( ''                                                                       
 print( 'soliton_fitting_rho_c  = {: >16.8e} UNIT_D'.format(  soliton_fitting_rho_c ) )
 print( 'soliton_fitting_r_c    = {: >16.8e} UNIT_L'.format(  soliton_fitting_r_c   ) )
 print( ''                                                                            )
-print( 'r_min                  = {: >16.8e} UNIT_L'.format(  r_min                 ) )
-print( 'r_max                  = {: >16.8e} UNIT_L'.format(  r_max                 ) )
-print( 'nbins                  = {: >16d}'.format(           nbins                 ) )
+print( 'halo_r_min             = {: >16.8e} UNIT_L'.format(  halo_r_min            ) )
+print( 'halo_r_max             = {: >16.8e} UNIT_L'.format(  halo_r_max            ) )
+print( 'halo_nbins             = {: >16d}'.format(           halo_nbins            ) )
+print( ''                                                                            )
+print( 'soliton_r_min          = {: >16.8e} UNIT_L'.format(  soliton_r_min         ) )
+print( 'soliton_r_max          = {: >16.8e} UNIT_L'.format(  soliton_r_max         ) )
+print( 'soliton_nbins          = {: >16d}'.format(           soliton_nbins         ) )
 ###################################################################################################################
 
 
 ###################################################################################################################
 # create the density profile
-halo_densprof_radius     = np.logspace( np.log10(r_min), np.log10(r_max), num=nbins )
+halo_densprof_radius     = np.logspace( np.log10(halo_r_min), np.log10(halo_r_max), num=halo_nbins )
 halo_densprof_density    = Halo_fitting_analytical_dens( halo_densprof_radius,
                                                          halo_fitting_rho_0, halo_fitting_r_0,
                                                          halo_fitting_alpha, halo_fitting_beta, halo_fitting_gamma )
 
-soliton_densprof_radius  = np.logspace( np.log10(r_min), np.log10(r_max), num=nbins )
+soliton_densprof_radius  = np.logspace( np.log10(soliton_r_min), np.log10(soliton_r_max), num=soliton_nbins )
 soliton_densprof_density = Soliton_fitting_analytical_dens( soliton_densprof_radius,
                                                             soliton_fitting_rho_c, soliton_fitting_r_c )
 ###################################################################################################################
@@ -118,9 +126,9 @@ ax.annotate( r'$\rho_{0}$ = %.8e'%(halo_fitting_rho_0)+'\n'+
              r'$\alpha$ = %.8e'%(halo_fitting_alpha)+'\n'+
              r'$\beta$ = %.8e'%(halo_fitting_beta)+'\n'+
              r'$\gamma$ = %.8e'%(halo_fitting_gamma)+'\n'+'\n'+
-             r'$r_{\rm min}$ = %.8e'%(r_min)+'\n'+
-             r'$r_{\rm max}$ = %.8e'%(r_max)+'\n'+
-             r'nbins = %d'%(nbins),
+             r'$r_{\rm min}$ = %.8e'%(halo_r_min)+'\n'+
+             r'$r_{\rm max}$ = %.8e'%(halo_r_max)+'\n'+
+             r'nbins = %d'%(halo_nbins),
              xy=(0.02,0.02), xycoords='axes fraction' )
 
 # setting for the figure
@@ -153,9 +161,9 @@ ax.plot( soliton_densprof_radius,                                               
 # annotate the information
 ax.annotate( r'$\rho_{\rm c}$ = %.8e'%(soliton_fitting_rho_c)+'\n'+
              r'$r_{\rm c}$ = %.8e'%(soliton_fitting_r_c)+'\n'+
-             r'$r_{\rm min}$ = %.8e'%(r_min)+'\n'+
-             r'$r_{\rm max}$ = %.8e'%(r_max)+'\n'+
-             r'nbins = %d'%(nbins),
+             r'$r_{\rm min}$ = %.8e'%(soliton_r_min)+'\n'+
+             r'$r_{\rm max}$ = %.8e'%(soliton_r_max)+'\n'+
+             r'nbins = %d'%(soliton_nbins),
              xy=(0.02,0.02), xycoords='axes fraction' )
 
 # setting for the figure
