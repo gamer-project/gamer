@@ -52,7 +52,7 @@ Note:
       - The initial condition of particle clouds is constructed by reading the table of density profile and using Par_EquilibriumIC()
       - The default particle clouds use the HaloDensityProfile to represent the CDM halos
       - Enable compilation options: PARTICLE, SUPPORT_GSL
-      - Set the parameter OPT__FREEZE_FLUID to 1 in Input__Parameter
+      - Set the parameter OPT__FREEZE_FLUID to 1 in Input__Parameter for particle-only simulations
 
 5. Turn on OPT__EXT_POT == 1 to add external potential
    a. The external potential of a uniform-density sphere, which is proportional to r^2 inside and proportional to 1/r outside
