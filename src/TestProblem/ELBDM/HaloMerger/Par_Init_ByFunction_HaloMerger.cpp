@@ -3,14 +3,14 @@
 
 #ifdef MASSIVE_PARTICLES
 
-extern int      HaloMerger_Halo_InitMode;
-extern int      HaloMerger_Halo_Num;
-extern double (*HaloMerger_Halo_CenCoord)[3];
-extern double (*HaloMerger_Halo_Velocity)[3];
-extern char   (*HaloMerger_Halo_Par_DensProf_Filename)[MAX_STRING];
-extern double  *HaloMerger_Halo_Par_DensProf_MaxR;
-extern int     *HaloMerger_Halo_Par_RSeed;
-extern long    *HaloMerger_Halo_Par_NPar;
+extern int      HaloMerger_ParCloud_InitMode;
+extern int      HaloMerger_ParCloud_Num;
+extern double (*HaloMerger_ParCloud_CenCoord)[3];
+extern double (*HaloMerger_ParCloud_Velocity)[3];
+extern char   (*HaloMerger_ParCloud_DensProf_Filename)[MAX_STRING];
+extern double  *HaloMerger_ParCloud_DensProf_MaxR;
+extern int     *HaloMerger_ParCloud_RSeed;
+extern long    *HaloMerger_ParCloud_NPar;
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -51,8 +51,8 @@ void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_A
                                      real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
 {
 
-   // This function is only for HaloMerger_Halo_InitMode == 2
-   if ( HaloMerger_Halo_InitMode != 2 )  return;
+   // This function is only for HaloMerger_ParCloud_InitMode == 1
+   if ( HaloMerger_ParCloud_Num == 0  ||  HaloMerger_ParCloud_InitMode != 1 )  return;
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
@@ -76,50 +76,50 @@ void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_A
 
       long Par_Idx0 = 0;
 
-      for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
+      for (int index_parcloud=0; index_parcloud<HaloMerger_ParCloud_Num; index_parcloud++)
       {
-         // initialize Par_EquilibriumIC for each halo
+         // initialize Par_EquilibriumIC for each particle cloud
          Par_EquilibriumIC Cloud_Constructor;
 
          Cloud_Constructor.params.Cloud_Center                = new double[3];
          Cloud_Constructor.params.Cloud_BulkVel               = new double[3];
 
-         // set the parameters for each halo
+         // set the parameters for each particle cloud
          strcpy( Cloud_Constructor.params.Cloud_Type,           "Table" );
-         strcpy( Cloud_Constructor.params.Density_Table_Name,   HaloMerger_Halo_Par_DensProf_Filename[index_halo] );
-         Cloud_Constructor.params.Cloud_Center[0]             = HaloMerger_Halo_CenCoord[index_halo][0];
-         Cloud_Constructor.params.Cloud_Center[1]             = HaloMerger_Halo_CenCoord[index_halo][1];
-         Cloud_Constructor.params.Cloud_Center[2]             = HaloMerger_Halo_CenCoord[index_halo][2];
-         Cloud_Constructor.params.Cloud_BulkVel[0]            = HaloMerger_Halo_Velocity[index_halo][0];
-         Cloud_Constructor.params.Cloud_BulkVel[1]            = HaloMerger_Halo_Velocity[index_halo][1];
-         Cloud_Constructor.params.Cloud_BulkVel[2]            = HaloMerger_Halo_Velocity[index_halo][2];
-         Cloud_Constructor.params.Cloud_MaxR                  = HaloMerger_Halo_Par_DensProf_MaxR[index_halo];
-         Cloud_Constructor.params.Cloud_RSeed                 = HaloMerger_Halo_Par_RSeed[index_halo];
-         Cloud_Constructor.params.Cloud_Par_Num               = HaloMerger_Halo_Par_NPar[index_halo];
+         strcpy( Cloud_Constructor.params.Density_Table_Name,   HaloMerger_ParCloud_DensProf_Filename[index_parcloud] );
+         Cloud_Constructor.params.Cloud_Center[0]             = HaloMerger_ParCloud_CenCoord[index_parcloud][0];
+         Cloud_Constructor.params.Cloud_Center[1]             = HaloMerger_ParCloud_CenCoord[index_parcloud][1];
+         Cloud_Constructor.params.Cloud_Center[2]             = HaloMerger_ParCloud_CenCoord[index_parcloud][2];
+         Cloud_Constructor.params.Cloud_BulkVel[0]            = HaloMerger_ParCloud_Velocity[index_parcloud][0];
+         Cloud_Constructor.params.Cloud_BulkVel[1]            = HaloMerger_ParCloud_Velocity[index_parcloud][1];
+         Cloud_Constructor.params.Cloud_BulkVel[2]            = HaloMerger_ParCloud_Velocity[index_parcloud][2];
+         Cloud_Constructor.params.Cloud_MaxR                  = HaloMerger_ParCloud_DensProf_MaxR[index_parcloud];
+         Cloud_Constructor.params.Cloud_RSeed                 = HaloMerger_ParCloud_RSeed[index_parcloud];
+         Cloud_Constructor.params.Cloud_Par_Num               = HaloMerger_ParCloud_NPar[index_parcloud];
          Cloud_Constructor.params.Cloud_R0                    = 1.0;  // will have no effect as long as the value is positive
          Cloud_Constructor.params.AddExtPot                   = 0;    // no external potential
 
-         // initialize the halo
+         // initialize the particle cloud
          Cloud_Constructor.Init();
 
-         // check whether the particle number of each halo is reasonable
+         // check whether the particle number of each particle cloud is reasonable
          if ( (Par_Idx0 + Cloud_Constructor.params.Cloud_Par_Num) > NPar_AllRank )
          {
             Aux_Error( ERROR_INFO, "particle number doesn't match (%ld + %ld = %ld > %ld) !!\n",
                         Par_Idx0, Cloud_Constructor.params.Cloud_Par_Num, Par_Idx0+Cloud_Constructor.params.Cloud_Par_Num, NPar_AllRank );
          }
 
-         // set an equilibrium initial condition for each halo
+         // set an equilibrium initial condition for each particle cloud
          Cloud_Constructor.Par_SetEquilibriumIC( ParData_AllRank[PAR_MASS], ParData_AllRank+PAR_POSX, ParData_AllRank+PAR_VELX, Par_Idx0 );
 
-         // update the particle index offset for the next halo
+         // update the particle index offset for the next particle cloud
          Par_Idx0 += Cloud_Constructor.params.Cloud_Par_Num;
 
          // free the memory
          delete [] Cloud_Constructor.params.Cloud_Center ;
          delete [] Cloud_Constructor.params.Cloud_BulkVel;
 
-      } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
+      } // for (int index_parcloud=0; index_parcloud<HaloMerger_ParCloud_Num; index_parcloud++)
 
       // check whether the total particle number is reasonable
       if ( Par_Idx0 != NPar_AllRank )

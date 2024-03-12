@@ -38,11 +38,6 @@ Note:
       - The initial condition of halos is constructed by reading the UM_IC file as a table and performing linear interpolation
       - The UM_IC must be single AMR level.
       - Note that HaloMerger_Halo_*_CenCoord* in Input__TestProb_Halo is the UM_IC box center, rather than the exact halo center
-   c. For HaloMerger_Halo_InitMode == 2
-      - The initial condition of halos is constructed by reading the table of halo density profile and using Par_EquilibriumIC()
-      - It is a particle-only simulation for the CDM halos
-      - Enable compilation options: PARTICLE, SUPPORT_GSL
-      - Set the parameter OPT__FREEZE_FLUID to 1 in Input__Parameter
 
 3. Edit Input_TestProb_Soliton to specify the parameters for the solitons
    a. Add new parameters with increasing indexes if the number of solitons is more than 2
@@ -51,20 +46,28 @@ Note:
    c. For HaloMerger_Soliton_InitMode == 2
       - The initial condition of solitons is constructed by using the analytical formula of soliton density profile
 
-4. Turn on OPT__EXT_POT == 1 to add external potential
+4. Edit Input_TestProb_ParCloud to specify the parameters for the particle clouds
+   a. Add new parameters with increasing indexes if the number of particle clouds is more than 2
+   b. For HaloMerger_ParCloud_InitMode == 1
+      - The initial condition of particle clouds is constructed by reading the table of density profile and using Par_EquilibriumIC()
+      - The default particle clouds use the HaloDensityProfile to represent the CDM halos
+      - Enable compilation options: PARTICLE, SUPPORT_GSL
+      - Set the parameter OPT__FREEZE_FLUID to 1 in Input__Parameter
+
+5. Turn on OPT__EXT_POT == 1 to add external potential
    a. The external potential of a uniform-density sphere, which is proportional to r^2 inside and proportional to 1/r outside
 
-5. Download the default UM_IC file: sh download_ic.sh
+6. Download the default UM_IC file: sh download_ic.sh
    a. Halo mass = 4.0960e+09 Msun
    b. Without soliton
    c. N = 640, L = 0.0646921095 Mpc/h, single-precision
 
-6. Generate the default HaloDensityProfile: python Make_HaloDensityProfile.py
+7. Generate the default HaloDensityProfile: python Make_HaloDensityProfile.py
    a. The parameters for the density profile are used to fit the ELBDM halo
 
-7. Some examples of yt visualization scripts are put in "plot_script"
+8. Some examples of yt visualization scripts are put in "plot_script"
 
-8. The corresponding wavelength is 0.00083778702 Mpc/h when ELBDM_MASS = 1.0e-22 and velocity = 1.0*100 km/s
+9. The corresponding wavelength is 0.00083778702 Mpc/h when ELBDM_MASS = 1.0e-22 and velocity = 1.0*100 km/s
    -> Make sure the resolution is high enough to resolve the wavelength
 
-9. The input halos and solitons should not overlap with each other initially
+10. The input halos and solitons should not overlap with each other initially

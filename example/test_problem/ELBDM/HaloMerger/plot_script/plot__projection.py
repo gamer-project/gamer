@@ -40,7 +40,6 @@ for ds in ts.piter():
 
    if ds.parameters["Particle"] == 1:
       if ds.parameters["Par_NPar"] > 0:
-         fields_list.remove('density')
          fields_list.append('particle_density_on_grid')
 
    for center_mode in ['c', 'm']:
