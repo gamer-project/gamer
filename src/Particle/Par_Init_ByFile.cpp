@@ -126,7 +126,7 @@ void Par_Init_ByFile()
 // store data into the particle repository
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Storing data into particle repository ... " );
 
-   real *ParData1 = new real [NParAtt];
+   real_par *ParData1 = new real_par [NParAtt];
 
    for (long p=0; p<NParThisRank; p++)
    {

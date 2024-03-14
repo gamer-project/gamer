@@ -94,9 +94,9 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    real   (*pot_ext)[GRA_NXT][GRA_NXT] = NULL;
 #  endif
 
-   const int MaxNewParPerPatch = CUBE(PS1);
-   real   (*NewParAtt)[PAR_NATT_TOTAL] = new real [MaxNewParPerPatch][PAR_NATT_TOTAL];
-   long    *NewParID                   = new long [MaxNewParPerPatch];
+   const int    MaxNewParPerPatch = CUBE(PS1);
+   real_par   (*NewParAtt)[PAR_NATT_TOTAL] = new real_par [MaxNewParPerPatch][PAR_NATT_TOTAL];
+   long        *NewParID                   = new long     [MaxNewParPerPatch];
 
    int NNewPar;
 
@@ -275,11 +275,11 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
 
 //       4-2. add particles to the patch
-         const real *PType = amr->Par->Type;
+         const real_par *PType = amr->Par->Type;
 #        ifdef DEBUG_PARTICLE
 //       do not set ParPos too early since pointers to the particle repository (e.g., amr->Par->PosX)
 //       may change after calling amr->Par->AddOneParticle()
-         const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+         const real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
          char Comment[100];
          sprintf( Comment, "%s", __FUNCTION__ );
 

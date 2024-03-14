@@ -53,6 +53,14 @@ void Output_DumpData_Total( const char *FileName )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d)     ...\n", __FUNCTION__, DumpID );
+#  ifdef PARTICLE
+   if ( (OPT__OUTPUT_TOTAL == OUTPUT_FORMAT_CBINARY) && (MPI_Rank == 0) )
+   {
+      #if ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) )
+         Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for OPT__OUTPUT_TOTAL=2 (C-binary) !!\n" );
+      #endif
+   }
+#  endif
 
 
 // check the synchronization

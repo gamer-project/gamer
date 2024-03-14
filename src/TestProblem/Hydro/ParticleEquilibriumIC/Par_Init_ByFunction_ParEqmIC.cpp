@@ -40,16 +40,16 @@ static RandomNumber_t *RNG = NULL;
 //-------------------------------------------------------------------------------------------------------
 
 void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_AllRank,
-                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                   real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
+                                   real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                   real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                   real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
 // define the particle attribute arrays
-   real *ParData_AllRank[PAR_NATT_TOTAL];
+   real_par *ParData_AllRank[PAR_NATT_TOTAL];
    for (int v=0; v<PAR_NATT_TOTAL; v++)   ParData_AllRank[v] = NULL;
 
 
@@ -61,13 +61,13 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
    if ( MPI_Rank == 0 ) {
 
 //    allocate memory for particle attribute arrays
-      ParData_AllRank[PAR_MASS] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_POSX] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_POSY] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_POSZ] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_VELX] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_VELY] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_VELZ] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_MASS] = new real_par [NPar_AllRank];
+      ParData_AllRank[PAR_POSX] = new real_par [NPar_AllRank];
+      ParData_AllRank[PAR_POSY] = new real_par [NPar_AllRank];
+      ParData_AllRank[PAR_POSZ] = new real_par [NPar_AllRank];
+      ParData_AllRank[PAR_VELX] = new real_par [NPar_AllRank];
+      ParData_AllRank[PAR_VELY] = new real_par [NPar_AllRank];
+      ParData_AllRank[PAR_VELZ] = new real_par [NPar_AllRank];
 
 //    input filenames as parameters into Filename_Loader
       Filename_Loader.Read_Filenames( "Input__TestProb" );

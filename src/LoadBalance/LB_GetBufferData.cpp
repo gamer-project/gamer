@@ -6,10 +6,10 @@
 const real BufSizeFactor = 1.05;    // Send/RecvBufSize = int(NSend/NRecv*BufSizeFactor) --> must be >= 1.0
 
 // MPI buffers are shared by some particle routines
-static real *MPI_SendBuf_Shared = NULL;
-static real *MPI_RecvBuf_Shared = NULL;
-static int   SendBufSize        = -1;
-static int   RecvBufSize        = -1;
+static void *MPI_SendBuf_Shared = NULL;
+static void *MPI_RecvBuf_Shared = NULL;
+static long  SendBufSize        = -1L;
+static long  RecvBufSize        = -1L;
 
 #ifdef TIMING
 extern Timer_t *Timer_MPI[3];
@@ -584,8 +584,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 
 
 // allocate send/recv buffers (only when the current buffer size is not large enough --> improve performance)
-   real *SendBuf = LB_GetBufferData_MemAllocate_Send( NSend_Total );
-   real *RecvBuf = LB_GetBufferData_MemAllocate_Recv( NRecv_Total );
+   real *SendBuf = (real *)LB_GetBufferData_MemAllocate_Send( NSend_Total*sizeof(real) );
+   real *RecvBuf = (real *)LB_GetBufferData_MemAllocate_Recv( NRecv_Total*sizeof(real) );
 
 
 
@@ -1799,26 +1799,26 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 //                3. We reallocate send/recv buffers only when the current buffer size is not large enough
 //                   --> It greatly improves MPI performance
 //
-// Parameter   :  NSend : Number of elements (with the type "real") to be sent
+// Parameter   :  SendSize : Number of bytes for total elements to be sent
 //
 // Return      :  Pointer to the MPI send buffer
 //-------------------------------------------------------------------------------------------------------
-real *LB_GetBufferData_MemAllocate_Send( const int NSend )
+void *LB_GetBufferData_MemAllocate_Send( const long SendSize )
 {
 
-   if ( NSend > SendBufSize )
+   if ( SendSize > SendBufSize )
    {
-      if ( MPI_SendBuf_Shared != NULL )   delete [] MPI_SendBuf_Shared;
+      if ( MPI_SendBuf_Shared != NULL )   ::operator delete (MPI_SendBuf_Shared);
 
 //    allocate BufSizeFactor more memory to sustain longer
-      SendBufSize = int(NSend*BufSizeFactor);
+      SendBufSize = (long)(SendSize*BufSizeFactor);
 
 //    check integer overflow
       if ( SendBufSize < 0 )
-         Aux_Error( ERROR_INFO, "NSend %d, BufSizeFactor %13.7e, SendBufSize %d < 0 !!\n",
-                    NSend, BufSizeFactor, SendBufSize );
+         Aux_Error( ERROR_INFO, "SendSize %ld, BufSizeFactor %13.7e, SendBufSize %ld < 0 !!\n",
+                    SendSize, BufSizeFactor, SendBufSize );
 
-      MPI_SendBuf_Shared = new real [SendBufSize];
+      MPI_SendBuf_Shared = ::operator new (SendBufSize);
    }
 
    return MPI_SendBuf_Shared;
@@ -1836,26 +1836,26 @@ real *LB_GetBufferData_MemAllocate_Send( const int NSend )
 //                3. We reallocate send/recv buffers only when the current buffer size is not large enough
 //                   --> It greatly improves MPI performance
 //
-// Parameter   :  NRecv : Number of elements (with the type "real") to be sent
+// Parameter   :  RecvSize : Number of bytes for total elements to be received
 //
 // Return      :  Pointer to the MPI recv buffer
 //-------------------------------------------------------------------------------------------------------
-real *LB_GetBufferData_MemAllocate_Recv( const int NRecv )
+void *LB_GetBufferData_MemAllocate_Recv( const long RecvSize )
 {
 
-   if ( NRecv > RecvBufSize )
+   if ( RecvSize > RecvBufSize )
    {
-      if ( MPI_RecvBuf_Shared != NULL )   delete [] MPI_RecvBuf_Shared;
+      if ( MPI_RecvBuf_Shared != NULL )   ::operator delete (MPI_RecvBuf_Shared);
 
 //    allocate BufSizeFactor more memory to sustain longer
-      RecvBufSize = int(NRecv*BufSizeFactor);
+      RecvBufSize = (long)(RecvSize*BufSizeFactor);
 
 //    check integer overflow
       if ( RecvBufSize < 0 )
-         Aux_Error( ERROR_INFO, "NRecv %d, BufSizeFactor %13.7e, RecvBufSize %d < 0 !!\n",
-                    NRecv, BufSizeFactor, RecvBufSize );
+         Aux_Error( ERROR_INFO, "RecvSize %ld, BufSizeFactor %13.7e, RecvBufSize %ld < 0 !!\n",
+                    RecvSize, BufSizeFactor, RecvBufSize );
 
-      MPI_RecvBuf_Shared = new real [RecvBufSize];
+      MPI_RecvBuf_Shared = ::operator new (RecvBufSize);
    }
 
    return MPI_RecvBuf_Shared;
@@ -1877,13 +1877,13 @@ void LB_GetBufferData_MemFree()
 
    if ( MPI_SendBuf_Shared != NULL )
    {
-      delete [] MPI_SendBuf_Shared;
+      ::operator delete (MPI_SendBuf_Shared);
       MPI_SendBuf_Shared = NULL;
    }
 
    if ( MPI_RecvBuf_Shared != NULL )
    {
-      delete [] MPI_RecvBuf_Shared;
+      ::operator delete (MPI_RecvBuf_Shared);
       MPI_RecvBuf_Shared = NULL;
    }
 

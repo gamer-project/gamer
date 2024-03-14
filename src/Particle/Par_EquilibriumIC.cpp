@@ -304,7 +304,7 @@ void Par_EquilibriumIC::Init()
 //                Pos_AllRank
 //                Vel_AllRank
 //-------------------------------------------------------------------------------------------------------
-void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx0 )
+void Par_EquilibriumIC::Par_SetEquilibriumIC( real_par *Mass_AllRank, real_par *Pos_AllRank[3], real_par *Vel_AllRank[3], const long Par_Idx0 )
 {
 
    double *Table_MassProf_r = NULL;
@@ -353,7 +353,7 @@ void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllR
       for (int d=0; d<3; d++)
       {
          if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )
-         Pos_AllRank[d][p] = FMOD( Pos_AllRank[d][p]+(real)amr->BoxSize[d], (real)amr->BoxSize[d] );
+         Pos_AllRank[d][p] = FMOD( Pos_AllRank[d][p]+(real_par)amr->BoxSize[d], (real_par)amr->BoxSize[d] );
       }
 
       //       velocity

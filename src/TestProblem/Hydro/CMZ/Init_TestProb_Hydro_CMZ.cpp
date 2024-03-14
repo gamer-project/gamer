@@ -19,9 +19,9 @@
 bool Flag_CMZ( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 #ifdef PARTICLE
 void Par_Init_ByFunction_BarredPot( const long NPar_ThisRank, const long NPar_AllRank,
-                                    real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                    real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                    real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
+                                    real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                    real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                    real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
 #endif
 static void IsolatedBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
                         const int GhostSize, const int idx[], const double pos[], const double Time,

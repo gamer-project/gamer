@@ -36,7 +36,7 @@ void Par_Output_BinaryFile( const char *FileName )
 
 
 // data
-   real *attribute_buff = (real*)malloc( sizeof(real)*amr->Par->NPar_AcPlusInac );
+   real_par *attribute_buff = (real_par*)malloc( sizeof(real_par)*amr->Par->NPar_AcPlusInac );
 
    for (int v=0; v<PAR_NATT_TOTAL; v++)
    {
@@ -56,7 +56,7 @@ void Par_Output_BinaryFile( const char *FileName )
             }
 
 //          dump data from the buffer
-            fwrite( attribute_buff, sizeof(real), counter, File );
+            fwrite( attribute_buff, sizeof(real_par), counter, File );
             fclose( File );
          } // if ( MPI_Rank == TargetMPIRank )
 

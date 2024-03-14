@@ -36,15 +36,15 @@
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttribute
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFunction_BarredPot( const long NPar_ThisRank, const long NPar_AllRank,
-                                  real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                  real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                  real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
+                                  real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                  real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                  real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] )
 {
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Initializing problem-specific particle attributes ... " );
 
-   const real Useless = -1.0;
+   const real_par Useless = -1.0;
 
 #  ifdef STAR_FORMATION
    for (int p=0; p<NPar_ThisRank; p++)    AllAttribute[Idx_ParCreTime  ][p] = Useless;

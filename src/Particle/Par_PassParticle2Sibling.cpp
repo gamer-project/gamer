@@ -45,8 +45,8 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
                                      (NX0_TOT[1]*(1<<TOP_LEVEL))*dh_min,
                                      (NX0_TOT[2]*(1<<TOP_LEVEL))*dh_min }; // prevent from the round-off error problem
 // ParPos should NOT be used after calling Par_LB_ExchangeParticleBetweenPatch() since amr->Par->Attribute may be reallocated
-   real *ParPos[3]               = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-   const real *PType = amr->Par->Type;
+   real_par *ParPos[3]           = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   const real_par *PType = amr->Par->Type;
 
    int     NPar_Remove_Tot=0;
    int     NPar, NGuess, NPar_Remove, ArraySize[26], ijk[3], Side, TSib, SibPID, FaPID, FaSib, FaSibPID;
@@ -219,7 +219,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
 
 
 //    3. remove the escaping particles (set amr->Par->NPar_Lv later due to OpenMP)
-      const real *PType = amr->Par->Type;
+      const real_par *PType = amr->Par->Type;
       amr->patch[0][lv][PID]->RemoveParticle( NPar_Remove, RemoveParList, NULL,
                                               RemoveAllPar_No, PType );
       delete [] RemoveParList;
@@ -257,7 +257,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
                amr->patch[0][lv][PID]->AddParticle( amr->patch[0][lv][SibPID]->NPar_Escp   [ MirSib[s] ],
                                                     amr->patch[0][lv][SibPID]->ParList_Escp[ MirSib[s] ],
                                                    &amr->Par->NPar_Lv[lv], PType,
-                                                    (const real **)ParPos, amr->Par->NPar_AcPlusInac, Comment );
+                                                    (const real_par **)ParPos, amr->Par->NPar_AcPlusInac, Comment );
 #              else
                amr->patch[0][lv][PID]->AddParticle( amr->patch[0][lv][SibPID]->NPar_Escp   [ MirSib[s] ],
                                                     amr->patch[0][lv][SibPID]->ParList_Escp[ MirSib[s] ],
@@ -322,7 +322,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
             amr->patch[0][FaLv][FaSibPID]->AddParticle( amr->patch[0][lv][PID]->NPar_Escp   [s],
                                                         amr->patch[0][lv][PID]->ParList_Escp[s],
                                                        &amr->Par->NPar_Lv[FaLv], PType,
-                                                        (const real **)ParPos, amr->Par->NPar_AcPlusInac, Comment );
+                                                        (const real_par **)ParPos, amr->Par->NPar_AcPlusInac, Comment );
 #           else
             amr->patch[0][FaLv][FaSibPID]->AddParticle( amr->patch[0][lv][PID]->NPar_Escp   [s],
                                                         amr->patch[0][lv][PID]->ParList_Escp[s],
@@ -415,7 +415,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
 //
 // Return      :  true/false : inside/outside the active region
 //-------------------------------------------------------------------------------------------------------
-bool Par_WithinActiveRegion( const real x, const real y, const real z )
+bool Par_WithinActiveRegion( const real_par x, const real_par y, const real_par z )
 {
 
 // RemoveCell has the unit of root-level cell

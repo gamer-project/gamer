@@ -24,7 +24,7 @@
 //
 // Return      :  ParPosX/Y/Z
 //-------------------------------------------------------------------------------------------------------
-void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *ParPosY, real *ParPosZ,
+void Par_PredictPos( const long NPar, const long *ParList, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                      const double TargetTime )
 {
 
@@ -56,20 +56,20 @@ void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *
          Aux_Error( ERROR_INFO, "ParID (%ld) lies outside the accepted range (0 <= ParID < %ld) !!\n",
                     ParID, amr->Par->NPar_AcPlusInac );
 
-      if ( amr->Par->Mass[ParID] < (real)0.0 )
+      if ( amr->Par->Mass[ParID] < (real_par)0.0 )
          Aux_Error( ERROR_INFO, "Found inactive particle (ParID %ld, Mass %14.7e) !!\n", ParID, amr->Par->Mass[ParID] );
 #     endif
 
 //    skip particles waiting for velocity correction (they should already be synchronized with TargetTime)
-      if ( amr->Par->Time[ParID] < (real)0.0 )  continue;
+      if ( amr->Par->Time[ParID] < (real_par)0.0 )  continue;
 
       ParTime = amr->Par->Time[ParID];
-      dt      = (real)TargetTime - ParTime;
+      dt      = (real)TargetTime - (real)ParTime;
 
 //    convert time-step for comoving
 #     ifdef COMOVING
       if ( Initialized )
-         dTime2dt    = ( ParTime != ParTime_Prev );
+         dTime2dt    = ( (real)ParTime != ParTime_Prev );
 
       else
       {
@@ -80,7 +80,7 @@ void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *
 //    avoid redundant calculations
       if ( dTime2dt )
       {
-         dt           = Mis_dTime2dt( ParTime, dt );
+         dt           = Mis_dTime2dt( (const double)ParTime, (const double)dt );
          dt_Prev      = dt;
          ParTime_Prev = ParTime;
       }
@@ -92,9 +92,9 @@ void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *
 //    note that we do not consider periodicity here
 //    --> ParPos[] may lie outside the simulation box
 //    --> caller function is reponsible for taking care of the periodicity
-      ParPosX[p] += amr->Par->VelX[ParID]*dt;
-      ParPosY[p] += amr->Par->VelY[ParID]*dt;
-      ParPosZ[p] += amr->Par->VelZ[ParID]*dt;
+      ParPosX[p] += amr->Par->VelX[ParID]*(real_par)dt;
+      ParPosY[p] += amr->Par->VelY[ParID]*(real_par)dt;
+      ParPosZ[p] += amr->Par->VelZ[ParID]*(real_par)dt;
    } // for (long p=0; p<NPar; p++)
 
 } // FUNCTION : Par_PredictPos
