@@ -100,15 +100,15 @@ static real ExtPot_ELBDM_HaloMerger( const double x, const double y, const doubl
    const real   dy     = (real)(y - Cen[1] - Vel[1]*Time);
    const real   dz     = (real)(z - Cen[2] - Vel[2]*Time);
    const real   r      = SQRT( dx*dx + dy*dy + dz*dz );
-   const real   _r     = 1.0/r;
-   const real   GM_2R3 = GM/(2.0*CUBE(R));
-   const real   Offset = 0.75*(GM/R);  // Shift the potential to reduce the absolute value of potential
-                                       // and thus increase the time step
+   const real   _r     = (real)1.0/r;
+   const real   GM_2R3 = GM/((real)2.0*CUBE(R));
+   const real   Offset = (real)0.75*(GM/R);  // Shift the potential to reduce the absolute value of potential
+                                             // and thus increase the time step
 
    if ( r >= R )
       return -GM*_r + Offset;
    else
-      return GM_2R3*(r*r-3.0*R*R) + Offset;
+      return GM_2R3*(r*r-(real)3.0*R*R) + Offset;
 
 } // FUNCTION : ExtPot_ELBDM_HaloMerger
 
