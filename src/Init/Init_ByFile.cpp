@@ -577,17 +577,17 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
                   if ( UM_Format == UM_IC_FORMAT_ZYXV )
                   {
                      if ( OPT__UM_IC_FLOAT8 )
-                        for (int v=0; v<UM_NVar; v++) fluid_in[v] = (real)(*( (double*)( PG_Data + Offset_PG + v*load_data_size ) )) ;
+                        for (int v=0; v<UM_NVar; v++) fluid_in[v] = (real)( *((double*)( PG_Data + Offset_PG + v*load_data_size )) ) ;
                      else
-                        for (int v=0; v<UM_NVar; v++) fluid_in[v] = (real)(*( (float* )( PG_Data + Offset_PG + v*load_data_size ) )) ;
+                        for (int v=0; v<UM_NVar; v++) fluid_in[v] = (real)( *((float* )( PG_Data + Offset_PG + v*load_data_size )) ) ;
                   }
 
                   else
                   {
                      if ( OPT__UM_IC_FLOAT8 )
-                        for (int v=0; v<UM_NVar; v++) fluid_in[v] = (real)(*((double*)( PG_Data + Offset_PG + v*CUBE(PS2)*load_data_size )));
+                        for (int v=0; v<UM_NVar; v++) fluid_in[v] = (real)( *((double*)( PG_Data + Offset_PG + v*CUBE(PS2)*load_data_size )) );
                      else
-                        for (int v=0; v<UM_NVar; v++) fluid_in[v] = (real)(*((float* )( PG_Data + Offset_PG + v*CUBE(PS2)*load_data_size )));
+                        for (int v=0; v<UM_NVar; v++) fluid_in[v] = (real)( *((float* )( PG_Data + Offset_PG + v*CUBE(PS2)*load_data_size )) );
                   }
 
                   Init_ByFile_User_Ptr( fluid_out, fluid_in, UM_NVar, x, y, z, Time[UM_lv], UM_lv, NULL );
