@@ -73,7 +73,7 @@ void Par_Init_ByFile()
       Aux_Error( ERROR_INFO, "file \"%s\" does not exist for PAR_INIT == PAR_INIT_BY_FILE !!\n", FileName );
 
 // determine the load_data_size for loading PAR_IC
-   size_t load_data_size   = ( PAR_IC_FLOAT8 ) ? sizeof(double) : sizeof(float);
+   size_t load_data_size = ( PAR_IC_FLOAT8 ) ? sizeof(double) : sizeof(float);
 
    FILE *FileTemp = fopen( FileName, "rb" );
 
@@ -107,14 +107,14 @@ void Par_Init_ByFile()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading data ... " );
 
 // allocate buffer for loading PAR_IC
-   char* ParData_ThisRank = new char [NParThisRank*NParAtt*load_data_size];
+   char* ParData_ThisRank = new char [ NParThisRank*NParAtt*load_data_size ];
 
 // note that fread() may fail for large files if sizeof(size_t) == 4 instead of 8
    FILE *File = fopen( FileName, "rb" );
 
    for (int v=0; v<NParAtt; v+=NParAttPerLoad)
    {
-      fseek( File, FileOffset+v*NParAllRank *load_data_size, SEEK_SET );
+      fseek( File, FileOffset+v*NParAllRank*load_data_size, SEEK_SET );
       fread( ParData_ThisRank+v*NParThisRank*load_data_size, load_data_size, long(NParAttPerLoad)*NParThisRank, File );
    }
 
@@ -134,29 +134,19 @@ void Par_Init_ByFile()
 //    [id][att]
       if ( amr->Par->ParICFormat == PAR_IC_FORMAT_ID_ATT )
       {
-         if ( sizeof(real) == load_data_size )
-            memcpy( ParData1, ParData_ThisRank+p*NParAtt*load_data_size, NParAtt*load_data_size );
+         if ( PAR_IC_FLOAT8 )
+            for (int v=0; v<NParAtt; v++) ParData1[v] = (real)( *((double*)(ParData_ThisRank+(p*NParAtt+v)*load_data_size)) );
          else
-         {
-            if ( PAR_IC_FLOAT8 )
-               for (int v=0; v<NParAtt; v++) ParData1[v] = (real)( *((double*)(ParData_ThisRank+(p*NParAtt+v)*load_data_size)) );
-            else
-               for (int v=0; v<NParAtt; v++) ParData1[v] = (real)( *((float* )(ParData_ThisRank+(p*NParAtt+v)*load_data_size)) );
-         }
+            for (int v=0; v<NParAtt; v++) ParData1[v] = (real)( *((float* )(ParData_ThisRank+(p*NParAtt+v)*load_data_size)) );
       }
 
 //    [att][id]
       else
       {
-         if ( sizeof(real) == load_data_size )
-            for (int v=0; v<NParAtt; v++) ParData1[v] = *((real*)(ParData_ThisRank+(v*NParThisRank+p)*load_data_size));
+         if ( PAR_IC_FLOAT8 )
+            for (int v=0; v<NParAtt; v++) ParData1[v] = (real)( *((double*)(ParData_ThisRank+(v*NParThisRank+p)*load_data_size)) );
          else
-         {
-            if ( PAR_IC_FLOAT8 )
-               for (int v=0; v<NParAtt; v++) ParData1[v] = (real)( *((double*)(ParData_ThisRank+(v*NParThisRank+p)*load_data_size)) );
-            else
-               for (int v=0; v<NParAtt; v++) ParData1[v] = (real)( *((float* )(ParData_ThisRank+(v*NParThisRank+p)*load_data_size)) );
-         }
+            for (int v=0; v<NParAtt; v++) ParData1[v] = (real)( *((float* )(ParData_ThisRank+(v*NParThisRank+p)*load_data_size)) );
       }
 
 //    assuming that the orders of the particle attributes stored on the disk and in Par->Attribute[] are the same

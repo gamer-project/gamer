@@ -172,12 +172,7 @@ void Init_ByFile()
 
    ExpectSize = 0;
    for (int t=0; t<OPT__UM_IC_NLEVEL; t++)
-   {
-      if ( OPT__UM_IC_FLOAT8 ) 
-          ExpectSize += long(OPT__UM_IC_NVAR)*UM_Size3D[t][0]*UM_Size3D[t][1]*UM_Size3D[t][2]*sizeof(double);
-      else
-          ExpectSize += long(OPT__UM_IC_NVAR)*UM_Size3D[t][0]*UM_Size3D[t][1]*UM_Size3D[t][2]*sizeof(float);
-   }
+      ExpectSize += long(OPT__UM_IC_NVAR)*UM_Size3D[t][0]*UM_Size3D[t][1]*UM_Size3D[t][2]*( (OPT__UM_IC_FLOAT8)?sizeof(double):sizeof(float) );
 
    if ( FileSize != ExpectSize )
       Aux_Error( ERROR_INFO, "size of the file <%s> (%ld) != expected (%ld) !!\n", UM_Filename, FileSize, ExpectSize );
@@ -503,7 +498,7 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
 
 // determine the load_data_size and allocate buffer for loading UM_IC
    size_t load_data_size = ( OPT__UM_IC_FLOAT8 ) ? sizeof(double) : sizeof(float);
-   char*  PG_Data        = new char [CUBE(PS2)*UM_NVar*load_data_size];
+   char*  PG_Data        = new char [ CUBE(PS2)*UM_NVar*load_data_size ];
 
 
 // calculate the file offset of the target level
@@ -581,28 +576,18 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
 
                   if ( UM_Format == UM_IC_FORMAT_ZYXV )
                   {
-                     if ( sizeof(real) == load_data_size )
-                        memcpy( fluid_in, PG_Data+Offset_PG, UM_NVar*load_data_size );
+                     if ( OPT__UM_IC_FLOAT8 )
+                        for (int v=0; v<UM_NVar; v++) fluid_in[v] = (real)(*( (double*)( PG_Data + Offset_PG + v*load_data_size ) )) ;
                      else
-                     {
-                        if ( OPT__UM_IC_FLOAT8 )
-                           for (int v=0; v<UM_NVar; v++) fluid_in[v] = (real)(*( (double*)( PG_Data + Offset_PG + v*load_data_size ) )) ;
-                        else
-                           for (int v=0; v<UM_NVar; v++) fluid_in[v] = (real)(*( (float* )( PG_Data + Offset_PG + v*load_data_size ) )) ;
-                     }
+                        for (int v=0; v<UM_NVar; v++) fluid_in[v] = (real)(*( (float* )( PG_Data + Offset_PG + v*load_data_size ) )) ;
                   }
 
                   else
                   {
-                     if ( sizeof(real) == load_data_size )
-                        for (int v=0; v<UM_NVar; v++) fluid_in[v] = *((real*)( PG_Data + Offset_PG + v*CUBE(PS2)*load_data_size ));
+                     if ( OPT__UM_IC_FLOAT8 )
+                        for (int v=0; v<UM_NVar; v++) fluid_in[v] = (real)(*((double*)( PG_Data + Offset_PG + v*CUBE(PS2)*load_data_size )));
                      else
-                     {
-                        if ( OPT__UM_IC_FLOAT8 )
-                           for (int v=0; v<UM_NVar; v++) fluid_in[v] = (real)(*((double*)( PG_Data + Offset_PG + v*CUBE(PS2)*load_data_size )));
-                        else
-                           for (int v=0; v<UM_NVar; v++) fluid_in[v] = (real)(*((float* )( PG_Data + Offset_PG + v*CUBE(PS2)*load_data_size )));
-                     }
+                        for (int v=0; v<UM_NVar; v++) fluid_in[v] = (real)(*((float* )( PG_Data + Offset_PG + v*CUBE(PS2)*load_data_size )));
                   }
 
                   Init_ByFile_User_Ptr( fluid_out, fluid_in, UM_NVar, x, y, z, Time[UM_lv], UM_lv, NULL );

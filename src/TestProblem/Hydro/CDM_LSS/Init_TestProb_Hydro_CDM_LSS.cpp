@@ -39,8 +39,8 @@ void Validate()
       Aux_Error( ERROR_INFO, "must adopt periodic BC for this test !!\n" );
 #  endif
 
-   if ( OPT__INIT != INIT_BY_FUNCTION  &&  OPT__INIT != INIT_BY_RESTART )
-      Aux_Error( ERROR_INFO, "OPT__INIT != FUNCTION (1) or RESTART (2) for this test !!\n" );
+//   if ( OPT__INIT != INIT_BY_FUNCTION  &&  OPT__INIT != INIT_BY_RESTART )
+//      Aux_Error( ERROR_INFO, "OPT__INIT != FUNCTION (1) or RESTART (2) for this test !!\n" );
 
 #  ifdef PARTICLE
    if ( amr->Par->Init != PAR_INIT_BY_FILE  &&  amr->Par->Init != PAR_INIT_BY_RESTART )
