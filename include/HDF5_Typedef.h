@@ -390,6 +390,7 @@ struct InputPara_t
    int    Par_ICFormat;
    double Par_ICMass;
    int    Par_ICType;
+   int    Par_ICFloat8;
    int    Par_Interp;
    int    Par_InterpTracer;
    int    Par_Integ;
@@ -672,6 +673,7 @@ struct InputPara_t
    int    Opt__UM_IC_NLevel;
    int    Opt__UM_IC_NVar;
    int    Opt__UM_IC_Format;
+   int    Opt__UM_IC_Float8;
    int    Opt__UM_IC_Downgrade;
    int    Opt__UM_IC_Refine;
    int    Opt__UM_IC_LoadNRank;

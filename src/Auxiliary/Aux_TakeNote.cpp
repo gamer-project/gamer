@@ -804,6 +804,7 @@ void Aux_TakeNote()
       fprintf( Note, "Par->NPar_Active_AllRank        %ld\n",     amr->Par->NPar_Active_AllRank );
       fprintf( Note, "Par->Init                       %d\n",      amr->Par->Init                );
       fprintf( Note, "Par->ParICFormat                %d\n",      amr->Par->ParICFormat         );
+      fprintf( Note, "PAR_IC_FLOAT8                   %d\n",      PAR_IC_FLOAT8                 );
       fprintf( Note, "Par->ParICMass                 %14.7e\n",   amr->Par->ParICMass           );
       fprintf( Note, "Par->ParICType                  %d\n",      amr->Par->ParICType           );
       fprintf( Note, "Par->Interp                     %d\n",      amr->Par->Interp              );
@@ -1274,6 +1275,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__UM_IC_NLEVEL               %d\n",      OPT__UM_IC_NLEVEL         );
       fprintf( Note, "OPT__UM_IC_NVAR                 %d\n",      OPT__UM_IC_NVAR           );
       fprintf( Note, "OPT__UM_IC_FORMAT               %d\n",      OPT__UM_IC_FORMAT         );
+      fprintf( Note, "OPT__UM_IC_FLOAT8               %d\n",      OPT__UM_IC_FLOAT8         );
       fprintf( Note, "OPT__UM_IC_DOWNGRADE            %d\n",      OPT__UM_IC_DOWNGRADE      );
       fprintf( Note, "OPT__UM_IC_REFINE               %d\n",      OPT__UM_IC_REFINE         );
       fprintf( Note, "OPT__UM_IC_LOAD_NRANK           %d\n",      OPT__UM_IC_LOAD_NRANK     );
