@@ -121,6 +121,15 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "currently the check \"%s\" must work with \"%s\" !!\n",
                  "OPT__CK_REFINE", "OPT__FLAG_RHO" );
 
+   if ( OPT__RECORD_CENTER  &&  COM_CEN_X > amr->BoxSize[0] )
+      Aux_Error( ERROR_INFO, "incorrect COM_CEN_X (out of range [X<=%lf]) !!\n", amr->BoxSize[0] );
+
+   if ( OPT__RECORD_CENTER  &&  COM_CEN_Y > amr->BoxSize[1] )
+      Aux_Error( ERROR_INFO, "incorrect COM_CEN_Y (out of range [Y<=%lf]) !!\n", amr->BoxSize[1] );
+
+   if ( OPT__RECORD_CENTER  &&  COM_CEN_Z > amr->BoxSize[2] )
+      Aux_Error( ERROR_INFO, "incorrect COM_CEN_Z (out of range [Z<=%lf]) !!\n", amr->BoxSize[2] );
+
 #  if   ( MODEL == HYDRO )
 #  ifndef COSMIC_RAY
    const bool OPT__FLAG_LOHNER_CRAY = false;
