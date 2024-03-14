@@ -78,7 +78,9 @@ plt.rcParams['mathtext.bf']       = 'STIXGeneral:italic:bold'
 
 # -------------------------------------------------------------------------------------------------------------------------
 # output figures
-fig  = plt.figure(1,(18*cm, 8*cm))
+fig = plt.figure()
+fig.dpi = 150
+
 grid = AxesGrid( fig, (0.1, 0.05, 3.2, 2.7), nrows_ncols=(1, 2), axes_pad=(1.2,0.5), label_mode="all", share_all=True, cbar_location="right", cbar_mode="single", cbar_size="2%", cbar_pad="2%")
 
 for idx in range(idx_start, idx_end+1, didx):
@@ -120,7 +122,6 @@ for idx in range(idx_start, idx_end+1, didx):
    plot.cax = grid.cbar_axes[1]
    parz._setup_plots()
 
-   fig.dpi = 150
    fig.set_size_inches(18*cm, 8*cm)
    fig.savefig("particle_proj_%06d.png"%idx, bbox_inches='tight',pad_inches=0.02)
    #fig.savefig("particle_proj_%06d.pdf"%idx, bbox_inches='tight',pad_inches=0.02)
