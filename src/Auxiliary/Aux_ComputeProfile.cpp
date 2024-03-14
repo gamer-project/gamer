@@ -429,16 +429,25 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                            const double r        = sqrt( SQR(dx) + SQR(dy) + SQR(dz) );
                            const real _Dens      =                  (real)1.0 / FluidPtr     [DENS][k][j][i];
                            const real _Dens_IntT = ( FluIntTime ) ? (real)1.0 / FluidPtr_IntT[DENS][k][j][i] : NULL_REAL;
-                           const real VelR       = ( FluIntTime )
-                                                 ? ( FluWeighting     *( FluidPtr     [MOMX][k][j][i]*dx +
-                                                                         FluidPtr     [MOMY][k][j][i]*dy +
-                                                                         FluidPtr     [MOMZ][k][j][i]*dz )*_Dens
-                                                   + FluWeighting_IntT*( FluidPtr_IntT[MOMX][k][j][i]*dx +
-                                                                         FluidPtr_IntT[MOMY][k][j][i]*dy +
-                                                                         FluidPtr_IntT[MOMZ][k][j][i]*dz )*_Dens_IntT ) / r
-                                                 :                     ( FluidPtr     [MOMX][k][j][i]*dx +
-                                                                         FluidPtr     [MOMY][k][j][i]*dy +
-                                                                         FluidPtr     [MOMZ][k][j][i]*dz )*_Dens / r;
+
+                           real VelR;
+                           if ( r == 0.0 ) {
+                              VelR = (real)0.0;    // take care of the corner case where the profile center coincides with a cell center
+                           }
+
+                           else {
+                              VelR = ( FluIntTime )
+                                   ? ( FluWeighting     *( FluidPtr     [MOMX][k][j][i]*dx +
+                                                           FluidPtr     [MOMY][k][j][i]*dy +
+                                                           FluidPtr     [MOMZ][k][j][i]*dz )*_Dens
+                                     + FluWeighting_IntT*( FluidPtr_IntT[MOMX][k][j][i]*dx +
+                                                           FluidPtr_IntT[MOMY][k][j][i]*dy +
+                                                           FluidPtr_IntT[MOMZ][k][j][i]*dz )*_Dens_IntT ) / r
+                                   :                     ( FluidPtr     [MOMX][k][j][i]*dx +
+                                                           FluidPtr     [MOMY][k][j][i]*dy +
+                                                           FluidPtr     [MOMZ][k][j][i]*dz )*_Dens / r;
+                           }
+
                            Patch_Data[TID][LocalID][k][j][i] = VelR;
                         }}} // i,j,k
                      } // for (int LocalID=0; LocalID<8; LocalID++)
