@@ -23,11 +23,7 @@ PYTHON_VER = [sys.version_info.major, sys.version_info.minor]
 
 GAMER_CONFIG_DIR  = "../configs"
 GAMER_MAKE_BASE   = "Makefile_base"
-#GAMER_MAKE_OUT    = "Makefile"
-#GAMER_MAKE_OUT    = "Makefile_comoving_spock"
-GAMER_MAKE_OUT    = "Makefile_comoving"
-#GAMER_MAKE_OUT    = "Makefile_strick_test"
-#GAMER_MAKE_OUT    = "Makefile_feedback"
+GAMER_MAKE_OUT    = "Makefile"
 GAMER_DESCRIPTION = "Prepare a customized Makefile for GAMER.\nDefault values are marked by '*'.\nUse -lh to show a detailed help message.\n"
 GAMER_EPILOG      = "2023 Computational Astrophysics Lab, NTU. All rights reserved.\n"
 
