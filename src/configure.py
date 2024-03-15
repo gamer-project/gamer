@@ -92,7 +92,8 @@ class ArgumentParser( argparse.ArgumentParser ):
                 min_dist = dist
                 pos_key = "--"+key
             msg += 'Unrecognized argument: %s'%(arg)
-            msg += ', do you mean: %s ?\n'%(pos_key) if min_dist <= CLOSE_DIST else "\n"
+            if min_dist <= CLOSE_DIST: msg += ', do you mean: %s ?\n'%(pos_key)
+            msg += '\n'
 
         if len(argv) != 0: self.error( msg )
         return args, self.gamer_names, self.depends, self.constraints
@@ -620,10 +621,10 @@ def load_config( config ):
 
 def set_conditional_defaults( args ):
     if args["unsplit_gravity"] is None:
-        args["unsplit_gravity"] = True if args["model"] == "HYDRO" else False
+        args["unsplit_gravity"] = (args["model"] == "HYDRO")
 
     if args["bitwise_reproducibility"] is None:
-        args["bitwise_reproducibility"] = True if args["debug"] else False
+        args["bitwise_reproducibility"] = args["debug"]
 
     if args["flux"] is None:
         args["flux"] = "HLLD" if args["mhd"] else "HLLC"
