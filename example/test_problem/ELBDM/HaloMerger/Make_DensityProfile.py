@@ -25,7 +25,11 @@ def Halo_fitting_analytical_dens(r, rho_0, r_0, alpha, beta, gamma):
     x = r / r_0
     return rho_0 * ( x**(-gamma) ) * ( ( 1.0+(x**alpha) )**( (gamma-beta)/alpha ) )
 
-def Soliton_fitting_analytical_dens(r, rho_c, r_c):
+def Soliton_rho_c_from_r_c(m22, r_c):
+    return 1.945e7/( m22**2 * (r_c*UNIT_L/Const_kpc)**4 )*(Const_Msun/Const_kpc**3)/UNIT_D
+
+def Soliton_fitting_analytical_dens(r, m22, r_c):
+    rho_c = Soliton_rho_c_from_r_c(m22, r_c)
     x = r / r_c
     return rho_c*( 1.0+9.06e-2*(x**2) )**(-8)
 ###################################################################################################################
@@ -42,8 +46,7 @@ halo_fitting_gamma    =       0.000
 # parameters for the soliton
 soliton_fitting_m22   =       1.0
 soliton_fitting_r_c   =       0.001                                     # in code_length
-soliton_fitting_rho_c =     ( 1.945e7/( soliton_fitting_m22**2 * (soliton_fitting_r_c*UNIT_L/Const_kpc)**4 )
-                                    *(Const_Msun/Const_kpc**3)/UNIT_D ) # in code_density
+soliton_fitting_rho_c = Soliton_rho_c_from_r_c(soliton_fitting_m22, soliton_fitting_r_c)
 
 
 # parameters for the density profile sampling
@@ -90,7 +93,7 @@ halo_densprof_density    = Halo_fitting_analytical_dens( halo_densprof_radius,
 
 soliton_densprof_radius  = np.logspace( np.log10(soliton_r_min), np.log10(soliton_r_max), num=soliton_nbins )
 soliton_densprof_density = Soliton_fitting_analytical_dens( soliton_densprof_radius,
-                                                            soliton_fitting_rho_c, soliton_fitting_r_c )
+                                                            soliton_fitting_m22, soliton_fitting_r_c )
 ###################################################################################################################
 
 
