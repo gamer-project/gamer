@@ -52,8 +52,8 @@ static double **HaloMerger_Soliton_DensProf                        = NULL; // ar
        double (*HaloMerger_ParCloud_CenCoord)[3]                   = NULL; // center coordinates of each particle cloud
        double (*HaloMerger_ParCloud_Velocity)[3]                   = NULL; // bulk velocity of each particle cloud
        char   (*HaloMerger_ParCloud_DensProf_Filename)[MAX_STRING] = NULL; // filename of the density profile table of each particle cloud
-       double  *HaloMerger_ParCloud_DensProf_MaxR                  = NULL; // particle maximum radius of each particle cloud
-       int     *HaloMerger_ParCloud_RSeed                          = NULL; // particle random seed of each particle cloud
+       double  *HaloMerger_ParCloud_DensProf_MaxR                  = NULL; // maximum radius for particles of each particle cloud
+       int     *HaloMerger_ParCloud_RSeed                          = NULL; // random seed for particles of each particle cloud
        long    *HaloMerger_ParCloud_NPar                           = NULL; // number of particles of each particle cloud
 // =======================================================================================
 
@@ -853,8 +853,8 @@ void SetParameter()
          if ( HaloMerger_ParCloud_CenCoord[index_halo][d] < 0.0 )
             HaloMerger_ParCloud_CenCoord[index_halo][d] = amr->BoxCenter[d]; // put at the box ceneter by default
 
-         // check and set the particle DensProf-related parameters
-         if ( HaloMerger_ParCloud_InitMode == 1 )
+         // check and set the parameters for the particle density profile
+         if ( HaloMerger_ParCloud_InitMode == 1 ) // the density profile from table
          {
             // count the total number of particles for the particle clouds
             HaloMerger_ParCloud_NPar_Total += HaloMerger_ParCloud_NPar[index_parcloud];
@@ -1084,14 +1084,12 @@ void SetParameter()
             Aux_Message( stdout, "\n  soliton density profile information:\n" );
             Aux_Message( stdout, "  %7s %31s  %14s  %14s  %14s  %14s\n",
                          "ID", "DensProf_Filename", "NBin",
-                               "Rescale",
-                               "ScaleL", "ScaleD"  );
+                               "Rescale", "ScaleL", "ScaleD"  );
 
             for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
                Aux_Message( stdout, "  %7d %31s  %14d  %14d  %14.6e  %14.6e\n",
                             index_soliton+1, HaloMerger_Soliton_DensProf_Filename[index_soliton], HaloMerger_Soliton_DensProf_NBin[index_soliton],
-                            HaloMerger_Soliton_DensProf_Rescale[index_soliton],
-                            HaloMerger_Soliton_DensProf_ScaleL[index_soliton], HaloMerger_Soliton_DensProf_ScaleD[index_soliton] );
+                            HaloMerger_Soliton_DensProf_Rescale[index_soliton], HaloMerger_Soliton_DensProf_ScaleL[index_soliton], HaloMerger_Soliton_DensProf_ScaleD[index_soliton] );
 
          } // if ( HaloMerger_Soliton_InitMode == 1 )
          else if ( HaloMerger_Soliton_InitMode == 2 )
