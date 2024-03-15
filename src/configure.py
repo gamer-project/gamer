@@ -118,8 +118,8 @@ class ArgumentParser( argparse.ArgumentParser ):
 
                     if "action" in option:
                         if option["action"] in ["help", "store_const", "store_true", "store_false"]:
-                            possibles = ""
-                            default_value = ""
+                            possibles = "\b"
+                            default_value = "\b"
 
                     usage += [ "[%s]"%(" ".join([item, possibles, default_value])) ]
 
