@@ -48,7 +48,7 @@ class BCOLOR:
     UNDERLINE = '\033[4m'
 
 class ArgumentParser( argparse.ArgumentParser ):
-    def __init__(self, *args, **kwargs):
+    def __init__( self, *args, **kwargs ):
         self.program     = { key: kwargs[key] for key in kwargs }
         self.options     = []
         self.depends     = {}
@@ -58,7 +58,7 @@ class ArgumentParser( argparse.ArgumentParser ):
         if PYTHON_VER[0] == 2 or PYTHON_VER[1] < 5: kwargs.pop("allow_abbrev")
         super(ArgumentParser, self).__init__(*args, **kwargs)
 
-    def add_argument(self, *args, **kwargs):
+    def add_argument( self, *args, **kwargs ):
         if "depend" in kwargs:
             key = args[0].replace("-", "")
             self.depends[key] = kwargs.pop("depend")
@@ -76,7 +76,7 @@ class ArgumentParser( argparse.ArgumentParser ):
             option[key] = kwargs[key]
         self.options.append(option)
 
-    def parse_args(self, args=None, namespace=None):
+    def parse_args( self, args=None, namespace=None ):
         args, argv = self.parse_known_args(args, namespace)
         msg = "\n"
         for arg in argv:
@@ -96,34 +96,6 @@ class ArgumentParser( argparse.ArgumentParser ):
 
         if len(argv) != 0: self.error( msg )
         return args, self.gamer_names, self.depends, self.constraints
-
-    def string_align( self, string, indent, width, end_char ):
-        """
-        end_char : The ending character of a word.
-        """
-        N          = len(indent)
-        sub_indent = N * " "
-        if width < N:  raise ValueError("Width is smaller than indent length.")
-
-        now_n = 0
-        new_str = ""
-        new_line = False
-        for i in range(len(string)):
-            if new_line:
-                new_str += "\n" + sub_indent
-                new_line = False
-                now_n = N
-
-            if string[i] == "\n":
-                new_line = True
-                continue
-
-            new_str += string[i]
-            now_n += 1
-
-            if now_n >= width:
-                if string[i] == end_char: new_line = True
-        return new_str
 
     def print_usage( self, *args, **kwargs ):
         if "usage" in self.program:
@@ -153,27 +125,21 @@ class ArgumentParser( argparse.ArgumentParser ):
 
             indent = "Usage: %s " % os.path.basename(sys.argv[0])
             output = indent + " " + str.join(" ", usage)
-            print( self.string_align(output, indent, PRINT_WIDTH, "]") )
+            print( string_align(output, indent, PRINT_WIDTH, "]") )
         print("")
 
     def print_help( self, *args, **kwargs ):
-        # Print usage
+        # print usage, description, then epilog
         self.print_usage()
-
-        # Print description
         if "description" in self.program: print(self.program["description"])
-
-        # Print epilog
-        if "epilog" in self.program: print(self.program["epilog"])
+        if "epilog"      in self.program: print(self.program["epilog"])
 
     def print_help_detail( self ):
-        # Print usage
+        # print usage, description, options, then epilog
         self.print_usage()
 
-        # Print description
         if "description" in self.program: print(self.program["description"])
 
-        # Print options
         print("Options:")
         option_indent = 0
         for option in self.options:
@@ -190,7 +156,7 @@ class ArgumentParser( argparse.ArgumentParser ):
 
             if "action" in option:
                 if option["action"] == "help":
-                    print( self.string_align(output, indent, PRINT_WIDTH, " ") )
+                    print( string_align(output, indent, PRINT_WIDTH, " ") )
                     continue
 
             if "choices" in option:
@@ -203,9 +169,8 @@ class ArgumentParser( argparse.ArgumentParser ):
             if "action" in option:
                 output += "Default: False" if option["action"] == "store_true" else "Default: False"
 
-            print( self.string_align(output, indent, PRINT_WIDTH, " ") )
+            print( string_align(output, indent, PRINT_WIDTH, " ") )
 
-        # Print epilog
         if "epilog" in self.program: print(self.program["epilog"])
 
 
@@ -266,6 +231,34 @@ def distance( s1, s2 ):
                 matrix[i][j] = 1 + min(matrix[i-1][j], matrix[i][j-1], matrix[i-1][j-1])
 
     return matrix[len(s1)][len(s2)]
+
+def string_align( string, indent_str, width, end_char ):
+    """
+    end_char : The ending character of a word.
+    """
+    N          = len(indent_str)
+    sub_indent = N * " "
+    if width < N:  raise ValueError("Width is smaller than indent length.")
+
+    now_n = 0
+    new_str = ""
+    new_line = False
+    for i in range(len(string)):
+        if new_line:
+            new_str += "\n" + sub_indent
+            new_line = False
+            now_n = N
+
+        if string[i] == "\n":
+            new_line = True
+            continue
+
+        new_str += string[i]
+        now_n += 1
+
+        if now_n >= width:
+            if string[i] == end_char: new_line = True
+    return new_str
 
 def load_arguments():
     parser = ArgumentParser( description = GAMER_DESCRIPTION,
