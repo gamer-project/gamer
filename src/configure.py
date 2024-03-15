@@ -79,8 +79,6 @@ class ArgumentParser( argparse.ArgumentParser ):
     def parse_args(self, args=None, namespace=None):
         args, argv = self.parse_known_args(args, namespace)
         msg = "\n"
-        close_dist = 2
-
         for arg in argv:
             if arg[0] != "-":
                 msg += 'Unrecognized positional argument: %s\n'%(arg)
@@ -94,7 +92,7 @@ class ArgumentParser( argparse.ArgumentParser ):
                 min_dist = dist
                 pos_key = "--"+key
             msg += 'Unrecognized argument: %s'%(arg)
-            msg += ', do you mean: %s ?\n'%(pos_key) if min_dist <= close_dist else "\n"
+            msg += ', do you mean: %s ?\n'%(pos_key) if min_dist <= CLOSE_DIST else "\n"
 
         if len(argv) != 0: self.error( msg )
         return args, self.gamer_names, self.depends, self.constraints
@@ -127,51 +125,38 @@ class ArgumentParser( argparse.ArgumentParser ):
                 if string[i] == end_char: new_line = True
         return new_str
 
-    def print_usage(self, *args, **kwargs):
+    def print_usage( self, *args, **kwargs ):
         if "usage" in self.program:
             print("Usage: %s" % self.program["usage"])
         else:
             usage = []
             for option in self.options:
                 for item in option["flags"]:
-                    if "choices" in option:
-                        temp = [ str(opt) for opt in option["choices"] ]
-                        if "default" in option:
-                            usage += [ "[%s {%s} *%s]"%(item, ", ".join(temp), "Depend" if option["default"] is None else str(option["default"])) ]
-                        else:
-                            usage += [ "[%s {%s}]"%(item, ", ".join(temp)) ]
-                        continue
-
-                    if "metavar" in option:
-                        if "default" in option:
-                            usage += [ "[%s %s *%s]"%(item, option["metavar"], "Depend" if option["default"] is None else str(option["default"])) ]
-                        else:
-                            usage += [ "[%s %s]"%(item, option["metavar"]) ]
-                        continue
-
-                    if "dest" in option:
-                        if "default" in option:
-                            usage += [ "[%s %s *%s]"%(item, option["dest"], "Depend" if option["default"] is None else str(option["default"])) ]
-                        else:
-                            usage += [ "[%s %s]"%(item, option["dest"].upper()) ]
-                        continue
-
                     if "action" in option:
                         if option["action"] in ["help", "store_const", "store_true", "store_false"]:
                             usage += [ "[%s]"%(item) ]
                             continue
 
-                    temp = re.sub(r"^(-{1,})", "", item).upper()
+                    default_value = ""
                     if "default" in option:
-                        usage += [ "[%s %s *%s]"%(item, temp, "Depend" if option["default"] is None else str(option["default"])) ]
-                    else:
-                        usage += [ "[%s %s]"%(item, temp) ]
+                        default_value += " *"
+                        default_value += "Depend" if option["default"] is None else str(option["default"])
+
+                    # the order of if does matter here
+                    possibles = " "
+                    if   "choices" in option: possibles += "{%s}"%(", ".join([ str(opt) for opt in option["choices"] ]))
+                    elif "metavar" in option: possibles += option["metavar"]
+                    elif "dest"    in option: possibles += option["dest"]    if "default" in option else option["dest"].upper()
+                    else:                     possibles += re.sub(r"^(-{1,})", "", item).upper()
+
+                    usage += [ "[%s%s%s]"%(item, possibles, default_value) ]
+
             indent = "Usage: %s " % os.path.basename(sys.argv[0])
             output = indent + " " + str.join(" ", usage)
             print( self.string_align(output, indent, PRINT_WIDTH, "]") )
         print("")
 
-    def print_help(self, *args, **kwargs):
+    def print_help( self, *args, **kwargs ):
         # Print usage
         self.print_usage()
 
@@ -181,7 +166,7 @@ class ArgumentParser( argparse.ArgumentParser ):
         # Print epilog
         if "epilog" in self.program: print(self.program["epilog"])
 
-    def print_help_detail(self):
+    def print_help_detail( self ):
         # Print usage
         self.print_usage()
 
@@ -228,14 +213,12 @@ class ArgumentParser( argparse.ArgumentParser ):
 ####################################################################################################
 # Functions
 ####################################################################################################
-def str2bool(v):
+def str2bool( v ):
     if isinstance(v, bool): return v
-    if v.lower() == "true":
-        return True
-    elif v.lower() == "false":
-        return False
-    else:
-        raise TypeError("Can not convert <%s> to boolean."%(v))
+
+    if   v.lower() == "true":  return True
+    elif v.lower() == "false": return False
+    else: raise TypeError("Can not convert <%s> to boolean."%(v))
     return
 
 def color_print( string, color ):
