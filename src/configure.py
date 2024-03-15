@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 """
 User and developer guides of this script are provided in the following link.
 
@@ -20,6 +21,9 @@ import re
 ####################################################################################################
 NONE_STR   = "OFF"
 PYTHON_VER = [sys.version_info.major, sys.version_info.minor]
+
+CLOSE_DIST = 2
+PRINT_WIDTH = 100
 
 GAMER_CONFIG_DIR  = "../configs"
 GAMER_MAKE_BASE   = "Makefile_base"
@@ -50,7 +54,7 @@ class ArgumentParser( argparse.ArgumentParser ):
         self.depends     = {}
         self.constraints = {}
         self.gamer_names = {}
-        # This feature is only supported for version >= 3.5.
+        # `allow_abbrev` feature is only supported for version >= 3.5.
         if PYTHON_VER[0] == 2 or PYTHON_VER[1] < 5: kwargs.pop("allow_abbrev")
         super(ArgumentParser, self).__init__(*args, **kwargs)
 
@@ -124,8 +128,6 @@ class ArgumentParser( argparse.ArgumentParser ):
         return new_str
 
     def print_usage(self, *args, **kwargs):
-        usage_width  = 100
-
         if "usage" in self.program:
             print("Usage: %s" % self.program["usage"])
         else:
@@ -135,21 +137,21 @@ class ArgumentParser( argparse.ArgumentParser ):
                     if "choices" in option:
                         temp = [ str(opt) for opt in option["choices"] ]
                         if "default" in option:
-                            usage += [ "[%s {%s} *%s]"%(item, ", ".join(temp), "Depend" if option["default"] == None else str(option["default"])) ]
+                            usage += [ "[%s {%s} *%s]"%(item, ", ".join(temp), "Depend" if option["default"] is None else str(option["default"])) ]
                         else:
                             usage += [ "[%s {%s}]"%(item, ", ".join(temp)) ]
                         continue
 
                     if "metavar" in option:
                         if "default" in option:
-                            usage += [ "[%s %s *%s]"%(item, option["metavar"], "Depend" if option["default"] == None else str(option["default"])) ]
+                            usage += [ "[%s %s *%s]"%(item, option["metavar"], "Depend" if option["default"] is None else str(option["default"])) ]
                         else:
                             usage += [ "[%s %s]"%(item, option["metavar"]) ]
                         continue
 
                     if "dest" in option:
                         if "default" in option:
-                            usage += [ "[%s %s *%s]"%(item, option["dest"], "Depend" if option["default"] == None else str(option["default"])) ]
+                            usage += [ "[%s %s *%s]"%(item, option["dest"], "Depend" if option["default"] is None else str(option["default"])) ]
                         else:
                             usage += [ "[%s %s]"%(item, option["dest"].upper()) ]
                         continue
@@ -161,12 +163,12 @@ class ArgumentParser( argparse.ArgumentParser ):
 
                     temp = re.sub(r"^(-{1,})", "", item).upper()
                     if "default" in option:
-                        usage += [ "[%s %s *%s]"%(item, temp, "Depend" if option["default"] == None else str(option["default"])) ]
+                        usage += [ "[%s %s *%s]"%(item, temp, "Depend" if option["default"] is None else str(option["default"])) ]
                     else:
                         usage += [ "[%s %s]"%(item, temp) ]
             indent = "Usage: %s " % os.path.basename(sys.argv[0])
             output = indent + " " + str.join(" ", usage)
-            print( self.string_align(output, indent, usage_width, "]") )
+            print( self.string_align(output, indent, PRINT_WIDTH, "]") )
         print("")
 
     def print_help(self, *args, **kwargs):
@@ -188,7 +190,6 @@ class ArgumentParser( argparse.ArgumentParser ):
 
         # Print options
         print("Options:")
-        option_width = 100
         option_indent = 0
         for option in self.options:
             option["flags2"] = str.join(", ", [ "%s %s" % (item, option["metavar"]) if "metavar" in option else "%s %s" % (item, option["dest"].upper()) if "dest" in option else item for item in option["flags"] ])
@@ -204,7 +205,7 @@ class ArgumentParser( argparse.ArgumentParser ):
 
             if "action" in option:
                 if option["action"] == "help":
-                    print( self.string_align(output, indent, option_width, " ") )
+                    print( self.string_align(output, indent, PRINT_WIDTH, " ") )
                     continue
 
             if "choices" in option:
@@ -212,12 +213,12 @@ class ArgumentParser( argparse.ArgumentParser ):
                 output += "Choice: [%s] => "%(", ".join(temp))
 
             if "default" in option:
-                output += "Default: %s" %("Depend" if option["default"] == None else str(option["default"]))
+                output += "Default: %s" %("Depend" if option["default"] is None else str(option["default"]))
 
             if "action" in option:
                 output += "Default: False" if option["action"] == "store_true" else "Default: False"
 
-            print( self.string_align(output, indent, option_width, " ") )
+            print( self.string_align(output, indent, PRINT_WIDTH, " ") )
 
         # Print epilog
         if "epilog" in self.program: print(self.program["epilog"])
@@ -642,16 +643,16 @@ def load_config( config ):
     return paths, compilers, flags
 
 def set_conditional_defaults( args ):
-    if args["unsplit_gravity"] == None:
+    if args["unsplit_gravity"] is None:
         args["unsplit_gravity"] = True if args["model"] == "HYDRO" else False
 
-    if args["bitwise_reproducibility"] == None:
+    if args["bitwise_reproducibility"] is None:
         args["bitwise_reproducibility"] = True if args["debug"] else False
 
-    if args["flux"] == None:
+    if args["flux"] is None:
         args["flux"] = "HLLD" if args["mhd"] else "HLLC"
 
-    if args["eos"] == None:
+    if args["eos"] is None:
         if   args["cosmic_ray"]: args["eos"] = "COSMIC_RAY"
         elif args["srhd"]      : args["eos"] = "TAUBMATHEWS"
         else                   : args["eos"] = "GAMMA"
@@ -835,7 +836,7 @@ args, name_table, depends, constraints = load_arguments()
 #------------------------------------------------------------
 # 2. Prepare the makefile args
 # 2.1 Load the machine setup
-paths, compilers, flags = load_config( "%s/%s.config"%(GAMER_CONFIG_DIR, args["machine"]) )
+paths, compilers, flags = load_config( os.path.join(GAMER_CONFIG_DIR, args["machine"]+".config") )
 
 # 2.2 Validate arguments
 validation( paths, depends, constraints, **args )
