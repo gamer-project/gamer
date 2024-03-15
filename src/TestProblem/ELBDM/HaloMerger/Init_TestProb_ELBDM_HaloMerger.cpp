@@ -14,7 +14,7 @@ static int      HaloMerger_Soliton_InitMode;                               // so
 
 // External potential-related parameters to read from the input
        double   HaloMerger_ExtPot_UniDenSph_M;                             // mass of the uniform-density sphere for the external potential (must >= 0.0) [0.0]
-       double   HaloMerger_ExtPot_UniDenSph_R;                             // radius of the uniform-density sphere for the external potential (must > 0.0) [-1.0]
+       double   HaloMerger_ExtPot_UniDenSph_R;                             // radius of the uniform-density sphere for the external potential (must > 0.0) [1.0]
        double   HaloMerger_ExtPot_UniDenSph_CenCoordX;                     // x/y/z-coordinate of the center of the uniform-density sphere for the external potential (<0.0=auto -> box center) [-1.0]
        double   HaloMerger_ExtPot_UniDenSph_CenCoordY;
        double   HaloMerger_ExtPot_UniDenSph_CenCoordZ;
@@ -186,7 +186,7 @@ void SetParameter()
    ReadPara->Add( "HaloMerger_ParCloud_Num",               &HaloMerger_ParCloud_Num,                    0,                0,             NoMax_int        );
    ReadPara->Add( "HaloMerger_ParCloud_InitMode",          &HaloMerger_ParCloud_InitMode,               1,                1,             1                );
    ReadPara->Add( "HaloMerger_ExtPot_UniDenSph_M",         &HaloMerger_ExtPot_UniDenSph_M,              0.0,              0.0,           NoMax_double     );
-   ReadPara->Add( "HaloMerger_ExtPot_UniDenSph_R",         &HaloMerger_ExtPot_UniDenSph_R,             -1.0,              Eps_double,    NoMax_double     );
+   ReadPara->Add( "HaloMerger_ExtPot_UniDenSph_R",         &HaloMerger_ExtPot_UniDenSph_R,              1.0,              Eps_double,    NoMax_double     );
    ReadPara->Add( "HaloMerger_ExtPot_UniDenSph_CenCoordX", &HaloMerger_ExtPot_UniDenSph_CenCoordX,     -1.0,              NoMin_double,  amr->BoxEdgeR[0] );
    ReadPara->Add( "HaloMerger_ExtPot_UniDenSph_CenCoordY", &HaloMerger_ExtPot_UniDenSph_CenCoordY,     -1.0,              NoMin_double,  amr->BoxEdgeR[1] );
    ReadPara->Add( "HaloMerger_ExtPot_UniDenSph_CenCoordZ", &HaloMerger_ExtPot_UniDenSph_CenCoordZ,     -1.0,              NoMin_double,  amr->BoxEdgeR[2] );
