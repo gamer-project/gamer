@@ -334,8 +334,8 @@ void SetParameter()
       ReadPara_t *ReadPara_Soliton  = new ReadPara_t;
 
       // Soliton-related parameters to read from the input
-      char HaloMerger_Soliton_i_CoreRadius[MAX_STRING];        // core radius of the i-th soliton (<=0.0=set by HaloMerger_Soliton_i_CoreRho) [-1.0]
-      char HaloMerger_Soliton_i_CoreRho   [MAX_STRING];        // peak density of the i-th soliton (will be overwritten if HaloMerger_Soliton_i_CoreRadius > 0.0) [-1.0]
+      char HaloMerger_Soliton_i_CoreRadius[MAX_STRING];        // core radius of the i-th soliton (<=0.0=set by HaloMerger_Soliton_i_CoreRho) (will be overwritten if HaloMerger_Soliton_i_DensProf_Rescale == 0) [-1.0]
+      char HaloMerger_Soliton_i_CoreRho   [MAX_STRING];        // peak density of the i-th soliton (will be overwritten if HaloMerger_Soliton_i_CoreRadius > 0.0) (will be overwritten if HaloMerger_Soliton_i_DensProf_Rescale == 0) [-1.0]
       char HaloMerger_Soliton_i_CenCoordX [MAX_STRING];        // x/y/z-coordinate of the center of the i-th soliton (<0.0=auto -> box center) [-1.0]
       char HaloMerger_Soliton_i_CenCoordY [MAX_STRING];
       char HaloMerger_Soliton_i_CenCoordZ [MAX_STRING];
