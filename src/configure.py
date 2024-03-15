@@ -25,7 +25,7 @@ PYTHON_VER = [sys.version_info.major, sys.version_info.minor]
 CLOSE_DIST = 2
 PRINT_WIDTH = 100
 
-GAMER_CONFIG_DIR  = "../configs"
+GAMER_CONFIG_DIR  = os.path.join("..", "configs")
 GAMER_MAKE_BASE   = "Makefile_base"
 GAMER_MAKE_OUT    = "Makefile"
 GAMER_DESCRIPTION = "Prepare a customized Makefile for GAMER.\nDefault values are marked by '*'.\nUse -lh to show a detailed help message.\n"
@@ -685,7 +685,7 @@ def set_compile( paths, compilers, flags, kwargs ):
     com_opt = {}
 
     # 1. Set the complier.
-    com_opt["CXX"] = paths["MPI_PATH"]+"/bin/"+compilers["CXX_MPI"] if kwargs["mpi"] else compilers["CXX"]
+    com_opt["CXX"] = os.path.join(paths["MPI_PATH"], "bin", compilers["CXX_MPI"]) if kwargs["mpi"] else compilers["CXX"]
 
     # 2. Set the OpenMP flags.
     if not kwargs["openmp"]: flags["OPENMPFLAG"] = ""
