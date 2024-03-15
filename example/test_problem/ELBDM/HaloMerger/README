@@ -70,4 +70,6 @@ Note:
 9. The corresponding wavelength is 0.00083778702 Mpc/h when ELBDM_MASS = 1.0e-22 and velocity = 1.0*100 km/s
    -> Make sure the resolution is high enough to resolve the wavelength
 
-10. The input halos and solitons should not overlap with each other initially
+10. The input halos and solitons may overlap with each other initially
+   -> Their wavefunctions, instead of densities, are added directly
+   -> Note that the interference will cause the density distribution to be different from the sum of individual density

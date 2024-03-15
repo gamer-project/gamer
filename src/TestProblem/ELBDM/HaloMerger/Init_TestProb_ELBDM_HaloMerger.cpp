@@ -6,14 +6,11 @@
 // problem-specific global variables
 // =======================================================================================
 static int      HaloMerger_Halo_Num;                                       // total number of halos [2]
-static int      HaloMerger_Halo_InitMode;                                  // halo initialization mode [1]
-                                                                           // (1=single-level UM_IC of real and imaginary parts)
+static int      HaloMerger_Halo_InitMode;                                  // halo initialization mode (1=single-level UM_IC of real and imaginary parts) [1]
 static int      HaloMerger_Soliton_Num;                                    // total number of solitons [0]
-static int      HaloMerger_Soliton_InitMode;                               // soliton initialization mode [1]
-                                                                           // (1=table of the density profile, 2=analytical function of the density profile)
+static int      HaloMerger_Soliton_InitMode;                               // soliton initialization mode (1=table of the density profile, 2=analytical function of the density profile) [1]
        int      HaloMerger_ParCloud_Num;                                   // total number of particle clouds [0]
-       int      HaloMerger_ParCloud_InitMode;                              // particle cloud initialization mode [1]
-                                                                           // (1=density profile)
+       int      HaloMerger_ParCloud_InitMode;                              // particle cloud initialization mode (1=table of the density profile) [1]
 
 // External potential-related parameters to read from the input
        double   HaloMerger_ExtPot_UniDenSph_M;                             // mass of the uniform-density sphere for the external potential (must >= 0.0) [0.0]
@@ -25,29 +22,17 @@ static int      HaloMerger_Soliton_InitMode;                               // so
        double   HaloMerger_ExtPot_UniDenSph_VelocityY;
        double   HaloMerger_ExtPot_UniDenSph_VelocityZ;
 
-// ParCloud-related parameters to read from the input
-static char     HaloMerger_ParCloud_i_CenCoordX[MAX_STRING];               // x-coordinate of the center of the i-th particle cloud (<0.0=auto -> box center) [-1.0]
-static char     HaloMerger_ParCloud_i_CenCoordY[MAX_STRING];               // y-coordinate of the center of the i-th particle cloud (<0.0=auto -> box center) [-1.0]
-static char     HaloMerger_ParCloud_i_CenCoordZ[MAX_STRING];               // z-coordinate of the center of the i-th particle cloud (<0.0=auto -> box center) [-1.0]
-static char     HaloMerger_ParCloud_i_VelocityX[MAX_STRING];               // x-component of the bulk velocity of the i-th particle cloud [0.0]
-static char     HaloMerger_ParCloud_i_VelocityY[MAX_STRING];               // y-component of the bulk velocity of the i-th particle cloud [0.0]
-static char     HaloMerger_ParCloud_i_VelocityZ[MAX_STRING];               // z-component of the bulk velocity of the i-th particle cloud [0.0]
-static char     HaloMerger_ParCloud_i_DensProf_Filename[MAX_STRING];       // filename of density table for the i-th particle cloud (HaloMerger_ParCloud_InitMode == 1 only)
-static char     HaloMerger_ParCloud_i_DensProf_MaxR[MAX_STRING];           // maximum radius for particles for the i-th particle cloud (must > 0.0) (HaloMerger_ParCloud_InitMode == 1 only) [-1.0]
-static char     HaloMerger_ParCloud_i_RSeed[MAX_STRING];                   // random seed for setting particle position and velocity for the i-th particle cloud (must >= 0) (HaloMerger_ParCloud_InitMode == 1 only) [123]
-static char     HaloMerger_ParCloud_i_NPar[MAX_STRING];                    // number of particles for the i-th particle cloud (must >= 0) (HaloMerger_ParCloud_InitMode == 1 only) [0]
-
 // Halo-related internal variables
-static double (*HaloMerger_Halo_CenCoord)[3]                      = NULL;  // center coordinates of each halo
-static double (*HaloMerger_Halo_Velocity)[3]                      = NULL;  // bulk velocity of each halo
-static char   (*HaloMerger_Halo_UM_IC_Filename)[MAX_STRING]       = NULL;  // UM_IC filename of each halo
-static double (*HaloMerger_Halo_UM_IC_BoxLen)[3]                  = NULL;  // physical length of UM_IC box of each halo
-static int    (*HaloMerger_Halo_UM_IC_NCells)[3]                  = NULL;  // number of cells of UM_IC of each halo
-static int     *HaloMerger_Halo_UM_IC_Float8                      = NULL;  // data precision of UM_IC of each halo
-static double (*HaloMerger_Halo_UM_IC_dh)[3]                      = NULL;  // grid size of each halo
-static double (*HaloMerger_Halo_UM_IC_Range_EdgeL)[3]             = NULL;  // left edge of the range of each halo
-static double (*HaloMerger_Halo_UM_IC_Range_EdgeR)[3]             = NULL;  // right edge of the range of each halo
-static char   **HaloMerger_Halo_UM_IC_Data                        = NULL;  // array to store the data read from UM_IC
+static double (*HaloMerger_Halo_CenCoord)[3]                       = NULL; // center coordinates of each halo
+static double (*HaloMerger_Halo_Velocity)[3]                       = NULL; // bulk velocity of each halo
+static char   (*HaloMerger_Halo_UM_IC_Filename)[MAX_STRING]        = NULL; // UM_IC filename of each halo
+static double (*HaloMerger_Halo_UM_IC_BoxLen)[3]                   = NULL; // physical length of UM_IC box of each halo
+static int    (*HaloMerger_Halo_UM_IC_NCells)[3]                   = NULL; // number of cells of UM_IC of each halo
+static int     *HaloMerger_Halo_UM_IC_Float8                       = NULL; // data precision of UM_IC of each halo
+static double (*HaloMerger_Halo_UM_IC_dh)[3]                       = NULL; // grid size of each halo
+static double (*HaloMerger_Halo_UM_IC_Range_EdgeL)[3]              = NULL; // left edge of the range of each halo
+static double (*HaloMerger_Halo_UM_IC_Range_EdgeR)[3]              = NULL; // right edge of the range of each halo
+static char   **HaloMerger_Halo_UM_IC_Data                         = NULL; // array to store the data read from UM_IC
 
 // Soliton-related internal variables
 static double  *HaloMerger_Soliton_CoreRadius                      = NULL; // core radius of each soliton
@@ -66,11 +51,10 @@ static double **HaloMerger_Soliton_DensProf                        = NULL; // ar
 // ParCloud-related internal variables
        double (*HaloMerger_ParCloud_CenCoord)[3]                   = NULL; // center coordinates of each particle cloud
        double (*HaloMerger_ParCloud_Velocity)[3]                   = NULL; // bulk velocity of each particle cloud
-       char   (*HaloMerger_ParCloud_DensProf_Filename)[MAX_STRING] = NULL; // density table filename of each particle cloud
+       char   (*HaloMerger_ParCloud_DensProf_Filename)[MAX_STRING] = NULL; // filename of the density profile table of each particle cloud
        double  *HaloMerger_ParCloud_DensProf_MaxR                  = NULL; // particle maximum radius of each particle cloud
        int     *HaloMerger_ParCloud_RSeed                          = NULL; // particle random seed of each particle cloud
        long    *HaloMerger_ParCloud_NPar                           = NULL; // number of particles of each particle cloud
-static long     HaloMerger_ParCloud_NPar_Total;                            // total number of particles in all particle clouds
 // =======================================================================================
 
 #if ( MODEL == ELBDM  &&  defined GRAVITY )
@@ -439,48 +423,71 @@ void SetParameter()
       HaloMerger_ParCloud_RSeed             = new int    [HaloMerger_ParCloud_Num];
       HaloMerger_ParCloud_NPar              = new long   [HaloMerger_ParCloud_Num];
       } // if ( HaloMerger_ParCloud_InitMode == 1 )
+      else
+         Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
+                    "HaloMerger_ParCloud_InitMode", HaloMerger_ParCloud_InitMode );
 
       // (1-4-2) read the parameters for the halos
       const char FileName_ParCloud[] = "Input__TestProb_ParCloud";
       ReadPara_t *ReadPara_ParCloud  = new ReadPara_t;
 
+      // ParCloud-related parameters to read from the input
+      char HaloMerger_ParCloud_i_CenCoordX[MAX_STRING];          // x/y/z-coordinate of the center of the i-th particle cloud (<0.0=auto -> box center) [-1.0]
+      char HaloMerger_ParCloud_i_CenCoordY[MAX_STRING];
+      char HaloMerger_ParCloud_i_CenCoordZ[MAX_STRING];
+      char HaloMerger_ParCloud_i_VelocityX[MAX_STRING];          // x/y/z-component of the bulk velocity of the i-th particle cloud [0.0]
+      char HaloMerger_ParCloud_i_VelocityY[MAX_STRING];
+      char HaloMerger_ParCloud_i_VelocityZ[MAX_STRING];
+      char HaloMerger_ParCloud_i_DensProf_Filename[MAX_STRING];  // filename of the density profile table for the i-th particle cloud (HaloMerger_ParCloud_InitMode == 1 only)
+      char HaloMerger_ParCloud_i_DensProf_MaxR[MAX_STRING];      // maximum radius for particles for the i-th particle cloud (must > 0.0) (HaloMerger_ParCloud_InitMode == 1 only) [-1.0]
+      char HaloMerger_ParCloud_i_RSeed[MAX_STRING];              // random seed for setting particle position and velocity for the i-th particle cloud (must >= 0) (HaloMerger_ParCloud_InitMode == 1 only) [123]
+      char HaloMerger_ParCloud_i_NPar[MAX_STRING];               // number of particles for the i-th particle cloud (must >= 0) (HaloMerger_ParCloud_InitMode == 1 only) [0]
+
       for (int index_parcloud=0; index_parcloud<HaloMerger_ParCloud_Num; index_parcloud++)
       {
-         sprintf( HaloMerger_ParCloud_i_CenCoordX,         "HaloMerger_ParCloud_%d_CenCoordX",         index_parcloud+1 );
-         sprintf( HaloMerger_ParCloud_i_CenCoordY,         "HaloMerger_ParCloud_%d_CenCoordY",         index_parcloud+1 );
-         sprintf( HaloMerger_ParCloud_i_CenCoordZ,         "HaloMerger_ParCloud_%d_CenCoordZ",         index_parcloud+1 );
-         sprintf( HaloMerger_ParCloud_i_VelocityX,         "HaloMerger_ParCloud_%d_VelocityX",         index_parcloud+1 );
-         sprintf( HaloMerger_ParCloud_i_VelocityY,         "HaloMerger_ParCloud_%d_VelocityY",         index_parcloud+1 );
-         sprintf( HaloMerger_ParCloud_i_VelocityZ,         "HaloMerger_ParCloud_%d_VelocityZ",         index_parcloud+1 );
+         const int index_parcloud_input = index_parcloud+1; // index of particle cloud in the input file
+
+         sprintf( HaloMerger_ParCloud_i_CenCoordX,         "HaloMerger_ParCloud_%d_CenCoordX",         index_parcloud_input );
+         sprintf( HaloMerger_ParCloud_i_CenCoordY,         "HaloMerger_ParCloud_%d_CenCoordY",         index_parcloud_input );
+         sprintf( HaloMerger_ParCloud_i_CenCoordZ,         "HaloMerger_ParCloud_%d_CenCoordZ",         index_parcloud_input );
+         sprintf( HaloMerger_ParCloud_i_VelocityX,         "HaloMerger_ParCloud_%d_VelocityX",         index_parcloud_input );
+         sprintf( HaloMerger_ParCloud_i_VelocityY,         "HaloMerger_ParCloud_%d_VelocityY",         index_parcloud_input );
+         sprintf( HaloMerger_ParCloud_i_VelocityZ,         "HaloMerger_ParCloud_%d_VelocityZ",         index_parcloud_input );
 
          if ( HaloMerger_ParCloud_InitMode == 1 )
          {
-         sprintf( HaloMerger_ParCloud_i_DensProf_Filename, "HaloMerger_ParCloud_%d_DensProf_Filename", index_parcloud+1 );
-         sprintf( HaloMerger_ParCloud_i_DensProf_MaxR,     "HaloMerger_ParCloud_%d_DensProf_MaxR",     index_parcloud+1 );
-         sprintf( HaloMerger_ParCloud_i_RSeed,             "HaloMerger_ParCloud_%d_RSeed",             index_parcloud+1 );
-         sprintf( HaloMerger_ParCloud_i_NPar,              "HaloMerger_ParCloud_%d_NPar",              index_parcloud+1 );
+         sprintf( HaloMerger_ParCloud_i_DensProf_Filename, "HaloMerger_ParCloud_%d_DensProf_Filename", index_parcloud_input );
+         sprintf( HaloMerger_ParCloud_i_DensProf_MaxR,     "HaloMerger_ParCloud_%d_DensProf_MaxR",     index_parcloud_input );
+         sprintf( HaloMerger_ParCloud_i_RSeed,             "HaloMerger_ParCloud_%d_RSeed",             index_parcloud_input );
+         sprintf( HaloMerger_ParCloud_i_NPar,              "HaloMerger_ParCloud_%d_NPar",              index_parcloud_input );
          } // if ( HaloMerger_ParCloud_InitMode == 1 )
+         else
+            Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
+                       "HaloMerger_ParCloud_InitMode", HaloMerger_ParCloud_InitMode );
 
       // (1-4-3) add parameters in the following format:
       // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
       // --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
       // ********************************************************************************************************************************
-      // ReadPara_ParCloud->Add( "KEY_IN_THE_FILE",                       &VARIABLE,                                              DEFAULT,          MIN,           MAX            );
+      // ReadPara_ParCloud->Add( "KEY_IN_THE_FILE",                       &VARIABLE,                                               DEFAULT,          MIN,           MAX              );
       // ********************************************************************************************************************************
-         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_CenCoordX,         &HaloMerger_ParCloud_CenCoord[index_parcloud][0],      -1.0,              NoMin_double,  NoMax_double   );
-         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_CenCoordY,         &HaloMerger_ParCloud_CenCoord[index_parcloud][1],      -1.0,              NoMin_double,  NoMax_double   );
-         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_CenCoordZ,         &HaloMerger_ParCloud_CenCoord[index_parcloud][2],      -1.0,              NoMin_double,  NoMax_double   );
-         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_VelocityX,         &HaloMerger_ParCloud_Velocity[index_parcloud][0],       0.0,              NoMin_double,  NoMax_double   );
-         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_VelocityY,         &HaloMerger_ParCloud_Velocity[index_parcloud][1],       0.0,              NoMin_double,  NoMax_double   );
-         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_VelocityZ,         &HaloMerger_ParCloud_Velocity[index_parcloud][2],       0.0,              NoMin_double,  NoMax_double   );
+         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_CenCoordX,         &HaloMerger_ParCloud_CenCoord[index_parcloud][0],       -1.0,              NoMin_double,  amr->BoxEdgeR[0] );
+         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_CenCoordY,         &HaloMerger_ParCloud_CenCoord[index_parcloud][1],       -1.0,              NoMin_double,  amr->BoxEdgeR[1] );
+         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_CenCoordZ,         &HaloMerger_ParCloud_CenCoord[index_parcloud][2],       -1.0,              NoMin_double,  amr->BoxEdgeR[2] );
+         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_VelocityX,         &HaloMerger_ParCloud_Velocity[index_parcloud][0],        0.0,              NoMin_double,  NoMax_double     );
+         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_VelocityY,         &HaloMerger_ParCloud_Velocity[index_parcloud][1],        0.0,              NoMin_double,  NoMax_double     );
+         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_VelocityZ,         &HaloMerger_ParCloud_Velocity[index_parcloud][2],        0.0,              NoMin_double,  NoMax_double     );
 
          if ( HaloMerger_ParCloud_InitMode == 1 )
          {
-         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_DensProf_Filename,  HaloMerger_ParCloud_DensProf_Filename[index_parcloud],  NoDef_str,        Useless_str,   Useless_str    );
-         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_DensProf_MaxR,     &HaloMerger_ParCloud_DensProf_MaxR[index_parcloud],     -1.0,              NoMin_double,  NoMax_double   );
-         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_RSeed,             &HaloMerger_ParCloud_RSeed[index_parcloud],              123,              0,             NoMax_int      );
-         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_NPar,              &HaloMerger_ParCloud_NPar[index_parcloud],               (long)0,          (long)0,       NoMax_long     );
+         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_DensProf_Filename,  HaloMerger_ParCloud_DensProf_Filename[index_parcloud],  NoDef_str,        Useless_str,   Useless_str      );
+         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_DensProf_MaxR,     &HaloMerger_ParCloud_DensProf_MaxR[index_parcloud],     -1.0,              Eps_double,    NoMax_double     );
+         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_RSeed,             &HaloMerger_ParCloud_RSeed[index_parcloud],              123,              0,             NoMax_int        );
+         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_NPar,              &HaloMerger_ParCloud_NPar[index_parcloud],               (long)0,          (long)0,       NoMax_long       );
          } // if ( HaloMerger_ParCloud_InitMode == 1 )
+         else
+            Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
+                       "HaloMerger_ParCloud_InitMode", HaloMerger_ParCloud_InitMode );
 
       } // for (int index_parcloud=0; index_parcloud<HaloMerger_ParCloud_Num; index_parcloud++)
 
@@ -811,6 +818,9 @@ void SetParameter()
 
                } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
             } // if ( HaloMerger_Halo_InitMode == 1 )
+            else
+               Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
+                          "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
 
          } // if ( HaloMerger_Halo_Num > 0 )
 
@@ -829,55 +839,45 @@ void SetParameter()
    if ( HaloMerger_ParCloud_Num > 0  &&  (HaloMerger_Halo_Num + HaloMerger_Soliton_Num) == 0  &&  OPT__FREEZE_FLUID != 1 )
       Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID should be 1 for particle-only simulations !!\n" );
 
+   // set the total number of particles in all particle clouds
+   long HaloMerger_ParCloud_NPar_Total = (long)0;
+
    if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_ParCloud_Num > 0 )
    {
       for (int index_parcloud=0; index_parcloud<HaloMerger_ParCloud_Num; index_parcloud++)
       {
+         const int index_parcloud_input = index_parcloud+1; // index of particle cloud in the input file
+
          // check the center for the particle clouds
-         if ( HaloMerger_ParCloud_CenCoord[index_parcloud][0] < 0.0  ||
-              HaloMerger_ParCloud_CenCoord[index_parcloud][1] < 0.0  ||
-              HaloMerger_ParCloud_CenCoord[index_parcloud][2] < 0.0 )
-         {
-            // put at the box ceneter by default
-            for (int d=0; d<3; d++)
-               HaloMerger_ParCloud_CenCoord[index_parcloud][d] = amr->BoxCenter[d];
-         }
-         else if ( HaloMerger_ParCloud_CenCoord[index_parcloud][0] > amr->BoxSize[0]  ||
-                   HaloMerger_ParCloud_CenCoord[index_parcloud][1] > amr->BoxSize[1]  ||
-                   HaloMerger_ParCloud_CenCoord[index_parcloud][2] > amr->BoxSize[2] )
-         {
-            // check whether the center is outside of the box
-            Aux_Error( ERROR_INFO, "HaloMerger_ParCloud_%d_CenCoord [%13.6e, %13.6e, %13.6e] is outside of the simulation box !!\n",
-                       index_parcloud+1, HaloMerger_ParCloud_CenCoord[index_parcloud][0],
-                       HaloMerger_ParCloud_CenCoord[index_parcloud][1], HaloMerger_ParCloud_CenCoord[index_parcloud][2] );
-         }
+         for (int d=0; d<3; d++)
+         if ( HaloMerger_ParCloud_CenCoord[index_halo][d] < 0.0 )
+            HaloMerger_ParCloud_CenCoord[index_halo][d] = amr->BoxCenter[d]; // put at the box ceneter by default
 
          // check and set the particle DensProf-related parameters
          if ( HaloMerger_ParCloud_InitMode == 1 )
          {
+            // count the total number of particles for the particle clouds
+            HaloMerger_ParCloud_NPar_Total += HaloMerger_ParCloud_NPar[index_parcloud];
+
             // check the density profile file exists
             if ( !Aux_CheckFileExist(HaloMerger_ParCloud_DensProf_Filename[index_parcloud]) )
                Aux_Error( ERROR_INFO, "ParCloud_%d density profile file \"%s\" does not exist !!\n",
-                          index_parcloud+1, HaloMerger_ParCloud_DensProf_Filename[index_parcloud] );
-
-            // check the maximum radius for particles
-            if ( HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] <= 0.0 )
-               Aux_Error( ERROR_INFO, "HaloMerger_ParCloud_%d_DensProf_MaxR (%13.6e) is not positive !!\n", index_parcloud, HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] );
+                          index_parcloud_input, HaloMerger_ParCloud_DensProf_Filename[index_parcloud] );
 
             // check whether the particle cloud touches the boundary of box
             for (int d=0; d<3; d++)
             {
                // check whether the input particle clouds cross the boundary
-               if ( HaloMerger_ParCloud_CenCoord[index_parcloud][d] + HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] > amr->BoxSize[d]  ||
-                    HaloMerger_ParCloud_CenCoord[index_parcloud][d] - HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] < 0.0 )
+               if ( HaloMerger_ParCloud_CenCoord[index_parcloud][d] + HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] > amr->BoxEdgeR[d]  ||
+                    HaloMerger_ParCloud_CenCoord[index_parcloud][d] - HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] < amr->BoxEdgeL[d] )
                   Aux_Error( ERROR_INFO, "The ParCloud_%d range is outside of the simulation box in the direction-%d !!\n",
-                             index_parcloud+1, d );
+                             index_parcloud_input, d );
             } // for (int d=0; d<3; d++)
 
             // check whether the input particle clouds overlap with each other
             for (int index2_parcloud=0; index2_parcloud<index_parcloud; index2_parcloud++)
             {
-               const int index_halo_input = index_halo+1; // index of halo in the input file
+               const int index2_parcloud_input = index2_parcloud+1; // index of particle cloud in the input file
 
                bool isOverlap = true;
 
@@ -891,7 +891,7 @@ void SetParameter()
                {
                   if ( isOverlap )
                      Aux_Message( stderr, "WARNING : The ParCloud_%d range overlaps with the ParCloud_%d range !!\n",
-                                  index_parcloud+1, index2_parcloud+1 );
+                                  index_parcloud_input, index2_parcloud_input );
                }
 
             } // for (int index2_parcloud=0; index2_parcloud<index_parcloud; index2_parcloud++)
@@ -903,6 +903,8 @@ void SetParameter()
                {
                   for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
                   {
+                     const int index_halo_input = index_halo+1; // index of halo in the input file
+
                      bool isOverlap = true;
 
                      for (int d=0; d<3; d++)
@@ -916,14 +918,17 @@ void SetParameter()
                      {
                         if ( isOverlap )
                            Aux_Message( stderr, "WARNING : ParCloud_%d (center: [%13.6e, %13.6e, %13.6e], MaxR: %13.6e) overlaps with the Halo_%d UM_IC range !!\n",
-                                        index_parcloud+1,
+                                        index_parcloud_input,
                                         HaloMerger_ParCloud_CenCoord[index_parcloud][0], HaloMerger_ParCloud_CenCoord[index_parcloud][1],
                                         HaloMerger_ParCloud_CenCoord[index_parcloud][2], HaloMerger_ParCloud_DensProf_MaxR[index_parcloud],
-                                        index_halo+1 );
+                                        index_halo_input );
                      }
 
                   } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
                } // if ( HaloMerger_Halo_InitMode == 1 )
+               else
+                  Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
+                             "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
 
             } // if ( HaloMerger_Halo_Num > 0 )
 
@@ -932,6 +937,8 @@ void SetParameter()
             {
                for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
                {
+                  const int index_soliton_input = index_soliton+1; // index of soliton in the input file
+
                   bool isOverlap = true;
 
                   for (int d=0; d<3; d++)
@@ -945,10 +952,10 @@ void SetParameter()
                   {
                      if ( isOverlap )
                         Aux_Message( stderr, "WARNING : ParCloud_%d (center: [%13.6e, %13.6e, %13.6e], MaxR: %13.6e) overlaps with the Soliton_%d 3r_c-range (center: [%13.6e, %13.6e, %13.6e], r_c: %13.6e) !!\n",
-                                     index_parcloud+1,
+                                     index_parcloud_input,
                                      HaloMerger_ParCloud_CenCoord[index_parcloud][0], HaloMerger_ParCloud_CenCoord[index_parcloud][1],
                                      HaloMerger_ParCloud_CenCoord[index_parcloud][2], HaloMerger_ParCloud_DensProf_MaxR[index_parcloud],
-                                     index_soliton+1,
+                                     index_soliton_input,
                                      HaloMerger_Soliton_CenCoord[index_soliton][0], HaloMerger_Soliton_CenCoord[index_soliton][1],
                                      HaloMerger_Soliton_CenCoord[index_soliton][2], HaloMerger_Soliton_CoreRadius[index_soliton] );
                   }
@@ -958,35 +965,27 @@ void SetParameter()
             } // if ( HaloMerger_Soliton_Num > 0 )
 
          } // if ( HaloMerger_ParCloud_InitMode == 1 )
+         else
+            Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
+                       "HaloMerger_ParCloud_InitMode", HaloMerger_ParCloud_InitMode );
 
       } // for (int index_parcloud=0; index_parcloud<HaloMerger_ParCloud_Num; index_parcloud++)
 
-      // Set the total number of particles
-      HaloMerger_ParCloud_NPar_Total = (long)0;
-
-      // Count the total number of particles for the particle clouds when HaloMerger_ParCloud_InitMode == 1
-      if ( HaloMerger_ParCloud_InitMode == 1 )
-      {
-
-         for (int index_parcloud=0; index_parcloud<HaloMerger_ParCloud_Num; index_parcloud++)
-         {
-            HaloMerger_ParCloud_NPar_Total += HaloMerger_ParCloud_NPar[index_parcloud];
-         } // for (int index_parcloud=0; index_parcloud<HaloMerger_ParCloud_Num; index_parcloud++)
-
-         // check there are particles
-         if ( HaloMerger_ParCloud_NPar_Total <= 0 )
-            Aux_Error( ERROR_INFO, "Total number of particles (sum of HaloMerger_ParCloud_i_NPar) must be >0 for HaloMerger_ParCloud_InitMode == 1 !!\n" );
-
-      } // if ( HaloMerger_ParCloud_InitMode == 1 )
+      // check there are particles
+      if ( HaloMerger_ParCloud_NPar_Total <= 0 )
+         Aux_Error( ERROR_INFO, "Total number of particles (sum of HaloMerger_ParCloud_i_NPar) must be >0 for HaloMerger_ParCloud_InitMode == 1 !!\n" );
 
    } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_ParCloud_Num > 0 )
 
    // overwrite the total number of particles
-   #  ifdef MASSIVE_PARTICLES
-   amr->Par->NPar_Active_AllRank = ( HaloMerger_ParCloud_Num > 0 ) ? HaloMerger_ParCloud_NPar_Total : (long)0;
+   if ( OPT__INIT != INIT_BY_RESTART )
+   {
+      #  ifdef MASSIVE_PARTICLES
+      amr->Par->NPar_Active_AllRank = HaloMerger_ParCloud_NPar_Total;
 
-   PRINT_RESET_PARA( amr->Par->NPar_Active_AllRank, FORMAT_LONG, "(PAR_NPAR in Input__Parameter)" );
-   #  endif
+      PRINT_RESET_PARA( amr->Par->NPar_Active_AllRank, FORMAT_LONG, "(PAR_NPAR in Input__Parameter)" );
+      #  endif
+   }
 
 
 
@@ -1138,6 +1137,9 @@ void SetParameter()
             Aux_Message( stdout, "  %18s-> Total number of particles in all particle clouds =  %14ld\n", "", HaloMerger_ParCloud_NPar_Total );
 
          } // if ( HaloMerger_ParCloud_InitMode == 1 )
+         else
+            Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
+                       "HaloMerger_ParCloud_InitMode", HaloMerger_ParCloud_InitMode );
 
       } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_ParCloud_Num > 0 )
 
@@ -1428,6 +1430,9 @@ void End_HaloMerger()
          delete [] HaloMerger_ParCloud_RSeed;
          delete [] HaloMerger_ParCloud_NPar;
       } // if ( HaloMerger_ParCloud_InitMode == 1 )
+      else
+         Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
+                    "HaloMerger_ParCloud_InitMode", HaloMerger_ParCloud_InitMode );
 
    } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_ParCloud_Num > 0 )
 
