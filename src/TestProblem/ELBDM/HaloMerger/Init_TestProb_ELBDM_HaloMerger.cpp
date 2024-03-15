@@ -344,6 +344,7 @@ void SetParameter()
       char HaloMerger_Soliton_i_VelocityZ [MAX_STRING];
 
       char HaloMerger_Soliton_i_DensProf_Filename[MAX_STRING]; // filename of the density profile table for the i-th soliton (HaloMerger_Soliton_InitMode == 1 only)
+      char HaloMerger_Soliton_i_DensProf_Rescale[MAX_STRING];  // whether to scale the density profile table for the 1st soliton (HaloMerger_Soliton_InitMode == 1 only) [1]
 
       char HaloMerger_Soliton_i_OuterSlope[MAX_STRING];        // outer slope of the analytical density profile of the i-th soliton (HaloMerger_Soliton_InitMode == 2 only) [-8.0]
 
@@ -795,6 +796,8 @@ void SetParameter()
          {
             for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
             {
+               const int index_halo_input = index_halo+1; // index of halo in the input file
+
                if ( HaloMerger_Halo_InitMode == 1 )
                {
                   bool isOverlap = true;
@@ -851,8 +854,8 @@ void SetParameter()
 
          // check the center for the particle clouds
          for (int d=0; d<3; d++)
-         if ( HaloMerger_ParCloud_CenCoord[index_halo][d] < 0.0 )
-            HaloMerger_ParCloud_CenCoord[index_halo][d] = amr->BoxCenter[d]; // put at the box ceneter by default
+         if ( HaloMerger_ParCloud_CenCoord[index_parcloud][d] < 0.0 )
+            HaloMerger_ParCloud_CenCoord[index_parcloud][d] = amr->BoxCenter[d]; // put at the box ceneter by default
 
          // check and set the parameters for the particle density profile
          if ( HaloMerger_ParCloud_InitMode == 1 ) // the density profile from table
