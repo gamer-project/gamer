@@ -367,8 +367,8 @@ def load_arguments():
     parser.add_argument( "--cosmic_ray", type=str2bool, metavar="BOOLEAN", gamer_name="COSMIC_RAY",
                          default=False,
                          depend={"model":"HYDRO"},
-                         constraint={ True:{"dual":[NONE_STR], "eos":"COSMIC_RAY", "comoving":False} },
-                         help="Enable cosmic ray. Must use <--eos=COSMIC_RAY>.\n"
+                         constraint={ True:{"dual":[NONE_STR], "eos":["COSMIC_RAY", "TAUBMATHEWS"], "comoving":False} },
+                         help="Enable cosmic ray. Hydro/MHD: <--eos=COSMIC_RAY> or SRHD: <--eos=TABMATHEWS>.\n"
                        )
 
     parser.add_argument( "--eos", type=str, metavar="TYPE", gamer_name="EOS",
@@ -652,8 +652,9 @@ def set_conditional_defaults( args ):
         args["flux"] = "HLLD" if args["mhd"] else "HLLC"
 
     if args["eos"] == None:
-        if   args["cosmic_ray"]: args["eos"] = "COSMIC_RAY"
-        elif args["srhd"]      : args["eos"] = "TAUBMATHEWS"
+        # The order does matter in this if
+        if   args["srhd"]      : args["eos"] = "TAUBMATHEWS"
+        elif args["cosmic_ray"]: args["eos"] = "COSMIC_RAY"
         else                   : args["eos"] = "GAMMA"
 
     return args
