@@ -233,10 +233,10 @@ void SetParameter()
       char HaloMerger_Halo_i_VelocityZ[MAX_STRING];
 
       char HaloMerger_Halo_i_UM_IC_Filename[MAX_STRING]; // filename of UM_IC (binary file in vzyx format; row-major and v=field) (single AMR level) for the i-th halo (HaloMerger_Halo_InitMode == 1 only)
-      char HaloMerger_Halo_i_UM_IC_BoxLenX [MAX_STRING]; // physical length in the x/y/z-direction of UM_IC box for the i-th halo (HaloMerger_Halo_InitMode == 1 only)
+      char HaloMerger_Halo_i_UM_IC_BoxLenX [MAX_STRING]; // physical length in the x/y/z-direction of UM_IC box for the i-th halo (must > 0.0) (HaloMerger_Halo_InitMode == 1 only)
       char HaloMerger_Halo_i_UM_IC_BoxLenY [MAX_STRING];
       char HaloMerger_Halo_i_UM_IC_BoxLenZ [MAX_STRING];
-      char HaloMerger_Halo_i_UM_IC_NCellsX [MAX_STRING]; // number of cells in the x/y/z-direction of UM_IC box for the i-th halo (HaloMerger_Halo_InitMode == 1 only)
+      char HaloMerger_Halo_i_UM_IC_NCellsX [MAX_STRING]; // number of cells in the x/y/z-direction of UM_IC box for the i-th halo (must > 0) (HaloMerger_Halo_InitMode == 1 only)
       char HaloMerger_Halo_i_UM_IC_NCellsY [MAX_STRING];
       char HaloMerger_Halo_i_UM_IC_NCellsZ [MAX_STRING];
       char HaloMerger_Halo_i_UM_IC_Float8  [MAX_STRING]; // data precision of UM_IC for the i-th halo (0=float, 1=double) (HaloMerger_Halo_InitMode == 1 only) [0]
@@ -334,7 +334,7 @@ void SetParameter()
       ReadPara_t *ReadPara_Soliton  = new ReadPara_t;
 
       // Soliton-related parameters to read from the input
-      char HaloMerger_Soliton_i_CoreRadius[MAX_STRING];        // core radius of the i-th soliton (<0.0=set by HaloMerger_Soliton_i_CoreRho) [-1.0]
+      char HaloMerger_Soliton_i_CoreRadius[MAX_STRING];        // core radius of the i-th soliton (<=0.0=set by HaloMerger_Soliton_i_CoreRho) [-1.0]
       char HaloMerger_Soliton_i_CoreRho   [MAX_STRING];        // peak density of the i-th soliton (will be overwritten if HaloMerger_Soliton_i_CoreRadius > 0.0) [-1.0]
       char HaloMerger_Soliton_i_CenCoordX [MAX_STRING];        // x/y/z-coordinate of the center of the i-th soliton (<0.0=auto -> box center) [-1.0]
       char HaloMerger_Soliton_i_CenCoordY [MAX_STRING];
@@ -681,27 +681,27 @@ void SetParameter()
             if ( HaloMerger_Soliton_DensProf_Rescale[index_soliton] )
             {
                // evaluate the scale factors of each soliton
-               if ( HaloMerger_Soliton_CoreRadius[index_soliton] < 0.0 )
+               if ( HaloMerger_Soliton_CoreRadius[index_soliton] <= 0.0 )
                {
                   if ( HaloMerger_Soliton_CoreRho[index_soliton] > 0.0 )
                   {
                      // overwrite the core radius by the value calculated from the peak density
                      HaloMerger_Soliton_DensProf_ScaleD[index_soliton] = HaloMerger_Soliton_CoreRho[index_soliton] / DensRef[0];
                      HaloMerger_Soliton_DensProf_ScaleL[index_soliton] = sqrt( sqrt( 1.0 / (4.0*M_PI*NEWTON_G*SQR(ELBDM_ETA)*HaloMerger_Soliton_DensProf_ScaleD[index_soliton]) ) );
-                     HaloMerger_Soliton_CoreRadius[index_soliton]      = CoreRadiusRef*HaloMerger_Soliton_DensProf_ScaleL[index_soliton];
+                     HaloMerger_Soliton_CoreRadius     [index_soliton] = CoreRadiusRef*HaloMerger_Soliton_DensProf_ScaleL[index_soliton];
                   }
                   else // if ( HaloMerger_Soliton_CoreRho[index_soliton] > 0.0 )
                   {
                      Aux_Error( ERROR_INFO, "HaloMerger_Soliton_%d_CoreRadius (%13.6e) is not set properly !!\n", index_soliton_input, HaloMerger_Soliton_CoreRadius[index_soliton] );
                   } // if ( HaloMerger_Soliton_CoreRho[index_soliton] > 0.0 ) ... else
                }
-               else // if ( HaloMerger_Soliton_CoreRadius[index_soliton] < 0.0 )
+               else // if ( HaloMerger_Soliton_CoreRadius[index_soliton] <= 0.0 )
                {
                   // overwrite the peak density by the value calculated from the core radius
                   HaloMerger_Soliton_DensProf_ScaleL[index_soliton] = HaloMerger_Soliton_CoreRadius[index_soliton] / CoreRadiusRef;
                   HaloMerger_Soliton_DensProf_ScaleD[index_soliton] = 1.0 / ( 4.0*M_PI*NEWTON_G*SQR(ELBDM_ETA)*POW4(HaloMerger_Soliton_DensProf_ScaleL[index_soliton]) );
-                  HaloMerger_Soliton_CoreRho[index_soliton]         = HaloMerger_Soliton_DensProf_ScaleD[index_soliton]*DensRef[0];
-               } // if ( HaloMerger_Soliton_CoreRadius[index_soliton] < 0.0 ) ... else
+                  HaloMerger_Soliton_CoreRho        [index_soliton] = HaloMerger_Soliton_DensProf_ScaleD[index_soliton]*DensRef[0];
+               } // if ( HaloMerger_Soliton_CoreRadius[index_soliton] <= 0.0 ) ... else
 
             } // if ( HaloMerger_Soliton_DensProf_Rescale[index_soliton] )
             else
@@ -709,15 +709,15 @@ void SetParameter()
                // overwrite the peak density and core radius from the table
                HaloMerger_Soliton_DensProf_ScaleL[index_soliton] = 1.0;
                HaloMerger_Soliton_DensProf_ScaleD[index_soliton] = 1.0;
-               HaloMerger_Soliton_CoreRho[index_soliton]         = DensRef[0];
-               HaloMerger_Soliton_CoreRadius[index_soliton]      = CoreRadiusRef;
+               HaloMerger_Soliton_CoreRho        [index_soliton] = DensRef[0];
+               HaloMerger_Soliton_CoreRadius     [index_soliton] = CoreRadiusRef;
             } // if ( HaloMerger_Soliton_DensProf_Rescale[index_soliton] ) ... else
 
          } // if ( HaloMerger_Soliton_InitMode == 1 )
          else if ( HaloMerger_Soliton_InitMode == 2 ) // the density profile from the analytical function
          {
             // set the core radius and the peak density
-            if ( HaloMerger_Soliton_CoreRadius[index_soliton] < 0.0 )
+            if ( HaloMerger_Soliton_CoreRadius[index_soliton] <= 0.0 )
             {
                if ( HaloMerger_Soliton_CoreRho[index_soliton] > 0.0 )
                {
@@ -731,13 +731,13 @@ void SetParameter()
                   Aux_Error( ERROR_INFO, "HaloMerger_Soliton_%d_CoreRadius (%13.6e) is not set properly !!\n", index_soliton_input, HaloMerger_Soliton_CoreRadius[index_soliton] );
                } // if ( HaloMerger_Soliton_CoreRho[index_soliton] > 0.0 ) ... else
             }
-            else // if ( HaloMerger_Soliton_CoreRadius[index_soliton] < 0.0 )
+            else // if ( HaloMerger_Soliton_CoreRadius[index_soliton] <= 0.0 )
             {
                // overwrite the peak density by the value calculated from the core radius
                const double m22                          = ELBDM_MASS*UNIT_M/(Const_eV/SQR(Const_c))/1.0e-22;
                const double rc_kpc                       = HaloMerger_Soliton_CoreRadius[index_soliton]*UNIT_L/Const_kpc;
                HaloMerger_Soliton_CoreRho[index_soliton] = 1.945e7/SQR( m22*rc_kpc*rc_kpc )*Const_Msun/CUBE(Const_kpc)/(UNIT_M/CUBE(UNIT_L));
-            } // if ( HaloMerger_Soliton_CoreRadius[index_soliton] < 0.0 ) ... else
+            } // if ( HaloMerger_Soliton_CoreRadius[index_soliton] <= 0.0 ) ... else
 
          } // else if ( HaloMerger_Soliton_InitMode == 2 )
          else
@@ -793,9 +793,9 @@ void SetParameter()
          // check whether the input soliton overlaps with the input halos
          if ( HaloMerger_Halo_Num > 0 )
          {
-            if ( HaloMerger_Halo_InitMode == 1 )
+            for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
             {
-               for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
+               if ( HaloMerger_Halo_InitMode == 1 )
                {
                   bool isOverlap = true;
 
@@ -816,11 +816,12 @@ void SetParameter()
                                      index_halo_input );
                   }
 
-               } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
-            } // if ( HaloMerger_Halo_InitMode == 1 )
-            else
-               Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
-                          "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
+               } // if ( HaloMerger_Halo_InitMode == 1 )
+               else
+                  Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
+                             "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
+
+            } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
 
          } // if ( HaloMerger_Halo_Num > 0 )
 
@@ -899,11 +900,12 @@ void SetParameter()
             // check whether the input particle cloud overlaps with the input halos
             if ( HaloMerger_Halo_Num > 0 )
             {
-               if ( HaloMerger_Halo_InitMode == 1 )
+               for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
                {
-                  for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
+                  const int index_halo_input = index_halo+1; // index of halo in the input file
+
+                  if ( HaloMerger_Halo_InitMode == 1 )
                   {
-                     const int index_halo_input = index_halo+1; // index of halo in the input file
 
                      bool isOverlap = true;
 
@@ -924,11 +926,12 @@ void SetParameter()
                                         index_halo_input );
                      }
 
-                  } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
-               } // if ( HaloMerger_Halo_InitMode == 1 )
-               else
-                  Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
-                             "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
+                  } // if ( HaloMerger_Halo_InitMode == 1 )
+                  else
+                     Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
+                                "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
+
+               } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
 
             } // if ( HaloMerger_Halo_Num > 0 )
 

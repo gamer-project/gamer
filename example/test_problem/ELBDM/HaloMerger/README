@@ -57,7 +57,7 @@ Note:
 5. Turn on OPT__EXT_POT == 1 to add external potential
    a. The external potential of a uniform-density sphere, which is proportional to r^2 inside and proportional to 1/r outside
 
-6. Download the default UM_IC file: sh download_ic.sh
+6. Download the default UM_IC_Halo file: sh download_ic.sh
    a. Halo mass = 4.0960e+09 Msun
    b. Without soliton
    c. N = 640, L = 0.0646921095 Mpc/h, single-precision
