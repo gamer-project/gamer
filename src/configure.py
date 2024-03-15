@@ -104,24 +104,24 @@ class ArgumentParser( argparse.ArgumentParser ):
             usage = []
             for option in self.options:
                 for item in option["flags"]:
-                    if "action" in option:
-                        if option["action"] in ["help", "store_const", "store_true", "store_false"]:
-                            usage += [ "[%s]"%(item) ]
-                            continue
-
-                    default_value = ""
-                    if "default" in option:
-                        default_value += " *"
-                        default_value += "Depend" if option["default"] is None else str(option["default"])
-
                     # the order of if does matter here
-                    possibles = " "
+                    possibles = ""
                     if   "choices" in option: possibles += "{%s}"%(", ".join([ str(opt) for opt in option["choices"] ]))
                     elif "metavar" in option: possibles += option["metavar"]
                     elif "dest"    in option: possibles += option["dest"]    if "default" in option else option["dest"].upper()
                     else:                     possibles += re.sub(r"^(-{1,})", "", item).upper()
 
-                    usage += [ "[%s%s%s]"%(item, possibles, default_value) ]
+                    default_value = ""
+                    if "default" in option:
+                        default_value += "*"
+                        default_value += "Depend" if option["default"] is None else str(option["default"])
+
+                    if "action" in option:
+                        if option["action"] in ["help", "store_const", "store_true", "store_false"]:
+                            possibles = ""
+                            default_value = ""
+
+                    usage += [ "[%s]"%(" ".join([item, possibles, default_value])) ]
 
             indent = "Usage: %s " % os.path.basename(sys.argv[0])
             output = indent + " " + str.join(" ", usage)
