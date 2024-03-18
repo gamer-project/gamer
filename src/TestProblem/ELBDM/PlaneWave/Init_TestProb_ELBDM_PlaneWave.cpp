@@ -284,6 +284,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //-------------------------------------------------------------------------------------------------------
 void AddNewField_PlaneWave()
 {
+
    if ( PWave_Idx_Phase == Idx_Undefined )
       PWave_Idx_Phase = AddField( "Phase", NORMALIZE_NO, INTERP_FRAC_NO );
 
