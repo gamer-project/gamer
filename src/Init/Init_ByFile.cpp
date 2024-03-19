@@ -159,6 +159,9 @@ void Init_ByFile()
       Aux_Error( ERROR_INFO, "OPT__UM_IC_LEVEL (%d) + OPT__UM_IC_NLEVEL (%d) - 1 = %d > MAX_LEVEL (%d) !!\n",
                  OPT__UM_IC_LEVEL, OPT__UM_IC_NLEVEL, OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1, MAX_LEVEL );
 
+   if ( OPT__RESET_FLUID_INIT  &&  Flu_ResetByUser_API_Ptr == NULL )
+      Aux_Error( ERROR_INFO, "Flu_ResetByUser_API_Ptr == NULL for OPT__RESET_FLUID_INIT !!\n" );
+
 // check file size
    long FileSize, ExpectSize;
 
@@ -169,7 +172,7 @@ void Init_ByFile()
 
    ExpectSize = 0;
    for (int t=0; t<OPT__UM_IC_NLEVEL; t++)
-      ExpectSize += long(OPT__UM_IC_NVAR)*UM_Size3D[t][0]*UM_Size3D[t][1]*UM_Size3D[t][2]*sizeof(real);
+      ExpectSize += long(OPT__UM_IC_NVAR)*UM_Size3D[t][0]*UM_Size3D[t][1]*UM_Size3D[t][2]*( (OPT__UM_IC_FLOAT8)?sizeof(double):sizeof(float) );
 
    if ( FileSize != ExpectSize )
       Aux_Error( ERROR_INFO, "size of the file <%s> (%ld) != expected (%ld) !!\n", UM_Filename, FileSize, ExpectSize );
@@ -272,6 +275,10 @@ void Init_ByFile()
    Init_ByFile_AssignData( UM_Filename, OPT__UM_IC_LEVEL, OPT__UM_IC_LEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK,
                            OPT__UM_IC_FORMAT, UM_Size3D, FlagPatch );
 
+   if ( OPT__RESET_FLUID_INIT )
+      Flu_ResetByUser_API_Ptr( OPT__UM_IC_LEVEL, amr->FluSg[OPT__UM_IC_LEVEL], amr->MagSg[OPT__UM_IC_LEVEL],
+                               Time[OPT__UM_IC_LEVEL], 0.0 );
+
 #  ifdef LOAD_BALANCE
    Buf_GetBufferData( OPT__UM_IC_LEVEL, amr->FluSg[OPT__UM_IC_LEVEL], amr->MagSg[OPT__UM_IC_LEVEL], NULL_INT,
                       DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
@@ -320,6 +327,9 @@ void Init_ByFile()
       Init_ByFile_AssignData( UM_Filename, SonLv, OPT__UM_IC_LEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK,
                               OPT__UM_IC_FORMAT, UM_Size3D, FlagPatch );
 
+      if ( OPT__RESET_FLUID_INIT )
+         Flu_ResetByUser_API_Ptr( SonLv, amr->FluSg[SonLv], amr->MagSg[SonLv], Time[SonLv], 0.0 );
+
 //    fill the buffer patches on SonLv
 #     ifdef LOAD_BALANCE
       Buf_GetBufferData( SonLv, amr->FluSg[SonLv], amr->MagSg[SonLv], NULL_INT,
@@ -338,14 +348,16 @@ void Init_ByFile()
    {
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Restricting level %d ... ", lv );
 
+      const long ResVar = ( lv < OPT__UM_IC_LEVEL ) ? _TOTAL : FixUpVar_Restrict;
+
       Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv], NULL_INT, NULL_INT,
-                          _TOTAL, _MAG );
+                          ResVar, _MAG );
 
 #     ifdef LOAD_BALANCE
-      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, _MAG, NULL_INT,    USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT, ResVar, _MAG, NULL_INT,    USELB_YES );
 
 //    use DATA_GENERAL instead of DATA_AFTER_FIXUP since we haven't call Buf_GetBufferData() on levels 0 ~ OPT__UM_IC_LEVEL-1
-      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL,  _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL,  ResVar, _MAG, Flu_ParaBuf, USELB_YES );
 #     endif
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
@@ -381,6 +393,12 @@ void Init_ByFile()
 
 
 // 9. refine the uniform-mesh data from levels OPT__UM_IC_LEVEL to MAX_LEVEL-1
+//    --> we currently do not apply OPT__RESET_FLUID_INIT after Refine() because
+//        (1) the existing patches from level OPT__UM_IC_LEVEL to level OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1
+//            already include the reset results (by Flu_ResetByUser_API_Ptr() directly),
+//        (2) the refined patches on levels higher than OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1
+//            also include the reset results (by interpolation), and
+//        (3) to avoid double-counting the reset data when Flu_ResetByUser_API_Ptr() uses fluid[]+=... instead of fluid[]=...
    if ( OPT__UM_IC_REFINE )
    for (int lv=OPT__UM_IC_LEVEL; lv<MAX_LEVEL; lv++)
    {
@@ -412,12 +430,12 @@ void Init_ByFile()
 
 //    no need to restrict potential since it will be recalculated later
       Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv], NULL_INT, NULL_INT,
-                          _TOTAL, _MAG );
+                          FixUpVar_Restrict, _MAG );
 
 #     ifdef LOAD_BALANCE
-      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT,    _TOTAL, _MAG, NULL_INT,    USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT,    FixUpVar_Restrict, _MAG, NULL_INT,    USELB_YES );
 
-      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_AFTER_FIXUP, _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_AFTER_FIXUP, FixUpVar_Restrict, _MAG, Flu_ParaBuf, USELB_YES );
 #     endif
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
@@ -477,13 +495,16 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
    real   fluid_in[UM_NVar], fluid_out[NCOMP_TOTAL];
    double x, y, z;
 
-   real *PG_Data = new real [ CUBE(PS2)*UM_NVar ];
+
+// determine the load_data_size and allocate buffer for loading UM_IC
+   size_t load_data_size = ( OPT__UM_IC_FLOAT8 ) ? sizeof(double) : sizeof(float);
+   char*  PG_Data        = new char [ CUBE(PS2)*UM_NVar*load_data_size ];
 
 
 // calculate the file offset of the target level
    Offset_lv = 0;
    for (int t=0; t<dlv; t++)
-      Offset_lv += long(UM_NVar)*UM_Size3D[t][0]*UM_Size3D[t][1]*UM_Size3D[t][2]*sizeof(real);
+      Offset_lv += long(UM_NVar)*UM_Size3D[t][0]*UM_Size3D[t][1]*UM_Size3D[t][2]*load_data_size;
 
 
 // load data with UM_LoadNRank ranks at a time
@@ -513,7 +534,7 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
 
             Offset_File0  = IDX321( Offset3D_File0[0], Offset3D_File0[1], Offset3D_File0[2],
                                     UM_Size3D[dlv][0], UM_Size3D[dlv][1] );
-            Offset_File0 *= (long)NVarPerLoad*sizeof(real);
+            Offset_File0 *= (long)NVarPerLoad*load_data_size;
 
 
 //          load data from the disk (one row at a time)
@@ -525,16 +546,16 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
                for (int j=0; j<PS2; j++)
                {
                   Offset_File = Offset_lv + Offset_File0
-                                + (long)NVarPerLoad*sizeof(real)*( ((long)k*UM_Size3D[dlv][1] + j)*UM_Size3D[dlv][0] )
-                                + v*UM_Size1v*sizeof(real);
+                                + (long)NVarPerLoad*load_data_size*( ((long)k*UM_Size3D[dlv][1] + j)*UM_Size3D[dlv][0] )
+                                + v*UM_Size1v*load_data_size;
 
                   fseek( File, Offset_File, SEEK_SET );
-                  fread( PG_Data+Offset_PG, sizeof(real), NVarPerLoad*PS2, File );
+                  fread( PG_Data+Offset_PG, load_data_size, NVarPerLoad*PS2, File );
 
 //                verify that the file size is not exceeded
                   if ( feof(File) )   Aux_Error( ERROR_INFO, "reaching the end of the file \"%s\" !!\n", UM_Filename );
 
-                  Offset_PG += NVarPerLoad*PS2;
+                  Offset_PG += NVarPerLoad*PS2*load_data_size;
                }
             }
 
@@ -551,15 +572,22 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
                for (int j=0; j<PS1; j++)  {  y = amr->patch[0][UM_lv][PID]->EdgeL[1] + (j+0.5)*dh;
                for (int i=0; i<PS1; i++)  {  x = amr->patch[0][UM_lv][PID]->EdgeL[0] + (i+0.5)*dh;
 
-                  Offset_PG = (long)NVarPerLoad*IDX321( i+Disp_i, j+Disp_j, k+Disp_k, PS2, PS2 );
+                  Offset_PG = (long)NVarPerLoad*IDX321( i+Disp_i, j+Disp_j, k+Disp_k, PS2, PS2 )*load_data_size;
 
                   if ( UM_Format == UM_IC_FORMAT_ZYXV )
-                     memcpy( fluid_in, PG_Data+Offset_PG, UM_NVar*sizeof(real) );
+                  {
+                     if ( OPT__UM_IC_FLOAT8 )
+                        for (int v=0; v<UM_NVar; v++) fluid_in[v] = (real)( *((double*)( PG_Data + Offset_PG + v*load_data_size )) ) ;
+                     else
+                        for (int v=0; v<UM_NVar; v++) fluid_in[v] = (real)( *((float* )( PG_Data + Offset_PG + v*load_data_size )) ) ;
+                  }
 
                   else
                   {
-                     for (int v=0; v<UM_NVar; v++)
-                        fluid_in[v] = *( PG_Data + Offset_PG + v*CUBE(PS2) );
+                     if ( OPT__UM_IC_FLOAT8 )
+                        for (int v=0; v<UM_NVar; v++) fluid_in[v] = (real)( *((double*)( PG_Data + Offset_PG + v*CUBE(PS2)*load_data_size )) );
+                     else
+                        for (int v=0; v<UM_NVar; v++) fluid_in[v] = (real)( *((float* )( PG_Data + Offset_PG + v*CUBE(PS2)*load_data_size )) );
                   }
 
                   Init_ByFile_User_Ptr( fluid_out, fluid_in, UM_NVar, x, y, z, Time[UM_lv], UM_lv, NULL );

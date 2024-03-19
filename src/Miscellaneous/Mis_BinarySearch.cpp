@@ -21,11 +21,11 @@
 //                Max   : Maximum array index for searching
 //                Key   : Integer number to search for
 //-------------------------------------------------------------------------------------------------------
-template <typename T>
-int Mis_BinarySearch( const T Array[], int Min, int Max, const T Key )
+template <typename U, typename T>
+U Mis_BinarySearch( const T Array[], U Min, U Max, const T Key )
 {
 
-   int Mid = -1;
+   U Mid = -1;
 
    while ( Min <= Max )
    {
@@ -43,6 +43,10 @@ int Mis_BinarySearch( const T Array[], int Min, int Max, const T Key )
 
 
 // explicit template instantiation
-template int Mis_BinarySearch <int>   ( const int   Array[], int Min, int Max, const int   Key );
-template int Mis_BinarySearch <long>  ( const long  Array[], int Min, int Max, const long  Key );
-template int Mis_BinarySearch <ulong> ( const ulong Array[], int Min, int Max, const ulong Key );
+template int  Mis_BinarySearch <int,int>    ( const int   Array[], int  Min, int  Max, const int   Key );
+template int  Mis_BinarySearch <int,long>   ( const long  Array[], int  Min, int  Max, const long  Key );
+template int  Mis_BinarySearch <int,ulong>  ( const ulong Array[], int  Min, int  Max, const ulong Key );
+
+template long Mis_BinarySearch <long,int>   ( const int   Array[], long Min, long Max, const int   Key );
+template long Mis_BinarySearch <long,long>  ( const long  Array[], long Min, long Max, const long  Key );
+template long Mis_BinarySearch <long,ulong> ( const ulong Array[], long Min, long Max, const ulong Key );

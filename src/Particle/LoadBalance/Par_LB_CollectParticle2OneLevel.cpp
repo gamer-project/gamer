@@ -231,7 +231,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
 //###NOTE: faster version can only be applied to the Hilbert space-filling curve
 #     if ( LOAD_BALANCE == HILBERT )
-      const long LB_Idx = amr->patch[0][lv][PID]->LB_Idx / ( 1 << (3*(lv-FaLv)) );
+      const long LB_Idx = amr->patch[0][lv][PID]->LB_Idx / ( 1L << (3L*(lv-FaLv)) );
 #     else
       int FaCr[3];
       for (int d=0; d<3; d++)    FaCr[d] = amr->patch[0][lv][PID]->corner[d] - amr->patch[0][lv][PID]->corner[d]%PatchScaleFaLv;
@@ -250,12 +250,13 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
 // 1-2. allocate the send buffers
 // both NSendPatchTotal and NSendParTotal do NOT include patches without particles
-   int NSendPatchTotal=0, NSendParTotal=0;
+   int  NSendPatchTotal = 0;
+   long NSendParTotal   = 0L;
 
    for (int r=0; r<MPI_NRank; r++)
    {
-      NSendPatchTotal += NPatchForEachRank[r];
-      NSendParTotal   += NParForEachRank  [r];
+      NSendPatchTotal +=       NPatchForEachRank[r];
+      NSendParTotal   += (long)NParForEachRank  [r];
    }
 
    SendBuf_NParEachPatch  = new int  [NSendPatchTotal];
@@ -385,7 +386,8 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
    const bool Exchange_NPatchEachRank_Yes = true;
    const bool Exchange_LBIdxEachRank_Yes  = true;
    const bool Exchange_ParDataEachRank    = !JustCountNPar;
-   int  NRecvPatchTotal, NRecvParTotal;
+   int  NRecvPatchTotal;
+   long NRecvParTotal;
 
    char Timer_Comment[50];
    sprintf( Timer_Comment, "%3d %15s", FaLv, "Par_Collect" );

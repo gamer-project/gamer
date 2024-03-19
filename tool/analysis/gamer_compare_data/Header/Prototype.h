@@ -6,8 +6,8 @@
 // CompareData functions
 void ReadOption( int argc, char **argv );
 void CheckParameter();
-void CompareGridData();
-void CompareParticleData();
+int CompareGridData();
+int CompareParticleData();
 void FreeMemory();
 
 // GAMER functions

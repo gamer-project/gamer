@@ -151,14 +151,15 @@ void YT_Inline()
    FieldList[EoSIdx + 1].field_unit         = "code_mass / (code_length*code_time**2)";
    FieldList[EoSIdx + 1].field_display_name = "Pressure";
 
-#  if ( EOS == EOS_NUCLEAR )
+#  if   ( EOS == EOS_NUCLEAR )
    FieldList[EoSIdx + 2].field_unit         = "code_mass*code_length**(2) / (code_temperature*code_time**(2))";
-#  endif // #if ( EOS == EOS_NUCLEAR )
-#  if ( EOS == EOS_GAMMA )
+#  elif ( EOS == EOS_GAMMA  ||  EOS == EOS_COSMIC_RAY )
    char EntropyUnit[100];
    real gamma_m1 = (real) GAMMA - 1.0;
    sprintf(EntropyUnit, "code_mass**(1-%.2f) / (code_length**(1-3*%.2f)*code_time**2)", gamma_m1, gamma_m1);
    FieldList[EoSIdx + 2].field_unit         = EntropyUnit;
+#  else
+   Aux_Message( stderr, "WARNING : unknown entropy unit in %s() !!\n", __FUNCTION__ );
 #  endif // #if ( EOS == EOS_GAMMA )
    FieldList[EoSIdx + 2].field_display_name = "Entropy";
 

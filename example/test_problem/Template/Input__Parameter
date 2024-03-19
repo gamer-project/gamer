@@ -18,7 +18,7 @@ BOX_SIZE                      1.0         # box size along the longest side (in 
 NX0_TOT_X                     64          # number of base-level cells along x
 NX0_TOT_Y                     64          # number of base-level cells along y
 NX0_TOT_Z                     64          # number of base-level cells along z
-OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
+OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto) [-1] ##OPENMP ONLY##
 END_T                        -1.0         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
 END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
 
@@ -44,6 +44,9 @@ TESTPROB_ID                   0           # test problem ID [0]
                                           #   16: HYDRO Jeans instability (+GRAVITY) [+MHD]
                                           #   17: HYDRO particle in equilibrium (+GRAVITY & PARTICLE)
                                           #   19: HYDRO energy power spectrum
+                                          #   20: HYDRO MHD Cosmic Ray Soundwave
+                                          #   21: HYDRO MHD Cosmic Ray Shocktube
+                                          #   23: HYDRO MHD Cosmic Ray Diffusion
                                           #  100: HYDRO CDM cosmological simulation (+GRAVITY & COMOVING & PARTICLE)
                                           #  101: HYDRO Zeldovich pancake collapse (+GRAVITY & COMOVING & PARTICLE)
                                           # 1000: ELBDM external potential (+GRAVITY)
@@ -73,6 +76,7 @@ GFUNC_COEFF0                 -1.0         # Green's function coefficient at the 
 PAR_NPAR                      0           # total number of particles (must be set for PAR_INIT==1/3; must be an integer)
 PAR_INIT                      1           # initialization option for particles: (1=FUNCTION, 2=RESTART, 3=FILE->"PAR_IC")
 PAR_IC_FORMAT                 1           # data format of PAR_IC: (1=[attribute][id], 2=[id][attribute]; row-major) [1]
+PAR_IC_FLOAT8                -1           # floating-point precision for PAR_IC (<0: default, 0: single, 1: double) [default: same as FLOAT8]
 PAR_IC_MASS                  -1.0         # mass of all particles for PAR_INIT==3 (<0=off) [-1.0]
 PAR_IC_TYPE                  -1           # type of all particles for PAR_INIT==3 (<0=off) [-1]
 PAR_INTERP                    3           # particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [2]
@@ -95,11 +99,13 @@ HUBBLE0                       0.70        # dimensionless Hubble parameter (curr
 DT__MAX                      -1.0         # dt criterion: maximum allowed dt (<0=off) [-1.0]
 DT__FLUID                    -1.0         # dt criterion: fluid solver CFL factor (<0=auto) [-1.0]
 DT__FLUID_INIT               -1.0         # dt criterion: DT__FLUID at the first step (<0=auto) [-1.0]
+DT__SPEED_OF_LIGHT            0           # dt criterion: speed of light [0] ##SRHD ONLY##
 DT__GRAVITY                  -1.0         # dt criterion: gravity solver safety factor (<0=auto) [-1.0]
 DT__PHASE                     0.0         # dt criterion: phase rotation safety factor (0=off) [0.0] ##ELBDM ONLY##
 DT__PARVEL                    0.5         # dt criterion: particle velocity safety factor [0.5]
 DT__PARVEL_MAX               -1.0         # dt criterion: maximum allowed dt from particle velocity (<0=off) [-1.0]
 DT__PARACC                    0.5         # dt criterion: particle acceleration safety factor (0=off) [0.5] ##STORE_PAR_ACC ONLY##
+DT__CR_DIFFUSION              0.3         # dt criterion: cosmic-ray diffusion CFL factor [0.3] ##CR_DIFFUSION only##
 DT__MAX_DELTA_A               0.01        # dt criterion: maximum variation of the cosmic scale factor [0.01]
 DT__SYNC_PARENT_LV            0.1         # dt criterion: allow dt to adjust by (1.0+DT__SYNC_PARENT) in order to synchronize
                                           #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
@@ -109,7 +115,7 @@ OPT__DT_USER                  0           # dt criterion: user-defined -> edit "
 OPT__DT_LEVEL                 3           # dt at different AMR levels (1=shared, 2=differ by two, 3=flexible) [3]
 OPT__RECORD_DT                1           # record info of the dt determination [1]
 AUTO_REDUCE_DT                1           # reduce dt automatically when the program fails (for OPT__DT_LEVEL==3 only) [1]
-AUTO_REDUCE_DT_FACTOR         0.8         # reduce dt by a factor of AUTO_REDUCE_DT_FACTOR when the program fails [0.8]
+AUTO_REDUCE_DT_FACTOR         1.0         # reduce dt by a factor of AUTO_REDUCE_DT_FACTOR when the program fails [1.0]
 AUTO_REDUCE_DT_FACTOR_MIN     0.1         # minimum allowed AUTO_REDUCE_DT_FACTOR after consecutive failures [0.1]
 AUTO_REDUCE_MINMOD_FACTOR     0.8         # reduce MINMOD_COEFF by this factor together with AUTO_REDUCE_DT (1.0=off) [0.8] ##HYDRO ONLY##
 AUTO_REDUCE_MINMOD_MIN        1.0e-2      # minimum allowed MINMOD_COEFF after consecutive failures [1.0e-2] ##HYDRO ONLY##
@@ -127,15 +133,18 @@ MAX_LEVEL                     0           # maximum refinement level (0~NLEVEL-1
 OPT__FLAG_RHO                 0           # flag: density (Input__Flag_Rho) [0]
 OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_RhoGradient) [0]
 OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag_PresGradient) [0] ##HYDRO ONLY##
+OPT__FLAG_LRTZ_GRADIENT       0           # flag: Lorentz factor gradient (Input__Flag_LrtzGradient) [0] ##SRHD ONLY##
 OPT__FLAG_VORTICITY           0           # flag: vorticity (Input__Flag_Vorticity) [0] ##HYDRO ONLY##
 OPT__FLAG_JEANS               0           # flag: Jeans length (Input__Flag_Jeans) [0] ##HYDRO ONLY##
 OPT__FLAG_CURRENT             0           # flag: current density in MHD (Input__Flag_Current) [0] ##MHD ONLY##
+OPT__FLAG_CRAY                0           # flag: cosmic-ray energy (Input__Flag_CRay) [0] ##COSMIC_RAY ONLY##
 OPT__FLAG_ENGY_DENSITY        0           # flag: energy density (Input_Flag_EngyDensity) [0] ##ELBDM ONLY##
-OPT__FLAG_LOHNER_DENS         0           # flag: Lohner for mass density   (Input__Flag_Lohner) [0] ##BOTH HYDRO AND ELBDM##
-OPT__FLAG_LOHNER_ENGY         0           # flag: Lohner for energy density (Input__Flag_Lohner) [0] ##HYDRO ONLY##
-OPT__FLAG_LOHNER_PRES         0           # flag: Lohner for pressure       (Input__Flag_Lohner) [0] ##HYDRO ONLY##
-OPT__FLAG_LOHNER_TEMP         0           # flag: Lohner for temperature    (Input__Flag_Lohner) [0] ##HYDRO ONLY##
-OPT__FLAG_LOHNER_ENTR         0           # flag: Lohner for entropy        (Input__Flag_Lohner) [0] ##HYDRO ONLY##
+OPT__FLAG_LOHNER_DENS         0           # flag: Lohner for mass density      (Input__Flag_Lohner) [0] ##BOTH HYDRO AND ELBDM##
+OPT__FLAG_LOHNER_ENGY         0           # flag: Lohner for energy density    (Input__Flag_Lohner) [0] ##HYDRO ONLY##
+OPT__FLAG_LOHNER_PRES         0           # flag: Lohner for pressure          (Input__Flag_Lohner) [0] ##HYDRO ONLY##
+OPT__FLAG_LOHNER_TEMP         0           # flag: Lohner for temperature       (Input__Flag_Lohner) [0] ##HYDRO ONLY##
+OPT__FLAG_LOHNER_ENTR         0           # flag: Lohner for entropy           (Input__Flag_Lohner) [0] ##HYDRO ONLY##
+OPT__FLAG_LOHNER_CRAY         0           # flag: Lohner for cosmic-ray energy (Input__Flag_Lohner) [0] ##COSMIC_RAY ONLY##
 OPT__FLAG_LOHNER_FORM         2           # form of Lohner: (1=FLASH-1, 2=FLASH-2, 3=form-invariant-1, 4=form-invariant-2) [2]
 OPT__FLAG_USER                0           # flag: user-defined (Input__Flag_User) -> edit "Flag_User.cpp" [0]
 OPT__FLAG_USER_NUM            1           # number of threshold values in user-defined table (Input__Flag_User) [1]
@@ -200,6 +209,13 @@ FB_SNE                        0           # supernova explosion feedback [0]
 FB_USER                       0           # user-defined feedback [0]
 
 
+# cosmic rays (COSMIC_RAY only)
+GAMMA_CR                      1.333333333 # effective adiabatic index of cosmic rays [4.0/3.0]
+CR_DIFF_PARA                  0.05        # cosmic-ray diffusion coefficients parallel/perpendicular to the
+CR_DIFF_PERP                  0.0         # magnetic field [0.0] ##CR_DIFFUSION only##
+CR_DIFF_MIN_B                 0.0         # disable diffusion locally when B field amplitude is smaller than this threshold (<=0=off) [0.0] ##CR_DIFFUSION only##
+
+
 # fluid solver in HYDRO (MODEL==HYDRO only)
 GAMMA                         1.666666667 # ratio of specific heats (i.e., adiabatic index) [5.0/3.0] ##EOS_GAMMA ONLY##
 MOLECULAR_WEIGHT              0.6         # mean molecular weight [0.6]
@@ -208,7 +224,7 @@ ISO_TEMP                      1.0e4       # isothermal temperature in kelvin ##E
 MINMOD_COEFF                  1.5         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
 MINMOD_MAX_ITER               0           # maximum number of iterations to reduce MINMOD_COEFF when data reconstruction fails (0=off) [0]
 OPT__LR_LIMITER              -1           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
-                                          # (-1=auto, 0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod, 6=central) [-1]
+                                          # (-1=auto, 0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod, 6=central, 7=Athena) [-1]
 OPT__1ST_FLUX_CORR           -1           # correct unphysical results (defined by MIN_DENS/PRES) by the 1st-order fluxes:
                                           # (<0=auto, 0=off, 1=3D, 2=3D+1D) [-1] ##MHM/MHM_RP/CTU ONLY##
 OPT__1ST_FLUX_CORR_SCHEME    -1           # Riemann solver for OPT__1ST_FLUX_CORR (-1=auto, 0=none, 1=Roe, 2=HLLC, 3=HLLE, 4=HLLD) [-1]
@@ -294,6 +310,7 @@ OPT__UM_IC_LEVEL              0           # starting AMR level in UM_IC [0]
 OPT__UM_IC_NLEVEL             1           # number of AMR levels UM_IC [1] --> edit "Input__UM_IC_RefineRegion" if >1
 OPT__UM_IC_NVAR              -1           # number of variables in UM_IC: (1~NCOMP_TOTAL; <=0=auto) [HYDRO=5+passive/ELBDM=2]
 OPT__UM_IC_FORMAT             1           # data format of UM_IC: (1=vzyx, 2=zyxv; row-major and v=field) [1]
+OPT__UM_IC_FLOAT8            -1           # floating-point precision for UM_IC (<0: default, 0: single, 1: double) [default: same as FLOAT8]
 OPT__UM_IC_DOWNGRADE          1           # downgrade UM_IC from level OPT__UM_IC_LEVEL to 0 [1]
 OPT__UM_IC_REFINE             1           # refine UM_IC from level OPT__UM_IC_LEVEL to MAX_LEVEL [1]
 OPT__UM_IC_LOAD_NRANK         1           # number of parallel I/O (i.e., number of MPI ranks) for loading UM_IC [1]
@@ -324,6 +341,7 @@ INT_OPP_SIGN_0TH_ORDER        1           # switch to 0th-order interpolation if
 # data dump
 OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
 OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
+OPT__OUTPUT_TEXT_FORMAT_FLT   %24.16e     # string format of output text files [%24.16e]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_PAR_MODE          0           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
@@ -333,12 +351,15 @@ OPT__OUTPUT_PAR_DENS          1           # output the particle or total mass de
                                           # (0=off, 1=particle mass density, 2=total mass density) [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_CC_MAG            1           # output **cell-centered** magnetic field (necessary for yt analysis) [1] ##MHD ONLY##
 OPT__OUTPUT_PRES              0           # output gas pressure [0] ##HYDRO ONLY##
-OPT__OUTPUT_TEMP              0           # output gas temperature [0] ##HYDRO ONLY##
+OPT__OUTPUT_TEMP              0           # output gas temperature [0 (HD) or 1 (SRHD)] ##HYDRO ONLY##
 OPT__OUTPUT_ENTR              0           # output gas entropy [0] ##HYDRO ONLY##
 OPT__OUTPUT_CS                0           # output sound speed [0] ##HYDRO ONLY##
 OPT__OUTPUT_DIVVEL            0           # output divergence(velocity) [0] ##HYDRO ONLY##
 OPT__OUTPUT_MACH              0           # output mach number [0] ##HYDRO ONLY##
 OPT__OUTPUT_DIVMAG            0           # output |divergence(B)*dh/|B|| [0] ##MHD ONLY##
+OPT__OUTPUT_LORENTZ           0           # output Lorentz factor [0] ##SRHD ONLY##
+OPT__OUTPUT_3VELOCITY         0           # output 3-velocities [0] ##SRHD ONLY##
+OPT__OUTPUT_ENTHALPY          1           # output reduced enthalpy [1] ##SRHD ONLY##
 OPT__OUTPUT_USER_FIELD        0           # output user-defined derived fields [0] -> edit "Flu_DerivedField_User.cpp"
 OPT__OUTPUT_MODE              1           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OPT__OUTPUT_RESTART           0           # output data immediately after restart [0]

@@ -12,23 +12,10 @@
 // Note        :  1. Work only when the corresponding input parameters are negative
 //                2. The default values are determined empirically from the cosmological simulations
 //
-// Parameter   :  SOR_Omega    : Over-relaxation parameter for SOR
-//                SOR_Max_Iter : Maximum number of iterations for SOR
-//                SOR_Min_Iter : Minimum number of iterations for SOR
+// Return      :  SOR_OMEGA, SOR_MAX_ITER, SOR_MIN_ITER
 //-------------------------------------------------------------------------------------------------------
-void Init_Set_Default_SOR_Parameter( double &SOR_Omega, int &SOR_Max_Iter, int &SOR_Min_Iter )
+void Init_Set_Default_SOR_Parameter()
 {
-
-// helper macro for printing warning messages
-#  define FORMAT_INT    %- 21d
-#  define FORMAT_FLT    %- 21.14e
-#  define PRINT_WARNING( name, value, format, reason )                                                         \
-   {                                                                                                           \
-      if ( MPI_Rank == 0 )                                                                                     \
-         Aux_Message( stderr, "WARNING : parameter [%-28s] is reset to [" EXPAND_AND_QUOTE(format) "] %s\n",   \
-                      #name, value, reason );                                                                  \
-   }
-
 
 // reference to the optimum relaxation parameter: Yang & Gobbert, Appl. Math. Lett. 22, 325 (2009)
 // --> Eq. [1.3] and the last paragraph in Sec. 3
@@ -42,32 +29,27 @@ void Init_Set_Default_SOR_Parameter( double &SOR_Omega, int &SOR_Max_Iter, int &
 #  endif
    const int    Default_MinIter = Default_MaxIter / 5;   // 20% of the maximum iteration (determined empirically)
 
-   if ( SOR_Omega < 0.0 )
-   {
-      SOR_Omega = Default_Omega;
 
-      PRINT_WARNING( SOR_OMEGA, SOR_Omega, FORMAT_FLT, "" );
+   if ( SOR_OMEGA < 0.0 )
+   {
+      SOR_OMEGA = Default_Omega;
+
+      PRINT_RESET_PARA( SOR_OMEGA, FORMAT_REAL, "" );
    }
 
-   if ( SOR_Max_Iter < 0 )
+   if ( SOR_MAX_ITER < 0 )
    {
-      SOR_Max_Iter = Default_MaxIter;
+      SOR_MAX_ITER = Default_MaxIter;
 
-      PRINT_WARNING( SOR_MAX_ITER, SOR_Max_Iter, FORMAT_INT, "" );
+      PRINT_RESET_PARA( SOR_MAX_ITER, FORMAT_INT, "" );
    }
 
-   if ( SOR_Min_Iter < 0 )
+   if ( SOR_MIN_ITER < 0 )
    {
-      SOR_Min_Iter = Default_MinIter;
+      SOR_MIN_ITER = Default_MinIter;
 
-      PRINT_WARNING( SOR_MIN_ITER, SOR_Min_Iter, FORMAT_INT, "" );
+      PRINT_RESET_PARA( SOR_MIN_ITER, FORMAT_INT, "" );
    }
-
-
-// remove symbolic constants and macros only used in this structure
-#  undef FORMAT_INT
-#  undef FORMAT_FLT
-#  undef QUOTE
 
 } // FUNCTION : Init_Set_Default_SOR_Parameter
 

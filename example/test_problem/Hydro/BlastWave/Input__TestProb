@@ -7,3 +7,8 @@ Blast_Center_X      -1.0            # explosion center x (<0=default) [box cente
 Blast_Center_Y      -1.0            # explosion center y (<0=default) [box center]
 Blast_Center_Z      -1.0            # explosion center z (<0=default) [box center]
 Blast_BField         5.0e-2         # magnetic field strength along the diagonal direction (MHD only) [1.0]
+Blast_ResetB_amp     1.0e2          # amplitude (for resetting magnetic field)
+Blast_ResetB_r0      4.0e-2         # scale radius
+Blast_ResetB_tmin    1.0e-3         # starting time
+Blast_ResetB_tmax    3.0e-3         # ending time
+Blast_ResetB_VecPot  1              # use vector potential to reset magnetic field (recommended)

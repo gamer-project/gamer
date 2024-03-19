@@ -37,7 +37,7 @@ void DerivedFuncWithName_PatchGroup(const int list_len, const long *list_gid, co
         if ( strcmp(PotLabel, field) == 0 )    gamer_fieldBIdx = _POTE;
 #endif
 #ifdef  MHD
-        char *CCMagLabel[] = {"CCMagX", "CCMagY", "CCMagZ"};
+        const char *CCMagLabel[] = {"CCMagX", "CCMagY", "CCMagZ"};
         for(int v=0; v<NCOMP_MAG; v++){
             if ( strcmp(CCMagLabel[v], field) == 0 ) {
                 if      ( v == 0 ) gamer_fieldBIdx = _MAGX_CC;

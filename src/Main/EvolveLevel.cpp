@@ -20,10 +20,6 @@ extern Timer_t *Timer_Par_2Son   [NLEVEL];
 
 bool AutoReduceDt_Continue;
 
-extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TimeNew, const double dt );
-extern void (*Mis_UserWorkBeforeNextLevel_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt );
-extern void (*Mis_UserWorkBeforeNextSubstep_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt );
-
 
 
 
@@ -295,6 +291,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #                    endif // HYDRO
                      Aux_Message( stderr, ", INT_MONO_COEFF %13.7e (min %13.7e)\n", IntMonoCoeff_Failed, AUTO_REDUCE_INT_MONO_MIN );
                      Aux_Message( stderr, "   --> Apply floor values with the original dt and interpolation coefficients as the last resort ...\n" );
+                     Aux_Message( stderr, "   --> Consider setting AUTO_REDUCE_DT_FACTOR < 1.0 in Input__Parameter if not done yet\n" );
                   }
                } // if ( AutoReduceDtCoeff >= AUTO_REDUCE_DT_FACTOR_MIN  && ... ) ... else ...
 
@@ -604,7 +601,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //       use the same timer as the fluid solver for now
          if ( Flu_ResetByUser_API_Ptr != NULL )
          {
-            TIMING_FUNC(   Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew, dt_SubStep ),
+            TIMING_FUNC(   Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, SaveSg_Mag, TimeNew, dt_SubStep ),
                            Timer_Flu_Advance[lv],   TIMER_ON   );
          }
 
@@ -720,12 +717,12 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          if ( OPT__FIXUP_RESTRICT )
          {
             TIMING_FUNC(   Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv],
-                                               NULL_INT, NULL_INT, _TOTAL, _MAG ),
+                                               NULL_INT, NULL_INT, FixUpVar_Restrict, _MAG ),
                            Timer_FixUp[lv],   TIMER_ON   );
 
 #           ifdef LOAD_BALANCE
             TIMING_FUNC(   LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT,
-                                             _TOTAL, _MAG, NULL_INT ),
+                                             FixUpVar_Restrict, _MAG, NULL_INT ),
                            Timer_GetBuf[lv][7],   TIMER_ON   );
 #           endif
          }
@@ -752,11 +749,11 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          {
 #           ifdef LOAD_BALANCE
             TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, NULL_INT, COARSE_FINE_FLUX,
-                                              _FLUX_TOTAL, _NONE, NULL_INT, USELB_YES ),
+                                              FixUpVar_Flux, _NONE, NULL_INT, USELB_YES ),
                            Timer_GetBuf[lv][6],   TIMER_ON   );
 #           endif
 
-            TIMING_FUNC(   Flu_FixUp_Flux( lv ),
+            TIMING_FUNC(   Flu_FixUp_Flux( lv, FixUpVar_Flux ),
                            Timer_FixUp[lv],   TIMER_ON   );
          }
 
@@ -767,7 +764,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          if ( OPT__FIXUP_FLUX  ||  OPT__FIXUP_RESTRICT )
 #        endif
          TIMING_FUNC(   Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_AFTER_FIXUP,
-                                           _TOTAL, _MAG, Flu_ParaBuf, USELB_YES  ),
+                                           FixUpVar_Flux | FixUpVar_Restrict, _MAG, Flu_ParaBuf, USELB_YES  ),
                         Timer_GetBuf[lv][3],   TIMER_ON   );
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );

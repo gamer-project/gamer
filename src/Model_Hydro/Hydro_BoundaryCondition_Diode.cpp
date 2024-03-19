@@ -33,7 +33,7 @@ static void BC_Diode_zp( real *Array, const int NVar_Flu, const int TFluVarIdxLi
 //
 // Parameter   :  Array          : Array to store the prepared data including ghost zones
 //                BC_Face        : Boundary face (0~5) --> (-x,+x,-y,+y,-z,+z)
-//                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
+//                NVar_Flu       : Number of fluid variables to be prepared (derived variables are NOT included)
 //                GhostSize      : Number of ghost zones
 //                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
 //                Idx_Start      : Minimum array indices
