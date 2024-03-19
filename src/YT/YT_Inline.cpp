@@ -248,12 +248,24 @@ void YT_Inline()
    if ( yt_run_FunctionArguments( "yt_inline_inputArg", 1, "\'Dens\'" ) != YT_SUCCESS )
        Aux_Error( ERROR_INFO, "yt_run_FunctionArguments() failed !!\n" );
    if ( yt_run_Function( "yt_inline" ) != YT_SUCCESS )
-       Aux_Error( ERROR_INFO, "yt_run_Function() failed !!\n" );
+       Aux_Error( ERROR_INFO, "yt_run_Function(\"yt_inline\") failed !!\n" );
 
 #ifdef LIBYT_INTERACTIVE
-// 5-2. activate libyt interactive mode
+// 5-2. activate libyt interactive python prompt
    if ( yt_run_InteractiveMode("LIBYT_STOP") != YT_SUCCESS )
-       Aux_Error( ERROR_INFO, "yt_run_InteractiveMode() failed !!\n" );
+       Aux_Error( ERROR_INFO, "yt_run_InteractiveMode(\"LIBYT_STOP\") failed !!\n" );
+#endif
+
+#ifdef LIBYT_RELOAD
+// 5-3. activate libyt reloading script feature
+   if ( yt_run_ReloadScript("LIBYT_STOP", "RELOAD", "reload.py") != YT_SUCCESS )
+       Aux_Error( ERROR_INFO, "yt_run_ReloadScript(\"LIBYT_STOP\", \"RELOAD\", \"reload.py\") failed !!\n" );
+#endif
+
+#ifdef LIBYT_JUPYTER
+// 5-4. activate jupyter kernel
+   if ( yt_run_JupyterKernel("LIBYT_STOP", true) != YT_SUCCESS )
+       Aux_Error( ERROR_INFO, "yt_run_JupyterKernel(\"LIBYT_STOP\", true) failed !!\n" );
 #endif
 
 // 6. free resource
@@ -262,7 +274,5 @@ void YT_Inline()
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : YT_Inline
-
-
 
 #endif // #ifdef SUPPORT_LIBYT
