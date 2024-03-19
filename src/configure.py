@@ -22,7 +22,7 @@ import re
 NONE_STR   = "OFF"
 PYTHON_VER = [sys.version_info.major, sys.version_info.minor]
 
-CLOSE_DIST = 2
+CLOSE_DIST  = 2
 PRINT_WIDTH = 100
 
 GAMER_CONFIG_DIR  = os.path.join("..", "configs")
@@ -49,13 +49,11 @@ class BCOLOR:
 
 class ArgumentParser( argparse.ArgumentParser ):
     def __init__( self, *args, **kwargs ):
-        self.program     = { key: kwargs[key] for key in kwargs }
+        self.program     = kwargs.copy()
         self.options     = []
         self.depends     = {}
         self.constraints = {}
         self.gamer_names = {}
-        # `allow_abbrev` feature is only supported for version >= 3.5.
-        if PYTHON_VER[0] == 2 or PYTHON_VER[1] < 5: kwargs.pop("allow_abbrev")
         super(ArgumentParser, self).__init__(*args, **kwargs)
 
     def add_argument( self, *args, **kwargs ):
@@ -70,10 +68,8 @@ class ArgumentParser( argparse.ArgumentParser ):
             self.gamer_names[key] = kwargs.pop("gamer_name")
 
         super(ArgumentParser, self).add_argument(*args, **kwargs)
-        option = {}
+        option = kwargs.copy()
         option["flags"] = [ item for item in args ]
-        for key in kwargs:
-            option[key] = kwargs[key]
         self.options.append(option)
 
     def parse_args( self, args=None, namespace=None ):
@@ -98,49 +94,75 @@ class ArgumentParser( argparse.ArgumentParser ):
         if len(argv) != 0: self.error( msg )
         return args, self.gamer_names, self.depends, self.constraints
 
+    def _get_option_tuples(self, option_string):
+        # This function is directly from the source code of `argparse`.
+        # We decided to add the function manually because versions prior to Python 3.5 do not support `allow_abbrev`.
+        # See: https://github.com/python/cpython/blob/main/Lib/argparse.py
+        result = []
+
+        # option strings starting with two prefix characters are only
+        # split at the '='
+        chars = self.prefix_chars
+        if option_string[0] in chars and option_string[1] in chars:
+            pass # we always use `allow_abbrev=False`
+
+        # single character options can be concatenated with their arguments
+        # but multiple character options always have to have their argument
+        # separate
+        elif option_string[0] in chars and option_string[1] not in chars:
+            option_prefix = option_string
+            short_option_prefix = option_string[:2]
+            short_explicit_arg = option_string[2:]
+
+            for option_string in self._option_string_actions:
+                if option_string == short_option_prefix:
+                    action = self._option_string_actions[option_string]
+                    tup = action, option_string, '', short_explicit_arg
+                    result.append(tup)
+                elif option_string.startswith(option_prefix):
+                    action = self._option_string_actions[option_string]
+                    tup = action, option_string, None, None
+                    result.append(tup)
+
+        # shouldn't ever get here
+        else:
+            self.error(_('unexpected option string: %s') % option_string)
+
+        # return the collected option tuples
+        return result
+
     def print_usage( self, *args, **kwargs ):
         if "usage" in self.program:
-            print("Usage: %s" % self.program["usage"])
-        else:
-            usage = []
-            for option in self.options:
-                for item in option["flags"]:
-                    # the order of if does matter here
-                    possibles = ""
-                    if   "choices" in option: possibles += "{%s}"%(", ".join([ str(opt) for opt in option["choices"] ]))
-                    elif "metavar" in option: possibles += option["metavar"]
-                    elif "dest"    in option: possibles += option["dest"]    if "default" in option else option["dest"].upper()
-                    else:                     possibles += re.sub(r"^(-{1,})", "", item).upper()
+            print("Usage: %s\n" % self.program["usage"])
+            return
 
-                    default_value = ""
-                    if "default" in option:
-                        default_value += "*"
-                        default_value += "Depend" if option["default"] is None else str(option["default"])
+        usage = []
+        for option in self.options:
+            for item in option["flags"]:
+                # the order of if does matter here
+                possibles = ""
+                if   "choices" in option: possibles += "{%s}"%(", ".join([ str(opt) for opt in option["choices"] ]))
+                elif "metavar" in option: possibles += option["metavar"]
+                elif "dest"    in option: possibles += option["dest"]    if "default" in option else option["dest"].upper()
+                else:                     possibles += re.sub(r"^(-{1,})", "", item).upper()
 
-                    if "action" in option:
-                        if option["action"] in ["help", "store_const", "store_true", "store_false"]:
-                            possibles = "\b"
-                            default_value = "\b"
+                default_value = ""
+                if "default" in option:
+                    default_value += "*"
+                    default_value += "Depend" if option["default"] is None else str(option["default"])
 
-                    usage += [ "[%s]"%(" ".join([item, possibles, default_value])) ]
+                if "action" in option:
+                    if option["action"] in ["help", "store_const", "store_true", "store_false"]:
+                        possibles = "\b"
+                        default_value = "\b"
 
-            indent = "Usage: %s " % os.path.basename(sys.argv[0])
-            output = indent + " " + str.join(" ", usage)
-            print( string_align(output, indent, PRINT_WIDTH, "]") )
-        print("")
+                usage += [ "[%s]"%(" ".join([item, possibles, default_value])) ]
 
-    def print_help( self, *args, **kwargs ):
-        # print usage, description, then epilog
-        self.print_usage()
-        if "description" in self.program: print(self.program["description"])
-        if "epilog"      in self.program: print(self.program["epilog"])
+        indent = "Usage: %s " % os.path.basename(sys.argv[0])
+        output = indent + " " + str.join(" ", usage) + "\n"
+        print( string_align(output, indent, PRINT_WIDTH, "]") )
 
-    def print_help_detail( self ):
-        # print usage, description, options, then epilog
-        self.print_usage()
-
-        if "description" in self.program: print(self.program["description"])
-
+    def print_option( self ):
         print("Options:")
         option_indent = 0
         for option in self.options:
@@ -148,8 +170,8 @@ class ArgumentParser( argparse.ArgumentParser ):
             if len(option["flags2"]) > option_indent:
                 option_indent = len(option["flags2"])
 
+        template = "  %-" + str(option_indent) + "s  "
         for option in self.options:
-            template = "  %-" + str(option_indent) + "s  "
             indent = template %(option["flags2"])
             output = indent
 
@@ -172,7 +194,12 @@ class ArgumentParser( argparse.ArgumentParser ):
 
             print( string_align(output, indent, PRINT_WIDTH, " ") )
 
-        if "epilog" in self.program: print(self.program["epilog"])
+    def print_help( self, *args, **kwargs ):
+        # print usage, description, options, then epilog
+        self.print_usage()
+        if "description"  in self.program: print(self.program["description"])
+        if "print_detail" in kwargs: self.print_option()
+        if "epilog"       in self.program: print(self.program["epilog"])
 
 
 
@@ -265,8 +292,8 @@ def load_arguments():
     parser = ArgumentParser( description = GAMER_DESCRIPTION,
                              formatter_class = argparse.RawTextHelpFormatter,
                              epilog = GAMER_EPILOG,
-                             allow_abbrev=False,
-                             add_help=False)
+                             add_help = False
+                           )
 
     parser.add_argument( "-h", "--help",
                          action="help", default=argparse.SUPPRESS,
@@ -584,7 +611,7 @@ def load_arguments():
 
     # 1. Print out a detailed help message then exit.
     if args["lh"]:
-        parser.print_help_detail()
+        parser.print_help(print_detail=True)
         exit()
 
     # 2. Conditional default arguments.
