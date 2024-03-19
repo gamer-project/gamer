@@ -143,7 +143,7 @@ class ArgumentParser( argparse.ArgumentParser ):
                 possibles = ""
                 if   "choices" in option: possibles += "{%s}"%(", ".join([ str(opt) for opt in option["choices"] ]))
                 elif "metavar" in option: possibles += option["metavar"]
-                elif "dest"    in option: possibles += option["dest"]    if "default" in option else option["dest"].upper()
+                elif "dest"    in option: possibles += option["dest"] if "default" in option else option["dest"].upper()
                 else:                     possibles += re.sub(r"^(-{1,})", "", item).upper()
 
                 default_value = ""
@@ -190,7 +190,7 @@ class ArgumentParser( argparse.ArgumentParser ):
                 output += "Default: %s" %("Depend" if option["default"] is None else str(option["default"]))
 
             if "action" in option:
-                output += "Default: False" if option["action"] == "store_true" else "Default: False"
+                output += "Default: False" if option["action"] == "store_true" else "Default: True"
 
             print( string_align(output, indent, PRINT_WIDTH, " ") )
 
