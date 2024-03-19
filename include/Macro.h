@@ -195,10 +195,14 @@
 #  define FLU_NOUT            NCOMP_TOTAL
 
 
-// for ELBDM, we do not need to transfer the density component into GPU
+// for ELBDM, we do not need to transfer the density component into GPU;
+// also exclude passive scalars for now since it is not supported yet
+// --> consistent with excluding _PASSIVE when calling Prepare_PatchData() in Flu_Prepare.cpp
 #elif ( MODEL == ELBDM )
-#  define FLU_NIN             ( NCOMP_TOTAL - 1 )
-#  define FLU_NOUT            ( NCOMP_TOTAL - 0 )
+//#  define FLU_NIN             ( NCOMP_TOTAL - 1 )
+//#  define FLU_NOUT            ( NCOMP_TOTAL - 0 )
+#  define FLU_NIN             ( NCOMP_FLUID - 1 )
+#  define FLU_NOUT            ( NCOMP_FLUID - 0 )
 
 #elif ( MODEL == PAR_ONLY )
 #  define FLU_NIN             0

@@ -44,37 +44,43 @@ void Flu_Prepare( const int lv, const double PrepTime,
 
 
 #  ifndef MHD
-   const int    OPT__MAG_INT_SCHEME = INT_NONE;
+   const int  OPT__MAG_INT_SCHEME = INT_NONE;
 #  endif
-   const bool   IntPhase_No         = false;
-   const real   MinDens_No          = -1.0;
-   const real   MinPres_No          = -1.0;
-   const real   MinTemp_No          = -1.0;
-   const real   MinEntr_No          = -1.0;
-   const bool   DE_Consistency_Yes  = true;
-   const bool   DE_Consistency_No   = false;
-   const bool   DE_Consistency      = ( OPT__OPTIMIZE_AGGRESSIVE ) ? DE_Consistency_No : DE_Consistency_Yes;
-   const real   MinDens             = ( OPT__OPTIMIZE_AGGRESSIVE ) ? MinDens_No : MIN_DENS;
+   const bool IntPhase_No         = false;
+   const real MinDens_No          = -1.0;
+   const real MinPres_No          = -1.0;
+   const real MinTemp_No          = -1.0;
+   const real MinEntr_No          = -1.0;
+   const bool DE_Consistency_Yes  = true;
+   const bool DE_Consistency_No   = false;
+   const bool DE_Consistency      = ( OPT__OPTIMIZE_AGGRESSIVE ) ? DE_Consistency_No : DE_Consistency_Yes;
+   const real MinDens             = ( OPT__OPTIMIZE_AGGRESSIVE ) ? MinDens_No : MIN_DENS;
 
 // prepare the fluid array
+// --> exclude passive scalars for ELBDM for now since it is not supported yet
+// --> consistent with FLU_NIN == NCOMP_FLUID - 1 in Macro.h
 #  if ( MODEL == ELBDM )
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( amr->use_wave_flag[lv] ) {
 #  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
       Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In[0][0], NULL,
-                        FLU_GHOST_SIZE, NPG, PID0_List, _REAL|_IMAG|_PASSIVE, _NONE,
+//                      FLU_GHOST_SIZE, NPG, PID0_List, _REAL|_IMAG|_PASSIVE, _NONE,
+                        FLU_GHOST_SIZE, NPG, PID0_List, _REAL|_IMAG, _NONE,
                         OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, OPT__INT_PHASE,
-                        OPT__BC_FLU, BC_POT_NONE, MinDens, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+                        OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    } else  { // if ( amr->use_wave_flag[lv] )
       Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In[0][0], NULL,
-                        HYB_GHOST_SIZE, NPG, PID0_List, _DENS|_PHAS|_PASSIVE, _NONE,
+//                      HYB_GHOST_SIZE, NPG, PID0_List, _DENS|_PHAS|_PASSIVE, _NONE,
+                        HYB_GHOST_SIZE, NPG, PID0_List, _DENS|_PHAS, _NONE,
                         OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, OPT__INT_PHASE,
-                        OPT__BC_FLU, BC_POT_NONE, MinDens, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+                        OPT__BC_FLU, BC_POT_NONE, MinDens,    MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
    } // if (amr->use_wave_flag[lv] ) ... else
 #  endif //  #if ( ELBDM_SCHEME == ELBDM_HYBRID )
-#  else
+
+#  else // #if ( MODEL == ELBDM )
+
 #  ifdef MHD
    real *Mag_Array = h_Mag_Array_F_In[0][0];
 #  else
@@ -84,7 +90,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
                       FLU_GHOST_SIZE, NPG, PID0_List, _TOTAL, _MAG,
                       OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
                       OPT__BC_FLU, BC_POT_NONE, MinDens, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency );
-#  endif
+#  endif // #if ( MODEL == ELBDM ) ... else ...
 
 #  ifdef UNSPLIT_GRAVITY
 // prepare the potential array
