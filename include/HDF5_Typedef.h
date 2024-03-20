@@ -125,6 +125,8 @@ struct Makefile_t
 #  ifdef SUPPORT_LIBYT
    int LibYTUsePatchGroup;
    int LibYTInteractive;
+   int LibYTReload;
+   int LibYTJupyter;
 #  endif
    int SupportGrackle;
    int RandomNumber;

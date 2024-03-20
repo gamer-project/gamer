@@ -1718,6 +1718,18 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.LibYTInteractive       = 0;
 #  endif
 
+#  ifdef LIBYT_RELOAD
+   Makefile.LibYTReload            = 1;
+#  else
+   Makefile.LibYTReload            = 0;
+#  endif
+
+#  ifdef LIBYT_JUPYTER
+   Makefile.LibYTJupyter           = 1;
+#  else
+   Makefile.LibYTJupyter           = 0;
+#  endif
+
 #  else  // #ifdef SUPPORT_LIBYT
    Makefile.SupportLibYT           = 0;
 #  endif // #ifdef SUPPORT_LIBYT ... else ...
@@ -2787,6 +2799,8 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 #  ifdef SUPPORT_LIBYT
    H5Tinsert( H5_TypeID, "LibYTUsePatchGroup",     HOFFSET(Makefile_t,LibYTUsePatchGroup     ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "LibYTInteractive",       HOFFSET(Makefile_t,LibYTInteractive       ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "LibYTReload",            HOFFSET(Makefile_t,LibYTReload            ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "LibYTJupyter",           HOFFSET(Makefile_t,LibYTJupyter           ), H5T_NATIVE_INT );
 #  endif
    H5Tinsert( H5_TypeID, "SupportGrackle",         HOFFSET(Makefile_t,SupportGrackle         ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "RandomNumber",           HOFFSET(Makefile_t,RandomNumber           ), H5T_NATIVE_INT );
