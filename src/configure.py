@@ -10,6 +10,7 @@ User and developer guides of this script are provided in the following link.
 # Packages
 ####################################################################################################
 import argparse
+import logging
 import os
 import sys
 import re
@@ -31,12 +32,18 @@ GAMER_MAKE_OUT    = "Makefile"
 GAMER_DESCRIPTION = "Prepare a customized Makefile for GAMER.\nDefault values are marked by '*'.\nUse -lh to show a detailed help message.\n"
 GAMER_EPILOG      = "2023 Computational Astrophysics Lab, NTU. All rights reserved.\n"
 
+LOGGER = logging.getLogger()
+logging.basicConfig( filename=GAMER_MAKE_OUT+'.log', level=logging.INFO, format='%(levelname)-8s: %(message)s' )
+
 
 
 ####################################################################################################
 # Classes
 ####################################################################################################
-class BCOLOR:
+class CustomFormatter( logging.Formatter ):
+    """
+    See: https://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output
+    """
     HEADER    = '\033[95m'
     OKBLUE    = '\033[94m'
     OKCYAN    = '\033[96m'
@@ -46,6 +53,18 @@ class BCOLOR:
     ENDC      = '\033[0m'
     BOLD      = '\033[1m'
     UNDERLINE = '\033[4m'
+    format = "%(levelname)-8s: %(message)s"
+
+    FORMATS = { logging.DEBUG   : HEADER  + format        + ENDC,
+                logging.INFO    : ENDC    + "%(message)s" + ENDC,
+                logging.WARNING : WARNING + format        + ENDC,
+                logging.ERROR   : FAIL    + format        + ENDC,
+                logging.CRITICAL: FAIL    + format        + ENDC }
+
+    def format( self, record ):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
 
 class ArgumentParser( argparse.ArgumentParser ):
     def __init__( self, *args, **kwargs ):
@@ -214,25 +233,21 @@ def str2bool( v ):
     else: raise TypeError("Can not convert <%s> to boolean."%(v))
     return
 
-def color_print( string, color ):
-    print( color + string + BCOLOR.ENDC )
-    return
-
 def add_option( opt_str, name, val ):
     # NOTE: Every -Doption must have a trailing space.
     if type(val) == type(True):
         if val: opt_str += "-D%s "%(name)
-        print("%-25s : %r"%(name, val))
+        LOGGER.info("%-25s : %r"%(name, val))
     elif type(val) == type("str"):
         if val != NONE_STR:
             opt_str += "-D%s=%s "%(name, val)
-            print("%-25s : %s"%(name, val))
+            LOGGER.info("%-25s : %s"%(name, val))
     elif type(val) == type(0):
         opt_str += "-D%s=%d "%(name, val)
-        print("%-25s : %d"%(name, val))
+        LOGGER.info("%-25s : %d"%(name, val))
     elif type(val) == type(0.):
         opt_str += "-D%s=%f "%(name, val)
-        print("%-25s : %f"%(name, val))
+        LOGGER.info("%-25s : %f"%(name, val))
     else:
         raise TypeError("The simulation option <%s> has an unknown type <%s>."%(name, str(type(val))))
 
@@ -619,7 +634,7 @@ def load_arguments():
     return args, name_table, depends, constraints
 
 def load_config( config ):
-    print("Using %s as the config."%(config))
+    LOGGER.info("Using %s as the config."%(config))
     paths, compilers, flags = {}, {"CXX":"", "CXX_MPI":""}, {"CXXFLAG":"", "OPENMPFLAG":"", "LIBFLAG":"", "CUDAFLAG":""}
     with open( config, 'r') as f:
         lines = f.readlines()
@@ -636,7 +651,7 @@ def load_config( config ):
         elif temp[0] in compilers:
             if len(temp) == 1: continue         # empty compiler
             if temp[1][0] == "#": continue      # comment out
-            if compilers[temp[0]] != "": color_print("Warning: The original compiler will be overwritten. <%s>: %s --> %s"%(temp[0], compilers[temp[0]], temp[1]), BCOLOR.WARNING)
+            if compilers[temp[0]] != "": LOGGER.warning("The original compiler will be overwritten. <%s>: %s --> %s"%(temp[0], compilers[temp[0]], temp[1]))
             compilers[temp[0]] = temp[1]
         else:
             try:
@@ -705,7 +720,7 @@ def validation( paths, depends, constraints, **kwargs ):
 
     # 0. Checking the Makefile_base existance.
     if not os.path.isfile( GAMER_MAKE_BASE ):
-        color_print("ERROR: %s does not exist."%(GAMER_MAKE_BASE), BCOLOR.FAIL)
+        LOGGER.error("%s does not exist."%(GAMER_MAKE_BASE))
         success = False
 
     # 1. Checking general constraints.
@@ -725,7 +740,7 @@ def validation( paths, depends, constraints, **kwargs ):
                 if kwargs[check_opt] in check_val: continue     # satisify the validation
 
                 val_str = ', '.join(str(x) for x in check_val)
-                color_print("ERROR: The option <--%s=%s> requires <--%s> to be set to [%s]. Current: <--%s=%s>."%(opt, str(kwargs[opt]), check_opt, val_str, check_opt, kwargs[check_opt]), BCOLOR.FAIL)
+                LOGGER.error("The option <--%s=%s> requires <--%s> to be set to [%s]. Current: <--%s=%s>."%(opt, str(kwargs[opt]), check_opt, val_str, check_opt, kwargs[check_opt]))
                 success = False
 
     # 2. Checking other conditions.
@@ -733,99 +748,76 @@ def validation( paths, depends, constraints, **kwargs ):
     # A.1 Module
     if kwargs["model"] == "HYDRO":
         if kwargs["passive"] < 0:
-            color_print("ERROR: Passive scalar should not be negative. Current: %d"%kwargs["passive"], BCOLOR.FAIL)
+            LOGGER.error("Passive scalar should not be negative. Current: %d"%kwargs["passive"])
             success = False
 
         if kwargs["dual"] not in [NONE_STR, "DE_ENPY"]:
-            color_print("ERROR: This dual energy form is not supported yet. Current: %s"%kwargs["dual"], BCOLOR.FAIL)
+            LOGGER.error("This dual energy form is not supported yet. Current: %s"%kwargs["dual"])
             success = False
 
     elif kwargs["model"] == "ELBDM":
         if kwargs["passive"] < 0:
-            color_print("ERROR: Passive scalar should not be negative. Current: %d"%kwargs["passive"], BCOLOR.FAIL)
+            LOGGER.error("Passive scalar should not be negative. Current: %d"%kwargs["passive"])
             success = False
 
     elif kwargs["model"] == "PAR_ONLY":
-        color_print("ERROR: <--model=PAR_ONLY> is not supported yet.", BCOLOR.FAIL)
+        LOGGER.error("<--model=PAR_ONLY> is not supported yet.")
         success = False
     else:
-        color_print("ERROR: Unrecognized model: <%s>. Please add to the model choices."%kwargs["model"], BCOLOR.FAIL)
+        LOGGER.error("Unrecognized model: %s. Please add to the model choices."%kwargs["model"])
         success = False
 
     # A.3 Particle
     if kwargs["particle"]:
         if kwargs["star_formation"] and kwargs["store_par_acc"] and not kwargs["store_pot_ghost"]:
-            color_print("ERROR: <--store_pot_ghost> must be enabled when <--star_formation> and <--store_par_acc> are enabled.", BCOLOR.FAIL)
+            LOGGER.error("<--store_pot_ghost> must be enabled when <--star_formation> and <--store_par_acc> are enabled.")
             success = False
         if not kwargs["gravity"] and not kwargs["tracer"]:
-            color_print("ERROR: At least one of <--gravity> or <--tracer> must be enabled for <--particle>.", BCOLOR.FAIL)
+            LOGGER.error("At least one of <--gravity> or <--tracer> must be enabled for <--particle>.")
             success = False
         if kwargs["par_attribute"] < 0:
-            color_print("ERROR: Number of particle attributes should not be negative. Current: %d"%kwargs["par_attribute"], BCOLOR.FAIL)
+            LOGGER.error("Number of particle attributes should not be negative. Current: %d"%kwargs["par_attribute"])
             success = False
 
     # B. miscellaneous options
     if kwargs["nlevel"] < 1:
-        color_print("ERROR: <--nlevel> should be greater than zero. Current: %d"%kwargs["nlevel"], BCOLOR.FAIL)
+        LOGGER.error("<--nlevel> should be greater than zero. Current: %d"%kwargs["nlevel"])
         success = False
 
     if kwargs["max_patch"] < 1:
-        color_print("ERROR: <--max_patch> should be greater than zero. Current: %d"%kwargs["max_patch"], BCOLOR.FAIL)
+        LOGGER.error("<--max_patch> should be greater than zero. Current: %d"%kwargs["max_patch"])
         success = False
 
     if kwargs["patch_size"]%2 != 0 or kwargs["patch_size"] < 8:
-        color_print("ERROR: <--patch_size> should be an even number greater than or equal to 8. Current: %d"%kwargs["patch_size"], BCOLOR.FAIL)
+        LOGGER.error("<--patch_size> should be an even number greater than or equal to 8. Current: %d"%kwargs["patch_size"])
         success = False
 
     if kwargs["overlap_mpi"]:
-        color_print("ERROR: <--overlap_mpi> is not supported yet.", BCOLOR.FAIL)
+        LOGGER.error("<--overlap_mpi> is not supported yet.")
         success = False
 
     if not success: raise BaseException(BCOLOR.FAIL+"The above validation failed."+BCOLOR.ENDC)
     return
 
-
 def warning( paths, **kwargs ):
     # 1. Makefile
     if os.path.isfile( GAMER_MAKE_OUT ):
-        color_print("Warning: %s already exists and will be overwritten."%(GAMER_MAKE_OUT), BCOLOR.WARNING)
+        LOGGER.warning("%s already exists and will be overwritten."%(GAMER_MAKE_OUT))
 
     # 2. Physics
     if kwargs["model"] == "ELBDM" and kwargs["passive"] != 0:
-        color_print("Warning: Not supported yet and can only be used as auxiliary fields.", BCOLOR.WARNING)
+        LOGGER.warning("Not supported yet and can only be used as auxiliary fields.")
 
     # 3. Path
-    if kwargs["gpu"]:
-        if paths.setdefault("CUDA_PATH", "") == "":
-            color_print("Warning: CUDA_PATH is not given in %s.config when enabling <--gpu>."%(kwargs["machine"]), BCOLOR.WARNING)
+    path_links = { "gpu":{True:"CUDA_PATH"}, "fftw":{"FFTW2":"FFTW2_PATH", "FFTW3":"FFTW3_PATH"},
+                   "mpi":{True:"MPI_PATH"}, "hdf5":{True:"HDF5_PATH"}, "grackle":{True:"GRACKLE_PATH"},
+                   "gsl":{True:"GSL_PATH"}, "libyt":{True:"LIBYT_PATH"} }
 
-    if kwargs["fftw"] == "FFTW2":
-        if paths.setdefault("FFTW2_PATH", "") == "":
-            color_print("Warning: FFTW2_PATH is not given in %s.config when enabling <--fftw=FFTW2>."%(kwargs["machine"]), BCOLOR.WARNING)
-
-    if kwargs["fftw"] == "FFTW3":
-        if paths.setdefault("FFTW3_PATH", "") == "":
-            color_print("Warning: FFTW3_PATH is not given in %s.config when enabling <--fftw=FFTW3>."%(kwargs["machine"]), BCOLOR.WARNING)
-
-    if kwargs["mpi"]:
-        if paths.setdefault("MPI_PATH", "") == "":
-            color_print("Warning: MPI_PATH is not given in %s.config when enabling <--mpi>."%(kwargs["machine"]), BCOLOR.WARNING)
-
-    if kwargs["hdf5"]:
-        if paths.setdefault("HDF5_PATH", "") == "":
-            color_print("Warning: HDF5_PATH is not given in %s.config when enabling <--hdf5>."%(kwargs["machine"]), BCOLOR.WARNING)
-
-    if kwargs["grackle"]:
-        if paths.setdefault("GRACKLE_PATH", "") == "":
-            color_print("Warning: GRACKLE_PATH is not given in %s.config when enabling <--grackle>."%(kwargs["machine"]), BCOLOR.WARNING)
-
-    if kwargs["gsl"]:
-        if paths.setdefault("GSL_PATH", "") == "":
-            color_print("Warning: GSL_PATH is not given in %s.config when enabling <--gsl>."%(kwargs["machine"]), BCOLOR.WARNING)
-
-    if kwargs["libyt"]:
-        if paths.setdefault("LIBYT_PATH", "") == "":
-            color_print("Warning: LIBYT_PATH is not given in %s.config when enabling <--libyt>."%(kwargs["machine"]), BCOLOR.WARNING)
+    for arg, links in path_links.items():
+        for val, p_name in links.items():
+            if kwargs[arg] != val: continue
+            if paths.setdefault(p_name, "") != "": continue
+            LOGGER.warning("%-15s is not given in %s.config when setting <--%s=%s>"%(p_name, kwargs["machine"], arg, str(val)))
 
     return
 
@@ -834,43 +826,49 @@ def warning( paths, **kwargs ):
 ####################################################################################################
 # Main execution
 ####################################################################################################
-# 0. Get the executed command
-command = " ".join(["# This makefile is generated by the following command:", "\n#", sys.executable] + sys.argv + ["\n"])
+# 0. Setup logger
+ch = logging.StreamHandler()
+ch.setFormatter(CustomFormatter())
+LOGGER.addHandler(ch)
 
-# 1. Load the input arguments
+# 1. Get the executed command
+command = " ".join(["# This makefile is generated by the following command:", "\n#", sys.executable] + sys.argv + ["\n"])
+LOGGER.info( " ".join( [sys.executable] + sys.argv ) )
+
+# 2. Load the input arguments
 args, name_table, depends, constraints = load_arguments()
 
 #------------------------------------------------------------
-# 2. Prepare the makefile args
-# 2.1 Load the machine setup
+# 3. Prepare the makefile args
+# 3.1 Load the machine setup
 paths, compilers, flags = load_config( os.path.join(GAMER_CONFIG_DIR, args["machine"]+".config") )
 
-# 2.2 Validate arguments
+# 3.2 Validate arguments
 validation( paths, depends, constraints, **args )
 
 warning( paths, **args )
 
-# 2.3 add the SIMU_OPTION
-print("")
-print("========================================")
-print("GAMER has the following setting.")
-print("----------------------------------------")
+# 3.3 add the SIMU_OPTION
+LOGGER.info("")
+LOGGER.info("========================================")
+LOGGER.info("GAMER has the following setting.")
+LOGGER.info("----------------------------------------")
 sims = set_sims( name_table, depends, **args )
 
-# 2.4 setup compiler
+# 3.4 setup compiler
 compiles = set_compile( paths, compilers, flags, args )
 
 
 #------------------------------------------------------------
-# 3. Create Makefile
-# 3.1 Read
+# 4. Create Makefile
+# 4.1 Read
 with open( GAMER_MAKE_BASE, "r" ) as make_base:
     makefile = make_base.read()
 
-# 3.2 Replace
-print("----------------------------------------")
+# 4.2 Replace
+LOGGER.info("----------------------------------------")
 for key, val in paths.items():
-    print("%-15s : %s"%(key, val))
+    LOGGER.info("%-15s : %s"%(key, val))
     makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
     if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
 
@@ -878,17 +876,17 @@ for key, val in sims.items():
     makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
     if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
 
-print("----------------------------------------")
+LOGGER.info("----------------------------------------")
 for key, val in compiles.items():
-    print("%-10s : %s"%(key, val))
+    LOGGER.info("%-10s : %s"%(key, val))
     makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
     if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
 
-# 3.3 Write
+# 4.3 Write
 with open( GAMER_MAKE_OUT, "w") as make_out:
     make_out.write( command + makefile )
 
 
-print("========================================")
-print("%s is created."%GAMER_MAKE_OUT)
-print("========================================")
+LOGGER.info("========================================")
+LOGGER.info("%s is created."%GAMER_MAKE_OUT)
+LOGGER.info("========================================")
