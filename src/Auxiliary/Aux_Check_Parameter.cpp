@@ -723,10 +723,6 @@ void Aux_Check_Parameter()
 #     error : ERROR : EOS != EOS_TAUBMATHEWS for SRHD !!
 #   endif
 
-#   ifdef COSMIC_RAY
-#     error : ERROR : SRHD does not support COSMIC_RAY !!
-#   endif
-
 #   ifdef DUAL_ENERGY
 #     error : ERROR : SRHD does not support DUAL_ENERGY !!
 #   endif
@@ -766,10 +762,6 @@ void Aux_Check_Parameter()
 #  ifdef COSMIC_RAY
 #   if ( FLU_SCHEME != MHM_RP )
 #     error : ERROR : COSMIC_RAY currently only supports the MHM_RP fluid scheme !!
-#   endif
-
-#   if ( EOS != EOS_COSMIC_RAY )
-#     error : ERROR : COSMIC_RAY must use EOS_COSMIC_RAY !!
 #   endif
 
 #   ifdef DUAL_ENERGY
