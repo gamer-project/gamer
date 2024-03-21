@@ -50,6 +50,10 @@ static double    Riemann_MagL_T2;      // left-state transverse B field 2
 static double    Riemann_MagR_T1;      // right-state transverse B field 1
 static double    Riemann_MagR_T2;      // right-state transverse B field 2
 #endif
+#ifdef COSMIC_RAY
+static double    Riemann_PreL_CR;      // left-state cosmic ray pressure
+static double    Riemann_PreR_CR;      // right-state cosmic ray pressure
+#endif
 // =======================================================================================
 
 
@@ -148,6 +152,10 @@ void SetParameter()
    ReadPara->Add( "Riemann_MagL_T2",   &Riemann_MagL_T2,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
    ReadPara->Add( "Riemann_MagR_T1",   &Riemann_MagR_T1,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
    ReadPara->Add( "Riemann_MagR_T2",   &Riemann_MagR_T2,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+#  endif
+#  ifdef COSMIC_RAY
+   ReadPara->Add( "Riemann_PreL_CR",   &Riemann_PreL_CR,        __DBL_MIN__,  __DBL_MIN__,      __DBL_MAX__       );
+   ReadPara->Add( "Riemann_PreR_CR",   &Riemann_PreR_CR,        __DBL_MIN__,  __DBL_MIN__,      __DBL_MAX__       );
 #  endif
 
    ReadPara->Read( FileName );
@@ -408,7 +416,17 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Prim[ MomIdx[0] ] = (real)(aVel + dVel*Tanh);
    Prim[ MomIdx[1] ] = (real)(aVT1 + dVT1*Tanh);
    Prim[ MomIdx[2] ] = (real)(aVT2 + dVT2*Tanh);
-   Prim[ ENGY      ] = (real)(aPre + dPre*Tanh); // pressure
+   Prim[ ENGY      ] = (real)(aPre + dPre*Tanh); // gas pressure
+#  ifdef COSMIC_RAY
+   const double dPre_CR = 0.5*( Riemann_PreR_CR    - Riemann_PreL_CR    );
+   const double aPre_CR = 0.5*( Riemann_PreR_CR    + Riemann_PreL_CR    );
+   Prim[ CRAY      ] = (real)(aPre_CR + dPre_CR*Tanh); // cosmic ray pressure
+   Prim[ ENGY      ] += Prim[CRAY]; // Note that p_gas >> p_cr in SRHD, so it should be fine.
+
+// should be replaced by the EoS
+   const double GAMMA_CR_m1_inv = 1.0 / (GAMMA_CR - 1.0);
+   fluid[CRAY] = Prim[CRAY] * GAMMA_CR_m1_inv;
+#  endif
 
 #  ifdef SRHD
    Hydro_Pri2Con( Prim, fluid, NULL_BOOL, NULL_INT, NULL, NULL,
