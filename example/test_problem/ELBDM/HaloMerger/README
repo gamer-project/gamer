@@ -37,6 +37,8 @@ Note:
    b. For HaloMerger_Halo_InitMode == 1
       - The initial condition of halos is constructed by reading the UM_IC file as a table and performing linear interpolation
       - The UM_IC must be single AMR level.
+         - If the UM_IC has multiple AMR levels (and there is Input__UM_IC_RefineRegion),
+           the Python script Make_UM_IC_uniform.py is provided to convert it to a single-level UM_IC with the specified level
       - Note that HaloMerger_Halo_*_CenCoord* in Input__TestProb_Halo is the UM_IC box center, rather than the exact halo center
 
 3. Edit Input_TestProb_Soliton to specify the parameters for the solitons
