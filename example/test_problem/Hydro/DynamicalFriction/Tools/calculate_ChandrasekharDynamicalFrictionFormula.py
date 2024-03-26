@@ -108,8 +108,8 @@ def clustermass(rho_s, r0, r, model_name):
             return 4*np.pi*x*x*(r0**3) * DoublePowerLaw_dens(x,DPLD_a,DPLD_b,DPLD_c)
         else:
             return 0
-    f = integrate.nquad(massbase, [[0, x]])[0] * rho_s
-    return f
+    clustermass_result = integrate.nquad(massbase, [[0, x]])[0] * rho_s
+    return clustermass_result
 
 
 def getrho(mass, r0, rt, model_name):
