@@ -66,7 +66,7 @@ Default setup:
           - Cloud_Rho0                1.976013787e-03
           - Cloud_R0                  6.081e3
 
-3. OMP_NTHREAD                   1  
+3. OMP_NTHREAD                   1  --> Recommend using only one OpenMP thread per MPI rank
    OPT__FREEZE_FLUID             1
 
 
