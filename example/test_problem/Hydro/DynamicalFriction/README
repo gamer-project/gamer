@@ -24,7 +24,7 @@ Default setup:
           - GC_MASS                   1.5e6
           - GC_initial_R              2e3
       (c) Input__Profile_Params :
-          - Cloud_Center*             8E3
+          - Cloud_Center*             8e3
           - Cloud_MaxR                6.0e3
           - Cloud_Rho0                6e-2
           - Cloud_R0                  1e3
@@ -44,7 +44,7 @@ Default setup:
           - GC_MASS                   0.75e6
           - GC_initial_R              2.5243e3
       (c) Input__Profile_Params :
-          - Cloud_Center*             38.0E3
+          - Cloud_Center*             38.0e3
           - Cloud_MaxR                35.0e3
           - Cloud_Rho0                1.96311939345708e-03
           - Cloud_R0                  5.48799489144317e+03
@@ -67,7 +67,7 @@ Default setup:
           - Halo_Profile_Param_b      4.002
           - Halo_Profile_Param_c      0.0
       (c) Input__Profile_Params :
-          - Cloud_Center*             48E3
+          - Cloud_Center*             48e3
           - Cloud_MaxR                36.0e3
           - Cloud_Rho0                1.976013787e-03
           - Cloud_R0                  6.081e3

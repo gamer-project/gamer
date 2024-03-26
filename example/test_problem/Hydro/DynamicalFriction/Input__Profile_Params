@@ -1,8 +1,8 @@
 # Halo/Cloud Profile Parameter 
 # ===============================================================================================================
-Cloud_CenterX             48E3                          # central x coordinate in [48E3]
-Cloud_CenterY             48E3                          # central y coordinate in [48E3]
-Cloud_CenterZ             48E3                          # central z coordinate in [48E3]
+Cloud_CenterX             48e3                          # central x coordinate in [48e3]
+Cloud_CenterY             48e3                          # central y coordinate in [48e3]
+Cloud_CenterZ             48e3                          # central z coordinate in [48e3]
 Cloud_MaxR                36000.0                       # Maximum radius for the particle [36000.0] 
 Cloud_Rho0                0.001976013787                # Maximum core density for the cloud [0.001976013787]
 Cloud_R0                  6081.0                        # Maximum core radius for the cloud/halo [6081.0]
