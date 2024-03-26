@@ -68,14 +68,6 @@ def Plummer_dens(x):
     return (1+x*x)**(-2.5)
 
 
-def LC_dens(x):
-    gamma_0 = 0.07
-    gamma_inf = 4.65
-    eta = 3.7
-    r0 = 1.4
-    return x**(-gamma_0)*(1+x**eta)**((gamma_0-gamma_inf)/eta)
-
-
 def King_dens(x):
     return ((1+x**2)**(-0.5))
 
@@ -88,14 +80,9 @@ def density(rho_s, r0, r, model_name):
     if model_name == "Burkert":
         return rho_s*Burkert_dens(x)
     elif model_name == "NFW":
-        # if r > halo_rt:
-        #     return 0
-        # else:
         return rho_s*NFW_dens(x)
     elif model_name == "Plummer":
         return rho_s*Plummer_dens(x)
-    elif model_name == "LC":
-        return rho_s*LC_dens(x)
     elif model_name == "King":
         return rho_s*King_dens(x)
     elif model_name == "DoublePowerLaw":
@@ -115,8 +102,6 @@ def clustermass(rho_s, r0, r, model_name):
             return 4*np.pi*x*x*(r0**3) * NFW_dens(x)
         elif model_name == "Plummer":
             return 4*np.pi*x*x*(r0**3) * Plummer_dens(x)
-        elif model_name == "LC":
-            return 4*np.pi*x*x*(r0**3) * LC_dens(x)
         elif model_name == "King":
             return 4*np.pi*x*x*(r0**3) * King_dens(x)
         elif model_name == "DoublePowerLaw":
@@ -208,7 +193,7 @@ def calculate_trajectory(r0_=r0, v0_=v0, m=m, t_end=t_end, dt_=dt):
     # Define the total number of iterations
     total_iterations = int(t_end / dt_)
     with tqdm(total=total_iterations) as pbar:
-        while t < t_end and r_history[-1] > 5e-2:
+        while t < t_end and r_history[-1] > 5e-2: # 0.05 is a threshold to stop the calculation
             def a(r, v):
                 # Calculate acceleration due to dynamical friction
                 df_accel = dynamical_friction_Chandrasekhar_erf(r, v, m)

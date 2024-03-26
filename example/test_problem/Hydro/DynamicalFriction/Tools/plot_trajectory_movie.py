@@ -4,12 +4,12 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 # Read the data
-GC_path = '' 
-Center_path = ''
-Start_Time = 2000
-End_Time = 5000
-x_limit = (7000,9000)
-y_limit = (7000,9000)
+GC_path = ''              # set the GC's result path here         
+Center_path = ''          # set the center's result path here
+Start_Time = 2000         # set the start time of the trajectory movie (Be careful for the time unit)
+End_Time = 5000           # set the end time of the trajectory movie (Be careful for the time unit)
+x_limit = (7000,9000)     # set the range of the x-axis in the movie
+y_limit = (7000,9000)     # set the range of the y-axis in the movie
 
 Center_df = pd.read_csv(Center_path, sep='\s+', header=0)
 GC_df = pd.read_csv(GC_path, sep='\s+', header=0)

@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from read_parameters import read_selected_parameters
 
-Chandreasekhar_result_path = ''
+Chandrasekhar_result_path = '' # set your Chandrasekhar_result_path here
 
-x_min, x_max = 0, 20
-y_min, y_max = 0.1, 13
+x_min, x_max = 0, 20            # set your x-axis' range here
+y_min, y_max = 0.1, 13          # set your y-axis' range here
 
 def plot_rt():
     # 0. Read the data
@@ -52,7 +52,7 @@ result_simu = plot_rt()
 plt.plot(result_simu[1], result_simu[0],label=f'Simulation       : Spatial Resolution={result_simu[2]:.3f} [pc]', linewidth=0.75)
 print("1. Read and plot the simulation result...Done")
 print("2. Read and plot the Chandrasekhar result...")
-result_DF = plot_chandrasekhar(Chandreasekhar_result_path)
+result_DF = plot_chandrasekhar(Chandrasekhar_result_path)
 plt.plot(result_DF[1], result_DF[0],label=f'Chandrasekhar DF : bmin Factor={result_DF[2][0]}, bmax Factor={result_DF[2][1]}', linewidth=0.75)
 print("2. Read and plot the Chandrasekhar result...Done")
 
