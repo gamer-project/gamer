@@ -20,28 +20,26 @@ DATA_SOURE = 'SIMU' # 'USER' or 'SIMU' : ['SIMU']. If you choose 'USER', you nee
 
 if DATA_SOURE == 'SIMU':
     # read the data from simulation : spatial resolution and GC_mass
-    params_TB =extract_parameters_from_logfile("../log")
-    m = params_TB['GC Mass']     # mass of the massive object in [Msun]
-    GC_velocity = params_TB['GC Velocity X'], params_TB['GC Velocity Y'], params_TB['GC Velocity Z'] # [pc/Myr] = [kpc/Gyr]
-    GC_position = params_TB['GC Position X']/1000, params_TB['GC Position Y']/1000, params_TB['GC Position Z']/1000 # [kpc]
-    Halo_Center = params_TB['central coordinate [0]']/1000, params_TB['central coordinate [1]']/1000, params_TB['central coordinate [2]']/1000 # [kpc]
-    params_IP = read_selected_parameters("../Record__Note")
-    SPATIAL_RESO = params_IP['BOX_SIZE_X']/params_IP['NX0_TOT[0]'] # [pc]
-
-    DPLD_a, DPLD_b, DPLD_c = params_TB['Halo_Profle_Param_a'], params_TB['Halo_Profle_Param_b'], params_TB['Halo_Profle_Param_c']
-
-    t_end = params_IP['END_T']/1000 # end time in [Gyr]
-    Interpolate_table_path = '../Profile_Table'
+    params_TB                    = extract_parameters_from_logfile("../log")
+    m                            = params_TB['GC Mass']     # mass of the massive object in [Msun]
+    GC_velocity                  = params_TB['GC Velocity X'], params_TB['GC Velocity Y'], params_TB['GC Velocity Z'] # [pc/Myr] = [kpc/Gyr]
+    GC_position                  = params_TB['GC Position X']/1000, params_TB['GC Position Y']/1000, params_TB['GC Position Z']/1000 # [kpc]
+    Halo_Center                  = params_TB['central coordinate [0]']/1000, params_TB['central coordinate [1]']/1000, params_TB['central coordinate [2]']/1000 # [kpc]
+    params_IP                    = read_selected_parameters("../Record__Note")
+    SPATIAL_RESO                 = params_IP['BOX_SIZE_X']/params_IP['NX0_TOT[0]'] # [pc]
+    DPLD_a, DPLD_b, DPLD_c       = params_TB['Halo_Profle_Param_a'], params_TB['Halo_Profle_Param_b'], params_TB['Halo_Profle_Param_c']
+    t_end                        = params_IP['END_T']/1000 # end time in [Gyr]
+    Interpolate_table_path       = '../Profile_Table'
     halo_rs,rho0_halo, halo_type = params_TB['HALO_Rs']/1000, params_TB['HALO_RHO_0']*1E9,params_TB['Halo Type']# [kpc], [Msun/kpc^3], Type
     stellar_rs, rho0_stellar, stellar_type = 0, 0, "None" # [kpc], [Msun/kpc^3], Type
 elif DATA_SOURE == 'USER' :
     m = 0 # mass of the massive object in [Msun]
-    SPATIAL_RESO = 0 # [pc]
-    t_end = 0 # end time in [Gyr]
-    GC_position = 0,0,0 # [kpc]
-    GC_velocity = 0,0,0 # [pc/Myr]=[kpc/Gyr]
-    Halo_Center = 0,0,0 # [kpc]
-    Interpolate_table_path = 'PUT_YOUR_PATH_HERE'
+    SPATIAL_RESO                 = 0 # [pc]
+    t_end                        = 0 # end time in [Gyr]
+    GC_position                  = 0,0,0 # [kpc]
+    GC_velocity                  = 0,0,0 # [pc/Myr]=[kpc/Gyr]
+    Halo_Center                  = 0,0,0 # [kpc]
+    Interpolate_table_path       = 'PUT_YOUR_PATH_HERE'
     halo_rs,rho0_halo, halo_type = 0, 0, "0" # [kpc], [Msun/kpc^3], Type
     stellar_rs, rho0_stellar, stellar_type = 0, 0, "0" # [kpc], [Msun/kpc^3], Type
 else:
@@ -50,9 +48,9 @@ else:
 
 
 
-GC_softening = 12.5  # softening length in [pc] -> For softening the gravitational acceleration
-dt = 0.01   # time step in [Gyr]
-G = 4.492e-6  # gravitational constant in [kpc^3 / (Gyr^2 Msun)]
+GC_softening  = 12.5  # softening length in [pc] -> For softening the gravitational acceleration
+dt            = 0.01   # time step in [Gyr]
+G             = 4.492e-6  # gravitational constant in [kpc^3 / (Gyr^2 Msun)]
 UPDATE_METHOD = 'RK4'  # ['RK4'] : 'RK4', 'Euler' or 'RK2'
 
 
@@ -140,10 +138,7 @@ def density_from_file(r):
 def velocity_dispersion(r):
     if version == 'analytical':
         rho_r = density(rho0_halo, halo_rs, np.linalg.norm(r), halo_type) + density(rho0_stellar, stellar_rs, np.linalg.norm(r), stellar_type)
-        integral_part = integrate.quad(lambda r_: (clustermass(rho0_halo, halo_rs, np.linalg.norm(r_), halo_type)+clustermass(rho0_stellar, stellar_rs, np.linalg.norm(r_), stellar_type)) *
-                                       (density(rho0_halo, halo_rs, np.linalg.norm(
-                                           r_), halo_type)+density(rho0_stellar, stellar_rs, np.linalg.norm(r_), stellar_type))
-                                       * G/np.linalg.norm(r_)**2, r, np.infty)
+        integral_part = integrate.quad(lambda r_: (clustermass(rho0_halo, halo_rs, np.linalg.norm(r_), halo_type)+clustermass(rho0_stellar, stellar_rs, np.linalg.norm(r_), stellar_type)) *(density(rho0_halo, halo_rs, np.linalg.norm(r_), halo_type)+density(rho0_stellar, stellar_rs, np.linalg.norm(r_), stellar_type))* G/np.linalg.norm(r_)**2, r, np.infty)
         result = integral_part[0]/rho_r
     elif version == 'interpolate_table':
         rho_r = density_from_file(np.linalg.norm(r))
@@ -168,8 +163,8 @@ def dynamical_friction_Chandrasekhar_erf(r, v, m):
         rho = 0
         print('Wrong rho!!!!')
 
-    ln_Lambda = -999
-    Lamda = (np.linalg.norm(r)*LN_LAMBDA_BMAX_FACTOR)/(SPATIAL_RESO*0.001*LN_LAMBDA_BMIN_FACTOR)
+    ln_Lambda = -999 # start from a negative number
+    Lamda     = (np.linalg.norm(r)*LN_LAMBDA_BMAX_FACTOR)/(SPATIAL_RESO*0.001*LN_LAMBDA_BMIN_FACTOR)
     ln_Lambda = np.log(Lamda)
     if ln_Lambda < 0:
         ln_Lambda = np.log(1+Lamda**2)
@@ -177,17 +172,17 @@ def dynamical_friction_Chandrasekhar_erf(r, v, m):
 
     erf_term = erf(x)
     exp_term = 2 * x / np.sqrt(np.pi) * np.exp(-x**2)
-    a_df = -4*np.pi*G**2 * m * rho * ln_Lambda / np.linalg.norm(v)**3 * v * (erf_term-exp_term)
+    a_df     = -4*np.pi*G**2 * m * rho * ln_Lambda / np.linalg.norm(v)**3 * v * (erf_term-exp_term)
     return a_df
 
 r0 = np.array([GC_position[0]-Halo_Center[0],GC_position[1]-Halo_Center[1],GC_position[2]-Halo_Center[2]], dtype=np.float64)  # initial position in [kpc]
 v0 = np.array(GC_velocity, dtype=np.float64)  # initial velocity in [kpc/Gyr]
 
 def calculate_trajectory(r0_=r0, v0_=v0, m=m, t_end=t_end, dt_=dt):
-    r = r0_
-    v = v0_
+    r  = r0_
+    v  = v0_
     dt = dt_
-    t = 0
+    t  = 0
     r_history = [np.linalg.norm(r)]
     t_history = [float(t)]
     # Define the total number of iterations
@@ -259,12 +254,12 @@ def calculate_trajectory(r0_=r0, v0_=v0, m=m, t_end=t_end, dt_=dt):
 
 if version == 'interpolate_table':
     print(f'You are using the interpolation version, will use the data from {Interpolate_table_path}!')
-    data = np.loadtxt("%s" % Interpolate_table_path, skiprows=1, dtype=float)
-    Input_Radius = data[:, 0].astype(float)  # in [pc]
-    Input_Radius = Input_Radius/1000  # change to [kpc]
+    data                 = np.loadtxt("%s" % Interpolate_table_path, skiprows=1, dtype=float)
+    Input_Radius         = data[:, 0].astype(float)  # in [pc]
+    Input_Radius         = Input_Radius/1000  # change to [kpc]
     Input_Density_Scaled = data[:, 1].astype(float)  # in Msun/pc^3
     Input_Density_Scaled = Input_Density_Scaled*1e9  # change to [Msun/kpc^3]
-    Input_Mass_Profile = data[:, 2].astype(float)  # in Msun
+    Input_Mass_Profile   = data[:, 2].astype(float)  # in Msun
 elif version == 'analytical':
     print('You are using the analytical version please make sure you have set the parameters correctly!')
 else:
