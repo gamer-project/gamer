@@ -44,10 +44,6 @@ void Par_Init_ByFunction_DynamicalFriction( const long NPar_ThisRank, const long
 
 #endif
 
-// testing the subtraction
-// void Output_UserWorkBeforeOutput_DF();
-
-
 void Mis_UserWorkBeforeNextLevel_Find_GC( const int lv, const double TimeNew, const double TimeOld, const double dt );
 
 void AdjustGCPotential(const bool add, const double GC_x, const double GC_y, const double GC_z);
@@ -207,7 +203,9 @@ void SetParameter()
 // Function    :  AdjustGCPotential()
 // Description :  Adjust the Potential
 //
-// Note        :  
+// Note        :  1. This function is aim to help the center finding of the halo (by searching potential minimum)
+//                   Though this function may have the potential of subtracting too much potential due to the mass
+//                   and postition, we still adopt this because we only care about the center
 // Parameter   :  add : the booldean value that determines the action (subtraction or add back)
 //                GC_x,GC_y,GC_z : the current GC's position
 //-------------------------------------------------------------------------------------------------------
@@ -239,7 +237,6 @@ void AdjustGCPotential(const bool add, const double GC_x, const double GC_y, con
                {
                   const double x  = x0 + i*dh;
                   const double dx = x - GC_x;
-                  //const double r      = sqrt( SQR(dx) + SQR(dy) + SQR(dz) + SQR(dh) );
                   const double r      = sqrt( SQR(dx) + SQR(dy) + SQR(dz) );
                   const double GC_pot = -NEWTON_G*GC_MASS/r;
          
@@ -260,6 +257,7 @@ void AdjustGCPotential(const bool add, const double GC_x, const double GC_y, con
 //                2. Enabled by the runtime option "OPT__RECORD_USER"
 //                3. This function will be called both during the program initialization and after each full update
 //                4. Notice that this function can only get "ONE" GC, multiple GCs are not supported.
+//                5. Write to the file "Record__Result_GC_position" and "Record__Result_Center"
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void Aux_Record_User_DynamicalFriction()
@@ -291,7 +289,7 @@ void Aux_Record_User_DynamicalFriction()
       }
    }
 
-// A. Broadcast the GC's position to all rank
+// B. Broadcast the GC's position to all rank
    MPI_Allreduce(&GC_x_local, &GC_x, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
    MPI_Allreduce(&GC_y_local, &GC_y, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
    MPI_Allreduce(&GC_z_local, &GC_z, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
@@ -301,12 +299,8 @@ void Aux_Record_User_DynamicalFriction()
    MPI_Bcast(&GC_z,1,MPI_DOUBLE,0,MPI_COMM_WORLD);   
    MPI_Barrier(MPI_COMM_WORLD);
 
-//   Aux_Message(stdout, "[%02d] GC's position is %15.6e %15.6e %15.6e\n",MPI_Rank,GC_x,GC_y,GC_z);
 
-
-
-
-   // B. Set the center finding method base on Input__TestProb
+// C. Set the center finding method base on Input__TestProb
    if ( FixCenter )
    {
       if ( MPI_Rank == 0 )
@@ -326,11 +320,11 @@ void Aux_Record_User_DynamicalFriction()
    {
 
 
-   // B-1. subtract GC potential
+   // C-1. subtract GC potential
       AdjustGCPotential(false,GC_x,GC_y,GC_z);     
       
        
-   // B-2. Find the minimum potential position
+   // C-2. Find the minimum potential position
       Extrema_t Extrema;
       Extrema.Field     = _POTE;
       Extrema.Radius    = SearchRadius*amr->dh[MAX_LEVEL];
@@ -357,7 +351,7 @@ void Aux_Record_User_DynamicalFriction()
       min_pot_last[1] = Extrema.Coord[1];
       min_pot_last[2] = Extrema.Coord[2];
 
-   // B-3. write them into a file
+   // C-3. write them into a file
 
       if ( MPI_Rank == 0 )
       {
@@ -378,61 +372,6 @@ void Aux_Record_User_DynamicalFriction()
    };
 
 } // FUNCTION : Aux_Record_User_DynamicalFriction
-
-
-
-//void Output_UserWorkBeforeOutput_DF(){
-//// A. Find the GC's position
-//
-//   double GC_x_local = 0.0, GC_y_local = 0.0, GC_z_local = 0.0;
-//   double GC_x, GC_y, GC_z;
-//
-//
-//
-//   for (long p=0; p<amr->Par->NPar_AcPlusInac; p++) {
-//   if ( amr->Par->Mass[p] < (real)0.0 )  continue;
-//      if ( amr->Par->Type[p] == PTYPE_GC)
-//      {
-//         GC_x_local = amr->Par->PosX[p];
-//         GC_y_local = amr->Par->PosY[p];
-//         GC_z_local = amr->Par->PosZ[p];
-//
-//      }
-//   }
-//
-//// A. Broadcast the GC's position to all rank
-//   MPI_Allreduce(&GC_x_local, &GC_x, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
-//   MPI_Allreduce(&GC_y_local, &GC_y, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
-//   MPI_Allreduce(&GC_z_local, &GC_z, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
-//   
-//   MPI_Bcast(&GC_x,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
-//   MPI_Bcast(&GC_y,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
-//   MPI_Bcast(&GC_z,1,MPI_DOUBLE,0,MPI_COMM_WORLD);   
-//   MPI_Barrier(MPI_COMM_WORLD);
-//
-////   Aux_Message(stdout, "[%02d] GC's position is %15.6e %15.6e %15.6e\n",MPI_Rank,GC_x,GC_y,GC_z);
-//
-//
-//
-//   AdjustGCPotential(false,GC_x,GC_y,GC_z);     
-//   if (MPI_Rank == 0)
-//   {
-//      Aux_Message(stdout,"Successfully subtracted the GC's potential!");
-//   }
-//
-//}
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -497,7 +436,6 @@ void Init_TestProb_Hydro_DynamicalFriction()
 // set the problem-specific runtime parameters
    SetParameter();
    Init_Function_User_Ptr  = SetGridIC;
-//   Output_UserWorkBeforeOutput_Ptr = Output_UserWorkBeforeOutput_DF;
    Aux_Record_User_Ptr     = Aux_Record_User_DynamicalFriction;
 #  ifdef MASSIVE_PARTICLES
    Par_Init_ByFunction_Ptr = Par_Init_ByFunction_DynamicalFriction;
