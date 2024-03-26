@@ -44,6 +44,9 @@ void Par_Init_ByFunction_DynamicalFriction( const long NPar_ThisRank, const long
 
 #endif
 
+// testing the subtraction
+// void Output_UserWorkBeforeOutput_DF();
+
 
 void Mis_UserWorkBeforeNextLevel_Find_GC( const int lv, const double TimeNew, const double TimeOld, const double dt );
 
@@ -236,6 +239,7 @@ void AdjustGCPotential(const bool add, const double GC_x, const double GC_y, con
                {
                   const double x  = x0 + i*dh;
                   const double dx = x - GC_x;
+                  //const double r      = sqrt( SQR(dx) + SQR(dy) + SQR(dz) + SQR(dh) );
                   const double r      = sqrt( SQR(dx) + SQR(dy) + SQR(dz) );
                   const double GC_pot = -NEWTON_G*GC_MASS/r;
          
@@ -262,15 +266,18 @@ void Aux_Record_User_DynamicalFriction()
 {
 
 // A. Find the GC's position
+   double GC_x_local = 0.0, GC_y_local = 0.0, GC_z_local = 0.0;
    double GC_x, GC_y, GC_z;
 
+
+
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++) {
-   if ( amr->Par->Mass[p] < PTYPE_GC )  continue;
+   if ( amr->Par->Mass[p] < (real)0.0 )  continue;
       if ( amr->Par->Type[p] == PTYPE_GC)
       {
-         GC_x = amr->Par->PosX[p];
-         GC_y = amr->Par->PosY[p];
-         GC_z = amr->Par->PosZ[p];
+         GC_x_local = amr->Par->PosX[p];
+         GC_y_local = amr->Par->PosY[p];
+         GC_z_local = amr->Par->PosZ[p];
 
          char Filename[MAX_STRING];
          sprintf( Filename, "%s", "Record__Result_GC_position" );
@@ -279,10 +286,23 @@ void Aux_Record_User_DynamicalFriction()
          {
            fprintf(File, "%15s\t%15s\t%15s\t%15s\n", "#          Time", " GCX", " GCY", " GCZ");
          }
-         fprintf(File, "%15.7f\t%15.7e\t%15.7e\t%15.7e\n", Time[0],GC_x,GC_y,GC_z );
+         fprintf(File, "%15.7f\t%15.7e\t%15.7e\t%15.7e\n", Time[0],GC_x_local,GC_y_local,GC_z_local );
          fclose ( File );
       }
    }
+
+// A. Broadcast the GC's position to all rank
+   MPI_Allreduce(&GC_x_local, &GC_x, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+   MPI_Allreduce(&GC_y_local, &GC_y, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+   MPI_Allreduce(&GC_z_local, &GC_z, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+   
+   MPI_Bcast(&GC_x,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+   MPI_Bcast(&GC_y,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+   MPI_Bcast(&GC_z,1,MPI_DOUBLE,0,MPI_COMM_WORLD);   
+   MPI_Barrier(MPI_COMM_WORLD);
+
+//   Aux_Message(stdout, "[%02d] GC's position is %15.6e %15.6e %15.6e\n",MPI_Rank,GC_x,GC_y,GC_z);
+
 
 
 
@@ -352,11 +372,68 @@ void Aux_Record_User_DynamicalFriction()
             Time[0]  ,Extrema.Coord[0], Extrema.Coord[1], Extrema.Coord[2]);
          fclose ( File );
       }
+
     // B-4 Add back the GC's potential
       AdjustGCPotential(true,GC_x,GC_y,GC_z);     
    };
 
 } // FUNCTION : Aux_Record_User_DynamicalFriction
+
+
+
+//void Output_UserWorkBeforeOutput_DF(){
+//// A. Find the GC's position
+//
+//   double GC_x_local = 0.0, GC_y_local = 0.0, GC_z_local = 0.0;
+//   double GC_x, GC_y, GC_z;
+//
+//
+//
+//   for (long p=0; p<amr->Par->NPar_AcPlusInac; p++) {
+//   if ( amr->Par->Mass[p] < (real)0.0 )  continue;
+//      if ( amr->Par->Type[p] == PTYPE_GC)
+//      {
+//         GC_x_local = amr->Par->PosX[p];
+//         GC_y_local = amr->Par->PosY[p];
+//         GC_z_local = amr->Par->PosZ[p];
+//
+//      }
+//   }
+//
+//// A. Broadcast the GC's position to all rank
+//   MPI_Allreduce(&GC_x_local, &GC_x, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+//   MPI_Allreduce(&GC_y_local, &GC_y, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+//   MPI_Allreduce(&GC_z_local, &GC_z, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+//   
+//   MPI_Bcast(&GC_x,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+//   MPI_Bcast(&GC_y,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+//   MPI_Bcast(&GC_z,1,MPI_DOUBLE,0,MPI_COMM_WORLD);   
+//   MPI_Barrier(MPI_COMM_WORLD);
+//
+////   Aux_Message(stdout, "[%02d] GC's position is %15.6e %15.6e %15.6e\n",MPI_Rank,GC_x,GC_y,GC_z);
+//
+//
+//
+//   AdjustGCPotential(false,GC_x,GC_y,GC_z);     
+//   if (MPI_Rank == 0)
+//   {
+//      Aux_Message(stdout,"Successfully subtracted the GC's potential!");
+//   }
+//
+//}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetGridIC
@@ -419,8 +496,8 @@ void Init_TestProb_Hydro_DynamicalFriction()
 #  if ( MODEL == HYDRO )
 // set the problem-specific runtime parameters
    SetParameter();
-//   const char* HaloType_g;
    Init_Function_User_Ptr  = SetGridIC;
+//   Output_UserWorkBeforeOutput_Ptr = Output_UserWorkBeforeOutput_DF;
    Aux_Record_User_Ptr     = Aux_Record_User_DynamicalFriction;
 #  ifdef MASSIVE_PARTICLES
    Par_Init_ByFunction_Ptr = Par_Init_ByFunction_DynamicalFriction;
