@@ -1,0 +1,92 @@
+Compilation flags:
+========================================
+Enable : MODEL=HYDRO, GRAVITY, PARTICLE, SUPPORT_GSL, fftw=FFTW3
+Disable: COMOVING
+
+Default setup:
+========================================
+1. Units:
+   [L] = pc
+   [T] = Myr
+   [M] = Msun
+
+2. Initial conditions:
+   (1) Burkert Density Profile :
+      (a) Input__Parameter :
+          - BOX_SIZE                  16e+03
+          - NX0_TOT_*                 256
+          - END_T                     8000 (Optional but Recommended)
+      (b) Input__TestProb :
+          - HALO_TYPE                 Burkert
+          - HALO_RHO_0                6e-2
+          - HALO_Rs                   1e3
+          - HALO_Rt                   6.0e3
+          - GC_MASS                   1.5e6
+          - GC_initial_R              2e3
+      (c) Input__Profile_Params :
+          - Cloud_Center*             8e3
+          - Cloud_MaxR                6.0e3
+          - Cloud_Rho0                6e-2
+          - Cloud_R0                  1e3
+      (d) Tools/calculate_ChandrasekharDynamicalFrictionFormula.py
+          - LN_LAMBDA_BMAX_FACTOR     3     
+          - LN_LAMBDA_BMIN_FACTOR     2
+   (2) NFW Density Profile :
+      (a) Input__Parameter :
+          - BOX_SIZE                  76e+03
+          - NX0_TOT_*                 512
+          - END_T                     18000 (Optional but Recommended)
+      (b) Input__TestProb :
+          - HALO_TYPE                 NFW
+          - HALO_RHO_0                1.96311939345708e-03
+          - HALO_Rs                   5.48799489144317e+03
+          - HALO_Rt                   35.0e3
+          - GC_MASS                   0.75e6
+          - GC_initial_R              2.5243e3
+      (c) Input__Profile_Params :
+          - Cloud_Center*             38.0e3
+          - Cloud_MaxR                35.0e3
+          - Cloud_Rho0                1.96311939345708e-03
+          - Cloud_R0                  5.48799489144317e+03
+      (d) Tools/calculate_ChandrasekharDynamicalFrictionFormula.py
+          - LN_LAMBDA_BMAX_FACTOR     3     
+          - LN_LAMBDA_BMIN_FACTOR     1
+   (3) Power-law Density Profile :
+      (a) Input__Parameter :
+          - BOX_SIZE                  96e+03
+          - NX0_TOT_*                 256
+          - END_T                     18000 (Optional but Recommended)
+      (b) Input__TestProb :
+          - HALO_TYPE                 DoublePowerLaw
+          - HALO_RHO_0                1.976013787e-03
+          - HALO_Rs                   6.081e3
+          - HALO_Rt                   36.0e3
+          - GC_MASS                   2.5e7
+          - GC_initial_R              7.5e3
+          - Halo_Profile_Param_a      1.815
+          - Halo_Profile_Param_b      4.002
+          - Halo_Profile_Param_c      0.0
+      (c) Input__Profile_Params :
+          - Cloud_Center*             48e3
+          - Cloud_MaxR                36.0e3
+          - Cloud_Rho0                1.976013787e-03
+          - Cloud_R0                  6.081e3
+      (d) Tools/calculate_ChandrasekharDynamicalFrictionFormula.py
+          - LN_LAMBDA_BMAX_FACTOR     3     
+          - LN_LAMBDA_BMIN_FACTOR     3
+
+3. OMP_NTHREAD                   1  --> Recommend using only one OpenMP thread per MPI rank
+   OPT__FREEZE_FLUID             1
+
+
+Note:
+========================================
+1. This test problem is to test the dynamical friction of a massive object in a CDM halo.
+   - only support one massive object (GC), and doesn't support MPI.
+   - This test problem implements some features in different test problems, which is `ParticleEquilibriumIC`
+2. Three default cases are provided in this test problem, see 2. Initial conditions. for the parameters.
+   - For the simulation result for the three cases, please refer to 
+3. 'Tools/calculate_ChandrasekharDynamicalFrictionFormula.py' is attached to calculate the dynamical friction formula from Chandrasekhar.
+4. 'Tools/plot_compare.py' is attched to plot the comparison of the simulation result and the Chandrasekhar formula.
+5. 'Tools/plot_trajectory_movie.py' is attached to plot the trajectory movie of the GC in the simulation.
+6. All three python scripts should be run in `python3` instead of `python`.
