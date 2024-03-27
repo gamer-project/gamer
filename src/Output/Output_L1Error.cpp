@@ -276,17 +276,20 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 #        elif ( MODEL == ELBDM )
 #        if ( ELBDM_SCHEME == ELBDM_WAVE )
 
-         fprintf( File_L1, "#%5s %13s %*s %*s %*s\n", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
+         fprintf( File_L1, "#%5s %13s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
                   StrLen_Flt, "Error(Real)", StrLen_Flt, "Error(Imag)" );
 #        elif ( ELBDM_SCHEME == ELBDM_HYBRID )
-         fprintf( File_L1, "#%5s %13s %*s %*s %*s\n", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
+         fprintf( File_L1, "#%5s %13s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
                   StrLen_Flt, "Error(Phas)", StrLen_Flt, "Stub" );
 #        else
 #        error : ERROR : unsupported ELBDM_SCHEME !!
 #        endif
 
-         for (int v=0; v<NCOMP_PASSIVE; v++)
-         fprintf( File_L1, "    Error(Passive%02d)", v );
+         for (int v=0; v<NCOMP_PASSIVE; v++) {
+            char tmp_str[MAX_STRING];
+            sprintf(tmp_str, "Error(Passive%02d)", v);
+            fprintf( File_L1, " %*s", StrLen_Flt, tmp_str );
+         }
 
          fprintf( File_L1, "\n" );
 
