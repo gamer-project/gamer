@@ -797,7 +797,8 @@ def validation( paths, depends, constraints, **kwargs ):
         LOGGER.error("<--overlap_mpi> is not supported yet.")
         success = False
 
-    if not success: raise BaseException(BCOLOR.FAIL+"The above validation failed."+BCOLOR.ENDC)
+    if not success:
+        raise BaseException( "The above vaildation failed." )
     return
 
 def warning( paths, **kwargs ):
