@@ -1492,7 +1492,7 @@ void Aux_TakeNote()
       fprintf( Note, "YT_VERBOSE                          %d\n",      YT_VERBOSE );
       fprintf( Note, "YT_FIG_BASENAME                     %s\n",      YT_FIG_BASENAME );
 #     ifdef LIBYT_JUPYTER
-      fprintf( Note, "LIBYT_JUPYTER_USE_CONNECTION_FILE   %s\n",      LIBYT_JUPYTER_USE_CONNECTION_FILE ? "ON" : "OFF" );
+      fprintf( Note, "YT_JUPYTER_USE_CONNECTION_FILE      %d\n",      YT_JUPYTER_USE_CONNECTION_FILE);
 #     endif
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");

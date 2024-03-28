@@ -264,8 +264,8 @@ void YT_Inline()
 
 #ifdef LIBYT_JUPYTER
 // 5-4. activate jupyter kernel
-   if ( yt_run_JupyterKernel("LIBYT_STOP", true) != YT_SUCCESS )
-       Aux_Error( ERROR_INFO, "yt_run_JupyterKernel(\"LIBYT_STOP\", true) failed !!\n" );
+   if ( yt_run_JupyterKernel("LIBYT_STOP", YT_JUPYTER_USE_CONNECTION_FILE) != YT_SUCCESS )
+       Aux_Error( ERROR_INFO, "yt_run_JupyterKernel(\"LIBYT_STOP\", %s) failed !!\n", YT_JUPYTER_USE_CONNECTION_FILE ? "true" : "false" );
 #endif
 
 // 6. free resource

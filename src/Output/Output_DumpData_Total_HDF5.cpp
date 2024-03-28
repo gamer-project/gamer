@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2474)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2475)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -247,6 +247,8 @@ Procedure for outputting new variables:
 //                2472 : 2023/11/11 --> output FixUpVar_Flux and FixUpVar_Restrict
 //                2473 : 2023/11/29 --> output SRHD options and fields
 //                2474 : 2023/11/22 --> output OPT__UM_IC_FLOAT8 and PAR_IC_FLOAT8
+//                2475 : 2024/03/28 --> output YT_JUPYTER_USE_CONNECTION_FILE, LIBYT_RELOAD, LIBYT_INTERACTIVE,
+//                                      LIBYT_JUPYTER
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -2578,6 +2580,11 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Output_PartZ                = OUTPUT_PART_Z;
    InputPara.InitDumpID                  = INIT_DUMPID;
 
+// libyt jupyter
+#  if defined(SUPPORT_LIBYT) && defined(LIBYT_JUPYTER)
+   InputPara.Yt_JupyterUseConnectionFile = YT_JUPYTER_USE_CONNECTION_FILE;
+#  endif
+
 // miscellaneous
    InputPara.Opt__Verbose            = OPT__VERBOSE;
    InputPara.Opt__TimingBarrier      = OPT__TIMING_BARRIER;
@@ -3507,6 +3514,11 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Output_PartY",                HOFFSET(InputPara_t,Output_PartY               ), H5T_NATIVE_DOUBLE           );
    H5Tinsert( H5_TypeID, "Output_PartZ",                HOFFSET(InputPara_t,Output_PartZ               ), H5T_NATIVE_DOUBLE           );
    H5Tinsert( H5_TypeID, "InitDumpID",                  HOFFSET(InputPara_t,InitDumpID                 ), H5T_NATIVE_INT              );
+
+// libyt jupyter
+#  if defined(SUPPORT_LIBYT) && defined(LIBYT_JUPYTER)
+   H5Tinsert( H5_TypeID, "Yt_JupyterUseConnectionFile", HOFFSET(InputPara_t,Yt_JupyterUseConnectionFile), H5T_NATIVE_INT              );
+#  endif
 
 // miscellaneous
    H5Tinsert( H5_TypeID, "Opt__Verbose",            HOFFSET(InputPara_t,Opt__Verbose           ), H5T_NATIVE_INT              );

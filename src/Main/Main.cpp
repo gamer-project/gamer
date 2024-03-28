@@ -212,7 +212,7 @@ yt_verbose           YT_VERBOSE;
 char                 YT_FIG_BASENAME[MAX_STRING];
 int                  YT_GID_Offset[NLEVEL];
 #ifdef LIBYT_JUPYTER
-bool                 LIBYT_JUPYTER_USE_CONNECTION_FILE;
+bool                 YT_JUPYTER_USE_CONNECTION_FILE;
 #endif
 #endif
 
