@@ -12,3 +12,4 @@ GAMER_ExtractProfile
 .vscode
 *~
 src/Makefile
+src/Makefile.log
