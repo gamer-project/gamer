@@ -211,6 +211,9 @@ char                 YT_SCRIPT[MAX_STRING];
 yt_verbose           YT_VERBOSE;
 char                 YT_FIG_BASENAME[MAX_STRING];
 int                  YT_GID_Offset[NLEVEL];
+#ifdef LIBYT_JUPYTER
+bool                 YT_JUPYTER_USE_CONNECTION_FILE;
+#endif
 #endif
 
 // (2-7) Grackle
