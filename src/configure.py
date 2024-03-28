@@ -570,13 +570,13 @@ def load_arguments():
     parser.add_argument( "--libyt_reload", type=str2bool, metavar="BOOLEAN", gamer_name="LIBYT_RELOAD",
                          default=False,
                          depend={"libyt":True},
-                         help="Call the reloading script feature in libyt. This activates reloading script feature, which can reload and update the script. Must compile libyt with INTERACTIVE_MODE. Must enable <--libyt>.\n"
+                         help="Allow for reloading libyt scripts during runtime. Must compile libyt with INTERACTIVE_MODE. Must enable <--libyt>.\n"
                        )
 
     parser.add_argument( "--libyt_jupyter", type=str2bool, metavar="BOOLEAN", gamer_name="LIBYT_JUPYTER",
                          default=False,
                          depend={"libyt":True},
-                         help="Access gamer using Jupyter Notebook / JupyterLab feature in libyt. This activates jupyter kernel during runtime, where user can access gamer using Jupyter Notebook / JupyterLab. Must compile libyt with JUPYTER_KERNEL. Must enable <--libyt>.\n"
+                         help="Allow for in situ analysis using Jupyter Notebook / JupyterLab through libyt. Must compile libyt with JUPYTER_KERNEL. Must enable <--libyt>.\n"
                        )
 
     parser.add_argument( "--rng", type=str, metavar="TYPE", gamer_name="RANDOM_NUMBER",
