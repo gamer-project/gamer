@@ -588,6 +588,18 @@ def load_arguments():
                          help="Enable the interactive mode of libyt. This activates python prompt and does not shut down a simulation when there are errors in an inline python script. Must compile libyt with INTERACTIVE_MODE. Must enable <--libyt>.\n"
                        )
 
+    parser.add_argument( "--libyt_reload", type=str2bool, metavar="BOOLEAN", gamer_name="LIBYT_RELOAD",
+                         default=False,
+                         depend={"libyt":True},
+                         help="Allow for reloading libyt scripts during runtime. Must compile libyt with INTERACTIVE_MODE. Must enable <--libyt>.\n"
+                       )
+
+    parser.add_argument( "--libyt_jupyter", type=str2bool, metavar="BOOLEAN", gamer_name="LIBYT_JUPYTER",
+                         default=False,
+                         depend={"libyt":True},
+                         help="Allow for in situ analysis using Jupyter Notebook / JupyterLab through libyt. Must compile libyt with JUPYTER_KERNEL. Must enable <--libyt>.\n"
+                       )
+
     parser.add_argument( "--rng", type=str, metavar="TYPE", gamer_name="RANDOM_NUMBER",
                          default="RNG_GNU_EXT",
                          choices=["RNG_GNU_EXT", "RNG_CPP11"],

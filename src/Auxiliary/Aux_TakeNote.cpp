@@ -402,6 +402,18 @@ void Aux_TakeNote()
       fprintf( Note, "LIBYT_INTERACTIVE               OFF\n" );
 #     endif
 
+#     ifdef LIBYT_RELOAD
+      fprintf( Note, "LIBYT_RELOAD                    ON\n" );
+#     else
+      fprintf( Note, "LIBYT_RELOAD                    OFF\n" );
+#     endif
+
+#     ifdef LIBYT_JUPYTER
+      fprintf( Note, "LIBYT_JUPYTER                   ON\n" );
+#     else
+      fprintf( Note, "LIBYT_JUPYTER                   OFF\n" );
+#     endif
+
 #     else  // #ifdef SUPPORT_LIBYT
       fprintf( Note, "SUPPORT_LIBYT                   OFF\n" );
 #     endif // #ifdef SUPPORT_LIBYT ... else ...
@@ -1476,9 +1488,12 @@ void Aux_TakeNote()
 #     ifdef SUPPORT_LIBYT
       fprintf( Note, "Parameters of YT Inline Analysis\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "YT_SCRIPT                       %s\n",      YT_SCRIPT  );
-      fprintf( Note, "YT_VERBOSE                      %d\n",      YT_VERBOSE );
-      fprintf( Note, "YT_FIG_BASENAME                 %s\n",      YT_FIG_BASENAME );
+      fprintf( Note, "YT_SCRIPT                           %s\n",      YT_SCRIPT  );
+      fprintf( Note, "YT_VERBOSE                          %d\n",      YT_VERBOSE );
+      fprintf( Note, "YT_FIG_BASENAME                     %s\n",      YT_FIG_BASENAME );
+#     ifdef LIBYT_JUPYTER
+      fprintf( Note, "YT_JUPYTER_USE_CONNECTION_FILE      %d\n",      YT_JUPYTER_USE_CONNECTION_FILE );
+#     endif
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif
