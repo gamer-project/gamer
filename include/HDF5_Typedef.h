@@ -125,6 +125,8 @@ struct Makefile_t
 #  ifdef SUPPORT_LIBYT
    int LibYTUsePatchGroup;
    int LibYTInteractive;
+   int LibYTReload;
+   int LibYTJupyter;
 #  endif
    int SupportGrackle;
    int RandomNumber;
@@ -752,6 +754,11 @@ struct InputPara_t
    double Output_PartY;
    double Output_PartZ;
    int    InitDumpID;
+
+// libyt jupyter interface
+#  if defined(SUPPORT_LIBYT) && defined(LIBYT_JUPYTER)
+   bool   Yt_JupyterUseConnectionFile;
+#  endif
 
 // miscellaneous
    int    Opt__Verbose;
