@@ -583,7 +583,11 @@ double Par_EquilibriumIC::Set_Mass( double r )
       else if ( convertToString(params.Cloud_Type) == "Burkert"   ) F.function = &mass_base_Burkert;
       else if ( convertToString(params.Cloud_Type) == "Jaffe"     ) F.function = &mass_base_Jaffe;
       else if ( convertToString(params.Cloud_Type) == "Hernquist" ) F.function = &mass_base_Hernquist;
-      else if ( convertToString(params.Cloud_Type) == "Einasto"   ) F.function = &mass_base_Einasto;
+      else if ( convertToString(params.Cloud_Type) == "Einasto"   )
+      {
+         F.function = &mass_base_Einasto;
+         F.params   = &params.Cloud_Einasto_Power_Factor;
+      } // see reference here: https://www.gnu.org/software/gsl/doc/html/roots.html?highlight=gsl_function#providing-the-function-to-solve
 
       gsl_integration_qag( &F, 0, x, 0, 1e-7, 1000, 1, w, &result, &error );
       gsl_integration_workspace_free (w);
@@ -632,7 +636,7 @@ double Par_EquilibriumIC::Set_Density( double x )
       else if ( convertToString(params.Cloud_Type) == "Burkert"   ) rho = mass_base_Burkert( x, nothing );
       else if ( convertToString(params.Cloud_Type) == "Jaffe"     ) rho = mass_base_Jaffe( x, nothing );
       else if ( convertToString(params.Cloud_Type) == "Hernquist" ) rho = mass_base_Hernquist( x, nothing );
-      else if ( convertToString(params.Cloud_Type) == "Einasto"   ) rho = mass_base_Einasto( x, nothing );
+      else if ( convertToString(params.Cloud_Type) == "Einasto"   ) rho = mass_base_Einasto( x, &params.Cloud_Einasto_Power_Factor );
 
       return rho*pow(x,-2);
 
