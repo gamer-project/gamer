@@ -756,8 +756,8 @@ struct InputPara_t
    int    InitDumpID;
 
 // libyt jupyter interface
-#  if defined(SUPPORT_LIBYT) && defined(LIBYT_JUPYTER)
-   bool   Yt_JupyterUseConnectionFile;
+#  if ( defined(SUPPORT_LIBYT) && defined(LIBYT_JUPYTER) )
+   int    Yt_JupyterUseConnectionFile;
 #  endif
 
 // miscellaneous

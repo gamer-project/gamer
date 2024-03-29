@@ -1498,7 +1498,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2474;
+   KeyInfo.FormatVersion        = 2475;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2581,7 +2581,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.InitDumpID                  = INIT_DUMPID;
 
 // libyt jupyter
-#  if defined(SUPPORT_LIBYT) && defined(LIBYT_JUPYTER)
+#  if ( defined(SUPPORT_LIBYT) && defined(LIBYT_JUPYTER) )
    InputPara.Yt_JupyterUseConnectionFile = YT_JUPYTER_USE_CONNECTION_FILE;
 #  endif
 
@@ -3516,7 +3516,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "InitDumpID",                  HOFFSET(InputPara_t,InitDumpID                 ), H5T_NATIVE_INT              );
 
 // libyt jupyter
-#  if defined(SUPPORT_LIBYT) && defined(LIBYT_JUPYTER)
+#  if ( defined(SUPPORT_LIBYT) && defined(LIBYT_JUPYTER) )
    H5Tinsert( H5_TypeID, "Yt_JupyterUseConnectionFile", HOFFSET(InputPara_t,Yt_JupyterUseConnectionFile), H5T_NATIVE_INT              );
 #  endif
 
