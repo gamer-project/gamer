@@ -872,7 +872,7 @@ void Par_EquilibriumIC::Add_Ext_Pot()
    if(Row_r_Table!=Row_Ext_Pot_Table)
       Aux_Error( ERROR_INFO, "Ext_Pot row number is not equal to radius row number in the profile file !! Please check this file.\n" );
 
-   if(params.Cloud_MassProfNBin!=(Row_r_Table-1))
+   if(params.Cloud_MassProfNBin!=(Row_r_Table))
       Aux_Error( ERROR_INFO, "Cloud_MassProfNBin is not equal to the row number in profile file !!\n" );
 
    for(int i=0;i<params.Cloud_MassProfNBin;i++){
