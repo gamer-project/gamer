@@ -438,10 +438,10 @@ void TABLE_GetSibPID_Based( const int lv, const int PID0, int SibPID_Based[] );
 long LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 
 // Declare classes defined in GatherTree.h
-class LB_PatchCount;
-class LB_LocalPatchExchangeList;
-class LB_GlobalPatchExchangeList;
-class LB_GlobalPatch;
+struct LB_PatchCount;
+struct LB_LocalPatchExchangeList;
+struct LB_GlobalPatchExchangeList;
+struct LB_GlobalPatch;
 
 void LB_GetPID( const int GID, int& level, int& PID, int* GID_Offset );
 void LB_AllgatherPatchCount( LB_PatchCount& pc );
