@@ -42,37 +42,6 @@ void Par_EquilibriumIC::Read_Filenames( const char *filename_para )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :
-// Description :
-//
-// Note        :
-//
-// Parameter   :
-//
-// Return      :
-//-------------------------------------------------------------------------------------------------------
-string convertToString( char* a )
-{
-
-   int i;
-   string s = "";
-
-   for (i=0; i<MAX_STRING; i++)
-   {
-
-      if ( a[i] == '\0' )  break;
-
-      s = s + a[i];
-
-   }
-
-   return s;
-
-} // FUNCTION : convertToString
-
-
-
-//-------------------------------------------------------------------------------------------------------
 // Function    :  Load_Physical_Params
 // Description :  Load the physical parameters from a file
 //
@@ -90,7 +59,7 @@ void Par_EquilibriumIC::Load_Physical_Params( const FP filename_para, const int 
    params.Cloud_Center   = new double[3]; // central coordinates
    params.Cloud_BulkVel  = new double[3]; // bulk velocity
 
-   Aux_Message( stdout, "Reading physical parameters input file:%s\n",filename_para.Params_Filenames[cloud_idx].c_str() );
+   Aux_Message( stdout, "Reading physical parameters input file: %s\n", filename_para.Params_Filenames[cloud_idx].c_str() );
 
    // (1) load the problem-specific runtime parameters
    params.Cloud_Num        = filename_para.Cloud_Num;
@@ -156,7 +125,7 @@ void Par_EquilibriumIC::Load_Physical_Params( const FP filename_para, const int 
       Aux_Message( stdout, "  bulk velocity [%d]                         = %13.7e\n", d, params.Cloud_BulkVel[d] );
       }
 
-      if ( convertToString(params.Cloud_Type) != "Table" )
+      if ( strcmp( params.Cloud_Type, "Table" ) != 0 )
       Aux_Message( stdout, "  number of radial bins in the mass profile = %d\n",     params.Cloud_MassProfNBin );
 
       Aux_Message( stdout, "  Cloud_Type                                = %s\n",     params.Cloud_Type );
@@ -175,35 +144,32 @@ void Par_EquilibriumIC::Load_Physical_Params( const FP filename_para, const int 
 
    int flag = 0;
 
-   if      ( convertToString(params.Cloud_Type) == "Plummer"   )   flag = 1;
-   else if ( convertToString(params.Cloud_Type) == "NFW"       )   flag = 1;
-   else if ( convertToString(params.Cloud_Type) == "Burkert"   )   flag = 1;
-   else if ( convertToString(params.Cloud_Type) == "Jaffe"     )   flag = 1;
-   else if ( convertToString(params.Cloud_Type) == "Hernquist" )   flag = 1;
-   else if ( convertToString(params.Cloud_Type) == "Einasto"   )   flag = 1;
-   else if ( convertToString(params.Cloud_Type) == "Table"     )   flag = 1;
+   if      ( strcmp( params.Cloud_Type, "Plummer"   ) == 0 )   flag = 1;
+   else if ( strcmp( params.Cloud_Type, "NFW"       ) == 0 )   flag = 1;
+   else if ( strcmp( params.Cloud_Type, "Burkert"   ) == 0 )   flag = 1;
+   else if ( strcmp( params.Cloud_Type, "Jaffe"     ) == 0 )   flag = 1;
+   else if ( strcmp( params.Cloud_Type, "Hernquist" ) == 0 )   flag = 1;
+   else if ( strcmp( params.Cloud_Type, "Einasto"   ) == 0 )   flag = 1;
+   else if ( strcmp( params.Cloud_Type, "Table"     ) == 0 )   flag = 1;
 
    if ( flag == 0 )
    {
-      Aux_Message( stdout, "%s is not a Model Type\n", convertToString(params.Cloud_Type).c_str() );
+      Aux_Message( stdout, "%s is not a Model Type\n", params.Cloud_Type );
       Aux_Error( ERROR_INFO, "Error in the input of Cloud_Type !!\n" );
    }
 
    // Checking Density_Table_Name
    Aux_Message( stdout, "Checking Density_Table_Name\n" );
 
-   if ( convertToString(params.Cloud_Type) == "Table" )
+   if ( strcmp( params.Cloud_Type, "Table" ) == 0 )
    {
 
-      char c[MAX_STRING];
-      strcpy( c, convertToString(params.Density_Table_Name).c_str() );
-
       fstream file;
-      file.open(c, ios::in);
+      file.open( params.Density_Table_Name, ios::in );
 
       if ( !file )
       {
-         Aux_Message( stdout, "Density profile %s cannot be found !!\n", c );
+         Aux_Message( stdout, "Density profile %s cannot be found !!\n", params.Density_Table_Name );
          Aux_Error( ERROR_INFO, "Error in the input of Density_Table_Name !!\n" );
       }
 
@@ -216,14 +182,12 @@ void Par_EquilibriumIC::Load_Physical_Params( const FP filename_para, const int 
    if ( params.AddExtPot )
    {
 
-      const char * c = convertToString(params.ExtPot_Table_Name).c_str();
-
       fstream file;
-      file.open(c, ios::in);
+      file.open( params.ExtPot_Table_Name, ios::in );
 
       if ( !file )
       {
-         Aux_Message( stdout, "External potential profile %s cannot be found !!\n", c);
+         Aux_Message( stdout, "External potential profile %s cannot be found !!\n", params.ExtPot_Table_Name );
          Aux_Error( ERROR_INFO, "Error in the input of ExtPot_Table_Name!!\n" );
       }
 
@@ -268,19 +232,19 @@ void Par_EquilibriumIC::Init()
    Random_Num_Gen->SetSeed( 0, params.Cloud_RSeed );
 
    //Initialize densities with Table
-   if ( convertToString(params.Cloud_Type) == "Table" )
+   if ( strcmp( params.Cloud_Type, "Table" ) == 0 )
    {
 
       int Tcol_r[1]   =  {0};
       int Tcol_rho[1] =  {1};
       int Row_r_Table;
 
-      Aux_Message( stdout, "Loading Density Profile Table:%s\n", convertToString(params.Density_Table_Name).c_str() );
+      Aux_Message( stdout, "Loading Density Profile Table: %s\n", params.Density_Table_Name );
 
-      Row_r_Table = Aux_LoadTable( Table_r, convertToString(params.Density_Table_Name).c_str(), 1, Tcol_r,true,true );
+      Row_r_Table = Aux_LoadTable( Table_r, params.Density_Table_Name, 1, Tcol_r,true,true );
 
       int Row_Density_Table;
-      Row_Density_Table = Aux_LoadTable( Table_Density, convertToString(params.Density_Table_Name).c_str() , 1, Tcol_rho,true,true );
+      Row_Density_Table = Aux_LoadTable( Table_Density, params.Density_Table_Name , 1, Tcol_rho,true,true );
 
       if ( Row_r_Table != Row_Density_Table )
          Aux_Error( ERROR_INFO, "Density row number is not equal to radius row number in the profile file !! Please check this file.\n" );
@@ -553,7 +517,7 @@ double Par_EquilibriumIC::Set_Mass( double r )
 
    double x = r/params.Cloud_R0;
 
-   if ( convertToString(params.Cloud_Type) == "Table" )
+   if ( strcmp( params.Cloud_Type, "Table" ) == 0 )
    {
 
       if ( r >= Table_r[params.Cloud_MassProfNBin-1] )
@@ -578,12 +542,12 @@ double Par_EquilibriumIC::Set_Mass( double r )
       double  error;
       gsl_function F;
 
-      if      ( convertToString(params.Cloud_Type) == "Plummer"   ) F.function = &mass_base_Plummer;
-      else if ( convertToString(params.Cloud_Type) == "NFW"       ) F.function = &mass_base_NFW;
-      else if ( convertToString(params.Cloud_Type) == "Burkert"   ) F.function = &mass_base_Burkert;
-      else if ( convertToString(params.Cloud_Type) == "Jaffe"     ) F.function = &mass_base_Jaffe;
-      else if ( convertToString(params.Cloud_Type) == "Hernquist" ) F.function = &mass_base_Hernquist;
-      else if ( convertToString(params.Cloud_Type) == "Einasto"   )
+      if      ( strcmp( params.Cloud_Type, "Plummer"   ) == 0 ) F.function = &mass_base_Plummer;
+      else if ( strcmp( params.Cloud_Type, "NFW"       ) == 0 ) F.function = &mass_base_NFW;
+      else if ( strcmp( params.Cloud_Type, "Burkert"   ) == 0 ) F.function = &mass_base_Burkert;
+      else if ( strcmp( params.Cloud_Type, "Jaffe"     ) == 0 ) F.function = &mass_base_Jaffe;
+      else if ( strcmp( params.Cloud_Type, "Hernquist" ) == 0 ) F.function = &mass_base_Hernquist;
+      else if ( strcmp( params.Cloud_Type, "Einasto"   ) == 0 )
       {
          F.function = &mass_base_Einasto;
          F.params   = &params.Cloud_Einasto_Power_Factor;
@@ -613,7 +577,7 @@ double Par_EquilibriumIC::Set_Mass( double r )
 double Par_EquilibriumIC::Set_Density( double x )
 {
 
-   if ( convertToString(params.Cloud_Type) == "Table" )
+   if ( strcmp( params.Cloud_Type, "Table" ) == 0 )
    {
 
       if ( x >= Table_r[params.Cloud_MassProfNBin-1] )
@@ -631,12 +595,12 @@ double Par_EquilibriumIC::Set_Density( double x )
       double rho;
       double* nothing;
 
-      if      ( convertToString(params.Cloud_Type) == "Plummer"   ) rho = mass_base_Plummer( x, nothing );
-      else if ( convertToString(params.Cloud_Type) == "NFW"       ) rho = mass_base_NFW( x, nothing );
-      else if ( convertToString(params.Cloud_Type) == "Burkert"   ) rho = mass_base_Burkert( x, nothing );
-      else if ( convertToString(params.Cloud_Type) == "Jaffe"     ) rho = mass_base_Jaffe( x, nothing );
-      else if ( convertToString(params.Cloud_Type) == "Hernquist" ) rho = mass_base_Hernquist( x, nothing );
-      else if ( convertToString(params.Cloud_Type) == "Einasto"   ) rho = mass_base_Einasto( x, &params.Cloud_Einasto_Power_Factor );
+      if      ( strcmp( params.Cloud_Type, "Plummer"   ) == 0 ) rho = mass_base_Plummer( x, nothing );
+      else if ( strcmp( params.Cloud_Type, "NFW"       ) == 0 ) rho = mass_base_NFW( x, nothing );
+      else if ( strcmp( params.Cloud_Type, "Burkert"   ) == 0 ) rho = mass_base_Burkert( x, nothing );
+      else if ( strcmp( params.Cloud_Type, "Jaffe"     ) == 0 ) rho = mass_base_Jaffe( x, nothing );
+      else if ( strcmp( params.Cloud_Type, "Hernquist" ) == 0 ) rho = mass_base_Hernquist( x, nothing );
+      else if ( strcmp( params.Cloud_Type, "Einasto"   ) == 0 ) rho = mass_base_Einasto( x, &params.Cloud_Einasto_Power_Factor );
 
       return rho*pow(x,-2);
 
@@ -1109,12 +1073,12 @@ void Par_EquilibriumIC::Add_Ext_Pot()
    double* Ext_Pot=NULL;
 
    int Row_r_Table;
-   Row_r_Table = Aux_LoadTable( Radius, convertToString(params.ExtPot_Table_Name).c_str(), 1, Tcol_r, true, true );
+   Row_r_Table = Aux_LoadTable( Radius, params.ExtPot_Table_Name, 1, Tcol_r, true, true );
 
    int Row_Ext_Pot_Table;
-   Row_Ext_Pot_Table = Aux_LoadTable( Ext_Pot, convertToString(params.ExtPot_Table_Name).c_str(), 1, Tcol_Pot, true, true );
+   Row_Ext_Pot_Table = Aux_LoadTable( Ext_Pot, params.ExtPot_Table_Name, 1, Tcol_Pot, true, true );
 
-   Aux_Message( stdout, "Loading Ext_Pot Profile Table:%s\n", convertToString(params.ExtPot_Table_Name).c_str() );
+   Aux_Message( stdout, "Loading Ext_Pot Profile Table: %s\n", params.ExtPot_Table_Name );
 
    if ( Row_r_Table != Row_Ext_Pot_Table )
       Aux_Error( ERROR_INFO, "Ext_Pot row number is not equal to radius row number in the profile file !! Please check this file.\n" );
@@ -1154,7 +1118,7 @@ void Par_EquilibriumIC::Check_InputFileName()
 
       const char * c = filenames.Params_Filenames[k].c_str();
 
-      file.open(c, ios::in);
+      file.open( c, ios::in );
 
       if ( !file )
       {
@@ -1183,7 +1147,7 @@ int Par_EquilibriumIC::Aux_CountRow( const char *filename )
 {
 
    fstream file;
-   file.open(filename,ios::in);
+   file.open( filename, ios::in );
 
    int row=0;
 
@@ -1227,7 +1191,7 @@ int Par_EquilibriumIC::Aux_Countcolumn( const char *filename )
 {
 
    fstream file;
-   file.open(filename,ios::in);
+   file.open( filename, ios::in );
 
    int column = 0;
    string line;
@@ -1235,7 +1199,7 @@ int Par_EquilibriumIC::Aux_Countcolumn( const char *filename )
    if ( !file )
    {
 
-      Aux_Error( ERROR_INFO, "Failed to open file : %s", filename);
+      Aux_Error( ERROR_INFO, "Failed to open file : %s", filename );
    }
    else
    {
@@ -1278,14 +1242,14 @@ int Par_EquilibriumIC::GetParams( const char *filename, const char *keyword, con
 {
 
    fstream file;
-   file.open(filename,ios::in);
+   file.open( filename, ios::in );
 
    string line;
    string para;
 
    if ( !file )
    {
-      Aux_Error( ERROR_INFO, "Failed to open file : %s",filename);
+      Aux_Error( ERROR_INFO, "Failed to open file : %s", filename );
    }
    else
    {
