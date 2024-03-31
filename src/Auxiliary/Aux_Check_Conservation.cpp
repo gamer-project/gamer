@@ -6,9 +6,9 @@
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_Check_Conservation
 // Description :  Verify the conservation laws
-//                --> HYDRO    : check mass, momentum, and energy
+//                --> HYDRO    : check mass, momentum, angular momentum, and energy
 //                    ELBDM    : check mass and energy
-//                    PAR_ONLY : check mass, momentum, and energy
+//                    PAR_ONLY : check mass, momentum, angular momentum, and energy
 //                    Passive scalars
 //
 // Note        :  1. This check only works with the models HYDRO, ELBDM, and PAR_ONLY
@@ -53,10 +53,10 @@ void Aux_Check_Conservation( const char *comment )
 
 #  if   ( MODEL == HYDRO )
 #  ifdef MHD
-   const int    NVar_NoPassive    = 9;    // 9: mass, momentum (x/y/z), kinetic/internal/potential/magnetic/total energies
+   const int    NVar_NoPassive    = 12;   // 12: mass, momentum (x/y/z), angular momentum (x/y/z), kinetic/internal/potential/magnetic/total energies
                                           // --> note that **total energy** is put in the last element
 #  else
-   const int    NVar_NoPassive    = 8;    // 8: mass, momentum (x/y/z), kinetic/internal/potential/total energies
+   const int    NVar_NoPassive    = 11;   // 11: mass, momentum (x/y/z), angular momentum (x/y/z), kinetic/internal/potential/total energies
                                           // --> note that **total energy** is put in the last element
 #  endif
    const int    idx_etot          = NVar_NoPassive - 1;
@@ -88,7 +88,7 @@ void Aux_Check_Conservation( const char *comment )
    const int  NVar_Max      = NVar_NoPassive + NCOMP_PASSIVE + 1; // for declaring the static variable Fluid_Ref
    const int  NVar          = NVar_NoPassive + NCOMP_PASSIVE + ( (GetPassiveSum)?1:0 );
 
-   double dv, Fluid_ThisRank[NVar], Fluid_AllRank[NVar], Fluid_lv[NVar];   // dv : cell volume at each level
+   double dh, dv, Fluid_ThisRank[NVar], Fluid_AllRank[NVar], Fluid_lv[NVar];   // dv : cell volume at each level
    int    FluSg;
 #  ifdef GRAVITY
    int    PotSg;
@@ -103,11 +103,16 @@ void Aux_Check_Conservation( const char *comment )
    for (int v=0; v<NVar; v++)    Fluid_ThisRank[v] = 0.0;
 
 
+   const double AngularMomentum_Center_x = amr->BoxCenter[0];
+   const double AngularMomentum_Center_y = amr->BoxCenter[1];
+   const double AngularMomentum_Center_z = amr->BoxCenter[2];
+
 // loop over all levels
    for (int lv=0; lv<NLEVEL; lv++)
    {
       for (int v=0; v<NVar; v++)    Fluid_lv[v] = 0.0;
 
+      dh    = amr->dh[lv];
       dv    = CUBE( amr->dh[lv] );
       FluSg = amr->FluSg[lv];
 #     ifdef GRAVITY
@@ -139,12 +144,16 @@ void Aux_Check_Conservation( const char *comment )
 //          only check the leaf patches
             if ( amr->patch[0][lv][PID]->son == -1 )
             {
+               const double x0  = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
+               const double y0  = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
+               const double z0  = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
+
 #              if   ( MODEL == HYDRO )
                for (int k=0; k<PATCH_SIZE; k++)
                for (int j=0; j<PATCH_SIZE; j++)
                for (int i=0; i<PATCH_SIZE; i++)
                {
-                  double Dens, MomX, MomY, MomZ, Etot, Ekin, Eint;
+                  double Dens, MomX, MomY, MomZ, AnMX, AnMY, AnMZ, Etot, Ekin, Eint;
 #                 ifdef GRAVITY
                   double Epot;
 #                 endif
@@ -156,6 +165,18 @@ void Aux_Check_Conservation( const char *comment )
                   MomZ = amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i];
                   Etot = amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i];
 
+                  const double x  = x0 + i*dh;
+                  const double y  = y0 + j*dh;
+                  const double z  = z0 + k*dh;
+
+                  const double dx = x - AngularMomentum_Center_x;
+                  const double dy = y - AngularMomentum_Center_y;
+                  const double dz = z - AngularMomentum_Center_z;
+
+                  AnMX = dy*MomZ - dz*MomY;
+                  AnMY = dz*MomX - dx*MomZ;
+                  AnMZ = dx*MomY - dy*MomX;
+
 #                 ifdef SRHD
 //                total energy density also includes rest mass energy density in relativistic hydro
                   Etot += Dens;
@@ -166,9 +187,13 @@ void Aux_Check_Conservation( const char *comment )
                   Fluid_lv[2] += MomY;
                   Fluid_lv[3] += MomZ;
 
+                  Fluid_lv[4] += AnMX;
+                  Fluid_lv[5] += AnMY;
+                  Fluid_lv[6] += AnMZ;
+
 #                 ifdef MHD
                   Emag         = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
-                  Fluid_lv[7] += Emag;
+                  Fluid_lv[10] += Emag;
 #                 endif
 
 #                 ifdef GRAVITY
@@ -178,7 +203,7 @@ void Aux_Check_Conservation( const char *comment )
                   if      (  OPT__SELF_GRAVITY  &&  !OPT__EXT_POT )  Epot = 0.5*Dens*amr->patch[PotSg][lv][PID]->pot[k][j][i];
                   else if ( !OPT__SELF_GRAVITY  &&   OPT__EXT_POT )  Epot =     Dens*amr->patch[PotSg][lv][PID]->pot[k][j][i];
                   else                                               Epot = 0.0;
-                  Fluid_lv[6] += Epot;
+                  Fluid_lv[9] += Epot;
 #                 endif
 #                 ifndef SRHD
 //                Hydro_Con2Eint() calculates Eint for both HD and SRHD but we disable SRHD for now
@@ -188,7 +213,7 @@ void Aux_Check_Conservation( const char *comment )
 #                 else
                   Eint = 0.0;
 #                 endif
-                  Fluid_lv[5] += Eint;
+                  Fluid_lv[8] += Eint;
 
 #                 ifdef SRHD
 //                For now we disable the calculation of Ekin for SRHD
@@ -219,7 +244,7 @@ void Aux_Check_Conservation( const char *comment )
                   Ekin        -= Emag;
 #                 endif
 #                 endif
-                  Fluid_lv[4] += Ekin;
+                  Fluid_lv[7] += Ekin;
                } // i,j,k
 
 
@@ -295,9 +320,9 @@ void Aux_Check_Conservation( const char *comment )
 //    get the total energy
 #     if   ( MODEL == HYDRO )
 #     ifdef MHD
-      Fluid_lv[idx_etot] = Fluid_lv[4] + Fluid_lv[5] + Fluid_lv[6] + Fluid_lv[7];
+      Fluid_lv[idx_etot] = Fluid_lv[7] + Fluid_lv[8] + Fluid_lv[9] + Fluid_lv[10];
 #     else
-      Fluid_lv[idx_etot] = Fluid_lv[4] + Fluid_lv[5] + Fluid_lv[6];
+      Fluid_lv[idx_etot] = Fluid_lv[7] + Fluid_lv[8] + Fluid_lv[9];
 #     endif
 #     elif ( MODEL == ELBDM )
       Fluid_lv[idx_etot] = Fluid_lv[1] + Fluid_lv[2] + Fluid_lv[3];
@@ -322,9 +347,9 @@ void Aux_Check_Conservation( const char *comment )
 
 // calculate conserved quantities for particles
 #  ifdef MASSIVE_PARTICLES
-   double Mass_Par, MomX_Par, MomY_Par, MomZ_Par, Ekin_Par, Epot_Par, Etot_Par;
+   double Mass_Par, MomX_Par, MomY_Par, MomZ_Par, AnMX_Par, AnMY_Par, AnMZ_Par, Ekin_Par, Epot_Par, Etot_Par;
 
-   Par_Aux_GetConservedQuantity( Mass_Par, MomX_Par, MomY_Par, MomZ_Par, Ekin_Par, Epot_Par );
+   Par_Aux_GetConservedQuantity( Mass_Par, MomX_Par, MomY_Par, MomZ_Par, AnMX_Par, AnMY_Par, AnMZ_Par, Ekin_Par, Epot_Par );
 
    Etot_Par = Ekin_Par + Epot_Par;
 #  endif
@@ -336,7 +361,7 @@ void Aux_Check_Conservation( const char *comment )
 //    note that a variable length array cannot have static storage duration
       static double Fluid_Ref[NVar_Max];
 #     ifdef MASSIVE_PARTICLES
-      static double Mass_Par_Ref, MomX_Par_Ref, MomY_Par_Ref, MomZ_Par_Ref, Ekin_Par_Ref, Epot_Par_Ref, Etot_Par_Ref;
+      static double Mass_Par_Ref, MomX_Par_Ref, MomY_Par_Ref, MomZ_Par_Ref, AnMX_Par_Ref, AnMY_Par_Ref, AnMZ_Par_Ref, Ekin_Par_Ref, Epot_Par_Ref, Etot_Par_Ref;
 #     endif
       double AbsErr[NVar], RelErr[NVar];
 
@@ -350,6 +375,9 @@ void Aux_Check_Conservation( const char *comment )
          MomX_Par_Ref = MomX_Par;
          MomY_Par_Ref = MomY_Par;
          MomZ_Par_Ref = MomZ_Par;
+         AnMX_Par_Ref = AnMX_Par;
+         AnMY_Par_Ref = AnMY_Par;
+         AnMZ_Par_Ref = AnMZ_Par;
          Ekin_Par_Ref = Ekin_Par;
          Epot_Par_Ref = Epot_Par;
          Etot_Par_Ref = Etot_Par;
@@ -366,6 +394,7 @@ void Aux_Check_Conservation( const char *comment )
 #        if   ( MODEL == HYDRO )
          Aux_Message( File, "# Mass_Gas     : total HYDRO mass\n" );
          Aux_Message( File, "# MomX/Y/Z_Gas : total HYDRO momentum\n" );
+         Aux_Message( File, "# AnMX/Y/Z_Gas : total HYDRO angular momentum\n" );
          Aux_Message( File, "# Ekin_Gas     : total HYDRO kinetic energy\n" );
          Aux_Message( File, "# Eint_Gas     : total HYDRO internal energy\n" );
          Aux_Message( File, "# Epot_Gas     : total HYDRO potential energy\n" );
@@ -388,6 +417,7 @@ void Aux_Check_Conservation( const char *comment )
 #        ifdef MASSIVE_PARTICLES
          Aux_Message( File, "# Mass_Par     : total PARTICLE mass\n" );
          Aux_Message( File, "# MomX/Y/Z_Par : total PARTICLE momentum\n" );
+         Aux_Message( File, "# AnMX/Y/Z_Par : total PARTICLE angular momentum\n" );
          Aux_Message( File, "# Ekin_Par     : total PARTICLE kinetic energy\n" );
          Aux_Message( File, "# Epot_Par     : total PARTICLE potential energy\n" );
          Aux_Message( File, "# Etot_Par     : total PARTICLE energy\n" );
@@ -398,6 +428,9 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "# MomX_All     : sum of the total HYDRO/ELBDM + PARTICLE momentum x\n" );
          Aux_Message( File, "# MomY_All     : sum of the total HYDRO/ELBDM + PARTICLE momentum y\n" );
          Aux_Message( File, "# MomZ_All     : sum of the total HYDRO/ELBDM + PARTICLE momentum z\n" );
+         Aux_Message( File, "# AnMX_All     : sum of the total HYDRO/ELBDM + PARTICLE angular momentum x\n" );
+         Aux_Message( File, "# AnMY_All     : sum of the total HYDRO/ELBDM + PARTICLE angular momentum y\n" );
+         Aux_Message( File, "# AnMZ_All     : sum of the total HYDRO/ELBDM + PARTICLE angular momentum z\n" );
 #        endif
          Aux_Message( File, "# Etot_All     : sum of the total HYDRO/ELBDM + PARTICLE energy\n" );
 #        endif // if ( MODEL != PAR_ONLY )
@@ -422,6 +455,9 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "  %14s  %14s  %14s", "MomX_Gas", "MomX_Gas_AErr", "MomX_Gas_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "MomY_Gas", "MomY_Gas_AErr", "MomY_Gas_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "MomZ_Gas", "MomZ_Gas_AErr", "MomZ_Gas_RErr" );
+         Aux_Message( File, "  %14s  %14s  %14s", "AnMX_Gas", "AnMX_Gas_AErr", "AnMX_Gas_RErr" );
+         Aux_Message( File, "  %14s  %14s  %14s", "AnMY_Gas", "AnMY_Gas_AErr", "AnMY_Gas_RErr" );
+         Aux_Message( File, "  %14s  %14s  %14s", "AnMZ_Gas", "AnMZ_Gas_AErr", "AnMZ_Gas_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "Ekin_Gas", "Ekin_Gas_AErr", "Ekin_Gas_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "Eint_Gas", "Eint_Gas_AErr", "Eint_Gas_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "Epot_Gas", "Epot_Gas_AErr", "Epot_Gas_RErr" );
@@ -449,6 +485,9 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "  %14s  %14s  %14s", "MomX_Par", "MomX_Par_AErr", "MomX_Par_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "MomY_Par", "MomY_Par_AErr", "MomY_Par_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "MomZ_Par", "MomZ_Par_AErr", "MomZ_Par_RErr" );
+         Aux_Message( File, "  %14s  %14s  %14s", "AnMX_Par", "AnMX_Par_AErr", "AnMX_Par_RErr" );
+         Aux_Message( File, "  %14s  %14s  %14s", "AnMY_Par", "AnMY_Par_AErr", "AnMY_Par_RErr" );
+         Aux_Message( File, "  %14s  %14s  %14s", "AnMZ_Par", "AnMZ_Par_AErr", "AnMZ_Par_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "Ekin_Par", "Ekin_Par_AErr", "Ekin_Par_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "Epot_Par", "Epot_Par_AErr", "Epot_Par_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "Etot_Par", "Etot_Par_AErr", "Etot_Par_RErr" );
@@ -459,6 +498,9 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "  %14s  %14s  %14s", "MomX_All", "MomX_All_AErr", "MomX_All_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "MomY_All", "MomY_All_AErr", "MomY_All_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "MomZ_All", "MomZ_All_AErr", "MomZ_All_RErr" );
+         Aux_Message( File, "  %14s  %14s  %14s", "AnMX_All", "AnMX_All_AErr", "AnMX_All_RErr" );
+         Aux_Message( File, "  %14s  %14s  %14s", "AnMY_All", "AnMY_All_AErr", "AnMY_All_RErr" );
+         Aux_Message( File, "  %14s  %14s  %14s", "AnMZ_All", "AnMZ_All_AErr", "AnMZ_All_RErr" );
 #        endif
          Aux_Message( File, "  %14s  %14s  %14s", "Etot_All", "Etot_All_AErr", "Etot_All_RErr" );
 #        endif // if ( MODEL != PAR_ONLY )
@@ -484,12 +526,18 @@ void Aux_Check_Conservation( const char *comment )
       const double MomX_All     = Fluid_AllRank[       1] + MomX_Par;
       const double MomY_All     = Fluid_AllRank[       2] + MomY_Par;
       const double MomZ_All     = Fluid_AllRank[       3] + MomZ_Par;
+      const double AnMX_All     = Fluid_AllRank[       4] + AnMX_Par;
+      const double AnMY_All     = Fluid_AllRank[       5] + AnMY_Par;
+      const double AnMZ_All     = Fluid_AllRank[       6] + AnMZ_Par;
       const double Etot_All     = Fluid_AllRank[idx_etot] + Etot_Par;      // for HYDRO, total energy is stored in the last element
 
       const double Mass_All_Ref = Fluid_Ref    [       0] + Mass_Par_Ref;
       const double MomX_All_Ref = Fluid_Ref    [       1] + MomX_Par_Ref;
       const double MomY_All_Ref = Fluid_Ref    [       2] + MomY_Par_Ref;
       const double MomZ_All_Ref = Fluid_Ref    [       3] + MomZ_Par_Ref;
+      const double AnMX_All_Ref = Fluid_Ref    [       4] + AnMX_Par_Ref;
+      const double AnMY_All_Ref = Fluid_Ref    [       5] + AnMY_Par_Ref;
+      const double AnMZ_All_Ref = Fluid_Ref    [       6] + AnMZ_Par_Ref;
       const double Etot_All_Ref = Fluid_Ref    [idx_etot] + Etot_Par_Ref;
 
 #     elif ( MODEL == ELBDM )
@@ -515,6 +563,9 @@ void Aux_Check_Conservation( const char *comment )
       Aux_Message( File, "  %14.7e  %14.7e  %14.7e", MomX_Par, MomX_Par-MomX_Par_Ref, (MomX_Par-MomX_Par_Ref)/fabs(MomX_Par_Ref) );
       Aux_Message( File, "  %14.7e  %14.7e  %14.7e", MomY_Par, MomY_Par-MomY_Par_Ref, (MomY_Par-MomY_Par_Ref)/fabs(MomY_Par_Ref) );
       Aux_Message( File, "  %14.7e  %14.7e  %14.7e", MomZ_Par, MomZ_Par-MomZ_Par_Ref, (MomZ_Par-MomZ_Par_Ref)/fabs(MomZ_Par_Ref) );
+      Aux_Message( File, "  %14.7e  %14.7e  %14.7e", AnMX_Par, AnMX_Par-AnMX_Par_Ref, (AnMX_Par-AnMX_Par_Ref)/fabs(AnMX_Par_Ref) );
+      Aux_Message( File, "  %14.7e  %14.7e  %14.7e", AnMY_Par, AnMY_Par-AnMY_Par_Ref, (AnMY_Par-AnMY_Par_Ref)/fabs(AnMY_Par_Ref) );
+      Aux_Message( File, "  %14.7e  %14.7e  %14.7e", AnMZ_Par, AnMZ_Par-AnMZ_Par_Ref, (AnMZ_Par-AnMZ_Par_Ref)/fabs(AnMZ_Par_Ref) );
       Aux_Message( File, "  %14.7e  %14.7e  %14.7e", Ekin_Par, Ekin_Par-Ekin_Par_Ref, (Ekin_Par-Ekin_Par_Ref)/fabs(Ekin_Par_Ref) );
       Aux_Message( File, "  %14.7e  %14.7e  %14.7e", Epot_Par, Epot_Par-Epot_Par_Ref, (Epot_Par-Epot_Par_Ref)/fabs(Epot_Par_Ref) );
       Aux_Message( File, "  %14.7e  %14.7e  %14.7e", Etot_Par, Etot_Par-Etot_Par_Ref, (Etot_Par-Etot_Par_Ref)/fabs(Etot_Par_Ref) );
@@ -525,6 +576,9 @@ void Aux_Check_Conservation( const char *comment )
       Aux_Message( File, "  %14.7e  %14.7e  %14.7e", MomX_All, MomX_All-MomX_All_Ref, (MomX_All-MomX_All_Ref)/fabs(MomX_All_Ref) );
       Aux_Message( File, "  %14.7e  %14.7e  %14.7e", MomY_All, MomY_All-MomY_All_Ref, (MomY_All-MomY_All_Ref)/fabs(MomY_All_Ref) );
       Aux_Message( File, "  %14.7e  %14.7e  %14.7e", MomZ_All, MomZ_All-MomZ_All_Ref, (MomZ_All-MomZ_All_Ref)/fabs(MomZ_All_Ref) );
+      Aux_Message( File, "  %14.7e  %14.7e  %14.7e", AnMX_All, AnMX_All-AnMX_All_Ref, (AnMX_All-AnMX_All_Ref)/fabs(AnMX_All_Ref) );
+      Aux_Message( File, "  %14.7e  %14.7e  %14.7e", AnMY_All, AnMY_All-AnMY_All_Ref, (AnMY_All-AnMY_All_Ref)/fabs(AnMY_All_Ref) );
+      Aux_Message( File, "  %14.7e  %14.7e  %14.7e", AnMZ_All, AnMZ_All-AnMZ_All_Ref, (AnMZ_All-AnMZ_All_Ref)/fabs(AnMZ_All_Ref) );
 #     endif
       Aux_Message( File, "  %14.7e  %14.7e  %14.7e", Etot_All, Etot_All-Etot_All_Ref, (Etot_All-Etot_All_Ref)/fabs(Etot_All_Ref) );
 #     endif // if ( MODEL != PAR_ONLY )
