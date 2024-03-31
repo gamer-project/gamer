@@ -505,9 +505,12 @@ void Init_Load_Parameter()
 
 // yt inline analysis
 #  ifdef SUPPORT_LIBYT
-   ReadPara->Add( "YT_SCRIPT",                   YT_SCRIPT,                       NoDef_str,       Useless_str,   Useless_str    );
-   ReadPara->Add( "YT_VERBOSE",           (int*)&YT_VERBOSE,                      1,               0,             3              );
-   ReadPara->Add( "YT_FIG_BASENAME",             YT_FIG_BASENAME,                 NoDef_str,       Useless_str,   Useless_str    );
+   ReadPara->Add( "YT_SCRIPT",                          YT_SCRIPT,                         NoDef_str,    Useless_str,   Useless_str    );
+   ReadPara->Add( "YT_VERBOSE",                  (int*)&YT_VERBOSE,                        1,            0,             3              );
+   ReadPara->Add( "YT_FIG_BASENAME",                    YT_FIG_BASENAME,                   NoDef_str,    Useless_str,   Useless_str    );
+#  ifdef LIBYT_JUPYTER
+   ReadPara->Add( "YT_JUPYTER_USE_CONNECTION_FILE",    &YT_JUPYTER_USE_CONNECTION_FILE,    false,        Useless_bool,  Useless_bool   );
+#  endif
 #  endif
 
 
