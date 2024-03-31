@@ -1012,12 +1012,12 @@ void Par_EquilibriumIC::Init_Pot_Table()
 void Par_EquilibriumIC::Init_Prob_Dens()
 {
 
-   double min,max;
+   double min, max;
    min   = -Table_Gravity_Potential[params.Cloud_MassProfNBin-1];
    max   = -Table_Gravity_Potential[1];
    delta = (max-min)/params.Cloud_MassProfNBin;
 
-   double eng=min;
+   double eng = min;
 
    for (int k =0; k<params.Cloud_MassProfNBin; k++)
    {
@@ -1130,96 +1130,6 @@ void Par_EquilibriumIC::Check_InputFileName()
    }
 
 } // FUNCTION : Check_InputFileName
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Aux_CountRow
-// Description :  Count the row number of a given file
-//
-// Note        :
-//
-// Parameter   :  filename : file name
-//
-// Return      :  Row number of the given file
-//-------------------------------------------------------------------------------------------------------
-int Par_EquilibriumIC::Aux_CountRow( const char *filename )
-{
-
-   fstream file;
-   file.open( filename, ios::in );
-
-   int row=0;
-
-   string line;
-
-   if ( !file )
-   {
-      Aux_Error( ERROR_INFO, "Failed to open file : %s", filename );
-   }
-   else
-   {
-
-      do
-      {
-
-         getline( file, line );
-         row++;
-
-      } while( !file.eof() );
-   }
-
-   file.close();
-
-   return row;
-
-} // FUNCTION : Aux_CountRow
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Aux_Countcolumn
-// Description :  Count the column number of a given file
-//
-// Note        :
-//
-// Parameter   :  filename : file name
-//
-// Return      :  Column number of the given file
-//-------------------------------------------------------------------------------------------------------
-int Par_EquilibriumIC::Aux_Countcolumn( const char *filename )
-{
-
-   fstream file;
-   file.open( filename, ios::in );
-
-   int column = 0;
-   string line;
-
-   if ( !file )
-   {
-
-      Aux_Error( ERROR_INFO, "Failed to open file : %s", filename );
-   }
-   else
-   {
-
-      getline( file, line, '\n' );
-      istringstream templine( line );
-
-      while( !templine.eof() )
-      {
-
-         getline( templine, line, ' ' );
-         column++;
-      };
-   }
-
-   file.close();
-
-   return column;
-
-} // FUNCTION : Aux_Countcolumn
 
 
 
