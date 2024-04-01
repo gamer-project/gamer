@@ -21,7 +21,6 @@ import re
 # Global variables
 ####################################################################################################
 NONE_STR   = "OFF"
-PYTHON_VER = [sys.version_info.major, sys.version_info.minor]
 
 CLOSE_DIST  = 2
 PRINT_WIDTH = 100
@@ -780,7 +779,7 @@ def validation( paths, depends, constraints, **kwargs ):
         LOGGER.error("Unrecognized model: %s. Please add to the model choices."%kwargs["model"])
         success = False
 
-#   A.3 Particle
+#   A.2 Particle
     if kwargs["particle"]:
         if kwargs["star_formation"] and kwargs["store_par_acc"] and not kwargs["store_pot_ghost"]:
             LOGGER.error("<--store_pot_ghost> must be enabled when <--star_formation> and <--store_par_acc> are enabled.")
