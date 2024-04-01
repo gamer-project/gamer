@@ -115,9 +115,9 @@ for ds in ts.piter():
     MomX_All    =    MomX_Gas +    MomX_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE momentum x
     MomY_All    =    MomY_Gas +    MomY_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE momentum y
     MomZ_All    =    MomZ_Gas +    MomZ_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE momentum z
-    AngMoMX_All = AngMomX_Gas + AngMomX_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE angular momentum x
-    AngMoMY_All = AngMomY_Gas + AngMomY_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE angular momentum y
-    AngMoMZ_All = AngMomZ_Gas + AngMomZ_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE angular momentum z
+    AngMomX_All = AngMomX_Gas + AngMomX_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE angular momentum x
+    AngMomY_All = AngMomY_Gas + AngMomY_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE angular momentum y
+    AngMomZ_All = AngMomZ_Gas + AngMomZ_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE angular momentum z
     Ekin_All    =    Ekin_Gas +    Ekin_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE kinetic energy
     Epot_All    =    Epot_Gas +    Epot_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE potential energy
     Etot_All    =    Etot_Gas +    Etot_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE energy
