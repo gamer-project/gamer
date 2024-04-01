@@ -24,64 +24,65 @@
 //                   --> Different number of OpenMP threads can also results in different results again
 //                       due to round-off errors
 //
-// Parameter   :  Mass_Total     : Total particle mass to be returned
-//                MomX/Y/Z_Total : Total momentum to be returned
-//                AnMX/Y/Z_Total : Total angular momentum to be returned
-//                Ek_Total       : Total kinematic energy to be returned
-//                Ep_Total       : Total potential energy to be returned
+// Parameter   :  Mass_Total        : Total particle mass to be returned
+//                MomX/Y/Z_Total    : Total momentum to be returned
+//                AngMomX/Y/Z_Total : Total angular momentum to be returned
+//                Ek_Total          : Total kinematic energy to be returned
+//                Ep_Total          : Total potential energy to be returned
 //
-// Return      :  Mass_Total, MomX/Y/Z_Total, AnMX/Y/Z_Total, Ek_Total, Ep_Total
+// Return      :  Mass_Total, MomX/Y/Z_Total, AngMomX/Y/Z_Total, Ek_Total, Ep_Total
 //-------------------------------------------------------------------------------------------------------
 void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, double &MomY_Total, double &MomZ_Total,
-                                   double &AnMX_Total, double &AnMY_Total, double &AnMZ_Total,
+                                   double &AngMomX_Total, double &AngMomY_Total, double &AngMomZ_Total,
                                    double &Ek_Total, double &Ep_Total )
 {
 
 // 1. mass, momentum, and kinematic energy
-   double Mass_ThisRank=0.0, MomX_ThisRank=0.0, MomY_ThisRank=0.0, MomZ_ThisRank=0.0, AnMX_ThisRank=0.0, AnMY_ThisRank=0.0, AnMZ_ThisRank=0.0, Ek_ThisRank=0.0;
+   double Mass_ThisRank=0.0, MomX_ThisRank=0.0, MomY_ThisRank=0.0, MomZ_ThisRank=0.0;
+   double AngMomX_ThisRank=0.0, AngMomY_ThisRank=0.0, AngMomZ_ThisRank=0.0, Ek_ThisRank=0.0;
    double Send[8], Recv[8];
 
-   const double AngularMomentum_Center_x = amr->BoxCenter[0];
-   const double AngularMomentum_Center_y = amr->BoxCenter[1];
-   const double AngularMomentum_Center_z = amr->BoxCenter[2];
+   const double AngMom_OriginX = amr->BoxCenter[0];
+   const double AngMom_OriginY = amr->BoxCenter[1];
+   const double AngMom_OriginZ = amr->BoxCenter[2];
 
 // use static schedule to give the same reduction results everytime
-#  pragma omp parallel for schedule( static ) reduction( +:Mass_ThisRank, MomX_ThisRank, MomY_ThisRank, MomZ_ThisRank, AnMX_ThisRank, AnMY_ThisRank, AnMZ_ThisRank, Ek_ThisRank )
+#  pragma omp parallel for schedule( static ) reduction( +:Mass_ThisRank, MomX_ThisRank, MomY_ThisRank, MomZ_ThisRank, AngMomX_ThisRank, AngMomY_ThisRank, AngMomZ_ThisRank, Ek_ThisRank )
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
 //    skip inactive, massless, and tracer particles
       if ( amr->Par->Mass[p] > (real_par)0.0  &&  amr->Par->Type[p] != PTYPE_TRACER )
       {
-         Mass_ThisRank += amr->Par->Mass[p];
-         MomX_ThisRank += amr->Par->Mass[p]*amr->Par->VelX[p];
-         MomY_ThisRank += amr->Par->Mass[p]*amr->Par->VelY[p];
-         MomZ_ThisRank += amr->Par->Mass[p]*(amr->Par->VelZ[p]);
-         AnMX_ThisRank += amr->Par->Mass[p]*( ( amr->Par->PosY[p] - AngularMomentum_Center_y )*amr->Par->VelZ[p] - ( amr->Par->PosZ[p] - AngularMomentum_Center_z )*amr->Par->VelY[p] );
-         AnMY_ThisRank += amr->Par->Mass[p]*( ( amr->Par->PosZ[p] - AngularMomentum_Center_z )*amr->Par->VelX[p] - ( amr->Par->PosX[p] - AngularMomentum_Center_x )*amr->Par->VelZ[p] );
-         AnMZ_ThisRank += amr->Par->Mass[p]*( ( amr->Par->PosX[p] - AngularMomentum_Center_x )*amr->Par->VelY[p] - ( amr->Par->PosY[p] - AngularMomentum_Center_y )*amr->Par->VelX[p] );
-         Ek_ThisRank   += 0.5*amr->Par->Mass[p]*( SQR(amr->Par->VelX[p]) + SQR(amr->Par->VelY[p]) + SQR(amr->Par->VelZ[p]) );
+         Mass_ThisRank    += amr->Par->Mass[p];
+         MomX_ThisRank    += amr->Par->Mass[p]*amr->Par->VelX[p];
+         MomY_ThisRank    += amr->Par->Mass[p]*amr->Par->VelY[p];
+         MomZ_ThisRank    += amr->Par->Mass[p]*(amr->Par->VelZ[p]);
+         AngMomX_ThisRank += amr->Par->Mass[p]*( ( amr->Par->PosY[p] - AngMom_OriginY )*amr->Par->VelZ[p] - ( amr->Par->PosZ[p] - AngMom_OriginZ )*amr->Par->VelY[p] );
+         AngMomY_ThisRank += amr->Par->Mass[p]*( ( amr->Par->PosZ[p] - AngMom_OriginZ )*amr->Par->VelX[p] - ( amr->Par->PosX[p] - AngMom_OriginX )*amr->Par->VelZ[p] );
+         AngMomZ_ThisRank += amr->Par->Mass[p]*( ( amr->Par->PosX[p] - AngMom_OriginX )*amr->Par->VelY[p] - ( amr->Par->PosY[p] - AngMom_OriginY )*amr->Par->VelX[p] );
+         Ek_ThisRank      += 0.5*amr->Par->Mass[p]*( SQR(amr->Par->VelX[p]) + SQR(amr->Par->VelY[p]) + SQR(amr->Par->VelZ[p]) );
       }
    }
 
-   Send[0] = Mass_ThisRank;
-   Send[1] = MomX_ThisRank;
-   Send[2] = MomY_ThisRank;
-   Send[3] = MomZ_ThisRank;
-   Send[4] = AnMX_ThisRank;
-   Send[5] = AnMY_ThisRank;
-   Send[6] = AnMZ_ThisRank;
-   Send[7] = Ek_ThisRank;
+   Send[0] =    Mass_ThisRank;
+   Send[1] =    MomX_ThisRank;
+   Send[2] =    MomY_ThisRank;
+   Send[3] =    MomZ_ThisRank;
+   Send[4] = AngMomX_ThisRank;
+   Send[5] = AngMomY_ThisRank;
+   Send[6] = AngMomZ_ThisRank;
+   Send[7] =      Ek_ThisRank;
 
    MPI_Reduce( Send, Recv, 8, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
 
-   Mass_Total = Recv[0];
-   MomX_Total = Recv[1];
-   MomY_Total = Recv[2];
-   MomZ_Total = Recv[3];
-   AnMX_Total = Recv[4];
-   AnMY_Total = Recv[5];
-   AnMZ_Total = Recv[6];
-   Ek_Total   = Recv[7];
+   Mass_Total    = Recv[0];
+   MomX_Total    = Recv[1];
+   MomY_Total    = Recv[2];
+   MomZ_Total    = Recv[3];
+   AngMomX_Total = Recv[4];
+   AngMomY_Total = Recv[5];
+   AngMomZ_Total = Recv[6];
+   Ek_Total      = Recv[7];
 
 
 // 2. potential energy

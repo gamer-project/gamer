@@ -86,80 +86,80 @@ for ds in ts.piter():
 
 
     # Gas
-    Mass_Gas = ad.quantities.total_quantity( 'cell_mass'                   ) # total HYDRO mass
-    MomX_Gas = ad.quantities.total_quantity( 'momentum_x'                  ) # total HYDRO momentum x
-    MomY_Gas = ad.quantities.total_quantity( 'momentum_y'                  ) # total HYDRO momentum y
-    MomZ_Gas = ad.quantities.total_quantity( 'momentum_z'                  ) # total HYDRO momentum z
-    AnMX_Gas = ad.quantities.total_quantity( 'angular_momentum_x'          ) # total HYDRO angular momentum x
-    AnMY_Gas = ad.quantities.total_quantity( 'angular_momentum_y'          ) # total HYDRO angular momentum y
-    AnMZ_Gas = ad.quantities.total_quantity( 'angular_momentum_z'          ) # total HYDRO angular momentum z
-    Ekin_Gas = ad.quantities.total_quantity( 'kinetic_energy'              ) # total HYDRO kinetic energy
-    Eint_Gas = ad.quantities.total_quantity( 'thermal_energy'              ) # total HYDRO internal energy
-    Epot_Gas = ad.quantities.total_quantity( 'potential_energy'            ) # total HYDRO potential energy
-    Etot_Gas = ad.quantities.total_quantity( 'total_energy'                ) # total HYDRO energy
+    Mass_Gas    = ad.quantities.total_quantity( 'cell_mass'                   ) # total HYDRO mass
+    MomX_Gas    = ad.quantities.total_quantity( 'momentum_x'                  ) # total HYDRO momentum x
+    MomY_Gas    = ad.quantities.total_quantity( 'momentum_y'                  ) # total HYDRO momentum y
+    MomZ_Gas    = ad.quantities.total_quantity( 'momentum_z'                  ) # total HYDRO momentum z
+    AngMomX_Gas = ad.quantities.total_quantity( 'angular_momentum_x'          ) # total HYDRO angular momentum x
+    AngMomY_Gas = ad.quantities.total_quantity( 'angular_momentum_y'          ) # total HYDRO angular momentum y
+    AngMomZ_Gas = ad.quantities.total_quantity( 'angular_momentum_z'          ) # total HYDRO angular momentum z
+    Ekin_Gas    = ad.quantities.total_quantity( 'kinetic_energy'              ) # total HYDRO kinetic energy
+    Eint_Gas    = ad.quantities.total_quantity( 'thermal_energy'              ) # total HYDRO internal energy
+    Epot_Gas    = ad.quantities.total_quantity( 'potential_energy'            ) # total HYDRO potential energy
+    Etot_Gas    = ad.quantities.total_quantity( 'total_energy'                ) # total HYDRO energy
 
     # Particle
-    Mass_Par = ad.quantities.total_quantity( 'particle_mass'               ) # total PARTICLE mass
-    MomX_Par = ad.quantities.total_quantity( 'particle_momentum_x'         ) # total PARTICLE momentum x
-    MomY_Par = ad.quantities.total_quantity( 'particle_momentum_y'         ) # total PARTICLE momentum y
-    MomZ_Par = ad.quantities.total_quantity( 'particle_momentum_z'         ) # total PARTICLE momentum z
-    AnMX_Par = ad.quantities.total_quantity( 'particle_angular_momentum_x' ) # total PARTICLE angular momentum x
-    AnMY_Par = ad.quantities.total_quantity( 'particle_angular_momentum_y' ) # total PARTICLE angular momentum y
-    AnMZ_Par = ad.quantities.total_quantity( 'particle_angular_momentum_z' ) # total PARTICLE angular momentum z
-    Ekin_Par = ad.quantities.total_quantity( 'particle_kinetic_energy'     ) # total PARTICLE kinetic energy
-    Epot_Par = ad.quantities.total_quantity( 'particle_potential_energy'   ) # total PARTICLE potential energy
-    Etot_Par = Ekin_Par + Epot_Par                                           # total PARTICLE energy
+    Mass_Par    = ad.quantities.total_quantity( 'particle_mass'               ) # total PARTICLE mass
+    MomX_Par    = ad.quantities.total_quantity( 'particle_momentum_x'         ) # total PARTICLE momentum x
+    MomY_Par    = ad.quantities.total_quantity( 'particle_momentum_y'         ) # total PARTICLE momentum y
+    MomZ_Par    = ad.quantities.total_quantity( 'particle_momentum_z'         ) # total PARTICLE momentum z
+    AngMomX_Par = ad.quantities.total_quantity( 'particle_angular_momentum_x' ) # total PARTICLE angular momentum x
+    AngMomY_Par = ad.quantities.total_quantity( 'particle_angular_momentum_y' ) # total PARTICLE angular momentum y
+    AngMomZ_Par = ad.quantities.total_quantity( 'particle_angular_momentum_z' ) # total PARTICLE angular momentum z
+    Ekin_Par    = ad.quantities.total_quantity( 'particle_kinetic_energy'     ) # total PARTICLE kinetic energy
+    Epot_Par    = ad.quantities.total_quantity( 'particle_potential_energy'   ) # total PARTICLE potential energy
+    Etot_Par    = Ekin_Par + Epot_Par                                           # total PARTICLE energy
 
     # All
-    Mass_All = Mass_Gas + Mass_Par                                           # sum of the total HYDRO/ELBDM + PARTICLE mass
-    MomX_All = MomX_Gas + MomX_Par                                           # sum of the total HYDRO/ELBDM + PARTICLE momentum x
-    MomY_All = MomY_Gas + MomY_Par                                           # sum of the total HYDRO/ELBDM + PARTICLE momentum y
-    MomZ_All = MomZ_Gas + MomZ_Par                                           # sum of the total HYDRO/ELBDM + PARTICLE momentum z
-    AnMX_All = AnMX_Gas + AnMX_Par                                           # sum of the total HYDRO/ELBDM + PARTICLE angular momentum x
-    AnMY_All = AnMY_Gas + AnMY_Par                                           # sum of the total HYDRO/ELBDM + PARTICLE angular momentum y
-    AnMZ_All = AnMZ_Gas + AnMZ_Par                                           # sum of the total HYDRO/ELBDM + PARTICLE angular momentum z
-    Ekin_All = Ekin_Gas + Ekin_Par                                           # sum of the total HYDRO/ELBDM + PARTICLE kinetic energy
-    Epot_All = Epot_Gas + Epot_Par                                           # sum of the total HYDRO/ELBDM + PARTICLE potential energy
-    Etot_All = Etot_Gas + Etot_Par                                           # sum of the total HYDRO/ELBDM + PARTICLE energy
+    Mass_All    =    Mass_Gas +    Mass_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE mass
+    MomX_All    =    MomX_Gas +    MomX_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE momentum x
+    MomY_All    =    MomY_Gas +    MomY_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE momentum y
+    MomZ_All    =    MomZ_Gas +    MomZ_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE momentum z
+    AngMoMX_All = AngMomX_Gas + AngMomX_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE angular momentum x
+    AngMoMY_All = AngMomY_Gas + AngMomY_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE angular momentum y
+    AngMoMZ_All = AngMomZ_Gas + AngMomZ_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE angular momentum z
+    Ekin_All    =    Ekin_Gas +    Ekin_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE kinetic energy
+    Epot_All    =    Epot_Gas +    Epot_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE potential energy
+    Etot_All    =    Etot_Gas +    Etot_Par                                     # sum of the total HYDRO/ELBDM + PARTICLE energy
 
 
     # print the conserved quantities
     print( '' )
     print( 'Gas' )
-    print( 'Mass_Gas = {: 14.8e}'.format( Mass_Gas.in_units('code_mass').d                           ) )
-    print( 'MomX_Gas = {: 14.8e}'.format( MomX_Gas.in_units('code_mass*code_velocity').d             ) )
-    print( 'MomY_Gas = {: 14.8e}'.format( MomY_Gas.in_units('code_mass*code_velocity').d             ) )
-    print( 'MomZ_Gas = {: 14.8e}'.format( MomZ_Gas.in_units('code_mass*code_velocity').d             ) )
-    print( 'AnMX_Gas = {: 14.8e}'.format( AnMX_Gas.in_units('code_length*code_mass*code_velocity').d ) )
-    print( 'AnMY_Gas = {: 14.8e}'.format( AnMY_Gas.in_units('code_length*code_mass*code_velocity').d ) )
-    print( 'AnMZ_Gas = {: 14.8e}'.format( AnMZ_Gas.in_units('code_length*code_mass*code_velocity').d ) )
-    print( 'Ekin_Gas = {: 14.8e}'.format( Ekin_Gas.in_units('code_mass*code_velocity**2').d          ) )
-    print( 'Eint_Gas = {: 14.8e}'.format( Eint_Gas.in_units('code_mass*code_velocity**2').d          ) )
-    print( 'Epot_Gas = {: 14.8e}'.format( Epot_Gas.in_units('code_mass*code_velocity**2').d          ) )
-    print( 'Etot_Gas = {: 14.8e}'.format( Etot_Gas.in_units('code_mass*code_velocity**2').d          ) )
+    print( 'Mass_Gas    = {: 14.8e}'.format(    Mass_Gas.in_units('code_mass').d                           ) )
+    print( 'MomX_Gas    = {: 14.8e}'.format(    MomX_Gas.in_units('code_mass*code_velocity').d             ) )
+    print( 'MomY_Gas    = {: 14.8e}'.format(    MomY_Gas.in_units('code_mass*code_velocity').d             ) )
+    print( 'MomZ_Gas    = {: 14.8e}'.format(    MomZ_Gas.in_units('code_mass*code_velocity').d             ) )
+    print( 'AngMomX_Gas = {: 14.8e}'.format( AngMomX_Gas.in_units('code_length*code_mass*code_velocity').d ) )
+    print( 'AngMomY_Gas = {: 14.8e}'.format( AngMomY_Gas.in_units('code_length*code_mass*code_velocity').d ) )
+    print( 'AngMomZ_Gas = {: 14.8e}'.format( AngMomZ_Gas.in_units('code_length*code_mass*code_velocity').d ) )
+    print( 'Ekin_Gas    = {: 14.8e}'.format(    Ekin_Gas.in_units('code_mass*code_velocity**2').d          ) )
+    print( 'Eint_Gas    = {: 14.8e}'.format(    Eint_Gas.in_units('code_mass*code_velocity**2').d          ) )
+    print( 'Epot_Gas    = {: 14.8e}'.format(    Epot_Gas.in_units('code_mass*code_velocity**2').d          ) )
+    print( 'Etot_Gas    = {: 14.8e}'.format(    Etot_Gas.in_units('code_mass*code_velocity**2').d          ) )
 
     print( '' )
     print( 'Par' )
-    print( 'Mass_Par = {: 14.8e}'.format( Mass_Par.in_units('code_mass').d                           ) )
-    print( 'MomX_Par = {: 14.8e}'.format( MomX_Par.in_units('code_mass*code_velocity').d             ) )
-    print( 'MomY_Par = {: 14.8e}'.format( MomY_Par.in_units('code_mass*code_velocity').d             ) )
-    print( 'MomZ_Par = {: 14.8e}'.format( MomZ_Par.in_units('code_mass*code_velocity').d             ) )
-    print( 'AnMX_Par = {: 14.8e}'.format( AnMX_Par.in_units('code_length*code_mass*code_velocity').d ) )
-    print( 'AnMY_Par = {: 14.8e}'.format( AnMY_Par.in_units('code_length*code_mass*code_velocity').d ) )
-    print( 'AnMZ_Par = {: 14.8e}'.format( AnMZ_Par.in_units('code_length*code_mass*code_velocity').d ) )
-    print( 'Ekin_Par = {: 14.8e}'.format( Ekin_Par.in_units('code_mass*code_velocity**2').d          ) )
-    print( 'Epot_Par = {: 14.8e}'.format( Epot_Par.in_units('code_mass*code_velocity**2').d          ) )
-    print( 'Etot_Par = {: 14.8e}'.format( Etot_Par.in_units('code_mass*code_velocity**2').d          ) )
+    print( 'Mass_Par    = {: 14.8e}'.format(    Mass_Par.in_units('code_mass').d                           ) )
+    print( 'MomX_Par    = {: 14.8e}'.format(    MomX_Par.in_units('code_mass*code_velocity').d             ) )
+    print( 'MomY_Par    = {: 14.8e}'.format(    MomY_Par.in_units('code_mass*code_velocity').d             ) )
+    print( 'MomZ_Par    = {: 14.8e}'.format(    MomZ_Par.in_units('code_mass*code_velocity').d             ) )
+    print( 'AngMomX_Par = {: 14.8e}'.format( AngMomX_Par.in_units('code_length*code_mass*code_velocity').d ) )
+    print( 'AngMomY_Par = {: 14.8e}'.format( AngMomY_Par.in_units('code_length*code_mass*code_velocity').d ) )
+    print( 'AngMomZ_Par = {: 14.8e}'.format( AngMomZ_Par.in_units('code_length*code_mass*code_velocity').d ) )
+    print( 'Ekin_Par    = {: 14.8e}'.format(    Ekin_Par.in_units('code_mass*code_velocity**2').d          ) )
+    print( 'Epot_Par    = {: 14.8e}'.format(    Epot_Par.in_units('code_mass*code_velocity**2').d          ) )
+    print( 'Etot_Par    = {: 14.8e}'.format(    Etot_Par.in_units('code_mass*code_velocity**2').d          ) )
 
     print( '' )
     print( 'All' )
-    print( 'Mass_All = {: 14.8e}'.format( Mass_All.in_units('code_mass').d                           ) )
-    print( 'MomX_All = {: 14.8e}'.format( MomX_All.in_units('code_mass*code_velocity').d             ) )
-    print( 'MomY_All = {: 14.8e}'.format( MomY_All.in_units('code_mass*code_velocity').d             ) )
-    print( 'MomZ_All = {: 14.8e}'.format( MomZ_All.in_units('code_mass*code_velocity').d             ) )
-    print( 'AnMX_All = {: 14.8e}'.format( AnMX_All.in_units('code_length*code_mass*code_velocity').d ) )
-    print( 'AnMY_All = {: 14.8e}'.format( AnMY_All.in_units('code_length*code_mass*code_velocity').d ) )
-    print( 'AnMZ_All = {: 14.8e}'.format( AnMZ_All.in_units('code_length*code_mass*code_velocity').d ) )
-    print( 'Ekin_All = {: 14.8e}'.format( Ekin_All.in_units('code_mass*code_velocity**2').d          ) )
-    print( 'Epot_All = {: 14.8e}'.format( Epot_All.in_units('code_mass*code_velocity**2').d          ) )
-    print( 'Etot_All = {: 14.8e}'.format( Etot_All.in_units('code_mass*code_velocity**2').d          ) )
+    print( 'Mass_All    = {: 14.8e}'.format(    Mass_All.in_units('code_mass').d                           ) )
+    print( 'MomX_All    = {: 14.8e}'.format(    MomX_All.in_units('code_mass*code_velocity').d             ) )
+    print( 'MomY_All    = {: 14.8e}'.format(    MomY_All.in_units('code_mass*code_velocity').d             ) )
+    print( 'MomZ_All    = {: 14.8e}'.format(    MomZ_All.in_units('code_mass*code_velocity').d             ) )
+    print( 'AngMomX_All = {: 14.8e}'.format( AngMomX_All.in_units('code_length*code_mass*code_velocity').d ) )
+    print( 'AngMomY_All = {: 14.8e}'.format( AngMomY_All.in_units('code_length*code_mass*code_velocity').d ) )
+    print( 'AngMomZ_All = {: 14.8e}'.format( AngMomZ_All.in_units('code_length*code_mass*code_velocity').d ) )
+    print( 'Ekin_All    = {: 14.8e}'.format(    Ekin_All.in_units('code_mass*code_velocity**2').d          ) )
+    print( 'Epot_All    = {: 14.8e}'.format(    Epot_All.in_units('code_mass*code_velocity**2').d          ) )
+    print( 'Etot_All    = {: 14.8e}'.format(    Etot_All.in_units('code_mass*code_velocity**2').d          ) )
