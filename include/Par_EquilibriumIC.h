@@ -84,8 +84,6 @@ class Par_EquilibriumIC
       void Add_Ext_Pot();
 
       // Auxiliary functions
-      int  Aux_CountRow( const char *filename );
-      int  Aux_Countcolumn( const char *filename );
       int  GetParams( const char *filename, const char *keyword, const int para_num, const char *para_type, vector <string> &container);
       void Check_InputFileName();
       void RanVec_FixRadius( const double r, double RanVec[] );
