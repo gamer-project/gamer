@@ -85,7 +85,6 @@ class Par_EquilibriumIC
 
       // Auxiliary functions
       int  GetParams( const char *filename, const char *keyword, const int para_num, const char *para_type, vector <string> &container);
-      void Check_InputFileName();
       void RanVec_FixRadius( const double r, double RanVec[] );
 
       // Solve Eddington's equation
@@ -100,13 +99,14 @@ class Par_EquilibriumIC
       double *psi;
 
       // statistics
-      double slope( double* a, double* b, int start, int fin );
       void   smooth_all( double* x, int start, int fin );
-      double ave(double* a, int start, int fin );
-      double var_n( double* a, int start, int fin);
-      double cor( double* x, double* y, int start, int fin);
       void   mask( double* x, int start, int fin);
       void   add_num( double* x, int start, int fin);
+
+      double ArrayCovariance( const double* array_x, const double* array_y,
+                              const int index_start, const int n_elements );
+      double Slope_LinearRegression( const double* array_x, const double* array_y,
+                                     const int index_start, const int n_elements );
 
       // Tables of particles' attributes
       double *Table_r;

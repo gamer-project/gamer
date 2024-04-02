@@ -35,7 +35,26 @@ void Par_EquilibriumIC::Read_Filenames( const char *filename_para )
 
    GetParams( filename_para, "ParEqmIC_Params_Filenames", filenames.Cloud_Num, "string", filenames.Params_Filenames );
 
-   Check_InputFileName();
+
+   Aux_Message( stdout, "Checking Params_Filenames\n" );
+
+   fstream file;
+
+   for (int k=0; k<filenames.Cloud_Num; k++)
+   {
+
+      const char * c = filenames.Params_Filenames[k].c_str();
+
+      file.open( c, ios::in );
+
+      if ( !file )
+      {
+         Aux_Message( stdout, "Test Problem parameter file %s cannot be found !!\n", filenames.Params_Filenames[k].c_str() );
+         Aux_Error( ERROR_INFO, "Error in the input of Params_Filenames !!\n" );
+      }
+
+      file.close();
+   }
 
 } // FUNCTION : Read_Filenames
 
@@ -835,16 +854,16 @@ void Par_EquilibriumIC::Init_Mass()
       int num=3;
 
       if      ( b == 0 )
-         Table_dRho_dr[b] = slope( Table_r, Table_Density, 0, num/2+1 );
+         Table_dRho_dr[b] = Slope_LinearRegression( Table_r, Table_Density, 0, num/2+1 );
 
       else if ( b == 1 )
-         Table_dRho_dr[b] = slope( Table_r, Table_Density, 0, num/2+2 );
+         Table_dRho_dr[b] = Slope_LinearRegression( Table_r, Table_Density, 0, num/2+2 );
 
       else if ( b == params.Cloud_MassProfNBin-2 )
-         Table_dRho_dr[b] = slope( Table_r, Table_Density, params.Cloud_MassProfNBin-num/2-1, params.Cloud_MassProfNBin );
+         Table_dRho_dr[b] = Slope_LinearRegression( Table_r, Table_Density, params.Cloud_MassProfNBin-num/2-1, num/2+1 );
 
       else
-         Table_dRho_dr[b] = slope( Table_r, Table_Density, b-num/2, b+num/2+1 );
+         Table_dRho_dr[b] = Slope_LinearRegression( Table_r, Table_Density, b-num/2, num+1 );
 
    }
 
@@ -933,15 +952,15 @@ void Par_EquilibriumIC::Init_Mass_Table()
    {
       int num = 3;
       if      ( b == 0 )
-         Table_dRho_dr[b] = slope( Table_r, Table_Density, 0, num/2+1 );
+         Table_dRho_dr[b] = Slope_LinearRegression( Table_r, Table_Density, 0, num/2+1 );
 
       else if ( b == 1 )
-         Table_dRho_dr[b] = slope( Table_r, Table_Density, 0, num/2+2 );
+         Table_dRho_dr[b] = Slope_LinearRegression( Table_r, Table_Density, 0, num/2+2 );
 
       else if ( b == params.Cloud_MassProfNBin-2 )
-         Table_dRho_dr[b] = slope( Table_r, Table_Density, params.Cloud_MassProfNBin-num/2-1, params.Cloud_MassProfNBin );
+         Table_dRho_dr[b] = Slope_LinearRegression( Table_r, Table_Density, params.Cloud_MassProfNBin-num/2-1, num/2+1 );
       else
-         Table_dRho_dr[b] = slope( Table_r, Table_Density, b-num/2, b+num/2+1 );
+         Table_dRho_dr[b] = Slope_LinearRegression( Table_r, Table_Density, b-num/2, num+1 );
 
    }
 
@@ -1029,11 +1048,11 @@ void Par_EquilibriumIC::Init_Prob_Dens()
    for (int k =0; k<params.Cloud_MassProfNBin; k++)
    {
 
-      if      ( k == 0 )                           prob_dens[k] = slope( psi, int_prob_dens, k,   k+5 );
-      else if ( k == 1 )                           prob_dens[k] = slope( psi, int_prob_dens, k-1, k+4 );
-      else if ( k == params.Cloud_MassProfNBin-2 ) prob_dens[k] = slope( psi, int_prob_dens, k-3, k+2 );
-      else if ( k == params.Cloud_MassProfNBin-1 ) prob_dens[k] = slope( psi, int_prob_dens, k-4, k+1 );
-      else                                         prob_dens[k] = slope( psi, int_prob_dens, k-2, k+3 );
+      if      ( k == 0 )                           prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k,   5 );
+      else if ( k == 1 )                           prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k-1, 5 );
+      else if ( k == params.Cloud_MassProfNBin-2 ) prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k-3, 5 );
+      else if ( k == params.Cloud_MassProfNBin-1 ) prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k-4, 5 );
+      else                                         prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k-2, 5 );
 
       if ( prob_dens[k] < 0 )                      prob_dens[k] = 0;
 
@@ -1093,43 +1112,6 @@ void Par_EquilibriumIC::Add_Ext_Pot()
 
 // Auxiliary functions
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Check_InputFileName
-// Description :  Check if the input file names are good
-//
-// Note        :  The input files' names are usually put in "Input__TestProb"
-//
-// Parameter   :
-//
-// Return      :
-//-------------------------------------------------------------------------------------------------------
-void Par_EquilibriumIC::Check_InputFileName()
-{
-
-   Aux_Message( stdout, "Checking Params_Filenames\n" );
-
-   fstream file;
-
-   for (int k=0; k<filenames.Cloud_Num; k++)
-   {
-
-      const char * c = filenames.Params_Filenames[k].c_str();
-
-      file.open( c, ios::in );
-
-      if ( !file )
-      {
-         Aux_Message( stdout, "Test Problem parameter file %s cannot be found !!\n", filenames.Params_Filenames[k].c_str() );
-         Aux_Error( ERROR_INFO, "Error in the input of Params_Filenames !!\n" );
-      }
-
-      file.close();
-   }
-
-} // FUNCTION : Check_InputFileName
-
-
-
-//-------------------------------------------------------------------------------------------------------
 // Function    :  GetParams
 // Description :  Get the parameters from a file
 //
@@ -1159,10 +1141,8 @@ int Par_EquilibriumIC::GetParams( const char *filename, const char *keyword, con
    }
    else
    {
-
       do
       {
-
          getline( file, line );
 
          istringstream templine( line );
@@ -1173,24 +1153,18 @@ int Par_EquilibriumIC::GetParams( const char *filename, const char *keyword, con
 
          if ( strcmp( first_word.c_str(), keyword ) == 0 )
          {
-
             for (int i=0; i<para_num; i++)
             {
                do
                {
-
                   getline( templine, para, ' ' );
 
                } while( para.length() == 0 );
 
                if ( strcmp( para_type, "string" ) == 0 )
-               {
                   container.push_back(para);
-               }
                else
-               {
                   return atoi( para.c_str() );
-               }
             }
 
             break;
@@ -1241,91 +1215,6 @@ void Par_EquilibriumIC::RanVec_FixRadius( const double r, double RanVec[] )
    for (int d=0; d<3; d++)    RanVec[d] *= Norm;
 
 } // FUNCTION : RanVec_FixRadius
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :
-// Description :
-//
-// Note        :
-//
-// Parameter   :
-//
-// Return      :
-//-------------------------------------------------------------------------------------------------------
-// Statistics
-double Par_EquilibriumIC::ave( double* a, int start, int fin )
-{
-
-   double sum = 0;
-
-   for (int k=start; k<fin; k++)
-   {
-      sum += a[k];
-   }
-
-   return sum/(fin-start);
-
-} // FUNCTION : ave
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :
-// Description :
-//
-// Note        :
-//
-// Parameter   :
-//
-// Return      :
-//-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::var_n( double* a, int start, int fin )
-{
-
-   double sum=0;
-
-   for (int k=start; k<fin; k++)
-   {
-      sum += (a[k])*(a[k]);
-   }
-
-   sum = sum - (fin-start)*pow( ave( a, start, fin ), 2 );
-
-   return sum;
-
-} // FUNCTION : var_n
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :
-// Description :
-//
-// Note        :
-//
-// Parameter   :
-//
-// Return      :
-//-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::cor( double* x, double* y, int start, int fin )
-{
-
-   double up   = 0;
-   double down = pow( var_n( x, start, fin )*var_n( y, start, fin ), 0.5 );
-
-   double ave_x = ave( x, start, fin );
-   double ave_y = ave( y, start, fin );
-
-   for (int k=start; k<fin ;k++)
-   {
-      up += (x[k]-ave_x)*(y[k]-ave_y);
-   }
-
-   return up/down;
-
-} // FUNCTION : cor
 
 
 
@@ -1434,27 +1323,77 @@ void Par_EquilibriumIC::smooth_all( double* x, int start, int fin )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :
-// Description :
+// Function    : ArrayCovariance
+// Description : Get the covariance between two arrays
+//
+// Note        : if x==y, then the covariance is the variance of x
+//
+// Parameter   : array_x     : array of x data
+//               array_y     : array of y data
+//               index_start : the first index in the array for the linear regression
+//               n_elements  : number of elements for the linear regression
+//
+// Return      : covariance_xy
+//-------------------------------------------------------------------------------------------------------
+double Par_EquilibriumIC::ArrayCovariance( const double* array_x, const double* array_y,
+                                           const int index_start, const int n_elements )
+{
+   const double normalized_factor = 1.0/n_elements;
+
+   // average
+   double average_x = 0.0;
+   double average_y = 0.0;
+
+   for (int i=index_start; i<index_start+n_elements; i++)
+   {
+      average_x += array_x[i];
+      average_y += array_y[i];
+   }
+
+   average_x *= normalized_factor;
+   average_y *= normalized_factor;
+
+
+   // covariance
+   double covariance_xy = 0.0;
+
+   for (int i=index_start; i<index_start+n_elements; i++)
+   {
+      covariance_xy += (array_x[i]-average_x)*(array_y[i]-average_y);
+   }
+
+   covariance_xy *= normalized_factor;
+
+
+   return covariance_xy;
+
+} // FUNCTION : ArrayCovariance
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    : Slope_LinearRegression
+// Description : Get the slope of y-x using linear regression
 //
 // Note        :
 //
-// Parameter   :
+// Parameter   : array_x     : array of x data
+//               array_y     : array of y data
+//               index_start : the first index in the array for the linear regression
+//               n_elements  : number of elements for the linear regression
 //
-// Return      :
+// Return      : slope
 //-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::slope( double* x, double* y, int start, int fin )
+double Par_EquilibriumIC::Slope_LinearRegression( const double* array_x, const double* array_y,
+                                                  const int index_start, const int n_elements )
 {
 
-   double cor_    = cor( x, y, start, fin );
-   double var_n_x = var_n( x, start, fin );
-   double var_n_y = var_n( y, start, fin );
+   const double variance_x    = ArrayCovariance( array_x, array_x, index_start, n_elements );
+   const double covariance_xy = ArrayCovariance( array_x, array_y, index_start, n_elements );
 
-   double s = cor_*pow( var_n_y, 0.5 )/pow( var_n_x, 0.5 );
+   return covariance_xy/variance_x;
 
-   return s;
-
-} // FUNCTION : slope
+} // FUNCTION : Slope_LinearRegression
 
 
 
