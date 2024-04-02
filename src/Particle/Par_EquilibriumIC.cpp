@@ -267,10 +267,10 @@ void Par_EquilibriumIC::Init()
       int_prob_dens           = new double [params.Cloud_MassProfNBin];
       psi                     = new double [params.Cloud_MassProfNBin];
 
-      Init_Mass_Table ();
-      Init_Pot_Table  ();
-      Add_Ext_Pot     ();
-      Init_Prob_Dens  ();
+      Init_Mass_Table();
+      Init_Pot_Table ();
+      Add_Ext_Pot    ();
+      Init_Prob_Dens ();
 
    }
 
@@ -421,7 +421,7 @@ double mass_base_Plummer( double x, void* nothing )
 //NFW
 double mass_base_NFW( double x, void* nothing )
 {
-   return ( x/(pow( 1+x, 2 )) );
+   return ( x/pow( 1+x, 2 ) );
 }
 
 
@@ -631,7 +631,7 @@ double Par_EquilibriumIC::Set_Velocity( const double x )
 
       if ( psi[k] > psi_per )
       {
-         index =k-1;
+         index = k-1;
          break;
       }
 
@@ -655,7 +655,7 @@ double Par_EquilibriumIC::Set_Velocity( const double x )
          break;
       }
 
-      sum_mes += prob_dens[k] *pow(psi_per-psi[k],0.5) *delta;
+      sum_mes += prob_dens[k] *pow( psi_per-psi[k], 0.5 ) *delta;
 
       if ( k == params.Cloud_MassProfNBin-1 )
          index_ass = params.Cloud_MassProfNBin-1;
@@ -771,10 +771,6 @@ double Par_EquilibriumIC::integration_eng_base( const double eng )
    int    num = 1000;
 
    double dx = (max-min)/num;
-
-   double result_right   = 0;
-   double result_left    = 0;
-   double result_simpson = 0;
 
    double result = 0;
 
@@ -1043,7 +1039,7 @@ void Par_EquilibriumIC::Init_Prob_Dens()
 
    }
 
-   smooth_all(prob_dens,0,params.Cloud_MassProfNBin);
+   smooth_all( prob_dens, 0, params.Cloud_MassProfNBin );
 
 } // FUNCTION : Init_Prob_Dens
 
@@ -1351,24 +1347,18 @@ void Par_EquilibriumIC::mask( double* x, int start, int fin )
    for (int j=start; j<fin; j++)
    {
 
-      bool flag=0;
+      bool flag = 0;
 
       for (int k=start; k<fin; k++)
       {
-
-         double test_fac;
-
          if ( x[k] != 0 )
          {
-
-            test_fac = fabs( x[j]/x[k] );
-
-            if ( test_fac > standard ) flag = 1;
+            if ( fabs( x[j]/x[k] ) > standard ) flag = 1;
          }
-
-         if ( flag )
-            x[j] = 0;
       }
+
+      if ( flag )
+         x[j] = 0;
    }
 
 } // FUNCTION : mask
@@ -1391,19 +1381,19 @@ void Par_EquilibriumIC::add_num( double* x, int start, int fin )
    double sum = 0;
    int    num = 0;
 
-   for (int j=start; j<fin; j++) {
+   for (int j=start; j<fin; j++)
+   {
 
       if ( x[j] != 0 )
+      {
          sum += x[j];
-
-      num++;
+         num++;
+      }
    }
-
-   double ave_x;
 
    if ( num != 0 )
    {
-      ave_x = sum/(num+0.0);
+      double ave_x = sum/num;
 
       for (int j=start; j<fin; j++)
       {

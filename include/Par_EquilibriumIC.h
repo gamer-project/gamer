@@ -90,7 +90,7 @@ class Par_EquilibriumIC
 
       // Solve Eddington's equation
       double potential( const double x );
-      double inverse_psi_to_index ( double psi );
+      double inverse_psi_to_index( double psi );
       double integration_eng_base( double eng );
 
       double  delta;
