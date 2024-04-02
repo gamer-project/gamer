@@ -135,18 +135,18 @@ void Par_Init_ByFile()
       if ( amr->Par->ParICFormat == PAR_IC_FORMAT_ID_ATT )
       {
          if ( PAR_IC_FLOAT8 )
-            for (int v=0; v<NParAtt; v++) ParData1[v] = (real)( *((double*)(ParData_ThisRank+(p*NParAtt+v)*load_data_size)) );
+            for (int v=0; v<NParAtt; v++) ParData1[v] = (real_par)( *((double*)(ParData_ThisRank+(p*NParAtt+v)*load_data_size)) );
          else
-            for (int v=0; v<NParAtt; v++) ParData1[v] = (real)( *((float* )(ParData_ThisRank+(p*NParAtt+v)*load_data_size)) );
+            for (int v=0; v<NParAtt; v++) ParData1[v] = (real_par)( *((float* )(ParData_ThisRank+(p*NParAtt+v)*load_data_size)) );
       }
 
 //    [att][id]
       else
       {
          if ( PAR_IC_FLOAT8 )
-            for (int v=0; v<NParAtt; v++) ParData1[v] = (real)( *((double*)(ParData_ThisRank+(v*NParThisRank+p)*load_data_size)) );
+            for (int v=0; v<NParAtt; v++) ParData1[v] = (real_par)( *((double*)(ParData_ThisRank+(v*NParThisRank+p)*load_data_size)) );
          else
-            for (int v=0; v<NParAtt; v++) ParData1[v] = (real)( *((float* )(ParData_ThisRank+(v*NParThisRank+p)*load_data_size)) );
+            for (int v=0; v<NParAtt; v++) ParData1[v] = (real_par)( *((float* )(ParData_ThisRank+(v*NParThisRank+p)*load_data_size)) );
       }
 
 //    assuming that the orders of the particle attributes stored on the disk and in Par->Attribute[] are the same

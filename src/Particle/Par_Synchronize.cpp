@@ -80,13 +80,13 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
 #  endif
 
 // convert SyncTime from double to real in advance to be consistent with particle time
-   const real SyncTime_Real = (real)SyncTime;
+   const real_par SyncTime_Real = (real_par)SyncTime;
 
-   real dt;
+   real_par dt;
 #  ifdef COMOVING
    bool     dTime2dt, Initialized=false;
    real_par ParTime_Prev=NULL_REAL;
-   real     dt_Prev     =NULL_REAL;
+   real_par dt_Prev     =NULL_REAL;
 #  endif
 
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
@@ -97,7 +97,7 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
 //    skip massive particles when enabling OPT__FREEZE_PAR
       if ( OPT__FREEZE_PAR  &&  ParType[p] != PTYPE_TRACER )   continue;
 
-      if (  ! Mis_CompareRealValue( SyncTime_Real, (real)ParTime[p], NULL, false )  )
+      if (  ! Mis_CompareRealValue( SyncTime_Real, ParTime[p], NULL, false )  )
       {
 //       backup data before synchronization
          if ( SyncOption == PAR_SYNC_TEMP )
@@ -124,7 +124,7 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
 
 
 //       synchronize particles
-         dt = SyncTime_Real - (real)ParTime[p];
+         dt = SyncTime_Real - ParTime[p];
 
 //       convert time-step for comoving
 #        ifdef COMOVING
@@ -140,7 +140,7 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
 //       avoid redundant calculations
          if ( dTime2dt )
          {
-            dt           = Mis_dTime2dt( (const double)ParTime[p], (const double)dt );
+            dt           = (real_par)Mis_dTime2dt( (double)ParTime[p], (double)dt );
             dt_Prev      = dt;
             ParTime_Prev = ParTime[p];
          }
@@ -154,10 +154,10 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
             ParPos[d][p] += ParVel[d][p]*dt;
 //          only accelerate massive particles
             if ( ParType[p] != PTYPE_TRACER )
-               ParVel[d][p] += ParAcc[d][p]*(real_par)dt;
+               ParVel[d][p] += ParAcc[d][p]*dt;
          }
 
-         ParTime[p] = (real_par)SyncTime_Real;
+         ParTime[p] = SyncTime_Real;
       } // if (  ! Mis_CompareRealValue( SyncTime_Real, ParTime[p], NULL, false )  )
    } // for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
 

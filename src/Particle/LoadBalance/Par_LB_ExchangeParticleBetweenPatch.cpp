@@ -194,7 +194,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
    long     *SendBuf_LBIdxEachRank    = NULL;    // useless and does not need to be allocated
    long     *RecvBuf_LBIdxEachRank    = NULL;    // useless and will not be allocated by Par_LB_SendParticleData
 
-   int  NRecvPatchTotal;                         // returned from Par_LB_SendParticleDat
+   int  NRecvPatchTotal;                         // returned from Par_LB_SendParticleData
    long NRecvParTotal;                           // returned from Par_LB_SendParticleData
 
 // note that we don't exchange NPatchEachRank (which is already known) and LBIdxEachRank (which is useless here)

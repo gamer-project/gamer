@@ -3,7 +3,7 @@
 #ifdef LOAD_BALANCE
 
 
-const real BufSizeFactor = 1.05;    // Send/RecvBufSize = int(NSend/NRecv*BufSizeFactor) --> must be >= 1.0
+const real BufSizeFactor = 1.05;    // Send/RecvBufSize = (long)(SendSize/RecvSize*BufSizeFactor) --> must be >= 1.0
 
 // MPI buffers are shared by some particle routines
 static void *MPI_SendBuf_Shared = NULL;
@@ -1798,8 +1798,13 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 //                2. This function is used by some particle routines as well
 //                3. We reallocate send/recv buffers only when the current buffer size is not large enough
 //                   --> It greatly improves MPI performance
+//                4. Use ::operator new/delete to allocate/deallocate MPI_SendBuf_Shared, because it is a void pointer,
+//                   and one cannot use "new void [N]" to allocate a void pointer with N elements, since void datatype does not have size
+//                   (see https://stackoverflow.com/questions/1666224/what-is-the-size-of-void); thus, we use
+//                   ::operator new/delete to allocate/deallocate raw memory in unit of bytes
+//                   (see https://stackoverflow.com/questions/14111900/using-new-on-void-pointer)
 //
-// Parameter   :  SendSize : Number of bytes for total elements to be sent
+// Parameter   :  SendSize : Number of bytes to be sent
 //
 // Return      :  Pointer to the MPI send buffer
 //-------------------------------------------------------------------------------------------------------
@@ -1835,8 +1840,13 @@ void *LB_GetBufferData_MemAllocate_Send( const long SendSize )
 //                2. This function is used by some particle routines as well
 //                3. We reallocate send/recv buffers only when the current buffer size is not large enough
 //                   --> It greatly improves MPI performance
+//                4. Use ::operator new/delete to allocate/deallocate MPI_RecvBuf_Shared, because it is a void pointer,
+//                   and one cannot use "new void [N]" to allocate a void pointer with N elements, since void datatype does not have size
+//                   (see https://stackoverflow.com/questions/1666224/what-is-the-size-of-void); thus, we use
+//                   ::operator new/delete to allocate/deallocate raw memory in unit of bytes
+//                   (see https://stackoverflow.com/questions/14111900/using-new-on-void-pointer)
 //
-// Parameter   :  RecvSize : Number of bytes for total elements to be received
+// Parameter   :  RecvSize : Number of bytes to be received
 //
 // Return      :  Pointer to the MPI recv buffer
 //-------------------------------------------------------------------------------------------------------
@@ -1868,7 +1878,8 @@ void *LB_GetBufferData_MemAllocate_Recv( const long RecvSize )
 // Function    :  LB_GetBufferData_MemFree
 // Description :  Free the MPI send and recv buffers
 //
-// Note        :  This function is invoked by "End_MemFree"
+// Note        :  1. This function is invoked by "End_MemFree"
+//                2. Use ::operator delete to deallocate MPI_SendBuf_Shared/MPI_RecvBuf_Shared, because they are a void pointers allocated as raw memories.
 //
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------

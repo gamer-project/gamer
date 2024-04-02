@@ -691,7 +691,7 @@ void Par_AddParticleAfterInit( const long NNewPar, real_par *NewParAtt[PAR_NATT_
 void Par_ScatterParticleData( const long NPar_ThisRank, const long NPar_AllRank, const long AttBitIdx,
                               real_par *Data_Send[PAR_NATT_TOTAL], real_par *Data_Recv[PAR_NATT_TOTAL] );
 void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
-                            const double _dh, const int AttrSize3D, const real_par *Attr,
+                            const double _dh, const int AttrSize3D, const real *Attr,
                             const int NPar, real_par *InterpParPos[3],
                             const real_par ParType[], const long ParList[],
                             const bool UseTracers, real_par ParAttr[], const bool CorrectVelocity );

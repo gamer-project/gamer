@@ -40,11 +40,11 @@ void Par_PredictPos( const long NPar, const long *ParList, real_par *ParPosX, re
 #  endif
 
 
-   long ParID;
-   real dt, ParTime;
+   long     ParID;
+   real_par dt, ParTime;
 #  ifdef COMOVING
-   bool dTime2dt, Initialized=false;
-   real ParTime_Prev=NULL_REAL, dt_Prev=NULL_REAL;
+   bool     dTime2dt, Initialized=false;
+   real_par ParTime_Prev=NULL_REAL, dt_Prev=NULL_REAL;
 #  endif
 
    for (long p=0; p<NPar; p++)
@@ -64,12 +64,12 @@ void Par_PredictPos( const long NPar, const long *ParList, real_par *ParPosX, re
       if ( amr->Par->Time[ParID] < (real_par)0.0 )  continue;
 
       ParTime = amr->Par->Time[ParID];
-      dt      = (real)TargetTime - (real)ParTime;
+      dt      = (real_par)TargetTime - ParTime;
 
 //    convert time-step for comoving
 #     ifdef COMOVING
       if ( Initialized )
-         dTime2dt    = ( (real)ParTime != ParTime_Prev );
+         dTime2dt    = ( ParTime != ParTime_Prev );
 
       else
       {
@@ -80,7 +80,7 @@ void Par_PredictPos( const long NPar, const long *ParList, real_par *ParPosX, re
 //    avoid redundant calculations
       if ( dTime2dt )
       {
-         dt           = Mis_dTime2dt( (const double)ParTime, (const double)dt );
+         dt           = (real_par)Mis_dTime2dt( (double)ParTime, (double)dt );
          dt_Prev      = dt;
          ParTime_Prev = ParTime;
       }
@@ -92,9 +92,9 @@ void Par_PredictPos( const long NPar, const long *ParList, real_par *ParPosX, re
 //    note that we do not consider periodicity here
 //    --> ParPos[] may lie outside the simulation box
 //    --> caller function is reponsible for taking care of the periodicity
-      ParPosX[p] += amr->Par->VelX[ParID]*(real_par)dt;
-      ParPosY[p] += amr->Par->VelY[ParID]*(real_par)dt;
-      ParPosZ[p] += amr->Par->VelZ[ParID]*(real_par)dt;
+      ParPosX[p] += amr->Par->VelX[ParID]*dt;
+      ParPosY[p] += amr->Par->VelY[ParID]*dt;
+      ParPosZ[p] += amr->Par->VelZ[ParID]*dt;
    } // for (long p=0; p<NPar; p++)
 
 } // FUNCTION : Par_PredictPos

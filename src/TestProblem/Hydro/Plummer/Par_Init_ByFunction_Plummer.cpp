@@ -189,7 +189,7 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 // set generic particle type
    for (long p=0; p<NPar_ThisRank; p++) {
       ParTime[p] = (real_par)Time[0];
-      ParType[p] = (real_par)PTYPE_GENERIC_MASSIVE;
+      ParType[p] = PTYPE_GENERIC_MASSIVE;
    }
 
 // free resource

@@ -34,19 +34,19 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
                                const bool MapOnly )
 {
 
-   const bool   IntPhase_No       = false;
-   const bool   DE_Consistency_No = false;
-   const real   MinDens_No        = -1.0;
-   const real   MinPres_No        = -1.0;
-   const real   MinTemp_No        = -1.0;
-   const real   MinEntr_No        = -1.0;
-   const double dh                = amr->dh[lv];
-   const double _dh               = 1.0/dh;
-   const int    ParGhost          = amr->Par->GhostSizeTracer;
-   const int    VelSize           = PS1 + 2*ParGhost;
-   const bool   UseTracers_Yes    = true;
+   const bool     IntPhase_No       = false;
+   const bool     DE_Consistency_No = false;
+   const real     MinDens_No        = -1.0;
+   const real     MinPres_No        = -1.0;
+   const real     MinTemp_No        = -1.0;
+   const real     MinEntr_No        = -1.0;
+   const double   dh                = amr->dh[lv];
+   const double   _dh               = 1.0/dh;
+   const int      ParGhost          = amr->Par->GhostSizeTracer;
+   const int      VelSize           = PS1 + 2*ParGhost;
+   const bool     UseTracers_Yes    = true;
 #  ifdef COMOVING
-   const real   dt_com            = (real)Mis_dTime2dt( TimeOld, TimeNew-TimeOld );
+   const real_par dt_com            = (real_par)Mis_dTime2dt( TimeOld, TimeNew-TimeOld );
 #  endif
 
          real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
@@ -80,9 +80,9 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
    Aux_AllocateArray2D( Vel_Temp,     3, NParMax );
    Aux_AllocateArray2D( InterpParPos, 3, NParMax );
 
-   bool GotYou;
-   long ParID;
-   real dt;
+   bool     GotYou;
+   long     ParID;
+   real_par dt;
 
 // loop over all **real** patch groups
 #  pragma omp for schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )
@@ -143,16 +143,16 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
             else
             {
 //             determine time-step
-               dt = (real)TimeNew - (real)ParTime[ParID];
+               dt = (real_par)TimeNew - ParTime[ParID];
 
 //             convert time-step for comoving
 #              ifdef COMOVING
                if ( ParTime[ParID] == (real_par)TimeOld )    dt = dt_com;   // avoid redundant calculations
-               else                                          dt = Mis_dTime2dt( (const double)ParTime[ParID], (const double)dt );
+               else                                          dt = (real_par)Mis_dTime2dt( (double)ParTime[ParID], (double)dt );
 #              endif
 
 //             predict the positions at TimeNew
-               for (int d=0; d<3; d++)    InterpParPos[d][p] = ParPos[d][ParID] + (real_par)dt*ParVel[d][ParID];
+               for (int d=0; d<3; d++)    InterpParPos[d][p] = ParPos[d][ParID] + dt*ParVel[d][ParID];
             }
          } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
 
@@ -200,17 +200,17 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
             else if ( amr->Par->IntegTracer == TRACER_INTEG_RK2 )
             {
 //             determine time-step
-               dt = (real)TimeNew - (real)ParTime[ParID];
+               dt = (real_par)TimeNew - ParTime[ParID];
 
 //             convert time-step for comoving
 #              ifdef COMOVING
                if ( ParTime[ParID] == (real_par)TimeOld )    dt = dt_com;   // avoid redundant calculations
-               else                                          dt = Mis_dTime2dt( (const double)ParTime[ParID], (const double)dt );
+               else                                          dt = (real_par)Mis_dTime2dt( (double)ParTime[ParID], (double)dt );
 #              endif
 
                for (int d=0; d<3; d++)
                   InterpParPos[d][p] = ParPos[d][ParID] +
-                     (real_par)0.5*(real_par)dt*( Vel_Temp[d][p] + ParVel[d][ParID] );
+                     (real_par)0.5*dt*( Vel_Temp[d][p] + ParVel[d][ParID] );
             } // amr->Par->IntegTracer
 
          } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)`

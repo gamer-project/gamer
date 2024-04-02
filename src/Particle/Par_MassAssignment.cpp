@@ -3,8 +3,8 @@
 #ifdef PARTICLE
 
 static bool WithinRho( const int idxRho[], const int RhoSize );
-static bool FarAwayParticle( real_par ParPosX, real_par ParPosY, real_par ParPosZ, const bool Periodic[], const real PeriodicSize_Phy[],
-                             const real EdgeL[], const real EdgeR[] );
+static bool FarAwayParticle( real_par ParPosX, real_par ParPosY, real_par ParPosZ, const bool Periodic[], const real_par PeriodicSize_Phy[],
+                             const real_par EdgeL[], const real_par EdgeR[] );
 
 
 
@@ -171,17 +171,17 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
    typedef real (*vla)[RhoSize][RhoSize];
    vla Rho3D = ( vla )Rho;
 
-   int  idxRho[3];   // array index for Rho
-   real ParDens;     // mass density of the cloud
-   real EdgeWithGhostL[3], EdgeWithGhostR[3], PeriodicSize_Phy[3];
+   int      idxRho[3];   // array index for Rho
+   real     ParDens;     // mass density of the cloud
+   real_par EdgeWithGhostL[3], EdgeWithGhostR[3], PeriodicSize_Phy[3];
 
    for (int d=0; d<3; d++)
    {
-      EdgeWithGhostL  [d] = real( EdgeL[d] - Ghost_Phy );
-      EdgeWithGhostR  [d] = real( EdgeL[d] + Ghost_Phy + RhoSize*dh );
+      EdgeWithGhostL  [d] = real_par( EdgeL[d] - Ghost_Phy );
+      EdgeWithGhostR  [d] = real_par( EdgeL[d] + Ghost_Phy + RhoSize*dh );
 
       if ( Periodic[d] )
-      PeriodicSize_Phy[d] = real( PeriodicSize[d]*dh );
+      PeriodicSize_Phy[d] = real_par( PeriodicSize[d]*dh );
    }
 
 
@@ -271,7 +271,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
             for (int d=0; d<3; d++)
             {
 //             4.2.2 calculate the array index of the left and right cells
-               dr      [d]  = (real)( Pos[d][Idx] - (real_par)EdgeL[d] )*_dh - 0.5;
+               dr      [d]  = (double)( Pos[d][Idx] - (real_par)EdgeL[d] )*_dh - 0.5;
                idxLR[0][d]  = (int)FLOOR( dr[d] );
                idxLR[1][d]  = idxLR[0][d] + 1;
                dr      [d] -= (double)idxLR[0][d];
@@ -347,7 +347,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
             for (int d=0; d<3; d++)
             {
 //             4.3.2 calculate the array index of the left, central, and right cells
-               dr       [d]  = (real)( Pos[d][Idx] - (real_par)EdgeL[d] )*_dh;
+               dr       [d]  = (double)( Pos[d][Idx] - (real_par)EdgeL[d] )*_dh;
                idxLCR[1][d]  = (int)FLOOR( dr[d] );
                idxLCR[0][d]  = idxLCR[1][d] - 1;
                idxLCR[2][d]  = idxLCR[1][d] + 1;
@@ -459,38 +459,38 @@ bool WithinRho( const int idxRho[], const int RhoSize )
 //
 // Return      :  (true / false) <--> particle (has no / does have) contribution to the give density array
 //-------------------------------------------------------------------------------------------------------
-bool FarAwayParticle( real_par ParPosX, real_par ParPosY, real_par ParPosZ, const bool Periodic[], const real PeriodicSize_Phy[],
-                      const real EdgeL[], const real EdgeR[] )
+bool FarAwayParticle( real_par ParPosX, real_par ParPosY, real_par ParPosZ, const bool Periodic[], const real_par PeriodicSize_Phy[],
+                      const real_par EdgeL[], const real_par EdgeR[] )
 {
 
 // x
    if ( Periodic[0] )
    {
-      if      ( ParPosX <  (real_par)EdgeL[0] )  ParPosX += (real_par)PeriodicSize_Phy[0];
-      else if ( ParPosX >= (real_par)EdgeR[0] )  ParPosX -= (real_par)PeriodicSize_Phy[0];
+      if      ( ParPosX <  EdgeL[0] )  ParPosX += PeriodicSize_Phy[0];
+      else if ( ParPosX >= EdgeR[0] )  ParPosX -= PeriodicSize_Phy[0];
    }
 
-   if ( ParPosX < (real_par)EdgeL[0]  ||  ParPosX >= (real_par)EdgeR[0] )    return true;
+   if ( ParPosX < EdgeL[0]  ||  ParPosX >= (real_par)EdgeR[0] )    return true;
 
 
 // y
    if ( Periodic[1] )
    {
-      if      ( ParPosY <  (real_par)EdgeL[1] )  ParPosY += (real_par)PeriodicSize_Phy[1];
-      else if ( ParPosY >= (real_par)EdgeR[1] )  ParPosY -= (real_par)PeriodicSize_Phy[1];
+      if      ( ParPosY <  EdgeL[1] )  ParPosY += PeriodicSize_Phy[1];
+      else if ( ParPosY >= EdgeR[1] )  ParPosY -= PeriodicSize_Phy[1];
    }
 
-   if ( ParPosY < (real_par)EdgeL[1]  ||  ParPosY >= (real_par)EdgeR[1] )    return true;
+   if ( ParPosY < EdgeL[1]  ||  ParPosY >= EdgeR[1] )    return true;
 
 
 // z
    if ( Periodic[2] )
    {
-      if      ( ParPosZ <  (real_par)EdgeL[2] )  ParPosZ += (real_par)PeriodicSize_Phy[2];
-      else if ( ParPosZ >= (real_par)EdgeR[2] )  ParPosZ -= (real_par)PeriodicSize_Phy[2];
+      if      ( ParPosZ <  EdgeL[2] )  ParPosZ += PeriodicSize_Phy[2];
+      else if ( ParPosZ >= EdgeR[2] )  ParPosZ -= PeriodicSize_Phy[2];
    }
 
-   if ( ParPosZ < (real_par)EdgeL[2]  ||  ParPosZ >= (real_par)EdgeR[2] )    return true;
+   if ( ParPosZ < EdgeL[2]  ||  ParPosZ >= EdgeR[2] )    return true;
 
 
    return false;

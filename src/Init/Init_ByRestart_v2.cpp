@@ -59,7 +59,7 @@ void Init_ByRestart()
       Aux_Error( ERROR_INFO, "restart file \"%s\" does not exist !!\n", FileName );
 
 #  if ( ( defined PARTICLE ) && ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) ) )
-   if ( MPI_Rank == 0 )    Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for OPT__OUTPUT_TOTAL=2 (C-binary) !!\n" );
+   Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for OPT__OUTPUT_TOTAL=2 (C-binary) !!\n" );
 #  endif
 
    MPI_Barrier( MPI_COMM_WORLD );

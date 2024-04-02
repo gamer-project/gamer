@@ -222,7 +222,7 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
 //     for star particles created during the evolution
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Initializing problem-specific particle attributes ... " );
 
-   const real Useless = -1.0;
+   const real_par Useless = -1.0;
 
 #  ifdef STAR_FORMATION
    for (int p=0; p<NPar_ThisRank; p++)    AllAttribute[Idx_ParCreTime  ][p] = Useless;
