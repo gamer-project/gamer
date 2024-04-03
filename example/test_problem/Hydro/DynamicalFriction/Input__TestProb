@@ -1,0 +1,32 @@
+# problem-specific runtime parameters
+
+
+# (0) Simulation configuration
+FIX_CENTER	           0				 # 1:Fix the center to be the halo center 0:dynamically adjust it base on potential minimum [0]
+SEARCH_RADIUS              2                             # search radius for the potential minimum search (unit:spatial resolution)
+                                                         # If FIX_CENTER = 1, this parameter is useless
+# (1) HALO and STELLAR Parameters
+HALO_TYPE                  DoublePowerLaw                # the type of the halo (NFW,Burkert,King,DoublePowerLaw)[DoublePowerLaw]
+HALO_RHO_0                 1.976013787e-03               # the core density of the halo [1.976013787e-3]
+HALO_Rs                    6.081e3                       # scale radius for the halo [6.081e3]
+HALO_Rt                    36.0e3                        # Truncate radius for the halo [36.0e3] 
+
+# For Double Power Law Density Profile only (only valid when HALO_TYPE = DoublePowerLaw)
+# See README for the meaning and the equation
+Halo_Profile_Param_a       1.815
+Halo_Profile_Param_b       4.002
+Halo_Profile_Param_c       0.0
+
+PURE_TABLE                 0                             # Determine whether using (1) to create the table or using user specified table to calculate initial condition [0]
+Density_Table_Name         Profile_Table                 # The table name which contains the radius, density and enclosed mass information. [Profile_Table]
+                                                         # If you want to use your own profile table rather than the GAMER calculated one, please change the name
+
+# (2) GC/Massive Object Parameters
+GC_MASS                    2.5e6                         # The Global cluster (Massive object) mass [2.5e6]
+GC_initial_R               7.5e3		         # The initial radius for GC (Massive object) to the center [7.5e3]
+
+
+# (3) Inherit from ParticleEquilibrium (basically NO CHANGE NEEDED) 
+GC_SmallGas                1e-10                         # The maximum tolerance gas density for the simulation [1e-10]
+ParEqmIC_Params_Filenames  Input__Profile_Params         # The filenames of the cloud info (which wwe want to set the Equilibrium IC)
+ParEqmIC_Cloud_Num         1                             # Ttotal number of cloud [1]

@@ -507,14 +507,15 @@
 
 // particle type macros
 
-// number of particle types (default: 4)
-#  define  PAR_NTYPE                4
+// number of particle types (default: 5)
+#  define  PAR_NTYPE                5
 
 // particle type indices (must be in the range 0<=index<PAR_NTYPE)
 #  define  PTYPE_TRACER          (real)0
 #  define  PTYPE_GENERIC_MASSIVE (real)1
 #  define  PTYPE_DARK_MATTER     (real)2
 #  define  PTYPE_STAR            (real)3
+#  define  PTYPE_GC              (real)4
 
 # ifdef GRAVITY
 #  define MASSIVE_PARTICLES
