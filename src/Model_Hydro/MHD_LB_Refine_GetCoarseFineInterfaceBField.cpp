@@ -97,7 +97,7 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
    int   Counter;
    long  Send_NTotal, Recv_NTotal;
    long  Send_NList[MPI_NRank], Recv_NList[MPI_NRank];
-   long  Send_Disp[MPI_NRank], Recv_Disp[MPI_NRank];
+   long  Send_Disp [MPI_NRank], Recv_Disp [MPI_NRank];
    int  *SendBuf_SibID=NULL, *RecvBuf_SibID=NULL;
    long *SendBuf_LBIdx=NULL, *RecvBuf_LBIdx=NULL;
 

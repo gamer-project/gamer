@@ -24,6 +24,14 @@ datatypes in the HDF5 format
 #  define DEBUG_HDF5
 #endif
 
+#ifdef PARTICLE
+#ifdef FLOAT8_PAR
+#  define H5T_GAMER_REAL_PAR H5T_NATIVE_DOUBLE
+#  else
+#  define H5T_GAMER_REAL_PAR H5T_NATIVE_FLOAT
+#endif
+#endif // #ifdef PARTICLE
+
 
 
 
@@ -67,6 +75,7 @@ struct KeyInfo_t
 #  ifdef PARTICLE
    long   Par_NPar;                 // amr->Par->NPar_Active_AllRank
    int    Par_NAttStored;           // PAR_NATT_STORED
+   int    Float8_Par;
 #  endif
 #  ifdef COSMIC_RAY
    int    CR_Diffusion;
@@ -168,6 +177,7 @@ struct Makefile_t
    int StarFormation;
    int Feedback;
    int Par_NAttUser;
+   int Float8_Par;
 #  endif
 
 #  ifdef COSMIC_RAY
