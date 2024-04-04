@@ -1518,7 +1518,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    KeyInfo.Particle             = 1;
 #  else
    KeyInfo.Particle             = 0;
-#  endif  // end of ifdef PARTICLE ... else ...
+#  endif  // #ifdef PARTICLE ... else ...
 #  ifdef FLOAT8
    KeyInfo.Float8               = 1;
 #  else
@@ -1534,7 +1534,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 #  else
    KeyInfo.Float8_Par           = 0;
 #  endif
-#  endif  // end of ifdef PARTICLE
+#  endif // #ifdef PARTICLE
 #  if ( MODEL == HYDRO )
 #  ifdef MHD
    KeyInfo.Magnetohydrodynamics = 1;
@@ -1620,7 +1620,7 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.Particle               = 1;
 #  else
    Makefile.Particle               = 0;
-#  endif  // end of ifdef PARTICLE ... else ...
+#  endif
 
 #  ifdef GPU
    Makefile.UseGPU                 = 1;

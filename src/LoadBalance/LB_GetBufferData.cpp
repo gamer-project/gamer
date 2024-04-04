@@ -1879,7 +1879,8 @@ void *LB_GetBufferData_MemAllocate_Recv( const long RecvSize )
 // Description :  Free the MPI send and recv buffers
 //
 // Note        :  1. This function is invoked by "End_MemFree"
-//                2. Use ::operator delete to deallocate MPI_SendBuf_Shared/MPI_RecvBuf_Shared, because they are a void pointers allocated as raw memories.
+//                2. Use ::operator delete to deallocate MPI_SendBuf_Shared/MPI_RecvBuf_Shared, because
+//                   they are void pointers allocated as raw memories.
 //
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------

@@ -879,7 +879,7 @@ void Init_ResetParameter()
 #  ifdef PARTICLE
    if ( amr->Par->Init == PAR_INIT_BY_FILE  &&  PAR_IC_FLOAT8 < 0 )
    {
-// set PAR_IC_FLOAT8 = FLOAT8_PAR by default
+//    set PAR_IC_FLOAT8 = FLOAT8_PAR by default
 #     ifdef FLOAT8_PAR
       PAR_IC_FLOAT8 = 1;
 #     else

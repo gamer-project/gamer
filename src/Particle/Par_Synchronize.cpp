@@ -79,7 +79,7 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
    const real_par *ParAcc[3] = { NULL, NULL, NULL };
 #  endif
 
-// convert SyncTime from double to real in advance to be consistent with particle time
+// convert SyncTime from double to real_par in advance to be consistent with particle time
    const real_par SyncTime_Real = (real_par)SyncTime;
 
    real_par dt;

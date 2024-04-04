@@ -25,11 +25,11 @@ datatypes in the HDF5 format
 #endif
 
 #ifdef PARTICLE
-#ifdef FLOAT8_PAR
+# ifdef FLOAT8_PAR
 #  define H5T_GAMER_REAL_PAR H5T_NATIVE_DOUBLE
-#  else
+# else
 #  define H5T_GAMER_REAL_PAR H5T_NATIVE_FLOAT
-#endif
+# endif
 #endif // #ifdef PARTICLE
 
 

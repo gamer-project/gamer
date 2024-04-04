@@ -470,7 +470,7 @@ bool FarAwayParticle( real_par ParPosX, real_par ParPosY, real_par ParPosZ, cons
       else if ( ParPosX >= EdgeR[0] )  ParPosX -= PeriodicSize_Phy[0];
    }
 
-   if ( ParPosX < EdgeL[0]  ||  ParPosX >= (real_par)EdgeR[0] )    return true;
+   if ( ParPosX < EdgeL[0]  ||  ParPosX >= EdgeR[0] )    return true;
 
 
 // y
