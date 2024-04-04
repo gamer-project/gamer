@@ -265,6 +265,7 @@ template <typename U, typename T> void  Mis_Heapsort( const U N, T Array[], U Id
 template <typename T> int   Mis_Matching_char( const int N, const T Array[], const int M, const T Key[], char Match[] );
 template <typename U, typename T> U Mis_Matching_int( const U N, const T Array[], const U M, const T Key[], U Match[] );
 template <typename T> bool  Mis_CompareRealValue( const T Input1, const T Input2, const char *comment, const bool Verbose );
+template <typename T> void Mis_SortByMultiField( const int NField, const long FieldSize, const T **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
 ulong  Mis_Idx3D2Idx1D( const int Size[], const int Idx3D[] );
 double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double AutoReduceDtCoeff );
 double Mis_dTime2dt( const double Time_In, const double dTime_In );
