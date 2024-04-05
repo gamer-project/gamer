@@ -685,7 +685,7 @@ def set_conditional_defaults( args ):
     if args["bitwise_reproducibility"] is None:
         args["bitwise_reproducibility"] = args["debug"]
 
-    if args["double_par"] == None:
+    if args["double_par"] is None:
         args["double_par"] = args["double"]
 
     if args["flux"] is None:
