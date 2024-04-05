@@ -45,27 +45,18 @@ void Mis_SortByMultiField( const int NField, const long FieldSize, const T **Arr
        for (long i=0; i<FieldSize; i++) IdxTable[i] = i;
    }
 
-// 0. back up the field
+// 0. back up the field and the table
    T *Array_Sorted     = new T [NSort];
-   for (long i=0; i<NSort; i++)
-   {
-       Array_Sorted[i]  = Array[SortField][start_idx+i];
-   }
-   long *IdxTable_copy = new long [NSort];
-   for (long i=0; i<FieldSize; i++)
-   {
-       IdxTable_copy[i] = IdxTable[i];
-   }
+   for (long i=0; i<NSort; i++)       Array_Sorted[i]  = Array[SortField][IdxTable[start_idx+i]];
+   long *IdxTable_copy = new long [FieldSize];
+   for (long i=0; i<FieldSize; i++)   IdxTable_copy[i] = IdxTable[i];
 
 // 1. sort by the field
    long *Idx_Sorted = new long [NSort];
    Mis_Heapsort( NSort, Array_Sorted, Idx_Sorted );
 
 // 2. update the index table
-   for (long i=0; i<NSort; i++)
-   {
-      IdxTable_copy[start_idx+i] = IdxTable[start_idx+Idx_Sorted[i]];
-   }
+   for (long i=0; i<NSort; i++)   IdxTable_copy[start_idx+i] = IdxTable[start_idx+Idx_Sorted[i]];
 
 // 3. check the same value
    long NSameVal;
@@ -73,7 +64,7 @@ void Mis_SortByMultiField( const int NField, const long FieldSize, const T **Arr
    {
        NSameVal = 1; // 1 --> itself
 
-       while ( i+NSameVal < NSort  &&  Array_Sorted[i] == Array_Sorted[i+NSameVal] )   NSameVal ++;
+       while ( i+NSameVal < NSort  &&  Array_Sorted[i] == Array_Sorted[i+NSameVal] )   NSameVal++;
 
        if ( NSameVal == 1 ) continue;
 
@@ -83,10 +74,7 @@ void Mis_SortByMultiField( const int NField, const long FieldSize, const T **Arr
    } // for (long i=0; i<FieldSize-1; i++)
 
 // 4. store the result
-   for (long i=0; i<NSort; i++)
-   {
-      IdxTable[i] = IdxTable_copy[i];
-   }
+   for (long i=start_idx; i<start_idx+NSort; i++)   IdxTable[i] = IdxTable_copy[i];
 
    delete [] Array_Sorted;
    delete [] IdxTable_copy;
