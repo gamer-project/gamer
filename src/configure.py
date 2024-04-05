@@ -473,6 +473,11 @@ def load_arguments():
                          help="Set the number of user-defined particle attributes.\n"
                        )
 
+    parser.add_argument( "--double_par", type=str2bool, metavar="BOOLEAN", gamer_name="FLOAT8_PAR",
+                         default=None,
+                         depend={"particle":True},
+                         help="Enable double precision for particle attributes.\n"
+                       )
     # A.5 grackle
     parser.add_argument( "--grackle", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_GRACKLE",
                          default=False,
@@ -659,6 +664,9 @@ def set_conditional_defaults( args ):
 
     if args["bitwise_reproducibility"] == None:
         args["bitwise_reproducibility"] = True if args["debug"] else False
+
+    if args["double_par"] == None:
+      args["double_par"] = args["double"]
 
     if args["flux"] == None:
         args["flux"] = "HLLD" if args["mhd"] else "HLLC"
