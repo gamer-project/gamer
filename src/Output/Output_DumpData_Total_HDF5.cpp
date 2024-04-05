@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2476)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2477)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -249,7 +249,9 @@ Procedure for outputting new variables:
 //                2474 : 2023/11/22 --> output OPT__UM_IC_FLOAT8 and PAR_IC_FLOAT8
 //                2475 : 2024/03/28 --> output YT_JUPYTER_USE_CONNECTION_FILE, LIBYT_RELOAD, LIBYT_INTERACTIVE,
 //                                      LIBYT_JUPYTER
-//                2476 : 2024/03/29 --> output OPT__RECORD_CENTER, COM_CEN_X, COM_CEN_Y, COM_CEN_Z,
+//                2476 : 2024/03/31 --> output particle attribute with assigned precision set by FLOAT8_PAR in Makefile;
+//                                      record value of FLOAT8_PAR as Makefile.Float8_Par and KeyInfo.Float8_Par
+//                2477 : 2024/04/05 --> output OPT__RECORD_CENTER, COM_CEN_X, COM_CEN_Y, COM_CEN_Z,
 //                                             COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R, COM_NITER_MAX
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
@@ -1227,8 +1229,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //###ISSUE: currently we output all particles at the same level at once (although one attribute at a time),
 //          which may introduce a large memory overhead
 //          --> solution: we can output a fixed number of particles at a time (see Output_DumpData_Total.cpp)
-   long (*NParLv_EachRank)[NLEVEL] = new long [MPI_NRank][NLEVEL];   // number of particles at each level in each rank
-   real (*ParBuf1v1Lv)             = NULL;   // buffer storing the data of one particle attribute at one level
+   long     (*NParLv_EachRank)[NLEVEL] = new long [MPI_NRank][NLEVEL];   // number of particles at each level in each rank
+   real_par (*ParBuf1v1Lv)             = NULL;   // buffer storing the data of one particle attribute at one level
 
    long  GParID_Offset[NLEVEL];  // GParID = global particle index (==> unique for each particle)
    long  NParLv_AllRank[NLEVEL];
@@ -1240,7 +1242,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    MaxNPar1Lv = 0;
    for (int lv=0; lv<NLEVEL; lv++)  MaxNPar1Lv = MAX( MaxNPar1Lv, amr->Par->NPar_Lv[lv] );
 
-   ParBuf1v1Lv = new real [MaxNPar1Lv];
+   ParBuf1v1Lv = new real_par [MaxNPar1Lv];
 
 // 6-1-2. get the starting global particle index (i.e., GParID_Offset[NLEVEL]) for particles at each level in this rank
    MPI_Allgather( amr->Par->NPar_Lv, NLEVEL, MPI_LONG, NParLv_EachRank[0], NLEVEL, MPI_LONG, MPI_COMM_WORLD );
@@ -1277,7 +1279,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //    create the datasets of all particle attributes
       for (int v=0; v<PAR_NATT_STORED; v++)
       {
-         H5_SetID_ParData = H5Dcreate( H5_GroupID_Particle, ParAttLabel[v], H5T_GAMER_REAL, H5_SpaceID_ParData,
+         H5_SetID_ParData = H5Dcreate( H5_GroupID_Particle, ParAttLabel[v], H5T_GAMER_REAL_PAR, H5_SpaceID_ParData,
                                        H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
          if ( H5_SetID_ParData < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", ParAttLabel[v] );
          H5_Status = H5Dclose( H5_SetID_ParData );
@@ -1345,7 +1347,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //          6-3-4. write data to disk
             H5_SetID_ParData = H5Dopen( H5_GroupID_Particle, ParAttLabel[v], H5P_DEFAULT );
 
-            H5_Status = H5Dwrite( H5_SetID_ParData, H5T_GAMER_REAL, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT, ParBuf1v1Lv );
+            H5_Status = H5Dwrite( H5_SetID_ParData, H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT, ParBuf1v1Lv );
             if ( H5_Status < 0 )
                Aux_Error( ERROR_INFO, "failed to write a particle attribute (lv %d, v %d) !!\n", lv, v );
 
@@ -1500,7 +1502,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2476;
+   KeyInfo.FormatVersion        = 2477;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1518,7 +1520,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    KeyInfo.Particle             = 1;
 #  else
    KeyInfo.Particle             = 0;
-#  endif
+#  endif  // #ifdef PARTICLE ... else ...
 #  ifdef FLOAT8
    KeyInfo.Float8               = 1;
 #  else
@@ -1529,7 +1531,12 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 #  ifdef PARTICLE
    KeyInfo.Par_NPar             = amr->Par->NPar_Active_AllRank;
    KeyInfo.Par_NAttStored       = PAR_NATT_STORED;
+#  ifdef FLOAT8_PAR
+   KeyInfo.Float8_Par           = 1;
+#  else
+   KeyInfo.Float8_Par           = 0;
 #  endif
+#  endif // #ifdef PARTICLE
 #  if ( MODEL == HYDRO )
 #  ifdef MHD
    KeyInfo.Magnetohydrodynamics = 1;
@@ -1860,6 +1867,12 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  endif
 
    Makefile.Par_NAttUser           = PAR_NATT_USER;
+
+#  ifdef FLOAT8_PAR
+   Makefile.Float8_Par             = 1;
+#  else
+   Makefile.Float8_Par             = 0;
+#  endif
 #  endif // #ifdef PARTICLE
 
 #  ifdef COSMIC_RAY
@@ -2742,8 +2755,9 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "NFieldStored",         HOFFSET(KeyInfo_t,NFieldStored        ), H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "NMagStored",           HOFFSET(KeyInfo_t,NMagStored          ), H5T_NATIVE_INT          );
 #  ifdef PARTICLE
-   H5Tinsert( H5_TypeID, "Par_NPar",             HOFFSET(KeyInfo_t,Par_NPar),             H5T_NATIVE_LONG         );
+   H5Tinsert( H5_TypeID, "Par_NPar",             HOFFSET(KeyInfo_t,Par_NPar            ), H5T_NATIVE_LONG         );
    H5Tinsert( H5_TypeID, "Par_NAttStored",       HOFFSET(KeyInfo_t,Par_NAttStored      ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Float8_Par",           HOFFSET(KeyInfo_t,Float8_Par          ), H5T_NATIVE_INT          );
 #  endif
 
 #  ifdef COSMIC_RAY
@@ -2862,6 +2876,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "StarFormation",          HOFFSET(Makefile_t,StarFormation          ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Feedback",               HOFFSET(Makefile_t,Feedback               ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Par_NAttUser",           HOFFSET(Makefile_t,Par_NAttUser           ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "Float8_Par",             HOFFSET(Makefile_t,Float8_Par             ), H5T_NATIVE_INT );
 #  endif
 
 #  ifdef COSMIC_RAY

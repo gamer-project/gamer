@@ -334,7 +334,8 @@ void JetBC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu
    double rad = sqrt( SQR(pos[0]-Jet_Center[0]) + SQR(pos[2]-Jet_Center[1]) );
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySize[2]][ArraySize[1]][ArraySize[0]] = ( real (*)[ArraySize[2]][ArraySize[1]][ArraySize[0]] )Array;
+   typedef real (*vla)[ ArraySize[2] ][ ArraySize[1] ][ ArraySize[0] ];
+   vla Array3D = ( vla )Array;
 
    double x = rad/Jet_Radius;
 

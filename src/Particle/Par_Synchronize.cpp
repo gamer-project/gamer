@@ -4,10 +4,10 @@
 
 
 // static global variables
-static double CurrentSyncTime   = -1.0;
-static long   Backup_NPar       = -1;
-static long  *Backup_ParID      = NULL;
-static real (*Backup_ParAtt)[7] = NULL;
+static double     CurrentSyncTime   = -1.0;
+static long       Backup_NPar       = -1;
+static long      *Backup_ParID      = NULL;
+static real_par (*Backup_ParAtt)[7] = NULL;
 
 
 
@@ -63,29 +63,30 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
       MemUnit       = MAX( 1, amr->Par->NPar_Active/100 );  // set arbitrarily (but must > 0)
       MemSize       = MemUnit;
       Backup_NPar   = 0;
-      Backup_ParID  = ( long *      )malloc(   MemSize*sizeof(long) );
-      Backup_ParAtt = ( real (*)[7] )malloc( 7*MemSize*sizeof(real) );  // 7 = pos*3, vel*3, time
+      Backup_ParID  = ( long *          )malloc(   MemSize*sizeof(long)     );
+      Backup_ParAtt = ( real_par (*)[7] )malloc( 7*MemSize*sizeof(real_par) );  // 7 = pos*3, vel*3, time
    }
 
 
 // synchronize all active particles
-         real *ParTime   =   amr->Par->Time;
-         real *ParType   =   amr->Par->Type;
-         real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-         real *ParVel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
+         real_par *ParTime   =   amr->Par->Time;
+         real_par *ParType   =   amr->Par->Type;
+         real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+         real_par *ParVel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
 #  ifdef STORE_PAR_ACC
-   const real *ParAcc[3] = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
+   const real_par *ParAcc[3] = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
 #  else
-   const real *ParAcc[3] = { NULL, NULL, NULL };
+   const real_par *ParAcc[3] = { NULL, NULL, NULL };
 #  endif
 
-// convert SyncTime from double to real in advance to be consistent with particle time
-   const real SyncTime_Real = (real)SyncTime;
+// convert SyncTime from double to real_par in advance to be consistent with particle time
+   const real_par SyncTime_Real = (real_par)SyncTime;
 
-   real dt;
+   real_par dt;
 #  ifdef COMOVING
-   bool dTime2dt, Initialized=false;
-   real ParTime_Prev=NULL_REAL, dt_Prev=NULL_REAL;
+   bool     dTime2dt, Initialized=false;
+   real_par ParTime_Prev=NULL_REAL;
+   real_par dt_Prev     =NULL_REAL;
 #  endif
 
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
@@ -105,8 +106,8 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
             if ( Backup_NPar >= MemSize )
             {
                MemSize      += MemUnit;
-               Backup_ParID  = ( long *      )realloc( Backup_ParID,    MemSize*sizeof(long) );
-               Backup_ParAtt = ( real (*)[7] )realloc( Backup_ParAtt, 7*MemSize*sizeof(real) );
+               Backup_ParID  = ( long *          )realloc( Backup_ParID,    MemSize*sizeof(long)     );
+               Backup_ParAtt = ( real_par (*)[7] )realloc( Backup_ParAtt, 7*MemSize*sizeof(real_par) );
             }
 
             Backup_ParID [ Backup_NPar ]    = p;
@@ -139,7 +140,7 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
 //       avoid redundant calculations
          if ( dTime2dt )
          {
-            dt           = Mis_dTime2dt( ParTime[p], dt );
+            dt           = (real_par)Mis_dTime2dt( (double)ParTime[p], (double)dt );
             dt_Prev      = dt;
             ParTime_Prev = ParTime[p];
          }
@@ -191,9 +192,9 @@ void Par_Synchronize_Restore( const double SyncTime )
 
 
 // restore particle attributes (position, velocity, and time)
-   real *ParTime   =   amr->Par->Time;
-   real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-   real *ParVel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
+   real_par *ParTime   =   amr->Par->Time;
+   real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   real_par *ParVel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
    long ParID;
 
    for (long p=0; p<Backup_NPar; p++)

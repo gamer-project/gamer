@@ -1912,10 +1912,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   const double EdgeL[3] = { amr->patch[0][lv][PID0]->EdgeL[0] - GhostSize*dh,
                                             amr->patch[0][lv][PID0]->EdgeL[1] - GhostSize*dh,
                                             amr->patch[0][lv][PID0]->EdgeL[2] - GhostSize*dh };
-                  long  *ParList = NULL;
-                  int    NPar;
-                  bool   UseInputMassPos;
-                  real **InputMassPos = NULL;
+                  long      *ParList = NULL;
+                  int        NPar;
+                  bool       UseInputMassPos;
+                  real_par **InputMassPos = NULL;
 
 #                 ifdef DEBUG_PARTICLE
                   if ( FaSibPID < 0 )  Aux_Error( ERROR_INFO, "FaSibPID = %d < 0 (lv %d, PID0 %d, FaPID %d, sib %d) !!\n",
@@ -2967,11 +2967,11 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv, const double Prep
 #  pragma omp parallel
    {
 //    thread-private variables
-      long  *ParList = NULL;
-      int    NPar;
-      double EdgeL[3];
-      bool   UseInputMassPos;
-      real **InputMassPos = NULL;
+      long      *ParList = NULL;
+      int        NPar;
+      double     EdgeL[3];
+      bool       UseInputMassPos;
+      real_par **InputMassPos = NULL;
 
 //    loop over all patches including buffer patches
 #     pragma omp for schedule( runtime )

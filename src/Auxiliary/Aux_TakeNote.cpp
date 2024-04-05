@@ -313,6 +313,12 @@ void Aux_TakeNote()
       fprintf( Note, "FLOAT8                          OFF\n" );
 #     endif
 
+#     ifdef FLOAT8_PAR
+      fprintf( Note, "FLOAT8_PAR                      ON\n" );
+#     else
+      fprintf( Note, "FLOAT8_PAR                      OFF\n" );
+#     endif
+
 #     ifdef SERIAL
       fprintf( Note, "SERIAL                          ON\n" );
 #     else
