@@ -1,7 +1,6 @@
 #include "GAMER.h"
 
 
-template <typename T>
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Mis_SortByMultiField
@@ -57,7 +56,7 @@ void Mis_SortByMultiField( const int NField, const long FieldSize, const T **Arr
    {
        IdxTable_copy[i] = IdxTable[i];
    }
-   
+
 // 1. sort by the field
    long *Idx_Sorted = new long [NSort];
    Mis_Heapsort( NSort, Array_Sorted, Idx_Sorted );
