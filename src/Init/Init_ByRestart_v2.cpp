@@ -58,6 +58,10 @@ void Init_ByRestart()
    if ( !Aux_CheckFileExist(FileName)  &&  MPI_Rank == 0 )
       Aux_Error( ERROR_INFO, "restart file \"%s\" does not exist !!\n", FileName );
 
+#  if ( ( defined PARTICLE ) && ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) ) )
+   Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for OPT__OUTPUT_TOTAL=2 (C-binary) !!\n" );
+#  endif
+
    MPI_Barrier( MPI_COMM_WORLD );
 
 
@@ -328,7 +332,7 @@ void Init_ByRestart()
       ExpectSize   += ParInfoSize;
    }
 
-   ExpectSize += (long)PAR_NATT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real);
+   ExpectSize += (long)PAR_NATT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real_par);
 #  endif
 
    fseek( File, 0, SEEK_END );
@@ -573,12 +577,12 @@ void Init_ByRestart()
 // e. load particles
 // =================================================================================================
 #  ifdef PARTICLE
-   const long ParDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(real);
+   const long ParDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(real_par);
 
-   long  *NewParList = new long [MaxNParInOnePatch];
-   real **ParBuf     = NULL;
+   long  *NewParList     = new long [MaxNParInOnePatch];
+   real_par **ParBuf     = NULL;
 
-   real NewParAtt[PAR_NATT_TOTAL];
+   real_par NewParAtt[PAR_NATT_TOTAL];
    long GParID;
    int  NParThisPatch;
 
@@ -603,7 +607,7 @@ void Init_ByRestart()
 
 // begin to load data
 #  ifdef DEBUG_PARTICLE
-   const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   const real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
 #  endif
 
    for (int TRanks=0; TRanks<MPI_NRank; TRanks+=RESTART_LOAD_NRANK)
@@ -631,10 +635,10 @@ void Init_ByRestart()
 //             load one particle attribute at a time
                for (int v=0; v<PAR_NATT_STORED; v++)
                {
-                  fseek( File, FileOffset_Particle + v*ParDataSize1v + GParID*sizeof(real), SEEK_SET );
+                  fseek( File, FileOffset_Particle + v*ParDataSize1v + GParID*sizeof(real_par), SEEK_SET );
 
 //                using ParBuf[v] here is safe since it's NOT called when NParThisPatch == 0
-                  fread( ParBuf[v], sizeof(real), NParThisPatch, File );
+                  fread( ParBuf[v], sizeof(real_par), NParThisPatch, File );
                }
 
 //             store particles to the particle repository (one particle at a time)
@@ -653,7 +657,7 @@ void Init_ByRestart()
                } // for (int p=0; p<NParThisPatch )
 
 //             link particles to this patch
-               const real *PType = amr->Par->Type;
+               const real_par *PType = amr->Par->Type;
 #              ifdef DEBUG_PARTICLE
                char Comment[100];
                sprintf( Comment, "%s, PID %d, NPar %d", __FUNCTION__, PID, NParThisPatch );

@@ -838,6 +838,20 @@ void Init_ResetParameter()
    }
 
 
+// OPT__UM_IC_FLOAT8
+   if ( OPT__INIT == INIT_BY_FILE  &&  OPT__UM_IC_FLOAT8 < 0 )
+   {
+//    set OPT__UM_IC_FLOAT8 = FLOAT8 by default
+#     ifdef FLOAT8
+      OPT__UM_IC_FLOAT8 = 1;
+#     else
+      OPT__UM_IC_FLOAT8 = 0;
+#     endif
+
+      PRINT_RESET_PARA( OPT__UM_IC_FLOAT8, FORMAT_INT, "to be consistent with FLOAT8" );
+   }
+
+
 // always turn on "OPT__CK_PARTICLE" when debugging particles
 #  ifdef DEBUG_PARTICLE
    if ( !OPT__CK_PARTICLE )
@@ -859,6 +873,22 @@ void Init_ResetParameter()
       PRINT_RESET_PARA( PAR_INIT, FORMAT_INT, "for restart" );
    }
 #  endif
+
+
+// PAR_IC_FLOAT8
+#  ifdef PARTICLE
+   if ( amr->Par->Init == PAR_INIT_BY_FILE  &&  PAR_IC_FLOAT8 < 0 )
+   {
+//    set PAR_IC_FLOAT8 = FLOAT8_PAR by default
+#     ifdef FLOAT8_PAR
+      PAR_IC_FLOAT8 = 1;
+#     else
+      PAR_IC_FLOAT8 = 0;
+#     endif
+                    
+      PRINT_RESET_PARA( PAR_IC_FLOAT8, FORMAT_INT, "to be consistent with FLOAT8_PAR" );
+   }
+#endif
 
 
 // JEANS_MIN_PRES must work with GRAVITY

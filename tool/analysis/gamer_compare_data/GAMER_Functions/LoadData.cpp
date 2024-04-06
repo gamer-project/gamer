@@ -553,8 +553,9 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, const long 
    if (  float8 )
       Aux_Error( ERROR_INFO, "%s : RESTART file (%s) != runtime (%s) !!\n", "FLOAT8", "ON", "OFF" );
 #  endif
+
 #  if ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) )
-   if ( particle )   Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 !!\n" );
+   if ( particle )   Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for C-binary snapshots!!\n" );
 #  endif
 
    CompareVar( "MODEL",      model,      MODEL,      Fatal );

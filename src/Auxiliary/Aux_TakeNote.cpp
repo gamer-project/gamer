@@ -313,6 +313,12 @@ void Aux_TakeNote()
       fprintf( Note, "FLOAT8                          OFF\n" );
 #     endif
 
+#     ifdef FLOAT8_PAR
+      fprintf( Note, "FLOAT8_PAR                      ON\n" );
+#     else
+      fprintf( Note, "FLOAT8_PAR                      OFF\n" );
+#     endif
+
 #     ifdef SERIAL
       fprintf( Note, "SERIAL                          ON\n" );
 #     else
@@ -400,6 +406,18 @@ void Aux_TakeNote()
       fprintf( Note, "LIBYT_INTERACTIVE               ON\n" );
 #     else
       fprintf( Note, "LIBYT_INTERACTIVE               OFF\n" );
+#     endif
+
+#     ifdef LIBYT_RELOAD
+      fprintf( Note, "LIBYT_RELOAD                    ON\n" );
+#     else
+      fprintf( Note, "LIBYT_RELOAD                    OFF\n" );
+#     endif
+
+#     ifdef LIBYT_JUPYTER
+      fprintf( Note, "LIBYT_JUPYTER                   ON\n" );
+#     else
+      fprintf( Note, "LIBYT_JUPYTER                   OFF\n" );
 #     endif
 
 #     else  // #ifdef SUPPORT_LIBYT
@@ -798,6 +816,7 @@ void Aux_TakeNote()
       fprintf( Note, "Par->NPar_Active_AllRank        %ld\n",     amr->Par->NPar_Active_AllRank );
       fprintf( Note, "Par->Init                       %d\n",      amr->Par->Init                );
       fprintf( Note, "Par->ParICFormat                %d\n",      amr->Par->ParICFormat         );
+      fprintf( Note, "PAR_IC_FLOAT8                   %d\n",      PAR_IC_FLOAT8                 );
       fprintf( Note, "Par->ParICMass                 %14.7e\n",   amr->Par->ParICMass           );
       fprintf( Note, "Par->ParICType                  %d\n",      amr->Par->ParICType           );
       fprintf( Note, "Par->Interp                     %d\n",      amr->Par->Interp              );
@@ -1268,6 +1287,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__UM_IC_NLEVEL               %d\n",      OPT__UM_IC_NLEVEL         );
       fprintf( Note, "OPT__UM_IC_NVAR                 %d\n",      OPT__UM_IC_NVAR           );
       fprintf( Note, "OPT__UM_IC_FORMAT               %d\n",      OPT__UM_IC_FORMAT         );
+      fprintf( Note, "OPT__UM_IC_FLOAT8               %d\n",      OPT__UM_IC_FLOAT8         );
       fprintf( Note, "OPT__UM_IC_DOWNGRADE            %d\n",      OPT__UM_IC_DOWNGRADE      );
       fprintf( Note, "OPT__UM_IC_REFINE               %d\n",      OPT__UM_IC_REFINE         );
       fprintf( Note, "OPT__UM_IC_LOAD_NRANK           %d\n",      OPT__UM_IC_LOAD_NRANK     );
@@ -1474,9 +1494,12 @@ void Aux_TakeNote()
 #     ifdef SUPPORT_LIBYT
       fprintf( Note, "Parameters of YT Inline Analysis\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "YT_SCRIPT                       %s\n",      YT_SCRIPT  );
-      fprintf( Note, "YT_VERBOSE                      %d\n",      YT_VERBOSE );
-      fprintf( Note, "YT_FIG_BASENAME                 %s\n",      YT_FIG_BASENAME );
+      fprintf( Note, "YT_SCRIPT                           %s\n",      YT_SCRIPT  );
+      fprintf( Note, "YT_VERBOSE                          %d\n",      YT_VERBOSE );
+      fprintf( Note, "YT_FIG_BASENAME                     %s\n",      YT_FIG_BASENAME );
+#     ifdef LIBYT_JUPYTER
+      fprintf( Note, "YT_JUPYTER_USE_CONNECTION_FILE      %d\n",      YT_JUPYTER_USE_CONNECTION_FILE );
+#     endif
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif

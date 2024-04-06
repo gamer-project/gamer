@@ -36,9 +36,13 @@ static real Hydro_CheckMinTemp( const real InTemp, const real MinTemp );
 GPU_DEVICE
 static real Hydro_CheckMinEntr( const real InEntr, const real MinEntr );
 GPU_DEVICE
-static bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], const char SingleFieldName[],
-                                   const char File[], const int Line, const char Function[],
-                                   const CheckUnphysical_t Verbose );
+static bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const char SingleFieldName[],
+                                const real Min, const real Max, const real Emag,
+                                const EoS_DE2P_t EoS_DensEint2Pres,
+                                const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                                const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                                const real *const EoS_Table[EOS_NTABLE_MAX],
+                                const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose );
 #ifdef SRHD
 GPU_DEVICE
 static real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
@@ -213,7 +217,11 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
    real HTilde, Factor, Temp, LorentzFactor;
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( UNPHY_MODE_CONS, In, NULL, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_CONS, In, NULL,
+                       NULL_REAL, NULL_REAL, NULL_REAL,
+                       EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
+                       EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
+                       ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
    HTilde = Hydro_Con2HTilde( In, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
@@ -573,12 +581,12 @@ real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, cons
    struct Hydro_HTildeFunction_params_s params =
    { MSqr_DSqr, NAN, -Constant, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table };
 
-   NewtonRaphsonSolver( FuncPtr, &params, GuessHTilde, (real)TINY_NUMBER, (real)MACHINE_EPSILON, &HTilde );
+   NewtonRaphsonSolver( FuncPtr, &params, GuessHTilde, TINY_NUMBER, MACHINE_EPSILON, &HTilde );
 
 #  ifdef GAMER_DEBUG
-   if ( HTilde <= (real)TINY_NUMBER )
-      printf( "ERROR : HTilde = %14.7e <= %13.7e (Constant %14.7e, GuessHTilde %14.7e) in %s !!\n",
-              HTilde, TINY_NUMBER, Constant, GuessHTilde, __FUNCTION__ );
+   if ( HTilde <= (real)0.0 )
+      printf( "ERROR : HTilde = %14.7e <= 0.0 (Constant %14.7e, GuessHTilde %14.7e) in %s !!\n",
+              HTilde, Constant, GuessHTilde, __FUNCTION__ );
 #  endif
 
    return HTilde;
@@ -795,34 +803,48 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_CheckUnphysical
+// Function    :  Hydro_IsUnphysical
 // Description :  Check unphysical results
 //
 // Note        :  1. Support various modes:
-//                   UNPHY_MODE_SING         : Check if the input single field is NAN, inf or negative
+//                   UNPHY_MODE_SING         : Check if the input single field is NAN or lies outside the accepted range
 //                   UNPHY_MODE_CONS         : Check if the input conserved variables, including passive scalars, are unphysical
 //                   UNPHY_MODE_PRIM         : Check if the input primitive variables, including passive scalars, are unphysical
 //                   UNPHY_MODE_PASSIVE_ONLY : Check if the input passive scalars are unphysical
 //                2. For UNPHY_MODE_CONS with SRHD, we also check if Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298"
 //                   has a positive root
-//                3. UNPHY_MODE_CONS currently does not check gas pressure
+//                3. For UNPHY_MODE_CONS:
+//                   - Mass density and total energy density must be positive
+//                   - Internal energy can be zero or even slightly negative if it's within machine precision
+//                   - Pressure cannot be negative (only for non-trivial EoS)
+//                   For UNPHY_MODE_PRIM:
+//                   - Mass density must be positive
+//                   - Pressure cannot be negative
 //
-// Parameter   :  Mode            : UNPHY_MODE_SING, UNPHY_MODE_CONS, UNPHY_MODE_PRIM, UNPHY_MODE_PASSIVE_ONLY
-//                                  --> See "Note" for details
-//                Fields          : Field data to be checked
-//                SingleFieldName : Name of the target field for UNPHY_MODE_SING
-//                File            : __FILE__
-//                Line            : __LINE__
-//                Function        : __FUNCTION__
-//                Verbose         : UNPHY_VERBOSE --> Show error messages
-//                                  UNPHY_SILENCE --> Show nothing
+// Parameter   :  Mode              : UNPHY_MODE_SING, UNPHY_MODE_CONS, UNPHY_MODE_PRIM, UNPHY_MODE_PASSIVE_ONLY
+//                                    --> See "Note" for details
+//                Fields            : Field data to be checked
+//                SingleFieldName   : Name of the target field for UNPHY_MODE_SING
+//                Min/Max           : Accepted range for UNPHY_MODE_SING
+//                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
+//                EoS_*             : EoS parameters
+//                File              : __FILE__
+//                Line              : __LINE__
+//                Function          : __FUNCTION__
+//                Verbose           : UNPHY_VERBOSE --> Show error messages
+//                                    UNPHY_SILENCE --> Show nothing
 //
 // Return      :  true  --> Input field is unphysical
 //                false --> Otherwise
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], const char SingleFieldName[],
-                            const char File[], const int Line, const char Function[], const CheckUnphysical_t Verbose )
+bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const char SingleFieldName[],
+                         const real Min, const real Max, const real Emag,
+                         const EoS_DE2P_t EoS_DensEint2Pres,
+                         const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                         const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                         const real *const EoS_Table[EOS_NTABLE_MAX],
+                         const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose )
 {
 
 // check
@@ -832,87 +854,125 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 #  endif
 
 
-   bool FailCell = false;
-#  ifdef SRHD
-   real Msqr, Dsqr, E_D, M_D, Temp, Discriminant;
-#  endif
-
+   bool UnphyCell = false;
 
    switch ( Mode )
    {
 //    === check single field ===
       case UNPHY_MODE_SING:
-
-//       assuming the input single field is positive definite
-         if ( Fields[0] <= TINY_NUMBER  ||  Fields[0] >= HUGE_NUMBER  ||  Fields[0] != Fields[0] )
-            FailCell = true;
+      {
+//       check if the input single field is NAN or lies outside the accepted range
+         if ( Fields[0] < Min  ||  Fields[0] > Max  ||  Fields[0] != Fields[0] )
+            UnphyCell = true;
 
 //       print out the unphysical value
 #        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
-         if ( FailCell && Verbose )
-            printf( "ERROR: invalid %s (%14.7e) at file <%s>, line <%d>, function <%s> !!\n",
-                    (SingleFieldName==NULL)?"unknown field":SingleFieldName, Fields[0],
+         if ( UnphyCell && Verbose )
+            printf( "ERROR : invalid %s = %14.7e (min %14.7e, max %14.7e) at file <%s>, line <%d>, function <%s> !!\n",
+                    (SingleFieldName==NULL)?"unknown field":SingleFieldName, Fields[0], Min, Max,
                     File, Line, Function );
 #        endif
-
+      } // case UNPHY_MODE_SING
       break;
 
 
 //    === check conserved variables, including passive scalars ===
       case UNPHY_MODE_CONS:
-
+      {
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
 //          check NaN
             if ( Fields[v] != Fields[v] )
-                  FailCell = true;
+                  UnphyCell = true;
 
 //          check momentum densities
             if ( v == MOMX  ||  v == MOMY  ||  v == MOMZ )
             {
-               if ( Fields[v] <= -HUGE_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
-                  FailCell = true;
+               if ( Fields[v] < -HUGE_NUMBER  ||  Fields[v] > HUGE_NUMBER )
+                  UnphyCell = true;
             }
 
-//          check mass and energy densities
+//          check mass and energy densities (which cannot be zero)
             else if ( v < NCOMP_FLUID )
             {
-               if ( Fields[v] <= TINY_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
-                  FailCell = true;
+               if ( Fields[v] <= (real)0.0  ||  Fields[v] > HUGE_NUMBER )
+                  UnphyCell = true;
             }
 
 //          check passive scalars (which can be zero)
             else
             {
-               if ( Fields[v] < (real)0.0  ||  Fields[v] >= HUGE_NUMBER )
-                  FailCell = true;
+               if ( Fields[v] < (real)0.0  ||  Fields[v] > HUGE_NUMBER )
+                  UnphyCell = true;
             }
          } // for (int v=0; v<NCOMP_TOTAL; v++)
 
 //       check discriminant for SRHD
 //       --> positive if and only if Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298" has a positive root
 #        ifdef SRHD
-         Msqr         = SQR(Fields[MOMX]) + SQR(Fields[MOMY]) + SQR(Fields[MOMZ]);
-         Dsqr         = SQR(Fields[DENS]);
-         E_D          = Fields[ENGY] / Fields[DENS];
-         M_D          = SQRT( Msqr / Dsqr );
-         Temp         = SQRT( E_D*E_D + (real)2.0*E_D );
-         Discriminant = ( Temp + M_D )*( Temp - M_D );   // replace a^2-b^2 with (a+b)*(a-b) to alleviate a catastrophic cancellation
+         const real Msqr         = SQR(Fields[MOMX]) + SQR(Fields[MOMY]) + SQR(Fields[MOMZ]);
+         const real Dsqr         = SQR(Fields[DENS]);
+         const real E_D          = Fields[ENGY] / Fields[DENS];
+         const real M_D          = SQRT( Msqr / Dsqr );
+         const real Temp         = SQRT( E_D*E_D + (real)2.0*E_D );
+         const real Discriminant = ( Temp + M_D )*( Temp - M_D ); // replace a^2-b^2 with (a+b)*(a-b) to alleviate a catastrophic cancellation
 
-         if ( Discriminant <= TINY_NUMBER )  FailCell = true;
+         if ( Discriminant <= (real)0.0  ||  Discriminant > HUGE_NUMBER  ||  Discriminant != Discriminant )
+            UnphyCell = true;
+
+#        else // #ifdef SRHD
+
+#        ifndef BAROTROPIC_EOS
+//       check internal energy (which can be zero or slightly negative if it's within machine precision)
+         const real CheckMinEint_No = false;
+         const real Eint = Hydro_Con2Eint( Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY],
+                                           CheckMinEint_No, NULL_REAL, Emag,
+                                           NULL, NULL, NULL, NULL, NULL );
+
+         if ( Eint < (real)-3.0*Fields[ENGY]*MACHINE_EPSILON  ||  Eint > HUGE_NUMBER  ||  Eint != Eint )
+            UnphyCell = true;
+
+//       check pressure for non-trivial EoS (which cannot be negative)
+//       --> for trivial EoS like EOS_GAMMA, checking internal energy is sufficient and pressure can be
+//           slightly negative if it's within machine precision
+#        if ( EOS != EOS_GAMMA )
+         const real Pres = EoS_DensEint2Pres( Fields[DENS], Eint, Fields+NCOMP_FLUID,
+                                              EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+
+         if ( Pres < (real)0.0  ||  Pres > HUGE_NUMBER  ||  Pres != Pres )
+            UnphyCell = true;
+#        endif // #if ( EOS != EOS_GAMMA )
+#        endif // #ifndef BAROTROPIC_EOS
+
+#        endif // #ifdef SRHD ... else ...
+
+#        ifdef MHD
+         if ( Emag < (real)0.0  ||  Emag > HUGE_NUMBER  ||  Emag != Emag )
+            UnphyCell = true;
 #        endif
 
 //       print out the unphysical values
 #        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
-         if ( FailCell && Verbose )
+         if ( UnphyCell && Verbose )
          {
-            printf( "ERROR: unphysical conserved variables at file <%s>, line <%d>, function <%s> !!\n",
+            printf( "ERROR : unphysical conserved variables at file <%s>, line <%d>, function <%s> !!\n",
                     File, Line, Function );
-            printf( "D=%14.7e Mx=%14.7e My=%14.7e Mz=%14.7e E=%14.7e\n",
+            printf( "D=%14.7e Mx=%14.7e My=%14.7e Mz=%14.7e E=%14.7e",
                     Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY] );
 #           ifdef SRHD
-            printf( "E^2+2*E*D-|M|^2=%14.7e\n", Discriminant );
+            printf( " E^2+2*E*D-|M|^2=%14.7e", Discriminant );
+#           else
+#           ifndef BAROTROPIC_EOS
+            printf( " Eint=%14.7e", Eint );
+#           if ( EOS != EOS_GAMMA )
+            printf( " Pres=%14.7e", Pres );
 #           endif
+#           endif // #ifndef BAROTROPIC_EOS
+#           endif // #ifdef SRHD ... else ...
+#           ifdef MHD
+            printf( " Emag=%14.7e", Emag );
+#           endif
+            printf( "\n" );
 #           if ( NCOMP_PASSIVE > 0 )
             printf( "Passive:" );
             for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  printf( " [%d]=%13.7e", v-NCOMP_FLUID, Fields[v] );
@@ -920,50 +980,65 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 #           endif
          }
 #        endif
-
+      } // case UNPHY_MODE_CONS
       break;
 
 
 //    === check primitive variables, including passive scalars ===
       case UNPHY_MODE_PRIM:
-
+      {
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
 //          check NaN
             if ( Fields[v] != Fields[v] )
-                  FailCell = true;
+                  UnphyCell = true;
 
 //          check velocities
             if ( v == MOMX  ||  v == MOMY  ||  v == MOMZ )
             {
-               if ( Fields[v] <= -HUGE_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
-                  FailCell = true;
+               if ( Fields[v] < -HUGE_NUMBER  ||  Fields[v] > HUGE_NUMBER )
+                  UnphyCell = true;
             }
 
-//          check mass density
+//          check mass density (which cannot be zero)
             else if ( v == DENS )
             {
-               if ( Fields[v] <= TINY_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
-                  FailCell = true;
+               if ( Fields[v] <= (real)0.0  ||  Fields[v] > HUGE_NUMBER )
+                  UnphyCell = true;
             }
 
-//          check pressure and passive scalars (which can be zero)
-//          --> allow pressure to be zero to tolerate round-off errors
+//          check pressure (which cannot be negative; a pressure floor should be applied prior to calling this routine)
+            else if ( v == ENGY )
+            {
+               if ( Fields[ENGY] < (real)0.0  ||  Fields[ENGY] > HUGE_NUMBER )
+                  UnphyCell = true;
+            }
+
+//          check passive scalars (which can be zero)
             else
             {
-               if ( Fields[v] < (real)0.0  ||  Fields[v] >= HUGE_NUMBER )
-                  FailCell = true;
+               if ( Fields[v] < (real)0.0  ||  Fields[v] > HUGE_NUMBER )
+                  UnphyCell = true;
             }
          } // for (int v=0; v<NCOMP_TOTAL; v++)
 
+#        ifdef MHD
+         if ( Emag < (real)0.0  ||  Emag > HUGE_NUMBER  ||  Emag != Emag )
+            UnphyCell = true;
+#        endif
+
 //       print out the unphysical values
 #        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
-         if ( FailCell && Verbose )
+         if ( UnphyCell && Verbose )
          {
-            printf( "ERROR: unphysical primitive variables at file <%s>, line <%d>, function <%s> !!\n",
+            printf( "ERROR : unphysical primitive variables at file <%s>, line <%d>, function <%s> !!\n",
                     File, Line, Function );
-            printf( "D=%14.7e, Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, P=%14.7e\n",
+            printf( "D=%14.7e Vx=%14.7e Vy=%14.7e Vz=%14.7e P=%14.7e",
                     Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY] );
+#           ifdef MHD
+            printf( " Emag=%14.7e", Emag );
+#           endif
+            printf( "\n" );
 #           if ( NCOMP_PASSIVE > 0 )
             printf( "Passive:" );
             for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  printf( " [%d]=%13.7e", v-NCOMP_FLUID, Fields[v] );
@@ -971,29 +1046,29 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 #           endif
          }
 #        endif
-
+      } // case UNPHY_MODE_PRIM
       break;
 
 
 //    === only check passive scalars ===
       case UNPHY_MODE_PASSIVE_ONLY:
-
+      {
          for (int v=0; v<NCOMP_PASSIVE; v++)
          {
 //          check NaN
             if ( Fields[v] != Fields[v] )
-                  FailCell = true;
+               UnphyCell = true;
 
 //          check negative and infinity (passive scalars can be zero)
-            if ( Fields[v] < (real)0.0  ||  Fields[v] >= HUGE_NUMBER )
-               FailCell = true;
+            if ( Fields[v] < (real)0.0  ||  Fields[v] > HUGE_NUMBER )
+               UnphyCell = true;
          }
 
 //       print out the unphysical values
 #        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
-         if ( FailCell && Verbose )
+         if ( UnphyCell && Verbose )
          {
-            printf( "ERROR: unphysical passive scalars at file <%s>, line <%d>, function <%s> !!\n",
+            printf( "ERROR : unphysical passive scalars at file <%s>, line <%d>, function <%s> !!\n",
                     File, Line, Function );
 #           if ( NCOMP_PASSIVE > 0 )
             printf( "Passive:" );
@@ -1002,23 +1077,25 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 #           endif
          }
 #        endif
-
+      } // case UNPHY_MODE_PASSIVE_ONLY
       break;
 
 
       default:
+      {
 #        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
          printf( "ERROR : unsupported mode (%d) at file <%s>, line <%d>, function <%s> !!\n",
                  Mode, File, Line, Function );
 #        endif
+      } // default
       break;
 
    } // switch ( Mode )
 
 
-   return FailCell;
+   return UnphyCell;
 
-} // FUNCTION : Hydro_CheckUnphysical
+} // FUNCTION : Hydro_IsUnphysical
 
 
 
@@ -1070,8 +1147,8 @@ real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const re
    Cons[3] = MomZ;
    Cons[4] = Engy;
 
-   Hydro_Con2Pri( Cons, Prim, (CheckMinPres)?MinPres:(real)-HUGE_NUMBER, false, NULL_INT, NULL,
-                  NULL_BOOL, (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
+   Hydro_Con2Pri( Cons, Prim, (CheckMinPres)?MinPres:-HUGE_NUMBER, false, NULL_INT, NULL,
+                  NULL_BOOL, NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
    Pres = Prim[4];
 
@@ -1091,7 +1168,9 @@ real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const re
 
 // check unphysical results
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "output pressure", ERROR_INFO, UNPHY_VERBOSE )  )
+   if (  Hydro_IsUnphysical( UNPHY_MODE_SING, &Pres, "output pressure",
+                             (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                             ERROR_INFO, UNPHY_VERBOSE )  )
    {
       printf( "Input: Dens %14.7e MomX %14.7e MomY %14.7e MomZ %14.7e Engy %14.7e",
               Dens, MomX, MomY, MomZ, Engy );
@@ -1164,8 +1243,8 @@ real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const re
    Cons[3] = MomZ;
    Cons[4] = Engy;
 
-   Hydro_Con2Pri( Cons, Prim, (real)-HUGE_NUMBER, false, NULL_INT, NULL,
-                  NULL_BOOL, (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
+   Hydro_Con2Pri( Cons, Prim, -HUGE_NUMBER, false, NULL_INT, NULL,
+                  NULL_BOOL, NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
 
    HTilde  = Hydro_Con2HTilde( Cons, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt,
@@ -1304,8 +1383,8 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
    Cons[3] = MomZ;
    Cons[4] = Engy;
 
-   Hydro_Con2Pri( Cons, Prim, (real)-HUGE_NUMBER, false, NULL_INT, NULL,
-                  NULL_BOOL, (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
+   Hydro_Con2Pri( Cons, Prim, -HUGE_NUMBER, false, NULL_INT, NULL,
+                  NULL_BOOL, NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
    Temp  = Prim[4]/Prim[0];
    Temp *= EoS_AuxArray_Flt[0];
@@ -1500,10 +1579,10 @@ void NewtonRaphsonSolver( void (*FuncPtr)( real Unknown, void *Params, real *Fun
       if ( DiffFunc == (real)0.0 )
          printf( "ERROR : derivative is zero at file <%s>, line <%d>, function <%s> !!\n", ERROR_INFO );
 
-      if ( Func != Func  ||(real) -HUGE_NUMBER >= Func  || Func  >= (real)HUGE_NUMBER )
+      if ( Func != Func  ||  Func < -HUGE_NUMBER  ||  Func > HUGE_NUMBER )
          printf( "ERROR : function value is not finite at file <%s>, line <%d>, function <%s> !!\n", ERROR_INFO );
 
-      if ( DiffFunc != DiffFunc ||(real) -HUGE_NUMBER >= DiffFunc || DiffFunc >= (real)HUGE_NUMBER )
+      if ( DiffFunc != DiffFunc  ||  DiffFunc < -HUGE_NUMBER  ||  DiffFunc > HUGE_NUMBER )
          printf( "ERROR : derivative value is not finite at file <%s>, line <%d>, function <%s> !!\n", ERROR_INFO );
 #     endif
 

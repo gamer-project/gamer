@@ -84,7 +84,7 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
    const int  Float8_RT    = 0;
 #  endif
 
-   int    PatchSize_RS, NLevel_RS, Float8_RS, Float8_Par_RS;
+   int    PatchSize_RS, NLevel_RS, Float8_RS;
    int    FormatVersion, NPatchTotal[NLEVEL], NPatchAllLv, DumpID;
    long   Step;
    double Time[NLEVEL];
@@ -145,6 +145,7 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
    LoadField( "NMagStored",           &NMag,                H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
    LoadField( "Particle",             &WithPar,             H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
    if ( WithPar ) {
+   int Float8_Par_RS;
 #  ifdef FLOAT8_PAR
    const int  Float8_Par_RT    = 1;
 #  else
@@ -153,14 +154,10 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
    int Float8_Par_check_flag;
    LoadField( "Par_NAttStored",       &NParAtt,             H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
    LoadField( "Par_NPar",             &NPar,                H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
-   Float8_Par_check_flag = LoadField( "Float8_Par",           &Float8_Par_RS,       H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   NonFatal,  &Float8_Par_RT,    1, NonFatal );
-      if ( Float8_Par_check_flag != 0 )
-      {
-	 if      ( sizeof(real) < sizeof(real_par) )
-            Aux_Error( ERROR_INFO, "Must use same precision for fluid data and particle attribute when Float8_Par is not stored in snapshot!! But fluid data is in %s and particle attribute is in %s\n", "SINGLE", "DOUBLE");
-	 else if ( sizeof(real) > sizeof(real_par) )
-            Aux_Error( ERROR_INFO, "Must use same precision for fluid data and particle attribute when Float8_Par is not stored in snapshot!! But fluid data is in %s and particle attribute is in %s\n", "DOUBLE", "SINGLE");
-      }  
+   Float8_Par_check_flag =
+   LoadField( "Float8_Par",           &Float8_Par_RS,       H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   NonFatal,  &Float8_Par_RT,    1, Fatal );
+   if ( Float8_Par_check_flag != 0 && sizeof(real) != sizeof(real_par) )
+      Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 in Makefile when Float8_Par is not stored in the snapshot !!\n");
    }
    else {
    NParAtt = 0;

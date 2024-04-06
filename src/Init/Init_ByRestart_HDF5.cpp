@@ -16,7 +16,7 @@ static void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, co
                           const int *SonList, const int (*CrList)[3],
                           const hid_t *H5_SetID_Field, const hid_t H5_SpaceID_Field, const hid_t H5_MemID_Field,
                           const hid_t *H5_SetID_FCMag, const hid_t *H5_SpaceID_FCMag, const hid_t *H5_MemID_FCMag,
-                          const int *NParList, real **ParBuf, long *NewParList, const hid_t *H5_SetID_ParData,
+                          const int *NParList, real_par **ParBuf, long *NewParList, const hid_t *H5_SetID_ParData,
                           const hid_t H5_SpaceID_ParData, const long *GParID_Offset, const long NParThisRank );
 static void Check_Makefile ( const char *FileName, const int FormatVersion );
 static void Check_SymConst ( const char *FileName, const int FormatVersion );
@@ -607,7 +607,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 // 2-5-4. get the maximum number of particles in one patch and allocate an I/O buffer accordingly
    long MaxNParInOnePatch = 0;
    long *NewParList       = NULL;
-   real **ParBuf          = NULL;
+   real_par **ParBuf      = NULL;
 
    for (int t=0; t<NPatchAllLv; t++)   MaxNParInOnePatch = MAX( MaxNParInOnePatch, NParList_AllLv[t] );
 
@@ -652,13 +652,13 @@ void Init_ByRestart_HDF5( const char *FileName )
    hid_t   H5_SetID_ParData[PAR_NATT_STORED], H5_SpaceID_ParData, H5_GroupID_Particle;
 #  else
 // define useless variables when PARTICLE is off
-   int   *NParList_AllLv     = NULL;
-   real **ParBuf             = NULL;
-   long  *NewParList         = NULL;
-   long  *GParID_Offset      = NULL;
-   hid_t *H5_SetID_ParData   = NULL;
-   hid_t  H5_SpaceID_ParData = NULL_INT;
-   long   NParThisRank       = NULL_INT;
+   int       *NParList_AllLv     = NULL;
+   real_par **ParBuf             = NULL;
+   long      *NewParList         = NULL;
+   long      *GParID_Offset      = NULL;
+   hid_t     *H5_SetID_ParData   = NULL;
+   hid_t      H5_SpaceID_ParData = NULL_INT;
+   long       NParThisRank       = NULL_INT;
 #  endif // #ifdef PARTICLE ... else ...
 
 
@@ -1252,7 +1252,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
                    const int *SonList, const int (*CrList)[3],
                    const hid_t *H5_SetID_Field, const hid_t H5_SpaceID_Field, const hid_t H5_MemID_Field,
                    const hid_t *H5_SetID_FCMag, const hid_t *H5_SpaceID_FCMag, const hid_t *H5_MemID_FCMag,
-                   const int *NParList, real **ParBuf, long *NewParList, const hid_t *H5_SetID_ParData,
+                   const int *NParList, real_par **ParBuf, long *NewParList, const hid_t *H5_SetID_ParData,
                    const hid_t H5_SpaceID_ParData, const long *GParID_Offset, const long NParThisRank )
 {
 
@@ -1327,9 +1327,9 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
 #  ifdef PARTICLE
    const int NParThisPatch = NParList[GID];
 
-   hsize_t H5_Offset_ParData[1], H5_Count_ParData[1], H5_MemDims_ParData[1];
-   hid_t   H5_MemID_ParData;
-   real    NewParAtt[PAR_NATT_TOTAL];
+   hsize_t     H5_Offset_ParData[1], H5_Count_ParData[1], H5_MemDims_ParData[1];
+   hid_t       H5_MemID_ParData;
+   real_par    NewParAtt[PAR_NATT_TOTAL];
 
    if ( NParThisPatch > 0 )
    {
@@ -1355,7 +1355,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       for (int v=0; v<PAR_NATT_STORED; v++)
       {
 //       using ParBuf[v] here is safe since it's NOT called when NParThisPatch == 0
-         H5_Status = H5Dread( H5_SetID_ParData[v], H5T_GAMER_REAL, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
+         H5_Status = H5Dread( H5_SetID_ParData[v], H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
                               ParBuf[v] );
          if ( H5_Status < 0 )
             Aux_Error( ERROR_INFO, "failed to load a particle attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
@@ -1378,9 +1378,9 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       } // for (int p=0; p<NParThisPatch )
 
 //    link particles to this patch
-      const real *PType = amr->Par->Type;
+      const real_par *PType = amr->Par->Type;
 #     ifdef DEBUG_PARTICLE
-      const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+      const real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
       char Comment[MAX_STRING];
       sprintf( Comment, "%s, lv %d, PID %d, GID %d, NPar %d", __FUNCTION__, lv, PID, GID, NParThisPatch );
       amr->patch[0][lv][PID]->AddParticle( NParThisPatch, NewParList, &amr->Par->NPar_Lv[lv],
@@ -1486,6 +1486,8 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
 #  ifdef SUPPORT_LIBYT
    LoadField( "LibYTUsePatchGroup",     &RS.LibYTUsePatchGroup,     SID, TID, NonFatal, &RT.LibYTUsePatchGroup,     1, NonFatal );
    LoadField( "LibYTInteractive",       &RS.LibYTInteractive,       SID, TID, NonFatal, &RT.LibYTInteractive,       1, NonFatal );
+   LoadField( "LibYTReload",            &RS.LibYTReload,            SID, TID, NonFatal, &RT.LibYTReload,            1, NonFatal );
+   LoadField( "LibYTJupyter",           &RS.LibYTJupyter,           SID, TID, NonFatal, &RT.LibYTJupyter,           1, NonFatal );
 #  endif
    LoadField( "SupportGrackle",         &RS.SupportGrackle,         SID, TID, NonFatal, &RT.SupportGrackle,         1, NonFatal );
    LoadField( "RandomNumber",           &RS.RandomNumber,           SID, TID, NonFatal, &RT.RandomNumber,           1, NonFatal );
@@ -1533,6 +1535,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "Par_NAttUser",           &RS.Par_NAttUser,           SID, TID, NonFatal, &RT.Par_NAttUser,           1,    Fatal );
    else
    LoadField( "Par_NAttUser",           &RS.Par_NAttUser,           SID, TID, NonFatal, &RT.Par_NAttUser,           1, NonFatal );
+   LoadField( "Float8_Par",             &RS.Float8_Par,             SID, TID, NonFatal, &RT.Float8_Par,             1, NonFatal );
 #  endif
 
 #  ifdef COSMIC_RAY
@@ -1822,6 +1825,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Par_ICFormat",            &RS.Par_ICFormat,            SID, TID, NonFatal, &RT.Par_ICFormat,             1, NonFatal );
    LoadField( "Par_ICMass",              &RS.Par_ICMass,              SID, TID, NonFatal, &RT.Par_ICMass,               1, NonFatal );
    LoadField( "Par_ICType",              &RS.Par_ICType,              SID, TID, NonFatal, &RT.Par_ICType,               1, NonFatal );
+   LoadField( "Par_ICFloat8",            &RS.Par_ICFloat8,            SID, TID, NonFatal, &RT.Par_ICFloat8,             1, NonFatal );
    LoadField( "Par_Interp",              &RS.Par_Interp,              SID, TID, NonFatal, &RT.Par_Interp,               1, NonFatal );
    LoadField( "Par_InterpTracer",        &RS.Par_InterpTracer,        SID, TID, NonFatal, &RT.Par_InterpTracer,         1, NonFatal );
    LoadField( "Par_Integ",               &RS.Par_Integ,               SID, TID, NonFatal, &RT.Par_Integ,                1, NonFatal );
@@ -2095,6 +2099,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__UM_IC_NLevel",       &RS.Opt__UM_IC_NLevel,       SID, TID, NonFatal, &RT.Opt__UM_IC_NLevel,        1, NonFatal );
    LoadField( "Opt__UM_IC_NVar",         &RS.Opt__UM_IC_NVar,         SID, TID, NonFatal, &RT.Opt__UM_IC_NVar,          1, NonFatal );
    LoadField( "Opt__UM_IC_Format",       &RS.Opt__UM_IC_Format,       SID, TID, NonFatal, &RT.Opt__UM_IC_Format,        1, NonFatal );
+   LoadField( "Opt__UM_IC_Float8",       &RS.Opt__UM_IC_Float8,       SID, TID, NonFatal, &RT.Opt__UM_IC_Float8,        1, NonFatal );
    LoadField( "Opt__UM_IC_Downgrade",    &RS.Opt__UM_IC_Downgrade,    SID, TID, NonFatal, &RT.Opt__UM_IC_Downgrade,     1, NonFatal );
    LoadField( "Opt__UM_IC_Refine",       &RS.Opt__UM_IC_Refine,       SID, TID, NonFatal, &RT.Opt__UM_IC_Refine,        1, NonFatal );
    LoadField( "Opt__UM_IC_LoadNRank",    &RS.Opt__UM_IC_LoadNRank,    SID, TID, NonFatal, &RT.Opt__UM_IC_LoadNRank,     1, NonFatal );
@@ -2189,6 +2194,11 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Output_PartZ",                &RS.Output_PartZ,                SID, TID, NonFatal, &RT.Output_PartZ,                1, NonFatal );
    }
    LoadField( "InitDumpID",                  &RS.InitDumpID,                  SID, TID, NonFatal, &RT.InitDumpID,                  1, NonFatal );
+
+// libyt jupyter
+#  if ( defined(SUPPORT_LIBYT) && defined(LIBYT_JUPYTER) )
+   LoadField( "Yt_JupyterUseConnectionFile", &RS.Yt_JupyterUseConnectionFile, SID, TID, NonFatal, &RT.Yt_JupyterUseConnectionFile, 1, NonFatal );
+#  endif
 
 // miscellaneous
    LoadField( "Opt__Verbose",            &RS.Opt__Verbose,            SID, TID, NonFatal, &RT.Opt__Verbose,             1, NonFatal );
