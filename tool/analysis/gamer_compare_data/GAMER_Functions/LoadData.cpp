@@ -555,7 +555,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, const long 
 #  endif
 
 #  if ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) )
-   if ( particle )   Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for C-binary snapshots!!\n" );
+   if ( particle )   Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for C-binary snapshots !!\n" );
 #  endif
 
    CompareVar( "MODEL",      model,      MODEL,      Fatal );

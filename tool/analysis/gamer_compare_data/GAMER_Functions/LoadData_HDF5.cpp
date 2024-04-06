@@ -155,13 +155,14 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
    LoadField( "Par_NAttStored",       &NParAtt,             H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
    LoadField( "Par_NPar",             &NPar,                H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
    Float8_Par_check_flag =
-   LoadField( "Float8_Par",           &Float8_Par_RS,       H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   NonFatal,  &Float8_Par_RT,    1, Fatal );
-   if ( Float8_Par_check_flag != 0 && sizeof(real) != sizeof(real_par) )
+   LoadField( "Float8_Par",           &Float8_Par_RS,       H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,NonFatal,  &Float8_Par_RT,    1,    Fatal );
+   if ( Float8_Par_check_flag != 0  &&  sizeof(real) != sizeof(real_par) )
       Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 in Makefile when Float8_Par is not stored in the snapshot !!\n");
    }
    else {
    NParAtt = 0;
-   NPar    = 0; }
+   NPar    = 0;
+   }
 
 // field and particle attribute labels
    FieldLabel_In = new char* [NField];
