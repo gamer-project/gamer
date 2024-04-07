@@ -29,6 +29,8 @@
 //                   --> All ranks will share the same results after invoking this function
 //                8. The parameters Min/MaxLv and PatchType are mainly for performance optimization
 //                   --> Simply set MinLv=0, MaxLv=TOP_LEVEL, PatchType=PATCH_LEAF should be OK for most cases
+//                9. In case different AMR levels are not synchronized, this function currently only checks
+//                   the most recent data on each level (i.e., data associated with FluSg[lv]/PotSg[lv]) without temporal interpolation
 //
 // Parameter   :  Extrema   : Extrema_t object storing the input and output information of the extrema
 //                Mode      : EXTREMA_MIN/MAX --> find the minimum/maximum value
@@ -78,7 +80,7 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
       Aux_Error( ERROR_INFO, "Field == _NONE !!\n" );
 
    if ( Extrema->Field & (Extrema->Field-1) )
-      Aux_Error( ERROR_INFO, "not support multiple fields (%ld) at once!!\n", Extrema->Field );
+      Aux_Error( ERROR_INFO, "not support computing multiple fields at once (Extrema->Field = %ld) !!\n", Extrema->Field );
 
    if ( Extrema->Radius <= 0.0 )
       Aux_Error( ERROR_INFO, "Radius (%14.7e) <= 0.0 !!\n", Extrema->Radius );
@@ -198,7 +200,7 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
 #     ifdef PARTICLE
       if ( UsePrepare  &&  ( Extrema->Field & _PAR_DENS  ||  Extrema->Field & _TOTAL_DENS ) )
       {
-         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos_No, NULL_REAL,
+         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos, Time[lv],
                                        SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
 
          Prepare_PatchData_InitParticleDensityArray( lv, Time[lv] );
@@ -207,14 +209,14 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
 
       for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
       {
-         int NPG = ( NPG_Max < NTotal-Disp ) ? NPG_Max : NTotal-Disp;
+         const int NPG = ( NPG_Max < NTotal-Disp ) ? NPG_Max : NTotal-Disp;
 
          real (*FieldPtr)[PS1][PS1][PS1] = NULL;
          if ( UsePrepare )
          {
             FieldPtr  = new real [8*NPG][PS1][PS1][PS1]; // 8: number of local patches
             Prepare_PatchData( lv, Time[lv], FieldPtr[0][0][0], NULL, 0, NPG, PID0_List+Disp, Field, _NONE,
-                               OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
+                               INT_NONE, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                                MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
          }
 
@@ -255,9 +257,9 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
 
 
 //             loop over all cells
-               const double x0  = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
-               const double y0  = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
-               const double z0  = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
+               const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
+               const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
+               const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
 
                for (int k=0; k<PS1; k++)  {  const double z = z0 + k*dh;
                                              double dz = z - Center[2];

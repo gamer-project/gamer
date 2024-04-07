@@ -9,7 +9,7 @@
 //
 // Note        :  1. Invoked by main()
 //                2. Enabled by the runtime option "OPT__RECORD_CENTER"
-//                3. This function will be called both during the program initialization and after each full update
+//                3. This function will be called both during the program initialization and after each global step
 //                4. It will record the position of maximum density, minimum potential, and center of mass
 //                5. Output filename is fixed to "Record__Center"
 //
@@ -129,7 +129,7 @@ void Aux_Record_Center()
          }
 
          FirstTime = false;
-      }
+      } // if ( FirstTime )
 
       FILE *File = fopen( FileName, "a" );
       fprintf( File, "%20.14e  %10ld  %14.7e  %14.7e  %14.7e  %14.7e",
@@ -151,6 +151,6 @@ void Aux_Record_Center()
 
       fprintf( File, "\n" );
       fclose( File );
-   }
+   } // if ( MPI_Rank == 0 )
 
 } // FUNCTION : Aux_Record_Center

@@ -1519,13 +1519,13 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__RECORD_CENTER              %d\n",      OPT__RECORD_CENTER       );
       if ( OPT__RECORD_CENTER )
       {
-      fprintf( Note, "COM_CEN_X                       %13.7e\n",  COM_CEN_X                );
-      fprintf( Note, "COM_CEN_Y                       %13.7e\n",  COM_CEN_Y                );
-      fprintf( Note, "COM_CEN_Z                       %13.7e\n",  COM_CEN_Z                );
-      fprintf( Note, "COM_MAX_R                       %13.7e\n",  COM_MAX_R                );
-      fprintf( Note, "COM_MIN_RHO                     %13.7e\n",  COM_MIN_RHO              );
-      fprintf( Note, "COM_TOLERR_R                    %13.7e\n",  COM_TOLERR_R             );
-      fprintf( Note, "COM_NITER_MAX                   %d\n",      COM_NITER_MAX            );
+      fprintf( Note, "   COM_CEN_X                    %13.7e\n",  COM_CEN_X                );
+      fprintf( Note, "   COM_CEN_Y                    %13.7e\n",  COM_CEN_Y                );
+      fprintf( Note, "   COM_CEN_Z                    %13.7e\n",  COM_CEN_Z                );
+      fprintf( Note, "   COM_MAX_R                    %13.7e\n",  COM_MAX_R                );
+      fprintf( Note, "   COM_MIN_RHO                  %13.7e\n",  COM_MIN_RHO              );
+      fprintf( Note, "   COM_TOLERR_R                 %13.7e\n",  COM_TOLERR_R             );
+      fprintf( Note, "   COM_NITER_MAX                %d\n",      COM_NITER_MAX            );
       }
       fprintf( Note, "OPT__MANUAL_CONTROL             %d\n",      OPT__MANUAL_CONTROL      );
       fprintf( Note, "OPT__RECORD_USER                %d\n",      OPT__RECORD_USER         );

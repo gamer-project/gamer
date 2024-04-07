@@ -3086,7 +3086,7 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv, const double Prep
 //
 // Note        :  1. This function is currently called by Gra_AdvanceDt(), Output_DumpData_Total(),
 //                   Output_DumpData_Total_HDF5(), Output_BasePowerSpectrum(), Aux_FindExtrema(),
-//                   Aux_FindWeightedAverageCenter(),  and Aux_ComputeProfile()
+//                   Aux_FindWeightedAverageCenter(), and Aux_ComputeProfile()
 //                2. Apply to buffer patches as well
 //                3. Do not free memory if OPT__REUSE_MEMORY is on
 //                   --> rho_ext[] will only be free'd together with other data arrays (e.g., fluid, pot)

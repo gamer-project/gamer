@@ -10,31 +10,28 @@
 // Note        :  The weighted average center is defined as
 //                  ( \int w(x,y,z)*r(x,y,z) dxdydz ) / ( \int w(x,y,z) dxdydz ),
 //                where w is the weighting density field and r is a vector of the position coordinate.
-//                If weighting density field is the mass density, the weighted average center is the center of mass.
+//                If the weighting density field is the mass density, the weighted average center is the center of mass.
 //
 // Parameter   :  WeightedAverageCenter  : Coordinate of the weighted average center to be returned
-//                Center_ref[]           : Coordinate of center of reference
+//                Center_ref             : Center coordinates for reference (i.e., an initial guess of the center coordinates)
 //                MaxR                   : Maximum radius to specify the region to compute the weighted average center
 //                MinWD                  : Minimum weighting density to specify the region to compute the weighted average center
-//                WeightingDensityField  : Weighting density field used for computation as the w(x,y,z) in the above Note
+//                WeightingDensityField  : Weighting density field w(x,y,z) in the above Note
 //                TolErrR                : Maximum error of distance to tolerate during the iteration
-//                NIterMax               : Maximum number of iterations to find the center of mass
-//                FinaldR                : Record of the dR in the last time of iteration
+//                NIterMax               : Maximum tolerated error of distance between the center coordinates during iterations
+//                FinaldR                : Record of the distance of the center coordinates update in the last iteration
 //                FinalNIter             : Record of the total number of iterations
 //
 // Example     :  double CoM_Coord[3];   // To find the location of center of mass
 //                double CoM_FinaldR;
 //                int    CoM_FinalNIter;
 //
-//                double CoM_ref[3];
-//                CoM_ref[0]           = amr->BoxCenter[0];
-//                CoM_ref[1]           = amr->BoxCenter[1];
-//                CoM_ref[2]           = amr->BoxCenter[2];
-//                double CoM_MaxR      = __FLT_MAX__; // entire domain
-//                double CoM_MinRho    = 0.0;
-//                long   CoM_Field     = _TOTAL_DENS;
-//                double CoM_TolErrR   = 0.1*CoM_MaxR;
-//                int    CoM_NIterMax  = 10;
+//                const double CoM_ref[3]    = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
+//                const double CoM_MaxR      = __FLT_MAX__; // entire domain
+//                const double CoM_MinRho    = 0.0;
+//                const long   CoM_Field     = _TOTAL_DENS;
+//                const double CoM_TolErrR   = amr->dh[MAX_LEVEL];
+//                const int    CoM_NIterMax  = 10;
 //
 //                Aux_FindWeightedAverageCenter( CoM_Coord, CoM_ref, CoM_MaxR, CoM_MinRho,
 //                                               CoM_Field, CoM_TolErrR, CoM_NIterMax, &CoM_FinaldR, &CoM_FinalNIter );
@@ -49,7 +46,7 @@
 //                                    "CoM_Field", "CoM_MaxR", "CoM_MinRho", "CoM_TolErrR", "CoM_NIterMax",
 //                                    "CoM_ref[x]", "CoM_ref[y]", "CoM_ref[z]",
 //                                    "CoM_FinalNIter", "CoM_FinaldR", "CoM_Coord[x]", "CoM_Coord[y]", "CoM_Coord[z]" );
-//                   fprintf( File, "%14.7e%14ld%3s%14.7e  %14ld %14.7e %14.7e %14.7e %14d %14.7e %14.7e %14.7e %15d %14.7e %14.7e %14.7e %14.7e\n",
+//                   fprintf( File, "%14.7e%14ld%3s%14.7e %15ld %14.7e %14.7e %14.7e %14d %14.7e %14.7e %14.7e %15d %14.7e %14.7e %14.7e %14.7e\n",
 //                                    Time[0], Step, "", dTime_Base,
 //                                    CoM_Field, CoM_MaxR, CoM_MinRho, CoM_TolErrR, CoM_NIterMax,
 //                                    CoM_ref[0], CoM_ref[1], CoM_ref[2],
@@ -69,7 +66,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
       Aux_Error( ERROR_INFO, "WeightingDensityField == _NONE !!\n" );
 
    if ( WeightingDensityField & (WeightingDensityField-1) )
-      Aux_Error( ERROR_INFO, "not support multiple fields (%ld) at once!!\n", WeightingDensityField );
+      Aux_Error( ERROR_INFO, "not support computing multiple fields at once (WeightingDensityField = %ld) !!\n", WeightingDensityField );
 
    if ( MaxR <= 0.0 )
       Aux_Error( ERROR_INFO, "MaxR (%14.7e) <= 0.0 !!\n", MaxR );
@@ -82,7 +79,8 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
 
    for (int d=0; d<3; d++) {
       if ( Center_ref[d] < amr->BoxEdgeL[d]  ||  Center_ref[d] > amr->BoxEdgeR[d] )
-         Aux_Error( ERROR_INFO, "Center_ref[%d] (%14.7e) lies outside the simulation box !!\n", d, Center_ref[d] );
+         Aux_Error( ERROR_INFO, "Center_ref[%d] (%14.7e) lies outside the simulation box (BoxEdgeL = %14.7e, BoxEdgeR = %14.7e) !!\n",
+                    d, Center_ref[d], amr->BoxEdgeL[d], amr->BoxEdgeR[d] );
    }
 #  endif // #ifdef GAMER_DEBUG
 
@@ -133,8 +131,8 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
 // initialize the referenced center in the first iteration as the input Center_ref
    const double MaxR2             = SQR( MaxR );
    const double TolErrR2          = SQR( TolErrR );
-   double dR2, Center_ref_OldIter[3];
-   for (int d=0; d<3; d++) Center_ref_OldIter[d] = Center_ref[d];
+   double dR2, Center_ref_Iter[3];
+   for (int d=0; d<3; d++) Center_ref_Iter[d] = Center_ref[d];
    int NIter = 0;
 
 // if the target region is the entire domain, then there is no need to iterate
@@ -149,14 +147,14 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
       for (int d=0; d<3; d++)
       {
          if ( Periodic[d] )
-         Center_Img[d] = ( Center_ref_OldIter[d] > amr->BoxCenter[d] ) ? Center_ref_OldIter[d]-amr->BoxSize[d] : Center_ref_OldIter[d]+amr->BoxSize[d];
+         Center_Img[d] = ( Center_ref_Iter[d] > amr->BoxCenter[d] ) ? Center_ref_Iter[d]-amr->BoxSize[d] : Center_ref_Iter[d]+amr->BoxSize[d];
          else
-         Center_Img[d] = Center_ref_OldIter[d];
+         Center_Img[d] = Center_ref_Iter[d];
 
-         RegMax    [d] = Center_ref_OldIter[d] + MaxR;
-         RegMin    [d] = Center_ref_OldIter[d] - MaxR;
-         RegMax_Img[d] = Center_Img        [d] + MaxR;
-         RegMin_Img[d] = Center_Img        [d] - MaxR;
+         RegMax    [d] = Center_ref_Iter[d] + MaxR;
+         RegMin    [d] = Center_ref_Iter[d] - MaxR;
+         RegMax_Img[d] = Center_Img     [d] + MaxR;
+         RegMin_Img[d] = Center_Img     [d] - MaxR;
       }
 
       double W_ThisRank, WR_ThisRank[3], W_AllRank, WR_AllRank[3];
@@ -179,7 +177,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
 #        ifdef PARTICLE
          if ( UsePrepare  &&  ( WeightingDensityField & _PAR_DENS  ||  WeightingDensityField & _TOTAL_DENS ) )
          {
-            Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos_No, NULL_REAL,
+            Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos, Time[lv],
                                           SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
 
             Prepare_PatchData_InitParticleDensityArray( lv, Time[lv] );
@@ -192,7 +190,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
 
          for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
          {
-            int NPG = ( NPG_Max < NTotal-Disp ) ? NPG_Max : NTotal-Disp;
+            const int NPG = ( NPG_Max < NTotal-Disp ) ? NPG_Max : NTotal-Disp;
 
 //          get the weighting density on grids
             real (*WeightingDensity)[PS1][PS1][PS1] = NULL;
@@ -200,7 +198,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
             {
                WeightingDensity = new real [8*NPG][PS1][PS1][PS1];
                Prepare_PatchData( lv, Time[lv], WeightingDensity[0][0][0], NULL, 0, NPG, PID0_List+Disp, WeightingDensityField, _NONE,
-                                  OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
+                                  INT_NONE, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                                   MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
             }
 
@@ -221,34 +219,33 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
                       (  ( EdgeL[2]>RegMax[2] || EdgeR[2]<RegMin[2] )  &&  ( EdgeL[2]>RegMax_Img[2] || EdgeR[2]<RegMin_Img[2] )  )    )
                   continue;
 
-
 //             loop over all cells
                const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
                const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
                const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
 
                for (int k=0; k<PS1; k++)  {  double z = z0 + k*dh;
-                                             double dz = z - Center_ref_OldIter[2];
+                                             double dz = z - Center_ref_Iter[2];
                                              if ( Periodic[2] ) {
                                                 if      ( dz > +HalfBox[2] )  {  z -= amr->BoxSize[2];  dz -= amr->BoxSize[2];  }
                                                 else if ( dz < -HalfBox[2] )  {  z += amr->BoxSize[2];  dz += amr->BoxSize[2];  }
                                              }
                for (int j=0; j<PS1; j++)  {  double y = y0 + j*dh;
-                                             double dy = y - Center_ref_OldIter[1];
+                                             double dy = y - Center_ref_Iter[1];
                                              if ( Periodic[1] ) {
                                                 if      ( dy > +HalfBox[1] )  {  y -= amr->BoxSize[1];  dy -= amr->BoxSize[1];  }
                                                 else if ( dy < -HalfBox[1] )  {  y += amr->BoxSize[1];  dy += amr->BoxSize[1];  }
                                              }
                for (int i=0; i<PS1; i++)  {  double x = x0 + i*dh;
-                                             double dx = x - Center_ref_OldIter[0];
+                                             double dx = x - Center_ref_Iter[0];
                                              if ( Periodic[0] ) {
                                                 if      ( dx > +HalfBox[0] )  {  x -= amr->BoxSize[0];  dx -= amr->BoxSize[0];  }
                                                 else if ( dx < -HalfBox[0] )  {  x += amr->BoxSize[0];  dx += amr->BoxSize[0];  }
                                              }
 
                   const double R2 = SQR(dx) + SQR(dy) + SQR(dz);
-//                only include cells that are
-//                within a sphere with radius MaxR and with the weighting density larger than MinWD
+
+//                only include cells that are within a sphere with radius MaxR and with the weighting density larger than MinWD
                   if ( R2 < MaxR2 )
                   {
                      double WD;
@@ -330,25 +327,25 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
             if      ( WeightedAverageCenter[d] >= amr->BoxSize[d] ) WeightedAverageCenter[d] -= amr->BoxSize[d];
             else if ( WeightedAverageCenter[d] < 0.0              ) WeightedAverageCenter[d] += amr->BoxSize[d];
          }
-
       }
 
       for (int d=0; d<3; d++)
          if ( WeightedAverageCenter[d] >= amr->BoxSize[d]  ||  WeightedAverageCenter[d] < 0.0 )
-            Aux_Error( ERROR_INFO, "WeightedAverageCenter[%d] = %14.7e lies outside the domain !!\n", d, WeightedAverageCenter[d] );
+            Aux_Error( ERROR_INFO, "WeightedAverageCenter[%d] = %14.7e lies outside the domain (BoxSize = %14.7e) in %s !!\n",
+                       d, WeightedAverageCenter[d], amr->BoxSize[d], __FUNCTION__ );
 
 
-      dR2 = SQR( Center_ref_OldIter[0] - WeightedAverageCenter[0] )
-          + SQR( Center_ref_OldIter[1] - WeightedAverageCenter[1] )
-          + SQR( Center_ref_OldIter[2] - WeightedAverageCenter[2] );
+      dR2 = SQR( Center_ref_Iter[0] - WeightedAverageCenter[0] )
+          + SQR( Center_ref_Iter[1] - WeightedAverageCenter[1] )
+          + SQR( Center_ref_Iter[2] - WeightedAverageCenter[2] );
       NIter++;
 
-//    check the convergence and number of iteration to decide whether to end the iteration
+//    check the convergence and number of iterations to decide whether to end the iteration
       if ( dR2 <= TolErrR2  ||  NIter >= NIterMax  ||  isWholeBox )
          break;
       else
 //       use the weighted average center as the referenced center in the next iteration
-         memcpy( Center_ref_OldIter, WeightedAverageCenter, sizeof(double)*3 );
+         memcpy( Center_ref_Iter, WeightedAverageCenter, sizeof(double)*3 );
 
    } // while ( true )
 
