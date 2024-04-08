@@ -235,9 +235,9 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
             {
                for (int k = 0;  k < InSize[XYZ];  k++)
                {
-                  const real SqrtDens = SQRT(Real[k]);
-                  Real[k] = SqrtDens * COS( Imag[k] / SPEC_INT_WAVELENGTH_MAGNIFIER );
-                  Imag[k] = SqrtDens * SIN( Imag[k] / SPEC_INT_WAVELENGTH_MAGNIFIER );
+                  const real Dens = Real[k];
+                  Real[k] = SQR(Real[k]);
+                  Imag[k] = Dens * SIN( Imag[k] / SPEC_INT_WAVELENGTH_MAGNIFIER );
                }
             }
          }
@@ -259,8 +259,14 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 
             for (int k = 0;  k < OutSize[XYZ];  k++)
             {
-               Re[k] = SQR(Im[k]) + SQR(Re[k]);
-               Im[k] = SATAN2(Im[k], Re[k]) * SPEC_INT_WAVELENGTH_MAGNIFIER;
+//             check for negative density
+               const double Dens = MAX(0, sqrt(Re[k]));
+
+               Re[k] = Dens;
+//             clip to [-1, 1]
+               const double w = MAX(-1, MIN(1, Im[k]/(Dens + TINY_NUMBER)));
+
+               Im[k] = asin(w) * SPEC_INT_WAVELENGTH_MAGNIFIER;
             }
 
 //          unwrap phase to be consistent with UnwrapPhase in other interpolation modes
