@@ -86,8 +86,8 @@ void Mis_SortByMultiField( const int NField, const long FieldSize, const T **Arr
 
 
 // explicit template instantiation
-template void Mis_SortByMultiField <int>    ( const int NField, const long FieldSize, const int    **Array );
-template void Mis_SortByMultiField <long>   ( const int NField, const long FieldSize, const long   **Array );
-template void Mis_SortByMultiField <ulong>  ( const int NField, const long FieldSize, const ulong  **Array );
-template void Mis_SortByMultiField <float>  ( const int NField, const long FieldSize, const float  **Array );
-template void Mis_SortByMultiField <double> ( const int NField, const long FieldSize, const double **Array );
+template void Mis_SortByMultiField <int   > ( const int NField, const long FieldSize, const int    **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
+template void Mis_SortByMultiField <long  > ( const int NField, const long FieldSize, const long   **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
+template void Mis_SortByMultiField <ulong > ( const int NField, const long FieldSize, const ulong  **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
+template void Mis_SortByMultiField <float > ( const int NField, const long FieldSize, const float  **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
+template void Mis_SortByMultiField <double> ( const int NField, const long FieldSize, const double **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
