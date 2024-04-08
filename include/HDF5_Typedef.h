@@ -787,7 +787,7 @@ struct InputPara_t
    double COM_MaxR;
    double COM_MinRho;
    double COM_TolErrR;
-   int    COM_NIterMax;
+   int    COM_MaxIter;
    int    Opt__RecordUser;
    int    Opt__OptimizeAggressive;
    int    Opt__SortPatchByLBIdx;

@@ -2217,7 +2217,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "COM_MaxR",                &RS.COM_MaxR,                SID, TID, NonFatal, &RT.COM_MaxR,                 1, NonFatal );
    LoadField( "COM_MinRho",              &RS.COM_MinRho,              SID, TID, NonFatal, &RT.COM_MinRho,               1, NonFatal );
    LoadField( "COM_TolErrR",             &RS.COM_TolErrR,             SID, TID, NonFatal, &RT.COM_TolErrR,              1, NonFatal );
-   LoadField( "COM_NIterMax",            &RS.COM_NIterMax,            SID, TID, NonFatal, &RT.COM_NIterMax,             1, NonFatal );
+   LoadField( "COM_MaxIter",             &RS.COM_MaxIter,             SID, TID, NonFatal, &RT.COM_MaxIter,              1, NonFatal );
    LoadField( "Opt__RecordUser",         &RS.Opt__RecordUser,         SID, TID, NonFatal, &RT.Opt__RecordUser,          1, NonFatal );
    LoadField( "Opt__OptimizeAggressive", &RS.Opt__OptimizeAggressive, SID, TID, NonFatal, &RT.Opt__OptimizeAggressive,  1, NonFatal );
    LoadField( "Opt__SortPatchByLBIdx",   &RS.Opt__SortPatchByLBIdx,   SID, TID, NonFatal, &RT.Opt__SortPatchByLBIdx,    1, NonFatal );

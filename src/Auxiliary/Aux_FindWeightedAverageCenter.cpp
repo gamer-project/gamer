@@ -18,7 +18,7 @@
 //                MinWD                  : Minimum weighting density to specify the region to compute the weighted average center
 //                WeightingDensityField  : Weighting density field w(x,y,z) in the above Note
 //                TolErrR                : Maximum error of distance to tolerate during the iteration
-//                NIterMax               : Maximum tolerated error of distance between the center coordinates during iterations
+//                MaxIter                : Maximum tolerated error of distance between the center coordinates during iterations
 //                FinaldR                : Record of the distance of the center coordinates update in the last iteration
 //                FinalNIter             : Record of the total number of iterations
 //
@@ -31,10 +31,10 @@
 //                const double CoM_MinRho    = 0.0;
 //                const long   CoM_Field     = _TOTAL_DENS;
 //                const double CoM_TolErrR   = amr->dh[MAX_LEVEL];
-//                const int    CoM_NIterMax  = 10;
+//                const int    CoM_MaxIter   = 10;
 //
 //                Aux_FindWeightedAverageCenter( CoM_Coord, CoM_ref, CoM_MaxR, CoM_MinRho,
-//                                               CoM_Field, CoM_TolErrR, CoM_NIterMax, &CoM_FinaldR, &CoM_FinalNIter );
+//                                               CoM_Field, CoM_TolErrR, CoM_MaxIter, &CoM_FinaldR, &CoM_FinalNIter );
 //
 //                if ( MPI_Rank == 0 )
 //                {
@@ -43,12 +43,12 @@
 //                   FILE *File = fopen( Filename, "w" );
 //                   fprintf( File, "#%13s%14s%3s%14s %15s %14s %14s %14s %14s %14s %14s %14s %15s %14s %14s %14s %14s\n",
 //                                    "Time", "Step", "", "dt",
-//                                    "CoM_Field", "CoM_MaxR", "CoM_MinRho", "CoM_TolErrR", "CoM_NIterMax",
+//                                    "CoM_Field", "CoM_MaxR", "CoM_MinRho", "CoM_TolErrR", "CoM_MaxIter",
 //                                    "CoM_ref[x]", "CoM_ref[y]", "CoM_ref[z]",
 //                                    "CoM_FinalNIter", "CoM_FinaldR", "CoM_Coord[x]", "CoM_Coord[y]", "CoM_Coord[z]" );
 //                   fprintf( File, "%14.7e%14ld%3s%14.7e %15ld %14.7e %14.7e %14.7e %14d %14.7e %14.7e %14.7e %15d %14.7e %14.7e %14.7e %14.7e\n",
 //                                    Time[0], Step, "", dTime_Base,
-//                                    CoM_Field, CoM_MaxR, CoM_MinRho, CoM_TolErrR, CoM_NIterMax,
+//                                    CoM_Field, CoM_MaxR, CoM_MinRho, CoM_TolErrR, CoM_MaxIter,
 //                                    CoM_ref[0], CoM_ref[1], CoM_ref[2],
 //                                    CoM_FinalNIter, CoM_FinaldR, CoM_Coord[0], CoM_Coord[1], CoM_Coord[2] );
 //                   fclose( File );
@@ -57,7 +57,7 @@
 // Return      :  WeightedAverageCenter[], FinaldR, FinalNIter
 //-------------------------------------------------------------------------------------------------------
 void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double Center_ref[], const double MaxR, const double MinWD,
-                                    const long WeightingDensityField, const double TolErrR, const int NIterMax, double *FinaldR, int *FinalNIter )
+                                    const long WeightingDensityField, const double TolErrR, const int MaxIter, double *FinaldR, int *FinalNIter )
 {
 
 // check
@@ -117,12 +117,13 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
    const bool   DE_Consistency_No = false;
 #  ifdef PARTICLE
    const bool   TimingSendPar_No  = false;
-   const bool   PredictParPos_No  = false;
    const bool   JustCountNPar_No  = false;
 #  ifdef LOAD_BALANCE
+   const bool   PredictPos        = amr->Par->PredictPos;
    const bool   SibBufPatch       = true;
    const bool   FaSibBufPatch     = true;
 #  else
+   const bool   PredictPos        = false;
    const bool   SibBufPatch       = NULL_BOOL;
    const bool   FaSibBufPatch     = NULL_BOOL;
 #  endif
@@ -175,9 +176,9 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
 
 //       initialize the particle density array (rho_ext) and collect particles to the target level
 #        ifdef PARTICLE
-         if ( UsePrepare  &&  ( WeightingDensityField & _PAR_DENS  ||  WeightingDensityField & _TOTAL_DENS ) )
+         if ( WeightingDensityField & _PAR_DENS  ||  WeightingDensityField & _TOTAL_DENS )
          {
-            Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos, Time[lv],
+            Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos, Time[lv],
                                           SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
 
             Prepare_PatchData_InitParticleDensityArray( lv, Time[lv] );
@@ -203,9 +204,9 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
             }
 
 #           pragma omp parallel for reduction ( +:W_ThisRank, WX_ThisRank, WY_ThisRank, WZ_ThisRank ) schedule( runtime )
-            for (int PID_IDX=0; PID_IDX<8*NPG; PID_IDX++)
+            for (int t=0; t<8*NPG; t++)
             {
-               const int PID = 8*Disp + PID_IDX;
+               const int PID = 8*Disp + t;
 
 //             skip non-leaf patches
                if ( amr->patch[0][lv][PID]->son != -1 )  continue;
@@ -252,7 +253,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
                      if ( TFluIntIdx != FluIdxUndef )
                         WD = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[TFluIntIdx][k][j][i];
                      else if ( UsePrepare )
-                        WD =  WeightingDensity[PID_IDX][k][j][i];
+                        WD =  WeightingDensity[t][k][j][i];
 #                    ifdef GRAVITY
                      else if ( WeightingDensityField & _POTE )
                         WD = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot[k][j][i];
@@ -271,7 +272,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
                      }
                   }
                }}} // i,j,k
-            } // for (int PID_IDX=0; PID_IDX<8*NPG; PID_IDX++)
+            } // for (int t=0; t<8*NPG; t++)
 
             if ( UsePrepare )
             {
@@ -282,7 +283,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
 
 //       free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
 #        ifdef PARTICLE
-         if ( UsePrepare  &&  ( WeightingDensityField & _PAR_DENS  ||  WeightingDensityField & _TOTAL_DENS ) )
+         if ( WeightingDensityField & _PAR_DENS  ||  WeightingDensityField & _TOTAL_DENS )
          {
             Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
 
@@ -341,7 +342,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
       NIter++;
 
 //    check the convergence and number of iterations to decide whether to end the iteration
-      if ( dR2 <= TolErrR2  ||  NIter >= NIterMax  ||  isWholeBox )
+      if ( dR2 <= TolErrR2  ||  NIter >= MaxIter  ||  isWholeBox )
          break;
       else
 //       use the weighted average center as the referenced center in the next iteration
@@ -353,7 +354,11 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
    if ( MPI_Rank == 0 )
    {
       if ( ! isWholeBox  &&  dR2 > TolErrR2 )
-         Aux_Message( stderr, "WARNING : target region is not the entire domain and dR (%13.7e) > TolErrR (%13.7e), the weighted average center may not have converged yet when the iteration stopped !!\n", sqrt(dR2), TolErrR );
+      {
+         Aux_Message( stderr, "WARNING : In %s, target region is not the entire domain\n", __FUNCTION__ );
+         Aux_Message( stderr, "          and dR (%13.7e) > TolErrR (%13.7e),\n", sqrt(dR2), TolErrR );
+         Aux_Message( stderr, "          the weighted average center may not have converged yet when the iteration stopped !!\n" );
+      }
    }
 
 // return the information about the iteration

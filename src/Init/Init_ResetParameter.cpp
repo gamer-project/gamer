@@ -698,13 +698,13 @@ void Init_ResetParameter()
       if ( COM_MAX_R < 0.0 )
       {
          COM_MAX_R = __FLT_MAX__;
-         PRINT_RESET_PARA( COM_MAX_R, FORMAT_REAL, "by default" );
+         PRINT_RESET_PARA( COM_MAX_R, FORMAT_REAL, "" );
       }
 
       if ( COM_TOLERR_R < 0.0 )
       {
-         COM_TOLERR_R = 0.1*COM_MAX_R;
-         PRINT_RESET_PARA( COM_TOLERR_R, FORMAT_REAL, "by default" );
+         COM_TOLERR_R = amr->dh[MAX_LEVEL];
+         PRINT_RESET_PARA( COM_TOLERR_R, FORMAT_REAL, "" );
       }
    }
 
@@ -912,7 +912,7 @@ void Init_ResetParameter()
 #     else
       PAR_IC_FLOAT8 = 0;
 #     endif
-                    
+
       PRINT_RESET_PARA( PAR_IC_FLOAT8, FORMAT_INT, "to be consistent with FLOAT8_PAR" );
    }
 #endif

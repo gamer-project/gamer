@@ -72,7 +72,7 @@ bool                 OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID, OPT__SORT_PA
 char                 OPT__OUTPUT_TEXT_FORMAT_FLT[MAX_STRING-1];
 int                  OPT__UM_IC_FLOAT8;
 double               COM_CEN_X, COM_CEN_Y, COM_CEN_Z, COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R;
-int                  COM_NITER_MAX;
+int                  COM_MAX_ITER;
 
 UM_IC_Format_t       OPT__UM_IC_FORMAT;
 TestProbID_t         TESTPROB_ID;

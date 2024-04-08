@@ -171,12 +171,13 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
    const bool   DE_Consistency_No = false;
 #  ifdef PARTICLE
    const bool   TimingSendPar_No  = false;
-   const bool   PredictParPos_No  = false;
    const bool   JustCountNPar_No  = false;
 #  ifdef LOAD_BALANCE
+   const bool   PredictPos        = amr->Par->PredictPos;
    const bool   SibBufPatch       = true;
    const bool   FaSibBufPatch     = true;
 #  else
+   const bool   PredictPos        = false;
    const bool   SibBufPatch       = NULL_BOOL;
    const bool   FaSibBufPatch     = NULL_BOOL;
 #  endif
@@ -198,9 +199,9 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
 
 //    initialize the particle density array (rho_ext) and collect particles to the target level
 #     ifdef PARTICLE
-      if ( UsePrepare  &&  ( Extrema->Field & _PAR_DENS  ||  Extrema->Field & _TOTAL_DENS ) )
+      if ( Extrema->Field & _PAR_DENS  ||  Extrema->Field & _TOTAL_DENS )
       {
-         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos, Time[lv],
+         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos, Time[lv],
                                        SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
 
          Prepare_PatchData_InitParticleDensityArray( lv, Time[lv] );
@@ -229,9 +230,9 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
 #           endif
 
 #           pragma omp for schedule( runtime )
-            for (int PID_IDX=0; PID_IDX<8*NPG; PID_IDX++)
+            for (int t=0; t<8*NPG; t++)
             {
-               const int PID = 8*Disp + PID_IDX;
+               const int PID = 8*Disp + t;
 
 //             skip untargeted patches
                if ( amr->patch[0][lv][PID]->son != -1 )
@@ -289,7 +290,7 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
                      if ( TFluIntIdx != FluIdxUndef )
                         Value = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[TFluIntIdx][k][j][i];
                      else if ( UsePrepare )
-                        Value = FieldPtr[PID_IDX][k][j][i];
+                        Value = FieldPtr[t][k][j][i];
 #                    ifdef GRAVITY
                      else if ( Extrema->Field & _POTE )
                         Value = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot[k][j][i];
@@ -313,7 +314,7 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
                      }
                   } // if ( r2 < MaxR2 )
                }}} // i,j,k
-            } // for (int PID_IDX=0; PID_IDX<8*NPG; PID_IDX++)
+            } // for (int t=0; t<8*NPG; t++)
          } // OpenMP parallel region
 
          if ( UsePrepare )
@@ -325,7 +326,7 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
 
 //    free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
 #     ifdef PARTICLE
-      if ( UsePrepare  &&  ( Extrema->Field & _PAR_DENS  ||  Extrema->Field & _TOTAL_DENS ) )
+      if ( Extrema->Field & _PAR_DENS  ||  Extrema->Field & _TOTAL_DENS )
       {
          Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
 

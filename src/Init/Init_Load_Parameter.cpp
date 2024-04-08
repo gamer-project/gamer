@@ -532,7 +532,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "COM_MAX_R",                  &COM_MAX_R,                      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "COM_MIN_RHO",                &COM_MIN_RHO,                     0.0,             0.0,           NoMax_double   );
    ReadPara->Add( "COM_TOLERR_R",               &COM_TOLERR_R,                   -1.0,             NoMin_double,  NoMax_double   );
-   ReadPara->Add( "COM_NITER_MAX",              &COM_NITER_MAX,                   10,              1,             NoMax_int      );
+   ReadPara->Add( "COM_MAX_ITER",               &COM_MAX_ITER,                    10,              1,             NoMax_int      );
    ReadPara->Add( "OPT__RECORD_USER",           &OPT__RECORD_USER,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OPTIMIZE_AGGRESSIVE",   &OPT__OPTIMIZE_AGGRESSIVE,        false,           Useless_bool,  Useless_bool   );
 #  ifdef LOAD_BALANCE
