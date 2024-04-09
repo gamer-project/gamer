@@ -159,7 +159,6 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 #  ifdef BITWISE_REPRODUCIBILITY
    long *Sort_IdxTable = new long [NPar];
 
-   // Par_SortByPos( NPar, Pos[0], Pos[1], Pos[2], Sort_IdxTable );
    Mis_SortByMultiField( 3, (long)NPar, Pos, Sort_IdxTable, (long)0, 0, (long)NPar );
 #  endif
 
