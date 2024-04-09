@@ -144,6 +144,15 @@ void Aux_Check_Parameter()
    if ( OPT__RECORD_CENTER  &&  COM_CEN_Z > amr->BoxSize[2] )
       Aux_Error( ERROR_INFO, "incorrect COM_CEN_Z = %lf (out of range [Z<=%lf]) !!\n", COM_CEN_Z, amr->BoxSize[2] );
 
+   if ( OPT__CK_CONSERVATION  &&  ANGMOM_ORIGIN_X > amr->BoxEdgeR[0] )
+      Aux_Error( ERROR_INFO, "incorrect ANGMOM_ORIGIN_X = %lf (out of range [X<=%lf]) !!\n", ANGMOM_ORIGIN_X, amr->BoxEdgeR[0] );
+
+   if ( OPT__CK_CONSERVATION  &&  ANGMOM_ORIGIN_Y > amr->BoxEdgeR[1] )
+      Aux_Error( ERROR_INFO, "incorrect ANGMOM_ORIGIN_Y = %lf (out of range [Y<=%lf]) !!\n", ANGMOM_ORIGIN_Y, amr->BoxEdgeR[1] );
+
+   if ( OPT__CK_CONSERVATION  &&  ANGMOM_ORIGIN_Z > amr->BoxEdgeR[2] )
+      Aux_Error( ERROR_INFO, "incorrect ANGMOM_ORIGIN_Z = %lf (out of range [Z<=%lf]) !!\n", ANGMOM_ORIGIN_Z, amr->BoxEdgeR[2] );
+
 #  if   ( MODEL == HYDRO )
 #  ifndef COSMIC_RAY
    const bool OPT__FLAG_LOHNER_CRAY = false;

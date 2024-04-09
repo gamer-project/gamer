@@ -105,12 +105,6 @@ void Aux_Check_Conservation( const char *comment )
    FILE  *File = NULL;
 
 
-// origin for the angular momentum
-   const double AngMom_OriginX = amr->BoxCenter[0];
-   const double AngMom_OriginY = amr->BoxCenter[1];
-   const double AngMom_OriginZ = amr->BoxCenter[2];
-
-
 // initialize accumulative variables as zero
    for (int v=0; v<NVar; v++)    Fluid_ThisRank[v] = 0.0;
 
@@ -189,9 +183,9 @@ void Aux_Check_Conservation( const char *comment )
                   const double y  = y0 + j*dh;
                   const double z  = z0 + k*dh;
 
-                  const double dX = x - AngMom_OriginX;
-                  const double dY = y - AngMom_OriginY;
-                  const double dZ = z - AngMom_OriginZ;
+                  const double dX = x - ANGMOM_ORIGIN_X;
+                  const double dY = y - ANGMOM_ORIGIN_Y;
+                  const double dZ = z - ANGMOM_ORIGIN_Z;
 
                   AngMomX = dY*MomZ - dZ*MomY;
                   AngMomY = dZ*MomX - dX*MomZ;

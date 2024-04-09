@@ -2312,6 +2312,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Ck_Refine",          &RS.Opt__Ck_Refine,          SID, TID, NonFatal, &RT.Opt__Ck_Refine,           1, NonFatal );
    LoadField( "Opt__Ck_ProperNesting",   &RS.Opt__Ck_ProperNesting,   SID, TID, NonFatal, &RT.Opt__Ck_ProperNesting,    1, NonFatal );
    LoadField( "Opt__Ck_Conservation",    &RS.Opt__Ck_Conservation,    SID, TID, NonFatal, &RT.Opt__Ck_Conservation,     1, NonFatal );
+   LoadField( "AngMom_OriginX",          &RS.AngMom_OriginX,          SID, TID, NonFatal, &RT.AngMom_OriginX,           1, NonFatal );
+   LoadField( "AngMom_OriginY",          &RS.AngMom_OriginY,          SID, TID, NonFatal, &RT.AngMom_OriginY,           1, NonFatal );
+   LoadField( "AngMom_OriginZ",          &RS.AngMom_OriginZ,          SID, TID, NonFatal, &RT.AngMom_OriginZ,           1, NonFatal );
    LoadField( "Opt__Ck_NormPassive",     &RS.Opt__Ck_NormPassive,     SID, TID, NonFatal, &RT.Opt__Ck_NormPassive,      1, NonFatal );
    LoadField( "Opt__Ck_Restrict",        &RS.Opt__Ck_Restrict,        SID, TID, NonFatal, &RT.Opt__Ck_Restrict,         1, NonFatal );
    LoadField( "Opt__Ck_Finite",          &RS.Opt__Ck_Finite,          SID, TID, NonFatal, &RT.Opt__Ck_Finite,           1, NonFatal );

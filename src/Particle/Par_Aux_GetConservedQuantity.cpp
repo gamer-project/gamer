@@ -37,14 +37,10 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                                    double &Ek_Total, double &Ep_Total )
 {
 
-// 1. mass, momentum, and kinematic energy
+// 1. mass, momentum, angular momentum, and kinematic energy
    double Mass_ThisRank=0.0, MomX_ThisRank=0.0, MomY_ThisRank=0.0, MomZ_ThisRank=0.0;
    double AngMomX_ThisRank=0.0, AngMomY_ThisRank=0.0, AngMomZ_ThisRank=0.0, Ek_ThisRank=0.0;
    double Send[8], Recv[8];
-
-   const double AngMom_OriginX = amr->BoxCenter[0];
-   const double AngMom_OriginY = amr->BoxCenter[1];
-   const double AngMom_OriginZ = amr->BoxCenter[2];
 
 // use static schedule to give the same reduction results everytime
 #  pragma omp parallel for schedule( static ) reduction( +:Mass_ThisRank, MomX_ThisRank, MomY_ThisRank, MomZ_ThisRank, AngMomX_ThisRank, AngMomY_ThisRank, AngMomZ_ThisRank, Ek_ThisRank )
@@ -57,9 +53,9 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
          MomX_ThisRank    += amr->Par->Mass[p]*amr->Par->VelX[p];
          MomY_ThisRank    += amr->Par->Mass[p]*amr->Par->VelY[p];
          MomZ_ThisRank    += amr->Par->Mass[p]*(amr->Par->VelZ[p]);
-         AngMomX_ThisRank += amr->Par->Mass[p]*( ( amr->Par->PosY[p] - AngMom_OriginY )*amr->Par->VelZ[p] - ( amr->Par->PosZ[p] - AngMom_OriginZ )*amr->Par->VelY[p] );
-         AngMomY_ThisRank += amr->Par->Mass[p]*( ( amr->Par->PosZ[p] - AngMom_OriginZ )*amr->Par->VelX[p] - ( amr->Par->PosX[p] - AngMom_OriginX )*amr->Par->VelZ[p] );
-         AngMomZ_ThisRank += amr->Par->Mass[p]*( ( amr->Par->PosX[p] - AngMom_OriginX )*amr->Par->VelY[p] - ( amr->Par->PosY[p] - AngMom_OriginY )*amr->Par->VelX[p] );
+         AngMomX_ThisRank += amr->Par->Mass[p]*( ( amr->Par->PosY[p] - ANGMOM_ORIGIN_Y )*amr->Par->VelZ[p] - ( amr->Par->PosZ[p] - ANGMOM_ORIGIN_Z )*amr->Par->VelY[p] );
+         AngMomY_ThisRank += amr->Par->Mass[p]*( ( amr->Par->PosZ[p] - ANGMOM_ORIGIN_Z )*amr->Par->VelX[p] - ( amr->Par->PosX[p] - ANGMOM_ORIGIN_X )*amr->Par->VelZ[p] );
+         AngMomZ_ThisRank += amr->Par->Mass[p]*( ( amr->Par->PosX[p] - ANGMOM_ORIGIN_X )*amr->Par->VelY[p] - ( amr->Par->PosY[p] - ANGMOM_ORIGIN_Y )*amr->Par->VelX[p] );
          Ek_ThisRank      += 0.5*amr->Par->Mass[p]*( SQR(amr->Par->VelX[p]) + SQR(amr->Par->VelY[p]) + SQR(amr->Par->VelZ[p]) );
       }
    }
