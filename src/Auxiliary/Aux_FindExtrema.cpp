@@ -187,6 +187,13 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
 // initialize the extrema
    for (int TID=0; TID<NT; TID++) OMP_Extrema[TID].Value = ( Mode == EXTREMA_MIN ) ? HUGE_NUMBER : -HUGE_NUMBER;
 
+// allocate memory for Prepare_PatchData
+   real (*FieldPtr)[PS1][PS1][PS1] = NULL;
+   if ( UsePrepare )
+   {
+      FieldPtr = new real [8*NPG_Max][PS1][PS1][PS1]; // 8: number of local patches
+   }
+
 
 // loop over all target levels
    for (int lv=MinLv; lv<=MaxLv; lv++)
@@ -212,10 +219,8 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
       {
          const int NPG = ( NPG_Max < NTotal-Disp ) ? NPG_Max : NTotal-Disp;
 
-         real (*FieldPtr)[PS1][PS1][PS1] = NULL;
          if ( UsePrepare )
          {
-            FieldPtr  = new real [8*NPG][PS1][PS1][PS1]; // 8: number of local patches
             Prepare_PatchData( lv, Time[lv], FieldPtr[0][0][0], NULL, 0, NPG, PID0_List+Disp, Field, _NONE,
                                INT_NONE, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                                MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
@@ -316,12 +321,6 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
                }}} // i,j,k
             } // for (int t=0; t<8*NPG; t++)
          } // OpenMP parallel region
-
-         if ( UsePrepare )
-         {
-            delete [] FieldPtr;
-         }
-
       } // for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
 
 //    free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
@@ -338,6 +337,12 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
 
    } // for (int lv=MinLv; lv<=MaxLv; lv++)
 
+
+// free memory for Prepare_PatchData
+   if ( UsePrepare )
+   {
+      delete [] FieldPtr;
+   }
 
 // find the extrema over all OpenMP threads
    Extrema->Value = ( Mode == EXTREMA_MIN ) ? HUGE_NUMBER : -HUGE_NUMBER;

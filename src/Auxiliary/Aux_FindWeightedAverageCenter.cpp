@@ -139,6 +139,14 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
 // if the target region is the entire domain, then there is no need to iterate
    const bool   isWholeBox        = ( MaxR2 >= (SQR(amr->BoxSize[0]) + SQR(amr->BoxSize[1]) + SQR(amr->BoxSize[2])) );
 
+// allocate memory for Prepare_PatchData
+   real (*WeightingDensity)[PS1][PS1][PS1] = NULL;
+   if ( UsePrepare )
+   {
+      WeightingDensity = new real [8*NPG_Max][PS1][PS1][PS1]; // 8: number of local patches
+   }
+
+
 // start the iteration to find the center until convergence
    while ( true )
    {
@@ -194,10 +202,8 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
             const int NPG = ( NPG_Max < NTotal-Disp ) ? NPG_Max : NTotal-Disp;
 
 //          get the weighting density on grids
-            real (*WeightingDensity)[PS1][PS1][PS1] = NULL;
             if ( UsePrepare )
             {
-               WeightingDensity = new real [8*NPG][PS1][PS1][PS1];
                Prepare_PatchData( lv, Time[lv], WeightingDensity[0][0][0], NULL, 0, NPG, PID0_List+Disp, WeightingDensityField, _NONE,
                                   INT_NONE, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                                   MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
@@ -273,12 +279,6 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
                   }
                }}} // i,j,k
             } // for (int t=0; t<8*NPG; t++)
-
-            if ( UsePrepare )
-            {
-               delete [] WeightingDensity;
-            }
-
          } // for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
 
 //       free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
@@ -325,15 +325,15 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
       {
          if ( Periodic[d] )
          {
-            if      ( WeightedAverageCenter[d] >= amr->BoxSize[d] ) WeightedAverageCenter[d] -= amr->BoxSize[d];
-            else if ( WeightedAverageCenter[d] < 0.0              ) WeightedAverageCenter[d] += amr->BoxSize[d];
+            if      ( WeightedAverageCenter[d] >= amr->BoxEdgeR[d] ) WeightedAverageCenter[d] -= amr->BoxSize[d];
+            else if ( WeightedAverageCenter[d] <  amr->BoxEdgeL[d] ) WeightedAverageCenter[d] += amr->BoxSize[d];
          }
       }
 
       for (int d=0; d<3; d++)
-         if ( WeightedAverageCenter[d] >= amr->BoxSize[d]  ||  WeightedAverageCenter[d] < 0.0 )
-            Aux_Error( ERROR_INFO, "WeightedAverageCenter[%d] = %14.7e lies outside the domain (BoxSize = %14.7e) in %s !!\n",
-                       d, WeightedAverageCenter[d], amr->BoxSize[d], __FUNCTION__ );
+         if ( WeightedAverageCenter[d] >= amr->BoxEdgeR[d]  ||  WeightedAverageCenter[d] < amr->BoxEdgeL[d] )
+            Aux_Error( ERROR_INFO, "WeightedAverageCenter[%d] = %14.7e lies outside the domain (BoxEdgeL = %14.7e, BoxEdgeR = %14.7e) in %s !!\n",
+                       d, WeightedAverageCenter[d], amr->BoxEdgeL[d], amr->BoxEdgeR[d], __FUNCTION__ );
 
 
       dR2 = SQR( Center_ref_Iter[0] - WeightedAverageCenter[0] )
@@ -350,6 +350,12 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
 
    } // while ( true )
 
+
+// free memory for Prepare_PatchData
+   if ( UsePrepare )
+   {
+      delete [] WeightingDensity;
+   }
 
    if ( MPI_Rank == 0 )
    {
