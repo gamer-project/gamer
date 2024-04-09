@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2475)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2478)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -249,6 +249,7 @@ Procedure for outputting new variables:
 //                2474 : 2023/11/22 --> output OPT__UM_IC_FLOAT8 and PAR_IC_FLOAT8
 //                2475 : 2024/03/28 --> output YT_JUPYTER_USE_CONNECTION_FILE, LIBYT_RELOAD, LIBYT_INTERACTIVE,
 //                                      LIBYT_JUPYTER
+//                2478 : 2024/04/09 --> output ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -2603,6 +2604,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Ck_Refine          = OPT__CK_REFINE;
    InputPara.Opt__Ck_ProperNesting   = OPT__CK_PROPER_NESTING;
    InputPara.Opt__Ck_Conservation    = OPT__CK_CONSERVATION;
+   InputPara.AngMom_OriginX          = ANGMOM_ORIGIN_X;
+   InputPara.AngMom_OriginY          = ANGMOM_ORIGIN_Y;
+   InputPara.AngMom_OriginZ          = ANGMOM_ORIGIN_Z;
    InputPara.Opt__Ck_NormPassive     = OPT__CK_NORMALIZE_PASSIVE;
    InputPara.Opt__Ck_Restrict        = OPT__CK_RESTRICT;
    InputPara.Opt__Ck_Finite          = OPT__CK_FINITE;
@@ -3538,6 +3542,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Ck_Refine",          HOFFSET(InputPara_t,Opt__Ck_Refine         ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Ck_ProperNesting",   HOFFSET(InputPara_t,Opt__Ck_ProperNesting  ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Ck_Conservation",    HOFFSET(InputPara_t,Opt__Ck_Conservation   ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "AngMom_OriginX",          HOFFSET(InputPara_t,AngMom_OriginX         ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "AngMom_OriginY",          HOFFSET(InputPara_t,AngMom_OriginY         ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "AngMom_OriginZ",          HOFFSET(InputPara_t,AngMom_OriginZ         ), H5T_NATIVE_DOUBLE           );
    H5Tinsert( H5_TypeID, "Opt__Ck_NormPassive",     HOFFSET(InputPara_t,Opt__Ck_NormPassive    ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Ck_Restrict",        HOFFSET(InputPara_t,Opt__Ck_Restrict       ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Ck_Finite",          HOFFSET(InputPara_t,Opt__Ck_Finite         ), H5T_NATIVE_INT              );

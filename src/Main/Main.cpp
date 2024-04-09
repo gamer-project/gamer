@@ -71,6 +71,7 @@ bool                 OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER
 bool                 OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID, OPT__SORT_PATCH_BY_LBIDX;
 char                 OPT__OUTPUT_TEXT_FORMAT_FLT[MAX_STRING-1];
 int                  OPT__UM_IC_FLOAT8;
+double               ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z;
 
 UM_IC_Format_t       OPT__UM_IC_FORMAT;
 TestProbID_t         TESTPROB_ID;
