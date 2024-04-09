@@ -48,15 +48,18 @@ const static flag_spectral_float  Flag_Spectral_Polynomials[FLAG_SPECTRAL_ORDER]
 void Least_Squares_Regression(flag_spectral_float x[], flag_spectral_float y[], int n, flag_spectral_float *slope, flag_spectral_float *intercept) {
     flag_spectral_float sum_x = 0.0, sum_y = 0.0, sum_x_squared = 0.0, sum_xy = 0.0;
 
-    for (int i = 0; i < n; i++) {
+    const int start   = 6; // Start calculation at 6th element
+    const int n_index = n - start;
+
+    for (int i = start; i < n; i++) {
         sum_x += x[i];
         sum_y += y[i];
         sum_x_squared += x[i] * x[i];
         sum_xy += x[i] * y[i];
     }
 
-    *slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x_squared - sum_x * sum_x);
-    *intercept = (sum_y - (*slope) * sum_x) / n;
+    *slope = (n_index * sum_xy - sum_x * sum_y) / (n_index * sum_x_squared - sum_x * sum_x);
+    *intercept = (sum_y - (*slope) * sum_x) / n_index;
 }
 
 
@@ -79,11 +82,10 @@ void Least_Squares_Regression(flag_spectral_float x[], flag_spectral_float y[], 
 void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
 {
 // set the stride to a small value to sample the wave function evenly
-// 1, 2, 4 should all work, but higher values are faster
    const size_t Stride    = 1;
    const size_t GhostSize = 1;
    const size_t Size1D    = PS2 + 2 * GhostSize;
-   const size_t MaxOrder  = 9;
+   const size_t MaxOrder  = 14;
 
    const real* Re1D = Var1D;
    const real* Im1D = Var1D + CUBE(Size1D);
@@ -104,7 +106,6 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
    Cond = -__FLT_MAX__;
 
 // iterate over 3 dimensions and sample the physical 2D arrays with a stride
-// for PS2 = 16, GhostSize = 8, Stride = 4, compute (16 / 4)^3 = 64 extensions
    for (size_t XYZ = 0; XYZ < 3; ++XYZ)
    for (size_t k=GhostSize; k<Size1D-GhostSize; k+=Stride)
    for (size_t j=GhostSize; j<Size1D-GhostSize; j+=Stride)
@@ -142,16 +143,16 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
 
 //       Compute polynomial expansions of real and imaginary parts
          for (int t = 0; t < MaxOrder; t++) {
-            Al_Re[i] += Flag_Spectral_Polynomials[i][t] * Row_Re[t];                                  // left boundary
-            Al_Im[i] += Flag_Spectral_Polynomials[i][t] * Row_Im[t];                                  // left boundary
-            Al_De[i] += Flag_Spectral_Polynomials[i][t] * Row_De[t];                                  // left boundary
+            Al_Re[i] += Flag_Spectral_Polynomials[i][t] * Row_Re[t];                     // left boundary
+            Al_Im[i] += Flag_Spectral_Polynomials[i][t] * Row_Im[t];                     // left boundary
+            Al_De[i] += Flag_Spectral_Polynomials[i][t] * Row_De[t];                     // left boundary
             Ar_Re[i] += Flag_Spectral_Polynomials[i][t] * Row_Re[Size1D - MaxOrder + t]; // right boundary
             Ar_Im[i] += Flag_Spectral_Polynomials[i][t] * Row_Im[Size1D - MaxOrder + t]; // right boundary
             Ar_De[i] += Flag_Spectral_Polynomials[i][t] * Row_De[Size1D - MaxOrder + t]; // right boundary
          } // t
 
 //       Prepare linear fit to logarithm of polynomial coefficients
-         Order[i] = i;
+         Order[i] = log(i + 1);
          Al_Re[i] = log(abs(Al_Re[i]) + 1e-14);
          Al_Im[i] = log(abs(Al_Im[i]) + 1e-14);
          Al_De[i] = log(abs(Al_De[i]) + 1e-14);
@@ -162,16 +163,16 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
 
 //    Find maximum slope to determine whether refinement is necessary
 //    Large negative slopes indicate that wavefunction is well-resolved
-      //Least_Squares_Regression(Order, Al_Re, MaxOrder, &Slope, &Intercept);
-      //Cond = MAX(Cond, Slope);
-      //Least_Squares_Regression(Order, Al_Im, MaxOrder, &Slope, &Intercept);
-      //Cond = MAX(Cond, Slope);
+      Least_Squares_Regression(Order, Al_Re, MaxOrder, &Slope, &Intercept);
+      Cond = MAX(Cond, Slope);
+      Least_Squares_Regression(Order, Al_Im, MaxOrder, &Slope, &Intercept);
+      Cond = MAX(Cond, Slope);
       Least_Squares_Regression(Order, Al_De, MaxOrder, &Slope, &Intercept);
       Cond = MAX(Cond, Slope);
-      //Least_Squares_Regression(Order, Ar_Re, MaxOrder, &Slope, &Intercept);
-      //Cond = MAX(Cond, Slope);
-      //Least_Squares_Regression(Order, Ar_Im, MaxOrder, &Slope, &Intercept);
-      //Cond = MAX(Cond, Slope);
+      Least_Squares_Regression(Order, Ar_Re, MaxOrder, &Slope, &Intercept);
+      Cond = MAX(Cond, Slope);
+      Least_Squares_Regression(Order, Ar_Im, MaxOrder, &Slope, &Intercept);
+      Cond = MAX(Cond, Slope);
       Least_Squares_Regression(Order, Ar_De, MaxOrder, &Slope, &Intercept);
       Cond = MAX(Cond, Slope);
 
