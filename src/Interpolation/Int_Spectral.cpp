@@ -236,7 +236,7 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
                for (int k = 0;  k < InSize[XYZ];  k++)
                {
                   const real Dens = Real[k];
-                  Real[k] = sqr(Real[k]);
+                  Real[k] = SQR(Real[k]);
                   Imag[k] = Dens * sin( Imag[k] / SPEC_INT_WAVELENGTH_MAGNIFIER );
                }
             }
@@ -260,11 +260,11 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
             for (int k = 0;  k < OutSize[XYZ];  k++)
             {
 //             check for negative density
-               const double Dens = max(0, sqrt(Re[k]));
+               const double Dens = MAX(0, sqrt(Re[k]));
 
                Re[k] = Dens;
 //             clip to [-1, 1]
-               const double w = max(-1, min(1, Im[k]/(Dens + TINY_NUMBER)));
+               const double w = MAX(-1, MIN(1, Im[k]/(Dens + TINY_NUMBER)));
 
                Im[k] = asin(w) * SPEC_INT_WAVELENGTH_MAGNIFIER;
             }
