@@ -15,6 +15,9 @@ SIMU_OPTION += -DMODEL=HYDRO
 # double precision
 #SIMU_OPTION += -DFLOAT8
 
+# double precision for particle attributes
+#SIMU_OPTION += -DFLOAT8_PAR
+
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
 

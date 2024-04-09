@@ -118,6 +118,8 @@ real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const re
                      const real *const EoS_Table[EOS_NTABLE_MAX] );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
 real Hydro_CheckMinEint( const real InEint, const real MinEint );
+real Hydro_CheckMinTemp( const real InTemp, const real MinTemp );
+real Hydro_CheckMinEntr( const real InEntr, const real MinEntr );
 real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real InEngy,
                                const real MinEint, const real Emag );
 bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const char SingleFieldName[],
