@@ -267,12 +267,6 @@ void Aux_TakeNote()
       fprintf( Note, "FEEDBACK                        OFF\n" );
 #     endif
 
-#     ifdef FLOAT8_PAR
-      fprintf( Note, "FLOAT8_PAR                      ON\n" );
-#     else
-      fprintf( Note, "FLOAT8_PAR                      OFF\n" );
-#     endif
-
 #     endif // #ifdef PARTICLE
 
       fprintf( Note, "***********************************************************************************\n" );
@@ -317,6 +311,12 @@ void Aux_TakeNote()
       fprintf( Note, "FLOAT8                          ON\n" );
 #     else
       fprintf( Note, "FLOAT8                          OFF\n" );
+#     endif
+
+#     ifdef FLOAT8_PAR
+      fprintf( Note, "FLOAT8_PAR                      ON\n" );
+#     else
+      fprintf( Note, "FLOAT8_PAR                      OFF\n" );
 #     endif
 
 #     ifdef SERIAL
