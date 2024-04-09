@@ -395,7 +395,7 @@ OPT__RECORD_CENTER            0           # record the position of maximum densi
 COM_CEN_X                    -1.0         # x coordinate as an initial guess for determining center of mass (if one of COM_CEN_X/Y/Z < 0 -> peak density position x) [-1.0]
 COM_CEN_Y                    -1.0         # y coordinate as an initial guess for determining center of mass (if one of COM_CEN_X/Y/Z < 0 -> peak density position y) [-1.0]
 COM_CEN_Z                    -1.0         # z coordinate as an initial guess for determining center of mass (if one of COM_CEN_X/Y/Z < 0 -> peak density position z) [-1.0]
-COM_MAX_R                    -1.0         # maximum radius for determining center of mass (<0=auto) [-1.0]
+COM_MAX_R                    -1.0         # maximum radius for determining center of mass (<0=auto -> __FLT_MAX__) [-1.0]
 COM_MIN_RHO                   0.0         # minimum density for determining center of mass (must >= 0.0) [0.0]
 COM_TOLERR_R                 -1.0         # maximum tolerated error of deviation in radius during the iterations of determining the center of mass (<0=auto -> amr->dh[MAX_LEVEL]) [-1.0]
 COM_MAX_ITER                  10          # maximum number of iterations for determining the center of mass (must >= 1) [10]
