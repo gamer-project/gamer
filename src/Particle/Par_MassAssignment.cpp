@@ -35,7 +35,7 @@ static bool FarAwayParticle( real_par ParPosX, real_par ParPosY, real_par ParPos
 //                           even with the NGP scheme), which is not considered here!
 //                   --> This is the reason for the check "if ( Periodic[d]  &&  RhoSize > PeriodicSize[d] ) ..."
 //                6. For bitwise reproducibility, particles are sorted by their position before mass deposition
-//                   --> Also refer to the note of the routine Par_SortByPos()
+//                   --> Also refer to the note of the routine Mis_SortByMultiField()
 //
 // Parameter   :  ParList         : List of target particle IDs
 //                NPar            : Number of particles
@@ -159,7 +159,8 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 #  ifdef BITWISE_REPRODUCIBILITY
    long *Sort_IdxTable = new long [NPar];
 
-   Par_SortByPos( NPar, Pos[0], Pos[1], Pos[2], Sort_IdxTable );
+   // Par_SortByPos( NPar, Pos[0], Pos[1], Pos[2], Sort_IdxTable );
+   Mis_SortByMultiField( 3, (long)NPar, Pos, Sort_IdxTable, (long)0, 0, (long)NPar );
 #  endif
 
 

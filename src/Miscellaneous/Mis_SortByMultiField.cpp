@@ -6,43 +6,42 @@
 // Function    :  Mis_SortByMultiField
 // Description :  Sort the data by the input fields
 //
-// Note        :  1.
-//                2.
-//                3. Invoked by Par_MassAssignment() and FB_AdvanceDt()
+// Note        :  1. Sorting by velocity may be necessary for STAR_FORMATION, where the new star particles
+//                   created at different time but the same position may still have the same position for a
+//                   while if velocity*dt is on the order of round-off errors
+//                   --> Not supported yet since we may not have the velocity information (e.g., when adopting
+//                       UseInputMassPos in Par_MassAssignment())
+//                2. Invoked by Par_MassAssignment() and FB_AdvanceDt()
 //
-// Parameter   :
+// Parameter   :  NField    : Number of the fields
+//                FieldSize : Size of a field
+//                Array     : The array to be sort has size of [NField*FieldSize]
+//                IdxTable  : Index table  to be returned
+//                start_idx : The index start to sort
+//                SortField : The field to be sorted
+//                NSort     : The size of field to be sorted
 //
 // Return      :  IdxTable
 //-------------------------------------------------------------------------------------------------------
 template <typename T>
-void Mis_SortByMultiField( const int NField, const long FieldSize, const T **Array, long *IdxTable,
+void Mis_SortByMultiField( const int NField, const long FieldSize, T **Array, long *IdxTable,
                            const long start_idx, const int SortField, const long NSort )
+// void Mis_SortByMultiField( const int NField, const long FieldSize, const T **Array, long *IdxTable,
+//                            const long start_idx, const int SortField, const long NSort )
 {
-   if ( SortField == NField-1 )
+   if ( SortField == NField )
    {
-//    TODO : print the warning message if the data is exactally the same
-      printf("WARNING : Can not sort the exact same value.\n");
+      Aux_Message( stderr, "WARNING : Can not sort the exact same value.\n");
       return;
    }
 
-// check the size of the **Array and IdxTable and FieldToBeSorted
+// check the inputs for the first call
    if ( SortField == 0 ) {
-       if (IdxTable == NULL)
-       {
-           printf("NULL IdxTable\n");
-           return;
-       }
-       if (FieldSize != NSort)
-       {
-           printf("FieldSize != NSort\n");
-           return;
-       }
-       if (start_idx != 0)
-       {
-           printf("start_idx != 0\n");
-           return;
-       }
-       for (long i=0; i<FieldSize; i++) IdxTable[i] = i;
+       if ( IdxTable  == NULL  )   Aux_Error( ERROR_INFO, "NULL IdxTable.\n" );
+       if ( FieldSize != NSort )   Aux_Error( ERROR_INFO, "FieldSize != NSort for the first call.\n" );
+       if ( start_idx != 0     )   Aux_Error( ERROR_INFO, "start_idx != 0 for the first call.\n" );
+
+       for (long i=0; i<FieldSize; i++)   IdxTable[i] = i;
    }
 
 // 0. back up the field and the table
@@ -68,12 +67,13 @@ void Mis_SortByMultiField( const int NField, const long FieldSize, const T **Arr
 
        if ( NSameVal == 1 ) continue;
 
+       // 4. Sort the same values again
        Mis_SortByMultiField( NField, FieldSize, Array, IdxTable_copy, start_idx+i, SortField+1, NSameVal );
 
-       i += NSameVal - 1;
+       i += NSameVal-1;
    } // for (long i=0; i<FieldSize-1; i++)
 
-// 4. store the result
+// 5. store the result
    for (long i=start_idx; i<start_idx+NSort; i++)   IdxTable[i] = IdxTable_copy[i];
 
    delete [] Array_Sorted;
@@ -86,8 +86,13 @@ void Mis_SortByMultiField( const int NField, const long FieldSize, const T **Arr
 
 
 // explicit template instantiation
-template void Mis_SortByMultiField <int   > ( const int NField, const long FieldSize, const int    **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
-template void Mis_SortByMultiField <long  > ( const int NField, const long FieldSize, const long   **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
-template void Mis_SortByMultiField <ulong > ( const int NField, const long FieldSize, const ulong  **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
-template void Mis_SortByMultiField <float > ( const int NField, const long FieldSize, const float  **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
-template void Mis_SortByMultiField <double> ( const int NField, const long FieldSize, const double **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
+// template void Mis_SortByMultiField <int   > ( const int NField, const long FieldSize, const int    **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
+// template void Mis_SortByMultiField <long  > ( const int NField, const long FieldSize, const long   **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
+// template void Mis_SortByMultiField <ulong > ( const int NField, const long FieldSize, const ulong  **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
+// template void Mis_SortByMultiField <float > ( const int NField, const long FieldSize, const float  **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
+// template void Mis_SortByMultiField <double> ( const int NField, const long FieldSize, const double **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
+template void Mis_SortByMultiField <int   > ( const int NField, const long FieldSize, int    **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
+template void Mis_SortByMultiField <long  > ( const int NField, const long FieldSize, long   **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
+template void Mis_SortByMultiField <ulong > ( const int NField, const long FieldSize, ulong  **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
+template void Mis_SortByMultiField <float > ( const int NField, const long FieldSize, float  **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
+template void Mis_SortByMultiField <double> ( const int NField, const long FieldSize, double **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
