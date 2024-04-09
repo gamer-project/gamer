@@ -15,7 +15,7 @@
 //
 // Parameter   :  NField    : Number of the fields
 //                FieldSize : Size of a field
-//                Array     : The array to be sort has size of [NField*FieldSize]
+//                Array     : The array to be sort has size of [NField*FieldSize]. DO NOT change the array in this function!
 //                IdxTable  : Index table  to be returned
 //                start_idx : The index start to sort
 //                SortField : The field to be sorted
@@ -26,8 +26,6 @@
 template <typename T>
 void Mis_SortByMultiField( const int NField, const long FieldSize, T **Array, long *IdxTable,
                            const long start_idx, const int SortField, const long NSort )
-// void Mis_SortByMultiField( const int NField, const long FieldSize, const T **Array, long *IdxTable,
-//                            const long start_idx, const int SortField, const long NSort )
 {
    if ( SortField == NField )
    {
@@ -86,11 +84,6 @@ void Mis_SortByMultiField( const int NField, const long FieldSize, T **Array, lo
 
 
 // explicit template instantiation
-// template void Mis_SortByMultiField <int   > ( const int NField, const long FieldSize, const int    **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
-// template void Mis_SortByMultiField <long  > ( const int NField, const long FieldSize, const long   **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
-// template void Mis_SortByMultiField <ulong > ( const int NField, const long FieldSize, const ulong  **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
-// template void Mis_SortByMultiField <float > ( const int NField, const long FieldSize, const float  **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
-// template void Mis_SortByMultiField <double> ( const int NField, const long FieldSize, const double **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
 template void Mis_SortByMultiField <int   > ( const int NField, const long FieldSize, int    **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
 template void Mis_SortByMultiField <long  > ( const int NField, const long FieldSize, long   **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
 template void Mis_SortByMultiField <ulong > ( const int NField, const long FieldSize, ulong  **Array, long *IdxTable, const long start_idx, const int SortField, const long NSort );
