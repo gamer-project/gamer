@@ -260,7 +260,7 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
             for (int k = 0;  k < OutSize[XYZ];  k++)
             {
 //             check for negative density
-               const double Dens = MAX(0, sqrt(Re[k]));
+               const double Dens = sqrt(MAX(0, Re[k]));
 
                Re[k] = Dens;
 //             clip to [-1, 1]
