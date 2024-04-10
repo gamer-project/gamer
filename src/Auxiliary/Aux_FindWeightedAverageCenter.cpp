@@ -17,8 +17,8 @@
 //                MaxR                   : Maximum radius to specify the region to compute the weighted average center
 //                MinWD                  : Minimum weighting density to specify the region to compute the weighted average center
 //                WeightingDensityField  : Weighting density field w(x,y,z) in the above Note
-//                TolErrR                : Maximum error of distance to tolerate during the iteration
-//                MaxIter                : Maximum tolerated error of distance between the center coordinates during iterations
+//                TolErrR                : Maximum tolerated error of distance between the center coordinates during iterations
+//                MaxIter                : Maximum number of iterations to find the weighted average center
 //                FinaldR                : Record of the distance of the center coordinates update in the last iteration
 //                FinalNIter             : Record of the total number of iterations
 //
@@ -332,8 +332,8 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
 
       for (int d=0; d<3; d++)
          if ( WeightedAverageCenter[d] >= amr->BoxEdgeR[d]  ||  WeightedAverageCenter[d] < amr->BoxEdgeL[d] )
-            Aux_Error( ERROR_INFO, "WeightedAverageCenter[%d] = %14.7e lies outside the domain (BoxEdgeL = %14.7e, BoxEdgeR = %14.7e) in %s !!\n",
-                       d, WeightedAverageCenter[d], amr->BoxEdgeL[d], amr->BoxEdgeR[d], __FUNCTION__ );
+            Aux_Error( ERROR_INFO, "WeightedAverageCenter[%d] = %14.7e lies outside the domain (BoxEdgeL = %14.7e, BoxEdgeR = %14.7e) !!\n",
+                       d, WeightedAverageCenter[d], amr->BoxEdgeL[d], amr->BoxEdgeR[d] );
 
 
       dR2 = SQR( Center_ref_Iter[0] - WeightedAverageCenter[0] )
