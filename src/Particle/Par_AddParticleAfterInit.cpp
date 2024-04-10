@@ -17,13 +17,13 @@
 //
 // Parameter   :  NNewPar   : Number of new particles to be added
 //                NewParAtt : Pointer array storing the data of new particle attributes
-//                            --> Format: real *NewParAtt[PAR_NATT_TOTAL]
+//                            --> Format: real_par *NewParAtt[PAR_NATT_TOTAL]
 //                            --> Must be deallocated manually after invoking this function
 //
 // Return      :  1. amr->Par
 //                2. NPar, ParListSize, and ParList[] of all real patches on lv
 //-------------------------------------------------------------------------------------------------------
-void Par_AddParticleAfterInit( const long NNewPar, real *NewParAtt[PAR_NATT_TOTAL] )
+void Par_AddParticleAfterInit( const long NNewPar, real_par *NewParAtt[PAR_NATT_TOTAL] )
 {
 
    const bool OldParOnly_No    = false;
