@@ -1219,106 +1219,64 @@ void Par_EquilibriumIC::RanVec_FixRadius( const double r, double RanVec[] )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :
+// Function    : SmoothArray
 // Description :
 //
 // Note        :
 //
-// Parameter   :
+// Parameter   : array_x     : array of x data
+//               index_start : the first index in the array for the smoothing
+//               index_end   : the last index in the array for the smoothing
 //
-// Return      :
+// Return      : array_x
 //-------------------------------------------------------------------------------------------------------
-void Par_EquilibriumIC::mask( double* x, int start, int fin )
+void Par_EquilibriumIC::SmoothArray( double* array_x, int index_start, int index_end )
 {
 
-   double standard = 3;
+   int    smoothing_n_elements = 10; // smoothing every "smoothing_n_elements" elements
+   double smoothing_criterion  =  3; // smoothing when the ratio is larger than this criterion
 
-   for (int j=start; j<fin; j++)
+   // set the elements as zero if its ratio to other elements is larger than smoothing_criterion
+   for (int i=index_start; i<index_end-smoothing_n_elements+1; i++)
    {
-
-      bool flag = 0;
-
-      for (int k=start; k<fin; k++)
+      for (int j=i; j<i+smoothing_n_elements; j++)
+      for (int k=i; k<i+smoothing_n_elements; k++)
       {
-         if ( x[k] != 0 )
+         if ( array_x[k] != 0  &&  fabs( array_x[j]/array_x[k] ) > smoothing_criterion )   array_x[j] = 0;
+      }
+   }
+
+   // set those zero elements as the average of non-zero elements
+   for (int i=index_start; i<index_end-smoothing_n_elements+1; i++)
+   {
+      double sum_of_nonzero = 0;
+      int    num_of_nonzero = 0;
+      double ave_of_nonzero = 0;
+
+      // sum the non-zero elements
+      for (int j=i; j<i+smoothing_n_elements; j++)
+      {
+         if ( array_x[j] != 0 )
          {
-            if ( fabs( x[j]/x[k] ) > standard ) flag = 1;
+            sum_of_nonzero += array_x[j];
+            num_of_nonzero ++;
          }
       }
 
-      if ( flag )
-         x[j] = 0;
-   }
+      // average of non-zero elements
+      if ( num_of_nonzero != 0 )   ave_of_nonzero = sum_of_nonzero/num_of_nonzero;
 
-} // FUNCTION : mask
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :
-// Description :
-//
-// Note        :
-//
-// Parameter   :
-//
-// Return      :
-//-------------------------------------------------------------------------------------------------------
-void Par_EquilibriumIC::add_num( double* x, int start, int fin )
-{
-
-   double sum = 0;
-   int    num = 0;
-
-   for (int j=start; j<fin; j++)
-   {
-
-      if ( x[j] != 0 )
+      // assign the average of non-zero elements to the zero element
+      for (int j=i; j<i+smoothing_n_elements; j++)
       {
-         sum += x[j];
-         num++;
+         if ( array_x[j] == 0 )
+         {
+            array_x[j] = ave_of_nonzero;
+         }
       }
    }
 
-   if ( num != 0 )
-   {
-      double ave_x = sum/num;
-
-      for (int j=start; j<fin; j++)
-      {
-         if ( x[j] == 0 ) x[j] = ave_x;
-      }
-   }
-
-} // FUNCTION : add_num
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :
-// Description :
-//
-// Note        :
-//
-// Parameter   :
-//
-// Return      :
-//-------------------------------------------------------------------------------------------------------
-void Par_EquilibriumIC::smooth_all( double* x, int start, int fin )
-{
-
-   int num = 10;
-   for (int k=start; k<fin-num+1; k++)
-   {
-      mask( x, k, k+num );
-   }
-
-   for (int k=start; k<fin-num+1; k++)
-   {
-      add_num( x, k, k+num );
-   }
-
-} // FUNCTION : smooth_all
+} // FUNCTION : SmoothArray
 
 
 
@@ -1382,7 +1340,7 @@ double Par_EquilibriumIC::ArrayCovariance( const double* array_x, const double* 
 //               index_start : the first index in the array for the linear regression
 //               n_elements  : number of elements for the linear regression
 //
-// Return      : slope
+// Return      : slope_y
 //-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::Slope_LinearRegression( const double* array_x, const double* array_y,
                                                   const int index_start, const int n_elements )
@@ -1391,7 +1349,9 @@ double Par_EquilibriumIC::Slope_LinearRegression( const double* array_x, const d
    const double variance_x    = ArrayCovariance( array_x, array_x, index_start, n_elements );
    const double covariance_xy = ArrayCovariance( array_x, array_y, index_start, n_elements );
 
-   return covariance_xy/variance_x;
+   const double slope_y       = covariance_xy/variance_x;
+
+   return slope_y;
 
 } // FUNCTION : Slope_LinearRegression
 

@@ -99,9 +99,7 @@ class Par_EquilibriumIC
       double *psi;
 
       // statistics
-      void   smooth_all( double* x, int start, int fin );
-      void   mask( double* x, int start, int fin);
-      void   add_num( double* x, int start, int fin);
+      void   SmoothArray( double* array_x, int index_start, int index_end );
 
       double ArrayCovariance( const double* array_x, const double* array_y,
                               const int index_start, const int n_elements );
