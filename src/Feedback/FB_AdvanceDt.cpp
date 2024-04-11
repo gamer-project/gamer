@@ -196,9 +196,9 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 //    5.2. sort PID by position
 //         --> necessary for fixing the order of particles in different patches
-      long      *NearbyPIDList_IdxTable = new long [NNearbyPatch];
-      int       *NearbyPIDList_Old      = new int  [NNearbyPatch];
-      real_par **PCr = NULL;
+      long  *NearbyPIDList_IdxTable = new long [NNearbyPatch];
+      int   *NearbyPIDList_Old      = new int  [NNearbyPatch];
+      int  **PCr = NULL;
       Aux_AllocateArray2D( PCr, 3, NNearbyPatch );
 
       for (int t=0; t<NNearbyPatch; t++)
