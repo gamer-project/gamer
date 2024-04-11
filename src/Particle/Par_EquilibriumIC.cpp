@@ -1058,7 +1058,7 @@ void Par_EquilibriumIC::Init_Prob_Dens()
 
    }
 
-   smooth_all( prob_dens, 0, params.Cloud_MassProfNBin );
+   SmoothArray( prob_dens, 0, params.Cloud_MassProfNBin );
 
 } // FUNCTION : Init_Prob_Dens
 
