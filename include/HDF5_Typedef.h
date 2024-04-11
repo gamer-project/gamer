@@ -780,6 +780,14 @@ struct InputPara_t
    int    Opt__RecordMemory;
    int    Opt__RecordPerformance;
    int    Opt__ManualControl;
+   int    Opt__RecordCenter;
+   double COM_CenX;
+   double COM_CenY;
+   double COM_CenZ;
+   double COM_MaxR;
+   double COM_MinRho;
+   double COM_TolErrR;
+   int    COM_MaxIter;
    int    Opt__RecordUser;
    int    Opt__OptimizeAggressive;
    int    Opt__SortPatchByLBIdx;

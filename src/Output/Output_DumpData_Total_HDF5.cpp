@@ -251,6 +251,8 @@ Procedure for outputting new variables:
 //                                      LIBYT_JUPYTER
 //                2476 : 2024/03/31 --> output particle attribute with assigned precision set by FLOAT8_PAR in Makefile;
 //                                      record value of FLOAT8_PAR as Makefile.Float8_Par and KeyInfo.Float8_Par
+//                2477 : 2024/04/05 --> output OPT__RECORD_CENTER, COM_CEN_X, COM_CEN_Y, COM_CEN_Z,
+//                                             COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R, COM_MAX_ITER
 //                2478 : 2024/04/09 --> output ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
@@ -2609,6 +2611,14 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__RecordMemory       = OPT__RECORD_MEMORY;
    InputPara.Opt__RecordPerformance  = OPT__RECORD_PERFORMANCE;
    InputPara.Opt__ManualControl      = OPT__MANUAL_CONTROL;
+   InputPara.Opt__RecordCenter       = OPT__RECORD_CENTER;
+   InputPara.COM_CenX                = COM_CEN_X;
+   InputPara.COM_CenY                = COM_CEN_Y;
+   InputPara.COM_CenZ                = COM_CEN_Z;
+   InputPara.COM_MaxR                = COM_MAX_R;
+   InputPara.COM_MinRho              = COM_MIN_RHO;
+   InputPara.COM_TolErrR             = COM_TOLERR_R;
+   InputPara.COM_MaxIter             = COM_MAX_ITER;
    InputPara.Opt__RecordUser         = OPT__RECORD_USER;
    InputPara.Opt__OptimizeAggressive = OPT__OPTIMIZE_AGGRESSIVE;
    InputPara.Opt__SortPatchByLBIdx   = OPT__SORT_PATCH_BY_LBIDX;
@@ -3549,6 +3559,14 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__RecordMemory",       HOFFSET(InputPara_t,Opt__RecordMemory      ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__RecordPerformance",  HOFFSET(InputPara_t,Opt__RecordPerformance ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__ManualControl",      HOFFSET(InputPara_t,Opt__ManualControl     ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__RecordCenter",       HOFFSET(InputPara_t,Opt__RecordCenter      ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "COM_CenX",                HOFFSET(InputPara_t,COM_CenX               ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "COM_CenY",                HOFFSET(InputPara_t,COM_CenY               ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "COM_CenZ",                HOFFSET(InputPara_t,COM_CenZ               ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "COM_MaxR",                HOFFSET(InputPara_t,COM_MaxR               ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "COM_MinRho",              HOFFSET(InputPara_t,COM_MinRho             ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "COM_TolErrR",             HOFFSET(InputPara_t,COM_TolErrR            ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "COM_MaxIter",             HOFFSET(InputPara_t,COM_MaxIter            ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__RecordUser",         HOFFSET(InputPara_t,Opt__RecordUser        ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__OptimizeAggressive", HOFFSET(InputPara_t,Opt__OptimizeAggressive), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__SortPatchByLBIdx",   HOFFSET(InputPara_t,Opt__SortPatchByLBIdx  ), H5T_NATIVE_INT              );
