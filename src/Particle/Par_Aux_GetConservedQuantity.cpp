@@ -52,10 +52,13 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
          Mass_ThisRank    += amr->Par->Mass[p];
          MomX_ThisRank    += amr->Par->Mass[p]*amr->Par->VelX[p];
          MomY_ThisRank    += amr->Par->Mass[p]*amr->Par->VelY[p];
-         MomZ_ThisRank    += amr->Par->Mass[p]*(amr->Par->VelZ[p]);
-         AngMomX_ThisRank += amr->Par->Mass[p]*( ( amr->Par->PosY[p] - ANGMOM_ORIGIN_Y )*amr->Par->VelZ[p] - ( amr->Par->PosZ[p] - ANGMOM_ORIGIN_Z )*amr->Par->VelY[p] );
-         AngMomY_ThisRank += amr->Par->Mass[p]*( ( amr->Par->PosZ[p] - ANGMOM_ORIGIN_Z )*amr->Par->VelX[p] - ( amr->Par->PosX[p] - ANGMOM_ORIGIN_X )*amr->Par->VelZ[p] );
-         AngMomZ_ThisRank += amr->Par->Mass[p]*( ( amr->Par->PosX[p] - ANGMOM_ORIGIN_X )*amr->Par->VelY[p] - ( amr->Par->PosY[p] - ANGMOM_ORIGIN_Y )*amr->Par->VelX[p] );
+         MomZ_ThisRank    += amr->Par->Mass[p]*amr->Par->VelZ[p];
+         const double dX   = amr->Par->PosX[p] - ANGMOM_ORIGIN_X;
+         const double dY   = amr->Par->PosY[p] - ANGMOM_ORIGIN_Y;
+         const double dZ   = amr->Par->PosZ[p] - ANGMOM_ORIGIN_Z;
+         AngMomX_ThisRank += amr->Par->Mass[p]*( dY*amr->Par->VelZ[p] - dZ*amr->Par->VelY[p] );
+         AngMomY_ThisRank += amr->Par->Mass[p]*( dZ*amr->Par->VelX[p] - dX*amr->Par->VelZ[p] );
+         AngMomZ_ThisRank += amr->Par->Mass[p]*( dX*amr->Par->VelY[p] - dY*amr->Par->VelX[p] );
          Ek_ThisRank      += 0.5*amr->Par->Mass[p]*( SQR(amr->Par->VelX[p]) + SQR(amr->Par->VelY[p]) + SQR(amr->Par->VelZ[p]) );
       }
    }
