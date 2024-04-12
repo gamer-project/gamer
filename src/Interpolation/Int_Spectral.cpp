@@ -242,7 +242,7 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
                   if (fabs(dPhase) > threshold) {
 //                      shift phase beyond the discontinuity
                         for (int j = k; j < InSize[XYZ]; j++) {
-                           Imag[j] += (dPhase > 0 ? -PI : PI);
+                           Imag[j] += (dPhase > 0 ? -M_PI : M_PI);
                         }
 //                      negate the density from this point onward
                         for (int j = k; j < InSize[XYZ]; j++) {
@@ -279,7 +279,7 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
                   }
 //                restore the phase for this and all subsequent points
                   for (int j = k; j < OutSize[XYZ]; j++) {
-                     Imag[j] += PI;
+                     Imag[j] += M_PI;
                   }
                }
             }
