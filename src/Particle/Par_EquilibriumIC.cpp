@@ -738,35 +738,28 @@ double Par_EquilibriumIC::potential( const double x )
 //
 // Return      :
 //-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::integration_eng_base( const double eng )
+double Par_EquilibriumIC::Integration_Eng_base( const double Eng, const int N_points )
 {
+   const double dEng = (Eng-Eng_min)/N_points;
 
-   double min = eng_min;
-   double max = eng;
-   int    num = 1000;
+   double Integration_result = 0;
 
-   double dx = (max-min)/num;
-
-   double result = 0;
-
-   for (int i=0; i<num; i++)
+   for (int i=0; i<N_points; i++)
    {
+      const double Psi_L = Eng_min +        i*dEng;
+      const double Psi_M = Eng_min +  (i+0.5)*dEng;
+      const double Psi_R = Eng_min +    (i+1)*dEng;
 
-      double psi_l = min+i*dx;
-      double psi_r = min+(i+1)*dx;
+      const int    index_Psi  = Mis_BinarySearch_Real( Table_Gravity_Potential, 0, params.Cloud_MassProfNBin-1,
+                                                       -Psi_M ) + 1;
 
-      int ind0 = Mis_BinarySearch_Real( Table_Gravity_Potential, 0, params.Cloud_MassProfNBin-1, -(min + (i+0.5)*dx) ) + 1;
-
-      if ( i == num-1 )
-         result += -2*Table_dRho_dx[ind0]*( pow(eng-psi_l,0.5) );
-      else
-         result += -2*Table_dRho_dx[ind0]*( pow(eng-psi_l,0.5) - pow(eng-psi_r,0.5) );
-
+      if ( i == N_points-1 )   Integration_result += -2*Table_dRho_dx[index_Psi]*( sqrt( Eng-Psi_L ) );
+      else                     Integration_result += -2*Table_dRho_dx[index_Psi]*( sqrt( Eng-Psi_L ) - sqrt( Eng-Psi_R ) );
    }
 
-   return result;
+   return Integration_result;
 
-} // FUNCTION : integration_eng_base
+} // FUNCTION : Integration_Eng_base
 
 
 
@@ -854,7 +847,7 @@ void Par_EquilibriumIC::Init_Pot()
 
    //Pot
    Table_Gravity_Potential[params.Cloud_MassProfNBin-1] = -NEWTON_G*Table_Enclosed_Mass[params.Cloud_MassProfNBin-1]/Table_r[params.Cloud_MassProfNBin-1];
-   eng_min = -Table_Gravity_Potential[params.Cloud_MassProfNBin-1];
+   Eng_min = -Table_Gravity_Potential[params.Cloud_MassProfNBin-1];
 
    for (int b=params.Cloud_MassProfNBin-2; b>0; b--)
    {
@@ -949,7 +942,7 @@ void Par_EquilibriumIC::Init_Pot_Table()
    //Pot
    Table_Gravity_Potential[params.Cloud_MassProfNBin-1] = -NEWTON_G*Table_Enclosed_Mass[params.Cloud_MassProfNBin-1]/Table_r[params.Cloud_MassProfNBin-1];
 
-   eng_min = -Table_Gravity_Potential[params.Cloud_MassProfNBin-1];
+   Eng_min = -Table_Gravity_Potential[params.Cloud_MassProfNBin-1];
 
    for (int b=params.Cloud_MassProfNBin-2; b>0; b--)
    {
@@ -995,7 +988,7 @@ void Par_EquilibriumIC::Init_Prob_Dens()
 
       psi[k] = eng;
 
-      int_prob_dens[k] = integration_eng_base(eng);
+      int_prob_dens[k] = Integration_Eng_base( eng, 1000 );
 
       eng += delta;
 

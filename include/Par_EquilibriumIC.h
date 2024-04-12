@@ -89,10 +89,10 @@ class Par_EquilibriumIC
 
       // Solve Eddington's equation
       double potential( const double x );
-      double integration_eng_base( double eng );
+      double Integration_Eng_base( const double Eng, const int N_points );
 
       double  delta;
-      double  eng_min;
+      double  Eng_min;
       double *prob_dens;
       double *int_prob_dens;
       double *psi;
