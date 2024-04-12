@@ -38,14 +38,13 @@ void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
                                        const int idx_flux, const int didx_flux[3],
                                        const real dt_dh2, const EoS_t *EoS )
 {
+#  ifdef SRHD
+   real Con_L[NCOMP_FLUID], Con_C[NCOMP_FLUID], Con_R[NCOMP_FLUID];
+   real Pri_L[NCOMP_FLUID], Pri_L[NCOMP_FLUID], Pri_L[NCOMP_FLUID];
+#  endif
 
-// 1. calculate the cosmic-ray pressure
-   const real pCR_old = EoS->CREint2CRPres_FuncPtr( g_ConVar_In[CRAY][idx_in], EoS->AuxArrayDevPtr_Flt,
-                                                    EoS->AuxArrayDevPtr_Int, EoS->Table );
-
-
-// 2. compute \div V using the upwind data; reference: [2]
-   real div_V[3];
+// 1. compute \div V using the upwind data; reference: [2]
+   real div_V[3], LorentzFactor = 1.0;
 
    for (int d=0; d<3; d++)
    {
@@ -57,18 +56,46 @@ void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
       const real DensFlux_R = g_Flux_Half[d][DENS][ idx_flux + didx_flux[d] ];
 #     endif
 
-      div_V[d]  = ( DensFlux_R > (real)0.0 ) ?
-                  ( DensFlux_R / g_ConVar_In[DENS][ idx_in              ] ) :
-                  ( DensFlux_R / g_ConVar_In[DENS][ idx_in + didx_in[d] ] );
+#     ifdef SRHD
+      for (int v=0; v<NCOMP_FLUID; v++)
+      {
+         Con_L[v] = g_ConVar_In[v][ idx_in - didx_in[d] ];
+         Con_C[v] = g_ConVar_In[v][ idx_in              ];
+         Con_R[v] = g_ConVar_In[v][ idx_in + didx_in[d] ];
+      }
 
-      div_V[d] -= ( DensFlux_L > (real)0.0 ) ?
-                  ( DensFlux_L / g_ConVar_In[DENS][ idx_in - didx_in[d] ] ) :
-                  ( DensFlux_L / g_ConVar_In[DENS][ idx_in              ] );
+      Hydro_Con2Pri( Con_L, Pri_L, NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
+                     EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr, EoS->GuessHTilde_FuncPtr,
+                     EoS->HTilde2Temp_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
+                     EoS->Table, NULL, NULL );
+      Hydro_Con2Pri( Con_C, Pri_C, NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
+                     EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr, EoS->GuessHTilde_FuncPtr,
+                     EoS->HTilde2Temp_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
+                     EoS->Table, NULL, &LorentzFactor );
+      Hydro_Con2Pri( Con_R, Pri_R, NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
+                     EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr, EoS->GuessHTilde_FuncPtr,
+                     EoS->HTilde2Temp_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
+                     EoS->Table, NULL, NULL );
+
+      const real Rho_L = Pri_L[DENS];
+      const real Rho_C = Pri_C[DENS];
+      const real Rho_R = Pri_R[DENS];
+#     else
+      const real Rho_L = g_ConVar_In[DENS][ idx_in - didx_in[d] ];
+      const real Rho_C = g_ConVar_In[DENS][ idx_in              ];
+      const real Rho_R = g_ConVar_In[DENS][ idx_in + didx_in[d] ];
+#     endif
+
+      div_V[d]  = ( DensFlux_R > (real)0.0 ) ? DensFlux_R / Rho_C : DensFlux_R / Rho_R;
+      div_V[d] -= ( DensFlux_L > (real)0.0 ) ? DensFlux_L / Rho_L : DensFlux_L / Rho_C;
    } // for (int d=0; d<3; d++)
 
+// 2. calculate the cosmic-ray pressure
+   const real pCR_old = EoS->CREint2CRPres_FuncPtr( g_ConVar_In[CRAY][idx_in]/LorentzFactor, EoS->AuxArrayDevPtr_Flt,
+                                                    EoS->AuxArrayDevPtr_Int, EoS->Table );
 
 // 3. update the cosmic-ray energy
-   OneCell[CRAY] -= pCR_old*dt_dh2*( div_V[0] + div_V[1] + div_V[2] );
+   OneCell[CRAY] -= pCR_old * dt_dh2 * ( div_V[0] + div_V[1] + div_V[2] );
 
 } // FUMCTION : CR_AdiabaticWork_HalfStep_MHM_RP
 
@@ -110,11 +137,15 @@ void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                                 const real dt, const real dh, const EoS_t *EoS )
 {
 
-   const int didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
-   const int didx_fc[3]   = { 1, N_FC_VAR,  SQR(N_FC_VAR)  };
-   const real dt_dh       = dt/dh;
+   const int  didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
+   const int  didx_fc  [3] = { 1, N_FC_VAR,  SQR(N_FC_VAR)  };
+   const real dt_dh        = dt/dh;
 
    real div_V[3];
+#  ifdef SRHD
+   real Con_LR[NCOMP_FLUID], Con_CL[NCOMP_FLUID], Con_CR[NCOMP_FLUID], Con_RL[NCOMP_FLUID];
+   real Pri_LR[NCOMP_FLUID], Pri_CL[NCOMP_FLUID], Pri_CR[NCOMP_FLUID], Pri_RL[NCOMP_FLUID];
+#  endif
 
    const int size_ij = SQR(PS2);
    CGPU_LOOP( idx_out, CUBE(PS2) )
@@ -149,13 +180,7 @@ void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
       const int k_fc     = k_out + 1;
       const int idx_fc   = IDX321( i_fc, j_fc, k_fc, N_FC_VAR, N_FC_VAR );
 
-
-//    1. calculate the cosmic-ray pressure
-      const real pCR_half = EoS->CREint2CRPres_FuncPtr( g_PriVar_Half[CRAY][idx_hf], EoS->AuxArrayDevPtr_Flt,
-                                                        EoS->AuxArrayDevPtr_Int, EoS->Table );
-
-
-//    2. compute \div V using the upwind data; reference: [2]
+//    1. compute \div V using the upwind data; reference: [2]
       for (int d=0; d<3; d++)
       {
          const int faceL = 2*d;
@@ -169,18 +194,53 @@ void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
          const real DensFlux_R = g_Flux[d][DENS][ idx_flux + didx_flux[d] ];
 #        endif
 
-         div_V[d]  = ( DensFlux_R > (real)0.0 ) ?
-                     ( DensFlux_R / g_FC_Var[faceR][DENS][ idx_fc              ] ) :
-                     ( DensFlux_R / g_FC_Var[faceL][DENS][ idx_fc + didx_fc[d] ] );
+#        ifdef SRHD
+         for (int v=0; v<NCOMP_FLUID; v++)
+         {
+            Con_LR[v] = g_FC_Var[faceR][ idx_fc - didx_fc[d] ];
+            Con_CL[v] = g_FC_Var[faceL][ idx_fc              ];
+            Con_CR[v] = g_FC_Var[faceR][ idx_fc              ];
+            Con_RL[v] = g_FC_Var[faceL][ idx_fc + didx_fc[d] ];
+         }
 
-         div_V[d] -= ( DensFlux_L > (real)0.0 ) ?
-                     ( DensFlux_L / g_FC_Var[faceR][DENS][ idx_fc - didx_fc[d] ] ) :
-                     ( DensFlux_L / g_FC_Var[faceL][DENS][ idx_fc              ] );
+         Hydro_Con2Pri( Con_LR, Pri_LR, NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
+                        EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr, EoS->GuessHTilde_FuncPtr,
+                        EoS->HTilde2Temp_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
+                        EoS->Table, NULL, NULL );
+         Hydro_Con2Pri( Con_CL, Pri_CL, NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
+                        EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr, EoS->GuessHTilde_FuncPtr,
+                        EoS->HTilde2Temp_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
+                        EoS->Table, NULL, NULL );
+         Hydro_Con2Pri( Con_CR, Pri_CR, NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
+                        EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr, EoS->GuessHTilde_FuncPtr,
+                        EoS->HTilde2Temp_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
+                        EoS->Table, NULL, NULL );
+         Hydro_Con2Pri( Con_RL, Pri_RL, NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
+                        EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr, EoS->GuessHTilde_FuncPtr,
+                        EoS->HTilde2Temp_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
+                        EoS->Table, NULL, NULL );
+
+         const real Rho_LR = Pri_LR[DENS];
+         const real Rho_CL = Pri_CL[DENS];
+         const real Rho_CR = Pri_CR[DENS];
+         const real Rho_RL = Pri_RL[DENS];
+#        else
+         const real Rho_LR = g_FC_Var[faceR][ idx_fc - didx_fc[d] ];
+         const real Rho_CL = g_FC_Var[faceL][ idx_fc              ];
+         const real Rho_CR = g_FC_Var[faceR][ idx_fc              ];
+         const real Rho_RL = g_FC_Var[faceL][ idx_fc + didx_fc[d] ];
+#        endif
+
+         div_V[d]  = ( DensFlux_R > (real)0.0 ) ? DensFlux_R / Rho_CR : DensFlux_R / Rho_RL;
+         div_V[d] -= ( DensFlux_L > (real)0.0 ) ? DensFlux_L / Rho_LR : DensFlux_L / Rho_CL;
       } // for (int d=0; d<3; d++)
 
+//    2. calculate the cosmic-ray pressure
+      const real pCR_half = EoS->CREint2CRPres_FuncPtr( g_PriVar_Half[CRAY][idx_hf], EoS->AuxArrayDevPtr_Flt,
+                                                        EoS->AuxArrayDevPtr_Int, EoS->Table );
 
 //    3. update the cosmic-ray energy
-      g_Output[CRAY][idx_out] -= pCR_half*dt_dh*( div_V[0] + div_V[1] + div_V[2] );
+      g_Output[CRAY][idx_out] -= pCR_half * dt_dh * ( div_V[0] + div_V[1] + div_V[2] );
 
    } // CGPU_LOOP( idx_out, CUBE(PS2) )
 
