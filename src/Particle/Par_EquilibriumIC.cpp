@@ -738,50 +738,6 @@ double Par_EquilibriumIC::potential( const double x )
 //
 // Return      :
 //-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::inverse_psi_to_index( const double psi )
-{
-
-   int max = params.Cloud_MassProfNBin-1;
-   int min = 0;
-   int mid = (max+min)/2;
-   double mid_psi;
-
-   while ( true )
-   {
-
-      if ( max == min+1 )
-      {
-         return max;
-      }
-
-      mid_psi = -Table_Gravity_Potential[mid] ;
-
-      if ( psi > mid_psi )
-      {
-         max = mid;
-         mid = (max+min)/2;
-      }
-      else
-      {
-         min = mid;
-         mid = (max+min)/2;
-      }
-   }
-
-} // FUNCTION : inverse_psi_to_index
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :
-// Description :
-//
-// Note        :
-//
-// Parameter   :
-//
-// Return      :
-//-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::integration_eng_base( const double eng )
 {
 
@@ -799,7 +755,7 @@ double Par_EquilibriumIC::integration_eng_base( const double eng )
       double psi_l = min+i*dx;
       double psi_r = min+(i+1)*dx;
 
-      int ind0 = inverse_psi_to_index(min+(i+0.5)*dx);
+      int ind0 = Mis_BinarySearch_Real( Table_Gravity_Potential, 0, params.Cloud_MassProfNBin-1, -(min + (i+0.5)*dx) ) + 1;
 
       if ( i == num-1 )
          result += -2*Table_dRho_dx[ind0]*( pow(eng-psi_l,0.5) );
