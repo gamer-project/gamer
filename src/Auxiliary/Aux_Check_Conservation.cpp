@@ -13,7 +13,7 @@ extern double ELBDM_Vcm[3];
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_Check_Conservation
 // Description :  Verify the conservation laws
-//                --> Mass, momentum, angular momentum, energy, passive scalars, ...
+//                --> Mass, center of mass, momentum, angular momentum, energy, passive scalars, ...
 //
 // Note        :  1. This check only works with the models HYDRO, ELBDM, and PAR_ONLY
 //                2. The values measured during the first function call will be taken as the reference values
@@ -398,12 +398,21 @@ void Aux_Check_Conservation( const char *comment )
    MPI_Reduce( Fluid_ThisRank, Fluid_AllRank, NVar, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
 
 
+// compute the center of mass
+   double CoM_Gas[3];
+   double FinaldR_Gas;
+   int    FinalNIter_Gas;
+   Aux_FindWeightedAverageCenter( CoM_Gas, amr->BoxCenter, __FLT_MAX__, 0.0, _DENS, __FLT_MAX__, 1, &FinaldR_Gas, &FinalNIter_Gas );
+
+
 // calculate conserved quantities for particles
 #  ifdef MASSIVE_PARTICLES
-   double Mass_Par, MomX_Par, MomY_Par, MomZ_Par;
+   double Mass_Par, CoMX_Par, CoMY_Par, CoMZ_Par;
+   double MomX_Par, MomY_Par, MomZ_Par;
    double AngMomX_Par, AngMomY_Par, AngMomZ_Par, Ekin_Par, Epot_Par, Etot_Par;
 
-   Par_Aux_GetConservedQuantity( Mass_Par, MomX_Par, MomY_Par, MomZ_Par,
+   Par_Aux_GetConservedQuantity( Mass_Par, CoMX_Par, CoMY_Par, CoMZ_Par,
+                                 MomX_Par, MomY_Par, MomZ_Par,
                                  AngMomX_Par, AngMomY_Par, AngMomZ_Par, Ekin_Par, Epot_Par );
 
    Etot_Par = Ekin_Par + Epot_Par;
@@ -415,8 +424,10 @@ void Aux_Check_Conservation( const char *comment )
    {
 //    note that a variable length array cannot have static storage duration
       static double Fluid_Ref[NVar_Max];
+      static double CoM_Gas_Ref[3];
 #     ifdef MASSIVE_PARTICLES
-      static double Mass_Par_Ref, MomX_Par_Ref, MomY_Par_Ref, MomZ_Par_Ref;
+      static double Mass_Par_Ref, CoMX_Par_Ref, CoMY_Par_Ref, CoMZ_Par_Ref;
+      static double MomX_Par_Ref, MomY_Par_Ref, MomZ_Par_Ref;
       static double AngMomX_Par_Ref, AngMomY_Par_Ref, AngMomZ_Par_Ref, Ekin_Par_Ref, Epot_Par_Ref, Etot_Par_Ref;
 #     if ( MODEL != PAR_ONLY )
       static double Mass_All_Ref, MomX_All_Ref, MomY_All_Ref, MomZ_All_Ref;
@@ -428,19 +439,23 @@ void Aux_Check_Conservation( const char *comment )
       if ( FirstTime )
       {
 //       record the reference values
-         for (int v=0; v<NVar; v++)    Fluid_Ref[v] = Fluid_AllRank[v];
+         for (int v=0; v<NVar; v++)    Fluid_Ref[v]   = Fluid_AllRank[v];
+         for (int d=0; d<3; d++)       CoM_Gas_Ref[d] = CoM_Gas[d];
 
 #        ifdef MASSIVE_PARTICLES
-         Mass_Par_Ref    = Mass_Par;
-         MomX_Par_Ref    = MomX_Par;
-         MomY_Par_Ref    = MomY_Par;
-         MomZ_Par_Ref    = MomZ_Par;
+         Mass_Par_Ref    =    Mass_Par;
+         CoMX_Par_Ref    =    CoMX_Par;
+         CoMY_Par_Ref    =    CoMY_Par;
+         CoMZ_Par_Ref    =    CoMZ_Par;
+         MomX_Par_Ref    =    MomX_Par;
+         MomY_Par_Ref    =    MomY_Par;
+         MomZ_Par_Ref    =    MomZ_Par;
          AngMomX_Par_Ref = AngMomX_Par;
          AngMomY_Par_Ref = AngMomY_Par;
          AngMomZ_Par_Ref = AngMomZ_Par;
-         Ekin_Par_Ref    = Ekin_Par;
-         Epot_Par_Ref    = Epot_Par;
-         Etot_Par_Ref    = Etot_Par;
+         Ekin_Par_Ref    =    Ekin_Par;
+         Epot_Par_Ref    =    Epot_Par;
+         Etot_Par_Ref    =    Etot_Par;
 
 #        if ( MODEL != PAR_ONLY )
 #        if   ( MODEL == HYDRO )
@@ -480,6 +495,7 @@ void Aux_Check_Conservation( const char *comment )
 
 #        if   ( MODEL == HYDRO )
          Aux_Message( File, "# Mass_Gas        : total HYDRO mass\n" );
+         Aux_Message( File, "# CoMX/Y/Z_Gas    : total HYDRO center of mass\n" );
          Aux_Message( File, "# MomX/Y/Z_Gas    : total HYDRO momentum\n" );
          Aux_Message( File, "# AngMomX/Y/Z_Gas : total HYDRO angular momentum\n" );
          Aux_Message( File, "# Ekin_Gas        : total HYDRO kinetic energy\n" );
@@ -492,6 +508,7 @@ void Aux_Check_Conservation( const char *comment )
 
 #        elif ( MODEL == ELBDM )
          Aux_Message( File, "# Mass_Psi        : total ELBDM mass\n" );
+         Aux_Message( File, "# CoMX/Y/Z_Psi    : total ELBDM center of mass\n" );
          Aux_Message( File, "# MomX/Y/Z_Psi    : total ELBDM momentum\n" );
          Aux_Message( File, "# Ekin_Psi        : total ELBDM kinetic energy\n" );
          Aux_Message( File, "# Epot_Psi        : total ELBDM potential energy\n" );
@@ -507,6 +524,7 @@ void Aux_Check_Conservation( const char *comment )
 
 #        ifdef MASSIVE_PARTICLES
          Aux_Message( File, "# Mass_Par        : total PARTICLE mass\n" );
+         Aux_Message( File, "# CoMX/Y/Z_Par    : total PARTICLE center of mass\n" );
          Aux_Message( File, "# MomX/Y/Z_Par    : total PARTICLE momentum\n" );
          Aux_Message( File, "# AngMomX/Y/Z_Par : total PARTICLE angular momentum\n" );
          Aux_Message( File, "# Ekin_Par        : total PARTICLE kinetic energy\n" );
@@ -515,6 +533,7 @@ void Aux_Check_Conservation( const char *comment )
 
 #        if ( MODEL != PAR_ONLY )
          Aux_Message( File, "# Mass_All        : sum of the total HYDRO/ELBDM + PARTICLE mass\n" );
+         Aux_Message( File, "# CoMX/Y/Z_All    : total HYDRO/ELBDM + PARTICLE center of mass\n" );
          Aux_Message( File, "# MomX_All        : sum of the total HYDRO/ELBDM + PARTICLE momentum x\n" );
          Aux_Message( File, "# MomY_All        : sum of the total HYDRO/ELBDM + PARTICLE momentum y\n" );
          Aux_Message( File, "# MomZ_All        : sum of the total HYDRO/ELBDM + PARTICLE momentum z\n" );
@@ -532,15 +551,18 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "#-------------------------------------------------------------------------------------------" );
          Aux_Message( File, "--------------------------------------------------------------------------------------------\n\n" );
 
-         const int NColumnMax = 90;
-         Aux_Message( File, "#%12s  %10s", "[ 1]", "[ 2]" );
-         for (int c=2; c<NColumnMax; c++)    Aux_Message( File, "  %13s[%2d]", "", c+1 );
+         const int NColumnMax = 120;
+         Aux_Message( File, "#%12s  %10s", "[  1]", "[  2]" );
+         for (int c=2; c<NColumnMax; c++)    Aux_Message( File, "  %12s[%3d]", "", c+1 );
          Aux_Message( File, "\n" );
 
          Aux_Message( File, "#%12s  %10s", "Time", "Step" );
 
 #        if   ( MODEL == HYDRO )
          Aux_Message( File, "  %17s  %17s  %17s",    "Mass_Gas",    "Mass_Gas_AErr",    "Mass_Gas_RErr" );
+         Aux_Message( File, "  %17s  %17s  %17s",    "CoMX_Gas",    "CoMX_Gas_AErr",    "CoMX_Gas_AveV" );
+         Aux_Message( File, "  %17s  %17s  %17s",    "CoMY_Gas",    "CoMY_Gas_AErr",    "CoMY_Gas_AveV" );
+         Aux_Message( File, "  %17s  %17s  %17s",    "CoMZ_Gas",    "CoMZ_Gas_AErr",    "CoMZ_Gas_AveV" );
          Aux_Message( File, "  %17s  %17s  %17s",    "MomX_Gas",    "MomX_Gas_AErr",    "MomX_Gas_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s",    "MomY_Gas",    "MomY_Gas_AErr",    "MomY_Gas_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s",    "MomZ_Gas",    "MomZ_Gas_AErr",    "MomZ_Gas_RErr" );
@@ -557,6 +579,9 @@ void Aux_Check_Conservation( const char *comment )
 
 #        elif ( MODEL == ELBDM )
          Aux_Message( File, "  %17s  %17s  %17s",    "Mass_Psi",    "Mass_Psi_AErr",    "Mass_Psi_RErr" );
+         Aux_Message( File, "  %17s  %17s  %17s",    "CoMX_Psi",    "CoMX_Psi_AErr",    "CoMX_Psi_AveV" );
+         Aux_Message( File, "  %17s  %17s  %17s",    "CoMY_Psi",    "CoMY_Psi_AErr",    "CoMY_Psi_AveV" );
+         Aux_Message( File, "  %17s  %17s  %17s",    "CoMZ_Psi",    "CoMZ_Psi_AErr",    "CoMZ_Psi_AveV" );
          Aux_Message( File, "  %17s  %17s  %17s",    "MomX_Psi",    "MomX_Psi_AErr",    "MomX_Psi_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s",    "MomY_Psi",    "MomY_Psi_AErr",    "MomY_Psi_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s",    "MomZ_Psi",    "MomZ_Psi_AErr",    "MomZ_Psi_RErr" );
@@ -577,6 +602,9 @@ void Aux_Check_Conservation( const char *comment )
 
 #        ifdef MASSIVE_PARTICLES
          Aux_Message( File, "  %17s  %17s  %17s",    "Mass_Par",    "Mass_Par_AErr",    "Mass_Par_RErr" );
+         Aux_Message( File, "  %17s  %17s  %17s",    "CoMX_Par",    "CoMX_Par_AErr",    "CoMX_Par_AveV" );
+         Aux_Message( File, "  %17s  %17s  %17s",    "CoMY_Par",    "CoMY_Par_AErr",    "CoMY_Par_AveV" );
+         Aux_Message( File, "  %17s  %17s  %17s",    "CoMZ_Par",    "CoMZ_Par_AErr",    "CoMZ_Par_AveV" );
          Aux_Message( File, "  %17s  %17s  %17s",    "MomX_Par",    "MomX_Par_AErr",    "MomX_Par_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s",    "MomY_Par",    "MomY_Par_AErr",    "MomY_Par_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s",    "MomZ_Par",    "MomZ_Par_AErr",    "MomZ_Par_RErr" );
@@ -589,6 +617,9 @@ void Aux_Check_Conservation( const char *comment )
 
 #        if ( MODEL != PAR_ONLY )
          Aux_Message( File, "  %17s  %17s  %17s",    "Mass_All",    "Mass_All_AErr",    "Mass_All_RErr" );
+         Aux_Message( File, "  %17s  %17s  %17s",    "CoMX_All",    "CoMX_All_AErr",    "CoMX_All_Avel" );
+         Aux_Message( File, "  %17s  %17s  %17s",    "CoMY_All",    "CoMY_All_AErr",    "CoMY_All_Avel" );
+         Aux_Message( File, "  %17s  %17s  %17s",    "CoMZ_All",    "CoMZ_All_AErr",    "CoMZ_All_Avel" );
          Aux_Message( File, "  %17s  %17s  %17s",    "MomX_All",    "MomX_All_AErr",    "MomX_All_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s",    "MomY_All",    "MomY_All_AErr",    "MomY_All_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s",    "MomZ_All",    "MomZ_All_AErr",    "MomZ_All_RErr" );
@@ -631,6 +662,13 @@ void Aux_Check_Conservation( const char *comment )
       const double MomZ_All    = Fluid_AllRank[       3] + MomZ_Par;
       const double Etot_All    = Fluid_AllRank[idx_etot] + Etot_Par;    // for ELBDM, total energy is stored in the last element
 #     endif // MODEL
+
+      const double CoMX_All        = ( Fluid_AllRank[0]*CoM_Gas    [0] + Mass_Par    *CoMX_Par     )/Mass_All;
+      const double CoMY_All        = ( Fluid_AllRank[0]*CoM_Gas    [1] + Mass_Par    *CoMY_Par     )/Mass_All;
+      const double CoMZ_All        = ( Fluid_AllRank[0]*CoM_Gas    [2] + Mass_Par    *CoMZ_Par     )/Mass_All;
+      const double CoMX_All_Ref    = ( Fluid_Ref    [0]*CoM_Gas_Ref[0] + Mass_Par_Ref*CoMX_Par_Ref )/Mass_All_Ref;
+      const double CoMY_All_Ref    = ( Fluid_Ref    [0]*CoM_Gas_Ref[1] + Mass_Par_Ref*CoMY_Par_Ref )/Mass_All_Ref;
+      const double CoMZ_All_Ref    = ( Fluid_Ref    [0]*CoM_Gas_Ref[2] + Mass_Par_Ref*CoMZ_Par_Ref )/Mass_All_Ref;
 #     endif // if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
 
 
@@ -639,11 +677,27 @@ void Aux_Check_Conservation( const char *comment )
 
       Aux_Message( File, "%13.7e  %10ld", Time[0], Step );
 
+      const int index_before_column_CoM = 0;
+
       for (int v=0; v<NVar; v++)
+      {
+
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e", Fluid_AllRank[v], AbsErr[v], RelErr[v] );
+
+      if ( v == index_before_column_CoM )
+      {
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[0],   CoM_Gas[0]-CoM_Gas_Ref[0],          (CoM_Gas[0]-CoM_Gas_Ref[0])/Time[0]        );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[1],   CoM_Gas[1]-CoM_Gas_Ref[1],          (CoM_Gas[1]-CoM_Gas_Ref[1])/Time[0]        );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[2],   CoM_Gas[2]-CoM_Gas_Ref[2],          (CoM_Gas[2]-CoM_Gas_Ref[2])/Time[0]        );
+      }
+
+      }
 
 #     ifdef MASSIVE_PARTICLES
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    Mass_Par,       Mass_Par-Mass_Par_Ref,          (Mass_Par-Mass_Par_Ref)/fabs(Mass_Par_Ref) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMX_Par,       CoMX_Par-CoMX_Par_Ref,          (CoMX_Par-CoMX_Par_Ref)/Time[0]            );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMY_Par,       CoMY_Par-CoMY_Par_Ref,          (CoMY_Par-CoMY_Par_Ref)/Time[0]            );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMZ_Par,       CoMZ_Par-CoMZ_Par_Ref,          (CoMZ_Par-CoMZ_Par_Ref)/Time[0]            );
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomX_Par,       MomX_Par-MomX_Par_Ref,          (MomX_Par-MomX_Par_Ref)/fabs(MomX_Par_Ref) );
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomY_Par,       MomY_Par-MomY_Par_Ref,          (MomY_Par-MomY_Par_Ref)/fabs(MomY_Par_Ref) );
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomZ_Par,       MomZ_Par-MomZ_Par_Ref,          (MomZ_Par-MomZ_Par_Ref)/fabs(MomZ_Par_Ref) );
@@ -656,6 +710,9 @@ void Aux_Check_Conservation( const char *comment )
 
 #     if ( MODEL != PAR_ONLY )
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    Mass_All,       Mass_All-Mass_All_Ref,          (Mass_All-Mass_All_Ref)/fabs(Mass_All_Ref) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMX_All,       CoMX_All-CoMX_All_Ref,          (CoMX_All-CoMX_All_Ref)/Time[0]            );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMY_All,       CoMY_All-CoMY_All_Ref,          (CoMY_All-CoMY_All_Ref)/Time[0]            );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMZ_All,       CoMZ_All-CoMZ_All_Ref,          (CoMZ_All-CoMZ_All_Ref)/Time[0]            );
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomX_All,       MomX_All-MomX_All_Ref,          (MomX_All-MomX_All_Ref)/fabs(MomX_All_Ref) );
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomY_All,       MomY_All-MomY_All_Ref,          (MomY_All-MomY_All_Ref)/fabs(MomY_All_Ref) );
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomZ_All,       MomZ_All-MomZ_All_Ref,          (MomZ_All-MomZ_All_Ref)/fabs(MomZ_All_Ref) );
