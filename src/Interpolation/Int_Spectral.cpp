@@ -230,14 +230,25 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
                Imag[k] = ELBDM_UnwrapPhase( Imag[k-1], Imag[k] );
             }
 
+            real threshold = 3;
+
 //          convert density and phase to real and imaginary part
             if ( SPEC_INT_XY_INSTEAD_DEPHA )
             {
-               for (int k = 0;  k < InSize[XYZ];  k++)
-               {
-                  const real Dens = Real[k];
-                  Real[k] = SQR(Real[k]);
-                  Imag[k] = Dens * sin( Imag[k] / SPEC_INT_WAVELENGTH_MAGNIFIER );
+//             detect phase jumps and adjust
+               for (int k = 1; k < InSize[XYZ]; k++) {
+                  double dPhase = Imag[k] - Imag[k-1];
+//                assuming jump > threshold is significant
+                  if (fabs(dPhase) > threshold) {
+//                      shift phase beyond the discontinuity
+                        for (int j = k; j < InSize[XYZ]; j++) {
+                           Imag[j] += (dPhase > 0 ? -PI : PI);
+                        }
+//                      negate the density from this point onward
+                        for (int j = k; j < InSize[XYZ]; j++) {
+                           Real[j] *= -1;
+                        }
+                  }
                }
             }
          }
@@ -254,28 +265,29 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 #        if ( MODEL == ELBDM )
          if ( UnwrapPhase && SPEC_INT_XY_INSTEAD_DEPHA )
          {
-            real* Re = Output  + 0 * OutputDisp;
-            real* Im = Output  + 1 * OutputDisp;
+            real* Real = Output  + 0 * OutputDisp;
+            real* Imag = Output  + 1 * OutputDisp;
 
-            for (int k = 0;  k < OutSize[XYZ];  k++)
-            {
-//             check for negative density
-               const double Dens = sqrt(MAX(0, Re[k]));
 
-               Re[k] = Dens;
-//             clip to [-1, 1]
-               const double w = MAX(-1, MIN(1, Im[k]/(Dens + TINY_NUMBER)));
-
-               Im[k] = asin(w) * SPEC_INT_WAVELENGTH_MAGNIFIER;
+//          reverse the phase and density adjustments
+            for (int k = 0; k < OutSize[XYZ]; k++) {
+//             indicates that this segment was negated
+               if (Real[k] < 0) {
+//                restore original density's sign
+                  for (int j = k; j < OutSize[XYZ]; j++) {
+                     Real[j] *= -1;
+                  }
+//                restore the phase for this and all subsequent points
+                  for (int j = k; j < OutSize[XYZ]; j++) {
+                     Imag[j] += PI;
+                  }
+               }
             }
 
-//          unwrap phase to be consistent with UnwrapPhase in other interpolation modes
-            if ( XYZ == 2 )
+//          unwrap phase to be restore continuous phase field away from vortices
+            for (int k = 1;  k < OutSize[XYZ];  k++)
             {
-               for (int k = 1;  k < OutSize[XYZ];  k++)
-               {
-                  Im[k] = ELBDM_UnwrapPhase( Im[k-1], Im[k] );
-               }
+               Imag[k] = ELBDM_UnwrapPhase( Imag[k-1], Imag[k] );
             }
          }
 #        endif
