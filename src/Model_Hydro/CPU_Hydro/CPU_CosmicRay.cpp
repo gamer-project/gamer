@@ -2,6 +2,22 @@
 
 #ifdef COSMIC_RAY
 
+// external functions
+#ifdef __CUDACC__
+
+#include "CUFLU_Shared_FluUtility.cu"
+
+#else // #ifdef __CUDACC__
+
+void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
+                    const bool FracPassive, const int NFrac, const int FracIdx[],
+                    const bool JeansMinPres, const real JeansMinPres_Coeff,
+                    const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
+                    const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                    const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                    const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut, real* LorentzFactorPtr );
+
+#endif // #ifdef __CUDACC__ ... else ...
 
 
 
@@ -40,7 +56,7 @@ void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
 {
 #  ifdef SRHD
    real Con_L[NCOMP_FLUID], Con_C[NCOMP_FLUID], Con_R[NCOMP_FLUID];
-   real Pri_L[NCOMP_FLUID], Pri_L[NCOMP_FLUID], Pri_L[NCOMP_FLUID];
+   real Pri_L[NCOMP_FLUID], Pri_C[NCOMP_FLUID], Pri_R[NCOMP_FLUID];
 #  endif
 
 // 1. compute \div V using the upwind data; reference: [2]
@@ -197,10 +213,10 @@ void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 #        ifdef SRHD
          for (int v=0; v<NCOMP_FLUID; v++)
          {
-            Con_LR[v] = g_FC_Var[faceR][ idx_fc - didx_fc[d] ];
-            Con_CL[v] = g_FC_Var[faceL][ idx_fc              ];
-            Con_CR[v] = g_FC_Var[faceR][ idx_fc              ];
-            Con_RL[v] = g_FC_Var[faceL][ idx_fc + didx_fc[d] ];
+            Con_LR[v] = g_FC_Var[faceR][v][ idx_fc - didx_fc[d] ];
+            Con_CL[v] = g_FC_Var[faceL][v][ idx_fc              ];
+            Con_CR[v] = g_FC_Var[faceR][v][ idx_fc              ];
+            Con_RL[v] = g_FC_Var[faceL][v][ idx_fc + didx_fc[d] ];
          }
 
          Hydro_Con2Pri( Con_LR, Pri_LR, NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
@@ -225,10 +241,10 @@ void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
          const real Rho_CR = Pri_CR[DENS];
          const real Rho_RL = Pri_RL[DENS];
 #        else
-         const real Rho_LR = g_FC_Var[faceR][ idx_fc - didx_fc[d] ];
-         const real Rho_CL = g_FC_Var[faceL][ idx_fc              ];
-         const real Rho_CR = g_FC_Var[faceR][ idx_fc              ];
-         const real Rho_RL = g_FC_Var[faceL][ idx_fc + didx_fc[d] ];
+         const real Rho_LR = g_FC_Var[faceR][DENS][ idx_fc - didx_fc[d] ];
+         const real Rho_CL = g_FC_Var[faceL][DENS][ idx_fc              ];
+         const real Rho_CR = g_FC_Var[faceR][DENS][ idx_fc              ];
+         const real Rho_RL = g_FC_Var[faceL][DENS][ idx_fc + didx_fc[d] ];
 #        endif
 
          div_V[d]  = ( DensFlux_R > (real)0.0 ) ? DensFlux_R / Rho_CR : DensFlux_R / Rho_RL;
