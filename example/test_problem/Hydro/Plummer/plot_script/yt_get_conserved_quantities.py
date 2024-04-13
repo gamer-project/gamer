@@ -78,8 +78,8 @@ for ds in ts.piter():
 
     print( '')
     print( '-------------------------------------------------------------------' )
-    print( 'Data name :', ds )
-    print( 'Time      :', ds.current_time.in_units('code_time').d )
+    print( 'Data name   :', ds )
+    print( 'Time        :', ds.current_time.in_units('code_time').d )
     print( '-------------------------------------------------------------------' )
 
     ad = ds.all_data()
