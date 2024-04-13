@@ -86,20 +86,15 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
    const size_t GhostSize = 1;
    const size_t Size1D    = PS2 + 2 * GhostSize;
    const size_t MaxOrder  = 14;
+   const size_t NField    = 3;
+   const size_t NCoeff    = 2*NField;
 
    const real* Re1D = Var1D;
    const real* Im1D = Var1D + CUBE(Size1D);
 
    flag_spectral_float Order[MaxOrder];
-   flag_spectral_float Al_Re[MaxOrder];
-   flag_spectral_float Al_Im[MaxOrder];
-   flag_spectral_float Al_De[MaxOrder];
-   flag_spectral_float Ar_Re[MaxOrder];
-   flag_spectral_float Ar_Im[MaxOrder];
-   flag_spectral_float Ar_De[MaxOrder];
-   real Row_Re[Size1D];
-   real Row_Im[Size1D];
-   real Row_De[Size1D];
+   flag_spectral_float Coeff[NCoeff][MaxOrder]; // left and right coefficients for every field
+   real Row[NField][Size1D];
    flag_spectral_float Slope, Intercept;
 
 // initialise with large negative number
@@ -127,54 +122,50 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
                break;
          }
 
-         Row_Re[i] = Re1D[index];
-         Row_Im[i] = Im1D[index];
-         Row_De[i] = SQR(Row_Re[i]) + SQR(Row_Im[i]);
+         Row[0][i] = Re1D[index];
+         Row[1][i] = Im1D[index];
+         Row[2][i] = SQR(Row_Re[i]) + SQR(Row_Im[i]);
       }
 
       for (int i = 0; i < MaxOrder; ++i)
       {
-         Al_Re[i] = 0;
-         Al_Im[i] = 0;
-         Al_De[i] = 0;
-         Ar_Re[i] = 0;
-         Ar_Im[i] = 0;
-         Ar_De[i] = 0;
+         for (int j = 0; j < NCoeff; ++j) {
+            Coeff[j][i] = 0;
+         }
 
 //       Compute polynomial expansions of real and imaginary parts
          for (int t = 0; t < MaxOrder; t++) {
-            Al_Re[i] += Flag_Spectral_Polynomials[i][t] * Row_Re[t];                     // left boundary
-            Al_Im[i] += Flag_Spectral_Polynomials[i][t] * Row_Im[t];                     // left boundary
-            Al_De[i] += Flag_Spectral_Polynomials[i][t] * Row_De[t];                     // left boundary
-            Ar_Re[i] += Flag_Spectral_Polynomials[i][t] * Row_Re[Size1D - MaxOrder + t]; // right boundary
-            Ar_Im[i] += Flag_Spectral_Polynomials[i][t] * Row_Im[Size1D - MaxOrder + t]; // right boundary
-            Ar_De[i] += Flag_Spectral_Polynomials[i][t] * Row_De[Size1D - MaxOrder + t]; // right boundary
+            for (int l = 0; l < NField; l++) {
+               Coeff[l       ][i] += Flag_Spectral_Polynomials[i][t] * Row[l][t];                     // left boundary
+               Coeff[l+NField][i] += Flag_Spectral_Polynomials[i][t] * Row[l][Size1D - MaxOrder + t]; // right boundary
+            }
          } // t
 
 //       Prepare linear fit to logarithm of polynomial coefficients
          Order[i] = log(i + 1);
-         Al_Re[i] = log(abs(Al_Re[i]) + 1e-14);
-         Al_Im[i] = log(abs(Al_Im[i]) + 1e-14);
-         Al_De[i] = log(abs(Al_De[i]) + 1e-14);
-         Ar_Re[i] = log(abs(Ar_Re[i]) + 1e-14);
-         Ar_Im[i] = log(abs(Ar_Im[i]) + 1e-14);
-         Ar_De[i] = log(abs(Ar_De[i]) + 1e-14);
+
+         for (int j = 0; j < NCoeff; ++j) {
+            Coeff[j][i] = log(abs(Coeff[j][i]) + 1e-16);
+         }
       }
 
 //    Find maximum slope to determine whether refinement is necessary
 //    Large negative slopes indicate that wavefunction is well-resolved
-      Least_Squares_Regression(Order, Al_Re, MaxOrder, &Slope, &Intercept);
-      Cond = MAX(Cond, Slope);
-      Least_Squares_Regression(Order, Al_Im, MaxOrder, &Slope, &Intercept);
-      Cond = MAX(Cond, Slope);
-      Least_Squares_Regression(Order, Al_De, MaxOrder, &Slope, &Intercept);
-      Cond = MAX(Cond, Slope);
-      Least_Squares_Regression(Order, Ar_Re, MaxOrder, &Slope, &Intercept);
-      Cond = MAX(Cond, Slope);
-      Least_Squares_Regression(Order, Ar_Im, MaxOrder, &Slope, &Intercept);
-      Cond = MAX(Cond, Slope);
-      Least_Squares_Regression(Order, Ar_De, MaxOrder, &Slope, &Intercept);
-      Cond = MAX(Cond, Slope);
+      for (int j = 0; j < NCoeff; ++j) {
+//       Check for plateau (if coefficients rapidly decline and then stay at machine precision
+         bool HasPlateaued = true;
+
+         for (int i = int(MaxOrder*0.75); i < MaxOrder; ++i) {
+            if (Coeff[j][i] > log10(MAX_ERROR)) {
+               HasPlateaued = false;
+            }
+         }
+
+         if (HasPlateaued) continue;
+
+         Least_Squares_Regression(Order, Coeff[j], MaxOrder, &Slope, &Intercept);
+         Cond = MAX(Cond, Slope);
+      }
 
    } // XYZ, k,j
 } // FUNCTION : Prepare_for_Spectral_Criterion
