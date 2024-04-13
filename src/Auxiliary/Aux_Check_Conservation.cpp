@@ -367,6 +367,7 @@ void Aux_Check_Conservation( const char *comment )
    if ( MPI_Rank == 0 )
    {
 //    note that a variable length array cannot have static storage duration
+      static double Time_Ref;
       static double Fluid_Ref[NVar_Max];
       static double CoM_Gas_Ref[3];
 #     ifdef MASSIVE_PARTICLES
@@ -379,6 +380,7 @@ void Aux_Check_Conservation( const char *comment )
       if ( FirstTime )
       {
 //       record the reference values
+         Time_Ref = Time[0];
          for (int v=0; v<NVar; v++)    Fluid_Ref[v]   = Fluid_AllRank[v];
          for (int d=0; d<3; d++)       CoM_Gas_Ref[d] = CoM_Gas[d];
 
@@ -402,8 +404,8 @@ void Aux_Check_Conservation( const char *comment )
 //       output header
          FILE *File = fopen( FileName, "a" );
 
-         Aux_Message( File, "# Ref time        : %13.7e\n", Time[0] );
-         Aux_Message( File, "# Ref step        : %ld\n",    Step    );
+         Aux_Message( File, "# Ref time        : %13.7e\n", Time_Ref );
+         Aux_Message( File, "# Ref step        : %ld\n",    Step     );
          Aux_Message( File, "\n" );
 
 #        if   ( MODEL == HYDRO )
@@ -458,6 +460,7 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "\n" );
          Aux_Message( File, "# AErr            : absolute error --> (now - ref)\n" );
          Aux_Message( File, "# RErr            : relative error --> (now - ref) / abs(ref)\n" );
+         Aux_Message( File, "# AveV            : average velocity of CoM --> (now - ref) / (time - time_ref)\n" );
 
          Aux_Message( File, "#-------------------------------------------------------------------------------------------" );
          Aux_Message( File, "--------------------------------------------------------------------------------------------\n\n" );
@@ -596,18 +599,18 @@ void Aux_Check_Conservation( const char *comment )
 
       if ( v == index_before_column_CoM )
       {
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[0],   CoM_Gas[0]-CoM_Gas_Ref[0],          (CoM_Gas[0]-CoM_Gas_Ref[0])/Time[0]        );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[1],   CoM_Gas[1]-CoM_Gas_Ref[1],          (CoM_Gas[1]-CoM_Gas_Ref[1])/Time[0]        );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[2],   CoM_Gas[2]-CoM_Gas_Ref[2],          (CoM_Gas[2]-CoM_Gas_Ref[2])/Time[0]        );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[0],   CoM_Gas[0]-CoM_Gas_Ref[0],      (CoM_Gas[0]-CoM_Gas_Ref[0])/(Time[0]-Time_Ref) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[1],   CoM_Gas[1]-CoM_Gas_Ref[1],      (CoM_Gas[1]-CoM_Gas_Ref[1])/(Time[0]-Time_Ref) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[2],   CoM_Gas[2]-CoM_Gas_Ref[2],      (CoM_Gas[2]-CoM_Gas_Ref[2])/(Time[0]-Time_Ref) );
       }
 
       }
 
 #     ifdef MASSIVE_PARTICLES
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    Mass_Par,       Mass_Par-Mass_Par_Ref,          (Mass_Par-Mass_Par_Ref)/fabs(Mass_Par_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMX_Par,       CoMX_Par-CoMX_Par_Ref,          (CoMX_Par-CoMX_Par_Ref)/Time[0]            );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMY_Par,       CoMY_Par-CoMY_Par_Ref,          (CoMY_Par-CoMY_Par_Ref)/Time[0]            );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMZ_Par,       CoMZ_Par-CoMZ_Par_Ref,          (CoMZ_Par-CoMZ_Par_Ref)/Time[0]            );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMX_Par,       CoMX_Par-CoMX_Par_Ref,          (CoMX_Par-CoMX_Par_Ref)/(Time[0]-Time_Ref) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMY_Par,       CoMY_Par-CoMY_Par_Ref,          (CoMY_Par-CoMY_Par_Ref)/(Time[0]-Time_Ref) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMZ_Par,       CoMZ_Par-CoMZ_Par_Ref,          (CoMZ_Par-CoMZ_Par_Ref)/(Time[0]-Time_Ref) );
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomX_Par,       MomX_Par-MomX_Par_Ref,          (MomX_Par-MomX_Par_Ref)/fabs(MomX_Par_Ref) );
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomY_Par,       MomY_Par-MomY_Par_Ref,          (MomY_Par-MomY_Par_Ref)/fabs(MomY_Par_Ref) );
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomZ_Par,       MomZ_Par-MomZ_Par_Ref,          (MomZ_Par-MomZ_Par_Ref)/fabs(MomZ_Par_Ref) );
@@ -620,9 +623,9 @@ void Aux_Check_Conservation( const char *comment )
 
 #     if ( MODEL != PAR_ONLY )
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    Mass_All,       Mass_All-Mass_All_Ref,          (Mass_All-Mass_All_Ref)/fabs(Mass_All_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMX_All,       CoMX_All-CoMX_All_Ref,          (CoMX_All-CoMX_All_Ref)/Time[0]            );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMY_All,       CoMY_All-CoMY_All_Ref,          (CoMY_All-CoMY_All_Ref)/Time[0]            );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMZ_All,       CoMZ_All-CoMZ_All_Ref,          (CoMZ_All-CoMZ_All_Ref)/Time[0]            );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMX_All,       CoMX_All-CoMX_All_Ref,          (CoMX_All-CoMX_All_Ref)/(Time[0]-Time_Ref) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMY_All,       CoMY_All-CoMY_All_Ref,          (CoMY_All-CoMY_All_Ref)/(Time[0]-Time_Ref) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMZ_All,       CoMZ_All-CoMZ_All_Ref,          (CoMZ_All-CoMZ_All_Ref)/(Time[0]-Time_Ref) );
 #     if ( MODEL == HYDRO )
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomX_All,       MomX_All-MomX_All_Ref,          (MomX_All-MomX_All_Ref)/fabs(MomX_All_Ref) );
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomY_All,       MomY_All-MomY_All_Ref,          (MomY_All-MomY_All_Ref)/fabs(MomY_All_Ref) );
