@@ -51,8 +51,6 @@
 #include <memory>
 #include "GramFE_Interpolation.h"
 
-#define SLOPE_RATIO( l, c, r ) (( (r) - (c) ) / ((c) - (l) ))
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Int_Spectral
 // Description :  Perform spatial interpolation based on the Gram-Fourier extension method
@@ -219,6 +217,9 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 
 #        if ( MODEL == ELBDM )
 
+         bool InterpolateXY   = false;
+         real VortexThreshold = M_PI / 2;
+
          if ( UnwrapPhase )
          {
             real* Real = Input  + 0 * InputDisp;
@@ -230,24 +231,39 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
                Imag[k] = ELBDM_UnwrapPhase( Imag[k-1], Imag[k] );
             }
 
-            real threshold = 3;
 
-//          convert density and phase to real and imaginary part
+//          convert density and phase to real and imaginary part if vortex is detected
+//          NOTE:
+//          Two other strategies that were thought to improve the interpolation around vortices have been thoroughly tested
+//          Strategy 1: Interpolate rho and rho * cos(S/N)
+//          This strategy performs poorly because rho has a kink at the vortex.
+//          Taking powers of rho to shift the kink to higher derivatives helps, but increases the error when taking a high root to obtain rho again
+//
+//          Strategy 2:
+//          Perform a singular gauge transformation rho -> -rho and S -> S +- pi at the vortex
+//          This leads to smooth fields at the vortex, but fails around the vortex where S might jump by less then pi and the density is non-zero
+//
+//          The safest strategy is to simply interpolate the real and imaginary part around the vortex with a generous vortex detection threshold
+//
+
             if ( SPEC_INT_XY_INSTEAD_DEPHA )
             {
 //             detect phase jumps and adjust
                for (int k = 1; k < InSize[XYZ]; k++) {
-                  double dPhase = Imag[k] - Imag[k-1];
 //                assuming jump > threshold is significant
-                  if (fabs(dPhase) > threshold) {
-//                      shift phase beyond the discontinuity
-                        for (int j = k; j < InSize[XYZ]; j++) {
-                           Imag[j] += (dPhase > 0 ? -M_PI : M_PI);
-                        }
-//                      negate the density from this point onward
-                        for (int j = k; j < InSize[XYZ]; j++) {
-                           Real[j] *= -1;
-                        }
+                  if (fabs(Imag[k] - Imag[k-1]) > VortexThreshold) {
+                     InterpolateXY = true;
+                     break;
+                  }
+               }
+
+//             convert back to real & imaginary part
+               if (InterpolateXY) {
+                  for (int k = 0; k < InSize[XYZ]; k++) {
+                     const real X = SQRT(Real[k]) * COS(Imag[k]);
+                     const real Y = SQRT(Real[k]) * SIN(Imag[k]);
+                     Real[k] = X;
+                     Imag[k] = Y;
                   }
                }
             }
@@ -263,31 +279,34 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
          }
 
 #        if ( MODEL == ELBDM )
-         if ( UnwrapPhase && SPEC_INT_XY_INSTEAD_DEPHA )
+         if ( UnwrapPhase )
          {
+
             real* Real = Output  + 0 * OutputDisp;
             real* Imag = Output  + 1 * OutputDisp;
 
+            if ( SPEC_INT_XY_INSTEAD_DEPHA ) {
 
-//          reverse the phase and density adjustments
-            for (int k = 0; k < OutSize[XYZ]; k++) {
-//             indicates that this segment was negated
-               if (Real[k] < 0) {
-//                restore original density's sign
-                  for (int j = k; j < OutSize[XYZ]; j++) {
-                     Real[j] *= -1;
+//             convert back to density and phase from real/imag
+               if (InterpolateXY) {
+                  for (int k = 0; k < OutSize[XYZ]; k++) {
+                     const real X = SQR(Real[k]) + SQR(Imag[k]);
+                     const real Y = SATAN2(Imag[k], Real[k]);
+                     Real[k] = X;
+                     Imag[k] = Y;
                   }
-//                restore the phase for this and all subsequent points
-                  for (int j = k; j < OutSize[XYZ]; j++) {
-                     Imag[j] += M_PI;
+
+//                unwrap phase to be restore phase field
+                  for (int k = 1;  k < OutSize[XYZ];  k++)
+                  {
+                     Imag[k] = ELBDM_UnwrapPhase( Imag[k-1], Imag[k] );
                   }
                }
             }
 
-//          unwrap phase to be restore continuous phase field away from vortices
-            for (int k = 1;  k < OutSize[XYZ];  k++)
-            {
-               Imag[k] = ELBDM_UnwrapPhase( Imag[k-1], Imag[k] );
+//          density floor
+            for (int k = 0; k < OutSize[XYZ]; k++) {
+               Real[k] = MAX(TINY_NUMBER, Real[k]);
             }
          }
 #        endif
