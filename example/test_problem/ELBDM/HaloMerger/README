@@ -1,0 +1,57 @@
+Compilation flags:
+========================================
+Enable : MODEL=ELBDM, GRAVITY
+Disable: COMOVING
+
+
+Default setup:
+========================================
+1. Code units
+   (1) UNIT_L = Mpc/h, where h=0.6955 is the present dimensionless Hubble parameter
+              = 1437.814521231748 kpc
+   (2) UNIT_V = 100 km/s
+   (3) UNIT_D = rho_bg (background matter density at z=0)
+              = 38.06 Msun/kpc^3
+       --> Mass density and wavefunction are normalized to rho_bg
+   (4) UNIT_T = 14068.4678922741 Myr
+   (5) UNIT_M = 1.131e+11 Msun
+
+2. ELBDM_MASS              1.0e-22
+   ELBDM_REMOVE_MOTION_CM  0
+   ELBDM_TAYLOR3_AUTO      0
+
+3. OPT__BC_FLU_*           1  (periodic)
+   OPT__BC_POT             2  (isolated)
+
+4. MAX_LEVEL               3
+   OPT__FLAG_RHO           1
+
+5. END_T                   0.25
+
+Note:
+========================================
+1. Simulate the merger of halos and solitons in an external potential
+
+2. Edit Input_TestProb_Halo to specify the parameters for the halos
+   a. Add new parameters with increasing indexes if the number of halos is more than 2
+   b. The initial condition of halos is constructed by reading the UM_IC file as a table and performing linear interpolation
+      - The UM_IC must be single AMR level.
+      - Note that HaloMerger_Halo_*_CenCoord* in Input__TestProb_Halo is the UM_IC box center, rather than the exact halo center.
+
+3. Edit Input_TestProb_Soliton to specify the parameters for the solitons
+   a. Add new parameters with increasing indexes if the number of solitons is more than 2
+
+4. Turn on OPT__EXT_POT == 1 to add external potential
+   a. The external potential of a uniform-density sphere, which is proportional to r^2 inside and proportional to 1/r outside
+
+5. Download the default IC file: sh download_ic.sh
+   a. Halo mass = 4.0960e+09 Msun
+   b. Without soliton
+   c. N = 640, L = 0.0646921095 Mpc/h, single-precision
+
+6. Some examples of yt visualization scripts are put in "plot_script"
+
+7. The corresponding wavelength is 0.00083778702*UNIT_L when ELBDM_MASS = 1.0e-22 and velocity = 1.0*UNIT_V
+   -> Make sure the resolution is high enough to resolve the wavelength
+
+8. The input halos and solitons should not overlap with each other initially

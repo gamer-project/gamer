@@ -119,7 +119,8 @@ void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
 
 
 // copy the updated data from output arrays to the corresponding patch pointers
-#  if ( FLU_NOUT != NCOMP_TOTAL )
+// --> for ELBDM, passive scalars are excluded for now and thus FLU_NOUT == NCOMP_FLUID in Macro.h
+#  if ( FLU_NOUT != NCOMP_TOTAL  &&  MODEL != ELBDM )
 #     error : ERROR : FLU_NOUT != NCOMP_TOTAL (one must specify how to copy data from h_Flu_Array_F_Out to fluid) !!
 #  endif
 

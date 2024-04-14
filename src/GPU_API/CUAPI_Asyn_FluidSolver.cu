@@ -289,22 +289,23 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  ifdef UNSPLIT_GRAVITY
    if ( UsePot )
    {
-      if ( h_Pot_Array_USG   == NULL )   Aux_Error( ERROR_INFO, "h_Pot_Array_USG == NULL !!\n" );
-      if ( d_Pot_Array_USG_F == NULL )   Aux_Error( ERROR_INFO, "d_Pot_Array_USG_F == NULL !!\n" );
+      if ( h_Pot_Array_USG   == NULL )    Aux_Error( ERROR_INFO, "h_Pot_Array_USG == NULL !!\n" );
+      if ( d_Pot_Array_USG_F == NULL )    Aux_Error( ERROR_INFO, "d_Pot_Array_USG_F == NULL !!\n" );
    }
 
    if ( ExtAcc )
    {
-      if ( h_Corner_Array   == NULL )    Aux_Error( ERROR_INFO, "h_Corner_Array == NULL !!\n" );
-      if ( d_Corner_Array_F == NULL )    Aux_Error( ERROR_INFO, "d_Corner_Array_F == NULL !!\n" );
+      if ( h_Corner_Array   == NULL )     Aux_Error( ERROR_INFO, "h_Corner_Array == NULL !!\n" );
+      if ( d_Corner_Array_F == NULL )     Aux_Error( ERROR_INFO, "d_Corner_Array_F == NULL !!\n" );
    }
 #  endif
 
 #  elif ( MODEL == ELBDM )
-   if ( h_IsCompletelyRefined == NULL )  Aux_Error( ERROR_INFO, "h_IsCompletelyRefined == NULL !!\n" );
+   if ( h_IsCompletelyRefined == NULL )   Aux_Error( ERROR_INFO, "h_IsCompletelyRefined == NULL !!\n" );
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( h_HasWaveCounterpart  == NULL )  Aux_Error( ERROR_INFO, "h_HasWaveCounterpart == NULL !!\n" );
+   if ( h_HasWaveCounterpart == NULL  &&  !UseWaveFlag )
+                                          Aux_Error( ERROR_INFO, "h_HasWaveCounterpart == NULL !!\n" );
 #  endif
 
 #  else
@@ -415,7 +416,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
    int *Flu_MemSize_IsCompletelyRefined = new int [GPU_NStream];
 #  endif
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   int *Flu_MemSize_HasWaveCounterpart  = new int [GPU_NStream];
+   int *Flu_MemSize_HasWaveCounterpart  = ( !UseWaveFlag ) ? new int [GPU_NStream] : NULL;
 #  endif
 
 
@@ -470,6 +471,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
       Flu_MemSize_IsCompletelyRefined[s] = sizeof(bool)*NPatch_per_Stream[s];
 #     endif
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      if ( !UseWaveFlag )
       Flu_MemSize_HasWaveCounterpart [s] = sizeof(bool)*NPatch_per_Stream[s]*CUBE(HYB_NXT);
 #     endif
    } // for (int s=0; s<GPU_NStream; s++)
@@ -516,6 +518,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                          Flu_MemSize_IsCompletelyRefined[s], cudaMemcpyHostToDevice, Stream[s] )  );
 #     endif
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      if ( !UseWaveFlag )
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_HasWaveCounterpart  + UsedPatch[s], h_HasWaveCounterpart  + UsedPatch[s],
                          Flu_MemSize_HasWaveCounterpart[s], cudaMemcpyHostToDevice, Stream[s] )  );
 #     endif
