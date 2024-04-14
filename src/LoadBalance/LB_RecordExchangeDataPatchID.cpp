@@ -261,7 +261,6 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 #              endif
             }
 
-
             for (int f=0; f<NFaBuff; f++)
             {
                TPID = FaBuff[f];
