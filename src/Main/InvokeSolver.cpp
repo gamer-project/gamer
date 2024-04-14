@@ -1,7 +1,7 @@
 #include "GAMER.h"
 
 static void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const int NPG,
-                              const int *PID0_List, const int ArrayID, LB_GlobalTree* GlobalTree);
+                              const int *PID0_List, const int ArrayID, LB_GlobalTree* GlobalTree );
 static void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld,
                     const int NPG, const int ArrayID, const double dt, const double Poi_Coeff );
 static void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, const int SaveSg_Mag, const int SaveSg_Pot,
@@ -196,11 +196,11 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
    NPG[ArrayID] = ( NPG_Max < NTotal ) ? NPG_Max : NTotal;
 
 
-
+// evaluate time evolution matrix (once per level per timestep)
 #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-// evaluate time evolution matrix ( once per level per timestep )
    ELBDM_GramFE_ComputeTimeEvolutionMatrix( h_GramFE_TimeEvo, dt, amr->dh[lv], ELBDM_ETA );
 #  endif
+
 
 //-------------------------------------------------------------------------------------------------------------
    TIMING_SYNC(   Preparation_Step( TSolver, lv, TimeNew, TimeOld, NPG[ArrayID], PID0_List, ArrayID, GlobalTree ),
@@ -264,6 +264,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
 
    if ( AllocateList )  delete [] PID0_List;
+
 } // FUNCTION : InvokeSolver
 
 
@@ -316,17 +317,19 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 #  endif
 #  if ( MODEL != ELBDM )
    bool (*h_IsCompletelyRefined[2])                                   = { NULL, NULL };
-#  endif // #  if ( MODEL != ELBDM )
-#  if ( MODEL != ELBDM || ELBDM_SCHEME != ELBDM_HYBRID )
+#  endif
+#  if ( MODEL != ELBDM  ||  ELBDM_SCHEME != ELBDM_HYBRID )
    bool (*h_HasWaveCounterpart [2])[ CUBE(HYB_NXT) ]                  = { NULL, NULL };
-#  endif // #  if ( MODEL != ELBDM || ELBDM_SCHEME != ELBDM_HYBRID )
+#  endif
 
 
    switch ( TSolver )
    {
       case FLUID_SOLVER :
          Flu_Prepare( lv, TimeOld, h_Flu_Array_F_In[ArrayID], h_Mag_Array_F_In[ArrayID],
-                      h_Pot_Array_USG_F[ArrayID], h_Corner_Array_F[ArrayID], h_IsCompletelyRefined[ArrayID], h_HasWaveCounterpart[ArrayID], NPG, PID0_List, GlobalTree );
+                      h_Pot_Array_USG_F[ArrayID], h_Corner_Array_F[ArrayID],
+                      h_IsCompletelyRefined[ArrayID], h_HasWaveCounterpart[ArrayID],
+                      NPG, PID0_List, GlobalTree );
       break;
 
 #     ifdef GRAVITY
@@ -529,14 +532,13 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 
 #  if ( MODEL != ELBDM )
    bool (*h_IsCompletelyRefined[2])                                   = { NULL, NULL };
-#  endif // #  if ( MODEL != ELBDM )
+#  endif
 #  if ( ELBDM_SCHEME != ELBDM_HYBRID )
    bool (*h_HasWaveCounterpart [2])[ CUBE(HYB_NXT) ]                  = { NULL, NULL };
-#  endif // #  if ( ELBDM_SCHEME != ELBDM_HYBRID )
-
+#  endif
 #  if ( GRAMFE_SCHEME != GRAMFE_MATMUL )
-   gramfe_matmul_float (*h_GramFE_TimeEvo)[ 2 * FLU_NXT ]             = NULL;
-#  endif // #  if ( MODEL != ELBDM || ELBDM_SCHEME != ELBDM_HYBRID )
+   gramfe_matmul_float (*h_GramFE_TimeEvo)[ 2*FLU_NXT ]               = NULL;
+#  endif
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #  error : ERROR : ADD MODEL-DEPENDENT USELESS VARIABLES FOR THE NEW MODELS HERE !!
@@ -550,12 +552,12 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
    const real JeansMinPres_Coeff = NULL_REAL;
 #  endif
 
-// support hybrid scheme, flag is not used unless (MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
-   bool UseWaveFlag = true;
-
+// support hybrid scheme; flag is only used for ELBDM_SCHEME == ELBDM_HYBRID
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   UseWaveFlag = amr->use_wave_flag[lv];
-#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   const bool UseWaveFlag = amr->use_wave_flag[lv];
+#  else
+   const bool UseWaveFlag = NULL_BOOL;
+#  endif
 
    switch ( TSolver )
    {
@@ -620,7 +622,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           MG_TOLERATED_ERROR, Poi_Coeff, OPT__POT_INT_SCHEME,
                                           NULL_BOOL, ELBDM_ETA, NULL_REAL, POISSON_ON, GRAVITY_OFF,
                                           OPT__SELF_GRAVITY, OPT__EXT_POT, OPT__EXT_ACC,
-                                          TimeNew, TimeOld, NULL_REAL, UseWaveFlag  );
+                                          TimeNew, TimeOld, NULL_REAL, UseWaveFlag );
 #        endif
       break;
 

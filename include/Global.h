@@ -336,6 +336,7 @@ extern InterpolationHandler Int_InterpolationHandler;
 #endif // #ifdef SUPPORT_SPECTRAL_INT
 
 
+
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // ============================================================================================================
 extern real       (*h_Flu_Array_F_In [2])[FLU_NIN ][ CUBE(FLU_NXT) ];
@@ -349,6 +350,15 @@ extern char       (*h_DE_Array_F_Out [2])[ CUBE(PS2) ];
 extern real       (*h_Mag_Array_F_In [2])[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
 extern real       (*h_Mag_Array_F_Out[2])[NCOMP_MAG][ PS2P1*SQR(PS2)          ];
 extern real       (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2P1*PS2 ];
+#endif
+#if ( MODEL == ELBDM )
+extern bool       (*h_IsCompletelyRefined[2]);
+#endif
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
+extern bool       (*h_HasWaveCounterpart[2])[ CUBE(HYB_NXT) ];
+#endif
+#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+extern gramfe_matmul_float (*h_GramFE_TimeEvo)[ 2*FLU_NXT ];
 #endif
 
 #ifdef GRAVITY
@@ -404,18 +414,6 @@ extern double     (*h_Corner_Array_S[2])[3];
 #if ( MODEL == HYDRO )
 extern real       (*h_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX];
 extern real        *h_SrcDlepProf_Radius;
-#endif
-
-#if ( MODEL == ELBDM )
-extern bool       (*h_IsCompletelyRefined[2]);
-#endif
-
-#if ( ELBDM_SCHEME == ELBDM_HYBRID )
-extern bool       (*h_HasWaveCounterpart[2])[ CUBE(HYB_NXT) ];
-#endif
-
-#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-extern gramfe_matmul_float (*h_GramFE_TimeEvo)[ 2*FLU_NXT ];
 #endif
 
 
