@@ -2,7 +2,12 @@
 
 #if ( MODEL == HYDRO  &&  defined GRAVITY )
 
-
+// external functions
+#ifdef __CUDACC__
+#include "../GPU_Hydro/CUFLU_Shared_FluUtility.cu"
+#else
+#include "../../../include/Prototype.h"
+#endif // #ifdef __CUDACC__ ... else ...
 
 // include c_ExtAcc_AuxArray[]
 #ifdef __CUDACC__
@@ -11,11 +16,14 @@
 
 
 
-
 //-----------------------------------------------------------------------------------------
 // Function    :  CPU/CUPOT_HydroGravitySolver
-// Description :  Advances the momentum and energy density of a group of patches by gravitational acceleration
-//                (including external gravity)
+// Description :  1. Advances the momentum and energy density of a group of patches by gravitational acceleration
+//                   (including external gravity)
+//                2. Note the SRHD still use the Newtonian gravity as a source term in the relativistic Euler equations.
+//                   --> Hence SRHD with the Newtonian gravity can only simulate the low-mass relativistic component
+//                       embedded in giant gas sphere.
+//                       e.g., relativistic AGN jet in gas sphere.
 //
 // Note        :  1. Currently this function does NOT ensure the consistency between internal energy and
 //                   dual-energy variable (e.g., entropy)
@@ -46,6 +54,7 @@
 //                TimeNew           : Physical time at the current  step (for the external gravity solver)
 //                TimeOld           : Physical time at the previous step (for the external gravity solver in UNSPLIT_GRAVITY)
 //                MinEint           : Internal energy floor
+//                EoS               : EoS object
 //
 // Return      :  g_Flu_Array_New, g_DE_Array
 //-----------------------------------------------------------------------------------------
@@ -61,7 +70,8 @@ void CUPOT_HydroGravitySolver(
    const real   g_Emag_Array   [][ CUBE(PS1) ],
    const real dt, const real dh, const bool P5_Gradient,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
-   const double TimeNew, const double TimeOld, const real MinEint )
+   const double TimeNew, const double TimeOld, const real MinEint,
+   const EoS_t EoS )
 #else
 void CPU_HydroGravitySolver(
          real   g_Flu_Array_New[][GRA_NIN][ CUBE(PS1) ],
@@ -75,7 +85,8 @@ void CPU_HydroGravitySolver(
    const real dt, const real dh, const bool P5_Gradient,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const double c_ExtAcc_AuxArray[],
-   const double TimeNew, const double TimeOld, const real MinEint )
+   const double TimeNew, const double TimeOld, const real MinEint,
+   const EoS_t EoS )
 #endif
 {
 

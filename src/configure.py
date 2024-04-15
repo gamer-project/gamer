@@ -353,14 +353,14 @@ def load_arguments():
                          default=False,
                          depend={"model":"HYDRO"},
                          constraint={ True:{"flu_scheme":["MHM", "MHM_RP", "CTU"], "flux":["ROE", "HLLE", "HLLD"]},
-                                     False:{"flux":["EXACT", "ROE", "HLLE", "HLLC"]} },
+                                      False:{"flux":["EXACT", "ROE", "HLLE", "HLLC"]} },
                          help="Magnetohydrodynamics.\n"
                        )
 
     parser.add_argument( "--srhd", type=str2bool, metavar="BOOLEAN", gamer_name="SRHD",
                          default=False,
                          depend={"model":"HYDRO"},
-                         constraint={ True:{"flu_scheme":["MHM", "MHM_RP"], "flux":["HLLE", "HLLC"], "eos":["TAUBMATHEWS"], "dual":[NONE_STR], "mhd":False, "gravity":False} },
+                         constraint={ True:{"flu_scheme":["MHM", "MHM_RP"], "flux":["HLLE", "HLLC"], "eos":["TAUBMATHEWS"], "dual":[NONE_STR], "mhd":False} },
                          help="Special Relativistic Hydrodynamics.\n"
                        )
 

@@ -707,10 +707,6 @@ void Aux_Check_Parameter()
 #     error : ERROR : SRHD does not support MHD !!
 #   endif
 
-#   ifdef GRAVITY
-#     error : ERROR : SRHD does not support GRAVITY !!
-#   endif
-
 #   ifdef COMOVING
 #     error : ERROR : SRHD does not support COMOVING !!
 #   endif
