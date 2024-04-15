@@ -194,6 +194,7 @@ def replace_parameter( file_name, name, val, flag ):
 
 def execution( **kwargs ):
     record_parameters = kwargs["record"]
+    print(record_parameters)
     print("GO GO GAMER GO!")
     return RETURN_SUCCESS
 
@@ -211,18 +212,26 @@ loop_paras1  = {"NX0_TOT_X":[16, 32], "NX0_TOT_Y":[16, 32]}                     
 # set the `File` class, the file changing method is decided by the last parameter. If the file is a flag file, please set it to `True`.
 file1        = File( file_name1, const_paras1, loop_paras1, flag=False )
 
-file_name2   = "Input__Testprob"
+file_name2   = "Input__TestProb"
 const_paras2 = {"Const_1":-1, "Const_2":50}
 loop_paras2  = {"Parameter_1":[0.01, 0.02], "Parameter_2":[16, 32]}
 file2        = File( file_name2, const_paras2, loop_paras2, flag=False )
 
+# this will change the single column to the same value
 file_name3   = "Input__Flag"
 const_paras3 = {"derefine":0.1}
 loop_paras3  = {"Soften":[0.01, 0.02], "refine":[16, 32]}
 file3        = File( file_name3, const_paras3, loop_paras3, flag=True )
 
+# this will change the column to the assigned value
+file_name4   = "Input__Flag_Rho"
+const_paras4 = {}
+loop_paras4  = { "Density":[( 0, 2, 4, 8,10,12,14,16,18,20,22,24,26),
+                            ( 1, 3, 5, 7, 9,11,13,15,17,19,21,23,25)] }
+file4        = File( file_name4, const_paras4, loop_paras4, flag=True )
+
 # Wrap all the `File` classes.
-files = [file1, file2, file3]
+files = [file1, file2, file3, file4]
 
 # 2. Taking the input arguments
 parser = argparse.ArgumentParser( description = "A small script of changing the parameters of Input__* files.",
