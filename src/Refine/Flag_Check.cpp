@@ -8,6 +8,8 @@ extern bool (*Flag_Region_Ptr)( const int i, const int j, const int k, const int
 extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 
 
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flag_Check
 // Description :  Check if the target cell (i,j,k) satisfies the refinement criteria
@@ -60,25 +62,20 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 
 // check ELBDM interference
-// must be performed before any other checks in order to set switch_to_wave_flag correctly
+// --> must be performed before any other checks in order to set switch_to_wave_flag correctly
 // ===========================================================================================
-
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( OPT__FLAG_INTERFERENCE && !amr->use_wave_flag[lv] )
+   if ( OPT__FLAG_INTERFERENCE  &&  !amr->use_wave_flag[lv] )
    {
-
-      Flag |=  ELBDM_Flag_Interference( i, j, k, Interf_Var, FlagTable_Interference[lv][0], FlagTable_Interference[lv][1], FlagTable_Interference[lv][2], FlagTable_Interference[lv][3] > 0.5);
+      Flag |= ELBDM_Flag_Interference( i, j, k, Interf_Var, FlagTable_Interference[lv][0], FlagTable_Interference[lv][1],
+                                       FlagTable_Interference[lv][2], FlagTable_Interference[lv][3]>0.5 );
 
 //    switch to wave solver when refining to ELBDM_FIRST_WAVE_LEVEL
-      if ( Flag && lv + 1 >= ELBDM_FIRST_WAVE_LEVEL )
-      {
-         amr->patch[0][lv][PID]->switch_to_wave_flag = true;
-      }
+      if ( Flag  &&  lv + 1 >= ELBDM_FIRST_WAVE_LEVEL )  amr->patch[0][lv][PID]->switch_to_wave_flag = true;
 
-      if ( Flag )
-            return Flag;
+      if ( Flag )    return Flag;
    }
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif
 
 
 #  ifdef PARTICLE
@@ -104,7 +101,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #  ifdef DENS
 // check density magnitude
 // ===========================================================================================
-if ( OPT__FLAG_RHO )
+   if ( OPT__FLAG_RHO )
    {
       Flag |= ( Fluid[DENS][k][j][i] > FlagTable_Rho[lv] );
       if ( Flag )    return Flag;
@@ -177,7 +174,7 @@ if ( OPT__FLAG_RHO )
 #  if ( MODEL == ELBDM )
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( amr->use_wave_flag[lv] ) {
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif
    if ( OPT__FLAG_ENGY_DENSITY )
    {
       Flag |= ELBDM_Flag_EngyDensity( i, j, k, &Fluid[REAL][0][0][0], &Fluid[IMAG][0][0][0],
@@ -185,33 +182,33 @@ if ( OPT__FLAG_RHO )
       if ( Flag )    return Flag;
    }
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   } // if ( amr->use_wave_flag[lv] ) {
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } // if ( amr->use_wave_flag[lv] )
 #  endif
+#  endif // ELBDM
+
 
 // check ELBDM spectral criterion
 // ===========================================================================================
 #  if ( MODEL == ELBDM )
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( amr->use_wave_flag[lv] ) {
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif
    if ( OPT__FLAG_SPECTRAL )
    {
-      Flag |= Spectral_Cond > FlagTable_Spectral[lv][0];
+      Flag |= ( Spectral_Cond > FlagTable_Spectral[lv][0] );
       if ( Flag )    return Flag;
    }
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   } // if ( amr->use_wave_flag[lv] ) {
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } // if ( amr->use_wave_flag[lv] )
 #  endif
+#  endif // ELBDM
 
 
 // check Lohner's error estimator
 // ===========================================================================================
-
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( amr->use_wave_flag[lv] ) {
-#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif
    if ( Lohner_NVar > 0 )
    {
 //    check Lohner only if density is greater than the minimum threshold
@@ -223,8 +220,8 @@ if ( OPT__FLAG_RHO )
       if ( Flag )    return Flag;
    }
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   } // if ( amr->use_wave_flag[lv] ) {
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } // if ( amr->use_wave_flag[lv] )
+#  endif
 
 
 // check user-defined criteria
