@@ -78,13 +78,14 @@ void SetExtPotAuxArray_IsothermalSlab( double AuxArray_Flt[], int AuxArray_Int[]
 //                                        EXT_POT_USAGE_SUB_TINT: like SUB but for temporal interpolation
 //                                    --> This parameter is useless in most cases
 //                PotTable          : 3D potential table used by EXT_POT_TABLE
+//                GenePtr           : Array of pointers for general potential tables
 //
 // Return      :  External potential at (x,y,z,Time)
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real ExtPot_IsothermalSlab( const double x, const double y, const double z, const double Time,
                                    const double UserArray_Flt[], const int UserArray_Int[],
-                                   const ExtPotUsage_t Usage, const real PotTable[] )
+                                   const ExtPotUsage_t Usage, const real PotTable[], void **GenePtr )
 {
 
 // halo potential
