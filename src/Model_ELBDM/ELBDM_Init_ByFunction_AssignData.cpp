@@ -57,7 +57,7 @@ void Init_Function_User_Template( real fluid[], const double x, const double y, 
    fluid[IMAG] = Imag;
    fluid[DENS] = Dens;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   } else { // if ( amr->use_wave_flag[lv] == true )
+   } else { // if ( amr->use_wave_flag[lv] )
    fluid[PHAS] = SATAN2(Imag, Real);
    fluid[DENS] = Dens;
    fluid[STUB] = 0.0;

@@ -3,6 +3,8 @@
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_HasWaveCounterpart
 // Description :  Check whether cell [I, J, K] in patch indexed by GID has wave counterpart on refined levels by traversing the global AMR Tree
@@ -20,20 +22,24 @@
 // Return      :  "true"  if cell [I, J, K] in patch GID has    wave counterpart
 //                "false" if cell [I, J, K] in patch GID has NO wave counterpart
 //-------------------------------------------------------------------------------------------------------
-bool ELBDM_HasWaveCounterpart(const int I, const int J, const int K, const long GID0, const long GID, const LB_GlobalTree& GlobalTree)
+bool ELBDM_HasWaveCounterpart( const int I, const int J, const int K, const long GID0, const long GID, const LB_GlobalTree& GlobalTree )
 {
+
 // convert to global coordinates
-   const int X = GlobalTree.Local2Global(I, 0, GID0);
-   const int Y = GlobalTree.Local2Global(J, 1, GID0);
-   const int Z = GlobalTree.Local2Global(K, 2, GID0);
+   const int X = GlobalTree.Local2Global( I, 0, GID0 );
+   const int Y = GlobalTree.Local2Global( J, 1, GID0 );
+   const int Z = GlobalTree.Local2Global( K, 2, GID0 );
 
 // find GID of child
-   const long ChildGID = GlobalTree.FindRefinedCounterpart(X, Y, Z, GID);
+   const long ChildGID = GlobalTree.FindRefinedCounterpart( X, Y, Z, GID );
    if ( ChildGID == -1 ) return false;
 
-   const bool HasWaveCounterpart = amr->use_wave_flag[GlobalTree[ChildGID].level];
+   const bool HasWaveCounterpart = amr->use_wave_flag[ GlobalTree[ChildGID].level ];
 
    return HasWaveCounterpart;
+
 } // FUNCTION : ELBDM_HasWaveCounterpart
+
+
 
 #endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
