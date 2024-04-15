@@ -66,24 +66,23 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 #  elif ( MODEL == ELBDM )
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( amr->use_wave_flag[lv] ) {
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif
       dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Fluid( lv );
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   } else { // if ( amr->use_wave_flag[lv] )
+   } else {
       dTime[NdTime] = HUGE_NUMBER;
    }
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID ) ... else
+#  endif
    sprintf( dTime_Name[NdTime++], "%s", "ELBDM_CFL" );
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( amr->use_wave_flag[lv] ) {
       dTime[NdTime] = HUGE_NUMBER;
-   } else { // if ( amr->use_wave_flag[lv] )
+   } else {
       dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Hybrid_CFL( lv );
-   } // if ( amr->use_wave_flag[lv] ) ... else
+   }
    sprintf( dTime_Name[NdTime++], "%s", "Hybrid_CFL" );
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID ) ... else
-
+#  endif
 
 #  else
 #  error : ERROR : unsupported MODEL !!
@@ -103,6 +102,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 #  elif ( MODEL == ELBDM )
    dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv  );
    sprintf( dTime_Name[NdTime++], "%s", "ELBDM_Pot" );
+
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
@@ -223,12 +223,12 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( amr->use_wave_flag[lv] ) {
       dTime[NdTime] = HUGE_NUMBER;
-   } else { // if ( amr->use_wave_flag[lv] )
+   } else {
       dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Hybrid_Velocity( lv );
-   } // if ( amr->use_wave_flag[lv] ) ... else
+   }
 
    sprintf( dTime_Name[NdTime++], "%s", "Hybrid_Vel" );
-#  endif //  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
+#  endif
 
 
 
