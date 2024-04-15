@@ -19,6 +19,8 @@ static void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const
 #define NERR      ( NBASIC + NEXTRA )
 
 
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_L1Error
 // Description :  Compare the numerical and analytical solutions and output the L1 errors
@@ -90,7 +92,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
    sprintf( FileName[     NBASIC+0], "%s_Temp_%06d", Prefix, DumpID );
 
 #  elif ( MODEL == ELBDM )
-#  if ( ELBDM_SCHEME == ELBDM_WAVE )
+#  if   ( ELBDM_SCHEME == ELBDM_WAVE )
    sprintf( FileName[            0], "%s_Dens_%06d", Prefix, DumpID );
    sprintf( FileName[            1], "%s_Real_%06d", Prefix, DumpID );
    sprintf( FileName[            2], "%s_Imag_%06d", Prefix, DumpID );
@@ -100,7 +102,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
    sprintf( FileName[            2], "%s_Stub_%06d", Prefix, DumpID );
 #  else
 #  error : ERROR : unsupported ELBDM_SCHEME !!
-#  endif
+#  endif // ELBDM_SCHEME
 
    for (int v=0; v<NCOMP_PASSIVE; v++)
    sprintf( FileName[NCOMP_FLUID+v], "%s_Passive%02d_%06d", Prefix, v, DumpID );
@@ -274,7 +276,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
          fprintf( File_L1, "\n" );
 
 #        elif ( MODEL == ELBDM )
-#        if ( ELBDM_SCHEME == ELBDM_WAVE )
+#        if   ( ELBDM_SCHEME == ELBDM_WAVE )
 
          fprintf( File_L1, "#%5s %13s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
                   StrLen_Flt, "Error(Real)", StrLen_Flt, "Error(Imag)" );
@@ -283,7 +285,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
                   StrLen_Flt, "Error(Phas)", StrLen_Flt, "Stub" );
 #        else
 #        error : ERROR : unsupported ELBDM_SCHEME !!
-#        endif
+#        endif // ELBDM_SCHEME
 
          for (int v=0; v<NCOMP_PASSIVE; v++) {
             char tmp_str[MAX_STRING];
@@ -348,7 +350,6 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 
    real Nume[NERR], Anal[NERR], Err[NERR];
 
-
 // get the numerical solution
    for (int v=0; v<NCOMP_TOTAL; v++)
       Nume[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
@@ -379,7 +380,6 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
    Nume[ENGY    ] = Pres_Nume;
    Nume[NBASIC+0] = Temp_Nume;
 #  endif // #if ( MODEL == HYDRO )
-
 
 
 // get the analytical solution
@@ -414,8 +414,9 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
       Nume[PHAS] = SATAN2(Nume[IMAG], Nume[REAL]);
       Anal[STUB] = 0;
       Nume[STUB] = 0;
-   } // if ( amr->use_wave_flag[lv] ) {
-#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   }
+#  endif
+
 
 // record the physical coordinate
    double r;
