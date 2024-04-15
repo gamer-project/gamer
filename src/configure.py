@@ -721,7 +721,7 @@ def validation( paths, depends, constraints, **kwargs ):
                 if kwargs[check_opt] in check_val: continue     # satisify the validation
 
                 val_str = ', '.join(str(x) for x in check_val)
-                color_print("ERROR: The option <--%s=%s> requires <--%s> to be set to [%s]. Current: <--%s=%s>."%(opt, str(kwargs[opt]), check_opt, val_str, check_opt, kwargs[check_opt]), BCOLOR.FAIL)
+                color_print("ERROR: The option <--%s=%s> requires <--%s=%s>. Current: <--%s=%s>."%(opt, str(kwargs[opt]), check_opt, val_str, check_opt, kwargs[check_opt]), BCOLOR.FAIL)
                 success = False
 
     # 2. Checking other conditions.
