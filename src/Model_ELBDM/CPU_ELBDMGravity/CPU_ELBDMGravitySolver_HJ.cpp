@@ -49,7 +49,6 @@ void CPU_ELBDMGravitySolver_HamiltonJacobi  (       real g_Flu_Array[][GRA_NIN][
 
    const int PS1_sqr = SQR(PS1);
 
-
 // loop over all patches
 // --> CPU/GPU solver: use different (OpenMP threads) / (CUDA thread blocks)
 //     to work on different patches
