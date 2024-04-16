@@ -10,13 +10,16 @@
 static void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] );
 
-
 static void BC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] );
 static void End_DiskHeating();
 static void AddNewParticleAttribute();
+static double get_value_from_interpolation(double r, double *array_radius, double *array_value);
 static double get_value_from_interpolation_log(double r, double *array_radius, double *array_value);
 static double get_dispersion(double r);
+static void GetCenterOfMass( const double CM_Old[], double CM_New[], const double CM_MaxR );
+static void Record_Max();
+
 void Init_ExtPot_Soliton();
 // problem-specific global variables
 // =======================================================================================
@@ -302,7 +305,7 @@ void SetParameter()
 
 // analytical density profile for fixed background halo
 double halo_density(double r) {
- 
+
    double rho_halo = Rho_0/pow(r/Rs, Alpha)/pow(1 + pow(r/Rs,Beta),(Gamma-Alpha)/Beta);
    if ( fabs(rho_halo) <  __FLT_MIN__) rho_halo = 0;
 
@@ -361,7 +364,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       }
       else dens = halo_density(r_in_kpc)*Unit_D_GALIC/UNIT_D;
    }
- 
+
 //ELBDM example
    fluid[DENS] = (real)dens;
    fluid[REAL] = sqrt( fluid[DENS] );
@@ -720,7 +723,7 @@ double get_value_from_interpolation(double r, double *array_radius, double *arra
   int i = 0;
   while(r > array_radius[i])
   {
-    i ++; 
+    i ++;
   }
   return array_value[i-1]+(array_value[i]-array_value[i-1])*(r-array_radius[i-1])/(array_radius[i]-array_radius[i-1]);
 } // FUNCTION : get_value_from_interpolation
@@ -731,7 +734,7 @@ double get_value_from_interpolation_log(double r, double *array_radius, double *
   int i = 0;
   while(r > array_radius[i])
   {
-    i ++; 
+    i ++;
   }
   return exp(log(array_value[i-1])+(log(array_value[i])-log(array_value[i-1]))*(log(r)-log(array_radius[i-1]))/(log(array_radius[i])-log(array_radius[i-1])));
 } // FUNCTION : get_value_from_interpolation_log
