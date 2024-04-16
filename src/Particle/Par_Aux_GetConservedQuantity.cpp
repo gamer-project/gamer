@@ -49,24 +49,23 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &CoMX_Total, doubl
 #  pragma omp parallel for schedule( static ) reduction( +:Mass_ThisRank, CoMX_ThisRank, CoMY_ThisRank, CoMZ_ThisRank, MomX_ThisRank, MomY_ThisRank, MomZ_ThisRank, AngMomX_ThisRank, AngMomY_ThisRank, AngMomZ_ThisRank, Ek_ThisRank )
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
-//    skip inactive, massless, and tracer particles
-      if ( amr->Par->Mass[p] > (real_par)0.0  &&  amr->Par->Type[p] != PTYPE_TRACER )
-      {
-         Mass_ThisRank    += amr->Par->Mass[p];
-         CoMX_ThisRank    += amr->Par->Mass[p]*amr->Par->PosX[p];
-         CoMY_ThisRank    += amr->Par->Mass[p]*amr->Par->PosY[p];
-         CoMZ_ThisRank    += amr->Par->Mass[p]*amr->Par->PosZ[p];
-         MomX_ThisRank    += amr->Par->Mass[p]*amr->Par->VelX[p];
-         MomY_ThisRank    += amr->Par->Mass[p]*amr->Par->VelY[p];
-         MomZ_ThisRank    += amr->Par->Mass[p]*amr->Par->VelZ[p];
-         const double dX   = amr->Par->PosX[p] - ANGMOM_ORIGIN_X;
-         const double dY   = amr->Par->PosY[p] - ANGMOM_ORIGIN_Y;
-         const double dZ   = amr->Par->PosZ[p] - ANGMOM_ORIGIN_Z;
-         AngMomX_ThisRank += amr->Par->Mass[p]*( dY*amr->Par->VelZ[p] - dZ*amr->Par->VelY[p] );
-         AngMomY_ThisRank += amr->Par->Mass[p]*( dZ*amr->Par->VelX[p] - dX*amr->Par->VelZ[p] );
-         AngMomZ_ThisRank += amr->Par->Mass[p]*( dX*amr->Par->VelY[p] - dY*amr->Par->VelX[p] );
-         Ek_ThisRank      += 0.5*amr->Par->Mass[p]*( SQR(amr->Par->VelX[p]) + SQR(amr->Par->VelY[p]) + SQR(amr->Par->VelZ[p]) );
-      }
+      if ( amr->Par->Mass[p] <= (real_par)0.0  ||  amr->Par->Type[p] == PTYPE_TRACER )   continue; // skip inactive, massless, and tracer particles
+
+      const double dX   = amr->Par->PosX[p] - ANGMOM_ORIGIN_X;
+      const double dY   = amr->Par->PosY[p] - ANGMOM_ORIGIN_Y;
+      const double dZ   = amr->Par->PosZ[p] - ANGMOM_ORIGIN_Z;
+
+      Mass_ThisRank    += amr->Par->Mass[p];
+      CoMX_ThisRank    += amr->Par->Mass[p]*amr->Par->PosX[p];
+      CoMY_ThisRank    += amr->Par->Mass[p]*amr->Par->PosY[p];
+      CoMZ_ThisRank    += amr->Par->Mass[p]*amr->Par->PosZ[p];
+      MomX_ThisRank    += amr->Par->Mass[p]*amr->Par->VelX[p];
+      MomY_ThisRank    += amr->Par->Mass[p]*amr->Par->VelY[p];
+      MomZ_ThisRank    += amr->Par->Mass[p]*amr->Par->VelZ[p];
+      AngMomX_ThisRank += amr->Par->Mass[p]*( dY*amr->Par->VelZ[p] - dZ*amr->Par->VelY[p] );
+      AngMomY_ThisRank += amr->Par->Mass[p]*( dZ*amr->Par->VelX[p] - dX*amr->Par->VelZ[p] );
+      AngMomZ_ThisRank += amr->Par->Mass[p]*( dX*amr->Par->VelY[p] - dY*amr->Par->VelX[p] );
+      Ek_ThisRank      += 0.5*amr->Par->Mass[p]*( SQR(amr->Par->VelX[p]) + SQR(amr->Par->VelY[p]) + SQR(amr->Par->VelZ[p]) );
    }
 
    Send[0]  =    Mass_ThisRank;

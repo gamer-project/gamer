@@ -124,7 +124,7 @@ void Aux_Check_Conservation( const char *comment )
 
       for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
       {
-#        if ( MODEL == ELBDM)
+#        if ( MODEL == ELBDM )
          const real MinDens_No = -1.0;
          const real MinPres_No = -1.0;
          const real MinTemp_No = -1.0;
@@ -137,180 +137,178 @@ void Aux_Check_Conservation( const char *comment )
 
          for (int PID=PID0; PID<PID0+8; PID++)
          {
-//          only check the leaf patches
-            if ( amr->patch[0][lv][PID]->son == -1 )
+            if ( amr->patch[0][lv][PID]->son != -1 )   continue; // only check the leaf patches
+
+            const double x0  = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
+            const double y0  = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
+            const double z0  = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
+
+#           if   ( MODEL == HYDRO )
+            for (int k=0; k<PATCH_SIZE; k++)
+            for (int j=0; j<PATCH_SIZE; j++)
+            for (int i=0; i<PATCH_SIZE; i++)
             {
-               const double x0  = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
-               const double y0  = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
-               const double z0  = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
+               double Dens, MomX, MomY, MomZ, AngMomX, AngMomY, AngMomZ, Etot, Ekin, Eint;
+#              ifdef GRAVITY
+               double Epot;
+#              endif
+               double Emag = NULL_REAL;
 
-#              if   ( MODEL == HYDRO )
-               for (int k=0; k<PATCH_SIZE; k++)
-               for (int j=0; j<PATCH_SIZE; j++)
-               for (int i=0; i<PATCH_SIZE; i++)
-               {
-                  double Dens, MomX, MomY, MomZ, AngMomX, AngMomY, AngMomZ, Etot, Ekin, Eint;
-#                 ifdef GRAVITY
-                  double Epot;
-#                 endif
-                  double Emag = NULL_REAL;
+               Dens = amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
+               MomX = amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i];
+               MomY = amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i];
+               MomZ = amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i];
+               Etot = amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i];
 
-                  Dens = amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
-                  MomX = amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i];
-                  MomY = amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i];
-                  MomZ = amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i];
-                  Etot = amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i];
+               // calculate the angular momentum
+               const double x  = x0 + i*dh;
+               const double y  = y0 + j*dh;
+               const double z  = z0 + k*dh;
 
-                  // calculate the angular momentum
-                  const double x  = x0 + i*dh;
-                  const double y  = y0 + j*dh;
-                  const double z  = z0 + k*dh;
+               const double dX = x - ANGMOM_ORIGIN_X;
+               const double dY = y - ANGMOM_ORIGIN_Y;
+               const double dZ = z - ANGMOM_ORIGIN_Z;
 
-                  const double dX = x - ANGMOM_ORIGIN_X;
-                  const double dY = y - ANGMOM_ORIGIN_Y;
-                  const double dZ = z - ANGMOM_ORIGIN_Z;
+               AngMomX = dY*MomZ - dZ*MomY;
+               AngMomY = dZ*MomX - dX*MomZ;
+               AngMomZ = dX*MomY - dY*MomX;
 
-                  AngMomX = dY*MomZ - dZ*MomY;
-                  AngMomY = dZ*MomX - dX*MomZ;
-                  AngMomZ = dX*MomY - dY*MomX;
+#              ifdef SRHD
+//             total energy density also includes rest mass energy density in relativistic hydro
+               Etot += Dens;
+#              endif
 
-#                 ifdef SRHD
-//                total energy density also includes rest mass energy density in relativistic hydro
-                  Etot += Dens;
-#                 endif
+               Fluid_lv[0] += Dens;
+               Fluid_lv[1] += MomX;
+               Fluid_lv[2] += MomY;
+               Fluid_lv[3] += MomZ;
 
-                  Fluid_lv[0] += Dens;
-                  Fluid_lv[1] += MomX;
-                  Fluid_lv[2] += MomY;
-                  Fluid_lv[3] += MomZ;
+               Fluid_lv[4] += AngMomX;
+               Fluid_lv[5] += AngMomY;
+               Fluid_lv[6] += AngMomZ;
 
-                  Fluid_lv[4] += AngMomX;
-                  Fluid_lv[5] += AngMomY;
-                  Fluid_lv[6] += AngMomZ;
+#              ifdef MHD
+               Emag          = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
+               Fluid_lv[10] += Emag;
+#              endif
 
-#                 ifdef MHD
-                  Emag          = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
-                  Fluid_lv[10] += Emag;
-#                 endif
-
-#                 ifdef GRAVITY
-//                set potential energy to zero when enabling both OPT__SELF_GRAVITY and OPT__EXT_POT
-//                since the potential energy obtained here would be wrong anyway
-//                --> to avoid possible misinterpretation
-                  if      (  OPT__SELF_GRAVITY  &&  !OPT__EXT_POT )  Epot = 0.5*Dens*amr->patch[PotSg][lv][PID]->pot[k][j][i];
-                  else if ( !OPT__SELF_GRAVITY  &&   OPT__EXT_POT )  Epot =     Dens*amr->patch[PotSg][lv][PID]->pot[k][j][i];
-                  else                                               Epot = 0.0;
-                  Fluid_lv[9] += Epot;
-#                 endif
-#                 ifndef SRHD
-//                Hydro_Con2Eint() calculates Eint for both HD and SRHD but we disable SRHD for now
-                  Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag,
-                                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
-                                                 EoS_AuxArray_Int, h_EoS_Table );
-#                 else
-                  Eint = 0.0;
-#                 endif
-                  Fluid_lv[8] += Eint;
-
-#                 ifdef SRHD
-//                For now we disable the calculation of Ekin for SRHD
-//                Also, note that the following is equivalent to "Etot - Dens - Lrtz*Eint"
-                  /*
-                  real HTilde, Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL], Lrtz, Lrtz_m1;
-                  Cons[0]      = Dens;
-                  Cons[1]      = MomX;
-                  Cons[2]      = MomY;
-                  Cons[3]      = MomZ;
-                  Cons[4]      = Etot;
-                  for ( int v = NCOMP_FLUID; v < NCOMP_TOTAL; v++ ) Cons[v] = 0.0;
-                  Hydro_Con2Pri( Cons, Prim, (real)-HUGE_NUMBER, NULL_BOOL, NULL_INT, NULL,
-                                 NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
-                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, &Lrtz );
-                  HTilde       = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-
-//                Compute gamma - 1 this way to avoid catastrophic cancellation
-                  Lrtz_m1      = ( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) ) / ( Lrtz + 1.0 );
-                  Ekin         = Lrtz_m1*( Dens*(HTilde+1.0) + Prim[4] );
-                  */
-                  Ekin = 0.0;
-#                 else
-//###NOTE: assuming Etot = Eint + Ekin + Emag
-                  Ekin         = Etot - Eint;
-#                 ifdef MHD
-                  Ekin        -= Emag;
-#                 endif
-#                 endif
-                  Fluid_lv[7] += Ekin;
-               } // i,j,k
-
-
-#              elif ( MODEL == ELBDM )
-               for (int k=0; k<PATCH_SIZE; k++)
-               for (int j=0; j<PATCH_SIZE; j++)
-               for (int i=0; i<PATCH_SIZE; i++)
-               {
-//                [0] mass
-                  Fluid_lv[0] += amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
-
-//                [2] potential energy in ELBDM
-//                set potential energy to zero when enabling both OPT__SELF_GRAVITY and OPT__EXT_POT
-//                since the potential energy obtained here would be wrong anyway
-//                --> to avoid possible misinterpretation
-#                 ifdef GRAVITY
-                  if      (  OPT__SELF_GRAVITY  &&  !OPT__EXT_POT )
-                  Fluid_lv[2] += 0.5*amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i]
-                                    *amr->patch[PotSg][lv][PID]->pot        [k][j][i];
-
-                  else if ( !OPT__SELF_GRAVITY  &&   OPT__EXT_POT )
-                  Fluid_lv[2] +=     amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i]
-                                    *amr->patch[PotSg][lv][PID]->pot        [k][j][i];
-#                 endif
-
-//                [3] quartic self-interaction potential
-#                 ifdef QUARTIC_SELF_INTERACTION
-                  Fluid_lv[3] += 0.5*ELBDM_LAMBDA*SQR( amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i] );
-#                 endif
-               }
-
-//             [1] kinetic energy in ELBDM
-               const int t = PID - PID0;
-
-               for (int k=NGhost; k<Size_Flu-NGhost; k++)   { kp = k+1; km = k-1;
-               for (int j=NGhost; j<Size_Flu-NGhost; j++)   { jp = j+1; jm = j-1;
-               for (int i=NGhost; i<Size_Flu-NGhost; i++)   { ip = i+1; im = i-1;
-
-                  GradR[0] = _dh2*( Flu_ELBDM[t][0][k ][j ][ip] - Flu_ELBDM[t][0][k ][j ][im] );
-                  GradR[1] = _dh2*( Flu_ELBDM[t][0][k ][jp][i ] - Flu_ELBDM[t][0][k ][jm][i ] );
-                  GradR[2] = _dh2*( Flu_ELBDM[t][0][kp][j ][i ] - Flu_ELBDM[t][0][km][j ][i ] );
-
-                  GradI[0] = _dh2*( Flu_ELBDM[t][1][k ][j ][ip] - Flu_ELBDM[t][1][k ][j ][im] );
-                  GradI[1] = _dh2*( Flu_ELBDM[t][1][k ][jp][i ] - Flu_ELBDM[t][1][k ][jm][i ] );
-                  GradI[2] = _dh2*( Flu_ELBDM[t][1][kp][j ][i ] - Flu_ELBDM[t][1][km][j ][i ] );
-
-                  Fluid_lv[1] += _2Eta2*( SQR(GradR[0]) + SQR(GradR[1]) + SQR(GradR[2]) +
-                                          SQR(GradI[0]) + SQR(GradI[1]) + SQR(GradI[2])   );
-               }}}
-
-
+#              ifdef GRAVITY
+//             set potential energy to zero when enabling both OPT__SELF_GRAVITY and OPT__EXT_POT
+//             since the potential energy obtained here would be wrong anyway
+//             --> to avoid possible misinterpretation
+               if      (  OPT__SELF_GRAVITY  &&  !OPT__EXT_POT )  Epot = 0.5*Dens*amr->patch[PotSg][lv][PID]->pot[k][j][i];
+               else if ( !OPT__SELF_GRAVITY  &&   OPT__EXT_POT )  Epot =     Dens*amr->patch[PotSg][lv][PID]->pot[k][j][i];
+               else                                               Epot = 0.0;
+               Fluid_lv[9] += Epot;
+#              endif
+#              ifndef SRHD
+//             Hydro_Con2Eint() calculates Eint for both HD and SRHD but we disable SRHD for now
+               Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag,
+                                              EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
+                                              EoS_AuxArray_Int, h_EoS_Table );
 #              else
-#              error : ERROR : unsupported MODEL !!
+               Eint = 0.0;
+#              endif
+               Fluid_lv[8] += Eint;
 
-#              endif // MODEL
+#              ifdef SRHD
+//             For now we disable the calculation of Ekin for SRHD
+//             Also, note that the following is equivalent to "Etot - Dens - Lrtz*Eint"
+               /*
+               real HTilde, Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL], Lrtz, Lrtz_m1;
+               Cons[0]      = Dens;
+               Cons[1]      = MomX;
+               Cons[2]      = MomY;
+               Cons[3]      = MomZ;
+               Cons[4]      = Etot;
+               for ( int v = NCOMP_FLUID; v < NCOMP_TOTAL; v++ ) Cons[v] = 0.0;
+               Hydro_Con2Pri( Cons, Prim, (real)-HUGE_NUMBER, NULL_BOOL, NULL_INT, NULL,
+                              NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
+                              EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, &Lrtz );
+               HTilde       = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+//             Compute gamma - 1 this way to avoid catastrophic cancellation
+               Lrtz_m1      = ( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) ) / ( Lrtz + 1.0 );
+               Ekin         = Lrtz_m1*( Dens*(HTilde+1.0) + Prim[4] );
+               */
+               Ekin = 0.0;
+#              else
+//###NOTE: assuming Etot = Eint + Ekin + Emag
+               Ekin         = Etot - Eint;
+#              ifdef MHD
+               Ekin        -= Emag;
+#              endif
+#              endif
+               Fluid_lv[7] += Ekin;
+            } // i,j,k
 
 
-//             individual passive scalars
-               for (int v=0; v<NCOMP_PASSIVE; v++)
-               {
-                  const int v1 = NVar_NoPassive + v;
-                  const int v2 = NCOMP_FLUID    + v;
+#           elif ( MODEL == ELBDM )
+            for (int k=0; k<PATCH_SIZE; k++)
+            for (int j=0; j<PATCH_SIZE; j++)
+            for (int i=0; i<PATCH_SIZE; i++)
+            {
+//             [0] mass
+               Fluid_lv[0] += amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
 
-                  for (int k=0; k<PATCH_SIZE; k++)
-                  for (int j=0; j<PATCH_SIZE; j++)
-                  for (int i=0; i<PATCH_SIZE; i++)
-                     Fluid_lv[v1] += amr->patch[FluSg][lv][PID]->fluid[v2][k][j][i];
-               }
-            } // if ( amr->patch[0][lv][PID]->son == -1 )
+//             [2] potential energy in ELBDM
+//             set potential energy to zero when enabling both OPT__SELF_GRAVITY and OPT__EXT_POT
+//             since the potential energy obtained here would be wrong anyway
+//             --> to avoid possible misinterpretation
+#              ifdef GRAVITY
+               if      (  OPT__SELF_GRAVITY  &&  !OPT__EXT_POT )
+               Fluid_lv[2] += 0.5*amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i]
+                                 *amr->patch[PotSg][lv][PID]->pot        [k][j][i];
+
+               else if ( !OPT__SELF_GRAVITY  &&   OPT__EXT_POT )
+               Fluid_lv[2] +=     amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i]
+                                 *amr->patch[PotSg][lv][PID]->pot        [k][j][i];
+#              endif
+
+//             [3] quartic self-interaction potential
+#              ifdef QUARTIC_SELF_INTERACTION
+               Fluid_lv[3] += 0.5*ELBDM_LAMBDA*SQR( amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i] );
+#              endif
+            }
+
+//          [1] kinetic energy in ELBDM
+            const int t = PID - PID0;
+
+            for (int k=NGhost; k<Size_Flu-NGhost; k++)   { kp = k+1; km = k-1;
+            for (int j=NGhost; j<Size_Flu-NGhost; j++)   { jp = j+1; jm = j-1;
+            for (int i=NGhost; i<Size_Flu-NGhost; i++)   { ip = i+1; im = i-1;
+
+               GradR[0] = _dh2*( Flu_ELBDM[t][0][k ][j ][ip] - Flu_ELBDM[t][0][k ][j ][im] );
+               GradR[1] = _dh2*( Flu_ELBDM[t][0][k ][jp][i ] - Flu_ELBDM[t][0][k ][jm][i ] );
+               GradR[2] = _dh2*( Flu_ELBDM[t][0][kp][j ][i ] - Flu_ELBDM[t][0][km][j ][i ] );
+
+               GradI[0] = _dh2*( Flu_ELBDM[t][1][k ][j ][ip] - Flu_ELBDM[t][1][k ][j ][im] );
+               GradI[1] = _dh2*( Flu_ELBDM[t][1][k ][jp][i ] - Flu_ELBDM[t][1][k ][jm][i ] );
+               GradI[2] = _dh2*( Flu_ELBDM[t][1][kp][j ][i ] - Flu_ELBDM[t][1][km][j ][i ] );
+
+               Fluid_lv[1] += _2Eta2*( SQR(GradR[0]) + SQR(GradR[1]) + SQR(GradR[2]) +
+                                       SQR(GradI[0]) + SQR(GradI[1]) + SQR(GradI[2])   );
+            }}}
+
+
+#           else
+#           error : ERROR : unsupported MODEL !!
+
+#           endif // MODEL
+
+
+//          individual passive scalars
+            for (int v=0; v<NCOMP_PASSIVE; v++)
+            {
+               const int v1 = NVar_NoPassive + v;
+               const int v2 = NCOMP_FLUID    + v;
+
+               for (int k=0; k<PATCH_SIZE; k++)
+               for (int j=0; j<PATCH_SIZE; j++)
+               for (int i=0; i<PATCH_SIZE; i++)
+                  Fluid_lv[v1] += amr->patch[FluSg][lv][PID]->fluid[v2][k][j][i];
+            }
          } // for (int PID=PID0; PID<PID0+8; PID++)
       } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
 
@@ -465,7 +463,7 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "#-------------------------------------------------------------------------------------------" );
          Aux_Message( File, "--------------------------------------------------------------------------------------------\n\n" );
 
-         const int NColumnMax = 120;
+         const int NColumnMax = 140;
          Aux_Message( File, "#%12s  %10s", "[  1]", "[  2]" );
          for (int c=2; c<NColumnMax; c++)    Aux_Message( File, "  %12s[%3d]", "", c+1 );
          Aux_Message( File, "\n" );
