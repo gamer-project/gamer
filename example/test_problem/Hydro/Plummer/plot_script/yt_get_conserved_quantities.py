@@ -34,7 +34,7 @@ def _kinetic_energy(field, data):
     return data['kinetic_energy_density']*data['cell_volume']
 
 def _potential_energy(field, data):
-    return 0.5*data['Pote']*data['Dens']*data['cell_volume']
+    return 0.5*data['Pote']*data['Dens']*data['cell_volume'] if data.ds.parameters["Opt__Output_Pot"] == 1 else float('nan')*data.ds.units.code_mass*data.ds.units.code_velocity**2
 
 def _thermal_energy(field, data):
     return data['thermal_energy_density']*data['cell_volume']
@@ -55,7 +55,7 @@ def _particle_kinetic_energy(field, data):
     return 0.5*data['particle_mass']*data['particle_velocity_magnitude']**2
 
 def _particle_potential_energy(field, data):
-    return 0.5*data['Pote']*data['ParDens']*data['cell_volume']
+    return 0.5*data['Pote']*data['ParDens']*data['cell_volume'] if data.ds.parameters["Opt__Output_Pot"] == 1 else float('nan')*data.ds.units.code_mass*data.ds.units.code_velocity**2
 
 
 # add new fields
@@ -78,12 +78,15 @@ for ds in ts.piter():
 
     print( '')
     print( '-------------------------------------------------------------------' )
-    print( 'Data name   :', ds )
-    print( 'Time        :', ds.current_time.in_units('code_time').d )
+    print( 'Data name   = ', ds )
+    print( 'Time        = % 14.7e'%( ds.current_time.in_units('code_time').d ) )
     print( '-------------------------------------------------------------------' )
 
     ad = ds.all_data()
 
+    # Check if the potential field exist
+    if ds.parameters["Opt__Output_Pot"] == 0:
+        print( 'WARNING : To calculate the gravitational potential energy, please turn on OPT__OUTPUT_POT in Input__Parameter !!\n' )
 
     # Gas
     Mass_Gas    = ad.quantities.total_quantity( 'cell_mass'                   ) # total HYDRO mass
@@ -126,40 +129,40 @@ for ds in ts.piter():
     # print the conserved quantities
     print( '' )
     print( 'Gas' )
-    print( 'Mass_Gas    = {: 14.8e}'.format(    Mass_Gas.in_units('code_mass').d                           ) )
-    print( 'MomX_Gas    = {: 14.8e}'.format(    MomX_Gas.in_units('code_mass*code_velocity').d             ) )
-    print( 'MomY_Gas    = {: 14.8e}'.format(    MomY_Gas.in_units('code_mass*code_velocity').d             ) )
-    print( 'MomZ_Gas    = {: 14.8e}'.format(    MomZ_Gas.in_units('code_mass*code_velocity').d             ) )
-    print( 'AngMomX_Gas = {: 14.8e}'.format( AngMomX_Gas.in_units('code_length*code_mass*code_velocity').d ) )
-    print( 'AngMomY_Gas = {: 14.8e}'.format( AngMomY_Gas.in_units('code_length*code_mass*code_velocity').d ) )
-    print( 'AngMomZ_Gas = {: 14.8e}'.format( AngMomZ_Gas.in_units('code_length*code_mass*code_velocity').d ) )
-    print( 'Ekin_Gas    = {: 14.8e}'.format(    Ekin_Gas.in_units('code_mass*code_velocity**2').d          ) )
-    print( 'Eint_Gas    = {: 14.8e}'.format(    Eint_Gas.in_units('code_mass*code_velocity**2').d          ) )
-    print( 'Epot_Gas    = {: 14.8e}'.format(    Epot_Gas.in_units('code_mass*code_velocity**2').d          ) )
-    print( 'Etot_Gas    = {: 14.8e}'.format(    Etot_Gas.in_units('code_mass*code_velocity**2').d          ) )
+    print( 'Mass_Gas    = % 14.7e'%(    Mass_Gas.in_units('code_mass').d                           ) )
+    print( 'MomX_Gas    = % 14.7e'%(    MomX_Gas.in_units('code_mass*code_velocity').d             ) )
+    print( 'MomY_Gas    = % 14.7e'%(    MomY_Gas.in_units('code_mass*code_velocity').d             ) )
+    print( 'MomZ_Gas    = % 14.7e'%(    MomZ_Gas.in_units('code_mass*code_velocity').d             ) )
+    print( 'AngMomX_Gas = % 14.7e'%( AngMomX_Gas.in_units('code_length*code_mass*code_velocity').d ) )
+    print( 'AngMomY_Gas = % 14.7e'%( AngMomY_Gas.in_units('code_length*code_mass*code_velocity').d ) )
+    print( 'AngMomZ_Gas = % 14.7e'%( AngMomZ_Gas.in_units('code_length*code_mass*code_velocity').d ) )
+    print( 'Ekin_Gas    = % 14.7e'%(    Ekin_Gas.in_units('code_mass*code_velocity**2').d          ) )
+    print( 'Eint_Gas    = % 14.7e'%(    Eint_Gas.in_units('code_mass*code_velocity**2').d          ) )
+    print( 'Epot_Gas    = % 14.7e'%(    Epot_Gas.in_units('code_mass*code_velocity**2').d          ) )
+    print( 'Etot_Gas    = % 14.7e'%(    Etot_Gas.in_units('code_mass*code_velocity**2').d          ) )
 
     print( '' )
     print( 'Par' )
-    print( 'Mass_Par    = {: 14.8e}'.format(    Mass_Par.in_units('code_mass').d                           ) )
-    print( 'MomX_Par    = {: 14.8e}'.format(    MomX_Par.in_units('code_mass*code_velocity').d             ) )
-    print( 'MomY_Par    = {: 14.8e}'.format(    MomY_Par.in_units('code_mass*code_velocity').d             ) )
-    print( 'MomZ_Par    = {: 14.8e}'.format(    MomZ_Par.in_units('code_mass*code_velocity').d             ) )
-    print( 'AngMomX_Par = {: 14.8e}'.format( AngMomX_Par.in_units('code_length*code_mass*code_velocity').d ) )
-    print( 'AngMomY_Par = {: 14.8e}'.format( AngMomY_Par.in_units('code_length*code_mass*code_velocity').d ) )
-    print( 'AngMomZ_Par = {: 14.8e}'.format( AngMomZ_Par.in_units('code_length*code_mass*code_velocity').d ) )
-    print( 'Ekin_Par    = {: 14.8e}'.format(    Ekin_Par.in_units('code_mass*code_velocity**2').d          ) )
-    print( 'Epot_Par    = {: 14.8e}'.format(    Epot_Par.in_units('code_mass*code_velocity**2').d          ) )
-    print( 'Etot_Par    = {: 14.8e}'.format(    Etot_Par.in_units('code_mass*code_velocity**2').d          ) )
+    print( 'Mass_Par    = % 14.7e'%(    Mass_Par.in_units('code_mass').d                           ) )
+    print( 'MomX_Par    = % 14.7e'%(    MomX_Par.in_units('code_mass*code_velocity').d             ) )
+    print( 'MomY_Par    = % 14.7e'%(    MomY_Par.in_units('code_mass*code_velocity').d             ) )
+    print( 'MomZ_Par    = % 14.7e'%(    MomZ_Par.in_units('code_mass*code_velocity').d             ) )
+    print( 'AngMomX_Par = % 14.7e'%( AngMomX_Par.in_units('code_length*code_mass*code_velocity').d ) )
+    print( 'AngMomY_Par = % 14.7e'%( AngMomY_Par.in_units('code_length*code_mass*code_velocity').d ) )
+    print( 'AngMomZ_Par = % 14.7e'%( AngMomZ_Par.in_units('code_length*code_mass*code_velocity').d ) )
+    print( 'Ekin_Par    = % 14.7e'%(    Ekin_Par.in_units('code_mass*code_velocity**2').d          ) )
+    print( 'Epot_Par    = % 14.7e'%(    Epot_Par.in_units('code_mass*code_velocity**2').d          ) )
+    print( 'Etot_Par    = % 14.7e'%(    Etot_Par.in_units('code_mass*code_velocity**2').d          ) )
 
     print( '' )
     print( 'All' )
-    print( 'Mass_All    = {: 14.8e}'.format(    Mass_All.in_units('code_mass').d                           ) )
-    print( 'MomX_All    = {: 14.8e}'.format(    MomX_All.in_units('code_mass*code_velocity').d             ) )
-    print( 'MomY_All    = {: 14.8e}'.format(    MomY_All.in_units('code_mass*code_velocity').d             ) )
-    print( 'MomZ_All    = {: 14.8e}'.format(    MomZ_All.in_units('code_mass*code_velocity').d             ) )
-    print( 'AngMomX_All = {: 14.8e}'.format( AngMomX_All.in_units('code_length*code_mass*code_velocity').d ) )
-    print( 'AngMomY_All = {: 14.8e}'.format( AngMomY_All.in_units('code_length*code_mass*code_velocity').d ) )
-    print( 'AngMomZ_All = {: 14.8e}'.format( AngMomZ_All.in_units('code_length*code_mass*code_velocity').d ) )
-    print( 'Ekin_All    = {: 14.8e}'.format(    Ekin_All.in_units('code_mass*code_velocity**2').d          ) )
-    print( 'Epot_All    = {: 14.8e}'.format(    Epot_All.in_units('code_mass*code_velocity**2').d          ) )
-    print( 'Etot_All    = {: 14.8e}'.format(    Etot_All.in_units('code_mass*code_velocity**2').d          ) )
+    print( 'Mass_All    = % 14.7e'%(    Mass_All.in_units('code_mass').d                           ) )
+    print( 'MomX_All    = % 14.7e'%(    MomX_All.in_units('code_mass*code_velocity').d             ) )
+    print( 'MomY_All    = % 14.7e'%(    MomY_All.in_units('code_mass*code_velocity').d             ) )
+    print( 'MomZ_All    = % 14.7e'%(    MomZ_All.in_units('code_mass*code_velocity').d             ) )
+    print( 'AngMomX_All = % 14.7e'%( AngMomX_All.in_units('code_length*code_mass*code_velocity').d ) )
+    print( 'AngMomY_All = % 14.7e'%( AngMomY_All.in_units('code_length*code_mass*code_velocity').d ) )
+    print( 'AngMomZ_All = % 14.7e'%( AngMomZ_All.in_units('code_length*code_mass*code_velocity').d ) )
+    print( 'Ekin_All    = % 14.7e'%(    Ekin_All.in_units('code_mass*code_velocity**2').d          ) )
+    print( 'Epot_All    = % 14.7e'%(    Epot_All.in_units('code_mass*code_velocity**2').d          ) )
+    print( 'Etot_All    = % 14.7e'%(    Etot_All.in_units('code_mass*code_velocity**2').d          ) )
