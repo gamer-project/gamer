@@ -835,21 +835,20 @@ void SetParameter()
    } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Soliton_Num > 0 )
 
 // (2-4) check the parameters for the particle clouds
-   #  ifndef MASSIVE_PARTICLES
-   // check the particle is enabled
-   if ( HaloMerger_ParCloud_Num > 0 )
-      Aux_Error( ERROR_INFO, "MASSIVE_PARTICLES must be enabled for HaloMerger_ParCloud_Num > 0 !!\n" );
-   #  endif
-
-   // check there fluid is freezed if it is supposed to be a particle-only case
-   if ( HaloMerger_ParCloud_Num > 0  &&  (HaloMerger_Halo_Num + HaloMerger_Soliton_Num) == 0  &&  OPT__FREEZE_FLUID != 1 )
-      Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID should be 1 for particle-only simulations !!\n" );
-
    // set the total number of particles in all particle clouds
    long HaloMerger_ParCloud_NPar_Total = (long)0;
 
    if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_ParCloud_Num > 0 )
    {
+      // check the particle is enabled
+#     ifndef MASSIVE_PARTICLES
+      Aux_Error( ERROR_INFO, "MASSIVE_PARTICLES must be enabled for HaloMerger_ParCloud_Num > 0 !!\n" );
+#     endif
+
+      // check there fluid is freezed if it is supposed to be a particle-only case
+      if ( (HaloMerger_Halo_Num + HaloMerger_Soliton_Num) == 0  &&  OPT__FREEZE_FLUID != 1 )
+         Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID should be 1 for particle-only simulations !!\n" );
+
       for (int index_parcloud=0; index_parcloud<HaloMerger_ParCloud_Num; index_parcloud++)
       {
          const int index_parcloud_input = index_parcloud+1; // index of particle cloud in the input file
@@ -987,12 +986,12 @@ void SetParameter()
    // overwrite the total number of particles
    if ( OPT__INIT != INIT_BY_RESTART )
    {
-      #  ifdef MASSIVE_PARTICLES
+#     ifdef MASSIVE_PARTICLES
       amr->Par->NPar_Active_AllRank = HaloMerger_ParCloud_NPar_Total;
 
       PRINT_RESET_PARA( amr->Par->NPar_Active_AllRank, FORMAT_LONG,
                         "(amr->Par->NPar_Active_AllRank is originally set by PAR_NPAR in Input__Parameter)" );
-      #  endif
+#     endif
    }
 
 
