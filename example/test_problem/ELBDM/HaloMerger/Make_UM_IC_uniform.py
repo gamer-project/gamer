@@ -263,9 +263,9 @@ print( '' )
 def Interpolated_Data( UM_IC_Input_SingleLevel, lv ):
 
     # difference of levels
-    delta_lv                 = Target_lv - lv
+    delta_lv                 = lv - Target_lv
 
-    if delta_lv < -np.log2( 2*PatchSize ):
+    if delta_lv > np.log2( 2*PatchSize ):
         raise RuntimeError( 'Interpolated_Data() does not work when (lv - Target_lv) > log_2( 2*PatchSize ) !!' )
 
     # Interpolation Table
@@ -284,9 +284,9 @@ def Interpolated_Data( UM_IC_Input_SingleLevel, lv ):
                                                                            InterpolationTable_Imag, bounds_error=False, fill_value=None )
 
     # Interpolated data size
-    Interpolated_Data_N_z    = np.around( UM_IC_Input_N_z[lv]*(2**delta_lv) ).astype(int)
-    Interpolated_Data_N_y    = np.around( UM_IC_Input_N_y[lv]*(2**delta_lv) ).astype(int)
-    Interpolated_Data_N_x    = np.around( UM_IC_Input_N_x[lv]*(2**delta_lv) ).astype(int)
+    Interpolated_Data_N_z    = np.around( UM_IC_Input_N_z[lv]/(2**delta_lv) ).astype(int)
+    Interpolated_Data_N_y    = np.around( UM_IC_Input_N_y[lv]/(2**delta_lv) ).astype(int)
+    Interpolated_Data_N_x    = np.around( UM_IC_Input_N_x[lv]/(2**delta_lv) ).astype(int)
 
     # Interpolation points
     Interpolation_Pts_Z      = np.array( [ UM_IC_Input_z0[lv] + (k+0.5)*UM_IC_Output_dh for k in range( 0, Interpolated_Data_N_z, 1 ) ], dtype=np.single )
@@ -306,13 +306,13 @@ def Interpolated_Data( UM_IC_Input_SingleLevel, lv ):
 def Repeated_Data( UM_IC_Input_LowerLevel, lv ):
 
     # difference of levels
-    delta_lv                 = Target_lv - lv
+    delta_lv                 = lv - Target_lv
 
-    if delta_lv < 0:
+    if delta_lv > 0:
         raise RuntimeError( 'lv must <= Target_lv for repeating !!' )
 
     # Repeating
-    Repeated_Data            = np.repeat( np.repeat( np.repeat( UM_IC_Input_LowerLevel, 2**delta_lv, axis=3 ), 2**delta_lv, axis=2 ), 2**delta_lv, axis=1 )
+    Repeated_Data            = np.repeat( np.repeat( np.repeat( UM_IC_Input_LowerLevel, 2**(-delta_lv), axis=3 ), 2**(-delta_lv), axis=2 ), 2**(-delta_lv), axis=1 )
 
     return Repeated_Data
 
@@ -320,23 +320,23 @@ def Repeated_Data( UM_IC_Input_LowerLevel, lv ):
 def Averaged_Data( UM_IC_Input_HigherLevel, lv ):
 
     # difference of levels
-    delta_lv                 = Target_lv - lv
+    delta_lv                 = lv - Target_lv
 
-    if delta_lv > 0:
+    if delta_lv < 0:
         raise RuntimeError( 'lv must >= Target_lv for averaging !!' )
 
-    if delta_lv < -np.log2( 2*PatchSize ):
+    if delta_lv > np.log2( 2*PatchSize ):
         raise RuntimeError( 'Averaged_Data() does not work when (lv - Target_lv) > log_2( 2*PatchSize ) !!' )
 
     # Averaged data size
-    Averaged_Data_N_z        = np.around( UM_IC_Input_N_z[lv]*(2**delta_lv) ).astype(int)
-    Averaged_Data_N_y        = np.around( UM_IC_Input_N_y[lv]*(2**delta_lv) ).astype(int)
-    Averaged_Data_N_x        = np.around( UM_IC_Input_N_x[lv]*(2**delta_lv) ).astype(int)
+    Averaged_Data_N_z        = np.around( UM_IC_Input_N_z[lv]/(2**delta_lv) ).astype(int)
+    Averaged_Data_N_y        = np.around( UM_IC_Input_N_y[lv]/(2**delta_lv) ).astype(int)
+    Averaged_Data_N_x        = np.around( UM_IC_Input_N_x[lv]/(2**delta_lv) ).astype(int)
 
     # Averaging
-    Averaged_Data            = ( (2**delta_lv)**3 )*UM_IC_Input_HigherLevel.reshape( 2, Averaged_Data_N_z, 2**(-delta_lv),
-                                                                                        Averaged_Data_N_y, 2**(-delta_lv),
-                                                                                        Averaged_Data_N_x, 2**(-delta_lv) ).sum(axis=2).sum(axis=3).sum(axis=4)
+    Averaged_Data            = ( 1.0/(2**delta_lv)**3 )*UM_IC_Input_HigherLevel.reshape( 2, Averaged_Data_N_z, 2**delta_lv,
+                                                                                            Averaged_Data_N_y, 2**delta_lv,
+                                                                                            Averaged_Data_N_x, 2**delta_lv ).sum(axis=2).sum(axis=3).sum(axis=4)
 
     return Averaged_Data
 
