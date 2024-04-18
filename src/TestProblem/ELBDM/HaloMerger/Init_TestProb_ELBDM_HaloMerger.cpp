@@ -992,7 +992,7 @@ void SetParameter()
 
       // check there are particles
       if ( HaloMerger_ParCloud_NPar_Total <= 0 )
-         Aux_Error( ERROR_INFO, "Total number of particles (sum of HaloMerger_ParCloud_i_NPar) must be >0 for HaloMerger_ParCloud_InitMode == 1 !!\n" );
+         Aux_Error( ERROR_INFO, "Total number of particles (sum of HaloMerger_ParCloud_i_NPar) must be >0 for HaloMerger_ParCloud_Num > 0 !!\n" );
 
    } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_ParCloud_Num > 0 )
 
