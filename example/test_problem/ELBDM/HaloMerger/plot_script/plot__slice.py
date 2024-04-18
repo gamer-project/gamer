@@ -53,7 +53,7 @@ for ds in ts.piter():
                center = ds.domain_center
 
             # SlicePlot
-            s_dens = yt.SlicePlot( ds, direction, field, center=center )
+            s_dens = yt.SlicePlot( ds, direction, field, center=center, buff_size=(1024, 1024) )
 
             # setting for the figure
             s_dens.set_axes_unit( 'kpc' )

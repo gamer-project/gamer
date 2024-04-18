@@ -53,7 +53,7 @@ for ds in ts.piter():
                center = ds.domain_center
 
             # ProjectionPlot
-            p_dens = yt.ProjectionPlot( ds, direction, field, center=center )
+            p_dens = yt.ProjectionPlot( ds, direction, field, center=center, buff_size=(1024, 1024) )
 
             # setting for the figure
             p_dens.set_axes_unit( 'kpc' )
