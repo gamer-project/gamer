@@ -344,7 +344,7 @@ void SetParameter()
       char HaloMerger_Soliton_i_VelocityZ [MAX_STRING];
 
       char HaloMerger_Soliton_i_DensProf_Filename[MAX_STRING]; // filename of the density profile table for the i-th soliton (HaloMerger_Soliton_InitMode == 1 only)
-      char HaloMerger_Soliton_i_DensProf_Rescale[MAX_STRING];  // whether to scale the density profile table for the 1st soliton (HaloMerger_Soliton_InitMode == 1 only) [1]
+      char HaloMerger_Soliton_i_DensProf_Rescale[MAX_STRING];  // whether to scale the density profile table for the i-th soliton (HaloMerger_Soliton_InitMode == 1 only) [1]
 
       char HaloMerger_Soliton_i_OuterSlope[MAX_STRING];        // outer slope of the analytical density profile of the i-th soliton (HaloMerger_Soliton_InitMode == 2 only) [-8.0]
 
@@ -440,7 +440,7 @@ void SetParameter()
       char HaloMerger_ParCloud_i_VelocityY[MAX_STRING];
       char HaloMerger_ParCloud_i_VelocityZ[MAX_STRING];
       char HaloMerger_ParCloud_i_DensProf_Filename[MAX_STRING];  // filename of the density profile table for the i-th particle cloud (HaloMerger_ParCloud_InitMode == 1 only)
-      char HaloMerger_ParCloud_i_DensProf_MaxR[MAX_STRING];      // maximum radius for particles for the i-th particle cloud (must > 0.0) (HaloMerger_ParCloud_InitMode == 1 only) [-1.0]
+      char HaloMerger_ParCloud_i_DensProf_MaxR[MAX_STRING];      // maximum radius for particles for the i-th particle cloud (must > 0.0) (HaloMerger_ParCloud_InitMode == 1 only) [0.5*amr->BoxSize[0]]
       char HaloMerger_ParCloud_i_RSeed[MAX_STRING];              // random seed for setting particle position and velocity for the i-th particle cloud (must >= 0) (HaloMerger_ParCloud_InitMode == 1 only) [123]
       char HaloMerger_ParCloud_i_NPar[MAX_STRING];               // number of particles for the i-th particle cloud (must >= 0) (HaloMerger_ParCloud_InitMode == 1 only) [0]
 
@@ -470,21 +470,21 @@ void SetParameter()
       // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
       // --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
       // ********************************************************************************************************************************
-      // ReadPara_ParCloud->Add( "KEY_IN_THE_FILE",                       &VARIABLE,                                               DEFAULT,          MIN,           MAX              );
+      // ReadPara_ParCloud->Add( "KEY_IN_THE_FILE",                       &VARIABLE,                                               DEFAULT,              MIN,           MAX              );
       // ********************************************************************************************************************************
-         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_CenCoordX,         &HaloMerger_ParCloud_CenCoord[index_parcloud][0],       -1.0,              NoMin_double,  amr->BoxEdgeR[0] );
-         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_CenCoordY,         &HaloMerger_ParCloud_CenCoord[index_parcloud][1],       -1.0,              NoMin_double,  amr->BoxEdgeR[1] );
-         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_CenCoordZ,         &HaloMerger_ParCloud_CenCoord[index_parcloud][2],       -1.0,              NoMin_double,  amr->BoxEdgeR[2] );
-         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_VelocityX,         &HaloMerger_ParCloud_Velocity[index_parcloud][0],        0.0,              NoMin_double,  NoMax_double     );
-         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_VelocityY,         &HaloMerger_ParCloud_Velocity[index_parcloud][1],        0.0,              NoMin_double,  NoMax_double     );
-         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_VelocityZ,         &HaloMerger_ParCloud_Velocity[index_parcloud][2],        0.0,              NoMin_double,  NoMax_double     );
+         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_CenCoordX,         &HaloMerger_ParCloud_CenCoord[index_parcloud][0],       -1.0,                  NoMin_double,  amr->BoxEdgeR[0] );
+         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_CenCoordY,         &HaloMerger_ParCloud_CenCoord[index_parcloud][1],       -1.0,                  NoMin_double,  amr->BoxEdgeR[1] );
+         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_CenCoordZ,         &HaloMerger_ParCloud_CenCoord[index_parcloud][2],       -1.0,                  NoMin_double,  amr->BoxEdgeR[2] );
+         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_VelocityX,         &HaloMerger_ParCloud_Velocity[index_parcloud][0],        0.0,                  NoMin_double,  NoMax_double     );
+         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_VelocityY,         &HaloMerger_ParCloud_Velocity[index_parcloud][1],        0.0,                  NoMin_double,  NoMax_double     );
+         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_VelocityZ,         &HaloMerger_ParCloud_Velocity[index_parcloud][2],        0.0,                  NoMin_double,  NoMax_double     );
 
          if ( HaloMerger_ParCloud_InitMode == 1 )
          {
-         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_DensProf_Filename,  HaloMerger_ParCloud_DensProf_Filename[index_parcloud],  NoDef_str,        Useless_str,   Useless_str      );
-         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_DensProf_MaxR,     &HaloMerger_ParCloud_DensProf_MaxR[index_parcloud],     -1.0,              Eps_double,    NoMax_double     );
-         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_RSeed,             &HaloMerger_ParCloud_RSeed[index_parcloud],              123,              0,             NoMax_int        );
-         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_NPar,              &HaloMerger_ParCloud_NPar[index_parcloud],               (long)0,          (long)0,       NoMax_long       );
+         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_DensProf_Filename,  HaloMerger_ParCloud_DensProf_Filename[index_parcloud],  NoDef_str,            Useless_str,   Useless_str      );
+         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_DensProf_MaxR,     &HaloMerger_ParCloud_DensProf_MaxR[index_parcloud],      0.5*amr->BoxSize[0],  Eps_double,    NoMax_double     );
+         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_RSeed,             &HaloMerger_ParCloud_RSeed[index_parcloud],              123,                  0,             NoMax_int        );
+         ReadPara_ParCloud->Add( HaloMerger_ParCloud_i_NPar,              &HaloMerger_ParCloud_NPar[index_parcloud],               (long)0,              (long)0,       NoMax_long       );
          } // if ( HaloMerger_ParCloud_InitMode == 1 )
          else
             Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
@@ -575,7 +575,10 @@ void SetParameter()
                {
                   if ( HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][d]  <= HaloMerger_Halo_UM_IC_Range_EdgeL[index2_halo][d] ||
                        HaloMerger_Halo_UM_IC_Range_EdgeR[index2_halo][d] <= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][d] )
+                  {
                      isOverlap = false;
+                     break;
+                  }
                } // for (int d=0; d<3; d++)
 
                if ( MPI_Rank == 0 )
@@ -771,10 +774,10 @@ void SetParameter()
 
             bool isOverlap = true;
 
-            if ( sqrt( SQR(HaloMerger_Soliton_CenCoord[index_soliton][0]-HaloMerger_Soliton_CenCoord[index2_soliton][0])
-                     + SQR(HaloMerger_Soliton_CenCoord[index_soliton][1]-HaloMerger_Soliton_CenCoord[index2_soliton][1])
-                     + SQR(HaloMerger_Soliton_CenCoord[index_soliton][2]-HaloMerger_Soliton_CenCoord[index2_soliton][2]) )
-                 > 3.0*(HaloMerger_Soliton_CoreRadius[index_soliton]+HaloMerger_Soliton_CoreRadius[index2_soliton]) )
+            if ( sqrt( SQR( HaloMerger_Soliton_CenCoord[index_soliton][0] - HaloMerger_Soliton_CenCoord[index2_soliton][0] )
+                     + SQR( HaloMerger_Soliton_CenCoord[index_soliton][1] - HaloMerger_Soliton_CenCoord[index2_soliton][1] )
+                     + SQR( HaloMerger_Soliton_CenCoord[index_soliton][2] - HaloMerger_Soliton_CenCoord[index2_soliton][2] ) )
+                 > 3.0*( HaloMerger_Soliton_CoreRadius[index_soliton] + HaloMerger_Soliton_CoreRadius[index2_soliton] ) )
                isOverlap = false;
 
             if ( MPI_Rank == 0 )
@@ -806,7 +809,10 @@ void SetParameter()
                   {
                      if ( HaloMerger_Soliton_CenCoord[index_soliton][d] - 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] >= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][d] ||
                           HaloMerger_Soliton_CenCoord[index_soliton][d] + 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] <= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][d] )
+                     {
                         isOverlap = false;
+                        break;
+                     }
                   } // for (int d=0; d<3; d++)
 
                   if ( MPI_Rank == 0 )
@@ -885,17 +891,22 @@ void SetParameter()
 
                bool isOverlap = true;
 
-               if ( sqrt( SQR(HaloMerger_ParCloud_CenCoord[index_parcloud][0]-HaloMerger_ParCloud_CenCoord[index2_parcloud][0])
-                        + SQR(HaloMerger_ParCloud_CenCoord[index_parcloud][1]-HaloMerger_ParCloud_CenCoord[index2_parcloud][1])
-                        + SQR(HaloMerger_ParCloud_CenCoord[index_parcloud][2]-HaloMerger_ParCloud_CenCoord[index2_parcloud][2]) )
-                    > (HaloMerger_ParCloud_DensProf_MaxR[index_parcloud]+HaloMerger_ParCloud_DensProf_MaxR[index2_parcloud]) )
+               if ( sqrt( SQR( HaloMerger_ParCloud_CenCoord[index_parcloud][0] - HaloMerger_ParCloud_CenCoord[index2_parcloud][0] )
+                        + SQR( HaloMerger_ParCloud_CenCoord[index_parcloud][1] - HaloMerger_ParCloud_CenCoord[index2_parcloud][1] )
+                        + SQR( HaloMerger_ParCloud_CenCoord[index_parcloud][2] - HaloMerger_ParCloud_CenCoord[index2_parcloud][2] ) )
+                    > ( HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] + HaloMerger_ParCloud_DensProf_MaxR[index2_parcloud] ) )
                   isOverlap = false;
 
                if ( MPI_Rank == 0 )
                {
                   if ( isOverlap )
-                     Aux_Message( stderr, "WARNING : The ParCloud_%d range overlaps with the ParCloud_%d range !!\n",
-                                  index_parcloud_input, index2_parcloud_input );
+                     Aux_Message( stderr, "WARNING : ParCloud_%d range (center: [%13.6e, %13.6e, %13.6e], MaxR: %13.6e) overlaps with the ParCloud_%d range (center: [%13.6e, %13.6e, %13.6e], MaxR: %13.6e) !!\n",
+                                  index_parcloud_input,
+                                  HaloMerger_ParCloud_CenCoord[index_parcloud][0], HaloMerger_ParCloud_CenCoord[index_parcloud][1],
+                                  HaloMerger_ParCloud_CenCoord[index_parcloud][2], HaloMerger_ParCloud_DensProf_MaxR[index_parcloud],
+                                  index2_parcloud_input,
+                                  HaloMerger_ParCloud_CenCoord[index2_parcloud][0], HaloMerger_ParCloud_CenCoord[index2_parcloud][1],
+                                  HaloMerger_ParCloud_CenCoord[index2_parcloud][2], HaloMerger_ParCloud_DensProf_MaxR[index2_parcloud] );
                }
 
             } // for (int index2_parcloud=0; index2_parcloud<index_parcloud; index2_parcloud++)
@@ -916,7 +927,10 @@ void SetParameter()
                      {
                         if ( HaloMerger_ParCloud_CenCoord[index_parcloud][d] - HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] >= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][d] ||
                              HaloMerger_ParCloud_CenCoord[index_parcloud][d] + HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] <= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][d] )
+                        {
                            isOverlap = false;
+                           break;
+                        }
                      } // for (int d=0; d<3; d++)
 
                      if ( MPI_Rank == 0 )
@@ -947,12 +961,11 @@ void SetParameter()
 
                   bool isOverlap = true;
 
-                  for (int d=0; d<3; d++)
-                  {
-                     if ( HaloMerger_ParCloud_CenCoord[index_parcloud][d] - HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] >= HaloMerger_Soliton_CenCoord[index_soliton][d] + 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] ||
-                          HaloMerger_ParCloud_CenCoord[index_parcloud][d] + HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] <= HaloMerger_Soliton_CenCoord[index_soliton][d] - 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] )
-                        isOverlap = false;
-                  } // for (int d=0; d<3; d++)
+                  if ( sqrt( SQR( HaloMerger_ParCloud_CenCoord[index_parcloud][0] - HaloMerger_Soliton_CenCoord[index_soliton][0] )
+                           + SQR( HaloMerger_ParCloud_CenCoord[index_parcloud][1] - HaloMerger_Soliton_CenCoord[index_soliton][1] )
+                           + SQR( HaloMerger_ParCloud_CenCoord[index_parcloud][2] - HaloMerger_Soliton_CenCoord[index_soliton][2] ) )
+                       > ( HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] + 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] ) )
+                     isOverlap = false;
 
                   if ( MPI_Rank == 0 )
                   {
@@ -989,7 +1002,8 @@ void SetParameter()
       #  ifdef MASSIVE_PARTICLES
       amr->Par->NPar_Active_AllRank = HaloMerger_ParCloud_NPar_Total;
 
-      PRINT_RESET_PARA( amr->Par->NPar_Active_AllRank, FORMAT_LONG, "(PAR_NPAR in Input__Parameter)" );
+      PRINT_RESET_PARA( amr->Par->NPar_Active_AllRank, FORMAT_LONG,
+                        "(amr->Par->NPar_Active_AllRank is originally set by PAR_NPAR in Input__Parameter)" );
       #  endif
    }
 

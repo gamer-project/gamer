@@ -39,12 +39,14 @@ Note:
       - The UM_IC must be single AMR level.
          - If the UM_IC has multiple AMR levels (and there is Input__UM_IC_RefineRegion),
            the Python script Make_UM_IC_uniform.py is provided to convert it to a single-level UM_IC with the specified level
+           (However, those levels higher than target_lv+log_2( 2*PATCH_SIZE ) cannot be handled and will be ignored)
       - Note that HaloMerger_Halo_*_CenCoord* in Input__TestProb_Halo is the UM_IC box center, rather than the exact halo center
 
 3. Edit Input_TestProb_Soliton to specify the parameters for the solitons
    a. Add new parameters with increasing indexes if the number of solitons is more than 2
    b. For HaloMerger_Soliton_InitMode == 1
       - The initial condition of solitons is constructed by reading the table of soliton density profile
+        (the density profiel will be rescaled to the given core radius or core density if HaloMerger_Soliton_*_DensProf_Rescale == 1)
    c. For HaloMerger_Soliton_InitMode == 2
       - The initial condition of solitons is constructed by using the analytical formula of soliton density profile
 
@@ -52,7 +54,7 @@ Note:
    a. Add new parameters with increasing indexes if the number of particle clouds is more than 2
    b. For HaloMerger_ParCloud_InitMode == 1
       - The initial condition of particle clouds is constructed by reading the table of density profile and using Par_EquilibriumIC()
-      - The default particle clouds use the HaloDensityProfile to represent the CDM halos
+      - The default particle clouds use the HaloDensityProfile (see Note 7. below) to represent the CDM halos
       - Enable compilation options: PARTICLE, SUPPORT_GSL
       - Set the parameter OPT__FREEZE_FLUID to 1 in Input__Parameter for particle-only simulations
 

@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # load the command-line parameters
-parser = argparse.ArgumentParser( description='Particle density profile' )
+parser = argparse.ArgumentParser( description='Enclosed mass profile' )
 
 parser.add_argument( '-p', action='store', required=False, type=str, dest='prefix',
                      help='path prefix [%(default)s]', default='../' )
