@@ -995,7 +995,6 @@ void SetParameter()
    }
 
 
-
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const long   End_Step_Default = __INT_MAX__;
