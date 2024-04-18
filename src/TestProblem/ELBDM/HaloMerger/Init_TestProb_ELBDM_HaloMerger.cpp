@@ -795,44 +795,40 @@ void SetParameter()
          } // for (int index2_soliton=0; index2_soliton<index_soliton; index2_soliton++)
 
          // check whether the input soliton overlaps with the input halos
-         if ( HaloMerger_Halo_Num > 0 )
+         for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
          {
-            for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
+            const int index_halo_input = index_halo+1; // index of halo in the input file
+
+            if ( HaloMerger_Halo_InitMode == 1 )
             {
-               const int index_halo_input = index_halo+1; // index of halo in the input file
+               bool isOverlap = true;
 
-               if ( HaloMerger_Halo_InitMode == 1 )
+               for (int d=0; d<3; d++)
                {
-                  bool isOverlap = true;
-
-                  for (int d=0; d<3; d++)
+                  if ( HaloMerger_Soliton_CenCoord[index_soliton][d] - 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] >= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][d] ||
+                       HaloMerger_Soliton_CenCoord[index_soliton][d] + 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] <= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][d] )
                   {
-                     if ( HaloMerger_Soliton_CenCoord[index_soliton][d] - 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] >= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][d] ||
-                          HaloMerger_Soliton_CenCoord[index_soliton][d] + 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] <= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][d] )
-                     {
-                        isOverlap = false;
-                        break;
-                     }
-                  } // for (int d=0; d<3; d++)
-
-                  if ( MPI_Rank == 0 )
-                  {
-                     if ( isOverlap )
-                        Aux_Message( stderr, "WARNING : Soliton_%d 3r_c-range (center: [%13.6e, %13.6e, %13.6e], r_c: %13.6e) overlaps with the Halo_%d UM_IC range !!\n",
-                                     index_soliton_input,
-                                     HaloMerger_Soliton_CenCoord[index_soliton][0], HaloMerger_Soliton_CenCoord[index_soliton][1],
-                                     HaloMerger_Soliton_CenCoord[index_soliton][2], HaloMerger_Soliton_CoreRadius[index_soliton],
-                                     index_halo_input );
+                     isOverlap = false;
+                     break;
                   }
+               } // for (int d=0; d<3; d++)
 
-               } // if ( HaloMerger_Halo_InitMode == 1 )
-               else
-                  Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
-                             "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
+               if ( MPI_Rank == 0 )
+               {
+                  if ( isOverlap )
+                     Aux_Message( stderr, "WARNING : Soliton_%d 3r_c-range (center: [%13.6e, %13.6e, %13.6e], r_c: %13.6e) overlaps with the Halo_%d UM_IC range !!\n",
+                                  index_soliton_input,
+                                  HaloMerger_Soliton_CenCoord[index_soliton][0], HaloMerger_Soliton_CenCoord[index_soliton][1],
+                                  HaloMerger_Soliton_CenCoord[index_soliton][2], HaloMerger_Soliton_CoreRadius[index_soliton],
+                                  index_halo_input );
+               }
 
-            } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
+            } // if ( HaloMerger_Halo_InitMode == 1 )
+            else
+               Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
+                          "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
 
-         } // if ( HaloMerger_Halo_Num > 0 )
+         } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
 
       } // for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
 
@@ -912,76 +908,68 @@ void SetParameter()
             } // for (int index2_parcloud=0; index2_parcloud<index_parcloud; index2_parcloud++)
 
             // check whether the input particle cloud overlaps with the input halos
-            if ( HaloMerger_Halo_Num > 0 )
+            for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
             {
-               for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
+               const int index_halo_input = index_halo+1; // index of halo in the input file
+
+               if ( HaloMerger_Halo_InitMode == 1 )
                {
-                  const int index_halo_input = index_halo+1; // index of halo in the input file
-
-                  if ( HaloMerger_Halo_InitMode == 1 )
-                  {
-
-                     bool isOverlap = true;
-
-                     for (int d=0; d<3; d++)
-                     {
-                        if ( HaloMerger_ParCloud_CenCoord[index_parcloud][d] - HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] >= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][d] ||
-                             HaloMerger_ParCloud_CenCoord[index_parcloud][d] + HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] <= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][d] )
-                        {
-                           isOverlap = false;
-                           break;
-                        }
-                     } // for (int d=0; d<3; d++)
-
-                     if ( MPI_Rank == 0 )
-                     {
-                        if ( isOverlap )
-                           Aux_Message( stderr, "WARNING : ParCloud_%d (center: [%13.6e, %13.6e, %13.6e], MaxR: %13.6e) overlaps with the Halo_%d UM_IC range !!\n",
-                                        index_parcloud_input,
-                                        HaloMerger_ParCloud_CenCoord[index_parcloud][0], HaloMerger_ParCloud_CenCoord[index_parcloud][1],
-                                        HaloMerger_ParCloud_CenCoord[index_parcloud][2], HaloMerger_ParCloud_DensProf_MaxR[index_parcloud],
-                                        index_halo_input );
-                     }
-
-                  } // if ( HaloMerger_Halo_InitMode == 1 )
-                  else
-                     Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
-                                "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
-
-               } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
-
-            } // if ( HaloMerger_Halo_Num > 0 )
-
-            // check whether the input particle cloud overlaps with the input solitons
-            if ( HaloMerger_Soliton_Num > 0 )
-            {
-               for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
-               {
-                  const int index_soliton_input = index_soliton+1; // index of soliton in the input file
 
                   bool isOverlap = true;
 
-                  if ( sqrt( SQR( HaloMerger_ParCloud_CenCoord[index_parcloud][0] - HaloMerger_Soliton_CenCoord[index_soliton][0] )
-                           + SQR( HaloMerger_ParCloud_CenCoord[index_parcloud][1] - HaloMerger_Soliton_CenCoord[index_soliton][1] )
-                           + SQR( HaloMerger_ParCloud_CenCoord[index_parcloud][2] - HaloMerger_Soliton_CenCoord[index_soliton][2] ) )
-                       > ( HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] + 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] ) )
-                     isOverlap = false;
+                  for (int d=0; d<3; d++)
+                  {
+                     if ( HaloMerger_ParCloud_CenCoord[index_parcloud][d] - HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] >= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][d] ||
+                          HaloMerger_ParCloud_CenCoord[index_parcloud][d] + HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] <= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][d] )
+                     {
+                        isOverlap = false;
+                        break;
+                     }
+                  } // for (int d=0; d<3; d++)
 
                   if ( MPI_Rank == 0 )
                   {
                      if ( isOverlap )
-                        Aux_Message( stderr, "WARNING : ParCloud_%d (center: [%13.6e, %13.6e, %13.6e], MaxR: %13.6e) overlaps with the Soliton_%d 3r_c-range (center: [%13.6e, %13.6e, %13.6e], r_c: %13.6e) !!\n",
+                        Aux_Message( stderr, "WARNING : ParCloud_%d (center: [%13.6e, %13.6e, %13.6e], MaxR: %13.6e) overlaps with the Halo_%d UM_IC range !!\n",
                                      index_parcloud_input,
                                      HaloMerger_ParCloud_CenCoord[index_parcloud][0], HaloMerger_ParCloud_CenCoord[index_parcloud][1],
                                      HaloMerger_ParCloud_CenCoord[index_parcloud][2], HaloMerger_ParCloud_DensProf_MaxR[index_parcloud],
-                                     index_soliton_input,
-                                     HaloMerger_Soliton_CenCoord[index_soliton][0], HaloMerger_Soliton_CenCoord[index_soliton][1],
-                                     HaloMerger_Soliton_CenCoord[index_soliton][2], HaloMerger_Soliton_CoreRadius[index_soliton] );
+                                     index_halo_input );
                   }
 
-               } // for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
+               } // if ( HaloMerger_Halo_InitMode == 1 )
+               else
+                  Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
+                             "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
 
-            } // if ( HaloMerger_Soliton_Num > 0 )
+            } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
+
+            // check whether the input particle cloud overlaps with the input solitons
+            for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
+            {
+               const int index_soliton_input = index_soliton+1; // index of soliton in the input file
+
+               bool isOverlap = true;
+
+               if ( sqrt( SQR( HaloMerger_ParCloud_CenCoord[index_parcloud][0] - HaloMerger_Soliton_CenCoord[index_soliton][0] )
+                        + SQR( HaloMerger_ParCloud_CenCoord[index_parcloud][1] - HaloMerger_Soliton_CenCoord[index_soliton][1] )
+                        + SQR( HaloMerger_ParCloud_CenCoord[index_parcloud][2] - HaloMerger_Soliton_CenCoord[index_soliton][2] ) )
+                    > ( HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] + 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] ) )
+                  isOverlap = false;
+
+               if ( MPI_Rank == 0 )
+               {
+                  if ( isOverlap )
+                     Aux_Message( stderr, "WARNING : ParCloud_%d (center: [%13.6e, %13.6e, %13.6e], MaxR: %13.6e) overlaps with the Soliton_%d 3r_c-range (center: [%13.6e, %13.6e, %13.6e], r_c: %13.6e) !!\n",
+                                  index_parcloud_input,
+                                  HaloMerger_ParCloud_CenCoord[index_parcloud][0], HaloMerger_ParCloud_CenCoord[index_parcloud][1],
+                                  HaloMerger_ParCloud_CenCoord[index_parcloud][2], HaloMerger_ParCloud_DensProf_MaxR[index_parcloud],
+                                  index_soliton_input,
+                                  HaloMerger_Soliton_CenCoord[index_soliton][0], HaloMerger_Soliton_CenCoord[index_soliton][1],
+                                  HaloMerger_Soliton_CenCoord[index_soliton][2], HaloMerger_Soliton_CoreRadius[index_soliton] );
+               }
+
+            } // for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
 
          } // if ( HaloMerger_ParCloud_InitMode == 1 )
          else
@@ -1198,148 +1186,142 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
    // (2) set the halos
-   if ( HaloMerger_Halo_Num > 0 )
+   for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
    {
-      for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
+      // wavefunction of each halo
+      double Real_halo = 0.0;
+      double Imag_halo = 0.0;
+
+      // get the wave function of the halo
+      switch ( HaloMerger_Halo_InitMode )
       {
-         // wavefunction of each halo
-         double Real_halo = 0.0;
-         double Imag_halo = 0.0;
-
-         // get the wave function of the halo
-         switch ( HaloMerger_Halo_InitMode )
+         // read the value interpolated from the UM_IC data
+         case 1:
          {
-            // read the value interpolated from the UM_IC data
-            case 1:
+            // when the (x,y,z) is inside the range of this halo
+            if ( x >= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][0]  &&
+                 x <= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][0]  &&
+                 y >= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][1]  &&
+                 y <= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][1]  &&
+                 z >= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][2]  &&
+                 z <= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][2] )
             {
-               // when the (x,y,z) is inside the range of this halo
-               if ( x >= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][0]  &&
-                    x <= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][0]  &&
-                    y >= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][1]  &&
-                    y <= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][1]  &&
-                    z >= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][2]  &&
-                    z <= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][2] )
-               {
-                  // assume real part first and then imaginary part
-                  Real_halo = HaloMerger_Get_Value_From_Halo_UM_IC_Data( x, y, z, 0, index_halo );
-                  Imag_halo = HaloMerger_Get_Value_From_Halo_UM_IC_Data( x, y, z, 1, index_halo );
-               }
+               // assume real part first and then imaginary part
+               Real_halo = HaloMerger_Get_Value_From_Halo_UM_IC_Data( x, y, z, 0, index_halo );
+               Imag_halo = HaloMerger_Get_Value_From_Halo_UM_IC_Data( x, y, z, 1, index_halo );
+            }
 
-               break;
-            } // case 1
+            break;
+         } // case 1
 
-            default:
-               Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
-                          "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
+         default:
+            Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
+                       "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
 
-         } // switch ( HaloMerger_Halo_InitMode )
+      } // switch ( HaloMerger_Halo_InitMode )
 
-         // add the velocity
-         HaloMerger_Add_Velocity( &Real_halo, &Imag_halo,
-                                  HaloMerger_Halo_Velocity[index_halo][0],
-                                  HaloMerger_Halo_Velocity[index_halo][1],
-                                  HaloMerger_Halo_Velocity[index_halo][2],
-                                  x, y, z );
+      // add the velocity
+      HaloMerger_Add_Velocity( &Real_halo, &Imag_halo,
+                               HaloMerger_Halo_Velocity[index_halo][0],
+                               HaloMerger_Halo_Velocity[index_halo][1],
+                               HaloMerger_Halo_Velocity[index_halo][2],
+                               x, y, z );
 
-         // add the wavefunction to the box
-         Real += Real_halo;
-         Imag += Imag_halo;
+      // add the wavefunction to the box
+      Real += Real_halo;
+      Imag += Imag_halo;
 
-      } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
-   } // if ( HaloMerger_Halo_Num > 0 )
+   } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
 
 
    // (3) set the solitons
-   if ( HaloMerger_Soliton_Num > 0 )
+   for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
    {
-      for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
+      // density and wave function of each soliton
+      double Dens_soliton = 0.0;
+      double Real_soliton = 0.0;
+      double Imag_soliton = 0.0;
+
+      // get the density and wave function of the soliton
+      switch ( HaloMerger_Soliton_InitMode )
       {
-         // density and wave function of each soliton
-         double Dens_soliton = 0.0;
-         double Real_soliton = 0.0;
-         double Imag_soliton = 0.0;
-
-         // get the density and wave function of the soliton
-         switch ( HaloMerger_Soliton_InitMode )
+         // read from the density profile table
+         case 1:
          {
-            // read from the density profile table
-            case 1:
+            // density profile
+            const double *Table_Radius  = HaloMerger_Soliton_DensProf[index_soliton] + 0*HaloMerger_Soliton_DensProf_NBin[index_soliton];  // radius
+            const double *Table_Density = HaloMerger_Soliton_DensProf[index_soliton] + 1*HaloMerger_Soliton_DensProf_NBin[index_soliton];  // density
+
+            // target radius
+            const double r_tar = sqrt( SQR(x - HaloMerger_Soliton_CenCoord[index_soliton][0]) +
+                                       SQR(y - HaloMerger_Soliton_CenCoord[index_soliton][1]) +
+                                       SQR(z - HaloMerger_Soliton_CenCoord[index_soliton][2]) );
+
+            // rescale radius (target radius --> reference radius)
+            const double r_ref = r_tar / HaloMerger_Soliton_DensProf_ScaleL[index_soliton];
+
+            // linear interpolation
+            double dens_ref = Mis_InterpolateFromTable( HaloMerger_Soliton_DensProf_NBin[index_soliton], Table_Radius, Table_Density, r_ref );
+
+            if ( dens_ref == NULL_REAL )
             {
-               // density profile
-               const double *Table_Radius  = HaloMerger_Soliton_DensProf[index_soliton] + 0*HaloMerger_Soliton_DensProf_NBin[index_soliton];  // radius
-               const double *Table_Density = HaloMerger_Soliton_DensProf[index_soliton] + 1*HaloMerger_Soliton_DensProf_NBin[index_soliton];  // density
+               if      ( r_ref <  Table_Radius[0] )
+                  dens_ref = Table_Density[0];
+               else if ( r_ref >= Table_Radius[HaloMerger_Soliton_DensProf_NBin[index_soliton]-1] )
+                  dens_ref = 0.0;
+               else
+                  Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e (min/max radius = %13.7e/%13.7e) !!\n",
+                             r_ref, Table_Radius[0], Table_Radius[HaloMerger_Soliton_DensProf_NBin[index_soliton]-1] );
+            }
 
-               // target radius
-               const double r_tar = sqrt( SQR(x - HaloMerger_Soliton_CenCoord[index_soliton][0]) +
-                                          SQR(y - HaloMerger_Soliton_CenCoord[index_soliton][1]) +
-                                          SQR(z - HaloMerger_Soliton_CenCoord[index_soliton][2]) );
+            // get the density of soliton
+            Dens_soliton = dens_ref*HaloMerger_Soliton_DensProf_ScaleD[index_soliton];
+            Real_soliton = sqrt( Dens_soliton );
+            Imag_soliton = 0.0;
 
-               // rescale radius (target radius --> reference radius)
-               const double r_ref = r_tar / HaloMerger_Soliton_DensProf_ScaleL[index_soliton];
+            break;
+         } // case 1
 
-               // linear interpolation
-               double dens_ref = Mis_InterpolateFromTable( HaloMerger_Soliton_DensProf_NBin[index_soliton], Table_Radius, Table_Density, r_ref );
+         // set from the analytical soliton density profile
+         case 2:
+         {
+            // parameters for the analytical soliton density profile
+            const double m22      = ELBDM_MASS*UNIT_M/(Const_eV/SQR(Const_c))/1.0e-22;
+            const double rc_kpc   = HaloMerger_Soliton_CoreRadius[index_soliton]*UNIT_L/Const_kpc;
+            const double peak_rho = 1.945e7/SQR( m22*rc_kpc*rc_kpc )*Const_Msun/CUBE(Const_kpc)/(UNIT_M/CUBE(UNIT_L));
 
-               if ( dens_ref == NULL_REAL )
-               {
-                  if      ( r_ref <  Table_Radius[0] )
-                     dens_ref = Table_Density[0];
-                  else if ( r_ref >= Table_Radius[HaloMerger_Soliton_DensProf_NBin[index_soliton]-1] )
-                     dens_ref = 0.0;
-                  else
-                     Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e (min/max radius = %13.7e/%13.7e) !!\n",
-                                r_ref, Table_Radius[0], Table_Radius[HaloMerger_Soliton_DensProf_NBin[index_soliton]-1] );
-               }
+            // target radius
+            const double r_tar = sqrt( SQR(x - HaloMerger_Soliton_CenCoord[index_soliton][0]) +
+                                       SQR(y - HaloMerger_Soliton_CenCoord[index_soliton][1]) +
+                                       SQR(z - HaloMerger_Soliton_CenCoord[index_soliton][2]) );
 
-               // get the density of soliton
-               Dens_soliton = dens_ref*HaloMerger_Soliton_DensProf_ScaleD[index_soliton];
-               Real_soliton = sqrt( Dens_soliton );
-               Imag_soliton = 0.0;
+            // get the density of soliton
+            Dens_soliton  = peak_rho*pow( 1.0+9.06e-2*SQR(r_tar/HaloMerger_Soliton_CoreRadius[index_soliton]),
+                                          HaloMerger_Soliton_OuterSlope[index_soliton] );
+            Real_soliton  = sqrt( Dens_soliton );
+            Imag_soliton  = 0.0;
 
-               break;
-            } // case 1
+            break;
+         } // case 2
 
-            // set from the analytical soliton density profile
-            case 2:
-            {
-               // parameters for the analytical soliton density profile
-               const double m22      = ELBDM_MASS*UNIT_M/(Const_eV/SQR(Const_c))/1.0e-22;
-               const double rc_kpc   = HaloMerger_Soliton_CoreRadius[index_soliton]*UNIT_L/Const_kpc;
-               const double peak_rho = 1.945e7/SQR( m22*rc_kpc*rc_kpc )*Const_Msun/CUBE(Const_kpc)/(UNIT_M/CUBE(UNIT_L));
+         default:
+            Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
+                       "HaloMerger_Soliton_InitMode", HaloMerger_Soliton_InitMode );
 
-               // target radius
-               const double r_tar = sqrt( SQR(x - HaloMerger_Soliton_CenCoord[index_soliton][0]) +
-                                          SQR(y - HaloMerger_Soliton_CenCoord[index_soliton][1]) +
-                                          SQR(z - HaloMerger_Soliton_CenCoord[index_soliton][2]) );
+      } // switch ( HaloMerger_Soliton_InitMode )
 
-               // get the density of soliton
-               Dens_soliton  = peak_rho*pow( 1.0+9.06e-2*SQR(r_tar/HaloMerger_Soliton_CoreRadius[index_soliton]),
-                                             HaloMerger_Soliton_OuterSlope[index_soliton] );
-               Real_soliton  = sqrt( Dens_soliton );
-               Imag_soliton  = 0.0;
+      // add the velocity
+      HaloMerger_Add_Velocity( &Real_soliton, &Imag_soliton,
+                               HaloMerger_Soliton_Velocity[index_soliton][0],
+                               HaloMerger_Soliton_Velocity[index_soliton][1],
+                               HaloMerger_Soliton_Velocity[index_soliton][2],
+                               x, y, z );
 
-               break;
-            } // case 2
+      // add the wavefunction to the box
+      Real += Real_soliton;
+      Imag += Imag_soliton;
 
-            default:
-               Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
-                          "HaloMerger_Soliton_InitMode", HaloMerger_Soliton_InitMode );
-
-         } // switch ( HaloMerger_Soliton_InitMode )
-
-         // add the velocity
-         HaloMerger_Add_Velocity( &Real_soliton, &Imag_soliton,
-                                  HaloMerger_Soliton_Velocity[index_soliton][0],
-                                  HaloMerger_Soliton_Velocity[index_soliton][1],
-                                  HaloMerger_Soliton_Velocity[index_soliton][2],
-                                  x, y, z );
-
-         // add the wavefunction to the box
-         Real += Real_soliton;
-         Imag += Imag_soliton;
-
-      } // for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
-   } // if ( HaloMerger_Soliton_Num > 0 )
+   } // for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
 
 
 
