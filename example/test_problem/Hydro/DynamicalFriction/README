@@ -13,7 +13,7 @@ Default setup:
 2. Initial conditions:
    (1) Burkert Density Profile :
       (a) Input__Parameter :
-          - BOX_SIZE                  16e+03
+          - BOX_SIZE                  1.6e4
           - NX0_TOT_*                 256
           - END_T                     8000 (Optional but Recommended)
       (b) Input__TestProb :
@@ -33,19 +33,19 @@ Default setup:
           - LN_LAMBDA_BMIN_FACTOR     2
    (2) NFW Density Profile :
       (a) Input__Parameter :
-          - BOX_SIZE                  76e+03
+          - BOX_SIZE                  7.6e4
           - NX0_TOT_*                 512
           - END_T                     18000 (Optional but Recommended)
       (b) Input__TestProb :
           - HALO_TYPE                 NFW
           - HALO_RHO_0                1.96311939345708e-03
           - HALO_Rs                   5.48799489144317e+03
-          - HALO_Rt                   35.0e3
-          - GC_MASS                   0.75e6
+          - HALO_Rt                   3.5e4
+          - GC_MASS                   7.5e5
           - GC_initial_R              2.5243e3
       (c) Input__Profile_Params :
-          - Cloud_Center*             38.0e3
-          - Cloud_MaxR                35.0e3
+          - Cloud_Center*             3.8e4
+          - Cloud_MaxR                3.5e4
           - Cloud_Rho0                1.96311939345708e-03
           - Cloud_R0                  5.48799489144317e+03
       (d) Tools/calculate_ChandrasekharDynamicalFrictionFormula.py
@@ -53,22 +53,22 @@ Default setup:
           - LN_LAMBDA_BMIN_FACTOR     1
    (3) Power-law Density Profile :
       (a) Input__Parameter :
-          - BOX_SIZE                  96e+03
+          - BOX_SIZE                  9.6e4
           - NX0_TOT_*                 256
           - END_T                     18000 (Optional but Recommended)
       (b) Input__TestProb :
           - HALO_TYPE                 DoublePowerLaw
           - HALO_RHO_0                1.976013787e-03
           - HALO_Rs                   6.081e3
-          - HALO_Rt                   36.0e3
+          - HALO_Rt                   3.6e4
           - GC_MASS                   2.5e7
           - GC_initial_R              7.5e3
           - Halo_Profile_Param_a      1.815
           - Halo_Profile_Param_b      4.002
           - Halo_Profile_Param_c      0.0
       (c) Input__Profile_Params :
-          - Cloud_Center*             48e3
-          - Cloud_MaxR                36.0e3
+          - Cloud_Center*             4.8e4
+          - Cloud_MaxR                3.6e4
           - Cloud_Rho0                1.976013787e-03
           - Cloud_R0                  6.081e3
       (d) Tools/calculate_ChandrasekharDynamicalFrictionFormula.py
@@ -85,7 +85,8 @@ Note:
    - only support one massive object (GC), and doesn't support MPI.
    - This test problem implements some features in different test problems, which is `ParticleEquilibriumIC`
 2. Three default cases are provided in this test problem, see 2. Initial conditions. for the parameters.
-   - For the simulation result for the three cases, please refer to 
+   - For the simulation result for the three cases, please refer to https://hackmd.io/@Q-7np4JqRmmhXMvo0h5Fqg/SJKCGpx1A
+   - For the parameters "Halo_Profile_Param_*" for the Power-law Density profile, please refer to the same hackmd page above
 3. 'Tools/calculate_ChandrasekharDynamicalFrictionFormula.py' is attached to calculate the dynamical friction formula from Chandrasekhar.
 4. 'Tools/plot_compare.py' is attched to plot the comparison of the simulation result and the Chandrasekhar formula.
 5. 'Tools/plot_trajectory_movie.py' is attached to plot the trajectory movie of the GC in the simulation.
