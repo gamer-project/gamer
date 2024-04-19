@@ -1,17 +1,17 @@
 # Halo/Cloud Profile Parameter 
 # ===============================================================================================================
-Cloud_CenterX             48e3                          # central x coordinate in [48e3]
-Cloud_CenterY             48e3                          # central y coordinate in [48e3]
-Cloud_CenterZ             48e3                          # central z coordinate in [48e3]
+Cloud_CenterX             4.8e4                          # central x coordinate in [4.8e4]
+Cloud_CenterY             4.8e4                          # central y coordinate in [4.8e4]
+Cloud_CenterZ             4.8e4                          # central z coordinate in [4.8e4]
 Cloud_MaxR                36000.0                       # Maximum radius for the particle [36000.0] 
 Cloud_Rho0                0.001976013787                # Maximum core density for the cloud [0.001976013787]
 Cloud_R0                  6081.0                        # Maximum core radius for the cloud/halo [6081.0]
 # ===============================================================================================================
 
 # Bulk Velocity of the Halo/Cloud : These will be updated when running GAMER, so no adjustment needed 
-Cloud_BulkVelX            0.000000                      
+Cloud_BulkVelX             0.000000                      
 Cloud_BulkVelY            -0.003605                     
-Cloud_BulkVelZ            0.000000                      
+Cloud_BulkVelZ             0.000000                      
 
 Cloud_MassProfNBin        1000                          # number of radial bins in the mass profile table [1000]
 Cloud_Par_Num_Ratio       1.0                           # particle number ratio [1.0]

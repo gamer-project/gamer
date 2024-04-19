@@ -22,7 +22,7 @@ Density_Table_Name         Profile_Table                 # The table name which 
                                                          # If you want to use your own profile table rather than the GAMER calculated one, please change the name
 
 # (2) GC/Massive Object Parameters
-GC_MASS                    2.5e6                         # The Global cluster (Massive object) mass [2.5e6]
+GC_MASS                    2.5e7                         # The Global cluster (Massive object) mass [2.5e6]
 GC_initial_R               7.5e3		         # The initial radius for GC (Massive object) to the center [7.5e3]
 
 
