@@ -14,7 +14,7 @@
 
 
 # simulation scale
-BOX_SIZE                      96e+03      # box size along the longest side (in Mpc/h if COMOVING is adopted)
+BOX_SIZE                      9.6e4      # box size along the longest side (in Mpc/h if COMOVING is adopted)
 NX0_TOT_X                     256         # number of base-level cells along x
 NX0_TOT_Y                     256         # number of base-level cells along y
 NX0_TOT_Z                     256         # number of base-level cells along z
