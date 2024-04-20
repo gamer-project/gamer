@@ -174,21 +174,22 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double Coeff = 2.0*SQR(ELBDM_ETA)*NEWTON_G*ELBDM_ExtPot_M;
    const double R     = sqrt( Coeff*r );
    const double Re    = ELBDM_ExtPot_Amp*j1( 2.0*R )/R;
-   const double Im    = 0.0;                            // imaginary part is always zero --> no initial velocity
+   const double Im    = 0.0;  // imaginary part is always zero --> no initial velocity
 
    fluid[DENS] = SQR( Re ) + SQR( Im );
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( amr->use_wave_flag[lv] ) {
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif
    fluid[REAL] = Re;
    fluid[IMAG] = 0.0;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   } else { // if ( amr->use_wave_flag[lv] )
+   } else {
    fluid[PHAS] = 0.0;
    fluid[STUB] = 0.0;
-   } // if ( amr->use_wave_flag[lv] ) ... else
-#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   }
+#  endif
+
 } // FUNCTION : SetGridIC
 
 
