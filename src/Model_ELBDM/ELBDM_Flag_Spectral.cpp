@@ -88,6 +88,12 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
    const size_t MaxOrder  = 14;
    const size_t NField    = 3;
    const size_t NCoeff    = 2*NField;
+// Convergence threshold for polynomial expansion
+// Polynomial coefficients < 10^Threshold replaced by linear function with slope LinearSlope
+// Should be slightly larger than typical rounding errors in single precision
+// Same for double precision to obtain similar refinement regardless of precision
+   const float ConvergenceThreshold = -6.0;
+   const float LinearSlope          = -5.0;
 
    const real* Re1D = Var1D;
    const real* Im1D = Var1D + CUBE(Size1D);
@@ -124,7 +130,7 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
 
          Row[0][i] = Re1D[index];
          Row[1][i] = Im1D[index];
-         Row[2][i] = SQR(Row[0][i]) + SQR(Row[1][i]);
+         Row[2][i] = SQR(Row_Re[i]) + SQR(Row_Im[i]);
       }
 
       for (int i = 0; i < MaxOrder; ++i)
@@ -142,22 +148,22 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
          } // t
 
 //       Prepare linear fit to logarithm of polynomial coefficients
-         Order[i] = log(i + 1);
+         Order[i] = log10(i + 1);
 
          for (int j = 0; j < NCoeff; ++j) {
-            Coeff[j][i] = log(abs(Coeff[j][i]) + 1e-16);
+            Coeff[j][i] = log10(abs(Coeff[j][i]) + 1e-16);
+//          Smoothly replace coefficients below ConvergenceThreshold with linear function using sigmoid
+            Coeff[j][i] = Coeff[j][i] + 1/(1+exp(Coeff[j][i]-ConvergenceThreshold)) * LinearSlope * j;
          }
       }
 
 //    Find maximum slope to determine whether refinement is necessary
 //    Large negative slopes indicate that wavefunction is well-resolved
       for (int j = 0; j < NCoeff; ++j) {
-         const int n_lr = 8; // size of linear regression domain
 
-//       Compute slope for first and last n_lr elements and take minimum float to
-         Least_Squares_Regression(Order, Coeff[j], 0,                        MIN(n_lr , MaxOrder), &SlopeFront, &Intercept);
-         Least_Squares_Regression(Order, Coeff[j], MAX(0, MaxOrder - n_lr ), MaxOrder,             &SlopeBack,  &Intercept);
-         Cond = MAX(Cond, MIN(SlopeFront, SlopeBack));
+//       Compute slope for first 10 elements, MaxOrder can converge too fast and make distinction below 10 and 20 points per wavelength difficult
+         Least_Squares_Regression(Order, Coeff[j], 0, MIN(10, MaxOrder), &Slope, &Intercept);
+         Cond = MAX(Cond, MIN(Slope);
       }
       printf("Cond: %f\n", Cond);
 
