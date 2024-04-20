@@ -39,27 +39,27 @@ const static flag_spectral_float  Flag_Spectral_Polynomials[FLAG_SPECTRAL_ORDER]
 //
 // Parameter   :  x        : Array of x-coordinates of the data points
 //                y        : Array of y-coordinates of the data points
-//                n        : Number of data points
+//                n_start  : Starting index for linear regression
+//                n_end    : End index for linear regression (set to size of x and y to include last point)
 //                slope    : Pointer to the variable where the computed slope (m) will be stored
 //                intercept: Pointer to the variable where the computed intercept (b) will be stored
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Least_Squares_Regression(flag_spectral_float x[], flag_spectral_float y[], int n, flag_spectral_float *slope, flag_spectral_float *intercept) {
-    flag_spectral_float sum_x = 0.0, sum_y = 0.0, sum_x_squared = 0.0, sum_xy = 0.0;
+void Least_Squares_Regression(flag_spectral_float x[], flag_spectral_float y[], int n_start, int n_end, flag_spectral_float *slope, flag_spectral_float *intercept) {
+   flag_spectral_float sum_x = 0.0, sum_y = 0.0, sum_x_squared = 0.0, sum_xy = 0.0;
 
-    const int start   = 6; // Start calculation at 6th element
-    const int n_index = n - start;
+   const int n = n_end - n_start;
 
-    for (int i = start; i < n; i++) {
-        sum_x += x[i];
-        sum_y += y[i];
-        sum_x_squared += x[i] * x[i];
-        sum_xy += x[i] * y[i];
-    }
+   for (int i = n_start; i < n_end; i++) {
+      sum_x += x[i];
+      sum_y += y[i];
+      sum_x_squared += x[i] * x[i];
+      sum_xy += x[i] * y[i];
+   }
 
-    *slope = (n_index * sum_xy - sum_x * sum_y) / (n_index * sum_x_squared - sum_x * sum_x);
-    *intercept = (sum_y - (*slope) * sum_x) / n_index;
+   *slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x_squared - sum_x * sum_x);
+   *intercept = (sum_y - (*slope) * sum_x) / n;
 }
 
 
@@ -95,7 +95,7 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
    flag_spectral_float Order[MaxOrder];
    flag_spectral_float Coeff[NCoeff][MaxOrder]; // left and right coefficients for every field
    real Row[NField][Size1D];
-   flag_spectral_float Slope, Intercept;
+   flag_spectral_float SlopeFront, SlopeBack, Intercept;
 
 // initialise with large negative number
    Cond = -__FLT_MAX__;
@@ -152,20 +152,14 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
 //    Find maximum slope to determine whether refinement is necessary
 //    Large negative slopes indicate that wavefunction is well-resolved
       for (int j = 0; j < NCoeff; ++j) {
-//       Check for plateau (if coefficients rapidly decline and then stay at machine precision
-         bool HasPlateaued = true;
+         const int n_lr = 8; // size of linear regression domain
 
-         for (int i = int(MaxOrder*0.75); i < MaxOrder; ++i) {
-            if (Coeff[j][i] > log10(MAX_ERROR)) {
-               HasPlateaued = false;
-            }
-         }
-
-         if (HasPlateaued) continue;
-
-         Least_Squares_Regression(Order, Coeff[j], MaxOrder, &Slope, &Intercept);
-         Cond = MAX(Cond, Slope);
+//       Compute slope for first and last n_lr elements and take minimum float to
+         Least_Squares_Regression(Order, Coeff[j], 0,                        MIN(n_lr , MaxOrder), &SlopeFront, &Intercept);
+         Least_Squares_Regression(Order, Coeff[j], MAX(0, MaxOrder - n_lr ), MaxOrder,             &SlopeBack,  &Intercept);
+         Cond = MAX(Cond, MIN(SlopeFront, SlopeBack));
       }
+      printf("Cond: %f\n", Cond);
 
    } // XYZ, k,j
 } // FUNCTION : Prepare_for_Spectral_Criterion
