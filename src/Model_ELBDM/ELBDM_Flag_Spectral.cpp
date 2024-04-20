@@ -101,7 +101,7 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
    flag_spectral_float Order[MaxOrder];
    flag_spectral_float Coeff[NCoeff][MaxOrder]; // left and right coefficients for every field
    real Row[NField][Size1D];
-   flag_spectral_float SlopeFront, SlopeBack, Intercept;
+   flag_spectral_float Slope, Intercept;
 
 // initialise with large negative number
    Cond = -__FLT_MAX__;
@@ -130,7 +130,7 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
 
          Row[0][i] = Re1D[index];
          Row[1][i] = Im1D[index];
-         Row[2][i] = SQR(Row_Re[i]) + SQR(Row_Im[i]);
+         Row[2][i] = SQR(Row[0][i]) + SQR(Row[1][i]);
       }
 
       for (int i = 0; i < MaxOrder; ++i)
@@ -163,7 +163,7 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
 
 //       Compute slope for first 10 elements, MaxOrder can converge too fast and make distinction below 10 and 20 points per wavelength difficult
          Least_Squares_Regression(Order, Coeff[j], 0, MIN(10, MaxOrder), &Slope, &Intercept);
-         Cond = MAX(Cond, MIN(Slope);
+         Cond = MAX(Cond, Slope);
       }
       printf("Cond: %f\n", Cond);
 
