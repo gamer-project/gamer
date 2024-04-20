@@ -3,9 +3,9 @@
 32          NX0_TOT[1]              # number of base-level grids in the y direction
 32          NX0_TOT[2]              # number of base-level grids in the z direction
 1           MPI_NRANK               # total number of MPI ranks (= MPI_NRANK_X[0]*MPI_NRANK_X[1]*MPI_NRANK_X[2])
-1           MPI_NRANK_X[0]          # number of MPI ranks in the x direction 
-1           MPI_NRANK_X[1]          # number of MPI ranks in the y direction 
-1           MPI_NRANK_X[2]          # number of MPI ranks in the z direction 
+1           MPI_NRANK_X[0]          # number of MPI ranks in the x direction
+1           MPI_NRANK_X[1]          # number of MPI ranks in the y direction
+1           MPI_NRANK_X[2]          # number of MPI ranks in the z direction
 -1          OMP_NTHREAD             # number of OpenMP threads (<=0:default [omp_get_max_threads])
 -1.0        END_T                   # end physical time of simulation (<0:default -> must be defined in Init_TestProb/RESTART)
 -1          END_STEP                # end step of simulation (<0:default -> must be defined in Init_TestProb)
@@ -24,9 +24,9 @@
 -1          PAR_INPUT__INTERP       # particle interpolation scheme: (-1, 1, 2, 3) -> (default, NGP, CIC, TSC)
 
 1           OOC_NRANK               # total number of OOC ranks (= OOC_NRANK_X[0]*OOC_NRANK_X[1]*OOC_NRANK_X[2])
-1           OOC_NRANK_X[0]          # number of OOC ranks in the x direction 
-1           OOC_NRANK_X[1]          # number of OOC ranks in the y direction 
-1           OOC_NRANK_X[1]          # number of OOC ranks in the z direction 
+1           OOC_NRANK_X[0]          # number of OOC ranks in the x direction
+1           OOC_NRANK_X[1]          # number of OOC ranks in the y direction
+1           OOC_NRANK_X[1]          # number of OOC ranks in the z direction
 
 1.0e-3      A_INIT                  # initial scale factor ##COMOVING ONLY##
 1.0         OMEGA_M0                # omega matter at the present time ##COMOVING ONLY##
@@ -44,7 +44,7 @@
 -1          FLAG_BUFFER_SIZE        # number of buffer cells for the flag operation (<0:default [8])
 0           MAX_LEVEL               # maximum refinement level (0 ... NLEVEL-1) (<0:default [NLEVEL-1])
 0           OPT__FLAG_RHO           # flag: density (Input__Flag_Rho)
-0           OPT__FLAG_RHO_GRADIENT  # flag: density gradient (Input__Flag_RhoGradient) 
+0           OPT__FLAG_RHO_GRADIENT  # flag: density gradient (Input__Flag_RhoGradient)
 0           OPT__FLAG_PRES_GRADIENT # flag: pressure gradient (Input__Flag_PresGradient) ##HYDRO ONLY##
 0           OPT__FLAG_ENGY_DENSITY  # flag: energy density (Input_Flag_EngyDensity) ##ELBDM ONLY##
 0           OPT__FLAG_LOHNER_DENS   # flag: Lohner (Input__Flag_Lohner) (HYDRO:mass density  ; ELBDM:R^2+I^2)
@@ -118,7 +118,7 @@
 0           OPT__OUTPUT_PARTICLE    # output the particle text file ##PARTICLE ONLY##
 0           OPT__OUTPUT_BASEPS      # output the base-level power spectrum
 0           OPT__OUTPUT_BASE        # only output the base-level data for the option "OPT__OUTPUT_PART"
-0           OPT__OUTPUT_POT         # output the potential field 
+0           OPT__OUTPUT_POT         # output the potential field
 2           OPT__OUTPUT_MODE        # (1, 2, 3) -> (const step, const dt, dump table)
 5           OUTPUT_STEP             # output data every OUTPUT_STEP step
 1.0e-2      OUTPUT_DT               # output data every OUTPUT_DT time interval
@@ -134,10 +134,10 @@
 1           OPT__RECORD_PERFORMANCE # record the code performance
 1           OPT__MANUAL_CONTROL     # support dump/stop dynamically by creating the file DUMP_GAMER_DUMP/STOP_GAMER_STOP
 
-0           OPT__CK_REFINE          # check the refinement 
-0           OPT__CK_PROPER_NESTING  # check the proper-nesting condition 
+0           OPT__CK_REFINE          # check the refinement
+0           OPT__CK_PROPER_NESTING  # check the proper-nesting condition
 0           OPT__CK_CONSERVATION    # check the conservation law: (0,1,2) -> (off, stdout, file)
-0           OPT__CK_RESTRICT        # check the restriction operation 
+0           OPT__CK_RESTRICT        # check the restriction operation
 0           OPT__CK_FINITE          # check if all variables are finite
 0           OPT__CK_PATCH_ALLOCATE  # check if all patches are properly allocated
 0           OPT__CK_FLUX_ALLOCATE   # check if all flux arrays are properly allocated ##HYDRO and ELBDM ONLY##

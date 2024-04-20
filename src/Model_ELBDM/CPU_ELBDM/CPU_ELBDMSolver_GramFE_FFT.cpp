@@ -474,8 +474,8 @@ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 //       use register variables Al, Ar and Psi_Ext to speed up summation
          complex_type Al, Ar;             // buffer for left and right Gram coefficients
-         complex_type Psi_Ext;            // buffer for wave function in extension region 
-         
+         complex_type Psi_Ext;            // buffer for wave function in extension region
+
          real   Amp_New, Re_New, Im_New;  // store density, real and imaginary part to apply minimum density check
 
 //       loop over all data columns
@@ -530,7 +530,7 @@ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                   Psi_Ext += s_Ao[sj][order] *  Fo[order][si - FLU_NXT];
                } // for (int order=0; order < GRAMFE_ORDER; order++)
 
-               s_In[sj][si] = Psi_Ext; 
+               s_In[sj][si] = Psi_Ext;
             }
 
 #           ifdef __CUDACC__

@@ -71,10 +71,7 @@ void CPU_ELBDMGravitySolver_HamiltonJacobi  (       real g_Flu_Array[][GRA_NIN][
          const int k_pot   = k_flu + GRA_GHOST_SIZE;
          const int idx_pot = IDX321( i_pot, j_pot, k_pot, GRA_NXT, GRA_NXT );
 
-
-         real Pot;
-
-         Pot  = g_Pot_Array[P]   [idx_pot];
+         real Pot = g_Pot_Array[P][idx_pot];
 
 #        ifdef QUARTIC_SELF_INTERACTION
          const real Rho = g_Flu_Array[P][0][idx_flu];

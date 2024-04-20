@@ -133,8 +133,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       if ( amr->use_wave_flag[lv] ) {
          Spectral_NVar = 2;
 //    do not use spectral criterion on fluid levels
-      } else { 
-         Spectral_NVar = 0; 
+      } else {
+         Spectral_NVar = 0;
       }
    }
 
@@ -144,7 +144,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 //    use interference criterion on fluid levels
       if ( !amr->use_wave_flag[lv] ) {
          Interf_NVar = 2;
-//    do not use interference criterion on wave levels 
+//    do not use interference criterion on wave levels
       } else {
          Interf_NVar = 0;
       }

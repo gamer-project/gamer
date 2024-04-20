@@ -49,15 +49,15 @@ void CPU_HydroGravitySolver(
    const double TimeNew, const double TimeOld, const real MinEint );
 
 #elif ( MODEL == ELBDM )
-void CPU_ELBDMGravitySolver  (       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
-                               const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
-                               const int NPatchGroup,
-                               const real EtaDt, const real dh, const real Lambda );
+void CPU_ELBDMGravitySolver(       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
+                             const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
+                             const int NPatchGroup,
+                             const real EtaDt, const real dh, const real Lambda );
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
-void CPU_ELBDMGravitySolver_HamiltonJacobi  (       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
-                               const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
-                               const int NPatchGroup,
-                               const real EtaDt, const real dh, const real Lambda );
+void CPU_ELBDMGravitySolver_HamiltonJacobi(       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
+                                            const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
+                                            const int NPatchGroup,
+                                            const real EtaDt, const real dh, const real Lambda );
 #endif
 
 #else
