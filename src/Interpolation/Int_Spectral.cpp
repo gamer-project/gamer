@@ -218,7 +218,7 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 #        if ( MODEL == ELBDM )
 
          bool InterpolateXY   = false;
-         real VortexThreshold = M_PI / 2;
+         real VortexThreshold = 0.1;
 
          if ( UnwrapPhase )
          {
@@ -248,10 +248,10 @@ void Int_Spectral(  real CData[], const int CSize[3], const int CStart[3], const
 
             if ( SPEC_INT_XY_INSTEAD_DEPHA )
             {
-//             detect phase jumps and adjust
-               for (int k = 1; k < InSize[XYZ]; k++) {
-//                assuming jump > threshold is significant
-                  if (fabs(Imag[k] - Imag[k-1]) > VortexThreshold) {
+//             detect phase discontinuities
+               for (int k = 1; k < InSize[XYZ] - 1; k++) {
+//                assuming Lap(S) * dx**2 > threshold is a significant
+                  if (fabs(Imag[k+1] - 2 * Imag[k] + Imag[k-1]) > VortexThreshold) {
                      InterpolateXY = true;
                      break;
                   }
