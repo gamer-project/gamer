@@ -124,7 +124,7 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
 
          Row[0][i] = Re1D[index];
          Row[1][i] = Im1D[index];
-         Row[2][i] = SQR(Row_Re[i]) + SQR(Row_Im[i]);
+         Row[2][i] = SQR(Row[0][i]) + SQR(Row[1][i]);
       }
 
       for (int i = 0; i < MaxOrder; ++i)
