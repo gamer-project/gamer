@@ -352,6 +352,10 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 #  elif ( MODEL == ELBDM )
 
+#  if ( WAVE_SCHEME == WAVE_GRAMFE  &&  GRAMFE_SCHEME == GRAMFE_FFT )
+   uint cufftdx_shared_memory_size = NULL_INT;
+#  endif
+
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( UseWaveFlag ) {
 #  endif
@@ -370,7 +374,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
    auto size_bytes = size*sizeof(complex_type);
 
 // shared memory must fit input data and must be big enough to run FFT
-   uint cufftdx_shared_memory_size = std::max( (unsigned int)FFT::shared_memory_size, (unsigned int)size_bytes );
+   cufftdx_shared_memory_size = std::max( (unsigned int)FFT::shared_memory_size, (unsigned int)size_bytes );
 
 // increase max shared memory if needed
    CUDA_CHECK_ERROR(  cudaFuncSetAttribute( CUFLU_ELBDMSolver_GramFE_FFT, cudaFuncAttributeMaxDynamicSharedMemorySize,
