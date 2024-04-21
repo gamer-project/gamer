@@ -1323,7 +1323,7 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : OPT__FLAG_INTERFERENCE is off for ELBDM_HYBRID so simulations will never switch to the wave scheme !!\n" );
 
    if (  OPT__INIT == INIT_BY_FILE  &&  ( !OPT__UM_IC_DOWNGRADE || !OPT__UM_IC_REFINE )  )
-      Aux_Message( stderr, "WARNING : please enable both OPT__UM_IC_DOWNGRADE and OPT__UM_IC_REFINE to properly switch to\n"
+      Aux_Message( stderr, "WARNING : consider enabling both OPT__UM_IC_DOWNGRADE and OPT__UM_IC_REFINE to properly switch to\n"
                            "          the wave scheme during initialization !!\n" );
 #  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 

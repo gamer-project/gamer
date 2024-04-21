@@ -71,7 +71,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
                                        FlagTable_Interference[lv][2], FlagTable_Interference[lv][3]>0.5 );
 
 //    switch to wave solver when refining to ELBDM_FIRST_WAVE_LEVEL
-      if ( Flag  &&  lv + 1 >= ELBDM_FIRST_WAVE_LEVEL )  amr->patch[0][lv][PID]->switch_to_wave_flag = true;
+      if ( Flag  &&  lv+1 >= ELBDM_FIRST_WAVE_LEVEL )    amr->patch[0][lv][PID]->switch_to_wave_flag = true;
 
       if ( Flag )    return Flag;
    }

@@ -45,13 +45,13 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
 
 
    const int NGhost = 1;
-   const int NCell  = PS1 + 2 * NGhost; // size of the array Var
+   const int NCell  = PS1 + 2*NGhost;  // size of the array Var
 
    int ii, jj, kk, iim, jjm, kkm, iip, jjp, kkp;
 
 
 // convert the 1D array
-   real (*Var)[NCell][NCell][NCell] = ( real(*)[NCell][NCell][NCell] )  Var1D;
+   real (*Var)[NCell][NCell][NCell] = ( real(*)[NCell][NCell][NCell] )Var1D;
 
    kk = k + NGhost;   kkp = kk + 1;   kkm = kk - 1;
    jj = j + NGhost;   jjp = jj + 1;   jjm = jj - 1;
@@ -59,7 +59,7 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
 
 
 // check minimum density
-   const bool DensCond = Var[0][kk][jj][ii] > DensThreshold;
+   const bool DensCond = ( Var[0][kk][jj][ii] > DensThreshold );
 
 
 // check whether density and phase fields have local extrema
@@ -72,20 +72,20 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
 
 
 // compute second derivative of phase field
-   const bool LapPhaseX = PhaseChangeSignX  &&  ( FABS( Var[1][kk ][jj ][iip] - 2*Var[1][kk][jj][ii] + Var[1][kk ][jj ][iim] ) > LapPhaseThreshold );
-   const bool LapPhaseY = PhaseChangeSignY  &&  ( FABS( Var[1][kk ][jjp][ii ] - 2*Var[1][kk][jj][ii] + Var[1][kk ][jjm][ii ] ) > LapPhaseThreshold );
-   const bool LapPhaseZ = PhaseChangeSignZ  &&  ( FABS( Var[1][kkp][jj ][ii ] - 2*Var[1][kk][jj][ii] + Var[1][kkm][jj ][ii ] ) > LapPhaseThreshold );
+   const bool LapPhaseX = PhaseChangeSignX  &&  ( FABS( Var[1][kk ][jj ][iip] - (real)2.0*Var[1][kk][jj][ii] + Var[1][kk ][jj ][iim] ) > LapPhaseThreshold );
+   const bool LapPhaseY = PhaseChangeSignY  &&  ( FABS( Var[1][kk ][jjp][ii ] - (real)2.0*Var[1][kk][jj][ii] + Var[1][kk ][jjm][ii ] ) > LapPhaseThreshold );
+   const bool LapPhaseZ = PhaseChangeSignZ  &&  ( FABS( Var[1][kkp][jj ][ii ] - (real)2.0*Var[1][kk][jj][ii] + Var[1][kkm][jj ][ii ] ) > LapPhaseThreshold );
 
 
 // compute quantum pressure
-   const real SqrtRhoC = SQRT(  MAX( Var[0][kk][jj][ii], TINY_NUMBER ) );
+   const real SqrtRhoC = SQRT(  MAX( Var[0][kk][jj][ii], TINY_NUMBER )  );
 
-   const bool QPX = DensCond  &&  DensChangeSignX  &&  ( FABS( SQRT(Var[0][kk ][jj ][iip]) - 2*SqrtRhoC + SQRT(Var[0][kk ][jj ][iim]) ) / SqrtRhoC > QPThreshold );
-   const bool QPY = DensCond  &&  DensChangeSignY  &&  ( FABS( SQRT(Var[0][kk ][jjp][ii ]) - 2*SqrtRhoC + SQRT(Var[0][kk ][jjm][ii ]) ) / SqrtRhoC > QPThreshold );
-   const bool QPZ = DensCond  &&  DensChangeSignZ  &&  ( FABS( SQRT(Var[0][kkp][jj ][ii ]) - 2*SqrtRhoC + SQRT(Var[0][kkm][jj ][ii ]) ) / SqrtRhoC > QPThreshold );
+   const bool QPX = DensCond  &&  DensChangeSignX  &&  ( FABS( SQRT(Var[0][kk ][jj ][iip]) - (real)2.0*SqrtRhoC + SQRT(Var[0][kk ][jj ][iim]) ) / SqrtRhoC > QPThreshold );
+   const bool QPY = DensCond  &&  DensChangeSignY  &&  ( FABS( SQRT(Var[0][kk ][jjp][ii ]) - (real)2.0*SqrtRhoC + SQRT(Var[0][kk ][jjm][ii ]) ) / SqrtRhoC > QPThreshold );
+   const bool QPZ = DensCond  &&  DensChangeSignZ  &&  ( FABS( SQRT(Var[0][kkp][jj ][ii ]) - (real)2.0*SqrtRhoC + SQRT(Var[0][kkm][jj ][ii ]) ) / SqrtRhoC > QPThreshold );
 
 
-   return QPX || QPY || QPZ || LapPhaseX || LapPhaseY || LapPhaseZ;
+   return ( QPX || QPY || QPZ || LapPhaseX || LapPhaseY || LapPhaseZ );
 
 } // FUNCTION : ELBDM_Flag_Interference
 

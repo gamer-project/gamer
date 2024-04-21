@@ -425,7 +425,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
 
             } else { // if ( IsCompletelyRefined )
 //             2. Runge-Kutta iterations
-               for (uint time_level = 0; time_level < ELBDM_HJ_RK_ORDER; ++time_level)
+               for (uint time_level=0; time_level<ELBDM_HJ_RK_ORDER; ++time_level)
                {
                   const uint ghost = GHOST_ZONE_PER_STAGE * ( time_level + 1 ) ;
 
@@ -482,7 +482,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                      Ph_New *= TIME_COEFFS[time_level];
 
 //                   3.3 use ELBDM_HJ_RK_ORDER-stages RK-algorithm
-                     for (uint tl = 0; tl < time_level + 1; ++tl) {
+                     for (uint tl=0; tl<time_level+1; ++tl) {
                         De_New += RK_COEFFS[time_level][tl] * s_In[sj][tl][DENS][si];
                         Ph_New += RK_COEFFS[time_level][tl] * s_In[sj][tl][PHAS][si];
                      }
@@ -496,7 +496,7 @@ void CUFLU_Advance(  real g_Fluid_In [][FLU_NIN  ][ CUBE(HYB_NXT) ],
                   __syncthreads();
 #                 endif
 
-               } // for (uint time_level = 0; time_level < ELBDM_HJ_RK_ORDER; ++time_level)
+               } // for (uint time_level=0; time_level<ELBDM_HJ_RK_ORDER; ++time_level)
             } // if ( isCompletelyRefined ) ... else ...
 
 //          4. write back final results to g_Fluid_In or g_Fluid_Out to save memory
