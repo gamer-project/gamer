@@ -134,7 +134,7 @@ extern double           ELBDM_LAMBDA;
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 extern bool             OPT__FLAG_INTERFERENCE;
 extern double           FlagTable_Interference[NLEVEL-1][4];
-extern double           DT__HYBRID_CFL, DT__HYBRID_CFL_INIT, DT__HYBRID_VELOCITY;
+extern double           DT__HYBRID_CFL, DT__HYBRID_CFL_INIT, DT__HYBRID_VELOCITY, DT__HYBRID_VELOCITY_INIT;
 extern bool             ELBDM_MATCH_PHASE;
 extern int              ELBDM_FIRST_WAVE_LEVEL;
 #endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
@@ -144,6 +144,7 @@ extern double           FlagTable_Spectral[NLEVEL-1][2];
 
 extern ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
 extern bool             ELBDM_BASE_SPECTRAL;
+
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
@@ -325,10 +326,15 @@ extern int  FB_ParaBuf;
 
 // (2-13) spectral interpolation
 #ifdef SUPPORT_SPECTRAL_INT
-extern char SPEC_INT_TABLE_PATH[MAX_STRING];
+extern char   SPEC_INT_TABLE_PATH[MAX_STRING];
+#if ( MODEL == ELBDM )
+extern bool   SPEC_INT_XY_INSTEAD_DEPHA;
+extern double SPEC_INT_WAVELENGTH_MAGNIFIER;
+#endif
 class InterpolationHandler;
 extern InterpolationHandler Int_InterpolationHandler;
 #endif // #ifdef SUPPORT_SPECTRAL_INT
+
 
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
@@ -344,6 +350,15 @@ extern char       (*h_DE_Array_F_Out [2])[ CUBE(PS2) ];
 extern real       (*h_Mag_Array_F_In [2])[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
 extern real       (*h_Mag_Array_F_Out[2])[NCOMP_MAG][ PS2P1*SQR(PS2)          ];
 extern real       (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2P1*PS2 ];
+#endif
+#if ( MODEL == ELBDM )
+extern bool       (*h_IsCompletelyRefined[2]);
+#endif
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
+extern bool       (*h_HasWaveCounterpart[2])[ CUBE(HYB_NXT) ];
+#endif
+#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+extern gramfe_matmul_float (*h_GramFE_TimeEvo)[ 2*FLU_NXT ];
 #endif
 
 #ifdef GRAVITY
@@ -400,18 +415,6 @@ extern double     (*h_Corner_Array_S[2])[3];
 extern real       (*h_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX];
 extern real        *h_SrcDlepProf_Radius;
 #endif
-
-#if ( MODEL == ELBDM )
-extern bool       (*h_IsCompletelyRefined[2]);
-#endif // #if ( MODEL == ELBDM )
-
-#if ( ELBDM_SCHEME == ELBDM_HYBRID )
-extern bool       (*h_HasWaveCounterpart[2])[ CUBE(HYB_NXT) ];
-#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
-
-#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-extern gramfe_matmul_float (*h_GramFE_TimeEvo)[2 * FLU_NXT];
-#endif // #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 
 

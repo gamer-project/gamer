@@ -230,19 +230,19 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    PhaseL  = -PWave_WaveK*r - PWave_WaveW*Time + PWave_Phase0;
 
 // set the real and imaginary parts
-   if ( PWave_LSR > 0 ) {      // Right-moving wave
+   if      ( PWave_LSR > 0 ) { // right-moving wave
       Real  = PWave_Amp*cos( PhaseR );
       Imag  = PWave_Amp*sin( PhaseR );
       Phase = PhaseR;
    }
-   else if ( PWave_LSR < 0 ) { // Left-moving wave
+   else if ( PWave_LSR < 0 ) { // left-moving wave
       Real  = PWave_Amp*cos( PhaseL );
       Imag  = PWave_Amp*sin( PhaseL );
       Phase = PhaseL;
    }
-   else { //( PWave_LSR == 0 ) // Standing wave
-      Real  = 0.5*( PWave_Amp*cos( PhaseR ) + PWave_Amp*cos( PhaseL ) );
-      Imag  = 0.5*( PWave_Amp*sin( PhaseR ) + PWave_Amp*sin( PhaseL ) );
+   else {                      // standing wave (PWave_LSR == 0 )
+      Real  = 0.5*(  PWave_Amp*cos( PhaseR ) + PWave_Amp*cos( PhaseL )  );
+      Imag  = 0.5*(  PWave_Amp*sin( PhaseR ) + PWave_Amp*sin( PhaseL )  );
       Phase = SATAN2 ( Imag, Real );
    }
 
@@ -257,12 +257,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // set the unwrapped phase
    fluid[PWave_Idx_Phase] = SATAN2( Imag, Real );
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   } else { // if ( amr->use_wave_flag[lv] )
+   } else {
    fluid[PHAS] = Phase;
    fluid[STUB] = 0.0;
-   } // if ( amr->use_wave_flag[lv] ) ... else
+   }
 #  endif
-
 
 } // FUNCTION : SetGridIC
 

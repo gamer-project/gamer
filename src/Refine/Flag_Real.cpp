@@ -5,7 +5,8 @@ void Prepare_for_Lohner( const OptLohnerForm_t Form, const real *Var1D, real *Av
 
 #if ( MODEL == ELBDM )
 void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond1D);
-#endif // #if ( MODEL == ELBDM )
+#endif
+
 
 
 
@@ -49,6 +50,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const bool IntPhase_No             = false;                 // for invoking Prepare_PatchData()
    const bool DE_Consistency_No       = false;                 // for invoking Prepare_PatchData()
    const int  NPG                     = 1;                     // for invoking Prepare_PatchData()
+
 // Lohner criterion
    const int  Lohner_NGhost           = 2;                     // number of ghost cells for the Lohner error estimator
    const int  Lohner_NCell            = PS1 + 2*Lohner_NGhost; // size of the variable array for Lohner
@@ -57,16 +59,15 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const IntScheme_t Lohner_IntScheme = INT_MINMOD1D;          // interpolation scheme for Lohner
 
 #  if ( MODEL == ELBDM )
-
-// Interference criterion
+// interference criterion
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    const int  Interf_NGhost             = 1;                     // number of ghost cells for the interference criterion
    const int  Interf_NCell              = PS1 + 2*Interf_NGhost; // size of the variable array for interference criterion
    const int  Interf_NCond              = PS1;                   // size of the array for interference criterion
    const IntScheme_t Interf_IntScheme   = INT_CQUAD;             // interpolation scheme for interference criterion
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif
 
-// Spectral refinement criterion
+// spectral refinement criterion
    const int  Spectral_NGhost           = FLU_GHOST_SIZE;        // number of ghost cells
    const int  Spectral_NCell            = FLU_NXT;               // prepare patch group
    const IntScheme_t Spectral_IntScheme = INT_CQUAD;             // interpolation scheme
@@ -118,11 +119,11 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    {
 //    use Lohner criterion on wave levels
       if ( amr->use_wave_flag[lv] ) {
-      Lohner_NVar = 2;
-      Lohner_TVar = _REAL | _IMAG;
+         Lohner_NVar = 2;
+         Lohner_TVar = _REAL | _IMAG;
 //    do not use Lohner criterion on fluid levels
       } else {
-      Lohner_NVar = 0;
+         Lohner_NVar = 0;
       }
    }
 
@@ -132,8 +133,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       if ( amr->use_wave_flag[lv] ) {
          Spectral_NVar = 2;
 //    do not use spectral criterion on fluid levels
-      } else { 
-         Spectral_NVar = 0; 
+      } else {
+         Spectral_NVar = 0;
       }
    }
 
@@ -143,20 +144,19 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 //    use interference criterion on fluid levels
       if ( !amr->use_wave_flag[lv] ) {
          Interf_NVar = 2;
-//    do not use interference criterion on wave levels 
+//    do not use interference criterion on wave levels
       } else {
          Interf_NVar = 0;
       }
-      Interf_Stride = Interf_NVar*Interf_NCell*Interf_NCell*Interf_NCell; // stride of array for one interference criterion patch
+      Interf_Stride = Interf_NVar*CUBE(Interf_NCell); // stride of array for one interference criterion patch
    }
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-
 
 #  else
 #  error : unsupported MODEL !!
 #  endif // MODEL
 
-   Lohner_Stride = Lohner_NVar*Lohner_NCell*Lohner_NCell*Lohner_NCell; // stride of array for one Lohner patch
+   Lohner_Stride = Lohner_NVar*Lohner_NCell*Lohner_NCell*Lohner_NCell;  // stride of array for one Lohner patch
 
 
 // collect particles to **real** patches at lv
@@ -215,22 +215,20 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #     endif
 
 #     if ( MODEL == ELBDM )
-      if ( Spectral_NVar > 0 ) {
-         Spectral_Var     = new real [ Spectral_NVar * Spectral_NCell * Spectral_NCell * Spectral_NCell ]; // prepare one patch group
-      }
+      if ( Spectral_NVar > 0 )
+         Spectral_Var = new real [ Spectral_NVar*CUBE(Spectral_NCell) ];   // prepare one patch group
 #     endif
 
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      if ( Interf_NVar > 0 ) {
-         Interf_Var       = new real [ 8 * Interf_NVar * Interf_NCell * Interf_NCell * Interf_NCell ];    // 8: number of local patches
-      }
-#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      if ( Interf_NVar > 0 )
+         Interf_Var   = new real [ 8*Interf_NVar*CUBE(Interf_NCell) ];  // 8: number of local patches
+#     endif
 
       if ( Lohner_NVar > 0 )
       {
-         Lohner_Var   = new real [ 8*Lohner_NVar*Lohner_NCell *Lohner_NCell *Lohner_NCell  ]; // 8: number of local patches
-         Lohner_Ave   = new real [ 3*Lohner_NVar*Lohner_NAve  *Lohner_NAve  *Lohner_NAve   ]; // 3: X/Y/Z of 1 patch
-         Lohner_Slope = new real [ 3*Lohner_NVar*Lohner_NSlope*Lohner_NSlope*Lohner_NSlope ]; // 3: X/Y/Z of 1 patch
+         Lohner_Var   = new real [ 8*Lohner_NVar*CUBE(Lohner_NCell)  ]; // 8: number of local patches
+         Lohner_Ave   = new real [ 3*Lohner_NVar*CUBE(Lohner_NAve)   ]; // 3: X/Y/Z of 1 patch
+         Lohner_Slope = new real [ 3*Lohner_NVar*CUBE(Lohner_NSlope) ]; // 3: X/Y/Z of 1 patch
       }
 
 
@@ -249,24 +247,21 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #        if ( MODEL == ELBDM )
          if ( Spectral_NVar > 0 )
          {
-            Prepare_PatchData( lv, Time[lv], Spectral_Var, NULL, Spectral_NGhost, NPG, &PID0, _REAL | _IMAG, _NONE,
+            Prepare_PatchData( lv, Time[lv], Spectral_Var, NULL, Spectral_NGhost, NPG, &PID0, _REAL|_IMAG, _NONE,
                                Spectral_IntScheme, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
 
 //          evaluate the ratio of the GramFE extension masses and the physical wave function
-            Prepare_for_Spectral_Criterion(Spectral_Var, Spectral_Cond);
+            Prepare_for_Spectral_Criterion( Spectral_Var, Spectral_Cond );
          }
-#        endif // # if ( MODEL == ELBDM )
-
+#        endif
 
 #        if ( ELBDM_SCHEME == ELBDM_HYBRID )
          if ( Interf_NVar > 0 )
-         {
-            Prepare_PatchData( lv, Time[lv], Interf_Var, NULL, Interf_NGhost, NPG, &PID0, _DENS | _PHAS, _NONE,
+            Prepare_PatchData( lv, Time[lv], Interf_Var, NULL, Interf_NGhost, NPG, &PID0, _DENS|_PHAS, _NONE,
                                Interf_IntScheme, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
-         }
-#        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#        endif
 
 //       loop over all local patches within the same patch group
          for (int LocalID=0; LocalID<8; LocalID++)
@@ -401,6 +396,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                   Prepare_for_Lohner( OPT__FLAG_LOHNER_FORM, Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope,
                                       Lohner_NVar );
 
+
 //             count the number of particles and/or particle mass density on each cell
 #              ifdef PARTICLE
                if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL )
@@ -531,15 +527,15 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 //                         note that we can have SibPID <= SIB_OFFSET_NONPERIODIC when OPT__NO_FLAG_NEAR_BOUNDARY == false
                            if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
 
-#                          if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //                         switch_to_wave_flag should be consistent with the flag buffer
-                           if ( amr->patch[0][lv][PID]->switch_to_wave_flag && SibPID >= 0 )
+#                          if ( ELBDM_SCHEME == ELBDM_HYBRID )
+                           if ( amr->patch[0][lv][PID]->switch_to_wave_flag  &&  SibPID >= 0 )
                               amr->patch[0][lv][SibPID]->switch_to_wave_flag = true;
 #                          endif
-                        }
-                     }
+                        } // if ( SibID != 999 )
+                     } // ii,jj,kk
 
-//                   for FlagBuf == PATCH_SIZE, once a cell is flagged, all 26 siblings will be flagged
+//                   for FlagBuf == PS1, once a cell is flagged, all 26 siblings will be flagged
                      if ( FlagBuf == PS1 )   NextPatch = true;
 
                   } // check flag
@@ -661,10 +657,10 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
          {
             amr->patch[0][lv][PID]->flag = false;
 
-#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //          enforce proper-nesting constraint for use_wave_flag
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
             amr->patch[0][lv][PID]->switch_to_wave_flag = false;
-#           endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#           endif
 
             break;
          }
@@ -685,7 +681,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 #              if ( ELBDM_SCHEME == ELBDM_HYBRID )
                amr->patch[0][lv][PID]->switch_to_wave_flag = false;
-#              endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#              endif
 
                break;
             }

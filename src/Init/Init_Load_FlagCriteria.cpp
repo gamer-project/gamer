@@ -33,10 +33,11 @@ void Init_Load_FlagCriteria()
 
 #  if ( MODEL != ELBDM )
    const bool OPT__FLAG_ENGY_DENSITY  = false;
-   double FlagTable_EngyDensity[NLEVEL-1][2];
+   double FlagTable_EngyDensity [NLEVEL-1][2];
+
    const bool OPT__FLAG_SPECTRAL      = false;
-   double FlagTable_Spectral[NLEVEL-1][2];
-#  endif // # if ( MODEL != ELBDM )
+   double FlagTable_Spectral    [NLEVEL-1][2];
+#  endif
 
 #  if ( ELBDM_SCHEME != ELBDM_HYBRID )
    const bool OPT__FLAG_INTERFERENCE  = false;
@@ -124,8 +125,8 @@ void Init_Load_FlagCriteria()
       for (int t=0; t<4; t++) {
       FlagTable_Interference[lv][t] = -1.0;
       }
-#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #     endif
+#     endif // MODEL
 
 #     ifdef PARTICLE
       FlagTable_NParPatch   [lv]    = -1;
@@ -197,17 +198,16 @@ void Init_Load_FlagCriteria()
 //          OPT__FLAG_NPAR_PATCH/CELL load integers
             else if ( FlagMode == 6 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParPatch[lv] );
             else if ( FlagMode == 7 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParCell [lv] );
-
 //          OPT__FLAG_INTERFERENCE loads four columns
-            else if ( FlagMode == 12 )  sscanf( input_line, "%d%lf%lf%lf%lf", &Trash, &FlagTable_Interference[lv][0],
-                                                                                      &FlagTable_Interference[lv][1],
-                                                                                      &FlagTable_Interference[lv][2],
-                                                                                      &FlagTable_Interference[lv][3]
-                                                                                      );
+            else if ( FlagMode == 12 ) sscanf( input_line, "%d%lf%lf%lf%lf", &Trash, &FlagTable_Interference[lv][0],
+                                                                                     &FlagTable_Interference[lv][1],
+                                                                                     &FlagTable_Interference[lv][2],
+                                                                                     &FlagTable_Interference[lv][3]
+                                                                                     );
 //          OPT__FLAG_SPECTRAL loads two columns
-            else if ( FlagMode == 13 )  sscanf( input_line, "%d%lf%lf", &Trash,       &FlagTable_Spectral[lv][0],
-                                                                                      &FlagTable_Spectral[lv][1]
-                                                                                      );
+            else if ( FlagMode == 13 ) sscanf( input_line, "%d%lf%lf", &Trash,       &FlagTable_Spectral[lv][0],
+                                                                                     &FlagTable_Spectral[lv][1]
+                                                                                     );
 //          others use the default format: (integer, double)
             else                       sscanf( input_line, "%d%lf", &Trash, &FlagTable[FlagMode][lv] );
          }

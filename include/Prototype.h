@@ -71,7 +71,7 @@ void Buf_SortBoundaryPatch( const int NPatch, int *IDList, int *PosList );
 #endif // #ifndef SERIAL
 
 
-// Foward declare classes defined in GatherTree.h
+// Forward declare classes defined in GatherTree.h
 class LB_PatchCount;
 class LB_LocalPatchExchangeList;
 class LB_GlobalPatchExchangeList;
@@ -90,7 +90,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                       const bool h_IsCompletelyRefined[],
                       const bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ],
-                      gramfe_matmul_float h_GramFE_TimeEvo[][ 2 * FLU_NXT ],
+                      gramfe_matmul_float h_GramFE_TimeEvo[][ 2*FLU_NXT ],
                       const int NPatchGroup, const real dt, const real dh,
                       const bool StoreFlux, const bool StoreElectric,
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter,
@@ -195,10 +195,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         const real MinDens, const real MinPres, const real MinTemp, const real MinEntr, const bool DE_Consistency );
 
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
-void Prepare_PatchData_HasWaveCounterpart(  const int lv, bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ],
-                                            const int GhostSize, const int NPG, const int *PID0_List,
-                                            const NSide_t NSide, LB_GlobalTree* GlobalTree );
-#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ],
+                                           const int GhostSize, const int NPG, const int *PID0_List,
+                                           const NSide_t NSide, LB_GlobalTree* GlobalTree );
+#endif
 
 // Init
 void End_GAMER();
@@ -254,6 +254,7 @@ void Interpolate( real CData[], const int CSize[3], const int CStart[3], const i
                   const IntPrim_t IntPrim, const ReduceOrFixMonoCoeff_t ReduceMonoCoeff,
                   const real CMag_IntIter[], const real FMag_IntIter[][NCOMP_MAG] );
 void Int_Table( const IntScheme_t IntScheme, int &NSide, int &NGhost );
+
 
 // Miscellaneous
 template <typename T> void  Mis_Idx1D2Idx3D( const int Size[], const T Idx1D, int Idx3D[] );
@@ -341,9 +342,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
                  const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1],
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
                  const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff,
-                 const real *Interf_Var, const real Spectral_Cond);
-bool Flag_Region( const int i, const int j, const int k, const int lv, const int PID,
-                 const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff );
+                 const real *Interf_Var, const real Spectral_Cond );
 bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t Form, const real *Var1D, const real *Ave1D,
                   const real *Slope1D, const int NVar, const double Threshold, const double Filter, const double Soften );
 void Refine( const int lv, const UseLBFunc_t UseLBFunc );
@@ -353,10 +352,10 @@ void SiblingSearch_Base();
 void Flag_Buffer( const int lv );
 void Refine_Buffer( const int lv, const int *SonTable, const int *GrandTable );
 #endif
-
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 void Sync_UseWaveFlag( const int lv );
-#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#endif
+
 
 // SelfGravity
 #ifdef GRAVITY
@@ -566,17 +565,16 @@ double ELBDM_GetTimeStep_Fluid( const int lv );
 double ELBDM_GetTimeStep_Gravity( const int lv );
 double ELBDM_GetTimeStep_Phase( const int lv );
 #if   ( ELBDM_SCHEME == ELBDM_HYBRID )
-double ELBDM_GetTimeStep_Hybrid_CFL( const int lv );        // for CFL condition of SPS in phase form
-double ELBDM_GetTimeStep_Hybrid_Velocity( const int lv );      // for velocity dependence of Hamilton-Jacobi equation
+double ELBDM_GetTimeStep_Hybrid_CFL( const int lv );
+double ELBDM_GetTimeStep_Hybrid_Velocity( const int lv );
 bool   ELBDM_HasWaveCounterpart( const int I, const int J, const int K, const long GID0, const long GID, const LB_GlobalTree& GlobalTree);
 void   ELBDM_Aux_Record_Hybrid();
-#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#endif
 
-//Flag for refining regions using wave solver
 bool   ELBDM_Flag_EngyDensity( const int i, const int j, const int k, const real Real_Array[],
                                const real Imag_Array[], const double Angle_2pi, const double Eps );
-//Flag for switching between wave and phase scheme in hybrid solver
-bool   ELBDM_Flag_Interference( const int i, const int j, const int k, const real Var[], const double QPThreshold, const double DensThreshold, const double LapPhaseThreshold, const bool OnlyAtExtrema );
+bool   ELBDM_Flag_Interference( const int i, const int j, const int k, const real Var1D[], const double QPThreshold,
+                                const double DensThreshold, const double LapPhaseThreshold, const bool OnlyAtExtrema );
 real   ELBDM_UnwrapPhase( const real Phase_Ref, const real Phase_Wrapped );
 real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 void   ELBDM_RemoveMotionCM();
@@ -584,7 +582,7 @@ void   ELBDM_RemoveMotionCM();
 void   CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg );
 #endif
 #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-void   ELBDM_GramFE_ComputeTimeEvolutionMatrix( gramfe_matmul_float (*output)[2 * FLU_NXT], const real dt, const real dh, const real Eta );
+void   ELBDM_GramFE_ComputeTimeEvolutionMatrix( gramfe_matmul_float (*output)[ 2*FLU_NXT ], const real dt, const real dh, const real Eta );
 #endif
 
 
@@ -616,7 +614,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              const bool NormPassive, const int NNorm,
                              const bool FracPassive, const int NFrac,
                              const bool JeansMinPres, const real JeansMinPres_Coeff,
-                             const int GPU_NStream, const bool UseWaveFlag);
+                             const int GPU_NStream, const bool UseWaveFlag );
 void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                           const real h_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real h_Pot_Array[][ CUBE(GRA_NXT) ],
                           const double h_Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
@@ -662,8 +660,8 @@ void CUAPI_SendExtPotTable2GPU( const real *h_Table );
 void CUAPI_MemFree_PoissonGravity();
 #endif // #ifdef GRAVITY
 #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-void CUAPI_SendGramFEMatrix2GPU( gramfe_matmul_float (*h_GramFE_TimeEvo)[2 * FLU_NXT] );
-#endif // #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+void CUAPI_SendGramFEMatrix2GPU( gramfe_matmul_float (*h_GramFE_TimeEvo)[ 2*FLU_NXT ] );
+#endif
 #endif // #ifdef GPU
 
 
@@ -716,7 +714,6 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
                             const bool UseTracers, real ParAttr[], const bool CorrectVelocity );
 FieldIdx_t AddParticleAttribute( const char *InputLabel );
 FieldIdx_t GetParticleAttributeIndex( const char *InputLabel, const Check_t Check );
-
 #ifdef LOAD_BALANCE
 void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, const bool PredictPos, const double TargetTime,
                                       const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
@@ -741,8 +738,7 @@ void Par_LB_RecordExchangeParticlePatchID( const int MainLv );
 void Par_LB_MapBuffer2RealPatch( const int lv, const int  Buff_NPatchTotal, int *&Buff_PIDList, int *Buff_NPatchEachRank,
                                                      int &Real_NPatchTotal, int *&Real_PIDList, int *Real_NPatchEachRank,
                                  const bool UseInputLBIdx, long *Buff_LBIdxList_Input );
-#endif
-
+#endif // #ifdef LOAD_BALANCE
 #endif // #ifdef PARTICLE
 
 

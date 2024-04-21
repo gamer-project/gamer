@@ -1,13 +1,13 @@
 
 
 
-# name of the executable file 
+# name of the executable file
 #######################################################################################################
 EXECUTABLE := Dizzy
 
 
 
-# simulation options 
+# simulation options
 #######################################################################################################
 
 # (a) common options (applied to all models)
@@ -82,7 +82,7 @@ SIMU_OPTION += -DGPU
 # optimization mode
 SIMU_OPTION += -DGAMER_OPTIMIZATION
 
-# debug mode 
+# debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
 
 # measure the elapsing wall-clock time of different parts of the program
@@ -205,14 +205,14 @@ CC_FILE     += Hydro_Init_StartOver_AssignData.cpp  Hydro_Aux_Check_Negative.cpp
                Hydro_Init_UM_AssignData.cpp  Hydro_BoundaryCondition_Outflow.cpp  Hydro_BoundaryCondition_Reflecting.cpp
 
 vpath %.cu     Model_Hydro/GPU_Hydro
-vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro  
+vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro
 
 ifeq "$(findstring GRAVITY, $(SIMU_OPTION))" "GRAVITY"
 CUDA_FILE   += CUPOT_HydroGravitySolver.cu
 
 CC_FILE     += CPU_HydroGravitySolver.cpp  Hydro_GetTimeStep_Gravity.cpp
 
-vpath %.cu     Model_Hydro/GPU_HydroGravity 
+vpath %.cu     Model_Hydro/GPU_HydroGravity
 vpath %.cpp    Model_Hydro/CPU_HydroGravity
 endif
 
@@ -259,7 +259,7 @@ endif # MODEL
 # ------------------------------------------------------------------------------------
 ifeq "$(findstring GRAVITY, $(SIMU_OPTION))" "GRAVITY"
 CUDA_FILE   += CUAPI_MemAllocate_PoissonGravity.cu  CUAPI_MemFree_PoissonGravity.cu \
-               CUAPI_Asyn_PoissonGravitySolver.cu      
+               CUAPI_Asyn_PoissonGravitySolver.cu
 
 CUDA_FILE   += CUPOT_PoissonSolver_SOR_10to14cube.cu  CUPOT_PoissonSolver_SOR_16to18cube.cu \
                CUPOT_PoissonSolver_MG.cu
@@ -272,7 +272,7 @@ CC_FILE     += Init_FFTW.cpp  Gra_Close.cpp  Gra_Prepare_Flu.cpp  Gra_Prepare_Po
                Output_PreparedPatch_Poisson.cpp  Init_MemAllocate_PoissonGravity.cpp  CPU_ExternalPot.cpp \
                End_MemFree_PoissonGravity.cpp  Init_Set_Default_SOR_Parameter.cpp \
                Init_Set_Default_MG_Parameter.cpp  Poi_GetAverageDensity.cpp  Init_GreenFuncK.cpp \
-               Init_ExternalPot.cpp  Poi_BoundaryCondition_Extrapolation.cpp  CPU_ExternalGravity.cpp 
+               Init_ExternalPot.cpp  Poi_BoundaryCondition_Extrapolation.cpp  CPU_ExternalGravity.cpp
 
 vpath %.cu     SelfGravity/GPU_Poisson  SelfGravity/GPU_Gravity
 vpath %.cpp    SelfGravity/CPU_Poisson  SelfGravity/CPU_Gravity  SelfGravity
@@ -297,15 +297,15 @@ endif # PARTICLE
 # galaxy source files (included only if "GALAXY" is turned on)
 # ------------------------------------------------------------------------------------
 ifeq "$(findstring GALAXY, $(SIMU_OPTION))" "GALAXY"
-#CUDA_FILE   += 
+#CUDA_FILE   +=
 CC_FILE     += Galaxy.cpp  Gal_Init_StartOver_AssignData.cpp
 
 ifeq "$(findstring GPU, $(SIMU_OPTION))" ""
 CC_FILE     += Gal_ExternalGravity_Burkert.cpp
 endif
 
-#vpath %.cu     
-vpath %.cpp    Galaxy 
+#vpath %.cu
+vpath %.cpp    Galaxy
 endif # GALAXY
 
 
@@ -314,7 +314,7 @@ endif # GALAXY
 ifeq "$(findstring SERIAL, $(SIMU_OPTION))" ""
 CC_FILE     += Flu_AllocateFluxArray_Buffer.cpp
 
-CC_FILE     += Flag_Buffer.cpp  Refine_Buffer.cpp  
+CC_FILE     += Flag_Buffer.cpp  Refine_Buffer.cpp
 
 CC_FILE     += Buf_AllocateBufferPatch.cpp  Buf_AllocateBufferPatch_Base.cpp  Buf_GetBufferData.cpp \
                Buf_RecordExchangeDataPatchID.cpp  Buf_RecordExchangeFluxPatchID.cpp Buf_SortBoundaryPatch.cpp \
@@ -322,10 +322,10 @@ CC_FILE     += Buf_AllocateBufferPatch.cpp  Buf_AllocateBufferPatch_Base.cpp  Bu
                Buf_ResetBufferFlux.cpp
 
 CC_FILE     += MPI_ExchangeBoundaryFlag.cpp  MPI_ExchangeBufferPosition.cpp  MPI_ExchangeData.cpp \
-               Init_MPI.cpp  MPI_Exit.cpp  
+               Init_MPI.cpp  MPI_Exit.cpp
 
 CC_FILE     += Output_BoundaryFlagList.cpp  Output_ExchangeDataPatchList.cpp  Output_ExchangeFluxPatchList.cpp \
-               Output_ExchangePatchMap.cpp 
+               Output_ExchangePatchMap.cpp
 
 CC_FILE     += Aux_RecordBoundaryPatch.cpp
 
@@ -476,13 +476,13 @@ endif
 # -------------------------------------------------------------------------------
 LIB :=
 ifeq "$(findstring GPU, $(SIMU_OPTION))" "GPU"
-LIB += -L$(CUDA_TOOLKIT_PATH)/lib64 
-#LIB += -L$(CUDA_TOOLKIT_PATH)/lib 
-LIB += -lcudart 
+LIB += -L$(CUDA_TOOLKIT_PATH)/lib64
+#LIB += -L$(CUDA_TOOLKIT_PATH)/lib
+LIB += -lcudart
 endif
 
 ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
-LIB += -limf 
+LIB += -limf
 endif
 
 ifeq "$(findstring LAOHU, $(SIMU_OPTION))" "LAOHU"
@@ -490,18 +490,18 @@ LIB += -L$(GPUID_PATH) -lgpudevmgr
 endif
 
 ifeq "$(findstring GRAVITY, $(SIMU_OPTION))" "GRAVITY"
-   LIB += -L$(FFTW_PATH)/lib 
+   LIB += -L$(FFTW_PATH)/lib
    ifeq "$(findstring FLOAT8, $(SIMU_OPTION))" "FLOAT8"
       ifeq "$(findstring SERIAL, $(SIMU_OPTION))" "SERIAL"
-         LIB += -ldrfftw -ldfftw 
+         LIB += -ldrfftw -ldfftw
       else
-         LIB += -ldrfftw_mpi -ldfftw_mpi -ldrfftw -ldfftw 
+         LIB += -ldrfftw_mpi -ldfftw_mpi -ldrfftw -ldfftw
       endif
    else
       ifeq "$(findstring SERIAL, $(SIMU_OPTION))" "SERIAL"
-         LIB += -lsrfftw -lsfftw 
+         LIB += -lsrfftw -lsfftw
       else
-         LIB += -lsrfftw_mpi -lsfftw_mpi -lsrfftw -lsfftw 
+         LIB += -lsrfftw_mpi -lsfftw_mpi -lsrfftw -lsfftw
       endif
    endif
 endif
@@ -523,9 +523,9 @@ LIB += -L$(HDF5_PATH)/lib -lhdf5
 endif
 
 
-# headers 
+# headers
 # -------------------------------------------------------------------------------
-INCLUDE := -I../include 
+INCLUDE := -I../include
 
 ifeq "$(findstring SERIAL, $(SIMU_OPTION))" ""
 INCLUDE += -I$(MPI_PATH)/include
@@ -548,7 +548,7 @@ ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
 CXXWARN_FLAG := -w1
 else
 CXXWARN_FLAG := -Wextra -Wall -Wimplicit -Wswitch -Wformat -Wchar-subscripts -Wparentheses -Wmultichar \
-                -Wtrigraphs -Wpointer-arith -Wcast-align -Wreturn-type -Wno-unused-function 
+                -Wtrigraphs -Wpointer-arith -Wcast-align -Wreturn-type -Wno-unused-function
 endif
 
 ifeq "$(findstring OPENMP, $(SIMU_OPTION))" ""
@@ -584,7 +584,7 @@ endif
 
 ifeq "$(findstring FERMI, $(SIMU_OPTION))" "FERMI"
    NVCCFLAG_FLU += -Xptxas -dlcm=ca -prec-div=false -ftz=true #-prec-sqrt=false
-   NVCCFLAG_POT += -Xptxas -dlcm=ca 
+   NVCCFLAG_POT += -Xptxas -dlcm=ca
    ifeq "$(findstring FLOAT8, $(SIMU_OPTION))" "FLOAT8"
 #     NVCCFLAG_FLU += --maxrregcount=64
    else
@@ -625,12 +625,12 @@ $(OBJ_PATH)/%.o : %.cpp
 $(EXECUTABLE) : $(OBJ)
 	$(CXX) -o $@ $^ $(LIB) $(OPENMP)
 	rm ./*.linkinfo -f
-	cp $(EXECUTABLE) ../bin/Run/ 
+	cp $(EXECUTABLE) ../bin/Run/
 
 
 # clean
 # -------------------------------------------------------------------------------
-clean : 
+clean :
 	rm -f $(OBJ_PATH)/*
 	rm -f $(EXECUTABLE)
 	rm ./*.linkinfo -f

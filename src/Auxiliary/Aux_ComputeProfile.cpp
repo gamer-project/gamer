@@ -147,16 +147,17 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
 // check whether phase field is accessed in hybrid scheme
 // currently computing the profile of the phase field is not supported
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
+#  if ( MODEL == ELBDM  &&  ELBDM_SCHEME == ELBDM_HYBRID )
    bool UsePhaseStub = false;
    for (int p=0; p<NProf; p++)
-      if ( TVarBitIdx[p] & _PHAS ||  TVarBitIdx[p] & _STUB ) UsePhaseStub = true;
+      if ( TVarBitIdx[p] & _PHAS  ||  TVarBitIdx[p] & _STUB )  UsePhaseStub = true;
 
    if ( UsePhaseStub )
       for (int lv=MinLv; lv<=MaxLv; lv++)
          if ( !amr->use_wave_flag[lv] )
-            Aux_Error( ERROR_INFO, "Retrieving PHAS and STUB to compute profile in hybrid scheme is not supported !!\n" );
-#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
+            Aux_Error( ERROR_INFO, "Computing the profile of PHAS or STUB in hybrid scheme is not supported !!\n" );
+#  endif
+
 
 // initialize the profile objects
    for (int p=0; p<NProf; p++)

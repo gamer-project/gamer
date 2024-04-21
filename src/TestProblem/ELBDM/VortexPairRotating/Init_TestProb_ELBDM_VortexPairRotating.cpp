@@ -56,7 +56,8 @@ void Validate()
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( ELBDM_MATCH_PHASE )
       Aux_Message( stderr, "WARNING: ELBDM_MATCH_PHASE should be disabled in vortex pair tests !!\n" );
-#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif
+
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
 
@@ -185,13 +186,14 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[REAL] = Re;
    fluid[IMAG] = Im;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   } else { // if ( amr->use_wave_flag[lv] )
+   } else {
    fluid[PHAS] = SATAN2(Im, Re);
    fluid[STUB] = 0.0;
-   } // if ( amr->use_wave_flag[lv] ) ... else
+   }
 #  endif
 
 } // FUNCTION : SetGridIC
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -214,8 +216,9 @@ void OutputVortexPairRotatingError()
    Output_L1Error( SetGridIC, NULL, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
 
 } // FUNCTION : OutputVortexPairRotatingError
-
 #endif // #if ( MODEL == ELBDM )
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_ELBDM_VortexPairRotating

@@ -50,19 +50,19 @@ void Init_Function_User_Template( real fluid[], const double x, const double y, 
    const real Imag      = 1.0 + Height2*exp(  -( SQR(x-C2[0]) + SQR(y-C2[1]) + SQR(z-C2[2]) ) /SQR(Width2)  );
    const real Dens      = Real*Real + Imag*Imag;
 
-#  if (ELBDM_SCHEME == ELBDM_HYBRID)
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( amr->use_wave_flag[lv] ) {
-#  endif // # if (ELBDM_SCHEME == ELBDM_HYBRID)
+#  endif
    fluid[REAL] = Real;
    fluid[IMAG] = Imag;
    fluid[DENS] = Dens;
-#  if (ELBDM_SCHEME == ELBDM_HYBRID)
-   } else { // if ( amr->use_wave_flag[lv] == true )
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } else { // if ( amr->use_wave_flag[lv] )
    fluid[PHAS] = SATAN2(Imag, Real);
    fluid[DENS] = Dens;
    fluid[STUB] = 0.0;
-   } // if ( amr->use_wave_flag[lv] == true ) ... else
-#  endif // # if (ELBDM_SCHEME == ELBDM_HYBRID)
+   } // if ( amr->use_wave_flag[lv] == true ) ... else ...
+#  endif
 
 // ELBDM does not support passive scalars yet ...
 
@@ -96,7 +96,7 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( INIT_SUBSAMPLING_NCELL > 1 )
       Aux_Error( ERROR_INFO, "ELBDM_HYBRID currently does not support subsampling !!\n" );
-#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif
 
 // set the number of OpenMP threads
 #  ifdef OPENMP
@@ -137,7 +137,7 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
 
       }}}
 
-#     if   (ELBDM_SCHEME == ELBDM_HYBRID)
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( amr->use_wave_flag[lv] ) {
 #     endif
 //    ensure density = real_part^2 + imaginary_part^2
@@ -154,11 +154,11 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
          fluid[IMAG] *= Rescale;
          fluid[DENS]  = (real)MIN_DENS;
       }
-#     if (ELBDM_SCHEME == ELBDM_HYBRID)
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       } else { // if ( amr->use_wave_flag[lv] )
 
 //*********************************************************
-//    ###REVISE: support rescaling phase for subsampling
+//###REVISE: support rescaling phase for subsampling
 //*********************************************************
 
 //    rescale density for subsampling
@@ -169,8 +169,8 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
          fluid[DENS]  = (real)MIN_DENS;
       }
 
-      } // if ( amr->use_wave_flag[lv] == true ) ...  else
-#     endif // #if   (ELBDM_SCHEME == ELBDM_HYBRID)
+      } // if ( amr->use_wave_flag[lv] == true ) ... else ...
+#     endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 //    floor and normalize passive scalars (actually passive scalars are NOT supported by ELBDM yet)
       /*

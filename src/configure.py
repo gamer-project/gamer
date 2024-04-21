@@ -563,7 +563,7 @@ def load_arguments():
 
     parser.add_argument( "--spectral_interpolation", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_SPECTRAL_INT",
                          default=False,
-                         constraint={ True:{"gsl":True} },
+                         constraint={ True:{"gsl":True, "fftw":["FFTW2", "FFTW3"]} },
                          help="Support spectral interpolation.\n"
                        )
 
@@ -757,6 +757,9 @@ def validation( paths, depends, constraints, **kwargs ):
     elif kwargs["model"] == "ELBDM":
         if kwargs["passive"] < 0:
             color_print("ERROR: Passive scalar should not be negative. Current: %d"%kwargs["passive"], BCOLOR.FAIL)
+            success = False
+        if kwargs["gramfe_scheme"] == "GRAMFE_FFT" and not kwargs["gpu"] and kwargs["fftw"] not in ["FFTW2", "FFTW3"]:
+            color_print("ERROR: Must set <--fftw> when adopting <--gramfe_scheme=GRAMFE_FFT> and <--gpu=false>", BCOLOR.FAIL)
             success = False
 
     elif kwargs["model"] == "PAR_ONLY":

@@ -248,9 +248,8 @@ void Flu_FixUp_Flux( const int lv )
 //             throw error if corrected density is NaN
                if ( CorrVal[DENS] != CorrVal[DENS] )
                {
-                  Aux_Error( ERROR_INFO, "Flux-corrected density is NaN in patch with PID %d on level %d for the option OPT__FIXUP_FLUX !!\n", PID, lv);
+                  Aux_Error( ERROR_INFO, "Flux-corrected density is NaN in patch with PID %d on level %d for OPT__FIXUP_FLUX !!\n", PID, lv );
                }
-
 
                if ( CorrVal[DENS] <= MIN_DENS )
 
@@ -309,10 +308,10 @@ void Flu_FixUp_Flux( const int lv )
 
 //                rescale the real and imaginary parts to be consistent with the corrected amplitude
 //                --> must NOT use CorrVal[REAL] and CorrVal[IMAG] below since NFLUX_TOTAL == 1 for ELBDM
-#                 if ( MODEL == ELBDM &&  defined CONSERVE_MASS )
+#                 if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
 #                 if ( ELBDM_SCHEME == ELBDM_HYBRID )
                   if ( amr->use_wave_flag[lv] ) {
-#                 endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#                 endif
                   real Re, Im, Rho_Corr, Rho_Wrong, Rescale;
 
                   Re        = *FluidPtr1D[REAL];
@@ -333,8 +332,8 @@ void Flu_FixUp_Flux( const int lv )
                   *FluidPtr1D[IMAG] *= Rescale;
 #                 if ( ELBDM_SCHEME == ELBDM_HYBRID )
                   } // if ( amr->use_wave_flag[lv] )
-#                 endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-#                 endif // # if ( MODEL == ELBDM &&  defined CONSERVE_MASS )
+#                 endif
+#                 endif // # if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
                } // if ( ApplyFix )
 
 

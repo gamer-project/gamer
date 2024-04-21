@@ -815,7 +815,8 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #        else
          if ( OPT__FIXUP_FLUX  ||  OPT__FIXUP_RESTRICT )
 #        endif
-         TIMING_FUNC(   Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, Flu_ParaBuf < PATCH_SIZE ? DATA_AFTER_FIXUP : DATA_GENERAL,
+         TIMING_FUNC(   Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT,
+                                           (Flu_ParaBuf<PS1)?DATA_AFTER_FIXUP:DATA_GENERAL,
                                            _TOTAL, _MAG, Flu_ParaBuf, USELB_YES  ),
                         Timer_GetBuf[lv][3],   TIMER_ON   );
 
@@ -834,14 +835,9 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
 #        if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //       always refine at least until first wave level when using fluid scheme
-         if ( !amr->use_wave_flag[lv] ) {
-            if ( lv < ELBDM_FIRST_WAVE_LEVEL )
-            {
-               Refine_NLevel = MAX(ELBDM_FIRST_WAVE_LEVEL - lv, REFINE_NLEVEL);
-            }
-         }
-#        endif // # ( ELBDM_SCHEME == ELBDM_HYBRID )
-
+         if ( !amr->use_wave_flag[lv]  &&  lv < ELBDM_FIRST_WAVE_LEVEL )
+            Refine_NLevel = MAX( ELBDM_FIRST_WAVE_LEVEL-lv, REFINE_NLEVEL );
+#        endif
 
          const int lv_refine_max = MIN( lv+Refine_NLevel, TOP_LEVEL ) - 1;
 
@@ -869,9 +865,9 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d: Refine %27s... ", lv_refine, "" );
 
 //          store wave flag in buffer to determine whether fluid scheme data was converted to wave scheme
-#           if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(LOAD_BALANCE))
+#           if ( MODEL == ELBDM  &&  ELBDM_SCHEME == ELBDM_HYBRID  &&  defined LOAD_BALANCE )
             const bool old_wave_flag = amr->use_wave_flag[ lv_refine + 1 ];
-#           endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID && defined(LOAD_BALANCE))
+#           endif
 
             TIMING_FUNC(   Refine( lv_refine, USELB_YES ),
                            Timer_Refine[lv_refine],   TIMER_ON   );
@@ -916,22 +912,21 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                            Timer_Refine[lv_refine],   TIMER_ON   );
 #           endif
 
-
 #           ifdef LOAD_BALANCE
 #           if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //          exchange all fluid data on refined wave levels after switching to wave scheme
-            if ( old_wave_flag != amr->use_wave_flag[ lv_refine + 1 ] ) {
-               for (int i = lv_refine + 1; i <= TOP_LEVEL; ++i) {
-                  TIMING_FUNC(   Buf_GetBufferData( i,     amr->FluSg[i], NULL_INT, NULL_INT, DATA_GENERAL,
+            if ( old_wave_flag != amr->use_wave_flag[lv_refine+1] ) {
+               for (int i=lv_refine+1; i<=TOP_LEVEL; ++i) {
+                  TIMING_FUNC(   Buf_GetBufferData( i,   amr->FluSg[i], NULL_INT, NULL_INT, DATA_GENERAL,
                                                     _TOTAL, _NONE, Flu_ParaBuf, USELB_YES ),
                                  Timer_GetBuf[lv_refine][4],   TIMER_ON   );
-                  TIMING_FUNC(   Buf_GetBufferData( i, 1 - amr->FluSg[i], NULL_INT, NULL_INT, DATA_GENERAL,
+                  TIMING_FUNC(   Buf_GetBufferData( i, 1-amr->FluSg[i], NULL_INT, NULL_INT, DATA_GENERAL,
                                                     _TOTAL, _NONE, Flu_ParaBuf, USELB_YES ),
                                  Timer_GetBuf[lv_refine][4],   TIMER_ON   );
                }
             }
-#           endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-#           endif // # ifdef LOAD_BALANCE
+#           endif
+#           endif // #ifdef LOAD_BALANCE
 
             if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 

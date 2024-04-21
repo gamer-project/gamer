@@ -1,12 +1,13 @@
 #include "GAMER.h"
 
-
-
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Sync_UseWaveFlag
-// Description :  Sync amr->use_wave_flag across all GAMER ranks
+// Description :  Synchronize amr->use_wave_flag[] across all MPI ranks
 //
 // Note        :  None
 //
@@ -21,9 +22,12 @@ void Sync_UseWaveFlag( const int lv )
     bool recv;
     bool send = amr->use_wave_flag[lv];
 
-    MPI_Allreduce(&send, &recv, 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD);
+    MPI_Allreduce( &send, &recv, 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD );
 
     amr->use_wave_flag[lv] = recv;
+
 } // FUNCTION : Sync_UseWaveFlag
+
+
 
 #endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )

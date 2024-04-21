@@ -129,14 +129,15 @@ bool                 OPT__FLAG_INTERFERENCE;
 double               FlagTable_Interference[NLEVEL-1][4];
 int                  ELBDM_FIRST_WAVE_LEVEL;
 bool                 ELBDM_MATCH_PHASE;
-double               DT__HYBRID_CFL, DT__HYBRID_CFL_INIT, DT__HYBRID_VELOCITY;
-#endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+double               DT__HYBRID_CFL, DT__HYBRID_CFL_INIT, DT__HYBRID_VELOCITY, DT__HYBRID_VELOCITY_INIT;
+#endif
 
 #ifdef QUARTIC_SELF_INTERACTION
 double               ELBDM_LAMBDA;
 #endif
 ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
 bool                 ELBDM_BASE_SPECTRAL;
+
 #else
 #error : unsupported MODEL !!
 #endif // MODEL
@@ -301,9 +302,13 @@ int  FB_ParaBuf;
 
 // (2-13) spectral interpolation
 #ifdef SUPPORT_SPECTRAL_INT
-char                 SPEC_INT_TABLE_PATH[MAX_STRING];
+char   SPEC_INT_TABLE_PATH[MAX_STRING];
+#if ( MODEL == ELBDM )
+bool   SPEC_INT_XY_INSTEAD_DEPHA;
+double SPEC_INT_WAVELENGTH_MAGNIFIER;
+#endif
 InterpolationHandler Int_InterpolationHandler;
-#endif // #ifdef SUPPORT_SPECTRAL_INT
+#endif
 
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
@@ -331,14 +336,15 @@ real (*h_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]        = NULL;
 real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 #endif
 #endif // FLU_SCHEME
-
 #if ( MODEL == ELBDM )
 bool  (*h_IsCompletelyRefined[2])                                  = { NULL, NULL };
-#endif // #if ( MODEL == ELBDM )
-
+#endif
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 bool (*h_HasWaveCounterpart[2])[ CUBE(HYB_NXT) ]                   = { NULL, NULL };
-#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#endif
+#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+gramfe_matmul_float (*h_GramFE_TimeEvo)[ 2*FLU_NXT ]               = NULL;
+#endif
 
 #ifdef GRAVITY
 // (3-2) Poisson and gravity solver
@@ -398,10 +404,6 @@ real (*h_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX]                  = NULL;
 real  *h_SrcDlepProf_Radius                                        = NULL;
 #endif
 
-#  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-gramfe_matmul_float (*h_GramFE_TimeEvo) [2 * FLU_NXT]              = NULL;
-#  endif // #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-
 
 
 // 4. GPU (device) global memory arrays
@@ -429,20 +431,16 @@ real (*d_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ]  = NULL;
 real (*d_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]        = NULL;
 real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 #endif
-
 #endif // FLU_SCHEME
-
 #if ( MODEL == ELBDM )
 bool  (*d_IsCompletelyRefined)                                     = NULL;
-#endif // #if ( MODEL == ELBDM )
-
+#endif
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 bool (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ]                      = NULL;
-#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
-
+#endif
 #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-gramfe_matmul_float (*d_Flu_TimeEvo)[2 * FLU_NXT]                  = NULL;
-#endif // #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+gramfe_matmul_float (*d_Flu_TimeEvo)[ 2*FLU_NXT ]                  = NULL;
+#endif
 
 #ifdef GRAVITY
 // (4-2) Poisson and gravity solver
@@ -585,6 +583,10 @@ int main( int argc, char *argv[] )
 
 #  ifdef PARTICLE
    if ( OPT__PARTICLE_COUNT > 0 )         Par_Aux_Record_ParticleCount();
+#  endif
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   ELBDM_Aux_Record_Hybrid();
 #  endif
 
    Aux_Check();
