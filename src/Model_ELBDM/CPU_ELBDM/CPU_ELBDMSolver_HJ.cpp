@@ -123,25 +123,28 @@ static uint get1D2(uint k, uint j, uint i, int XYZ) {
 # define OSHER_SETHIAN_FLUX(Vel_p, Vel_m) ((real) 0.5 * (pow(MIN(Vel_p, 0), 2) + pow(MAX(Vel_m, 0), 2)))
 
 
-// use third-order Runge-Kutta scheme since it provides a good compromise between the required ghost zone (6 for the second-order spatial discretisation)
-// and the achievable time steps (close to finite-difference scheme)
-// lower-order Runge-Kutta methods suffer from small time steps (CFL condition < 0.01 for first-order and <= 0.05 for second-order methods according to empirical tests)
+// use third-order Runge-Kutta scheme since it provides a good compromise between the required ghost zone
+// (6 for the second-order spatial discretisation) and the achievable time steps (close to finite-difference scheme)
+// --> lower-order Runge-Kutta methods suffer from small time steps (CFL condition < 0.01 for first-order
+//     and <= 0.05 for second-order methods according to empirical tests)
+// --> using double precision for the following three constant coefficients improves the mass conservation errors
+//     from ~1e-5 to ~1e-8 but deteriorates the performance by ~10%
 #define ELBDM_HJ_RK_ORDER 3
 GPU_DEVICE_VARIABLE
-const static real TIME_COEFFS[ELBDM_HJ_RK_ORDER]                    = {1.0, 1.0/4.0, 2.0/3.0};
+const static double TIME_COEFFS[ELBDM_HJ_RK_ORDER]                    = {1.0, 1.0/4.0, 2.0/3.0};
 
 GPU_DEVICE_VARIABLE
-const static real RK_COEFFS  [ELBDM_HJ_RK_ORDER][ELBDM_HJ_RK_ORDER] = { {1.0, 0.0, 0.0}, {3.0/4.0, 1.0/4.0, 0.0}, {1.0/3.0, 0.0, 2.0/3.0} };
+const static double RK_COEFFS  [ELBDM_HJ_RK_ORDER][ELBDM_HJ_RK_ORDER] = { {1.0, 0.0, 0.0}, {3.0/4.0, 1.0/4.0, 0.0}, {1.0/3.0, 0.0, 2.0/3.0} };
 
 #ifdef CONSERVE_MASS
 GPU_DEVICE_VARIABLE
-const static real FLUX_COEFFS[ELBDM_HJ_RK_ORDER]                    = {1.0/6.0, 1.0/6.0, 2.0/3.0};
+const static double FLUX_COEFFS[ELBDM_HJ_RK_ORDER]                    = {1.0/6.0, 1.0/6.0, 2.0/3.0};
 #endif
 
 // density floor for computation of quantum pressure from input density
 // should be small so as to not affect the accuracy of the quantum pressure
-// must be positive and larger than machine precision to ensure that density close to machine precision
-// does not lead to nan in logarithm
+// --> must be positive and larger than machine precision to ensure that density close to machine precision
+//     does not lead to nan in logarithm
 #define QP_DENSITY_FLOOR TINY_NUMBER
 
 GPU_DEVICE
