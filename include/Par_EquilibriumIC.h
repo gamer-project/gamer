@@ -67,8 +67,8 @@ class Par_EquilibriumIC
 
    private:
       // Derive physical attributes for particles
-      double Set_Mass( double x );
-      double Set_Density( double x );
+      double Set_Mass( const double r );
+      double Set_Density( const double r );
       double Set_Velocity(const double x);
 
       // Initialize physical parameter tables

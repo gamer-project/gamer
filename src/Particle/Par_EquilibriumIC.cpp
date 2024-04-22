@@ -420,11 +420,19 @@ void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllR
 // Return      :
 //-------------------------------------------------------------------------------------------------------
 //Plummer
-double mass_base_Plummer( double x, void* nothing )
+double DensProf_Plummer( const double r, const double R0, const double Rho0 )
 {
-   return pow( x, 2 )*pow( 1+x*x, -2.5 );
+   const double x = r/R0;
+
+   return Rho0*pow( 1+x*x, -2.5 );
 }
 
+double MassProf_Plummer( const double r, const double R0, const double Rho0 )
+{
+   const double x = r/R0;
+
+   return (4.0/3.0)*M_PI*Rho0*CUBE(R0)*pow( 1+x*x, -1.5 );
+}
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -438,11 +446,20 @@ double mass_base_Plummer( double x, void* nothing )
 // Return      :
 //-------------------------------------------------------------------------------------------------------
 //NFW
-double mass_base_NFW( double x, void* nothing )
+double DensProf_NFW( const double r, const double R0, const double Rho0 )
 {
-   return ( x/pow( 1+x, 2 ) );
+   const double x = r/R0;
+
+   return Rho0/( x*SQR( 1+x ) );
 }
 
+
+double MassProf_NFW( const double r, const double R0, const double Rho0 )
+{
+   const double x = r/R0;
+
+   return 0.0;
+}
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -456,12 +473,20 @@ double mass_base_NFW( double x, void* nothing )
 // Return      :
 //-------------------------------------------------------------------------------------------------------
 //Burkert
-double mass_base_Burkert( double x, void* nothing )
+double DensProf_Burkert( const double r, const double R0, const double Rho0 )
 {
-   return pow( x, 2 )*( 1/( (1+x)*(1+x*x) ) );
+   const double x = r/R0;
+
+   return Rho0/( (1+x)*(1+x*x) );
 }
 
 
+double MassProf_Burkert( const double r, const double R0, const double Rho0 )
+{
+   const double x = r/R0;
+
+   return 0.0;
+}
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -475,11 +500,20 @@ double mass_base_Burkert( double x, void* nothing )
 // Return      :
 //-------------------------------------------------------------------------------------------------------
 //Jaffe
-double mass_base_Jaffe( double x, void* nothing )
+double DensProf_Jaffe( const double r, const double R0, const double Rho0 )
 {
-   return (x/(1+x));
+   const double x = r/R0;
+
+   return Rho0/(x*(1+x));
 }
 
+
+double MassProf_Jaffe( const double r, const double R0, const double Rho0 )
+{
+   const double x = r/R0;
+
+   return 0.0;
+}
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -493,11 +527,28 @@ double mass_base_Jaffe( double x, void* nothing )
 // Return      :
 //-------------------------------------------------------------------------------------------------------
 //Hernquist
-double mass_base_Hernquist( double x, void* nothing )
+double DensProf_Hernquist( const double r, const double R0, const double Rho0 )
 {
-   return ( x/pow( 1+x, 3 ) );
+   const double x = r/R0;
+
+   return Rho0/( x*CUBE( 1+x ) );
 }
 
+double MassIntegrand_Hernquist( const double r, void* parameters )
+{
+   struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
+   double R0   = p->Cloud_R0;
+   double Rho0 = p->Cloud_Rho0;
+
+   return 4*M_PI*SQR(r)*DensProf_Hernquist( r, R0, Rho0 );
+}
+
+double MassProf_Hernquist( const double r, const double R0, const double Rho0 )
+{
+   const double x = r/R0;
+
+   return 0.0;
+}
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -511,14 +562,40 @@ double mass_base_Hernquist( double x, void* nothing )
 // Return      :
 //-------------------------------------------------------------------------------------------------------
 //Einasto
-double mass_base_Einasto( double x, void *Einasto_Power_Factor )
+double DensProf_Einasto( const double r, const double R0, const double Rho0, const double Einasto_Power_Factor )
 {
+   const double x = r/R0;
 
-   double a = *(double *) Einasto_Power_Factor;
-
-   return pow( x, 2 ) *exp( -pow( x, a ) );
+   return Rho0*exp( -pow( x, Einasto_Power_Factor ) );
 }
 
+double MassIntegrand_Einasto( const double r, void* parameters )
+{
+   struct mass_integrand_params_Einasto *p = (struct mass_integrand_params_Einasto *) parameters;
+   double R0                           = p->Cloud_R0;
+   double Rho0                         = p->Cloud_Rho0;
+   double Einasto_Power_Factor         = p->Cloud_Einasto_Power_Factor;
+
+   return 4*M_PI*SQR(r)*DensProf_Einasto( r, R0, Rho0, Einasto_Power_Factor );
+}
+
+double MassProf_Einasto( const double r, const double R0, const double Rho0, const double Einasto_Power_Factor )
+{
+   const double x = r/R0;
+
+   return 0.0;
+}
+
+
+struct mass_integrand_params
+{
+   double Cloud_R0, Cloud_Rho0;
+};
+
+struct mass_integrand_params_Einasto
+{
+   double Cloud_R0, Cloud_Rho0, Cloud_Einasto_Power_Factor;
+};
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -531,55 +608,53 @@ double mass_base_Einasto( double x, void *Einasto_Power_Factor )
 //
 // Return      :  Enclosed mass of this cloud within radius r
 //-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::Set_Mass( double r )
+double Par_EquilibriumIC::Set_Mass( const double r )
 {
-
-   double x = r/params.Cloud_R0;
 
    if ( strcmp( params.Cloud_Type, "Table" ) == 0 )
    {
-
-      if ( r >= Table_r[params.Cloud_MassProfNBin-1] )
-         return Table_Enclosed_Mass[params.Cloud_MassProfNBin-1];
-
-      else if ( r <= Table_r[0] )
-         return Table_Enclosed_Mass[0];
-
-      else
-         return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Enclosed_Mass, r );
+      if      ( r >= Table_r[params.Cloud_MassProfNBin-1] )   return Table_Enclosed_Mass[params.Cloud_MassProfNBin-1];
+      else if ( r <= Table_r[0] )                             return Table_Enclosed_Mass[0];
+      else                                                    return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Enclosed_Mass, r );
    }
-
    else
    {
-
-      double result = NULL_REAL;
-      double M0 = 4*M_PI*pow(params.Cloud_R0,3)*(params.Cloud_Rho0);
+      double enclosed_mass = NULL_REAL;
 
 #     ifdef SUPPORT_GSL
-      gsl_integration_workspace * w = gsl_integration_workspace_alloc (1000);
+      const double lower_lim  = 0.0001*r;
+      const double upper_lim  = r;
+      const double abs_err    = 0;
+      const double rel_err    = 1e-7;
+      const int    limit_size = 1000;
+      const int    rule       = 1;
+      double error;
 
-      double  error;
+      gsl_integration_workspace * w = gsl_integration_workspace_alloc( limit_size );
       gsl_function F;
 
-      if      ( strcmp( params.Cloud_Type, "Plummer"   ) == 0 ) F.function = &mass_base_Plummer;
-      else if ( strcmp( params.Cloud_Type, "NFW"       ) == 0 ) F.function = &mass_base_NFW;
-      else if ( strcmp( params.Cloud_Type, "Burkert"   ) == 0 ) F.function = &mass_base_Burkert;
-      else if ( strcmp( params.Cloud_Type, "Jaffe"     ) == 0 ) F.function = &mass_base_Jaffe;
-      else if ( strcmp( params.Cloud_Type, "Hernquist" ) == 0 ) F.function = &mass_base_Hernquist;
-      else if ( strcmp( params.Cloud_Type, "Einasto"   ) == 0 )
-      {
-         F.function = &mass_base_Einasto;
-         F.params   = &params.Cloud_Einasto_Power_Factor;
-      } // see reference here: https://www.gnu.org/software/gsl/doc/html/roots.html?highlight=gsl_function#providing-the-function-to-solve
+      struct mass_integrand_params integrand_params = { params.Cloud_R0, params.Cloud_Rho0 };
+      struct mass_integrand_params integrand_params_Einasto = { params.Cloud_R0, params.Cloud_Rho0, params.Cloud_Einasto_Power_Factor };
 
-      gsl_integration_qag( &F, 0, x, 0, 1e-7, 1000, 1, w, &result, &error );
+      if      ( strcmp( params.Cloud_Type, "Plummer"   ) == 0 ) F.function = &MassIntegrand_Plummer;
+      else if ( strcmp( params.Cloud_Type, "NFW"       ) == 0 ) F.function = &MassIntegrand_NFW;
+      else if ( strcmp( params.Cloud_Type, "Burkert"   ) == 0 ) F.function = &MassIntegrand_Burkert;
+      else if ( strcmp( params.Cloud_Type, "Jaffe"     ) == 0 ) F.function = &MassIntegrand_Jaffe;
+      else if ( strcmp( params.Cloud_Type, "Hernquist" ) == 0 ) F.function = &MassIntegrand_Hernquist;
+      else if ( strcmp( params.Cloud_Type, "Einasto"   ) == 0 ) F.function = &MassIntegrand_Einasto;
+
+      if ( strcmp( params.Cloud_Type, "Einasto"   ) == 0 )      F.params   = &integrand_params_Einasto;
+      else                                                      F.params   = &integrand_params;
+
+      gsl_integration_qag( &F, lower_lim, upper_lim, abs_err, rel_err, limit_size, rule, w, &enclosed_mass, &error );
+
       gsl_integration_workspace_free (w);
 #     endif // #ifdef SUPPORT_GSL
 
-      return result*M0;
+      return enclosed_mass;
    }
 
-} // FUNCTION : SetMass
+} // FUNCTION : Set_Mass
 
 
 
@@ -593,35 +668,28 @@ double Par_EquilibriumIC::Set_Mass( double r )
 //
 // Return      :  Density of this cloud at radius r
 //-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::Set_Density( double x )
+double Par_EquilibriumIC::Set_Density( const double r )
 {
 
    if ( strcmp( params.Cloud_Type, "Table" ) == 0 )
    {
-
-      if ( x >= Table_r[params.Cloud_MassProfNBin-1] )
-      {
+      if ( r >= Table_r[params.Cloud_MassProfNBin-1] )
          return Table_Density[params.Cloud_MassProfNBin-1];
-      }
-
-      return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Density, x );
-
+      else
+         return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Density, r );
    }
-
    else
    {
-
       double rho;
-      double* nothing;
 
-      if      ( strcmp( params.Cloud_Type, "Plummer"   ) == 0 ) rho = mass_base_Plummer( x, nothing );
-      else if ( strcmp( params.Cloud_Type, "NFW"       ) == 0 ) rho = mass_base_NFW( x, nothing );
-      else if ( strcmp( params.Cloud_Type, "Burkert"   ) == 0 ) rho = mass_base_Burkert( x, nothing );
-      else if ( strcmp( params.Cloud_Type, "Jaffe"     ) == 0 ) rho = mass_base_Jaffe( x, nothing );
-      else if ( strcmp( params.Cloud_Type, "Hernquist" ) == 0 ) rho = mass_base_Hernquist( x, nothing );
-      else if ( strcmp( params.Cloud_Type, "Einasto"   ) == 0 ) rho = mass_base_Einasto( x, &params.Cloud_Einasto_Power_Factor );
+      if      ( strcmp( params.Cloud_Type, "Plummer"   ) == 0 ) rho = DensProf_Plummer  ( r, params.Cloud_R0, params.Cloud_Rho0 );
+      else if ( strcmp( params.Cloud_Type, "NFW"       ) == 0 ) rho = DensProf_NFW      ( r, params.Cloud_R0, params.Cloud_Rho0 );
+      else if ( strcmp( params.Cloud_Type, "Burkert"   ) == 0 ) rho = DensProf_Burkert  ( r, params.Cloud_R0, params.Cloud_Rho0 );
+      else if ( strcmp( params.Cloud_Type, "Jaffe"     ) == 0 ) rho = DensProf_Jaffe    ( r, params.Cloud_R0, params.Cloud_Rho0 );
+      else if ( strcmp( params.Cloud_Type, "Hernquist" ) == 0 ) rho = DensProf_Hernquist( r, params.Cloud_R0, params.Cloud_Rho0 );
+      else if ( strcmp( params.Cloud_Type, "Einasto"   ) == 0 ) rho = DensProf_Einasto  ( r, params.Cloud_R0, params.Cloud_Rho0, params.Cloud_Einasto_Power_Factor );
 
-      return rho*pow(x,-2);
+      return rho;
 
    }
 
@@ -790,14 +858,13 @@ void Par_EquilibriumIC::Init_Mass()
    //Rho
    for (int b=1; b<params.Cloud_MassProfNBin; b++)
    {
-      double x = dr*b/params.Cloud_R0;
-      Table_Density[b] = Set_Density(x);
+      Table_Density[b] = Set_Density( Table_r[b] );
    }
 
    Table_Density[0] = Table_Density[1];
 
    //Rhodr
-   Table_dRho_dr[0] = (Table_Density[1]-Table_Density[0])/dr;
+   Table_dRho_dr[0] = ( Table_Density[1]-Table_Density[0] )/dr;
    for (int b=1; b<params.Cloud_MassProfNBin-1; b++)
    {
       int num=3;
