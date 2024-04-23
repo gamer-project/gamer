@@ -33,6 +33,7 @@ void Aux_Record_Timing();
 void Aux_Record_PatchCount();
 void Aux_Record_Performance( const double ElapsedTime );
 void Aux_Record_CorrUnphy();
+void Aux_Record_Center();
 int  Aux_CountRow( const char *FileName );
 void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
                          const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const long TVarBitIdx[],
@@ -40,6 +41,8 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                          const double PrepTimeIn );
 void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int MinLv, const int MaxLv,
                       const PatchType_t PatchType );
+void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double Center_ref[], const double MaxR, const double MinWD,
+                                    const long WeightingDensityField, const double TolErrR, const int MaxIter, double *FinaldR, int *FinalNIter );
 #ifndef SERIAL
 void Aux_Record_BoundaryPatch( const int lv, int *NList, int **IDList, int **PosList );
 #endif
