@@ -16,7 +16,7 @@
 // Parameter   :  NField    : Number of the fields
 //                FieldSize : Size of a field
 //                Array     : The array to be sort has size of [NField*FieldSize]. DO NOT change the array in this function!
-//                IdxTable  : Index table  to be returned
+//                IdxTable  : Index table to be returned
 //                start_idx : The index start to sort
 //                SortField : The field to be sorted
 //                NSort     : The size of field to be sorted
@@ -29,17 +29,18 @@ void Mis_SortByMultiField( const int NField, const long FieldSize, T **Array, lo
 {
    if ( SortField == NField )
    {
-      Aux_Message( stderr, "WARNING : Can not sort the exact same value.\n");
+      Aux_Message( stderr, "WARNING : Can not sort the exact same value.\n" );
       return;
    }
 
 // check the inputs for the first call
-   if ( SortField == 0 ) {
-       if ( IdxTable  == NULL  )   Aux_Error( ERROR_INFO, "NULL IdxTable.\n" );
-       if ( FieldSize != NSort )   Aux_Error( ERROR_INFO, "FieldSize != NSort for the first call.\n" );
-       if ( start_idx != 0     )   Aux_Error( ERROR_INFO, "start_idx != 0 for the first call.\n" );
+   if ( SortField == 0 )
+   {
+      if ( IdxTable  == NULL  )   Aux_Error( ERROR_INFO, "NULL IdxTable.\n" );
+      if ( FieldSize != NSort )   Aux_Error( ERROR_INFO, "FieldSize != NSort for the first call.\n" );
+      if ( start_idx != 0     )   Aux_Error( ERROR_INFO, "start_idx != 0 for the first call.\n" );
 
-       for (long i=0; i<FieldSize; i++)   IdxTable[i] = i;
+      for (long i=0; i<FieldSize; i++)   IdxTable[i] = i;
    }
 
 // 0. back up the field and the table
@@ -59,16 +60,16 @@ void Mis_SortByMultiField( const int NField, const long FieldSize, T **Array, lo
    long NSameVal;
    for (long i=0; i<NSort-1; i++)
    {
-       NSameVal = 1; // 1 --> itself
+      NSameVal = 1; // 1 --> itself
 
-       while ( i+NSameVal < NSort  &&  Array_Sorted[i] == Array_Sorted[i+NSameVal] )   NSameVal++;
+      while ( i+NSameVal < NSort  &&  Array_Sorted[i] == Array_Sorted[i+NSameVal] )   NSameVal++;
 
-       if ( NSameVal == 1 ) continue;
+      if ( NSameVal == 1 )   continue;
 
-       // 4. Sort the same values again
-       Mis_SortByMultiField( NField, FieldSize, Array, IdxTable_copy, start_idx+i, SortField+1, NSameVal );
+      // 4. Sort the same values again
+      Mis_SortByMultiField( NField, FieldSize, Array, IdxTable_copy, start_idx+i, SortField+1, NSameVal );
 
-       i += NSameVal-1;
+      i += NSameVal-1;
    } // for (long i=0; i<FieldSize-1; i++)
 
 // 5. store the result
@@ -77,7 +78,6 @@ void Mis_SortByMultiField( const int NField, const long FieldSize, T **Array, lo
    delete [] Array_Sorted;
    delete [] IdxTable_copy;
    delete [] Idx_Sorted;
-
 
 } // FUNCTION :  Mis_SortByMultiField
 
