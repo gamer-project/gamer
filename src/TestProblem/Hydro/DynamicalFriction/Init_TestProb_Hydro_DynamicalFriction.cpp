@@ -156,17 +156,17 @@ void SetParameter()
    ReadPara->Add( "GC_SmallGas",             &GC_SmallGas,           1e-10,         0.,               NoMax_double      );
 
    ReadPara->Add( "GC_initial_R",            &GC_R,                  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "GC_MASS",                 &GC_MASS,               NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "GC_Mass",                 &GC_MASS,               NoDef_double,  NoMin_double,     NoMax_double      );
 
-   ReadPara->Add( "SEARCH_RADIUS",           &SearchRadius,          NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "FIX_CENTER",              &FixCenter,             Useless_bool,  Useless_bool,     Useless_bool      );
-   ReadPara->Add( "PURE_TABLE",              &PURE_TABLE,            Useless_bool,  Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Search_Radius",           &SearchRadius,          NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Fix_Center",              &FixCenter,             Useless_bool,  Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Pure_Table",              &PURE_TABLE,            Useless_bool,  Useless_bool,     Useless_bool      );
    ReadPara->Add( "Density_Table_Name",      TableName,              "None",        Useless_str,      Useless_str       );
 
-   ReadPara->Add( "HALO_TYPE",               HaloType,               "None",        Useless_str,      Useless_str       );
-   ReadPara->Add( "HALO_RHO_0",              &Halo_Rho0,             NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "HALO_Rs",                 &Halo_Rs,               NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "HALO_Rt",                 &Halo_Rt,               NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Halo_Type",               HaloType,               "None",        Useless_str,      Useless_str       );
+   ReadPara->Add( "Halo_Rho_0",              &Halo_Rho0,             NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Halo_Rs",                 &Halo_Rs,               NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Halo_Rt",                 &Halo_Rt,               NoDef_double,  NoMin_double,     NoMax_double      );
    ReadPara->Add( "Halo_Profile_Param_a",    &Halo_Profile_Param_a,  NoDef_double,  NoMin_double,     NoMax_double      );
    ReadPara->Add( "Halo_Profile_Param_b",    &Halo_Profile_Param_b,  NoDef_double,  NoMin_double,     NoMax_double      );
    ReadPara->Add( "Halo_Profile_Param_c",    &Halo_Profile_Param_c,  NoDef_double,  NoMin_double,     NoMax_double      );
