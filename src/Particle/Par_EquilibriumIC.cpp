@@ -406,6 +406,7 @@ void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllR
 } // FUNCTION : Par_SetEquilibriumIC
 
 
+// Parameters for the intergration of mass profile
 struct mass_integrand_params
 {
    double Cloud_R0;
@@ -421,27 +422,40 @@ struct mass_integrand_params_Einasto
 };
 
 
-//Calculate Mass
 //Different Model Type
 //-------------------------------------------------------------------------------------------------------
-// Function    :
-// Description :
+// Function    :  AnalyticalDensProf_Plummer
+// Description :  Analytical density profile of the Plummer model
 //
-// Note        :
+// Note        :  1. \rho(r) = \rho_0 ( 1 + (\frac{r}{a})^2 )^{-5/2}
+//                2. Reference: Plummer H. C., MNRAS, 1991, doi:10.1093/mnras/71.5.460
 //
-// Parameter   :
+// Parameter   :  r    : input radius
+//                R0   : Plummer scale radius, a
+//                Rho0 : Plummer scale density, \rho_0
 //
-// Return      :
+// Return      :  density at the given radius
 //-------------------------------------------------------------------------------------------------------
-//Plummer
-double DensProf_Plummer( const double r, const double R0, const double Rho0 )
+double AnalyticalDensProf_Plummer( const double r, const double R0, const double Rho0 )
 {
    const double x = r/R0;
 
    return Rho0*pow( 1+x*x, -2.5 );
-}
+
+} // FUNCTION : AnalyticalDensProf_Plummer
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MassIntegrand_Plummer
+// Description :  Integrand for the enclosed mass profile of the Plummer model
+//
+// Note        :  integrand = 4*\pi*r^2*\rho(r)
+//
+// Parameter   :  r          : input radius
+//                parameters : parameters for the model
+//
+// Return      :  integrand of mass at the given radius
+//-------------------------------------------------------------------------------------------------------
 double MassIntegrand_Plummer( const double r, void* parameters )
 {
    if ( r == 0.0 ) return 0.0;
@@ -450,37 +464,68 @@ double MassIntegrand_Plummer( const double r, void* parameters )
    double R0   = p->Cloud_R0;
    double Rho0 = p->Cloud_Rho0;
 
-   return 4*M_PI*SQR(r)*DensProf_Plummer( r, R0, Rho0 );
-}
+   return 4*M_PI*SQR(r)*AnalyticalDensProf_Plummer( r, R0, Rho0 );
+
+} // FUNCTION : MassIntegrand_Plummer
 
 
-double MassProf_Plummer( const double r, const double R0, const double Rho0 )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalMassProf_Plummer
+// Description :  Analytical enclosed mass profile of the Plummer model
+//
+// Note        :  1. M(r) = M_0 \frac{ r^3 }{ (r^2 + a^2)^{3/2} }
+//                        = \frac{4\pi}{3} a^3 \rho_0 \frac{ r^3 }{ (r^2 + a^2)^{3/2} }
+//                2. Reference: Plummer H. C., MNRAS, 1991, doi:10.1093/mnras/71.5.460
+//
+// Parameter   :  r    : input radius
+//                R0   : Plummer scale radius, a
+//                Rho0 : Plummer scale density, \rho_0
+//
+// Return      :  enclosed mass at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalMassProf_Plummer( const double r, const double R0, const double Rho0 )
 {
    const double x = r/R0;
 
    return (4.0/3.0)*M_PI*Rho0*CUBE(r)*pow( 1+x*x, -1.5 );
-}
+
+} // FUNCTION : AnalyticalMassProf_Plummer
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :
-// Description :
+// Function    :  AnalyticalDensProf_NFW
+// Description :  Analytical density profile of the NFW model
 //
-// Note        :
+// Note        :  1. \rho(r) = \rho_s \frac{1}{ ( \frac{r}{r_s} ) ( 1 + \frac{r}{r_s} )^2 }
+//                2. Reference: Navarro J.~F., Frenk C.~S., White S.~D.~M., 1996, ApJ, doi:10.1086/177173
+//                              Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
 //
-// Parameter   :
+// Parameter   :  r    : input radius
+//                R0   : NFW scale radius, r_s
+//                Rho0 : NFW scale density, \rho_s
 //
-// Return      :
+// Return      :  density at the given radius
 //-------------------------------------------------------------------------------------------------------
-//NFW
-double DensProf_NFW( const double r, const double R0, const double Rho0 )
+double AnalyticalDensProf_NFW( const double r, const double R0, const double Rho0 )
 {
    const double x = r/R0;
 
    return Rho0/( x*SQR( 1+x ) );
-}
+
+} // FUNCTION : AnalyticalDensProf_NFW
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MassIntegrand_NFW
+// Description :  Integrand for the enclosed mass profile of the NFW model
+//
+// Note        :  integrand = 4*\pi*r^2*\rho(r)
+//
+// Parameter   :  r          : input radius
+//                parameters : parameters for the model
+//
+// Return      :  integrand of mass at the given radius
+//-------------------------------------------------------------------------------------------------------
 double MassIntegrand_NFW( const double r, void* parameters )
 {
    if ( r == 0.0 ) return 0.0;
@@ -489,37 +534,68 @@ double MassIntegrand_NFW( const double r, void* parameters )
    double R0   = p->Cloud_R0;
    double Rho0 = p->Cloud_Rho0;
 
-   return 4*M_PI*SQR(r)*DensProf_NFW( r, R0, Rho0 );
-}
+   return 4*M_PI*SQR(r)*AnalyticalDensProf_NFW( r, R0, Rho0 );
+
+} // FUNCTION : MassIntegrand_NFW
 
 
-double MassProf_NFW( const double r, const double R0, const double Rho0 )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalMassProf_NFW
+// Description :  Analytical enclosed mass profile of the NFW model
+//
+// Note        :  1. M(r) = 4\pi \rho_s r_s^3 [ \ln( \frac{ r_s + r }{ r_s } ) - \frac{ r }{ r_s + r } ]
+//                2. Reference: Navarro J.~F., Frenk C.~S., White S.~D.~M., 1996, ApJ, doi:10.1086/177173
+//                              Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
+//
+// Parameter   :  r    : input radius
+//                R0   : NFW scale radius, r_s
+//                Rho0 : NFW scale density, \rho_s
+//
+// Return      :  enclosed mass at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalMassProf_NFW( const double r, const double R0, const double Rho0 )
 {
    const double x = r/R0;
 
    return 4*M_PI*Rho0*CUBE(R0)*( log( 1+x ) - x/(1+x) );
-}
+
+} // FUNCTION : AnalyticalMassProf_NFW
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :
-// Description :
+// Function    :  AnalyticalDensProf_Burkert
+// Description :  Analytical density profile of the Burkert model
 //
-// Note        :
+// Note        :  1. \rho(r) = \rho_s \frac{1}{ ( 1 + \frac{r}{r_s} ) ( 1 + (\frac{r}{r_s})^2 ) }
+//                2. Reference: Burkert A., 1995, ApJL, doi:10.1086/309560
+//                              Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
 //
-// Parameter   :
+// Parameter   :  r    : input radius
+//                R0   : Plummer scale radius, a
+//                Rho0 : Plummer scale density, \rho_0
 //
-// Return      :
+// Return      :  density at the given radius
 //-------------------------------------------------------------------------------------------------------
-//Burkert
-double DensProf_Burkert( const double r, const double R0, const double Rho0 )
+double AnalyticalDensProf_Burkert( const double r, const double R0, const double Rho0 )
 {
    const double x = r/R0;
 
    return Rho0/( (1+x)*(1+x*x) );
-}
+
+} // FUNCTION : AnalyticalDensProf_Burkert
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MassIntegrand_Burkert
+// Description :  Integrand for the enclosed mass profile of the Burkert model
+//
+// Note        :  integrand = 4*\pi*r^2*\rho(r)
+//
+// Parameter   :  r          : input radius
+//                parameters : parameters for the model
+//
+// Return      :  integrand of mass at the given radius
+//-------------------------------------------------------------------------------------------------------
 double MassIntegrand_Burkert( const double r, void* parameters )
 {
    if ( r == 0.0 ) return 0.0;
@@ -528,40 +604,69 @@ double MassIntegrand_Burkert( const double r, void* parameters )
    double R0   = p->Cloud_R0;
    double Rho0 = p->Cloud_Rho0;
 
-   return 4*M_PI*SQR(r)*DensProf_Burkert( r, R0, Rho0 );
-}
+   return 4*M_PI*SQR(r)*AnalyticalDensProf_Burkert( r, R0, Rho0 );
+
+} // FUNCTION : MassIntegrand_Burkert
 
 
-double MassProf_Burkert( const double r, const double R0, const double Rho0 )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalMassProf_Burkert
+// Description :  Analytical enclosed mass profile of the Burkert model
+//
+// Note        :  1. M(r) = 2\pi \rho_s r_s^3 [ \frac{1}{2}\ln( 1 + (\frac{r}{r_s})^2 ) + \ln( 1 + \frac{r}{r_s} ) - \arctan( \frac{r}{r_s} ) ]
+//                2. Reference: Burkert A., 1995, ApJL, doi:10.1086/309560
+//                              Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
+//
+// Parameter   :  r    : input radius
+//                R0   : Burkert scale radius, r_s
+//                Rho0 : Burkert scale density, \rho_s
+//
+// Return      :  enclosed mass at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalMassProf_Burkert( const double r, const double R0, const double Rho0 )
 {
-   // reference:  https://doi.org/10.3847/1538-4365/ab700e
    const double x = r/R0;
 
    return 2*M_PI*Rho0*CUBE(R0)*( 0.5*log( 1+x*x ) + log( 1+x ) - atan( x ) );
-}
+
+} // FUNCTION : AnalyticalMassProf_Burkert
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :
-// Description :
+// Function    :  AnalyticalDensProf_Jaffe
+// Description :  Analytical density profile of the Jaffe model
 //
-// Note        :
+// Note        :  1. \rho(r) = \frac{ \rho_0 }{ 4\pi } \frac{ r_J^4 }{ r^2 (r_J + r)^2}
+//                           = \frac{ \rho_0 }{ 4\pi } \frac{1}{ ( \frac{r}{r_J} )^2 ( 1 + \frac{r}{r_J} )^2 }
+//                2. Reference: Jaffe W., 1983, MNRAS, doi:10.1093/mnras/202.4.995
+//                              Ciotti L. and Ziaee Lorzad A., 2018, MNRAS, doi:10.1093/mnras/stx2771
 //
-// Parameter   :
+// Parameter   :  r    : input radius
+//                R0   : Jaffe scale radius, r_J
+//                Rho0 : Jaffe scale density, \rho_0
 //
-// Return      :
+// Return      :  density at the given radius
 //-------------------------------------------------------------------------------------------------------
-//Jaffe
-double DensProf_Jaffe( const double r, const double R0, const double Rho0 )
+double AnalyticalDensProf_Jaffe( const double r, const double R0, const double Rho0 )
 {
-   // reference: https://doi.org/10.1093/mnras/stx2771
    const double x = r/R0;
 
-   // return Rho0/(x*(1+x));
-   return Rho0/( 4*M_PI*SQR(x)*SQR(1+x) );
-}
+   return Rho0/( 4*M_PI*SQR(x)*SQR(1+x) ); // return Rho0/(x*(1+x)); //previous one
+
+} // FUNCTION : AnalyticalDensProf_Jaffe
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MassIntegrand_Jaffe
+// Description :  Integrand for the enclosed mass profile of the Jaffe model
+//
+// Note        :  integrand = 4*\pi*r^2*\rho(r)
+//
+// Parameter   :  r          : input radius
+//                parameters : parameters for the model
+//
+// Return      :  integrand of mass at the given radius
+//-------------------------------------------------------------------------------------------------------
 double MassIntegrand_Jaffe( const double r, void* parameters )
 {
    if ( r == 0.0 ) return 0.0;
@@ -570,38 +675,69 @@ double MassIntegrand_Jaffe( const double r, void* parameters )
    double R0   = p->Cloud_R0;
    double Rho0 = p->Cloud_Rho0;
 
-   return 4*M_PI*SQR(r)*DensProf_Jaffe( r, R0, Rho0 );
-}
+   return 4*M_PI*SQR(r)*AnalyticalDensProf_Jaffe( r, R0, Rho0 );
+
+} // FUNCTION : MassIntegrand_Jaffe
 
 
-double MassProf_Jaffe( const double r, const double R0, const double Rho0 )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalMassProf_Jaffe
+// Description :  Analytical enclosed mass profile of the Jaffe model
+//
+// Note        :  1. M(r) = M_J \frac{ r }{ r_J + r }
+//                   ,where M_J = \rho_0*r_J^3 is the total mass
+//                2. Reference: Jaffe W., 1983, MNRAS, doi:10.1093/mnras/202.4.995
+//                              Ciotti L. and Ziaee Lorzad A., 2018, MNRAS, doi:10.1093/mnras/stx2771
+//
+// Parameter   :  r    : input radius
+//                R0   : Jaffe scale radius, r_J
+//                Rho0 : Jaffe scale density, \rho_0
+//
+// Return      :  enclosed mass at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalMassProf_Jaffe( const double r, const double R0, const double Rho0 )
 {
-   // reference: https://doi.org/10.1093/mnras/stx2771
    const double x = r/R0;
 
    return Rho0*CUBE(R0)*x/(1+x);
-}
+
+} // FUNCTION : AnalyticalMassProf_Jaffe
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :
-// Description :
+// Function    :  AnalyticalDensProf_Hernquist
+// Description :  Analytical density profile of the Hernquist model
 //
-// Note        :
+// Note        :  1. \rho(r) = \rho_0 \frac{ a^4 }{ r (r+a)^3 }
+//                           = \rho_0 \frac{1}{ \frac{r}{a} ( 1+\frac{r}{a} )^3 }
+//                2. Reference: Hernquist L., 1990, ApJ, doi:10.1086/168845
 //
-// Parameter   :
+// Parameter   :  r    : input radius
+//                R0   : Hernquist scale radius, a
+//                Rho0 : Hernquist scale density, \rho_0
 //
-// Return      :
+// Return      :  density at the given radius
 //-------------------------------------------------------------------------------------------------------
-//Hernquist
-double DensProf_Hernquist( const double r, const double R0, const double Rho0 )
+double AnalyticalDensProf_Hernquist( const double r, const double R0, const double Rho0 )
 {
    const double x = r/R0;
 
    return Rho0/( x*CUBE( 1+x ) );
-}
+
+} // FUNCTION : AnalyticalDensProf_Hernquist
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MassIntegrand_Hernquist
+// Description :  Integrand for the enclosed mass profile of the Hernquist model
+//
+// Note        :  integrand = 4*\pi*r^2*\rho(r)
+//
+// Parameter   :  r          : input radius
+//                parameters : parameters for the model
+//
+// Return      :  integrand of mass at the given radius
+//-------------------------------------------------------------------------------------------------------
 double MassIntegrand_Hernquist( const double r, void* parameters )
 {
    if ( r == 0.0 ) return 0.0;
@@ -610,38 +746,71 @@ double MassIntegrand_Hernquist( const double r, void* parameters )
    double R0   = p->Cloud_R0;
    double Rho0 = p->Cloud_Rho0;
 
-   return 4*M_PI*SQR(r)*DensProf_Hernquist( r, R0, Rho0 );
-}
+   return 4*M_PI*SQR(r)*AnalyticalDensProf_Hernquist( r, R0, Rho0 );
+
+} // FUNCTION : MassIntegrand_Hernquist
 
 
-double MassProf_Hernquist( const double r, const double R0, const double Rho0 )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalMassProf_Hernquist
+// Description :  Analytical enclosed mass profile of the Hernquist model
+//
+// Note        :  1. M(r) = M_0 \frac{ r^2 }{ (r+a)^2 }
+//                   ,where M_0 = 2\pi*\rho_0*a^3 is the total mass
+//                2. Reference: Hernquist L., 1990, ApJ, doi:10.1086/168845
+//
+// Parameter   :  r    : input radius
+//                R0   : Hernquist scale radius, a
+//                Rho0 : Hernquist scale density, \rho_0
+//
+// Return      :  enclosed mass at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalMassProf_Hernquist( const double r, const double R0, const double Rho0 )
 {
-   // reference:  doi:10.1086/168845
    const double x = r/R0;
 
    return 2*M_PI*Rho0*CUBE(R0)*SQR(x)/SQR(1+x);
-}
+
+} // FUNCTION : AnalyticalMassProf_Hernquist
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :
-// Description :
+// Function    :  AnalyticalDensProf_Einasto
+// Description :  Analytical density profile of the Einasto model
 //
-// Note        :
+// Note        :  1. \rho(r) = \rho_s    \exp{ -d_n [ (\frac{r}{r_s})^{1/n}    - 1 ] }, where r_s is the radius at which contains half of the total mass
+//                           = \rho_{-2} \exp{ -2n  [ (\frac{r}{r_{-2}})^{1/n} - 1 ] }, where r_{-2} is the radius at which \rho(r) \propto r^{-2}
+//                           = \rho_0    \exp{ -[ (\frac{r}{h})^{1/n} ] }
+//                2. Reference: Einasto J., 1965, TrAlm
+//                              Retana-Montenegro E. et al., 2012, A&A, doi:10.1051/0004-6361/201118543
 //
-// Parameter   :
+// Parameter   :  r                    : input radius
+//                R0                   : Einasto scale radius, h = \frac{r_s}{d_n^n} = \frac{r_{-2}}{(2n)^n}
+//                Rho0                 : Einasto central density, \rho_0 = \rho_s\exp{d_n} = \rho_{-2}\exp{2n}
+//                Einasto_Power_Factor : Einasto power factor, 1/n
 //
-// Return      :
+// Return      :  density at the given radius
 //-------------------------------------------------------------------------------------------------------
-//Einasto
-double DensProf_Einasto( const double r, const double R0, const double Rho0, const double Einasto_Power_Factor )
+double AnalyticalDensProf_Einasto( const double r, const double R0, const double Rho0, const double Einasto_Power_Factor )
 {
    const double x = r/R0;
 
    return Rho0*exp( -pow( x, Einasto_Power_Factor ) );
-}
+
+} // FUNCTION : AnalyticalDensProf_Einasto
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MassIntegrand_Einasto
+// Description :  Integrand for the enclosed mass profile of the Einasto model
+//
+// Note        :  integrand = 4*\pi*r^2*\rho(r)
+//
+// Parameter   :  r          : input radius
+//                parameters : parameters for the model
+//
+// Return      :  integrand of mass at the given radius
+//-------------------------------------------------------------------------------------------------------
 double MassIntegrand_Einasto( const double r, void* parameters )
 {
    if ( r == 0.0 ) return 0.0;
@@ -651,20 +820,37 @@ double MassIntegrand_Einasto( const double r, void* parameters )
    double Rho0                         = p->Cloud_Rho0;
    double Einasto_Power_Factor         = p->Cloud_Einasto_Power_Factor;
 
-   return 4*M_PI*SQR(r)*DensProf_Einasto( r, R0, Rho0, Einasto_Power_Factor );
-}
+   return 4*M_PI*SQR(r)*AnalyticalDensProf_Einasto( r, R0, Rho0, Einasto_Power_Factor );
+
+} // FUNCTION : MassIntegrand_Einasto
 
 
-//double MassProf_Einasto( const double r, const double R0, const double Rho0, const double Einasto_Power_Factor )
-//{
-//   // reference: https://doi.org/10.1051/0004-6361/201118543
-//   const double x = r/R0;
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalMassProf_Einasto
+// Description :  Analytical enclosed mass profile of the Einasto model
 //
-//   //Gamma function:                  Gamma( s    ) = \int_{0}^{\infty} t^{s-1}*e^{-t} dt
-//   //Upper incomplete Gamma function: Gamma( s, x ) = \int_{x}^{\infty} t^{s-1}*e^{-t} dt
+// Note        :  1. M(r) = M_0 [1 - \frac{ \Gamma( 3n, (r/h)^{1/n} ) }{ \Gamma(3n) }]
+//                   ,where M_0 = 4\pi \rho_0 h^3 n \Gamma(3n) is the total mass
+//                2. Reference: Einasto J., 1965, TrAlm
+//                              Retana-Montenegro E. et al., 2012, A&A, doi:10.1051/0004-6361/201118543
 //
-//   return 4*M_PI*Rho0*CUBE(R0)/Einasto_Power_Factor*( Gamma(3/Einasto_Power_Factor) - UpperIncompleteGamma( 3/Einasto_Power_Factor, pow( x, Einasto_Power_Factor ) ) );
-//}
+// Parameter   :  r                    : input radius
+//                R0                   : Einasto scale radius, h
+//                Rho0                 : Einasto central density, \rho_0
+//                Einasto_Power_Factor : Einasto power factor, 1/n
+//
+// Return      :  enclosed mass at the given radius
+//-------------------------------------------------------------------------------------------------------
+// double AnalyticalMassProf_Einasto( const double r, const double R0, const double Rho0, const double Einasto_Power_Factor )
+// {
+//    const double x = r/R0;
+//
+//    //Gamma function:                  Gamma( s    ) = \int_{0}^{\infty} t^{s-1}*e^{-t} dt
+//    //Upper incomplete Gamma function: Gamma( s, x ) = \int_{x}^{\infty} t^{s-1}*e^{-t} dt
+//
+//    return 4*M_PI*Rho0*CUBE(R0)/Einasto_Power_Factor*( Gamma(3/Einasto_Power_Factor) - UpperIncompleteGamma( 3/Einasto_Power_Factor, pow( x, Einasto_Power_Factor ) ) );
+//
+// } // FUNCTION : AnalyticalMassProf_Einasto
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -756,12 +942,12 @@ double Par_EquilibriumIC::Set_Density( const double r )
    {
       double rho;
 
-      if      ( strcmp( params.Cloud_Type, "Plummer"   ) == 0 ) rho = DensProf_Plummer  ( r, params.Cloud_R0, params.Cloud_Rho0 );
-      else if ( strcmp( params.Cloud_Type, "NFW"       ) == 0 ) rho = DensProf_NFW      ( r, params.Cloud_R0, params.Cloud_Rho0 );
-      else if ( strcmp( params.Cloud_Type, "Burkert"   ) == 0 ) rho = DensProf_Burkert  ( r, params.Cloud_R0, params.Cloud_Rho0 );
-      else if ( strcmp( params.Cloud_Type, "Jaffe"     ) == 0 ) rho = DensProf_Jaffe    ( r, params.Cloud_R0, params.Cloud_Rho0 );
-      else if ( strcmp( params.Cloud_Type, "Hernquist" ) == 0 ) rho = DensProf_Hernquist( r, params.Cloud_R0, params.Cloud_Rho0 );
-      else if ( strcmp( params.Cloud_Type, "Einasto"   ) == 0 ) rho = DensProf_Einasto  ( r, params.Cloud_R0, params.Cloud_Rho0, params.Cloud_Einasto_Power_Factor );
+      if      ( strcmp( params.Cloud_Type, "Plummer"   ) == 0 ) rho = AnalyticalDensProf_Plummer  ( r, params.Cloud_R0, params.Cloud_Rho0 );
+      else if ( strcmp( params.Cloud_Type, "NFW"       ) == 0 ) rho = AnalyticalDensProf_NFW      ( r, params.Cloud_R0, params.Cloud_Rho0 );
+      else if ( strcmp( params.Cloud_Type, "Burkert"   ) == 0 ) rho = AnalyticalDensProf_Burkert  ( r, params.Cloud_R0, params.Cloud_Rho0 );
+      else if ( strcmp( params.Cloud_Type, "Jaffe"     ) == 0 ) rho = AnalyticalDensProf_Jaffe    ( r, params.Cloud_R0, params.Cloud_Rho0 );
+      else if ( strcmp( params.Cloud_Type, "Hernquist" ) == 0 ) rho = AnalyticalDensProf_Hernquist( r, params.Cloud_R0, params.Cloud_Rho0 );
+      else if ( strcmp( params.Cloud_Type, "Einasto"   ) == 0 ) rho = AnalyticalDensProf_Einasto  ( r, params.Cloud_R0, params.Cloud_Rho0, params.Cloud_Einasto_Power_Factor );
 
       return rho;
 
