@@ -8,10 +8,10 @@
 //
 // Note        :  1. Invoked by Par_MassAssignment() and FB_AdvanceDt()
 //
-// Parameter   :  Array     : The array to be sorted. DO NOT change the array in this function!
-//                IdxTable  : Index table to be returned has a size of NSort.
+// Parameter   :  Array     : The array to be sorted. Do NOT change the array in this function!
+//                IdxTable  : Index table to be returned has a size of NSort. Must be iunitialized.
 //                NSort     : The size of field to be sorted.
-//                SortOrder : The order of sort field has a size of NOrder.
+//                SortOrder : The order of sorting field has a size of NOrder.
 //                NOrder    : The size of the sort field order.
 //
 // Return      :  IdxTable
