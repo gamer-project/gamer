@@ -458,7 +458,7 @@ double MassProf_Plummer( const double r, const double R0, const double Rho0 )
 {
    const double x = r/R0;
 
-   return (4.0/3.0)*M_PI*Rho0*CUBE(R0)*pow( 1+x*x, -1.5 );
+   return (4.0/3.0)*M_PI*Rho0*CUBE(r)*pow( 1+x*x, -1.5 );
 }
 
 
@@ -497,7 +497,7 @@ double MassProf_NFW( const double r, const double R0, const double Rho0 )
 {
    const double x = r/R0;
 
-   return 0.0;
+   return 4*M_PI*Rho0*CUBE(R0)*( log( 1+x ) - x/(1+x) );
 }
 
 
@@ -534,9 +534,10 @@ double MassIntegrand_Burkert( const double r, void* parameters )
 
 double MassProf_Burkert( const double r, const double R0, const double Rho0 )
 {
+   // reference:  https://doi.org/10.3847/1538-4365/ab700e
    const double x = r/R0;
 
-   return 0.0;
+   return 2*M_PI*Rho0*CUBE(R0)*( 0.5*log( 1+x*x ) + log( 1+x ) - atan( x ) );
 }
 
 
@@ -553,9 +554,11 @@ double MassProf_Burkert( const double r, const double R0, const double Rho0 )
 //Jaffe
 double DensProf_Jaffe( const double r, const double R0, const double Rho0 )
 {
+   // reference: https://doi.org/10.1093/mnras/stx2771
    const double x = r/R0;
 
-   return Rho0/(x*(1+x));
+   // return Rho0/(x*(1+x));
+   return Rho0/( 4*M_PI*SQR(x)*SQR(1+x) );
 }
 
 
@@ -573,9 +576,10 @@ double MassIntegrand_Jaffe( const double r, void* parameters )
 
 double MassProf_Jaffe( const double r, const double R0, const double Rho0 )
 {
+   // reference: https://doi.org/10.1093/mnras/stx2771
    const double x = r/R0;
 
-   return 0.0;
+   return Rho0*CUBE(R0)*x/(1+x);
 }
 
 
@@ -612,9 +616,10 @@ double MassIntegrand_Hernquist( const double r, void* parameters )
 
 double MassProf_Hernquist( const double r, const double R0, const double Rho0 )
 {
+   // reference:  doi:10.1086/168845
    const double x = r/R0;
 
-   return 0.0;
+   return 2*M_PI*Rho0*CUBE(R0)*SQR(x)/SQR(1+x);
 }
 
 
@@ -650,12 +655,16 @@ double MassIntegrand_Einasto( const double r, void* parameters )
 }
 
 
-double MassProf_Einasto( const double r, const double R0, const double Rho0, const double Einasto_Power_Factor )
-{
-   const double x = r/R0;
-
-   return 0.0;
-}
+//double MassProf_Einasto( const double r, const double R0, const double Rho0, const double Einasto_Power_Factor )
+//{
+//   // reference: https://doi.org/10.1051/0004-6361/201118543
+//   const double x = r/R0;
+//
+//   //Gamma function:                  Gamma( s    ) = \int_{0}^{\infty} t^{s-1}*e^{-t} dt
+//   //Upper incomplete Gamma function: Gamma( s, x ) = \int_{x}^{\infty} t^{s-1}*e^{-t} dt
+//
+//   return 4*M_PI*Rho0*CUBE(R0)/Einasto_Power_Factor*( Gamma(3/Einasto_Power_Factor) - UpperIncompleteGamma( 3/Einasto_Power_Factor, pow( x, Einasto_Power_Factor ) ) );
+//}
 
 
 //-------------------------------------------------------------------------------------------------------
