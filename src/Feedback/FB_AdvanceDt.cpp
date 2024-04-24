@@ -197,6 +197,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //    5.2. sort PID by position
 //         --> necessary for fixing the order of particles in different patches
       long  *NearbyPIDList_IdxTable = new long [NNearbyPatch];
+      long  *NearbyPIDList_IdxTable_test = new long [NNearbyPatch];
       int   *NearbyPIDList_Old      = new int  [NNearbyPatch];
       int  **PCr = NULL;
       Aux_AllocateArray2D( PCr, 3, NNearbyPatch );
@@ -205,9 +206,11 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       {
          const int PID = NearbyPIDList[t];
          for (int d=0; d<3; d++)    PCr[d][t] = amr->patch[0][lv][PID]->corner[d];
+         NearbyPIDList_IdxTable[t] = t;
       }
 
-      Mis_SortByMultiField( 3, (long)NNearbyPatch, PCr, NearbyPIDList_IdxTable, (long)0, 0, (long)NNearbyPatch );
+      const int SortOrder_PID[3] = {0, 1, 2};
+      Mis_SortByMultiField( PCr, NearbyPIDList_IdxTable, (long)NNearbyPatch, SortOrder_PID, 3 );
 
       memcpy( NearbyPIDList_Old, NearbyPIDList, NNearbyPatch*sizeof(int) );
 
@@ -335,7 +338,9 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //       7-3. sort particles by positions to fix their order
 //            --> necessary when feedback involves random numbers
 //            --> otherwise, the same particles accessed by different patches may have different random numbers
-         Mis_SortByMultiField( 3, (long)NPar, ParAtt_Local, ParSortID, (long)0, 0, (long)NPar );
+         const int SortOrder_pos[3] = {PAR_POSX, PAR_POSY, PAR_POSZ};
+         for (int t=0; t<NParMax; t++)   ParSortID[t] = t;
+         Mis_SortByMultiField( ParAtt_Local, ParSortID, (long)NPar, SortOrder_pos, 3 );
 
 
 
