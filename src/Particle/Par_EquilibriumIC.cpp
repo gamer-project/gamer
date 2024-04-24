@@ -406,6 +406,20 @@ void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllR
 } // FUNCTION : Par_SetEquilibriumIC
 
 
+struct mass_integrand_params
+{
+   double Cloud_R0;
+   double Cloud_Rho0;
+};
+
+
+struct mass_integrand_params_Einasto
+{
+   double Cloud_R0;
+   double Cloud_Rho0;
+   double Cloud_Einasto_Power_Factor;
+};
+
 
 //Calculate Mass
 //Different Model Type
@@ -426,6 +440,19 @@ double DensProf_Plummer( const double r, const double R0, const double Rho0 )
 
    return Rho0*pow( 1+x*x, -2.5 );
 }
+
+
+double MassIntegrand_Plummer( const double r, void* parameters )
+{
+   if ( r == 0.0 ) return 0.0;
+
+   struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
+   double R0   = p->Cloud_R0;
+   double Rho0 = p->Cloud_Rho0;
+
+   return 4*M_PI*SQR(r)*DensProf_Plummer( r, R0, Rho0 );
+}
+
 
 double MassProf_Plummer( const double r, const double R0, const double Rho0 )
 {
@@ -451,6 +478,18 @@ double DensProf_NFW( const double r, const double R0, const double Rho0 )
    const double x = r/R0;
 
    return Rho0/( x*SQR( 1+x ) );
+}
+
+
+double MassIntegrand_NFW( const double r, void* parameters )
+{
+   if ( r == 0.0 ) return 0.0;
+
+   struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
+   double R0   = p->Cloud_R0;
+   double Rho0 = p->Cloud_Rho0;
+
+   return 4*M_PI*SQR(r)*DensProf_NFW( r, R0, Rho0 );
 }
 
 
@@ -481,6 +520,18 @@ double DensProf_Burkert( const double r, const double R0, const double Rho0 )
 }
 
 
+double MassIntegrand_Burkert( const double r, void* parameters )
+{
+   if ( r == 0.0 ) return 0.0;
+
+   struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
+   double R0   = p->Cloud_R0;
+   double Rho0 = p->Cloud_Rho0;
+
+   return 4*M_PI*SQR(r)*DensProf_Burkert( r, R0, Rho0 );
+}
+
+
 double MassProf_Burkert( const double r, const double R0, const double Rho0 )
 {
    const double x = r/R0;
@@ -505,6 +556,18 @@ double DensProf_Jaffe( const double r, const double R0, const double Rho0 )
    const double x = r/R0;
 
    return Rho0/(x*(1+x));
+}
+
+
+double MassIntegrand_Jaffe( const double r, void* parameters )
+{
+   if ( r == 0.0 ) return 0.0;
+
+   struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
+   double R0   = p->Cloud_R0;
+   double Rho0 = p->Cloud_Rho0;
+
+   return 4*M_PI*SQR(r)*DensProf_Jaffe( r, R0, Rho0 );
 }
 
 
@@ -534,14 +597,18 @@ double DensProf_Hernquist( const double r, const double R0, const double Rho0 )
    return Rho0/( x*CUBE( 1+x ) );
 }
 
+
 double MassIntegrand_Hernquist( const double r, void* parameters )
 {
+   if ( r == 0.0 ) return 0.0;
+
    struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
    double R0   = p->Cloud_R0;
    double Rho0 = p->Cloud_Rho0;
 
    return 4*M_PI*SQR(r)*DensProf_Hernquist( r, R0, Rho0 );
 }
+
 
 double MassProf_Hernquist( const double r, const double R0, const double Rho0 )
 {
@@ -569,8 +636,11 @@ double DensProf_Einasto( const double r, const double R0, const double Rho0, con
    return Rho0*exp( -pow( x, Einasto_Power_Factor ) );
 }
 
+
 double MassIntegrand_Einasto( const double r, void* parameters )
 {
+   if ( r == 0.0 ) return 0.0;
+
    struct mass_integrand_params_Einasto *p = (struct mass_integrand_params_Einasto *) parameters;
    double R0                           = p->Cloud_R0;
    double Rho0                         = p->Cloud_Rho0;
@@ -579,23 +649,13 @@ double MassIntegrand_Einasto( const double r, void* parameters )
    return 4*M_PI*SQR(r)*DensProf_Einasto( r, R0, Rho0, Einasto_Power_Factor );
 }
 
+
 double MassProf_Einasto( const double r, const double R0, const double Rho0, const double Einasto_Power_Factor )
 {
    const double x = r/R0;
 
    return 0.0;
 }
-
-
-struct mass_integrand_params
-{
-   double Cloud_R0, Cloud_Rho0;
-};
-
-struct mass_integrand_params_Einasto
-{
-   double Cloud_R0, Cloud_Rho0, Cloud_Einasto_Power_Factor;
-};
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -620,22 +680,22 @@ double Par_EquilibriumIC::Set_Mass( const double r )
    else
    {
       double enclosed_mass = NULL_REAL;
+      double abs_error;
 
 #     ifdef SUPPORT_GSL
-      const double lower_lim  = 0.0001*r;
-      const double upper_lim  = r;
-      const double abs_err    = 0;
-      const double rel_err    = 1e-7;
-      const int    limit_size = 1000;
-      const int    rule       = 1;
-      double error;
+      // arguments for the gsl integration
+      const double lower_bound  = 0.0;
+      const double upper_bound  = r;
+      const double abs_err_lim  = 0;
+      const double rel_err_lim  = 1e-7;
+      const int    limit_size   = 1000;
+      const int    integ_rule   = 1;    // 1 = GSL_INTEG_GAUSS15, the 15 point Gauss-Kronrod rule
 
       gsl_integration_workspace * w = gsl_integration_workspace_alloc( limit_size );
+
       gsl_function F;
 
-      struct mass_integrand_params integrand_params = { params.Cloud_R0, params.Cloud_Rho0 };
-      struct mass_integrand_params integrand_params_Einasto = { params.Cloud_R0, params.Cloud_Rho0, params.Cloud_Einasto_Power_Factor };
-
+      // integrand for the integration
       if      ( strcmp( params.Cloud_Type, "Plummer"   ) == 0 ) F.function = &MassIntegrand_Plummer;
       else if ( strcmp( params.Cloud_Type, "NFW"       ) == 0 ) F.function = &MassIntegrand_NFW;
       else if ( strcmp( params.Cloud_Type, "Burkert"   ) == 0 ) F.function = &MassIntegrand_Burkert;
@@ -643,12 +703,17 @@ double Par_EquilibriumIC::Set_Mass( const double r )
       else if ( strcmp( params.Cloud_Type, "Hernquist" ) == 0 ) F.function = &MassIntegrand_Hernquist;
       else if ( strcmp( params.Cloud_Type, "Einasto"   ) == 0 ) F.function = &MassIntegrand_Einasto;
 
-      if ( strcmp( params.Cloud_Type, "Einasto"   ) == 0 )      F.params   = &integrand_params_Einasto;
+      // parameters for the integrand
+      struct mass_integrand_params         integrand_params         = { params.Cloud_R0, params.Cloud_Rho0 };
+      struct mass_integrand_params_Einasto integrand_params_Einasto = { params.Cloud_R0, params.Cloud_Rho0, params.Cloud_Einasto_Power_Factor };
+
+      if      ( strcmp( params.Cloud_Type, "Einasto"   ) == 0 ) F.params   = &integrand_params_Einasto;
       else                                                      F.params   = &integrand_params;
 
-      gsl_integration_qag( &F, lower_lim, upper_lim, abs_err, rel_err, limit_size, rule, w, &enclosed_mass, &error );
+      // integration
+      gsl_integration_qag( &F, lower_bound, upper_bound, abs_err_lim, rel_err_lim, limit_size, integ_rule, w, &enclosed_mass, &abs_error );
 
-      gsl_integration_workspace_free (w);
+      gsl_integration_workspace_free( w );
 #     endif // #ifdef SUPPORT_GSL
 
       return enclosed_mass;
