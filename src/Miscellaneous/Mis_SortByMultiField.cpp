@@ -6,12 +6,7 @@
 // Function    :  Mis_SortByMultiField
 // Description :  Sort the data by the input fields
 //
-// Note        :  1. Sorting by velocity may be necessary for STAR_FORMATION, where the new star particles
-//                   created at different time but the same position may still have the same position for a
-//                   while if velocity*dt is on the order of round-off errors
-//                   --> Not supported yet since we may not have the velocity information (e.g., when adopting
-//                       UseInputMassPos in Par_MassAssignment())
-//                2. Invoked by Par_MassAssignment() and FB_AdvanceDt()
+// Note        :  1. Invoked by Par_MassAssignment() and FB_AdvanceDt()
 //
 // Parameter   :  Array     : The array to be sorted. DO NOT change the array in this function!
 //                IdxTable  : Index table to be returned has a size of NSort.

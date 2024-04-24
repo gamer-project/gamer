@@ -36,6 +36,11 @@ static bool FarAwayParticle( real_par ParPosX, real_par ParPosY, real_par ParPos
 //                   --> This is the reason for the check "if ( Periodic[d]  &&  RhoSize > PeriodicSize[d] ) ..."
 //                6. For bitwise reproducibility, particles are sorted by their position before mass deposition
 //                   --> Also refer to the note of the routine Mis_SortByMultiField()
+//                7. Sorting by velocity may be necessary for STAR_FORMATION, where the new star particles
+//                   created at different time but the same position may still have the same position for a
+//                   while if velocity*dt is on the order of round-off errors
+//                   --> Not supported yet since we may not have the velocity information (e.g., when adopting
+//                       UseInputMassPos)
 //
 // Parameter   :  ParList         : List of target particle IDs
 //                NPar            : Number of particles
