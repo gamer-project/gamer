@@ -58,18 +58,14 @@ void Mis_SortByMultiField( T **Array, long *IdxTable, const long NSort, const in
 
 //    4. Sort the same values again
       long *IdxTable_same  = new long [NSameVal];
-      int  *SortOrder_same = new int  [NOrder-1];
       for (long j=0; j<NSameVal; j++)   IdxTable_same[j]  = IdxTable[i+j];
-      for ( int j=0; j<NOrder-1; j++)   SortOrder_same[j] = SortOrder[j+1];
 
-      // TODO: maybe can do something like &SortOrder+1
-      Mis_SortByMultiField( Array, IdxTable_same, NSameVal, SortOrder_same, NOrder-1 );
+      Mis_SortByMultiField( Array, IdxTable_same, NSameVal, SortOrder+1, NOrder-1 );
 
 //    5. store the result
       for (long j=0; j<NSameVal; j++)   IdxTable[i+j] = IdxTable_same[j];
 
       delete [] IdxTable_same;
-      delete [] SortOrder_same;
 
       i += NSameVal-1;
    } // for (long i=0; i<FieldSize-1; i++)
