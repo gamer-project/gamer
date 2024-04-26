@@ -19,8 +19,8 @@
 template <typename T>
 void Mis_SortByMultiField( T **Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder )
 {
-   if ( NSort  < 0 )   Aux_Error( ERROR_INFO, "NSort must be greater than zero!!\n" );
-   if ( NOrder < 1 )   Aux_Error( ERROR_INFO, "NOrder must be greater than one!!\n" );
+   if ( NSort  < 0 )   Aux_Error( ERROR_INFO, "NSort must be greater than or equal to zero!!\n" );
+   if ( NOrder < 1 )   Aux_Error( ERROR_INFO, "NOrder must be greater than or equal to one!!\n" );
 
    T    *Array_Sorted = new T    [NSort];
    long *Idx_Sorted   = new long [NSort];
