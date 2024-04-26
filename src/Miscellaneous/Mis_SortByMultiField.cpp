@@ -9,7 +9,7 @@
 // Note        :  1. Invoked by Par_MassAssignment() and FB_AdvanceDt()
 //
 // Parameter   :  Array     : The array to be sorted. Do NOT change the array in this function!
-//                IdxTable  : Index table to be returned has a size of NSort. Must be iunitialized.
+//                IdxTable  : Index table to be returned has a size of NSort. Must be initialized.
 //                NSort     : The size of field to be sorted.
 //                SortOrder : The order of sorting field has a size of NOrder.
 //                NOrder    : The size of the sort field order.
@@ -19,6 +19,9 @@
 template <typename T>
 void Mis_SortByMultiField( T **Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder )
 {
+   if ( NSort  < 0 )   Aux_Error( ERROR_INFO, "NSort must be greater than zero!!\n" );
+   if ( NOrder < 1 )   Aux_Error( ERROR_INFO, "NOrder must be greater than one!!\n" );
+
    T    *Array_Sorted = new T    [NSort];
    long *Idx_Sorted   = new long [NSort];
    long *IdxTable_old = new long [NSort];
@@ -37,14 +40,14 @@ void Mis_SortByMultiField( T **Array, long *IdxTable, const long NSort, const in
    for (long i=0; i<NSort; i++)   IdxTable[i] = IdxTable_old[Idx_Sorted[i]];
 
 // 3. check the same value
-   long NSameVal;
    for (long i=0; i<NSort-1; i++)
    {
-      NSameVal = 1; // 1 --> itself
+      long NSameVal = 1; // 1 --> itself
 
       while ( i+NSameVal < NSort  &&  Array_Sorted[i] == Array_Sorted[i+NSameVal] )   NSameVal++;
 
       if ( NSameVal == 1 )   continue;
+
       if ( NOrder == 1 )
       {
          Aux_Message( stderr, "WARNING : Can not sort the exact same value.\n" );
@@ -53,7 +56,7 @@ void Mis_SortByMultiField( T **Array, long *IdxTable, const long NSort, const in
 
 //    4. Sort the same values again
       long *IdxTable_same  = new long [NSameVal];
-      for (long j=0; j<NSameVal; j++)   IdxTable_same[j]  = IdxTable[i+j];
+      for (long j=0; j<NSameVal; j++)   IdxTable_same[j] = IdxTable[i+j];
 
       Mis_SortByMultiField( Array, IdxTable_same, NSameVal, SortOrder+1, NOrder-1 );
 
@@ -63,7 +66,7 @@ void Mis_SortByMultiField( T **Array, long *IdxTable, const long NSort, const in
       delete [] IdxTable_same;
 
       i += NSameVal-1;
-   } // for (long i=0; i<FieldSize-1; i++)
+   } // for (long i=0; i<NSort-1; i++)
 
    delete [] Array_Sorted;
    delete [] IdxTable_old;
