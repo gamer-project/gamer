@@ -209,7 +209,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       }
 
       const int SortOrder_PID[3] = { 0, 1, 2 };
-      Mis_SortByMultiField( PCr, NearbyPIDList_IdxTable, (long)NNearbyPatch, SortOrder_PID, 3 );
+      Mis_SortByRows( PCr, NearbyPIDList_IdxTable, (long)NNearbyPatch, SortOrder_PID, 3 );
 
       memcpy( NearbyPIDList_Old, NearbyPIDList, NNearbyPatch*sizeof(int) );
 
@@ -339,7 +339,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //            --> otherwise, the same particles accessed by different patches may have different random numbers
          const int SortOrder_pos[3] = { PAR_POSX, PAR_POSY, PAR_POSZ };
          for (int p=0; p<NPar; p++)   ParSortID[p] = p;
-         Mis_SortByMultiField( ParAtt_Local, ParSortID, (long)NPar, SortOrder_pos, 3 );
+         Mis_SortByRows( ParAtt_Local, ParSortID, (long)NPar, SortOrder_pos, 3 );
 
 
 
