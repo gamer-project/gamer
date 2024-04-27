@@ -67,7 +67,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 // Spectral refinement criterion
-   const int  Spectral_NGhost           = 1;                     // number of ghost cells
+   const int  Spectral_NGhost           = 0;                     // number of ghost cells
    const int  Spectral_NCell            = PS2 + 2 * Spectral_NGhost; // prepare patch group
    const IntScheme_t Spectral_IntScheme = INT_CQUAD;             // interpolation scheme
 #  endif // # if ( MODEL == ELBDM )
@@ -247,7 +247,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 //       prepare the ghost-zone data for interference criterion
 #        if ( MODEL == ELBDM )
-         if ( Spectral_NVar > 0 )
+         if ( Spectral_NVar > 0 && lv < MAX_LEVEL )
          {
             Prepare_PatchData( lv, Time[lv], Spectral_Var, NULL, Spectral_NGhost, NPG, &PID0, _REAL | _IMAG, _NONE,
                                Spectral_IntScheme, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,

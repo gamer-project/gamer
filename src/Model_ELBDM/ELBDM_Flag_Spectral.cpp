@@ -82,12 +82,12 @@ void Least_Squares_Regression(flag_spectral_float x[], flag_spectral_float y[], 
 void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
 {
 // set the stride to a small value to sample the wave function evenly
-   const size_t Stride    = 1;
-   const size_t GhostSize = 1;
+   const size_t Stride    = 2;
+   const size_t GhostSize = 0;
    const size_t Size1D    = PS2 + 2 * GhostSize;
    const size_t MaxOrder  = 14;
-   const size_t NField    = 3;
-   const size_t NCoeff    = 2*NField;
+   const size_t NField    = 2;
+   const size_t NCoeff    = NField;
 // Convergence threshold for polynomial expansion
 // Polynomial coefficients < 10^Threshold replaced by linear function with slope LinearSlope
 // Should be slightly larger than typical rounding errors in single precision
@@ -130,7 +130,7 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
 
          Row[0][i] = Re1D[index];
          Row[1][i] = Im1D[index];
-         Row[2][i] = SQR(Row[0][i]) + SQR(Row[1][i]);
+         //Row[2][i] = SQR(Row[0][i]) + SQR(Row[1][i]);
       }
 
       for (int i = 0; i < MaxOrder; ++i)
@@ -142,8 +142,8 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
 //       Compute polynomial expansions of real and imaginary parts
          for (int t = 0; t < MaxOrder; t++) {
             for (int l = 0; l < NField; l++) {
-               Coeff[l       ][i] += Flag_Spectral_Polynomials[i][t] * Row[l][t];                     // left boundary
-               Coeff[l+NField][i] += Flag_Spectral_Polynomials[i][t] * Row[l][Size1D - MaxOrder + t]; // right boundary
+               Coeff[l][i] += Flag_Spectral_Polynomials[i][t] * Row[l][t];                     // left boundary
+               //Coeff[l+NField][i] += Flag_Spectral_Polynomials[i][t] * Row[l][Size1D - MaxOrder + t]; // right boundary
             }
          } // t
 
@@ -153,7 +153,7 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
          for (int j = 0; j < NCoeff; ++j) {
             Coeff[j][i] = log10(abs(Coeff[j][i]) + 1e-16);
 //          Smoothly replace coefficients below ConvergenceThreshold with linear function using sigmoid
-            Coeff[j][i] = Coeff[j][i] + 1/(1+exp(Coeff[j][i]-ConvergenceThreshold)) * LinearSlope * j;
+            Coeff[j][i] += 1/(1+exp(Coeff[j][i]-ConvergenceThreshold)) * LinearSlope * i;
          }
       }
 
@@ -162,10 +162,9 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
       for (int j = 0; j < NCoeff; ++j) {
 
 //       Compute slope for first 10 elements, MaxOrder can converge too fast and make distinction below 10 and 20 points per wavelength difficult
-         Least_Squares_Regression(Order, Coeff[j], 0, MIN(10, MaxOrder), &Slope, &Intercept);
+         Least_Squares_Regression(Order, Coeff[j], 0, MaxOrder, &Slope, &Intercept);
          Cond = MAX(Cond, Slope);
       }
-      printf("Cond: %f\n", Cond);
 
    } // XYZ, k,j
 } // FUNCTION : Prepare_for_Spectral_Criterion
