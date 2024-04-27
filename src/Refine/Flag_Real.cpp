@@ -67,7 +67,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 // Spectral refinement criterion
-   const int  Spectral_NGhost           = 0;                     // number of ghost cells
+   const int  Spectral_NGhost           = 1;                     // number of ghost cells
    const int  Spectral_NCell            = PS2 + 2 * Spectral_NGhost; // prepare patch group
    const IntScheme_t Spectral_IntScheme = INT_CQUAD;             // interpolation scheme
 #  endif // # if ( MODEL == ELBDM )
