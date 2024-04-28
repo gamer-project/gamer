@@ -19,35 +19,23 @@ using namespace std;
 #endif
 
 
-typedef struct Filename_Parameter{
-
-   int Cloud_Num;
-   vector<string> Params_Filenames;
-
-}FP;
-
-typedef struct Physical_Parameter{
-
-   int      Cloud_Num;
-
-   string Params_Filenames;
-
-   char     Cloud_Type[MAX_STRING];
-   char     Density_Table_Name[MAX_STRING];
-   int      AddExtPot;
-   char     ExtPot_Table_Name[MAX_STRING];
-   int      Cloud_RSeed;
-   double   Cloud_Rho0;
-   double   Cloud_R0;
-   double   Cloud_MaxR;
+typedef struct Physical_Parameter
+{
    double*  Cloud_Center;
    double*  Cloud_BulkVel;
+   char     Cloud_Type[MAX_STRING];
+   double   Cloud_Rho0;
+   double   Cloud_R0;
    double   Cloud_Einasto_Power_Factor;
+   char     Density_Table_Name[MAX_STRING];
    long     Cloud_Par_Num;
-
+   double   Cloud_MaxR;
    int      Cloud_MassProfNBin;
+   int      Cloud_RSeed;
+   int      AddExtPot;
+   char     ExtPot_Table_Name[MAX_STRING];
 
-}PhysP;
+} PhysP;
 
 
 class Par_EquilibriumIC
@@ -55,13 +43,10 @@ class Par_EquilibriumIC
    public:
       Par_EquilibriumIC();
       virtual ~Par_EquilibriumIC();
-      void Read_Filenames( const char *filename_para );
-      void Load_Physical_Params( const FP filenames,const int cloud_idx, const long NPar_AllRank );
       void Init();
       void Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx );
 
       PhysP params;
-      FP   filenames;
 
    protected:
 
@@ -84,7 +69,6 @@ class Par_EquilibriumIC
       void Add_Ext_Pot();
 
       // Auxiliary functions
-      int  GetParams( const char *filename, const char *keyword, const int para_num, const char *para_type, vector <string> &container);
       void RanVec_FixRadius( const double r, double RanVec[] );
 
       // Solve Eddington's equation
