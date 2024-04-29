@@ -69,25 +69,25 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
    const double _dh               = 1.0/dh;
    const double PrepPotTime       = ( UpdateStep==PAR_UPSTEP_CORR || UpdateStep==PAR_UPSTEP_ACC_ONLY ) ? TimeNew : TimeOld;
 
-   const int  GraGhost_Par        = 1;                      // always set to 1 for particles (P5 gradient is not supported yet)
-   const int  ParGhost            = amr->Par->GhostSize;
-   const int  PotGhost            = GraGhost_Par + ParGhost;
-   const int  PotSize             = PS1 + 2*PotGhost;
-   const int  AccSize             = PS1 + 2*ParGhost;
-   const real Const_8             = (real)8.0;
-// const real GraConst            = ( OPT__GRA_P5_GRADIENT ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // but P5 is NOT supported yet
-   const real GraConst            = ( false                ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // but P5 is NOT supported yet
+   const int      GraGhost_Par        = 1;                      // always set to 1 for particles (P5 gradient is not supported yet)
+   const int      ParGhost            = amr->Par->GhostSize;
+   const int      PotGhost            = GraGhost_Par + ParGhost;
+   const int      PotSize             = PS1 + 2*PotGhost;
+   const int      AccSize             = PS1 + 2*ParGhost;
+   const real     Const_8             = (real)8.0;
+// const real     GraConst            = ( OPT__GRA_P5_GRADIENT ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // but P5 is NOT supported yet
+   const real     GraConst            = ( false                ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // but P5 is NOT supported yet
 #  ifdef COMOVING
-   const real dt_com              = (real)Mis_dTime2dt( TimeOld, TimeNew-TimeOld );
+   const real_par dt_com              = (real_par)Mis_dTime2dt( TimeOld, TimeNew-TimeOld );
 #  endif
 
-   real *ParPos[3]       = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-   real *ParVel[3]       = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
+   real_par *ParPos[3]       = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   real_par *ParVel[3]       = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
 #  ifdef STORE_PAR_ACC
-   real *ParAcc[3]       = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
+   real_par *ParAcc[3]       = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
 #  endif
-   real *ParTime         = amr->Par->Time;
-   const real *ParType   = amr->Par->Type;
+   real_par *ParTime         = amr->Par->Time;
+   const real_par *ParType   = amr->Par->Type;
 
 // determine PotSg for STORE_POT_GHOST
 #  ifdef STORE_POT_GHOST
@@ -182,11 +182,12 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
    vla_pot Pot3D = ( vla_pot )Pot;
    vla_acc Acc3D = ( vla_acc )Acc;
 
-   bool GotYou;
-   long ParID;
-   real Acc_Temp[3], dt, dt_half;
+   bool     GotYou;
+   long     ParID;
+   real     Acc_Temp[3];
+   real_par dt, dt_half;
 
-   long ptype_tracer = (long)PTYPE_TRACER;
+   long     ptype_tracer = (long)PTYPE_TRACER;
 
 // loop over all **real** patch groups
 #  pragma omp for schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )
@@ -207,7 +208,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                {
                   ParID = amr->patch[0][lv][PID]->ParList[p];
 
-                  if ( ParTime[ParID] < (real)0.0  &&  ParType[ParID] != PTYPE_TRACER )
+                  if ( ParTime[ParID] < (real_par)0.0  &&  ParType[ParID] != PTYPE_TRACER )
                   {
                      GotYou = true;
                      break;
@@ -327,21 +328,21 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 //          4. determine time-step and skip particles with zero or negative time-step
             if ( UpdateStep == PAR_UPSTEP_PRED )
             {
-//             it's crucial to first calculate dt here and skip particles with dt <= (real)0.0 (including the equal sign)
+//             it's crucial to first calculate dt here and skip particles with dt <= (real_par)0.0 (including the equal sign)
 //             since later on we select particles with negative particle time (which has been set to -dt), with equal sign
 //             excluded, for the velocity correction
 //             --> particles just crossing from coarse to fine grids can have ParTime[ParID] >= TimeNew
-               dt      = (real)TimeNew - ParTime[ParID];
+               dt      = (real_par)TimeNew - ParTime[ParID];
 
 //             convert time-step for comoving
 #              ifdef COMOVING
-               if ( ParTime[ParID] == (real)TimeOld )    dt = dt_com;   // avoid redundant calculations
-               else                                      dt = Mis_dTime2dt( ParTime[ParID], dt );
+               if ( ParTime[ParID] == (real_par)TimeOld )    dt = dt_com;   // avoid redundant calculations
+               else                                          dt = (real_par)Mis_dTime2dt( (double)ParTime[ParID], (double)dt );
 #              endif
 
-               dt_half = (real)0.5*dt;
+               dt_half = (real_par)0.5*dt;
 
-               if ( dt <= (real)0.0 )  continue;
+               if ( dt <= (real_par)0.0 )  continue;
             }
 
             else if ( UpdateStep == PAR_UPSTEP_CORR )
@@ -350,7 +351,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 //             these particles require velocity correction
                dt_half = -ParTime[ParID];
 
-               if ( dt_half <= (real)0.0 )   continue;
+               if ( dt_half <= (real_par)0.0 )   continue;
             }
 
             else if ( UpdateStep == PAR_UPSTEP_ACC_ONLY )
@@ -378,9 +379,9 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                   if ( idx[d] < 0 )
                   {
 #                    ifdef DEBUG_PARTICLE
-                     if (  ! Mis_CompareRealValue( ParPos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
+                     if (  ! Mis_CompareRealValue( ParPos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
                      Aux_Error( ERROR_INFO, "index outside the acc array (pos[%d] %14.7e, EdgeL %14.7e, idx %d) !!\n",
-                                d, ParPos[d][ParID], amr->patch[0][lv][PID]->EdgeL[d], idx[d] );
+                                d, ParPos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeL[d], idx[d] );
 #                    endif
 
                      idx[d] = 0;
@@ -389,9 +390,9 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                   else if ( idx[d] >= AccSize )
                   {
 #                    ifdef DEBUG_PARTICLE
-                     if (  ! Mis_CompareRealValue( ParPos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
+                     if (  ! Mis_CompareRealValue( ParPos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
                         Aux_Error( ERROR_INFO, "index outside the acc array (pos[%d] %14.7e, EdgeR %14.7e, idx %d) !!\n",
-                                   d, ParPos[d][ParID], amr->patch[0][lv][PID]->EdgeR[d], idx[d] );
+                                   d, ParPos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeR[d], idx[d] );
 #                    endif
 
                      idx[d] = AccSize - 1;
@@ -403,13 +404,13 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                {
 #                 ifdef STORE_PAR_ACC
                   if ( UseStoredAcc )
-                     Acc_Temp[d] = ParAcc[d][ParID];
+                     Acc_Temp[d] = (real)ParAcc[d][ParID];
                   else
 #                 endif
                      Acc_Temp[d] = Acc3D[d][ idx[2] ][ idx[1] ][ idx[0] ];
 
 #                 ifdef STORE_PAR_ACC
-                  if ( StoreAcc )   ParAcc[d][ParID] = Acc_Temp[d];
+                  if ( StoreAcc )   ParAcc[d][ParID] = (real_par)Acc_Temp[d];
 #                 endif
                }
             } // PAR_INTERP_NGP
@@ -436,9 +437,9 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                   if ( idxLR[0][d] < 0 )
                   {
 #                    ifdef DEBUG_PARTICLE
-                     if (  ! Mis_CompareRealValue( ParPos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
+                     if (  ! Mis_CompareRealValue( ParPos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
                      Aux_Error( ERROR_INFO, "index outside the acc array (pos[%d] %14.7e, EdgeL %14.7e, idxL %d, idxR %d) !!\n",
-                                d, ParPos[d][ParID], amr->patch[0][lv][PID]->EdgeL[d], idxLR[0][d], idxLR[1][d] );
+                                d, ParPos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeL[d], idxLR[0][d], idxLR[1][d] );
 #                    endif
 
                      idxLR[0][d] = 0;
@@ -448,9 +449,9 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                   else if ( idxLR[1][d] >= AccSize )
                   {
 #                    ifdef DEBUG_PARTICLE
-                     if (  ! Mis_CompareRealValue( ParPos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
+                     if (  ! Mis_CompareRealValue( ParPos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
                      Aux_Error( ERROR_INFO, "index outside the acc array (pos[%d] %14.7e, EdgeR %14.7e, idxL %d, idxR %d) !!\n",
-                                d, ParPos[d][ParID], amr->patch[0][lv][PID]->EdgeR[d], idxLR[0][d], idxLR[1][d] );
+                                d, ParPos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeR[d], idxLR[0][d], idxLR[1][d] );
 #                    endif
 
                      idxLR[0][d] = AccSize - 2;
@@ -468,7 +469,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                {
 #                 ifdef STORE_PAR_ACC
                   if ( UseStoredAcc )
-                     Acc_Temp[d] = ParAcc[d][ParID];
+                     Acc_Temp[d] = (real)ParAcc[d][ParID];
                   else
 #                 endif
                   {
@@ -482,7 +483,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                   }
 
 #                 ifdef STORE_PAR_ACC
-                  if ( StoreAcc )   ParAcc[d][ParID] = Acc_Temp[d];
+                  if ( StoreAcc )   ParAcc[d][ParID] = (real_par)Acc_Temp[d];
 #                 endif
                }
             } // PAR_INTERP_CIC
@@ -509,9 +510,9 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                   if ( idxLCR[0][d] < 0 )
                   {
 #                    ifdef DEBUG_PARTICLE
-                     if (  ! Mis_CompareRealValue( ParPos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
+                     if (  ! Mis_CompareRealValue( ParPos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
                      Aux_Error( ERROR_INFO, "index outside the acc array (pos[%d] %14.7e, EdgeL %14.7e, idxL %d, idxR %d) !!\n",
-                                d, ParPos[d][ParID], amr->patch[0][lv][PID]->EdgeL[d], idxLCR[0][d], idxLCR[2][d] );
+                                d, ParPos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeL[d], idxLCR[0][d], idxLCR[2][d] );
 #                    endif
 
                      idxLCR[0][d] = 0;
@@ -522,9 +523,9 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                   else if ( idxLCR[2][d] >= AccSize )
                   {
 #                    ifdef DEBUG_PARTICLE
-                     if (  ! Mis_CompareRealValue( ParPos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
+                     if (  ! Mis_CompareRealValue( ParPos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
                      Aux_Error( ERROR_INFO, "index outside the acc array (pos[%d] %14.7e, EdgeR %14.7e, idxL %d, idxR %d) !!\n",
-                                d, ParPos[d][ParID], amr->patch[0][lv][PID]->EdgeR[d], idxLCR[0][d], idxLCR[2][d] );
+                                d, ParPos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeR[d], idxLCR[0][d], idxLCR[2][d] );
 #                    endif
 
                      idxLCR[0][d] = AccSize - 3;
@@ -544,7 +545,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                {
 #                 ifdef STORE_PAR_ACC
                   if ( UseStoredAcc )
-                     Acc_Temp[d] = ParAcc[d][ParID];
+                     Acc_Temp[d] = (real)ParAcc[d][ParID];
                   else
 #                 endif
                   {
@@ -558,7 +559,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                   }
 
 #                 ifdef STORE_PAR_ACC
-                  if ( StoreAcc )   ParAcc[d][ParID] = Acc_Temp[d];
+                  if ( StoreAcc )   ParAcc[d][ParID] = (real_par)Acc_Temp[d];
 #                 endif
                }
             } // PAR_INTERP_TSC
@@ -579,11 +580,11 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
             {
                for (int d=0; d<3; d++)
                {
-                  ParPos[d][ParID] += ParVel  [d][ParID]*dt;   // update position first
-                  ParVel[d][ParID] += Acc_Temp[d]       *dt;
+                  ParPos[d][ParID] += ParVel            [d][ParID]*dt;    // update position first
+                  ParVel[d][ParID] += (real_par)Acc_Temp[d]*dt;
                }
 
-               ParTime[ParID] = TimeNew;
+               ParTime[ParID] = (real_par)TimeNew;
             }
 
 
@@ -595,8 +596,8 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                {
                   for (int d=0; d<3; d++)
                   {
-                     ParVel[d][ParID] += Acc_Temp[d]       *dt_half; // predict velocity for 0.5*dt
-                     ParPos[d][ParID] += ParVel  [d][ParID]*dt;      // update position by the half-step velocity for a full dt
+                     ParVel[d][ParID] += (real_par)Acc_Temp[d]*dt_half;   // predict velocity for 0.5*dt
+                     ParPos[d][ParID] += ParVel            [d][ParID]*dt; // update position by the half-step velocity for a full dt
                   }
 
                   ParTime[ParID] = -dt_half;   // negative --> indicating that it requires velocity correction
@@ -606,7 +607,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                else // UpdateStep == PAR_UPSTEP_CORR
                {
                   for (int d=0; d<3; d++)
-                     ParVel[d][ParID] += Acc_Temp[d]*dt_half;     // correct velocity for 0.5*dt
+                     ParVel[d][ParID] += (real_par)Acc_Temp[d]*dt_half;   // correct velocity for 0.5*dt
 
                   ParTime[ParID] = TimeNew;
                }
