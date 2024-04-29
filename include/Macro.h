@@ -31,6 +31,34 @@
 #define TURING       6
 #define AMPERE       7
 
+#if   ( GPU_COMPUTE_CAPABILITY == 200 )
+#define GPU_ARCH FERMI
+#elif ( GPU_COMPUTE_CAPABILITY == 300 )
+#define GPU_ARCH KEPLER
+#elif ( GPU_COMPUTE_CAPABILITY == 350 )
+#define GPU_ARCH KEPLER
+#elif ( GPU_COMPUTE_CAPABILITY == 370 )
+#define GPU_ARCH KEPLER
+#elif ( GPU_COMPUTE_CAPABILITY == 500 )
+#define GPU_ARCH MAXWELL
+#elif ( GPU_COMPUTE_CAPABILITY == 520 )
+#define GPU_ARCH MAXWELL
+#elif ( GPU_COMPUTE_CAPABILITY == 600 )
+#define GPU_ARCH PASCAL
+#elif ( GPU_COMPUTE_CAPABILITY == 610 )
+#define GPU_ARCH PASCAL
+#elif ( GPU_COMPUTE_CAPABILITY == 700 )
+#define GPU_ARCH VOLTA
+#elif ( GPU_COMPUTE_CAPABILITY == 750 )
+#define GPU_ARCH TURING
+#elif ( GPU_COMPUTE_CAPABILITY == 800 )
+#define GPU_ARCH AMPERE
+#elif ( GPU_COMPUTE_CAPABILITY == 860 )
+#define GPU_ARCH AMPERE
+#elif ( defined GPU )
+#error: Unknown GPU_COMPUTE_CAPABILITY !!\n
+#endif
+
 
 // models
 #define HYDRO        1

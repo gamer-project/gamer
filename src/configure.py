@@ -12,6 +12,7 @@ import argparse
 import os
 import sys
 import re
+import ctypes
 
 
 
@@ -282,6 +283,59 @@ def distance( s1, s2 ):
                 matrix[i][j] = 1 + min(matrix[i-1][j], matrix[i][j-1], matrix[i-1][j-1])
 
     return matrix[len(s1)][len(s2)]
+
+def get_gpu_compute_capability():
+    """
+    Outputs some information on CUDA-enabled devices on your computer, including current memory usage.
+
+    It's a port of https://gist.github.com/f0k/0d6431e3faa60bffc788f8b4daa029b1
+    from C to Python with ctypes, so it can run without compiling anything. Note
+    that this is a direct translation with no attempt to make the code Pythonic.
+    It's meant as a general demonstration on how to obtain CUDA device information
+    from Python without resorting to nvidia-smi or a compiled Python extension.
+
+    Author: Jan Schluter
+    License: MIT (https://gist.github.com/f0k/63a664160d016a491b2cbea15913d549#gistcomment-3870498)
+    Others: https://en.wikipedia.org/wiki/CUDA#GPUs_supported
+    """
+    CUDA_SUCCESS = 0
+    libnames = ('libcuda.so', 'libcuda.dylib', 'cuda.dll')
+    for libname in libnames:
+        try:
+            cuda = ctypes.CDLL(libname)
+        except OSError:
+            continue
+        else:
+            break
+    else:
+        raise OSError("could not load any of: " + ' '.join(libnames))
+
+    nGpus, cc_major, cc_minor, device = ctypes.c_int(), ctypes.c_int(), ctypes.c_int(), ctypes.c_int()
+
+    def cuda_check_error( result ):
+        if result == CUDA_SUCCESS: return
+
+        error_str = ctypes.c_char_p()
+
+        cuda.cuGetErrorString(result, ctypes.byref(error_str))
+        raise BaseException( "CUDA failed with error code %d: %s"%( result, error_str.value.decode() ) )
+
+        return
+
+    cuda_check_error( cuda.cuInit(0) )
+    cuda_check_error( cuda.cuDeviceGetCount(ctypes.byref(nGpus)) )
+
+    arch = ""
+    if nGpus.value > 1: print("WARNING: More than one GPU. Selecting the last GPU architecture.")
+    for i in range(nGpus.value):
+        cuda_check_error( cuda.cuDeviceGet(ctypes.byref(device), i) )
+        cuda_check_error( cuda.cuDeviceComputeCapability(ctypes.byref(cc_major), ctypes.byref(cc_minor), device) )
+
+    if cc_minor.value >= 10:
+        compute_capability = cc_major.value*100 + cc_minor.value
+    else:
+        compute_capability = cc_major.value*100 + cc_minor.value*10
+    return compute_capability
 
 def load_arguments():
     parser = ArgumentParser( description = GAMER_DESCRIPTION,
@@ -567,6 +621,18 @@ def load_arguments():
                          help="Enable the interactive mode of libyt. This activates python prompt and does not shut down a simulation when there are errors in an inline python script. Must compile libyt with INTERACTIVE_MODE. Must enable <--libyt>.\n"
                        )
 
+    parser.add_argument( "--libyt_reload", type=str2bool, metavar="BOOLEAN", gamer_name="LIBYT_RELOAD",
+                         default=False,
+                         depend={"libyt":True},
+                         help="Allow for reloading libyt scripts during runtime. Must compile libyt with INTERACTIVE_MODE. Must enable <--libyt>.\n"
+                       )
+
+    parser.add_argument( "--libyt_jupyter", type=str2bool, metavar="BOOLEAN", gamer_name="LIBYT_JUPYTER",
+                         default=False,
+                         depend={"libyt":True},
+                         help="Allow for in situ analysis using Jupyter Notebook / JupyterLab through libyt. Must compile libyt with JUPYTER_KERNEL. Must enable <--libyt>.\n"
+                       )
+
     parser.add_argument( "--rng", type=str, metavar="TYPE", gamer_name="RANDOM_NUMBER",
                          default="RNG_GNU_EXT",
                          choices=["RNG_GNU_EXT", "RNG_CPP11"],
@@ -595,10 +661,10 @@ def load_arguments():
                          help="Enable GPU. Must set <--gpu_arch> as well.\n"
                        )
 
-    parser.add_argument( "--gpu_arch", type=str, metavar="TYPE", gamer_name="GPU_ARCH",
+    parser.add_argument( "--gpu_compute_capability", type=int, metavar="INT", gamer_name="GPU_COMPUTE_CAPABILITY",
                          depend={"gpu":True},
-                         default="TURING", choices=["FERMI", "KEPLER", "MAXWELL", "PASCAL", "VOLTA", "TURING", "AMPERE"],
-                         help="Select the architecture of GPU.\n"
+                         default=get_gpu_compute_capability(),
+                         help="Select the compute capability of GPU.\n"
                        )
 
     args, name_table, depends, constraints = parser.parse_args()
