@@ -5,23 +5,25 @@
 
 static RandomNumber_t *RNG = NULL;
 
-extern int      ParEqmIC_CloudNum;
-extern char   (*ParEqmIC_Params_Filenames)[MAX_STRING];
+extern int      ParEqmIC_NumCloud;
+extern char   (*ParEqmIC_Cloud_ParaFilenames)[MAX_STRING];
 
 extern double (*ParEqmIC_Cloud_Center)[3];
 extern double (*ParEqmIC_Cloud_BulkVel)[3];
 extern char   (*ParEqmIC_Cloud_Type)[MAX_STRING];
 extern double  *ParEqmIC_Cloud_Rho0;
 extern double  *ParEqmIC_Cloud_R0;
-extern double  *ParEqmIC_Cloud_Einasto_Power_Factor;
-extern char   (*ParEqmIC_Density_Table_Name)[MAX_STRING];
-extern double  *ParEqmIC_Cloud_Par_Num_Ratio;
-extern long    *ParEqmIC_Cloud_Par_Num;
+extern double  *ParEqmIC_Cloud_EinastoPowerFactor;
+extern char   (*ParEqmIC_Cloud_DensityTable)[MAX_STRING];
+extern double  *ParEqmIC_Cloud_ParNumRatio;
+extern long    *ParEqmIC_Cloud_ParNum;
 extern double  *ParEqmIC_Cloud_MaxR;
-extern int     *ParEqmIC_Cloud_MassProfNBin;
+extern int     *ParEqmIC_Cloud_DensProfNBin;
 extern int     *ParEqmIC_Cloud_RSeed;
-extern int     *ParEqmIC_AddExtPot;
-extern char   (*ParEqmIC_ExtPot_Table_Name)[MAX_STRING];
+extern int     *ParEqmIC_Cloud_AddExtPot;
+extern char   (*ParEqmIC_Cloud_ExtPotTable)[MAX_STRING];
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -86,14 +88,15 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
 
       long Par_Idx0 = 0;
 
-      for (int i=0; i<ParEqmIC_CloudNum; i++)
+      for (int i=0; i<ParEqmIC_NumCloud; i++)
       {
 
          // Convert Cloud_Par_Num_Ratio to Cloud_Par_Num
-         ParEqmIC_Cloud_Par_Num[i] = long(ParEqmIC_Cloud_Par_Num_Ratio[i]*NPar_AllRank);
+         ParEqmIC_Cloud_ParNum[i] = long(ParEqmIC_Cloud_ParNumRatio[i]*NPar_AllRank);
 
          // Check whether user forgot to fill in Cloud_Par_Num_Ratio
-         if ( ParEqmIC_Cloud_Par_Num[i] == 0 )   Aux_Error( ERROR_INFO, "Cloud_Par_Num_Ratio is 0! There is no particle in this cloud (%d)!!", i );
+         if ( ParEqmIC_Cloud_ParNum[i] == 0 )
+            Aux_Error( ERROR_INFO, "Cloud_ParNum is 0 for cloud_%d !!\n", i+1 );
 
 //       initialize Par_EquilibriumIC for each cloud
          Par_EquilibriumIC Cloud_Constructor;
@@ -110,15 +113,15 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
          Cloud_Constructor.params.Cloud_BulkVel[2]            = ParEqmIC_Cloud_BulkVel[i][2];
          Cloud_Constructor.params.Cloud_Rho0                  = ParEqmIC_Cloud_Rho0[i];
          Cloud_Constructor.params.Cloud_R0                    = ParEqmIC_Cloud_R0[i];
-         Cloud_Constructor.params.Cloud_Einasto_Power_Factor  = ParEqmIC_Cloud_Einasto_Power_Factor[i];
-         Cloud_Constructor.params.Cloud_Par_Num               = ParEqmIC_Cloud_Par_Num[i];
+         Cloud_Constructor.params.Cloud_Einasto_Power_Factor  = ParEqmIC_Cloud_EinastoPowerFactor[i];
+         Cloud_Constructor.params.Cloud_Par_Num               = ParEqmIC_Cloud_ParNum[i];
          Cloud_Constructor.params.Cloud_MaxR                  = ParEqmIC_Cloud_MaxR[i];
-         Cloud_Constructor.params.Cloud_MassProfNBin          = ParEqmIC_Cloud_MassProfNBin[i];
+         Cloud_Constructor.params.Cloud_MassProfNBin          = ParEqmIC_Cloud_DensProfNBin[i];
          Cloud_Constructor.params.Cloud_RSeed                 = ParEqmIC_Cloud_RSeed[i];
-         Cloud_Constructor.params.AddExtPot                   = ParEqmIC_AddExtPot[i];
+         Cloud_Constructor.params.AddExtPot                   = ParEqmIC_Cloud_AddExtPot[i];
          strcpy( Cloud_Constructor.params.Cloud_Type,           ParEqmIC_Cloud_Type[i]         );
-         strcpy( Cloud_Constructor.params.Density_Table_Name,   ParEqmIC_Density_Table_Name[i] );
-         strcpy( Cloud_Constructor.params.ExtPot_Table_Name,    ParEqmIC_ExtPot_Table_Name[i]  );
+         strcpy( Cloud_Constructor.params.Density_Table_Name,   ParEqmIC_Cloud_DensityTable[i] );
+         strcpy( Cloud_Constructor.params.ExtPot_Table_Name,    ParEqmIC_Cloud_ExtPotTable[i]  );
 
          // initialize the particle cloud
          Cloud_Constructor.Init();

@@ -1,28 +1,29 @@
 #include "GAMER.h"
 #include "Par_EquilibriumIC.h"
-#include "string"
 
-using namespace std;
 
-// negligibly small uniform density and energy
-double ParEqmIC_SmallGas;
-int    ParEqmIC_CloudNum;
-char   (*ParEqmIC_Params_Filenames)[MAX_STRING]        = NULL;
 
-double (*ParEqmIC_Cloud_Center)[3]                     = NULL;
-double (*ParEqmIC_Cloud_BulkVel)[3]                    = NULL;
-char   (*ParEqmIC_Cloud_Type)[MAX_STRING]              = NULL;
-double  *ParEqmIC_Cloud_Rho0                           = NULL;
-double  *ParEqmIC_Cloud_R0                             = NULL;
-double  *ParEqmIC_Cloud_Einasto_Power_Factor           = NULL;
-char   (*ParEqmIC_Density_Table_Name)[MAX_STRING]      = NULL;
-double  *ParEqmIC_Cloud_Par_Num_Ratio                  = NULL;
-long    *ParEqmIC_Cloud_Par_Num                        = NULL;
-double  *ParEqmIC_Cloud_MaxR                           = NULL;
-int     *ParEqmIC_Cloud_MassProfNBin                   = NULL;
-int     *ParEqmIC_Cloud_RSeed                          = NULL;
-int     *ParEqmIC_AddExtPot                            = NULL;
-char   (*ParEqmIC_ExtPot_Table_Name)[MAX_STRING]       = NULL;
+// problem-specific global variables
+// =======================================================================================
+static double   ParEqmIC_SmallGas;                                // negligibly small uniform density and energy
+       int      ParEqmIC_NumCloud;                                // number of clouds
+       char   (*ParEqmIC_Cloud_ParaFilenames)[MAX_STRING] = NULL; // filenames of the parameters for each cloud
+
+       double (*ParEqmIC_Cloud_Center)[3]                 = NULL; // center coordinates of each cloud
+       double (*ParEqmIC_Cloud_BulkVel)[3]                = NULL; // bulk velocity of each cloud
+       char   (*ParEqmIC_Cloud_Type)[MAX_STRING]          = NULL; // type of each cloud
+       double  *ParEqmIC_Cloud_Rho0                       = NULL; // scale density of each cloud
+       double  *ParEqmIC_Cloud_R0                         = NULL; // scale radius of each cloud
+       double  *ParEqmIC_Cloud_EinastoPowerFactor         = NULL; // Einato power factor of each cloud
+       char   (*ParEqmIC_Cloud_DensityTable)[MAX_STRING]  = NULL; // input density profile table of each cloud
+       double  *ParEqmIC_Cloud_ParNumRatio                = NULL; // ratio of number of particles of each cloud
+       long    *ParEqmIC_Cloud_ParNum                     = NULL; // number of particles of each cloud
+       double  *ParEqmIC_Cloud_MaxR                       = NULL; // maximum radius of each cloud
+       int     *ParEqmIC_Cloud_DensProfNBin               = NULL; // number of bins of density profile of each cloud
+       int     *ParEqmIC_Cloud_RSeed                      = NULL; // random seed for particles of each cloud
+       int     *ParEqmIC_Cloud_AddExtPot                  = NULL; // whether adding external potential for each cloud
+       char   (*ParEqmIC_Cloud_ExtPotTable)[MAX_STRING]   = NULL; // input external potential table of each cloud
+// =======================================================================================
 
 // problem-specific function prototypes
 #ifdef MASSIVE_PARTICLES
@@ -117,86 +118,70 @@ void Validate()
 //-------------------------------------------------------------------------------------------------------
 void SetParameter()
 {
-//     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
-   const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default    =  10;
 
-   if ( END_STEP < 0 ) {
-      END_STEP = End_Step_Default;
-      PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
-   }
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ...\n" );
 
-   if ( END_T < 0.0 ) {
-      END_T = End_T_Default;
-      PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
-   }
 
-// load run-time parameters
-   const char* FileName = "Input__TestProb";
+// (1) load the problem-specific runtime parameters
+   const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
+
+// (1-1) add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
    // ********************************************************************************************************************************
    // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
    // ********************************************************************************************************************************
-   ReadPara->Add( "ParEqmIC_SmallGas",       &ParEqmIC_SmallGas,     1e-3,          0.,               NoMax_double      );
-   ReadPara->Add( "ParEqmIC_CloudNum",       &ParEqmIC_CloudNum,     1,             1,                NoMax_int         );
+   ReadPara->Add( "ParEqmIC_SmallGas",       &ParEqmIC_SmallGas,     1e-3,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "ParEqmIC_NumCloud",       &ParEqmIC_NumCloud,     1,             1,                NoMax_int         );
+
    ReadPara->Read( FileName );
 
-   ParEqmIC_Params_Filenames = new char [ParEqmIC_CloudNum][MAX_STRING];
+   ParEqmIC_Cloud_ParaFilenames = new char [ParEqmIC_NumCloud][MAX_STRING];
 
-   char ParEqmIC_Params_Filename_i[MAX_STRING];
-
-   for (int i=0; i<ParEqmIC_CloudNum; i++)
+   char ParEqmIC_Cloud_ParaFilename_i[MAX_STRING];
+   for (int i=0; i<ParEqmIC_NumCloud; i++)
    {
-      sprintf( ParEqmIC_Params_Filename_i, "ParEqmIC_Params_Filename_%d", i+1 );
-      ReadPara->Add( ParEqmIC_Params_Filename_i,  ParEqmIC_Params_Filenames[i],  NoDef_str,            Useless_str,   Useless_str      );
+      sprintf( ParEqmIC_Cloud_ParaFilename_i, "ParEqmIC_Cloud_ParaFilename_%d", i+1 );
+      ReadPara->Add( ParEqmIC_Cloud_ParaFilename_i, ParEqmIC_Cloud_ParaFilenames[i], NoDef_str, Useless_str, Useless_str );
    }
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
 
+// (1-2) set the default values
 
-   if ( MPI_Rank == 0 )
+// (1-3) check and reset the runtime parameters
+   for (int i=0; i<ParEqmIC_NumCloud; i++)
+      if ( !Aux_CheckFileExist( ParEqmIC_Cloud_ParaFilenames[i] ) )
+         Aux_Error( ERROR_INFO, "ParEqmIC_Cloud_ParaFilename_%d file %s cannot be found !!\n", i+1, ParEqmIC_Cloud_ParaFilenames[i] );
+
+
+// (2) set the parameters for each cloud
+   ParEqmIC_Cloud_Center             = new double [ParEqmIC_NumCloud][3];
+   ParEqmIC_Cloud_BulkVel            = new double [ParEqmIC_NumCloud][3];
+   ParEqmIC_Cloud_Type               = new char   [ParEqmIC_NumCloud][MAX_STRING];
+   ParEqmIC_Cloud_Rho0               = new double [ParEqmIC_NumCloud];
+   ParEqmIC_Cloud_R0                 = new double [ParEqmIC_NumCloud];
+   ParEqmIC_Cloud_EinastoPowerFactor = new double [ParEqmIC_NumCloud];
+   ParEqmIC_Cloud_DensityTable       = new char   [ParEqmIC_NumCloud][MAX_STRING];
+   ParEqmIC_Cloud_ParNumRatio        = new double [ParEqmIC_NumCloud];
+   ParEqmIC_Cloud_ParNum             = new long   [ParEqmIC_NumCloud];
+   ParEqmIC_Cloud_MaxR               = new double [ParEqmIC_NumCloud];
+   ParEqmIC_Cloud_DensProfNBin       = new int    [ParEqmIC_NumCloud];
+   ParEqmIC_Cloud_RSeed              = new int    [ParEqmIC_NumCloud];
+   ParEqmIC_Cloud_AddExtPot          = new int    [ParEqmIC_NumCloud];
+   ParEqmIC_Cloud_ExtPotTable        = new char   [ParEqmIC_NumCloud][MAX_STRING];
+
+   for (int i=0; i<ParEqmIC_NumCloud; i++)
    {
-      Aux_Message( stdout, "Checking Params_Filenames...\n" );
+      if ( MPI_Rank == 0 )   Aux_Message( stdout, "Reading the input ParEqmIC cloud parameters file for cloud_%d: %s\n", i+1, ParEqmIC_Cloud_ParaFilenames[i] );
 
-      fstream file;
-
-      for (int i=0; i<ParEqmIC_CloudNum; i++)
-      {
-         file.open( ParEqmIC_Params_Filenames[i], ios::in );
-
-         if ( !file )   Aux_Message( stdout, "ParEqmIC_Params_Filenames file %s cannot be found !!\n", ParEqmIC_Params_Filenames[i] );
-
-         file.close();
-      }
-
-      Aux_Message( stdout, "Checking Params_Filenames... done\n" );
-   }
-
-   ParEqmIC_Cloud_Center               = new double [ParEqmIC_CloudNum][3];
-   ParEqmIC_Cloud_BulkVel              = new double [ParEqmIC_CloudNum][3];
-   ParEqmIC_Cloud_Type                 = new char   [ParEqmIC_CloudNum][MAX_STRING];
-   ParEqmIC_Cloud_Rho0                 = new double [ParEqmIC_CloudNum];
-   ParEqmIC_Cloud_R0                   = new double [ParEqmIC_CloudNum];
-   ParEqmIC_Cloud_Einasto_Power_Factor = new double [ParEqmIC_CloudNum];
-   ParEqmIC_Density_Table_Name         = new char   [ParEqmIC_CloudNum][MAX_STRING];
-   ParEqmIC_Cloud_Par_Num_Ratio        = new double [ParEqmIC_CloudNum];
-   ParEqmIC_Cloud_Par_Num              = new long   [ParEqmIC_CloudNum];
-   ParEqmIC_Cloud_MaxR                 = new double [ParEqmIC_CloudNum];
-   ParEqmIC_Cloud_MassProfNBin         = new int    [ParEqmIC_CloudNum];
-   ParEqmIC_Cloud_RSeed                = new int    [ParEqmIC_CloudNum];
-   ParEqmIC_AddExtPot                  = new int    [ParEqmIC_CloudNum];
-   ParEqmIC_ExtPot_Table_Name          = new char   [ParEqmIC_CloudNum][MAX_STRING];
-
-   for (int i=0; i<ParEqmIC_CloudNum; i++)
-   {
-      if ( MPI_Rank == 0 )   Aux_Message( stdout, "Reading physical parameters input file (%d): %s\n", i, ParEqmIC_Params_Filenames[i] );
-
-      // (1) load the problem-specific runtime parameters
+      // (2-1) load the problem-specific runtime parameters
       ReadPara_t *ReadPara  = new ReadPara_t;
 
-      // (1-1) add parameters in the following format:
+      // (2-1-1) add parameters in the following format:
       // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
       // --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
       // ********************************************************************************************************************************
@@ -211,102 +196,109 @@ void SetParameter()
       ReadPara->Add( "Cloud_Type",                  ParEqmIC_Cloud_Type[i],                 NoDef_str,     Useless_str,      Useless_str       );
       ReadPara->Add( "Cloud_Rho0",                 &ParEqmIC_Cloud_Rho0[i],                 1.0,           Eps_double,       NoMax_double      );
       ReadPara->Add( "Cloud_R0",                   &ParEqmIC_Cloud_R0[i],                   0.1,           Eps_double,       NoMax_double      );
-      ReadPara->Add( "Cloud_Einasto_Power_Factor", &ParEqmIC_Cloud_Einasto_Power_Factor[i], 1.0,           0.1,              10.0              );
-      ReadPara->Add( "Density_Table_Name",          ParEqmIC_Density_Table_Name[i],         NoDef_str,     Useless_str,      Useless_str       );
-      ReadPara->Add( "Cloud_Par_Num_Ratio",        &ParEqmIC_Cloud_Par_Num_Ratio[i],        0.0,           0.0,              1.0               );
+      ReadPara->Add( "Cloud_EinastoPowerFactor",   &ParEqmIC_Cloud_EinastoPowerFactor[i],   1.0,           0.1,              10.0              );
+      ReadPara->Add( "Cloud_DensityTable",          ParEqmIC_Cloud_DensityTable[i],         NoDef_str,     Useless_str,      Useless_str       );
+      ReadPara->Add( "Cloud_ParNumRatio",          &ParEqmIC_Cloud_ParNumRatio[i],          0.0,           0.0,              1.0               );
       ReadPara->Add( "Cloud_MaxR",                 &ParEqmIC_Cloud_MaxR[i],                 0.375,         Eps_double,       NoMax_double      );
-      ReadPara->Add( "Cloud_MassProfNBin",         &ParEqmIC_Cloud_MassProfNBin[i],         1000,          2,                NoMax_int         );
+      ReadPara->Add( "Cloud_DensProfNBin",         &ParEqmIC_Cloud_DensProfNBin[i],         1000,          2,                NoMax_int         );
       ReadPara->Add( "Cloud_RSeed",                &ParEqmIC_Cloud_RSeed[i],                123,           0,                NoMax_int         );
-      ReadPara->Add( "AddExtPot",                  &ParEqmIC_AddExtPot[i],                  0,             0,                1                 );
-      ReadPara->Add( "ExtPot_Table_Name",           ParEqmIC_ExtPot_Table_Name[i],          NoDef_str,     Useless_str,      Useless_str       );
+      ReadPara->Add( "Cloud_AddExtPot",            &ParEqmIC_Cloud_AddExtPot[i],            0,             0,                1                 );
+      ReadPara->Add( "Cloud_ExtPotTable",           ParEqmIC_Cloud_ExtPotTable[i],          NoDef_str,     Useless_str,      Useless_str       );
 
-      ReadPara->Read( ParEqmIC_Params_Filenames[i] );
+      ReadPara->Read( ParEqmIC_Cloud_ParaFilenames[i] );
+
       delete ReadPara;
 
-      // (1-2) set the default values
+      // (2-1-2) set the default values
       for (int d=0; d<3; d++)
          if ( ParEqmIC_Cloud_Center[i][d] == NoDef_double )  ParEqmIC_Cloud_Center[i][d] = amr->BoxCenter[d];
 
-      // (2) make a note
-      if ( MPI_Rank == 0 )
+      // (2-2) Warn against small Cloud_R0
+      if ( MPI_Rank == 0  &&  ParEqmIC_Cloud_R0[i] < amr->dh[MAX_LEVEL] )
+         Aux_Message( stdout, "WARNING : scale length R0 = %f of cloud_%d is smaller than highest spatial resolution %f!\n", i+1, ParEqmIC_Cloud_R0[i], amr->dh[MAX_LEVEL] );
+
+      // (2-3) Check Cloud_Type
+      if ( !( strcmp( ParEqmIC_Cloud_Type[i], "Plummer"   ) == 0  ||
+              strcmp( ParEqmIC_Cloud_Type[i], "NFW"       ) == 0  ||
+              strcmp( ParEqmIC_Cloud_Type[i], "Burkert"   ) == 0  ||
+              strcmp( ParEqmIC_Cloud_Type[i], "Jaffe"     ) == 0  ||
+              strcmp( ParEqmIC_Cloud_Type[i], "Hernquist" ) == 0  ||
+              strcmp( ParEqmIC_Cloud_Type[i], "Einasto"   ) == 0  ||
+              strcmp( ParEqmIC_Cloud_Type[i], "Table"     ) == 0 ) )
+         Aux_Error( ERROR_INFO, "Incorrect ParEqmIC_Cloud_Type = %s for cloud_%d !!\n", ParEqmIC_Cloud_Type[i], i+1 );
+
+      // (2-4) Check Cloud_DensityTable
+      if ( strcmp( ParEqmIC_Cloud_Type[i], "Table" ) == 0  &&  !Aux_CheckFileExist( ParEqmIC_Cloud_DensityTable[i] ) )
+         Aux_Error( ERROR_INFO, "ParEqmIC_Cloud_DensityTable %s for cloud_%d cannot be found !!\n", ParEqmIC_Cloud_DensityTable[i], i+1 );
+
+      // (2-5) Check Cloud_ExtPotTable
+      if ( ParEqmIC_Cloud_AddExtPot[i]  &&  !Aux_CheckFileExist( ParEqmIC_Cloud_ExtPotTable[i] ) )
+         Aux_Error( ERROR_INFO, "ParEqmIC_Cloud_ExtPotTable %s for cloud_%d cannot be found !!\n", ParEqmIC_Cloud_ExtPotTable[i], i+1 );
+
+   } // for (int i=0; i<ParEqmIC_NumCloud; i++)
+
+
+// (3) reset other general-purpose parameters
+//     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
+   const long   End_Step_Default = __INT_MAX__;
+   const double End_T_Default    =  10;
+
+   if ( END_STEP < 0 ) {
+      END_STEP = End_Step_Default;
+      PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
+   }
+
+   if ( END_T < 0.0 ) {
+      END_T = End_T_Default;
+      PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
+   }
+
+
+// (4) make a note
+   if ( MPI_Rank == 0 )
+   {
+      Aux_Message( stdout, "=============================================================================\n"                  );
+      Aux_Message( stdout, "  test problem ID                              = %d\n",     TESTPROB_ID                          );
+      Aux_Message( stdout, "  small gas                                    = %13.7e\n", ParEqmIC_SmallGas                    );
+      Aux_Message( stdout, "  number of clouds                             = %d\n",     ParEqmIC_NumCloud                    );
+
+      for (int i=0; i<ParEqmIC_NumCloud; i++)
       {
-         if ( i == 0 )
-         {
-         Aux_Message( stdout, "=============================================================================\n"          );
-         Aux_Message( stdout, "  test problem ID                           = %d\n",     TESTPROB_ID                      );
-         Aux_Message( stdout, "=============================================================================\n"          );
-         }
 
-         Aux_Message( stdout, "=============================================================================\n"          );
-         Aux_Message( stdout, "  cloud ID                                  = %d\n",     i                                );
-         Aux_Message( stdout, "  random seed for setting particle position = %d\n",     ParEqmIC_Cloud_RSeed[i]          );
-         Aux_Message( stdout, "  peak density                              = %13.7e\n", ParEqmIC_Cloud_Rho0[i]           );
-         Aux_Message( stdout, "  scale radius                              = %13.7e\n", ParEqmIC_Cloud_R0[i]             );
-         Aux_Message( stdout, "  maximum radius of particles               = %13.7e\n", ParEqmIC_Cloud_MaxR[i]           );
+      Aux_Message( stdout, "\n" );
+      Aux_Message( stdout, "  Cloud ID                                     = %d\n",     i+1                                  );
 
-         for (int d=0; d<3; d++)
-         {
-         Aux_Message( stdout, "  central coordinate [%d]                    = %13.7e\n", d, ParEqmIC_Cloud_Center[i][d]  );
-         Aux_Message( stdout, "  bulk velocity [%d]                         = %13.7e\n", d, ParEqmIC_Cloud_BulkVel[i][d] );
-         }
-
-         if ( strcmp( ParEqmIC_Cloud_Type[i], "Table" ) != 0 )
-         Aux_Message( stdout, "  number of radial bins in the mass profile = %d\n",     ParEqmIC_Cloud_MassProfNBin[i]   );
-
-         Aux_Message( stdout, "  Cloud_Type                                = %s\n",     ParEqmIC_Cloud_Type[i]           );
-         Aux_Message( stdout, "=============================================================================\n"          );
-
-      }//if ( MPI_Rank == 0 )
-
-      // (3) Warn against small R0
-      if ( ParEqmIC_Cloud_R0[i] < amr->dh[MAX_LEVEL] )
-         Aux_Message( stdout, "WARNING : Characteristic length R0:%f is smaller than spatial resolution %f!\n", ParEqmIC_Cloud_R0[i], amr->dh[MAX_LEVEL] );
-
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
-
-      // (4) Check Cloud_Type and table filenames
-      // Checking Cloud_Type
-      if ( MPI_Rank == 0 )   Aux_Message( stdout, "Checking Cloud_Type\n" );
-
-      int flag = 0;
-
-      if      ( strcmp( ParEqmIC_Cloud_Type[i], "Plummer"   ) == 0 )   flag = 1;
-      else if ( strcmp( ParEqmIC_Cloud_Type[i], "NFW"       ) == 0 )   flag = 1;
-      else if ( strcmp( ParEqmIC_Cloud_Type[i], "Burkert"   ) == 0 )   flag = 1;
-      else if ( strcmp( ParEqmIC_Cloud_Type[i], "Jaffe"     ) == 0 )   flag = 1;
-      else if ( strcmp( ParEqmIC_Cloud_Type[i], "Hernquist" ) == 0 )   flag = 1;
-      else if ( strcmp( ParEqmIC_Cloud_Type[i], "Einasto"   ) == 0 )   flag = 1;
-      else if ( strcmp( ParEqmIC_Cloud_Type[i], "Table"     ) == 0 )   flag = 1;
-
-      if ( flag == 0 )   Aux_Error( ERROR_INFO, "Error in the input of Cloud_Type: %s is not a Model Type !!\n", ParEqmIC_Cloud_Type[i] );
-
-      // Checking Density_Table_Name
-      if ( MPI_Rank == 0 )   Aux_Message( stdout, "Checking Density_Table_Name\n" );
-
+      Aux_Message( stdout, "     Cloud_Type                                = %s\n",     ParEqmIC_Cloud_Type[i]               );
       if ( strcmp( ParEqmIC_Cloud_Type[i], "Table" ) == 0 )
-      {
-         fstream file;
-         file.open( ParEqmIC_Density_Table_Name[i], ios::in );
+      Aux_Message( stdout, "     density profile file name                 = %s\n",     ParEqmIC_Cloud_DensityTable[i]       );
 
-         if ( !file )   Aux_Error( ERROR_INFO, "Error in the input of Density_Table_Name: Density profile %s cannot be found !!\n", ParEqmIC_Density_Table_Name[i] );
+      for (int d=0; d<3; d++)
+      Aux_Message( stdout, "     central coordinate [%3d]                  = %13.7e\n", d, ParEqmIC_Cloud_Center[i][d]       );
+      for (int d=0; d<3; d++)
+      Aux_Message( stdout, "     bulk velocity [%3d]                       = %13.7e\n", d, ParEqmIC_Cloud_BulkVel[i][d]      );
 
-         file.close();
+      Aux_Message( stdout, "     peak density                              = %13.7e\n", ParEqmIC_Cloud_Rho0[i]               );
+      Aux_Message( stdout, "     scale radius                              = %13.7e\n", ParEqmIC_Cloud_R0[i]                 );
+      if ( strcmp( ParEqmIC_Cloud_Type[i], "Einasto" ) == 0 )
+      Aux_Message( stdout, "     Einasto power factor                      = %13.7e\n", ParEqmIC_Cloud_EinastoPowerFactor[i] );
+
+      Aux_Message( stdout, "     ratio of number of particles              = %13.7e\n", ParEqmIC_Cloud_ParNumRatio[i]        );
+      Aux_Message( stdout, "     maximum radius of particles               = %13.7e\n", ParEqmIC_Cloud_MaxR[i]               );
+      Aux_Message( stdout, "     random seed for setting particle position = %d\n",     ParEqmIC_Cloud_RSeed[i]              );
+      if ( strcmp( ParEqmIC_Cloud_Type[i], "Table" ) != 0 )
+      Aux_Message( stdout, "     number of radial bins in the dens profile = %d\n",     ParEqmIC_Cloud_DensProfNBin[i]       );
+
+      Aux_Message( stdout, "     adding external potential                 = %d\n",     ParEqmIC_Cloud_AddExtPot[i]          );
+      if ( ParEqmIC_Cloud_AddExtPot[i] )
+      Aux_Message( stdout, "     external potential table file name        = %s\n",     ParEqmIC_Cloud_ExtPotTable[i]        );
+
       }
 
-      // Checking ExtPot_Table_Name
-      if ( MPI_Rank == 0 )   Aux_Message( stdout, "Checking ExtPot_Table_Name\n" );
+      Aux_Message( stdout, "=============================================================================\n"                  );
+   }
 
-      if ( ParEqmIC_AddExtPot[i] )
-      {
-         fstream file;
-         file.open( ParEqmIC_ExtPot_Table_Name[i], ios::in );
 
-         if ( !file )   Aux_Error( ERROR_INFO, "Error in the input of ExtPot_Table_Name: External potential profile %s cannot be found !!\n", ParEqmIC_ExtPot_Table_Name[i] );
-
-         file.close();
-      }
-
-   } // for (int i=0; i<ParEqmIC_CloudNum; i++)
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
 
 } // FUNCTION : SetParameter
 
@@ -360,21 +352,21 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //-------------------------------------------------------------------------------------------------------
 void End_ParEqmIC()
 {
-   delete [] ParEqmIC_Params_Filenames;
+   delete [] ParEqmIC_Cloud_ParaFilenames;
    delete [] ParEqmIC_Cloud_Center;
    delete [] ParEqmIC_Cloud_BulkVel;
    delete [] ParEqmIC_Cloud_Type;
    delete [] ParEqmIC_Cloud_Rho0;
    delete [] ParEqmIC_Cloud_R0;
-   delete [] ParEqmIC_Cloud_Einasto_Power_Factor;
-   delete [] ParEqmIC_Density_Table_Name;
-   delete [] ParEqmIC_Cloud_Par_Num_Ratio;
-   delete [] ParEqmIC_Cloud_Par_Num;
+   delete [] ParEqmIC_Cloud_EinastoPowerFactor;
+   delete [] ParEqmIC_Cloud_DensityTable;
+   delete [] ParEqmIC_Cloud_ParNumRatio;
+   delete [] ParEqmIC_Cloud_ParNum;
    delete [] ParEqmIC_Cloud_MaxR;
-   delete [] ParEqmIC_Cloud_MassProfNBin;
+   delete [] ParEqmIC_Cloud_DensProfNBin;
    delete [] ParEqmIC_Cloud_RSeed;
-   delete [] ParEqmIC_AddExtPot;
-   delete [] ParEqmIC_ExtPot_Table_Name;
+   delete [] ParEqmIC_Cloud_AddExtPot;
+   delete [] ParEqmIC_Cloud_ExtPotTable;
 
 } // FUNCTION : End_ParEqmIC
 #endif // #if ( MODEL == HYDRO )
