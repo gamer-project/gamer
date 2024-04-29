@@ -552,7 +552,7 @@ def load_arguments():
                          depend={"particle":True},
                          help="Enable double precision for particle attributes.\n"
                        )
-    # A.5 grackle
+#   A.5 grackle
     parser.add_argument( "--grackle", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_GRACKLE",
                          default=False,
                          constraint={ True:{"model":"HYDRO", "eos":["GAMMA", "COSMIC_RAY"], "comoving":False} },
