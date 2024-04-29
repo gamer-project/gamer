@@ -47,43 +47,43 @@ void Par_EquilibriumIC::Init()
 
    //Set random seeds
    Random_Num_Gen = new RandomNumber_t( 1 );
-   Random_Num_Gen->SetSeed( 0, params.Cloud_RSeed );
+   Random_Num_Gen->SetSeed( 0, Cloud_RSeed );
 
    //Initialize densities with Table
-   if ( strcmp( params.Cloud_Type, "Table" ) == 0 )
+   if ( strcmp( Cloud_Type, "Table" ) == 0 )
    {
 
       int Tcol_r[1]   =  {0};
       int Tcol_rho[1] =  {1};
       int Row_r_Table;
 
-      Aux_Message( stdout, "Loading Density Profile Table: %s\n", params.Density_Table_Name );
+      Aux_Message( stdout, "Loading Density Profile Table: %s\n", Density_Table_Name );
 
-      Row_r_Table = Aux_LoadTable( Table_r, params.Density_Table_Name, 1, Tcol_r,true,true );
+      Row_r_Table = Aux_LoadTable( Table_r, Density_Table_Name, 1, Tcol_r,true,true );
 
       int Row_Density_Table;
-      Row_Density_Table = Aux_LoadTable( Table_Density, params.Density_Table_Name , 1, Tcol_rho,true,true );
+      Row_Density_Table = Aux_LoadTable( Table_Density, Density_Table_Name , 1, Tcol_rho,true,true );
 
       if ( Row_r_Table != Row_Density_Table )
          Aux_Error( ERROR_INFO, "Density row number is not equal to radius row number in the profile file !! Please check this file.\n" );
 
-      params.Cloud_MassProfNBin = Row_r_Table;
+      Cloud_MassProfNBin = Row_r_Table;
 
       // Radii in the density table must be no less than Cloud_MaxR
-      if ( Table_r[params.Cloud_MassProfNBin-1] < params.Cloud_MaxR )
+      if ( Table_r[Cloud_MassProfNBin-1] < Cloud_MaxR )
       {
          Aux_Error( ERROR_INFO, "Maximum radius in your density table is smaller then Cloud_MaxR! Please check!\n" );
       }
 
-      Table_Enclosed_Mass     = new double [params.Cloud_MassProfNBin];
-      Table_dRho_dr           = new double [params.Cloud_MassProfNBin];
-      Table_Gravity_Field     = new double [params.Cloud_MassProfNBin];
-      Table_Gravity_Potential = new double [params.Cloud_MassProfNBin];
-      Table_dRho_dx           = new double [params.Cloud_MassProfNBin];
+      Table_Enclosed_Mass     = new double [Cloud_MassProfNBin];
+      Table_dRho_dr           = new double [Cloud_MassProfNBin];
+      Table_Gravity_Field     = new double [Cloud_MassProfNBin];
+      Table_Gravity_Potential = new double [Cloud_MassProfNBin];
+      Table_dRho_dx           = new double [Cloud_MassProfNBin];
 
-      prob_dens               = new double [params.Cloud_MassProfNBin];
-      int_prob_dens           = new double [params.Cloud_MassProfNBin];
-      psi                     = new double [params.Cloud_MassProfNBin];
+      prob_dens               = new double [Cloud_MassProfNBin];
+      int_prob_dens           = new double [Cloud_MassProfNBin];
+      psi                     = new double [Cloud_MassProfNBin];
 
       Init_Mass_Table();
       Init_Pot_Table ();
@@ -94,17 +94,17 @@ void Par_EquilibriumIC::Init()
 
    else
    {
-      Table_r                 = new double [params.Cloud_MassProfNBin];
-      Table_Enclosed_Mass     = new double [params.Cloud_MassProfNBin];
-      Table_Density           = new double [params.Cloud_MassProfNBin];
-      Table_dRho_dr           = new double [params.Cloud_MassProfNBin];
-      Table_Gravity_Field     = new double [params.Cloud_MassProfNBin];
-      Table_Gravity_Potential = new double [params.Cloud_MassProfNBin];
-      Table_dRho_dx           = new double [params.Cloud_MassProfNBin];
+      Table_r                 = new double [Cloud_MassProfNBin];
+      Table_Enclosed_Mass     = new double [Cloud_MassProfNBin];
+      Table_Density           = new double [Cloud_MassProfNBin];
+      Table_dRho_dr           = new double [Cloud_MassProfNBin];
+      Table_Gravity_Field     = new double [Cloud_MassProfNBin];
+      Table_Gravity_Potential = new double [Cloud_MassProfNBin];
+      Table_dRho_dx           = new double [Cloud_MassProfNBin];
 
-      prob_dens               = new double [params.Cloud_MassProfNBin];
-      int_prob_dens           = new double [params.Cloud_MassProfNBin];
-      psi                     = new double [params.Cloud_MassProfNBin];
+      prob_dens               = new double [Cloud_MassProfNBin];
+      int_prob_dens           = new double [Cloud_MassProfNBin];
+      psi                     = new double [Cloud_MassProfNBin];
 
       Init_Mass     ();
       Init_Pot      ();
@@ -141,23 +141,23 @@ void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllR
 
 
    // determine the total enclosed mass within the maximum radius
-   TotM = Set_Mass( params.Cloud_MaxR );
-   ParM = TotM / (params.Cloud_Par_Num);
+   TotM = Set_Mass( Cloud_MaxR );
+   ParM = TotM / (Cloud_Par_Num);
 
    // construct the mass profile table
-   Table_MassProf_r = new double [params.Cloud_MassProfNBin];
-   Table_MassProf_M = new double [params.Cloud_MassProfNBin];
+   Table_MassProf_r = new double [Cloud_MassProfNBin];
+   Table_MassProf_M = new double [Cloud_MassProfNBin];
 
-   dr = params.Cloud_MaxR / (params.Cloud_MassProfNBin-1);
+   dr = Cloud_MaxR / (Cloud_MassProfNBin-1);
 
-   for (int b=0; b<params.Cloud_MassProfNBin; b++)
+   for (int b=0; b<Cloud_MassProfNBin; b++)
    {
       Table_MassProf_r[b] = dr*b;
       Table_MassProf_M[b] = Set_Mass( Table_MassProf_r[b] );
    }
 
    // set particle attributes
-   for (long p=Par_Idx0; p<Par_Idx0+params.Cloud_Par_Num; p++)
+   for (long p=Par_Idx0; p<Par_Idx0+Cloud_Par_Num; p++)
    {
       // mass
       Mass_AllRank[p] = ParM;
@@ -165,7 +165,7 @@ void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllR
       // position
       // --> sample from the cumulative mass profile with linear interpolation
       RanM = Random_Num_Gen->GetValue( 0, 0.0, 1.0 )*TotM;
-      RanR = Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_MassProf_M, Table_MassProf_r, RanM );
+      RanR = Mis_InterpolateFromTable( Cloud_MassProfNBin, Table_MassProf_M, Table_MassProf_r, RanM );
 
       // record the maximum error
       EstM     = Set_Mass( RanR );
@@ -174,7 +174,7 @@ void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllR
 
       // randomly set the position vector with a given radius
       RanVec_FixRadius( RanR, RanVec );
-      for (int d=0; d<3; d++)    Pos_AllRank[d][p] = RanVec[d] + params.Cloud_Center[d];
+      for (int d=0; d<3; d++)    Pos_AllRank[d][p] = RanVec[d] + Cloud_Center[d];
 
       // check periodicity
       for (int d=0; d<3; d++)
@@ -184,13 +184,13 @@ void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllR
       }
 
       // velocity
-      double a3 = RanR/params.Cloud_R0;
+      double a3 = RanR/Cloud_R0;
 
       RanV = Set_Velocity(a3);
 
       // randomly set the velocity vector with the given amplitude (RanV*Vmax)
       RanVec_FixRadius( RanV, RanVec );
-      for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + params.Cloud_BulkVel[d];
+      for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + Cloud_BulkVel[d];
 
    } // for (long p=0; p<NPar_AllRank; p++)
 
@@ -665,11 +665,11 @@ double MassIntegrand_Einasto( const double r, void* parameters )
 double Par_EquilibriumIC::Set_Mass( const double r )
 {
 
-   if ( strcmp( params.Cloud_Type, "Table" ) == 0 )
+   if ( strcmp( Cloud_Type, "Table" ) == 0 )
    {
-      if      ( r >= Table_r[params.Cloud_MassProfNBin-1] )   return Table_Enclosed_Mass[params.Cloud_MassProfNBin-1];
-      else if ( r <= Table_r[0] )                             return Table_Enclosed_Mass[0];
-      else                                                    return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Enclosed_Mass, r );
+      if      ( r >= Table_r[Cloud_MassProfNBin-1] )   return Table_Enclosed_Mass[Cloud_MassProfNBin-1];
+      else if ( r <= Table_r[0] )                      return Table_Enclosed_Mass[0];
+      else                                             return Mis_InterpolateFromTable( Cloud_MassProfNBin, Table_r, Table_Enclosed_Mass, r );
    }
    else
    {
@@ -690,19 +690,19 @@ double Par_EquilibriumIC::Set_Mass( const double r )
       gsl_function F;
 
       // integrand for the integration
-      if      ( strcmp( params.Cloud_Type, "Plummer"   ) == 0 ) F.function = &MassIntegrand_Plummer;
-      else if ( strcmp( params.Cloud_Type, "NFW"       ) == 0 ) F.function = &MassIntegrand_NFW;
-      else if ( strcmp( params.Cloud_Type, "Burkert"   ) == 0 ) F.function = &MassIntegrand_Burkert;
-      else if ( strcmp( params.Cloud_Type, "Jaffe"     ) == 0 ) F.function = &MassIntegrand_Jaffe;
-      else if ( strcmp( params.Cloud_Type, "Hernquist" ) == 0 ) F.function = &MassIntegrand_Hernquist;
-      else if ( strcmp( params.Cloud_Type, "Einasto"   ) == 0 ) F.function = &MassIntegrand_Einasto;
+      if      ( strcmp( Cloud_Type, "Plummer"   ) == 0 ) F.function = &MassIntegrand_Plummer;
+      else if ( strcmp( Cloud_Type, "NFW"       ) == 0 ) F.function = &MassIntegrand_NFW;
+      else if ( strcmp( Cloud_Type, "Burkert"   ) == 0 ) F.function = &MassIntegrand_Burkert;
+      else if ( strcmp( Cloud_Type, "Jaffe"     ) == 0 ) F.function = &MassIntegrand_Jaffe;
+      else if ( strcmp( Cloud_Type, "Hernquist" ) == 0 ) F.function = &MassIntegrand_Hernquist;
+      else if ( strcmp( Cloud_Type, "Einasto"   ) == 0 ) F.function = &MassIntegrand_Einasto;
 
       // parameters for the integrand
-      struct mass_integrand_params         integrand_params         = { params.Cloud_R0, params.Cloud_Rho0 };
-      struct mass_integrand_params_Einasto integrand_params_Einasto = { params.Cloud_R0, params.Cloud_Rho0, params.Cloud_Einasto_Power_Factor };
+      struct mass_integrand_params         integrand_params         = { Cloud_R0, Cloud_Rho0 };
+      struct mass_integrand_params_Einasto integrand_params_Einasto = { Cloud_R0, Cloud_Rho0, Cloud_Einasto_Power_Factor };
 
-      if      ( strcmp( params.Cloud_Type, "Einasto"   ) == 0 ) F.params   = &integrand_params_Einasto;
-      else                                                      F.params   = &integrand_params;
+      if      ( strcmp( Cloud_Type, "Einasto"   ) == 0 ) F.params   = &integrand_params_Einasto;
+      else                                               F.params   = &integrand_params;
 
       // integration
       gsl_integration_qag( &F, lower_bound, upper_bound, abs_err_lim, rel_err_lim, limit_size, integ_rule, w, &enclosed_mass, &abs_error );
@@ -730,23 +730,23 @@ double Par_EquilibriumIC::Set_Mass( const double r )
 double Par_EquilibriumIC::Set_Density( const double r )
 {
 
-   if ( strcmp( params.Cloud_Type, "Table" ) == 0 )
+   if ( strcmp( Cloud_Type, "Table" ) == 0 )
    {
-      if ( r >= Table_r[params.Cloud_MassProfNBin-1] )
-         return Table_Density[params.Cloud_MassProfNBin-1];
+      if ( r >= Table_r[Cloud_MassProfNBin-1] )
+         return Table_Density[Cloud_MassProfNBin-1];
       else
-         return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Density, r );
+         return Mis_InterpolateFromTable( Cloud_MassProfNBin, Table_r, Table_Density, r );
    }
    else
    {
       double rho;
 
-      if      ( strcmp( params.Cloud_Type, "Plummer"   ) == 0 ) rho = AnalyticalDensProf_Plummer  ( r, params.Cloud_R0, params.Cloud_Rho0 );
-      else if ( strcmp( params.Cloud_Type, "NFW"       ) == 0 ) rho = AnalyticalDensProf_NFW      ( r, params.Cloud_R0, params.Cloud_Rho0 );
-      else if ( strcmp( params.Cloud_Type, "Burkert"   ) == 0 ) rho = AnalyticalDensProf_Burkert  ( r, params.Cloud_R0, params.Cloud_Rho0 );
-      else if ( strcmp( params.Cloud_Type, "Jaffe"     ) == 0 ) rho = AnalyticalDensProf_Jaffe    ( r, params.Cloud_R0, params.Cloud_Rho0 );
-      else if ( strcmp( params.Cloud_Type, "Hernquist" ) == 0 ) rho = AnalyticalDensProf_Hernquist( r, params.Cloud_R0, params.Cloud_Rho0 );
-      else if ( strcmp( params.Cloud_Type, "Einasto"   ) == 0 ) rho = AnalyticalDensProf_Einasto  ( r, params.Cloud_R0, params.Cloud_Rho0, params.Cloud_Einasto_Power_Factor );
+      if      ( strcmp( Cloud_Type, "Plummer"   ) == 0 ) rho = AnalyticalDensProf_Plummer  ( r, Cloud_R0, Cloud_Rho0 );
+      else if ( strcmp( Cloud_Type, "NFW"       ) == 0 ) rho = AnalyticalDensProf_NFW      ( r, Cloud_R0, Cloud_Rho0 );
+      else if ( strcmp( Cloud_Type, "Burkert"   ) == 0 ) rho = AnalyticalDensProf_Burkert  ( r, Cloud_R0, Cloud_Rho0 );
+      else if ( strcmp( Cloud_Type, "Jaffe"     ) == 0 ) rho = AnalyticalDensProf_Jaffe    ( r, Cloud_R0, Cloud_Rho0 );
+      else if ( strcmp( Cloud_Type, "Hernquist" ) == 0 ) rho = AnalyticalDensProf_Hernquist( r, Cloud_R0, Cloud_Rho0 );
+      else if ( strcmp( Cloud_Type, "Einasto"   ) == 0 ) rho = AnalyticalDensProf_Einasto  ( r, Cloud_R0, Cloud_Rho0, Cloud_Einasto_Power_Factor );
 
       return rho;
 
@@ -772,7 +772,7 @@ double Par_EquilibriumIC::Set_Velocity( const double x )
    double index, sum = 0;
    double psi_per = -potential(x);
 
-   for (int k=0; k<params.Cloud_MassProfNBin; k++)
+   for (int k=0; k<Cloud_MassProfNBin; k++)
    {
 
       if ( psi[k] > psi_per )
@@ -791,7 +791,7 @@ double Par_EquilibriumIC::Set_Velocity( const double x )
 
    sum_rad *= sum;
 
-   for (int k=0; k<params.Cloud_MassProfNBin; k++)
+   for (int k=0; k<Cloud_MassProfNBin; k++)
    {
 
       if ( sum_mes > sum_rad )
@@ -803,8 +803,8 @@ double Par_EquilibriumIC::Set_Velocity( const double x )
 
       sum_mes += prob_dens[k] *pow( psi_per-psi[k], 0.5 ) *delta;
 
-      if ( k == params.Cloud_MassProfNBin-1 )
-         index_ass = params.Cloud_MassProfNBin-1;
+      if ( k == Cloud_MassProfNBin-1 )
+         index_ass = Cloud_MassProfNBin-1;
    }
 
    psi_ass = psi[index_ass] + delta*par;
@@ -837,11 +837,11 @@ double Par_EquilibriumIC::Set_Velocity( const double x )
 // Solve Eddington's equation
 double Par_EquilibriumIC::potential( const double x )
 {
-   const double r = x*params.Cloud_R0;
+   const double r = x*Cloud_R0;
 
-   if ( r >= Table_r[params.Cloud_MassProfNBin-1] )
+   if ( r >= Table_r[Cloud_MassProfNBin-1] )
    {
-      return Table_Gravity_Potential[params.Cloud_MassProfNBin-1]*Table_r[params.Cloud_MassProfNBin-1]/r;
+      return Table_Gravity_Potential[Cloud_MassProfNBin-1]*Table_r[Cloud_MassProfNBin-1]/r;
    }
 
    if ( r <= Table_r[0] )
@@ -849,7 +849,7 @@ double Par_EquilibriumIC::potential( const double x )
       return Table_Gravity_Potential[0];
    }
 
-   return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Gravity_Potential, r );
+   return Mis_InterpolateFromTable( Cloud_MassProfNBin, Table_r, Table_Gravity_Potential, r );
 
 } // FUNCTION : potential
 
@@ -877,7 +877,7 @@ double Par_EquilibriumIC::Integration_Eng_base( const double Eng, const int N_po
       const double Psi_M = Eng_min +  (i+0.5)*dEng;
       const double Psi_R = Eng_min +    (i+1)*dEng;
 
-      const int    index_Psi  = Mis_BinarySearch_Real( Table_Gravity_Potential, 0, params.Cloud_MassProfNBin-1,
+      const int    index_Psi  = Mis_BinarySearch_Real( Table_Gravity_Potential, 0, Cloud_MassProfNBin-1,
                                                        -Psi_M ) + 1;
 
       if ( i == N_points-1 )   Integration_result += -2*Table_dRho_dx[index_Psi]*( sqrt( Eng-Psi_L ) );
@@ -905,17 +905,17 @@ double Par_EquilibriumIC::Integration_Eng_base( const double Eng, const int N_po
 void Par_EquilibriumIC::Init_Mass()
 {
 
-   double dr = params.Cloud_MaxR / (params.Cloud_MassProfNBin-1);
+   double dr = Cloud_MaxR / (Cloud_MassProfNBin-1);
 
    //Radius & Mass
-   for (int b=0; b<params.Cloud_MassProfNBin; b++)
+   for (int b=0; b<Cloud_MassProfNBin; b++)
    {
       Table_r[b] = dr*b;
       Table_Enclosed_Mass[b] = Set_Mass( Table_r[b] );
    }
 
    //Rho
-   for (int b=1; b<params.Cloud_MassProfNBin; b++)
+   for (int b=1; b<Cloud_MassProfNBin; b++)
    {
       Table_Density[b] = Set_Density( Table_r[b] );
    }
@@ -924,7 +924,7 @@ void Par_EquilibriumIC::Init_Mass()
 
    //Rhodr
    Table_dRho_dr[0] = ( Table_Density[1]-Table_Density[0] )/dr;
-   for (int b=1; b<params.Cloud_MassProfNBin-1; b++)
+   for (int b=1; b<Cloud_MassProfNBin-1; b++)
    {
       int num=3;
 
@@ -934,15 +934,15 @@ void Par_EquilibriumIC::Init_Mass()
       else if ( b == 1 )
          Table_dRho_dr[b] = Slope_LinearRegression( Table_r, Table_Density, 0, num/2+2 );
 
-      else if ( b == params.Cloud_MassProfNBin-2 )
-         Table_dRho_dr[b] = Slope_LinearRegression( Table_r, Table_Density, params.Cloud_MassProfNBin-num/2-1, num/2+1 );
+      else if ( b == Cloud_MassProfNBin-2 )
+         Table_dRho_dr[b] = Slope_LinearRegression( Table_r, Table_Density, Cloud_MassProfNBin-num/2-1, num/2+1 );
 
       else
          Table_dRho_dr[b] = Slope_LinearRegression( Table_r, Table_Density, b-num/2, num+1 );
 
    }
 
-   Table_dRho_dr[params.Cloud_MassProfNBin-1] = Table_dRho_dr[params.Cloud_MassProfNBin-2];
+   Table_dRho_dr[Cloud_MassProfNBin-1] = Table_dRho_dr[Cloud_MassProfNBin-2];
 
 } // FUNCTION : Init_Mass
 
@@ -962,20 +962,20 @@ void Par_EquilibriumIC::Init_Mass()
 void Par_EquilibriumIC::Init_Pot()
 {
 
-   double dr = params.Cloud_MaxR / (params.Cloud_MassProfNBin-1);
+   double dr = Cloud_MaxR / (Cloud_MassProfNBin-1);
 
    Table_Gravity_Field[0] =0;
 
-   for (int b=1; b<params.Cloud_MassProfNBin; b++)
+   for (int b=1; b<Cloud_MassProfNBin; b++)
    {
       Table_Gravity_Field[b] = -NEWTON_G*Table_Enclosed_Mass[b]/pow( Table_r[b], 2 );
    }
 
    //Pot
-   Table_Gravity_Potential[params.Cloud_MassProfNBin-1] = -NEWTON_G*Table_Enclosed_Mass[params.Cloud_MassProfNBin-1]/Table_r[params.Cloud_MassProfNBin-1];
-   Eng_min = -Table_Gravity_Potential[params.Cloud_MassProfNBin-1];
+   Table_Gravity_Potential[Cloud_MassProfNBin-1] = -NEWTON_G*Table_Enclosed_Mass[Cloud_MassProfNBin-1]/Table_r[Cloud_MassProfNBin-1];
+   Eng_min = -Table_Gravity_Potential[Cloud_MassProfNBin-1];
 
-   for (int b=params.Cloud_MassProfNBin-2; b>0; b--)
+   for (int b=Cloud_MassProfNBin-2; b>0; b--)
    {
       Table_Gravity_Potential[b] = Table_Gravity_Potential[b+1] + Table_Gravity_Field[b]*dr;
    }
@@ -983,7 +983,7 @@ void Par_EquilibriumIC::Init_Pot()
    Table_Gravity_Potential[0] = Table_Gravity_Potential[1];
 
    //derho_overdx
-   for (int b=0; b<params.Cloud_MassProfNBin; b++)
+   for (int b=0; b<Cloud_MassProfNBin; b++)
    {
       Table_dRho_dx[b] = -Table_dRho_dr[b]/Table_Gravity_Field[b];
    }
@@ -1011,7 +1011,7 @@ void Par_EquilibriumIC::Init_Mass_Table()
    Table_Enclosed_Mass[0] = 0;
    double rho,dr,r;
 
-   for (int b=1; b<params.Cloud_MassProfNBin; b++)
+   for (int b=1; b<Cloud_MassProfNBin; b++)
    {
       rho = (Table_Density[b] + Table_Density[b-1])/2;
       dr  = Table_r[b] - Table_r[b-1];
@@ -1023,7 +1023,7 @@ void Par_EquilibriumIC::Init_Mass_Table()
    //Rhodr
    Table_dRho_dr[0] = (Table_Density[1]-Table_Density[0])/(Table_r[1]-Table_r[0]);
 
-   for (int b=1; b<params.Cloud_MassProfNBin-1; b++)
+   for (int b=1; b<Cloud_MassProfNBin-1; b++)
    {
       int num = 3;
       if      ( b == 0 )
@@ -1032,14 +1032,14 @@ void Par_EquilibriumIC::Init_Mass_Table()
       else if ( b == 1 )
          Table_dRho_dr[b] = Slope_LinearRegression( Table_r, Table_Density, 0, num/2+2 );
 
-      else if ( b == params.Cloud_MassProfNBin-2 )
-         Table_dRho_dr[b] = Slope_LinearRegression( Table_r, Table_Density, params.Cloud_MassProfNBin-num/2-1, num/2+1 );
+      else if ( b == Cloud_MassProfNBin-2 )
+         Table_dRho_dr[b] = Slope_LinearRegression( Table_r, Table_Density, Cloud_MassProfNBin-num/2-1, num/2+1 );
       else
          Table_dRho_dr[b] = Slope_LinearRegression( Table_r, Table_Density, b-num/2, num+1 );
 
    }
 
-   Table_dRho_dr[params.Cloud_MassProfNBin-1] = Table_dRho_dr[params.Cloud_MassProfNBin-2];
+   Table_dRho_dr[Cloud_MassProfNBin-1] = Table_dRho_dr[Cloud_MassProfNBin-2];
 
 } // FUNCTION : Init_Mass_Table
 
@@ -1060,17 +1060,17 @@ void Par_EquilibriumIC::Init_Pot_Table()
 {
 
    Table_Gravity_Field[0] = 0;
-   for (int b=1; b<params.Cloud_MassProfNBin; b++)
+   for (int b=1; b<Cloud_MassProfNBin; b++)
    {
       Table_Gravity_Field[b] = -NEWTON_G*Table_Enclosed_Mass[b]/pow( Table_r[b], 2 );
    }
 
    //Pot
-   Table_Gravity_Potential[params.Cloud_MassProfNBin-1] = -NEWTON_G*Table_Enclosed_Mass[params.Cloud_MassProfNBin-1]/Table_r[params.Cloud_MassProfNBin-1];
+   Table_Gravity_Potential[Cloud_MassProfNBin-1] = -NEWTON_G*Table_Enclosed_Mass[Cloud_MassProfNBin-1]/Table_r[Cloud_MassProfNBin-1];
 
-   Eng_min = -Table_Gravity_Potential[params.Cloud_MassProfNBin-1];
+   Eng_min = -Table_Gravity_Potential[Cloud_MassProfNBin-1];
 
-   for (int b=params.Cloud_MassProfNBin-2; b>0; b--)
+   for (int b=Cloud_MassProfNBin-2; b>0; b--)
    {
       double dr = Table_r[b+1] - Table_r[b];
 
@@ -1080,7 +1080,7 @@ void Par_EquilibriumIC::Init_Pot_Table()
    Table_Gravity_Potential[0] = Table_Gravity_Potential[1];
 
    //derho_overdx
-   for (int b=0; b<params.Cloud_MassProfNBin; b++)
+   for (int b=0; b<Cloud_MassProfNBin; b++)
    {
       Table_dRho_dx[b] = -Table_dRho_dr[b]/Table_Gravity_Field[b];
    }
@@ -1103,13 +1103,13 @@ void Par_EquilibriumIC::Init_Prob_Dens()
 {
 
    double min, max;
-   min   = -Table_Gravity_Potential[params.Cloud_MassProfNBin-1];
+   min   = -Table_Gravity_Potential[Cloud_MassProfNBin-1];
    max   = -Table_Gravity_Potential[1];
-   delta = (max-min)/params.Cloud_MassProfNBin;
+   delta = (max-min)/Cloud_MassProfNBin;
 
    double eng = min;
 
-   for (int k =0; k<params.Cloud_MassProfNBin; k++)
+   for (int k =0; k<Cloud_MassProfNBin; k++)
    {
 
       psi[k] = eng;
@@ -1120,20 +1120,20 @@ void Par_EquilibriumIC::Init_Prob_Dens()
 
    }
 
-   for (int k =0; k<params.Cloud_MassProfNBin; k++)
+   for (int k =0; k<Cloud_MassProfNBin; k++)
    {
 
-      if      ( k == 0 )                           prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k,   5 );
-      else if ( k == 1 )                           prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k-1, 5 );
-      else if ( k == params.Cloud_MassProfNBin-2 ) prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k-3, 5 );
-      else if ( k == params.Cloud_MassProfNBin-1 ) prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k-4, 5 );
-      else                                         prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k-2, 5 );
+      if      ( k == 0 )                    prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k,   5 );
+      else if ( k == 1 )                    prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k-1, 5 );
+      else if ( k == Cloud_MassProfNBin-2 ) prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k-3, 5 );
+      else if ( k == Cloud_MassProfNBin-1 ) prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k-4, 5 );
+      else                                  prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k-2, 5 );
 
-      if ( prob_dens[k] < 0 )                      prob_dens[k] = 0;
+      if ( prob_dens[k] < 0 )               prob_dens[k] = 0;
 
    }
 
-   SmoothArray( prob_dens, 0, params.Cloud_MassProfNBin );
+   SmoothArray( prob_dens, 0, Cloud_MassProfNBin );
 
 } // FUNCTION : Init_Prob_Dens
 
@@ -1152,7 +1152,7 @@ void Par_EquilibriumIC::Init_Prob_Dens()
 void Par_EquilibriumIC::Add_Ext_Pot()
 {
 
-   if ( ! bool(params.AddExtPot) )  return;
+   if ( ! bool(AddExtPot) )  return;
 
    Aux_Message( stdout, "Loading External Potential Table...\n");
 
@@ -1163,20 +1163,20 @@ void Par_EquilibriumIC::Add_Ext_Pot()
    double* Ext_Pot=NULL;
 
    int Row_r_Table;
-   Row_r_Table = Aux_LoadTable( Radius, params.ExtPot_Table_Name, 1, Tcol_r, true, true );
+   Row_r_Table = Aux_LoadTable( Radius, ExtPot_Table_Name, 1, Tcol_r, true, true );
 
    int Row_Ext_Pot_Table;
-   Row_Ext_Pot_Table = Aux_LoadTable( Ext_Pot, params.ExtPot_Table_Name, 1, Tcol_Pot, true, true );
+   Row_Ext_Pot_Table = Aux_LoadTable( Ext_Pot, ExtPot_Table_Name, 1, Tcol_Pot, true, true );
 
-   Aux_Message( stdout, "Loading Ext_Pot Profile Table: %s\n", params.ExtPot_Table_Name );
+   Aux_Message( stdout, "Loading Ext_Pot Profile Table: %s\n", ExtPot_Table_Name );
 
    if ( Row_r_Table != Row_Ext_Pot_Table )
       Aux_Error( ERROR_INFO, "Ext_Pot row number is not equal to radius row number in the profile file !! Please check this file.\n" );
 
-   if ( params.Cloud_MassProfNBin != Row_r_Table )
+   if ( Cloud_MassProfNBin != Row_r_Table )
       Aux_Error( ERROR_INFO, "Cloud_MassProfNBin is not equal to the row number in profile file !!\n" );
 
-   for (int i=0; i<params.Cloud_MassProfNBin; i++)
+   for (int i=0; i<Cloud_MassProfNBin; i++)
    {
       Table_Gravity_Potential[i] += Ext_Pot[i];
    }

@@ -101,47 +101,47 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
 //       initialize Par_EquilibriumIC for each cloud
          Par_EquilibriumIC Cloud_Constructor;
 
-         Cloud_Constructor.params.Cloud_Center                = new double[3];
-         Cloud_Constructor.params.Cloud_BulkVel               = new double[3];
+         Cloud_Constructor.Cloud_Center                = new double[3];
+         Cloud_Constructor.Cloud_BulkVel               = new double[3];
 
          // set the parameters for each particle cloud
-         Cloud_Constructor.params.Cloud_Center[0]             = ParEqmIC_Cloud_Center[i][0];
-         Cloud_Constructor.params.Cloud_Center[1]             = ParEqmIC_Cloud_Center[i][1];
-         Cloud_Constructor.params.Cloud_Center[2]             = ParEqmIC_Cloud_Center[i][2];
-         Cloud_Constructor.params.Cloud_BulkVel[0]            = ParEqmIC_Cloud_BulkVel[i][0];
-         Cloud_Constructor.params.Cloud_BulkVel[1]            = ParEqmIC_Cloud_BulkVel[i][1];
-         Cloud_Constructor.params.Cloud_BulkVel[2]            = ParEqmIC_Cloud_BulkVel[i][2];
-         Cloud_Constructor.params.Cloud_Rho0                  = ParEqmIC_Cloud_Rho0[i];
-         Cloud_Constructor.params.Cloud_R0                    = ParEqmIC_Cloud_R0[i];
-         Cloud_Constructor.params.Cloud_Einasto_Power_Factor  = ParEqmIC_Cloud_EinastoPowerFactor[i];
-         Cloud_Constructor.params.Cloud_Par_Num               = ParEqmIC_Cloud_ParNum[i];
-         Cloud_Constructor.params.Cloud_MaxR                  = ParEqmIC_Cloud_MaxR[i];
-         Cloud_Constructor.params.Cloud_MassProfNBin          = ParEqmIC_Cloud_DensProfNBin[i];
-         Cloud_Constructor.params.Cloud_RSeed                 = ParEqmIC_Cloud_RSeed[i];
-         Cloud_Constructor.params.AddExtPot                   = ParEqmIC_Cloud_AddExtPot[i];
-         strcpy( Cloud_Constructor.params.Cloud_Type,           ParEqmIC_Cloud_Type[i]         );
-         strcpy( Cloud_Constructor.params.Density_Table_Name,   ParEqmIC_Cloud_DensityTable[i] );
-         strcpy( Cloud_Constructor.params.ExtPot_Table_Name,    ParEqmIC_Cloud_ExtPotTable[i]  );
+         Cloud_Constructor.Cloud_Center[0]             = ParEqmIC_Cloud_Center[i][0];
+         Cloud_Constructor.Cloud_Center[1]             = ParEqmIC_Cloud_Center[i][1];
+         Cloud_Constructor.Cloud_Center[2]             = ParEqmIC_Cloud_Center[i][2];
+         Cloud_Constructor.Cloud_BulkVel[0]            = ParEqmIC_Cloud_BulkVel[i][0];
+         Cloud_Constructor.Cloud_BulkVel[1]            = ParEqmIC_Cloud_BulkVel[i][1];
+         Cloud_Constructor.Cloud_BulkVel[2]            = ParEqmIC_Cloud_BulkVel[i][2];
+         Cloud_Constructor.Cloud_Rho0                  = ParEqmIC_Cloud_Rho0[i];
+         Cloud_Constructor.Cloud_R0                    = ParEqmIC_Cloud_R0[i];
+         Cloud_Constructor.Cloud_Einasto_Power_Factor  = ParEqmIC_Cloud_EinastoPowerFactor[i];
+         Cloud_Constructor.Cloud_Par_Num               = ParEqmIC_Cloud_ParNum[i];
+         Cloud_Constructor.Cloud_MaxR                  = ParEqmIC_Cloud_MaxR[i];
+         Cloud_Constructor.Cloud_MassProfNBin          = ParEqmIC_Cloud_DensProfNBin[i];
+         Cloud_Constructor.Cloud_RSeed                 = ParEqmIC_Cloud_RSeed[i];
+         Cloud_Constructor.AddExtPot                   = ParEqmIC_Cloud_AddExtPot[i];
+         strcpy( Cloud_Constructor.Cloud_Type,           ParEqmIC_Cloud_Type[i]         );
+         strcpy( Cloud_Constructor.Density_Table_Name,   ParEqmIC_Cloud_DensityTable[i] );
+         strcpy( Cloud_Constructor.ExtPot_Table_Name,    ParEqmIC_Cloud_ExtPotTable[i]  );
 
          // initialize the particle cloud
          Cloud_Constructor.Init();
 
 //       check whether the particle number of each cloud is reasonable
-         if ( (Par_Idx0 + Cloud_Constructor.params.Cloud_Par_Num) > NPar_AllRank )
+         if ( (Par_Idx0 + Cloud_Constructor.Cloud_Par_Num) > NPar_AllRank )
          {
             Aux_Error( ERROR_INFO, "particle number doesn't match (%ld + %ld = %ld > %ld) !!\n",
-                       Par_Idx0, Cloud_Constructor.params.Cloud_Par_Num, Par_Idx0+Cloud_Constructor.params.Cloud_Par_Num, NPar_AllRank );
+                       Par_Idx0, Cloud_Constructor.Cloud_Par_Num, Par_Idx0+Cloud_Constructor.Cloud_Par_Num, NPar_AllRank );
          }
 
 //       set an equilibrium initial condition for each cloud
          Cloud_Constructor.Par_SetEquilibriumIC( ParData_AllRank[PAR_MASS], ParData_AllRank+PAR_POSX, ParData_AllRank+PAR_VELX, Par_Idx0 );
 
 //       update the particle index offset for the next cloud
-         Par_Idx0 += Cloud_Constructor.params.Cloud_Par_Num;
+         Par_Idx0 += Cloud_Constructor.Cloud_Par_Num;
 
          // free the memory
-         delete [] Cloud_Constructor.params.Cloud_Center ;
-         delete [] Cloud_Constructor.params.Cloud_BulkVel;
+         delete [] Cloud_Constructor.Cloud_Center ;
+         delete [] Cloud_Constructor.Cloud_BulkVel;
 
       } // for (int i=0; i<ParEqmIC_CloudNum; i++)
 

@@ -19,25 +19,6 @@ using namespace std;
 #endif
 
 
-typedef struct Physical_Parameter
-{
-   double*  Cloud_Center;
-   double*  Cloud_BulkVel;
-   char     Cloud_Type[MAX_STRING];
-   double   Cloud_Rho0;
-   double   Cloud_R0;
-   double   Cloud_Einasto_Power_Factor;
-   char     Density_Table_Name[MAX_STRING];
-   long     Cloud_Par_Num;
-   double   Cloud_MaxR;
-   int      Cloud_MassProfNBin;
-   int      Cloud_RSeed;
-   int      AddExtPot;
-   char     ExtPot_Table_Name[MAX_STRING];
-
-} PhysP;
-
-
 class Par_EquilibriumIC
 {
    public:
@@ -46,7 +27,19 @@ class Par_EquilibriumIC
       void Init();
       void Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx );
 
-      PhysP params;
+      double*  Cloud_Center;
+      double*  Cloud_BulkVel;
+      char     Cloud_Type[MAX_STRING];
+      double   Cloud_Rho0;
+      double   Cloud_R0;
+      double   Cloud_Einasto_Power_Factor;
+      char     Density_Table_Name[MAX_STRING];
+      long     Cloud_Par_Num;
+      double   Cloud_MaxR;
+      int      Cloud_MassProfNBin;
+      int      Cloud_RSeed;
+      int      AddExtPot;
+      char     ExtPot_Table_Name[MAX_STRING];
 
    protected:
 
