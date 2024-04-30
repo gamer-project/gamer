@@ -9,6 +9,16 @@
 Par_EquilibriumIC::Par_EquilibriumIC( const char* Type )
 {
    strcpy( Cloud_Type, Type );
+
+   if      ( strcmp( Cloud_Type, "Table"     ) == 0 ) Cloud_Model = CLOUD_MODEL_TABLE;
+   else if ( strcmp( Cloud_Type, "Plummer"   ) == 0 ) Cloud_Model = CLOUD_MODEL_PLUMMER;
+   else if ( strcmp( Cloud_Type, "NFW"       ) == 0 ) Cloud_Model = CLOUD_MODEL_NFW;
+   else if ( strcmp( Cloud_Type, "Burkert"   ) == 0 ) Cloud_Model = CLOUD_MODEL_BURKERT;
+   else if ( strcmp( Cloud_Type, "Jaffe"     ) == 0 ) Cloud_Model = CLOUD_MODEL_JAFFE;
+   else if ( strcmp( Cloud_Type, "Hernquist" ) == 0 ) Cloud_Model = CLOUD_MODEL_HERNQUIST;
+   else if ( strcmp( Cloud_Type, "Einasto"   ) == 0 ) Cloud_Model = CLOUD_MODEL_EINASTO;
+   else
+      Aux_Error( ERROR_INFO, "Unsupported Cloud_Type \"%s\" for Par_EquilibriumIC !!\n", Cloud_Type );
 }
 
 Par_EquilibriumIC::~Par_EquilibriumIC()
@@ -102,7 +112,7 @@ void Par_EquilibriumIC::Init()
    Random_Num_Gen->SetSeed( 0, Cloud_RSeed );
 
    //Initialize densities with Table
-   if ( strcmp( Cloud_Type, "Table" ) == 0 )
+   if ( Cloud_Model == CLOUD_MODEL_TABLE )
    {
 
       int Tcol_r[1]   =  {0};
@@ -717,7 +727,7 @@ double MassIntegrand_Einasto( const double r, void* parameters )
 double Par_EquilibriumIC::Set_Mass( const double r )
 {
 
-   if ( strcmp( Cloud_Type, "Table" ) == 0 )
+   if ( Cloud_Model == CLOUD_MODEL_TABLE )
    {
       if      ( r >= Table_r[Cloud_MassProfNBin-1] )   return Table_Enclosed_Mass[Cloud_MassProfNBin-1];
       else if ( r <= Table_r[0] )                      return Table_Enclosed_Mass[0];
@@ -742,19 +752,19 @@ double Par_EquilibriumIC::Set_Mass( const double r )
       gsl_function F;
 
       // integrand for the integration
-      if      ( strcmp( Cloud_Type, "Plummer"   ) == 0 ) F.function = &MassIntegrand_Plummer;
-      else if ( strcmp( Cloud_Type, "NFW"       ) == 0 ) F.function = &MassIntegrand_NFW;
-      else if ( strcmp( Cloud_Type, "Burkert"   ) == 0 ) F.function = &MassIntegrand_Burkert;
-      else if ( strcmp( Cloud_Type, "Jaffe"     ) == 0 ) F.function = &MassIntegrand_Jaffe;
-      else if ( strcmp( Cloud_Type, "Hernquist" ) == 0 ) F.function = &MassIntegrand_Hernquist;
-      else if ( strcmp( Cloud_Type, "Einasto"   ) == 0 ) F.function = &MassIntegrand_Einasto;
+      if      ( Cloud_Model == CLOUD_MODEL_PLUMMER   ) F.function = &MassIntegrand_Plummer;
+      else if ( Cloud_Model == CLOUD_MODEL_NFW       ) F.function = &MassIntegrand_NFW;
+      else if ( Cloud_Model == CLOUD_MODEL_BURKERT   ) F.function = &MassIntegrand_Burkert;
+      else if ( Cloud_Model == CLOUD_MODEL_JAFFE     ) F.function = &MassIntegrand_Jaffe;
+      else if ( Cloud_Model == CLOUD_MODEL_HERNQUIST ) F.function = &MassIntegrand_Hernquist;
+      else if ( Cloud_Model == CLOUD_MODEL_EINASTO   ) F.function = &MassIntegrand_Einasto;
 
       // parameters for the integrand
       struct mass_integrand_params         integrand_params         = { Cloud_R0, Cloud_Rho0 };
       struct mass_integrand_params_Einasto integrand_params_Einasto = { Cloud_R0, Cloud_Rho0, Cloud_Einasto_Power_Factor };
 
-      if      ( strcmp( Cloud_Type, "Einasto"   ) == 0 ) F.params   = &integrand_params_Einasto;
-      else                                               F.params   = &integrand_params;
+      if      ( Cloud_Model == CLOUD_MODEL_EINASTO   ) F.params   = &integrand_params_Einasto;
+      else                                             F.params   = &integrand_params;
 
       // integration
       gsl_integration_qag( &F, lower_bound, upper_bound, abs_err_lim, rel_err_lim, limit_size, integ_rule, w, &enclosed_mass, &abs_error );
@@ -782,7 +792,7 @@ double Par_EquilibriumIC::Set_Mass( const double r )
 double Par_EquilibriumIC::Set_Density( const double r )
 {
 
-   if ( strcmp( Cloud_Type, "Table" ) == 0 )
+   if ( Cloud_Model == CLOUD_MODEL_TABLE )
    {
       if ( r >= Table_r[Cloud_MassProfNBin-1] )
          return Table_Density[Cloud_MassProfNBin-1];
@@ -793,12 +803,12 @@ double Par_EquilibriumIC::Set_Density( const double r )
    {
       double rho;
 
-      if      ( strcmp( Cloud_Type, "Plummer"   ) == 0 ) rho = AnalyticalDensProf_Plummer  ( r, Cloud_R0, Cloud_Rho0 );
-      else if ( strcmp( Cloud_Type, "NFW"       ) == 0 ) rho = AnalyticalDensProf_NFW      ( r, Cloud_R0, Cloud_Rho0 );
-      else if ( strcmp( Cloud_Type, "Burkert"   ) == 0 ) rho = AnalyticalDensProf_Burkert  ( r, Cloud_R0, Cloud_Rho0 );
-      else if ( strcmp( Cloud_Type, "Jaffe"     ) == 0 ) rho = AnalyticalDensProf_Jaffe    ( r, Cloud_R0, Cloud_Rho0 );
-      else if ( strcmp( Cloud_Type, "Hernquist" ) == 0 ) rho = AnalyticalDensProf_Hernquist( r, Cloud_R0, Cloud_Rho0 );
-      else if ( strcmp( Cloud_Type, "Einasto"   ) == 0 ) rho = AnalyticalDensProf_Einasto  ( r, Cloud_R0, Cloud_Rho0, Cloud_Einasto_Power_Factor );
+      if      ( Cloud_Model == CLOUD_MODEL_PLUMMER   ) rho = AnalyticalDensProf_Plummer  ( r, Cloud_R0, Cloud_Rho0 );
+      else if ( Cloud_Model == CLOUD_MODEL_NFW       ) rho = AnalyticalDensProf_NFW      ( r, Cloud_R0, Cloud_Rho0 );
+      else if ( Cloud_Model == CLOUD_MODEL_BURKERT   ) rho = AnalyticalDensProf_Burkert  ( r, Cloud_R0, Cloud_Rho0 );
+      else if ( Cloud_Model == CLOUD_MODEL_JAFFE     ) rho = AnalyticalDensProf_Jaffe    ( r, Cloud_R0, Cloud_Rho0 );
+      else if ( Cloud_Model == CLOUD_MODEL_HERNQUIST ) rho = AnalyticalDensProf_Hernquist( r, Cloud_R0, Cloud_Rho0 );
+      else if ( Cloud_Model == CLOUD_MODEL_EINASTO   ) rho = AnalyticalDensProf_Einasto  ( r, Cloud_R0, Cloud_Rho0, Cloud_Einasto_Power_Factor );
 
       return rho;
 

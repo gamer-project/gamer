@@ -19,6 +19,16 @@ using namespace std;
 #endif
 
 
+// Cloud_Model
+#define CLOUD_MODEL_TABLE      0
+#define CLOUD_MODEL_PLUMMER    1
+#define CLOUD_MODEL_NFW        2
+#define CLOUD_MODEL_BURKERT    3
+#define CLOUD_MODEL_JAFFE      4
+#define CLOUD_MODEL_HERNQUIST  5
+#define CLOUD_MODEL_EINASTO    6
+
+
 class Par_EquilibriumIC
 {
    public:
@@ -40,6 +50,7 @@ class Par_EquilibriumIC
 
    private:
       char   Cloud_Type[MAX_STRING];
+      int    Cloud_Model                     = -1;
       double Cloud_Center[3]                 = { -1, -1, -1 };
       double Cloud_BulkVel[3]                = {  0,  0,  0 };
       double Cloud_Rho0                      = -1;
