@@ -466,7 +466,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__OUTPUT_CC_MAG",         &OPT__OUTPUT_CC_MAG,              true,            Useless_bool,  Useless_bool   );
 #  endif
 #  ifdef GRAVITY
-   ReadPara->Add( "OPT__OUTPUT_POT",            &OPT__OUTPUT_POT,                 false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_POT",            &OPT__OUTPUT_POT,                 true,           Useless_bool,  Useless_bool   );
 #  endif
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__OUTPUT_PAR_DENS",       &OPT__OUTPUT_PAR_DENS,            PAR_OUTPUT_DENS_PAR_ONLY, 0,    2              );
