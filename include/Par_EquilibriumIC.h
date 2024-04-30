@@ -22,28 +22,36 @@ using namespace std;
 class Par_EquilibriumIC
 {
    public:
-      Par_EquilibriumIC();
+      Par_EquilibriumIC( const char* Type );
       virtual ~Par_EquilibriumIC();
+
+      void setCenter( const double Center_X, const double Center_Y, const double Center_Z );
+      void setBulkVel( const double BulkVel_X, const double BulkVel_Y, const double BulkVel_Z );
+      void setModelParameters( const double Rho0, const double R0 );
+      void setEinastoPowerFactor( const double EinastoPowerFactor );
+      void setDensityTableFilename( const char* DensityTableFilename );
+      void setParticleParameters( const long ParNum, const double MaxR, const int ProfNBin, const int RSeed );
+      void setExternalPotential( const int AddingExternalPotential, const char* ExtPotTableFilename );
+      long getParticleNumber( );
+
       void Init();
       void Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx );
 
-      double*  Cloud_Center;
-      double*  Cloud_BulkVel;
-      char     Cloud_Type[MAX_STRING];
-      double   Cloud_Rho0;
-      double   Cloud_R0;
-      double   Cloud_Einasto_Power_Factor;
-      char     Density_Table_Name[MAX_STRING];
-      long     Cloud_Par_Num;
-      double   Cloud_MaxR;
-      int      Cloud_MassProfNBin;
-      int      Cloud_RSeed;
-      int      AddExtPot;
-      char     ExtPot_Table_Name[MAX_STRING];
-
-   protected:
 
    private:
+      char   Cloud_Type[MAX_STRING];
+      double Cloud_Center[3]                 = { -1, -1, -1 };
+      double Cloud_BulkVel[3]                = {  0,  0,  0 };
+      double Cloud_Rho0                      = -1;
+      double Cloud_R0                        = -1;
+      double Cloud_Einasto_Power_Factor      = -1;
+      char   Density_Table_Name[MAX_STRING];
+      long   Cloud_Par_Num                   = -1;
+      double Cloud_MaxR                      = -1;
+      int    Cloud_MassProfNBin              = -1;
+      int    Cloud_RSeed                     = -1;
+      int    AddExtPot                       =  0;
+      char   ExtPot_Table_Name[MAX_STRING];
       // Derive physical attributes for particles
       double Set_Mass( const double r );
       double Set_Density( const double r );

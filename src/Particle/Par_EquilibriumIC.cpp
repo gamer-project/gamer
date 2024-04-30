@@ -6,14 +6,66 @@
 
 
 
-Par_EquilibriumIC::Par_EquilibriumIC()
+Par_EquilibriumIC::Par_EquilibriumIC( const char* Type )
 {
+   strcpy( Cloud_Type, Type );
 }
 
 Par_EquilibriumIC::~Par_EquilibriumIC()
 {
 }
 
+void Par_EquilibriumIC::setCenter( const double Center_X, const double Center_Y, const double Center_Z )
+{
+   Cloud_Center[0] = Center_X;
+   Cloud_Center[1] = Center_Y;
+   Cloud_Center[2] = Center_Z;
+}
+
+void Par_EquilibriumIC::setBulkVel( const double BulkVel_X, const double BulkVel_Y, const double BulkVel_Z )
+{
+   Cloud_BulkVel[0] = BulkVel_X;
+   Cloud_BulkVel[1] = BulkVel_Y;
+   Cloud_BulkVel[2] = BulkVel_Z;
+}
+
+void Par_EquilibriumIC::setModelParameters( const double Rho0, const double R0 )
+{
+   Cloud_Rho0 = Rho0;
+   Cloud_R0   = R0;
+}
+
+void Par_EquilibriumIC::setEinastoPowerFactor( const double EinastoPowerFactor )
+{
+   Cloud_Einasto_Power_Factor = EinastoPowerFactor;
+}
+
+void Par_EquilibriumIC::setDensityTableFilename( const char* DensityTableFilename )
+{
+   strcpy( Density_Table_Name, DensityTableFilename );
+}
+
+
+void Par_EquilibriumIC::setParticleParameters( const long ParNum, const double MaxR, const int ProfNBin, const int RSeed )
+{
+   Cloud_Par_Num      = ParNum;
+   Cloud_MaxR         = MaxR;
+   Cloud_MassProfNBin = ProfNBin;
+   Cloud_RSeed        = RSeed;
+}
+
+long Par_EquilibriumIC::getParticleNumber( )
+{
+   return Cloud_Par_Num;
+}
+
+void Par_EquilibriumIC::setExternalPotential( const int AddingExternalPotential, const char* ExtPotTableFilename )
+{
+   AddExtPot = AddingExternalPotential;
+
+   if ( AddExtPot )
+      strcpy( ExtPot_Table_Name, ExtPotTableFilename );
+}
 
 
 //-------------------------------------------------------------------------------------------------------
