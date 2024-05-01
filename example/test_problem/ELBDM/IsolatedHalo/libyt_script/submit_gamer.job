@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#PBS -N gamer_isolatedhalo_test_yt
+#PBS -N gamer_isolatedhalo_test_libyt
 ##PBS -M YOUR_EMAIL
 ##PBS -m abe
 #PBS -q workq
