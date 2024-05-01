@@ -59,14 +59,14 @@ class Par_EquilibriumIC
       char   Density_Table_Name[MAX_STRING];
       long   Cloud_Par_Num                   = -1;
       double Cloud_MaxR                      = -1;
-      int    Cloud_MassProfNBin              = -1;
+      int    Cloud_TableNBin                 = -1;
       int    Cloud_RSeed                     = -1;
       int    AddExtPot                       =  0;
       char   ExtPot_Table_Name[MAX_STRING];
       // Derive physical attributes for particles
       double Set_Mass( const double r );
       double Set_Density( const double r );
-      double Set_Velocity(const double x);
+      double Set_Velocity( const double r );
 
       // Initialize physical parameter tables
       void Init_Mass();
@@ -84,7 +84,7 @@ class Par_EquilibriumIC
       void RanVec_FixRadius( const double r, double RanVec[] );
 
       // Solve Eddington's equation
-      double potential( const double x );
+      double potential( const double r );
       double Integration_Eng_base( const double Eng, const int N_points );
 
       double  delta;
@@ -102,8 +102,13 @@ class Par_EquilibriumIC
                                      const int index_start, const int n_elements );
 
       // Tables of particles' attributes
-      double *Table_r;
-      double *Table_Enclosed_Mass;
+      double *Table_input_radius;
+      double *Table_input_density;
+      double *Table_input_enclosedmass;
+      int     Table_input_NBin = -1;
+      double  Table_dr = 0.0;
+      double *Table_Radius;
+      double *Table_EnclosedMass;
       double *Table_Density;
       double *Table_dRho_dr;
       double *Table_dRho_dx;
