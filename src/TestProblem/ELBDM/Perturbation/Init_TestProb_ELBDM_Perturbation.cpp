@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -134,7 +133,6 @@ void SetParameter()
 
 
 // (3) reset other general-purpose parameters
-//     --> a helper macro PRINT_RESET_PARA is defined in TestProb.h
    const long   End_Step_Default = __INT_MAX__;
    const double End_T_Default    = 2.0;
 

@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -166,6 +165,7 @@ void SetParameter()
    Jump_Width        *= Const_kpc / UNIT_L;
    Jet_PrecessPeriod *= 1000.0*Const_yr / UNIT_T;
 
+
 // (2) set the problem-specific derived parameters
    Jump_Tangent     = tan( Jump_Angle*M_PI/180.0 );
    Jump_Sine        = sin( Jump_Angle*M_PI/180.0 );
@@ -178,20 +178,21 @@ void SetParameter()
    Jet_Cosine       = cos( Jet_PrecessAngle*M_PI/180.0 );
    Jet_Sine         = sin( Jet_PrecessAngle*M_PI/180.0 );
 
+
 // (3) reset other general-purpose parameters
-//     --> a helper macro PRINT_RESET_PARA is defined in TestProb.h
    const long   End_Step_Default = __INT_MAX__;
    const double End_T_Default    = 100.0*Const_kyr / UNIT_T;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
-      PRINT_RESET_PARA(END_STEP, FORMAT_LONG, "" );
+      PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
    if ( END_T < 0.0 ) {
       END_T = End_T_Default;
-      PRINT_RESET_PARA(END_T, FORMAT_REAL, "" );
+      PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
+
 
 // (4) make a note
    if ( MPI_Rank == 0 )
@@ -222,6 +223,7 @@ void SetParameter()
    {
      Aux_Message( stdout, "=============================================================================\n" );
    }
+
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
 
