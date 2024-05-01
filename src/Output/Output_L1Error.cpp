@@ -375,7 +375,8 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
                                                  Nume[ENGY], Nume+NCOMP_FLUID,
                                                  CheckMinPres_No, NULL_REAL, Emag_Nume,
                                                  EoS_DensEint2Pres_CPUPtr,
-                                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+                                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
    const real  Temp_Nume       = Hydro_Con2Temp( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ],
                                                  Nume[ENGY], Nume+NCOMP_FLUID,
                                                  CheckMinTemp_No, NULL_REAL, Emag_Nume,
