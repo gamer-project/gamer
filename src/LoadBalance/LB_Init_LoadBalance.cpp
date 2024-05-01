@@ -4,11 +4,11 @@
 
 
 
-static void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool RemoveParFromRepo, const bool SendGridData );
+static void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool RemoveParFromRepo, const bool SendGridData );
 static void LB_SortRealPatch( const int lv );
 #ifdef PARTICLE
-static void LB_RedistributeParticle_Init( real **ParAtt_Old );
-static void LB_RedistributeParticle_End( real **ParAtt_Old );
+static void LB_RedistributeParticle_Init( real_par **ParAtt_Old );
+static void LB_RedistributeParticle_End ( real_par **ParAtt_Old );
 #endif
 
 
@@ -117,9 +117,9 @@ void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, cons
    const bool RemoveParFromRepo_No  = false;
 
 #  ifdef PARTICLE
-   real  *ParAtt_Old[PAR_NATT_TOTAL];
+   real_par  *ParAtt_Old[PAR_NATT_TOTAL];
 #  else
-   real **ParAtt_Old = NULL;
+   real_par **ParAtt_Old = NULL;
 #  endif
 
 #  ifdef PARTICLE
@@ -331,7 +331,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, cons
 //                SendGridData      : Transfer grid data
 //                                    --> Particle data will always be transferred
 //-------------------------------------------------------------------------------------------------------
-void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool RemoveParFromRepo, const bool SendGridData )
+void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool RemoveParFromRepo, const bool SendGridData )
 {
 
 // 1. count the number of real patches (and particles) to be sent and received
@@ -347,41 +347,41 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
    int  NSend_Total_Patch, NRecv_Total_Patch, TRank;
    long LB_Idx;
 
-   int *Send_NCount_Patch  = new int [MPI_NRank];
-   int *Recv_NCount_Patch  = new int [MPI_NRank];
-   int *Send_NDisp_Patch   = new int [MPI_NRank];
-   int *Recv_NDisp_Patch   = new int [MPI_NRank];
-   int *Send_NCount_Flu1v  = new int [MPI_NRank];
-   int *Recv_NCount_Flu1v  = new int [MPI_NRank];
-   int *Send_NDisp_Flu1v   = new int [MPI_NRank];
-   int *Recv_NDisp_Flu1v   = new int [MPI_NRank];
-   int *NDone_Patch        = new int [MPI_NRank];
+   int *Send_NCount_Patch    = new int  [MPI_NRank];
+   int *Recv_NCount_Patch    = new int  [MPI_NRank];
+   int *Send_NDisp_Patch     = new int  [MPI_NRank];
+   int *Recv_NDisp_Patch     = new int  [MPI_NRank];
+   int *NDone_Patch          = new int  [MPI_NRank];
+   long *Send_NCount_Flu1v   = new long [MPI_NRank];
+   long *Recv_NCount_Flu1v   = new long [MPI_NRank];
+   long *Send_NDisp_Flu1v    = new long [MPI_NRank];
+   long *Recv_NDisp_Flu1v    = new long [MPI_NRank];
 
 #  ifdef STORE_POT_GHOST
-   int *Send_NCount_PotExt = new int [MPI_NRank];
-   int *Recv_NCount_PotExt = new int [MPI_NRank];
-   int *Send_NDisp_PotExt  = new int [MPI_NRank];
-   int *Recv_NDisp_PotExt  = new int [MPI_NRank];
+   long *Send_NCount_PotExt  = new long [MPI_NRank];
+   long *Recv_NCount_PotExt  = new long [MPI_NRank];
+   long *Send_NDisp_PotExt   = new long [MPI_NRank];
+   long *Recv_NDisp_PotExt   = new long [MPI_NRank];
 #  endif
 
 #  ifdef MHD
-   int *Send_NCount_Mag1v  = new int [MPI_NRank];
-   int *Recv_NCount_Mag1v  = new int [MPI_NRank];
-   int *Send_NDisp_Mag1v   = new int [MPI_NRank];
-   int *Recv_NDisp_Mag1v   = new int [MPI_NRank];
+   long *Send_NCount_Mag1v   = new long [MPI_NRank];
+   long *Recv_NCount_Mag1v   = new long [MPI_NRank];
+   long *Send_NDisp_Mag1v    = new long [MPI_NRank];
+   long *Recv_NDisp_Mag1v    = new long [MPI_NRank];
 #  endif
 
 #  ifdef PARTICLE
    const bool RemoveAllParticle = true;
 
-   int  NSend_Total_ParData, NRecv_Total_ParData;
+   long NSend_Total_ParData, NRecv_Total_ParData;
    long ParID;
 
-   int *Send_NCount_ParData = new int [MPI_NRank];
-   int *Recv_NCount_ParData = new int [MPI_NRank];
-   int *Send_NDisp_ParData  = new int [MPI_NRank];
-   int *Recv_NDisp_ParData  = new int [MPI_NRank];
-   int *NDone_ParData       = new int [MPI_NRank];
+   long *NDone_ParData       = new long [MPI_NRank];
+   long *Send_NCount_ParData = new long [MPI_NRank];
+   long *Recv_NCount_ParData = new long [MPI_NRank];
+   long *Send_NDisp_ParData  = new long [MPI_NRank];
+   long *Recv_NDisp_ParData  = new long [MPI_NRank];
 
 #  ifdef DEBUG_PARTICLE
    if ( ParAtt_Old  == NULL )    Aux_Error( ERROR_INFO, "ParAtt_Old == NULL !!\n" );
@@ -392,14 +392,14 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
    {
       Send_NCount_Patch  [r] = 0;
 #     ifdef PARTICLE
-      Send_NCount_ParData[r] = 0;
+      Send_NCount_ParData[r] = 0L;
 #     endif
    }
    Send_NDisp_Patch  [0] = 0;
    Recv_NDisp_Patch  [0] = 0;
 #  ifdef PARTICLE
-   Send_NDisp_ParData[0] = 0;
-   Recv_NDisp_ParData[0] = 0;
+   Send_NDisp_ParData[0] = 0L;
+   Recv_NDisp_ParData[0] = 0L;
 #  endif
 
 // 1.1 send count
@@ -410,17 +410,17 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 
       Send_NCount_Patch  [TRank] ++;
 #     ifdef PARTICLE
-      Send_NCount_ParData[TRank] += amr->patch[0][lv][PID]->NPar;
+      Send_NCount_ParData[TRank] += (long)amr->patch[0][lv][PID]->NPar;
 #     endif
    }
 #  ifdef PARTICLE
-   for (int r=0; r<MPI_NRank; r++)  Send_NCount_ParData[r] *= PAR_NATT_TOTAL;
+   for (int r=0; r<MPI_NRank; r++)  Send_NCount_ParData[r] *= (long)PAR_NATT_TOTAL;
 #  endif
 
 // 1.2 receive count
-   MPI_Alltoall( Send_NCount_Patch,   1, MPI_INT, Recv_NCount_Patch,   1, MPI_INT, MPI_COMM_WORLD );
+   MPI_Alltoall( Send_NCount_Patch,   1, MPI_INT,  Recv_NCount_Patch,   1, MPI_INT,  MPI_COMM_WORLD );
 #  ifdef PARTICLE
-   MPI_Alltoall( Send_NCount_ParData, 1, MPI_INT, Recv_NCount_ParData, 1, MPI_INT, MPI_COMM_WORLD );
+   MPI_Alltoall( Send_NCount_ParData, 1, MPI_LONG, Recv_NCount_ParData, 1, MPI_LONG, MPI_COMM_WORLD );
 #  endif
 
 // 1.3 send/recv displacement
@@ -437,21 +437,21 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 // 1.4 send/recv data displacement
    for (int r=0; r<MPI_NRank; r++)
    {
-      Send_NCount_Flu1v [r] = FluSize1v  * Send_NCount_Patch[r];
-      Recv_NCount_Flu1v [r] = FluSize1v  * Recv_NCount_Patch[r];
-      Send_NDisp_Flu1v  [r] = FluSize1v  * Send_NDisp_Patch [r];
-      Recv_NDisp_Flu1v  [r] = FluSize1v  * Recv_NDisp_Patch [r];
+      Send_NCount_Flu1v [r] = (long)FluSize1v  * (long)Send_NCount_Patch[r];
+      Recv_NCount_Flu1v [r] = (long)FluSize1v  * (long)Recv_NCount_Patch[r];
+      Send_NDisp_Flu1v  [r] = (long)FluSize1v  * (long)Send_NDisp_Patch [r];
+      Recv_NDisp_Flu1v  [r] = (long)FluSize1v  * (long)Recv_NDisp_Patch [r];
 #     ifdef STORE_POT_GHOST
-      Send_NCount_PotExt[r] = GraNxtSize * Send_NCount_Patch[r];
-      Recv_NCount_PotExt[r] = GraNxtSize * Recv_NCount_Patch[r];
-      Send_NDisp_PotExt [r] = GraNxtSize * Send_NDisp_Patch [r];
-      Recv_NDisp_PotExt [r] = GraNxtSize * Recv_NDisp_Patch [r];
+      Send_NCount_PotExt[r] = (long)GraNxtSize * (long)Send_NCount_Patch[r];
+      Recv_NCount_PotExt[r] = (long)GraNxtSize * (long)Recv_NCount_Patch[r];
+      Send_NDisp_PotExt [r] = (long)GraNxtSize * (long)Send_NDisp_Patch [r];
+      Recv_NDisp_PotExt [r] = (long)GraNxtSize * (long)Recv_NDisp_Patch [r];
 #     endif
 #     ifdef MHD
-      Send_NCount_Mag1v [r] = MagSize1v  * Send_NCount_Patch[r];
-      Recv_NCount_Mag1v [r] = MagSize1v  * Recv_NCount_Patch[r];
-      Send_NDisp_Mag1v  [r] = MagSize1v  * Send_NDisp_Patch [r];
-      Recv_NDisp_Mag1v  [r] = MagSize1v  * Recv_NDisp_Patch [r];
+      Send_NCount_Mag1v [r] = (long)MagSize1v  * (long)Send_NCount_Patch[r];
+      Recv_NCount_Mag1v [r] = (long)MagSize1v  * (long)Recv_NCount_Patch[r];
+      Send_NDisp_Mag1v  [r] = (long)MagSize1v  * (long)Send_NDisp_Patch [r];
+      Recv_NDisp_Mag1v  [r] = (long)MagSize1v  * (long)Recv_NDisp_Patch [r];
 #     endif
    }
 
@@ -470,9 +470,9 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
                  NSend_Total_Patch, amr->NPatchComma[lv][1] );
 #  endif
 #  ifdef DEBUG_PARTICLE
-   if ( NSend_Total_ParData != amr->Par->NPar_Lv[lv]*PAR_NATT_TOTAL )
-      Aux_Error( ERROR_INFO, "NSend_Total_ParData (%d) != expected (%ld) !!\n",
-                 NSend_Total_ParData, amr->Par->NPar_Lv[lv]*PAR_NATT_TOTAL );
+   if ( NSend_Total_ParData != (long)amr->Par->NPar_Lv[lv]*(long)PAR_NATT_TOTAL )
+      Aux_Error( ERROR_INFO, "NSend_Total_ParData (%ld) != expected (%ld) !!\n",
+                 NSend_Total_ParData, (long)amr->Par->NPar_Lv[lv]*(long)PAR_NATT_TOTAL );
 #  endif
 
 
@@ -494,28 +494,29 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
    const long RecvDataSizeMag1v  = NRecv_Total_Patch*MagSize1v;
 #  endif
 
-   real *SendPtr         = NULL;
-   long *SendBuf_LBIdx   = new long [ NSend_Total_Patch ];
-   real *SendBuf_Flu     = ( SendGridData ) ? new real [ SendDataSizeFlu1v*NCOMP_TOTAL ] : NULL;
+   real     *SendPtr         = NULL;
+   real_par *SendPtr_Par     = NULL;
+   long     *SendBuf_LBIdx   = new long [ NSend_Total_Patch ];
+   real     *SendBuf_Flu     = ( SendGridData ) ? new real [ SendDataSizeFlu1v*NCOMP_TOTAL ] : NULL;
 #  ifdef GRAVITY
-   real *SendBuf_Pot     = ( SendGridData ) ? new real [ SendDataSizeFlu1v ]             : NULL;
+   real     *SendBuf_Pot     = ( SendGridData ) ? new real [ SendDataSizeFlu1v ]             : NULL;
 #  ifdef STORE_POT_GHOST
-   real *SendBuf_PotExt  = ( SendGridData ) ? new real [ SendDataSizePotExt ]            : NULL;
+   real     *SendBuf_PotExt  = ( SendGridData ) ? new real [ SendDataSizePotExt ]            : NULL;
 #  endif
 #  endif // GRAVITY
 #  ifdef MHD
-   real *SendBuf_Mag     = ( SendGridData ) ? new real [ SendDataSizeMag1v*NCOMP_MAG ]   : NULL;
+   real     *SendBuf_Mag     = ( SendGridData ) ? new real [ SendDataSizeMag1v*NCOMP_MAG ]   : NULL;
 #  endif
 #  ifdef PARTICLE
-   real *SendBuf_ParData = new real [ NSend_Total_ParData ];
-   int  *SendBuf_NPar    = new int  [ NSend_Total_Patch ];
+   real_par *SendBuf_ParData = new real_par [ NSend_Total_ParData ];
+   int      *SendBuf_NPar    = new int      [ NSend_Total_Patch ];
 #  endif
 
    for (int r=0; r<MPI_NRank; r++)
    {
       NDone_Patch  [r] = 0;
 #     ifdef PARTICLE
-      NDone_ParData[r] = 0;
+      NDone_ParData[r] = 0L;
 #     endif
    }
 
@@ -532,18 +533,18 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 //       2.2 fluid
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
-            SendPtr = SendBuf_Flu + v*SendDataSizeFlu1v + (long)Send_NDisp_Flu1v[TRank] + (long)NDone_Patch[TRank]*FluSize1v;
+            SendPtr = SendBuf_Flu + v*SendDataSizeFlu1v + Send_NDisp_Flu1v[TRank] + (long)NDone_Patch[TRank]*FluSize1v;
             memcpy( SendPtr, &amr->patch[FluSg][lv][PID]->fluid[v][0][0][0], FluSize1v*sizeof(real) );
          }
 
 #        ifdef GRAVITY
 //       2.3 potential
-         SendPtr = SendBuf_Pot + (long)Send_NDisp_Flu1v[TRank] + (long)NDone_Patch[TRank]*FluSize1v;
+         SendPtr = SendBuf_Pot + Send_NDisp_Flu1v[TRank] + (long)NDone_Patch[TRank]*FluSize1v;
          memcpy( SendPtr, &amr->patch[PotSg][lv][PID]->pot[0][0][0], FluSize1v*sizeof(real) );
 
 //       2.4 potential with ghost zones
 #        ifdef STORE_POT_GHOST
-         SendPtr = SendBuf_PotExt + (long)Send_NDisp_PotExt[TRank] + (long)NDone_Patch[TRank]*GraNxtSize;
+         SendPtr = SendBuf_PotExt + Send_NDisp_PotExt[TRank] + (long)NDone_Patch[TRank]*GraNxtSize;
          memcpy( SendPtr, &amr->patch[PotSg][lv][PID]->pot_ext[0][0][0], GraNxtSize*sizeof(real) );
 #        endif
 #        endif
@@ -552,7 +553,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 #        ifdef MHD
          for (int v=0; v<NCOMP_MAG; v++)
          {
-            SendPtr = SendBuf_Mag + v*SendDataSizeMag1v + (long)Send_NDisp_Mag1v[TRank] + (long)NDone_Patch[TRank]*MagSize1v;
+            SendPtr = SendBuf_Mag + v*SendDataSizeMag1v + Send_NDisp_Mag1v[TRank] + (long)NDone_Patch[TRank]*MagSize1v;
             memcpy( SendPtr, &amr->patch[MagSg][lv][PID]->magnetic[v][0], MagSize1v*sizeof(real) );
          }
 #        endif
@@ -562,7 +563,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 #     ifdef PARTICLE
       SendBuf_NPar[ Send_NDisp_Patch[TRank] + NDone_Patch[TRank] ] = amr->patch[0][lv][PID]->NPar;
 
-      SendPtr = SendBuf_ParData + Send_NDisp_ParData[TRank] + NDone_ParData[TRank];
+      SendPtr_Par = SendBuf_ParData + Send_NDisp_ParData[TRank] + NDone_ParData[TRank];
 
       for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
       {
@@ -570,11 +571,11 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 
 //       there should be no inactive particles associated with patches
 #        ifdef DEBUG_PARTICLE
-         if ( ParAtt_Old[PAR_MASS][ParID] < (real)0.0 )
+         if ( ParAtt_Old[PAR_MASS][ParID] < (real_par)0.0 )
             Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, ParAtt_Old[PAR_MASS][ParID] );
 #        endif
 
-         for (int v=0; v<PAR_NATT_TOTAL; v++)   *SendPtr++ = ParAtt_Old[v][ParID];
+         for (int v=0; v<PAR_NATT_TOTAL; v++)   *SendPtr_Par++ = ParAtt_Old[v][ParID];
 
 //       remove this particle from the particle repository
          if ( RemoveParFromRepo )   amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_MPI );
@@ -583,11 +584,11 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 
       NDone_Patch  [TRank] ++;
 #     ifdef PARTICLE
-      NDone_ParData[TRank] += amr->patch[0][lv][PID]->NPar*PAR_NATT_TOTAL;
+      NDone_ParData[TRank] += (long)amr->patch[0][lv][PID]->NPar*(long)PAR_NATT_TOTAL;
 
 //    detach particles from patches to avoid warning messages when deleting
 //    patches with particles
-      const real *PType = amr->Par->Type;
+      const real_par *PType = amr->Par->Type;
       amr->patch[0][lv][PID]->RemoveParticle( NULL_INT, NULL, &amr->Par->NPar_Lv[lv], RemoveAllParticle, PType );
 #     endif
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -619,8 +620,8 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
    real *RecvBuf_Mag     = ( SendGridData ) ? new real [ RecvDataSizeMag1v*NCOMP_MAG ]   : NULL;
 #  endif
 #  ifdef PARTICLE
-   real *RecvBuf_ParData = new real [ NRecv_Total_ParData ];
-   int  *RecvBuf_NPar    = new int  [ NRecv_Total_Patch ];
+   real_par *RecvBuf_ParData = new real_par [ NRecv_Total_ParData ];
+   int      *RecvBuf_NPar    = new int      [ NRecv_Total_Patch ];
 #  endif
 
 
@@ -635,13 +636,8 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 //    4.2 fluid (transfer one component at a time to avoid exceeding the maximum allowed transfer size in MPI)
       for (int v=0; v<NCOMP_TOTAL; v++)
       {
-#        ifdef FLOAT8
-         MPI_Alltoallv( SendBuf_Flu + v*SendDataSizeFlu1v, Send_NCount_Flu1v, Send_NDisp_Flu1v, MPI_DOUBLE,
-                        RecvBuf_Flu + v*RecvDataSizeFlu1v, Recv_NCount_Flu1v, Recv_NDisp_Flu1v, MPI_DOUBLE, MPI_COMM_WORLD );
-#        else
-         MPI_Alltoallv( SendBuf_Flu + v*SendDataSizeFlu1v, Send_NCount_Flu1v, Send_NDisp_Flu1v, MPI_FLOAT,
-                        RecvBuf_Flu + v*RecvDataSizeFlu1v, Recv_NCount_Flu1v, Recv_NDisp_Flu1v, MPI_FLOAT,  MPI_COMM_WORLD );
-#        endif
+         MPI_Alltoallv_GAMER( SendBuf_Flu + v*SendDataSizeFlu1v, Send_NCount_Flu1v, Send_NDisp_Flu1v, MPI_GAMER_REAL,
+                              RecvBuf_Flu + v*RecvDataSizeFlu1v, Recv_NCount_Flu1v, Recv_NDisp_Flu1v, MPI_GAMER_REAL, MPI_COMM_WORLD );
       }
 
 #     ifdef GRAVITY
@@ -649,23 +645,13 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 //    --> debugger may report that the potential data are NOT initialized when calling LB_Init_LoadBalance()
 //        during initialization
 //    --> it's fine since we will calculate potential AFTER invoking LB_Init_LoadBalance() in Init_GAMER()
-#     ifdef FLOAT8
-      MPI_Alltoallv( SendBuf_Pot, Send_NCount_Flu1v, Send_NDisp_Flu1v, MPI_DOUBLE,
-                     RecvBuf_Pot, Recv_NCount_Flu1v, Recv_NDisp_Flu1v, MPI_DOUBLE, MPI_COMM_WORLD );
-#     else
-      MPI_Alltoallv( SendBuf_Pot, Send_NCount_Flu1v, Send_NDisp_Flu1v, MPI_FLOAT,
-                     RecvBuf_Pot, Recv_NCount_Flu1v, Recv_NDisp_Flu1v, MPI_FLOAT,  MPI_COMM_WORLD );
-#     endif
+      MPI_Alltoallv_GAMER( SendBuf_Pot, Send_NCount_Flu1v, Send_NDisp_Flu1v, MPI_GAMER_REAL,
+                           RecvBuf_Pot, Recv_NCount_Flu1v, Recv_NDisp_Flu1v, MPI_GAMER_REAL, MPI_COMM_WORLD );
 
 //    4.4 potential with ghost zones
 #     ifdef STORE_POT_GHOST
-#     ifdef FLOAT8
-      MPI_Alltoallv( SendBuf_PotExt, Send_NCount_PotExt, Send_NDisp_PotExt, MPI_DOUBLE,
-                     RecvBuf_PotExt, Recv_NCount_PotExt, Recv_NDisp_PotExt, MPI_DOUBLE, MPI_COMM_WORLD );
-#     else
-      MPI_Alltoallv( SendBuf_PotExt, Send_NCount_PotExt, Send_NDisp_PotExt, MPI_FLOAT,
-                     RecvBuf_PotExt, Recv_NCount_PotExt, Recv_NDisp_PotExt, MPI_FLOAT,  MPI_COMM_WORLD );
-#     endif
+      MPI_Alltoallv_GAMER( SendBuf_PotExt, Send_NCount_PotExt, Send_NDisp_PotExt, MPI_GAMER_REAL,
+                           RecvBuf_PotExt, Recv_NCount_PotExt, Recv_NDisp_PotExt, MPI_GAMER_REAL, MPI_COMM_WORLD );
 #     endif // STORE_POT_GHOST
 #     endif // GRAVITY
 
@@ -673,13 +659,8 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 #     ifdef MHD
       for (int v=0; v<NCOMP_MAG; v++)
       {
-#        ifdef FLOAT8
-         MPI_Alltoallv( SendBuf_Mag + v*SendDataSizeMag1v, Send_NCount_Mag1v, Send_NDisp_Mag1v, MPI_DOUBLE,
-                        RecvBuf_Mag + v*RecvDataSizeMag1v, Recv_NCount_Mag1v, Recv_NDisp_Mag1v, MPI_DOUBLE, MPI_COMM_WORLD );
-#        else
-         MPI_Alltoallv( SendBuf_Mag + v*SendDataSizeMag1v, Send_NCount_Mag1v, Send_NDisp_Mag1v, MPI_FLOAT,
-                        RecvBuf_Mag + v*RecvDataSizeMag1v, Recv_NCount_Mag1v, Recv_NDisp_Mag1v, MPI_FLOAT,  MPI_COMM_WORLD );
-#        endif
+         MPI_Alltoallv_GAMER( SendBuf_Mag + v*SendDataSizeMag1v, Send_NCount_Mag1v, Send_NDisp_Mag1v, MPI_GAMER_REAL,
+                              RecvBuf_Mag + v*RecvDataSizeMag1v, Recv_NCount_Mag1v, Recv_NDisp_Mag1v, MPI_GAMER_REAL, MPI_COMM_WORLD );
       }
 #     endif
    } // if ( SendGridData )
@@ -690,13 +671,8 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
                   RecvBuf_NPar, Recv_NCount_Patch, Recv_NDisp_Patch, MPI_INT, MPI_COMM_WORLD );
 
 // 4.7 particle data
-#  ifdef FLOAT8
-   MPI_Alltoallv( SendBuf_ParData, Send_NCount_ParData, Send_NDisp_ParData, MPI_DOUBLE,
-                  RecvBuf_ParData, Recv_NCount_ParData, Recv_NDisp_ParData, MPI_DOUBLE, MPI_COMM_WORLD );
-#  else
-   MPI_Alltoallv( SendBuf_ParData, Send_NCount_ParData, Send_NDisp_ParData, MPI_FLOAT,
-                  RecvBuf_ParData, Recv_NCount_ParData, Recv_NDisp_ParData, MPI_FLOAT,  MPI_COMM_WORLD );
-#  endif
+   MPI_Alltoallv_GAMER( SendBuf_ParData, Send_NCount_ParData, Send_NDisp_ParData, MPI_GAMER_REAL_PAR,
+                        RecvBuf_ParData, Recv_NCount_ParData, Recv_NDisp_ParData, MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
 #  endif // #ifdef PARTICLE
 
 
@@ -747,14 +723,14 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 // check: for RemoveParFromRepo == false, the size of particle repository should be exactly equal to the received particles
 // --> see LB_RedistributeParticle_Init()
 #  ifdef DEBUG_PARTICLE
-   const long NParExpect = amr->Par->NPar_AcPlusInac + NRecv_Total_ParData/PAR_NATT_TOTAL;
+   const long NParExpect = amr->Par->NPar_AcPlusInac + NRecv_Total_ParData/(long)PAR_NATT_TOTAL;
    if ( !RemoveParFromRepo  &&  NParExpect > amr->Par->ParListSize )
       Aux_Error( ERROR_INFO, "NParExpect (%ld) > ParListSize (%ld) !!\n", NParExpect, amr->Par->ParListSize );
 #  endif
 
-   const real *RecvPtr_Par = RecvBuf_ParData;
-   long *ParList        = NULL;
-   int   ParListSizeMax = 0;    // must NOT be negative to deal with the case NRecv_Total_Patch == 0
+   const real_par *RecvPtr_Par = RecvBuf_ParData;
+   long *ParList               = NULL;
+   int   ParListSizeMax        = 0;    // must NOT be negative to deal with the case NRecv_Total_Patch == 0
 
    for (int t=0; t<NRecv_Total_Patch; t++)   ParListSizeMax = MAX( ParListSizeMax, RecvBuf_NPar[t] );
 
@@ -836,11 +812,11 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
          }
 
 //       6.3 associate particles with their home patches
-         const real *PType = amr->Par->Type;
+         const real_par *PType = amr->Par->Type;
 #        ifdef DEBUG_PARTICLE
 //       do not set ParPos too early since pointers to the particle repository (e.g., amr->Par->PosX)
 //       may change after calling amr->Par->AddOneParticle()
-         const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+         const real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
          char Comment[100];
          sprintf( Comment, "%s, PID %d, NPar %d", __FUNCTION__, PID, RecvBuf_NPar[PID] );
          amr->patch[0][lv][PID]->AddParticle( RecvBuf_NPar[PID], ParList, &amr->Par->NPar_Lv[lv],
@@ -1021,7 +997,7 @@ void LB_SortRealPatch( const int lv )
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void LB_RedistributeParticle_Init( real **ParAtt_Old )
+void LB_RedistributeParticle_Init( real_par **ParAtt_Old )
 {
 
 // backup the old particle attribute arrays
@@ -1076,7 +1052,7 @@ void LB_RedistributeParticle_Init( real **ParAtt_Old )
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void LB_RedistributeParticle_End( real **ParAtt_Old )
+void LB_RedistributeParticle_End( real_par **ParAtt_Old )
 {
 
 // remove old particle attribute arrays

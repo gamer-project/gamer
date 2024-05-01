@@ -23,7 +23,7 @@
 //                FaPotSg  : Potential sandglass at level "FaLv"
 //                TVarCC   : Target cell-centered variables on level "FaLv"
 //                           --> Supported variables in different models:
-//                               HYDRO        : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY,[, _POTE]
+//                               HYDRO        : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY [, _POTE] [, BIDX(field_index)]
 //                               ELBDM_WAVE   : _DENS, _REAL, _IMAG, [, _POTE]
 //                               ELBDM_HYBRID : _DENS, _PHAS [, _POTE]
 //                           --> _FLUID, _PASSIVE, and _TOTAL apply to all models
@@ -39,15 +39,10 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
    const int SonLv = FaLv + 1;
 
-// check
-   if ( FaLv < 0  ||  FaLv >= NLEVEL )
-      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "FaLv", FaLv );
 
-   if ( FaLv == NLEVEL-1 )
-   {
-      Aux_Message( stderr, "WARNING : applying \"%s\" to the maximum level is meaningless !! \n", __FUNCTION__ );
-      return;
-   }
+// check
+   if ( FaLv < 0  ||  FaLv > TOP_LEVEL )
+      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "FaLv", FaLv );
 
    if (  ( TVarCC & _TOTAL )  &&  ( SonFluSg != 0 && SonFluSg != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SonFluSg", SonFluSg );
@@ -75,7 +70,14 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #  endif
 
 
-// nothing to do if there are no real patches at lv+1
+// nothing to do on the top level
+   if ( FaLv == TOP_LEVEL )
+   {
+      Aux_Message( stderr, "WARNING : applying \"%s\" to the top level is meaningless !!\n", __FUNCTION__ );
+      return;
+   }
+
+// nothing to do if there is no real patch at lv+1
    if ( amr->NPatchComma[SonLv][1] == 0 )    return;
 
 // check the synchronization
@@ -96,51 +98,52 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
    const int PS1_half = PS1 / 2;
 
 
-// determine the components to be restricted (TFluVarIdx : target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
+// determine the indices of fluid components to be restricted: TFluVarIdx = [0 ... NCOMP_TOTAL-1]
    int NFluVar=0, TFluVarIdxList[NCOMP_TOTAL];
 
-   for (int v=0; v<NCOMP_TOTAL; v++)
-      if ( TVarCC & (1L<<v) )    TFluVarIdxList[ NFluVar ++ ] = v;
-
-
-// return immediately if no target variable is found
-   if ( NFluVar == 0  &&  !ResPot  &&  !ResMag )
-   {
-      Aux_Message( stderr, "WARNING : no target variable is found !!\n" );
-      return;
-   }
-
-
+#  if ( MODEL == ELBDM )
 // set correct restriction options for wave-wave, fluid-wave and fluid-fluid level phase restriction
 // wave-wave:   phase restriction on if OPT__RES_PHASE is set
 // fluid-wave:  always use phase restriction
 // fluid-fluid: treat phase restriction the same as normal restriction
-#  if ( MODEL == ELBDM )
+// --> ELBDM_MATCH_PHASE is only applied to fluid-wave
+   const bool ResWave  = ( TVarCC & _REAL ) || ( TVarCC & _IMAG );
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 // restrict phase during wave-wave-level restriction if OPT__RES_PHAS is enabled
-   const bool ResWWPha = ResFlu  &&  OPT__RES_PHASE  &&  ( TVarCC & (_REAL) || TVarCC & (_IMAG) )  &&   amr->use_wave_flag[FaLv]  &&  amr->use_wave_flag[SonLv];
+   const bool ResWWPha = OPT__RES_PHASE && ResWave &&  amr->use_wave_flag[FaLv] && amr->use_wave_flag[SonLv];
 // always restrict phase during fluid-wave-level restriction
-   const bool ResWFPha = ResFlu  &&                      ( TVarCC & (_REAL) || TVarCC & (_IMAG) )  &&  !amr->use_wave_flag[FaLv]  &&  amr->use_wave_flag[SonLv];
+   const bool ResWFPha =                   ResWave && !amr->use_wave_flag[FaLv] && amr->use_wave_flag[SonLv];
    const bool ResPha   = ResWWPha || ResWFPha;
 #  else
 // restrict phase if OPT__RES_PHAS is enabled
-   const bool ResPha   = ResFlu  &&  OPT__RES_PHASE  &&  ( TVarCC & (_REAL) || TVarCC & (_IMAG) );
+   const bool ResPha   = OPT__RES_PHASE && ResWave;
 #  endif
-#  endif // #if ( MODEL == ELBDM )
-
 
 // update the components to be restricted depending on whether phase restriction is enabled
-#  if ( MODEL == ELBDM )
-   NFluVar = 0;
-
+// --> when applying phase restriction, TFluVarIdxList[] only needs to record components other than density and wave function
    for (int v=0; v<NCOMP_TOTAL; v++) {
       if ( ResPha ) {
-            if ( TVarCC & (1L<<v)  &&  v != DENS  &&  v != REAL  &&  v != IMAG )    TFluVarIdxList[ NFluVar ++ ] = v;
+         if ( TVarCC & (1L<<v)  &&  v != DENS  &&  v != REAL  &&  v != IMAG )    TFluVarIdxList[ NFluVar ++ ] = v;
       } else {
-            if ( TVarCC & (1L<<v)                                              )    TFluVarIdxList[ NFluVar ++ ] = v;
+         if ( TVarCC & (1L<<v)                                              )    TFluVarIdxList[ NFluVar ++ ] = v;
       }
    }
-#  endif
+
+#  else // #if ( MODEL == ELBDM )
+
+   const bool ResPha = false;
+
+   for (int v=0; v<NCOMP_TOTAL; v++)
+      if ( TVarCC & (1L<<v) )    TFluVarIdxList[ NFluVar ++ ] = v;
+#  endif // #if ( MODEL == ELBDM ) ... else ...
+
+
+// return immediately if no target variable is found
+   if ( NFluVar == 0  &&  !ResPot  &&  !ResMag  &&  !ResPha )
+   {
+      Aux_Message( stderr, "WARNING : no target variable is found in %s !!\n", __FUNCTION__ );
+      return;
+   }
 
 
 // restrict
@@ -397,13 +400,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
 //    check the minimum pressure/internal energy and, when the dual-energy formalism is adopted, ensure the consistency between
 //    pressure, total energy density, and the dual-energy variable
-#     if ( MODEL == HYDRO )
-//    apply this correction only when preparing all fluid variables or magnetic field
-#     ifdef MHD
-      if (  ( TVarCC & _TOTAL ) == _TOTAL  ||  ResMag  )
-#     else
-      if (  ( TVarCC & _TOTAL ) == _TOTAL  )
-#     endif
+#     if ( MODEL == HYDRO  &&  !defined SRHD )
       for (int k=0; k<PS1; k++)
       for (int j=0; j<PS1; j++)
       for (int i=0; i<PS1; i++)

@@ -118,8 +118,8 @@ bfield = cg.RadialRandomMagneticVectorPotential(left_edge, right_edge, dims,
                                                 profile2="profile2.h5", r_max=5000.0)
 
 # Write the 3D vector potential to the B_IC file
-bfield.write_to_h5("B_IC", overwrite=True, length_unit="Mpc",
-                   field_unit="sqrt(1e14*Msun/Mpc**3)*Mpc/(10*Gyr)")
+bfield.write_file("B_IC", overwrite=True, length_unit="Mpc",
+                  field_unit="sqrt(1e14*Msun/Mpc**3)*Mpc/(10*Gyr)")
 
 # We now set up the velocities of the two clusters. Assume 1500 km/s
 # relative velocity, and then use the M200 of the two clusters to

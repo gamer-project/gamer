@@ -19,7 +19,7 @@ Default setup:
        [M] = 1.0e14 Msun
        [T] = 1.0e1 Gyr
     -->[V] = [L]/[T] ~ 9.8e1 km/s
-    -->[D] = [M]/[D]^3 ~ 6.8e-27 g/cm^3
+    -->[D] = [M]/[L]^3 ~ 6.8e-27 g/cm^3
 
 2. Default resolution ~ 15 kpc (MAX_LEVEL = 3)
 

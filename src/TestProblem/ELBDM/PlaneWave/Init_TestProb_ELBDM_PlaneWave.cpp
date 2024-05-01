@@ -269,7 +269,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  AddNewField_PlaneWave
-// Description :  Add the unwrapped phase as problem-specific fields
+// Description :  Add the unwrapped phase as a problem-specific field
 //
 // Note        :  1. Ref: https://github.com/gamer-project/gamer/wiki/Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes
 //                2. Invoke AddField() for each of the problem-specific field:
@@ -285,7 +285,7 @@ void AddNewField_PlaneWave()
 {
 
    if ( PWave_Idx_Phase == Idx_Undefined )
-      PWave_Idx_Phase = AddField( "Phase", NORMALIZE_NO, INTERP_FRAC_NO );
+      PWave_Idx_Phase = AddField( "Phase", FIXUP_FLUX_NO, FIXUP_REST_NO, NORMALIZE_NO, INTERP_FRAC_NO );
 
 } // FUNCTION : AddNewField_PlaneWave
 
@@ -379,9 +379,9 @@ void Init_TestProb_ELBDM_PlaneWave()
    SetParameter();
 
 
-   Init_Function_User_Ptr = SetGridIC;
-   Init_Field_User_Ptr    = AddNewField_PlaneWave;
-   Output_User_Ptr        = OutputError;
+   Init_Function_User_Ptr          = SetGridIC;
+   Init_Field_User_Ptr             = AddNewField_PlaneWave;
+   Output_User_Ptr                 = OutputError;
    Output_UserWorkBeforeOutput_Ptr = Output_UserWorkBeforeOutput_PlaneWave;
 #  endif // #if ( MODEL == ELBDM )
 

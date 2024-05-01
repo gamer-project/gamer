@@ -52,7 +52,7 @@ void CPU_FluidSolver_MHM(
    const bool NormPassive, const int NNorm, const int c_NormIdx[],
    const bool FracPassive, const int NFrac, const int c_FracIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_t EoS );
+   const EoS_t EoS, const MicroPhy_t MicroPhy );
 #elif ( FLU_SCHEME == CTU )
 void CPU_FluidSolver_CTU(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -155,7 +155,6 @@ static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 //                   3. MUSCL-Hancock scheme with Riemann prediction   (MHM_RP) --> unsplit
 //                   4. Corner-Transport-Upwind scheme                 (CTU   ) --> unsplit
 //
-//
 // Parameter   :  h_Flu_Array_In        : Host array storing the input fluid variables
 //                h_Flu_Array_Out       : Host array to store the output fluid variables
 //                h_Mag_Array_In        : Host array storing the input B field (for MHD only)
@@ -188,6 +187,7 @@ static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 //                Time                  : Current physical time                      (for UNSPLIT_GRAVITY only)
 //                UsePot                : Add self-gravity and/or external potential (for UNSPLIT_GRAVITY only)
 //                ExtAcc                : Add external acceleration                  (for UNSPLIT_GRAVITY only)
+//                MicroPhy              : Microphysics object
 //                MinDens/Pres/Eint     : Density, pressure, and internal energy floors
 //                DualEnergySwitch      : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
 //                NormPassive           : true --> normalize passive scalars so that the sum of their mass density
@@ -221,7 +221,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const bool StoreFlux, const bool StoreElectric,
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter,
                       const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
-                      const double Time, const bool UsePot, const OptExtAcc_t ExtAcc,
+                      const double Time, const bool UsePot, const OptExtAcc_t ExtAcc, const MicroPhy_t MicroPhy,
                       const real MinDens, const real MinPres, const real MinEint,
                       const real DualEnergySwitch,
                       const bool NormPassive, const int NNorm, const int NormIdx[],
@@ -261,7 +261,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                             NPatchGroup, dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, MinMod_MaxIter, Time,
                             UsePot, ExtAcc, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, MinEint,
                             DualEnergySwitch, NormPassive, NNorm, NormIdx, FracPassive, NFrac, FracIdx,
-                            JeansMinPres, JeansMinPres_Coeff, EoS );
+                            JeansMinPres, JeansMinPres_Coeff, EoS, MicroPhy );
 
 #     elif ( FLU_SCHEME == CTU )
 
