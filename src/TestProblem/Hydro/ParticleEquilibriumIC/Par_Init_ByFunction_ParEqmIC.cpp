@@ -102,22 +102,22 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
          Par_EquilibriumIC Cloud_Constructor( ParEqmIC_Cloud_Type[i] );
 
          // Set the parameters for each particle cloud
-         Cloud_Constructor.setCenter(               ParEqmIC_Cloud_Center            [i][0],
-                                                    ParEqmIC_Cloud_Center            [i][1],
-                                                    ParEqmIC_Cloud_Center            [i][2] );
-         Cloud_Constructor.setBulkVel(              ParEqmIC_Cloud_BulkVel           [i][0],
-                                                    ParEqmIC_Cloud_BulkVel           [i][1],
-                                                    ParEqmIC_Cloud_BulkVel           [i][2] );
-         Cloud_Constructor.setModelParameters(      ParEqmIC_Cloud_Rho0              [i],
-                                                    ParEqmIC_Cloud_R0                [i] );
-         Cloud_Constructor.setEinastoPowerFactor(   ParEqmIC_Cloud_EinastoPowerFactor[i] );
-         Cloud_Constructor.setDensityTableFilename( ParEqmIC_Cloud_DensityTable      [i] );
-         Cloud_Constructor.setParticleParameters(   ParEqmIC_Cloud_ParNum            [i],
-                                                    ParEqmIC_Cloud_MaxR              [i],
-                                                    ParEqmIC_Cloud_DensProfNBin      [i],
-                                                    ParEqmIC_Cloud_RSeed             [i] );
-         Cloud_Constructor.setExternalPotential(    ParEqmIC_Cloud_AddExtPot         [i],
-                                                    ParEqmIC_Cloud_ExtPotTable       [i] );
+         Cloud_Constructor.setCenter(                ParEqmIC_Cloud_Center            [i][0],
+                                                     ParEqmIC_Cloud_Center            [i][1],
+                                                     ParEqmIC_Cloud_Center            [i][2] );
+         Cloud_Constructor.setBulkVel(               ParEqmIC_Cloud_BulkVel           [i][0],
+                                                     ParEqmIC_Cloud_BulkVel           [i][1],
+                                                     ParEqmIC_Cloud_BulkVel           [i][2] );
+         Cloud_Constructor.setModelParameters(       ParEqmIC_Cloud_Rho0              [i],
+                                                     ParEqmIC_Cloud_R0                [i] );
+         Cloud_Constructor.setEinastoPowerFactor(    ParEqmIC_Cloud_EinastoPowerFactor[i] );
+         Cloud_Constructor.setDensProfTableFilename( ParEqmIC_Cloud_DensityTable      [i] );
+         Cloud_Constructor.setParticleParameters(    ParEqmIC_Cloud_ParNum            [i],
+                                                     ParEqmIC_Cloud_MaxR              [i],
+                                                     ParEqmIC_Cloud_DensProfNBin      [i],
+                                                     ParEqmIC_Cloud_RSeed             [i] );
+         Cloud_Constructor.setExternalPotential(     ParEqmIC_Cloud_AddExtPot         [i],
+                                                     ParEqmIC_Cloud_ExtPotTable       [i] );
 
          // initialize the particle cloud
          Cloud_Constructor.Init();

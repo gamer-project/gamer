@@ -39,7 +39,7 @@ class Par_EquilibriumIC
       void setBulkVel( const double BulkVel_X, const double BulkVel_Y, const double BulkVel_Z );
       void setModelParameters( const double Rho0, const double R0 );
       void setEinastoPowerFactor( const double EinastoPowerFactor );
-      void setDensityTableFilename( const char* DensityTableFilename );
+      void setDensProfTableFilename( const char* DensProfTableFilename );
       void setParticleParameters( const long ParNum, const double MaxR, const int ProfNBin, const int RSeed );
       void setExternalPotential( const int AddingExternalPotential, const char* ExtPotTableFilename );
       long getParticleNumber( );
@@ -56,35 +56,31 @@ class Par_EquilibriumIC
       double Cloud_Rho0                      = -1;
       double Cloud_R0                        = -1;
       double Cloud_Einasto_Power_Factor      = -1;
-      char   Density_Table_Name[MAX_STRING];
+      char   DensProf_Table_Name[MAX_STRING];
       long   Cloud_Par_Num                   = -1;
       double Cloud_MaxR                      = -1;
-      int    Cloud_TableNBin                 = -1;
+      int    Cloud_ArrayNBin                 = -1;
       int    Cloud_RSeed                     = -1;
       int    AddExtPot                       =  0;
       char   ExtPot_Table_Name[MAX_STRING];
-      // Derive physical attributes for particles
-      double Set_Mass( const double r );
-      double Set_Density( const double r );
-      double Set_Velocity( const double r );
+
+      // Get physical attributes for cloud
+      double getEnclosedMass     ( const double r );
+      double getDensity          ( const double r );
+      double getExternalPotential( const double r );
+      double getGraviPotential   ( const double r );
+      double Set_Velocity        ( const double r );
 
       // Initialize physical parameter tables
-      void Init_Mass();
-      void Init_Pot();
       void Init_Prob_Dens();
 
-      //  Initialization through Table
-      void Init_Mass_Table();
-      void Init_Pot_Table();
-
       //  Add External Potential
-      void Add_Ext_Pot();
+      void addExternalPotential();
 
       // Auxiliary functions
       void RanVec_FixRadius( const double r, double RanVec[] );
 
       // Solve Eddington's equation
-      double potential( const double r );
       double Integration_Eng_base( const double Eng, const int N_points );
 
       double  delta;
@@ -98,22 +94,42 @@ class Par_EquilibriumIC
 
       double ArrayCovariance( const double* array_x, const double* array_y,
                               const int index_start, const int n_elements );
+
       double Slope_LinearRegression( const double* array_x, const double* array_y,
                                      const int index_start, const int n_elements );
 
-      // Tables of particles' attributes
-      double *Table_input_radius;
-      double *Table_input_density;
-      double *Table_input_enclosedmass;
-      int     Table_input_NBin = -1;
-      double  Table_dr = 0.0;
-      double *Table_Radius;
-      double *Table_EnclosedMass;
-      double *Table_Density;
-      double *Table_dRho_dr;
-      double *Table_dRho_dx;
-      double *Table_Gravity_Field;
-      double *Table_Gravity_Potential;
+      // Input table of density profile
+      void    loadInputDensProfTable();
+      int     InputTable_DensProf_nbin = -1;
+      double *InputTable_DensProf_radius;
+      double *InputTable_DensProf_density;
+      double *InputTable_DensProf_enclosedmass;
+
+      // Input table of external potential
+      void    loadInputExtPotTable();
+      int     InputTable_ExtPot_nbin = -1;
+      double *InputTable_ExtPot_radius;
+      double *InputTable_ExtPot_potential;
+
+      // Arrays of radial distribution of properties of the cloud
+      double *Array_dr;
+      double *Array_Radius;
+      double *Array_Density;
+      double *Array_EnclosedMass;
+      double *Array_DensitySlope;
+      double *Array_dRho_dx;
+      double *Array_GraviField;
+      double *Array_GraviPotential;
+      double *Array_ExternalPotential;
+
+      void setArray_Radius();
+      void setArray_Density();
+      void setArray_EnclosedMass();
+      void setArray_DensitySlope();
+      void setArray_dRho_dx();
+      void setArray_GraviField();
+      void setArray_GraviPotential();
+      void setArray_ExternalPotential();
 
       // Random number generator
       RandomNumber_t *Random_Num_Gen;
