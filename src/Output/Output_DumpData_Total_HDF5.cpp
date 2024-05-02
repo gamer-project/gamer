@@ -19,25 +19,27 @@ static void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored );
 /*======================================================================================================
 Data structure:
 / -> |
-     | -> Info group     -> | -> InputPara dset (compound)
-     |                      | -> KeyInfo   dset (compound)
-     |                      | -> Makefile  dset (compound)
-     |                      | -> SymConst  dset (compound)
+     | -> Info group      -> | -> InputPara dset (compound)
+     |                       | -> KeyInfo   dset (compound)
+     |                       | -> Makefile  dset (compound)
+     |                       | -> SymConst  dset (compound)
      |
-     | -> Tree group     -> | -> Corner  dset -> Cvt2Phy attrs
-     |                      | -> LBIdx   dset
-     |                      | -> Father  dset
-     |                      | -> Son     dset
-     |                      | -> Sibling dset
-     |                      | -> NPar    dset
+     | -> Tree group      -> | -> Corner  dset -> Cvt2Phy attrs
+     |                       | -> LBIdx   dset
+     |                       | -> Father  dset
+     |                       | -> Son     dset
+     |                       | -> Sibling dset
+     |                       | -> NPar    dset
      |
-     | -> GridData group -> | -> Dens dset
-     |                      | -> ...
-     |                      | -> ...
+     | -> GridData group  -> | -> Dens dset
+     |                       | -> ...
+     |                       | -> ...
      |
-     | -> Particle group -> | -> ParMass dset
-                            | -> ...
-                            | -> ...
+     | -> Particle group  -> | -> ParMass dset
+     |                       | -> ...
+     |                       | -> ...
+     |
+     | -> Simultion grpup -> | -> simulation data
 ======================================================================================================*/
 
 
@@ -1369,6 +1371,11 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    delete [] ParBuf1v1Lv;
    delete [] NParLv_EachRank;
 #  endif // #ifdef PARTICLE
+
+
+
+// TODO: probably record user stuff here
+// Store int float only?
 
 
 
