@@ -875,4 +875,125 @@ inline void SyncHDF5File( const char *FileName )
 
 
 
+#define NPARA_MAX    1000     // maximum number of parameters
+#define TYPE_INT        1     // various data types
+#define TYPE_LONG       2
+#define TYPE_UINT       3
+#define TYPE_ULONG      4
+#define TYPE_BOOL       5
+#define TYPE_FLOAT      6
+#define TYPE_DOUBLE     7
+#define TYPE_STRING     8
+
+
+
+struct HDF5_OutUser_t
+{
+// data members
+   int NPara;
+   char (*Key)[MAX_STRING];
+   void **Ptr;
+   int   *Type;
+
+//===================================================================================
+// Constructor :  HDF5_OutUser_t
+// Description :  Constructor of the structure HDF5_OutUser"_t"
+//
+// Note        :  Initialize variables and allocate memory
+//===================================================================================
+   HDF5_OutUser_t()
+   {
+      NPara  = 0;
+      Key    = new char  [NPARA_MAX][MAX_STRING];
+      Ptr    = new void* [NPARA_MAX];
+      Type   = new int   [NPARA_MAX];
+   } // METHOD : ReadPara_t
+
+//===================================================================================
+// Constructor :  ~HDF5_OutUser_t
+// Description :  Destructor of the structure "HDF5_OutUser_t"
+//
+// Note        :  Deallocate memory
+//===================================================================================
+   ~HDF5_OutUser_t()
+   {
+      delete [] Key;
+      delete [] Ptr;
+      delete [] Type;
+   } // METHOD : ~HDF5_OutUser_t
+
+//===================================================================================
+// Constructor :  Add
+// Description :  Add a new parameter to be loaded later
+//
+// Note        :  1. This function stores the name, address, and data type of the new parameter
+//                2. Data type (e.g., integer, float, ...) is determined by the input pointer
+//                3. NewPtr, NewDef, NewMin, and NewMax must have the same data type
+//                4. String parameters are handled by a separate overloaded function
+//===================================================================================
+   template <typename T>
+   void Add( const char NewKey[], T* NewPtr )
+   {
+      if ( NPara >= NPARA_MAX )  Aux_Error( ERROR_INFO, "exceed the maximum number of parameters (%d) !!\n", NPARA_MAX );
+
+//    parameter name
+      strncpy( Key[NPara], NewKey, MAX_STRING );
+
+//    parameter address
+      Ptr[NPara] = NewPtr;
+
+//    parameter data type
+      if      ( typeid(T) == typeid(int   ) )   Type[NPara] = TYPE_INT;
+      else if ( typeid(T) == typeid(long  ) )   Type[NPara] = TYPE_LONG;
+      else if ( typeid(T) == typeid(uint  ) )   Type[NPara] = TYPE_UINT;
+      else if ( typeid(T) == typeid(ulong ) )   Type[NPara] = TYPE_ULONG;
+      else if ( typeid(T) == typeid(bool  ) )   Type[NPara] = TYPE_BOOL;
+      else if ( typeid(T) == typeid(float ) )   Type[NPara] = TYPE_FLOAT;
+      else if ( typeid(T) == typeid(double) )   Type[NPara] = TYPE_DOUBLE;
+      else
+         Aux_Error( ERROR_INFO, "unsupported data type for \"%s\" (float*, double*, int*, long*, unit*, ulong*, bool* only) !!\n",
+                    NewKey );
+
+      NPara ++;
+   } // METHOD : Add
+
+//===================================================================================
+// Constructor :  Add (string)
+// Description :  Add a new string parameter to be loaded later
+//
+// Note        :  1. Overloaded function for strings
+//===================================================================================
+   void Add( const char NewKey[], char* NewPtr )
+   {
+      if ( NPara >= NPARA_MAX )  Aux_Error( ERROR_INFO, "exceed the maximum number of parameters (%d) !!\n", NPARA_MAX );
+
+//    parameter name
+      strncpy( Key[NPara], NewKey, MAX_STRING );
+
+//    parameter address
+      Ptr[NPara] = NewPtr;
+
+//    parameter data type
+      Type[NPara] = TYPE_STRING;
+
+      NPara ++;
+
+   } // METHOD : Add (string)
+
+}; // struct HDF5_OutUser_t
+
+
+
+#undef NPARA_MAX
+#undef TYPE_INT
+#undef TYPE_LONG
+#undef TYPE_UINT
+#undef TYPE_ULONG
+#undef TYPE_FLOAT
+#undef TYPE_DOUBLE
+#undef TYPE_BOOL
+#undef TYPE_STRING
+
+
+
 #endif // #ifndef __HDF5_TYPEDEF_H__
