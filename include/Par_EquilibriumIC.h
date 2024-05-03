@@ -83,11 +83,11 @@ class Par_EquilibriumIC
       // Solve Eddington's equation
       double Integration_Eng_base( const double Eng, const int N_points );
 
-      double  delta;
+      double  EngArray_dPsi;
       double  Eng_min;
-      double *prob_dens;
-      double *int_prob_dens;
-      double *psi;
+      double *EngArray_DistriFunc;
+      double *EngArray_IntegDistriFunc;
+      double *EngArray_Psi;
 
       // statistics
       void   SmoothArray( double* array_x, int index_start, int index_end );
@@ -112,26 +112,26 @@ class Par_EquilibriumIC
       double *InputTable_ExtPot_potential;
 
       // Arrays of radial distribution of properties of the cloud
-      double *Array_dr;
-      double *Array_Radius;
-      double *Array_Density;
-      double *Array_EnclosedMass;
-      double *Array_DensitySlope;
-      double *Array_dRho_dx;
-      double *Array_GraviField;
-      double *Array_GraviPotential;
-      double *Array_ExternalPotential;
+      double *RadArray_dr;
+      double *RadArray_Radius;
+      double *RadArray_Density;
+      double *RadArray_EnclosedMass;
+      double *RadArray_DensitySlope;
+      double *RadArray_dRho_dx;
+      double *RadArray_GraviField;
+      double *RadArray_GraviPotential;
+      double *RadArray_ExternalPotential;
 
       int  LastIdx;
 
-      void setArray_Radius();
-      void setArray_Density();
-      void setArray_EnclosedMass();
-      void setArray_DensitySlope();
-      void setArray_dRho_dx();
-      void setArray_GraviField();
-      void setArray_GraviPotential();
-      void setArray_ExternalPotential();
+      void setRadArray_Radius();
+      void setRadArray_Density();
+      void setRadArray_EnclosedMass();
+      void setRadArray_DensitySlope();
+      void setRadArray_dRho_dx();
+      void setRadArray_GraviField();
+      void setRadArray_GraviPotential();
+      void setRadArray_ExternalPotential();
 
       // Random number generator
       RandomNumber_t *Random_Num_Gen;
