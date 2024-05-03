@@ -122,6 +122,8 @@ class Par_EquilibriumIC
       double *Array_GraviPotential;
       double *Array_ExternalPotential;
 
+      int  LastIdx;
+
       void setArray_Radius();
       void setArray_Density();
       void setArray_EnclosedMass();

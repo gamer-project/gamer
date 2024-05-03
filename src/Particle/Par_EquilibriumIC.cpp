@@ -226,6 +226,8 @@ void Par_EquilibriumIC::Init()
    int_prob_dens        = new double [Cloud_ArrayNBin];
    psi                  = new double [Cloud_ArrayNBin];
 
+   LastIdx = Cloud_ArrayNBin-1;
+
    setArray_Radius();
    setArray_Density();
    setArray_EnclosedMass();
@@ -985,9 +987,9 @@ double Par_EquilibriumIC::getEnclosedMass( const double r )
 double Par_EquilibriumIC::getGraviPotential( const double r )
 {
    // Note this direction is differt: from table
-   if      ( r >= Array_Radius[Cloud_ArrayNBin-1] )   return Array_GraviPotential[Cloud_ArrayNBin-1]*Array_Radius[Cloud_ArrayNBin-1]/r;
-   else if ( r <= Array_Radius[0] )                   return Array_GraviPotential[0];
-   else                                               return Mis_InterpolateFromTable( Cloud_ArrayNBin, Array_Radius, Array_GraviPotential, r );
+   if      ( r >= Array_Radius[LastIdx] )   return Array_GraviPotential[LastIdx]*Array_Radius[LastIdx]/r;
+   else if ( r <= Array_Radius[0] )         return Array_GraviPotential[0];
+   else                                     return Mis_InterpolateFromTable( Cloud_ArrayNBin, Array_Radius, Array_GraviPotential, r );
 
 } // FUNCTION : getGraviPotential
 
@@ -1061,8 +1063,8 @@ double Par_EquilibriumIC::Set_Velocity( const double r )
 
       sum_mes += prob_dens[k] *pow( psi_per-psi[k], 0.5 ) *delta;
 
-      if ( k == Cloud_ArrayNBin-1 )
-         index_ass = Cloud_ArrayNBin-1;
+      if ( k == LastIdx )
+         index_ass = LastIdx;
    }
 
    psi_ass = psi[index_ass] + delta*par;
@@ -1104,7 +1106,7 @@ double Par_EquilibriumIC::Integration_Eng_base( const double Eng, const int N_po
       const double Psi_M = Eng_min +  (i+0.5)*dEng;
       const double Psi_R = Eng_min +    (i+1)*dEng;
 
-      const int    index_Psi  = Mis_BinarySearch_Real( Array_GraviPotential, 0, Cloud_ArrayNBin-1,
+      const int    index_Psi  = Mis_BinarySearch_Real( Array_GraviPotential, 0, LastIdx,
                                                        -Psi_M ) + 1;
 
       if ( i == N_points-1 )   Integration_result += -2*Array_dRho_dx[index_Psi]*( sqrt( Eng-Psi_L ) );
@@ -1138,9 +1140,9 @@ void Par_EquilibriumIC::setArray_Radius()
    //const double ratio_r_log    = POW( Cloud_MaxR, 1.0/(Cloud_ArrayNBin-1) );
    //for (int b=1; b<Cloud_ArrayNBin; b++)   Array_Radius[b] = POW( ratio_r_log, b );
 
-   for (int b=0; b<Cloud_ArrayNBin-1; b++)   Array_dr[b] = Array_Radius[b+1] - Array_Radius[b];
+   for (int b=0; b<LastIdx; b++)   Array_dr[b] = Array_Radius[b+1] - Array_Radius[b];
 
-   Array_dr[Cloud_ArrayNBin-1] = 0;
+   Array_dr[LastIdx] = 0;
 
 } // FUNCTION : setArray_Radius
 
@@ -1214,7 +1216,7 @@ void Par_EquilibriumIC::setArray_DensitySlope()
 
    Array_DensitySlope[Cloud_ArrayNBin-2] = Slope_LinearRegression( Array_Radius, Array_Density, Cloud_ArrayNBin-Npoints/2-1, Npoints/2+1 );
 
-   Array_DensitySlope[Cloud_ArrayNBin-1] = Array_DensitySlope[Cloud_ArrayNBin-2];
+   Array_DensitySlope[LastIdx]           = Array_DensitySlope[Cloud_ArrayNBin-2];
 
 } // FUNCTION : setArray_DensitySlope
 
@@ -1251,7 +1253,7 @@ void Par_EquilibriumIC::setArray_GraviField()
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::setArray_GraviPotential()
 {
-   Array_GraviPotential[Cloud_ArrayNBin-1] = -NEWTON_G*Array_EnclosedMass[Cloud_ArrayNBin-1]/Array_Radius[Cloud_ArrayNBin-1];
+   Array_GraviPotential[LastIdx] = -NEWTON_G*Array_EnclosedMass[LastIdx]/Array_Radius[LastIdx];
 
    for (int b=Cloud_ArrayNBin-2; b>1; b--)
       Array_GraviPotential[b] = Array_GraviPotential[b+1] + Array_GraviField[b]*Array_dr[b];
@@ -1263,7 +1265,7 @@ void Par_EquilibriumIC::setArray_GraviPotential()
 
    Array_GraviPotential[0] = Array_GraviPotential[1];
 
-   Eng_min = -Array_GraviPotential[Cloud_ArrayNBin-1];
+   Eng_min = -Array_GraviPotential[LastIdx];
 
 } // FUNCTION : setArray_GraviPotential
 
@@ -1316,7 +1318,7 @@ void Par_EquilibriumIC::Init_Prob_Dens()
 {
 
    double min, max;
-   min   = -Array_GraviPotential[Cloud_ArrayNBin-1];
+   min   = -Array_GraviPotential[LastIdx];
    max   = -Array_GraviPotential[1];
    delta = (max-min)/Cloud_ArrayNBin;
 
@@ -1339,7 +1341,7 @@ void Par_EquilibriumIC::Init_Prob_Dens()
       if      ( k == 0 )                 prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k,   5 );
       else if ( k == 1 )                 prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k-1, 5 );
       else if ( k == Cloud_ArrayNBin-2 ) prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k-3, 5 );
-      else if ( k == Cloud_ArrayNBin-1 ) prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k-4, 5 );
+      else if ( k == LastIdx           ) prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k-4, 5 );
       else                               prob_dens[k] = Slope_LinearRegression( psi, int_prob_dens, k-2, 5 );
 
       if ( prob_dens[k] < 0 )            prob_dens[k] = 0;
