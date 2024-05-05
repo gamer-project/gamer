@@ -170,7 +170,7 @@ OPT__OUTPUT_PART              7           # output a single line or slice: (0=of
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
-OPT__OUTPUT_POT               0           # output gravitational potential [0] ##OPT__OUTPUT_TOTAL ONLY##
+OPT__OUTPUT_POT               1           # output gravitational potential [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_PRES              0           # output gas pressure [0] ##HYDRO ONLY##
 OPT__OUTPUT_TEMP              0           # output gas temperature [0] ##HYDRO ONLY##
 OPT__OUTPUT_ENTR              0           # output gas entropy [0] ##HYDRO ONLY##
