@@ -496,6 +496,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       HDF5_OutUser_t *HDF5_OutUser = new HDF5_OutUser_t;
       HDF5_Output_User_Ptr( HDF5_OutUser );
       structWriteToHDF5( H5_SetID_HDF5OutUser, HDF5_OutUser );
+      delete HDF5_OutUser;
 
       // int intData1 = 42;
       // int intData2 = 13;
