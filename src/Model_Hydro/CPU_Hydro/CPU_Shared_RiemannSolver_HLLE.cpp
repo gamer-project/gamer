@@ -26,9 +26,14 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 
 
 
+// ##################
+// ## SRHD version ##
+// ##################
+#ifdef SRHD
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_RiemannSolver_HLLE
 // Description :  Approximate Riemann solver of Harten, Lax, and van Leer
+//                (SRHD version)
 //
 // Note        :  1. Input data should be conserved variables
 //                2. Ref : (a) Riemann Solvers and Numerical Methods for Fluid Dynamics - A Practical Introduction
@@ -47,12 +52,16 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed squared
 //                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
 //                EoS_Table         : EoS tables
+//
+// Return      :  Flux_Out[]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
-                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
-                               const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] )
+                               const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
+                               const EoS_H2TEM_t EoS_HTilde2Temp,
+                               const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                               const real* const EoS_Table[EOS_NTABLE_MAX] )
 {
 
 // 1. reorder the input variables for different spatial directions
@@ -68,8 +77,256 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
    Hydro_Rotate3D( R, XYZ, true, MAG_OFFSET );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &L[0], "density", ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &R[0], "density", ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_CONS, L, NULL,
+                       NULL_REAL, NULL_REAL, NULL_REAL,
+                       EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
+                       EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
+                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_CONS, R, NULL,
+                       NULL_REAL, NULL_REAL, NULL_REAL,
+                       EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
+                       EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
+                       ERROR_INFO, UNPHY_VERBOSE );
+#  endif
+
+
+// 2. compute primitive variables from conserved variables
+   real PL[NCOMP_TOTAL], PR[NCOMP_TOTAL]; // primitive variables
+   real Fl[NCOMP_TOTAL], Fr[NCOMP_TOTAL];
+   real Fhll[NCOMP_TOTAL];
+   real cslsq, csrsq, gammasql, gammasqr;
+   real ssl, ssr, lmdapl, lmdapr, lmdaml, lmdamr, lmdatlmda;
+   real lmdal,lmdar; // left and right wave speeds
+   real ovlrmll;
+   real lV1, rV1, lV2, rV2, lV3, rV3;
+   real lFactor,rFactor;   // Lorentz factor
+
+
+   Hydro_Con2Pri( L, PL, MinPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+                  (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &lFactor );
+
+   Hydro_Con2Pri( R, PR, MinPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+                  (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &rFactor );
+
+
+//  3. transform 4-velocity to 3-velocity
+   const real _lFactor = (real)1.0 / lFactor;
+   lV1 = PL[1]*_lFactor;
+   lV2 = PL[2]*_lFactor;
+   lV3 = PL[3]*_lFactor;
+
+   const real _rFactor = (real)1.0 / rFactor;
+   rV1 = PR[1]*_rFactor;
+   rV2 = PR[2]*_rFactor;
+   rV3 = PR[3]*_rFactor;
+
+
+// 4. compute the max and min wave speeds used in Mignone
+   cslsq = EoS_DensPres2CSqr( PL[0], PL[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+   csrsq = EoS_DensPres2CSqr( PR[0], PR[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
+   if ( cslsq >= (real)1.0  ||  csrsq >= (real)1.0  ||  cslsq < (real)0.0  ||  csrsq < (real)0.0 )
+      printf( "cslsq = %14.7e, cslrq = %14.7e\n", cslsq, csrsq );
+#  endif
+
+// square of Lorentz factor
+   gammasql = SQR(lFactor);
+   gammasqr = SQR(rFactor);
+   ssl      = cslsq / ( -gammasql*cslsq + gammasql ); // Mignone Eq 22.5
+   ssr      = csrsq / ( -gammasqr*csrsq + gammasqr ); // Mignone Eq 22.5
+
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
+   if ( ssl < (real)0.0  ||  ssr < (real)0.0 )  printf( "ssl = %14.7e, ssr = %14.7e\n", ssl, ssr );
+#  endif
+
+   const real lV2s       = SQR( lV2 );
+   const real rV2s       = SQR( rV2 );
+   const real lV3s       = SQR( lV3 );
+   const real rV3s       = SQR( rV3 );
+   const real __gammasql = (real)1.0 / gammasql;
+   const real __gammasqr = (real)1.0 / gammasqr;
+   const real deltal     = SQR( ssl ) + ssl*( __gammasql + lV2s + lV3s );
+   const real deltar     = SQR( ssr ) + ssr*( __gammasqr + rV2s + rV3s );
+   const real ssl__      = (real)1.0 + ssl;
+   const real ssr__      = (real)1.0 + ssr;
+
+   lmdapl = ( lV1 + SQRT(deltal) ) / ssl__ ;
+   lmdaml = ( lV1 - SQRT(deltal) ) / ssl__ ;
+   lmdapr = ( rV1 + SQRT(deltar) ) / ssr__ ;
+   lmdamr = ( rV1 - SQRT(deltar) ) / ssr__ ;
+   lmdal  = FMIN( lmdaml, lmdamr ); // Mignone Eq 21
+   lmdar  = FMAX( lmdapl, lmdapr );
+
+
+// 5. compute HLL flux using Mignone Eq 11 (necessary for computing lmdas (Eq 18))
+//    compute HLL conserved quantities using Mignone Eq 9
+   Fl[0] = L[0]*lV1;
+   Fl[1] = L[1]*lV1 + PL[4];
+   Fl[2] = L[2]*lV1;
+   Fl[3] = L[3]*lV1;
+   Fl[4] = lV1*( L[4] + PL[4] );
+
+   Fr[0] = R[0]*rV1;
+   Fr[1] = R[1]*rV1 + PR[4];
+   Fr[2] = R[2]*rV1;
+   Fr[3] = R[3]*rV1;
+   Fr[4] = rV1*( R[4] + PR[4] );
+
+
+// 6. Determine intercell flux according to Mignone Eq 13
+   if ( lmdal >= (real)0.0 )
+   {
+//    Fl
+//    intercell flux is left flux
+      Flux_Out[0] = Fl[0];
+      Flux_Out[1] = Fl[1];
+      Flux_Out[2] = Fl[2];
+      Flux_Out[3] = Fl[3];
+      Flux_Out[4] = Fl[4];
+
+//    evaluate the fluxes of passive scalars
+#     if ( NCOMP_PASSIVE > 0 )
+      if ( Flux_Out[FLUX_DENS] >= (real)0.0 )
+      {
+         const real vx = Flux_Out[FLUX_DENS]/L[0];
+
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = L[v]*vx;
+      }
+
+      else
+      {
+         const real vx = Flux_Out[FLUX_DENS]/R[0];
+
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = R[v]*vx;
+      }
+#     endif
+
+      Hydro_Rotate3D( Flux_Out, XYZ, false, MAG_OFFSET );
+      return;
+   } // if ( lmdal >= (real)0.0 )
+
+   else if ( lmdal < (real)0.0  &&  lmdar > (real)0.0 )
+   {
+//    Fs
+      ovlrmll = (real)1.0/( lmdar - lmdal );
+      lmdatlmda = lmdal*lmdar;
+
+      Fhll[0] = (  lmdatlmda*( R[0] - L[0] ) + ( lmdar*Fl[0] - lmdal*Fr[0] )  )*ovlrmll;
+      Fhll[1] = (  lmdatlmda*( R[1] - L[1] ) + ( lmdar*Fl[1] - lmdal*Fr[1] )  )*ovlrmll;
+      Fhll[2] = (  lmdatlmda*( R[2] - L[2] ) + ( lmdar*Fl[2] - lmdal*Fr[2] )  )*ovlrmll;
+      Fhll[3] = (  lmdatlmda*( R[3] - L[3] ) + ( lmdar*Fl[3] - lmdal*Fr[3] )  )*ovlrmll;
+      Fhll[4] = (  lmdatlmda*( R[4] - L[4] ) + ( lmdar*Fl[4] - lmdal*Fr[4] )  )*ovlrmll;
+
+//    calculate Fs
+      Flux_Out[0] = Fhll[0];
+      Flux_Out[1] = Fhll[1];
+      Flux_Out[2] = Fhll[2];
+      Flux_Out[3] = Fhll[3];
+      Flux_Out[4] = Fhll[4];
+
+//    evaluate the fluxes of passive scalars
+#     if ( NCOMP_PASSIVE > 0 )
+      if ( Flux_Out[FLUX_DENS] >= (real)0.0 )
+      {
+         const real vx = Flux_Out[FLUX_DENS]/L[0];
+
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = L[v]*vx;
+      }
+
+      else
+      {
+         const real vx = Flux_Out[FLUX_DENS]/R[0];
+
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = R[v]*vx;
+      }
+#     endif
+
+      Hydro_Rotate3D( Flux_Out, XYZ, false, MAG_OFFSET );
+      return;
+   } // else if ( lmdal < (real)0.0  &&  lmdar > (real)0.0 )
+
+   else
+   {
+//    Fr
+//    intercell flux is right flux
+      Flux_Out[0] = Fr[0];
+      Flux_Out[1] = Fr[1];
+      Flux_Out[2] = Fr[2];
+      Flux_Out[3] = Fr[3];
+      Flux_Out[4] = Fr[4];
+
+//    evaluate the fluxes of passive scalars
+#     if ( NCOMP_PASSIVE > 0 )
+      if ( Flux_Out[FLUX_DENS] >= (real)0.0 )
+      {
+         const real vx = Flux_Out[FLUX_DENS]/L[0];
+
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = L[v]*vx;
+      }
+
+      else
+      {
+         const real vx = Flux_Out[FLUX_DENS]/R[0];
+
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = R[v]*vx;
+      }
+#     endif
+
+      Hydro_Rotate3D( Flux_Out, XYZ, false, MAG_OFFSET );
+      return;
+   } // if ( lmdal >= (real)0.0 ) ... elif ... else ...
+
+} // FUNCTION : Hydro_RiemannSolver_HLLE
+#endif // #ifdef SRHD
+
+
+
+// ################
+// ## HD version ##
+// ################
+#ifndef SRHD
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_RiemannSolver_HLLE
+// Description :  Approximate Riemann solver of Harten, Lax, and van Leer
+//                (HD version)
+//
+// Note        :  See the SRHD routine
+//
+// Parameter   :  See the SRHD routine
+//
+// Return      :  See the SRHD routine
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                               const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
+                               const EoS_H2TEM_t EoS_HTilde2Temp,
+                               const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                               const real* const EoS_Table[EOS_NTABLE_MAX] )
+{
+
+// 1. reorder the input variables for different spatial directions
+   real L[NCOMP_TOTAL_PLUS_MAG], R[NCOMP_TOTAL_PLUS_MAG];
+
+   for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
+   {
+      L[v] = L_In[v];
+      R[v] = R_In[v];
+   }
+
+   Hydro_Rotate3D( L, XYZ, true, MAG_OFFSET );
+   Hydro_Rotate3D( R, XYZ, true, MAG_OFFSET );
+
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &L[0], "density",
+                       TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &R[0], "density",
+                       TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -115,15 +372,21 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
 #  endif
 
    P_L   = Hydro_Con2Pres( L[0], L[1], L[2], L[3], L[4], L+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag_L,
-                           EoS_DensEint2Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+                           EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
+                           EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
    P_R   = Hydro_Con2Pres( R[0], R[1], R[2], R[3], R[4], R+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag_R,
-                           EoS_DensEint2Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+                           EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
+                           EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
    a2_L  = EoS_DensPres2CSqr( L[0], P_L, L+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
    a2_R  = EoS_DensPres2CSqr( R[0], P_R, R+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &P_L, "pressure", ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &P_R, "pressure", ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &P_L, "pressure",
+                       (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &P_R, "pressure",
+                       (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 #  if ( defined GAMER_DEBUG  &&  defined MHD )
@@ -254,7 +517,9 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
    a2_Roe  = Gamma*_Rho_Roe*Hydro_CheckMinPres( a2_Roe*Rho_Roe*_Gamma, MinPres );   // apply pressure floor
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &a2_Roe, "a2_Roe", ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &a2_Roe, "a2_Roe",
+                       (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
 #  endif // #ifdef CHECK_UNPHYSICAL_IN_FLUID
 
 #  ifdef MHD
@@ -275,10 +540,14 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
    Cf2_min_Cs2_Roe = SQRT( SQR(Ca2_min_a2_Roe) + (real)4.0*a2_Roe*Cat2_Roe );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &a2_Roe, "a2_Roe", ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &a2_Roe, "a2_Roe",
+                       (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
 
 #  ifdef MHD
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Gamma_m1_mY, "Gamma_m1-Y", ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &Gamma_m1_mY, "Gamma_m1-Y",
+                       (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 #  endif // #ifdef CHECK_UNPHYSICAL_IN_FLUID
 
@@ -361,8 +630,12 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
    MaxV_R = FMAX( MaxV_R, ZERO );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &q_L, "q_L", ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &q_R, "q_R", ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &q_L, "q_L",
+                       (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &q_R, "q_R",
+                       (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -442,6 +715,7 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
    Hydro_Rotate3D( Flux_Out, XYZ, false, MAG_OFFSET );
 
 } // FUNCTION : Hydro_RiemannSolver_HLLE
+#endif // #ifndef SRHD
 
 
 

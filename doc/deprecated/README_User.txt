@@ -471,6 +471,7 @@ II. Perform Simulation
             3 -> generalized MinMod + van Leer limiter
                  (please set the parameter "MINMOD_COEFF" for this limiter)
             4 -> extrema-preserving limiter (not well tested yet)
+            7 -> Athena++ PPM slope limiter
 
       OPT__WAF_LIMITER :
          The flux limiter in WAF scheme.

@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -41,9 +40,9 @@ static FieldIdx_t Plummer_Idx_Cloud1 = Idx_Undefined;
 // problem-specific function prototypes
 #ifdef MASSIVE_PARTICLES
 void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllRank,
-                                  real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                  real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                  real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
+                                  real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                  real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                  real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
 #endif
 void Init_ExtAcc_Plummer();
 void Init_ExtPot_Plummer();
@@ -492,8 +491,8 @@ void AddNewField_Plummer()
 
    if ( Plummer_AddColor )
    {
-      Plummer_Idx_Cloud0 = AddField( "Cloud0", NORMALIZE_YES, INTERP_FRAC_YES );
-      Plummer_Idx_Cloud1 = AddField( "Cloud1", NORMALIZE_YES, INTERP_FRAC_YES );
+      Plummer_Idx_Cloud0 = AddField( "Cloud0", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+      Plummer_Idx_Cloud1 = AddField( "Cloud1", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_YES, INTERP_FRAC_YES );
    }
 
 } // FUNCTION : AddNewField_Plummer

@@ -1,8 +1,7 @@
 #include "Macro.h"
 #include "CUFLU.h"
 
-#if ( defined GPU  &&  MODEL == HYDRO  &&  FLU_SCHEME == RTVD )
-
+#if ( defined GPU  &&  MODEL == HYDRO  &&  FLU_SCHEME == RTVD  &&  !defined SRHD )
 
 // check before compiling anything else
 #if ( NCOMP_PASSIVE != 0 )
@@ -193,12 +192,16 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
       _rho = (real)1.0 / Fluid[0];
       vx   = _rho * Fluid[1];
       p    = Hydro_Con2Pres( Fluid[0], Fluid[1], Fluid[2], Fluid[3], Fluid[4], Passive,
-                             CheckMinPres_Yes, MinPres, NULL_REAL, EoS->DensEint2Pres_FuncPtr,
+                             CheckMinPres_Yes, MinPres, NULL_REAL, EoS->DensEint2Pres_FuncPtr, NULL, NULL,
                              EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
-      Hydro_CheckUnphysical( UNPHY_MODE_SING, &p       , "pressure", ERROR_INFO, UNPHY_VERBOSE );
-      Hydro_CheckUnphysical( UNPHY_MODE_SING, &Fluid[0], "density" , ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical( UNPHY_MODE_SING, &p,        "pressure",
+                          (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                          ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical( UNPHY_MODE_SING, &Fluid[0], "density",
+                          TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                          ERROR_INFO, UNPHY_VERBOSE );
 #     endif
       c    = FABS( vx ) + SQRT(  EoS->DensPres2CSqr_FuncPtr( Fluid[0], p, Passive, EoS->AuxArrayDevPtr_Flt,
                                                              EoS->AuxArrayDevPtr_Int, EoS->Table )  );
@@ -252,12 +255,16 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
          _rho = (real)1.0 / Fluid_half[0];
          vx   = _rho * Fluid_half[1];
          p    = Hydro_Con2Pres( Fluid_half[0], Fluid_half[1], Fluid_half[2], Fluid_half[3], Fluid_half[4], Passive,
-                                CheckMinPres_Yes, MinPres, NULL_REAL, EoS->DensEint2Pres_FuncPtr,
+                                CheckMinPres_Yes, MinPres, NULL_REAL, EoS->DensEint2Pres_FuncPtr, NULL, NULL,
                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
 #        ifdef CHECK_UNPHYSICAL_IN_FLUID
-         Hydro_CheckUnphysical( UNPHY_MODE_SING, &p            , "pressure", ERROR_INFO, UNPHY_VERBOSE );
-         Hydro_CheckUnphysical( UNPHY_MODE_SING, &Fluid_half[0], "density" , ERROR_INFO, UNPHY_VERBOSE );
+         Hydro_IsUnphysical( UNPHY_MODE_SING, &p,             "pressure",
+                             (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                             ERROR_INFO, UNPHY_VERBOSE );
+         Hydro_IsUnphysical( UNPHY_MODE_SING, &Fluid_half[0], "density",
+                             TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                             ERROR_INFO, UNPHY_VERBOSE );
 #        endif
 
          c    = FABS( vx ) + SQRT(  EoS->DensPres2CSqr_FuncPtr( Fluid_half[0], p, Passive, EoS->AuxArrayDevPtr_Flt,
@@ -345,8 +352,12 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
 
 //       check negative density and energy
 #        ifdef CHECK_UNPHYSICAL_IN_FLUID
-         Hydro_CheckUnphysical( UNPHY_MODE_SING, &Fluid[4], "energy" , ERROR_INFO, UNPHY_VERBOSE );
-         Hydro_CheckUnphysical( UNPHY_MODE_SING, &Fluid[0], "density", ERROR_INFO, UNPHY_VERBOSE );
+         Hydro_IsUnphysical( UNPHY_MODE_SING, &Fluid[4], "energy",
+                             TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                             ERROR_INFO, UNPHY_VERBOSE );
+         Hydro_IsUnphysical( UNPHY_MODE_SING, &Fluid[0], "density",
+                             TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                             ERROR_INFO, UNPHY_VERBOSE );
 #        endif
 
 
@@ -417,4 +428,4 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
 
 
 
-#endif // #if ( defined GPU  &&  MODEL == HYDRO  &&  FLU_SCHEME == RTVD )
+#endif // #if ( defined GPU  &&  MODEL == HYDRO  &&  FLU_SCHEME == RTVD  &&  !defined SRHD )

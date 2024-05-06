@@ -34,9 +34,9 @@
 //-------------------------------------------------------------------------------------------------------
 void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
                             const double _dh, const int AttrSize3D, const real *Attr,
-                            const int NPar, real *InterpParPos[3],
-                            const real ParType[], const long ParList[],
-                            const bool UseTracers, real ParAttr[], const bool CorrectVelocity )
+                            const int NPar, real_par *InterpParPos[3],
+                            const real_par ParType[], const long ParList[],
+                            const bool UseTracers, real_par ParAttr[], const bool CorrectVelocity )
 {
 
    typedef real (*vla)[AttrSize3D][AttrSize3D];
@@ -77,9 +77,9 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
             if ( idx[d] < 0 )
             {
 #              ifdef DEBUG_PARTICLE
-               if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real)EdgeL[d], NULL, false )  )
+               if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real_par)EdgeL[d], NULL, false )  )
                   Aux_Error( ERROR_INFO, "index outside the attr array (pos[%d] %14.7e, EdgeL %14.7e, idx %d) !!\n",
-                             d, InterpParPos[d][p], EdgeL[d], idx[d] );
+                             d, InterpParPos[d][p], (real_par)EdgeL[d], idx[d] );
 #              endif
 
                idx[d] = 0;
@@ -87,9 +87,9 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
             else if ( idx[d] >= AttrSize3D )
             {
 #              ifdef DEBUG_PARTICLE
-               if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real)EdgeR[d], NULL, false )  )
+               if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real_par)EdgeR[d], NULL, false )  )
                   Aux_Error( ERROR_INFO, "index outside the attr array (pos[%d] %14.7e, EdgeR %14.7e, idx %d) !!\n",
-                             d, InterpParPos[d][p], EdgeR[d], idx[d] );
+                             d, InterpParPos[d][p], (real_par)EdgeR[d], idx[d] );
 #              endif
 
                idx[d] = AttrSize3D - 1;
@@ -97,7 +97,7 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
          } // for (int d=0; d<3; d++)
 
 //       calculate new particle attribute
-         ParAttr[p] = Attr3D[ idx[2] ][ idx[1] ][ idx[0] ];
+         ParAttr[p] = (real_par)Attr3D[ idx[2] ][ idx[1] ][ idx[0] ];
 
       } // PAR_INTERP_NGP
       break;
@@ -112,7 +112,7 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
          for (int d=0; d<3; d++)
          {
 //          calculate the array index of the left and right cells
-            dr      [d] = ( InterpParPos[d][p] - EdgeL[d] )*_dh - 0.5;
+            dr      [d] = (double)( InterpParPos[d][p] - (real_par)EdgeL[d] )*_dh - 0.5;
             idxLR[0][d] = int( dr[d] );
             idxLR[1][d] = idxLR[0][d] + 1;
 
@@ -121,9 +121,9 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
             if ( idxLR[0][d] < 0 )
             {
 #              ifdef DEBUG_PARTICLE
-               if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real)EdgeL[d], NULL, false )  )
+               if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real_par)EdgeL[d], NULL, false )  )
                   Aux_Error( ERROR_INFO, "index outside the attr array (pos[%d] %14.7e, EdgeL %14.7e, idxL %d, idxR %d) !!\n",
-                             d, InterpParPos[d][p], EdgeL[d], idxLR[0][d], idxLR[1][d] );
+                             d, InterpParPos[d][p], (real_par)EdgeL[d], idxLR[0][d], idxLR[1][d] );
 #              endif
 
                idxLR[0][d] = 0;
@@ -132,9 +132,9 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
             else if ( idxLR[1][d] >= AttrSize3D )
             {
 #              ifdef DEBUG_PARTICLE
-               if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real)EdgeR[d], NULL, false )  )
+               if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real_par)EdgeR[d], NULL, false )  )
                   Aux_Error( ERROR_INFO, "index outside the attr array (pos[%d] %14.7e, EdgeR %14.7e, idxL %d, idxR %d) !!\n",
-                             d, InterpParPos[d][p], EdgeR[d], idxLR[0][d], idxLR[1][d] );
+                             d, InterpParPos[d][p], (real_par)EdgeR[d], idxLR[0][d], idxLR[1][d] );
 #              endif
 
                idxLR[0][d] = AttrSize3D - 2;
@@ -148,13 +148,13 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
          } // for (int d=0; d<3; d++)
 
 //       calculate attribute
-         ParAttr[p] = (real)0.0;
+         ParAttr[p] = (real_par)0.0;
 
          for (int k=0; k<2; k++)
          for (int j=0; j<2; j++)
          for (int i=0; i<2; i++) {
-            ParAttr[p] += Attr3D[ idxLR[k][2] ][ idxLR[j][1] ][ idxLR[i][0] ]
-               *Frac[i][0]*Frac[j][1]*Frac[k][2];
+            ParAttr[p] += (real_par)(Attr3D[ idxLR[k][2] ][ idxLR[j][1] ][ idxLR[i][0] ]
+               *Frac[i][0]*Frac[j][1]*Frac[k][2]);
          }
 
       } // PAR_INTERP_CIC
@@ -170,7 +170,7 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
          for (int d=0; d<3; d++)
          {
 //          calculate the array index of the left, central, and right cells
-            dr       [d] = ( InterpParPos[d][p] - EdgeL[d] )*_dh;
+            dr       [d] = (double)( InterpParPos[d][p] - (real_par)EdgeL[d] )*_dh;
             idxLCR[1][d] = int( dr[d] );
             idxLCR[0][d] = idxLCR[1][d] - 1;
             idxLCR[2][d] = idxLCR[1][d] + 1;
@@ -179,9 +179,9 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
             if ( idxLCR[0][d] < 0 )
             {
 #              ifdef DEBUG_PARTICLE
-               if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real)EdgeL[d], NULL, false )  )
+               if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real_par)EdgeL[d], NULL, false )  )
                   Aux_Error( ERROR_INFO, "index outside the attr array (pos[%d] %14.7e, EdgeL %14.7e, idxL %d, idxR %d) !!\n",
-                             d, InterpParPos[d][p], EdgeL[d], idxLCR[0][d], idxLCR[2][d] );
+                             d, InterpParPos[d][p], (real_par)EdgeL[d], idxLCR[0][d], idxLCR[2][d] );
 #              endif
 
                idxLCR[0][d] = 0;
@@ -191,9 +191,9 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
             else if ( idxLCR[2][d] >= AttrSize3D )
             {
 #              ifdef DEBUG_PARTICLE
-               if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real)EdgeR[d], NULL, false )  )
+               if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real_par)EdgeR[d], NULL, false )  )
                   Aux_Error( ERROR_INFO, "index outside the attr array (pos[%d] %14.7e, EdgeR %14.7e, idxL %d, idxR %d) !!\n",
-                             d, InterpParPos[d][p], EdgeR[d], idxLCR[0][d], idxLCR[2][d] );
+                             d, InterpParPos[d][p], (real_par)EdgeR[d], idxLCR[0][d], idxLCR[2][d] );
 #              endif
 
                idxLCR[0][d] = AttrSize3D - 3;
@@ -209,13 +209,13 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
          } // for (int d=0; d<3; d++)
 
 //       calculate attribute
-         ParAttr[p] = (real)0.0;
+         ParAttr[p] = (real_par)0.0;
 
          for (int k=0; k<3; k++)
          for (int j=0; j<3; j++)
          for (int i=0; i<3; i++) {
-            ParAttr[p] += Attr3D[ idxLCR[k][2] ][ idxLCR[j][1] ][ idxLCR[i][0] ]
-               *Frac[i][0]*Frac[j][1]*Frac[k][2];
+            ParAttr[p] += (real_par)(Attr3D[ idxLCR[k][2] ][ idxLCR[j][1] ][ idxLCR[i][0] ]
+               *Frac[i][0]*Frac[j][1]*Frac[k][2]);
          }
 
       } // PAR_INTERP_TSC
@@ -233,15 +233,15 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
 //       calculate the nearest grid index
          for (int d=0; d<3; d++)
          {
-            idx[d] = int( ( InterpParPos[d][p] - EdgeL[d] )*_dh );
+            idx[d] = int( (double)( InterpParPos[d][p] - (real_par)EdgeL[d] )*_dh );
 
 //          prevent from round-off errors (especially for NGP and TSC)
             if ( idx[d] < 1 )
             {
 #              ifdef DEBUG_PARTICLE
-               if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real)EdgeL[d], NULL, false )  )
+               if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real_par)EdgeL[d], NULL, false )  )
                   Aux_Error( ERROR_INFO, "index outside the attr array (pos[%d] %14.7e, EdgeL %14.7e, idx-1 %d) !!\n",
-                             d, InterpParPos[d][p], EdgeL[d], idx[d]-1 );
+                             d, InterpParPos[d][p], (real_par)EdgeL[d], idx[d]-1 );
 #              endif
 
                idx[d] = 1;
@@ -249,9 +249,9 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
             else if ( idx[d] >= AttrSize3D - 1 )
             {
 #              ifdef DEBUG_PARTICLE
-               if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real)EdgeR[d], NULL, false )  )
+               if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real_par)EdgeR[d], NULL, false )  )
                   Aux_Error( ERROR_INFO, "index outside the attr array (pos[%d] %14.7e, EdgeR %14.7e, idx+1 %d) !!\n",
-                             d, InterpParPos[d][p], EdgeR[d], idx[d]+1 );
+                             d, InterpParPos[d][p], (real_par)EdgeR[d], idx[d]+1 );
 #              endif
 
                idx[d] = AttrSize3D - 2;
@@ -271,7 +271,7 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
 
          deltav = (double)Attr3D[ idx[2] ][ idx[1] ][ idx[0] ] - deltav/27.0;
 
-         ParAttr[p] += (real)deltav;
+         ParAttr[p] += (real_par)deltav;
       } // if ( CorrectVelocity )
 
    } // for (int p=0; p<NPar; p++)

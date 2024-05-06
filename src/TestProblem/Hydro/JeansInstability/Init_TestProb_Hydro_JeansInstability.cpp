@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -60,10 +59,6 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
-#  ifndef FLOAT8
-   Aux_Error( ERROR_INFO, "FLOAT8 must be enabled !!\n" );
-#  endif
-
    if ( Jeans_Dir == 3  &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )
       Aux_Error( ERROR_INFO, "simulation domain must be cubic for Jeans_Dir = %d !!\n", Jeans_Dir );
 
@@ -84,6 +79,10 @@ void Validate()
 // warnings
    if ( MPI_Rank == 0 )
    {
+#     ifndef FLOAT8
+      Aux_Message( stderr, "WARNING : it's recommended to enable FLOAT8 for this test !!\n" );
+#     endif
+
       if ( !OPT__OUTPUT_USER )   Aux_Message( stdout, "WARNING : OPT__OUTPUT_USER is off !!\n" );
    }
 

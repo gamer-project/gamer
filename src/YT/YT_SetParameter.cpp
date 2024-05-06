@@ -97,7 +97,7 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
 #  endif
    if (yt_set_UserParameterInt("mhd", 1, &mhd) != YT_SUCCESS)  Aux_Error( ERROR_INFO, "yt_set_UserParameterInt() set mhd failed !!\n" );
 
-#  if ( MODEL == HYDRO )
+#  if   ( MODEL == HYDRO )
    const double gamma = (double) GAMMA;
    const double mu = (double) MOLECULAR_WEIGHT;
 #  ifdef SRHD
@@ -105,17 +105,20 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
 #  else
    const int srhd = 0;
 #  endif
-   if (yt_set_UserParameterDouble("gamma", 1, &gamma) != YT_SUCCESS )  Aux_Error( ERROR_INFO, "yt_set_UserParameterDouble() set GAMMA failed !!\n" );
-   if (yt_set_UserParameterDouble("mu", 1, &mu) != YT_SUCCESS )        Aux_Error( ERROR_INFO, "yt_set_UserParameterDouble() set MOLECULAR_WEIGHT failed !!\n" );
-   if (yt_set_UserParameterInt("srhd", 1, &srhd) != YT_SUCCESS )       Aux_Error( ERROR_INFO, "yt_set_UserParameterInt() set srhd failed !!\n" );
+   if ( yt_set_UserParameterDouble("gamma",    1, &gamma   ) != YT_SUCCESS )   Aux_Error( ERROR_INFO, "yt_set_UserParameterDouble() set %s failed !!\n", "GAMMA" );
+   if ( yt_set_UserParameterDouble("mu",       1, &mu      ) != YT_SUCCESS )   Aux_Error( ERROR_INFO, "yt_set_UserParameterDouble() set %s failed !!\n", "MOLECULAR_WEIGHT" );
+   if ( yt_set_UserParameterInt   ("srhd",     1, &srhd    ) != YT_SUCCESS )   Aux_Error( ERROR_INFO, "yt_set_UserParameterInt() set %s failed !!\n", "SRHD" );
 
 #  elif ( MODEL == ELBDM )
    const int srhd = 0;
-   if (yt_set_UserParameterInt("srhd", 1, &srhd) != YT_SUCCESS )       Aux_Error( ERROR_INFO, "yt_set_UserParameterInt() set srhd failed !!\n" );
-#  endif
+   if ( yt_set_UserParameterInt   ("srhd",     1, &srhd    ) != YT_SUCCESS )   Aux_Error( ERROR_INFO, "yt_set_UserParameterInt() set %s failed !!\n", "SRHD" );
+#  endif // MODEL
+
+   const int opt_unit = OPT__UNIT;
+   if ( yt_set_UserParameterInt   ("opt_unit", 1, &opt_unit) != YT_SUCCESS )   Aux_Error( ERROR_INFO, "yt_set_UserParameterInt() set %s failed !!\n", "OPT__UNIT" );
+
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
-
 
 } // FUNCTION : YT_SetParameter
 

@@ -43,7 +43,7 @@ Libyt covering_grid setup:
 5. END_T                   5.7116620e-03
    END_STEP                32
 
-6. YT_SCRIPT               inline_script_covering_grid
+6. YT_SCRIPT               libyt_script/inline_script_covering_grid
    YT_VERBOSE              1
 
 

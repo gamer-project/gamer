@@ -54,10 +54,10 @@ void Par_PassParticle2Son_SinglePatch( const int FaLv, const int FaPID )
 
 
 // 2. find the home patches at SonLv for all particles
-   const int     Octant[2][2][2] = {  { {0,1},{2,4} }, { {3,6},{5,7} }  };    // LocalID of sons at different octants
-   const double *FaCen           = amr->patch[0][SonLv][SonPID0+7]->EdgeL;    // central coordinates of FaPID
-   const real   *ParPos[3]       = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-   const real   *PType           = amr->Par->Type;
+   const int         Octant[2][2][2] = {  { {0,1},{2,4} }, { {3,6},{5,7} }  };    // LocalID of sons at different octants
+   const double     *FaCen           = amr->patch[0][SonLv][SonPID0+7]->EdgeL;    // central coordinates of FaPID
+   const real_par   *ParPos[3]       = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   const real_par   *PType           = amr->Par->Type;
    long ParID;
    int  ijk[3], LocalID;
 

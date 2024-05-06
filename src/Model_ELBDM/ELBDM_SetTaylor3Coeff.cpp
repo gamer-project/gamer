@@ -49,7 +49,7 @@ real ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta )
                    Temp, dt, dh, Eta, __FUNCTION__ );
       Aux_Message( stderr, "        --> Program cannot find an optimized Taylor expansion coefficient.\n" );
       Aux_Message( stderr, "            Therefore, it is set to %12.5e by default.\n", Taylor3_Coeff );
-      Aux_Message( stderr, "        --> Perhaps you should set DT__FLUID/DT__FLUID_INIT smaller ... \n" );
+      Aux_Message( stderr, "        --> Perhaps you should set DT__FLUID/DT__FLUID_INIT smaller ...\n" );
       Aux_Message( stderr, "        Rank <%d>, file <%s>, line <%d>, function <%s>\n",
                    MPI_Rank, __FILE__, __LINE__, __FUNCTION__ );
       Aux_Message( stderr, "********************************************************************************\n" );
@@ -72,7 +72,7 @@ real ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta )
                    Temp, dt, dh, Eta, __FUNCTION__ );
       Aux_Message( stderr, "        --> Program cannot find an optimized Taylor expansion coefficient.\n" );
       Aux_Message( stderr, "            Therefore, it is set to %12.5e by default.\n", Taylor3_Coeff );
-      Aux_Message( stderr, "        --> Perhaps you should set DT__FLUID/DT__FLUID_INIT smaller ... \n" );
+      Aux_Message( stderr, "        --> Perhaps you should set DT__FLUID/DT__FLUID_INIT smaller ...\n" );
       Aux_Message( stderr, "        Rank <%d>, file <%s>, line <%d>, function <%s>\n",
                    MPI_Rank, __FILE__, __LINE__, __FUNCTION__ );
       Aux_Message( stderr, "********************************************************************************\n" );

@@ -116,7 +116,8 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 // 1. get the number of particles to be sent
    int *SendBuf_NParEachPatch = new int [Send_NPatchTotal];
 
-   int PID, NParThisPatch, NSendParTotal = 0;
+   int  PID, NParThisPatch;
+   long NSendParTotal = 0L;
 
 // loop over all target send patches
    for (int t=0; t<Send_NPatchTotal; t++)
@@ -130,8 +131,8 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
                     NParThisPatch, lv, PID );
 #     endif
 
-      NSendParTotal            += NParThisPatch;
-      SendBuf_NParEachPatch[t]  = NParThisPatch;
+      NSendParTotal            += (long)NParThisPatch;
+      SendBuf_NParEachPatch[t]  =       NParThisPatch;
    } // for (int t=0; t<Send_NPatchTotal; t++)
 
 
@@ -139,11 +140,11 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
    const bool RemoveAllPar_Yes = true;
 
 // reuse the MPI send buffer declared in LB_GetBufferData for better MPI performance
-   real *SendBuf_ParDataEachPatch = LB_GetBufferData_MemAllocate_Send( NSendParTotal*PAR_NATT_TOTAL );
+   real_par *SendBuf_ParDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)PAR_NATT_TOTAL*sizeof(real_par) );
 
-   real *SendPtr = SendBuf_ParDataEachPatch;
-   long *ParList = NULL;
-   long  ParID;
+   real_par *SendPtr = SendBuf_ParDataEachPatch;
+   long     *ParList = NULL;
+   long      ParID;
 
    for (int t=0; t<Send_NPatchTotal; t++)
    {
@@ -173,7 +174,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
       }
 
 //    2-3. remove all particles in this send patch
-      const real *PType = amr->Par->Type;
+      const real_par *PType = amr->Par->Type;
       amr->patch[0][lv][PID]->RemoveParticle( NULL_INT, NULL, &amr->Par->NPar_Lv[lv],
                                               RemoveAllPar_Yes, PType );
    } // for (int t=0; t<Send_NPatchTotal; t++)
@@ -184,16 +185,17 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
    const bool Exchange_LBIdxEachRank_No    = false;
    const bool Exchange_ParDataEachRank_Yes = true;
 
-   int  *SendBuf_NPatchEachRank   = Send_NPatchEachRank;
-   int  *RecvBuf_NPatchEachRank   = Recv_NPatchEachRank;
-   int  *RecvBuf_NParEachPatch    = NULL;    // will be allocated by Par_LB_SendParticleData and must be free'd later
-   real *RecvBuf_ParDataEachPatch = NULL;    // a pointer to the MPI recv buffer declared in LB_GetBufferData
-                                             // --> don't have to be free'd here
+   int      *SendBuf_NPatchEachRank   = Send_NPatchEachRank;
+   int      *RecvBuf_NPatchEachRank   = Recv_NPatchEachRank;
+   int      *RecvBuf_NParEachPatch    = NULL;    // will be allocated by Par_LB_SendParticleData and must be free'd later
+   real_par *RecvBuf_ParDataEachPatch = NULL;    // a pointer to the MPI recv buffer declared in LB_GetBufferData
+                                                 // --> don't have to be free'd here
 
-   long *SendBuf_LBIdxEachRank    = NULL;    // useless and does not need to be allocated
-   long *RecvBuf_LBIdxEachRank    = NULL;    // useless and will not be allocated by Par_LB_SendParticleData
+   long     *SendBuf_LBIdxEachRank    = NULL;    // useless and does not need to be allocated
+   long     *RecvBuf_LBIdxEachRank    = NULL;    // useless and will not be allocated by Par_LB_SendParticleData
 
-   int NRecvPatchTotal, NRecvParTotal;       // returned from Par_LB_SendParticleData
+   int  NRecvPatchTotal;                         // returned from Par_LB_SendParticleData
+   long NRecvParTotal;                           // returned from Par_LB_SendParticleData
 
 // note that we don't exchange NPatchEachRank (which is already known) and LBIdxEachRank (which is useless here)
    Par_LB_SendParticleData(
@@ -214,7 +216,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 
 
 // 4. store the received particle data to the particle repository and link to each recv patch
-   const real *RecvPtr = RecvBuf_ParDataEachPatch;
+   const real_par *RecvPtr = RecvBuf_ParDataEachPatch;
 
 // 4-1. get the maximum number of particles in one recv patch
    int   NParThisPatch_Max;
@@ -241,7 +243,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 
 //       we do not transfer inactive particles
 #        ifdef DEBUG_PARTICLE
-         if ( amr->Par->Attribute[PAR_MASS][ParID] < (real)0.0 )
+         if ( amr->Par->Attribute[PAR_MASS][ParID] < (real_par)0.0 )
             Aux_Error( ERROR_INFO, "Find inactive particle (ParID %d, Mass %14.7e) !!\n",
                        ParID, amr->Par->Attribute[PAR_MASS][ParID] );
 #        endif
@@ -250,11 +252,11 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 //    4-3. add particles to the recv patch
       PID = Recv_PIDList[t];
 
-      const real *PType = amr->Par->Type;
+      const real_par *PType = amr->Par->Type;
 #     ifdef DEBUG_PARTICLE
 //    do not set ParPos too early since pointers to the particle repository (e.g., amr->Par->PosX)
 //    may change after calling amr->Par->AddOneParticle
-      const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+      const real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
       char Comment[100];
       sprintf( Comment, "%s", __FUNCTION__ );
 

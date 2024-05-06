@@ -36,6 +36,7 @@ double              *FlagTable_User       [NLEVEL-1];
 double              *DumpTable = NULL;
 int                  DumpTable_NDump;
 int                 *UM_IC_RefineRegion = NULL;
+long                 FixUpVar_Flux, FixUpVar_Restrict;
 int                  PassiveNorm_NVar, PassiveNorm_VarIdx[NCOMP_PASSIVE];
 int                  PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 int                  StrLen_Flt;
@@ -65,11 +66,14 @@ bool                 OPT__INT_TIME, OPT__OUTPUT_USER, OPT__OUTPUT_BASE, OPT__OUT
 bool                 OPT__OUTPUT_BASEPS, OPT__CK_REFINE, OPT__CK_PROPER_NESTING, OPT__CK_FINITE, OPT__RECORD_PERFORMANCE;
 bool                 OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE, OPT__CK_NORMALIZE_PASSIVE;
 bool                 OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
-bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__FREEZE_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
+bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__FREEZE_FLUID, OPT__RECORD_CENTER, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 bool                 OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 bool                 OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
 bool                 OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID, OPT__SORT_PATCH_BY_LBIDX;
-char                 OPT__OUTPUT_TEXT_FORMAT_FLT[MAX_STRING];
+char                 OPT__OUTPUT_TEXT_FORMAT_FLT[MAX_STRING-1];
+int                  OPT__UM_IC_FLOAT8;
+double               COM_CEN_X, COM_CEN_Y, COM_CEN_Z, COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R;
+int                  COM_MAX_ITER;
 
 UM_IC_Format_t       OPT__UM_IC_FORMAT;
 TestProbID_t         TESTPROB_ID;
@@ -112,6 +116,14 @@ double               UNIT_B;
 bool                 OPT__SAME_INTERFACE_B;
 
 OptInitMagByVecPot_t OPT__INIT_BFIELD_BYVECPOT;
+#endif
+#ifdef SRHD
+double               FlagTable_LrtzGradient[NLEVEL-1];
+bool                 DT__SPEED_OF_LIGHT;
+bool                 OPT__FLAG_LRTZ_GRADIENT;
+bool                 OPT__OUTPUT_LORENTZ;
+bool                 OPT__OUTPUT_3VELOCITY;
+bool                 OPT__OUTPUT_ENTHALPY;
 #endif
 
 #elif ( MODEL == ELBDM )
@@ -206,7 +218,7 @@ bool                 FFTW3_Double_OMP_Enabled, FFTW3_Single_OMP_Enabled;
 #ifdef PARTICLE
 double               DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
 bool                 OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL, OPT__FREEZE_PAR;
-int                  OPT__OUTPUT_PAR_MODE, OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
+int                  OPT__OUTPUT_PAR_MODE, OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, PAR_IC_FLOAT8, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 double               FlagTable_ParMassCell[NLEVEL-1];
 ParOutputDens_t      OPT__OUTPUT_PAR_DENS;
 #endif
@@ -217,6 +229,9 @@ char                 YT_SCRIPT[MAX_STRING];
 yt_verbose           YT_VERBOSE;
 char                 YT_FIG_BASENAME[MAX_STRING];
 int                  YT_GID_Offset[NLEVEL];
+#ifdef LIBYT_JUPYTER
+bool                 YT_JUPYTER_USE_CONNECTION_FILE;
+#endif
 #endif
 
 // (2-7) Grackle
@@ -256,21 +271,33 @@ double EoS_AuxArray_Flt[EOS_NAUX_MAX];
 int    EoS_AuxArray_Int[EOS_NAUX_MAX];
 
 // b. function pointers
-EoS_DE2P_t EoS_DensEint2Pres_CPUPtr = NULL;
-EoS_DP2E_t EoS_DensPres2Eint_CPUPtr = NULL;
-EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr = NULL;
-EoS_DE2T_t EoS_DensEint2Temp_CPUPtr = NULL;
-EoS_DT2P_t EoS_DensTemp2Pres_CPUPtr = NULL;
-EoS_DE2S_t EoS_DensEint2Entr_CPUPtr = NULL;
-EoS_GENE_t EoS_General_CPUPtr       = NULL;
+EoS_GUESS_t   EoS_GuessHTilde_CPUPtr   = NULL;
+EoS_H2TEM_t   EoS_HTilde2Temp_CPUPtr   = NULL;
+EoS_TEM2H_t   EoS_Temp2HTilde_CPUPtr   = NULL;
+EoS_DE2P_t    EoS_DensEint2Pres_CPUPtr = NULL;
+EoS_DP2E_t    EoS_DensPres2Eint_CPUPtr = NULL;
+EoS_DP2C_t    EoS_DensPres2CSqr_CPUPtr = NULL;
+EoS_DE2T_t    EoS_DensEint2Temp_CPUPtr = NULL;
+EoS_DT2P_t    EoS_DensTemp2Pres_CPUPtr = NULL;
+EoS_DE2S_t    EoS_DensEint2Entr_CPUPtr = NULL;
+EoS_GENE_t    EoS_General_CPUPtr       = NULL;
+#ifdef COSMIC_RAY
+EoS_CRE2CRP_t EoS_CREint2CRPres_CPUPtr = NULL;
+#endif
 #ifdef GPU
-EoS_DE2P_t EoS_DensEint2Pres_GPUPtr = NULL;
-EoS_DP2E_t EoS_DensPres2Eint_GPUPtr = NULL;
-EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr = NULL;
-EoS_DE2T_t EoS_DensEint2Temp_GPUPtr = NULL;
-EoS_DT2P_t EoS_DensTemp2Pres_GPUPtr = NULL;
-EoS_DE2S_t EoS_DensEint2Entr_GPUPtr = NULL;
-EoS_GENE_t EoS_General_GPUPtr       = NULL;
+EoS_GUESS_t   EoS_GuessHTilde_GPUPtr   = NULL;
+EoS_H2TEM_t   EoS_HTilde2Temp_GPUPtr   = NULL;
+EoS_TEM2H_t   EoS_Temp2HTilde_GPUPtr   = NULL;
+EoS_DE2P_t    EoS_DensEint2Pres_GPUPtr = NULL;
+EoS_DP2E_t    EoS_DensPres2Eint_GPUPtr = NULL;
+EoS_DP2C_t    EoS_DensPres2CSqr_GPUPtr = NULL;
+EoS_DE2T_t    EoS_DensEint2Temp_GPUPtr = NULL;
+EoS_DT2P_t    EoS_DensTemp2Pres_GPUPtr = NULL;
+EoS_DE2S_t    EoS_DensEint2Entr_GPUPtr = NULL;
+EoS_GENE_t    EoS_General_GPUPtr       = NULL;
+#ifdef COSMIC_RAY
+EoS_CRE2CRP_t EoS_CREint2CRPres_GPUPtr = NULL;
+#endif
 #endif
 
 // c. data structure for the CPU/GPU solvers
@@ -288,7 +315,7 @@ int        Src_User_AuxArray_Int[SRC_NAUX_USER];
 
 // (2-11) user-defined derived fields
 bool OPT__OUTPUT_USER_FIELD;
-int  UserDerField_Num                  = -1;    // must be negative for Output_DumpData_Total_HDF5()
+int  UserDerField_Num                  = 0;     // must be zero for Output_DumpData_Total_HDF5()
 char (*UserDerField_Label)[MAX_STRING] = NULL;
 char (*UserDerField_Unit )[MAX_STRING] = NULL;
 
@@ -308,6 +335,25 @@ bool   SPEC_INT_XY_INSTEAD_DEPHA;
 double SPEC_INT_WAVELENGTH_MAGNIFIER;
 #endif
 InterpolationHandler Int_InterpolationHandler;
+#endif // #ifdef SUPPORT_SPECTRAL_INT
+
+// (2-14) cosmic ray
+#ifdef COSMIC_RAY
+double GAMMA_CR;
+bool   OPT__FLAG_CRAY, OPT__FLAG_LOHNER_CRAY;
+double FlagTable_CRay[NLEVEL-1];
+#endif
+
+// (2-15) microphysics
+// a. data structure for the CPU/GPU solvers
+MicroPhy_t MicroPhy;
+
+// b. cosmic-ray diffusion
+#ifdef CR_DIFFUSION
+double CR_DIFF_PARA;
+double CR_DIFF_PERP;
+double DT__CR_DIFFUSION;
+double CR_DIFF_MIN_B;
 #endif
 
 
@@ -535,10 +581,6 @@ Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 Timer_t  Timer_OutputWalltime;
 
 
-// function pointer for recording the user-specified info
-extern void (*Aux_Record_User_Ptr)();
-
-
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -580,6 +622,7 @@ int main( int argc, char *argv[] )
       else
          Aux_Error( ERROR_INFO, "Aux_Record_User_Ptr == NULL for OPT__RECORD_USER !!\n" );
    }
+   if ( OPT__RECORD_CENTER )              Aux_Record_Center();
 
 #  ifdef PARTICLE
    if ( OPT__PARTICLE_COUNT > 0 )         Par_Aux_Record_ParticleCount();
@@ -678,16 +721,19 @@ int main( int argc, char *argv[] )
       TIMING_FUNC(   Par_Aux_Record_ParticleCount(),  Timer_Main[4],   TIMER_ON   );
 #     endif
 
-#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      TIMING_FUNC(   ELBDM_Aux_Record_Hybrid(),       Timer_Main[4],   TIMER_ON   );
-#     endif
+      if ( OPT__RECORD_CENTER )
+      TIMING_FUNC(   Aux_Record_Center(),             Timer_Main[4],   TIMER_ON   );
 
       TIMING_FUNC(   Aux_Check(),                     Timer_Main[4],   TIMER_ON   );
 
 #     if ( MODEL == ELBDM )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      TIMING_FUNC(   ELBDM_Aux_Record_Hybrid(),       Timer_Main[4],   TIMER_ON   );
+#     endif
+
       if ( ELBDM_REMOVE_MOTION_CM == ELBDM_REMOVE_MOTION_CM_EVERY_STEP )
       TIMING_FUNC(   ELBDM_RemoveMotionCM(),          Timer_Main[4],   TIMER_ON   );
-#     endif
+#     endif // #if ( MODEL == ELBDM )
 //    ---------------------------------------------------------------------------------------------------
 
 

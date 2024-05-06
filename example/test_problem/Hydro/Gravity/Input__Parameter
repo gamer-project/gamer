@@ -18,7 +18,7 @@ BOX_SIZE                      1.0e2       # box size along the longest side (in 
 NX0_TOT_X                     64          # number of base-level cells along x
 NX0_TOT_Y                     64          # number of base-level cells along y
 NX0_TOT_Z                     64          # number of base-level cells along z
-OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
+OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto) [-1] ##OPENMP ONLY##
 END_T                        -1.0         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
 END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
 
@@ -106,7 +106,7 @@ MOLECULAR_WEIGHT              0.6         # mean molecular weight -> currently o
 MINMOD_COEFF                  1.5         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
 MINMOD_MAX_ITER               0           # maximum number of iterations to reduce MINMOD_COEFF when data reconstruction fails (0=off) [0]
 OPT__LR_LIMITER              -1           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
-                                          # (-1=auto, 0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod, 6=central) [-1]
+                                          # (-1=auto, 0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod, 6=central, 7=Athena) [-1]
 OPT__1ST_FLUX_CORR           -1           # correct unphysical results (defined by MIN_DENS/PRES) by the 1st-order fluxes:
                                           # (<0=auto, 0=off, 1=3D, 2=3D+1D) [-1] ##MHM/MHM_RP/CTU ONLY##
 OPT__1ST_FLUX_CORR_SCHEME    -1           # Riemann solver for OPT__1ST_FLUX_CORR (<0=auto, 0=none, 1=Roe, 2=HLLC, 3=HLLE, 4=HLLD) [-1]
@@ -171,7 +171,7 @@ OPT__OUTPUT_PART              0           # output a single line or slice: (0=of
 OPT__OUTPUT_USER              1           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
-OPT__OUTPUT_POT               1           # output gravitational potential [0] ##OPT__OUTPUT_TOTAL ONLY##
+OPT__OUTPUT_POT               1           # output gravitational potential [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_PRES              0           # output gas pressure [0] ##HYDRO ONLY##
 OPT__OUTPUT_TEMP              0           # output gas temperature [0] ##HYDRO ONLY##
 OPT__OUTPUT_ENTR              0           # output gas entropy [0] ##HYDRO ONLY##
@@ -179,6 +179,8 @@ OPT__OUTPUT_CS                0           # output sound speed [0] ##HYDRO ONLY#
 OPT__OUTPUT_DIVVEL            0           # output divergence(velocity) [0] ##HYDRO ONLY##
 OPT__OUTPUT_MACH              0           # output mach number [0] ##HYDRO ONLY##
 OPT__OUTPUT_DIVMAG            0           # output |divergence(B)*dh/|B|| [0] ##MHD ONLY##
+OPT__OUTPUT_LORENTZ           0           # output Lorentz factor [0] ##SRHD ONLY##
+OPT__OUTPUT_3VELOCITY         0           # output 3-velocities [0] ##SRHD ONLY##
 OPT__OUTPUT_USER_FIELD        0           # output user-defined derived fields [0] -> edit "Flu_DerivedField_User.cpp"
 OPT__OUTPUT_MODE              1           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
@@ -198,7 +200,7 @@ OPT__RECORD_MEMORY            1           # record the memory consumption [1]
 OPT__RECORD_PERFORMANCE       1           # record the code performance [1]
 OPT__MANUAL_CONTROL           1           # support manually dump data or stop run during the runtime
                                           # (by generating the file DUMP_GAMER_DUMP or STOP_GAMER_STOP) [1]
-OPT__RECORD_USER              1           # record the user-specified info -> edit "Aux_RecordUser.cpp" [0]
+OPT__RECORD_USER              1           # record the user-specified info -> edit "Aux_Record_User.cpp" [0]
 OPT__OPTIMIZE_AGGRESSIVE      0           # apply aggressive optimizations (experimental) [0]
 
 

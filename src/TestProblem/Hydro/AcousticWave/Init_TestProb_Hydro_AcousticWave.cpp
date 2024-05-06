@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -10,14 +9,20 @@ static void OutputError();
 // =======================================================================================
 static double Acoustic_RhoAmp;      // amplitude of the density perturbation (assuming background density = 1.0)
 static double Acoustic_Cs;          // sound speed
-static double Acoustic_v0;          // background velocity
 static int    Acoustic_Dir;         // wave direction: (0/1/2/3) --> (x/y/z/diagonal)
 static double Acoustic_Sign;        // (+1/-1) --> (right/left-moving wave)
 static double Acoustic_Phase0;      // initial phase shift
 
 static double Acoustic_WaveLength;  // wavelength
-// =======================================================================================
 
+#ifdef SRHD
+static double Acoustic_Cs2;         // sound speed squared
+static double Acoustic_Temp_Bg;     // ambient temperature
+static double Acoustic_Rho_Bg;      // ambient proper mass density
+#else
+static double Acoustic_v0;          // background velocity
+#endif
+// =======================================================================================
 
 
 
@@ -46,10 +51,6 @@ void Validate()
    Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
 #  endif
 
-#  ifndef FLOAT8
-   Aux_Error( ERROR_INFO, "FLOAT8 must be enabled !!\n" );
-#  endif
-
 #  ifdef COMOVING
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
@@ -58,8 +59,12 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
-#  if ( EOS != EOS_GAMMA )
+#  if ( EOS != EOS_GAMMA  &&  !defined SRHD )
    Aux_Error( ERROR_INFO, "EOS != EOS_GAMMA !!\n" );
+#  endif
+
+#  if ( EOS != EOS_TAUBMATHEWS  &&  defined SRHD )
+   Aux_Error( ERROR_INFO, "EOS != EOS_TAUBMATHEWS for SRHD !!\n" );
 #  endif
 
    if ( Acoustic_Dir == 3  &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )
@@ -73,7 +78,11 @@ void Validate()
 // warnings
    if ( MPI_Rank == 0 )
    {
-      if ( !OPT__OUTPUT_USER )   Aux_Message( stdout, "WARNING : OPT__OUTPUT_USER is off !!\n" );
+#     ifndef FLOAT8
+      Aux_Message( stderr, "WARNING : it's recommended to enable FLOAT8 for this test !!\n" );
+#     endif
+
+      if ( !OPT__OUTPUT_USER )   Aux_Message( stderr, "WARNING : OPT__OUTPUT_USER is off !!\n" );
    }
 
 
@@ -116,11 +125,15 @@ void SetParameter()
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
    ReadPara->Add( "Acoustic_RhoAmp",   &Acoustic_RhoAmp,       -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Acoustic_Cs",       &Acoustic_Cs,           -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Acoustic_v0",       &Acoustic_v0,            0.0,          NoMin_double,     NoMax_double      );
    ReadPara->Add( "Acoustic_Dir",      &Acoustic_Dir,           3,            0,                3                 );
    ReadPara->Add( "Acoustic_Sign",     &Acoustic_Sign,          1.0,          NoMin_double,     NoMax_double      );
    ReadPara->Add( "Acoustic_Phase0",   &Acoustic_Phase0,        0.0,          NoMin_double,     NoMax_double      );
+#  ifdef SRHD
+   ReadPara->Add( "Acoustic_Temp_Bg",  &Acoustic_Temp_Bg,       1.0,          Eps_double,       NoMax_double      );
+#  else
+   ReadPara->Add( "Acoustic_v0",       &Acoustic_v0,            0.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Acoustic_Cs",       &Acoustic_Cs,           -1.0,          Eps_double,       NoMax_double      );
+#  endif
 
    ReadPara->Read( FileName );
 
@@ -128,11 +141,23 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
+#  ifdef SRHD
+// must initialize EoS first
+   EoS_Init();
+#  endif
+
    Acoustic_WaveLength = ( Acoustic_Dir == 3 ) ? amr->BoxSize[0]/sqrt(3.0) : amr->BoxSize[Acoustic_Dir];
 
 // force Acoustic_Sign to be +1.0/-1.0
    if ( Acoustic_Sign >= 0.0 )   Acoustic_Sign = +1.0;
    else                          Acoustic_Sign = -1.0;
+
+#  ifdef SRHD
+   Acoustic_Rho_Bg = 1.0;
+   Acoustic_Cs2    = EoS_DensPres2CSqr_CPUPtr( Acoustic_Rho_Bg, Acoustic_Rho_Bg*Acoustic_Temp_Bg,
+                                               NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+   Acoustic_Cs     = sqrt( Acoustic_Cs2 );
+#  endif
 
 
 // (3) reset other general-purpose parameters
@@ -155,14 +180,18 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID     = %d\n",      TESTPROB_ID );
-      Aux_Message( stdout, "  density amplitude   = % 14.7e\n", Acoustic_RhoAmp );
-      Aux_Message( stdout, "  sound speed         = % 14.7e\n", Acoustic_Cs );
-      Aux_Message( stdout, "  background velocity = % 14.7e\n", Acoustic_v0 );
-      Aux_Message( stdout, "  direction           = %d\n",      Acoustic_Dir );
-      Aux_Message( stdout, "  sign (R/L)          = % 14.7e\n", Acoustic_Sign );
-      Aux_Message( stdout, "  initial phase shift = % 14.7e\n", Acoustic_Phase0 );
-      Aux_Message( stdout, "  wavelength          = % 14.7e\n", Acoustic_WaveLength );
+      Aux_Message( stdout, "  test problem ID        = %d\n",      TESTPROB_ID );
+      Aux_Message( stdout, "  density amplitude      = % 14.7e\n", Acoustic_RhoAmp );
+      Aux_Message( stdout, "  sound speed            = % 14.7e\n", Acoustic_Cs );
+#     ifdef SRHD
+      Aux_Message( stdout, "  background temperature = % 14.7e\n", Acoustic_Temp_Bg );
+#     else
+      Aux_Message( stdout, "  background velocity    = % 14.7e\n", Acoustic_v0 );
+#     endif
+      Aux_Message( stdout, "  direction              = %d\n",      Acoustic_Dir );
+      Aux_Message( stdout, "  sign (R/L)             = % 14.7e\n", Acoustic_Sign );
+      Aux_Message( stdout, "  initial phase shift    = % 14.7e\n", Acoustic_Phase0 );
+      Aux_Message( stdout, "  wavelength             = % 14.7e\n", Acoustic_WaveLength );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -196,11 +225,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-// assuming EOS_GAMMA
-   const double _Gamma_m1 = 1.0/(GAMMA-1.0);
-
-   double r, v1, P0, P1, Phase, WaveK, WaveW;
-   double Dens, Mom, MomX, MomY, MomZ, Pres, Eint, Etot;
+   double r, Phase, WaveK, WaveW, v, vx, vy, vz;
 
    switch ( Acoustic_Dir ) {
       case 0:  r = x;                        break;
@@ -208,30 +233,64 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       case 2:  r = z;                        break;
       case 3:  r = ( x + y + z )/sqrt(3.0);  break;
    }
+
+   WaveK = 2.0*M_PI/Acoustic_WaveLength;
+   WaveW = 2.0*M_PI/(Acoustic_WaveLength/Acoustic_Cs);
+
+#  ifdef SRHD
+   real Prim[NCOMP_TOTAL];
+   double LorentzFactor;
+
+   LorentzFactor = 1.0/sqrt( 1.0 - Acoustic_Cs2 );
+   Phase         = WaveK*r - Acoustic_Sign*WaveW*Time + Acoustic_Phase0;
+   v             = Acoustic_Sign*Acoustic_Cs;
+
+#  else // #ifdef SRHD
+
+// assuming EOS_GAMMA
+   const double _Gamma_m1 = 1.0/(GAMMA-1.0);
+   double v1, P0, P1, Dens, Mom, MomX, MomY, MomZ, Pres, Eint, Etot;
+
    r -= Acoustic_v0*Time;
 
    v1    = Acoustic_Sign*Acoustic_Cs*Acoustic_RhoAmp;
    P0    = SQR(Acoustic_Cs)/GAMMA;
    P1    = SQR(Acoustic_Cs)*Acoustic_RhoAmp;
 
-   WaveK = 2.0*M_PI/Acoustic_WaveLength;
-   WaveW = 2.0*M_PI/(Acoustic_WaveLength/Acoustic_Cs);
    Phase = WaveK*r - Acoustic_Sign*WaveW*Time + Acoustic_Phase0;
 
    Dens  = 1.0 + Acoustic_RhoAmp*cos(Phase);
-   Mom   = Dens*( v1*cos(Phase) + Acoustic_v0 );
-
-   switch ( Acoustic_Dir ) {
-      case 0:  MomX = Mom;            MomY = 0.0;   MomZ = 0.0;   break;
-      case 1:  MomX = 0.0;            MomY = Mom;   MomZ = 0.0;   break;
-      case 2:  MomX = 0.0;            MomY = 0.0;   MomZ = Mom;   break;
-      case 3:  MomX = Mom/sqrt(3.0);  MomY = MomX;  MomZ = MomX;  break;
-   }
 
    Pres  = P0 + P1*cos(Phase);
-   Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
-                                     EoS_AuxArray_Int, h_EoS_Table );   // assuming EoS requires no passive scalars
-   Etot  = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );     // do NOT include magnetic energy here
+
+   v = v1*cos(Phase) + Acoustic_v0;
+#  endif // #ifdef SRHD ... else ...
+
+   switch ( Acoustic_Dir ) {
+      case 0:  vx = v;            vy = 0.0;   vz = 0.0;   break;
+      case 1:  vx = 0.0;          vy = v;     vz = 0.0;   break;
+      case 2:  vx = 0.0;          vy = 0.0;   vz = v;     break;
+      case 3:  vx = v/sqrt(3.0);  vy = vx;    vz = vx;    break;
+   }
+
+#  ifdef SRHD
+   Prim[0] = Acoustic_Rho_Bg + Acoustic_RhoAmp*sin( Phase );
+   Prim[1] = LorentzFactor*vx;
+   Prim[2] = LorentzFactor*vy;
+   Prim[3] = LorentzFactor*vz;
+   Prim[4] = Acoustic_Temp_Bg*Acoustic_Rho_Bg;
+
+   Hydro_Pri2Con( Prim, fluid, NULL_BOOL, NULL_INT, NULL,
+                  EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+
+#  else // #ifdef SRHD
+
+   MomX = Dens*vx; MomY = Dens*vy; MomZ = Dens*vz;
+
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
+                                    EoS_AuxArray_Int, h_EoS_Table ); // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );   // do NOT include magnetic energy here
 
 // set the output array
    fluid[DENS] = Dens;
@@ -239,6 +298,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[MOMY] = MomY;
    fluid[MOMZ] = MomZ;
    fluid[ENGY] = Etot;
+#  endif // #ifdef SRHD ... else ...
 
 } // FUNCTION : SetGridIC
 
