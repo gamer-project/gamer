@@ -970,6 +970,9 @@ struct HDF5_OutUser_t
 //    parameter name
       strncpy( Key[NPara], NewKey, MAX_STRING );
 
+//    make sure C-strings are null-terminated
+      NewPtr[MAX_STRING-1] = '\0';
+
 //    parameter address
       Ptr[NPara] = NewPtr;
 
@@ -981,6 +984,16 @@ struct HDF5_OutUser_t
    } // METHOD : Add (string)
 
 }; // struct HDF5_OutUser_t
+
+
+// This is the temporary solution for storing the string.
+// Somehow, I can not store the string in HDF5 by method provided in the document
+// Not only I can not storing, I also can not store the character
+struct HDF5_string_t
+{
+   char *string_content;
+}; // struct HDF5_string_t
+
 
 
 

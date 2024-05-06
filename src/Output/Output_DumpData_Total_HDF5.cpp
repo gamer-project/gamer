@@ -17,6 +17,7 @@ static void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored );
 
 void (*HDF5_Output_User_Ptr)( HDF5_OutUser_t *HDF5_OutUser ) = NULL;
 static void structWriteToHDF5( const hid_t H5_GroupID, const HDF5_OutUser_t *HDF5_OutUser );
+static void storeStringToHDF5( hid_t H5_GroupID, char *KeyName, void *StringPtr );
 
 
 
@@ -491,7 +492,6 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //    3-3-5. HDF5User
       H5_SetID_HDF5OutUser = H5Gcreate( H5_GroupID_Info, "Output_User", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
       if ( H5_SetID_HDF5OutUser < 0 ) Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "HDF5OutUser" );
-
 
       HDF5_OutUser_t *HDF5_OutUser = new HDF5_OutUser_t;
       HDF5_Output_User_Ptr( HDF5_OutUser );
@@ -3714,92 +3714,81 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 
 } // FUNCTION : GetCompound_InputPara
 
+
 // TODO: input test
 void structWriteToHDF5( const hid_t H5_GroupID, const HDF5_OutUser_t *HDF5_OutUser )
 {
    herr_t H5_Status;
    hid_t H5_SpaceID_Scalar;
-   hid_t  H5_TypeID_VarStr;
-   hid_t H5_SetID_Data, H5T_NATIVE_TYPE;
+   hid_t H5_SetID_Data, H5_Type;
    int type;
-   int    temp_int;
-   long   temp_long;
-   uint   temp_uint;
-   ulong  temp_ulong;
-   bool   temp_bool;
-   float  temp_float;
-   double temp_double;
-   char  *temp_str;
 
    H5_SpaceID_Scalar = H5Screate( H5S_SCALAR );
-   H5_TypeID_VarStr = H5Tcopy( H5T_C_S1 );
-   H5_Status        = H5Tset_size( H5_TypeID_VarStr, H5T_VARIABLE );
 
-// helper function to convert the (void*) pointer
-#  define GET_VOID( type, var )    ( *( (type*)(var) ) )   // helper function to convert the (void*) pointer
    for (int i=0; i<HDF5_OutUser->NPara; i++)
    {
+      printf("Assign type\n");
       type = HDF5_OutUser->Type[i];
 
       switch ( type )
       {
-         case 1: H5T_NATIVE_TYPE = H5T_NATIVE_INT;    temp_int    = GET_VOID( int,    HDF5_OutUser->Ptr[i] ); break;
-         case 2: H5T_NATIVE_TYPE = H5T_NATIVE_LONG;   temp_long   = GET_VOID( long,   HDF5_OutUser->Ptr[i] ); break;
-         case 3: H5T_NATIVE_TYPE = H5T_NATIVE_UINT;   temp_uint   = GET_VOID( uint,   HDF5_OutUser->Ptr[i] ); break;
-         case 4: H5T_NATIVE_TYPE = H5T_NATIVE_ULONG;  temp_ulong  = GET_VOID( ulong,  HDF5_OutUser->Ptr[i] ); break;
-         case 5: H5T_NATIVE_TYPE = H5T_NATIVE_INT;    temp_bool   = GET_VOID( bool,   HDF5_OutUser->Ptr[i] ); break;
-         case 6: H5T_NATIVE_TYPE = H5T_NATIVE_FLOAT;  temp_float  = GET_VOID( float,  HDF5_OutUser->Ptr[i] ); break;
-         case 7: H5T_NATIVE_TYPE = H5T_NATIVE_DOUBLE; temp_double = GET_VOID( double, HDF5_OutUser->Ptr[i] ); break;
-         case 8: H5T_NATIVE_TYPE = H5_TypeID_VarStr;  temp_str    =            (char*)HDF5_OutUser->Ptr[i]  ; break;
-         default: break; // TODO : Raise an error here
+         case 1: H5_Type = H5T_NATIVE_INT;    break;
+         case 2: H5_Type = H5T_NATIVE_LONG;   break;
+         case 3: H5_Type = H5T_NATIVE_UINT;   break;
+         case 4: H5_Type = H5T_NATIVE_ULONG;  break;
+         case 5: H5_Type = H5T_NATIVE_INT;    break; // bool is stored as int
+         case 6: H5_Type = H5T_NATIVE_FLOAT;  break;
+         case 7: H5_Type = H5T_NATIVE_DOUBLE; break;
+         case 8: H5_Type = H5_TypeID_VarStr;  break; // Do it in the fuction
+         default: Aux_Error( ERROR_INFO, "Unrecognize type: %d", type ); break;
       }
 
-      H5_SetID_Data      = H5Dcreate( H5_GroupID, HDF5_OutUser->Key[i], H5T_NATIVE_TYPE, H5_SpaceID_Scalar,
-                                      H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+      if ( type == 8 ) { storeStringToHDF5( H5_GroupID, HDF5_OutUser->Key[i], HDF5_OutUser->Ptr[i] ); continue; }
 
-      if ( type == 5 ) // boolean
-      {
-         // TODO : test if we can store the bool as int directly
-         temp_int = (temp_bool) ? 1 : 0;
-      }
+      H5_SetID_Data = H5Dcreate( H5_GroupID, HDF5_OutUser->Key[i], H5_Type, H5_SpaceID_Scalar, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+      if ( H5_SetID_Data < 0 ) printf("Error while creating the dataset\n");
 
-      switch ( type )
-      {
-         case 1:
-            H5_Status = H5Dwrite( H5_SetID_Data, H5T_NATIVE_TYPE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &temp_int    );
-            break;
-         case 2:
-            H5_Status = H5Dwrite( H5_SetID_Data, H5T_NATIVE_TYPE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &temp_long   );
-            break;
-         case 3:
-            H5_Status = H5Dwrite( H5_SetID_Data, H5T_NATIVE_TYPE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &temp_uint   );
-            break;
-         case 4:
-            H5_Status = H5Dwrite( H5_SetID_Data, H5T_NATIVE_TYPE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &temp_ulong  );
-            break;
-         case 5: // there is no bool type to store
-            H5_Status = H5Dwrite( H5_SetID_Data, H5T_NATIVE_TYPE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &temp_int    );
-            break;
-         case 6:
-            H5_Status = H5Dwrite( H5_SetID_Data, H5T_NATIVE_TYPE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &temp_float  );
-            break;
-         case 7:
-            H5_Status = H5Dwrite( H5_SetID_Data, H5T_NATIVE_TYPE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &temp_double );
-            break;
-         case 8:
-            H5_Status = H5Dwrite( H5_SetID_Data, H5T_NATIVE_TYPE, H5S_ALL, H5S_ALL, H5P_DEFAULT,  temp_str    );
-            break;
-         default: break; // TODO : Raise an error here
-      }
-      H5_Status          = H5Dclose( H5_SetID_Data );
+      H5_Status     = H5Dwrite( H5_SetID_Data, H5_Type, H5S_ALL, H5S_ALL, H5P_DEFAULT, HDF5_OutUser->Ptr[i] );
+      if ( H5_Status < 0 ) printf("Error while storing type (%d)\n", type);
+
+      H5_Status     = H5Dclose( H5_SetID_Data );
+      if ( H5_Status < 0 ) printf("Error while closing the dataset\n");
    } // for (int i=0; i<HDF5_OutUser.NPara; i++)
 
-#  undef GET_VOID
-
    H5_Status = H5Sclose( H5_SpaceID_Scalar );
-   H5_Status = H5Tclose( H5_TypeID_VarStr  );
-
 } // FUNCTION : structWriteToHDF5
+
+
+void storeStringToHDF5( hid_t H5_GroupID, char *KeyName, void *StringPtr )
+{
+   herr_t H5_Status;
+   hid_t H5_SpaceID_Scalar, H5_TypeID_VarStr;
+   hid_t H5_TypeID_struct, H5_SetID_struct;
+
+   H5_SpaceID_Scalar = H5Screate( H5S_SCALAR );
+   H5_TypeID_VarStr  = H5Tcopy( H5T_C_S1 );
+   H5_Status         = H5Tset_size( H5_TypeID_VarStr, H5T_VARIABLE );
+
+   H5_TypeID_struct = H5Tcreate( H5T_COMPOUND, sizeof(HDF5_string_t) );
+   H5Tinsert( H5_TypeID_struct, KeyName, HOFFSET(HDF5_string_t, string_content), H5_TypeID_VarStr );
+
+   HDF5_string_t HDF5_string;
+// BUG? Somehow you have to copy the original string again instead of using the original pointer
+   char temp[MAX_STRING];
+   strncpy( temp, (char *)StringPtr, MAX_STRING );
+   HDF5_string.string_content = temp;
+   // HDF5_string.string_content = (char *)HDF5_OutUser->Ptr[i];
+
+   H5_SetID_struct = H5Dcreate( H5_GroupID, KeyName, H5_TypeID_struct, H5_SpaceID_Scalar,
+                                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+   if ( H5_SetID_struct < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", KeyName );
+   H5_Status = H5Dwrite( H5_SetID_struct, H5_TypeID_struct, H5S_ALL, H5S_ALL, H5P_DEFAULT, &HDF5_string );
+
+   H5_Status = H5Dclose( H5_SetID_struct   );
+   H5_Status = H5Tclose( H5_TypeID_struct  );
+   H5_Status = H5Tclose( H5_TypeID_VarStr  );
+   H5_Status = H5Sclose( H5_SpaceID_Scalar );
+} // FUNCTION : storeStringToHDF5
 
 
 

@@ -562,6 +562,10 @@ void AddNewField_Plummer()
 // NOTE : this function only works in MPI_RANK == 0
 void HDF5_Output_User_Plummer( HDF5_OutUser_t *HDF5_OutUser )
 {
+   printf("Adding the parameters\n");
+   char temp_str[MAX_STRING] = "Test string UWU.";
+   printf("In init: %p\n", temp_str);
+   HDF5_OutUser->Add( "Plummer_String",       temp_str              );
    HDF5_OutUser->Add( "Plummer_RSeed",        &Plummer_RSeed        );
    HDF5_OutUser->Add( "Plummer_Rho0",         &Plummer_Rho0         );
    HDF5_OutUser->Add( "Plummer_R0",           &Plummer_R0           );
