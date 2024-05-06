@@ -17,7 +17,6 @@ static void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored );
 
 void (*HDF5_Output_User_Ptr)( HDF5_OutUser_t *HDF5_OutUser ) = NULL;
 static void H5_write_user( const hid_t H5_GroupID, const HDF5_OutUser_t *HDF5_OutUser );
-static void H5_write_string( hid_t H5_GroupID, char *KeyName, void *StringPtr );
 
 
 
@@ -3723,20 +3722,15 @@ void H5_write_user( const hid_t H5_GroupID, const HDF5_OutUser_t *HDF5_OutUser )
          case 5: H5_Type = H5T_NATIVE_INT;    break; // bool is stored as int
          case 6: H5_Type = H5T_NATIVE_FLOAT;  break;
          case 7: H5_Type = H5T_NATIVE_DOUBLE; break;
-         case 8: H5_Type = H5_TypeID_VarStr;  break; // useless for the current solution
+         case 8: H5_Type = H5_TypeID_VarStr;  break;
          default: Aux_Error( ERROR_INFO, "Unrecognize type: %d", type ); break;
       } // switch ( type )
-
-//    BUG maybe?
-//    This is the temporary solution for storing the string.
-//    Somehow, I can not store the string in HDF5 by method provided in the document
-//    Not only string, I also can not store the character
-      if ( type == 8 ) { H5_write_string( H5_GroupID, HDF5_OutUser->Key[i], HDF5_OutUser->Ptr[i] ); continue; }
 
       H5_SetID_Data = H5Dcreate( H5_GroupID, HDF5_OutUser->Key[i], H5_Type, H5_SpaceID_Scalar, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
       if ( H5_SetID_Data < 0 ) printf("Error while creating the dataset\n");
 
-      H5_Status     = H5Dwrite( H5_SetID_Data, H5_Type, H5S_ALL, H5S_ALL, H5P_DEFAULT, HDF5_OutUser->Ptr[i] );
+      if ( type == 8 )  H5_Status     = H5Dwrite( H5_SetID_Data, H5_Type, H5S_ALL, H5S_ALL, H5P_DEFAULT, &HDF5_OutUser->Ptr[i] );
+      else              H5_Status     = H5Dwrite( H5_SetID_Data, H5_Type, H5S_ALL, H5S_ALL, H5P_DEFAULT,  HDF5_OutUser->Ptr[i] );
       if ( H5_Status < 0 ) printf("Error while storing type (%d)\n", type);
 
       H5_Status     = H5Dclose( H5_SetID_Data );
@@ -3746,50 +3740,6 @@ void H5_write_user( const hid_t H5_GroupID, const HDF5_OutUser_t *HDF5_OutUser )
    H5_Status = H5Tclose( H5_TypeID_VarStr  );
    H5_Status = H5Sclose( H5_SpaceID_Scalar );
 } // FUNCTION : H5_write_user
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  H5_write_string
-// Description :  Write the string to HDF5
-//
-// Note        :  1. Data structure is defined in "HDF5_Typedef.h"
-//                2. This is the tempeorary solution to store string.
-//
-// Parameter   :  H5_GroupID   : the group id of HDF5 to write the datasets
-//                KeyName      : the key name to access the string in HDF5
-//                StringPtr    : the pointer of the string
-//-------------------------------------------------------------------------------------------------------
-void H5_write_string( hid_t H5_GroupID, char *KeyName, void *StringPtr )
-{
-   herr_t H5_Status;
-   hid_t H5_SpaceID_Scalar, H5_TypeID_VarStr;
-   hid_t H5_TypeID_struct, H5_SetID_struct;
-
-   H5_SpaceID_Scalar = H5Screate( H5S_SCALAR );
-   H5_TypeID_VarStr  = H5Tcopy( H5T_C_S1 );
-   H5_Status         = H5Tset_size( H5_TypeID_VarStr, H5T_VARIABLE );
-
-   H5_TypeID_struct = H5Tcreate( H5T_COMPOUND, sizeof(HDF5_string_t) );
-   H5Tinsert( H5_TypeID_struct, KeyName, HOFFSET(HDF5_string_t, string_content), H5_TypeID_VarStr );
-
-   HDF5_string_t HDF5_string;
-// BUG? Somehow you have to copy the original string again instead of using the original pointer
-   char temp[MAX_STRING];
-   strncpy( temp, (char *)StringPtr, MAX_STRING );
-   HDF5_string.string_content = temp;
-   // HDF5_string.string_content = (char *)HDF5_OutUser->Ptr[i];
-
-   H5_SetID_struct = H5Dcreate( H5_GroupID, KeyName, H5_TypeID_struct, H5_SpaceID_Scalar,
-                                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
-   if ( H5_SetID_struct < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", KeyName );
-   H5_Status = H5Dwrite( H5_SetID_struct, H5_TypeID_struct, H5S_ALL, H5S_ALL, H5P_DEFAULT, &HDF5_string );
-   H5_Status = H5Dclose( H5_SetID_struct   );
-
-   H5_Status = H5Tclose( H5_TypeID_struct  );
-   H5_Status = H5Tclose( H5_TypeID_VarStr  );
-   H5_Status = H5Sclose( H5_SpaceID_Scalar );
-} // FUNCTION : storeStringToHDF5
 
 
 

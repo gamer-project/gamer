@@ -992,19 +992,6 @@ struct HDF5_OutUser_t
 
 
 
-//-------------------------------------------------------------------------------------------------------
-// Structure   :  HDF5_string_t
-// Description :  Data structure for storing the string.
-//
-// Note        :  1. A temporary solution of storing string in HDF5.
-//-------------------------------------------------------------------------------------------------------
-struct HDF5_string_t
-{
-   char *string_content;
-}; // struct HDF5_string_t
-
-
-
 #undef NPARA_MAX
 #undef TYPE_INT
 #undef TYPE_LONG
