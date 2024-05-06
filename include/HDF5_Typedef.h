@@ -887,6 +887,12 @@ inline void SyncHDF5File( const char *FileName )
 
 
 
+//-------------------------------------------------------------------------------------------------------
+// Structure   :  HDF5_OutUser_t
+// Description :  Data structure for outputting the user run-time parameters
+//
+// Note        :  1. Run-time parameters are stored by HDF5_Output_User_Ptr function
+//-------------------------------------------------------------------------------------------------------
 struct HDF5_OutUser_t
 {
 // data members
@@ -897,7 +903,7 @@ struct HDF5_OutUser_t
 
 //===================================================================================
 // Constructor :  HDF5_OutUser_t
-// Description :  Constructor of the structure HDF5_OutUser"_t"
+// Description :  Constructor of the structure "HDF5_OutUser_t"
 //
 // Note        :  Initialize variables and allocate memory
 //===================================================================================
@@ -924,11 +930,10 @@ struct HDF5_OutUser_t
 
 //===================================================================================
 // Constructor :  Add
-// Description :  Add a new parameter to be loaded later
+// Description :  Add a new parameter to be written latter
 //
-// Note        :  1. This function stores the name, address, and data type of the new parameter
+// Note        :  1. This function stores the name, address, and data type of the parameter
 //                2. Data type (e.g., integer, float, ...) is determined by the input pointer
-//                3. NewPtr, NewDef, NewMin, and NewMax must have the same data type
 //                4. String parameters are handled by a separate overloaded function
 //===================================================================================
    template <typename T>
@@ -959,7 +964,7 @@ struct HDF5_OutUser_t
 
 //===================================================================================
 // Constructor :  Add (string)
-// Description :  Add a new string parameter to be loaded later
+// Description :  Add a new string parameter to be written later
 //
 // Note        :  1. Overloaded function for strings
 //===================================================================================
@@ -986,14 +991,17 @@ struct HDF5_OutUser_t
 }; // struct HDF5_OutUser_t
 
 
-// This is the temporary solution for storing the string.
-// Somehow, I can not store the string in HDF5 by method provided in the document
-// Not only I can not storing, I also can not store the character
+
+//-------------------------------------------------------------------------------------------------------
+// Structure   :  HDF5_string_t
+// Description :  Data structure for storing the string.
+//
+// Note        :  1. A temporary solution of storing string in HDF5.
+//-------------------------------------------------------------------------------------------------------
 struct HDF5_string_t
 {
    char *string_content;
 }; // struct HDF5_string_t
-
 
 
 
