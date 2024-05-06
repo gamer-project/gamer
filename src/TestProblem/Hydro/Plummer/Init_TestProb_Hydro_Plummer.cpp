@@ -369,66 +369,6 @@ void SetParameter()
       Aux_Message( stdout, "  feedback likelihood                       = %13.7e\n", Plummer_FB_Like );
 #     endif
       Aux_Message( stdout, "=============================================================================\n" );
-
-//==============================================================================================================
-// Record the input test problem
-//==============================================================================================================
-//       InputTest_t *InputTest  = new InputTest_t;
-// //    (1-1) add parameters in the following format:
-//       InputTest->Add( "Plummer_RSeed",        &Plummer_RSeed        );
-//       InputTest->Add( "Plummer_Rho0",         &Plummer_Rho0         );
-//       InputTest->Add( "Plummer_R0",           &Plummer_R0           );
-//       InputTest->Add( "Plummer_MaxR",         &Plummer_MaxR         );
-//       InputTest->Add( "Plummer_Collision",    &Plummer_Collision    );
-//       InputTest->Add( "Plummer_Collision_D",  &Plummer_Collision_D  );
-//       InputTest->Add( "Plummer_CenterX",      &Plummer_Center[0]    );
-//       InputTest->Add( "Plummer_CenterY",      &Plummer_Center[1]    );
-//       InputTest->Add( "Plummer_CenterZ",      &Plummer_Center[2]    );
-//       InputTest->Add( "Plummer_BulkVelX",     &Plummer_BulkVel[0]   );
-//       InputTest->Add( "Plummer_BulkVelY",     &Plummer_BulkVel[1]   );
-//       InputTest->Add( "Plummer_BulkVelZ",     &Plummer_BulkVel[2]   );
-//       InputTest->Add( "Plummer_GasMFrac",     &Plummer_GasMFrac     );
-//       InputTest->Add( "Plummer_ExtAccMFrac",  &Plummer_ExtAccMFrac  );
-//       InputTest->Add( "Plummer_ExtPotMFrac",  &Plummer_ExtPotMFrac  );
-//       InputTest->Add( "Plummer_MassProfNBin", &Plummer_MassProfNBin );
-//       InputTest->Add( "Plummer_AddColor",     &Plummer_AddColor     );
-// #     ifdef FEEDBACK
-//       InputTest->Add( "Plummer_FB_Exp",       &Plummer_FB_Exp       );
-//       InputTest->Add( "Plummer_FB_ExpEMin",   &Plummer_FB_ExpEMin   );
-//       InputTest->Add( "Plummer_FB_ExpEMax",   &Plummer_FB_ExpEMax   );
-//       InputTest->Add( "Plummer_FB_ExpMMin",   &Plummer_FB_ExpMMin   );
-//       InputTest->Add( "Plummer_FB_ExpMMax",   &Plummer_FB_ExpMMax   );
-//       InputTest->Add( "Plummer_FB_Acc",       &Plummer_FB_Acc       );
-//       InputTest->Add( "Plummer_FB_AccMMin",   &Plummer_FB_AccMMin   );
-//       InputTest->Add( "Plummer_FB_AccMMax",   &Plummer_FB_AccMMax   );
-//       InputTest->Add( "Plummer_FB_Like",      &Plummer_FB_Like      );
-// #     endif
-// 
-// #     define GET_VOID( type, var )    ( *( (type*)(var) ) )   // helper function to convert the (void*) pointer
-//       for (int i=0; i<InputTest->NPara; i++)
-//       {
-//          if      ( InputTest->Type[i] == 1 )
-//             printf( "%s => %d\n",    InputTest->Key[i], GET_VOID(    int, InputTest->Ptr[i] ) );
-//          else if ( InputTest->Type[i] == 2 )
-//             printf( "%s => %ld\n",   InputTest->Key[i], GET_VOID(   long, InputTest->Ptr[i] ) );
-//          else if ( InputTest->Type[i] == 3 )
-//             printf( "%s => %d\n",    InputTest->Key[i], GET_VOID(   uint, InputTest->Ptr[i] ) );
-//          else if ( InputTest->Type[i] == 4 )
-//             printf( "%s => %ld\n",   InputTest->Key[i], GET_VOID(  ulong, InputTest->Ptr[i] ) );
-//          else if ( InputTest->Type[i] == 5 )
-//             printf( "%s => %d\n",    InputTest->Key[i], GET_VOID(   bool, InputTest->Ptr[i] ) );
-//          else if ( InputTest->Type[i] == 6 )
-//             printf( "%s => %.7e\n",  InputTest->Key[i], GET_VOID(  float, InputTest->Ptr[i] ) );
-//          else if ( InputTest->Type[i] == 7 )
-//             printf( "%s => %.14e\n", InputTest->Key[i], GET_VOID( double, InputTest->Ptr[i] ) );
-//          else if ( InputTest->Type[i] == 8 )
-//             printf( "%s => %s\n",    InputTest->Key[i], (char*)InputTest->Ptr[i] );
-//          else
-//             Aux_Error( ERROR_INFO, "Unknown InputTest.Type\n" );
-//       } // for (int i=0; i<InputTest->NPara; i++)
-// #     undef GET_VOID
-// 
-//       delete InputTest;
    } // if ( MPI_Rank == 0 )
 
 
