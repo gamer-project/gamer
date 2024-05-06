@@ -558,14 +558,21 @@ void AddNewField_Plummer()
 } // FUNCTION : AddNewField_Plummer
 
 
+
 #ifdef SUPPORT_HDF5
-// NOTE : this function only works in MPI_RANK == 0
+//-------------------------------------------------------------------------------------------------------
+// Function    :  HDF5_Output_User_Plummer
+// Description :  Add the problem-specific fields
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype.
+//
+// Parameter   :  HDF5_OutUser : the structure storing the user output parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
 void HDF5_Output_User_Plummer( HDF5_OutUser_t *HDF5_OutUser )
 {
-   printf("Adding the parameters\n");
-   char temp_str[MAX_STRING] = "Test string UWU.";
-   printf("In init: %p\n", temp_str);
-   HDF5_OutUser->Add( "Plummer_String",       temp_str              );
    HDF5_OutUser->Add( "Plummer_RSeed",        &Plummer_RSeed        );
    HDF5_OutUser->Add( "Plummer_Rho0",         &Plummer_Rho0         );
    HDF5_OutUser->Add( "Plummer_R0",           &Plummer_R0           );
@@ -595,7 +602,10 @@ void HDF5_Output_User_Plummer( HDF5_OutUser_t *HDF5_OutUser )
    HDF5_OutUser->Add( "Plummer_FB_Like",      &Plummer_FB_Like      );
 #  endif
 } // FUNCTION : HDF5_OutputUser
-#endif
+#endif // #ifdef SUPPORT_HDF5
+
+
+
 #endif // #if ( MODEL == HYDRO )
 
 

@@ -315,6 +315,9 @@ void Init_TestProb_Template()
 #  ifdef FEEDBACK
    FB_Init_User_Ptr                  = NULL; // option: FB_USER;                      example: TestProblem/Hydro/Plummer/FB_Plummer.cpp
 #  endif
+#  ifdef SUPPORT_HDF5
+   HDF5_Output_User_Ptr              = NULL; // example: TestProblem/Hydro/Plummer/Init_TestProb_Hydro_Plummer.cpp --> HDF5_Output_User_Plummer()
+#  endif
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
