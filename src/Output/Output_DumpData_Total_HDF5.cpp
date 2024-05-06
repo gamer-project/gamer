@@ -3739,7 +3739,7 @@ void structWriteToHDF5( const hid_t H5_GroupID, const HDF5_OutUser_t *HDF5_OutUs
          case 5: H5_Type = H5T_NATIVE_INT;    break; // bool is stored as int
          case 6: H5_Type = H5T_NATIVE_FLOAT;  break;
          case 7: H5_Type = H5T_NATIVE_DOUBLE; break;
-         case 8: H5_Type = H5_TypeID_VarStr;  break; // Do it in the fuction
+         case 8: break; // Do it in the fuction
          default: Aux_Error( ERROR_INFO, "Unrecognize type: %d", type ); break;
       }
 
