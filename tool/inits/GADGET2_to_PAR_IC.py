@@ -58,7 +58,7 @@ with h5py.File(input_GADGET_file, "r") as f:
     print(Header_list_attribute_list)
 
     # output simulation parameters adopted in the GADGET input file
-    with open('GADGET2_Input_Parameters.txt', 'wb') as output:
+    with open('GADGET2_Input_Parameters.txt', 'w') as output:
 
         output.write("GADGET2 Input Parameters\n\n")
 

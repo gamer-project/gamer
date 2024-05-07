@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -74,10 +73,6 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
-#  ifndef FLOAT8
-   Aux_Error( ERROR_INFO, "FLOAT8 must be enabled !!\n" );
-#  endif
-
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
       Aux_Error( ERROR_INFO, "must adopt periodic BC for fluid --> reset OPT__BC_FLU* !!\n" );
@@ -99,6 +94,10 @@ void Validate()
 // warnings
    if ( MPI_Rank == 0 )
    {
+#     ifndef FLOAT8
+      Aux_Message( stderr, "WARNING : it's recommended to enable FLOAT8 for this test !!\n" );
+#     endif
+
       if ( !OPT__OUTPUT_USER )
          Aux_Message( stderr, "WARNING : it's recommended to enable OPT__OUTPUT_USER !!\n" );
    }
@@ -163,7 +162,7 @@ void SetParameter()
 
 
 // (3) reset other general-purpose parameters
-//     --> a helper macro PRINT_WARNING is defined in TestProb.h
+//     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const long   End_Step_Default = __INT_MAX__;
 // End_T : (stable/unstable) --> (1 period in the high-k limit / grow by a factor of 50 in the low-k limit)
    const double End_T_Default    = ( Jeans_Stable) ?
@@ -171,12 +170,12 @@ void SetParameter()
                                     A_INIT*50;
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
-      PRINT_WARNING( "END_STEP", END_STEP, FORMAT_LONG );
+      PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
    if ( END_T < 0.0 ) {
       END_T = End_T_Default;
-      PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
+      PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
 
 
@@ -230,11 +229,22 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double r       = 1.0/sqrt(3.0)*( x + y + z );
    const double Jeans_y = SQR(Jeans_WaveK)/ELBDM_ETA*pow( Time, -0.5 );
    const double Phase   = Jeans_WaveK*r + Jeans_Phase0;
+   const double Re = 1.0 + Jeans_RealAmp( Jeans_RealAmp0, Jeans_y )*cos( Phase );
+   const double Im =       Jeans_ImagAmp( Jeans_ImagAmp0, Jeans_y )*cos( Phase );
 
-   fluid[REAL] = 1.0 + Jeans_RealAmp( Jeans_RealAmp0, Jeans_y )*cos( Phase );
-   fluid[IMAG] =       Jeans_ImagAmp( Jeans_ImagAmp0, Jeans_y )*cos( Phase );
+   fluid[DENS] = SQR( Re ) + SQR( Im );
 
-   fluid[DENS] = SQR(fluid[REAL]) + SQR(fluid[IMAG]);
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif
+   fluid[REAL] = Re;
+   fluid[IMAG] = Im;
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } else {
+   fluid[PHAS] = SATAN2( Im, Re );
+   fluid[STUB] = 0.0;
+   }
+#  endif
 
 } // FUNCTION : SetGridIC
 

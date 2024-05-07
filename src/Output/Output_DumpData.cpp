@@ -3,8 +3,6 @@
 extern Timer_t Timer_OutputWalltime;
 
 static void Write_DumpRecord();
-extern void (*Output_User_Ptr)();
-extern void (*Output_UserWorkBeforeOutput_Ptr)();
 
 
 
@@ -55,7 +53,7 @@ void Output_DumpData( const int Stage )
 
             else
             {
-               DumpTime = ( int(Time[0]/OUTPUT_DT) + 1.0 )*OUTPUT_DT;
+               DumpTime = round( int(Time[0]/OUTPUT_DT) + 1.0 )*OUTPUT_DT;
 
 //             be careful about round-off errors
                if (   (  DumpTime <= Time[0]  )                                            ||
@@ -297,7 +295,7 @@ void Output_DumpData( const int Stage )
 
       if ( OutputData )
       {
-         if ( OPT__OUTPUT_MODE == OUTPUT_CONST_DT  )  DumpTime = Time[0] + OUTPUT_DT;
+         if ( OPT__OUTPUT_MODE == OUTPUT_CONST_DT  )  DumpTime = round( Time[0]/OUTPUT_DT + 1.0 )*OUTPUT_DT;
          if ( OPT__OUTPUT_MODE == OUTPUT_USE_TABLE )  DumpTime = DumpTable[ ++DumpTableID ];
       }
 

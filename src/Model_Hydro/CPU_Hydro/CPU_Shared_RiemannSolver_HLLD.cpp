@@ -5,7 +5,7 @@
 
 #include "CUFLU.h"
 
-#if ( MODEL == HYDRO  &&  defined MHD )
+#if ( MODEL == HYDRO  &&  defined MHD  &&  !defined SRHD )
 
 
 
@@ -24,8 +24,9 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool FracPassive, const int NFrac, const int FracIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
+                    const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                     const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                    const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut );
+                    const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut, real* LorentzFactorPtr );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -56,6 +57,8 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed squared
 //                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
 //                EoS_Table         : EoS tables
+//
+// Return      :  Flux_Out[]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
@@ -108,9 +111,9 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 #  endif
 
    Hydro_Con2Pri( Con_L, Pri_L, MinPres, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                  EoS_DensEint2Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+                  EoS_DensEint2Pres, NULL, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
    Hydro_Con2Pri( Con_R, Pri_R, MinPres, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                  EoS_DensEint2Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+                  EoS_DensEint2Pres, NULL, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
 
    real tmp_1, tmp_2, crit, crit_Bx;
    real _RhoL, _RhoR;
@@ -228,8 +231,12 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    sqrt_RhoRst    = SQRT( Con_Rst[0] );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Con_Lst[0], "Con_Lst[0]", ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Con_Rst[0], "Con_Rst[0]", ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &Con_Lst[0], "Con_Lst[0]",
+                       (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &Con_Rst[0], "Con_Rst[0]",
+                       (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
    tmp_1          = FABS( Bx );

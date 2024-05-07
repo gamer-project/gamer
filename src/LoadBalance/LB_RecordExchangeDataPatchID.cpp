@@ -199,6 +199,35 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
       if ( FaPID == -1 )   Aux_Error( ERROR_INFO, "SonLv %d, SonPID0 %d has no father patch !!\n", SonLv, SonPID0 );
 #     endif
 
+//    exchange complete father patch if option OPT__LB_EXCHANGE_FATHER is set
+      if ( OPT__LB_EXCHANGE_FATHER ) {
+
+         TPID = FaPID;
+
+         if ( TPID >= NReal )
+         {
+            RSib = 26;
+            SibIdx = TPID - NReal;
+
+            if (  ( SibList_H[SibIdx] & SibMask_Check[RSib] ) == false  )
+            {
+               SibList_H[SibIdx] |= ( 1 << RSib );
+               SibList_H[SibIdx] &= SibMask_Clear[RSib];
+            }
+
+//          allocate memory for the buffer patches that will receive data
+            for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->hnew();
+
+#           ifdef MHD
+            for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->mnew();
+#           endif
+
+#           ifdef GRAVITY // so that the XXX_H lists can also be applied to the potential data
+            for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->gnew();
+#           endif
+         } // if ( TPID >= NReal )
+      } // if ( OPT__LB_EXCHANGE_FATHER )
+
       TABLE_GetSibPID_Based( SonLv, SonPID0, SibPID0_List );
 
       for (int s=0; s<NSib_F; s++)
@@ -258,7 +287,6 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 #                 ifdef GRAVITY // so that the XXX_H lists can also be applied to the potential data
                   for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->gnew();
 #                 endif
-
                } // if ( TPID >= NReal )
             } // for (int f=0; f<NFaBuff; f++)
          } // if ( SibPID0 == -1 )
@@ -553,7 +581,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
       int *TempIDList = new int [ LB_RecvH_NList[r] ];
       memcpy( TempIDList, LB_RecvH_IDList[r], LB_RecvH_NList[r]*sizeof(int) );
 
-      Mis_Heapsort( LB_RecvH_NList[r], TempIDList, NULL );
+      Mis_Heapsort<int,int>( LB_RecvH_NList[r], TempIDList, NULL );
 
       for (int t=1; t<LB_RecvH_NList[r]; t++)
          if ( TempIDList[t] == TempIDList[t-1] )
@@ -658,7 +686,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
       int *TempIDList = new int [ LB_RecvG_NList[r] ];
       memcpy( TempIDList, LB_RecvG_IDList[r], LB_RecvG_NList[r]*sizeof(int) );
 
-      Mis_Heapsort( LB_RecvG_NList[r], TempIDList, NULL );
+      Mis_Heapsort<int,int>( LB_RecvG_NList[r], TempIDList, NULL );
 
       for (int t=1; t<LB_RecvG_NList[r]; t++)
          if ( TempIDList[t] == TempIDList[t-1] )
@@ -728,7 +756,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
                         LB_SendH_LBIdxList[r], Match_H );
 
 //    7.1.3 check: all target patches must be found
-      #ifdef GAMER_DEBUG
+#     ifdef GAMER_DEBUG
       for (int t=0; t<LB_SendH_NList[r]; t++)
          if ( Match_H[t] == -1 )
             Aux_Error( ERROR_INFO, "Lv %d, TRank %d, LB_Idx %ld found no matching patches (hydro) !!\n",
@@ -755,7 +783,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
                         LB_SendG_LBIdxList[r], Match_G );
 
 //    7.2.3 check: all target patches must be found
-      #ifdef GAMER_DEBUG
+#     ifdef GAMER_DEBUG
       for (int t=0; t<LB_SendG_NList[r]; t++)
          if ( Match_G[t] == -1 )
             Aux_Error( ERROR_INFO, "Lv %d, TRank %d, LB_Idx %ld found no matching patches (potential) !!\n",

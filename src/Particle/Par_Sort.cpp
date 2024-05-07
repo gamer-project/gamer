@@ -24,15 +24,15 @@
 //
 // Return      :  IdxTable
 //-------------------------------------------------------------------------------------------------------
-void Par_SortByPos( const long NPar, const real *PosX, const real *PosY, const real *PosZ, int *IdxTable )
+void Par_SortByPos( const long NPar, const real_par *PosX, const real_par *PosY, const real_par *PosZ, long *IdxTable )
 {
 
    long NParSameX, NParSameY;
 
 // 0. back up the PosX array since we don't want to modify it during the sorting
-   real *PosX_Sorted = new real [NPar];
+   real_par *PosX_Sorted = new real_par [NPar];
 
-   memcpy( PosX_Sorted, PosX, sizeof(real)*NPar );
+   memcpy( PosX_Sorted, PosX, sizeof(real_par)*NPar );
 
 
 // 1. sort by x
@@ -49,9 +49,9 @@ void Par_SortByPos( const long NPar, const real *PosX, const real *PosY, const r
 
       if ( NParSameX > 1 )
       {
-         int  *SortByX_IdxTable = new int  [NParSameX];  // it will fail if "long" is actually required
-         int  *SortByY_IdxTable = new int  [NParSameX];  // it will fail if "long" is actually required
-         real *PosY_Sorted      = new real [NParSameX];
+         long     *SortByX_IdxTable = new long [NParSameX];
+         long     *SortByY_IdxTable = new long [NParSameX];
+         real_par *PosY_Sorted      = new real_par [NParSameX];
 
          for (long y=0; y<NParSameX; y++)
          {
@@ -74,8 +74,8 @@ void Par_SortByPos( const long NPar, const real *PosX, const real *PosY, const r
 
             if ( NParSameY > 1 )
             {
-               int  *SortByZ_IdxTable = new int  [NParSameY];  // it will fail if "long" is actually required
-               real *PosZ_Sorted      = new real [NParSameY];
+               long     *SortByZ_IdxTable = new long [NParSameY];
+               real_par *PosZ_Sorted      = new real_par [NParSameY];
 
                for (long z=0; z<NParSameY; z++)
                {

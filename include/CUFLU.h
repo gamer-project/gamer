@@ -14,6 +14,7 @@
 # include "Typedef.h"
 # include "SrcTerms.h"
 # include "EoS.h"
+# include "Microphysics.h"
 #else
 # include "GAMER.h"
 #endif
@@ -26,9 +27,9 @@
 
 
 // include CUDA FFT library if GPU kinetic ELBDM Gram-Fourier extension solver is enabled
-#if ( defined(__CUDACC__) && MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
+#if ( defined(__CUDACC__) && GRAMFE_SCHEME == GRAMFE_FFT )
 #  include <cufftdx.hpp>
-#endif // #if ( defined(__CUDACC__) && MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
+#endif
 
 // faster integer multiplication in Fermi
 #if ( defined __CUDACC__  &&  __CUDA_ARCH__ >= 200 )
@@ -103,8 +104,16 @@
 #  if   ( FLU_SCHEME == MHM )
 
 #     define N_FC_VAR            ( PS2 + 2 )
+#    ifdef MHD
+#     define N_HF_VAR            ( N_FC_VAR )
+#     define N_FL_FLUX           ( PS2 + 2 )
+//    MHM doesn't have the half-step flux actually; this is only for calculating the half-step electric field
+#     define N_HF_FLUX           ( N_FL_FLUX+2 )
+#    else
 #     define N_FL_FLUX           ( PS2 + 1 )
-#     define N_FC_FLUX           ( N_FL_FLUX )
+//    MHM doesn't have the half-step flux actually; this is only for defining N_FC_FLUX
+#     define N_HF_FLUX           ( N_FL_FLUX )
+#    endif
 
 #  elif ( FLU_SCHEME == MHM_RP )
 
@@ -117,7 +126,6 @@
 #     define N_FL_FLUX           ( PS2 + 1 )
 #     define N_HF_FLUX           ( FLU_NXT - 1 )
 #    endif
-#     define N_FC_FLUX           ( N_HF_FLUX )
 #     define N_HF_VAR            ( FLU_NXT - 2 )
 
 #  elif ( FLU_SCHEME == CTU )
@@ -131,18 +139,19 @@
 #     define N_FL_FLUX           ( N_FC_VAR )
 #    endif
 #     define N_HF_FLUX           ( N_FC_VAR )
-#     define N_FC_FLUX           ( N_HF_FLUX )
 
 #  endif // FLU_SCHEME
 
 #  define N_SLOPE_PPM            ( N_FC_VAR + 2 )
 
+#   define N_FC_FLUX             ( N_HF_FLUX )
 #  ifdef MHD
-#   define N_HF_ELE              ( N_FC_FLUX - 1 )
+#   define N_HF_ELE              ( N_HF_FLUX - 1 )
 #   define N_FL_ELE              ( N_FL_FLUX - 1 )
 #   define N_EC_ELE              ( N_FC_FLUX - 1 )
 #  else
 #   define N_EC_ELE              0
+#   define N_HF_ELE              0
 #  endif
 
 #endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
@@ -270,6 +279,13 @@
 //#  define HLLE_WAVESPEED   HLL_WAVESPEED_PVRS
 #endif
 #  define HLLD_WAVESPEED   HLL_WAVESPEED_DAVIS
+
+
+// check unphysical results in the MHM half-step prediction
+#if ( FLU_SCHEME == MHM )
+#  define MHM_CHECK_PREDICT
+#endif
+
 
 
 // 2. ELBDM macro
@@ -479,9 +495,18 @@
 #  endif
 
 
-// set number of threads and blocks used in GRAMFE GPU scheme
-# if ( defined(__CUDACC__) && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
+// to get rid of the "uses too much shared data" error message in the ELBDM HJ solver
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#     if ( PATCH_SIZE == 8  &&  NCOMP_PASSIVE == 0 )
+#        define FLU_HJ_BLOCK_SIZE_Y    ( FLU_BLOCK_SIZE_Y   )  // not optimized yet
+#     else
+#        define FLU_HJ_BLOCK_SIZE_Y    ( FLU_BLOCK_SIZE_Y/2 )  // not optimized yet
+#     endif
+#  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
+
+// set number of threads and blocks used in GRAMFE_FFT GPU scheme
+#  if ( defined(__CUDACC__)  &&  WAVE_SCHEME == WAVE_GRAMFE  &&  GRAMFE_SCHEME == GRAMFE_FFT )
 
 // cuFFTdx supports the following GPU architectures at the time of writing (23.05.23)
 //
@@ -511,7 +536,7 @@
 
 using CUFFTDX_ARCH = decltype(cufftdx::SM<GPU_COMPUTE_CAPABILITY>());
 
-using fft_base     = decltype(cufftdx::Block() + cufftdx::Size<GRAMFE_FLU_NXT>() + cufftdx::Type<cufftdx::fft_type::c2c>() + cufftdx::Precision<gramfe_float>() + CUFFTDX_ARCH() );
+using fft_base     = decltype(cufftdx::Block() + cufftdx::Size<GRAMFE_FLU_NXT>() + cufftdx::Type<cufftdx::fft_type::c2c>() + cufftdx::Precision<gramfe_fft_float>() + CUFFTDX_ARCH() );
 using forward_fft  = decltype(fft_base() + cufftdx::Direction<cufftdx::fft_direction::forward>());
 using inverse_fft  = decltype(fft_base() + cufftdx::Direction<cufftdx::fft_direction::inverse>());
 
@@ -524,11 +549,11 @@ using IFFT         = decltype( inverse_fft() + cufftdx::ElementsPerThread<elemen
 
 using complex_type = typename FFT::value_type;
 
-# endif // # if ( defined(__CUDACC__) && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_ENABLE_GPU )
+#  endif // # if ( defined(__CUDACC__)  &&  WAVE_SCHEME == WAVE_GRAMFE  &&  GRAMFE_SCHEME == GRAMFE_FFT )
 
-# else
-# error : ERROR : Unsupported model in CUFLU.h
-# endif // MODEL
+#else
+#  error : ERROR : Unsupported model in CUFLU.h
+#endif // MODEL
 
 
 // 3. dt solver for fluid

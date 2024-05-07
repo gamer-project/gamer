@@ -11,7 +11,7 @@ parser.add_argument( '-e', action='store', required=True,  type=int, dest='idx_e
                      help='last data index' )
 parser.add_argument( '-d', action='store', required=False, type=int, dest='didx',
                      help='delta data index [%(default)d]', default=1 )
-parser.add_argument( '-i', action='store', required=False,  type=str, dest='prefix',
+parser.add_argument( '-i', action='store', required=False, type=str, dest='prefix',
                      help='data path prefix [%(default)s]', default='./' )
 
 args=parser.parse_args()
@@ -19,9 +19,7 @@ args=parser.parse_args()
 # take note
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
-for t in range( len(sys.argv) ):
-   print( str(sys.argv[t]) ),
-print( '' )
+print( ' '.join(map(str, sys.argv)) )
 print( '-------------------------------------------------------------------\n' )
 
 

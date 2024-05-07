@@ -55,6 +55,14 @@ void Output_DumpData_Total( const char *FileName )
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d)     ...\n", __FUNCTION__, DumpID );
 
 
+// when snapshot is output as binary format, only support identical floating-point precision between field and particle data
+#  ifdef PARTICLE
+#  if ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) )
+   Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for OPT__OUTPUT_TOTAL=2 (C-binary) !!\n" );
+#  endif
+#  endif
+
+
 // check the synchronization
    for (int lv=1; lv<NLEVEL; lv++)
       if ( NPatchTotal[lv] != 0 )   Mis_CompareRealValue( Time[0], Time[lv], __FUNCTION__, true );
@@ -782,10 +790,10 @@ void Output_DumpData_Total( const char *FileName )
 #     ifdef MASSIVE_PARTICLES
       if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
       {
-         Prepare_PatchData_InitParticleDensityArray( lv );
-
          Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos_No,
                                        NULL_REAL, SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
+
+         Prepare_PatchData_InitParticleDensityArray( lv, Time[lv] );
       }
 #     endif
 

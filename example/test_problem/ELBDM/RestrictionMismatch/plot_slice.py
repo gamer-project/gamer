@@ -61,24 +61,21 @@ args=parser.parse_args()
 # take note
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
-for t in range( len(sys.argv) ):
-    print( str(sys.argv[t]) ),
-print( '' )
+print( ' '.join(map(str, sys.argv)) )
 print( '-------------------------------------------------------------------\n' )
 
 
 idx_start   = args.idx_start
 idx_end     = args.idx_end
-didx            = args.didx
+didx        = args.didx
 prefix      = args.prefix
 
-plot_grid    = args.plot_grid
-use_phase    = args.use_phase
-make_3d_plot = args.make_3d_plot
+plot_grid      = args.plot_grid
+use_phase      = args.use_phase
+make_3d_plot   = args.make_3d_plot
 make_reim_plot = args.plot_reim
 
-colormap        = 'arbre'
-center_mode = 'c'
+colormap    = 'viridis'
 dpi         = 150
 
 if use_phase:
@@ -95,11 +92,12 @@ else:
      )
 
 for idx in range(idx_start, idx_end+1, didx):
-          ds = yt.load("Data_%06d"%idx)# ds = yt.load('t_%06d'%idx)
+          ds = yt.load("Data_%06d"%idx)
           try:
             ds.force_periodicity()
           except:
             ds.periodicity = (True, True, True)
+
           grad_fields = ds.add_gradient_fields(("gas", "density"))
           grad_fields = ds.add_gradient_fields(("gamer", "Real"))
           grad_fields = ds.add_gradient_fields(("gamer", "Imag"))
@@ -112,7 +110,7 @@ for idx in range(idx_start, idx_end+1, didx):
                      axes = ["z"]
 
           for myax in axes:
-                     fig = plt.figure(dpi = 120, figsize=(24, 12))
+                     fig = plt.figure(dpi = dpi, figsize=(24, 12))
 
                      # See http://matplotlib.org/mpl_toolkits/axes_grid/api/axes_grid_api.html
                      # These choices of keyword arguments produce a four panel plot that includes
@@ -155,7 +153,7 @@ for idx in range(idx_start, idx_end+1, didx):
                      pz.annotate_grids( periodic=False )
 
                      for field in fields:
-                        pz.set_cmap( field, "viridis" )
+                        pz.set_cmap( field, colormap )
 
                      # For each plotted field, force the SlicePlot to redraw itself onto the AxesGrid
                      # axes.
@@ -170,7 +168,7 @@ for idx in range(idx_start, idx_end+1, didx):
                          pz2.set_log(("gamer", "Phase"), False)
 
                      for field in fields:
-                        pz2.set_cmap( field, "viridis" )
+                        pz2.set_cmap( field, colormap )
                      # For each plotted field, force the SlicePlot to redraw itself onto the AxesGrid
                      # axes.
                      for i, field in enumerate(fields):

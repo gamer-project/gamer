@@ -57,9 +57,9 @@ void Init_ByFunction()
    {
       for (int lv=TOP_LEVEL-1; lv>=0; lv--)
       {
-         Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv], NULL_INT, NULL_INT, _TOTAL, _MAG );
+         Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv], NULL_INT, NULL_INT, FixUpVar_Restrict, _MAG );
 
-         Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_NO );
+         Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL, FixUpVar_Restrict, _MAG, Flu_ParaBuf, USELB_NO );
       } // for (int lv=NLEVEL-2; lv>=0; lv--)
    } // if ( OPT__INIT_RESTRICT )
 

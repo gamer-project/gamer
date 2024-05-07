@@ -20,9 +20,7 @@ args=parser.parse_args()
 # take note
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
-for t in range( len(sys.argv) ):
-   print str(sys.argv[t]),
-print( '' )
+print( ' '.join(map(str, sys.argv)) )
 print( '-------------------------------------------------------------------\n' )
 
 
@@ -50,8 +48,8 @@ for ds in ts.piter():
    p.annotate_title("GAMER-%i$^3$: Data_%06d, Proj_Axis = %s"%(NPar_base,ds.parameters["DumpID"],projection_axis))
    p.annotate_timestamp(corner='upper_right', redshift=True, time=False, text_args={'color':'k'})
    p.set_colorbar_label(("all", "particle_mass"),"Projected Particle Mass [M$_\odot$]")
-   p.set_zlim(("all", "particle_mass"), 1e8, 6e12)
    p.set_unit(("all", "particle_mass"), "Msun")
+   p.set_zlim(("all", "particle_mass"), 1e8, 6e12)
    # see https://yt-project.org/doc/visualizing/callbacks.html
    p.annotate_text((0,0.8,0.8),"[NX0_TOT:%i$^3$][AMR_MAX:%i]"%(base_level_cell_num,max_AMR_level),coord_system="data",text_args={"color": "black"},
    inset_box_args={

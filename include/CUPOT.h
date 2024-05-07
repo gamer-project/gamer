@@ -145,15 +145,15 @@
 
 // blockDim.x for the GPU Poisson solver
 #if   ( POT_GHOST_SIZE == 1 )
-      #define POT_BLOCK_SIZE_X      256
+#     define POT_BLOCK_SIZE_X      256
 #elif ( POT_GHOST_SIZE == 2 )
-      #define POT_BLOCK_SIZE_X      256
+#     define POT_BLOCK_SIZE_X      256
 #elif ( POT_GHOST_SIZE == 3 )
-      #define POT_BLOCK_SIZE_X      256
+#     define POT_BLOCK_SIZE_X      256
 #elif ( POT_GHOST_SIZE == 4 )
-      #define POT_BLOCK_SIZE_X      256
+#     define POT_BLOCK_SIZE_X      256
 #elif ( POT_GHOST_SIZE == 5 )
-      #define POT_BLOCK_SIZE_X      256
+#     define POT_BLOCK_SIZE_X      256
 #endif
 
 #endif // POT_SCHEME

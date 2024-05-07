@@ -23,7 +23,7 @@ unit_l    = ( f['Info']['Unit_L'], 'cm' )
 unit_m    = ( f['Info']['Unit_M'], 'g' )
 unit_t    = ( f['Info']['Unit_T'], 's' )
 
-units = [ f['Data'][k].attrs['Unit'].decode('utf-8') for k in fields ]
+units = [ f['Data'][k].attrs['Unit'] for k in fields ]
 data  = { k:(f['Data'][k][()].transpose(),u) for k,u in zip(fields,units) }
 
 

@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -55,10 +54,6 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
-#  ifndef FLOAT8
-   Aux_Error( ERROR_INFO, "FLOAT8 must be enabled !!\n" );
-#  endif
-
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
       Aux_Error( ERROR_INFO, "must adopt periodic BC for fluid --> reset OPT__BC_FLU* !!\n" );
@@ -70,6 +65,10 @@ void Validate()
 // warnings
    if ( MPI_Rank == 0 )
    {
+#     ifndef FLOAT8
+      Aux_Message( stderr, "WARNING : it's recommended to enable FLOAT8 for this test !!\n" );
+#     endif
+
       if ( !OPT__OUTPUT_USER )
          Aux_Message( stderr, "WARNING : it's recommended to enable OPT__OUTPUT_USER !!\n" );
    }
@@ -131,7 +130,7 @@ void SetParameter()
 
    if ( PWave_XYZ == 3 ) {
       PWave_NWavelength *= 3;
-      PRINT_WARNING( "PWave_NWavelength", PWave_NWavelength, FORMAT_INT );
+      PRINT_RESET_PARA( PWave_NWavelength, FORMAT_INT, "");
    }
 
 
@@ -146,18 +145,18 @@ void SetParameter()
 
 
 // (3) reset other general-purpose parameters
-//     --> a helper macro PRINT_WARNING is defined in TestProb.h
+//     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const long   End_Step_Default = __INT_MAX__;
    const double End_T_Default    = 6.0*PWave_Period; // 6 periods
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
-      PRINT_WARNING( "END_STEP", END_STEP, FORMAT_LONG );
+      PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
    if ( END_T < 0.0 ) {
       END_T = End_T_Default;
-      PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
+      PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
 
 
@@ -215,7 +214,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   double r, PhaseR, PhaseL;
+   double r, PhaseR, PhaseL, Real, Imag, Phase;
    switch ( PWave_XYZ )
    {
       case 0 : r = x;                              break;
@@ -230,24 +229,38 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    PhaseL  = -PWave_WaveK*r - PWave_WaveW*Time + PWave_Phase0;
 
 // set the real and imaginary parts
-   if ( PWave_LSR > 0 ) {      // Right-moving wave
-      fluid[REAL] = PWave_Amp*cos( PhaseR );
-      fluid[IMAG] = PWave_Amp*sin( PhaseR );
+   if      ( PWave_LSR > 0 ) { // right-moving wave
+      Real  = PWave_Amp*cos( PhaseR );
+      Imag  = PWave_Amp*sin( PhaseR );
+      Phase = PhaseR;
    }
-   else if ( PWave_LSR < 0 ) { // Left-moving wave
-      fluid[REAL] = PWave_Amp*cos( PhaseL );
-      fluid[IMAG] = PWave_Amp*sin( PhaseL );
+   else if ( PWave_LSR < 0 ) { // left-moving wave
+      Real  = PWave_Amp*cos( PhaseL );
+      Imag  = PWave_Amp*sin( PhaseL );
+      Phase = PhaseL;
    }
-   else { //( PWave_LSR == 0 ) // Standing wave
-      fluid[REAL] = 0.5*( PWave_Amp*cos( PhaseR ) + PWave_Amp*cos( PhaseL ) );
-      fluid[IMAG] = 0.5*( PWave_Amp*sin( PhaseR ) + PWave_Amp*sin( PhaseL ) );
+   else {                      // standing wave (PWave_LSR == 0 )
+      Real  = 0.5*(  PWave_Amp*cos( PhaseR ) + PWave_Amp*cos( PhaseL )  );
+      Imag  = 0.5*(  PWave_Amp*sin( PhaseR ) + PWave_Amp*sin( PhaseL )  );
+      Phase = SATAN2 ( Imag, Real );
    }
 
 // set the density
-   fluid[DENS] = SQR( fluid[REAL] ) + SQR( fluid[IMAG] );
+   fluid[DENS] = SQR( Real ) + SQR( Imag );
 
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif
+   fluid[REAL] = Real;
+   fluid[IMAG] = Imag;
 // set the unwrapped phase
-   fluid[PWave_Idx_Phase] = ATAN2( fluid[IMAG], fluid[REAL] );
+   fluid[PWave_Idx_Phase] = SATAN2( Imag, Real );
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } else {
+   fluid[PHAS] = Phase;
+   fluid[STUB] = 0.0;
+   }
+#  endif
 
 } // FUNCTION : SetGridIC
 
@@ -255,7 +268,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  AddNewField_PlaneWave
-// Description :  Add the unwrapped phase as problem-specific fields
+// Description :  Add the unwrapped phase as a problem-specific field
 //
 // Note        :  1. Ref: https://github.com/gamer-project/gamer/wiki/Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes
 //                2. Invoke AddField() for each of the problem-specific field:
@@ -269,8 +282,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //-------------------------------------------------------------------------------------------------------
 void AddNewField_PlaneWave()
 {
+
    if ( PWave_Idx_Phase == Idx_Undefined )
-      PWave_Idx_Phase = AddField( "Phase", NORMALIZE_NO, INTERP_FRAC_NO );
+      PWave_Idx_Phase = AddField( "Phase", FIXUP_FLUX_NO, FIXUP_REST_NO, NORMALIZE_NO, INTERP_FRAC_NO );
 
 } // FUNCTION : AddNewField_PlaneWave
 
@@ -364,9 +378,9 @@ void Init_TestProb_ELBDM_PlaneWave()
    SetParameter();
 
 
-   Init_Function_User_Ptr = SetGridIC;
-   Init_Field_User_Ptr    = AddNewField_PlaneWave;
-   Output_User_Ptr        = OutputError;
+   Init_Function_User_Ptr          = SetGridIC;
+   Init_Field_User_Ptr             = AddNewField_PlaneWave;
+   Output_User_Ptr                 = OutputError;
    Output_UserWorkBeforeOutput_Ptr = Output_UserWorkBeforeOutput_PlaneWave;
 #  endif // #if ( MODEL == ELBDM )
 

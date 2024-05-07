@@ -17,8 +17,8 @@ plot_width  = [ 0.4, 0.4, 0.4 ]
 unit_l      = kpc
 unit_m      = Msun
 unit_t      = Gyr
-nref        = 256
 bext        = 1.0
+natt        = 12
 colormap    = 'arbre'
 dpi         = 150
 
@@ -36,17 +36,15 @@ parser.add_argument( '-e', action='store', required=True,  type=int, dest='idx_e
                      help='last data index' )
 parser.add_argument( '-d', action='store', required=False, type=int, dest='didx',
                      help='delta data index [%(default)d]', default=1 )
-parser.add_argument( '-f', action='store', required=False, type=bool, dest='float',
-                     help='single precision [%(default)r]', default=False )
+parser.add_argument( '-D', action='store_true', required=False, dest='double',
+                     help='double precision [%(default)r]' )
 
 args=parser.parse_args()
 
 # take note
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
-for t in range( len(sys.argv) ):
-   print str(sys.argv[t]),
-print( '' )
+print( ' '.join(map(str, sys.argv)) )
 print( '-------------------------------------------------------------------\n' )
 
 prefix_in  = args.prefix_in
@@ -54,15 +52,15 @@ prefix_out = args.prefix_out
 idx_start  = args.idx_start
 idx_end    = args.idx_end
 didx       = args.didx
-ftype      = np.float if args.float else np.double
+ftype      = np.double if args.double else np.single
 
 
 for idx in range(idx_start, idx_end+1, didx):
 
 #  load data
-   file_in = prefix_in + '/Data_%06d'%idx
+   file_in = prefix_in + '/Particle_%06d.cbin'%idx
    data    = np.fromfile( file=file_in, dtype=ftype )
-   data    = data.reshape( 7, -1 )
+   data    = data.reshape( natt, -1 )
 
 
 #  send data to yt
@@ -82,7 +80,7 @@ for idx in range(idx_start, idx_end+1, didx):
                               [ min(z)-bext*bbox_width[2], max(z)+bext*bbox_width[2] ]  ]  )
 
    ds = yt.load_particles( data_dic, length_unit=unit_l, mass_unit=unit_m, time_unit=unit_t,
-                           n_ref=nref, bbox=bbox, sim_time=time, periodicity=(False,False,False) )
+                           bbox=bbox, sim_time=time, periodicity=(False,False,False) )
 
 
 #  plot

@@ -35,7 +35,7 @@ void Par_Output_TextFile( const char *FileName )
       fprintf( File, "#" );
 
       for (int v=0; v<PAR_NATT_TOTAL; v++)
-      fprintf( File, "  %*s", (v==0)?20:21, ParAttLabel[v] );
+      fprintf( File, " %*s", (v==0)?StrLen_Flt-1:StrLen_Flt, ParAttLabel[v] );
 
       fprintf( File, "\n" );
 
@@ -55,7 +55,7 @@ void Par_Output_TextFile( const char *FileName )
 //          skip inactive particles
             if ( amr->Par->Mass[p] < 0.0 )   continue;
 
-            for (int v=0; v<PAR_NATT_TOTAL; v++)   fprintf( File, "  %21.14e", amr->Par->Attribute[v][p] );
+            for (int v=0; v<PAR_NATT_TOTAL; v++)   fprintf( File, BlankPlusFormat_Flt, amr->Par->Attribute[v][p] );
 
             fprintf( File, "\n" );
          }

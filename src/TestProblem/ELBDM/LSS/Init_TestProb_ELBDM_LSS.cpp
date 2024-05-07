@@ -1,11 +1,10 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
 // problem-specific global variables
 // =======================================================================================
-static int LSS_InitMode;   // initialization mode: 1=density-only, 2=real and imaginary parts
+static int LSS_InitMode;   // initialization mode: 1=density-only, 2=real and imaginary parts or phase and density
 // =======================================================================================
 
 
@@ -105,18 +104,18 @@ void SetParameter()
 
 
 // (3) reset other general-purpose parameters
-//     --> a helper macro PRINT_WARNING is defined in TestProb.h
+//     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const long   End_Step_Default = __INT_MAX__;
    const double End_T_Default    = 1.0;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
-      PRINT_WARNING( "END_STEP", END_STEP, FORMAT_LONG );
+      PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
    if ( END_T < 0.0 ) {
       END_T = End_T_Default;
-      PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
+      PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
 
 
@@ -144,7 +143,12 @@ void SetParameter()
 //                   --> The function pointer may be reset by various test problem initializers, in which case
 //                       this funtion will become useless
 //                2. One can use LSS_InitMode to support different data formats
-//
+//                3. For ELBDM_SCHEME == ELBDM_WAVE this function expects:
+//                       LSS_InitMode == 1: Density
+//                       LSS_InitMode == 2: Real and imaginary part
+//                   For ELBDM_SCHEME == ELBDM_HYBRID this function expects:
+//                       LSS_InitMode == 1: Density
+//                       LSS_InitMode == 2: Density and phase
 // Parameter   :  fluid_out : Fluid field to be set
 //                fluid_in  : Fluid field loaded from the uniform-mesh array (UM_IC)
 //                nvar_in   : Number of variables in fluid_in
@@ -160,6 +164,12 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
                             const int lv, double AuxArray[] )
 {
 
+   double Re, Im, De;
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   double Ph;
+#  endif
+
    switch ( LSS_InitMode )
    {
       case 1:
@@ -169,8 +179,14 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
          const double AveDens     = 1.0;        // assuming background density = 1.0
          const double GrowingFrac = 3.0/5.0;    // growing-mode amplitude = total amplitude * 3/5
 
-         fluid_out[REAL] = sqrt( (fluid_in[0]-AveDens )/GrowingFrac + AveDens );
-         fluid_out[IMAG] = 0.0;  // constant phase
+         Re = sqrt( (fluid_in[0]-AveDens )/GrowingFrac + AveDens );
+         Im = 0.0;   // constant phase
+         De = SQR( Re ) + SQR( Im );
+
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         Ph = 0.0;
+#        endif
+
          break;
       }
 
@@ -178,8 +194,20 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
       {
          if ( nvar_in != 2 )  Aux_Error( ERROR_INFO, "nvar_in (%d) != 2 for LSS_InitMode 2 !!\n", nvar_in );
 
-         fluid_out[REAL] = fluid_in[0];
-         fluid_out[IMAG] = fluid_in[1];
+//       ELBDM_WAVE   expects real and imaginary parts
+//       ELBDM_HYBRID expects density and phase
+#        if   ( ELBDM_SCHEME == ELBDM_WAVE )
+         Re = fluid_in[0];
+         Im = fluid_in[1];
+         De = SQR( Re ) + SQR( Im );
+#        elif ( ELBDM_SCHEME == ELBDM_HYBRID )
+         De = fluid_in[0];
+         Ph = fluid_in[1];
+         Re = sqrt( De )*cos( Ph );
+         Im = sqrt( De )*sin( Ph );
+#        else
+#        error : ERROR : unsupported ELBDM_SCHEME !!
+#        endif
          break;
       }
 
@@ -188,7 +216,19 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
                     "LSS_InitMode", LSS_InitMode );
    } // switch ( LSS_InitMode )
 
-   fluid_out[DENS] = SQR( fluid_out[REAL] ) + SQR( fluid_out[IMAG] );
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif
+   fluid_out[DENS] = De;
+   fluid_out[REAL] = Re;
+   fluid_out[IMAG] = Im;
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } else {
+   fluid_out[DENS] = De;
+   fluid_out[PHAS] = Ph;
+   fluid_out[STUB] = 0.0;
+   }
+#  endif
 
 } // Init_ByFile_ELBDM_LSS
 #endif // #if ( MODEL == ELBDM )
