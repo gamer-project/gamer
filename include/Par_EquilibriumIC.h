@@ -59,7 +59,7 @@ class Par_EquilibriumIC
       char   DensProf_Table_Name[MAX_STRING];
       long   Cloud_Par_Num                   = -1;
       double Cloud_MaxR                      = -1;
-      int    Cloud_ArrayNBin                 = -1;
+      int    Cloud_Rad_NBin                  = -1;
       int    Cloud_RSeed                     = -1;
       int    AddExtPot                       =  0;
       char   ExtPot_Table_Name[MAX_STRING];
@@ -71,8 +71,8 @@ class Par_EquilibriumIC
       double getGraviPotential   ( const double r );
       double Set_Velocity        ( const double r );
 
-      // Initialize physical parameter tables
-      void Init_Prob_Dens();
+      // Initialize arrays in energy space
+      void Init_EngArray();
 
       //  Add External Potential
       void addExternalPotential();
@@ -81,13 +81,16 @@ class Par_EquilibriumIC
       void RanVec_FixRadius( const double r, double RanVec[] );
 
       // Solve Eddington's equation
-      double Integration_Eng_base( const double Eng, const int N_points );
+      double getIntegratedDistributionFunction( const double Psi_Min, const double Psi_Max, const int N_points );
 
-      double  EngArray_dPsi;
-      double  Eng_min;
+      int     Cloud_Eng_NBin             = -1;
+      double  EngArray_dBindingEnergy    = -1;
+      double  EngArray_MinBindingEnergy  = -1;
+      double  EngArray_MaxBindingEnergy  = -1;
+      double *EngArray_BindingEnergy;
       double *EngArray_DistriFunc;
       double *EngArray_IntegDistriFunc;
-      double *EngArray_Psi;
+      int     Eng_LastIdx;
 
       // statistics
       void   SmoothArray( double* array_x, int index_start, int index_end );
@@ -117,18 +120,17 @@ class Par_EquilibriumIC
       double *RadArray_Density;
       double *RadArray_EnclosedMass;
       double *RadArray_DensitySlope;
-      double *RadArray_dRho_dx;
+      double *RadArray_dRho_dPsi;
       double *RadArray_GraviField;
       double *RadArray_GraviPotential;
       double *RadArray_ExternalPotential;
-
-      int  LastIdx;
+      int     Rad_LastIdx;
 
       void setRadArray_Radius();
       void setRadArray_Density();
       void setRadArray_EnclosedMass();
       void setRadArray_DensitySlope();
-      void setRadArray_dRho_dx();
+      void setRadArray_dRho_dPsi();
       void setRadArray_GraviField();
       void setRadArray_GraviPotential();
       void setRadArray_ExternalPotential();
