@@ -438,11 +438,13 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       Makefile_t  Makefile;
       SymConst_t  SymConst;
       InputPara_t InputPara;
+      HDF5_OutUser_t HDF5_OutUser;
 
       FillIn_KeyInfo  ( KeyInfo, NFieldStored );
       FillIn_Makefile ( Makefile );
       FillIn_SymConst ( SymConst );
       FillIn_InputPara( InputPara, NFieldStored, FieldLabelOut );
+      if ( HDF5_Output_User_Ptr != NULL )   HDF5_Output_User_Ptr( &HDF5_OutUser );
 
 
 //    3-2. create the HDF5 file (overwrite the existing file)
@@ -486,10 +488,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //    3-3-5. Output_User
       H5_SetID_HDF5OutUser = H5Gcreate( H5_GroupID_Info, "Output_User", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
       if ( H5_SetID_HDF5OutUser < 0 ) Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "Output_User" );
-      HDF5_OutUser_t *HDF5_OutUser = new HDF5_OutUser_t;
-      if ( HDF5_Output_User_Ptr != NULL )   HDF5_Output_User_Ptr( HDF5_OutUser );
-      H5_write_user( H5_SetID_HDF5OutUser, HDF5_OutUser );
-      delete HDF5_OutUser;
+      H5_write_user( H5_SetID_HDF5OutUser, &HDF5_OutUser );
       H5_Status            = H5Gclose( H5_SetID_HDF5OutUser );
 
       H5_Status = H5Gclose( H5_GroupID_Info );
