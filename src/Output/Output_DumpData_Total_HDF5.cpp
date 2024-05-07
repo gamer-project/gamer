@@ -14,7 +14,6 @@ static void GetCompound_Makefile ( hid_t &H5_TypeID );
 static void GetCompound_SymConst ( hid_t &H5_TypeID );
 static void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored );
 
-
 void (*HDF5_Output_User_Ptr)( HDF5_OutUser_t *HDF5_OutUser ) = NULL;
 static void H5_write_user( const hid_t H5_GroupID, const HDF5_OutUser_t *HDF5_OutUser );
 
@@ -495,7 +494,6 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
       H5_Status = H5Gclose( H5_GroupID_Info );
       H5_Status = H5Fclose( H5_FileID );
-
 
 //    3-4. free memory
       for (int lv=0; lv<NLEVEL-1; lv++)   free( InputPara.FlagTable_User[lv].p );
@@ -3727,14 +3725,14 @@ void H5_write_user( const hid_t H5_GroupID, const HDF5_OutUser_t *HDF5_OutUser )
       } // switch ( type )
 
       H5_SetID_Data = H5Dcreate( H5_GroupID, HDF5_OutUser->Key[i], H5_Type, H5_SpaceID_Scalar, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
-      if ( H5_SetID_Data < 0 ) printf("Error while creating the dataset\n");
+      if ( H5_SetID_Data < 0 )   printf("Error while creating the dataset\n");
 
-      if ( type == 8 )  H5_Status     = H5Dwrite( H5_SetID_Data, H5_Type, H5S_ALL, H5S_ALL, H5P_DEFAULT, &HDF5_OutUser->Ptr[i] );
-      else              H5_Status     = H5Dwrite( H5_SetID_Data, H5_Type, H5S_ALL, H5S_ALL, H5P_DEFAULT,  HDF5_OutUser->Ptr[i] );
-      if ( H5_Status < 0 ) printf("Error while storing type (%d)\n", type);
+      if ( type == 8 )   H5_Status = H5Dwrite( H5_SetID_Data, H5_Type, H5S_ALL, H5S_ALL, H5P_DEFAULT, &HDF5_OutUser->Ptr[i] );
+      else               H5_Status = H5Dwrite( H5_SetID_Data, H5_Type, H5S_ALL, H5S_ALL, H5P_DEFAULT,  HDF5_OutUser->Ptr[i] );
+      if ( H5_Status < 0 )   printf("Error while storing type (%d)\n", type);
 
       H5_Status     = H5Dclose( H5_SetID_Data );
-      if ( H5_Status < 0 ) printf("Error while closing the dataset\n");
+      if ( H5_Status < 0 )   printf("Error while closing the dataset\n");
    } // for (int i=0; i<HDF5_OutUser.NPara; i++)
 
    H5_Status = H5Tclose( H5_TypeID_VarStr  );
