@@ -1,4 +1,4 @@
-# problem-specific runtime parameters
+# parameters for Record__Center (only useful when OPT__RECORD_USER=1, now replaced by OPT__RECORD_CENTER=1)
 CM_MaxR                 1e30                   # maximum radius for determining CM
 CM_TolErrR             -1                      # maximum allowed errors for determining CM
 

@@ -207,6 +207,7 @@ void SetParameter()
    delete ReadPara;
 
 // (1-2) set the default values
+   if ( CM_TolErrR < 0.0 )   CM_TolErrR = 1.0*amr->dh[MAX_LEVEL];
 
 // (1-3) check the runtime parameters
 
@@ -388,7 +389,7 @@ void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
 // Function    :  GetCenterOfMass
 // Description :  Record the center of mass (CM)
 //
-// Note        :  1. Invoked by Record_EridanusII() recursively
+// Note        :  1. Invoked by Record_Max() recursively
 //                2. Only include cells within CM_MaxR from CM_Old[] when updating CM
 //
 // Parameter   :  CM_Old[] : Previous CM
@@ -542,7 +543,7 @@ void GetCenterOfMass( const double CM_Old[], double CM_New[], const double CM_Ma
 // Note        :  1. It will also record the real and imaginary parts associated with the maximum density
 //                2. For the center coordinates, it will record the position of maximum density, minimum potential,
 //                   and center-of-mass
-//                3. Output filenames are fixed to "Record__MaxDens" and "Record__Center"
+//                3. Output filenames are fixed to "Record__MaxDens_ELBDM_DiskHeating" and "Record__Center_ELBDM_DiskHeating"
 //
 // Parameter   :  None
 //
@@ -551,8 +552,8 @@ void GetCenterOfMass( const double CM_Old[], double CM_New[], const double CM_Ma
 void Record_Max()
 {
 
-   const char filename_max_dens[] = "Record__MaxDens";
-   const char filename_center  [] = "Record__Center";
+   const char filename_max_dens[] = "Record__MaxDens_ELBDM_DiskHeating";
+   const char filename_center  [] = "Record__Center_ELBDM_DiskHeating";
    const int  CountMPI            = 10;
 
    double dens, max_dens_loc=-__DBL_MAX__, max_dens_pos_loc[3], real_loc, imag_loc;
