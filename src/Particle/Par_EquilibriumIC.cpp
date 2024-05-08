@@ -335,19 +335,23 @@ void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllR
 
    double *Table_MassProf_r = NULL;
    double *Table_MassProf_M = NULL;
-   double  TotM, ParM, dr, RanM, RanR, EstM, ErrM, ErrM_Max=-1.0, RanVec[3];
-   double  Vmax, RanV, RanProb, Prob;
 
+   int Cloud_Rad_NBin_2;
+
+   if ( Cloud_Model == CLOUD_MODEL_TABLE )
+      Cloud_Rad_NBin_2 = Cloud_Rad_NBin-1;
+   else
+      Cloud_Rad_NBin_2 = Cloud_Rad_NBin;
 
    // determine the total enclosed mass within the maximum radius
-   TotM = getEnclosedMass( Cloud_MaxR );
-   ParM = TotM / (Cloud_Par_Num);
+   const double TotCloudMass = getEnclosedMass( Cloud_MaxR );
+   const double ParticleMass = TotCloudMass/Cloud_Par_Num;
 
    // construct the mass profile table
-   Table_MassProf_r = new double [Cloud_Rad_NBin];
-   Table_MassProf_M = new double [Cloud_Rad_NBin];
+   Table_MassProf_r = new double [Cloud_Rad_NBin_2];
+   Table_MassProf_M = new double [Cloud_Rad_NBin_2];
 
-   dr = Cloud_MaxR / (Cloud_Rad_NBin-1);
+   const double dr = Cloud_MaxR / (Cloud_Rad_NBin_2-1);
 
    for (int b=0; b<Cloud_Rad_NBin; b++)
    {
@@ -355,45 +359,64 @@ void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllR
       Table_MassProf_M[b] = getEnclosedMass( Table_MassProf_r[b] );
    }
 
+   printf( "T_r:    [" );
+   for (int b=0; b<10; b++)  printf(" %21.14e,", Table_MassProf_r[b] );
+   printf( " ... ");
+   for (int b=Cloud_Rad_NBin_2-10; b<Cloud_Rad_NBin_2; b++)  printf(" %21.14e,", Table_MassProf_r[b] );
+   printf( "]\n");
+
+   printf( "T_M:    [");
+   for (int b=0; b<10; b++)  printf(" %21.14e,", Table_MassProf_M[b] );
+   printf( " ... ");
+   for (int b=Cloud_Rad_NBin_2-10; b<Cloud_Rad_NBin_2; b++)  printf(" %21.14e,", Table_MassProf_M[b] );
+   printf( "]\n");
+
+
+   double  RandomSampleM;
+   double  RandomSampleR;
+   double  RandomSampleV;
+   double  ErrM_Max =-1.0;
+   double  RandomVectorR[3];
+   double  RandomVectorV[3];
+
    // set particle attributes
    for (long p=Par_Idx0; p<Par_Idx0+Cloud_Par_Num; p++)
    {
       // mass
-      Mass_AllRank[p] = ParM;
+      Mass_AllRank[p] = ParticleMass;
 
       // position
       // --> sample from the cumulative mass profile with linear interpolation
-      RanM = Random_Num_Gen->GetValue( 0, 0.0, 1.0 )*TotM;
-      RanR = Mis_InterpolateFromTable( Cloud_Rad_NBin, Table_MassProf_M, Table_MassProf_r, RanM );
+      RandomSampleM = TotCloudMass*Random_Num_Gen->GetValue( 0, 0.0, 1.0 );
+
+      if ( Cloud_Model == CLOUD_MODEL_TABLE )
+         RandomSampleR = Mis_InterpolateFromTable( Cloud_Rad_NBin_2, Table_MassProf_M, Table_MassProf_r, RandomSampleM );
+      else
+         RandomSampleR = Mis_InterpolateFromTable( Cloud_Rad_NBin, RadArray_EnclosedMass, RadArray_Radius, RandomSampleM );
 
       // record the maximum error
-      EstM     = getEnclosedMass( RanR );
-      ErrM     = fabs( (EstM-RanM)/RanM );
-      ErrM_Max = fmax( ErrM, ErrM_Max );
+      ErrM_Max = fmax( fabs( ( getEnclosedMass( RandomSampleR ) - RandomSampleM )/RandomSampleM ), ErrM_Max );
 
       // randomly set the position vector with a given radius
-      RanVec_FixRadius( RanR, RanVec );
-      for (int d=0; d<3; d++)    Pos_AllRank[d][p] = RanVec[d] + Cloud_Center[d];
+      RanVec_FixRadius( RandomSampleR, RandomVectorR );
+      for (int d=0; d<3; d++)   Pos_AllRank[d][p] = Cloud_Center[d]  + RandomVectorR[d];
 
       // check periodicity
       for (int d=0; d<3; d++)
-      {
-         if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )
-            Pos_AllRank[d][p] = FMOD( Pos_AllRank[d][p]+(real)amr->BoxSize[d], (real)amr->BoxSize[d] );
-      }
+         if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )   Pos_AllRank[d][p] = FMOD( Pos_AllRank[d][p]+(real)amr->BoxSize[d], (real)amr->BoxSize[d] );
 
       // velocity
-      RanV = Set_Velocity( RanR );
+      RandomSampleV = getRandomSampleVelocity( RandomSampleR );
 
-      // randomly set the velocity vector with the given amplitude (RanV*Vmax)
-      RanVec_FixRadius( RanV, RanVec );
-      for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + Cloud_BulkVel[d];
+      // randomly set the velocity vector with the given amplitude
+      RanVec_FixRadius( RandomSampleV, RandomVectorV );
+      for (int d=0; d<3; d++)   Vel_AllRank[d][p] = Cloud_BulkVel[d] + RandomVectorV[d];
 
    } // for (long p=0; p<NPar_AllRank; p++)
 
-   Aux_Message( stdout, "   Total enclosed mass within MaxR  = %13.7e\n",  TotM );
-   Aux_Message( stdout, "   Particle mass                    = %13.7e\n",  ParM );
-   Aux_Message( stdout, "   Maximum mass interpolation error = %13.7e\n",  ErrM_Max );
+   Aux_Message( stdout, "   Total enclosed mass within MaxR  = %13.7e\n",  TotCloudMass );
+   Aux_Message( stdout, "   Particle mass                    = %13.7e\n",  ParticleMass );
+   Aux_Message( stdout, "   Maximum mass interpolation error = %13.7e\n",  ErrM_Max     );
 
    // free memory
    delete [] Table_MassProf_r;
@@ -1039,7 +1062,7 @@ double Par_EquilibriumIC::getExternalPotential( const double r )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Set_Velocity
+// Function    :  getRandomSampleVelocity
 // Description :  Set the velocity of a particle at radius r
 //
 // Note        :
@@ -1048,61 +1071,50 @@ double Par_EquilibriumIC::getExternalPotential( const double r )
 //
 // Return      :  Particle velocity
 //-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::Set_Velocity( const double r )
+double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
 {
 
-   double index, sum = 0;
-   double psi_per = -getGraviPotential(r);
+   // TODO: use a table of probability and use interpolation
+   double TotalProbability = 0;
+   const double Psi = -getGraviPotential(r);
+
+   for (int k=0; k<Cloud_Eng_NBin; k++)
+   {
+      if ( EngArray_BindingEnergy[k] > Psi )   break;
+
+      TotalProbability += EngArray_DistriFunc[k]*sqrt( Psi-EngArray_BindingEnergy[k] )*EngArray_dBindingEnergy; //TODO: factor 2 in sqrt
+   }
+
+   double sum_mes        =  0;
+   double Fraction_dEng  =  0;
+   int RandomSampleIndex = -1;
+
+   const double RandomSampleProbability = TotalProbability*Random_Num_Gen->GetValue( 0, 0.0, 1.0 );
 
    for (int k=0; k<Cloud_Eng_NBin; k++)
    {
 
-      if ( EngArray_BindingEnergy[k] > psi_per )
+      if ( sum_mes > RandomSampleProbability )
       {
-         index = k-1;
+         RandomSampleIndex = k-1;
+         Fraction_dEng = (sum_mes-RandomSampleProbability)/( EngArray_DistriFunc[RandomSampleIndex]*sqrt( Psi-EngArray_BindingEnergy[RandomSampleIndex] )*EngArray_dBindingEnergy ); // TODO: (1 - ...)
          break;
       }
 
-      sum += EngArray_DistriFunc[k] *pow( psi_per-EngArray_BindingEnergy[k], 0.5 ) *EngArray_dBindingEnergy;
+      sum_mes += EngArray_DistriFunc[k]*sqrt( Psi-EngArray_BindingEnergy[k] )*EngArray_dBindingEnergy;
    }
 
-   double sum_rad, sum_mes=0, par, psi_ass;
-   int index_ass = 0;
+   if ( RandomSampleIndex < 0 )   RandomSampleIndex = Eng_LastIdx;
 
-   sum_rad = Random_Num_Gen->GetValue( 0, 0.0, 1.0 );
+   const double RandomSampleBindingEnergy = EngArray_BindingEnergy[RandomSampleIndex] + EngArray_dBindingEnergy*Fraction_dEng;
 
-   sum_rad *= sum;
+   const double RandomSampleKineticEnergy = 2*(Psi-RandomSampleBindingEnergy);
 
-   for (int k=0; k<Cloud_Eng_NBin; k++)
-   {
+   const double RandomSampleVelocity      = ( RandomSampleKineticEnergy < 0.0 ) ? 0 : sqrt( RandomSampleKineticEnergy );
 
-      if ( sum_mes > sum_rad )
-      {
-         index_ass = k-1;
-         par = (sum_mes-sum_rad)/( EngArray_DistriFunc[index_ass] *pow( psi_per-EngArray_BindingEnergy[index_ass], 0.5 ) *EngArray_dBindingEnergy );
-         break;
-      }
+   return RandomSampleVelocity;
 
-      sum_mes += EngArray_DistriFunc[k] *pow( psi_per-EngArray_BindingEnergy[k], 0.5 ) *EngArray_dBindingEnergy;
-
-      if ( k == Eng_LastIdx )
-         index_ass = Eng_LastIdx;
-   }
-
-   psi_ass = EngArray_BindingEnergy[index_ass] + EngArray_dBindingEnergy*par;
-
-   double kim = 2*(psi_per-psi_ass);
-
-   if ( kim < 0.0 )
-   {
-      return 0;
-   }
-
-   double v = pow( kim, 0.5 );
-
-   return v;
-
-} // FUNCTION : Set_Velocity
+} // FUNCTION : getRandomSampleVelocity
 
 
 

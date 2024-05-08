@@ -65,11 +65,11 @@ class Par_EquilibriumIC
       char   ExtPot_Table_Name[MAX_STRING];
 
       // Get physical attributes for cloud
-      double getEnclosedMass     ( const double r );
-      double getDensity          ( const double r );
-      double getExternalPotential( const double r );
-      double getGraviPotential   ( const double r );
-      double Set_Velocity        ( const double r );
+      double getEnclosedMass        ( const double r );
+      double getDensity             ( const double r );
+      double getExternalPotential   ( const double r );
+      double getGraviPotential      ( const double r );
+      double getRandomSampleVelocity( const double r );
 
       // Initialize arrays in energy space
       void Init_EngArray();
