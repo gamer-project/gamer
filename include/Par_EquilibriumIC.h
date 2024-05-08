@@ -4,18 +4,10 @@
 
 
 #include "GAMER.h"
-#include "vector"
-#include <iostream>
-#include <fstream>
-#include <sstream>
-using namespace std;
 
 //gsl library
 #ifdef SUPPORT_GSL
 #include <gsl/gsl_integration.h>
-#include <gsl/gsl_errno.h>
-#include <gsl/gsl_math.h>
-#include <gsl/gsl_roots.h>
 #endif
 
 
@@ -47,7 +39,6 @@ class Par_EquilibriumIC
       void Init();
       void Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx );
 
-
    private:
       char   Cloud_Type[MAX_STRING];
       int    Cloud_Model                     = -1;
@@ -60,6 +51,7 @@ class Par_EquilibriumIC
       long   Cloud_Par_Num                   = -1;
       double Cloud_MaxR                      = -1;
       int    Cloud_Rad_NBin                  = -1;
+      int    Cloud_Eng_NBin                  = -1;
       int    Cloud_RSeed                     = -1;
       int    AddExtPot                       =  0;
       char   ExtPot_Table_Name[MAX_STRING];
@@ -71,28 +63,11 @@ class Par_EquilibriumIC
       double getGraviPotential      ( const double r );
       double getRandomSampleVelocity( const double r );
 
-      // Initialize arrays in energy space
-      void Init_EngArray();
-
-      //  Add External Potential
-      void addExternalPotential();
-
-      // Auxiliary functions
-      void RandomVector_GivenLength( const double Length, double RandomVector[3] );
-
-      // Solve Eddington's equation
       double getIntegratedDistributionFunction( const double Psi_Min, const double Psi_Max, const int N_points );
 
-      int     Cloud_Eng_NBin             = -1;
-      double  EngArray_dBindingEnergy    = -1;
-      double  EngArray_MinBindingEnergy  = -1;
-      double  EngArray_MaxBindingEnergy  = -1;
-      double *EngArray_BindingEnergy;
-      double *EngArray_DistriFunc;
-      double *EngArray_IntegDistriFunc;
-      int     Eng_LastIdx;
+      // Auxiliary functions
+      void   RandomVector_GivenLength( const double Length, double RandomVector[3] );
 
-      // statistics
       void   SmoothArray( double* array_x, int index_start, int index_end );
 
       double ArrayCovariance( const double* array_x, const double* array_y,
@@ -115,6 +90,7 @@ class Par_EquilibriumIC
       double *InputTable_ExtPot_potential;
 
       // Arrays of radial distribution of properties of the cloud
+      void    setRadArray();
       double *RadArray_dr;
       double *RadArray_Radius;
       double *RadArray_Density;
@@ -126,14 +102,15 @@ class Par_EquilibriumIC
       double *RadArray_ExternalPotential;
       int     Rad_LastIdx;
 
-      void setRadArray_Radius();
-      void setRadArray_Density();
-      void setRadArray_EnclosedMass();
-      void setRadArray_DensitySlope();
-      void setRadArray_dRho_dPsi();
-      void setRadArray_GraviField();
-      void setRadArray_GraviPotential();
-      void setRadArray_ExternalPotential();
+      // Arrays in energy space
+      void    setEngArray();
+      double  EngArray_dBindingEnergy    = -1;
+      double  EngArray_MinBindingEnergy  = -1;
+      double  EngArray_MaxBindingEnergy  = -1;
+      double *EngArray_BindingEnergy;
+      double *EngArray_DistriFunc;
+      double *EngArray_IntegDistriFunc;
+      int     Eng_LastIdx;
 
       // Random number generator
       RandomNumber_t *Random_Num_Gen;
