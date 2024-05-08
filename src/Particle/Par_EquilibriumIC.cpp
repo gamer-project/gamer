@@ -398,7 +398,7 @@ void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllR
       ErrM_Max = fmax( fabs( ( getEnclosedMass( RandomSampleR ) - RandomSampleM )/RandomSampleM ), ErrM_Max );
 
       // randomly set the position vector with a given radius
-      RanVec_FixRadius( RandomSampleR, RandomVectorR );
+      RandomVector_GivenLength( RandomSampleR, RandomVectorR );
       for (int d=0; d<3; d++)   Pos_AllRank[d][p] = Cloud_Center[d]  + RandomVectorR[d];
 
       // check periodicity
@@ -409,7 +409,7 @@ void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllR
       RandomSampleV = getRandomSampleVelocity( RandomSampleR );
 
       // randomly set the velocity vector with the given amplitude
-      RanVec_FixRadius( RandomSampleV, RandomVectorV );
+      RandomVector_GivenLength( RandomSampleV, RandomVectorV );
       for (int d=0; d<3; d++)   Vel_AllRank[d][p] = Cloud_BulkVel[d] + RandomVectorV[d];
 
    } // for (long p=0; p<NPar_AllRank; p++)
@@ -1410,39 +1410,30 @@ void Par_EquilibriumIC::addExternalPotential()
 
 // Auxiliary functions
 //-------------------------------------------------------------------------------------------------------
-// Function    :  RanVec_FixRadius
-// Description :  Compute a random 3D vector with a fixed radius
+// Function    :  RandomVector_GivenLength
+// Description :  Compute a random 3D vector with a given length
 //
 // Note        :  Uniformly random sample in theta and phi does NOT give a uniformly random sample in 3D space
 //                --> Uniformly random sample in a 3D sphere and then normalize all vectors to the given radius
 //
-// Parameter   :  r      : Input radius
-//                RanVec : Array to store the random 3D vector
+// Parameter   :  Length       : Input vector length
+//                RandomVector : Array to store the random 3D vector
 //
-// Return      :  RanVec
+// Return      :  RandomVector
 //-------------------------------------------------------------------------------------------------------
-void Par_EquilibriumIC::RanVec_FixRadius( const double r, double RanVec[] )
+void Par_EquilibriumIC::RandomVector_GivenLength( const double Length, double RandomVector[3] )
 {
-
-   double Norm, RanR2;
-
    do
    {
-      RanR2 = 0.0;
+      for (int d=0; d<3; d++)   RandomVector[d] = Random_Num_Gen->GetValue( 0, -1.0, +1.0 );
+   }
+   while ( SQR(RandomVector[0]) + SQR(RandomVector[1]) + SQR(RandomVector[2]) > 1.0 );
 
-      for (int d=0; d<3; d++)
-      {
-         RanVec[d]  = Random_Num_Gen->GetValue( 0, -1.0, +1.0 );
-         RanR2     += SQR( RanVec[d] );
-      }
+   const double Normalization = Length / sqrt( SQR(RandomVector[0]) + SQR(RandomVector[1]) + SQR(RandomVector[2]) );
 
-   } while ( RanR2 > 1.0 );
+   for (int d=0; d<3; d++)   RandomVector[d] *= Normalization;
 
-   Norm = r / sqrt( RanR2 );
-
-   for (int d=0; d<3; d++)    RanVec[d] *= Norm;
-
-} // FUNCTION : RanVec_FixRadius
+} // FUNCTION : RandomVector_GivenLength
 
 
 

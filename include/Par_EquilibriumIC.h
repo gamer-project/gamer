@@ -78,7 +78,7 @@ class Par_EquilibriumIC
       void addExternalPotential();
 
       // Auxiliary functions
-      void RanVec_FixRadius( const double r, double RanVec[] );
+      void RandomVector_GivenLength( const double Length, double RandomVector[3] );
 
       // Solve Eddington's equation
       double getIntegratedDistributionFunction( const double Psi_Min, const double Psi_Max, const int N_points );
