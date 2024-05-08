@@ -1073,44 +1073,52 @@ double Par_EquilibriumIC::getExternalPotential( const double r )
 //-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
 {
-
-   // TODO: use a table of probability and use interpolation
-   double TotalProbability = 0;
    const double Psi = -getGraviPotential(r);
 
-   for (int k=0; k<Cloud_Eng_NBin; k++)
-   {
-      if ( EngArray_BindingEnergy[k] > Psi )   break;
+   double  Probability;
+   double *CumulativeProbability = NULL;
+   CumulativeProbability = new double [Cloud_Eng_NBin];
 
-      TotalProbability += EngArray_DistriFunc[k]*sqrt( Psi-EngArray_BindingEnergy[k] )*EngArray_dBindingEnergy; //TODO: factor 2 in sqrt
+   CumulativeProbability[0] = EngArray_DistriFunc[0]*sqrt( Psi-EngArray_BindingEnergy[0] )*EngArray_dBindingEnergy;
+   for (int k=1; k<Cloud_Eng_NBin; k++)
+   {
+      Probability = ( EngArray_BindingEnergy[k] > Psi ) ? 0 : EngArray_DistriFunc[k]*sqrt( Psi-EngArray_BindingEnergy[k] )*EngArray_dBindingEnergy; //TODO: factor 2 in sqrt
+      CumulativeProbability[k] = CumulativeProbability[k-1] + Probability;
    }
 
-   double sum_mes        =  0;
+   const double TotalProbability          = CumulativeProbability[Eng_LastIdx];
+   const double RandomSampleProbability   = TotalProbability*Random_Num_Gen->GetValue( 0, 0.0, 1.0 );
+
+   //const double RandomSampleBindingEnergy = Mis_InterpolateFromTable( Cloud_Eng_NBin, CumulativeProbability, EngArray_BindingEnergy, RandomSampleProbability );
+
+   //----------------------------
+   double SumProbability =  0;
    double Fraction_dEng  =  0;
    int RandomSampleIndex = -1;
 
-   const double RandomSampleProbability = TotalProbability*Random_Num_Gen->GetValue( 0, 0.0, 1.0 );
-
    for (int k=0; k<Cloud_Eng_NBin; k++)
    {
 
-      if ( sum_mes > RandomSampleProbability )
+      if ( SumProbability > RandomSampleProbability )
       {
          RandomSampleIndex = k-1;
-         Fraction_dEng = (sum_mes-RandomSampleProbability)/( EngArray_DistriFunc[RandomSampleIndex]*sqrt( Psi-EngArray_BindingEnergy[RandomSampleIndex] )*EngArray_dBindingEnergy ); // TODO: (1 - ...)
+         Fraction_dEng = (SumProbability-RandomSampleProbability)/( EngArray_DistriFunc[RandomSampleIndex]*sqrt( Psi-EngArray_BindingEnergy[RandomSampleIndex] )*EngArray_dBindingEnergy ); // TODO: (1 - ...)
          break;
       }
 
-      sum_mes += EngArray_DistriFunc[k]*sqrt( Psi-EngArray_BindingEnergy[k] )*EngArray_dBindingEnergy;
+      SumProbability += EngArray_DistriFunc[k]*sqrt( Psi-EngArray_BindingEnergy[k] )*EngArray_dBindingEnergy;
    }
 
    if ( RandomSampleIndex < 0 )   RandomSampleIndex = Eng_LastIdx;
 
    const double RandomSampleBindingEnergy = EngArray_BindingEnergy[RandomSampleIndex] + EngArray_dBindingEnergy*Fraction_dEng;
+   //----------------------------
 
    const double RandomSampleKineticEnergy = 2*(Psi-RandomSampleBindingEnergy);
 
    const double RandomSampleVelocity      = ( RandomSampleKineticEnergy < 0.0 ) ? 0 : sqrt( RandomSampleKineticEnergy );
+
+   delete [] CumulativeProbability;
 
    return RandomSampleVelocity;
 
