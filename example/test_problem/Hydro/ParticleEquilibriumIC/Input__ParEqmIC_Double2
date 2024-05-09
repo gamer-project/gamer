@@ -14,5 +14,6 @@ Cloud_ParNumRatio            0.5                    # particle number ratio
 Cloud_MaxR                   0.2                    # maximum radius for particles [0.375]
 Cloud_RSeed                  124                    # random seed for setting particle position and velocity (>=0) [123]
 Cloud_DensProfNBin           1000                   # number of radial bins in the mass profile table [1000]
+Cloud_EnergyNBin             1000                   # number of energy bins [1000]
 Cloud_AddExtPot              0                      # whether to add an external potential table [0]
 Cloud_ExtPotTable            NONE                   # External potential table filename.

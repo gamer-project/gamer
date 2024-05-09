@@ -20,6 +20,7 @@ static double   ParEqmIC_SmallGas;                                // negligibly 
        long    *ParEqmIC_Cloud_ParNum                     = NULL; // number of particles of each cloud
        double  *ParEqmIC_Cloud_MaxR                       = NULL; // maximum radius of each cloud
        int     *ParEqmIC_Cloud_DensProfNBin               = NULL; // number of bins of density profile of each cloud
+       int     *ParEqmIC_Cloud_EnergyNBin                 = NULL; // number of bins of distribution function
        int     *ParEqmIC_Cloud_RSeed                      = NULL; // random seed for particles of each cloud
        int     *ParEqmIC_Cloud_AddExtPot                  = NULL; // whether adding external potential for each cloud
        char   (*ParEqmIC_Cloud_ExtPotTable)[MAX_STRING]   = NULL; // input external potential table of each cloud
@@ -170,6 +171,7 @@ void SetParameter()
    ParEqmIC_Cloud_ParNum             = new long   [ParEqmIC_NumCloud];
    ParEqmIC_Cloud_MaxR               = new double [ParEqmIC_NumCloud];
    ParEqmIC_Cloud_DensProfNBin       = new int    [ParEqmIC_NumCloud];
+   ParEqmIC_Cloud_EnergyNBin         = new int    [ParEqmIC_NumCloud];
    ParEqmIC_Cloud_RSeed              = new int    [ParEqmIC_NumCloud];
    ParEqmIC_Cloud_AddExtPot          = new int    [ParEqmIC_NumCloud];
    ParEqmIC_Cloud_ExtPotTable        = new char   [ParEqmIC_NumCloud][MAX_STRING];
@@ -201,6 +203,7 @@ void SetParameter()
       ReadPara->Add( "Cloud_ParNumRatio",          &ParEqmIC_Cloud_ParNumRatio[i],          0.0,           0.0,              1.0               );
       ReadPara->Add( "Cloud_MaxR",                 &ParEqmIC_Cloud_MaxR[i],                 0.375,         Eps_double,       NoMax_double      );
       ReadPara->Add( "Cloud_DensProfNBin",         &ParEqmIC_Cloud_DensProfNBin[i],         1000,          2,                NoMax_int         );
+      ReadPara->Add( "Cloud_EnergyNBin",           &ParEqmIC_Cloud_EnergyNBin[i],           1000,          2,                NoMax_int         );
       ReadPara->Add( "Cloud_RSeed",                &ParEqmIC_Cloud_RSeed[i],                123,           0,                NoMax_int         );
       ReadPara->Add( "Cloud_AddExtPot",            &ParEqmIC_Cloud_AddExtPot[i],            0,             0,                1                 );
       ReadPara->Add( "Cloud_ExtPotTable",           ParEqmIC_Cloud_ExtPotTable[i],          NoDef_str,     Useless_str,      Useless_str       );
@@ -288,6 +291,8 @@ void SetParameter()
       if ( strcmp( ParEqmIC_Cloud_Type[i], "Table" ) != 0 )
       Aux_Message( stdout, "     number of radial bins in the dens profile = %d\n",     ParEqmIC_Cloud_DensProfNBin[i]       );
 
+      Aux_Message( stdout, "     number of bins in distribution function   = %d\n",     ParEqmIC_Cloud_EnergyNBin[i]         );
+
       Aux_Message( stdout, "     adding external potential                 = %d\n",     ParEqmIC_Cloud_AddExtPot[i]          );
       if ( ParEqmIC_Cloud_AddExtPot[i] )
       Aux_Message( stdout, "     external potential table file name        = %s\n",     ParEqmIC_Cloud_ExtPotTable[i]        );
@@ -364,6 +369,7 @@ void End_ParEqmIC()
    delete [] ParEqmIC_Cloud_ParNum;
    delete [] ParEqmIC_Cloud_MaxR;
    delete [] ParEqmIC_Cloud_DensProfNBin;
+   delete [] ParEqmIC_Cloud_EnergyNBin;
    delete [] ParEqmIC_Cloud_RSeed;
    delete [] ParEqmIC_Cloud_AddExtPot;
    delete [] ParEqmIC_Cloud_ExtPotTable;

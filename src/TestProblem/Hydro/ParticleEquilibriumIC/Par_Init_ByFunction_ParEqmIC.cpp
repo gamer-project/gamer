@@ -19,6 +19,7 @@ extern double  *ParEqmIC_Cloud_ParNumRatio;
 extern long    *ParEqmIC_Cloud_ParNum;
 extern double  *ParEqmIC_Cloud_MaxR;
 extern int     *ParEqmIC_Cloud_DensProfNBin;
+extern int     *ParEqmIC_Cloud_EnergyNBin;
 extern int     *ParEqmIC_Cloud_RSeed;
 extern int     *ParEqmIC_Cloud_AddExtPot;
 extern char   (*ParEqmIC_Cloud_ExtPotTable)[MAX_STRING];
@@ -115,12 +116,13 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
          Cloud_Constructor.setParticleParameters(    ParEqmIC_Cloud_ParNum            [i],
                                                      ParEqmIC_Cloud_MaxR              [i],
                                                      ParEqmIC_Cloud_DensProfNBin      [i],
+                                                     ParEqmIC_Cloud_EnergyNBin        [i],
                                                      ParEqmIC_Cloud_RSeed             [i] );
          Cloud_Constructor.setExternalPotential(     ParEqmIC_Cloud_AddExtPot         [i],
                                                      ParEqmIC_Cloud_ExtPotTable       [i] );
 
          // initialize the particle cloud
-         Cloud_Constructor.Init();
+         Cloud_Constructor.initialize();
 
 //       check whether the particle number of each cloud is reasonable
          if ( (Par_Idx0 + Cloud_Constructor.getParticleNumber()) > NPar_AllRank )
@@ -130,7 +132,7 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
          }
 
 //       set an equilibrium initial condition for each cloud
-         Cloud_Constructor.Par_SetEquilibriumIC( ParData_AllRank[PAR_MASS], ParData_AllRank+PAR_POSX, ParData_AllRank+PAR_VELX, Par_Idx0 );
+         Cloud_Constructor.constructParticles( ParData_AllRank[PAR_MASS], ParData_AllRank+PAR_POSX, ParData_AllRank+PAR_VELX, Par_Idx0 );
 
 //       update the particle index offset for the next cloud
          Par_Idx0 += Cloud_Constructor.getParticleNumber();
