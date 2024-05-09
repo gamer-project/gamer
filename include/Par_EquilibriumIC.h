@@ -32,12 +32,12 @@ class Par_EquilibriumIC
       void setModelParameters( const double Rho0, const double R0 );
       void setEinastoPowerFactor( const double EinastoPowerFactor );
       void setDensProfTableFilename( const char* DensProfTableFilename );
-      void setParticleParameters( const long ParNum, const double MaxR, const int ProfNBin, const int RSeed );
+      void setParticleParameters( const long ParNum, const double MaxR, const int Radial_NBin, const int Energy_NBin, const int RSeed );
       void setExternalPotential( const int AddingExternalPotential, const char* ExtPotTableFilename );
       long getParticleNumber( );
 
-      void Init();
-      void Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx );
+      void initialize();
+      void constructParticles( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx );
 
    private:
       char   Cloud_Type[MAX_STRING];
@@ -50,8 +50,6 @@ class Par_EquilibriumIC
       char   DensProf_Table_Name[MAX_STRING];
       long   Cloud_Par_Num                   = -1;
       double Cloud_MaxR                      = -1;
-      int    Cloud_Rad_NBin                  = -1;
-      int    Cloud_Eng_NBin                  = -1;
       int    Cloud_RSeed                     = -1;
       int    AddExtPot                       =  0;
       char   ExtPot_Table_Name[MAX_STRING];
@@ -59,7 +57,6 @@ class Par_EquilibriumIC
       // Get physical attributes for cloud
       double getEnclosedMass        ( const double r );
       double getDensity             ( const double r );
-      double getExternalPotential   ( const double r );
       double getGraviPotential      ( const double r );
       double getRandomSampleVelocity( const double r );
 
@@ -90,27 +87,28 @@ class Par_EquilibriumIC
       double *InputTable_ExtPot_potential;
 
       // Arrays of radial distribution of properties of the cloud
-      void    setRadArray();
-      double *RadArray_dr;
-      double *RadArray_Radius;
-      double *RadArray_Density;
-      double *RadArray_EnclosedMass;
-      double *RadArray_DensitySlope;
-      double *RadArray_dRho_dPsi;
-      double *RadArray_GraviField;
-      double *RadArray_GraviPotential;
-      double *RadArray_ExternalPotential;
-      int     Rad_LastIdx;
+      void    constructRadialArray();
+      double  RArray_dR = -1;
+      double *RArray_R;
+      double *RArray_Rho;
+      double *RArray_M_Enc;
+      double *RArray_dRho_dR;
+      double *RArray_dRho_dPsi;
+      double *RArray_G;
+      double *RArray_Phi;
+      int     RLastIdx    = -1;
+      int     RNBin       = -1;
 
       // Arrays in energy space
-      void    setEngArray();
-      double  EngArray_dBindingEnergy    = -1;
-      double  EngArray_MinBindingEnergy  = -1;
-      double  EngArray_MaxBindingEnergy  = -1;
-      double *EngArray_BindingEnergy;
-      double *EngArray_DistriFunc;
-      double *EngArray_IntegDistriFunc;
-      int     Eng_LastIdx;
+      void    constructEnergyArray();
+      double  EArray_dE   = -1;
+      double  EArray_MinE = -1;
+      double  EArray_MaxE = -1;
+      double *EArray_E;
+      double *EArray_DFunc;
+      double *EArray_IntDFunc;
+      int     ELastIdx    = -1;
+      int     ENBin       = -1;
 
       // Random number generator
       RandomNumber_t *Random_Num_Gen;
