@@ -33,7 +33,7 @@ class Par_EquilibriumIC
       void   setEinastoPowerFactor( const double EinastoPowerFactor );
       void   setDensProfTableFilename( const char* DensProfTableFilename );
       void   setParticleParameters( const long ParNum, const double MaxR, const int Radial_NBin, const int Energy_NBin, const int RSeed );
-      void   setExternalPotential( const int AddingExternalPotential, const char* ExtPotTableFilename );
+      void   setExternalPotential( const int AddingExternalPotential_Analytical, const int AddingExternalPotential_Table, const char* ExtPotTableFilename );
       long   getParticleNumber();
       double getTotCloudMass();
       double getParticleMass();
@@ -54,7 +54,8 @@ class Par_EquilibriumIC
       long   Cloud_Par_Num                   = -1;
       double Cloud_MaxR                      = -1;
       int    Cloud_RSeed                     = -1;
-      int    AddExtPot                       =  0;
+      int    AddExtPot_Analytical            =  0;
+      int    AddExtPot_Table                 =  0;
       char   ExtPot_Table_Name[MAX_STRING];
       double TotCloudMass                    = -1;
       double ParticleMass                    = -1;

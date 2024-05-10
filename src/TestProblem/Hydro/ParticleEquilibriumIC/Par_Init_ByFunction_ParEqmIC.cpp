@@ -21,7 +21,8 @@ extern double  *ParEqmIC_Cloud_MaxR;
 extern int     *ParEqmIC_Cloud_DensProfNBin;
 extern int     *ParEqmIC_Cloud_EnergyNBin;
 extern int     *ParEqmIC_Cloud_RSeed;
-extern int     *ParEqmIC_Cloud_AddExtPot;
+extern int     *ParEqmIC_Cloud_AddExtPotAnaly;
+extern int     *ParEqmIC_Cloud_AddExtPotTable;
 extern char   (*ParEqmIC_Cloud_ExtPotTable)[MAX_STRING];
 
 
@@ -118,7 +119,8 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
                                                      ParEqmIC_Cloud_DensProfNBin      [i],
                                                      ParEqmIC_Cloud_EnergyNBin        [i],
                                                      ParEqmIC_Cloud_RSeed             [i] );
-         Cloud_Constructor.setExternalPotential(     ParEqmIC_Cloud_AddExtPot         [i],
+         Cloud_Constructor.setExternalPotential(     ParEqmIC_Cloud_AddExtPotAnaly    [i],
+                                                     ParEqmIC_Cloud_AddExtPotTable    [i],
                                                      ParEqmIC_Cloud_ExtPotTable       [i] );
 
          // initialize the particle cloud

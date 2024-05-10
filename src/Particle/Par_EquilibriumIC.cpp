@@ -31,7 +31,7 @@ Par_EquilibriumIC::~Par_EquilibriumIC()
       delete [] InputTable_DensProf_enclosedmass;
    }
 
-   if ( AddExtPot )
+   if ( AddExtPot_Table )
    {
       delete [] InputTable_ExtPot_radius;
       delete [] InputTable_ExtPot_potential;
@@ -119,11 +119,15 @@ double Par_EquilibriumIC::getMaxMassError()
 }
 
 
-void Par_EquilibriumIC::setExternalPotential( const int AddingExternalPotential, const char* ExtPotTableFilename )
+void Par_EquilibriumIC::setExternalPotential( const int AddingExternalPotential_Analytical, const int AddingExternalPotential_Table, const char* ExtPotTableFilename )
 {
-   AddExtPot = AddingExternalPotential;
+   AddExtPot_Analytical = AddingExternalPotential_Analytical;
+   AddExtPot_Table      = AddingExternalPotential_Table;
 
-   if ( AddExtPot )   strcpy( ExtPot_Table_Name, ExtPotTableFilename );
+   if ( AddExtPot_Analytical  &&  AddExtPot_Table )
+      Aux_Error( ERROR_INFO, "AddExtPot_Analytical and AddExtPot_Table in Par_EquilibriumIC cannot both be turned on !!\n" );
+
+   if ( AddExtPot_Table )   strcpy( ExtPot_Table_Name, ExtPotTableFilename );
 }
 
 
@@ -221,7 +225,7 @@ void Par_EquilibriumIC::initialize()
 
    // Load the input density table
    if ( Cloud_Model == CLOUD_MODEL_TABLE )   loadInputDensProfTable();
-   if ( AddExtPot )                          loadInputExtPotTable();
+   if ( AddExtPot_Table )                    loadInputExtPotTable();
 
    if ( RNBin < 2 )   Aux_Error( ERROR_INFO, "RNBin = %d is less than 2 !!\n", RNBin );
 
@@ -847,6 +851,24 @@ double MassIntegrand_Einasto( const double r, void* parameters )
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalExternalPotential
+// Description :  Analytical external potential
+//
+// Note        :
+//
+// Parameter   :  r                    : input radius
+//
+// Return      :  external potential at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalExternalPotential( const double r )
+{
+   return 0.0;
+
+} // FUNCTION : AnalyticalExternalPotential
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :
 // Description :
 //
@@ -1154,8 +1176,10 @@ void Par_EquilibriumIC::constructRadialArray()
    RArray_Phi[0] = RArray_Phi[1];
 
 
-   if ( AddExtPot )
-   for (int b=0; b<RNBin; b++)   RArray_Phi[b] += ExtendedInterpolatedTable( RArray_R[b], InputTable_ExtPot_nbin, InputTable_ExtPot_radius, InputTable_ExtPot_potential );
+   if ( AddExtPot_Table )
+      for (int b=0; b<RNBin; b++)   RArray_Phi[b] += ExtendedInterpolatedTable( RArray_R[b], InputTable_ExtPot_nbin, InputTable_ExtPot_radius, InputTable_ExtPot_potential );
+   else if ( AddExtPot_Analytical )
+      for (int b=0; b<RNBin; b++)   RArray_Phi[b] += AnalyticalExternalPotential( RArray_R[b] );
 
    // dRho_dPsi
    for (int b=0; b<RNBin; b++)   RArray_dRho_dPsi[b] = RArray_dRho_dR[b]/RArray_G[b];

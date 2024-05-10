@@ -22,7 +22,8 @@ static double   ParEqmIC_SmallGas;                                // negligibly 
        int     *ParEqmIC_Cloud_DensProfNBin               = NULL; // number of bins of density profile of each cloud
        int     *ParEqmIC_Cloud_EnergyNBin                 = NULL; // number of bins of distribution function
        int     *ParEqmIC_Cloud_RSeed                      = NULL; // random seed for particles of each cloud
-       int     *ParEqmIC_Cloud_AddExtPot                  = NULL; // whether adding external potential for each cloud
+       int     *ParEqmIC_Cloud_AddExtPotAnaly             = NULL; // whether adding analytical external potential for each cloud
+       int     *ParEqmIC_Cloud_AddExtPotTable             = NULL; // whether adding table external potential for each cloud
        char   (*ParEqmIC_Cloud_ExtPotTable)[MAX_STRING]   = NULL; // input external potential table of each cloud
 // =======================================================================================
 
@@ -173,7 +174,8 @@ void SetParameter()
    ParEqmIC_Cloud_DensProfNBin       = new int    [ParEqmIC_NumCloud];
    ParEqmIC_Cloud_EnergyNBin         = new int    [ParEqmIC_NumCloud];
    ParEqmIC_Cloud_RSeed              = new int    [ParEqmIC_NumCloud];
-   ParEqmIC_Cloud_AddExtPot          = new int    [ParEqmIC_NumCloud];
+   ParEqmIC_Cloud_AddExtPotAnaly     = new int    [ParEqmIC_NumCloud];
+   ParEqmIC_Cloud_AddExtPotTable     = new int    [ParEqmIC_NumCloud];
    ParEqmIC_Cloud_ExtPotTable        = new char   [ParEqmIC_NumCloud][MAX_STRING];
 
    for (int i=0; i<ParEqmIC_NumCloud; i++)
@@ -205,7 +207,8 @@ void SetParameter()
       ReadPara->Add( "Cloud_DensProfNBin",         &ParEqmIC_Cloud_DensProfNBin[i],         1000,          2,                NoMax_int         );
       ReadPara->Add( "Cloud_EnergyNBin",           &ParEqmIC_Cloud_EnergyNBin[i],           1000,          2,                NoMax_int         );
       ReadPara->Add( "Cloud_RSeed",                &ParEqmIC_Cloud_RSeed[i],                123,           0,                NoMax_int         );
-      ReadPara->Add( "Cloud_AddExtPot",            &ParEqmIC_Cloud_AddExtPot[i],            0,             0,                1                 );
+      ReadPara->Add( "Cloud_AddExtPotAnaly",       &ParEqmIC_Cloud_AddExtPotAnaly[i],       0,             0,                1                 );
+      ReadPara->Add( "Cloud_AddExtPotTable",       &ParEqmIC_Cloud_AddExtPotTable[i],       0,             0,                1                 );
       ReadPara->Add( "Cloud_ExtPotTable",           ParEqmIC_Cloud_ExtPotTable[i],          NoDef_str,     Useless_str,      Useless_str       );
 
       ReadPara->Read( ParEqmIC_Cloud_ParaFilenames[i] );
@@ -235,7 +238,7 @@ void SetParameter()
          Aux_Error( ERROR_INFO, "ParEqmIC_Cloud_DensityTable %s for cloud_%d cannot be found !!\n", ParEqmIC_Cloud_DensityTable[i], i+1 );
 
       // (2-5) Check Cloud_ExtPotTable
-      if ( ParEqmIC_Cloud_AddExtPot[i]  &&  !Aux_CheckFileExist( ParEqmIC_Cloud_ExtPotTable[i] ) )
+      if ( ParEqmIC_Cloud_AddExtPotTable[i]  &&  !Aux_CheckFileExist( ParEqmIC_Cloud_ExtPotTable[i] ) )
          Aux_Error( ERROR_INFO, "ParEqmIC_Cloud_ExtPotTable %s for cloud_%d cannot be found !!\n", ParEqmIC_Cloud_ExtPotTable[i], i+1 );
 
    } // for (int i=0; i<ParEqmIC_NumCloud; i++)
@@ -293,8 +296,9 @@ void SetParameter()
 
       Aux_Message( stdout, "     number of bins in distribution function   = %d\n",     ParEqmIC_Cloud_EnergyNBin[i]         );
 
-      Aux_Message( stdout, "     adding external potential                 = %d\n",     ParEqmIC_Cloud_AddExtPot[i]          );
-      if ( ParEqmIC_Cloud_AddExtPot[i] )
+      Aux_Message( stdout, "     adding external potential analytical      = %d\n",     ParEqmIC_Cloud_AddExtPotAnaly[i]     );
+      Aux_Message( stdout, "     adding external potential table           = %d\n",     ParEqmIC_Cloud_AddExtPotTable[i]     );
+      if ( ParEqmIC_Cloud_AddExtPotTable[i] )
       Aux_Message( stdout, "     external potential table file name        = %s\n",     ParEqmIC_Cloud_ExtPotTable[i]        );
 
       }
@@ -371,7 +375,8 @@ void End_ParEqmIC()
    delete [] ParEqmIC_Cloud_DensProfNBin;
    delete [] ParEqmIC_Cloud_EnergyNBin;
    delete [] ParEqmIC_Cloud_RSeed;
-   delete [] ParEqmIC_Cloud_AddExtPot;
+   delete [] ParEqmIC_Cloud_AddExtPotAnaly;
+   delete [] ParEqmIC_Cloud_AddExtPotTable;
    delete [] ParEqmIC_Cloud_ExtPotTable;
 
 } // FUNCTION : End_ParEqmIC
