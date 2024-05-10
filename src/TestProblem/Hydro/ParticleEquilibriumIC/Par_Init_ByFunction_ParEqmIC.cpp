@@ -103,10 +103,10 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
          Par_EquilibriumIC Cloud_Constructor( ParEqmIC_Cloud_Type[i] );
 
          // Set the parameters for each particle cloud
-         Cloud_Constructor.setCenter(                ParEqmIC_Cloud_Center            [i][0],
+         Cloud_Constructor.setCenterAndBulkVel(      ParEqmIC_Cloud_Center            [i][0],
                                                      ParEqmIC_Cloud_Center            [i][1],
-                                                     ParEqmIC_Cloud_Center            [i][2] );
-         Cloud_Constructor.setBulkVel(               ParEqmIC_Cloud_BulkVel           [i][0],
+                                                     ParEqmIC_Cloud_Center            [i][2],
+                                                     ParEqmIC_Cloud_BulkVel           [i][0],
                                                      ParEqmIC_Cloud_BulkVel           [i][1],
                                                      ParEqmIC_Cloud_BulkVel           [i][2] );
          Cloud_Constructor.setModelParameters(       ParEqmIC_Cloud_Rho0              [i],
@@ -133,6 +133,10 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
 
 //       set an equilibrium initial condition for each cloud
          Cloud_Constructor.constructParticles( ParData_AllRank[PAR_MASS], ParData_AllRank+PAR_POSX, ParData_AllRank+PAR_VELX, Par_Idx0 );
+
+         Aux_Message( stdout, "   Total enclosed mass within MaxR  = %13.7e\n",  Cloud_Constructor.getTotCloudMass() );
+         Aux_Message( stdout, "   Particle mass                    = %13.7e\n",  Cloud_Constructor.getParticleMass() );
+         Aux_Message( stdout, "   Maximum mass interpolation error = %13.7e\n",  Cloud_Constructor.getMaxMassError() );
 
 //       update the particle index offset for the next cloud
          Par_Idx0 += Cloud_Constructor.getParticleNumber();

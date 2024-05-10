@@ -53,16 +53,13 @@ Par_EquilibriumIC::~Par_EquilibriumIC()
 }
 
 
-void Par_EquilibriumIC::setCenter( const double Center_X, const double Center_Y, const double Center_Z )
+void Par_EquilibriumIC::setCenterAndBulkVel( const double Center_X, const double Center_Y, const double Center_Z,
+                                             const double BulkVel_X, const double BulkVel_Y, const double BulkVel_Z )
 {
-   Cloud_Center[0] = Center_X;
-   Cloud_Center[1] = Center_Y;
-   Cloud_Center[2] = Center_Z;
-}
+   Cloud_Center[0]  = Center_X;
+   Cloud_Center[1]  = Center_Y;
+   Cloud_Center[2]  = Center_Z;
 
-
-void Par_EquilibriumIC::setBulkVel( const double BulkVel_X, const double BulkVel_Y, const double BulkVel_Z )
-{
    Cloud_BulkVel[0] = BulkVel_X;
    Cloud_BulkVel[1] = BulkVel_Y;
    Cloud_BulkVel[2] = BulkVel_Z;
@@ -104,6 +101,24 @@ long Par_EquilibriumIC::getParticleNumber()
 }
 
 
+double Par_EquilibriumIC::getTotCloudMass()
+{
+   return TotCloudMass;
+}
+
+
+double Par_EquilibriumIC::getParticleMass()
+{
+   return ParticleMass;
+}
+
+
+double Par_EquilibriumIC::getMaxMassError()
+{
+   return MaxMassError;
+}
+
+
 void Par_EquilibriumIC::setExternalPotential( const int AddingExternalPotential, const char* ExtPotTableFilename )
 {
    AddExtPot = AddingExternalPotential;
@@ -114,7 +129,7 @@ void Par_EquilibriumIC::setExternalPotential( const int AddingExternalPotential,
 
 void Par_EquilibriumIC::loadInputDensProfTable()
 {
-   Aux_Message( stdout, "Loading Density Profile Table: %s\n", DensProf_Table_Name );
+   if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading Density Profile Table: \"%s\" ...\n", DensProf_Table_Name );
 
    const int  Col_R[1] = {0};   // target column: radius
    const int  Col_D[1] = {1};   // target column: density
@@ -155,12 +170,14 @@ void Par_EquilibriumIC::loadInputDensProfTable()
 
       InputTable_DensProf_enclosedmass[b] = InputTable_DensProf_enclosedmass[b-1] + 4*M_PI*SQR(r_mid)*rho_mid*dr;
    }
+
+   if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading Density Profile Table: \"%s\" ... done\n", DensProf_Table_Name );
 }
 
 
 void Par_EquilibriumIC::loadInputExtPotTable()
 {
-   Aux_Message( stdout, "Loading ExtPot Profile Table: %s\n", ExtPot_Table_Name );
+   if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading ExtPot Profile Table: %s ...\n", ExtPot_Table_Name );
 
    const int  Col_R[1] = {0};   // target column: radius
    const int  Col_P[1] = {1};   // target column: potential
@@ -174,6 +191,8 @@ void Par_EquilibriumIC::loadInputExtPotTable()
                              NRowP, NRowR, ExtPot_Table_Name );
    else
       InputTable_ExtPot_nbin = NRowR;
+
+   if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading ExtPot Profile Table: \"%s\" ... done\n", ExtPot_Table_Name );
 }
 
 
@@ -193,6 +212,8 @@ void Par_EquilibriumIC::initialize()
 #  ifndef SUPPORT_GSL
    Aux_Error( ERROR_INFO, "Must enable SUPPORT_GSL for Par_EquilibriumIC !!\n" );
 #  endif
+
+   if ( MPI_Rank == 0 )   Aux_Message( stdout, "Initializing Par_EquilibriumIC ...\n" );
 
    // Set random seeds
    Random_Num_Gen = new RandomNumber_t( 1 );
@@ -265,6 +286,8 @@ void Par_EquilibriumIC::initialize()
    printf( "]\n");
    //----------------------------------------------------------------------------------------------
 
+   if ( MPI_Rank == 0 )   Aux_Message( stdout, "Initializing Par_EquilibriumIC ... done\n" );
+
 } // FUNCTION : initialize
 
 
@@ -285,6 +308,8 @@ void Par_EquilibriumIC::initialize()
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::constructParticles( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx0 )
 {
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Constructing Par_EquilibriumIC ...\n" );
+
    // TODO: remove them
    //------------------------------------------------------------------------------------------
    int RNBin_2;
@@ -314,15 +339,14 @@ void Par_EquilibriumIC::constructParticles( real *Mass_AllRank, real *Pos_AllRan
 
 
    // determine the total enclosed mass within the maximum radius
-   const double TotCloudMass = getEnclosedMass( Cloud_MaxR );
-   const double ParticleMass = TotCloudMass/Cloud_Par_Num;
+   TotCloudMass = getEnclosedMass( Cloud_MaxR );
+   ParticleMass = TotCloudMass/Cloud_Par_Num;
 
    double  RandomSampleM;
    double  RandomSampleR;
    double  RandomSampleV;
    double  RandomVectorR[3];
    double  RandomVectorV[3];
-   double  ErrM_Max = -1.0;
 
    // set particle attributes
    for (long p=Par_Idx0; p<Par_Idx0+Cloud_Par_Num; p++)
@@ -354,17 +378,15 @@ void Par_EquilibriumIC::constructParticles( real *Mass_AllRank, real *Pos_AllRan
          if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )   Pos_AllRank[d][p] = FMOD( Pos_AllRank[d][p]+(real)amr->BoxSize[d], (real)amr->BoxSize[d] );
 
       // record the maximum error
-      ErrM_Max = fmax( fabs( ( getEnclosedMass( RandomSampleR ) - RandomSampleM )/RandomSampleM ), ErrM_Max );
+      MaxMassError = fmax( fabs( ( getEnclosedMass( RandomSampleR ) - RandomSampleM )/RandomSampleM ), MaxMassError );
 
    } // for (long p=Par_Idx0; p<Par_Idx0+Cloud_Par_Num; p++)
-
-   Aux_Message( stdout, "   Total enclosed mass within MaxR  = %13.7e\n",  TotCloudMass );
-   Aux_Message( stdout, "   Particle mass                    = %13.7e\n",  ParticleMass );
-   Aux_Message( stdout, "   Maximum mass interpolation error = %13.7e\n",  ErrM_Max     );
 
    // free memory
    delete [] Table_MassProf_r;
    delete [] Table_MassProf_M;
+
+   if ( MPI_Rank == 0 )   Aux_Message( stdout, "Constructing Par_EquilibriumIC ... done\n" );
 
 } // FUNCTION : constructParticle
 

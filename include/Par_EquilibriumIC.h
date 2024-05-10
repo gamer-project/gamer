@@ -27,17 +27,20 @@ class Par_EquilibriumIC
       Par_EquilibriumIC( const char* Type );
       virtual ~Par_EquilibriumIC();
 
-      void setCenter( const double Center_X, const double Center_Y, const double Center_Z );
-      void setBulkVel( const double BulkVel_X, const double BulkVel_Y, const double BulkVel_Z );
-      void setModelParameters( const double Rho0, const double R0 );
-      void setEinastoPowerFactor( const double EinastoPowerFactor );
-      void setDensProfTableFilename( const char* DensProfTableFilename );
-      void setParticleParameters( const long ParNum, const double MaxR, const int Radial_NBin, const int Energy_NBin, const int RSeed );
-      void setExternalPotential( const int AddingExternalPotential, const char* ExtPotTableFilename );
-      long getParticleNumber( );
+      void   setCenterAndBulkVel( const double Center_X, const double Center_Y, const double Center_Z,
+                                  const double BulkVel_X, const double BulkVel_Y, const double BulkVel_Z );
+      void   setModelParameters( const double Rho0, const double R0 );
+      void   setEinastoPowerFactor( const double EinastoPowerFactor );
+      void   setDensProfTableFilename( const char* DensProfTableFilename );
+      void   setParticleParameters( const long ParNum, const double MaxR, const int Radial_NBin, const int Energy_NBin, const int RSeed );
+      void   setExternalPotential( const int AddingExternalPotential, const char* ExtPotTableFilename );
+      long   getParticleNumber();
+      double getTotCloudMass();
+      double getParticleMass();
+      double getMaxMassError();
 
-      void initialize();
-      void constructParticles( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx );
+      void   initialize();
+      void   constructParticles( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx );
 
    private:
       char   Cloud_Type[MAX_STRING];
@@ -53,6 +56,9 @@ class Par_EquilibriumIC
       int    Cloud_RSeed                     = -1;
       int    AddExtPot                       =  0;
       char   ExtPot_Table_Name[MAX_STRING];
+      double TotCloudMass                    = -1;
+      double ParticleMass                    = -1;
+      double MaxMassError                    = -1;
 
       // Get physical attributes for cloud
       double getEnclosedMass        ( const double r );
