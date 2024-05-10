@@ -121,6 +121,15 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "currently the check \"%s\" must work with \"%s\" !!\n",
                  "OPT__CK_REFINE", "OPT__FLAG_RHO" );
 
+   if ( OPT__RECORD_CENTER  &&  COM_CEN_X > amr->BoxSize[0] )
+      Aux_Error( ERROR_INFO, "incorrect COM_CEN_X = %lf (out of range [X<=%lf]) !!\n", COM_CEN_X, amr->BoxSize[0] );
+
+   if ( OPT__RECORD_CENTER  &&  COM_CEN_Y > amr->BoxSize[1] )
+      Aux_Error( ERROR_INFO, "incorrect COM_CEN_Y = %lf (out of range [Y<=%lf]) !!\n", COM_CEN_Z, amr->BoxSize[1] );
+
+   if ( OPT__RECORD_CENTER  &&  COM_CEN_Z > amr->BoxSize[2] )
+      Aux_Error( ERROR_INFO, "incorrect COM_CEN_Z = %lf (out of range [Z<=%lf]) !!\n", COM_CEN_Z, amr->BoxSize[2] );
+
 #  if   ( MODEL == HYDRO )
 #  ifndef COSMIC_RAY
    const bool OPT__FLAG_LOHNER_CRAY = false;
@@ -332,7 +341,12 @@ void Aux_Check_Parameter()
 #  endif
 
    if ( OPT__OUTPUT_TOTAL == OUTPUT_FORMAT_CBINARY )
+   {
       Aux_Message( stderr, "WARNING : OPT__OUTPUT_TOTAL = 2 (C-binary) is deprecated !!\n" );
+#     if ( ( defined PARTICLE ) && ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) ) )
+      Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for OPT__OUTPUT_TOTAL=2 (C-binary) !!\n" );
+#     endif
+   }
 
    if ( !OPT__OUTPUT_TOTAL  &&  !OPT__OUTPUT_PART  &&  !OPT__OUTPUT_USER  &&  !OPT__OUTPUT_BASEPS )
 #  ifdef PARTICLE

@@ -44,7 +44,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
 //    skip inactive, massless, and tracer particles
-      if ( amr->Par->Mass[p] > (real)0.0  &&  amr->Par->Type[p] != PTYPE_TRACER )
+      if ( amr->Par->Mass[p] > (real_par)0.0  &&  amr->Par->Type[p] != PTYPE_TRACER )
       {
          Mass_ThisRank += amr->Par->Mass[p];
          MomX_ThisRank += amr->Par->Mass[p]*amr->Par->VelX[p];
@@ -71,23 +71,23 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
 
 // 2. potential energy
 #  ifdef GRAVITY
-   const ParInterp_t IntScheme  = amr->Par->Interp;
-   const bool UsePot            = ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT );
-   const bool IntPhase_No       = false;
-   const bool DE_Consistency_No = false;
-   const real MinDens_No        = -1.0;
-   const real MinPres_No        = -1.0;
-   const real MinTemp_No        = -1.0;
-   const real MinEntr_No        = -1.0;
+   const ParInterp_t IntScheme      = amr->Par->Interp;
+   const bool UsePot                = ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT );
+   const bool IntPhase_No           = false;
+   const bool DE_Consistency_No     = false;
+   const real MinDens_No            = -1.0;
+   const real MinPres_No            = -1.0;
+   const real MinTemp_No            = -1.0;
+   const real MinEntr_No            = -1.0;
 
-   const int  PotGhost          = amr->Par->GhostSize;
-   const int  PotSize           = PS1 + 2*PotGhost;
+   const int  PotGhost              = amr->Par->GhostSize;
+   const int  PotSize               = PS1 + 2*PotGhost;
 
-   const real *Pos[3]           = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-   const real *Mass             = amr->Par->Mass;
-   const real *PType            = amr->Par->Type;
+   const real_par *Pos[3]           = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   const real_par *Mass             = amr->Par->Mass;
+   const real_par *PType            = amr->Par->Type;
 
-   double Ep_ThisRank = 0.0;
+   double Ep_ThisRank               = 0.0;
    double PrepPotTime, dh, _dh, Ep_Coeff;
    int    PotSg;
 
@@ -216,7 +216,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                   {
                      ParID = amr->patch[0][lv][PID]->ParList[p];
 
-                     if ( PType[ParID] == PTYPE_TRACER  ||  Mass[ParID] <= (real)0.0 )
+                     if ( PType[ParID] == PTYPE_TRACER  ||  Mass[ParID] <= (real_par)0.0 )
                         continue;
 
 //                   calculate the nearest grid index
@@ -228,7 +228,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                         if ( idx[d] < 0 )
                         {
 #                          ifdef DEBUG_PARTICLE
-                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
+                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
                            Aux_Error( ERROR_INFO, "index outside the pot array (pos[%d] %14.7e, EdgeL %14.7e, idx %d) !!\n",
                                       d, Pos[d][ParID], amr->patch[0][lv][PID]->EdgeL[d], idx[d] );
 #                          endif
@@ -239,7 +239,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                         else if ( idx[d] >= PotSize )
                         {
 #                          ifdef DEBUG_PARTICLE
-                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
+                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
                               Aux_Error( ERROR_INFO, "index outside the pot array (pos[%d] %14.7e, EdgeR %14.7e, idx %d) !!\n",
                                          d, Pos[d][ParID], amr->patch[0][lv][PID]->EdgeR[d], idx[d] );
 #                          endif
@@ -266,7 +266,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                   {
                      ParID = amr->patch[0][lv][PID]->ParList[p];
 
-                     if ( PType[ParID] == PTYPE_TRACER  ||  Mass[ParID] <= (real)0.0 )
+                     if ( PType[ParID] == PTYPE_TRACER  ||  Mass[ParID] <= (real_par)0.0 )
                         continue;
 
                      for (int d=0; d<3; d++)
@@ -282,7 +282,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                         if ( idxLR[0][d] < 0 )
                         {
 #                          ifdef DEBUG_PARTICLE
-                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
+                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
                            Aux_Error( ERROR_INFO, "index outside the pot array (pos[%d] %14.7e, EdgeL %14.7e, idxL %d, idxR %d) !!\n",
                                       d, Pos[d][ParID], amr->patch[0][lv][PID]->EdgeL[d], idxLR[0][d], idxLR[1][d] );
 #                          endif
@@ -294,7 +294,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                         else if ( idxLR[1][d] >= PotSize )
                         {
 #                          ifdef DEBUG_PARTICLE
-                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
+                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
                            Aux_Error( ERROR_INFO, "index outside the pot array (pos[%d] %14.7e, EdgeR %14.7e, idxL %d, idxR %d) !!\n",
                                       d, Pos[d][ParID], amr->patch[0][lv][PID]->EdgeR[d], idxLR[0][d], idxLR[1][d] );
 #                          endif
@@ -330,7 +330,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                   {
                      ParID = amr->patch[0][lv][PID]->ParList[p];
 
-                     if ( PType[ParID] == PTYPE_TRACER  ||  Mass[ParID] <= (real)0.0 )
+                     if ( PType[ParID] == PTYPE_TRACER  ||  Mass[ParID] <= (real_par)0.0 )
                         continue;
 
                      for (int d=0; d<3; d++)
@@ -346,7 +346,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                         if ( idxLCR[0][d] < 0 )
                         {
 #                          ifdef DEBUG_PARTICLE
-                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
+                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
                            Aux_Error( ERROR_INFO, "index outside the pot array (pos[%d] %14.7e, EdgeL %14.7e, idxL %d, idxR %d) !!\n",
                                       d, Pos[d][ParID], amr->patch[0][lv][PID]->EdgeL[d], idxLCR[0][d], idxLCR[2][d] );
 #                          endif
@@ -359,7 +359,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                         else if ( idxLCR[2][d] >= PotSize )
                         {
 #                          ifdef DEBUG_PARTICLE
-                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
+                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
                            Aux_Error( ERROR_INFO, "index outside the pot array (pos[%d] %14.7e, EdgeR %14.7e, idxL %d, idxR %d) !!\n",
                                       d, Pos[d][ParID], amr->patch[0][lv][PID]->EdgeR[d], idxLCR[0][d], idxLCR[2][d] );
 #                          endif

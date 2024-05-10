@@ -266,6 +266,7 @@ static real EoS_DensPres2CSqr_TaubMathews( const real Dens, const real Pres, con
 } // FUNCTION : EoS_DensPres2CSqr_TaubMathews
 
 
+
 #ifdef COSMIC_RAY
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_CREint2CRPres_TaubMathews

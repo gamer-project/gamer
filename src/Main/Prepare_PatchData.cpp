@@ -866,7 +866,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                 endif
                   const bool CheckMinEint_No = false; // floor value is not supported for now
                   Data1PG_CC_Ptr[Idx1] = Hydro_Con2Eint( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
-                                                         FluidForEoS[MOMZ], FluidForEoS[ENGY], 
+                                                         FluidForEoS[MOMZ], FluidForEoS[ENGY],
                                                          CheckMinEint_No, NULL_REAL, Emag,
                                                          EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
@@ -883,7 +883,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      Data1PG_CC_Ptr[Idx1] =
                         FluWeighting     *Data1PG_CC_Ptr[Idx1]
                       + FluWeighting_IntT*Hydro_Con2Eint( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
-                                                          FluidForEoS[MOMZ], FluidForEoS[ENGY], 
+                                                          FluidForEoS[MOMZ], FluidForEoS[ENGY],
                                                           CheckMinEint_No, NULL_REAL, Emag,
                                                           EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
@@ -1318,7 +1318,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                       endif
                         const bool CheckMinEint_No = false; // floor value is not supported for now
                         Data1PG_CC_Ptr[Idx1] = Hydro_Con2Eint( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
-                                                               FluidForEoS[MOMZ], FluidForEoS[ENGY], 
+                                                               FluidForEoS[MOMZ], FluidForEoS[ENGY],
                                                                CheckMinEint_No, NULL_REAL, Emag,
                                                                EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
@@ -1335,7 +1335,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                            Data1PG_CC_Ptr[Idx1] =
                               FluWeighting     *Data1PG_CC_Ptr[Idx1]
                             + FluWeighting_IntT*Hydro_Con2Eint( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
-                                                                FluidForEoS[MOMZ], FluidForEoS[ENGY], 
+                                                                FluidForEoS[MOMZ], FluidForEoS[ENGY],
                                                                 CheckMinEint_No, NULL_REAL, Emag,
                                                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
@@ -1912,10 +1912,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   const double EdgeL[3] = { amr->patch[0][lv][PID0]->EdgeL[0] - GhostSize*dh,
                                             amr->patch[0][lv][PID0]->EdgeL[1] - GhostSize*dh,
                                             amr->patch[0][lv][PID0]->EdgeL[2] - GhostSize*dh };
-                  long  *ParList = NULL;
-                  int    NPar;
-                  bool   UseInputMassPos;
-                  real **InputMassPos = NULL;
+                  long      *ParList = NULL;
+                  int        NPar;
+                  bool       UseInputMassPos;
+                  real_par **InputMassPos = NULL;
 
 #                 ifdef DEBUG_PARTICLE
                   if ( FaSibPID < 0 )  Aux_Error( ERROR_INFO, "FaSibPID = %d < 0 (lv %d, PID0 %d, FaPID %d, sib %d) !!\n",
@@ -2916,7 +2916,8 @@ extern bool Particle_Collected;
 // Description :  Initialize rho_ext[] used by Prepare_PatchData() for preparing particle density on grids
 //
 // Note        :  1. This function is currently called by Gra_AdvanceDt(), Output_DumpData_Total(),
-//                   Output_DumpData_Total_HDF5(), Output_BasePowerSpectrum(), and Aux_ComputeProfile()
+//                   Output_DumpData_Total_HDF5(), Output_BasePowerSpectrum(), Aux_FindExtrema(),
+//                   Aux_FindWeightedAverageCenter(), and Aux_ComputeProfile()
 //                2. Apply to both real and buffer patches
 //                3. For patches without any particle, this routine ensures either rho_ext == NULL or
 //                   rho_ext[0][0][0] == RHO_EXT_NEED_INIT
@@ -2966,11 +2967,11 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv, const double Prep
 #  pragma omp parallel
    {
 //    thread-private variables
-      long  *ParList = NULL;
-      int    NPar;
-      double EdgeL[3];
-      bool   UseInputMassPos;
-      real **InputMassPos = NULL;
+      long      *ParList = NULL;
+      int        NPar;
+      double     EdgeL[3];
+      bool       UseInputMassPos;
+      real_par **InputMassPos = NULL;
 
 //    loop over all patches including buffer patches
 #     pragma omp for schedule( runtime )
@@ -3084,7 +3085,8 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv, const double Prep
 // Description :  Free rho_ext[] allocated by Prepare_PatchData() temporarily for storing the partice mass density
 //
 // Note        :  1. This function is currently called by Gra_AdvanceDt(), Output_DumpData_Total(),
-//                   Output_DumpData_Total_HDF5(), Output_BasePowerSpectrum(), and Aux_ComputeProfile()
+//                   Output_DumpData_Total_HDF5(), Output_BasePowerSpectrum(), Aux_FindExtrema(),
+//                   Aux_FindWeightedAverageCenter(), and Aux_ComputeProfile()
 //                2. Apply to buffer patches as well
 //                3. Do not free memory if OPT__REUSE_MEMORY is on
 //                   --> rho_ext[] will only be free'd together with other data arrays (e.g., fluid, pot)

@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2474)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2477)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -247,6 +247,12 @@ Procedure for outputting new variables:
 //                2472 : 2023/11/11 --> output FixUpVar_Flux and FixUpVar_Restrict
 //                2473 : 2023/11/29 --> output SRHD options and fields
 //                2474 : 2023/11/22 --> output OPT__UM_IC_FLOAT8 and PAR_IC_FLOAT8
+//                2475 : 2024/03/28 --> output YT_JUPYTER_USE_CONNECTION_FILE, LIBYT_RELOAD, LIBYT_INTERACTIVE,
+//                                      LIBYT_JUPYTER
+//                2476 : 2024/03/31 --> output particle attribute with assigned precision set by FLOAT8_PAR in Makefile;
+//                                      record value of FLOAT8_PAR as Makefile.Float8_Par and KeyInfo.Float8_Par
+//                2477 : 2024/04/05 --> output OPT__RECORD_CENTER, COM_CEN_X, COM_CEN_Y, COM_CEN_Z,
+//                                             COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R, COM_MAX_ITER
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1223,8 +1229,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //###ISSUE: currently we output all particles at the same level at once (although one attribute at a time),
 //          which may introduce a large memory overhead
 //          --> solution: we can output a fixed number of particles at a time (see Output_DumpData_Total.cpp)
-   long (*NParLv_EachRank)[NLEVEL] = new long [MPI_NRank][NLEVEL];   // number of particles at each level in each rank
-   real (*ParBuf1v1Lv)             = NULL;   // buffer storing the data of one particle attribute at one level
+   long     (*NParLv_EachRank)[NLEVEL] = new long [MPI_NRank][NLEVEL];   // number of particles at each level in each rank
+   real_par (*ParBuf1v1Lv)             = NULL;   // buffer storing the data of one particle attribute at one level
 
    long  GParID_Offset[NLEVEL];  // GParID = global particle index (==> unique for each particle)
    long  NParLv_AllRank[NLEVEL];
@@ -1236,7 +1242,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    MaxNPar1Lv = 0;
    for (int lv=0; lv<NLEVEL; lv++)  MaxNPar1Lv = MAX( MaxNPar1Lv, amr->Par->NPar_Lv[lv] );
 
-   ParBuf1v1Lv = new real [MaxNPar1Lv];
+   ParBuf1v1Lv = new real_par [MaxNPar1Lv];
 
 // 6-1-2. get the starting global particle index (i.e., GParID_Offset[NLEVEL]) for particles at each level in this rank
    MPI_Allgather( amr->Par->NPar_Lv, NLEVEL, MPI_LONG, NParLv_EachRank[0], NLEVEL, MPI_LONG, MPI_COMM_WORLD );
@@ -1273,7 +1279,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //    create the datasets of all particle attributes
       for (int v=0; v<PAR_NATT_STORED; v++)
       {
-         H5_SetID_ParData = H5Dcreate( H5_GroupID_Particle, ParAttLabel[v], H5T_GAMER_REAL, H5_SpaceID_ParData,
+         H5_SetID_ParData = H5Dcreate( H5_GroupID_Particle, ParAttLabel[v], H5T_GAMER_REAL_PAR, H5_SpaceID_ParData,
                                        H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
          if ( H5_SetID_ParData < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", ParAttLabel[v] );
          H5_Status = H5Dclose( H5_SetID_ParData );
@@ -1341,7 +1347,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //          6-3-4. write data to disk
             H5_SetID_ParData = H5Dopen( H5_GroupID_Particle, ParAttLabel[v], H5P_DEFAULT );
 
-            H5_Status = H5Dwrite( H5_SetID_ParData, H5T_GAMER_REAL, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT, ParBuf1v1Lv );
+            H5_Status = H5Dwrite( H5_SetID_ParData, H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT, ParBuf1v1Lv );
             if ( H5_Status < 0 )
                Aux_Error( ERROR_INFO, "failed to write a particle attribute (lv %d, v %d) !!\n", lv, v );
 
@@ -1496,7 +1502,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2474;
+   KeyInfo.FormatVersion        = 2477;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1514,7 +1520,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    KeyInfo.Particle             = 1;
 #  else
    KeyInfo.Particle             = 0;
-#  endif
+#  endif  // #ifdef PARTICLE ... else ...
 #  ifdef FLOAT8
    KeyInfo.Float8               = 1;
 #  else
@@ -1525,7 +1531,12 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 #  ifdef PARTICLE
    KeyInfo.Par_NPar             = amr->Par->NPar_Active_AllRank;
    KeyInfo.Par_NAttStored       = PAR_NATT_STORED;
+#  ifdef FLOAT8_PAR
+   KeyInfo.Float8_Par           = 1;
+#  else
+   KeyInfo.Float8_Par           = 0;
 #  endif
+#  endif // #ifdef PARTICLE
 #  if ( MODEL == HYDRO )
 #  ifdef MHD
    KeyInfo.Magnetohydrodynamics = 1;
@@ -1718,6 +1729,18 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.LibYTInteractive       = 0;
 #  endif
 
+#  ifdef LIBYT_RELOAD
+   Makefile.LibYTReload            = 1;
+#  else
+   Makefile.LibYTReload            = 0;
+#  endif
+
+#  ifdef LIBYT_JUPYTER
+   Makefile.LibYTJupyter           = 1;
+#  else
+   Makefile.LibYTJupyter           = 0;
+#  endif
+
 #  else  // #ifdef SUPPORT_LIBYT
    Makefile.SupportLibYT           = 0;
 #  endif // #ifdef SUPPORT_LIBYT ... else ...
@@ -1844,6 +1867,12 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  endif
 
    Makefile.Par_NAttUser           = PAR_NATT_USER;
+
+#  ifdef FLOAT8_PAR
+   Makefile.Float8_Par             = 1;
+#  else
+   Makefile.Float8_Par             = 0;
+#  endif
 #  endif // #ifdef PARTICLE
 
 #  ifdef COSMIC_RAY
@@ -2566,6 +2595,11 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Output_PartZ                = OUTPUT_PART_Z;
    InputPara.InitDumpID                  = INIT_DUMPID;
 
+// libyt jupyter
+#  if ( defined(SUPPORT_LIBYT) && defined(LIBYT_JUPYTER) )
+   InputPara.Yt_JupyterUseConnectionFile = YT_JUPYTER_USE_CONNECTION_FILE;
+#  endif
+
 // miscellaneous
    InputPara.Opt__Verbose            = OPT__VERBOSE;
    InputPara.Opt__TimingBarrier      = OPT__TIMING_BARRIER;
@@ -2576,6 +2610,14 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__RecordMemory       = OPT__RECORD_MEMORY;
    InputPara.Opt__RecordPerformance  = OPT__RECORD_PERFORMANCE;
    InputPara.Opt__ManualControl      = OPT__MANUAL_CONTROL;
+   InputPara.Opt__RecordCenter       = OPT__RECORD_CENTER;
+   InputPara.COM_CenX                = COM_CEN_X;
+   InputPara.COM_CenY                = COM_CEN_Y;
+   InputPara.COM_CenZ                = COM_CEN_Z;
+   InputPara.COM_MaxR                = COM_MAX_R;
+   InputPara.COM_MinRho              = COM_MIN_RHO;
+   InputPara.COM_TolErrR             = COM_TOLERR_R;
+   InputPara.COM_MaxIter             = COM_MAX_ITER;
    InputPara.Opt__RecordUser         = OPT__RECORD_USER;
    InputPara.Opt__OptimizeAggressive = OPT__OPTIMIZE_AGGRESSIVE;
    InputPara.Opt__SortPatchByLBIdx   = OPT__SORT_PATCH_BY_LBIDX;
@@ -2713,8 +2755,9 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "NFieldStored",         HOFFSET(KeyInfo_t,NFieldStored        ), H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "NMagStored",           HOFFSET(KeyInfo_t,NMagStored          ), H5T_NATIVE_INT          );
 #  ifdef PARTICLE
-   H5Tinsert( H5_TypeID, "Par_NPar",             HOFFSET(KeyInfo_t,Par_NPar),             H5T_NATIVE_LONG         );
+   H5Tinsert( H5_TypeID, "Par_NPar",             HOFFSET(KeyInfo_t,Par_NPar            ), H5T_NATIVE_LONG         );
    H5Tinsert( H5_TypeID, "Par_NAttStored",       HOFFSET(KeyInfo_t,Par_NAttStored      ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Float8_Par",           HOFFSET(KeyInfo_t,Float8_Par          ), H5T_NATIVE_INT          );
 #  endif
 
 #  ifdef COSMIC_RAY
@@ -2787,6 +2830,8 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 #  ifdef SUPPORT_LIBYT
    H5Tinsert( H5_TypeID, "LibYTUsePatchGroup",     HOFFSET(Makefile_t,LibYTUsePatchGroup     ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "LibYTInteractive",       HOFFSET(Makefile_t,LibYTInteractive       ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "LibYTReload",            HOFFSET(Makefile_t,LibYTReload            ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "LibYTJupyter",           HOFFSET(Makefile_t,LibYTJupyter           ), H5T_NATIVE_INT );
 #  endif
    H5Tinsert( H5_TypeID, "SupportGrackle",         HOFFSET(Makefile_t,SupportGrackle         ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "RandomNumber",           HOFFSET(Makefile_t,RandomNumber           ), H5T_NATIVE_INT );
@@ -2831,6 +2876,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "StarFormation",          HOFFSET(Makefile_t,StarFormation          ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Feedback",               HOFFSET(Makefile_t,Feedback               ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Par_NAttUser",           HOFFSET(Makefile_t,Par_NAttUser           ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "Float8_Par",             HOFFSET(Makefile_t,Float8_Par             ), H5T_NATIVE_INT );
 #  endif
 
 #  ifdef COSMIC_RAY
@@ -3494,6 +3540,11 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Output_PartZ",                HOFFSET(InputPara_t,Output_PartZ               ), H5T_NATIVE_DOUBLE           );
    H5Tinsert( H5_TypeID, "InitDumpID",                  HOFFSET(InputPara_t,InitDumpID                 ), H5T_NATIVE_INT              );
 
+// libyt jupyter
+#  if ( defined(SUPPORT_LIBYT) && defined(LIBYT_JUPYTER) )
+   H5Tinsert( H5_TypeID, "Yt_JupyterUseConnectionFile", HOFFSET(InputPara_t,Yt_JupyterUseConnectionFile), H5T_NATIVE_INT              );
+#  endif
+
 // miscellaneous
    H5Tinsert( H5_TypeID, "Opt__Verbose",            HOFFSET(InputPara_t,Opt__Verbose           ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__TimingBarrier",      HOFFSET(InputPara_t,Opt__TimingBarrier     ), H5T_NATIVE_INT              );
@@ -3504,6 +3555,14 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__RecordMemory",       HOFFSET(InputPara_t,Opt__RecordMemory      ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__RecordPerformance",  HOFFSET(InputPara_t,Opt__RecordPerformance ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__ManualControl",      HOFFSET(InputPara_t,Opt__ManualControl     ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__RecordCenter",       HOFFSET(InputPara_t,Opt__RecordCenter      ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "COM_CenX",                HOFFSET(InputPara_t,COM_CenX               ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "COM_CenY",                HOFFSET(InputPara_t,COM_CenY               ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "COM_CenZ",                HOFFSET(InputPara_t,COM_CenZ               ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "COM_MaxR",                HOFFSET(InputPara_t,COM_MaxR               ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "COM_MinRho",              HOFFSET(InputPara_t,COM_MinRho             ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "COM_TolErrR",             HOFFSET(InputPara_t,COM_TolErrR            ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "COM_MaxIter",             HOFFSET(InputPara_t,COM_MaxIter            ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__RecordUser",         HOFFSET(InputPara_t,Opt__RecordUser        ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__OptimizeAggressive", HOFFSET(InputPara_t,Opt__OptimizeAggressive), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__SortPatchByLBIdx",   HOFFSET(InputPara_t,Opt__SortPatchByLBIdx  ), H5T_NATIVE_INT              );

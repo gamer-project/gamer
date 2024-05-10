@@ -466,7 +466,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__OUTPUT_CC_MAG",         &OPT__OUTPUT_CC_MAG,              true,            Useless_bool,  Useless_bool   );
 #  endif
 #  ifdef GRAVITY
-   ReadPara->Add( "OPT__OUTPUT_POT",            &OPT__OUTPUT_POT,                 false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_POT",            &OPT__OUTPUT_POT,                 true,           Useless_bool,  Useless_bool   );
 #  endif
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__OUTPUT_PAR_DENS",       &OPT__OUTPUT_PAR_DENS,            PAR_OUTPUT_DENS_PAR_ONLY, 0,    2              );
@@ -505,9 +505,12 @@ void Init_Load_Parameter()
 
 // yt inline analysis
 #  ifdef SUPPORT_LIBYT
-   ReadPara->Add( "YT_SCRIPT",                   YT_SCRIPT,                       NoDef_str,       Useless_str,   Useless_str    );
-   ReadPara->Add( "YT_VERBOSE",           (int*)&YT_VERBOSE,                      1,               0,             3              );
-   ReadPara->Add( "YT_FIG_BASENAME",             YT_FIG_BASENAME,                 NoDef_str,       Useless_str,   Useless_str    );
+   ReadPara->Add( "YT_SCRIPT",                          YT_SCRIPT,                         NoDef_str,    Useless_str,   Useless_str    );
+   ReadPara->Add( "YT_VERBOSE",                  (int*)&YT_VERBOSE,                        1,            0,             3              );
+   ReadPara->Add( "YT_FIG_BASENAME",                    YT_FIG_BASENAME,                   NoDef_str,    Useless_str,   Useless_str    );
+#  ifdef LIBYT_JUPYTER
+   ReadPara->Add( "YT_JUPYTER_USE_CONNECTION_FILE",    &YT_JUPYTER_USE_CONNECTION_FILE,    false,        Useless_bool,  Useless_bool   );
+#  endif
 #  endif
 
 
@@ -522,6 +525,14 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__RECORD_MEMORY",         &OPT__RECORD_MEMORY,              true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RECORD_PERFORMANCE",    &OPT__RECORD_PERFORMANCE,         true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__MANUAL_CONTROL",        &OPT__MANUAL_CONTROL,             true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__RECORD_CENTER",         &OPT__RECORD_CENTER,              false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "COM_CEN_X",                  &COM_CEN_X,                      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_CEN_Y",                  &COM_CEN_Y,                      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_CEN_Z",                  &COM_CEN_Z,                      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_MAX_R",                  &COM_MAX_R,                      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_MIN_RHO",                &COM_MIN_RHO,                     0.0,             0.0,           NoMax_double   );
+   ReadPara->Add( "COM_TOLERR_R",               &COM_TOLERR_R,                   -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_MAX_ITER",               &COM_MAX_ITER,                    10,              1,             NoMax_int      );
    ReadPara->Add( "OPT__RECORD_USER",           &OPT__RECORD_USER,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OPTIMIZE_AGGRESSIVE",   &OPT__OPTIMIZE_AGGRESSIVE,        false,           Useless_bool,  Useless_bool   );
 #  ifdef LOAD_BALANCE
