@@ -95,12 +95,6 @@ void Par_EquilibriumIC::setParticleParameters( const long ParNum, const double M
 }
 
 
-long Par_EquilibriumIC::getParticleNumber()
-{
-   return Cloud_Par_Num;
-}
-
-
 double Par_EquilibriumIC::getTotCloudMass()
 {
    return TotCloudMass;

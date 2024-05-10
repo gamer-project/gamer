@@ -34,7 +34,6 @@ class Par_EquilibriumIC
       void   setDensProfTableFilename( const char* DensProfTableFilename );
       void   setParticleParameters( const long ParNum, const double MaxR, const int Radial_NBin, const int Energy_NBin, const int RSeed );
       void   setExternalPotential( const int AddingExternalPotential_Analytical, const int AddingExternalPotential_Table, const char* ExtPotTableFilename );
-      long   getParticleNumber();
       double getTotCloudMass();
       double getParticleMass();
       double getMaxMassError();

@@ -10,7 +10,7 @@ Cloud_BulkVelZ               0.0                  # bulk velocity in z
 Cloud_Rho0                   1.0                  # peak density [1.0]
 Cloud_R0                     0.1                  # scale radius [0.1]
 Cloud_EinastoPowerFactor     1                    # Einasto_Power_Factor parameter for Einasto model [1]
-Cloud_ParNumRatio            1.0                  # particle number ratio
+Cloud_ParNum                 20000                # particle number [1]
 Cloud_MaxR                   1.5                  # maximum radius for particles [0.375]
 Cloud_RSeed                  123                  # random seed for setting particle position and velocity (>=0) [123]
 Cloud_DensProfNBin           1000                 # number of radial bins in the density profile table [1000]

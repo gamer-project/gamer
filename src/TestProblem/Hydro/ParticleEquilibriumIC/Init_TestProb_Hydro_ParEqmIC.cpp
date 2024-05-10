@@ -16,7 +16,6 @@ static double   ParEqmIC_SmallGas;                                // negligibly 
        double  *ParEqmIC_Cloud_R0                         = NULL; // scale radius of each cloud
        double  *ParEqmIC_Cloud_EinastoPowerFactor         = NULL; // Einato power factor of each cloud
        char   (*ParEqmIC_Cloud_DensityTable)[MAX_STRING]  = NULL; // input density profile table of each cloud
-       double  *ParEqmIC_Cloud_ParNumRatio                = NULL; // ratio of number of particles of each cloud
        long    *ParEqmIC_Cloud_ParNum                     = NULL; // number of particles of each cloud
        double  *ParEqmIC_Cloud_MaxR                       = NULL; // maximum radius of each cloud
        int     *ParEqmIC_Cloud_DensProfNBin               = NULL; // number of bins of density profile of each cloud
@@ -168,7 +167,6 @@ void SetParameter()
    ParEqmIC_Cloud_R0                 = new double [ParEqmIC_NumCloud];
    ParEqmIC_Cloud_EinastoPowerFactor = new double [ParEqmIC_NumCloud];
    ParEqmIC_Cloud_DensityTable       = new char   [ParEqmIC_NumCloud][MAX_STRING];
-   ParEqmIC_Cloud_ParNumRatio        = new double [ParEqmIC_NumCloud];
    ParEqmIC_Cloud_ParNum             = new long   [ParEqmIC_NumCloud];
    ParEqmIC_Cloud_MaxR               = new double [ParEqmIC_NumCloud];
    ParEqmIC_Cloud_DensProfNBin       = new int    [ParEqmIC_NumCloud];
@@ -202,7 +200,7 @@ void SetParameter()
       ReadPara->Add( "Cloud_R0",                   &ParEqmIC_Cloud_R0[i],                   0.1,           Eps_double,       NoMax_double      );
       ReadPara->Add( "Cloud_EinastoPowerFactor",   &ParEqmIC_Cloud_EinastoPowerFactor[i],   1.0,           0.1,              10.0              );
       ReadPara->Add( "Cloud_DensityTable",          ParEqmIC_Cloud_DensityTable[i],         NoDef_str,     Useless_str,      Useless_str       );
-      ReadPara->Add( "Cloud_ParNumRatio",          &ParEqmIC_Cloud_ParNumRatio[i],          0.0,           0.0,              1.0               );
+      ReadPara->Add( "Cloud_ParNum",               &ParEqmIC_Cloud_ParNum[i],               (long)1,       (long)1,          NoMax_long        );
       ReadPara->Add( "Cloud_MaxR",                 &ParEqmIC_Cloud_MaxR[i],                 0.375,         Eps_double,       NoMax_double      );
       ReadPara->Add( "Cloud_DensProfNBin",         &ParEqmIC_Cloud_DensProfNBin[i],         1000,          2,                NoMax_int         );
       ReadPara->Add( "Cloud_EnergyNBin",           &ParEqmIC_Cloud_EnergyNBin[i],           1000,          2,                NoMax_int         );
@@ -288,7 +286,7 @@ void SetParameter()
       if ( strcmp( ParEqmIC_Cloud_Type[i], "Einasto" ) == 0 )
       Aux_Message( stdout, "     Einasto power factor                      = %13.7e\n", ParEqmIC_Cloud_EinastoPowerFactor[i] );
 
-      Aux_Message( stdout, "     ratio of number of particles              = %13.7e\n", ParEqmIC_Cloud_ParNumRatio[i]        );
+      Aux_Message( stdout, "     number of particles                       = %ld\n",    ParEqmIC_Cloud_ParNum[i]             );
       Aux_Message( stdout, "     maximum radius of particles               = %13.7e\n", ParEqmIC_Cloud_MaxR[i]               );
       Aux_Message( stdout, "     random seed for setting particle position = %d\n",     ParEqmIC_Cloud_RSeed[i]              );
       if ( strcmp( ParEqmIC_Cloud_Type[i], "Table" ) != 0 )
@@ -369,7 +367,6 @@ void End_ParEqmIC()
    delete [] ParEqmIC_Cloud_R0;
    delete [] ParEqmIC_Cloud_EinastoPowerFactor;
    delete [] ParEqmIC_Cloud_DensityTable;
-   delete [] ParEqmIC_Cloud_ParNumRatio;
    delete [] ParEqmIC_Cloud_ParNum;
    delete [] ParEqmIC_Cloud_MaxR;
    delete [] ParEqmIC_Cloud_DensProfNBin;

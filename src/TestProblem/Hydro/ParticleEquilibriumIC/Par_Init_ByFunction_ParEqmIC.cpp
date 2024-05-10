@@ -15,7 +15,6 @@ extern double  *ParEqmIC_Cloud_Rho0;
 extern double  *ParEqmIC_Cloud_R0;
 extern double  *ParEqmIC_Cloud_EinastoPowerFactor;
 extern char   (*ParEqmIC_Cloud_DensityTable)[MAX_STRING];
-extern double  *ParEqmIC_Cloud_ParNumRatio;
 extern long    *ParEqmIC_Cloud_ParNum;
 extern double  *ParEqmIC_Cloud_MaxR;
 extern int     *ParEqmIC_Cloud_DensProfNBin;
@@ -93,12 +92,12 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
       for (int i=0; i<ParEqmIC_NumCloud; i++)
       {
 
-         // Convert Cloud_Par_Num_Ratio to Cloud_Par_Num
-         ParEqmIC_Cloud_ParNum[i] = long(ParEqmIC_Cloud_ParNumRatio[i]*NPar_AllRank);
-
-         // Check whether user forgot to fill in Cloud_Par_Num_Ratio
-         if ( ParEqmIC_Cloud_ParNum[i] == 0 )
-            Aux_Error( ERROR_INFO, "Cloud_ParNum is 0 for cloud_%d !!\n", i+1 );
+         // Check whether the particle number of each cloud is reasonable
+         if ( (Par_Idx0 + ParEqmIC_Cloud_ParNum[i]) > NPar_AllRank )
+         {
+            Aux_Error( ERROR_INFO, "particle number doesn't match (%ld + %ld = %ld > %ld) !!\n",
+                       Par_Idx0, ParEqmIC_Cloud_ParNum[i], Par_Idx0+ParEqmIC_Cloud_ParNum[i], NPar_AllRank );
+         }
 
          // Initialize Par_EquilibriumIC for each cloud
          Par_EquilibriumIC Cloud_Constructor( ParEqmIC_Cloud_Type[i] );
@@ -126,13 +125,6 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
          // initialize the particle cloud
          Cloud_Constructor.initialize();
 
-//       check whether the particle number of each cloud is reasonable
-         if ( (Par_Idx0 + Cloud_Constructor.getParticleNumber()) > NPar_AllRank )
-         {
-            Aux_Error( ERROR_INFO, "particle number doesn't match (%ld + %ld = %ld > %ld) !!\n",
-                       Par_Idx0, Cloud_Constructor.getParticleNumber(), Par_Idx0+Cloud_Constructor.getParticleNumber(), NPar_AllRank );
-         }
-
 //       set an equilibrium initial condition for each cloud
          Cloud_Constructor.constructParticles( ParData_AllRank[PAR_MASS], ParData_AllRank+PAR_POSX, ParData_AllRank+PAR_VELX, Par_Idx0 );
 
@@ -141,7 +133,7 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
          Aux_Message( stdout, "   Maximum mass interpolation error = %13.7e\n",  Cloud_Constructor.getMaxMassError() );
 
 //       update the particle index offset for the next cloud
-         Par_Idx0 += Cloud_Constructor.getParticleNumber();
+         Par_Idx0 += ParEqmIC_Cloud_ParNum[i];
 
       } // for (int i=0; i<ParEqmIC_CloudNum; i++)
 
