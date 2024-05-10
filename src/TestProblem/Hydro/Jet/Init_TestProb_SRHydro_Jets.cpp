@@ -288,7 +288,7 @@ void SetParameter()
 
 // Read header for the fermi bubbles
    SetArrayDisk();
-//   SetArrayHVC();
+// SetArrayHVC();
    randCloud( &randXYZ, N_CLOUDS );
 
 // replace useless parameters with NaN
@@ -764,7 +764,6 @@ void SetArrayHVC()
       if ( Z_hvc == NULL ) Aux_Error( ERROR_INFO, "Z_hvc is NULL at %d, %s !!\n", __LINE__, __FUNCTION__ );
 
       real *Ptr;
-
       Ptr = BUFFER + headerSize;
 
       for ( int c=0; c<5*N_TOT; c++ ) {
@@ -843,7 +842,18 @@ void Interpolation_UM_IC( real x, real y, real z, real ****Pri_input, real **XYZ
 
    bool Unphy = false;
    for (int i=0; i<8; i++)
-      Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertices[i], NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
+   {
+      for (int v=0; v<5; v++)   Unphy |= ( Vertices[i][v] != Vertices[i][v] );
+      Unphy |= ( (real) TINY_NUMBER >= Vertices[i][0] );
+      Unphy |= ( (real)-HUGE_NUMBER >= Vertices[i][1] );
+      Unphy |= ( (real)-HUGE_NUMBER >= Vertices[i][2] );
+      Unphy |= ( (real)-HUGE_NUMBER >= Vertices[i][3] );
+      Unphy |= ( (real) TINY_NUMBER >= Vertices[i][4] );
+      for (int v=0; v<5; v++)   Unphy |= ( Vertices[i][v] >= (real)HUGE_NUMBER );
+
+      // TODO : Can not use since the function also check for the passive scalar
+      // Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertices[i], NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
+   } // for (int i=0; i<8; i++)
 
    // Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex000, NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, true );
    // Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex001, NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, true );
@@ -921,7 +931,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 // variables for jet
-   real Pri[NCOMP_FLUID];
+   real Pri[NCOMP_FLUID] = {0.0};
    real xc = x - IsothermalSlab_Center[0];
    real yc = y - IsothermalSlab_Center[1];
    real zc = z - IsothermalSlab_Center[2];
@@ -1035,7 +1045,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
             Pri[1] = 0.0;
             Pri[2] = 0.0;
             Pri[3] = 0.0;
-            Pri[4] = Pri[4];
+            Pri[4] = Pri[0];
          }
 
          Hydro_Pri2Con( Pri, fluid, false, PassiveNorm_NVar, PassiveNorm_VarIdx, EoS_DensPres2Eint_CPUPtr,
@@ -1153,8 +1163,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       else
          ambientDens  = -IsothermalSlab_Pot(zc)/ambientTemperature;
 
-       //printf("IsothermalSlab_Pot(zc)=%e\n", IsothermalSlab_Pot(zc));
-       //printf("ambientTemperature=%e\n", ambientTemperature);
+      //printf("IsothermalSlab_Pot(zc)=%e\n", IsothermalSlab_Pot(zc));
+      //printf("ambientTemperature=%e\n", ambientTemperature);
 
       ambientDens  = exp(ambientDens);
       ambientDens *= ambientPeakDens;
@@ -1189,7 +1199,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    } else
    {
       // TODO : Add an error for wrong Jet_Ambient
-   } // if ( Jet_Ambient == 0 ) ... else if
+   } // if ( Jet_Ambient == 0 ) ... else if ... else ...
 } // FUNCTION : SetGridIC
 
 
@@ -1241,8 +1251,8 @@ int Flu_ResetByUser_Jets( real fluid[], const double Emag, const double x, const
 
   if ( !Jet_SphericalSrc ) {
      double xp[3], rp[3];
-     double Prim[NCOMP_FLUID], Cons[NCOMP_FLUID], Vel[3];
-     real PriReal[NCOMP_FLUID];
+     double Prim[NCOMP_FLUID] = {0.0}, Cons[NCOMP_FLUID] = {0.0}, Vel[3];
+     real PriReal[NCOMP_FLUID] = {0.0};
      double PrecessionAxis_Spherical[3], Omega_t;
      bool InsideUpperCone, InsideLowerCone;
      double Jet_SrcVelSmooth;
@@ -1254,7 +1264,8 @@ int Flu_ResetByUser_Jets( real fluid[], const double Emag, const double x, const
      xp[1] = y - Jet_Center[1];
      xp[2] = z - Jet_Center[2];
 
-     if ( Jet_PrecessionAxis[0] != 0.0  ||  Jet_PrecessionAxis[1] != 0.0  ||  Jet_PrecessionAxis[2] == 0.0 ) {
+     if ( Jet_PrecessionAxis[0] != 0.0  ||  Jet_PrecessionAxis[1] != 0.0  ||  Jet_PrecessionAxis[2] == 0.0 )
+     {
 //      get theta, phi for the first rotation
         Mis_Cartesian2Spherical( Jet_PrecessionAxis, PrecessionAxis_Spherical );
 //      rotate coordinate to align z-axis with fixed precession axis
@@ -1271,7 +1282,8 @@ int Flu_ResetByUser_Jets( real fluid[], const double Emag, const double x, const
      InsideLowerCone  = SQR(xp[0]) + SQR(xp[1]) <= SQR( -tan(Jet_HalfOpeningAngle)*xp[2] + Jet_Radius );
      InsideLowerCone &= -Jet_HalfHeight <= xp[2] && xp[2] <= 0.0;
 
-     if ( Jet_HalfOpeningAngle != 0.0 ) {
+     if ( Jet_HalfOpeningAngle != 0.0 )
+     {
         InsideUpperCone &= SQR(xp[0]) + SQR(xp[1]) + SQR(xp[2] + Jet_Radius/tan(Jet_HalfOpeningAngle))
                         <= SQR(Jet_HalfHeight+Jet_Radius/tan(Jet_HalfOpeningAngle));
 
@@ -1281,7 +1293,8 @@ int Flu_ResetByUser_Jets( real fluid[], const double Emag, const double x, const
                         <= SQR(Jet_HalfHeight+Jet_Radius/tan(Jet_HalfOpeningAngle));
 
         InsideLowerCone &= xp[2] <= 0.0;
-     } else {
+     } else
+     {
         InsideUpperCone &= 0.0 <= xp[2] && xp[2] <= Jet_HalfHeight;
         InsideLowerCone &= -Jet_HalfHeight <= xp[2] && xp[2] <= 0.0;
      } // if ( Jet_HalfOpeningAngle != 0.0 ) ... else ...
@@ -1362,8 +1375,8 @@ int Flu_ResetByUser_Jets( real fluid[], const double Emag, const double x, const
   } else // if ( !Jet_SphericalSrc )
   {
      double xp[3], rp[3];
-     double Prim[NCOMP_FLUID], Cons[NCOMP_FLUID], Vel[3];
-     real PriReal[NCOMP_FLUID];
+     double Prim[NCOMP_FLUID] = {0.0}, Cons[NCOMP_FLUID] = {0.0}, Vel[3];
+     real PriReal[NCOMP_FLUID] = {0.0};
 
 //   shift the coordinate origin to the source center (the point O)
      xp[0] = x - Jet_Center[0];
@@ -1457,13 +1470,13 @@ bool Flag_User( const int i, const int j, const int k, const int lv, const int P
    bool Flag, Src = R <= dh*1.8;
    if ( Jet_Ambient != 4 )
    {
-     bool Disk = fabs(dR[2]) <= dh*1.8;
-     if (lv >= jetSrc_lowRes_LEVEL) Disk = false;
-     Flag = Src || Disk;
+      bool Disk = fabs(dR[2]) <= dh*1.8;
+      if (lv >= jetSrc_lowRes_LEVEL) Disk = false;
+      Flag = Src || Disk;
    }
    else
    {
-     Flag = Src;
+      Flag = Src;
    }
    return Flag;
 } // FUNCTION : Flag_User
@@ -1517,8 +1530,8 @@ double Mis_GetTimeStep_User( const int lv, const double dTime_dt )
 
    const double dh  = amr->dh[MAX_LEVEL];
 
-   const double Cs      = 0.182574; // 1.0/sqrt(3); // TODO: not enough digit for double
-   double dt_user = DT__FLUID * dh / (Jet_Src3Vel+3.0*Cs);
+   const double Cs = 0.182574; // 1.0/sqrt(3); // TODO: not enough digit for double
+   double dt_user  = DT__FLUID * dh / (Jet_Src3Vel+3.0*Cs);
 
    return dt_user;
 } // FUNCTION : Mis_GetTimeStep_User_Template
@@ -1527,17 +1540,17 @@ double Mis_GetTimeStep_User( const int lv, const double dTime_dt )
 
 void AddNewField_Jet()
 {
-#if ( NCOMP_PASSIVE_USER > 0)
-   if ( Passive_0000 == 5 ) Passive_0000 = AddField( "Passive_0000", NORMALIZE_NO );
-   if ( Passive_0001 == 6 ) Passive_0001 = AddField( "Passive_0001", NORMALIZE_NO );
-   if ( Passive_0002 == 7 ) Passive_0002 = AddField( "Passive_0002", NORMALIZE_NO );
-#endif
+#  if ( NCOMP_PASSIVE_USER > 0)
+   if ( Passive_0000 == 5 ) Passive_0000 = AddField( "Passive_0000", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+   if ( Passive_0001 == 6 ) Passive_0001 = AddField( "Passive_0001", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+   if ( Passive_0002 == 7 ) Passive_0002 = AddField( "Passive_0002", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+#  endif
 } // FUNCTION : AddNewField_Jet
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_Hydro_Jets
+// Function    :  Init_TestProb_Hydro_Jet
 // Description :  Test problem initializer
 //
 // Note        :  None
