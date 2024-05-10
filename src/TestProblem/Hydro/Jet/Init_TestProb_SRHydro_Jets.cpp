@@ -13,7 +13,7 @@ real TrilinearInterpolation(real *FieldAtVertices, real *xyz000, real *dxyz, rea
 static void SetArrayDisk();
 static void SetArrayHVC();
 static real *randXYZ;
-static int  N_CLOUDS = 30;
+static int  N_CLOUDS = 0;
 static real R_CLOUD  = 1.0;
 void randCloud( real **randXYZ, const int numClouds );
 
@@ -291,7 +291,6 @@ void SetParameter()
 //   SetArrayHVC();
    randCloud( &randXYZ, N_CLOUDS );
 
-
 // replace useless parameters with NaN
    if ( Jet_Ambient != 0 )
    {
@@ -305,7 +304,6 @@ void SetParameter()
    {
       Amb_FluSphereRadius = NAN;
    }
-
 
    if ( !Jet_TimeDependentSrc )
    {
@@ -324,7 +322,7 @@ void SetParameter()
      if ( !Flag_Burst4Vel && !Flag_BurstDens && !Flag_BurstTemp )
        Aux_Error( ERROR_INFO, "One of Flag_Burst4Vel, Flag_BurstDens or Flag_BurstTemp must be enabled !!\n" );
 
-     if ( Jet_BurstEndTime <= Jet_BurstStartTime)
+     if ( Jet_BurstEndTime <= Jet_BurstStartTime )
        Aux_Error( ERROR_INFO, "Jet_BurstEndTime <= Jet_BurstStartTime !!\n" );
 
      if ( Jet_BurstEndTime >= END_T )
@@ -661,7 +659,7 @@ void SetArrayDisk()
    const int NZ    = Nz + 2*numGhost;
    const int N_TOT = NX * NY * NZ;
 
-   if ( 5*N_TOT > INT_MAX )   Aux_Error( ERROR_INFO, "Integer overflow (5*N_TOT > INT_MAX), N_TOT=NX*NY*NZ, NX=%d, NY=%d, NZ=%d, INT_MAX=%d!! \n",NX, NY, NZ, INT_MAX);
+   if ( 5*N_TOT > INT_MAX )   Aux_Error( ERROR_INFO, "Integer overflow (5*N_TOT > INT_MAX), N_TOT=NX*NY*NZ, NX=%d, NY=%d, NZ=%d, INT_MAX=%d!! \n", NX, NY, NZ, INT_MAX );
 
    if ( Step == 0 )
    {
@@ -747,7 +745,7 @@ void SetArrayHVC()
    const int NZ = Nz + 2*numGhost;
    const int N_TOT = NX * NY * NZ;
 
-   if ( 5*N_TOT > INT_MAX )   Aux_Error( ERROR_INFO, "Integer overflow (5*N_TOT > INT_MAX), N_TOT=NX*NY*NZ, NX=%d, NY=%d, NZ=%d, INT_MAX=%d!! \n",NX, NY, NZ, INT_MAX);
+   if ( 5*N_TOT > INT_MAX )   Aux_Error( ERROR_INFO, "Integer overflow (5*N_TOT > INT_MAX), N_TOT=NX*NY*NZ, NX=%d, NY=%d, NZ=%d, INT_MAX=%d!! \n", NX, NY, NZ, INT_MAX );
 
    if ( Step == 0 )
    {
@@ -845,7 +843,7 @@ void Interpolation_UM_IC( real x, real y, real z, real ****Pri_input, real **XYZ
 
    bool Unphy = false;
    for (int i=0; i<8; i++)
-      Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertices[i], NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, true );
+      Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertices[i], NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
 
    // Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex000, NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, true );
    // Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex001, NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, true );
@@ -947,7 +945,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
       if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr,
                                EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
-                               EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, true ) )
+                               EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
          Aux_Error( ERROR_INFO, "Unphysical cell at (%e, %e %e)\n", x, y, z);
 
 #     if (NCOMP_PASSIVE_USER > 0)
@@ -970,7 +968,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
          if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr,
                                   EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
-                                  EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, true ) )
+                                  EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
             Aux_Error( ERROR_INFO, "Unphysical cell at (%e, %e %e)\n", x, y, z);
 
          if ( Pri[4]/Pri[0] > criticalTemp ) Pri[0] = Pri[4] / ambientTemperature;
@@ -1030,7 +1028,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
             if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri_hvc_output, NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr,
                                      EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
-                                     EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, true ) )
+                                     EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
                Aux_Error( ERROR_INFO, "Unphysical cell at (%e, %e %e)\n", x, y, z);
 
             Pri[0] = Pri_hvc_output[0]*0.05*Const_mp/UNIT_D;
@@ -1046,7 +1044,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
          if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr,
                                   EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
-                                  EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, true ) )
+                                  EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
             Aux_Error( ERROR_INFO, "Unphysical cell at (%e, %e %e)\n", x, y, z);
 
 #        if (NCOMP_PASSIVE_USER > 0)
@@ -1056,7 +1054,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #        endif
 
 #        ifdef COSMIC_RAY
-         fluid[CRAY] = (real)0.333333333*Amb_CR_Engy;
+         fluid[CRAY] = Amb_CR_Engy * SQRT((real)1.0+SQR(Jet_SrcVel));
 #        endif
       } // if ( fabs(zc) < interfaceHeight ) ... else ...
 #  endif
@@ -1071,7 +1069,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
          if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr,
                                   EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
-                                  EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, true ) )
+                                  EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
             Aux_Error( ERROR_INFO, "Unphysical cell at (%e, %e %e)\n", x, y, z);
 
          Hydro_Pri2Con( Pri, fluid, false, PassiveNorm_NVar, PassiveNorm_VarIdx, EoS_DensPres2Eint_CPUPtr,
@@ -1085,7 +1083,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #        endif
 
 #        ifdef COSMIC_RAY
-         fluid[CRAY] = (real)0.333333333*Amb_CR_Engy;
+         fluid[CRAY] = Amb_CR_Engy * SQRT((real)1.0+SQR(Jet_SrcVel));
 #        endif
       } else // if ( fabs(zc) < interfaceHeight )
       {
@@ -1113,7 +1111,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
          if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr,
                                   EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
-                                  EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, true  ) )
+                                  EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
             Aux_Error( ERROR_INFO, "Unphysical cell at (%e, %e %e)\n", x, y, z);
 
          Hydro_Pri2Con( Pri, fluid, false, PassiveNorm_NVar, PassiveNorm_VarIdx, EoS_DensPres2Eint_CPUPtr,
@@ -1174,7 +1172,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
       if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr,
                                EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
-                               EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, true  ) )
+                               EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
             Aux_Error( ERROR_INFO, "Unphysical cell at (%e, %e %e)\n", x, y, z);
 
 #     if (NCOMP_PASSIVE_USER > 0)
