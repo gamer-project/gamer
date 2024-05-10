@@ -308,65 +308,32 @@ void Par_EquilibriumIC::constructParticles( real *Mass_AllRank, real *Pos_AllRan
 {
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Constructing Par_EquilibriumIC ...\n" );
 
-   // TODO: remove them
-   //------------------------------------------------------------------------------------------
-   int RNBin_2;
-   if ( Cloud_Model == CLOUD_MODEL_TABLE )   RNBin_2 = RNBin-1;
-   else                                      RNBin_2 = RNBin;
-
-   // construct the mass profile table
-   double *Table_MassProf_r = new double [RNBin_2];
-   double *Table_MassProf_M = new double [RNBin_2];
-
-   const double dr = Cloud_MaxR / (RNBin_2-1);
-
-   for (int b=0; b<RNBin; b++)
-   {
-      Table_MassProf_r[b] = dr*b;
-      Table_MassProf_M[b] = getEnclosedMass( Table_MassProf_r[b] );
-   }
-
-   printf( "T_r:    [" );
-   for (int b=0; b<RNBin_2; b++)  printf(" %21.14e,", Table_MassProf_r[b] );
-   printf( "]\n");
-
-   printf( "T_M:    [");
-   for (int b=0; b<RNBin_2; b++)  printf(" %21.14e,", Table_MassProf_M[b] );
-   printf( "]\n");
-   //------------------------------------------------------------------------------------------
-
-
    // determine the total enclosed mass within the maximum radius
    TotCloudMass = getEnclosedMass( Cloud_MaxR );
    ParticleMass = TotCloudMass/Cloud_Par_Num;
 
-   double  RandomSampleM;
-   double  RandomSampleR;
-   double  RandomSampleV;
    double  RandomVectorR[3];
    double  RandomVectorV[3];
 
    // set particle attributes
    for (long p=Par_Idx0; p<Par_Idx0+Cloud_Par_Num; p++)
    {
-      // position, sample from the cumulative mass profile with linear interpolation
-      RandomSampleM = TotCloudMass*Random_Num_Gen->GetValue( 0, 0.0, 1.0 );
+      // randomly sample the enclosed mass
+      const double RandomSampleM = TotCloudMass*Random_Num_Gen->GetValue( 0, 0.0, 1.0 );
 
-      // TODO: combine them
-      if ( Cloud_Model == CLOUD_MODEL_TABLE )
-         RandomSampleR = Mis_InterpolateFromTable( RNBin_2, Table_MassProf_M, Table_MassProf_r, RandomSampleM );
-      else
-         RandomSampleR = Mis_InterpolateFromTable( RNBin, RArray_M_Enc, RArray_R, RandomSampleM );
+      // position, sample from the enclosed mass profile with linear interpolation
+      const double RandomSampleR = Mis_InterpolateFromTable( RNBin, RArray_M_Enc, RArray_R, RandomSampleM );
 
       // randomly set the position vector with a given radius
       RandomVector_GivenLength( RandomSampleR, RandomVectorR );
 
       // velocity
-      RandomSampleV = getRandomSampleVelocity( RandomSampleR );
+      const double RandomSampleV = getRandomSampleVelocity( RandomSampleR );
 
       // randomly set the velocity vector with the given amplitude
       RandomVector_GivenLength( RandomSampleV, RandomVectorV );
 
+      // set particle attributes
       Mass_AllRank[p] = ParticleMass;
       for (int d=0; d<3; d++)   Pos_AllRank[d][p] = Cloud_Center[d]  + RandomVectorR[d];
       for (int d=0; d<3; d++)   Vel_AllRank[d][p] = Cloud_BulkVel[d] + RandomVectorV[d];
@@ -379,10 +346,6 @@ void Par_EquilibriumIC::constructParticles( real *Mass_AllRank, real *Pos_AllRan
       MaxMassError = fmax( fabs( ( getEnclosedMass( RandomSampleR ) - RandomSampleM )/RandomSampleM ), MaxMassError );
 
    } // for (long p=Par_Idx0; p<Par_Idx0+Cloud_Par_Num; p++)
-
-   // free memory
-   delete [] Table_MassProf_r;
-   delete [] Table_MassProf_M;
 
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "Constructing Par_EquilibriumIC ... done\n" );
 
