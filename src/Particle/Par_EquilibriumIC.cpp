@@ -1101,15 +1101,11 @@ double Par_EquilibriumIC::getIntegratedDistributionFunction( const double Psi_Mi
 
    for (int i=0; i<N_points; i++)
    {
-      const double Psi_L = Psi_Min +       i*dPsi; // TODO: use an array psi
-      const double Psi_M = Psi_Min + (i+0.5)*dPsi;
-      const double Psi_R = Psi_Min +   (i+1)*dPsi;
+      const double Psi             = Psi_Min + i*dPsi;
+      const int    index_Psi       = Mis_BinarySearch_Real( RArray_Phi, 0, RLastIdx, -(Psi+0.5*dPsi) ) + 1;
+      const double dsqrt_EminusPsi = ( i == N_points-1 ) ? ( - sqrt( Psi_Max-Psi ) ) : ( sqrt( Psi_Max-(Psi+dPsi) ) - sqrt( Psi_Max-Psi ) ) ;
 
-      const int    index_Psi  = Mis_BinarySearch_Real( RArray_Phi, 0, RLastIdx, -Psi_M ) + 1;
-
-      // TODO: seperate dsqrt(Psi_Max-Psi)
-      if ( i == N_points-1 )   integral += -2*RArray_dRho_dPsi[index_Psi]*(                       - sqrt( Psi_Max-Psi_L ) );
-      else                     integral += -2*RArray_dRho_dPsi[index_Psi]*( sqrt( Psi_Max-Psi_R ) - sqrt( Psi_Max-Psi_L ) );
+      integral += -2*RArray_dRho_dPsi[index_Psi]*dsqrt_EminusPsi;
    }
 
    return integral;
@@ -1208,9 +1204,9 @@ void Par_EquilibriumIC::constructEnergyArray()
    // Set the distribution function
    for (int k =0; k<ENBin; k++)
    {
-      if      ( k <= 1                )   EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,                0, 5 );
-      else if ( k >= ENBin-2   )   EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,   ENBin-5, 5 );
-      else                                EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,              k-2, 5 );
+      if      ( k <= 1         )   EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,       0, 5 );
+      else if ( k >= ENBin-2   )   EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc, ENBin-5, 5 );
+      else                         EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,     k-2, 5 );
 
       // check negative distribution function
       if ( EArray_DFunc[k] < 0 )   EArray_DFunc[k] = 0;
