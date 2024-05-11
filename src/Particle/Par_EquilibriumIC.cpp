@@ -6,6 +6,66 @@
 
 
 
+static void   SmoothArray                 ( double* array_x, const int index_start, const int index_end );
+static double ArrayCovariance             ( const double* array_x, const double* array_y, const int index_start, const int n_elements );
+static double Slope_LinearRegression      ( const double* array_x, const double* array_y, const int index_start, const int n_elements );
+static double ExtendedInterpolatedTable   ( const double x, const int N, const double Table_x[], const double Table_y[] );
+static double LinearDensityShellMass      ( const double r0, const double r1, const double rho0, const double rho1 );
+static double AnalyticalExternalPotential ( const double r );
+
+static double AnalyticalDensProf_Plummer  ( const double r, const double R0, const double Rho0 );
+static double AnalyticalMassProf_Plummer  ( const double r, const double R0, const double Rho0 );
+static double AnalyticalDensProf_NFW      ( const double r, const double R0, const double Rho0 );
+static double AnalyticalMassProf_NFW      ( const double r, const double R0, const double Rho0 );
+static double AnalyticalDensProf_Burkert  ( const double r, const double R0, const double Rho0 );
+static double AnalyticalMassProf_Burkert  ( const double r, const double R0, const double Rho0 );
+static double AnalyticalDensProf_Jaffe    ( const double r, const double R0, const double Rho0 );
+static double AnalyticalMassProf_Jaffe    ( const double r, const double R0, const double Rho0 );
+static double AnalyticalDensProf_Hernquist( const double r, const double R0, const double Rho0 );
+static double AnalyticalMassProf_Hernquist( const double r, const double R0, const double Rho0 );
+static double AnalyticalDensProf_Einasto  ( const double r, const double R0, const double Rho0, const double Einasto_Power_Factor );
+
+static double MassIntegrand_Plummer       ( const double r, void* parameters );
+static double MassIntegrand_NFW           ( const double r, void* parameters );
+static double MassIntegrand_Burkert       ( const double r, void* parameters );
+static double MassIntegrand_Jaffe         ( const double r, void* parameters );
+static double MassIntegrand_Hernquist     ( const double r, void* parameters );
+static double MassIntegrand_Einasto       ( const double r, void* parameters );
+static double MassIntegrand_Table         ( const double r, void* parameters );
+
+// Parameters for the intergration of mass profile
+struct mass_integrand_params
+{
+   double Cloud_R0;
+   double Cloud_Rho0;
+};
+
+struct mass_integrand_params_Einasto
+{
+   double Cloud_R0;
+   double Cloud_Rho0;
+   double Cloud_Einasto_Power_Factor;
+};
+
+struct mass_integrand_params_Table
+{
+   int     NBin;
+   double* Table_R;
+   double* Table_D;
+};
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Par_EquilibriumIC
+// Description :  Constructor of the class Par_Equilibrium
+//
+// Note        :  1. Cloud_Type is determined during the construction
+//
+// Parameter   :  Type : Type of this particle cloud
+//
+// Return      :
+//-------------------------------------------------------------------------------------------------------
 Par_EquilibriumIC::Par_EquilibriumIC( const char* Type )
 {
    strcpy( Cloud_Type, Type );
@@ -22,6 +82,17 @@ Par_EquilibriumIC::Par_EquilibriumIC( const char* Type )
 }
 
 
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  ~Par_EquilibriumIC
+// Description :  Destructor of the class Par_Equilibrium
+//
+// Note        :  1. Memory is free here
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
 Par_EquilibriumIC::~Par_EquilibriumIC()
 {
    if ( Cloud_Model == CLOUD_MODEL_TABLE )
@@ -53,6 +124,22 @@ Par_EquilibriumIC::~Par_EquilibriumIC()
 }
 
 
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  setCenterAndBulkVel
+// Description :  Set the cloud center and bulk velocity from input parameters outside
+//
+// Note        :  1.
+//
+// Parameter   :  Center_X  : x coordinate of the center
+//                Center_Y  : y coordinate of the center
+//                Center_Z  : z coordinate of the center
+//                BulkVel_X : x component of the bulk velocity
+//                BulkVel_Y : y component of the bulk velocity
+//                BulkVel_Z : z component of the bulk velocity
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::setCenterAndBulkVel( const double Center_X, const double Center_Y, const double Center_Z,
                                              const double BulkVel_X, const double BulkVel_Y, const double BulkVel_Z )
 {
@@ -66,6 +153,19 @@ void Par_EquilibriumIC::setCenterAndBulkVel( const double Center_X, const double
 }
 
 
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  setModelParameters
+// Description :  Set the parameters for the analytical models from input parameters outside
+//
+// Note        :  1. The scale density and scale radius are general but may have different names in
+//                   different models. Check the definition in AnalyticalDensProf_* for details
+//
+// Parameter   :  Rho0 : scale density in the density profile
+//                R0   : scale radius in the density profile
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::setModelParameters( const double Rho0, const double R0 )
 {
    Cloud_Rho0 = Rho0;
@@ -73,18 +173,55 @@ void Par_EquilibriumIC::setModelParameters( const double Rho0, const double R0 )
 }
 
 
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  setEinastoPowerFactor
+// Description :  Set the power factor in the Einasto model from input parameters outside
+//
+// Note        :  1. See AnalyticalDensProf_Einasto for details
+//
+// Parameter   :  EinastoPowerFactor  : the power factor in the Einasto density profile
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::setEinastoPowerFactor( const double EinastoPowerFactor )
 {
    Cloud_Einasto_Power_Factor = EinastoPowerFactor;
 }
 
 
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  setDensProfTableFilename
+// Description :  Set the filename for the density profile table from input parameters outside
+//
+// Note        :  1. The file has two columns, the first is the radius and the second is the density
+//
+// Parameter   :  DensProfTableFilename : filename for the density profile table
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::setDensProfTableFilename( const char* DensProfTableFilename )
 {
    strcpy( DensProf_Table_Name, DensProfTableFilename );
 }
 
 
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  setParticleParameters
+// Description :  Set the parameters related to the construction of the particle cloud from input parameters outside
+//
+// Note        :  1.
+//
+// Parameter   :  ParNum      : Number of particles of the particle cloud
+//                MaxR        : Maximum radius for the particles in this cloud
+//                Radial_NBin : Number of bins in the radial direction for the profiles of density, enclosed mass, potential, etc
+//                Energy_NBin : Number of bins in the energy space for the distribution function
+//                RSeed       : Random seed for setting the particle position and velocity
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::setParticleParameters( const long ParNum, const double MaxR, const int Radial_NBin, const int Energy_NBin, const int RSeed )
 {
    Cloud_Par_Num  = ParNum;
@@ -95,24 +232,22 @@ void Par_EquilibriumIC::setParticleParameters( const long ParNum, const double M
 }
 
 
-double Par_EquilibriumIC::getTotCloudMass()
-{
-   return TotCloudMass;
-}
 
-
-double Par_EquilibriumIC::getParticleMass()
-{
-   return ParticleMass;
-}
-
-
-double Par_EquilibriumIC::getMaxMassError()
-{
-   return MaxMassError;
-}
-
-
+//-------------------------------------------------------------------------------------------------------
+// Function    :  setExternalPotential
+// Description :  Set the parametes related to the external potential from input parameters outside
+//
+// Note        :  1. It supports adding either anlytical external potential or external potential from table
+//                2. The analytical external potential can be set at AnalyticalExternalPotential
+//                3. The external potential table has two columns, the first is the radius and the second is the potential
+//                4. AddExtPot_Analytical and AddExtPot_Table in Par_EquilibriumIC cannot both be turned on
+//
+// Parameter   :  AddingExternalPotential_Analytical  : Whether adding the analytical external potential
+//                AddingExternalPotential_Table       : Whether adding the external potential from table
+//                ExtPotTableFilename                 : Filename for the external potential table
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::setExternalPotential( const int AddingExternalPotential_Analytical, const int AddingExternalPotential_Table, const char* ExtPotTableFilename )
 {
    AddExtPot_Analytical = AddingExternalPotential_Analytical;
@@ -125,6 +260,70 @@ void Par_EquilibriumIC::setExternalPotential( const int AddingExternalPotential_
 }
 
 
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  getTotCloudMass
+// Description :  Get the total enclosed mass with the radius = MaxR for this cloud
+//
+// Note        :  1. The enclosed mass is computed from the sampled bins of the density profile
+//
+// Parameter   :  None
+//
+// Return      :  TotCloudMass
+//-------------------------------------------------------------------------------------------------------
+double Par_EquilibriumIC::getTotCloudMass()
+{
+   return TotCloudMass;
+}
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  getParticleMass
+// Description :  Get the mass of each particle in this cloud
+//
+// Note        :  1. ParticleMass = TotCloudMass/ParNum
+//
+// Parameter   :  None
+//
+// Return      :  ParticleMass
+//-------------------------------------------------------------------------------------------------------
+double Par_EquilibriumIC::getParticleMass()
+{
+   return ParticleMass;
+}
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  getMaxMassError
+// Description :  Get the maximum error for the enclosed mass
+//
+// Note        :  1. The enclosed mass is interpolated from RArray_M_Enc
+//                2. The error is calculated by comparing the enclosed mass
+//                   to the analytical models or the input table interpolation.
+//
+// Parameter   :  None
+//
+// Return      :  MaxMassError
+//-------------------------------------------------------------------------------------------------------
+double Par_EquilibriumIC::getMaxMassError()
+{
+   return MaxMassError;
+}
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  loadInputDensProfTable
+// Description :  Load the density profile from the input table
+//
+// Note        :  1.
+//
+// Parameter   :  None
+//
+// Return      :  InputTable_DensProf_radius, InputTable_DensProf_density
+//-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::loadInputDensProfTable()
 {
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading Density Profile Table: \"%s\" ...\n", DensProf_Table_Name );
@@ -152,6 +351,7 @@ void Par_EquilibriumIC::loadInputDensProfTable()
       Aux_Error( ERROR_INFO, "Minimum radius (%14.7e) in density table %s is larger then Cloud_MaxR (%14.7e) !!\n",
                              InputTable_DensProf_radius[0], DensProf_Table_Name, Cloud_MaxR );
 
+   // TODO: remove this
    // Set the default number of bins the same as the input table
    if ( RNBin < 0 )
       RNBin = Mis_BinarySearch_Real( InputTable_DensProf_radius, 0, InputTable_DensProf_nbin-1, Cloud_MaxR ) + 2;
@@ -174,6 +374,17 @@ void Par_EquilibriumIC::loadInputDensProfTable()
 }
 
 
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  loadInputExtPotTable
+// Description :  Load the external potential profile from the input table
+//
+// Note        :  1.
+//
+// Parameter   :  None
+//
+// Return      :  InputTable_ExtPot_radius, InputTable_ExtPot_potential
+//-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::loadInputExtPotTable()
 {
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading ExtPot Profile Table: %s ...\n", ExtPot_Table_Name );
@@ -195,15 +406,18 @@ void Par_EquilibriumIC::loadInputExtPotTable()
 }
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  initialize
-// Description :  Initialize all necessary tables of physical parameters, including radius, mass, density, gravitational potential
+// Description :  Initialization after reading input parameter and before constructing the cloud
 //
-// Note        :
+// Note        :  1. Set the random number generator
+//                2. Initialize the radial arrays of physical quantities, including radius, mass, density, gravitational potential
+//                3. Initialize the distribution function in the energy space
 //
-// Parameter   :
+// Parameter   :  None
 //
-// Return      :
+// Return      :  None
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::initialize()
 {
@@ -290,11 +504,107 @@ void Par_EquilibriumIC::initialize()
 } // FUNCTION : initialize
 
 
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  constructRadialArray
+// Description :  Construct the arrays of the various radial functions
+//
+// Note        :  1.
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Par_EquilibriumIC::constructRadialArray()
+{
+   // Interval of radial bins
+   RArray_dR = Cloud_MaxR/(RNBin-1);
+
+   // Array of Radius
+   for (int b=0; b<RNBin; b++)         RArray_R[b]         = RArray_dR*b;
+
+   // Array of Density
+   for (int b=1; b<RNBin; b++)         RArray_Rho[b]       = getDensity( RArray_R[b] );
+   RArray_Rho[0]                                           = RArray_Rho[1];   // where r=0
+
+   // Array of Enclosed Mass
+   RArray_M_Enc[0]                                         = 0;   // where r=0
+   for (int b=1; b<RNBin; b++)         RArray_M_Enc[b]     = RArray_M_Enc[b-1] + LinearDensityShellMass( RArray_R[b-1], RArray_R[b], RArray_Rho[b-1], RArray_Rho[b] );
+
+   // Array of dRho/dR
+   RArray_dRho_dR[0]                                       = (RArray_Rho[1] - RArray_Rho[0])/RArray_dR;
+   for (int b=1; b<RNBin-1; b++)       RArray_dRho_dR[b]   = Slope_LinearRegression( RArray_R, RArray_Rho, b-1, 3 );
+   RArray_dRho_dR[RLastIdx]                                = (RArray_Rho[RLastIdx] - RArray_Rho[RLastIdx-1])/RArray_dR;
+
+   // Array of Gravitional Field
+   RArray_G[0] = 0;
+   for (int b=1; b<RNBin; b++)         RArray_G[b]         = -NEWTON_G*RArray_M_Enc[b]/SQR( RArray_R[b] );
+
+   // Array of dRho_dPsi
+   for (int b=0; b<RNBin; b++)         RArray_dRho_dPsi[b] = RArray_dRho_dR[b]/RArray_G[b];
+
+   // Array of Gravitational Potential
+   RArray_Phi[RLastIdx]                                    = -NEWTON_G*RArray_M_Enc[RLastIdx]/RArray_R[RLastIdx];
+   for (int b=RLastIdx-1; b>=0; b--)   RArray_Phi[b]       = RArray_Phi[b+1] + 0.5*(RArray_G[b]+RArray_G[b+1])*RArray_dR;
+
+   // Adding external potentil
+   if ( AddExtPot_Table )
+      for (int b=0; b<RNBin; b++)      RArray_Phi[b]      += ExtendedInterpolatedTable( RArray_R[b], InputTable_ExtPot_nbin, InputTable_ExtPot_radius, InputTable_ExtPot_potential );
+
+   if ( AddExtPot_Analytical )
+      for (int b=0; b<RNBin; b++)      RArray_Phi[b]      += AnalyticalExternalPotential( RArray_R[b] );
+
+} // FUNCTION : constructRadialArray
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  constructEnergyArray
+// Description :  Construct the energy-space arrays for the distribution function
+//
+// Note        :  1.
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Par_EquilibriumIC::constructEnergyArray()
+{
+   EArray_MinE = -RArray_Phi[RLastIdx]; // TODO: why not zero
+   if ( Cloud_Model == CLOUD_MODEL_TABLE )   EArray_MaxE = -RArray_Phi[2];
+   else                                      EArray_MaxE = -RArray_Phi[1];
+   EArray_dE   = (EArray_MaxE-EArray_MinE)/ENBin;
+
+   // Set the binding energy
+   EArray_E[0] = EArray_MinE;
+   for (int k=1; k<ENBin; k++)   EArray_E[k] = EArray_E[k-1] + EArray_dE;
+
+   // Set the integrated distribution function
+   for (int k=0; k<ENBin; k++)   EArray_IntDFunc[k] = getIntegratedDistributionFunction( EArray_MinE, EArray_E[k], 1000 ); // TODO: why not from zero
+
+   // Set the distribution function
+   for (int k =0; k<ENBin; k++)
+   {
+      if      ( k <= 1         )   EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,       0, 5 );
+      else if ( k >= ENBin-2   )   EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc, ENBin-5, 5 );
+      else                         EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,     k-2, 5 );
+
+      // check negative distribution function
+      if ( EArray_DFunc[k] < 0 )   EArray_DFunc[k] = 0;
+   }
+
+   // Smooth the distribution function
+   SmoothArray( EArray_DFunc, 0, ENBin );
+
+} // FUNCTION : constructEnergyArray
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  constructParticles
-// Description :  Set particle's initial conditions (IC) for a cloud that is in equilibrium state
+// Description :  Set the particle's initial conditions (IC) for a cloud that is in equilibrium state
 //
-// Note        :
+// Note        :  1.
 //
 // Parameter   :  Mass_AllRank : An array of all particles' masses
 //                Pos_AllRank  : An array of all particles' position vectors
@@ -326,13 +636,13 @@ void Par_EquilibriumIC::constructParticles( real *Mass_AllRank, real *Pos_AllRan
       const double RandomSampleR = Mis_InterpolateFromTable( RNBin, RArray_M_Enc, RArray_R, RandomSampleM );
 
       // randomly set the position vector with a given radius
-      RandomVector_GivenLength( RandomSampleR, RandomVectorR );
+      getRandomVector_GivenLength( RandomSampleR, RandomVectorR );
 
       // velocity
       const double RandomSampleV = getRandomSampleVelocity( RandomSampleR );
 
       // randomly set the velocity vector with the given amplitude
-      RandomVector_GivenLength( RandomSampleV, RandomVectorV );
+      getRandomVector_GivenLength( RandomSampleV, RandomVectorV );
 
       // set particle attributes
       Mass_AllRank[p] = ParticleMass;
@@ -356,526 +666,13 @@ void Par_EquilibriumIC::constructParticles( real *Mass_AllRank, real *Pos_AllRan
 } // FUNCTION : constructParticle
 
 
-// Parameters for the intergration of mass profile
-struct mass_integrand_params
-{
-   double Cloud_R0;
-   double Cloud_Rho0;
-};
-
-
-struct mass_integrand_params_Einasto
-{
-   double Cloud_R0;
-   double Cloud_Rho0;
-   double Cloud_Einasto_Power_Factor;
-};
-
-
-struct mass_integrand_params_Table
-{
-   int     NBin;
-   double* Table_R;
-   double* Table_D;
-};
-
-
-//Different Model Type
-//-------------------------------------------------------------------------------------------------------
-// Function    :  AnalyticalDensProf_Plummer
-// Description :  Analytical density profile of the Plummer model
-//
-// Note        :  1. \rho(r) = \rho_0 ( 1 + (\frac{r}{a})^2 )^{-5/2}
-//                2. Reference: Plummer H. C., MNRAS, 1991, doi:10.1093/mnras/71.5.460
-//
-// Parameter   :  r    : input radius
-//                R0   : Plummer scale radius, a
-//                Rho0 : Plummer scale density, \rho_0
-//
-// Return      :  density at the given radius
-//-------------------------------------------------------------------------------------------------------
-double AnalyticalDensProf_Plummer( const double r, const double R0, const double Rho0 )
-{
-   const double x = r/R0;
-
-   return Rho0*pow( 1+x*x, -2.5 );
-
-} // FUNCTION : AnalyticalDensProf_Plummer
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  MassIntegrand_Plummer
-// Description :  Integrand for the enclosed mass profile of the Plummer model
-//
-// Note        :  integrand = 4*\pi*r^2*\rho(r)
-//
-// Parameter   :  r          : input radius
-//                parameters : parameters for the model
-//
-// Return      :  integrand of mass at the given radius
-//-------------------------------------------------------------------------------------------------------
-double MassIntegrand_Plummer( const double r, void* parameters )
-{
-   if ( r == 0.0 ) return 0.0;
-
-   struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
-   double R0   = p->Cloud_R0;
-   double Rho0 = p->Cloud_Rho0;
-
-   return 4*M_PI*SQR(r)*AnalyticalDensProf_Plummer( r, R0, Rho0 );
-
-} // FUNCTION : MassIntegrand_Plummer
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  AnalyticalMassProf_Plummer
-// Description :  Analytical enclosed mass profile of the Plummer model
-//
-// Note        :  1. M(r) = M_0 \frac{ r^3 }{ (r^2 + a^2)^{3/2} }
-//                        = \frac{4\pi}{3} a^3 \rho_0 \frac{ r^3 }{ (r^2 + a^2)^{3/2} }
-//                2. Reference: Plummer H. C., MNRAS, 1991, doi:10.1093/mnras/71.5.460
-//
-// Parameter   :  r    : input radius
-//                R0   : Plummer scale radius, a
-//                Rho0 : Plummer scale density, \rho_0
-//
-// Return      :  enclosed mass at the given radius
-//-------------------------------------------------------------------------------------------------------
-double AnalyticalMassProf_Plummer( const double r, const double R0, const double Rho0 )
-{
-   const double x = r/R0;
-
-   return (4.0/3.0)*M_PI*Rho0*CUBE(r)*pow( 1+x*x, -1.5 );
-
-} // FUNCTION : AnalyticalMassProf_Plummer
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  AnalyticalDensProf_NFW
-// Description :  Analytical density profile of the NFW model
-//
-// Note        :  1. \rho(r) = \rho_s \frac{1}{ ( \frac{r}{r_s} ) ( 1 + \frac{r}{r_s} )^2 }
-//                2. Reference: Navarro J.~F., Frenk C.~S., White S.~D.~M., 1996, ApJ, doi:10.1086/177173
-//                              Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
-//
-// Parameter   :  r    : input radius
-//                R0   : NFW scale radius, r_s
-//                Rho0 : NFW scale density, \rho_s
-//
-// Return      :  density at the given radius
-//-------------------------------------------------------------------------------------------------------
-double AnalyticalDensProf_NFW( const double r, const double R0, const double Rho0 )
-{
-   const double x = r/R0;
-
-   return Rho0/( x*SQR( 1+x ) );
-
-} // FUNCTION : AnalyticalDensProf_NFW
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  MassIntegrand_NFW
-// Description :  Integrand for the enclosed mass profile of the NFW model
-//
-// Note        :  integrand = 4*\pi*r^2*\rho(r)
-//
-// Parameter   :  r          : input radius
-//                parameters : parameters for the model
-//
-// Return      :  integrand of mass at the given radius
-//-------------------------------------------------------------------------------------------------------
-double MassIntegrand_NFW( const double r, void* parameters )
-{
-   if ( r == 0.0 ) return 0.0;
-
-   struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
-   double R0   = p->Cloud_R0;
-   double Rho0 = p->Cloud_Rho0;
-
-   return 4*M_PI*SQR(r)*AnalyticalDensProf_NFW( r, R0, Rho0 );
-
-} // FUNCTION : MassIntegrand_NFW
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  AnalyticalMassProf_NFW
-// Description :  Analytical enclosed mass profile of the NFW model
-//
-// Note        :  1. M(r) = 4\pi \rho_s r_s^3 [ \ln( \frac{ r_s + r }{ r_s } ) - \frac{ r }{ r_s + r } ]
-//                2. Reference: Navarro J.~F., Frenk C.~S., White S.~D.~M., 1996, ApJ, doi:10.1086/177173
-//                              Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
-//
-// Parameter   :  r    : input radius
-//                R0   : NFW scale radius, r_s
-//                Rho0 : NFW scale density, \rho_s
-//
-// Return      :  enclosed mass at the given radius
-//-------------------------------------------------------------------------------------------------------
-double AnalyticalMassProf_NFW( const double r, const double R0, const double Rho0 )
-{
-   const double x = r/R0;
-
-   return 4*M_PI*Rho0*CUBE(R0)*( log( 1+x ) - x/(1+x) );
-
-} // FUNCTION : AnalyticalMassProf_NFW
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  AnalyticalDensProf_Burkert
-// Description :  Analytical density profile of the Burkert model
-//
-// Note        :  1. \rho(r) = \rho_s \frac{1}{ ( 1 + \frac{r}{r_s} ) ( 1 + (\frac{r}{r_s})^2 ) }
-//                2. Reference: Burkert A., 1995, ApJL, doi:10.1086/309560
-//                              Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
-//
-// Parameter   :  r    : input radius
-//                R0   : Plummer scale radius, a
-//                Rho0 : Plummer scale density, \rho_0
-//
-// Return      :  density at the given radius
-//-------------------------------------------------------------------------------------------------------
-double AnalyticalDensProf_Burkert( const double r, const double R0, const double Rho0 )
-{
-   const double x = r/R0;
-
-   return Rho0/( (1+x)*(1+x*x) );
-
-} // FUNCTION : AnalyticalDensProf_Burkert
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  MassIntegrand_Burkert
-// Description :  Integrand for the enclosed mass profile of the Burkert model
-//
-// Note        :  integrand = 4*\pi*r^2*\rho(r)
-//
-// Parameter   :  r          : input radius
-//                parameters : parameters for the model
-//
-// Return      :  integrand of mass at the given radius
-//-------------------------------------------------------------------------------------------------------
-double MassIntegrand_Burkert( const double r, void* parameters )
-{
-   if ( r == 0.0 ) return 0.0;
-
-   struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
-   double R0   = p->Cloud_R0;
-   double Rho0 = p->Cloud_Rho0;
-
-   return 4*M_PI*SQR(r)*AnalyticalDensProf_Burkert( r, R0, Rho0 );
-
-} // FUNCTION : MassIntegrand_Burkert
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  AnalyticalMassProf_Burkert
-// Description :  Analytical enclosed mass profile of the Burkert model
-//
-// Note        :  1. M(r) = 2\pi \rho_s r_s^3 [ \frac{1}{2}\ln( 1 + (\frac{r}{r_s})^2 ) + \ln( 1 + \frac{r}{r_s} ) - \arctan( \frac{r}{r_s} ) ]
-//                2. Reference: Burkert A., 1995, ApJL, doi:10.1086/309560
-//                              Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
-//
-// Parameter   :  r    : input radius
-//                R0   : Burkert scale radius, r_s
-//                Rho0 : Burkert scale density, \rho_s
-//
-// Return      :  enclosed mass at the given radius
-//-------------------------------------------------------------------------------------------------------
-double AnalyticalMassProf_Burkert( const double r, const double R0, const double Rho0 )
-{
-   const double x = r/R0;
-
-   return 2*M_PI*Rho0*CUBE(R0)*( 0.5*log( 1+x*x ) + log( 1+x ) - atan( x ) );
-
-} // FUNCTION : AnalyticalMassProf_Burkert
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  AnalyticalDensProf_Jaffe
-// Description :  Analytical density profile of the Jaffe model
-//
-// Note        :  1. \rho(r) = \frac{ \rho_0 }{ 4\pi } \frac{ r_J^4 }{ r^2 (r_J + r)^2}
-//                           = \frac{ \rho_0 }{ 4\pi } \frac{1}{ ( \frac{r}{r_J} )^2 ( 1 + \frac{r}{r_J} )^2 }
-//                2. Reference: Jaffe W., 1983, MNRAS, doi:10.1093/mnras/202.4.995
-//                              Ciotti L. and Ziaee Lorzad A., 2018, MNRAS, doi:10.1093/mnras/stx2771
-//
-// Parameter   :  r    : input radius
-//                R0   : Jaffe scale radius, r_J
-//                Rho0 : Jaffe scale density, \rho_0
-//
-// Return      :  density at the given radius
-//-------------------------------------------------------------------------------------------------------
-double AnalyticalDensProf_Jaffe( const double r, const double R0, const double Rho0 )
-{
-   const double x = r/R0;
-
-   return Rho0/( 4*M_PI*SQR(x)*SQR(1+x) ); // return Rho0/(x*(1+x)); //previous one
-
-} // FUNCTION : AnalyticalDensProf_Jaffe
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  MassIntegrand_Jaffe
-// Description :  Integrand for the enclosed mass profile of the Jaffe model
-//
-// Note        :  integrand = 4*\pi*r^2*\rho(r)
-//
-// Parameter   :  r          : input radius
-//                parameters : parameters for the model
-//
-// Return      :  integrand of mass at the given radius
-//-------------------------------------------------------------------------------------------------------
-double MassIntegrand_Jaffe( const double r, void* parameters )
-{
-   if ( r == 0.0 ) return 0.0;
-
-   struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
-   double R0   = p->Cloud_R0;
-   double Rho0 = p->Cloud_Rho0;
-
-   return 4*M_PI*SQR(r)*AnalyticalDensProf_Jaffe( r, R0, Rho0 );
-
-} // FUNCTION : MassIntegrand_Jaffe
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  AnalyticalMassProf_Jaffe
-// Description :  Analytical enclosed mass profile of the Jaffe model
-//
-// Note        :  1. M(r) = M_J \frac{ r }{ r_J + r }
-//                   ,where M_J = \rho_0*r_J^3 is the total mass
-//                2. Reference: Jaffe W., 1983, MNRAS, doi:10.1093/mnras/202.4.995
-//                              Ciotti L. and Ziaee Lorzad A., 2018, MNRAS, doi:10.1093/mnras/stx2771
-//
-// Parameter   :  r    : input radius
-//                R0   : Jaffe scale radius, r_J
-//                Rho0 : Jaffe scale density, \rho_0
-//
-// Return      :  enclosed mass at the given radius
-//-------------------------------------------------------------------------------------------------------
-double AnalyticalMassProf_Jaffe( const double r, const double R0, const double Rho0 )
-{
-   const double x = r/R0;
-
-   return Rho0*CUBE(R0)*x/(1+x);
-
-} // FUNCTION : AnalyticalMassProf_Jaffe
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  AnalyticalDensProf_Hernquist
-// Description :  Analytical density profile of the Hernquist model
-//
-// Note        :  1. \rho(r) = \rho_0 \frac{ a^4 }{ r (r+a)^3 }
-//                           = \rho_0 \frac{1}{ \frac{r}{a} ( 1+\frac{r}{a} )^3 }
-//                2. Reference: Hernquist L., 1990, ApJ, doi:10.1086/168845
-//
-// Parameter   :  r    : input radius
-//                R0   : Hernquist scale radius, a
-//                Rho0 : Hernquist scale density, \rho_0
-//
-// Return      :  density at the given radius
-//-------------------------------------------------------------------------------------------------------
-double AnalyticalDensProf_Hernquist( const double r, const double R0, const double Rho0 )
-{
-   const double x = r/R0;
-
-   return Rho0/( x*CUBE( 1+x ) );
-
-} // FUNCTION : AnalyticalDensProf_Hernquist
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  MassIntegrand_Hernquist
-// Description :  Integrand for the enclosed mass profile of the Hernquist model
-//
-// Note        :  integrand = 4*\pi*r^2*\rho(r)
-//
-// Parameter   :  r          : input radius
-//                parameters : parameters for the model
-//
-// Return      :  integrand of mass at the given radius
-//-------------------------------------------------------------------------------------------------------
-double MassIntegrand_Hernquist( const double r, void* parameters )
-{
-   if ( r == 0.0 ) return 0.0;
-
-   struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
-   double R0   = p->Cloud_R0;
-   double Rho0 = p->Cloud_Rho0;
-
-   return 4*M_PI*SQR(r)*AnalyticalDensProf_Hernquist( r, R0, Rho0 );
-
-} // FUNCTION : MassIntegrand_Hernquist
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  AnalyticalMassProf_Hernquist
-// Description :  Analytical enclosed mass profile of the Hernquist model
-//
-// Note        :  1. M(r) = M_0 \frac{ r^2 }{ (r+a)^2 }
-//                   ,where M_0 = 2\pi*\rho_0*a^3 is the total mass
-//                2. Reference: Hernquist L., 1990, ApJ, doi:10.1086/168845
-//
-// Parameter   :  r    : input radius
-//                R0   : Hernquist scale radius, a
-//                Rho0 : Hernquist scale density, \rho_0
-//
-// Return      :  enclosed mass at the given radius
-//-------------------------------------------------------------------------------------------------------
-double AnalyticalMassProf_Hernquist( const double r, const double R0, const double Rho0 )
-{
-   const double x = r/R0;
-
-   return 2*M_PI*Rho0*CUBE(R0)*SQR(x)/SQR(1+x);
-
-} // FUNCTION : AnalyticalMassProf_Hernquist
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  AnalyticalDensProf_Einasto
-// Description :  Analytical density profile of the Einasto model
-//
-// Note        :  1. \rho(r) = \rho_s    \exp{ -d_n [ (\frac{r}{r_s})^{1/n}    - 1 ] }, where r_s is the radius at which contains half of the total mass
-//                           = \rho_{-2} \exp{ -2n  [ (\frac{r}{r_{-2}})^{1/n} - 1 ] }, where r_{-2} is the radius at which \rho(r) \propto r^{-2}
-//                           = \rho_0    \exp{ -[ (\frac{r}{h})^{1/n} ] }
-//                2. Reference: Einasto J., 1965, TrAlm
-//                              Retana-Montenegro E. et al., 2012, A&A, doi:10.1051/0004-6361/201118543
-//
-// Parameter   :  r                    : input radius
-//                R0                   : Einasto scale radius, h = \frac{r_s}{d_n^n} = \frac{r_{-2}}{(2n)^n}
-//                Rho0                 : Einasto central density, \rho_0 = \rho_s\exp{d_n} = \rho_{-2}\exp{2n}
-//                Einasto_Power_Factor : Einasto power factor, 1/n
-//
-// Return      :  density at the given radius
-//-------------------------------------------------------------------------------------------------------
-double AnalyticalDensProf_Einasto( const double r, const double R0, const double Rho0, const double Einasto_Power_Factor )
-{
-   const double x = r/R0;
-
-   return Rho0*exp( -pow( x, Einasto_Power_Factor ) );
-
-} // FUNCTION : AnalyticalDensProf_Einasto
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  MassIntegrand_Einasto
-// Description :  Integrand for the enclosed mass profile of the Einasto model
-//
-// Note        :  integrand = 4*\pi*r^2*\rho(r)
-//
-// Parameter   :  r          : input radius
-//                parameters : parameters for the model
-//
-// Return      :  integrand of mass at the given radius
-//-------------------------------------------------------------------------------------------------------
-double MassIntegrand_Einasto( const double r, void* parameters )
-{
-   if ( r == 0.0 ) return 0.0;
-
-   struct mass_integrand_params_Einasto *p = (struct mass_integrand_params_Einasto *) parameters;
-   double R0                           = p->Cloud_R0;
-   double Rho0                         = p->Cloud_Rho0;
-   double Einasto_Power_Factor         = p->Cloud_Einasto_Power_Factor;
-
-   return 4*M_PI*SQR(r)*AnalyticalDensProf_Einasto( r, R0, Rho0, Einasto_Power_Factor );
-
-} // FUNCTION : MassIntegrand_Einasto
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  AnalyticalMassProf_Einasto
-// Description :  Analytical enclosed mass profile of the Einasto model
-//
-// Note        :  1. M(r) = M_0 [1 - \frac{ \Gamma( 3n, (r/h)^{1/n} ) }{ \Gamma(3n) }]
-//                   ,where M_0 = 4\pi \rho_0 h^3 n \Gamma(3n) is the total mass
-//                2. Reference: Einasto J., 1965, TrAlm
-//                              Retana-Montenegro E. et al., 2012, A&A, doi:10.1051/0004-6361/201118543
-//
-// Parameter   :  r                    : input radius
-//                R0                   : Einasto scale radius, h
-//                Rho0                 : Einasto central density, \rho_0
-//                Einasto_Power_Factor : Einasto power factor, 1/n
-//
-// Return      :  enclosed mass at the given radius
-//-------------------------------------------------------------------------------------------------------
-// double AnalyticalMassProf_Einasto( const double r, const double R0, const double Rho0, const double Einasto_Power_Factor )
-// {
-//    const double x = r/R0;
-//
-//    //Gamma function:                  Gamma( s    ) = \int_{0}^{\infty} t^{s-1}*e^{-t} dt
-//    //Upper incomplete Gamma function: Gamma( s, x ) = \int_{x}^{\infty} t^{s-1}*e^{-t} dt
-//
-//    return 4*M_PI*Rho0*CUBE(R0)/Einasto_Power_Factor*( Gamma(3/Einasto_Power_Factor) - UpperIncompleteGamma( 3/Einasto_Power_Factor, pow( x, Einasto_Power_Factor ) ) );
-//
-// } // FUNCTION : AnalyticalMassProf_Einasto
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  AnalyticalExternalPotential
-// Description :  Analytical external potential
-//
-// Note        :
-//
-// Parameter   :  r                    : input radius
-//
-// Return      :  external potential at the given radius
-//-------------------------------------------------------------------------------------------------------
-double AnalyticalExternalPotential( const double r )
-{
-   return 0.0;
-
-} // FUNCTION : AnalyticalExternalPotential
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :
-// Description :
-//
-// Note        :
-//
-// Parameter   :
-//
-// Return      :
-//-------------------------------------------------------------------------------------------------------
-double ExtendedInterpolatedTable( const double x, const int N, const double Table_x[], const double Table_y[] )
-{
-   if      ( x <= Table_x[0]   )   return Table_y[0];
-   else if ( x >= Table_x[N-1] )   return Table_y[N-1];
-   else                            return Mis_InterpolateFromTable( N, Table_x, Table_y, x );
-}
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :
-// Description :
-//
-// Note        :
-//
-// Parameter   :
-//
-// Return      :
-//-------------------------------------------------------------------------------------------------------
-double MassIntegrand_Table( const double r, void* parameters )
-{
-   if ( r == 0.0 ) return 0.0;
-
-   struct  mass_integrand_params_Table *p = (struct mass_integrand_params_Table *) parameters;
-   int     NBin                       = p->NBin;
-   double* Table_R                    = p->Table_R;
-   double* Table_D                    = p->Table_D;
-
-   return 4*M_PI*SQR(r)*ExtendedInterpolatedTable( r, NBin, Table_R, Table_D );
-
-} // FUNCTION : MassIntegrand_Table
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  getDensity
-// Description :  Calculate the density of this cloud at radius r
+// Description :  Get the density of this cloud at radius r
 //
-// Note        :
+// Note        :  1. For CLOUD_MODEL_TABLE, the density is interpolated from the input density profile table
+//                2. For other models, the density is from the analytical density profile
 //
 // Parameter   :  r : radius
 //
@@ -899,11 +696,12 @@ double Par_EquilibriumIC::getDensity( const double r )
 } // FUNCTION : getDensity
 
 
+
 //-------------------------------------------------------------------------------------------------------
-// Function    :  getEnclosedMass
+// Function    :  getEnclosedMass_GSLintegration
 // Description :  Calculate the enclosed mass of this cloud within radius r
 //
-// Note        :
+// Note        :  1. Integrate the enclosed mass from the density profile
 //
 // Parameter   :  r : radius
 //
@@ -960,6 +758,17 @@ double Par_EquilibriumIC::getEnclosedMass_GSLintegration( const double r )
 } // FUNCTION : getEnclosedMass_GSLintegration
 
 
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  getEnclosedMass_Analytical
+// Description :  Calculate the enclosed mass of this cloud within radius r
+//
+// Note        :  1. Get the enclosed mass from the analytical enclosed mass profile
+//
+// Parameter   :  r : radius
+//
+// Return      :  Enclosed mass of this cloud within radius r
+//-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::getEnclosedMass_Analytical( const double r )
 {
 
@@ -977,32 +786,34 @@ double Par_EquilibriumIC::getEnclosedMass_Analytical( const double r )
 } // FUNCTION : getEnclosedMass_Analytical
 
 
+
 //-------------------------------------------------------------------------------------------------------
-// Function    :
-// Description :
+// Function    :  getEnclosedMass
+// Description :  Get the enclosed mass of this cloud within radius r by interpolating the constructed array
 //
-// Note        :
+// Note        :  1. Get the enclosed mass from the sampled density profiles
 //
-// Parameter   :
+// Parameter   :  r : radius
 //
-// Return      :
+// Return      :  Enclosed mass of this cloud within radius r
 //-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::getEnclosedMass( const double r )
 {
    return ExtendedInterpolatedTable( r, RNBin, RArray_R, RArray_M_Enc );
 
-} // FUNCTION : getGraviPotential
+} // FUNCTION : getEnclosedMass
+
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :
-// Description :
+// Function    :  getGraviPotential
+// Description :  Get the gravitational potential of this cloud at radius r by interpolating the constructed array
 //
-// Note        :
+// Note        :  1. Get the gravitaional potential from the sampled enclosed mass profiles
 //
-// Parameter   :
+// Parameter   :  r : radius
 //
-// Return      :
+// Return      :  Gravitational potential of this cloud at radius r
 //-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::getGraviPotential( const double r )
 {
@@ -1014,15 +825,16 @@ double Par_EquilibriumIC::getGraviPotential( const double r )
 } // FUNCTION : getGraviPotential
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  getRandomSampleVelocity
-// Description :  Set the velocity of a particle at radius r
+// Description :  Get the ramdomly sampled magnitude of the velocity of a particle at radius r from the distribution function
 //
 // Note        :
 //
 // Parameter   :  r : radius
 //
-// Return      :  Particle velocity
+// Return      :  Magnitude of velocity for a particle at radius r
 //-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
 {
@@ -1077,15 +889,18 @@ double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :
-// Description :
+// Function    :  getIntegratedDistributionFunction
+// Description :  Get the integrated distribution function
 //
-// Note        :   \int_{0}^{\mathcal{E}} \frac{ 1 }{ \sqrt{ \mathcal{E} -\Psi } } \frac{ d\rho }{ d\Psi } d\Psi
-//               = \int_{0}^{\mathcal{E}} -2 \frac{ d\rho }{ d\Psi } d\sqrt{ \mathcal{E} -\Psi } }
+// Note        :  1. The integrated deistribution function
+//                   = \int_{0}^{\mathcal{E}} \frac{ 1 }{ \sqrt{ \mathcal{E} -\Psi } } \frac{ d\rho }{ d\Psi } d\Psi
+//                   = \int_{0}^{\mathcal{E}} -2 \frac{ d\rho }{ d\Psi } d\sqrt{ \mathcal{E} -\Psi } }
 //
-// Parameter   :
+// Parameter   :  Psi_Min  : Lower limit of the integration
+//                Psi_Max  : Upper limit of the integration
+//                N_points : Number of points for the integration
 //
-// Return      :
+// Return      :  Integrated distribution function
 //-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::getIntegratedDistributionFunction( const double Psi_Min, const double Psi_Max, const int N_points )
 {
@@ -1099,6 +914,7 @@ double Par_EquilibriumIC::getIntegratedDistributionFunction( const double Psi_Mi
       const int    index_Psi       = Mis_BinarySearch_Real( RArray_Phi, 0, RLastIdx, -(Psi+0.5*dPsi) ) + 1;
       const double dsqrt_EminusPsi = ( i == N_points-1 ) ? ( - sqrt( Psi_Max-Psi ) ) : ( sqrt( Psi_Max-(Psi+dPsi) ) - sqrt( Psi_Max-Psi ) ) ;
 
+      // use interpolation for dRho_dPsi, Psi -> r -> dRho_dPsi
       integral += -2*RArray_dRho_dPsi[index_Psi]*dsqrt_EminusPsi;
    }
 
@@ -1107,126 +923,10 @@ double Par_EquilibriumIC::getIntegratedDistributionFunction( const double Psi_Mi
 } // FUNCTION : getIntegratedDistributionFunction
 
 
-//-------------------------------------------------------------------------------------------------------
-// Function    : LinearDensityShellMass
-// Description :
-//
-// Note        :   Assume the density profile \rho(r) is linear between two end points, r0 and r1:
-//                 \rho(r) = \rho_0 + (\frac{(\rho_1-\rho_0)}{r_1-r_0})(r-r_0)
-//                 Then, the integrated shell mass between the two end points is
-//                 M_{shell} = \int_{r_0}^{r_1} \rho(r) 4\pi r^2 dr
-//                           = 4\pi r_0^2 \Delta r   [ \frac{1}{2} \rho_0 + \frac{1}{2} \rho_1 ] +
-//                             4\pi r_0   \Delta r^2 [ \frac{1}{3} \rho_0 + \frac{2}{3} \rho_1 ] +
-//                             4\pi       \Delta r^3 [ \frac{1}{12}\rho_0 + \frac{3}{12}\rho_1 ]
-//
-// Parameter   :
-//
-// Return      :
-//-------------------------------------------------------------------------------------------------------
-double LinearDensityShellMass( const double r0, const double r1, const double rho0, const double rho1 )
-{
-   const double dr  = r1 - r0;
-
-   return M_PI*dr*( r0*r0*( 6*rho0 + 6*rho1 ) + r0*dr*( 4*rho0 + 8*rho1 ) + dr*dr*( rho0 + 3*rho1 ) )/3.0;
-
-} // FUNCTION : LinearDensityShellMass
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  constructRadialArray
-// Description :  Calculate the probability density function of particles' velocities
-//
-// Note        :
-//
-// Parameter   :
-//
-// Return      :
-//-------------------------------------------------------------------------------------------------------
-void Par_EquilibriumIC::constructRadialArray()
-{
-   // Interval of radial bins
-   RArray_dR = Cloud_MaxR/(RNBin-1);
-
-   // Array of Radius
-   for (int b=0; b<RNBin; b++)         RArray_R[b]         = RArray_dR*b;
-
-   // Array of Density
-   for (int b=1; b<RNBin; b++)         RArray_Rho[b]       = getDensity( RArray_R[b] );
-   RArray_Rho[0]                                           = RArray_Rho[1];   // where r=0
-
-   // Array of Enclosed Mass
-   RArray_M_Enc[0]                                         = 0;   // where r=0
-   for (int b=1; b<RNBin; b++)         RArray_M_Enc[b]     = RArray_M_Enc[b-1] + LinearDensityShellMass( RArray_R[b-1], RArray_R[b], RArray_Rho[b-1], RArray_Rho[b] );
-
-   // Array of dRho/dR
-   RArray_dRho_dR[0]                                       = (RArray_Rho[1] - RArray_Rho[0])/RArray_dR;
-   for (int b=1; b<RNBin-1; b++)       RArray_dRho_dR[b]   = Slope_LinearRegression( RArray_R, RArray_Rho, b-1, 3 );
-   RArray_dRho_dR[RLastIdx]                                = (RArray_Rho[RLastIdx] - RArray_Rho[RLastIdx-1])/RArray_dR;
-
-   // Array of Gravitional Field
-   RArray_G[0] = 0;
-   for (int b=1; b<RNBin; b++)         RArray_G[b]         = -NEWTON_G*RArray_M_Enc[b]/SQR( RArray_R[b] );
-
-   // Array of dRho_dPsi
-   for (int b=0; b<RNBin; b++)         RArray_dRho_dPsi[b] = RArray_dRho_dR[b]/RArray_G[b];
-
-   // Array of Gravitational Potential
-   RArray_Phi[RLastIdx]                                    = -NEWTON_G*RArray_M_Enc[RLastIdx]/RArray_R[RLastIdx];
-   for (int b=RLastIdx-1; b>=0; b--)   RArray_Phi[b]       = RArray_Phi[b+1] + 0.5*(RArray_G[b]+RArray_G[b+1])*RArray_dR;
-
-   // Adding external potentil
-   if ( AddExtPot_Table )
-      for (int b=0; b<RNBin; b++)      RArray_Phi[b]      += ExtendedInterpolatedTable( RArray_R[b], InputTable_ExtPot_nbin, InputTable_ExtPot_radius, InputTable_ExtPot_potential );
-
-   if ( AddExtPot_Analytical )
-      for (int b=0; b<RNBin; b++)      RArray_Phi[b]      += AnalyticalExternalPotential( RArray_R[b] );
-
-} // FUNCTION : constructRadialArray
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  constructEnergyArray
-// Description :  Calculate the probability density function of particles' velocities
-//
-// Note        :
-//
-// Parameter   :
-//
-// Return      :
-//-------------------------------------------------------------------------------------------------------
-void Par_EquilibriumIC::constructEnergyArray()
-{
-   EArray_MinE = -RArray_Phi[RLastIdx]; // TODO: why not zero
-   if ( Cloud_Model == CLOUD_MODEL_TABLE )   EArray_MaxE = -RArray_Phi[2];
-   else                                      EArray_MaxE = -RArray_Phi[1];
-   EArray_dE   = (EArray_MaxE-EArray_MinE)/ENBin;
-
-   // Set the binding energy
-   EArray_E[0] = EArray_MinE;
-   for (int k=1; k<ENBin; k++)   EArray_E[k] = EArray_E[k-1] + EArray_dE;
-
-   // Set the integrated distribution function
-   for (int k=0; k<ENBin; k++)   EArray_IntDFunc[k] = getIntegratedDistributionFunction( EArray_MinE, EArray_E[k], 1000 ); // TODO: why not from zero
-
-   // Set the distribution function
-   for (int k =0; k<ENBin; k++)
-   {
-      if      ( k <= 1         )   EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,       0, 5 );
-      else if ( k >= ENBin-2   )   EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc, ENBin-5, 5 );
-      else                         EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,     k-2, 5 );
-
-      // check negative distribution function
-      if ( EArray_DFunc[k] < 0 )   EArray_DFunc[k] = 0;
-   }
-
-   // Smooth the distribution function
-   SmoothArray( EArray_DFunc, 0, ENBin );
-
-} // FUNCTION : constructEnergyArray
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  RandomVector_GivenLength
-// Description :  Compute a random 3D vector with a given length
+// Function    :  getRandomVector_GivenLength
+// Description :  Get a randomly sampled 3D vector with a given length
 //
 // Note        :  Uniformly random sample in theta and phi does NOT give a uniformly random sample in 3D space
 //                --> Uniformly random sample in a 3D sphere and then normalize all vectors to the given radius
@@ -1236,7 +936,7 @@ void Par_EquilibriumIC::constructEnergyArray()
 //
 // Return      :  RandomVector
 //-------------------------------------------------------------------------------------------------------
-void Par_EquilibriumIC::RandomVector_GivenLength( const double Length, double RandomVector[3] )
+void Par_EquilibriumIC::getRandomVector_GivenLength( const double Length, double RandomVector[3] )
 {
    do
    {
@@ -1253,18 +953,18 @@ void Par_EquilibriumIC::RandomVector_GivenLength( const double Length, double Ra
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    : SmoothArray
-// Description :
+// Function    :  SmoothArray
+// Description :  Smooth the input array
 //
-// Note        :
+// Note        :  1.
 //
-// Parameter   : array_x     : array of x data
-//               index_start : the first index in the array for the smoothing
-//               index_end   : the last index in the array for the smoothing
+// Parameter   :  array_x     : array of x data
+//                index_start : the first index in the array for the smoothing
+//                index_end   : the last index in the array for the smoothing
 //
-// Return      : array_x
+// Return      :  array_x
 //-------------------------------------------------------------------------------------------------------
-void Par_EquilibriumIC::SmoothArray( double* array_x, int index_start, int index_end )
+void SmoothArray( double* array_x, const int index_start, const int index_end )
 {
 
    int    smoothing_n_elements = 10; // smoothing every "smoothing_n_elements" elements
@@ -1315,20 +1015,19 @@ void Par_EquilibriumIC::SmoothArray( double* array_x, int index_start, int index
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    : ArrayCovariance
-// Description : Get the covariance between two arrays
+// Function    :  ArrayCovariance
+// Description :  Get the covariance between two arrays
 //
-// Note        : if x==y, then the covariance is the variance of x
+// Note        :  1. if x==y, then the covariance is the variance of x
 //
-// Parameter   : array_x     : array of x data
-//               array_y     : array of y data
-//               index_start : the first index in the array for the linear regression
-//               n_elements  : number of elements for the linear regression
+// Parameter   :  array_x     : array of x data
+//                array_y     : array of y data
+//                index_start : the first index in the array for the linear regression
+//                n_elements  : number of elements for the linear regression
 //
-// Return      : covariance_xy
+// Return      :  covariance_xy
 //-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::ArrayCovariance( const double* array_x, const double* array_y,
-                                           const int index_start, const int n_elements )
+double ArrayCovariance( const double* array_x, const double* array_y, const int index_start, const int n_elements )
 {
    const double normalized_factor = 1.0/n_elements;
 
@@ -1364,20 +1063,19 @@ double Par_EquilibriumIC::ArrayCovariance( const double* array_x, const double* 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    : Slope_LinearRegression
-// Description : Get the slope of y-x using linear regression
+// Function    :  Slope_LinearRegression
+// Description :  Get the slope of y-x using linear regression
 //
 // Note        :
 //
-// Parameter   : array_x     : array of x data
-//               array_y     : array of y data
-//               index_start : the first index in the array for the linear regression
-//               n_elements  : number of elements for the linear regression
+// Parameter   :  array_x     : array of x data
+//                array_y     : array of y data
+//                index_start : the first index in the array for the linear regression
+//                n_elements  : number of elements for the linear regression
 //
-// Return      : slope_y
+// Return      :  slope_y
 //-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::Slope_LinearRegression( const double* array_x, const double* array_y,
-                                                  const int index_start, const int n_elements )
+double Slope_LinearRegression( const double* array_x, const double* array_y, const int index_start, const int n_elements )
 {
 
    const double variance_x    = ArrayCovariance( array_x, array_x, index_start, n_elements );
@@ -1388,6 +1086,550 @@ double Par_EquilibriumIC::Slope_LinearRegression( const double* array_x, const d
    return slope_y;
 
 } // FUNCTION : Slope_LinearRegression
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  ExtendedInterpolatedTable
+// Description :  Get the interpolated value even x is out of range
+//
+// Note        :  1. If the x is in the range of Table_x, it call Mis_InterpolateFromTable
+//                2. If the x is out of the range of Table_x, it return the values at end points
+//
+// Parameter   :  x       : Position to get the interpolation
+//                N       : Number of bins in the Table
+//                Table_x : Table of values to be input
+//                Table_y : Table of values to be interpolated
+//
+// Return      :  Interpolated value
+//-------------------------------------------------------------------------------------------------------
+double ExtendedInterpolatedTable( const double x, const int N, const double Table_x[], const double Table_y[] )
+{
+   if      ( x <= Table_x[0]   )   return Table_y[0];
+   else if ( x >= Table_x[N-1] )   return Table_y[N-1];
+   else                            return Mis_InterpolateFromTable( N, Table_x, Table_y, x );
+}
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  LinearDensityShellMass
+// Description :  Get the shell mass between to radii according to a linear density profile
+//
+// Note        :  1. Assume the density profile \rho(r) is linear between two end points, r0 and r1:
+//                   \rho(r) = \rho_0 + (\frac{(\rho_1-\rho_0)}{r_1-r_0})(r-r_0)
+//                   Then, the integrated shell mass between the two end points is
+//                   M_{shell} = \int_{r_0}^{r_1} \rho(r) 4\pi r^2 dr
+//                             = 4\pi r_0^2 \Delta r   [ \frac{1}{2} \rho_0 + \frac{1}{2} \rho_1 ] +
+//                               4\pi r_0   \Delta r^2 [ \frac{1}{3} \rho_0 + \frac{2}{3} \rho_1 ] +
+//                               4\pi       \Delta r^3 [ \frac{1}{12}\rho_0 + \frac{3}{12}\rho_1 ]
+//
+// Parameter   :  r0   : Radius of the start point
+//                r1   : Radius of the end point
+//                rho0 : Density of the start point
+//                rho1 : Density of the end point
+//
+// Return      :  Shell mass integrated from the linear density profile
+//-------------------------------------------------------------------------------------------------------
+double LinearDensityShellMass( const double r0, const double r1, const double rho0, const double rho1 )
+{
+   const double dr  = r1 - r0;
+
+   return M_PI*dr*( r0*r0*( 6*rho0 + 6*rho1 ) + r0*dr*( 4*rho0 + 8*rho1 ) + dr*dr*( rho0 + 3*rho1 ) )/3.0;
+
+} // FUNCTION : LinearDensityShellMass
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalExternalPotential
+// Description :  Analytical external potential
+//
+// Note        :
+//
+// Parameter   :  r : input radius
+//
+// Return      :  external potential at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalExternalPotential( const double r )
+{
+   return 0.0;
+
+} // FUNCTION : AnalyticalExternalPotential
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalDensProf_Plummer
+// Description :  Analytical density profile of the Plummer model
+//
+// Note        :  1. \rho(r) = \rho_0 ( 1 + (\frac{r}{a})^2 )^{-5/2}
+//                2. Reference: Plummer H. C., MNRAS, 1991, doi:10.1093/mnras/71.5.460
+//
+// Parameter   :  r    : input radius
+//                R0   : Plummer scale radius, a
+//                Rho0 : Plummer scale density, \rho_0
+//
+// Return      :  density at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalDensProf_Plummer( const double r, const double R0, const double Rho0 )
+{
+   const double x = r/R0;
+
+   return Rho0*pow( 1+x*x, -2.5 );
+
+} // FUNCTION : AnalyticalDensProf_Plummer
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MassIntegrand_Plummer
+// Description :  Integrand for the enclosed mass profile of the Plummer model
+//
+// Note        :  integrand = 4*\pi*r^2*\rho(r)
+//
+// Parameter   :  r          : input radius
+//                parameters : parameters for the model
+//
+// Return      :  integrand of mass at the given radius
+//-------------------------------------------------------------------------------------------------------
+double MassIntegrand_Plummer( const double r, void* parameters )
+{
+   if ( r == 0.0 ) return 0.0;
+
+   struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
+   double R0   = p->Cloud_R0;
+   double Rho0 = p->Cloud_Rho0;
+
+   return 4*M_PI*SQR(r)*AnalyticalDensProf_Plummer( r, R0, Rho0 );
+
+} // FUNCTION : MassIntegrand_Plummer
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalMassProf_Plummer
+// Description :  Analytical enclosed mass profile of the Plummer model
+//
+// Note        :  1. M(r) = M_0 \frac{ r^3 }{ (r^2 + a^2)^{3/2} }
+//                        = \frac{4\pi}{3} a^3 \rho_0 \frac{ r^3 }{ (r^2 + a^2)^{3/2} }
+//                2. Reference: Plummer H. C., MNRAS, 1991, doi:10.1093/mnras/71.5.460
+//
+// Parameter   :  r    : input radius
+//                R0   : Plummer scale radius, a
+//                Rho0 : Plummer scale density, \rho_0
+//
+// Return      :  enclosed mass at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalMassProf_Plummer( const double r, const double R0, const double Rho0 )
+{
+   const double x = r/R0;
+
+   return (4.0/3.0)*M_PI*Rho0*CUBE(r)*pow( 1+x*x, -1.5 );
+
+} // FUNCTION : AnalyticalMassProf_Plummer
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalDensProf_NFW
+// Description :  Analytical density profile of the NFW model
+//
+// Note        :  1. \rho(r) = \rho_s \frac{1}{ ( \frac{r}{r_s} ) ( 1 + \frac{r}{r_s} )^2 }
+//                2. Reference: Navarro J.~F., Frenk C.~S., White S.~D.~M., 1996, ApJ, doi:10.1086/177173
+//                              Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
+//
+// Parameter   :  r    : input radius
+//                R0   : NFW scale radius, r_s
+//                Rho0 : NFW scale density, \rho_s
+//
+// Return      :  density at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalDensProf_NFW( const double r, const double R0, const double Rho0 )
+{
+   const double x = r/R0;
+
+   return Rho0/( x*SQR( 1+x ) );
+
+} // FUNCTION : AnalyticalDensProf_NFW
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MassIntegrand_NFW
+// Description :  Integrand for the enclosed mass profile of the NFW model
+//
+// Note        :  integrand = 4*\pi*r^2*\rho(r)
+//
+// Parameter   :  r          : input radius
+//                parameters : parameters for the model
+//
+// Return      :  integrand of mass at the given radius
+//-------------------------------------------------------------------------------------------------------
+double MassIntegrand_NFW( const double r, void* parameters )
+{
+   if ( r == 0.0 ) return 0.0;
+
+   struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
+   double R0   = p->Cloud_R0;
+   double Rho0 = p->Cloud_Rho0;
+
+   return 4*M_PI*SQR(r)*AnalyticalDensProf_NFW( r, R0, Rho0 );
+
+} // FUNCTION : MassIntegrand_NFW
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalMassProf_NFW
+// Description :  Analytical enclosed mass profile of the NFW model
+//
+// Note        :  1. M(r) = 4\pi \rho_s r_s^3 [ \ln( \frac{ r_s + r }{ r_s } ) - \frac{ r }{ r_s + r } ]
+//                2. Reference: Navarro J.~F., Frenk C.~S., White S.~D.~M., 1996, ApJ, doi:10.1086/177173
+//                              Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
+//
+// Parameter   :  r    : input radius
+//                R0   : NFW scale radius, r_s
+//                Rho0 : NFW scale density, \rho_s
+//
+// Return      :  enclosed mass at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalMassProf_NFW( const double r, const double R0, const double Rho0 )
+{
+   const double x = r/R0;
+
+   return 4*M_PI*Rho0*CUBE(R0)*( log( 1+x ) - x/(1+x) );
+
+} // FUNCTION : AnalyticalMassProf_NFW
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalDensProf_Burkert
+// Description :  Analytical density profile of the Burkert model
+//
+// Note        :  1. \rho(r) = \rho_s \frac{1}{ ( 1 + \frac{r}{r_s} ) ( 1 + (\frac{r}{r_s})^2 ) }
+//                2. Reference: Burkert A., 1995, ApJL, doi:10.1086/309560
+//                              Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
+//
+// Parameter   :  r    : input radius
+//                R0   : Plummer scale radius, a
+//                Rho0 : Plummer scale density, \rho_0
+//
+// Return      :  density at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalDensProf_Burkert( const double r, const double R0, const double Rho0 )
+{
+   const double x = r/R0;
+
+   return Rho0/( (1+x)*(1+x*x) );
+
+} // FUNCTION : AnalyticalDensProf_Burkert
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MassIntegrand_Burkert
+// Description :  Integrand for the enclosed mass profile of the Burkert model
+//
+// Note        :  integrand = 4*\pi*r^2*\rho(r)
+//
+// Parameter   :  r          : input radius
+//                parameters : parameters for the model
+//
+// Return      :  integrand of mass at the given radius
+//-------------------------------------------------------------------------------------------------------
+double MassIntegrand_Burkert( const double r, void* parameters )
+{
+   if ( r == 0.0 ) return 0.0;
+
+   struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
+   double R0   = p->Cloud_R0;
+   double Rho0 = p->Cloud_Rho0;
+
+   return 4*M_PI*SQR(r)*AnalyticalDensProf_Burkert( r, R0, Rho0 );
+
+} // FUNCTION : MassIntegrand_Burkert
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalMassProf_Burkert
+// Description :  Analytical enclosed mass profile of the Burkert model
+//
+// Note        :  1. M(r) = 2\pi \rho_s r_s^3 [ \frac{1}{2}\ln( 1 + (\frac{r}{r_s})^2 ) + \ln( 1 + \frac{r}{r_s} ) - \arctan( \frac{r}{r_s} ) ]
+//                2. Reference: Burkert A., 1995, ApJL, doi:10.1086/309560
+//                              Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
+//
+// Parameter   :  r    : input radius
+//                R0   : Burkert scale radius, r_s
+//                Rho0 : Burkert scale density, \rho_s
+//
+// Return      :  enclosed mass at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalMassProf_Burkert( const double r, const double R0, const double Rho0 )
+{
+   const double x = r/R0;
+
+   return 2*M_PI*Rho0*CUBE(R0)*( 0.5*log( 1+x*x ) + log( 1+x ) - atan( x ) );
+
+} // FUNCTION : AnalyticalMassProf_Burkert
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalDensProf_Jaffe
+// Description :  Analytical density profile of the Jaffe model
+//
+// Note        :  1. \rho(r) = \frac{ \rho_0 }{ 4\pi } \frac{ r_J^4 }{ r^2 (r_J + r)^2}
+//                           = \frac{ \rho_0 }{ 4\pi } \frac{1}{ ( \frac{r}{r_J} )^2 ( 1 + \frac{r}{r_J} )^2 }
+//                2. Reference: Jaffe W., 1983, MNRAS, doi:10.1093/mnras/202.4.995
+//                              Ciotti L. and Ziaee Lorzad A., 2018, MNRAS, doi:10.1093/mnras/stx2771
+//
+// Parameter   :  r    : input radius
+//                R0   : Jaffe scale radius, r_J
+//                Rho0 : Jaffe scale density, \rho_0
+//
+// Return      :  density at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalDensProf_Jaffe( const double r, const double R0, const double Rho0 )
+{
+   const double x = r/R0;
+
+   return Rho0/( 4*M_PI*SQR(x)*SQR(1+x) ); // return Rho0/(x*(1+x)); //previous one
+
+} // FUNCTION : AnalyticalDensProf_Jaffe
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MassIntegrand_Jaffe
+// Description :  Integrand for the enclosed mass profile of the Jaffe model
+//
+// Note        :  integrand = 4*\pi*r^2*\rho(r)
+//
+// Parameter   :  r          : input radius
+//                parameters : parameters for the model
+//
+// Return      :  integrand of mass at the given radius
+//-------------------------------------------------------------------------------------------------------
+double MassIntegrand_Jaffe( const double r, void* parameters )
+{
+   if ( r == 0.0 ) return 0.0;
+
+   struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
+   double R0   = p->Cloud_R0;
+   double Rho0 = p->Cloud_Rho0;
+
+   return 4*M_PI*SQR(r)*AnalyticalDensProf_Jaffe( r, R0, Rho0 );
+
+} // FUNCTION : MassIntegrand_Jaffe
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalMassProf_Jaffe
+// Description :  Analytical enclosed mass profile of the Jaffe model
+//
+// Note        :  1. M(r) = M_J \frac{ r }{ r_J + r }
+//                   ,where M_J = \rho_0*r_J^3 is the total mass
+//                2. Reference: Jaffe W., 1983, MNRAS, doi:10.1093/mnras/202.4.995
+//                              Ciotti L. and Ziaee Lorzad A., 2018, MNRAS, doi:10.1093/mnras/stx2771
+//
+// Parameter   :  r    : input radius
+//                R0   : Jaffe scale radius, r_J
+//                Rho0 : Jaffe scale density, \rho_0
+//
+// Return      :  enclosed mass at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalMassProf_Jaffe( const double r, const double R0, const double Rho0 )
+{
+   const double x = r/R0;
+
+   return Rho0*CUBE(R0)*x/(1+x);
+
+} // FUNCTION : AnalyticalMassProf_Jaffe
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalDensProf_Hernquist
+// Description :  Analytical density profile of the Hernquist model
+//
+// Note        :  1. \rho(r) = \rho_0 \frac{ a^4 }{ r (r+a)^3 }
+//                           = \rho_0 \frac{1}{ \frac{r}{a} ( 1+\frac{r}{a} )^3 }
+//                2. Reference: Hernquist L., 1990, ApJ, doi:10.1086/168845
+//
+// Parameter   :  r    : input radius
+//                R0   : Hernquist scale radius, a
+//                Rho0 : Hernquist scale density, \rho_0
+//
+// Return      :  density at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalDensProf_Hernquist( const double r, const double R0, const double Rho0 )
+{
+   const double x = r/R0;
+
+   return Rho0/( x*CUBE( 1+x ) );
+
+} // FUNCTION : AnalyticalDensProf_Hernquist
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MassIntegrand_Hernquist
+// Description :  Integrand for the enclosed mass profile of the Hernquist model
+//
+// Note        :  integrand = 4*\pi*r^2*\rho(r)
+//
+// Parameter   :  r          : input radius
+//                parameters : parameters for the model
+//
+// Return      :  integrand of mass at the given radius
+//-------------------------------------------------------------------------------------------------------
+double MassIntegrand_Hernquist( const double r, void* parameters )
+{
+   if ( r == 0.0 ) return 0.0;
+
+   struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
+   double R0   = p->Cloud_R0;
+   double Rho0 = p->Cloud_Rho0;
+
+   return 4*M_PI*SQR(r)*AnalyticalDensProf_Hernquist( r, R0, Rho0 );
+
+} // FUNCTION : MassIntegrand_Hernquist
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalMassProf_Hernquist
+// Description :  Analytical enclosed mass profile of the Hernquist model
+//
+// Note        :  1. M(r) = M_0 \frac{ r^2 }{ (r+a)^2 }
+//                   ,where M_0 = 2\pi*\rho_0*a^3 is the total mass
+//                2. Reference: Hernquist L., 1990, ApJ, doi:10.1086/168845
+//
+// Parameter   :  r    : input radius
+//                R0   : Hernquist scale radius, a
+//                Rho0 : Hernquist scale density, \rho_0
+//
+// Return      :  enclosed mass at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalMassProf_Hernquist( const double r, const double R0, const double Rho0 )
+{
+   const double x = r/R0;
+
+   return 2*M_PI*Rho0*CUBE(R0)*SQR(x)/SQR(1+x);
+
+} // FUNCTION : AnalyticalMassProf_Hernquist
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalDensProf_Einasto
+// Description :  Analytical density profile of the Einasto model
+//
+// Note        :  1. \rho(r) = \rho_s    \exp{ -d_n [ (\frac{r}{r_s})^{1/n}    - 1 ] }, where r_s is the radius at which contains half of the total mass
+//                           = \rho_{-2} \exp{ -2n  [ (\frac{r}{r_{-2}})^{1/n} - 1 ] }, where r_{-2} is the radius at which \rho(r) \propto r^{-2}
+//                           = \rho_0    \exp{ -[ (\frac{r}{h})^{1/n} ] }
+//                2. Reference: Einasto J., 1965, TrAlm
+//                              Retana-Montenegro E. et al., 2012, A&A, doi:10.1051/0004-6361/201118543
+//
+// Parameter   :  r                    : input radius
+//                R0                   : Einasto scale radius, h = \frac{r_s}{d_n^n} = \frac{r_{-2}}{(2n)^n}
+//                Rho0                 : Einasto central density, \rho_0 = \rho_s\exp{d_n} = \rho_{-2}\exp{2n}
+//                Einasto_Power_Factor : Einasto power factor, 1/n
+//
+// Return      :  density at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalDensProf_Einasto( const double r, const double R0, const double Rho0, const double Einasto_Power_Factor )
+{
+   const double x = r/R0;
+
+   return Rho0*exp( -pow( x, Einasto_Power_Factor ) );
+
+} // FUNCTION : AnalyticalDensProf_Einasto
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MassIntegrand_Einasto
+// Description :  Integrand for the enclosed mass profile of the Einasto model
+//
+// Note        :  integrand = 4*\pi*r^2*\rho(r)
+//
+// Parameter   :  r          : input radius
+//                parameters : parameters for the model
+//
+// Return      :  integrand of mass at the given radius
+//-------------------------------------------------------------------------------------------------------
+double MassIntegrand_Einasto( const double r, void* parameters )
+{
+   if ( r == 0.0 ) return 0.0;
+
+   struct mass_integrand_params_Einasto *p = (struct mass_integrand_params_Einasto *) parameters;
+   double R0                           = p->Cloud_R0;
+   double Rho0                         = p->Cloud_Rho0;
+   double Einasto_Power_Factor         = p->Cloud_Einasto_Power_Factor;
+
+   return 4*M_PI*SQR(r)*AnalyticalDensProf_Einasto( r, R0, Rho0, Einasto_Power_Factor );
+
+} // FUNCTION : MassIntegrand_Einasto
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalMassProf_Einasto
+// Description :  Analytical enclosed mass profile of the Einasto model
+//
+// Note        :  1. M(r) = M_0 [1 - \frac{ \Gamma( 3n, (r/h)^{1/n} ) }{ \Gamma(3n) }]
+//                   ,where M_0 = 4\pi \rho_0 h^3 n \Gamma(3n) is the total mass
+//                2. Reference: Einasto J., 1965, TrAlm
+//                              Retana-Montenegro E. et al., 2012, A&A, doi:10.1051/0004-6361/201118543
+//
+// Parameter   :  r                    : input radius
+//                R0                   : Einasto scale radius, h
+//                Rho0                 : Einasto central density, \rho_0
+//                Einasto_Power_Factor : Einasto power factor, 1/n
+//
+// Return      :  enclosed mass at the given radius
+//-------------------------------------------------------------------------------------------------------
+// double AnalyticalMassProf_Einasto( const double r, const double R0, const double Rho0, const double Einasto_Power_Factor )
+// {
+//    const double x = r/R0;
+//
+//    //Gamma function:                  Gamma( s    ) = \int_{0}^{\infty} t^{s-1}*e^{-t} dt
+//    //Upper incomplete Gamma function: Gamma( s, x ) = \int_{x}^{\infty} t^{s-1}*e^{-t} dt
+//
+//    return 4*M_PI*Rho0*CUBE(R0)/Einasto_Power_Factor*( Gamma(3/Einasto_Power_Factor) - UpperIncompleteGamma( 3/Einasto_Power_Factor, pow( x, Einasto_Power_Factor ) ) );
+//
+// } // FUNCTION : AnalyticalMassProf_Einasto
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MassIntegrand_Table
+// Description :  Integrand for the enclosed mass profile of the table
+//
+// Note        :  integrand = 4*\pi*r^2*\rho(r)
+//
+// Parameter   :  r          : input radius
+//                parameters : parameters for the model
+//
+// Return      :  integrand of mass at the given radius
+//-------------------------------------------------------------------------------------------------------
+double MassIntegrand_Table( const double r, void* parameters )
+{
+   if ( r == 0.0 ) return 0.0;
+
+   struct  mass_integrand_params_Table *p = (struct mass_integrand_params_Table *) parameters;
+   int     NBin                       = p->NBin;
+   double* Table_R                    = p->Table_R;
+   double* Table_D                    = p->Table_D;
+
+   return 4*M_PI*SQR(r)*ExtendedInterpolatedTable( r, NBin, Table_R, Table_D );
+
+} // FUNCTION : MassIntegrand_Table
 
 
 

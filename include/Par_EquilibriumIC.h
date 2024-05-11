@@ -67,19 +67,9 @@ class Par_EquilibriumIC
       double getDensity             ( const double r );
       double getGraviPotential      ( const double r );
       double getRandomSampleVelocity( const double r );
-
       double getIntegratedDistributionFunction( const double Psi_Min, const double Psi_Max, const int N_points );
 
-      // Auxiliary functions
-      void   RandomVector_GivenLength( const double Length, double RandomVector[3] );
-
-      void   SmoothArray( double* array_x, int index_start, int index_end );
-
-      double ArrayCovariance( const double* array_x, const double* array_y,
-                              const int index_start, const int n_elements );
-
-      double Slope_LinearRegression( const double* array_x, const double* array_y,
-                                     const int index_start, const int n_elements );
+      void   getRandomVector_GivenLength( const double Length, double RandomVector[3] );
 
       // Input table of density profile
       void    loadInputDensProfTable();
