@@ -156,6 +156,7 @@ void Par_EquilibriumIC::loadInputDensProfTable()
    if ( RNBin < 0 )
       RNBin = Mis_BinarySearch_Real( InputTable_DensProf_radius, 0, InputTable_DensProf_nbin-1, Cloud_MaxR ) + 2;
 
+   // TODO: to try a higher-order integration first
    // Set the enclosed mass profile // TODO: this is not good, maybe remove it
    InputTable_DensProf_enclosedmass = new double [InputTable_DensProf_nbin];
 
@@ -344,6 +345,9 @@ void Par_EquilibriumIC::constructParticles( real *Mass_AllRank, real *Pos_AllRan
 
       // record the maximum error
       MaxMassError = fmax( fabs( ( getEnclosedMass( RandomSampleR ) - RandomSampleM )/RandomSampleM ), MaxMassError );
+
+      printf( "p = %ld, SampleM = %21.14e, SampleR = %21.14e, EnclosedMass_RArray = %21.14e, EnclosedMass_Analytical = %21.14e, EnclosedMAss_GSL = %21.14e\n",
+               p,       RandomSampleM,     RandomSampleR,     getEnclosedMass( RandomSampleR ), getEnclosedMass_Analytical( RandomSampleR ), getEnclosedMass_GSLintegration( RandomSampleR ) ); 
 
    } // for (long p=Par_Idx0; p<Par_Idx0+Cloud_Par_Num; p++)
 
@@ -905,62 +909,89 @@ double Par_EquilibriumIC::getDensity( const double r )
 //
 // Return      :  Enclosed mass of this cloud within radius r
 //-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::getEnclosedMass( const double r )
+double Par_EquilibriumIC::getEnclosedMass_GSLintegration( const double r )
 {
 
    double enclosed_mass = NULL_REAL;
 
-   if ( Cloud_Model == CLOUD_MODEL_TABLE )
-   {
-      enclosed_mass = ExtendedInterpolatedTable( r, InputTable_DensProf_nbin, InputTable_DensProf_radius, InputTable_DensProf_enclosedmass );
-   }
+   double abs_error;
+
+#  ifdef SUPPORT_GSL
+   // arguments for the gsl integration
+   const double lower_limit  = 0.0;
+   const double upper_limit  = r;
+   const double abs_err_lim  = 0;
+   const double rel_err_lim  = 1e-7;
+   const int    integ_size   = 1000; // TODO: more efficient
+   const int    integ_rule   = 1;    // 1 = GSL_INTEG_GAUSS15, the 15 point Gauss-Kronrod rule
+
+   gsl_integration_workspace * w = gsl_integration_workspace_alloc( integ_size );
+
+   gsl_function F;
+
+   // integrand for the integration
+   if      ( Cloud_Model == CLOUD_MODEL_PLUMMER   ) F.function = &MassIntegrand_Plummer;
+   else if ( Cloud_Model == CLOUD_MODEL_NFW       ) F.function = &MassIntegrand_NFW;
+   else if ( Cloud_Model == CLOUD_MODEL_BURKERT   ) F.function = &MassIntegrand_Burkert;
+   else if ( Cloud_Model == CLOUD_MODEL_JAFFE     ) F.function = &MassIntegrand_Jaffe;
+   else if ( Cloud_Model == CLOUD_MODEL_HERNQUIST ) F.function = &MassIntegrand_Hernquist;
+   else if ( Cloud_Model == CLOUD_MODEL_EINASTO   ) F.function = &MassIntegrand_Einasto;
+   else if ( Cloud_Model == CLOUD_MODEL_TABLE     ) F.function = &MassIntegrand_Table;
    else
-   {
-      double abs_error;
+      Aux_Error( ERROR_INFO, "Unsupported Cloud_Model = %d !!\n", Cloud_Model );
 
-#     ifdef SUPPORT_GSL
-      // arguments for the gsl integration
-      const double lower_limit  = 0.0;
-      const double upper_limit  = r;
-      const double abs_err_lim  = 0;
-      const double rel_err_lim  = 1e-7;
-      const int    integ_size   = 1000; // TODO: more efficient
-      const int    integ_rule   = 1;    // 1 = GSL_INTEG_GAUSS15, the 15 point Gauss-Kronrod rule
+   // parameters for the integrand
+   struct mass_integrand_params         integrand_params         = { Cloud_R0, Cloud_Rho0 };
+   struct mass_integrand_params_Einasto integrand_params_Einasto = { Cloud_R0, Cloud_Rho0, Cloud_Einasto_Power_Factor };
+   struct mass_integrand_params_Table   integrand_params_Table   = { InputTable_DensProf_nbin, InputTable_DensProf_radius, InputTable_DensProf_density };
 
-      gsl_integration_workspace * w = gsl_integration_workspace_alloc( integ_size );
+   if      ( Cloud_Model == CLOUD_MODEL_EINASTO   ) F.params     = &integrand_params_Einasto;
+   else if ( Cloud_Model == CLOUD_MODEL_TABLE     ) F.params     = &integrand_params_Table;
+   else                                             F.params     = &integrand_params;
 
-      gsl_function F;
+   // integration
+   gsl_integration_qag( &F, lower_limit, upper_limit, abs_err_lim, rel_err_lim, integ_size, integ_rule, w, &enclosed_mass, &abs_error );
 
-      // integrand for the integration
-      if      ( Cloud_Model == CLOUD_MODEL_PLUMMER   ) F.function = &MassIntegrand_Plummer;
-      else if ( Cloud_Model == CLOUD_MODEL_NFW       ) F.function = &MassIntegrand_NFW;
-      else if ( Cloud_Model == CLOUD_MODEL_BURKERT   ) F.function = &MassIntegrand_Burkert;
-      else if ( Cloud_Model == CLOUD_MODEL_JAFFE     ) F.function = &MassIntegrand_Jaffe;
-      else if ( Cloud_Model == CLOUD_MODEL_HERNQUIST ) F.function = &MassIntegrand_Hernquist;
-      else if ( Cloud_Model == CLOUD_MODEL_EINASTO   ) F.function = &MassIntegrand_Einasto;
-      else if ( Cloud_Model == CLOUD_MODEL_TABLE     ) F.function = &MassIntegrand_Table;
-      else
-         Aux_Error( ERROR_INFO, "Unsupported Cloud_Model = %d !!\n", Cloud_Model );
-
-      // parameters for the integrand
-      struct mass_integrand_params         integrand_params         = { Cloud_R0, Cloud_Rho0 };
-      struct mass_integrand_params_Einasto integrand_params_Einasto = { Cloud_R0, Cloud_Rho0, Cloud_Einasto_Power_Factor };
-      struct mass_integrand_params_Table   integrand_params_Table   = { InputTable_DensProf_nbin, InputTable_DensProf_radius, InputTable_DensProf_density };
-
-      if      ( Cloud_Model == CLOUD_MODEL_EINASTO   ) F.params     = &integrand_params_Einasto;
-      else if ( Cloud_Model == CLOUD_MODEL_TABLE     ) F.params     = &integrand_params_Table;
-      else                                             F.params     = &integrand_params;
-
-      // integration
-      gsl_integration_qag( &F, lower_limit, upper_limit, abs_err_lim, rel_err_lim, integ_size, integ_rule, w, &enclosed_mass, &abs_error );
-
-      gsl_integration_workspace_free( w );
-#     endif // #ifdef SUPPORT_GSL
-   }
+   gsl_integration_workspace_free( w );
+#  endif // #ifdef SUPPORT_GSL
 
    return enclosed_mass;
 
-} // FUNCTION : getEnclosedMass
+} // FUNCTION : getEnclosedMass_GSLintegration
+
+
+double Par_EquilibriumIC::getEnclosedMass_Analytical( const double r )
+{
+
+   double enclosed_mass = NULL_REAL;
+
+   if      ( Cloud_Model == CLOUD_MODEL_PLUMMER   ) enclosed_mass = AnalyticalMassProf_Plummer  ( r, Cloud_R0, Cloud_Rho0 );
+   else if ( Cloud_Model == CLOUD_MODEL_NFW       ) enclosed_mass = AnalyticalMassProf_NFW      ( r, Cloud_R0, Cloud_Rho0 );
+   else if ( Cloud_Model == CLOUD_MODEL_BURKERT   ) enclosed_mass = AnalyticalMassProf_Burkert  ( r, Cloud_R0, Cloud_Rho0 );
+   else if ( Cloud_Model == CLOUD_MODEL_JAFFE     ) enclosed_mass = AnalyticalMassProf_Jaffe    ( r, Cloud_R0, Cloud_Rho0 );
+   else if ( Cloud_Model == CLOUD_MODEL_HERNQUIST ) enclosed_mass = AnalyticalMassProf_Hernquist( r, Cloud_R0, Cloud_Rho0 );
+   else if ( Cloud_Model == CLOUD_MODEL_TABLE     ) enclosed_mass = ExtendedInterpolatedTable   ( r, InputTable_DensProf_nbin, InputTable_DensProf_radius, InputTable_DensProf_enclosedmass );
+
+   return enclosed_mass;
+
+} // FUNCTION : getEnclosedMass_Analytical
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :
+// Description :
+//
+// Note        :
+//
+// Parameter   :
+//
+// Return      :
+//-------------------------------------------------------------------------------------------------------
+double Par_EquilibriumIC::getEnclosedMass( const double r )
+{
+   return ExtendedInterpolatedTable( r, RNBin, RArray_R, RArray_M_Enc );
+
+} // FUNCTION : getGraviPotential
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -977,8 +1008,8 @@ double Par_EquilibriumIC::getGraviPotential( const double r )
 {
    // Note this direction is differt: from table
    if      ( r >= RArray_R[RLastIdx] )   return RArray_Phi[RLastIdx]*RArray_R[RLastIdx]/r;
-   else if ( r <= RArray_R[0] )             return RArray_Phi[0];
-   else                                     return Mis_InterpolateFromTable( RNBin, RArray_R, RArray_Phi, r );
+   else if ( r <= RArray_R[0] )          return RArray_Phi[0];
+   else                                  return Mis_InterpolateFromTable( RNBin, RArray_R, RArray_Phi, r );
 
 } // FUNCTION : getGraviPotential
 
@@ -1077,6 +1108,30 @@ double Par_EquilibriumIC::getIntegratedDistributionFunction( const double Psi_Mi
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    : LinearDensityShellMass
+// Description :
+//
+// Note        :   Assume the density profile \rho(r) is linear between two end points, r0 and r1:
+//                 \rho(r) = \rho_0 + (\frac{(\rho_1-\rho_0)}{r_1-r_0})(r-r_0)
+//                 Then, the integrated shell mass between the two end points is
+//                 M_{shell} = \int_{r_0}^{r_1} \rho(r) 4\pi r^2 dr
+//                           = 4\pi r_0^2 \Delta r   [ \frac{1}{2} \rho_0 + \frac{1}{2} \rho_1 ] +
+//                             4\pi r_0   \Delta r^2 [ \frac{1}{3} \rho_0 + \frac{2}{3} \rho_1 ] +
+//                             4\pi       \Delta r^3 [ \frac{1}{12}\rho_0 + \frac{3}{12}\rho_1 ]
+//
+// Parameter   :
+//
+// Return      :
+//-------------------------------------------------------------------------------------------------------
+double LinearDensityShellMass( const double r0, const double r1, const double rho0, const double rho1 )
+{
+   const double dr  = r1 - r0;
+
+   return M_PI*dr*( r0*r0*( 6*rho0 + 6*rho1 ) + r0*dr*( 4*rho0 + 8*rho1 ) + dr*dr*( rho0 + 3*rho1 ) )/3.0;
+
+} // FUNCTION : LinearDensityShellMass
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  constructRadialArray
 // Description :  Calculate the probability density function of particles' velocities
 //
@@ -1088,54 +1143,42 @@ double Par_EquilibriumIC::getIntegratedDistributionFunction( const double Psi_Mi
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::constructRadialArray()
 {
-   // Radius
+   // Interval of radial bins
    RArray_dR = Cloud_MaxR/(RNBin-1);
-   for (int b=0; b<RNBin; b++)   RArray_R[b] = RArray_dR*b;
 
-   // Density
-   for (int b=1; b<RNBin; b++)   RArray_Rho[b] = getDensity( RArray_R[b] );
-   RArray_Rho[0] = RArray_Rho[1];   // when r=0
+   // Array of Radius
+   for (int b=0; b<RNBin; b++)         RArray_R[b]         = RArray_dR*b;
 
-   // EnclosedMass
-   for (int b=1; b<RNBin; b++)   RArray_M_Enc[b] = getEnclosedMass( RArray_R[b] );
-   RArray_M_Enc[0] = 0;   // when r=0
+   // Array of Density
+   for (int b=1; b<RNBin; b++)         RArray_Rho[b]       = getDensity( RArray_R[b] );
+   RArray_Rho[0]                                           = RArray_Rho[1];   // where r=0
 
-   // DensitySlope
-   RArray_dRho_dR[0] =               (RArray_Rho[1] - RArray_Rho[0])/RArray_dR;
+   // Array of Enclosed Mass
+   RArray_M_Enc[0]                                         = 0;   // where r=0
+   for (int b=1; b<RNBin; b++)         RArray_M_Enc[b]     = RArray_M_Enc[b-1] + LinearDensityShellMass( RArray_R[b-1], RArray_R[b], RArray_Rho[b-1], RArray_Rho[b] );
 
-   if ( Cloud_Model == CLOUD_MODEL_TABLE )
-      RArray_dRho_dR[1] =            (RArray_Rho[2] - RArray_Rho[1])/RArray_dR;
-   else
-      RArray_dRho_dR[1] =             Slope_LinearRegression( RArray_R, RArray_Rho,                0, 3 );
+   // Array of dRho/dR
+   RArray_dRho_dR[0]                                       = (RArray_Rho[1] - RArray_Rho[0])/RArray_dR;
+   for (int b=1; b<RNBin-1; b++)       RArray_dRho_dR[b]   = Slope_LinearRegression( RArray_R, RArray_Rho, b-1, 3 );
+   RArray_dRho_dR[RLastIdx]                                = (RArray_Rho[RLastIdx] - RArray_Rho[RLastIdx-1])/RArray_dR;
 
-   for (int b=2; b<RNBin-2; b++)
-      RArray_dRho_dR[b] =             Slope_LinearRegression( RArray_R, RArray_Rho,              b-1, 3 );
-
-   RArray_dRho_dR[RNBin-2] = Slope_LinearRegression( RArray_R, RArray_Rho, RNBin-2, 2 );
-
-   RArray_dRho_dR[RLastIdx]      = RArray_dRho_dR[RNBin-2];
-
-   // GraviField
+   // Array of Gravitional Field
    RArray_G[0] = 0;
-   for (int b=1; b<RNBin; b++)   RArray_G[b] = -NEWTON_G*RArray_M_Enc[b]/SQR( RArray_R[b] );
+   for (int b=1; b<RNBin; b++)         RArray_G[b]         = -NEWTON_G*RArray_M_Enc[b]/SQR( RArray_R[b] );
 
-   // GraviPotential
-   RArray_Phi[RLastIdx] = -NEWTON_G*RArray_M_Enc[RLastIdx]/RArray_R[RLastIdx];
-   for (int b=RNBin-2; b>1; b--)   RArray_Phi[b] = RArray_Phi[b+1] + RArray_G[b]*RArray_dR;
+   // Array of dRho_dPsi
+   for (int b=0; b<RNBin; b++)         RArray_dRho_dPsi[b] = RArray_dRho_dR[b]/RArray_G[b];
 
-   if ( Cloud_Model == CLOUD_MODEL_TABLE )   RArray_Phi[1] = RArray_Phi[2];
-   else                                      RArray_Phi[1] = RArray_Phi[2] + RArray_G[1]*RArray_dR;
+   // Array of Gravitational Potential
+   RArray_Phi[RLastIdx]                                    = -NEWTON_G*RArray_M_Enc[RLastIdx]/RArray_R[RLastIdx];
+   for (int b=RLastIdx-1; b>=0; b--)   RArray_Phi[b]       = RArray_Phi[b+1] + 0.5*(RArray_G[b]+RArray_G[b+1])*RArray_dR;
 
-   RArray_Phi[0] = RArray_Phi[1];
-
-
+   // Adding external potentil
    if ( AddExtPot_Table )
-      for (int b=0; b<RNBin; b++)   RArray_Phi[b] += ExtendedInterpolatedTable( RArray_R[b], InputTable_ExtPot_nbin, InputTable_ExtPot_radius, InputTable_ExtPot_potential );
-   else if ( AddExtPot_Analytical )
-      for (int b=0; b<RNBin; b++)   RArray_Phi[b] += AnalyticalExternalPotential( RArray_R[b] );
+      for (int b=0; b<RNBin; b++)      RArray_Phi[b]      += ExtendedInterpolatedTable( RArray_R[b], InputTable_ExtPot_nbin, InputTable_ExtPot_radius, InputTable_ExtPot_potential );
 
-   // dRho_dPsi
-   for (int b=0; b<RNBin; b++)   RArray_dRho_dPsi[b] = RArray_dRho_dR[b]/RArray_G[b];
+   if ( AddExtPot_Analytical )
+      for (int b=0; b<RNBin; b++)      RArray_Phi[b]      += AnalyticalExternalPotential( RArray_R[b] );
 
 } // FUNCTION : constructRadialArray
 

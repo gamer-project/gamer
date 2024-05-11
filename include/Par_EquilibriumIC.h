@@ -62,6 +62,8 @@ class Par_EquilibriumIC
 
       // Get physical attributes for cloud
       double getEnclosedMass        ( const double r );
+      double getEnclosedMass_GSLintegration( const double r );
+      double getEnclosedMass_Analytical( const double r );
       double getDensity             ( const double r );
       double getGraviPotential      ( const double r );
       double getRandomSampleVelocity( const double r );
