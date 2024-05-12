@@ -92,7 +92,7 @@ class Par_EquilibriumIC
       double *RArray_M_Enc;
       double *RArray_dRho_dR;
       double *RArray_dRho_dPsi;
-      double *RArray_G;
+      double *RArray_g;
       double *RArray_Phi;
       int     RLastIdx    = -1;
       int     RNBin       = -1;

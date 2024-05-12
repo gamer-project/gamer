@@ -114,7 +114,7 @@ Par_EquilibriumIC::~Par_EquilibriumIC()
    delete [] RArray_Rho;
    delete [] RArray_M_Enc;
    delete [] RArray_dRho_dR;
-   delete [] RArray_G;
+   delete [] RArray_g;
    delete [] RArray_Phi;
    delete [] RArray_dRho_dPsi;
 
@@ -443,7 +443,7 @@ void Par_EquilibriumIC::initialize()
    RArray_Rho       = new double [RNBin];
    RArray_M_Enc     = new double [RNBin];
    RArray_dRho_dR   = new double [RNBin];
-   RArray_G         = new double [RNBin];
+   RArray_g         = new double [RNBin];
    RArray_Phi       = new double [RNBin];
    RArray_dRho_dPsi = new double [RNBin];
 
@@ -479,7 +479,7 @@ void Par_EquilibriumIC::initialize()
    printf( "]\n");
 
    printf( "GreF:   [");
-   for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_G[b] );
+   for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_g[b] );
    printf( "]\n");
 
    printf( "dDdx:   [");
@@ -520,34 +520,34 @@ void Par_EquilibriumIC::constructRadialArray()
    // Interval of radial bins
    RArray_dR = Cloud_MaxR/(RNBin-1);
 
-   // Array of Radius
+   // Array of Radius, R
    for (int b=0; b<RNBin; b++)         RArray_R[b]         = RArray_dR*b;
 
-   // Array of Density
+   // Array of Density, Rho(R)
    for (int b=1; b<RNBin; b++)         RArray_Rho[b]       = getDensity( RArray_R[b] );
    RArray_Rho[0]                                           = RArray_Rho[1];   // where r=0
 
-   // Array of Enclosed Mass
+   // Array of Enclosed Mass, M_Enc(R) = \int_{0}^{R} Rho(r) 4\pi R^2 dR
    RArray_M_Enc[0]                                         = 0;   // where r=0
    for (int b=1; b<RNBin; b++)         RArray_M_Enc[b]     = RArray_M_Enc[b-1] + LinearDensityShellMass( RArray_R[b-1], RArray_R[b], RArray_Rho[b-1], RArray_Rho[b] );
 
-   // Array of dRho/dR
+   // Array of Density Slope, dRho/dR
    RArray_dRho_dR[0]                                       = (RArray_Rho[1] - RArray_Rho[0])/RArray_dR;
    for (int b=1; b<RNBin-1; b++)       RArray_dRho_dR[b]   = Slope_LinearRegression( RArray_R, RArray_Rho, b-1, 3 );
    RArray_dRho_dR[RLastIdx]                                = (RArray_Rho[RLastIdx] - RArray_Rho[RLastIdx-1])/RArray_dR;
 
-   // Array of Gravitional Field
-   RArray_G[0] = 0;
-   for (int b=1; b<RNBin; b++)         RArray_G[b]         = -NEWTON_G*RArray_M_Enc[b]/SQR( RArray_R[b] );
+   // Array of Gravitional Field, g(R) = -(GM_Enc)/R^2 = -dPhi/dR
+   RArray_g[0] = 0;
+   for (int b=1; b<RNBin; b++)         RArray_g[b]         = -NEWTON_G*RArray_M_Enc[b]/SQR( RArray_R[b] );
 
-   // Array of dRho_dPsi
-   for (int b=0; b<RNBin; b++)         RArray_dRho_dPsi[b] = RArray_dRho_dR[b]/RArray_G[b];
+   // Array of dRho/dPsi, dRho/dPsi = -(dRho/dPhi) = -(dRho/dR)(dR/dPhi) = (dRho/dR)(1/g), where Psi = -Phi
+   for (int b=0; b<RNBin; b++)         RArray_dRho_dPsi[b] = RArray_dRho_dR[b]/RArray_g[b]; // TODO: there is a 0/0 at r=0
 
-   // Array of Gravitational Potential
+   // Array of Gravitational Potential, Phi(R) = Phi(\infty) - \int_{\infty}^{R} g dR
    RArray_Phi[RLastIdx]                                    = -NEWTON_G*RArray_M_Enc[RLastIdx]/RArray_R[RLastIdx];
-   for (int b=RLastIdx-1; b>=0; b--)   RArray_Phi[b]       = RArray_Phi[b+1] + 0.5*(RArray_G[b]+RArray_G[b+1])*RArray_dR;
+   for (int b=RLastIdx-1; b>=0; b--)   RArray_Phi[b]       = RArray_Phi[b+1] + 0.5*(RArray_g[b]+RArray_g[b+1])*RArray_dR;
 
-   // Adding external potentil
+   // Adding External Potentil
    if ( AddExtPot_Table )
       for (int b=0; b<RNBin; b++)      RArray_Phi[b]      += ExtendedInterpolatedTable( RArray_R[b], InputTable_ExtPot_nbin, InputTable_ExtPot_radius, InputTable_ExtPot_potential );
 
@@ -570,19 +570,20 @@ void Par_EquilibriumIC::constructRadialArray()
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::constructEnergyArray()
 {
+   // Ralative Energy (Binding Energy) ranges from Psi_Min to Psi_Max, where Psi = -Phi is the Relative Potential
    EArray_MinE = -RArray_Phi[RLastIdx]; // TODO: why not zero
-   if ( Cloud_Model == CLOUD_MODEL_TABLE )   EArray_MaxE = -RArray_Phi[2];
+   if ( Cloud_Model == CLOUD_MODEL_TABLE )   EArray_MaxE = -RArray_Phi[2]; //TODO: combine them and use 0
    else                                      EArray_MaxE = -RArray_Phi[1];
    EArray_dE   = (EArray_MaxE-EArray_MinE)/ENBin;
 
-   // Set the binding energy
+   // Array of Relative Energy (Binding Energy), E = -(Phi + 1/2 v^2) = Psi - 1/2 v^2 = 1/2 ( v_{esc}^2 - v^2 )
    EArray_E[0] = EArray_MinE;
    for (int k=1; k<ENBin; k++)   EArray_E[k] = EArray_E[k-1] + EArray_dE;
 
-   // Set the integrated distribution function
+   // Array of Integrated Distribution Function, IntDFunc(E) = \int_{0}^{E} (\frac{ 1 }{ \sqrt{E-Psi} }) (\frac{ dRho }{ dPsi }) dPsi
    for (int k=0; k<ENBin; k++)   EArray_IntDFunc[k] = getIntegratedDistributionFunction( EArray_MinE, EArray_E[k], 1000 ); // TODO: why not from zero
 
-   // Set the distribution function
+   // Array of Distribution Function, DFunc(E) = f(E) = d/dE IntDFunc(E)
    for (int k =0; k<ENBin; k++)
    {
       if      ( k <= 1         )   EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,       0, 5 );
@@ -619,41 +620,41 @@ void Par_EquilibriumIC::constructParticles( real *Mass_AllRank, real *Pos_AllRan
 {
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Constructing Par_EquilibriumIC ...\n" );
 
-   // determine the total enclosed mass within the maximum radius
+   // Determine the total enclosed mass within the maximum radius
    TotCloudMass = getEnclosedMass( Cloud_MaxR );
    ParticleMass = TotCloudMass/Cloud_Par_Num;
 
    double  RandomVectorR[3];
    double  RandomVectorV[3];
 
-   // set particle attributes
+   // Set particle attributes
    for (long p=Par_Idx0; p<Par_Idx0+Cloud_Par_Num; p++)
    {
-      // randomly sample the enclosed mass
+      // Randomly sample the enclosed mass
       const double RandomSampleM = TotCloudMass*Random_Num_Gen->GetValue( 0, 0.0, 1.0 );
 
-      // position, sample from the enclosed mass profile with linear interpolation
+      // Ramdomly sample the radius from the enclosed mass profile with linear interpolation
       const double RandomSampleR = Mis_InterpolateFromTable( RNBin, RArray_M_Enc, RArray_R, RandomSampleM );
 
-      // randomly set the position vector with a given radius
+      // Randomly set the position vector with a given radius
       getRandomVector_GivenLength( RandomSampleR, RandomVectorR );
 
-      // velocity
+      // Randomly sample the velocity magnitude from the distribution function
       const double RandomSampleV = getRandomSampleVelocity( RandomSampleR );
 
-      // randomly set the velocity vector with the given amplitude
+      // Randomly set the velocity vector with the given magnitude
       getRandomVector_GivenLength( RandomSampleV, RandomVectorV );
 
-      // set particle attributes
+      // Set particle attributes
       Mass_AllRank[p] = ParticleMass;
       for (int d=0; d<3; d++)   Pos_AllRank[d][p] = Cloud_Center[d]  + RandomVectorR[d];
       for (int d=0; d<3; d++)   Vel_AllRank[d][p] = Cloud_BulkVel[d] + RandomVectorV[d];
 
-      // check periodicity
+      // Check periodicity
       for (int d=0; d<3; d++)
          if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )   Pos_AllRank[d][p] = FMOD( Pos_AllRank[d][p]+(real)amr->BoxSize[d], (real)amr->BoxSize[d] );
 
-      // record the maximum error
+      // Record the maximum error
       MaxMassError = fmax( fabs( ( getEnclosedMass( RandomSampleR ) - RandomSampleM )/RandomSampleM ), MaxMassError );
 
       printf( "p = %ld, SampleM = %21.14e, SampleR = %21.14e, EnclosedMass_RArray = %21.14e, EnclosedMass_Analytical = %21.14e, EnclosedMAss_GSL = %21.14e\n",
@@ -830,7 +831,12 @@ double Par_EquilibriumIC::getGraviPotential( const double r )
 // Function    :  getRandomSampleVelocity
 // Description :  Get the ramdomly sampled magnitude of the velocity of a particle at radius r from the distribution function
 //
-// Note        :
+// Note        :  1. The probability of the magnitude of the velocity with a given radius, p(v|r) \propto v^2*f(E),
+//                   where f(E) = DFunc(E) = DFunc(Psi(r)-1/2 v^2) is the distribution function
+//                2. Psi = E + 1/2 v^2 -> v = \sqrt{ 2*( Psi - E ) }
+//                3. dv = \frac{ 1 }{ \sqrt{ 2*( Psi - E )} } dE
+//                4. The state E<0 is unbound, v^2 > v_{esc}^2
+//                5. E is in the range  0 < E < Psi(r)
 //
 // Parameter   :  r : radius
 //
@@ -838,8 +844,12 @@ double Par_EquilibriumIC::getGraviPotential( const double r )
 //-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
 {
+   // The relative potential at this radius
    const double Psi = -getGraviPotential(r);
 
+   // CumulativeProbability = \int_{v}^{v_min} v^2 f(E) dv
+   //                       = \int_{E_min}^{E} (2*(Psi-E)) f(E) \frac{ 1 }{ \sqrt{ 2*( Psi - E )} } dE
+   //                       = \int_{E_min}^{E} \sqrt{ (2*(Psi-E)) } f(E) dE
    double *CumulativeProbability = new double [ENBin];
 
    CumulativeProbability[0] = EArray_DFunc[0]*sqrt( Psi-EArray_E[0] )*EArray_dE;
@@ -876,9 +886,10 @@ double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
    const double RandomSampleE = EArray_E[RandomSampleIndex] + EArray_dE*Fraction_dEng;
    //----------------------------
 
-   const double RandomSampleKineticEnergy = 2*(Psi-RandomSampleE);
+   // v^2 = 2*(Psi-E)
+   const double RandomSampleSquaredV = 2*(Psi-RandomSampleE);
 
-   const double RandomSampleVelocity      = ( RandomSampleKineticEnergy < 0.0 ) ? 0 : sqrt( RandomSampleKineticEnergy );
+   const double RandomSampleVelocity = ( RandomSampleKineticEnergy < 0.0 ) ? 0 : sqrt( RandomSampleSquaredV );
 
    delete [] CumulativeProbability;
 
