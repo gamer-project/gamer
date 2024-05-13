@@ -240,8 +240,7 @@ if __name__ == "__main__":
                                 ( 1, 3, 5, 7, 9,11,13,15,17,19,21,23 )] }
     file4        = File( file_name4, const_paras4, iter_paras4, flag_file=True )
 
-    # files = [file1, file2, file3, file4]        # wrap all the `File` classes.
-    files = [file1, file4]        # wrap all the `File` classes.
+    files = [file1, file2, file3, file4]        # wrap all the `File` classes.
 
     # 2. Taking the input arguments
     parser = argparse.ArgumentParser( description = "A script of changing the parameters for Input__* files.",
