@@ -30,8 +30,8 @@
 //                const double CoM_MaxR      = __FLT_MAX__; // entire domain
 //                const double CoM_MinRho    = 0.0;
 //                const long   CoM_Field     = _TOTAL_DENS;
-//                const double CoM_TolErrR   = amr->dh[MAX_LEVEL];
-//                const int    CoM_MaxIter   = 10;
+//                const double CoM_TolErrR   = __FLT_MAX__; // disable it since CoM_MaxR includes the entire domain
+//                const int    CoM_MaxIter   = 1;           // no iteration is required since CoM_MaxR includes the entire domain
 //
 //                Aux_FindWeightedAverageCenter( CoM_Coord, CoM_ref, CoM_MaxR, CoM_MinRho,
 //                                               CoM_Field, CoM_TolErrR, CoM_MaxIter, &CoM_FinaldR, &CoM_FinalNIter );
