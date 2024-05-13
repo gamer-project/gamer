@@ -775,7 +775,9 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
 //    13. refine to higher level(s)
 // ===============================================================================================
-      if ( lv != TOP_LEVEL  &&  AdvanceCounter[lv] % REGRID_COUNT == 0 )
+//    still check lv>=MAX_LEVEL since it’s possible to have patches on levels higher than MAX_LEVEL temporarily
+//    if MAX_LEVEL is reduced during restart or runtime
+      if (  ( lv < MAX_LEVEL || (lv!=TOP_LEVEL && NPatchTotal[lv+1]!=0) )  &&  AdvanceCounter[lv] % REGRID_COUNT == 0  )
       {
 //       REFINE_NLEVEL>1 allows for refining multiple levels at once
          const int lv_refine_max = MIN( lv+REFINE_NLEVEL, TOP_LEVEL ) - 1;
