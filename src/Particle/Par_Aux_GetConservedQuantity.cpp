@@ -25,11 +25,11 @@
 //                       due to round-off errors
 //
 // Parameter   :  Mass_Total        : Total particle mass to be returned
-//                CoMX/Y/Z_Total    : Total center of mass to be returned
-//                MomX/Y/Z_Total    : Total momentum to be returned
-//                AngMomX/Y/Z_Total : Total angular momentum to be returned
-//                Ek_Total          : Total kinematic energy to be returned
-//                Ep_Total          : Total potential energy to be returned
+//                CoMX/Y/Z_Total    : Total particle center of mass to be returned
+//                MomX/Y/Z_Total    : Total particle momentum to be returned
+//                AngMomX/Y/Z_Total : Total particle angular momentum to be returned
+//                Ek_Total          : Total particle kinematic energy to be returned
+//                Ep_Total          : Total particle potential energy to be returned
 //
 // Return      :  Mass_Total, CoMX/Y/Z_Total, MomX/Y/Z_Total, AngMomX/Y/Z_Total, Ek_Total, Ep_Total
 //-------------------------------------------------------------------------------------------------------
@@ -39,14 +39,17 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &CoMX_Total, doubl
                                    double &Ek_Total, double &Ep_Total )
 {
 
-// 1. mass, momentum, angular momentum, and kinematic energy
+// 1. mass, center of mass, momentum, angular momentum, and kinematic energy
    double Mass_ThisRank=0.0, CoMX_ThisRank=0.0, CoMY_ThisRank=0.0, CoMZ_ThisRank=0.0;
    double MomX_ThisRank=0.0, MomY_ThisRank=0.0, MomZ_ThisRank=0.0;
    double AngMomX_ThisRank=0.0, AngMomY_ThisRank=0.0, AngMomZ_ThisRank=0.0, Ek_ThisRank=0.0;
-   double Send[11], Recv[11];
 
 // use static schedule to give the same reduction results everytime
-#  pragma omp parallel for schedule( static ) reduction( +:Mass_ThisRank, CoMX_ThisRank, CoMY_ThisRank, CoMZ_ThisRank, MomX_ThisRank, MomY_ThisRank, MomZ_ThisRank, AngMomX_ThisRank, AngMomY_ThisRank, AngMomZ_ThisRank, Ek_ThisRank )
+#  pragma omp parallel for schedule( static ) reduction( +:Mass_ThisRank, \
+                                                           CoMX_ThisRank, CoMY_ThisRank, CoMZ_ThisRank, \
+                                                           MomX_ThisRank, MomY_ThisRank, MomZ_ThisRank, \
+                                                           AngMomX_ThisRank, AngMomY_ThisRank, AngMomZ_ThisRank, \
+                                                           Ek_ThisRank )
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
       if ( amr->Par->Mass[p] <= (real_par)0.0  ||  amr->Par->Type[p] == PTYPE_TRACER )   continue; // skip inactive, massless, and tracer particles
@@ -68,6 +71,9 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &CoMX_Total, doubl
       Ek_ThisRank      += 0.5*amr->Par->Mass[p]*( SQR(amr->Par->VelX[p]) + SQR(amr->Par->VelY[p]) + SQR(amr->Par->VelZ[p]) );
    }
 
+   const int NQuan_ToReduce = 11;
+   double    Send[NQuan_ToReduce], Recv[NQuan_ToReduce];
+
    Send[0]  =    Mass_ThisRank;
    Send[1]  =    CoMX_ThisRank;
    Send[2]  =    CoMY_ThisRank;
@@ -80,19 +86,22 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &CoMX_Total, doubl
    Send[9]  = AngMomZ_ThisRank;
    Send[10] =      Ek_ThisRank;
 
-   MPI_Reduce( Send, Recv, 11, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+   MPI_Reduce( Send, Recv, NQuan_ToReduce, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
 
-   Mass_Total    = Recv[0];
-   CoMX_Total    = Recv[1]/Mass_Total;
-   CoMY_Total    = Recv[2]/Mass_Total;
-   CoMZ_Total    = Recv[3]/Mass_Total;
-   MomX_Total    = Recv[4];
-   MomY_Total    = Recv[5];
-   MomZ_Total    = Recv[6];
-   AngMomX_Total = Recv[7];
-   AngMomY_Total = Recv[8];
-   AngMomZ_Total = Recv[9];
-   Ek_Total      = Recv[10];
+   if ( MPI_Rank == 0 )
+   {
+      Mass_Total    = Recv[0];
+      CoMX_Total    = Recv[1]/Mass_Total;
+      CoMY_Total    = Recv[2]/Mass_Total;
+      CoMZ_Total    = Recv[3]/Mass_Total;
+      MomX_Total    = Recv[4];
+      MomY_Total    = Recv[5];
+      MomZ_Total    = Recv[6];
+      AngMomX_Total = Recv[7];
+      AngMomY_Total = Recv[8];
+      AngMomZ_Total = Recv[9];
+      Ek_Total      = Recv[10];
+   }
 
 
 // 2. potential energy

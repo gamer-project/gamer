@@ -177,7 +177,7 @@ void Aux_Check_Conservation( const char *comment )
                MomZ = amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i];
                Etot = amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i];
 
-               // calculate the angular momentum
+//             calculate the angular momentum
                const double x  = x0 + i*dh;
                const double y  = y0 + j*dh;
                const double z  = z0 + k*dh;
@@ -620,9 +620,9 @@ void Aux_Check_Conservation( const char *comment )
 
 #        if ( MODEL != PAR_ONLY )
          Aux_Message( File, "  %17s  %17s  %17s",    "Mass_All",    "Mass_All_AErr",    "Mass_All_RErr" );
-         Aux_Message( File, "  %17s  %17s  %17s",    "CoMX_All",    "CoMX_All_AErr",    "CoMX_All_Avel" );
-         Aux_Message( File, "  %17s  %17s  %17s",    "CoMY_All",    "CoMY_All_AErr",    "CoMY_All_Avel" );
-         Aux_Message( File, "  %17s  %17s  %17s",    "CoMZ_All",    "CoMZ_All_AErr",    "CoMZ_All_Avel" );
+         Aux_Message( File, "  %17s  %17s  %17s",    "CoMX_All",    "CoMX_All_AErr",    "CoMX_All_AveV" );
+         Aux_Message( File, "  %17s  %17s  %17s",    "CoMY_All",    "CoMY_All_AErr",    "CoMY_All_AveV" );
+         Aux_Message( File, "  %17s  %17s  %17s",    "CoMZ_All",    "CoMZ_All_AErr",    "CoMZ_All_AveV" );
          Aux_Message( File, "  %17s  %17s  %17s",    "MomX_All",    "MomX_All_AErr",    "MomX_All_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s",    "MomY_All",    "MomY_All_AErr",    "MomY_All_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s",    "MomZ_All",    "MomZ_All_AErr",    "MomZ_All_RErr" );
