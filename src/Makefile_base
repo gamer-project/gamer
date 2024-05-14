@@ -28,6 +28,7 @@ COMPILE_VERBOSE := 0
 # simulation options
 #######################################################################################################
 SIMU_OPTION = @@@SIMU_OPTION@@@
+SIMU_OPTION += -DGPU_COMPUTE_CAPALIBITY=@@@GPU_COMPUTE_CAPABILITY@@@
 
 
 
@@ -528,33 +529,7 @@ endif
 # common flags
 NVCCFLAG_COM := $(COMMONFLAG) -O3 # -Xcompiler #-Xopencc -OPT:Olimit=0
 
-ifeq      "$(filter -DGPU_COMPUTE_CAPABILITY=200, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=200"
-   NVCCFLAG_ARCH += -gencode arch=compute_20,code=\"compute_20,sm_20\"
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=300, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=300"
-   NVCCFLAG_ARCH += -gencode arch=compute_30,code=\"compute_30,sm_30\"
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=350, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=350"
-   NVCCFLAG_ARCH += -gencode arch=compute_35,code=\"compute_35,sm_35\"
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=370, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=370"
-   NVCCFLAG_ARCH += -gencode arch=compute_37,code=\"compute_37,sm_37\"
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=500, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=500"
-   NVCCFLAG_ARCH += -gencode arch=compute_50,code=\"compute_50,sm_50\"
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=520, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=520"
-   NVCCFLAG_ARCH += -gencode arch=compute_52,code=\"compute_52,sm_52\"
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=600, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=600"
-   NVCCFLAG_ARCH += -gencode arch=compute_60,code=\"compute_60,sm_60\"
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=610, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=610"
-   NVCCFLAG_ARCH += -gencode arch=compute_61,code=\"compute_61,sm_61\"
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=700, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=700"
-   NVCCFLAG_ARCH += -gencode arch=compute_70,code=\"compute_70,sm_70\"
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=750, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=750"
-   NVCCFLAG_ARCH += -gencode arch=compute_75,code=\"compute_75,sm_75\"
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=800, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=800"
-   NVCCFLAG_ARCH += -gencode arch=compute_80,code=\"compute_80,sm_80\"
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=860, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=860"
-   NVCCFLAG_ARCH += -gencode arch=compute_86,code=\"compute_86,sm_86\"
-else ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
-   $(error unknown GPU_COMPUTE_CAPABILITY (please set it properly in the Makefile))
-endif
+NVCCFLAG_ARCH += @@@NVCCFLAG_ARCH@@@
 
 NVCCFLAG_COM += $(NVCCFLAG_ARCH)
 
@@ -565,81 +540,7 @@ endif
 #NVCCFLAG_COM += -use_fast_math
 
 # fluid solver flags
-NVCCFLAG_FLU += -Xptxas -dlcm=ca -prec-div=false -ftz=true
-
-ifeq      "$(filter -DGPU_COMPUTE_CAPABILITY=200, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=200"
-   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
-#    NVCCFLAG_FLU += --maxrregcount=XX
-   else
-#    NVCCFLAG_FLU += --maxrregcount=XX
-   endif
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=300, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=300"
-   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
-     NVCCFLAG_FLU += --maxrregcount=128
-   else
-     NVCCFLAG_FLU += --maxrregcount=70
-   endif
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=350, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=350"
-   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
-     NVCCFLAG_FLU += --maxrregcount=192
-   else
-     NVCCFLAG_FLU += --maxrregcount=128
-   endif
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=370, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=370"
-   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
-     NVCCFLAG_FLU += --maxrregcount=192
-   else
-     NVCCFLAG_FLU += --maxrregcount=128
-   endif
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=500, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=500"
-   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
-     NVCCFLAG_FLU += --maxrregcount=192
-   else
-     NVCCFLAG_FLU += --maxrregcount=128
-   endif
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=520, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=520"
-   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
-     NVCCFLAG_FLU += --maxrregcount=192
-   else
-     NVCCFLAG_FLU += --maxrregcount=128
-   endif
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=600, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=600"
-   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
-     NVCCFLAG_FLU += --maxrregcount=192
-   else
-     NVCCFLAG_FLU += --maxrregcount=128
-   endif
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=610, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=610"
-   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
-     NVCCFLAG_FLU += --maxrregcount=192
-   else
-     NVCCFLAG_FLU += --maxrregcount=128
-   endif
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=700, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=700"
-   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
-     NVCCFLAG_FLU += --maxrregcount=192
-   else
-     NVCCFLAG_FLU += --maxrregcount=128
-   endif
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=750, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=750"
-   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
-     NVCCFLAG_FLU += --maxrregcount=192
-   else
-     NVCCFLAG_FLU += --maxrregcount=128
-   endif
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=800, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=800"
-   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
-     NVCCFLAG_FLU += --maxrregcount=192
-   else
-     NVCCFLAG_FLU += --maxrregcount=128
-   endif
-else ifeq "$(filter -DGPU_COMPUTE_CAPABILITY=860, $(SIMU_OPTION))" "-DGPU_COMPUTE_CAPABILITY=860"
-   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
-     NVCCFLAG_FLU += --maxrregcount=192
-   else
-     NVCCFLAG_FLU += --maxrregcount=128
-   endif
-endif
+NVCCFLAG_FLU += -Xptxas -dlcm=ca -prec-div=false -ftz=true @@@NVCCFLAG_FLU@@@
 
 # Poisson/gravity solvers flags
 NVCCFLAG_POT += -Xptxas -dlcm=ca
