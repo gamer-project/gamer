@@ -677,7 +677,7 @@ def load_arguments():
 
     parser.add_argument( "--gpu", type=str2bool, metavar="BOOLEAN", gamer_name="GPU",
                          default=False,
-                         help="Enable GPU. Must set <--gpu_arch> as well.\n"
+                         help="Enable GPU. Must set <GPU_COMPUTE_CAPABILITY> in your machine *.config file as well.\n"
                        )
 
     args, name_table, depends, constraints = parser.parse_args()
