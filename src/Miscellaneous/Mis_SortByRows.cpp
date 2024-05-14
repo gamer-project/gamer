@@ -24,17 +24,17 @@
 //                            The array will not be changed in this function since it is an indirect sort.
 //                IdxTable  : Table of indices of the columns to be sorted, with a size of NSort. Must be initialized.
 //                            This will be changed and returned to sort the array.
-//                NSort     : Number of columns to be sorted in the array must less than or equal to n.
+//                NSort     : Number of columns (n) to be sorted in Array[m][n].
 //                SortOrder : Array with a size of NOrder specifies which rows to compare first, second, etc.
-//                NOrder    : Size of SortOrder must be less than or equal to m.
+//                NOrder    : Size of SortOrder (must be <= m).
 //
 // Return      :  IdxTable
 //-------------------------------------------------------------------------------------------------------
 template <typename T>
 void Mis_SortByRows( T **Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder )
 {
-   if ( NSort  < 0 )   Aux_Error( ERROR_INFO, "NSort must be greater than or equal to zero!!\n" );
-   if ( NOrder < 1 )   Aux_Error( ERROR_INFO, "NOrder must be greater than or equal to one!!\n" );
+   if ( NSort  < 0 )   Aux_Error( ERROR_INFO, "NSort < 0 !!\n" );
+   if ( NOrder < 1 )   Aux_Error( ERROR_INFO, "NOrder < 1 !!\n" );
 
    T    *Array_Sorted = new T    [NSort];
    long *Idx_Sorted   = new long [NSort];
@@ -64,12 +64,12 @@ void Mis_SortByRows( T **Array, long *IdxTable, const long NSort, const int *Sor
 
       if ( NOrder == 1 )
       {
-         Aux_Message( stderr, "WARNING : Can not sort the exact same value.\n" );
+         Aux_Message( stderr, "WARNING : Cannot sort the exact same value.\n" );
          break;
       }
 
-//    4. Sort the same values again
-      long *IdxTable_same  = new long [NSameVal];
+//    4. sort the same values again
+      long *IdxTable_same = new long [NSameVal];
       for (long j=0; j<NSameVal; j++)   IdxTable_same[j] = IdxTable[i+j];
 
       Mis_SortByRows( Array, IdxTable_same, NSameVal, SortOrder+1, NOrder-1 );
@@ -85,7 +85,6 @@ void Mis_SortByRows( T **Array, long *IdxTable, const long NSort, const int *Sor
    delete [] Array_Sorted;
    delete [] IdxTable_old;
    delete [] Idx_Sorted;
-
 } // FUNCTION :  Mis_SortByRows
 
 
