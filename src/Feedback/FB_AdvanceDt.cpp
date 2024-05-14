@@ -205,7 +205,6 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       {
          const int PID = NearbyPIDList[t];
          for (int d=0; d<3; d++)    PCr[d][t] = amr->patch[0][lv][PID]->corner[d];
-         NearbyPIDList_IdxTable[t] = t;
       }
 
       const int SortOrder_PID[3] = { 0, 1, 2 };
@@ -338,7 +337,6 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //            --> necessary when feedback involves random numbers
 //            --> otherwise, the same particles accessed by different patches may have different random numbers
          const int SortOrder_pos[3] = { PAR_POSX, PAR_POSY, PAR_POSZ };
-         for (int p=0; p<NPar; p++)   ParSortID[p] = p;
          Mis_SortByRows( ParAtt_Local, ParSortID, (long)NPar, SortOrder_pos, 3 );
 
 

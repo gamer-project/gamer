@@ -1,5 +1,8 @@
 #include "GAMER.h"
 
+template <typename T>
+static void SortByRows( T **Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder );
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -10,15 +13,42 @@
 //
 //                Example:
 //
-//                int  NOrder       = 2;
-//                int  SortOrder[2] = { 0, 1 }; // Sort by Array[0] first, then by Array[1]
-//                long NSort        = 7;
-//                int Array[2][7]   = { { 1, 5, 1, 4, 3, 4, 4 },
-//                                      { 9, 4, 0, 4, 0, 2, 1 } };
-//                long IdxTable[7]  = { 0, 1, 2, 3, 4, 5, 6 };
+//                int  NOrder         = 2;
+//                int  SortOrder[2]   = { 0, 1 }; // Sort by Array[0] first, then by Array[1]
+//                long NSort          = 7;
+//                int Array[2][NSort] = { { 1, 5, 1, 4, 3, 4, 4 },
+//                                        { 9, 4, 0, 4, 0, 2, 1 } };
+//                long IdxTable       = new long [NSort];
 //
 //                Mis_SortByRows( Array, IdxTable, NSort, SortOrder, NOrder );
 //                // => SortIdxTable becomes { 2, 0, 4, 6, 5, 3, 1 };
+//
+// Parameter   :  Array     : A 2D m by n array to be sorted, Array[m][n], which can be interpreted as m rows of 1D arrays with n columns.
+//                            The array will not be changed in this function since it is an indirect sort.
+//                IdxTable  : Table of indices of the columns to be sorted, with a size of NSort.
+//                            This will be changed and returned to sort the array.
+//                NSort     : Number of columns (n) to be sorted in Array[m][n].
+//                SortOrder : Array with a size of NOrder specifies which rows to compare first, second, etc.
+//                NOrder    : Size of SortOrder (must be <= m).
+//
+// Return      :  IdxTable
+//-------------------------------------------------------------------------------------------------------
+template <typename T>
+void Mis_SortByRows( T **Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder )
+{
+//  Initialize the IdxTable
+    for (long i=0; i<NSort; i++)   IdxTable[i] = i;
+
+    SortByRows<T>( Array, IdxTable, NSort, SortOrder, NOrder );
+} // FUNCTION : Mis_SortByRow
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SortByRows
+// Description :  Indirectly sort the columns of a 2D array using a sequence of sorting rows.
+//
+// Note        :  Invoked by Mis_SortBySort().
 //
 // Parameter   :  Array     : A 2D m by n array to be sorted, Array[m][n], which can be interpreted as m rows of 1D arrays with n columns.
 //                            The array will not be changed in this function since it is an indirect sort.
@@ -31,7 +61,7 @@
 // Return      :  IdxTable
 //-------------------------------------------------------------------------------------------------------
 template <typename T>
-void Mis_SortByRows( T **Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder )
+void SortByRows( T **Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder )
 {
    if ( NSort  < 0L )   Aux_Error( ERROR_INFO, "NSort < 0 !!\n" );
    if ( NOrder < 1  )   Aux_Error( ERROR_INFO, "NOrder < 1 !!\n" );
@@ -72,7 +102,7 @@ void Mis_SortByRows( T **Array, long *IdxTable, const long NSort, const int *Sor
       long *IdxTable_same = new long [NSameVal];
       for (long j=0; j<NSameVal; j++)   IdxTable_same[j] = IdxTable[i+j];
 
-      Mis_SortByRows( Array, IdxTable_same, NSameVal, SortOrder+1, NOrder-1 );
+      SortByRows<T>( Array, IdxTable_same, NSameVal, SortOrder+1, NOrder-1 );
 
 //    5. store the result
       for (long j=0; j<NSameVal; j++)   IdxTable[i+j] = IdxTable_same[j];
@@ -85,7 +115,7 @@ void Mis_SortByRows( T **Array, long *IdxTable, const long NSort, const int *Sor
    delete [] Array_Sorted;
    delete [] IdxTable_old;
    delete [] Idx_Sorted;
-} // FUNCTION :  Mis_SortByRows
+} // FUNCTION : SortByRows
 
 
 
