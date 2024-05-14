@@ -28,7 +28,7 @@ COMPILE_VERBOSE := 0
 # simulation options
 #######################################################################################################
 SIMU_OPTION = @@@SIMU_OPTION@@@
-SIMU_OPTION += -DGPU_COMPUTE_CAPALIBITY=@@@GPU_COMPUTE_CAPABILITY@@@
+SIMU_OPTION += -DGPU_COMPUTE_CAPABILITY=@@@GPU_COMPUTE_CAPABILITY@@@
 
 
 

@@ -755,13 +755,13 @@ def set_gpu( gpus, args ):
 
     if   compute_capability < 0:
         compute_capability = get_gpu_compute_capability()
-        gpu_opts["GPU_COMPUTE_CAPABILITY"] = str(compute_capability)
     elif compute_capability < 200:
         raise ValueError("Not correct GPU_COMPUTE_CAPABILITY range (>=200)")
+    gpu_opts["GPU_COMPUTE_CAPABILITY"] = str(compute_capability)
 
     # 2. Set the NVCCFLAG_COM
     flag_num = compute_capability // 10
-    gput_opts["NVCCFLAG_ARCH"] = '-gencode arch=compute_%d,code=\\"compute_%d,sm_%d\\"'%(flag_num, flag_num, flag_num)
+    gpu_opts["NVCCFLAG_ARCH"] = '-gencode arch=compute_%d,code=\\"compute_%d,sm_%d\\"'%(flag_num, flag_num, flag_num)
 
     # 3. Set the NVCCFLAG_FLU
     if 300 <= compute_capability and compute_capability <= 370:
