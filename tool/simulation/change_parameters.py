@@ -21,80 +21,7 @@ How to use it:
 
   3. [Optional] To pass extra arguments to `execution()` from the command line,
      add your own `parser.add_argument` in the `Main` section.
-
-An example of the script (from Alexander Kunkel):
 -----------------------------------------------------------------------------------------------------
-# Additional imports for interacting with file system
-import shutil
-import glob
-
-...
-
-def execution( **kwargs ):
-    cwd               = os.getcwd()
-    record_parameters = kwargs["record"]
-    exe               = kwargs["exe"]
-
-
-    # Run GAMER with executable passed as command line parameter
-    subprocess.run([kwargs["exe"]], capture_output=False)
-
-    # Analyse run: Call python scripts etc.
-    os.system("python3 plot_wave_slice.py -s 1 -e 1")
-    os.system("python3 analyse_l1_error.py")
-    os.system("ls -alt > Record__FileSizes")
-
-    # Create folder recording which parameters where changed
-    par_dir  = exe[2:] + "_" + "_".join(record_parameters.keys())
-
-    try:
-        os.mkdir(par_dir)
-    except FileExistsError:
-        pass
-
-    # Create folder recording current runtime parameters
-    sub_dir  = str(record_parameters)
-    dest_dir = os.path.join(par_dir, sub_dir)
-    try:
-        os.mkdir(dest_dir)
-    except FileExistsError:
-        pass
-
-    # Move and or output files to folder, delete with os.remove() (files) and shutil.rmtree() (directories) if necessary
-    for file in glob.glob(r'*.png'):
-        shutil.move(os.path.join(cwd, file), os.path.join(cwd, dest_dir))
-
-    for file in glob.glob(r'Input*'):
-        shutil.copy(os.path.join(cwd, file), os.path.join(cwd, dest_dir))
-
-    for file in glob.glob(r'Record*'):
-        shutil.move(os.path.join(cwd, file), os.path.join(cwd, dest_dir))
-
-    for file in glob.glob(r'VortexPairLinear*'):
-        shutil.move(os.path.join(cwd, file), os.path.join(cwd, dest_dir))
-
-    for file in glob.glob(r'Data*'):
-        shutil.move(os.path.join(cwd, file), os.path.join(cwd, dest_dir))
-
-    return
-
-...
-
-file_name1       = "Input__Parameter"
-loop_paras1      = { "OPT__FIXUP_RESTRICT": [0, 1], "OPT__REF_FLU_INT_SCHEME": [4, 5, 6, 7],
-const_paras1     = {"MAX_LEVEL": 1, "NX0_TOT_X": 64, "NX0_TOT_Y": 64, "OPT__INIT": 2, "END_STEP": 1000, "REFINE_NLEVEL": 1, "REGRID_COUNT":1, "OPT__INT_PHASE": 0}
-
-file_name2       = "Input__Flag_Rho"
-loop_paras2      = { "Density": [0, 1e3]}
-const_paras2     = {}
-
-
-file1  = File( file_name1, const_paras1, loop_paras1, False  )
-file2  = File( file_name2, const_paras2, loop_paras2, True  )
-
-files  = [ file1, file2 ]
------------------------------------------------------------------------------------------------------
-
 For developer:
 1. The main concept is to use a recursion function instead of nest for loops, so the code stays clean
    and easy to maintain.
@@ -110,6 +37,8 @@ import re
 import os
 import sys
 import subprocess
+import shutil
+import glob
 
 
 
@@ -203,9 +132,36 @@ def execution( **kwargs ):
     """
     Main execution after iterating all the parameters.
     """
+    cwd               = os.getcwd()
     record_parameters = kwargs["record"]
-    print( record_parameters )
-    print( "GO GO GAMER GO!" )
+    exe               = kwargs["exe"]
+
+    # 1. Run GAMER with executable passed as command line parameter
+    subprocess.run([kwargs["exe"]], capture_output=False)
+
+    # 2. Analysis: Call python scripts etc.
+
+    # 3. Create folder recording which parameters where changed
+    par_dir  = exe[2:] + "_" + "_".join(record_parameters.keys())
+
+    if not os.path.isdir(par_dir): os.mkdir(par_dir)
+
+    # 4. Create folder recording current runtime parameters
+    sub_dir  = str(record_parameters)
+    dest_dir = os.path.join(par_dir, sub_dir)
+    if not os.path.isdir(dest_dir): os.mkdir(dest_dir)
+
+    # 5. Move and or output files to folder, delete with os.remove() (files) and shutil.rmtree() (directories) if necessary
+    move_files = [ r'*.png', r'Record*', r'Data*']
+    copy_files = [ r'Input*', ]
+
+    for f_type in move_files:
+        for f in glob.glob(f_type):
+            shutil.move(os.path.join(cwd, f), os.path.join(cwd, dest_dir))
+
+    for f_type in copy_files:
+        for f in glob.glob(f_type):
+            shutil.copy(os.path.join(cwd, f), os.path.join(cwd, dest_dir))
     return RETURN_SUCCESS
 
 
@@ -218,29 +174,24 @@ if __name__ == "__main__":
 
     # 1. Set up the files and the parameters to be changed
     file_name1   = "Input__Parameter"                                             # file name
-    const_paras1 = { "END_T":-1, "END_STEP":50 }                                  # the constant parameters
-    iter_paras1  = { "NX0_TOT_X":[16, 32], "NX0_TOT_Y":[16, 32] }                 # the parameters iterated as the given list
+    const_paras1 = { "END_T":-1, "END_STEP":-1 }                                  # the constant parameters
+    iter_paras1  = { "NX0_TOT_X":[128, 256], "NX0_TOT_Y":[16, 32] }               # the parameters iterated as the given list
     file1        = File( file_name1, const_paras1, iter_paras1, flag_file=False ) # set the `File` class
 
-    file_name2   = "Input__TestProb"
-    const_paras2 = { "Const_1":-1, "Const_2":50 }
-    iter_paras2  = { "Parameter_1":[0.01, 0.02], "Parameter_2":[16, 32] }
-    #file2        = File( file_name2, const_paras2, iter_paras2, flag_file=False )
-
     # this will change the single column to the same value
-    file_name3   = "Input__Flag"
-    const_paras3 = { "derefine":0.1 }
-    iter_paras3  = { "Soften":[0.01, 0.02], "refine":[16, 32] }
-    #file3        = File( file_name3, const_paras3, iter_paras3, flag_file=True )
+    file_name2   = "Input__Flag_NParPatch"
+    const_paras2 = {}
+    iter_paras2  = { "NPar_per_patch":[2048, 4096] }
+    file2        = File( file_name2, const_paras2, iter_paras2, flag_file=True )
 
     # this will change the column to the assigned value
-    file_name4   = "Input__Flag_Rho"
-    const_paras4 = {}
-    iter_paras4  = { "Density":[( 0, 2, 4, 8,10,12,14,16,18,20,22,24 ),
-                                ( 1, 3, 5, 7, 9,11,13,15,17,19,21,23 )] }
-    file4        = File( file_name4, const_paras4, iter_paras4, flag_file=True )
+    file_name3   = "Input__Flag_Rho"
+    const_paras3 = {}
+    iter_paras3  = { "Density":[ tuple( [8.0**(i)   for i in range(12)] ),
+                                 tuple( [8.0**(i+1) for i in range(12)] )] }
+    file3        = File( file_name3, const_paras3, iter_paras3, flag_file=True )
 
-    files = [file1, file2, file3, file4]        # wrap all the `File` classes.
+    files = [file1, file2, file3] # wrap all the `File` classes.
 
     # 2. Taking the input arguments
     parser = argparse.ArgumentParser( description = "A script of changing the parameters for Input__* files.",
@@ -264,5 +215,5 @@ if __name__ == "__main__":
 
     args = vars( parser.parse_args() )
 
-    # 3. Start changing parameters and running
+    # 3. Start iterating parameters and running
     iter_files( files, **args )
