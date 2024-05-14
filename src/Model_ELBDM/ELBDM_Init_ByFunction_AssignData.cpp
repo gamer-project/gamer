@@ -10,9 +10,6 @@ static void Init_Function_User_Template( real fluid[], const double x, const dou
 void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                                 const int lv, double AuxArray[] ) = NULL;
 
-extern int (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
-                                        const int lv, double AuxArray[] );
-
 
 
 
@@ -46,10 +43,23 @@ void Init_Function_User_Template( real fluid[], const double x, const double y, 
    const double Height2 =   8.0;
    const double Width1  =  64.0;
    const double Width2  = 512.0;
+   const real Real      = 1.0 + Height1*exp(  -( SQR(x-C1[0]) + SQR(y-C1[1]) + SQR(z-C1[2]) ) /SQR(Width1)  );
+   const real Imag      = 1.0 + Height2*exp(  -( SQR(x-C2[0]) + SQR(y-C2[1]) + SQR(z-C2[2]) ) /SQR(Width2)  );
+   const real Dens      = Real*Real + Imag*Imag;
 
-   fluid[REAL] = 1.0 + Height1*exp(  -( SQR(x-C1[0]) + SQR(y-C1[1]) + SQR(z-C1[2]) ) /SQR(Width1)  );
-   fluid[IMAG] = 1.0 + Height2*exp(  -( SQR(x-C2[0]) + SQR(y-C2[1]) + SQR(z-C2[2]) ) /SQR(Width2)  );
-   fluid[DENS] = fluid[REAL]*fluid[REAL] + fluid[IMAG]*fluid[IMAG];
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif
+   fluid[REAL] = Real;
+   fluid[IMAG] = Imag;
+   fluid[DENS] = Dens;
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } else { // if ( amr->use_wave_flag[lv] )
+   fluid[PHAS] = SATAN2(Imag, Real);
+   fluid[DENS] = Dens;
+   fluid[STUB] = 0.0;
+   } // if ( amr->use_wave_flag[lv] == true ) ... else ...
+#  endif
 
 // ELBDM does not support passive scalars yet ...
 
@@ -80,10 +90,16 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
    if ( OPT__RESET_FLUID_INIT  &&  Flu_ResetByUser_Func_Ptr == NULL )
       Aux_Error( ERROR_INFO, "Flu_ResetByUser_Func_Ptr == NULL for OPT__RESET_FLUID_INIT !!\n" );
 
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( INIT_SUBSAMPLING_NCELL > 1 )
+      Aux_Error( ERROR_INFO, "ELBDM_HYBRID currently does not support subsampling !!\n" );
+#  endif
 
 // set the number of OpenMP threads
 #  ifdef OPENMP
-   const int OMP_NThread = ( OPT__INIT_GRID_WITH_OMP ) ? OMP_NTHREAD : 1;
+   const int OMP_NT = ( OPT__INIT_GRID_WITH_OMP ) ? OMP_NTHREAD : 1;
+#  else
+   const int OMP_NT = 1;
 #  endif
 
 
@@ -96,7 +112,7 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
    double x, y, z, x0, y0, z0;
 
 
-#  pragma omp parallel for private( fluid, fluid_sub, x, y, z, x0, y0, z0 ) schedule( runtime ) num_threads( OMP_NThread )
+#  pragma omp parallel for private( fluid, fluid_sub, x, y, z, x0, y0, z0 ) schedule( runtime ) num_threads( OMP_NT )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    for (int k=0; k<PS1; k++)  {  z0 = amr->patch[0][lv][PID]->EdgeL[2] + k*dh + 0.5*dh_sub;
    for (int j=0; j<PS1; j++)  {  y0 = amr->patch[0][lv][PID]->EdgeL[1] + j*dh + 0.5*dh_sub;
@@ -112,12 +128,15 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
 
 //       modify the initial condition if required
          if ( OPT__RESET_FLUID_INIT )
-            Flu_ResetByUser_Func_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
+            Flu_ResetByUser_Func_Ptr( fluid_sub, (real)0.0, x, y, z, Time[lv], 0.0, lv, NULL );
 
          for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] += fluid_sub[v];
 
       }}}
 
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      if ( amr->use_wave_flag[lv] ) {
+#     endif
 //    ensure density = real_part^2 + imaginary_part^2
       fluid[REAL] *= _NSub3;
       fluid[IMAG] *= _NSub3;
@@ -132,6 +151,23 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
          fluid[IMAG] *= Rescale;
          fluid[DENS]  = (real)MIN_DENS;
       }
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      } else { // if ( amr->use_wave_flag[lv] )
+
+//*********************************************************
+//###REVISE: support rescaling phase for subsampling
+//*********************************************************
+
+//    rescale density for subsampling
+      fluid[DENS]  *= SQR(_NSub3);
+//    check minimum density (but keep phase fixed)
+      if ( fluid[DENS] < (real)MIN_DENS )
+      {
+         fluid[DENS]  = (real)MIN_DENS;
+      }
+
+      } // if ( amr->use_wave_flag[lv] == true ) ... else ...
+#     endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 //    floor and normalize passive scalars (actually passive scalars are NOT supported by ELBDM yet)
       /*

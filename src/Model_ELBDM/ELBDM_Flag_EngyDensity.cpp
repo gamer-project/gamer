@@ -6,13 +6,13 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  ELBDM_Flag_EngyDensity 
-// Description :  Flag according to the energy density criterion 
+// Function    :  ELBDM_Flag_EngyDensity
+// Description :  Flag according to the energy density criterion
 //
-// Note        :  1. Flag the input cell if its energy density exceeds Angle^2  
-//                2. A soften factor "Eps" is added to the denominator when evaluating energy density 
+// Note        :  1. Flag the input cell if its energy density exceeds Angle^2
+//                2. A soften factor "Eps" is added to the denominator when evaluating energy density
 //                   to prevent flagging in the extremely low density region
-//                3. Size of the input arrays "Real & Imag" should be PATCH_SIZE^3 
+//                3. Size of the input arrays "Real & Imag" should be PATCH_SIZE^3
 //
 // Parameter   :  i,j,k       : Indices of the target cell in the arrays "Real & Imag"
 //                Real_Array  : Real     -part array of the target patch
@@ -23,7 +23,7 @@
 // Return      :  "true"  if the flag criterion is     fulfilled
 //                "false" if the flag criterion is NOT fulfilled
 //-------------------------------------------------------------------------------------------------------
-bool ELBDM_Flag_EngyDensity( const int i, const int j, const int k, const real Real_Array[], 
+bool ELBDM_Flag_EngyDensity( const int i, const int j, const int k, const real Real_Array[],
                              const real Imag_Array[], const double Angle_2pi, const double Eps )
 {
 
@@ -56,7 +56,7 @@ bool ELBDM_Flag_EngyDensity( const int i, const int j, const int k, const real R
          case 0     : Idx_m = Idx;           Idx_p = Idx+dIdx[d];    _dh = (real)1.0;  break;
          case PS1-1 : Idx_m = Idx-dIdx[d];   Idx_p = Idx;            _dh = (real)1.0;  break;
          default    : Idx_m = Idx-dIdx[d];   Idx_p = Idx+dIdx[d];    _dh = (real)0.5;  break;
-      } 
+      }
 
       Grad_Real[d] = _dh*( Real_Array[Idx_p] - Real_Array[Idx_m] );
       Grad_Imag[d] = _dh*( Imag_Array[Idx_p] - Imag_Array[Idx_m] );

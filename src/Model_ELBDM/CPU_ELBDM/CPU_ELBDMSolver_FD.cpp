@@ -1,7 +1,7 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-#if ( !defined GPU  &&  MODEL == ELBDM )
+#if ( !defined GPU  &&  MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_FD )
 
 
 
@@ -30,7 +30,7 @@ static void TransposeXZ( real u[][ CUBE(FLU_NXT) ] );
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_ELBDMSolver
+// Function    :  CPU_ELBDMSolver_FD
 // Description :  CPU ELBDM kinematic solver based on expanding the propagator to the 3rd order
 //
 // Note        :  1. The three-dimensional evolution is achieved by applying x, y, and z operators successively.
@@ -57,11 +57,11 @@ static void TransposeXZ( real u[][ CUBE(FLU_NXT) ] );
 //                                     are broken ...
 //                MinDens        : Minimum allowed density
 //-------------------------------------------------------------------------------------------------------
-void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                      real Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
-                      real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
-                      const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
-                      const real Taylor3_Coeff, const bool XYZ, const real MinDens )
+void CPU_ELBDMSolver_FD( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                         real Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
+                         real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
+                         const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
+                         const real Taylor3_Coeff, const bool XYZ, const real MinDens )
 {
 
    if ( XYZ )
@@ -151,7 +151,7 @@ void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
       }
    } // for (int P=0; P<NPatchGroup; P++)
 
-} // FUNCTION : CPU_ELBDMSolver
+} // FUNCTION : CPU_ELBDMSolver_FD
 
 
 
@@ -375,4 +375,4 @@ void TransposeXZ( real u[][ CUBE(FLU_NXT) ] )
 
 
 
-#endif // #if ( !defined GPU  &&  MODEL == ELBDM )
+#endif // #if ( !defined GPU  &&  MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_FD )

@@ -15,11 +15,15 @@
 GPU_DEVICE
 static real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                             const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
-                            const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                            const EoS_DE2P_t EoS_DensEint2Pres, const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                            const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                             const real *const EoS_Table[EOS_NTABLE_MAX], real *EintOut );
 GPU_DEVICE
 static real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                            const bool CheckMinEint, const real MinEint, const real Emag );
+                            const bool CheckMinEint, const real MinEint, const real Emag,
+                            const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                            const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                            const real *const EoS_Table[EOS_NTABLE_MAX] );
 GPU_DEVICE
 static real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint,
                                 const real Emag );
@@ -31,6 +35,38 @@ GPU_DEVICE
 static real Hydro_CheckMinTemp( const real InTemp, const real MinTemp );
 GPU_DEVICE
 static real Hydro_CheckMinEntr( const real InEntr, const real MinEntr );
+GPU_DEVICE
+static bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const char SingleFieldName[],
+                                const real Min, const real Max, const real Emag,
+                                const EoS_DE2P_t EoS_DensEint2Pres,
+                                const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                                const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                                const real *const EoS_Table[EOS_NTABLE_MAX],
+                                const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose );
+#ifdef SRHD
+GPU_DEVICE
+static real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                              const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                              const real *const EoS_Table[EOS_NTABLE_MAX] );
+#endif
+#endif // #ifdef __CUDACC__
+
+GPU_DEVICE
+void NewtonRaphsonSolver( void (*FuncPtr)( real, void*, real*, real* ), void * params, const real guess,
+                          const real epsabs, const real epsrel, real *root );
+
+#ifdef SRHD
+struct Hydro_HTildeFunction_params_s{
+   real MSqr_DSqr;                  // (|Momentum|/Dens)**2
+   real Temp;                       // Temperature
+   real Constant;                   // LHS of Eq. A3 in "Tseng et al. 2021, MNRAS, 504, 3298"
+   EoS_H2TEM_t EoS_HTilde2Temp;     // EoS routine to compute the temperature
+   const double *EoS_AuxArray_Flt;  // Auxiliary arrays for EoS_HTilde2Temp
+   const int *EoS_AuxArray_Int;     // Auxiliary arrays for EoS_HTilde2Temp
+   const real *const *EoS_Table;    // EoS tables for EoS_HTilde2Temp
+};
+GPU_DEVICE
+static void Hydro_HTildeFunction( real HTilde, void *params, real *Func, real *DiffFunc );
 #endif
 
 
@@ -153,25 +189,67 @@ void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int 
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //                EoS_DensEint2Pres  : EoS routine to compute the gas pressure
 //                EoS_DensPres2Eint  : EoS routine to compute the gas internal energy
+//                EoS_GuessHTilde    : EoS routine to compute guessed reduced enthalpy
+//                EoS_HTilde2Temp    : EoS routine to compute temperature
 //                EoS_AuxArray_*     : Auxiliary arrays for EoS_DensEint2Pres()
 //                EoS_Table          : EoS tables for EoS_DensEint2Pres()
 //                EintOut            : Pointer to store the output internal energy
 //                                     --> Do nothing if it is NULL
 //                                     --> Internal energy floor is not applied
+//                LorentzFactorPtr   : Pointer to store the Lorentz factor value
+//                                     --> Do nothing if it is NULL
+//                                     --> Only used for SRHD
 //
-// Return      :  Out[], EintOut (optional)
+// Return      :  Out[], EintOut (optional), LorentzFactorPtr (optional)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool FracPassive, const int NFrac, const int FracIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
+                    const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                     const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                    const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut )
+                    const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut, real* LorentzFactorPtr )
 {
+
+// conserved --> primitive
+#  ifdef SRHD
+   real HTilde, Factor, Temp, LorentzFactor;
+
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
+   Hydro_IsUnphysical( UNPHY_MODE_CONS, In, NULL,
+                       NULL_REAL, NULL_REAL, NULL_REAL,
+                       EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
+                       EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
+                       ERROR_INFO, UNPHY_VERBOSE );
+#  endif
+
+   HTilde = Hydro_Con2HTilde( In, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+   Factor = In[0]*( (real)1.0 + HTilde );
+
+   Out[1] = In[1]/Factor;
+   Out[2] = In[2]/Factor;
+   Out[3] = In[3]/Factor;
+
+   LorentzFactor = SQRT( (real)1.0 + SQR(Out[1]) + SQR(Out[2]) + SQR(Out[3]) );
+
+   if ( LorentzFactorPtr != NULL )  *LorentzFactorPtr = LorentzFactor;
+
+   const real _LorentzFactor = real(1.0) / LorentzFactor;
+   Out[0] = In[0]*_LorentzFactor;
+
+   EoS_HTilde2Temp( HTilde, &Temp, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+
+   Out[4] = Out[0]*Temp;
+   Out[4] = Hydro_CheckMinPres( Out[4], MinPres );
+
+
+#  else // #ifdef SRHD
+
 
    const bool CheckMinPres_Yes = true;
    const real _Rho             = (real)1.0/In[0];
+
 #  ifdef MHD
    const real Bx               = In[ MAG_OFFSET + 0 ];
    const real By               = In[ MAG_OFFSET + 1 ];
@@ -181,14 +259,13 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
    const real Emag             = NULL_REAL;
 #  endif
 
-// conserved --> primitive
    Out[0] = In[0];
    Out[1] = In[1]*_Rho;
    Out[2] = In[2]*_Rho;
    Out[3] = In[3]*_Rho;
    Out[4] = Hydro_Con2Pres( In[0], In[1], In[2], In[3], In[4], In+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag,
-                            EoS_DensEint2Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, EintOut );
-
+                            EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
+                            EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, EintOut );
 
 // pressure floor required to resolve the Jeans length
 // --> note that currently we do not modify the dual-energy variable (e.g., entropy) accordingly
@@ -201,12 +278,19 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
       if ( EintOut != NULL  &&  Out[4] != Pres0 )
          *EintOut = EoS_DensPres2Eint( Out[0], Out[4], In+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
    }
+#  endif // #ifdef SRHD ... else ...
 
 
 // passive scalars
 #  if ( NCOMP_PASSIVE > 0 )
 // copy all passive scalars
    for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
+
+#  ifdef SRHD
+   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] *= _LorentzFactor;
+
+   const real _Rho = (real)1.0/Out[0];
+#  endif
 
 // convert the mass density of target passive scalars to mass fraction
    if ( FracPassive )
@@ -244,6 +328,8 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 //                NFrac             : Number of passive scalars for the option "FracPassive"
 //                FracIdx           : Target variable indices for the option "FracPassive"
 //                EoS_DensPres2Eint : EoS routine to compute the gas internal energy
+//                EoS_Temp2HTilde   : EoS routine to compute reduced enthalpy
+//                EoS_HTilde2Temp   : EoS routine to compute temperature
 //                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensPres2Eint()
 //                EoS_Table         : EoS tables for EoS_DensPres2Eint()
 //                EintIn            : Pointer storing the input internal energy (see the note above)
@@ -252,12 +338,51 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 // Return      :  Out[]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const int NFrac, const int FracIdx[],
-                    const EoS_DP2E_t EoS_DensPres2Eint, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive,
+                    const int NFrac, const int FracIdx[], const EoS_DP2E_t EoS_DensPres2Eint,
+                    const EoS_TEM2H_t EoS_Temp2HTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                    const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                     const real *const EoS_Table[EOS_NTABLE_MAX], const real* const EintIn )
 {
 
-   real Eint, Emag=NULL_REAL;
+#  ifdef SRHD
+// primitive --> conserved
+   real LorentzFactor, Temperature, HTilde, MSqr_DSqr, HTildeFunction, Factor;
+
+   LorentzFactor = SQRT( (real)1.0 + SQR(In[1]) + SQR(In[2]) + SQR(In[3]) );
+   Temperature   = In[4]/In[0];
+   HTilde        = EoS_Temp2HTilde( Temperature, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+   Out[0]        = In[0]*LorentzFactor;
+   Factor        = Out[0]*HTilde + Out[0];
+   Out[1]        = In[1]*Factor;
+   Out[2]        = In[2]*Factor;
+   Out[3]        = In[3]*Factor;
+   MSqr_DSqr     = SQR(Out[1]) + SQR(Out[2]) + SQR(Out[3]);
+   MSqr_DSqr    /= SQR(Out[0]);
+
+   struct Hydro_HTildeFunction_params_s params =
+   { MSqr_DSqr, Temperature, (real)0.0, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table };
+
+   Hydro_HTildeFunction( HTilde, &params, &HTildeFunction, NULL );
+
+   Out[4]  = MSqr_DSqr + HTildeFunction;
+   Out[4] /= (real)1.0 + SQRT( (real)1.0 + MSqr_DSqr + HTildeFunction );
+   Out[4] *= Out[0];
+
+
+// passive scalars
+#  if ( NCOMP_PASSIVE > 0 )
+// copy all passive scalars
+   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v]*LorentzFactor;
+
+// convert the mass fraction of target passive scalars back to mass density
+   if ( FracPassive )
+      for (int v=0; v<NFrac; v++)   Out[ NCOMP_FLUID + FracIdx[v] ] *= In[0];
+#  endif
+
+
+#  else // #ifdef SRHD
+
 
 // passive scalars
 // --> do it before invoking EoS_DensPres2Eint() since the latter requires the mass density
@@ -278,6 +403,7 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const i
    Out[2] = In[0]*In[2];
    Out[3] = In[0]*In[3];
 
+   real Eint, Emag=NULL_REAL;
 #  ifdef MHD
    const real Bx = In[ MAG_OFFSET + 0 ];
    const real By = In[ MAG_OFFSET + 1 ];
@@ -294,6 +420,8 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const i
 #  ifdef MHD
    for (int v=NCOMP_TOTAL; v<NCOMP_TOTAL_PLUS_MAG; v++)  Out[v] = In[v];
 #  endif
+
+#  endif // #ifdef SRHD ... else ...
 
 } // FUNCTION : Hydro_Pri2Con
 
@@ -316,44 +444,78 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const i
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Pres()
 //                EoS_Table         : EoS tables for EoS_DensEint2Pres()
-//                PresIn            : Pointer storing the input pressure (see the note above)
-//                                    --> Do nothing if it is NULL
+//                AuxArray          : Array storing
+//                                    (1) the input pressure in non-SRHD (see the note above)
+//                                        --> Do nothing if it is NULL
+//                                    (2) primitive variables in SRHD
 //
 // Return      :  Flux[]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
                      const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                     const real *const EoS_Table[EOS_NTABLE_MAX], const real* const PresIn )
+                     const real *const EoS_Table[EOS_NTABLE_MAX], const real* const AuxArray )
 {
 
-   const bool CheckMinPres_Yes = true;
-   real InRot[ NCOMP_FLUID + NCOMP_MAG ];    // no need to include passive scalars since they don't have to be rotated
+#  if ( defined GAMER_DEBUG  &&  defined SRHD )
+   if ( AuxArray == NULL )
+      printf( "ERROR : AuxArray == NULL at file <%s>, line <%d>, function <%s> !!\n",
+              ERROR_INFO );
+#  endif
 
-   for (int v=0; v<NCOMP_FLUID; v++)   InRot[v] = In[v];
+   real InRot [ NCOMP_FLUID + NCOMP_MAG ];   // no need to include passive scalars since they don't have to be rotated
+#  ifdef SRHD
+   real PriRot[ NCOMP_FLUID + NCOMP_MAG ];
+#  else
+   const bool CheckMinPres_Yes = true;
+#  endif
+
+   for (int v=0; v<NCOMP_FLUID; v++)
+   {
+      InRot [v] = In      [v];
+#     ifdef SRHD
+      PriRot[v] = AuxArray[v];
+#     endif
+   }
 
 #  ifdef MHD
    for (int v=NCOMP_FLUID; v<NCOMP_FLUID+NCOMP_MAG; v++)    InRot[v] = In[ v - NCOMP_FLUID + MAG_OFFSET ];
 #  endif
 
-   Hydro_Rotate3D( InRot, XYZ, true, NCOMP_FLUID );
+   Hydro_Rotate3D( InRot,  XYZ, true, NCOMP_FLUID );
+#  ifdef SRHD
+   Hydro_Rotate3D( PriRot, XYZ, true, NCOMP_FLUID );
+#  endif
 
 #  ifdef MHD
    const real Bx   = InRot[ NCOMP_FLUID + 0 ];
    const real By   = InRot[ NCOMP_FLUID + 1 ];
    const real Bz   = InRot[ NCOMP_FLUID + 2 ];
    const real Emag = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
-#  else
+#  elif ( !defined SRHD )
    const real Emag = NULL_REAL;
 #  endif
-   const real Pres = ( PresIn == NULL ) ? Hydro_Con2Pres( InRot[0], InRot[1], InRot[2], InRot[3], InRot[4], In+NCOMP_FLUID,
-                                                          CheckMinPres_Yes, MinPres, Emag, EoS_DensEint2Pres,
-                                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL )
-                                        : *PresIn;
+
+#  ifdef SRHD
+   const real Pres          = PriRot[4];
+   const real LorentzFactor = SQRT( (real)1.0 + SQR(PriRot[1]) + SQR(PriRot[2]) + SQR(PriRot[3]) );
+   const real Vx            = PriRot[1] / LorentzFactor;
+
+   Flux[0] = Vx*InRot[0];
+
+#  else // #ifdef SRHD
+
+   const real Pres = ( AuxArray == NULL ) ? Hydro_Con2Pres( InRot[0], InRot[1], InRot[2], InRot[3], InRot[4], In+NCOMP_FLUID,
+                                                            CheckMinPres_Yes, MinPres, Emag, EoS_DensEint2Pres,
+                                                            NULL, NULL,
+                                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL )
+                                          : AuxArray[0];
    const real _Rho = (real)1.0 / InRot[0];
    const real Vx   = _Rho*InRot[1];
 
    Flux[0] = InRot[1];
+#  endif // #ifdef SRHD ... else ...
+
    Flux[1] = Vx*InRot[1] + Pres;
    Flux[2] = Vx*InRot[2];
    Flux[3] = Vx*InRot[3];
@@ -381,6 +543,114 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
    Hydro_Rotate3D( Flux, XYZ, false, MAG_OFFSET );
 
 } // FUNCTION : Hydro_Con2Flux
+
+
+
+#ifdef SRHD
+//-------------------------------------------------------------------------------------------------------
+// Function    : Hydro_Con2HTilde
+// Description : Conserved variables --> reduced enthalpy
+//
+// Note        : Using Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298"
+//
+// Parameter   : Con             : Conserved variables
+//               EoS_GuessHTilde : EoS routine to compute guessed reduced enthalpy
+//               EoS_HTilde2Temp : EoS routine to compute temperature
+//               EoS_AuxArray_*  : Auxiliary arrays
+//               EoS_Table       : EoS tables
+//
+// Return      : HTilde          : Reduced enthalpy
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                       const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                       const real *const EoS_Table[EOS_NTABLE_MAX] )
+{
+
+   real HTilde, GuessHTilde, MSqr_DSqr, Constant;
+
+   MSqr_DSqr  = SQR(Con[1]) + SQR(Con[2]) + SQR(Con[3]);
+   MSqr_DSqr /= SQR(Con[0]);
+
+   GuessHTilde = EoS_GuessHTilde( Con, &Constant, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+
+   void (*FuncPtr)( real HTilde, void *params, real *Func, real *DiffFunc ) = &Hydro_HTildeFunction;
+
+// set params->Temp=NAN to force re-computing temperature from the given HTilde
+// set params->Constant=-A3_LHS (i.e., negative of the LHS of Eq. A3) since we want to find the root of f(HTilde) - A3_LHS
+   struct Hydro_HTildeFunction_params_s params =
+   { MSqr_DSqr, NAN, -Constant, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table };
+
+   NewtonRaphsonSolver( FuncPtr, &params, GuessHTilde, TINY_NUMBER, MACHINE_EPSILON, &HTilde );
+
+#  ifdef GAMER_DEBUG
+   if ( HTilde <= (real)0.0 )
+      printf( "ERROR : HTilde = %14.7e <= 0.0 (Constant %14.7e, GuessHTilde %14.7e) in %s !!\n",
+              HTilde, Constant, GuessHTilde, __FUNCTION__ );
+#  endif
+
+   return HTilde;
+
+} // FUNCTION : Hydro_Con2HTilde
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    : Hydro_HTildeFunction
+// Description : RHS of Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298" plus Params->Constant
+//
+// Note        :
+//
+// Parameter   : HTilde         : Reduced specific enthalpy
+//               Params         : Pointer to the structure `Hydro_HTildeFunction_params_s`
+//               Func           : Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298"
+//               DiffFunc       : Eq. A1 in "Tseng et al. 2021, MNRAS, 504, 3298"
+//               EoS_AuxArray_* : Auxiliary arrays for EoS_DensEint2Pres()
+//               EoS_Table      : EoS tables for EoS_DensEint2Pres()
+//
+// Return      : Func, DiffFunc
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+void Hydro_HTildeFunction( real HTilde, void *Params, real *Func, real *DiffFunc )
+{
+
+   struct Hydro_HTildeFunction_params_s *parameters = (struct Hydro_HTildeFunction_params_s *) Params;
+
+   const real         MSqr_DSqr        = parameters->MSqr_DSqr;
+   const real         Constant         = parameters->Constant;
+   const EoS_H2TEM_t  EoS_HTilde2Temp  = parameters->EoS_HTilde2Temp;
+   const double      *EoS_AuxArray_Flt = parameters->EoS_AuxArray_Flt;
+   const int         *EoS_AuxArray_Int = parameters->EoS_AuxArray_Int;
+   const real *const *EoS_Table        = parameters->EoS_Table;
+   real Temp                           = parameters->Temp;
+   real DiffTemp;
+
+// DiffTemp required by DiffFunc is only computed when Temp == NAN
+#  ifdef GAMER_DEBUG
+   if ( Temp == Temp  &&  DiffFunc != NULL )
+      printf( "ERROR : Temp (%13.7e) != NAN but DiffFunc != NULL at file <%s>, line <%d>, function <%s> !!\n",
+              Temp, ERROR_INFO );
+#  endif
+
+// recompute temperature only when the input Temp is NAN, which is used in Hydro_Con2HTilde()
+   if ( Temp != Temp )
+      EoS_HTilde2Temp( HTilde, &Temp, &DiffTemp, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+
+// Eq. 15
+   const real H =  HTilde + (real)1.0;
+   const real Factor0 = SQR( H ) + MSqr_DSqr;
+
+   if ( Func != NULL )
+   *Func = SQR( HTilde ) + (real)2.0*HTilde - (real)2.0*Temp - (real)2.0*Temp*HTilde
+           + SQR( Temp*H )/Factor0 + Constant;
+
+// Eq. A1
+   if ( DiffFunc != NULL )
+   *DiffFunc = (real)2.0*H - (real)2.0*Temp - (real)2.0*H*DiffTemp +
+               (real)2.0*Temp*H*( DiffTemp*H*Factor0 + Temp*MSqr_DSqr ) / SQR( Factor0 );
+
+} // FUNCTION : Hydro_HTildeFunction
+#endif // #ifdef SRHD
 
 
 
@@ -466,6 +736,7 @@ real Hydro_CheckMinTemp( const real InTemp, const real MinTemp )
 
 
 
+#ifndef SRHD
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_CheckMinEntr
 // Description :  Similar to Hydro_CheckMinPres() except that this function checks the gas entropy
@@ -516,7 +787,8 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
    const bool CheckMinEint_No = false;
    real InEint, OutEint, OutEngy;
 
-   InEint  = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, InEngy, CheckMinEint_No, NULL_REAL, Emag );
+   InEint  = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, InEngy, CheckMinEint_No, NULL_REAL, Emag,
+                             NULL, NULL, NULL, NULL, NULL );
    OutEint = Hydro_CheckMinEint( InEint, MinEint );
 
 // do not modify energy (even the round-off errors) if the input data pass the check
@@ -526,38 +798,53 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
    return OutEngy;
 
 } // FUNCTION : Hydro_CheckMinEintInEngy
+#endif // #ifndef SRHD
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_CheckUnphysical
+// Function    :  Hydro_IsUnphysical
 // Description :  Check unphysical results
 //
 // Note        :  1. Support various modes:
-//                   UNPHY_MODE_SING         : Check if the input single field is NAN, inf or negative
+//                   UNPHY_MODE_SING         : Check if the input single field is NAN or lies outside the accepted range
 //                   UNPHY_MODE_CONS         : Check if the input conserved variables, including passive scalars, are unphysical
 //                   UNPHY_MODE_PRIM         : Check if the input primitive variables, including passive scalars, are unphysical
 //                   UNPHY_MODE_PASSIVE_ONLY : Check if the input passive scalars are unphysical
 //                2. For UNPHY_MODE_CONS with SRHD, we also check if Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298"
 //                   has a positive root
-//                3. UNPHY_MODE_CONS currently does not check gas pressure
+//                3. For UNPHY_MODE_CONS:
+//                   - Mass density and total energy density must be positive
+//                   - Internal energy can be zero or even slightly negative if it's within machine precision
+//                   - Pressure cannot be negative (only for non-trivial EoS)
+//                   For UNPHY_MODE_PRIM:
+//                   - Mass density must be positive
+//                   - Pressure cannot be negative
 //
-// Parameter   :  Mode            : UNPHY_MODE_SING, UNPHY_MODE_CONS, UNPHY_MODE_PRIM, UNPHY_MODE_PASSIVE_ONLY
-//                                  --> See "Note" for details
-//                Fields          : Field data to be checked
-//                SingleFieldName : Name of the target field for UNPHY_MODE_SING
-//                File            : __FILE__
-//                Line            : __LINE__
-//                Function        : __FUNCTION__
-//                Verbose         : true  --> Show error messages
-//                                  false --> Show nothing
+// Parameter   :  Mode              : UNPHY_MODE_SING, UNPHY_MODE_CONS, UNPHY_MODE_PRIM, UNPHY_MODE_PASSIVE_ONLY
+//                                    --> See "Note" for details
+//                Fields            : Field data to be checked
+//                SingleFieldName   : Name of the target field for UNPHY_MODE_SING
+//                Min/Max           : Accepted range for UNPHY_MODE_SING
+//                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
+//                EoS_*             : EoS parameters
+//                File              : __FILE__
+//                Line              : __LINE__
+//                Function          : __FUNCTION__
+//                Verbose           : UNPHY_VERBOSE --> Show error messages
+//                                    UNPHY_SILENCE --> Show nothing
 //
 // Return      :  true  --> Input field is unphysical
 //                false --> Otherwise
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], const char SingleFieldName[],
-                            const char File[], const int Line, const char Function[], const CheckUnphysical_t Verbose )
+bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const char SingleFieldName[],
+                         const real Min, const real Max, const real Emag,
+                         const EoS_DE2P_t EoS_DensEint2Pres,
+                         const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                         const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                         const real *const EoS_Table[EOS_NTABLE_MAX],
+                         const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose )
 {
 
 // check
@@ -567,87 +854,125 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 #  endif
 
 
-   bool FailCell = false;
-#  ifdef SRHD
-   real Msqr, Dsqr, E_D, M_D, Temp, Discriminant;
-#  endif
-
+   bool UnphyCell = false;
 
    switch ( Mode )
    {
 //    === check single field ===
       case UNPHY_MODE_SING:
-
-//       assuming the input single field is positive definite
-         if ( Fields[0] <= TINY_NUMBER  ||  Fields[0] >= HUGE_NUMBER  ||  Fields[0] != Fields[0] )
-            FailCell = true;
+      {
+//       check if the input single field is NAN or lies outside the accepted range
+         if ( Fields[0] < Min  ||  Fields[0] > Max  ||  Fields[0] != Fields[0] )
+            UnphyCell = true;
 
 //       print out the unphysical value
 #        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
-         if ( FailCell && Verbose )
-            printf( "ERROR: invalid %s (%14.7e) at file <%s>, line <%d>, function <%s> !!\n",
-                    (SingleFieldName==NULL)?"unknown field":SingleFieldName, Fields[0],
+         if ( UnphyCell && Verbose )
+            printf( "ERROR : invalid %s = %14.7e (min %14.7e, max %14.7e) at file <%s>, line <%d>, function <%s> !!\n",
+                    (SingleFieldName==NULL)?"unknown field":SingleFieldName, Fields[0], Min, Max,
                     File, Line, Function );
 #        endif
-
+      } // case UNPHY_MODE_SING
       break;
 
 
 //    === check conserved variables, including passive scalars ===
       case UNPHY_MODE_CONS:
-
+      {
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
 //          check NaN
             if ( Fields[v] != Fields[v] )
-                  FailCell = true;
+                  UnphyCell = true;
 
 //          check momentum densities
             if ( v == MOMX  ||  v == MOMY  ||  v == MOMZ )
             {
-               if ( Fields[v] <= -HUGE_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
-                  FailCell = true;
+               if ( Fields[v] < -HUGE_NUMBER  ||  Fields[v] > HUGE_NUMBER )
+                  UnphyCell = true;
             }
 
-//          check mass and energy densities
+//          check mass and energy densities (which cannot be zero)
             else if ( v < NCOMP_FLUID )
             {
-               if ( Fields[v] <= TINY_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
-                  FailCell = true;
+               if ( Fields[v] <= (real)0.0  ||  Fields[v] > HUGE_NUMBER )
+                  UnphyCell = true;
             }
 
 //          check passive scalars (which can be zero)
             else
             {
-               if ( Fields[v] < (real)0.0  ||  Fields[v] >= HUGE_NUMBER )
-                  FailCell = true;
+               if ( Fields[v] < (real)0.0  ||  Fields[v] > HUGE_NUMBER )
+                  UnphyCell = true;
             }
          } // for (int v=0; v<NCOMP_TOTAL; v++)
 
 //       check discriminant for SRHD
 //       --> positive if and only if Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298" has a positive root
 #        ifdef SRHD
-         Msqr         = SQR(Fields[MOMX]) + SQR(Fields[MOMY]) + SQR(Fields[MOMZ]);
-         Dsqr         = SQR(Fields[DENS]);
-         E_D          = Fields[ENGY] / Fields[DENS];
-         M_D          = SQRT( Msqr / Dsqr );
-         Temp         = SQRT( E_D*E_D + (real)2.0*E_D );
-         Discriminant = ( Temp + M_D )*( Temp - M_D );
+         const real Msqr         = SQR(Fields[MOMX]) + SQR(Fields[MOMY]) + SQR(Fields[MOMZ]);
+         const real Dsqr         = SQR(Fields[DENS]);
+         const real E_D          = Fields[ENGY] / Fields[DENS];
+         const real M_D          = SQRT( Msqr / Dsqr );
+         const real Temp         = SQRT( E_D*E_D + (real)2.0*E_D );
+         const real Discriminant = ( Temp + M_D )*( Temp - M_D ); // replace a^2-b^2 with (a+b)*(a-b) to alleviate a catastrophic cancellation
 
-         if ( Discriminant <= TINY_NUMBER )  FailCell = true;
+         if ( Discriminant <= (real)0.0  ||  Discriminant > HUGE_NUMBER  ||  Discriminant != Discriminant )
+            UnphyCell = true;
+
+#        else // #ifdef SRHD
+
+#        ifndef BAROTROPIC_EOS
+//       check internal energy (which can be zero or slightly negative if it's within machine precision)
+         const real CheckMinEint_No = false;
+         const real Eint = Hydro_Con2Eint( Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY],
+                                           CheckMinEint_No, NULL_REAL, Emag,
+                                           NULL, NULL, NULL, NULL, NULL );
+
+         if ( Eint < (real)-3.0*Fields[ENGY]*MACHINE_EPSILON  ||  Eint > HUGE_NUMBER  ||  Eint != Eint )
+            UnphyCell = true;
+
+//       check pressure for non-trivial EoS (which cannot be negative)
+//       --> for trivial EoS like EOS_GAMMA, checking internal energy is sufficient and pressure can be
+//           slightly negative if it's within machine precision
+#        if ( EOS != EOS_GAMMA )
+         const real Pres = EoS_DensEint2Pres( Fields[DENS], Eint, Fields+NCOMP_FLUID,
+                                              EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+
+         if ( Pres < (real)0.0  ||  Pres > HUGE_NUMBER  ||  Pres != Pres )
+            UnphyCell = true;
+#        endif // #if ( EOS != EOS_GAMMA )
+#        endif // #ifndef BAROTROPIC_EOS
+
+#        endif // #ifdef SRHD ... else ...
+
+#        ifdef MHD
+         if ( Emag < (real)0.0  ||  Emag > HUGE_NUMBER  ||  Emag != Emag )
+            UnphyCell = true;
 #        endif
 
 //       print out the unphysical values
 #        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
-         if ( FailCell && Verbose )
+         if ( UnphyCell && Verbose )
          {
-            printf( "ERROR: unphysical conserved variables at file <%s>, line <%d>, function <%s> !!\n",
+            printf( "ERROR : unphysical conserved variables at file <%s>, line <%d>, function <%s> !!\n",
                     File, Line, Function );
-            printf( "D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
+            printf( "D=%14.7e Mx=%14.7e My=%14.7e Mz=%14.7e E=%14.7e",
                     Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY] );
 #           ifdef SRHD
-            printf( "E^2+2*E*D-|M|^2=%14.7e\n", Discriminant );
+            printf( " E^2+2*E*D-|M|^2=%14.7e", Discriminant );
+#           else
+#           ifndef BAROTROPIC_EOS
+            printf( " Eint=%14.7e", Eint );
+#           if ( EOS != EOS_GAMMA )
+            printf( " Pres=%14.7e", Pres );
 #           endif
+#           endif // #ifndef BAROTROPIC_EOS
+#           endif // #ifdef SRHD ... else ...
+#           ifdef MHD
+            printf( " Emag=%14.7e", Emag );
+#           endif
+            printf( "\n" );
 #           if ( NCOMP_PASSIVE > 0 )
             printf( "Passive:" );
             for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  printf( " [%d]=%13.7e", v-NCOMP_FLUID, Fields[v] );
@@ -655,50 +980,65 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 #           endif
          }
 #        endif
-
+      } // case UNPHY_MODE_CONS
       break;
 
 
 //    === check primitive variables, including passive scalars ===
       case UNPHY_MODE_PRIM:
-
+      {
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
 //          check NaN
             if ( Fields[v] != Fields[v] )
-                  FailCell = true;
+                  UnphyCell = true;
 
 //          check velocities
             if ( v == MOMX  ||  v == MOMY  ||  v == MOMZ )
             {
-               if ( Fields[v] <= -HUGE_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
-                  FailCell = true;
+               if ( Fields[v] < -HUGE_NUMBER  ||  Fields[v] > HUGE_NUMBER )
+                  UnphyCell = true;
             }
 
-//          check mass density
+//          check mass density (which cannot be zero)
             else if ( v == DENS )
             {
-               if ( Fields[v] <= TINY_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
-                  FailCell = true;
+               if ( Fields[v] <= (real)0.0  ||  Fields[v] > HUGE_NUMBER )
+                  UnphyCell = true;
             }
 
-//          check pressure and passive scalars (which can be zero)
-//          --> allow pressure to be zero to tolerate round-off errors
+//          check pressure (which cannot be negative; a pressure floor should be applied prior to calling this routine)
+            else if ( v == ENGY )
+            {
+               if ( Fields[ENGY] < (real)0.0  ||  Fields[ENGY] > HUGE_NUMBER )
+                  UnphyCell = true;
+            }
+
+//          check passive scalars (which can be zero)
             else
             {
-               if ( Fields[v] < (real)0.0  ||  Fields[v] >= HUGE_NUMBER )
-                  FailCell = true;
+               if ( Fields[v] < (real)0.0  ||  Fields[v] > HUGE_NUMBER )
+                  UnphyCell = true;
             }
          } // for (int v=0; v<NCOMP_TOTAL; v++)
 
+#        ifdef MHD
+         if ( Emag < (real)0.0  ||  Emag > HUGE_NUMBER  ||  Emag != Emag )
+            UnphyCell = true;
+#        endif
+
 //       print out the unphysical values
 #        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
-         if ( FailCell && Verbose )
+         if ( UnphyCell && Verbose )
          {
-            printf( "ERROR: unphysical primitive variables at file <%s>, line <%d>, function <%s> !!\n",
+            printf( "ERROR : unphysical primitive variables at file <%s>, line <%d>, function <%s> !!\n",
                     File, Line, Function );
-            printf( "D=%14.7e, Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, P=%14.7e\n",
+            printf( "D=%14.7e Vx=%14.7e Vy=%14.7e Vz=%14.7e P=%14.7e",
                     Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY] );
+#           ifdef MHD
+            printf( " Emag=%14.7e", Emag );
+#           endif
+            printf( "\n" );
 #           if ( NCOMP_PASSIVE > 0 )
             printf( "Passive:" );
             for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  printf( " [%d]=%13.7e", v-NCOMP_FLUID, Fields[v] );
@@ -706,29 +1046,29 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 #           endif
          }
 #        endif
-
+      } // case UNPHY_MODE_PRIM
       break;
 
 
 //    === only check passive scalars ===
       case UNPHY_MODE_PASSIVE_ONLY:
-
+      {
          for (int v=0; v<NCOMP_PASSIVE; v++)
          {
 //          check NaN
             if ( Fields[v] != Fields[v] )
-                  FailCell = true;
+               UnphyCell = true;
 
 //          check negative and infinity (passive scalars can be zero)
-            if ( Fields[v] < (real)0.0  ||  Fields[v] >= HUGE_NUMBER )
-               FailCell = true;
+            if ( Fields[v] < (real)0.0  ||  Fields[v] > HUGE_NUMBER )
+               UnphyCell = true;
          }
 
 //       print out the unphysical values
 #        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
-         if ( FailCell && Verbose )
+         if ( UnphyCell && Verbose )
          {
-            printf( "ERROR: unphysical passive scalars at file <%s>, line <%d>, function <%s> !!\n",
+            printf( "ERROR : unphysical passive scalars at file <%s>, line <%d>, function <%s> !!\n",
                     File, Line, Function );
 #           if ( NCOMP_PASSIVE > 0 )
             printf( "Passive:" );
@@ -737,23 +1077,25 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 #           endif
          }
 #        endif
-
+      } // case UNPHY_MODE_PASSIVE_ONLY
       break;
 
 
       default:
+      {
 #        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
          printf( "ERROR : unsupported mode (%d) at file <%s>, line <%d>, function <%s> !!\n",
                  Mode, File, Line, Function );
 #        endif
+      } // default
       break;
 
    } // switch ( Mode )
 
 
-   return FailCell;
+   return UnphyCell;
 
-} // FUNCTION : Hydro_CheckUnphysical
+} // FUNCTION : Hydro_IsUnphysical
 
 
 
@@ -776,6 +1118,8 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 //                MinPres           : Pressure floor
 //                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
+//                EoS_GuessHTilde   : EoS routine to compute guessed reduced enthalpy
+//                EoS_HTilde2Temp   : EoS routine to compute temperature
 //                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Pres()
 //                EoS_Table         : EoS tables for EoS_DensEint2Pres()
 //                EintOut           : Pointer to store the output internal energy
@@ -787,26 +1131,52 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 GPU_DEVICE
 real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
-                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                     const real *const EoS_Table[EOS_NTABLE_MAX], real *EintOut )
+                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_GUESS_t EoS_GuessHTilde,
+                     const EoS_H2TEM_t EoS_HTilde2Temp, const double EoS_AuxArray_Flt[],
+                     const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX], real *EintOut )
 {
 
-   const bool CheckMinEint_No = false;
-   real Eint, Pres;
+   real Pres;
 
-   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag );
+#  ifdef SRHD
+   real Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL];
+
+   Cons[0] = Dens;
+   Cons[1] = MomX;
+   Cons[2] = MomY;
+   Cons[3] = MomZ;
+   Cons[4] = Engy;
+
+   Hydro_Con2Pri( Cons, Prim, (CheckMinPres)?MinPres:-HUGE_NUMBER, false, NULL_INT, NULL,
+                  NULL_BOOL, NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
+   Pres = Prim[4];
+
+#  else // #ifdef SRHD
+
+   const bool CheckMinEint_No = false;
+   real Eint;
+
+   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag,
+                          NULL, NULL, NULL, NULL, NULL );
    Pres = EoS_DensEint2Pres( Dens, Eint, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
    if ( CheckMinPres )   Pres = Hydro_CheckMinPres( Pres, MinPres );
 
    if ( EintOut != NULL )  *EintOut = Eint;
+#  endif // #ifdef SRHD ... else ...
 
 // check unphysical results
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "output pressure", ERROR_INFO, UNPHY_VERBOSE )  )
+   if (  Hydro_IsUnphysical( UNPHY_MODE_SING, &Pres, "output pressure",
+                             (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                             ERROR_INFO, UNPHY_VERBOSE )  )
    {
-      printf( "Input: Dens %14.7e MomX %14.7e MomY %14.7e MomZ %14.7e Engy %14.7e Eint %14.7e",
-              Dens, MomX, MomY, MomZ, Engy, Eint );
+      printf( "Input: Dens %14.7e MomX %14.7e MomY %14.7e MomZ %14.7e Engy %14.7e",
+              Dens, MomX, MomY, MomZ, Engy );
+#     ifndef SRHD
+      printf( " Eint %14.7e", Eint );
+#     endif
 #     ifdef MHD
       printf( " Emag %14.7e", Emag );
 #     endif
@@ -838,29 +1208,57 @@ real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const re
 //                   and thus one must provide Emag to subtract it
 //                2. Internal energy density is energy per volume instead of per mass
 //
-// Parameter   :  Dens         : Mass density
-//                MomX/Y/Z     : Momentum density
-//                Engy         : Energy density (including the magnetic energy density for MHD)
-//                CheckMinEint : Apply internal energy floor by invoking Hydro_CheckMinEint()
-//                               --> In some cases we actually want to check if internal energy becomes unphysical,
-//                                   for which this option should be disabled
-//                MinEint      : Internal energy floor
-//                Emag         : Magnetic energy density (0.5*B^2) --> For MHD only
+// Parameter   :  Dens            : Mass density
+//                MomX/Y/Z        : Momentum density
+//                Engy            : Energy density (including the magnetic energy density for MHD)
+//                CheckMinEint    : Apply internal energy floor by invoking Hydro_CheckMinEint()
+//                                  --> In some cases we actually want to check if internal energy
+//                                      becomes unphysical, for which this option should be disabled
+//                MinEint         : Internal energy floor
+//                Emag            : Magnetic energy density (0.5*B^2) --> For MHD only
+//                EoS_GuessHTilde : EoS routine to compute guessed reduced enthalpy
+//                EoS_HTilde2Temp : EoS routine to compute temperature
+//                EoS_AuxArray_*  : Auxiliary arrays for EoS_DensEint2Pres()
+//                EoS_Table       : EoS tables for EoS_DensEint2Pres()
 //
 // Return      :  Gas internal energy density (Eint)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const bool CheckMinEint, const real MinEint, const real Emag )
+                     const bool CheckMinEint, const real MinEint, const real Emag,
+                     const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                     const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real *const EoS_Table[EOS_NTABLE_MAX] )
 {
 
-//###NOTE: assuming Etot = Eint + Ekin + Emag
    real Eint;
 
-   Eint  = Engy - (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) / Dens;
+#  ifdef SRHD
+   real Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL];
+   real HTilde;
+
+   Cons[0] = Dens;
+   Cons[1] = MomX;
+   Cons[2] = MomY;
+   Cons[3] = MomZ;
+   Cons[4] = Engy;
+
+   Hydro_Con2Pri( Cons, Prim, -HUGE_NUMBER, false, NULL_INT, NULL,
+                  NULL_BOOL, NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
+
+   HTilde  = Hydro_Con2HTilde( Cons, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt,
+                               EoS_AuxArray_Int, EoS_Table );
+   Eint    = HTilde*Prim[0] - Prim[4];
+
+#  else // #ifdef SRHD
+
+//###NOTE: assuming Etot = Eint + Ekin + Emag
+   Eint    = Engy - (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) / Dens;
 #  ifdef MHD
-   Eint -= Emag;
+   Eint   -= Emag;
 #  endif
+#  endif // #ifdef SRHD ... else ...
 
    if ( CheckMinEint )   Eint = Hydro_CheckMinEint( Eint, MinEint );
 
@@ -876,6 +1274,7 @@ real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const re
 //
 // Note        :  1. For MHD, total energy density includes the magnetic energy Emag=0.5*B^2
 //                2. Internal energy density is energy per volume instead of per mass
+//                3. Does NOT support SRHD
 //
 // Parameter   :  Dens     : Mass density
 //                MomX/Y/Z : Momentum density
@@ -888,6 +1287,15 @@ GPU_DEVICE
 real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint,
                          const real Emag )
 {
+
+#  if ( defined SRHD  &&  defined GAMER_DEBUG )
+#  ifdef __CUDACC__
+   printf( "ERROR :  SRHD does not support Hydro_ConEint2Etot at file <%s>, line <%d>, function <%s> !!\n",
+           ERROR_INFO );
+#  else
+   Aux_Error( ERROR_INFO, "SRHD does not support Hydro_ConEint2Etot !!\n" );
+#  endif
+#  endif
 
 //###NOTE: assuming Etot = Eint + Ekin + Emag
    real Etot;
@@ -921,6 +1329,8 @@ real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, cons
 //                MinTemp           : Temperature floor
 //                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
 //                EoS_DensEint2Temp : EoS routine to compute the gas temperature
+//                EoS_GuessHTilde   : EoS routine to compute guessed reduced enthalpy
+//                EoS_HTilde2Temp   : EoS routine to compute temperature
 //                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Temp()
 //                EoS_Table         : EoS tables for EoS_DensEint2Temp()
 //
@@ -929,29 +1339,65 @@ real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, cons
 GPU_DEVICE
 real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Passive[], const bool CheckMinTemp, const real MinTemp, const real Emag,
-                     const EoS_DE2T_t EoS_DensEint2Temp, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const EoS_DE2T_t EoS_DensEint2Temp, const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                     const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX] )
 {
 
 // check
 #  ifdef GAMER_DEBUG
+#  ifdef SRHD
+   if ( EoS_GuessHTilde == NULL  ||  EoS_HTilde2Temp == NULL )
+   {
+#     ifdef __CUDACC__
+      printf( "ERROR :  EoS_GuessHTilde == NULL || EoS_HTilde2Temp == NULL at file <%s>, line <%d>, function <%s> !!\n",
+               ERROR_INFO );
+#     else
+      Aux_Error( ERROR_INFO, "EoS_GuessHTilde == NULL || EoS_HTilde2Temp == NULL !!\n" );
+#     endif
+   }
+
+#  else
+
    if ( EoS_DensEint2Temp == NULL )
    {
 #     ifdef __CUDACC__
       printf( "ERROR : EoS_DensEint2Temp == NULL at file <%s>, line <%d>, function <%s> !!\n",
-              __FILE__, __LINE__, __FUNCTION__ );
+               ERROR_INFO );
 #     else
       Aux_Error( ERROR_INFO, "EoS_DensEint2Temp == NULL !!\n" );
 #     endif
    }
+#  endif // #ifdef SRHD ... else ...
 #  endif // #ifdef GAMER_DEBUG
 
 
-   const bool CheckMinEint_No = false;
-   real Eint, Temp;
+   real Temp;
 
-   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag );
+#  ifdef SRHD
+   real Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL];
+
+   Cons[0] = Dens;
+   Cons[1] = MomX;
+   Cons[2] = MomY;
+   Cons[3] = MomZ;
+   Cons[4] = Engy;
+
+   Hydro_Con2Pri( Cons, Prim, -HUGE_NUMBER, false, NULL_INT, NULL,
+                  NULL_BOOL, NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
+   Temp  = Prim[4]/Prim[0];
+   Temp *= EoS_AuxArray_Flt[0];
+
+#  else // #ifdef SRHD
+
+   const bool CheckMinEint_No = false;
+   real Eint;
+
+   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag,
+                          NULL, NULL, NULL, NULL, NULL );
    Temp = EoS_DensEint2Temp( Dens, Eint, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+#  endif // #ifdef SRHD ... else ...
 
    if ( CheckMinTemp )   Temp = Hydro_CheckMinTemp( Temp, MinTemp );
 
@@ -961,6 +1407,7 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
 
 
 
+#ifndef SRHD
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_Con2Entr
 // Description :  Evaluate the fluid entropy
@@ -996,6 +1443,15 @@ real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const re
 
 // check
 #  ifdef GAMER_DEBUG
+#  ifdef SRHD
+#  ifdef __CUDACC__
+   printf( "ERROR : SRHD does not support entropy evaluation at file <%s>, line <%d>, function <%s> !!\n",
+           ERROR_INFO );
+#  else
+   Aux_Error( ERROR_INFO, "SRHD does not support entropy evaluation !!\n" );
+#  endif
+#  endif // #ifdef SRHD
+
    if ( EoS_DensEint2Entr == NULL )
    {
 #     ifdef __CUDACC__
@@ -1011,7 +1467,8 @@ real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const re
    const bool CheckMinEint_No = false;
    real Eint, Entr;
 
-   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag );
+   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag,
+                          NULL, NULL, NULL, NULL, NULL );
    Entr = EoS_DensEint2Entr( Dens, Eint, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
    if ( CheckMinEntr )   Entr = Hydro_CheckMinEntr( Entr, MinEntr );
@@ -1019,6 +1476,7 @@ real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const re
    return Entr;
 
 } // FUNCTION : Hydro_Con2Entr
+#endif // #ifndef SRHD
 
 
 
@@ -1067,6 +1525,74 @@ void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm
    for (int v=0; v<NNorm; v++)   Passive[ NormIdx[v] ] *= Norm;
 
 } // FUNCTION : Hydro_NormalizePassive
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    : NewtonRaphsonSolver
+// Description : The one-dimensional root-finder using the Newton's method
+//
+// Note        : 1. Solving arbitrary one-dimensional function with N parameters (a1,..,aN)
+//                  --> i.e. f(a1,..,aN; x) + constant = 0, where constant = Params->Constant
+//               2. Iteration stops when either |x1-x0| < EpsAbs + EpsRel*x0 or number of iterations > threshold
+//                  --> x1/x0          : the estimated solution in current/previous iteration
+//                  --> EpsAbs, EpsRel : See below
+//
+// Parameter   : FuncPtr : Pointer to the target function with the signature as follows:
+//                         --> (*FuncPtr)( real Unknown, void *Params, real *Func, real *DiffFunc )
+//                             --> Unknown  : Independent variables of the target function
+//                             --> Params   : Pointer to a user-defined structure that groups the N parameters and the `constant`
+//                             --> Func     : Evaluation of FuncPtr at `Unknown`
+//                             --> DiffFunc : Evaluation of the derivative of FuncPtr w.r.t `x` at `Unknown`
+//               Params  : See above
+//               Guess   : Initial guess of x
+//               EpsAbs  : Absolute error between the current and previous solution
+//               EpsRel  : Relative error between the current and previous solution
+//               Root    : Pointer to the root of the target function
+//
+// Return      : Root
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+void NewtonRaphsonSolver( void (*FuncPtr)( real Unknown, void *Params, real *Func, real *DiffFunc ),
+                          void *Params, const real Guess, const real EpsAbs, const real EpsRel, real *Root )
+{
+
+   int Iter = 0;
+
+#  ifdef FLOAT8
+   int MaxIter = 20;
+#  else
+   int MaxIter = 10;
+#  endif
+
+   real Func, DiffFunc, Delta, Tolerance;
+
+   *Root = Guess;
+
+   do
+   {
+      Iter++;
+
+      FuncPtr( *Root, Params, &Func, &DiffFunc );
+
+#     ifdef GAMER_DEBUG
+      if ( DiffFunc == (real)0.0 )
+         printf( "ERROR : derivative is zero at file <%s>, line <%d>, function <%s> !!\n", ERROR_INFO );
+
+      if ( Func != Func  ||  Func < -HUGE_NUMBER  ||  Func > HUGE_NUMBER )
+         printf( "ERROR : function value is not finite at file <%s>, line <%d>, function <%s> !!\n", ERROR_INFO );
+
+      if ( DiffFunc != DiffFunc  ||  DiffFunc < -HUGE_NUMBER  ||  DiffFunc > HUGE_NUMBER )
+         printf( "ERROR : derivative value is not finite at file <%s>, line <%d>, function <%s> !!\n", ERROR_INFO );
+#     endif
+
+      Delta     = Func/DiffFunc;
+      Tolerance =  EpsRel*FABS(*Root) + EpsAbs;
+      *Root     = *Root - Delta;
+
+   } while ( FABS(Delta) >= Tolerance  &&  Iter < MaxIter );
+
+} // FUNCTION : NewtonRaphsonSolver
 
 
 

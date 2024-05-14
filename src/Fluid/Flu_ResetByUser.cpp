@@ -11,15 +11,6 @@ int (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double Emag, const double x
 // this function pointer **may** be overwritten by a test problem initializer
 void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt ) = Flu_ResetByUser_API_Default;
 
-#ifdef MHD
-extern double (*MHD_ResetByUser_VecPot_Ptr)( const double x, const double y, const double z, const double Time,
-                                             const double dt, const int lv, const char Component, double AuxArray[] );
-extern double (*MHD_ResetByUser_BField_Ptr)( const double x, const double y, const double z, const double Time,
-                                             const double dt, const int lv, const char Component, double AuxArray[], const double B_in,
-                                             const bool UseVecPot, const real *Ax, const real *Ay, const real *Az,
-                                             const int i, const int j, const int k );
-#endif
-
 
 
 
@@ -294,8 +285,10 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
 #           if ( MODEL == HYDRO )
 //          apply density and internal energy floors
             fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
+#           ifndef SRHD
             fluid[ENGY] = Hydro_CheckMinEintInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                                     MIN_EINT, Emag );
+#           endif
 
 //          calculate the dual-energy variable (entropy or internal energy)
 #           ifdef DUAL_ENERGY

@@ -7,7 +7,7 @@
 extern void (*Init_Function_Ptr)( real fluid[], const double x, const double y, const double z, const double Time );
 extern void (*Output_TestProbErr_Ptr)( const bool BaseOnly );
 
-static void ELBDM_TestProbSol_JeansInstability_Physical( real fluid[], const double x, const double y, const double z, 
+static void ELBDM_TestProbSol_JeansInstability_Physical( real fluid[], const double x, const double y, const double z,
                                                          const double Time );
 static void ELBDM_OutputError_JeansInstability_Physical( const bool BaseOnly );
 static void WriteFile( FILE *File[], const int lv, const int PID, const int i, const int j, const int k,
@@ -22,8 +22,8 @@ static real Jeans_WaveKj;        // critical wave number
 static real Jeans_Omega;         // wave angular frequency
 static real Jeans_RealAmp;       // wave real part amplitude
 static real Jeans_ImagAmp;       // wave imaginary part amplitude
-static real Jeans_Sign;          // stable   : (+1/-1) --> (right/left-moving wave) 
-                                 // unstable : (+1/-1) --> (growing/decaying mode) 
+static real Jeans_Sign;          // stable   : (+1/-1) --> (right/left-moving wave)
+                                 // unstable : (+1/-1) --> (growing/decaying mode)
 static real Jeans_Phase0;        // initial phase shift
 static bool Jeans_Stable;        // true/false --> Jeans stable/unstable
 // =======================================================================================
@@ -39,10 +39,10 @@ static bool Jeans_Stable;        // true/false --> Jeans stable/unstable
 //                2. Global variables declared here will also be used in the function
 //                   "ELBDM_TestProbSol_JeansInstability"
 //
-// Parameter   :  None 
+// Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void Init_TestProb()
-{  
+{
 
    const char *TestProb = "ELBDM physical-frame Jeans instability";
 
@@ -101,7 +101,7 @@ void Init_TestProb()
 
 // set some default parameters
 // End_T : (stable/unstable) --> (1 period/grow by a factor of 50)
-   const double End_T_Default    = ( Jeans_Stable) ? 2.0*M_PI/Jeans_Omega : log(50.0)/Jeans_Omega; 
+   const double End_T_Default    = ( Jeans_Stable) ? 2.0*M_PI/Jeans_Omega : log(50.0)/Jeans_Omega;
    const long   End_Step_Default = __INT_MAX__;
 
    if ( END_STEP < 0 )
@@ -125,7 +125,7 @@ void Init_TestProb()
       OPT__OUTPUT_TEST_ERROR = true;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : parameter %s is reset to %d in the %s test !!\n", 
+         Aux_Message( stdout, "NOTE : parameter %s is reset to %d in the %s test !!\n",
                       "OPT__OUTPUT_TEST_ERROR", OPT__OUTPUT_TEST_ERROR, TestProb );
    }
 
@@ -135,14 +135,14 @@ void Init_TestProb()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_TestProbSol_JeansInstability_Physical
-// Description :  Calculate the analytical solution in the ELBDM physical-frame Jeans instability test  
+// Description :  Calculate the analytical solution in the ELBDM physical-frame Jeans instability test
 //
 // Note        :  1. Wave vector is along the diagonal direction
 //                2. Background density is assumed to be ONE
-//                3. This function is invoked by "ELBDM_Init_StartOver_AssignData" and "Output_TestProbErr" 
+//                3. This function is invoked by "ELBDM_Init_StartOver_AssignData" and "Output_TestProbErr"
 //
 // Parameter   :  fluid : Array to store the analytical solution to be returned
-//                x/y/z : Target physical coordinates 
+//                x/y/z : Target physical coordinates
 //                Time  : Target physical time
 //
 // Return      :  fluid
@@ -176,7 +176,7 @@ void ELBDM_TestProbSol_JeansInstability_Physical( real fluid[], const double x, 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_OutputError_JeansInstability_Physical
 // Description :  Compare and output the numerical and analytical solutions in the ELBDM physical-frame
-//                Jeans instability test problem 
+//                Jeans instability test problem
 //
 // Note        :  1. Invoked by "Output_TestProbErr"
 //                2. This function has the similar form as Output_DumpData_Part, except that some code lines
@@ -185,7 +185,7 @@ void ELBDM_TestProbSol_JeansInstability_Physical( real fluid[], const double x, 
 // Parameter   :  BaseOnly :  Only output the base-level data
 //-------------------------------------------------------------------------------------------------------
 void ELBDM_OutputError_JeansInstability_Physical( const bool BaseOnly )
-{  
+{
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ...\n", __FUNCTION__, DumpID );
 
@@ -233,18 +233,18 @@ void ELBDM_OutputError_JeansInstability_Physical( const bool BaseOnly )
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
 // ===================================================================================================
-  
-  
+
+
 // check if the output files already exist
-   if ( MPI_Rank == 0 )  
+   if ( MPI_Rank == 0 )
    {
       for (int v=0; v<NCOMP; v++)
       {
          FILE *File_Check = fopen( FileName[v], "r" );
 
-         if ( File_Check != NULL )  
+         if ( File_Check != NULL )
          {
-            Aux_Message( stderr, "WARNING : the file \"%s\" already exists and will be overwritten !!\n", 
+            Aux_Message( stderr, "WARNING : the file \"%s\" already exists and will be overwritten !!\n",
                          FileName[v] );
             fclose( File_Check );
 
@@ -261,7 +261,7 @@ void ELBDM_OutputError_JeansInstability_Physical( const bool BaseOnly )
    int  ii, jj, kk, scale;
    real dh, PW;
    real xx, yy, zz;        // grid physical coordinates
-   int *Corner  = NULL;    // corner grid ID 
+   int *Corner  = NULL;    // corner grid ID
    bool Check_x = false;
    bool Check_y = false;
    bool Check_z = false;
@@ -291,21 +291,21 @@ void ELBDM_OutputError_JeansInstability_Physical( const bool BaseOnly )
          for (int v=0; v<NCOMP; v++)   File[v] = fopen( FileName[v], "a" );
 
 //       output header
-         if ( TargetMPIRank == 0 )  
+         if ( TargetMPIRank == 0 )
          {
-            for (int v=0; v<NCOMP; v++)   
+            for (int v=0; v<NCOMP; v++)
                fprintf( File[v], "%9s %20s %20s %20s\n", "Coord.", "Numerical", "Analytical", "Error" );
          }
 
 
 //       output data
-         for (int lv=0; lv<NLv; lv++)                             
-         {  
+         for (int lv=0; lv<NLv; lv++)
+         {
             dh    = amr->dh   [lv];
             scale = amr->scale[lv];
             PW    = PATCH_SIZE*dh;
 
-            for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)    
+            for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
             {
 //             output the patch data only if it has no son (if the option "BaseOnly" is turned off)
                if ( amr->patch[0][lv][PID]->son == -1  ||  BaseOnly )
@@ -316,7 +316,7 @@ void ELBDM_OutputError_JeansInstability_Physical( const bool BaseOnly )
                   {
                      if ( Corner[0] == Corner[1]  &&  Corner[0] == Corner[2] )
                      {
-                        for (int k=0; k<PS1; k++)  
+                        for (int k=0; k<PS1; k++)
                         {
                            kk = Corner[2] + k*scale;
 
@@ -377,14 +377,14 @@ void ELBDM_OutputError_JeansInstability_Physical( const bool BaseOnly )
       if ( FirstTime )
       {
 #        if   ( MODEL == HYDRO )
-         fprintf( File_L1, "%5s %13s %19s %19s %19s %19s %19s\n", 
+         fprintf( File_L1, "%5s %13s %19s %19s %19s %19s %19s\n",
                   "NGrid", "Time", "Error(DENS)", "Error(MOMX)", "Error(MOMY)", "Error(MOMZ)", "Error(PRES)" );
 
 #        elif ( MODEL == MHD )
 #        warning : WAIT MHD !!!
 
 #        elif ( MODEL == ELBDM )
-         fprintf( File_L1, "%5s %13s %19s %19s %19s\n", 
+         fprintf( File_L1, "%5s %13s %19s %19s %19s\n",
                   "NGrid", "Time", "Error(DENS)", "Error(REAL)", "Error(IMAG)" );
 
 #        else
@@ -414,20 +414,20 @@ void ELBDM_OutputError_JeansInstability_Physical( const bool BaseOnly )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  WriteFile 
+// Function    :  WriteFile
 // Description :  Output data to file
 //
-// Parameter   :  File     : File pointer 
+// Parameter   :  File     : File pointer
 //                lv       : Targeted refinement level
 //                PID      : Patch ID
 //                i/j/k    : Cell indices within the patch
 //                ii/jj/kk : Cell scale indices in the simulation domain
 //                L1_Err   : Array to record the L1 errors of all variables
-//                Part     : OUTPUT_XY   : xy plane  
+//                Part     : OUTPUT_XY   : xy plane
 //                           OUTPUT_YZ   : yz plane
 //                           OUTPUT_XZ   : xz plane
 //                           OUTPUT_X    : x  line
-//                           OUTPUT_Y    : y  line 
+//                           OUTPUT_Y    : y  line
 //                           OUTPUT_Z    : z  line
 //                           OUTPUT_DIAG : diagonal along (+1,+1,+1)
 //-------------------------------------------------------------------------------------------------------
@@ -441,7 +441,7 @@ void WriteFile( FILE *File[], const int lv, const int PID, const int i, const in
    for (int v=0; v<NCOMP; v++)   fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
 #  if   ( MODEL == HYDRO )
-   fluid[ENGY] = (GAMMA-1.0)*(  fluid[ENGY] - 0.5*( fluid[MOMX]*fluid[MOMX] + 
+   fluid[ENGY] = (GAMMA-1.0)*(  fluid[ENGY] - 0.5*( fluid[MOMX]*fluid[MOMX] +
                                                     fluid[MOMY]*fluid[MOMY] +
                                                     fluid[MOMZ]*fluid[MOMZ] ) / fluid[DENS]  );
 
@@ -474,7 +474,7 @@ void WriteFile( FILE *File[], const int lv, const int PID, const int i, const in
 
 
 // estimate and output errors
-   for (int v=0; v<NCOMP; v++)   
+   for (int v=0; v<NCOMP; v++)
    {
       Err   [v]  = fabs( Anal[v] - fluid[v] );
       L1_Err[v] += Err[v]*amr->dh[lv];

@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -14,6 +13,9 @@ static int    Gau_PeriodicN;// periodic boundary condition
 // =======================================================================================
 
 static void OutputError();
+static void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                const int GhostSize, const int idx[], const double pos[], const double Time,
+                const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 
 
@@ -119,18 +121,18 @@ void SetParameter()
 
 
 // (3) reset other general-purpose parameters
-//     --> a helper macro PRINT_WARNING is defined in TestProb.h
+//     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const long   End_Step_Default = __INT_MAX__;
    const double End_T_Default    = 0.50*amr->BoxSize[Gau_XYZ]/fabs( Gau_v0 );
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
-      PRINT_WARNING( "END_STEP", END_STEP, FORMAT_LONG );
+      PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
    if ( END_T < 0.0 ) {
       END_T = End_T_Default;
-      PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
+      PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
 
 
@@ -206,9 +208,19 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Im += Gau_Const2*sin( Gau_Theta1 + Gau_Theta2 );
    }}
 
+   fluid[DENS] = SQR( Re ) + SQR( Im );
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif
    fluid[REAL] = Re;
    fluid[IMAG] = Im;
-   fluid[DENS] = SQR(fluid[REAL]) + SQR(fluid[IMAG]);
+#  if  ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } else {
+   fluid[PHAS] = SATAN2( Im, Re );
+   fluid[STUB] = 0.0;
+   }
+#  endif
 
 } // FUNCTION : SetGridIC
 
@@ -234,6 +246,38 @@ void OutputError()
    Output_L1Error( SetGridIC, NULL, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
 
 } // FUNCTION : OutputError
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  BC
+// Description :  Set the extenral boundary condition to the analytical solution
+//
+// Note        :  1. Linked to the function pointer "BC_User_Ptr"
+//
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
+//                ArraySize      : Size of Array including the ghost zones on each side
+//                fluid          : Fluid fields to be set
+//                NVar_Flu       : Number of fluid variables to be prepared
+//                GhostSize      : Number of ghost zones
+//                idx            : Array indices
+//                pos            : Physical coordinates
+//                Time           : Physical time
+//                lv             : Refinement level
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
+//                AuxArray       : Auxiliary array
+//
+// Return      :  fluid
+//-------------------------------------------------------------------------------------------------------
+void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+         const int GhostSize, const int idx[], const double pos[], const double Time,
+         const int lv, const int TFluVarIdxList[], double AuxArray[] )
+{
+
+// simply call the IC function
+   SetGridIC( fluid, pos[0], pos[1], pos[2], Time, lv, AuxArray );
+
+} // FUNCTION : BC
 #endif // #if ( MODEL == ELBDM )
 
 
@@ -264,7 +308,7 @@ void Init_TestProb_ELBDM_GaussianWavePacket()
 
 
    Init_Function_User_Ptr = SetGridIC;
-   BC_User_Ptr            = SetGridIC;
+   BC_User_Ptr            = BC;
    Output_User_Ptr        = OutputError;
 #  endif // #if ( MODEL == ELBDM )
 

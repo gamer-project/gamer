@@ -25,31 +25,53 @@ void Init_ResetParameter()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-// helper macro for printing warning messages
-#  define FORMAT_INT    %- 21d
-#  define FORMAT_FLT    %- 21.14e
-#  define PRINT_WARNING( name, format, reason )                                                                \
-   {                                                                                                           \
-      if ( MPI_Rank == 0 )                                                                                     \
-         Aux_Message( stderr, "WARNING : parameter [%-28s] is reset to [" EXPAND_AND_QUOTE(format) "] %s\n",   \
-                      #name, name, reason );                                                                   \
-   }
-
-
 // number of OpenMP threads
 #  ifdef OPENMP
    if ( OMP_NTHREAD <= 0 )
    {
-      OMP_NTHREAD = omp_get_max_threads();
+      int  NCPU_Node, NNode_PBS, NNode_SLURM;
+      FILE *fp;
 
-      PRINT_WARNING( OMP_NTHREAD, FORMAT_INT, "" );
-   }
-#  else
+//    determine if the PBS/SLURM software is used
+      fp = popen( "echo ${PBS_NUM_NODES:-0}", "r" );
+      fscanf( fp, "%d", &NNode_PBS );
+
+      fp = popen( "echo ${SLURM_JOB_NUM_NODES:-0}", "r" );
+      fscanf( fp, "%d", &NNode_SLURM );
+
+//    set up the number of OpenMP threads
+      if ( NNode_PBS ) // PBS system
+      {
+         fp = popen( "echo $PBS_NUM_PPN", "r" );
+         fscanf( fp, "%d", &NCPU_Node );
+
+         OMP_NTHREAD = NCPU_Node * NNode_PBS / MPI_NRank;
+      }
+
+      else if ( NNode_SLURM ) // SLURM system
+      {
+         fp = popen( "echo $SLURM_CPUS_ON_NODE", "r" );
+         fscanf( fp, "%d", &NCPU_Node );
+
+         OMP_NTHREAD = NCPU_Node * NNode_SLURM / MPI_NRank;
+      }
+
+      else // default
+      {
+         OMP_NTHREAD = omp_get_max_threads();
+      }
+
+      pclose( fp );
+
+      PRINT_RESET_PARA( OMP_NTHREAD, FORMAT_INT, "" );
+   } // if ( OMP_NTHREAD <= 0 )
+
+#  else // #ifdef OPENMP
    if ( OMP_NTHREAD != 1 )
    {
       OMP_NTHREAD = 1;
 
-      PRINT_WARNING( OMP_NTHREAD, FORMAT_INT, "since OPENMP is disabled" );
+      PRINT_RESET_PARA( OMP_NTHREAD, FORMAT_INT, "since OPENMP is disabled" );
    }
 #  endif // #ifdef OPENMP ... else ...
 
@@ -58,12 +80,14 @@ void Init_ResetParameter()
    if ( DT__FLUID < 0.0 )
    {
 #     if   ( MODEL == HYDRO )
+
 #     if   ( FLU_SCHEME == RTVD )
       DT__FLUID = 0.50;
 #     elif ( FLU_SCHEME == MHM )
       DT__FLUID = 0.40;
 #     elif ( FLU_SCHEME == MHM_RP )
-      DT__FLUID = 0.30;
+//    CFL factor is recommended to be larger than 0.4 for the Athena limiter
+      DT__FLUID = ( OPT__LR_LIMITER == LR_LIMITER_ATHENA ) ? 0.4 : 0.3;
 #     elif ( FLU_SCHEME == CTU )
       DT__FLUID = 0.50;
 #     else
@@ -71,7 +95,8 @@ void Init_ResetParameter()
 #     endif
 
 #     elif  ( MODEL == ELBDM )
-#     if ( WAVE_SCHEME == WAVE_FD )
+
+#     if   ( WAVE_SCHEME == WAVE_FD )
 #     ifdef GRAVITY
       DT__FLUID = 0.20;                   // 1D k-max mode rotates 0.20*2*PI
 #     else // # ifdef GRAVITY
@@ -79,15 +104,17 @@ void Init_ResetParameter()
       DT__FLUID = SQRT(27.0)*M_PI/32.0;   // stability limit (~0.51)
 #     else // # ifdef LAPLACIAN_4TH
       DT__FLUID = SQRT(3.0)*M_PI/8.0;     // stability limit (~0.68)
-#     endif // # ifdef LAPLACIAN_4TH ... # else
-#     endif // # ifdef GRAVITY ... # else
+#     endif // # ifdef LAPLACIAN_4TH ... else ...
+#     endif // # ifdef GRAVITY ... else ...
+
 #     elif ( WAVE_SCHEME == WAVE_GRAMFE )
 #     ifdef GRAVITY
       DT__FLUID = 0.20;                   // 1D k-max mode rotates 0.20*2*PI
 #     else // # ifdef GRAVITY
-      DT__FLUID = 0.30;                   // stability limit depends on ghost boundary and extension order
-#     endif // # ifdef GRAVITY ... # else
-#     else // #  if (WAVE_SCHEME == WAVE_FD )
+      DT__FLUID = 0.20;                   // stability limit depends on ghost boundary and extension order
+#     endif // # ifdef GRAVITY ... else ...
+
+#     else // WAVE_SCHEME
 #        error : ERROR : unsupported WAVE_SCHEME !!
 #     endif // WAVE_SCHEME
 
@@ -95,15 +122,55 @@ void Init_ResetParameter()
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
 
-      PRINT_WARNING( DT__FLUID, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( DT__FLUID, FORMAT_REAL, "" );
    } // if ( DT__FLUID < 0.0 )
 
    if ( DT__FLUID_INIT < 0.0 )
    {
       DT__FLUID_INIT = DT__FLUID;
 
-      PRINT_WARNING( DT__FLUID_INIT, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( DT__FLUID_INIT, FORMAT_REAL, "" );
    }
+
+
+// hybrid dt (empirically determined CFL condition)
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( DT__HYBRID_CFL < 0.0 )
+   {
+#     ifdef GRAVITY
+      DT__HYBRID_CFL = 0.20;
+#     else
+      DT__HYBRID_CFL = 0.40;
+#     endif
+
+      PRINT_RESET_PARA( DT__HYBRID_CFL, FORMAT_REAL, "" );
+   }
+
+   if ( DT__HYBRID_CFL_INIT < 0.0 )
+   {
+      DT__HYBRID_CFL_INIT = DT__HYBRID_CFL;
+
+      PRINT_RESET_PARA( DT__HYBRID_CFL_INIT, FORMAT_REAL, "" );
+   }
+#  endif
+
+
+// hybrid velocity dt (empirically determined CFL condition)
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( DT__HYBRID_VELOCITY < 0.0 )
+   {
+      DT__HYBRID_VELOCITY = 1.00;
+
+      PRINT_RESET_PARA( DT__HYBRID_VELOCITY, FORMAT_REAL, "" );
+   }
+
+   if ( DT__HYBRID_VELOCITY_INIT < 0.0 )
+   {
+      DT__HYBRID_VELOCITY_INIT = DT__HYBRID_VELOCITY;
+
+      PRINT_RESET_PARA( DT__HYBRID_VELOCITY_INIT, FORMAT_REAL, "" );
+   }
+#  endif
 
 
 // gravity dt
@@ -118,7 +185,7 @@ void Init_ResetParameter()
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
 
-      PRINT_WARNING( DT__GRAVITY, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( DT__GRAVITY, FORMAT_REAL, "" );
    } // if ( DT__GRAVITY < 0.0 )
 #  endif
 
@@ -129,7 +196,7 @@ void Init_ResetParameter()
    {
       DT__PARACC = 0.0;    // disable it
 
-      PRINT_WARNING( DT__PARACC, FORMAT_FLT, "since STORE_PAR_ACC is disabled" );
+      PRINT_RESET_PARA( DT__PARACC, FORMAT_REAL, "since STORE_PAR_ACC is disabled" );
    }
 #  endif
 
@@ -137,9 +204,9 @@ void Init_ResetParameter()
 // Poisson solver parameters
 #  ifdef GRAVITY
 #  if   ( POT_SCHEME == SOR )
-   Init_Set_Default_SOR_Parameter( SOR_OMEGA, SOR_MAX_ITER, SOR_MIN_ITER );
+   Init_Set_Default_SOR_Parameter();
 #  elif ( POT_SCHEME == MG  )
-   Init_Set_Default_MG_Parameter( MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH, MG_TOLERATED_ERROR );
+   Init_Set_Default_MG_Parameter();
 #  endif
 #  endif // GRAVITY
 
@@ -155,7 +222,7 @@ void Init_ResetParameter()
       EXT_POT_TABLE_FLOAT8 = 0;
 #     endif
 
-      PRINT_WARNING( EXT_POT_TABLE_FLOAT8, FORMAT_INT, "to be consistent with FLOAT8" );
+      PRINT_RESET_PARA( EXT_POT_TABLE_FLOAT8, FORMAT_INT, "to be consistent with FLOAT8" );
    }
 #  endif
 
@@ -164,7 +231,7 @@ void Init_ResetParameter()
 #  ifndef GPU
    GPU_NSTREAM = 1;
 
-   PRINT_WARNING( GPU_NSTREAM, FORMAT_INT, "since GPU is disabled" );
+   PRINT_RESET_PARA( GPU_NSTREAM, FORMAT_INT, "since GPU is disabled" );
 
    if ( FLU_GPU_NPGROUP <= 0 )
    {
@@ -174,7 +241,7 @@ void Init_ResetParameter()
       FLU_GPU_NPGROUP = 1;
 #     endif
 
-      PRINT_WARNING( FLU_GPU_NPGROUP, FORMAT_INT, "since GPU is disabled" );
+      PRINT_RESET_PARA( FLU_GPU_NPGROUP, FORMAT_INT, "since GPU is disabled" );
    }
 
 #  ifdef GRAVITY
@@ -186,7 +253,7 @@ void Init_ResetParameter()
       POT_GPU_NPGROUP = 1;
 #     endif
 
-      PRINT_WARNING( POT_GPU_NPGROUP, FORMAT_INT, "since GPU is disabled" );
+      PRINT_RESET_PARA( POT_GPU_NPGROUP, FORMAT_INT, "since GPU is disabled" );
    }
 #  endif
 
@@ -199,7 +266,7 @@ void Init_ResetParameter()
       CHE_GPU_NPGROUP = 1;
 #     endif
 
-      PRINT_WARNING( CHE_GPU_NPGROUP, FORMAT_INT, "since GPU is disabled" );
+      PRINT_RESET_PARA( CHE_GPU_NPGROUP, FORMAT_INT, "since GPU is disabled" );
    }
 #  endif
 
@@ -211,7 +278,7 @@ void Init_ResetParameter()
       SRC_GPU_NPGROUP = 1;
 #     endif
 
-      PRINT_WARNING( SRC_GPU_NPGROUP, FORMAT_INT, "since GPU is disabled" );
+      PRINT_RESET_PARA( SRC_GPU_NPGROUP, FORMAT_INT, "since GPU is disabled" );
    }
 #  endif // #ifndef GPU
 
@@ -256,11 +323,20 @@ void Init_ResetParameter()
 #  endif
 
 
+// text format parameters
+// --> The current strategy is to read the integer in between % and . to determine the string length.
+//     For example, the format %20.16e will give a length of 20. However, if only checking the string after %,
+//     the format %+-20.16e (align to the left and also add a + sign for a positive value) will give a zero string length
+//     since +- is not an integer. This is why checking OPT__OUTPUT_DATA_FORMAT+2 is necessary.
+   StrLen_Flt = MAX( abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+1)), abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+2)) );
+   sprintf( BlankPlusFormat_Flt, " %s", OPT__OUTPUT_TEXT_FORMAT_FLT );
+
+
 // ELBDM parameters
 #  if ( MODEL == ELBDM )
    ELBDM_ETA = ELBDM_MASS / ELBDM_PLANCK_CONST;
 
-   PRINT_WARNING( ELBDM_ETA, FORMAT_FLT, "" );
+   PRINT_RESET_PARA( ELBDM_ETA, FORMAT_REAL, "" );
 
 #  ifdef COMOVING
    if ( MPI_Rank == 0 )
@@ -275,7 +351,7 @@ void Init_ResetParameter()
    {
       ELBDM_TAYLOR3_COEFF = NULL_REAL;
 
-      PRINT_WARNING( ELBDM_TAYLOR3_COEFF, FORMAT_FLT, "since ELBDM_TAYLOR3_AUTO is enabled" );
+      PRINT_RESET_PARA( ELBDM_TAYLOR3_COEFF, FORMAT_REAL, "since ELBDM_TAYLOR3_AUTO is enabled" );
    }
 
 // must disable ELBDM_TAYLOR3_AUTO for OPT__FREEZE_FLUID since ELBDM_SetTaylor3Coeff() doesn't support dt=0.0
@@ -283,7 +359,7 @@ void Init_ResetParameter()
    {
       ELBDM_TAYLOR3_AUTO = false;
 
-      PRINT_WARNING( ELBDM_TAYLOR3_AUTO, FORMAT_INT, "since OPT__FREEZE_FLUID is enabled" );
+      PRINT_RESET_PARA( ELBDM_TAYLOR3_AUTO, FORMAT_INT, "since OPT__FREEZE_FLUID is enabled" );
    }
 #  endif // #if ( MODEL == ELBDM )
 
@@ -294,14 +370,14 @@ void Init_ResetParameter()
    {
       OPT__FLU_INT_SCHEME = INT_CQUAD;
 
-      PRINT_WARNING( OPT__FLU_INT_SCHEME, FORMAT_INT, "" );
+      PRINT_RESET_PARA( OPT__FLU_INT_SCHEME, FORMAT_INT, "" );
    }
 
    if ( OPT__REF_FLU_INT_SCHEME == INT_DEFAULT )
    {
       OPT__REF_FLU_INT_SCHEME = INT_CQUAD;
 
-      PRINT_WARNING( OPT__REF_FLU_INT_SCHEME, FORMAT_INT, "" );
+      PRINT_RESET_PARA( OPT__REF_FLU_INT_SCHEME, FORMAT_INT, "" );
    }
 
 #  elif ( MODEL == ELBDM )
@@ -309,14 +385,14 @@ void Init_ResetParameter()
    {
       OPT__FLU_INT_SCHEME = INT_CQUAR;
 
-      PRINT_WARNING( OPT__FLU_INT_SCHEME, FORMAT_INT, "" );
+      PRINT_RESET_PARA( OPT__FLU_INT_SCHEME, FORMAT_INT, "" );
    }
 
    if ( OPT__REF_FLU_INT_SCHEME == INT_DEFAULT )
    {
       OPT__REF_FLU_INT_SCHEME = INT_CQUAR;
 
-      PRINT_WARNING( OPT__REF_FLU_INT_SCHEME, FORMAT_INT, "" );
+      PRINT_RESET_PARA( OPT__REF_FLU_INT_SCHEME, FORMAT_INT, "" );
    }
 
 #  else
@@ -366,7 +442,7 @@ void Init_ResetParameter()
       }
 
       const double PAR_REMOVE_CELL = amr->Par->RemoveCell;
-      PRINT_WARNING( PAR_REMOVE_CELL, FORMAT_FLT, "for the adopted PAR_INTERP scheme" );
+      PRINT_RESET_PARA( PAR_REMOVE_CELL, FORMAT_REAL, "for the adopted PAR_INTERP scheme" );
    }
 
 // RemoveCell is useless for the periodic B.C.
@@ -375,7 +451,7 @@ void Init_ResetParameter()
       amr->Par->RemoveCell = -1.0;
 
       const double PAR_REMOVE_CELL = amr->Par->RemoveCell;
-      PRINT_WARNING( PAR_REMOVE_CELL, FORMAT_FLT, "since the periodic BC is adopted along all directions" );
+      PRINT_RESET_PARA( PAR_REMOVE_CELL, FORMAT_REAL, "since the periodic BC is adopted along all directions" );
    }
 
 // number of ghost zones for the particle interpolation scheme
@@ -389,7 +465,7 @@ void Init_ResetParameter()
          default: Aux_Error( ERROR_INFO, "unsupported particle interpolation scheme !!\n" );
       }
 
-      PRINT_WARNING( amr->Par->GhostSize, FORMAT_INT, "for the adopted PAR_INTERP scheme" );
+      PRINT_RESET_PARA( amr->Par->GhostSize, FORMAT_INT, "for the adopted PAR_INTERP scheme" );
    }
 
    if ( amr->Par->GhostSizeTracer < 0 )
@@ -402,7 +478,7 @@ void Init_ResetParameter()
          default: Aux_Error( ERROR_INFO, "unsupported particle interpolation scheme !!\n" );
       }
 
-      PRINT_WARNING( amr->Par->GhostSizeTracer, FORMAT_INT, "for the adopted PAR_TR_INTERP scheme" );
+      PRINT_RESET_PARA( amr->Par->GhostSizeTracer, FORMAT_INT, "for the adopted PAR_TR_INTERP scheme" );
    }
 
 #  endif // #ifdef PARTICLE
@@ -428,7 +504,7 @@ void Init_ResetParameter()
 
       GFUNC_COEFF0 = 3.8;  // empirically determined value for minimizing the center-of-mass drift
 
-      PRINT_WARNING( GFUNC_COEFF0, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( GFUNC_COEFF0, FORMAT_REAL, "" );
    }
 #  endif
 
@@ -437,10 +513,15 @@ void Init_ResetParameter()
 #  if ( MODEL == HYDRO )
    if ( OPT__1ST_FLUX_CORR < 0 )
    {
-#     ifdef MHD
+#     ifdef SRHD
+      OPT__1ST_FLUX_CORR = FIRST_FLUX_CORR_NONE;
+
+      PRINT_RESET_PARA( OPT__1ST_FLUX_CORR, FORMAT_INT, "for SRHD" );
+
+#     elif ( defined MHD )
       OPT__1ST_FLUX_CORR = FIRST_FLUX_CORR_3D;
 
-      PRINT_WARNING( OPT__1ST_FLUX_CORR, FORMAT_INT, "for MHD" );
+      PRINT_RESET_PARA( OPT__1ST_FLUX_CORR, FORMAT_INT, "for MHD" );
 
 #     else
 
@@ -450,15 +531,15 @@ void Init_ResetParameter()
       OPT__1ST_FLUX_CORR = FIRST_FLUX_CORR_3D1D;
 #     endif
 
-      PRINT_WARNING( OPT__1ST_FLUX_CORR, FORMAT_INT, "for HYDRO" );
-#     endif // #ifdef MHD ... else ...
+      PRINT_RESET_PARA( OPT__1ST_FLUX_CORR, FORMAT_INT, "for HYDRO" );
+#     endif // #ifdef SRHD ... elif MHD ... else ...
    }
 
    if      ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_NONE )
    {
       OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_1ST_NONE;
 
-      PRINT_WARNING( OPT__1ST_FLUX_CORR_SCHEME, FORMAT_INT, "since OPT__1ST_FLUX_CORR is disabled" );
+      PRINT_RESET_PARA( OPT__1ST_FLUX_CORR_SCHEME, FORMAT_INT, "since OPT__1ST_FLUX_CORR is disabled" );
    }
 
    else if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_DEFAULT )
@@ -469,7 +550,7 @@ void Init_ResetParameter()
       OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_1ST_HLLE;
 #     endif
 
-      PRINT_WARNING( OPT__1ST_FLUX_CORR_SCHEME, FORMAT_INT, "" );
+      PRINT_RESET_PARA( OPT__1ST_FLUX_CORR_SCHEME, FORMAT_INT, "" );
    }
 #  endif // if ( MODEL == HYDRO )
 
@@ -488,7 +569,7 @@ void Init_ResetParameter()
       OPT__TIMING_BARRIER = 1;
 #     endif
 
-      PRINT_WARNING( OPT__TIMING_BARRIER, FORMAT_INT, "" );
+      PRINT_RESET_PARA( OPT__TIMING_BARRIER, FORMAT_INT, "" );
    }
 
 
@@ -525,7 +606,7 @@ void Init_ResetParameter()
    {
       OPT__CORR_AFTER_ALL_SYNC = CORR_AFTER_SYNC_BEFORE_DUMP;
 
-      PRINT_WARNING( OPT__CORR_AFTER_ALL_SYNC, FORMAT_INT, "" );
+      PRINT_RESET_PARA( OPT__CORR_AFTER_ALL_SYNC, FORMAT_INT, "" );
    }
 
 
@@ -536,7 +617,7 @@ void Init_ResetParameter()
    {
       OPT__OVERLAP_MPI = false;
 
-      PRINT_WARNING( OPT__OVERLAP_MPI, FORMAT_INT, "since OVERLAP_MPI is disabled in the makefile" );
+      PRINT_RESET_PARA( OPT__OVERLAP_MPI, FORMAT_INT, "since OVERLAP_MPI is disabled in the makefile" );
    }
 #  endif
 
@@ -545,7 +626,7 @@ void Init_ResetParameter()
    {
       OPT__OVERLAP_MPI = false;
 
-      PRINT_WARNING( OPT__OVERLAP_MPI, FORMAT_INT, "since SERIAL is enabled" );
+      PRINT_RESET_PARA( OPT__OVERLAP_MPI, FORMAT_INT, "since SERIAL is enabled" );
    }
 #  endif // ifdef SERIAL
 
@@ -554,7 +635,7 @@ void Init_ResetParameter()
    {
       OPT__OVERLAP_MPI = false;
 
-      PRINT_WARNING( OPT__OVERLAP_MPI, FORMAT_INT, "since LOAD_BALANCE is disabled" );
+      PRINT_RESET_PARA( OPT__OVERLAP_MPI, FORMAT_INT, "since LOAD_BALANCE is disabled" );
    }
 #  endif // #ifndef LOAD_BALANCE
 
@@ -563,7 +644,7 @@ void Init_ResetParameter()
    {
       OPT__OVERLAP_MPI = false;
 
-      PRINT_WARNING( OPT__OVERLAP_MPI, FORMAT_INT, "since OPENMP is disabled" );
+      PRINT_RESET_PARA( OPT__OVERLAP_MPI, FORMAT_INT, "since OPENMP is disabled" );
    }
 #  endif
 
@@ -575,7 +656,7 @@ void Init_ResetParameter()
    {
       OPT__OVERLAP_MPI = false;
 
-      PRINT_WARNING( OPT__OVERLAP_MPI, FORMAT_INT, "since the level of MPI thread support == MPI_THREAD_SINGLE" );
+      PRINT_RESET_PARA( OPT__OVERLAP_MPI, FORMAT_INT, "since the level of MPI thread support == MPI_THREAD_SINGLE" );
    }
 #  endif
 
@@ -585,7 +666,7 @@ void Init_ResetParameter()
    {
       OPT__CK_FLUX_ALLOCATE = false;
 
-      PRINT_WARNING( OPT__CK_FLUX_ALLOCATE, FORMAT_INT, "since no flux is required" );
+      PRINT_RESET_PARA( OPT__CK_FLUX_ALLOCATE, FORMAT_INT, "since no flux is required" );
    }
 
 
@@ -594,7 +675,7 @@ void Init_ResetParameter()
    {
       OPT__INT_TIME = false;
 
-      PRINT_WARNING( OPT__INT_TIME, FORMAT_INT, "since OPT__DT_LEVEL == DT_LEVEL_SHARED" );
+      PRINT_RESET_PARA( OPT__INT_TIME, FORMAT_INT, "since OPT__DT_LEVEL == DT_LEVEL_SHARED" );
    }
 
 
@@ -604,7 +685,7 @@ void Init_ResetParameter()
    {
       OPT__VERBOSE = true;
 
-      PRINT_WARNING( OPT__VERBOSE, FORMAT_INT, "since GAMER_DEBUG is enabled" );
+      PRINT_RESET_PARA( OPT__VERBOSE, FORMAT_INT, "since GAMER_DEBUG is enabled" );
    }
 #  endif
 
@@ -615,14 +696,14 @@ void Init_ResetParameter()
    {
       OPT__FIXUP_FLUX = false;
 
-      PRINT_WARNING( OPT__FIXUP_FLUX, FORMAT_INT, "since it's only supported in HYDRO/ELBDM" );
+      PRINT_RESET_PARA( OPT__FIXUP_FLUX, FORMAT_INT, "since it's only supported in HYDRO/ELBDM" );
    }
 
    if ( OPT__CK_FLUX_ALLOCATE )
    {
       OPT__CK_FLUX_ALLOCATE = false;
 
-      PRINT_WARNING( OPT__CK_FLUX_ALLOCATE, FORMAT_INT, "since it's only supported in HYDRO/ELBDM" );
+      PRINT_RESET_PARA( OPT__CK_FLUX_ALLOCATE, FORMAT_INT, "since it's only supported in HYDRO/ELBDM" );
    }
 #  endif
 
@@ -633,21 +714,21 @@ void Init_ResetParameter()
    {
       OPT__FLAG_RHO = false;
 
-      PRINT_WARNING( OPT__FLAG_RHO, FORMAT_INT, "since the symbolic constant DENS is not defined" );
+      PRINT_RESET_PARA( OPT__FLAG_RHO, FORMAT_INT, "since the symbolic constant DENS is not defined" );
    }
 
    if ( OPT__FLAG_RHO_GRADIENT )
    {
       OPT__FLAG_RHO_GRADIENT = false;
 
-      PRINT_WARNING( OPT__FLAG_RHO_GRADIENT, FORMAT_INT, "since the symbolic constant DENS is not defined" );
+      PRINT_RESET_PARA( OPT__FLAG_RHO_GRADIENT, FORMAT_INT, "since the symbolic constant DENS is not defined" );
    }
 
    if ( OPT__CK_REFINE )
    {
       OPT__CK_REFINE = false;
 
-      PRINT_WARNING( OPT__CK_REFINE, FORMAT_INT, "since the symbolic constant DENS is not defined" );
+      PRINT_RESET_PARA( OPT__CK_REFINE, FORMAT_INT, "since the symbolic constant DENS is not defined" );
    }
 #  endif // #ifndef DENS
 
@@ -658,9 +739,36 @@ void Init_ResetParameter()
    {
       OPT__CK_CONSERVATION = false;
 
-      PRINT_WARNING( OPT__CK_CONSERVATION, FORMAT_INT, "since it's only supported in HYDRO/ELBDM" );
+      PRINT_RESET_PARA( OPT__CK_CONSERVATION, FORMAT_INT, "since it's only supported in HYDRO/ELBDM" );
    }
 #  endif
+
+
+// set default value for OPT__RECORD_CENTER
+   if ( OPT__RECORD_CENTER )
+   {
+      if ( COM_CEN_X < 0.0  ||  COM_CEN_Y < 0.0  ||  COM_CEN_Z < 0.0 )
+      {
+         COM_CEN_X = -1.0;
+         COM_CEN_Y = -1.0;
+         COM_CEN_Z = -1.0;
+         PRINT_RESET_PARA( COM_CEN_X, FORMAT_REAL, "and it will be reset to the coordinate of the peak total density" );
+         PRINT_RESET_PARA( COM_CEN_Y, FORMAT_REAL, "and it will be reset to the coordinate of the peak total density" );
+         PRINT_RESET_PARA( COM_CEN_Z, FORMAT_REAL, "and it will be reset to the coordinate of the peak total density" );
+      }
+
+      if ( COM_MAX_R < 0.0 )
+      {
+         COM_MAX_R = __FLT_MAX__;
+         PRINT_RESET_PARA( COM_MAX_R, FORMAT_REAL, "" );
+      }
+
+      if ( COM_TOLERR_R < 0.0 )
+      {
+         COM_TOLERR_R = amr->dh[MAX_LEVEL];
+         PRINT_RESET_PARA( COM_TOLERR_R, FORMAT_REAL, "" );
+      }
+   }
 
 
 // OPT__LR_LIMITER
@@ -674,14 +782,14 @@ void Init_ResetParameter()
 //    OPT__LR_LIMITER = LR_LIMITER_VL_GMINMOD;
       OPT__LR_LIMITER = LR_LIMITER_GMINMOD;
 
-      PRINT_WARNING( OPT__LR_LIMITER, FORMAT_INT, "for MHM_RP+PPM" );
+      PRINT_RESET_PARA( OPT__LR_LIMITER, FORMAT_INT, "for MHM_RP+PPM" );
    }
 #  else
    if ( OPT__LR_LIMITER == LR_LIMITER_DEFAULT )
    {
       OPT__LR_LIMITER = LR_LIMITER_VL_GMINMOD;
 
-      PRINT_WARNING( OPT__LR_LIMITER, FORMAT_INT, "" );
+      PRINT_RESET_PARA( OPT__LR_LIMITER, FORMAT_INT, "" );
    }
 #  endif // #if ( FLU_SCHEME == MHM_RP  &&  LR_SCHEME == PPM ) ... else ...
 
@@ -691,7 +799,7 @@ void Init_ResetParameter()
    {
       OPT__LR_LIMITER = LR_LIMITER_NONE;
 
-      PRINT_WARNING( OPT__LR_LIMITER, FORMAT_INT, "since it's only useful for the MHM/MHM_RP/CTU integrators" );
+      PRINT_RESET_PARA( OPT__LR_LIMITER, FORMAT_INT, "since it's only useful for the MHM/MHM_RP/CTU integrators" );
    }
 
 #  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU ) ... else ...
@@ -704,7 +812,7 @@ void Init_ResetParameter()
    {
       OPT__FLAG_JEANS = false;
 
-      PRINT_WARNING( OPT__FLAG_JEANS, FORMAT_INT, "since GRAVITY is disabled" );
+      PRINT_RESET_PARA( OPT__FLAG_JEANS, FORMAT_INT, "since GRAVITY is disabled" );
    }
 #  endif
 
@@ -715,14 +823,14 @@ void Init_ResetParameter()
    {
       OPT__FIXUP_FLUX = false;
 
-      PRINT_WARNING( OPT__FIXUP_FLUX, FORMAT_INT, "since CONSERVE_MASS is disabled" );
+      PRINT_RESET_PARA( OPT__FIXUP_FLUX, FORMAT_INT, "since CONSERVE_MASS is disabled" );
    }
 
    if ( OPT__CK_FLUX_ALLOCATE )
    {
       OPT__CK_FLUX_ALLOCATE = false;
 
-      PRINT_WARNING( OPT__CK_FLUX_ALLOCATE, FORMAT_INT, "since CONSERVE_MASS is disabled" );
+      PRINT_RESET_PARA( OPT__CK_FLUX_ALLOCATE, FORMAT_INT, "since CONSERVE_MASS is disabled" );
    }
 #  endif
 
@@ -733,7 +841,7 @@ void Init_ResetParameter()
    {
       OPT__OUTPUT_BASEPS = false;
 
-      PRINT_WARNING( OPT__OUTPUT_BASEPS, FORMAT_INT, "since SUPPORT_FFTW is disabled" );
+      PRINT_RESET_PARA( OPT__OUTPUT_BASEPS, FORMAT_INT, "since SUPPORT_FFTW is disabled" );
    }
 #  endif
 
@@ -744,7 +852,7 @@ void Init_ResetParameter()
    if ( MPI_NRank_X[d] != 1 )
    {
       MPI_NRank_X[d] = 1;
-      PRINT_WARNING( MPI_NRank_X[d], FORMAT_INT, "for SERIAL" );
+      PRINT_RESET_PARA( MPI_NRank_X[d], FORMAT_INT, "for SERIAL" );
    }
 #  endif
 
@@ -754,7 +862,7 @@ void Init_ResetParameter()
    {
       MPI_NRank_X[d] = -1;
 
-      PRINT_WARNING( MPI_NRank_X[d], FORMAT_INT, "since it's useless" );
+      PRINT_RESET_PARA( MPI_NRank_X[d], FORMAT_INT, "since it's useless" );
    }
 #  endif
 
@@ -765,28 +873,28 @@ void Init_ResetParameter()
    {
       OPT__RECORD_PERFORMANCE = false;
 
-      PRINT_WARNING( OPT__RECORD_PERFORMANCE, FORMAT_INT, "since TIMING is disabled" );
+      PRINT_RESET_PARA( OPT__RECORD_PERFORMANCE, FORMAT_INT, "since TIMING is disabled" );
    }
 
    if ( OPT__TIMING_BARRIER != 0 )
    {
       OPT__TIMING_BARRIER = 0;
 
-      PRINT_WARNING( OPT__TIMING_BARRIER, FORMAT_INT, "since TIMING is disabled" );
+      PRINT_RESET_PARA( OPT__TIMING_BARRIER, FORMAT_INT, "since TIMING is disabled" );
    }
 
    if ( OPT__TIMING_BALANCE )
    {
       OPT__TIMING_BALANCE = false;
 
-      PRINT_WARNING( OPT__TIMING_BALANCE, FORMAT_INT, "since TIMING is disabled" );
+      PRINT_RESET_PARA( OPT__TIMING_BALANCE, FORMAT_INT, "since TIMING is disabled" );
    }
 
    if ( OPT__TIMING_MPI )
    {
       OPT__TIMING_MPI = false;
 
-      PRINT_WARNING( OPT__TIMING_MPI, FORMAT_INT, "since TIMING is disabled" );
+      PRINT_RESET_PARA( OPT__TIMING_MPI, FORMAT_INT, "since TIMING is disabled" );
    }
 #  endif // #ifndef TIMING
 
@@ -797,7 +905,7 @@ void Init_ResetParameter()
    {
       OPT__TIMING_MPI = false;
 
-      PRINT_WARNING( OPT__TIMING_MPI, FORMAT_INT, "since LOAD_BALANCE is disabled" );
+      PRINT_RESET_PARA( OPT__TIMING_MPI, FORMAT_INT, "since LOAD_BALANCE is disabled" );
    }
 #  endif
 
@@ -815,7 +923,21 @@ void Init_ResetParameter()
       OPT__UM_IC_NVAR = NCOMP_TOTAL;      // load all fields
 #     endif
 
-      PRINT_WARNING( OPT__UM_IC_NVAR, FORMAT_INT, "" );
+      PRINT_RESET_PARA( OPT__UM_IC_NVAR, FORMAT_INT, "" );
+   }
+
+
+// OPT__UM_IC_FLOAT8
+   if ( OPT__INIT == INIT_BY_FILE  &&  OPT__UM_IC_FLOAT8 < 0 )
+   {
+//    set OPT__UM_IC_FLOAT8 = FLOAT8 by default
+#     ifdef FLOAT8
+      OPT__UM_IC_FLOAT8 = 1;
+#     else
+      OPT__UM_IC_FLOAT8 = 0;
+#     endif
+
+      PRINT_RESET_PARA( OPT__UM_IC_FLOAT8, FORMAT_INT, "to be consistent with FLOAT8" );
    }
 
 
@@ -825,7 +947,7 @@ void Init_ResetParameter()
    {
       OPT__CK_PARTICLE = true;
 
-      PRINT_WARNING( OPT__CK_PARTICLE, FORMAT_INT, "since DEBUG_PARTICLE is enabled" );
+      PRINT_RESET_PARA( OPT__CK_PARTICLE, FORMAT_INT, "since DEBUG_PARTICLE is enabled" );
    }
 #  endif
 
@@ -837,9 +959,25 @@ void Init_ResetParameter()
       amr->Par->Init = PAR_INIT_BY_RESTART;
 
       const ParInit_t PAR_INIT = amr->Par->Init;
-      PRINT_WARNING( PAR_INIT, FORMAT_INT, "for restart" );
+      PRINT_RESET_PARA( PAR_INIT, FORMAT_INT, "for restart" );
    }
 #  endif
+
+
+// PAR_IC_FLOAT8
+#  ifdef PARTICLE
+   if ( amr->Par->Init == PAR_INIT_BY_FILE  &&  PAR_IC_FLOAT8 < 0 )
+   {
+//    set PAR_IC_FLOAT8 = FLOAT8_PAR by default
+#     ifdef FLOAT8_PAR
+      PAR_IC_FLOAT8 = 1;
+#     else
+      PAR_IC_FLOAT8 = 0;
+#     endif
+
+      PRINT_RESET_PARA( PAR_IC_FLOAT8, FORMAT_INT, "to be consistent with FLOAT8_PAR" );
+   }
+#endif
 
 
 // JEANS_MIN_PRES must work with GRAVITY
@@ -849,7 +987,7 @@ void Init_ResetParameter()
    {
       JEANS_MIN_PRES = false;
 
-      PRINT_WARNING( JEANS_MIN_PRES, FORMAT_INT, "since GRAVITY is disabled" );
+      PRINT_RESET_PARA( JEANS_MIN_PRES, FORMAT_INT, "since GRAVITY is disabled" );
    }
 #  endif
 
@@ -857,7 +995,7 @@ void Init_ResetParameter()
    {
       JEANS_MIN_PRES_LEVEL = MAX_LEVEL;
 
-      PRINT_WARNING( JEANS_MIN_PRES_LEVEL, FORMAT_INT, "" );
+      PRINT_RESET_PARA( JEANS_MIN_PRES_LEVEL, FORMAT_INT, "" );
    }
 #  endif
 
@@ -868,14 +1006,14 @@ void Init_ResetParameter()
    {
       MIN_EINT = MIN_PRES*1.5;
 
-      PRINT_WARNING( MIN_EINT, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( MIN_EINT, FORMAT_REAL, "" );
    }
 
    else if ( MIN_EINT > 0.0  &&  MIN_PRES == 0.0 )
    {
       MIN_PRES = MIN_EINT/1.5;
 
-      PRINT_WARNING( MIN_PRES, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( MIN_PRES, FORMAT_REAL, "" );
    }
 #  endif
 
@@ -888,14 +1026,14 @@ void Init_ResetParameter()
       {
          OPT__CHECK_PRES_AFTER_FLU = 1;
 
-         PRINT_WARNING( OPT__CHECK_PRES_AFTER_FLU, FORMAT_INT, "" );
+         PRINT_RESET_PARA( OPT__CHECK_PRES_AFTER_FLU, FORMAT_INT, "" );
       }
 
       else
       {
          OPT__CHECK_PRES_AFTER_FLU = 0;
 
-         PRINT_WARNING( OPT__CHECK_PRES_AFTER_FLU, FORMAT_INT, "" );
+         PRINT_RESET_PARA( OPT__CHECK_PRES_AFTER_FLU, FORMAT_INT, "" );
       }
    }
 #  endif
@@ -906,14 +1044,14 @@ void Init_ResetParameter()
    {
       MU_NORM = Const_mH;
 
-      PRINT_WARNING( MU_NORM, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( MU_NORM, FORMAT_REAL, "" );
    }
 
    else if ( MU_NORM == 0.0 )
    {
       MU_NORM = Const_amu;
 
-      PRINT_WARNING( MU_NORM, FORMAT_FLT, "" );
+      PRINT_RESET_PARA( MU_NORM, FORMAT_REAL, "" );
    }
 #  endif
 
@@ -923,7 +1061,7 @@ void Init_ResetParameter()
    {
       AUTO_REDUCE_DT = false;
 
-      PRINT_WARNING( AUTO_REDUCE_DT, FORMAT_INT, "since OPT__DT_LEVEL != DT_LEVEL_FLEXIBLE" );
+      PRINT_RESET_PARA( AUTO_REDUCE_DT, FORMAT_INT, "since OPT__DT_LEVEL != DT_LEVEL_FLEXIBLE" );
    }
 
 
@@ -933,7 +1071,7 @@ void Init_ResetParameter()
    {
       FLAG_BUFFER_SIZE = PS1;
 
-      PRINT_WARNING( FLAG_BUFFER_SIZE, FORMAT_INT, "to match PATCH_SIZE" );
+      PRINT_RESET_PARA( FLAG_BUFFER_SIZE, FORMAT_INT, "to match PATCH_SIZE" );
    }
 
 // level MAX_LEVEL-1
@@ -941,7 +1079,7 @@ void Init_ResetParameter()
    {
       FLAG_BUFFER_SIZE_MAXM1_LV = REGRID_COUNT;
 
-      PRINT_WARNING( FLAG_BUFFER_SIZE_MAXM1_LV, FORMAT_INT, "to match REGRID_COUNT" );
+      PRINT_RESET_PARA( FLAG_BUFFER_SIZE_MAXM1_LV, FORMAT_INT, "to match REGRID_COUNT" );
    }
 
 // level MAX_LEVEL-2
@@ -950,7 +1088,7 @@ void Init_ResetParameter()
    {
       FLAG_BUFFER_SIZE_MAXM2_LV = ( FLAG_BUFFER_SIZE_MAXM1_LV + FLAG_BUFFER_SIZE_MAXM1_LV%2 + PS1 ) / 2;
 
-      PRINT_WARNING( FLAG_BUFFER_SIZE_MAXM2_LV, FORMAT_INT, "" );
+      PRINT_RESET_PARA( FLAG_BUFFER_SIZE_MAXM2_LV, FORMAT_INT, "" );
    }
 
 
@@ -960,17 +1098,17 @@ void Init_ResetParameter()
    {
       SF_CREATE_STAR_MIN_LEVEL = MAX_LEVEL;
 
-      PRINT_WARNING( SF_CREATE_STAR_MIN_LEVEL, FORMAT_INT, "" );
+      PRINT_RESET_PARA( SF_CREATE_STAR_MIN_LEVEL, FORMAT_INT, "" );
    }
 
    if ( SF_CREATE_STAR_DET_RANDOM < 0 )
    {
 #     ifdef BITWISE_REPRODUCIBILITY
          SF_CREATE_STAR_DET_RANDOM = 1;
-         PRINT_WARNING( SF_CREATE_STAR_DET_RANDOM, FORMAT_INT, "since BITWISE_REPRODUCIBILITY is enabled" );
+         PRINT_RESET_PARA( SF_CREATE_STAR_DET_RANDOM, FORMAT_INT, "since BITWISE_REPRODUCIBILITY is enabled" );
 #     else
          SF_CREATE_STAR_DET_RANDOM = 0;
-         PRINT_WARNING( SF_CREATE_STAR_DET_RANDOM, FORMAT_INT, "since BITWISE_REPRODUCIBILITY is disabled" );
+         PRINT_RESET_PARA( SF_CREATE_STAR_DET_RANDOM, FORMAT_INT, "since BITWISE_REPRODUCIBILITY is disabled" );
 #     endif
 
    }
@@ -983,9 +1121,15 @@ void Init_ResetParameter()
    {
       FB_LEVEL = MAX_LEVEL;
 
-      PRINT_WARNING( FB_LEVEL, FORMAT_INT, "" );
+      PRINT_RESET_PARA( FB_LEVEL, FORMAT_INT, "" );
    }
 #  endif // #ifdef FEEDBACK
+
+
+// cosmic-ray options
+#  ifdef COSMIC_RAY
+// nothing yet
+#  endif // #ifdef COSMIC_RAY
 
 
 // convert to code units
@@ -993,13 +1137,13 @@ void Init_ResetParameter()
 // SF_CREATE_STAR_MIN_GAS_DENS: HI count/cm^3 --> mass density in code units
    SF_CREATE_STAR_MIN_GAS_DENS *= Const_mH / UNIT_D;
 
-   PRINT_WARNING( SF_CREATE_STAR_MIN_GAS_DENS, FORMAT_FLT, "to be consistent with the code units" );
+   PRINT_RESET_PARA( SF_CREATE_STAR_MIN_GAS_DENS, FORMAT_REAL, "to be consistent with the code units" );
 
 
 // SF_CREATE_STAR_MIN_STAR_MASS: Msun --> code units
    SF_CREATE_STAR_MIN_STAR_MASS *= Const_Msun / UNIT_M;
 
-   PRINT_WARNING( SF_CREATE_STAR_MIN_STAR_MASS, FORMAT_FLT, "to be consistent with the code units" );
+   PRINT_RESET_PARA( SF_CREATE_STAR_MIN_STAR_MASS, FORMAT_REAL, "to be consistent with the code units" );
 #  endif // #ifdef STAR_FORMATION
 
 
@@ -1009,7 +1153,7 @@ void Init_ResetParameter()
    {
       OPT__MINIMIZE_MPI_BARRIER = false;
 
-      PRINT_WARNING( OPT__MINIMIZE_MPI_BARRIER, FORMAT_INT, "since SERIAL is enabled" );
+      PRINT_RESET_PARA( OPT__MINIMIZE_MPI_BARRIER, FORMAT_INT, "since SERIAL is enabled" );
    }
 #  endif
 
@@ -1020,7 +1164,7 @@ void Init_ResetParameter()
    {
       OPT__INIT_GRID_WITH_OMP = false;
 
-      PRINT_WARNING( OPT__INIT_GRID_WITH_OMP, FORMAT_INT, "since OPENMP is disabled" );
+      PRINT_RESET_PARA( OPT__INIT_GRID_WITH_OMP, FORMAT_INT, "since OPENMP is disabled" );
    }
 #  endif
 
@@ -1030,7 +1174,7 @@ void Init_ResetParameter()
    {
       OPT__RESET_FLUID_INIT = OPT__RESET_FLUID;
 
-      PRINT_WARNING( OPT__RESET_FLUID_INIT, FORMAT_INT, "to match OPT__RESET_FLUID" );
+      PRINT_RESET_PARA( OPT__RESET_FLUID_INIT, FORMAT_INT, "to match OPT__RESET_FLUID" );
    }
 
 
@@ -1040,12 +1184,12 @@ void Init_ResetParameter()
    {
       OPT__SORT_PATCH_BY_LBIDX = false;
 
-      PRINT_WARNING( OPT__SORT_PATCH_BY_LBIDX, FORMAT_INT, "for SERIAL" );
+      PRINT_RESET_PARA( OPT__SORT_PATCH_BY_LBIDX, FORMAT_INT, "for SERIAL" );
    }
 #  endif
 
 
-// must set OPT__FFTW_STARTUP = FFTW_STARTUP_ESTIMATE for BITWISE_REPRODUCIBILITY 
+// must set OPT__FFTW_STARTUP = FFTW_STARTUP_ESTIMATE for BITWISE_REPRODUCIBILITY
 // --> even when disabling BITWISE_REPRODUCIBILITY, we still use FFTW_STARTUP_ESTIMATE
 //     by default since otherwise the FFT results can vary in each run on the level
 //     of machine precision, which can be confusing
@@ -1054,20 +1198,14 @@ void Init_ResetParameter()
    {
 #     ifdef BITWISE_REPRODUCIBILITY
       OPT__FFTW_STARTUP = FFTW_STARTUP_ESTIMATE;
-      PRINT_WARNING( OPT__FFTW_STARTUP, FORMAT_INT, "when enabling BITWISE_REPRODUCIBILITY" );
+      PRINT_RESET_PARA( OPT__FFTW_STARTUP, FORMAT_INT, "when enabling BITWISE_REPRODUCIBILITY" );
 #     else
 //    OPT__FFTW_STARTUP = FFTW_STARTUP_MEASURE;
       OPT__FFTW_STARTUP = FFTW_STARTUP_ESTIMATE;
-      PRINT_WARNING( OPT__FFTW_STARTUP, FORMAT_INT, "when disabling BITWISE_REPRODUCIBILITY" );
+      PRINT_RESET_PARA( OPT__FFTW_STARTUP, FORMAT_INT, "when disabling BITWISE_REPRODUCIBILITY" );
 #     endif
    }
 #  endif
-
-
-// remove symbolic constants and macros only used in this structure
-#  undef FORMAT_INT
-#  undef FORMAT_FLT
-#  undef QUOTE
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

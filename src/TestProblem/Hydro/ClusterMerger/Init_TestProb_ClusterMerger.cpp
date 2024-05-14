@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 #include <string>
 
@@ -60,20 +59,24 @@ static FieldIdx_t ColorField3Idx = Idx_Undefined;
 
 // =======================================================================================
 
+
 // problem-specific function prototypes
 #ifdef MASSIVE_PARTICLES
 long Read_Particle_Number_ClusterMerger(std::string filename);
 void Par_Init_ByFunction_ClusterMerger(const long NPar_ThisRank,
                                        const long NPar_AllRank,
-                                       real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                       real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                       real *ParType, real *AllAttribute[PAR_NATT_TOTAL]);
+                                       real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                       real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                       real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL]);
 #endif
 
 int Read_Num_Points_ClusterMerger(std::string filename);
 void Read_Profile_ClusterMerger(std::string filename, std::string fieldname,
                                 double field[]);
 void AddNewField_ClusterMerger();
+
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -384,24 +387,24 @@ void SetParameter()
 
       // overwrite the total number of particles
       amr->Par->NPar_Active_AllRank = NPar_AllCluster;
-      PRINT_WARNING( "PAR_NPAR", amr->Par->NPar_Active_AllRank, FORMAT_LONG );
+      PRINT_RESET_PARA( amr->Par->NPar_Active_AllRank, FORMAT_LONG, "(PAR_NPAR in Input__Parameter)" );
 
    } // if ( OPT__INIT != INIT_BY_RESTART )
 
 
 // (4) reset other general-purpose parameters
-//     --> a helper macro PRINT_WARNING is defined in TestProb.h
+//     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const long   End_Step_Default = __INT_MAX__;
    const double End_T_Default    = 10.0*Const_Gyr/UNIT_T;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
-      PRINT_WARNING( "END_STEP", END_STEP, FORMAT_LONG );
+      PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
    if ( END_T < 0.0 ) {
       END_T = End_T_Default;
-      PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
+      PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
 
 
@@ -772,13 +775,13 @@ void AddNewField_ClusterMerger()
 {
 
    if ( Merger_Coll_UseMetals )
-      Idx_Metal = AddField( "Metal", NORMALIZE_NO, INTERP_FRAC_NO );
+      Idx_Metal = AddField( "Metal", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
    if ( ColorField1Idx == Idx_Undefined )
-      ColorField1Idx = AddField( "ColorField1", NORMALIZE_NO, INTERP_FRAC_NO );
+      ColorField1Idx = AddField( "ColorField1", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
    if ( Merger_Coll_NumHalos > 1 && ColorField2Idx == Idx_Undefined )
-      ColorField2Idx = AddField( "ColorField2", NORMALIZE_NO, INTERP_FRAC_NO );
+      ColorField2Idx = AddField( "ColorField2", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
    if ( Merger_Coll_NumHalos > 2 && ColorField3Idx == Idx_Undefined )
-      ColorField3Idx = AddField( "ColorField3", NORMALIZE_NO, INTERP_FRAC_NO );
+      ColorField3Idx = AddField( "ColorField3", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
 
 }
 

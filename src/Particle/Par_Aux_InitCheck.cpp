@@ -23,9 +23,9 @@ void Par_Aux_InitCheck()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-   const real *Mass   =   amr->Par->Mass;
-   const real *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-   const real *Type   =   amr->Par->Type;
+   const real_par *Mass   =   amr->Par->Mass;
+   const real_par *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   const real_par *Type   =   amr->Par->Type;
 
 
 // 1. all active particles should lie within the simulation domain
@@ -37,7 +37,7 @@ void Par_Aux_InitCheck()
       if ( Mass[ParID] < 0.0 )   Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, Mass[ParID] );
 
 //    check particle types
-      if ( Type[ParID] < (real)0  ||  Type[ParID] >= (real)PAR_NTYPE )
+      if ( Type[ParID] < (real_par)0  ||  Type[ParID] >= (real_par)PAR_NTYPE )
          Aux_Error( ERROR_INFO, "Type[%ld] = %d (accepted range: 0<=index<%d) !!\n", ParID, (int)Type[ParID], PAR_NTYPE );
 
 //    only support tracer particles when disabling GRAVITY
@@ -54,13 +54,13 @@ void Par_Aux_InitCheck()
 
 //    tracer particles must be massless
 #     ifdef TRACER
-      if ( Type[ParID] == PTYPE_TRACER  &&  Mass[ParID] != (real)0.0 )
+      if ( Type[ParID] == PTYPE_TRACER  &&  Mass[ParID] != (real_par)0.0 )
          Aux_Error( ERROR_INFO, "Tracer[%ld] has non-zero mass (%13.7e) !!\n", ParID, Mass[ParID] );
 #     endif
 
       for (int d=0; d<3; d++)
       {
-         if ( Pos[d][ParID] < (real)0.0  ||  Pos[d][ParID] >= amr->BoxSize[d] )
+         if ( Pos[d][ParID] < (real_par)0.0  ||  Pos[d][ParID] >= amr->BoxSize[d] )
          {
 //          periodicity should be taken care of in advance
             if ( OPT__BC_FLU[2*d] == BC_FLU_PERIODIC )

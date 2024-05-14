@@ -1,7 +1,5 @@
 #include "GAMER.h"
 
-extern double (*Mis_GetTimeStep_User_Ptr)( const int lv, const double dTime_dt );
-
 
 
 
@@ -60,12 +58,35 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 // 1.1 CRITERION ONE : fluid solver
 // =============================================================================================================
 #  if   ( MODEL == HYDRO )
-   dTime[NdTime] = dTime_dt * dt_InvokeSolver( DT_FLU_SOLVER, lv );
+#  ifdef SRHD
+   if ( DT__SPEED_OF_LIGHT ) dTime[NdTime] = ( (Step==0)?DT__FLUID_INIT:DT__FLUID ) * amr->dh[lv];
+   else                      dTime[NdTime] = dt_InvokeSolver( DT_FLU_SOLVER, lv );
+#  else
+   dTime[NdTime] = dt_InvokeSolver( DT_FLU_SOLVER, lv );
+#  endif
+   dTime[NdTime] *= dTime_dt;
    sprintf( dTime_Name[NdTime++], "%s", "Hydro_CFL" );
 
 #  elif ( MODEL == ELBDM )
-   dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Fluid( lv );
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif
+      dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Fluid( lv );
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } else {
+      dTime[NdTime] = HUGE_NUMBER;
+   }
+#  endif
    sprintf( dTime_Name[NdTime++], "%s", "ELBDM_CFL" );
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+      dTime[NdTime] = HUGE_NUMBER;
+   } else {
+      dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Hybrid_CFL( lv );
+   }
+   sprintf( dTime_Name[NdTime++], "%s", "Hybrid_CFL" );
+#  endif
 
 #  else
 #  error : ERROR : unsupported MODEL !!
@@ -198,6 +219,19 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    if ( UseAcc ) {
    dTime[NdTime] *= dTime_dt;
    sprintf( dTime_Name[NdTime++], "%s", "Par_Acc" ); }
+#  endif
+
+
+// 1.9 CRITERION NINE : maximum velocity dS/dx ##ELBDM PHASE SOLVER ONLY##
+// =============================================================================================================
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+      dTime[NdTime] = HUGE_NUMBER;
+   } else {
+      dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Hybrid_Velocity( lv );
+   }
+
+   sprintf( dTime_Name[NdTime++], "%s", "Hybrid_Vel" );
 #  endif
 
 

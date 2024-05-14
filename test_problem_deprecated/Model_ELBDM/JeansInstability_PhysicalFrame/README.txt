@@ -6,7 +6,7 @@
 Procedure to run the test problem:
 -------------------------------------------------------------------------------
 1. Execute the script "Copy.sh" to copy files to their corresponding
-   directories 
+   directories
 
       Init_TestProb.cpp      --> GAMER/src/Init
       Makefile               --> GAMER/src
