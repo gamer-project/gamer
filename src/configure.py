@@ -110,6 +110,7 @@ class ArgumentParser( argparse.ArgumentParser ):
             msg += 'Unrecognized argument: %s'%(arg)
             if min_dist <= CLOSE_DIST: msg += ', do you mean: %s ?\n'%(pos_key)
             msg += '\n'
+            if arg == '--gpu_arch': msg += "ERROR: <--gpu_arch> is deprecated in Makefile. Please set the <GPU_COMPUTE_CAPABILITY> in your machine config file.\n"
 
         if len(argv) != 0: self.error( msg )
         return args, self.gamer_names, self.depends, self.constraints
