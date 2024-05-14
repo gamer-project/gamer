@@ -43,12 +43,6 @@ mpirun -map-by ppr:1:socket:pe=16 --report-bindings ./gamer  1>>log 2>&1
 #    - set `PBS -l nodes=gpuserver01:ppn=32+gpuserver02:ppn=32`
 #
 # 2. for 4 GPUs per node, 1 nodes
-#    - In Makefile
-#       - set `SIMU_OPTION += -DGPU_ARCH=AMPERE`
-#       - add `NVCCFLAG_ARCH += -gencode arch=compute_75,code=\"compute_75,sm_75\"`
-#         to the NVCC flags of the AMPERE option
-#    - comment out the sanity check of computing capability for the Ampere architecture
-#      in src/GPU_API/CUAPI_SetDevice.cu
 #    - In job script
 #       - set `PBS -l gres=4`
 #       - comment out `export CUDA_VISIBLE_DEVICES=*`
