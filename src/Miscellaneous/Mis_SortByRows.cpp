@@ -33,8 +33,8 @@
 template <typename T>
 void Mis_SortByRows( T **Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder )
 {
-   if ( NSort  < 0 )   Aux_Error( ERROR_INFO, "NSort < 0 !!\n" );
-   if ( NOrder < 1 )   Aux_Error( ERROR_INFO, "NOrder < 1 !!\n" );
+   if ( NSort  < 0L )   Aux_Error( ERROR_INFO, "NSort < 0 !!\n" );
+   if ( NOrder < 1  )   Aux_Error( ERROR_INFO, "NOrder < 1 !!\n" );
 
    T    *Array_Sorted = new T    [NSort];
    long *Idx_Sorted   = new long [NSort];
@@ -56,11 +56,11 @@ void Mis_SortByRows( T **Array, long *IdxTable, const long NSort, const int *Sor
 // 3. check the same value
    for (long i=0; i<NSort-1; i++)
    {
-      long NSameVal = 1; // 1 --> itself
+      long NSameVal = 1L; // 1 --> itself
 
       while ( i+NSameVal < NSort  &&  Array_Sorted[i] == Array_Sorted[i+NSameVal] )   NSameVal++;
 
-      if ( NSameVal == 1 )   continue;
+      if ( NSameVal == 1L )   continue;
 
       if ( NOrder == 1 )
       {
