@@ -17,7 +17,7 @@ How to use it:
         names in the header specify the options' names.
 
   2. Overwrite the `execution()` function to your execution.
-     For instance, `subprocess.called([kwargs["exe"]]).
+     The script is currently used for the Zeldovich test problem.
 
   3. [Optional] To pass extra arguments to `execution()` from the command line,
      add your own `parser.add_argument` in the `Main` section.
