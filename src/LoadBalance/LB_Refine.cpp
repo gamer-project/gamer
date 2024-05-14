@@ -15,7 +15,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
                                  int NDel_Home, int *DelPID_Home, int NDel_Away, ulong *DelCr1D_Away,
                                  int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList,
                                  const int (*CFB_SibRank_Home)[6], const int (*CFB_SibRank_Away)[6],
-                                 const real *CFB_BField, const int *CFB_NSibEachRank );
+                                 const real *CFB_BField, const long *CFB_NSibEachRank );
 #ifdef PARTICLE
 void Par_LB_Refine_SendParticle2Father( const int FaLv, const int RefineS2F_Send_NPatchTotal, int *RefineS2F_Send_PIDList );
 #endif
@@ -24,7 +24,7 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
    const int FaLv, const int NNew_Home, const int NNew_Away,
    const long (*CFB_SibLBIdx_Home)[6], const long (*CFB_SibLBIdx_Away)[6],
    int (*&CFB_SibRank_Home)[6], int (*&CFB_SibRank_Away)[6],
-   real *&CFB_BField, int *CFB_NSibEachRank );
+   real *&CFB_BField, long *CFB_NSibEachRank );
 #endif
 
 
@@ -72,8 +72,8 @@ void LB_Refine( const int FaLv )
 
 // 1. construct LB_CutPoint for the newly-created level
 // ==========================================================================================
-//###NOTE : here we have assumed that the newly-created son patches will have LB_Idx ~ 8*(father LB_Idx)
-//          --> hold for Hilbert curve method, but may not hold for other methods
+//###NOTE: here we have assumed that the newly-created son patches will have LB_Idx ~ 8*(father LB_Idx)
+//         --> hold for Hilbert curve method, but may not hold for other methods
    if ( NPatchTotal[SonLv] == 0 )
       for (int r=0; r<MPI_NRank+1; r++)   amr->LB->CutPoint[SonLv][r] = amr->LB->CutPoint[FaLv][r]*8;
 
@@ -89,7 +89,7 @@ void LB_Refine( const int FaLv )
 // CFB = Coarse-Fine interface B field (for MHD only)
    int  (*CFB_SibRank_Home)[6]=NULL, (*CFB_SibRank_Away)[6]=NULL;
    long (*CFB_SibLBIdx_Home)[6]=NULL, (*CFB_SibLBIdx_Away)[6]=NULL;
-   int    CFB_NSibEachRank[MPI_NRank];
+   long   CFB_NSibEachRank[MPI_NRank];
    real  *CFB_BField=NULL;
 
    bool SwitchFinerLevelsToWaveScheme = false;
@@ -100,15 +100,15 @@ void LB_Refine( const int FaLv )
                                   CFB_SibLBIdx_Home, CFB_SibLBIdx_Away,
                                   SwitchFinerLevelsToWaveScheme );
 
-# if ( ELBDM_SCHEME == ELBDM_HYBRID )
 // sync information whether refined levels are switched to wave scheme
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    bool Send = SwitchFinerLevelsToWaveScheme;
    bool Recv;
 
-   MPI_Allreduce(&Send, &Recv, 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD);
+   MPI_Allreduce( &Send, &Recv, 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD );
 
    SwitchFinerLevelsToWaveScheme = Recv;
-# endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif
 
 
 // 3. get the magnetic field on the coarse-fine interfaces for the divergence-free interpolation
@@ -199,34 +199,34 @@ void LB_Refine( const int FaLv )
 // ==========================================================================================
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( SwitchFinerLevelsToWaveScheme ) {
-      for (int ChildLv = SonLv; ChildLv <= TOP_LEVEL; ++ChildLv) {
+      for (int ChildLv=SonLv; ChildLv<=TOP_LEVEL; ++ChildLv) {
 //       set use_wave_flag
          amr->use_wave_flag[ChildLv] = true;
 
 //       iterate over real and buffer patches
-         for (int PID=0; PID < amr->NPatchComma[ChildLv][27]; PID++)
+         for (int PID=0; PID<amr->NPatchComma[ChildLv][27]; PID++)
          {
 //          convert both sandglasses
-            for ( int FluSg = 0; FluSg < 2; ++FluSg )
+            for (int FluSg=0; FluSg<2; ++FluSg)
             {
                for (int k=0; k<PS1; k++)  {
                for (int j=0; j<PS1; j++)  {
                for (int i=0; i<PS1; i++)  {
 //                check fluid != NULL for buffer patches
-                  if ( amr->patch[FluSg][ChildLv][PID]->fluid != NULL && amr->FluSgTime[ChildLv][FluSg] >= 0.0 )
+                  if ( amr->patch[FluSg][ChildLv][PID]->fluid != NULL  &&  amr->FluSgTime[ChildLv][FluSg] >= 0.0 )
                   {
-//                   IMPROVEMENT: at this point, we should check whether dB wavelength is resolved after conversion to wave representation
-                     const real Amp   = SQRT(amr->patch[FluSg][ChildLv][PID]->fluid[DENS][k][j][i]);
+//###REVISE: at this point, we should check whether dB wavelength is resolved after conversion to wave representation
+                     const real Amp   = SQRT( amr->patch[FluSg][ChildLv][PID]->fluid[DENS][k][j][i] );
                      const real Phase = amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][k][j][i];
-                     amr->patch[FluSg][ChildLv][PID]->fluid[REAL][k][j][i] = Amp * COS(Phase);
-                     amr->patch[FluSg][ChildLv][PID]->fluid[IMAG][k][j][i] = Amp * SIN(Phase);
+                     amr->patch[FluSg][ChildLv][PID]->fluid[REAL][k][j][i] = Amp*COS( Phase );
+                     amr->patch[FluSg][ChildLv][PID]->fluid[IMAG][k][j][i] = Amp*SIN( Phase );
                   }
                } // FluSg
             }}} // k,j,i
-         } // for (int PID=0; PID < amr->NPatchComma[ChildLv][27]; PID++)
-      } // for (int ChildLv = SonLv; ChildLv <= TOP_LEVEL; ++ChildLv)
+         } // for (int PID=0; PID<amr->NPatchComma[ChildLv][27]; PID++)
+      } // for (int ChildLv=SonLv; ChildLv<=TOP_LEVEL; ++ChildLv)
    } // if ( SwitchFinerLevelsToWaveScheme )
-#   endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
+#  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 // 8. miscellaneous

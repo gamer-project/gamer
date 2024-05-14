@@ -28,23 +28,23 @@
 //                   and hence no data needed to be shared
 //
 //
-// Parameter   :  g_Flu_Array       : Array to store the input and output data
-//                g_Pot_Array       : Array storing the input potential for evaluating the gravitational acceleration
-//                NPatchGroup       : Number of patch groups to be evaluated (for CPU only)
-//                EtaDt             : Particle mass / Planck constant * dt
-//                dh                : Cell size
-//                Lambda            : Quartic self-interaction coefficient in ELBDM
+// Parameter   :  g_Flu_Array : Array to store the input and output data
+//                g_Pot_Array : Array storing the input potential for evaluating the gravitational acceleration
+//                NPatchGroup : Number of patch groups to be evaluated (for CPU only)
+//                EtaDt       : Particle mass / Planck constant * dt
+//                dh          : Cell size
+//                Lambda      : Quartic self-interaction coefficient in ELBDM
 //
 // Return      :  g_Flu_Array[]
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __global__
-void CUPOT_ELBDMGravitySolver(       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
-                               const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
+void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
+                               const real g_Pot_Array[][ CUBE(GRA_NXT) ],
                                const real EtaDt, const real dh, const real Lambda )
 #else
-void CPU_ELBDMGravitySolver  (       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
-                               const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
+void CPU_ELBDMGravitySolver  (       real g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
+                               const real g_Pot_Array[][ CUBE(GRA_NXT) ],
                                const int NPatchGroup,
                                const real EtaDt, const real dh, const real Lambda )
 #endif

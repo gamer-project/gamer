@@ -45,22 +45,6 @@
 #define MHM_RP       4
 #define CTU          5
 
-// elbdm schemes
-#define ELBDM_WAVE   1
-#define ELBDM_HYBRID 2
-
-// wave schemes
-#define WAVE_FD      1
-#define WAVE_GRAMFE  2
-
-// hybrid schemes
-#define HYBRID_UPWIND 1
-#define HYBRID_MUSCL  2
-#define HYBRID_FROMM  3
-
-// gramfe schemes
-#define GRAMFE_FFT    1
-#define GRAMFE_MATMUL 2
 
 // data reconstruction schemes
 #define PLM          1
@@ -92,7 +76,30 @@
 #define EOS_ISOTHERMAL  2
 #define EOS_NUCLEAR     3
 #define EOS_TABULAR     4
-#define EOS_USER        5
+#define EOS_COSMIC_RAY  5
+#define EOS_TAUBMATHEWS 6
+#define EOS_USER        7
+
+
+// ELBDM schemes
+#define ELBDM_WAVE      1
+#define ELBDM_HYBRID    2
+
+
+// ELBDM wave schemes
+#define WAVE_FD         1
+#define WAVE_GRAMFE     2
+
+
+// ELBDM hybrid schemes
+#define HYBRID_UPWIND   1
+#define HYBRID_MUSCL    2
+#define HYBRID_FROMM    3
+
+
+// ELBDM gramfe schemes
+#define GRAMFE_FFT      1
+#define GRAMFE_MATMUL   2
 
 
 // Poisson solvers
@@ -215,7 +222,7 @@
 
 // number of input fluid variables in the dt solver
 // --> EOS_GAMMA/EOS_ISOTHERMAL do not require passive scalars
-#if (  MODEL == HYDRO  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
+#if (  MODEL == HYDRO  &&  !defined SRHD  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
 #  define FLU_NIN_T           NCOMP_FLUID
 #else
 #  define FLU_NIN_T           NCOMP_TOTAL
@@ -391,10 +398,10 @@
 #  define  REAL               1
 #  define  IMAG               2
 
-#if ( ELBDM_SCHEME == ELBDM_HYBRID )
+# if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  define  PHAS               1
 #  define  STUB               2
-#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+# endif
 
 // field indices of passive[] --> element of [NCOMP_FLUID ... NCOMP_TOTAL-1]
 // none for ELBDM
@@ -407,10 +414,10 @@
 #  define _REAL               ( 1L << REAL )
 #  define _IMAG               ( 1L << IMAG )
 #  define _MAG                0
-#if ( ELBDM_SCHEME == ELBDM_HYBRID )
+# if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  define _PHAS               ( 1L << PHAS )
 #  define _STUB               ( 1L << STUB )
-#endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+# endif
 
 
 // bitwise flux indices
@@ -548,10 +555,10 @@
 #  define  PAR_NTYPE                4
 
 // particle type indices (must be in the range 0<=index<PAR_NTYPE)
-#  define  PTYPE_TRACER          (real)0
-#  define  PTYPE_GENERIC_MASSIVE (real)1
-#  define  PTYPE_DARK_MATTER     (real)2
-#  define  PTYPE_STAR            (real)3
+#  define  PTYPE_TRACER          (real_par)0
+#  define  PTYPE_GENERIC_MASSIVE (real_par)1
+#  define  PTYPE_DARK_MATTER     (real_par)2
+#  define  PTYPE_STAR            (real_par)3
 
 # ifdef GRAVITY
 #  define MASSIVE_PARTICLES
@@ -568,6 +575,7 @@
 
 // number of fluid ghost zones for the fluid solver
 #if   ( MODEL == HYDRO )   // hydro
+
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 #    if   ( LR_SCHEME == PLM )
 #     define LR_GHOST_SIZE          1
@@ -594,6 +602,7 @@
 
 
 #elif ( MODEL == ELBDM )   // ELBDM
+
 #  if ( WAVE_SCHEME == WAVE_FD )
 #     ifdef LAPLACIAN_4TH
 #        define FLU_GHOST_SIZE         6
@@ -604,27 +613,28 @@
 #      else
 #        define FLU_GHOST_SIZE         3
 #      endif
-#     endif
+#     endif // LAPLACIAN_4TH
 #  elif ( WAVE_SCHEME == WAVE_GRAMFE )
 // the accuracy of the local spectral method increases with larger FLU_GHOST_SIZE.
 // a minimum of FLU_GHOST_SIZE 6 has been found to be stable with the filter options alpha = 100 and beta = 32 * log(10)
 // larger ghost zones should increase stability and accuracy and allow for larger timesteps, but have not extensively tested
 // for smaller ghost zones, GRAMFE_ORDER should be decreased to values between 6 and 12 and the filter parameters should be adapted
 #        define FLU_GHOST_SIZE         8
-#  else  // # if ( WAVE_SCHEME == WAVE_FD ) ... else
+#  else // WAVE_SCHEME
 #     error : ERROR : unsupported WAVE_SCHEME !!
-#  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE ) ... # else
+#  endif // WAVE_SCHEME
+
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
 
 // define fluid ghost boundary size for hybrid scheme
-// it must be smaller than or equal to FLU_GHOST_SIZE because the same fluid arrays are used for both the wave and fluid solvers
+// --> it must be smaller than or equal to FLU_GHOST_SIZE because the same fluid arrays are used for both the wave and fluid solvers
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-#       define HYB_GHOST_SIZE         6
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#        define HYB_GHOST_SIZE         6
+#  endif
 
-# if ( WAVE_SCHEME == WAVE_GRAMFE || SUPPORT_SPECTRAL_INT )
+# if ( WAVE_SCHEME == WAVE_GRAMFE  ||  SUPPORT_SPECTRAL_INT )
 //  number of evaluation points of Gram polynomials for computing FC(SVD) continuation
 #   define GRAMFE_GAMMA  150
 //  number of Fourier modes used in the FC(SVD) continuation
@@ -633,7 +643,7 @@
 # endif
 
 // set default parameters of gram extension scheme
-# if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
+# if ( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE )
 //  number of boundary points used for Gram polynomial space on boundary
 #   define GRAMFE_NDELTA 14
 //  maximum order of Gram polynomials on boundary
@@ -644,65 +654,55 @@
 
 //  a boundary of size GRAMFE_NDELTA can only support polynomials of degree up to GRAMFE_ORDER
 #   if ( GRAMFE_ORDER > GRAMFE_NDELTA )
-#       error : ERROR : Gram Fourier extension order must not be higher than NDELTA
+#     error : ERROR : Gram Fourier extension order must not be higher than NDELTA !!
 #   endif
 
 //  size of the extension region
-//  total size of extended region = GRAMFE_FLU_NXT = FLU_NXT + GRAMFE_ND
-
-#   if ( GRAMFE_SCHEME == GRAMFE_FFT )
+//  --> total size of extended region = GRAMFE_FLU_NXT = FLU_NXT + GRAMFE_ND
+#   if   ( GRAMFE_SCHEME == GRAMFE_FFT )
 //  default values in order for GRAMFE_FLU_NXT to have small prime factorisations
-//  this is important for the FFT to be fast
-#   if ( PATCH_SIZE == 8 )
-#     define GRAMFE_ND     32  // GRAMFE_FLU_NXT = 2^6
-#   elif ( PATCH_SIZE == 16 )
-#     define GRAMFE_ND     24  // GRAMFE_FLU_NXT = 2^3 * 3^2
-#   elif ( PATCH_SIZE == 32 )
-#     define GRAMFE_ND     28  // GRAMFE_FLU_NXT = 2^2 * 3^3
-#   elif ( PATCH_SIZE == 64 )
-#     define GRAMFE_ND     24  // GRAMFE_FLU_NXT = 2^3 * 3 * 7
-#   elif ( PATCH_SIZE == 128 )
-#     define GRAMFE_ND     28  // GRAMFE_FLU_NXT = 2^2 * 3 * 5^2
-#   else
+//  --> this is important for the FFT to be fast
+#    if   ( PATCH_SIZE == 8 )
+#     define GRAMFE_ND        32 // GRAMFE_FLU_NXT = 2^6
+#    elif ( PATCH_SIZE == 16 )
+#     define GRAMFE_ND        24 // GRAMFE_FLU_NXT = 2^3 * 3^2
+#    elif ( PATCH_SIZE == 32 )
+#     define GRAMFE_ND        28 // GRAMFE_FLU_NXT = 2^2 * 3^3
+#    elif ( PATCH_SIZE == 64 )
+#     define GRAMFE_ND        24 // GRAMFE_FLU_NXT = 2^3 * 3 * 7
+#    elif ( PATCH_SIZE == 128 )
+#     define GRAMFE_ND        28 // GRAMFE_FLU_NXT = 2^2 * 3 * 5^2
+#    else
 #     error : ERROR : Unsupported PATCH_SIZE for GRAMFE_FFT!!
-#   endif // PATCH_SIZE
+#    endif // PATCH_SIZE
+
 #   elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 //  for GRAMFE_MATMUL extension size is irrelevant since matrix multiplication works for all sizes
-#     define GRAMFE_ND     32  // GRAMFE_FLU_NXT = 2^6
+#     define GRAMFE_ND        32 // GRAMFE_FLU_NXT = 2^6
 
-#     if ( PATCH_SIZE != 8 && PATCH_SIZE != 16 )
-#       error : ERROR : Unsupported PATCH_SIZE for GRAMFE_MATMUL!! Consider switching to GRAMFE_FFT.
-#     endif // PATCH_SIZE
+#     if ( PATCH_SIZE != 8  &&  PATCH_SIZE != 16 )
+#       error : ERROR : Unsupported PATCH_SIZE for GRAMFE_MATMUL (only support 8 and 16) !! Consider switching to GRAMFE_FFT.
+#     endif
 
 #   else
 #     error : ERROR : Unsupported GRAMFE_SCHEME!!
 #   endif
 
 //  total size of extended region
-#   define GRAMFE_FLU_NXT ( FLU_NXT + GRAMFE_ND )
+#   define GRAMFE_FLU_NXT     ( FLU_NXT + GRAMFE_ND )
 
-# endif // # if ( MODEL == ELBDM && WAVE_SCHEME == WAVE_GRAMFE )
+# endif // # if ( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE )
 
-#ifdef SUPPORT_SPECTRAL_INT
-// if this constant is true, spectral interpolation interpolates
-// x = density^0.5*cos(phase/SPEC_INT_WAVELENGTH_MAGNIFIER), y = density^0.5*sin(phase/SPEC_INT_WAVELENGTH_MAGNIFIER)
-// instead of density and phase
-// this approach has the advantage of being well-defined across vortices
-# define SPEC_INT_XY_INSTEAD_DEPHA true
-// stretching factor for wavelength in xy interpolation
-// for SPEC_INT_WAVELENGTH_MAGNIFIER = 1, x = real part and y = imaginary part
-# define SPEC_INT_WAVELENGTH_MAGNIFIER 100.0
-#endif
 
 // self-gravity constants
 #ifdef GRAVITY
 
 // number of input and output variables in the gravity solver
 #  if   ( MODEL == HYDRO )
-#        define GRA_NIN             NCOMP_FLUID
+#        define GRA_NIN             ( NCOMP_FLUID )
 
 // for ELBDM, we do not need to transfer the density component
-// this remains valid for hybrid solver that also has 2 components
+// --> this remains valid for hybrid solver that also has 2 components
 #  elif ( MODEL == ELBDM )
 #        define GRA_NIN             ( NCOMP_FLUID - 1 )
 
@@ -805,7 +805,6 @@
 //###REVISE: support interpolation schemes requiring 2 ghost cells on each side for POT_NXT
 #  define FLU_NXT       ( PS2 + 2*FLU_GHOST_SIZE )                // use patch group as the unit
 #  define FLU_NXT_P1    ( FLU_NXT + 1 )
-
 #ifdef GRAVITY
 #  define POT_NXT       ( PS1/2 + 2*( (POT_GHOST_SIZE+3)/2 ) )    // assuming interpolation ghost zone == 1
 #  define RHO_NXT       ( PS1 + 2*RHO_GHOST_SIZE )                // POT/RHO/GRA_NXT use patch as the unit
@@ -823,18 +822,19 @@
 #else
 #  define GRA_NXT       ( 1 )                                     // still define GRA_NXT   ...
 #  define USG_NXT_F     ( 1 )                                     // still define USG_NXT_F ...
-#endif
+#endif // GRAVITY
 #  define SRC_NXT       ( PS1 + 2*SRC_GHOST_SIZE )                // use patch as the unit
 #  define SRC_NXT_P1    ( SRC_NXT + 1 )
 #  define DER_NXT       ( PS1 + 2*DER_GHOST_SIZE )                // use patch as the unit
 #ifdef FEEDBACK
 #  define FB_NXT        ( PS2 + 2*FB_GHOST_SIZE )                 // use patch group as the unit
 #endif
-#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #  define HYB_NXT       ( PS2 + 2*HYB_GHOST_SIZE )
-#  else
+#else
 #  define HYB_NXT       ( 1 )
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
 
 // size of auxiliary arrays and EoS tables
 #if ( MODEL == HYDRO )
@@ -890,16 +890,17 @@
 #  define FB_SEP_FLUOUT
 #endif
 
-// enable double precision for GRAMFE_FFT and GRAMFE_MATMUL schemes by default
-// precision for FFT in GRAMFE_FFT
+
+// precision for FFT in GRAMFE_FFT and matrix multiplication in GRAMFE_MATMUL
+// --> enable double precision for GRAMFE_FFT and GRAMFE_MATMUL schemes by default
 #if ( GRAMFE_SCHEME == GRAMFE_FFT )
 #   define GRAMFE_FFT_FLOAT8
-#endif // #if ( GRAMFE_SCHEME == GRAMFE_FFT )
+#endif
 
-// precision for matrix multiplication in GRAMFE_MATMUL
 #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 #   define GRAMFE_MATMUL_FLOAT8
-#endif // #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+#endif
+
 
 // extreme values
 #ifndef __INT_MAX__
@@ -934,6 +935,13 @@
 #  define __DBL_MIN__            2.22507386e-308
 #endif
 
+#ifndef __FLT_EPSILON__
+#  define __FLT_EPSILON__        1.19209290e-07F
+#endif
+
+#ifndef __DBL_EPSILON__
+#  define __DBL_EPSILON__        2.2204460492503131e-16
+#endif
 
 // extreme value used for various purposes (e.g., floor value for passive scalars)
 #ifdef FLOAT8
@@ -946,13 +954,15 @@
 
 
 // maximum allowed error for various purposes (e.g., exact Riemann solver, MHD routines, Mis_CompareRealValue())
-#define MAX_ERROR_DBL      1.0e-14
-#define MAX_ERROR_FLT      1.0e-06f
+#define MAX_ERROR_DBL            1.0e-14
+#define MAX_ERROR_FLT            1.0e-06f
 
 #ifdef FLOAT8
-#  define MAX_ERROR        MAX_ERROR_DBL
+#  define MACHINE_EPSILON        __DBL_EPSILON__
+#  define MAX_ERROR              MAX_ERROR_DBL
 #else
-#  define MAX_ERROR        MAX_ERROR_FLT
+#  define MACHINE_EPSILON        __FLT_EPSILON__
+#  define MAX_ERROR              MAX_ERROR_FLT
 #endif
 
 
@@ -1046,6 +1056,11 @@
 #  define MPI_GAMER_REAL MPI_FLOAT
 #endif
 
+#ifdef FLOAT8_PAR
+#  define MPI_GAMER_REAL_PAR MPI_DOUBLE
+#else
+#  define MPI_GAMER_REAL_PAR MPI_FLOAT
+#endif
 
 
 
@@ -1086,6 +1101,7 @@
 #  define ATAN2( a, b )    atan2f( a, b )
 #endif
 
+
 // sign function
 #define SIGN( a )       (  ( (a) < (real)0.0 ) ? (real)-1.0 : (real)+1.0  )
 
@@ -1093,6 +1109,7 @@
 // max/min functions
 #define MAX( a, b )     (  ( (a) > (b) ) ? (a) : (b)  )
 #define MIN( a, b )     (  ( (a) < (b) ) ? (a) : (b)  )
+
 
 // safe ATAN2 that does not return nan when a = b = 0
 #define SATAN2( a, b )   (  ( (a) == (real)0.0  &&  (b) == (real)0.0 ) ? (real)0.0 : ATAN2( (a), (b) )  )
@@ -1191,6 +1208,7 @@
 #ifndef GRAVITY
 #  undef STORE_PAR_ACC
 #endif
+
 
 
 #endif  // #ifndef __MACRO_H__

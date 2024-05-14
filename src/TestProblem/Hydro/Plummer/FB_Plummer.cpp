@@ -13,14 +13,6 @@ extern double Plummer_FB_AccMMax;
 extern double Plummer_FB_Like;
 
 
-// function pointers to be set by FB_Init_Plummer()
-extern int (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                           const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                           real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
-                           const int TID, RandomNumber_t *RNG );
-extern void (*FB_End_User_Ptr)();
-
-
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -87,7 +79,7 @@ extern void (*FB_End_User_Ptr)();
 // Return      :  Fluid, ParAtt
 //-------------------------------------------------------------------------------------------------------
 int FB_Plummer( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
+                const int NPar, const long *ParSortID, real_par *ParAtt[PAR_NATT_TOTAL],
                 real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
                 const int TID, RandomNumber_t *RNG )
 {
@@ -123,8 +115,8 @@ int FB_Plummer( const int lv, const double TimeNew, const double TimeOld, const 
 
    for (int t=0; t<NPar; t++)
    {
-      const int    p      = ParSortID[t];
-      const double xyz[3] = { ParAtt[PAR_POSX][p], ParAtt[PAR_POSY][p], ParAtt[PAR_POSZ][p] };
+      const long   p      = ParSortID[t];
+      const double xyz[3] = { (double)ParAtt[PAR_POSX][p], (double)ParAtt[PAR_POSY][p], (double)ParAtt[PAR_POSZ][p] };
 
       int idx[3];
       for (int d=0; d<3; d++)    idx[d] = (int)floor( ( xyz[d] - EdgeL[d] )*_dh );
@@ -185,7 +177,7 @@ int FB_Plummer( const int lv, const double TimeNew, const double TimeOld, const 
             if ( idx[0] >= FB_GHOST_SIZE  &&  idx[0] < FB_GHOST_SIZE+PS2  &&
                  idx[1] >= FB_GHOST_SIZE  &&  idx[1] < FB_GHOST_SIZE+PS2  &&
                  idx[2] >= FB_GHOST_SIZE  &&  idx[2] < FB_GHOST_SIZE+PS2   )
-               ParAtt[PAR_MASS][p] *= ExpMassFac;
+               ParAtt[PAR_MASS][p] *= (real_par)ExpMassFac;
          } // if ( Plummer_FB_Exp )
 
 
@@ -215,7 +207,7 @@ int FB_Plummer( const int lv, const double TimeNew, const double TimeOld, const 
             if ( idx[0] >= FB_GHOST_SIZE  &&  idx[0] < FB_GHOST_SIZE+PS2  &&
                  idx[1] >= FB_GHOST_SIZE  &&  idx[1] < FB_GHOST_SIZE+PS2  &&
                  idx[2] >= FB_GHOST_SIZE  &&  idx[2] < FB_GHOST_SIZE+PS2   )
-               ParAtt[PAR_MASS][p] += dM_sum;
+               ParAtt[PAR_MASS][p] += (real_par)dM_sum;
          } // if ( Plummer_FB_Acc )
 
       } // if ( RNG->GetValue(TID,0.0,1.0) < Plummer_FB_Like )

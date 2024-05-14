@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -74,10 +73,6 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
-#  ifndef FLOAT8
-   Aux_Error( ERROR_INFO, "FLOAT8 must be enabled !!\n" );
-#  endif
-
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
       Aux_Error( ERROR_INFO, "must adopt periodic BC for fluid --> reset OPT__BC_FLU* !!\n" );
@@ -99,6 +94,10 @@ void Validate()
 // warnings
    if ( MPI_Rank == 0 )
    {
+#     ifndef FLOAT8
+      Aux_Message( stderr, "WARNING : it's recommended to enable FLOAT8 for this test !!\n" );
+#     endif
+
       if ( !OPT__OUTPUT_USER )
          Aux_Message( stderr, "WARNING : it's recommended to enable OPT__OUTPUT_USER !!\n" );
    }
@@ -233,19 +232,20 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double Re = 1.0 + Jeans_RealAmp( Jeans_RealAmp0, Jeans_y )*cos( Phase );
    const double Im =       Jeans_ImagAmp( Jeans_ImagAmp0, Jeans_y )*cos( Phase );
 
-   fluid[DENS] = SQR(Re) + SQR(Im);
+   fluid[DENS] = SQR( Re ) + SQR( Im );
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( amr->use_wave_flag[lv] ) {
-#  endif // if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif
    fluid[REAL] = Re;
    fluid[IMAG] = Im;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   } else { // if ( amr->use_wave_flag[lv] == true )
-   fluid[PHAS] = SATAN2(Im, Re);
+   } else {
+   fluid[PHAS] = SATAN2( Im, Re );
    fluid[STUB] = 0.0;
-   } // if ( amr->use_wave_flag[lv] == true ) ... else
-#  endif // if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   }
+#  endif
+
 } // FUNCTION : SetGridIC
 
 

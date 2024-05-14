@@ -76,19 +76,21 @@ extern "C" {
 #include "Extrema.h"
 #include "SrcTerms.h"
 #include "EoS.h"
+#include "Microphysics.h"
 #include "Global.h"
 #include "Field.h"
 #include "Prototype.h"
 #include "PhysicalConstant.h"
 #include "GatherTree.h"
 #include "FFTW.h"
+#include "TestProb.h"
 
 #ifdef SERIAL
 #  include "Serial.h"
 #endif
 
 #ifdef SUPPORT_SPECTRAL_INT
-#include "GramFE_Interpolation.h"
+#  include "GramFE_Interpolation.h"
 #endif
 
 

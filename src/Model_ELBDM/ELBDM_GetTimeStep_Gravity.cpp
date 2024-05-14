@@ -136,11 +136,8 @@ real GetMaxPot( const int lv )
 // get the maximum potential in all ranks
    real MaxPot_AllRank;
    bool AnyCell_AllRank;
-#  ifdef FLOAT8
-   MPI_Allreduce( &MaxPot, &MaxPot_AllRank, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
-#  else
-   MPI_Allreduce( &MaxPot, &MaxPot_AllRank, 1, MPI_FLOAT,  MPI_MAX, MPI_COMM_WORLD );
-#  endif
+
+   MPI_Allreduce( &MaxPot, &MaxPot_AllRank, 1, MPI_GAMER_REAL, MPI_MAX, MPI_COMM_WORLD );
    MPI_Reduce( &AnyCell, &AnyCell_AllRank, 1, MPI_C_BOOL, MPI_LOR, 0, MPI_COMM_WORLD );
 
 

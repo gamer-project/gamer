@@ -48,7 +48,7 @@ SET_GLOBAL( FieldIdx_t Idx_Metal,         Idx_Undefined );
 
 #elif ( MODEL == ELBDM )
 
-#if ( ELBDM_SCHEME == ELBDM_WAVE )
+#if   ( ELBDM_SCHEME == ELBDM_WAVE )
 SET_GLOBAL( FieldIdx_t Idx_Dens,          Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_Real,          Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_Imag,          Idx_Undefined );

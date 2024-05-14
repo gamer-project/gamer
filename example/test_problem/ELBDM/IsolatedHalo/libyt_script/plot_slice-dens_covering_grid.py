@@ -49,7 +49,7 @@ field         = 'Dens'
 
 yt.enable_parallelism()
 idx_range = np.arange(idx_start, idx_end+1, didx)
-file_list = ( [ './covering-grid_test_Data_%06d_lv=%d.npz'%(idx,lv) for idx in idx_range ] )
+file_list = ( [ '%s/covering-grid_test_Data_%06d_lv=%d.npz'%(prefix,idx,lv) for idx in idx_range ] )
 my_storage = {}
 
 for sto, fn in yt.parallel_objects(file_list, num_procs, storage=my_storage):

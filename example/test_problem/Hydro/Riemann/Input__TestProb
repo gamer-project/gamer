@@ -10,7 +10,30 @@ Riemann_Prob         0              # target Riemann problem
                                     #    7 : Torrilhon (MHD only)
                                     #    8 : Brio & Wu (MHD only)
                                     #    9 : Noh's strong shock
+                                    #   10 : SRHD ultra-relativistic limit (SRHD only)
+                                    #   11 : SRHD mixed limits (SRHD only)
+                                    #   12 : user-defined
 Riemann_LR          +1              # wave propagation direction (>0/<0 --> positive/negative direction) [1]
 Riemann_XYZ          0              # wave propagation axis (0/1/2 --> x/y/z) [0]
 Riemann_Pos          0.5            # position of discontinuity [box center]
 Riemann_Width        1.0e-10        # width    of discontinuity [infinitesimal]
+
+# for user-defined Riemman problem only (Riemann_Prob 12)
+#Riemann_RhoL         0.5            # left-state density
+#Riemann_VelL         0.1            # left-state longitudinal velocity
+#Riemann_VelL_T1      0.2            # left-state transverse velocity 1
+#Riemann_VelL_T2      0.3            # left-state transverse velocity 2
+#Riemann_PreL         2.0            # left-state pressure
+#Riemann_MagL_T1      0.2            # left-state transverse B field 1
+#Riemann_MagL_T2     -0.2            # left-state transverse B field 2
+
+#Riemann_RhoR         0.2            # right-state density
+#Riemann_VelR         0.3            # right-state longitudinal velocity
+#Riemann_VelR_T1     -0.2            # right-state transverse velocity 1
+#Riemann_VelR_T2     -0.3            # right-state transverse velocity 2
+#Riemann_PreR         0.5            # right-state pressure
+#Riemann_MagR_T1      0.3            # right-state transverse B field 1
+#Riemann_MagR_T2     -0.3            # right-state transverse B field 2
+
+#Riemann_Mag          0.1            # longitudinal B field
+#Riemann_EndT         0.2            # end time

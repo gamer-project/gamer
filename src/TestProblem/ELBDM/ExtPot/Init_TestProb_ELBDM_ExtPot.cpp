@@ -1,9 +1,5 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
-
-static void BC( real fluid[], const double x, const double y, const double z, const double Time,
-                const int lv, double AuxArray[] );
 
 
 // problem-specific global variables
@@ -15,6 +11,9 @@ static double ELBDM_ExtPot_Amp;     // initial wave function amplitude
 
 // external potential routines
 void Init_ExtPot_ELBDM_ExtPot();
+static void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                const int GhostSize, const int idx[], const double pos[], const double Time,
+                const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 
 
@@ -174,21 +173,22 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double Coeff = 2.0*SQR(ELBDM_ETA)*NEWTON_G*ELBDM_ExtPot_M;
    const double R     = sqrt( Coeff*r );
    const double Re    = ELBDM_ExtPot_Amp*j1( 2.0*R )/R;
-   const double Im    = 0.0;                            // imaginary part is always zero --> no initial velocity
+   const double Im    = 0.0;  // imaginary part is always zero --> no initial velocity
 
    fluid[DENS] = SQR( Re ) + SQR( Im );
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( amr->use_wave_flag[lv] ) {
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif
    fluid[REAL] = Re;
    fluid[IMAG] = 0.0;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   } else { // if ( amr->use_wave_flag[lv] )
+   } else {
    fluid[PHAS] = 0.0;
    fluid[STUB] = 0.0;
-   } // if ( amr->use_wave_flag[lv] ) ... else
-#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   }
+#  endif
+
 } // FUNCTION : SetGridIC
 
 
@@ -199,19 +199,27 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Note        :  1. Linked to the function pointer "BC_User_Ptr"
 //
-// Parameter   :  fluid    : Fluid field to be set
-//                x/y/z    : Physical coordinates
-//                Time     : Physical time
-//                lv       : Refinement level
-//                AuxArray : Auxiliary array
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
+//                ArraySize      : Size of Array including the ghost zones on each side
+//                fluid          : Fluid fields to be set
+//                NVar_Flu       : Number of fluid variables to be prepared
+//                GhostSize      : Number of ghost zones
+//                idx            : Array indices
+//                pos            : Physical coordinates
+//                Time           : Physical time
+//                lv             : Refinement level
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
+//                AuxArray       : Auxiliary array
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void BC( real fluid[], const double x, const double y, const double z, const double Time,
-         const int lv, double AuxArray[] )
+void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+         const int GhostSize, const int idx[], const double pos[], const double Time,
+         const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
 
-   SetGridIC( fluid, x, y, z, Time, lv, AuxArray );
+// simply call the IC function
+   SetGridIC( fluid, pos[0], pos[1], pos[2], Time, lv, AuxArray );
 
 } // FUNCTION : BC
 #endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )

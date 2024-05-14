@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 """
 User and developer guides of this script are provided in the following link.
 
@@ -9,6 +10,7 @@ User and developer guides of this script are provided in the following link.
 # Packages
 ####################################################################################################
 import argparse
+import logging
 import os
 import sys
 import re
@@ -19,20 +21,29 @@ import re
 # Global variables
 ####################################################################################################
 NONE_STR   = "OFF"
-PYTHON_VER = [sys.version_info.major, sys.version_info.minor]
 
-GAMER_CONFIG_DIR  = "../configs"
+CLOSE_DIST  = 2
+PRINT_WIDTH = 100
+
+GAMER_CONFIG_DIR  = os.path.join("..", "configs")
 GAMER_MAKE_BASE   = "Makefile_base"
 GAMER_MAKE_OUT    = "Makefile"
 GAMER_DESCRIPTION = "Prepare a customized Makefile for GAMER.\nDefault values are marked by '*'.\nUse -lh to show a detailed help message.\n"
 GAMER_EPILOG      = "2023 Computational Astrophysics Lab, NTU. All rights reserved.\n"
+
+LOGGER     = logging.getLogger()
+LOG_FORMAT = '%(asctime)s %(levelname)-8s: %(message)s'
+logging.basicConfig( filename=GAMER_MAKE_OUT+'.log', filemode='w', level=logging.INFO, format=LOG_FORMAT )
 
 
 
 ####################################################################################################
 # Classes
 ####################################################################################################
-class BCOLOR:
+class CustomFormatter( logging.Formatter ):
+    """
+    See: https://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output
+    """
     HEADER    = '\033[95m'
     OKBLUE    = '\033[94m'
     OKCYAN    = '\033[96m'
@@ -43,18 +54,28 @@ class BCOLOR:
     BOLD      = '\033[1m'
     UNDERLINE = '\033[4m'
 
+    CONSOLE_FORMAT = '%(levelname)-8s: %(message)s'
+    FORMATS = { logging.DEBUG   : HEADER  + CONSOLE_FORMAT + ENDC,
+                logging.INFO    : ENDC    + "%(message)s"  + ENDC,
+                logging.WARNING : WARNING + CONSOLE_FORMAT + ENDC,
+                logging.ERROR   : FAIL    + CONSOLE_FORMAT + ENDC,
+                logging.CRITICAL: FAIL    + CONSOLE_FORMAT + ENDC }
+
+    def format( self, record ):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
+
 class ArgumentParser( argparse.ArgumentParser ):
-    def __init__(self, *args, **kwargs):
-        self.program     = { key: kwargs[key] for key in kwargs }
+    def __init__( self, *args, **kwargs ):
+        self.program     = kwargs.copy()
         self.options     = []
         self.depends     = {}
         self.constraints = {}
         self.gamer_names = {}
-        # This feature is only supported for version >= 3.5.
-        if PYTHON_VER[0] == 2 or PYTHON_VER[1] < 5: kwargs.pop("allow_abbrev")
         super(ArgumentParser, self).__init__(*args, **kwargs)
 
-    def add_argument(self, *args, **kwargs):
+    def add_argument( self, *args, **kwargs ):
         if "depend" in kwargs:
             key = args[0].replace("-", "")
             self.depends[key] = kwargs.pop("depend")
@@ -66,17 +87,13 @@ class ArgumentParser( argparse.ArgumentParser ):
             self.gamer_names[key] = kwargs.pop("gamer_name")
 
         super(ArgumentParser, self).add_argument(*args, **kwargs)
-        option = {}
+        option = kwargs.copy()
         option["flags"] = [ item for item in args ]
-        for key in kwargs:
-            option[key] = kwargs[key]
         self.options.append(option)
 
-    def parse_args(self, args=None, namespace=None):
+    def parse_args( self, args=None, namespace=None ):
         args, argv = self.parse_known_args(args, namespace)
         msg = "\n"
-        close_dist = 2
-
         for arg in argv:
             if arg[0] != "-":
                 msg += 'Unrecognized positional argument: %s\n'%(arg)
@@ -90,113 +107,90 @@ class ArgumentParser( argparse.ArgumentParser ):
                 min_dist = dist
                 pos_key = "--"+key
             msg += 'Unrecognized argument: %s'%(arg)
-            msg += ', do you mean: %s ?\n'%(pos_key) if min_dist <= close_dist else "\n"
+            if min_dist <= CLOSE_DIST: msg += ', do you mean: %s ?\n'%(pos_key)
+            msg += '\n'
 
         if len(argv) != 0: self.error( msg )
         return args, self.gamer_names, self.depends, self.constraints
 
-    def string_align( self, string, indent, width, end_char ):
-        """
-        end_char : The ending character of a word.
-        """
-        N          = len(indent)
-        sub_indent = N * " "
-        if width < N:  raise ValueError("Width is smaller than indent length.")
+    def _get_option_tuples(self, option_string):
+#       This function is directly from the source code of `argparse`.
+#       We decided to add the function manually because versions prior to Python 3.5 do not support `allow_abbrev`.
+#       See: https://github.com/python/cpython/blob/main/Lib/argparse.py
+        result = []
 
-        now_n = 0
-        new_str = ""
-        new_line = False
-        for i in range(len(string)):
-            if new_line:
-                new_str += "\n" + sub_indent
-                new_line = False
-                now_n = N
+#       option strings starting with two prefix characters are only
+#       split at the '='
+        chars = self.prefix_chars
+        if option_string[0] in chars and option_string[1] in chars:
+            pass # we always use `allow_abbrev=False`
 
-            if string[i] == "\n":
-                new_line = True
-                continue
+#       single character options can be concatenated with their arguments
+#       but multiple character options always have to have their argument
+#       separate
+        elif option_string[0] in chars and option_string[1] not in chars:
+            option_prefix = option_string
+            short_option_prefix = option_string[:2]
+            short_explicit_arg = option_string[2:]
 
-            new_str += string[i]
-            now_n += 1
+            for option_string in self._option_string_actions:
+                if option_string == short_option_prefix:
+                    action = self._option_string_actions[option_string]
+                    tup = action, option_string, '', short_explicit_arg
+                    result.append(tup)
+                elif option_string.startswith(option_prefix):
+                    action = self._option_string_actions[option_string]
+                    tup = action, option_string, None, None
+                    result.append(tup)
 
-            if now_n >= width:
-                if string[i] == end_char: new_line = True
-        return new_str
-
-    def print_usage(self, *args, **kwargs):
-        usage_width  = 100
-
-        if "usage" in self.program:
-            print("Usage: %s" % self.program["usage"])
+#       shouldn't ever get here
         else:
-            usage = []
-            for option in self.options:
-                for item in option["flags"]:
-                    if "choices" in option:
-                        temp = [ str(opt) for opt in option["choices"] ]
-                        if "default" in option:
-                            usage += [ "[%s {%s} *%s]"%(item, ", ".join(temp), "Depend" if option["default"] == None else str(option["default"])) ]
-                        else:
-                            usage += [ "[%s {%s}]"%(item, ", ".join(temp)) ]
-                        continue
+            self.error(_('unexpected option string: %s') % option_string)
 
-                    if "metavar" in option:
-                        if "default" in option:
-                            usage += [ "[%s %s *%s]"%(item, option["metavar"], "Depend" if option["default"] == None else str(option["default"])) ]
-                        else:
-                            usage += [ "[%s %s]"%(item, option["metavar"]) ]
-                        continue
+#       return the collected option tuples
+        return result
 
-                    if "dest" in option:
-                        if "default" in option:
-                            usage += [ "[%s %s *%s]"%(item, option["dest"], "Depend" if option["default"] == None else str(option["default"])) ]
-                        else:
-                            usage += [ "[%s %s]"%(item, option["dest"].upper()) ]
-                        continue
+    def print_usage( self, *args, **kwargs ):
+        if "usage" in self.program:
+            print("Usage: %s\n" % self.program["usage"])
+            return
 
-                    if "action" in option:
-                        if option["action"] in ["help", "store_const", "store_true", "store_false"]:
-                            usage += [ "[%s]"%(item) ]
-                            continue
+        usage = []
+        for option in self.options:
+            for item in option["flags"]:
+#               the order of if does matter here
+                possibles = ""
+                if   "choices" in option: possibles += "{%s}"%(", ".join([ str(opt) for opt in option["choices"] ]))
+                elif "metavar" in option: possibles += option["metavar"]
+                elif "dest"    in option: possibles += option["dest"] if "default" in option else option["dest"].upper()
+                else:                     possibles += re.sub(r"^(-{1,})", "", item).upper()
 
-                    temp = re.sub(r"^(-{1,})", "", item).upper()
-                    if "default" in option:
-                        usage += [ "[%s %s *%s]"%(item, temp, "Depend" if option["default"] == None else str(option["default"])) ]
-                    else:
-                        usage += [ "[%s %s]"%(item, temp) ]
-            indent = "Usage: %s " % os.path.basename(sys.argv[0])
-            output = indent + " " + str.join(" ", usage)
-            print( self.string_align(output, indent, usage_width, "]") )
-        print("")
+                default_value = ""
+                if "default" in option:
+                    default_value += "*"
+                    default_value += "Depend" if option["default"] is None else str(option["default"])
 
-    def print_help(self, *args, **kwargs):
-        # Print usage
-        self.print_usage()
+                if "action" in option:
+                    if option["action"] in ["help", "store_const", "store_true", "store_false"]:
+                        possibles = "\b"
+                        default_value = "\b"
 
-        # Print description
-        if "description" in self.program: print(self.program["description"])
+                usage += [ "[%s]"%(" ".join([item, possibles, default_value])) ]
 
-        # Print epilog
-        if "epilog" in self.program: print(self.program["epilog"])
+        indent = "Usage: %s " % os.path.basename(sys.argv[0])
+        output = indent + " " + str.join(" ", usage) + "\n"
+        print( string_align(output, indent, PRINT_WIDTH, "]") )
 
-    def print_help_detail(self):
-        # Print usage
-        self.print_usage()
-
-        # Print description
-        if "description" in self.program: print(self.program["description"])
-
-        # Print options
+    def print_option( self ):
         print("Options:")
-        option_width = 100
         option_indent = 0
         for option in self.options:
             option["flags2"] = str.join(", ", [ "%s %s" % (item, option["metavar"]) if "metavar" in option else "%s %s" % (item, option["dest"].upper()) if "dest" in option else item for item in option["flags"] ])
             if len(option["flags2"]) > option_indent:
                 option_indent = len(option["flags2"])
 
+        template = "  %-" + str(option_indent) + "s  "
         for option in self.options:
-            template = "  %-" + str(option_indent) + "s  "
             indent = template %(option["flags2"])
             output = indent
 
@@ -204,7 +198,7 @@ class ArgumentParser( argparse.ArgumentParser ):
 
             if "action" in option:
                 if option["action"] == "help":
-                    print( self.string_align(output, indent, option_width, " ") )
+                    print( string_align(output, indent, PRINT_WIDTH, " ") )
                     continue
 
             if "choices" in option:
@@ -212,50 +206,48 @@ class ArgumentParser( argparse.ArgumentParser ):
                 output += "Choice: [%s] => "%(", ".join(temp))
 
             if "default" in option:
-                output += "Default: %s" %("Depend" if option["default"] == None else str(option["default"]))
+                output += "Default: %s" %("Depend" if option["default"] is None else str(option["default"]))
 
             if "action" in option:
-                output += "Default: False" if option["action"] == "store_true" else "Default: False"
+                output += "Default: False" if option["action"] == "store_true" else "Default: True"
 
-            print( self.string_align(output, indent, option_width, " ") )
+            print( string_align(output, indent, PRINT_WIDTH, " ") )
 
-        # Print epilog
-        if "epilog" in self.program: print(self.program["epilog"])
+    def print_help( self, *args, **kwargs ):
+#       print usage, description, options, then epilog
+        self.print_usage()
+        if "description"  in self.program: print(self.program["description"])
+        if "print_detail" in kwargs: self.print_option()
+        if "epilog"       in self.program: print(self.program["epilog"])
 
 
 
 ####################################################################################################
 # Functions
 ####################################################################################################
-def str2bool(v):
+def str2bool( v ):
     if isinstance(v, bool): return v
-    if v.lower() == "true":
-        return True
-    elif v.lower() == "false":
-        return False
-    else:
-        raise TypeError("Can not convert <%s> to boolean."%(v))
-    return
 
-def color_print( string, color ):
-    print( color + string + BCOLOR.ENDC )
+    if   v.lower() == "true":  return True
+    elif v.lower() == "false": return False
+    else: raise TypeError("Can not convert <%s> to boolean."%(v))
     return
 
 def add_option( opt_str, name, val ):
-    # NOTE: Every -Doption must have a trailing space.
+#   NOTE: Every -Doption must have a trailing space.
     if type(val) == type(True):
         if val: opt_str += "-D%s "%(name)
-        print("%-25s : %r"%(name, val))
+        LOGGER.info("%-25s : %r"%(name, val))
     elif type(val) == type("str"):
         if val != NONE_STR:
             opt_str += "-D%s=%s "%(name, val)
-            print("%-25s : %s"%(name, val))
+            LOGGER.info("%-25s : %s"%(name, val))
     elif type(val) == type(0):
         opt_str += "-D%s=%d "%(name, val)
-        print("%-25s : %d"%(name, val))
+        LOGGER.info("%-25s : %d"%(name, val))
     elif type(val) == type(0.):
         opt_str += "-D%s=%f "%(name, val)
-        print("%-25s : %f"%(name, val))
+        LOGGER.info("%-25s : %f"%(name, val))
     else:
         raise TypeError("The simulation option <%s> has an unknown type <%s>."%(name, str(type(val))))
 
@@ -283,31 +275,59 @@ def distance( s1, s2 ):
 
     return matrix[len(s1)][len(s2)]
 
+def string_align( string, indent_str, width, end_char ):
+    """
+    end_char : The ending character of a word.
+    """
+    N          = len(indent_str)
+    sub_indent = N * " "
+    if width < N:  raise ValueError("Width is smaller than indent length.")
+
+    now_n = 0
+    new_str = ""
+    new_line = False
+    for i in range(len(string)):
+        if new_line:
+            new_str += "\n" + sub_indent
+            new_line = False
+            now_n = N
+
+        if string[i] == "\n":
+            new_line = True
+            continue
+
+        new_str += string[i]
+        now_n += 1
+
+        if now_n >= width:
+            if string[i] == end_char: new_line = True
+    return new_str
+
 def load_arguments():
     parser = ArgumentParser( description = GAMER_DESCRIPTION,
                              formatter_class = argparse.RawTextHelpFormatter,
                              epilog = GAMER_EPILOG,
-                             allow_abbrev=False,
-                             add_help=False)
+                             add_help = False
+                           )
 
     parser.add_argument( "-h", "--help",
                          action="help", default=argparse.SUPPRESS,
                          help="Show this help message and exit.\n"
                        )
 
-    # detailed help message
+#   detailed help message
     parser.add_argument( "-lh",
                          action="store_true",
                          help="Show this help message in detail and exit.\n"
                        )
 
-    # machine config setup
+#   machine config setup
     parser.add_argument( "--machine", type=str, metavar="MACHINE",
                          default="eureka_intel",
-                         help="Select the MACHINE.config file under ../configs directory. \nChoice: [eureka_intel, YOUR_MACHINE_NAME] => "
+                         help="Select the MACHINE.config file under ../configs directory.\nChoice: [eureka_intel, YOUR_MACHINE_NAME] => "
                        )
 
-    # A. physical models and options of diffierent physical models
+#   A. physical models and options of diffierent physical models
     parser.add_argument( "--model", type=str, metavar="TYPE", gamer_name="MODEL",
                          default="HYDRO", choices=["HYDRO", "ELBDM", "PAR_ONLY"],
                          help="The physical model (HYDRO: hydrodynamics/magnetohydrodynamics, ELBDM: wave dark matter, PAR_ONLY: partivle-only). Must be set in any cases. PAR_ONLY is not supported yet.\n"
@@ -319,7 +339,7 @@ def load_arguments():
                          help="Set the number of user-defined passively advected scalars. Useless for RTVD. <--model=ELBDM> doesn't support passive scalars and only regards them as auxiliary fields.\n"
                        )
 
-    # A.1 Hydro options
+#   A.1 Hydro options
     parser.add_argument( "--flu_scheme", type=str, metavar="TYPE", gamer_name="FLU_SCHEME",
                          default="CTU", choices=["RTVD", "MHM", "MHM_RP", "CTU"],
                          depend={"model":"HYDRO"},
@@ -339,7 +359,7 @@ def load_arguments():
                          depend={"model":"HYDRO"},
                          constraint={ "ROE":{"eos":"GAMMA"},
                                       "EXACT":{"eos":"GAMMA"} },
-                         help="The Riemann solver. Pure hydro: EXACT/ROE/HLLE/HLLC^, MHD: ROE/HLLE/HLLD^ (^ indicates the recommended and default solvers). Useless for RTVD.\n"
+                         help="The Riemann solver. Pure hydro: EXACT/ROE/HLLE/HLLC^, MHD: ROE/HLLE/HLLD^, SRHD: HLLE/HLLC^, (^ indicates the recommended and default solvers). Useless for RTVD.\n"
                        )
 
     parser.add_argument( "--dual", type=str, metavar="TYPE", gamer_name="DUAL_ENERGY",
@@ -357,17 +377,24 @@ def load_arguments():
                          help="Magnetohydrodynamics.\n"
                        )
 
+    parser.add_argument( "--srhd", type=str2bool, metavar="BOOLEAN", gamer_name="SRHD",
+                         default=False,
+                         depend={"model":"HYDRO"},
+                         constraint={ True:{"flu_scheme":["MHM", "MHM_RP"], "flux":["HLLE", "HLLC"], "eos":["TAUBMATHEWS"], "dual":[NONE_STR], "mhd":False, "gravity":False} },
+                         help="Special Relativistic Hydrodynamics.\n"
+                       )
+
     parser.add_argument( "--cosmic_ray", type=str2bool, metavar="BOOLEAN", gamer_name="COSMIC_RAY",
                          default=False,
                          depend={"model":"HYDRO"},
-                         constraint={ True:{"dual":[NONE_STR]} },
-                         help="Cosmic rays (not supported yet).\n"
+                         constraint={ True:{"dual":[NONE_STR], "eos":"COSMIC_RAY", "comoving":False} },
+                         help="Enable cosmic ray. Must use <--eos=COSMIC_RAY>.\n"
                        )
 
     parser.add_argument( "--eos", type=str, metavar="TYPE", gamer_name="EOS",
-                         default="GAMMA", choices=["GAMMA", "ISOTHERMAL", "NUCLEAR", "TABULAR", "USER"],
+                         default=None, choices=["GAMMA", "ISOTHERMAL", "NUCLEAR", "TABULAR", "COSMIC_RAY", "TAUBMATHEWS", "USER"],
                          depend={"model":"HYDRO"},
-                         constraint={ "ISOTHERMAL":{"barotropic":True} },
+                         constraint={ "ISOTHERMAL":{"barotropic":True}, "COSMIC_RAY":{"cosmic_ray":True}, "TAUBMATHEWS":{"srhd":True} },
                          help="Equation of state. Must be set when <--model=HYDRO>. Must enable <--barotropic> for ISOTHERMAL.\n"
                        )
 
@@ -378,7 +405,7 @@ def load_arguments():
                          help="Whether or not the equation of state set by <--eos> is barotropic. Mandatory for <--eos=ISOTHEMAL>. Optional for <--eos=TABULAR> and <--eos=USER>.\n"
                        )
 
-    # A.2 ELBDM scheme
+#   A.2 ELBDM scheme
     parser.add_argument( "--elbdm_scheme", type=str, metavar="TYPE", gamer_name="ELBDM_SCHEME",
                          default="ELBDM_WAVE", choices=["ELBDM_WAVE", "ELBDM_HYBRID"],
                          depend={"model":"ELBDM"},
@@ -424,7 +451,7 @@ def load_arguments():
                          help="Include the quartic self-interaction potential for <--model=ELBDM>. Must enable <--gravity>. Does not support <--comoving>.\n"
                        )
 
-    # A.3 gravity
+#   A.3 gravity
     parser.add_argument( "--gravity", type=str2bool, metavar="BOOLEAN", gamer_name="GRAVITY",
                          default=False,
                          constraint={ True:{"fftw":["FFTW2", "FFTW3"]} },
@@ -457,7 +484,7 @@ def load_arguments():
                          help="Comoving frame for cosmological simulations.\n"
                        )
 
-    # A.4 particle
+#   A.4 particle
     parser.add_argument( "--particle", type=str2bool, metavar="BOOLEAN", gamer_name="PARTICLE",
                          default=False,
                          help="Enable particles.\n"
@@ -492,14 +519,27 @@ def load_arguments():
                          help="Set the number of user-defined particle attributes.\n"
                        )
 
+    parser.add_argument( "--double_par", type=str2bool, metavar="BOOLEAN", gamer_name="FLOAT8_PAR",
+                         default=None,
+                         depend={"particle":True},
+                         help="Enable double precision for particle attributes.\n"
+                       )
     # A.5 grackle
     parser.add_argument( "--grackle", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_GRACKLE",
                          default=False,
-                         constraint={ True:{"model":"HYDRO", "eos":"GAMMA"} },
+                         constraint={ True:{"model":"HYDRO", "eos":["GAMMA", "COSMIC_RAY"], "comoving":False} },
                          help="Enable Grackle, a chemistry and radiative cooling library. Must set <--passive> according to the primordial chemistry network set by GRACKLE_PRIMORDIAL. Please enable OpenMP when compiling Grackle (by 'make omp-on').\n"
                        )
 
-    # B. miscellaneous options
+#   A.6 microphysics
+    parser.add_argument( "--cr_diffusion", type=str2bool, metavar="BOOLEAN", gamer_name="CR_DIFFUSION",
+                         default=False,
+                         depend={"cosmic_ray":True},
+                         constraint={ True:{"cosmic_ray":True, "mhd":True} },
+                         help="Enable cosmic-ray diffusion. Must enable <--mhd> and <--cosmic_ray>.\n"
+                       )
+
+#   B. miscellaneous options
     parser.add_argument( "--nlevel", type=int, metavar="INTEGER", gamer_name="NLEVEL",
                          default=10,
                          help="Set the total number of AMR levels including the root level.\n"
@@ -563,7 +603,7 @@ def load_arguments():
 
     parser.add_argument( "--spectral_interpolation", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_SPECTRAL_INT",
                          default=False,
-                         constraint={ True:{"gsl":True} },
+                         constraint={ True:{"gsl":True, "fftw":["FFTW2", "FFTW3"]} },
                          help="Support spectral interpolation.\n"
                        )
 
@@ -584,16 +624,28 @@ def load_arguments():
                          help="Enable the interactive mode of libyt. This activates python prompt and does not shut down a simulation when there are errors in an inline python script. Must compile libyt with INTERACTIVE_MODE. Must enable <--libyt>.\n"
                        )
 
+    parser.add_argument( "--libyt_reload", type=str2bool, metavar="BOOLEAN", gamer_name="LIBYT_RELOAD",
+                         default=False,
+                         depend={"libyt":True},
+                         help="Allow for reloading libyt scripts during runtime. Must compile libyt with INTERACTIVE_MODE. Must enable <--libyt>.\n"
+                       )
+
+    parser.add_argument( "--libyt_jupyter", type=str2bool, metavar="BOOLEAN", gamer_name="LIBYT_JUPYTER",
+                         default=False,
+                         depend={"libyt":True},
+                         help="Allow for in situ analysis using Jupyter Notebook / JupyterLab through libyt. Must compile libyt with JUPYTER_KERNEL. Must enable <--libyt>.\n"
+                       )
+
     parser.add_argument( "--rng", type=str, metavar="TYPE", gamer_name="RANDOM_NUMBER",
                          default="RNG_GNU_EXT",
                          choices=["RNG_GNU_EXT", "RNG_CPP11"],
                          help="Select the random number generator (RNG_GNU_EXT: GNU extension drand48_r, RNG_CPP11: c++11 <random>).\nRNG_GNU_EXT may not be supported on some macOS.\nFor RNG_CPP11, add -std=c++11 to CXXFLAG in your config file.\n"
                        )
 
-    # C. parallelization and flags
+#   C. parallelization and flags
     parser.add_argument( "--openmp", type=str2bool, metavar="BOOLEAN", gamer_name="OPENMP",
                          default=True,
-                         help="Enable OpenMP parallization.\n"
+                         help="Enable OpenMP parallelization.\n"
                        )
 
     parser.add_argument( "--mpi", type=str2bool, metavar="BOOLEAN", gamer_name="LOAD_BALANCE=HILBERT",
@@ -621,17 +673,17 @@ def load_arguments():
     args, name_table, depends, constraints = parser.parse_args()
     args = vars( args )
 
-    # 1. Print out a detailed help message then exit.
+#   1. Print out a detailed help message then exit.
     if args["lh"]:
-        parser.print_help_detail()
+        parser.print_help(print_detail=True)
         exit()
 
-    # 2. Conditional default arguments.
+#   2. Conditional default arguments.
     args = set_conditional_defaults( args )
     return args, name_table, depends, constraints
 
 def load_config( config ):
-    print("Using %s as the config."%(config))
+    LOGGER.info("Using %s as the config."%(config))
     paths, compilers, flags = {}, {"CXX":"", "CXX_MPI":""}, {"CXXFLAG":"", "OPENMPFLAG":"", "LIBFLAG":"", "CUDAFLAG":""}
     with open( config, 'r') as f:
         lines = f.readlines()
@@ -648,7 +700,7 @@ def load_config( config ):
         elif temp[0] in compilers:
             if len(temp) == 1: continue         # empty compiler
             if temp[1][0] == "#": continue      # comment out
-            if compilers[temp[0]] != "": color_print("Warning: The original compiler will be overwritten. <%s>: %s --> %s"%(temp[0], compilers[temp[0]], temp[1]), BCOLOR.WARNING)
+            if compilers[temp[0]] != "": LOGGER.warning("The original compiler will be overwritten. <%s>: %s --> %s"%(temp[0], compilers[temp[0]], temp[1]))
             compilers[temp[0]] = temp[1]
         else:
             try:
@@ -659,26 +711,34 @@ def load_config( config ):
     return paths, compilers, flags
 
 def set_conditional_defaults( args ):
-    if args["unsplit_gravity"] == None:
-        args["unsplit_gravity"] = True if args["model"] == "HYDRO" else False
+    if args["unsplit_gravity"] is None:
+        args["unsplit_gravity"] = (args["model"] == "HYDRO")
 
-    if args["bitwise_reproducibility"] == None:
-        args["bitwise_reproducibility"] = True if args["debug"] else False
+    if args["bitwise_reproducibility"] is None:
+        args["bitwise_reproducibility"] = args["debug"]
 
-    if args["laplacian_four"] == None:
+    if args["laplacian_four"] is None:
       args["laplacian_four"] = True if args["wave_scheme"] == "WAVE_FD" else False
 
-    if args["flux"] == None:
+    if args["double_par"] is None:
+        args["double_par"] = args["double"]
+
+    if args["flux"] is None:
         args["flux"] = "HLLD" if args["mhd"] else "HLLC"
+
+    if args["eos"] is None:
+        if   args["cosmic_ray"]: args["eos"] = "COSMIC_RAY"
+        elif args["srhd"]      : args["eos"] = "TAUBMATHEWS"
+        else                   : args["eos"] = "GAMMA"
 
     return args
 
 def set_sims( name_table, depends, **kwargs ):
     opt_str = ""
-    # Loop all the simulation options in GAMER.
+#   Loop all the simulation options in GAMER.
     for opt, gamer_name in name_table.items():
         store = True
-        # check if the depend is true
+#       check if the depend is true
         if opt in depends:
             for depend, val in depends[opt].items():
                 if type(val) != type([]): val = [val]   # transform to list
@@ -690,7 +750,7 @@ def set_sims( name_table, depends, **kwargs ):
         else:
             opt_str = add_option( opt_str, name=gamer_name, val=kwargs[opt] )
 
-    # Hard-code the option of serial.
+#   Hard-code the option of serial.
     if not kwargs["mpi"]: opt_str = add_option( opt_str, name="SERIAL", val=True )
 
     return {"SIMU_OPTION":opt_str}
@@ -698,13 +758,13 @@ def set_sims( name_table, depends, **kwargs ):
 def set_compile( paths, compilers, flags, kwargs ):
     com_opt = {}
 
-    # 1. Set the complier.
-    com_opt["CXX"] = paths["MPI_PATH"]+"/bin/"+compilers["CXX_MPI"] if kwargs["mpi"] else compilers["CXX"]
+#   1. Set the complier.
+    com_opt["CXX"] = os.path.join(paths["MPI_PATH"], "bin", compilers["CXX_MPI"]) if kwargs["mpi"] else compilers["CXX"]
 
-    # 2. Set the OpenMP flags.
+#   2. Set the OpenMP flags.
     if not kwargs["openmp"]: flags["OPENMPFLAG"] = ""
 
-    # 3. Write flags to complie option dictionary.
+#   3. Write flags to complie option dictionary.
     for key, val in flags.items():
         com_opt[key] = val
 
@@ -713,12 +773,12 @@ def set_compile( paths, compilers, flags, kwargs ):
 def validation( paths, depends, constraints, **kwargs ):
     success = True
 
-    # 0. Checking the Makefile_base existance.
+#   0. Checking the Makefile_base existance.
     if not os.path.isfile( GAMER_MAKE_BASE ):
-        color_print("ERROR: %s does not exist."%(GAMER_MAKE_BASE), BCOLOR.FAIL)
+        LOGGER.error("%s does not exist."%(GAMER_MAKE_BASE))
         success = False
 
-    # 1. Checking general constraints.
+#   1. Checking general constraints.
     for opt, condition in constraints.items():
         check = True
         if opt in depends:
@@ -735,111 +795,87 @@ def validation( paths, depends, constraints, **kwargs ):
                 if kwargs[check_opt] in check_val: continue     # satisify the validation
 
                 val_str = ', '.join(str(x) for x in check_val)
-                color_print("ERROR: The option <--%s=%s> requires <--%s> to be set to [%s]. Current: <--%s=%s>."%(opt, str(kwargs[opt]), check_opt, val_str, check_opt, kwargs[check_opt]), BCOLOR.FAIL)
+                LOGGER.error("The option <--%s=%s> requires <--%s> to be set to [%s]. Current: <--%s=%s>."%(opt, str(kwargs[opt]), check_opt, val_str, check_opt, kwargs[check_opt]))
                 success = False
 
-    # 2. Checking other conditions.
-    # A. Physics
-    # A.1 Module
+#   2. Checking other conditions.
+#   A. Physics
+#   A.1 Module
     if kwargs["model"] == "HYDRO":
         if kwargs["passive"] < 0:
-            color_print("ERROR: Passive scalar should not be negative. Current: %d"%kwargs["passive"], BCOLOR.FAIL)
+            LOGGER.error("Passive scalar should not be negative. Current: %d"%kwargs["passive"])
             success = False
 
         if kwargs["dual"] not in [NONE_STR, "DE_ENPY"]:
-            color_print("ERROR: This dual energy form is not supported yet. Current: %s"%kwargs["dual"], BCOLOR.FAIL)
-            success = False
-
-        if kwargs["cosmic_ray"]:
-            color_print("ERROR: <--cosmic_ray> is not supported yet.", BCOLOR.FAIL)
+            LOGGER.error("This dual energy form is not supported yet. Current: %s"%kwargs["dual"])
             success = False
 
     elif kwargs["model"] == "ELBDM":
         if kwargs["passive"] < 0:
-            color_print("ERROR: Passive scalar should not be negative. Current: %d"%kwargs["passive"], BCOLOR.FAIL)
+            LOGGER.error("Passive scalar should not be negative. Current: %d"%kwargs["passive"])
+            success = False
+        if kwargs["gramfe_scheme"] == "GRAMFE_FFT" and not kwargs["gpu"] and kwargs["fftw"] not in ["FFTW2", "FFTW3"]:
+            color_print("ERROR: Must set <--fftw> when adopting <--gramfe_scheme=GRAMFE_FFT> and <--gpu=false>", BCOLOR.FAIL)
             success = False
 
     elif kwargs["model"] == "PAR_ONLY":
-        color_print("ERROR: <--model=PAR_ONLY> is not supported yet.", BCOLOR.FAIL)
+        LOGGER.error("<--model=PAR_ONLY> is not supported yet.")
         success = False
     else:
-        color_print("ERROR: Unrecognized model: <%s>. Please add to the model choices."%kwargs["model"], BCOLOR.FAIL)
+        LOGGER.error("Unrecognized model: %s. Please add to the model choices."%kwargs["model"])
         success = False
 
-    # A.3 Particle
+#   A.2 Particle
     if kwargs["particle"]:
         if kwargs["star_formation"] and kwargs["store_par_acc"] and not kwargs["store_pot_ghost"]:
-            color_print("ERROR: <--store_pot_ghost> must be enabled when <--star_formation> and <--store_par_acc> are enabled.", BCOLOR.FAIL)
+            LOGGER.error("<--store_pot_ghost> must be enabled when <--star_formation> and <--store_par_acc> are enabled.")
             success = False
         if not kwargs["gravity"] and not kwargs["tracer"]:
-            color_print("ERROR: At least one of <--gravity> or <--tracer> must be enabled for <--particle>.", BCOLOR.FAIL)
+            LOGGER.error("At least one of <--gravity> or <--tracer> must be enabled for <--particle>.")
             success = False
         if kwargs["par_attribute"] < 0:
-            color_print("ERROR: Number of particle attributes should not be negative. Current: %d"%kwargs["par_attribute"], BCOLOR.FAIL)
+            LOGGER.error("Number of particle attributes should not be negative. Current: %d"%kwargs["par_attribute"])
             success = False
 
-    # B. miscellaneous options
+#   B. miscellaneous options
     if kwargs["nlevel"] < 1:
-        color_print("ERROR: <--nlevel> should be greater than zero. Current: %d"%kwargs["nlevel"], BCOLOR.FAIL)
+        LOGGER.error("<--nlevel> should be greater than zero. Current: %d"%kwargs["nlevel"])
         success = False
 
     if kwargs["max_patch"] < 1:
-        color_print("ERROR: <--max_patch> should be greater than zero. Current: %d"%kwargs["max_patch"], BCOLOR.FAIL)
+        LOGGER.error("<--max_patch> should be greater than zero. Current: %d"%kwargs["max_patch"])
         success = False
 
     if kwargs["patch_size"]%2 != 0 or kwargs["patch_size"] < 8:
-        color_print("ERROR: <--patch_size> should be an even number greater than or equal to 8. Current: %d"%kwargs["patch_size"], BCOLOR.FAIL)
+        LOGGER.error("<--patch_size> should be an even number greater than or equal to 8. Current: %d"%kwargs["patch_size"])
         success = False
 
     if kwargs["overlap_mpi"]:
-        color_print("ERROR: <--overlap_mpi> is not supported yet.", BCOLOR.FAIL)
+        LOGGER.error("<--overlap_mpi> is not supported yet.")
         success = False
 
-    if not success: raise BaseException(BCOLOR.FAIL+"The above validation failed."+BCOLOR.ENDC)
+    if not success: raise BaseException( "The above vaildation failed." )
     return
 
-
 def warning( paths, **kwargs ):
-    # 1. Makefile
+#   1. Makefile
     if os.path.isfile( GAMER_MAKE_OUT ):
-        color_print("Warning: %s already exists and will be overwritten."%(GAMER_MAKE_OUT), BCOLOR.WARNING)
+        LOGGER.warning("%s already exists and will be overwritten."%(GAMER_MAKE_OUT))
 
-    # 2. Physics
+#   2. Physics
     if kwargs["model"] == "ELBDM" and kwargs["passive"] != 0:
-        color_print("Warning: Not supported yet and can only be used as auxiliary fields.", BCOLOR.WARNING)
+        LOGGER.warning("Not supported yet and can only be used as auxiliary fields.")
 
-    # 3. Path
-    if kwargs["gpu"]:
-        if paths.setdefault("CUDA_PATH", "") == "":
-            color_print("Warning: CUDA_PATH is not given in %s.config when enabling <--gpu>."%(kwargs["machine"]), BCOLOR.WARNING)
+#   3. Path
+    path_links = { "gpu":{True:"CUDA_PATH"}, "fftw":{"FFTW2":"FFTW2_PATH", "FFTW3":"FFTW3_PATH"},
+                   "mpi":{True:"MPI_PATH"}, "hdf5":{True:"HDF5_PATH"}, "grackle":{True:"GRACKLE_PATH"},
+                   "gsl":{True:"GSL_PATH"}, "libyt":{True:"LIBYT_PATH"} }
 
-    if kwargs["fftw"] == "FFTW2":
-        if paths.setdefault("FFTW2_PATH", "") == "":
-            color_print("Warning: FFTW2_PATH is not given in %s.config when enabling <--fftw=FFTW2>."%(kwargs["machine"]), BCOLOR.WARNING)
-
-    if kwargs["fftw"] == "FFTW3":
-        if paths.setdefault("FFTW3_PATH", "") == "":
-            color_print("Warning: FFTW3_PATH is not given in %s.config when enabling <--fftw=FFTW3>."%(kwargs["machine"]), BCOLOR.WARNING)
-
-    if kwargs["mpi"]:
-        if paths.setdefault("MPI_PATH", "") == "":
-            color_print("Warning: MPI_PATH is not given in %s.config when enabling <--mpi>."%(kwargs["machine"]), BCOLOR.WARNING)
-
-    if kwargs["hdf5"]:
-        if paths.setdefault("HDF5_PATH", "") == "":
-            color_print("Warning: HDF5_PATH is not given in %s.config when enabling <--hdf5>."%(kwargs["machine"]), BCOLOR.WARNING)
-
-    if kwargs["grackle"]:
-        if paths.setdefault("GRACKLE_PATH", "") == "":
-            color_print("Warning: GRACKLE_PATH is not given in %s.config when enabling <--grackle>."%(kwargs["machine"]), BCOLOR.WARNING)
-
-    if kwargs["gsl"]:
-        if paths.setdefault("GSL_PATH", "") == "":
-            color_print("Warning: GSL_PATH is not given in %s.config when enabling <--gsl>."%(kwargs["machine"]), BCOLOR.WARNING)
-
-    if kwargs["libyt"]:
-        if paths.setdefault("LIBYT_PATH", "") == "":
-            color_print("Warning: LIBYT_PATH is not given in %s.config when enabling <--libyt>."%(kwargs["machine"]), BCOLOR.WARNING)
+    for arg, links in path_links.items():
+        for val, p_name in links.items():
+            if kwargs[arg] != val: continue
+            if paths.setdefault(p_name, "") != "": continue
+            LOGGER.warning("%-15s is not given in %s.config when setting <--%s=%s>"%(p_name, kwargs["machine"], arg, str(val)))
 
     if kwargs["model"] == "ELBDM" and kwargs["gpu"] and kwargs["wave_scheme"] == "WAVE_GRAMFE" and kwargs["gramfe_scheme"] == "GRAMFE_FFT":
         if paths.setdefault("CUFFTDX_PATH", "") == "":
@@ -852,58 +888,64 @@ def warning( paths, **kwargs ):
 ####################################################################################################
 # Main execution
 ####################################################################################################
-# 1. Load the input arguments
-args, name_table, depends, constraints = load_arguments()
+if __name__ == "__main__":
+#   0. Setup logger
+    ch = logging.StreamHandler()
+    ch.setFormatter( CustomFormatter() )
+    LOGGER.addHandler( ch )
 
-#------------------------------------------------------------
-# 2. Prepare the makefile args
-# 2.1 Load the machine setup
-paths, compilers, flags = load_config( "%s/%s.config"%(GAMER_CONFIG_DIR, args["machine"]) )
+#   1. Get the executed command
+    command = " ".join(["# This makefile is generated by the following command:", "\n#", sys.executable] + sys.argv + ["\n"])
+    LOGGER.info( " ".join( [sys.executable] + sys.argv ) )
 
-# 2.2 Validate arguments
-validation( paths, depends, constraints, **args )
+#   2. Load the input arguments
+    args, name_table, depends, constraints = load_arguments()
 
-warning( paths, **args )
+#   3. Prepare the makefile args
+#   3.1 Load the machine setup
+    paths, compilers, flags = load_config( os.path.join(GAMER_CONFIG_DIR, args["machine"]+".config") )
 
-# 2.3 add the SIMU_OPTION
-print("")
-print("========================================")
-print("GAMER has the following setting.")
-print("----------------------------------------")
-sims = set_sims( name_table, depends, **args )
+#   3.2 Validate arguments
+    validation( paths, depends, constraints, **args )
 
-# 2.4 setup compiler
-compiles = set_compile( paths, compilers, flags, args )
+    warning( paths, **args )
+
+#   3.3 add the SIMU_OPTION
+    LOGGER.info("========================================")
+    LOGGER.info("GAMER has the following setting.")
+    LOGGER.info("----------------------------------------")
+    sims = set_sims( name_table, depends, **args )
+
+#   3.4 setup compiler
+    compiles = set_compile( paths, compilers, flags, args )
+
+#   4. Create Makefile
+#   4.1 Read
+    with open( GAMER_MAKE_BASE, "r" ) as make_base:
+        makefile = make_base.read()
+
+#   4.2 Replace
+    LOGGER.info("----------------------------------------")
+    for key, val in paths.items():
+        LOGGER.info("%-15s : %s"%(key, val))
+        makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
+        if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
+
+    for key, val in sims.items():
+        makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
+        if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
+
+    LOGGER.info("----------------------------------------")
+    for key, val in compiles.items():
+        LOGGER.info("%-10s : %s"%(key, val))
+        makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
+        if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
+
+#   4.3 Write
+    with open( GAMER_MAKE_OUT, "w") as make_out:
+        make_out.write( command + makefile )
 
 
-#------------------------------------------------------------
-# 3. Create Makefile
-# 3.1 Read
-with open( GAMER_MAKE_BASE, "r" ) as make_base:
-    makefile = make_base.read()
-
-# 3.2 Replace
-print("----------------------------------------")
-for key, val in paths.items():
-    print("%-15s : %s"%(key, val))
-    makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
-    if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
-
-for key, val in sims.items():
-    makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
-    if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
-
-print("----------------------------------------")
-for key, val in compiles.items():
-    print("%-10s : %s"%(key, val))
-    makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
-    if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
-
-# 3.3 Write
-with open( GAMER_MAKE_OUT, "w") as make_out:
-    make_out.write( makefile )
-
-
-print("========================================")
-print("%s is created."%GAMER_MAKE_OUT)
-print("========================================")
+    LOGGER.info("========================================")
+    LOGGER.info("%s is created."%GAMER_MAKE_OUT)
+    LOGGER.info("========================================")

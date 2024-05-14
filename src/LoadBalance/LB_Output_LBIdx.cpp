@@ -49,7 +49,7 @@ void LB_Output_LBIdx( const int lv )
          }
 
 //       sorting
-         Mis_Heapsort( NP, List, NULL );
+         Mis_Heapsort<int,long>( NP, List, NULL );
 
 //       get corner
          for (int t=0; t<NP; t++)

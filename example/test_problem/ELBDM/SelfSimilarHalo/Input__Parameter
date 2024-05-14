@@ -18,7 +18,7 @@ BOX_SIZE                      0.5         # box size along the longest side (in 
 NX0_TOT_X                     256         # number of base-level cells along x
 NX0_TOT_Y                     256         # number of base-level cells along y
 NX0_TOT_Z                     256         # number of base-level cells along z
-OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
+OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto) [-1] ##OPENMP ONLY##
 END_T                        -1.0         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
 END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
 
@@ -135,7 +135,7 @@ OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2
 INIT_SUBSAMPLING_NCELL        2           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
 
 
-# interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar, 8=Spectral (##ELBDM & SUPPORT_SPECTRAL_INT ONLY ##))
+# interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar, 8=Spectral (##ELBDM & SUPPORT_SPECTRAL_INT ONLY##))
 
 OPT__INT_TIME                 1           # perform "temporal" interpolation for OPT__DT_LEVEL == 2/3 [1]
 OPT__INT_PHASE                0           # interpolation on phase (does not support MinMod-1D) [1] ##ELBDM ONLY##
@@ -146,7 +146,7 @@ OPT__RHO_INT_SCHEME           4           # ghost-zone mass density for the Pois
 OPT__GRA_INT_SCHEME           4           # ghost-zone potential for the gravity solver (for UNSPLIT_GRAVITY as well) [4]
 OPT__REF_POT_INT_SCHEME       4           # newly allocated potential during grid refinement [4]
 INT_MONO_COEFF                2.0         # coefficient for ensuring the interpolation monotonicity (1.0~4.0) [2.0]
-SPEC_INT_TABLE_PATH           ./          # path to tables for spectral interpolation ##ELBDM & SUPPORT_SPECTRAL_INT ONLY ##
+SPEC_INT_TABLE_PATH           ./          # path to tables for spectral interpolation ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
 
 
 # data dump
@@ -155,7 +155,7 @@ OPT__OUTPUT_PART              7           # output a single line or slice: (0=of
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
-OPT__OUTPUT_POT               0           # output gravitational potential [0] ##OPT__OUTPUT_TOTAL ONLY##
+OPT__OUTPUT_POT               1           # output gravitational potential [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_PAR_DENS          1           # output the particle or total mass density on grids:
                                           # (0=off, 1=particle mass density, 2=total mass density) [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
@@ -176,7 +176,7 @@ OPT__RECORD_MEMORY            1           # record the memory consumption [1]
 OPT__RECORD_PERFORMANCE       1           # record the code performance [1]
 OPT__MANUAL_CONTROL           1           # support manually dump data or stop run during the runtime
                                           # (by generating the file DUMP_GAMER_DUMP or STOP_GAMER_STOP) [1]
-OPT__RECORD_USER              0           # record the user-specified info -> edit "Aux_RecordUser.cpp" [0]
+OPT__RECORD_USER              0           # record the user-specified info -> edit "Aux_Record_User.cpp" [0]
 OPT__OPTIMIZE_AGGRESSIVE      0           # apply aggressive optimizations (experimental) [0]
 
 

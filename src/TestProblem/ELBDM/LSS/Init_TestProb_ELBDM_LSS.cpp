@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -164,6 +163,7 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
                             const double x, const double y, const double z, const double Time,
                             const int lv, double AuxArray[] )
 {
+
    double Re, Im, De;
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
@@ -180,8 +180,8 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
          const double GrowingFrac = 3.0/5.0;    // growing-mode amplitude = total amplitude * 3/5
 
          Re = sqrt( (fluid_in[0]-AveDens )/GrowingFrac + AveDens );
-         Im = 0.0;  // constant phase
-         De = SQR(Re) + SQR(Im);
+         Im = 0.0;   // constant phase
+         De = SQR( Re ) + SQR( Im );
 
 #        if ( ELBDM_SCHEME == ELBDM_HYBRID )
          Ph = 0.0;
@@ -194,19 +194,19 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
       {
          if ( nvar_in != 2 )  Aux_Error( ERROR_INFO, "nvar_in (%d) != 2 for LSS_InitMode 2 !!\n", nvar_in );
 
-         // ELBDM_WAVE   expects real and imaginary parts
-         // ELBDM_HYBRID expects density and phase
-#        if ( ELBDM_SCHEME == ELBDM_WAVE )
+//       ELBDM_WAVE   expects real and imaginary parts
+//       ELBDM_HYBRID expects density and phase
+#        if   ( ELBDM_SCHEME == ELBDM_WAVE )
          Re = fluid_in[0];
          Im = fluid_in[1];
-         De = SQR(Re) + SQR(Im);
+         De = SQR( Re ) + SQR( Im );
 #        elif ( ELBDM_SCHEME == ELBDM_HYBRID )
          De = fluid_in[0];
          Ph = fluid_in[1];
-         Re = SQRT(De) * COS(Ph);
-         Im = SQRT(De) * SIN(Ph);
+         Re = sqrt( De )*cos( Ph );
+         Im = sqrt( De )*sin( Ph );
 #        else
-#        error : ERROR : Unsupported ELBDM_SCHEME!!
+#        error : ERROR : unsupported ELBDM_SCHEME !!
 #        endif
          break;
       }
@@ -216,7 +216,6 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
                     "LSS_InitMode", LSS_InitMode );
    } // switch ( LSS_InitMode )
 
-
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( amr->use_wave_flag[lv] ) {
 #  endif
@@ -224,11 +223,11 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
    fluid_out[REAL] = Re;
    fluid_out[IMAG] = Im;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   } else { // if ( amr->use_wave_flag[lv] )
+   } else {
    fluid_out[DENS] = De;
    fluid_out[PHAS] = Ph;
    fluid_out[STUB] = 0.0;
-   } // if ( amr->use_wave_flag[lv] ) ... else
+   }
 #  endif
 
 } // Init_ByFile_ELBDM_LSS

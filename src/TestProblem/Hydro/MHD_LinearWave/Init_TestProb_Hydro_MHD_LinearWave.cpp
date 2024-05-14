@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -51,10 +50,6 @@ void Validate()
    Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
 #  endif
 
-#  ifndef FLOAT8
-   Aux_Error( ERROR_INFO, "FLOAT8 must be enabled !!\n" );
-#  endif
-
 #  ifdef PARTICLE
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
@@ -74,6 +69,10 @@ void Validate()
 // warnings
    if ( MPI_Rank == 0 )
    {
+#     ifndef FLOAT8
+      Aux_Message( stderr, "WARNING : it's recommended to enable FLOAT8 for this test !!\n" );
+#     endif
+
       if ( !OPT__OUTPUT_USER )   Aux_Message( stdout, "WARNING : OPT__OUTPUT_USER is off !!\n" );
    }
 

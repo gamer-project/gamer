@@ -43,7 +43,7 @@ Libyt covering_grid setup:
 5. END_T                   5.7116620e-03
    END_STEP                32
 
-6. YT_SCRIPT               inline_script_covering_grid
+6. YT_SCRIPT               libyt_script/inline_script_covering_grid
    YT_VERBOSE              1
 
 
@@ -62,7 +62,7 @@ Note:
 
    c. For determining the "left_edge" and "dims" in function "ds.covering_grid":
       left_edge: LV1 resolution is 0.175/512/2 ; region covered by LV1 box (by "ds.covering_grid") is 0.175/512/2*512; 0.04375 = (0.175 - 0.175/512/2*512)/2
-      dims:      Plan to cover region with half of the simulation box length, i.e. base level cells is 256X256X256 -> refine to MAX_LEVEL=1 -> LV1 cells is 512X512X512
+      dims:      Plan to cover region with half of the simulation box length, i.e. will have 256X256X256 base level cells -> refine to MAX_LEVEL=1 -> LV1 cells is 512X512X512
 
    d. Use "plot_slice-dens_covering_grid.py" to extract density slices from .npz files
 

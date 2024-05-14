@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -16,21 +15,22 @@
 // =======================================================================================
 
 // problem-specific function prototypes
-
 bool Flag_CMZ( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 #ifdef PARTICLE
 void Par_Init_ByFunction_BarredPot( const long NPar_ThisRank, const long NPar_AllRank,
-                                    real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                    real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                    real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
+                                    real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                    real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                    real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
 #endif
-static void IsolatedBC( real fluid[], const double x, const double y, const double z, const double Time,
-                const int lv, double AuxArray[] );
-
+static void IsolatedBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                        const int GhostSize, const int idx[], const double pos[], const double Time,
+                        const int lv, const int TFluVarIdxList[], double AuxArray[] );
 //void Init_ExtAcc_BarredPot();
 //void Init_ExtPot_BarredPot();
-
 void Init_ExtPot_TabularP17();
+
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -167,14 +167,13 @@ void SetParameter()
 // (4) make a note
    if ( MPI_Rank == 0 )
    {
-      Aux_Message( stdout, "==================================================================================\n" );
-      Aux_Message( stdout, "  test problem ID               = %d\n",              TESTPROB_ID                     );
-      Aux_Message( stdout, "  Log bar velocity              = %13.7e km/s \n",    BarredPot_V0*UNIT_V/Const_km    );
-      Aux_Message( stdout, "  Log bar axis ratio            = %13.7e \n",         BarredPot_q                     );
-      Aux_Message( stdout, "  Log bar pattern speed         = %13.7e km/s/kpc\n", BarredPot_Omegabar/UNIT_T
-                                                                                              *Const_kpc/Const_km );
-      Aux_Message( stdout, "  Initial Gas disk temperature  = %13.7e K \n",       BarredPot_initT                 );
-      Aux_Message( stdout, "==================================================================================\n" );
+      Aux_Message( stdout, "==================================================================================\n"             );
+      Aux_Message( stdout, "  test problem ID              = %d\n",              TESTPROB_ID                                  );
+      Aux_Message( stdout, "  Log bar velocity             = %13.7e km/s\n",     BarredPot_V0*UNIT_V/Const_km                 );
+      Aux_Message( stdout, "  Log bar axis ratio           = %13.7e\n",          BarredPot_q                                  );
+      Aux_Message( stdout, "  Log bar pattern speed        = %13.7e km/s/kpc\n", BarredPot_Omegabar/UNIT_T*Const_kpc/Const_km );
+      Aux_Message( stdout, "  Initial Gas disk temperature = %13.7e K\n",        BarredPot_initT                              );
+      Aux_Message( stdout, "==================================================================================\n"             );
    }
 
 
@@ -283,43 +282,38 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 } // FUNCTION : SetGridIC
 
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  IsolatedBC
 // Description :  Isolated boundary condition for galaxies, only allow outflow velocities
 //
 // Note        :  1. Linked to the function pointer "BC_User_Ptr"
 //
-// Parameter   :  fluid    : Fluid field to be set
-//                x/y/z    : Physical coordinates
-//                Time     : Physical time
-//                lv       : Refinement level
-//                AuxArray : Auxiliary array
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
+//                ArraySize      : Size of Array including the ghost zones on each side
+//                fluid          : Fluid fields to be set
+//                NVar_Flu       : Number of fluid variables to be prepared
+//                GhostSize      : Number of ghost zones
+//                idx            : Array indices
+//                pos            : Physical coordinates
+//                Time           : Physical time
+//                lv             : Refinement level
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
+//                AuxArray       : Auxiliary array
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void IsolatedBC( real fluid[], const double x, const double y, const double z, const double Time,
-         const int lv, double AuxArray[] )
+void IsolatedBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                 const int GhostSize, const int idx[], const double pos[], const double Time,
+                 const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
 
-//   real Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
-//
-//   Dens       = 1.0e-6*(Const_Msun/CUBE(Const_pc))/(UNIT_M/CUBE(UNIT_L));
-//   MomX       = Dens*Vx;
-//   MomY       = Dens*Vy;
-//   MomZ       = Dens*Vz;
-//   Pres       = Pres0*(  2.0 + sin( 2.0*M_PI*(4.5*x+5.5*y*6.5*z)/amr->BoxSize[2] )  );
-//   Eint       = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray );
-//   Etot       = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, Emag0 );
+// simply call the IC function
+   SetGridIC( fluid, pos[0], pos[1], pos[2], Time, lv, AuxArray );
 
-//   fluid[DENS] = Dens;
-//   fluid[MOMX] = MomX;
-//   fluid[MOMY] = MomY;
-//   fluid[MOMZ] = MomZ;
-//   fluid[ENGY] = Etot;
+} // FUNCTION : IsolatedBC
 
-   SetGridIC( fluid, x, y, z, Time, lv, AuxArray );
-
-} // FUNCTION : BC
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -342,7 +336,7 @@ void AddNewField_BarredPot()
 // --> since Grackle may already add this field automatically when GRACKLE_METAL is enabled
 // --> also note that "Idx_Metal" has been predefined in Field.h
    if ( Idx_Metal == Idx_Undefined )
-      Idx_Metal = AddField( "Metal", NORMALIZE_NO, INTERP_FRAC_YES );
+      Idx_Metal = AddField( "Metal", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_YES );
 
 
 } // FUNCTION : AddNewField_BarredPot

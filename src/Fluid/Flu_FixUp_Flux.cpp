@@ -12,9 +12,15 @@
 //                   Buf_GetBufferData()
 //                2. Invoked by EvolveLevel()
 //
-// Parameter   :  lv : Target coarse level
+// Parameter   :  lv   : Target coarse level
+//                TVar : Target variables
+//                       --> Supported variables in different models:
+//                           HYDRO        : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY [, BIDX(field_index)]
+//                           ELBDM_WAVE   : _DENS
+//                           ELBDM_HYBRID : _DENS
+//                       --> _FLUID, _PASSIVE, and _TOTAL apply to all models
 //-------------------------------------------------------------------------------------------------------
-void Flu_FixUp_Flux( const int lv )
+void Flu_FixUp_Flux( const int lv, const long TVar )
 {
 
    const bool CheckMinPres_No = false;
@@ -148,11 +154,15 @@ void Flu_FixUp_Flux( const int lv )
 //             calculate the corrected results
 //             --> do NOT **store** these results yet since we want to skip the cells with unphysical results
                real CorrVal[NFLUX_TOTAL];    // values after applying the flux correction
-               for (int v=0; v<NFLUX_TOTAL; v++)   CorrVal[v] = *FluidPtr1D[v] + FluxPtr[v][m][n]*Const[s];
+               for (int v=0; v<NFLUX_TOTAL; v++)
+               {
+                  if ( TVar & BIDX(v) )   CorrVal[v] = *FluidPtr1D[v] + FluxPtr[v][m][n]*Const[s];
+                  else                    CorrVal[v] = *FluidPtr1D[v];
+               }
 
 
 //             calculate the internal energy density and pressure
-#              if ( MODEL == HYDRO  &&  !defined BAROTROPIC_EOS )
+#              if ( MODEL == HYDRO  &&  !defined BAROTROPIC_EOS  &&  !defined SRHD )
                real Eint, Pres;
                real *ForEint = CorrVal;
 
@@ -199,7 +209,8 @@ void Flu_FixUp_Flux( const int lv )
                {
                   Pres = Hydro_Con2Pres( ForEint[DENS], ForEint[MOMX], ForEint[MOMY], ForEint[MOMZ], ForEint[ENGY],
                                          ForEint+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, Emag,
-                                         EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                         EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                         EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
                                          &Eint );
                }
 
@@ -230,6 +241,12 @@ void Flu_FixUp_Flux( const int lv )
                bool ApplyFix;
 
 #              if   ( MODEL == HYDRO )
+#              ifdef SRHD
+               if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, CorrVal, NULL, NULL_REAL, NULL_REAL, NULL_REAL,
+                                         EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                         EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                         ERROR_INFO, UNPHY_VERBOSE )  )
+#              else
                if ( CorrVal[DENS] <= MIN_DENS
 #                   ifndef BAROTROPIC_EOS
                     ||  Eint <= MIN_EINT  ||  !Aux_IsFinite(Eint)
@@ -244,13 +261,13 @@ void Flu_FixUp_Flux( const int lv )
 #                   endif
                   )
 
-#              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
-//             throw error if corrected density is NaN
-               if ( CorrVal[DENS] != CorrVal[DENS] )
-               {
-                  Aux_Error( ERROR_INFO, "Flux-corrected density is NaN in patch with PID %d on level %d for the option OPT__FIXUP_FLUX !!\n", PID, lv);
-               }
+#              endif
 
+#              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
+//             throw error if corrected density is unphysical
+               if ( ! Aux_IsFinite(CorrVal[DENS]) )
+                  Aux_Error( ERROR_INFO, "Flux-corrected density is unphysical (dens %14.7e, flux %14.7e, const %14.7e, PID %d, lv %d) !!\n",
+                             CorrVal[DENS], FluxPtr[DENS][m][n], Const[s], PID, lv );
 
                if ( CorrVal[DENS] <= MIN_DENS )
 
@@ -271,7 +288,8 @@ void Flu_FixUp_Flux( const int lv )
                {
 //                floor and normalize the passive scalars
 #                 if ( NCOMP_PASSIVE > 0  &&  MODEL == HYDRO )
-                  for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+                  for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+                     if ( TVar & BIDX(v) )   CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
 
                   if ( OPT__NORMALIZE_PASSIVE )
                      Hydro_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
@@ -281,7 +299,7 @@ void Flu_FixUp_Flux( const int lv )
 //                ensure the consistency between pressure, total energy density, and dual-energy variable
 //                --> assuming the variable "Eint" is correct
 //                --> no need to check the internal energy floor here since we have skipped failing cells
-#                 if ( MODEL == HYDRO )
+#                 if ( MODEL == HYDRO  &&  !defined SRHD )
 
 //                for barotropic EoS, do not apply flux correction at all
 #                 ifdef BAROTROPIC_EOS
@@ -304,15 +322,18 @@ void Flu_FixUp_Flux( const int lv )
 
 
 //                store the corrected results
-                  for (int v=0; v<NFLUX_TOTAL; v++)   *FluidPtr1D[v] = CorrVal[v];
+                  for (int v=0; v<NFLUX_TOTAL; v++)
+                  {
+                     if ( TVar & BIDX(v) )   *FluidPtr1D[v] = CorrVal[v];
+                  }
 
 
 //                rescale the real and imaginary parts to be consistent with the corrected amplitude
 //                --> must NOT use CorrVal[REAL] and CorrVal[IMAG] below since NFLUX_TOTAL == 1 for ELBDM
-#                 if ( MODEL == ELBDM &&  defined CONSERVE_MASS )
+#                 if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
 #                 if ( ELBDM_SCHEME == ELBDM_HYBRID )
                   if ( amr->use_wave_flag[lv] ) {
-#                 endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#                 endif
                   real Re, Im, Rho_Corr, Rho_Wrong, Rescale;
 
                   Re        = *FluidPtr1D[REAL];
@@ -333,8 +354,8 @@ void Flu_FixUp_Flux( const int lv )
                   *FluidPtr1D[IMAG] *= Rescale;
 #                 if ( ELBDM_SCHEME == ELBDM_HYBRID )
                   } // if ( amr->use_wave_flag[lv] )
-#                 endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-#                 endif // # if ( MODEL == ELBDM &&  defined CONSERVE_MASS )
+#                 endif
+#                 endif // # if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
                } // if ( ApplyFix )
 
 

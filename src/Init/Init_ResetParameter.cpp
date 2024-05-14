@@ -29,11 +29,44 @@ void Init_ResetParameter()
 #  ifdef OPENMP
    if ( OMP_NTHREAD <= 0 )
    {
-      OMP_NTHREAD = omp_get_max_threads();
+      int  NCPU_Node, NNode_PBS, NNode_SLURM;
+      FILE *fp;
+
+//    determine if the PBS/SLURM software is used
+      fp = popen( "echo ${PBS_NUM_NODES:-0}", "r" );
+      fscanf( fp, "%d", &NNode_PBS );
+
+      fp = popen( "echo ${SLURM_JOB_NUM_NODES:-0}", "r" );
+      fscanf( fp, "%d", &NNode_SLURM );
+
+//    set up the number of OpenMP threads
+      if ( NNode_PBS ) // PBS system
+      {
+         fp = popen( "echo $PBS_NUM_PPN", "r" );
+         fscanf( fp, "%d", &NCPU_Node );
+
+         OMP_NTHREAD = NCPU_Node * NNode_PBS / MPI_NRank;
+      }
+
+      else if ( NNode_SLURM ) // SLURM system
+      {
+         fp = popen( "echo $SLURM_CPUS_ON_NODE", "r" );
+         fscanf( fp, "%d", &NCPU_Node );
+
+         OMP_NTHREAD = NCPU_Node * NNode_SLURM / MPI_NRank;
+      }
+
+      else // default
+      {
+         OMP_NTHREAD = omp_get_max_threads();
+      }
+
+      pclose( fp );
 
       PRINT_RESET_PARA( OMP_NTHREAD, FORMAT_INT, "" );
-   }
-#  else
+   } // if ( OMP_NTHREAD <= 0 )
+
+#  else // #ifdef OPENMP
    if ( OMP_NTHREAD != 1 )
    {
       OMP_NTHREAD = 1;
@@ -47,12 +80,14 @@ void Init_ResetParameter()
    if ( DT__FLUID < 0.0 )
    {
 #     if   ( MODEL == HYDRO )
+
 #     if   ( FLU_SCHEME == RTVD )
       DT__FLUID = 0.50;
 #     elif ( FLU_SCHEME == MHM )
       DT__FLUID = 0.40;
 #     elif ( FLU_SCHEME == MHM_RP )
-      DT__FLUID = 0.30;
+//    CFL factor is recommended to be larger than 0.4 for the Athena limiter
+      DT__FLUID = ( OPT__LR_LIMITER == LR_LIMITER_ATHENA ) ? 0.4 : 0.3;
 #     elif ( FLU_SCHEME == CTU )
       DT__FLUID = 0.50;
 #     else
@@ -61,7 +96,7 @@ void Init_ResetParameter()
 
 #     elif  ( MODEL == ELBDM )
 
-#     if ( WAVE_SCHEME == WAVE_FD )
+#     if   ( WAVE_SCHEME == WAVE_FD )
 #     ifdef GRAVITY
       DT__FLUID = 0.20;                   // 1D k-max mode rotates 0.20*2*PI
 #     else // # ifdef GRAVITY
@@ -69,16 +104,17 @@ void Init_ResetParameter()
       DT__FLUID = SQRT(27.0)*M_PI/32.0;   // stability limit (~0.51)
 #     else // # ifdef LAPLACIAN_4TH
       DT__FLUID = SQRT(3.0)*M_PI/8.0;     // stability limit (~0.68)
-#     endif // # ifdef LAPLACIAN_4TH ... # else
-#     endif // # ifdef GRAVITY ... # else
+#     endif // # ifdef LAPLACIAN_4TH ... else ...
+#     endif // # ifdef GRAVITY ... else ...
 
 #     elif ( WAVE_SCHEME == WAVE_GRAMFE )
 #     ifdef GRAVITY
       DT__FLUID = 0.20;                   // 1D k-max mode rotates 0.20*2*PI
 #     else // # ifdef GRAVITY
       DT__FLUID = 0.20;                   // stability limit depends on ghost boundary and extension order
-#     endif // # ifdef GRAVITY ... # else
-#     else // #  if (WAVE_SCHEME == WAVE_FD )
+#     endif // # ifdef GRAVITY ... else ...
+
+#     else // WAVE_SCHEME
 #        error : ERROR : unsupported WAVE_SCHEME !!
 #     endif // WAVE_SCHEME
 
@@ -97,17 +133,6 @@ void Init_ResetParameter()
    }
 
 
-// hybrid velocity dt (empirically determined CFL condition)
-#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( DT__HYBRID_VELOCITY < 0.0 )
-   {
-      DT__HYBRID_VELOCITY = 1.00;
-
-      PRINT_RESET_PARA( DT__HYBRID_VELOCITY, FORMAT_REAL, "" );
-   } // if ( DT__HYBRID_VELOCITY < 0.0 )
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-
-
 // hybrid dt (empirically determined CFL condition)
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( DT__HYBRID_CFL < 0.0 )
@@ -117,15 +142,36 @@ void Init_ResetParameter()
 #     else
       DT__HYBRID_CFL = 0.40;
 #     endif
+
       PRINT_RESET_PARA( DT__HYBRID_CFL, FORMAT_REAL, "" );
-   } // if ( DT__HYBRID_CFL < 0.0 )
+   }
 
    if ( DT__HYBRID_CFL_INIT < 0.0 )
    {
       DT__HYBRID_CFL_INIT = DT__HYBRID_CFL;
+
       PRINT_RESET_PARA( DT__HYBRID_CFL_INIT, FORMAT_REAL, "" );
-   } // if ( DT__HYBRID_CFL < 0.0 )
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   }
+#  endif
+
+
+// hybrid velocity dt (empirically determined CFL condition)
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( DT__HYBRID_VELOCITY < 0.0 )
+   {
+      DT__HYBRID_VELOCITY = 1.00;
+
+      PRINT_RESET_PARA( DT__HYBRID_VELOCITY, FORMAT_REAL, "" );
+   }
+
+   if ( DT__HYBRID_VELOCITY_INIT < 0.0 )
+   {
+      DT__HYBRID_VELOCITY_INIT = DT__HYBRID_VELOCITY;
+
+      PRINT_RESET_PARA( DT__HYBRID_VELOCITY_INIT, FORMAT_REAL, "" );
+   }
+#  endif
+
 
 // gravity dt
 #  ifdef GRAVITY
@@ -315,8 +361,8 @@ void Init_ResetParameter()
 
       PRINT_RESET_PARA( ELBDM_TAYLOR3_AUTO, FORMAT_INT, "since OPT__FREEZE_FLUID is enabled" );
    }
+#  endif // #if ( MODEL == ELBDM )
 
-#  endif //  #if ( MODEL == ELBDM )
 
 // interpolation schemes for the fluid variables
 #  if   ( MODEL == HYDRO )
@@ -467,7 +513,12 @@ void Init_ResetParameter()
 #  if ( MODEL == HYDRO )
    if ( OPT__1ST_FLUX_CORR < 0 )
    {
-#     ifdef MHD
+#     ifdef SRHD
+      OPT__1ST_FLUX_CORR = FIRST_FLUX_CORR_NONE;
+
+      PRINT_RESET_PARA( OPT__1ST_FLUX_CORR, FORMAT_INT, "for SRHD" );
+
+#     elif ( defined MHD )
       OPT__1ST_FLUX_CORR = FIRST_FLUX_CORR_3D;
 
       PRINT_RESET_PARA( OPT__1ST_FLUX_CORR, FORMAT_INT, "for MHD" );
@@ -481,7 +532,7 @@ void Init_ResetParameter()
 #     endif
 
       PRINT_RESET_PARA( OPT__1ST_FLUX_CORR, FORMAT_INT, "for HYDRO" );
-#     endif // #ifdef MHD ... else ...
+#     endif // #ifdef SRHD ... elif MHD ... else ...
    }
 
    if      ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_NONE )
@@ -693,6 +744,33 @@ void Init_ResetParameter()
 #  endif
 
 
+// set default value for OPT__RECORD_CENTER
+   if ( OPT__RECORD_CENTER )
+   {
+      if ( COM_CEN_X < 0.0  ||  COM_CEN_Y < 0.0  ||  COM_CEN_Z < 0.0 )
+      {
+         COM_CEN_X = -1.0;
+         COM_CEN_Y = -1.0;
+         COM_CEN_Z = -1.0;
+         PRINT_RESET_PARA( COM_CEN_X, FORMAT_REAL, "and it will be reset to the coordinate of the peak total density" );
+         PRINT_RESET_PARA( COM_CEN_Y, FORMAT_REAL, "and it will be reset to the coordinate of the peak total density" );
+         PRINT_RESET_PARA( COM_CEN_Z, FORMAT_REAL, "and it will be reset to the coordinate of the peak total density" );
+      }
+
+      if ( COM_MAX_R < 0.0 )
+      {
+         COM_MAX_R = __FLT_MAX__;
+         PRINT_RESET_PARA( COM_MAX_R, FORMAT_REAL, "" );
+      }
+
+      if ( COM_TOLERR_R < 0.0 )
+      {
+         COM_TOLERR_R = amr->dh[MAX_LEVEL];
+         PRINT_RESET_PARA( COM_TOLERR_R, FORMAT_REAL, "" );
+      }
+   }
+
+
 // OPT__LR_LIMITER
 #  if ( MODEL == HYDRO )
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
@@ -849,6 +927,20 @@ void Init_ResetParameter()
    }
 
 
+// OPT__UM_IC_FLOAT8
+   if ( OPT__INIT == INIT_BY_FILE  &&  OPT__UM_IC_FLOAT8 < 0 )
+   {
+//    set OPT__UM_IC_FLOAT8 = FLOAT8 by default
+#     ifdef FLOAT8
+      OPT__UM_IC_FLOAT8 = 1;
+#     else
+      OPT__UM_IC_FLOAT8 = 0;
+#     endif
+
+      PRINT_RESET_PARA( OPT__UM_IC_FLOAT8, FORMAT_INT, "to be consistent with FLOAT8" );
+   }
+
+
 // always turn on "OPT__CK_PARTICLE" when debugging particles
 #  ifdef DEBUG_PARTICLE
    if ( !OPT__CK_PARTICLE )
@@ -870,6 +962,22 @@ void Init_ResetParameter()
       PRINT_RESET_PARA( PAR_INIT, FORMAT_INT, "for restart" );
    }
 #  endif
+
+
+// PAR_IC_FLOAT8
+#  ifdef PARTICLE
+   if ( amr->Par->Init == PAR_INIT_BY_FILE  &&  PAR_IC_FLOAT8 < 0 )
+   {
+//    set PAR_IC_FLOAT8 = FLOAT8_PAR by default
+#     ifdef FLOAT8_PAR
+      PAR_IC_FLOAT8 = 1;
+#     else
+      PAR_IC_FLOAT8 = 0;
+#     endif
+
+      PRINT_RESET_PARA( PAR_IC_FLOAT8, FORMAT_INT, "to be consistent with FLOAT8_PAR" );
+   }
+#endif
 
 
 // JEANS_MIN_PRES must work with GRAVITY
@@ -1016,6 +1124,12 @@ void Init_ResetParameter()
       PRINT_RESET_PARA( FB_LEVEL, FORMAT_INT, "" );
    }
 #  endif // #ifdef FEEDBACK
+
+
+// cosmic-ray options
+#  ifdef COSMIC_RAY
+// nothing yet
+#  endif // #ifdef COSMIC_RAY
 
 
 // convert to code units

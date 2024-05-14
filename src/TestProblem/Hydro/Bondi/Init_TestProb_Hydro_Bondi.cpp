@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -86,10 +85,9 @@ int Flu_ResetByUser_Func_Bondi( real fluid[], const double Emag, const double x,
                                 const double dt, const int lv, double AuxArray[] );
 void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
 static void HSE_SetDensProfileTable();
-
-// this test problem needs to reset both Flu_ResetByUser_API_Ptr and Flu_ResetByUser_Func_Ptr, while
-// the former is not defined in TestProb.h (because it's rarely required)
-extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
+static void BondiBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                     const int GhostSize, const int idx[], const double pos[], const double Time,
+                     const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 
 
@@ -185,8 +183,8 @@ void SetParameter()
    ReadPara_t *ReadPara  = new ReadPara_t;
 
 // (1-1) add parameters in the following format:
-// add parameters in the following format (some handy constants are defined in TestProb.h):
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,                  DEFAULT,      MIN,              MAX               );
 // ********************************************************************************************************************************
@@ -605,6 +603,38 @@ void End_Bondi()
    }
 
 } // FUNCTION : End_Bondi
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  BondiBC
+// Description :  Set the external boundary condition to the IC condition
+//
+// Note        :  1. Linked to the function pointer "BC_User_Ptr"
+//
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
+//                ArraySize      : Size of Array including the ghost zones on each side
+//                fluid          : Fluid fields to be set
+//                NVar_Flu       : Number of fluid variables to be prepared
+//                GhostSize      : Number of ghost zones
+//                idx            : Array indices
+//                pos            : Physical coordinates
+//                Time           : Physical time
+//                lv             : Refinement level
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
+//                AuxArray       : Auxiliary array
+//
+// Return      :  fluid
+//-------------------------------------------------------------------------------------------------------
+void BondiBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+              const int GhostSize, const int idx[], const double pos[], const double Time,
+              const int lv, const int TFluVarIdxList[], double AuxArray[] )
+{
+
+// simply call the IC function
+   SetGridIC( fluid, pos[0], pos[1], pos[2], Time, lv, AuxArray );
+
+} // FUNCTION : BondiBC
 #endif // #if ( MODEL == HYDRO  &&  defined GRAVITY )
 
 
@@ -638,7 +668,7 @@ void Init_TestProb_Hydro_Bondi()
    Init_Function_User_Ptr   = SetGridIC;
    Flag_User_Ptr            = Flag_Bondi;
    Aux_Record_User_Ptr      = Record_Bondi;
-   BC_User_Ptr              = SetGridIC;
+   BC_User_Ptr              = BondiBC;
    Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Func_Bondi;
    Flu_ResetByUser_API_Ptr  = Flu_ResetByUser_API_Bondi;
    End_User_Ptr             = End_Bondi;

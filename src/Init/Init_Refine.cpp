@@ -75,15 +75,14 @@ void Init_Refine( const int lv )
 
 #           if ( ELBDM_SCHEME == ELBDM_HYBRID )
             if ( amr->patch[0][lv][PID]->switch_to_wave_flag ) {
-               amr->use_wave_flag[lv + 1] = true;
+               amr->use_wave_flag[lv+1] = true;
             }
 
-//          if father level uses wave flag, also use wave solver on son level
+//          if father level uses wave flag, also use wave solver on son levels
             if ( amr->use_wave_flag[lv] ) {
                amr->use_wave_flag[lv+1] = true;
             }
-#           endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-
+#           endif
          } // if ( amr->patch[0][lv][PID]->flag )
       } // for (int PID=amr->NPatchComma[lv][s+1]; PID<amr->NPatchComma[lv][s+2]; PID++)
 

@@ -178,12 +178,12 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
 
 // 1. prepare the send buffers
-   int  *NParForEachRank          = new int [MPI_NRank];
-   int  *NPatchForEachRank        = new int [MPI_NRank];
-   int  *SendBuf_NPatchEachRank   = NPatchForEachRank;
-   int  *SendBuf_NParEachPatch    = NULL;
-   long *SendBuf_LBIdxEachPatch   = NULL;
-   real *SendBuf_ParDataEachPatch = NULL;
+   int      *NParForEachRank          = new int [MPI_NRank];
+   int      *NPatchForEachRank        = new int [MPI_NRank];
+   int      *SendBuf_NPatchEachRank   = NPatchForEachRank;
+   int      *SendBuf_NParEachPatch    = NULL;
+   long     *SendBuf_LBIdxEachPatch   = NULL;
+   real_par *SendBuf_ParDataEachPatch = NULL;
 
 #  if ( LOAD_BALANCE != HILBERT )
    const int PatchScaleFaLv = PS1 * amr->scale[FaLv];
@@ -250,19 +250,20 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
 // 1-2. allocate the send buffers
 // both NSendPatchTotal and NSendParTotal do NOT include patches without particles
-   int NSendPatchTotal=0, NSendParTotal=0;
+   int  NSendPatchTotal = 0;
+   long NSendParTotal   = 0L;
 
    for (int r=0; r<MPI_NRank; r++)
    {
-      NSendPatchTotal += NPatchForEachRank[r];
-      NSendParTotal   += NParForEachRank  [r];
+      NSendPatchTotal +=       NPatchForEachRank[r];
+      NSendParTotal   += (long)NParForEachRank  [r];
    }
 
    SendBuf_NParEachPatch  = new int  [NSendPatchTotal];
    SendBuf_LBIdxEachPatch = new long [NSendPatchTotal];
 
 // reuse the MPI send buffer declared in LB_GetBufferData() for better MPI performance
-   if ( !JustCountNPar )   SendBuf_ParDataEachPatch = LB_GetBufferData_MemAllocate_Send( NSendParTotal*NAtt );
+   if ( !JustCountNPar )   SendBuf_ParDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)NAtt*sizeof(real_par) );
 
 
 // 1-3. set the array offsets of the send buffer of each rank
@@ -280,8 +281,8 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
 
 // 1-4. set the array offsets of the send buffer of each patch (mainly for the OpenMP parallelization)
-   int *OffsetEachPatch_Patch   = new int [NPatchAll];
-   int *OffsetEachPatch_ParData = new int [NPatchAll];   // actually useless in the JustCountNPar mode
+   int  *OffsetEachPatch_Patch   = new int  [NPatchAll];
+   long *OffsetEachPatch_ParData = new long [NPatchAll];   // actually useless in the JustCountNPar mode
 
    for (int lv=FaLv+1, q=0; lv<=MAX_LEVEL; lv++, q++)
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -293,8 +294,8 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 //    skip patches without particles (must skip since OffsetEachRank_* are not set for patches without particles)
       if ( NParThisPatch == 0 )  continue;
 
-      OffsetEachPatch_Patch  [AccIdx] = OffsetEachRank_Patch  [TRank];
-      OffsetEachPatch_ParData[AccIdx] = OffsetEachRank_ParData[TRank];
+      OffsetEachPatch_Patch  [AccIdx] =       OffsetEachRank_Patch  [TRank];
+      OffsetEachPatch_ParData[AccIdx] = (long)OffsetEachRank_ParData[TRank];
 
       OffsetEachRank_Patch  [TRank] += 1;
       OffsetEachRank_ParData[TRank] += NParThisPatch*NAtt;
@@ -323,9 +324,9 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
             Aux_Error( ERROR_INFO, "OffsetEachPatch_Patch[%d] (%d) >= max (%d) !!\n",
                        AccIdx, OffsetEachPatch_Patch[AccIdx], NSendPatchTotal );
 
-         if ( OffsetEachPatch_ParData[AccIdx] + NAtt > NSendParTotal*NAtt )
-            Aux_Error( ERROR_INFO, "OffsetEachPatch_ParData[%d] + NAtt (%d) > max (%d) !!\n",
-                       AccIdx, OffsetEachPatch_ParData[AccIdx] + NAtt, NSendParTotal*NAtt );
+         if ( OffsetEachPatch_ParData[AccIdx] + (long)NAtt > NSendParTotal*(long)NAtt )
+            Aux_Error( ERROR_INFO, "OffsetEachPatch_ParData[%d] + NAtt (%ld) > max (%ld) !!\n",
+                       AccIdx, OffsetEachPatch_ParData[AccIdx] + (long)NAtt, NSendParTotal*(long)NAtt );
 #        endif
 
          SendBuf_NParEachPatch [ OffsetEachPatch_Patch[AccIdx] ] = NParThisPatch;
@@ -333,7 +334,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
          if ( !JustCountNPar )
          {
-            real *SendPtr = SendBuf_ParDataEachPatch + OffsetEachPatch_ParData[AccIdx];
+            real_par *SendPtr = SendBuf_ParDataEachPatch + OffsetEachPatch_ParData[AccIdx];
 
             for (int p=0; p<NParThisPatch; p++)
             {
@@ -345,9 +346,9 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
                if ( PredictPos )
                {
 //                there should be no particles waiting for velocity correction since these particles are collected from **higher** levels
-//                if ( amr->Par->Time[ParID] < (real)0.0 )  continue;
+//                if ( amr->Par->Time[ParID] < (real_par)0.0 )  continue;
 #                 ifdef DEBUG_PARTICLE
-                  if ( amr->Par->Time[ParID] < (real)0.0 )
+                  if ( amr->Par->Time[ParID] < (real_par)0.0 )
                      Aux_Error( ERROR_INFO, "ParTime[%ld] = %21.14e < 0.0 !!\n", ParID, amr->Par->Time[ParID] );
 #                 endif
 
@@ -376,16 +377,17 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 // 2. send data to all ranks
 // these arrays will be allocated by Par_LB_SendParticleData() (using call by reference) and must be free'd later
 // --> except for RecvBuf_ParDataEachPatch, which is just a pointer to the MPI recv buffer declared in LB_GetBufferData
-   int  *RecvBuf_NPatchEachRank   = NULL;
-   int  *RecvBuf_NParEachPatch    = NULL;
-   long *RecvBuf_LBIdxEachPatch   = NULL;
-   real *RecvBuf_ParDataEachPatch = NULL;
+   int      *RecvBuf_NPatchEachRank   = NULL;
+   int      *RecvBuf_NParEachPatch    = NULL;
+   long     *RecvBuf_LBIdxEachPatch   = NULL;
+   real_par *RecvBuf_ParDataEachPatch = NULL;
 
 // 2-1. exchange data
    const bool Exchange_NPatchEachRank_Yes = true;
    const bool Exchange_LBIdxEachRank_Yes  = true;
    const bool Exchange_ParDataEachRank    = !JustCountNPar;
-   int  NRecvPatchTotal, NRecvParTotal;
+   int  NRecvPatchTotal;
+   long NRecvParTotal;
 
    char Timer_Comment[50];
    sprintf( Timer_Comment, "%3d %15s", FaLv, "Par_Collect" );
@@ -468,7 +470,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
       if ( amr->patch[0][FaLv][FaPID]->NPar_Copy > 0 )
       {
          for (int v=0; v<NAtt; v++)
-            amr->patch[0][FaLv][FaPID]->ParAtt_Copy[ AttIntIdx[v] ] = new real [ amr->patch[0][FaLv][FaPID]->NPar_Copy ];
+            amr->patch[0][FaLv][FaPID]->ParAtt_Copy[ AttIntIdx[v] ] = new real_par [ amr->patch[0][FaLv][FaPID]->NPar_Copy ];
 
 //       reset to zero (instead of NPar) since we will use NPar_Copy to record the number of particles that has been
 //       added to ParAtt_Copy[]
@@ -480,7 +482,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 // 3-4. store the received particle data
 // --> currently we do not implement OpenMP here since different received patches at lv>FaLv may map to the same patch at FaLv
 // --> one cannot naively parallelize the "for (int t=0; t<NRecvPatchTotal; t++)" loop
-   const real *RecvPtr = RecvBuf_ParDataEachPatch;
+   const real_par *RecvPtr = RecvBuf_ParDataEachPatch;
    int NPar_Copy_Old;
 
    if ( !JustCountNPar )
@@ -514,18 +516,18 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 #        ifdef DEBUG_PARTICLE
 //       we do not transfer inactive particles
          if ( AttBitIdx & _PAR_MASS )
-         if ( amr->patch[0][FaLv][FaPID_Match]->ParAtt_Copy[PAR_MASS][p] < (real)0.0 )
+         if ( amr->patch[0][FaLv][FaPID_Match]->ParAtt_Copy[PAR_MASS][p] < (real_par)0.0 )
             Aux_Error( ERROR_INFO, "found inactive particle (FaLv %d, FaPID %d, Mass %14.7e, particle %d) !!\n",
                        FaLv, FaPID_Match, amr->patch[0][FaLv][FaPID_Match]->ParAtt_Copy[PAR_MASS][p], p );
 
 //       check if the received particle lies within the target patch (may not when PredictPos is on)
          if ( !PredictPos  &&  ( AttBitIdx & _PAR_POSX )  &&  ( AttBitIdx & _PAR_POSY )  &&  ( AttBitIdx & _PAR_POSZ ) )
          {
-            const double *EdgeL     = amr->patch[0][FaLv][FaPID_Match]->EdgeL;
-            const double *EdgeR     = amr->patch[0][FaLv][FaPID_Match]->EdgeR;
-            const real    ParPos[3] = { amr->patch[0][FaLv][FaPID_Match]->ParAtt_Copy[PAR_POSX][p],
-                                        amr->patch[0][FaLv][FaPID_Match]->ParAtt_Copy[PAR_POSY][p],
-                                        amr->patch[0][FaLv][FaPID_Match]->ParAtt_Copy[PAR_POSZ][p] };
+            const double     *EdgeL     = amr->patch[0][FaLv][FaPID_Match]->EdgeL;
+            const double     *EdgeR     = amr->patch[0][FaLv][FaPID_Match]->EdgeR;
+            const real_par    ParPos[3] = { amr->patch[0][FaLv][FaPID_Match]->ParAtt_Copy[PAR_POSX][p],
+                                            amr->patch[0][FaLv][FaPID_Match]->ParAtt_Copy[PAR_POSY][p],
+                                            amr->patch[0][FaLv][FaPID_Match]->ParAtt_Copy[PAR_POSZ][p] };
 
             for (int d=0; d<3; d++)
             {
@@ -562,7 +564,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
 //          4-1. check if this particle is indeed waiting for the velocity correction (i.e., ParTime = -dt_half < 0.0 for KDK)
 #           ifdef DEBUG_PARTICLE
-            if ( amr->Par->Integ == PAR_INTEG_KDK  &&  amr->Par->Time[ParID] >= (real)0.0  &&  amr->Par->Type[ParID] != PTYPE_TRACER )
+            if ( amr->Par->Integ == PAR_INTEG_KDK  &&  amr->Par->Time[ParID] >= (real_par)0.0  &&  amr->Par->Type[ParID] != PTYPE_TRACER )
                Aux_Error( ERROR_INFO, "This particle shouldn't be here (FaLv %d, FaPID %d, ParID %ld, ParTime %21.14e, ParType %d ) !!\n",
                           FaLv, FaPID, ParID, amr->Par->Time[ParID], (int)amr->Par->Type[ParID] );
 #           endif

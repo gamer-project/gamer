@@ -17,9 +17,9 @@ BOX_SIZE                      30.0        # box size along the longest side (in 
 NX0_TOT_X                     512         # number of base-level cells along x
 NX0_TOT_Y                     512         # number of base-level cells along y
 NX0_TOT_Z                     16          # number of base-level cells along z
-OMP_NTHREAD                   -1          # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
-END_T                         -1          # end physical time (<0=auto -> must be set by test problems or restart) [-1]
-END_STEP                      -1          # end step (<0=auto -> must be set by test problems or restart) [-1]
+OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto) [-1] ##OPENMP ONLY##
+END_T                        -1.0         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
+END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
 
 
 # test problems
@@ -50,7 +50,12 @@ HUBBLE0                       0.6732117            # dimensionless Hubble parame
 DT__MAX                      -1.0         # dt criterion: maximum allowed dt (<0=off) [-1.0]
 DT__FLUID                    -1.0         # dt criterion: fluid solver CFL factor (<0=auto) [-1.0]
 DT__FLUID_INIT               -1.0         # dt criterion: DT__FLUID at the first step (<0=auto) [-1.0]
+DT__GRAVITY                  -1.0         # dt criterion: gravity solver safety factor (<0=auto) [-1.0]
 DT__PHASE                     0.0         # dt criterion: phase rotation safety factor (0=off) [0.0] ##ELBDM ONLY##
+DT__HYBRID_CFL               -1.0         # dt criterion: hybrid solver CFL factor (<0=auto) (diffusion) [-1.0] ## ELBDM_HYBRID ONLY##
+DT__HYBRID_CFL_INIT          -1.0         # dt criterion: DT__HYBRID_CFL in the first step (<0=auto) [-1.0] ## ELBDM_HYBRID ONLY##
+DT__HYBRID_VELOCITY          -1.0         # dt criterion: hybrid solver CFL factor (<0=auto) (Hamilton-Jacobi) [-1.0] ## ELBDM_HYBRID ONLY##
+DT__HYBRID_VELOCITY_INIT     -1.0         # dt criterion: DT__HYBRID_VELOCITY in the first step (<0=auto) [-1.0] ## ELBDM_HYBRID ONLY##
 DT__PARVEL                    0.5         # dt criterion: particle velocity safety factor [0.5]
 DT__PARVEL_MAX               -1.0         # dt criterion: maximum allowed dt from particle velocity (<0=off) [-1.0]
 DT__PARACC                    0.5         # dt criterion: particle acceleration safety factor (0=off) [0.5] ##STORE_PAR_ACC ONLY##
@@ -99,7 +104,7 @@ LB_INPUT__PAR_WEIGHT          0.0         # load-balance weighting of one partic
 OPT__RECORD_LOAD_BALANCE      1           # record the load-balance info [1]
 OPT__MINIMIZE_MPI_BARRIER     0           # minimize MPI barriers to improve load balance, especially with particles [0]
                                           # (STORE_POT_GHOST, PAR_IMPROVE_ACC=1, OPT__TIMING_BARRIER=0 only; recommend AUTO_REDUCE_DT=0)
-OPT__LB_EXCHANGE_FATHER       1           # exchange all cells of all father patches during load balancing (must enable for hybrid scheme + MPI) [0 usually, 1 for ELBDM_HYBRID] ## HYBRID ELBDM ONLY###
+OPT__LB_EXCHANGE_FATHER       1           # exchange all cells of all father patches during load balancing (must enable for hybrid scheme + MPI) [0 usually, 1 for ELBDM_HYBRID] ## ELBDM_HYBRID ONLY###
 
 # fluid solver in ELBDM (MODEL==ELBDM only)
 ELBDM_MASS                    1.0         # particle mass in ev/c^2 (input unit is fixed even when OPT__UNIT or COMOVING is on)
@@ -108,8 +113,9 @@ ELBDM_TAYLOR3_COEFF           0.166666667 # 3rd Taylor expansion coefficient [1.
 ELBDM_TAYLOR3_AUTO            0           # Optimize ELBDM_TAYLOR3_COEFF automatically to minimize the damping at kmax [0]
 ELBDM_REMOVE_MOTION_CM        0           # remove the motion of center-of-mass (must enable OPT__CK_CONSERVATION):
                                           # (0=off, 1=init, 2=every step) [0]
-ELBDM_FIRST_WAVE_LEVEL       -1           # level at which to start using the wave solver, if set to -1, an error is thrown [-1] ##HYBRID ELBDM ONLY##
 ELBDM_BASE_SPECTRAL           1           # adopt the spectral method to evolve base-level wave function (must enable SUPPORT_FFTW) [0]
+ELBDM_MATCH_PHASE             1           # match child phases with father phases during data restriction [1] ##ELBDM_HYBRID ONLY##
+ELBDM_FIRST_WAVE_LEVEL       -1           # level at which to switch to the wave solver (must >=1) [-1] ##ELBDM_HYBRID ONLY##
 
 # fluid solvers in all models
 FLU_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU fluid solver (<=0=auto) [-1]
@@ -153,7 +159,7 @@ OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2
 INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
 
 
-# interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar, 8=Spectral (##ELBDM & SUPPORT_SPECTRAL_INT ONLY ##))
+# interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar, 8=Spectral (##ELBDM & SUPPORT_SPECTRAL_INT ONLY##))
 OPT__INT_TIME                 1           # perform "temporal" interpolation for OPT__DT_LEVEL == 2/3 [1]
 OPT__INT_PHASE                0           # interpolation on phase (does not support MinMod-1D) [1] ##ELBDM ONLY##
 OPT__FLU_INT_SCHEME          -1           # ghost-zone fluid variables for the fluid solver [-1]
@@ -163,7 +169,7 @@ OPT__RHO_INT_SCHEME           4           # ghost-zone mass density for the Pois
 OPT__GRA_INT_SCHEME           4           # ghost-zone potential for the gravity solver (for UNSPLIT_GRAVITY as well) [4]
 OPT__REF_POT_INT_SCHEME       4           # newly allocated potential during grid refinement [4]
 INT_MONO_COEFF                2.0         # coefficient for ensuring the interpolation monotonicity (1.0~4.0) [2.0]
-SPEC_INT_TABLE_PATH           ./          # path to tables for spectral interpolation ##ELBDM & SUPPORT_SPECTRAL_INT ONLY ##
+SPEC_INT_TABLE_PATH           ./          # path to tables for spectral interpolation ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
 
 
 # data dump
@@ -173,7 +179,7 @@ OPT__OUTPUT_USER              0           # output the user-specified data -> ed
 OPT__OUTPUT_PAR_MODE          0           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
-OPT__OUTPUT_POT               0           # output gravitational potential [0] ##OPT__OUTPUT_TOTAL ONLY##
+OPT__OUTPUT_POT               1           # output gravitational potential [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_PAR_DENS          1           # output the particle or total mass density on grids:
                                           # (0=off, 1=particle mass density, 2=total mass density) [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3

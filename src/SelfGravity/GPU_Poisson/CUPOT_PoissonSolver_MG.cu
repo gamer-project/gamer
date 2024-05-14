@@ -748,7 +748,7 @@ __device__ void Restrict( const real *FData, real *CData, const uint NGrid_F, co
 //    Coeff_zc = (real)1.0 - Coeff_zm - Coeff_zp;
 
 
-//###OPTIMIZATION : follow the same strategy adopted in "Int_Quadratic"
+//###OPTIMIZATION: follow the same strategy adopted in "Int_Quadratic"
       CData[Cijk] =       Coeff_zm * Coeff_ym * Coeff_xm * FData[ Fijk - Fdk - Fdj - Fdi ]
                        +  Coeff_zm * Coeff_ym * Coeff_xc * FData[ Fijk - Fdk - Fdj       ]
                        +  Coeff_zm * Coeff_ym * Coeff_xp * FData[ Fijk - Fdk - Fdj + Fdi ]

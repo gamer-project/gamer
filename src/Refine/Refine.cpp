@@ -142,26 +142,24 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    real (*Mag_FDataCC_IntIter)[NCOMP_MAG] = new real [ CUBE(FSize_CC) ][NCOMP_MAG];
 #  endif // #ifdef MHD
 
+
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-
-
-//       for hybrid scheme, consider the following cases:
+// for hybrid scheme, consider the following cases:
 //
-//       A: lv & lv+1 both use wave scheme or lv & lv+1 both use phase scheme and switch_to_wave_flag = false
-//          1. no modification
+// A: lv & lv+1 both use wave scheme or lv & lv+1 both use phase scheme and switch_to_wave_flag = false
+//    1. no modification
 //
-//       B: lv & lv+1 both use phase scheme & switch_to_wave_flag on lv:
-//          1. switch to wave scheme on level lv+1
-//          2. no modification for interpolation
-//          3. convert DENS/PHAS to IM/RE after refinement for all patches on levels greater than lv
+// B: lv & lv+1 both use phase scheme & switch_to_wave_flag on lv:
+//    1. switch to wave scheme on level lv+1
+//    2. no modification for interpolation
+//    3. convert DENS/PHAS to IM/RE after refinement for all patches on levels greater than lv
 //
-//       C: lv uses phase scheme & lv+1 uses wave scheme
-//          1. convert refined patch to IM/RE after interpolation
-//
+// C: lv uses phase scheme & lv+1 uses wave scheme
+//    1. convert refined patch to IM/RE after interpolation
 
    bool SwitchFinerLevelsToWaveScheme = false;
-
 #  endif
+
 
 // determine the priority of different boundary faces (z>y>x) to set the corner cells properly for the non-periodic B.C.
    const int   NDer       = 0;
@@ -249,7 +247,6 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    {
       patch_t *Pedigree = amr->patch[0][lv][PID];  // fixed to Sg=0 for the patch relation
 
-
       if ( Pedigree->flag  &&  Pedigree->son == -1 )
       {
 //       (c1.1) construct relation : father -> child
@@ -274,8 +271,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        endif
 
 #        if ( ELBDM_SCHEME == ELBDM_HYBRID )
-         SwitchFinerLevelsToWaveScheme = !amr->use_wave_flag[lv+1] && Pedigree->switch_to_wave_flag;
-#        endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         SwitchFinerLevelsToWaveScheme = ( !amr->use_wave_flag[lv+1]  &&  Pedigree->switch_to_wave_flag );
+#        endif
 
 
 //       (c1.3) assign data to child patches by spatial interpolation
@@ -410,7 +407,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #                 endif
 
                   case BC_FLU_USER:
-                     Flu_BoundaryCondition_User        ( Flu_CData[0][0][0],                      NCOMP_TOTAL,
+                     Flu_BoundaryCondition_User        ( Flu_CData[0][0][0],                      NCOMP_TOTAL, CGhost_Flu,
                                                          CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End,
                                                          FluVarIdxList, Time[lv], amr->dh[lv], xyz_flu, _TOTAL, lv );
                   break;
@@ -693,7 +690,6 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //       (c1.3.4) perform spatial interpolation
          const bool PhaseUnwrapping_Yes   = true;
          const bool PhaseUnwrapping_No    = false;
-
          const bool Monotonicity_Yes      = true;
          const bool Monotonicity_No       = false;
          const bool IntOppSign0thOrder_No = false;
@@ -715,14 +711,14 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #           elif ( MODEL == ELBDM )
 #           if ( ELBDM_SCHEME == ELBDM_HYBRID )
             if ( amr->use_wave_flag[lv] ) {
-#           endif // if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#           endif
             if ( v != REAL  &&  v != IMAG )  Monotonicity[v] = Monotonicity_Yes;
             else                             Monotonicity[v] = Monotonicity_No;
 #           if ( ELBDM_SCHEME == ELBDM_HYBRID )
             } else { // if ( amr->use_wave_flag[lv] )
             if ( v != PHAS )                 Monotonicity[v] = Monotonicity_Yes;
-            } // if ( amr->use_wave_flag[lv] ) ... else
-#           endif // if ( ELBDM_SCHEME == ELBDM_HYBRID )
+            } // if ( amr->use_wave_flag[lv] ) ... else ...
+#           endif
 
 #           else
 #           error : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION IN THIS NEW MODEL ??
@@ -746,7 +742,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        if ( MODEL == ELBDM )
 #        if ( ELBDM_SCHEME == ELBDM_HYBRID )
          if ( amr->use_wave_flag[lv] ) {
-#        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#        endif
 
          if ( OPT__INT_PHASE )
          {
@@ -825,8 +821,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             Interpolate( &Flu_CData[PHAS][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[PHAS][0][0][0],
                          FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No,
                          IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
-         }
-#        endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         } // if ( amr->use_wave_flag[lv] ) ... else ...
+#        endif
 
 #        else // #if ( MODEL == ELBDM )
 
@@ -867,23 +863,24 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        endif
 
 
-
 //       (c1.3.4.3) convert density/phase to real and imaginary parts if patches were refined from phase to wave level
 #        if ( ELBDM_SCHEME == ELBDM_HYBRID )
-         if ( Pedigree->flag && !amr->use_wave_flag[lv] && amr->use_wave_flag[lv+1] ) {
+         if ( Pedigree->flag  &&  !amr->use_wave_flag[lv]  &&  amr->use_wave_flag[lv+1] )
+         {
             real Amp, Phase, Re, Im;
 
             for (int k=0; k<FSize_CC; k++) {
             for (int j=0; j<FSize_CC; j++) {
             for (int i=0; i<FSize_CC; i++) {
-//                IMPROVEMENT: at this point, we should check whether dB wavelength is resolved after conversion to wave representation
+//###REVISE: at this point, we should check whether dB wavelength is resolved after conversion to wave representation
                   Amp   = SQRT( Flu_FData[DENS][k][j][i] );
                   Phase =       Flu_FData[PHAS][k][j][i] ;
-                  Flu_FData[REAL][k][j][i] = Amp * COS( Phase );
-                  Flu_FData[IMAG][k][j][i] = Amp * SIN( Phase );
+                  Flu_FData[REAL][k][j][i] = Amp*COS( Phase );
+                  Flu_FData[IMAG][k][j][i] = Amp*SIN( Phase );
             }}}
          }
-#        endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
+#        endif
+
 
 //       (c1.3.4.4) check minimum density and pressure/internal energy
 //       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
@@ -914,12 +911,13 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                } // if ( amr->use_wave_flag[lv+1] )
 #              endif
 #              endif // #if ( MODEL == ELBDM )
+
 //             apply minimum density
                Flu_FData[DENS][k][j][i] = MIN_DENS;
             }
 
 
-#           if ( MODEL == HYDRO )
+#           if ( MODEL == HYDRO  &&  !defined SRHD )
 //          compute magnetic energy
 #           ifdef MHD
             const real Emag = MHD_GetCellCenteredBEnergy( Mag_FData[MAGX], Mag_FData[MAGY], Mag_FData[MAGZ],
@@ -1053,13 +1051,13 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #           endif // #if ( MODEL == ELBDM )
          } // for (int LocalID=0; LocalID<8; LocalID++)
 
+
 //       (c1.4) pass particles from father to son
 #        ifdef PARTICLE
          Par_PassParticle2Son_SinglePatch( lv, PID );
 #        endif
       } // if ( Pedigree->flag  &&  Pedigree->son == -1 )
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-
 
 
 // (c2) remove unflagged child patches (deallocate one patch group at a time)
@@ -1197,36 +1195,37 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    Mis_GetTotalPatchNumber( lv+1 );
 
 
+
 // f. convert density/phase to density/real part/imaginary part in hybrid scheme when we switch the level from fluid to wave
 // ------------------------------------------------------------------------------------------------
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( SwitchFinerLevelsToWaveScheme ) {
-      for (int ChildLv = lv + 1; ChildLv <= TOP_LEVEL; ++ChildLv) {
+      for (int ChildLv=lv+1; ChildLv<=TOP_LEVEL; ++ChildLv) {
 //       set use_wave_flag
          amr->use_wave_flag[ChildLv] = true;
 
 //       iterate over real and buffer patches
-         for (int PID=0; PID < amr->NPatchComma[ChildLv][27]; PID++)
+         for (int PID=0; PID<amr->NPatchComma[ChildLv][27]; PID++)
          {
 //          convert both sandglasses
-            for ( int FluSg = 0; FluSg < 2; ++FluSg )
+            for (int FluSg=0; FluSg<2; ++FluSg)
             {
                for (int k=0; k<PS1; k++)  {
                for (int j=0; j<PS1; j++)  {
                for (int i=0; i<PS1; i++)  {
 //                check fluid != NULL for buffer patches
-                  if ( amr->patch[FluSg][ChildLv][PID]->fluid != NULL && amr->FluSgTime[ChildLv][FluSg] >= 0.0 )
+                  if ( amr->patch[FluSg][ChildLv][PID]->fluid != NULL  &&  amr->FluSgTime[ChildLv][FluSg] >= 0.0 )
                   {
-//                   IMPROVEMENT: at this point, we should check whether dB wavelength is resolved after conversion to wave representation
-                     const real Amp   = SQRT(amr->patch[FluSg][ChildLv][PID]->fluid[DENS][k][j][i]);
+//###REVISE: at this point, we should check whether dB wavelength is resolved after conversion to wave representation
+                     const real Amp   = SQRT( amr->patch[FluSg][ChildLv][PID]->fluid[DENS][k][j][i] );
                      const real Phase = amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][k][j][i];
-                     amr->patch[FluSg][ChildLv][PID]->fluid[REAL][k][j][i] = Amp * COS(Phase);
-                     amr->patch[FluSg][ChildLv][PID]->fluid[IMAG][k][j][i] = Amp * SIN(Phase);
+                     amr->patch[FluSg][ChildLv][PID]->fluid[REAL][k][j][i] = Amp*COS(Phase);
+                     amr->patch[FluSg][ChildLv][PID]->fluid[IMAG][k][j][i] = Amp*SIN(Phase);
                   }
-               } // FluSg
-            }}} // k,j,i
-         } // for (int PID=0; PID < amr->NPatchComma[ChildLv][27]; PID++)
-      } // for (int ChildLv = lv + 1; ChildLv <= TOP_LEVEL; ++ChildLv)
+               }}} // k,j,i
+            } // FluSg
+         } // for (int PID=0; PID<amr->NPatchComma[ChildLv][27]; PID++)
+      } // for (int ChildLv=lv+1; ChildLv<=TOP_LEVEL; ++ChildLv)
    } // if ( SwitchFinerToWaveScheme )
 #  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 

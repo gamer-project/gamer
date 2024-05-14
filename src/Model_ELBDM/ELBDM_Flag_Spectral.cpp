@@ -2,6 +2,7 @@
 
 #if ( MODEL == ELBDM )
 
+
 #include <complex.h>
 
 #define flag_spectral_float double
@@ -85,6 +86,8 @@ const static flag_spectral_float  Flag_Spectral_Pr[FLAG_SPECTRAL_ORDER][FLAG_SPE
 };
 
 
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flag_Spectral_Prepare_for_Spectral_Criterion
 // Description :  Evaluate ratio of average density of wave function in patch group and average density of wave function in extension domain
@@ -103,13 +106,14 @@ const static flag_spectral_float  Flag_Spectral_Pr[FLAG_SPECTRAL_ORDER][FLAG_SPE
 //                3. Assume a ghost size of FLU_GHOST_SIZE in order to match the GramFE extension algorithm
 //                   This is required in order to compute the same extensions that are also computed in the GramFE wave solver
 //
-// Parameter   :  Var1D     : Array storing the input re & im
-//                Cond      : Reference to floating point variable where density ratio is stored
+// Parameter   :  Var1D : Array storing the input re & im
+//                Cond  : Reference to floating point variable where density ratio is stored
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
+void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
 {
+
 // set the stride to a small value to sample the wave function evenly
 // 1, 2, 4 should all work, but higher values are faster
    const size_t Stride = 4;
@@ -127,24 +131,24 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
 
 // iterate over 3 dimensions and sample the physical 2D arrays with a stride
 // for FLU_NXT = 32, FLU_GHOST_SIZE = 8, Stride = 4, compute (16 / 4)^3 = 64 extensions
-   for (size_t XYZ = 0; XYZ < 3; ++XYZ)
+   for (size_t XYZ=0; XYZ<3; ++XYZ)
    for (size_t k=FLU_GHOST_SIZE; k<FLU_NXT-FLU_GHOST_SIZE; k+=Stride)
    for (size_t j=FLU_GHOST_SIZE; j<FLU_NXT-FLU_GHOST_SIZE; j+=Stride)
    {
 //    read one column of data from 3D block
-      for (size_t i = 0; i < FLU_NXT; ++i) {
+      for (size_t i=0; i<FLU_NXT; ++i) {
          size_t index;
 
-         switch (XYZ)
+         switch ( XYZ )
          {
             case 0:
-               index = IDX321(k, j, i, FLU_NXT, FLU_NXT);
+               index = IDX321( k, j, i, FLU_NXT, FLU_NXT );
                break;
             case 1:
-               index = IDX321(k, i, j, FLU_NXT, FLU_NXT);
+               index = IDX321( k, i, j, FLU_NXT, FLU_NXT );
                break;
             case 2:
-               index = IDX321(i, k, j, FLU_NXT, FLU_NXT);
+               index = IDX321( i, k, j, FLU_NXT, FLU_NXT );
                break;
          }
 
@@ -157,29 +161,29 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
          PhysicalCellCount += 1;
       }
 
-      for (int i = 0; i < FLAG_SPECTRAL_ORDER; ++i)
+      for (int i=0; i<FLAG_SPECTRAL_ORDER; ++i)
       {
          Al = {0, 0};
          Ar = {0, 0};
-         for (int t = 0; t < FLAG_SPECTRAL_NDELTA; t++) {
+         for (int t=0; t<FLAG_SPECTRAL_NDELTA; t++) {
             Al += Flag_Spectral_Pl[i][t] * (flag_spectral_complex_type) Row[t];                                  // left boundary
             Ar += Flag_Spectral_Pr[i][t] * (flag_spectral_complex_type) Row[FLU_NXT - FLAG_SPECTRAL_NDELTA + t]; // right boundary
-         } // t
+         }
 
-         Ae[i] = (flag_spectral_float) 0.5 * (Ar + Al);
-         Ao[i] = (flag_spectral_float) 0.5 * (Ar - Al);
+         Ae[i] = (flag_spectral_float)0.5*( Ar + Al );
+         Ao[i] = (flag_spectral_float)0.5*( Ar - Al );
       }
 
-      for ( int i = 0; i < FLAG_SPECTRAL_ND; ++i)
+      for (int i=0; i<FLAG_SPECTRAL_ND; ++i)
       {
          Psi = {0, 0};
 
-         for (int order=0; order < FLAG_SPECTRAL_ORDER; order++) {
+         for (int order=0; order<FLAG_SPECTRAL_ORDER; order++) {
             Psi += Ae[order] *  Flag_Spectral_Fe[order][i];
             Psi += Ao[order] *  Flag_Spectral_Fo[order][i];
          }
 
-         ExtensionMass      += SQR(Psi.real()) + SQR(Psi.imag());
+         ExtensionMass      += SQR( Psi.real() ) + SQR( Psi.imag() );
          ExtensionCellCount += 1;
       }
    } // XYZ, k,j
@@ -193,12 +197,12 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
    const real Normalise = 1.0e18;
 
 // compute average densities from masses to be independent of patch and extension sizes
-   if ( PhysicalCellCount > 0 ) PhysicalMass /= PhysicalCellCount;
+   if ( PhysicalCellCount  > 0 ) PhysicalMass  /= PhysicalCellCount;
    if ( ExtensionCellCount > 0 ) ExtensionMass /= ExtensionCellCount;
 
-   Cond = (ExtensionMass / (PhysicalMass + Eps )) / (Normalise);
+   Cond = ( ExtensionMass / (PhysicalMass + Eps) ) / Normalise;
 
-} // FUNCTION : Flag_Spectral_Prepare_for_Spectral_Criterion
+} // FUNCTION : Prepare_for_Spectral_Criterion
 
 
 

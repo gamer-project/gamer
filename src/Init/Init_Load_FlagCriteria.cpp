@@ -31,12 +31,23 @@ void Init_Load_FlagCriteria()
    double *FlagTable_Current          = NULL;
 #  endif
 
+#  ifndef SRHD
+   const bool OPT__FLAG_LRTZ_GRADIENT = false;
+   double *FlagTable_LrtzGradient     = NULL;
+#  endif
+#  ifndef COSMIC_RAY
+   const bool OPT__FLAG_LOHNER_CRAY   = false;
+   const bool OPT__FLAG_CRAY          = false;
+   double *FlagTable_CRay             = NULL;
+#  endif
+
 #  if ( MODEL != ELBDM )
    const bool OPT__FLAG_ENGY_DENSITY  = false;
-   double FlagTable_EngyDensity[NLEVEL-1][2];
+   double FlagTable_EngyDensity [NLEVEL-1][2];
+
    const bool OPT__FLAG_SPECTRAL      = false;
-   double FlagTable_Spectral[NLEVEL-1][2];
-#  endif // # if ( MODEL != ELBDM )
+   double FlagTable_Spectral    [NLEVEL-1][2];
+#  endif
 
 #  if ( ELBDM_SCHEME != ELBDM_HYBRID )
    const bool OPT__FLAG_INTERFERENCE  = false;
@@ -56,33 +67,38 @@ void Init_Load_FlagCriteria()
 
 #  if   ( MODEL == HYDRO )
    const bool OPT__FLAG_LOHNER = ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES ||
-                                   OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR );
+                                   OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR || OPT__FLAG_LOHNER_CRAY );
 #  elif ( MODEL == ELBDM )
    const bool OPT__FLAG_LOHNER = OPT__FLAG_LOHNER_DENS;
 #  else
 #  error : unsupported MODEL !!
 #  endif
 
-   const int  NFlagMode         = 14;
+   const int  NFlagMode         = 16;
    const bool Flag[NFlagMode]   = { OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_PRES_GRADIENT,
                                     OPT__FLAG_ENGY_DENSITY, OPT__FLAG_LOHNER, OPT__FLAG_USER,
                                     (bool)OPT__FLAG_NPAR_PATCH, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL,
                                     OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, OPT__FLAG_CURRENT,
-                                    OPT__FLAG_INTERFERENCE, OPT__FLAG_SPECTRAL };
+                                    OPT__FLAG_CRAY, OPT__FLAG_LRTZ_GRADIENT, OPT__FLAG_INTERFERENCE,
+                                    OPT__FLAG_SPECTRAL };
    const char ModeName[][100]   = { "OPT__FLAG_RHO", "OPT__FLAG_RHO_GRADIENT", "OPT__FLAG_PRES_GRADIENT",
                                     "OPT__FLAG_ENGY_DENSITY", "OPT__FLAG_LOHNER", "OPT__FLAG_USER",
                                     "OPT__FLAG_NPAR_PATCH", "OPT__FLAG_NPAR_CELL", "OPT__FLAG_PAR_MASS_CELL",
                                     "OPT__FLAG_VORTICITY", "OPT__FLAG_JEANS", "OPT__FLAG_CURRENT",
-                                    "OPT__FLAG_INTERFERENCE", "OPT__FLAG_SPECTRAL" };
+                                    "OPT__FLAG_CRAY", "OPT__FLAG_LRTZ_GRADIENT", "OPT__FLAG_INTERFERENCE",
+                                    "OPT__FLAG_SPECTRAL" };
    const char FileName[][100]   = { "Input__Flag_Rho", "Input__Flag_RhoGradient", "Input__Flag_PresGradient",
                                     "Input__Flag_EngyDensity", "Input__Flag_Lohner", "Input__Flag_User",
                                     "Input__Flag_NParPatch", "Input__Flag_NParCell", "Input__Flag_ParMassCell",
                                     "Input__Flag_Vorticity", "Input__Flag_Jeans", "Input__Flag_Current",
-                                    "Input__Flag_Interference", "Input__Flag_Spectral" };
+                                    "Input__Flag_CRay", "Input__Flag_LrtzGradient", "Input__Flag_Interference",
+                                    "Input__Flag_Spectral" };
    double *FlagTable[NFlagMode] = { FlagTable_Rho, FlagTable_RhoGradient, FlagTable_PresGradient,
-                                    NULL, NULL, NULL, NULL, NULL, FlagTable_ParMassCell,
+                                    NULL, NULL, NULL,
+                                    NULL, NULL, FlagTable_ParMassCell,
                                     FlagTable_Vorticity, FlagTable_Jeans, FlagTable_Current,
-                                    NULL, NULL };
+                                    FlagTable_CRay, FlagTable_LrtzGradient, NULL,
+                                    NULL };
 
    FILE *File;
    char *input_line = NULL, TargetName[100];
@@ -110,6 +126,12 @@ void Init_Load_FlagCriteria()
 #     ifdef MHD
       FlagTable_Current     [lv]    = -1.0;
 #     endif
+#     ifdef COSMIC_RAY
+      FlagTable_CRay        [lv]    = -1.0;
+#     endif
+#     ifdef SRHD
+      FlagTable_LrtzGradient[lv]    = -1.0;
+#     endif
 
 #     elif ( MODEL == ELBDM )
       for (int t=0; t<2; t++) {
@@ -124,8 +146,8 @@ void Init_Load_FlagCriteria()
       for (int t=0; t<4; t++) {
       FlagTable_Interference[lv][t] = -1.0;
       }
-#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #     endif
+#     endif // MODEL
 
 #     ifdef PARTICLE
       FlagTable_NParPatch   [lv]    = -1;
@@ -197,17 +219,16 @@ void Init_Load_FlagCriteria()
 //          OPT__FLAG_NPAR_PATCH/CELL load integers
             else if ( FlagMode == 6 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParPatch[lv] );
             else if ( FlagMode == 7 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParCell [lv] );
-
 //          OPT__FLAG_INTERFERENCE loads four columns
-            else if ( FlagMode == 12 )  sscanf( input_line, "%d%lf%lf%lf%lf", &Trash, &FlagTable_Interference[lv][0],
-                                                                                      &FlagTable_Interference[lv][1],
-                                                                                      &FlagTable_Interference[lv][2],
-                                                                                      &FlagTable_Interference[lv][3]
-                                                                                      );
+            else if ( FlagMode == 14 ) sscanf( input_line, "%d%lf%lf%lf%lf", &Trash, &FlagTable_Interference[lv][0],
+                                                                                     &FlagTable_Interference[lv][1],
+                                                                                     &FlagTable_Interference[lv][2],
+                                                                                     &FlagTable_Interference[lv][3]
+                                                                                     );
 //          OPT__FLAG_SPECTRAL loads two columns
-            else if ( FlagMode == 13 )  sscanf( input_line, "%d%lf%lf", &Trash,       &FlagTable_Spectral[lv][0],
-                                                                                      &FlagTable_Spectral[lv][1]
-                                                                                      );
+            else if ( FlagMode == 15 ) sscanf( input_line, "%d%lf%lf", &Trash,       &FlagTable_Spectral[lv][0],
+                                                                                     &FlagTable_Spectral[lv][1]
+                                                                                     );
 //          others use the default format: (integer, double)
             else                       sscanf( input_line, "%d%lf", &Trash, &FlagTable[FlagMode][lv] );
          }

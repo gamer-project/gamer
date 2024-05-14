@@ -150,7 +150,9 @@ void LB_AllocateBufferPatch_Father( const int SonLv, const bool SearchAllSon, co
             FaCr1D0     -= dr[d];
 
 #           ifdef GAMER_DEBUG
-            if ( FaCr1D0 < 0 )   Aux_Error( ERROR_INFO, "FaCr1D0 (%lu) < 0 (dr[%d] = %lu) !!\n", FaCr1D0, d, dr[d] );
+            if ( FaCr1D0 >= amr->patch[0][SonLv][SonPID0]->PaddedCr1D )
+               Aux_Error( ERROR_INFO, "FaCr1D0 (%lu) underflow (dr[%d] = %lu, PaddedCr1D = %lu) !!\n",
+                          FaCr1D0, d, dr[d], amr->patch[0][SonLv][SonPID0]->PaddedCr1D );
 #           endif
          }
          else
@@ -209,7 +211,7 @@ void LB_AllocateBufferPatch_Father( const int SonLv, const bool SearchAllSon, co
 
 
 // 2. sort the candidate list and remove duplicates (with the same FaCr1D)
-   Mis_Heapsort( NFaBuf_Dup, FaCr1D_List, NULL );
+   Mis_Heapsort<int,ulong>( NFaBuf_Dup, FaCr1D_List, NULL );
 
    NFaBuf = ( NFaBuf_Dup > 0 ) ? 1 : 0;
 
