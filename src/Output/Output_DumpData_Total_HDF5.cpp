@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2478)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2479)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -258,7 +258,8 @@ Procedure for outputting new variables:
 //                                      record value of FLOAT8_PAR as Makefile.Float8_Par and KeyInfo.Float8_Par
 //                2477 : 2024/04/05 --> output OPT__RECORD_CENTER, COM_CEN_X, COM_CEN_Y, COM_CEN_Z,
 //                                             COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R, COM_MAX_ITER
-//                2478 : 2024/05/06 --> output user defined parameters under "Output_User" group
+//                2478 : 2024/04/09 --> output ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z
+//                2479 : 2024/05/06 --> output user defined parameters under "Output_User" group
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1516,7 +1517,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2478;
+   KeyInfo.FormatVersion        = 2479;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2640,6 +2641,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Ck_Refine          = OPT__CK_REFINE;
    InputPara.Opt__Ck_ProperNesting   = OPT__CK_PROPER_NESTING;
    InputPara.Opt__Ck_Conservation    = OPT__CK_CONSERVATION;
+   InputPara.AngMom_OriginX          = ANGMOM_ORIGIN_X;
+   InputPara.AngMom_OriginY          = ANGMOM_ORIGIN_Y;
+   InputPara.AngMom_OriginZ          = ANGMOM_ORIGIN_Z;
    InputPara.Opt__Ck_NormPassive     = OPT__CK_NORMALIZE_PASSIVE;
    InputPara.Opt__Ck_Restrict        = OPT__CK_RESTRICT;
    InputPara.Opt__Ck_Finite          = OPT__CK_FINITE;
@@ -3585,6 +3589,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Ck_Refine",          HOFFSET(InputPara_t,Opt__Ck_Refine         ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Ck_ProperNesting",   HOFFSET(InputPara_t,Opt__Ck_ProperNesting  ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Ck_Conservation",    HOFFSET(InputPara_t,Opt__Ck_Conservation   ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "AngMom_OriginX",          HOFFSET(InputPara_t,AngMom_OriginX         ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "AngMom_OriginY",          HOFFSET(InputPara_t,AngMom_OriginY         ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "AngMom_OriginZ",          HOFFSET(InputPara_t,AngMom_OriginZ         ), H5T_NATIVE_DOUBLE           );
    H5Tinsert( H5_TypeID, "Opt__Ck_NormPassive",     HOFFSET(InputPara_t,Opt__Ck_NormPassive    ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Ck_Restrict",        HOFFSET(InputPara_t,Opt__Ck_Restrict       ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Ck_Finite",          HOFFSET(InputPara_t,Opt__Ck_Finite         ), H5T_NATIVE_INT              );

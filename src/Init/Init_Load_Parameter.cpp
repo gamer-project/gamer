@@ -466,7 +466,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__OUTPUT_CC_MAG",         &OPT__OUTPUT_CC_MAG,              true,            Useless_bool,  Useless_bool   );
 #  endif
 #  ifdef GRAVITY
-   ReadPara->Add( "OPT__OUTPUT_POT",            &OPT__OUTPUT_POT,                 false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_POT",            &OPT__OUTPUT_POT,                 true,           Useless_bool,  Useless_bool   );
 #  endif
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__OUTPUT_PAR_DENS",       &OPT__OUTPUT_PAR_DENS,            PAR_OUTPUT_DENS_PAR_ONLY, 0,    2              );
@@ -546,6 +546,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__CK_REFINE",             &OPT__CK_REFINE,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_PROPER_NESTING",     &OPT__CK_PROPER_NESTING,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_CONSERVATION",       &OPT__CK_CONSERVATION,            false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "ANGMOM_ORIGIN_X",            &ANGMOM_ORIGIN_X,                -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "ANGMOM_ORIGIN_Y",            &ANGMOM_ORIGIN_Y,                -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "ANGMOM_ORIGIN_Z",            &ANGMOM_ORIGIN_Z,                -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "OPT__CK_NORMALIZE_PASSIVE",  &OPT__CK_NORMALIZE_PASSIVE,       false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_RESTRICT",           &OPT__CK_RESTRICT,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_FINITE",             &OPT__CK_FINITE,                  false,           Useless_bool,  Useless_bool   );
