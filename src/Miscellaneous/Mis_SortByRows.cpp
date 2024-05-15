@@ -91,8 +91,7 @@ void SortByRows( T const* const* Array, long *IdxTable, const long NSort, const 
       while ( i+NSameVal < NSort  &&  Array_Sorted[i] == Array_Sorted[i+NSameVal] )   NSameVal++;
 
       if ( NSameVal == 1L )   continue;
-
-      if ( NOrder == 1 )
+      else if ( NOrder == 1 )
       {
          Aux_Message( stderr, "WARNING : Cannot sort the exact same value.\n" );
          break;
