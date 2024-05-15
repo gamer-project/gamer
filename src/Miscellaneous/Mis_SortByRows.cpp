@@ -1,7 +1,7 @@
 #include "GAMER.h"
 
 template <typename T>
-static void SortByRows( T **Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder );
+static void SortByRows( T const* const* Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder );
 
 
 
@@ -34,7 +34,7 @@ static void SortByRows( T **Array, long *IdxTable, const long NSort, const int *
 // Return      :  IdxTable
 //-------------------------------------------------------------------------------------------------------
 template <typename T>
-void Mis_SortByRows( T **Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder )
+void Mis_SortByRows( T const* const* Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder )
 {
 //  Initialize the IdxTable
     for (long i=0; i<NSort; i++)   IdxTable[i] = i;
@@ -61,7 +61,7 @@ void Mis_SortByRows( T **Array, long *IdxTable, const long NSort, const int *Sor
 // Return      :  IdxTable
 //-------------------------------------------------------------------------------------------------------
 template <typename T>
-void SortByRows( T **Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder )
+void SortByRows( T const* const* Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder )
 {
    if ( NSort  < 0L )   Aux_Error( ERROR_INFO, "NSort < 0 !!\n" );
    if ( NOrder < 1  )   Aux_Error( ERROR_INFO, "NOrder < 1 !!\n" );
@@ -120,8 +120,8 @@ void SortByRows( T **Array, long *IdxTable, const long NSort, const int *SortOrd
 
 
 // explicit template instantiation
-template void Mis_SortByRows <int   > ( int    **Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder );
-template void Mis_SortByRows <long  > ( long   **Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder );
-template void Mis_SortByRows <ulong > ( ulong  **Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder );
-template void Mis_SortByRows <float > ( float  **Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder );
-template void Mis_SortByRows <double> ( double **Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder );
+template void Mis_SortByRows <int   > ( int    const* const* Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder );
+template void Mis_SortByRows <long  > ( long   const* const* Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder );
+template void Mis_SortByRows <ulong > ( ulong  const* const* Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder );
+template void Mis_SortByRows <float > ( float  const* const* Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder );
+template void Mis_SortByRows <double> ( double const* const* Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder );
