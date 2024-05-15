@@ -1,9 +1,10 @@
 #!/bin/python3
 """
-This is a script of changing the parameters of Input__* files.
+A script for changing the parameters of Input__* files.
 
 How to use it:
   1. Set up the files and the parameters you want to change.
+     The current script can be used directly for the Plummer test problem.
     a. The file is set to be a `File()` class. The `File` takes four inputs: file name, constant
        parameters, changing parameters, and flag file or not. Please check out the `Classes` section
        for the detail of inputs.
@@ -16,8 +17,7 @@ How to use it:
         The first line of a flag file should always start with `# ` and the following column
         names in the header specify the options' names.
 
-  2. Overwrite the `execution()` function to your execution.
-     The script is currently used for the Zeldovich test problem.
+  2. [Optional] Tailor the `execution()` function for your tests.
 
   3. [Optional] To pass extra arguments to `execution()` from the command line,
      add your own `parser.add_argument` in the `Main` section.
@@ -58,9 +58,9 @@ class File():
     def __init__( self, file_name, consts, paras, flag_file ):
         """
         file_name : string. The file name.
-        consts    : dict. The const parameter to be specified.
-        paras     : dict with list element. The parameter to be chenged.
-        flag_file : bool. The flag file or not.
+        consts    : dict. The constant parameters to be specified.
+        paras     : dict with list elements. The parameters to be changed.
+        flag_file : bool. Whether or not the target file is a refinement flag file.
         """
         self.name   = file_name
         self.paras  = paras
@@ -194,7 +194,7 @@ if __name__ == "__main__":
     files = [file1, file2, file3] # wrap all the `File` classes.
 
     # 2. Taking the input arguments
-    parser = argparse.ArgumentParser( description = "A script of changing the parameters for Input__* files.",
+    parser = argparse.ArgumentParser( description = "A script for changing the parameters of Input__* files.",
                                       formatter_class = argparse.RawTextHelpFormatter,
                                       add_help=False)
 
