@@ -247,7 +247,7 @@ OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=o
 OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_PAR_MODE          0           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
-OPT__OUTPUT_POT               0           # output gravitational potential [0] ##OPT__OUTPUT_TOTAL ONLY##
+OPT__OUTPUT_POT               1           # output gravitational potential [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_PAR_DENS          1           # output the particle or total mass density on grids:
                                           # (0=off, 1=particle mass density, 2=total mass density) [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_CC_MAG            1           # output **cell-centered** magnetic field (necessary for yt analysis) [1] ##MHD ONLY##
