@@ -101,8 +101,6 @@ Par_EquilibriumIC::~Par_EquilibriumIC()
    delete [] RArray_R;
    delete [] RArray_Rho;
    delete [] RArray_M_Enc;
-   delete [] RArray_dRho_dR;
-   delete [] RArray_g;
    delete [] RArray_Phi;
    delete [] RArray_dRho_dPsi;
 
@@ -414,8 +412,6 @@ void Par_EquilibriumIC::initialize()
    RArray_R         = new double [RNBin];
    RArray_Rho       = new double [RNBin];
    RArray_M_Enc     = new double [RNBin];
-   RArray_dRho_dR   = new double [RNBin];
-   RArray_g         = new double [RNBin];
    RArray_Phi       = new double [RNBin];
    RArray_dRho_dPsi = new double [RNBin];
 
@@ -442,16 +438,8 @@ void Par_EquilibriumIC::initialize()
    for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_M_Enc[b] );
    printf( "]\n");
 
-   printf( "dDdr:   [");
-   for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_dRho_dR[b] );
-   printf( "]\n");
-
    printf( "Pote:   [");
    for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_Phi[b] );
-   printf( "]\n");
-
-   printf( "GreF:   [");
-   for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_g[b] );
    printf( "]\n");
 
    printf( "dDdx:   [");
@@ -503,21 +491,10 @@ void Par_EquilibriumIC::constructRadialArray()
    RArray_M_Enc[0]                                         = 0;   // where r=0
    for (int b=1; b<RNBin; b++)         RArray_M_Enc[b]     = RArray_M_Enc[b-1] + LinearDensityShellMass( RArray_R[b-1], RArray_R[b], RArray_Rho[b-1], RArray_Rho[b] );
 
-   // Array of Density Slope, dRho/dR
-   RArray_dRho_dR[0]                                       = (RArray_Rho[1] - RArray_Rho[0])/RArray_dR;
-   for (int b=1; b<RNBin-1; b++)       RArray_dRho_dR[b]   = Slope_LinearRegression( RArray_R, RArray_Rho, b-1, 3 );
-   RArray_dRho_dR[RLastIdx]                                = (RArray_Rho[RLastIdx] - RArray_Rho[RLastIdx-1])/RArray_dR;
-
-   // Array of Gravitional Field, g(R) = -(GM_Enc)/R^2 = -dPhi/dR
-   RArray_g[0] = 0;
-   for (int b=1; b<RNBin; b++)         RArray_g[b]         = -NEWTON_G*RArray_M_Enc[b]/SQR( RArray_R[b] );
-
-   // Array of dRho/dPsi, dRho/dPsi = -(dRho/dPhi) = -(dRho/dR)(dR/dPhi) = (dRho/dR)(1/g), where Psi = -Phi
-   for (int b=0; b<RNBin; b++)         RArray_dRho_dPsi[b] = RArray_dRho_dR[b]/RArray_g[b]; // TODO: there is a 0/0 at r=0
-
-   // Array of Gravitational Potential, Phi(R) = Phi(\infty) - \int_{\infty}^{R} g dR
+   // Array of Gravitational Potential, Phi(R) = Phi(\infty) - \int_{\infty}^{R} g dR, where g = -GM/R^2
    RArray_Phi[RLastIdx]                                    = -NEWTON_G*RArray_M_Enc[RLastIdx]/RArray_R[RLastIdx];
-   for (int b=RLastIdx-1; b>=0; b--)   RArray_Phi[b]       = RArray_Phi[b+1] + 0.5*(RArray_g[b]+RArray_g[b+1])*RArray_dR;
+   for (int b=RLastIdx-1; b>0; b--)    RArray_Phi[b]       = RArray_Phi[b+1] + -NEWTON_G*0.5*(RArray_M_Enc[b]/SQR( RArray_R[b] ) + RArray_M_Enc[b+1]/SQR( RArray_R[b+1] ))*RArray_dR;
+   RArray_Phi[0]                                           = RArray_Phi[1]   + -NEWTON_G*0.5*(RArray_M_Enc[1]/SQR( RArray_R[1] ))*RArray_dR;
 
    // Adding External Potentil
    if ( AddExtPot_Table )
@@ -525,6 +502,11 @@ void Par_EquilibriumIC::constructRadialArray()
 
    if ( AddExtPot_Analytical )
       for (int b=0; b<RNBin; b++)      RArray_Phi[b]      += AnalyticalExternalPotential( RArray_R[b] );
+
+   // Array of dRho/dPsi, dRho/dPsi = -(dRho/dPhi), where Psi = -Phi
+   RArray_dRho_dPsi[0]                                     = -(RArray_Rho[1] - RArray_Rho[0])/(RArray_Phi[1] - RArray_Phi[0]);
+   for (int b=1; b<RNBin-1; b++)       RArray_dRho_dPsi[b] = -Slope_LinearRegression( RArray_Phi, RArray_Rho, b-1, 3 );
+   RArray_dRho_dPsi[RLastIdx]                              = -(RArray_Rho[RLastIdx] - RArray_Rho[RLastIdx-1])/(RArray_Phi[RLastIdx] - RArray_Phi[RLastIdx-1]);
 
 } // FUNCTION : constructRadialArray
 
