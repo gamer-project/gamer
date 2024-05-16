@@ -36,7 +36,7 @@ class Par_EquilibriumIC
       void   setExternalPotential( const int AddingExternalPotential_Analytical, const int AddingExternalPotential_Table, const char* ExtPotTableFilename );
       double getTotCloudMass();
       double getParticleMass();
-      double getMaxMassError();
+      double getTotCloudMassError();
 
       void   initialize();
       void   constructParticles( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx );
@@ -58,12 +58,10 @@ class Par_EquilibriumIC
       char   ExtPot_Table_Name[MAX_STRING];
       double TotCloudMass                    = -1;
       double ParticleMass                    = -1;
-      double MaxMassError                    = -1;
 
       // Get physical attributes for cloud
       double getEnclosedMass        ( const double r );
-      double getEnclosedMass_GSLintegration( const double r );
-      double getEnclosedMass_Analytical( const double r );
+      double getEnclosedMass_Anal   ( const double r );
       double getDensity             ( const double r );
       double getGraviPotential      ( const double r );
       double getRandomSampleVelocity( const double r );
@@ -76,7 +74,6 @@ class Par_EquilibriumIC
       int     InputTable_DensProf_nbin = -1;
       double *InputTable_DensProf_radius;
       double *InputTable_DensProf_density;
-      double *InputTable_DensProf_enclosedmass;
 
       // Input table of external potential
       void    loadInputExtPotTable();

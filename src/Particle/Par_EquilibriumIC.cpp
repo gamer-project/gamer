@@ -25,21 +25,10 @@ static double AnalyticalDensProf_Hernquist( const double r, const double R0, con
 static double AnalyticalMassProf_Hernquist( const double r, const double R0, const double Rho0 );
 static double AnalyticalDensProf_Einasto  ( const double r, const double R0, const double Rho0, const double Einasto_Power_Factor );
 
-static double MassIntegrand_Plummer       ( const double r, void* parameters );
-static double MassIntegrand_NFW           ( const double r, void* parameters );
-static double MassIntegrand_Burkert       ( const double r, void* parameters );
-static double MassIntegrand_Jaffe         ( const double r, void* parameters );
-static double MassIntegrand_Hernquist     ( const double r, void* parameters );
 static double MassIntegrand_Einasto       ( const double r, void* parameters );
 static double MassIntegrand_Table         ( const double r, void* parameters );
 
 // Parameters for the intergration of mass profile
-struct mass_integrand_params
-{
-   double Cloud_R0;
-   double Cloud_Rho0;
-};
-
 struct mass_integrand_params_Einasto
 {
    double Cloud_R0;
@@ -99,7 +88,6 @@ Par_EquilibriumIC::~Par_EquilibriumIC()
    {
       delete [] InputTable_DensProf_radius;
       delete [] InputTable_DensProf_density;
-      delete [] InputTable_DensProf_enclosedmass;
    }
 
    if ( AddExtPot_Table )
@@ -296,8 +284,8 @@ double Par_EquilibriumIC::getParticleMass()
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  getMaxMassError
-// Description :  Get the maximum error for the enclosed mass
+// Function    :  getTotCloudMassError
+// Description :  Get the relative error for the total enclosed mass
 //
 // Note        :  1. The enclosed mass is interpolated from RArray_M_Enc
 //                2. The error is calculated by comparing the enclosed mass
@@ -305,11 +293,14 @@ double Par_EquilibriumIC::getParticleMass()
 //
 // Parameter   :  None
 //
-// Return      :  MaxMassError
+// Return      :  TotCloudMassError
 //-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::getMaxMassError()
+double Par_EquilibriumIC::getTotCloudMassError()
 {
-   return MaxMassError;
+   const double TotCloudMass_Analytical = getEnclosedMass_Anal( Cloud_MaxR );
+   const double TotCloudMassError       = ( TotCloudMass - TotCloudMass_Analytical )/TotCloudMass_Analytical;
+
+   return TotCloudMassError;
 }
 
 
@@ -350,25 +341,6 @@ void Par_EquilibriumIC::loadInputDensProfTable()
    if ( InputTable_DensProf_radius[0] > Cloud_MaxR )
       Aux_Error( ERROR_INFO, "Minimum radius (%14.7e) in density table %s is larger then Cloud_MaxR (%14.7e) !!\n",
                              InputTable_DensProf_radius[0], DensProf_Table_Name, Cloud_MaxR );
-
-   // TODO: remove this
-   // Set the default number of bins the same as the input table
-   if ( RNBin < 0 )
-      RNBin = Mis_BinarySearch_Real( InputTable_DensProf_radius, 0, InputTable_DensProf_nbin-1, Cloud_MaxR ) + 2;
-
-   // TODO: to try a higher-order integration first
-   // Set the enclosed mass profile // TODO: this is not good, maybe remove it
-   InputTable_DensProf_enclosedmass = new double [InputTable_DensProf_nbin];
-
-   InputTable_DensProf_enclosedmass[0] = 0;
-   for (int b=1; b<InputTable_DensProf_nbin; b++)
-   {
-      double dr      =      InputTable_DensProf_radius[b]  - InputTable_DensProf_radius[b-1];
-      double r_mid   = 0.5*(InputTable_DensProf_radius[b]  + InputTable_DensProf_radius[b-1]);
-      double rho_mid = 0.5*(InputTable_DensProf_density[b] + InputTable_DensProf_density[b-1]);
-
-      InputTable_DensProf_enclosedmass[b] = InputTable_DensProf_enclosedmass[b-1] + 4*M_PI*SQR(r_mid)*rho_mid*dr;
-   }
 
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading Density Profile Table: \"%s\" ... done\n", DensProf_Table_Name );
 }
@@ -654,12 +626,6 @@ void Par_EquilibriumIC::constructParticles( real *Mass_AllRank, real *Pos_AllRan
       for (int d=0; d<3; d++)
          if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )   Pos_AllRank[d][p] = FMOD( Pos_AllRank[d][p]+(real)amr->BoxSize[d], (real)amr->BoxSize[d] );
 
-      // Record the maximum error
-      MaxMassError = fmax( fabs( ( getEnclosedMass( RandomSampleR ) - RandomSampleM )/RandomSampleM ), MaxMassError );
-
-      printf( "p = %ld, SampleM = %21.14e, SampleR = %21.14e, EnclosedMass_RArray = %21.14e, EnclosedMass_Analytical = %21.14e, EnclosedMAss_GSL = %21.14e\n",
-               p,       RandomSampleM,     RandomSampleR,     getEnclosedMass( RandomSampleR ), getEnclosedMass_Analytical( RandomSampleR ), getEnclosedMass_GSLintegration( RandomSampleR ) ); 
-
    } // for (long p=Par_Idx0; p<Par_Idx0+Cloud_Par_Num; p++)
 
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "Constructing Par_EquilibriumIC ... done\n" );
@@ -699,69 +665,7 @@ double Par_EquilibriumIC::getDensity( const double r )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  getEnclosedMass_GSLintegration
-// Description :  Calculate the enclosed mass of this cloud within radius r
-//
-// Note        :  1. Integrate the enclosed mass from the density profile
-//
-// Parameter   :  r : radius
-//
-// Return      :  Enclosed mass of this cloud within radius r
-//-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::getEnclosedMass_GSLintegration( const double r )
-{
-
-   double enclosed_mass = NULL_REAL;
-
-   double abs_error;
-
-#  ifdef SUPPORT_GSL
-   // arguments for the gsl integration
-   const double lower_limit  = 0.0;
-   const double upper_limit  = r;
-   const double abs_err_lim  = 0;
-   const double rel_err_lim  = 1e-7;
-   const int    integ_size   = 1000; // TODO: more efficient
-   const int    integ_rule   = 1;    // 1 = GSL_INTEG_GAUSS15, the 15 point Gauss-Kronrod rule
-
-   gsl_integration_workspace * w = gsl_integration_workspace_alloc( integ_size );
-
-   gsl_function F;
-
-   // integrand for the integration
-   if      ( Cloud_Model == CLOUD_MODEL_PLUMMER   ) F.function = &MassIntegrand_Plummer;
-   else if ( Cloud_Model == CLOUD_MODEL_NFW       ) F.function = &MassIntegrand_NFW;
-   else if ( Cloud_Model == CLOUD_MODEL_BURKERT   ) F.function = &MassIntegrand_Burkert;
-   else if ( Cloud_Model == CLOUD_MODEL_JAFFE     ) F.function = &MassIntegrand_Jaffe;
-   else if ( Cloud_Model == CLOUD_MODEL_HERNQUIST ) F.function = &MassIntegrand_Hernquist;
-   else if ( Cloud_Model == CLOUD_MODEL_EINASTO   ) F.function = &MassIntegrand_Einasto;
-   else if ( Cloud_Model == CLOUD_MODEL_TABLE     ) F.function = &MassIntegrand_Table;
-   else
-      Aux_Error( ERROR_INFO, "Unsupported Cloud_Model = %d !!\n", Cloud_Model );
-
-   // parameters for the integrand
-   struct mass_integrand_params         integrand_params         = { Cloud_R0, Cloud_Rho0 };
-   struct mass_integrand_params_Einasto integrand_params_Einasto = { Cloud_R0, Cloud_Rho0, Cloud_Einasto_Power_Factor };
-   struct mass_integrand_params_Table   integrand_params_Table   = { InputTable_DensProf_nbin, InputTable_DensProf_radius, InputTable_DensProf_density };
-
-   if      ( Cloud_Model == CLOUD_MODEL_EINASTO   ) F.params     = &integrand_params_Einasto;
-   else if ( Cloud_Model == CLOUD_MODEL_TABLE     ) F.params     = &integrand_params_Table;
-   else                                             F.params     = &integrand_params;
-
-   // integration
-   gsl_integration_qag( &F, lower_limit, upper_limit, abs_err_lim, rel_err_lim, integ_size, integ_rule, w, &enclosed_mass, &abs_error );
-
-   gsl_integration_workspace_free( w );
-#  endif // #ifdef SUPPORT_GSL
-
-   return enclosed_mass;
-
-} // FUNCTION : getEnclosedMass_GSLintegration
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  getEnclosedMass_Analytical
+// Function    :  getEnclosedMass_Anal
 // Description :  Calculate the enclosed mass of this cloud within radius r
 //
 // Note        :  1. Get the enclosed mass from the analytical enclosed mass profile
@@ -770,7 +674,7 @@ double Par_EquilibriumIC::getEnclosedMass_GSLintegration( const double r )
 //
 // Return      :  Enclosed mass of this cloud within radius r
 //-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::getEnclosedMass_Analytical( const double r )
+double Par_EquilibriumIC::getEnclosedMass_Anal( const double r )
 {
 
    double enclosed_mass = NULL_REAL;
@@ -780,11 +684,51 @@ double Par_EquilibriumIC::getEnclosedMass_Analytical( const double r )
    else if ( Cloud_Model == CLOUD_MODEL_BURKERT   ) enclosed_mass = AnalyticalMassProf_Burkert  ( r, Cloud_R0, Cloud_Rho0 );
    else if ( Cloud_Model == CLOUD_MODEL_JAFFE     ) enclosed_mass = AnalyticalMassProf_Jaffe    ( r, Cloud_R0, Cloud_Rho0 );
    else if ( Cloud_Model == CLOUD_MODEL_HERNQUIST ) enclosed_mass = AnalyticalMassProf_Hernquist( r, Cloud_R0, Cloud_Rho0 );
-   else if ( Cloud_Model == CLOUD_MODEL_TABLE     ) enclosed_mass = ExtendedInterpolatedTable   ( r, InputTable_DensProf_nbin, InputTable_DensProf_radius, InputTable_DensProf_enclosedmass );
+   else
+   {
+#     ifdef SUPPORT_GSL
+      double abs_error;
+
+      // arguments for the gsl integration
+      const double lower_limit = 0.0;
+      const double upper_limit = r;
+      const double abs_err_lim = 1e-8;
+      const double rel_err_lim = 1e-8;
+      const int    integ_size  = 1000;
+      const int    integ_rule  = 1;    // 1 = GSL_INTEG_GAUSS15, the 15 point Gauss-Kronrod rule
+
+      gsl_integration_workspace * w = gsl_integration_workspace_alloc( integ_size );
+
+      gsl_function F;
+
+      // parameters for the integrand
+      struct mass_integrand_params_Einasto integrand_params_Einasto = { Cloud_R0, Cloud_Rho0, Cloud_Einasto_Power_Factor };
+      struct mass_integrand_params_Table   integrand_params_Table   = { InputTable_DensProf_nbin, InputTable_DensProf_radius, InputTable_DensProf_density };
+
+      // integrand for the integration
+      if      ( Cloud_Model == CLOUD_MODEL_EINASTO )
+      {
+         F.function = &MassIntegrand_Einasto;
+         F.params   = &integrand_params_Einasto;
+      }
+      else if ( Cloud_Model == CLOUD_MODEL_TABLE   )
+      {
+         F.function = &MassIntegrand_Table;
+         F.params   = &integrand_params_Table;
+      }
+      else
+         Aux_Error( ERROR_INFO, "Unsupported Cloud_Model = %d !!\n", Cloud_Model );
+
+      // integration
+      gsl_integration_qag( &F, lower_limit, upper_limit, abs_err_lim, rel_err_lim, integ_size, integ_rule, w, &enclosed_mass, &abs_error );
+
+      gsl_integration_workspace_free( w );
+#     endif // #ifdef SUPPORT_GSL
+   }
 
    return enclosed_mass;
 
-} // FUNCTION : getEnclosedMass_Analytical
+} // FUNCTION : getEnclosedMass_Anal
 
 
 
@@ -889,7 +833,7 @@ double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
    // v^2 = 2*(Psi-E)
    const double RandomSampleSquaredV = 2*(Psi-RandomSampleE);
 
-   const double RandomSampleVelocity = ( RandomSampleKineticEnergy < 0.0 ) ? 0 : sqrt( RandomSampleSquaredV );
+   const double RandomSampleVelocity = ( RandomSampleSquaredV < 0.0 ) ? 0 : sqrt( RandomSampleSquaredV );
 
    delete [] CumulativeProbability;
 
@@ -1194,31 +1138,6 @@ double AnalyticalDensProf_Plummer( const double r, const double R0, const double
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  MassIntegrand_Plummer
-// Description :  Integrand for the enclosed mass profile of the Plummer model
-//
-// Note        :  integrand = 4*\pi*r^2*\rho(r)
-//
-// Parameter   :  r          : input radius
-//                parameters : parameters for the model
-//
-// Return      :  integrand of mass at the given radius
-//-------------------------------------------------------------------------------------------------------
-double MassIntegrand_Plummer( const double r, void* parameters )
-{
-   if ( r == 0.0 ) return 0.0;
-
-   struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
-   double R0   = p->Cloud_R0;
-   double Rho0 = p->Cloud_Rho0;
-
-   return 4*M_PI*SQR(r)*AnalyticalDensProf_Plummer( r, R0, Rho0 );
-
-} // FUNCTION : MassIntegrand_Plummer
-
-
-
-//-------------------------------------------------------------------------------------------------------
 // Function    :  AnalyticalMassProf_Plummer
 // Description :  Analytical enclosed mass profile of the Plummer model
 //
@@ -1267,31 +1186,6 @@ double AnalyticalDensProf_NFW( const double r, const double R0, const double Rho
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  MassIntegrand_NFW
-// Description :  Integrand for the enclosed mass profile of the NFW model
-//
-// Note        :  integrand = 4*\pi*r^2*\rho(r)
-//
-// Parameter   :  r          : input radius
-//                parameters : parameters for the model
-//
-// Return      :  integrand of mass at the given radius
-//-------------------------------------------------------------------------------------------------------
-double MassIntegrand_NFW( const double r, void* parameters )
-{
-   if ( r == 0.0 ) return 0.0;
-
-   struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
-   double R0   = p->Cloud_R0;
-   double Rho0 = p->Cloud_Rho0;
-
-   return 4*M_PI*SQR(r)*AnalyticalDensProf_NFW( r, R0, Rho0 );
-
-} // FUNCTION : MassIntegrand_NFW
-
-
-
-//-------------------------------------------------------------------------------------------------------
 // Function    :  AnalyticalMassProf_NFW
 // Description :  Analytical enclosed mass profile of the NFW model
 //
@@ -1336,31 +1230,6 @@ double AnalyticalDensProf_Burkert( const double r, const double R0, const double
    return Rho0/( (1+x)*(1+x*x) );
 
 } // FUNCTION : AnalyticalDensProf_Burkert
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  MassIntegrand_Burkert
-// Description :  Integrand for the enclosed mass profile of the Burkert model
-//
-// Note        :  integrand = 4*\pi*r^2*\rho(r)
-//
-// Parameter   :  r          : input radius
-//                parameters : parameters for the model
-//
-// Return      :  integrand of mass at the given radius
-//-------------------------------------------------------------------------------------------------------
-double MassIntegrand_Burkert( const double r, void* parameters )
-{
-   if ( r == 0.0 ) return 0.0;
-
-   struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
-   double R0   = p->Cloud_R0;
-   double Rho0 = p->Cloud_Rho0;
-
-   return 4*M_PI*SQR(r)*AnalyticalDensProf_Burkert( r, R0, Rho0 );
-
-} // FUNCTION : MassIntegrand_Burkert
 
 
 
@@ -1414,31 +1283,6 @@ double AnalyticalDensProf_Jaffe( const double r, const double R0, const double R
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  MassIntegrand_Jaffe
-// Description :  Integrand for the enclosed mass profile of the Jaffe model
-//
-// Note        :  integrand = 4*\pi*r^2*\rho(r)
-//
-// Parameter   :  r          : input radius
-//                parameters : parameters for the model
-//
-// Return      :  integrand of mass at the given radius
-//-------------------------------------------------------------------------------------------------------
-double MassIntegrand_Jaffe( const double r, void* parameters )
-{
-   if ( r == 0.0 ) return 0.0;
-
-   struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
-   double R0   = p->Cloud_R0;
-   double Rho0 = p->Cloud_Rho0;
-
-   return 4*M_PI*SQR(r)*AnalyticalDensProf_Jaffe( r, R0, Rho0 );
-
-} // FUNCTION : MassIntegrand_Jaffe
-
-
-
-//-------------------------------------------------------------------------------------------------------
 // Function    :  AnalyticalMassProf_Jaffe
 // Description :  Analytical enclosed mass profile of the Jaffe model
 //
@@ -1484,31 +1328,6 @@ double AnalyticalDensProf_Hernquist( const double r, const double R0, const doub
    return Rho0/( x*CUBE( 1+x ) );
 
 } // FUNCTION : AnalyticalDensProf_Hernquist
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  MassIntegrand_Hernquist
-// Description :  Integrand for the enclosed mass profile of the Hernquist model
-//
-// Note        :  integrand = 4*\pi*r^2*\rho(r)
-//
-// Parameter   :  r          : input radius
-//                parameters : parameters for the model
-//
-// Return      :  integrand of mass at the given radius
-//-------------------------------------------------------------------------------------------------------
-double MassIntegrand_Hernquist( const double r, void* parameters )
-{
-   if ( r == 0.0 ) return 0.0;
-
-   struct mass_integrand_params *p = (struct mass_integrand_params *) parameters;
-   double R0   = p->Cloud_R0;
-   double Rho0 = p->Cloud_Rho0;
-
-   return 4*M_PI*SQR(r)*AnalyticalDensProf_Hernquist( r, R0, Rho0 );
-
-} // FUNCTION : MassIntegrand_Hernquist
 
 
 
