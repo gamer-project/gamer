@@ -65,7 +65,7 @@ class Par_EquilibriumIC
       double getDensity             ( const double r );
       double getGraviPotential      ( const double r );
       double getRandomSampleVelocity( const double r );
-      double getIntegratedDistributionFunction( const double Psi_Min, const double Psi_Max, const int N_points );
+      double getIntegratedDistributionFunction( const double E );
 
       void   getRandomVector_GivenLength( const double Length, double RandomVector[3] );
 

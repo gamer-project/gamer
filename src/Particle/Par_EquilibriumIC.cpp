@@ -525,28 +525,24 @@ void Par_EquilibriumIC::constructRadialArray()
 void Par_EquilibriumIC::constructEnergyArray()
 {
    // Ralative Energy (Binding Energy) ranges from Psi_Min to Psi_Max, where Psi = -Phi is the Relative Potential
-   EArray_MinE = -RArray_Phi[RLastIdx]; // TODO: why not zero
-   if ( Cloud_Model == CLOUD_MODEL_TABLE )   EArray_MaxE = -RArray_Phi[2]; //TODO: combine them and use 0
-   else                                      EArray_MaxE = -RArray_Phi[1];
+   EArray_MinE = -RArray_Phi[RLastIdx];
+   EArray_MaxE = -RArray_Phi[0];
    EArray_dE   = (EArray_MaxE-EArray_MinE)/ENBin;
 
    // Array of Relative Energy (Binding Energy), E = -(Phi + 1/2 v^2) = Psi - 1/2 v^2 = 1/2 ( v_{esc}^2 - v^2 )
-   EArray_E[0] = EArray_MinE;
-   for (int k=1; k<ENBin; k++)   EArray_E[k] = EArray_E[k-1] + EArray_dE;
+   for (int k=0; k<ENBin; k++)   EArray_E[k] = EArray_MinE + k*EArray_dE;
 
-   // Array of Integrated Distribution Function, IntDFunc(E) = \int_{0}^{E} (\frac{ 1 }{ \sqrt{E-Psi} }) (\frac{ dRho }{ dPsi }) dPsi
-   for (int k=0; k<ENBin; k++)   EArray_IntDFunc[k] = getIntegratedDistributionFunction( EArray_MinE, EArray_E[k], 1000 ); // TODO: why not from zero
+   // Array of Integrated Distribution Function, IntDFunc(E) = \int_{E_{min}}^{E} (\frac{ 1 }{ \sqrt{E-Psi} }) (\frac{ dRho }{ dPsi }) dPsi
+   for (int k=0; k<ENBin; k++)   EArray_IntDFunc[k] = getIntegratedDistributionFunction( EArray_E[k] );
 
    // Array of Distribution Function, DFunc(E) = f(E) = d/dE IntDFunc(E)
-   for (int k =0; k<ENBin; k++)
-   {
-      if      ( k <= 1         )   EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,       0, 5 );
-      else if ( k >= ENBin-2   )   EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc, ENBin-5, 5 );
-      else                         EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,     k-2, 5 );
+   for (int k=0;       k<2;       k++)   EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,       0, 5 );
+   for (int k=2;       k<ENBin-2; k++)   EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc, ENBin-5, 5 );
+   for (int k=ENBin-2; k<ENBin;   k++)   EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,     k-2, 5 );
 
-      // check negative distribution function
+   // check negative distribution function
+   for (int k=0; k<ENBin; k++)
       if ( EArray_DFunc[k] < 0 )   EArray_DFunc[k] = 0;
-   }
 
    // Smooth the distribution function
    SmoothArray( EArray_DFunc, 0, ENBin );
@@ -578,8 +574,8 @@ void Par_EquilibriumIC::constructParticles( real *Mass_AllRank, real *Pos_AllRan
    TotCloudMass = getEnclosedMass( Cloud_MaxR );
    ParticleMass = TotCloudMass/Cloud_Par_Num;
 
-   double  RandomVectorR[3];
-   double  RandomVectorV[3];
+   double RandomVectorR[3];
+   double RandomVectorV[3];
 
    // Set particle attributes
    for (long p=Par_Idx0; p<Par_Idx0+Cloud_Par_Num; p++)
@@ -744,7 +740,6 @@ double Par_EquilibriumIC::getEnclosedMass( const double r )
 //-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::getGraviPotential( const double r )
 {
-   // Note this direction is differt: from table
    if      ( r >= RArray_R[RLastIdx] )   return RArray_Phi[RLastIdx]*RArray_R[RLastIdx]/r;
    else if ( r <= RArray_R[0] )          return RArray_Phi[0];
    else                                  return Mis_InterpolateFromTable( RNBin, RArray_R, RArray_Phi, r );
@@ -777,45 +772,24 @@ double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
    //                       = \int_{E_min}^{E} (2*(Psi-E)) f(E) \frac{ 1 }{ \sqrt{ 2*( Psi - E )} } dE
    //                       = \int_{E_min}^{E} \sqrt{ (2*(Psi-E)) } f(E) dE
    double *CumulativeProbability = new double [ENBin];
+   double Probability;
 
-   CumulativeProbability[0] = EArray_DFunc[0]*sqrt( Psi-EArray_E[0] )*EArray_dE;
+   CumulativeProbability[0] = 0;
    for (int k=1; k<ENBin; k++)
    {
-      const double Probability = ( EArray_E[k] > Psi ) ? 0 : EArray_DFunc[k]*sqrt( Psi-EArray_E[k] )*EArray_dE; //TODO: factor 2 in sqrt
+      if ( EArray_E[k] > Psi )   Probability = ( EArray_E[k-1] > Psi ) ? 0 : 0.5*EArray_DFunc[k-1]*sqrt(2*(Psi-EArray_E[k-1]))*(Psi-EArray_E[k-1]);
+      else                       Probability = 0.5*( EArray_DFunc[k-1]*sqrt(2*(Psi-EArray_E[k-1])) +
+                                                     EArray_DFunc[k  ]*sqrt(2*(Psi-EArray_E[k  ])) )*EArray_dE;
+
       CumulativeProbability[k] = CumulativeProbability[k-1] + Probability;
    }
 
-   const double TotalProbability          = CumulativeProbability[ELastIdx];
-   const double RandomSampleProbability   = TotalProbability*Random_Num_Gen->GetValue( 0, 0.0, 1.0 );
-   //const double RandomSampleE = Mis_InterpolateFromTable( ENBin, CumulativeProbability, EArray_E, RandomSampleProbability );
-
-   //----------------------------
-   double SumProbability =  0;
-   double Fraction_dEng  =  0;
-   int RandomSampleIndex = -1;
-
-   for (int k=0; k<ENBin; k++)
-   {
-
-      if ( SumProbability > RandomSampleProbability )
-      {
-         RandomSampleIndex = k-1;
-         Fraction_dEng = (SumProbability-RandomSampleProbability)/( EArray_DFunc[RandomSampleIndex]*sqrt( Psi-EArray_E[RandomSampleIndex] )*EArray_dE ); // TODO: (1 - ...)
-         break;
-      }
-
-      SumProbability += EArray_DFunc[k]*sqrt( Psi-EArray_E[k] )*EArray_dE;
-   }
-
-   if ( RandomSampleIndex < 0 )   RandomSampleIndex = ELastIdx;
-
-   const double RandomSampleE = EArray_E[RandomSampleIndex] + EArray_dE*Fraction_dEng;
-   //----------------------------
+   const double TotalProbability        = CumulativeProbability[ELastIdx];
+   const double RandomSampleProbability = TotalProbability*Random_Num_Gen->GetValue( 0, 0.0, 1.0 );
+   const double RandomSampleE           = Mis_InterpolateFromTable( ENBin, CumulativeProbability, EArray_E, RandomSampleProbability );
 
    // v^2 = 2*(Psi-E)
-   const double RandomSampleSquaredV = 2*(Psi-RandomSampleE);
-
-   const double RandomSampleVelocity = ( RandomSampleSquaredV < 0.0 ) ? 0 : sqrt( RandomSampleSquaredV );
+   const double RandomSampleVelocity = ( RandomSampleE > Psi ) ? 0 : sqrt( 2*(Psi-RandomSampleE) );
 
    delete [] CumulativeProbability;
 
@@ -833,26 +807,25 @@ double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
 //                   = \int_{0}^{\mathcal{E}} \frac{ 1 }{ \sqrt{ \mathcal{E} -\Psi } } \frac{ d\rho }{ d\Psi } d\Psi
 //                   = \int_{0}^{\mathcal{E}} -2 \frac{ d\rho }{ d\Psi } d\sqrt{ \mathcal{E} -\Psi } }
 //
-// Parameter   :  Psi_Min  : Lower limit of the integration
-//                Psi_Max  : Upper limit of the integration
-//                N_points : Number of points for the integration
+// Parameter   :  E  : \mathcal{E} in the above equation
 //
 // Return      :  Integrated distribution function
 //-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::getIntegratedDistributionFunction( const double Psi_Min, const double Psi_Max, const int N_points )
+double Par_EquilibriumIC::getIntegratedDistributionFunction( const double E )
 {
-   const double dPsi = ( Psi_Max - Psi_Min )/N_points;
+   if ( E <= EArray_MinE )   return 0.0;
+
+   const int    N_points = 1000;
+   const double dPsi     = ( E - EArray_MinE )/N_points;
 
    double integral = 0;
-
    for (int i=0; i<N_points; i++)
    {
-      const double Psi             = Psi_Min + i*dPsi;
-      const int    index_Psi       = Mis_BinarySearch_Real( RArray_Phi, 0, RLastIdx, -(Psi+0.5*dPsi) ) + 1;
-      const double dsqrt_EminusPsi = ( i == N_points-1 ) ? ( - sqrt( Psi_Max-Psi ) ) : ( sqrt( Psi_Max-(Psi+dPsi) ) - sqrt( Psi_Max-Psi ) ) ;
+      const double Psi             = EArray_MinE + i*dPsi;
+      const double dRho_dPsi       = Mis_InterpolateFromTable( RNBin, RArray_Phi, RArray_dRho_dPsi, -(Psi+0.5*dPsi) );
+      const double dsqrt_EminusPsi = ( ( (Psi+dPsi) >= E ) ? 0 : sqrt( E-(Psi+dPsi) ) ) - sqrt( E-Psi );
 
-      // use interpolation for dRho_dPsi, Psi -> r -> dRho_dPsi
-      integral += -2*RArray_dRho_dPsi[index_Psi]*dsqrt_EminusPsi;
+      integral += -2*dRho_dPsi*dsqrt_EminusPsi;
    }
 
    return integral;
