@@ -155,9 +155,9 @@ void CUAPI_SetDevice( const int Mode )
 
 // (5) verify the GPU compute capability
    if ( DeviceProp.major * 100 + DeviceProp.minor * 10 != GPU_COMPUTE_CAPABILITY )
-         Aux_Error( ERROR_INFO, "The compute capability %d.%d of the GPU \"%s\" does not match the GPU_COMPUTE_CAPABILITY %d !!\n"
-                                    "        --> Please set it properly in your machine config file.\n",
-                                                   DeviceProp.major, DeviceProp.minor, DeviceProp.name, GPU_COMPUTE_CAPABILITY );
+      Aux_Error( ERROR_INFO, "The compute capability %d.%d of the GPU \"%s\" does not match the GPU_COMPUTE_CAPABILITY %d !!\n"
+                             "        --> Please set it properly in your machine config file.\n",
+                 DeviceProp.major, DeviceProp.minor, DeviceProp.name, GPU_COMPUTE_CAPABILITY );
 
 
 // (6) some options are not supported
