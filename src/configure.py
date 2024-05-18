@@ -752,7 +752,9 @@ def set_gpu( gpus, flags, args ):
     compute_capability = gpus["GPU_COMPUTE_CAPABILITY"]
 
     # 1. Check the compute capability
-    if compute_capability == "": return gpu_opts
+    if compute_capability == "":
+        if args["gpu"]: raise ValueError("GPU_COMPUTE_CAPABILITY is not set in *.config. Please checkout `../configs/template.config` to see how to set GPU_COMPUTE_CAPABILITY.")
+        return gpu_opts
     compute_capability = int(compute_capability)
 
     if   compute_capability < 0:
