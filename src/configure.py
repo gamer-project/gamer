@@ -820,7 +820,7 @@ def set_compile( paths, compilers, flags, kwargs ):
 def validation( paths, depends, constraints, **kwargs ):
     success = True
 
-    # 0. Checking the Makefile_base existance.
+    # 0. Checking the Makefile_base existence.
     if not os.path.isfile( GAMER_MAKE_BASE ):
         LOGGER.error("%s does not exist."%(GAMER_MAKE_BASE))
         success = False
