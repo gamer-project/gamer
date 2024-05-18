@@ -695,8 +695,9 @@ def load_arguments():
 
 def load_config( config ):
     LOGGER.info("Using %s as the config."%(config))
-    paths, compilers, flags = {}, {"CXX":"", "CXX_MPI":""}, {"CXXFLAG":"", "OPENMPFLAG":"", "LIBFLAG":"", "CUDAFLAG":""}
-    gpus = {"GPU_COMPUTE_CAPABILITY":""}
+    paths, compilers = {}, {"CXX":"", "CXX_MPI":""}
+    flags = {"CXXFLAG":"", "OPENMPFLAG":"", "LIBFLAG":"", "CUDAFLAG":"", "NVCCFLAG_COM":"", "NVCCFLAG_FLU":"", "NVCCFLAG_POT":""}
+    gpus  = {"GPU_COMPUTE_CAPABILITY":""}
     with open( config, 'r') as f:
         lines = f.readlines()
 
@@ -746,7 +747,7 @@ def set_conditional_defaults( args ):
         else                   : args["eos"] = "GAMMA"
     return args
 
-def set_gpu( gpus, args ):
+def set_gpu( gpus, flags, args ):
     gpu_opts = {}
     compute_capability = gpus["GPU_COMPUTE_CAPABILITY"]
 
@@ -760,21 +761,21 @@ def set_gpu( gpus, args ):
         raise ValueError("Incorrect GPU_COMPUTE_CAPABILITY range (>=200)")
     gpu_opts["GPU_COMPUTE_CAPABILITY"] = str(compute_capability)
 
-    # 2. Set the NVCCFLAG_COM
+    # 2. Set NVCCFLAG_ARCH
     flag_num = compute_capability // 10
     gpu_opts["NVCCFLAG_ARCH"] = '-gencode arch=compute_%d,code=\\"compute_%d,sm_%d\\"'%(flag_num, flag_num, flag_num)
 
-    # 3. Set the NVCCFLAG_FLU
+    # 3. Set MAXRREGCOUNT
     if 300 <= compute_capability and compute_capability <= 370:
         if args["double"]:
-            gpu_opts["NVCCFLAG_FLU"] = "--maxrregcount=128"
+            gpu_opts["MAXRREGCOUNT"] = "--maxrregcount=128"
         else:
-            gpu_opts["NVCCFLAG_FLU"] = "--maxrregcount=70"
+            gpu_opts["MAXRREGCOUNT"] = "--maxrregcount=70"
     elif 500 <= compute_capability and compute_capability <= 870:
         if args["double"]:
-            gpu_opts["NVCCFLAG_FLU"] = "--maxrregcount=192"
+            gpu_opts["MAXRREGCOUNT"] = "--maxrregcount=192"
         else:
-            gpu_opts["NVCCFLAG_FLU"] = "--maxrregcount=128"
+            gpu_opts["MAXRREGCOUNT"] = "--maxrregcount=128"
     return gpu_opts
 
 def set_sims( name_table, depends, **kwargs ):
@@ -956,7 +957,7 @@ if __name__ == "__main__":
     compiles = set_compile( paths, compilers, flags, args )
 
     # 3.5 Set the GPU
-    gpu_setup = set_gpu( gpus, args )
+    gpu_setup = set_gpu( gpus, flags, args )
 
     # 4. Create Makefile
     # 4.1 Read
@@ -966,7 +967,7 @@ if __name__ == "__main__":
     # 4.2 Replace
     LOGGER.info("----------------------------------------")
     for key, val in paths.items():
-        LOGGER.info("%-15s : %s"%(key, val))
+        LOGGER.info("%-25s : %s"%(key, val))
         makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
         if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
 
@@ -976,13 +977,13 @@ if __name__ == "__main__":
 
     LOGGER.info("----------------------------------------")
     for key, val in compiles.items():
-        LOGGER.info("%-10s : %s"%(key, val))
+        LOGGER.info("%-25s : %s"%(key, val))
         makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
         if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
 
     LOGGER.info("----------------------------------------")
     for key, val in gpu_setup.items():
-        LOGGER.info("%-15s : %s"%(key, val))
+        LOGGER.info("%-25s : %s"%(key, val))
         makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
         if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
 
