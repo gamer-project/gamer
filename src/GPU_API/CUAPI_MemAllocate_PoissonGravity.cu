@@ -63,6 +63,8 @@ int CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 #  ifdef UNSPLIT_GRAVITY
    TotalSize += Pot_MemSize_USG_G + Flu_MemSize_USG_G;
 #  endif
+   if ( OPT__EXT_ACC  ||  OPT__EXT_POT )
+   TotalSize += Corner_MemSize;
 #  ifdef DUAL_ENERGY
    TotalSize += DE_MemSize_G;
 #  endif

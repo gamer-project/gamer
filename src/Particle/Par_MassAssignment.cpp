@@ -2,9 +2,9 @@
 
 #ifdef PARTICLE
 
-static bool WithinRho( const int idx[], const int RhoSize );
-static bool FarAwayParticle( real ParPosX, real ParPosY, real ParPosZ, const bool Periodic[], const real PeriodicSize_Phy[],
-                             const real EdgeL[], const real EdgeR[] );
+static bool WithinRho( const int idxRho[], const int RhoSize );
+static bool FarAwayParticle( real_par ParPosX, real_par ParPosY, real_par ParPosZ, const bool Periodic[], const real_par PeriodicSize_Phy[],
+                             const real_par EdgeL[], const real_par EdgeR[] );
 
 
 
@@ -35,7 +35,12 @@ static bool FarAwayParticle( real ParPosX, real ParPosY, real ParPosZ, const boo
 //                           even with the NGP scheme), which is not considered here!
 //                   --> This is the reason for the check "if ( Periodic[d]  &&  RhoSize > PeriodicSize[d] ) ..."
 //                6. For bitwise reproducibility, particles are sorted by their position before mass deposition
-//                   --> Also refer to the note of the routine Par_SortByPos()
+//                   --> Also refer to the note of the routine Mis_SortByRows()
+//                   --> Sorting by velocity may be necessary for STAR_FORMATION, where the new star particles
+//                       created at different time but the same position may still have the same position for a
+//                       while if velocity*dt is on the order of round-off errors
+//                       --> Not supported yet since we may not have the velocity information (e.g., when adopting
+//                           UseInputMassPos)
 //
 // Parameter   :  ParList         : List of target particle IDs
 //                NPar            : Number of particles
@@ -72,7 +77,7 @@ static bool FarAwayParticle( real ParPosX, real ParPosY, real ParPosZ, const boo
 void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t IntScheme, real *Rho,
                          const int RhoSize, const double *EdgeL, const double dh, const bool PredictPos,
                          const double TargetTime, const bool InitZero, const bool Periodic[], const int PeriodicSize[3],
-                         const bool UnitDens, const bool CheckFarAway, const bool UseInputMassPos, real **InputMassPos )
+                         const bool UnitDens, const bool CheckFarAway, const bool UseInputMassPos, real_par **InputMassPos )
 {
 
 // check
@@ -115,9 +120,9 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
 
 // 2. set up attribute arrays, copy particle position since they might be modified during the position prediction
-   real *Mass   = NULL;
-   real *Pos[3] = { NULL, NULL, NULL };
-   real *PType  = NULL;
+   real_par *Mass   = NULL;
+   real_par *Pos[3] = { NULL, NULL, NULL };
+   real_par *PType  = NULL;
    long  ParID, Idx;
 
    if ( UseInputMassPos )
@@ -131,11 +136,11 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
    else
    {
-      Mass = new real [NPar];
+      Mass = new real_par [NPar];
 
-      for (int d=0; d<3; d++)    Pos[d] = new real [NPar];
+      for (int d=0; d<3; d++)    Pos[d] = new real_par [NPar];
 
-      PType = new real [NPar];
+      PType = new real_par [NPar];
 
       for (long p=0; p<NPar; p++)
       {
@@ -157,9 +162,10 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 // 3-1/2: sort particles by their position to fix the order of mass assignment
 //        --> necessary for achieving bitwise reproducibility
 #  ifdef BITWISE_REPRODUCIBILITY
-   int *Sort_IdxTable = new int [NPar];   // it will fail if "long" is actually required for NPar
+   long *Sort_IdxTable = new long [NPar];
+   const int Sort_Order[3] = { 0, 1, 2 };
 
-   Par_SortByPos( NPar, Pos[0], Pos[1], Pos[2], Sort_IdxTable );
+   Mis_SortByRows( Pos, Sort_IdxTable, (long)NPar, Sort_Order, 3 );
 #  endif
 
 
@@ -171,17 +177,17 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
    typedef real (*vla)[RhoSize][RhoSize];
    vla Rho3D = ( vla )Rho;
 
-   int  idx[3];      // array index for Rho
-   real ParDens;     // mass density of the cloud
-   real EdgeWithGhostL[3], EdgeWithGhostR[3], PeriodicSize_Phy[3];
+   int      idxRho[3];   // array index for Rho
+   real     ParDens;     // mass density of the cloud
+   real_par EdgeWithGhostL[3], EdgeWithGhostR[3], PeriodicSize_Phy[3];
 
    for (int d=0; d<3; d++)
    {
-      EdgeWithGhostL  [d] = real( EdgeL[d] - Ghost_Phy );
-      EdgeWithGhostR  [d] = real( EdgeL[d] + Ghost_Phy + RhoSize*dh );
+      EdgeWithGhostL  [d] = real_par( EdgeL[d] - Ghost_Phy );
+      EdgeWithGhostR  [d] = real_par( EdgeL[d] + Ghost_Phy + RhoSize*dh );
 
       if ( Periodic[d] )
-      PeriodicSize_Phy[d] = real( PeriodicSize[d]*dh );
+      PeriodicSize_Phy[d] = real_par( PeriodicSize[d]*dh );
    }
 
 
@@ -211,17 +217,17 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 //          4.1.2 calculate the nearest grid index
             for (int d=0; d<3; d++)
             {
-               idx[d] = (int)FLOOR( ( Pos[d][Idx] - EdgeL[d] )*_dh );
+               idxRho[d] = (int)FLOOR( ( Pos[d][Idx] - EdgeL[d] )*_dh );
 
 //             periodicity
                if ( Periodic[d] )
                {
-                  idx[d] = ( idx[d] + PeriodicSize[d] ) % PeriodicSize[d];
+                  idxRho[d] = ( idxRho[d] + PeriodicSize[d] ) % PeriodicSize[d];
 
 #                 ifdef DEBUG_PARTICLE
-                  if ( idx[d] < 0  ||  idx[d] >= PeriodicSize[d] )
-                     Aux_Error( ERROR_INFO, "incorrect idx[%d] = %d (PeriodicSize = %d) !!\n",
-                                d, idx[d], PeriodicSize[d] );
+                  if ( idxRho[d] < 0  ||  idxRho[d] >= PeriodicSize[d] )
+                     Aux_Error( ERROR_INFO, "incorrect idxRho[%d] = %d (PeriodicSize = %d) !!\n",
+                                d, idxRho[d], PeriodicSize[d] );
 #                 endif
                }
             }
@@ -229,15 +235,15 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 //          4.1.3 assign mass if within Rho[]
 //          check inactive particles (which have negative mass)
 #           ifdef DEBUG_PARTICLE
-            if ( Mass[Idx] < (real)0.0 )
+            if ( Mass[Idx] < (real_par)0.0 )
                Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", Idx, Mass[Idx] );
 #           endif
 
             if ( UnitDens )   ParDens = (real)1.0;
-            else              ParDens = Mass[Idx]*_dh3;
+            else              ParDens = (real)Mass[Idx]*_dh3;
 
-            if (  WithinRho( idx, RhoSize )  )
-               Rho3D[ idx[2] ][ idx[1] ][ idx[0] ] += ParDens;
+            if (  WithinRho( idxRho, RhoSize )  )
+               Rho3D[ idxRho[2] ][ idxRho[1] ][ idxRho[0] ] += ParDens;
          } // for (long p=0; p<NPar; p++)
       } // PAR_INTERP_NGP
       break;
@@ -271,7 +277,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
             for (int d=0; d<3; d++)
             {
 //             4.2.2 calculate the array index of the left and right cells
-               dr      [d]  = ( Pos[d][Idx] - EdgeL[d] )*_dh - 0.5;
+               dr      [d]  = (double)( Pos[d][Idx] - (real_par)EdgeL[d] )*_dh - 0.5;
                idxLR[0][d]  = (int)FLOOR( dr[d] );
                idxLR[1][d]  = idxLR[0][d] + 1;
                dr      [d] -= (double)idxLR[0][d];
@@ -299,19 +305,19 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 //          4.2.4 assign mass if within Rho[]
 //          check inactive particles (which have negative mass)
 #           ifdef DEBUG_PARTICLE
-            if ( Mass[Idx] < (real)0.0 )
+            if ( Mass[Idx] < (real_par)0.0 )
                Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", Idx, Mass[Idx] );
 #           endif
 
             if ( UnitDens )   ParDens = (real)1.0;
-            else              ParDens = Mass[Idx]*_dh3;
+            else              ParDens = (real)Mass[Idx]*_dh3;
 
-            for (int k=0; k<2; k++) {  idx[2] = idxLR[k][2];
-            for (int j=0; j<2; j++) {  idx[1] = idxLR[j][1];
-            for (int i=0; i<2; i++) {  idx[0] = idxLR[i][0];
+            for (int k=0; k<2; k++) {  idxRho[2] = idxLR[k][2];
+            for (int j=0; j<2; j++) {  idxRho[1] = idxLR[j][1];
+            for (int i=0; i<2; i++) {  idxRho[0] = idxLR[i][0];
 
-               if (  WithinRho( idx, RhoSize )  )
-                  Rho3D[ idx[2] ][ idx[1] ][ idx[0] ] += ParDens*Frac[i][0]*Frac[j][1]*Frac[k][2];
+               if (  WithinRho( idxRho, RhoSize )  )
+                  Rho3D[ idxRho[2] ][ idxRho[1] ][ idxRho[0] ] += ParDens*Frac[i][0]*Frac[j][1]*Frac[k][2];
 
             }}}
          } // for (long p=0; p<NPar; p++)
@@ -347,7 +353,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
             for (int d=0; d<3; d++)
             {
 //             4.3.2 calculate the array index of the left, central, and right cells
-               dr       [d]  = ( Pos[d][Idx] - EdgeL[d] )*_dh;
+               dr       [d]  = (double)( Pos[d][Idx] - (real_par)EdgeL[d] )*_dh;
                idxLCR[1][d]  = (int)FLOOR( dr[d] );
                idxLCR[0][d]  = idxLCR[1][d] - 1;
                idxLCR[2][d]  = idxLCR[1][d] + 1;
@@ -382,14 +388,14 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 #           endif
 
             if ( UnitDens )   ParDens = (real)1.0;
-            else              ParDens = Mass[Idx]*_dh3;
+            else              ParDens = (real)Mass[Idx]*_dh3;
 
-            for (int k=0; k<3; k++) {  idx[2] = idxLCR[k][2];
-            for (int j=0; j<3; j++) {  idx[1] = idxLCR[j][1];
-            for (int i=0; i<3; i++) {  idx[0] = idxLCR[i][0];
+            for (int k=0; k<3; k++) {  idxRho[2] = idxLCR[k][2];
+            for (int j=0; j<3; j++) {  idxRho[1] = idxLCR[j][1];
+            for (int i=0; i<3; i++) {  idxRho[0] = idxLCR[i][0];
 
-               if (  WithinRho( idx, RhoSize )  )
-                  Rho3D[ idx[2] ][ idx[1] ][ idx[0] ] += ParDens*Frac[i][0]*Frac[j][1]*Frac[k][2];
+               if (  WithinRho( idxRho, RhoSize )  )
+                  Rho3D[ idxRho[2] ][ idxRho[1] ][ idxRho[0] ] += ParDens*Frac[i][0]*Frac[j][1]*Frac[k][2];
             }}}
          } // for (long p=0; p<NPar; p++)
       } // PAR_INTERP_TSC
@@ -421,17 +427,17 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 //
 // Note        :  This function does NOT consider periodicity
 //
-// Parameter   :  idx     : Cell indices
+// Parameter   :  idxRho  : Cell indices
 //                RhoSize : Size of the Rho array
 //
 // Return      :  true --> within the target region
 //-------------------------------------------------------------------------------------------------------
-bool WithinRho( const int idx[], const int RhoSize )
+bool WithinRho( const int idxRho[], const int RhoSize )
 {
 
-   if ( idx[0] < 0  ||  idx[0] >= RhoSize  ||
-        idx[1] < 0  ||  idx[1] >= RhoSize  ||
-        idx[2] < 0  ||  idx[2] >= RhoSize    )
+   if ( idxRho[0] < 0  ||  idxRho[0] >= RhoSize  ||
+        idxRho[1] < 0  ||  idxRho[1] >= RhoSize  ||
+        idxRho[2] < 0  ||  idxRho[2] >= RhoSize    )
       return false;
 
    else
@@ -459,8 +465,8 @@ bool WithinRho( const int idx[], const int RhoSize )
 //
 // Return      :  (true / false) <--> particle (has no / does have) contribution to the give density array
 //-------------------------------------------------------------------------------------------------------
-bool FarAwayParticle( real ParPosX, real ParPosY, real ParPosZ, const bool Periodic[], const real PeriodicSize_Phy[],
-                      const real EdgeL[], const real EdgeR[] )
+bool FarAwayParticle( real_par ParPosX, real_par ParPosY, real_par ParPosZ, const bool Periodic[], const real_par PeriodicSize_Phy[],
+                      const real_par EdgeL[], const real_par EdgeR[] )
 {
 
 // x

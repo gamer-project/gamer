@@ -1,14 +1,5 @@
 #include "GAMER.h"
 
-extern void (*Init_User_Ptr)();
-extern void (*Init_DerivedField_User_Ptr)();
-#ifdef PARTICLE
-extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
-                                        real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                        real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                        real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
-#endif
-
 
 
 
@@ -53,6 +44,20 @@ void Init_GAMER( int *argc, char ***argv )
 // reset parameters
 // --> must be called after Init_Unit()
    Init_ResetParameter();
+
+
+// load the tables of the flag criteria from the input files "Input__Flag_XXX"
+   Init_Load_FlagCriteria();
+
+
+// load the dump table from the input file "Input__DumpTable"
+   if ( OPT__OUTPUT_MODE == OUTPUT_USE_TABLE )
+#  ifdef PARTICLE
+   if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_MODE )
+#  else
+   if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS )
+#  endif
+   Init_Load_DumpTable();
 
 
 // initialize OpenMP settings
@@ -129,6 +134,10 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
+// initialize the microphysics
+   Microphysics_Init();
+
+
 // initialize the user-defined derived fields
    if ( OPT__OUTPUT_USER_FIELD )
    {
@@ -155,21 +164,6 @@ void Init_GAMER( int *argc, char ***argv )
 #  ifdef TIMING
    Aux_CreateTimer();
 #  endif
-
-
-// load the tables of the flag criteria from the input files "Input__Flag_XXX"
-   Init_Load_FlagCriteria();
-
-
-// load the dump table from the input file "Input__DumpTable"
-//###NOTE: unit has not been converted into internal unit
-   if ( OPT__OUTPUT_MODE == OUTPUT_USE_TABLE )
-#  ifdef PARTICLE
-   if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_MODE )
-#  else
-   if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS )
-#  endif
-   Init_Load_DumpTable();
 
 
 // initialize memory pool
@@ -317,5 +311,34 @@ void Init_GAMER( int *argc, char ***argv )
 
 #  endif // #ifdef PARTICLE
 
+
+// initialize source-term fields (e.g., cooling time)
+// --> necessary for, for example, estimating the source-term time-step at the first step
+// --> must ensure each source term does not modify any fluid field (e.g., gas internal energy) when dt=0.0
+//     --> source terms violating this criterion (e.g., deleptonization) must be temporarily disabled before calling Src_AdvanceDt()
+   if ( OPT__INIT != INIT_BY_RESTART )
+   {
+      const bool OverlapMPI_No   = false;
+      const bool Overlap_Sync_No = false;
+
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Initializing source-term fields" );
+
+      for (int lv=0; lv<NLEVEL; lv++)
+      {
+         if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d ... ", lv );
+
+//       adopt dt=0.0 to prevent any update of the fluid fields
+         Src_AdvanceDt( lv, Time[lv], Time[lv], 0.0, amr->FluSg[lv], amr->MagSg[lv], OverlapMPI_No, Overlap_Sync_No );
+
+//       must exchange all source-term fields since they are currently implemeted as passive scalars,
+//       which will be advected by the fluid solver (and then be overwritten by Src_AdvanceDt())
+//       --> here we exchange all _TOTAL and _MAG fields just for simplicity
+         Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
+
+         if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      } // for (int lv=0; lv<NLEVEL; lv++)
+
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Initializing source-term fields" );
+   } // if ( OPT__INIT != INIT_BY_RESTART )
 
 } // FUNCTION : Init_GAMER

@@ -123,7 +123,7 @@ void LB_AllocateBufferPatch_Sibling_Base()
 // ==========================================================================================
    int NAlloc = ( NAlloc_Temp > 0 ) ? 1 : 0;
 
-   Mis_Heapsort( NAlloc_Temp, FaPaddedCr1D, NULL );
+   Mis_Heapsort<int,ulong>( NAlloc_Temp, FaPaddedCr1D, NULL );
 
    for (int t=1; t<NAlloc_Temp; t++)
       if ( FaPaddedCr1D[t] != FaPaddedCr1D[t-1] )  FaPaddedCr1D[ NAlloc ++ ] = FaPaddedCr1D[t];

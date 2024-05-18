@@ -151,14 +151,15 @@ void YT_Inline()
    FieldList[EoSIdx + 1].field_unit         = "code_mass / (code_length*code_time**2)";
    FieldList[EoSIdx + 1].field_display_name = "Pressure";
 
-#  if ( EOS == EOS_NUCLEAR )
+#  if   ( EOS == EOS_NUCLEAR )
    FieldList[EoSIdx + 2].field_unit         = "code_mass*code_length**(2) / (code_temperature*code_time**(2))";
-#  endif // #if ( EOS == EOS_NUCLEAR )
-#  if ( EOS == EOS_GAMMA )
+#  elif ( EOS == EOS_GAMMA  ||  EOS == EOS_COSMIC_RAY )
    char EntropyUnit[100];
    real gamma_m1 = (real) GAMMA - 1.0;
    sprintf(EntropyUnit, "code_mass**(1-%.2f) / (code_length**(1-3*%.2f)*code_time**2)", gamma_m1, gamma_m1);
    FieldList[EoSIdx + 2].field_unit         = EntropyUnit;
+#  else
+   Aux_Message( stderr, "WARNING : unknown entropy unit in %s() !!\n", __FUNCTION__ );
 #  endif // #if ( EOS == EOS_GAMMA )
    FieldList[EoSIdx + 2].field_display_name = "Entropy";
 
@@ -222,7 +223,7 @@ void YT_Inline()
        // set attribute name
        ParticleList[0].attr_list[v].attr_name  = ParAttLabel[v];
        // set attribute data type
-#      ifdef FLOAT8
+#      ifdef FLOAT8_PAR
        ParticleList[0].attr_list[v].attr_dtype = YT_DOUBLE;
 #      else
        ParticleList[0].attr_list[v].attr_dtype = YT_FLOAT;
@@ -245,14 +246,26 @@ void YT_Inline()
 
 // 5-1. perform yt inline analysis
    if ( yt_run_FunctionArguments( "yt_inline_inputArg", 1, "\'Dens\'" ) != YT_SUCCESS )
-       Aux_Error( ERROR_INFO, "yt_run_FunctionArguments() failed !!\n" );
+       Aux_Error( ERROR_INFO, "yt_run_FunctionArguments(\"yt_inline_inputArg\", 1, \"'Dens'\") failed !!\n" );
    if ( yt_run_Function( "yt_inline" ) != YT_SUCCESS )
-       Aux_Error( ERROR_INFO, "yt_run_Function() failed !!\n" );
+       Aux_Error( ERROR_INFO, "yt_run_Function(\"yt_inline\") failed !!\n" );
 
 #ifdef LIBYT_INTERACTIVE
-// 5-2. activate libyt interactive mode
+// 5-2. activate libyt interactive python prompt
    if ( yt_run_InteractiveMode("LIBYT_STOP") != YT_SUCCESS )
-       Aux_Error( ERROR_INFO, "yt_run_InteractiveMode() failed !!\n" );
+       Aux_Error( ERROR_INFO, "yt_run_InteractiveMode(\"LIBYT_STOP\") failed !!\n" );
+#endif
+
+#ifdef LIBYT_RELOAD
+// 5-3. activate libyt reloading script feature
+   if ( yt_run_ReloadScript("LIBYT_STOP", "RELOAD", "reload.py") != YT_SUCCESS )
+       Aux_Error( ERROR_INFO, "yt_run_ReloadScript(\"LIBYT_STOP\", \"RELOAD\", \"reload.py\") failed !!\n" );
+#endif
+
+#ifdef LIBYT_JUPYTER
+// 5-4. activate jupyter kernel
+   if ( yt_run_JupyterKernel("LIBYT_STOP", YT_JUPYTER_USE_CONNECTION_FILE) != YT_SUCCESS )
+       Aux_Error( ERROR_INFO, "yt_run_JupyterKernel(\"LIBYT_STOP\", %s) failed !!\n", YT_JUPYTER_USE_CONNECTION_FILE ? "true" : "false" );
 #endif
 
 // 6. free resource
@@ -261,7 +274,5 @@ void YT_Inline()
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : YT_Inline
-
-
 
 #endif // #ifdef SUPPORT_LIBYT

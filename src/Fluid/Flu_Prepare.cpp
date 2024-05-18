@@ -120,8 +120,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
 
 //          HYDRO
 #           if ( MODEL == HYDRO )
-            const bool CheckMinPres_No = false;
-            real Pres, Cs2, Emag=NULL_REAL;
+            real Emag=NULL_REAL;
 
 #           if ( FLU_NIN != NCOMP_TOTAL )
 #           error : ERROR : FLU_NIN != NCOMP_TOTAL for HYDRO !!
@@ -133,26 +132,12 @@ void Flu_Prepare( const int lv, const double PrepTime,
                                                h_Mag_Array_F_In[TID][MAGZ],
                                                FLU_NXT, FLU_NXT, FLU_NXT, i, j, k );
 #           endif
-            Pres = Hydro_Con2Pres( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                   fluid+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, Emag,
-                                   EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-            Cs2  = EoS_DensPres2CSqr_CPUPtr( fluid[DENS], Pres, fluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
-            if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, fluid, NULL, ERROR_INFO, UNPHY_VERBOSE )  ||
-                  !Aux_IsFinite( Pres )  ||  Pres < (real)0.0  ||
-                  !Aux_IsFinite( Cs2 )   ||  Cs2  < (real)0.0  )
-            {
-               Aux_Message( stderr, "Invalid input fluid data:\n" );
-               Aux_Message( stderr, "Fluid: " );
-               for (int v=0; v<FLU_NIN; v++)    Aux_Message( stderr, " [%d]=%14.7e", v, fluid[v] );
-               Aux_Message( stderr, " Pres=%14.7e Cs2=%14.7e", Pres, Cs2 );
-#              ifdef MHD
-               Aux_Message( stderr, " Emag=%14.7e", Emag );
-#              endif
-               Aux_Message( stderr, "\n" );
-
+            if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, fluid, NULL, NULL_REAL, NULL_REAL, Emag,
+                                      EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                      EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                      ERROR_INFO, UNPHY_VERBOSE )  )
                CheckFailed = true;
-            }
 
 //          generic
 #           else // #if ( MODEL == HYDRO )

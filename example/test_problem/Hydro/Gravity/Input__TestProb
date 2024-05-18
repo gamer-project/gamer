@@ -1,5 +1,6 @@
 # problem-specific runtime parameters
-Gra_DensProf   2     # density profile (1=NFW, 2=Hernquiest) [2]
-Gra_Radius0    1.0   # radius  parameter for the adopted density profile
-Gra_Dens0      1.0   # density parameter for the adopted density profile
-Gra_NIterPerf  0     # number of iterations to measure the average performance of the Poisson solver (0=off) [0]
+Gra_DensProf      2     # density profile (1=NFW, 2=Hernquiest) [2]
+Gra_Radius0       1.0   # radius  parameter for the adopted density profile
+Gra_Dens0         1.0   # density parameter for the adopted density profile
+Gra_NIterPerf     0     # number of iterations to measure the average performance of the Poisson solver (0=off) [0]
+Gra_PerfExcRoot   0     # exclude the root level when measuring the Poisson solver performance with Gra_NIterPerf [0]

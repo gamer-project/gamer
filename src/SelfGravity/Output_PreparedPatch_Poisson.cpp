@@ -113,26 +113,30 @@ void Output_PreparedPatch_Poisson( const int TLv, const int TPID, const int TCom
       switch ( TComp )
       {
          case 0:
-            fprintf( File, "(%3s,%3s,%3s )%16s\n", "i", "j", "k", "Density" );
+            fprintf( File, "(%3s,%3s,%3s ) %*s\n", "i", "j", "k", StrLen_Flt, "Density" );
 
             for (int k=0; k<RHO_NXT; k++)    {  K = k - RHO_GHOST_SIZE;
             for (int j=0; j<RHO_NXT; j++)    {  J = j - RHO_GHOST_SIZE;
             for (int i=0; i<RHO_NXT; i++)    {  I = i - RHO_GHOST_SIZE;
 
-               fprintf( File, "(%3d,%3d,%3d )  %14.7e\n", I, J, K, h_Rho_Array_P[N][k][j][i] );
+               fprintf( File, "(%3d,%3d,%3d )", I, J, K );
+               fprintf( File, BlankPlusFormat_Flt, h_Rho_Array_P[N][k][j][i] );
+               fprintf( File, "\n" );
 
             }}}
             break;
 
 
          case 1:
-            fprintf( File, "(%3s,%3s,%3s )%16s\n", "i", "j", "k", "Potential_In" );
+            fprintf( File, "(%3s,%3s,%3s ) %*s\n", "i", "j", "k", StrLen_Flt, "Potential_In" );
 
             for (int k=0; k<POT_NXT; k++)    {  K = k - PotCGhost;
             for (int j=0; j<POT_NXT; j++)    {  J = j - PotCGhost;
             for (int i=0; i<POT_NXT; i++)    {  I = i - PotCGhost;
 
-               fprintf( File, "(%3d,%3d,%3d )  %14.7e\n", I, J, K, h_Pot_Array_P_In[N][k][j][i] );
+               fprintf( File, "(%3d,%3d,%3d )", I, J, K );
+               fprintf( File, BlankPlusFormat_Flt, h_Pot_Array_P_In[N][k][j][i] );
+               fprintf( File, "\n" );
 
             }}}
             break;

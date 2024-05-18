@@ -3,8 +3,6 @@
 extern Timer_t Timer_OutputWalltime;
 
 static void Write_DumpRecord();
-extern void (*Output_User_Ptr)();
-extern void (*Output_UserWorkBeforeOutput_Ptr)();
 
 
 
@@ -55,7 +53,7 @@ void Output_DumpData( const int Stage )
 
             else
             {
-               DumpTime = ( int(Time[0]/OUTPUT_DT) + 1.0 )*OUTPUT_DT;
+               DumpTime = round( int(Time[0]/OUTPUT_DT) + 1.0 )*OUTPUT_DT;
 
 //             be careful about round-off errors
                if (   (  DumpTime <= Time[0]  )                                            ||
@@ -247,6 +245,25 @@ void Output_DumpData( const int Stage )
 // output data
    if ( OutputData || OutputData_RunTime || OutputData_Walltime )
    {
+//    sort real patches by their load-balance indices to improve bitwise reproducibility
+#     ifdef LOAD_BALANCE
+      if ( OPT__SORT_PATCH_BY_LBIDX )
+      {
+#        ifdef PARTICLE
+         const double ParWeight         = amr->LB->Par_Weight;
+#        else
+         const double ParWeight         = 0.0;
+#        endif
+         const bool   Redistribute_Yes  = true;
+         const bool   SendGridData_Yes  = true;
+         const bool   ResetLB_Yes       = true;
+         const bool   SortRealPatch_Yes = true;
+         const int    AllLv             = -1;
+
+         LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, ParWeight, ResetLB_Yes, SortRealPatch_Yes, AllLv );
+      }
+#     endif // #ifdef LOAD_BALANCE
+
 //    apply various corrections (e.g., synchronize particles, restrict data, recalculate potential and particle acceleration)
 //    before dumpting data --> for bitwise reproducibility
       if ( OPT__CORR_AFTER_ALL_SYNC == CORR_AFTER_SYNC_BEFORE_DUMP  &&  Stage != 0 )  Flu_CorrAfterAllSync();
@@ -278,7 +295,7 @@ void Output_DumpData( const int Stage )
 
       if ( OutputData )
       {
-         if ( OPT__OUTPUT_MODE == OUTPUT_CONST_DT  )  DumpTime = Time[0] + OUTPUT_DT;
+         if ( OPT__OUTPUT_MODE == OUTPUT_CONST_DT  )  DumpTime = round( Time[0]/OUTPUT_DT + 1.0 )*OUTPUT_DT;
          if ( OPT__OUTPUT_MODE == OUTPUT_USE_TABLE )  DumpTime = DumpTable[ ++DumpTableID ];
       }
 

@@ -15,9 +15,7 @@ filename_in = args.filename_in
 # take note
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
-for t in range( len(sys.argv) ):
-   print( str(sys.argv[t]) ),
-print( '' )
+print( ' '.join(map(str, sys.argv)) )
 print( '-------------------------------------------------------------------\n' )
 
 

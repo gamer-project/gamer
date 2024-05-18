@@ -19,7 +19,7 @@ Default setup:
        [M] = 1.0e14 Msun
        [T] = 1.0e1 Gyr
     -->[V] = [L]/[T] ~ 9.8e1 km/s
-    -->[D] = [M]/[D]^3 ~ 6.8e-27 g/cm^3
+    -->[D] = [M]/[L]^3 ~ 6.8e-27 g/cm^3
 
 2. Default resolution ~ 15 kpc (MAX_LEVEL = 3)
 
@@ -37,8 +37,9 @@ Note:
    --> Install cluster_generator from GitHub and run the included gamer_cluster_ics.py script
        (1) git clone https://github.com/jzuhone/cluster_generator (somewhere else probably)
        (2) cd cluster_generator
-       (3) python -m pip install .
-       (4) Go back to the gamer_cluster_ics.py script and run with python "gamer_cluster_ics.py"
+       (3) [Optional] Update SciPy to version >= 1.13.0
+       (4) python -m pip install .
+       (5) Go back to the gamer_cluster_ics.py script and run with "python gamer_cluster_ics.py"
 4. No need to set PAR_NPAR in Input__Parameter since it will be reset automatically.
 5. Some handy yt analysis scripts and a notebook are put in "yt_script"
    --> For example, to generate the slice plots, one can

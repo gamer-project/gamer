@@ -65,7 +65,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
                                  int NDel_Home, int *DelPID_Home, int NDel_Away, ulong *DelCr1D_Away,
                                  int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList,
                                  const int (*CFB_SibRank_Home)[6], const int (*CFB_SibRank_Away)[6],
-                                 const real *CFB_BField, const int *CFB_NSibEachRank )
+                                 const real *CFB_BField, const long *CFB_NSibEachRank )
 {
 
    const int SonLv    = FaLv + 1;
@@ -167,7 +167,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
       }
 
 //    2-1-3. sort the PID list and remove duplicates
-      Mis_Heapsort( NBufBk_Dup, PID_BufBk, NULL );
+      Mis_Heapsort<int,int>( NBufBk_Dup, PID_BufBk, NULL );
 
       NBufBk = ( NBufBk_Dup > 0 ) ? 1 : 0;
 
@@ -1026,7 +1026,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       }
 
 
-#     if ( MODEL == HYDRO )
+#     if ( MODEL == HYDRO  &&  !defined SRHD )
 //    compute magnetic energy
 #     ifdef MHD
       const real Emag = MHD_GetCellCenteredBEnergy( FData_Mag[MAGX], FData_Mag[MAGY], FData_Mag[MAGZ],

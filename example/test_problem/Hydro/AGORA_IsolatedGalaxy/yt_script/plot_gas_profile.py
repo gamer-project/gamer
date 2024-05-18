@@ -19,9 +19,7 @@ args=parser.parse_args()
 # take note
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
-for t in range( len(sys.argv) ):
-   print str(sys.argv[t]),
-print( '' )
+print( ' '.join(map(str, sys.argv)) )
 print( '-------------------------------------------------------------------\n' )
 
 
@@ -40,9 +38,13 @@ dpi         = 150
 
 yt.enable_parallelism()
 
-ts = yt.load( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
+ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 #ts = yt.load( 'Data_??????' )
 
+
+yt_radius = ('index', 'cylindrical_radius') if yt.__version__.split(".")[0] == "4" else ('index', 'cylindrical_r')
+yt_tan_vel = 'velocity_cylindrical_theta' if yt.__version__.split(".")[0] == "4" else 'cylindrical_tangential_velocity'
+yt_par_arg = {} if yt.__version__.split(".")[0] == "4" else {"particle_type":False}
 
 # loop over all datasets
 for ds in ts.piter():
@@ -50,12 +52,12 @@ for ds in ts.piter():
 #  calculate various profiles
 #  ==================================================================================
 #  define center as the location of peak gas density within 1 kpc from the center of gas mass
-   v, cen1 = ds.h.find_max( ("gas", "density") )
+   v, cen1 = ds.find_max( ("gas", "density") )
    sp1  = ds.sphere( cen1, (30.0, "kpc") )
    cen2 = sp1.quantities.center_of_mass( use_gas=True, use_particles=False ).in_units( "kpc" )
    sp2  = ds.sphere( cen2, (1.0, "kpc") )
-   cen3 = sp2.quantities.max_location( ("gas", "density") )
-   cen  = ds.arr( [cen3[1].d, cen3[2].d, cen3[3].d], 'code_length' )
+   cen3 = sp2.quantities.max_location( ("gas", "density") )[1:]         # first value is not position
+   cen  = cen3
 
 
 #  only include the data within a sphere with a radius of width_kpc
@@ -64,7 +66,7 @@ for ds in ts.piter():
 
 
 #  (1) gas surface density
-   prof     = yt.ProfilePlot( sp, ("index", "cylindrical_r"), ("gas", "cell_mass"), weight_field=None,
+   prof     = yt.ProfilePlot( sp, yt_radius, ("gas", "cell_mass"), weight_field=None,
                               n_bins=nbin, x_log=False, accumulation=False )
    gas_dens = prof.profiles[0]["cell_mass"].in_units("Msun").d
    radius   = prof.profiles[0].x.in_units("kpc").d
@@ -82,7 +84,7 @@ for ds in ts.piter():
       return data["density"]**2
    ds.add_field( ("gas", "density_square"), function=_density_square, sampling_type="cell", units="g**2/cm**6" )
 
-   prof     = yt.ProfilePlot( sp, ("index", "cylindrical_r"), ("gas", "temperature"), weight_field="density_square",
+   prof     = yt.ProfilePlot( sp, yt_radius, ("gas", "temperature"), weight_field="density_square",
                                n_bins=nbin, x_log=False, accumulation=False )
    gas_temp = prof.profiles[0]["temperature"].in_units("K").d
 
@@ -91,9 +93,9 @@ for ds in ts.piter():
 #  consider only dense enough gas in order to exclude the gaseous halo
 #  --> follow the AGORA analysis script: https://bitbucket.org/mornkr/agora-analysis-script/
    sp_dense = sp.cut_region( ["obj['gas', 'density'].in_units('g/cm**3') > 1.e-25"] )
-   prof     = yt.ProfilePlot( sp_dense, ("index", "cylindrical_r"),  ("gas", "cylindrical_tangential_velocity"),
+   prof     = yt.ProfilePlot( sp_dense, yt_radius,  ('gas', yt_tan_vel),
                               weight_field=("gas", "cell_mass"), n_bins=nbin, x_log=False )
-   gas_vrot = prof.profiles[0]["cylindrical_tangential_velocity"].in_units("km/s").d
+   gas_vrot = prof.profiles[0][yt_tan_vel].in_units("km/s").d
 
 
 #  (4) gas velocity dispersion
@@ -101,31 +103,31 @@ for ds in ts.piter():
    def _local_rotational_velocity_x( field, data ):
       vx = np.zeros( data[("gas", "velocity_x")].shape )
       for r, vrot in zip(radius, gas_vrot):
-         idx = np.where( (data[("index", "cylindrical_r")].in_units("kpc") >= (r - 0.5*dr)) &
-                         (data[("index", "cylindrical_r")].in_units("kpc") <  (r + 0.5*dr)) )
+         idx = np.where( (data[yt_radius].in_units("kpc") >= (r - 0.5*dr)) &
+                         (data[yt_radius].in_units("kpc") <  (r + 0.5*dr)) )
          vx[idx] = -np.sin( data["index", 'cylindrical_theta'][idx] ) * vrot
       return data.ds.arr( vx, "km/s" ).in_base( data.ds.unit_system.name )
    ds.add_field( ("gas", "local_rotational_velocity_x"), function=_local_rotational_velocity_x,
-                 sampling_type="cell", take_log=False, particle_type=False, units="km/s" )
+                 sampling_type="cell", take_log=False, units="km/s", **yt_par_arg )
 
    def _local_rotational_velocity_y( field, data ):
       vy = np.zeros( data[("gas", "velocity_y")].shape )
       for r, vrot in zip(radius, gas_vrot):
-         idx = np.where( (data[("index", "cylindrical_r")].in_units("kpc") >= (r - 0.5*dr)) &
-                         (data[("index", "cylindrical_r")].in_units("kpc") <  (r + 0.5*dr)) )
+         idx = np.where( (data[yt_radius].in_units("kpc") >= (r - 0.5*dr)) &
+                         (data[yt_radius].in_units("kpc") <  (r + 0.5*dr)) )
          vy[idx] =  np.cos( data["index", 'cylindrical_theta'][idx] ) * vrot
       return data.ds.arr( vy, "km/s" ).in_base( data.ds.unit_system.name )
    ds.add_field( ("gas", "local_rotational_velocity_y"), function=_local_rotational_velocity_y,
-                 sampling_type="cell", take_log=False, particle_type=False, units="km/s" )
+                 sampling_type="cell", take_log=False, units="km/s", **yt_par_arg )
 
    def _velocity_minus_local_rotational_velocity_squared( field, data ):
            return ( data[("gas", "velocity_x")] - data[("gas", "local_rotational_velocity_x")] )**2 + \
                   ( data[("gas", "velocity_y")] - data[("gas", "local_rotational_velocity_y")] )**2 + \
                   ( data[("gas", "velocity_z")]                                                )**2
    ds.add_field( ("gas", "velocity_minus_local_rotational_velocity_squared"), function=_velocity_minus_local_rotational_velocity_squared,
-                 sampling_type="cell", take_log=False, particle_type=False, units="km**2/s**2" )
+                 sampling_type="cell", take_log=False, units="km**2/s**2", **yt_par_arg )
 
-   prof     = yt.ProfilePlot( sp_dense, ("index", "cylindrical_r"),  ("gas", "velocity_minus_local_rotational_velocity_squared"),
+   prof     = yt.ProfilePlot( sp_dense, yt_radius,  ("gas", "velocity_minus_local_rotational_velocity_squared"),
                               weight_field=("gas", "cell_mass"), n_bins=nbin, x_log=False )
    gas_vdis = np.sqrt( prof.profiles[0]["velocity_minus_local_rotational_velocity_squared"] ).in_units("km/s").d
 
@@ -144,14 +146,14 @@ for ds in ts.piter():
 
 #  (1) gas surface density
    ax[0][0].plot( radius, gas_dens, 'r-o', lw=2, mec='none', ms=markersize )
-   ax[0][0].set_yscale( 'log', nonposy='clip' )
+   ax[0][0].set_yscale( 'log', nonpositive='clip' )
    ax[0][0].set_ylim( 1.0e0, 2.0e3 )
    ax[0][0].yaxis.set_minor_locator( plt.LogLocator(base=10.0, subs=[2.0,5.0,8.0]) )
    ax[0][0].set_ylabel( "$\mathrm{\Sigma_{gas}\ [M_{\odot}/pc^2]}$", fontsize='large' )
 
 #  (2) gas temperature
    ax[0][1].plot( radius, gas_temp, 'r-o', lw=2, mec='none', ms=markersize )
-   ax[0][1].set_yscale( 'log', nonposy='clip' )
+   ax[0][1].set_yscale( 'log', nonpositive='clip' )
    ax[0][1].set_ylim( 1.0e1, 1.0e4 )
    ax[0][1].yaxis.set_minor_locator( plt.LogLocator(base=10.0, subs=[2.0,5.0,8.0]) )
    ax[0][1].set_ylabel( "$\mathrm{T\ [K]}$", fontsize='large' )
