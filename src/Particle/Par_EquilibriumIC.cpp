@@ -55,17 +55,16 @@ struct mass_integrand_params_Table
 //
 // Return      :
 //-------------------------------------------------------------------------------------------------------
-Par_EquilibriumIC::Par_EquilibriumIC( const char* Type )
+Par_EquilibriumIC::Par_EquilibriumIC( const char* Cloud_Type )
 {
-   strcpy( Cloud_Type, Type );
 
-   if      ( strcmp( Cloud_Type, "Table"     ) == 0 ) Cloud_Model = CLOUD_MODEL_TABLE;
-   else if ( strcmp( Cloud_Type, "Plummer"   ) == 0 ) Cloud_Model = CLOUD_MODEL_PLUMMER;
-   else if ( strcmp( Cloud_Type, "NFW"       ) == 0 ) Cloud_Model = CLOUD_MODEL_NFW;
-   else if ( strcmp( Cloud_Type, "Burkert"   ) == 0 ) Cloud_Model = CLOUD_MODEL_BURKERT;
-   else if ( strcmp( Cloud_Type, "Jaffe"     ) == 0 ) Cloud_Model = CLOUD_MODEL_JAFFE;
-   else if ( strcmp( Cloud_Type, "Hernquist" ) == 0 ) Cloud_Model = CLOUD_MODEL_HERNQUIST;
-   else if ( strcmp( Cloud_Type, "Einasto"   ) == 0 ) Cloud_Model = CLOUD_MODEL_EINASTO;
+   if      ( strcmp( Cloud_Type, "Table"     ) == 0 )   Cloud_Model = CLOUD_MODEL_TABLE;
+   else if ( strcmp( Cloud_Type, "Plummer"   ) == 0 )   Cloud_Model = CLOUD_MODEL_PLUMMER;
+   else if ( strcmp( Cloud_Type, "NFW"       ) == 0 )   Cloud_Model = CLOUD_MODEL_NFW;
+   else if ( strcmp( Cloud_Type, "Burkert"   ) == 0 )   Cloud_Model = CLOUD_MODEL_BURKERT;
+   else if ( strcmp( Cloud_Type, "Jaffe"     ) == 0 )   Cloud_Model = CLOUD_MODEL_JAFFE;
+   else if ( strcmp( Cloud_Type, "Hernquist" ) == 0 )   Cloud_Model = CLOUD_MODEL_HERNQUIST;
+   else if ( strcmp( Cloud_Type, "Einasto"   ) == 0 )   Cloud_Model = CLOUD_MODEL_EINASTO;
    else
       Aux_Error( ERROR_INFO, "Unsupported Cloud_Type \"%s\" for Par_EquilibriumIC !!\n", Cloud_Type );
 }
@@ -104,9 +103,9 @@ Par_EquilibriumIC::~Par_EquilibriumIC()
    delete [] RArray_Phi;
    delete [] RArray_dRho_dPsi;
 
+   delete [] EArray_E;
    delete [] EArray_DFunc;
    delete [] EArray_IntDFunc;
-   delete [] EArray_E;
 }
 
 
@@ -215,6 +214,11 @@ void Par_EquilibriumIC::setParticleParameters( const long ParNum, const double M
    RNBin          = Radial_NBin;
    ENBin          = Energy_NBin;
    Cloud_RSeed    = RSeed;
+
+   if ( RNBin < 2 )   Aux_Error( ERROR_INFO, "RNBin = %d is less than 2 !!\n", RNBin );
+
+   RLastIdx = RNBin-1;
+   ELastIdx = ENBin-1;
 }
 
 
@@ -291,14 +295,13 @@ double Par_EquilibriumIC::getParticleMass()
 //
 // Parameter   :  None
 //
-// Return      :  TotCloudMassError
+// Return      :  Total Cloud Mass Error
 //-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::getTotCloudMassError()
 {
-   const double TotCloudMass_Analytical = getEnclosedMass_Anal( Cloud_MaxR );
-   const double TotCloudMassError       = ( TotCloudMass - TotCloudMass_Analytical )/TotCloudMass_Analytical;
+   const double TotCloudMass_Analytical = getAnalEnclosedMass( Cloud_MaxR );
 
-   return TotCloudMassError;
+   return ( TotCloudMass - TotCloudMass_Analytical )/TotCloudMass_Analytical;
 }
 
 
@@ -317,25 +320,25 @@ void Par_EquilibriumIC::loadInputDensProfTable()
 {
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading Density Profile Table: \"%s\" ...\n", DensProf_Table_Name );
 
-   const int  Col_R[1] = {0};   // target column: radius
-   const int  Col_D[1] = {1};   // target column: density
+   const int Col_R[1] = {0};   // target column: radius
+   const int Col_D[1] = {1};   // target column: density
 
    const int NRowR = Aux_LoadTable( InputTable_DensProf_radius,  DensProf_Table_Name, 1, Col_R, true, true );
    const int NRowD = Aux_LoadTable( InputTable_DensProf_density, DensProf_Table_Name, 1, Col_D, true, true );
 
-   // Check the number of rows are consistent
+// Check the number of rows are consistent
    if ( NRowR != NRowD )
       Aux_Error( ERROR_INFO, "The number of rows of density (%d) is not equal to the number of rows of radii (%d) in density table %s !!\n",
                              NRowD, NRowR, DensProf_Table_Name );
    else
       InputTable_DensProf_nbin = NRowR;
 
-   // Check maximum radius in the density table must be larger than Cloud_MaxR
+// Check maximum radius in the density table must be larger than Cloud_MaxR
    if ( InputTable_DensProf_radius[InputTable_DensProf_nbin-1] < Cloud_MaxR )
       Aux_Error( ERROR_INFO, "Maximum radius (%14.7e) in density table %s is smaller then Cloud_MaxR (%14.7e) !!\n",
                              InputTable_DensProf_radius[InputTable_DensProf_nbin-1], DensProf_Table_Name, Cloud_MaxR );
 
-   // Check minimum radius in the density table must be smaller than Cloud_MaxR
+// Check minimum radius in the density table must be smaller than Cloud_MaxR
    if ( InputTable_DensProf_radius[0] > Cloud_MaxR )
       Aux_Error( ERROR_INFO, "Minimum radius (%14.7e) in density table %s is larger then Cloud_MaxR (%14.7e) !!\n",
                              InputTable_DensProf_radius[0], DensProf_Table_Name, Cloud_MaxR );
@@ -359,13 +362,13 @@ void Par_EquilibriumIC::loadInputExtPotTable()
 {
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading ExtPot Profile Table: %s ...\n", ExtPot_Table_Name );
 
-   const int  Col_R[1] = {0};   // target column: radius
-   const int  Col_P[1] = {1};   // target column: potential
+   const int Col_R[1] = {0};   // target column: radius
+   const int Col_P[1] = {1};   // target column: potential
 
    const int NRowR = Aux_LoadTable( InputTable_ExtPot_radius,     ExtPot_Table_Name, 1, Col_R, true, true );
    const int NRowP = Aux_LoadTable( InputTable_ExtPot_potential,  ExtPot_Table_Name, 1, Col_P, true, true );
 
-   // Check the number of rows are consistent
+// Check the number of rows are consistent
    if ( NRowR != NRowP )
       Aux_Error( ERROR_INFO, "The number of rows of potential (%d) is not equal to the number of rows of radii (%d) in ExtPot table %s !!\n",
                              NRowP, NRowR, ExtPot_Table_Name );
@@ -398,66 +401,39 @@ void Par_EquilibriumIC::initialize()
 
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "Initializing Par_EquilibriumIC ...\n" );
 
-   // Set random seeds
+// Set random seeds
    Random_Num_Gen = new RandomNumber_t( 1 );
    Random_Num_Gen->SetSeed( 0, Cloud_RSeed );
 
-   // Load the input density table
+// Load the input density table
    if ( Cloud_Model == CLOUD_MODEL_TABLE )   loadInputDensProfTable();
    if ( AddExtPot_Table )                    loadInputExtPotTable();
 
-   if ( RNBin < 2 )   Aux_Error( ERROR_INFO, "RNBin = %d is less than 2 !!\n", RNBin );
-
-   // allocate memory
+// Allocate memory
    RArray_R         = new double [RNBin];
    RArray_Rho       = new double [RNBin];
    RArray_M_Enc     = new double [RNBin];
    RArray_Phi       = new double [RNBin];
    RArray_dRho_dPsi = new double [RNBin];
 
-   RLastIdx = RNBin-1;
    constructRadialArray();
 
    EArray_DFunc     = new double [ENBin];
    EArray_IntDFunc  = new double [ENBin];
    EArray_E         = new double [ENBin];
 
-   ELastIdx = ENBin-1;
    constructEnergyArray();
 
-   //----------------------------------------------------------------------------------------------
-   printf( "Radius: [" );
-   for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_R[b] );
-   printf( "]\n");
-
-   printf( "Dens:   [");
-   for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_Rho[b] );
-   printf( "]\n");
-
-   printf( "Mass:   [");
-   for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_M_Enc[b] );
-   printf( "]\n");
-
-   printf( "Pote:   [");
-   for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_Phi[b] );
-   printf( "]\n");
-
-   printf( "dDdx:   [");
-   for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_dRho_dPsi[b] );
-   printf( "]\n");
-
-   printf( "BEng:   [");
-   for (int b=0; b<ENBin; b++)  printf(" %21.14e,", EArray_E[b] );
-   printf( "]\n");
-
-   printf( "InDF:   [");
-   for (int b=0; b<ENBin; b++)  printf(" %21.14e,", EArray_IntDFunc[b] );
-   printf( "]\n");
-
-   printf( "DisF:   [");
-   for (int b=0; b<ENBin; b++)  printf(" %21.14e,", EArray_DFunc[b] );
-   printf( "]\n");
-   //----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+   printf( "Radius: [" ); for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_R[b]         ); printf( "]\n");
+   printf( "Dens:   [" ); for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_Rho[b]       ); printf( "]\n");
+   printf( "Mass:   [" ); for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_M_Enc[b]     ); printf( "]\n");
+   printf( "Pote:   [" ); for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_Phi[b]       ); printf( "]\n");
+   printf( "dDdx:   [" ); for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_dRho_dPsi[b] ); printf( "]\n");
+   printf( "BEng:   [" ); for (int b=0; b<ENBin; b++)  printf(" %21.14e,", EArray_E[b]         ); printf( "]\n");
+   printf( "InDF:   [" ); for (int b=0; b<ENBin; b++)  printf(" %21.14e,", EArray_IntDFunc[b]  ); printf( "]\n");
+   printf( "DisF:   [" ); for (int b=0; b<ENBin; b++)  printf(" %21.14e,", EArray_DFunc[b]     ); printf( "]\n");
+//----------------------------------------------------------------------------------------------
 
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "Initializing Par_EquilibriumIC ... done\n" );
 
@@ -477,33 +453,33 @@ void Par_EquilibriumIC::initialize()
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::constructRadialArray()
 {
-   // Interval of radial bins
+// Interval of radial bins
    RArray_dR = Cloud_MaxR/(RNBin-1);
 
-   // Array of Radius, R
+// Array of Radius, R
    for (int b=0; b<RNBin; b++)         RArray_R[b]         = RArray_dR*b;
 
-   // Array of Density, Rho(R)
+// Array of Density, Rho(R)
    for (int b=1; b<RNBin; b++)         RArray_Rho[b]       = getDensity( RArray_R[b] );
    RArray_Rho[0]                                           = RArray_Rho[1];   // where r=0
 
-   // Array of Enclosed Mass, M_Enc(R) = \int_{0}^{R} Rho(r) 4\pi R^2 dR
+// Array of Enclosed Mass, M_Enc(R) = \int_{0}^{R} Rho(r) 4\pi R^2 dR
    RArray_M_Enc[0]                                         = 0;   // where r=0
    for (int b=1; b<RNBin; b++)         RArray_M_Enc[b]     = RArray_M_Enc[b-1] + LinearDensityShellMass( RArray_R[b-1], RArray_R[b], RArray_Rho[b-1], RArray_Rho[b] );
 
-   // Array of Gravitational Potential, Phi(R) = Phi(\infty) - \int_{\infty}^{R} g dR, where g = -GM/R^2
+// Array of Gravitational Potential, Phi(R) = Phi(\infty) - \int_{\infty}^{R} g dR, where g = -GM/R^2
    RArray_Phi[RLastIdx]                                    = -NEWTON_G*RArray_M_Enc[RLastIdx]/RArray_R[RLastIdx];
    for (int b=RLastIdx-1; b>0; b--)    RArray_Phi[b]       = RArray_Phi[b+1] + -NEWTON_G*0.5*(RArray_M_Enc[b]/SQR( RArray_R[b] ) + RArray_M_Enc[b+1]/SQR( RArray_R[b+1] ))*RArray_dR;
    RArray_Phi[0]                                           = RArray_Phi[1]   + -NEWTON_G*0.5*(RArray_M_Enc[1]/SQR( RArray_R[1] ))*RArray_dR;
 
-   // Adding External Potentil
+// Adding External Potentil
    if ( AddExtPot_Table )
       for (int b=0; b<RNBin; b++)      RArray_Phi[b]      += ExtendedInterpolatedTable( RArray_R[b], InputTable_ExtPot_nbin, InputTable_ExtPot_radius, InputTable_ExtPot_potential );
 
    if ( AddExtPot_Analytical )
       for (int b=0; b<RNBin; b++)      RArray_Phi[b]      += AnalyticalExternalPotential( RArray_R[b] );
 
-   // Array of dRho/dPsi, dRho/dPsi = -(dRho/dPhi), where Psi = -Phi
+// Array of dRho/dPsi, dRho/dPsi = -(dRho/dPhi), where Psi = -Phi
    RArray_dRho_dPsi[0]                                     = -(RArray_Rho[1] - RArray_Rho[0])/(RArray_Phi[1] - RArray_Phi[0]);
    for (int b=1; b<RNBin-1; b++)       RArray_dRho_dPsi[b] = -Slope_LinearRegression( RArray_Phi, RArray_Rho, b-1, 3 );
    RArray_dRho_dPsi[RLastIdx]                              = -(RArray_Rho[RLastIdx] - RArray_Rho[RLastIdx-1])/(RArray_Phi[RLastIdx] - RArray_Phi[RLastIdx-1]);
@@ -524,27 +500,27 @@ void Par_EquilibriumIC::constructRadialArray()
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::constructEnergyArray()
 {
-   // Ralative Energy (Binding Energy) ranges from Psi_Min to Psi_Max, where Psi = -Phi is the Relative Potential
+// Ralative Energy (Binding Energy) ranges from Psi_Min to Psi_Max, where Psi = -Phi is the Relative Potential
    EArray_MinE = -RArray_Phi[RLastIdx];
    EArray_MaxE = -RArray_Phi[0];
    EArray_dE   = (EArray_MaxE-EArray_MinE)/ENBin;
 
-   // Array of Relative Energy (Binding Energy), E = -(Phi + 1/2 v^2) = Psi - 1/2 v^2 = 1/2 ( v_{esc}^2 - v^2 )
-   for (int k=0; k<ENBin; k++)   EArray_E[k] = EArray_MinE + k*EArray_dE;
+// Array of Relative Energy (Binding Energy), E = -(Phi + 1/2 v^2) = Psi - 1/2 v^2 = 1/2 ( v_{esc}^2 - v^2 )
+   for (int b=0; b<ENBin; b++)   EArray_E[b] = EArray_MinE + b*EArray_dE;
 
-   // Array of Integrated Distribution Function, IntDFunc(E) = \int_{E_{min}}^{E} (\frac{ 1 }{ \sqrt{E-Psi} }) (\frac{ dRho }{ dPsi }) dPsi
-   for (int k=0; k<ENBin; k++)   EArray_IntDFunc[k] = getIntegratedDistributionFunction( EArray_E[k] );
+// Array of Integrated Distribution Function, IntDFunc(E) = \int_{E_{min}}^{E} (\frac{ 1 }{ \sqrt{E-Psi} }) (\frac{ dRho }{ dPsi }) dPsi
+   for (int b=0; b<ENBin; b++)   EArray_IntDFunc[b] = getIntegratedDistributionFunction( EArray_E[b] );
 
-   // Array of Distribution Function, DFunc(E) = f(E) = d/dE IntDFunc(E)
-   for (int k=0;       k<2;       k++)   EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,       0, 5 );
-   for (int k=2;       k<ENBin-2; k++)   EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc, ENBin-5, 5 );
-   for (int k=ENBin-2; k<ENBin;   k++)   EArray_DFunc[k] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,     k-2, 5 );
+// Array of Distribution Function, DFunc(E) = f(E) = d/dE IntDFunc(E)
+   for (int b=0;       b<2;       b++)   EArray_DFunc[b] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,       0, 5 );
+   for (int b=2;       b<ENBin-2; b++)   EArray_DFunc[b] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,     b-2, 5 );
+   for (int b=ENBin-2; b<ENBin;   b++)   EArray_DFunc[b] = Slope_LinearRegression( EArray_E, EArray_IntDFunc, ENBin-5, 5 );
 
-   // check negative distribution function
-   for (int k=0; k<ENBin; k++)
-      if ( EArray_DFunc[k] < 0 )   EArray_DFunc[k] = 0;
+// check negative distribution function
+   for (int b=0; b<ENBin; b++)
+      if ( EArray_DFunc[b] < 0 )   EArray_DFunc[b] = 0;
 
-   // Smooth the distribution function
+// Smooth the distribution function
    SmoothArray( EArray_DFunc, 0, ENBin );
 
 } // FUNCTION : constructEnergyArray
@@ -570,37 +546,37 @@ void Par_EquilibriumIC::constructParticles( real *Mass_AllRank, real *Pos_AllRan
 {
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Constructing Par_EquilibriumIC ...\n" );
 
-   // Determine the total enclosed mass within the maximum radius
-   TotCloudMass = getEnclosedMass( Cloud_MaxR );
+// Determine the total enclosed mass within the maximum radius
+   TotCloudMass = ExtendedInterpolatedTable( Cloud_MaxR, RNBin, RArray_R, RArray_M_Enc );
    ParticleMass = TotCloudMass/Cloud_Par_Num;
 
    double RandomVectorR[3];
    double RandomVectorV[3];
 
-   // Set particle attributes
+// Set particle attributes
    for (long p=Par_Idx0; p<Par_Idx0+Cloud_Par_Num; p++)
    {
-      // Randomly sample the enclosed mass
+//    Randomly sample the enclosed mass
       const double RandomSampleM = TotCloudMass*Random_Num_Gen->GetValue( 0, 0.0, 1.0 );
 
-      // Ramdomly sample the radius from the enclosed mass profile with linear interpolation
+//    Ramdomly sample the radius from the enclosed mass profile with linear interpolation
       const double RandomSampleR = Mis_InterpolateFromTable( RNBin, RArray_M_Enc, RArray_R, RandomSampleM );
 
-      // Randomly set the position vector with a given radius
+//    Randomly set the position vector with a given radius
       getRandomVector_GivenLength( RandomSampleR, RandomVectorR );
 
-      // Randomly sample the velocity magnitude from the distribution function
+//    Randomly sample the velocity magnitude from the distribution function
       const double RandomSampleV = getRandomSampleVelocity( RandomSampleR );
 
-      // Randomly set the velocity vector with the given magnitude
+//    Randomly set the velocity vector with the given magnitude
       getRandomVector_GivenLength( RandomSampleV, RandomVectorV );
 
-      // Set particle attributes
+//    Set particle attributes
       Mass_AllRank[p] = ParticleMass;
       for (int d=0; d<3; d++)   Pos_AllRank[d][p] = Cloud_Center[d]  + RandomVectorR[d];
       for (int d=0; d<3; d++)   Vel_AllRank[d][p] = Cloud_BulkVel[d] + RandomVectorV[d];
 
-      // Check periodicity
+//    Check periodicity
       for (int d=0; d<3; d++)
          if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )   Pos_AllRank[d][p] = FMOD( Pos_AllRank[d][p]+(real)amr->BoxSize[d], (real)amr->BoxSize[d] );
 
@@ -625,25 +601,26 @@ void Par_EquilibriumIC::constructParticles( real *Mass_AllRank, real *Pos_AllRan
 //-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::getDensity( const double r )
 {
-   if      ( Cloud_Model == CLOUD_MODEL_TABLE     ) return ExtendedInterpolatedTable   ( r, InputTable_DensProf_nbin, InputTable_DensProf_radius, InputTable_DensProf_density );
-   else if ( Cloud_Model == CLOUD_MODEL_PLUMMER   ) return AnalyticalDensProf_Plummer  ( r, Cloud_R0, Cloud_Rho0 );
-   else if ( Cloud_Model == CLOUD_MODEL_NFW       ) return AnalyticalDensProf_NFW      ( r, Cloud_R0, Cloud_Rho0 );
-   else if ( Cloud_Model == CLOUD_MODEL_BURKERT   ) return AnalyticalDensProf_Burkert  ( r, Cloud_R0, Cloud_Rho0 );
-   else if ( Cloud_Model == CLOUD_MODEL_JAFFE     ) return AnalyticalDensProf_Jaffe    ( r, Cloud_R0, Cloud_Rho0 );
-   else if ( Cloud_Model == CLOUD_MODEL_HERNQUIST ) return AnalyticalDensProf_Hernquist( r, Cloud_R0, Cloud_Rho0 );
-   else if ( Cloud_Model == CLOUD_MODEL_EINASTO   ) return AnalyticalDensProf_Einasto  ( r, Cloud_R0, Cloud_Rho0, Cloud_Einasto_Power_Factor );
+   double dens = 0.0;
+
+   if      ( Cloud_Model == CLOUD_MODEL_TABLE     )   dens = ExtendedInterpolatedTable   ( r, InputTable_DensProf_nbin, InputTable_DensProf_radius, InputTable_DensProf_density );
+   else if ( Cloud_Model == CLOUD_MODEL_PLUMMER   )   dens = AnalyticalDensProf_Plummer  ( r, Cloud_R0, Cloud_Rho0 );
+   else if ( Cloud_Model == CLOUD_MODEL_NFW       )   dens = AnalyticalDensProf_NFW      ( r, Cloud_R0, Cloud_Rho0 );
+   else if ( Cloud_Model == CLOUD_MODEL_BURKERT   )   dens = AnalyticalDensProf_Burkert  ( r, Cloud_R0, Cloud_Rho0 );
+   else if ( Cloud_Model == CLOUD_MODEL_JAFFE     )   dens = AnalyticalDensProf_Jaffe    ( r, Cloud_R0, Cloud_Rho0 );
+   else if ( Cloud_Model == CLOUD_MODEL_HERNQUIST )   dens = AnalyticalDensProf_Hernquist( r, Cloud_R0, Cloud_Rho0 );
+   else if ( Cloud_Model == CLOUD_MODEL_EINASTO   )   dens = AnalyticalDensProf_Einasto  ( r, Cloud_R0, Cloud_Rho0, Cloud_Einasto_Power_Factor );
    else
-   {
       Aux_Error( ERROR_INFO, "Unsupported Cloud_Model = %d !!\n", Cloud_Model );
-      return 0.0;
-   }
+
+   return dens;
 
 } // FUNCTION : getDensity
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  getEnclosedMass_Anal
+// Function    :  getAnalEnclosedMass
 // Description :  Calculate the enclosed mass of this cloud within radius r
 //
 // Note        :  1. Get the enclosed mass from the analytical enclosed mass profile
@@ -652,22 +629,21 @@ double Par_EquilibriumIC::getDensity( const double r )
 //
 // Return      :  Enclosed mass of this cloud within radius r
 //-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::getEnclosedMass_Anal( const double r )
+double Par_EquilibriumIC::getAnalEnclosedMass( const double r )
 {
-
    double enclosed_mass = NULL_REAL;
 
-   if      ( Cloud_Model == CLOUD_MODEL_PLUMMER   ) enclosed_mass = AnalyticalMassProf_Plummer  ( r, Cloud_R0, Cloud_Rho0 );
-   else if ( Cloud_Model == CLOUD_MODEL_NFW       ) enclosed_mass = AnalyticalMassProf_NFW      ( r, Cloud_R0, Cloud_Rho0 );
-   else if ( Cloud_Model == CLOUD_MODEL_BURKERT   ) enclosed_mass = AnalyticalMassProf_Burkert  ( r, Cloud_R0, Cloud_Rho0 );
-   else if ( Cloud_Model == CLOUD_MODEL_JAFFE     ) enclosed_mass = AnalyticalMassProf_Jaffe    ( r, Cloud_R0, Cloud_Rho0 );
-   else if ( Cloud_Model == CLOUD_MODEL_HERNQUIST ) enclosed_mass = AnalyticalMassProf_Hernquist( r, Cloud_R0, Cloud_Rho0 );
+   if      ( Cloud_Model == CLOUD_MODEL_PLUMMER   )   enclosed_mass = AnalyticalMassProf_Plummer  ( r, Cloud_R0, Cloud_Rho0 );
+   else if ( Cloud_Model == CLOUD_MODEL_NFW       )   enclosed_mass = AnalyticalMassProf_NFW      ( r, Cloud_R0, Cloud_Rho0 );
+   else if ( Cloud_Model == CLOUD_MODEL_BURKERT   )   enclosed_mass = AnalyticalMassProf_Burkert  ( r, Cloud_R0, Cloud_Rho0 );
+   else if ( Cloud_Model == CLOUD_MODEL_JAFFE     )   enclosed_mass = AnalyticalMassProf_Jaffe    ( r, Cloud_R0, Cloud_Rho0 );
+   else if ( Cloud_Model == CLOUD_MODEL_HERNQUIST )   enclosed_mass = AnalyticalMassProf_Hernquist( r, Cloud_R0, Cloud_Rho0 );
    else
    {
 #     ifdef SUPPORT_GSL
       double abs_error;
 
-      // arguments for the gsl integration
+//    Arguments for the gsl integration
       const double lower_limit = 0.0;
       const double upper_limit = r;
       const double abs_err_lim = 1e-8;
@@ -679,11 +655,11 @@ double Par_EquilibriumIC::getEnclosedMass_Anal( const double r )
 
       gsl_function F;
 
-      // parameters for the integrand
+//    Parameters for the integrand
       struct mass_integrand_params_Einasto integrand_params_Einasto = { Cloud_R0, Cloud_Rho0, Cloud_Einasto_Power_Factor };
       struct mass_integrand_params_Table   integrand_params_Table   = { InputTable_DensProf_nbin, InputTable_DensProf_radius, InputTable_DensProf_density };
 
-      // integrand for the integration
+//    Integrand for the integration
       if      ( Cloud_Model == CLOUD_MODEL_EINASTO )
       {
          F.function = &MassIntegrand_Einasto;
@@ -697,7 +673,7 @@ double Par_EquilibriumIC::getEnclosedMass_Anal( const double r )
       else
          Aux_Error( ERROR_INFO, "Unsupported Cloud_Model = %d !!\n", Cloud_Model );
 
-      // integration
+//    Integration
       gsl_integration_qag( &F, lower_limit, upper_limit, abs_err_lim, rel_err_lim, integ_size, integ_rule, w, &enclosed_mass, &abs_error );
 
       gsl_integration_workspace_free( w );
@@ -706,45 +682,7 @@ double Par_EquilibriumIC::getEnclosedMass_Anal( const double r )
 
    return enclosed_mass;
 
-} // FUNCTION : getEnclosedMass_Anal
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  getEnclosedMass
-// Description :  Get the enclosed mass of this cloud within radius r by interpolating the constructed array
-//
-// Note        :  1. Get the enclosed mass from the sampled density profiles
-//
-// Parameter   :  r : radius
-//
-// Return      :  Enclosed mass of this cloud within radius r
-//-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::getEnclosedMass( const double r )
-{
-   return ExtendedInterpolatedTable( r, RNBin, RArray_R, RArray_M_Enc );
-
-} // FUNCTION : getEnclosedMass
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  getGraviPotential
-// Description :  Get the gravitational potential of this cloud at radius r by interpolating the constructed array
-//
-// Note        :  1. Get the gravitaional potential from the sampled enclosed mass profiles
-//
-// Parameter   :  r : radius
-//
-// Return      :  Gravitational potential of this cloud at radius r
-//-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::getGraviPotential( const double r )
-{
-   if      ( r >= RArray_R[RLastIdx] )   return RArray_Phi[RLastIdx]*RArray_R[RLastIdx]/r;
-   else if ( r <= RArray_R[0] )          return RArray_Phi[0];
-   else                                  return Mis_InterpolateFromTable( RNBin, RArray_R, RArray_Phi, r );
-
-} // FUNCTION : getGraviPotential
+} // FUNCTION : getAnalEnclosedMass
 
 
 
@@ -765,30 +703,30 @@ double Par_EquilibriumIC::getGraviPotential( const double r )
 //-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
 {
-   // The relative potential at this radius
-   const double Psi = -getGraviPotential(r);
+// The relative potential at this radius
+   const double Psi = -ExtendedInterpolatedTable( r, RNBin, RArray_R, RArray_Phi );
 
-   // CumulativeProbability = \int_{v}^{v_min} v^2 f(E) dv
-   //                       = \int_{E_min}^{E} (2*(Psi-E)) f(E) \frac{ 1 }{ \sqrt{ 2*( Psi - E )} } dE
-   //                       = \int_{E_min}^{E} \sqrt{ (2*(Psi-E)) } f(E) dE
+// CumulativeProbability = \int_{v}^{v_min} v^2 f(E) dv
+//                       = \int_{E_min}^{E} (2*(Psi-E)) f(E) \frac{ 1 }{ \sqrt{ 2*( Psi - E )} } dE
+//                       = \int_{E_min}^{E} \sqrt{ (2*(Psi-E)) } f(E) dE
    double *CumulativeProbability = new double [ENBin];
    double Probability;
 
    CumulativeProbability[0] = 0;
-   for (int k=1; k<ENBin; k++)
+   for (int b=1; b<ENBin; b++)
    {
-      if ( EArray_E[k] > Psi )   Probability = ( EArray_E[k-1] > Psi ) ? 0 : 0.5*EArray_DFunc[k-1]*sqrt(2*(Psi-EArray_E[k-1]))*(Psi-EArray_E[k-1]);
-      else                       Probability = 0.5*( EArray_DFunc[k-1]*sqrt(2*(Psi-EArray_E[k-1])) +
-                                                     EArray_DFunc[k  ]*sqrt(2*(Psi-EArray_E[k  ])) )*EArray_dE;
+      if ( EArray_E[b] > Psi )   Probability = ( EArray_E[b-1] > Psi ) ? 0 : 0.5*EArray_DFunc[b-1]*sqrt(2*(Psi-EArray_E[b-1]))*(Psi-EArray_E[b-1]);
+      else                       Probability = 0.5*( EArray_DFunc[b-1]*sqrt(2*(Psi-EArray_E[b-1])) +
+                                                     EArray_DFunc[b  ]*sqrt(2*(Psi-EArray_E[b  ])) )*EArray_dE;
 
-      CumulativeProbability[k] = CumulativeProbability[k-1] + Probability;
+      CumulativeProbability[b] = CumulativeProbability[b-1] + Probability;
    }
 
    const double TotalProbability        = CumulativeProbability[ELastIdx];
    const double RandomSampleProbability = TotalProbability*Random_Num_Gen->GetValue( 0, 0.0, 1.0 );
    const double RandomSampleE           = Mis_InterpolateFromTable( ENBin, CumulativeProbability, EArray_E, RandomSampleProbability );
 
-   // v^2 = 2*(Psi-E)
+// v^2 = 2*(Psi-E)
    const double RandomSampleVelocity = ( RandomSampleE > Psi ) ? 0 : sqrt( 2*(Psi-RandomSampleE) );
 
    delete [] CumulativeProbability;
@@ -876,28 +814,25 @@ void Par_EquilibriumIC::getRandomVector_GivenLength( const double Length, double
 //-------------------------------------------------------------------------------------------------------
 void SmoothArray( double* array_x, const int index_start, const int index_end )
 {
-
    int    smoothing_n_elements = 10; // smoothing every "smoothing_n_elements" elements
    double smoothing_criterion  =  3; // smoothing when the ratio is larger than this criterion
 
-   // set the elements as zero if its ratio to other elements is larger than smoothing_criterion
+// Set the elements as zero if its ratio to other elements is larger than smoothing_criterion
    for (int i=index_start; i<index_end-smoothing_n_elements+1; i++)
+   for (int j=i; j<i+smoothing_n_elements; j++)
+   for (int k=i; k<i+smoothing_n_elements; k++)
    {
-      for (int j=i; j<i+smoothing_n_elements; j++)
-      for (int k=i; k<i+smoothing_n_elements; k++)
-      {
-         if ( array_x[k] != 0  &&  fabs( array_x[j]/array_x[k] ) > smoothing_criterion )   array_x[j] = 0;
-      }
+      if ( array_x[k] != 0  &&  fabs( array_x[j]/array_x[k] ) > smoothing_criterion )   array_x[j] = 0;
    }
 
-   // set those zero elements as the average of non-zero elements
+// Set those zero elements as the average of non-zero elements
    for (int i=index_start; i<index_end-smoothing_n_elements+1; i++)
    {
       double sum_of_nonzero = 0;
       int    num_of_nonzero = 0;
       double ave_of_nonzero = 0;
 
-      // sum the non-zero elements
+//    Sum the non-zero elements
       for (int j=i; j<i+smoothing_n_elements; j++)
       {
          if ( array_x[j] != 0 )
@@ -907,17 +842,12 @@ void SmoothArray( double* array_x, const int index_start, const int index_end )
          }
       }
 
-      // average of non-zero elements
+//    Average of non-zero elements
       if ( num_of_nonzero != 0 )   ave_of_nonzero = sum_of_nonzero/num_of_nonzero;
 
-      // assign the average of non-zero elements to the zero element
+//    Assign the average of non-zero elements to the zero element
       for (int j=i; j<i+smoothing_n_elements; j++)
-      {
-         if ( array_x[j] == 0 )
-         {
-            array_x[j] = ave_of_nonzero;
-         }
-      }
+         if ( array_x[j] == 0 )   array_x[j] = ave_of_nonzero;
    }
 
 } // FUNCTION : SmoothArray
@@ -928,7 +858,7 @@ void SmoothArray( double* array_x, const int index_start, const int index_end )
 // Function    :  ArrayCovariance
 // Description :  Get the covariance between two arrays
 //
-// Note        :  1. if x==y, then the covariance is the variance of x
+// Note        :  1. if x == y, then the covariance is the variance of x
 //
 // Parameter   :  array_x     : array of x data
 //                array_y     : array of y data
@@ -941,7 +871,7 @@ double ArrayCovariance( const double* array_x, const double* array_y, const int 
 {
    const double normalized_factor = 1.0/n_elements;
 
-   // average
+// Average
    double average_x = 0.0;
    double average_y = 0.0;
 
@@ -954,14 +884,10 @@ double ArrayCovariance( const double* array_x, const double* array_y, const int 
    average_x *= normalized_factor;
    average_y *= normalized_factor;
 
-
-   // covariance
+// Covariance
    double covariance_xy = 0.0;
 
-   for (int i=index_start; i<index_start+n_elements; i++)
-   {
-      covariance_xy += (array_x[i]-average_x)*(array_y[i]-average_y);
-   }
+   for (int i=index_start; i<index_start+n_elements; i++)   covariance_xy += (array_x[i]-average_x)*(array_y[i]-average_y);
 
    covariance_xy *= normalized_factor;
 

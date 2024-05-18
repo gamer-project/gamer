@@ -24,7 +24,7 @@
 class Par_EquilibriumIC
 {
    public:
-      Par_EquilibriumIC( const char* Type );
+      Par_EquilibriumIC( const char* Cloud_Type );
       virtual ~Par_EquilibriumIC();
 
       void   setCenterAndBulkVel( const double Center_X, const double Center_Y, const double Center_Z,
@@ -42,7 +42,6 @@ class Par_EquilibriumIC
       void   constructParticles( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx );
 
    private:
-      char   Cloud_Type[MAX_STRING];
       int    Cloud_Model                     = -1;
       double Cloud_Center[3]                 = { -1, -1, -1 };
       double Cloud_BulkVel[3]                = {  0,  0,  0 };
@@ -60,13 +59,11 @@ class Par_EquilibriumIC
       double ParticleMass                    = -1;
 
       // Get physical attributes for cloud
-      double getEnclosedMass        ( const double r );
-      double getEnclosedMass_Anal   ( const double r );
       double getDensity             ( const double r );
-      double getGraviPotential      ( const double r );
+      double getAnalEnclosedMass    ( const double r );
       double getRandomSampleVelocity( const double r );
-      double getIntegratedDistributionFunction( const double E );
 
+      double getIntegratedDistributionFunction( const double E );
       void   getRandomVector_GivenLength( const double Length, double RandomVector[3] );
 
       // Input table of density profile
@@ -83,25 +80,25 @@ class Par_EquilibriumIC
 
       // Arrays of radial distribution of properties of the cloud
       void    constructRadialArray();
-      double  RArray_dR = -1;
+      int     RNBin       = -1;
+      int     RLastIdx    = -1;
+      double  RArray_dR   = -1;
       double *RArray_R;
       double *RArray_Rho;
       double *RArray_M_Enc;
       double *RArray_dRho_dPsi;
       double *RArray_Phi;
-      int     RLastIdx    = -1;
-      int     RNBin       = -1;
 
       // Arrays in energy space
       void    constructEnergyArray();
+      int     ENBin       = -1;
+      int     ELastIdx    = -1;
       double  EArray_dE   = -1;
       double  EArray_MinE = -1;
       double  EArray_MaxE = -1;
       double *EArray_E;
       double *EArray_DFunc;
       double *EArray_IntDFunc;
-      int     ELastIdx    = -1;
-      int     ENBin       = -1;
 
       // Random number generator
       RandomNumber_t *Random_Num_Gen;
