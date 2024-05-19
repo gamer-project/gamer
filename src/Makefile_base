@@ -27,18 +27,18 @@ COMPILE_VERBOSE := 0
 
 # simulation options
 #######################################################################################################
-SIMU_OPTION = @@@SIMU_OPTION@@@
+SIMU_OPTION  = @@@SIMU_OPTION@@@
 SIMU_OPTION += -DGPU_COMPUTE_CAPABILITY=@@@GPU_COMPUTE_CAPABILITY@@@
 
 
 
 # compilers and flags
 #######################################################################################################
-CXX         = @@@CXX@@@
-CXXFLAG     = @@@CXXFLAG@@@
-LIB         = @@@LIBFLAG@@@
-OPENMPFLAG  = @@@OPENMPFLAG@@@
-NVCC        = $(CUDA_PATH)/bin/nvcc @@@CUDAFLAG@@@
+CXX        = @@@CXX@@@
+CXXFLAG    = @@@CXXFLAG@@@
+LIB        = @@@LIBFLAG@@@
+OPENMPFLAG = @@@OPENMPFLAG@@@
+NVCC       = $(CUDA_PATH)/bin/nvcc @@@CUDAFLAG@@@
 
 
 
