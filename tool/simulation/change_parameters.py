@@ -136,13 +136,14 @@ def execution( **kwargs ):
     record_parameters = kwargs["record"]
 
     # 1. Run GAMER with executable passed as command line parameter
-    subprocess.run( ["./gamer > log 2>&1"], shell=True )
+    # subprocess.run( ["./gamer > log 2>&1"], shell=True )
+    subprocess.run( ["mpirun -map-by ppr:2:socket:pe=8 --report-bindings ./gamer 1>>log 2>&1"], shell=True )
     # subprocess.run( ["mpirun -map-by ppr:4:socket:pe=8 --report-bindings ./gamer 1>>log 2>&1"], shell=True )
 
     # 2. Analysis: Call python scripts etc.
 
     # 3. Create folder recording which parameters where changed
-    par_dir  = exe[2:] + "_" + "_".join(record_parameters.keys())
+    par_dir  = "gamer_" + "_".join(record_parameters.keys())
 
     if not os.path.isdir(par_dir): os.mkdir(par_dir)
 
@@ -181,7 +182,7 @@ if __name__ == "__main__":
     # this will change the single column to the same value
     file_name2   = "Input__Flag_NParPatch"
     const_paras2 = {}
-    iter_paras2  = { "Number_of_particle_per_patch":[200, 400] }
+    iter_paras2  = { "Number_of_particles_per_patch":[200, 400] }
     file2        = File( file_name2, const_paras2, iter_paras2, flag_file=True )
 
     # this will change the column to the assigned value
