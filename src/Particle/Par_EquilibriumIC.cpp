@@ -461,7 +461,7 @@ void Par_EquilibriumIC::constructRadialArray()
 
 // Array of Density, Rho(R)
    for (int b=1; b<RNBin; b++)         RArray_Rho[b]       = getDensity( RArray_R[b] );
-   RArray_Rho[0]                                           = RArray_Rho[1];   // where r=0
+   RArray_Rho[0]                                           = 2*RArray_Rho[1]-RArray_Rho[2];   // where r=0
 
 // Array of Enclosed Mass, M_Enc(R) = \int_{0}^{R} Rho(r) 4\pi R^2 dR
    RArray_M_Enc[0]                                         = 0;   // where r=0
@@ -481,7 +481,7 @@ void Par_EquilibriumIC::constructRadialArray()
 
 // Array of dRho/dPsi, dRho/dPsi = -(dRho/dPhi), where Psi = -Phi
    RArray_dRho_dPsi[0]                                     = -(RArray_Rho[1] - RArray_Rho[0])/(RArray_Phi[1] - RArray_Phi[0]);
-   for (int b=1; b<RNBin-1; b++)       RArray_dRho_dPsi[b] = -Slope_LinearRegression( RArray_Phi, RArray_Rho, b-1, 3 );
+   for (int b=1; b<RNBin-1; b++)       RArray_dRho_dPsi[b] = -(RArray_Rho[b+1] - RArray_Rho[b-1])/(RArray_Phi[b+1] - RArray_Phi[b-1]); //Slope_LinearRegression( RArray_Phi, RArray_Rho, b-1, 3 );
    RArray_dRho_dPsi[RLastIdx]                              = -(RArray_Rho[RLastIdx] - RArray_Rho[RLastIdx-1])/(RArray_Phi[RLastIdx] - RArray_Phi[RLastIdx-1]);
 
 } // FUNCTION : constructRadialArray
@@ -512,16 +512,19 @@ void Par_EquilibriumIC::constructEnergyArray()
    for (int b=0; b<ENBin; b++)   EArray_IntDFunc[b] = getIntegratedDistributionFunction( EArray_E[b] );
 
 // Array of Distribution Function, DFunc(E) = f(E) = d/dE IntDFunc(E)
-   for (int b=0;       b<2;       b++)   EArray_DFunc[b] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,       0, 5 );
-   for (int b=2;       b<ENBin-2; b++)   EArray_DFunc[b] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,     b-2, 5 );
-   for (int b=ENBin-2; b<ENBin;   b++)   EArray_DFunc[b] = Slope_LinearRegression( EArray_E, EArray_IntDFunc, ENBin-5, 5 );
+   //for (int b=0;       b<2;       b++)   EArray_DFunc[b] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,       0, 5 );
+   //for (int b=2;       b<ENBin-2; b++)   EArray_DFunc[b] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,     b-2, 5 );
+   //for (int b=ENBin-2; b<ENBin;   b++)   EArray_DFunc[b] = Slope_LinearRegression( EArray_E, EArray_IntDFunc, ENBin-5, 5 );
+   EArray_DFunc[0]                                       = (EArray_IntDFunc[1] - EArray_IntDFunc[0])/(EArray_E[1] - EArray_E[0]);
+   for (int b=1;       b<ENBin-1; b++)   EArray_DFunc[b] = (EArray_IntDFunc[b+1] - EArray_IntDFunc[b-1])/(EArray_E[b+1] - EArray_E[b-1]);
+   EArray_DFunc[ELastIdx]                                = (EArray_IntDFunc[ELastIdx] - EArray_IntDFunc[ELastIdx-1])/(EArray_E[ELastIdx] - EArray_E[ELastIdx-1]);
 
 // check negative distribution function
    for (int b=0; b<ENBin; b++)
       if ( EArray_DFunc[b] < 0 )   EArray_DFunc[b] = 0;
 
 // Smooth the distribution function
-   SmoothArray( EArray_DFunc, 0, ENBin );
+   //SmoothArray( EArray_DFunc, 0, ENBin );
 
 } // FUNCTION : constructEnergyArray
 
@@ -753,7 +756,7 @@ double Par_EquilibriumIC::getIntegratedDistributionFunction( const double E )
 {
    if ( E <= EArray_MinE )   return 0.0;
 
-   const int    N_points = 1000;
+   const int    N_points = 10000;
    const double dPsi     = ( E - EArray_MinE )/N_points;
 
    double integral = 0;
