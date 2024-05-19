@@ -134,10 +134,10 @@ def execution( **kwargs ):
     """
     cwd               = os.getcwd()
     record_parameters = kwargs["record"]
-    exe               = kwargs["exe"]
 
     # 1. Run GAMER with executable passed as command line parameter
-    subprocess.run([kwargs["exe"]], capture_output=False)
+    subprocess.run( ["./gamer > log 2>&1"], shell=True )
+    # subprocess.run( ["mpirun -map-by ppr:4:socket:pe=8 --report-bindings ./gamer 1>>log 2>&1"], shell=True )
 
     # 2. Analysis: Call python scripts etc.
 
@@ -152,7 +152,7 @@ def execution( **kwargs ):
     if not os.path.isdir(dest_dir): os.mkdir(dest_dir)
 
     # 5. Move and or output files to folder, delete with os.remove() (files) and shutil.rmtree() (directories) if necessary
-    move_files = [ r'*.png', r'Record*', r'Data*']
+    move_files = [ r'*.png', r'Record*', r'Data*', r'Particle_*', r'log']
     copy_files = [ r'Input*', ]
 
     for f_type in move_files:
@@ -175,20 +175,20 @@ if __name__ == "__main__":
     # 1. Set up the files and the parameters to be changed
     file_name1   = "Input__Parameter"                                             # file name
     const_paras1 = { "END_T":-1, "END_STEP":-1 }                                  # the constant parameters
-    iter_paras1  = { "NX0_TOT_X":[128, 256], "NX0_TOT_Y":[16, 32] }               # the parameters iterated as the given list
+    iter_paras1  = { "OPT__FLAG_RHO":[0, 1], "MAX_LEVEL":[2, 3] }                 # the parameters iterated as the given list
     file1        = File( file_name1, const_paras1, iter_paras1, flag_file=False ) # set the `File` class
 
     # this will change the single column to the same value
     file_name2   = "Input__Flag_NParPatch"
     const_paras2 = {}
-    iter_paras2  = { "NPar_per_patch":[2048, 4096] }
+    iter_paras2  = { "Number_of_particle_per_patch":[200, 400] }
     file2        = File( file_name2, const_paras2, iter_paras2, flag_file=True )
 
     # this will change the column to the assigned value
     file_name3   = "Input__Flag_Rho"
     const_paras3 = {}
-    iter_paras3  = { "Density":[ tuple( [8.0**(i)   for i in range(12)] ),
-                                 tuple( [8.0**(i+1) for i in range(12)] )] }
+    iter_paras3  = { "Density":[ tuple( [10**(i-3) for i in range(12)] ),
+                                 tuple( [10**(i-4) for i in range(12)] )] }
     file3        = File( file_name3, const_paras3, iter_paras3, flag_file=True )
 
     files = [file1, file2, file3] # wrap all the `File` classes.
@@ -206,11 +206,6 @@ if __name__ == "__main__":
     parser.add_argument( "-q", "--quite",
                          action="store_true",
                          help="Enable silent mode.\n"
-                       )
-
-    parser.add_argument( "-e", "--exe", type=str,
-                         default="./gamer",
-                         help="The file you want to execute.\n"
                        )
 
     args = vars( parser.parse_args() )
