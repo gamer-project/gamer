@@ -315,8 +315,7 @@ def get_gpu_compute_capability():
     cuda_check_error( cuda.cuInit(0) )
     cuda_check_error( cuda.cuDeviceGetCount(ctypes.byref(nGpus)) )
 
-    arch = ""
-    if nGpus.value > 1: print("WARNING: More than one GPU. Selecting the last GPU architecture.")
+    if nGpus.value > 1: print("WARNING: More than one GPU. Selecting the last GPU compute capability.")
     for i in range(nGpus.value):
         cuda_check_error( cuda.cuDeviceGet(ctypes.byref(device), i) )
         cuda_check_error( cuda.cuDeviceComputeCapability(ctypes.byref(cc_major), ctypes.byref(cc_minor), device) )
