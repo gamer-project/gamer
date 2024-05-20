@@ -3,19 +3,19 @@
 A script for changing the parameters of Input__* files.
 
 How to use it:
-  1. Set up the files and the parameters you want to change.
+  1. Set up the files and parameters you want to change in the `Main` section.
      The current script can be used directly for the Plummer test problem.
-    a. The file is set to be a `File()` class. The `File` takes four inputs: file name, constant
-       parameters, changing parameters, and flag file or not. Please check out the `Classes` section
-       for the detail of inputs.
+    a. The file is set to be a `File` class. The `File` takes four inputs:
+       file name, constant parameters, variable parameters, and flag file or not.
+       Check the `Classes` section for details.
     b. Wrap all the `File` classes to a list called `files`.
 
     * NOTICE:
       Parameter files:
-        The first column specifies the option's name and the second column should be the value of the option.
+        The first and second columns specify the name and value of the target parameter, respectively.
       Flag files:
-        The first line of a flag file should always start with `# ` and the following column
-        names in the header specify the options' names.
+        The first line should always start with `#` and the following columns in the header specify
+        the name of each flag threshold.
 
   2. [Optional] Tailor the `execution()` function for your tests.
 
@@ -23,9 +23,9 @@ How to use it:
      add your own `parser.add_argument` in the `Main` section.
 -----------------------------------------------------------------------------------------------------
 For developer:
-1. The main concept is to use a recursion function instead of nest for loops, so the code stays clean
+1. The main concept is to use a recursive function instead of nested for loops so that the code stays clean
    and easy to maintain.
-2. First we iterate the files then the parameters of each files. At the end of iteration, we called
+2. We iterate the target files first and then the parameters of each file. At the end of iteration, we call
    `execution()`.
 """
 #====================================================================================================
@@ -130,29 +130,29 @@ def replace_parameter_flag( file_name, para_name, val ):
 
 def execution( **kwargs ):
     """
-    Main execution after iterating all the parameters.
+    Main execution after iterating all parameters.
     """
     cwd               = os.getcwd()
     record_parameters = kwargs["record"]
 
-    # 1. Run GAMER with executable passed as command line parameter
+    # 1. Run gamer
     # subprocess.run( ["./gamer > log 2>&1"], shell=True )
     subprocess.run( ["mpirun -map-by ppr:2:socket:pe=8 --report-bindings ./gamer 1>>log 2>&1"], shell=True )
     # subprocess.run( ["mpirun -map-by ppr:4:socket:pe=8 --report-bindings ./gamer 1>>log 2>&1"], shell=True )
 
     # 2. Analysis: Call python scripts etc.
 
-    # 3. Create folder recording which parameters where changed
+    # 3. Create a folder named by the parameters to be changed
     par_dir  = "gamer_" + "_".join(record_parameters.keys())
 
     if not os.path.isdir(par_dir): os.mkdir(par_dir)
 
-    # 4. Create folder recording current runtime parameters
+    # 4. Create a subfolder named by the current runtime parameters
     sub_dir  = str(record_parameters)
     dest_dir = os.path.join(par_dir, sub_dir)
     if not os.path.isdir(dest_dir): os.mkdir(dest_dir)
 
-    # 5. Move and or output files to folder, delete with os.remove() (files) and shutil.rmtree() (directories) if necessary
+    # 5. Move input and output files to the subfolder; delete with os.remove() (files) and shutil.rmtree() (directories) if necessary
     move_files = [ r'*.png', r'Record*', r'Data*', r'Particle_*', r'log']
     copy_files = [ r'Input*', ]
 
@@ -173,19 +173,19 @@ def execution( **kwargs ):
 if __name__ == "__main__":
     sys.setrecursionlimit( RECURSION_LIMIT ) # reset the recursion depth limit
 
-    # 1. Set up the files and the parameters to be changed
+    # 1. Set up the files and parameters to be changed
     file_name1   = "Input__Parameter"                                             # file name
-    const_paras1 = { "END_T":-1, "END_STEP":-1 }                                  # the constant parameters
+    const_paras1 = { "END_T":-1, "END_STEP":5 }                                   # the constant parameters
     iter_paras1  = { "OPT__FLAG_RHO":[0, 1], "MAX_LEVEL":[2, 3] }                 # the parameters iterated as the given list
     file1        = File( file_name1, const_paras1, iter_paras1, flag_file=False ) # set the `File` class
 
-    # this will change the single column to the same value
+    # this will change the entire column to the same value
     file_name2   = "Input__Flag_NParPatch"
     const_paras2 = {}
     iter_paras2  = { "Number_of_particles_per_patch":[200, 400] }
     file2        = File( file_name2, const_paras2, iter_paras2, flag_file=True )
 
-    # this will change the column to the assigned value
+    # this will change the column to the assigned values
     file_name3   = "Input__Flag_Rho"
     const_paras3 = {}
     iter_paras3  = { "Density":[ tuple( [10**(i-3) for i in range(12)] ),
@@ -211,5 +211,5 @@ if __name__ == "__main__":
 
     args = vars( parser.parse_args() )
 
-    # 3. Start iterating parameters and running
+    # 3. Start iterating parameters and running gamer
     iter_files( files, **args )
