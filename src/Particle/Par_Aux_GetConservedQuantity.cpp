@@ -8,7 +8,7 @@
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Aux_GetConservedQuantity
 // Description :  Calculate conserved quantities for particles
-//                --> Mass, momentum, kinematic energy and potential energy
+//                --> Mass, center of mass, momentum, angular momentum, kinematic energy and potential energy
 //
 // Note        :  1. Use "call by reference" to return results
 //                2. Return Ep=0.0 if GRAVITY is off
@@ -24,70 +24,105 @@
 //                   --> Different number of OpenMP threads can also results in different results again
 //                       due to round-off errors
 //
-// Parameter   :  Mass_Total     : Total particle mass to be returned
-//                MomX/Y/Z_Total : Total momentum to be returned
-//                Ek_Total       : Total kinematic energy to be returned
-//                Ep_Total       : Total potential energy to be returned
+// Parameter   :  Mass_Total        : Total particle mass to be returned
+//                CoMX/Y/Z_Total    : Total particle center of mass to be returned
+//                MomX/Y/Z_Total    : Total particle momentum to be returned
+//                AngMomX/Y/Z_Total : Total particle angular momentum to be returned
+//                Ek_Total          : Total particle kinematic energy to be returned
+//                Ep_Total          : Total particle potential energy to be returned
 //
-// Return      :  Mass_Total, MomX/Y/Z_Total, Ek_Total, Ep_Total
+// Return      :  Mass_Total, CoMX/Y/Z_Total, MomX/Y/Z_Total, AngMomX/Y/Z_Total, Ek_Total, Ep_Total
 //-------------------------------------------------------------------------------------------------------
-void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, double &MomY_Total, double &MomZ_Total,
+void Par_Aux_GetConservedQuantity( double &Mass_Total, double &CoMX_Total, double &CoMY_Total, double &CoMZ_Total,
+                                   double &MomX_Total, double &MomY_Total, double &MomZ_Total,
+                                   double &AngMomX_Total, double &AngMomY_Total, double &AngMomZ_Total,
                                    double &Ek_Total, double &Ep_Total )
 {
 
-// 1. mass, momentum, and kinematic energy
-   double Mass_ThisRank=0.0, MomX_ThisRank=0.0, MomY_ThisRank=0.0, MomZ_ThisRank=0.0, Ek_ThisRank=0.0;
-   double Send[5], Recv[5];
+// 1. mass, center of mass, momentum, angular momentum, and kinematic energy
+   double Mass_ThisRank=0.0, CoMX_ThisRank=0.0, CoMY_ThisRank=0.0, CoMZ_ThisRank=0.0;
+   double MomX_ThisRank=0.0, MomY_ThisRank=0.0, MomZ_ThisRank=0.0;
+   double AngMomX_ThisRank=0.0, AngMomY_ThisRank=0.0, AngMomZ_ThisRank=0.0, Ek_ThisRank=0.0;
 
 // use static schedule to give the same reduction results everytime
-#  pragma omp parallel for schedule( static ) reduction( +:Mass_ThisRank, MomX_ThisRank, MomY_ThisRank, MomZ_ThisRank, Ek_ThisRank )
+#  pragma omp parallel for schedule( static ) reduction( +:Mass_ThisRank, \
+                                                           CoMX_ThisRank, CoMY_ThisRank, CoMZ_ThisRank, \
+                                                           MomX_ThisRank, MomY_ThisRank, MomZ_ThisRank, \
+                                                           AngMomX_ThisRank, AngMomY_ThisRank, AngMomZ_ThisRank, \
+                                                           Ek_ThisRank )
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
-//    skip inactive, massless, and tracer particles
-      if ( amr->Par->Mass[p] > (real)0.0  &&  amr->Par->Type[p] != PTYPE_TRACER )
-      {
-         Mass_ThisRank += amr->Par->Mass[p];
-         MomX_ThisRank += amr->Par->Mass[p]*amr->Par->VelX[p];
-         MomY_ThisRank += amr->Par->Mass[p]*amr->Par->VelY[p];
-         MomZ_ThisRank += amr->Par->Mass[p]*amr->Par->VelZ[p];
-         Ek_ThisRank   += 0.5*amr->Par->Mass[p]*( SQR(amr->Par->VelX[p]) + SQR(amr->Par->VelY[p]) + SQR(amr->Par->VelZ[p]) );
-      }
+      if ( amr->Par->Mass[p] <= (real_par)0.0  ||  amr->Par->Type[p] == PTYPE_TRACER )   continue; // skip inactive, massless, and tracer particles
+
+      const double dX   = amr->Par->PosX[p] - ANGMOM_ORIGIN_X;
+      const double dY   = amr->Par->PosY[p] - ANGMOM_ORIGIN_Y;
+      const double dZ   = amr->Par->PosZ[p] - ANGMOM_ORIGIN_Z;
+
+      Mass_ThisRank    += amr->Par->Mass[p];
+      CoMX_ThisRank    += amr->Par->Mass[p]*amr->Par->PosX[p];
+      CoMY_ThisRank    += amr->Par->Mass[p]*amr->Par->PosY[p];
+      CoMZ_ThisRank    += amr->Par->Mass[p]*amr->Par->PosZ[p];
+      MomX_ThisRank    += amr->Par->Mass[p]*amr->Par->VelX[p];
+      MomY_ThisRank    += amr->Par->Mass[p]*amr->Par->VelY[p];
+      MomZ_ThisRank    += amr->Par->Mass[p]*amr->Par->VelZ[p];
+      AngMomX_ThisRank += amr->Par->Mass[p]*( dY*amr->Par->VelZ[p] - dZ*amr->Par->VelY[p] );
+      AngMomY_ThisRank += amr->Par->Mass[p]*( dZ*amr->Par->VelX[p] - dX*amr->Par->VelZ[p] );
+      AngMomZ_ThisRank += amr->Par->Mass[p]*( dX*amr->Par->VelY[p] - dY*amr->Par->VelX[p] );
+      Ek_ThisRank      += 0.5*amr->Par->Mass[p]*( SQR(amr->Par->VelX[p]) + SQR(amr->Par->VelY[p]) + SQR(amr->Par->VelZ[p]) );
    }
 
-   Send[0] = Mass_ThisRank;
-   Send[1] = MomX_ThisRank;
-   Send[2] = MomY_ThisRank;
-   Send[3] = MomZ_ThisRank;
-   Send[4] = Ek_ThisRank;
+   const int NQuan_ToReduce = 11;
+   double    Send[NQuan_ToReduce], Recv[NQuan_ToReduce];
 
-   MPI_Reduce( Send, Recv, 5, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+   Send[0]  =    Mass_ThisRank;
+   Send[1]  =    CoMX_ThisRank;
+   Send[2]  =    CoMY_ThisRank;
+   Send[3]  =    CoMZ_ThisRank;
+   Send[4]  =    MomX_ThisRank;
+   Send[5]  =    MomY_ThisRank;
+   Send[6]  =    MomZ_ThisRank;
+   Send[7]  = AngMomX_ThisRank;
+   Send[8]  = AngMomY_ThisRank;
+   Send[9]  = AngMomZ_ThisRank;
+   Send[10] =      Ek_ThisRank;
 
-   Mass_Total = Recv[0];
-   MomX_Total = Recv[1];
-   MomY_Total = Recv[2];
-   MomZ_Total = Recv[3];
-   Ek_Total   = Recv[4];
+   MPI_Reduce( Send, Recv, NQuan_ToReduce, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+
+   if ( MPI_Rank == 0 )
+   {
+      Mass_Total    = Recv[0];
+      CoMX_Total    = Recv[1]/Mass_Total;
+      CoMY_Total    = Recv[2]/Mass_Total;
+      CoMZ_Total    = Recv[3]/Mass_Total;
+      MomX_Total    = Recv[4];
+      MomY_Total    = Recv[5];
+      MomZ_Total    = Recv[6];
+      AngMomX_Total = Recv[7];
+      AngMomY_Total = Recv[8];
+      AngMomZ_Total = Recv[9];
+      Ek_Total      = Recv[10];
+   }
 
 
 // 2. potential energy
 #  ifdef GRAVITY
-   const ParInterp_t IntScheme  = amr->Par->Interp;
-   const bool UsePot            = ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT );
-   const bool IntPhase_No       = false;
-   const bool DE_Consistency_No = false;
-   const real MinDens_No        = -1.0;
-   const real MinPres_No        = -1.0;
-   const real MinTemp_No        = -1.0;
-   const real MinEntr_No        = -1.0;
+   const ParInterp_t IntScheme      = amr->Par->Interp;
+   const bool UsePot                = ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT );
+   const bool IntPhase_No           = false;
+   const bool DE_Consistency_No     = false;
+   const real MinDens_No            = -1.0;
+   const real MinPres_No            = -1.0;
+   const real MinTemp_No            = -1.0;
+   const real MinEntr_No            = -1.0;
 
-   const int  PotGhost          = amr->Par->GhostSize;
-   const int  PotSize           = PS1 + 2*PotGhost;
+   const int  PotGhost              = amr->Par->GhostSize;
+   const int  PotSize               = PS1 + 2*PotGhost;
 
-   const real *Pos[3]           = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-   const real *Mass             = amr->Par->Mass;
-   const real *PType            = amr->Par->Type;
+   const real_par *Pos[3]           = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   const real_par *Mass             = amr->Par->Mass;
+   const real_par *PType            = amr->Par->Type;
 
-   double Ep_ThisRank = 0.0;
+   double Ep_ThisRank               = 0.0;
    double PrepPotTime, dh, _dh, Ep_Coeff;
    int    PotSg;
 
@@ -216,7 +251,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                   {
                      ParID = amr->patch[0][lv][PID]->ParList[p];
 
-                     if ( PType[ParID] == PTYPE_TRACER  ||  Mass[ParID] <= (real)0.0 )
+                     if ( PType[ParID] == PTYPE_TRACER  ||  Mass[ParID] <= (real_par)0.0 )
                         continue;
 
 //                   calculate the nearest grid index
@@ -228,7 +263,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                         if ( idx[d] < 0 )
                         {
 #                          ifdef DEBUG_PARTICLE
-                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
+                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
                            Aux_Error( ERROR_INFO, "index outside the pot array (pos[%d] %14.7e, EdgeL %14.7e, idx %d) !!\n",
                                       d, Pos[d][ParID], amr->patch[0][lv][PID]->EdgeL[d], idx[d] );
 #                          endif
@@ -239,7 +274,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                         else if ( idx[d] >= PotSize )
                         {
 #                          ifdef DEBUG_PARTICLE
-                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
+                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
                               Aux_Error( ERROR_INFO, "index outside the pot array (pos[%d] %14.7e, EdgeR %14.7e, idx %d) !!\n",
                                          d, Pos[d][ParID], amr->patch[0][lv][PID]->EdgeR[d], idx[d] );
 #                          endif
@@ -266,7 +301,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                   {
                      ParID = amr->patch[0][lv][PID]->ParList[p];
 
-                     if ( PType[ParID] == PTYPE_TRACER  ||  Mass[ParID] <= (real)0.0 )
+                     if ( PType[ParID] == PTYPE_TRACER  ||  Mass[ParID] <= (real_par)0.0 )
                         continue;
 
                      for (int d=0; d<3; d++)
@@ -282,7 +317,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                         if ( idxLR[0][d] < 0 )
                         {
 #                          ifdef DEBUG_PARTICLE
-                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
+                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
                            Aux_Error( ERROR_INFO, "index outside the pot array (pos[%d] %14.7e, EdgeL %14.7e, idxL %d, idxR %d) !!\n",
                                       d, Pos[d][ParID], amr->patch[0][lv][PID]->EdgeL[d], idxLR[0][d], idxLR[1][d] );
 #                          endif
@@ -294,7 +329,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                         else if ( idxLR[1][d] >= PotSize )
                         {
 #                          ifdef DEBUG_PARTICLE
-                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
+                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
                            Aux_Error( ERROR_INFO, "index outside the pot array (pos[%d] %14.7e, EdgeR %14.7e, idxL %d, idxR %d) !!\n",
                                       d, Pos[d][ParID], amr->patch[0][lv][PID]->EdgeR[d], idxLR[0][d], idxLR[1][d] );
 #                          endif
@@ -330,7 +365,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                   {
                      ParID = amr->patch[0][lv][PID]->ParList[p];
 
-                     if ( PType[ParID] == PTYPE_TRACER  ||  Mass[ParID] <= (real)0.0 )
+                     if ( PType[ParID] == PTYPE_TRACER  ||  Mass[ParID] <= (real_par)0.0 )
                         continue;
 
                      for (int d=0; d<3; d++)
@@ -346,7 +381,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                         if ( idxLCR[0][d] < 0 )
                         {
 #                          ifdef DEBUG_PARTICLE
-                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
+                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )
                            Aux_Error( ERROR_INFO, "index outside the pot array (pos[%d] %14.7e, EdgeL %14.7e, idxL %d, idxR %d) !!\n",
                                       d, Pos[d][ParID], amr->patch[0][lv][PID]->EdgeL[d], idxLCR[0][d], idxLCR[2][d] );
 #                          endif
@@ -359,7 +394,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                         else if ( idxLCR[2][d] >= PotSize )
                         {
 #                          ifdef DEBUG_PARTICLE
-                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
+                           if (  ! Mis_CompareRealValue( Pos[d][ParID], (real_par)amr->patch[0][lv][PID]->EdgeR[d], NULL, false )  )
                            Aux_Error( ERROR_INFO, "index outside the pot array (pos[%d] %14.7e, EdgeR %14.7e, idxL %d, idxR %d) !!\n",
                                       d, Pos[d][ParID], amr->patch[0][lv][PID]->EdgeR[d], idxLCR[0][d], idxLCR[2][d] );
 #                          endif

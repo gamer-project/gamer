@@ -32,24 +32,24 @@
 void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
 {
 
-   const bool  IncNonleaf = true;
-   const real *Vel[3]     = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
+   const bool  IncNonleaf     = true;
+   const real_par *Vel[3]     = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
 #  ifdef STORE_PAR_ACC
-   const real *Acc[3]     = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
+   const real_par *Acc[3]     = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
 #  else
-   const real *Acc[3]     = { NULL, NULL, NULL };
+   const real_par *Acc[3]     = { NULL, NULL, NULL };
 #  endif
 #  ifdef MASSIVE_PARTICLES
-   const bool  UseAcc     = ( DT__PARACC > 0.0 );
+   const bool  UseAcc         = ( DT__PARACC > 0.0 );
 #  else
-   const bool  UseAcc     = false;
+   const bool  UseAcc         = false;
 #  endif
 #  ifdef OPENMP
-   const int   NT         = OMP_NTHREAD;   // number of OpenMP threads
+   const int   NT             = OMP_NTHREAD;   // number of OpenMP threads
 #  else
-   const int   NT         = 1;
+   const int   NT             = 1;
 #  endif
-   const real *ParType   = amr->Par->Type;
+   const real_par *ParType    = amr->Par->Type;
 
 #  ifndef STORE_PAR_ACC
    if ( UseAcc )
@@ -76,19 +76,19 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
 
 
 // get the maximum particle velocity and acceleration on the target level
-   real MaxVel, MaxAcc;
+   real_par MaxVel, MaxAcc;
    long NParVel=0, NParAcc=0;
 
-   real *MaxVel_OMP = new real [NT];
-   real *MaxAcc_OMP = new real [NT];
+   real_par *MaxVel_OMP = new real_par [NT];
+   real_par *MaxAcc_OMP = new real_par [NT];
 
-   MaxVel = (real)0.0;  // don't assign negative values since we assume it to be positive-definite
-   MaxAcc = (real)0.0;
+   MaxVel = (real_par)0.0;  // don't assign negative values since we assume it to be positive-definite
+   MaxAcc = (real_par)0.0;
 
    for (int t=0; t<NT; t++)
    {
-      MaxVel_OMP[t] = (real)0.0;
-      MaxAcc_OMP[t] = (real)0.0;
+      MaxVel_OMP[t] = (real_par)0.0;
+      MaxAcc_OMP[t] = (real_par)0.0;
    }
 
 //###NOTE: OpenMP may not improve performance here
@@ -140,9 +140,9 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
          if ( UseCopy )
          {
 //          ParAtt_Copy[] is only defined in LOAD_BALANCE
-            real *Vel_Copy[3] = { NULL, NULL, NULL };
-            real *Acc_Copy[3] = { NULL, NULL, NULL };
-            real *Typ_Copy = NULL;
+            real_par *Vel_Copy[3] = { NULL, NULL, NULL };
+            real_par *Acc_Copy[3] = { NULL, NULL, NULL };
+            real_par *Typ_Copy = NULL;
 #           ifdef LOAD_BALANCE
             for (int d=0; d<3; d++)
             {
@@ -224,10 +224,10 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
 
 // get the time-step in this rank
    double dt_vel_local, dt_acc_local;
-   dt_vel_local =       amr->dh[lv] / MaxVel;
+   dt_vel_local =       amr->dh[lv] / (double)MaxVel;
 
    if ( UseAcc )
-   dt_acc_local = sqrt( amr->dh[lv] / MaxAcc );
+   dt_acc_local = sqrt( amr->dh[lv] / (double)MaxAcc );
 
 
 // get the minimum time-step in all ranks

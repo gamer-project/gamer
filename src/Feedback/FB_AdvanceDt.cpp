@@ -6,14 +6,14 @@
 
 // prototypes of built-in feedbacks
 int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
-            const int NPar, const long *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
+            const int NPar, const long *ParSortID, real_par *ParAtt[PAR_NATT_TOTAL],
             real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
             const int TID, RandomNumber_t *RNG );
 
 
 // user-specified feedback to be set by a test problem initializer
 int (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                    const int NPar, const long *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
+                    const int NPar, const long *ParSortID, real_par *ParAtt[PAR_NATT_TOTAL],
                     real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
                     const int TID, RandomNumber_t *RNG ) = NULL;
 
@@ -86,8 +86,8 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //        --> also to retain the information of inactive particles
 //###OPTIMIZATION: only store the attributes being updated
 //###OPTIMIZATION: only count particles on FB_LEVEL
-   real *ParAtt_Updated[PAR_NATT_TOTAL];
-   long  ParAttBitIdx_Out = _PAR_TOTAL;
+   real_par *ParAtt_Updated[PAR_NATT_TOTAL];
+   long      ParAttBitIdx_Out = _PAR_TOTAL;
 
 // do not update particle positions and accelerations
    ParAttBitIdx_Out &= ~( _PAR_POSX | _PAR_POSY | _PAR_POSZ );
@@ -97,8 +97,8 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
    for (int v=0; v<PAR_NATT_TOTAL; v++) {
       if ( ParAttBitIdx_Out & BIDX(v) ) {
-         ParAtt_Updated[v] = new real [ amr->Par->ParListSize ];
-         memcpy( ParAtt_Updated[v], amr->Par->Attribute[v], amr->Par->ParListSize*sizeof(real) );
+         ParAtt_Updated[v] = new real_par [ amr->Par->ParListSize ];
+         memcpy( ParAtt_Updated[v], amr->Par->Attribute[v], amr->Par->ParListSize*sizeof(real_par) );
       }
       else
          ParAtt_Updated[v] = NULL;
@@ -196,9 +196,9 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 //    5.2. sort PID by position
 //         --> necessary for fixing the order of particles in different patches
-      long *NearbyPIDList_IdxTable = new long [NNearbyPatch];
-      int  *NearbyPIDList_Old      = new int  [NNearbyPatch];
-      real **PCr = NULL;
+      long  *NearbyPIDList_IdxTable = new long [NNearbyPatch];
+      int   *NearbyPIDList_Old      = new int  [NNearbyPatch];
+      int  **PCr = NULL;
       Aux_AllocateArray2D( PCr, 3, NNearbyPatch );
 
       for (int t=0; t<NNearbyPatch; t++)
@@ -207,7 +207,8 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
          for (int d=0; d<3; d++)    PCr[d][t] = amr->patch[0][lv][PID]->corner[d];
       }
 
-      Par_SortByPos( NNearbyPatch, PCr[0], PCr[1], PCr[2], NearbyPIDList_IdxTable );
+      const int SortOrder_PID[3] = { 0, 1, 2 };
+      Mis_SortByRows( PCr, NearbyPIDList_IdxTable, (long)NNearbyPatch, SortOrder_PID, 3 );
 
       memcpy( NearbyPIDList_Old, NearbyPIDList, NNearbyPatch*sizeof(int) );
 
@@ -230,9 +231,9 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //       --> include particles in both real and buffer patches
 //       --> allocate the **maximum** required size among all nearby patches of a given patch group **just once**
 //           for better performance
-      real *ParAtt_Local[PAR_NATT_TOTAL];
-      long *ParSortID = NULL;
-      int   NParMax   = -1;
+      real_par *ParAtt_Local[PAR_NATT_TOTAL];
+      long     *ParSortID = NULL;
+      int       NParMax   = -1;
 
       for (int v=0; v<PAR_NATT_TOTAL; v++)   ParAtt_Local[v] = NULL;
 
@@ -248,7 +249,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       if ( NParMax > 0 )
       {
          for (int v=0; v<PAR_NATT_TOTAL; v++)
-            if ( ParAttBitIdx_In & BIDX(v) )    ParAtt_Local[v] = new real [NParMax];
+            if ( ParAttBitIdx_In & BIDX(v) )    ParAtt_Local[v] = new real_par [NParMax];
 
          ParSortID = new long [NParMax];  // it will fail if "long" is actually required for NParMax
       }
@@ -335,7 +336,8 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //       7-3. sort particles by positions to fix their order
 //            --> necessary when feedback involves random numbers
 //            --> otherwise, the same particles accessed by different patches may have different random numbers
-         Par_SortByPos( NPar, ParAtt_Local[PAR_POSX], ParAtt_Local[PAR_POSY], ParAtt_Local[PAR_POSZ], ParSortID );
+         const int SortOrder_pos[3] = { PAR_POSX, PAR_POSY, PAR_POSZ };
+         Mis_SortByRows( ParAtt_Local, ParSortID, (long)NPar, SortOrder_pos, 3 );
 
 
 
@@ -352,11 +354,11 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
             if ( Periodic[d] ) {
                for (int p=0; p<NPar; p++) {
 
-                  real *ParPos = ParAtt_Local[ ParPosIdx[d] ] + p;
-                  const double dr = *ParPos - PGCenter[d];
+                  real_par *ParPos = ParAtt_Local[ ParPosIdx[d] ] + p;
+                  const double dr  = (double)*ParPos - PGCenter[d];
 
-                  if      ( dr > +HalfBox[d] )  *ParPos -= amr->BoxSize[d];
-                  else if ( dr < -HalfBox[d] )  *ParPos += amr->BoxSize[d];
+                  if      ( dr > +HalfBox[d] )  *ParPos -= (real_par)amr->BoxSize[d];
+                  else if ( dr < -HalfBox[d] )  *ParPos += (real_par)amr->BoxSize[d];
                }
             } // if ( Periodic[d] )
          } // for (int d=0; d<3; d++)
@@ -444,7 +446,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 // 11. store the updated particle data
    for (int v=0; v<PAR_NATT_TOTAL; v++) {
       if ( ParAttBitIdx_Out & BIDX(v) )
-         memcpy( amr->Par->Attribute[v], ParAtt_Updated[v], amr->Par->ParListSize*sizeof(real) );
+         memcpy( amr->Par->Attribute[v], ParAtt_Updated[v], amr->Par->ParListSize*sizeof(real_par) );
    }
 
 

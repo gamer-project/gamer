@@ -22,6 +22,11 @@ typedef double real;
 typedef float  real;
 #endif
 
+#ifdef FLOAT8_PAR
+typedef double real_par;
+#else
+typedef float  real_par;
+#endif
 
 // short names for unsigned type
 typedef unsigned short     ushort;
@@ -176,7 +181,7 @@ const OptOutputParMode_t
    OUTPUT_PAR_CBIN = 2;
 
 
-// options in "Prepare_PatchData"
+// options in Prepare_PatchData()
 typedef int PrepUnit_t;
 const PrepUnit_t
    UNIT_PATCH      = 1,
@@ -203,18 +208,18 @@ const Check_t
    CHECK_ON  = 1;
 
 
-// check unphysical quantities
-typedef int CheckUnphysical_t;
-const CheckUnphysical_t
+// modes of Hydro_IsUnphysical()
+typedef int IsUnphyMode_t;
+const IsUnphyMode_t
    UNPHY_MODE_SING         = 0,  // check single field
    UNPHY_MODE_CONS         = 1,  // check conserved variables, including passive scalars
    UNPHY_MODE_PRIM         = 2,  // check primitive variables, including passive scalars
    UNPHY_MODE_PASSIVE_ONLY = 3;  // only check passive scalars
 
 
-// verbosity levels of Hydro_CheckUnphysical()
-typedef int VerbosityLevelUnphy_t;
-const VerbosityLevelUnphy_t
+// verbosity levels of Hydro_IsUnphysical()
+typedef int IsUnphVerb_t;
+const IsUnphVerb_t
    UNPHY_SILENCE = 0,   // print nothing
    UNPHY_VERBOSE = 1;   // print out unphysical values
 

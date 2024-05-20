@@ -76,6 +76,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "PAR_NPAR",                   &amr->Par->NPar_Active_AllRank,  -1L,               NoMin_long,    NoMax_long     );
    ReadPara->Add( "PAR_INIT",                   &amr->Par->Init,                 -1,                1,             3              );
    ReadPara->Add( "PAR_IC_FORMAT",              &amr->Par->ParICFormat,      PAR_IC_FORMAT_ATT_ID,  1,             2              );
+   ReadPara->Add( "PAR_IC_FLOAT8",              &PAR_IC_FLOAT8,                  -1,                NoMin_int,     1              );
    ReadPara->Add( "PAR_IC_MASS",                &amr->Par->ParICMass,            -1.0,              NoMin_double,  NoMax_double   );
    ReadPara->Add( "PAR_IC_TYPE",                &amr->Par->ParICType,            -1,                NoMin_int,     PAR_NTYPE-1    );
    ReadPara->Add( "PAR_INTERP",                 &amr->Par->Interp,                PAR_INTERP_CIC,   1,             3              );
@@ -427,6 +428,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__UM_IC_NVAR",            &OPT__UM_IC_NVAR,                -1,               NoMin_int,     NCOMP_TOTAL    );
 #  endif
    ReadPara->Add( "OPT__UM_IC_FORMAT",          &OPT__UM_IC_FORMAT,             UM_IC_FORMAT_VZYX, 1,             2              );
+   ReadPara->Add( "OPT__UM_IC_FLOAT8",          &OPT__UM_IC_FLOAT8,              -1,               NoMin_int,     1              );
    ReadPara->Add( "OPT__UM_IC_DOWNGRADE",       &OPT__UM_IC_DOWNGRADE,            true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__UM_IC_REFINE",          &OPT__UM_IC_REFINE,               true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__UM_IC_LOAD_NRANK",      &OPT__UM_IC_LOAD_NRANK,           1,               1,             NoMax_int      );
@@ -496,7 +498,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__OUTPUT_CC_MAG",         &OPT__OUTPUT_CC_MAG,              true,            Useless_bool,  Useless_bool   );
 #  endif
 #  ifdef GRAVITY
-   ReadPara->Add( "OPT__OUTPUT_POT",            &OPT__OUTPUT_POT,                 false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_POT",            &OPT__OUTPUT_POT,                 true,           Useless_bool,  Useless_bool   );
 #  endif
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__OUTPUT_PAR_DENS",       &OPT__OUTPUT_PAR_DENS,            PAR_OUTPUT_DENS_PAR_ONLY, 0,    2              );
@@ -535,9 +537,12 @@ void Init_Load_Parameter()
 
 // yt inline analysis
 #  ifdef SUPPORT_LIBYT
-   ReadPara->Add( "YT_SCRIPT",                   YT_SCRIPT,                       NoDef_str,       Useless_str,   Useless_str    );
-   ReadPara->Add( "YT_VERBOSE",           (int*)&YT_VERBOSE,                      1,               0,             3              );
-   ReadPara->Add( "YT_FIG_BASENAME",             YT_FIG_BASENAME,                 NoDef_str,       Useless_str,   Useless_str    );
+   ReadPara->Add( "YT_SCRIPT",                          YT_SCRIPT,                         NoDef_str,    Useless_str,   Useless_str    );
+   ReadPara->Add( "YT_VERBOSE",                  (int*)&YT_VERBOSE,                        1,            0,             3              );
+   ReadPara->Add( "YT_FIG_BASENAME",                    YT_FIG_BASENAME,                   NoDef_str,    Useless_str,   Useless_str    );
+#  ifdef LIBYT_JUPYTER
+   ReadPara->Add( "YT_JUPYTER_USE_CONNECTION_FILE",    &YT_JUPYTER_USE_CONNECTION_FILE,    false,        Useless_bool,  Useless_bool   );
+#  endif
 #  endif
 
 
@@ -552,6 +557,14 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__RECORD_MEMORY",         &OPT__RECORD_MEMORY,              true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RECORD_PERFORMANCE",    &OPT__RECORD_PERFORMANCE,         true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__MANUAL_CONTROL",        &OPT__MANUAL_CONTROL,             true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__RECORD_CENTER",         &OPT__RECORD_CENTER,              false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "COM_CEN_X",                  &COM_CEN_X,                      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_CEN_Y",                  &COM_CEN_Y,                      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_CEN_Z",                  &COM_CEN_Z,                      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_MAX_R",                  &COM_MAX_R,                      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_MIN_RHO",                &COM_MIN_RHO,                     0.0,             0.0,           NoMax_double   );
+   ReadPara->Add( "COM_TOLERR_R",               &COM_TOLERR_R,                   -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_MAX_ITER",               &COM_MAX_ITER,                    10,              1,             NoMax_int      );
    ReadPara->Add( "OPT__RECORD_USER",           &OPT__RECORD_USER,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OPTIMIZE_AGGRESSIVE",   &OPT__OPTIMIZE_AGGRESSIVE,        false,           Useless_bool,  Useless_bool   );
 #  ifdef LOAD_BALANCE
@@ -565,6 +578,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__CK_REFINE",             &OPT__CK_REFINE,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_PROPER_NESTING",     &OPT__CK_PROPER_NESTING,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_CONSERVATION",       &OPT__CK_CONSERVATION,            false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "ANGMOM_ORIGIN_X",            &ANGMOM_ORIGIN_X,                -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "ANGMOM_ORIGIN_Y",            &ANGMOM_ORIGIN_Y,                -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "ANGMOM_ORIGIN_Z",            &ANGMOM_ORIGIN_Z,                -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "OPT__CK_NORMALIZE_PASSIVE",  &OPT__CK_NORMALIZE_PASSIVE,       false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_RESTRICT",           &OPT__CK_RESTRICT,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_FINITE",             &OPT__CK_FINITE,                  false,           Useless_bool,  Useless_bool   );

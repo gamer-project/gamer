@@ -3,13 +3,13 @@
 
 
 // no need to share with other files
-static AMR_t    amr1, amr2;
-static char    *FileName_In1=NULL, *FileName_In2=NULL, *FileName_Out=NULL;
-static bool     UseCorner=false, MaxErrOnly=false;
-static int      NField1=-1, NField2=-1, NMag1=-1, NMag2=-1, NParAtt1=-1, NParAtt2=-1, Format1=-1, Format2=-1;
-static long     NPar1=-1, NPar2=-1;
-static double   TolErr=__FLT_MIN__;
-static real   **ParData1=NULL, **ParData2=NULL;
+static AMR_t        amr1, amr2;
+static char        *FileName_In1=NULL, *FileName_In2=NULL, *FileName_Out=NULL;
+static bool         UseCorner=false, MaxErrOnly=false;
+static int          NField1=-1, NField2=-1, NMag1=-1, NMag2=-1, NParAtt1=-1, NParAtt2=-1, Format1=-1, Format2=-1;
+static long         NPar1=-1, NPar2=-1;
+static double       TolErr=__FLT_MIN__;
+static real_par   **ParData1=NULL, **ParData2=NULL;
 static char  (*FieldLabel1)[MAX_STRING]=NULL, (*MagLabel1)[MAX_STRING]=NULL, (*ParAttLabel1)[MAX_STRING]=NULL;
 static char  (*FieldLabel2)[MAX_STRING]=NULL, (*MagLabel2)[MAX_STRING]=NULL, (*ParAttLabel2)[MAX_STRING]=NULL;
 
@@ -459,13 +459,13 @@ int CompareParticleData()
 
 
 // compare data
-   double AbsErr, RelErr;
-   long   ParID1, ParID2;
-   real   Data1, Data2;
-   bool   ErrorDetected = false;
+   double     AbsErr, RelErr;
+   long       ParID1, ParID2;
+   real_par   Data1, Data2;
+   bool       ErrorDetected = false;
 
-   double MaxErrPar_Data[NParAtt1][4];
-   long   MaxErrPar_Info[NParAtt1][3];
+   double     MaxErrPar_Data[NParAtt1][4];
+   long       MaxErrPar_Info[NParAtt1][3];
 
    for (int v=0; v<NParAtt1; v++)   MaxErrPar_Data[v][3] = -__FLT_MIN__;
 
@@ -555,8 +555,8 @@ void FreeMemory()
    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
 
-   Aux_DeallocateArray2D( ParData1 );
-   Aux_DeallocateArray2D( ParData2 );
+   Aux_DeallocateArray2D<real_par>( ParData1 );
+   Aux_DeallocateArray2D<real_par>( ParData2 );
 
    delete [] FieldLabel1;
    delete [] FieldLabel2;

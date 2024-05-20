@@ -92,11 +92,11 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
    if ( UsePot )
    {
-      TIMING_FUNC(   Prepare_PatchData_InitParticleDensityArray( lv ),
-                     Timer_Par_Collect[lv],   Timing   );
-
       TIMING_FUNC(   Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos,
                                                    TimeNew, SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_Yes ),
+                     Timer_Par_Collect[lv],   Timing   );
+
+      TIMING_FUNC(   Prepare_PatchData_InitParticleDensityArray( lv, TimeNew ),
                      Timer_Par_Collect[lv],   Timing   );
    }
 #  endif // #ifdef PARTICLE

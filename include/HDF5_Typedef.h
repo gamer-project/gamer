@@ -24,6 +24,14 @@ datatypes in the HDF5 format
 #  define DEBUG_HDF5
 #endif
 
+#ifdef PARTICLE
+# ifdef FLOAT8_PAR
+#  define H5T_GAMER_REAL_PAR H5T_NATIVE_DOUBLE
+# else
+#  define H5T_GAMER_REAL_PAR H5T_NATIVE_FLOAT
+# endif
+#endif // #ifdef PARTICLE
+
 
 
 
@@ -67,6 +75,7 @@ struct KeyInfo_t
 #  ifdef PARTICLE
    long   Par_NPar;                 // amr->Par->NPar_Active_AllRank
    int    Par_NAttStored;           // PAR_NATT_STORED
+   int    Float8_Par;
 #  endif
 #  ifdef COSMIC_RAY
    int    CR_Diffusion;
@@ -131,6 +140,8 @@ struct Makefile_t
 #  ifdef SUPPORT_LIBYT
    int LibYTUsePatchGroup;
    int LibYTInteractive;
+   int LibYTReload;
+   int LibYTJupyter;
 #  endif
    int SupportGrackle;
    int RandomNumber;
@@ -172,6 +183,7 @@ struct Makefile_t
    int StarFormation;
    int Feedback;
    int Par_NAttUser;
+   int Float8_Par;
 #  endif
 
 #  ifdef COSMIC_RAY
@@ -394,6 +406,7 @@ struct InputPara_t
    int    Par_ICFormat;
    double Par_ICMass;
    int    Par_ICType;
+   int    Par_ICFloat8;
    int    Par_Interp;
    int    Par_InterpTracer;
    int    Par_Integ;
@@ -705,6 +718,7 @@ struct InputPara_t
    int    Opt__UM_IC_NLevel;
    int    Opt__UM_IC_NVar;
    int    Opt__UM_IC_Format;
+   int    Opt__UM_IC_Float8;
    int    Opt__UM_IC_Downgrade;
    int    Opt__UM_IC_Refine;
    int    Opt__UM_IC_LoadNRank;
@@ -792,6 +806,11 @@ struct InputPara_t
    double Output_PartZ;
    int    InitDumpID;
 
+// libyt jupyter interface
+#  if ( defined(SUPPORT_LIBYT) && defined(LIBYT_JUPYTER) )
+   int    Yt_JupyterUseConnectionFile;
+#  endif
+
 // miscellaneous
    int    Opt__Verbose;
    int    Opt__TimingBarrier;
@@ -802,6 +821,14 @@ struct InputPara_t
    int    Opt__RecordMemory;
    int    Opt__RecordPerformance;
    int    Opt__ManualControl;
+   int    Opt__RecordCenter;
+   double COM_CenX;
+   double COM_CenY;
+   double COM_CenZ;
+   double COM_MaxR;
+   double COM_MinRho;
+   double COM_TolErrR;
+   int    COM_MaxIter;
    int    Opt__RecordUser;
    int    Opt__OptimizeAggressive;
    int    Opt__SortPatchByLBIdx;
@@ -810,6 +837,9 @@ struct InputPara_t
    int    Opt__Ck_Refine;
    int    Opt__Ck_ProperNesting;
    int    Opt__Ck_Conservation;
+   double AngMom_OriginX;
+   double AngMom_OriginY;
+   double AngMom_OriginZ;
    int    Opt__Ck_NormPassive;
    int    Opt__Ck_Restrict;
    int    Opt__Ck_Finite;

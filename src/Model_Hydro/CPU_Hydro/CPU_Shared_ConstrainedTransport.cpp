@@ -670,7 +670,9 @@ void MHD_HalfStepPrimitive( const real g_Flu_In[][ CUBE(FLU_NXT) ],
 
 //    check negative density
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
-      Hydro_CheckUnphysical( UNPHY_MODE_SING, &Output_1Cell[DENS], "density", ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical( UNPHY_MODE_SING, &Output_1Cell[DENS], "density",
+                          TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                          ERROR_INFO, UNPHY_VERBOSE );
 #     endif
 
 
