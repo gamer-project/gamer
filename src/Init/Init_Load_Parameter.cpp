@@ -179,6 +179,10 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__FLAG_USER",             &OPT__FLAG_USER,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_USER_NUM",         &OPT__FLAG_USER_NUM,              1,               1,             NoMax_int      );
    ReadPara->Add( "OPT__FLAG_REGION",           &OPT__FLAG_REGION,                false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__FLAG_ANGULAR",          &OPT__FLAG_ANGULAR,               false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "ANGULAR_CEN_X",              &ANGULAR_CEN_X,                  -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "ANGULAR_CEN_Y",              &ANGULAR_CEN_Y,                  -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "ANGULAR_CEN_Z",              &ANGULAR_CEN_Z,                  -1.0,             NoMin_double,  NoMax_double   );
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__FLAG_NPAR_PATCH",       &OPT__FLAG_NPAR_PATCH,            0,               0,             2              );
    ReadPara->Add( "OPT__FLAG_NPAR_CELL",        &OPT__FLAG_NPAR_CELL,             false,           Useless_bool,  Useless_bool   );
