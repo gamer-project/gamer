@@ -3682,6 +3682,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1Int       );
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1Double    );
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_2Double  );
+   H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_3Double  );
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_5Double  );
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_VLDouble );
 #  endif
