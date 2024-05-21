@@ -810,7 +810,11 @@ def set_compile( paths, compilers, flags, kwargs ):
     # 2. Set the OpenMP flags.
     if not kwargs["openmp"]: flags["OPENMPFLAG"] = ""
 
-    # 3. Write flags to compile option dictionary.
+    # 3. Set the nvcc common flags
+    # NOTE: `-G` may cause the GPU Poisson solver to fail
+    if kwargs["debug"]: flags["NVCCFLAG_COM"] += "-g -Xptxas -v"
+
+    # 4. Write flags to compile option dictionary.
     for key, val in flags.items():
         com_opt[key] = val
 

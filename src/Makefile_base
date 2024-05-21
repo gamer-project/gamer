@@ -533,10 +533,6 @@ NVCCFLAG_ARCH += @@@NVCCFLAG_ARCH@@@
 
 NVCCFLAG_COM += $(NVCCFLAG_ARCH)
 
-ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
-   NVCCFLAG_COM += -g -Xptxas -v   # "-G" may cause the GPU Poisson solver to fail
-endif
-
 # fluid solver flags
 NVCCFLAG_FLU += @@@NVCCFLAG_FLU@@@ @@@MAXRREGCOUNT_FLU@@@
 
