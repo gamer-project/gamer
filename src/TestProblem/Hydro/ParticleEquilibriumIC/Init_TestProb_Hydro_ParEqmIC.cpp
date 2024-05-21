@@ -200,7 +200,7 @@ void SetParameter()
       ReadPara->Add( "Cloud_R0",                   &ParEqmIC_Cloud_R0[i],                   0.1,           Eps_double,       NoMax_double      );
       ReadPara->Add( "Cloud_EinastoPowerFactor",   &ParEqmIC_Cloud_EinastoPowerFactor[i],   1.0,           0.1,              10.0              );
       ReadPara->Add( "Cloud_DensityTable",          ParEqmIC_Cloud_DensityTable[i],         NoDef_str,     Useless_str,      Useless_str       );
-      ReadPara->Add( "Cloud_ParNum",               &ParEqmIC_Cloud_ParNum[i],               (long)1,       (long)1,          NoMax_long        );
+      ReadPara->Add( "Cloud_ParNum",               &ParEqmIC_Cloud_ParNum[i],               1L,            1L,               NoMax_long        );
       ReadPara->Add( "Cloud_MaxR",                 &ParEqmIC_Cloud_MaxR[i],                 0.375,         Eps_double,       NoMax_double      );
       ReadPara->Add( "Cloud_DensProfNBin",         &ParEqmIC_Cloud_DensProfNBin[i],         1000,          2,                NoMax_int         );
       ReadPara->Add( "Cloud_EnergyNBin",           &ParEqmIC_Cloud_EnergyNBin[i],           1000,          2,                NoMax_int         );
@@ -277,7 +277,7 @@ void SetParameter()
       Aux_Message( stdout, "     density profile file name                 = %s\n",     ParEqmIC_Cloud_DensityTable[i]       );
 
       for (int d=0; d<3; d++)
-      Aux_Message( stdout, "     central coordinate [%3d]                  = %13.7e\n", d, ParEqmIC_Cloud_Center[i][d]       );
+      Aux_Message( stdout, "     center coordinates [%3d]                  = %13.7e\n", d, ParEqmIC_Cloud_Center[i][d]       );
       for (int d=0; d<3; d++)
       Aux_Message( stdout, "     bulk velocity [%3d]                       = %13.7e\n", d, ParEqmIC_Cloud_BulkVel[i][d]      );
 
