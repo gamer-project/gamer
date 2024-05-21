@@ -315,7 +315,7 @@ def get_gpu_compute_capability():
     cuda_check_error( cuda.cuInit(0) )
     cuda_check_error( cuda.cuDeviceGetCount(ctypes.byref(nGpus)) )
 
-    if nGpus.value > 1: print("WARNING: More than one GPU. Selecting the last GPU compute capability.")
+    if nGpus.value > 1: LOGGER.warning("More than one GPU --> select the compute capability of the last GPU.")
     for i in range(nGpus.value):
         cuda_check_error( cuda.cuDeviceGet(ctypes.byref(device), i) )
         cuda_check_error( cuda.cuDeviceComputeCapability(ctypes.byref(cc_major), ctypes.byref(cc_minor), device) )
@@ -752,7 +752,7 @@ def set_gpu( gpus, flags, args ):
 
     # 1. Check the compute capability
     if compute_capability == "":
-        if args["gpu"]: raise ValueError("GPU_COMPUTE_CAPABILITY is not set in *.config. Please checkout `../configs/template.config` to see how to set GPU_COMPUTE_CAPABILITY.")
+        if args["gpu"]: raise ValueError("GPU_COMPUTE_CAPABILITY is not set in `../configs/%s.config`. See `../configs/template.config` for illustration.")
         return gpu_opts
     compute_capability = int(compute_capability)
 
