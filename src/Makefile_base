@@ -38,7 +38,7 @@ CXX        = @@@CXX@@@
 CXXFLAG    = @@@CXXFLAG@@@
 LIB        = @@@LIBFLAG@@@
 OPENMPFLAG = @@@OPENMPFLAG@@@
-NVCC       = $(CUDA_PATH)/bin/nvcc @@@CUDAFLAG@@@
+NVCC       = $(CUDA_PATH)/bin/nvcc
 
 
 

@@ -695,7 +695,7 @@ def load_arguments():
 def load_config( config ):
     LOGGER.info("Using %s as the config."%(config))
     paths, compilers = {}, {"CXX":"", "CXX_MPI":""}
-    flags = {"CXXFLAG":"", "OPENMPFLAG":"", "LIBFLAG":"", "CUDAFLAG":"", "NVCCFLAG_COM":"", "NVCCFLAG_FLU":"", "NVCCFLAG_POT":""}
+    flags = {"CXXFLAG":"", "OPENMPFLAG":"", "LIBFLAG":"", "NVCCFLAG_COM":"", "NVCCFLAG_FLU":"", "NVCCFLAG_POT":""}
     gpus  = {"GPU_COMPUTE_CAPABILITY":""}
     with open( config, 'r') as f:
         lines = f.readlines()
