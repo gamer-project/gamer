@@ -128,9 +128,9 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
 //       set an equilibrium initial condition for each cloud
          Cloud_Constructor.constructParticles( ParData_AllRank[PAR_MASS], ParData_AllRank+PAR_POSX, ParData_AllRank+PAR_VELX, Par_Idx0 );
 
-         Aux_Message( stdout, "   Total enclosed mass within MaxR    = % 13.7e\n",  Cloud_Constructor.getTotCloudMass()      );
-         Aux_Message( stdout, "   Particle mass                      = % 13.7e\n",  Cloud_Constructor.getParticleMass()      );
-         Aux_Message( stdout, "   Total enclosed mass relative error = % 13.7e\n",  Cloud_Constructor.getTotCloudMassError() );
+         Aux_Message( stdout, "   Total enclosed mass within MaxR    = % 13.7e\n",  Cloud_Constructor.TotCloudMass      );
+         Aux_Message( stdout, "   Particle mass                      = % 13.7e\n",  Cloud_Constructor.ParticleMass      );
+         Aux_Message( stdout, "   Total enclosed mass relative error = % 13.7e\n",  Cloud_Constructor.TotCloudMassError );
 
 //       update the particle index offset for the next cloud
          Par_Idx0 += ParEqmIC_Cloud_ParNum[i];

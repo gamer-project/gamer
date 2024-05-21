@@ -34,12 +34,13 @@ class Par_EquilibriumIC
       void   setDensProfTableFilename( const char* DensProfTableFilename );
       void   setParticleParameters( const long ParNum, const double MaxR, const int Radial_NBin, const int Energy_NBin, const int RSeed );
       void   setExtPotParameters( const int AddingExternalPotential_Analytical, const int AddingExternalPotential_Table, const char* ExtPotTableFilename );
-      double getTotCloudMass();
-      double getParticleMass();
-      double getTotCloudMassError();
 
       void   initialize();
       void   constructParticles( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx );
+
+      double TotCloudMass                    = -1;
+      double ParticleMass                    = -1;
+      double TotCloudMassError               = -1;
 
    private:
       int    Cloud_Model                     = -1;
@@ -55,8 +56,6 @@ class Par_EquilibriumIC
       int    AddExtPot_Analytical            =  0;
       int    AddExtPot_Table                 =  0;
       char   ExtPot_Table_Name[MAX_STRING];
-      double TotCloudMass                    = -1;
-      double ParticleMass                    = -1;
 
       // Get physical attributes for cloud
       double getDensity             ( const double r );

@@ -244,64 +244,6 @@ void Par_EquilibriumIC::setExtPotParameters( const int AddingExternalPotential_A
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  getTotCloudMass
-// Description :  Get the total enclosed mass with the radius = MaxR for this cloud
-//
-// Note        :  1. The enclosed mass is computed from the sampled bins of the density profile
-//
-// Parameter   :  None
-//
-// Return      :  TotCloudMass
-//-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::getTotCloudMass()
-{
-   return TotCloudMass;
-
-} // FUNCTION :getTotCloudMass
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  getParticleMass
-// Description :  Get the mass of each particle in this cloud
-//
-// Note        :  1. ParticleMass = TotCloudMass/ParNum
-//
-// Parameter   :  None
-//
-// Return      :  ParticleMass
-//-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::getParticleMass()
-{
-   return ParticleMass;
-
-} // FUNCTION : getParticleMass
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  getTotCloudMassError
-// Description :  Get the relative error for the total enclosed mass
-//
-// Note        :  1. The enclosed mass is interpolated from RArray_M_Enc
-//                2. The error is calculated by comparing the enclosed mass
-//                   to the analytical models or the input table interpolation.
-//
-// Parameter   :  None
-//
-// Return      :  Total Cloud Mass Error
-//-------------------------------------------------------------------------------------------------------
-double Par_EquilibriumIC::getTotCloudMassError()
-{
-   const double TotCloudMass_Analytical = getAnalEnclosedMass( Cloud_MaxR );
-
-   return ( TotCloudMass - TotCloudMass_Analytical )/TotCloudMass_Analytical;
-
-} // FUNCTION : getTotCloudMassError
-
-
-
-//-------------------------------------------------------------------------------------------------------
 // Function    :  loadInputDensProfTable
 // Description :  Load the density profile from the input table
 //
@@ -457,8 +399,8 @@ void Par_EquilibriumIC::constructRadialArray()
    for (int b=0; b<RNBin; b++)        RArray_R[b]         = RArray_dR*b;
 
 // Array of Density, Rho(R)
-   for (int b=1; b<RNBin; b++         RArray_Rho[b]       = getDensity( RArray_R[b] );
-   RArray_Rho[0]                                           = 2*RArray_Rho[1]-RArray_Rho[2];   // where r=0
+   for (int b=1; b<RNBin; b++)        RArray_Rho[b]       = getDensity( RArray_R[b] );
+   RArray_Rho[0]                                          = 2*RArray_Rho[1]-RArray_Rho[2];   // where r=0
 
 // Array of Enclosed Mass, M_Enc(R) = \int_{0}^{R} Rho(r) 4\pi R^2 dR
    RArray_M_Enc[0]                                        = 0;   // where r=0
@@ -537,8 +479,10 @@ void Par_EquilibriumIC::constructParticles( real *Mass_AllRank, real *Pos_AllRan
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Constructing Par_EquilibriumIC ...\n" );
 
 // Determine the total enclosed mass within the maximum radius
-   TotCloudMass = ExtendedInterpolatedTable( Cloud_MaxR, RNBin, RArray_R, RArray_M_Enc );
-   ParticleMass = TotCloudMass/Cloud_Par_Num;
+   const double TotCloudMass_Analytical = getAnalEnclosedMass( Cloud_MaxR );
+   TotCloudMass                         = ExtendedInterpolatedTable( Cloud_MaxR, RNBin, RArray_R, RArray_M_Enc );
+   ParticleMass                         = TotCloudMass/Cloud_Par_Num;
+   TotCloudMassError                    = ( TotCloudMass - TotCloudMass_Analytical )/TotCloudMass_Analytical;
 
    double RandomVectorR[3];
    double RandomVectorV[3];
