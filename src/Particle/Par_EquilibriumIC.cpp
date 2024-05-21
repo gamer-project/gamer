@@ -400,7 +400,7 @@ void Par_EquilibriumIC::constructRadialArray()
 
 // Array of Density, Rho(R)
    for (int b=1; b<RNBin; b++)        RArray_Rho[b]       = getDensity( RArray_R[b] );
-   RArray_Rho[0]                                          = 2*RArray_Rho[1]-RArray_Rho[2];   // where r=0
+   RArray_Rho[0]                                          = 2.0*RArray_Rho[1]-RArray_Rho[2];   // where r=0
 
 // Array of Enclosed Mass, M_Enc(R) = \int_{0}^{R} Rho(r) 4\pi R^2 dR
    RArray_M_Enc[0]                                        = 0;   // where r=0
@@ -436,7 +436,7 @@ void Par_EquilibriumIC::constructRadialArray()
 void Par_EquilibriumIC::constructEnergyArray()
 {
 // Ralative Energy (Binding Energy) ranges from Psi_Min to Psi_Max, where Psi = -Phi is the Relative Potential
-   EArray_MinE = 0;
+   EArray_MinE = 0.0;
    EArray_MaxE = -RArray_Phi[0];
    EArray_dE   = (EArray_MaxE-EArray_MinE)/ENBin;
 
@@ -448,12 +448,12 @@ void Par_EquilibriumIC::constructEnergyArray()
 
 // Array of Distribution Function, DFunc(E) = f(E) = d/dE IntDFunc(E), which is the Eddington formula
    EArray_DFunc[0]                                    = (EArray_IntDFunc[1]        - EArray_IntDFunc[0]         )/EArray_dE;
-   for (int b=1; b<ENBin-1; b++)   EArray_DFunc[b]    = (EArray_IntDFunc[b+1]      - EArray_IntDFunc[b-1]       )/(2*EArray_dE);
+   for (int b=1; b<ENBin-1; b++)   EArray_DFunc[b]    = (EArray_IntDFunc[b+1]      - EArray_IntDFunc[b-1]       )/(2.0*EArray_dE);
    EArray_DFunc[ELastIdx]                             = (EArray_IntDFunc[ELastIdx] - EArray_IntDFunc[ELastIdx-1])/EArray_dE;
 
 // check negative distribution function
    for (int b=0; b<ENBin; b++)
-      if ( EArray_DFunc[b] < 0 )   EArray_DFunc[b] = 0;
+      if ( EArray_DFunc[b] < 0 )   EArray_DFunc[b] = 0.0;
 
 } // FUNCTION : constructEnergyArray
 
@@ -579,8 +579,8 @@ double Par_EquilibriumIC::getAnalEnclosedMass( const double r )
 //    Arguments for the gsl integration
       const double lower_limit = 0.0;
       const double upper_limit = r;
-      const double abs_err_lim = 1e-8;
-      const double rel_err_lim = 1e-8;
+      const double abs_err_lim = 1.0e-8;
+      const double rel_err_lim = 1.0e-8;
       const int    integ_size  = 1000;
       const int    integ_rule  = 1;    // 1 = GSL_INTEG_GAUSS15, the 15 point Gauss-Kronrod rule
 
@@ -670,12 +670,12 @@ double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
    double *CumulativeProbability = new double [ENBin];
    double Probability;
 
-   CumulativeProbability[0] = 0;
+   CumulativeProbability[0] = 0.0;
    for (int b=1; b<ENBin; b++)
    {
-      if ( EArray_E[b] > Psi )   Probability = ( EArray_E[b-1] > Psi ) ? 0 : 0.5*EArray_DFunc[b-1]*sqrt(2*(Psi-EArray_E[b-1]))*(Psi-EArray_E[b-1]);
-      else                       Probability = 0.5*( EArray_DFunc[b-1]*sqrt(2*(Psi-EArray_E[b-1])) +
-                                                     EArray_DFunc[b  ]*sqrt(2*(Psi-EArray_E[b  ])) )*EArray_dE;
+      if ( EArray_E[b] > Psi )   Probability = ( EArray_E[b-1] > Psi ) ? 0.0 : 0.5*EArray_DFunc[b-1]*sqrt(2.0*(Psi-EArray_E[b-1]))*(Psi-EArray_E[b-1]);
+      else                       Probability = 0.5*( EArray_DFunc[b-1]*sqrt(2.0*(Psi-EArray_E[b-1])) +
+                                                     EArray_DFunc[b  ]*sqrt(2.0*(Psi-EArray_E[b  ])) )*EArray_dE;
 
       CumulativeProbability[b] = CumulativeProbability[b-1] + Probability;
    }
@@ -685,7 +685,7 @@ double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
    const double RandomSampleE           = Mis_InterpolateFromTable( ENBin, CumulativeProbability, EArray_E, RandomSampleProbability );
 
 // v^2 = 2*(Psi-E)
-   const double RandomSampleVelocity = ( RandomSampleE > Psi ) ? 0 : sqrt( 2*(Psi-RandomSampleE) );
+   const double RandomSampleVelocity = ( RandomSampleE > Psi ) ? 0.0 : sqrt( 2.0*(Psi-RandomSampleE) );
 
    delete [] CumulativeProbability;
 
@@ -717,13 +717,13 @@ double Par_EquilibriumIC::getIntegratedDistributionFunction( const double E )
    for (int i=0; i<N_points; i++)
    {
       const double Psi             = (i+0.5)*dPsi;
-      const double dsqrt_EminusPsi = ( ( (Psi+0.5*dPsi) >= E ) ? 0 : sqrt( E-(Psi+0.5*dPsi) ) ) - sqrt( E-(Psi-0.5*dPsi) );
+      const double dsqrt_EminusPsi = ( ( (Psi+0.5*dPsi) >= E ) ? 0.0 : sqrt( E-(Psi+0.5*dPsi) ) ) - sqrt( E-(Psi-0.5*dPsi) );
 
       if ( Psi > -RArray_Phi[RLastIdx] )   dRho_dPsi = Mis_InterpolateFromTable( RNBin, RArray_Phi, RArray_dRho_dPsi, -(Psi) );
       else                                 dRho_dPsi = RArray_dRho_dPsi[RLastIdx]
                                                        + ( Psi + RArray_Phi[RLastIdx] ) * ( RArray_dRho_dPsi[RLastIdx-1] - RArray_dRho_dPsi[RLastIdx] )
                                                                                         / (      -RArray_Phi[RLastIdx-1] +       RArray_Phi[RLastIdx] );
-      integral += -2*dRho_dPsi*dsqrt_EminusPsi;
+      integral += -2.0*dRho_dPsi*dsqrt_EminusPsi;
    }
 
    return integral/(sqrt(8.0)*SQR(M_PI));
@@ -806,7 +806,7 @@ double LinearDensityShellMass( const double r0, const double r1, const double rh
 {
    const double dr  = r1 - r0;
 
-   return M_PI*dr*( r0*r0*( 6*rho0 + 6*rho1 ) + r0*dr*( 4*rho0 + 8*rho1 ) + dr*dr*( rho0 + 3*rho1 ) )/3.0;
+   return M_PI*dr*( r0*r0*( 6.0*rho0 + 6.0*rho1 ) + r0*dr*( 4.0*rho0 + 8.0*rho1 ) + dr*dr*( rho0 + 3.0*rho1 ) )/3.0;
 
 } // FUNCTION : LinearDensityShellMass
 
@@ -850,7 +850,7 @@ double AnalyticalDensProf_Plummer( const double r, const double R0, const double
 {
    const double x = r/R0;
 
-   return Rho0*pow( 1+x*x, -2.5 );
+   return Rho0*pow( 1.0+x*x, -2.5 );
 
 } // FUNCTION : AnalyticalDensProf_Plummer
 
@@ -874,7 +874,7 @@ double AnalyticalMassProf_Plummer( const double r, const double R0, const double
 {
    const double x = r/R0;
 
-   return (4.0/3.0)*M_PI*Rho0*CUBE(r)*pow( 1+x*x, -1.5 );
+   return (4.0/3.0)*M_PI*Rho0*CUBE(r)*pow( 1.0+x*x, -1.5 );
 
 } // FUNCTION : AnalyticalMassProf_Plummer
 
@@ -898,7 +898,7 @@ double AnalyticalDensProf_NFW( const double r, const double R0, const double Rho
 {
    const double x = r/R0;
 
-   return Rho0/( x*SQR( 1+x ) );
+   return Rho0/( x*SQR( 1.0+x ) );
 
 } // FUNCTION : AnalyticalDensProf_NFW
 
@@ -922,7 +922,7 @@ double AnalyticalMassProf_NFW( const double r, const double R0, const double Rho
 {
    const double x = r/R0;
 
-   return 4*M_PI*Rho0*CUBE(R0)*( log( 1+x ) - x/(1+x) );
+   return 4.0*M_PI*Rho0*CUBE(R0)*( log( 1.0+x ) - x/(1.0+x) );
 
 } // FUNCTION : AnalyticalMassProf_NFW
 
@@ -946,7 +946,7 @@ double AnalyticalDensProf_Burkert( const double r, const double R0, const double
 {
    const double x = r/R0;
 
-   return Rho0/( (1+x)*(1+x*x) );
+   return Rho0/( (1.0+x)*(1.0+x*x) );
 
 } // FUNCTION : AnalyticalDensProf_Burkert
 
@@ -970,7 +970,7 @@ double AnalyticalMassProf_Burkert( const double r, const double R0, const double
 {
    const double x = r/R0;
 
-   return 2*M_PI*Rho0*CUBE(R0)*( 0.5*log( 1+x*x ) + log( 1+x ) - atan( x ) );
+   return 2.0*M_PI*Rho0*CUBE(R0)*( 0.5*log( 1.0+x*x ) + log( 1.0+x ) - atan( x ) );
 
 } // FUNCTION : AnalyticalMassProf_Burkert
 
@@ -995,7 +995,7 @@ double AnalyticalDensProf_Jaffe( const double r, const double R0, const double R
 {
    const double x = r/R0;
 
-   return Rho0/( 4*M_PI*SQR(x)*SQR(1+x) ); // return Rho0/(x*(1+x)); //previous one
+   return Rho0/( 4.0*M_PI*SQR(x)*SQR(1.0+x) ); // return Rho0/(x*(1.0+x)); //previous one
 
 } // FUNCTION : AnalyticalDensProf_Jaffe
 
@@ -1020,7 +1020,7 @@ double AnalyticalMassProf_Jaffe( const double r, const double R0, const double R
 {
    const double x = r/R0;
 
-   return Rho0*CUBE(R0)*x/(1+x);
+   return Rho0*CUBE(R0)*x/(1.0+x);
 
 } // FUNCTION : AnalyticalMassProf_Jaffe
 
@@ -1044,7 +1044,7 @@ double AnalyticalDensProf_Hernquist( const double r, const double R0, const doub
 {
    const double x = r/R0;
 
-   return Rho0/( x*CUBE( 1+x ) );
+   return Rho0/( x*CUBE( 1.0+x ) );
 
 } // FUNCTION : AnalyticalDensProf_Hernquist
 
@@ -1068,7 +1068,7 @@ double AnalyticalMassProf_Hernquist( const double r, const double R0, const doub
 {
    const double x = r/R0;
 
-   return 2*M_PI*Rho0*CUBE(R0)*SQR(x)/SQR(1+x);
+   return 2.0*M_PI*Rho0*CUBE(R0)*SQR(x)/SQR(1.0+x);
 
 } // FUNCTION : AnalyticalMassProf_Hernquist
 
@@ -1121,7 +1121,7 @@ double MassIntegrand_Einasto( const double r, void* parameters )
    double Rho0                         = p->Cloud_Rho0;
    double Einasto_Power_Factor         = p->Cloud_Einasto_Power_Factor;
 
-   return 4*M_PI*SQR(r)*AnalyticalDensProf_Einasto( r, R0, Rho0, Einasto_Power_Factor );
+   return 4.0*M_PI*SQR(r)*AnalyticalDensProf_Einasto( r, R0, Rho0, Einasto_Power_Factor );
 
 } // FUNCTION : MassIntegrand_Einasto
 
@@ -1150,7 +1150,7 @@ double MassIntegrand_Einasto( const double r, void* parameters )
 //    //Gamma function:                  Gamma( s    ) = \int_{0}^{\infty} t^{s-1}*e^{-t} dt
 //    //Upper incomplete Gamma function: Gamma( s, x ) = \int_{x}^{\infty} t^{s-1}*e^{-t} dt
 //
-//    return 4*M_PI*Rho0*CUBE(R0)/Einasto_Power_Factor*( Gamma(3/Einasto_Power_Factor) - UpperIncompleteGamma( 3/Einasto_Power_Factor, pow( x, Einasto_Power_Factor ) ) );
+//    return 4.0*M_PI*Rho0*CUBE(R0)/Einasto_Power_Factor*( Gamma(3.0/Einasto_Power_Factor) - UpperIncompleteGamma( 3.0/Einasto_Power_Factor, pow( x, Einasto_Power_Factor ) ) );
 //
 // } // FUNCTION : AnalyticalMassProf_Einasto
 
@@ -1176,7 +1176,7 @@ double MassIntegrand_Table( const double r, void* parameters )
    double* Table_R                    = p->Table_R;
    double* Table_D                    = p->Table_D;
 
-   return 4*M_PI*SQR(r)*ExtendedInterpolatedTable( r, NBin, Table_R, Table_D );
+   return 4.0*M_PI*SQR(r)*ExtendedInterpolatedTable( r, NBin, Table_R, Table_D );
 
 } // FUNCTION : MassIntegrand_Table
 
