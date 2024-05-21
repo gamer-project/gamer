@@ -72,15 +72,15 @@ class Par_EquilibriumIC
 
 //    Input table of density profile
       void    loadInputDensProfTable();
-      int     InputTable_DensProf_nbin    = -1;
-      double *InputTable_DensProf_radius  = NULL;
-      double *InputTable_DensProf_density = NULL;
+      int     InputTable_DensProf_NBin    = -1;
+      double *InputTable_DensProf_Radius  = NULL;
+      double *InputTable_DensProf_Density = NULL;
 
 //    Input table of external potential
       void    loadInputExtPotTable();
-      int     InputTable_ExtPot_nbin      = -1;
-      double *InputTable_ExtPot_radius    = NULL;
-      double *InputTable_ExtPot_potential = NULL;
+      int     InputTable_ExtPot_NBin      = -1;
+      double *InputTable_ExtPot_Radius    = NULL;
+      double *InputTable_ExtPot_Potential = NULL;
 
 //    Arrays of radial distribution of properties of the cloud
       void    constructRadialArray();

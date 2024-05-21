@@ -50,7 +50,7 @@ Par_EquilibriumIC::Par_EquilibriumIC( const char* Cloud_Type )
    else if ( strcmp( Cloud_Type, "Jaffe"     ) == 0 )   Cloud_Model = CLOUD_MODEL_JAFFE;
    else if ( strcmp( Cloud_Type, "Hernquist" ) == 0 )   Cloud_Model = CLOUD_MODEL_HERNQUIST;
    else if ( strcmp( Cloud_Type, "Einasto"   ) == 0 )   Cloud_Model = CLOUD_MODEL_EINASTO;
-   else    Aux_Error( ERROR_INFO, "Unsupported Cloud_Type \"%s\" for Par_EquilibriumIC !!\n", Cloud_Type );
+   else   Aux_Error( ERROR_INFO, "Unsupported Cloud_Type \"%s\" for Par_EquilibriumIC !!\n", Cloud_Type );
 
 } // FUNCTION : Par_EquilibriumIC
 
@@ -70,17 +70,15 @@ Par_EquilibriumIC::~Par_EquilibriumIC()
 {
    if ( Cloud_Model == CLOUD_MODEL_TABLE )
    {
-      delete [] InputTable_DensProf_radius;
-      delete [] InputTable_DensProf_density;
+      delete [] InputTable_DensProf_Radius;
+      delete [] InputTable_DensProf_Density;
    }
 
    if ( AddExtPot_Table )
    {
-      delete [] InputTable_ExtPot_radius;
-      delete [] InputTable_ExtPot_potential;
+      delete [] InputTable_ExtPot_Radius;
+      delete [] InputTable_ExtPot_Potential;
    }
-
-   delete Random_Num_Gen;
 
    delete [] RArray_R;
    delete [] RArray_Rho;
@@ -91,6 +89,8 @@ Par_EquilibriumIC::~Par_EquilibriumIC()
    delete [] EArray_E;
    delete [] EArray_DFunc;
    delete [] EArray_IntDFunc;
+
+   delete Random_Num_Gen;
 
 } // FUNCTION : ~Par_EquilibriumIC
 
@@ -251,7 +251,7 @@ void Par_EquilibriumIC::setExtPotParameters( const int AddingExternalPotential_A
 //
 // Parameter   :  None
 //
-// Return      :  InputTable_DensProf_radius, InputTable_DensProf_density
+// Return      :  InputTable_DensProf_Radius, InputTable_DensProf_Density
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::loadInputDensProfTable()
 {
@@ -260,25 +260,25 @@ void Par_EquilibriumIC::loadInputDensProfTable()
    const int Col_R[1] = {0};   // target column: radius
    const int Col_D[1] = {1};   // target column: density
 
-   const int NRowR = Aux_LoadTable( InputTable_DensProf_radius,  DensProf_Table_Name, 1, Col_R, true, true );
-   const int NRowD = Aux_LoadTable( InputTable_DensProf_density, DensProf_Table_Name, 1, Col_D, true, true );
+   const int NRowR = Aux_LoadTable( InputTable_DensProf_Radius,  DensProf_Table_Name, 1, Col_R, true, true );
+   const int NRowD = Aux_LoadTable( InputTable_DensProf_Density, DensProf_Table_Name, 1, Col_D, true, true );
 
 // Check the number of rows are consistent
    if ( NRowR != NRowD )
       Aux_Error( ERROR_INFO, "The number of rows of density (%d) is not equal to the number of rows of radii (%d) in density table %s !!\n",
                              NRowD, NRowR, DensProf_Table_Name );
    else
-      InputTable_DensProf_nbin = NRowR;
+      InputTable_DensProf_NBin = NRowR;
 
 // Check maximum radius in the density table must be larger than Cloud_MaxR
-   if ( InputTable_DensProf_radius[InputTable_DensProf_nbin-1] < Cloud_MaxR )
+   if ( InputTable_DensProf_Radius[InputTable_DensProf_NBin-1] < Cloud_MaxR )
       Aux_Error( ERROR_INFO, "Maximum radius (%14.7e) in density table %s is smaller then Cloud_MaxR (%14.7e) !!\n",
-                             InputTable_DensProf_radius[InputTable_DensProf_nbin-1], DensProf_Table_Name, Cloud_MaxR );
+                             InputTable_DensProf_Radius[InputTable_DensProf_NBin-1], DensProf_Table_Name, Cloud_MaxR );
 
 // Check minimum radius in the density table must be smaller than Cloud_MaxR
-   if ( InputTable_DensProf_radius[0] > Cloud_MaxR )
+   if ( InputTable_DensProf_Radius[0] > Cloud_MaxR )
       Aux_Error( ERROR_INFO, "Minimum radius (%14.7e) in density table %s is larger then Cloud_MaxR (%14.7e) !!\n",
-                             InputTable_DensProf_radius[0], DensProf_Table_Name, Cloud_MaxR );
+                             InputTable_DensProf_Radius[0], DensProf_Table_Name, Cloud_MaxR );
 
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading Density Profile Table: \"%s\" ... done\n", DensProf_Table_Name );
 
@@ -294,7 +294,7 @@ void Par_EquilibriumIC::loadInputDensProfTable()
 //
 // Parameter   :  None
 //
-// Return      :  InputTable_ExtPot_radius, InputTable_ExtPot_potential
+// Return      :  InputTable_ExtPot_Radius, InputTable_ExtPot_Potential
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::loadInputExtPotTable()
 {
@@ -303,15 +303,15 @@ void Par_EquilibriumIC::loadInputExtPotTable()
    const int Col_R[1] = {0};   // target column: radius
    const int Col_P[1] = {1};   // target column: potential
 
-   const int NRowR = Aux_LoadTable( InputTable_ExtPot_radius,     ExtPot_Table_Name, 1, Col_R, true, true );
-   const int NRowP = Aux_LoadTable( InputTable_ExtPot_potential,  ExtPot_Table_Name, 1, Col_P, true, true );
+   const int NRowR = Aux_LoadTable( InputTable_ExtPot_Radius,    ExtPot_Table_Name, 1, Col_R, true, true );
+   const int NRowP = Aux_LoadTable( InputTable_ExtPot_Potential, ExtPot_Table_Name, 1, Col_P, true, true );
 
 // Check the number of rows are consistent
    if ( NRowR != NRowP )
       Aux_Error( ERROR_INFO, "The number of rows of potential (%d) is not equal to the number of rows of radii (%d) in ExtPot table %s !!\n",
                              NRowP, NRowR, ExtPot_Table_Name );
    else
-      InputTable_ExtPot_nbin = NRowR;
+      InputTable_ExtPot_NBin = NRowR;
 
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading ExtPot Profile Table: \"%s\" ... done\n", ExtPot_Table_Name );
 
@@ -536,14 +536,14 @@ double Par_EquilibriumIC::getDensity( const double r )
 {
    double dens = 0.0;
 
-   if      ( Cloud_Model == CLOUD_MODEL_TABLE     )   dens = ExtendedInterpolatedTable   ( r, InputTable_DensProf_nbin, InputTable_DensProf_radius, InputTable_DensProf_density );
+   if      ( Cloud_Model == CLOUD_MODEL_TABLE     )   dens = ExtendedInterpolatedTable   ( r, InputTable_DensProf_NBin, InputTable_DensProf_Radius, InputTable_DensProf_Density );
    else if ( Cloud_Model == CLOUD_MODEL_PLUMMER   )   dens = AnalyticalDensProf_Plummer  ( r, Cloud_R0, Cloud_Rho0 );
    else if ( Cloud_Model == CLOUD_MODEL_NFW       )   dens = AnalyticalDensProf_NFW      ( r, Cloud_R0, Cloud_Rho0 );
    else if ( Cloud_Model == CLOUD_MODEL_BURKERT   )   dens = AnalyticalDensProf_Burkert  ( r, Cloud_R0, Cloud_Rho0 );
    else if ( Cloud_Model == CLOUD_MODEL_JAFFE     )   dens = AnalyticalDensProf_Jaffe    ( r, Cloud_R0, Cloud_Rho0 );
    else if ( Cloud_Model == CLOUD_MODEL_HERNQUIST )   dens = AnalyticalDensProf_Hernquist( r, Cloud_R0, Cloud_Rho0 );
    else if ( Cloud_Model == CLOUD_MODEL_EINASTO   )   dens = AnalyticalDensProf_Einasto  ( r, Cloud_R0, Cloud_Rho0, Cloud_Einasto_Power_Factor );
-   else    Aux_Error( ERROR_INFO, "Unsupported Cloud_Model = %d !!\n", Cloud_Model );
+   else   Aux_Error( ERROR_INFO, "Unsupported Cloud_Model = %d !!\n", Cloud_Model );
 
    return dens;
 
@@ -593,7 +593,7 @@ double Par_EquilibriumIC::getAnalEnclosedMass( const double r )
 
 //    Parameters for the integrand
       struct mass_integrand_params_Einasto integrand_params_Einasto = { Cloud_R0, Cloud_Rho0, Cloud_Einasto_Power_Factor };
-      struct mass_integrand_params_Table   integrand_params_Table   = { InputTable_DensProf_nbin, InputTable_DensProf_radius, InputTable_DensProf_density };
+      struct mass_integrand_params_Table   integrand_params_Table   = { InputTable_DensProf_NBin, InputTable_DensProf_Radius, InputTable_DensProf_Density };
 
 //    Integrand for the integration
       if      ( Cloud_Model == CLOUD_MODEL_EINASTO )
@@ -637,7 +637,7 @@ double Par_EquilibriumIC::getExternalPotential( const double r )
 {
    double ext_pot;
 
-   if      ( AddExtPot_Table      )   ext_pot = ExtendedInterpolatedTable( r, InputTable_ExtPot_nbin, InputTable_ExtPot_radius, InputTable_ExtPot_potential );
+   if      ( AddExtPot_Table      )   ext_pot = ExtendedInterpolatedTable( r, InputTable_ExtPot_NBin, InputTable_ExtPot_Radius, InputTable_ExtPot_Potential );
    else if ( AddExtPot_Analytical )   ext_pot = AnalyticalPoteProf_Plummer( r, 0.1, 1.0 );
    else                               ext_pot = 0.0;
 
@@ -711,9 +711,9 @@ double Par_EquilibriumIC::getIntegratedDistributionFunction( const double E )
 {
    const int    N_points = 1000;
    const double dPsi     = E/N_points;
-   double dRho_dPsi;
 
-   double integral = 0;
+   double dRho_dPsi = 0.0;
+   double integral  = 0.0;
    for (int i=0; i<N_points; i++)
    {
       const double Psi             = (i+0.5)*dPsi;
@@ -721,8 +721,8 @@ double Par_EquilibriumIC::getIntegratedDistributionFunction( const double E )
 
       if ( Psi > -RArray_Phi[RLastIdx] )   dRho_dPsi = Mis_InterpolateFromTable( RNBin, RArray_Phi, RArray_dRho_dPsi, -(Psi) );
       else                                 dRho_dPsi = RArray_dRho_dPsi[RLastIdx]
-                                                       + ( Psi + RArray_Phi[RLastIdx] ) * ( RArray_dRho_dPsi[RLastIdx-1] - RArray_dRho_dPsi[RLastIdx] )
-                                                                                        / (      -RArray_Phi[RLastIdx-1] +       RArray_Phi[RLastIdx] );
+                                                       +( Psi + RArray_Phi[RLastIdx] ) *( RArray_dRho_dPsi[RLastIdx-1] - RArray_dRho_dPsi[RLastIdx] )
+                                                                                       /(      -RArray_Phi[RLastIdx-1] +       RArray_Phi[RLastIdx] ); // dRho_dPsi is linearly extrapolated for low Psi
       integral += -2.0*dRho_dPsi*dsqrt_EminusPsi;
    }
 
@@ -1124,35 +1124,6 @@ double MassIntegrand_Einasto( const double r, void* parameters )
    return 4.0*M_PI*SQR(r)*AnalyticalDensProf_Einasto( r, R0, Rho0, Einasto_Power_Factor );
 
 } // FUNCTION : MassIntegrand_Einasto
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  AnalyticalMassProf_Einasto
-// Description :  Analytical enclosed mass profile of the Einasto model
-//
-// Note        :  1. M(r) = M_0 [1 - \frac{ \Gamma( 3n, (r/h)^{1/n} ) }{ \Gamma(3n) }]
-//                   ,where M_0 = 4\pi \rho_0 h^3 n \Gamma(3n) is the total mass
-//                2. Reference: Einasto J., 1965, TrAlm
-//                              Retana-Montenegro E. et al., 2012, A&A, doi:10.1051/0004-6361/201118543
-//
-// Parameter   :  r                    : input radius
-//                R0                   : Einasto scale radius, h
-//                Rho0                 : Einasto central density, \rho_0
-//                Einasto_Power_Factor : Einasto power factor, 1/n
-//
-// Return      :  enclosed mass at the given radius
-//-------------------------------------------------------------------------------------------------------
-// double AnalyticalMassProf_Einasto( const double r, const double R0, const double Rho0, const double Einasto_Power_Factor )
-// {
-//    const double x = r/R0;
-//
-//    //Gamma function:                  Gamma( s    ) = \int_{0}^{\infty} t^{s-1}*e^{-t} dt
-//    //Upper incomplete Gamma function: Gamma( s, x ) = \int_{x}^{\infty} t^{s-1}*e^{-t} dt
-//
-//    return 4.0*M_PI*Rho0*CUBE(R0)/Einasto_Power_Factor*( Gamma(3.0/Einasto_Power_Factor) - UpperIncompleteGamma( 3.0/Einasto_Power_Factor, pow( x, Einasto_Power_Factor ) ) );
-//
-// } // FUNCTION : AnalyticalMassProf_Einasto
 
 
 
