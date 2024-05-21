@@ -281,7 +281,7 @@ void SetParameter()
       for (int d=0; d<3; d++)
       Aux_Message( stdout, "     bulk velocity [%3d]                       = %13.7e\n", d, ParEqmIC_Cloud_BulkVel[i][d]      );
 
-      Aux_Message( stdout, "     peak density                              = %13.7e\n", ParEqmIC_Cloud_Rho0[i]               );
+      Aux_Message( stdout, "     scale density                             = %13.7e\n", ParEqmIC_Cloud_Rho0[i]               );
       Aux_Message( stdout, "     scale radius                              = %13.7e\n", ParEqmIC_Cloud_R0[i]                 );
       if ( strcmp( ParEqmIC_Cloud_Type[i], "Einasto" ) == 0 )
       Aux_Message( stdout, "     Einasto power factor                      = %13.7e\n", ParEqmIC_Cloud_EinastoPowerFactor[i] );

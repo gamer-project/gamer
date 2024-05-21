@@ -118,7 +118,7 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
                                                      ParEqmIC_Cloud_DensProfNBin      [i],
                                                      ParEqmIC_Cloud_EnergyNBin        [i],
                                                      ParEqmIC_Cloud_RSeed             [i] );
-         Cloud_Constructor.setExternalPotential(     ParEqmIC_Cloud_AddExtPotAnaly    [i],
+         Cloud_Constructor.setExtPotParameters(      ParEqmIC_Cloud_AddExtPotAnaly    [i],
                                                      ParEqmIC_Cloud_AddExtPotTable    [i],
                                                      ParEqmIC_Cloud_ExtPotTable       [i] );
 

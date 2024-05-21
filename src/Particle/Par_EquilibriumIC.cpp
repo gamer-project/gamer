@@ -8,8 +8,8 @@
 
 static double ExtendedInterpolatedTable   ( const double x, const int N, const double Table_x[], const double Table_y[] );
 static double LinearDensityShellMass      ( const double r0, const double r1, const double rho0, const double rho1 );
-static double AnalyticalExternalPotential ( const double r );
 
+static double AnalyticalPoteProf_Plummer  ( const double r, const double R0, const double Rho0 );
 static double AnalyticalDensProf_Plummer  ( const double r, const double R0, const double Rho0 );
 static double AnalyticalMassProf_Plummer  ( const double r, const double R0, const double Rho0 );
 static double AnalyticalDensProf_NFW      ( const double r, const double R0, const double Rho0 );
@@ -26,19 +26,8 @@ static double MassIntegrand_Einasto       ( const double r, void* parameters );
 static double MassIntegrand_Table         ( const double r, void* parameters );
 
 // Parameters for the intergration of mass profile
-struct mass_integrand_params_Einasto
-{
-   double Cloud_R0;
-   double Cloud_Rho0;
-   double Cloud_Einasto_Power_Factor;
-};
-
-struct mass_integrand_params_Table
-{
-   int     NBin;
-   double* Table_R;
-   double* Table_D;
-};
+struct mass_integrand_params_Einasto{ double Cloud_R0; double Cloud_Rho0; double Cloud_Einasto_Power_Factor; };
+struct mass_integrand_params_Table  { int NBin;        double* Table_R;   double* Table_D;                   };
 
 
 
@@ -48,13 +37,12 @@ struct mass_integrand_params_Table
 //
 // Note        :  1. Cloud_Type is determined during the construction
 //
-// Parameter   :  Type : Type of this particle cloud
+// Parameter   :  Cloud_Type : Type of this particle cloud
 //
-// Return      :
+// Return      :  None
 //-------------------------------------------------------------------------------------------------------
 Par_EquilibriumIC::Par_EquilibriumIC( const char* Cloud_Type )
 {
-
    if      ( strcmp( Cloud_Type, "Table"     ) == 0 )   Cloud_Model = CLOUD_MODEL_TABLE;
    else if ( strcmp( Cloud_Type, "Plummer"   ) == 0 )   Cloud_Model = CLOUD_MODEL_PLUMMER;
    else if ( strcmp( Cloud_Type, "NFW"       ) == 0 )   Cloud_Model = CLOUD_MODEL_NFW;
@@ -62,9 +50,9 @@ Par_EquilibriumIC::Par_EquilibriumIC( const char* Cloud_Type )
    else if ( strcmp( Cloud_Type, "Jaffe"     ) == 0 )   Cloud_Model = CLOUD_MODEL_JAFFE;
    else if ( strcmp( Cloud_Type, "Hernquist" ) == 0 )   Cloud_Model = CLOUD_MODEL_HERNQUIST;
    else if ( strcmp( Cloud_Type, "Einasto"   ) == 0 )   Cloud_Model = CLOUD_MODEL_EINASTO;
-   else
-      Aux_Error( ERROR_INFO, "Unsupported Cloud_Type \"%s\" for Par_EquilibriumIC !!\n", Cloud_Type );
-}
+   else    Aux_Error( ERROR_INFO, "Unsupported Cloud_Type \"%s\" for Par_EquilibriumIC !!\n", Cloud_Type );
+
+} // FUNCTION : Par_EquilibriumIC
 
 
 
@@ -103,7 +91,8 @@ Par_EquilibriumIC::~Par_EquilibriumIC()
    delete [] EArray_E;
    delete [] EArray_DFunc;
    delete [] EArray_IntDFunc;
-}
+
+} // FUNCTION : ~Par_EquilibriumIC
 
 
 
@@ -132,7 +121,8 @@ void Par_EquilibriumIC::setCenterAndBulkVel( const double Center_X, const double
    Cloud_BulkVel[0] = BulkVel_X;
    Cloud_BulkVel[1] = BulkVel_Y;
    Cloud_BulkVel[2] = BulkVel_Z;
-}
+
+} // FUNCTION : setCenterAndBulkVel
 
 
 
@@ -152,7 +142,8 @@ void Par_EquilibriumIC::setModelParameters( const double Rho0, const double R0 )
 {
    Cloud_Rho0 = Rho0;
    Cloud_R0   = R0;
-}
+
+} // FUNCTION : setModelParameters
 
 
 
@@ -162,14 +153,15 @@ void Par_EquilibriumIC::setModelParameters( const double Rho0, const double R0 )
 //
 // Note        :  1. See AnalyticalDensProf_Einasto for details
 //
-// Parameter   :  EinastoPowerFactor  : the power factor in the Einasto density profile
+// Parameter   :  EinastoPowerFactor : the power factor in the Einasto density profile
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::setEinastoPowerFactor( const double EinastoPowerFactor )
 {
    Cloud_Einasto_Power_Factor = EinastoPowerFactor;
-}
+
+} // FUNCTION : setEinastoPowerFactor
 
 
 
@@ -186,7 +178,8 @@ void Par_EquilibriumIC::setEinastoPowerFactor( const double EinastoPowerFactor )
 void Par_EquilibriumIC::setDensProfTableFilename( const char* DensProfTableFilename )
 {
    strcpy( DensProf_Table_Name, DensProfTableFilename );
-}
+
+} // FUNCTION : setDensProfTableFilename
 
 
 
@@ -216,16 +209,17 @@ void Par_EquilibriumIC::setParticleParameters( const long ParNum, const double M
 
    RLastIdx = RNBin-1;
    ELastIdx = ENBin-1;
-}
+
+} // FUNCTION : setParticleParameters
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  setExternalPotential
+// Function    :  setExtPotParameters
 // Description :  Set the parametes related to the external potential from input parameters outside
 //
 // Note        :  1. It supports adding either anlytical external potential or external potential from table
-//                2. The analytical external potential can be set at AnalyticalExternalPotential
+//                2. The analytical external potential can be set at getExternalPotential
 //                3. The external potential table has two columns, the first is the radius and the second is the potential
 //                4. AddExtPot_Analytical and AddExtPot_Table in Par_EquilibriumIC cannot both be turned on
 //
@@ -235,7 +229,7 @@ void Par_EquilibriumIC::setParticleParameters( const long ParNum, const double M
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Par_EquilibriumIC::setExternalPotential( const int AddingExternalPotential_Analytical, const int AddingExternalPotential_Table, const char* ExtPotTableFilename )
+void Par_EquilibriumIC::setExtPotParameters( const int AddingExternalPotential_Analytical, const int AddingExternalPotential_Table, const char* ExtPotTableFilename )
 {
    AddExtPot_Analytical = AddingExternalPotential_Analytical;
    AddExtPot_Table      = AddingExternalPotential_Table;
@@ -244,7 +238,8 @@ void Par_EquilibriumIC::setExternalPotential( const int AddingExternalPotential_
       Aux_Error( ERROR_INFO, "AddExtPot_Analytical and AddExtPot_Table in Par_EquilibriumIC cannot both be turned on !!\n" );
 
    if ( AddExtPot_Table )   strcpy( ExtPot_Table_Name, ExtPotTableFilename );
-}
+
+} // FUNCTION : setExtPotParameters
 
 
 
@@ -261,7 +256,8 @@ void Par_EquilibriumIC::setExternalPotential( const int AddingExternalPotential_
 double Par_EquilibriumIC::getTotCloudMass()
 {
    return TotCloudMass;
-}
+
+} // FUNCTION :getTotCloudMass
 
 
 
@@ -278,7 +274,8 @@ double Par_EquilibriumIC::getTotCloudMass()
 double Par_EquilibriumIC::getParticleMass()
 {
    return ParticleMass;
-}
+
+} // FUNCTION : getParticleMass
 
 
 
@@ -299,7 +296,8 @@ double Par_EquilibriumIC::getTotCloudMassError()
    const double TotCloudMass_Analytical = getAnalEnclosedMass( Cloud_MaxR );
 
    return ( TotCloudMass - TotCloudMass_Analytical )/TotCloudMass_Analytical;
-}
+
+} // FUNCTION : getTotCloudMassError
 
 
 
@@ -341,7 +339,8 @@ void Par_EquilibriumIC::loadInputDensProfTable()
                              InputTable_DensProf_radius[0], DensProf_Table_Name, Cloud_MaxR );
 
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading Density Profile Table: \"%s\" ... done\n", DensProf_Table_Name );
-}
+
+} // FUNCTION : loadInputDensProfTable
 
 
 
@@ -373,7 +372,8 @@ void Par_EquilibriumIC::loadInputExtPotTable()
       InputTable_ExtPot_nbin = NRowR;
 
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading ExtPot Profile Table: \"%s\" ... done\n", ExtPot_Table_Name );
-}
+
+} // FUNCTION : loadInputExtPotTable
 
 
 
@@ -454,32 +454,28 @@ void Par_EquilibriumIC::constructRadialArray()
    RArray_dR = Cloud_MaxR/(RNBin-1);
 
 // Array of Radius, R
-   for (int b=0; b<RNBin; b++)         RArray_R[b]         = RArray_dR*b;
+   for (int b=0; b<RNBin; b++)        RArray_R[b]         = RArray_dR*b;
 
 // Array of Density, Rho(R)
-   for (int b=1; b<RNBin; b++)         RArray_Rho[b]       = getDensity( RArray_R[b] );
+   for (int b=1; b<RNBin; b++         RArray_Rho[b]       = getDensity( RArray_R[b] );
    RArray_Rho[0]                                           = 2*RArray_Rho[1]-RArray_Rho[2];   // where r=0
 
 // Array of Enclosed Mass, M_Enc(R) = \int_{0}^{R} Rho(r) 4\pi R^2 dR
-   RArray_M_Enc[0]                                         = 0;   // where r=0
-   for (int b=1; b<RNBin; b++)         RArray_M_Enc[b]     = RArray_M_Enc[b-1] + LinearDensityShellMass( RArray_R[b-1], RArray_R[b], RArray_Rho[b-1], RArray_Rho[b] );
+   RArray_M_Enc[0]                                        = 0;   // where r=0
+   for (int b=1; b<RNBin; b++)        RArray_M_Enc[b]     = RArray_M_Enc[b-1] + LinearDensityShellMass( RArray_R[b-1], RArray_R[b], RArray_Rho[b-1], RArray_Rho[b] );
 
 // Array of Gravitational Potential, Phi(R) = Phi(\infty) - \int_{\infty}^{R} g dR, where g = -GM/R^2
-   RArray_Phi[RLastIdx]                                    = -NEWTON_G*RArray_M_Enc[RLastIdx]/RArray_R[RLastIdx];
-   for (int b=RLastIdx-1; b>0; b--)    RArray_Phi[b]       = RArray_Phi[b+1] + -NEWTON_G*0.5*(RArray_M_Enc[b]/SQR( RArray_R[b] ) + RArray_M_Enc[b+1]/SQR( RArray_R[b+1] ))*RArray_dR;
-   RArray_Phi[0]                                           = RArray_Phi[1]   + -NEWTON_G*0.5*(RArray_M_Enc[1]/SQR( RArray_R[1] ))*RArray_dR;
+   RArray_Phi[RLastIdx]                                   = -NEWTON_G*RArray_M_Enc[RLastIdx]/RArray_R[RLastIdx];
+   for (int b=RLastIdx-1; b>0; b--)   RArray_Phi[b]       = RArray_Phi[b+1] + -NEWTON_G*0.5*(RArray_M_Enc[b]/SQR( RArray_R[b] ) + RArray_M_Enc[b+1]/SQR( RArray_R[b+1] ))*RArray_dR;
+   RArray_Phi[0]                                          = RArray_Phi[1]   + -NEWTON_G*0.5*(RArray_M_Enc[1]/SQR( RArray_R[1] ))*RArray_dR;
 
 // Adding External Potentil
-   if ( AddExtPot_Table )
-      for (int b=0; b<RNBin; b++)      RArray_Phi[b]      += ExtendedInterpolatedTable( RArray_R[b], InputTable_ExtPot_nbin, InputTable_ExtPot_radius, InputTable_ExtPot_potential );
-
-   if ( AddExtPot_Analytical )
-      for (int b=0; b<RNBin; b++)      RArray_Phi[b]      += AnalyticalExternalPotential( RArray_R[b] );
+   for (int b=0; b<RNBin; b++)        RArray_Phi[b]      += getExternalPotential( RArray_R[b] );
 
 // Array of dRho/dPsi, dRho/dPsi = -(dRho/dPhi), where Psi = -Phi
-   RArray_dRho_dPsi[0]                                     = -(RArray_Rho[1]        - RArray_Rho[0]         )/(RArray_Phi[1]        - RArray_Phi[0]         );
-   for (int b=1; b<RNBin-1; b++)       RArray_dRho_dPsi[b] = -(RArray_Rho[b+1]      - RArray_Rho[b-1]       )/(RArray_Phi[b+1]      - RArray_Phi[b-1]       );
-   RArray_dRho_dPsi[RLastIdx]                              = -(RArray_Rho[RLastIdx] - RArray_Rho[RLastIdx-1])/(RArray_Phi[RLastIdx] - RArray_Phi[RLastIdx-1]);
+   RArray_dRho_dPsi[0]                                    = -(RArray_Rho[1]        - RArray_Rho[0]         )/(RArray_Phi[1]        - RArray_Phi[0]         );
+   for (int b=1; b<RNBin-1; b++)      RArray_dRho_dPsi[b] = -(RArray_Rho[b+1]      - RArray_Rho[b-1]       )/(RArray_Phi[b+1]      - RArray_Phi[b-1]       );
+   RArray_dRho_dPsi[RLastIdx]                             = -(RArray_Rho[RLastIdx] - RArray_Rho[RLastIdx-1])/(RArray_Phi[RLastIdx] - RArray_Phi[RLastIdx-1]);
 
 } // FUNCTION : constructRadialArray
 
@@ -516,9 +512,6 @@ void Par_EquilibriumIC::constructEnergyArray()
 // check negative distribution function
    for (int b=0; b<ENBin; b++)
       if ( EArray_DFunc[b] < 0 )   EArray_DFunc[b] = 0;
-
-// Smooth the distribution function
-   //SmoothArray( EArray_DFunc, 0, ENBin );
 
 } // FUNCTION : constructEnergyArray
 
@@ -607,8 +600,7 @@ double Par_EquilibriumIC::getDensity( const double r )
    else if ( Cloud_Model == CLOUD_MODEL_JAFFE     )   dens = AnalyticalDensProf_Jaffe    ( r, Cloud_R0, Cloud_Rho0 );
    else if ( Cloud_Model == CLOUD_MODEL_HERNQUIST )   dens = AnalyticalDensProf_Hernquist( r, Cloud_R0, Cloud_Rho0 );
    else if ( Cloud_Model == CLOUD_MODEL_EINASTO   )   dens = AnalyticalDensProf_Einasto  ( r, Cloud_R0, Cloud_Rho0, Cloud_Einasto_Power_Factor );
-   else
-      Aux_Error( ERROR_INFO, "Unsupported Cloud_Model = %d !!\n", Cloud_Model );
+   else    Aux_Error( ERROR_INFO, "Unsupported Cloud_Model = %d !!\n", Cloud_Model );
 
    return dens;
 
@@ -684,6 +676,31 @@ double Par_EquilibriumIC::getAnalEnclosedMass( const double r )
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  getExternalPotential
+// Description :  Get the external potential at radius r
+//
+// Note        :  1. Get the external potential from table interpolation or the analytical potential profile
+//                2. For the analytical potential, now there is only Plummer potential with hardcoded parameters
+//
+// Parameter   :  r : radius
+//
+// Return      :  external potential at radius r
+//-------------------------------------------------------------------------------------------------------
+double Par_EquilibriumIC::getExternalPotential( const double r )
+{
+   double ext_pot;
+
+   if      ( AddExtPot_Table      )   ext_pot = ExtendedInterpolatedTable( r, InputTable_ExtPot_nbin, InputTable_ExtPot_radius, InputTable_ExtPot_potential );
+   else if ( AddExtPot_Analytical )   ext_pot = AnalyticalPoteProf_Plummer( r, 0.1, 1.0 );
+   else                               ext_pot = 0.0;
+
+   return ext_pot;
+
+} // FUNCTION : getExternalPotential
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  getRandomSampleVelocity
 // Description :  Get the ramdomly sampled magnitude of the velocity of a particle at radius r from the distribution function
 //
@@ -692,7 +709,7 @@ double Par_EquilibriumIC::getAnalEnclosedMass( const double r )
 //                2. Psi = E + 1/2 v^2 -> v = \sqrt{ 2*( Psi - E ) }
 //                3. dv = \frac{ 1 }{ \sqrt{ 2*( Psi - E )} } dE
 //                4. The state E<0 is unbound, v^2 > v_{esc}^2
-//                5. E is in the range  0 < E < Psi(r)
+//                5. E is in the range  0 <= E <= Psi(r)
 //
 // Parameter   :  r : radius
 //
@@ -742,7 +759,7 @@ double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
 //                   = \frac{1}{\sqrt{8}\pi^2} \int_{0}^{\mathcal{E}} \frac{ 1 }{ \sqrt{ \mathcal{E} -\Psi } } \frac{ d\rho }{ d\Psi } d\Psi
 //                   = \frac{1}{\sqrt{8}\pi^2} \int_{0}^{\mathcal{E}} -2 \frac{ d\rho }{ d\Psi } d\sqrt{ \mathcal{E} -\Psi } }
 //
-// Parameter   :  E  : \mathcal{E} in the above equation
+// Parameter   :  E  : Ralative energy, \mathcal{E} in the above equation
 //
 // Return      :  Integrated distribution function
 //-------------------------------------------------------------------------------------------------------
@@ -852,20 +869,23 @@ double LinearDensityShellMass( const double r0, const double r1, const double rh
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  AnalyticalExternalPotential
-// Description :  Analytical external potential
+// Function    :  AnalyticalPoteProf_Plummer
+// Description :  Analytical gravitational potential of the Plummer model
 //
-// Note        :
+// Note        :  1. \Phi(r) = \frac{ -G*M_0 }{ ( r^2 + a^2 )^{1/2} },
+//                    where M_0 = \frac{4\pi}{3} a^3 \rho_0
 //
-// Parameter   :  r : input radius
+// Parameter   :  r    : input radius
+//                R0   : Plummer scale radius, a
+//                Rho0 : Plummer scale density, \rho_0
 //
-// Return      :  external potential at the given radius
+// Return      :  gravitational potential at the given radius
 //-------------------------------------------------------------------------------------------------------
-double AnalyticalExternalPotential( const double r )
+double AnalyticalPoteProf_Plummer( const double r, const double R0, const double Rho0  )
 {
-   return 0.0;
+   return -NEWTON_G*(4.0/3.0)*M_PI*CUBE(R0)*Rho0/sqrt( SQR(r) + SQR(R0) );
 
-} // FUNCTION : AnalyticalExternalPotential
+} // FUNCTION : AnalyticalPoteProf_Plummer
 
 
 
