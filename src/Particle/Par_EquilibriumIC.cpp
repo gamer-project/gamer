@@ -6,9 +6,6 @@
 
 
 
-static void   SmoothArray                 ( double* array_x, const int index_start, const int index_end );
-static double ArrayCovariance             ( const double* array_x, const double* array_y, const int index_start, const int n_elements );
-static double Slope_LinearRegression      ( const double* array_x, const double* array_y, const int index_start, const int n_elements );
 static double ExtendedInterpolatedTable   ( const double x, const int N, const double Table_x[], const double Table_y[] );
 static double LinearDensityShellMass      ( const double r0, const double r1, const double rho0, const double rho1 );
 static double AnalyticalExternalPotential ( const double r );
@@ -480,8 +477,8 @@ void Par_EquilibriumIC::constructRadialArray()
       for (int b=0; b<RNBin; b++)      RArray_Phi[b]      += AnalyticalExternalPotential( RArray_R[b] );
 
 // Array of dRho/dPsi, dRho/dPsi = -(dRho/dPhi), where Psi = -Phi
-   RArray_dRho_dPsi[0]                                     = -(RArray_Rho[1] - RArray_Rho[0])/(RArray_Phi[1] - RArray_Phi[0]);
-   for (int b=1; b<RNBin-1; b++)       RArray_dRho_dPsi[b] = -(RArray_Rho[b+1] - RArray_Rho[b-1])/(RArray_Phi[b+1] - RArray_Phi[b-1]); //Slope_LinearRegression( RArray_Phi, RArray_Rho, b-1, 3 );
+   RArray_dRho_dPsi[0]                                     = -(RArray_Rho[1]        - RArray_Rho[0]         )/(RArray_Phi[1]        - RArray_Phi[0]         );
+   for (int b=1; b<RNBin-1; b++)       RArray_dRho_dPsi[b] = -(RArray_Rho[b+1]      - RArray_Rho[b-1]       )/(RArray_Phi[b+1]      - RArray_Phi[b-1]       );
    RArray_dRho_dPsi[RLastIdx]                              = -(RArray_Rho[RLastIdx] - RArray_Rho[RLastIdx-1])/(RArray_Phi[RLastIdx] - RArray_Phi[RLastIdx-1]);
 
 } // FUNCTION : constructRadialArray
@@ -501,23 +498,20 @@ void Par_EquilibriumIC::constructRadialArray()
 void Par_EquilibriumIC::constructEnergyArray()
 {
 // Ralative Energy (Binding Energy) ranges from Psi_Min to Psi_Max, where Psi = -Phi is the Relative Potential
-   EArray_MinE = -RArray_Phi[RLastIdx];
+   EArray_MinE = 0;
    EArray_MaxE = -RArray_Phi[0];
    EArray_dE   = (EArray_MaxE-EArray_MinE)/ENBin;
 
 // Array of Relative Energy (Binding Energy), E = -(Phi + 1/2 v^2) = Psi - 1/2 v^2 = 1/2 ( v_{esc}^2 - v^2 )
-   for (int b=0; b<ENBin; b++)   EArray_E[b] = EArray_MinE + b*EArray_dE;
+   for (int b=0; b<ENBin; b++)     EArray_E[b]        = EArray_MinE + b*EArray_dE;
 
-// Array of Integrated Distribution Function, IntDFunc(E) = \int_{E_{min}}^{E} (\frac{ 1 }{ \sqrt{E-Psi} }) (\frac{ dRho }{ dPsi }) dPsi
-   for (int b=0; b<ENBin; b++)   EArray_IntDFunc[b] = getIntegratedDistributionFunction( EArray_E[b] );
+// Array of Integrated Distribution Function, IntDFunc(E) = \frac{1}{\sqrt{8}\pi^2} \int_{0}^{E} (\frac{ 1 }{ \sqrt{E-Psi} }) (\frac{ dRho }{ dPsi }) dPsi
+   for (int b=0; b<ENBin; b++)     EArray_IntDFunc[b] = getIntegratedDistributionFunction( EArray_E[b] );
 
-// Array of Distribution Function, DFunc(E) = f(E) = d/dE IntDFunc(E)
-   //for (int b=0;       b<2;       b++)   EArray_DFunc[b] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,       0, 5 );
-   //for (int b=2;       b<ENBin-2; b++)   EArray_DFunc[b] = Slope_LinearRegression( EArray_E, EArray_IntDFunc,     b-2, 5 );
-   //for (int b=ENBin-2; b<ENBin;   b++)   EArray_DFunc[b] = Slope_LinearRegression( EArray_E, EArray_IntDFunc, ENBin-5, 5 );
-   EArray_DFunc[0]                                       = (EArray_IntDFunc[1] - EArray_IntDFunc[0])/(EArray_E[1] - EArray_E[0]);
-   for (int b=1;       b<ENBin-1; b++)   EArray_DFunc[b] = (EArray_IntDFunc[b+1] - EArray_IntDFunc[b-1])/(EArray_E[b+1] - EArray_E[b-1]);
-   EArray_DFunc[ELastIdx]                                = (EArray_IntDFunc[ELastIdx] - EArray_IntDFunc[ELastIdx-1])/(EArray_E[ELastIdx] - EArray_E[ELastIdx-1]);
+// Array of Distribution Function, DFunc(E) = f(E) = d/dE IntDFunc(E), which is the Eddington formula
+   EArray_DFunc[0]                                    = (EArray_IntDFunc[1]        - EArray_IntDFunc[0]         )/EArray_dE;
+   for (int b=1; b<ENBin-1; b++)   EArray_DFunc[b]    = (EArray_IntDFunc[b+1]      - EArray_IntDFunc[b-1]       )/(2*EArray_dE);
+   EArray_DFunc[ELastIdx]                             = (EArray_IntDFunc[ELastIdx] - EArray_IntDFunc[ELastIdx-1])/EArray_dE;
 
 // check negative distribution function
    for (int b=0; b<ENBin; b++)
@@ -745,8 +739,8 @@ double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
 // Description :  Get the integrated distribution function
 //
 // Note        :  1. The integrated deistribution function
-//                   = \int_{0}^{\mathcal{E}} \frac{ 1 }{ \sqrt{ \mathcal{E} -\Psi } } \frac{ d\rho }{ d\Psi } d\Psi
-//                   = \int_{0}^{\mathcal{E}} -2 \frac{ d\rho }{ d\Psi } d\sqrt{ \mathcal{E} -\Psi } }
+//                   = \frac{1}{\sqrt{8}\pi^2} \int_{0}^{\mathcal{E}} \frac{ 1 }{ \sqrt{ \mathcal{E} -\Psi } } \frac{ d\rho }{ d\Psi } d\Psi
+//                   = \frac{1}{\sqrt{8}\pi^2} \int_{0}^{\mathcal{E}} -2 \frac{ d\rho }{ d\Psi } d\sqrt{ \mathcal{E} -\Psi } }
 //
 // Parameter   :  E  : \mathcal{E} in the above equation
 //
@@ -754,22 +748,24 @@ double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
 //-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::getIntegratedDistributionFunction( const double E )
 {
-   if ( E <= EArray_MinE )   return 0.0;
-
-   const int    N_points = 10000;
-   const double dPsi     = ( E - EArray_MinE )/N_points;
+   const int    N_points = 1000;
+   const double dPsi     = E/N_points;
+   double dRho_dPsi;
 
    double integral = 0;
    for (int i=0; i<N_points; i++)
    {
-      const double Psi             = EArray_MinE + i*dPsi;
-      const double dRho_dPsi       = Mis_InterpolateFromTable( RNBin, RArray_Phi, RArray_dRho_dPsi, -(Psi+0.5*dPsi) );
-      const double dsqrt_EminusPsi = ( ( (Psi+dPsi) >= E ) ? 0 : sqrt( E-(Psi+dPsi) ) ) - sqrt( E-Psi );
+      const double Psi             = (i+0.5)*dPsi;
+      const double dsqrt_EminusPsi = ( ( (Psi+0.5*dPsi) >= E ) ? 0 : sqrt( E-(Psi+0.5*dPsi) ) ) - sqrt( E-(Psi-0.5*dPsi) );
 
+      if ( Psi > -RArray_Phi[RLastIdx] )   dRho_dPsi = Mis_InterpolateFromTable( RNBin, RArray_Phi, RArray_dRho_dPsi, -(Psi) );
+      else                                 dRho_dPsi = RArray_dRho_dPsi[RLastIdx]
+                                                       + ( Psi + RArray_Phi[RLastIdx] ) * ( RArray_dRho_dPsi[RLastIdx-1] - RArray_dRho_dPsi[RLastIdx] )
+                                                                                        / (      -RArray_Phi[RLastIdx-1] +       RArray_Phi[RLastIdx] );
       integral += -2*dRho_dPsi*dsqrt_EminusPsi;
    }
 
-   return integral;
+   return integral/(sqrt(8.0)*SQR(M_PI));
 
 } // FUNCTION : getIntegratedDistributionFunction
 
@@ -800,131 +796,6 @@ void Par_EquilibriumIC::getRandomVector_GivenLength( const double Length, double
    for (int d=0; d<3; d++)   RandomVector[d] *= Normalization;
 
 } // FUNCTION : RandomVector_GivenLength
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  SmoothArray
-// Description :  Smooth the input array
-//
-// Note        :  1.
-//
-// Parameter   :  array_x     : array of x data
-//                index_start : the first index in the array for the smoothing
-//                index_end   : the last index in the array for the smoothing
-//
-// Return      :  array_x
-//-------------------------------------------------------------------------------------------------------
-void SmoothArray( double* array_x, const int index_start, const int index_end )
-{
-   int    smoothing_n_elements = 10; // smoothing every "smoothing_n_elements" elements
-   double smoothing_criterion  =  3; // smoothing when the ratio is larger than this criterion
-
-// Set the elements as zero if its ratio to other elements is larger than smoothing_criterion
-   for (int i=index_start; i<index_end-smoothing_n_elements+1; i++)
-   for (int j=i; j<i+smoothing_n_elements; j++)
-   for (int k=i; k<i+smoothing_n_elements; k++)
-   {
-      if ( array_x[k] != 0  &&  fabs( array_x[j]/array_x[k] ) > smoothing_criterion )   array_x[j] = 0;
-   }
-
-// Set those zero elements as the average of non-zero elements
-   for (int i=index_start; i<index_end-smoothing_n_elements+1; i++)
-   {
-      double sum_of_nonzero = 0;
-      int    num_of_nonzero = 0;
-      double ave_of_nonzero = 0;
-
-//    Sum the non-zero elements
-      for (int j=i; j<i+smoothing_n_elements; j++)
-      {
-         if ( array_x[j] != 0 )
-         {
-            sum_of_nonzero += array_x[j];
-            num_of_nonzero ++;
-         }
-      }
-
-//    Average of non-zero elements
-      if ( num_of_nonzero != 0 )   ave_of_nonzero = sum_of_nonzero/num_of_nonzero;
-
-//    Assign the average of non-zero elements to the zero element
-      for (int j=i; j<i+smoothing_n_elements; j++)
-         if ( array_x[j] == 0 )   array_x[j] = ave_of_nonzero;
-   }
-
-} // FUNCTION : SmoothArray
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  ArrayCovariance
-// Description :  Get the covariance between two arrays
-//
-// Note        :  1. if x == y, then the covariance is the variance of x
-//
-// Parameter   :  array_x     : array of x data
-//                array_y     : array of y data
-//                index_start : the first index in the array for the linear regression
-//                n_elements  : number of elements for the linear regression
-//
-// Return      :  covariance_xy
-//-------------------------------------------------------------------------------------------------------
-double ArrayCovariance( const double* array_x, const double* array_y, const int index_start, const int n_elements )
-{
-   const double normalized_factor = 1.0/n_elements;
-
-// Average
-   double average_x = 0.0;
-   double average_y = 0.0;
-
-   for (int i=index_start; i<index_start+n_elements; i++)
-   {
-      average_x += array_x[i];
-      average_y += array_y[i];
-   }
-
-   average_x *= normalized_factor;
-   average_y *= normalized_factor;
-
-// Covariance
-   double covariance_xy = 0.0;
-
-   for (int i=index_start; i<index_start+n_elements; i++)   covariance_xy += (array_x[i]-average_x)*(array_y[i]-average_y);
-
-   covariance_xy *= normalized_factor;
-
-
-   return covariance_xy;
-
-} // FUNCTION : ArrayCovariance
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Slope_LinearRegression
-// Description :  Get the slope of y-x using linear regression
-//
-// Note        :
-//
-// Parameter   :  array_x     : array of x data
-//                array_y     : array of y data
-//                index_start : the first index in the array for the linear regression
-//                n_elements  : number of elements for the linear regression
-//
-// Return      :  slope_y
-//-------------------------------------------------------------------------------------------------------
-double Slope_LinearRegression( const double* array_x, const double* array_y, const int index_start, const int n_elements )
-{
-
-   const double variance_x    = ArrayCovariance( array_x, array_x, index_start, n_elements );
-   const double covariance_xy = ArrayCovariance( array_x, array_y, index_start, n_elements );
-
-   const double slope_y       = covariance_xy/variance_x;
-
-   return slope_y;
-
-} // FUNCTION : Slope_LinearRegression
 
 
 
