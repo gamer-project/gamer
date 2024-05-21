@@ -538,7 +538,7 @@ ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
 endif
 
 # fluid solver flags
-NVCCFLAG_FLU += @@@NVCCFLAG_FLU@@@ @@@MAXRREGCOUNT@@@
+NVCCFLAG_FLU += @@@NVCCFLAG_FLU@@@ @@@MAXRREGCOUNT_FLU@@@
 
 # Poisson/gravity solvers flags
 NVCCFLAG_POT += @@@NVCCFLAG_POT@@@

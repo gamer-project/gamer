@@ -766,17 +766,17 @@ def set_gpu( gpus, flags, args ):
     flag_num = compute_capability // 10
     gpu_opts["NVCCFLAG_ARCH"] = '-gencode arch=compute_%d,code=\\"compute_%d,sm_%d\\"'%(flag_num, flag_num, flag_num)
 
-    # 3. Set MAXRREGCOUNT
+    # 3. Set MAXRREGCOUNT_FLU
     if 300 <= compute_capability and compute_capability <= 370:
         if args["double"]:
-            gpu_opts["MAXRREGCOUNT"] = "--maxrregcount=128"
+            gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=128"
         else:
-            gpu_opts["MAXRREGCOUNT"] = "--maxrregcount=70"
+            gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=70"
     elif 500 <= compute_capability and compute_capability <= 870:
         if args["double"]:
-            gpu_opts["MAXRREGCOUNT"] = "--maxrregcount=192"
+            gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=192"
         else:
-            gpu_opts["MAXRREGCOUNT"] = "--maxrregcount=128"
+            gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=128"
     return gpu_opts
 
 def set_sims( name_table, depends, **kwargs ):
