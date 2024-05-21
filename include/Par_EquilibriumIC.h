@@ -27,22 +27,27 @@ class Par_EquilibriumIC
       Par_EquilibriumIC( const char* Cloud_Type );
       virtual ~Par_EquilibriumIC();
 
-      void   setCenterAndBulkVel( const double Center_X, const double Center_Y, const double Center_Z,
-                                  const double BulkVel_X, const double BulkVel_Y, const double BulkVel_Z );
-      void   setModelParameters( const double Rho0, const double R0 );
-      void   setEinastoPowerFactor( const double EinastoPowerFactor );
+//    Set the parameters from input
+      void   setCenterAndBulkVel     ( const double Center_X, const double Center_Y, const double Center_Z,
+                                       const double BulkVel_X, const double BulkVel_Y, const double BulkVel_Z );
+      void   setModelParameters      ( const double Rho0, const double R0 );
+      void   setEinastoPowerFactor   ( const double EinastoPowerFactor );
       void   setDensProfTableFilename( const char* DensProfTableFilename );
-      void   setParticleParameters( const long ParNum, const double MaxR, const int Radial_NBin, const int Energy_NBin, const int RSeed );
-      void   setExtPotParameters( const int AddingExternalPotential_Analytical, const int AddingExternalPotential_Table, const char* ExtPotTableFilename );
+      void   setParticleParameters   ( const long ParNum, const double MaxR, const int Radial_NBin, const int Energy_NBin, const int RSeed );
+      void   setExtPotParameters     ( const int AddingExternalPotential_Analytical,
+                                       const int AddingExternalPotential_Table, const char* ExtPotTableFilename );
 
-      void   initialize();
+//    Main construction process
+      void   constructDistribution();
       void   constructParticles( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx );
 
+//    Results to be returned
       double TotCloudMass                    = -1;
       double ParticleMass                    = -1;
       double TotCloudMassError               = -1;
 
    private:
+//    Parameters for the cloud
       int    Cloud_Model                     = -1;
       double Cloud_Center[3]                 = { -1, -1, -1 };
       double Cloud_BulkVel[3]                = {  0,  0,  0 };
@@ -57,50 +62,52 @@ class Par_EquilibriumIC
       int    AddExtPot_Table                 =  0;
       char   ExtPot_Table_Name[MAX_STRING];
 
-      // Get physical attributes for cloud
-      double getDensity             ( const double r );
-      double getAnalEnclosedMass    ( const double r );
-      double getExternalPotential   ( const double r );
-      double getRandomSampleVelocity( const double r );
-
+//    Functions to get the physical quantities
+      double getDensity                       ( const double r );
+      double getAnalEnclosedMass              ( const double r );
+      double getExternalPotential             ( const double r );
+      double getRandomSampleVelocity          ( const double r );
       double getIntegratedDistributionFunction( const double E );
-      void   getRandomVector_GivenLength( const double Length, double RandomVector[3] );
+      void   getRandomVector_GivenLength      ( const double Length, double RandomVector[3] );
 
-      // Input table of density profile
+//    Input table of density profile
       void    loadInputDensProfTable();
-      int     InputTable_DensProf_nbin = -1;
-      double *InputTable_DensProf_radius;
-      double *InputTable_DensProf_density;
+      int     InputTable_DensProf_nbin    = -1;
+      double *InputTable_DensProf_radius  = NULL;
+      double *InputTable_DensProf_density = NULL;
 
-      // Input table of external potential
+//    Input table of external potential
       void    loadInputExtPotTable();
-      int     InputTable_ExtPot_nbin = -1;
-      double *InputTable_ExtPot_radius;
-      double *InputTable_ExtPot_potential;
+      int     InputTable_ExtPot_nbin      = -1;
+      double *InputTable_ExtPot_radius    = NULL;
+      double *InputTable_ExtPot_potential = NULL;
 
-      // Arrays of radial distribution of properties of the cloud
+//    Arrays of radial distribution of properties of the cloud
       void    constructRadialArray();
-      int     RNBin       = -1;
-      int     RLastIdx    = -1;
-      double  RArray_dR   = -1;
-      double *RArray_R;
-      double *RArray_Rho;
-      double *RArray_M_Enc;
-      double *RArray_dRho_dPsi;
-      double *RArray_Phi;
+      int     RNBin            = -1;
+      int     RLastIdx         = -1;
+      double  RArray_dR        = -1;
+      double *RArray_R         = NULL;
+      double *RArray_Rho       = NULL;
+      double *RArray_M_Enc     = NULL;
+      double *RArray_dRho_dPsi = NULL;
+      double *RArray_Phi       = NULL;
 
-      // Arrays in energy space
+//    Arrays in energy space
       void    constructEnergyArray();
-      int     ENBin       = -1;
-      int     ELastIdx    = -1;
-      double  EArray_dE   = -1;
-      double  EArray_MinE = -1;
-      double  EArray_MaxE = -1;
-      double *EArray_E;
-      double *EArray_DFunc;
-      double *EArray_IntDFunc;
+      int     ENBin           = -1;
+      int     ELastIdx        = -1;
+      double  EArray_dE       = -1;
+      double  EArray_MinE     = -1;
+      double  EArray_MaxE     = -1;
+      double *EArray_E        = NULL;
+      double *EArray_DFunc    = NULL;
+      double *EArray_IntDFunc = NULL;
 
-      // Random number generator
+//    Cumulative probability distribution at given radius
+      double *CumulProbaDistr_GivenRadius = NULL;
+
+//    Random number generator
       RandomNumber_t *Random_Num_Gen;
 
 }; // class Par_EquilibriumIC

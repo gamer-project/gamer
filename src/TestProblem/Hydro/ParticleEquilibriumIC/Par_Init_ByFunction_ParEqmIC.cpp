@@ -122,8 +122,8 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
                                                      ParEqmIC_Cloud_AddExtPotTable    [i],
                                                      ParEqmIC_Cloud_ExtPotTable       [i] );
 
-         // initialize the particle cloud
-         Cloud_Constructor.initialize();
+//       construct the distribution for the particle cloud
+         Cloud_Constructor.constructDistribution();
 
 //       set an equilibrium initial condition for each cloud
          Cloud_Constructor.constructParticles( ParData_AllRank[PAR_MASS], ParData_AllRank+PAR_POSX, ParData_AllRank+PAR_VELX, Par_Idx0 );

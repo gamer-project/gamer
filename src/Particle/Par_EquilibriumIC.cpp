@@ -320,29 +320,20 @@ void Par_EquilibriumIC::loadInputExtPotTable()
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  initialize
+// Function    :  constructDistribution
 // Description :  Initialization after reading input parameter and before constructing the cloud
 //
 // Note        :  1. Set the random number generator
-//                2. Initialize the radial arrays of physical quantities, including radius, mass, density, gravitational potential
-//                3. Initialize the distribution function in the energy space
+//                2. Construct the radial arrays of physical quantities, including radius, mass, density, gravitational potential
+//                3. Construct the distribution function in the energy space
 //
 // Parameter   :  None
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Par_EquilibriumIC::initialize()
+void Par_EquilibriumIC::constructDistribution()
 {
-
-#  ifndef SUPPORT_GSL
-   Aux_Error( ERROR_INFO, "Must enable SUPPORT_GSL for Par_EquilibriumIC !!\n" );
-#  endif
-
-   if ( MPI_Rank == 0 )   Aux_Message( stdout, "Initializing Par_EquilibriumIC ...\n" );
-
-// Set random seeds
-   Random_Num_Gen = new RandomNumber_t( 1 );
-   Random_Num_Gen->SetSeed( 0, Cloud_RSeed );
+   if ( MPI_Rank == 0 )   Aux_Message( stdout, "Constructing the distribution in Par_EquilibriumIC ...\n" );
 
 // Load the input density table
    if ( Cloud_Model == CLOUD_MODEL_TABLE )   loadInputDensProfTable();
@@ -374,9 +365,9 @@ void Par_EquilibriumIC::initialize()
    printf( "DisF:   [" ); for (int b=0; b<ENBin; b++)  printf(" %21.14e,", EArray_DFunc[b]     ); printf( "]\n");
 //----------------------------------------------------------------------------------------------
 
-   if ( MPI_Rank == 0 )   Aux_Message( stdout, "Initializing Par_EquilibriumIC ... done\n" );
+   if ( MPI_Rank == 0 )   Aux_Message( stdout, "Constructing the distribution in Par_EquilibriumIC ... done\n" );
 
-} // FUNCTION : initialize
+} // FUNCTION : constructDistribution
 
 
 
@@ -476,7 +467,7 @@ void Par_EquilibriumIC::constructEnergyArray()
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::constructParticles( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx0 )
 {
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Constructing Par_EquilibriumIC ...\n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Constructing the particles in Par_EquilibriumIC ...\n" );
 
 // Determine the total enclosed mass within the maximum radius
    const double TotCloudMass_Analytical = getAnalEnclosedMass( Cloud_MaxR );
@@ -484,8 +475,14 @@ void Par_EquilibriumIC::constructParticles( real *Mass_AllRank, real *Pos_AllRan
    ParticleMass                         = TotCloudMass/Cloud_Par_Num;
    TotCloudMassError                    = ( TotCloudMass - TotCloudMass_Analytical )/TotCloudMass_Analytical;
 
+// Set random number generator
+   Random_Num_Gen = new RandomNumber_t( 1 );
+   Random_Num_Gen->SetSeed( 0, Cloud_RSeed );
+
    double RandomVectorR[3];
    double RandomVectorV[3];
+
+   CumulProbaDistr_GivenRadius = new double [ENBin];
 
 // Set particle attributes
    for (long p=Par_Idx0; p<Par_Idx0+Cloud_Par_Num; p++)
@@ -516,9 +513,11 @@ void Par_EquilibriumIC::constructParticles( real *Mass_AllRank, real *Pos_AllRan
 
    } // for (long p=Par_Idx0; p<Par_Idx0+Cloud_Par_Num; p++)
 
-   if ( MPI_Rank == 0 )   Aux_Message( stdout, "Constructing Par_EquilibriumIC ... done\n" );
+   delete [] CumulProbaDistr_GivenRadius;
 
-} // FUNCTION : constructParticle
+   if ( MPI_Rank == 0 )   Aux_Message( stdout, "Constructing the particles in Par_EquilibriumIC ... done\n" );
+
+} // FUNCTION : constructParticles
 
 
 
@@ -573,6 +572,10 @@ double Par_EquilibriumIC::getAnalEnclosedMass( const double r )
    else if ( Cloud_Model == CLOUD_MODEL_HERNQUIST )   enclosed_mass = AnalyticalMassProf_Hernquist( r, Cloud_R0, Cloud_Rho0 );
    else
    {
+#     ifndef SUPPORT_GSL
+      Aux_Error( ERROR_INFO, "Must enable SUPPORT_GSL for integration of enclosed mass in Par_EquilibriumIC !!\n" );
+#     endif
+
 #     ifdef SUPPORT_GSL
       double abs_error;
 
@@ -664,30 +667,27 @@ double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
 // The relative potential at this radius
    const double Psi = -ExtendedInterpolatedTable( r, RNBin, RArray_R, RArray_Phi );
 
-// CumulativeProbability = \int_{v}^{v_min} v^2 f(E) dv
-//                       = \int_{E_min}^{E} (2*(Psi-E)) f(E) \frac{ 1 }{ \sqrt{ 2*( Psi - E )} } dE
-//                       = \int_{E_min}^{E} \sqrt{ (2*(Psi-E)) } f(E) dE
-   double *CumulativeProbability = new double [ENBin];
+// Cumulative Probability = \int_{v}^{v_min} v^2 f(E) dv
+//                        = \int_{E_min}^{E} (2*(Psi-E)) f(E) \frac{ 1 }{ \sqrt{ 2*( Psi - E )} } dE
+//                        = \int_{E_min}^{E} \sqrt{ (2*(Psi-E)) } f(E) dE
    double Probability;
 
-   CumulativeProbability[0] = 0.0;
+   CumulProbaDistr_GivenRadius[0] = 0.0;
    for (int b=1; b<ENBin; b++)
    {
       if ( EArray_E[b] > Psi )   Probability = ( EArray_E[b-1] > Psi ) ? 0.0 : 0.5*EArray_DFunc[b-1]*sqrt(2.0*(Psi-EArray_E[b-1]))*(Psi-EArray_E[b-1]);
       else                       Probability = 0.5*( EArray_DFunc[b-1]*sqrt(2.0*(Psi-EArray_E[b-1])) +
                                                      EArray_DFunc[b  ]*sqrt(2.0*(Psi-EArray_E[b  ])) )*EArray_dE;
 
-      CumulativeProbability[b] = CumulativeProbability[b-1] + Probability;
+      CumulProbaDistr_GivenRadius[b] = CumulProbaDistr_GivenRadius[b-1] + Probability;
    }
 
-   const double TotalProbability        = CumulativeProbability[ELastIdx];
+   const double TotalProbability        = CumulProbaDistr_GivenRadius[ELastIdx];
    const double RandomSampleProbability = TotalProbability*Random_Num_Gen->GetValue( 0, 0.0, 1.0 );
-   const double RandomSampleE           = Mis_InterpolateFromTable( ENBin, CumulativeProbability, EArray_E, RandomSampleProbability );
+   const double RandomSampleE           = Mis_InterpolateFromTable( ENBin, CumulProbaDistr_GivenRadius, EArray_E, RandomSampleProbability );
 
 // v^2 = 2*(Psi-E)
    const double RandomSampleVelocity = ( RandomSampleE > Psi ) ? 0.0 : sqrt( 2.0*(Psi-RandomSampleE) );
-
-   delete [] CumulativeProbability;
 
    return RandomSampleVelocity;
 
