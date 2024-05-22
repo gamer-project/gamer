@@ -39,7 +39,7 @@ class Par_EquilibriumIC
 
 //    Main construction process
       void   constructDistribution();
-      void   constructParticles( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx );
+      void   constructParticles( real_par *Mass_AllRank, real_par *Pos_AllRank[3], real_par *Vel_AllRank[3], const long Par_Idx );
 
 //    Results to be returned
       double TotCloudMass                    = -1;

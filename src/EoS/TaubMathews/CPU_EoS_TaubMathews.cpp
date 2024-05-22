@@ -245,7 +245,7 @@ static real EoS_DensPres2CSqr_TaubMathews( const real Dens, const real Pres, con
 
    return Cs2;
 
-} // FUNCTION : EoS_DensPres2CSqr_TaubMathews 
+} // FUNCTION : EoS_DensPres2CSqr_TaubMathews
 
 
 

@@ -682,6 +682,61 @@ void Init_ResetParameter()
 #  endif
 
 
+// set default value for the origin of angular momentum
+   if ( OPT__CK_CONSERVATION )
+   {
+      if ( ANGMOM_ORIGIN_X < 0.0 )
+      {
+         ANGMOM_ORIGIN_X = amr->BoxCenter[0];
+
+         PRINT_RESET_PARA( ANGMOM_ORIGIN_X, FORMAT_REAL, "" );
+      }
+
+      if ( ANGMOM_ORIGIN_Y < 0.0 )
+      {
+         ANGMOM_ORIGIN_Y = amr->BoxCenter[1];
+
+         PRINT_RESET_PARA( ANGMOM_ORIGIN_Y, FORMAT_REAL, "" );
+      }
+
+      if ( ANGMOM_ORIGIN_Z < 0.0 )
+      {
+         ANGMOM_ORIGIN_Z = amr->BoxCenter[2];
+
+         PRINT_RESET_PARA( ANGMOM_ORIGIN_Z, FORMAT_REAL, "" );
+      }
+   }
+
+// set default value for OPT__RECORD_CENTER
+   if ( OPT__RECORD_CENTER )
+   {
+      if ( COM_CEN_X < 0.0  ||  COM_CEN_Y < 0.0  ||  COM_CEN_Z < 0.0 )
+      {
+         COM_CEN_X = -1.0;
+         COM_CEN_Y = -1.0;
+         COM_CEN_Z = -1.0;
+
+         PRINT_RESET_PARA( COM_CEN_X, FORMAT_REAL, "and it will be reset to the coordinate of the peak total density" );
+         PRINT_RESET_PARA( COM_CEN_Y, FORMAT_REAL, "and it will be reset to the coordinate of the peak total density" );
+         PRINT_RESET_PARA( COM_CEN_Z, FORMAT_REAL, "and it will be reset to the coordinate of the peak total density" );
+      }
+
+      if ( COM_MAX_R < 0.0 )
+      {
+         COM_MAX_R = __FLT_MAX__;
+
+         PRINT_RESET_PARA( COM_MAX_R, FORMAT_REAL, "" );
+      }
+
+      if ( COM_TOLERR_R < 0.0 )
+      {
+         COM_TOLERR_R = amr->dh[MAX_LEVEL];
+
+         PRINT_RESET_PARA( COM_TOLERR_R, FORMAT_REAL, "" );
+      }
+   }
+
+
 // OPT__LR_LIMITER
 #  if ( MODEL == HYDRO )
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
@@ -879,14 +934,14 @@ void Init_ResetParameter()
 #  ifdef PARTICLE
    if ( amr->Par->Init == PAR_INIT_BY_FILE  &&  PAR_IC_FLOAT8 < 0 )
    {
-      // set PAR_IC_FLOAT8 = FLOAT8 by default
-#     ifdef FLOAT8
+//    set PAR_IC_FLOAT8 = FLOAT8_PAR by default
+#     ifdef FLOAT8_PAR
       PAR_IC_FLOAT8 = 1;
 #     else
       PAR_IC_FLOAT8 = 0;
 #     endif
-                    
-      PRINT_RESET_PARA( PAR_IC_FLOAT8, FORMAT_INT, "to be consistent with FLOAT8" );
+
+      PRINT_RESET_PARA( PAR_IC_FLOAT8, FORMAT_INT, "to be consistent with FLOAT8_PAR" );
    }
 #endif
 

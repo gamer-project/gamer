@@ -197,7 +197,7 @@ OPT__OUTPUT_USER              0           # output the user-specified data -> ed
 OPT__OUTPUT_PAR_MODE          1           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
-OPT__OUTPUT_POT               0           # output gravitational potential [0] ##OPT__OUTPUT_TOTAL ONLY##
+OPT__OUTPUT_POT               1           # output gravitational potential [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_PAR_DENS          1           # output the particle or total mass density on grids:
                                           # (0=off, 1=particle mass density, 2=total mass density) [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_PRES              0           # output gas pressure [0] ##HYDRO ONLY##
@@ -228,7 +228,15 @@ OPT__RECORD_MEMORY            1           # record the memory consumption [1]
 OPT__RECORD_PERFORMANCE       1           # record the code performance [1]
 OPT__MANUAL_CONTROL           1           # support manually dump data or stop run during the runtime
                                           # (by generating the file DUMP_GAMER_DUMP or STOP_GAMER_STOP) [1]
-OPT__RECORD_USER              0           # record the user-specified info -> edit "Aux_RecordUser.cpp" [0]
+OPT__RECORD_CENTER            0           # record the position of maximum density, minimum potential, and center of mass [0]
+COM_CEN_X                    -1.0         # x coordinate as an initial guess for determining center of mass (if one of COM_CEN_X/Y/Z < 0 -> peak density position x) [-1.0]
+COM_CEN_Y                    -1.0         # y coordinate as an initial guess for determining center of mass (if one of COM_CEN_X/Y/Z < 0 -> peak density position y) [-1.0]
+COM_CEN_Z                    -1.0         # z coordinate as an initial guess for determining center of mass (if one of COM_CEN_X/Y/Z < 0 -> peak density position z) [-1.0]
+COM_MAX_R                    -1.0         # maximum radius for determining center of mass (<0=auto -> __FLT_MAX__) [-1.0]
+COM_MIN_RHO                   0.0         # minimum density for determining center of mass (must >= 0.0) [0.0]
+COM_TOLERR_R                 -1.0         # maximum tolerated error of deviation in radius during the iterations of determining the center of mass (<0=auto -> amr->dh[MAX_LEVEL]) [-1.0]
+COM_MAX_ITER                  10          # maximum number of iterations for determining the center of mass (must >= 1) [10]
+OPT__RECORD_USER              0           # record the user-specified info -> edit "Aux_Record_User.cpp" [0]
 OPT__OPTIMIZE_AGGRESSIVE      0           # apply aggressive optimizations (experimental) [0]
 
 
@@ -236,6 +244,9 @@ OPT__OPTIMIZE_AGGRESSIVE      0           # apply aggressive optimizations (expe
 OPT__CK_REFINE                0           # check the grid refinement [0]
 OPT__CK_PROPER_NESTING        0           # check the proper-nesting condition [0]
 OPT__CK_CONSERVATION          1           # check the conservation law [0]
+ANGMOM_ORIGIN_X              -1.0         # x coordinate of the origin for angular momentum (<0=auto -> BoxCenter) [-1.0]
+ANGMOM_ORIGIN_Y              -1.0         # y coordinate of the origin for angular momentum (<0=auto -> BoxCenter) [-1.0]
+ANGMOM_ORIGIN_Z              -1.0         # z coordinate of the origin for angular momentum (<0=auto -> BoxCenter) [-1.0]
 OPT__CK_NORMALIZE_PASSIVE     0           # check the normalization of passive scalars [0] ##OPT__NORMALIZE_PASSIVE ONLY##
 OPT__CK_RESTRICT              0           # check the data restriction [0]
 OPT__CK_FINITE                0           # check if all variables are finite [0]

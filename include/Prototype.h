@@ -33,6 +33,7 @@ void Aux_Record_Timing();
 void Aux_Record_PatchCount();
 void Aux_Record_Performance( const double ElapsedTime );
 void Aux_Record_CorrUnphy();
+void Aux_Record_Center();
 int  Aux_CountRow( const char *FileName );
 void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
                          const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const long TVarBitIdx[],
@@ -40,6 +41,8 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                          const double PrepTimeIn );
 void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int MinLv, const int MaxLv,
                       const PatchType_t PatchType );
+void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double Center_ref[], const double MaxR, const double MinWD,
+                                    const long WeightingDensityField, const double TolErrR, const int MaxIter, double *FinaldR, int *FinalNIter );
 #ifndef SERIAL
 void Aux_Record_BoundaryPatch( const int lv, int *NList, int **IDList, int **PosList );
 #endif
@@ -115,6 +118,8 @@ real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const re
                      const real *const EoS_Table[EOS_NTABLE_MAX] );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
 real Hydro_CheckMinEint( const real InEint, const real MinEint );
+real Hydro_CheckMinTemp( const real InTemp, const real MinTemp );
+real Hydro_CheckMinEntr( const real InEntr, const real MinEntr );
 real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real InEngy,
                                const real MinEint, const real Emag );
 bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const char SingleFieldName[],
@@ -265,6 +270,7 @@ template <typename U, typename T> void  Mis_Heapsort( const U N, T Array[], U Id
 template <typename T> int   Mis_Matching_char( const int N, const T Array[], const int M, const T Key[], char Match[] );
 template <typename U, typename T> U Mis_Matching_int( const U N, const T Array[], const U M, const T Key[], U Match[] );
 template <typename T> bool  Mis_CompareRealValue( const T Input1, const T Input2, const char *comment, const bool Verbose );
+template <typename T> void Mis_SortByRows( T const* const* Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder );
 ulong  Mis_Idx3D2Idx1D( const int Size[], const int Idx3D[] );
 double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double AutoReduceDtCoeff );
 double Mis_dTime2dt( const double Time_In, const double dTime_In );
@@ -438,10 +444,10 @@ void TABLE_GetSibPID_Based( const int lv, const int PID0, int SibPID_Based[] );
 long LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 
 // Declare classes defined in GatherTree.h
-class LB_PatchCount;
-class LB_LocalPatchExchangeList;
-class LB_GlobalPatchExchangeList;
-class LB_GlobalPatch;
+struct LB_PatchCount;
+struct LB_LocalPatchExchangeList;
+struct LB_GlobalPatchExchangeList;
+struct LB_GlobalPatch;
 
 void LB_GetPID( const int GID, int& level, int& PID, int* GID_Offset );
 void LB_AllgatherPatchCount( LB_PatchCount& pc );
@@ -462,8 +468,8 @@ void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, 
 void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput, int* TargetFaPID );
 void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int PotSg, const GetBufMode_t GetBufMode,
                        const long TVarCC, const long TVarFC, const int ParaBuf );
-real*LB_GetBufferData_MemAllocate_Send( const int NSend );
-real*LB_GetBufferData_MemAllocate_Recv( const int NRecv );
+void*LB_GetBufferData_MemAllocate_Send( const long SendSize );
+void*LB_GetBufferData_MemAllocate_Recv( const long RecvSize );
 void LB_GrandsonCheck( const int lv );
 void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, const double ParWeight, const bool Reset,
                           const bool SortRealPatch, const int TLv );
@@ -654,7 +660,7 @@ void Par_Init_ByFile();
 void Par_Output_TextFile( const char *comment );
 void Par_Output_BinaryFile( const char *comment );
 void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly,
-                                    const long NNewPar, real *NewParAtt[PAR_NATT_TOTAL] );
+                                    const long NNewPar, real_par *NewParAtt[PAR_NATT_TOTAL] );
 void Par_PassParticle2Son_SinglePatch( const int FaLv, const int FaPID );
 void Par_PassParticle2Son_MultiPatch( const int FaLv, const ParPass2Son_t Mode, const bool TimingSendPar,
                                       const int NFaPatch, const int *FaPIDList );
@@ -663,17 +669,18 @@ void Par_Aux_Check_Particle( const char *comment );
 void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t IntScheme, real *Rho,
                          const int RhoSize, const double *EdgeL, const double dh, const bool PredictPos,
                          const double TargetTime, const bool InitZero, const bool Periodic[], const int PeriodicSize[3],
-                         const bool UnitDens, const bool CheckFarAway, const bool UseInputMassPos, real **InputMassPos );
-void Par_SortByPos( const long NPar, const real *PosX, const real *PosY, const real *PosZ, long *IdxTable );
+                         const bool UnitDens, const bool CheckFarAway, const bool UseInputMassPos, real_par **InputMassPos );
 void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOld, const ParUpStep_t UpdateStep,
                          const bool StoreAcc, const bool UseStoredAcc );
 void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double TimeOld,
                                const bool MapOnly );
 void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv );
 void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar );
-bool Par_WithinActiveRegion( const real x, const real y, const real z );
+bool Par_WithinActiveRegion( const real_par x, const real_par y, const real_par z );
 int  Par_CountParticleInDescendant( const int FaLv, const int FaPID );
-void Par_Aux_GetConservedQuantity( double &Mass, double &MomX, double &MomY, double &MomZ, double &Ek, double &Ep );
+void Par_Aux_GetConservedQuantity( double &Mass, double &CoMX, double &CoMY, double &CoMZ,
+                                   double &MomX, double &MomY, double &MomZ,
+                                   double &AngMomX, double &AngMomY, double &AngMomZ, double &Ek, double &Ep );
 void Par_Aux_InitCheck();
 void Par_Aux_Record_ParticleCount();
 void Par_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, const bool PredictPos, const double TargetTime,
@@ -684,17 +691,17 @@ int  Par_Synchronize( const double SyncTime, const ParSync_t SyncOption );
 void Par_Synchronize_Restore( const double SyncTime );
 void Prepare_PatchData_InitParticleDensityArray( const int lv, const double PrepTime );
 void Prepare_PatchData_FreeParticleDensityArray( const int lv );
-void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *ParPosY, real *ParPosZ,
+void Par_PredictPos( const long NPar, const long *ParList, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                      const double TargetTime );
 void Par_Init_Attribute();
-void Par_AddParticleAfterInit( const long NNewPar, real *NewParAtt[PAR_NATT_TOTAL] );
+void Par_AddParticleAfterInit( const long NNewPar, real_par *NewParAtt[PAR_NATT_TOTAL] );
 void Par_ScatterParticleData( const long NPar_ThisRank, const long NPar_AllRank, const long AttBitIdx,
-                              real *Data_Send[PAR_NATT_TOTAL], real *Data_Recv[PAR_NATT_TOTAL] );
+                              real_par *Data_Send[PAR_NATT_TOTAL], real_par *Data_Recv[PAR_NATT_TOTAL] );
 void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
                             const double _dh, const int AttrSize3D, const real *Attr,
-                            const int NPar, real *InterpParPos[3],
-                            const real ParType[], const long ParList[],
-                            const bool UseTracers, real ParAttr[], const bool CorrectVelocity );
+                            const int NPar, real_par *InterpParPos[3],
+                            const real_par ParType[], const long ParList[],
+                            const bool UseTracers, real_par ParAttr[], const bool CorrectVelocity );
 FieldIdx_t AddParticleAttribute( const char *InputLabel );
 FieldIdx_t GetParticleAttributeIndex( const char *InputLabel, const Check_t Check );
 #ifdef LOAD_BALANCE
@@ -712,9 +719,9 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
                                           const int Recv_NPatchTotal, const int *Recv_PIDList, int *Recv_NPatchEachRank,
                                           Timer_t *Timer, const char *Timer_Comment );
 void Par_LB_SendParticleData( const int NParAtt, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
-                              long *SendBuf_LBIdxEachPatch, real *SendBuf_ParDataEachPatch, const long NSendParTotal,
+                              long *SendBuf_LBIdxEachPatch, real_par *SendBuf_ParDataEachPatch, const long NSendParTotal,
                               int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
-                              real *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, long &NRecvParTotal,
+                              real_par *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, long &NRecvParTotal,
                               const bool Exchange_NPatchEachRank, const bool Exchange_LBIdxEachRank,
                               const bool Exchange_ParDataEachRank, Timer_t *Timer, const char *Timer_Comment );
 void Par_LB_RecordExchangeParticlePatchID( const int MainLv );

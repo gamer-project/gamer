@@ -33,7 +33,7 @@ static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, cons
 // Return      :  amr, Format, NField, NMag, NParAtt, NPar, ParData
 //                FieldLabel, MagLabel, ParAttLabel (for HDF5 only)
 //-------------------------------------------------------------------------------------------------------
-void LoadData( const char *FileName, AMR_t &amr, int &Format, int &NField, int &NMag, int &NParAtt, long &NPar, real **&ParData,
+void LoadData( const char *FileName, AMR_t &amr, int &Format, int &NField, int &NMag, int &NParAtt, long &NPar, real_par **&ParData,
                char (*&FieldLabel)[MAX_STRING], char (*&MagLabel)[MAX_STRING], char (*&ParAttLabel)[MAX_STRING] )
 {
 
@@ -216,7 +216,7 @@ void LoadData( const char *FileName, AMR_t &amr, int &Format, int &NField, int &
          ExpectSize   += ParInfoSize;
       }
 
-      ExpectSize += (long)NParAtt*NPar*sizeof(real);
+      ExpectSize += (long)NParAtt*NPar*sizeof(real_par);
    }
 
    fseek( File, 0, SEEK_END );
@@ -274,16 +274,16 @@ void LoadData( const char *FileName, AMR_t &amr, int &Format, int &NField, int &
 // load particles
    if ( NPar > 0 )
    {
-      const long ParDataSize1v = NPar*sizeof(real);
+      const long ParDataSize1v = NPar*sizeof(real_par);
 
-      Aux_AllocateArray2D( ParData, NParAtt, NPar );
+      Aux_AllocateArray2D<real_par>( ParData, NParAtt, NPar );
 
       File = fopen( FileName, "rb" );
 
       for (int v=0; v<NParAtt; v++)
       {
          fseek( File, FileOffset_Particle + v*ParDataSize1v, SEEK_SET );
-         fread( ParData[v], sizeof(real), NPar, File );
+         fread( ParData[v], sizeof(real_par), NPar, File );
       }
 
       fclose( File );
@@ -552,6 +552,10 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, const long 
 #  else
    if (  float8 )
       Aux_Error( ERROR_INFO, "%s : RESTART file (%s) != runtime (%s) !!\n", "FLOAT8", "ON", "OFF" );
+#  endif
+
+#  if ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) )
+   if ( particle )   Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for C-binary snapshots !!\n" );
 #  endif
 
    CompareVar( "MODEL",      model,      MODEL,      Fatal );

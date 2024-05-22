@@ -505,7 +505,7 @@ void Par_EquilibriumIC::printArrays()
 //                Pos_AllRank
 //                Vel_AllRank
 //-------------------------------------------------------------------------------------------------------
-void Par_EquilibriumIC::constructParticles( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx0 )
+void Par_EquilibriumIC::constructParticles( real_par *Mass_AllRank, real_par *Pos_AllRank[3], real_par *Vel_AllRank[3], const long Par_Idx0 )
 {
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "Constructing the particles in Par_EquilibriumIC ...\n" );
 
@@ -549,7 +549,7 @@ void Par_EquilibriumIC::constructParticles( real *Mass_AllRank, real *Pos_AllRan
 
 //    Check periodicity
       for (int d=0; d<3; d++)
-         if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )   Pos_AllRank[d][p] = FMOD( Pos_AllRank[d][p]+(real)amr->BoxSize[d], (real)amr->BoxSize[d] );
+         if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )   Pos_AllRank[d][p] = FMOD( Pos_AllRank[d][p]+(real_par)amr->BoxSize[d], (real_par)amr->BoxSize[d] );
 
    } // for (long p=Par_Idx0; p<Par_Idx0+Cloud_Par_Num; p++)
 
