@@ -209,6 +209,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
                                   MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
             }
 
+//          use the "static" schedule for reproducibility
 #           pragma omp parallel for reduction ( +:W_ThisRank, WX_ThisRank, WY_ThisRank, WZ_ThisRank ) schedule( static )
             for (int t=0; t<8*NPG; t++)
             {
