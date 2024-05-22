@@ -252,6 +252,88 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "GitBranch",            &KeyInfo.GitBranch,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  EXPAND_AND_QUOTE(GIT_BRANCH), 1, NonFatal );
    LoadField( "GitCommit",            &KeyInfo.GitCommit,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  EXPAND_AND_QUOTE(GIT_COMMIT), 1, NonFatal );
 
+// ugly index from Aux_Check_Conservation.cpp
+#  if   ( MODEL == HYDRO )
+#  ifdef MHD
+   const int    NVar_NoPassive    = 12;
+#  else
+   const int    NVar_NoPassive    = 11;
+#  endif
+   const int    idx_etot          = NVar_NoPassive - 1;
+#  elif ( MODEL == ELBDM )
+   const int    NVar_NoPassive    = 5;
+   const int    idx_etot          = NVar_NoPassive - 1;
+#  endif
+   const bool GetPassiveSum = ( PassiveNorm_NVar > 0 );
+   const int  NVar          = NVar_NoPassive + NCOMP_PASSIVE + ( (GetPassiveSum)?1:0 );
+
+   LoadField( "Time_H5Ref",           &Time_Ref,                     H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+#  if   ( MODEL == HYDRO )
+   LoadField( "Mass_Gas_H5Ref",       &Fluid_Ref[0],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "CoMX_Gas_H5Ref",       &CoM_Gas_Ref[0],               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "CoMY_Gas_H5Ref",       &CoM_Gas_Ref[1],               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "CoMZ_Gas_H5Ref",       &CoM_Gas_Ref[2],               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "MomX_Gas_H5Ref",       &Fluid_Ref[1],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "MomY_Gas_H5Ref",       &Fluid_Ref[2],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "MomZ_Gas_H5Ref",       &Fluid_Ref[3],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "AngMomX_Gas_H5Ref",    &Fluid_Ref[4],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "AngMomY_Gas_H5Ref",    &Fluid_Ref[5],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "AngMomZ_Gas_H5Ref",    &Fluid_Ref[6],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "Ekin_Gas_H5Ref",       &Fluid_Ref[7],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "Eint_Gas_H5Ref",       &Fluid_Ref[8],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "Epot_Gas_H5Ref",       &Fluid_Ref[9],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+#  ifdef MHD
+   LoadField( "Emag_Gas_H5Ref",       &Fluid_Ref[10],                H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+#  endif
+   LoadField( "Etot_Gas_H5Ref",       &Fluid_Ref[idx_etot],          H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+#  elif ( MODEL == ELBDM )
+   LoadField( "Mass_Psi_H5Ref",       &Fluid_Ref[0],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "CoMX_Psi_H5Ref",       &CoM_Gas_Ref[0],               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "CoMY_Psi_H5Ref",       &CoM_Gas_Ref[1],               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "CoMZ_Psi_H5Ref",       &CoM_Gas_Ref[2],               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "Ekin_Psi_H5Ref",       &Fluid_Ref[1],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "Epot_Psi_H5Ref",       &Fluid_Ref[2],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "Esel_Psi_H5Ref",       &Fluid_Ref[3],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "Etot_Psi_H5Ref",       &Fluid_Ref[idx_etot],          H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+#  endif
+
+#  if ( NCOMP_PASSIVE > 0 )
+   LoadField( "Passive_H5Ref",        &Fluid_Ref[NVar_NoPassive],    H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Fluid_Ref[NVar_NoPassive],   NCOMP_PASSIVE, NonFatal );
+   if ( GetPassiveSum )
+   LoadField( "Passive_Sum_H5Ref",    &Fluid_Ref[NVar-1],            H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+#  endif
+
+#  ifdef MASSIVE_PARTICLES
+   LoadField( "Mass_Par_H5Ref",       &Mass_Par_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "CoMX_Par_H5Ref",       &CoMX_Par_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "CoMY_Par_H5Ref",       &CoMY_Par_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "CoMZ_Par_H5Ref",       &CoMZ_Par_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "MomX_Par_H5Ref",       &MomX_Par_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "MomY_Par_H5Ref",       &MomY_Par_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "MomZ_Par_H5Ref",       &MomZ_Par_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "AngMomX_Par_H5Ref",    &AngMomX_Par_Ref,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "AngMomY_Par_H5Ref",    &AngMomY_Par_Ref,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "AngMomZ_Par_H5Ref",    &AngMomZ_Par_Ref,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "Ekin_Par_H5Ref",       &Ekin_Par_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "Epot_Par_H5Ref",       &Epot_Par_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "Etot_Par_H5Ref",       &Etot_Par_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+#  if ( MODEL != PAR_ONLY )
+   LoadField( "Mass_All_H5Ref",       &Mass_All_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "CoMX_All_H5Ref",       &CoMX_All_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "CoMY_All_H5Ref",       &CoMY_All_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "CoMZ_All_H5Ref",       &CoMZ_All_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+#  if ( MODEL == HYDRO )
+   LoadField( "MomX_All_H5Ref",       &MomX_All_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "MomY_All_H5Ref",       &MomY_All_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "MomZ_All_H5Ref",       &MomZ_All_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "AngMomX_All_H5Ref",    &AngMomX_All_Ref,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "AngMomY_All_H5Ref",    &AngMomY_All_Ref,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "AngMomZ_All_H5Ref",    &AngMomZ_All_Ref,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+#  endif
+   LoadField( "Etot_All_H5Ref",       &Etot_All_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+#  endif // #if ( MODEL != PAR_ONLY )
+#  endif // #ifdef MASSIVE_PARTICLES
+
 
 // 1-4. close all objects
    H5_Status = H5Tclose( H5_TypeID_KeyInfo );
