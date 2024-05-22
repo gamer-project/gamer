@@ -507,7 +507,7 @@ void Par_EquilibriumIC::printArrays()
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::constructParticles( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx0 )
 {
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Constructing the particles in Par_EquilibriumIC ...\n" );
+   if ( MPI_Rank == 0 )   Aux_Message( stdout, "Constructing the particles in Par_EquilibriumIC ...\n" );
 
 // Determine the total enclosed mass within the maximum radius
    const double TotCloudMass_Analytical = getAnalEnclosedMass( Cloud_MaxR );
@@ -1204,4 +1204,4 @@ double MassIntegrand_Table( const double r, void* parameters )
 
 
 
-#endif // #ifdef PARTICLE
+#endif // #ifdef MASSIVE_PARTICLE
