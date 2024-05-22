@@ -206,6 +206,7 @@ void Par_EquilibriumIC::setParticleParameters( const long ParNum, const double M
    Cloud_RSeed    = RSeed;
 
    if ( RNBin < 2 )   Aux_Error( ERROR_INFO, "RNBin = %d is less than 2 !!\n", RNBin );
+   if ( ENBin < 2 )   Aux_Error( ERROR_INFO, "ENBin = %d is less than 2 !!\n", ENBin );
 
    RLastIdx = RNBin-1;
    ELastIdx = ENBin-1;
@@ -429,7 +430,7 @@ void Par_EquilibriumIC::constructEnergyArray()
 // Ralative Energy (Binding Energy) ranges from Psi_Min to Psi_Max, where Psi = -Phi is the Relative Potential
    EArray_MinE = 0.0;
    EArray_MaxE = -RArray_Phi[0];
-   EArray_dE   = (EArray_MaxE-EArray_MinE)/ENBin;
+   EArray_dE   = (EArray_MaxE-EArray_MinE)/(ENBin-1);
 
 // Array of Relative Energy (Binding Energy), E = -(Phi + 1/2 v^2) = Psi - 1/2 v^2 = 1/2 ( v_{esc}^2 - v^2 )
    for (int b=0; b<ENBin; b++)     EArray_E[b]        = EArray_MinE + b*EArray_dE;
