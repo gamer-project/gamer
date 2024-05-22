@@ -96,7 +96,7 @@ struct KeyInfo_t
    long   UniqueDataID;
 
 // conserved variables
-   double    Time_H5Ref;
+   double        Time_H5Ref;
 #  if   ( MODEL == HYDRO )
    double    Mass_Gas_H5Ref;
    double    CoMX_Gas_H5Ref;
