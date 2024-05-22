@@ -595,9 +595,9 @@ void Aux_Check_Conservation( const char *comment )
 
       if ( v == index_before_column_CoM )
       {
-      Aux_Message( File, "  %17.14e  %17.14e  %17.14e",  CoM_Gas[0],   CoM_Gas[0]-CoM_Gas_Ref[0],      (CoM_Gas[0]-CoM_Gas_Ref[0])/(Time[0]-Time_Ref) );
-      Aux_Message( File, "  %17.14e  %17.14e  %17.14e",  CoM_Gas[1],   CoM_Gas[1]-CoM_Gas_Ref[1],      (CoM_Gas[1]-CoM_Gas_Ref[1])/(Time[0]-Time_Ref) );
-      Aux_Message( File, "  %17.14e  %17.14e  %17.14e",  CoM_Gas[2],   CoM_Gas[2]-CoM_Gas_Ref[2],      (CoM_Gas[2]-CoM_Gas_Ref[2])/(Time[0]-Time_Ref) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[0],   CoM_Gas[0]-CoM_Gas_Ref[0],      (CoM_Gas[0]-CoM_Gas_Ref[0])/(Time[0]-Time_Ref) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[1],   CoM_Gas[1]-CoM_Gas_Ref[1],      (CoM_Gas[1]-CoM_Gas_Ref[1])/(Time[0]-Time_Ref) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[2],   CoM_Gas[2]-CoM_Gas_Ref[2],      (CoM_Gas[2]-CoM_Gas_Ref[2])/(Time[0]-Time_Ref) );
       }
 
       }
