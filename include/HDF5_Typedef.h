@@ -95,6 +95,73 @@ struct KeyInfo_t
    char  *GitCommit;
    long   UniqueDataID;
 
+// conserved variables
+   double    Time_H5Ref;
+#  if   ( MODEL == HYDRO )
+   double    Mass_Gas_H5Ref;
+   double    CoMX_Gas_H5Ref;
+   double    CoMY_Gas_H5Ref;
+   double    CoMZ_Gas_H5Ref;
+   double    MomX_Gas_H5Ref;
+   double    MomY_Gas_H5Ref;
+   double    MomZ_Gas_H5Ref;
+   double AngMomX_Gas_H5Ref;
+   double AngMomY_Gas_H5Ref;
+   double AngMomZ_Gas_H5Ref;
+   double    Ekin_Gas_H5Ref;
+   double    Eint_Gas_H5Ref;
+   double    Epot_Gas_H5Ref;
+#  ifdef MHD
+   double    Emag_Gas_H5Ref;
+#  endif
+   double    Etot_Gas_H5Ref;
+#  elif ( MODEL == ELBDM )
+   double    Mass_Psi_H5Ref;
+   double    CoMX_Psi_H5Ref;
+   double    CoMY_Psi_H5Ref;
+   double    CoMZ_Psi_H5Ref;
+   double    Ekin_Psi_H5Ref;
+   double    Epot_Psi_H5Ref;
+   double    Esel_Psi_H5Ref;
+   double    Etot_Psi_H5Ref;
+#  endif
+
+#  if ( NCOMP_PASSIVE > 0 )
+   double     Passive_H5Ref[NCOMP_PASSIVE];
+   double Passive_Sum_H5Ref;
+#  endif
+
+#  ifdef MASSIVE_PARTICLES
+   double    Mass_Par_H5Ref;
+   double    CoMX_Par_H5Ref;
+   double    CoMY_Par_H5Ref;
+   double    CoMZ_Par_H5Ref;
+   double    MomX_Par_H5Ref;
+   double    MomY_Par_H5Ref;
+   double    MomZ_Par_H5Ref;
+   double AngMomX_Par_H5Ref;
+   double AngMomY_Par_H5Ref;
+   double AngMomZ_Par_H5Ref;
+   double    Ekin_Par_H5Ref;
+   double    Epot_Par_H5Ref;
+   double    Etot_Par_H5Ref;
+#  if ( MODEL != PAR_ONLY )
+   double    Mass_All_H5Ref;
+   double    CoMX_All_H5Ref;
+   double    CoMY_All_H5Ref;
+   double    CoMZ_All_H5Ref;
+#  if ( MODEL == HYDRO )
+   double    MomX_All_H5Ref;
+   double    MomY_All_H5Ref;
+   double    MomZ_All_H5Ref;
+   double AngMomX_All_H5Ref;
+   double AngMomY_All_H5Ref;
+   double AngMomZ_All_H5Ref;
+#  endif
+   double    Etot_All_H5Ref;
+#  endif // #if ( MODEL != PAR_ONLY )
+#  endif // #ifdef MASSIVE_PARTICLES
+
 }; // struct KeyInfo_t
 
 

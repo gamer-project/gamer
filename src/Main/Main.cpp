@@ -86,6 +86,37 @@ OptLohnerForm_t      OPT__FLAG_LOHNER_FORM;
 OptCorrAfterSync_t   OPT__CORR_AFTER_ALL_SYNC;
 OptTimeStepLevel_t   OPT__DT_LEVEL;
 
+double               Time_Ref;
+#if   ( MODEL == HYDRO )
+#ifdef MHD
+double               Fluid_Ref[12+NCOMP_PASSIVE+1];
+#else
+double               Fluid_Ref[11+NCOMP_PASSIVE+1];
+#endif
+#elif ( MODEL == ELBDM )
+double               Fluid_Ref[ 5+NCOMP_PASSIVE+1];
+#endif
+
+double               CoM_Gas_Ref[3];
+
+#ifdef MASSIVE_PARTICLES
+double               Mass_Par_Ref;
+double               CoMX_Par_Ref, CoMY_Par_Ref, CoMZ_Par_Ref;
+double               MomX_Par_Ref, MomY_Par_Ref, MomZ_Par_Ref;
+double               AngMomX_Par_Ref, AngMomY_Par_Ref, AngMomZ_Par_Ref;
+double               Ekin_Par_Ref, Eint_Par_Ref, Epot_Par_Ref, Etot_Par_Ref;
+#if ( MODEL != PAR_ONLY )
+double               Mass_All_Ref;
+double               CoMX_All_Ref, CoMY_All_Ref, CoMZ_All_Ref;
+#if ( MODEL == HYDRO )
+double               MomX_All_Ref, MomY_All_Ref, MomZ_All_Ref;
+double               AngMomX_All_Ref, AngMomY_All_Ref, AngMomZ_All_Ref;
+#endif
+double               Etot_All_Ref;
+#endif // if ( MODEL != PAR_ONLY )
+#endif // #ifdef MASSIVE_PARTICLES
+
+
 
 // 2. global variables for different applications
 // =======================================================================================================
@@ -569,8 +600,6 @@ int main( int argc, char *argv[] )
 #     endif
    }
 
-   Output_DumpData( 0 );
-
    if ( OPT__PATCH_COUNT > 0 )            Aux_Record_PatchCount();
    if ( OPT__RECORD_MEMORY )              Aux_GetMemInfo();
    if ( OPT__RECORD_USER ) {
@@ -585,6 +614,9 @@ int main( int argc, char *argv[] )
 #  endif
 
    Aux_Check();
+
+// Must after Aux_Check to get the conserved values
+   Output_DumpData( 0 );
 
 #  ifdef TIMING
    Aux_ResetTimer();

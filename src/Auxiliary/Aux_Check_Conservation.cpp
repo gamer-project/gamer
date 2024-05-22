@@ -365,20 +365,13 @@ void Aux_Check_Conservation( const char *comment )
    if ( MPI_Rank == 0 )
    {
 //    note that a variable length array cannot have static storage duration
-      static double Time_Ref;
-      static double Fluid_Ref[NVar_Max];
-      static double CoM_Gas_Ref[3];
-#     ifdef MASSIVE_PARTICLES
-      static double Mass_Par_Ref, CoMX_Par_Ref, CoMY_Par_Ref, CoMZ_Par_Ref;
-      static double MomX_Par_Ref, MomY_Par_Ref, MomZ_Par_Ref;
-      static double AngMomX_Par_Ref, AngMomY_Par_Ref, AngMomZ_Par_Ref, Ekin_Par_Ref, Epot_Par_Ref, Etot_Par_Ref;
-#     endif
       double AbsErr[NVar], RelErr[NVar];
 
-      if ( FirstTime )
+//    record the reference values if not restart
+      if ( FirstTime  &&  OPT__INIT != INIT_BY_RESTART )
       {
-//       record the reference values
          Time_Ref = Time[0];
+
          for (int v=0; v<NVar; v++)    Fluid_Ref[v]   = Fluid_AllRank[v];
          for (int d=0; d<3; d++)       CoM_Gas_Ref[d] = CoM_Gas[d];
 
@@ -396,14 +389,30 @@ void Aux_Check_Conservation( const char *comment )
          Ekin_Par_Ref    =    Ekin_Par;
          Epot_Par_Ref    =    Epot_Par;
          Etot_Par_Ref    =    Etot_Par;
+#        if ( MODEL != PAR_ONLY )
+         Mass_All_Ref    =   Fluid_Ref[0]                + Mass_Par_Ref;
+         CoMX_All_Ref    = ( Fluid_Ref[0]*CoM_Gas_Ref[0] + Mass_Par_Ref*CoMX_Par_Ref )/Mass_All_Ref;
+         CoMY_All_Ref    = ( Fluid_Ref[0]*CoM_Gas_Ref[1] + Mass_Par_Ref*CoMY_Par_Ref )/Mass_All_Ref;
+         CoMZ_All_Ref    = ( Fluid_Ref[0]*CoM_Gas_Ref[2] + Mass_Par_Ref*CoMZ_Par_Ref )/Mass_All_Ref;
+#        if   ( MODEL == HYDRO )
+         MomX_All_Ref    = Fluid_Ref[1       ] +    MomX_Par_Ref;
+         MomY_All_Ref    = Fluid_Ref[2       ] +    MomY_Par_Ref;
+         MomZ_All_Ref    = Fluid_Ref[3       ] +    MomZ_Par_Ref;
+         AngMomX_All_Ref = Fluid_Ref[4       ] + AngMomX_Par_Ref;
+         AngMomY_All_Ref = Fluid_Ref[5       ] + AngMomY_Par_Ref;
+         AngMomZ_All_Ref = Fluid_Ref[6       ] + AngMomZ_Par_Ref;
 #        endif
+         Etot_All_Ref    = Fluid_Ref[idx_etot] +    Etot_Par_Ref;
+#        endif // #if ( MODEL != PAR_ONLY )
+#        endif // #ifdef MASSIVE_PARTICLES
+      } // if ( FirstTime  &&  OPT__INIT != INIT_BY_RESTART )
 
-
+      if ( FirstTime )
+      {
 //       output header
          FILE *File = fopen( FileName, "a" );
 
          Aux_Message( File, "# Ref time        : %13.7e\n", Time_Ref );
-         Aux_Message( File, "# Ref step        : %ld\n",    Step     );
          Aux_Message( File, "\n" );
 
 #        if   ( MODEL == HYDRO )
@@ -553,33 +562,22 @@ void Aux_Check_Conservation( const char *comment )
 
 //    calculate the sum of conserved quantities in different models
 #     if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
-      const double Mass_All        = Fluid_AllRank[       0] +    Mass_Par;
-      const double Mass_All_Ref    = Fluid_Ref    [       0] +    Mass_Par_Ref;
+      const double Mass_All    = Fluid_AllRank[       0] +    Mass_Par;
 
 #     if   ( MODEL == HYDRO )
-      const double MomX_All        = Fluid_AllRank[       1] +    MomX_Par;
-      const double MomY_All        = Fluid_AllRank[       2] +    MomY_Par;
-      const double MomZ_All        = Fluid_AllRank[       3] +    MomZ_Par;
-      const double AngMomX_All     = Fluid_AllRank[       4] + AngMomX_Par;
-      const double AngMomY_All     = Fluid_AllRank[       5] + AngMomY_Par;
-      const double AngMomZ_All     = Fluid_AllRank[       6] + AngMomZ_Par;
+      const double MomX_All    = Fluid_AllRank[       1] +    MomX_Par;
+      const double MomY_All    = Fluid_AllRank[       2] +    MomY_Par;
+      const double MomZ_All    = Fluid_AllRank[       3] +    MomZ_Par;
+      const double AngMomX_All = Fluid_AllRank[       4] + AngMomX_Par;
+      const double AngMomY_All = Fluid_AllRank[       5] + AngMomY_Par;
+      const double AngMomZ_All = Fluid_AllRank[       6] + AngMomZ_Par;
 
-      const double MomX_All_Ref    = Fluid_Ref    [       1] +    MomX_Par_Ref;
-      const double MomY_All_Ref    = Fluid_Ref    [       2] +    MomY_Par_Ref;
-      const double MomZ_All_Ref    = Fluid_Ref    [       3] +    MomZ_Par_Ref;
-      const double AngMomX_All_Ref = Fluid_Ref    [       4] + AngMomX_Par_Ref;
-      const double AngMomY_All_Ref = Fluid_Ref    [       5] + AngMomY_Par_Ref;
-      const double AngMomZ_All_Ref = Fluid_Ref    [       6] + AngMomZ_Par_Ref;
 #     endif // MODEL
-      const double Etot_All        = Fluid_AllRank[idx_etot] +    Etot_Par;      // for HYDRO and ELBDM, total energy is stored in the last element
-      const double Etot_All_Ref    = Fluid_Ref    [idx_etot] +    Etot_Par_Ref;
+      const double Etot_All    = Fluid_AllRank[idx_etot] +    Etot_Par;      // for HYDRO and ELBDM, total energy is stored in the last element
 
-      const double CoMX_All        = ( Fluid_AllRank[0]*CoM_Gas    [0] + Mass_Par    *CoMX_Par     )/Mass_All;
-      const double CoMY_All        = ( Fluid_AllRank[0]*CoM_Gas    [1] + Mass_Par    *CoMY_Par     )/Mass_All;
-      const double CoMZ_All        = ( Fluid_AllRank[0]*CoM_Gas    [2] + Mass_Par    *CoMZ_Par     )/Mass_All;
-      const double CoMX_All_Ref    = ( Fluid_Ref    [0]*CoM_Gas_Ref[0] + Mass_Par_Ref*CoMX_Par_Ref )/Mass_All_Ref;
-      const double CoMY_All_Ref    = ( Fluid_Ref    [0]*CoM_Gas_Ref[1] + Mass_Par_Ref*CoMY_Par_Ref )/Mass_All_Ref;
-      const double CoMZ_All_Ref    = ( Fluid_Ref    [0]*CoM_Gas_Ref[2] + Mass_Par_Ref*CoMZ_Par_Ref )/Mass_All_Ref;
+      const double CoMX_All    = ( Fluid_AllRank[0]*CoM_Gas[0] + Mass_Par*CoMX_Par )/Mass_All;
+      const double CoMY_All    = ( Fluid_AllRank[0]*CoM_Gas[1] + Mass_Par*CoMY_Par )/Mass_All;
+      const double CoMZ_All    = ( Fluid_AllRank[0]*CoM_Gas[2] + Mass_Par*CoMZ_Par )/Mass_All;
 #     endif // if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
 
 
@@ -597,9 +595,9 @@ void Aux_Check_Conservation( const char *comment )
 
       if ( v == index_before_column_CoM )
       {
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[0],   CoM_Gas[0]-CoM_Gas_Ref[0],      (CoM_Gas[0]-CoM_Gas_Ref[0])/(Time[0]-Time_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[1],   CoM_Gas[1]-CoM_Gas_Ref[1],      (CoM_Gas[1]-CoM_Gas_Ref[1])/(Time[0]-Time_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[2],   CoM_Gas[2]-CoM_Gas_Ref[2],      (CoM_Gas[2]-CoM_Gas_Ref[2])/(Time[0]-Time_Ref) );
+      Aux_Message( File, "  %17.14e  %17.14e  %17.14e",  CoM_Gas[0],   CoM_Gas[0]-CoM_Gas_Ref[0],      (CoM_Gas[0]-CoM_Gas_Ref[0])/(Time[0]-Time_Ref) );
+      Aux_Message( File, "  %17.14e  %17.14e  %17.14e",  CoM_Gas[1],   CoM_Gas[1]-CoM_Gas_Ref[1],      (CoM_Gas[1]-CoM_Gas_Ref[1])/(Time[0]-Time_Ref) );
+      Aux_Message( File, "  %17.14e  %17.14e  %17.14e",  CoM_Gas[2],   CoM_Gas[2]-CoM_Gas_Ref[2],      (CoM_Gas[2]-CoM_Gas_Ref[2])/(Time[0]-Time_Ref) );
       }
 
       }

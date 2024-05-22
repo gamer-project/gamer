@@ -94,6 +94,36 @@ extern OptLohnerForm_t    OPT__FLAG_LOHNER_FORM;
 extern OptCorrAfterSync_t OPT__CORR_AFTER_ALL_SYNC;
 extern OptTimeStepLevel_t OPT__DT_LEVEL;
 
+extern double     Time_Ref;
+#if   ( MODEL == HYDRO )
+#ifdef MHD
+extern double     Fluid_Ref[12+NCOMP_PASSIVE+1];
+#else
+extern double     Fluid_Ref[11+NCOMP_PASSIVE+1];
+#endif
+#elif ( MODEL == ELBDM )
+extern double     Fluid_Ref[ 5+NCOMP_PASSIVE+1];
+#endif
+
+extern double     CoM_Gas_Ref[3];
+
+#ifdef MASSIVE_PARTICLES
+extern double     Mass_Par_Ref;
+extern double     CoMX_Par_Ref, CoMY_Par_Ref, CoMZ_Par_Ref;
+extern double     MomX_Par_Ref, MomY_Par_Ref, MomZ_Par_Ref;
+extern double     AngMomX_Par_Ref, AngMomY_Par_Ref, AngMomZ_Par_Ref;
+extern double     Ekin_Par_Ref, Eint_Par_Ref, Epot_Par_Ref, Etot_Par_Ref;
+#if ( MODEL != PAR_ONLY )
+extern double     Mass_All_Ref;
+extern double     CoMX_All_Ref, CoMY_All_Ref, CoMZ_All_Ref;
+#if ( MODEL == HYDRO )
+extern double     MomX_All_Ref, MomY_All_Ref, MomZ_All_Ref;
+extern double     AngMomX_All_Ref, AngMomY_All_Ref, AngMomZ_All_Ref;
+#endif
+extern double     Etot_All_Ref;
+#endif // if ( MODEL != PAR_ONLY )
+#endif // #ifdef MASSIVE_PARTICLES
+
 
 
 // 2. global variables for different applications
@@ -343,7 +373,7 @@ extern int  FB_ParaBuf;
 // =======================================================================================================
 #ifdef COSMIC_RAY
 extern double GAMMA_CR;
-extern bool OPT__FLAG_CRAY, OPT__FLAG_LOHNER_CRAY;
+extern bool   OPT__FLAG_CRAY, OPT__FLAG_LOHNER_CRAY;
 extern double FlagTable_CRay[NLEVEL-1];
 #endif
 
