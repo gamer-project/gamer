@@ -759,10 +759,21 @@ double Par_EquilibriumIC::getIntegratedDistributionFunction( const double E )
       const double Psi             = (i+0.5)*dPsi;
       const double dsqrt_EminusPsi = ( ( (Psi+0.5*dPsi) >= E ) ? 0.0 : sqrt( E-(Psi+0.5*dPsi) ) ) - sqrt( E-(Psi-0.5*dPsi) );
 
-      if ( Psi > -RArray_Phi[RLastIdx] )   dRho_dPsi = Mis_InterpolateFromTable( RNBin, RArray_Phi, RArray_dRho_dPsi, -(Psi) );
-      else                                 dRho_dPsi = RArray_dRho_dPsi[RLastIdx]
-                                                       +( Psi + RArray_Phi[RLastIdx] ) *( RArray_dRho_dPsi[RLastIdx-1] - RArray_dRho_dPsi[RLastIdx] )
-                                                                                       /(      -RArray_Phi[RLastIdx-1] +       RArray_Phi[RLastIdx] ); // dRho_dPsi is linearly extrapolated for low Psi
+      if ( Psi > -RArray_Phi[RLastIdx] )
+      {
+         dRho_dPsi = Mis_InterpolateFromTable( RNBin, RArray_Phi, RArray_dRho_dPsi, -(Psi) );
+      }
+      else
+      {
+         // dRho_dPsi is linearly extrapolated for low Psi
+         const double dRho_dPsi_Extrapolated = RArray_dRho_dPsi[RLastIdx]
+                                               +( Psi + RArray_Phi[RLastIdx] )
+                                               *( RArray_dRho_dPsi[RLastIdx-1] - RArray_dRho_dPsi[RLastIdx] )
+                                               /(      -RArray_Phi[RLastIdx-1] +       RArray_Phi[RLastIdx] );
+
+         dRho_dPsi = ( dRho_dPsi_Extrapolated < 0 ) ? 0.0 : dRho_dPsi_Extrapolated;
+      }
+
       integral += -2.0*dRho_dPsi*dsqrt_EminusPsi;
    }
 
