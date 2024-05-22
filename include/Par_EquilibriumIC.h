@@ -104,6 +104,9 @@ class Par_EquilibriumIC
       double *EArray_DFunc    = NULL;
       double *EArray_IntDFunc = NULL;
 
+//    Output the arrays
+      void    printArrays();
+
 //    Cumulative probability distribution at given radius
       double *CumulProbaDistr_GivenRadius = NULL;
 

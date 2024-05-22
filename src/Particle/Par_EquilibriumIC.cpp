@@ -340,7 +340,7 @@ void Par_EquilibriumIC::constructDistribution()
    if ( Cloud_Model == CLOUD_MODEL_TABLE )   loadInputDensProfTable();
    if ( AddExtPot_Table )                    loadInputExtPotTable();
 
-// Allocate memory
+// Construct RArray
    RArray_R         = new double [RNBin];
    RArray_Rho       = new double [RNBin];
    RArray_M_Enc     = new double [RNBin];
@@ -349,22 +349,17 @@ void Par_EquilibriumIC::constructDistribution()
 
    constructRadialArray();
 
+// Construct EArray
    EArray_DFunc     = new double [ENBin];
    EArray_IntDFunc  = new double [ENBin];
    EArray_E         = new double [ENBin];
 
    constructEnergyArray();
 
-//----------------------------------------------------------------------------------------------
-   printf( "Radius: [" ); for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_R[b]         ); printf( "]\n");
-   printf( "Dens:   [" ); for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_Rho[b]       ); printf( "]\n");
-   printf( "Mass:   [" ); for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_M_Enc[b]     ); printf( "]\n");
-   printf( "Pote:   [" ); for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_Phi[b]       ); printf( "]\n");
-   printf( "dDdx:   [" ); for (int b=0; b<RNBin; b++)  printf(" %21.14e,", RArray_dRho_dPsi[b] ); printf( "]\n");
-   printf( "BEng:   [" ); for (int b=0; b<ENBin; b++)  printf(" %21.14e,", EArray_E[b]         ); printf( "]\n");
-   printf( "InDF:   [" ); for (int b=0; b<ENBin; b++)  printf(" %21.14e,", EArray_IntDFunc[b]  ); printf( "]\n");
-   printf( "DisF:   [" ); for (int b=0; b<ENBin; b++)  printf(" %21.14e,", EArray_DFunc[b]     ); printf( "]\n");
-//----------------------------------------------------------------------------------------------
+#  ifdef GAMER_DEBUG
+// Output the arrays for debugging
+   printArrays();
+#  endif // #ifdef GAMER_DEBUG
 
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "Constructing the distribution in Par_EquilibriumIC ... done\n" );
 
@@ -448,6 +443,50 @@ void Par_EquilibriumIC::constructEnergyArray()
       if ( EArray_DFunc[b] < 0 )   EArray_DFunc[b] = 0.0;
 
 } // FUNCTION : constructEnergyArray
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  printArrays
+// Description :  Output the RArray and EArray to file for debugging purpose
+//
+// Note        :  1.
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Par_EquilibriumIC::printArrays()
+{
+   if ( MPI_Rank == 0 )
+   {
+//    RArray
+      char Filename_R[MAX_STRING];
+      sprintf( Filename_R, "%s%d%s", "Record__ParEquilibriumIC_Model_", Cloud_Model, "_RArray" );
+      FILE *File_R = fopen( Filename_R, "a" );
+
+      fprintf( File_R, "#%21s %21s %21s %21s %21s\n", "R", "Rho", "M_Enc", "Phi", "dRho_dPsi" );
+
+      for (int b=0; b<RNBin; b++)
+         fprintf( File_R, " %21.14e %21.14e %21.14e %21.14e %21.14e\n",
+                          RArray_R[b], RArray_Rho[b], RArray_M_Enc[b], RArray_Phi[b], RArray_dRho_dPsi[b] );
+
+      fclose( File_R );
+
+//    EArray
+      char Filename_E[MAX_STRING];
+      sprintf( Filename_E, "%s%d%s", "Record__ParEquilibriumIC_Model_", Cloud_Model, "_EArray" );
+      FILE *File_E = fopen( Filename_E, "a" );
+
+      fprintf( File_E, "#%21s %21s %21s\n", "E", "IntDFunc", "DFunc" );
+
+      for (int b=0; b<ENBin; b++)
+         fprintf( File_E, " %21.14e %21.14e %21.14e\n", EArray_E[b], EArray_IntDFunc[b], EArray_DFunc[b] );
+
+      fclose( File_E );
+   }
+
+} // FUNCTION : printArrays
 
 
 
