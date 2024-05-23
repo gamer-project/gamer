@@ -351,7 +351,6 @@ void Aux_Check_Conservation( const char *comment )
 
 #           else
 #           error : ERROR : unsupported MODEL !!
-#           endif // MODEL
 
 #           endif // MODEL
 
@@ -482,6 +481,7 @@ void Aux_Check_Conservation( const char *comment )
 
 #        else
 #        error : ERROR : unsupported MODEL !!
+
 #        endif // MODEL
 #        endif // #if ( MODEL != PAR_ONLY )
 
@@ -630,7 +630,7 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "  %17s  %17s  %17s", "AngMomY_All", "AngMomY_All_AErr", "AngMomY_All_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s", "AngMomZ_All", "AngMomZ_All_AErr", "AngMomZ_All_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s",    "Etot_All",    "Etot_All_AErr",    "Etot_All_RErr" );
-#        endif
+#        endif // if ( MODEL != PAR_ONLY )
 #        endif // #ifdef PARTICLE
 
          Aux_Message( File, "\n" );
