@@ -35,7 +35,12 @@ static bool FarAwayParticle( real_par ParPosX, real_par ParPosY, real_par ParPos
 //                           even with the NGP scheme), which is not considered here!
 //                   --> This is the reason for the check "if ( Periodic[d]  &&  RhoSize > PeriodicSize[d] ) ..."
 //                6. For bitwise reproducibility, particles are sorted by their position before mass deposition
-//                   --> Also refer to the note of the routine Par_SortByPos()
+//                   --> Also refer to the note of the routine Mis_SortByRows()
+//                   --> Sorting by velocity may be necessary for STAR_FORMATION, where the new star particles
+//                       created at different time but the same position may still have the same position for a
+//                       while if velocity*dt is on the order of round-off errors
+//                       --> Not supported yet since we may not have the velocity information (e.g., when adopting
+//                           UseInputMassPos)
 //
 // Parameter   :  ParList         : List of target particle IDs
 //                NPar            : Number of particles
@@ -158,8 +163,9 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 //        --> necessary for achieving bitwise reproducibility
 #  ifdef BITWISE_REPRODUCIBILITY
    long *Sort_IdxTable = new long [NPar];
+   const int Sort_Order[3] = { 0, 1, 2 };
 
-   Par_SortByPos( NPar, Pos[0], Pos[1], Pos[2], Sort_IdxTable );
+   Mis_SortByRows( Pos, Sort_IdxTable, (long)NPar, Sort_Order, 3 );
 #  endif
 
 
