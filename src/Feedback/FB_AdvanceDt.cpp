@@ -65,7 +65,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
    const bool SibBufPatch_Yes   = true;
    const bool FaSibBufPatch_No  = false;
 //###OPTIMIZATION: only collect necessary particle attributes
-   const long ParAttBitIdx_In   = _PAR_TOTAL;
+   const long ParAttBitIdx_In   = _PAR_FLT_TOTAL;
 
    Par_CollectParticle2OneLevel( lv, ParAttBitIdx_In, PredictPos_No, TimeNew, SibBufPatch_Yes, FaSibBufPatch_No,
                                  JustCountNPar_No, TimingSendPar_Yes );
@@ -87,7 +87,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //###OPTIMIZATION: only store the attributes being updated
 //###OPTIMIZATION: only count particles on FB_LEVEL
    real_par *ParAtt_Updated[PAR_NATT_FLT_TOTAL];
-   long      ParAttBitIdx_Out = _PAR_TOTAL;
+   long      ParAttBitIdx_Out = _PAR_FLT_TOTAL;
 
 // do not update particle positions and accelerations
    ParAttBitIdx_Out &= ~( _PAR_POSX | _PAR_POSY | _PAR_POSZ );

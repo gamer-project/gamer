@@ -511,7 +511,7 @@
 # if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
 #  define _PAR_ACC            ( _PAR_ACCX | _PAR_ACCY | _PAR_ACCZ )
 # endif
-#  define _PAR_TOTAL          (  ( 1L << PAR_NATT_FLT_TOTAL ) - 1L )
+#  define _PAR_FLT_TOTAL      (  ( 1L << PAR_NATT_FLT_TOTAL ) - 1L )
 
 // grid fields related to particles
 // --> note that _POTE = ( 1L << (NCOMP_TOTAL+NDERIVE) )
