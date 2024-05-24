@@ -176,7 +176,7 @@ struct Makefile_t
    int StoreParAcc;
    int StarFormation;
    int Feedback;
-   int Par_NAttUser;
+   int Par_NAttFltUser;
    int Float8_Par;
 #  endif
 

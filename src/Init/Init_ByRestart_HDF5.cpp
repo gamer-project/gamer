@@ -1532,9 +1532,9 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "StarFormation",          &RS.StarFormation,          SID, TID, NonFatal, &RT.StarFormation,          1, NonFatal );
    LoadField( "Feedback",               &RS.Feedback,               SID, TID, NonFatal, &RT.Feedback,               1, NonFatal );
    if ( FormatVersion >= 2300 )
-   LoadField( "Par_NAttUser",           &RS.Par_NAttUser,           SID, TID, NonFatal, &RT.Par_NAttUser,           1,    Fatal );
+   LoadField( "Par_NAttFltUser",        &RS.Par_NAttFltUser,        SID, TID, NonFatal, &RT.Par_NAttFltUser,        1,    Fatal );
    else
-   LoadField( "Par_NAttUser",           &RS.Par_NAttUser,           SID, TID, NonFatal, &RT.Par_NAttUser,           1, NonFatal );
+   LoadField( "Par_NAttFltUser",        &RS.Par_NAttFltUser,        SID, TID, NonFatal, &RT.Par_NAttFltUser,        1, NonFatal );
    LoadField( "Float8_Par",             &RS.Float8_Par,             SID, TID, NonFatal, &RT.Float8_Par,             1, NonFatal );
 #  endif
 
