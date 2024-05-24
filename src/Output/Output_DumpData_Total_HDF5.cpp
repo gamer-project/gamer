@@ -1280,9 +1280,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //    create the datasets of all particle attributes
       for (int v=0; v<PAR_NATT_FLT_STORED; v++)
       {
-         H5_SetID_ParData = H5Dcreate( H5_GroupID_Particle, ParAttLabel[v], H5T_GAMER_REAL_PAR, H5_SpaceID_ParData,
+         H5_SetID_ParData = H5Dcreate( H5_GroupID_Particle, ParAttFltLabel[v], H5T_GAMER_REAL_PAR, H5_SpaceID_ParData,
                                        H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
-         if ( H5_SetID_ParData < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", ParAttLabel[v] );
+         if ( H5_SetID_ParData < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", ParAttFltLabel[v] );
          H5_Status = H5Dclose( H5_SetID_ParData );
       }
 
@@ -1346,7 +1346,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 
 //          6-3-4. write data to disk
-            H5_SetID_ParData = H5Dopen( H5_GroupID_Particle, ParAttLabel[v], H5P_DEFAULT );
+            H5_SetID_ParData = H5Dopen( H5_GroupID_Particle, ParAttFltLabel[v], H5P_DEFAULT );
 
             H5_Status = H5Dwrite( H5_SetID_ParData, H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT, ParBuf1v1Lv );
             if ( H5_Status < 0 )
@@ -2208,7 +2208,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Par_GhostSize           = amr->Par->GhostSize;
    InputPara.Par_GhostSizeTracer     = amr->Par->GhostSizeTracer;
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
-   InputPara.ParAttLabel[v]          = ParAttLabel[v];
+   InputPara.ParAttFltLabel[v]       = ParAttFltLabel[v];
 #  endif
 
 // cosmology
@@ -3094,7 +3094,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 
 
 // get the size of a single pointer, which is used for storing the array of variable-length strings
-// --> FieldLabel[], MagLabel[], ParAttLabel[]
+// --> FieldLabel[], MagLabel[], ParAttFltLabel[]
    const int PtrSize     = sizeof( char* );
    const int PtrSize_hvl = sizeof( hvl_t );
    char Key[MAX_STRING];
@@ -3158,10 +3158,10 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    {
 //    key for each particle attribute
-      sprintf( Key, "ParAttLabel%02d", v );
+      sprintf( Key, "ParAttFltLabel%02d", v );
 
-//    assuming the offset between successive ParAttLabel pointers is "PtrSize", which is equal to "sizeof( char* )"
-      H5Tinsert( H5_TypeID, Key, HOFFSET(InputPara_t,ParAttLabel[0])+v*PtrSize, H5_TypeID_VarStr );
+//    assuming the offset between successive ParAttFltLabel pointers is "PtrSize", which is equal to "sizeof( char* )"
+      H5Tinsert( H5_TypeID, Key, HOFFSET(InputPara_t,ParAttFltLabel[0])+v*PtrSize, H5_TypeID_VarStr );
    }
 #  endif
 

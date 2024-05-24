@@ -35,7 +35,7 @@ void Par_Output_TextFile( const char *FileName )
       fprintf( File, "#" );
 
       for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
-      fprintf( File, " %*s", (v==0)?StrLen_Flt-1:StrLen_Flt, ParAttLabel[v] );
+      fprintf( File, " %*s", (v==0)?StrLen_Flt-1:StrLen_Flt, ParAttFltLabel[v] );
 
       fprintf( File, "\n" );
 

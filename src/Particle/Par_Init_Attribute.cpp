@@ -102,7 +102,7 @@ void Par_Init_Attribute()
 //
 // Parameter   :  InputLabel : Label (i.e., name) of the new attribute
 //
-// Return      :  (1) ParAttLabel[]
+// Return      :  (1) ParAttFltLabel[]
 //                (2) Index of the newly added attribute
 //-------------------------------------------------------------------------------------------------------
 FieldIdx_t AddParticleAttribute( const char *InputLabel )
@@ -121,12 +121,12 @@ FieldIdx_t AddParticleAttribute( const char *InputLabel )
                  NDefinedAtt, PAR_NATT_FLT_TOTAL, InputLabel );
 
    for (int v=0; v<NDefinedAtt-1; v++)
-      if (  strcmp( ParAttLabel[v], InputLabel ) == 0  )
+      if (  strcmp( ParAttFltLabel[v], InputLabel ) == 0  )
          Aux_Error( ERROR_INFO, "duplicate particle attribute label \"%s\" !!\n", InputLabel );
 
 
 // set attribute label
-   strcpy( ParAttLabel[AttIdx], InputLabel );
+   strcpy( ParAttFltLabel[AttIdx], InputLabel );
 
 
 // return attribute index
@@ -140,7 +140,7 @@ FieldIdx_t AddParticleAttribute( const char *InputLabel )
 // Function    :  GetParticleAttributeIndex
 // Description :  Return the index of the target particle attribute
 //
-// Note        :  1. Usage: AttIdx = GetParticleAttributeIndex( ParAttLabel );
+// Note        :  1. Usage: AttIdx = GetParticleAttributeIndex( ParAttFltLabel );
 //                2. Return Idx_Undefined if the target attribute cannot be found
 //
 // Parameter   :  InputLabel : Target attribute label
@@ -157,7 +157,7 @@ FieldIdx_t GetParticleAttributeIndex( const char *InputLabel, const Check_t Chec
 
    for (int v=0; v<NDefinedAtt; v++)
    {
-      if (  strcmp( ParAttLabel[v], InputLabel ) == 0  )
+      if (  strcmp( ParAttFltLabel[v], InputLabel ) == 0  )
       {
          Idx_Out = v;
          break;

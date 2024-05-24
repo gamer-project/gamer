@@ -406,7 +406,7 @@ struct InputPara_t
    int    Par_GhostSize;
    int    Par_GhostSizeTracer;
    int    Par_TracerVelCorr;
-   char  *ParAttLabel[PAR_NATT_FLT_TOTAL];
+   char  *ParAttFltLabel[PAR_NATT_FLT_TOTAL];
 #  endif
 
 // cosmology

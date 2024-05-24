@@ -671,7 +671,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 
 #  ifdef PARTICLE
 // skip the last PAR_NATT_FLT_UNSTORED attributes since we do not store them on disk
-   for (int v=0; v<PAR_NATT_FLT_STORED; v++)  sprintf( ParAttName[v], "%s", ParAttLabel[v] );
+   for (int v=0; v<PAR_NATT_FLT_STORED; v++)  sprintf( ParAttName[v], "%s", ParAttFltLabel[v] );
 #  endif
 
 
