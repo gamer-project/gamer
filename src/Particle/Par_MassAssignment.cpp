@@ -66,7 +66,7 @@ static bool FarAwayParticle( real_par ParPosX, real_par ParPosY, real_par ParPos
 //                                           overhead if most input particles do have contribution to Rho[].
 //                UseInputMassPos : Use the input array InputMassPos[] to obtain particle mass and position
 //                                  --> Used by LOAD_BALANCE, where particle position and mass may be stored in
-//                                      ParAtt_Copy[] of each patch
+//                                      ParAttFlt_Copy[] of each patch
 //                                  --> ParList[] becomes useless and must be set to NULL
 //                                  --> Does not work with PredictPos since we don't have the information of particle
 //                                      time and velocity

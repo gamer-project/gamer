@@ -31,11 +31,11 @@ bool Particle_Collected = false;
 //                       It's because particles travelling from coarse to fine grids will stay in coarse grids
 //                       temporarily until the velocity correction is done.
 //                       --> For these patches, NPar_Copy will be **the sum of NPar and the number of particles
-//                           collected from other patches**, and ParList_Copy (or ParAtt_Copy) will contain
+//                           collected from other patches**, and ParList_Copy (or ParAttFlt_Copy) will contain
 //                           information of particles belonging to NPar as well.
 //                       --> It makes implementation simplier. **For leaf real patches, one only needs to consider
 //                           NPar and ParList. While for all other patches, one only needs to consider NPar_Copy,
-//                           ParList_Copy (or ParAtt_Copy). One never needs to consider both.**
+//                           ParList_Copy (or ParAttFlt_Copy). One never needs to consider both.**
 //                5. When using OpenMP, one must ensure that different threads do NOT invoke this function
 //                   for the same patch at the same time !!!
 //                   --> Because this function will modify "NPar_Copy & ParList_Copy" for the target patch

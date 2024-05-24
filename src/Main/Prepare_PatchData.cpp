@@ -1941,7 +1941,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      NPar            = amr->patch[0][lv-1][FaSibPID]->NPar_Copy;
                      ParList         = NULL;
                      UseInputMassPos = true;
-                     InputMassPos    = amr->patch[0][lv-1][FaSibPID]->ParAtt_Copy;
+                     InputMassPos    = amr->patch[0][lv-1][FaSibPID]->ParAttFlt_Copy;
 #                    else
                      Aux_Error( ERROR_INFO, "FaSibPID (%d) is not a real patch (NReal %d) !!\n",
                                 FaSibPID, amr->NPatchComma[lv-1][1] );
@@ -2999,7 +2999,7 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv, const double Prep
 #           ifdef LOAD_BALANCE
             ParList         = NULL;
             UseInputMassPos = true;
-            InputMassPos    = amr->patch[0][lv][PID]->ParAtt_Copy;
+            InputMassPos    = amr->patch[0][lv][PID]->ParAttFlt_Copy;
 #           else
             ParList         = amr->patch[0][lv][PID]->ParList_Copy;
             UseInputMassPos = false;

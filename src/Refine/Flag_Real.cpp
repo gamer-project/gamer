@@ -381,7 +381,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #                    ifdef LOAD_BALANCE
                      ParList         = NULL;
                      UseInputMassPos = true;
-                     InputMassPos    = amr->patch[0][lv][PID]->ParAtt_Copy;
+                     InputMassPos    = amr->patch[0][lv][PID]->ParAttFlt_Copy;
 #                    else
                      ParList         = amr->patch[0][lv][PID]->ParList_Copy;
                      UseInputMassPos = false;

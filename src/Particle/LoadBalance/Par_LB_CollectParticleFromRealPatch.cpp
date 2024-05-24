@@ -15,7 +15,7 @@
 //                   provided. The information of real patches can be calculated in advance by using Par_LB_MapBuffer2RealPatch()
 //                2. All Target patches (those in Buff_PIDList[] and Real_PIDList[]) must be patches at the same level "lv"
 //                3. This function is called by Par_LB_CollectParticle2OneLevel()
-//                4. ParAtt_Copy[] will be allocated for all target buffer patches with particles in the
+//                4. ParAttFlt_Copy[] will be allocated for all target buffer patches with particles in the
 //                   corresponding real patches
 //                   --> Must be deallocated afterward by calling Par_LB_CollectParticle2OneLevel_FreeMemory()
 //
@@ -36,7 +36,7 @@
 //                Timer               : Timer used by Par_LB_SendParticleData()
 //                Timer_Comment       : String used by Par_LB_SendParticleData()
 //
-// Return      :  NPar_Copy and ParAtt_Copy[] (if NPar_Copy > 0) for all buffer patches specified in Buff_PIDList[]
+// Return      :  NPar_Copy and ParAttFlt_Copy[] (if NPar_Copy > 0) for all buffer patches specified in Buff_PIDList[]
 //-------------------------------------------------------------------------------------------------------
 void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
                                           const int Buff_NPatchTotal, const int *Buff_PIDList, int *Buff_NPatchEachRank,
@@ -115,8 +115,8 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
          Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Copy = %d >= 0 !!\n", lv, PID, amr->patch[0][lv][PID]->NPar_Copy );
 
       for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
-      if ( amr->patch[0][lv][PID]->ParAtt_Copy[v] != NULL )
-         Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Copy = %d, ParAtt_Copy[%d] != NULL !!\n",
+      if ( amr->patch[0][lv][PID]->ParAttFlt_Copy[v] != NULL )
+         Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Copy = %d, ParAttFlt_Copy[%d] != NULL !!\n",
                     lv, PID, amr->patch[0][lv][PID]->NPar_Copy, v );
    } // for (int t=0; t<Buff_NPatchTotal; t++)
 
@@ -201,12 +201,12 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
 // reuse the MPI send buffer declared in LB_GetBufferData() for better MPI performance
    real_par  *SendBuf_ParDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)NAtt*sizeof(real_par) );
 
-   real_par  *SendPtr     = NULL;
-   long      *ParList     = NULL;
-   real_par **ParAtt_Copy = NULL;
+   real_par  *SendPtr        = NULL;
+   long      *ParList        = NULL;
+   real_par **ParAttFlt_Copy = NULL;
    long       ParID;
 
-#  pragma omp parallel for private( PID, NParThisPatch, SendPtr, ParList, ParAtt_Copy, ParID ) \
+#  pragma omp parallel for private( PID, NParThisPatch, SendPtr, ParList, ParAttFlt_Copy, ParID ) \
                            schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )
    for (int t=0; t<Real_NPatchTotal; t++)
    {
@@ -247,12 +247,12 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
 
       else
       {
-         ParAtt_Copy = amr->patch[0][lv][PID]->ParAtt_Copy;
+         ParAttFlt_Copy = amr->patch[0][lv][PID]->ParAttFlt_Copy;
 
 #        ifdef DEBUG_PARTICLE
          for (int v=0; v<NAtt; v++)
-            if ( ParAtt_Copy[ AttIntIdx[v] ] == NULL )
-               Aux_Error( ERROR_INFO, "ParAtt_Copy[%d] == NULL for NParThisPatch (%d) > 0 (lv %d, PID %d) !!\n",
+            if ( ParAttFlt_Copy[ AttIntIdx[v] ] == NULL )
+               Aux_Error( ERROR_INFO, "ParAttFlt_Copy[%d] == NULL for NParThisPatch (%d) > 0 (lv %d, PID %d) !!\n",
                           AttIntIdx[v], NParThisPatch, lv, PID );
 #        endif
 
@@ -260,7 +260,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
          {
 //          note that the particle position should have already been predicted to TargetTime
 //          by Par_LB_CollectParticle2OneLevel()
-            for (int v=0; v<NAtt; v++)    SendPtr[v] = ParAtt_Copy[ AttIntIdx[v] ][p];
+            for (int v=0; v<NAtt; v++)    SendPtr[v] = ParAttFlt_Copy[ AttIntIdx[v] ][p];
 
             SendPtr += NAtt;
          }
@@ -324,23 +324,23 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
 
       if ( NParThisPatch > 0 )
       {
-//       4-2. allocate ParAtt_Copy[]
+//       4-2. allocate ParAttFlt_Copy[]
          for (int v=0; v<NAtt; v++)
-            amr->patch[0][lv][PID]->ParAtt_Copy[ AttIntIdx[v] ] = new real_par [NParThisPatch];
+            amr->patch[0][lv][PID]->ParAttFlt_Copy[ AttIntIdx[v] ] = new real_par [NParThisPatch];
 
          for (int p=0; p<NParThisPatch; p++)
          {
 //          4-3. store the received data
             for (int v=0; v<NAtt; v++)
-               amr->patch[0][lv][PID]->ParAtt_Copy[ AttIntIdx[v] ][p] = *RecvPtr++;
+               amr->patch[0][lv][PID]->ParAttFlt_Copy[ AttIntIdx[v] ][p] = *RecvPtr++;
 
 //          4-4. check
 #           ifdef DEBUG_PARTICLE
 //          we do not transfer inactive particles
             if ( AttBitIdx & _PAR_MASS )
-            if ( amr->patch[0][lv][PID]->ParAtt_Copy[PAR_MASS][p] < (real_par)0.0 )
+            if ( amr->patch[0][lv][PID]->ParAttFlt_Copy[PAR_MASS][p] < (real_par)0.0 )
                Aux_Error( ERROR_INFO, "found inactive particle (lv %d, PID %d, Mass %14.7e, particle %d) !!\n",
-                          lv, PID, amr->patch[0][lv][PID]->ParAtt_Copy[PAR_MASS][p], p );
+                          lv, PID, amr->patch[0][lv][PID]->ParAttFlt_Copy[PAR_MASS][p], p );
 
 //          check if the received particle lies within the target patch (may not when PredictPos is on)
             if ( !PredictPos  &&  ( AttBitIdx & _PAR_POSX )  &&  ( AttBitIdx & _PAR_POSY )  &&  ( AttBitIdx & _PAR_POSZ ) )
@@ -350,9 +350,9 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
 //             --> we can use EdgeL/R stored in each patch directly since they assume periodicity as well
                const double     *EdgeL     = amr->patch[0][lv][PID]->EdgeL;
                const double     *EdgeR     = amr->patch[0][lv][PID]->EdgeR;
-               const real_par    ParPos[3] = { amr->patch[0][lv][PID]->ParAtt_Copy[PAR_POSX][p],
-                                               amr->patch[0][lv][PID]->ParAtt_Copy[PAR_POSY][p],
-                                               amr->patch[0][lv][PID]->ParAtt_Copy[PAR_POSZ][p] };
+               const real_par    ParPos[3] = { amr->patch[0][lv][PID]->ParAttFlt_Copy[PAR_POSX][p],
+                                               amr->patch[0][lv][PID]->ParAttFlt_Copy[PAR_POSY][p],
+                                               amr->patch[0][lv][PID]->ParAttFlt_Copy[PAR_POSZ][p] };
 
                for (int d=0; d<3; d++)
                {

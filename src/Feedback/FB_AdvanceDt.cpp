@@ -307,13 +307,13 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
                if ( ParAttBitIdx_In & BIDX(v) ) {
 
 #                 ifdef DEBUG_PARTICLE
-                  if ( NPar > 0  &&  amr->patch[0][lv][PID]->ParAtt_Copy[v] == NULL )
-                     Aux_Error( ERROR_INFO, "ParAtt_Copy == NULL for NPar (%d) > 0 (lv %d, PID %d, v %d) !!\n",
+                  if ( NPar > 0  &&  amr->patch[0][lv][PID]->ParAttFlt_Copy[v] == NULL )
+                     Aux_Error( ERROR_INFO, "ParAttFlt_Copy == NULL for NPar (%d) > 0 (lv %d, PID %d, v %d) !!\n",
                                 NPar, lv, PID, v );
 #                 endif
 
                   for (int p=0; p<NPar; p++)
-                     ParAtt_Local[v][p] = amr->patch[0][lv][PID]->ParAtt_Copy[v][p];
+                     ParAtt_Local[v][p] = amr->patch[0][lv][PID]->ParAttFlt_Copy[v][p];
          }}}
 
          else
