@@ -53,9 +53,9 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
 // 0. determine the target particle attributes
 // --> assuming _VAR_NAME = 1L<<VAR_NAME (e.g., _PAR_MASS == 1L<<PAR_MASS == BIDX(PAR_MASS))
 // --> PosSendIdx[] is used by Par_PredictPos()
-   int NAtt=0, AttIntIdx[PAR_NATT_TOTAL], PosSendIdx[3]={-1, -1, -1};
+   int NAtt=0, AttIntIdx[PAR_NATT_FLT_TOTAL], PosSendIdx[3]={-1, -1, -1};
 
-   for (int v=0; v<PAR_NATT_TOTAL; v++)
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
       if ( AttBitIdx & (1L<<v) )    AttIntIdx[ NAtt ++ ] = v;
 
    if ( PredictPos )
@@ -114,7 +114,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
       if ( amr->patch[0][lv][PID]->NPar_Copy >= 0 )
          Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Copy = %d >= 0 !!\n", lv, PID, amr->patch[0][lv][PID]->NPar_Copy );
 
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
       if ( amr->patch[0][lv][PID]->ParAtt_Copy[v] != NULL )
          Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Copy = %d, ParAtt_Copy[%d] != NULL !!\n",
                     lv, PID, amr->patch[0][lv][PID]->NPar_Copy, v );

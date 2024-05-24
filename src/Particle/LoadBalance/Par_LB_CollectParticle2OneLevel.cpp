@@ -80,10 +80,10 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 // determine the target particle attributes
 // --> assuming _VAR_NAME = 1L<<VAR_NAME (e.g., _PAR_MASS == 1L<<PAR_MASS == BIDX(PAR_MASS))
 // --> PosSendIdx[] is used by Par_PredictPos()
-   int NAtt=0, AttIntIdx[PAR_NATT_TOTAL], PosSendIdx[3]={-1, -1, -1};
+   int NAtt=0, AttIntIdx[PAR_NATT_FLT_TOTAL], PosSendIdx[3]={-1, -1, -1};
 
    if ( !JustCountNPar )
-   for (int v=0; v<PAR_NATT_TOTAL; v++)
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
       if ( AttBitIdx & (1L<<v) )    AttIntIdx[ NAtt ++ ] = v;
 
    if ( PredictPos )
@@ -132,7 +132,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
          Aux_Error( ERROR_INFO, "particle parameters have been initialized already (FaLv %d, FaPID %d, NPar_Copy %d) !!\n",
                     FaLv, FaPID, amr->patch[0][FaLv][FaPID]->NPar_Copy );
 
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
       {
          if ( amr->patch[0][FaLv][FaPID]->ParAtt_Copy[v] != NULL )
             Aux_Error( ERROR_INFO, "particle parameters have been initialized already (FaLv %d, FaPID %d, NPar_Copy %d, v %d) !!\n",
@@ -656,7 +656,7 @@ void Par_LB_CollectParticle2OneLevel_FreeMemory( const int lv, const bool SibBuf
 // 1. real patches at lv
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
       {
          delete [] amr->patch[0][lv][PID]->ParAtt_Copy[v];
          amr->patch[0][lv][PID]->ParAtt_Copy[v] = NULL;
@@ -673,7 +673,7 @@ void Par_LB_CollectParticle2OneLevel_FreeMemory( const int lv, const bool SibBuf
    {
       const int PID = amr->Par->R2B_Buff_PIDList[lv][0][p];
 
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
       {
          delete [] amr->patch[0][lv][PID]->ParAtt_Copy[v];
          amr->patch[0][lv][PID]->ParAtt_Copy[v] = NULL;
@@ -692,7 +692,7 @@ void Par_LB_CollectParticle2OneLevel_FreeMemory( const int lv, const bool SibBuf
    {
       const int FaPID = amr->Par->R2B_Buff_PIDList[lv][1][p];
 
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
       {
          delete [] amr->patch[0][FaLv][FaPID]->ParAtt_Copy[v];
          amr->patch[0][FaLv][FaPID]->ParAtt_Copy[v] = NULL;
@@ -711,7 +711,7 @@ void Par_LB_CollectParticle2OneLevel_FreeMemory( const int lv, const bool SibBuf
 //    loop over all real and buffer patches
       for (int PID=0; PID<amr->num[TLv]; PID++)
       {
-         for (int v=0; v<PAR_NATT_TOTAL; v++)
+         for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
          if ( amr->patch[0][TLv][PID]->ParAtt_Copy[v] != NULL )
             Aux_Error( ERROR_INFO, "lv %d, PID %d, v %d, ParAtt_Copy != NULL !!\n",
                        TLv, PID, v );

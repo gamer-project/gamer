@@ -129,7 +129,7 @@ struct Particle_t
    double        RemoveCell;
    int           GhostSize;
    int           GhostSizeTracer;
-   real_par     *Attribute[PAR_NATT_TOTAL];
+   real_par     *Attribute[PAR_NATT_FLT_TOTAL];
    long         *InactiveParList;
 
 #  ifdef LOAD_BALANCE
@@ -201,7 +201,7 @@ struct Particle_t
 
       for (int lv=0; lv<NLEVEL; lv++)  NPar_Lv[lv] = 0;
 
-      for (int v=0; v<PAR_NATT_TOTAL; v++)   Attribute[v] = NULL;
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   Attribute[v] = NULL;
 
       InactiveParList = NULL;
 
@@ -261,7 +261,7 @@ struct Particle_t
    ~Particle_t()
    {
 
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
          if ( Attribute[v] != NULL )   free( Attribute[v] );
 
       if ( InactiveParList != NULL )   free( InactiveParList );
@@ -320,7 +320,7 @@ struct Particle_t
 
 //    allocate arrays (use malloc so that realloc can be used later to resize the array)
 //    --> free memory first since other functions (e.g., LB_Init_LoadBalance()) will call InitRepo() again
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
       {
          if ( Attribute[v] != NULL )   free( Attribute[v] );
          Attribute[v] = (real_par*)malloc( ParListSize*sizeof(real_par) );
@@ -448,7 +448,7 @@ struct Particle_t
          {
             ParListSize = (int)ceil( PARLIST_GROWTH_FACTOR*(ParListSize+1) );
 
-            for (int v=0; v<PAR_NATT_TOTAL; v++)   Attribute[v] = (real_par*)realloc( Attribute[v], ParListSize*sizeof(real_par) );
+            for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   Attribute[v] = (real_par*)realloc( Attribute[v], ParListSize*sizeof(real_par) );
 
             Mass = Attribute[PAR_MASS];
             PosX = Attribute[PAR_POSX];
@@ -472,7 +472,7 @@ struct Particle_t
 
 
 //    2. record the data of new particles
-      for (int v=0; v<PAR_NATT_TOTAL; v++)   Attribute[v][ParID] = NewAtt[v];
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   Attribute[v][ParID] = NewAtt[v];
 
 
 //    3. update the total number of active particles (assuming all new particles are active)

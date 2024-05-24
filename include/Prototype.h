@@ -659,7 +659,7 @@ void Par_Init_ByFile();
 void Par_Output_TextFile( const char *comment );
 void Par_Output_BinaryFile( const char *comment );
 void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly,
-                                    const long NNewPar, real_par *NewParAtt[PAR_NATT_TOTAL] );
+                                    const long NNewPar, real_par *NewParAtt[PAR_NATT_FLT_TOTAL] );
 void Par_PassParticle2Son_SinglePatch( const int FaLv, const int FaPID );
 void Par_PassParticle2Son_MultiPatch( const int FaLv, const ParPass2Son_t Mode, const bool TimingSendPar,
                                       const int NFaPatch, const int *FaPIDList );
@@ -692,9 +692,9 @@ void Prepare_PatchData_FreeParticleDensityArray( const int lv );
 void Par_PredictPos( const long NPar, const long *ParList, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                      const double TargetTime );
 void Par_Init_Attribute();
-void Par_AddParticleAfterInit( const long NNewPar, real_par *NewParAtt[PAR_NATT_TOTAL] );
+void Par_AddParticleAfterInit( const long NNewPar, real_par *NewParAtt[PAR_NATT_FLT_TOTAL] );
 void Par_ScatterParticleData( const long NPar_ThisRank, const long NPar_AllRank, const long AttBitIdx,
-                              real_par *Data_Send[PAR_NATT_TOTAL], real_par *Data_Recv[PAR_NATT_TOTAL] );
+                              real_par *Data_Send[PAR_NATT_FLT_TOTAL], real_par *Data_Recv[PAR_NATT_FLT_TOTAL] );
 void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
                             const double _dh, const int AttrSize3D, const real *Attr,
                             const int NPar, real_par *InterpParPos[3],

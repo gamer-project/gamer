@@ -38,7 +38,7 @@ void Par_Output_BinaryFile( const char *FileName )
 // data
    real_par *attribute_buff = (real_par*)malloc( sizeof(real_par)*amr->Par->NPar_AcPlusInac );
 
-   for (int v=0; v<PAR_NATT_TOTAL; v++)
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    {
       for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
       {
@@ -62,7 +62,7 @@ void Par_Output_BinaryFile( const char *FileName )
 
          MPI_Barrier( MPI_COMM_WORLD );
       } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
-   } // for (int v=0; v<PAR_NATT_TOTAL; v++)
+   } // for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
 
    free( attribute_buff );
 

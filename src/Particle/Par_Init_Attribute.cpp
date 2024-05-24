@@ -20,7 +20,7 @@ static int NDefinedAtt;    // total number of defined attributes
 // Description :  Set all particle attributes (including both built-in and user-defined attributes)
 //
 // Note        :  1. Invoked by Init_GAMER()
-//                2. Total number of attributes is determined by PAR_NATT_TOTAL = PAR_NATT_BUILTIN + PAR_NATT_USER
+//                2. Total number of attributes is determined by PAR_NATT_FLT_TOTAL = PAR_NATT_FLT_BUILTIN + PAR_NATT_FLT_USER
 //                3. To initialize user-defined particle attributes, the function pointer "Par_Init_Attribute_User_Ptr"
 //                   must be set by a test problem initializer
 //
@@ -64,7 +64,7 @@ void Par_Init_Attribute()
 // 4. must put built-in attributes not to be stored on disk at the END of the attribute list
 //    --> make it easier to discard them when storing data on disk (see Output_DumpData_Total(_HDF5).cpp)
 //    --> must also be consistent with the symbolic constant (e.g., PAR_TIME and PAR_ACC*) defined in Macro.h
-//    --> total number of attributes not to be stored on disk is set by PAR_NATT_UNSTORED
+//    --> total number of attributes not to be stored on disk is set by PAR_NATT_FLT_UNSTORED
 //        --> currently including time and acceleration*3
 #  ifdef STORE_PAR_ACC
    Idx_ParAccX = AddParticleAttribute( "ParAccX" );
@@ -76,10 +76,10 @@ void Par_Init_Attribute()
 
 
 // 5. validate if all attributes have been set properly
-   if ( NDefinedAtt != PAR_NATT_TOTAL )
+   if ( NDefinedAtt != PAR_NATT_FLT_TOTAL )
       Aux_Error( ERROR_INFO, "total number of defined attributes (%d) != expectation (%d) !!\n"
-                 "        --> Modify PAR_NATT_USER in the Makefile or invoke AddParticleAttribute() properly\n",
-                 NDefinedAtt, PAR_NATT_TOTAL );
+                 "        --> Modify PAR_NATT_FLT_USER in the Makefile or invoke AddParticleAttribute() properly\n",
+                 NDefinedAtt, PAR_NATT_FLT_TOTAL );
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
@@ -96,7 +96,7 @@ void Par_Init_Attribute()
 //                   (1) set the attribute label, which will be used as the output name of the attribute
 //                   (2) return the index of the new attribute, which can be used to access the attribute
 //                       data (e.g., amr->Par->Attribute[])
-//                2. One must invoke AddParticleAttribute() exactly PAR_NATT_TOTAL times to set the labels
+//                2. One must invoke AddParticleAttribute() exactly PAR_NATT_FLT_TOTAL times to set the labels
 //                   of all attributes
 //                3. Invoked by Par_Init_Attribute() and various test problem initializers
 //
@@ -115,10 +115,10 @@ FieldIdx_t AddParticleAttribute( const char *InputLabel )
    if ( InputLabel == NULL )
       Aux_Error( ERROR_INFO, "InputLabel == NULL !!\n" );
 
-   if ( NDefinedAtt > PAR_NATT_TOTAL )
+   if ( NDefinedAtt > PAR_NATT_FLT_TOTAL )
       Aux_Error( ERROR_INFO, "total number of defined particle attributes (%d) exceeds expectation (%d) after adding \"%s\" !!\n"
-                 "        --> Modify PAR_NATT_USER in the Makefile properly\n",
-                 NDefinedAtt, PAR_NATT_TOTAL, InputLabel );
+                 "        --> Modify PAR_NATT_FLT_USER in the Makefile properly\n",
+                 NDefinedAtt, PAR_NATT_FLT_TOTAL, InputLabel );
 
    for (int v=0; v<NDefinedAtt-1; v++)
       if (  strcmp( ParAttLabel[v], InputLabel ) == 0  )

@@ -75,7 +75,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  endif
 #  ifdef PARTICLE
    const int  Particle             = 1;
-   const int  Par_NAttStored       = PAR_NATT_STORED;
+   const int  Par_NAttStored       = PAR_NATT_FLT_STORED;
 #  else
    const int  Particle             = 0;
 #  endif
@@ -614,8 +614,8 @@ void Init_ByRestart_HDF5( const char *FileName )
    NewParList = new long [MaxNParInOnePatch];
 
 // be careful about using ParBuf returned from Aux_AllocateArray2D, which is set to NULL if MaxNParInOnePatch == 0
-// --> for example, accessing ParBuf[0...PAR_NATT_STORED-1] will be illegal when MaxNParInOnePatch == 0
-   Aux_AllocateArray2D( ParBuf, PAR_NATT_STORED, MaxNParInOnePatch );
+// --> for example, accessing ParBuf[0...PAR_NATT_FLT_STORED-1] will be illegal when MaxNParInOnePatch == 0
+   Aux_AllocateArray2D( ParBuf, PAR_NATT_FLT_STORED, MaxNParInOnePatch );
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Initializing particle repository ... done\n" );
 #  endif // #ifdef PARTICLE
@@ -647,9 +647,9 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  endif // #ifdef MHD ... else ...
 
 #  ifdef PARTICLE
-   char (*ParAttName)[MAX_STRING] = new char [PAR_NATT_STORED][MAX_STRING];
+   char (*ParAttName)[MAX_STRING] = new char [PAR_NATT_FLT_STORED][MAX_STRING];
    hsize_t H5_SetDims_ParData[1];
-   hid_t   H5_SetID_ParData[PAR_NATT_STORED], H5_SpaceID_ParData, H5_GroupID_Particle;
+   hid_t   H5_SetID_ParData[PAR_NATT_FLT_STORED], H5_SpaceID_ParData, H5_GroupID_Particle;
 #  else
 // define useless variables when PARTICLE is off
    int       *NParList_AllLv     = NULL;
@@ -670,8 +670,8 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  endif
 
 #  ifdef PARTICLE
-// skip the last PAR_NATT_UNSTORED attributes since we do not store them on disk
-   for (int v=0; v<PAR_NATT_STORED; v++)  sprintf( ParAttName[v], "%s", ParAttLabel[v] );
+// skip the last PAR_NATT_FLT_UNSTORED attributes since we do not store them on disk
+   for (int v=0; v<PAR_NATT_FLT_STORED; v++)  sprintf( ParAttName[v], "%s", ParAttLabel[v] );
 #  endif
 
 
@@ -754,7 +754,7 @@ void Init_ByRestart_HDF5( const char *FileName )
             H5_GroupID_Particle = H5Gopen( H5_FileID, "Particle", H5P_DEFAULT );
             if ( H5_GroupID_Particle < 0 )   Aux_Error( ERROR_INFO, "failed to open the group \"%s\" !!\n", "Particle" );
 
-            for (int v=0; v<PAR_NATT_STORED; v++)
+            for (int v=0; v<PAR_NATT_FLT_STORED; v++)
             {
                H5_SetID_ParData[v] = H5Dopen( H5_GroupID_Particle, ParAttName[v], H5P_DEFAULT );
                if ( H5_SetID_ParData[v] < 0 )   Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", ParAttName[v] );
@@ -859,7 +859,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 
 #        ifdef PARTICLE
          if ( ! ReenablePar ) {
-            for (int v=0; v<PAR_NATT_STORED; v++)  H5_Status = H5Dclose( H5_SetID_ParData[v] );
+            for (int v=0; v<PAR_NATT_FLT_STORED; v++)  H5_Status = H5Dclose( H5_SetID_ParData[v] );
             H5_Status = H5Gclose( H5_GroupID_Particle );
          }
 #        endif
@@ -1238,7 +1238,7 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
 //                                         stored on disk
 //                                     --> Be careful about using ParBuf, which is set to NULL if it has no elements
 //                                         (because of the current implementation of Aux_AllocateArray2D)
-//                                         --> For example, accessing ParBuf[0...PAR_NATT_STORED-1] will be illegal when there
+//                                         --> For example, accessing ParBuf[0...PAR_NATT_FLT_STORED-1] will be illegal when there
 //                                             are no particles
 //                NewParList         : Array to store the new particle indices
 //                                     --> It must be preallocated with a size equal to the maximum number of
@@ -1329,7 +1329,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
 
    hsize_t     H5_Offset_ParData[1], H5_Count_ParData[1], H5_MemDims_ParData[1];
    hid_t       H5_MemID_ParData;
-   real_par    NewParAtt[PAR_NATT_TOTAL];
+   real_par    NewParAtt[PAR_NATT_FLT_TOTAL];
 
    if ( NParThisPatch > 0 )
    {
@@ -1352,7 +1352,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       if ( H5_MemID_ParData < 0 )   Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemID_ParData" );
 
 //    load particle data from disk
-      for (int v=0; v<PAR_NATT_STORED; v++)
+      for (int v=0; v<PAR_NATT_FLT_STORED; v++)
       {
 //       using ParBuf[v] here is safe since it's NOT called when NParThisPatch == 0
          H5_Status = H5Dread( H5_SetID_ParData[v], H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
@@ -1366,8 +1366,8 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
 
       for (int p=0; p<NParThisPatch; p++)
       {
-//       skip the last PAR_NATT_UNSTORED attributes since we do not store them on disk
-         for (int v=0; v<PAR_NATT_STORED; v++)  NewParAtt[v] = ParBuf[v][p];
+//       skip the last PAR_NATT_FLT_UNSTORED attributes since we do not store them on disk
+         for (int v=0; v<PAR_NATT_FLT_STORED; v++)  NewParAtt[v] = ParBuf[v][p];
 
          NewParList[p] = amr->Par->AddOneParticle( NewParAtt );
 

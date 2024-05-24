@@ -6,13 +6,13 @@
 static void Par_Init_ByFunction_Template( const long NPar_ThisRank, const long NPar_AllRank,
                                           real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                           real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                          real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
+                                          real_par *ParType, real_par *AllAttribute[PAR_NATT_FLT_TOTAL] );
 
 // this function pointer must be set by a test problem initializer
 void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
                                  real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                  real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                 real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] ) = NULL;
+                                 real_par *ParType, real_par *AllAttribute[PAR_NATT_FLT_TOTAL] ) = NULL;
 
 
 
@@ -42,7 +42,7 @@ void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRa
 //                ParTime       : Particle time     array with the size of NPar_ThisRank
 //                ParType       : Particle type     array with the size of NPar_ThisRank
 //                AllAttribute  : Pointer array for all particle attributes
-//                                --> Dimension = [PAR_NATT_TOTAL][NPar_ThisRank]
+//                                --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_ThisRank]
 //                                --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
 //                                    to access the data
 //
@@ -51,7 +51,7 @@ void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRa
 void Par_Init_ByFunction_Template( const long NPar_ThisRank, const long NPar_AllRank,
                                    real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                    real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                   real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] )
+                                   real_par *ParType, real_par *AllAttribute[PAR_NATT_FLT_TOTAL] )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );

@@ -93,7 +93,7 @@ SET_GLOBAL( const char *PotLabel, "Pote" );  // potential label is currently fix
 SET_GLOBAL( char MagLabel[NCOMP_MAG][MAX_STRING] );
 #endif
 #ifdef PARTICLE
-SET_GLOBAL( char ParAttLabel[PAR_NATT_TOTAL][MAX_STRING] );
+SET_GLOBAL( char ParAttLabel[PAR_NATT_FLT_TOTAL][MAX_STRING] );
 #endif
 
 

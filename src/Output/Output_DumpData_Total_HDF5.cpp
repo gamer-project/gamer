@@ -1277,7 +1277,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       if ( H5_GroupID_Particle < 0 )   Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "Particle" );
 
 //    create the datasets of all particle attributes
-      for (int v=0; v<PAR_NATT_STORED; v++)
+      for (int v=0; v<PAR_NATT_FLT_STORED; v++)
       {
          H5_SetID_ParData = H5Dcreate( H5_GroupID_Particle, ParAttLabel[v], H5T_GAMER_REAL_PAR, H5_SpaceID_ParData,
                                        H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
@@ -1324,8 +1324,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 
 //       output one particle attribute at one level in one rank at a time
-//       --> skip the last PAR_NATT_UNSTORED attributes since we do not want to store them on disk
-         for (int v=0; v<PAR_NATT_STORED; v++)
+//       --> skip the last PAR_NATT_FLT_UNSTORED attributes since we do not want to store them on disk
+         for (int v=0; v<PAR_NATT_FLT_STORED; v++)
          {
 //          6-3-3. collect particle data from all patches at the current target level
             NParInBuf = 0;
@@ -1352,7 +1352,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                Aux_Error( ERROR_INFO, "failed to write a particle attribute (lv %d, v %d) !!\n", lv, v );
 
             H5_Status = H5Dclose( H5_SetID_ParData );
-         } // for (int v=0; v<PAR_NATT_STORED; v++)
+         } // for (int v=0; v<PAR_NATT_FLT_STORED; v++)
 
 //       free resource
          H5_Status = H5Sclose( H5_MemID_ParData );
@@ -1530,7 +1530,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    KeyInfo.NMagStored           = NCOMP_MAG;
 #  ifdef PARTICLE
    KeyInfo.Par_NPar             = amr->Par->NPar_Active_AllRank;
-   KeyInfo.Par_NAttStored       = PAR_NATT_STORED;
+   KeyInfo.Par_NAttStored       = PAR_NATT_FLT_STORED;
 #  ifdef FLOAT8_PAR
    KeyInfo.Float8_Par           = 1;
 #  else
@@ -1866,7 +1866,7 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.Feedback               = 0;
 #  endif
 
-   Makefile.Par_NAttUser           = PAR_NATT_USER;
+   Makefile.Par_NAttUser           = PAR_NATT_FLT_USER;
 
 #  ifdef FLOAT8_PAR
    Makefile.Float8_Par             = 1;
@@ -1985,7 +1985,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
 
 
 #  ifdef PARTICLE
-   SymConst.Par_NAttStored       = PAR_NATT_STORED;
+   SymConst.Par_NAttStored       = PAR_NATT_FLT_STORED;
    SymConst.Par_NType            = PAR_NTYPE;
 #  ifdef GRAVITY
    SymConst.RhoExt_GhostSize     = RHOEXT_GHOST_SIZE;
@@ -2206,7 +2206,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__FreezePar          = OPT__FREEZE_PAR;
    InputPara.Par_GhostSize           = amr->Par->GhostSize;
    InputPara.Par_GhostSizeTracer     = amr->Par->GhostSizeTracer;
-   for (int v=0; v<PAR_NATT_TOTAL; v++)
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    InputPara.ParAttLabel[v]          = ParAttLabel[v];
 #  endif
 
@@ -3151,7 +3151,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Par_GhostSizeTracer",     HOFFSET(InputPara_t,Par_GhostSizeTracer    ), H5T_NATIVE_INT     );
 
 // store the name of all particle attributes
-   for (int v=0; v<PAR_NATT_TOTAL; v++)
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    {
 //    key for each particle attribute
       sprintf( Key, "ParAttLabel%02d", v );

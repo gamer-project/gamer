@@ -74,7 +74,7 @@ struct KeyInfo_t
    int    NMagStored;               // NCOMP_MAG (declare it even when MHD is off)
 #  ifdef PARTICLE
    long   Par_NPar;                 // amr->Par->NPar_Active_AllRank
-   int    Par_NAttStored;           // PAR_NATT_STORED
+   int    Par_NAttStored;           // PAR_NATT_FLT_STORED
    int    Float8_Par;
 #  endif
 #  ifdef COSMIC_RAY
@@ -406,7 +406,7 @@ struct InputPara_t
    int    Par_GhostSize;
    int    Par_GhostSizeTracer;
    int    Par_TracerVelCorr;
-   char  *ParAttLabel[PAR_NATT_TOTAL];
+   char  *ParAttLabel[PAR_NATT_FLT_TOTAL];
 #  endif
 
 // cosmology

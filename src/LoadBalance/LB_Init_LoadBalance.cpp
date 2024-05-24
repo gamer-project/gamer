@@ -117,7 +117,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, cons
    const bool RemoveParFromRepo_No  = false;
 
 #  ifdef PARTICLE
-   real_par  *ParAtt_Old[PAR_NATT_TOTAL];
+   real_par  *ParAtt_Old[PAR_NATT_FLT_TOTAL];
 #  else
    real_par **ParAtt_Old = NULL;
 #  endif
@@ -130,13 +130,13 @@ void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, cons
 
       else
       {
-         for (int v=0; v<PAR_NATT_TOTAL; v++)   ParAtt_Old[v] = amr->Par->Attribute[v];
+         for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParAtt_Old[v] = amr->Par->Attribute[v];
       }
    }
 
    else
    {
-      for (int v=0; v<PAR_NATT_TOTAL; v++)   ParAtt_Old[v] = NULL;
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParAtt_Old[v] = NULL;
    }
 #  endif
 
@@ -407,7 +407,7 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
 #     endif
    }
 #  ifdef PARTICLE
-   for (int r=0; r<MPI_NRank; r++)  Send_NCount_ParData[r] *= (long)PAR_NATT_TOTAL;
+   for (int r=0; r<MPI_NRank; r++)  Send_NCount_ParData[r] *= (long)PAR_NATT_FLT_TOTAL;
 #  endif
 
 // 1.2 receive count
@@ -463,9 +463,9 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
                  NSend_Total_Patch, amr->NPatchComma[lv][1] );
 #  endif
 #  ifdef DEBUG_PARTICLE
-   if ( NSend_Total_ParData != (long)amr->Par->NPar_Lv[lv]*(long)PAR_NATT_TOTAL )
+   if ( NSend_Total_ParData != (long)amr->Par->NPar_Lv[lv]*(long)PAR_NATT_FLT_TOTAL )
       Aux_Error( ERROR_INFO, "NSend_Total_ParData (%ld) != expected (%ld) !!\n",
-                 NSend_Total_ParData, (long)amr->Par->NPar_Lv[lv]*(long)PAR_NATT_TOTAL );
+                 NSend_Total_ParData, (long)amr->Par->NPar_Lv[lv]*(long)PAR_NATT_FLT_TOTAL );
 #  endif
 
 
@@ -568,7 +568,7 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
             Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, ParAtt_Old[PAR_MASS][ParID] );
 #        endif
 
-         for (int v=0; v<PAR_NATT_TOTAL; v++)   *SendPtr_Par++ = ParAtt_Old[v][ParID];
+         for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   *SendPtr_Par++ = ParAtt_Old[v][ParID];
 
 //       remove this particle from the particle repository
          if ( RemoveParFromRepo )   amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_MPI );
@@ -577,7 +577,7 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
 
       NDone_Patch  [TRank] ++;
 #     ifdef PARTICLE
-      NDone_ParData[TRank] += (long)amr->patch[0][lv][PID]->NPar*(long)PAR_NATT_TOTAL;
+      NDone_ParData[TRank] += (long)amr->patch[0][lv][PID]->NPar*(long)PAR_NATT_FLT_TOTAL;
 
 //    detach particles from patches to avoid warning messages when deleting
 //    patches with particles
@@ -716,7 +716,7 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
 // check: for RemoveParFromRepo == false, the size of particle repository should be exactly equal to the received particles
 // --> see LB_RedistributeParticle_Init()
 #  ifdef DEBUG_PARTICLE
-   const long NParExpect = amr->Par->NPar_AcPlusInac + NRecv_Total_ParData/(long)PAR_NATT_TOTAL;
+   const long NParExpect = amr->Par->NPar_AcPlusInac + NRecv_Total_ParData/(long)PAR_NATT_FLT_TOTAL;
    if ( !RemoveParFromRepo  &&  NParExpect > amr->Par->ParListSize )
       Aux_Error( ERROR_INFO, "NParExpect (%ld) > ParListSize (%ld) !!\n", NParExpect, amr->Par->ParListSize );
 #  endif
@@ -791,7 +791,7 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
          {
 //          add a single particle to the particle repository
             ParID        = amr->Par->AddOneParticle( RecvPtr_Par );
-            RecvPtr_Par += PAR_NATT_TOTAL;
+            RecvPtr_Par += PAR_NATT_FLT_TOTAL;
 
 //          store the new particle index
             ParList[p] = ParID;
@@ -995,7 +995,7 @@ void LB_RedistributeParticle_Init( real_par **ParAtt_Old )
 
 // backup the old particle attribute arrays
 // remember to reset Attribute[] to NULL so that amr->Par->InitRepo will NOT delete these arrays
-   for (int v=0; v<PAR_NATT_TOTAL; v++)
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    {
       ParAtt_Old         [v] = amr->Par->Attribute[v];
       amr->Par->Attribute[v] = NULL;
@@ -1049,7 +1049,7 @@ void LB_RedistributeParticle_End( real_par **ParAtt_Old )
 {
 
 // remove old particle attribute arrays
-   for (int v=0; v<PAR_NATT_TOTAL; v++)   free( ParAtt_Old [v] );
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   free( ParAtt_Old [v] );
 
 
 // check the total number of particles

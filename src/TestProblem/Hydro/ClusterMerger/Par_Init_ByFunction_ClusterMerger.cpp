@@ -70,7 +70,7 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
 //                ParTime       : Particle time     array with the size of NPar_ThisRank
 //                ParType       : Particle type     array with the size of NPar_ThisRank
 //                AllAttribute  : Pointer array for all particle attributes
-//                                --> Dimension = [PAR_NATT_TOTAL][NPar_ThisRank]
+//                                --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_ThisRank]
 //                                --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
 //                                    to access the data
 //
@@ -80,7 +80,7 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
 void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPar_AllRank,
                                         real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                         real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                        real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] )
+                                        real_par *ParType, real_par *AllAttribute[PAR_NATT_FLT_TOTAL] )
 {
 
 #ifdef SUPPORT_HDF5

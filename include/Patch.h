@@ -240,7 +240,7 @@ struct patch_t
 
    int    NPar_Copy;
 #  ifdef LOAD_BALANCE
-   real_par  *ParAtt_Copy[PAR_NATT_TOTAL];
+   real_par  *ParAtt_Copy[PAR_NATT_FLT_TOTAL];
 #  else
    long      *ParList_Copy;
 #  endif
@@ -438,7 +438,7 @@ struct patch_t
 
       NPar_Copy    = -1;         // -1 : indicating that it has not been calculated yet
 #     ifdef LOAD_BALANCE
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
       ParAtt_Copy[v] = NULL;
 #     else
       ParList_Copy = NULL;
@@ -486,7 +486,7 @@ struct patch_t
 #     ifdef DEBUG_PARTICLE
       if ( ParList != NULL )              Aux_Error( ERROR_INFO, "ParList != NULL !!\n" );
 #     ifdef LOAD_BALANCE
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
       if ( ParAtt_Copy[v] != NULL )       Aux_Error( ERROR_INFO, "ParAtt_Copy[%d] != NULL !!\n", v );
 #     else
       if ( ParList_Copy != NULL )         Aux_Error( ERROR_INFO, "ParList_Copy != NULL !!\n" );

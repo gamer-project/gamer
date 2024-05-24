@@ -95,8 +95,8 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 #  endif
 
    const int    MaxNewParPerPatch = CUBE(PS1);
-   real_par   (*NewParAtt)[PAR_NATT_TOTAL] = new real_par [MaxNewParPerPatch][PAR_NATT_TOTAL];
-   long        *NewParID                   = new long     [MaxNewParPerPatch];
+   real_par   (*NewParAtt)[PAR_NATT_FLT_TOTAL] = new real_par [MaxNewParPerPatch][PAR_NATT_FLT_TOTAL];
+   long        *NewParID                       = new long     [MaxNewParPerPatch];
 
    int NNewPar;
 

@@ -695,9 +695,9 @@ void Aux_TakeNote()
       fprintf( Note, "#define SRC_BLOCK_SIZE         % d\n",      SRC_BLOCK_SIZE        );
 #     endif // #ifdef GPU
 #     ifdef PARTICLE
-      fprintf( Note, "#define PAR_NATT_TOTAL         % d\n",      PAR_NATT_TOTAL        );
-      fprintf( Note, "#define PAR_NATT_USER          % d\n",      PAR_NATT_USER         );
-      fprintf( Note, "#define PAR_NATT_STORED        % d\n",      PAR_NATT_STORED       );
+      fprintf( Note, "#define PAR_NATT_FLT_TOTAL     % d\n",      PAR_NATT_FLT_TOTAL    );
+      fprintf( Note, "#define PAR_NATT_FLT_USER      % d\n",      PAR_NATT_FLT_USER     );
+      fprintf( Note, "#define PAR_NATT_FLT_STORED    % d\n",      PAR_NATT_FLT_STORED   );
       fprintf( Note, "#define PAR_NTYPE              % d\n",      PAR_NTYPE             );
 #     endif
       fprintf( Note, "#define MAX_STRING             % d\n",      MAX_STRING            );

@@ -184,7 +184,7 @@ void Output_DumpData_Total( const char *FileName )
 
       FileOffset_Particle = ExpectFileSize;  // file offset at the beginning of particle data
 
-      ExpectFileSize += (long)PAR_NATT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real);
+      ExpectFileSize += (long)PAR_NATT_FLT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real);
 #     endif
 
 
@@ -504,8 +504,8 @@ void Output_DumpData_Total( const char *FileName )
 #     endif
 
 #     ifdef PARTICLE
-      const int    par_natt_stored       = PAR_NATT_STORED;
-      const int    par_natt_user         = PAR_NATT_USER;
+      const int    par_natt_stored       = PAR_NATT_FLT_STORED;
+      const int    par_natt_user         = PAR_NATT_FLT_USER;
 #     else
       const int    par_natt_stored       = NULL_INT;
       const int    par_natt_user         = NULL_INT;
@@ -953,7 +953,7 @@ void Output_DumpData_Total( const char *FileName )
    long NParInBuf, ParID, FileOffset_ThisVar;
    int  NParThisPatch;
 
-   for (int v=0; v<PAR_NATT_STORED; v++)
+   for (int v=0; v<PAR_NATT_FLT_STORED; v++)
    for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
    {
       if ( MPI_Rank == TargetMPIRank )
@@ -1005,7 +1005,7 @@ void Output_DumpData_Total( const char *FileName )
       } // if ( MPI_Rank == TargetMPIRank )
 
       MPI_Barrier( MPI_COMM_WORLD );
-   } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++), for (int v=0; v<PAR_NATT_STORED; v++)
+   } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++), for (int v=0; v<PAR_NATT_FLT_STORED; v++)
 
    delete [] ParBuf;
 #  endif // #ifdef PARTICLE

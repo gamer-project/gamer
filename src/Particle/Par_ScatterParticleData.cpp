@@ -19,14 +19,14 @@
 //                                --> A user-defined attribute with an integer index AttIntIdx returned by
 //                                    AddParticleAttribute() can be converted to a bitwise index by BIDX(AttIntIdx)
 //                Data_Send     : Pointer array for all particle attributes to be sent
-//                                --> Dimension = [PAR_NATT_TOTAL][NPar_AllRank]
+//                                --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_AllRank]
 //                                --> Target particle attributes are set by "AttBitIdx"
 //                Data_Recv     : Pointer array for all particle attributes to be received
 //
 // Return      :  Data_Recv
 //-------------------------------------------------------------------------------------------------------
 void Par_ScatterParticleData( const long NPar_ThisRank, const long NPar_AllRank, const long AttBitIdx,
-                              real_par *Data_Send[PAR_NATT_TOTAL], real_par *Data_Recv[PAR_NATT_TOTAL] )
+                              real_par *Data_Send[PAR_NATT_FLT_TOTAL], real_par *Data_Recv[PAR_NATT_FLT_TOTAL] )
 {
 
 // check integer overflow in MPI
@@ -50,7 +50,7 @@ void Par_ScatterParticleData( const long NPar_ThisRank, const long NPar_AllRank,
 
 
 // send particle attributes (one at a time) from the root rank to all ranks
-   for (int v=0; v<PAR_NATT_TOTAL; v++)
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    {
       if ( AttBitIdx & (1L<<v) )    MPI_Scatterv( Data_Send[v], NSend, SendDisp, MPI_GAMER_REAL_PAR,
                                                   Data_Recv[v], NPar_ThisRank,   MPI_GAMER_REAL_PAR,

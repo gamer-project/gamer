@@ -487,7 +487,7 @@ def load_arguments():
                          help="Feedback from particles to grids and vice versa.\n"
                        )
 
-    parser.add_argument( "--par_attribute", type=int, metavar="INTEGER", gamer_name="PAR_NATT_USER",
+    parser.add_argument( "--par_attribute", type=int, metavar="INTEGER", gamer_name="PAR_NATT_FLT_USER",
                          default=0,
                          depend={"particle":True},
                          help="Set the number of user-defined particle attributes.\n"

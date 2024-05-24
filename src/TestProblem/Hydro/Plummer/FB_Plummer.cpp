@@ -79,7 +79,7 @@ extern double Plummer_FB_Like;
 // Return      :  Fluid, ParAtt
 //-------------------------------------------------------------------------------------------------------
 int FB_Plummer( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                const int NPar, const long *ParSortID, real_par *ParAtt[PAR_NATT_TOTAL],
+                const int NPar, const long *ParSortID, real_par *ParAtt[PAR_NATT_FLT_TOTAL],
                 real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
                 const int TID, RandomNumber_t *RNG )
 {

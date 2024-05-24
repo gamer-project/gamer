@@ -44,7 +44,7 @@ extern bool   ParTest_Use_Massive;
 //                ParTime       : Particle time     array with the size of NPar_ThisRank
 //                ParType       : Particle type     array with the size of NPar_ThisRank
 //                AllAttribute  : Pointer array for all particle attributes
-//                                --> Dimension = [PAR_NATT_TOTAL][NPar_ThisRank]
+//                                --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_ThisRank]
 //                                --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
 //                                    to access the data
 //
@@ -53,7 +53,7 @@ extern bool   ParTest_Use_Massive;
 void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar_AllRank,
                                        real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                        real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                       real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] )
+                                       real_par *ParType, real_par *AllAttribute[PAR_NATT_FLT_TOTAL] )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -68,8 +68,8 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
                  NPar_All, NPar_AllRank );
 
 // define the particle attribute arrays
-   real_par *ParData_AllRank[PAR_NATT_TOTAL];
-   for (int v=0; v<PAR_NATT_TOTAL; v++)   ParData_AllRank[v] = NULL;
+   real_par *ParData_AllRank[PAR_NATT_FLT_TOTAL];
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParData_AllRank[v] = NULL;
 
 // only the master rank will construct the initial condition
    if ( MPI_Rank == 0 ) {
@@ -158,7 +158,7 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
 
 // free resource
    if ( MPI_Rank == 0 )
-      for (int v=0; v<PAR_NATT_TOTAL; v++)   delete [] ParData_AllRank[v];
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   delete [] ParData_AllRank[v];
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

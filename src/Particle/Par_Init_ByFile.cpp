@@ -26,7 +26,7 @@
 //
 //                      mass, position x/y/z, velocity x/y/z, type,
 //                      [, creation time (when enabling STAR_FORMATION)]
-//                      [, user-specified attributes (when PAR_NATT_USER>0)]
+//                      [, user-specified attributes (when PAR_NATT_FLT_USER>0)]
 //
 //                   --> The mass of all particles can be set to PAR_IC_MASS instead (by having PAR_IC_MASS>=0.0),
 //                       in which case PAR_IC should exclude partice mass
@@ -58,7 +58,7 @@ void Par_Init_ByFile()
    const bool SingleParType = amr->Par->ParICType >= 0;
 
 // determine the number of attributes to be loaded
-   int NParAtt = PAR_NATT_TOTAL - 1;   // exclude time
+   int NParAtt = PAR_NATT_FLT_TOTAL - 1;   // exclude time
 #  ifdef STORE_PAR_ACC
    NParAtt -= 3;                       // exclude acceleration
 #  endif

@@ -4,7 +4,7 @@
 
 static long ParPos2LBIdx( const int lv, const real_par ParPos[] );
 static void SendParticle2HomeRank( const int lv, const bool OldParOnly,
-                                   const long NNewPar, real_par *NewParAtt[PAR_NATT_TOTAL] );
+                                   const long NNewPar, real_par *NewParAtt[PAR_NATT_FLT_TOTAL] );
 
 
 
@@ -26,14 +26,14 @@ static void SendParticle2HomeRank( const int lv, const bool OldParOnly,
 //                                       --> Particles already exist in the current repository will not be redistributed
 //                NNewPar    : Number of new particles to be added                       (for OldParOnly==false only)
 //                NewParAtt  : Pointer array storing the data of new particle attributes (for OldParOnly==false only)
-//                             --> Format: real_par *NewParAtt[PAR_NATT_TOTAL]
+//                             --> Format: real_par *NewParAtt[PAR_NATT_FLT_TOTAL]
 //                             --> Must be deallocated manually after invoking this function
 //
 // Return      :  1. amr->Par
 //                2. NPar, ParListSize, and ParList[] of all real patches on lv
 //-------------------------------------------------------------------------------------------------------
 void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly,
-                                    const long NNewPar, real_par *NewParAtt[PAR_NATT_TOTAL] )
+                                    const long NNewPar, real_par *NewParAtt[PAR_NATT_FLT_TOTAL] )
 {
 
 // check
@@ -188,14 +188,14 @@ void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly,
 //                                       --> Particles already exist in the current repository will not be redistributed
 //                NNewPar    : Number of new particles to be added                       (for OldParOnly==false only)
 //                NewParAtt  : Pointer array storing the data of new particle attributes (for OldParOnly==false only)
-//                             --> Format: real_par *NewParAtt[PAR_NATT_TOTAL]
+//                             --> Format: real_par *NewParAtt[PAR_NATT_FLT_TOTAL]
 //                             --> Must be deallocated manually after invoking this function
 //
 // Return      :  1. amr->Par
 //                2. NPar, ParListSize and ParList[] of all real patches on lv
 //-------------------------------------------------------------------------------------------------------
 void SendParticle2HomeRank( const int lv, const bool OldParOnly,
-                            const long NNewPar, real_par *NewParAtt[PAR_NATT_TOTAL] )
+                            const long NNewPar, real_par *NewParAtt[PAR_NATT_FLT_TOTAL] )
 {
 
    real_par *Mass   = NULL;
@@ -285,15 +285,15 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly,
    real_par *RecvBuf = NULL;
 
 // 3-1. record attribute pointers
-   real_par *SendAttPtr[PAR_NATT_TOTAL], **OldAttPtrPtr[PAR_NATT_TOTAL];
+   real_par *SendAttPtr[PAR_NATT_FLT_TOTAL], **OldAttPtrPtr[PAR_NATT_FLT_TOTAL];
 
-   for (int v=0; v<PAR_NATT_TOTAL; v++)
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    {
       SendAttPtr  [v] = ( OldParOnly ) ? amr->Par->Attribute[v] : NewParAtt[v];
       OldAttPtrPtr[v] = &amr->Par->Attribute[v];
    }
 
-   for (int v=0; v<PAR_NATT_TOTAL; v++)
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    {
 //    3-2. initialize the array offsets of all target ranks
       for (int r=0; r<MPI_NRank; r++)  Offset[r] = Send_Disp[r];
@@ -319,7 +319,7 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly,
 
 //    3-5. redistribute data
       MPI_Alltoallv_GAMER( SendBuf, Send_Count, Send_Disp, MPI_GAMER_REAL_PAR, RecvBuf, Recv_Count, Recv_Disp, MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
-   } // for (int v=0; v<PAR_NATT_TOTAL; v++)
+   } // for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
 
 
 // 4. reset particle parameters

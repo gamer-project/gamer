@@ -84,7 +84,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
       if ( amr->patch[0][lv][PID]->NPar_Copy != -1 )
          Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Copy = %d != -1 !!\n", lv, PID, amr->patch[0][lv][PID]->NPar_Copy );
 
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
       if ( amr->patch[0][lv][PID]->ParAtt_Copy[v] != NULL )
          Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Copy = %d, ParAtt_Copy[%d] != NULL !!\n",
                     lv, PID, amr->patch[0][lv][PID]->NPar_Copy, v );
@@ -140,7 +140,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
    const bool RemoveAllPar_Yes = true;
 
 // reuse the MPI send buffer declared in LB_GetBufferData for better MPI performance
-   real_par *SendBuf_ParDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)PAR_NATT_TOTAL*sizeof(real_par) );
+   real_par *SendBuf_ParDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)PAR_NATT_FLT_TOTAL*sizeof(real_par) );
 
    real_par *SendPtr = SendBuf_ParDataEachPatch;
    long     *ParList = NULL;
@@ -167,7 +167,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
          ParID = ParList[p];
 
 //       2-1. store particle data into the MPI send buffer
-         for (int v=0; v<PAR_NATT_TOTAL; v++)   *SendPtr++ = amr->Par->Attribute[v][ParID];
+         for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   *SendPtr++ = amr->Par->Attribute[v][ParID];
 
 //       2-2. remove this particle from the particle repository of this rank
          amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_MPI );
@@ -199,7 +199,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 
 // note that we don't exchange NPatchEachRank (which is already known) and LBIdxEachRank (which is useless here)
    Par_LB_SendParticleData(
-      PAR_NATT_TOTAL,
+      PAR_NATT_FLT_TOTAL,
       SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachRank, SendBuf_ParDataEachPatch, NSendParTotal,
       RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch, RecvBuf_LBIdxEachRank, RecvBuf_ParDataEachPatch,
       NRecvPatchTotal, NRecvParTotal, Exchange_NPatchEachRank_No, Exchange_LBIdxEachRank_No, Exchange_ParDataEachRank_Yes,
@@ -236,7 +236,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
       for (int p=0; p<NParThisPatch; p++)
       {
          ParID    = amr->Par->AddOneParticle( RecvPtr );
-         RecvPtr += PAR_NATT_TOTAL;
+         RecvPtr += PAR_NATT_FLT_TOTAL;
 
 //       store the new particle index
          NewParIDList[p] = ParID;
