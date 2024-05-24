@@ -75,7 +75,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  endif
 #  ifdef PARTICLE
    const int  Particle             = 1;
-   const int  Par_NAttStored       = PAR_NATT_FLT_STORED;
+   const int  Par_NAttFltStored    = PAR_NATT_FLT_STORED;
 #  else
    const int  Particle             = 0;
 #  endif
@@ -215,16 +215,16 @@ void Init_ByRestart_HDF5( const char *FileName )
 
 #  ifdef PARTICLE
    if ( ReenablePar ) {
-      KeyInfo.Par_NPar       = 0;
-      KeyInfo.Par_NAttStored = 0;
+      KeyInfo.Par_NPar          = 0;
+      KeyInfo.Par_NAttFltStored = 0;
    }
 
    else {
    LoadField( "Par_NPar",             &KeyInfo.Par_NPar,             H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
    if ( KeyInfo.FormatVersion >= 2300 )
-   LoadField( "Par_NAttStored",       &KeyInfo.Par_NAttStored,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttStored,        1,    Fatal );
+   LoadField( "Par_NAttFltStored",    &KeyInfo.Par_NAttFltStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttFltStored,     1,    Fatal );
    else
-   LoadField( "Par_NAttStored",       &KeyInfo.Par_NAttStored,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttStored,        1, NonFatal );
+   LoadField( "Par_NAttFltStored",    &KeyInfo.Par_NAttFltStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttFltStored,     1, NonFatal );
    } // if ( ReenablePar ) ... else ...
 #  endif
 
@@ -1650,9 +1650,9 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
 
 #  ifdef PARTICLE
    if ( FormatVersion >= 2300 )
-   LoadField( "Par_NAttStored",       &RS.Par_NAttStored,       SID, TID, NonFatal, &RT.Par_NAttStored,        1,    Fatal );
+   LoadField( "Par_NAttFltStored",    &RS.Par_NAttFltStored,    SID, TID, NonFatal, &RT.Par_NAttFltStored,     1,    Fatal );
    else
-   LoadField( "Par_NAttStored",       &RS.Par_NAttStored,       SID, TID, NonFatal, &RT.Par_NAttStored,        1, NonFatal );
+   LoadField( "Par_NAttFltStored",    &RS.Par_NAttFltStored,    SID, TID, NonFatal, &RT.Par_NAttFltStored,     1, NonFatal );
    LoadField( "Par_NType",            &RS.Par_NType,            SID, TID, NonFatal, &RT.Par_NType,             1, NonFatal );
 #  ifdef GRAVITY
    LoadField( "RhoExt_GhostSize",     &RS.RhoExt_GhostSize,     SID, TID, NonFatal, &RT.RhoExt_GhostSize,      1, NonFatal );

@@ -74,7 +74,7 @@ struct KeyInfo_t
    int    NMagStored;               // NCOMP_MAG (declare it even when MHD is off)
 #  ifdef PARTICLE
    long   Par_NPar;                 // amr->Par->NPar_Active_AllRank
-   int    Par_NAttStored;           // PAR_NATT_FLT_STORED
+   int    Par_NAttFltStored;        // PAR_NATT_FLT_STORED
    int    Float8_Par;
 #  endif
 #  ifdef COSMIC_RAY
@@ -258,7 +258,7 @@ struct SymConst_t
 
 
 #  ifdef PARTICLE
-   int    Par_NAttStored;
+   int    Par_NAttFltStored;
    int    Par_NType;
 #  ifdef GRAVITY
    int    RhoExt_GhostSize;

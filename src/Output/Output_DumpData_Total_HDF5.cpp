@@ -1531,7 +1531,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    KeyInfo.NMagStored           = NCOMP_MAG;
 #  ifdef PARTICLE
    KeyInfo.Par_NPar             = amr->Par->NPar_Active_AllRank;
-   KeyInfo.Par_NAttStored       = PAR_NATT_FLT_STORED;
+   KeyInfo.Par_NAttFltStored    = PAR_NATT_FLT_STORED;
 #  ifdef FLOAT8_PAR
    KeyInfo.Float8_Par           = 1;
 #  else
@@ -1986,7 +1986,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
 
 
 #  ifdef PARTICLE
-   SymConst.Par_NAttStored       = PAR_NATT_FLT_STORED;
+   SymConst.Par_NAttFltStored    = PAR_NATT_FLT_STORED;
    SymConst.Par_NType            = PAR_NTYPE;
 #  ifdef GRAVITY
    SymConst.RhoExt_GhostSize     = RHOEXT_GHOST_SIZE;
@@ -2760,7 +2760,7 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "NMagStored",           HOFFSET(KeyInfo_t,NMagStored          ), H5T_NATIVE_INT          );
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Par_NPar",             HOFFSET(KeyInfo_t,Par_NPar            ), H5T_NATIVE_LONG         );
-   H5Tinsert( H5_TypeID, "Par_NAttStored",       HOFFSET(KeyInfo_t,Par_NAttStored      ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Par_NAttFltStored",    HOFFSET(KeyInfo_t,Par_NAttFltStored   ), H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "Float8_Par",           HOFFSET(KeyInfo_t,Float8_Par          ), H5T_NATIVE_INT          );
 #  endif
 
@@ -2959,7 +2959,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 #  endif // #ifdef GRAVITY
 
 #  ifdef PARTICLE
-   H5Tinsert( H5_TypeID, "Par_NAttStored",       HOFFSET(SymConst_t,Par_NAttStored      ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "Par_NAttFltStored",    HOFFSET(SymConst_t,Par_NAttFltStored   ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Par_NType",            HOFFSET(SymConst_t,Par_NType           ), H5T_NATIVE_INT    );
 #  ifdef GRAVITY
    H5Tinsert( H5_TypeID, "RhoExt_GhostSize",     HOFFSET(SymConst_t,RhoExt_GhostSize    ), H5T_NATIVE_INT    );
