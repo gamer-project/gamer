@@ -301,18 +301,18 @@ void Aux_Check_Conservation( const char *comment )
 #              if ( ELBDM_SCHEME == ELBDM_HYBRID )
                if ( amr->use_wave_flag[lv] ) {
 #              endif
-               const double R       = Flu_ELBDM[t][0][k][j][i];
-               const double I       = Flu_ELBDM[t][1][k][j][i];
+               const real R       = Flu_ELBDM[t][0][k][j][i];
+               const real I       = Flu_ELBDM[t][1][k][j][i];
 
 //             compute gradient of real part dR/dx
-               const double GradR_X = _dh2*( Flu_ELBDM[t][0][k ][j ][ip] - Flu_ELBDM[t][0][k ][j ][im] );
-               const double GradR_Y = _dh2*( Flu_ELBDM[t][0][k ][jp][i ] - Flu_ELBDM[t][0][k ][jm][i ] );
-               const double GradR_Z = _dh2*( Flu_ELBDM[t][0][kp][j ][i ] - Flu_ELBDM[t][0][km][j ][i ] );
+               const real GradR_X = _dh2*( Flu_ELBDM[t][0][k ][j ][ip] - Flu_ELBDM[t][0][k ][j ][im] );
+               const real GradR_Y = _dh2*( Flu_ELBDM[t][0][k ][jp][i ] - Flu_ELBDM[t][0][k ][jm][i ] );
+               const real GradR_Z = _dh2*( Flu_ELBDM[t][0][kp][j ][i ] - Flu_ELBDM[t][0][km][j ][i ] );
 
 //             compute gradient of imaginary part dR/dx
-               const double GradI_X = _dh2*( Flu_ELBDM[t][1][k ][j ][ip] - Flu_ELBDM[t][1][k ][j ][im] );
-               const double GradI_Y = _dh2*( Flu_ELBDM[t][1][k ][jp][i ] - Flu_ELBDM[t][1][k ][jm][i ] );
-               const double GradI_Z = _dh2*( Flu_ELBDM[t][1][kp][j ][i ] - Flu_ELBDM[t][1][km][j ][i ] );
+               const real GradI_X = _dh2*( Flu_ELBDM[t][1][k ][j ][ip] - Flu_ELBDM[t][1][k ][j ][im] );
+               const real GradI_Y = _dh2*( Flu_ELBDM[t][1][k ][jp][i ] - Flu_ELBDM[t][1][k ][jm][i ] );
+               const real GradI_Z = _dh2*( Flu_ELBDM[t][1][kp][j ][i ] - Flu_ELBDM[t][1][km][j ][i ] );
 
 //             compute momentum in ELBDM wave scheme
                MomX = _Eta*( R*GradI_X - I*GradR_X );
