@@ -938,9 +938,9 @@ void Output_DumpData_Total( const char *FileName )
 
 
 // allocate I/O buffer (just for better I/O performance)
-   const long ParBufSize = 10000000;   // number of particles dumped at a time
+   const long ParFltBufSize = 10000000;   // number of particles dumped at a time
 
-   real *ParBuf = new real [ParBufSize];
+   real *ParFltBuf = new real [ParFltBufSize];
 
 
 // set the file offset of particle data for each rank
@@ -975,12 +975,12 @@ void Output_DumpData_Total( const char *FileName )
          {
             NParThisPatch = amr->patch[0][lv][PID]->NPar;
 
-//          check if the particle I/O buffer is exceeded (possible only if the number of particles in this patch > ParBufSize)
-            if ( NParInBuf + NParThisPatch > ParBufSize )
+//          check if the particle I/O buffer is exceeded (possible only if the number of particles in this patch > ParFltBufSize)
+            if ( NParInBuf + NParThisPatch > ParFltBufSize )
             {
-               Aux_Message( stderr, "ERROR : NParInBuf (%ld) + NParThisPatch (%d) = %ld > ParBufSize (%ld) ...\n",
-                            NParInBuf, NParThisPatch, NParInBuf+NParThisPatch, ParBufSize );
-               Aux_Message( stderr, "        ==> Please increase ParBufSize in the file \"%s\" !!\n", __FILE__ );
+               Aux_Message( stderr, "ERROR : NParInBuf (%ld) + NParThisPatch (%d) = %ld > ParFltBufSize (%ld) ...\n",
+                            NParInBuf, NParThisPatch, NParInBuf+NParThisPatch, ParFltBufSize );
+               Aux_Message( stderr, "        ==> Please increase ParFltBufSize in the file \"%s\" !!\n", __FILE__ );
                MPI_Exit();
             }
 
@@ -989,13 +989,13 @@ void Output_DumpData_Total( const char *FileName )
             {
                ParID = amr->patch[0][lv][PID]->ParList[p];
 
-               ParBuf[ NParInBuf ++ ] = amr->Par->AttributeFlt[v][ParID];
+               ParFltBuf[ NParInBuf ++ ] = amr->Par->AttributeFlt[v][ParID];
             }
 
 //          store particle data from I/O buffer to disk
-            if ( PID+1 == amr->NPatchComma[lv][1]  ||  NParInBuf + amr->patch[0][lv][PID+1]->NPar > ParBufSize )
+            if ( PID+1 == amr->NPatchComma[lv][1]  ||  NParInBuf + amr->patch[0][lv][PID+1]->NPar > ParFltBufSize )
             {
-               fwrite( ParBuf, sizeof(real), NParInBuf, File );
+               fwrite( ParFltBuf, sizeof(real), NParInBuf, File );
 
                NParInBuf = 0;
             }
@@ -1007,7 +1007,7 @@ void Output_DumpData_Total( const char *FileName )
       MPI_Barrier( MPI_COMM_WORLD );
    } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++), for (int v=0; v<PAR_NATT_FLT_STORED; v++)
 
-   delete [] ParBuf;
+   delete [] ParFltBuf;
 #  endif // #ifdef PARTICLE
 
 

@@ -580,15 +580,15 @@ void Init_ByRestart()
    const long ParDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(real_par);
 
    long  *NewParList     = new long [MaxNParInOnePatch];
-   real_par **ParBuf     = NULL;
+   real_par **ParFltBuf  = NULL;
 
    real_par NewParAttFlt[PAR_NATT_FLT_TOTAL];
    long GParID;
    int  NParThisPatch;
 
-// be careful about using ParBuf returned from Aux_AllocateArray2D, which is set to NULL if MaxNParInOnePatch == 0
-// --> for example, accessing ParBuf[0...PAR_NATT_FLT_STORED-1] will be illegal when MaxNParInOnePatch == 0
-   Aux_AllocateArray2D( ParBuf, PAR_NATT_FLT_STORED, MaxNParInOnePatch );
+// be careful about using ParFltBuf returned from Aux_AllocateArray2D, which is set to NULL if MaxNParInOnePatch == 0
+// --> for example, accessing ParFltBuf[0...PAR_NATT_FLT_STORED-1] will be illegal when MaxNParInOnePatch == 0
+   Aux_AllocateArray2D( ParFltBuf, PAR_NATT_FLT_STORED, MaxNParInOnePatch );
 
 
 // all particles are assumed to be synchronized with the base level
@@ -637,15 +637,15 @@ void Init_ByRestart()
                {
                   fseek( File, FileOffset_Particle + v*ParDataSize1v + GParID*sizeof(real_par), SEEK_SET );
 
-//                using ParBuf[v] here is safe since it's NOT called when NParThisPatch == 0
-                  fread( ParBuf[v], sizeof(real_par), NParThisPatch, File );
+//                using ParFltBuf[v] here is safe since it's NOT called when NParThisPatch == 0
+                  fread( ParFltBuf[v], sizeof(real_par), NParThisPatch, File );
                }
 
 //             store particles to the particle repository (one particle at a time)
                for (int p=0; p<NParThisPatch; p++ )
                {
 //                skip the last PAR_NATT_FLT_UNSTORED attributes since we do not store them on disk
-                  for (int v=0; v<PAR_NATT_FLT_STORED; v++)  NewParAttFlt[v] = ParBuf[v][p];
+                  for (int v=0; v<PAR_NATT_FLT_STORED; v++)  NewParAttFlt[v] = ParFltBuf[v][p];
 
                   NewParList[p] = amr->Par->AddOneParticle( NewParAttFlt );
 
@@ -685,7 +685,7 @@ void Init_ByRestart()
 
 // free memory
    delete [] NewParList;
-   Aux_DeallocateArray2D( ParBuf );
+   Aux_DeallocateArray2D( ParFltBuf );
 #  endif // #ifdef PARTICLE
 
 

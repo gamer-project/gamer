@@ -1231,7 +1231,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //          which may introduce a large memory overhead
 //          --> solution: we can output a fixed number of particles at a time (see Output_DumpData_Total.cpp)
    long     (*NParLv_EachRank)[NLEVEL] = new long [MPI_NRank][NLEVEL];   // number of particles at each level in each rank
-   real_par (*ParBuf1v1Lv)             = NULL;   // buffer storing the data of one particle attribute at one level
+   real_par (*ParFltBuf1v1Lv)          = NULL;   // buffer storing the data of one particle attribute at one level
 
    long  GParID_Offset[NLEVEL];  // GParID = global particle index (==> unique for each particle)
    long  NParLv_AllRank[NLEVEL];
@@ -1243,7 +1243,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    MaxNPar1Lv = 0;
    for (int lv=0; lv<NLEVEL; lv++)  MaxNPar1Lv = MAX( MaxNPar1Lv, amr->Par->NPar_Lv[lv] );
 
-   ParBuf1v1Lv = new real_par [MaxNPar1Lv];
+   ParFltBuf1v1Lv = new real_par [MaxNPar1Lv];
 
 // 6-1-2. get the starting global particle index (i.e., GParID_Offset[NLEVEL]) for particles at each level in this rank
    MPI_Allgather( amr->Par->NPar_Lv, NLEVEL, MPI_LONG, NParLv_EachRank[0], NLEVEL, MPI_LONG, MPI_COMM_WORLD );
@@ -1341,14 +1341,14 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   Aux_Error( ERROR_INFO, "lv %d, NParInBuf (%ld) >= NPar_Lv (%ld) !!\n", lv, NParInBuf, amr->Par->NPar_Lv[lv] );
 #              endif
 
-               ParBuf1v1Lv[ NParInBuf ++ ] = amr->Par->AttributeFlt[v][ParID];
+               ParFltBuf1v1Lv[ NParInBuf ++ ] = amr->Par->AttributeFlt[v][ParID];
             }
 
 
 //          6-3-4. write data to disk
             H5_SetID_ParFltData = H5Dopen( H5_GroupID_Particle, ParAttFltLabel[v], H5P_DEFAULT );
 
-            H5_Status = H5Dwrite( H5_SetID_ParFltData, H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT, ParBuf1v1Lv );
+            H5_Status = H5Dwrite( H5_SetID_ParFltData, H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT, ParFltBuf1v1Lv );
             if ( H5_Status < 0 )
                Aux_Error( ERROR_INFO, "failed to write a particle attribute (lv %d, v %d) !!\n", lv, v );
 
@@ -1367,7 +1367,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
    H5_Status = H5Sclose( H5_SpaceID_ParData );
 
-   delete [] ParBuf1v1Lv;
+   delete [] ParFltBuf1v1Lv;
    delete [] NParLv_EachRank;
 #  endif // #ifdef PARTICLE
 
