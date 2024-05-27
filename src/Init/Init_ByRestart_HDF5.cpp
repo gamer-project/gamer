@@ -647,7 +647,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  endif // #ifdef MHD ... else ...
 
 #  ifdef PARTICLE
-   char (*ParAttName)[MAX_STRING] = new char [PAR_NATT_FLT_STORED][MAX_STRING];
+   char (*ParAttFltName)[MAX_STRING] = new char [PAR_NATT_FLT_STORED][MAX_STRING];
    hsize_t H5_SetDims_ParData[1];
    hid_t   H5_SetID_ParData[PAR_NATT_FLT_STORED], H5_SpaceID_ParData, H5_GroupID_Particle;
 #  else
@@ -671,7 +671,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 
 #  ifdef PARTICLE
 // skip the last PAR_NATT_FLT_UNSTORED attributes since we do not store them on disk
-   for (int v=0; v<PAR_NATT_FLT_STORED; v++)  sprintf( ParAttName[v], "%s", ParAttFltLabel[v] );
+   for (int v=0; v<PAR_NATT_FLT_STORED; v++)  sprintf( ParAttFltName[v], "%s", ParAttFltLabel[v] );
 #  endif
 
 
@@ -756,8 +756,8 @@ void Init_ByRestart_HDF5( const char *FileName )
 
             for (int v=0; v<PAR_NATT_FLT_STORED; v++)
             {
-               H5_SetID_ParData[v] = H5Dopen( H5_GroupID_Particle, ParAttName[v], H5P_DEFAULT );
-               if ( H5_SetID_ParData[v] < 0 )   Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", ParAttName[v] );
+               H5_SetID_ParData[v] = H5Dopen( H5_GroupID_Particle, ParAttFltName[v], H5P_DEFAULT );
+               if ( H5_SetID_ParData[v] < 0 )   Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", ParAttFltName[v] );
             }
          } // if ( ! ReenablePar )
 #        endif
@@ -950,7 +950,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    delete [] SonList_AllLv;
 #  endif
 #  ifdef PARTICLE
-   delete [] ParAttName;
+   delete [] ParAttFltName;
    delete [] NParList_AllLv;
    delete [] GParID_Offset;
    delete [] NewParList;
@@ -1329,7 +1329,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
 
    hsize_t     H5_Offset_ParData[1], H5_Count_ParData[1], H5_MemDims_ParData[1];
    hid_t       H5_MemID_ParData;
-   real_par    NewParAtt[PAR_NATT_FLT_TOTAL];
+   real_par    NewParAttFlt[PAR_NATT_FLT_TOTAL];
 
    if ( NParThisPatch > 0 )
    {
@@ -1362,14 +1362,14 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       }
 
 //    store particles to the particle repository (one particle at a time)
-      NewParAtt[PAR_TIME] = Time[0];   // all particles are assumed to be synchronized with the base level
+      NewParAttFlt[PAR_TIME] = Time[0];   // all particles are assumed to be synchronized with the base level
 
       for (int p=0; p<NParThisPatch; p++)
       {
 //       skip the last PAR_NATT_FLT_UNSTORED attributes since we do not store them on disk
-         for (int v=0; v<PAR_NATT_FLT_STORED; v++)  NewParAtt[v] = ParBuf[v][p];
+         for (int v=0; v<PAR_NATT_FLT_STORED; v++)  NewParAttFlt[v] = ParBuf[v][p];
 
-         NewParList[p] = amr->Par->AddOneParticle( NewParAtt );
+         NewParList[p] = amr->Par->AddOneParticle( NewParAttFlt );
 
 //       check
          if ( NewParList[p] >= NParThisRank )

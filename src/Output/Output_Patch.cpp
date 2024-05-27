@@ -304,7 +304,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
       ParID = Relation->ParList[p];
 
       fprintf( File, "%5d  %10ld", p, ParID );
-      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   fprintf( File, BlankPlusFormat_Flt, amr->Par->Attribute[v][ParID] );
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   fprintf( File, BlankPlusFormat_Flt, amr->Par->AttributeFlt[v][ParID] );
 
       fprintf( File, "\n" );
    }

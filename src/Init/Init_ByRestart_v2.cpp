@@ -582,7 +582,7 @@ void Init_ByRestart()
    long  *NewParList     = new long [MaxNParInOnePatch];
    real_par **ParBuf     = NULL;
 
-   real_par NewParAtt[PAR_NATT_FLT_TOTAL];
+   real_par NewParAttFlt[PAR_NATT_FLT_TOTAL];
    long GParID;
    int  NParThisPatch;
 
@@ -592,7 +592,7 @@ void Init_ByRestart()
 
 
 // all particles are assumed to be synchronized with the base level
-   NewParAtt[PAR_TIME] = Time[0];
+   NewParAttFlt[PAR_TIME] = Time[0];
 
 
 // allocate particle repository
@@ -645,9 +645,9 @@ void Init_ByRestart()
                for (int p=0; p<NParThisPatch; p++ )
                {
 //                skip the last PAR_NATT_FLT_UNSTORED attributes since we do not store them on disk
-                  for (int v=0; v<PAR_NATT_FLT_STORED; v++)  NewParAtt[v] = ParBuf[v][p];
+                  for (int v=0; v<PAR_NATT_FLT_STORED; v++)  NewParAttFlt[v] = ParBuf[v][p];
 
-                  NewParList[p] = amr->Par->AddOneParticle( NewParAtt );
+                  NewParList[p] = amr->Par->AddOneParticle( NewParAttFlt );
 
 #                 ifdef DEBUG_PARTICLE
                   if ( NewParList[p] >= NParThisRank )

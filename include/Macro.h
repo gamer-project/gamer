@@ -469,7 +469,7 @@
 #  define PAR_NATT_FLT_TOTAL      ( PAR_NATT_FLT_BUILTIN + PAR_NATT_FLT_USER )
 
 
-// indices of built-in particle attributes in Par->Attribute[]
+// indices of built-in particle attributes in Par->AttributeFlt[]
 // --> must NOT modify their values
 #  define  PAR_MASS           0
 #  define  PAR_POSX           1

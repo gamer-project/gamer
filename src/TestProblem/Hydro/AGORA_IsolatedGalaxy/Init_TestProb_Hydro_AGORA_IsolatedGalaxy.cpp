@@ -39,7 +39,7 @@ bool Flag_AGORA( const int i, const int j, const int k, const int lv, const int 
 void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRank,
                                 real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                 real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                real_par *ParType, real_par *AllAttribute[PAR_NATT_FLT_TOTAL] );
+                                real_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL] );
 #endif
 
 
@@ -473,7 +473,7 @@ void AddNewField_AGORA()
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  AddNewParticleAttribute_AGORA
+// Function    :  AddNewParticleAttributeFlt_AGORA
 // Description :  Add the problem-specific particle attributes
 //
 // Note        :  1. Ref: https://github.com/gamer-project/gamer/wiki/Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes
@@ -491,7 +491,7 @@ void AddNewParticleAttribute_AGORA()
 
 // "Idx_ParMetalFrac" has been predefined in Field.h
    if ( AGORA_UseMetal  &&  Idx_ParMetalFrac == Idx_Undefined )
-      Idx_ParMetalFrac = AddParticleAttribute( "ParMetalFrac" );
+      Idx_ParMetalFrac = AddParticleAttributeFlt( "ParMetalFrac" );
 
 } // FUNCTION : AddNewParticleAttribute_AGORA
 #endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )

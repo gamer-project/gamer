@@ -52,7 +52,7 @@ void Par_Output_BinaryFile( const char *FileName )
             {
 //             skip inactive particles
                if ( amr->Par->Mass[p] < 0.0 )   continue;
-               else                             attribute_buff[ counter ++ ] = amr->Par->Attribute[v][p];
+               else                             attribute_buff[ counter ++ ] = amr->Par->AttributeFlt[v][p];
             }
 
 //          dump data from the buffer

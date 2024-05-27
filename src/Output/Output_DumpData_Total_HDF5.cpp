@@ -1341,7 +1341,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   Aux_Error( ERROR_INFO, "lv %d, NParInBuf (%ld) >= NPar_Lv (%ld) !!\n", lv, NParInBuf, amr->Par->NPar_Lv[lv] );
 #              endif
 
-               ParBuf1v1Lv[ NParInBuf ++ ] = amr->Par->Attribute[v][ParID];
+               ParBuf1v1Lv[ NParInBuf ++ ] = amr->Par->AttributeFlt[v][ParID];
             }
 
 

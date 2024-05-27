@@ -167,7 +167,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
          ParID = ParList[p];
 
 //       2-1. store particle data into the MPI send buffer
-         for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   *SendPtr++ = amr->Par->Attribute[v][ParID];
+         for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   *SendPtr++ = amr->Par->AttributeFlt[v][ParID];
 
 //       2-2. remove this particle from the particle repository of this rank
          amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_MPI );
@@ -243,9 +243,9 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 
 //       we do not transfer inactive particles
 #        ifdef DEBUG_PARTICLE
-         if ( amr->Par->Attribute[PAR_MASS][ParID] < (real_par)0.0 )
+         if ( amr->Par->AttributeFlt[PAR_MASS][ParID] < (real_par)0.0 )
             Aux_Error( ERROR_INFO, "Find inactive particle (ParID %d, Mass %14.7e) !!\n",
-                       ParID, amr->Par->Attribute[PAR_MASS][ParID] );
+                       ParID, amr->Par->AttributeFlt[PAR_MASS][ParID] );
 #        endif
       }
 

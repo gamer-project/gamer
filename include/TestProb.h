@@ -72,7 +72,7 @@ extern void (*End_ExtPot_Ptr)();
 extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
                                         real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                         real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                        real_par *ParType, real_par *AllAttribute[PAR_NATT_FLT_TOTAL] );
+                                        real_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL] );
 extern void (*Par_Init_Attribute_User_Ptr)();
 #endif
 #if ( MODEL == HYDRO )

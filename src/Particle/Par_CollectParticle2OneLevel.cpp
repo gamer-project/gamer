@@ -55,7 +55,7 @@ bool Particle_Collected = false;
 // Parameter   :  FaLv          : Target refinement leve
 //                AttBitIdx     : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
 //                                --> A user-defined attribute with an integer index AttIntIdx returned by
-//                                    AddParticleAttribute() can be converted to a bitwise index by BIDX(AttIntIdx)
+//                                    AddParticleAttributeFlt() can be converted to a bitwise index by BIDX(AttIntIdx)
 //                                --> Used by LOAD_BALANCE only
 //                PredictPos    : true --> Predict particle position to TargetTime (for LOAD_BALANCE only)
 //                TargetTime    : Target time for predicting the particle position (for LOAD_BALANCE only)

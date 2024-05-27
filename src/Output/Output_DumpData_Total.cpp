@@ -989,7 +989,7 @@ void Output_DumpData_Total( const char *FileName )
             {
                ParID = amr->patch[0][lv][PID]->ParList[p];
 
-               ParBuf[ NParInBuf ++ ] = amr->Par->Attribute[v][ParID];
+               ParBuf[ NParInBuf ++ ] = amr->Par->AttributeFlt[v][ParID];
             }
 
 //          store particle data from I/O buffer to disk

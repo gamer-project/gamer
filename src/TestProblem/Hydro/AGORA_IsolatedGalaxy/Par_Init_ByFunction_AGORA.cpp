@@ -54,7 +54,7 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-   const int NParAtt = 7;  // mass, pos*3, vel*3
+   const int NParAttFlt = 7;  // mass, pos*3, vel*3
    real_par *ParData_AllRank = NULL;
 
 // load data --> for simplicity, currently only the root rank will load data from disk
@@ -90,7 +90,7 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
 
 
 //    allocate memory to store all particles loaded from disk
-      ParData_AllRank = new real_par [NPar_Sum*NParAtt];
+      ParData_AllRank = new real_par [NPar_Sum*NParAttFlt];
 
 
 //    load data from the three particle tables
@@ -107,7 +107,7 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
          Aux_Message( stdout, "   Loading particles from the file \"%s\" ... ", Filename[t] );
 
 //       must use a temporary pointer "tmp_ptr" for Aux_LoadTable() because of the call-by-reference approach
-         real_par *tmp_ptr = ParData_AllRank + NPar_Loaded*NParAtt;
+         real_par *tmp_ptr = ParData_AllRank + NPar_Loaded*NParAttFlt;
 
          NPar_Loaded += Aux_LoadTable( tmp_ptr, Filename[t], NCol, Col, RowMajor_Yes, AllocMem_No );
 
@@ -124,9 +124,9 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
 
 
 // get the number of particles in each rank and set the corresponding offsets
-   if ( (long)NParAtt*NPar_AllRank > (long)__INT_MAX__ )
+   if ( (long)NParAttFlt*NPar_AllRank > (long)__INT_MAX__ )
       Aux_Error( ERROR_INFO, "Total number of particle attributes to be sent (%ld) exceeds the maximum integer (%ld) !!\n",
-                 (long)NParAtt*NPar_AllRank, (long)__INT_MAX__ );
+                 (long)NParAttFlt*NPar_AllRank, (long)__INT_MAX__ );
 
    int NSend[MPI_NRank], SendDisp[MPI_NRank];
    int NPar_ThisRank_int = NPar_ThisRank;    // (i) convert to "int" and (ii) remove the "const" declaration
@@ -136,7 +136,7 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
 
    if ( MPI_Rank == 0 )
    {
-      for (int r=0; r<MPI_NRank; r++)  NSend[r] *= NParAtt;
+      for (int r=0; r<MPI_NRank; r++)  NSend[r] *= NParAttFlt;
 
       SendDisp[0] = 0;
       for (int r=1; r<MPI_NRank; r++)  SendDisp[r] = SendDisp[r-1] + NSend[r-1];
@@ -145,10 +145,10 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
 
 // send particles from the root rank to all ranks
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Sending particles from the root rank to all ranks ... " );
-   real_par (*ParData_MyRank)[NParAtt] = new real_par [NPar_ThisRank][NParAtt];
+   real_par (*ParData_MyRank)[NParAttFlt] = new real_par [NPar_ThisRank][NParAttFlt];
 
-   MPI_Scatterv( ParData_AllRank,   NSend, SendDisp,       MPI_GAMER_REAL_PAR,
-                 ParData_MyRank[0], NPar_ThisRank*NParAtt, MPI_GAMER_REAL_PAR, 0, MPI_COMM_WORLD );
+   MPI_Scatterv( ParData_AllRank,   NSend, SendDisp,          MPI_GAMER_REAL_PAR,
+                 ParData_MyRank[0], NPar_ThisRank*NParAttFlt, MPI_GAMER_REAL_PAR, 0, MPI_COMM_WORLD );
 
    delete [] ParData_AllRank;
 

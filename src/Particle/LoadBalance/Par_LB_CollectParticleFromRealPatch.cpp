@@ -22,7 +22,7 @@
 // Parameter   :  lv                  : Target refinement level
 //                AttBitIdx           : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
 //                                      --> A user-defined attribute with an integer index AttIntIdx returned by
-//                                          AddParticleAttribute() can be converted to a bitwise index by BIDX(AttIntIdx)
+//                                          AddParticleAttributeFlt() can be converted to a bitwise index by BIDX(AttIntIdx)
 //                Buff_NPatchTotal    : Total number of buffer patches in Buff_PIDList
 //                Buff_PIDList        : Target buffer patch indices
 //                Buff_NPatchEachRank : Number of buffer patches to receive particles from each rank
@@ -231,7 +231,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
          {
             ParID = ParList[p];
 
-            for (int v=0; v<NAtt; v++)    SendPtr[v] = amr->Par->Attribute[ AttIntIdx[v] ][ParID];
+            for (int v=0; v<NAtt; v++)    SendPtr[v] = amr->Par->AttributeFlt[ AttIntIdx[v] ][ParID];
 
 //          predict particle position to TargetTime
 //          --> note that we need to skip particles waiting for velocity correction since these are leaf real patches

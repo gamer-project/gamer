@@ -17,7 +17,7 @@
 //                NPar_AllRank  : Total number of particles in all MPI ranks
 //                AttBitIdx     : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
 //                                --> A user-defined attribute with an integer index AttIntIdx returned by
-//                                    AddParticleAttribute() can be converted to a bitwise index by BIDX(AttIntIdx)
+//                                    AddParticleAttributeFlt() can be converted to a bitwise index by BIDX(AttIntIdx)
 //                Data_Send     : Pointer array for all particle attributes to be sent
 //                                --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_AllRank]
 //                                --> Target particle attributes are set by "AttBitIdx"

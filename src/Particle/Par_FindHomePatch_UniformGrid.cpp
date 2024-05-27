@@ -4,7 +4,7 @@
 
 static long ParPos2LBIdx( const int lv, const real_par ParPos[] );
 static void SendParticle2HomeRank( const int lv, const bool OldParOnly,
-                                   const long NNewPar, real_par *NewParAtt[PAR_NATT_FLT_TOTAL] );
+                                   const long NNewPar, real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL] );
 
 
 
@@ -19,21 +19,21 @@ static void SendParticle2HomeRank( const int lv, const bool OldParOnly,
 //                3. After calling this function, the amr->Par structure will be reconstructed and
 //                   all particles will be associated with their home patches on lv
 //
-// Parameter   :  lv         : Target level
-//                OldParOnly : true  --> only redistribute particles already exist in the current repository
-//                                       --> Ignore NNewPar and NewParAtt
-//                             false --> only redistribute newly added particles specified by NNewPar and NewParAtt
-//                                       --> Particles already exist in the current repository will not be redistributed
-//                NNewPar    : Number of new particles to be added                       (for OldParOnly==false only)
-//                NewParAtt  : Pointer array storing the data of new particle attributes (for OldParOnly==false only)
-//                             --> Format: real_par *NewParAtt[PAR_NATT_FLT_TOTAL]
-//                             --> Must be deallocated manually after invoking this function
+// Parameter   :  lv           : Target level
+//                OldParOnly   : true  --> only redistribute particles already exist in the current repository
+//                                         --> Ignore NNewPar and NewParAttFlt
+//                               false --> only redistribute newly added particles specified by NNewPar and NewParAttFlt
+//                                         --> Particles already exist in the current repository will not be redistributed
+//                NNewPar      : Number of new particles to be added                       (for OldParOnly==false only)
+//                NewParAttFlt : Pointer array storing the data of new particle attributes (for OldParOnly==false only)
+//                               --> Format: real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL]
+//                               --> Must be deallocated manually after invoking this function
 //
 // Return      :  1. amr->Par
 //                2. NPar, ParListSize, and ParList[] of all real patches on lv
 //-------------------------------------------------------------------------------------------------------
 void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly,
-                                    const long NNewPar, real_par *NewParAtt[PAR_NATT_FLT_TOTAL] )
+                                    const long NNewPar, real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL] )
 {
 
 // check
@@ -46,8 +46,8 @@ void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly,
       if ( NNewPar < 0 )
          Aux_Error( ERROR_INFO, "NNewPar (%ld) < 0 !!\n", NNewPar );
 
-      if ( NNewPar > 0  &&  NewParAtt[PAR_MASS] == NULL )
-         Aux_Error( ERROR_INFO, "NewParAtt[PAR_MASS] == NULL !!\n" );
+      if ( NNewPar > 0  &&  NewParAttFlt[PAR_MASS] == NULL )
+         Aux_Error( ERROR_INFO, "NewParAttFlt[PAR_MASS] == NULL !!\n" );
    }
 #  endif
 
@@ -57,7 +57,7 @@ void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly,
 
 
 // 1. redistribute all particles to their home ranks
-   SendParticle2HomeRank( lv, OldParOnly, NNewPar, NewParAtt );
+   SendParticle2HomeRank( lv, OldParOnly, NNewPar, NewParAttFlt );
 
 
 // 2. find the home patch
@@ -181,21 +181,21 @@ void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly,
 //                2. Invoked by Par_FindHomePatch_UniformGrid()
 //                3. Inactive particles will NOT be redistributed
 //
-// Parameter   :  lv         : Target level
-//                OldParOnly : true  --> only redistribute particles already exist in the current repository
-//                                       --> Ignore NNewPar and NewParAtt
-//                             false --> only redistribute newly added particles specified by NNewPar and NewParAtt
-//                                       --> Particles already exist in the current repository will not be redistributed
-//                NNewPar    : Number of new particles to be added                       (for OldParOnly==false only)
-//                NewParAtt  : Pointer array storing the data of new particle attributes (for OldParOnly==false only)
-//                             --> Format: real_par *NewParAtt[PAR_NATT_FLT_TOTAL]
-//                             --> Must be deallocated manually after invoking this function
+// Parameter   :  lv           : Target level
+//                OldParOnly   : true  --> only redistribute particles already exist in the current repository
+//                                         --> Ignore NNewPar and NewParAttFlt
+//                               false --> only redistribute newly added particles specified by NNewPar and NewParAttFlt
+//                                         --> Particles already exist in the current repository will not be redistributed
+//                NNewPar      : Number of new particles to be added                       (for OldParOnly==false only)
+//                NewParAttFlt : Pointer array storing the data of new particle attributes (for OldParOnly==false only)
+//                               --> Format: real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL]
+//                               --> Must be deallocated manually after invoking this function
 //
 // Return      :  1. amr->Par
 //                2. NPar, ParListSize and ParList[] of all real patches on lv
 //-------------------------------------------------------------------------------------------------------
 void SendParticle2HomeRank( const int lv, const bool OldParOnly,
-                            const long NNewPar, real_par *NewParAtt[PAR_NATT_FLT_TOTAL] )
+                            const long NNewPar, real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL] )
 {
 
    real_par *Mass   = NULL;
@@ -215,10 +215,10 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly,
 
    else
    {
-      Mass   = NewParAtt[PAR_MASS];
-      Pos[0] = NewParAtt[PAR_POSX];
-      Pos[1] = NewParAtt[PAR_POSY];
-      Pos[2] = NewParAtt[PAR_POSZ];
+      Mass   = NewParAttFlt[PAR_MASS];
+      Pos[0] = NewParAttFlt[PAR_POSX];
+      Pos[1] = NewParAttFlt[PAR_POSY];
+      Pos[2] = NewParAttFlt[PAR_POSZ];
    }
 
    for (int r=0; r<MPI_NRank; r++)  Send_Count[r] = 0L;
@@ -289,8 +289,8 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly,
 
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    {
-      SendAttPtr  [v] = ( OldParOnly ) ? amr->Par->Attribute[v] : NewParAtt[v];
-      OldAttPtrPtr[v] = &amr->Par->Attribute[v];
+      SendAttPtr  [v] = ( OldParOnly ) ? amr->Par->AttributeFlt[v] : NewParAttFlt[v];
+      OldAttPtrPtr[v] = &amr->Par->AttributeFlt[v];
    }
 
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
@@ -347,19 +347,19 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly,
 
 
 // 5. reset attribute pointers
-   amr->Par->Mass = amr->Par->Attribute[PAR_MASS];
-   amr->Par->PosX = amr->Par->Attribute[PAR_POSX];
-   amr->Par->PosY = amr->Par->Attribute[PAR_POSY];
-   amr->Par->PosZ = amr->Par->Attribute[PAR_POSZ];
-   amr->Par->VelX = amr->Par->Attribute[PAR_VELX];
-   amr->Par->VelY = amr->Par->Attribute[PAR_VELY];
-   amr->Par->VelZ = amr->Par->Attribute[PAR_VELZ];
-   amr->Par->Time = amr->Par->Attribute[PAR_TIME];
-   amr->Par->Type = amr->Par->Attribute[PAR_TYPE];
+   amr->Par->Mass = amr->Par->AttributeFlt[PAR_MASS];
+   amr->Par->PosX = amr->Par->AttributeFlt[PAR_POSX];
+   amr->Par->PosY = amr->Par->AttributeFlt[PAR_POSY];
+   amr->Par->PosZ = amr->Par->AttributeFlt[PAR_POSZ];
+   amr->Par->VelX = amr->Par->AttributeFlt[PAR_VELX];
+   amr->Par->VelY = amr->Par->AttributeFlt[PAR_VELY];
+   amr->Par->VelZ = amr->Par->AttributeFlt[PAR_VELZ];
+   amr->Par->Time = amr->Par->AttributeFlt[PAR_TIME];
+   amr->Par->Type = amr->Par->AttributeFlt[PAR_TYPE];
 #  ifdef STORE_PAR_ACC
-   amr->Par->AccX = amr->Par->Attribute[PAR_ACCX];
-   amr->Par->AccY = amr->Par->Attribute[PAR_ACCY];
-   amr->Par->AccZ = amr->Par->Attribute[PAR_ACCZ];
+   amr->Par->AccX = amr->Par->AttributeFlt[PAR_ACCX];
+   amr->Par->AccY = amr->Par->AttributeFlt[PAR_ACCY];
+   amr->Par->AccZ = amr->Par->AttributeFlt[PAR_ACCZ];
 #  endif
 
 

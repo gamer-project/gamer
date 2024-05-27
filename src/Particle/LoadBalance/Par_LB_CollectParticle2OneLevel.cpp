@@ -50,7 +50,7 @@ extern Timer_t *Timer_Par_MPI[NLEVEL][6];
 // Parameter   :  FaLv          : Father's refinement level
 //                AttBitIdx     : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
 //                                --> A user-defined attribute with an integer index AttIntIdx returned by
-//                                    AddParticleAttribute() can be converted to a bitwise index by BIDX(AttIntIdx)
+//                                    AddParticleAttributeFlt() can be converted to a bitwise index by BIDX(AttIntIdx)
 //                PredictPos    : Predict particle position, which is useful for particle mass assignement
 //                                --> We send particle position **after** prediction so that we don't have to
 //                                    send particle velocity
@@ -340,7 +340,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
             {
                const long ParID = amr->patch[0][lv][PID]->ParList[p];
 
-               for (int v=0; v<NAtt; v++)    SendPtr[v] = amr->Par->Attribute[ AttIntIdx[v] ][ParID];
+               for (int v=0; v<NAtt; v++)    SendPtr[v] = amr->Par->AttributeFlt[ AttIntIdx[v] ][ParID];
 
 //             predict particle position to TargetTime
                if ( PredictPos )
@@ -573,7 +573,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 //          --> no need for position prediction here since these particles are all waiting for velocity correction
 //          and should already be synchronized with TargetTime
             for (int v=0; v<NAtt; v++)
-               amr->patch[0][FaLv][FaPID]->ParAttFlt_Copy[ AttIntIdx[v] ][idx] = amr->Par->Attribute[ AttIntIdx[v] ][ParID];
+               amr->patch[0][FaLv][FaPID]->ParAttFlt_Copy[ AttIntIdx[v] ][idx] = amr->Par->AttributeFlt[ AttIntIdx[v] ][ParID];
          } // for (int p=0; p<amr->patch[0][FaLv][FaPID]->NPar; p++)
 
 //       4-3. update NPar_Copy

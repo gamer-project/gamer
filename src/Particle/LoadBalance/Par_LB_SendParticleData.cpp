@@ -20,7 +20,7 @@
 //                   --> Par_LB_ExchangeParticleBetweenPatch() is called by
 //                       Par_PassParticle2Sibling() and Par_PassParticle2Son_MultiPatch()
 //
-// Parameter   :  NParAtt                  : Number of particle attributes to be sent
+// Parameter   :  NParAttFlt               : Number of particle attributes to be sent
 //                SendBuf_NPatchEachRank   : MPI send buffer --> number of patches sent to each rank
 //                SendBuf_NParEachPatch    : MPI send buffer --> number of particles in each patch to be sent
 //                SendBuf_LBIdxEachPatch   : MPI send buffer --> load-balance index of each patch to be sent
@@ -49,7 +49,7 @@
 //                RecvBuf_ParDataEachPatch (if Exchange_ParDataEachRank == true),
 //                NRecvPatchTotal, NRecvPatchTotal
 //-------------------------------------------------------------------------------------------------------
-void Par_LB_SendParticleData( const int NParAtt, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
+void Par_LB_SendParticleData( const int NParAttFlt, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
                               long *SendBuf_LBIdxEachPatch, real_par *SendBuf_ParDataEachPatch, const long NSendParTotal,
                               int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
                               real_par *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, long &NRecvParTotal,
@@ -59,7 +59,7 @@ void Par_LB_SendParticleData( const int NParAtt, int *SendBuf_NPatchEachRank, in
 
 // check
 #  ifdef DEBUG_PARTICLE
-   if ( NParAtt < 0 )                        Aux_Error( ERROR_INFO, "NParAtt = %d < 0 !!\n", NParAtt );
+   if ( NParAttFlt < 0 )                     Aux_Error( ERROR_INFO, "NParAttFlt = %d < 0 !!\n", NParAttFlt );
    if ( SendBuf_NPatchEachRank   == NULL )   Aux_Error( ERROR_INFO, "SendBuf_NPatchEachRank == NULL !!\n" );
    if ( SendBuf_NParEachPatch    == NULL )   Aux_Error( ERROR_INFO, "SendBuf_NParEachPatch == NULL !!\n" );
    if ( Exchange_ParDataEachRank  &&
@@ -170,8 +170,8 @@ void Par_LB_SendParticleData( const int NParAtt, int *SendBuf_NPatchEachRank, in
 
          NRecvParTotal += RecvCount_ParDataEachPatch[r];
 
-         SendCount_ParDataEachPatch[r] *= (long)NParAtt;
-         RecvCount_ParDataEachPatch[r] *= (long)NParAtt;
+         SendCount_ParDataEachPatch[r] *= (long)NParAttFlt;
+         RecvCount_ParDataEachPatch[r] *= (long)NParAttFlt;
       }
 
 //    send/recv displacement
@@ -184,7 +184,7 @@ void Par_LB_SendParticleData( const int NParAtt, int *SendBuf_NPatchEachRank, in
       }
 
 //    reuse the MPI recv buffer declared in LB_GetBufferData for better MPI performance
-      RecvBuf_ParDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Recv( NRecvParTotal*(long)NParAtt*sizeof(real_par) );
+      RecvBuf_ParDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Recv( NRecvParTotal*(long)NParAttFlt*sizeof(real_par) );
 
 
 //    exchange data
@@ -222,11 +222,11 @@ void Par_LB_SendParticleData( const int NParAtt, int *SendBuf_NPatchEachRank, in
 
          FILE *File = fopen( FileName, "a" );
 
-         const double SendMB = (double)NSendParTotal*NParAtt*sizeof(real_par)*1.0e-6;
-         const double RecvMB = (double)NRecvParTotal*NParAtt*sizeof(real_par)*1.0e-6;
+         const double SendMB = (double)NSendParTotal*NParAttFlt*sizeof(real_par)*1.0e-6;
+         const double RecvMB = (double)NRecvParTotal*NParAttFlt*sizeof(real_par)*1.0e-6;
 
          fprintf( File, "%19s %4d %4s %10s %10s %10.5f %8.3f %8.3f %10.3f %10.3f\n",
-                  Timer_Comment, NParAtt, "X", "X", "X", dtime, SendMB, RecvMB, SendMB/dtime, RecvMB/dtime );
+                  Timer_Comment, NParAttFlt, "X", "X", "X", dtime, SendMB, RecvMB, SendMB/dtime, RecvMB/dtime );
 
          fclose( File );
       } // if ( OPT__TIMING_MPI )
