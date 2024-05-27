@@ -299,9 +299,12 @@ void Init_ByRestart_HDF5( const char *FileName )
 // --> assuming dTime_AllLv[] has been initialized as 0.0 properly
    for (int lv=KeyInfo.NLevel; lv<NLEVEL; lv++)
    {
-      Time          [lv] = 0.0;
-      NPatchTotal   [lv] = 0;
-      AdvanceCounter[lv] = 0;
+      Time              [lv] = 0.0;
+      NPatchTotal       [lv] = 0;
+      AdvanceCounter    [lv] = 0;
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      amr->use_wave_flag[lv] = KeyInfo.UseWaveScheme[ KeyInfo.NLevel - 1 ];
+#     endif
    }
 
 
