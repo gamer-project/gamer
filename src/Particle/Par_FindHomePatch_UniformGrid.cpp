@@ -285,11 +285,11 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly,
    real_par *RecvBuf = NULL;
 
 // 3-1. record attribute pointers
-   real_par *SendAttPtr[PAR_NATT_FLT_TOTAL], **OldAttPtrPtr[PAR_NATT_FLT_TOTAL];
+   real_par *SendAttFltPtr[PAR_NATT_FLT_TOTAL], **OldAttPtrPtr[PAR_NATT_FLT_TOTAL];
 
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    {
-      SendAttPtr  [v] = ( OldParOnly ) ? amr->Par->AttributeFlt[v] : NewParAttFlt[v];
+      SendAttFltPtr  [v] = ( OldParOnly ) ? amr->Par->AttributeFlt[v] : NewParAttFlt[v];
       OldAttPtrPtr[v] = &amr->Par->AttributeFlt[v];
    }
 
@@ -300,12 +300,12 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly,
 
 //    3-3. prepare send buffer (skip inactive particles)
       for (long ParID=0; ParID<NTarPar; ParID++)
-         if ( TRank[ParID] != -1 )  SendBuf[ Offset[TRank[ParID]] ++ ] = SendAttPtr[v][ParID];
+         if ( TRank[ParID] != -1 )  SendBuf[ Offset[TRank[ParID]] ++ ] = SendAttFltPtr[v][ParID];
 
 //    3-4. free/allocate the old/new particle arrays and set the recv buffer
       if ( OldParOnly )
       {
-         free( SendAttPtr[v] );
+         free( SendAttFltPtr[v] );
 
          *(OldAttPtrPtr[v]) = (real_par*)malloc( UpdatedParListSize*sizeof(real_par) );
          RecvBuf            = *(OldAttPtrPtr[v]);
