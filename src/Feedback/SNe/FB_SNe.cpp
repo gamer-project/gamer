@@ -9,12 +9,12 @@
 // Function    :  FB_SNe
 // Description :  Supernova explosion feedback
 //
-// Note        :  1. Input and output fluid and particle data are stored in Fluid[] and ParAtt[], respectively
+// Note        :  1. Input and output fluid and particle data are stored in Fluid[] and ParAttFlt[], respectively
 //                   --> This function is responsible for updating gas and particles within
 //                       ** FB_GHOST_SIZE <= cell indices i,j,k < FB_GHOST_SIZE+PS2 **
 //                   --> Updating gas and particles outside this range is fine but will have no effect at all
-//                2. Must use ParSortID[] to access ParAtt[]
-//                   --> ParAtt[PAR_MASS/PAR_POSX/etc][ ParSortID[...] ]
+//                2. Must use ParSortID[] to access ParAttFlt[]
+//                   --> ParAttFlt[PAR_MASS/PAR_POSX/etc][ ParSortID[...] ]
 //                3. Particles may be outside the target region
 //                4. To ensure the consistency of random numbers, one must call the random number generator for
 //                   ALL particles, including those too far away to affect the target region
@@ -51,7 +51,7 @@
 //                dt         : Time interval to advance solution
 //                NPar       : Number of particles
 //                ParSortID  : Sorted particle IDs
-//                ParAtt     : Particle attribute arrays
+//                ParAttFlt  : Particle attribute arrays
 //                Fluid      : Array to store the input/output fluid data
 //                             --> Array size is fixed to (FB_NXT)^3=(PS2+2*FB_GHOST_SIZE)^3
 //                EdgeL      : Left edge of Fluid[]
@@ -63,10 +63,10 @@
 //                             --> Random number can be obtained by "RNG->GetValue( TID, Min, Max )",
 //                                 where Min/Max specify the range of random numbers
 //
-// Return      :  Fluid, ParAtt
+// Return      :  Fluid, ParAttFlt
 //-------------------------------------------------------------------------------------------------------
 int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
-            const int NPar, const long *ParSortID, real_par *ParAtt[PAR_NATT_FLT_TOTAL],
+            const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL],
             real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
             const int TID, RandomNumber_t *RNG )
 {
@@ -77,7 +77,7 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
    if ( NPar > 0 )
    {
       if ( ParSortID == NULL )   Aux_Error( ERROR_INFO, "ParSortID == NULL for NPar = %d !!\n", NPar );
-      if ( ParAtt == NULL )      Aux_Error( ERROR_INFO, "ParAtt == NULL for NPar = %d !!\n", NPar );
+      if ( ParAttFlt == NULL )   Aux_Error( ERROR_INFO, "ParAttFlt == NULL for NPar = %d !!\n", NPar );
    }
 #  endif // #ifdef GAMER_DEBUG
 

@@ -6,14 +6,14 @@
 
 // prototypes of built-in feedbacks
 int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
-            const int NPar, const long *ParSortID, real_par *ParAtt[PAR_NATT_FLT_TOTAL],
+            const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL],
             real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
             const int TID, RandomNumber_t *RNG );
 
 
 // user-specified feedback to be set by a test problem initializer
 int (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                    const int NPar, const long *ParSortID, real_par *ParAtt[PAR_NATT_FLT_TOTAL],
+                    const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL],
                     real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
                     const int TID, RandomNumber_t *RNG ) = NULL;
 
@@ -59,22 +59,22 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //    --> for simplicity, we disable particle position prediction (PredictPos_No) currently even though particles
 //        just crossing from coarse (lv-1) to fine (lv) grids may have time greater than other particles at lv
 //        --> to fix it, we will need to correct other particle attributes such as velocity too
-   const bool TimingSendPar_Yes = true;
-   const bool JustCountNPar_No  = false;
-   const bool PredictPos_No     = false;
-   const bool SibBufPatch_Yes   = true;
-   const bool FaSibBufPatch_No  = false;
+   const bool TimingSendPar_Yes  = true;
+   const bool JustCountNPar_No   = false;
+   const bool PredictPos_No      = false;
+   const bool SibBufPatch_Yes    = true;
+   const bool FaSibBufPatch_No   = false;
 //###OPTIMIZATION: only collect necessary particle attributes
-   const long ParAttBitIdx_In   = _PAR_FLT_TOTAL;
+   const long ParAttFltBitIdx_In = _PAR_FLT_TOTAL;
 
-   Par_CollectParticle2OneLevel( lv, ParAttBitIdx_In, PredictPos_No, TimeNew, SibBufPatch_Yes, FaSibBufPatch_No,
+   Par_CollectParticle2OneLevel( lv, ParAttFltBitIdx_In, PredictPos_No, TimeNew, SibBufPatch_Yes, FaSibBufPatch_No,
                                  JustCountNPar_No, TimingSendPar_Yes );
 
 #  ifdef DEBUG_PARTICLE
-   if (  ! ( ParAttBitIdx_In & _PAR_POSX )  ||
-         ! ( ParAttBitIdx_In & _PAR_POSY )  ||
-         ! ( ParAttBitIdx_In & _PAR_POSZ )  )
-      Aux_Error( ERROR_INFO, "ParAttBitIdx_In must include particle positions !!\n" );
+   if (  ! ( ParAttFltBitIdx_In & _PAR_POSX )  ||
+         ! ( ParAttFltBitIdx_In & _PAR_POSY )  ||
+         ! ( ParAttFltBitIdx_In & _PAR_POSZ )  )
+      Aux_Error( ERROR_INFO, "ParAttFltBitIdx_In must include particle positions !!\n" );
 #  endif
 
 
@@ -87,16 +87,16 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //###OPTIMIZATION: only store the attributes being updated
 //###OPTIMIZATION: only count particles on FB_LEVEL
    real_par *ParAttFlt_Updated[PAR_NATT_FLT_TOTAL];
-   long      ParAttBitIdx_Out = _PAR_FLT_TOTAL;
+   long      ParAttFltBitIdx_Out = _PAR_FLT_TOTAL;
 
 // do not update particle positions and accelerations
-   ParAttBitIdx_Out &= ~( _PAR_POSX | _PAR_POSY | _PAR_POSZ );
+   ParAttFltBitIdx_Out &= ~( _PAR_POSX | _PAR_POSY | _PAR_POSZ );
 #  ifdef STORE_PAR_ACC
-   ParAttBitIdx_Out &= ~( _PAR_ACCX | _PAR_ACCY | _PAR_ACCZ );
+   ParAttFltBitIdx_Out &= ~( _PAR_ACCX | _PAR_ACCY | _PAR_ACCZ );
 #  endif
 
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++) {
-      if ( ParAttBitIdx_Out & BIDX(v) ) {
+      if ( ParAttFltBitIdx_Out & BIDX(v) ) {
          ParAttFlt_Updated[v] = new real_par [ amr->Par->ParListSize ];
          memcpy( ParAttFlt_Updated[v], amr->Par->AttributeFlt[v], amr->Par->ParListSize*sizeof(real_par) );
       }
@@ -249,7 +249,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       if ( NParMax > 0 )
       {
          for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
-            if ( ParAttBitIdx_In & BIDX(v) )    ParAttFlt_Local[v] = new real_par [NParMax];
+            if ( ParAttFltBitIdx_In & BIDX(v) )    ParAttFlt_Local[v] = new real_par [NParMax];
 
          ParSortID = new long [NParMax];  // it will fail if "long" is actually required for NParMax
       }
@@ -304,7 +304,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 #        ifdef LOAD_BALANCE
          if ( UseParAttCopy ) {
             for (int v=0; v<PAR_NATT_FLT_TOTAL; v++) {
-               if ( ParAttBitIdx_In & BIDX(v) ) {
+               if ( ParAttFltBitIdx_In & BIDX(v) ) {
 
 #                 ifdef DEBUG_PARTICLE
                   if ( NPar > 0  &&  amr->patch[0][lv][PID]->ParAttFlt_Copy[v] == NULL )
@@ -326,7 +326,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 #           endif
 
             for (int v=0; v<PAR_NATT_FLT_TOTAL; v++) {
-               if ( ParAttBitIdx_In & BIDX(v) )
+               if ( ParAttFltBitIdx_In & BIDX(v) )
                   for (int p=0; p<NPar; p++)
                      ParAttFlt_Local[v][p] = amr->Par->AttributeFlt[v][ ParList[p] ];
             }
@@ -395,7 +395,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //          --> different OpenMP threads work on different patch groups and thus won't update the same particles
          if ( PID >= PID0  &&  PID < PID0+8  &&  amr->patch[0][lv][PID]->son == -1 ) {
             for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
-               if ( ParAttBitIdx_Out & BIDX(v) )
+               if ( ParAttFltBitIdx_Out & BIDX(v) )
                   for (int p=0; p<NPar; p++)
                      ParAttFlt_Updated[v][ ParList[p] ] = ParAttFlt_Local[v][p];
          }
@@ -445,7 +445,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 // 11. store the updated particle data
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++) {
-      if ( ParAttBitIdx_Out & BIDX(v) )
+      if ( ParAttFltBitIdx_Out & BIDX(v) )
          memcpy( amr->Par->AttributeFlt[v], ParAttFlt_Updated[v], amr->Par->ParListSize*sizeof(real_par) );
    }
 
