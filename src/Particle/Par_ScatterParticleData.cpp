@@ -15,17 +15,17 @@
 //
 // Parameter   :  NPar_ThisRank : Number of particles to be received by this MPI rank
 //                NPar_AllRank  : Total number of particles in all MPI ranks
-//                AttBitIdx     : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
+//                FltAttBitIdx  : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
 //                                --> A user-defined attribute with an integer index FltAttIntIdx returned by
 //                                    AddParticleAttributeFlt() can be converted to a bitwise index by BIDX(FltAttIntIdx)
 //                Data_Send     : Pointer array for all particle attributes to be sent
 //                                --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_AllRank]
-//                                --> Target particle attributes are set by "AttBitIdx"
+//                                --> Target particle attributes are set by "FltAttBitIdx"
 //                Data_Recv     : Pointer array for all particle attributes to be received
 //
 // Return      :  Data_Recv
 //-------------------------------------------------------------------------------------------------------
-void Par_ScatterParticleData( const long NPar_ThisRank, const long NPar_AllRank, const long AttBitIdx,
+void Par_ScatterParticleData( const long NPar_ThisRank, const long NPar_AllRank, const long FltAttBitIdx,
                               real_par *Data_Send[PAR_NATT_FLT_TOTAL], real_par *Data_Recv[PAR_NATT_FLT_TOTAL] )
 {
 
@@ -52,7 +52,7 @@ void Par_ScatterParticleData( const long NPar_ThisRank, const long NPar_AllRank,
 // send particle attributes (one at a time) from the root rank to all ranks
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    {
-      if ( AttBitIdx & (1L<<v) )    MPI_Scatterv( Data_Send[v], NSend, SendDisp, MPI_GAMER_REAL_PAR,
+      if ( FltAttBitIdx & (1L<<v) )    MPI_Scatterv( Data_Send[v], NSend, SendDisp, MPI_GAMER_REAL_PAR,
                                                   Data_Recv[v], NPar_ThisRank,   MPI_GAMER_REAL_PAR,
                                                   0, MPI_COMM_WORLD );
    }

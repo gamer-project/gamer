@@ -53,7 +53,7 @@ bool Particle_Collected = false;
 //                9. Only the master thread in OpenMP is allowed to call this routine
 //
 // Parameter   :  FaLv          : Target refinement leve
-//                AttBitIdx     : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
+//                FltAttBitIdx  : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
 //                                --> A user-defined attribute with an integer index FltAttIntIdx returned by
 //                                    AddParticleAttributeFlt() can be converted to a bitwise index by BIDX(FltAttIntIdx)
 //                                --> Used by LOAD_BALANCE only
@@ -70,7 +70,7 @@ bool Particle_Collected = false;
 //
 // Return      :  NPar_Copy and ParList_Copy (if JustCountNPar == false) for all non-leaf real patches at FaLv
 //-------------------------------------------------------------------------------------------------------
-void Par_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, const bool PredictPos, const double TargetTime,
+void Par_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, const bool PredictPos, const double TargetTime,
                                    const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
                                    const bool TimingSendPar )
 {
@@ -91,7 +91,7 @@ void Par_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, const b
 #  ifdef LOAD_BALANCE
 // note that if SibBufPatch or FaSibBufPatch is on, we need to call Par_LB_CollectParticle2OneLevel()
 // even when FaLv == MAX_LEVEL
-   Par_LB_CollectParticle2OneLevel( FaLv, AttBitIdx, PredictPos, TargetTime, SibBufPatch, FaSibBufPatch, JustCountNPar, TimingSendPar );
+   Par_LB_CollectParticle2OneLevel( FaLv, FltAttBitIdx, PredictPos, TargetTime, SibBufPatch, FaSibBufPatch, JustCountNPar, TimingSendPar );
 
    return;
 

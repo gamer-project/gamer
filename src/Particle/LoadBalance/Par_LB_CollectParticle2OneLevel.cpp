@@ -48,7 +48,7 @@ extern Timer_t *Timer_Par_MPI[NLEVEL][6];
 //                   --> Does NOT work with "PredictPos"
 //
 // Parameter   :  FaLv          : Father's refinement level
-//                AttBitIdx     : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
+//                FltAttBitIdx  : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
 //                                --> A user-defined attribute with an integer index FltAttIntIdx returned by
 //                                    AddParticleAttributeFlt() can be converted to a bitwise index by BIDX(FltAttIntIdx)
 //                PredictPos    : Predict particle position, which is useful for particle mass assignement
@@ -66,7 +66,7 @@ extern Timer_t *Timer_Par_MPI[NLEVEL][6];
 //                (and for sibling-buffer patches at FaLv if SibBufPatch is on, and for father-sibling-buffer
 //                patches at FaLv-1 if FaSibBufPatch is on and FaLv>0)
 //-------------------------------------------------------------------------------------------------------
-void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, const bool PredictPos, const double TargetTime,
+void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, const bool PredictPos, const double TargetTime,
                                       const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
                                       const bool TimingSendPar )
 {
@@ -84,7 +84,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
    if ( !JustCountNPar )
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
-      if ( AttBitIdx & (1L<<v) )    FltAttIntIdx[ NAtt ++ ] = v;
+      if ( FltAttBitIdx & (1L<<v) )    FltAttIntIdx[ NAtt ++ ] = v;
 
    if ( PredictPos )
    {
@@ -154,7 +154,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
          sprintf( Timer_Comment, "%3d %15s", FaLv, "Par_Coll2Sib" );
 
          Par_LB_CollectParticleFromRealPatch(
-            FaLv, AttBitIdx,
+            FaLv, FltAttBitIdx,
             amr->Par->R2B_Buff_NPatchTotal[FaLv][0], amr->Par->R2B_Buff_PIDList[FaLv][0], amr->Par->R2B_Buff_NPatchEachRank[FaLv][0],
             amr->Par->R2B_Real_NPatchTotal[FaLv][0], amr->Par->R2B_Real_PIDList[FaLv][0], amr->Par->R2B_Real_NPatchEachRank[FaLv][0],
             PredictPos, TargetTime, Timer[1], Timer_Comment );
@@ -167,7 +167,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
          sprintf( Timer_Comment, "%3d %15s", FaLv, "Par_Coll2FaSib" );
 
          Par_LB_CollectParticleFromRealPatch(
-            FaLv-1, AttBitIdx,
+            FaLv-1, FltAttBitIdx,
             amr->Par->R2B_Buff_NPatchTotal[FaLv][1], amr->Par->R2B_Buff_PIDList[FaLv][1], amr->Par->R2B_Buff_NPatchEachRank[FaLv][1],
             amr->Par->R2B_Real_NPatchTotal[FaLv][1], amr->Par->R2B_Real_PIDList[FaLv][1], amr->Par->R2B_Real_NPatchEachRank[FaLv][1],
             PredictPos, TargetTime, Timer[2], Timer_Comment );
@@ -515,13 +515,13 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
 #        ifdef DEBUG_PARTICLE
 //       we do not transfer inactive particles
-         if ( AttBitIdx & _PAR_MASS )
+         if ( FltAttBitIdx & _PAR_MASS )
          if ( amr->patch[0][FaLv][FaPID_Match]->ParAttFlt_Copy[PAR_MASS][p] < (real_par)0.0 )
             Aux_Error( ERROR_INFO, "found inactive particle (FaLv %d, FaPID %d, Mass %14.7e, particle %d) !!\n",
                        FaLv, FaPID_Match, amr->patch[0][FaLv][FaPID_Match]->ParAttFlt_Copy[PAR_MASS][p], p );
 
 //       check if the received particle lies within the target patch (may not when PredictPos is on)
-         if ( !PredictPos  &&  ( AttBitIdx & _PAR_POSX )  &&  ( AttBitIdx & _PAR_POSY )  &&  ( AttBitIdx & _PAR_POSZ ) )
+         if ( !PredictPos  &&  ( FltAttBitIdx & _PAR_POSX )  &&  ( FltAttBitIdx & _PAR_POSY )  &&  ( FltAttBitIdx & _PAR_POSZ ) )
          {
             const double     *EdgeL     = amr->patch[0][FaLv][FaPID_Match]->EdgeL;
             const double     *EdgeR     = amr->patch[0][FaLv][FaPID_Match]->EdgeR;
@@ -614,7 +614,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
       sprintf( Timer_Comment, "%3d %15s", FaLv, "Par_Coll2Sib" );
 
       Par_LB_CollectParticleFromRealPatch(
-         FaLv, AttBitIdx,
+         FaLv, FltAttBitIdx,
          amr->Par->R2B_Buff_NPatchTotal[FaLv][0], amr->Par->R2B_Buff_PIDList[FaLv][0], amr->Par->R2B_Buff_NPatchEachRank[FaLv][0],
          amr->Par->R2B_Real_NPatchTotal[FaLv][0], amr->Par->R2B_Real_PIDList[FaLv][0], amr->Par->R2B_Real_NPatchEachRank[FaLv][0],
          PredictPos, TargetTime, Timer[1], Timer_Comment );
@@ -627,7 +627,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
       sprintf( Timer_Comment, "%3d %15s", FaLv, "Par_Coll2FaSib" );
 
       Par_LB_CollectParticleFromRealPatch(
-         FaLv-1, AttBitIdx,
+         FaLv-1, FltAttBitIdx,
          amr->Par->R2B_Buff_NPatchTotal[FaLv][1], amr->Par->R2B_Buff_PIDList[FaLv][1], amr->Par->R2B_Buff_NPatchEachRank[FaLv][1],
          amr->Par->R2B_Real_NPatchTotal[FaLv][1], amr->Par->R2B_Real_PIDList[FaLv][1], amr->Par->R2B_Real_NPatchEachRank[FaLv][1],
          PredictPos, TargetTime, Timer[2], Timer_Comment );

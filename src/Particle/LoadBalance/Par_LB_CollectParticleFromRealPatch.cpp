@@ -20,7 +20,7 @@
 //                   --> Must be deallocated afterward by calling Par_LB_CollectParticle2OneLevel_FreeMemory()
 //
 // Parameter   :  lv                  : Target refinement level
-//                AttBitIdx           : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
+//                FltAttBitIdx        : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
 //                                      --> A user-defined attribute with an integer index FltAttIntIdx returned by
 //                                          AddParticleAttributeFlt() can be converted to a bitwise index by BIDX(FltAttIntIdx)
 //                Buff_NPatchTotal    : Total number of buffer patches in Buff_PIDList
@@ -38,7 +38,7 @@
 //
 // Return      :  NPar_Copy and ParAttFlt_Copy[] (if NPar_Copy > 0) for all buffer patches specified in Buff_PIDList[]
 //-------------------------------------------------------------------------------------------------------
-void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
+void Par_LB_CollectParticleFromRealPatch( const int lv, const long FltAttBitIdx,
                                           const int Buff_NPatchTotal, const int *Buff_PIDList, int *Buff_NPatchEachRank,
                                           const int Real_NPatchTotal, const int *Real_PIDList, int *Real_NPatchEachRank,
                                           const bool PredictPos, const double TargetTime,
@@ -56,7 +56,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
    int NAtt=0, FltAttIntIdx[PAR_NATT_FLT_TOTAL], PosSendIdx[3]={-1, -1, -1};
 
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
-      if ( AttBitIdx & (1L<<v) )    FltAttIntIdx[ NAtt ++ ] = v;
+      if ( FltAttBitIdx & (1L<<v) )    FltAttIntIdx[ NAtt ++ ] = v;
 
    if ( PredictPos )
    {
@@ -337,13 +337,13 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
 //          4-4. check
 #           ifdef DEBUG_PARTICLE
 //          we do not transfer inactive particles
-            if ( AttBitIdx & _PAR_MASS )
+            if ( FltAttBitIdx & _PAR_MASS )
             if ( amr->patch[0][lv][PID]->ParAttFlt_Copy[PAR_MASS][p] < (real_par)0.0 )
                Aux_Error( ERROR_INFO, "found inactive particle (lv %d, PID %d, Mass %14.7e, particle %d) !!\n",
                           lv, PID, amr->patch[0][lv][PID]->ParAttFlt_Copy[PAR_MASS][p], p );
 
 //          check if the received particle lies within the target patch (may not when PredictPos is on)
-            if ( !PredictPos  &&  ( AttBitIdx & _PAR_POSX )  &&  ( AttBitIdx & _PAR_POSY )  &&  ( AttBitIdx & _PAR_POSZ ) )
+            if ( !PredictPos  &&  ( FltAttBitIdx & _PAR_POSX )  &&  ( FltAttBitIdx & _PAR_POSY )  &&  ( FltAttBitIdx & _PAR_POSZ ) )
             {
 //             always assume periodic B.C. in this check since we don't allocate buffer patches lying outside
 //             the simulation domain for non-periodic B.C.
