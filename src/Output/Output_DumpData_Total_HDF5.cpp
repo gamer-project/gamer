@@ -403,7 +403,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    herr_t  H5_Status;
 #  ifdef PARTICLE
    hsize_t H5_SetDims_NPar, H5_SetDims_ParData[1], H5_MemDims_ParData[1],  H5_Count_ParData[1], H5_Offset_ParData[1];
-   hid_t   H5_SetID_NPar, H5_SpaceID_NPar, H5_SpaceID_ParData, H5_GroupID_Particle, H5_SetID_ParData, H5_MemID_ParData;
+   hid_t   H5_SetID_NPar, H5_SpaceID_NPar, H5_SpaceID_ParData, H5_GroupID_Particle, H5_SetID_ParFltData, H5_MemID_ParData;
 #  endif
 #  ifdef MHD
    hsize_t H5_SetDims_FCMag[4], H5_MemDims_FCMag[4], H5_Count_FCMag[4], H5_Offset_FCMag[4];
@@ -1280,10 +1280,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //    create the datasets of all particle attributes
       for (int v=0; v<PAR_NATT_FLT_STORED; v++)
       {
-         H5_SetID_ParData = H5Dcreate( H5_GroupID_Particle, ParAttFltLabel[v], H5T_GAMER_REAL_PAR, H5_SpaceID_ParData,
-                                       H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
-         if ( H5_SetID_ParData < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", ParAttFltLabel[v] );
-         H5_Status = H5Dclose( H5_SetID_ParData );
+         H5_SetID_ParFltData = H5Dcreate( H5_GroupID_Particle, ParAttFltLabel[v], H5T_GAMER_REAL_PAR, H5_SpaceID_ParData,
+                                          H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
+         if ( H5_SetID_ParFltData < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", ParAttFltLabel[v] );
+         H5_Status = H5Dclose( H5_SetID_ParFltData );
       }
 
 //    close the file and group
@@ -1346,13 +1346,13 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 
 //          6-3-4. write data to disk
-            H5_SetID_ParData = H5Dopen( H5_GroupID_Particle, ParAttFltLabel[v], H5P_DEFAULT );
+            H5_SetID_ParFltData = H5Dopen( H5_GroupID_Particle, ParAttFltLabel[v], H5P_DEFAULT );
 
-            H5_Status = H5Dwrite( H5_SetID_ParData, H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT, ParBuf1v1Lv );
+            H5_Status = H5Dwrite( H5_SetID_ParFltData, H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT, ParBuf1v1Lv );
             if ( H5_Status < 0 )
                Aux_Error( ERROR_INFO, "failed to write a particle attribute (lv %d, v %d) !!\n", lv, v );
 
-            H5_Status = H5Dclose( H5_SetID_ParData );
+            H5_Status = H5Dclose( H5_SetID_ParFltData );
          } // for (int v=0; v<PAR_NATT_FLT_STORED; v++)
 
 //       free resource
