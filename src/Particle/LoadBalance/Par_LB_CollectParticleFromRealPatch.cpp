@@ -21,8 +21,8 @@
 //
 // Parameter   :  lv                  : Target refinement level
 //                AttBitIdx           : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
-//                                      --> A user-defined attribute with an integer index AttIntIdx returned by
-//                                          AddParticleAttributeFlt() can be converted to a bitwise index by BIDX(AttIntIdx)
+//                                      --> A user-defined attribute with an integer index FltAttIntIdx returned by
+//                                          AddParticleAttributeFlt() can be converted to a bitwise index by BIDX(FltAttIntIdx)
 //                Buff_NPatchTotal    : Total number of buffer patches in Buff_PIDList
 //                Buff_PIDList        : Target buffer patch indices
 //                Buff_NPatchEachRank : Number of buffer patches to receive particles from each rank
@@ -53,18 +53,18 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
 // 0. determine the target particle attributes
 // --> assuming _VAR_NAME = 1L<<VAR_NAME (e.g., _PAR_MASS == 1L<<PAR_MASS == BIDX(PAR_MASS))
 // --> PosSendIdx[] is used by Par_PredictPos()
-   int NAtt=0, AttIntIdx[PAR_NATT_FLT_TOTAL], PosSendIdx[3]={-1, -1, -1};
+   int NAtt=0, FltAttIntIdx[PAR_NATT_FLT_TOTAL], PosSendIdx[3]={-1, -1, -1};
 
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
-      if ( AttBitIdx & (1L<<v) )    AttIntIdx[ NAtt ++ ] = v;
+      if ( AttBitIdx & (1L<<v) )    FltAttIntIdx[ NAtt ++ ] = v;
 
    if ( PredictPos )
    {
       for (int v=0; v<NAtt; v++)
       {
-         if      ( AttIntIdx[v] == PAR_POSX )   PosSendIdx[0] = v;
-         else if ( AttIntIdx[v] == PAR_POSY )   PosSendIdx[1] = v;
-         else if ( AttIntIdx[v] == PAR_POSZ )   PosSendIdx[2] = v;
+         if      ( FltAttIntIdx[v] == PAR_POSX )   PosSendIdx[0] = v;
+         else if ( FltAttIntIdx[v] == PAR_POSY )   PosSendIdx[1] = v;
+         else if ( FltAttIntIdx[v] == PAR_POSZ )   PosSendIdx[2] = v;
       }
 
 #     ifdef DEBUG_PARTICLE
@@ -231,7 +231,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
          {
             ParID = ParList[p];
 
-            for (int v=0; v<NAtt; v++)    SendPtr[v] = amr->Par->AttributeFlt[ AttIntIdx[v] ][ParID];
+            for (int v=0; v<NAtt; v++)    SendPtr[v] = amr->Par->AttributeFlt[ FltAttIntIdx[v] ][ParID];
 
 //          predict particle position to TargetTime
 //          --> note that we need to skip particles waiting for velocity correction since these are leaf real patches
@@ -251,16 +251,16 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
 
 #        ifdef DEBUG_PARTICLE
          for (int v=0; v<NAtt; v++)
-            if ( ParAttFlt_Copy[ AttIntIdx[v] ] == NULL )
+            if ( ParAttFlt_Copy[ FltAttIntIdx[v] ] == NULL )
                Aux_Error( ERROR_INFO, "ParAttFlt_Copy[%d] == NULL for NParThisPatch (%d) > 0 (lv %d, PID %d) !!\n",
-                          AttIntIdx[v], NParThisPatch, lv, PID );
+                          FltAttIntIdx[v], NParThisPatch, lv, PID );
 #        endif
 
          for (int p=0; p<NParThisPatch; p++)
          {
 //          note that the particle position should have already been predicted to TargetTime
 //          by Par_LB_CollectParticle2OneLevel()
-            for (int v=0; v<NAtt; v++)    SendPtr[v] = ParAttFlt_Copy[ AttIntIdx[v] ][p];
+            for (int v=0; v<NAtt; v++)    SendPtr[v] = ParAttFlt_Copy[ FltAttIntIdx[v] ][p];
 
             SendPtr += NAtt;
          }
@@ -326,13 +326,13 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
       {
 //       4-2. allocate ParAttFlt_Copy[]
          for (int v=0; v<NAtt; v++)
-            amr->patch[0][lv][PID]->ParAttFlt_Copy[ AttIntIdx[v] ] = new real_par [NParThisPatch];
+            amr->patch[0][lv][PID]->ParAttFlt_Copy[ FltAttIntIdx[v] ] = new real_par [NParThisPatch];
 
          for (int p=0; p<NParThisPatch; p++)
          {
 //          4-3. store the received data
             for (int v=0; v<NAtt; v++)
-               amr->patch[0][lv][PID]->ParAttFlt_Copy[ AttIntIdx[v] ][p] = *RecvPtr++;
+               amr->patch[0][lv][PID]->ParAttFlt_Copy[ FltAttIntIdx[v] ][p] = *RecvPtr++;
 
 //          4-4. check
 #           ifdef DEBUG_PARTICLE

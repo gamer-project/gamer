@@ -49,8 +49,8 @@ extern Timer_t *Timer_Par_MPI[NLEVEL][6];
 //
 // Parameter   :  FaLv          : Father's refinement level
 //                AttBitIdx     : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
-//                                --> A user-defined attribute with an integer index AttIntIdx returned by
-//                                    AddParticleAttributeFlt() can be converted to a bitwise index by BIDX(AttIntIdx)
+//                                --> A user-defined attribute with an integer index FltAttIntIdx returned by
+//                                    AddParticleAttributeFlt() can be converted to a bitwise index by BIDX(FltAttIntIdx)
 //                PredictPos    : Predict particle position, which is useful for particle mass assignement
 //                                --> We send particle position **after** prediction so that we don't have to
 //                                    send particle velocity
@@ -80,19 +80,19 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 // determine the target particle attributes
 // --> assuming _VAR_NAME = 1L<<VAR_NAME (e.g., _PAR_MASS == 1L<<PAR_MASS == BIDX(PAR_MASS))
 // --> PosSendIdx[] is used by Par_PredictPos()
-   int NAtt=0, AttIntIdx[PAR_NATT_FLT_TOTAL], PosSendIdx[3]={-1, -1, -1};
+   int NAtt=0, FltAttIntIdx[PAR_NATT_FLT_TOTAL], PosSendIdx[3]={-1, -1, -1};
 
    if ( !JustCountNPar )
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
-      if ( AttBitIdx & (1L<<v) )    AttIntIdx[ NAtt ++ ] = v;
+      if ( AttBitIdx & (1L<<v) )    FltAttIntIdx[ NAtt ++ ] = v;
 
    if ( PredictPos )
    {
       for (int v=0; v<NAtt; v++)
       {
-         if      ( AttIntIdx[v] == PAR_POSX )   PosSendIdx[0] = v;
-         else if ( AttIntIdx[v] == PAR_POSY )   PosSendIdx[1] = v;
-         else if ( AttIntIdx[v] == PAR_POSZ )   PosSendIdx[2] = v;
+         if      ( FltAttIntIdx[v] == PAR_POSX )   PosSendIdx[0] = v;
+         else if ( FltAttIntIdx[v] == PAR_POSY )   PosSendIdx[1] = v;
+         else if ( FltAttIntIdx[v] == PAR_POSZ )   PosSendIdx[2] = v;
       }
 
 #     ifdef DEBUG_PARTICLE
@@ -340,7 +340,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
             {
                const long ParID = amr->patch[0][lv][PID]->ParList[p];
 
-               for (int v=0; v<NAtt; v++)    SendPtr[v] = amr->Par->AttributeFlt[ AttIntIdx[v] ][ParID];
+               for (int v=0; v<NAtt; v++)    SendPtr[v] = amr->Par->AttributeFlt[ FltAttIntIdx[v] ][ParID];
 
 //             predict particle position to TargetTime
                if ( PredictPos )
@@ -470,7 +470,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
       if ( amr->patch[0][FaLv][FaPID]->NPar_Copy > 0 )
       {
          for (int v=0; v<NAtt; v++)
-            amr->patch[0][FaLv][FaPID]->ParAttFlt_Copy[ AttIntIdx[v] ] = new real_par [ amr->patch[0][FaLv][FaPID]->NPar_Copy ];
+            amr->patch[0][FaLv][FaPID]->ParAttFlt_Copy[ FltAttIntIdx[v] ] = new real_par [ amr->patch[0][FaLv][FaPID]->NPar_Copy ];
 
 //       reset to zero (instead of NPar) since we will use NPar_Copy to record the number of particles that has been
 //       added to ParAttFlt_Copy[]
@@ -504,14 +504,14 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 #        ifdef DEBUG_PARTICLE
          for (int v=0; v<NAtt; v++)
          {
-            if ( amr->patch[0][FaLv][FaPID_Match]->ParAttFlt_Copy[ AttIntIdx[v] ] == NULL )
+            if ( amr->patch[0][FaLv][FaPID_Match]->ParAttFlt_Copy[ FltAttIntIdx[v] ] == NULL )
                Aux_Error( ERROR_INFO, "particle parameters have NOT been initialized (FaLv %d, FaPID %d, NPar_Copy %d, v %d) !!\n",
                           FaLv, FaPID_Match, amr->patch[0][FaLv][FaPID_Match]->NPar_Copy, v );
          }
 #        endif
 
          for (int v=0; v<NAtt; v++)
-            amr->patch[0][FaLv][FaPID_Match]->ParAttFlt_Copy[ AttIntIdx[v] ][p] = *RecvPtr++;
+            amr->patch[0][FaLv][FaPID_Match]->ParAttFlt_Copy[ FltAttIntIdx[v] ][p] = *RecvPtr++;
 
 #        ifdef DEBUG_PARTICLE
 //       we do not transfer inactive particles
@@ -573,7 +573,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 //          --> no need for position prediction here since these particles are all waiting for velocity correction
 //          and should already be synchronized with TargetTime
             for (int v=0; v<NAtt; v++)
-               amr->patch[0][FaLv][FaPID]->ParAttFlt_Copy[ AttIntIdx[v] ][idx] = amr->Par->AttributeFlt[ AttIntIdx[v] ][ParID];
+               amr->patch[0][FaLv][FaPID]->ParAttFlt_Copy[ FltAttIntIdx[v] ][idx] = amr->Par->AttributeFlt[ FltAttIntIdx[v] ][ParID];
          } // for (int p=0; p<amr->patch[0][FaLv][FaPID]->NPar; p++)
 
 //       4-3. update NPar_Copy
