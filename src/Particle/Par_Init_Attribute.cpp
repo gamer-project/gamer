@@ -10,7 +10,7 @@ void Par_Init_Attribute_User_Template();
 void (*Par_Init_Attribute_User_Ptr)() = NULL;
 
 
-static int NDefinedAtt;    // total number of defined attributes
+static int NDefinedAttFlt;    // total number of defined attributes
 
 
 
@@ -35,7 +35,7 @@ void Par_Init_Attribute()
 
 
 // 0. initialize counter as zero
-   NDefinedAtt = 0;
+   NDefinedAttFlt = 0;
 
 
 // 1. add built-in intrinsic attributes
@@ -76,10 +76,10 @@ void Par_Init_Attribute()
 
 
 // 5. validate if all attributes have been set properly
-   if ( NDefinedAtt != PAR_NATT_FLT_TOTAL )
+   if ( NDefinedAttFlt != PAR_NATT_FLT_TOTAL )
       Aux_Error( ERROR_INFO, "total number of defined attributes (%d) != expectation (%d) !!\n"
                  "        --> Modify PAR_NATT_FLT_USER in the Makefile or invoke AddParticleAttributeFlt() properly\n",
-                 NDefinedAtt, PAR_NATT_FLT_TOTAL );
+                 NDefinedAttFlt, PAR_NATT_FLT_TOTAL );
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
@@ -108,19 +108,19 @@ void Par_Init_Attribute()
 FieldIdx_t AddParticleAttributeFlt( const char *InputLabel )
 {
 
-   const FieldIdx_t AttIdx = NDefinedAtt ++;
+   const FieldIdx_t AttIdx = NDefinedAttFlt ++;
 
 
 // check
    if ( InputLabel == NULL )
       Aux_Error( ERROR_INFO, "InputLabel == NULL !!\n" );
 
-   if ( NDefinedAtt > PAR_NATT_FLT_TOTAL )
+   if ( NDefinedAttFlt > PAR_NATT_FLT_TOTAL )
       Aux_Error( ERROR_INFO, "total number of defined particle attributes (%d) exceeds expectation (%d) after adding \"%s\" !!\n"
                  "        --> Modify PAR_NATT_FLT_USER in the Makefile properly\n",
-                 NDefinedAtt, PAR_NATT_FLT_TOTAL, InputLabel );
+                 NDefinedAttFlt, PAR_NATT_FLT_TOTAL, InputLabel );
 
-   for (int v=0; v<NDefinedAtt-1; v++)
+   for (int v=0; v<NDefinedAttFlt-1; v++)
       if (  strcmp( ParAttFltLabel[v], InputLabel ) == 0  )
          Aux_Error( ERROR_INFO, "duplicate particle attribute label \"%s\" !!\n", InputLabel );
 
@@ -154,7 +154,7 @@ FieldIdx_t GetParticleAttributeFltIndex( const char *InputLabel, const Check_t C
 
    FieldIdx_t Idx_Out = Idx_Undefined;
 
-   for (int v=0; v<NDefinedAtt; v++)
+   for (int v=0; v<NDefinedAttFlt; v++)
    {
       if (  strcmp( ParAttFltLabel[v], InputLabel ) == 0  )
       {
