@@ -472,7 +472,7 @@ struct Particle_t
 
 
 //    2. record the data of new particles
-      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   AttributeFlt[v][ParID] = NewAtt[v];
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   AttributeFlt[v][ParID] = NewAttFlt[v];
 
 
 //    3. update the total number of active particles (assuming all new particles are active)
