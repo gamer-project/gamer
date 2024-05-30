@@ -421,8 +421,8 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-   real_par *ParData_AllRank[PAR_NATT_FLT_TOTAL];
-   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParData_AllRank[v] = NULL;
+   real_par *ParFltData_AllRank[PAR_NATT_FLT_TOTAL];
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParFltData_AllRank[v] = NULL;
 
 // only the master rank will construct the initial condition
    if ( MPI_Rank == 0 )
@@ -434,13 +434,13 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
 //    determine the individual mass of identical particles
       const double ParM = TotM_Boundary / NPar_AllRank;
 
-      ParData_AllRank[PAR_MASS] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_POSX] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_POSY] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_POSZ] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_VELX] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_VELY] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_VELZ] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_MASS] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSX] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSY] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSZ] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELX] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELY] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELZ] = new real_par [NPar_AllRank];
 
 //    set particle attributes
       for (long px=0; px<NPar_X; px++)
@@ -460,19 +460,19 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
             for (long pz=0; pz<NPar_YZ; pz++)
             {
 //             mass
-               ParData_AllRank[PAR_MASS][NPar_AllRank_Counter] = (real_par)ParM;
+               ParFltData_AllRank[PAR_MASS][NPar_AllRank_Counter] = (real_par)ParM;
 
 //             z-component position
                PosVec[2] = pz*dhx;
 
                for (int d=0; d<3; d++)
                {
-                  ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter] = (real_par)PosVec[d];
-                  ParData_AllRank[PAR_VELX+d][NPar_AllRank_Counter] = (real_par)VelVec[d];
+                  ParFltData_AllRank[PAR_POSX+d][NPar_AllRank_Counter] = (real_par)PosVec[d];
+                  ParFltData_AllRank[PAR_VELX+d][NPar_AllRank_Counter] = (real_par)VelVec[d];
 //                check periodicity
                   if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )
-                     ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter]
-                        = FMOD( ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter]+(real_par)amr->BoxSize[d], (real_par)amr->BoxSize[d] );
+                     ParFltData_AllRank[PAR_POSX+d][NPar_AllRank_Counter]
+                        = FMOD( ParFltData_AllRank[PAR_POSX+d][NPar_AllRank_Counter]+(real_par)amr->BoxSize[d], (real_par)amr->BoxSize[d] );
                }
 
                NPar_AllRank_Counter ++;
@@ -491,7 +491,7 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
    } // if ( MPI_Rank == 0 )
 
 // send particle attributes from the master rank to all ranks
-   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, ParData_AllRank, AllAttributeFlt );
+   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, ParFltData_AllRank, AllAttributeFlt );
 
 // synchronize all particles to the physical time on the base level, and set generic particle type
    for (long p=0; p<NPar_ThisRank; p++)
@@ -503,7 +503,7 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
 // free memory
    if ( MPI_Rank == 0 )
    {
-      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   delete [] ParData_AllRank[v];
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   delete [] ParFltData_AllRank[v];
    }
 
 

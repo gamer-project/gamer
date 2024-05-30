@@ -49,8 +49,8 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
 
 
 // define the particle attribute arrays
-   real_par *ParData_AllRank[PAR_NATT_FLT_TOTAL];
-   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParData_AllRank[v] = NULL;
+   real_par *ParFltData_AllRank[PAR_NATT_FLT_TOTAL];
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParFltData_AllRank[v] = NULL;
 
 
 // define the particle IC constructor
@@ -61,13 +61,13 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
    if ( MPI_Rank == 0 ) {
 
 //    allocate memory for particle attribute arrays
-      ParData_AllRank[PAR_MASS] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_POSX] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_POSY] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_POSZ] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_VELX] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_VELY] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_VELZ] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_MASS] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSX] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSY] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSZ] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELX] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELY] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELZ] = new real_par [NPar_AllRank];
 
 //    input filenames as parameters into Filename_Loader
       Filename_Loader.Read_Filenames( "Input__TestProb" );
@@ -87,7 +87,7 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
          }
 
 //       set an equilibrium initial condition for each cloud
-         Cloud_Constructor.Par_SetEquilibriumIC( ParData_AllRank[PAR_MASS], ParData_AllRank+PAR_POSX, ParData_AllRank+PAR_VELX, Par_Idx0 );
+         Cloud_Constructor.Par_SetEquilibriumIC( ParFltData_AllRank[PAR_MASS], ParFltData_AllRank+PAR_POSX, ParFltData_AllRank+PAR_VELX, Par_Idx0 );
 
 //       update the particle index offset for the next cloud
          Par_Idx0 += Cloud_Constructor.params.Cloud_Par_Num;
@@ -97,7 +97,7 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
 
 
 // send particle attributes from the master rank to all ranks
-   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, ParData_AllRank, AllAttributeFlt );
+   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, ParFltData_AllRank, AllAttributeFlt );
 
 
 // synchronize all particles to the physical time on the base level
@@ -112,7 +112,7 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
    if ( MPI_Rank == 0 )
    {
       delete RNG;
-      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   delete [] ParData_AllRank[v];
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   delete [] ParFltData_AllRank[v];
    }
 
 

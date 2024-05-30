@@ -68,21 +68,21 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
                  NPar_All, NPar_AllRank );
 
 // define the particle attribute arrays
-   real_par *ParData_AllRank[PAR_NATT_FLT_TOTAL];
-   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParData_AllRank[v] = NULL;
+   real_par *ParFltData_AllRank[PAR_NATT_FLT_TOTAL];
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParFltData_AllRank[v] = NULL;
 
 // only the master rank will construct the initial condition
    if ( MPI_Rank == 0 ) {
 
 //    allocate memory for particle attribute arrays
-      ParData_AllRank[PAR_MASS] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_POSX] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_POSY] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_POSZ] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_VELX] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_VELY] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_VELZ] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_TYPE] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_MASS] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSX] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSY] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSZ] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELX] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELY] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELZ] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_TYPE] = new real_par [NPar_AllRank];
 
       long p = 0;
 
@@ -94,19 +94,19 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
 
             const double dir = 2.0*ii-1.0;
 
-            ParData_AllRank[PAR_MASS][p] = real_par( ParTest_Point_Mass );
+            ParFltData_AllRank[PAR_MASS][p] = real_par( ParTest_Point_Mass );
 
-            ParData_AllRank[PAR_POSX][p] = real_par( 0.5*amr->BoxSize[0] +
+            ParFltData_AllRank[PAR_POSX][p] = real_par( 0.5*amr->BoxSize[0] +
                  0.5*ParTest_Par_Sep*dir );
-            ParData_AllRank[PAR_POSY][p] = real_par( 0.5*amr->BoxSize[1] );
-            ParData_AllRank[PAR_POSZ][p] = real_par( 0.5*amr->BoxSize[2] );
+            ParFltData_AllRank[PAR_POSY][p] = real_par( 0.5*amr->BoxSize[1] );
+            ParFltData_AllRank[PAR_POSZ][p] = real_par( 0.5*amr->BoxSize[2] );
 
-            ParData_AllRank[PAR_VELX][p] = (real_par)0.0;
-            ParData_AllRank[PAR_VELY][p] = real_par( v*dir );
-            ParData_AllRank[PAR_VELZ][p] = (real_par)0.0;
+            ParFltData_AllRank[PAR_VELX][p] = (real_par)0.0;
+            ParFltData_AllRank[PAR_VELY][p] = real_par( v*dir );
+            ParFltData_AllRank[PAR_VELZ][p] = (real_par)0.0;
 
 //          set the particle type to be generic massive
-            ParData_AllRank[PAR_TYPE][p] = PTYPE_GENERIC_MASSIVE;
+            ParFltData_AllRank[PAR_TYPE][p] = PTYPE_GENERIC_MASSIVE;
 
             p++;
          }
@@ -124,23 +124,23 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
          {
 
 //          tracer particles have no mass
-            ParData_AllRank[PAR_MASS][p] = (real_par)0.0;
+            ParFltData_AllRank[PAR_MASS][p] = (real_par)0.0;
 
 //          assign positions
-            ParData_AllRank[PAR_POSX][p] = real_par(
+            ParFltData_AllRank[PAR_POSX][p] = real_par(
                  (ii+1)*delta_p[0]+0.25*amr->BoxSize[0] );
-            ParData_AllRank[PAR_POSY][p] = real_par(
+            ParFltData_AllRank[PAR_POSY][p] = real_par(
                  (jj+1)*delta_p[1]+0.25*amr->BoxSize[1] );
-            ParData_AllRank[PAR_POSZ][p] = real_par(
+            ParFltData_AllRank[PAR_POSZ][p] = real_par(
                  (kk+1)*delta_p[2]+0.25*amr->BoxSize[2] );
 
 //          set velocities to zero (these will be updated from the grid later)
-            ParData_AllRank[PAR_VELX][p] = (real_par)0.0;
-            ParData_AllRank[PAR_VELY][p] = (real_par)0.0;
-            ParData_AllRank[PAR_VELZ][p] = (real_par)0.0;
+            ParFltData_AllRank[PAR_VELX][p] = (real_par)0.0;
+            ParFltData_AllRank[PAR_VELY][p] = (real_par)0.0;
+            ParFltData_AllRank[PAR_VELZ][p] = (real_par)0.0;
 
 //          set the particle type to be tracer
-            ParData_AllRank[PAR_TYPE][p] = PTYPE_TRACER;
+            ParFltData_AllRank[PAR_TYPE][p] = PTYPE_TRACER;
 
             p++;
          }
@@ -150,7 +150,7 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
 // send particle attributes from the master rank to all ranks
    Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank,
                             _PAR_MASS|_PAR_POS|_PAR_VEL|_PAR_TYPE,
-                            ParData_AllRank, AllAttributeFlt );
+                            ParFltData_AllRank, AllAttributeFlt );
 
 // synchronize all particles to the physical time on the base level
    for (long p=0; p<NPar_ThisRank; p++)
@@ -158,7 +158,7 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
 
 // free resource
    if ( MPI_Rank == 0 )
-      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   delete [] ParData_AllRank[v];
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   delete [] ParFltData_AllRank[v];
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

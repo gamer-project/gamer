@@ -55,7 +55,7 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
 
 
    const int NParAttFlt = 7;  // mass, pos*3, vel*3
-   real_par *ParData_AllRank = NULL;
+   real_par *ParFltData_AllRank = NULL;
 
 // load data --> for simplicity, currently only the root rank will load data from disk
    if ( MPI_Rank == 0 )
@@ -90,13 +90,13 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
 
 
 //    allocate memory to store all particles loaded from disk
-      ParData_AllRank = new real_par [NPar_Sum*NParAttFlt];
+      ParFltData_AllRank = new real_par [NPar_Sum*NParAttFlt];
 
 
 //    load data from the three particle tables
       const char *Filename[3]  = { AGORA_HaloPar_Filename, AGORA_DiskPar_Filename, AGORA_BulgePar_Filename };
       const bool  RowMajor_Yes = true;                   // load data into the row-major order
-      const bool  AllocMem_No  = false;                  // do not allocate memory for ParData_AllRank
+      const bool  AllocMem_No  = false;                  // do not allocate memory for ParFltData_AllRank
       const int   NCol         = 7;                      // total number of columns to load
       const int   Col[NCol]    = {0, 1, 2, 3, 4, 5, 6};  // target columns: (x, y, z, vx, vy, vz, mass)
 
@@ -107,7 +107,7 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
          Aux_Message( stdout, "   Loading particles from the file \"%s\" ... ", Filename[t] );
 
 //       must use a temporary pointer "tmp_ptr" for Aux_LoadTable() because of the call-by-reference approach
-         real_par *tmp_ptr = ParData_AllRank + NPar_Loaded*NParAttFlt;
+         real_par *tmp_ptr = ParFltData_AllRank + NPar_Loaded*NParAttFlt;
 
          NPar_Loaded += Aux_LoadTable( tmp_ptr, Filename[t], NCol, Col, RowMajor_Yes, AllocMem_No );
 
@@ -147,10 +147,10 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Sending particles from the root rank to all ranks ... " );
    real_par (*ParData_MyRank)[NParAttFlt] = new real_par [NPar_ThisRank][NParAttFlt];
 
-   MPI_Scatterv( ParData_AllRank,   NSend, SendDisp,          MPI_GAMER_REAL_PAR,
+   MPI_Scatterv( ParFltData_AllRank,   NSend, SendDisp,          MPI_GAMER_REAL_PAR,
                  ParData_MyRank[0], NPar_ThisRank*NParAttFlt, MPI_GAMER_REAL_PAR, 0, MPI_COMM_WORLD );
 
-   delete [] ParData_AllRank;
+   delete [] ParFltData_AllRank;
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 

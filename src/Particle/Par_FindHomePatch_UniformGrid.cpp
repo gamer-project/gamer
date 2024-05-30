@@ -281,8 +281,8 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly,
 
    long Offset[MPI_NRank];
 
-   real_par *SendBuf = new real_par [Send_Count_Sum];
-   real_par *RecvBuf = NULL;
+   real_par *SendBuf_Flt = new real_par [Send_Count_Sum];
+   real_par *RecvBuf_Flt = NULL;
 
 // 3-1. record attribute pointers
    real_par *SendAttFltPtr[PAR_NATT_FLT_TOTAL], **OldAttPtrPtr[PAR_NATT_FLT_TOTAL];
@@ -300,7 +300,7 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly,
 
 //    3-3. prepare send buffer (skip inactive particles)
       for (long ParID=0; ParID<NTarPar; ParID++)
-         if ( TRank[ParID] != -1 )  SendBuf[ Offset[TRank[ParID]] ++ ] = SendAttFltPtr[v][ParID];
+         if ( TRank[ParID] != -1 )  SendBuf_Flt[ Offset[TRank[ParID]] ++ ] = SendAttFltPtr[v][ParID];
 
 //    3-4. free/allocate the old/new particle arrays and set the recv buffer
       if ( OldParOnly )
@@ -308,17 +308,17 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly,
          free( SendAttFltPtr[v] );
 
          *(OldAttPtrPtr[v]) = (real_par*)malloc( UpdatedParListSize*sizeof(real_par) );
-         RecvBuf            = *(OldAttPtrPtr[v]);
+         RecvBuf_Flt        = *(OldAttPtrPtr[v]);
       }
 
       else
       {
          *(OldAttPtrPtr[v]) = (real_par*)realloc( *(OldAttPtrPtr[v]), UpdatedParListSize*sizeof(real_par) );
-         RecvBuf            = *(OldAttPtrPtr[v]) + NOldPar;
+         RecvBuf_Flt        = *(OldAttPtrPtr[v]) + NOldPar;
       }
 
 //    3-5. redistribute data
-      MPI_Alltoallv_GAMER( SendBuf, Send_Count, Send_Disp, MPI_GAMER_REAL_PAR, RecvBuf, Recv_Count, Recv_Disp, MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
+      MPI_Alltoallv_GAMER( SendBuf_Flt, Send_Count, Send_Disp, MPI_GAMER_REAL_PAR, RecvBuf_Flt, Recv_Count, Recv_Disp, MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
    } // for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
 
 
@@ -378,7 +378,7 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly,
 
 // free memory
    delete [] TRank;
-   delete [] SendBuf;
+   delete [] SendBuf_Flt;
 
 } // FUNCTION : SendParticle2HomeRank
 
