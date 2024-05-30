@@ -285,12 +285,12 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly,
    real_par *RecvBuf_Flt = NULL;
 
 // 3-1. record attribute pointers
-   real_par *SendAttFltPtr[PAR_NATT_FLT_TOTAL], **OldAttPtrPtr[PAR_NATT_FLT_TOTAL];
+   real_par *SendAttFltPtr[PAR_NATT_FLT_TOTAL], **OldAttFltPtrPtr[PAR_NATT_FLT_TOTAL];
 
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    {
       SendAttFltPtr  [v] = ( OldParOnly ) ? amr->Par->AttributeFlt[v] : NewParAttFlt[v];
-      OldAttPtrPtr[v] = &amr->Par->AttributeFlt[v];
+      OldAttFltPtrPtr[v] = &amr->Par->AttributeFlt[v];
    }
 
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
@@ -307,14 +307,14 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly,
       {
          free( SendAttFltPtr[v] );
 
-         *(OldAttPtrPtr[v]) = (real_par*)malloc( UpdatedParListSize*sizeof(real_par) );
-         RecvBuf_Flt        = *(OldAttPtrPtr[v]);
+         *(OldAttFltPtrPtr[v]) = (real_par*)malloc( UpdatedParListSize*sizeof(real_par) );
+         RecvBuf_Flt           = *(OldAttFltPtrPtr[v]);
       }
 
       else
       {
-         *(OldAttPtrPtr[v]) = (real_par*)realloc( *(OldAttPtrPtr[v]), UpdatedParListSize*sizeof(real_par) );
-         RecvBuf_Flt        = *(OldAttPtrPtr[v]) + NOldPar;
+         *(OldAttFltPtrPtr[v]) = (real_par*)realloc( *(OldAttFltPtrPtr[v]), UpdatedParListSize*sizeof(real_par) );
+         RecvBuf_Flt           = *(OldAttFltPtrPtr[v]) + NOldPar;
       }
 
 //    3-5. redistribute data
