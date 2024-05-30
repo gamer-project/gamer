@@ -505,10 +505,10 @@ void Output_DumpData_Total( const char *FileName )
 
 #     ifdef PARTICLE
       const int    par_natt_flt_stored   = PAR_NATT_FLT_STORED;
-      const int    par_natt_user         = PAR_NATT_FLT_USER;
+      const int    par_natt_flt_user     = PAR_NATT_FLT_USER;
 #     else
       const int    par_natt_flt_stored   = NULL_INT;
-      const int    par_natt_user         = NULL_INT;
+      const int    par_natt_flt_user     = NULL_INT;
 #     endif
 
       fwrite( &ncomp_fluid,               sizeof(int),                     1,             File );
@@ -531,7 +531,7 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &pot_block_size_z,          sizeof(int),                     1,             File );
       fwrite( &gra_block_size,            sizeof(int),                     1,             File );
       fwrite( &par_natt_flt_stored,       sizeof(int),                     1,             File );
-      fwrite( &par_natt_user,             sizeof(int),                     1,             File );
+      fwrite( &par_natt_flt_user,         sizeof(int),                     1,             File );
 
 
 //    d. output the simulation parameters recorded in the file "Input__Parameter"

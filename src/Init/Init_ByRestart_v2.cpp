@@ -869,7 +869,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    bool   use_psolver_10to14;
    int    ncomp_fluid, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
    int    flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size;
-   int    par_natt_flt_stored, par_natt_user;
+   int    par_natt_flt_stored, par_natt_flt_user;
    double min_pres, max_error;
 
    fseek( File, HeaderOffset_Constant, SEEK_SET );
@@ -894,7 +894,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &pot_block_size_z,           sizeof(int),                     1,             File );
    fread( &gra_block_size,             sizeof(int),                     1,             File );
    fread( &par_natt_flt_stored,        sizeof(int),                     1,             File );
-   fread( &par_natt_user,              sizeof(int),                     1,             File );
+   fread( &par_natt_flt_user,          sizeof(int),                     1,             File );
 
 
 // c. load the simulation parameters recorded in the file "Input__Parameter"
@@ -1356,13 +1356,13 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "PAR_NATT_FLT_STORED",     par_natt_flt_stored,          PAR_NATT_FLT_STORED,       NonFatal );
 
       if ( FormatVersion >= 2200 )
-      CompareVar( "PAR_NATT_FLT_USER",       par_natt_user,                PAR_NATT_FLT_USER,            Fatal );
+      CompareVar( "PAR_NATT_FLT_USER",       par_natt_flt_user,            PAR_NATT_FLT_USER,            Fatal );
       else
-      CompareVar( "PAR_NATT_FLT_USER",       par_natt_user,                PAR_NATT_FLT_USER,         NonFatal );
+      CompareVar( "PAR_NATT_FLT_USER",       par_natt_flt_user,            PAR_NATT_FLT_USER,         NonFatal );
 
-      if ( par_natt_user > 0  &&  FormatVersion < 2200  &&  MPI_Rank == 0 )
+      if ( par_natt_flt_user > 0  &&  FormatVersion < 2200  &&  MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : loading user-defined particle attributes (PAR_NATT_FLT_USER = %d) "
-                              "from version < 2200 will likely fail !!\n", par_natt_user );
+                              "from version < 2200 will likely fail !!\n", par_natt_flt_user );
 #     endif
 
 
