@@ -1867,7 +1867,7 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.Feedback               = 0;
 #  endif
 
-   Makefile.Par_NAttUser           = PAR_NATT_FLT_USER;
+   Makefile.Par_NAttFltUser        = PAR_NATT_FLT_USER;
 
 #  ifdef FLOAT8_PAR
    Makefile.Float8_Par             = 1;
@@ -2879,7 +2879,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "StoreParAcc",            HOFFSET(Makefile_t,StoreParAcc            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "StarFormation",          HOFFSET(Makefile_t,StarFormation          ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Feedback",               HOFFSET(Makefile_t,Feedback               ), H5T_NATIVE_INT );
-   H5Tinsert( H5_TypeID, "Par_NAttUser",           HOFFSET(Makefile_t,Par_NAttUser           ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "Par_NAttFltUser",        HOFFSET(Makefile_t,Par_NAttFltUser        ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Float8_Par",             HOFFSET(Makefile_t,Float8_Par             ), H5T_NATIVE_INT );
 #  endif
 
