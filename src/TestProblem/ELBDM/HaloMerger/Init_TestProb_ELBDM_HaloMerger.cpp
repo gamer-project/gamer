@@ -851,7 +851,7 @@ void SetParameter()
       // check there fluid is freezed if it is supposed to be a particle-only case
       if ( OPT__INIT == INIT_BY_FUNCTION  &&  (HaloMerger_Halo_Num + HaloMerger_Soliton_Num) == 0
                                           &&  OPT__FREEZE_FLUID != 1 )
-         Aux_Message( stderr, "WARNING : OPT__FREEZE_FLUID should be 1 for particle-only simulations !!\n" );
+         if ( MPI_Rank == 0 )   Aux_Message( stderr, "WARNING : OPT__FREEZE_FLUID should be 1 for particle-only simulations !!\n" );
 
       for (int index_parcloud=0; index_parcloud<HaloMerger_ParCloud_Num; index_parcloud++)
       {
