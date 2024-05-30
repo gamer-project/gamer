@@ -117,9 +117,6 @@ void Validate()
 #  endif
 
 #  ifdef PARTICLE
-   if ( OPT__INIT == INIT_BY_FUNCTION  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
-      Aux_Error( ERROR_INFO, "please set PAR_INIT = 1 (by FUNCTION) !!\n" );
-
 #  ifndef SUPPORT_GSL
    Aux_Error( ERROR_INFO, "SUPPORT_GSL must be enabled !!\n" );
 #  endif
@@ -197,8 +194,15 @@ void SetParameter()
 
    delete ReadPara;
 
+// Reset the number of objects to zero if initialization mode is not ByFunction
+   if ( OPT__INIT != INIT_BY_FUNCTION )            HaloMerger_Halo_Num     = 0;
+   if ( OPT__INIT != INIT_BY_FUNCTION )            HaloMerger_Soliton_Num  = 0;
+#  ifdef MASSIVE_PARTICLES
+   if ( amr->Par->Init != PAR_INIT_BY_FUNCTION )   HaloMerger_ParCloud_Num = 0;
+#  endif
+
 // (1-2) load the runtime parameters for the halos
-   if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Halo_Num > 0 )
+   if ( HaloMerger_Halo_Num > 0 )
    {
       // (1-2-1) allocate the memory
       HaloMerger_Halo_CenCoord              = new double [HaloMerger_Halo_Num][3];
@@ -300,10 +304,10 @@ void SetParameter()
 
       delete ReadPara_Halo;
 
-   } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Halo_Num > 0 )
+   } // if ( HaloMerger_Halo_Num > 0 )
 
 // (1-3) load the runtime parameters for the solitons
-   if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Soliton_Num > 0 )
+   if ( HaloMerger_Soliton_Num > 0 )
    {
       // (1-3-1) allocate the memory
       HaloMerger_Soliton_CenCoord          = new double [HaloMerger_Soliton_Num][3];
@@ -407,10 +411,10 @@ void SetParameter()
 
       delete ReadPara_Soliton;
 
-   } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Soliton_Num > 0 )
+   } // if ( HaloMerger_Soliton_Num > 0 )
 
 // (1-4) load the runtime parameters for the particle clouds
-   if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_ParCloud_Num > 0 )
+   if ( HaloMerger_ParCloud_Num > 0 )
    {
       // (1-4-1) allocate the memory
       HaloMerger_ParCloud_CenCoord          = new double [HaloMerger_ParCloud_Num][3];
@@ -495,7 +499,7 @@ void SetParameter()
 
       delete ReadPara_ParCloud;
 
-   } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_ParCloud_Num > 0 )
+   } // if ( HaloMerger_ParCloud_Num > 0 )
 
 
 // (2) check the runtime parameters
@@ -519,7 +523,7 @@ void SetParameter()
    } // if ( OPT__EXT_POT == EXT_POT_FUNC )
 
 // (2-2) check the parameters for the halos
-   if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Halo_Num > 0 )
+   if ( HaloMerger_Halo_Num > 0 )
    {
       for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
       {
@@ -635,10 +639,10 @@ void SetParameter()
          Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
                     "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
 
-   } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Halo_Num > 0 )
+   } // if ( HaloMerger_Halo_Num > 0 )
 
 // (2-3) check the parameters for the solitons
-   if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Soliton_Num > 0 )
+   if ( HaloMerger_Soliton_Num > 0 )
    {
       for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
       {
@@ -831,13 +835,13 @@ void SetParameter()
 
       } // for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
 
-   } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Soliton_Num > 0 )
+   } // if ( HaloMerger_Soliton_Num > 0 )
 
 // (2-4) check the parameters for the particle clouds
    // set the total number of particles in all particle clouds
    long HaloMerger_ParCloud_NPar_Total = (long)0;
 
-   if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_ParCloud_Num > 0 )
+   if ( HaloMerger_ParCloud_Num > 0 )
    {
       // check the particle is enabled
 #     ifndef MASSIVE_PARTICLES
@@ -845,8 +849,9 @@ void SetParameter()
 #     endif
 
       // check there fluid is freezed if it is supposed to be a particle-only case
-      if ( (HaloMerger_Halo_Num + HaloMerger_Soliton_Num) == 0  &&  OPT__FREEZE_FLUID != 1 )
-         Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID should be 1 for particle-only simulations !!\n" );
+      if ( OPT__INIT == INIT_BY_FUNCTION  &&  (HaloMerger_Halo_Num + HaloMerger_Soliton_Num) == 0
+                                          &&  OPT__FREEZE_FLUID != 1 )
+         Aux_Message( stderr, "WARNING : OPT__FREEZE_FLUID should be 1 for particle-only simulations !!\n" );
 
       for (int index_parcloud=0; index_parcloud<HaloMerger_ParCloud_Num; index_parcloud++)
       {
@@ -980,18 +985,18 @@ void SetParameter()
       if ( HaloMerger_ParCloud_NPar_Total <= 0 )
          Aux_Error( ERROR_INFO, "Total number of particles (sum of HaloMerger_ParCloud_i_NPar) must be >0 for HaloMerger_ParCloud_Num > 0 !!\n" );
 
-   } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_ParCloud_Num > 0 )
+   } // if ( HaloMerger_ParCloud_Num > 0 )
 
    // overwrite the total number of particles
-   if ( OPT__INIT != INIT_BY_RESTART )
+#  ifdef MASSIVE_PARTICLES
+   if ( amr->Par->Init == PAR_INIT_BY_FUNCTION )
    {
-#     ifdef MASSIVE_PARTICLES
       amr->Par->NPar_Active_AllRank = HaloMerger_ParCloud_NPar_Total;
 
       PRINT_RESET_PARA( amr->Par->NPar_Active_AllRank, FORMAT_LONG,
                         "(amr->Par->NPar_Active_AllRank is originally set by PAR_NPAR in Input__Parameter)" );
-#     endif
    }
+#  endif
 
 
 // (3) reset other general-purpose parameters
@@ -1032,7 +1037,7 @@ void SetParameter()
                       HaloMerger_ExtPot_UniDenSph_VelocityX, HaloMerger_ExtPot_UniDenSph_VelocityY, HaloMerger_ExtPot_UniDenSph_VelocityZ );
       }
 
-      if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Halo_Num > 0 )
+      if ( HaloMerger_Halo_Num > 0 )
       {
          Aux_Message( stdout, "\n  halo information:\n" );
          Aux_Message( stdout, "  %7s  %14s  %14s  %14s  %14s  %14s  %14s\n",
@@ -1069,9 +1074,9 @@ void SetParameter()
             Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
                        "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
 
-      } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Halo_Num > 0 )
+      } // if ( HaloMerger_Halo_Num > 0 )
 
-      if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Soliton_Num > 0 )
+      if ( HaloMerger_Soliton_Num > 0 )
       {
          Aux_Message( stdout, "\n  soliton information:\n" );
          Aux_Message( stdout, "  %7s  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s\n",
@@ -1112,9 +1117,9 @@ void SetParameter()
             Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
                        "HaloMerger_Soliton_InitMode", HaloMerger_Soliton_InitMode );
 
-      } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Soliton_Num > 0 )
+      } // if ( HaloMerger_Soliton_Num > 0 )
 
-      if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_ParCloud_Num > 0 )
+      if ( HaloMerger_ParCloud_Num > 0 )
       {
          Aux_Message( stdout, "\n  particle cloud information:\n" );
          Aux_Message( stdout, "  %7s  %14s  %14s  %14s  %14s  %14s  %14s\n",
@@ -1144,7 +1149,7 @@ void SetParameter()
             Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
                        "HaloMerger_ParCloud_InitMode", HaloMerger_ParCloud_InitMode );
 
-      } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_ParCloud_Num > 0 )
+      } // if ( HaloMerger_ParCloud_Num > 0 )
 
       Aux_Message( stdout, "=============================================================================\n" );
    }
@@ -1352,7 +1357,7 @@ void End_HaloMerger()
 {
 
    // Halos
-   if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Halo_Num > 0 )
+   if ( HaloMerger_Halo_Num > 0 )
    {
       delete [] HaloMerger_Halo_CenCoord;
       delete [] HaloMerger_Halo_Velocity;
@@ -1378,10 +1383,10 @@ void End_HaloMerger()
          Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
                     "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
 
-   } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Halo_Num > 0 )
+   } // if ( HaloMerger_Halo_Num > 0 )
 
    // Solitons
-   if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Soliton_Num > 0 )
+   if ( HaloMerger_Soliton_Num > 0 )
    {
       delete [] HaloMerger_Soliton_CenCoord;
       delete [] HaloMerger_Soliton_Velocity;
@@ -1412,10 +1417,10 @@ void End_HaloMerger()
          Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
                     "HaloMerger_Soliton_InitMode", HaloMerger_Soliton_InitMode );
 
-   } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_Soliton_Num > 0 )
+   } // if ( HaloMerger_Soliton_Num > 0 )
 
    // ParClouds
-   if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_ParCloud_Num > 0 )
+   if ( HaloMerger_ParCloud_Num > 0 )
    {
       delete [] HaloMerger_ParCloud_CenCoord;
       delete [] HaloMerger_ParCloud_Velocity;
@@ -1431,7 +1436,7 @@ void End_HaloMerger()
          Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
                     "HaloMerger_ParCloud_InitMode", HaloMerger_ParCloud_InitMode );
 
-   } // if ( OPT__INIT != INIT_BY_RESTART  &&  HaloMerger_ParCloud_Num > 0 )
+   } // if ( HaloMerger_ParCloud_Num > 0 )
 
 } // FUNCTION : End_HaloMerger
 
