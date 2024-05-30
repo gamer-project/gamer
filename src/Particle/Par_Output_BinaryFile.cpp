@@ -36,7 +36,7 @@ void Par_Output_BinaryFile( const char *FileName )
 
 
 // data
-   real_par *attribute_buff = (real_par*)malloc( sizeof(real_par)*amr->Par->NPar_AcPlusInac );
+   real_par *attribute_flt_buff = (real_par*)malloc( sizeof(real_par)*amr->Par->NPar_AcPlusInac );
 
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    {
@@ -52,11 +52,11 @@ void Par_Output_BinaryFile( const char *FileName )
             {
 //             skip inactive particles
                if ( amr->Par->Mass[p] < 0.0 )   continue;
-               else                             attribute_buff[ counter ++ ] = amr->Par->AttributeFlt[v][p];
+               else                             attribute_flt_buff[ counter ++ ] = amr->Par->AttributeFlt[v][p];
             }
 
 //          dump data from the buffer
-            fwrite( attribute_buff, sizeof(real_par), counter, File );
+            fwrite( attribute_flt_buff, sizeof(real_par), counter, File );
             fclose( File );
          } // if ( MPI_Rank == TargetMPIRank )
 
@@ -64,7 +64,7 @@ void Par_Output_BinaryFile( const char *FileName )
       } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
    } // for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
 
-   free( attribute_buff );
+   free( attribute_flt_buff );
 
 } // FUNCTION : Par_Output_BinaryFile
 
