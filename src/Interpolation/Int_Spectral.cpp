@@ -217,8 +217,7 @@ void Int_Spectral( real CData[], const int CSize[3], const int CStart[3], const 
 
 #        if ( MODEL == ELBDM )
 
-         bool InterpolateXY   = false;
-         real VortexThreshold = 0.1;
+         bool InterpolateReIm = false;
 
          if ( UnwrapPhase )
          {
@@ -236,7 +235,7 @@ void Int_Spectral( real CData[], const int CSize[3], const int CStart[3], const 
 //          NOTE:
 //          Two other strategies that were thought to improve the interpolation around vortices have been thoroughly tested
 //          Strategy 1: Interpolate rho and rho * cos(S/N)
-//          This strategy performs poorly because rho has a kink at the vortex.
+//          This strategy performs poorly because rho's derivatives have a kink at the vortex.
 //          Taking powers of rho to shift the kink to higher derivatives helps, but increases the error when taking a high root to obtain rho again
 //
 //          Strategy 2:
@@ -249,21 +248,21 @@ void Int_Spectral( real CData[], const int CSize[3], const int CStart[3], const 
             if ( SPEC_INT_XY_INSTEAD_DEPHA )
             {
 //             detect phase discontinuities
-               for (int k = 1; k < InSize[XYZ] - 1; k++) {
-//                assuming Lap(S) * dx**2 > threshold is a significant jump
-                  if (fabs(Imag[k+1] - 2 * Imag[k] + Imag[k-1]) > VortexThreshold) {
-                     InterpolateXY = true;
+               for ( int k = 1; k < InSize[XYZ] - 1; k++ ) {
+//                assuming Lap(S) * dx**2 > threshold implies a significant phase jump
+                  if ( fabs( Imag[k+1] - 2 * Imag[k] + Imag[k-1] ) > SPEC_INT_VORTEX_THRESHOLD ) {
+                     InterpolateReIm = true;
                      break;
                   }
                }
 
 //             convert back to real & imaginary part
-               if (InterpolateXY) {
-                  for (int k = 0; k < InSize[XYZ]; k++) {
-                     const real X = SQRT(Real[k]) * COS(Imag[k]);
-                     const real Y = SQRT(Real[k]) * SIN(Imag[k]);
-                     Real[k] = X;
-                     Imag[k] = Y;
+               if ( InterpolateReIm ) {
+                  for ( int k = 0; k < InSize[XYZ]; k++ ) {
+                     const real Re = SQRT( Real[k] ) * COS( Imag[k] );
+                     const real Im = SQRT( Real[k] ) * SIN( Imag[k] );
+                     Real[k] = Re;
+                     Imag[k] = Im;
                   }
                }
             }
@@ -288,12 +287,12 @@ void Int_Spectral( real CData[], const int CSize[3], const int CStart[3], const 
             if ( SPEC_INT_XY_INSTEAD_DEPHA ) {
 
 //             convert back to density and phase from real/imag
-               if (InterpolateXY) {
+               if ( InterpolateReIm ) {
                   for (int k = 0; k < OutSize[XYZ]; k++) {
-                     const real X = SQR(Real[k]) + SQR(Imag[k]);
-                     const real Y = SATAN2(Imag[k], Real[k]);
-                     Real[k] = X;
-                     Imag[k] = Y;
+                     const real De  = SQR( Real[k] ) + SQR( Imag[k] );
+                     const real Pha = SATAN2( Imag[k], Real[k] );
+                     Real[k] = De;
+                     Imag[k] = Pha;
                   }
 
 //                unwrap phase to be restore phase field
@@ -306,7 +305,7 @@ void Int_Spectral( real CData[], const int CSize[3], const int CStart[3], const 
 
 //          density floor
             for (int k = 0; k < OutSize[XYZ]; k++) {
-               Real[k] = MAX(TINY_NUMBER, Real[k]);
+               Real[k] = MAX( TINY_NUMBER, Real[k] );
             }
          } // if ( UnwrapPhase && SPEC_INT_XY_INSTEAD_DEPHA )
 #        endif // #if ( MODEL == ELBDM )
