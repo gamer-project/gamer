@@ -746,13 +746,17 @@ PrecomputedInterpolationContext::~PrecomputedInterpolationContext()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  PrecomputedInterpolationContext::GetWorkspaceSize
-// Description :  Return 0 since PrecomputedInterpolationContext does not require a workspace
+// Description :  Return size of input and output arrays in pi_gsl::gsl_real precision for matrix multiplication
 //
-// Return      :  Returns the unsigned integer 0
+// Return      :  Returns the workspace size in bytes
 //-------------------------------------------------------------------------------------------------------
 size_t PrecomputedInterpolationContext::GetWorkspaceSize() const {
 
-   return 0;
+   size_t total_size = 0;
+   total_size += nInput;        // input
+   total_size += nInterpolated; // output
+
+   return total_size*sizeof( pi_gsl::gsl_real );
 
 } // FUNCTION : GetWorkspaceSize
 
@@ -764,17 +768,29 @@ size_t PrecomputedInterpolationContext::GetWorkspaceSize() const {
 //
 // Parameter   :  input          : Real input  array of size nInput
 //                output         : Real output array of size 2 * (nInput - nGhostBoundary)
-//                workspace      : Useless for PrecomputedInterpolationContext
-//
+//                workspace      : Workspace containing input and output in double precision pi_gsl::gsl_real
 //-------------------------------------------------------------------------------------------------------
 void PrecomputedInterpolationContext::InterpolateReal( const real *input, real *output, char* workspace ) const
 {
 
-   pi_gsl::vector_const_view in = pi_gsl::vector_const_view_array( input, nInput );
-   pi_gsl::vector_view out      = pi_gsl::vector_view_array      ( output, nInterpolated );
+// define arrays in workspace
+   pi_gsl::gsl_real* pi_gsl_input         = (pi_gsl::gsl_real*) workspace;
+   pi_gsl::gsl_real* pi_gsl_output        = input + nInput;
+
+// convert input to matrix multiplication precision
+   for (size_t i=0; i<nInput; ++i) {
+      pi_gsl_input[i] = (pi_gsl::gsl_real) input[i];
+   }
+
+   pi_gsl::vector_const_view in = pi_gsl::vector_const_view_array( pi_gsl_input, nInput );
+   pi_gsl::vector_view out      = pi_gsl::vector_view_array      ( pi_gsl_output, nInterpolated );
 
    pi_gsl::blas_sgemv( CblasNoTrans, 1.0, interpolationMatrix, &in.vector, 0.0, &out.vector );
 
+
+   for (size_t i=0; i<nInterpolated; ++i) {
+      output[i] = (real) pi_gsl_output[i];
+   }
 } // FUNCTION : InterpolateReal
 
 
