@@ -14,6 +14,7 @@
 # include "Typedef.h"
 # include "SrcTerms.h"
 # include "EoS.h"
+# include "Microphysics.h"
 #else
 # include "GAMER.h"
 #endif
@@ -28,7 +29,7 @@
 // include CUDA FFT library if GPU kinetic ELBDM Gram-Fourier extension solver is enabled
 #if ( defined(__CUDACC__) && GRAMFE_SCHEME == GRAMFE_FFT )
 #  include <cufftdx.hpp>
-#endif // #if ( defined(__CUDACC__) && GRAMFE_SCHEME == GRAMFE_FFT )
+#endif
 
 // faster integer multiplication in Fermi
 #if ( defined __CUDACC__  &&  __CUDA_ARCH__ >= 200 )
@@ -494,10 +495,18 @@
 #  endif
 
 
+// to get rid of the "uses too much shared data" error message in the ELBDM HJ solver
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#     if ( PATCH_SIZE == 8  &&  NCOMP_PASSIVE == 0 )
+#        define FLU_HJ_BLOCK_SIZE_Y    ( FLU_BLOCK_SIZE_Y   )  // not optimized yet
+#     else
+#        define FLU_HJ_BLOCK_SIZE_Y    ( FLU_BLOCK_SIZE_Y/2 )  // not optimized yet
+#     endif
+#  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
-// set number of threads and blocks used in GRAMFE GPU scheme
-# if ( defined(__CUDACC__) && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
 
+// set number of threads and blocks used in GRAMFE_FFT GPU scheme
+#  if ( defined(__CUDACC__)  &&  WAVE_SCHEME == WAVE_GRAMFE  &&  GRAMFE_SCHEME == GRAMFE_FFT )
 
 // cuFFTdx supports the following GPU architectures at the time of writing (23.05.23)
 //
@@ -540,11 +549,11 @@ using IFFT         = decltype( inverse_fft() + cufftdx::ElementsPerThread<elemen
 
 using complex_type = typename FFT::value_type;
 
-# endif // # if ( defined(__CUDACC__) && WAVE_SCHEME == WAVE_GRAMFE && GRAMFE_SCHEME == GRAMFE_FFT )
+#  endif // # if ( defined(__CUDACC__)  &&  WAVE_SCHEME == WAVE_GRAMFE  &&  GRAMFE_SCHEME == GRAMFE_FFT )
 
-# else
-# error : ERROR : Unsupported model in CUFLU.h
-# endif // MODEL
+#else
+#  error : ERROR : Unsupported model in CUFLU.h
+#endif // MODEL
 
 
 // 3. dt solver for fluid

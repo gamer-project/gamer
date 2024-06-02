@@ -36,7 +36,6 @@ void Aux_Check_Conservation( const char *comment )
    const char *FileName  = "Record__Conservation";
 
 
-
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM  &&  MODEL != PAR_ONLY )
    Aux_Message( stderr, "WARNING : function \"%s\" is supported only in the models HYDRO, ELBDM, and PAR_ONLY !!\n",
                 __FUNCTION__ );
@@ -139,19 +138,18 @@ void Aux_Check_Conservation( const char *comment )
 
 #        if ( ELBDM_SCHEME == ELBDM_HYBRID )
          if ( amr->use_wave_flag[lv] ) {
-#        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-         TVar = _REAL|_IMAG;
+#        endif
+         TVar = _REAL | _IMAG;
 #        if ( ELBDM_SCHEME == ELBDM_HYBRID )
-         } else { // if ( amr->use_wave_flag[lv] )
-         TVar = _DENS|_PHAS;
-         } // if ( amr->use_wave_flag[lv] == true ) ... else
-#        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         } else {
+         TVar = _DENS | _PHAS;
+         }
+#        endif
 
          Prepare_PatchData( lv, Time[lv], Flu_ELBDM[0][0][0][0], NULL, NGhost, NPG, &PID0, TVar, _NONE,
                             IntScheme, INT_NONE, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                             MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
-
-#        endif
+#        endif // #if ( MODEL == ELBDM )
 
          for (int PID=PID0; PID<PID0+8; PID++)
          {
@@ -175,6 +173,11 @@ void Aux_Check_Conservation( const char *comment )
                   MomZ = amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i];
                   Etot = amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i];
 
+#                 ifdef SRHD
+//                total energy density also includes rest mass energy density in relativistic hydro
+                  Etot += Dens;
+#                 endif
+
                   Fluid_lv[0] += Dens;
                   Fluid_lv[1] += MomX;
                   Fluid_lv[2] += MomY;
@@ -194,14 +197,44 @@ void Aux_Check_Conservation( const char *comment )
                   else                                               Epot = 0.0;
                   Fluid_lv[6] += Epot;
 #                 endif
-
-                  Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag );
+#                 ifndef SRHD
+//                Hydro_Con2Eint() calculates Eint for both HD and SRHD but we disable SRHD for now
+                  Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag,
+                                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
+                                                 EoS_AuxArray_Int, h_EoS_Table );
+#                 else
+                  Eint = 0.0;
+#                 endif
                   Fluid_lv[5] += Eint;
 
+#                 ifdef SRHD
+//                For now we disable the calculation of Ekin for SRHD
+//                Also, note that the following is equivalent to "Etot - Dens - Lrtz*Eint"
+                  /*
+                  real HTilde, Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL], Lrtz, Lrtz_m1;
+                  Cons[0]      = Dens;
+                  Cons[1]      = MomX;
+                  Cons[2]      = MomY;
+                  Cons[3]      = MomZ;
+                  Cons[4]      = Etot;
+                  for ( int v = NCOMP_FLUID; v < NCOMP_TOTAL; v++ ) Cons[v] = 0.0;
+                  Hydro_Con2Pri( Cons, Prim, (real)-HUGE_NUMBER, NULL_BOOL, NULL_INT, NULL,
+                                 NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
+                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, &Lrtz );
+                  HTilde       = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+//                Compute gamma - 1 this way to avoid catastrophic cancellation
+                  Lrtz_m1      = ( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) ) / ( Lrtz + 1.0 );
+                  Ekin         = Lrtz_m1*( Dens*(HTilde+1.0) + Prim[4] );
+                  */
+                  Ekin = 0.0;
+#                 else
 //###NOTE: assuming Etot = Eint + Ekin + Emag
                   Ekin         = Etot - Eint;
 #                 ifdef MHD
                   Ekin        -= Emag;
+#                 endif
 #                 endif
                   Fluid_lv[4] += Ekin;
                } // i,j,k
@@ -245,14 +278,14 @@ void Aux_Check_Conservation( const char *comment )
                      Flu_ELBDM[t][DENS][k][j][i] = LOG(Flu_ELBDM[t][DENS][k][j][i]);
                   }}} //k,j,i
                }
-#              endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#              endif
 
                for (int k=NGhost; k<Size_Flu-NGhost; k++)   { kp = k+1; km = k-1;
                for (int j=NGhost; j<Size_Flu-NGhost; j++)   { jp = j+1; jm = j-1;
                for (int i=NGhost; i<Size_Flu-NGhost; i++)   { ip = i+1; im = i-1;
 #                 if ( ELBDM_SCHEME == ELBDM_HYBRID )
                   if ( amr->use_wave_flag[lv] ) {
-#                 endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#                 endif
 //                [1-3] momentum in ELBDM
                   R = Flu_ELBDM[t][0][k][j][i];
                   I = Flu_ELBDM[t][1][k][j][i];
@@ -272,18 +305,18 @@ void Aux_Check_Conservation( const char *comment )
                   Fluid_lv[4] += _2Eta2*( SQR(GradR[0]) + SQR(GradR[1]) + SQR(GradR[2]) +
                                           SQR(GradI[0]) + SQR(GradI[1]) + SQR(GradI[2])   );
 #                 if ( ELBDM_SCHEME == ELBDM_HYBRID )
-                  } else { //if ( amr->use_wave_flag[lv] )
+                  } else {
 //                [1-3] momentum in ELBDM
-                  const double Dens =  exp(Flu_ELBDM[t][DENS][k][j][i]);
+                  const double Dens = exp(Flu_ELBDM[t][DENS][k][j][i]);
 
 //                compute bulk velocities v_i = dS/dx
-                  GradI[0] = 1.0 * _dh2*( Flu_ELBDM[t][PHAS][k ][j ][ip] - Flu_ELBDM[t][PHAS][k ][j ][im] );
-                  GradI[1] = 1.0 * _dh2*( Flu_ELBDM[t][PHAS][k ][jp][i ] - Flu_ELBDM[t][PHAS][k ][jm][i ] );
-                  GradI[2] = 1.0 * _dh2*( Flu_ELBDM[t][PHAS][kp][j ][i ] - Flu_ELBDM[t][PHAS][km][j ][i ] );
-//                compute thermal velocities v_r = dln(sqrt(rho))/dx = 0.5 * dln(rho)/dx
-                  GradR[0] = 0.5 * _dh2*( Flu_ELBDM[t][DENS][k ][j ][ip] - Flu_ELBDM[t][DENS][k ][j ][im] );
-                  GradR[1] = 0.5 * _dh2*( Flu_ELBDM[t][DENS][k ][jp][i ] - Flu_ELBDM[t][DENS][k ][jm][i ] );
-                  GradR[2] = 0.5 * _dh2*( Flu_ELBDM[t][DENS][kp][j ][i ] - Flu_ELBDM[t][DENS][km][j ][i ] );
+                  GradI[0] = 1.0*_dh2*( Flu_ELBDM[t][PHAS][k ][j ][ip] - Flu_ELBDM[t][PHAS][k ][j ][im] );
+                  GradI[1] = 1.0*_dh2*( Flu_ELBDM[t][PHAS][k ][jp][i ] - Flu_ELBDM[t][PHAS][k ][jm][i ] );
+                  GradI[2] = 1.0*_dh2*( Flu_ELBDM[t][PHAS][kp][j ][i ] - Flu_ELBDM[t][PHAS][km][j ][i ] );
+//                compute thermal velocities v_r = dln(sqrt(rho))/dx = 0.5*dln(rho)/dx
+                  GradR[0] = 0.5*_dh2*( Flu_ELBDM[t][DENS][k ][j ][ip] - Flu_ELBDM[t][DENS][k ][j ][im] );
+                  GradR[1] = 0.5*_dh2*( Flu_ELBDM[t][DENS][k ][jp][i ] - Flu_ELBDM[t][DENS][k ][jm][i ] );
+                  GradR[2] = 0.5*_dh2*( Flu_ELBDM[t][DENS][kp][j ][i ] - Flu_ELBDM[t][DENS][km][j ][i ] );
 
                   for (int d=0; d<3; d++)
                   Fluid_lv[d+1] += _Eta * Dens * GradI[d];
@@ -291,10 +324,9 @@ void Aux_Check_Conservation( const char *comment )
 //                [4] kinetic energy in ELBDM
                   Fluid_lv[4] += _2Eta2 * Dens * ( SQR(GradR[0]) + SQR(GradR[1]) + SQR(GradR[2])
                                                  + SQR(GradI[0]) + SQR(GradI[1]) + SQR(GradI[2])   );
-                  } //if ( amr->use_wave_flag[lv] == true ) ... else
+                  } // if ( amr->use_wave_flag[lv] ) ... else ...
 #                 endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
-               }}}
-
+               }}} // i,j,k
 
 #              else
 #              error : ERROR : unsupported MODEL !!

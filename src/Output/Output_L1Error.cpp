@@ -19,6 +19,8 @@ static void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const
 #define NERR      ( NBASIC + NEXTRA )
 
 
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_L1Error
 // Description :  Compare the numerical and analytical solutions and output the L1 errors
@@ -90,7 +92,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
    sprintf( FileName[     NBASIC+0], "%s_Temp_%06d", Prefix, DumpID );
 
 #  elif ( MODEL == ELBDM )
-#  if ( ELBDM_SCHEME == ELBDM_WAVE )
+#  if   ( ELBDM_SCHEME == ELBDM_WAVE )
    sprintf( FileName[            0], "%s_Dens_%06d", Prefix, DumpID );
    sprintf( FileName[            1], "%s_Real_%06d", Prefix, DumpID );
    sprintf( FileName[            2], "%s_Imag_%06d", Prefix, DumpID );
@@ -100,7 +102,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
    sprintf( FileName[            2], "%s_Stub_%06d", Prefix, DumpID );
 #  else
 #  error : ERROR : unsupported ELBDM_SCHEME !!
-#  endif
+#  endif // ELBDM_SCHEME
 
    for (int v=0; v<NCOMP_PASSIVE; v++)
    sprintf( FileName[NCOMP_FLUID+v], "%s_Passive%02d_%06d", Prefix, v, DumpID );
@@ -274,19 +276,22 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
          fprintf( File_L1, "\n" );
 
 #        elif ( MODEL == ELBDM )
-#        if ( ELBDM_SCHEME == ELBDM_WAVE )
+#        if   ( ELBDM_SCHEME == ELBDM_WAVE )
 
-         fprintf( File_L1, "#%5s %13s %*s %*s %*s\n", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
+         fprintf( File_L1, "#%5s %13s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
                   StrLen_Flt, "Error(Real)", StrLen_Flt, "Error(Imag)" );
 #        elif ( ELBDM_SCHEME == ELBDM_HYBRID )
-         fprintf( File_L1, "#%5s %13s %*s %*s %*s\n", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
+         fprintf( File_L1, "#%5s %13s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
                   StrLen_Flt, "Error(Phas)", StrLen_Flt, "Stub" );
 #        else
 #        error : ERROR : unsupported ELBDM_SCHEME !!
-#        endif
+#        endif // ELBDM_SCHEME
 
-         for (int v=0; v<NCOMP_PASSIVE; v++)
-         fprintf( File_L1, "    Error(Passive%02d)", v );
+         for (int v=0; v<NCOMP_PASSIVE; v++) {
+            char tmp_str[MAX_STRING];
+            sprintf(tmp_str, "Error(Passive%02d)", v);
+            fprintf( File_L1, " %*s", StrLen_Flt, tmp_str );
+         }
 
          fprintf( File_L1, "\n" );
 
@@ -345,7 +350,6 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 
    real Nume[NERR], Anal[NERR], Err[NERR];
 
-
 // get the numerical solution
    for (int v=0; v<NCOMP_TOTAL; v++)
       Nume[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
@@ -367,16 +371,21 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
    const real  Emag_Nume       = NULL_REAL;
 #  endif
 
-   const real  Pres_Nume       = Hydro_Con2Pres( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ], Nume[ENGY], Nume+NCOMP_FLUID,
+   const real  Pres_Nume       = Hydro_Con2Pres( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ],
+                                                 Nume[ENGY], Nume+NCOMP_FLUID,
                                                  CheckMinPres_No, NULL_REAL, Emag_Nume,
-                                                 EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-   const real  Temp_Nume       = Hydro_Con2Temp( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ], Nume[ENGY], Nume+NCOMP_FLUID,
+                                                 EoS_DensEint2Pres_CPUPtr,
+                                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+   const real  Temp_Nume       = Hydro_Con2Temp( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ],
+                                                 Nume[ENGY], Nume+NCOMP_FLUID,
                                                  CheckMinTemp_No, NULL_REAL, Emag_Nume,
-                                                 EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                                                 EoS_DensEint2Temp_CPUPtr,
+                                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    Nume[ENGY    ] = Pres_Nume;
    Nume[NBASIC+0] = Temp_Nume;
 #  endif // #if ( MODEL == HYDRO )
-
 
 
 // get the analytical solution
@@ -392,14 +401,17 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 
 // get pressure and temperature
 #  if ( MODEL == HYDRO )
-   const real Emag_Zero = 0.0;   // Anal[ENGY] set by AnalFunc_Flu() does NOT include magentic energy
+   const real Emag_Zero = 0.0;   // Anal[ENGY] set by AnalFunc_Flu() does NOT include magnetic energy
+   const real Pres_Anal = Hydro_Con2Pres( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY],
+                                          Anal+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, Emag_Zero,
+                                          EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
-   const real Pres_Anal = Hydro_Con2Pres( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY], Anal+NCOMP_FLUID,
-                                          CheckMinPres_No, NULL_REAL, Emag_Zero,
-                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-   const real Temp_Anal = Hydro_Con2Temp( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY], Anal+NCOMP_FLUID,
-                                          CheckMinTemp_No, NULL_REAL, Emag_Zero,
-                                          EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+   const real Temp_Anal = Hydro_Con2Temp( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY],
+                                          Anal+NCOMP_FLUID, CheckMinTemp_No, NULL_REAL, Emag_Zero,
+                                          EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
    Anal[ENGY    ] = Pres_Anal;
    Anal[NBASIC+0] = Temp_Anal;
 #  endif
@@ -411,8 +423,9 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
       Nume[PHAS] = SATAN2(Nume[IMAG], Nume[REAL]);
       Anal[STUB] = 0;
       Nume[STUB] = 0;
-   } // if ( amr->use_wave_flag[lv] ) {
-#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   }
+#  endif
+
 
 // record the physical coordinate
    double r;

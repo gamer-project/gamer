@@ -1,5 +1,7 @@
 #include "GAMER.h"
 
+
+
 #ifndef GPU
 
 #include "GAMER.h"
@@ -50,7 +52,7 @@ void CPU_FluidSolver_MHM(
    const bool NormPassive, const int NNorm, const int c_NormIdx[],
    const bool FracPassive, const int NFrac, const int c_FracIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_t EoS );
+   const EoS_t EoS, const MicroPhy_t MicroPhy );
 #elif ( FLU_SCHEME == CTU )
 void CPU_FluidSolver_CTU(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -82,43 +84,43 @@ void CPU_FluidSolver_CTU(
 #endif // FLU_SCHEME
 
 #elif ( MODEL == ELBDM )
-#if ( WAVE_SCHEME == WAVE_FD )
-void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
-                      real Flu_Array_Out[][FLU_NOUT   ][ CUBE(PS2) ],
-                      real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
-                      const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
-                      const real Taylor3_Coeff, const bool XYZ, const real MinDens );
+#if   ( WAVE_SCHEME == WAVE_FD )
+void CPU_ELBDMSolver_FD( real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
+                         real Flu_Array_Out[][FLU_NOUT   ][ CUBE(PS2) ],
+                         real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
+                         const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
+                         const real Taylor3_Coeff, const bool XYZ, const real MinDens );
 #elif ( WAVE_SCHEME == WAVE_GRAMFE ) // #if ( WAVE_SCHEME == WAVE_FD )
-#if ( GRAMFE_SCHEME == GRAMFE_FFT )
-void CPU_ELBDMSolver_GramFE_FFT (   real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
+#if   ( GRAMFE_SCHEME == GRAMFE_FFT )
+void CPU_ELBDMSolver_GramFE_FFT( real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
+                                 real Flu_Array_Out[][FLU_NOUT   ][ CUBE(PS2) ],
+                                 real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                 const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
+                                 const bool XYZ, const real MinDens );
+#elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+void CPU_ELBDMSolver_GramFE_MATMUL( real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
                                     real Flu_Array_Out[][FLU_NOUT   ][ CUBE(PS2) ],
                                     real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                    gramfe_matmul_float TimeEvo[][ 2*FLU_NXT ],
                                     const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                                     const bool XYZ, const real MinDens );
-#elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-void CPU_ELBDMSolver_GramFE_MATMUL (      real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
-                                          real Flu_Array_Out[][FLU_NOUT   ][ CUBE(PS2) ],
-                                          real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                          gramfe_matmul_float TimeEvo[][2 * FLU_NXT],
-                                          const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
-                                          const bool XYZ, const real MinDens );
 #else
 #error : ERROR : unsupported GRAMFE_SCHEME !!
 #endif // GRAMFE_SCHEME
-#endif // #if ( WAVE_SCHEME == WAVE_FD ) ... else
+#endif // WAVE_SCHEME
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
-void CPU_ELBDMSolver_HamiltonJacobi(  real Flu_Array_In [][FLU_NIN ][ CUBE(HYB_NXT)],
-                                      #ifdef GAMER_DEBUG
-                                      real Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
-                                      #else
-                                      real Flu_Array_Out[][FLU_NIN] [ CUBE(PS2) ],
-                                      #endif
-                                      real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                      const bool g_IsCompletelyRefined [],
-                                      const bool HasWaveCounterpart[][ CUBE(HYB_NXT) ],
-                                      const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
-                                      const bool XYZ, const real MinDens );
-#endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+void CPU_ELBDMSolver_HamiltonJacobi( real Flu_Array_In [][FLU_NIN ][ CUBE(HYB_NXT)],
+#                                    ifdef GAMER_DEBUG
+                                     real Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
+#                                    else
+                                     real Flu_Array_Out[][FLU_NIN] [ CUBE(PS2) ],
+#                                    endif
+                                     real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                     const bool g_IsCompletelyRefined [],
+                                     const bool HasWaveCounterpart[][ CUBE(HYB_NXT) ],
+                                     const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
+                                     const bool XYZ, const real MinDens );
+#endif
 
 #else
 #error : ERROR : unsupported MODEL !!
@@ -140,6 +142,8 @@ static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 #endif // FLU_SCHEME
 
 
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_FluidSolver
 // Description :  1. MODEL == HYDRO : use CPU to solve the Euler equations by different schemes
@@ -150,7 +154,6 @@ static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 //                   2. MUSCL-Hancock scheme                           (MHM   ) --> unsplit
 //                   3. MUSCL-Hancock scheme with Riemann prediction   (MHM_RP) --> unsplit
 //                   4. Corner-Transport-Upwind scheme                 (CTU   ) --> unsplit
-//
 //
 // Parameter   :  h_Flu_Array_In        : Host array storing the input fluid variables
 //                h_Flu_Array_Out       : Host array to store the output fluid variables
@@ -184,6 +187,7 @@ static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 //                Time                  : Current physical time                      (for UNSPLIT_GRAVITY only)
 //                UsePot                : Add self-gravity and/or external potential (for UNSPLIT_GRAVITY only)
 //                ExtAcc                : Add external acceleration                  (for UNSPLIT_GRAVITY only)
+//                MicroPhy              : Microphysics object
 //                MinDens/Pres/Eint     : Density, pressure, and internal energy floors
 //                DualEnergySwitch      : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
 //                NormPassive           : true --> normalize passive scalars so that the sum of their mass density
@@ -212,12 +216,12 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                       const bool h_IsCompletelyRefined[],
                       const bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ],
-                      gramfe_matmul_float h_GramFE_TimeEvo[][ 2 * FLU_NXT ],
+                      gramfe_matmul_float h_GramFE_TimeEvo[][ 2*FLU_NXT ],
                       const int NPatchGroup, const real dt, const real dh,
                       const bool StoreFlux, const bool StoreElectric,
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter,
                       const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
-                      const double Time, const bool UsePot, const OptExtAcc_t ExtAcc,
+                      const double Time, const bool UsePot, const OptExtAcc_t ExtAcc, const MicroPhy_t MicroPhy,
                       const real MinDens, const real MinPres, const real MinEint,
                       const real DualEnergySwitch,
                       const bool NormPassive, const int NNorm, const int NormIdx[],
@@ -257,7 +261,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                             NPatchGroup, dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, MinMod_MaxIter, Time,
                             UsePot, ExtAcc, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, MinEint,
                             DualEnergySwitch, NormPassive, NNorm, NormIdx, FracPassive, NFrac, FracIdx,
-                            JeansMinPres, JeansMinPres_Coeff, EoS );
+                            JeansMinPres, JeansMinPres_Coeff, EoS, MicroPhy );
 
 #     elif ( FLU_SCHEME == CTU )
 
@@ -281,48 +285,48 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( UseWaveFlag ) {
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-
-#  if (WAVE_SCHEME == WAVE_FD )
-//    evaluate the optimized Taylor expansion coefficient
-   if ( ELBDM_Taylor3_Auto )  ELBDM_Taylor3_Coeff = ELBDM_SetTaylor3Coeff( dt, dh, ELBDM_Eta );
-
-   CPU_ELBDMSolver( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
-                     ELBDM_Taylor3_Coeff, XYZ, MinDens );
-
-#  elif ( WAVE_SCHEME == WAVE_GRAMFE ) // #  if (WAVE_SCHEME == WAVE_FD )
-
-#  if ( GRAMFE_SCHEME == GRAMFE_FFT )
-   CPU_ELBDMSolver_GramFE_FFT( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
-                     XYZ, MinDens );
-#  elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-   CPU_ELBDMSolver_GramFE_MATMUL( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, h_GramFE_TimeEvo, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
-                     XYZ, MinDens );
-#  else
-#     error : ERROR : unsupported GRAMFE_SCHEME !!
 #  endif
 
-#  else // #  if (WAVE_SCHEME == WAVE_GRAMFE )
+#  if   ( WAVE_SCHEME == WAVE_FD )
+// evaluate the optimized Taylor expansion coefficient
+   if ( ELBDM_Taylor3_Auto )  ELBDM_Taylor3_Coeff = ELBDM_SetTaylor3Coeff( dt, dh, ELBDM_Eta );
+
+   CPU_ELBDMSolver_FD( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
+                       ELBDM_Taylor3_Coeff, XYZ, MinDens );
+
+#  elif ( WAVE_SCHEME == WAVE_GRAMFE )
+
+#  if   ( GRAMFE_SCHEME == GRAMFE_FFT )
+   CPU_ELBDMSolver_GramFE_FFT( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
+                               XYZ, MinDens );
+#  elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+   CPU_ELBDMSolver_GramFE_MATMUL( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, h_GramFE_TimeEvo, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
+                                  XYZ, MinDens );
+#  else
+#     error : ERROR : unsupported GRAMFE_SCHEME !!
+#  endif // GRAMFE_SCHEME
+
+#  else // WAVE_SCHEME
 #     error : ERROR : unsupported WAVE_SCHEME !!
 #  endif // WAVE_SCHEME
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    } else {
 //    cast h_Flu_Array_In since HYB_NXT is possibly smaller than FLU_NXT
-      real       (*smaller_h_Flu_Array_In )  [FLU_NIN ][CUBE(HYB_NXT)] = (      real (*)[FLU_NIN][CUBE(HYB_NXT)]) h_Flu_Array_In;
+      real (*smaller_h_Flu_Array_In )[FLU_NIN ][ CUBE(HYB_NXT) ] = ( real (*)[FLU_NIN][ CUBE(HYB_NXT) ] ) h_Flu_Array_In;
 
 //    in debug mode, send DENS, PHAS and STUB back from CPU/GPU solvers
 //    in regular mode, only send DENS and PHAS back from CPU/GPU solvers
 #     ifndef GAMER_DEBUG
-      real (*smaller_h_Flu_Array_Out  )[FLU_NIN ][CUBE(PS2)]     = (real (*)[FLU_NIN ][CUBE(PS2)])    h_Flu_Array_Out;
-#     else // # ifndef GAMER_DEBUG
-      real (*smaller_h_Flu_Array_Out  )[FLU_NOUT][CUBE(PS2)]     = (real (*)[FLU_NOUT][CUBE(PS2)])    h_Flu_Array_Out;
-#     endif // # ifndef GAMER_DEBUG ... else
+      real (*smaller_h_Flu_Array_Out)[FLU_NIN ][ CUBE(PS2)     ] = (real (*)[FLU_NIN ][ CUBE(PS2)     ] ) h_Flu_Array_Out;
+#     else
+      real (*smaller_h_Flu_Array_Out)[FLU_NOUT][ CUBE(PS2)     ] = (real (*)[FLU_NOUT][ CUBE(PS2)     ] ) h_Flu_Array_Out;
+#     endif
 
-      CPU_ELBDMSolver_HamiltonJacobi( smaller_h_Flu_Array_In, smaller_h_Flu_Array_Out, h_Flux_Array, h_IsCompletelyRefined, h_HasWaveCounterpart, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
-            XYZ, MinDens );
+      CPU_ELBDMSolver_HamiltonJacobi( smaller_h_Flu_Array_In, smaller_h_Flu_Array_Out, h_Flux_Array, h_IsCompletelyRefined,
+                                      h_HasWaveCounterpart, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux, XYZ, MinDens );
    }
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif
 
 #  else
 #     error : ERROR : unsupported MODEL !!

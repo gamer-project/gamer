@@ -1,3 +1,4 @@
+import yt_libyt
 import yt
 import numpy as np
 
@@ -5,7 +6,7 @@ yt.enable_parallelism()
 
 def yt_inline():
 # ref: https://yt-project.org/doc/examining/low_level_inspection.html#examining-grid-data-in-a-fixed-resolution-array
-   ds = yt.frontends.libyt.libytDataset()
+   ds = yt_libyt.libytDataset()
    idx = int(str(ds).split("_")[0].split("g")[-1])
 
    # target field

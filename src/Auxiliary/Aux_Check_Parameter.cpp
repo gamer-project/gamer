@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 #include "CUFLU.h"
 #ifdef GRAVITY
 #include "CUPOT.h"
@@ -50,15 +49,17 @@ void Aux_Check_Parameter()
 
 #  ifdef SUPPORT_SPECTRAL_INT
 #  ifndef SUPPORT_GSL
-#     error : ERROR : SUPPORT_SPECTRAL_INT requires SUPPORT_GSL!!
-#  endif // # ifndef SUPPORT_GSL
+#     error : ERROR : SUPPORT_SPECTRAL_INT requires SUPPORT_GSL !!
+#  endif
+
 #  ifndef SUPPORT_FFTW
-#     error : ERROR : SUPPORT_SPECTRAL_INT requires SUPPORT_FFTW!!
-#  endif // # ifndef SUPPORT_FFTW
-#  if ( SUPPORT_FFTW == FFTW2 && !defined FLOAT8 )
-#     error : ERROR : SUPPORT_SPECTRAL_INT with SUPPORT_FFTW=FFTW2 requires FLOAT8!!
-#  endif // # if ( SUPPORT_FFTW == FFTW2 && !defined FLOAT8 )
-#  endif // # ifdef SUPPORT_SPECTRAL_INT
+#     error : ERROR : SUPPORT_SPECTRAL_INT requires SUPPORT_FFTW !!
+#  endif
+
+#  if ( SUPPORT_FFTW == FFTW2  &&  !defined FLOAT8 )
+#     error : ERROR : SUPPORT_SPECTRAL_INT with SUPPORT_FFTW=FFTW2 requires FLOAT8 !!
+#  endif
+#  endif // #ifdef SUPPORT_SPECTRAL_INT
 
 #  ifdef SERIAL
    int NRank = 1;
@@ -134,8 +135,21 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "currently the check \"%s\" must work with \"%s\" !!\n",
                  "OPT__CK_REFINE", "OPT__FLAG_RHO" );
 
+   if ( OPT__RECORD_CENTER  &&  COM_CEN_X > amr->BoxSize[0] )
+      Aux_Error( ERROR_INFO, "incorrect COM_CEN_X = %lf (out of range [X<=%lf]) !!\n", COM_CEN_X, amr->BoxSize[0] );
+
+   if ( OPT__RECORD_CENTER  &&  COM_CEN_Y > amr->BoxSize[1] )
+      Aux_Error( ERROR_INFO, "incorrect COM_CEN_Y = %lf (out of range [Y<=%lf]) !!\n", COM_CEN_Z, amr->BoxSize[1] );
+
+   if ( OPT__RECORD_CENTER  &&  COM_CEN_Z > amr->BoxSize[2] )
+      Aux_Error( ERROR_INFO, "incorrect COM_CEN_Z = %lf (out of range [Z<=%lf]) !!\n", COM_CEN_Z, amr->BoxSize[2] );
+
 #  if   ( MODEL == HYDRO )
-   if (  ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR )
+#  ifndef COSMIC_RAY
+   const bool OPT__FLAG_LOHNER_CRAY = false;
+#  endif
+   if (  ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP ||
+           OPT__FLAG_LOHNER_ENTR || OPT__FLAG_LOHNER_CRAY )
          &&  Flu_ParaBuf < 2  )
       Aux_Error( ERROR_INFO, "Lohner error estimator does NOT work when Flu_ParaBuf (%d) < 2 !!\n", Flu_ParaBuf );
 #  elif ( MODEL == ELBDM )
@@ -297,8 +311,10 @@ void Aux_Check_Parameter()
    } // if ( OPT__OUTPUT_USER_FIELD )
 
 #  if ( MODEL == HYDRO )
+#  ifndef SRHD
    if (  OPT__OUTPUT_TEMP  &&  EoS_DensEint2Temp_CPUPtr == NULL )
       Aux_Error( ERROR_INFO, "EoS_DensEint2Temp_CPUPtr == NULL for OPT__OUTPUT_TEMP !!\n" );
+#  endif
 
 #  if ( EOS == EOS_ISOTHERMAL )
    if ( OPT__OUTPUT_ENTR )
@@ -339,7 +355,12 @@ void Aux_Check_Parameter()
 #  endif
 
    if ( OPT__OUTPUT_TOTAL == OUTPUT_FORMAT_CBINARY )
+   {
       Aux_Message( stderr, "WARNING : OPT__OUTPUT_TOTAL = 2 (C-binary) is deprecated !!\n" );
+#     if ( ( defined PARTICLE ) && ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) ) )
+      Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for OPT__OUTPUT_TOTAL=2 (C-binary) !!\n" );
+#     endif
+   }
 
    if ( !OPT__OUTPUT_TOTAL  &&  !OPT__OUTPUT_PART  &&  !OPT__OUTPUT_USER  &&  !OPT__OUTPUT_BASEPS )
 #  ifdef PARTICLE
@@ -379,14 +400,21 @@ void Aux_Check_Parameter()
 #  ifdef MHD
    Flag |= OPT__FLAG_CURRENT;
 #  endif
+#  ifdef SRHD
+   Flag |= OPT__FLAG_LRTZ_GRADIENT;
+#  endif
+#  ifdef COSMIC_RAY
+   Flag |= OPT__FLAG_CRAY;
+   Flag |= OPT__FLAG_LOHNER_CRAY;
+#  endif
 #  endif
 #  if ( MODEL == ELBDM )
    Flag |= OPT__FLAG_ENGY_DENSITY;
    Flag |= OPT__FLAG_SPECTRAL;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    Flag |= OPT__FLAG_INTERFERENCE;
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-#  endif // # if ( MODEL == ELBDM )
+#  endif
+#  endif // #if ( MODEL == ELBDM )
 #  ifdef PARTICLE
    Flag |= OPT__FLAG_NPAR_PATCH;
    Flag |= OPT__FLAG_NPAR_CELL;
@@ -481,6 +509,11 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : INT_OPP_SIGN_0TH_ORDER is not recommended for ELBDM !!\n" );
 #  endif
 
+#  if ( defined SUPPORT_SPECTRAL_INT  &&  MODEL != ELBDM )
+#     warning : WARNING : SUPPORT_SPECTRAL_INT has not been well tested for MODEL != ELBDM !!
+      Aux_Message( stderr, "WARNING : SUPPORT_SPECTRAL_INT has not been well tested for MODEL != ELBDM !!\n" );
+#  endif
+
    } // if ( MPI_Rank == 0 )
 
 
@@ -498,7 +531,6 @@ void Aux_Check_Parameter()
 #  if ( LOAD_BALANCE != HILBERT )
 #     error : ERROR : currently GAMER only supports "LOAD_BALANCE == HILBERT" !!
 #  endif
-
 
 // ensure that the variable "PaddedCr1D" will not overflow
    const int Padded              = 1<<NLEVEL;
@@ -679,6 +711,15 @@ void Aux_Check_Parameter()
 #   endif
 #  endif // MHD
 
+#  ifdef SRHD
+#   if ( defined RSOLVER  &&  RSOLVER != HLLC  &&  RSOLVER != HLLE )
+#     error : ERROR : unsupported Riemann solver for SRHD (HLLC/HLLE) !!
+#   endif
+#   if ( defined FLU_SCHEME  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != MHM )
+#     error : ERROR : unsupported FLU_SCHEME for SRHD (MHM_RP/MHM) !!
+#   endif
+#  endif // SRHD
+
 #  ifdef DUAL_ENERGY
 #   if ( FLU_SCHEME == RTVD )
 #     error : RTVD does NOT support DUAL_ENERGY !!
@@ -688,14 +729,60 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
 #   endif
 
-#  if ( DUAL_ENERGY == DE_ENPY  &&  EOS != EOS_GAMMA )
+#   if ( DUAL_ENERGY == DE_ENPY  &&  EOS != EOS_GAMMA )
 #     error : ERROR : DUAL_ENERGY=DE_ENPY only supports EOS_GAMMA !!
-#  endif
-
-#   if ( DUAL_ENERGY == DE_ENPY  &&  defined COSMIC_RAY )
-#     error : COSMIC_RAY does NOT support DUAL_ENERGY=DE_ENPY !!
 #   endif
 #  endif // #ifdef DUAL_ENERGY
+
+#  ifdef SRHD
+#   ifdef MHD
+#     error : ERROR : SRHD does not support MHD !!
+#   endif
+
+#   ifdef GRAVITY
+#     error : ERROR : SRHD does not support GRAVITY !!
+#   endif
+
+#   ifdef COMOVING
+#     error : ERROR : SRHD does not support COMOVING !!
+#   endif
+
+#   ifdef PARTICLE
+#     error : ERROR : SRHD does not support PARTICLE !!
+#   endif
+
+#   if ( EOS != EOS_TAUBMATHEWS )
+#     error : ERROR : EOS != EOS_TAUBMATHEWS for SRHD !!
+#   endif
+
+#   ifdef COSMIC_RAY
+#     error : ERROR : SRHD does not support COSMIC_RAY !!
+#   endif
+
+#   ifdef DUAL_ENERGY
+#     error : ERROR : SRHD does not support DUAL_ENERGY !!
+#   endif
+
+#   ifdef SUPPORT_GRACKLE
+#     error : ERROR : SRHD does not support SUPPORT_GRACKLE !!
+#   endif
+
+#   ifdef LR_EINT
+#     error : ERROR : SRHD does not support LR_EINT !!
+#   endif
+
+    if ( OPT__OUTPUT_ENTR )
+      Aux_Error( ERROR_INFO, "SRHD does not support OPT__OUTPUT_ENTR !!\n" );
+
+    if ( OPT__FLAG_LOHNER_ENTR )
+      Aux_Error( ERROR_INFO, "SRHD does not support OPT__FLAG_LOHNER_ENTR !!\n" );
+
+    if ( JEANS_MIN_PRES )
+      Aux_Error( ERROR_INFO, "SRHD does not support JEANS_MIN_PRES !!\n" );
+
+    if ( OPT__FLAG_JEANS )
+      Aux_Error( ERROR_INFO, "SRHD does not support OPT__FLAG_JEANS !!\n" );
+#  endif // #ifdef SRHD
 
 #  ifdef MHD
 #   if ( defined CHECK_INTERMEDIATE  &&  CHECK_INTERMEDIATE != HLLE  &&  CHECK_INTERMEDIATE != HLLD )
@@ -709,15 +796,29 @@ void Aux_Check_Parameter()
 #  endif // MHD
 
 #  ifdef COSMIC_RAY
-#     error : ERROR : COSMIC_RAY is NOT supported yet !!
-#  endif
+#   if ( FLU_SCHEME != MHM_RP )
+#     error : ERROR : COSMIC_RAY currently only supports the MHM_RP fluid scheme !!
+#   endif
+
+#   if ( EOS != EOS_COSMIC_RAY )
+#     error : ERROR : COSMIC_RAY must use EOS_COSMIC_RAY !!
+#   endif
+
+#   ifdef DUAL_ENERGY
+#     error : ERROR : DUAL_ENERGY is not supported for COSMIC_RAY !!
+#   endif
+
+#   ifdef COMOVING
+#     error : ERROR : COSMIC_RAY currently does not support COMOVING !!
+#   endif
+#  endif // COSMIC_RAY
 
 #  if ( defined LR_EINT  &&  FLU_SCHEME == CTU )
 #     error : ERROR : CTU does NOT support LR_EINT in CUFLU.h !!
 #  endif
 
-#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR  &&  EOS != EOS_USER )
-#     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_USER) !!
+#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR  &&  EOS != EOS_COSMIC_RAY  &&  EOS != EOS_TAUBMATHEWS  &&  EOS != EOS_USER )
+#     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_COSMIC_RAY/EOS_TAUBMATHEWS/EOS_USER) !!
 #  endif
 
 #  if ( EOS != EOS_GAMMA )
@@ -765,16 +866,19 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "EOS_TABULAR is not supported yet !!\n" );
 #  endif
 
+#  if ( EOS == EOS_COSMIC_RAY  &&  !defined COSMIC_RAY )
+#     error : ERROR : must enable COSMIC_RAY for EOS_COSMIC_RAY !!
+#  endif
+
 #  ifdef BAROTROPIC_EOS
-#     if ( EOS == EOS_GAMMA  ||  EOS == EOS_NUCLEAR )
-#        error : ERROR : BAROTROPIC_EOS is incompatible with EOS_GAMMA/EOS_NUCLEAR !!
+#     if ( EOS == EOS_GAMMA  ||  EOS == EOS_COSMIC_RAY  ||  EOS == EOS_NUCLEAR  ||  EOS == EOS_TAUBMATHEWS )
+#        error : ERROR : BAROTROPIC_EOS is incompatible with EOS_GAMMA/EOS_COSMIC_RAY/EOS_NUCLEAR/EOS_TAUBMATHEWS !!
 #     endif
 #  else
 #     if ( EOS == EOS_ISOTHERMAL )
 #        error : ERROR : must enable BAROTROPIC_EOS for EOS_ISOTHERMAL !!
 #     endif
 #  endif // #ifdef BAROTROPIC_EOS ... else ...
-
 
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
    {
@@ -850,7 +954,7 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
 
    if ( OPT__OPTIMIZE_AGGRESSIVE )
-      Aux_Message( stderr, "WARNING : Input density for fluid solvers does not respect MIN_DENS when OPT__OPTIMIZE_AGGRESSIVE is on!!\n" );
+      Aux_Message( stderr, "WARNING : input density for fluid solvers does not respect MIN_DENS when OPT__OPTIMIZE_AGGRESSIVE is on!!\n" );
 
    if ( MIN_PRES == 0.0 )
       Aux_Message( stderr, "WARNING : MIN_PRES == 0.0 could be dangerous and is mainly for debugging only !!\n" );
@@ -875,6 +979,20 @@ void Aux_Check_Parameter()
 #  if (  defined LR_EINT  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
       Aux_Message( stderr, "WARNING : LR_EINT is not recommended for EOS_GAMMA/EOS_ISOTHERMAL !!\n" );
 #  endif
+
+#  ifdef SRHD
+   if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
+      Aux_Message( stderr, "WARNING : OPT__1ST_FLUX_CORR (%d) currently has no effect on SRHD !!\n", OPT__1ST_FLUX_CORR );
+
+   if ( AUTO_REDUCE_DT )
+      Aux_Message( stderr, "WARNING : AUTO_REDUCE_DT currently has no effect on SRHD !!\n" );
+
+   if ( !OPT__OUTPUT_TEMP )
+      Aux_Message( stderr, "WARNING : OPT__OUTPUT_TEMP is off, which will make most SRHD fields in yt unavailable !!\n" );
+
+   if ( !OPT__OUTPUT_ENTHALPY )
+      Aux_Message( stderr, "WARNING : OPT__OUTPUT_ENTHALPY is off, which will make most SRHD fields in yt unavailable !!\n" );
+#  endif // #ifdef SRHD
    } // if ( MPI_Rank == 0 )
 
 
@@ -890,9 +1008,16 @@ void Aux_Check_Parameter()
 
    if ( OPT__LR_LIMITER != LR_LIMITER_VANLEER     &&  OPT__LR_LIMITER != LR_LIMITER_GMINMOD  &&
         OPT__LR_LIMITER != LR_LIMITER_ALBADA      &&  OPT__LR_LIMITER != LR_LIMITER_EXTPRE   &&
-        OPT__LR_LIMITER != LR_LIMITER_VL_GMINMOD  &&  OPT__LR_LIMITER != LR_LIMITER_CENTRAL    )
+        OPT__LR_LIMITER != LR_LIMITER_VL_GMINMOD  &&  OPT__LR_LIMITER != LR_LIMITER_CENTRAL  &&
+        OPT__LR_LIMITER != LR_LIMITER_ATHENA )
       Aux_Error( ERROR_INFO, "unsupported data reconstruction limiter (OPT__LR_IMITER = %d) !!\n",
                  OPT__LR_LIMITER );
+
+#  if ( LR_SCHEME == PLM )
+   if ( OPT__LR_LIMITER == LR_LIMITER_ATHENA )
+      Aux_Error( ERROR_INFO, "ERROR : OPT__LR_LIMITER = %d (LR_LIMITER_ATHENA) is not supported for PLM !!\n",
+                 OPT__LR_LIMITER );
+#  endif
 
 
 // warnings
@@ -900,9 +1025,15 @@ void Aux_Check_Parameter()
    if ( MPI_Rank == 0 ) {
 
 #     if ( FLU_SCHEME == MHM_RP  &&  LR_SCHEME == PPM )
-      if ( OPT__LR_LIMITER != LR_LIMITER_CENTRAL )
-         Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (LR_LIMITER_CENTRAL) is recommended for MHM_RP+PPM !!\n",
-                      LR_LIMITER_CENTRAL );
+      if ( OPT__LR_LIMITER != LR_LIMITER_ATHENA )
+         Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (LR_LIMITER_ATHENA) is recommended for MHM_RP+PPM !!\n",
+                      LR_LIMITER_ATHENA );
+#     endif
+
+#     if ( FLU_SCHEME == MHM  &&  defined MHD )
+      if ( OPT__LR_LIMITER == LR_LIMITER_ATHENA )
+         Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (LR_LIMITER_ATHENA) is not recommended for MHM+MHD !!\n",
+                      LR_LIMITER_ATHENA );
 #     endif
 
 #     if ( LR_SCHEME == PLM )
@@ -1059,20 +1190,19 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-
-#  if ( !defined( ELBDM_SCHEME ) ||  ( ELBDM_SCHEME != ELBDM_WAVE && ELBDM_SCHEME != ELBDM_HYBRID ) )
+#  if (  !defined( ELBDM_SCHEME )  ||  ( ELBDM_SCHEME != ELBDM_WAVE && ELBDM_SCHEME != ELBDM_HYBRID )  )
 #     error : ERROR : ELBDM_SCHEME not defined or unsupported in ELBDM !!
-#  endif // # if ( !defined( ELBDM_SCHEME ) ||  ( ELBDM_SCHEME != ELBDM_WAVE && ELBDM_SCHEME != ELBDM_HYBRID ) )
+#  endif
 
-#  if ( !defined( WAVE_SCHEME )  ||  ( WAVE_SCHEME != WAVE_FD && WAVE_SCHEME != WAVE_GRAMFE ) )
+#  if (  !defined( WAVE_SCHEME )  ||  ( WAVE_SCHEME != WAVE_FD && WAVE_SCHEME != WAVE_GRAMFE )  )
 #     error : ERROR : WAVE_SCHEME not defined or unsupported in ELBDM !!
-#  endif // # if ( !defined( WAVE_SCHEME )  ||  ( WAVE_SCHEME != WAVE_FD && WAVE_SCHEME != WAVE_GRAMFE ) )
+#  endif
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-#  if ( !defined( HYBRID_SCHEME ) ||  ( HYBRID_SCHEME != HYBRID_UPWIND && HYBRID_SCHEME != HYBRID_FROMM && HYBRID_SCHEME != HYBRID_MUSCL ) )
+#  if ( !defined( HYBRID_SCHEME )  ||  ( HYBRID_SCHEME != HYBRID_UPWIND && HYBRID_SCHEME != HYBRID_FROMM && HYBRID_SCHEME != HYBRID_MUSCL )  )
 #     error : ERROR : HYBRID_SCHEME not defined or unsupported in ELBDM_HYBRID !!
-#  endif // # if (  !defined( HYBRID_SCHEME ) ||  ( HYBRID_SCHEME != HYBRID_UPWIND && HYBRID_SCHEME != HYBRID_FROMM && HYBRID_SCHEME != HYBRID_MUSCL )  )
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif
+#  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 #  if ( NCOMP_FLUID != 3 )
 #     error : ERROR : NCOMP_FLUID != 3 in ELBDM !!
@@ -1109,15 +1239,6 @@ void Aux_Check_Parameter()
    if ( OPT__INT_PHASE  &&  OPT__FLU_INT_SCHEME == INT_MINMOD1D )
       Aux_Error( ERROR_INFO, "unsupported interpolation scheme \"%s = %d\" when OPT__INT_PHASE is on !!\n",
                  "OPT__FLU_INT_SCHEME", OPT__FLU_INT_SCHEME );
-
-   if ( MIN_DENS == 0.0  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
-   else if ( MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
-
-   if ( OPT__OPTIMIZE_AGGRESSIVE )
-      Aux_Message( stderr, "WARNING : Input density for fluid solvers does not respect MIN_DENS when OPT__OPTIMIZE_AGGRESSIVE is on!!\n" );
-
    if ( ELBDM_REMOVE_MOTION_CM != ELBDM_REMOVE_MOTION_CM_NONE  &&  !OPT__CK_CONSERVATION )
       Aux_Error( ERROR_INFO, "\"%s\" must work with \"%s\" !!\n", "ELBDM_REMOVE_MOTION_CM", "OPT__CK_CONSERVATION" );
 
@@ -1137,9 +1258,11 @@ void Aux_Check_Parameter()
 
 // check hybrid scheme parameters for errors
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( OPT__INIT == INIT_BY_FILE  &&  OPT__UM_IC_LEVEL >= ELBDM_FIRST_WAVE_LEVEL  &&  ELBDM_MATCH_PHASE )
+      Aux_Error( ERROR_INFO, "ELBDM_HYBRID currently does not support OPT__UM_IC_LEVEL (%d) >= ELBDM_FIRST_WAVE_LEVEL (%d)\n"
+                             "        from UM_IC because of phase matching (ELBDM_MATCH_PHASE) !!\n",
+                 OPT__UM_IC_LEVEL, ELBDM_FIRST_WAVE_LEVEL );
 
-   if ( OPT__INIT == INIT_BY_FILE && OPT__UM_IC_LEVEL >= ELBDM_FIRST_WAVE_LEVEL && ELBDM_MATCH_PHASE )
-      Aux_Error( ERROR_INFO, "ELBDM_HYBRID currently does not support OPT__UM_IC_LEVEL (%d) >= ELBDM_FIRST_WAVE_LEVEL (%d) from UM_IC because of phase matching (ELBDM_MATCH_PHASE) !!\n", OPT__UM_IC_LEVEL, ELBDM_FIRST_WAVE_LEVEL );
    if ( INIT_SUBSAMPLING_NCELL > 1 )
       Aux_Error( ERROR_INFO, "ELBDM_HYBRID currently does not support INIT_SUBSAMPLING_NCELL > 1 !!\n" );
 
@@ -1147,59 +1270,58 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "ELBDM_HYBRID currently does not support OPT__OUTPUT_TOTAL == 2 !!\n" );
 
 #  if ( FLU_GHOST_SIZE < HYB_GHOST_SIZE )
-#  error : ERROR : FLU_GHOST_SIZE needs to be bigger than HYB_GHOST_SIZE !!
-#  endif // # if ( FLU_GHOST_SIZE < HYB_GHOST_SIZE )
-
-// bitwise reproducibility currently fails in hybrid scheme because of conversion from RE/IM to DENS/PHAS when storing fields in HDF5
-// possible solution could be to convert RE/IM <-> DENS/PHAS using high-precision routines to ensure bitwise identity for significant digits
-#  ifdef BITWISE_REPRODUCIBILITY
-      Aux_Message( stderr, "WARNING : BITWISE_REPRODUCIBILITY currently unsupported for ELBDM_SCHEME == ELBDM_HYBRID !!\n" );
+#     error : ERROR : FLU_GHOST_SIZE needs to be bigger than HYB_GHOST_SIZE !!
 #  endif
 
    if ( ELBDM_BASE_SPECTRAL )
-      Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL incompatible with ELBDM_SCHEME == ELBDM_HYBRID !!\n" );
-
-   const int ELBDM_LAST_FLUID_LEVEL = ELBDM_FIRST_WAVE_LEVEL - 1;
+      Aux_Error( ERROR_INFO, "ELBDM_BASE_SPECTRAL is incompatible with ELBDM_SCHEME == ELBDM_HYBRID !!\n" );
 
 // for stability of hybrid scheme with wave levels, all fluid levels require that the flag buffer >= PATCH_SIZE
 // furthermore, the restriction operation needs to be enabled
-   if ( MAX_LEVEL > 0 && ELBDM_FIRST_WAVE_LEVEL > 0 && ELBDM_FIRST_WAVE_LEVEL <= MAX_LEVEL )
+   if ( MAX_LEVEL > 0  &&  ELBDM_FIRST_WAVE_LEVEL > 0  &&  ELBDM_FIRST_WAVE_LEVEL <= MAX_LEVEL )
    {
-   if ( FLAG_BUFFER_SIZE < PATCH_SIZE )
-      Aux_Error(  ERROR_INFO, "ELBDM_HYBRID with AMR requires that the FLAG_BUFFER_SIZE size is equal or greater than patch size on fluid levels to enforce refinement!!\n");
+      if ( FLAG_BUFFER_SIZE < PATCH_SIZE )
+         Aux_Error( ERROR_INFO, "ELBDM_HYBRID with AMR requires that FLAG_BUFFER_SIZE (%d) is equal to or greater than\n"
+                                "        PATCH_SIZE (%d) on fluid levels to enforce refinement !!\n",
+                    FLAG_BUFFER_SIZE, PATCH_SIZE );
 
-   if ( !OPT__FIXUP_RESTRICT )
-      Aux_Error(  ERROR_INFO, "ELBDM_HYBRID with AMR requires the option OPT__FIXUP_RESTRICT !!\n");
+      if ( !OPT__FIXUP_RESTRICT )
+         Aux_Error( ERROR_INFO, "ELBDM_HYBRID with AMR requires the option OPT__FIXUP_RESTRICT !!\n");
 
-   if ( !OPT__INIT_RESTRICT )
-      Aux_Error(  ERROR_INFO, "ELBDM_HYBRID with AMR requires the option OPT__INIT_RESTRICT !!\n");
+      if ( !OPT__INIT_RESTRICT )
+         Aux_Error( ERROR_INFO, "ELBDM_HYBRID with AMR requires the option OPT__INIT_RESTRICT !!\n");
    }
 
 #  ifdef LOAD_BALANCE
    if ( !OPT__LB_EXCHANGE_FATHER )
-      Aux_Error(  ERROR_INFO, "ELBDM_HYBRID requires the option OPT__LB_EXCHANGE_FATHER for load balancing !!\n");
-#  endif // # ifdef LOAD_BALANCE
+      Aux_Error( ERROR_INFO, "ELBDM_HYBRID requires the option OPT__LB_EXCHANGE_FATHER for load balancing !!\n");
+#  endif
 
    const double dt_hybrid_max   = 0.49;
    const double dt_velocity_max = 3.50;
 
    if ( DT__HYBRID_CFL > dt_hybrid_max )
-      Aux_Error(  ERROR_INFO, "DT__HYBRID_CFL (%13.7e) > %13.7e is unstable !!\n",
-                   DT__HYBRID_CFL, dt_hybrid_max );
-   if ( DT__HYBRID_CFL_INIT > dt_hybrid_max )
-      Aux_Error(  ERROR_INFO, "DT__HYBRID_CFL_INIT (%13.7e) > %13.7e is unstable !!\n",
-                   DT__HYBRID_CFL_INIT, dt_hybrid_max );
-   if ( DT__HYBRID_VELOCITY > dt_velocity_max )
-      Aux_Error(  ERROR_INFO, "DT__HYBRID_VELOCITY (%13.7e) > %13.7e is unstable !!\n",
-                   DT__HYBRID_VELOCITY, dt_velocity_max );
+      Aux_Error( ERROR_INFO, "DT__HYBRID_CFL (%13.7e) > %13.7e is unstable !!\n",
+                 DT__HYBRID_CFL, dt_hybrid_max );
 
+   if ( DT__HYBRID_CFL_INIT > dt_hybrid_max )
+      Aux_Error( ERROR_INFO, "DT__HYBRID_CFL_INIT (%13.7e) > %13.7e is unstable !!\n",
+                 DT__HYBRID_CFL_INIT, dt_hybrid_max );
+
+   if ( DT__HYBRID_VELOCITY > dt_velocity_max )
+      Aux_Error( ERROR_INFO, "DT__HYBRID_VELOCITY (%13.7e) > %13.7e is unstable !!\n",
+                 DT__HYBRID_VELOCITY, dt_velocity_max );
+
+   if ( DT__HYBRID_VELOCITY_INIT > dt_velocity_max )
+      Aux_Error( ERROR_INFO, "DT__HYBRID_VELOCITY_INIT (%13.7e) > %13.7e is unstable !!\n",
+                 DT__HYBRID_VELOCITY_INIT, dt_velocity_max );
 #  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 // check finite-difference scheme for errors
 #  if ( WAVE_SCHEME == WAVE_FD )
    if ( !ELBDM_TAYLOR3_AUTO  &&  ELBDM_TAYLOR3_COEFF < 1.0/8.0 )
       Aux_Error( ERROR_INFO, "ELBDM_TAYLOR3_COEFF (%13.7e) < 0.125 is unconditionally unstable !!\n",
-                   ELBDM_TAYLOR3_COEFF );
+                 ELBDM_TAYLOR3_COEFF );
 
 #  ifdef LAPLACIAN_4TH
    const double dt_fluid_max = 3.0*M_PI/16.0;
@@ -1208,11 +1330,11 @@ void Aux_Check_Parameter()
 #  endif
    if ( DT__FLUID > dt_fluid_max )
       Aux_Error( ERROR_INFO, "DT__FLUID (%13.7e) > %13.7e is unconditionally unstable (even with %s) !!\n",
-                   DT__FLUID, dt_fluid_max, "ELBDM_TAYLOR3_AUTO" );
+                 DT__FLUID, dt_fluid_max, "ELBDM_TAYLOR3_AUTO" );
 
    if ( DT__FLUID_INIT > dt_fluid_max )
       Aux_Error( ERROR_INFO, "DT__FLUID_INIT (%13.7e) > %13.7e is unconditionally unstable (even with %s) !!\n",
-                   DT__FLUID_INIT, dt_fluid_max, "ELBDM_TAYLOR3_AUTO" );
+                 DT__FLUID_INIT, dt_fluid_max, "ELBDM_TAYLOR3_AUTO" );
 
    if ( !ELBDM_TAYLOR3_AUTO )
    {
@@ -1225,20 +1347,16 @@ void Aux_Check_Parameter()
 
       if ( DT__FLUID > dt_fluid_max_normal  &&  ELBDM_TAYLOR3_COEFF <= 1.0/6.0 )
       {
-         Aux_Error( ERROR_INFO, "DT__FLUID (%13.7e) > stability limit (%13.7e) for ELBDM_TAYLOR3_COEFF <= 1/6\n",
-                      DT__FLUID, dt_fluid_max_normal );
-         Aux_Error( ERROR_INFO, "          --> Please either (a) set ELBDM_TAYLOR3_COEFF (%13.7e) > 1/6\n",
-                      ELBDM_TAYLOR3_COEFF );
-         Aux_Error( ERROR_INFO, "                            (b) set DT__FLUID smaller (c) turn on ELBDM_TAYLOR3_AUTO\n" );
+         Aux_Error( ERROR_INFO, "DT__FLUID (%13.7e) > stability limit (%13.7e) for ELBDM_TAYLOR3_COEFF <= 1/6\n"
+                                "    --> Please set ELBDM_TAYLOR3_COEFF (%13.7e) > 1/6, reduce DT__FLUID, or enable ELBDM_TAYLOR3_AUTO\n",
+                    DT__FLUID, dt_fluid_max_normal, ELBDM_TAYLOR3_COEFF );
       }
 
       if ( DT__FLUID_INIT > dt_fluid_max_normal  &&  ELBDM_TAYLOR3_COEFF <= 1.0/6.0 )
       {
-         Aux_Error( ERROR_INFO, "DT__FLUID_INIT (%13.7e) > stability limit (%13.7e) for ELBDM_TAYLOR3_COEFF <= 1/6\n",
-                      DT__FLUID_INIT, dt_fluid_max_normal );
-         Aux_Error( ERROR_INFO, "          --> Please either (a) set ELBDM_TAYLOR3_COEFF (%13.7e) > 1/6\n",
-                      ELBDM_TAYLOR3_COEFF );
-         Aux_Error( ERROR_INFO, "                            (b) set DT__FLUID_INIT smaller (c) turn on ELBDM_TAYLOR3_AUTO\n" );
+         Aux_Error( ERROR_INFO, "DT__FLUID_INIT (%13.7e) > stability limit (%13.7e) for ELBDM_TAYLOR3_COEFF <= 1/6\n"
+                                "    --> Please set ELBDM_TAYLOR3_COEFF (%13.7e) > 1/6, reduce DT__FLUID_INIT, or enable ELBDM_TAYLOR3_AUTO\n",
+                    DT__FLUID_INIT, dt_fluid_max_normal, ELBDM_TAYLOR3_COEFF );
       }
    }
 
@@ -1249,41 +1367,41 @@ void Aux_Check_Parameter()
 
    if ( DT__FLUID > dt_fluid_max )
       Aux_Error( ERROR_INFO, "%s solver with DT__FLUID (%13.7e) > %13.7e is unstable !!\n",
-                   "WAVE_GRAMFE", DT__FLUID, dt_fluid_max );
+                 "WAVE_GRAMFE", DT__FLUID, dt_fluid_max );
 
-
-
-#  if ( GRAMFE_SCHEME == GRAMFE_FFT )
+#  if   ( GRAMFE_SCHEME == GRAMFE_FFT )
 
 #  if ( FLU_GHOST_SIZE < 6 )
-#  error : ERROR : WAVE_GRAMFE is only stable (empirically) for FLU_GHOST_SIZE >= 6!
-#  endif // #  if ( FLU_GHOST_SIZE < 6 )
+#     error : ERROR : WAVE_GRAMFE is only stable (empirically) for FLU_GHOST_SIZE >= 6 !!
+#  endif
 
 #  ifndef GRAMFE_FFT_FLOAT8
-#  error : ERROR : WAVE_GRAMFE solver requires GRAMFE_FFT_FLOAT8 for stability !!
-#  endif // # ifndef GRAMFE_FFT_FLOAT8
+#     error : ERROR : WAVE_GRAMFE solver requires GRAMFE_FFT_FLOAT8 for stability !!
+#  endif
 
 
-#  if ( !defined(GPU) && !defined(SUPPORT_FFTW) )
-#  error : ERROR : CPU && GRAMFE_SCHEME == GRAMFE_FFT require SUPPORT_FFTW flag!
-#  endif // #  if ( !defined(GPU) && !defined(SUPPORT_FFTW) )
+#  if ( !defined(GPU)  &&  !defined(SUPPORT_FFTW) )
+#     error : ERROR : CPU && GRAMFE_SCHEME == GRAMFE_FFT require SUPPORT_FFTW flag !!
+#  endif
 
-#  if ( !defined(GPU) && SUPPORT_FFTW == FFTW2 && !defined(FLOAT8) )
-#  error : ERROR : CPU && GRAMFE_SCHEME == GRAMFE_FFT && SUPPORT_FFTW = FFTW2 require FLOAT8!
-#  endif // #  if ( !defined(GPU) && SUPPORT_FFTW == FFTW2 && !defined(FLOAT8) )
+#  if ( !defined(GPU)  &&  SUPPORT_FFTW == FFTW2  &&  !defined(FLOAT8) )
+#     error : ERROR : CPU && GRAMFE_SCHEME == GRAMFE_FFT && SUPPORT_FFTW = FFTW2 require FLOAT8 !!
+#  endif
 
 #  elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
 
 #  ifndef SUPPORT_GSL
-#  error : ERROR : GRAMFE_SCHEME == GRAMFE_MATMUL requires SUPPORT_GSL!
-#  endif // #  ifndef SUPPORT_GSL
-
-#  else
-#  error : ERROR : Unsupported GRAMFE_SCHEME !
+#     error : ERROR : GRAMFE_SCHEME == GRAMFE_MATMUL requires SUPPORT_GSL !!
 #  endif
-#  else
-#  error : ERROR : unsupported WAVE_SCHEME
-#  endif  // # WAVE_SCHEME
+
+#  else // GRAMFE_SCHEME
+#  error : ERROR : Unsupported GRAMFE_SCHEME !!
+#  endif // GRAMFE_SCHEME
+
+#  else // WAVE_SCHEME
+#  error : ERROR : unsupported WAVE_SCHEME !!
+#  endif // WAVE_SCHEME
+
 
 // warnings
 // ------------------------------
@@ -1319,10 +1437,24 @@ void Aux_Check_Parameter()
    if ( OPT__INIT == INIT_BY_FILE )
       Aux_Message( stderr, "WARNING : currently we don't check MIN_DENS for the initial data loaded from UM_IC !!\n" );
 
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+// bitwise reproducibility currently fails in hybrid scheme because of conversion from RE/IM to DENS/PHAS when storing fields in HDF5
+// --> possible solution could be to converting RE/IM <-> DENS/PHAS using high-precision routines to ensure bitwise identity for significant digits
+#  ifdef BITWISE_REPRODUCIBILITY
+      Aux_Message( stderr, "WARNING : BITWISE_REPRODUCIBILITY is currently not unsupported for ELBDM_HYBRID during restart !!\n" );
+#  endif
 
-#  if ( WAVE_SCHEME == WAVE_FD )
+   if ( ! OPT__FLAG_INTERFERENCE )
+      Aux_Message( stderr, "WARNING : OPT__FLAG_INTERFERENCE is off for ELBDM_HYBRID so simulations will never switch to the wave scheme !!\n" );
 
-#  elif ( WAVE_SCHEME == WAVE_GRAMFE ) // #  if ( WAVE_SCHEME == WAVE_FD )
+   if (  OPT__INIT == INIT_BY_FILE  &&  ( !OPT__UM_IC_DOWNGRADE || !OPT__UM_IC_REFINE )  )
+      Aux_Message( stderr, "WARNING : consider enabling both OPT__UM_IC_DOWNGRADE and OPT__UM_IC_REFINE to properly switch to\n"
+                           "          the wave scheme during initialization !!\n" );
+#  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+#  if   ( WAVE_SCHEME == WAVE_FD )
+
+#  elif ( WAVE_SCHEME == WAVE_GRAMFE )
 
    if ( OPT__FIXUP_FLUX )
       Aux_Message( stderr, "WARNING : OPT__FIXUP_FLUX will not be applied on wave levels when %s is on !!\n",
@@ -1330,14 +1462,23 @@ void Aux_Check_Parameter()
 
 #  ifdef CONSERVE_MASS
    Aux_Message( stderr, "WARNING : mass is not conserved with the %s solver even though CONSERVE_MASS is on !!\n",
-                  "WAVE_GRAMFE" );
+                "WAVE_GRAMFE" );
 #  endif // #  ifdef CONSERVE_MASS
 
 #  else
 #  error : ERROR : unsupported WAVE_SCHEME
-#  endif //
+#  endif // WAVE_SCHEME
+
+   if ( MIN_DENS == 0.0 )
+      Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+   else
+      Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
+
+   if ( OPT__OPTIMIZE_AGGRESSIVE )
+      Aux_Message( stderr, "WARNING : input density for fluid solvers does not respect MIN_DENS when OPT__OPTIMIZE_AGGRESSIVE is on!!\n" );
 
    } // if ( MPI_Rank == 0 )
+
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
@@ -1363,7 +1504,7 @@ void Aux_Check_Parameter()
 #  endif
 
 #  if ( POT_GHOST_SIZE <= GRA_GHOST_SIZE )
-      #error : ERROR : POT_GHOST_SIZE <= GRA_GHOST_SIZE !!
+#     error : ERROR : POT_GHOST_SIZE <= GRA_GHOST_SIZE !!
 #  endif
 
 #  if ( POT_GHOST_SIZE < 1 )
@@ -1623,8 +1764,8 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-#  if ( EOS != EOS_GAMMA )
-#     error : ERROR : SUPPORT_GRACKLE must work with EOS_GAMMA !!
+#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_COSMIC_RAY )
+#     error : ERROR : SUPPORT_GRACKLE must work with EOS_GAMMA/EOS_COSMIC_RAY !!
 #  endif
 
 // warning
@@ -1730,6 +1871,30 @@ void Aux_Check_Parameter()
    } // if ( MPI_Rank == 0 )
 
 #endif // #ifdef FEEDBACK
+
+
+// cosmic-ray diffusion
+// =======================================================================================
+#ifdef CR_DIFFUSION
+
+// errors
+// ------------------------------
+#  ifndef COSMIC_RAY
+#     error : ERROR : must enable COSMIC_RAY for CR_DIFFUSION !!
+#  endif
+
+#  ifndef MHD
+#     error : ERROR : must enable MHD for CR_DIFFUSION !!
+#  endif
+
+// warning
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
+      if ( DT__CR_DIFFUSION < 0.0  ||  DT__CR_DIFFUSION > 1.0 )
+         Aux_Message( stderr, "WARNING : DT__CR_DIFFUSION (%14.7e) is not within the normal range [0...1] !!\n", DT__CR_DIFFUSION );
+   } // if ( MPI_Rank == 0 )
+
+#endif // ifdef CR_DIFFUSION
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ... done\n" );

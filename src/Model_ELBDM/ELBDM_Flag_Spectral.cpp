@@ -2,6 +2,7 @@
 
 #if ( MODEL == ELBDM )
 
+
 #include <complex.h>
 
 #define flag_spectral_float double
@@ -63,6 +64,8 @@ void Least_Squares_Regression(flag_spectral_float x[], flag_spectral_float y[], 
 }
 
 
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Prepare_for_Spectral_Criterion
 // Description :  Evaluate decay of the coefficients of a polynomial expansion of the wave function.
@@ -74,13 +77,14 @@ void Least_Squares_Regression(flag_spectral_float x[], flag_spectral_float y[], 
 //                2. The size of the array Var1D must be PS2 + 2
 //                3. Assume a ghost size of 1
 //
-// Parameter   :  Var1D     : Array storing the input re & im
-//                Cond      : Reference to floating point variable where density ratio is stored
+// Parameter   :  Var1D : Array storing the input re & im
+//                Cond  : Reference to floating point variable where density ratio is stored
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
+void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
 {
+
 // set the stride to a small value to sample the wave function evenly
    const size_t Stride    = 1;
    const size_t GhostSize = 1;
@@ -115,7 +119,7 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
       for (size_t i = 0; i < Size1D; ++i) {
          size_t index;
 
-         switch (XYZ)
+         switch ( XYZ )
          {
             case 0:
                index = IDX321(k, j, i, Size1D, Size1D);

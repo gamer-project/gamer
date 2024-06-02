@@ -123,7 +123,7 @@ void LB_RecordExchangeRestrictDataPatchID( const int FaLv )
       int *TempIDList = new int [ LB_SendR_NList[r] ];
       memcpy( TempIDList, LB_SendR_IDList[r], LB_SendR_NList[r]*sizeof(int) );
 
-      Mis_Heapsort( LB_SendR_NList[r], TempIDList, NULL );
+      Mis_Heapsort<int,int>( LB_SendR_NList[r], TempIDList, NULL );
 
       for (int t=1; t<LB_SendR_NList[r]; t++)
          if ( TempIDList[t] == TempIDList[t-1] )

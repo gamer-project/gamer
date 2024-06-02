@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -38,9 +37,9 @@ double GaussianQuadratureIntegrate( const double dx, const double dy, const doub
 bool Flag_AGORA( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 #ifdef PARTICLE
 void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRank,
-                                real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
+                                real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
 #endif
 
 
@@ -467,7 +466,7 @@ void AddNewField_AGORA()
 // --> since Grackle may already add this field automatically when GRACKLE_METAL is enabled
 // --> also note that "Idx_Metal" has been predefined in Field.h
    if ( AGORA_UseMetal  &&  Idx_Metal == Idx_Undefined )
-      Idx_Metal = AddField( "Metal", NORMALIZE_NO, INTERP_FRAC_YES );
+      Idx_Metal = AddField( "Metal", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_YES );
 
 } // FUNCTION : AddNewField_AGORA
 

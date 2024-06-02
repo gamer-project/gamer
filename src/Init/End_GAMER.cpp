@@ -1,7 +1,5 @@
 #include "GAMER.h"
 
-extern void (*End_User_Ptr)();
-
 
 
 
@@ -48,6 +46,8 @@ void End_GAMER()
 #  ifdef FEEDBACK
    FB_End();
 #  endif
+
+   Microphysics_End();
 
 #  ifdef GRAVITY
    End_ExtAccPot();

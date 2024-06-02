@@ -1,7 +1,7 @@
 #include "Macro.h"
 #include "CUFLU.h"
 
-#if ( defined GPU  &&  MODEL == ELBDM )
+#if ( defined GPU  &&  MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_FD )
 
 
 
@@ -49,7 +49,7 @@ static __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CUFLU_ELBDMSolver
+// Function    :  CUFLU_ELBDMSolver_FD
 // Description :  GPU ELBDM kinematic solver based on expanding the propagator to 3rd order
 //
 // Note        :  1. The three-dimensional evolution is achieved by applying x, y, and z operators successively.
@@ -77,11 +77,11 @@ static __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT
 //                                     are broken ...
 //                MinDens        : Minimum allowed density
 //-------------------------------------------------------------------------------------------------------
-__global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
-                                   real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
-                                   real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
-                                   const real dt, const real _dh, const real Eta, const bool StoreFlux,
-                                   const real Taylor3_Coeff, const bool XYZ, const real MinDens )
+__global__ void CUFLU_ELBDMSolver_FD( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                                      real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
+                                      real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
+                                      const real dt, const real _dh, const real Eta, const bool StoreFlux,
+                                      const real Taylor3_Coeff, const bool XYZ, const real MinDens )
 {
 
    __shared__ real s_In  [FLU_NIN][FLU_BLOCK_SIZE_Y][FLU_NXT];
@@ -113,7 +113,7 @@ __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ]
                      FLU_GHOST_SIZE, FLU_GHOST_SIZE, s_In, s_Half, s_Flux,  true, 0, MinDens );
    }
 
-} // FUNCTION : CUFLU_ELBDMSolver
+} // FUNCTION : CUFLU_ELBDMSolver_FD
 
 
 
@@ -421,4 +421,4 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 
 
-#endif // #if ( defined GPU  &&  MODEL == ELBDM )
+#endif // #if ( defined GPU  &&  MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_FD )

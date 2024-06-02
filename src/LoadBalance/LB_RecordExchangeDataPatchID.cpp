@@ -261,7 +261,6 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 #              endif
             }
 
-
             for (int f=0; f<NFaBuff; f++)
             {
                TPID = FaBuff[f];
@@ -582,7 +581,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
       int *TempIDList = new int [ LB_RecvH_NList[r] ];
       memcpy( TempIDList, LB_RecvH_IDList[r], LB_RecvH_NList[r]*sizeof(int) );
 
-      Mis_Heapsort( LB_RecvH_NList[r], TempIDList, NULL );
+      Mis_Heapsort<int,int>( LB_RecvH_NList[r], TempIDList, NULL );
 
       for (int t=1; t<LB_RecvH_NList[r]; t++)
          if ( TempIDList[t] == TempIDList[t-1] )
@@ -687,7 +686,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
       int *TempIDList = new int [ LB_RecvG_NList[r] ];
       memcpy( TempIDList, LB_RecvG_IDList[r], LB_RecvG_NList[r]*sizeof(int) );
 
-      Mis_Heapsort( LB_RecvG_NList[r], TempIDList, NULL );
+      Mis_Heapsort<int,int>( LB_RecvG_NList[r], TempIDList, NULL );
 
       for (int t=1; t<LB_RecvG_NList[r]; t++)
          if ( TempIDList[t] == TempIDList[t-1] )
@@ -757,7 +756,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
                         LB_SendH_LBIdxList[r], Match_H );
 
 //    7.1.3 check: all target patches must be found
-      #ifdef GAMER_DEBUG
+#     ifdef GAMER_DEBUG
       for (int t=0; t<LB_SendH_NList[r]; t++)
          if ( Match_H[t] == -1 )
             Aux_Error( ERROR_INFO, "Lv %d, TRank %d, LB_Idx %ld found no matching patches (hydro) !!\n",
@@ -784,7 +783,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
                         LB_SendG_LBIdxList[r], Match_G );
 
 //    7.2.3 check: all target patches must be found
-      #ifdef GAMER_DEBUG
+#     ifdef GAMER_DEBUG
       for (int t=0; t<LB_SendG_NList[r]; t++)
          if ( Match_G[t] == -1 )
             Aux_Error( ERROR_INFO, "Lv %d, TRank %d, LB_Idx %ld found no matching patches (potential) !!\n",

@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 #include <math.h>
 #ifdef SUPPORT_GSL
 #  include <gsl/gsl_errno.h>
@@ -39,9 +38,9 @@ static double Zeldovich_density_profile( const double x_Lagrangian, const double
 static double Zeldovich_x_velocity_profile( const double x_Lagrangian, const double z );
 #ifdef PARTICLE
 void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_AllRank,
-                                    real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                    real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                    real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
+                                    real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                    real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                    real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
 #endif // #ifdef PARTICLE
 #endif // #ifdef SUPPORT_GSL
 
@@ -410,9 +409,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttribute
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_AllRank,
-                                    real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                    real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                    real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
+                                    real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                    real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                    real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] )
 {
 
 #  ifdef SUPPORT_GSL
@@ -422,7 +421,7 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-   real *ParData_AllRank[PAR_NATT_TOTAL];
+   real_par *ParData_AllRank[PAR_NATT_TOTAL];
    for (int v=0; v<PAR_NATT_TOTAL; v++)   ParData_AllRank[v] = NULL;
 
 // only the master rank will construct the initial condition
@@ -435,13 +434,13 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
 //    determine the individual mass of identical particles
       const double ParM = TotM_Boundary / NPar_AllRank;
 
-      ParData_AllRank[PAR_MASS] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_POSX] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_POSY] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_POSZ] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_VELX] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_VELY] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_VELZ] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_MASS] = new real_par [NPar_AllRank];
+      ParData_AllRank[PAR_POSX] = new real_par [NPar_AllRank];
+      ParData_AllRank[PAR_POSY] = new real_par [NPar_AllRank];
+      ParData_AllRank[PAR_POSZ] = new real_par [NPar_AllRank];
+      ParData_AllRank[PAR_VELX] = new real_par [NPar_AllRank];
+      ParData_AllRank[PAR_VELY] = new real_par [NPar_AllRank];
+      ParData_AllRank[PAR_VELZ] = new real_par [NPar_AllRank];
 
 //    set particle attributes
       for (long px=0; px<NPar_X; px++)
@@ -461,19 +460,19 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
             for (long pz=0; pz<NPar_YZ; pz++)
             {
 //             mass
-               ParData_AllRank[PAR_MASS][NPar_AllRank_Counter] = ParM;
+               ParData_AllRank[PAR_MASS][NPar_AllRank_Counter] = (real_par)ParM;
 
 //             z-component position
                PosVec[2] = pz*dhx;
 
                for (int d=0; d<3; d++)
                {
-                  ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter] = PosVec[d];
-                  ParData_AllRank[PAR_VELX+d][NPar_AllRank_Counter] = VelVec[d];
+                  ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter] = (real_par)PosVec[d];
+                  ParData_AllRank[PAR_VELX+d][NPar_AllRank_Counter] = (real_par)VelVec[d];
 //                check periodicity
                   if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )
                      ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter]
-                        = FMOD( ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter]+(real)amr->BoxSize[d], (real)amr->BoxSize[d] );
+                        = FMOD( ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter]+(real_par)amr->BoxSize[d], (real_par)amr->BoxSize[d] );
                }
 
                NPar_AllRank_Counter ++;
@@ -497,7 +496,7 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
 // synchronize all particles to the physical time on the base level, and set generic particle type
    for (long p=0; p<NPar_ThisRank; p++)
    {
-      ParTime[p] = Time[0];
+      ParTime[p] = (real_par)Time[0];
       ParType[p] = PTYPE_GENERIC_MASSIVE;
    }
 

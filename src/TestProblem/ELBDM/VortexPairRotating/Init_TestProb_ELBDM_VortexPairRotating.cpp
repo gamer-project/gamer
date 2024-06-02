@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -10,6 +9,10 @@ static double VorPairRot_J1Amp;
 static double VorPairRot_Omega;
 static double VorPairRot_Phase0;
 // =======================================================================================
+
+static void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                const int GhostSize, const int idx[], const double pos[], const double Time,
+                const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 
 
@@ -56,7 +59,8 @@ void Validate()
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( ELBDM_MATCH_PHASE )
       Aux_Message( stderr, "WARNING: ELBDM_MATCH_PHASE should be disabled in vortex pair tests !!\n" );
-#  endif // #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif
+
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
 
@@ -185,13 +189,14 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[REAL] = Re;
    fluid[IMAG] = Im;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   } else { // if ( amr->use_wave_flag[lv] )
+   } else {
    fluid[PHAS] = SATAN2(Im, Re);
    fluid[STUB] = 0.0;
-   } // if ( amr->use_wave_flag[lv] ) ... else
+   }
 #  endif
 
 } // FUNCTION : SetGridIC
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -215,7 +220,40 @@ void OutputVortexPairRotatingError()
 
 } // FUNCTION : OutputVortexPairRotatingError
 
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  BC
+// Description :  Set the extenral boundary condition to the analytical solution
+//
+// Note        :  1. Linked to the function pointer "BC_User_Ptr"
+//
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
+//                ArraySize      : Size of Array including the ghost zones on each side
+//                fluid          : Fluid fields to be set
+//                NVar_Flu       : Number of fluid variables to be prepared
+//                GhostSize      : Number of ghost zones
+//                idx            : Array indices
+//                pos            : Physical coordinates
+//                Time           : Physical time
+//                lv             : Refinement level
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
+//                AuxArray       : Auxiliary array
+//
+// Return      :  fluid
+//-------------------------------------------------------------------------------------------------------
+void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+         const int GhostSize, const int idx[], const double pos[], const double Time,
+         const int lv, const int TFluVarIdxList[], double AuxArray[] )
+{
+
+// simply call the IC function
+   SetGridIC( fluid, pos[0], pos[1], pos[2], Time, lv, AuxArray );
+
+} // FUNCTION : BC
 #endif // #if ( MODEL == ELBDM )
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_ELBDM_VortexPairRotating
@@ -243,7 +281,7 @@ void Init_TestProb_ELBDM_VortexPairRotating()
 
 
    Init_Function_User_Ptr = SetGridIC;
-   BC_User_Ptr            = SetGridIC;
+   BC_User_Ptr            = BC;
    Output_User_Ptr        = OutputVortexPairRotatingError;
 #  endif // #if ( MODEL == ELBDM )
 

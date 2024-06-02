@@ -69,9 +69,11 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
    const int  didx_flux[3]    = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
    const real dt_dh           = dt/dh;
+#  if ( defined DUAL_ENERGY  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
    const bool CheckMinPres_No = false;
+#  endif
 
-   real dFlux[3][NCOMP_TOTAL], Output_1Cell[NCOMP_TOTAL], Emag, Pres;
+   real dFlux[3][NCOMP_TOTAL], Output_1Cell[NCOMP_TOTAL], Emag;
 
 
    const int size_ij = SQR(PS2);
@@ -174,16 +176,14 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
          bool FullStepFailure = false; // per-thread status
 #        endif
 
-//       get pressure
-         Pres = Hydro_Con2Pres( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
-                                Output_1Cell[ENGY], Output_1Cell+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, Emag,
-                                EoS->DensEint2Pres_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
-                                EoS->Table, NULL );
-
 //       5-1. check
 //       --> allow pressure to be zero to tolerate round-off errors
-         if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Output_1Cell, NULL, ERROR_INFO, UNPHY_SILENCE )  ||
-               Pres < (real)0.0  ||  Pres >= HUGE_NUMBER  ||  Pres != Pres  )
+         if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, Output_1Cell, NULL,
+                                   NULL_REAL, NULL_REAL, Emag,
+                                   EoS->DensEint2Pres_FuncPtr,
+                                   EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
+                                   EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
+                                   ERROR_INFO, UNPHY_SILENCE )  )
          {
 #           ifdef __CUDACC__  // GPU
 //          use atomicExch_block() on Pascal (or later) GPUs to avoid inter-block synchronization for better performance
@@ -206,6 +206,14 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 #        ifdef CHECK_UNPHYSICAL_IN_FLUID
          if ( FullStepFailure  &&  Iteration == MinMod_MaxIter )
          {
+//          get pressure
+            const real Pres = Hydro_Con2Pres( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
+                                              Output_1Cell[ENGY], Output_1Cell+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, Emag,
+                                              EoS->DensEint2Pres_FuncPtr,
+                                              EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
+                                              EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
+                                              EoS->Table, NULL );
+
             printf( "Unphysical results at the end of the fluid solver:" );
             for (int v=0; v<NCOMP_TOTAL; v++)   printf( " [%d]=%14.7e", v, Output_1Cell[v] );
             printf( " Pres=%14.7e", Pres );

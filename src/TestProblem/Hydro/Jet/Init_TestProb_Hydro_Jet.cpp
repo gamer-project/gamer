@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -32,9 +31,13 @@ static double  *Jet_MaxDis        = NULL;          // maximum distance between t
 static double *Jet_HSE_BgTable_Data = NULL;        // for Jet_HSE: background gas table [radius/density/temperature]
 static int     Jet_HSE_BgTable_NBin;               // for Jet_HSE: number of bins in Jet_HSE_BgTable_Data[]
 // =======================================================================================
+
 #ifdef GRAVITY
 void Init_ExtAcc_Jet();
 #endif
+static void IsolatedBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                        const int GhostSize, const int idx[], const double pos[], const double Time,
+                        const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 
 
@@ -432,6 +435,38 @@ void End_Jet()
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  IsolatedBC
+// Description :  Isolated boundary condition for galaxies, only allow outflow velocities
+//
+// Note        :  1. Linked to the function pointer "BC_User_Ptr"
+//
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
+//                ArraySize      : Size of Array including the ghost zones on each side
+//                fluid          : Fluid fields to be set
+//                NVar_Flu       : Number of fluid variables to be prepared
+//                GhostSize      : Number of ghost zones
+//                idx            : Array indices
+//                pos            : Physical coordinates
+//                Time           : Physical time
+//                lv             : Refinement level
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
+//                AuxArray       : Auxiliary array
+//
+// Return      :  fluid
+//-------------------------------------------------------------------------------------------------------
+void IsolatedBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                 const int GhostSize, const int idx[], const double pos[], const double Time,
+                 const int lv, const int TFluVarIdxList[], double AuxArray[] )
+{
+
+// simply call the IC function
+   SetGridIC( fluid, pos[0], pos[1], pos[2], Time, lv, AuxArray );
+
+} // FUNCTION : IsolatedBC
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_ResetByUser_Jet
 // Description :  Function to reset the fluid field
 //
@@ -562,7 +597,7 @@ void Init_TestProb_Hydro_Jet()
    Init_Function_User_Ptr   = SetGridIC;
    Flag_User_Ptr            = NULL;
    Mis_GetTimeStep_User_Ptr = NULL;
-   BC_User_Ptr              = SetGridIC;
+   BC_User_Ptr              = IsolatedBC;
    Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Jet;
    Output_User_Ptr          = NULL;
    Aux_Record_User_Ptr      = NULL;

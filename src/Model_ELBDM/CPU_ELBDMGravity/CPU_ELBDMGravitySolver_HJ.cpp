@@ -6,7 +6,10 @@
 
 #include "CUPOT.h"
 
-#if ( MODEL == ELBDM  &&  defined GRAVITY && ELBDM_SCHEME == ELBDM_HYBRID )
+#if ( MODEL == ELBDM  &&  defined GRAVITY  &&  ELBDM_SCHEME == ELBDM_HYBRID )
+
+
+
 
 //-----------------------------------------------------------------------------------------
 // Function    :  CPU/CUPOT_ELBDMGravitySolver_HamiltonJacobi
@@ -22,23 +25,22 @@
 //                4. No GPU shared memory is used in this kernel since no computational stencil is required
 //                   and hence no data needed to be shared
 //
-//
-// Parameter   :  g_Flu_Array       : Array to store the input and output data
-//                g_Pot_Array       : Array storing the input potential for evaluating the gravitational acceleration
-//                NPatchGroup       : Number of patch groups to be evaluated (for CPU only)
-//                EtaDt             : Particle mass / Planck constant * dt
-//                dh                : Cell size
-//                Lambda            : Quartic self-interaction coefficient in ELBDM
+// Parameter   :  g_Flu_Array : Array to store the input and output data
+//                g_Pot_Array : Array storing the input potential for evaluating the gravitational acceleration
+//                NPatchGroup : Number of patch groups to be evaluated (for CPU only)
+//                EtaDt       : Particle mass / Planck constant * dt
+//                dh          : Cell size
+//                Lambda      : Quartic self-interaction coefficient in ELBDM
 //
 // Return      :  g_Flu_Array[]
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __global__
-void CUPOT_ELBDMGravitySolver_HamiltonJacobi( real g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
+void CUPOT_ELBDMGravitySolver_HamiltonJacobi(       real g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
                                               const real g_Pot_Array[][ CUBE(GRA_NXT) ],
                                               const real EtaDt, const real dh, const real Lambda )
 #else
-void CPU_ELBDMGravitySolver_HamiltonJacobi  ( real g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
+void CPU_ELBDMGravitySolver_HamiltonJacobi  (       real g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
                                               const real g_Pot_Array[][ CUBE(GRA_NXT) ],
                                               const int NPatchGroup,
                                               const real EtaDt, const real dh, const real Lambda )
@@ -46,7 +48,6 @@ void CPU_ELBDMGravitySolver_HamiltonJacobi  ( real g_Flu_Array[][GRA_NIN][ CUBE(
 {
 
    const int PS1_sqr = SQR(PS1);
-
 
 // loop over all patches
 // --> CPU/GPU solver: use different (OpenMP threads) / (CUDA thread blocks)
@@ -70,10 +71,7 @@ void CPU_ELBDMGravitySolver_HamiltonJacobi  ( real g_Flu_Array[][GRA_NIN][ CUBE(
          const int k_pot   = k_flu + GRA_GHOST_SIZE;
          const int idx_pot = IDX321( i_pot, j_pot, k_pot, GRA_NXT, GRA_NXT );
 
-
-         real Pot;
-
-         Pot  = g_Pot_Array[P]   [idx_pot];
+         real Pot = g_Pot_Array[P][idx_pot];
 
 #        ifdef QUARTIC_SELF_INTERACTION
          const real Rho = g_Flu_Array[P][0][idx_flu];
@@ -89,4 +87,5 @@ void CPU_ELBDMGravitySolver_HamiltonJacobi  ( real g_Flu_Array[][GRA_NIN][ CUBE(
 } // FUNCTION : CPU/CUPOT_ELBDMGravitySolver_HJ
 
 
-#endif // #if ( MODEL == ELBDM  &&  defined GRAVITY && ELBDM_SCHEME == ELBDM_HYBRID )
+
+#endif // #if ( MODEL == ELBDM  &&  defined GRAVITY  &&  ELBDM_SCHEME == ELBDM_HYBRID )

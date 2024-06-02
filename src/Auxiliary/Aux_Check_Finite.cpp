@@ -43,15 +43,15 @@ void Aux_Check_Finite( const int lv, const char *comment )
                NextIdx = 0;
 
                for (int v=0; v<NCOMP_TOTAL; v++) {
-#              if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#                 if ( ELBDM_SCHEME == ELBDM_HYBRID )
 //                ignore stub field on fluid levels in hybrid scheme
-                  if ( !amr->use_wave_flag[lv] && v == STUB )
-                       Data[ NextIdx ++ ] = 0.0;
+                  if ( !amr->use_wave_flag[lv]  &&  v == STUB )
+                     Data[ NextIdx ++ ] = 0.0;
                   else
-#              endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
-                       Data[ NextIdx ++ ] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
-
+#                 endif
+                     Data[ NextIdx ++ ] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
                }
+
 #              ifdef GRAVITY
                Data[ NextIdx ++ ] = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot[k][j][i];
 #              endif
@@ -64,7 +64,8 @@ void Aux_Check_Finite( const int lv, const char *comment )
 #              endif
                const real Pres = Hydro_Con2Pres( Data[DENS], Data[MOMX], Data[MOMY], Data[MOMZ], Data[ENGY], Data+NCOMP_FLUID,
                                                  false, NULL_REAL, Emag,
-                                                 EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt,
+                                                 EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                 EoS_AuxArray_Flt,
                                                  EoS_AuxArray_Int, h_EoS_Table, NULL );
                Data[ NextIdx ++ ] = Pres;
 #              ifdef MHD

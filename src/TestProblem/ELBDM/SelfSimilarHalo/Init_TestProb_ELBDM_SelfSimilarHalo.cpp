@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -220,10 +219,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[REAL] = sqrt( Dens )*cos( Phase );
    fluid[IMAG] = sqrt( Dens )*sin( Phase );
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   } else { // if ( amr->use_wave_flag[lv] )
+   } else {
    fluid[PHAS] = Phase;
    fluid[STUB] = 0.0;
-   } // if ( amr->use_wave_flag[lv] ) ... else
+   }
 #  endif
 
 } // FUNCTION : SetGridIC

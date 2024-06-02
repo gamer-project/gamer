@@ -157,8 +157,20 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 #           ifdef MHD
             if ( OPT__OUTPUT_DIVMAG )  fprintf( File, " %*s", StrLen_Flt, "Div(Mag)" );
 #           endif
+#           ifdef SRHD
+            if ( OPT__OUTPUT_LORENTZ ) fprintf( File, " %*s", StrLen_Flt, "Lorentz" );
+            if ( OPT__OUTPUT_3VELOCITY )
+            {
+                                       fprintf( File, " %*s", StrLen_Flt, "Velocity X" );
+                                       fprintf( File, " %*s", StrLen_Flt, "Velocity Y" );
+                                       fprintf( File, " %*s", StrLen_Flt, "Velocity Z" );
+            }
+            if ( OPT__OUTPUT_ENTHALPY )
+                                       fprintf( File, " %*s", StrLen_Flt, "Reduced enthalpy" );
+#           endif
             if ( OPT__OUTPUT_USER_FIELD ) {
-               for (int v=0; v<UserDerField_Num; v++)    fprintf( File, " %*s", StrLen_Flt, UserDerField_Label[v] );
+               for (int v=0; v<UserDerField_Num; v++)
+                                       fprintf( File, " %*s", StrLen_Flt, UserDerField_Label[v] );
             }
 
             fprintf( File, "\n" );
@@ -319,6 +331,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    if ( OPT__OUTPUT_PRES ) {
       Pres = Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                              CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
+                             EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
       fprintf( File, BlankPlusFormat_Flt, Pres );
    }
@@ -326,25 +339,42 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    if ( OPT__OUTPUT_TEMP ) {
       Temp = Hydro_Con2Temp( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                              CheckMinTemp_No, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
+                             EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       fprintf( File, BlankPlusFormat_Flt, Temp );
    }
 
+#  ifndef SRHD
    if ( OPT__OUTPUT_ENTR ) {
       Entr = Hydro_Con2Entr( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                              CheckMinEntr_No, NULL_REAL, Emag, EoS_DensEint2Entr_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       fprintf( File, BlankPlusFormat_Flt, Entr );
    }
+#  endif
+
+#  ifdef SRHD
+   real Prim[NCOMP_TOTAL], LorentzFactor=-1.0, HTilde=-1.0;
+   if ( OPT__OUTPUT_CS || OPT__OUTPUT_LORENTZ || OPT__OUTPUT_3VELOCITY )
+      Hydro_Con2Pri( u, Prim, (real)-HUGE_NUMBER, NULL_BOOL, NULL_INT, NULL,
+                     NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
+                     EoS_DensPres2Eint_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
+#  endif
 
    if ( OPT__OUTPUT_CS ) {
+#     ifdef SRHD
+      Cs = SQRT(  EoS_DensPres2CSqr_CPUPtr( Prim[0], Prim[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table )  );
+#     else
 //    compute pressure if it is not done yet
       if ( Pres < 0.0 )
       Pres = Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                              CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
+                             EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
       Cs   = SQRT(  EoS_DensPres2CSqr_CPUPtr( u[DENS], Pres, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                               h_EoS_Table )  );
+#     endif
       fprintf( File, BlankPlusFormat_Flt, Cs );
    }
 
@@ -359,6 +389,25 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    if ( OPT__OUTPUT_DIVMAG ) {
       const real DivB = MHD_GetCellCenteredDivBInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
       fprintf( File, BlankPlusFormat_Flt, DivB );
+   }
+#  endif
+
+#  ifdef SRHD
+   if ( OPT__OUTPUT_LORENTZ )
+      fprintf( File, BlankPlusFormat_Flt, LorentzFactor );
+
+   if ( OPT__OUTPUT_3VELOCITY )
+   {
+      fprintf( File, BlankPlusFormat_Flt, Prim[1] / LorentzFactor );
+      fprintf( File, BlankPlusFormat_Flt, Prim[2] / LorentzFactor );
+      fprintf( File, BlankPlusFormat_Flt, Prim[3] / LorentzFactor );
+   }
+
+   if ( OPT__OUTPUT_ENTHALPY )
+   {
+      HTilde = Hydro_Con2HTilde( u, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      fprintf( File, BlankPlusFormat_Flt, HTilde );
    }
 #  endif
 

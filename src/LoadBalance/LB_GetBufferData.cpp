@@ -3,13 +3,13 @@
 #ifdef LOAD_BALANCE
 
 
-const real BufSizeFactor = 1.05;    // Send/RecvBufSize = int(NSend/NRecv*BufSizeFactor) --> must be >= 1.0
+const real BufSizeFactor = 1.05;    // Send/RecvBufSize = (long)(SendSize/RecvSize*BufSizeFactor) --> must be >= 1.0
 
 // MPI buffers are shared by some particle routines
-static real *MPI_SendBuf_Shared = NULL;
-static real *MPI_RecvBuf_Shared = NULL;
-static int   SendBufSize        = -1;
-static int   RecvBufSize        = -1;
+static void *MPI_SendBuf_Shared = NULL;
+static void *MPI_RecvBuf_Shared = NULL;
+static long  SendBufSize        = -1L;
+static long  RecvBufSize        = -1L;
 
 #ifdef TIMING
 extern Timer_t *Timer_MPI[3];
@@ -176,22 +176,22 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
    const int ParaBufP1     = ParaBuf + 1;
 #  endif
 
-   int   NSend_Total, NRecv_Total;
    int   DataUnit_Buf[27], LoopStart[27][3], LoopEnd[27][3];
    int   LoopStart_X[6][3], LoopEnd_X[6][3];
    int  *Send_NList=NULL, *Recv_NList=NULL, *Send_NResList=NULL, *Recv_NResList=NULL;
    int **Send_IDList=NULL, **Recv_IDList=NULL, **Send_IDList_IdxTable=NULL, **Recv_IDList_IdxTable=NULL;
    int **Send_SibList=NULL, **Recv_SibList=NULL;
+   long  NSend_Total, NRecv_Total;
 
 #  ifdef MHD
    int  *SendY_NList=NULL, **SendY_IDList=NULL, **SendY_SibList=NULL;
    int  *RecvY_NList=NULL, **RecvY_IDList=NULL, **RecvY_SibList=NULL;
 #  endif
 
-   int *Send_NCount = new int [MPI_NRank];
-   int *Recv_NCount = new int [MPI_NRank];
-   int *Send_NDisp  = new int [MPI_NRank];
-   int *Recv_NDisp  = new int [MPI_NRank];
+   long *Send_NCount = new long [MPI_NRank];
+   long *Recv_NCount = new long [MPI_NRank];
+   long *Send_NDisp  = new long [MPI_NRank];
+   long *Recv_NDisp  = new long [MPI_NRank];
 
 
 // 1. set up the number of elements to be sent and received in each cell and the send/recv lists
@@ -316,10 +316,10 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
          LoopEnd  [26][0] = LoopEnd  [26][1] = LoopEnd  [26][2] = PS1;
 
 //       MPI count array
-         for (int s= 0; s< 6; s++)  DataUnit_Buf[ s] = NVarCC_Tot * PS1     * PS1     * ParaBuf;   // sibling 0 ~ 5
-         for (int s= 6; s<18; s++)  DataUnit_Buf[ s] = NVarCC_Tot * PS1     * ParaBuf * ParaBuf;   // sibling 6 ~ 17
-         for (int s=18; s<26; s++)  DataUnit_Buf[ s] = NVarCC_Tot * ParaBuf * ParaBuf * ParaBuf;   // sibling 18 ~ 25
-                                    DataUnit_Buf[26] = NVarCC_Tot * PS1     * PS1     * PS1;       // entire patch
+         for (int s= 0; s< 6; s++)  { DataUnit_Buf[ s] = NVarCC_Tot * PS1     * PS1     * ParaBuf; }  // sibling 0 ~ 5
+         for (int s= 6; s<18; s++)  { DataUnit_Buf[ s] = NVarCC_Tot * PS1     * ParaBuf * ParaBuf; }  // sibling 6 ~ 17
+         for (int s=18; s<26; s++)  { DataUnit_Buf[ s] = NVarCC_Tot * ParaBuf * ParaBuf * ParaBuf; }  // sibling 18 ~ 25
+                                      DataUnit_Buf[26] = NVarCC_Tot * PS1     * PS1     * PS1;        // entire patch
 
 #        ifdef MHD
          for (int v=0; v<NVarFC_Mag; v++)
@@ -357,27 +357,27 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
             } // switch ( TMagVarIdx )
          } // for (int v=0; v<NVarFC_Mag; v++)
 
-         for (int s=18; s<26; s++)  DataUnit_Buf[ s] += NVarFC_Mag*ParaBufP1*SQR( ParaBuf );
-                                    DataUnit_Buf[26] += NVarFC_Mag*PS1P1*SQR( PS1 );
+         for (int s=18; s<26; s++)  { DataUnit_Buf[ s] += NVarFC_Mag*ParaBufP1*SQR( ParaBuf ); }
+                                      DataUnit_Buf[26] += NVarFC_Mag*PS1P1*SQR( PS1 );
 #        endif // #ifdef MHD
 
          for (int r=0; r<MPI_NRank; r++)
          {
-            Send_NCount[r] = 0;
-            Recv_NCount[r] = 0;
+            Send_NCount[r] = 0L;
+            Recv_NCount[r] = 0L;
 
             for (int t=0; t<Send_NList[r]; t++)
             {
                if ( Send_SibList[r][t] != 0 )
                for (int s=0; s<27; s++)
-                  if ( Send_SibList[r][t] & (1<<s) )  Send_NCount[r] += DataUnit_Buf[s];
+                  if ( Send_SibList[r][t] & (1<<s) )  Send_NCount[r] += (long)DataUnit_Buf[s];
             }
 
             for (int t=0; t<Recv_NList[r]; t++)
             {
                if ( Recv_SibList[r][t] != 0 )
                for (int s=0; s<27; s++)
-                  if ( Recv_SibList[r][t] & (1<<s) )  Recv_NCount[r] += DataUnit_Buf[s];
+                  if ( Recv_SibList[r][t] & (1<<s) )  Recv_NCount[r] += (long)DataUnit_Buf[s];
             }
          }
          break; // cases DATA_GENERAL, DATA_AFTER_REFINE, POT_FOR_POISSON, POT_AFTER_REFINE
@@ -405,10 +405,10 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
          }
 
 //       MPI count array
-         for (int s= 0; s< 6; s++)  DataUnit_Buf[ s] = NVarCC_Tot * PS1     * PS1     * ParaBuf;   // sibling 0 ~ 5
-         for (int s= 6; s<18; s++)  DataUnit_Buf[ s] = NVarCC_Tot * PS1     * ParaBuf * ParaBuf;   // sibling 6 ~ 17
-         for (int s=18; s<26; s++)  DataUnit_Buf[ s] = NVarCC_Tot * ParaBuf * ParaBuf * ParaBuf;   // sibling 18 ~ 25
-                                    DataUnit_Buf[26] = NVarCC_Tot * PS1     * PS1     * PS1;       // entire patch
+         for (int s= 0; s< 6; s++)  { DataUnit_Buf[ s] = NVarCC_Tot * PS1     * PS1     * ParaBuf; }  // sibling 0 ~ 5
+         for (int s= 6; s<18; s++)  { DataUnit_Buf[ s] = NVarCC_Tot * PS1     * ParaBuf * ParaBuf; }  // sibling 6 ~ 17
+         for (int s=18; s<26; s++)  { DataUnit_Buf[ s] = NVarCC_Tot * ParaBuf * ParaBuf * ParaBuf; }  // sibling 18 ~ 25
+                                      DataUnit_Buf[26] = NVarCC_Tot * PS1     * PS1     * PS1;        // entire patch
 
 #        ifdef MHD
          for (int v=0; v<NVarFC_Mag; v++)
@@ -446,32 +446,32 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
             } // switch ( TMagVarIdx )
          } // for (int v=0; v<NVarFC_Mag; v++)
 
-         for (int s=18; s<26; s++)  DataUnit_Buf[ s] += NVarFC_Mag*ParaBufP1*SQR( ParaBuf );
-                                    DataUnit_Buf[26] += NVarFC_Mag*PS1P1*SQR( PS1 );
+         for (int s=18; s<26; s++)  { DataUnit_Buf[ s] += NVarFC_Mag*ParaBufP1*SQR( ParaBuf ); }
+                                      DataUnit_Buf[26] += NVarFC_Mag*PS1P1*SQR( PS1 );
 #        endif // #ifdef MHD
 
          for (int r=0; r<MPI_NRank; r++)
          {
-            Send_NCount[r] = 0;
-            Recv_NCount[r] = 0;
+            Send_NCount[r] = 0L;
+            Recv_NCount[r] = 0L;
 
 //          for restriction fix-up
             for (int t=0; t<Send_NResList[r]; t++)
             for (int s=0; s<27; s++)
-               if ( Send_SibList[r][t] & (1<<s) )  Send_NCount[r] += DataUnit_Buf[s];
+               if ( Send_SibList[r][t] & (1<<s) )  Send_NCount[r] += (long)DataUnit_Buf[s];
 
             for (int t=0; t<Recv_NResList[r]; t++)
             for (int s=0; s<27; s++)
-               if ( Recv_SibList[r][t] & (1<<s) )  Recv_NCount[r] += DataUnit_Buf[s];
+               if ( Recv_SibList[r][t] & (1<<s) )  Recv_NCount[r] += (long)DataUnit_Buf[s];
 
 //          for flux fix-up
             for (int t=Send_NResList[r]; t<Send_NList[r]; t++)
             for (int s=0; s<6; s++)
-               if ( Send_SibList[r][t] & (1<<s) )  Send_NCount[r] += DataUnit_Flux;
+               if ( Send_SibList[r][t] & (1<<s) )  Send_NCount[r] += (long)DataUnit_Flux;
 
             for (int t=Recv_NResList[r]; t<Recv_NList[r]; t++)
             for (int s=0; s<6; s++)
-               if ( Recv_SibList[r][t] & (1<<s) )  Recv_NCount[r] += DataUnit_Flux;
+               if ( Recv_SibList[r][t] & (1<<s) )  Recv_NCount[r] += (long)DataUnit_Flux;
          }
 
 //       for electric field fix-up
@@ -513,18 +513,18 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
             } // switch ( TMagVarIdx )
          } // for (int v=0; v<NVarFC_Mag; v++)
 
-         for (int s=18; s<26; s++)  DataUnit_Buf[ s] = NVarFC_Mag*ParaBufP1*SQR( ParaBuf );
-                                    DataUnit_Buf[26] = NVarFC_Mag*PS1P1*SQR( PS1 );
+         for (int s=18; s<26; s++)  { DataUnit_Buf[ s] = NVarFC_Mag*ParaBufP1*SQR( ParaBuf ); }
+                                      DataUnit_Buf[26] = NVarFC_Mag*PS1P1*SQR( PS1 );
 
          for (int r=0; r<MPI_NRank; r++)
          {
             for (int t=0; t<SendY_NList[r]; t++)
             for (int s=0; s<27; s++)
-               if ( SendY_SibList[r][t] & (1<<s) )    Send_NCount[r] += DataUnit_Buf[s];
+               if ( SendY_SibList[r][t] & (1<<s) )    Send_NCount[r] += (long)DataUnit_Buf[s];
 
             for (int t=0; t<RecvY_NList[r]; t++)
             for (int s=0; s<27; s++)
-               if ( RecvY_SibList[r][t] & (1<<s) )    Recv_NCount[r] += DataUnit_Buf[s];
+               if ( RecvY_SibList[r][t] & (1<<s) )    Recv_NCount[r] += (long)DataUnit_Buf[s];
          }
 #        endif // #ifdef MHD
          break; // case DATA_AFTER_FIXUP
@@ -534,11 +534,11 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 //    ----------------------------------------------
          for (int r=0; r<MPI_NRank; r++)
          {
-            Send_NCount[r]  = Send_NList[r]*CUBE( PS1 )*NVarCC_Tot;
-            Recv_NCount[r]  = Recv_NList[r]*CUBE( PS1 )*NVarCC_Tot;
+            Send_NCount[r]  = (long)Send_NList[r]*(long)CUBE( PS1 )*(long)NVarCC_Tot;
+            Recv_NCount[r]  = (long)Recv_NList[r]*(long)CUBE( PS1 )*(long)NVarCC_Tot;
 #           ifdef MHD
-            Send_NCount[r] += Send_NList[r]*SQR( PS1 )*PS1P1*NVarFC_Mag;
-            Recv_NCount[r] += Recv_NList[r]*SQR( PS1 )*PS1P1*NVarFC_Mag;
+            Send_NCount[r] += (long)Send_NList[r]*(long)SQR( PS1 )*(long)PS1P1*(long)NVarFC_Mag;
+            Recv_NCount[r] += (long)Recv_NList[r]*(long)SQR( PS1 )*(long)PS1P1*(long)NVarFC_Mag;
 #           endif
          }
          break; // case DATA_RESTRICT
@@ -548,8 +548,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 //    ----------------------------------------------
          for (int r=0; r<MPI_NRank; r++)
          {
-            Send_NCount[r] = Send_NList[r]*DataUnit_Flux;
-            Recv_NCount[r] = Recv_NList[r]*DataUnit_Flux;
+            Send_NCount[r] = (long)Send_NList[r]*(long)DataUnit_Flux;
+            Recv_NCount[r] = (long)Recv_NList[r]*(long)DataUnit_Flux;
          }
          break; // case COARSE_FINE_FLUX
 
@@ -559,11 +559,11 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 //    ----------------------------------------------
          for (int r=0; r<MPI_NRank; r++)
          {
-            Send_NCount[r] = 0;
-            Recv_NCount[r] = 0;
+            Send_NCount[r] = 0L;
+            Recv_NCount[r] = 0L;
 
-            for(int t=0; t<Send_NList[r]; t++)  Send_NCount[r] += ( Send_SibList[r][t] < 6 ) ? NCOMP_ELE*PS1M1*PS1 : PS1;
-            for(int t=0; t<Recv_NList[r]; t++)  Recv_NCount[r] += ( Recv_SibList[r][t] < 6 ) ? NCOMP_ELE*PS1M1*PS1 : PS1;
+            for(int t=0; t<Send_NList[r]; t++)  Send_NCount[r] += ( Send_SibList[r][t] < 6 ) ? (long)NCOMP_ELE*(long)PS1M1*(long)PS1 : (long)PS1;
+            for(int t=0; t<Recv_NList[r]; t++)  Recv_NCount[r] += ( Recv_SibList[r][t] < 6 ) ? (long)NCOMP_ELE*(long)PS1M1*(long)PS1 : (long)PS1;
          }
          break; // case COARSE_FINE_ELECTRIC
 #     endif
@@ -571,8 +571,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 
 
 // MPI displacement array
-   Send_NDisp[0] = 0;
-   Recv_NDisp[0] = 0;
+   Send_NDisp[0] = 0L;
+   Recv_NDisp[0] = 0L;
 
    for (int r=1; r<MPI_NRank; r++)
    {
@@ -585,8 +585,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 
 
 // allocate send/recv buffers (only when the current buffer size is not large enough --> improve performance)
-   real *SendBuf = LB_GetBufferData_MemAllocate_Send( NSend_Total );
-   real *RecvBuf = LB_GetBufferData_MemAllocate_Recv( NRecv_Total );
+   real *SendBuf = (real *)LB_GetBufferData_MemAllocate_Send( NSend_Total*sizeof(real) );
+   real *RecvBuf = (real *)LB_GetBufferData_MemAllocate_Recv( NRecv_Total*sizeof(real) );
 
 
 
@@ -1112,13 +1112,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
    if ( OPT__TIMING_MPI )  Timer_MPI[1]->Start();
 #  endif
 
-#  ifdef FLOAT8
-   MPI_Alltoallv( SendBuf, Send_NCount, Send_NDisp, MPI_DOUBLE,
-                  RecvBuf, Recv_NCount, Recv_NDisp, MPI_DOUBLE, MPI_COMM_WORLD );
-#  else
-   MPI_Alltoallv( SendBuf, Send_NCount, Send_NDisp, MPI_FLOAT,
-                  RecvBuf, Recv_NCount, Recv_NDisp, MPI_FLOAT,  MPI_COMM_WORLD );
-#  endif
+   MPI_Alltoallv_GAMER( SendBuf, Send_NCount, Send_NDisp, MPI_GAMER_REAL,
+                        RecvBuf, Recv_NCount, Recv_NDisp, MPI_GAMER_REAL, MPI_COMM_WORLD );
 
 #  ifdef TIMING
    if ( OPT__TIMING_MPI )  Timer_MPI[1]->Stop();
@@ -1804,27 +1799,32 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 //                2. This function is used by some particle routines as well
 //                3. We reallocate send/recv buffers only when the current buffer size is not large enough
 //                   --> It greatly improves MPI performance
+//                4. Use ::operator new/delete to allocate/deallocate MPI_SendBuf_Shared, because it is a void pointer,
+//                   and one cannot use "new void [N]" to allocate a void pointer with N elements, since void datatype does not have size
+//                   (see https://stackoverflow.com/questions/1666224/what-is-the-size-of-void); thus, we use
+//                   ::operator new/delete to allocate/deallocate raw memory in unit of bytes
+//                   (see https://stackoverflow.com/questions/14111900/using-new-on-void-pointer)
 //
-// Parameter   :  NSend : Number of elements (with the type "real") to be sent
+// Parameter   :  SendSize : Number of bytes to be sent
 //
 // Return      :  Pointer to the MPI send buffer
 //-------------------------------------------------------------------------------------------------------
-real *LB_GetBufferData_MemAllocate_Send( const int NSend )
+void *LB_GetBufferData_MemAllocate_Send( const long SendSize )
 {
 
-   if ( NSend > SendBufSize )
+   if ( SendSize > SendBufSize )
    {
-      if ( MPI_SendBuf_Shared != NULL )   delete [] MPI_SendBuf_Shared;
+      if ( MPI_SendBuf_Shared != NULL )   ::operator delete (MPI_SendBuf_Shared);
 
 //    allocate BufSizeFactor more memory to sustain longer
-      SendBufSize = int(NSend*BufSizeFactor);
+      SendBufSize = (long)(SendSize*BufSizeFactor);
 
 //    check integer overflow
       if ( SendBufSize < 0 )
-         Aux_Error( ERROR_INFO, "NSend %d, BufSizeFactor %13.7e, SendBufSize %d < 0 !!\n",
-                    NSend, BufSizeFactor, SendBufSize );
+         Aux_Error( ERROR_INFO, "SendSize %ld, BufSizeFactor %13.7e, SendBufSize %ld < 0 !!\n",
+                    SendSize, BufSizeFactor, SendBufSize );
 
-      MPI_SendBuf_Shared = new real [SendBufSize];
+      MPI_SendBuf_Shared = ::operator new (SendBufSize);
    }
 
    return MPI_SendBuf_Shared;
@@ -1841,27 +1841,32 @@ real *LB_GetBufferData_MemAllocate_Send( const int NSend )
 //                2. This function is used by some particle routines as well
 //                3. We reallocate send/recv buffers only when the current buffer size is not large enough
 //                   --> It greatly improves MPI performance
+//                4. Use ::operator new/delete to allocate/deallocate MPI_RecvBuf_Shared, because it is a void pointer,
+//                   and one cannot use "new void [N]" to allocate a void pointer with N elements, since void datatype does not have size
+//                   (see https://stackoverflow.com/questions/1666224/what-is-the-size-of-void); thus, we use
+//                   ::operator new/delete to allocate/deallocate raw memory in unit of bytes
+//                   (see https://stackoverflow.com/questions/14111900/using-new-on-void-pointer)
 //
-// Parameter   :  NRecv : Number of elements (with the type "real") to be sent
+// Parameter   :  RecvSize : Number of bytes to be received
 //
 // Return      :  Pointer to the MPI recv buffer
 //-------------------------------------------------------------------------------------------------------
-real *LB_GetBufferData_MemAllocate_Recv( const int NRecv )
+void *LB_GetBufferData_MemAllocate_Recv( const long RecvSize )
 {
 
-   if ( NRecv > RecvBufSize )
+   if ( RecvSize > RecvBufSize )
    {
-      if ( MPI_RecvBuf_Shared != NULL )   delete [] MPI_RecvBuf_Shared;
+      if ( MPI_RecvBuf_Shared != NULL )   ::operator delete (MPI_RecvBuf_Shared);
 
 //    allocate BufSizeFactor more memory to sustain longer
-      RecvBufSize = int(NRecv*BufSizeFactor);
+      RecvBufSize = (long)(RecvSize*BufSizeFactor);
 
 //    check integer overflow
       if ( RecvBufSize < 0 )
-         Aux_Error( ERROR_INFO, "NRecv %d, BufSizeFactor %13.7e, RecvBufSize %d < 0 !!\n",
-                    NRecv, BufSizeFactor, RecvBufSize );
+         Aux_Error( ERROR_INFO, "RecvSize %ld, BufSizeFactor %13.7e, RecvBufSize %ld < 0 !!\n",
+                    RecvSize, BufSizeFactor, RecvBufSize );
 
-      MPI_RecvBuf_Shared = new real [RecvBufSize];
+      MPI_RecvBuf_Shared = ::operator new (RecvBufSize);
    }
 
    return MPI_RecvBuf_Shared;
@@ -1874,7 +1879,9 @@ real *LB_GetBufferData_MemAllocate_Recv( const int NRecv )
 // Function    :  LB_GetBufferData_MemFree
 // Description :  Free the MPI send and recv buffers
 //
-// Note        :  This function is invoked by "End_MemFree"
+// Note        :  1. This function is invoked by "End_MemFree"
+//                2. Use ::operator delete to deallocate MPI_SendBuf_Shared/MPI_RecvBuf_Shared, because
+//                   they are void pointers allocated as raw memories.
 //
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
@@ -1883,13 +1890,13 @@ void LB_GetBufferData_MemFree()
 
    if ( MPI_SendBuf_Shared != NULL )
    {
-      delete [] MPI_SendBuf_Shared;
+      ::operator delete (MPI_SendBuf_Shared);
       MPI_SendBuf_Shared = NULL;
    }
 
    if ( MPI_RecvBuf_Shared != NULL )
    {
-      delete [] MPI_RecvBuf_Shared;
+      ::operator delete (MPI_RecvBuf_Shared);
       MPI_RecvBuf_Shared = NULL;
    }
 

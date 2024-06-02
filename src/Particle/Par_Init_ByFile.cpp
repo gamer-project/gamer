@@ -72,11 +72,14 @@ void Par_Init_ByFile()
    if ( !Aux_CheckFileExist(FileName) )
       Aux_Error( ERROR_INFO, "file \"%s\" does not exist for PAR_INIT == PAR_INIT_BY_FILE !!\n", FileName );
 
+// determine the load_data_size for loading PAR_IC
+   size_t load_data_size = ( PAR_IC_FLOAT8 ) ? sizeof(double) : sizeof(float);
+
    FILE *FileTemp = fopen( FileName, "rb" );
 
    fseek( FileTemp, 0, SEEK_END );
 
-   const long ExpectSize = long(NParAtt)*NParAllRank*sizeof(real);
+   const long ExpectSize = long(NParAtt)*NParAllRank*load_data_size;
    const long FileSize   = ftell( FileTemp );
    if ( FileSize != ExpectSize )
       Aux_Error( ERROR_INFO, "size of the file <%s> = %ld != expect = %ld !!\n",
@@ -97,21 +100,22 @@ void Par_Init_ByFile()
    if ( NPar_Check != NParAllRank )
       Aux_Error( ERROR_INFO, "total number of particles found (%ld) != expect (%ld) !!\n", NPar_Check, NParAllRank );
 
-   for (int r=0; r<MPI_Rank; r++)   FileOffset = FileOffset + long(NParAttPerLoad)*NPar_EachRank[r]*sizeof(real);
+   for (int r=0; r<MPI_Rank; r++)   FileOffset = FileOffset + long(NParAttPerLoad)*NPar_EachRank[r]*load_data_size;
 
 
 // load data
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading data ... " );
 
-   real *ParData_ThisRank = new real [ NParThisRank*NParAtt ];
+// allocate buffer for loading PAR_IC
+   char* ParData_ThisRank = new char [ NParThisRank*NParAtt*load_data_size ];
 
 // note that fread() may fail for large files if sizeof(size_t) == 4 instead of 8
    FILE *File = fopen( FileName, "rb" );
 
    for (int v=0; v<NParAtt; v+=NParAttPerLoad)
    {
-      fseek( File, FileOffset+v*NParAllRank*sizeof(real), SEEK_SET );
-      fread( ParData_ThisRank+v*NParThisRank, sizeof(real), long(NParAttPerLoad)*NParThisRank, File );
+      fseek( File, FileOffset+v*NParAllRank*load_data_size, SEEK_SET );
+      fread( ParData_ThisRank+v*NParThisRank*load_data_size, load_data_size, long(NParAttPerLoad)*NParThisRank, File );
    }
 
    fclose( File );
@@ -122,20 +126,27 @@ void Par_Init_ByFile()
 // store data into the particle repository
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Storing data into particle repository ... " );
 
-   real *ParData1 = new real [NParAtt];
+   real_par *ParData1 = new real_par [NParAtt];
 
    for (long p=0; p<NParThisRank; p++)
    {
 //    collect data for the target particle
 //    [id][att]
       if ( amr->Par->ParICFormat == PAR_IC_FORMAT_ID_ATT )
-         memcpy( ParData1, ParData_ThisRank+p*NParAtt, NParAtt*sizeof(real) );
+      {
+         if ( PAR_IC_FLOAT8 )
+            for (int v=0; v<NParAtt; v++) ParData1[v] = (real_par)( *((double*)(ParData_ThisRank+(p*NParAtt+v)*load_data_size)) );
+         else
+            for (int v=0; v<NParAtt; v++) ParData1[v] = (real_par)( *((float* )(ParData_ThisRank+(p*NParAtt+v)*load_data_size)) );
+      }
 
 //    [att][id]
       else
       {
-         for (int v=0; v<NParAtt; v++)
-            ParData1[v] = ParData_ThisRank[ v*NParThisRank + p ];
+         if ( PAR_IC_FLOAT8 )
+            for (int v=0; v<NParAtt; v++) ParData1[v] = (real_par)( *((double*)(ParData_ThisRank+(v*NParThisRank+p)*load_data_size)) );
+         else
+            for (int v=0; v<NParAtt; v++) ParData1[v] = (real_par)( *((float* )(ParData_ThisRank+(v*NParThisRank+p)*load_data_size)) );
       }
 
 //    assuming that the orders of the particle attributes stored on the disk and in Par->Attribute[] are the same

@@ -180,11 +180,7 @@ real GetMaxPhaseDerivative( const int lv )
 
 // get the maximum potential in all ranks
    real MaxdS_dt_AllRank;
-#  ifdef FLOAT8
-   MPI_Allreduce( &MaxdS_dt, &MaxdS_dt_AllRank, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
-#  else
-   MPI_Allreduce( &MaxdS_dt, &MaxdS_dt_AllRank, 1, MPI_FLOAT,  MPI_MAX, MPI_COMM_WORLD );
-#  endif
+   MPI_Allreduce( &MaxdS_dt, &MaxdS_dt_AllRank, 1, MPI_GAMER_REAL, MPI_MAX, MPI_COMM_WORLD );
 
 
 // check

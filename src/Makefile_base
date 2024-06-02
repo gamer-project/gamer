@@ -76,8 +76,8 @@ CPU_FILE    += Aux_Check_Parameter.cpp  Aux_Check_Conservation.cpp  Aux_Check.cp
                Aux_Check_Refinement.cpp  Aux_Check_Restrict.cpp  Aux_Error.cpp  Aux_GetCPUInfo.cpp \
                Aux_GetMemInfo.cpp  Aux_Message.cpp  Aux_Record_PatchCount.cpp  Aux_TakeNote.cpp  Aux_Timing.cpp \
                Aux_Check_MemFree.cpp  Aux_Record_Performance.cpp  Aux_CheckFileExist.cpp  Aux_Array.cpp \
-               Aux_Record_User.cpp  Aux_Record_CorrUnphy.cpp  Aux_SwapPointer.cpp  Aux_Check_NormalizePassive.cpp \
-               Aux_LoadTable.cpp  Aux_IsFinite.cpp  Aux_ComputeProfile.cpp  Aux_FindExtrema.cpp  Aux_PauseManually.cpp
+               Aux_Record_User.cpp  Aux_Record_CorrUnphy.cpp  Aux_Record_Center.cpp  Aux_SwapPointer.cpp  Aux_Check_NormalizePassive.cpp \
+               Aux_LoadTable.cpp  Aux_IsFinite.cpp  Aux_ComputeProfile.cpp  Aux_FindExtrema.cpp  Aux_FindWeightedAverageCenter.cpp  Aux_PauseManually.cpp
 
 CPU_FILE    += CPU_FluidSolver.cpp  Flu_AdvanceDt.cpp  Flu_Prepare.cpp  Flu_Close.cpp  Flu_FixUp_Flux.cpp \
                Flu_FixUp_Restrict.cpp  Flu_AllocateFluxArray.cpp  Flu_BoundaryCondition_User.cpp  Flu_ResetByUser.cpp \
@@ -120,20 +120,21 @@ vpath %.cpp    Main  Init  Refine  Fluid  Interpolation  Tables  Output  Miscell
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
 GPU_FILE    += CUFLU_dtSolver_HydroCFL.cu  CUFLU_FluidSolver_RTVD.cu  CUFLU_FluidSolver_MHM.cu  CUFLU_FluidSolver_CTU.cu \
-               GPU_EoS_Gamma.cu  GPU_EoS_User_Template.cu  GPU_EoS_Isothermal.cu
+               GPU_EoS_Gamma.cu  GPU_EoS_User_Template.cu  GPU_EoS_Isothermal.cu  GPU_EoS_GammaCR.cu  GPU_EoS_TaubMathews.cu
 
 CPU_FILE    += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_MHM.cpp  CPU_FluidSolver_CTU.cpp \
                CPU_Shared_DataReconstruction.cpp  CPU_Shared_FluUtility.cpp  CPU_Shared_ComputeFlux.cpp \
                CPU_Shared_FullStepUpdate.cpp  CPU_Shared_RiemannSolver_Exact.cpp  CPU_Shared_RiemannSolver_Roe.cpp \
                CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_RiemannSolver_HLLC.cpp  CPU_Shared_DualEnergy.cpp \
-               CPU_dtSolver_HydroCFL.cpp  CPU_EoS_Gamma.cpp  CPU_EoS_User_Template.cpp  CPU_EoS_Isothermal.cpp
+               CPU_dtSolver_HydroCFL.cpp  CPU_EoS_Gamma.cpp  CPU_EoS_User_Template.cpp  CPU_EoS_Isothermal.cpp \
+               CPU_EoS_GammaCR.cpp  CPU_EoS_TaubMathews.cpp
 
 CPU_FILE    += Hydro_Init_ByFunction_AssignData.cpp  Hydro_Aux_Check_Negative.cpp \
                Hydro_BoundaryCondition_Reflecting.cpp  Hydro_BoundaryCondition_Outflow.cpp \
                Hydro_BoundaryCondition_Diode.cpp  EoS_Init.cpp  EoS_End.cpp
 
-vpath %.cu     Model_Hydro/GPU_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal
-vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal
+vpath %.cu     Model_Hydro/GPU_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal  EoS/GammaCR  EoS/TaubMathews
+vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal  EoS/GammaCR  EoS/TaubMathews
 
 ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
 GPU_FILE    += CUPOT_HydroGravitySolver.cu  CUPOT_dtSolver_HydroGravity.cu
@@ -166,10 +167,11 @@ else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
 GPU_FILE    += CUFLU_ELBDMSolver_FD.cu  CUFLU_ELBDMSolver_GramFE_FFT.cu  CUFLU_ELBDMSolver_GramFE_MATMUL.cu  CUFLU_ELBDMSolver_HJ.cu \
                CUAPI_SendGramFEMatrix2GPU.cu
 
-CPU_FILE    += CPU_ELBDMSolver_FD.cpp  CPU_ELBDMSolver_FFT.cpp  CPU_ELBDMSolver_GramFE_FFT.cpp  CPU_ELBDMSolver_GramFE_MATMUL.cpp  CPU_ELBDMSolver_HJ.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
-               ELBDM_GetTimeStep_Fluid.cpp  ELBDM_GetTimeStep_Hybrid_CFL.cpp  ELBDM_Flag_EngyDensity.cpp  ELBDM_Flag_Interference.cpp  ELBDM_Flag_Spectral.cpp  ELBDM_UnwrapPhase.cpp \
-               ELBDM_GetTimeStep_Phase.cpp  ELBDM_GetTimeStep_Hybrid_Velocity.cpp  ELBDM_HasWaveCounterpart.cpp  ELBDM_SetTaylor3Coeff.cpp  ELBDM_GramFE_EvolutionMatrix.cpp  ELBDM_RemoveMotionCM.cpp \
-               ELBDM_Aux_Record_Hybrid.cpp
+CPU_FILE    += CPU_ELBDMSolver_FD.cpp  CPU_ELBDMSolver_FFT.cpp  CPU_ELBDMSolver_GramFE_FFT.cpp  CPU_ELBDMSolver_GramFE_MATMUL.cpp \
+               CPU_ELBDMSolver_HJ.cpp  ELBDM_Init_ByFunction_AssignData.cpp  ELBDM_GetTimeStep_Fluid.cpp  ELBDM_GetTimeStep_Hybrid_CFL.cpp \
+               ELBDM_Flag_EngyDensity.cpp  ELBDM_Flag_Interference.cpp  ELBDM_Flag_Spectral.cpp  ELBDM_UnwrapPhase.cpp \
+               ELBDM_GetTimeStep_Phase.cpp  ELBDM_GetTimeStep_Hybrid_Velocity.cpp  ELBDM_HasWaveCounterpart.cpp  ELBDM_SetTaylor3Coeff.cpp \
+               ELBDM_GramFE_EvolutionMatrix.cpp  ELBDM_RemoveMotionCM.cpp  ELBDM_Aux_Record_Hybrid.cpp
 
 vpath %.cu     Model_ELBDM/GPU_ELBDM
 vpath %.cpp    Model_ELBDM/CPU_ELBDM  Model_ELBDM
@@ -256,7 +258,7 @@ CPU_FILE    += Buf_AllocateBufferPatch.cpp  Buf_AllocateBufferPatch_Base.cpp  Bu
                Buf_ResetBufferFlux.cpp
 
 CPU_FILE    += MPI_ExchangeBoundaryFlag.cpp  MPI_ExchangeBufferPosition.cpp  MPI_ExchangeData.cpp \
-               Init_MPI.cpp  MPI_Exit.cpp
+               Init_MPI.cpp  MPI_Exit.cpp  MPI_Alltoallv_GAMER.cpp
 
 CPU_FILE    += Output_BoundaryFlagList.cpp  Output_ExchangeDataPatchList.cpp  Output_ExchangeFluxPatchList.cpp \
                Output_ExchangePatchMap.cpp
@@ -340,6 +342,35 @@ CPU_FILE    += FB_AdvanceDt.cpp  FB_Init.cpp  FB_End.cpp  FB_Auxiliary.cpp  FB_U
 
 vpath %.cpp    Feedback  Feedback/User_Template  Feedback/SNe
 endif # FEEDBACK
+
+
+# cosmic-ray source files (included only if "COSMIC_RAY" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DCOSMIC_RAY, $(SIMU_OPTION))" "-DCOSMIC_RAY"
+CPU_FILE    += CPU_CosmicRay.cpp
+
+GPU_FILE    += CUFLU_CosmicRay.cu
+endif # COSMIC_RAY
+
+
+# microphysics source files
+# ------------------------------------------------------------------------------------
+CPU_FILE    += Microphysics_Init.cpp  Microphysics_End.cpp
+
+vpath %.cpp    Microphysics
+vpath %.cu     Microphysics
+
+
+# cosmic-ray diffusion source files (included only if "CR_DIFFUSION" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DCR_DIFFUSION, $(SIMU_OPTION))" "-DCR_DIFFUSION"
+CPU_FILE    += CPU_CR_AddDiffuseFlux.cpp  CPU_CR_ComputeDiffusivity.cpp
+
+GPU_FILE    += CUFLU_CR_AddDiffuseFlux.cu  CUFLU_CR_ComputeDiffusivity.cu
+
+vpath %.cpp    Microphysics/CosmicRayDiffusion
+vpath %.cu     Microphysics/CosmicRayDiffusion
+endif # CR_DIFFUSION
 
 
 # test problem source files
@@ -621,6 +652,7 @@ GRACKLE_PATH := $(strip $(GRACKLE_PATH))
 GSL_PATH     := $(strip $(GSL_PATH))
 LIBYT_PATH   := $(strip $(LIBYT_PATH))
 CUFFTDX_PATH := $(strip $(CUFFTDX_PATH))
+
 
 # implicit rules (do NOT modify the order of the following rules)
 # -------------------------------------------------------------------------------

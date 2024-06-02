@@ -14,13 +14,13 @@
 
 
 # simulation scale
-BOX_SIZE                      8.0        # box size along the longest side (in Mpc/h if COMOVING is adopted)
-NX0_TOT_X                     128        # number of base-level cells along x
-NX0_TOT_Y                     128        # number of base-level cells along y
-NX0_TOT_Z                     16         # number of base-level cells along z
-OMP_NTHREAD                   1           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
-END_T                        -1           # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
-END_STEP                      2          # end step (<0=auto -> must be set by test problems or restart) [-1]
+BOX_SIZE                      8.0         # box size along the longest side (in Mpc/h if COMOVING is adopted)
+NX0_TOT_X                     128         # number of base-level cells along x
+NX0_TOT_Y                     128         # number of base-level cells along y
+NX0_TOT_Z                     16          # number of base-level cells along z
+OMP_NTHREAD                   1           # number of OpenMP threads (<=0=auto) [-1] ##OPENMP ONLY##
+END_T                        -1.0         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
+END_STEP                      2           # end step (<0=auto -> must be set by test problems or restart) [-1]
 
 
 # test problems
@@ -45,9 +45,10 @@ OPT__BC_FLU_ZP                4           # fluid boundary condition at the +z f
 DT__FLUID                    -1.0         # dt criterion: fluid solver CFL factor (<0=auto) [-1.0]
 DT__FLUID_INIT               -1.0         # dt criterion: DT__FLUID at the first step (<0=auto) [-1.0]
 DT__PHASE                     0.0         # dt criterion: phase rotation safety factor (0=off) [0.0] ##ELBDM ONLY##
-DT__HYBRID_CFL               -1.0         # dt criterion: hybrid solver CFL factor (<0=auto) (diffusion) [-1.0] ## HYBRID ELBDM ONLY##
-DT__HYBRID_CFL_INIT          -1.0         # dt criterion: DT__HYBRID_CFL in the first step (<0=auto) [-1.0] ## HYBRID ELBDM ONLY##
-DT__HYBRID_VELOCITY          -1.0         # dt criterion: hybrid solver CFL factor (<0=auto) (Hamilton-Jacobi) [-1.0] ## HYBRID ELBDM ONLY##
+DT__HYBRID_CFL               -1.0         # dt criterion: hybrid solver CFL factor (<0=auto) (diffusion) [-1.0] ## ELBDM_HYBRID ONLY##
+DT__HYBRID_CFL_INIT          -1.0         # dt criterion: DT__HYBRID_CFL in the first step (<0=auto) [-1.0] ## ELBDM_HYBRID ONLY##
+DT__HYBRID_VELOCITY          -1.0         # dt criterion: hybrid solver CFL factor (<0=auto) (Hamilton-Jacobi) [-1.0] ## ELBDM_HYBRID ONLY##
+DT__HYBRID_VELOCITY_INIT     -1.0         # dt criterion: DT__HYBRID_VELOCITY in the first step (<0=auto) [-1.0] ## ELBDM_HYBRID ONLY##
 DT__SYNC_PARENT_LV            0.1         # dt criterion: allow dt to adjust by (1.0+DT__SYNC_PARENT) in order to synchronize
                                           #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
 DT__SYNC_CHILDREN_LV          0.1         # dt criterion: allow dt to adjust by (1.0-DT__SYNC_CHILDREN) in order to synchronize
@@ -71,7 +72,7 @@ OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_
 OPT__FLAG_ENGY_DENSITY        0           # flag: energy density (Input_Flag_EngyDensity) [0] ##ELBDM ONLY##
 OPT__FLAG_LOHNER_DENS         0           # flag: Lohner for mass density   (Input__Flag_Lohner) [0] ##BOTH HYDRO AND ELBDM##
 OPT__FLAG_LOHNER_FORM         2           # form of Lohner: (1=FLASH-1, 2=FLASH-2, 3=form-invariant-1, 4=form-invariant-2) [2]
-OPT__FLAG_INTERFERENCE        0           # flag: interference (Input_Flag_Interference) [0] ##HYBRID ELBDM ONLY##
+OPT__FLAG_INTERFERENCE        0           # flag: interference (Input_Flag_Interference) [0] ##ELBDM_HYBRID ONLY##
 OPT__FLAG_USER                0           # flag: user-defined (Input__Flag_User) -> edit "Flag_User.cpp" [0]
 OPT__FLAG_REGION              0           # flag: specify the regions **allowed** to be refined -> edit "Flag_Region.cpp" [0]
 OPT__NO_FLAG_NEAR_BOUNDARY    0           # flag: disallow refinement near the boundaries [0]
@@ -120,7 +121,7 @@ OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2
 INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
 
 
-# interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar, 8=Spectral (##ELBDM & SUPPORT_SPECTRAL_INT ONLY ##))
+# interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar, 8=Spectral (##ELBDM & SUPPORT_SPECTRAL_INT ONLY##))
 
 OPT__INT_TIME                 0           # perform "temporal" interpolation for OPT__DT_LEVEL == 2/3 [1]
 OPT__INT_PHASE                1           # interpolation on phase (does not support MinMod-1D) [1] ##ELBDM ONLY##
@@ -132,7 +133,7 @@ OPT__RHO_INT_SCHEME           4           # ghost-zone mass density for the Pois
 OPT__GRA_INT_SCHEME           5           # ghost-zone potential for the gravity solver (for UNSPLIT_GRAVITY as well) [5]
 OPT__REF_POT_INT_SCHEME       5           # newly allocated potential during grid refinement [5]
 INT_MONO_COEFF                2.0         # coefficient for ensuring the interpolation monotonicity (1.0~4.0) [2.0]
-SPEC_INT_TABLE_PATH           ./          # path to tables for spectral interpolation ##ELBDM & SUPPORT_SPECTRAL_INT ONLY ##
+SPEC_INT_TABLE_PATH           ./          # path to tables for spectral interpolation ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
 
 
 # data dump
@@ -142,7 +143,7 @@ OPT__OUTPUT_USER              0           # output the user-specified data -> ed
 OPT__OUTPUT_PAR_TEXT          0           # output the particle text file [0] ##PARTICLE ONLY##
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
-OPT__OUTPUT_POT               0           # output gravitational potential [0] ##OPT__OUTPUT_TOTAL ONLY##
+OPT__OUTPUT_POT               1           # output gravitational potential [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_PAR_DENS          1           # output the particle or total mass density on grids:
                                           # (0=off, 1=particle mass density, 2=total mass density) [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3

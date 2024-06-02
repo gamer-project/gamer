@@ -143,7 +143,9 @@ static void Src_User_Template( real fluid[], const real B[],
    Emag  = (real)0.0;
 #  endif
    Eint  = Hydro_Con2Eint( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                           CheckMinEint_Yes, MinEint, Emag );
+                           CheckMinEint_Yes, MinEint, Emag, EoS->GuessHTilde_CPUPtr,
+                           EoS->HTilde2Temp_CPUPtr, EoS->AuxArray_Flt, EoS->AuxArray_Int,
+                           EoS->Table );
    Enth  = fluid[ENGY] - Eint;
    Eint -= fluid[DENS]*CoolingRate*dt;
 
@@ -269,11 +271,6 @@ void Src_SetConstMemory_User_Template( const double AuxArray_Flt[], const int Au
 
 
 #ifndef __CUDACC__
-
-// function pointer
-extern void (*Src_WorkBeforeMajorFunc_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                                                 double AuxArray_Flt[], int AuxArray_Int[] );
-extern void (*Src_End_User_Ptr)();
 
 //-----------------------------------------------------------------------------------------
 // Function    :  Src_Init_User_Template

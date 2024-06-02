@@ -7,7 +7,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_Init_Refine
-// Description :  Refine patches on level "FaLv" to create patches on level "FaLv"+1
+// Description :  Refine patches on level FaLv to create patches on level FaLv+1
 //
 // Note        :  1. Invoked by LB_Init_ByFunction()
 //                2. Only apply to real patches
@@ -36,7 +36,7 @@ void LB_Init_Refine( const int FaLv, const bool AllocData )
       Aux_Error( ERROR_INFO, "number of son patches on level %d = %d != 0 !!\n", SonLv, amr->num[SonLv] );
 
 
-// loop over all **real** patches on level "FaLv"
+// loop over all **real** patches on level FaLv
    for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
    {
       if ( amr->patch[0][FaLv][FaPID]->flag )
@@ -72,7 +72,7 @@ void LB_Init_Refine( const int FaLv, const bool AllocData )
             amr->use_wave_flag[SonLv] = true;
          }
 
-#        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#        endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
       } // if ( amr->patch[0][FaLv][FaPID]->flag )
    } // for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
@@ -82,7 +82,7 @@ void LB_Init_Refine( const int FaLv, const bool AllocData )
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 // ensure that all MPI ranks see the same use_wave_flag
    Sync_UseWaveFlag( SonLv );
-#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  endif
 
 } // FUNCTION : LB_Init_Refine
 
