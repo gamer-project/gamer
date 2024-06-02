@@ -25,7 +25,9 @@ namespace gfei_gsl = gsl_single_precision;
 #endif
 
 // accuracy for matrix multiplication in precomputed interpolation (PI)
-#ifdef FLOAT8
+// also requires double precision since interpolation matrices have high condition numbers
+#define PI_GSL_FLOAT8
+#ifdef PI_GSL_FLOAT8
 namespace pi_gsl   = gsl_double_precision;
 #else
 namespace pi_gsl   = gsl_single_precision;
