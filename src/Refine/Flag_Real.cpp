@@ -67,7 +67,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const IntScheme_t Interf_IntScheme   = INT_CQUAD;             // interpolation scheme for interference criterion
 #  endif
 
-// Spectral refinement criterion
+// spectral refinement criterion
    const int  Spectral_NGhost           = FLU_GHOST_SIZE;        // number of ghost cells
    const int  Spectral_NCell            = FLU_NXT;               // prepare patch group
    const IntScheme_t Spectral_IntScheme = INT_CQUAD;             // interpolation scheme
@@ -252,14 +252,14 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 //       prepare the ghost-zone data for interference criterion
 #        if ( MODEL == ELBDM )
-         if ( Spectral_NVar > 0 && lv < MAX_LEVEL )
+         if ( Spectral_NVar > 0 )
          {
             Prepare_PatchData( lv, Time[lv], Spectral_Var, NULL, Spectral_NGhost, NPG, &PID0, _REAL|_IMAG, _NONE,
                                Spectral_IntScheme, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
 
-//          evaluate the ratio of the GramFE extension masses and the physical wave function
-            Prepare_for_Spectral_Criterion(Spectral_Var, Spectral_Cond);
+//          evaluate the slope of the polynomial expansion
+            Prepare_for_Spectral_Criterion( Spectral_Var, Spectral_Cond );
          }
 #        endif
 
