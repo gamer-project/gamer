@@ -82,7 +82,7 @@ void Least_Squares_Regression(flag_spectral_float x[], flag_spectral_float y[], 
 void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
 {
 // set the stride to a small value to sample the wave function evenly
-   const size_t Stride    = 2;
+   const size_t Stride    = 1;
    const size_t GhostSize = 1;
    const size_t Size1D    = PS2 + 2 * GhostSize;
    const size_t MaxOrder  = 14;
@@ -130,7 +130,6 @@ void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond)
 
          Row[0][i] = Re1D[index];
          Row[1][i] = Im1D[index];
-         //Row[2][i] = SQR(Row[0][i]) + SQR(Row[1][i]);
       }
 
       for (int i = 0; i < MaxOrder; ++i)
