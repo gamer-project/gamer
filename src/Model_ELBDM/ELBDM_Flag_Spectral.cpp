@@ -111,9 +111,9 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
    Cond = -__FLT_MAX__;
 
 // iterate over 3 dimensions and sample the physical 2D arrays with a stride
-   for (size_t XYZ = 0; XYZ < 3; ++XYZ)
-   for (size_t k=GhostSize; k<Size1D-GhostSize; k+=Stride)
-   for (size_t j=GhostSize; j<Size1D-GhostSize; j+=Stride)
+   for ( size_t XYZ = 0; XYZ < 3; ++XYZ )
+   for ( size_t k=GhostSize; k<Size1D-GhostSize; k+=Stride )
+   for ( size_t j=GhostSize; j<Size1D-GhostSize; j+=Stride )
    {
 //    read one column of data from 3D block
       for (size_t i = 0; i < Size1D; ++i) {
@@ -122,13 +122,13 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
          switch ( XYZ )
          {
             case 0:
-               index = IDX321(k, j, i, Size1D, Size1D);
+               index = IDX321( k, j, i, Size1D, Size1D );
                break;
             case 1:
-               index = IDX321(k, i, j, Size1D, Size1D);
+               index = IDX321( k, i, j, Size1D, Size1D );
                break;
             case 2:
-               index = IDX321(i, k, j, Size1D, Size1D);
+               index = IDX321( i, k, j, Size1D, Size1D );
                break;
          }
 
