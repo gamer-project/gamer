@@ -154,6 +154,7 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
          Order[i] = log10(i + 1);
 
          for (int j = 0; j < NCoeff; ++j) {
+//          Double precision floor so that logarithm does not fail
             Coeff[j][i] = log10(abs(Coeff[j][i]) + 1e-16);
 //          Smoothly replace coefficients below ConvergenceThreshold with linear function using sigmoid
             Coeff[j][i] += 1/(1+exp(Coeff[j][i]-ConvergenceThreshold)) * LinearSlope * i;
