@@ -775,7 +775,7 @@ void PrecomputedInterpolationContext::InterpolateReal( const real *input, real *
 
 // define arrays in workspace
    pi_gsl::gsl_real* pi_gsl_input         = (pi_gsl::gsl_real*) workspace;
-   pi_gsl::gsl_real* pi_gsl_output        = input + nInput;
+   pi_gsl::gsl_real* pi_gsl_output        = pi_gsl_input + nInput;
 
 // convert input to matrix multiplication precision
    for (size_t i=0; i<nInput; ++i) {
