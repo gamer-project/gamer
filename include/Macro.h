@@ -435,6 +435,7 @@
 // number of built-in particle attributes
 // (1) mass, position*3, velocity*3, time, and type
 #  define PAR_NATT_FLT_BUILTIN0   9
+#  define PAR_NATT_INT_BUILTIN0   0
 
 // acceleration*3 when STORE_PAR_ACC is adopted
 # if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
@@ -452,21 +453,28 @@
 
 // **total** number of built-in particle attributes
 #  define PAR_NATT_FLT_BUILTIN    ( PAR_NATT_FLT_BUILTIN0 + PAR_NATT_FLT_BUILTIN1 + PAR_NATT_FLT_BUILTIN2 )
+#  define PAR_NATT_INT_BUILTIN    ( PAR_NATT_INT_BUILTIN0 )
 
 
 // number of particle attributes that we do not want to store on disk (currently time + acceleration*3)
 #  define PAR_NATT_FLT_UNSTORED   ( 1 + PAR_NATT_FLT_BUILTIN1 )
 #  define PAR_NATT_FLT_STORED     ( PAR_NATT_FLT_TOTAL - PAR_NATT_FLT_UNSTORED )
+#  define PAR_NATT_INT_UNSTORED   ( 0 )
+#  define PAR_NATT_INT_STORED     ( PAR_NATT_INT_TOTAL - PAR_NATT_INT_UNSTORED )
 
 
-// define PAR_NATT_FLT_USER if not set in the Makefile
+// define PAR_NATT_FLT/INT_USER if not set in the Makefile
 # ifndef PAR_NATT_FLT_USER
 #  define PAR_NATT_FLT_USER       0
+# endif
+# ifndef PAR_NATT_INT_USER
+#  define PAR_NATT_INT_USER       0
 # endif
 
 
 // total number of particle attributes (built-in + user-defined)
 #  define PAR_NATT_FLT_TOTAL      ( PAR_NATT_FLT_BUILTIN + PAR_NATT_FLT_USER )
+#  define PAR_NATT_INT_TOTAL      ( PAR_NATT_INT_BUILTIN + PAR_NATT_INT_USER )
 
 
 // indices of built-in particle attributes in Par->AttributeFlt[]
@@ -512,6 +520,7 @@
 #  define _PAR_ACC            ( _PAR_ACCX | _PAR_ACCY | _PAR_ACCZ )
 # endif
 #  define _PAR_FLT_TOTAL      (  ( 1L << PAR_NATT_FLT_TOTAL ) - 1L )
+#  define _PAR_INT_TOTAL      (  ( 1L << PAR_NATT_INT_TOTAL ) - 1L )
 
 // grid fields related to particles
 // --> note that _POTE = ( 1L << (NCOMP_TOTAL+NDERIVE) )
