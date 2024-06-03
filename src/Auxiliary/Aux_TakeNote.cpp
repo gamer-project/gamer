@@ -699,6 +699,9 @@ void Aux_TakeNote()
       fprintf( Note, "#define PAR_NATT_FLT_TOTAL     % d\n",      PAR_NATT_FLT_TOTAL    );
       fprintf( Note, "#define PAR_NATT_FLT_USER      % d\n",      PAR_NATT_FLT_USER     );
       fprintf( Note, "#define PAR_NATT_FLT_STORED    % d\n",      PAR_NATT_FLT_STORED   );
+      fprintf( Note, "#define PAR_NATT_INT_TOTAL     % d\n",      PAR_NATT_INT_TOTAL    );
+      fprintf( Note, "#define PAR_NATT_INT_USER      % d\n",      PAR_NATT_INT_USER     );
+      fprintf( Note, "#define PAR_NATT_INT_STORED    % d\n",      PAR_NATT_INT_STORED   );
       fprintf( Note, "#define PAR_NTYPE              % d\n",      PAR_NTYPE             );
 #     endif
       fprintf( Note, "#define MAX_STRING             % d\n",      MAX_STRING            );
