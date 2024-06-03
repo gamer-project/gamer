@@ -52,7 +52,8 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                RemoveCell              : remove particles RemoveCell-base-level-cells away from the boundary
 //                                          (for non-periodic BC only)
 //                GhostSize               : Number of ghost zones required for interpolation scheme
-//                AttributeFlt            : Pointer arrays to different particle float attributes (Mass, Pos, Vel, ...)
+//                AttributeFlt            : Pointer arrays to different particle float   attributes (Mass, Pos, Vel, ...)
+//                AttributeInt            : Pointer arrays to different particle integer attributes (Type)
 //                InactiveParList         : List of inactive particle IDs
 //                R2B_Real_NPatchTotal    : see R2B_Buff_NPatchTotal
 //                R2B_Real_NPatchEachRank : see R2B_Buff_NPatchEachRank
@@ -130,6 +131,7 @@ struct Particle_t
    int           GhostSize;
    int           GhostSizeTracer;
    real_par     *AttributeFlt[PAR_NATT_FLT_TOTAL];
+   long         *AttributeInt[PAR_NATT_INT_TOTAL];
    long         *InactiveParList;
 
 #  ifdef LOAD_BALANCE
@@ -203,6 +205,8 @@ struct Particle_t
 
       for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   AttributeFlt[v] = NULL;
 
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   AttributeInt[v] = NULL;
+
       InactiveParList = NULL;
 
 #     ifdef LOAD_BALANCE
@@ -264,6 +268,9 @@ struct Particle_t
       for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
          if ( AttributeFlt[v] != NULL )   free( AttributeFlt[v] );
 
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+         if ( AttributeInt[v] != NULL )   free( AttributeInt[v] );
+
       if ( InactiveParList != NULL )   free( InactiveParList );
 
 #     ifdef LOAD_BALANCE
@@ -324,6 +331,11 @@ struct Particle_t
       {
          if ( AttributeFlt[v] != NULL )   free( AttributeFlt[v] );
          AttributeFlt[v] = (real_par*)malloc( ParListSize*sizeof(real_par) );
+      }
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+      {
+         if ( AttributeInt[v] != NULL )   free( AttributeInt[v] );
+         AttributeInt[v] = (long*)malloc( ParListSize*sizeof(long) );
       }
 
       if ( InactiveParList != NULL )   free( InactiveParList );
