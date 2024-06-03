@@ -167,7 +167,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
          ParID = ParList[p];
 
 //       2-1. store particle data into the MPI send buffer
-         for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   *SendPtrFlt++ = amr->Par->AttributeFlt[v][ParID];
+         for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   *SendPtr_Flt++ = amr->Par->AttributeFlt[v][ParID];
 
 //       2-2. remove this particle from the particle repository of this rank
          amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_MPI );

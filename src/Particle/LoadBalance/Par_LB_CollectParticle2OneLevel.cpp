@@ -376,11 +376,11 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, c
 
 // 2. send data to all ranks
 // these arrays will be allocated by Par_LB_SendParticleData() (using call by reference) and must be free'd later
-// --> except for RecvBuf_ParDataEachPatch, which is just a pointer to the MPI recv buffer declared in LB_GetBufferData
+// --> except for RecvBuf_ParFltDataEachPatch, which is just a pointer to the MPI recv buffer declared in LB_GetBufferData
    int      *RecvBuf_NPatchEachRank   = NULL;
    int      *RecvBuf_NParEachPatch    = NULL;
    long     *RecvBuf_LBIdxEachPatch   = NULL;
-   real_par *RecvBuf_ParDataEachPatch = NULL;
+   real_par *RecvBuf_ParFltDataEachPatch = NULL;
 
 // 2-1. exchange data
    const bool Exchange_NPatchEachRank_Yes = true;
@@ -395,7 +395,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, c
 // note that Par_LB_SendParticleData will also return the total number of patches and particles received (using call by reference)
    Par_LB_SendParticleData( NAttFlt, SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachPatch,
                             SendBuf_ParFltDataEachPatch, NSendParTotal, RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch,
-                            RecvBuf_LBIdxEachPatch, RecvBuf_ParDataEachPatch, NRecvPatchTotal, NRecvParTotal,
+                            RecvBuf_LBIdxEachPatch, RecvBuf_ParFltDataEachPatch, NRecvPatchTotal, NRecvParTotal,
                             Exchange_NPatchEachRank_Yes, Exchange_LBIdxEachRank_Yes, Exchange_ParDataEachRank,
                             Timer[0], Timer_Comment );
 
@@ -482,7 +482,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, c
 // 3-4. store the received particle data
 // --> currently we do not implement OpenMP here since different received patches at lv>FaLv may map to the same patch at FaLv
 // --> one cannot naively parallelize the "for (int t=0; t<NRecvPatchTotal; t++)" loop
-   const real_par *RecvPtr = RecvBuf_ParDataEachPatch;
+   const real_par *RecvPtr_Flt = RecvBuf_ParFltDataEachPatch;
    int NPar_Copy_Old;
 
    if ( !JustCountNPar )
@@ -511,7 +511,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, c
 #        endif
 
          for (int v=0; v<NAttFlt; v++)
-            amr->patch[0][FaLv][FaPID_Match]->ParAttFlt_Copy[ FltAttIntIdx[v] ][p] = *RecvPtr++;
+            amr->patch[0][FaLv][FaPID_Match]->ParAttFlt_Copy[ FltAttIntIdx[v] ][p] = *RecvPtr_Flt++;
 
 #        ifdef DEBUG_PARTICLE
 //       we do not transfer inactive particles

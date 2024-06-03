@@ -948,7 +948,7 @@ void Output_DumpData_Total( const char *FileName )
 
 
 // output particle data (one attribute at a time to avoid creating holes in the file)
-   const long ParDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(real);
+   const long ParFltDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(real);
 
    long NParInBuf, ParID, FileOffset_ThisVar;
    int  NParThisPatch;
@@ -961,7 +961,7 @@ void Output_DumpData_Total( const char *FileName )
          File = fopen( FileName, "ab" );
 
 //       set file position indicator to the end of the current file and check whether it's consistent with expectation
-         FileOffset_ThisVar = FileOffset_Particle + ParDataSize1v*v + GParID_Offset*sizeof(real);
+         FileOffset_ThisVar = FileOffset_Particle + ParFltDataSize1v*v + GParID_Offset*sizeof(real);
          NParInBuf          = 0;
 
          fseek( File, 0, SEEK_END );

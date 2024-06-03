@@ -577,7 +577,7 @@ void Init_ByRestart()
 // e. load particles
 // =================================================================================================
 #  ifdef PARTICLE
-   const long ParDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(real_par);
+   const long ParFltDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(real_par);
 
    long  *NewParList     = new long [MaxNParInOnePatch];
    real_par **ParFltBuf  = NULL;
@@ -635,7 +635,7 @@ void Init_ByRestart()
 //             load one particle attribute at a time
                for (int v=0; v<PAR_NATT_FLT_STORED; v++)
                {
-                  fseek( File, FileOffset_Particle + v*ParDataSize1v + GParID*sizeof(real_par), SEEK_SET );
+                  fseek( File, FileOffset_Particle + v*ParFltDataSize1v + GParID*sizeof(real_par), SEEK_SET );
 
 //                using ParFltBuf[v] here is safe since it's NOT called when NParThisPatch == 0
                   fread( ParFltBuf[v], sizeof(real_par), NParThisPatch, File );

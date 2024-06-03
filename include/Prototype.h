@@ -696,7 +696,7 @@ void Par_PredictPos( const long NPar, const long *ParList, real_par *ParPosX, re
 void Par_Init_Attribute();
 void Par_AddParticleAfterInit( const long NNewPar, real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL] );
 void Par_ScatterParticleData( const long NPar_ThisRank, const long NPar_AllRank, const long FltAttBitIdx,
-                              real_par *Data_Send[PAR_NATT_FLT_TOTAL], real_par *Data_Recv[PAR_NATT_FLT_TOTAL] );
+                              real_par *Data_Send_Flt[PAR_NATT_FLT_TOTAL], real_par *Data_Recv_Flt[PAR_NATT_FLT_TOTAL] );
 void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
                             const double _dh, const int AttrSize3D, const real *Attr,
                             const int NPar, real_par *InterpParPos[3],
@@ -719,9 +719,9 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
                                           const int Recv_NPatchTotal, const int *Recv_PIDList, int *Recv_NPatchEachRank,
                                           Timer_t *Timer, const char *Timer_Comment );
 void Par_LB_SendParticleData( const int NParAttFlt, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
-                              long *SendBuf_LBIdxEachPatch, real_par *SendBuf_ParDataEachPatch, const long NSendParTotal,
+                              long *SendBuf_LBIdxEachPatch, real_par *SendBuf_ParFltDataEachPatch, const long NSendParTotal,
                               int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
-                              real_par *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, long &NRecvParTotal,
+                              real_par *&RecvBuf_ParFltDataEachPatch, int &NRecvPatchTotal, long &NRecvParTotal,
                               const bool Exchange_NPatchEachRank, const bool Exchange_LBIdxEachRank,
                               const bool Exchange_ParDataEachRank, Timer_t *Timer, const char *Timer_Comment );
 void Par_LB_RecordExchangeParticlePatchID( const int MainLv );
