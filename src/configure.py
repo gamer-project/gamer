@@ -538,7 +538,13 @@ def load_arguments():
     parser.add_argument( "--par_attribute_flt", type=int, metavar="INTEGER", gamer_name="PAR_NATT_FLT_USER",
                          default=0,
                          depend={"particle":True},
-                         help="Set the number of user-defined particle attributes.\n"
+                         help="Set the number of user-defined particle float attributes.\n"
+                       )
+
+    parser.add_argument( "--par_attribute_int", type=int, metavar="INTEGER", gamer_name="PAR_NATT_INT_USER",
+                         default=0,
+                         depend={"particle":True},
+                         help="Set the number of user-defined particle integer attributes.\n"
                        )
 
     parser.add_argument( "--double_par", type=str2bool, metavar="BOOLEAN", gamer_name="FLOAT8_PAR",
