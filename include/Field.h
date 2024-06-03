@@ -94,6 +94,7 @@ SET_GLOBAL( char MagLabel[NCOMP_MAG][MAX_STRING] );
 #endif
 #ifdef PARTICLE
 SET_GLOBAL( char ParAttFltLabel[PAR_NATT_FLT_TOTAL][MAX_STRING] );
+SET_GLOBAL( char ParAttIntLabel[PAR_NATT_INT_TOTAL][MAX_STRING] );
 #endif
 
 
