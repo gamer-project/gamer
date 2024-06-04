@@ -1661,6 +1661,12 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__CK_REFINE                 % d\n",      OPT__CK_REFINE            );
       fprintf( Note, "OPT__CK_PROPER_NESTING         % d\n",      OPT__CK_PROPER_NESTING    );
       fprintf( Note, "OPT__CK_CONSERVATION           % d\n",      OPT__CK_CONSERVATION      );
+      if ( OPT__CK_CONSERVATION )
+      {
+      fprintf( Note, "   ANGMOM_ORIGIN_X             % 14.7e\n",  ANGMOM_ORIGIN_X           );
+      fprintf( Note, "   ANGMOM_ORIGIN_Y             % 14.7e\n",  ANGMOM_ORIGIN_Y           );
+      fprintf( Note, "   ANGMOM_ORIGIN_Z             % 14.7e\n",  ANGMOM_ORIGIN_Z           );
+      }
       fprintf( Note, "OPT__CK_NORMALIZE_PASSIVE      % d\n",      OPT__CK_NORMALIZE_PASSIVE );
       fprintf( Note, "OPT__CK_RESTRICT               % d\n",      OPT__CK_RESTRICT          );
       fprintf( Note, "OPT__CK_FINITE                 % d\n",      OPT__CK_FINITE            );
