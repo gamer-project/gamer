@@ -309,7 +309,7 @@ void Aux_Check_Conservation( const char *comment )
                const real GradR_Y = _dh2*( Flu_ELBDM[t][0][k ][jp][i ] - Flu_ELBDM[t][0][k ][jm][i ] );
                const real GradR_Z = _dh2*( Flu_ELBDM[t][0][kp][j ][i ] - Flu_ELBDM[t][0][km][j ][i ] );
 
-//             compute gradient of imaginary part dR/dx
+//             compute gradient of imaginary part dI/dx
                const real GradI_X = _dh2*( Flu_ELBDM[t][1][k ][j ][ip] - Flu_ELBDM[t][1][k ][j ][im] );
                const real GradI_Y = _dh2*( Flu_ELBDM[t][1][k ][jp][i ] - Flu_ELBDM[t][1][k ][jm][i ] );
                const real GradI_Z = _dh2*( Flu_ELBDM[t][1][kp][j ][i ] - Flu_ELBDM[t][1][km][j ][i ] );
