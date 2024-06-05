@@ -848,6 +848,9 @@ def set_compile( paths, compilers, flags, kwargs ):
     # 3. Set the nvcc common flags
     # NOTE: `-G` may cause the GPU Poisson solver to fail
     if kwargs["debug"]: flags["NVCCFLAG_COM"] += "-g -Xptxas -v"
+    # enable C++ 17 support for ELBDM GPU Gram-Fourier extension scheme
+    if kwargs["model"] == "ELBDM" and kwargs["wave_scheme"] == "WAVE_GRAMFE" and kwargs["gramfe_scheme"] == "GRAMFE_FFT":
+        flags["NVCCFLAG_COM"] += "-std=c++17"
 
     # 4. Write flags to compile option dictionary.
     for key, val in flags.items():
@@ -900,7 +903,7 @@ def validation( paths, depends, constraints, **kwargs ):
             LOGGER.error("Passive scalar should not be negative. Current: %d"%kwargs["passive"])
             success = False
         if kwargs["gramfe_scheme"] == "GRAMFE_FFT" and not kwargs["gpu"] and kwargs["fftw"] not in ["FFTW2", "FFTW3"]:
-            color_print("ERROR: Must set <--fftw> when adopting <--gramfe_scheme=GRAMFE_FFT> and <--gpu=false>", BCOLOR.FAIL)
+            LOGGER.error("Must set <--fftw> when adopting <--gramfe_scheme=GRAMFE_FFT> and <--gpu=false>")
             success = False
 
     elif kwargs["model"] == "PAR_ONLY":
@@ -964,7 +967,7 @@ def warning( paths, **kwargs ):
 
     if kwargs["model"] == "ELBDM" and kwargs["gpu"] and kwargs["wave_scheme"] == "WAVE_GRAMFE" and kwargs["gramfe_scheme"] == "GRAMFE_FFT":
         if paths.setdefault("CUFFTDX_PATH", "") == "":
-            color_print("Warning: CUFFTDX_PATH is not given in %s.config when enabling <--gramfe_scheme=GRAMFE_FFT>."%(kwargs["machine"]), BCOLOR.WARNING)
+            LOGGER.warning("CUFFTDX_PATH is not given in %s.config when enabling <--gramfe_scheme=GRAMFE_FFT>."%(kwargs["machine"]))
 
     return
 
