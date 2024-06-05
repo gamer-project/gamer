@@ -1,4 +1,4 @@
-# Level      Number of patches to be preallocated
+# Level      Number_of_patches_to_be_preallocated
       0                                     10000
       1                                     10000
       2                                     10000
