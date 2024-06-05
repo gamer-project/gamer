@@ -1,15 +1,19 @@
 #include "GAMER.h"
 
 
+// global variable to store the ELBDM center-of-mass velocity
+// --> declared in "Model_ELBDM/ELBDM_RemoveMotionCM.cpp"
+#if ( MODEL == ELBDM )
+extern double ELBDM_Vcm[3];
+#endif
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_Check_Conservation
 // Description :  Verify the conservation laws
-//                --> HYDRO    : check mass, center of mass, momentum, angular momentum, and energy
-//                    ELBDM    : check mass, center of mass, and energy
-//                    PAR_ONLY : check mass, center of mass, momentum, angular momentum, and energy
-//                    Passive scalars
+//                --> Mass, center of mass, momentum, angular momentum, energy, passive scalars, ...
 //
 // Note        :  1. This check only works with the models HYDRO, ELBDM, and PAR_ONLY
 //                2. The values measured during the first function call will be taken as the reference values
@@ -22,6 +26,8 @@
 //
 // Parameter   :  comment : You can put the location where this function is invoked in this string
 //                          (not used currently)
+//
+// Return      :  Log file "Record__Conservation"
 //-------------------------------------------------------------------------------------------------------
 void Aux_Check_Conservation( const char *comment )
 {
@@ -30,13 +36,6 @@ void Aux_Check_Conservation( const char *comment )
    const char *FileName  = "Record__Conservation";
 
 
-// check
-#  ifdef COMOVING
-   Aux_Message( stderr, "WARNING : function \"%s\" is NOT supported in COMOVING !!\n", __FUNCTION__ );
-   OPT__CK_CONSERVATION = false;
-   return;
-#  endif
-
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM  &&  MODEL != PAR_ONLY )
    Aux_Message( stderr, "WARNING : function \"%s\" is supported only in the models HYDRO, ELBDM, and PAR_ONLY !!\n",
                 __FUNCTION__ );
@@ -44,8 +43,14 @@ void Aux_Check_Conservation( const char *comment )
    return;
 #  endif
 
+
    if ( FirstTime  &&  MPI_Rank == 0 )
    {
+//    check
+#     ifdef COMOVING
+      Aux_Message( stderr, "WARNING : function \"%s\" is NOT fully supported in COMOVING !! Only mass conservation check works !!\n", __FUNCTION__ );
+#     endif
+
       if ( Aux_CheckFileExist(FileName) )
          Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
    }
@@ -63,18 +68,16 @@ void Aux_Check_Conservation( const char *comment )
    const bool   CheckMinEint_No   = false;
 
 #  elif ( MODEL == ELBDM )
-   const int    NVar_NoPassive    = 5;    // 5: mass, kinetic/gravitational/self-interaction/total energies
+   const int    NVar_NoPassive    = 11;   // 11: mass, momentum (x/y/z), angular momentum (x/y/z), kinetic/gravitational/self-interaction/total energies
    const int    idx_etot          = NVar_NoPassive - 1;
    const bool   IntPhase_No       = false;
    const bool   DE_Consistency_No = false;
    const int    NGhost            = 1;    // number of ghost zones for calculating the gradient of wave function
    const int    Size_Flu          = PS1 + 2*NGhost;
    const int    NPG               = 1;
+   const double _Eta              = 1.0/ELBDM_ETA;
    const double _2Eta2            = 0.5/SQR(ELBDM_ETA);
    const IntScheme_t IntScheme    = INT_CQUAR;
-
-   real GradR[3], GradI[3], _dh2;
-   int  ip, im, jp, jm, kp, km;
 
    real (*Flu_ELBDM)[2][Size_Flu][Size_Flu][Size_Flu] = new real [NPG*8][2][Size_Flu][Size_Flu][Size_Flu];
 
@@ -118,7 +121,7 @@ void Aux_Check_Conservation( const char *comment )
       MagSg = amr->MagSg[lv];
 #     endif
 #     if ( MODEL == ELBDM )
-      _dh2  = 0.5/amr->dh[lv];
+      const real _dh2  = 0.5/amr->dh[lv];
 #     endif
 
 
@@ -129,11 +132,22 @@ void Aux_Check_Conservation( const char *comment )
          const real MinPres_No = -1.0;
          const real MinTemp_No = -1.0;
          const real MinEntr_No = -1.0;
+         long  TVar = -1.0;
 
-         Prepare_PatchData( lv, Time[lv], Flu_ELBDM[0][0][0][0], NULL, NGhost, NPG, &PID0, _REAL|_IMAG, _NONE,
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         if ( amr->use_wave_flag[lv] ) {
+#        endif
+         TVar = _REAL | _IMAG;
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         } else {
+         TVar = _DENS | _PHAS;
+         }
+#        endif
+
+         Prepare_PatchData( lv, Time[lv], Flu_ELBDM[0][0][0][0], NULL, NGhost, NPG, &PID0, TVar, _NONE,
                             IntScheme, INT_NONE, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                             MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
-#        endif
+#        endif // #if ( MODEL == ELBDM )
 
          for (int PID=PID0; PID<PID0+8; PID++)
          {
@@ -249,48 +263,119 @@ void Aux_Check_Conservation( const char *comment )
             for (int j=0; j<PATCH_SIZE; j++)
             for (int i=0; i<PATCH_SIZE; i++)
             {
-//             [0] mass
-               Fluid_lv[0] += amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
+               double Dens, Esel;
+#              ifdef GRAVITY
+               double Epot;
+#              endif
 
-//             [2] potential energy in ELBDM
+//             [0] mass
+               Dens         = amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
+               Fluid_lv[0] += Dens;
+
+//             [8] potential energy in ELBDM
+#              ifdef GRAVITY
 //             set potential energy to zero when enabling both OPT__SELF_GRAVITY and OPT__EXT_POT
 //             since the potential energy obtained here would be wrong anyway
 //             --> to avoid possible misinterpretation
-#              ifdef GRAVITY
-               if      (  OPT__SELF_GRAVITY  &&  !OPT__EXT_POT )
-               Fluid_lv[2] += 0.5*amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i]
-                                 *amr->patch[PotSg][lv][PID]->pot        [k][j][i];
-
-               else if ( !OPT__SELF_GRAVITY  &&   OPT__EXT_POT )
-               Fluid_lv[2] +=     amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i]
-                                 *amr->patch[PotSg][lv][PID]->pot        [k][j][i];
+               if      (  OPT__SELF_GRAVITY  &&  !OPT__EXT_POT )  Epot = 0.5*Dens*amr->patch[PotSg][lv][PID]->pot[k][j][i];
+               else if ( !OPT__SELF_GRAVITY  &&   OPT__EXT_POT )  Epot =     Dens*amr->patch[PotSg][lv][PID]->pot[k][j][i];
+               else                                               Epot = 0.0;
+               Fluid_lv[8] += Epot;
 #              endif
 
-//             [3] quartic self-interaction potential
+//             [9] quartic self-interaction potential in ELBDM
 #              ifdef QUARTIC_SELF_INTERACTION
-               Fluid_lv[3] += 0.5*ELBDM_LAMBDA*SQR( amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i] );
+               Esel         = 0.5*ELBDM_LAMBDA*SQR( amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i] );
+               Fluid_lv[9] += Esel;
 #              endif
             }
 
-//          [1] kinetic energy in ELBDM
             const int t = PID - PID0;
 
-            for (int k=NGhost; k<Size_Flu-NGhost; k++)   { kp = k+1; km = k-1;
-            for (int j=NGhost; j<Size_Flu-NGhost; j++)   { jp = j+1; jm = j-1;
-            for (int i=NGhost; i<Size_Flu-NGhost; i++)   { ip = i+1; im = i-1;
+            for (int k=NGhost; k<Size_Flu-NGhost; k++)   { const int kp = k+1; const int km = k-1;
+            for (int j=NGhost; j<Size_Flu-NGhost; j++)   { const int jp = j+1; const int jm = j-1;
+            for (int i=NGhost; i<Size_Flu-NGhost; i++)   { const int ip = i+1; const int im = i-1;
 
-               GradR[0] = _dh2*( Flu_ELBDM[t][0][k ][j ][ip] - Flu_ELBDM[t][0][k ][j ][im] );
-               GradR[1] = _dh2*( Flu_ELBDM[t][0][k ][jp][i ] - Flu_ELBDM[t][0][k ][jm][i ] );
-               GradR[2] = _dh2*( Flu_ELBDM[t][0][kp][j ][i ] - Flu_ELBDM[t][0][km][j ][i ] );
+               double MomX, MomY, MomZ, AngMomX, AngMomY, AngMomZ, Ekin;
 
-               GradI[0] = _dh2*( Flu_ELBDM[t][1][k ][j ][ip] - Flu_ELBDM[t][1][k ][j ][im] );
-               GradI[1] = _dh2*( Flu_ELBDM[t][1][k ][jp][i ] - Flu_ELBDM[t][1][k ][jm][i ] );
-               GradI[2] = _dh2*( Flu_ELBDM[t][1][kp][j ][i ] - Flu_ELBDM[t][1][km][j ][i ] );
+#              if ( ELBDM_SCHEME == ELBDM_HYBRID )
+               if ( amr->use_wave_flag[lv] ) {
+#              endif
+               const real R       = Flu_ELBDM[t][0][k][j][i];
+               const real I       = Flu_ELBDM[t][1][k][j][i];
 
-               Fluid_lv[1] += _2Eta2*( SQR(GradR[0]) + SQR(GradR[1]) + SQR(GradR[2]) +
-                                       SQR(GradI[0]) + SQR(GradI[1]) + SQR(GradI[2])   );
-            }}}
+//             compute gradient of real part dR/dx
+               const real GradR_X = _dh2*( Flu_ELBDM[t][0][k ][j ][ip] - Flu_ELBDM[t][0][k ][j ][im] );
+               const real GradR_Y = _dh2*( Flu_ELBDM[t][0][k ][jp][i ] - Flu_ELBDM[t][0][k ][jm][i ] );
+               const real GradR_Z = _dh2*( Flu_ELBDM[t][0][kp][j ][i ] - Flu_ELBDM[t][0][km][j ][i ] );
 
+//             compute gradient of imaginary part dI/dx
+               const real GradI_X = _dh2*( Flu_ELBDM[t][1][k ][j ][ip] - Flu_ELBDM[t][1][k ][j ][im] );
+               const real GradI_Y = _dh2*( Flu_ELBDM[t][1][k ][jp][i ] - Flu_ELBDM[t][1][k ][jm][i ] );
+               const real GradI_Z = _dh2*( Flu_ELBDM[t][1][kp][j ][i ] - Flu_ELBDM[t][1][km][j ][i ] );
+
+//             compute momentum in ELBDM wave scheme
+               MomX = _Eta*( R*GradI_X - I*GradR_X );
+               MomY = _Eta*( R*GradI_Y - I*GradR_Y );
+               MomZ = _Eta*( R*GradI_Z - I*GradR_Z );
+
+//             compute kinetic energy in ELBDM wave scheme
+               Ekin = _2Eta2*( SQR(GradR_X) + SQR(GradR_Y) + SQR(GradR_Z) +
+                               SQR(GradI_X) + SQR(GradI_Y) + SQR(GradI_Z)   );
+
+#              if ( ELBDM_SCHEME == ELBDM_HYBRID )
+               } else {
+               const double Dens    = Flu_ELBDM[t][DENS][k][j][i];
+
+//             compute bulk velocities v_i = (1/Eta)*dS/dx
+               const double Vbulk_X =  _Eta * ( _dh2*( Flu_ELBDM[t][PHAS][k ][j ][ip] - Flu_ELBDM[t][PHAS][k ][j ][im] ) );
+               const double Vbulk_Y =  _Eta * ( _dh2*( Flu_ELBDM[t][PHAS][k ][jp][i ] - Flu_ELBDM[t][PHAS][k ][jm][i ] ) );
+               const double Vbulk_Z =  _Eta * ( _dh2*( Flu_ELBDM[t][PHAS][kp][j ][i ] - Flu_ELBDM[t][PHAS][km][j ][i ] ) );
+
+//             compute thermal velocities v_r = (1/Eta)*dln(sqrt(rho))/dx = (1/Eta)*0.5*dln(rho)/dx
+               const double Vther_X =  _Eta * ( (real)0.5*_dh2*( LOG(Flu_ELBDM[t][DENS][k ][j ][ip]) - LOG(Flu_ELBDM[t][DENS][k ][j ][im]) ) );
+               const double Vther_Y =  _Eta * ( (real)0.5*_dh2*( LOG(Flu_ELBDM[t][DENS][k ][jp][i ]) - LOG(Flu_ELBDM[t][DENS][k ][jm][i ]) ) );
+               const double Vther_Z =  _Eta * ( (real)0.5*_dh2*( LOG(Flu_ELBDM[t][DENS][kp][j ][i ]) - LOG(Flu_ELBDM[t][DENS][km][j ][i ]) ) );
+
+//             compute momentum in ELBDM fluid scheme
+               MomX = Dens * Vbulk_X;
+               MomY = Dens * Vbulk_Y;
+               MomZ = Dens * Vbulk_Z;
+
+//             compute kinetic energy in ELBDM fluid scheme
+               Ekin = 0.5 * Dens * ( SQR(Vbulk_X) + SQR(Vbulk_Y) + SQR(Vbulk_Z) +
+                                     SQR(Vther_X) + SQR(Vther_Y) + SQR(Vther_Z)   );
+
+               } // if ( amr->use_wave_flag[lv] ) ... else ...
+#              endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+//             compute angular momentum in ELBDM
+               const double x  = x0 + (i-NGhost)*dh;
+               const double y  = y0 + (j-NGhost)*dh;
+               const double z  = z0 + (k-NGhost)*dh;
+
+               const double dX = x - ANGMOM_ORIGIN_X;
+               const double dY = y - ANGMOM_ORIGIN_Y;
+               const double dZ = z - ANGMOM_ORIGIN_Z;
+
+               AngMomX = dY*MomZ - dZ*MomY;
+               AngMomY = dZ*MomX - dX*MomZ;
+               AngMomZ = dX*MomY - dY*MomX;
+
+//             [1-3] momentum in ELBDM
+               Fluid_lv[1] += MomX;
+               Fluid_lv[2] += MomY;
+               Fluid_lv[3] += MomZ;
+
+//             [4-6] angular momentum in ELBDM
+               Fluid_lv[4] += AngMomX;
+               Fluid_lv[5] += AngMomY;
+               Fluid_lv[6] += AngMomZ;
+
+//             [7] kinetic energy in ELBDM
+               Fluid_lv[7] += Ekin;
+
+            }}} // i,j,k
 
 #           else
 #           error : ERROR : unsupported MODEL !!
@@ -320,7 +405,7 @@ void Aux_Check_Conservation( const char *comment )
       Fluid_lv[idx_etot] = Fluid_lv[7] + Fluid_lv[8] + Fluid_lv[9];
 #     endif
 #     elif ( MODEL == ELBDM )
-      Fluid_lv[idx_etot] = Fluid_lv[1] + Fluid_lv[2] + Fluid_lv[3];
+      Fluid_lv[idx_etot] = Fluid_lv[7] + Fluid_lv[8] + Fluid_lv[9];
 #     else
 #     error : ERROR : unsupported MODEL !!
 #     endif
@@ -331,7 +416,7 @@ void Aux_Check_Conservation( const char *comment )
          Fluid_lv[ NVar - 1 ] += Fluid_lv[ NVar_NoPassive + PassiveNorm_VarIdx[v] ];
 #     endif
 
-//    sum over all levels
+//    multiply by the cell volume and sum over all levels
       for (int v=0; v<NVar; v++)    Fluid_ThisRank[v] += Fluid_lv[v]*dv;
    } // for (int lv=0; lv<NLEVEL; lv++)
 
@@ -364,6 +449,22 @@ void Aux_Check_Conservation( const char *comment )
 // output
    if ( MPI_Rank == 0 )
    {
+//    calculate the sum of conserved quantities in different models
+#     if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
+      const double Mass_All    = Fluid_AllRank[       0] + Mass_Par;
+      const double MomX_All    = Fluid_AllRank[       1] + MomX_Par;
+      const double MomY_All    = Fluid_AllRank[       2] + MomY_Par;
+      const double MomZ_All    = Fluid_AllRank[       3] + MomZ_Par;
+      const double AngMomX_All = Fluid_AllRank[       4] + AngMomX_Par;
+      const double AngMomY_All = Fluid_AllRank[       5] + AngMomY_Par;
+      const double AngMomZ_All = Fluid_AllRank[       6] + AngMomZ_Par;
+      const double Etot_All    = Fluid_AllRank[idx_etot] + Etot_Par;    // for HYDRO/ELBDM, total energy is stored in the last element
+
+      const double CoMX_All    = ( Fluid_AllRank[0]*CoM_Gas[0] + Mass_Par*CoMX_Par )/Mass_All;
+      const double CoMY_All    = ( Fluid_AllRank[0]*CoM_Gas[1] + Mass_Par*CoMY_Par )/Mass_All;
+      const double CoMZ_All    = ( Fluid_AllRank[0]*CoM_Gas[2] + Mass_Par*CoMZ_Par )/Mass_All;
+#     endif // if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
+
 //    note that a variable length array cannot have static storage duration
       double AbsErr[NVar], RelErr[NVar];
 
@@ -390,19 +491,17 @@ void Aux_Check_Conservation( const char *comment )
          Epot_Par_Ref    =    Epot_Par;
          Etot_Par_Ref    =    Etot_Par;
 #        if ( MODEL != PAR_ONLY )
-         Mass_All_Ref    =   Fluid_Ref[0]                + Mass_Par_Ref;
-         CoMX_All_Ref    = ( Fluid_Ref[0]*CoM_Gas_Ref[0] + Mass_Par_Ref*CoMX_Par_Ref )/Mass_All_Ref;
-         CoMY_All_Ref    = ( Fluid_Ref[0]*CoM_Gas_Ref[1] + Mass_Par_Ref*CoMY_Par_Ref )/Mass_All_Ref;
-         CoMZ_All_Ref    = ( Fluid_Ref[0]*CoM_Gas_Ref[2] + Mass_Par_Ref*CoMZ_Par_Ref )/Mass_All_Ref;
-#        if   ( MODEL == HYDRO )
-         MomX_All_Ref    = Fluid_Ref[1       ] +    MomX_Par_Ref;
-         MomY_All_Ref    = Fluid_Ref[2       ] +    MomY_Par_Ref;
-         MomZ_All_Ref    = Fluid_Ref[3       ] +    MomZ_Par_Ref;
-         AngMomX_All_Ref = Fluid_Ref[4       ] + AngMomX_Par_Ref;
-         AngMomY_All_Ref = Fluid_Ref[5       ] + AngMomY_Par_Ref;
-         AngMomZ_All_Ref = Fluid_Ref[6       ] + AngMomZ_Par_Ref;
-#        endif
-         Etot_All_Ref    = Fluid_Ref[idx_etot] +    Etot_Par_Ref;
+         Mass_All_Ref    =    Mass_All;
+         CoMX_All_Ref    =    CoMX_All;
+         CoMY_All_Ref    =    CoMY_All;
+         CoMZ_All_Ref    =    CoMZ_All;
+         MomX_All_Ref    =    MomX_All;
+         MomY_All_Ref    =    MomY_All;
+         MomZ_All_Ref    =    MomZ_All;
+         AngMomX_All_Ref = AngMomX_All;
+         AngMomY_All_Ref = AngMomY_All;
+         AngMomZ_All_Ref = AngMomZ_All;
+         Etot_All_Ref    =    Etot_All;
 #        endif // #if ( MODEL != PAR_ONLY )
 #        endif // #ifdef MASSIVE_PARTICLES
       } // if ( FirstTime  &&  OPT__INIT != INIT_BY_RESTART )
@@ -431,10 +530,15 @@ void Aux_Check_Conservation( const char *comment )
 #        elif ( MODEL == ELBDM )
          Aux_Message( File, "# Mass_Psi        : total ELBDM mass\n" );
          Aux_Message( File, "# CoMX/Y/Z_Psi    : total ELBDM center of mass\n" );
+         Aux_Message( File, "# MomX/Y/Z_Psi    : total ELBDM momentum\n" );
+         Aux_Message( File, "# AngMomX/Y/Z_Psi : total ELBDM angular momentum\n" );
          Aux_Message( File, "# Ekin_Psi        : total ELBDM kinetic energy\n" );
          Aux_Message( File, "# Epot_Psi        : total ELBDM potential energy\n" );
          Aux_Message( File, "# Esel_Psi        : total ELBDM self-interaction energy\n" );
          Aux_Message( File, "# Etot_Psi        : total ELBDM energy\n" );
+
+#        else
+#        error : ERROR : unsupported MODEL !!
 #        endif
 
          if ( GetPassiveSum )
@@ -452,14 +556,12 @@ void Aux_Check_Conservation( const char *comment )
 #        if ( MODEL != PAR_ONLY )
          Aux_Message( File, "# Mass_All        : sum of the total HYDRO/ELBDM + PARTICLE mass\n" );
          Aux_Message( File, "# CoMX/Y/Z_All    : total HYDRO/ELBDM + PARTICLE center of mass\n" );
-#        if ( MODEL == HYDRO )
          Aux_Message( File, "# MomX_All        : sum of the total HYDRO/ELBDM + PARTICLE momentum x\n" );
          Aux_Message( File, "# MomY_All        : sum of the total HYDRO/ELBDM + PARTICLE momentum y\n" );
          Aux_Message( File, "# MomZ_All        : sum of the total HYDRO/ELBDM + PARTICLE momentum z\n" );
          Aux_Message( File, "# AngMomX_All     : sum of the total HYDRO/ELBDM + PARTICLE angular momentum x\n" );
          Aux_Message( File, "# AngMomY_All     : sum of the total HYDRO/ELBDM + PARTICLE angular momentum y\n" );
          Aux_Message( File, "# AngMomZ_All     : sum of the total HYDRO/ELBDM + PARTICLE angular momentum z\n" );
-#        endif
          Aux_Message( File, "# Etot_All        : sum of the total HYDRO/ELBDM + PARTICLE energy\n" );
 #        endif // if ( MODEL != PAR_ONLY )
 #        endif // #ifdef MASSIVE_PARTICLES
@@ -503,11 +605,20 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "  %17s  %17s  %17s",    "CoMX_Psi",    "CoMX_Psi_AErr",    "CoMX_Psi_AveV" );
          Aux_Message( File, "  %17s  %17s  %17s",    "CoMY_Psi",    "CoMY_Psi_AErr",    "CoMY_Psi_AveV" );
          Aux_Message( File, "  %17s  %17s  %17s",    "CoMZ_Psi",    "CoMZ_Psi_AErr",    "CoMZ_Psi_AveV" );
+         Aux_Message( File, "  %17s  %17s  %17s",    "MomX_Psi",    "MomX_Psi_AErr",    "MomX_Psi_RErr" );
+         Aux_Message( File, "  %17s  %17s  %17s",    "MomY_Psi",    "MomY_Psi_AErr",    "MomY_Psi_RErr" );
+         Aux_Message( File, "  %17s  %17s  %17s",    "MomZ_Psi",    "MomZ_Psi_AErr",    "MomZ_Psi_RErr" );
+         Aux_Message( File, "  %17s  %17s  %17s", "AngMomX_Psi", "AngMomX_Psi_AErr", "AngMomX_Psi_RErr" );
+         Aux_Message( File, "  %17s  %17s  %17s", "AngMomY_Psi", "AngMomY_Psi_AErr", "AngMomY_Psi_RErr" );
+         Aux_Message( File, "  %17s  %17s  %17s", "AngMomZ_Psi", "AngMomZ_Psi_AErr", "AngMomZ_Psi_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s",    "Ekin_Psi",    "Ekin_Psi_AErr",    "Ekin_Psi_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s",    "Epot_Psi",    "Epot_Psi_AErr",    "Epot_Psi_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s",    "Esel_Psi",    "Esel_Psi_AErr",    "Esel_Psi_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s",    "Etot_Psi",    "Etot_Psi_AErr",    "Etot_Psi_RErr" );
-#        endif
+
+#        else
+#        error : ERROR : unsupported MODEL !!
+#        endif // MODEL
 
          for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
          Aux_Message( File, "  %17s  %12s_AErr  %12s_RErr", FieldLabel[v], FieldLabel[v], FieldLabel[v] );
@@ -535,14 +646,12 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "  %17s  %17s  %17s",    "CoMX_All",    "CoMX_All_AErr",    "CoMX_All_AveV" );
          Aux_Message( File, "  %17s  %17s  %17s",    "CoMY_All",    "CoMY_All_AErr",    "CoMY_All_AveV" );
          Aux_Message( File, "  %17s  %17s  %17s",    "CoMZ_All",    "CoMZ_All_AErr",    "CoMZ_All_AveV" );
-#        if ( MODEL == HYDRO )
          Aux_Message( File, "  %17s  %17s  %17s",    "MomX_All",    "MomX_All_AErr",    "MomX_All_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s",    "MomY_All",    "MomY_All_AErr",    "MomY_All_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s",    "MomZ_All",    "MomZ_All_AErr",    "MomZ_All_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s", "AngMomX_All", "AngMomX_All_AErr", "AngMomX_All_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s", "AngMomY_All", "AngMomY_All_AErr", "AngMomY_All_RErr" );
          Aux_Message( File, "  %17s  %17s  %17s", "AngMomZ_All", "AngMomZ_All_AErr", "AngMomZ_All_RErr" );
-#        endif
          Aux_Message( File, "  %17s  %17s  %17s",    "Etot_All",    "Etot_All_AErr",    "Etot_All_RErr" );
 #        endif // if ( MODEL != PAR_ONLY )
 #        endif // #ifdef PARTICLE
@@ -559,26 +668,6 @@ void Aux_Check_Conservation( const char *comment )
          AbsErr[v] = Fluid_AllRank[v] - Fluid_Ref[v];
          RelErr[v] = AbsErr[v] / fabs(Fluid_Ref[v]);
       }
-
-//    calculate the sum of conserved quantities in different models
-#     if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
-      const double Mass_All    = Fluid_AllRank[       0] +    Mass_Par;
-
-#     if   ( MODEL == HYDRO )
-      const double MomX_All    = Fluid_AllRank[       1] +    MomX_Par;
-      const double MomY_All    = Fluid_AllRank[       2] +    MomY_Par;
-      const double MomZ_All    = Fluid_AllRank[       3] +    MomZ_Par;
-      const double AngMomX_All = Fluid_AllRank[       4] + AngMomX_Par;
-      const double AngMomY_All = Fluid_AllRank[       5] + AngMomY_Par;
-      const double AngMomZ_All = Fluid_AllRank[       6] + AngMomZ_Par;
-
-#     endif // MODEL
-      const double Etot_All    = Fluid_AllRank[idx_etot] +    Etot_Par;      // for HYDRO and ELBDM, total energy is stored in the last element
-
-      const double CoMX_All    = ( Fluid_AllRank[0]*CoM_Gas[0] + Mass_Par*CoMX_Par )/Mass_All;
-      const double CoMY_All    = ( Fluid_AllRank[0]*CoM_Gas[1] + Mass_Par*CoMY_Par )/Mass_All;
-      const double CoMZ_All    = ( Fluid_AllRank[0]*CoM_Gas[2] + Mass_Par*CoMZ_Par )/Mass_All;
-#     endif // if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
 
 
 //    output
@@ -622,14 +711,12 @@ void Aux_Check_Conservation( const char *comment )
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMX_All,       CoMX_All-CoMX_All_Ref,          (CoMX_All-CoMX_All_Ref)/(Time[0]-Time_Ref) );
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMY_All,       CoMY_All-CoMY_All_Ref,          (CoMY_All-CoMY_All_Ref)/(Time[0]-Time_Ref) );
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMZ_All,       CoMZ_All-CoMZ_All_Ref,          (CoMZ_All-CoMZ_All_Ref)/(Time[0]-Time_Ref) );
-#     if ( MODEL == HYDRO )
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomX_All,       MomX_All-MomX_All_Ref,          (MomX_All-MomX_All_Ref)/fabs(MomX_All_Ref) );
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomY_All,       MomY_All-MomY_All_Ref,          (MomY_All-MomY_All_Ref)/fabs(MomY_All_Ref) );
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomZ_All,       MomZ_All-MomZ_All_Ref,          (MomZ_All-MomZ_All_Ref)/fabs(MomZ_All_Ref) );
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e", AngMomX_All, AngMomX_All-AngMomX_All_Ref, (AngMomX_All-AngMomX_All_Ref)/fabs(AngMomX_All_Ref) );
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e", AngMomY_All, AngMomY_All-AngMomY_All_Ref, (AngMomY_All-AngMomY_All_Ref)/fabs(AngMomY_All_Ref) );
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e", AngMomZ_All, AngMomZ_All-AngMomZ_All_Ref, (AngMomZ_All-AngMomZ_All_Ref)/fabs(AngMomZ_All_Ref) );
-#     endif
       Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    Etot_All,       Etot_All-Etot_All_Ref,          (Etot_All-Etot_All_Ref)/fabs(Etot_All_Ref) );
 #     endif // if ( MODEL != PAR_ONLY )
 #     endif // #ifdef MASSIVE_PARTICLES
@@ -644,7 +731,24 @@ void Aux_Check_Conservation( const char *comment )
 
 
 #  if ( MODEL == ELBDM )
-   if ( Flu_ELBDM != NULL )   delete [] Flu_ELBDM;
+   delete [] Flu_ELBDM;
+#  endif
+
+
+// calculate the ELBDM center-of-mass velocity for ELBDM_RemoveMotionCM()
+#  if ( MODEL == ELBDM )
+   if ( ELBDM_REMOVE_MOTION_CM != ELBDM_REMOVE_MOTION_CM_NONE )
+   {
+//    momentum --> velocity
+      if ( MPI_Rank == 0 )
+      {
+         for (int d=0; d<3; d++)
+            ELBDM_Vcm[d] = Fluid_AllRank[d+1]/Fluid_AllRank[0];
+      }
+
+//    broadcast
+      MPI_Bcast( ELBDM_Vcm, 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   }
 #  endif
 
 } // FUNCTION : Aux_Check_Conservation
