@@ -116,10 +116,8 @@ extern double     Ekin_Par_Ref, Eint_Par_Ref, Epot_Par_Ref, Etot_Par_Ref;
 #if ( MODEL != PAR_ONLY )
 extern double     Mass_All_Ref;
 extern double     CoMX_All_Ref, CoMY_All_Ref, CoMZ_All_Ref;
-#if ( MODEL == HYDRO )
 extern double     MomX_All_Ref, MomY_All_Ref, MomZ_All_Ref;
 extern double     AngMomX_All_Ref, AngMomY_All_Ref, AngMomZ_All_Ref;
-#endif
 extern double     Etot_All_Ref;
 #endif // if ( MODEL != PAR_ONLY )
 #endif // #ifdef MASSIVE_PARTICLES

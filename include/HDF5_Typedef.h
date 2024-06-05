@@ -156,14 +156,12 @@ struct KeyInfo_t
    double    CoMX_All_H5Ref;
    double    CoMY_All_H5Ref;
    double    CoMZ_All_H5Ref;
-#  if ( MODEL == HYDRO )
    double    MomX_All_H5Ref;
    double    MomY_All_H5Ref;
    double    MomZ_All_H5Ref;
    double AngMomX_All_H5Ref;
    double AngMomY_All_H5Ref;
    double AngMomZ_All_H5Ref;
-#  endif
    double    Etot_All_H5Ref;
 #  endif // #if ( MODEL != PAR_ONLY )
 #  endif // #ifdef MASSIVE_PARTICLES

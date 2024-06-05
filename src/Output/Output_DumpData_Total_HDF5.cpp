@@ -1667,14 +1667,12 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    KeyInfo.CoMX_All_H5Ref    =    CoMX_All_Ref;
    KeyInfo.CoMY_All_H5Ref    =    CoMY_All_Ref;
    KeyInfo.CoMZ_All_H5Ref    =    CoMZ_All_Ref;
-#  if ( MODEL == HYDRO )
    KeyInfo.MomX_All_H5Ref    =    MomX_All_Ref;
    KeyInfo.MomY_All_H5Ref    =    MomY_All_Ref;
    KeyInfo.MomZ_All_H5Ref    =    MomZ_All_Ref;
    KeyInfo.AngMomX_All_H5Ref = AngMomX_All_Ref;
    KeyInfo.AngMomY_All_H5Ref = AngMomY_All_Ref;
    KeyInfo.AngMomZ_All_H5Ref = AngMomZ_All_Ref;
-#  endif
    KeyInfo.Etot_All_H5Ref    =    Etot_All_Ref;
 #  endif // #if ( MODEL != PAR_ONLY )
 #  endif // #ifdef MASSIVE_PARTICLES

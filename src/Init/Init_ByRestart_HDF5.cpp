@@ -328,14 +328,12 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "CoMX_All_H5Ref",       &CoMX_All_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
    LoadField( "CoMY_All_H5Ref",       &CoMY_All_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
    LoadField( "CoMZ_All_H5Ref",       &CoMZ_All_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-#  if ( MODEL == HYDRO )
    LoadField( "MomX_All_H5Ref",       &MomX_All_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
    LoadField( "MomY_All_H5Ref",       &MomY_All_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
    LoadField( "MomZ_All_H5Ref",       &MomZ_All_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
    LoadField( "AngMomX_All_H5Ref",    &AngMomX_All_Ref,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
    LoadField( "AngMomY_All_H5Ref",    &AngMomY_All_Ref,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
    LoadField( "AngMomZ_All_H5Ref",    &AngMomZ_All_Ref,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-#  endif
    LoadField( "Etot_All_H5Ref",       &Etot_All_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 #  endif // #if ( MODEL != PAR_ONLY )
 #  endif // #ifdef MASSIVE_PARTICLES
