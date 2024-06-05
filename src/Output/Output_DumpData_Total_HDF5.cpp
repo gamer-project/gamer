@@ -1597,7 +1597,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 #  endif
    const int    idx_etot          = NVar_NoPassive - 1;
 #  elif ( MODEL == ELBDM )
-   const int    NVar_NoPassive    = 5;
+   const int    NVar_NoPassive    = 11;
    const int    idx_etot          = NVar_NoPassive - 1;
 #  endif
    const bool GetPassiveSum = ( PassiveNorm_NVar > 0 );
@@ -1627,9 +1627,15 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    KeyInfo.CoMX_Psi_H5Ref    = CoM_Gas_Ref[0];
    KeyInfo.CoMY_Psi_H5Ref    = CoM_Gas_Ref[1];
    KeyInfo.CoMZ_Psi_H5Ref    = CoM_Gas_Ref[2];
-   KeyInfo.Ekin_Psi_H5Ref    = Fluid_Ref[1];
-   KeyInfo.Epot_Psi_H5Ref    = Fluid_Ref[2];
-   KeyInfo.Esel_Psi_H5Ref    = Fluid_Ref[3];
+   KeyInfo.MomX_Psi_H5Ref    = Fluid_Ref[1];
+   KeyInfo.MomY_Psi_H5Ref    = Fluid_Ref[2];
+   KeyInfo.MomZ_Psi_H5Ref    = Fluid_Ref[3];
+   KeyInfo.AngMomX_Psi_H5Ref = Fluid_Ref[4];
+   KeyInfo.AngMomY_Psi_H5Ref = Fluid_Ref[5];
+   KeyInfo.AngMomZ_Psi_H5Ref = Fluid_Ref[6];
+   KeyInfo.Ekin_Psi_H5Ref    = Fluid_Ref[7];
+   KeyInfo.Epot_Psi_H5Ref    = Fluid_Ref[8];
+   KeyInfo.Esel_Psi_H5Ref    = Fluid_Ref[9];
    KeyInfo.Etot_Psi_H5Ref    = Fluid_Ref[idx_etot];
 #  endif
 

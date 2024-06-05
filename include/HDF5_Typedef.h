@@ -120,6 +120,12 @@ struct KeyInfo_t
    double    CoMX_Psi_H5Ref;
    double    CoMY_Psi_H5Ref;
    double    CoMZ_Psi_H5Ref;
+   double    MomX_Psi_H5Ref;
+   double    MomY_Psi_H5Ref;
+   double    MomZ_Psi_H5Ref;
+   double AngMomX_Psi_H5Ref;
+   double AngMomY_Psi_H5Ref;
+   double AngMomZ_Psi_H5Ref;
    double    Ekin_Psi_H5Ref;
    double    Epot_Psi_H5Ref;
    double    Esel_Psi_H5Ref;

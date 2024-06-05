@@ -94,7 +94,7 @@ double               Fluid_Ref[12+NCOMP_PASSIVE+1];
 double               Fluid_Ref[11+NCOMP_PASSIVE+1];
 #endif
 #elif ( MODEL == ELBDM )
-double               Fluid_Ref[ 5+NCOMP_PASSIVE+1];
+double               Fluid_Ref[11+NCOMP_PASSIVE+1];
 #endif
 
 double               CoM_Gas_Ref[3];

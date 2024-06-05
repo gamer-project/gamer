@@ -102,7 +102,7 @@ extern double     Fluid_Ref[12+NCOMP_PASSIVE+1];
 extern double     Fluid_Ref[11+NCOMP_PASSIVE+1];
 #endif
 #elif ( MODEL == ELBDM )
-extern double     Fluid_Ref[ 5+NCOMP_PASSIVE+1];
+extern double     Fluid_Ref[11+NCOMP_PASSIVE+1];
 #endif
 
 extern double     CoM_Gas_Ref[3];

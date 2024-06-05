@@ -291,9 +291,15 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "CoMX_Psi_H5Ref",       &CoM_Gas_Ref[0],               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
    LoadField( "CoMY_Psi_H5Ref",       &CoM_Gas_Ref[1],               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
    LoadField( "CoMZ_Psi_H5Ref",       &CoM_Gas_Ref[2],               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "Ekin_Psi_H5Ref",       &Fluid_Ref[1],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "Epot_Psi_H5Ref",       &Fluid_Ref[2],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "Esel_Psi_H5Ref",       &Fluid_Ref[3],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "MomX_Psi_H5Ref",       &Fluid_Ref[1],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "MomY_Psi_H5Ref",       &Fluid_Ref[2],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "MomZ_Psi_H5Ref",       &Fluid_Ref[3],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "AngMomX_Psi_H5Ref",    &Fluid_Ref[4],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "AngMomY_Psi_H5Ref",    &Fluid_Ref[5],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "AngMomZ_Psi_H5Ref",    &Fluid_Ref[6],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "Ekin_Psi_H5Ref",       &Fluid_Ref[7],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "Epot_Psi_H5Ref",       &Fluid_Ref[8],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "Esel_Psi_H5Ref",       &Fluid_Ref[9],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
    LoadField( "Etot_Psi_H5Ref",       &Fluid_Ref[idx_etot],          H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 #  endif
 
