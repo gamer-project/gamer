@@ -6,14 +6,14 @@
 
 // prototypes of built-in feedbacks
 int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
-            const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL],
+            const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL], long *ParAttInt[PAR_NATT_INT_TOTAL],
             real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
             const int TID, RandomNumber_t *RNG );
 
 
 // user-specified feedback to be set by a test problem initializer
 int (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                    const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL],
+                    const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL], long *ParAttInt[PAR_NATT_INT_TOTAL],
                     real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
                     const int TID, RandomNumber_t *RNG ) = NULL;
 
@@ -66,6 +66,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
    const bool FaSibBufPatch_No   = false;
 //###OPTIMIZATION: only collect necessary particle attributes
    const long ParAttFltBitIdx_In = _PAR_FLT_TOTAL;
+   const long ParAttIntBitIdx_In = _PAR_INT_TOTAL;
 
    Par_CollectParticle2OneLevel( lv, ParAttFltBitIdx_In, PredictPos_No, TimeNew, SibBufPatch_Yes, FaSibBufPatch_No,
                                  JustCountNPar_No, TimingSendPar_Yes );
@@ -232,10 +233,12 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //       --> allocate the **maximum** required size among all nearby patches of a given patch group **just once**
 //           for better performance
       real_par *ParAttFlt_Local[PAR_NATT_FLT_TOTAL];
+      long     *ParAttInt_Local[PAR_NATT_INT_TOTAL];
       long     *ParSortID = NULL;
       int       NParMax   = -1;
 
       for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParAttFlt_Local[v] = NULL;
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   ParAttInt_Local[v] = NULL;
 
       for (int t=0; t<NNearbyPatch; t++)
       {
@@ -250,6 +253,9 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       {
          for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
             if ( ParAttFltBitIdx_In & BIDX(v) )    ParAttFlt_Local[v] = new real_par [NParMax];
+
+         for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+            if ( ParAttIntBitIdx_In & BIDX(v) )    ParAttInt_Local[v] = new long     [NParMax];
 
          ParSortID = new long [NParMax];  // it will fail if "long" is actually required for NParMax
       }
@@ -380,11 +386,11 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
                                    amr->patch[0][lv][PID0]->EdgeL[2] - FB_GHOST_SIZE*amr->dh[lv] };
          int Status;
 
-         if ( FB_SNE  )    Status = FB_SNe     ( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAttFlt_Local, fluid_PG,
-                                                 EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
+         if ( FB_SNE  )    Status = FB_SNe     ( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAttFlt_Local, ParAttInt_Local,
+                                                 fluid_PG, EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
 
-         if ( FB_USER )    Status = FB_User_Ptr( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAttFlt_Local, fluid_PG,
-                                                 EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
+         if ( FB_USER )    Status = FB_User_Ptr( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAttFlt_Local, ParAttInt_Local,
+                                                 fluid_PG, EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
 
 
 
@@ -432,6 +438,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 //    free memory
       for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   delete [] ParAttFlt_Local[v];
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   delete [] ParAttInt_Local[v];
       delete [] ParSortID;
 
    } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)

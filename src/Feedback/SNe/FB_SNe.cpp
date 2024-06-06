@@ -51,7 +51,8 @@
 //                dt         : Time interval to advance solution
 //                NPar       : Number of particles
 //                ParSortID  : Sorted particle IDs
-//                ParAttFlt  : Particle attribute arrays
+//                ParAttFlt  : Particle float   attribute arrays
+//                ParAttInt  : Particle integer attribute arrays
 //                Fluid      : Array to store the input/output fluid data
 //                             --> Array size is fixed to (FB_NXT)^3=(PS2+2*FB_GHOST_SIZE)^3
 //                EdgeL      : Left edge of Fluid[]
@@ -66,7 +67,7 @@
 // Return      :  Fluid, ParAttFlt
 //-------------------------------------------------------------------------------------------------------
 int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
-            const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL],
+            const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL], long *ParAttInt[PAR_NATT_INT_TOTAL],
             real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
             const int TID, RandomNumber_t *RNG )
 {
