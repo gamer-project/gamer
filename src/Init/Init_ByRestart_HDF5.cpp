@@ -267,6 +267,8 @@ void Init_ByRestart_HDF5( const char *FileName )
    const bool GetPassiveSum = ( PassiveNorm_NVar > 0 );
    const int  NVar          = NVar_NoPassive + NCOMP_PASSIVE + ( (GetPassiveSum)?1:0 );
 
+   if ( KeyInfo.FormatVersion >= 2479 )
+   {
    LoadField( "Time_H5Ref",           &Time_Ref,                     H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 #  if   ( MODEL == HYDRO )
    LoadField( "Mass_Gas_H5Ref",       &Fluid_Ref[0],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
@@ -337,6 +339,8 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "Etot_All_H5Ref",       &Etot_All_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 #  endif // #if ( MODEL != PAR_ONLY )
 #  endif // #ifdef MASSIVE_PARTICLES
+   CONSERVED_REF_LOADED = true;
+   } // if ( KeyInfo.FormatVersion >= 2479 )
 
 
 // 1-4. close all objects

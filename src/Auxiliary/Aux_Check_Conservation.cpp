@@ -468,8 +468,8 @@ void Aux_Check_Conservation( const char *comment )
 //    note that a variable length array cannot have static storage duration
       double AbsErr[NVar], RelErr[NVar];
 
-//    record the reference values if not restart
-      if ( FirstTime  &&  OPT__INIT != INIT_BY_RESTART )
+//    record the reference values if not loaded, e.g. first time, not from restart, or HDF5 version < 2479
+      if ( !CONSERVED_REF_LOADED )
       {
          Time_Ref = Time[0];
 
@@ -504,6 +504,7 @@ void Aux_Check_Conservation( const char *comment )
          Etot_All_Ref    =    Etot_All;
 #        endif // #if ( MODEL != PAR_ONLY )
 #        endif // #ifdef MASSIVE_PARTICLES
+         CONSERVED_REF_LOADED = true;
       } // if ( FirstTime  &&  OPT__INIT != INIT_BY_RESTART )
 
       if ( FirstTime )
