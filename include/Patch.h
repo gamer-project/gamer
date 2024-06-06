@@ -140,21 +140,24 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                      IDs stored in ParList_Copy, which points to the same particle repository
 //                                      (i.e., the amr->Par->AttributeFlt[]). In comparison, in LOAD_BALANCE mode,
 //                                      since particles corresponding to NPar_Copy may be collected from other ranks,
-//                                      these patches will allocate a local particle attribute array called ParAttFlt_Copy
+//                                      these patches will allocate local particle attribute arrays called ParAttFlt_Copy
+//                                      and ParAttInt_Copy.
 //                                  --> Note that non-leaf patches may have NPar>0 temporarily after updating particle position.
 //                                      It's because particles travelling from coarse to fine grids will stay in coarse grids
 //                                      temporarily until the velocity correction is done.
 //                                      --> For these patches, NPar_Copy will be **the sum of NPar and the number of particles
-//                                          collected from other patches**, and ParList_Copy (or ParAttFlt_Copy) will contain
-//                                          information of particles belonging to NPar as well.
+//                                          collected from other patches**, and ParList_Copy (or ParAttFlt_Copy and ParAttInt_Copy)
+//                                          will contain information of particles belonging to NPar as well.
 //                                      --> It makes implementation simplier. For leaf real patches, one only needs to consider
 //                                          NPar and ParList. While for all other patches, one only needs to consider NPar_Copy
-//                                          and ParList_Copy (or ParAttFlt_Copy). One never needs to consider both.
+//                                          and ParList_Copy (or ParAttFlt_Copy and ParAttInt_Copy). One never needs to consider both.
 //                ParList_Copy    : List recording the IDs of all particles belonging to the descendants of this patch
 //                                  (and particles temporarily locate in this patch waiting for the velocity correction, see
 //                                  discussion above)
 //                                  --> for SERIAL only
-//                ParAttFlt_Copy  : Pointer arrays storing the data of NPar_Copy particles collected from other patches
+//                ParAttFlt_Copy  : Pointer arrays storing the float   data of NPar_Copy particles collected from other patches
+//                                  --> for LOAD_BALANCE only
+//                ParAttInt_Copy  : Pointer arrays storing the integer data of NPar_Copy particles collected from other patches
 //                                  --> for LOAD_BALANCE only
 //                NPar_Escp       : Number of particles escaping from this patch
 //                ParList_Escp    : List recording the IDs of all particles escaping from this patch
@@ -241,6 +244,7 @@ struct patch_t
    int    NPar_Copy;
 #  ifdef LOAD_BALANCE
    real_par  *ParAttFlt_Copy[PAR_NATT_FLT_TOTAL];
+   long      *ParAttInt_Copy[PAR_NATT_INT_TOTAL];
 #  else
    long      *ParList_Copy;
 #  endif
@@ -438,8 +442,8 @@ struct patch_t
 
       NPar_Copy    = -1;         // -1 : indicating that it has not been calculated yet
 #     ifdef LOAD_BALANCE
-      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
-      ParAttFlt_Copy[v] = NULL;
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParAttFlt_Copy[v] = NULL;
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   ParAttInt_Copy[v] = NULL;
 #     else
       ParList_Copy = NULL;
 #     endif
@@ -488,6 +492,8 @@ struct patch_t
 #     ifdef LOAD_BALANCE
       for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
       if ( ParAttFlt_Copy[v] != NULL )       Aux_Error( ERROR_INFO, "ParAttFlt_Copy[%d] != NULL !!\n", v );
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+      if ( ParAttInt_Copy[v] != NULL )       Aux_Error( ERROR_INFO, "ParAttInt_Copy[%d] != NULL !!\n", v );
 #     else
       if ( ParList_Copy != NULL )         Aux_Error( ERROR_INFO, "ParList_Copy != NULL !!\n" );
 #     endif
