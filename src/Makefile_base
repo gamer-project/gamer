@@ -27,17 +27,18 @@ COMPILE_VERBOSE := 0
 
 # simulation options
 #######################################################################################################
-SIMU_OPTION = @@@SIMU_OPTION@@@
+SIMU_OPTION  = @@@SIMU_OPTION@@@
+SIMU_OPTION += -DGPU_COMPUTE_CAPABILITY=@@@GPU_COMPUTE_CAPABILITY@@@
 
 
 
 # compilers and flags
 #######################################################################################################
-CXX         = @@@CXX@@@
-CXXFLAG     = @@@CXXFLAG@@@
-LIB         = @@@LIBFLAG@@@
-OPENMPFLAG  = @@@OPENMPFLAG@@@
-NVCC        = $(CUDA_PATH)/bin/nvcc @@@CUDAFLAG@@@
+CXX        = @@@CXX@@@
+CXXFLAG    = @@@CXXFLAG@@@
+LIB        = @@@LIBFLAG@@@
+OPENMPFLAG = @@@OPENMPFLAG@@@
+NVCC       = $(CUDA_PATH)/bin/nvcc
 
 
 
@@ -99,7 +100,8 @@ CPU_FILE    += Mis_CompareRealValue.cpp  Mis_GetTotalPatchNumber.cpp  Mis_GetTim
                Mis_BinarySearch.cpp  Mis_1D3DIdx.cpp  Mis_Matching.cpp  Mis_GetTimeStep_User.cpp \
                Mis_dTime2dt.cpp  Mis_CoordinateTransform.cpp  Mis_BinarySearch_Real.cpp  Mis_InterpolateFromTable.cpp \
                CPU_dtSolver.cpp  dt_Prepare_Flu.cpp  dt_Prepare_Pot.cpp  dt_Close.cpp  dt_InvokeSolver.cpp \
-               Mis_UserWorkBeforeNextLevel.cpp  Mis_UserWorkBeforeNextSubstep.cpp
+               Mis_UserWorkBeforeNextLevel.cpp  Mis_UserWorkBeforeNextSubstep.cpp \
+               Mis_SortByRows.cpp
 
 CPU_FILE    += Output_DumpData_Total.cpp  Output_DumpData.cpp  Output_DumpManually.cpp  Output_PatchMap.cpp \
                Output_DumpData_Part.cpp  Output_FlagMap.cpp  Output_Patch.cpp  Output_PreparedPatch_Fluid.cpp \
@@ -228,7 +230,7 @@ CPU_FILE    += Par_Init_ByFunction.cpp  Par_Output_TextFile.cpp  Par_Output_Bina
                Par_Aux_InitCheck.cpp  Par_Aux_Record_ParticleCount.cpp  Par_PassParticle2Son_MultiPatch.cpp \
                Par_Synchronize.cpp  Par_PredictPos.cpp  Par_Init_ByFile.cpp  Par_Init_Attribute.cpp \
                Par_AddParticleAfterInit.cpp  Par_PassParticle2Son_SinglePatch.cpp  Par_EquilibriumIC.cpp \
-               Par_ScatterParticleData.cpp  Par_UpdateTracerParticle.cpp  Par_MapMesh2Particles.cpp  Par_Sort.cpp
+               Par_ScatterParticleData.cpp  Par_UpdateTracerParticle.cpp  Par_MapMesh2Particles.cpp
 
 vpath %.cu     Particle/GPU
 vpath %.cpp    Particle/CPU  Particle
@@ -537,99 +539,18 @@ endif
 # NVCC flags
 # -------------------------------------------------------------------------------
 # common flags
-NVCCFLAG_COM := $(COMMONFLAG) -O3 # -Xcompiler #-Xopencc -OPT:Olimit=0
+NVCCFLAG_COM := $(COMMONFLAG) @@@NVCCFLAG_COM@@@
 
-ifeq      "$(filter -DGPU_ARCH=FERMI,   $(SIMU_OPTION))" "-DGPU_ARCH=FERMI"
-   NVCCFLAG_ARCH += -gencode arch=compute_20,code=\"compute_20,sm_20\"
-#  NVCCFLAG_ARCH += -gencode arch=compute_20,code=\"compute_20,sm_21\"
-else ifeq "$(filter -DGPU_ARCH=KEPLER,  $(SIMU_OPTION))" "-DGPU_ARCH=KEPLER"
-   NVCCFLAG_ARCH += -gencode arch=compute_30,code=\"compute_30,sm_30\"
-   NVCCFLAG_ARCH += -gencode arch=compute_35,code=\"compute_35,sm_35\"
-   NVCCFLAG_ARCH += -gencode arch=compute_37,code=\"compute_37,sm_37\"
-else ifeq "$(filter -DGPU_ARCH=MAXWELL, $(SIMU_OPTION))" "-DGPU_ARCH=MAXWELL"
-   NVCCFLAG_ARCH += -gencode arch=compute_50,code=\"compute_50,sm_50\"
-   NVCCFLAG_ARCH += -gencode arch=compute_52,code=\"compute_52,sm_52\"
-else ifeq "$(filter -DGPU_ARCH=PASCAL,  $(SIMU_OPTION))" "-DGPU_ARCH=PASCAL"
-   NVCCFLAG_ARCH += -gencode arch=compute_60,code=\"compute_60,sm_60\"
-   NVCCFLAG_ARCH += -gencode arch=compute_61,code=\"compute_61,sm_61\"
-else ifeq "$(filter -DGPU_ARCH=VOLTA,  $(SIMU_OPTION))" "-DGPU_ARCH=VOLTA"
-   NVCCFLAG_ARCH += -gencode arch=compute_70,code=\"compute_70,sm_70\"
-else ifeq "$(filter -DGPU_ARCH=TURING,  $(SIMU_OPTION))" "-DGPU_ARCH=TURING"
-   NVCCFLAG_ARCH += -gencode arch=compute_75,code=\"compute_75,sm_75\"
-else ifeq "$(filter -DGPU_ARCH=AMPERE,  $(SIMU_OPTION))" "-DGPU_ARCH=AMPERE"
-   NVCCFLAG_ARCH += -gencode arch=compute_80,code=\"compute_80,sm_80\"
-   NVCCFLAG_ARCH += -gencode arch=compute_86,code=\"compute_86,sm_86\"
-else ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
-   $(error unknown GPU_ARCH (please set it in the Makefile))
-endif
+NVCCFLAG_ARCH += @@@NVCCFLAG_ARCH@@@
 
 NVCCFLAG_COM += $(NVCCFLAG_ARCH)
 
-ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
-   NVCCFLAG_COM += -g -Xptxas -v   # "-G" may cause the GPU Poisson solver to fail
-endif
-
-#NVCCFLAG_COM += -use_fast_math
-
-# enable C++ 17 support for ELBDM GPU Gram-Fourier extension scheme
-ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
-   ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
-      ifeq "$(filter -DGRAMFE_SCHEME=GRAMFE_FFT, $(SIMU_OPTION))" "-DGRAMFE_SCHEME=GRAMFE_FFT"
-         NVCCFLAG_COM += -std=c++17
-      endif
-   endif
-endif
-
 # fluid solver flags
-NVCCFLAG_FLU += -Xptxas -dlcm=ca -prec-div=false -ftz=true
-
-ifeq      "$(filter -DGPU_ARCH=FERMI, $(SIMU_OPTION))" "-DGPU_ARCH=FERMI"
-   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
-#    NVCCFLAG_FLU += --maxrregcount=XX
-   else
-#    NVCCFLAG_FLU += --maxrregcount=XX
-   endif
-else ifeq "$(filter -DGPU_ARCH=KEPLER, $(SIMU_OPTION))" "-DGPU_ARCH=KEPLER"
-   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
-     NVCCFLAG_FLU += --maxrregcount=128
-   else
-     NVCCFLAG_FLU += --maxrregcount=70
-   endif
-else ifeq "$(filter -DGPU_ARCH=MAXWELL, $(SIMU_OPTION))" "-DGPU_ARCH=MAXWELL"
-   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
-     NVCCFLAG_FLU += --maxrregcount=192
-   else
-     NVCCFLAG_FLU += --maxrregcount=128
-   endif
-else ifeq "$(filter -DGPU_ARCH=PASCAL, $(SIMU_OPTION))" "-DGPU_ARCH=PASCAL"
-   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
-     NVCCFLAG_FLU += --maxrregcount=192
-   else
-     NVCCFLAG_FLU += --maxrregcount=128
-   endif
-else ifeq "$(filter -DGPU_ARCH=VOLTA, $(SIMU_OPTION))" "-DGPU_ARCH=VOLTA"
-   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
-     NVCCFLAG_FLU += --maxrregcount=192
-   else
-     NVCCFLAG_FLU += --maxrregcount=128
-   endif
-else ifeq "$(filter -DGPU_ARCH=TURING, $(SIMU_OPTION))" "-DGPU_ARCH=TURING"
-   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
-     NVCCFLAG_FLU += --maxrregcount=192
-   else
-     NVCCFLAG_FLU += --maxrregcount=128
-   endif
-else ifeq "$(filter -DGPU_ARCH=AMPERE, $(SIMU_OPTION))" "-DGPU_ARCH=AMPERE"
-   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
-     NVCCFLAG_FLU += --maxrregcount=192
-   else
-     NVCCFLAG_FLU += --maxrregcount=128
-   endif
-endif
+NVCCFLAG_FLU += @@@NVCCFLAG_FLU@@@ @@@MAXRREGCOUNT_FLU@@@
 
 
 # Poisson/gravity solvers flags
-NVCCFLAG_POT += -Xptxas -dlcm=ca
+NVCCFLAG_POT += @@@NVCCFLAG_POT@@@
 
 
 # remove extra whitespaces
