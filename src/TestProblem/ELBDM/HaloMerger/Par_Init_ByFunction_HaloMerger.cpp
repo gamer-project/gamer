@@ -134,7 +134,7 @@ void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_A
       // check whether the total particle number is reasonable
       if ( Par_Idx0 != NPar_AllRank )
       {
-         Aux_Error( ERROR_INFO, "total particle number doesn't match (total = %ld > NPar_AllRank = %ld) !!\n", Par_Idx0, NPar_AllRank );
+         Aux_Error( ERROR_INFO, "total particle number doesn't match (total = %ld != NPar_AllRank = %ld) !!\n", Par_Idx0, NPar_AllRank );
       }
 
    } // if ( MPI_Rank == 0 )
