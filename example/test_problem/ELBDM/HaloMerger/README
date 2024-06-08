@@ -35,16 +35,17 @@ Note:
 2. Edit Input_TestProb_Halo to specify the parameters for the halos
    a. Add new parameters with increasing indexes if the number of halos is more than 2
    b. For HaloMerger_Halo_InitMode == 1
-      - The initial condition of halos is constructed by reading the UM_IC file as a table and performing linear interpolation
-         - Note that this UM_IC has nothing to do with the built-in option OPT__INIT = 3
-      - The UM_IC must be single AMR level
-         - If the UM_IC has multiple AMR levels (and there is Input__UM_IC_RefineRegion),
-           the Python script Make_UM_IC_uniform.py is provided to convert it to a single-level UM_IC with the specified level
+      - The initial condition of halos is constructed by reading the HALO_IC file as a table and performing linear interpolation
+         - Note that this HALO_IC has nothing to do with the built-in option OPT__INIT = 3
+      - The HALO_IC must be single AMR level
+         - If there is a halo UM_IC (for OPT__INIT = 3) that has multiple AMR levels (and there is Input__UM_IC_RefineRegion),
+           the Python script Make_UM_IC_uniform.py is provided to convert it to
+           a single-level UM_IC with the specified level, which can be used as the HALO_IC
            (However, those levels higher than Target_lv+log_2( 2*PatchSize ) cannot be handled and will be ignored)
-         - If converting the UM_IC to be single-level is not feasible,
+         - If converting the halo UM_IC to be single-level is not feasible,
            switching to the initialization option OPT__INIT = 3 to load a multi-level UM_IC is also an alternative
            (However, only one UM_IC can be loaded and all the parameters in Input_TestProb_Halo will not be used)
-      - Note that HaloMerger_Halo_*_CenCoord* in Input__TestProb_Halo is the UM_IC box center rather than the exact halo center
+      - Note that HaloMerger_Halo_*_CenCoord* in Input__TestProb_Halo is the HALO_IC box center rather than the exact halo center
 
 3. Edit Input_TestProb_Soliton to specify the parameters for the solitons
    a. Add new parameters with increasing indexes if the number of solitons is more than 2
@@ -65,7 +66,7 @@ Note:
 5. Turn on OPT__EXT_POT == 1 to add external potential
    a. The external potential of a uniform-density sphere, which is proportional to r^2 inside and proportional to 1/r outside
 
-6. Download the default UM_IC_Halo file: sh download_ic.sh
+6. Download the default HALO_IC file: sh download_ic.sh
    a. Halo mass = 4.0960e+09 Msun
    b. Without soliton
    c. N = 640, L = 0.0646921095 Mpc/h, single-precision

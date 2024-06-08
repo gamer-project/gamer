@@ -1,6 +1,6 @@
 # problem-specific runtime parameters
 HaloMerger_Halo_Num                     2               # total number of halos [2]
-HaloMerger_Halo_InitMode                1               # halo initialization mode (1=single-level UM_IC of real and imaginary parts) [1]
+HaloMerger_Halo_InitMode                1               # halo initialization mode (1=single-level HALO_IC of real and imaginary parts) [1]
                                                         # -> edit Input_TestProb_Halo to specify the parameters for the halos
 HaloMerger_Soliton_Num                  0               # total number of solitons [0]
 HaloMerger_Soliton_InitMode             1               # soliton initialization mode (1=table of the density profile, 2=analytical function of the density profile) [1]

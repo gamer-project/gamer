@@ -5,7 +5,7 @@
 // problem-specific global variables
 // =======================================================================================
 static int      HaloMerger_Halo_Num;                                       // total number of halos
-static int      HaloMerger_Halo_InitMode;                                  // halo initialization mode (1=single-level UM_IC of real and imaginary parts)
+static int      HaloMerger_Halo_InitMode;                                  // halo initialization mode (1=single-level HALO_IC of real and imaginary parts)
 static int      HaloMerger_Soliton_Num;                                    // total number of solitons
 static int      HaloMerger_Soliton_InitMode;                               // soliton initialization mode (1=table of the density profile, 2=analytical function of the density profile)
        int      HaloMerger_ParCloud_Num;                                   // total number of particle clouds
@@ -24,14 +24,14 @@ static int      HaloMerger_Soliton_InitMode;                               // so
 // Halo-related internal variables
 static double (*HaloMerger_Halo_CenCoord)[3]                       = NULL; // center coordinates of each halo
 static double (*HaloMerger_Halo_Velocity)[3]                       = NULL; // bulk velocity of each halo
-static char   (*HaloMerger_Halo_UM_IC_Filename)[MAX_STRING]        = NULL; // UM_IC filename of each halo
-static double (*HaloMerger_Halo_UM_IC_BoxLen)[3]                   = NULL; // physical length of UM_IC box of each halo
-static int    (*HaloMerger_Halo_UM_IC_NCells)[3]                   = NULL; // number of cells of UM_IC of each halo
-static int     *HaloMerger_Halo_UM_IC_Float8                       = NULL; // data precision of UM_IC of each halo
-static double (*HaloMerger_Halo_UM_IC_dh)[3]                       = NULL; // grid size of each halo
-static double (*HaloMerger_Halo_UM_IC_Range_EdgeL)[3]              = NULL; // left edge of the range of each halo
-static double (*HaloMerger_Halo_UM_IC_Range_EdgeR)[3]              = NULL; // right edge of the range of each halo
-static char   **HaloMerger_Halo_UM_IC_Data                         = NULL; // array to store the data read from UM_IC
+static char   (*HaloMerger_Halo_HALO_IC_Filename)[MAX_STRING]      = NULL; // HALO_IC filename of each halo
+static double (*HaloMerger_Halo_HALO_IC_BoxLen)[3]                 = NULL; // physical length of HALO_IC box of each halo
+static int    (*HaloMerger_Halo_HALO_IC_NCells)[3]                 = NULL; // number of cells of HALO_IC of each halo
+static int     *HaloMerger_Halo_HALO_IC_Float8                     = NULL; // data precision of HALO_IC of each halo
+static double (*HaloMerger_Halo_HALO_IC_dh)[3]                     = NULL; // grid size of each halo
+static double (*HaloMerger_Halo_HALO_IC_Range_EdgeL)[3]            = NULL; // left edge of the range of each halo
+static double (*HaloMerger_Halo_HALO_IC_Range_EdgeR)[3]            = NULL; // right edge of the range of each halo
+static char   **HaloMerger_Halo_HALO_IC_Data                       = NULL; // array to store the data read from HALO_IC
 
 // Soliton-related internal variables
 static double  *HaloMerger_Soliton_CoreRadius                      = NULL; // core radius of each soliton
@@ -80,7 +80,7 @@ static double HaloMerger_Trilinear_Interpolation( const double Target_X, const d
                                                   const double Ref_Value[2][2][2],
                                                   const double Ref_X[2], const double Ref_Y[2], const double Ref_Z[2] );
 
-static double HaloMerger_Get_Value_From_Halo_UM_IC_Data( const double x, const double y, const double z, const int v, const int index_halo );
+static double HaloMerger_Get_Value_From_HALO_IC_Data( const double x, const double y, const double z, const int v, const int index_halo );
 // =======================================================================================
 #endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
@@ -210,14 +210,14 @@ void SetParameter()
 
       if ( HaloMerger_Halo_InitMode == 1 )
       {
-      HaloMerger_Halo_UM_IC_Filename        = new char   [HaloMerger_Halo_Num][MAX_STRING];
-      HaloMerger_Halo_UM_IC_BoxLen          = new double [HaloMerger_Halo_Num][3];
-      HaloMerger_Halo_UM_IC_NCells          = new int    [HaloMerger_Halo_Num][3];
-      HaloMerger_Halo_UM_IC_Float8          = new int    [HaloMerger_Halo_Num];
-      HaloMerger_Halo_UM_IC_dh              = new double [HaloMerger_Halo_Num][3];
-      HaloMerger_Halo_UM_IC_Range_EdgeL     = new double [HaloMerger_Halo_Num][3];
-      HaloMerger_Halo_UM_IC_Range_EdgeR     = new double [HaloMerger_Halo_Num][3];
-      HaloMerger_Halo_UM_IC_Data            = new char*  [HaloMerger_Halo_Num];
+      HaloMerger_Halo_HALO_IC_Filename      = new char   [HaloMerger_Halo_Num][MAX_STRING];
+      HaloMerger_Halo_HALO_IC_BoxLen        = new double [HaloMerger_Halo_Num][3];
+      HaloMerger_Halo_HALO_IC_NCells        = new int    [HaloMerger_Halo_Num][3];
+      HaloMerger_Halo_HALO_IC_Float8        = new int    [HaloMerger_Halo_Num];
+      HaloMerger_Halo_HALO_IC_dh            = new double [HaloMerger_Halo_Num][3];
+      HaloMerger_Halo_HALO_IC_Range_EdgeL   = new double [HaloMerger_Halo_Num][3];
+      HaloMerger_Halo_HALO_IC_Range_EdgeR   = new double [HaloMerger_Halo_Num][3];
+      HaloMerger_Halo_HALO_IC_Data          = new char*  [HaloMerger_Halo_Num];
       } // if ( HaloMerger_Halo_InitMode == 1 )
       else
          Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
@@ -228,43 +228,43 @@ void SetParameter()
       ReadPara_t *ReadPara_Halo  = new ReadPara_t;
 
       // Halo-related parameters to read from the input
-      char HaloMerger_Halo_i_CenCoordX[MAX_STRING];      // x/y/z-coordinate of the center of the i-th halo (<0.0=auto -> box center)
-      char HaloMerger_Halo_i_CenCoordY[MAX_STRING];      // (Note that CenCoordX/Y/Z denotes the UM_IC box center, not the exact halo center, when HaloMerger_Halo_InitMode == 1)
+      char HaloMerger_Halo_i_CenCoordX[MAX_STRING];        // x/y/z-coordinate of the center of the i-th halo (<0.0=auto -> box center)
+      char HaloMerger_Halo_i_CenCoordY[MAX_STRING];        // (Note that CenCoordX/Y/Z denotes the HALO_IC box center, not the exact halo center, when HaloMerger_Halo_InitMode == 1)
       char HaloMerger_Halo_i_CenCoordZ[MAX_STRING];
-      char HaloMerger_Halo_i_VelocityX[MAX_STRING];      // x/y/z-component of the bulk velocity of the i-th halo
+      char HaloMerger_Halo_i_VelocityX[MAX_STRING];        // x/y/z-component of the bulk velocity of the i-th halo
       char HaloMerger_Halo_i_VelocityY[MAX_STRING];
       char HaloMerger_Halo_i_VelocityZ[MAX_STRING];
 
-      char HaloMerger_Halo_i_UM_IC_Filename[MAX_STRING]; // filename of UM_IC (binary file in vzyx format; row-major and v=field) (single AMR level) for the i-th halo (HaloMerger_Halo_InitMode == 1 only)
-      char HaloMerger_Halo_i_UM_IC_BoxLenX [MAX_STRING]; // physical length in the x/y/z-direction of UM_IC box for the i-th halo (must > 0.0) (HaloMerger_Halo_InitMode == 1 only)
-      char HaloMerger_Halo_i_UM_IC_BoxLenY [MAX_STRING];
-      char HaloMerger_Halo_i_UM_IC_BoxLenZ [MAX_STRING];
-      char HaloMerger_Halo_i_UM_IC_NCellsX [MAX_STRING]; // number of cells in the x/y/z-direction of UM_IC box for the i-th halo (must > 0) (HaloMerger_Halo_InitMode == 1 only)
-      char HaloMerger_Halo_i_UM_IC_NCellsY [MAX_STRING];
-      char HaloMerger_Halo_i_UM_IC_NCellsZ [MAX_STRING];
-      char HaloMerger_Halo_i_UM_IC_Float8  [MAX_STRING]; // data precision of UM_IC for the i-th halo (0=float, 1=double) (HaloMerger_Halo_InitMode == 1 only)
+      char HaloMerger_Halo_i_HALO_IC_Filename[MAX_STRING]; // filename of HALO_IC (binary file in vzyx format; row-major and v=field) (single AMR level) for the i-th halo (HaloMerger_Halo_InitMode == 1 only)
+      char HaloMerger_Halo_i_HALO_IC_BoxLenX [MAX_STRING]; // physical length in the x/y/z-direction of HALO_IC box for the i-th halo (must > 0.0) (HaloMerger_Halo_InitMode == 1 only)
+      char HaloMerger_Halo_i_HALO_IC_BoxLenY [MAX_STRING];
+      char HaloMerger_Halo_i_HALO_IC_BoxLenZ [MAX_STRING];
+      char HaloMerger_Halo_i_HALO_IC_NCellsX [MAX_STRING]; // number of cells in the x/y/z-direction of HALO_IC box for the i-th halo (must > 0) (HaloMerger_Halo_InitMode == 1 only)
+      char HaloMerger_Halo_i_HALO_IC_NCellsY [MAX_STRING];
+      char HaloMerger_Halo_i_HALO_IC_NCellsZ [MAX_STRING];
+      char HaloMerger_Halo_i_HALO_IC_Float8  [MAX_STRING]; // data precision of HALO_IC for the i-th halo (0=float, 1=double) (HaloMerger_Halo_InitMode == 1 only)
 
       for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
       {
          const int index_halo_input = index_halo+1; // index of halo in the input file
 
-         sprintf( HaloMerger_Halo_i_CenCoordX,      "HaloMerger_Halo_%d_CenCoordX",      index_halo_input );
-         sprintf( HaloMerger_Halo_i_CenCoordY,      "HaloMerger_Halo_%d_CenCoordY",      index_halo_input );
-         sprintf( HaloMerger_Halo_i_CenCoordZ,      "HaloMerger_Halo_%d_CenCoordZ",      index_halo_input );
-         sprintf( HaloMerger_Halo_i_VelocityX,      "HaloMerger_Halo_%d_VelocityX",      index_halo_input );
-         sprintf( HaloMerger_Halo_i_VelocityY,      "HaloMerger_Halo_%d_VelocityY",      index_halo_input );
-         sprintf( HaloMerger_Halo_i_VelocityZ,      "HaloMerger_Halo_%d_VelocityZ",      index_halo_input );
+         sprintf( HaloMerger_Halo_i_CenCoordX,        "HaloMerger_Halo_%d_CenCoordX",        index_halo_input );
+         sprintf( HaloMerger_Halo_i_CenCoordY,        "HaloMerger_Halo_%d_CenCoordY",        index_halo_input );
+         sprintf( HaloMerger_Halo_i_CenCoordZ,        "HaloMerger_Halo_%d_CenCoordZ",        index_halo_input );
+         sprintf( HaloMerger_Halo_i_VelocityX,        "HaloMerger_Halo_%d_VelocityX",        index_halo_input );
+         sprintf( HaloMerger_Halo_i_VelocityY,        "HaloMerger_Halo_%d_VelocityY",        index_halo_input );
+         sprintf( HaloMerger_Halo_i_VelocityZ,        "HaloMerger_Halo_%d_VelocityZ",        index_halo_input );
 
          if ( HaloMerger_Halo_InitMode == 1 )
          {
-         sprintf( HaloMerger_Halo_i_UM_IC_Filename, "HaloMerger_Halo_%d_UM_IC_Filename", index_halo_input );
-         sprintf( HaloMerger_Halo_i_UM_IC_BoxLenX,  "HaloMerger_Halo_%d_UM_IC_BoxLenX",  index_halo_input );
-         sprintf( HaloMerger_Halo_i_UM_IC_BoxLenY,  "HaloMerger_Halo_%d_UM_IC_BoxLenY",  index_halo_input );
-         sprintf( HaloMerger_Halo_i_UM_IC_BoxLenZ,  "HaloMerger_Halo_%d_UM_IC_BoxLenZ",  index_halo_input );
-         sprintf( HaloMerger_Halo_i_UM_IC_NCellsX,  "HaloMerger_Halo_%d_UM_IC_NCellsX",  index_halo_input );
-         sprintf( HaloMerger_Halo_i_UM_IC_NCellsY,  "HaloMerger_Halo_%d_UM_IC_NCellsY",  index_halo_input );
-         sprintf( HaloMerger_Halo_i_UM_IC_NCellsZ,  "HaloMerger_Halo_%d_UM_IC_NCellsZ",  index_halo_input );
-         sprintf( HaloMerger_Halo_i_UM_IC_Float8,   "HaloMerger_Halo_%d_UM_IC_Float8",   index_halo_input );
+         sprintf( HaloMerger_Halo_i_HALO_IC_Filename, "HaloMerger_Halo_%d_HALO_IC_Filename", index_halo_input );
+         sprintf( HaloMerger_Halo_i_HALO_IC_BoxLenX,  "HaloMerger_Halo_%d_HALO_IC_BoxLenX",  index_halo_input );
+         sprintf( HaloMerger_Halo_i_HALO_IC_BoxLenY,  "HaloMerger_Halo_%d_HALO_IC_BoxLenY",  index_halo_input );
+         sprintf( HaloMerger_Halo_i_HALO_IC_BoxLenZ,  "HaloMerger_Halo_%d_HALO_IC_BoxLenZ",  index_halo_input );
+         sprintf( HaloMerger_Halo_i_HALO_IC_NCellsX,  "HaloMerger_Halo_%d_HALO_IC_NCellsX",  index_halo_input );
+         sprintf( HaloMerger_Halo_i_HALO_IC_NCellsY,  "HaloMerger_Halo_%d_HALO_IC_NCellsY",  index_halo_input );
+         sprintf( HaloMerger_Halo_i_HALO_IC_NCellsZ,  "HaloMerger_Halo_%d_HALO_IC_NCellsZ",  index_halo_input );
+         sprintf( HaloMerger_Halo_i_HALO_IC_Float8,   "HaloMerger_Halo_%d_HALO_IC_Float8",   index_halo_input );
          } // if ( HaloMerger_Halo_InitMode == 1 )
          else
             Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
@@ -274,25 +274,25 @@ void SetParameter()
       // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
       // --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
       // ********************************************************************************************************************************
-      // ReadPara_Halo->Add( "KEY_IN_THE_FILE",                       &VARIABLE,                                      DEFAULT,          MIN,           MAX              );
+      // ReadPara_Halo->Add( "KEY_IN_THE_FILE",                       &VARIABLE,                                        DEFAULT,          MIN,           MAX              );
       // ********************************************************************************************************************************
-         ReadPara_Halo->Add( HaloMerger_Halo_i_CenCoordX,             &HaloMerger_Halo_CenCoord[index_halo][0],      -1.0,              NoMin_double,  amr->BoxEdgeR[0] );
-         ReadPara_Halo->Add( HaloMerger_Halo_i_CenCoordY,             &HaloMerger_Halo_CenCoord[index_halo][1],      -1.0,              NoMin_double,  amr->BoxEdgeR[1] );
-         ReadPara_Halo->Add( HaloMerger_Halo_i_CenCoordZ,             &HaloMerger_Halo_CenCoord[index_halo][2],      -1.0,              NoMin_double,  amr->BoxEdgeR[2] );
-         ReadPara_Halo->Add( HaloMerger_Halo_i_VelocityX,             &HaloMerger_Halo_Velocity[index_halo][0],       0.0,              NoMin_double,  NoMax_double     );
-         ReadPara_Halo->Add( HaloMerger_Halo_i_VelocityY,             &HaloMerger_Halo_Velocity[index_halo][1],       0.0,              NoMin_double,  NoMax_double     );
-         ReadPara_Halo->Add( HaloMerger_Halo_i_VelocityZ,             &HaloMerger_Halo_Velocity[index_halo][2],       0.0,              NoMin_double,  NoMax_double     );
+         ReadPara_Halo->Add( HaloMerger_Halo_i_CenCoordX,             &HaloMerger_Halo_CenCoord[index_halo][0],        -1.0,              NoMin_double,  amr->BoxEdgeR[0] );
+         ReadPara_Halo->Add( HaloMerger_Halo_i_CenCoordY,             &HaloMerger_Halo_CenCoord[index_halo][1],        -1.0,              NoMin_double,  amr->BoxEdgeR[1] );
+         ReadPara_Halo->Add( HaloMerger_Halo_i_CenCoordZ,             &HaloMerger_Halo_CenCoord[index_halo][2],        -1.0,              NoMin_double,  amr->BoxEdgeR[2] );
+         ReadPara_Halo->Add( HaloMerger_Halo_i_VelocityX,             &HaloMerger_Halo_Velocity[index_halo][0],         0.0,              NoMin_double,  NoMax_double     );
+         ReadPara_Halo->Add( HaloMerger_Halo_i_VelocityY,             &HaloMerger_Halo_Velocity[index_halo][1],         0.0,              NoMin_double,  NoMax_double     );
+         ReadPara_Halo->Add( HaloMerger_Halo_i_VelocityZ,             &HaloMerger_Halo_Velocity[index_halo][2],         0.0,              NoMin_double,  NoMax_double     );
 
          if ( HaloMerger_Halo_InitMode == 1 )
          {
-         ReadPara_Halo->Add( HaloMerger_Halo_i_UM_IC_Filename,         HaloMerger_Halo_UM_IC_Filename[index_halo],    NoDef_str,        Useless_str,   Useless_str      );
-         ReadPara_Halo->Add( HaloMerger_Halo_i_UM_IC_BoxLenX,         &HaloMerger_Halo_UM_IC_BoxLen[index_halo][0],  -1.0,              Eps_double,    NoMax_double     );
-         ReadPara_Halo->Add( HaloMerger_Halo_i_UM_IC_BoxLenY,         &HaloMerger_Halo_UM_IC_BoxLen[index_halo][1],  -1.0,              Eps_double,    NoMax_double     );
-         ReadPara_Halo->Add( HaloMerger_Halo_i_UM_IC_BoxLenZ,         &HaloMerger_Halo_UM_IC_BoxLen[index_halo][2],  -1.0,              Eps_double,    NoMax_double     );
-         ReadPara_Halo->Add( HaloMerger_Halo_i_UM_IC_NCellsX,         &HaloMerger_Halo_UM_IC_NCells[index_halo][0],  -1,                1,             NoMax_int        );
-         ReadPara_Halo->Add( HaloMerger_Halo_i_UM_IC_NCellsY,         &HaloMerger_Halo_UM_IC_NCells[index_halo][1],  -1,                1,             NoMax_int        );
-         ReadPara_Halo->Add( HaloMerger_Halo_i_UM_IC_NCellsZ,         &HaloMerger_Halo_UM_IC_NCells[index_halo][2],  -1,                1,             NoMax_int        );
-         ReadPara_Halo->Add( HaloMerger_Halo_i_UM_IC_Float8,          &HaloMerger_Halo_UM_IC_Float8[index_halo],      0,                0,             1                );
+         ReadPara_Halo->Add( HaloMerger_Halo_i_HALO_IC_Filename,       HaloMerger_Halo_HALO_IC_Filename[index_halo],    NoDef_str,        Useless_str,   Useless_str      );
+         ReadPara_Halo->Add( HaloMerger_Halo_i_HALO_IC_BoxLenX,       &HaloMerger_Halo_HALO_IC_BoxLen[index_halo][0],  -1.0,              Eps_double,    NoMax_double     );
+         ReadPara_Halo->Add( HaloMerger_Halo_i_HALO_IC_BoxLenY,       &HaloMerger_Halo_HALO_IC_BoxLen[index_halo][1],  -1.0,              Eps_double,    NoMax_double     );
+         ReadPara_Halo->Add( HaloMerger_Halo_i_HALO_IC_BoxLenZ,       &HaloMerger_Halo_HALO_IC_BoxLen[index_halo][2],  -1.0,              Eps_double,    NoMax_double     );
+         ReadPara_Halo->Add( HaloMerger_Halo_i_HALO_IC_NCellsX,       &HaloMerger_Halo_HALO_IC_NCells[index_halo][0],  -1,                1,             NoMax_int        );
+         ReadPara_Halo->Add( HaloMerger_Halo_i_HALO_IC_NCellsY,       &HaloMerger_Halo_HALO_IC_NCells[index_halo][1],  -1,                1,             NoMax_int        );
+         ReadPara_Halo->Add( HaloMerger_Halo_i_HALO_IC_NCellsZ,       &HaloMerger_Halo_HALO_IC_NCells[index_halo][2],  -1,                1,             NoMax_int        );
+         ReadPara_Halo->Add( HaloMerger_Halo_i_HALO_IC_Float8,        &HaloMerger_Halo_HALO_IC_Float8[index_halo],      0,                0,             1                );
          } // if ( HaloMerger_Halo_InitMode == 1 )
          else
             Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
@@ -534,35 +534,35 @@ void SetParameter()
          if ( HaloMerger_Halo_CenCoord[index_halo][d] < 0.0 )
             HaloMerger_Halo_CenCoord[index_halo][d] = amr->BoxCenter[d]; // put at the box ceneter by default
 
-         // check and set the UM_IC-related parameters
+         // check and set the HALO_IC-related parameters
          if ( HaloMerger_Halo_InitMode == 1 )
          {
-            // check the UM_IC file exists
-            if ( !Aux_CheckFileExist(HaloMerger_Halo_UM_IC_Filename[index_halo]) )
-               Aux_Error( ERROR_INFO, "Halo_%d UM_IC file \"%s\" does not exist !!\n",
-                          index_halo_input, HaloMerger_Halo_UM_IC_Filename[index_halo] );
+            // check the HALO_IC file exists
+            if ( !Aux_CheckFileExist(HaloMerger_Halo_HALO_IC_Filename[index_halo]) )
+               Aux_Error( ERROR_INFO, "Halo_%d HALO_IC file \"%s\" does not exist !!\n",
+                          index_halo_input, HaloMerger_Halo_HALO_IC_Filename[index_halo] );
 
             // check the range of the halos
             for (int d=0; d<3; d++)
             {
                // derived parameters from the input for the halos
-               HaloMerger_Halo_UM_IC_dh         [index_halo][d] = HaloMerger_Halo_UM_IC_BoxLen[index_halo][d]/HaloMerger_Halo_UM_IC_NCells[index_halo][d];
-               HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][d] = HaloMerger_Halo_CenCoord[index_halo][d] - 0.5*HaloMerger_Halo_UM_IC_BoxLen[index_halo][d];
-               HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][d] = HaloMerger_Halo_CenCoord[index_halo][d] + 0.5*HaloMerger_Halo_UM_IC_BoxLen[index_halo][d];
+               HaloMerger_Halo_HALO_IC_dh         [index_halo][d] = HaloMerger_Halo_HALO_IC_BoxLen[index_halo][d]/HaloMerger_Halo_HALO_IC_NCells[index_halo][d];
+               HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][d] = HaloMerger_Halo_CenCoord[index_halo][d] - 0.5*HaloMerger_Halo_HALO_IC_BoxLen[index_halo][d];
+               HaloMerger_Halo_HALO_IC_Range_EdgeR[index_halo][d] = HaloMerger_Halo_CenCoord[index_halo][d] + 0.5*HaloMerger_Halo_HALO_IC_BoxLen[index_halo][d];
 
-               // check wheter the UM_IC dh are the same along different directions
+               // check wheter the HALO_IC dh are the same along different directions
                for (int d2=0; d2<d; d2++)
-                  if ( ! Mis_CompareRealValue( HaloMerger_Halo_UM_IC_dh[index_halo][d], HaloMerger_Halo_UM_IC_dh[index_halo][d2], NULL, false )  )
+                  if ( ! Mis_CompareRealValue( HaloMerger_Halo_HALO_IC_dh[index_halo][d], HaloMerger_Halo_HALO_IC_dh[index_halo][d2], NULL, false )  )
                      if ( MPI_Rank == 0 )
-                        Aux_Message( stderr, "WARNING : The cell size (dh = %13.6e) along direction-%d is different from the cell size (dh = %13.6e) along direction-%d for Halo_%d UM_IC !!\n",
-                                             HaloMerger_Halo_UM_IC_dh[index_halo][d], d, HaloMerger_Halo_UM_IC_dh[index_halo][d2], d2, index_halo_input );
+                        Aux_Message( stderr, "WARNING : The cell size (dh = %13.6e) along direction-%d is different from the cell size (dh = %13.6e) along direction-%d for Halo_%d HALO_IC !!\n",
+                                             HaloMerger_Halo_HALO_IC_dh[index_halo][d], d, HaloMerger_Halo_HALO_IC_dh[index_halo][d2], d2, index_halo_input );
 
                // check whether the input halos cross the boundary
-               if ( HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][d] > amr->BoxEdgeR[d]  ||
-                    HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][d] < amr->BoxEdgeL[d] )
-                  Aux_Error( ERROR_INFO, "The edge in direction-%d [%13.6e, %13.6e] of Halo_%d UM_IC range is outside of the simulation box !!\n",
-                             d, HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][d],
-                             HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][d], index_halo_input );
+               if ( HaloMerger_Halo_HALO_IC_Range_EdgeR[index_halo][d] > amr->BoxEdgeR[d]  ||
+                    HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][d] < amr->BoxEdgeL[d] )
+                  Aux_Error( ERROR_INFO, "The edge in direction-%d [%13.6e, %13.6e] of Halo_%d HALO_IC range is outside of the simulation box !!\n",
+                             d, HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][d],
+                             HaloMerger_Halo_HALO_IC_Range_EdgeR[index_halo][d], index_halo_input );
 
             } // for (int d=0; d<3; d++)
 
@@ -576,8 +576,8 @@ void SetParameter()
                // three directions
                for (int d=0; d<3; d++)
                {
-                  if ( HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][d]  <= HaloMerger_Halo_UM_IC_Range_EdgeL[index2_halo][d] ||
-                       HaloMerger_Halo_UM_IC_Range_EdgeR[index2_halo][d] <= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][d] )
+                  if ( HaloMerger_Halo_HALO_IC_Range_EdgeR[index_halo][d]  <= HaloMerger_Halo_HALO_IC_Range_EdgeL[index2_halo][d] ||
+                       HaloMerger_Halo_HALO_IC_Range_EdgeR[index2_halo][d] <= HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][d] )
                   {
                      isOverlap = false;
                      break;
@@ -587,7 +587,7 @@ void SetParameter()
                if ( MPI_Rank == 0 )
                {
                   if ( isOverlap )
-                     Aux_Message( stderr, "WARNING : Halo_%d UM_IC range overlaps with the Halo_%d UM_IC range !!\n",
+                     Aux_Message( stderr, "WARNING : Halo_%d HALO_IC range overlaps with the Halo_%d HALO_IC range !!\n",
                                   index_halo_input, index2_halo_input );
                }
 
@@ -600,34 +600,34 @@ void SetParameter()
 
       } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
 
-      // load the UM_IC data for the halos when HaloMerger_Halo_InitMode == 1
+      // load the HALO_IC data for the halos when HaloMerger_Halo_InitMode == 1
       if ( HaloMerger_Halo_InitMode == 1 )
       {
-         const long UM_IC_NVar = 2; // (Real part & Imag part)
+         const long HALO_IC_NVar = 2; // (Real part & Imag part)
 
          for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
          {
-             // UM_IC information
-             const long UM_IC_NCells3D = (long)HaloMerger_Halo_UM_IC_NCells[index_halo][0]*HaloMerger_Halo_UM_IC_NCells[index_halo][1]*HaloMerger_Halo_UM_IC_NCells[index_halo][2];
-             size_t load_data_size     = ( HaloMerger_Halo_UM_IC_Float8[index_halo] ) ? sizeof(double) : sizeof(float);
-             const long UM_IC_TotSize  = UM_IC_NVar*UM_IC_NCells3D*load_data_size;
+             // HALO_IC information
+             const long HALO_IC_NCells3D = (long)HaloMerger_Halo_HALO_IC_NCells[index_halo][0]*HaloMerger_Halo_HALO_IC_NCells[index_halo][1]*HaloMerger_Halo_HALO_IC_NCells[index_halo][2];
+             size_t load_data_size       = ( HaloMerger_Halo_HALO_IC_Float8[index_halo] ) ? sizeof(double) : sizeof(float);
+             const long HALO_IC_TotSize  = HALO_IC_NVar*HALO_IC_NCells3D*load_data_size;
 
              // allocate the memory for the array to read the data
-             HaloMerger_Halo_UM_IC_Data[index_halo] = new char [ UM_IC_TotSize ];
+             HaloMerger_Halo_HALO_IC_Data[index_halo] = new char [ HALO_IC_TotSize ];
 
              // open the file
-             FILE *File = fopen( HaloMerger_Halo_UM_IC_Filename[index_halo], "rb" );
+             FILE *File = fopen( HaloMerger_Halo_HALO_IC_Filename[index_halo], "rb" );
 
              // check the file size
              fseek( File, 0, SEEK_END );
-             const long ExpectSize = UM_IC_TotSize;
+             const long ExpectSize = HALO_IC_TotSize;
              const long FileSize   = ftell( File );
              if ( FileSize != ExpectSize )
-                Aux_Error( ERROR_INFO, "size of the UM_IC <%s> (%ld) != expect (%ld) !!\n", HaloMerger_Halo_UM_IC_Filename[index_halo], FileSize, ExpectSize );
+                Aux_Error( ERROR_INFO, "size of the HALO_IC <%s> (%ld) != expect (%ld) !!\n", HaloMerger_Halo_HALO_IC_Filename[index_halo], FileSize, ExpectSize );
 
              // load data from the file
              fseek( File, 0, SEEK_SET );
-             fread( HaloMerger_Halo_UM_IC_Data[index_halo], 1, UM_IC_TotSize, File );
+             fread( HaloMerger_Halo_HALO_IC_Data[index_halo], 1, HALO_IC_TotSize, File );
 
              // close the file
              fclose( File );
@@ -808,8 +808,8 @@ void SetParameter()
 
                for (int d=0; d<3; d++)
                {
-                  if ( HaloMerger_Soliton_CenCoord[index_soliton][d] - 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] >= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][d] ||
-                       HaloMerger_Soliton_CenCoord[index_soliton][d] + 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] <= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][d] )
+                  if ( HaloMerger_Soliton_CenCoord[index_soliton][d] - 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] >= HaloMerger_Halo_HALO_IC_Range_EdgeR[index_halo][d] ||
+                       HaloMerger_Soliton_CenCoord[index_soliton][d] + 3.0*HaloMerger_Soliton_CoreRadius[index_soliton] <= HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][d] )
                   {
                      isOverlap = false;
                      break;
@@ -819,7 +819,7 @@ void SetParameter()
                if ( MPI_Rank == 0 )
                {
                   if ( isOverlap )
-                     Aux_Message( stderr, "WARNING : Soliton_%d 3r_c-range (center: [%13.6e, %13.6e, %13.6e], r_c: %13.6e) overlaps with the Halo_%d UM_IC range !!\n",
+                     Aux_Message( stderr, "WARNING : Soliton_%d 3r_c-range (center: [%13.6e, %13.6e, %13.6e], r_c: %13.6e) overlaps with the Halo_%d HALO_IC range !!\n",
                                   index_soliton_input,
                                   HaloMerger_Soliton_CenCoord[index_soliton][0], HaloMerger_Soliton_CenCoord[index_soliton][1],
                                   HaloMerger_Soliton_CenCoord[index_soliton][2], HaloMerger_Soliton_CoreRadius[index_soliton],
@@ -922,8 +922,8 @@ void SetParameter()
 
                   for (int d=0; d<3; d++)
                   {
-                     if ( HaloMerger_ParCloud_CenCoord[index_parcloud][d] - HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] >= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][d] ||
-                          HaloMerger_ParCloud_CenCoord[index_parcloud][d] + HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] <= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][d] )
+                     if ( HaloMerger_ParCloud_CenCoord[index_parcloud][d] - HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] >= HaloMerger_Halo_HALO_IC_Range_EdgeR[index_halo][d] ||
+                          HaloMerger_ParCloud_CenCoord[index_parcloud][d] + HaloMerger_ParCloud_DensProf_MaxR[index_parcloud] <= HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][d] )
                      {
                         isOverlap = false;
                         break;
@@ -933,7 +933,7 @@ void SetParameter()
                   if ( MPI_Rank == 0 )
                   {
                      if ( isOverlap )
-                        Aux_Message( stderr, "WARNING : ParCloud_%d (center: [%13.6e, %13.6e, %13.6e], MaxR: %13.6e) overlaps with the Halo_%d UM_IC range !!\n",
+                        Aux_Message( stderr, "WARNING : ParCloud_%d (center: [%13.6e, %13.6e, %13.6e], MaxR: %13.6e) overlaps with the Halo_%d HALO_IC range !!\n",
                                      index_parcloud_input,
                                      HaloMerger_ParCloud_CenCoord[index_parcloud][0], HaloMerger_ParCloud_CenCoord[index_parcloud][1],
                                      HaloMerger_ParCloud_CenCoord[index_parcloud][2], HaloMerger_ParCloud_DensProf_MaxR[index_parcloud],
@@ -1030,9 +1030,9 @@ void SetParameter()
       if ( OPT__EXT_POT == EXT_POT_FUNC )
       {
          Aux_Message( stdout, "  external potential of uniform-density sphere information:\n" );
-         Aux_Message( stdout, "           %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s\n",
+         Aux_Message( stdout, "           %16s  %16s  %16s  %16s  %16s  %16s  %16s  %16s  %16s\n",
                       "Mass", "Radius", "Rho", "CenCoord_X", "CenCoord_Y", "CenCoord_Z", "Velocity_X", "Velocity_Y", "Velocity_Z"  );
-         Aux_Message( stdout, "           %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e\n",
+         Aux_Message( stdout, "           %16.6e  %16.6e  %16.6e  %16.6e  %16.6e  %16.6e  %16.6e  %16.6e  %16.6e\n",
                       HaloMerger_ExtPot_UniDenSph_M, HaloMerger_ExtPot_UniDenSph_R, HaloMerger_ExtPot_UniDenSph_Rho,
                       HaloMerger_ExtPot_UniDenSph_CenCoordX, HaloMerger_ExtPot_UniDenSph_CenCoordY, HaloMerger_ExtPot_UniDenSph_CenCoordZ,
                       HaloMerger_ExtPot_UniDenSph_VelocityX, HaloMerger_ExtPot_UniDenSph_VelocityY, HaloMerger_ExtPot_UniDenSph_VelocityZ );
@@ -1041,34 +1041,34 @@ void SetParameter()
       if ( HaloMerger_Halo_Num > 0 )
       {
          Aux_Message( stdout, "\n  halo information:\n" );
-         Aux_Message( stdout, "  %7s  %14s  %14s  %14s  %14s  %14s  %14s\n",
+         Aux_Message( stdout, "  %7s  %16s  %16s  %16s  %16s  %16s  %16s\n",
                       "ID", "CenCoord_X", "CenCoord_Y", "CenCoord_Z", "Velocity_X", "Velocity_Y", "Velocity_Z" );
 
          for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
-            Aux_Message( stdout, "  %7d  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e\n",
+            Aux_Message( stdout, "  %7d  %16.6e  %16.6e  %16.6e  %16.6e  %16.6e  %16.6e\n",
                          index_halo+1,
                          HaloMerger_Halo_CenCoord[index_halo][0], HaloMerger_Halo_CenCoord[index_halo][1], HaloMerger_Halo_CenCoord[index_halo][2],
                          HaloMerger_Halo_Velocity[index_halo][0], HaloMerger_Halo_Velocity[index_halo][1], HaloMerger_Halo_Velocity[index_halo][2] );
 
          if ( HaloMerger_Halo_InitMode == 1 )
          {
-            Aux_Message( stdout, "\n  halo UM_IC information:\n" );
-            Aux_Message( stdout, "  %7s  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %20s  %20s  %20s  %20s  %20s  %20s\n",
-                         "ID", "UM_IC_Filename", "UM_IC_Float8",
-                               "UM_IC_BoxLen_X", "UM_IC_BoxLen_Y", "UM_IC_BoxLen_Z",
-                               "UM_IC_NCells_X", "UM_IC_NCells_Y", "UM_IC_NCells_Z",
-                               "UM_IC_dh_X", "UM_IC_dh_Y", "UM_IC_dh_Z",
-                               "UM_IC_Range_EdgeL_X", "UM_IC_Range_EdgeL_Y", "UM_IC_Range_EdgeL_Z",
-                               "UM_IC_Range_EdgeR_X", "UM_IC_Range_EdgeR_Y", "UM_IC_Range_EdgeR_Z" );
+            Aux_Message( stdout, "\n  halo HALO_IC information:\n" );
+            Aux_Message( stdout, "  %7s  %16s  %16s  %16s  %16s  %16s  %16s  %16s  %16s  %16s  %16s  %16s  %22s  %22s  %22s  %22s  %22s  %22s\n",
+                         "ID", "HALO_IC_Filename", "HALO_IC_Float8",
+                               "HALO_IC_BoxLen_X", "HALO_IC_BoxLen_Y", "HALO_IC_BoxLen_Z",
+                               "HALO_IC_NCells_X", "HALO_IC_NCells_Y", "HALO_IC_NCells_Z",
+                               "HALO_IC_dh_X", "HALO_IC_dh_Y", "HALO_IC_dh_Z",
+                               "HALO_IC_Range_EdgeL_X", "HALO_IC_Range_EdgeL_Y", "HALO_IC_Range_EdgeL_Z",
+                               "HALO_IC_Range_EdgeR_X", "HALO_IC_Range_EdgeR_Y", "HALO_IC_Range_EdgeR_Z" );
 
             for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
-               Aux_Message( stdout, "  %7d  %14s  %14d  %14.6e  %14.6e  %14.6e  %14d  %14d  %14d  %14.6e  %14.6e  %14.6e  %20.6e  %20.6e  %20.6e  %20.6e  %20.6e  %20.6e\n",
-                            index_halo+1, HaloMerger_Halo_UM_IC_Filename[index_halo], HaloMerger_Halo_UM_IC_Float8[index_halo],
-                            HaloMerger_Halo_UM_IC_BoxLen[index_halo][0], HaloMerger_Halo_UM_IC_BoxLen[index_halo][1], HaloMerger_Halo_UM_IC_BoxLen[index_halo][2],
-                            HaloMerger_Halo_UM_IC_NCells[index_halo][0], HaloMerger_Halo_UM_IC_NCells[index_halo][1], HaloMerger_Halo_UM_IC_NCells[index_halo][2],
-                            HaloMerger_Halo_UM_IC_dh[index_halo][0], HaloMerger_Halo_UM_IC_dh[index_halo][1], HaloMerger_Halo_UM_IC_dh[index_halo][2],
-                            HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][0], HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][1], HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][2],
-                            HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][0], HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][1], HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][2]);
+               Aux_Message( stdout, "  %7d  %16s  %16d  %16.6e  %16.6e  %16.6e  %16d  %16d  %16d  %16.6e  %16.6e  %16.6e  %22.6e  %22.6e  %22.6e  %22.6e  %22.6e  %22.6e\n",
+                            index_halo+1, HaloMerger_Halo_HALO_IC_Filename[index_halo], HaloMerger_Halo_HALO_IC_Float8[index_halo],
+                            HaloMerger_Halo_HALO_IC_BoxLen[index_halo][0], HaloMerger_Halo_HALO_IC_BoxLen[index_halo][1], HaloMerger_Halo_HALO_IC_BoxLen[index_halo][2],
+                            HaloMerger_Halo_HALO_IC_NCells[index_halo][0], HaloMerger_Halo_HALO_IC_NCells[index_halo][1], HaloMerger_Halo_HALO_IC_NCells[index_halo][2],
+                            HaloMerger_Halo_HALO_IC_dh[index_halo][0], HaloMerger_Halo_HALO_IC_dh[index_halo][1], HaloMerger_Halo_HALO_IC_dh[index_halo][2],
+                            HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][0], HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][1], HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][2],
+                            HaloMerger_Halo_HALO_IC_Range_EdgeR[index_halo][0], HaloMerger_Halo_HALO_IC_Range_EdgeR[index_halo][1], HaloMerger_Halo_HALO_IC_Range_EdgeR[index_halo][2] );
 
          } // if ( HaloMerger_Halo_InitMode == 1 )
          else
@@ -1080,11 +1080,11 @@ void SetParameter()
       if ( HaloMerger_Soliton_Num > 0 )
       {
          Aux_Message( stdout, "\n  soliton information:\n" );
-         Aux_Message( stdout, "  %7s  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s\n",
+         Aux_Message( stdout, "  %7s  %16s  %16s  %16s  %16s  %16s  %16s  %16s  %16s\n",
                       "ID", "CoreRadius", "CoreRho", "CenCoord_X", "CenCoord_Y", "CenCoord_Z", "Velocity_X", "Velocity_Y", "Velocity_Z" );
 
          for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
-            Aux_Message( stdout, "  %7d  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e\n",
+            Aux_Message( stdout, "  %7d  %16.6e  %16.6e  %16.6e  %16.6e  %16.6e  %16.6e  %16.6e  %16.6e\n",
                          index_soliton+1,
                          HaloMerger_Soliton_CoreRadius[index_soliton], HaloMerger_Soliton_CoreRho[index_soliton],
                          HaloMerger_Soliton_CenCoord[index_soliton][0], HaloMerger_Soliton_CenCoord[index_soliton][1], HaloMerger_Soliton_CenCoord[index_soliton][2],
@@ -1093,12 +1093,12 @@ void SetParameter()
          if ( HaloMerger_Soliton_InitMode == 1 )
          {
             Aux_Message( stdout, "\n  soliton density profile information:\n" );
-            Aux_Message( stdout, "  %7s %31s  %14s  %14s  %14s  %14s\n",
+            Aux_Message( stdout, "  %7s %35s  %16s  %16s  %16s  %16s\n",
                          "ID", "DensProf_Filename", "NBin",
                                "Rescale", "ScaleL", "ScaleD"  );
 
             for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
-               Aux_Message( stdout, "  %7d %31s  %14d  %14d  %14.6e  %14.6e\n",
+               Aux_Message( stdout, "  %7d %35s  %16d  %16d  %16.6e  %16.6e\n",
                             index_soliton+1, HaloMerger_Soliton_DensProf_Filename[index_soliton], HaloMerger_Soliton_DensProf_NBin[index_soliton],
                             HaloMerger_Soliton_DensProf_Rescale[index_soliton], HaloMerger_Soliton_DensProf_ScaleL[index_soliton], HaloMerger_Soliton_DensProf_ScaleD[index_soliton] );
 
@@ -1106,11 +1106,11 @@ void SetParameter()
          else if ( HaloMerger_Soliton_InitMode == 2 )
          {
             Aux_Message( stdout, "\n  soliton density profile information:\n" );
-            Aux_Message( stdout, "  %7s  %14s\n",
+            Aux_Message( stdout, "  %7s  %16s\n",
                          "ID", "OuterSlope" );
 
             for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
-               Aux_Message( stdout, "  %7d  %14.6e\n",
+               Aux_Message( stdout, "  %7d  %16.6e\n",
                             index_soliton+1, HaloMerger_Soliton_OuterSlope[index_soliton] );
 
          } // else if ( HaloMerger_Soliton_InitMode == 2 )
@@ -1123,11 +1123,11 @@ void SetParameter()
       if ( HaloMerger_ParCloud_Num > 0 )
       {
          Aux_Message( stdout, "\n  particle cloud information:\n" );
-         Aux_Message( stdout, "  %7s  %14s  %14s  %14s  %14s  %14s  %14s\n",
+         Aux_Message( stdout, "  %7s  %16s  %16s  %16s  %16s  %16s  %16s\n",
                       "ID", "CenCoord_X", "CenCoord_Y", "CenCoord_Z", "Velocity_X", "Velocity_Y", "Velocity_Z" );
 
          for (int index_parcloud=0; index_parcloud<HaloMerger_ParCloud_Num; index_parcloud++)
-            Aux_Message( stdout, "  %7d  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e  %14.6e\n",
+            Aux_Message( stdout, "  %7d  %16.6e  %16.6e  %16.6e  %16.6e  %16.6e  %16.6e\n",
                          index_parcloud+1,
                          HaloMerger_ParCloud_CenCoord[index_parcloud][0], HaloMerger_ParCloud_CenCoord[index_parcloud][1], HaloMerger_ParCloud_CenCoord[index_parcloud][2],
                          HaloMerger_ParCloud_Velocity[index_parcloud][0], HaloMerger_ParCloud_Velocity[index_parcloud][1], HaloMerger_ParCloud_Velocity[index_parcloud][2] );
@@ -1135,15 +1135,15 @@ void SetParameter()
          if ( HaloMerger_ParCloud_InitMode == 1 )
          {
             Aux_Message( stdout, "\n  particle cloud density profile information:\n" );
-            Aux_Message( stdout, "  %7s  %30s  %14s  %14s  %14s\n",
+            Aux_Message( stdout, "  %7s  %34s  %16s  %16s  %16s\n",
                          "ID", "DensProf_Filename", "DensProf_MaxR", "RSeed", "NPar" );
 
             for (int index_parcloud=0; index_parcloud<HaloMerger_ParCloud_Num; index_parcloud++)
-               Aux_Message( stdout, "  %7d  %30s  %14.6e  %14d  %14ld\n",
+               Aux_Message( stdout, "  %7d  %34s  %16.6e  %16d  %16ld\n",
                             index_parcloud+1, HaloMerger_ParCloud_DensProf_Filename[index_parcloud], HaloMerger_ParCloud_DensProf_MaxR[index_parcloud],
                             HaloMerger_ParCloud_RSeed[index_parcloud], HaloMerger_ParCloud_NPar[index_parcloud] );
 
-            Aux_Message( stdout, "  %18s-> Total number of particles in all particle clouds =  %14ld\n", "", HaloMerger_ParCloud_NPar_Total );
+            Aux_Message( stdout, "  %26s-> Total number of particles in all particle clouds =  %16ld\n", "", HaloMerger_ParCloud_NPar_Total );
 
          } // if ( HaloMerger_ParCloud_InitMode == 1 )
          else
@@ -1198,20 +1198,20 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       // get the wave function of the halo
       switch ( HaloMerger_Halo_InitMode )
       {
-         // read the value interpolated from the UM_IC data
+         // read the value interpolated from the HALO_IC data
          case 1:
          {
             // when the (x,y,z) is inside the range of this halo
-            if ( x >= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][0]  &&
-                 x <= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][0]  &&
-                 y >= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][1]  &&
-                 y <= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][1]  &&
-                 z >= HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][2]  &&
-                 z <= HaloMerger_Halo_UM_IC_Range_EdgeR[index_halo][2] )
+            if ( x >= HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][0]  &&
+                 x <= HaloMerger_Halo_HALO_IC_Range_EdgeR[index_halo][0]  &&
+                 y >= HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][1]  &&
+                 y <= HaloMerger_Halo_HALO_IC_Range_EdgeR[index_halo][1]  &&
+                 z >= HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][2]  &&
+                 z <= HaloMerger_Halo_HALO_IC_Range_EdgeR[index_halo][2] )
             {
                // assume real part first and then imaginary part
-               Real_halo = HaloMerger_Get_Value_From_Halo_UM_IC_Data( x, y, z, 0, index_halo );
-               Imag_halo = HaloMerger_Get_Value_From_Halo_UM_IC_Data( x, y, z, 1, index_halo );
+               Real_halo = HaloMerger_Get_Value_From_HALO_IC_Data( x, y, z, 0, index_halo );
+               Imag_halo = HaloMerger_Get_Value_From_HALO_IC_Data( x, y, z, 1, index_halo );
             }
 
             break;
@@ -1367,17 +1367,17 @@ void End_HaloMerger()
       {
          for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
          {
-            delete [] HaloMerger_Halo_UM_IC_Data[index_halo];
+            delete [] HaloMerger_Halo_HALO_IC_Data[index_halo];
          }
 
-         delete [] HaloMerger_Halo_UM_IC_Filename;
-         delete [] HaloMerger_Halo_UM_IC_BoxLen;
-         delete [] HaloMerger_Halo_UM_IC_NCells;
-         delete [] HaloMerger_Halo_UM_IC_Float8;
-         delete [] HaloMerger_Halo_UM_IC_dh;
-         delete [] HaloMerger_Halo_UM_IC_Range_EdgeL;
-         delete [] HaloMerger_Halo_UM_IC_Range_EdgeR;
-         delete [] HaloMerger_Halo_UM_IC_Data;
+         delete [] HaloMerger_Halo_HALO_IC_Filename;
+         delete [] HaloMerger_Halo_HALO_IC_BoxLen;
+         delete [] HaloMerger_Halo_HALO_IC_NCells;
+         delete [] HaloMerger_Halo_HALO_IC_Float8;
+         delete [] HaloMerger_Halo_HALO_IC_dh;
+         delete [] HaloMerger_Halo_HALO_IC_Range_EdgeL;
+         delete [] HaloMerger_Halo_HALO_IC_Range_EdgeR;
+         delete [] HaloMerger_Halo_HALO_IC_Data;
 
       } // if ( HaloMerger_Halo_InitMode == 1 )
       else
@@ -1522,8 +1522,8 @@ double HaloMerger_Trilinear_Interpolation( const double Target_X, const double T
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  HaloMerger_Get_Value_From_Halo_UM_IC_Data
-// Description :  Get the target value of field v at (x,y,z) by reading the UM_IC of halo and performing linear interpolation
+// Function    :  HaloMerger_Get_Value_From_HALO_IC_Data
+// Description :  Get the target value of field v at (x,y,z) by reading the HALO_IC of halo and performing linear interpolation
 //
 // Note        :  None
 //
@@ -1532,59 +1532,59 @@ double HaloMerger_Trilinear_Interpolation( const double Target_X, const double T
 //                z                  : target z-coordinate
 //                v                  : index of the target field
 //                index_halo         : index of target halo
-// Return      :  Interpolated_Value : value interpolated from the UM_IC of halo
+// Return      :  Interpolated_Value : value interpolated from the HALO_IC of halo
 //-------------------------------------------------------------------------------------------------------
-double HaloMerger_Get_Value_From_Halo_UM_IC_Data( const double x, const double y, const double z, const int v, const int index_halo )
+double HaloMerger_Get_Value_From_HALO_IC_Data( const double x, const double y, const double z, const int v, const int index_halo )
 {
-    // 1. UM_IC information
-    const int UM_IC_Nx          = HaloMerger_Halo_UM_IC_NCells[index_halo][0];
-    const int UM_IC_Ny          = HaloMerger_Halo_UM_IC_NCells[index_halo][1];
-    const int UM_IC_Nz          = HaloMerger_Halo_UM_IC_NCells[index_halo][2];
-    const int UM_IC_NVar        = 2; // (Real part & Imag part)
-    const int UM_IC_Float8      = HaloMerger_Halo_UM_IC_Float8[index_halo];
-    size_t load_data_size       = ( UM_IC_Float8 ) ? sizeof(double) : sizeof(float);
+    // 1. HALO_IC information
+    const int HALO_IC_Nx        = HaloMerger_Halo_HALO_IC_NCells[index_halo][0];
+    const int HALO_IC_Ny        = HaloMerger_Halo_HALO_IC_NCells[index_halo][1];
+    const int HALO_IC_Nz        = HaloMerger_Halo_HALO_IC_NCells[index_halo][2];
+    const int HALO_IC_NVar      = 2; // (Real part & Imag part)
+    const int HALO_IC_Float8    = HaloMerger_Halo_HALO_IC_Float8[index_halo];
+    size_t load_data_size       = ( HALO_IC_Float8 ) ? sizeof(double) : sizeof(float);
 
-    double UM_IC_Range_EdgeL[3];
-    double UM_IC_dh[3];
-    for (int d=0; d<3; d++) UM_IC_Range_EdgeL[d] = HaloMerger_Halo_UM_IC_Range_EdgeL[index_halo][d];
-    for (int d=0; d<3; d++) UM_IC_dh[d]          = HaloMerger_Halo_UM_IC_dh[index_halo][d];
+    double HALO_IC_Range_EdgeL[3];
+    double HALO_IC_dh[3];
+    for (int d=0; d<3; d++) HALO_IC_Range_EdgeL[d] = HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][d];
+    for (int d=0; d<3; d++) HALO_IC_dh[d]          = HaloMerger_Halo_HALO_IC_dh[index_halo][d];
 
-    // Use the eight corners from the UM_IC to do the linear interpolation
+    // Use the eight corners from the HALO_IC to do the linear interpolation
 
-    // 2. index of the bottom-left corner in the UM_IC
-    const int IntCorner000_UMICIndex[3] = {(int)floor( (x - UM_IC_Range_EdgeL[0])/UM_IC_dh[0] - 0.5 ),
-                                           (int)floor( (y - UM_IC_Range_EdgeL[1])/UM_IC_dh[1] - 0.5 ),
-                                           (int)floor( (z - UM_IC_Range_EdgeL[2])/UM_IC_dh[2] - 0.5 )};
+    // 2. index of the bottom-left corner in the HALO_IC
+    const int IntCorner000_HALOICIndex[3] = {(int)floor( (x - HALO_IC_Range_EdgeL[0])/HALO_IC_dh[0] - 0.5 ),
+                                             (int)floor( (y - HALO_IC_Range_EdgeL[1])/HALO_IC_dh[1] - 0.5 ),
+                                             (int)floor( (z - HALO_IC_Range_EdgeL[2])/HALO_IC_dh[2] - 0.5 )};
 
     // 3. physical coordinates of the eight corners
     double IntCorner_Coord[3][2];
     for (int d=0; d<3; d++)
     for (int IntCorner_ID=0; IntCorner_ID<2; IntCorner_ID++)
-       IntCorner_Coord[d][IntCorner_ID] = UM_IC_Range_EdgeL[d] + (IntCorner000_UMICIndex[d] + IntCorner_ID + 0.5)*UM_IC_dh[d];
+       IntCorner_Coord[d][IntCorner_ID] = HALO_IC_Range_EdgeL[d] + (IntCorner000_HALOICIndex[d] + IntCorner_ID + 0.5)*HALO_IC_dh[d];
 
     // 4. values at the eight corners
     double IntCorner_Value[2][2][2];
-    for (int IntCorner_ID_k=0; IntCorner_ID_k<2; IntCorner_ID_k++){ const int IntCorner_UMICIndex_k = IntCorner000_UMICIndex[2] + IntCorner_ID_k;
-    for (int IntCorner_ID_j=0; IntCorner_ID_j<2; IntCorner_ID_j++){ const int IntCorner_UMICIndex_j = IntCorner000_UMICIndex[1] + IntCorner_ID_j;
-    for (int IntCorner_ID_i=0; IntCorner_ID_i<2; IntCorner_ID_i++){ const int IntCorner_UMICIndex_i = IntCorner000_UMICIndex[0] + IntCorner_ID_i;
+    for (int IntCorner_ID_k=0; IntCorner_ID_k<2; IntCorner_ID_k++){ const int IntCorner_HALOICIndex_k = IntCorner000_HALOICIndex[2] + IntCorner_ID_k;
+    for (int IntCorner_ID_j=0; IntCorner_ID_j<2; IntCorner_ID_j++){ const int IntCorner_HALOICIndex_j = IntCorner000_HALOICIndex[1] + IntCorner_ID_j;
+    for (int IntCorner_ID_i=0; IntCorner_ID_i<2; IntCorner_ID_i++){ const int IntCorner_HALOICIndex_i = IntCorner000_HALOICIndex[0] + IntCorner_ID_i;
 
-       if ( IntCorner_UMICIndex_i < 0  ||  IntCorner_UMICIndex_i >= UM_IC_Nx  ||
-            IntCorner_UMICIndex_j < 0  ||  IntCorner_UMICIndex_j >= UM_IC_Ny  ||
-            IntCorner_UMICIndex_k < 0  ||  IntCorner_UMICIndex_k >= UM_IC_Nz )
+       if ( IntCorner_HALOICIndex_i < 0  ||  IntCorner_HALOICIndex_i >= HALO_IC_Nx  ||
+            IntCorner_HALOICIndex_j < 0  ||  IntCorner_HALOICIndex_j >= HALO_IC_Ny  ||
+            IntCorner_HALOICIndex_k < 0  ||  IntCorner_HALOICIndex_k >= HALO_IC_Nz )
        {
-          // set the value as zero when the corner is outside the UM_IC file
+          // set the value as zero when the corner is outside the HALO_IC file
           IntCorner_Value[IntCorner_ID_k][IntCorner_ID_j][IntCorner_ID_i] = 0.0;
        }
        else
        {
-          const long IdxIn_UM_IC = (long)v*UM_IC_Nz*UM_IC_Ny*UM_IC_Nx
-                                 + (long)IntCorner_UMICIndex_k*UM_IC_Ny*UM_IC_Nx
-                                 + (long)IntCorner_UMICIndex_j*UM_IC_Nx
-                                 + (long)IntCorner_UMICIndex_i;
+          const long IdxIn_HALO_IC = (long)v*HALO_IC_Nz*HALO_IC_Ny*HALO_IC_Nx
+                                   + (long)IntCorner_HALOICIndex_k*HALO_IC_Ny*HALO_IC_Nx
+                                   + (long)IntCorner_HALOICIndex_j*HALO_IC_Nx
+                                   + (long)IntCorner_HALOICIndex_i;
 
-          IntCorner_Value[IntCorner_ID_k][IntCorner_ID_j][IntCorner_ID_i] = ( UM_IC_Float8 ) ?
-             (double)(*((double*)&HaloMerger_Halo_UM_IC_Data[index_halo][IdxIn_UM_IC*load_data_size])):
-             (double)(*( (float*)&HaloMerger_Halo_UM_IC_Data[index_halo][IdxIn_UM_IC*load_data_size]));
+          IntCorner_Value[IntCorner_ID_k][IntCorner_ID_j][IntCorner_ID_i] = ( HALO_IC_Float8 ) ?
+             (double)(*((double*)&HaloMerger_Halo_HALO_IC_Data[index_halo][IdxIn_HALO_IC*load_data_size])):
+             (double)(*( (float*)&HaloMerger_Halo_HALO_IC_Data[index_halo][IdxIn_HALO_IC*load_data_size]));
        }
 
     }}} // for (int IntCorner_ID_kji=0; IntCorner_ID_kji<2; IntCorner_ID_kji++)
@@ -1594,7 +1594,7 @@ double HaloMerger_Get_Value_From_Halo_UM_IC_Data( const double x, const double y
 
     return Interpolated_Value;
 
-} // FUNCTION : HaloMerger_Get_Value_From_Halo_UM_IC_Data
+} // FUNCTION : HaloMerger_Get_Value_From_HALO_IC_Data
 #endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
 
