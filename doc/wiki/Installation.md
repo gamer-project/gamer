@@ -3,12 +3,12 @@ To compile GAMER, go to the source directory:
     > cd src
 
 We recommend using the Python script
-[[configure.py|Installation: Configure.py]]
+[[configure.py|Installation:-Configure.py]]
 to tailor the `Makefile` for your simulation and machine. Alternatively, you can
 edit `Makefile` and set the following configurations directly:
-1. [[Simulation Options|Installation: Simulation Options]]
-2. [[Compiler and Flags|Installation: Compiler and Flags]]
-3. [[External Libraries|Installation: External Libraries]]
+1. [[Simulation Options|Installation:-Simulation-Options]]
+2. [[Compiler and Flags|Installation:-Compiler-and-Flags]]
+3. [[External Libraries|Installation:-External-Libraries]]
 
 **Caution**: on macOS, we recommend using the GNU compiler and set
 [[RANDOM_NUMBER | Installation:-Simulation-Options#RANDOM_NUMBER]] to `RNG_CPP11`

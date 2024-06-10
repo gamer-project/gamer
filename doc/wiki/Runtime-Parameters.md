@@ -21,19 +21,19 @@ Input file templates are put in `example/input/`.
 * [[All]]
 -- List all parameters in alphabetical order
 
-* [[General | Runtime Parameters:-General]]
+* [[General | Runtime-Parameters:-General]]
 -- Parameters applicable to all simulations, such as simulation domain, root-level grid, simulation end time...
 
-* [[MPI and OpenMP | MPI and OpenMP#runtime-parameters]]
+* [[MPI and OpenMP | MPI-and-OpenMP#runtime-parameters]]
 -- Number of MPI processes and OpenMP threads, load-balancing parameters
 
 * [[GPU | GPU#runtime-parameters]]
 -- GPU IDs and optimization parameters
 
-* [[Units | Runtime Parameters: Units]]
+* [[Units | Runtime-Parameters:-Units]]
 -- Unit system
 
-* [[Initial Conditions | Initial Conditions]]
+* [[Initial Conditions | Initial-Conditions]]
 -- Initialization methods, restarting simulations
 
 * [[Hydro | Hydro#runtime-parameters]]
@@ -45,31 +45,31 @@ Input file templates are put in `example/input/`.
 * [[Particles | Particles#runtime-parameters]]
 -- Particle parameters
 
-* [[Cosmology | Runtime Parameters:-Cosmology]]
+* [[Cosmology | Runtime-Parameters:-Cosmology]]
 -- Cosmological parameters
 
-* [[Chemistry and Radiation | Chemistry and Radiation#runtime-parameters]]
+* [[Chemistry and Radiation | Chemistry-and-Radiation#runtime-parameters]]
 -- GRACKLE parameters
 
-* [[Star Formation | Star Formation#runtime-parameters]]
+* [[Star Formation | Star-Formation#runtime-parameters]]
 -- Star formation parameters
 
 * [[Feedback | Feedback#runtime-parameters]]
 -- Feedback parameters
 
-* [[Timestep | Runtime Parameters:-Timestep]]
+* [[Timestep | Runtime-Parameters:-Timestep]]
 -- Timestep criteria
 
-* [[Refinement | Runtime Parameters:-Refinement]]
+* [[Refinement | Runtime-Parameters:-Refinement]]
 -- Grid refinement criteria
 
-* [[Interpolation | Runtime Parameters:-Interpolation]]
+* [[Interpolation | Runtime-Parameters:-Interpolation]]
 -- Interpolation schemes
 
 * [[Outputs | Outputs#runtime-parameters]]
 -- Data output parameters
 
-* [[Miscellaneous | Runtime Parameters:-Miscellaneous]]
+* [[Miscellaneous | Runtime-Parameters:-Miscellaneous]]
 -- Miscellaneous parameters such as timing options, log files, and self-checking options...
 
 
@@ -110,7 +110,7 @@ it will be reset later depending on other configurations
 * For boolean options, 0=off and 1=on.
 
 * All dimensional variables must be set consistently with the adopted unit
-system (set by [[OPT__UNIT | Runtime Parameters:-Units#OPT__UNIT]]) unless otherwise specified.
+system (set by [[OPT__UNIT | Runtime-Parameters:-Units#OPT__UNIT]]) unless otherwise specified.
 
 * Parameter names are case sensitive.
 
@@ -143,7 +143,7 @@ any parameters (usually because they are either useless or set to
 
 ### Adding New Parameters
 
-See [[Adding Parameters]].
+See [[ Adding Parameters|Adding-Parameters ]].
 
 
 ## Input__TestProb
@@ -169,10 +169,10 @@ Riemann_XYZ      0     # wave propagation axis (0/1/2 --> x/y/z) [0]
 ## Input__Flag_*
 
 Refinement thresholds of various refinement criteria `OPT__FLAG_*`
-described in [[Runtime Parameters -- Refinement | Runtime Parameters:-Refinement]],
+described in [[Runtime Parameters -- Refinement | Runtime-Parameters:-Refinement]],
 where each criterion has its own input file.
 For instance, the following shows an example of the table `Input__Flag_Rho`
-used by [[OPT__FLAG_RHO | Runtime Parameters:-Refinement#OPT__FLAG_RHO]]:
+used by [[OPT__FLAG_RHO | Runtime-Parameters:-Refinement#OPT__FLAG_RHO]]:
 
 ```
 # Level                         Density
@@ -199,7 +199,7 @@ other than the first column.
 * Empty and comment lines (i.e., lines starting with #) are NOT allowed
 except in the first header line.
 
-* Must contain at least [[MAX_LEVEL | Runtime Parameters:-Refinement#MAX_LEVEL]]
+* Must contain at least [[MAX_LEVEL | Runtime-Parameters:-Refinement#MAX_LEVEL]]
 data lines excluding the header line.
 
 
@@ -233,7 +233,7 @@ except in the first header line.
 * The loading routine will stop loading when detecting a line
 starting with *. All remaining lines will be ignored.
 
-* Simulation end time [[END_T | Runtime Parameters:-General#END_T]]
+* Simulation end time [[END_T | Runtime-Parameters:-General#END_T]]
 loaded from `Input__Parameter` will be reset to the maximum output
 time in the dump table if the latter is found to be smaller.
 
@@ -241,7 +241,7 @@ time in the dump table if the latter is found to be smaller.
 ## Input__MemoryPool
 
 Number of patches to be preallocated on each AMR level when enabling
-[[OPT__MEMORY_POOL | Runtime Parameters:-Refinement#OPT__MEMORY_POOL]].
+[[OPT__MEMORY_POOL | Runtime-Parameters:-Refinement#OPT__MEMORY_POOL]].
 The following example will preallocate 100, 800 and 6400 patches on
 levels 0, 1, and 2, respectively, and will not preallocate any patch
 above level 2.
@@ -265,9 +265,9 @@ patches to be preallocated must be put in the second column.
 except in the first header line.
 
 * At most
-[[MAX_LEVEL | Runtime Parameters:-Refinement#MAX_LEVEL]]+1
+[[MAX_LEVEL | Runtime-Parameters:-Refinement#MAX_LEVEL]]+1
 lines will be loaded. If there are fewer than
-[[MAX_LEVEL | Runtime Parameters:-Refinement#MAX_LEVEL]]+1
+[[MAX_LEVEL | Runtime-Parameters:-Refinement#MAX_LEVEL]]+1
 lines in the input file, no patches will be preallocated on the
 unspecified levels.
 

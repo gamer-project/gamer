@@ -12,7 +12,7 @@ for your simulation and machine. The script supports both Python2 and Python3.
 
 ## User Guide
 ### Simulation options
-The following commands list all available [[simulation options|Installation: Simulation Options]].
+The following commands list all available [[simulation options|Installation:-Simulation-Options]].
 ```bash
 python configure.py -h    # show a short help message
 python configure.py -lh   # show a detailed help message

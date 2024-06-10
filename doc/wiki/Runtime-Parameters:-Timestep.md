@@ -72,7 +72,7 @@ Using the speed of light as the maximum information propagation speed for determ
 in special relativistic hydrodynamic simulations.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[SRHD | Installation: Simulation-Options#SRHD]].
+[[SRHD | Installation:-Simulation-Options#SRHD]].
 
 <a name="DT__GRAVITY"></a>
 * #### `DT__GRAVITY` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [-1.0]
@@ -106,7 +106,7 @@ See Section 2.6, Eq. [3] in the [GAMER-2 code paper](https://arxiv.org/abs/1712.
 for the exact formula.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[STORE_PAR_ACC | Installation: Simulation-Options#STORE_PAR_ACC]].
+[[STORE_PAR_ACC | Installation:-Simulation-Options#STORE_PAR_ACC]].
 
 <a name="DT__CR_DIFFUSION"></a>
 * #### `DT__CR_DIFFUSION` &ensp; (&#8805;0.0) &ensp; [0.3]
@@ -114,7 +114,7 @@ Only applicable when adopting the compilation option
 CFL safety factor for cosmic-ray diffusion.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[CR_DIFFUSION | Installation: Simulation-Options#CR_DIFFUSION]].
+[[CR_DIFFUSION | Installation:-Simulation-Options#CR_DIFFUSION]].
 
 <a name="DT__MAX_DELTA_A"></a>
 * #### `DT__MAX_DELTA_A` &ensp; (&#8805;0.0) &ensp; [0.01]
@@ -123,7 +123,7 @@ Maximum allowed fraction of increase in the cosmic scale factor <var>a</var>.
 Specifically, it enforces &Delta;<var>a</var> &#8804; `DT__MAX_DELTA_A` &#8901; <var>a</var>.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[COMOVING | Installation: Simulation-Options#COMOVING]].
+[[COMOVING | Installation:-Simulation-Options#COMOVING]].
 
 <a name="DT__SYNC_PARENT_LV"></a>
 * #### `DT__SYNC_PARENT_LV` &ensp; (&#8805;0.0) &ensp; [0.1]
@@ -174,7 +174,7 @@ Automatically reduce timestep by a factor of
 [AUTO_REDUCE_DT_FACTOR](#AUTO_REDUCE_DT_FACTOR),
 [[MINMOD_COEFF | Hydro#MINMOD_COEFF]] by a factor of
 [AUTO_REDUCE_MINMOD_FACTOR](#AUTO_REDUCE_MINMOD_FACTOR), and
-[[INT_MONO_COEFF | Runtime Parameters:-Interpolation#INT_MONO_COEFF]]
+[[INT_MONO_COEFF | Runtime-Parameters:-Interpolation#INT_MONO_COEFF]]
 by a factor of
 [AUTO_REDUCE_INT_MONO_FACTOR](#AUTO_REDUCE_INT_MONO_FACTOR)
 when the program fails until the timestep reducing factor
@@ -230,4 +230,4 @@ Must enable [AUTO_REDUCE_DT](#AUTO_REDUCE_DT).
 <br>
 
 ## Links
-* [[Main page of Runtime Parameters | Runtime Parameters]]
+* [[Main page of Runtime Parameters | Runtime-Parameters]]
