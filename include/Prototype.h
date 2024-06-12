@@ -705,9 +705,9 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
 FieldIdx_t AddParticleAttributeFlt( const char *InputLabel );
 FieldIdx_t GetParticleAttributeFltIndex( const char *InputLabel, const Check_t Check );
 #ifdef LOAD_BALANCE
-void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, const bool PredictPos, const double TargetTime,
-                                      const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
-                                      const bool TimingSendPar );
+void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, const long IntAttBitIdx, const bool PredictPos,
+                                      const double TargetTime, const bool SibBufPatch, const bool FaSibBufPatch,
+                                      const bool JustCountNPar, const bool TimingSendPar );
 void Par_LB_CollectParticle2OneLevel_FreeMemory( const int lv, const bool SibBufPatch, const bool FaSibBufPatch );
 void Par_LB_CollectParticleFromRealPatch( const int lv, const long FltAttBitIdx,
                                           const int Buff_NPatchTotal, const int *Buff_PIDList, int *Buff_NPatchEachRank,

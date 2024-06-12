@@ -91,7 +91,7 @@ void Par_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, cons
 #  ifdef LOAD_BALANCE
 // note that if SibBufPatch or FaSibBufPatch is on, we need to call Par_LB_CollectParticle2OneLevel()
 // even when FaLv == MAX_LEVEL
-   Par_LB_CollectParticle2OneLevel( FaLv, FltAttBitIdx, PredictPos, TargetTime, SibBufPatch, FaSibBufPatch, JustCountNPar, TimingSendPar );
+   Par_LB_CollectParticle2OneLevel( FaLv, FltAttBitIdx, IntAttBitIdx, PredictPos, TargetTime, SibBufPatch, FaSibBufPatch, JustCountNPar, TimingSendPar );
 
    return;
 
