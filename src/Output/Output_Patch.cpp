@@ -297,6 +297,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
    fprintf( File, "\n" );
    fprintf( File, "%5s  %10s", "No.", "ParID" );
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   fprintf( File, " %*s", StrLen_Flt, ParAttFltLabel[v] );
+   for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   fprintf( File, " %*s", StrLen_Flt, ParAttIntLabel[v] );
    fprintf( File, "\n" );
 
    for (int p=0; p<Relation->NPar; p++)
@@ -305,6 +306,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 
       fprintf( File, "%5d  %10ld", p, ParID );
       for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   fprintf( File, BlankPlusFormat_Flt, amr->Par->AttributeFlt[v][ParID] );
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   fprintf( File, " %*d",  StrLen_Flt, amr->Par->AttributeInt[v][ParID] );
 
       fprintf( File, "\n" );
    }
