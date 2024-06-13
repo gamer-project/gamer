@@ -33,7 +33,7 @@ void Par_AddParticleAfterInit( const long NNewPar, real_par *NewParAttFlt[PAR_NA
    const bool TimingSendPar_No = false;
 
 // add new particles to the base level first
-   Par_FindHomePatch_UniformGrid( 0, OldParOnly_No, NNewPar, NewParAttFlt );
+   Par_FindHomePatch_UniformGrid( 0, OldParOnly_No, NNewPar, NewParAttFlt, NewParAttInt );
 
 
 // send particles to their home leaf patches
