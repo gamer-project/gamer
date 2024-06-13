@@ -72,6 +72,8 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
    real_par *ParFltData_AllRank[PAR_NATT_FLT_TOTAL];
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParFltData_AllRank[v] = NULL;
+   long     *ParIntData_AllRank[PAR_NATT_INT_TOTAL];
+   for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   ParIntData_AllRank[v] = NULL;
 
 // only the master rank will construct the initial condition
    if ( MPI_Rank == 0 )
@@ -187,7 +189,8 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
    } // if ( MPI_Rank == 0 )
 
 // send particle attributes from the master rank to all ranks
-   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, ParFltData_AllRank, AllAttributeFlt );
+   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, 0L,
+                            ParFltData_AllRank, ParIntData_AllRank, AllAttributeFlt, AllAttributeInt );
 
 // synchronize all particles to the physical time on the base level,
 // set generic particle type
@@ -201,6 +204,7 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
    {
       delete RNG;
       for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   delete [] ParFltData_AllRank[v];
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   delete [] ParIntData_AllRank[v];
    }
 
 

@@ -696,8 +696,9 @@ void Par_PredictPos( const long NPar, const long *ParList, real_par *ParPosX, re
                      const double TargetTime );
 void Par_Init_Attribute();
 void Par_AddParticleAfterInit( const long NNewPar, real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL], long *NewParAttInt[PAR_NATT_INT_TOTAL] );
-void Par_ScatterParticleData( const long NPar_ThisRank, const long NPar_AllRank, const long FltAttBitIdx,
-                              real_par *Data_Send_Flt[PAR_NATT_FLT_TOTAL], real_par *Data_Recv_Flt[PAR_NATT_FLT_TOTAL] );
+void Par_ScatterParticleData( const long NPar_ThisRank, const long NPar_AllRank, const long FltAttBitIdx, const long IntAttBitIdx,
+                              real_par *Data_Send_Flt[PAR_NATT_FLT_TOTAL], long *Data_Send_Int[PAR_NATT_INT_TOTAL],
+                              real_par *Data_Recv_Flt[PAR_NATT_FLT_TOTAL], long *Data_Recv_Int[PAR_NATT_INT_TOTAL] );
 void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
                             const double _dh, const int AttrSize3D, const real *Attr,
                             const int NPar, real_par *InterpParPos[3],
