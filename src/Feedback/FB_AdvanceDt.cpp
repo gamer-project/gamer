@@ -68,7 +68,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
    const long ParAttFltBitIdx_In = _PAR_FLT_TOTAL;
    const long ParAttIntBitIdx_In = _PAR_INT_TOTAL;
 
-   Par_CollectParticle2OneLevel( lv, ParAttFltBitIdx_In, PredictPos_No, TimeNew, SibBufPatch_Yes, FaSibBufPatch_No,
+   Par_CollectParticle2OneLevel( lv, ParAttFltBitIdx_In, ParAttIntBitIdx_In, PredictPos_No, TimeNew, SibBufPatch_Yes, FaSibBufPatch_No,
                                  JustCountNPar_No, TimingSendPar_Yes );
 
 #  ifdef DEBUG_PARTICLE

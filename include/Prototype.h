@@ -683,9 +683,9 @@ void Par_Aux_GetConservedQuantity( double &Mass, double &CoMX, double &CoMY, dou
                                    double &AngMomX, double &AngMomY, double &AngMomZ, double &Ek, double &Ep );
 void Par_Aux_InitCheck();
 void Par_Aux_Record_ParticleCount();
-void Par_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, const bool PredictPos, const double TargetTime,
-                                   const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
-                                   const bool TimingSendPar );
+void Par_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, const long IntAttBitIdx,
+                                   const bool PredictPos, const double TargetTime, const bool SibBufPatch,
+                                   const bool FaSibBufPatch, const bool JustCountNPar, const bool TimingSendPar );
 void Par_CollectParticle2OneLevel_FreeMemory( const int FaLv, const bool SibBufPatch, const bool FaSibBufPatch );
 int  Par_Synchronize( const double SyncTime, const ParSync_t SyncOption );
 void Par_Synchronize_Restore( const double SyncTime );

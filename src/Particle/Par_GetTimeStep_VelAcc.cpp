@@ -70,7 +70,7 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
 #  endif
 
    if ( IncNonleaf )
-      Par_CollectParticle2OneLevel( lv, _PAR_VEL|((UseAcc)?ParAccBIdx:0)|_PAR_TYPE, PredictPos_No,
+      Par_CollectParticle2OneLevel( lv, _PAR_VEL|((UseAcc)?ParAccBIdx:0)|_PAR_TYPE, 0L, PredictPos_No,
                                     NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_No,
                                     TimingSendPar_No );
 
