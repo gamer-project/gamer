@@ -18,13 +18,13 @@ BOX_SIZE                      1.60671536e-01  # box size along the longest side 
 NX0_TOT_X                     480             # number of base-level cells along x
 NX0_TOT_Y                     480             # number of base-level cells along y
 NX0_TOT_Z                     480             # number of base-level cells along z
-OMP_NTHREAD                   8               # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
-END_T                         0.5e-1          # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
+OMP_NTHREAD                  -1               # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
+END_T                         2.5e-1          # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
 END_STEP                      -1              # end step (<0=auto -> must be set by test problems or restart) [-1]
 
 
 # test problems
-TESTPROB_ID                  2000             # test problem ID [0]
+TESTPROB_ID                  1013             # test problem ID [0]
                                               # 1003: ELBDM soliton merger (+GRAVITY)
 
 
@@ -92,7 +92,7 @@ OPT__FLAG_LOHNER_DENS         0               # flag: Lohner for mass density   
 OPT__FLAG_LOHNER_FORM         4               # form of Lohner: (1=FLASH-1, 2=FLASH-2, 3=form-invariant-1, 4=form-invariant-2) [2]
 OPT__FLAG_USER                0               # flag: user-defined (Input__Flag_User) -> edit "Flag_User.cpp" [0]
 OPT__FLAG_REGION              0               # flag: specify the regions **allowed** to be refined -> edit "Flag_Region.cpp" [0]
-OPT__FLAG_NPAR_PATCH          2               # 2 is better
+OPT__FLAG_NPAR_PATCH          2               # flag: # of particles per patch (Input__Flag_NParPatch): (0=off, 1=itself, 2=itself+siblings) [0]
 OPT__FLAG_NPAR_CELL           0               # flag: # of particles per cell  (Input__Flag_NParCell) [0]
 OPT__FLAG_PAR_MASS_CELL       0               # flag: total particle mass per cell (Input__Flag_ParMassCell) [0]
 OPT__NO_FLAG_NEAR_BOUNDARY    0               # flag: disallow refinement near the boundaries [0]
@@ -192,7 +192,7 @@ INT_OPP_SIGN_0TH_ORDER        0               # switch to 0th-order interpolatio
 OPT__OUTPUT_TOTAL             1               # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
 OPT__OUTPUT_PART              0               # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
 OPT__OUTPUT_USER              0               # output the user-specified data -> edit "Output_User.cpp" [0]
-OPT__OUTPUT_PAR_TEXT          0               # output the particle text file [0] ##PARTICLE ONLY##
+OPT__OUTPUT_PAR_MODE          0               # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
 OPT__OUTPUT_BASEPS            0               # output the base-level power spectrum [0]
 OPT__OUTPUT_BASE              0               # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
 OPT__OUTPUT_POT               1               # output gravitational potential [0] ##OPT__OUTPUT_TOTAL ONLY##
@@ -238,7 +238,7 @@ OPT__CK_CONSERVATION          1               # check the conservation law [0]
 OPT__CK_NORMALIZE_PASSIVE     0               # check the normalization of passive scalars [0] ##OPT__NORMALIZE_PASSIVE ONLY##
 OPT__CK_RESTRICT              0               # check the data restriction [0]
 OPT__CK_FINITE                0               # check if all variables are finite [0]
-OPT__CK_PATCH_ALLOCATE        0               #  check if all patches are properly allocated [0]
+OPT__CK_PATCH_ALLOCATE        0               # check if all patches are properly allocated [0]
 OPT__CK_FLUX_ALLOCATE         0               # check if all flux arrays are properly allocated ##HYDRO and ELBDM ONLY## [0]
 OPT__CK_NEGATIVE              0               # check the negative values: (0=off, 1=density, 2=pressure and entropy, 3=both) [0] ##HYDRO ONLY##
 OPT__CK_MEMFREE               1.0             # check the free memory in GB (0=off, >0=threshold) [1.0]
