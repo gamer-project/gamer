@@ -96,6 +96,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
    const int    MaxNewParPerPatch = CUBE(PS1);
    real_par   (*NewParAttFlt)[PAR_NATT_FLT_TOTAL] = new real_par [MaxNewParPerPatch][PAR_NATT_FLT_TOTAL];
+   long       (*NewParAttInt)[PAR_NATT_INT_TOTAL] = new long     [MaxNewParPerPatch][PAR_NATT_INT_TOTAL];
    long        *NewParID                          = new long     [MaxNewParPerPatch];
 
    int NNewPar;
@@ -271,7 +272,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
       {
 //       4-1. add particles to the particle repository
          for (int p=0; p<NNewPar; p++)
-            NewParID[p] = amr->Par->AddOneParticle( NewParAttFlt[p] );
+            NewParID[p] = amr->Par->AddOneParticle( NewParAttFlt[p], NewParAttInt[p] );
 
 
 //       4-2. add particles to the patch
@@ -294,6 +295,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
 // free memory
    delete [] NewParAttFlt;
+   delete [] NewParAttInt;
    delete [] NewParID;
 
    } // end of OpenMP parallel region
