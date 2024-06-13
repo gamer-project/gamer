@@ -88,6 +88,11 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
       if ( amr->patch[0][lv][PID]->ParAttFlt_Copy[v] != NULL )
          Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Copy = %d, ParAttFlt_Copy[%d] != NULL !!\n",
                     lv, PID, amr->patch[0][lv][PID]->NPar_Copy, v );
+
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+      if ( amr->patch[0][lv][PID]->ParAttInt_Copy[v] != NULL )
+         Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Copy = %d, ParAttInt_Copy[%d] != NULL !!\n",
+                    lv, PID, amr->patch[0][lv][PID]->NPar_Copy, v );
    } // for m, t
 
 // check Recv_NPatchEachRank and Recv_NPatchTotal
@@ -141,8 +146,10 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 
 // reuse the MPI send buffer declared in LB_GetBufferData for better MPI performance
    real_par *SendBuf_ParFltDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)PAR_NATT_FLT_TOTAL*sizeof(real_par) );
+   long     *SendBuf_ParIntDataEachPatch = (    long *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)PAR_NATT_INT_TOTAL*sizeof(long)     );
 
    real_par *SendPtr_Flt = SendBuf_ParFltDataEachPatch;
+   long     *SendPtr_Int = SendBuf_ParIntDataEachPatch;
    long     *ParList     = NULL;
    long      ParID;
 
@@ -168,6 +175,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 
 //       2-1. store particle data into the MPI send buffer
          for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   *SendPtr_Flt++ = amr->Par->AttributeFlt[v][ParID];
+         for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   *SendPtr_Int++ = amr->Par->AttributeInt[v][ParID];
 
 //       2-2. remove this particle from the particle repository of this rank
          amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_MPI );
@@ -190,6 +198,8 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
    int      *RecvBuf_NParEachPatch       = NULL;    // will be allocated by Par_LB_SendParticleData and must be free'd later
    real_par *RecvBuf_ParFltDataEachPatch = NULL;    // a pointer to the MPI recv buffer declared in LB_GetBufferData
                                                     // --> don't have to be free'd here
+   long     *RecvBuf_ParIntDataEachPatch = NULL;    // a pointer to the MPI recv buffer declared in LB_GetBufferData
+                                                    // --> don't have to be free'd here
 
    long     *SendBuf_LBIdxEachRank       = NULL;    // useless and does not need to be allocated
    long     *RecvBuf_LBIdxEachRank       = NULL;    // useless and will not be allocated by Par_LB_SendParticleData
@@ -199,9 +209,9 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 
 // note that we don't exchange NPatchEachRank (which is already known) and LBIdxEachRank (which is useless here)
    Par_LB_SendParticleData(
-      PAR_NATT_FLT_TOTAL,
-      SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachRank, SendBuf_ParFltDataEachPatch, NSendParTotal,
-      RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch, RecvBuf_LBIdxEachRank, RecvBuf_ParFltDataEachPatch,
+      PAR_NATT_FLT_TOTAL, PAR_NATT_INT_TOTAL,
+      SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachRank, SendBuf_ParFltDataEachPatch, SendBuf_ParIntDataEachPatch, NSendParTotal,
+      RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch, RecvBuf_LBIdxEachRank, RecvBuf_ParFltDataEachPatch, RecvBuf_ParIntDataEachPatch,
       NRecvPatchTotal, NRecvParTotal, Exchange_NPatchEachRank_No, Exchange_LBIdxEachRank_No, Exchange_ParDataEachRank_Yes,
       Timer, Timer_Comment );
 
@@ -217,6 +227,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 
 // 4. store the received particle data to the particle repository and link to each recv patch
    const real_par *RecvPtr_Flt = RecvBuf_ParFltDataEachPatch;
+   const long     *RecvPtr_Int = RecvBuf_ParIntDataEachPatch;
 
 // 4-1. get the maximum number of particles in one recv patch
    int   NParThisPatch_Max;
@@ -235,8 +246,9 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 //    4-2. add particles to the particle repository
       for (int p=0; p<NParThisPatch; p++)
       {
-         ParID        = amr->Par->AddOneParticle( RecvPtr_Flt );
+         ParID        = amr->Par->AddOneParticle( RecvPtr_Flt, RecvPtr_Int );
          RecvPtr_Flt += PAR_NATT_FLT_TOTAL;
+         RecvPtr_Int += PAR_NATT_INT_TOTAL;
 
 //       store the new particle index
          NewParIDList[p] = ParID;
