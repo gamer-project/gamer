@@ -20,11 +20,13 @@
 //                   --> Par_LB_ExchangeParticleBetweenPatch() is called by
 //                       Par_PassParticle2Sibling() and Par_PassParticle2Son_MultiPatch()
 //
-// Parameter   :  NParAttFlt                  : Number of particle attributes to be sent
+// Parameter   :  NParAttFlt                  : Number of particle float   attributes to be sent
+//                NParAttInt                  : Number of particle integer attributes to be sent
 //                SendBuf_NPatchEachRank      : MPI send buffer --> number of patches sent to each rank
 //                SendBuf_NParEachPatch       : MPI send buffer --> number of particles in each patch to be sent
 //                SendBuf_LBIdxEachPatch      : MPI send buffer --> load-balance index of each patch to be sent
-//                SendBuf_ParFltDataEachPatch : MPI send buffer --> particle data in each patch to be sent
+//                SendBuf_ParFltDataEachPatch : MPI send buffer --> particle float   data in each patch to be sent
+//                SendBuf_ParIntDataEachPatch : MPI send buffer --> particle integer data in each patch to be sent
 //                NSendParTotal               : Total number of particles sent to all ranks (used by OPT__TIMING_MPI only)
 //                RecvBuf_XXX                 : MPI recv buffer
 //                NRecvPatchTotal             : Total number of patches   received from all ranks
@@ -40,6 +42,7 @@
 //                                                      --> RecvBuf_LBIdxEachPatch will NOT be allocated
 //                                                      --> Useful in Par_LB_CollectParticleFromRealPatch.cpp
 //                Exchange_ParDataEachRank    : true  : Exchange SendBuf_ParFltDataEachPatch to get RecvBuf_ParFltDataEachPatch
+//                                                      Exchange SendBuf_ParIntDataEachPatch to get RecvBuf_ParIntDataEachPatch
 //                Timer                       : Timer used by the options "TIMING" and "OPT__TIMING_MPI"
 //                                              --> Do nothing if Timer == NULL
 //                Timer_Comment               : String used by "OPT__TIMING_MPI"
@@ -47,23 +50,27 @@
 // Return      :  RecvBuf_NPatchEachRank (if Exchange_NPatchEachRank == true), RecvBuf_NParEachPatch,
 //                RecvBuf_LBIdxEachPatch (if Exchange_LBIdxEachRank == true),
 //                RecvBuf_ParFltDataEachPatch (if Exchange_ParDataEachRank == true),
+//                RecvBuf_ParIntDataEachPatch (if Exchange_ParDataEachRank == true),
 //                NRecvPatchTotal, NRecvPatchTotal
 //-------------------------------------------------------------------------------------------------------
-void Par_LB_SendParticleData( const int NParAttFlt, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
-                              long *SendBuf_LBIdxEachPatch, real_par *SendBuf_ParFltDataEachPatch, const long NSendParTotal,
-                              int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
-                              real_par *&RecvBuf_ParFltDataEachPatch, int &NRecvPatchTotal, long &NRecvParTotal,
-                              const bool Exchange_NPatchEachRank, const bool Exchange_LBIdxEachRank,
+void Par_LB_SendParticleData( const int NParAttFlt, const int NParAttInt, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
+                              long *SendBuf_LBIdxEachPatch, real_par *SendBuf_ParFltDataEachPatch, long *SendBuf_ParIntDataEatchPatch,
+                              const long NSendParTotal, int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
+                              real_par *&RecvBuf_ParFltDataEachPatch, long *&RecvBuf_ParIntDataEachPatch, int &NRecvPatchTotal,
+                              long &NRecvParTotal, const bool Exchange_NPatchEachRank, const bool Exchange_LBIdxEachRank,
                               const bool Exchange_ParDataEachRank, Timer_t *Timer, const char *Timer_Comment )
 {
 
 // check
 #  ifdef DEBUG_PARTICLE
    if ( NParAttFlt < 0 )                        Aux_Error( ERROR_INFO, "NParAttFlt = %d < 0 !!\n", NParAttFlt );
+   if ( NParAttInt < 0 )                        Aux_Error( ERROR_INFO, "NParAttInt = %d < 0 !!\n", NParAttInt );
    if ( SendBuf_NPatchEachRank   == NULL )      Aux_Error( ERROR_INFO, "SendBuf_NPatchEachRank == NULL !!\n" );
    if ( SendBuf_NParEachPatch    == NULL )      Aux_Error( ERROR_INFO, "SendBuf_NParEachPatch == NULL !!\n" );
    if ( Exchange_ParDataEachRank  &&
         SendBuf_ParFltDataEachPatch == NULL )   Aux_Error( ERROR_INFO, "SendBuf_ParFltDataEachPatch == NULL !!\n" );
+   if ( Exchange_ParDataEachRank  &&
+        SendBuf_ParIntDataEachPatch == NULL )   Aux_Error( ERROR_INFO, "SendBuf_ParIntDataEachPatch == NULL !!\n" );
    if ( Exchange_LBIdxEachRank  &&
         SendBuf_LBIdxEachPatch   == NULL )      Aux_Error( ERROR_INFO, "SendBuf_LBIdxEachPatch == NULL !!\n" );
    if ( !Exchange_NPatchEachRank  &&
@@ -152,50 +159,75 @@ void Par_LB_SendParticleData( const int NParAttFlt, int *SendBuf_NPatchEachRank,
       long *RecvCount_ParFltDataEachPatch = new long [MPI_NRank];
       long *SendDisp_ParFltDataEachPatch  = new long [MPI_NRank];
       long *RecvDisp_ParFltDataEachPatch  = new long [MPI_NRank];
+      long *SendCount_ParIntDataEachPatch = new long [MPI_NRank];
+      long *RecvCount_ParIntDataEachPatch = new long [MPI_NRank];
+      long *SendDisp_ParIntDataEachPatch  = new long [MPI_NRank];
+      long *RecvDisp_ParIntDataEachPatch  = new long [MPI_NRank];
 
 //    send/recv count
       const int *SendPtr_Flt = NULL, *RecvPtr_Flt = NULL;
+      const int *SendPtr_Int = NULL, *RecvPtr_Int = NULL;
       NRecvParTotal = 0L;
 
       for (int r=0; r<MPI_NRank; r++)
       {
          SendCount_ParFltDataEachPatch[r] = 0L;
          RecvCount_ParFltDataEachPatch[r] = 0L;
+         SendCount_ParIntDataEachPatch[r] = 0L;
+         RecvCount_ParIntDataEachPatch[r] = 0L;
 
          SendPtr_Flt = SendBuf_NParEachPatch + SendDisp_NParEachPatch[r];
          RecvPtr_Flt = RecvBuf_NParEachPatch + RecvDisp_NParEachPatch[r];
+         SendPtr_Int = SendBuf_NParEachPatch + SendDisp_NParEachPatch[r];
+         RecvPtr_Int = RecvBuf_NParEachPatch + RecvDisp_NParEachPatch[r];
 
          for (int p=0; p<SendBuf_NPatchEachRank[r]; p++)    SendCount_ParFltDataEachPatch[r] += (long)SendPtr_Flt[p];
          for (int p=0; p<RecvBuf_NPatchEachRank[r]; p++)    RecvCount_ParFltDataEachPatch[r] += (long)RecvPtr_Flt[p];
+         for (int p=0; p<SendBuf_NPatchEachRank[r]; p++)    SendCount_ParIntDataEachPatch[r] += (long)SendPtr_Int[p];
+         for (int p=0; p<RecvBuf_NPatchEachRank[r]; p++)    RecvCount_ParIntDataEachPatch[r] += (long)RecvPtr_Int[p];
 
          NRecvParTotal += RecvCount_ParFltDataEachPatch[r];
+         // NRecvParTotal += RecvCount_ParIntDataEachPatch[r];
 
          SendCount_ParFltDataEachPatch[r] *= (long)NParAttFlt;
          RecvCount_ParFltDataEachPatch[r] *= (long)NParAttFlt;
+         SendCount_ParIntDataEachPatch[r] *= (long)NParAttInt;
+         RecvCount_ParIntDataEachPatch[r] *= (long)NParAttInt;
       }
 
 //    send/recv displacement
       SendDisp_ParFltDataEachPatch[0] = 0L;
       RecvDisp_ParFltDataEachPatch[0] = 0L;
+      SendDisp_ParIntDataEachPatch[0] = 0L;
+      RecvDisp_ParIntDataEachPatch[0] = 0L;
       for (int r=1; r<MPI_NRank; r++)
       {
          SendDisp_ParFltDataEachPatch[r] = SendDisp_ParFltDataEachPatch[r-1] + SendCount_ParFltDataEachPatch[r-1];
          RecvDisp_ParFltDataEachPatch[r] = RecvDisp_ParFltDataEachPatch[r-1] + RecvCount_ParFltDataEachPatch[r-1];
+         SendDisp_ParIntDataEachPatch[r] = SendDisp_ParIntDataEachPatch[r-1] + SendCount_ParIntDataEachPatch[r-1];
+         RecvDisp_ParIntDataEachPatch[r] = RecvDisp_ParIntDataEachPatch[r-1] + RecvCount_ParIntDataEachPatch[r-1];
       }
 
 //    reuse the MPI recv buffer declared in LB_GetBufferData for better MPI performance
       RecvBuf_ParFltDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Recv( NRecvParTotal*(long)NParAttFlt*sizeof(real_par) );
+      RecvBuf_ParIntDataEachPatch = (    long *)LB_GetBufferData_MemAllocate_Recv( NRecvParTotal*(long)NParAttInt*sizeof(long)     );
 
 
 //    exchange data
       MPI_Alltoallv_GAMER( SendBuf_ParFltDataEachPatch, SendCount_ParFltDataEachPatch, SendDisp_ParFltDataEachPatch, MPI_GAMER_REAL_PAR,
                            RecvBuf_ParFltDataEachPatch, RecvCount_ParFltDataEachPatch, RecvDisp_ParFltDataEachPatch, MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
+      MPI_Alltoallv_GAMER( SendBuf_ParIntDataEachPatch, SendCount_ParIntDataEachPatch, SendDisp_ParIntDataEachPatch, MPI_LONG,
+                           RecvBuf_ParIntDataEachPatch, RecvCount_ParIntDataEachPatch, RecvDisp_ParIntDataEachPatch, MPI_LONG,           MPI_COMM_WORLD );
 
 //    free memory
       delete [] SendCount_ParFltDataEachPatch;
       delete [] SendDisp_ParFltDataEachPatch;
       delete [] RecvCount_ParFltDataEachPatch;
       delete [] RecvDisp_ParFltDataEachPatch;
+      delete [] SendCount_ParIntDataEachPatch;
+      delete [] SendDisp_ParIntDataEachPatch;
+      delete [] RecvCount_ParIntDataEachPatch;
+      delete [] RecvDisp_ParIntDataEachPatch;
    } // if ( Exchange_ParDataEachRank )
 
 
