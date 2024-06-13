@@ -704,7 +704,9 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
                             const real_par ParType[], const long ParList[],
                             const bool UseTracers, real_par ParAttr[], const bool CorrectVelocity );
 FieldIdx_t AddParticleAttributeFlt( const char *InputLabel );
+FieldIdx_t AddParticleAttributeInt( const char *InputLabel );
 FieldIdx_t GetParticleAttributeFltIndex( const char *InputLabel, const Check_t Check );
+FieldIdx_t GetParticleAttributeIntIndex( const char *InputLabel, const Check_t Check );
 #ifdef LOAD_BALANCE
 void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, const long IntAttBitIdx, const bool PredictPos,
                                       const double TargetTime, const bool SibBufPatch, const bool FaSibBufPatch,

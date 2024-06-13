@@ -10,8 +10,8 @@ void Par_Init_Attribute_User_Template();
 void (*Par_Init_Attribute_User_Ptr)() = NULL;
 
 
-static int NDefinedAttFlt;    // total number of defined attributes
-
+static int NDefinedAttFlt;    // total number of defined float   attributes
+static int NDefinedAttInt;    // total number of defined integer attributes
 
 
 
@@ -36,6 +36,7 @@ void Par_Init_Attribute()
 
 // 0. initialize counter as zero
    NDefinedAttFlt = 0;
+   NDefinedAttInt = 0;
 
 
 // 1. add built-in intrinsic attributes
@@ -77,20 +78,25 @@ void Par_Init_Attribute()
 
 // 5. validate if all attributes have been set properly
    if ( NDefinedAttFlt != PAR_NATT_FLT_TOTAL )
-      Aux_Error( ERROR_INFO, "total number of defined attributes (%d) != expectation (%d) !!\n"
+      Aux_Error( ERROR_INFO, "total number of defined float attributes (%d) != expectation (%d) !!\n"
                  "        --> Modify PAR_NATT_FLT_USER in the Makefile or invoke AddParticleAttributeFlt() properly\n",
                  NDefinedAttFlt, PAR_NATT_FLT_TOTAL );
+
+   if ( NDefinedAttInt != PAR_NATT_INT_TOTAL )
+      Aux_Error( ERROR_INFO, "total number of defined integer attributes (%d) != expectation (%d) !!\n"
+                 "        --> Modify PAR_NATT_INT_USER in the Makefile or invoke AddParticleAttributeInt() properly\n",
+                 NDefinedAttInt, PAR_NATT_INT_TOTAL );
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Par_Init_AttributeFlt
+} // FUNCTION : Par_Init_Attribute
 
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  AddParticleAttributeFlt
-// Description :  Add a new particle attribute to the attribute list
+// Description :  Add a new particle float attribute to the attribute list
 //
 // Note        :  1. This function will
 //                   (1) set the attribute label, which will be used as the output name of the attribute
@@ -104,7 +110,7 @@ void Par_Init_Attribute()
 //
 // Return      :  (1) ParAttFltLabel[]
 //                (2) Index of the newly added attribute
-//-------------------------------------------------------------------------------------------------------FieldIdx_t AddParticleAttributeFlt( const char *InputLabel )
+//-------------------------------------------------------------------------------------------------------
 FieldIdx_t AddParticleAttributeFlt( const char *InputLabel )
 {
 
@@ -116,7 +122,7 @@ FieldIdx_t AddParticleAttributeFlt( const char *InputLabel )
       Aux_Error( ERROR_INFO, "InputLabel == NULL !!\n" );
 
    if ( NDefinedAttFlt > PAR_NATT_FLT_TOTAL )
-      Aux_Error( ERROR_INFO, "total number of defined particle attributes (%d) exceeds expectation (%d) after adding \"%s\" !!\n"
+      Aux_Error( ERROR_INFO, "total number of defined particle float attributes (%d) exceeds expectation (%d) after adding \"%s\" !!\n"
                  "        --> Modify PAR_NATT_FLT_USER in the Makefile properly\n",
                  NDefinedAttFlt, PAR_NATT_FLT_TOTAL, InputLabel );
 
@@ -135,9 +141,58 @@ FieldIdx_t AddParticleAttributeFlt( const char *InputLabel )
 } // FUNCTION : AddParticleAttributeFlt
 
 
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AddParticleAttributeInt
+// Description :  Add a new particle integer attribute to the attribute list
+//
+// Note        :  1. This function will
+//                   (1) set the attribute label, which will be used as the output name of the attribute
+//                   (2) return the index of the new attribute, which can be used to access the attribute
+//                       data (e.g., amr->Par->AttributeInt[])
+//                2. One must invoke AddParticleAttributeInt() exactly PAR_NATT_INT_TOTAL times to set the labels
+//                   of all attributes
+//                3. Invoked by Par_Init_AttributeInt() and various test problem initializers
+//
+// Parameter   :  InputLabel : Label (i.e., name) of the new attribute
+//
+// Return      :  (1) ParAttIntLabel[]
+//                (2) Index of the newly added attribute
+//-------------------------------------------------------------------------------------------------------
+FieldIdx_t AddParticleAttributeInt( const char *InputLabel )
+{
+
+   const FieldIdx_t AttIdx = NDefinedAttInt ++;
+
+
+// check
+   if ( InputLabel == NULL )
+      Aux_Error( ERROR_INFO, "InputLabel == NULL !!\n" );
+
+   if ( NDefinedAttInt > PAR_NATT_INT_TOTAL )
+      Aux_Error( ERROR_INFO, "total number of defined particle integer attributes (%d) exceeds expectation (%d) after adding \"%s\" !!\n"
+                 "        --> Modify PAR_NATT_INT_USER in the Makefile properly\n",
+                 NDefinedAttInt, PAR_NATT_INT_TOTAL, InputLabel );
+
+   for (int v=0; v<NDefinedAttInt-1; v++)
+      if (  strcmp( ParAttIntLabel[v], InputLabel ) == 0  )
+         Aux_Error( ERROR_INFO, "duplicate particle attribute label \"%s\" !!\n", InputLabel );
+
+
+// set attribute label
+   strcpy( ParAttIntLabel[AttIdx], InputLabel );
+
+
+// return attribute index
+   return AttIdx;
+
+} // FUNCTION : AddParticleAttributeInt
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  GetParticleAttributeFltIndex
-// Description :  Return the index of the target particle attribute
+// Description :  Return the index of the target particle float attribute
 //
 // Note        :  1. Usage: AttIdx = GetParticleAttributeFltIndex( ParAttFltLabel );
 //                2. Return Idx_Undefined if the target attribute cannot be found
@@ -164,7 +219,44 @@ FieldIdx_t GetParticleAttributeFltIndex( const char *InputLabel, const Check_t C
    }
 
    if ( Check == CHECK_ON  &&  Idx_Out == Idx_Undefined )
-      Aux_Error( ERROR_INFO, "cannot find the target particle attribute \"%s\" !!\n", InputLabel );
+      Aux_Error( ERROR_INFO, "cannot find the target particle float attribute \"%s\" !!\n", InputLabel );
+
+   return Idx_Out;
+
+} // FUNCTION : GetParticleAttributeFltIndex
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  GetParticleAttributeIntIndex
+// Description :  Return the index of the target particle integer attribute
+//
+// Note        :  1. Usage: AttIdx = GetParticleAttributeIntIndex( ParAttIntLabel );
+//                2. Return Idx_Undefined if the target attribute cannot be found
+//
+// Parameter   :  InputLabel : Target attribute label
+//                Check      : Whether or not to terminate the program if the target attribute cannot be found
+//                             --> Accepted options: CHECK_ON / CHECK_OFF
+//
+// Return      :  Sucess: index of the target attribute
+//                Failed: Idx_Undefined
+//-------------------------------------------------------------------------------------------------------
+FieldIdx_t GetParticleAttributeIntIndex( const char *InputLabel, const Check_t Check )
+{
+
+   FieldIdx_t Idx_Out = Idx_Undefined;
+
+   for (int v=0; v<NDefinedAttInt; v++)
+   {
+      if (  strcmp( ParAttIntLabel[v], InputLabel ) == 0  )
+      {
+         Idx_Out = v;
+         break;
+      }
+   }
+
+   if ( Check == CHECK_ON  &&  Idx_Out == Idx_Undefined )
+      Aux_Error( ERROR_INFO, "cannot find the target particle integer attribute \"%s\" !!\n", InputLabel );
 
    return Idx_Out;
 
@@ -188,6 +280,7 @@ void Par_Init_Attribute_User_Template()
 
 // example
 // Idx_NewAttFlt = AddParticleAttributeFlt( "NewAttFltLabel" );
+// Idx_NewAttInt = AddParticleAttributeInt( "NewAttIntLabel" );
 
 } // FUNCTION : Par_Init_Attribute_User_Template
 
