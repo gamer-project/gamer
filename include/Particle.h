@@ -410,11 +410,12 @@ struct Particle_t
    //                4. Note that the global variable "AveDensity_Init" will NOT be recalculated
    //                   automatically here
    //
-   // Parameter   :  NewAttFlt : Array storing the attributes of new particles
+   // Parameter   :  NewAttFlt : Array storing the float   attributes of new particles
+   //                NewAttInt : Array storing the integer attributes of new particles
    //
    // Return      :  Index of the new particle (ParID)
    //===================================================================================
-   long AddOneParticle( const real_par *NewAttFlt )
+   long AddOneParticle( const real_par *NewAttFlt, const long *NewAttInt )
    {
 
 //    check
@@ -422,6 +423,8 @@ struct Particle_t
       if ( NPar_AcPlusInac < 0 ) Aux_Error( ERROR_INFO, "NPar_AcPlusInac (%ld) < 0 !!\n", NPar_AcPlusInac );
 
       if ( NewAttFlt == NULL )   Aux_Error( ERROR_INFO, "NewAttFlt == NULL !!\n" );
+
+      if ( NewAttInt == NULL )   Aux_Error( ERROR_INFO, "NewAttInt == NULL !!\n" );
 
       if ( NewAttFlt[PAR_MASS] < (real_par)0.0 )
          Aux_Error( ERROR_INFO, "Adding an inactive particle (mass = %21.14e) !!\n", NewAttFlt[PAR_MASS] );
@@ -461,6 +464,7 @@ struct Particle_t
             ParListSize = (int)ceil( PARLIST_GROWTH_FACTOR*(ParListSize+1) );
 
             for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   AttributeFlt[v] = (real_par*)realloc( AttributeFlt[v], ParListSize*sizeof(real_par) );
+            for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   AttributeInt[v] = (    long*)realloc( AttributeInt[v], ParListSize*sizeof(long)     );
 
             Mass = AttributeFlt[PAR_MASS];
             PosX = AttributeFlt[PAR_POSX];
@@ -485,6 +489,7 @@ struct Particle_t
 
 //    2. record the data of new particles
       for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   AttributeFlt[v][ParID] = NewAttFlt[v];
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   AttributeInt[v][ParID] = NewAttInt[v];
 
 
 //    3. update the total number of active particles (assuming all new particles are active)

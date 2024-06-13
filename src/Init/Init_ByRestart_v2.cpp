@@ -583,6 +583,7 @@ void Init_ByRestart()
    real_par **ParFltBuf  = NULL;
 
    real_par NewParAttFlt[PAR_NATT_FLT_TOTAL];
+   long     NewParAttInt[PAR_NATT_INT_TOTAL];
    long GParID;
    int  NParThisPatch;
 
@@ -647,7 +648,7 @@ void Init_ByRestart()
 //                skip the last PAR_NATT_FLT_UNSTORED attributes since we do not store them on disk
                   for (int v=0; v<PAR_NATT_FLT_STORED; v++)  NewParAttFlt[v] = ParFltBuf[v][p];
 
-                  NewParList[p] = amr->Par->AddOneParticle( NewParAttFlt );
+                  NewParList[p] = amr->Par->AddOneParticle( NewParAttFlt, NewParAttInt );
 
 #                 ifdef DEBUG_PARTICLE
                   if ( NewParList[p] >= NParThisRank )
