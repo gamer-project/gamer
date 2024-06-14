@@ -9,12 +9,13 @@
 // Function    :  FB_User_Template
 // Description :  Template of a user-defined feedback
 //
-// Note        :  1. Input and output fluid and particle data are stored in Fluid[] and ParAttFlt[], respectively
+// Note        :  1. Input and output fluid and particle data are stored in Fluid[] and ParAttFlt/Int[], respectively
 //                   --> This function is responsible for updating gas and particles within
 //                       ** FB_GHOST_SIZE <= cell indices i,j,k < FB_GHOST_SIZE+PS2 **
 //                   --> Updating gas and particles outside this range is fine but will have no effect at all
-//                2. Must use ParSortID[] to access ParAttFlt[]
+//                2. Must use ParSortID[] to access ParAttFlt[] and ParAttInt[]
 //                   --> ParAttFlt[PAR_MASS/PAR_POSX/etc][ ParSortID[...] ]
+//                   --> ParAttInt[PAR_TYPE/etc][ ParSortID[...] ]
 //                3. Particles may be outside the target region
 //                4. To ensure the consistency of random numbers, one must call the random number generator for
 //                   ALL particles, including those too far away to affect the target region
@@ -65,7 +66,7 @@
 //                             --> Random number can be obtained by "RNG->GetValue( TID, Min, Max )",
 //                                 where Min/Max specify the range of random numbers
 //
-// Return      :  Fluid, ParAttFlt
+// Return      :  Fluid, ParAttFlt, ParAttInt
 //-------------------------------------------------------------------------------------------------------
 int FB_User_Template( const int lv, const double TimeNew, const double TimeOld, const double dt,
                       const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL], long *ParAttInt[PAR_NATT_INT_TOTAL],
@@ -80,6 +81,7 @@ int FB_User_Template( const int lv, const double TimeNew, const double TimeOld, 
    {
       if ( ParSortID == NULL )   Aux_Error( ERROR_INFO, "ParSortID == NULL for NPar = %d !!\n", NPar );
       if ( ParAttFlt == NULL )   Aux_Error( ERROR_INFO, "ParAttFlt == NULL for NPar = %d !!\n", NPar );
+      if ( ParAttInt == NULL )   Aux_Error( ERROR_INFO, "ParAttInt == NULL for NPar = %d !!\n", NPar );
    }
 #  endif // #ifdef GAMER_DEBUG
 
