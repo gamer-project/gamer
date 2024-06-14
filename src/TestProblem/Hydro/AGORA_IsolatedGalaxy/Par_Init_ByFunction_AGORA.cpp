@@ -59,7 +59,9 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
 
 
    const int NParAttFlt = 7;  // mass, pos*3, vel*3
+   const int NParAttInt = 1;  // type
    real_par *ParFltData_AllRank = NULL;
+   long     *ParIntData_AllRank = NULL;
 
 // load data --> for simplicity, currently only the root rank will load data from disk
    if ( MPI_Rank == 0 )
@@ -95,12 +97,13 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
 
 //    allocate memory to store all particles loaded from disk
       ParFltData_AllRank = new real_par [NPar_Sum*NParAttFlt];
+      ParIntData_AllRank = new long     [NPar_Sum*NParAttInt];
 
 
 //    load data from the three particle tables
       const char *Filename[3]  = { AGORA_HaloPar_Filename, AGORA_DiskPar_Filename, AGORA_BulgePar_Filename };
       const bool  RowMajor_Yes = true;                   // load data into the row-major order
-      const bool  AllocMem_No  = false;                  // do not allocate memory for ParFltData_AllRank
+      const bool  AllocMem_No  = false;                  // do not allocate memory for ParFlt/IntData_AllRank
       const int   NCol         = 7;                      // total number of columns to load
       const int   Col[NCol]    = {0, 1, 2, 3, 4, 5, 6};  // target columns: (x, y, z, vx, vy, vz, mass)
 
@@ -129,10 +132,15 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
 
 // get the number of particles in each rank and set the corresponding offsets
    if ( (long)NParAttFlt*NPar_AllRank > (long)__INT_MAX__ )
-      Aux_Error( ERROR_INFO, "Total number of particle attributes to be sent (%ld) exceeds the maximum integer (%ld) !!\n",
+      Aux_Error( ERROR_INFO, "Total number of particle float attributes to be sent (%ld) exceeds the maximum integer (%ld) !!\n",
                  (long)NParAttFlt*NPar_AllRank, (long)__INT_MAX__ );
 
+   if ( (long)NParAttInt*NPar_AllRank > (long)__INT_MAX__ )
+      Aux_Error( ERROR_INFO, "Total number of particle integer attributes to be sent (%ld) exceeds the maximum integer (%ld) !!\n",
+                 (long)NParAttInt*NPar_AllRank, (long)__INT_MAX__ );
+
    int NSend_Flt[MPI_NRank], SendDisp_Flt[MPI_NRank];
+   int NSend_Int[MPI_NRank], SendDisp_Int[MPI_NRank];
    int NPar_ThisRank_int = NPar_ThisRank;    // (i) convert to "int" and (ii) remove the "const" declaration
                                              // --> (ii) is necessary for OpenMPI version < 1.7
 
@@ -141,20 +149,27 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
    if ( MPI_Rank == 0 )
    {
       for (int r=0; r<MPI_NRank; r++)  NSend_Flt[r] *= NParAttFlt;
+      for (int r=0; r<MPI_NRank; r++)  NSend_Int[r] *= NParAttInt;
 
       SendDisp_Flt[0] = 0;
+      SendDisp_Int[0] = 0;
       for (int r=1; r<MPI_NRank; r++)  SendDisp_Flt[r] = SendDisp_Flt[r-1] + NSend_Flt[r-1];
+      for (int r=1; r<MPI_NRank; r++)  SendDisp_Int[r] = SendDisp_Int[r-1] + NSend_Int[r-1];
    }
 
 
 // send particles from the root rank to all ranks
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Sending particles from the root rank to all ranks ... " );
    real_par (*ParFltData_MyRank)[NParAttFlt] = new real_par [NPar_ThisRank][NParAttFlt];
+   long     (*ParIntData_MyRank)[NParAttInt] = new long     [NPar_ThisRank][NParAttInt];
 
    MPI_Scatterv( ParFltData_AllRank,   NSend_Flt, SendDisp_Flt,  MPI_GAMER_REAL_PAR,
                  ParFltData_MyRank[0], NPar_ThisRank*NParAttFlt, MPI_GAMER_REAL_PAR, 0, MPI_COMM_WORLD );
+   MPI_Scatterv( ParIntData_AllRank,   NSend_Int, SendDisp_Int,  MPI_LONG,
+                 ParIntData_MyRank[0], NPar_ThisRank*NParAttInt, MPI_LONG,           0, MPI_COMM_WORLD );
 
    delete [] ParFltData_AllRank;
+   delete [] ParIntData_AllRank;
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
@@ -181,6 +196,7 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
    }
 
    delete [] ParFltData_MyRank;
+   delete [] ParIntData_MyRank;
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
