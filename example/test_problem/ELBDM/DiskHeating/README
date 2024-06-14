@@ -16,7 +16,7 @@ Quick start:
 
 3. Default END_T is 2.5e-1 (about 3.5 Gyr) as in Yang et al. 2023 and OUTPUT_DT is 1.0e-2 (about 0.14 Gyr)
 
-4. To switch to a high resolution run, command "ln -sf ic_files/PAR_IC_0.4_M7 PAR_IC"
+4. To switch to a high-resolution run, command "ln -sf ic_files/PAR_IC_0.4_M7 PAR_IC"
    Set PAR_NPAR=80000000, MAX_LEVEL=3, and change all values in Input__Flag_NParPatch to 800
 
 
@@ -72,8 +72,8 @@ Analysis scripts:
 2. plot_halo_density.py, plot_halo_potential.py:
 
    * Compute and plot shell-averaged halo density or gravitational potential profiles
-   * Output files: Data_*_1d-Profile_radius_Dens.png, Halo_Dens_Data_*.npy;
-		   Data_*_1d-Profile_radius_Pote.png, Halo_Pote_Data_*.npy
+   * Output files: Data_*_1d-Profile_radius_Dens.png, Halo_Dens_Data_*.npy,
+                   Data_*_1d-Profile_radius_Pote.png, Halo_Pote_Data_*.npy
 
 3. data_disk.py:
 

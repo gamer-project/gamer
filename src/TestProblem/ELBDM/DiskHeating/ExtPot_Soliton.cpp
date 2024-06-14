@@ -34,7 +34,7 @@ void SetExtPotAuxArray_Soliton( double AuxArray_Flt[], int AuxArray_Int[], const
 // example parameters
    const double A = 0.0019/m_22/m_22/POW(CoreRadius,4);
    const double B = 9.1*0.01;
-   const double G = 6.6743e-8*1.989e+43/3.085678e21/UNIT_V/UNIT_V;
+   const double G = Const_NewtonG*1.0e10*Const_Msun/Const_kpc/UNIT_V/UNIT_V;
    AuxArray_Flt[0] = Cen[0];    // x coordinate of the external potential center
    AuxArray_Flt[1] = Cen[1];    // y ...
    AuxArray_Flt[2] = Cen[2];    // z ...
