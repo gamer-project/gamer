@@ -8,7 +8,7 @@
 
 
 static void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
-                const int lv, double AuxArray[] );
+                       const int lv, double AuxArray[] );
 
 static void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
                 const int GhostSize, const int idx[], const double pos[], const double Time,
@@ -16,65 +16,55 @@ static void BC( real Array[], const int ArraySize[], real fluid[], const int NVa
 
 static void End_DiskHeating();
 static void AddNewParticleAttribute();
-static double get_value_from_interpolation(double r, double *array_radius, double *array_value);
-static double get_value_from_interpolation_log(double r, double *array_radius, double *array_value);
 static double get_dispersion(double r);
-static void GetCenterOfMass( const double CM_Old[], double CM_New[], const double CM_MaxR );
-static void Record_Max();
 
 void Init_ExtPot_Soliton();
 // problem-specific global variables
 // =======================================================================================
 FieldIdx_t ParTypeIdx_DiskHeating = Idx_Undefined;
 static RandomNumber_t *RNG = NULL;
-static double pi = 3.1415926;
-static double G = 6.67408E-8;
+static double pi = M_PI;
+static double G = Const_NewtonG;
 
-static double CM_MaxR;      // maximum radius for determining CM
-static double CM_TolErrR;   // maximum allowed errors for determining CM
-       double Cen[3];       // center
-static bool AddFixedHalo;  // add a fixed halo, must enable OPT__FREEZE_FLUID
-static bool HaloUseTable;   // 0 = from analytical profile, 1 = from table
-       double m_22;         // ELBDM particle mass, used for soliton profile of the fixed halo
-       double CoreRadius;   // soliton radius of the fixed halo (in kpc)
-static double Rho_0;        // halo rho_0 (in 1.0e+10 Msun*kpc^-3)
-static double Rs;           // halo Rs (in kpc)
-static double Alpha;        // dimensionless
-static double Beta;         // dimensionless
-static double Gamma;        // dimensionless
-static char   DensTableFile[1000];   // fixed halo density profile filename
-static int    DensNbin;              // Nbins of density table
-static double *DensTable_r = NULL;   // radius of density table
-static double *DensTable_d = NULL;   // density of density table
-static bool   AddParWhenRestart;        // add a new disk to an existing snapshot, must enable OPT__RESTART_RESET
-static bool   AddParWhenRestartByfile;  // add a new disk via PAR_IC
-static int    AddParWhenRestartNPar;    // particle number of the new disk
-static double Disk_Mass;                // total mass of the new disk
-static double Disk_R;                   // scale radius of the new disk
-static char   DispTableFile[1000];   // velocity dispersion filename
-static int    DispNbin;              // Nbins of velocity dispersion table
-static double *DispTable_r = NULL;   // radius of velocity dispersion table
-static double *DispTable_d = NULL;   // velocity dispersion of velocity dispersion table
+static double CM_MaxR;                   // maximum radius for determining CM
+static double CM_TolErrR;                // maximum allowed errors for determining CM
+       double Cen[3];                    // center
+static bool   AddFixedHalo;              // add a fixed halo, must enable OPT__FREEZE_FLUID
+static bool   HaloUseTable;              // 0 = from analytical profile, 1 = from table
+       double m_22;                      // ELBDM particle mass, used for soliton profile of the fixed halo
+       double CoreRadius;                // soliton radius of the fixed halo (in kpc)
+static double Rho_0;                     // halo rho_0 (in 1.0e+10 Msun*kpc^-3)
+static double Rs;                        // halo Rs (in kpc)
+static double Alpha;                     // dimensionless, used for alpha-beta-gamma density profile of the fixed halo
+static double Beta;                      // dimensionless, used for alpha-beta-gamma density profile of the fixed halo
+static double Gamma;                     // dimensionless, used for alpha-beta-gamma density profile of the fixed halo
+static char   DensTableFile[MAX_STRING]; // fixed halo density profile filename
+static int    DensNbin;                  // number of bins of density table
+static double *DensTable_r = NULL;       // radius of density table
+static double *DensTable_d = NULL;       // density of density table
+static bool   AddParWhenRestart;         // add a new disk to an existing snapshot, must enable OPT__RESTART_RESET
+static bool   AddParWhenRestartByfile;   // add a new disk via PAR_IC
+static long   AddParWhenRestartNPar;     // particle number of the new disk
+static int    NewDisk_RSeed;             // random seed for setting new disk particle position and velocity
+static double Disk_Mass;                 // total mass of the new disk
+static double Disk_R;                    // scale radius of the new disk
+static char   DispTableFile[MAX_STRING]; // velocity dispersion filename
+static int    DispNbin;                  // number of bins of velocity dispersion table
+static double *DispTable_r = NULL;       // radius of velocity dispersion table
+static double *DispTable_d = NULL;       // velocity dispersion of velocity dispersion table
 
 // =======================================================================================
 #ifdef PARTICLE
 void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_AllRank,
-                                real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                real *ParType, real *AllAttribute[PAR_NATT_TOTAL]);
+                                      real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
+                                      real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
+                                      real *ParType, real *AllAttribute[PAR_NATT_TOTAL]);
 static void Init_NewDiskRestart();
 static void Par_AfterAcceleration( const long NPar_ThisRank, const long NPar_AllRank,
-                                 real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                 real *ParVelX, real *ParVelY, real *ParVelZ,
-                                 real *ParAccX, real *ParAccY, real *ParAccZ,
-                                 real *ParTime, real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
-
-
-void (*Par_AfterAcceleration_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
-                                 real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                 real *ParVelX, real *ParVelY, real *ParVelZ,
-                                 real *ParAccX, real *ParAccY, real *ParAccZ,
-                                 real *ParTime, real *ParType, real *AllAttribute[PAR_NATT_TOTAL] ) = Par_AfterAcceleration;
+                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
+                                   real *ParVelX, real *ParVelY, real *ParVelZ,
+                                   real *ParAccX, real *ParAccY, real *ParAccZ,
+                                   real *ParTime, real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
 
 #endif
 
@@ -116,9 +106,6 @@ void Validate()
 #  endif
 
 #  ifdef PARTICLE
-//   if ( OPT__INIT == INIT_BY_FUNCTION  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
-//      Aux_Error( ERROR_INFO, "please set PAR_INIT = 1 (by FUNCTION) !!\n" );
-
    if ( PAR_NATT_USER != 1 )
       Aux_Error( ERROR_INFO, "please set PAR_NATT_USER = 1 in the Makefile !!\n" );
 #  endif
@@ -127,10 +114,6 @@ void Validate()
 // warnings
    if ( MPI_Rank == 0 )
    {
-#     ifndef DUAL_ENERGY
-         Aux_Message( stderr, "WARNING : it's recommended to enable DUAL_ENERGY for this test !!\n" );
-#     endif
-
       if ( FLAG_BUFFER_SIZE < 5 )
          Aux_Message( stderr, "WARNING : it's recommended to set FLAG_BUFFER_SIZE >= 5 for this test !!\n" );
    } // if ( MPI_Rank == 0 )
@@ -184,7 +167,7 @@ void SetParameter()
    ReadPara->Add( "CenZ",                    &Cen[2],                  NoDef_double,  NoMin_double,     NoMax_double      );
    ReadPara->Add( "AddFixedHalo",            &AddFixedHalo,            false,         Useless_bool,     Useless_bool      );
    ReadPara->Add( "HaloUseTable",            &HaloUseTable,            false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "m_22",                    &m_22,                    0.81,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "m_22",                    &m_22,                    0.4,           Eps_double,       NoMax_double      );
    ReadPara->Add( "CoreRadius",              &CoreRadius,              1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "Rho_0",                   &Rho_0,                   1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "Rs",                      &Rs,                      1.0,           Eps_double,       NoMax_double      );
@@ -195,7 +178,8 @@ void SetParameter()
    ReadPara->Add( "DensNbin",                &DensNbin,                0,             0,                NoMax_int         );
    ReadPara->Add( "AddParWhenRestart",       &AddParWhenRestart,       false,         Useless_bool,     Useless_bool      );
    ReadPara->Add( "AddParWhenRestartByfile", &AddParWhenRestartByfile, true,          Useless_bool,     Useless_bool      );
-   ReadPara->Add( "AddParWhenRestartNPar",   &AddParWhenRestartNPar,   0,             NoMin_int,        NoMax_int         );
+   ReadPara->Add( "AddParWhenRestartNPar",   &AddParWhenRestartNPar,   (long)0,       (long)0,          NoMax_long        );
+   ReadPara->Add( "NewDisk_RSeed",           &NewDisk_RSeed,           1002,          0,                NoMax_int         );
    ReadPara->Add( "Disk_Mass",               &Disk_Mass,               1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "Disk_R",                  &Disk_R,                  1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "DispTableFile",           DispTableFile,            NoDef_str,     Useless_str,      Useless_str       );
@@ -218,10 +202,9 @@ void SetParameter()
       if ( DensNbin == 0){
          if ( MPI_Rank == 0 )    Aux_Error( ERROR_INFO, "DensNbin should be set!\n" );
       }
-      int STR_SIZE = 1024;
       int counter, k;
       FILE *input_table;
-      char buff[STR_SIZE];
+      char buff[MAX_STRING];
       double radius, value;
       DensTable_r = new double [DensNbin];
       DensTable_d = new double [DensNbin];
@@ -237,17 +220,18 @@ void SetParameter()
             Aux_Message( stdout, "Loading %s for reading density table succeed!\n", DensTableFile);
          while (!feof(input_table))
          {
-            fgets(buff, STR_SIZE, input_table);
+            fgets(buff, MAX_STRING, input_table);
             if (buff==NULL||buff[0]=='\0')
                break;
             else if (buff[0]!='#')
             {
                sscanf(buff, "%lf %lf", &radius, &value);
-               DensTable_r[counter] = radius;
-               DensTable_d[counter] = value*CUBE(UNIT_L)/UNIT_M;
+               // convert table to log-log scale
+               DensTable_r[counter] = log(radius);
+               DensTable_d[counter] = log(value*CUBE(UNIT_L)/UNIT_M);
                counter ++;
             }
-            memset(buff, '\0', STR_SIZE);
+            memset(buff, '\0', MAX_STRING);
          }
          fclose(input_table);
       }
@@ -256,8 +240,8 @@ void SetParameter()
    }
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
-   const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default    = __FLT_MAX__; //2.5
+   const long   End_Step_Default = 2500;
+   const double End_T_Default    = 2.5e-1;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -280,7 +264,7 @@ void SetParameter()
       Aux_Message( stdout, "  CenX                      = %13.7e\n",     Cen[0]                  );
       Aux_Message( stdout, "  CenY                      = %13.7e\n",     Cen[1]                  );
       Aux_Message( stdout, "  Cenz                      = %13.7e\n",     Cen[2]                  );
-      Aux_Message( stdout, "  AddFixedHalo              = %d\n",         AddFixedHalo           );
+      Aux_Message( stdout, "  AddFixedHalo              = %d\n",         AddFixedHalo            );
       Aux_Message( stdout, "  HaloUseTable              = %d\n",         HaloUseTable            );
       Aux_Message( stdout, "  m_22                      = %13.7e\n",     m_22                    );
       Aux_Message( stdout, "  CoreRadius                = %13.7e\n",     CoreRadius              );
@@ -294,6 +278,7 @@ void SetParameter()
       Aux_Message( stdout, "  AddParWhenRestart         = %d\n",         AddParWhenRestart       );
       Aux_Message( stdout, "  AddParWhenRestartByfile   = %d\n",         AddParWhenRestartByfile );
       Aux_Message( stdout, "  AddParWhenRestartNPar     = %d\n",         AddParWhenRestartNPar   );
+      Aux_Message( stdout, "  NewDisk_RSeed             = %d\n",         NewDisk_RSeed           );
       Aux_Message( stdout, "  Disk_Mass                 = %13.7e\n",     Disk_Mass               );
       Aux_Message( stdout, "  Disk_R                    = %13.7e\n",     Disk_R                  );
       Aux_Message( stdout, "  DispTableFile             = %s\n",         DispTableFile           );
@@ -306,7 +291,9 @@ void SetParameter()
 
 } // FUNCTION : SetParameter
 
-// analytical density profile for fixed background halo
+// alpha-beta-gamma density profile for fixed background halo with soliton as function of radius
+// r should have unit in kpc
+// returned density is in 1.0e10*Msun/kpc^3
 double halo_density(double r) {
 
    double rho_halo = Rho_0/pow(r/Rs, Alpha)/pow(1 + pow(r/Rs,Beta),(Gamma-Alpha)/Beta);
@@ -361,9 +348,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       const double r_in_kpc = r*UNIT_L/Unit_L_GALIC;
       if (HaloUseTable)
       {
-         if (r_in_kpc < DensTable_r[0]) dens = DensTable_d[0];
-         else if (r_in_kpc > DensTable_r[DensNbin-1]) dens = 0;
-         else dens = get_value_from_interpolation_log(r_in_kpc, DensTable_r, DensTable_d);
+         if (r_in_kpc < exp(DensTable_r[0])) dens = exp(DensTable_d[0]);
+         else if (r_in_kpc > exp(DensTable_r[DensNbin-1])) dens = 0;
+         else dens = exp( Mis_InterpolateFromTable( DensNbin, DensTable_r, DensTable_d, log(r_in_kpc) ) );
       }
       else dens = halo_density(r_in_kpc)*Unit_D_GALIC/UNIT_D;
    }
@@ -385,364 +372,6 @@ void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
 
 } // FUNCTION : BC
 
-//-------------------------------------------------------------------------------------------------------
-// Function    :  GetCenterOfMass
-// Description :  Record the center of mass (CM)
-//
-// Note        :  1. Invoked by Record_Max() recursively
-//                2. Only include cells within CM_MaxR from CM_Old[] when updating CM
-//
-// Parameter   :  CM_Old[] : Previous CM
-//                CM_New[] : New CM to be returned
-//                CM_MaxR  : Maximum radius to compute CM
-//
-// Return      :  CM_New[]
-//-------------------------------------------------------------------------------------------------------
-void GetCenterOfMass( const double CM_Old[], double CM_New[], const double CM_MaxR )
-{
-
-   const double CM_MaxR2          = SQR( CM_MaxR );
-   const double HalfBox[3]        = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
-   const bool   Periodic          = ( OPT__BC_FLU[0] == BC_FLU_PERIODIC );
-   const bool   IntPhase_No       = false;
-   const real   MinDens_No        = -1.0;
-   const real   MinPres_No        = -1.0;
-   const real   MinTemp_No        = -1.0;
-   const real   MinEntr_No        = -1.0;
-   const bool   DE_Consistency_No = false;
-#  ifdef PARTICLE
-   const bool   TimingSendPar_No  = false;
-   const bool   PredictParPos_No  = false;
-   const bool   JustCountNPar_No  = false;
-#  ifdef LOAD_BALANCE
-   const bool   SibBufPatch       = true;
-   const bool   FaSibBufPatch     = true;
-#  else
-   const bool   SibBufPatch       = NULL_BOOL;
-   const bool   FaSibBufPatch     = NULL_BOOL;
-#  endif
-#  endif // #ifdef PARTICLE
-
-   int   *PID0List = NULL;
-   double M_ThisRank, MR_ThisRank[3], M_AllRank, MR_AllRank[3];
-   real (*TotalDens)[PS1][PS1][PS1];
-
-   M_ThisRank = 0.0;
-   for (int d=0; d<3; d++)    MR_ThisRank[d] = 0.0;
-
-
-   for (int lv=0; lv<NLEVEL; lv++)
-   {
-//    initialize the particle density array (rho_ext) and collect particles to the target level
-/*
-#     ifdef PARTICLE
-      Prepare_PatchData_InitParticleDensityArray( lv );
-
-      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE ,PredictParPos_No, NULL_REAL, SibBufPatch, FaSibBufPatch, JustCountNPar_No,
-                                    TimingSendPar_No );
-#     endif
-*/
-//    get the total density on grids
-      TotalDens = new real [ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
-      PID0List  = new int  [ amr->NPatchComma[lv][1]/8 ];
-
-      for (int PID0=0, t=0; PID0<amr->NPatchComma[lv][1]; PID0+=8, t++)    PID0List[t] = PID0;
-
-      Prepare_PatchData( lv, Time[lv], TotalDens[0][0][0], NULL, 0, amr->NPatchComma[lv][1]/8, PID0List, _DENS, _NONE,
-                         OPT__RHO_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                         MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
-
-      delete [] PID0List;
-
-
-//    free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
-/*
-#     ifdef PARTICLE
-      Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
-
-      Prepare_PatchData_FreeParticleDensityArray( lv );
-#     endif
-*/
-
-//    calculate the center of mass
-      const double dh = amr->dh[lv];
-      const double dv = CUBE( dh );
-
-      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-      {
-//       skip non-leaf patches
-         if ( amr->patch[0][lv][PID]->son != -1 )  continue;
-
-         const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
-         const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
-         const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
-
-         double x, y, z, dx, dy, dz;
-
-         for (int k=0; k<PS1; k++)  {  z = z0 + k*dh;  dz = z - CM_Old[2];
-                                       if ( Periodic ) {
-                                          if      ( dz > +HalfBox[2] )  {  z -= amr->BoxSize[2];  dz -= amr->BoxSize[2];  }
-                                          else if ( dz < -HalfBox[2] )  {  z += amr->BoxSize[2];  dz += amr->BoxSize[2];  }
-                                       }
-         for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;  dy = y - CM_Old[1];
-                                       if ( Periodic ) {
-                                          if      ( dy > +HalfBox[1] )  {  y -= amr->BoxSize[1];  dy -= amr->BoxSize[1];  }
-                                          else if ( dy < -HalfBox[1] )  {  y += amr->BoxSize[1];  dy += amr->BoxSize[1];  }
-                                       }
-         for (int i=0; i<PS1; i++)  {  x = x0 + i*dh;  dx = x - CM_Old[0];
-                                       if ( Periodic ) {
-                                          if      ( dx > +HalfBox[0] )  {  x -= amr->BoxSize[0];  dx -= amr->BoxSize[0];  }
-                                          else if ( dx < -HalfBox[0] )  {  x += amr->BoxSize[0];  dx += amr->BoxSize[0];  }
-                                       }
-
-//          only include cells within CM_MaxR
-            const double R2 = SQR(dx) + SQR(dy) + SQR(dz);
-            if ( R2 < CM_MaxR2 )
-            {
-               const double dm = TotalDens[PID][k][j][i]*dv;
-
-               M_ThisRank     += dm;
-               MR_ThisRank[0] += dm*x;
-               MR_ThisRank[1] += dm*y;
-               MR_ThisRank[2] += dm*z;
-            }
-         }}}
-      } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-
-      delete [] TotalDens;
-   } // for (int lv=0; lv<NLEVEL; lv++)
-
-
-// collect data from all ranks to calculate the CM
-// --> note that all ranks will get CM_New[]
-   MPI_Allreduce( &M_ThisRank, &M_AllRank, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-   MPI_Allreduce( MR_ThisRank, MR_AllRank, 3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-
-   for (int d=0; d<3; d++)    CM_New[d] = MR_AllRank[d] / M_AllRank;
-
-// map the new CM back to the simulation domain
-   if ( Periodic )
-   for (int d=0; d<3; d++)
-   {
-      if      ( CM_New[d] >= amr->BoxSize[d] )  CM_New[d] -= amr->BoxSize[d];
-      else if ( CM_New[d] < 0.0              )  CM_New[d] += amr->BoxSize[d];
-
-   }
-
-   for (int d=0; d<3; d++)
-      if ( CM_New[d] >= amr->BoxSize[d]  ||  CM_New[d] < 0.0 )
-         Aux_Error( ERROR_INFO, "CM_New[%d] = %14.7e lies outside the domain !!\n", d, CM_New[d] );
-
-} // FUNCTION : GetCenterOfMass
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Record_Max
-// Description :  Record the maximum density and center coordinates
-//
-// Note        :  1. It will also record the real and imaginary parts associated with the maximum density
-//                2. For the center coordinates, it will record the position of maximum density, minimum potential,
-//                   and center-of-mass
-//                3. Output filenames are fixed to "Record__MaxDens_ELBDM_DiskHeating" and "Record__Center_ELBDM_DiskHeating"
-//
-// Parameter   :  None
-//
-// Return      :  None
-//-------------------------------------------------------------------------------------------------------
-void Record_Max()
-{
-
-   const char filename_max_dens[] = "Record__MaxDens_ELBDM_DiskHeating";
-   const char filename_center  [] = "Record__Center_ELBDM_DiskHeating";
-   const int  CountMPI            = 10;
-
-   double dens, max_dens_loc=-__DBL_MAX__, max_dens_pos_loc[3], real_loc, imag_loc;
-   double pote, min_pote_loc=+__DBL_MAX__, min_pote_pos_loc[3];
-   double send[CountMPI], (*recv)[CountMPI]=new double [MPI_NRank][CountMPI];
-
-
-// collect local data
-   for (int lv=0; lv<NLEVEL; lv++)
-   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-   {
-//    skip non-leaf patches
-      if ( amr->patch[0][lv][PID]->son != -1 )  continue;
-
-      for (int k=0; k<PS1; k++)  {  const double z = amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*amr->dh[lv];
-      for (int j=0; j<PS1; j++)  {  const double y = amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*amr->dh[lv];
-      for (int i=0; i<PS1; i++)  {  const double x = amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*amr->dh[lv];
-
-         dens = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
-         pote = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot[k][j][i];
-
-         if ( dens > max_dens_loc )
-         {
-            max_dens_loc        = dens;
-            real_loc            = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[REAL][k][j][i];
-            imag_loc            = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[IMAG][k][j][i];
-            max_dens_pos_loc[0] = x;
-            max_dens_pos_loc[1] = y;
-            max_dens_pos_loc[2] = z;
-         }
-
-         if ( pote < min_pote_loc )
-         {
-            min_pote_loc        = pote;
-            min_pote_pos_loc[0] = x;
-            min_pote_pos_loc[1] = y;
-            min_pote_pos_loc[2] = z;
-         }
-      }}}
-   }
-
-
-// gather data to the root rank
-   send[0] = max_dens_loc;
-   send[1] = real_loc;
-   send[2] = imag_loc;
-   send[3] = max_dens_pos_loc[0];
-   send[4] = max_dens_pos_loc[1];
-   send[5] = max_dens_pos_loc[2];
-   send[6] = min_pote_loc;
-   send[7] = min_pote_pos_loc[0];
-   send[8] = min_pote_pos_loc[1];
-   send[9] = min_pote_pos_loc[2];
-
-   MPI_Gather( send, CountMPI, MPI_DOUBLE, recv[0], CountMPI, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-
-
-// record the maximum density and center coordinates
-   double max_dens      = -__DBL_MAX__;
-   double min_pote      = +__DBL_MAX__;
-   int    max_dens_rank = -1;
-   int    min_pote_rank = -1;
-
-   if ( MPI_Rank == 0 )
-   {
-      for (int r=0; r<MPI_NRank; r++)
-      {
-         if ( recv[r][0] > max_dens )
-         {
-            max_dens      = recv[r][0];
-            max_dens_rank = r;
-         }
-
-         if ( recv[r][6] < min_pote )
-         {
-            min_pote      = recv[r][6];
-            min_pote_rank = r;
-         }
-      }
-
-      if ( max_dens_rank < 0  ||  max_dens_rank >= MPI_NRank )
-         Aux_Error( ERROR_INFO, "incorrect max_dens_rank (%d) !!\n", max_dens_rank );
-
-      if ( min_pote_rank < 0  ||  min_pote_rank >= MPI_NRank )
-         Aux_Error( ERROR_INFO, "incorrect min_pote_rank (%d) !!\n", min_pote_rank );
-
-      static bool FirstTime = true;
-
-      if ( FirstTime )
-      {
-         if ( Aux_CheckFileExist(filename_max_dens) )
-            Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", filename_max_dens );
-         else
-         {
-            FILE *file_max_dens = fopen( filename_max_dens, "w" );
-            fprintf( file_max_dens, "#%19s   %10s   %14s   %14s   %14s\n", "Time", "Step", "Dens", "Real", "Imag" );
-            fclose( file_max_dens );
-         }
-
-         if ( Aux_CheckFileExist(filename_center) )
-            Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", filename_center );
-         else
-         {
-            FILE *file_center = fopen( filename_center, "w" );
-            fprintf( file_center, "#%19s  %10s  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %10s  %14s  %14s  %14s\n",
-                     "Time", "Step", "Dens", "Dens_x", "Dens_y", "Dens_z", "Pote", "Pote_x", "Pote_y", "Pote_z",
-                     "NIter", "CM_x", "CM_y", "CM_z" );
-            fclose( file_center );
-         }
-
-         FirstTime = false;
-      }
-
-      FILE *file_max_dens = fopen( filename_max_dens, "a" );
-      fprintf( file_max_dens, "%20.14e   %10ld   %14.7e   %14.7e   %14.7e\n",
-               Time[0], Step, recv[max_dens_rank][0], recv[max_dens_rank][1], recv[max_dens_rank][2] );
-      fclose( file_max_dens );
-
-      FILE *file_center = fopen( filename_center, "a" );
-      fprintf( file_center, "%20.14e  %10ld  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e",
-               Time[0], Step, recv[max_dens_rank][0], recv[max_dens_rank][3], recv[max_dens_rank][4], recv[max_dens_rank][5],
-                              recv[min_pote_rank][6], recv[min_pote_rank][7], recv[min_pote_rank][8], recv[min_pote_rank][9] );
-      fclose( file_center );
-   } // if ( MPI_Rank == 0 )
-
-
-// compute the center of mass until convergence
-   const double TolErrR2 = SQR( CM_TolErrR );
-   const int    NIterMax = 10;
-
-   double dR2, CM_Old[3], CM_New[3];
-   int NIter = 0;
-
-// set an initial guess by the peak density position
-   if ( MPI_Rank == 0 )
-      for (int d=0; d<3; d++)    CM_Old[d] = recv[max_dens_rank][3+d];
-
-   MPI_Bcast( CM_Old, 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-
-   while ( true )
-   {
-      GetCenterOfMass( CM_Old, CM_New, CM_MaxR );
-
-      dR2 = SQR( CM_Old[0] - CM_New[0] )
-          + SQR( CM_Old[1] - CM_New[1] )
-          + SQR( CM_Old[2] - CM_New[2] );
-      NIter ++;
-
-      if ( dR2 <= TolErrR2  ||  NIter >= NIterMax )
-         break;
-      else
-         memcpy( CM_Old, CM_New, sizeof(double)*3 );
-   }
-
-   if ( MPI_Rank == 0 )
-   {
-      if ( dR2 > TolErrR2 )
-         Aux_Message( stderr, "WARNING : dR (%13.7e) > CM_TolErrR (%13.7e) !!\n", sqrt(dR2), CM_TolErrR );
-
-      FILE *file_center = fopen( filename_center, "a" );
-      fprintf( file_center, "  %10d  %14.7e  %14.7e  %14.7e\n", NIter, CM_New[0], CM_New[1], CM_New[2] );
-      fclose( file_center );
-   }
-
-   delete [] recv;
-
-} // FUNCTION : Record_Max
-
-
-double get_value_from_interpolation(double r, double *array_radius, double *array_value)
-{
-  int i = 0;
-  while(r > array_radius[i])
-  {
-    i ++;
-  }
-  return array_value[i-1]+(array_value[i]-array_value[i-1])*(r-array_radius[i-1])/(array_radius[i]-array_radius[i-1]);
-} // FUNCTION : get_value_from_interpolation
-
-
-double get_value_from_interpolation_log(double r, double *array_radius, double *array_value)
-{
-  int i = 0;
-  while(r > array_radius[i])
-  {
-    i ++;
-  }
-  return exp(log(array_value[i-1])+(log(array_value[i])-log(array_value[i-1]))*(log(r)-log(array_radius[i-1]))/(log(array_radius[i])-log(array_radius[i-1])));
-} // FUNCTION : get_value_from_interpolation_log
 
 void End_DiskHeating()
 {
@@ -772,8 +401,7 @@ void End_DiskHeating()
 void AddNewParticleAttribute()
 {
 
-   // "Idx_ParLabel" has been predefined in Field.h
-   if ( ParTypeIdx_DiskHeating == Idx_Undefined )  ParTypeIdx_DiskHeating = AddParticleAttribute( "ParNumber" );
+   if ( ParTypeIdx_DiskHeating == Idx_Undefined )  ParTypeIdx_DiskHeating = AddParticleAttribute( "ParLabel" );
 
 } // FUNCTION : AddNewParticleAttribute
 #ifdef GRAVITY
@@ -808,7 +436,6 @@ void Init_NewDiskRestart()
       if ( MPI_Rank == 0 ){
          const char FileName[]     = "PAR_IC";
          const int  NParAtt        = 8;             // mass, pos*3, vel*3, type
-         const int  NParAttPerLoad = 1;
 
 //       check
          if ( !Aux_CheckFileExist(FileName) )
@@ -832,10 +459,10 @@ void Init_NewDiskRestart()
 //       note that fread() may fail for large files if sizeof(size_t) == 4 instead of 8
          FILE *File = fopen( FileName, "rb" );
 
-         for (int v=0; v<NParAtt; v+=NParAttPerLoad)
+         for (int v=0; v<NParAtt; v++)
          {
             fseek( File, v*NPar_AllRank*sizeof(real), SEEK_SET );
-            fread( ParData_AllRank+v*NPar_AllRank, sizeof(real), long(NParAttPerLoad)*NPar_AllRank, File );
+            fread( ParData_AllRank+v*NPar_AllRank, sizeof(real), NPar_AllRank, File );
          }
 
          fclose( File );
@@ -855,7 +482,7 @@ void Init_NewDiskRestart()
 //          mass
             Mass_AllRank[p] = ParData1[0];
 //          label
-            Type_AllRank[p] = ParData1[7];
+            Type_AllRank[p] = PTYPE_GENERIC_MASSIVE;
             Label_AllRank[p] = ParData1[7];
 //          position
             Pos_AllRank[0][p] = ParData1[1];
@@ -869,6 +496,9 @@ void Init_NewDiskRestart()
          } // for ( long p = 0; p < NPar_AllRank; p++)
          Aux_Message( stdout, "done\n" );
 
+         // free memory
+         delete [] ParData_AllRank;
+         delete [] ParData1;
       } // if ( MPI_Rank == 0 )
    }// if ( AddParWhenRestartByfile )
 
@@ -881,12 +511,11 @@ void Init_NewDiskRestart()
 
       // read velocity dispersion table
       if ( DispNbin == 0){
-         if ( MPI_Rank == 0 )    Aux_Error( ERROR_INFO, "DispNbin should be set!\n" );
+         Aux_Error( ERROR_INFO, "DispNbin should be set!\n" );
       }
-      int STR_SIZE = 1024;
       int counter, k;
       FILE *input_table;
-      char buff[STR_SIZE];
+      char buff[MAX_STRING];
       double radius, value;
       DispTable_r = new double [DispNbin];
       DispTable_d = new double [DispNbin];
@@ -902,7 +531,7 @@ void Init_NewDiskRestart()
             Aux_Message( stdout, "Loading %s for reading density table succeed!\n", DispTableFile);
          while (!feof(input_table))
          {
-            fgets(buff, STR_SIZE, input_table);
+            fgets(buff, MAX_STRING, input_table);
             if (buff==NULL||buff[0]=='\0')
                break;
             else if (buff[0]!='#')
@@ -912,7 +541,7 @@ void Init_NewDiskRestart()
                DispTable_d[counter] = value*1e5/UNIT_V;
                counter ++;
             }
-            memset(buff, '\0', STR_SIZE);
+            memset(buff, '\0', MAX_STRING);
          }
          fclose(input_table);
       }
@@ -929,7 +558,7 @@ void Init_NewDiskRestart()
 
 //       initialize the RNG
          RNG = new RandomNumber_t( 1 );
-         RNG->SetSeed( 0, 1002 );
+         RNG->SetSeed( 0, NewDisk_RSeed );
 
          for ( long p = 0; p < NPar_AllRank; p++)
          {
@@ -937,10 +566,10 @@ void Init_NewDiskRestart()
 //          mass
             Mass_AllRank[p] = ParM;
 //          label
-            Type_AllRank[p] = 3;
-            Label_AllRank[p] = 3;
+            Type_AllRank[p] = PTYPE_STAR;
+            Label_AllRank[p] = 3;    // use 3 to represent thin disk particles
 
-//          position
+//          position: statisfying surface density Sigma=Disk_Mass/(2*pi*Disk_R**2)*exp(-R/Disk_R)
             Ran  = RNG->GetValue( 0, 0.0, 1.0);
             R = 1.0;
             do
@@ -958,14 +587,6 @@ void Init_NewDiskRestart()
             RanVec[2] = 0;
             for (int d = 0; d < 3; d++) Pos_AllRank[d][p] = RanVec[d] + Cen[d];
 
-//          velocity
-            double V_acc, sigma, r;
-            double RanV[3];
-            V_acc = sqrt(Ran*Disk_Mass/RanR);
-            Vel_AllRank[0][p] = - V_acc*sin(phi);
-            Vel_AllRank[1][p] =   V_acc*cos(phi);
-            Vel_AllRank[2][p] =   0;
-
          } // for ( long p = 0; p < NPar_AllRank; p++)
 
       } //if ( MPI_Rank == 0 )
@@ -975,9 +596,6 @@ void Init_NewDiskRestart()
    Par_AddParticleAfterInit( NNewPar, NewParAtt );
 // free memory
    for (int v=0; v<PAR_NATT_TOTAL; v++)   delete [] NewParAtt[v];
-
-// initialize the k-space Green's function for the isolated BC.
-   if ( OPT__BC_POT == BC_POT_ISOLATED )  Init_GreenFuncK();
 
 #  if ( defined PARTICLE  &&  defined LOAD_BALANCE )
    const double Par_Weight    = amr->LB->Par_Weight;
@@ -1005,8 +623,12 @@ void Init_NewDiskRestart()
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Refining level %d ... done\n", lv );
     } // for (int lv=OPT__UM_IC_LEVEL; lv<MAX_LEVEL; lv++)
 
+//  compute garvitaional potential field to get the accleration for thin disk particles
     if ( !AddParWhenRestartByfile )
     {
+//    initialize the k-space Green's function for the isolated BC.
+      if ( OPT__BC_POT == BC_POT_ISOLATED )  Init_GreenFuncK();
+
 //    evaluate the initial average density if it is not set yet (may already be set in Init_ByRestart)
       if ( AveDensity_Init <= 0.0 )    Poi_GetAverageDensity();
 
@@ -1041,11 +663,14 @@ void Init_NewDiskRestart()
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating particle acceleration" );
 
       // compute particle velocities using acceleration fields
-      Par_AfterAcceleration_Ptr( amr->Par->NPar_AcPlusInac, amr->Par->NPar_Active_AllRank,
-                                 amr->Par->Mass, amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ,
-                                 amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ,
-                                 amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ,
-                                 amr->Par->Time, amr->Par->Type, amr->Par->Attribute );
+      Par_AfterAcceleration( amr->Par->NPar_AcPlusInac, amr->Par->NPar_Active_AllRank,
+                             amr->Par->Mass, amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ,
+                             amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ,
+                             amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ,
+                             amr->Par->Time, amr->Par->Type, amr->Par->Attribute );
+
+      // free memory
+      root_fftw::fft_free(GreenFuncK); GreenFuncK      = NULL;
 
    }// if ( !AddParWhenRestartByfile )
 
@@ -1055,11 +680,11 @@ void Init_NewDiskRestart()
 //// Function    :  Par_AfterAcceleration()
 //// Description :  Compute particle veolcities using acceleration fields
 ////-------------------------------------------------------------------------------------------------------
-void Par_AfterAcceleration(const long NPar_ThisRank, const long NPar_AllRank, real *ParMass,
-                                            real *ParPosX, real *ParPosY, real *ParPosZ,
-                                            real *ParVelX, real *ParVelY, real *ParVelZ,
-                                            real *ParAccX, real *ParAccY, real *ParAccZ,
-                                            real *ParTime, real *ParType,  real *AllAttribute[PAR_NATT_TOTAL])
+void Par_AfterAcceleration( const long NPar_ThisRank, const long NPar_AllRank, real *ParMass,
+                            real *ParPosX, real *ParPosY, real *ParPosZ,
+                            real *ParVelX, real *ParVelY, real *ParVelZ,
+                            real *ParAccX, real *ParAccY, real *ParAccZ,
+                            real *ParTime, real *ParType,  real *AllAttribute[PAR_NATT_TOTAL])
 {
 #  ifdef SUPPORT_GSL
 
@@ -1077,12 +702,12 @@ void Par_AfterAcceleration(const long NPar_ThisRank, const long NPar_AllRank, re
    // initialize the RNG
    gsl_rng *random_generator;
    random_generator = gsl_rng_alloc(gsl_rng_ranlxd1);
-   gsl_rng_set(random_generator, 42 + MPI_Rank);
+   gsl_rng_set(random_generator, NewDisk_RSeed + MPI_Rank);
 
    for (long p=0; p<NPar_ThisRank; p++)
    {
       if ( ParMass[p] < 0.0 )  continue;
-      if ( ParType[p] == 3){
+      if ( AllAttribute[ParTypeIdx_DiskHeating][p] == 3 ){
          ParRadius[0] = ParPos[0][p] - Cen[0];
          ParRadius[1] = ParPos[1][p] - Cen[1];
          ParR = sqrt( SQR(ParRadius[0]) + SQR(ParRadius[1]) );
@@ -1110,13 +735,13 @@ void Par_AfterAcceleration(const long NPar_ThisRank, const long NPar_AllRank, re
 
 } // FUNCTION : Par_AfterAcceleration
 
-
+// get thin disk velocity dispersion from table
 double get_dispersion(double r){
    double disp = 0.0;
-   const double r_in_kpc = r*UNIT_L/3.085678e21;
+   const double r_in_kpc = r*UNIT_L/Const_kpc;
    if (r_in_kpc < DispTable_r[0]) disp = DispTable_d[0];
    else if (r_in_kpc > DispTable_r[DispNbin-1]) disp = DispTable_d[DispNbin-1];
-   else disp = get_value_from_interpolation(r_in_kpc, DispTable_r, DispTable_d);
+   else disp = Mis_InterpolateFromTable( DispNbin, DispTable_r, DispTable_d, r_in_kpc );
 
    return disp;
 } // FUNCTION : get_dispersion
@@ -1150,56 +775,24 @@ void Init_TestProb_ELBDM_DiskHeating()
    Validate();
 
 
-// replace HYDRO by the target model (e.g., MHD/ELBDM) and also check other compilation flags if necessary (e.g., GRAVITY/PARTICLE)
 #  if ( MODEL == ELBDM )
 // set the problem-specific runtime parameters
    SetParameter();
 
 
-// procedure to enable a problem-// 1. define a user-specified function (example functions are given below)
-// 1. define a user-specified function (example functions are given below)
-// 2. declare its function prototype on the top of this file
-// 3. set the corresponding function pointer below to the new problem-specific function
-// 4. enable the corresponding runtime option in "Input__Parameter"
-//    --> for instance, enable OPT__OUTPUT_USER for Output_User_Ptr
+// set the function pointers of various problem-specific routines
    Init_Function_User_Ptr         = SetGridIC;
-#  ifdef MHD
-//   Init_Function_BField_User_Ptr  = SetBFieldIC;
-#  endif
-// comment out Init_ByFile_User_Ptr to use the default
-//   Init_ByFile_User_Ptr           = NULL; // option: OPT__INIT=3;             example: Init/Init_ByFile.cpp -> Init_ByFile_Default()
-//   Init_Field_User_Ptr            = NULL; // set NCOMP_PASSIVE_USER;          example: TestProblem/Hydro/Plummer/Init_TestProb_Hydro_Plummer.cpp --> AddNewField()
-//   Flag_User_Ptr                  = NULL; // option: OPT__FLAG_USER;          example: Refine/Flag_User.cpp
-//   Mis_GetTimeStep_User_Ptr       = NULL; // option: OPT__DT_USER;            example: Miscellaneous/Mis_GetTimeStep_User.cpp
-   BC_User_Ptr                    = BC; // option: OPT__BC_FLU_*=4;         example: TestProblem/ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> BC()
-#  ifdef MHD
-//   BC_BField_User_Ptr             = NULL; // option: OPT__BC_FLU_*=4;
-#  endif
-//   Flu_ResetByUser_Func_Ptr       = NULL; // option: OPT__RESET_FLUID;        example: Fluid/Flu_ResetByUser.cpp
-//   Init_DerivedField_User_Ptr     = NULL; // option: OPT__OUTPUT_USER_FIELD;  example: Fluid/Flu_DerivedField_User.cpp
-//   Output_User_Ptr                = NULL; // option: OPT__OUTPUT_USER;        example: TestProblem/Hydro/AcousticWave/Init_TestProb_Hydro_AcousticWave.cpp --> OutputError()
-   Aux_Record_User_Ptr            = Record_Max; // option: OPT__RECORD_USER;        example: Auxiliary/Aux_Record_User.cpp
-//   Init_User_Ptr                  = NULL; // option: none;                    example: none
-   End_User_Ptr                   = End_DiskHeating; // option: none;                    example: TestProblem/Hydro/ClusterMerger_vs_Flash/Init_TestProb_ClusterMerger_vs_Flash.cpp --> End_ClusterMerger()
+   BC_User_Ptr                    = BC; // option: OPT__BC_FLU_*=4;                          example: TestProblem/ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> BC()
+   End_User_Ptr                   = End_DiskHeating; // option: none;                        example: TestProblem/Hydro/ClusterMerger_vs_Flash/Init_TestProb_ClusterMerger_vs_Flash.cpp --> End_ClusterMerger()
 #  ifdef GRAVITY
-//   Init_ExtAcc_Ptr                = NULL; // option: OPT__EXT_ACC;            example: SelfGravity/CPU_Gravity/CPU_ExtAcc_PointMass.cpp
-//   End_ExtAcc_Ptr                 = NULL;
    Init_ExtPot_Ptr                = Init_ExtPot_Soliton; // option: OPT__EXT_POT;            example: SelfGravity/CPU_Poisson/CPU_ExtPot_PointMass.cpp
-//   End_ExtPot_Ptr                 = NULL;
-//   Poi_AddExtraMassForGravity_Ptr = NULL; // option: OPT__GRAVITY_EXTRA_MASS; example: none
-//   Poi_UserWorkBeforePoisson_Ptr  = NULL; // option: none;                    example: SelfGravity/Poi_UserWorkBeforePoisson.cpp
 #  endif
 #  ifdef PARTICLE
-   Par_Init_ByFunction_Ptr        = Par_Init_ByFunction_DiskHeating; // option: PAR_INIT=1;              example: Particle/Par_Init_ByFunction.cpp
-   Par_Init_Attribute_User_Ptr    = AddNewParticleAttribute; // set PAR_NATT_USER;               example: TestProblem/Hydro/AGORA_IsolatedGalaxy/Init_TestProb_Hydro_AGORA_IsolatedGalaxy.cpp --> AddNewParticleAttribute()
+   Par_Init_ByFunction_Ptr        = Par_Init_ByFunction_DiskHeating; // option: PAR_INIT=1;  example: Particle/Par_Init_ByFunction.cpp
+   Par_Init_Attribute_User_Ptr    = AddNewParticleAttribute; // set PAR_NATT_USER;           example: TestProblem/Hydro/AGORA_IsolatedGalaxy/Init_TestProb_Hydro_AGORA_IsolatedGalaxy.cpp --> AddNewParticleAttribute()
    Init_User_Ptr                  = Init_NewDiskRestart;
 #  endif
-#  if ( EOS == EOS_USER )
-//   EoS_Init_Ptr                   = NULL; // option: EOS in the Makefile;     example: EoS/User_Template/CPU_EoS_User_Template.cpp
-//   EoS_End_Ptr                    = NULL;
-#  endif
-#  endif // #if ( MODEL == HYDRO )
-//   Src_Init_User_Ptr              = NULL; // option: SRC_USER;                example: SourceTerms/User_Template/CPU_Src_User_Template.cpp
+#  endif // #if ( MODEL == ELBDM )
 
 
 

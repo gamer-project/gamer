@@ -42,7 +42,7 @@ void SetExtPotAuxArray_Soliton( double AuxArray_Flt[], int AuxArray_Int[], const
    AuxArray_Flt[4] = A;
    AuxArray_Flt[5] = B;
    AuxArray_Flt[6] = G;
-   AuxArray_Flt[7] = UNIT_L;
+   AuxArray_Flt[7] = UNIT_L/Const_kpc;
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "EXT_POT_AUX_ARRAY:\n" );
@@ -55,7 +55,6 @@ void SetExtPotAuxArray_Soliton( double AuxArray_Flt[], int AuxArray_Int[], const
       Aux_Message( stdout, "  UNIT_V                    = %13.7e\n",     UNIT_V                );
       Aux_Message( stdout, "  m_22                      = %13.7e\n",     m_22                  );
       Aux_Message( stdout, "=============================================================================\n" );
-
    }
 } // FUNCTION : SetExtPotAuxArray_Soliton
 #endif // #ifndef __CUDACC__
@@ -94,8 +93,8 @@ void SetExtPotAuxArray_Soliton( double AuxArray_Flt[], int AuxArray_Int[], const
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real ExtPot_Soliton( const double x, const double y, const double z, const double Time,
-                              const double UserArray_Flt[], const int UserArray_Int[],
-                              const ExtPotUsage_t Usage, const real PotTable[], void **GenePtr )
+                            const double UserArray_Flt[], const int UserArray_Int[],
+                            const ExtPotUsage_t Usage, const real PotTable[], void **GenePtr )
 {
    const double Center[3] = { UserArray_Flt[0], UserArray_Flt[1], UserArray_Flt[2] };
    const real   r_sol  = (real)UserArray_Flt[3];
@@ -106,12 +105,12 @@ static real ExtPot_Soliton( const double x, const double y, const double z, cons
    const real    B     = (real)UserArray_Flt[5];
    const real    G     = (real)UserArray_Flt[6];
    const real  unit_l  = (real)UserArray_Flt[7];
-   const real    r     = SQRT( dx*dx + dy*dy + dz*dz )*unit_l/3.085678e21;
-   const real    pi    = 3.1415926;
-   real soliton_potential = -pi*POW(r_sol,3.)*A*G/53760./POW(B,1.5)*(r_sol*POW(B,0.5)/POW((POW(r_sol,2.)+B*POW(r,2.)),6.)
-                            *(11895.*POW(r_sol,10.)+36685.*POW(r_sol,8.)*B*POW(r,2.)+55638.*POW(r_sol,6.)*POW(B,2.)*POW(r,4.)
-                            +45738.*POW(r_sol,4.)*POW(B,3)*POW(r,6.)+19635.*POW(r_sol,2.)*POW(B,4.)*POW(r,8.)+3465.*POW(B,5.)
-                            *POW(r,10.))+3465.*ATAN(POW(B,0.5)*r/r_sol)/r);
+   const real    r     = SQRT( dx*dx + dy*dy + dz*dz )*unit_l;
+   const real    pi    = M_PI;
+   real soliton_potential = -pi*POW(r_sol,3.)*A*G/(real)53760./POW(B,1.5)*(r_sol*POW(B,0.5)/POW((POW(r_sol,2.)+B*POW(r,2.)),6.)
+                            *((real)11895.*POW(r_sol,10.)+(real)36685.*POW(r_sol,8.)*B*POW(r,2.)+(real)55638.*POW(r_sol,6.)*POW(B,2.)*POW(r,4.)
+                            +(real)45738.*POW(r_sol,4.)*POW(B,3)*POW(r,6.)+(real)19635.*POW(r_sol,2.)*POW(B,4.)*POW(r,8.)+(real)3465.*POW(B,5.)
+                            *POW(r,10.))+(real)3465.*ATAN(POW(B,0.5)*r/r_sol)/r);
 
    return soliton_potential;
 } // FUNCTION : ExtPot_Soliton

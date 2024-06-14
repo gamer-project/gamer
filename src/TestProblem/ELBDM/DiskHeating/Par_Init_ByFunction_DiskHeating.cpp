@@ -34,23 +34,18 @@ extern FieldIdx_t ParTypeIdx_DiskHeating;
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, AllAttribute
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_AllRank,
-                                real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                real *ParType, real *AllAttribute[PAR_NATT_TOTAL])
+                                      real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
+                                      real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
+                                      real *ParType, real *AllAttribute[PAR_NATT_TOTAL])
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-// check
-//   if ( amr->Par->ParICFormat != PAR_IC_FORMAT_ID_ATT  &&  amr->Par->ParICFormat != PAR_IC_FORMAT_ATT_ID )
-//      Aux_Error( ERROR_INFO, "unknown data format in PAR_IC (%d) !!\n", amr->Par->ParICFormat );
-
    const char FileName[]     = "PAR_IC";
    const long NParAllRank    = amr->Par->NPar_Active_AllRank;
          long NParThisRank   = amr->Par->NPar_AcPlusInac;            // cannot be "const" due to MPI_Allgather()
    const int  NParAtt        = 8;                                    // mass, pos*3, vel*3, type
-   const int  NParAttPerLoad = 1;
 
 
 // check
@@ -82,7 +77,7 @@ void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_
    if ( NPar_Check != NParAllRank )
       Aux_Error( ERROR_INFO, "total number of particles found (%ld) != expect (%ld) !!\n", NPar_Check, NParAllRank );
 
-   for (int r=0; r<MPI_Rank; r++)   FileOffset = FileOffset + long(NParAttPerLoad)*NPar_EachRank[r]*sizeof(real);
+   for (int r=0; r<MPI_Rank; r++)   FileOffset = FileOffset + NPar_EachRank[r]*sizeof(real);
 
 
 // load data
@@ -93,10 +88,10 @@ void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_
 // note that fread() may fail for large files if sizeof(size_t) == 4 instead of 8
    FILE *File = fopen( FileName, "rb" );
 
-   for (int v=0; v<NParAtt; v+=NParAttPerLoad)
+   for (int v=0; v<NParAtt; v++)
    {
       fseek( File, FileOffset+v*NParAllRank*sizeof(real), SEEK_SET );
-      fread( ParData_ThisRank+v*NParThisRank, sizeof(real), long(NParAttPerLoad)*NParThisRank, File );
+      fread( ParData_ThisRank+v*NParThisRank, sizeof(real), NParThisRank, File );
    }
 
    fclose( File );
@@ -118,7 +113,6 @@ void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_
 
 
 //    assuming that the orders of the particle attributes stored on the disk and in Par->Attribute[] are the same
-
       ParMass[p] = ParData1[0];
       ParPosX[p] = ParData1[1];
       ParPosY[p] = ParData1[2];
@@ -126,7 +120,7 @@ void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_
       ParVelX[p] = ParData1[4];
       ParVelY[p] = ParData1[5];
       ParVelZ[p] = ParData1[6];
-      ParType[p] = ParData1[7];
+      ParType[p] = PTYPE_GENERIC_MASSIVE;
       AllAttribute[ParTypeIdx_DiskHeating][p] = ParData1[7];
 
 //    synchronize all particles to the physical time at the base level
