@@ -843,6 +843,9 @@ struct InputPara_t
    int    Opt__Ck_Refine;
    int    Opt__Ck_ProperNesting;
    int    Opt__Ck_Conservation;
+   double AngMom_OriginX;
+   double AngMom_OriginY;
+   double AngMom_OriginZ;
    int    Opt__Ck_NormPassive;
    int    Opt__Ck_Restrict;
    int    Opt__Ck_Finite;
