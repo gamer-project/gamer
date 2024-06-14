@@ -254,11 +254,12 @@ void Par_LB_SendParticleData( const int NParAttFlt, const int NParAttInt, int *S
 
          FILE *File = fopen( FileName, "a" );
 
-         const double SendMB = (double)NSendParTotal*NParAttFlt*sizeof(real_par)*1.0e-6;
-         const double RecvMB = (double)NRecvParTotal*NParAttFlt*sizeof(real_par)*1.0e-6;
+         const double SendMB = (double)NSendParTotal*NParAttFlt*sizeof(real_par)*1.0e-6 + (double)NSendParTotal*NParAttInt*sizeof(long)*1.0e-6;
+         const double RecvMB = (double)NRecvParTotal*NParAttFlt*sizeof(real_par)*1.0e-6 + (double)NRecvParTotal*NParAttInt*sizeof(long)*1.0e-6;
 
+         // TODO: NVar is wrong
          fprintf( File, "%19s %4d %4s %10s %10s %10.5f %8.3f %8.3f %10.3f %10.3f\n",
-                  Timer_Comment, NParAttFlt, "X", "X", "X", dtime, SendMB, RecvMB, SendMB/dtime, RecvMB/dtime );
+                  Timer_Comment, NParAttFlt+NParAttInt, "X", "X", "X", dtime, SendMB, RecvMB, SendMB/dtime, RecvMB/dtime );
 
          fclose( File );
       } // if ( OPT__TIMING_MPI )
