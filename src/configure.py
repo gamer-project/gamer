@@ -511,6 +511,7 @@ def load_arguments():
                          default=False,
                          help="Enable particles.\n"
                        )
+
     parser.add_argument( "--tracer", type=str2bool, metavar="BOOLEAN", gamer_name="TRACER",
                          default=False,
                          depend={"particle":True},
@@ -550,7 +551,13 @@ def load_arguments():
     parser.add_argument( "--double_par", type=str2bool, metavar="BOOLEAN", gamer_name="FLOAT8_PAR",
                          default=None,
                          depend={"particle":True},
-                         help="Enable double precision for particle attributes.\n"
+                         help="Enable double precision for particle float attributes.\n"
+                       )
+
+    parser.add_argument( "--long_par", type=str2bool, metavar="BOOLEAN", gamer_name="INT8_PAR",
+                         default=None,
+                         depend={"particle":True},
+                         help="Enable double precision for particle integer attributes.\n"
                        )
     # A.5 grackle
     parser.add_argument( "--grackle", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_GRACKLE",
