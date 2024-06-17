@@ -1052,9 +1052,11 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #     else // #ifdef DUAL_ENERGY
 
 //    apply internal energy floor
+#     ifndef SRHD
       FData_Flu[ENGY][k][j][i]
          = Hydro_CheckMinEintInEngy( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
                                      FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], MIN_EINT, Emag );
+#     endif
 #     endif // #ifdef DUAL_ENERGY ... else ...
 #     endif // #if ( MODEL == HYDRO )
 

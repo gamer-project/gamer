@@ -155,8 +155,10 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const int MagSg, 
 #           if ( MODEL == HYDRO )
 
             fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
-            //fluid[ENGY] = Hydro_CheckMinEintInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-            //                                        (real)MIN_EINT, Emag );
+#           ifndef SRHD
+            fluid[ENGY] = Hydro_CheckMinEintInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                                    (real)MIN_EINT, Emag );
+#           endif
 
 //          calculate the dual-energy variable
 #           ifdef DUAL_ENERGY

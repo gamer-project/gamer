@@ -920,9 +920,11 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //          --> apply it only when AutoReduceDt_Continue is false
 //              --> otherwise AUTO_REDUCE_DT may not be triggered due to this internal energy floor
 #           else
+#           ifndef SRHD
             if ( ! AutoReduceDt_Continue  &&  OPT__LAST_RESORT_FLOOR )
                Update[ENGY] = Hydro_CheckMinEintInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                                                         MIN_EINT, Emag_Out );
+#           endif
 #           endif
 
 
