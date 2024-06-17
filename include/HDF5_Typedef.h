@@ -30,6 +30,12 @@ datatypes in the HDF5 format
 # else
 #  define H5T_GAMER_REAL_PAR H5T_NATIVE_FLOAT
 # endif
+
+# ifdef INT8_PAR
+#  define H5T_GAMER_LONG_PAR H5T_NATIVE_LONG
+# else
+#  define H5T_GAMER_LONG_PAR H5T_NATIVE_INT
+# endif
 #endif // #ifdef PARTICLE
 
 

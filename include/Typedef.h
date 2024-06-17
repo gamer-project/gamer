@@ -28,6 +28,12 @@ typedef double real_par;
 typedef float  real_par;
 #endif
 
+#ifdef INT8_PAR
+typedef long long_par;
+#else
+typedef int  long_par;
+#endif
+
 // short names for unsigned type
 typedef unsigned short     ushort;
 typedef unsigned int       uint;

@@ -943,6 +943,12 @@
 #  define MPI_GAMER_REAL_PAR MPI_FLOAT
 #endif
 
+#ifdef INT8_PAR
+#  define MPI_GAMER_LONG_PAR MPI_LONG
+#else
+#  define MPI_GAMER_LONG_PAR MPI_INT
+#endif
+
 
 
 // ############
