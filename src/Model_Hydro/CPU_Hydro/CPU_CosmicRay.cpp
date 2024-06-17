@@ -55,8 +55,10 @@ void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
                                        const real dt_dh2, const EoS_t *EoS )
 {
 #  ifdef SRHD
-   real Con_L[NCOMP_FLUID], Con_C[NCOMP_FLUID], Con_R[NCOMP_FLUID];
-   real Pri_L[NCOMP_FLUID], Pri_C[NCOMP_FLUID], Pri_R[NCOMP_FLUID];
+// Although SRHD does not support the magnetic field yet, we still declare the size as 
+// NCOMP_TOTAL_PLUS_MAG in case the magnetic field is supported someday.
+   real Con_L[NCOMP_TOTAL_PLUS_MAG], Con_C[NCOMP_TOTAL_PLUS_MAG], Con_R[NCOMP_TOTAL_PLUS_MAG];
+   real Pri_L[NCOMP_TOTAL_PLUS_MAG], Pri_C[NCOMP_TOTAL_PLUS_MAG], Pri_R[NCOMP_TOTAL_PLUS_MAG];
 #  endif
 
 // 1. compute \div V using the upwind data; reference: [2]
@@ -73,7 +75,7 @@ void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
 #     endif
 
 #     ifdef SRHD
-      for (int v=0; v<NCOMP_FLUID; v++)
+      for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
       {
          Con_L[v] = g_ConVar_In[v][ idx_in - didx_in[d] ];
          Con_C[v] = g_ConVar_In[v][ idx_in              ];
@@ -159,8 +161,8 @@ void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 
    real div_V[3];
 #  ifdef SRHD
-   real Con_LR[NCOMP_FLUID], Con_CL[NCOMP_FLUID], Con_CR[NCOMP_FLUID], Con_RL[NCOMP_FLUID];
-   real Pri_LR[NCOMP_FLUID], Pri_CL[NCOMP_FLUID], Pri_CR[NCOMP_FLUID], Pri_RL[NCOMP_FLUID];
+   real Con_LR[NCOMP_TOTAL_PLUS_MAG], Con_CL[NCOMP_TOTAL_PLUS_MAG], Con_CR[NCOMP_TOTAL_PLUS_MAG], Con_RL[NCOMP_TOTAL_PLUS_MAG];
+   real Pri_LR[NCOMP_TOTAL_PLUS_MAG], Pri_CL[NCOMP_TOTAL_PLUS_MAG], Pri_CR[NCOMP_TOTAL_PLUS_MAG], Pri_RL[NCOMP_TOTAL_PLUS_MAG];
 #  endif
 
    const int size_ij = SQR(PS2);
@@ -211,7 +213,7 @@ void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 #        endif
 
 #        ifdef SRHD
-         for (int v=0; v<NCOMP_FLUID; v++)
+         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
          {
             Con_LR[v] = g_FC_Var[faceR][v][ idx_fc - didx_fc[d] ];
             Con_CL[v] = g_FC_Var[faceL][v][ idx_fc              ];

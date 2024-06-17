@@ -376,7 +376,8 @@ void CPU_HydroGravitySolver(
 #        else  // #ifdef UNSPLIT_GRAVITY
 
 #        ifdef SRHD
-         real Cons_new[NCOMP_FLUID], Prim_new[NCOMP_FLUID], LorentzFactor_new, Cons_old2[NCOMP_FLUID];
+         real Cons_new[NCOMP_TOTAL]={0.0}, Prim_new[NCOMP_TOTAL]={0.0}, LorentzFactor_new, Cons_old2[NCOMP_TOTAL]={0.0};
+         // NOTE: g_Flu_Array_New has NCOMP_FLUID only instead of NCOMP_TOTAL
          for (int v=0; v<NCOMP_FLUID; v++)
          {
             Cons_new [v] = g_Flu_Array_New[P][v][idx_g0];
@@ -441,7 +442,7 @@ void CPU_HydroGravitySolver(
          g_Flu_Array_New[P][ENGY][idx_g0] = Etot_out;
 
 #        ifdef SRHD
-         real Cons[NCOMP_FLUID];
+         real Cons[NCOMP_TOTAL]={0.0};
          for (int v=0; v<NCOMP_FLUID; v++)   Cons[v] = g_Flu_Array_New[P][v][idx_g0];
 
          if ( Hydro_IsUnphysical( UNPHY_MODE_CONS, Cons, NULL, NULL_REAL, NULL_REAL, NULL_REAL,
