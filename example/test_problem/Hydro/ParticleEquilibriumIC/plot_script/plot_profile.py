@@ -52,5 +52,5 @@ for ds in ts.piter():
    ax.plot(rp1.x.value,rp1[field].in_units("code_mass/code_length**3").value)
    ax.set_xscale('log')
    ax.set_yscale('log')
-   ax.legend(["Later", "Original"])
+   ax.legend(["Original", "Later"])
    fig.savefig(str(ds)+"_profile.png")
