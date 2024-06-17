@@ -75,6 +75,7 @@ struct KeyInfo_t
 #  ifdef PARTICLE
    long   Par_NPar;                 // amr->Par->NPar_Active_AllRank
    int    Par_NAttFltStored;        // PAR_NATT_FLT_STORED
+   int    Par_NAttIntStored;        // PAR_NATT_INT_STORED
    int    Float8_Par;
 #  endif
 #  ifdef COSMIC_RAY
@@ -177,6 +178,7 @@ struct Makefile_t
    int StarFormation;
    int Feedback;
    int Par_NAttFltUser;
+   int Par_NAttIntUser;
    int Float8_Par;
 #  endif
 
@@ -259,6 +261,7 @@ struct SymConst_t
 
 #  ifdef PARTICLE
    int    Par_NAttFltStored;
+   int    Par_NAttIntStored;
    int    Par_NType;
 #  ifdef GRAVITY
    int    RhoExt_GhostSize;
@@ -407,6 +410,7 @@ struct InputPara_t
    int    Par_GhostSizeTracer;
    int    Par_TracerVelCorr;
    char  *ParAttFltLabel[PAR_NATT_FLT_TOTAL];
+   char  *ParAttIntLabel[PAR_NATT_INT_TOTAL];
 #  endif
 
 // cosmology

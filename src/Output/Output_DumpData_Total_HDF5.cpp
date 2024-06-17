@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2478)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2481)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -254,6 +254,7 @@ Procedure for outputting new variables:
 //                2477 : 2024/04/05 --> output OPT__RECORD_CENTER, COM_CEN_X, COM_CEN_Y, COM_CEN_Z,
 //                                             COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R, COM_MAX_ITER
 //                2478 : 2024/04/09 --> output ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z
+//                2481 : 2024/07/01 --> output particle integer attribute
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -403,7 +404,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    herr_t  H5_Status;
 #  ifdef PARTICLE
    hsize_t H5_SetDims_NPar, H5_SetDims_ParData[1], H5_MemDims_ParData[1],  H5_Count_ParData[1], H5_Offset_ParData[1];
-   hid_t   H5_SetID_NPar, H5_SpaceID_NPar, H5_SpaceID_ParData, H5_GroupID_Particle, H5_SetID_ParFltData, H5_MemID_ParData;
+   hid_t   H5_SetID_NPar, H5_SpaceID_NPar, H5_SpaceID_ParData, H5_GroupID_Particle, H5_SetID_ParFltData, H5_SetID_ParIntData, H5_MemID_ParData;
 #  endif
 #  ifdef MHD
    hsize_t H5_SetDims_FCMag[4], H5_MemDims_FCMag[4], H5_Count_FCMag[4], H5_Offset_FCMag[4];
@@ -1231,7 +1232,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //          which may introduce a large memory overhead
 //          --> solution: we can output a fixed number of particles at a time (see Output_DumpData_Total.cpp)
    long     (*NParLv_EachRank)[NLEVEL] = new long [MPI_NRank][NLEVEL];   // number of particles at each level in each rank
-   real_par (*ParFltBuf1v1Lv)          = NULL;   // buffer storing the data of one particle attribute at one level
+   real_par (*ParFltBuf1v1Lv)          = NULL;   // buffer storing the data of one particle float   attribute at one level
+   long     (*ParIntBuf1v1Lv)          = NULL;   // buffer storing the data of one particle integer attribute at one level
 
    long  GParID_Offset[NLEVEL];  // GParID = global particle index (==> unique for each particle)
    long  NParLv_AllRank[NLEVEL];
@@ -1244,6 +1246,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    for (int lv=0; lv<NLEVEL; lv++)  MaxNPar1Lv = MAX( MaxNPar1Lv, amr->Par->NPar_Lv[lv] );
 
    ParFltBuf1v1Lv = new real_par [MaxNPar1Lv];
+   ParIntBuf1v1Lv = new long     [MaxNPar1Lv];
 
 // 6-1-2. get the starting global particle index (i.e., GParID_Offset[NLEVEL]) for particles at each level in this rank
    MPI_Allgather( amr->Par->NPar_Lv, NLEVEL, MPI_LONG, NParLv_EachRank[0], NLEVEL, MPI_LONG, MPI_COMM_WORLD );
@@ -1284,6 +1287,14 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                                           H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
          if ( H5_SetID_ParFltData < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", ParAttFltLabel[v] );
          H5_Status = H5Dclose( H5_SetID_ParFltData );
+      }
+
+      for (int v=0; v<PAR_NATT_INT_STORED; v++)
+      {
+         H5_SetID_ParIntData = H5Dcreate( H5_GroupID_Particle, ParAttIntLabel[v], H5T_LONG, H5_SpaceID_ParData,
+                                          H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
+         if ( H5_SetID_ParIntData < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", ParAttIntLabel[v] );
+         H5_Status = H5Dclose( H5_SetID_ParIntData );
       }
 
 //    close the file and group
@@ -1350,9 +1361,40 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
             H5_Status = H5Dwrite( H5_SetID_ParFltData, H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT, ParFltBuf1v1Lv );
             if ( H5_Status < 0 )
-               Aux_Error( ERROR_INFO, "failed to write a particle attribute (lv %d, v %d) !!\n", lv, v );
+               Aux_Error( ERROR_INFO, "failed to write a particle float attribute (lv %d, v %d) !!\n", lv, v );
 
             H5_Status = H5Dclose( H5_SetID_ParFltData );
+         } // for (int v=0; v<PAR_NATT_FLT_STORED; v++)
+
+//       output one particle attribute at one level in one rank at a time
+//       --> skip the last PAR_NATT_INT_UNSTORED attributes since we do not want to store them on disk
+         for (int v=0; v<PAR_NATT_INT_STORED; v++)
+         {
+//          6-3-3. collect particle data from all patches at the current target level
+            NParInBuf = 0;
+
+            for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+            for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
+            {
+               ParID = amr->patch[0][lv][PID]->ParList[p];
+
+#              ifdef DEBUG_PARTICLE
+               if ( NParInBuf >= amr->Par->NPar_Lv[lv] )
+                  Aux_Error( ERROR_INFO, "lv %d, NParInBuf (%ld) >= NPar_Lv (%ld) !!\n", lv, NParInBuf, amr->Par->NPar_Lv[lv] );
+#              endif
+
+               ParIntBuf1v1Lv[ NParInBuf ++ ] = amr->Par->AttributeInt[v][ParID];
+            }
+
+
+//          6-3-4. write data to disk
+            H5_SetID_ParIntData = H5Dopen( H5_GroupID_Particle, ParAttIntLabel[v], H5P_DEFAULT );
+
+            H5_Status = H5Dwrite( H5_SetID_ParIntData, H5T_LONG, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT, ParIntBuf1v1Lv );
+            if ( H5_Status < 0 )
+               Aux_Error( ERROR_INFO, "failed to write a particle integer attribute (lv %d, v %d) !!\n", lv, v );
+
+            H5_Status = H5Dclose( H5_SetID_ParIntData );
          } // for (int v=0; v<PAR_NATT_FLT_STORED; v++)
 
 //       free resource
@@ -1368,6 +1410,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    H5_Status = H5Sclose( H5_SpaceID_ParData );
 
    delete [] ParFltBuf1v1Lv;
+   delete [] ParIntBuf1v1Lv;
    delete [] NParLv_EachRank;
 #  endif // #ifdef PARTICLE
 
@@ -1503,7 +1546,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2478;
+   KeyInfo.FormatVersion        = 2481;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1532,6 +1575,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 #  ifdef PARTICLE
    KeyInfo.Par_NPar             = amr->Par->NPar_Active_AllRank;
    KeyInfo.Par_NAttFltStored    = PAR_NATT_FLT_STORED;
+   KeyInfo.Par_NAttIntStored    = PAR_NATT_INT_STORED;
 #  ifdef FLOAT8_PAR
    KeyInfo.Float8_Par           = 1;
 #  else
@@ -1868,6 +1912,7 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  endif
 
    Makefile.Par_NAttFltUser        = PAR_NATT_FLT_USER;
+   Makefile.Par_NAttIntUser        = PAR_NATT_INT_USER;
 
 #  ifdef FLOAT8_PAR
    Makefile.Float8_Par             = 1;
@@ -1987,6 +2032,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
 
 #  ifdef PARTICLE
    SymConst.Par_NAttFltStored    = PAR_NATT_FLT_STORED;
+   SymConst.Par_NAttIntStored    = PAR_NATT_INT_STORED;
    SymConst.Par_NType            = PAR_NTYPE;
 #  ifdef GRAVITY
    SymConst.RhoExt_GhostSize     = RHOEXT_GHOST_SIZE;
@@ -2209,6 +2255,8 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Par_GhostSizeTracer     = amr->Par->GhostSizeTracer;
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    InputPara.ParAttFltLabel[v]       = ParAttFltLabel[v];
+   for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+   InputPara.ParAttIntLabel[v]       = ParAttIntLabel[v];
 #  endif
 
 // cosmology
@@ -2761,6 +2809,7 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Par_NPar",             HOFFSET(KeyInfo_t,Par_NPar            ), H5T_NATIVE_LONG         );
    H5Tinsert( H5_TypeID, "Par_NAttFltStored",    HOFFSET(KeyInfo_t,Par_NAttFltStored   ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Par_NAttIntStored",    HOFFSET(KeyInfo_t,Par_NAttIntStored   ), H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "Float8_Par",           HOFFSET(KeyInfo_t,Float8_Par          ), H5T_NATIVE_INT          );
 #  endif
 
@@ -2879,7 +2928,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "StoreParAcc",            HOFFSET(Makefile_t,StoreParAcc            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "StarFormation",          HOFFSET(Makefile_t,StarFormation          ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Feedback",               HOFFSET(Makefile_t,Feedback               ), H5T_NATIVE_INT );
-   H5Tinsert( H5_TypeID, "Par_NAttFltUser",        HOFFSET(Makefile_t,Par_NAttFltUser        ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "Par_NAttIntUser",        HOFFSET(Makefile_t,Par_NAttIntUser        ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Float8_Par",             HOFFSET(Makefile_t,Float8_Par             ), H5T_NATIVE_INT );
 #  endif
 
@@ -2960,6 +3009,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Par_NAttFltStored",    HOFFSET(SymConst_t,Par_NAttFltStored   ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "Par_NAttIntStored",    HOFFSET(SymConst_t,Par_NAttIntStored   ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Par_NType",            HOFFSET(SymConst_t,Par_NType           ), H5T_NATIVE_INT    );
 #  ifdef GRAVITY
    H5Tinsert( H5_TypeID, "RhoExt_GhostSize",     HOFFSET(SymConst_t,RhoExt_GhostSize    ), H5T_NATIVE_INT    );
@@ -3094,7 +3144,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 
 
 // get the size of a single pointer, which is used for storing the array of variable-length strings
-// --> FieldLabel[], MagLabel[], ParAttFltLabel[]
+// --> FieldLabel[], MagLabel[], ParAttFltLabel[], ParAttIntLabel[]
    const int PtrSize     = sizeof( char* );
    const int PtrSize_hvl = sizeof( hvl_t );
    char Key[MAX_STRING];
@@ -3162,6 +3212,15 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 
 //    assuming the offset between successive ParAttFltLabel pointers is "PtrSize", which is equal to "sizeof( char* )"
       H5Tinsert( H5_TypeID, Key, HOFFSET(InputPara_t,ParAttFltLabel[0])+v*PtrSize, H5_TypeID_VarStr );
+   }
+
+   for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+   {
+//    key for each particle attribute
+      sprintf( Key, "ParAttIntLabel%02d", v );
+
+//    assuming the offset between successive ParAttIntLabel pointers is "PtrSize", which is equal to "sizeof( char* )"
+      H5Tinsert( H5_TypeID, Key, HOFFSET(InputPara_t,ParAttIntLabel[0])+v*PtrSize, H5_TypeID_VarStr );
    }
 #  endif
 
