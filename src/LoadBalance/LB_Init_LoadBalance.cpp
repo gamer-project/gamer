@@ -4,11 +4,11 @@
 
 
 
-static void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long **ParAttInt_Old, const bool RemoveParFromRepo, const bool SendGridData );
+static void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long_par **ParAttInt_Old, const bool RemoveParFromRepo, const bool SendGridData );
 static void LB_SortRealPatch( const int lv );
 #ifdef PARTICLE
-static void LB_RedistributeParticle_Init( real_par **ParAttFlt_Old, long **ParAttInt_Old );
-static void LB_RedistributeParticle_End ( real_par **ParAttFlt_Old, long **ParAttInt_Old );
+static void LB_RedistributeParticle_Init( real_par **ParAttFlt_Old, long_par **ParAttInt_Old );
+static void LB_RedistributeParticle_End ( real_par **ParAttFlt_Old, long_par **ParAttInt_Old );
 #endif
 
 
@@ -118,10 +118,10 @@ void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, cons
 
 #  ifdef PARTICLE
    real_par  *ParAttFlt_Old[PAR_NATT_FLT_TOTAL];
-   long      *ParAttInt_Old[PAR_NATT_INT_TOTAL];
+   long_par  *ParAttInt_Old[PAR_NATT_INT_TOTAL];
 #  else
    real_par **ParAttFlt_Old = NULL;
-   long     **ParAttInt_Old = NULL;
+   long_par **ParAttInt_Old = NULL;
 #  endif
 
 #  ifdef PARTICLE
@@ -518,7 +518,7 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long **Pa
 
    real     *SendPtr         = NULL;
    real_par *SendPtr_ParFlt  = NULL;
-   long     *SendPtr_ParInt  = NULL;
+   long_par *SendPtr_ParInt  = NULL;
    long     *SendBuf_LBIdx   = new long [ NSend_Total_Patch ];
    real     *SendBuf_Flu     = ( SendGridData ) ? new real [ SendDataSizeFlu1v*NCOMP_TOTAL ] : NULL;
 #  ifdef GRAVITY
@@ -532,7 +532,7 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long **Pa
 #  endif
 #  ifdef PARTICLE
    real_par *SendBuf_ParFltData = new real_par [ NSend_Total_ParFltData ];
-   long     *SendBuf_ParIntData = new long     [ NSend_Total_ParIntData ];
+   long_par *SendBuf_ParIntData = new long_par [ NSend_Total_ParIntData ];
    int      *SendBuf_NPar       = new int      [ NSend_Total_Patch ];
 #  endif
 
@@ -649,7 +649,7 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long **Pa
 #  endif
 #  ifdef PARTICLE
    real_par *RecvBuf_ParFltData = new real_par [ NRecv_Total_ParFltData ];
-   long     *RecvBuf_ParIntData = new long     [ NRecv_Total_ParIntData ];
+   long_par *RecvBuf_ParIntData = new long_par [ NRecv_Total_ParIntData ];
    int      *RecvBuf_NPar       = new int      [ NRecv_Total_Patch ];
 #  endif
 
@@ -702,8 +702,8 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long **Pa
 // 4.7 particle data
    MPI_Alltoallv_GAMER( SendBuf_ParFltData, Send_NCount_ParFltData, Send_NDisp_ParFltData, MPI_GAMER_REAL_PAR,
                         RecvBuf_ParFltData, Recv_NCount_ParFltData, Recv_NDisp_ParFltData, MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
-   MPI_Alltoallv_GAMER( SendBuf_ParIntData, Send_NCount_ParIntData, Send_NDisp_ParIntData, MPI_LONG,
-                        RecvBuf_ParIntData, Recv_NCount_ParIntData, Recv_NDisp_ParIntData, MPI_LONG,           MPI_COMM_WORLD );
+   MPI_Alltoallv_GAMER( SendBuf_ParIntData, Send_NCount_ParIntData, Send_NDisp_ParIntData, MPI_GAMER_LONG_PAR,
+                        RecvBuf_ParIntData, Recv_NCount_ParIntData, Recv_NDisp_ParIntData, MPI_GAMER_LONG_PAR, MPI_COMM_WORLD );
 #  endif // #ifdef PARTICLE
 
 
@@ -764,7 +764,7 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long **Pa
 #  endif
 
    const real_par *RecvPtr_ParFlt = RecvBuf_ParFltData;
-   const long     *RecvPtr_ParInt = RecvBuf_ParIntData;
+   const long_par *RecvPtr_ParInt = RecvBuf_ParIntData;
    long *ParList                  = NULL;
    int   ParListSizeMax           = 0;    // must NOT be negative to deal with the case NRecv_Total_Patch == 0
 
@@ -1038,7 +1038,7 @@ void LB_SortRealPatch( const int lv )
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void LB_RedistributeParticle_Init( real_par **ParAttFlt_Old, long **ParAttInt_Old )
+void LB_RedistributeParticle_Init( real_par **ParAttFlt_Old, long_par **ParAttInt_Old )
 {
 
 // backup the old particle attribute arrays
@@ -1099,7 +1099,7 @@ void LB_RedistributeParticle_Init( real_par **ParAttFlt_Old, long **ParAttInt_Ol
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void LB_RedistributeParticle_End( real_par **ParAttFlt_Old, long **ParAttInt_Old )
+void LB_RedistributeParticle_End( real_par **ParAttFlt_Old, long_par **ParAttInt_Old )
 {
 
 // remove old particle attribute arrays

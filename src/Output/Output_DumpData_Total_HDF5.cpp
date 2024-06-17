@@ -1233,7 +1233,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //          --> solution: we can output a fixed number of particles at a time (see Output_DumpData_Total.cpp)
    long     (*NParLv_EachRank)[NLEVEL] = new long [MPI_NRank][NLEVEL];   // number of particles at each level in each rank
    real_par (*ParFltBuf1v1Lv)          = NULL;   // buffer storing the data of one particle float   attribute at one level
-   long     (*ParIntBuf1v1Lv)          = NULL;   // buffer storing the data of one particle integer attribute at one level
+   long_par (*ParIntBuf1v1Lv)          = NULL;   // buffer storing the data of one particle integer attribute at one level
 
    long  GParID_Offset[NLEVEL];  // GParID = global particle index (==> unique for each particle)
    long  NParLv_AllRank[NLEVEL];
@@ -1246,7 +1246,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    for (int lv=0; lv<NLEVEL; lv++)  MaxNPar1Lv = MAX( MaxNPar1Lv, amr->Par->NPar_Lv[lv] );
 
    ParFltBuf1v1Lv = new real_par [MaxNPar1Lv];
-   ParIntBuf1v1Lv = new long     [MaxNPar1Lv];
+   ParIntBuf1v1Lv = new long_par [MaxNPar1Lv];
 
 // 6-1-2. get the starting global particle index (i.e., GParID_Offset[NLEVEL]) for particles at each level in this rank
    MPI_Allgather( amr->Par->NPar_Lv, NLEVEL, MPI_LONG, NParLv_EachRank[0], NLEVEL, MPI_LONG, MPI_COMM_WORLD );
@@ -1291,7 +1291,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
       for (int v=0; v<PAR_NATT_INT_STORED; v++)
       {
-         H5_SetID_ParIntData = H5Dcreate( H5_GroupID_Particle, ParAttIntLabel[v], H5T_LONG, H5_SpaceID_ParData,
+         H5_SetID_ParIntData = H5Dcreate( H5_GroupID_Particle, ParAttIntLabel[v], H5T_GAMER_LONG_PAR, H5_SpaceID_ParData,
                                           H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
          if ( H5_SetID_ParIntData < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", ParAttIntLabel[v] );
          H5_Status = H5Dclose( H5_SetID_ParIntData );
@@ -1390,7 +1390,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //          6-3-4. write data to disk
             H5_SetID_ParIntData = H5Dopen( H5_GroupID_Particle, ParAttIntLabel[v], H5P_DEFAULT );
 
-            H5_Status = H5Dwrite( H5_SetID_ParIntData, H5T_LONG, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT, ParIntBuf1v1Lv );
+            H5_Status = H5Dwrite( H5_SetID_ParIntData, H5T_GAMER_LONG_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT, ParIntBuf1v1Lv );
             if ( H5_Status < 0 )
                Aux_Error( ERROR_INFO, "failed to write a particle integer attribute (lv %d, v %d) !!\n", lv, v );
 

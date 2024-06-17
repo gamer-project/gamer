@@ -285,7 +285,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, c
    if ( !JustCountNPar )
    {
       SendBuf_ParFltDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)NAttFlt*sizeof(real_par) );
-      SendBuf_ParIntDataEachPatch = (    long *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)NAttInt*sizeof(long)     );
+      SendBuf_ParIntDataEachPatch = (long_par *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)NAttInt*sizeof(long_par) );
    }
 
 
@@ -369,7 +369,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, c
          if ( !JustCountNPar )
          {
             real_par *SendPtr_Flt = SendBuf_ParFltDataEachPatch + OffsetEachPatch_ParFltData[AccIdx];
-            long     *SendPtr_Int = SendBuf_ParIntDataEachPatch + OffsetEachPatch_ParIntData[AccIdx];
+            long_par *SendPtr_Int = SendBuf_ParIntDataEachPatch + OffsetEachPatch_ParIntData[AccIdx];
 
             for (int p=0; p<NParThisPatch; p++)
             {
@@ -420,7 +420,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, c
    int      *RecvBuf_NParEachPatch       = NULL;
    long     *RecvBuf_LBIdxEachPatch      = NULL;
    real_par *RecvBuf_ParFltDataEachPatch = NULL;
-   long     *RecvBuf_ParIntDataEachPatch = NULL;
+   long_par *RecvBuf_ParIntDataEachPatch = NULL;
 
 // 2-1. exchange data
    const bool Exchange_NPatchEachRank_Yes = true;
@@ -527,7 +527,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, c
 // --> currently we do not implement OpenMP here since different received patches at lv>FaLv may map to the same patch at FaLv
 // --> one cannot naively parallelize the "for (int t=0; t<NRecvPatchTotal; t++)" loop
    const real_par *RecvPtr_Flt = RecvBuf_ParFltDataEachPatch;
-   const long     *RecvPtr_Int = RecvBuf_ParIntDataEachPatch;
+   const long_par *RecvPtr_Int = RecvBuf_ParIntDataEachPatch;
    int NPar_Copy_Old;
 
    if ( !JustCountNPar )

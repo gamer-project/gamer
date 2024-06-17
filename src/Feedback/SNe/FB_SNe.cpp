@@ -67,7 +67,7 @@
 // Return      :  Fluid, ParAttFlt
 //-------------------------------------------------------------------------------------------------------
 int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
-            const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL], long *ParAttInt[PAR_NATT_INT_TOTAL],
+            const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL], long_par *ParAttInt[PAR_NATT_INT_TOTAL],
             real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
             const int TID, RandomNumber_t *RNG )
 {

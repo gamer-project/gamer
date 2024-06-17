@@ -146,10 +146,10 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 
 // reuse the MPI send buffer declared in LB_GetBufferData for better MPI performance
    real_par *SendBuf_ParFltDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)PAR_NATT_FLT_TOTAL*sizeof(real_par) );
-   long     *SendBuf_ParIntDataEachPatch = (    long *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)PAR_NATT_INT_TOTAL*sizeof(long)     );
+   long_par *SendBuf_ParIntDataEachPatch = (long_par *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)PAR_NATT_INT_TOTAL*sizeof(long_par) );
 
    real_par *SendPtr_Flt = SendBuf_ParFltDataEachPatch;
-   long     *SendPtr_Int = SendBuf_ParIntDataEachPatch;
+   long_par *SendPtr_Int = SendBuf_ParIntDataEachPatch;
    long     *ParList     = NULL;
    long      ParID;
 
@@ -198,7 +198,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
    int      *RecvBuf_NParEachPatch       = NULL;    // will be allocated by Par_LB_SendParticleData and must be free'd later
    real_par *RecvBuf_ParFltDataEachPatch = NULL;    // a pointer to the MPI recv buffer declared in LB_GetBufferData
                                                     // --> don't have to be free'd here
-   long     *RecvBuf_ParIntDataEachPatch = NULL;    // a pointer to the MPI recv buffer declared in LB_GetBufferData
+   long_par *RecvBuf_ParIntDataEachPatch = NULL;    // a pointer to the MPI recv buffer declared in LB_GetBufferData
                                                     // --> don't have to be free'd here
 
    long     *SendBuf_LBIdxEachRank       = NULL;    // useless and does not need to be allocated
@@ -227,7 +227,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 
 // 4. store the received particle data to the particle repository and link to each recv patch
    const real_par *RecvPtr_Flt = RecvBuf_ParFltDataEachPatch;
-   const long     *RecvPtr_Int = RecvBuf_ParIntDataEachPatch;
+   const long_par *RecvPtr_Int = RecvBuf_ParIntDataEachPatch;
 
 // 4-1. get the maximum number of particles in one recv patch
    int   NParThisPatch_Max;

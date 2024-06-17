@@ -32,10 +32,10 @@
 //
 // Return      :  Data_Recv_Flt, Data_Recv_Int
 //-------------------------------------------------------------------------------------------------------
-void Par_ScatterParticleData( const long NPar_ThisRank, const long NPar_AllRank, const long FltAttBitIdx,
-                              const long IntAttBitIdx, real_par *Data_Send_Flt[PAR_NATT_FLT_TOTAL],
-                              long *Data_Send_Int[PAR_NATT_INT_TOTAL], real_par *Data_Recv_Flt[PAR_NATT_FLT_TOTAL],
-                              long *Data_Recv_Flt[PAR_NATT_INT_TOTAL] )
+void Par_ScatterParticleData( const long NPar_ThisRank, const long NPar_AllRank,
+                              const long FltAttBitIdx, const long IntAttBitIdx,
+                              real_par *Data_Send_Flt[PAR_NATT_FLT_TOTAL], long_par *Data_Send_Int[PAR_NATT_INT_TOTAL],
+                              real_par *Data_Recv_Flt[PAR_NATT_FLT_TOTAL], long_par *Data_Recv_Int[PAR_NATT_INT_TOTAL] )
 {
 
 // check integer overflow in MPI
@@ -72,8 +72,8 @@ void Par_ScatterParticleData( const long NPar_ThisRank, const long NPar_AllRank,
 
    for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
    {
-      if ( IntAttBitIdx & (1L<<v) )    MPI_Scatterv( Data_Send_Int[v], NSend_Int, SendDisp_Int, MPI_LONG,
-                                                     Data_Recv_Int[v], NPar_ThisRank,           MPI_LONG,
+      if ( IntAttBitIdx & (1L<<v) )    MPI_Scatterv( Data_Send_Int[v], NSend_Int, SendDisp_Int, MPI_GAMER_LONG_PAR,
+                                                     Data_Recv_Int[v], NPar_ThisRank,           MPI_GAMER_LONG_PAR,
                                                      0, MPI_COMM_WORLD );
    }
 

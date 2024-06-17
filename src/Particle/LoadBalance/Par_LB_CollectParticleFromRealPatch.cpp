@@ -218,13 +218,13 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long FltAttBitIdx,
 // 2. prepare the particle data to be sent
 // reuse the MPI send buffer declared in LB_GetBufferData() for better MPI performance
    real_par  *SendBuf_ParFltDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)NAttFlt*sizeof(real_par) );
-   long      *SendBuf_ParIntDataEachPatch = (    long *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)NAttInt*sizeof(long)     );
+   long_par  *SendBuf_ParIntDataEachPatch = (long_par *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)NAttInt*sizeof(long_par) );
 
    real_par  *SendPtr_Flt    = NULL;
-   long      *SendPtr_Int    = NULL;
+   long_par  *SendPtr_Int    = NULL;
    long      *ParList        = NULL;
    real_par **ParAttFlt_Copy = NULL;
-   long     **ParAttInt_Copy = NULL;
+   long_par **ParAttInt_Copy = NULL;
    long       ParID;
 
 #  pragma omp parallel for private( PID, NParThisPatch, SendPtr_Flt, SendPtr_Int, ParList, ParAttFlt_Copy, ParAttInt_Copy, ParID ) \
@@ -311,7 +311,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long FltAttBitIdx,
    int      *RecvBuf_NParEachPatch       = NULL;   // will be allocated by Par_LB_SendParticleData and must be free'd later
    real_par *RecvBuf_ParFltDataEachPatch = NULL;   // a pointer to the MPI recv buffer declared in LB_GetBufferData
                                                    // --> don't have to be free'd here
-   long     *RecvBuf_ParIntDataEachPatch = NULL;   // a pointer to the MPI recv buffer declared in LB_GetBufferData
+   long_par *RecvBuf_ParIntDataEachPatch = NULL;   // a pointer to the MPI recv buffer declared in LB_GetBufferData
                                                    // --> don't have to be free'd here
 
    long     *SendBuf_LBIdxEachRank       = NULL;   // useless and does not need to be allocated
@@ -342,7 +342,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long FltAttBitIdx,
 
 // 4. store the received particle data to each patch
    const real_par *RecvPtr_Flt = NULL;
-   const long     *RecvPtr_Int = NULL;
+   const long_par *RecvPtr_Int = NULL;
 
 // 4-0. get the array offset of each patch (mainly for the OpenMP parallelization)
    long *RecvBuf_Offset_Flt = new long [Buff_NPatchTotal];
@@ -372,7 +372,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long FltAttBitIdx,
             amr->patch[0][lv][PID]->ParAttFlt_Copy[ FltAttIntIdx[v] ] = new real_par [NParThisPatch];
 
          for (int v=0; v<NAttInt; v++)
-            amr->patch[0][lv][PID]->ParAttInt_Copy[ IntAttIntIdx[v] ] = new long     [NParThisPatch];
+            amr->patch[0][lv][PID]->ParAttInt_Copy[ IntAttIntIdx[v] ] = new long_par [NParThisPatch];
 
          for (int p=0; p<NParThisPatch; p++)
          {

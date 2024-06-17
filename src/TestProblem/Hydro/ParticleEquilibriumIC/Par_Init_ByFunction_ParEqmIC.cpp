@@ -46,7 +46,7 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
                                    real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                    real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
                                    real_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
-                                   long *AllAttributeInt[PAR_NATT_INT_TOTAL] )
+                                   long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -55,7 +55,7 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
 // define the particle attribute arrays
    real_par *ParFltData_AllRank[PAR_NATT_FLT_TOTAL];
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParFltData_AllRank[v] = NULL;
-   long     *ParIntData_AllRank[PAR_NATT_INT_TOTAL];
+   long_par *ParIntData_AllRank[PAR_NATT_INT_TOTAL];
    for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   ParIntData_AllRank[v] = NULL;
 
 

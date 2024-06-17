@@ -6,14 +6,14 @@
 
 // prototypes of built-in feedbacks
 int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
-            const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL], long *ParAttInt[PAR_NATT_INT_TOTAL],
+            const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL], long_par *ParAttInt[PAR_NATT_INT_TOTAL],
             real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
             const int TID, RandomNumber_t *RNG );
 
 
 // user-specified feedback to be set by a test problem initializer
 int (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                    const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL], long *ParAttInt[PAR_NATT_INT_TOTAL],
+                    const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL], long_par *ParAttInt[PAR_NATT_INT_TOTAL],
                     real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
                     const int TID, RandomNumber_t *RNG ) = NULL;
 
@@ -89,7 +89,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //###OPTIMIZATION: only count particles on FB_LEVEL
    real_par *ParAttFlt_Updated[PAR_NATT_FLT_TOTAL];
    long      ParAttFltBitIdx_Out = _PAR_FLT_TOTAL;
-   long     *ParAttInt_Updated[PAR_NATT_INT_TOTAL];
+   long_par *ParAttInt_Updated[PAR_NATT_INT_TOTAL];
    long      ParAttIntBitIdx_Out = _PAR_INT_TOTAL;
 
 // do not update particle positions and accelerations
@@ -109,8 +109,8 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
    for (int v=0; v<PAR_NATT_INT_TOTAL; v++) {
       if ( ParAttIntBitIdx_Out & BIDX(v) ) {
-         ParAttInt_Updated[v] = new long [ amr->Par->ParListSize ];
-         memcpy( ParAttInt_Updated[v], amr->Par->AttributeInt[v], amr->Par->ParListSize*sizeof(long) );
+         ParAttInt_Updated[v] = new long_par [ amr->Par->ParListSize ];
+         memcpy( ParAttInt_Updated[v], amr->Par->AttributeInt[v], amr->Par->ParListSize*sizeof(long_par) );
       }
       else
          ParAttInt_Updated[v] = NULL;
@@ -244,7 +244,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //       --> allocate the **maximum** required size among all nearby patches of a given patch group **just once**
 //           for better performance
       real_par *ParAttFlt_Local[PAR_NATT_FLT_TOTAL];
-      long     *ParAttInt_Local[PAR_NATT_INT_TOTAL];
+      long_par *ParAttInt_Local[PAR_NATT_INT_TOTAL];
       long     *ParSortID = NULL;
       int       NParMax   = -1;
 
@@ -266,7 +266,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
             if ( ParAttFltBitIdx_In & BIDX(v) )    ParAttFlt_Local[v] = new real_par [NParMax];
 
          for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
-            if ( ParAttIntBitIdx_In & BIDX(v) )    ParAttInt_Local[v] = new long     [NParMax];
+            if ( ParAttIntBitIdx_In & BIDX(v) )    ParAttInt_Local[v] = new long_par [NParMax];
 
          ParSortID = new long [NParMax];  // it will fail if "long" is actually required for NParMax
       }
@@ -495,7 +495,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
    }
    for (int v=0; v<PAR_NATT_INT_TOTAL; v++) {
       if ( ParAttIntBitIdx_Out & BIDX(v) )
-         memcpy( amr->Par->AttributeInt[v], ParAttInt_Updated[v], amr->Par->ParListSize*sizeof(long) );
+         memcpy( amr->Par->AttributeInt[v], ParAttInt_Updated[v], amr->Par->ParListSize*sizeof(long_par) );
    }
 
 

@@ -583,7 +583,7 @@ void Init_ByRestart()
    real_par **ParFltBuf  = NULL;
 
    real_par NewParAttFlt[PAR_NATT_FLT_TOTAL];
-   long     NewParAttInt[PAR_NATT_INT_TOTAL];
+   long_par NewParAttInt[PAR_NATT_INT_TOTAL];
    long GParID;
    int  NParThisPatch;
 

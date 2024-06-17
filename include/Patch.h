@@ -244,7 +244,7 @@ struct patch_t
    int    NPar_Copy;
 #  ifdef LOAD_BALANCE
    real_par  *ParAttFlt_Copy[PAR_NATT_FLT_TOTAL];
-   long      *ParAttInt_Copy[PAR_NATT_INT_TOTAL];
+   long_par  *ParAttInt_Copy[PAR_NATT_INT_TOTAL];
 #  else
    long      *ParList_Copy;
 #  endif

@@ -54,9 +54,9 @@
 //                NRecvPatchTotal, NRecvPatchTotal
 //-------------------------------------------------------------------------------------------------------
 void Par_LB_SendParticleData( const int NParAttFlt, const int NParAttInt, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
-                              long *SendBuf_LBIdxEachPatch, real_par *SendBuf_ParFltDataEachPatch, long *SendBuf_ParIntDataEatchPatch,
+                              long *SendBuf_LBIdxEachPatch, real_par *SendBuf_ParFltDataEachPatch, long_par *SendBuf_ParIntDataEatchPatch,
                               const long NSendParTotal, int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
-                              real_par *&RecvBuf_ParFltDataEachPatch, long *&RecvBuf_ParIntDataEachPatch, int &NRecvPatchTotal,
+                              real_par *&RecvBuf_ParFltDataEachPatch, long_par *&RecvBuf_ParIntDataEachPatch, int &NRecvPatchTotal,
                               long &NRecvParTotal, const bool Exchange_NPatchEachRank, const bool Exchange_LBIdxEachRank,
                               const bool Exchange_ParDataEachRank, Timer_t *Timer, const char *Timer_Comment )
 {
@@ -210,14 +210,14 @@ void Par_LB_SendParticleData( const int NParAttFlt, const int NParAttInt, int *S
 
 //    reuse the MPI recv buffer declared in LB_GetBufferData for better MPI performance
       RecvBuf_ParFltDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Recv( NRecvParTotal*(long)NParAttFlt*sizeof(real_par) );
-      RecvBuf_ParIntDataEachPatch = (    long *)LB_GetBufferData_MemAllocate_Recv( NRecvParTotal*(long)NParAttInt*sizeof(long)     );
+      RecvBuf_ParIntDataEachPatch = (long_par *)LB_GetBufferData_MemAllocate_Recv( NRecvParTotal*(long)NParAttInt*sizeof(long_par) );
 
 
 //    exchange data
       MPI_Alltoallv_GAMER( SendBuf_ParFltDataEachPatch, SendCount_ParFltDataEachPatch, SendDisp_ParFltDataEachPatch, MPI_GAMER_REAL_PAR,
                            RecvBuf_ParFltDataEachPatch, RecvCount_ParFltDataEachPatch, RecvDisp_ParFltDataEachPatch, MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
-      MPI_Alltoallv_GAMER( SendBuf_ParIntDataEachPatch, SendCount_ParIntDataEachPatch, SendDisp_ParIntDataEachPatch, MPI_LONG,
-                           RecvBuf_ParIntDataEachPatch, RecvCount_ParIntDataEachPatch, RecvDisp_ParIntDataEachPatch, MPI_LONG,           MPI_COMM_WORLD );
+      MPI_Alltoallv_GAMER( SendBuf_ParIntDataEachPatch, SendCount_ParIntDataEachPatch, SendDisp_ParIntDataEachPatch, MPI_GAMER_LONG_PAR,
+                           RecvBuf_ParIntDataEachPatch, RecvCount_ParIntDataEachPatch, RecvDisp_ParIntDataEachPatch, MPI_GAMER_LONG_PAR, MPI_COMM_WORLD );
 
 //    free memory
       delete [] SendCount_ParFltDataEachPatch;

@@ -661,7 +661,7 @@ void Par_Output_TextFile( const char *comment );
 void Par_Output_BinaryFile( const char *comment );
 void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly, const long NNewPar,
                                     real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL],
-                                    long     *NewParAttInt[PAR_NATT_INT_TOTAL] );
+                                    long_par *NewParAttInt[PAR_NATT_INT_TOTAL] );
 void Par_PassParticle2Son_SinglePatch( const int FaLv, const int FaPID );
 void Par_PassParticle2Son_MultiPatch( const int FaLv, const ParPass2Son_t Mode, const bool TimingSendPar,
                                       const int NFaPatch, const int *FaPIDList );
@@ -695,10 +695,10 @@ void Prepare_PatchData_FreeParticleDensityArray( const int lv );
 void Par_PredictPos( const long NPar, const long *ParList, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                      const double TargetTime );
 void Par_Init_Attribute();
-void Par_AddParticleAfterInit( const long NNewPar, real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL], long *NewParAttInt[PAR_NATT_INT_TOTAL] );
+void Par_AddParticleAfterInit( const long NNewPar, real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL], long_par *NewParAttInt[PAR_NATT_INT_TOTAL] );
 void Par_ScatterParticleData( const long NPar_ThisRank, const long NPar_AllRank, const long FltAttBitIdx, const long IntAttBitIdx,
-                              real_par *Data_Send_Flt[PAR_NATT_FLT_TOTAL], long *Data_Send_Int[PAR_NATT_INT_TOTAL],
-                              real_par *Data_Recv_Flt[PAR_NATT_FLT_TOTAL], long *Data_Recv_Int[PAR_NATT_INT_TOTAL] );
+                              real_par *Data_Send_Flt[PAR_NATT_FLT_TOTAL], long_par *Data_Send_Int[PAR_NATT_INT_TOTAL],
+                              real_par *Data_Recv_Flt[PAR_NATT_FLT_TOTAL], long_par *Data_Recv_Int[PAR_NATT_INT_TOTAL] );
 void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
                             const double _dh, const int AttrSize3D, const real *Attr,
                             const int NPar, real_par *InterpParPos[3],
@@ -723,9 +723,9 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
                                           const int Recv_NPatchTotal, const int *Recv_PIDList, int *Recv_NPatchEachRank,
                                           Timer_t *Timer, const char *Timer_Comment );
 void Par_LB_SendParticleData( const int NParAttFlt, const int NParAttInt, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
-                              long *SendBuf_LBIdxEachPatch, real_par *SendBuf_ParFltDataEachPatch, long *SendBuf_ParIntDataEachPatch,
+                              long *SendBuf_LBIdxEachPatch, real_par *SendBuf_ParFltDataEachPatch, long_par *SendBuf_ParIntDataEachPatch,
                               const long NSendParTotal, int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
-                              real_par *&RecvBuf_ParFltDataEachPatch, long *&RecvBuf_ParFltDataEachPatch, int &NRecvPatchTotal, long &NRecvParTotal,
+                              real_par *&RecvBuf_ParFltDataEachPatch, long_par *&RecvBuf_ParIntDataEachPatch, int &NRecvPatchTotal, long &NRecvParTotal,
                               const bool Exchange_NPatchEachRank, const bool Exchange_LBIdxEachRank,
                               const bool Exchange_ParDataEachRank, Timer_t *Timer, const char *Timer_Comment );
 void Par_LB_RecordExchangeParticlePatchID( const int MainLv );

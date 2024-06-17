@@ -22,7 +22,7 @@ void Par_Init_ByFunction_BarredPot( const long NPar_ThisRank, const long NPar_Al
                                     real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                     real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
                                     real_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
-                                    long *AllAttributeInt[PAR_NATT_INT_TOTAL] );
+                                    long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
 #endif
 static void IsolatedBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
                         const int GhostSize, const int idx[], const double pos[], const double Time,

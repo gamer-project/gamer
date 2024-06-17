@@ -1330,7 +1330,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
    hsize_t     H5_Offset_ParData[1], H5_Count_ParData[1], H5_MemDims_ParData[1];
    hid_t       H5_MemID_ParData;
    real_par    NewParAttFlt[PAR_NATT_FLT_TOTAL];
-   long        NewParAttInt[PAR_NATT_INT_TOTAL];
+   long_par    NewParAttInt[PAR_NATT_INT_TOTAL];
 
    if ( NParThisPatch > 0 )
    {

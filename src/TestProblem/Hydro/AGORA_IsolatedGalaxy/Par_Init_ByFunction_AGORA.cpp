@@ -52,7 +52,7 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
                                 real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                 real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
                                 real_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
-                                long *AllAttributeInt[PAR_NATT_INT_TOTAL] )
+                                long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -61,7 +61,7 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
    const int NParAttFlt = 7;  // mass, pos*3, vel*3
    const int NParAttInt = 1;  // type
    real_par *ParFltData_AllRank = NULL;
-   long     *ParIntData_AllRank = NULL;
+   long_par *ParIntData_AllRank = NULL;
 
 // load data --> for simplicity, currently only the root rank will load data from disk
    if ( MPI_Rank == 0 )
@@ -97,7 +97,7 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
 
 //    allocate memory to store all particles loaded from disk
       ParFltData_AllRank = new real_par [NPar_Sum*NParAttFlt];
-      ParIntData_AllRank = new long     [NPar_Sum*NParAttInt];
+      ParIntData_AllRank = new long_par [NPar_Sum*NParAttInt];
 
 
 //    load data from the three particle tables
@@ -161,12 +161,12 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
 // send particles from the root rank to all ranks
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Sending particles from the root rank to all ranks ... " );
    real_par (*ParFltData_MyRank)[NParAttFlt] = new real_par [NPar_ThisRank][NParAttFlt];
-   long     (*ParIntData_MyRank)[NParAttInt] = new long     [NPar_ThisRank][NParAttInt];
+   long_par (*ParIntData_MyRank)[NParAttInt] = new long_par [NPar_ThisRank][NParAttInt];
 
    MPI_Scatterv( ParFltData_AllRank,   NSend_Flt, SendDisp_Flt,  MPI_GAMER_REAL_PAR,
                  ParFltData_MyRank[0], NPar_ThisRank*NParAttFlt, MPI_GAMER_REAL_PAR, 0, MPI_COMM_WORLD );
-   MPI_Scatterv( ParIntData_AllRank,   NSend_Int, SendDisp_Int,  MPI_LONG,
-                 ParIntData_MyRank[0], NPar_ThisRank*NParAttInt, MPI_LONG,           0, MPI_COMM_WORLD );
+   MPI_Scatterv( ParIntData_AllRank,   NSend_Int, SendDisp_Int,  MPI_GAMER_LONG_PAR,
+                 ParIntData_MyRank[0], NPar_ThisRank*NParAttInt, MPI_GAMER_LONG_PAR, 0, MPI_COMM_WORLD );
 
    delete [] ParFltData_AllRank;
    delete [] ParIntData_AllRank;

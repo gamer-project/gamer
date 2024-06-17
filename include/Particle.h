@@ -131,7 +131,7 @@ struct Particle_t
    int           GhostSize;
    int           GhostSizeTracer;
    real_par     *AttributeFlt[PAR_NATT_FLT_TOTAL];
-   long         *AttributeInt[PAR_NATT_INT_TOTAL];
+   long_par     *AttributeInt[PAR_NATT_INT_TOTAL];
    long         *InactiveParList;
 
 #  ifdef LOAD_BALANCE
@@ -335,7 +335,7 @@ struct Particle_t
       for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
       {
          if ( AttributeInt[v] != NULL )   free( AttributeInt[v] );
-         AttributeInt[v] = (long*)malloc( ParListSize*sizeof(long) );
+         AttributeInt[v] = (long_par*)malloc( ParListSize*sizeof(long_par) );
       }
 
       if ( InactiveParList != NULL )   free( InactiveParList );
@@ -415,7 +415,7 @@ struct Particle_t
    //
    // Return      :  Index of the new particle (ParID)
    //===================================================================================
-   long AddOneParticle( const real_par *NewAttFlt, const long *NewAttInt )
+   long AddOneParticle( const real_par *NewAttFlt, const long_par *NewAttInt )
    {
 
 //    check
@@ -464,7 +464,7 @@ struct Particle_t
             ParListSize = (int)ceil( PARLIST_GROWTH_FACTOR*(ParListSize+1) );
 
             for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   AttributeFlt[v] = (real_par*)realloc( AttributeFlt[v], ParListSize*sizeof(real_par) );
-            for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   AttributeInt[v] = (    long*)realloc( AttributeInt[v], ParListSize*sizeof(long)     );
+            for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   AttributeInt[v] = (long_par*)realloc( AttributeInt[v], ParListSize*sizeof(long_par) );
 
             Mass = AttributeFlt[PAR_MASS];
             PosX = AttributeFlt[PAR_POSX];

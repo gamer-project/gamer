@@ -59,7 +59,11 @@ void Par_Output_TextFile( const char *FileName )
             if ( amr->Par->Mass[p] < 0.0 )   continue;
 
             for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   fprintf( File, BlankPlusFormat_Flt, amr->Par->AttributeFlt[v][p] );
+#           ifdef INT8_PAR
+            for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   fprintf( File, " %*ld", StrLen_Flt, amr->Par->AttributeInt[v][p] );
+#           else
             for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   fprintf( File, " %*d",  StrLen_Flt, amr->Par->AttributeInt[v][p] );
+#           endif
 
             fprintf( File, "\n" );
          }

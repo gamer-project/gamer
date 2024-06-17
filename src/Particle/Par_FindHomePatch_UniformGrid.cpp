@@ -5,7 +5,7 @@
 static long ParPos2LBIdx( const int lv, const real_par ParPos[] );
 static void SendParticle2HomeRank( const int lv, const bool OldParOnly, const long NNewPar,
                                    real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL],
-                                   long     *NewParAttInt[PAR_NATT_INT_TOTAL] );
+                                   long_par *NewParAttInt[PAR_NATT_INT_TOTAL] );
 
 
 
@@ -38,7 +38,7 @@ static void SendParticle2HomeRank( const int lv, const bool OldParOnly, const lo
 //-------------------------------------------------------------------------------------------------------
 void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly, const long NNewPar,
                                     real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL],
-                                    long     *NewParAttInt[PAR_NATT_INT_TOTAL] )
+                                    long_par *NewParAttInt[PAR_NATT_INT_TOTAL] )
 {
 
 // check
@@ -204,7 +204,7 @@ void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly, const l
 //-------------------------------------------------------------------------------------------------------
 void SendParticle2HomeRank( const int lv, const bool OldParOnly, const long NNewPar,
                             real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL],
-                            long     *NewParAttInt[PAR_NATT_INT_TOTAL] )
+                            long_par *NewParAttInt[PAR_NATT_INT_TOTAL] )
 {
 
    real_par *Mass   = NULL;
@@ -292,12 +292,12 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly, const long NNew
 
    real_par *SendBuf_Flt = new real_par [Send_Count_Sum];
    real_par *RecvBuf_Flt = NULL;
-   long     *SendBuf_Int = new long     [Send_Count_Sum];
-   long     *RecvBuf_Int = NULL;
+   long_par *SendBuf_Int = new long_par [Send_Count_Sum];
+   long_par *RecvBuf_Int = NULL;
 
 // 3-1. record attribute pointers
    real_par *SendAttFltPtr[PAR_NATT_FLT_TOTAL], **OldAttFltPtrPtr[PAR_NATT_FLT_TOTAL];
-   long     *SendAttIntPtr[PAR_NATT_INT_TOTAL], **OldAttIntPtrPtr[PAR_NATT_INT_TOTAL];
+   long_par *SendAttIntPtr[PAR_NATT_INT_TOTAL], **OldAttIntPtrPtr[PAR_NATT_INT_TOTAL];
 
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    {
@@ -353,18 +353,18 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly, const long NNew
       {
          free( SendAttIntPtr[v] );
 
-         *(OldAttIntPtrPtr[v]) = (long*)malloc( UpdatedParListSize*sizeof(long) );
+         *(OldAttIntPtrPtr[v]) = (long_par*)malloc( UpdatedParListSize*sizeof(long_par) );
          RecvBuf_Int           = *(OldAttIntPtrPtr[v]);
       }
 
       else
       {
-         *(OldAttIntPtrPtr[v]) = (long*)realloc( *(OldAttIntPtrPtr[v]), UpdatedParListSize*sizeof(long) );
+         *(OldAttIntPtrPtr[v]) = (long_par*)realloc( *(OldAttIntPtrPtr[v]), UpdatedParListSize*sizeof(long_par) );
          RecvBuf_Int           = *(OldAttIntPtrPtr[v]) + NOldPar;
       }
 
 //    3-5. redistribute data
-      MPI_Alltoallv_GAMER( SendBuf_Int, Send_Count, Send_Disp, MPI_LONG, RecvBuf_Int, Recv_Count, Recv_Disp, MPI_LONG, MPI_COMM_WORLD );
+      MPI_Alltoallv_GAMER( SendBuf_Int, Send_Count, Send_Disp, MPI_GAMER_LONG_PAR, RecvBuf_Int, Recv_Count, Recv_Disp, MPI_GAMER_LONG_PAR, MPI_COMM_WORLD );
    } // for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
 
 

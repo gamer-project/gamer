@@ -73,7 +73,7 @@ extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPa
                                         real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                         real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
                                         real_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
-                                        long *AllAttributeInt[PAR_NATT_INT_TOTAL] );
+                                        long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
 extern void (*Par_Init_Attribute_User_Ptr)();
 #endif
 #if ( MODEL == HYDRO )
@@ -89,7 +89,7 @@ extern void (*Init_DerivedField_User_Ptr)();
 extern void (*FB_Init_User_Ptr)();
 extern void (*FB_End_User_Ptr)();
 extern int  (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                            const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL], long *ParAttInt[PAR_NATT_INT_TOTAL],
+                            const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL], long_par *ParAttInt[PAR_NATT_INT_TOTAL],
                             real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
                             const int TID, RandomNumber_t *RNG );
 #endif

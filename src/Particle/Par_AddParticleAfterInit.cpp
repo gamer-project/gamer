@@ -26,7 +26,7 @@
 // Return      :  1. amr->Par
 //                2. NPar, ParListSize, and ParList[] of all real patches on lv
 //-------------------------------------------------------------------------------------------------------
-void Par_AddParticleAfterInit( const long NNewPar, real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL], long *NewParAttInt[PAR_NATT_INT_TOTAL] )
+void Par_AddParticleAfterInit( const long NNewPar, real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL], long_par *NewParAttInt[PAR_NATT_INT_TOTAL] )
 {
 
    const bool OldParOnly_No    = false;
