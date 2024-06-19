@@ -441,7 +441,6 @@ void CPU_HydroGravitySolver(
 
 
 //       store the updated total energy density to the output array
-         if (Etot_out > 1.e+30) Aux_Error( ERROR_INFO, "Too large energy after update gravity solver." );
          g_Flu_Array_New[P][ENGY][idx_g0] = Etot_out;
 
 #        ifdef SRHD
