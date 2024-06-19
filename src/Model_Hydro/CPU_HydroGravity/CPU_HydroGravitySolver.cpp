@@ -384,7 +384,9 @@ void CPU_HydroGravitySolver(
             Cons_old2[v] = Cons_new[v];
          }
 
-         Hydro_Con2Pri( Cons_new, Prim_new, NULL_REAL, NULL_BOOL, NULL_INT, NULL,
+         const real minPres = TINY_NUMBER;
+         const real minJeansPres =  TINY_NUMBER;
+         Hydro_Con2Pri( Cons_new, Prim_new, minPres, NULL_BOOL, NULL_INT, NULL,
                         NULL_BOOL, NULL_REAL, EoS.DensEint2Pres_FuncPtr, EoS.DensPres2Eint_FuncPtr,
                         EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr, EoS.AuxArrayDevPtr_Flt,
                         EoS.AuxArrayDevPtr_Int, EoS.Table, NULL, &LorentzFactor_new );
@@ -439,6 +441,7 @@ void CPU_HydroGravitySolver(
 
 
 //       store the updated total energy density to the output array
+         if (Etot_out > 1.e+30) Aux_Error( ERROR_INFO, "Too large energy after update gravity solver." );
          g_Flu_Array_New[P][ENGY][idx_g0] = Etot_out;
 
 #        ifdef SRHD

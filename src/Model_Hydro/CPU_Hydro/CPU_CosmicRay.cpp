@@ -82,15 +82,17 @@ void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
          Con_R[v] = g_ConVar_In[v][ idx_in + didx_in[d] ];
       }
 
-      Hydro_Con2Pri( Con_L, Pri_L, NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
+      const real minPres = TINY_NUMBER;
+      const real minJeansPres =  TINY_NUMBER;
+      Hydro_Con2Pri( Con_L, Pri_L, minPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
                      EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr, EoS->GuessHTilde_FuncPtr,
                      EoS->HTilde2Temp_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
                      EoS->Table, NULL, NULL );
-      Hydro_Con2Pri( Con_C, Pri_C, NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
+      Hydro_Con2Pri( Con_C, Pri_C, minPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
                      EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr, EoS->GuessHTilde_FuncPtr,
                      EoS->HTilde2Temp_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
                      EoS->Table, NULL, &LorentzFactor );
-      Hydro_Con2Pri( Con_R, Pri_R, NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
+      Hydro_Con2Pri( Con_R, Pri_R, minPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
                      EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr, EoS->GuessHTilde_FuncPtr,
                      EoS->HTilde2Temp_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
                      EoS->Table, NULL, NULL );
@@ -221,19 +223,21 @@ void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
             Con_RL[v] = g_FC_Var[faceL][v][ idx_fc + didx_fc[d] ];
          }
 
-         Hydro_Con2Pri( Con_LR, Pri_LR, NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
+         const real minPres = TINY_NUMBER;
+         const real minJeansPres =  TINY_NUMBER;
+         Hydro_Con2Pri( Con_LR, Pri_LR, minPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
                         EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr, EoS->GuessHTilde_FuncPtr,
                         EoS->HTilde2Temp_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
                         EoS->Table, NULL, NULL );
-         Hydro_Con2Pri( Con_CL, Pri_CL, NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
+         Hydro_Con2Pri( Con_CL, Pri_CL, minPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
                         EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr, EoS->GuessHTilde_FuncPtr,
                         EoS->HTilde2Temp_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
                         EoS->Table, NULL, NULL );
-         Hydro_Con2Pri( Con_CR, Pri_CR, NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
+         Hydro_Con2Pri( Con_CR, Pri_CR, minPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
                         EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr, EoS->GuessHTilde_FuncPtr,
                         EoS->HTilde2Temp_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
                         EoS->Table, NULL, NULL );
-         Hydro_Con2Pri( Con_RL, Pri_RL, NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
+         Hydro_Con2Pri( Con_RL, Pri_RL, minPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
                         EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr, EoS->GuessHTilde_FuncPtr,
                         EoS->HTilde2Temp_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
                         EoS->Table, NULL, NULL );
@@ -259,6 +263,9 @@ void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 
 //    3. update the cosmic-ray energy
       g_Output[CRAY][idx_out] -= pCR_half * dt_dh * ( div_V[0] + div_V[1] + div_V[2] );
+
+//    4. apply floor
+      g_Output[CRAY][idx_out] = FMAX( g_Output[CRAY][idx_out], TINY_NUMBER );
 
    } // CGPU_LOOP( idx_out, CUBE(PS2) )
 
