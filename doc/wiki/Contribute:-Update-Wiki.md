@@ -2,7 +2,7 @@ We are glad you have something new to contribute to GAMER, and you would like to
 
 Before getting started, I recommend you have some basic knowledge of [repository, branch, fork](https://docs.github.com/en/repositories/creating-and-managing-repositories/about-repositories), [action](https://docs.github.com/en/actions), and [workflow](https://docs.github.com/en/actions/using-workflows).
 
-The following is the outline of this document:
+The followings are the outline of this document:
 * [Setup](#Setup)
 * [Edit Wiki](#Edit-Wiki)
 * [Contribute](#Contribute)
@@ -52,7 +52,7 @@ We provide two examples of editing the wiki pages: from GitHub website and throu
    - **Copy wiki doc to wiki page**
 
      This step is like the `git checkout new_contribution_branch` but the GitHub wiki website version. 
-     * Click `Action` > `Workflows` > `Copy doc to wiki` > `Run workflow` > choose `new_contribution_branch` branch > Click green `Run workflow`. Once the workflow is done, the wiki is also updated to the specific branch version.
+     * Click `Action` > `Workflows` > `Copy doc to wiki` > `Run workflow` > choose `new_contribution_branch` branch > Click green `Run workflow`. Once the workflow is done, the wiki is also updated to `new_contribution_branch` branch version.
 
       [[images/CopyDocFromNewBranch.png]]
 
@@ -60,7 +60,7 @@ We provide two examples of editing the wiki pages: from GitHub website and throu
    - **Copy wiki to wiki doc**
 
      This step is like the `git push` to your branch.
-     * Click `Action` > `Workflows` > `Sync wiki to doc` > `Run workflow` > choose `new_contribution_branch` branch > Click green `Run workflow`. Once the workflow is done, the docs in the specific branch are updated to the latest wiki.
+     * Click `Action` > `Workflows` > `Sync wiki to doc` > `Run workflow` > choose `new_contribution_branch` branch > Click green `Run workflow`. Once the workflow is done, the docs in `new_contribution_branch` branch are updated to the latest wiki.
 
       [[images/CopyWikiToNewBranch.png]]
 
