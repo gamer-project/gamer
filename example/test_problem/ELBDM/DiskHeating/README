@@ -1,7 +1,8 @@
 Compilation flags:
 ========================================
 Enable  : MODEL=ELBDM, GRAVITY, PARTICLE, STORE_PAR_ACC, SUPPORT_HDF5,
-          NPAR_ATT_USER=1, SUPPORT_GSL (optional, only useful for thin disk)
+          SUPPORT_GSL (optional, only useful for thin disk)
+
 Disable : COMOVING
 
 
@@ -59,7 +60,7 @@ General initial condition setup:
 
    c. Turn on AddParWhenRestart in Input__TestProb
 
-   d. Set AddParWhenRestartNPar, Disk_Mass, Disk_R, DispTableFile, and DispNbin in Input__TestProb
+   d. Set AddParWhenRestartNPar, Disk_Mass, Disk_R, and DispTableFile in Input__TestProb
 
 
 Analysis scripts:

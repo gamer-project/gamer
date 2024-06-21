@@ -72,6 +72,8 @@ Unit_M = f['Info']['InputPara']['Unit_M']
 Center = np.loadtxt('../../Record__Center', skiprows=1, dtype=float)
 Center = Center * Unit_L
 f.close()
+if Center.ndim == 1:
+   Center = Center.reshape(1,len(Center)) # reshape the array if there is only one row
 
 
 #-----------------------------------------------------------------------------------------------------------------

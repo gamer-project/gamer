@@ -43,6 +43,8 @@ yt.enable_parallelism()
 field       = ('Dens')
 center_mode = 'max'
 Center      = np.loadtxt('../../Record__Center', skiprows=1, dtype=float)
+if Center.ndim == 1:
+   Center = Center.reshape(1,len(Center)) # reshape the array if there is only one row
 
 for idx in range(idx_start, idx_end+1, didx):
    ds             = yt.load( '../../Data_%06d'%idx )

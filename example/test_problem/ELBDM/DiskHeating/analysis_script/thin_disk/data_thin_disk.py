@@ -1,9 +1,12 @@
+import matplotlib
+matplotlib.use('Agg')
 import h5py
 import math
 import numpy as np
 import argparse
 import sys
-
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 # -------------------------------------------------------------------------------------------------------------------------
 # user-specified parameters
@@ -52,12 +55,13 @@ def SearchIndex(x, A, N):
       else: i = mid + 1
    return i
 
+
 f = h5py.File('../../Data_%06d'%idx_start, 'r')
 Unit_L = f['Info']['InputPara']['Unit_L']
 Unit_T = f['Info']['InputPara']['Unit_T']*(3.16887646e-14)
 Unit_V = f['Info']['InputPara']['Unit_V']
 Unit_M = f['Info']['InputPara']['Unit_M']
-Center = np.loadtxt('../../Record__Center', skiprows=1, dtype=float)
+Center = np.loadtxt('../../Record__Center',skiprows=1, dtype=float)
 Center = Center * Unit_L
 f.close()
 if Center.ndim == 1:
@@ -69,16 +73,31 @@ if Center.ndim == 1:
 for idx in range(idx_start, idx_end+1, didx):
    print('loading file Data_%06d ...'%idx)
    with h5py.File('../../Data_%06d'%idx, 'r') as f:
-      disk_mass = np.array(f['Particle/ParMass'], dtype = np.float64) * Unit_M
-      disk_posx = np.array(f['Particle/ParPosX'], dtype = np.float64) * Unit_L
-      disk_posy = np.array(f['Particle/ParPosY'], dtype = np.float64) * Unit_L
-      disk_posz = np.array(f['Particle/ParPosZ'], dtype = np.float64) * Unit_L
-      disk_velx = np.array(f['Particle/ParVelX'], dtype = np.float64) * Unit_V
-      disk_vely = np.array(f['Particle/ParVelY'], dtype = np.float64) * Unit_V
-      disk_velz = np.array(f['Particle/ParVelZ'], dtype = np.float64) * Unit_V
+      mass = np.array(f['Particle/ParMass'], dtype = np.float64) * Unit_M
+      posx = np.array(f['Particle/ParPosX'], dtype = np.float64) * Unit_L
+      posy = np.array(f['Particle/ParPosY'], dtype = np.float64) * Unit_L
+      posz = np.array(f['Particle/ParPosZ'], dtype = np.float64) * Unit_L
+      velx = np.array(f['Particle/ParVelX'], dtype = np.float64) * Unit_V
+      vely = np.array(f['Particle/ParVelY'], dtype = np.float64) * Unit_V
+      velz = np.array(f['Particle/ParVelZ'], dtype = np.float64) * Unit_V
       current_step = f['Info/KeyInfo']['Step']
       time = f['Info/KeyInfo']['Time'][0]*Unit_T
-   disk_size = np.size(disk_mass)
+      ptype = np.array(f['Particle/ParType'], dtype = np.int32)
+   index = np.argsort(ptype)
+   N_Thin = np.sum(ptype)-2*len(ptype)
+   N_Thick = len(ptype)-N_Thin
+   print("N_Thick=%d"%N_Thick)
+   print("N_Thin =%d"%N_Thin)
+
+   disk_mass = mass[index[N_Thick:]]
+   disk_posx = posx[index[N_Thick:]]
+   disk_posy = posy[index[N_Thick:]]
+   disk_posz = posz[index[N_Thick:]]
+   disk_velx = velx[index[N_Thick:]]
+   disk_vely = vely[index[N_Thick:]]
+   disk_velz = velz[index[N_Thick:]]
+   disk_type = ptype[index[N_Thick:]]
+   print(np.sum(disk_type))
    VCM = [ np.sum(disk_mass*disk_velx)/ np.sum(disk_mass),
            np.sum(disk_mass*disk_vely)/ np.sum(disk_mass),
            np.sum(disk_mass*disk_velz)/ np.sum(disk_mass) ]
@@ -89,9 +108,9 @@ for idx in range(idx_start, idx_end+1, didx):
    disk_velx = disk_velx - VCM[0]
    disk_vely = disk_vely - VCM[1]
    disk_velz = disk_velz - VCM[2]
-   # compute angular momentum
-   disk_pos = np.zeros((disk_size, 3))
-   disk_vel = np.zeros((disk_size, 3))
+
+   disk_pos = np.zeros((N_Thin, 3))
+   disk_vel = np.zeros((N_Thin, 3))
    disk_pos[:,0] = disk_posx
    disk_pos[:,1] = disk_posy
    disk_pos[:,2] = disk_posz
@@ -101,6 +120,7 @@ for idx in range(idx_start, idx_end+1, didx):
    disk_L = np.cross(disk_pos, disk_vel)
    tot_L = np.array([np.sum(disk_L[:,0]),np.sum(disk_L[:,1]),np.sum(disk_L[:,2])])
    tot_L = tot_L/(tot_L[0]**2+tot_L[1]**2+tot_L[2]**2)**0.5
+
    vec = np.cross(tot_L, np.array([0,0,1]))
    c = tot_L[2]
    s = 1-c**2
@@ -122,7 +142,7 @@ for idx in range(idx_start, idx_end+1, didx):
    disk_velp = (disk_posx*disk_vely - disk_posy*disk_velx)/disk_r
    disk_sortR  = np.sort(disk_r)
    disk_indexR = np.argsort(disk_r)
-   Data = np.zeros((8,Div_disk))
+   Data = np.zeros((8, Div_disk))
 
    r = 0
    disk_num = 0
@@ -130,14 +150,14 @@ for idx in range(idx_start, idx_end+1, didx):
    for j in range(Div_disk):
       disk_num_pre = disk_num
       Data[0,j] = r + 0.5 * dr
-      disk_num = SearchIndex( r+dr, disk_sortR, disk_size )
+      disk_num = SearchIndex( r+dr, disk_sortR, N_Thin )
       mean_vr = np.mean( disk_velr[ disk_indexR[ disk_num_pre:disk_num ] ] )
       mean_vp = np.mean( disk_velp[ disk_indexR[ disk_num_pre:disk_num ] ] )
       mean_vz = np.mean( disk_velz[ disk_indexR[ disk_num_pre:disk_num ] ] )
       mean_vp2 = np.mean( disk_velp[ disk_indexR[ disk_num_pre:disk_num ] ]**2 )
       Data[1,j] = mean_vp      # rotation curve
-      Data[2,j] = (np.mean(( disk_velr[ disk_indexR[ disk_num_pre:disk_num ] ] - mean_vr )**2))**0.5      # sigma_r
-      Data[3,j] = (np.mean(( disk_velz[ disk_indexR[ disk_num_pre:disk_num ] ] - mean_vz )**2))**0.5      # sigma_z
+      Data[2,j] = (np.mean(( disk_velr[ disk_indexR[ disk_num_pre:disk_num ] ] - mean_vr )**2))**0.5
+      Data[3,j] = (np.mean(( disk_velz[ disk_indexR[ disk_num_pre:disk_num ] ] - mean_vz )**2))**0.5
       mass = disk_mass[0]*( disk_num-disk_num_pre )
       mass_total = disk_mass[0]*disk_num
       area = (math.pi *((r + dr)**2 - r**2))
@@ -156,5 +176,6 @@ for idx in range(idx_start, idx_end+1, didx):
 
       r = r + dr
 
-   np.save('Data_Disk_%06d'%idx, Data)
+   np.save('Data_Thin_Disk_%06d'%idx, Data)
    print(' ')
+

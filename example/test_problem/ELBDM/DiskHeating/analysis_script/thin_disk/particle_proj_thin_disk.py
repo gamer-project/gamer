@@ -44,10 +44,11 @@ print( '-------------------------------------------------------------------\n' )
 # -------------------------------------------------------------------------------------------------------------------------
 # specify script unit and output figure settings
 cm       = 1/2.54  # centimeters in inches
-field    = 'particle_mass'
+field = ('ThinDisk', 'ParMass')
 Center   = np.loadtxt('../../Record__Center', skiprows=1, dtype=float)
 if Center.ndim == 1:
    Center = Center.reshape(1,len(Center)) # reshape the array if there is only one row
+
 
 plt.rcParams['font.size']         = FONT_SIZE
 plt.rcParams['figure.titlesize']  = 2*FONT_SIZE
@@ -78,6 +79,12 @@ plt.rcParams['mathtext.rm']       = 'STIXGeneral:regular'
 plt.rcParams['mathtext.it']       = 'STIXGeneral:italic'
 plt.rcParams['mathtext.bf']       = 'STIXGeneral:italic:bold'
 
+# add yt particle filter
+def Disk(pfilter, data):
+   filter = data['all', 'ParType'] == 3
+   return filter
+yt.add_particle_filter('ThinDisk', function = Disk, filtered_type = 'all', requires = ['ParType'])
+
 # -------------------------------------------------------------------------------------------------------------------------
 # output figures
 fig = plt.figure()
@@ -87,6 +94,7 @@ grid = AxesGrid( fig, (0.1, 0.05, 3.2, 2.7), nrows_ncols=(1, 2), axes_pad=(1.2,0
 
 for idx in range(idx_start, idx_end+1, didx):
    ds             = yt.load( '../../Data_%06d'%idx )
+   ds.add_particle_filter('ThinDisk')
    if sys.version_info[0] == 2:
       ds.periodicity=(True,True,True)
    current_step   = ds.parameters["Step"]

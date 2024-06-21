@@ -22,35 +22,30 @@ static double Halo_Density( double r );
 void Init_ExtPot_Soliton();
 // problem-specific global variables
 // =======================================================================================
-FieldIdx_t ParTypeIdx_DiskHeating = Idx_Undefined;
+FieldIdx_t ParLabel_Idx = Idx_Undefined;
 static RandomNumber_t *RNG = NULL;
-static double CM_MaxR;                   // maximum radius for determining CM
-static double CM_TolErrR;                // maximum allowed errors for determining CM
-       double Cen[3];                    // center
-static bool   AddFixedHalo;              // add a fixed halo, must enable OPT__FREEZE_FLUID
-static bool   HaloUseTable;              // 0 = from analytical profile, 1 = from table
-       double m_22;                      // ELBDM particle mass, used for soliton profile of the fixed halo
-       double CoreRadius;                // soliton radius of the fixed halo (in kpc)
-static double Rho_0;                     // halo rho_0 (in 1.0e+10 Msun*kpc^-3)
-static double Rs;                        // halo Rs (in kpc)
-static double Alpha;                     // dimensionless, used for alpha-beta-gamma density profile of the fixed halo
-static double Beta;                      // dimensionless, used for alpha-beta-gamma density profile of the fixed halo
-static double Gamma;                     // dimensionless, used for alpha-beta-gamma density profile of the fixed halo
-static char   DensTableFile[MAX_STRING]; // fixed halo density profile filename
-static int    DensNbin;                  // number of bins of density table
-static double *DensTable_r = NULL;       // radius of density table
-static double *DensTable_d = NULL;       // density of density table
-static bool   AddParWhenRestart;         // add a new disk to an existing snapshot, must enable OPT__RESTART_RESET
-static bool   AddParWhenRestartByFile;   // add a new disk via PAR_IC
-static long   AddParWhenRestartNPar;     // particle number of the new disk
-static int    NewDisk_RSeed;             // random seed for setting new disk particle position and velocity
-static double Disk_Mass;                 // total mass of the new disk
-static double Disk_R;                    // scale radius of the new disk
-static char   DispTableFile[MAX_STRING]; // velocity dispersion filename
-static int    DispNbin;                  // number of bins of velocity dispersion table
-static double *DispTable_r = NULL;       // radius of velocity dispersion table
-static double *DispTable_d = NULL;       // velocity dispersion of velocity dispersion table
-
+       double  Cen[3];                    // center
+static bool    AddFixedHalo;              // add a fixed halo, must enable OPT__FREEZE_FLUID
+static bool    HaloUseTable;              // 0 = from analytical profile, 1 = from table
+       double  m_22;                      // ELBDM particle mass, used for soliton profile of the fixed halo
+       double  CoreRadius;                // soliton radius of the fixed halo (in kpc)
+static double  Rho_0;                     // halo rho_0 (in 1.0e+10 Msun*kpc^-3)
+static double  Rs;                        // halo Rs (in kpc)
+static double  Alpha;                     // dimensionless, used for alpha-beta-gamma density profile of the fixed halo
+static double  Beta;                      // dimensionless, used for alpha-beta-gamma density profile of the fixed halo
+static double  Gamma;                     // dimensionless, used for alpha-beta-gamma density profile of the fixed halo
+static char    DensTableFile[MAX_STRING]; // fixed halo density profile filename
+static double *DensTable = NULL;          // density table
+static int     DensTable_Nbin;            // number of bins of density table
+static bool    AddParWhenRestart;         // add a new disk to an existing snapshot, must enable OPT__RESTART_RESET
+static bool    AddParWhenRestartByFile;   // add a new disk via PAR_IC
+static long    AddParWhenRestartNPar;     // particle number of the new disk
+static int     NewDisk_RSeed;             // random seed for setting new disk particle position and velocity
+static double  Disk_Mass;                 // total mass of the new disk
+static double  Disk_R;                    // scale radius of the new disk
+static char    DispTableFile[MAX_STRING]; // velocity dispersion filename
+static double *DispTable = NULL;          // radius of velocity dispersion table
+static int     DispTable_Nbin;            // number of bins of velocity dispersion table
 // =======================================================================================
 #ifdef PARTICLE
 void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_AllRank,
@@ -103,11 +98,6 @@ void Validate()
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
 
-#  ifdef PARTICLE
-   if ( PAR_NATT_USER != 1 )
-      Aux_Error( ERROR_INFO, "please set PAR_NATT_USER = 1 in the Makefile !!\n" );
-#  endif
-
 
 // warnings
    if ( MPI_Rank == 0 )
@@ -158,8 +148,6 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",         &VARIABLE,                DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "CM_MaxR",                 &CM_MaxR,                -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "CM_TolErrR",              &CM_TolErrR,             -1.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "CenX",                    &Cen[0],                  NoDef_double,  NoMin_double,     NoMax_double      );
    ReadPara->Add( "CenY",                    &Cen[1],                  NoDef_double,  NoMin_double,     NoMax_double      );
    ReadPara->Add( "CenZ",                    &Cen[2],                  NoDef_double,  NoMin_double,     NoMax_double      );
@@ -173,7 +161,6 @@ void SetParameter()
    ReadPara->Add( "Beta",                    &Beta,                    1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "Gamma",                   &Gamma,                   1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "DensTableFile",           DensTableFile,            NoDef_str,     Useless_str,      Useless_str       );
-   ReadPara->Add( "DensNbin",                &DensNbin,                0,             0,                NoMax_int         );
    ReadPara->Add( "AddParWhenRestart",       &AddParWhenRestart,       false,         Useless_bool,     Useless_bool      );
    ReadPara->Add( "AddParWhenRestartByFile", &AddParWhenRestartByFile, true,          Useless_bool,     Useless_bool      );
    ReadPara->Add( "AddParWhenRestartNPar",   &AddParWhenRestartNPar,   (long)0,       (long)0,          NoMax_long        );
@@ -181,7 +168,6 @@ void SetParameter()
    ReadPara->Add( "Disk_Mass",               &Disk_Mass,               1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "Disk_R",                  &Disk_R,                  1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "DispTableFile",           DispTableFile,            NoDef_str,     Useless_str,      Useless_str       );
-   ReadPara->Add( "DispNbin",                &DispNbin,                0,             0,                NoMax_int         );
 
 
    ReadPara->Read( FileName );
@@ -189,52 +175,30 @@ void SetParameter()
    delete ReadPara;
 
 // (1-2) set the default values
-   if ( CM_TolErrR < 0.0 )   CM_TolErrR = 1.0*amr->dh[MAX_LEVEL];
 
 // (1-3) check the runtime parameters
-
 
 // (2) set the problem-specific derived parameters
    // use density table as background fixed halo profile
    if ( HaloUseTable == 1 ) {
-      if ( DensNbin == 0){
-         if ( MPI_Rank == 0 )    Aux_Error( ERROR_INFO, "DensNbin should be set!\n" );
-      }
-      int counter, k;
-      FILE *input_table;
-      char buff[MAX_STRING];
-      double radius, value;
-      DensTable_r = new double [DensNbin];
-      DensTable_d = new double [DensNbin];
 
       // read the density table
-      if ( MPI_Rank == 0 )
+      const bool RowMajor_No = false;     // load data into the column-major order
+      const bool AllocMem_Yes = true;     // allocate memory for AGORA_VcProf
+      const int  NCol        = 2;         // total number of columns to load
+      const int  Col[NCol]   = {0, 1};    // target columns: (radius, density)
+
+      DensTable_Nbin = Aux_LoadTable( DensTable, DensTableFile, NCol, Col, RowMajor_No, AllocMem_Yes );
+
+      double *DensTable_r = DensTable + 0*DensTable_Nbin;
+      double *DensTable_d = DensTable + 1*DensTable_Nbin;
+
+      // convert to log-log scale
+      for (int b=0; b<DensTable_Nbin; b++)
       {
-         counter = 0;
-         input_table = fopen(DensTableFile,"r");
-         if (!input_table)
-            Aux_Error( ERROR_INFO, "File %s cannot be opened! Exit!\n", DensTableFile);
-         else
-            Aux_Message( stdout, "Loading %s for reading density table succeed!\n", DensTableFile);
-         while (!feof(input_table))
-         {
-            fgets(buff, MAX_STRING, input_table);
-            if (buff==NULL||buff[0]=='\0')
-               break;
-            else if (buff[0]!='#')
-            {
-               sscanf(buff, "%lf %lf", &radius, &value);
-               // convert table to log-log scale
-               DensTable_r[counter] = log(radius);
-               DensTable_d[counter] = log(value*CUBE(UNIT_L)/UNIT_M);
-               counter ++;
-            }
-            memset(buff, '\0', MAX_STRING);
-         }
-         fclose(input_table);
+         DensTable_r[b] = log(DensTable_r[b]);
+         DensTable_d[b] = log(DensTable_d[b]*CUBE(UNIT_L)/UNIT_M);
       }
-      MPI_Bcast(DensTable_r, DensNbin, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-      MPI_Bcast(DensTable_d, DensNbin, MPI_DOUBLE, 0, MPI_COMM_WORLD);
    }
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
@@ -257,8 +221,6 @@ void SetParameter()
    {
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID           = %d\n",         TESTPROB_ID             );
-      Aux_Message( stdout, "  CM_MaxR                   = %13.7e\n",     CM_MaxR                 );
-      Aux_Message( stdout, "  CM_TolErrR                = %13.7e\n",     CM_TolErrR              );
       Aux_Message( stdout, "  CenX                      = %13.7e\n",     Cen[0]                  );
       Aux_Message( stdout, "  CenY                      = %13.7e\n",     Cen[1]                  );
       Aux_Message( stdout, "  Cenz                      = %13.7e\n",     Cen[2]                  );
@@ -272,7 +234,6 @@ void SetParameter()
       Aux_Message( stdout, "  Beta                      = %13.7e\n",     Beta                    );
       Aux_Message( stdout, "  Gamma                     = %13.7e\n",     Gamma                   );
       Aux_Message( stdout, "  DensTableFile             = %s\n",         DensTableFile           );
-      Aux_Message( stdout, "  DensNbin                  = %d\n",         DensNbin                );
       Aux_Message( stdout, "  AddParWhenRestart         = %d\n",         AddParWhenRestart       );
       Aux_Message( stdout, "  AddParWhenRestartByFile   = %d\n",         AddParWhenRestartByFile );
       Aux_Message( stdout, "  AddParWhenRestartNPar     = %d\n",         AddParWhenRestartNPar   );
@@ -280,7 +241,6 @@ void SetParameter()
       Aux_Message( stdout, "  Disk_Mass                 = %13.7e\n",     Disk_Mass               );
       Aux_Message( stdout, "  Disk_R                    = %13.7e\n",     Disk_R                  );
       Aux_Message( stdout, "  DispTableFile             = %s\n",         DispTableFile           );
-      Aux_Message( stdout, "  DispNbin                  = %d\n",         DispNbin                );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -346,11 +306,15 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       const double Unit_M_GALIC = 1.0e10*Const_Msun;    //  1.0e10 solar masses
       const double Unit_D_GALIC = Unit_M_GALIC/CUBE(Unit_L_GALIC);
       const double r_in_kpc = r*UNIT_L/Unit_L_GALIC;
+
+      const double *DensTable_r = DensTable + 0*DensTable_Nbin;
+      const double *DensTable_d = DensTable + 1*DensTable_Nbin;
+
       if (HaloUseTable)
       {
          if (r_in_kpc < exp(DensTable_r[0])) dens = exp(DensTable_d[0]);
-         else if (r_in_kpc > exp(DensTable_r[DensNbin-1])) dens = 0;
-         else dens = exp( Mis_InterpolateFromTable( DensNbin, DensTable_r, DensTable_d, log(r_in_kpc) ) );
+         else if (r_in_kpc > exp(DensTable_r[DensTable_Nbin-1])) dens = 0;
+         else dens = exp( Mis_InterpolateFromTable( DensTable_Nbin, DensTable_r, DensTable_d, log(r_in_kpc) ) );
       }
       else dens = Halo_Density(r_in_kpc)*Unit_D_GALIC/UNIT_D;
    }
@@ -375,10 +339,8 @@ void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
 
 void End_DiskHeating()
 {
-   delete [] DensTable_r;
-   delete [] DensTable_d;
-   delete [] DispTable_r;
-   delete [] DispTable_d;
+   delete [] DensTable;
+   delete [] DispTable;
 } // FUNCTION : End_DiskHeating
 
 
@@ -401,7 +363,7 @@ void End_DiskHeating()
 void AddNewParticleAttribute()
 {
 
-   if ( ParTypeIdx_DiskHeating == Idx_Undefined )  ParTypeIdx_DiskHeating = AddParticleAttribute( "ParLabel" );
+   if ( ParLabel_Idx == Idx_Undefined )  ParLabel_Idx = AddParticleAttribute( "ParLabel" );
 
 } // FUNCTION : AddNewParticleAttribute
 #ifdef GRAVITY
@@ -428,7 +390,10 @@ void Init_NewDiskRestart()
    real *Pos_AllRank[3] = { NewParAtt[PAR_POSX], NewParAtt[PAR_POSY], NewParAtt[PAR_POSZ] };
    real *Vel_AllRank[3] = { NewParAtt[PAR_VELX], NewParAtt[PAR_VELY], NewParAtt[PAR_VELZ] };
    real *Type_AllRank   = NewParAtt[PAR_TYPE];
-   real *Label_AllRank  = NewParAtt[ParTypeIdx_DiskHeating];
+#  if ( PAR_NATT_USER == 1 )
+   const long ParLabelStart = amr->Par->NPar_Active_AllRank;
+   real *Label_AllRank  = NewParAtt[ParLabel_Idx];
+#  endif
 
    if ( AddParWhenRestartByFile ) // add new disk via PAR_IC
    {
@@ -482,8 +447,11 @@ void Init_NewDiskRestart()
 //          mass
             Mass_AllRank[p] = ParData1[0];
 //          label
-            Type_AllRank[p] = PTYPE_GENERIC_MASSIVE;
-            Label_AllRank[p] = ParData1[7];
+            Type_AllRank[p] = ParData1[7]; // 1=CDM halo, 2=disk
+#           if ( PAR_NATT_USER == 1 )      // add particle label, not very reliable due to floating point error
+            Label_AllRank[p] = ParLabelStart + p;
+#           endif
+
 //          position
             Pos_AllRank[0][p] = ParData1[1];
             Pos_AllRank[1][p] = ParData1[2];
@@ -510,43 +478,22 @@ void Init_NewDiskRestart()
 #     endif
 
       // read velocity dispersion table
-      if ( DispNbin == 0){
-         Aux_Error( ERROR_INFO, "DispNbin should be set!\n" );
-      }
-      int counter, k;
-      FILE *input_table;
-      char buff[MAX_STRING];
-      double radius, value;
-      DispTable_r = new double [DispNbin];
-      DispTable_d = new double [DispNbin];
+      const bool RowMajor_No = false;     // load data into the column-major order
+      const bool AllocMem_Yes = true;     // allocate memory for AGORA_VcProf
+      const int  NCol        = 2;         // total number of columns to load
+      const int  Col[NCol]   = {0, 1};    // target columns: (radius, density)
 
-      // velocity dispersion table for thin disk
-      if ( MPI_Rank == 0 )
+      DispTable_Nbin = Aux_LoadTable( DispTable, DispTableFile, NCol, Col, RowMajor_No, AllocMem_Yes );
+
+      double *DispTable_r = DispTable + 0*DispTable_Nbin;
+      double *DispTable_d = DispTable + 1*DispTable_Nbin;
+
+      // convert to code unit
+      for (int b=0; b<DispTable_Nbin; b++)
       {
-         counter = 0;
-         input_table = fopen(DispTableFile,"r");
-         if (!input_table)
-         Aux_Error( ERROR_INFO, "File %s cannot be opened! Exit!\n", DispTableFile);
-         else
-            Aux_Message( stdout, "Loading %s for reading density table succeed!\n", DispTableFile);
-         while (!feof(input_table))
-         {
-            fgets(buff, MAX_STRING, input_table);
-            if (buff==NULL||buff[0]=='\0')
-               break;
-            else if (buff[0]!='#')
-            {
-               sscanf(buff, "%lf %lf", &radius, &value);
-               DispTable_r[counter] = radius;
-               DispTable_d[counter] = value*1e5/UNIT_V;
-               counter ++;
-            }
-            memset(buff, '\0', MAX_STRING);
-         }
-         fclose(input_table);
+         DispTable_r[b] = DispTable_r[b]*Const_kpc/UNIT_L;
+         DispTable_d[b] = DispTable_d[b]*1e5/UNIT_V;
       }
-      MPI_Bcast(DispTable_r, DispNbin, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-      MPI_Bcast(DispTable_d, DispNbin, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
       if ( MPI_Rank == 0 )
       {
@@ -560,14 +507,17 @@ void Init_NewDiskRestart()
          RNG = new RandomNumber_t( 1 );
          RNG->SetSeed( 0, NewDisk_RSeed );
 
+
          for ( long p = 0; p < NPar_AllRank; p++)
          {
             Time_AllRank[p] = Time[0];
 //          mass
             Mass_AllRank[p] = ParM;
 //          label
-            Type_AllRank[p] = PTYPE_STAR;
-            Label_AllRank[p] = 3;    // use 3 to represent thin disk particles
+            Type_AllRank[p] = 3;      // use 3 to represent thin disk particles
+#           if ( PAR_NATT_USER == 1 ) // add particle label, not very reliable due to floating point error
+            Label_AllRank[p] = ParLabelStart + p;
+#           endif
 
 //          position: statisfying surface density Sigma=Disk_Mass/(2*pi*Disk_R**2)*exp(-R/Disk_R)
             Ran  = RNG->GetValue( 0, 0.0, 1.0);
@@ -707,7 +657,7 @@ void Par_AfterAcceleration( const long NPar_ThisRank, const long NPar_AllRank, r
    for (long p=0; p<NPar_ThisRank; p++)
    {
       if ( ParMass[p] < 0.0 )  continue;
-      if ( AllAttribute[ParTypeIdx_DiskHeating][p] == 3 ){
+      if ( ParType[p] == 3 ){
          ParRadius[0] = ParPos[0][p] - Cen[0];
          ParRadius[1] = ParPos[1][p] - Cen[1];
          ParR = sqrt( SQR(ParRadius[0]) + SQR(ParRadius[1]) );
@@ -741,10 +691,12 @@ void Par_AfterAcceleration( const long NPar_ThisRank, const long NPar_AllRank, r
 ////-------------------------------------------------------------------------------------------------------
 double Get_Dispersion(double r){
    double disp = 0.0;
-   const double r_in_kpc = r*UNIT_L/Const_kpc;
-   if (r_in_kpc < DispTable_r[0]) disp = DispTable_d[0];
-   else if (r_in_kpc > DispTable_r[DispNbin-1]) disp = DispTable_d[DispNbin-1];
-   else disp = Mis_InterpolateFromTable( DispNbin, DispTable_r, DispTable_d, r_in_kpc );
+   const double *DispTable_r = DispTable + 0*DispTable_Nbin;
+   const double *DispTable_d = DispTable + 1*DispTable_Nbin;
+
+   if (r < DispTable_r[0]) disp = DispTable_d[0];
+   else if (r > DispTable_r[DispTable_Nbin-1]) disp = DispTable_d[DispTable_Nbin-1];
+   else disp = Mis_InterpolateFromTable( DispTable_Nbin, DispTable_r, DispTable_d, r );
 
    return disp;
 } // FUNCTION : Get_Dispersion
@@ -792,7 +744,9 @@ void Init_TestProb_ELBDM_DiskHeating()
 #  endif
 #  ifdef PARTICLE
    Par_Init_ByFunction_Ptr        = Par_Init_ByFunction_DiskHeating;
+#  if ( PAR_NATT_USER == 1 )
    Par_Init_Attribute_User_Ptr    = AddNewParticleAttribute;
+#  endif
    Init_User_Ptr                  = Init_NewDiskRestart;
 #  endif
 #  endif // #if ( MODEL == ELBDM )

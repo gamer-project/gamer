@@ -1,5 +1,5 @@
 #include "GAMER.h"
-extern FieldIdx_t ParTypeIdx_DiskHeating;
+extern FieldIdx_t ParLabel_Idx;
 #ifdef PARTICLE
 
 
@@ -68,7 +68,7 @@ void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_
 
 
 // set the file offset for this rank
-   long NPar_EachRank[MPI_NRank], NPar_Check=0, FileOffset=0;
+   long NPar_EachRank[MPI_NRank], NPar_Check=0, FileOffset=0, NumOffset=0;
 
    MPI_Allgather( &NParThisRank, 1, MPI_LONG, NPar_EachRank, 1, MPI_LONG, MPI_COMM_WORLD );
 
@@ -77,8 +77,11 @@ void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_
    if ( NPar_Check != NParAllRank )
       Aux_Error( ERROR_INFO, "total number of particles found (%ld) != expect (%ld) !!\n", NPar_Check, NParAllRank );
 
-   for (int r=0; r<MPI_Rank; r++)   FileOffset = FileOffset + NPar_EachRank[r]*sizeof(real);
-
+   for (int r=0; r<MPI_Rank; r++)
+   {
+      FileOffset = FileOffset + NPar_EachRank[r]*sizeof(real);
+      NumOffset  = NumOffset  + NPar_EachRank[r];
+   }
 
 // load data
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading data ... " );
@@ -120,8 +123,10 @@ void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_
       ParVelX[p] = ParData1[4];
       ParVelY[p] = ParData1[5];
       ParVelZ[p] = ParData1[6];
-      ParType[p] = PTYPE_GENERIC_MASSIVE;
-      AllAttribute[ParTypeIdx_DiskHeating][p] = ParData1[7];
+      ParType[p] = ParData1[7]; // 1=CDM halo, 2=disk
+#     if ( PAR_NATT_USER == 1 ) // add particle label, not very reliable due to floating point error
+      AllAttribute[ParLabel_Idx][p] = NumOffset + p;
+#     endif
 
 //    synchronize all particles to the physical time at the base level
       amr->Par->Time[p] = Time[0];
