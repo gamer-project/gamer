@@ -35,7 +35,7 @@ In the following document, the Wiki stands for the Wiki page on the GitHub websi
 
    * Remember to save the token since it will only be shown once!
 
-1. **Create the repository secret token**
+1. **Create the repository secret token and email**
    * Go to `Setting` of your forked gamer repository > `Security` > `Secrets and variables` > `Actions` > `Repository secrets`
    
    [[images/CreateSecret.png]]
