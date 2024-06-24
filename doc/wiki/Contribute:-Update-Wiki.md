@@ -40,9 +40,14 @@ In the following document, the Wiki stands for the Wiki page on the GitHub websi
    
    [[images/CreateSecret.png]]
 
-   * Click `New repository secrets`, and then you will see the following. Please replace `<your personal access token>` with the token generated in the previous step at `Secret` and make sure the `Name` of the token is `TOKEN_FOR_WIKI`. 
+   * Click `New repository secrets`, and then you will see the following. Please replace `<your_personal_access_token>` with the token generated in the previous step at `Secret` and make sure the `Name` of the secret is `TOKEN_FOR_WIKI`. 
 
    [[images/SetToken.png]]
+
+   * Click `New repository secrets`. Please replace `<your_email_address>` with your account email address at `Secret` and make sure the `Name` of the secret is `MY_EMAIL`.
+      - NOTE: We will not know your address since it only exists in your repository. This step is only for recording your contribution by the action.
+
+   [[images/SetMail.png]]
 
 1. **Enable actions (workflows)**
    * Click `Actions` > click the green button.
