@@ -4,6 +4,8 @@
 
 #include "CUFLU.h"
 
+static real minmod( const real a, const real b );
+
 //-----------------------------------------------------------------------------------------
 // Function    : MC_limiter
 // Description : Monotonized central (MC) slope limiter

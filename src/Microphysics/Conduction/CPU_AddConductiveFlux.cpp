@@ -128,7 +128,7 @@ void Hydro_AddConductiveFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //       |         |         |
 //       ---------------------
          real B_N_mean, B_T1_mean, B_T2_mean, B_amp;
-         if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION ) 
+         if ( MicroPhy->CondFluxType == ANISOTROPIC_CONDUCTION ) 
          {
             B_N_mean  =             g_FC_B[    d][ idx_fc_B                ];
             B_T1_mean = (real)0.5*( g_CC_B[TDir1][ idx_cvar                ] +
@@ -159,7 +159,7 @@ void Hydro_AddConductiveFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //       normal direction
          N_slope = ( Temp[ idx_cvar + didx_cvar[d] ] - Temp[ idx_cvar ] ) * _dh;
 
-         if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION ) 
+         if ( MicroPhy->CondFluxType == ANISOTROPIC_CONDUCTION ) 
          {
 //          transverse direction 1
             al = Temp[ idx_cvar                                   ] -
@@ -191,20 +191,24 @@ void Hydro_AddConductiveFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
 //       3. compute conductive flux
          real gradient, gradT, Total_Flux;
-         if ( MicroPhy.CondFluxType == ISOTROPIC_CONDUCTION ) 
+#        ifdef MHD
+         if ( MicroPhy->CondFluxType == ISOTROPIC_CONDUCTION ) 
             gradient = -N_slope;
-         else if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION ) 
+         else if ( MicroPhy->CondFluxType == ANISOTROPIC_CONDUCTION ) 
             gradient = -B_N_mean*( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
+#        else
+         gradient = -N_slope;
+#        endif 
 //       get the conductivity
 //       --> for non-constant conduction coefficients, take the spatial average along the normal direction
 //           to get the face-centered coefficients
          real kappa_l, kappa_r, kappa, chi;
-         Hydro_ComputeConduction( kappa_l, cond_chi, MicroPhy, g_ConVar[DENS][ idx_cvar ], 
+         Hydro_ComputeConduction( kappa_l, chi, MicroPhy, g_ConVar[DENS][ idx_cvar ], 
                                   Temp[ idx_cvar ] );
-         Hydro_ComputeConduction( kappa_r, cond_chi, MicroPhy, g_ConVar[DENS][ idx_cvar + didx_cvar[d] ], 
+         Hydro_ComputeConduction( kappa_r, chi, MicroPhy, g_ConVar[DENS][ idx_cvar + didx_cvar[d] ], 
                                   Temp[ idx_cvar + didx_cvar[d] ] );
          kappa = 0.5*( kappa_l + kappa_r );
-         if ( MicroPhy.CondSaturation ) {
+         if ( MicroPhy->CondSaturation ) {
             real gradT = SQRT( SQR(N_slope) + SQR(T1_slope) + SQR(T2_slope) );
             real Thalf = 0.5*( Temp[ idx_cvar ] + Temp[ idx_cvar + didx_cvar[d] ] );
             real Dhalf = 0.5*( g_ConVar[DENS][ idx_cvar ] + g_ConVar[DENS][ idx_cvar + didx_cvar[d] ] );
@@ -212,7 +216,7 @@ void Hydro_AddConductiveFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
             real l_T = Thalf/gradT;
             real sat_factor = 4.0;
 #           ifdef MHD
-            if ( MicroPhy.CondSatWhistler ) 
+            if ( MicroPhy->CondSatWhistler ) 
             {
                real Phalf = MicroPhy.CondPresConv*Dhalf*Thalf;
                real beta = (real)2.0*Phalf/( B_amp * B_amp );
@@ -265,9 +269,11 @@ void Hydro_AddConductiveFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT)
                                        const int NFlux, const real dh, const MicroPhy_t *MicroPhy )
 {
 
+#  ifdef MHD  
    const int  didx_half[3] = { 1, N_HF_VAR, SQR(N_HF_VAR) };
    const int  mag_offset   = ( N_HF_VAR - PS2 ) / 2;
    const int  half_offset  = ( N_HF_VAR - NFlux ) / 2;
+#  endif
    const int  flux_offset  = 1;  // skip the additional fluxes along the transverse directions for computing the CT electric field
    const real _dh          = (real)1.0 / dh;
 
@@ -330,7 +336,7 @@ void Hydro_AddConductiveFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT)
 
 #        ifdef MHD
 //       magnetic field indices
-         if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION ) 
+         if ( MicroPhy->CondFluxType == ANISOTROPIC_CONDUCTION ) 
          {
             const int i_fc       = i_flux + mag_offset_i;
             const int j_fc       = j_flux + mag_offset_j;
@@ -357,7 +363,7 @@ void Hydro_AddConductiveFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT)
 //       |         |         |
 //       ---------------------
          real B_N_mean, B_T1_mean, B_T2_mean, B_amp;
-         if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION ) 
+         if ( MicroPhy->CondFluxType == ANISOTROPIC_CONDUCTION ) 
          {
             B_N_mean  =              g_FC_B_Half[    d][ idx_fc_BN                                            ];
             B_T1_mean = (real)0.25*( g_FC_B_Half[TDir1][ idx_fc_BT1                                           ] +
@@ -393,7 +399,7 @@ void Hydro_AddConductiveFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT)
 //       normal direction
          N_slope = ( Temp[ idx_half + didx_half[d] ] - Temp[ idx_half ] ) * _dh;
 
-         if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION ) 
+         if ( MicroPhy->CondFluxType == ANISOTROPIC_CONDUCTION ) 
          {
 //          transverse direction 1
             al = Temp[ idx_half                                   ] -
@@ -425,10 +431,14 @@ void Hydro_AddConductiveFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT)
 
 //       3. compute conductive flux
          real gradient, Total_Flux;
-         if ( MicroPhy.CondFluxType == ISOTROPIC_CONDUCTION ) 
+#        ifdef MHD
+         if ( MicroPhy->CondFluxType == ISOTROPIC_CONDUCTION ) 
             gradient = -N_slope;
-         else if ( MicroPhy.CondFluxType == ANISOTROPIC_CONDUCTION ) 
+         else if ( MicroPhy->CondFluxType == ANISOTROPIC_CONDUCTION ) 
             gradient = -B_N_mean*( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
+#        else
+	 gradient = -N_slope;
+#        endif
 //       get the conductivity
 //       --> for non-constant conduction coefficients, take the spatial average along the normal direction
 //           to get the face-centered coefficients
@@ -438,7 +448,7 @@ void Hydro_AddConductiveFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT)
          Hydro_ComputeConduction( kappa_r, chi, MicroPhy, g_PriVar_Half[DENS][ idx_half + didx_half[d] ], 
                                   Temp[ idx_half + didx_half[d] ] );
          kappa = 0.5*( kappa_l + kappa_r );
-         if ( MicroPhy.CondSaturation ) {
+         if ( MicroPhy->CondSaturation ) {
             real gradT = SQRT( SQR(N_slope) + SQR(T1_slope) + SQR(T2_slope) );
             real Thalf = 0.5*( Temp[ idx_half ] + Temp[ idx_half + didx_half[d] ] );
             real Dhalf = 0.5*( g_PriVar_Half[DENS][ idx_half ] + g_PriVar_Half[DENS][ idx_half + didx_half[d] ] );
@@ -446,9 +456,9 @@ void Hydro_AddConductiveFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT)
             real l_T = Thalf/gradT;
             real sat_factor = 4.0;
 #           ifdef MHD
-            if ( MicroPhy.CondSatWhistler ) 
+            if ( MicroPhy->CondSatWhistler ) 
             {
-               real Phalf = MicroPhy.CondPresConv*Dhalf*Thalf;
+               real Phalf = MicroPhy->CondPresConv*Dhalf*Thalf;
                real beta = (real)2.0*Phalf/( B_amp * B_amp );
                sat_factor += beta/(real)3.0;
             } 

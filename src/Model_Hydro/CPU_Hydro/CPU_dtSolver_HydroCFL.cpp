@@ -8,6 +8,12 @@
 #ifdef __CUDACC__
 
 #include "CUFLU_Shared_FluUtility.cu"
+#ifdef CONDUCTION
+#include "CUFLU_ComputeConduction.cu"
+#endif
+#ifdef VISCOSITY
+#include "CUFLU_ComputeViscosity.cu"
+#endif
 #include "CUDA_ConstMemory.h"
 
 // parallel reduction routine
@@ -66,8 +72,6 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
 #endif
 {
 
-   const bool CheckMinPres_Yes = true;
-   const bool CheckMinTemp_Yes = true;
    const real dhSafety         = Safety*dh;
 #  ifdef CR_DIFFUSION
    const real dh2CRSafety = MicroPhy.CR_safety*0.5*dh*dh;
@@ -80,6 +84,7 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
 #  endif
 #  ifndef SRHD
    const bool CheckMinPres_Yes = true;
+   const bool CheckMinTemp_Yes = true;
 #  endif
 
 // loop over all patches
@@ -209,7 +214,8 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
 
          Temp  = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                  fluid+NCOMP_FLUID, CheckMinTemp_Yes, MinTemp, Emag,
-                                 EoS.DensEint2Temp_FuncPtr, EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );
+                                 EoS.DensEint2Temp_FuncPtr, EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr,
+				 EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );
 #        endif
 
 #        ifdef VISCOSITY

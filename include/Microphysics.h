@@ -50,6 +50,7 @@ struct MicroPhy_t
    real CondMFPConst;
    real CondSpecificHeat;
    real CondPresConv;
+   real CondMue;
 #  endif // #ifdef CONDUCTION
 
 #  ifdef VISCOSITY

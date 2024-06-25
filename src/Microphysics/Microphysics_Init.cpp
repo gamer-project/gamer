@@ -45,7 +45,7 @@ void Microphysics_Init()
    MicroPhy.CondSaturation = CONDUCTION_SATURATION;
    MicroPhy.CondSatWhistler = CONDUCTION_SAT_WHISTLER;
    MicroPhy.CondMue = CONDUCTION_MUE;
-   if ( OPT_UNIT )
+   if ( OPT__UNIT )
       MicroPhy.CondSpecificHeat = Const_kB / ( MOLECULAR_WEIGHT * MU_NORM ) * (UNIT_M/UNIT_E);
    else
       MicroPhy.CondSpecificHeat = (real)1.0/MOLECULAR_WEIGHT;

@@ -12,7 +12,7 @@ void Hydro_ComputeConduction( real &cond_kappa, real &cond_chi, const MicroPhy_t
 
     real _Rho  = (real)1.0 / Dens;
 
-    if ( CONDUCTION_TYPE == CONSTANT_CONUDCTIVITY ) 
+    if ( CONDUCTION_TYPE == CONSTANT_CONDUCTION ) 
        // Constant conductivity
        cond_kappa = MicroPhy->CondConstCoeff; 
     else if ( CONDUCTION_TYPE == SPITZER_CONDUCTION ) 

@@ -142,6 +142,14 @@ real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Gamma_m1,
                           const bool CheckMinPres, const real MinPres );
 #endif // #ifdef DUAL_ENERGY
 #endif // #if ( MODEL == HYDRO )
+#ifdef VISCOSITY
+void Hydro_ComputeViscosity( real &visc_mu, real &visc_nu, const MicroPhy_t *MicroPhy,
+                             const real Dens, const real Temp );
+#endif
+#ifdef CONDUCTION
+void Hydro_ComputeConduction( real &cond_kappa, real &cond_chi, const MicroPhy_t *MicroPhy,
+                              const real Dens, const real Temp );
+#endif
 #ifdef SRHD
 real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                        const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
