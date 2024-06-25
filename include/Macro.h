@@ -31,6 +31,7 @@
 #define TURING       6
 #define AMPERE       7
 
+#ifdef GPU
 #if   ( GPU_COMPUTE_CAPABILITY >= 200  &&  GPU_COMPUTE_CAPABILITY < 300 )
 # define GPU_ARCH FERMI
 #elif ( GPU_COMPUTE_CAPABILITY >= 300  &&  GPU_COMPUTE_CAPABILITY < 500 )
@@ -45,9 +46,10 @@
 # define GPU_ARCH TURING
 #elif ( GPU_COMPUTE_CAPABILITY >= 800  &&  GPU_COMPUTE_CAPABILITY < 890 )
 # define GPU_ARCH AMPERE
-#elif ( defined GPU )
+#else
 # error : ERROR : Unknown GPU_COMPUTE_CAPABILITY !!
-#endif
+#endif // GPU_COMPUTE_CAPABILITY
+#endif // #ifdef GPU
 
 
 // models
