@@ -5,8 +5,8 @@ static bool Check_Curl( const int i, const int j, const int k,
                         const real vx[][PS1][PS1], const real vy[][PS1][PS1], const real vz[][PS1][PS1],
                         const double Threshold );
 static int  Check_Angular( const int i, const int j, const int k, const int lv, const int PID,
-                           const real CenX, const real CenY, const real CenZ,
-                           const real AngRes_Max, const real AngRes_Min, const real Refine_Rad );
+                           const double CenX, const double CenY, const double CenZ,
+                           const double AngRes_Max, const double AngRes_Min, const double Refine_Rad );
 
 
 
@@ -378,8 +378,8 @@ bool Check_Curl( const int i, const int j, const int k,
 //                2 : if the minimum angular resolution is not reached and r >= Refine_Rad
 //-------------------------------------------------------------------------------------------------------
 int Check_Angular( const int i, const int j, const int k, const int lv, const int PID,
-                   const real CenX, const real CenY, const real CenZ,
-                   const real AngRes_Max, const real AngRes_Min, const real Refine_Rad )
+                   const double CenX, const double CenY, const double CenZ,
+                   const double AngRes_Max, const double AngRes_Min, const double Refine_Rad )
 {
 
 // check
