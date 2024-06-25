@@ -1244,6 +1244,7 @@ void Aux_TakeNote()
 #     endif
       }
       fprintf( Note, "OPT__FREEZE_FLUID              % d\n",      OPT__FREEZE_FLUID        );
+      fprintf( Note, "OPT__FREEZE_HYDRO              % d\n",      OPT__FREEZE_HYDRO        );     
 #     if ( MODEL == HYDRO  ||  MODEL == ELBDM )
       fprintf( Note, "MIN_DENS                       % 14.7e\n",  MIN_DENS                 );
 #     endif

@@ -2410,6 +2410,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__ResetFluid         = OPT__RESET_FLUID;
    InputPara.Opt__ResetFluidInit     = OPT__RESET_FLUID_INIT;
    InputPara.Opt__FreezeFluid        = OPT__FREEZE_FLUID;
+   InputPara.Opt__FreezeHydro        = OPT__FREEZE_HYDRO;
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    InputPara.MinDens                 = MIN_DENS;
 #  endif
@@ -3425,6 +3426,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__ResetFluid",         HOFFSET(InputPara_t,Opt__ResetFluid        ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__ResetFluidInit",     HOFFSET(InputPara_t,Opt__ResetFluidInit    ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__FreezeFluid",        HOFFSET(InputPara_t,Opt__FreezeFluid       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__FreezeHydro",        HOFFSET(InputPara_t,Opt__FreezeHydro       ), H5T_NATIVE_INT              );
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "MinDens",                 HOFFSET(InputPara_t,MinDens                ), H5T_NATIVE_DOUBLE           );
 #  endif

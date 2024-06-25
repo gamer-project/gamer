@@ -652,6 +652,9 @@ void Aux_Check_Parameter()
    if ( OPT__FREEZE_FLUID )
       Aux_Message( stderr, "REMINDER : \"%s\" will prevent fluid variables from being updated\n", "OPT__FREEZE_FLUID" );
 
+   if ( OPT__FREEZE_HYDRO )
+      Aux_Message( stderr, "REMINDER : \"%s\" will prevent hydro fluxes from being updated\n", "OPT__FREEZE_HYDRO" );
+   
    } // if ( MPI_Rank == 0 )
 
 
