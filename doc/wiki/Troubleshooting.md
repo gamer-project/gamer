@@ -11,4 +11,30 @@
    * **Solution**: Update `CUDA` to 11.3 or higher.
 
 * * *
+* #### Check static array by [AddressSanitizer](https://github.com/google/sanitizers/wiki/AddressSanitizer) (ASen)
+   * **Description**: To detect the wrong usage of the static array.
+   * **Steps**:
+      1. Use `g++` compiler.
+      1. Compile and link with flags `-fsanitize=undefined -fsanitize=address`.
 
+   * **Example of using `eureka` machine**
+      1. Uncomment the following lines in `configs/eureka_gnu.config`
+         ```
+         #CXXFLAG -fsanitize=undefined -fsanitize=address
+         #LIBFLAG -fsanitize=undefined -fsanitize=address
+         ```
+      1. Edit `src/Makefile_base`
+    
+         Add the `$(CXXFLAG)` at the makefile linking part, usually at the bottom of the makefile.
+         ```
+         $(CXX) $(CXXFLAG) -o $@ $^ $(OBJ_GPU_LINK) $(LIB) $(OPENMPFLAG)
+         ```
+      1. Generate `Makefile`
+         ```
+         python configure.py --machine=eureka_gnu [--your_other_arguments]
+         ```
+      1. Compile
+         ```
+         make clean && make -j4
+         ```
+* * *
