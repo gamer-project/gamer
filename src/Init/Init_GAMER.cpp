@@ -238,7 +238,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
-// user-defined initialization
+// user-defined initialization (before the Poisson solver)
    if ( Init_User_Ptr != NULL )  Init_User_Ptr();
 
 
@@ -313,7 +313,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif // #ifdef PARTICLE
 
 
-// user-defined initialization after the Poisson solver
+// user-defined initialization (after the Poisson solver)
    if ( Init_User_AfterPoisson_Ptr != NULL )    Init_User_AfterPoisson_Ptr();
 
 
