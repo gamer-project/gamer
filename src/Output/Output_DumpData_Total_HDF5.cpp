@@ -1604,7 +1604,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    const bool GetPassiveSum = ( PassiveNorm_NVar > 0 );
    const int  NVar          = NVar_NoPassive + NCOMP_PASSIVE + ( (GetPassiveSum)?1:0 );
 
-   if ( !CONSERVED_REF_LOADED )   Aux_Error( ERROR_INFO, "Conserved variables reference are not assigned yet!!\n" );
+   if ( !ConservedRefLoaded )   Aux_Error( ERROR_INFO, "Conserved variables reference are not assigned yet!!\n" );
    KeyInfo.Time_H5Ref        = Time_Ref;
 #  if   ( MODEL == HYDRO )
    KeyInfo.Mass_Gas_H5Ref    = Fluid_Ref[0];

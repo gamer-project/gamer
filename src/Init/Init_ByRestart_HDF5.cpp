@@ -339,7 +339,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "Etot_All_H5Ref",       &Etot_All_Ref,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 #  endif // #if ( MODEL != PAR_ONLY )
 #  endif // #ifdef MASSIVE_PARTICLES
-   CONSERVED_REF_LOADED = true;
+   ConservedRefLoaded = true;
    } // if ( KeyInfo.FormatVersion >= 2479 )
 
 
