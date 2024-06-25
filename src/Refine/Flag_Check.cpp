@@ -369,11 +369,11 @@ bool Check_Curl( const int i, const int j, const int k,
 //                CenX        : x coordinate of center of calculating angular resolution
 //                CenY        : y coordinate of center of calculating angular resolution
 //                CenZ        : z coordinate of center of calculating angular resolution
-//                AngRes_Max  : the maximum allowed angular resolution
-//                AngRes_Min  : the minimum allowed angular resolution
-//                Refine_Rad  : the radius of must refined at level (lv)
+//                AngRes_Max  : The maximum allowed angular resolution
+//                AngRes_Min  : The minimum allowed angular resolution
+//                Refine_Rad  : The radius of must refined at level (lv)
 //
-// Return      :  0 : if the cell is not in the refine region.
+// Return      :  0 : if the cell is not in the refine region
 //                1 : if the minimum angular resolution is     reached or  r <  Refine_Rad
 //                2 : if the minimum angular resolution is not reached and r >= Refine_Rad
 //-------------------------------------------------------------------------------------------------------
