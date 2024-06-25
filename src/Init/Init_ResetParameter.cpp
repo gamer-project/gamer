@@ -649,7 +649,9 @@ void Init_ResetParameter()
 // angular resolution center
    if ( OPT__FLAG_ANGULAR )
    {
-      if ( ANGULAR_CEN_X < 0.0  ||  ANGULAR_CEN_Y < 0.0  ||  ANGULAR_CEN_Z < 0.0 )
+      if ( ANGULAR_CEN_X < 0.0  ||  ANGULAR_CEN_X > amr->BoxSize[0]  ||
+           ANGULAR_CEN_Y < 0.0  ||  ANGULAR_CEN_Y > amr->BoxSize[1]  ||
+           ANGULAR_CEN_Z < 0.0  ||  ANGULAR_CEN_Z > amr->BoxSize[2] )
       {
          ANGULAR_CEN_X = amr->BoxCenter[0];
          ANGULAR_CEN_Y = amr->BoxCenter[1];
