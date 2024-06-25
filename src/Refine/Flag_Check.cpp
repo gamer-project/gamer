@@ -400,7 +400,7 @@ int Check_Angular( const int i, const int j, const int k, const int lv, const in
       return 0;
 
 // (2) refine the region within r < Refine_Rad and the innermost cells
-   if ( R < dh  ||  R * UNIT_L < Refine_Rad )
+   if ( R < dh  ||  R < Refine_Rad )
       return 1;
 
 // (3) check if the minimum angular resolution is reached
