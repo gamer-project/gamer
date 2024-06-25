@@ -25,7 +25,7 @@
          ```
       1. Edit `src/Makefile_base`
     
-         Add the `$(CXXFLAG)` at the makefile linking part, usually at the bottom of the makefile.
+         Add the `$(CXXFLAG)` at the makefile linking part, usually at the bottom of the makefile. The line should be like this:
          ```
          $(CXX) $(CXXFLAG) -o $@ $^ $(OBJ_GPU_LINK) $(LIB) $(OPENMPFLAG)
          ```
