@@ -66,6 +66,8 @@ struct KeyInfo_t
    int    Magnetohydrodynamics;
    int    SRHydrodynamics;
    int    CosmicRay;
+   int    Viscosity;
+   int    Conduction;
 #  endif
 
    long   Step;
@@ -79,12 +81,6 @@ struct KeyInfo_t
 #  endif
 #  ifdef COSMIC_RAY
    int    CR_Diffusion;
-#  endif
-#  ifdef VISCOSITY
-   int    Viscosity;
-#  endif
-#  ifdef CONDUCTION
-   int    Conduction;
 #  endif
 
    double BoxSize[3];
@@ -166,6 +162,8 @@ struct Makefile_t
    int CosmicRay;
    int EoS;
    int BarotropicEoS;
+   int Viscosity;
+   int Conduction;
 
 #  elif ( MODEL == ELBDM )
    int ConserveMass;
@@ -188,12 +186,6 @@ struct Makefile_t
 
 #  ifdef COSMIC_RAY
    int CR_Diffusion;
-#  endif
-#  ifdef VISCOSITY
-   int Viscosity;
-#  endif
-#  ifdef CONDUCTION
-   int Conduction;
 #  endif
 
 }; // struct Makefile_t

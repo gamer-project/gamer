@@ -2526,7 +2526,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Cond_FluxType           = CONDUCTION_FLUX_TYPE;
    InputPara.Cond_Saturation         = CONDUCTION_SATURATION;
    InputPara.Cond_SatWhistler        = CONDUCTION_SAT_WHISTLER;
-   InputPara.Cond_ConstCoeff         = CONDUCTION_CONST_COEFF;
+   InputPara.Cond_ConstCoeff         = CONDUCTION_CONSTANT_COEFF;
    InputPara.Cond_MaxDiffusivity     = CONDUCTION_MAX_DIFFUSIVITY;
    InputPara.Cond_SpitzerFraction    = CONDUCTION_SPITZER_FRAC;
    InputPara.Cond_CoulombLog         = CONDUCTION_COULOMB_LOG;

@@ -1697,7 +1697,7 @@ void Aux_Check_Parameter()
 #     error : ERROR : HYDRO is required for CONDUCTION!!
 #  endif
 
-#  if ( EOS != EOS_GAMMA || EOS != EOS_COSMIC_RAY )
+#  if ( EOS != EOS_GAMMA && EOS != EOS_COSMIC_RAY )
 #     error : ERROR : CONDUCTION must work with EOS_GAMMA/EOS_COSMIC_RAY !!
 #  endif 
 
@@ -1708,8 +1708,8 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "CONDUCTION_SAT_WHISTLER requires MHD !!\n" );
 #  endif
 
-   if ( CONDUCTION_TYPE == CONSTANT_CONDUCTION && CONDUCTION_CONST_COEFF <= 0.0 ) 
-      Aux_Error( ERROR_INFO, "CONDUCTION_CONST_COEFF <= 0 !!\n" );
+   if ( CONDUCTION_TYPE == CONSTANT_CONDUCTION && CONDUCTION_CONSTANT_COEFF <= 0.0 ) 
+      Aux_Error( ERROR_INFO, "CONDUCTION_CONSTANT_COEFF <= 0 !!\n" );
  
    if ( CONDUCTION_TYPE == SPITZER_CONDUCTION && CONDUCTION_COULOMB_LOG <= 0.0 ) 
       Aux_Error( ERROR_INFO, "CONDUCTION_COULOMB_LOG <= 0 !!\n" );
@@ -1720,7 +1720,7 @@ void Aux_Check_Parameter()
    if ( CONDUCTION_MUE <= 0.0 )
       Aux_Error( ERROR_INFO, "CONDUCTION_MUE <= 0 !!\n" );
 
-   if ( CONDUCTION_TYPE == SPITZER_CONDUCTION && !OPT_UNIT )
+   if ( CONDUCTION_TYPE == SPITZER_CONDUCTION && !OPT__UNIT )
       Aux_Error( ERROR_INFO, "SPITZER_CONDUCTION only works with OPT__UNIT !!\n" );
  
    if ( CONDUCTION_TYPE == CONSTANT_CONDUCTION && CONDUCTION_SATURATION )

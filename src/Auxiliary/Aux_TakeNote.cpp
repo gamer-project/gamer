@@ -1100,8 +1100,8 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "CONDUCTION_TYPE                 %d\n",      CONDUCTION_TYPE         );
       fprintf( Note, "CONDUCTION_FLUX_TYPE            %d\n",      CONDUCTION_FLUX_TYPE    );
-      fprintf( Note, "CONDUCTION_CONST_COEFF          %13.7e\n",  CONDUCTION_CONST_COEFF  );
-      fprintf( Note, "CONDUCTION_SPITZER_FRACTION     %13.7e\n",  CONDUCTION_SPITZER_FRACTION );
+      fprintf( Note, "CONDUCTION_CONSTANT_COEFF       %13.7e\n",  CONDUCTION_CONSTANT_COEFF  );
+      fprintf( Note, "CONDUCTION_SPITZER_FRAC         %13.7e\n",  CONDUCTION_SPITZER_FRAC );
       fprintf( Note, "CONDUCTION_COULOMB_LOG          %13.7e\n",  CONDUCTION_COULOMB_LOG  );
       fprintf( Note, "CONDUCTION_MAX_DIFFUSIVITY      %13.7e\n",  CONDUCTION_MAX_DIFFUSIVITY  );
       fprintf( Note, "***********************************************************************************\n" );
