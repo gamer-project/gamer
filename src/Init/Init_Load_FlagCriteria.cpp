@@ -103,7 +103,7 @@ void Init_Load_FlagCriteria()
       FlagTable_Lohner      [lv][t] = -1.0;
 
       for (int t=0; t<3; t++)
-      FlagTable_Angular      [lv][t] = -1.0;
+      FlagTable_Angular     [lv][t] = -1.0;
 
       FlagTable_User        [lv]    = (double *) malloc( OPT__FLAG_USER_NUM*sizeof(double) );
       for (int t=0; t<OPT__FLAG_USER_NUM; t++)
