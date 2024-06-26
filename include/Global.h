@@ -53,7 +53,7 @@ extern int        PassiveNorm_NVar, PassiveNorm_VarIdx[NCOMP_PASSIVE];
 extern int        PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 
 extern int        StrLen_Flt;
-extern char       BlankPlusFormat_Flt[MAX_STRING];
+extern char       BlankPlusFormat_Flt[MAX_STRING+1];
 
 extern double     BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, OUTPUT_WALLTIME, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
 extern long int   END_STEP;

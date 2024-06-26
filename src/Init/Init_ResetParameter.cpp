@@ -329,9 +329,9 @@ void Init_ResetParameter()
 //     For example, the format %20.16e will give a length of 20. However, if only checking the string after %,
 //     the format %+-20.16e (align to the left and also add a + sign for a positive value) will give a zero string length
 //     since +- is not an integer. This is why checking OPT__OUTPUT_DATA_FORMAT+2 is necessary.
-   if ( strlen(OPT__OUTPUT_TEXT_FORMAT_FLT) > MAX_STRING-2 )
-      Aux_Error( ERROR_INFO, "Length of OPT__OUTPUT_TEXT_FORMAT_FLT (%d) should be smaller than MAX_STRING-2 (%d) !!\n",
-                 strlen(OPT__OUTPUT_TEXT_FORMAT_FLT), MAX_STRING-2 );
+   if ( strlen(OPT__OUTPUT_TEXT_FORMAT_FLT) > MAX_STRING-1 )
+      Aux_Error( ERROR_INFO, "Length of OPT__OUTPUT_TEXT_FORMAT_FLT (%d) should be smaller than MAX_STRING-1 (%d) !!\n",
+                 strlen(OPT__OUTPUT_TEXT_FORMAT_FLT), MAX_STRING-1 );
 
    StrLen_Flt = MAX( abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+1)), abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+2)) );
    sprintf( BlankPlusFormat_Flt, " %s", OPT__OUTPUT_TEXT_FORMAT_FLT );

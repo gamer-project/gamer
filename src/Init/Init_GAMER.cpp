@@ -7,7 +7,8 @@
 // Function    :  Init
 // Description :  Initialize GAMER
 //
-// Note        :  1. Function pointer "Init_User_Ptr" may be set by a test problem initializer
+// Note        :  1. Function pointers "Init_User_Ptr" and "Init_User_AfterPoisson_Ptr" may be set by a
+//                   test problem initializer
 //
 // Parameter   :  argc, argv: Command line arguments
 //-------------------------------------------------------------------------------------------------------
@@ -244,7 +245,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
-// user-defined initialization
+// user-defined initialization (before the Poisson solver)
    if ( Init_User_Ptr != NULL )  Init_User_Ptr();
 
 
@@ -317,6 +318,10 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif // #ifdef TRACER
 
 #  endif // #ifdef PARTICLE
+
+
+// user-defined initialization (after the Poisson solver)
+   if ( Init_User_AfterPoisson_Ptr != NULL )    Init_User_AfterPoisson_Ptr();
 
 
 // initialize source-term fields (e.g., cooling time)
