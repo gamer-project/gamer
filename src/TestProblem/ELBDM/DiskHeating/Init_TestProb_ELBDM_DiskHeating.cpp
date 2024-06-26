@@ -581,23 +581,26 @@ void Init_NewDiskRestart()
 //-------------------------------------------------------------------------------------------------------
 void Init_NewDiskVelocity()
 {
-#  ifdef SUPPORT_GSL
    if ( amr->Par->Init != PAR_INIT_BY_RESTART  || !OPT__RESTART_RESET || !AddParWhenRestart || AddParWhenRestartByFile )   return;
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
+#  ifndef SUPPORT_GSL
+   Aux_Error( ERROR_INFO, "SUPPORT_GSL must be enabled when AddParWhenRestart=1 and AddParWhenRestartByFile=0 !!\n" );
+#  endif
+
    const long NPar_ThisRank = amr->Par->NPar_AcPlusInac;
-   real *ParMass   =   amr->Par->Mass;
    real *ParType   =   amr->Par->Type;
    real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    real *ParVel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
    real *ParAcc[3] = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
 
-
    real ParRadius[2];
    real NormParRadius[2];
    double V_acc, RanV[3], sigma;
    double ParR;
+
+#  ifdef SUPPORT_GSL
 
 // initialize the RNG
    gsl_rng *random_generator;
@@ -606,7 +609,6 @@ void Init_NewDiskVelocity()
 
    for (long p=0; p<NPar_ThisRank; p++)
    {
-      if ( ParMass[p] < 0.0 )  continue;
       if ( ParType[p] == 3 ) // applies for thin disk particles
       {
          ParRadius[0] = ParPos[0][p] - Cen[0];
@@ -631,9 +633,10 @@ void Init_NewDiskVelocity()
       }
    }
 
+#  endif // #ifdef SUPPORT_GSL
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-#  endif // #ifdef SUPPORT_GSL
 } // FUNCTION : Init_NewDiskVelocity
 
 
