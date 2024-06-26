@@ -53,12 +53,7 @@ void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_
                                       real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                       real *ParType, real *AllAttribute[PAR_NATT_TOTAL]);
 static void Init_NewDiskRestart();
-static void Par_AfterAcceleration( const long NPar_ThisRank, const long NPar_AllRank,
-                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                   real *ParVelX, real *ParVelY, real *ParVelZ,
-                                   real *ParAccX, real *ParAccY, real *ParAccZ,
-                                   real *ParTime, real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
-
+static void Init_NewDiskVelocity();
 #endif
 
 
@@ -182,18 +177,18 @@ void SetParameter()
    // use density table as background fixed halo profile
    if ( HaloUseTable == 1 ) {
 
-      // read the density table
-      const bool RowMajor_No = false;     // load data into the column-major order
-      const bool AllocMem_Yes = true;     // allocate memory for AGORA_VcProf
-      const int  NCol        = 2;         // total number of columns to load
-      const int  Col[NCol]   = {0, 1};    // target columns: (radius, density)
+//    read the density table
+      const bool RowMajor_No  = false;     // load data into the column-major order
+      const bool AllocMem_Yes = true;      // allocate memory for DensTable
+      const int  NCol         = 2;         // total number of columns to load
+      const int  Col[NCol]    = {0, 1};    // target columns: (radius, density)
 
       DensTable_Nbin = Aux_LoadTable( DensTable, DensTableFile, NCol, Col, RowMajor_No, AllocMem_Yes );
 
       double *DensTable_r = DensTable + 0*DensTable_Nbin;
       double *DensTable_d = DensTable + 1*DensTable_Nbin;
 
-      // convert to log-log scale
+//    convert to log-log scale
       for (int b=0; b<DensTable_Nbin; b++)
       {
          DensTable_r[b] = log(DensTable_r[b]);
@@ -249,13 +244,14 @@ void SetParameter()
 
 } // FUNCTION : SetParameter
 
-////-------------------------------------------------------------------------------------------------------
-//// Function    :  Halo_Density
-//// Description :  alpha-beta-gamma density profile for fixed background halo with soliton as function of radius
-//// Note        :  r should have unit in kpc
-////                Returned density is in 1.0e10*Msun/kpc^3
-////-------------------------------------------------------------------------------------------------------
-double Halo_Density(double r) {
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Halo_Density
+// Description :  alpha-beta-gamma density profile for fixed background halo with soliton as function of radius
+// Note        :  r should have unit in kpc
+//                Returned density is in 1.0e10*Msun/kpc^3
+//-------------------------------------------------------------------------------------------------------
+double Halo_Density( double r )
+{
 
    double rho_halo = Rho_0/pow(r/Rs, Alpha)/pow(1 + pow(r/Rs,Beta),(Gamma-Alpha)/Beta);
    if ( fabs(rho_halo) <  __FLT_MIN__) rho_halo = 0;
@@ -296,14 +292,14 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // set the output array
    double dens = 0.0;
 
-   if ( AddFixedHalo && OPT__FREEZE_FLUID)  // add a fixed halo at the background
+   if ( AddFixedHalo && OPT__FREEZE_FLUID )  // add a fixed halo at the background
    {
       const double dx     = (x - Cen[0]);
       const double dy     = (y - Cen[1]);
       const double dz     = (z - Cen[2]);
       const double r      = SQRT( dx*dx + dy*dy + dz*dz );
-      const double Unit_L_GALIC = Const_kpc; //  1.0 kpc
-      const double Unit_M_GALIC = 1.0e10*Const_Msun;    //  1.0e10 solar masses
+      const double Unit_L_GALIC = Const_kpc;          //  1.0 kpc
+      const double Unit_M_GALIC = 1.0e10*Const_Msun;  //  1.0e10 solar masses
       const double Unit_D_GALIC = Unit_M_GALIC/CUBE(Unit_L_GALIC);
       const double r_in_kpc = r*UNIT_L/Unit_L_GALIC;
 
@@ -312,14 +308,14 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
       if (HaloUseTable)
       {
-         if (r_in_kpc < exp(DensTable_r[0])) dens = exp(DensTable_d[0]);
-         else if (r_in_kpc > exp(DensTable_r[DensTable_Nbin-1])) dens = 0;
+         if ( r_in_kpc < exp(DensTable_r[0] )) dens = exp(DensTable_d[0]);
+         else if ( r_in_kpc > exp(DensTable_r[DensTable_Nbin-1]) ) dens = 0;
          else dens = exp( Mis_InterpolateFromTable( DensTable_Nbin, DensTable_r, DensTable_d, log(r_in_kpc) ) );
       }
       else dens = Halo_Density(r_in_kpc)*Unit_D_GALIC/UNIT_D;
    }
 
-//ELBDM example
+// ELBDM example
    fluid[DENS] = (real)dens;
    fluid[REAL] = sqrt( fluid[DENS] );
    fluid[IMAG] = 0.0;
@@ -347,19 +343,19 @@ void End_DiskHeating()
 # ifdef PARTICLE
 
 //-------------------------------------------------------------------------------------------------------
-//// Function    :  AddNewParticleAttribute
-//// Description :  Add the problem-specific particle attributes
-////
-//// Note        :  1. Ref: https://github.com/gamer-project/gamer/wiki/Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes
-////                2. Invoke AddParticleField() for each of the problem-specific particle attribute:
-////                   --> Attribute label sent to AddParticleField() will be used as the output name of the attribute
-////                   --> Attribute index returned by AddParticleField() can be used to access the particle attribute data
-////                3. Pre-declared attribute indices are put in Field.h
-////
-//// Parameter   :  None
-////
-//// Return      :  None
-////-------------------------------------------------------------------------------------------------------
+// Function    :  AddNewParticleAttribute
+// Description :  Add the problem-specific particle attributes
+//
+// Note        :  1. Ref: https://github.com/gamer-project/gamer/wiki/Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes
+//                2. Invoke AddParticleField() for each of the problem-specific particle attribute:
+//                   --> Attribute label sent to AddParticleField() will be used as the output name of the attribute
+//                   --> Attribute index returned by AddParticleField() can be used to access the particle attribute data
+//                3. Pre-declared attribute indices are put in Field.h
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
 void AddNewParticleAttribute()
 {
 
@@ -369,20 +365,22 @@ void AddNewParticleAttribute()
 #ifdef GRAVITY
 
 //-------------------------------------------------------------------------------------------------------
-//// Function    :  Init_NewDiskRestart()
-//// Description :  Add a new disk from an existing snapshot
-//// Note        :  Must enable OPT__RESTART_RESET and AddParWhenRestart
-////-------------------------------------------------------------------------------------------------------
+// Function    :  Init_NewDiskRestart()
+// Description :  Add a new disk from an existing snapshot
+// Note        :  Must enable OPT__RESTART_RESET and AddParWhenRestart
+//-------------------------------------------------------------------------------------------------------
 void Init_NewDiskRestart()
 {
 
    if ( amr->Par->Init != PAR_INIT_BY_RESTART  || !OPT__RESTART_RESET || !AddParWhenRestart )   return;
 
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
+
    const long   NNewPar        = ( MPI_Rank == 0 ) ? AddParWhenRestartNPar : 0;
    const long   NPar_AllRank   = NNewPar;
    real *NewParAtt[PAR_NATT_TOTAL];
 
-   for (int v=0; v<PAR_NATT_TOTAL; v++)   NewParAtt[v] = new real [NNewPar];
+   for (int v = 0; v < PAR_NATT_TOTAL; v++ )   NewParAtt[v] = new real [NNewPar];
 
 // set particle attributes
    real *Time_AllRank   = NewParAtt[PAR_TIME];
@@ -424,7 +422,7 @@ void Init_NewDiskRestart()
 //       note that fread() may fail for large files if sizeof(size_t) == 4 instead of 8
          FILE *File = fopen( FileName, "rb" );
 
-         for (int v=0; v<NParAtt; v++)
+         for ( int v = 0; v < NParAtt; v++ )
          {
             fseek( File, v*NPar_AllRank*sizeof(real), SEEK_SET );
             fread( ParData_AllRank+v*NPar_AllRank, sizeof(real), NPar_AllRank, File );
@@ -436,11 +434,11 @@ void Init_NewDiskRestart()
 
          real *ParData1 = new real [NParAtt];
 
-         for ( long p = 0; p < NPar_AllRank; p++)
+         for ( long p = 0; p < NPar_AllRank; p++ )
          {
 //          collect data for the target particle
 //          [att][id]
-            for (int v=0; v<NParAtt; v++)
+            for ( int v = 0; v < NParAtt; v++ )
                ParData1[v] = ParData_AllRank[ v*NPar_AllRank + p ];
 
             Time_AllRank[p] = Time[0];
@@ -464,11 +462,11 @@ void Init_NewDiskRestart()
          } // for ( long p = 0; p < NPar_AllRank; p++)
          Aux_Message( stdout, "done\n" );
 
-         // free memory
+//       free memory
          delete [] ParData_AllRank;
          delete [] ParData1;
       } // if ( MPI_Rank == 0 )
-   }// if ( AddParWhenRestartByFile )
+   } // if ( AddParWhenRestartByFile )
 
    else // add a thin disk
    {
@@ -478,10 +476,10 @@ void Init_NewDiskRestart()
 #     endif
 
       // read velocity dispersion table
-      const bool RowMajor_No = false;     // load data into the column-major order
-      const bool AllocMem_Yes = true;     // allocate memory for AGORA_VcProf
-      const int  NCol        = 2;         // total number of columns to load
-      const int  Col[NCol]   = {0, 1};    // target columns: (radius, density)
+      const bool RowMajor_No  = false;     // load data into the column-major order
+      const bool AllocMem_Yes = true;      // allocate memory for DispTable
+      const int  NCol         = 2;         // total number of columns to load
+      const int  Col[NCol]    = {0, 1};    // target columns: (radius, dispersion)
 
       DispTable_Nbin = Aux_LoadTable( DispTable, DispTableFile, NCol, Col, RowMajor_No, AllocMem_Yes );
 
@@ -489,7 +487,7 @@ void Init_NewDiskRestart()
       double *DispTable_d = DispTable + 1*DispTable_Nbin;
 
       // convert to code unit
-      for (int b=0; b<DispTable_Nbin; b++)
+      for ( int b = 0; b < DispTable_Nbin; b++ )
       {
          DispTable_r[b] = DispTable_r[b]*Const_kpc/UNIT_L;
          DispTable_d[b] = DispTable_d[b]*1e5/UNIT_V;
@@ -497,8 +495,6 @@ void Init_NewDiskRestart()
 
       if ( MPI_Rank == 0 )
       {
-         Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
-
          const double ParM = Disk_Mass / NPar_AllRank;
          double Ran, RanR, RanV, R, Rold, f, f_, phi, RanVec[3];
          Aux_Message(stdout, " Particle Mass = %13.7e\n", ParM) ;
@@ -508,7 +504,7 @@ void Init_NewDiskRestart()
          RNG->SetSeed( 0, NewDisk_RSeed );
 
 
-         for ( long p = 0; p < NPar_AllRank; p++)
+         for ( long p = 0; p < NPar_AllRank; p++ )
          {
             Time_AllRank[p] = Time[0];
 //          mass
@@ -537,10 +533,10 @@ void Init_NewDiskRestart()
             RanVec[2] = 0;
             for (int d = 0; d < 3; d++) Pos_AllRank[d][p] = RanVec[d] + Cen[d];
 
-         } // for ( long p = 0; p < NPar_AllRank; p++)
+         } // for ( long p = 0; p < NPar_AllRank; p++ )
 
-      } //if ( MPI_Rank == 0 )
-   } //if ( !AddParWhenRestartByFile )
+      } // if ( MPI_Rank == 0 )
+   } // if ( !AddParWhenRestartByFile )
 
 // add particles here
    Par_AddParticleAfterInit( NNewPar, NewParAtt );
@@ -571,85 +567,39 @@ void Init_NewDiskRestart()
 #     endif
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Refining level %d ... done\n", lv );
-    } // for (int lv=OPT__UM_IC_LEVEL; lv<MAX_LEVEL; lv++)
+   } // for (int lv=OPT__UM_IC_LEVEL; lv<MAX_LEVEL; lv++)
 
-//  compute garvitaional potential field to get the accleration for thin disk particles
-    if ( !AddParWhenRestartByFile )
-    {
-//    initialize the k-space Green's function for the isolated BC.
-      if ( OPT__BC_POT == BC_POT_ISOLATED )  Init_GreenFuncK();
-
-//    evaluate the initial average density if it is not set yet (may already be set in Init_ByRestart)
-      if ( AveDensity_Init <= 0.0 )    Poi_GetAverageDensity();
-
-//    evaluate the gravitational potential
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Calculating gravitational potential" );
-
-      for (int lv=0; lv<NLEVEL; lv++)
-      {
-         if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d ... ", lv );
-
-         Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _DENS, _NONE, Rho_ParaBuf, USELB_YES );
-
-         Gra_AdvanceDt( lv, Time[lv], NULL_REAL, NULL_REAL, NULL_INT, amr->PotSg[lv], true, false, false, false, false );
-
-         if ( lv > 0 )
-
-         Buf_GetBufferData( lv, NULL_INT, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES );
-
-         if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
-      } // for (int lv=0; lv<NLEVEL; lv++)
-
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating gravitational potential" );
-//    initialize particle acceleration
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Calculating particle acceleration" );
-
-      const bool StoreAcc_Yes    = true;
-      const bool UseStoredAcc_No = false;
-
-      for (int lv=0; lv<NLEVEL; lv++)
-      Par_UpdateParticle( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], NULL_REAL, PAR_UPSTEP_ACC_ONLY, StoreAcc_Yes, UseStoredAcc_No );
-
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating particle acceleration" );
-
-      // compute particle velocities using acceleration fields
-      Par_AfterAcceleration( amr->Par->NPar_AcPlusInac, amr->Par->NPar_Active_AllRank,
-                             amr->Par->Mass, amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ,
-                             amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ,
-                             amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ,
-                             amr->Par->Time, amr->Par->Type, amr->Par->Attribute );
-
-      // free memory
-      root_fftw::fft_free(GreenFuncK); GreenFuncK      = NULL;
-
-   }// if ( !AddParWhenRestartByFile )
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_NewDiskRestart
 
-////-------------------------------------------------------------------------------------------------------
-//// Function    :  Par_AfterAcceleration()
-//// Description :  Compute particle veolcities using acceleration fields
-////-------------------------------------------------------------------------------------------------------
-void Par_AfterAcceleration( const long NPar_ThisRank, const long NPar_AllRank, real *ParMass,
-                            real *ParPosX, real *ParPosY, real *ParPosZ,
-                            real *ParVelX, real *ParVelY, real *ParVelZ,
-                            real *ParAccX, real *ParAccY, real *ParAccZ,
-                            real *ParTime, real *ParType,  real *AllAttribute[PAR_NATT_TOTAL])
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_NewDiskVelocity()
+// Description :  Initialize velocities of the new disk after Poisson solver
+// Note        :  Must enable OPT__RESTART_RESET and AddParWhenRestart and disable AddParWhenRestartByFile
+//-------------------------------------------------------------------------------------------------------
+void Init_NewDiskVelocity()
 {
 #  ifdef SUPPORT_GSL
+   if ( amr->Par->Init != PAR_INIT_BY_RESTART  || !OPT__RESTART_RESET || !AddParWhenRestart || AddParWhenRestartByFile )   return;
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
-   real *ParPos[3] = { ParPosX, ParPosY, ParPosZ };
-   real *ParVel[3] = { ParVelX, ParVelY, ParVelZ };
-   real *ParAcc[3] = { ParAccX, ParAccY, ParAccZ };
+   const long NPar_ThisRank = amr->Par->NPar_AcPlusInac;
+   real *ParMass   =   amr->Par->Mass;
+   real *ParType   =   amr->Par->Type;
+   real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   real *ParVel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
+   real *ParAcc[3] = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
+
 
    real ParRadius[2];
    real NormParRadius[2];
    double V_acc, RanV[3], sigma;
    double ParR;
 
-   // initialize the RNG
+// initialize the RNG
    gsl_rng *random_generator;
    random_generator = gsl_rng_alloc(gsl_rng_ranlxd1);
    gsl_rng_set(random_generator, NewDisk_RSeed + MPI_Rank);
@@ -657,55 +607,55 @@ void Par_AfterAcceleration( const long NPar_ThisRank, const long NPar_AllRank, r
    for (long p=0; p<NPar_ThisRank; p++)
    {
       if ( ParMass[p] < 0.0 )  continue;
-      if ( ParType[p] == 3 ){
+      if ( ParType[p] == 3 ) // applies for thin disk particles
+      {
          ParRadius[0] = ParPos[0][p] - Cen[0];
          ParRadius[1] = ParPos[1][p] - Cen[1];
          ParR = sqrt( SQR(ParRadius[0]) + SQR(ParRadius[1]) );
          NormParRadius[0] = ParRadius[0]/ ParR;
          NormParRadius[1] = ParRadius[1]/ ParR;
 
-         // compute radial acceleration
+//       compute radial acceleration
          V_acc = sqrt(fabs(ParRadius[0]*ParAcc[0][p]+ParRadius[1]*ParAcc[1][p]));
 
-         // add velocity dispersion
+//       add velocity dispersion
          sigma = Get_Dispersion(ParR);
          RanV[0] = gsl_ran_gaussian(random_generator, sigma);
          RanV[1] = gsl_ran_gaussian(random_generator, sigma);
          RanV[2] = gsl_ran_gaussian(random_generator, sigma);
 
+//       compute particle velocities using acceleration fields
          ParVel[0][p] = - V_acc*NormParRadius[1]+RanV[0];
          ParVel[1][p] =   V_acc*NormParRadius[0]+RanV[1];
          ParVel[2][p] =   RanV[2];
       }
-
    }
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
-#  endif //ifdef SUPPORT_GSL
 
-} // FUNCTION : Par_AfterAcceleration
+#  endif // #ifdef SUPPORT_GSL
+} // FUNCTION : Init_NewDiskVelocity
 
-////-------------------------------------------------------------------------------------------------------
-//// Function    :  Get_Dispersion
-//// Description :  Get thin disk velocity dispersion from table
-////-------------------------------------------------------------------------------------------------------
-double Get_Dispersion(double r){
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Get_Dispersion
+// Description :  Get thin disk velocity dispersion from table
+//-------------------------------------------------------------------------------------------------------
+double Get_Dispersion( double r )
+{
    double disp = 0.0;
    const double *DispTable_r = DispTable + 0*DispTable_Nbin;
    const double *DispTable_d = DispTable + 1*DispTable_Nbin;
 
-   if (r < DispTable_r[0]) disp = DispTable_d[0];
-   else if (r > DispTable_r[DispTable_Nbin-1]) disp = DispTable_d[DispTable_Nbin-1];
+   if ( r < DispTable_r[0] ) disp = DispTable_d[0];
+   else if ( r > DispTable_r[DispTable_Nbin-1] ) disp = DispTable_d[DispTable_Nbin-1];
    else disp = Mis_InterpolateFromTable( DispTable_Nbin, DispTable_r, DispTable_d, r );
 
    return disp;
 } // FUNCTION : Get_Dispersion
 
-
-
-
-#endif //ifdef GRAVITY
-#endif //ifdef PARTICLE
+#endif // #ifdef GRAVITY
+#endif // #ifdef PARTICLE
 #endif // #if ( MODEL == ELBDM )
 
 
@@ -748,6 +698,7 @@ void Init_TestProb_ELBDM_DiskHeating()
    Par_Init_Attribute_User_Ptr    = AddNewParticleAttribute;
 #  endif
    Init_User_Ptr                  = Init_NewDiskRestart;
+   Init_User_AfterPoisson_Ptr     = Init_NewDiskVelocity;
 #  endif
 #  endif // #if ( MODEL == ELBDM )
 
