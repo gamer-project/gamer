@@ -40,7 +40,7 @@ long                 FixUpVar_Flux, FixUpVar_Restrict;
 int                  PassiveNorm_NVar, PassiveNorm_VarIdx[NCOMP_PASSIVE];
 int                  PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 int                  StrLen_Flt;
-char                 BlankPlusFormat_Flt[MAX_STRING];
+char                 BlankPlusFormat_Flt[MAX_STRING+1];
 
 int                  MPI_Rank, MPI_Rank_X[3], MPI_SibRank[26], NX0[3], NPatchTotal[NLEVEL];
 int                 *BaseP = NULL;
