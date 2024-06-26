@@ -369,7 +369,7 @@ void SetParameter()
       Aux_Message( stdout, "  feedback likelihood                       = %13.7e\n", Plummer_FB_Like );
 #     endif
       Aux_Message( stdout, "=============================================================================\n" );
-   }
+   } // if ( MPI_Rank == 0 )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
@@ -496,6 +496,56 @@ void AddNewField_Plummer()
    }
 
 } // FUNCTION : AddNewField_Plummer
+
+
+
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  HDF5_Output_User_Plummer
+// Description :  Add the problem-specific fields
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype.
+//
+// Parameter   :  HDF5_OutUser : the structure storing the user output parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void HDF5_Output_User_Plummer( HDF5_OutUser_t *HDF5_OutUser )
+{
+   HDF5_OutUser->Add( "Plummer_RSeed",        &Plummer_RSeed        );
+   HDF5_OutUser->Add( "Plummer_Rho0",         &Plummer_Rho0         );
+   HDF5_OutUser->Add( "Plummer_R0",           &Plummer_R0           );
+   HDF5_OutUser->Add( "Plummer_MaxR",         &Plummer_MaxR         );
+   HDF5_OutUser->Add( "Plummer_Collision",    &Plummer_Collision    );
+   HDF5_OutUser->Add( "Plummer_Collision_D",  &Plummer_Collision_D  );
+   HDF5_OutUser->Add( "Plummer_CenterX",      &Plummer_Center[0]    );
+   HDF5_OutUser->Add( "Plummer_CenterY",      &Plummer_Center[1]    );
+   HDF5_OutUser->Add( "Plummer_CenterZ",      &Plummer_Center[2]    );
+   HDF5_OutUser->Add( "Plummer_BulkVelX",     &Plummer_BulkVel[0]   );
+   HDF5_OutUser->Add( "Plummer_BulkVelY",     &Plummer_BulkVel[1]   );
+   HDF5_OutUser->Add( "Plummer_BulkVelZ",     &Plummer_BulkVel[2]   );
+   HDF5_OutUser->Add( "Plummer_GasMFrac",     &Plummer_GasMFrac     );
+   HDF5_OutUser->Add( "Plummer_ExtAccMFrac",  &Plummer_ExtAccMFrac  );
+   HDF5_OutUser->Add( "Plummer_ExtPotMFrac",  &Plummer_ExtPotMFrac  );
+   HDF5_OutUser->Add( "Plummer_MassProfNBin", &Plummer_MassProfNBin );
+   HDF5_OutUser->Add( "Plummer_AddColor",     &Plummer_AddColor     );
+#  ifdef FEEDBACK
+   HDF5_OutUser->Add( "Plummer_FB_Exp",       &Plummer_FB_Exp       );
+   HDF5_OutUser->Add( "Plummer_FB_ExpEMin",   &Plummer_FB_ExpEMin   );
+   HDF5_OutUser->Add( "Plummer_FB_ExpEMax",   &Plummer_FB_ExpEMax   );
+   HDF5_OutUser->Add( "Plummer_FB_ExpMMin",   &Plummer_FB_ExpMMin   );
+   HDF5_OutUser->Add( "Plummer_FB_ExpMMax",   &Plummer_FB_ExpMMax   );
+   HDF5_OutUser->Add( "Plummer_FB_Acc",       &Plummer_FB_Acc       );
+   HDF5_OutUser->Add( "Plummer_FB_AccMMin",   &Plummer_FB_AccMMin   );
+   HDF5_OutUser->Add( "Plummer_FB_AccMMax",   &Plummer_FB_AccMMax   );
+   HDF5_OutUser->Add( "Plummer_FB_Like",      &Plummer_FB_Like      );
+#  endif
+} // FUNCTION : HDF5_OutputUser
+#endif // #ifdef SUPPORT_HDF5
+
+
+
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -537,6 +587,9 @@ void Init_TestProb_Hydro_Plummer()
 #  endif
 #  ifdef FEEDBACK
    FB_Init_User_Ptr        = FB_Init_Plummer;
+#  endif
+#  ifdef SUPPORT_HDF5
+   HDF5_Output_User_Ptr        = HDF5_Output_User_Plummer;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

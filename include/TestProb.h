@@ -5,6 +5,9 @@
 
 // common headers
 #include "ReadPara.h"
+#ifdef SUPPORT_HDF5
+#include "HDF5_Typedef.h"
+#endif
 
 
 // common function prototypes
@@ -34,6 +37,9 @@ extern void (*Init_Field_User_Ptr)();
 extern void (*Init_User_Ptr)();
 extern void (*Init_User_AfterPoisson_Ptr)();
 extern void (*Output_User_Ptr)();
+#ifdef SUPPORT_HDF5
+extern void (*HDF5_Output_User_Ptr)( HDF5_OutUser_t *HDF5_OutUser );
+#endif
 extern void (*Output_UserWorkBeforeOutput_Ptr)();
 extern bool (*Flag_Region_Ptr)( const int i, const int j, const int k, const int lv, const int PID );
 extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
