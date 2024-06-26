@@ -350,47 +350,6 @@ void CPU_FluidSolver_MHM(
 #  pragma omp parallel
 #  endif
    {
-//    point to the arrays associated with different OpenMP threads (for CPU) or CUDA thread blocks (for GPU)
-#     ifdef __CUDACC__
-      const int array_idx = blockIdx.x;
-#     else
-#     ifdef OPENMP
-      const int array_idx = omp_get_thread_num();
-#     else
-      const int array_idx = 0;
-#     endif
-#     endif // #ifdef __CUDACC__ ... else ...
-
-      real (*const g_FC_Var_1PG   )[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ] = g_FC_Var   [array_idx];
-      real (*const g_FC_Flux_1PG  )[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ] = g_FC_Flux  [array_idx];
-      real (*const g_PriVar_1PG   )                      [ CUBE(FLU_NXT)     ] = g_PriVar   [array_idx];
-      real (*const g_Slope_PPM_1PG)[NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ] = g_Slope_PPM[array_idx];
-
-#     if ( FLU_SCHEME == MHM_RP )
-      real (*const g_Flux_Half_1PG)[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ] = g_FC_Flux_1PG;
-      real (*const g_PriVar_Half_1PG )                   [ CUBE(FLU_NXT)   ] = g_PriVar_1PG;
-
-#     ifdef MHD
-      real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = g_FC_Mag_Half[array_idx];
-      real (*const g_EC_Ele_1PG     )[ CUBE(N_EC_ELE)          ] = g_EC_Ele     [array_idx];
-#     else
-      real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = NULL;
-#     endif
-#     endif // if ( FLU_SCHEME == MHM_RP )
-
-#     if ( FLU_SCHEME == MHM )
-//    half-step array size is over-estimated here as it only needs CUBE(N_FC_VAR)
-//    --> we use the same array size as the half-step variables of MHM_RP to avoid
-//        changing the MHM_RP full-step MHD_ComputeElectric()
-      real (*const g_PriVar_Half_1PG )[ CUBE(FLU_NXT)  ] = g_PriVar_1PG;
-#     ifdef MHD
-      real (*const g_EC_Ele_1PG      )[ CUBE(N_EC_ELE) ] = g_EC_Ele[array_idx];
-#     else
-      real (*const g_EC_Ele_1PG      )[ CUBE(N_EC_ELE) ] = NULL;
-#     endif
-#     endif // #if ( FLU_SCHEME == MHM )
-
-
 //    loop over all patch groups
 //    --> CPU/GPU solver: use different (OpenMP threads) / (CUDA thread blocks)
 //        to work on different patch groups
@@ -402,6 +361,38 @@ void CPU_FluidSolver_MHM(
 #     endif
       {
          Iteration = 0;
+
+//       0. point to the arrays associated with different patch groups
+//          --> necessary because different patch groups are computed by different OpenMP threads or CUDA blocks in parallel
+         real (*const g_FC_Var_1PG   )[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ] = g_FC_Var   [P];
+         real (*const g_FC_Flux_1PG  )[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ] = g_FC_Flux  [P];
+         real (*const g_PriVar_1PG   )                      [ CUBE(FLU_NXT)     ] = g_PriVar   [P];
+         real (*const g_Slope_PPM_1PG)[NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ] = g_Slope_PPM[P];
+
+#        if ( FLU_SCHEME == MHM_RP )
+         real (*const g_Flux_Half_1PG)[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ] = g_FC_Flux_1PG;
+         real (*const g_PriVar_Half_1PG )                   [ CUBE(FLU_NXT)   ] = g_PriVar_1PG;
+
+#        ifdef MHD
+         real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = g_FC_Mag_Half[P];
+         real (*const g_EC_Ele_1PG     )[ CUBE(N_EC_ELE)          ] = g_EC_Ele     [P];
+#        else
+         real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = NULL;
+#        endif
+#        endif // if ( FLU_SCHEME == MHM_RP )
+
+#        if ( FLU_SCHEME == MHM )
+//       half-step array size is over-estimated here as it only needs CUBE(N_FC_VAR)
+//       --> we use the same array size as the half-step variables of MHM_RP to avoid
+//           changing the MHM_RP full-step MHD_ComputeElectric()
+         real (*const g_PriVar_Half_1PG )[ CUBE(FLU_NXT)  ] = g_PriVar_1PG;
+#        ifdef MHD
+         real (*const g_EC_Ele_1PG      )[ CUBE(N_EC_ELE) ] = g_EC_Ele[P];
+#        else
+         real (*const g_EC_Ele_1PG      )[ CUBE(N_EC_ELE) ] = NULL;
+#        endif
+#        endif // #if ( FLU_SCHEME == MHM )
+
 
 //       1. half-step prediction
 //       1-a. MHM_RP: use Riemann solver to calculate the half-step fluxes
