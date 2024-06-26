@@ -144,75 +144,74 @@ void Init_Load_FlagCriteria()
    if ( MAX_LEVEL > 0 )
    for (int FlagMode=0; FlagMode<NFlagMode; FlagMode++)
    {
-      if ( Flag[FlagMode] )
-      {
-//       open the target file
-         strcpy( TargetName, FileName[FlagMode] );
+      if ( !Flag[FlagMode] )   continue;
 
-         if ( !Aux_CheckFileExist(TargetName) )
+//    open the target file
+      strcpy( TargetName, FileName[FlagMode] );
+
+      if ( !Aux_CheckFileExist(TargetName) )
+      {
+         Aux_Message( stderr, "\n" );
+         Aux_Error( ERROR_INFO, "file \"%s\" does not exist for the mode \"%s\" !!\n",
+                    TargetName, ModeName[FlagMode] );
+      }
+
+      File = fopen( TargetName, "r" );
+
+//    skip the header
+      getline( &input_line, &len, File );
+
+//    begin to read
+      for (int lv=0; lv<MAX_LEVEL; lv++)
+      {
+         n = getline( &input_line, &len, File );
+
+//       check
+         if ( n <= 1 )
          {
             Aux_Message( stderr, "\n" );
-            Aux_Error( ERROR_INFO, "file \"%s\" does not exist for the mode \"%s\" !!\n",
-                       TargetName, ModeName[FlagMode] );
+            Aux_Error( ERROR_INFO, "incorrect reading at level %d of the file <%s> !!\n",
+                       lv, TargetName );
          }
 
-         File = fopen( TargetName, "r" );
-
-//       skip the header
-         getline( &input_line, &len, File );
-
-//       begin to read
-         for (int lv=0; lv<MAX_LEVEL; lv++)
+//       OPT__FLAG_ENGY_DENSITY and OPT__FLAG_LOHNER have two and five columns to be loaded, respectively
+         if      ( FlagMode == 3 )  sscanf( input_line, "%d%lf%lf", &Trash, &FlagTable_EngyDensity[lv][0],
+                                                                            &FlagTable_EngyDensity[lv][1] );
+         else if ( FlagMode == 4 )  sscanf( input_line, "%d%lf%lf%lf%lf%lf", &Trash, &FlagTable_Lohner[lv][0],
+                                                                                     &FlagTable_Lohner[lv][1],
+                                                                                     &FlagTable_Lohner[lv][2],
+                                                                                     &FlagTable_Lohner[lv][3],
+                                                                                     &FlagTable_Lohner[lv][4] );
+//       OPT__FLAG_USER has OPT__FLAG_USER_NUM columns to be loaded
+         else if ( FlagMode == 5 )
          {
-            n = getline( &input_line, &len, File );
+            char *input_line0 = input_line;
+            int offset;
 
-//          check
-            if ( n <= 1 )
+            sscanf( input_line, "%d%n", &Trash, &offset );
+            input_line += offset;
+
+            for (int t=0; t<OPT__FLAG_USER_NUM; t++)
             {
-               Aux_Message( stderr, "\n" );
-               Aux_Error( ERROR_INFO, "incorrect reading at level %d of the file <%s> !!\n",
-                          lv, TargetName );
-            }
-
-//          OPT__FLAG_ENGY_DENSITY and OPT__FLAG_LOHNER have two and five columns to be loaded, respectively
-            if      ( FlagMode == 3 )  sscanf( input_line, "%d%lf%lf", &Trash, &FlagTable_EngyDensity[lv][0],
-                                                                               &FlagTable_EngyDensity[lv][1] );
-            else if ( FlagMode == 4 )  sscanf( input_line, "%d%lf%lf%lf%lf%lf", &Trash, &FlagTable_Lohner[lv][0],
-                                                                                        &FlagTable_Lohner[lv][1],
-                                                                                        &FlagTable_Lohner[lv][2],
-                                                                                        &FlagTable_Lohner[lv][3],
-                                                                                        &FlagTable_Lohner[lv][4] );
-//          OPT__FLAG_USER has OPT__FLAG_USER_NUM columns to be loaded
-            else if ( FlagMode == 5 )
-            {
-               char *input_line0 = input_line;
-               int offset;
-
-               sscanf( input_line, "%d%n", &Trash, &offset );
+               sscanf( input_line, "%lf%n", &FlagTable_User[lv][t], &offset );
                input_line += offset;
-
-               for (int t=0; t<OPT__FLAG_USER_NUM; t++)
-               {
-                  sscanf( input_line, "%lf%n", &FlagTable_User[lv][t], &offset );
-                  input_line += offset;
-               }
-
-               input_line = input_line0;  // reset input_line
             }
-//          OPT__FLAG_NPAR_PATCH/CELL load integers
-            else if ( FlagMode == 6 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParPatch[lv] );
-            else if ( FlagMode == 7 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParCell [lv] );
-//          OPT__FLAG_ANGULAR has three columns to be loaded
-            else if ( FlagMode == 14 ) sscanf( input_line, "%d%lf%lf", &Trash, &FlagTable_Angular[lv][0],
-                                                                               &FlagTable_Angular[lv][1] );
 
-//          others use the default format: (integer, double)
-            else                       sscanf( input_line, "%d%lf", &Trash, &FlagTable[FlagMode][lv] );
+            input_line = input_line0;  // reset input_line
          }
+//       OPT__FLAG_NPAR_PATCH/CELL load integers
+         else if ( FlagMode == 6 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParPatch[lv] );
+         else if ( FlagMode == 7 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParCell [lv] );
+//       OPT__FLAG_ANGULAR has three columns to be loaded
+         else if ( FlagMode == 14 ) sscanf( input_line, "%d%lf%lf", &Trash, &FlagTable_Angular[lv][0],
+                                                                            &FlagTable_Angular[lv][1] );
 
-         fclose( File );
+//       others use the default format: (integer, double)
+         else                       sscanf( input_line, "%d%lf", &Trash, &FlagTable[FlagMode][lv] );
+      }
 
-      } // if ( Flag[FlagMode] )
+      fclose( File );
+
    } // for (int FlagMode=0; FlagMode<NFlagMode; FlagMode++)
 
 
