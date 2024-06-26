@@ -76,9 +76,20 @@ for idx in range(idx_start, idx_end+1, didx):
       disk_velx = np.array(f['Particle/ParVelX'], dtype = np.float64) * Unit_V
       disk_vely = np.array(f['Particle/ParVelY'], dtype = np.float64) * Unit_V
       disk_velz = np.array(f['Particle/ParVelZ'], dtype = np.float64) * Unit_V
+      disk_type = np.array(f['Particle/ParType'], dtype = np.int32)
       current_step = f['Info/KeyInfo']['Step']
       time = f['Info/KeyInfo']['Time'][0]*Unit_T
+   # particle filter: disk particles have ParType=2
+   disk_index = (disk_type==2)
+   disk_mass = disk_mass[disk_index]
+   disk_posx = disk_posx[disk_index]
+   disk_posy = disk_posy[disk_index]
+   disk_posz = disk_posz[disk_index]
+   disk_velx = disk_velx[disk_index]
+   disk_vely = disk_vely[disk_index]
+   disk_velz = disk_velz[disk_index]
    disk_size = np.size(disk_mass)
+   print("number of disk particles = %d"%disk_size)
    VCM = [ np.sum(disk_mass*disk_velx)/ np.sum(disk_mass),
            np.sum(disk_mass*disk_vely)/ np.sum(disk_mass),
            np.sum(disk_mass*disk_velz)/ np.sum(disk_mass) ]
@@ -101,6 +112,7 @@ for idx in range(idx_start, idx_end+1, didx):
    disk_L = np.cross(disk_pos, disk_vel)
    tot_L = np.array([np.sum(disk_L[:,0]),np.sum(disk_L[:,1]),np.sum(disk_L[:,2])])
    tot_L = tot_L/(tot_L[0]**2+tot_L[1]**2+tot_L[2]**2)**0.5
+
    vec = np.cross(tot_L, np.array([0,0,1]))
    c = tot_L[2]
    s = 1-c**2
