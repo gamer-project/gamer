@@ -476,15 +476,20 @@ Perform user-specified simulation diagnostics.
 
 ### Initialization Function
 * **Description:**
-This function will be invoked at the end of the program initialization.
+These functions will be invoked at the end of the program initialization.
+`Init_User_Ptr` and `Init_User_AfterPoisson_Ptr` are invoked before and after
+the Poisson solver, respectively.
+
 * **Prototype:**
-`void Init_NewProblem();`
+   * `void Init_NewProblem();`
+   * `void Init_AfterPoisson_NewProblem();`
 * **Function Pointer:**
-`Init_User_Ptr`
+   * `Init_User_Ptr`
+   * `Init_User_AfterPoisson_Ptr`
 * **Runtime Option:**
 None
 * **Example:**
-None
+`src/Init/Init_User.cpp`
 
 ### Finalize Function
 * **Description:**
