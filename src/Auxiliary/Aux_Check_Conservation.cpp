@@ -466,25 +466,13 @@ void Aux_Check_Conservation( const char *comment )
 #     endif // if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
 
 //    note that a variable length array cannot have static storage duration
-      static double Time_Ref;
-      static double Fluid_Ref[NVar_Max];
-      static double CoM_Gas_Ref[3];
-#     ifdef MASSIVE_PARTICLES
-      static double Mass_Par_Ref, CoMX_Par_Ref, CoMY_Par_Ref, CoMZ_Par_Ref;
-      static double MomX_Par_Ref, MomY_Par_Ref, MomZ_Par_Ref;
-      static double AngMomX_Par_Ref, AngMomY_Par_Ref, AngMomZ_Par_Ref, Ekin_Par_Ref, Epot_Par_Ref, Etot_Par_Ref;
-#     if ( MODEL != PAR_ONLY )
-      static double Mass_All_Ref, CoMX_All_Ref, CoMY_All_Ref, CoMZ_All_Ref;
-      static double MomX_All_Ref, MomY_All_Ref, MomZ_All_Ref;
-      static double AngMomX_All_Ref, AngMomY_All_Ref, AngMomZ_All_Ref, Etot_All_Ref;
-#     endif
-#     endif // #ifdef PARTICLE
       double AbsErr[NVar], RelErr[NVar];
 
-      if ( FirstTime )
+//    record the reference values if not loaded, e.g. first time, not from restart, or HDF5 version < 2479
+      if ( !ConservedRefLoaded )
       {
-//       record the reference values
          Time_Ref = Time[0];
+
          for (int v=0; v<NVar; v++)    Fluid_Ref[v]   = Fluid_AllRank[v];
          for (int d=0; d<3; d++)       CoM_Gas_Ref[d] = CoM_Gas[d];
 
@@ -502,7 +490,6 @@ void Aux_Check_Conservation( const char *comment )
          Ekin_Par_Ref    =    Ekin_Par;
          Epot_Par_Ref    =    Epot_Par;
          Etot_Par_Ref    =    Etot_Par;
-
 #        if ( MODEL != PAR_ONLY )
          Mass_All_Ref    =    Mass_All;
          CoMX_All_Ref    =    CoMX_All;
@@ -516,15 +503,19 @@ void Aux_Check_Conservation( const char *comment )
          AngMomZ_All_Ref = AngMomZ_All;
          Etot_All_Ref    =    Etot_All;
 #        endif // #if ( MODEL != PAR_ONLY )
+#        endif // #ifdef MASSIVE_PARTICLES
+         ConservedRefLoaded = true;
+      } // if ( FirstTime  &&  OPT__INIT != INIT_BY_RESTART )
 
-#        endif // #ifdef PARTICLE
+//    only record the reference if not check conservation
+      if ( ! OPT__CK_CONSERVATION ) return;
 
-
+      if ( FirstTime )
+      {
 //       output header
          FILE *File = fopen( FileName, "a" );
 
          Aux_Message( File, "# Ref time        : %13.7e\n", Time_Ref );
-         Aux_Message( File, "# Ref step        : %ld\n",    Step     );
          Aux_Message( File, "\n" );
 
 #        if   ( MODEL == HYDRO )
