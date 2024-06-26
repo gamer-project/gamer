@@ -203,8 +203,12 @@ void Init_Load_FlagCriteria()
          else if ( FlagMode == 6 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParPatch[lv] );
          else if ( FlagMode == 7 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParCell [lv] );
 //       OPT__FLAG_ANGULAR has three columns to be loaded
-         else if ( FlagMode == 14 ) sscanf( input_line, "%d%lf%lf", &Trash, &FlagTable_Angular[lv][0],
-                                                                            &FlagTable_Angular[lv][1] );
+         else if ( FlagMode == 14 )
+         {
+            sscanf( input_line, "%d%lf%lf", &Trash, &FlagTable_Angular[lv][0], &FlagTable_Angular[lv][1] );
+            if ( FlagTable_Angular[lv][0] < FlagTable_Angular[lv][1] )
+               Aux_Message( stderr, "WARNING : AngRes_Max < AngRes_Min at lv %d\n", lv );
+         }
 
 //       others use the default format: (integer, double)
          else                       sscanf( input_line, "%d%lf", &Trash, &FlagTable[FlagMode][lv] );
