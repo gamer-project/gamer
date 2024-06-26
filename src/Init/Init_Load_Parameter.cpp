@@ -183,6 +183,10 @@ void Init_Load_Parameter()
    ReadPara->Add( "ANGULAR_CEN_X",              &ANGULAR_CEN_X,                  -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "ANGULAR_CEN_Y",              &ANGULAR_CEN_Y,                  -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "ANGULAR_CEN_Z",              &ANGULAR_CEN_Z,                  -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "OPT__FLAG_RADIAL",          &OPT__FLAG_RADIAL,               false,             Useless_bool,  Useless_bool   );
+   ReadPara->Add( "RADIAL_CEN_X",              &RADIAL_CEN_X,                    -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "RADIAL_CEN_Y",              &RADIAL_CEN_Y,                    -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "RADIAL_CEN_Z",              &RADIAL_CEN_Z,                    -1.0,             NoMin_double,  NoMax_double   );
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__FLAG_NPAR_PATCH",       &OPT__FLAG_NPAR_PATCH,            0,               0,             2              );
    ReadPara->Add( "OPT__FLAG_NPAR_CELL",        &OPT__FLAG_NPAR_CELL,             false,           Useless_bool,  Useless_bool   );

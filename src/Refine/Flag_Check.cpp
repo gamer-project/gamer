@@ -6,7 +6,9 @@ static bool Check_Curl( const int i, const int j, const int k,
                         const double Threshold );
 static int  Check_Angular( const int i, const int j, const int k, const int lv, const int PID,
                            const double CenX, const double CenY, const double CenZ,
-                           const double AngRes_Max, const double AngRes_Min, const double Refine_Rad );
+                           const double AngRes_Max, const double AngRes_Min );
+static bool Check_Radial( const int i, const int j, const int k, const int lv, const int PID,
+                          const double CenX, const double CenY, const double CenZ, const double Refine_Rad );
 
 
 
@@ -59,15 +61,23 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       if (  !Flag_Region_Ptr( i, j, k, lv, PID )  )    return false;
    }
 
-
 // check angular resolution
 // ===========================================================================================
    if ( OPT__FLAG_ANGULAR )
    {
       int flag = Check_Angular( i, j, k, lv, PID, ANGULAR_CEN_X, ANGULAR_CEN_Y, ANGULAR_CEN_Z,
-                                FlagTable_Angular[lv][0], FlagTable_Angular[lv][1], FlagTable_Angular[lv][2] );
+                                FlagTable_Angular[lv][0], FlagTable_Angular[lv][1] );
       if      ( flag == 0 )    return false;
       else if ( flag == 1 )    Flag = true;
+      if ( Flag )              return Flag;
+   }
+
+
+// check radial resolution
+// ===========================================================================================
+   if ( OPT__FLAG_RADIAL )
+   {
+      Flag |= Check_Radial( i, j, k, lv, PID, RADIAL_CEN_X, RADIAL_CEN_Y, RADIAL_CEN_Z, FlagTable_Radial[lv] );
       if ( Flag )              return Flag;
    }
 
@@ -371,17 +381,15 @@ bool Check_Curl( const int i, const int j, const int k,
 //                CenZ        : z coordinate of center of calculating angular resolution
 //                AngRes_Max  : The maximum allowed angular resolution
 //                AngRes_Min  : The minimum allowed angular resolution
-//                Refine_Rad  : The radius of must refined at level (lv)
 //
 // Return      :  0 : if the cell is not in the refine region
-//                1 : if the minimum angular resolution is     reached or  r <  Refine_Rad
-//                2 : if the minimum angular resolution is not reached and r >= Refine_Rad
+//                1 : if the minimum angular resolution is     reached
+//                2 : if the minimum angular resolution is not reached
 //-------------------------------------------------------------------------------------------------------
 int Check_Angular( const int i, const int j, const int k, const int lv, const int PID,
                    const double CenX, const double CenY, const double CenZ,
-                   const double AngRes_Max, const double AngRes_Min, const double Refine_Rad )
+                   const double AngRes_Max, const double AngRes_Min )
 {
-
 // check
 #  ifdef GAMER_DEBUG
    if (  i < 0  ||  i >= PS1  ||  j < 0  ||  j >= PS1  ||  k < 0  ||  k >= PS1  )
@@ -399,14 +407,55 @@ int Check_Angular( const int i, const int j, const int k, const int lv, const in
    if ( AngRes_Max > 0.0  &&  2.0 * R * AngRes_Max > dh )
       return 0;
 
-// (2) refine the region within r < Refine_Rad and the innermost cells
-   if ( R < dh  ||  R < Refine_Rad )
-      return 1;
-
-// (3) check if the minimum angular resolution is reached
+// (2) check if the minimum angular resolution is reached
    if ( AngRes_Min > 0.0  &&  R * AngRes_Min < dh )
       return 1;
 
    return 2;
 
 } // FUNCTION : Check_Angular
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Check_Radial
+// Description :  Check if the cell is in Refined_Rad.
+//
+// Note        :  1. Enabled by the runtime option "OPT__FLAG_RADIAL"
+//
+// Parameter   :  i,j,k       : Indices of the target element in the patch ptr[0][lv][PID]
+//                lv          : Refinement level of the target patch
+//                PID         : ID of the target patch
+//                CenX        : x coordinate of center of calculating angular resolution
+//                CenY        : y coordinate of center of calculating angular resolution
+//                CenZ        : z coordinate of center of calculating angular resolution
+//                Refine_Rad  : The radius of must refined at level (lv)
+//
+// Return      :  "true"  if r <  Refine_Rad
+//                "false" if r >= Refine_Rad or Refine_Rad is not set
+//-------------------------------------------------------------------------------------------------------
+bool Check_Radial( const int i, const int j, const int k, const int lv, const int PID,
+                   const double CenX, const double CenY, const double CenZ, const double Refine_Rad )
+{
+// check
+#  ifdef GAMER_DEBUG
+   if (  i < 0  ||  i >= PS1  ||  j < 0  ||  j >= PS1  ||  k < 0  ||  k >= PS1  )
+      Aux_Error( ERROR_INFO, "incorrect index (i,j,k) = (%d,%d,%d) !!\n", i, j, k );
+#  endif // #ifdef GAMER_DEBUG
+
+   const double dh     = amr->dh[lv];                                         // cell size
+   const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,     // x,y,z position
+                           amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
+                           amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
+   const double dR [3] = { Pos[0]-CenX, Pos[1]-CenY, Pos[2]-CenZ };
+   const double R      = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
+
+// not refine if the radius is not set
+   if ( Refine_Rad < 0.0 )   return false;
+
+// refine the region within r < Refine_Rad and the innermost cells
+   if ( R < dh  ||  R < Refine_Rad )   return true;
+
+   return false;
+
+} // FUNCTION : Check_Radial

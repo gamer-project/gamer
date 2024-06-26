@@ -2329,12 +2329,19 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "FlagTable_Angular",        RS.FlagTable_Angular,       SID, TID, NonFatal,  NullPtr,                    -1, NonFatal );
 
    for (int lv=0; lv<MAX_LEVEL; lv++)
-   for (int t=0; t<3; t++)
+   for (int t=0; t<2; t++)
    {
       if ( RS.FlagTable_Angular[lv][t] != RT.FlagTable_Angular[lv][t] )
          Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                        "FlagTable_Angular", lv, t, RS.FlagTable_Angular[lv][t],  RT.FlagTable_Angular[lv][t] );
    }}
+
+   if ( OPT__FLAG_RADIAL ) {
+   LoadField( "Radial_CenX",             &RS.Radial_CenX,             SID, TID, NonFatal, &RT.Radial_CenX,              1, NonFatal );
+   LoadField( "Radial_CenY",             &RS.Radial_CenY,             SID, TID, NonFatal, &RT.Radial_CenY,              1, NonFatal );
+   LoadField( "Radial_CenZ",             &RS.Radial_CenZ,             SID, TID, NonFatal, &RT.Radial_CenZ,              1, NonFatal );
+   LoadField( "FlagTable_Radial",         RS.FlagTable_Radial,        SID, TID, NonFatal, &RT.FlagTable_Radial,        N1, NonFatal );
+   }
 
    if ( OPT__FLAG_USER ) {
    for (int lv=0; lv<MAX_LEVEL; lv++)
