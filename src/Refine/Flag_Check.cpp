@@ -372,6 +372,7 @@ bool Check_Curl( const int i, const int j, const int k,
 //                than the maximum angular resolution. Also, check if the cell is in Refined_Rad.
 //
 // Note        :  1. Enabled by the runtime option "OPT__FLAG_ANGULAR"
+//                2. AngRes_Max has higher priority than AngRes_Min in case of 2.0 * AngRes_Max > AngRes_Min
 //
 // Parameter   :  i,j,k       : Indices of the target element in the patch ptr[0][lv][PID]
 //                lv          : Refinement level of the target patch
