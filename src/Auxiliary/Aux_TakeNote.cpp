@@ -365,7 +365,8 @@ void Aux_TakeNote()
 #     else
       fprintf( Note, "GPU_ARCH                        UNKNOWN\n" );
 #     endif
-#     endif
+      fprintf( Note, "GPU_COMPUTE_CAPABILITY          %d\n", GPU_COMPUTE_CAPABILITY );
+#     endif // #ifdef GPU
 
 #     ifdef LAOHU
       fprintf( Note, "LAOHU                           ON\n" );
