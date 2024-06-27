@@ -174,13 +174,13 @@ void SetParameter()
 // (1-3) check the runtime parameters
 
 // (2) set the problem-specific derived parameters
-   // use density table as background fixed halo profile
+// use density table as background fixed halo profile
    if ( HaloUseTable == 1 ) {
 
 //    read the density table
-      const bool RowMajor_No  = false;     // load data into the column-major order
-      const bool AllocMem_Yes = true;      // allocate memory for DensTable
-      const int  NCol         = 2;         // total number of columns to load
+      const bool RowMajor_No  =  false;    // load data into the column-major order
+      const bool AllocMem_Yes =  true;     // allocate memory for DensTable
+      const int  NCol         =  2;        // total number of columns to load
       const int  Col[NCol]    = {0, 1};    // target columns: (radius, density)
 
       DensTable_Nbin = Aux_LoadTable( DensTable, DensTableFile, NCol, Col, RowMajor_No, AllocMem_Yes );
@@ -262,6 +262,7 @@ double Halo_Density( double r )
    double rho_max =  0.0019 / m_22 / m_22 * pow(1.0 / CoreRadius, 4);
    if ((rho_halo + rho_soliton) > rho_max) return rho_max;
    else return(rho_halo + rho_soliton);
+
 } // FUNCTION : Halo_Density
 
 //-------------------------------------------------------------------------------------------------------
@@ -383,11 +384,11 @@ void Init_NewDiskRestart()
    for (int v = 0; v < PAR_NATT_TOTAL; v++ )   NewParAtt[v] = new real [NNewPar];
 
 // set particle attributes
-   real *Time_AllRank   = NewParAtt[PAR_TIME];
-   real *Mass_AllRank   = NewParAtt[PAR_MASS];
+   real *Time_AllRank   =   NewParAtt[PAR_TIME];
+   real *Mass_AllRank   =   NewParAtt[PAR_MASS];
    real *Pos_AllRank[3] = { NewParAtt[PAR_POSX], NewParAtt[PAR_POSY], NewParAtt[PAR_POSZ] };
    real *Vel_AllRank[3] = { NewParAtt[PAR_VELX], NewParAtt[PAR_VELY], NewParAtt[PAR_VELZ] };
-   real *Type_AllRank   = NewParAtt[PAR_TYPE];
+   real *Type_AllRank   =   NewParAtt[PAR_TYPE];
 #  if ( PAR_NATT_USER == 1 )
    const long ParLabelStart = amr->Par->NPar_Active_AllRank;
    real *Label_AllRank  = NewParAtt[ParLabel_Idx];
@@ -475,10 +476,10 @@ void Init_NewDiskRestart()
       Aux_Error( ERROR_INFO, "SUPPORT_GSL must be enabled when AddParWhenRestart=1 and AddParWhenRestartByFile=0 !!\n" );
 #     endif
 
-      // read velocity dispersion table
-      const bool RowMajor_No  = false;     // load data into the column-major order
-      const bool AllocMem_Yes = true;      // allocate memory for DispTable
-      const int  NCol         = 2;         // total number of columns to load
+//    read velocity dispersion table
+      const bool RowMajor_No  =  false;    // load data into the column-major order
+      const bool AllocMem_Yes =  true;     // allocate memory for DispTable
+      const int  NCol         =  2;        // total number of columns to load
       const int  Col[NCol]    = {0, 1};    // target columns: (radius, dispersion)
 
       DispTable_Nbin = Aux_LoadTable( DispTable, DispTableFile, NCol, Col, RowMajor_No, AllocMem_Yes );
@@ -486,7 +487,7 @@ void Init_NewDiskRestart()
       double *DispTable_r = DispTable + 0*DispTable_Nbin;
       double *DispTable_d = DispTable + 1*DispTable_Nbin;
 
-      // convert to code unit
+//    convert to code unit
       for ( int b = 0; b < DispTable_Nbin; b++ )
       {
          DispTable_r[b] = DispTable_r[b]*Const_kpc/UNIT_L;
