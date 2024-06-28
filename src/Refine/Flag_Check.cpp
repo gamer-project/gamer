@@ -78,7 +78,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    if ( OPT__FLAG_RADIAL )
    {
       Flag |= Check_Radial( i, j, k, lv, PID, RADIAL_CEN_X, RADIAL_CEN_Y, RADIAL_CEN_Z, FlagTable_Radial[lv] );
-      if ( Flag )              return Flag;
+      if ( Flag )    return Flag;
    }
 
 
