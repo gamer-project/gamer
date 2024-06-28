@@ -369,7 +369,7 @@ bool Check_Curl( const int i, const int j, const int k,
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Check_Angular
 // Description :  Check if dh/R at cell (i,j,k) is larger than the minimum angular resolution and smaller
-//                than the maximum angular resolution. Also, check if the cell is in Refined_Rad.
+//                than the maximum angular resolution
 //
 // Note        :  1. Enabled by the runtime option "OPT__FLAG_ANGULAR"
 //                2. AngRes_Max has higher priority than AngRes_Min in case of 2.0 * AngRes_Max > AngRes_Min
@@ -420,7 +420,7 @@ int Check_Angular( const int i, const int j, const int k, const int lv, const in
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Check_Radial
-// Description :  Check if the cell is in Refined_Rad.
+// Description :  Check if the cell is in Refined_Rad
 //
 // Note        :  1. Enabled by the runtime option "OPT__FLAG_RADIAL"
 //
