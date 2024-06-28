@@ -1892,6 +1892,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "MaxLevel",                &RS.MaxLevel,                SID, TID, NonFatal, &RT.MaxLevel,                 1, NonFatal );
    LoadField( "Opt__Flag_Rho",           &RS.Opt__Flag_Rho,           SID, TID, NonFatal, &RT.Opt__Flag_Rho,            1, NonFatal );
    LoadField( "Opt__Flag_RhoGradient",   &RS.Opt__Flag_RhoGradient,   SID, TID, NonFatal, &RT.Opt__Flag_RhoGradient,    1, NonFatal );
+   LoadField( "Opt__Flag_Angular",       &RS.Opt__Flag_Angular,       SID, TID, NonFatal, &RT.Opt__Flag_Angular,        1, NonFatal );
 #  if ( MODEL == HYDRO )
    LoadField( "Opt__Flag_PresGradient",  &RS.Opt__Flag_PresGradient,  SID, TID, NonFatal, &RT.Opt__Flag_PresGradient,   1, NonFatal );
    LoadField( "Opt__Flag_Vorticity",     &RS.Opt__Flag_Vorticity,     SID, TID, NonFatal, &RT.Opt__Flag_Vorticity,      1, NonFatal );
@@ -2270,6 +2271,11 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
       for (int t=0; t<5; t++)
       RS.FlagTable_Lohner      [lv][t] = -1.0;
 
+      for (int t=0; t<3; t++)
+      RS.FlagTable_Angular     [lv][t] = -1.0;
+
+      RS.FlagTable_Radial      [lv]    = -1.0;
+
       RS.FlagTable_User        [lv].p   = malloc( OPT__FLAG_USER_NUM*sizeof(double) );
       RS.FlagTable_User        [lv].len = OPT__FLAG_USER_NUM;
       for (int t=0; t<OPT__FLAG_USER_NUM; t++)
@@ -2317,6 +2323,27 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
          Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                        "FlagTable_Lohner", lv, t, RS.FlagTable_Lohner[lv][t],  RT.FlagTable_Lohner[lv][t] );
    }}
+
+   if ( OPT__FLAG_ANGULAR ) {
+   LoadField( "Angular_CenX",            &RS.Angular_CenX,            SID, TID, NonFatal, &RT.Angular_CenX,             1, NonFatal );
+   LoadField( "Angular_CenY",            &RS.Angular_CenY,            SID, TID, NonFatal, &RT.Angular_CenY,             1, NonFatal );
+   LoadField( "Angular_CenZ",            &RS.Angular_CenZ,            SID, TID, NonFatal, &RT.Angular_CenZ,             1, NonFatal );
+   LoadField( "FlagTable_Angular",        RS.FlagTable_Angular,       SID, TID, NonFatal,  NullPtr,                    -1, NonFatal );
+
+   for (int lv=0; lv<MAX_LEVEL; lv++)
+   for (int t=0; t<3; t++)
+   {
+      if ( RS.FlagTable_Angular[lv][t] != RT.FlagTable_Angular[lv][t] )
+         Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
+                       "FlagTable_Angular", lv, t, RS.FlagTable_Angular[lv][t],  RT.FlagTable_Angular[lv][t] );
+   }}
+
+   if ( OPT__FLAG_RADIAL ) {
+   LoadField( "Radial_CenX",             &RS.Radial_CenX,             SID, TID, NonFatal, &RT.Radial_CenX,              1, NonFatal );
+   LoadField( "Radial_CenY",             &RS.Radial_CenY,             SID, TID, NonFatal, &RT.Radial_CenY,              1, NonFatal );
+   LoadField( "Radial_CenZ",             &RS.Radial_CenZ,             SID, TID, NonFatal, &RT.Radial_CenZ,              1, NonFatal );
+   LoadField( "FlagTable_Radial",         RS.FlagTable_Radial,        SID, TID, NonFatal, &RT.FlagTable_Radial,        N1, NonFatal );
+   }
 
    if ( OPT__FLAG_USER ) {
    for (int lv=0; lv<MAX_LEVEL; lv++)
