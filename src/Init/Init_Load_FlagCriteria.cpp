@@ -206,8 +206,11 @@ void Init_Load_FlagCriteria()
          else if ( FlagMode == 14 )
          {
             sscanf( input_line, "%d%lf%lf", &Trash, &FlagTable_Angular[lv][0], &FlagTable_Angular[lv][1] );
-            if ( FlagTable_Angular[lv][0] < FlagTable_Angular[lv][1] )
-               Aux_Message( stderr, "WARNING : AngRes_Max < AngRes_Min at lv %d\n", lv );
+            if ( FlagTable_Angular[lv][0] > 0.0  &&
+                 FlagTable_Angular[lv][1] > 0.0  &&
+                 FlagTable_Angular[lv][0] > FlagTable_Angular[lv][1] )
+               Aux_Message( stderr, "WARNING : AngRes_Max (%20.14e) > AngRes_Min (%20.14e) at lv %d\n",
+                            FlagTable_Angular[lv][0], FlagTable_Angular[lv][1], lv );
          }
 
 //       others use the default format: (integer, double)
