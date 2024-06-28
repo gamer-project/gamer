@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2480)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2479)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -254,7 +254,7 @@ Procedure for outputting new variables:
 //                2477 : 2024/04/05 --> output OPT__RECORD_CENTER, COM_CEN_X, COM_CEN_Y, COM_CEN_Z,
 //                                             COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R, COM_MAX_ITER
 //                2478 : 2024/04/09 --> output ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z
-//                2480 : 2024/05/19 --> output OPT__FLAG_ANGULAR, FlagTable_Angular, ANGULAR_CEN_X, ANGULAR_CEN_Y, ANGULAR_CEN_Z
+//                2479 : 2024/05/19 --> output OPT__FLAG_ANGULAR, FlagTable_Angular, ANGULAR_CEN_X, ANGULAR_CEN_Y, ANGULAR_CEN_Z
 //                                             OPT__FLAG_RADIAL,  FlagTable_Radial,   RADIAL_CEN_X,  RADIAL_CEN_Y,  RADIAL_CEN_Z
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
@@ -1505,7 +1505,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2480;
+   KeyInfo.FormatVersion        = 2479;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
