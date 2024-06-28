@@ -1608,9 +1608,10 @@ void Aux_TakeNote()
       {
          fprintf( Note, "Flag Criterion (Angular Resolution)\n" );
          fprintf( Note, "***********************************************************************************\n" );
-         fprintf( Note, "  Level          AngRes_Max          AngRes_Min\n");
+         fprintf( Note, "  Level          AngRes_Max          AngRes_Min        AngRes_Max_R\n");
          for (int lv=0; lv<MAX_LEVEL; lv++)
-            fprintf( Note, "%7d%20.7e%20.7e\n", lv, FlagTable_Angular[lv][0], FlagTable_Angular[lv][1] );
+            fprintf( Note, "%7d%20.7e%20.7e%20.7e\n", lv, FlagTable_Angular[lv][0], FlagTable_Angular[lv][1],
+                     FlagTable_Angular[lv][2] );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }

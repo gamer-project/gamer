@@ -6,7 +6,7 @@ static bool Check_Curl( const int i, const int j, const int k,
                         const double Threshold );
 static int  Check_Angular( const int i, const int j, const int k, const int lv, const int PID,
                            const double CenX, const double CenY, const double CenZ,
-                           const double AngRes_Max, const double AngRes_Min );
+                           const double AngRes_Max, const double AngRes_Min, const double AngRes_Max_R );
 static bool Check_Radial( const int i, const int j, const int k, const int lv, const int PID,
                           const double CenX, const double CenY, const double CenZ, const double Refine_Rad );
 
@@ -66,7 +66,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    if ( OPT__FLAG_ANGULAR )
    {
       int flag = Check_Angular( i, j, k, lv, PID, ANGULAR_CEN_X, ANGULAR_CEN_Y, ANGULAR_CEN_Z,
-                                FlagTable_Angular[lv][0], FlagTable_Angular[lv][1] );
+                                FlagTable_Angular[lv][0], FlagTable_Angular[lv][1], FlagTable_Angular[lv][2] );
       if      ( flag == 0 )    return false;
       else if ( flag == 1 )    Flag = true;
       if ( Flag )              return Flag;
@@ -374,14 +374,15 @@ bool Check_Curl( const int i, const int j, const int k,
 // Note        :  1. Enabled by the runtime option "OPT__FLAG_ANGULAR"
 //                2. AngRes_Max has higher priority than AngRes_Min in case of 2.0 * AngRes_Max > AngRes_Min
 //
-// Parameter   :  i,j,k       : Indices of the target element in the patch ptr[0][lv][PID]
-//                lv          : Refinement level of the target patch
-//                PID         : ID of the target patch
-//                CenX        : x coordinate of center of calculating angular resolution
-//                CenY        : y coordinate of center of calculating angular resolution
-//                CenZ        : z coordinate of center of calculating angular resolution
-//                AngRes_Max  : The maximum allowed angular resolution
-//                AngRes_Min  : The minimum allowed angular resolution
+// Parameter   :  i,j,k        : Indices of the target element in the patch ptr[0][lv][PID]
+//                lv           : Refinement level of the target patch
+//                PID          : ID of the target patch
+//                CenX         : x coordinate of center of calculating angular resolution
+//                CenY         : y coordinate of center of calculating angular resolution
+//                CenZ         : z coordinate of center of calculating angular resolution
+//                AngRes_Max   : The maximum allowed angular resolution
+//                AngRes_Min   : The minimum allowed angular resolution
+//                AngRes_Max_R : The minimum radius to apply AngRes_Max
 //
 // Return      :  0 : if the cell is not in the refine region
 //                1 : if the minimum angular resolution is     reached
@@ -389,7 +390,7 @@ bool Check_Curl( const int i, const int j, const int k,
 //-------------------------------------------------------------------------------------------------------
 int Check_Angular( const int i, const int j, const int k, const int lv, const int PID,
                    const double CenX, const double CenY, const double CenZ,
-                   const double AngRes_Max, const double AngRes_Min )
+                   const double AngRes_Max, const double AngRes_Min, const double AngRes_Max_R )
 {
 // check
 #  ifdef GAMER_DEBUG
@@ -405,7 +406,7 @@ int Check_Angular( const int i, const int j, const int k, const int lv, const in
    const double R      = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
 
 // (1) check the maximum allowed refinement level based on angular resolution
-   if ( AngRes_Max > 0.0  &&  2.0 * R * AngRes_Max > dh )
+   if ( AngRes_Max > 0.0  &&  2.0 * R * AngRes_Max > dh  &&  R > AngRes_Max_R )
       return 0;
 
 // (2) check if the minimum angular resolution is reached

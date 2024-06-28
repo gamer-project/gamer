@@ -205,7 +205,7 @@ void Init_Load_FlagCriteria()
 //       OPT__FLAG_ANGULAR has three columns to be loaded
          else if ( FlagMode == 14 )
          {
-            sscanf( input_line, "%d%lf%lf", &Trash, &FlagTable_Angular[lv][0], &FlagTable_Angular[lv][1] );
+            sscanf( input_line, "%d%lf%lf%lf", &Trash, &FlagTable_Angular[lv][0], &FlagTable_Angular[lv][1], &FlagTable_Angular[lv][2] );
             if ( FlagTable_Angular[lv][0] > 0.0  &&
                  FlagTable_Angular[lv][1] > 0.0  &&
                  FlagTable_Angular[lv][0] > FlagTable_Angular[lv][1] )
