@@ -46,6 +46,8 @@ Parameters described on this page:
 [OPT__FLAG_USER](#OPT__FLAG_USER), &nbsp;
 [OPT__FLAG_USER_NUM](#OPT__FLAG_USER_NUM), &nbsp;
 [OPT__FLAG_REGION](#OPT__FLAG_REGION), &nbsp;
+[OPT__FLAG_ANGULAR](#OPT__FLAG_ANGULAR), &nbsp;
+[OPT__FLAG_RADIAL](#OPT__FLAG_RADIAL), &nbsp;
 [OPT__FLAG_NPAR_PATCH](#OPT__FLAG_NPAR_PATCH), &nbsp;
 [OPT__FLAG_NPAR_CELL](#OPT__FLAG_NPAR_CELL), &nbsp;
 [OPT__FLAG_PAR_MASS_CELL](#OPT__FLAG_PAR_MASS_CELL), &nbsp;
@@ -361,6 +363,26 @@ Edit `src/Refine/Flag_Region.cpp` to specify the regions that are
 *allowed* to be refined. Note that this option does not trigger
 any refinement. Instead, it simply forbids refinement outside the
 specified regions.
+    * **Restriction:**
+
+<a name="OPT__FLAG_ANGULAR"></a>
+* #### `OPT__FLAG_ANGULAR` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Refinement criterion: Cell radian from the given centre (`ANGULAR_CEN_X`,
+`ANGULAR_CEN_Y`, `ANGULAR_CEN_Z`). Specify the refinement thresholds
+on different levels in the input file `Input__Flag_AngularResolution`
+with the [[specific format | Runtime Parameters#input__flag_]].
+An example file can be found at `example/input/Input__Flag_AngularResolution`.
+    * **Restriction:**
+
+<a name="OPT__FLAG_RADIAL"></a>
+* #### `OPT__FLAG_RADIAL` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Refinement criterion: Distance to the given centre (`RADIAL_CEN_X`,
+`RADIAL_CEN_Y`, `RADIAL_CEN_Z`). Specify the refinement thresholds
+on different levels in the input file `Input__Flag_RadialResolution`
+with the [[specific format | Runtime Parameters#input__flag_]].
+An example file can be found at `example/input/Input__Flag_RadialResolution`.
     * **Restriction:**
 
 <a name="OPT__FLAG_NPAR_PATCH"></a>
