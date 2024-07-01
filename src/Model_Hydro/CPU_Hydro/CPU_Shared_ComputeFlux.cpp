@@ -359,22 +359,7 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
          } // for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
 #        endif // #if ( RSOLVER_RESCUE != NONE )
 
-//       4. Optionally, compute conductive and/or viscous fluxes
-
-#ifdef MICROPHYSICS
-         const bool NormPassive_No  = false; // do NOT convert any passive variable to mass fraction for the Riemann solvers
-         const bool JeansMinPres_No = false;
-         Hydro_Con2Pri( ConVar_L, PriVar_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, 
-                        JeansMinPres_No, NULL_REAL );
-#ifdef VISCOSITY
-         Hydro_ComputeViscousFluxes(d, Flux_1Face, Gamma_m1, MinPres);
-#endif
-#ifdef CONDUCTIVITY
-         Hydro_ComputeConductiveFluxes(d, Flux_1Face, Gamma_m1, MinPres);
-#endif
-#endif 
-
-//       5. store the fluxes of all cells in g_FC_Flux[]
+//       4. store the fluxes of all cells in g_FC_Flux[]
 //       --> including the magnetic components since they are required for CT
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_FC_Flux[d][v][idx_flux] = Flux_1Face[v];
       } // i,j,k
