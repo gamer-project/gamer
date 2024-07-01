@@ -525,6 +525,4 @@
 # define CGPU_LOOP( var, niter )    for (int (var)=0;           (var)<(niter); (var)++          )
 #endif
 
-
-
 #endif // #ifndef __CUFLU_H__
