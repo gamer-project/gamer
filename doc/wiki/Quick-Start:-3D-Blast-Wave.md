@@ -7,56 +7,28 @@ It is recommended to first check [[Quick Start: 1D Shock Tube]].
 
 ***
 
+0\. Set configuration file.
+
+Please set `CUDA_PATH`, `MPI_PATH`, `HDF5_PATH`, and `GPU_COMPUTE_CAPABILITY` in your machine configuration file in `gamer/configs/YOUR_MACHINE.config`.
+See step 0 in
+[[Quick Start: 1D Shock Tube -- Hybrid OpenMP/GPU | Quick-Start:-1D-Shock-Tube#hybrid-openmpgpu]]
+about how to set your machine configuration file.
+
 1\. Install the external packages required for this demo.
 * [yt](http://yt-project.org)
 * [HDF5](https://support.hdfgroup.org/HDF5)
 
-2\. **[Deprecated; use `configure.py` described below instead]**: Edit the `Makefile` to validate the following settings.
-See [[Installation]] for details.
-
-#### Simulation options:
-``` makefile
-SIMU_OPTION += -DMODEL=HYDRO
-#SIMU_OPTION += -DGRAVITY
-#SIMU_OPTION += -DPARTICLE
-#SIMU_OPTION += -DSUPPORT_GRACKLE
-
-SIMU_OPTION += -DGPU
-SIMU_OPTION += -DGPU_COMPUTE_CAPABILITY=860
-#SIMU_OPTION += -DSERIAL
-SIMU_OPTION += -DLOAD_BALANCE=HILBERT
-SIMU_OPTION += -DOPENMP
-SIMU_OPTION += -DSUPPORT_HDF5
-```
-See step 1 in
-[[Quick Start: 1D Shock Tube -- Hybrid OpenMP/GPU | Quick-Start:-1D-Shock-Tube#hybrid-openmpgpu]]
-about how to set `GPU_COMPUTE_CAPABILITY`.
-
-**Caution: to enable MPI, one must comment out `SIMU_OPTION += -DSERIAL` and set
-`SIMU_OPTION += -DLOAD_BALANCE=HILBERT`.**
-
-#### MPI compiler:
-``` makefile
-#CXX = g++                      # comment out the serial compiler
- CXX = $(MPI_PATH)/bin/mpicxx   # if necessary, switch to the MPI compiler recommended on your system
-```
-
-#### Library paths:
-``` makefile
-CUDA_PATH   := /usr/local/cuda
-MPI_PATH    := /usr/local/mpi
-HDF5_PATH   := /usr/local/hdf5
-```
-Replace these paths with your local installation.
-
-**Update**: If you are using
-[configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py),
-you can first set `CUDA_PATH`, `MPI_PATH`, `HDF5_PATH`, `CXX_MPI`, and `GPU_COMPUTE_CAPABILITY`
-in your machine configuration file in `gamer/config/YOUR_MACHINE.config`
-and then generate a `Makefile` by
+2\. Generate `Makefile` by [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py).
 ``` bash
-python configure.py --machine=YOUR_MACHINE --openmp=true --gpu=true --mpi=true --hdf5=true
+> cp ../example/test_problem/Hydro/BlastWave/generate_make.sh ./
+> sh generate_make.sh --openmp=true --gpu=true --mpi=true --hdf5=true
+   ...
+   ...
+========================================
+Makefile is created.
+========================================
 ```
+See [[Installation]] for details.
 
 3\. Compile the code.
 ``` bash

@@ -10,7 +10,16 @@ This page includes three demos:
 > cd src
 ```
 
-2\. **[Deprecated; use `configure.py` described below instead]**: Edit the `Makefile` to validate the following settings.
+2\. Generate `Makefile` by [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py).
+``` bash
+> cp ../example/test_problem/Hydro/Riemann/generate_make.sh ./
+> sh generate_make.sh --openmp=false
+   ...
+   ...
+========================================
+Makefile is created.
+========================================
+```
 Note that we have enabled
 [[SERIAL | Installation:-Simulation-Options#SERIAL]]
 and disabled
@@ -21,23 +30,6 @@ to run in a CPU-only mode
 without OpenMP and MPI.
 See [[Installation: Simulation Options|Installation:-Simulation-Options]]
 for a complete list of all compile-time simulation options.
-``` makefile
-SIMU_OPTION += -DMODEL=HYDRO
-#SIMU_OPTION += -DGRAVITY
-#SIMU_OPTION += -DPARTICLE
-#SIMU_OPTION += -DSUPPORT_GRACKLE
-
-#SIMU_OPTION += -DGPU
-SIMU_OPTION += -DSERIAL
-#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
-#SIMU_OPTION += -DOPENMP
-```
-
-**Update**: You can use the Python script
-[configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py)
-to tailor `Makefile` rather than editing it manually. An example can be found at
-`../example/test_problem/Hydro/Riemann/generate_make.sh`, for which you can disable
-OpenMP by adding `--openmp=false`.
 
 3\. Compile the code.
 ``` bash
@@ -118,15 +110,15 @@ Total Processing Time : 75.954923 s
 Next, we enable OpenMP for the same test problem.
 Repeat the steps above with the following modifications.
 
-1\. **[Deprecated]**: Enable
-[[OPENMP | Installation:-Simulation-Options#OPENMP]]
-in the `Makefile` and recompile the code.
-``` makefile
-SIMU_OPTION += -DOPENMP
+1\. Re-generate `Makefile` by [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py).
+``` bash
+> sh generate_make.sh --openmp=true
+   ...
+   ...
+========================================
+Makefile is created.
+========================================
 ```
-**Update**: If you are using
-[configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py),
-you can enable OpenMP by adding `--openmp=true`.
 
 **Caution: remember to clean the previous configurations by `make clean`
 before `make` and copy the new executable to the working directory.**
@@ -196,25 +188,19 @@ To enable both GPU and OpenMP, repeat the steps in
 [CPU-only with OpenMP](#cpu-only-with-openmp) with the
 following modifications.
 
-1\.  **[Deprecated]**: Edit the `Makefile` as described below and recompile the code.
-* Enable [[GPU | Installation:-Simulation-Options#GPU]].
-* Set [[GPU_COMPUTE_CAPABILITY | Installation:-Simulation-Options#GPU_COMPUTE_CAPABILITY]]
-to match the GPU on your system (e.g., `GPU_COMPUTE_CAPABILITY=890` for GeForce RTX 4090).
-* Set `CUDA_PATH` to the location of your CUDA installation.
+0\. Set configuration file.
+* Make a copy from `gamer/configs/template.config` and name it as `YOUR_MACHINE.config` under `gamer/configs/`.
+* Please set `CUDA_PATH` and [[GPU_COMPUTE_CAPABILITY | Installation:-Simulation-Options#GPU_COMPUTE_CAPABILITY]] in `gamer/configs/YOUR_MACHINE.config` properly.
 
-The following example assumes that the `TURING` architecture
-is adopted and CUDA is installed at `/usr/local/cuda`.
-``` makefile
-SIMU_OPTION += -DGPU
-SIMU_OPTION += -DDGPU_COMPUTE_CAPABILITY=860
-
-CUDA_PATH   := /usr/local/cuda
+1\. Re-generate `Makefile` by [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py).
+``` bash
+> sh generate_make.sh --machine=YOUR_MACHINE --openmp=true --gpu=true
+   ...
+   ...
+========================================
+Makefile is created.
+========================================
 ```
-
-**Update**: If you are using
-[configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py),
-you can first set `CUDA_PATH` and `GPU_COMPUTE_CAPABILITY` in your machine configuration file in `gamer/config/YOUR_MACHINE.config`
-and then add `--machine=YOUR_MACHINE --openmp=true --gpu=true` when running `configure.py`.
 
 2\. Remove all old log and data files, if necessary.
 Run the code with the new executable.

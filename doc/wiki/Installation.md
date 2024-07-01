@@ -1,7 +1,7 @@
 To compile GAMER, go to the source directory:
-
-    > cd src
-
+```bash
+> cd src
+```
 We recommend using the Python script
 [[configure.py|Installation:-Configure.py]]
 to tailor the `Makefile` for your simulation and machine. Alternatively, you can
@@ -15,24 +15,24 @@ edit `Makefile` and set the following configurations directly:
 in the `Makefile` (or via `--rng=RNG_CPP11` in `configure.py`).
 
 Compile the code by
-
-    > make clean
-    > make
-
+```bash
+> make clean
+> make
+```
 To reduce the compilation time, you can perform a parallel
 compilation by `make -j N`, where N is the number of compilation
 jobs to run in parallel. For example, the following command will
 invoke 4 compilation jobs simultaneously:
-
-    > make -j 4
-
+```bash
+> make -j 4
+```
 However, please consult the documentation of your system to avoid
 violating the usage policy.
 
 If the compilation succeeds, you will see the following message
-
-    > Compiling GAMER --> Successful!
-
+```bash
+> Compiling GAMER --> Successful!
+```
 and get an executable `gamer`, which will be automatically copied
 to `../bin/gamer`.
 

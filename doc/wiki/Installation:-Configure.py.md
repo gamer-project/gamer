@@ -29,8 +29,8 @@ Run the following command to generate a new `Makefile`.
 python configure.py --machine=your_configuration_file [--your_arguments]
 ```
 
-For example, the following command will set the compiler, flags, and library paths
-based on `gamer/configs/pleiades.config`, use `FFTW2`, and enable both gravity and GPU.
+For example, the following command sets the compiler, flags, and library paths
+based on `gamer/configs/pleiades.config`, uses `FFTW2`, and enables both gravity and GPU.
 
 ``` bash
 python configure.py --machine=pleiades --fftw=FFTW2 --gravity=true --gpu=true
@@ -87,7 +87,7 @@ asserts `--eos=GAMMA` when adopting either `--flux=ROE` or `--flux=EXACT`.
 parser.add_argument( "--flux", type=str, metavar="TYPE", gamer_name="RSOLVER",
                      choices=["EXACT", "ROE", "HLLE", "HLLC", "HLLD"],
                      constraint={ "ROE":{"eos":"GAMMA"},
-                                 "EXACT":{"eos":"GAMMA"} },
+                                  "EXACT":{"eos":"GAMMA"} },
                      ...
                    )
 ```
@@ -100,7 +100,7 @@ def validation( paths, depends, constraints, **kwargs ):
     ...
 
     if kwargs["new_argument"] < -1:
-        color_print("ERROR: Your error message.", BCOLOR.FAIL)
+        LOGGER.error("Your error message.")
         success = False
     ...
 
@@ -112,7 +112,7 @@ def validation( paths, depends, constraints, **kwargs ):
 def warning( paths, **kwargs ):
     ...
     if kwargs["new_argument"] == 0:
-        color_print("Warning: Your warning message.", BCOLOR.WARNING)
+        LOGGER.warning("Your warning message.")
     ...
     return
 ```
