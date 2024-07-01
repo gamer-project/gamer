@@ -2,4 +2,4 @@
 
 PYTHON=python3
 
-${PYTHON} configure.py --machine=eureka_intel --model=HYDRO --hdf5=true
+${PYTHON} configure.py --model=HYDRO --hdf5=true "$@"
