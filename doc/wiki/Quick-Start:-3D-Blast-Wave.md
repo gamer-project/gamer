@@ -147,10 +147,11 @@ and all OpenMP threads use different CPU cores.
 Especially, make sure that the MPI processes running on the
 same node access different `GPU ID` (unless that is what you want).
 
-10\. Plot a HDF5 snapshot with yt. You can use the sample script `plot_slice.py`.
+10\. Plot a HDF5 snapshot with yt. You can use the sample script `plot_script/plot_slice.py`.
 ```
-> python plot_slice.py -h
-usage: plot_slice.py [-h] -s IDX_START -e IDX_END [-d DIDX] [-i PREFIX]
+> cd plot_script
+> python plot_slice_gas.py -h
+usage: plot_slice_gas.py [-h] -s IDX_START -e IDX_END [-d DIDX] [-i PREFIX]
 
 Plot gas density slices for the blast wave test
 
@@ -159,16 +160,16 @@ optional arguments:
   -s IDX_START  first data index
   -e IDX_END    last data index
   -d DIDX       delta data index [1]
-  -i PREFIX     data path prefix [./]
+  -i PREFIX     data path prefix [../]
 ```
 
 Let's plot `Data_000010`.
 ```
-> python plot_slice.py -s 10 -e 10
+> python plot_slice_gas.py -s 10 -e 10
 
 Command-line arguments:
 -------------------------------------------------------------------
-plot_slice.py -s 10 -e 10
+plot_slice_gas.py -s 10 -e 10
 -------------------------------------------------------------------
 
 yt : [WARNING  ] 2017-12-11 20:34:09,787 Cannot determine code units ==> Use units_override to specify the units
