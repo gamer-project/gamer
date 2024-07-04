@@ -765,11 +765,13 @@ double Par_EquilibriumIC::getIntegratedDistributionFunction( const double E )
       }
       else
       {
-         // dRho_dPsi is linearly extrapolated for low Psi
-         const double dRho_dPsi_Extrapolated = RArray_dRho_dPsi[RLastIdx]
-                                               +( Psi + RArray_Phi[RLastIdx] )
-                                               *( RArray_dRho_dPsi[RLastIdx-1] - RArray_dRho_dPsi[RLastIdx] )
-                                               /(      -RArray_Phi[RLastIdx-1] +       RArray_Phi[RLastIdx] );
+         // dRho_dPsi is extrapolated with a power law for low Psi
+         double power_extrapolated = log( RArray_dRho_dPsi[RLastIdx-1]/RArray_dRho_dPsi[RLastIdx] )/log( (-RArray_Phi[RLastIdx-1])/(-RArray_Phi[RLastIdx]) );
+
+         // to avoid the slope of distribution function become negative when the power of Psi is less then 1/2
+         power_extrapolated = ( power_extrapolated < 0.5 ) ? 0.5 : power_extrapolated;
+
+         const double dRho_dPsi_Extrapolated = RArray_dRho_dPsi[RLastIdx]*pow( Psi/(-RArray_Phi[RLastIdx]), power_extrapolated );
 
          dRho_dPsi = ( dRho_dPsi_Extrapolated < 0 ) ? 0.0 : dRho_dPsi_Extrapolated;
       }
