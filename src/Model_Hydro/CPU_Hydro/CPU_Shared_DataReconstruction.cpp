@@ -81,6 +81,12 @@ static void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCO
                                   const int NGhost, const int NEle,
                                   const real MinDens, const real MinPres, const real MinEint,
                                   const EoS_t *EoS );
+GPU_DEVICE
+void AddExtraFlux_HancockPredict_Template(       real Flux[][NCOMP_TOTAL_PLUS_MAG],
+                                           const real g_cc_array[][ CUBE(FLU_NXT) ],
+                                           const real g_FC_B[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                           const int cc_idx, const int cc_i, const int cc_j, const int cc_k,
+                                           const int NGhost, const real dh );
 #ifdef MHD
 GPU_DEVICE
 void Hydro_ConFC2PriCC_MHM(       real g_PriVar[][ CUBE(FLU_NXT) ],
@@ -2092,6 +2098,8 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
       Hydro_Con2Flux( f/2, Flux[f], fcCon[f], MinPres, EoS->DensEint2Pres_FuncPtr,
                       EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 #     endif
+
+   AddExtraFlux_HancockPredict_Template( Flux, g_cc_array, g_FC_B, cc_idx, cc_i, cc_j, cc_k, NGhost, dh );
 
 // update the face-centered variables
    for (int v=0; v<NCOMP_TOTAL; v++)

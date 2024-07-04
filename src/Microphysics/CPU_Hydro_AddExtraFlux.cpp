@@ -35,7 +35,6 @@
 //
 // Return      : g_Flux_Half[]
 //-----------------------------------------------------------------------------------------
-GPU_DEVICE
 void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
                             const real g_PriVar[][ CUBE(FLU_NXT) ],
                                   real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
@@ -281,6 +280,7 @@ void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //
 // Return      : g_Flux_Half[]
 //-----------------------------------------------------------------------------------------
+GPU_DEVICE
 void AddExtraFlux_HancockPredict_Template(       real Flux[][NCOMP_TOTAL_PLUS_MAG],
                                            const real g_cc_array[][ CUBE(FLU_NXT) ],
                                            const real g_FC_B[][ FLU_NXT_P1*SQR(FLU_NXT) ],
@@ -321,6 +321,21 @@ void AddExtraFlux_HancockPredict_Template(       real Flux[][NCOMP_TOTAL_PLUS_MA
       const int idx_fc_BT1 = IDX321( cc_i+LorR, cc_j, cc_j, sizeB_k, sizeB_i );
       const int idx_fc_BT2 = IDX321( cc_i+LorR, cc_j, cc_j, sizeB_j, sizeB_k );
 #     endif
+
+/*
+#ifdef MHD
+      printf("f: %d, d: %d, LR: %d, cc: (%02d, %02d, %02d, %05d), fc: (%02d, %02d, %02d) => (%05d, %05d, %05d)\n",
+              f, d, LorR,
+              cc_i, cc_j, cc_k, cc_idx,
+              cc_i+LorR, cc_j, cc_k,
+              idx_fc_BN, idx_fc_BT1, idx_fc_BT2);
+#else
+      printf("f: %d, d: %d, LR: %d, cc: (%02d, %02d, %02d, %05d)\n",
+              f, d, LorR,
+              cc_i, cc_j, cc_k, cc_idx
+              );
+#endif
+*/
 
 //    1. compute the mean magnetic field at the face-centered flux location
 #     ifdef MHD

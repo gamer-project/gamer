@@ -398,6 +398,7 @@ void CPU_FluidSolver_MHM(
 //       --> we use the same array size as the half-step variables of MHM_RP to avoid
 //           changing the MHM_RP full-step MHD_ComputeElectric()
          real (*const g_PriVar_Half_1PG )[ CUBE(FLU_NXT)  ] = g_PriVar_1PG;
+         real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = NULL;
 #        ifdef MHD
          real (*const g_EC_Ele_1PG      )[ CUBE(N_EC_ELE) ] = g_EC_Ele[P];
 #        else
