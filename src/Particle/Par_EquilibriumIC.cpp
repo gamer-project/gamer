@@ -622,8 +622,8 @@ double Par_EquilibriumIC::getAnalEnclosedMass( const double r )
 //    Arguments for the gsl integration
       const double lower_limit = 0.0;
       const double upper_limit = r;
-      const double abs_err_lim = 1.0e-8;
-      const double rel_err_lim = 1.0e-8;
+      const double abs_err_lim = 1.0e-6;
+      const double rel_err_lim = 1.0e-6;
       const int    integ_size  = 1000;
       const int    integ_rule  = 1;    // 1 = GSL_INTEG_GAUSS15, the 15 point Gauss-Kronrod rule
 
