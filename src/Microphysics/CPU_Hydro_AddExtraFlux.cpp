@@ -17,23 +17,24 @@
 //
 // Description : Add extra flux
 //
-// Note        : 1. only update the inner flux
-//               2.
+// Note        : 1. Only for MHM_RP half-step, MHM_RP full-step, and MHM full-step
+//               2. Does not upadate the additional flux along transverse direction for computing the CT electric field
 //
-// Usage       :
-//               MHM_RP: (NSkip_N, NSkip_T) = (0, 0) ifdef MHD else (0, 1)
-//               MHM_RP half-step: AddExtraFlux_Template( g_ConVar,     NULL, g_Flux, g_FC_B, FLU_NXT,              0, N_HF_FLUX, NSkip_N, NSkip_T, dh )
-//               MHM_RP full-step: AddExtraFlux_Template(     NULL, g_PriVar, g_Flux, g_FC_B, N_HF_VAR, LR_GHOST_SIZE, N_FL_FLUX, NSkip_N, NSkip_T, dh )
-//               MHM    full-step: AddExtraFlux_Template(     NULL, g_PriVar, g_Flux,   NULL, N_HF_VAR,             0, N_FL_FLUX, NSkip_N, NSkip_T, dh )
-// Reference   :
+// Usage       :     MHM_RP half-step: AddExtraFlux_Template( g_Flu_Array_In[P],              NULL, g_Flux_Half_1PG, g_Mag_Array_In[P],  FLU_NXT,             0, N_HF_FLUX, NSkip_N, NSkip_T, dh );
+//               MHM/MHM_RP full-step: AddExtraFlux_Template(              NULL, g_PriVar_Half_1PG,   g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_HF_VAR, LR_GHOST_SIZE, N_FL_FLUX, NSkip_N, NSkip_T, dh );
 //
-// Parameter   : g_Con_Var   : Array storing the input cell-centered conserved fluid variables (NCOMP_TOTAL)
-//               g_Pri_Var   : Array storing the input cell-centered primitive fluid variables (NCOMP_TOTAL_PLUS_MAG)
-//               g_Flux      : Array with hydrodynamic fluxes for adding the extra fluxes
-//               g_FC_B      : Array storing the input face-centered B field
-//               dh          : Cell size
+// Parameter   : g_ConVar : Array storing the input cell-centered conserved fluid variables (NCOMP_TOTAL)
+//               g_PriVar : Array storing the input cell-centered primitive fluid variables (NCOMP_TOTAL_PLUS_MAG)
+//               g_Flux   : Array with hydrodynamic fluxes for adding the extra fluxes
+//               g_FC_B   : Array storing the input face-centered B field
+//               N_Var    : Size of g_ConVar/g_PriVar
+//               N_Ghost  : Ghost zone size of data-reconstruction
+//               N_Flux   : Size of flux
+//               NSkip_N  : Empty size of flux on normal     direction
+//               NSkip_T  : Empty size of flux on transverse direction
+//               dh       : Cell size
 //
-// Return      : g_Flux_Half[]
+// Return      : g_Flux[]
 //-----------------------------------------------------------------------------------------
 void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
                             const real g_PriVar[][ CUBE(FLU_NXT) ],
@@ -182,7 +183,6 @@ void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
 #endif
 */
 
-/*
 //       2. compute the mean magnetic field at the face-centered flux location
 #        ifdef MHD
          real B_N_mean, B_T1_mean, B_T2_mean;
@@ -249,7 +249,6 @@ void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
 //       5. flux add-up
          g_Flux[d][DENS][idx_flux] += Extra_Flux;
-*/
       } // CGPU_LOOP( idx, size_i*size_j*size_k )
    } // for (int d=0; d<3; d++)
 
@@ -266,19 +265,18 @@ void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //
 // Description : Add extra flux only in Hancock predict
 //
-// Note        : 1.
-//               2.
+// Note        : 1. Only for MHM half-step
 //
-// Usage       :
-// Reference   :
+// Usage       : MHM half-step : AddExtraFlux_HancockPredict_Template( Flux, g_cc_array, g_FC_B, cc_idx, cc_i, cc_j, cc_k, NGhost, dh );
 //
-// Parameter   : g_Con_Var   : Array storing the input cell-centered conserved fluid variables
-//               g_Pri_Var   : Array storing the input cell-centered primitive fluid variables
-//               g_Flux      : Array with hydrodynamic fluxes for adding the extra fluxes
-//               g_FC_B      : Array storing the input face-centered B field
-//               dh          : Cell size
+// Parameter   : Flux         : Array with hydrodynamic fluxes for adding the extra fluxes
+//               g_g_cc_array : Array storing the input cell-centered conserved fluid variables
+//               g_FC_B       : Array storing the input face-centered B field
+//               cc_idx/i/j/k : Index of g_cc_array
+//               NGhost       : Ghost zone size of data-reconstruction
+//               dh           : Cell size
 //
-// Return      : g_Flux_Half[]
+// Return      : Flux[]
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
 void AddExtraFlux_HancockPredict_Template(       real Flux[][NCOMP_TOTAL_PLUS_MAG],
