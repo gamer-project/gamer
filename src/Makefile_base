@@ -353,7 +353,7 @@ endif # COSMIC_RAY
 
 # microphysics source files
 # ------------------------------------------------------------------------------------
-CPU_FILE    += Microphysics_Init.cpp  Microphysics_End.cpp
+CPU_FILE    += Microphysics_Init.cpp  Microphysics_End.cpp  CPU_Hydro_AddExtraFlux.cpp
 
 vpath %.cpp    Microphysics
 vpath %.cu     Microphysics

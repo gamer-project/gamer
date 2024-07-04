@@ -156,6 +156,18 @@ void CR_AddDiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 #endif // #ifdef __CUDACC__ ... else ...
 
 
+void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
+                            const real g_PriVar[][ CUBE(FLU_NXT) ],
+                                  real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                            const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
+                            const int N_Var,
+                            const int Var_Offset,
+                            const int N_Flux,
+                            const int NSkip_N,
+                            const int NSkip_T,
+                            const real dh );
+
+
 // internal functions
 #if ( FLU_SCHEME == MHM_RP )
 GPU_DEVICE
@@ -393,6 +405,14 @@ void CPU_FluidSolver_MHM(
 #        endif
 #        endif // #if ( FLU_SCHEME == MHM )
 
+#           ifdef MHD
+            const int NSkip_N = 0;
+            const int NSkip_T = 0;
+#           else
+            const int NSkip_N = 0;
+            const int NSkip_T = 1;
+#           endif
+
 
 //       1. half-step prediction
 //       1-a. MHM_RP: use Riemann solver to calculate the half-step fluxes
@@ -441,6 +461,8 @@ void CPU_FluidSolver_MHM(
 #        ifdef CR_DIFFUSION
          CR_AddDiffuseFlux_HalfStep( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P], g_PriVar_1PG+MAG_OFFSET, dh, &MicroPhy );
 #        endif
+
+         AddExtraFlux_Template( g_Flu_Array_In[P], NULL, g_Flux_Half_1PG, g_Mag_Array_In[P], FLU_NXT, 0, N_HF_FLUX, NSkip_N, NSkip_T, dh );
 
 
 //       1-a-3. evaluate electric field and update B field at the half time-step
@@ -518,13 +540,6 @@ void CPU_FluidSolver_MHM(
 
 
 //          2. evaluate the full-step fluxes
-#           ifdef MHD
-            const int NSkip_N = 0;
-            const int NSkip_T = 0;
-#           else
-            const int NSkip_N = 0;
-            const int NSkip_T = 1;
-#           endif
 
 //          hydrodynamic fluxes
             Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T,
@@ -537,6 +552,7 @@ void CPU_FluidSolver_MHM(
             CR_AddDiffuseFlux_FullStep( g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_FL_FLUX, dh, &MicroPhy );
 #           endif
 
+            AddExtraFlux_Template( NULL, g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_HF_VAR, LR_GHOST_SIZE, N_FL_FLUX, NSkip_N, NSkip_T, dh );
 
             if ( StoreFlux )
                Hydro_StoreIntFlux( g_FC_Flux_1PG, g_Flux_Array[P], N_FL_FLUX );
