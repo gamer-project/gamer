@@ -24,6 +24,7 @@ jobs:
           python sync_runtime_parameter.py
       - name: move markdown
         run: |
+          ll
           mv test.md ../../doc/wiki/Runtime-Parameters:-All.md
       - name: make a commit
         run: |
