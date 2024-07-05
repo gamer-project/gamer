@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - test_workflow
+      - wiki_sync_parameter_md
 
 env:
   GIT_AUTHOR_NAME: ${{ github.actor }}
