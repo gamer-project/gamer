@@ -24,7 +24,7 @@ jobs:
           python sync_runtime_parameter.py
       - name: move markdown
         run: |
-          mv tool/wiki/test.md doc/wiki/Runtime-Parameters:-All.md
+          mv tool/wiki/Runtime-Parameters:-All.md doc/wiki/
       - name: set git config
         run: |
           git config --global user.email "${{env.GIT_AUTHOR_NAME}}"
@@ -34,7 +34,6 @@ jobs:
           git status
           git add doc/wiki/Runtime-Parameters:-All.md
           git commit -m "[Workflow] Update all parameters wiki page"
-
       - name: push to branch
         run: |
           git push
