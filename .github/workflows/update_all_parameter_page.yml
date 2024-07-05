@@ -24,11 +24,11 @@ jobs:
           python sync_runtime_parameter.py
       - name: move markdown
         run: |
-          ls -a
-          mv test.md ../../doc/wiki/Runtime-Parameters:-All.md
+          pwd
+          mv tool/wiki/test.md doc/wiki/Runtime-Parameters:-All.md
       - name: make a commit
         run: |
-          cd ../../
+          pwd
           git status
           git add doc/wiki/Runtime-Parameters:-All.md
           git commit -m "[Workflow] Update all parameters wiki page"
