@@ -26,7 +26,7 @@ LINK_FILES = ["../../doc/wiki/Runtime-Parameters:-General.md",
               "../../doc/wiki/Runtime-Parameters:-Miscellaneous.md"
               ]
 
-OUT_MD = "test.md"
+OUT_MD = "Runtime-Parameters:-All.md"
 FIRST_PARAM = "BOX_SIZE"
 
 REPLACE_DICT = { "NoMin_double":"None", "NoMax_double":"None", "NoDef_double":"None",
