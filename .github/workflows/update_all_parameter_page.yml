@@ -2,6 +2,9 @@ name: Update all parameter wiki page
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - test_workflow
 
 env:
   GIT_AUTHOR_NAME: ${{ github.actor }}
