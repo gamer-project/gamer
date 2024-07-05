@@ -32,7 +32,7 @@ jobs:
       - name: make a commit and push
         run: |
           git diff --exit-code doc/wiki/Runtime-Parameters:-All.md || \
-          git add doc/wiki/Runtime-Parameters:-All.md && echo "test1"
+          ( git add doc/wiki/Runtime-Parameters:-All.md && echo "test1" )
           #git commit -m "[Workflow] Update all parameters wiki page"
           #git push
           echo "File pushed"
