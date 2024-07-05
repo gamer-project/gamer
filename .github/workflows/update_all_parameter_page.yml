@@ -29,11 +29,10 @@ jobs:
         run: |
           git config --global user.email "${{env.GIT_AUTHOR_NAME}}"
           git config --global user.name "${{env.GIT_AUTHOR_EMAIL}}"
-      - name: make a commit
+      - name: make a commit and push
         run: |
-          git status
-          git add doc/wiki/Runtime-Parameters:-All.md
-          git commit -m "[Workflow] Update all parameters wiki page"
-      - name: push to branch
-        run: |
-          git push
+          git diff --exit-code doc/wiki/Runtime-Parameters:-All.md &&\
+          git add doc/wiki/Runtime-Parameters:-All.md &&\
+          git commit -m "[Workflow] Update all parameters wiki page" &&\
+          git push &&\
+          echo "File pushed"
