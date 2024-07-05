@@ -1,4 +1,4 @@
-name: Update all parameter wiki page
+name: Update all parameters wiki page
 
 on:
   workflow_dispatch:
@@ -9,6 +9,7 @@ on:
 env:
   GIT_AUTHOR_NAME: ${{ github.actor }}
   GIT_AUTHOR_EMAIL: ${{ secrets.MY_EMAIL }}
+  GIT_TOKEN: ${{ secrets.TOKEN_FOR_WIKI }}
 
 jobs:
   clone-repo:
@@ -18,10 +19,19 @@ jobs:
         uses: actions/checkout@v4
       - name: run script
         run: |
-          pwd
-          ls -a
-          git status
           cd tool/wiki
           python --version
           python sync_runtime_parameter.py
+      - name: move markdown
+        run: |
+          mv test.md ../../doc/wiki/Runtime-Parameters:-All.md
+      - name: make a commit
+        run: |
+          cd ../../
           git status
+          git add doc/wiki/Runtime-Parameters:-All.md
+          git commit -m "[Workflow] Update all parameters wiki page"
+
+      - name: push to branch
+        run: |
+          git push
