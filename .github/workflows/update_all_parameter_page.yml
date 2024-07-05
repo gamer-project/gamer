@@ -17,3 +17,8 @@ jobs:
         run: |
           pwd
           ls -a
+          git status
+          cd tool/wiki
+          python --version
+          python sync_runtime_parameter.py
+          git status
