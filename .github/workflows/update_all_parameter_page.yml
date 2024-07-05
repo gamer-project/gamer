@@ -9,7 +9,6 @@ on:
 env:
   GIT_AUTHOR_NAME: ${{ github.actor }}
   GIT_AUTHOR_EMAIL: ${{ secrets.MY_EMAIL }}
-  GIT_TOKEN: ${{ secrets.TOKEN_FOR_WIKI }}
 
 jobs:
   Update-all-parameters-page:
@@ -17,6 +16,8 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.TOKEN_FOR_WIKI }}
       - name: run script
         run: |
           cd tool/wiki
