@@ -505,10 +505,16 @@ void Aux_Check_Conservation( const char *comment )
 #        endif // #if ( MODEL != PAR_ONLY )
 #        endif // #ifdef MASSIVE_PARTICLES
          ConservedRefLoaded = true;
-      } // if ( FirstTime  &&  OPT__INIT != INIT_BY_RESTART )
+      } // if ( !ConservedRefLoaded )
 
 //    only record the reference if not check conservation
-      if ( ! OPT__CK_CONSERVATION ) return;
+      if ( ! OPT__CK_CONSERVATION )
+      {
+#        if ( MODEL == ELBDM )
+         delete [] Flu_ELBDM;
+#        endif
+         return;
+      }
 
       if ( FirstTime )
       {
