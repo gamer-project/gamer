@@ -1,0 +1,19 @@
+name: Update all parameter wiki page
+
+on:
+  workflow_dispatch:
+
+env:
+  GIT_AUTHOR_NAME: ${{ github.actor }}
+  GIT_AUTHOR_EMAIL: ${{ secrets.MY_EMAIL }}
+
+jobs:
+  clone-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+      - name: run script
+        run: |
+          pwd
+          ls -a
