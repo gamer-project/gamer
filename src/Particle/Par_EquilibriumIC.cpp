@@ -194,26 +194,22 @@ void Par_EquilibriumIC::setDensProfTableFilename( const char* DensProfTableFilen
 // Note        :  1.
 //
 // Parameter   :  ParNum      : Number of particles of the particle cloud
-//                MaxR        : Maximum radius for the particles in this cloud
-//                Radial_NBin : Number of bins in the radial direction for the profiles of density, enclosed mass, potential, etc
-//                Energy_NBin : Number of bins in the energy space for the distribution function
+//                MaxR        : Maximum radius for the scattered particles in this cloud
+//                NBin        : Number of bins of radial profiles inside the MaxR
 //                RSeed       : Random seed for setting the particle position and velocity
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Par_EquilibriumIC::setParticleParameters( const long ParNum, const double MaxR, const int Radial_NBin, const int Energy_NBin, const int RSeed )
+void Par_EquilibriumIC::setParticleParameters( const long ParNum, const double MaxR, const int NBin, const int RSeed )
 {
    Cloud_Par_Num  = ParNum;
    Cloud_MaxR     = MaxR;
-   RNBin          = Radial_NBin;
-   ENBin          = Energy_NBin;
+   Cloud_NBin     = NBin;
    Cloud_RSeed    = RSeed;
 
-   if ( RNBin < 2 )   Aux_Error( ERROR_INFO, "RNBin = %d is less than 2 !!\n", RNBin );
-   if ( ENBin < 2 )   Aux_Error( ERROR_INFO, "ENBin = %d is less than 2 !!\n", ENBin );
-
-   RLastIdx = RNBin-1;
-   ELastIdx = ENBin-1;
+   if ( Cloud_Par_Num < 1 )   Aux_Error( ERROR_INFO, "Cloud_Par_Num = %d is less than 1 !!\n", Cloud_Par_Num );
+   if ( Cloud_MaxR <= 0.0 )   Aux_Error( ERROR_INFO, "Cloud_MaxR = % 14.7e is not positive !!\n", Cloud_MaxR );
+   if ( Cloud_NBin < 1    )   Aux_Error( ERROR_INFO, "Cloud_NBin = %d is less than 1 !!\n", Cloud_NBin       );
 
 } // FUNCTION : setParticleParameters
 
@@ -285,6 +281,21 @@ void Par_EquilibriumIC::loadInputDensProfTable()
       Aux_Error( ERROR_INFO, "Minimum radius (%14.7e) in density table %s is larger then Cloud_MaxR (%14.7e) !!\n",
                              InputTable_DensProf_Radius[0], DensProf_Table_Name, Cloud_MaxR );
 
+// Check Cloud_NBin must be larger than the number of bins inside Cloud_MaxR in the density table
+   int InputTable_NBins_InsideMaxR = 0;
+   for (int i=0; i<InputTable_DensProf_NBin; i++)
+   {
+      if ( InputTable_DensProf_Radius[i] > Cloud_MaxR )   break;
+
+      InputTable_NBins_InsideMaxR += 1;
+   }
+   if ( Cloud_NBin < InputTable_NBins_InsideMaxR )
+      Aux_Message( stderr, "WARNING : Cloud_NBin = %d is smaller than the number of bins (= %d) inside Cloud_MaxR (= %14.7e) in input density table \"%s\" !!\n",
+                           Cloud_NBin, InputTable_NBins_InsideMaxR, Cloud_MaxR, DensProf_Table_Name );
+
+// Reset the maximum radius of RArray according to the density table
+   RArray_MaxR = MIN( RArray_MaxR, InputTable_DensProf_Radius[InputTable_DensProf_NBin-1] );
+
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading Density Profile Table: \"%s\" ... done\n", DensProf_Table_Name );
 
 } // FUNCTION : loadInputDensProfTable
@@ -318,6 +329,19 @@ void Par_EquilibriumIC::loadInputExtPotTable()
    else
       InputTable_ExtPot_NBin = NRowR;
 
+// Check maximum radius in the external potential table must be larger than Cloud_MaxR
+   if ( InputTable_ExtPot_Radius[InputTable_ExtPot_NBin-1] < Cloud_MaxR )
+      Aux_Error( ERROR_INFO, "Maximum radius (%14.7e) in external potential table %s is smaller then Cloud_MaxR (%14.7e) !!\n",
+                             InputTable_ExtPot_Radius[InputTable_ExtPot_NBin-1], ExtPot_Table_Name, Cloud_MaxR );
+
+// Check minimum radius in the external potential table must be smaller than Cloud_MaxR
+   if ( InputTable_ExtPot_Radius[0] > Cloud_MaxR )
+      Aux_Error( ERROR_INFO, "Minimum radius (%14.7e) in external potential table %s is larger then Cloud_MaxR (%14.7e) !!\n",
+                             InputTable_ExtPot_Radius[0], ExtPot_Table_Name, Cloud_MaxR );
+
+// Reset the maximum radius of RArray according to the external potential table
+   RArray_MaxR = MIN( RArray_MaxR, InputTable_ExtPot_Radius[InputTable_ExtPot_NBin-1] );
+
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading ExtPot Profile Table: \"%s\" ... done\n", ExtPot_Table_Name );
 
 } // FUNCTION : loadInputExtPotTable
@@ -340,23 +364,30 @@ void Par_EquilibriumIC::constructDistribution()
 {
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "Constructing the distribution in Par_EquilibriumIC ...\n" );
 
+// maximum radius for the profiles to calculate the distribution function, should be much larger than the Cloud_MaxR
+   RArray_MaxR = 1.0e3*Cloud_MaxR;
+
 // Load the input density table
    if ( Cloud_Model == CLOUD_MODEL_TABLE )   loadInputDensProfTable();
    if ( AddExtPot_Table )                    loadInputExtPotTable();
 
 // Construct RArray
-   RArray_R         = new double [RNBin];
-   RArray_Rho       = new double [RNBin];
-   RArray_M_Enc     = new double [RNBin];
-   RArray_Phi       = new double [RNBin];
-   RArray_dRho_dPsi = new double [RNBin];
+   RNPoints         = MIN( __INT_MAX__, MAX( 1000, (int)ceil( Cloud_NBin*(RArray_MaxR/Cloud_MaxR)+1 ) ) ); // within a reasonable range, try to keep roughly the same Cloud_NBin inside Cloud_MaxR
+   RLastIdx         = RNPoints-1;
+   RArray_R         = new double [RNPoints];
+   RArray_Rho       = new double [RNPoints];
+   RArray_M_Enc     = new double [RNPoints];
+   RArray_Phi       = new double [RNPoints];
+   RArray_dRho_dPsi = new double [RNPoints];
 
    constructRadialArray();
 
 // Construct EArray
-   EArray_DFunc     = new double [ENBin];
-   EArray_IntDFunc  = new double [ENBin];
-   EArray_E         = new double [ENBin];
+   ENPoints         = MIN( __INT_MAX__, MAX( 1000, (int)ceil( 2*(RArray_Phi[0]/RArray_Phi[RLastIdx])+1 ) ) ); // within a reasonable range, estimated by the potential difference at the center
+   ELastIdx         = ENPoints-1;
+   EArray_DFunc     = new double [ENPoints];
+   EArray_IntDFunc  = new double [ENPoints];
+   EArray_E         = new double [ENPoints];
 
    constructEnergyArray();
 
@@ -384,30 +415,30 @@ void Par_EquilibriumIC::constructDistribution()
 void Par_EquilibriumIC::constructRadialArray()
 {
 // Interval of radial bins
-   RArray_dR = Cloud_MaxR/(RNBin-1);
+   RArray_dR = RArray_MaxR/(RNPoints-1);
 
 // Array of Radius, R
-   for (int b=0; b<RNBin; b++)        RArray_R[b]         = RArray_dR*b;
+   for (int i=0; i<RNPoints; i++)     RArray_R[i]         = RArray_dR*i;
 
 // Array of Density, Rho(R)
-   for (int b=1; b<RNBin; b++)        RArray_Rho[b]       = getDensity( RArray_R[b] );
+   for (int i=1; i<RNPoints; i++)     RArray_Rho[i]       = getDensity( RArray_R[i] );
    RArray_Rho[0]                                          = 2.0*RArray_Rho[1]-RArray_Rho[2];   // where r=0
 
 // Array of Enclosed Mass, M_Enc(R) = \int_{0}^{R} Rho(r) 4\pi R^2 dR
    RArray_M_Enc[0]                                        = 0;   // where r=0
-   for (int b=1; b<RNBin; b++)        RArray_M_Enc[b]     = RArray_M_Enc[b-1] + LinearDensityShellMass( RArray_R[b-1], RArray_R[b], RArray_Rho[b-1], RArray_Rho[b] );
+   for (int i=1; i<RNPoints; i++)     RArray_M_Enc[i]     = RArray_M_Enc[i-1] + LinearDensityShellMass( RArray_R[i-1], RArray_R[i], RArray_Rho[i-1], RArray_Rho[i] );
 
 // Array of Gravitational Potential, Phi(R) = Phi(\infty) - \int_{\infty}^{R} g dR, where g = -GM/R^2
    RArray_Phi[RLastIdx]                                   = -NEWTON_G*RArray_M_Enc[RLastIdx]/RArray_R[RLastIdx];
-   for (int b=RLastIdx-1; b>0; b--)   RArray_Phi[b]       = RArray_Phi[b+1] + -NEWTON_G*0.5*(RArray_M_Enc[b]/SQR( RArray_R[b] ) + RArray_M_Enc[b+1]/SQR( RArray_R[b+1] ))*RArray_dR;
+   for (int i=RLastIdx-1; i>0; i--)   RArray_Phi[i]       = RArray_Phi[i+1] + -NEWTON_G*0.5*(RArray_M_Enc[i]/SQR( RArray_R[i] ) + RArray_M_Enc[i+1]/SQR( RArray_R[i+1] ))*RArray_dR;
    RArray_Phi[0]                                          = RArray_Phi[1]   + -NEWTON_G*0.5*(RArray_M_Enc[1]/SQR( RArray_R[1] ))*RArray_dR;
 
 // Adding External Potentil
-   for (int b=0; b<RNBin; b++)        RArray_Phi[b]      += getExternalPotential( RArray_R[b] );
+   for (int i=0; i<RNPoints; i++)     RArray_Phi[i]      += getExternalPotential( RArray_R[i] );
 
 // Array of dRho/dPsi, dRho/dPsi = -(dRho/dPhi), where Psi = -Phi
    RArray_dRho_dPsi[0]                                    = -(RArray_Rho[1]        - RArray_Rho[0]         )/(RArray_Phi[1]        - RArray_Phi[0]         );
-   for (int b=1; b<RNBin-1; b++)      RArray_dRho_dPsi[b] = -(RArray_Rho[b+1]      - RArray_Rho[b-1]       )/(RArray_Phi[b+1]      - RArray_Phi[b-1]       );
+   for (int i=1; i<RNPoints-1; i++)   RArray_dRho_dPsi[i] = -(RArray_Rho[i+1]      - RArray_Rho[i-1]       )/(RArray_Phi[i+1]      - RArray_Phi[i-1]       );
    RArray_dRho_dPsi[RLastIdx]                             = -(RArray_Rho[RLastIdx] - RArray_Rho[RLastIdx-1])/(RArray_Phi[RLastIdx] - RArray_Phi[RLastIdx-1]);
 
 } // FUNCTION : constructRadialArray
@@ -428,25 +459,25 @@ void Par_EquilibriumIC::constructRadialArray()
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::constructEnergyArray()
 {
-// Ralative Energy (Binding Energy) ranges from Psi_Min to Psi_Max, where Psi = -Phi is the Relative Potential
+// Ralative Energy (Binding Energy) E ranges from Psi_Min to Psi_Max, where Psi = -Phi is the Relative Potential
    EArray_MinE = 0.0;
    EArray_MaxE = -RArray_Phi[0];
-   EArray_dE   = (EArray_MaxE-EArray_MinE)/(ENBin-1);
+   EArray_dE   = (EArray_MaxE-EArray_MinE)/(ENPoints-1);
 
-// Array of Relative Energy (Binding Energy), E = -(Phi + 1/2 v^2) = Psi - 1/2 v^2 = 1/2 ( v_{esc}^2 - v^2 )
-   for (int b=0; b<ENBin; b++)     EArray_E[b]        = EArray_MinE + b*EArray_dE;
+// Array of Relative Energy (Binding Energy), E = -(Phi + 1/2 v^2) = Psi - 1/2 v^2 = 1/2 ( v_{esc}^2 - v^2 ). See Eq.(4.41) in Binney & Tremaine 2008, Galactic Dynamics
+   for (int i=0; i<ENPoints; i++)     EArray_E[i]        = EArray_MinE + i*EArray_dE;
 
-// Array of Integrated Distribution Function, IntDFunc(E) = \frac{1}{\sqrt{8}\pi^2} \int_{0}^{E} (\frac{ 1 }{ \sqrt{E-Psi} }) (\frac{ dRho }{ dPsi }) dPsi
-   for (int b=0; b<ENBin; b++)     EArray_IntDFunc[b] = getIntegratedDistributionFunction( EArray_E[b] );
+// Array of Integrated Distribution Function, IntDFunc(E) = \frac{1}{\sqrt{8}\pi^2} \int_{0}^{E} (\frac{ 1 }{ \sqrt{E-Psi} }) (\frac{ dRho }{ dPsi }) dPsi. See Eq.(4.46a) in Binney & Tremaine 2008, Galactic Dynamics
+   for (int i=0; i<ENPoints; i++)     EArray_IntDFunc[i] = getIntegratedDistributionFunction( EArray_E[i] );
 
-// Array of Distribution Function, DFunc(E) = f(E) = d/dE IntDFunc(E), which is the Eddington formula
-   EArray_DFunc[0]                                    = (EArray_IntDFunc[1]        - EArray_IntDFunc[0]         )/EArray_dE;
-   for (int b=1; b<ENBin-1; b++)   EArray_DFunc[b]    = (EArray_IntDFunc[b+1]      - EArray_IntDFunc[b-1]       )/(2.0*EArray_dE);
-   EArray_DFunc[ELastIdx]                             = (EArray_IntDFunc[ELastIdx] - EArray_IntDFunc[ELastIdx-1])/EArray_dE;
+// Array of Distribution Function, DFunc(E) = f(E) = d/dE IntDFunc(E), which is the Eddington's formula Eq.(4.46a) in Binney & Tremaine 2008, Galactic Dynamics
+   EArray_DFunc[0]                                       = (EArray_IntDFunc[1]        - EArray_IntDFunc[0]         )/EArray_dE;
+   for (int i=1; i<ENPoints-1; i++)   EArray_DFunc[i]    = (EArray_IntDFunc[i+1]      - EArray_IntDFunc[i-1]       )/(2.0*EArray_dE);
+   EArray_DFunc[ELastIdx]                                = (EArray_IntDFunc[ELastIdx] - EArray_IntDFunc[ELastIdx-1])/EArray_dE;
 
 // check negative distribution function
-   for (int b=0; b<ENBin; b++)
-      if ( EArray_DFunc[b] < 0 )   EArray_DFunc[b] = 0.0;
+   for (int i=0; i<ENPoints; i++)
+      if ( EArray_DFunc[i] < 0 )      EArray_DFunc[i]    = 0.0;
 
 } // FUNCTION : constructEnergyArray
 
@@ -466,30 +497,34 @@ void Par_EquilibriumIC::printArrays()
 {
    if ( MPI_Rank == 0 )
    {
+      static int Cloud_ID = 1;
+
 //    RArray
       char Filename_R[MAX_STRING];
-      sprintf( Filename_R, "%s%d%s", "Record__ParEquilibriumIC_Model_", Cloud_Model, "_RArray" );
-      FILE *File_R = fopen( Filename_R, "a" );
+      sprintf( Filename_R, "%s%d%s%d", "Record__ParEquilibriumIC_Model_", Cloud_Model, "_RArray_", Cloud_ID );
+      FILE *File_R = fopen( Filename_R, "w" );
 
       fprintf( File_R, "#%21s %21s %21s %21s %21s\n", "R", "Rho", "M_Enc", "Phi", "dRho_dPsi" );
 
-      for (int b=0; b<RNBin; b++)
+      for (int i=0; i<RNPoints; i++)
          fprintf( File_R, " %21.14e %21.14e %21.14e %21.14e %21.14e\n",
-                          RArray_R[b], RArray_Rho[b], RArray_M_Enc[b], RArray_Phi[b], RArray_dRho_dPsi[b] );
+                          RArray_R[i], RArray_Rho[i], RArray_M_Enc[i], RArray_Phi[i], RArray_dRho_dPsi[i] );
 
       fclose( File_R );
 
 //    EArray
       char Filename_E[MAX_STRING];
-      sprintf( Filename_E, "%s%d%s", "Record__ParEquilibriumIC_Model_", Cloud_Model, "_EArray" );
-      FILE *File_E = fopen( Filename_E, "a" );
+      sprintf( Filename_E, "%s%d%s%d", "Record__ParEquilibriumIC_Model_", Cloud_Model, "_EArray_", Cloud_ID );
+      FILE *File_E = fopen( Filename_E, "w" );
 
       fprintf( File_E, "#%21s %21s %21s\n", "E", "IntDFunc", "DFunc" );
 
-      for (int b=0; b<ENBin; b++)
-         fprintf( File_E, " %21.14e %21.14e %21.14e\n", EArray_E[b], EArray_IntDFunc[b], EArray_DFunc[b] );
+      for (int i=0; i<ENPoints; i++)
+         fprintf( File_E, " %21.14e %21.14e %21.14e\n", EArray_E[i], EArray_IntDFunc[i], EArray_DFunc[i] );
 
       fclose( File_E );
+
+      Cloud_ID += 1;
    }
 
 } // FUNCTION : printArrays
@@ -517,7 +552,7 @@ void Par_EquilibriumIC::constructParticles( real_par *Mass_AllRank, real_par *Po
 
 // Determine the total enclosed mass within the maximum radius
    const double TotCloudMass_Analytical = getAnalEnclosedMass( Cloud_MaxR );
-   TotCloudMass                         = ExtendedInterpolatedTable( Cloud_MaxR, RNBin, RArray_R, RArray_M_Enc );
+   TotCloudMass                         = ExtendedInterpolatedTable( Cloud_MaxR, RNPoints, RArray_R, RArray_M_Enc );
    ParticleMass                         = TotCloudMass/Cloud_Par_Num;
    TotCloudMassError                    = ( TotCloudMass - TotCloudMass_Analytical )/TotCloudMass_Analytical;
 
@@ -528,7 +563,7 @@ void Par_EquilibriumIC::constructParticles( real_par *Mass_AllRank, real_par *Po
    double RandomVectorR[3];
    double RandomVectorV[3];
 
-   CumulProbaDistr_GivenRadius = new double [ENBin];
+   CumulProbaDistr_GivenRadius = new double [ENPoints];
 
 // Set particle attributes
    for (long p=Par_Idx0; p<Par_Idx0+Cloud_Par_Num; p++)
@@ -537,7 +572,7 @@ void Par_EquilibriumIC::constructParticles( real_par *Mass_AllRank, real_par *Po
       const double RandomSampleM = TotCloudMass*Random_Num_Gen->GetValue( 0, 0.0, 1.0 );
 
 //    Ramdomly sample the radius from the enclosed mass profile with linear interpolation
-      const double RandomSampleR = Mis_InterpolateFromTable( RNBin, RArray_M_Enc, RArray_R, RandomSampleM );
+      const double RandomSampleR = Mis_InterpolateFromTable( RNPoints, RArray_M_Enc, RArray_R, RandomSampleM );
 
 //    Randomly set the position vector with a given radius
       getRandomVector_GivenLength( RandomSampleR, RandomVectorR );
@@ -628,8 +663,8 @@ double Par_EquilibriumIC::getAnalEnclosedMass( const double r )
 //    Arguments for the gsl integration
       const double lower_limit = 0.0;
       const double upper_limit = r;
-      const double abs_err_lim = 1.0e-6;
-      const double rel_err_lim = 1.0e-6;
+      const double abs_err_lim = 1.0e-4;
+      const double rel_err_lim = 1.0e-4;
       const int    integ_size  = 1000;
       const int    integ_rule  = 1;    // 1 = GSL_INTEG_GAUSS15, the 15 point Gauss-Kronrod rule
 
@@ -710,7 +745,7 @@ double Par_EquilibriumIC::getExternalPotential( const double r )
 double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
 {
 // The relative potential at this radius
-   const double Psi = -ExtendedInterpolatedTable( r, RNBin, RArray_R, RArray_Phi );
+   const double Psi = -ExtendedInterpolatedTable( r, RNPoints, RArray_R, RArray_Phi );
 
 // Cumulative Probability = \int_{v}^{v_min} v^2 f(E) dv
 //                        = \int_{E_min}^{E} (2*(Psi-E)) f(E) \frac{ 1 }{ \sqrt{ 2*( Psi - E )} } dE
@@ -718,18 +753,18 @@ double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
    double Probability;
 
    CumulProbaDistr_GivenRadius[0] = 0.0;
-   for (int b=1; b<ENBin; b++)
+   for (int i=1; i<ENPoints; i++)
    {
-      if ( EArray_E[b] > Psi )   Probability = ( EArray_E[b-1] > Psi ) ? 0.0 : 0.5*EArray_DFunc[b-1]*sqrt(2.0*(Psi-EArray_E[b-1]))*(Psi-EArray_E[b-1]);
-      else                       Probability = 0.5*( EArray_DFunc[b-1]*sqrt(2.0*(Psi-EArray_E[b-1])) +
-                                                     EArray_DFunc[b  ]*sqrt(2.0*(Psi-EArray_E[b  ])) )*EArray_dE;
+      if ( EArray_E[i] > Psi )   Probability = ( EArray_E[i-1] > Psi ) ? 0.0 : 0.5*EArray_DFunc[i-1]*sqrt(2.0*(Psi-EArray_E[i-1]))*(Psi-EArray_E[i-1]);
+      else                       Probability = 0.5*( EArray_DFunc[i-1]*sqrt(2.0*(Psi-EArray_E[i-1])) +
+                                                     EArray_DFunc[i  ]*sqrt(2.0*(Psi-EArray_E[i  ])) )*EArray_dE;
 
-      CumulProbaDistr_GivenRadius[b] = CumulProbaDistr_GivenRadius[b-1] + Probability;
+      CumulProbaDistr_GivenRadius[i] = CumulProbaDistr_GivenRadius[i-1] + Probability;
    }
 
    const double TotalProbability        = CumulProbaDistr_GivenRadius[ELastIdx];
    const double RandomSampleProbability = TotalProbability*Random_Num_Gen->GetValue( 0, 0.0, 1.0 );
-   const double RandomSampleE           = Mis_InterpolateFromTable( ENBin, CumulProbaDistr_GivenRadius, EArray_E, RandomSampleProbability );
+   const double RandomSampleE           = Mis_InterpolateFromTable( ENPoints, CumulProbaDistr_GivenRadius, EArray_E, RandomSampleProbability );
 
 // v^2 = 2*(Psi-E)
    const double RandomSampleVelocity = ( RandomSampleE > Psi ) ? 0.0 : sqrt( 2.0*(Psi-RandomSampleE) );
@@ -754,19 +789,19 @@ double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
 //-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::getIntegratedDistributionFunction( const double E )
 {
-   const int    N_points = 1000;
-   const double dPsi     = E/N_points;
+   const int    N_intervals = MIN( (int)ceil(E/EArray_dE), 1000 );
+   const double dPsi     = E/N_intervals;
 
    double dRho_dPsi = 0.0;
    double integral  = 0.0;
-   for (int i=0; i<N_points; i++)
+   for (int i=0; i<N_intervals; i++)
    {
       const double Psi             = (i+0.5)*dPsi;
       const double dsqrt_EminusPsi = ( ( (Psi+0.5*dPsi) >= E ) ? 0.0 : sqrt( E-(Psi+0.5*dPsi) ) ) - sqrt( E-(Psi-0.5*dPsi) );
 
       if ( Psi > -RArray_Phi[RLastIdx] )
       {
-         dRho_dPsi = Mis_InterpolateFromTable( RNBin, RArray_Phi, RArray_dRho_dPsi, -(Psi) );
+         dRho_dPsi = Mis_InterpolateFromTable( RNPoints, RArray_Phi, RArray_dRho_dPsi, -(Psi) );
       }
       else
       {

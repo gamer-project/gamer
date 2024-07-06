@@ -17,8 +17,7 @@ extern double  *ParEqmIC_Cloud_EinastoPowerFactor;
 extern char   (*ParEqmIC_Cloud_DensityTable)[MAX_STRING];
 extern long    *ParEqmIC_Cloud_ParNum;
 extern double  *ParEqmIC_Cloud_MaxR;
-extern int     *ParEqmIC_Cloud_DensProfNBin;
-extern int     *ParEqmIC_Cloud_EnergyNBin;
+extern int     *ParEqmIC_Cloud_NBin;
 extern int     *ParEqmIC_Cloud_RSeed;
 extern int     *ParEqmIC_Cloud_AddExtPotAnaly;
 extern int     *ParEqmIC_Cloud_AddExtPotTable;
@@ -106,8 +105,7 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
          Cloud_Constructor.setCenterAndBulkVel( ParEqmIC_Cloud_Center [i][0], ParEqmIC_Cloud_Center [i][1], ParEqmIC_Cloud_Center [i][2],
                                                 ParEqmIC_Cloud_BulkVel[i][0], ParEqmIC_Cloud_BulkVel[i][1], ParEqmIC_Cloud_BulkVel[i][2] );
 
-         Cloud_Constructor.setParticleParameters( ParEqmIC_Cloud_ParNum[i], ParEqmIC_Cloud_MaxR[i],
-                                                  ParEqmIC_Cloud_DensProfNBin[i], ParEqmIC_Cloud_EnergyNBin[i], ParEqmIC_Cloud_RSeed[i] );
+         Cloud_Constructor.setParticleParameters( ParEqmIC_Cloud_ParNum[i], ParEqmIC_Cloud_MaxR[i], ParEqmIC_Cloud_NBin[i], ParEqmIC_Cloud_RSeed[i] );
 
          if ( strcmp( ParEqmIC_Cloud_Type[i], "Table" ) == 0 )
          {

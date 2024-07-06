@@ -2,14 +2,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Model
-MODEL = 5
+MODEL = 1
+ID    = 1
 
 
-# Parameters for Hernquist model
+# Parameters for analytical model
 G    = 1.0
 R0   = 1.0
 Rho0 = 1.0/(2*np.pi)
-M0   = 2*np.pi*Rho0*R0**3
 
 
 # Analytical solutoins for Hernquist model
@@ -17,35 +17,73 @@ def Density_Hernquist( r ):
     return Rho0/( ( r/R0 )*( 1.0+(r/R0) )**3 )
 
 def EnclosedMass_Hernquist( r ):
+    M0 = 2*np.pi*Rho0*R0**3
     return M0*( r**2 )/( r+R0 )**2
 
 def Potential_Hernquist( r ):
+    M0 = 2*np.pi*Rho0*R0**3
     return ( -G*M0/R0 )/( 1.0+(r/R0) )
 
 def DistributionFunction_Hernquist( E ):
-
+    M0   = 2*np.pi*Rho0*R0**3
     Etil = E*R0/(G*M0)
 
     return (2**(-0.5))*(2*np.pi*(G*M0*R0)**0.5)**(-3)*((Etil**0.5)/(1-Etil)**2)*((1-2*Etil)*(8*Etil**2-8*Etil-3)+(3*np.arcsin(Etil**0.5))/(Etil*(1-Etil))**0.5)
 
+# Analytical solutoins for Plummer model
+def Density_Plummer( r ):
+    return Rho0/( 1.0+(r/R0)**2 )**(2.5)
+
+def EnclosedMass_Plummer( r ):
+    M0 = 4.0/3.0*np.pi*Rho0*R0**3
+    return M0*( r**3 )/( r**2 + R0**2 )**(1.5)
+
+def Potential_Plummer( r ):
+    M0 = 4.0/3.0*np.pi*Rho0*R0**3
+    return -G*M0/( r**2 + R0**2 )**0.5
+
+def DistributionFunction_Plummer( E ):
+    M0 = 4.0/3.0*np.pi*Rho0*R0**3
+    return (24.0*np.sqrt(2.0))/(7.0*np.pi**3)*(R0**2/((G**5)*(M0**4)))*(E**3.5)
+
 
 # Analytical solutoins
 def Density_Analytical( r ):
-    return Density_Hernquist( r ) if MODEL == 5 else  np.full( np.shape(r), np.nan )
+    if MODEL == 5:
+        return Density_Hernquist( r )
+    elif MODEL == 1:
+        return Density_Plummer( r )
+    else:
+        return np.full( np.shape(r), np.nan )
 
 def EnclosedMass_Analytical( r ):
-    return EnclosedMass_Hernquist( r ) if MODEL == 5 else  np.full( np.shape(r), np.nan )
+    if MODEL == 5:
+        return EnclosedMass_Hernquist( r )
+    elif MODEL == 1:
+        return EnclosedMass_Plummer( r )
+    else:
+        return np.full( np.shape(r), np.nan )
 
 def Potential_Analytical( r ):
-    return Potential_Hernquist( r ) if MODEL == 5 else np.full( np.shape(r), np.nan )
+    if MODEL == 5:
+        return Potential_Hernquist( r )
+    elif MODEL == 1:
+        return Potential_Plummer( r )
+    else:
+        return np.full( np.shape(r), np.nan )
 
 def DistributionFunction_Analytical( E ):
-    return DistributionFunction_Hernquist( E ) if MODEL == 5 else np.full( np.shape(E), np.nan )
+    if MODEL == 5:
+        return DistributionFunction_Hernquist( E )
+    elif MODEL == 1:
+        return DistributionFunction_Plummer( E )
+    else:
+        return np.full( np.shape(E), np.nan )
 
 
 # Load the data
-R, Rho, M_Enc, Phi, dRho_dPsi = np.loadtxt( '../Record__ParEquilibriumIC_Model_%d_RArray'%MODEL, unpack=True )
-E, IntDFunc, DFunc            = np.loadtxt( '../Record__ParEquilibriumIC_Model_%d_EArray'%MODEL, unpack=True )
+R, Rho, M_Enc, Phi, dRho_dPsi = np.loadtxt( '../Record__ParEquilibriumIC_Model_%d_RArray_%d'%(MODEL,ID), unpack=True )
+E, IntDFunc, DFunc            = np.loadtxt( '../Record__ParEquilibriumIC_Model_%d_EArray_%d'%(MODEL,ID), unpack=True )
 
 
 # Sample points of analytical solutions

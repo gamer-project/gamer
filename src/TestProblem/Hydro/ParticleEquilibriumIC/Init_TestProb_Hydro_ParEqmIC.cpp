@@ -18,8 +18,7 @@ static double   ParEqmIC_SmallGas;                                // negligibly 
        char   (*ParEqmIC_Cloud_DensityTable)[MAX_STRING]  = NULL; // input density profile table of each cloud
        long    *ParEqmIC_Cloud_ParNum                     = NULL; // number of particles of each cloud
        double  *ParEqmIC_Cloud_MaxR                       = NULL; // maximum radius of each cloud
-       int     *ParEqmIC_Cloud_DensProfNBin               = NULL; // number of bins of density profile of each cloud
-       int     *ParEqmIC_Cloud_EnergyNBin                 = NULL; // number of bins of distribution function
+       int     *ParEqmIC_Cloud_NBin                       = NULL; // number of bins inside Cloud_MaxR in density profile of each cloud
        int     *ParEqmIC_Cloud_RSeed                      = NULL; // random seed for particles of each cloud
        int     *ParEqmIC_Cloud_AddExtPotAnaly             = NULL; // whether adding analytical external potential for each cloud
        int     *ParEqmIC_Cloud_AddExtPotTable             = NULL; // whether adding table external potential for each cloud
@@ -169,8 +168,7 @@ void SetParameter()
    ParEqmIC_Cloud_DensityTable       = new char   [ParEqmIC_NumCloud][MAX_STRING];
    ParEqmIC_Cloud_ParNum             = new long   [ParEqmIC_NumCloud];
    ParEqmIC_Cloud_MaxR               = new double [ParEqmIC_NumCloud];
-   ParEqmIC_Cloud_DensProfNBin       = new int    [ParEqmIC_NumCloud];
-   ParEqmIC_Cloud_EnergyNBin         = new int    [ParEqmIC_NumCloud];
+   ParEqmIC_Cloud_NBin               = new int    [ParEqmIC_NumCloud];
    ParEqmIC_Cloud_RSeed              = new int    [ParEqmIC_NumCloud];
    ParEqmIC_Cloud_AddExtPotAnaly     = new int    [ParEqmIC_NumCloud];
    ParEqmIC_Cloud_AddExtPotTable     = new int    [ParEqmIC_NumCloud];
@@ -202,8 +200,7 @@ void SetParameter()
       ReadPara->Add( "Cloud_DensityTable",          ParEqmIC_Cloud_DensityTable[i],         NoDef_str,     Useless_str,      Useless_str       );
       ReadPara->Add( "Cloud_ParNum",               &ParEqmIC_Cloud_ParNum[i],               1L,            1L,               NoMax_long        );
       ReadPara->Add( "Cloud_MaxR",                 &ParEqmIC_Cloud_MaxR[i],                 0.375,         Eps_double,       NoMax_double      );
-      ReadPara->Add( "Cloud_DensProfNBin",         &ParEqmIC_Cloud_DensProfNBin[i],         1000,          2,                NoMax_int         );
-      ReadPara->Add( "Cloud_EnergyNBin",           &ParEqmIC_Cloud_EnergyNBin[i],           1000,          2,                NoMax_int         );
+      ReadPara->Add( "Cloud_NBin",                 &ParEqmIC_Cloud_NBin[i],                 1000,          1,                NoMax_int         );
       ReadPara->Add( "Cloud_RSeed",                &ParEqmIC_Cloud_RSeed[i],                123,           0,                NoMax_int         );
       ReadPara->Add( "Cloud_AddExtPotAnaly",       &ParEqmIC_Cloud_AddExtPotAnaly[i],       0,             0,                1                 );
       ReadPara->Add( "Cloud_AddExtPotTable",       &ParEqmIC_Cloud_AddExtPotTable[i],       0,             0,                1                 );
@@ -288,11 +285,8 @@ void SetParameter()
 
       Aux_Message( stdout, "     number of particles                       = %ld\n",    ParEqmIC_Cloud_ParNum[i]             );
       Aux_Message( stdout, "     maximum radius of particles               = %13.7e\n", ParEqmIC_Cloud_MaxR[i]               );
+      Aux_Message( stdout, "     number of radial bins inside Cloud_MaxR   = %d\n",     ParEqmIC_Cloud_NBin[i]               );
       Aux_Message( stdout, "     random seed for setting particle position = %d\n",     ParEqmIC_Cloud_RSeed[i]              );
-      if ( strcmp( ParEqmIC_Cloud_Type[i], "Table" ) != 0 )
-      Aux_Message( stdout, "     number of radial bins in the dens profile = %d\n",     ParEqmIC_Cloud_DensProfNBin[i]       );
-
-      Aux_Message( stdout, "     number of bins in distribution function   = %d\n",     ParEqmIC_Cloud_EnergyNBin[i]         );
 
       Aux_Message( stdout, "     adding external potential analytical      = %d\n",     ParEqmIC_Cloud_AddExtPotAnaly[i]     );
       Aux_Message( stdout, "     adding external potential table           = %d\n",     ParEqmIC_Cloud_AddExtPotTable[i]     );
@@ -369,8 +363,7 @@ void End_ParEqmIC()
    delete [] ParEqmIC_Cloud_DensityTable;
    delete [] ParEqmIC_Cloud_ParNum;
    delete [] ParEqmIC_Cloud_MaxR;
-   delete [] ParEqmIC_Cloud_DensProfNBin;
-   delete [] ParEqmIC_Cloud_EnergyNBin;
+   delete [] ParEqmIC_Cloud_NBin;
    delete [] ParEqmIC_Cloud_RSeed;
    delete [] ParEqmIC_Cloud_AddExtPotAnaly;
    delete [] ParEqmIC_Cloud_AddExtPotTable;

@@ -33,7 +33,7 @@ class Par_EquilibriumIC
       void   setModelParameters      ( const double Rho0, const double R0 );
       void   setEinastoPowerFactor   ( const double EinastoPowerFactor );
       void   setDensProfTableFilename( const char* DensProfTableFilename );
-      void   setParticleParameters   ( const long ParNum, const double MaxR, const int Radial_NBin, const int Energy_NBin, const int RSeed );
+      void   setParticleParameters   ( const long ParNum, const double MaxR, const int NBin, const int RSeed );
       void   setExtPotParameters     ( const int AddingExternalPotential_Analytical,
                                        const int AddingExternalPotential_Table, const char* ExtPotTableFilename );
 
@@ -57,6 +57,7 @@ class Par_EquilibriumIC
       char   DensProf_Table_Name[MAX_STRING];
       long   Cloud_Par_Num                   = -1;
       double Cloud_MaxR                      = -1;
+      int    Cloud_NBin                      = -1;
       int    Cloud_RSeed                     = -1;
       int    AddExtPot_Analytical            =  0;
       int    AddExtPot_Table                 =  0;
@@ -84,9 +85,10 @@ class Par_EquilibriumIC
 
 //    Arrays of radial distribution of properties of the cloud
       void    constructRadialArray();
-      int     RNBin            = -1;
+      int     RNPoints         = -1;
       int     RLastIdx         = -1;
       double  RArray_dR        = -1;
+      double  RArray_MaxR      = -1;
       double *RArray_R         = NULL;
       double *RArray_Rho       = NULL;
       double *RArray_M_Enc     = NULL;
@@ -95,7 +97,7 @@ class Par_EquilibriumIC
 
 //    Arrays in energy space
       void    constructEnergyArray();
-      int     ENBin           = -1;
+      int     ENPoints        = -1;
       int     ELastIdx        = -1;
       double  EArray_dE       = -1;
       double  EArray_MinE     = -1;
