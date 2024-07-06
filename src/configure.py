@@ -746,8 +746,7 @@ def set_conditional_defaults( args ):
         else                   : args["eos"] = "GAMMA"
 
     if args["barotropic"] is None:
-        if   args["eos"] == "ISOTHERMAL": args["barotropic"] = True
-        else                            : args["barotropic"] = False 
+        args["barotropic"] = (args["eos"] == "ISOTHERMAL")
     return args
 
 def set_gpu( gpus, flags, args ):
