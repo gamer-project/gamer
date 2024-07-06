@@ -33,8 +33,8 @@
 void SetExtPotAuxArray_ParEqmIC( double AuxArray_Flt[], int AuxArray_Int[], const double Time )
 {
 // This external potential is the potential of the Plummer model = -G*M0/(r^2+R0^2)^(1/2)
-   const double Plummer_Rho0 = 1.0;
-   const double Plummer_R0   = 0.1;
+   const double Plummer_Rho0 = 80.0;
+   const double Plummer_R0   = 0.05;
    const double Plummer_M0   = (4.0/3.0)*M_PI*CUBE(Plummer_R0)*Plummer_Rho0;
 
    AuxArray_Flt[0] = amr->BoxCenter[0];     // x coordinate of the potential center

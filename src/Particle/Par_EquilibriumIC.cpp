@@ -929,7 +929,7 @@ double UserDefAnlaytical_ExtPot( const double r )
    return AnalyticalPoteProf_Hernquist( r, 0.1, 1.0 );
 */
 
-   return AnalyticalPoteProf_Plummer( r, 0.1, 1.0 );
+   return AnalyticalPoteProf_Plummer( r, 0.05, 80.0 );
 
 } // FUNCTION : UserDefAnlaytical_ExtPot
 
