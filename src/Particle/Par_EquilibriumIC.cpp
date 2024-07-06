@@ -8,18 +8,22 @@
 
 static double ExtendedInterpolatedTable   ( const double x, const int N, const double Table_x[], const double Table_y[] );
 static double LinearDensityShellMass      ( const double r0, const double r1, const double rho0, const double rho1 );
+static double UserDefAnlaytical_ExtPot    ( const double r );
 
-static double AnalyticalPoteProf_Plummer  ( const double r, const double R0, const double Rho0 );
 static double AnalyticalDensProf_Plummer  ( const double r, const double R0, const double Rho0 );
 static double AnalyticalMassProf_Plummer  ( const double r, const double R0, const double Rho0 );
+static double AnalyticalPoteProf_Plummer  ( const double r, const double R0, const double Rho0 );
 static double AnalyticalDensProf_NFW      ( const double r, const double R0, const double Rho0 );
 static double AnalyticalMassProf_NFW      ( const double r, const double R0, const double Rho0 );
+static double AnalyticalPoteProf_NFW      ( const double r, const double R0, const double Rho0 );
 static double AnalyticalDensProf_Burkert  ( const double r, const double R0, const double Rho0 );
 static double AnalyticalMassProf_Burkert  ( const double r, const double R0, const double Rho0 );
 static double AnalyticalDensProf_Jaffe    ( const double r, const double R0, const double Rho0 );
 static double AnalyticalMassProf_Jaffe    ( const double r, const double R0, const double Rho0 );
+static double AnalyticalPoteProf_Jaffe    ( const double r, const double R0, const double Rho0 );
 static double AnalyticalDensProf_Hernquist( const double r, const double R0, const double Rho0 );
 static double AnalyticalMassProf_Hernquist( const double r, const double R0, const double Rho0 );
+static double AnalyticalPoteProf_Hernquist( const double r, const double R0, const double Rho0 );
 static double AnalyticalDensProf_Einasto  ( const double r, const double R0, const double Rho0, const double Einasto_Power_Factor );
 
 static double MassIntegrand_Einasto       ( const double r, void* parameters );
@@ -414,7 +418,9 @@ void Par_EquilibriumIC::constructRadialArray()
 // Function    :  constructEnergyArray
 // Description :  Construct the energy-space arrays for the distribution function
 //
-// Note        :  1.
+// Note        :  1. Solve the ergodic distribution function from the density profile using the Eddington inversion
+//                2. Reference: Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Chapter 4.3 -- Chapter 4.3.1
+//                              Eddingtion A. S., 1916, MNRAS, doi:10.1093/mnras/76.7.572
 //
 // Parameter   :  None
 //
@@ -667,7 +673,6 @@ double Par_EquilibriumIC::getAnalEnclosedMass( const double r )
 // Description :  Get the external potential at radius r
 //
 // Note        :  1. Get the external potential from table interpolation or the analytical potential profile
-//                2. For the analytical potential, now there is only Plummer potential with hardcoded parameters
 //
 // Parameter   :  r : radius
 //
@@ -678,7 +683,7 @@ double Par_EquilibriumIC::getExternalPotential( const double r )
    double ext_pot;
 
    if      ( AddExtPot_Table      )   ext_pot = ExtendedInterpolatedTable( r, InputTable_ExtPot_NBin, InputTable_ExtPot_Radius, InputTable_ExtPot_Potential );
-   else if ( AddExtPot_Analytical )   ext_pot = AnalyticalPoteProf_Plummer( r, 0.1, 1.0 );
+   else if ( AddExtPot_Analytical )   ext_pot = UserDefAnlaytical_ExtPot( r );
    else                               ext_pot = 0.0;
 
    return ext_pot;
@@ -866,23 +871,32 @@ double LinearDensityShellMass( const double r0, const double r1, const double rh
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  AnalyticalPoteProf_Plummer
-// Description :  Analytical gravitational potential of the Plummer model
+// Function    :  UserDefAnlaytical_ExtPot
+// Description :  User-defined analytical external potential formula
 //
-// Note        :  1. \Phi(r) = \frac{ -G*M_0 }{ ( r^2 + a^2 )^{1/2} },
-//                    where M_0 = \frac{4\pi}{3} a^3 \rho_0
+// Note        :  1. As an example, there is a Plummer potential with hardcoded parameters
 //
-// Parameter   :  r    : input radius
-//                R0   : Plummer scale radius, a
-//                Rho0 : Plummer scale density, \rho_0
+// Parameter   :  r : radius
 //
-// Return      :  gravitational potential at the given radius
+// Return      :  external potential at radius r
 //-------------------------------------------------------------------------------------------------------
-double AnalyticalPoteProf_Plummer( const double r, const double R0, const double Rho0  )
+double UserDefAnlaytical_ExtPot( const double r )
 {
-   return -NEWTON_G*(4.0/3.0)*M_PI*CUBE(R0)*Rho0/sqrt( SQR(r) + SQR(R0) );
+// DEFINE YOUR FUNCTION HERE !!!
+/*
+   return -NEWTON_G*M/r;
+*/
 
-} // FUNCTION : AnalyticalPoteProf_Plummer
+// Or use one of the built-in models
+/*
+   return AnalyticalPoteProf_NFW( r, 0.1, 1.0 );
+   return AnalyticalPoteProf_Jaffe( r, 0.1, 1.0 );
+   return AnalyticalPoteProf_Hernquist( r, 0.1, 1.0 );
+*/
+
+   return AnalyticalPoteProf_Plummer( r, 0.1, 1.0 );
+
+} // FUNCTION : UserDefAnlaytical_ExtPot
 
 
 
@@ -934,6 +948,27 @@ double AnalyticalMassProf_Plummer( const double r, const double R0, const double
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalPoteProf_Plummer
+// Description :  Analytical gravitational potential of the Plummer model
+//
+// Note        :  1. \Phi(r) = \frac{ -G*M_0 }{ ( r^2 + a^2 )^{1/2} },
+//                    where M_0 = \frac{4\pi}{3} a^3 \rho_0
+//
+// Parameter   :  r    : input radius
+//                R0   : Plummer scale radius, a
+//                Rho0 : Plummer scale density, \rho_0
+//
+// Return      :  gravitational potential at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalPoteProf_Plummer( const double r, const double R0, const double Rho0  )
+{
+   return -NEWTON_G*(4.0/3.0)*M_PI*CUBE(R0)*Rho0/sqrt( SQR(r) + SQR(R0) );
+
+} // FUNCTION : AnalyticalPoteProf_Plummer
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  AnalyticalDensProf_NFW
 // Description :  Analytical density profile of the NFW model
 //
@@ -964,6 +999,7 @@ double AnalyticalDensProf_NFW( const double r, const double R0, const double Rho
 // Note        :  1. M(r) = 4\pi \rho_s r_s^3 [ \ln( \frac{ r_s + r }{ r_s } ) - \frac{ r }{ r_s + r } ]
 //                2. Reference: Navarro J.~F., Frenk C.~S., White S.~D.~M., 1996, ApJ, doi:10.1086/177173
 //                              Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
+//                              Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.66)
 //
 // Parameter   :  r    : input radius
 //                R0   : NFW scale radius, r_s
@@ -978,6 +1014,29 @@ double AnalyticalMassProf_NFW( const double r, const double R0, const double Rho
    return 4.0*M_PI*Rho0*CUBE(R0)*( log( 1.0+x ) - x/(1.0+x) );
 
 } // FUNCTION : AnalyticalMassProf_NFW
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalPoteProf_NFW
+// Description :  Analytical gravitational potential of the NFW model
+//
+// Note        :  1. \Phi(r) = -4\pi G\rho_s r_s^2 \frac{\ln(1+r/r_s)}{r/r_s}
+//                2. Reference: Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.67)
+//
+// Parameter   :  r    : input radius
+//                R0   : NFW scale radius, r_s
+//                Rho0 : NFW scale density, \rho_s
+//
+// Return      :  gravitational potential at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalPoteProf_NFW( const double r, const double R0, const double Rho0  )
+{
+   const double x = r/R0;
+
+   return -4.0*M_PI*NEWTON_G*Rho0*SQR(R0)*( log( 1.0+x )/x );
+
+} // FUNCTION : AnalyticalPoteProf_NFW
 
 
 
@@ -1062,6 +1121,7 @@ double AnalyticalDensProf_Jaffe( const double r, const double R0, const double R
 //                   ,where M_J = \rho_0*r_J^3 is the total mass
 //                2. Reference: Jaffe W., 1983, MNRAS, doi:10.1093/mnras/202.4.995
 //                              Ciotti L. and Ziaee Lorzad A., 2018, MNRAS, doi:10.1093/mnras/stx2771
+//                              Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.66)
 //
 // Parameter   :  r    : input radius
 //                R0   : Jaffe scale radius, r_J
@@ -1076,6 +1136,27 @@ double AnalyticalMassProf_Jaffe( const double r, const double R0, const double R
    return Rho0*CUBE(R0)*x/(1.0+x);
 
 } // FUNCTION : AnalyticalMassProf_Jaffe
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalPoteProf_Jaffe
+// Description :  Analytical gravitational potential of the Jaffe model
+//
+// Note        :  1. \Phi(r) = -G\rho_0 r_J^2 \ln(1+r_J/r)
+//                2. Reference: Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.67)
+//
+// Parameter   :  r    : input radius
+//                R0   : Jaffe scale radius, r_J
+//                Rho0 : Jaffe scale density, \rho_0
+//
+// Return      :  gravitational potential at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalPoteProf_Jaffe( const double r, const double R0, const double Rho0  )
+{
+   return -NEWTON_G*Rho0*SQR(R0)*log( 1.0 + R0/r );
+
+} // FUNCTION : AnalyticalPoteProf_Jaffe
 
 
 
@@ -1110,6 +1191,7 @@ double AnalyticalDensProf_Hernquist( const double r, const double R0, const doub
 // Note        :  1. M(r) = M_0 \frac{ r^2 }{ (r+a)^2 }
 //                   ,where M_0 = 2\pi*\rho_0*a^3 is the total mass
 //                2. Reference: Hernquist L., 1990, ApJ, doi:10.1086/168845
+//                              Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.66)
 //
 // Parameter   :  r    : input radius
 //                R0   : Hernquist scale radius, a
@@ -1124,6 +1206,29 @@ double AnalyticalMassProf_Hernquist( const double r, const double R0, const doub
    return 2.0*M_PI*Rho0*CUBE(R0)*SQR(x)/SQR(1.0+x);
 
 } // FUNCTION : AnalyticalMassProf_Hernquist
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AnalyticalPoteProf_Hernquist
+// Description :  Analytical gravitational potential of the Hernquist model
+//
+// Note        :  1. \Phi(r) = -4\pi G\rho_0 a^2 \frac{1}{2(1+r/a)}
+//                2. Reference: Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.67)
+//
+// Parameter   :  r    : input radius
+//                R0   : Hernquist scale radius, a
+//                Rho0 : Hernquist scale density, \rho_0
+//
+// Return      :  gravitational potential at the given radius
+//-------------------------------------------------------------------------------------------------------
+double AnalyticalPoteProf_Hernquist( const double r, const double R0, const double Rho0  )
+{
+   const double x = r/R0;
+
+   return -2.0*M_PI*NEWTON_G*Rho0*SQR(R0)/(1.0+x);
+
+} // FUNCTION : AnalyticalPoteProf_Hernquist
 
 
 
