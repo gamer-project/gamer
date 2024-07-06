@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Model
-MODEL = 1
+MODEL = 1 # 1=Plummer, 2=NFW, 3=Burkert, 4=Jaffe, 5=Hernquist, 6=Einasto
 ID    = 1
 
 
@@ -138,20 +138,20 @@ ax5.set_xlabel( r'$\Psi$'        )
 ax6.set_xlabel( r'$\mathcal{E}$' )
 ax7.set_xlabel( r'$\mathcal{E}$' )
 
-ax1.set_xscale( 'symlog', linthresh=1e+0*R[1]                    )
-ax2.set_xscale( 'symlog', linthresh=1e+0*R[1]                    )
-ax3.set_xscale( 'symlog', linthresh=1e+0*R[1]                    )
-ax4.set_xscale( 'symlog', linthresh=1e+0*R[1]                    )
-ax5.set_xscale( 'symlog', linthresh=1e+0*E[1]                    )
-ax6.set_xscale( 'symlog', linthresh=1e+0*E[1]                    )
-ax7.set_xscale( 'symlog', linthresh=1e+0*E[1]                    )
-ax1.set_yscale( 'symlog', linthresh=1e-3*Rho[-1]                 )
-ax2.set_yscale( 'symlog', linthresh=1e-3*M_Enc[1]                )
-ax3.set_yscale( 'symlog', linthresh=1e-3*-Phi[-1]                )
-ax4.set_yscale( 'symlog', linthresh=1e-3*dRho_dPsi[-1]           )
-ax5.set_yscale( 'symlog', linthresh=1e-3*dRho_dPsi[-1]           )
-ax6.set_yscale( 'symlog', linthresh=1e-3*IntDFunc[IntDFunc>0][0] )
-ax7.set_yscale( 'symlog', linthresh=1e-3*DFunc[DFunc>0][0]       )
+ax1.set_xscale( 'symlog', linthresh=1e+0*R[1]                       )
+ax2.set_xscale( 'symlog', linthresh=1e+0*R[1]                       )
+ax3.set_xscale( 'symlog', linthresh=1e+0*R[1]                       )
+ax4.set_xscale( 'symlog', linthresh=1e+0*R[1]                       )
+ax5.set_xscale( 'symlog', linthresh=1e+0*E[1]                       )
+ax6.set_xscale( 'symlog', linthresh=1e+0*E[1]                       )
+ax7.set_xscale( 'symlog', linthresh=1e+0*E[1]                       )
+ax1.set_yscale( 'symlog', linthresh=1e-3*Rho[Rho>0][-1]             )
+ax2.set_yscale( 'symlog', linthresh=1e-3*M_Enc[1]                   )
+ax3.set_yscale( 'symlog', linthresh=1e-3*-Phi[Phi<0][-1]            )
+ax4.set_yscale( 'symlog', linthresh=1e-3*dRho_dPsi[dRho_dPsi>0][-1] )
+ax5.set_yscale( 'symlog', linthresh=1e-3*dRho_dPsi[dRho_dPsi>0][-1] )
+ax6.set_yscale( 'symlog', linthresh=1e-3*IntDFunc[IntDFunc>0][0]    )
+ax7.set_yscale( 'symlog', linthresh=1e-3*DFunc[DFunc>0][0]          )
 
 ax1.set_xlim( -2e-2*R[1], 2e+1*R[-1] )
 ax2.set_xlim( -2e-2*R[1], 2e+1*R[-1] )
@@ -172,4 +172,4 @@ ax7.legend()
 
 # Save to file
 plt.tight_layout()
-fig.savefig( 'fig_ParEquilibriumIC_Distribution.png' )
+fig.savefig( 'fig_ParEquilibriumIC_Distribution_Model_%d_ID_%d.png'%(MODEL,ID) )

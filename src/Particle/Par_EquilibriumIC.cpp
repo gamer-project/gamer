@@ -281,6 +281,19 @@ void Par_EquilibriumIC::loadInputDensProfTable()
       Aux_Error( ERROR_INFO, "Minimum radius (%14.7e) in density table %s is larger then Cloud_MaxR (%14.7e) !!\n",
                              InputTable_DensProf_Radius[0], DensProf_Table_Name, Cloud_MaxR );
 
+// Check the properties of values in the density table
+   for (int i=1; i<InputTable_DensProf_NBin; i++)
+   {
+      if ( InputTable_DensProf_Radius[i] <= InputTable_DensProf_Radius[i-1] )
+         Aux_Error( ERROR_INFO, "Radii in density table \"%s\" are not strictly increasing !!\n", DensProf_Table_Name );
+
+      if ( InputTable_DensProf_Density[i] < 0.0 )
+         Aux_Error( ERROR_INFO, "Densities in density table \"%s\" have negative value !!\n", DensProf_Table_Name );
+
+      if ( InputTable_DensProf_Density[i] > InputTable_DensProf_Density[i-1] )
+         Aux_Error( ERROR_INFO, "Densities in density table \"%s\" are not monotonically decreasing !!\n", DensProf_Table_Name );
+   }
+
 // Check Cloud_NBin must be larger than the number of bins inside Cloud_MaxR in the density table
    int InputTable_NBins_InsideMaxR = 0;
    for (int i=0; i<InputTable_DensProf_NBin; i++)
@@ -339,6 +352,21 @@ void Par_EquilibriumIC::loadInputExtPotTable()
       Aux_Error( ERROR_INFO, "Minimum radius (%14.7e) in external potential table %s is larger then Cloud_MaxR (%14.7e) !!\n",
                              InputTable_ExtPot_Radius[0], ExtPot_Table_Name, Cloud_MaxR );
 
+// Check the properties of values in the external potential table
+   for (int i=1; i<InputTable_ExtPot_NBin; i++)
+   {
+      if ( InputTable_ExtPot_Radius[i] <= InputTable_ExtPot_Radius[i-1] )
+         Aux_Error( ERROR_INFO, "Radii in external potential table \"%s\" are not strictly increasing !!\n", ExtPot_Table_Name );
+
+      // The potential at r=infinity is assumed to be zero
+      if ( InputTable_ExtPot_Potential[i] > 0.0 )
+         Aux_Error( ERROR_INFO, "Potential in external potential table \"%s\" have postive value !!\n", ExtPot_Table_Name );
+
+      // Assume there is no outward force
+      if ( InputTable_ExtPot_Potential[i] > InputTable_ExtPot_Potential[i-1] )
+         Aux_Error( ERROR_INFO, "Potential in external potential table \"%s\" are not monotonically increasing !!\n", ExtPot_Table_Name );
+   }
+
 // Reset the maximum radius of RArray according to the external potential table
    RArray_MaxR = MIN( RArray_MaxR, InputTable_ExtPot_Radius[InputTable_ExtPot_NBin-1] );
 
@@ -372,7 +400,7 @@ void Par_EquilibriumIC::constructDistribution()
    if ( AddExtPot_Table )                    loadInputExtPotTable();
 
 // Construct RArray
-   RNPoints         = MIN( __INT_MAX__, MAX( 1000, (int)ceil( Cloud_NBin*(RArray_MaxR/Cloud_MaxR)+1 ) ) ); // within a reasonable range, try to keep roughly the same Cloud_NBin inside Cloud_MaxR
+   RNPoints         = MIN( 10000000, MAX( 1000, (int)ceil( Cloud_NBin*(RArray_MaxR/Cloud_MaxR)+1 ) ) ); // within a reasonable range, try to keep roughly the same Cloud_NBin inside Cloud_MaxR
    RLastIdx         = RNPoints-1;
    RArray_R         = new double [RNPoints];
    RArray_Rho       = new double [RNPoints];
@@ -383,7 +411,7 @@ void Par_EquilibriumIC::constructDistribution()
    constructRadialArray();
 
 // Construct EArray
-   ENPoints         = MIN( __INT_MAX__, MAX( 1000, (int)ceil( 2*(RArray_Phi[0]/RArray_Phi[RLastIdx])+1 ) ) ); // within a reasonable range, estimated by the potential difference at the center
+   ENPoints         = MIN( 10000000, MAX( 1000, (int)ceil( 2*(RArray_Phi[0]/RArray_Phi[RLastIdx])+1 ) ) ); // within a reasonable range, estimated by the potential difference at the center
    ELastIdx         = ENPoints-1;
    EArray_DFunc     = new double [ENPoints];
    EArray_IntDFunc  = new double [ENPoints];
@@ -813,7 +841,7 @@ double Par_EquilibriumIC::getIntegratedDistributionFunction( const double E )
 
          const double dRho_dPsi_Extrapolated = RArray_dRho_dPsi[RLastIdx]*pow( Psi/(-RArray_Phi[RLastIdx]), power_extrapolated );
 
-         dRho_dPsi = ( dRho_dPsi_Extrapolated < 0 ) ? 0.0 : dRho_dPsi_Extrapolated;
+         dRho_dPsi = ( dRho_dPsi_Extrapolated > 0 ) ? dRho_dPsi_Extrapolated : 0.0;
       }
 
       integral += -2.0*dRho_dPsi*dsqrt_EminusPsi;
