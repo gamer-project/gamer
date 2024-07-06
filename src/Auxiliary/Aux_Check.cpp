@@ -16,6 +16,7 @@ void Aux_Check( )
    if ( OPT__CK_PROPER_NESTING )
       for (int lv=1; lv<NLEVEL; lv++)                    Aux_Check_ProperNesting( lv, "DIAGNOSIS" );
 
+   printf("Rank: %d, ConservedRefLoaded: %d\n", MPI_Rank, ConservedRefLoaded);
    if ( OPT__CK_CONSERVATION || ! ConservedRefLoaded )   Aux_Check_Conservation( "DIAGNOSIS" );
 
 #  if ( NCOMP_PASSIVE > 0 )

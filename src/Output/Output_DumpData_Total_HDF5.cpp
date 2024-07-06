@@ -1605,77 +1605,77 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    const int  NVar          = NVar_NoPassive + NCOMP_PASSIVE + ( (GetPassiveSum)?1:0 );
 
    if ( !ConservedRefLoaded )   Aux_Error( ERROR_INFO, "Conserved variables reference are not assigned yet!!\n" );
-   KeyInfo.Time_H5Ref        = Time_Ref;
+   KeyInfo.Time_ConservedRef        = Time_ConservedRef;
 #  if   ( MODEL == HYDRO )
-   KeyInfo.Mass_Gas_H5Ref    = Fluid_Ref[0];
-   KeyInfo.CoMX_Gas_H5Ref    = CoM_Gas_Ref[0];
-   KeyInfo.CoMY_Gas_H5Ref    = CoM_Gas_Ref[1];
-   KeyInfo.CoMZ_Gas_H5Ref    = CoM_Gas_Ref[2];
-   KeyInfo.MomX_Gas_H5Ref    = Fluid_Ref[1];
-   KeyInfo.MomY_Gas_H5Ref    = Fluid_Ref[2];
-   KeyInfo.MomZ_Gas_H5Ref    = Fluid_Ref[3];
-   KeyInfo.AngMomX_Gas_H5Ref = Fluid_Ref[4];
-   KeyInfo.AngMomY_Gas_H5Ref = Fluid_Ref[5];
-   KeyInfo.AngMomZ_Gas_H5Ref = Fluid_Ref[6];
-   KeyInfo.Ekin_Gas_H5Ref    = Fluid_Ref[7];
-   KeyInfo.Eint_Gas_H5Ref    = Fluid_Ref[8];
-   KeyInfo.Epot_Gas_H5Ref    = Fluid_Ref[9];
+   KeyInfo.Mass_Gas_ConservedRef    = Fluid_ConservedRef[0];
+   KeyInfo.CoMX_Gas_ConservedRef    = CoM_Gas_ConservedRef[0];
+   KeyInfo.CoMY_Gas_ConservedRef    = CoM_Gas_ConservedRef[1];
+   KeyInfo.CoMZ_Gas_ConservedRef    = CoM_Gas_ConservedRef[2];
+   KeyInfo.MomX_Gas_ConservedRef    = Fluid_ConservedRef[1];
+   KeyInfo.MomY_Gas_ConservedRef    = Fluid_ConservedRef[2];
+   KeyInfo.MomZ_Gas_ConservedRef    = Fluid_ConservedRef[3];
+   KeyInfo.AngMomX_Gas_ConservedRef = Fluid_ConservedRef[4];
+   KeyInfo.AngMomY_Gas_ConservedRef = Fluid_ConservedRef[5];
+   KeyInfo.AngMomZ_Gas_ConservedRef = Fluid_ConservedRef[6];
+   KeyInfo.Ekin_Gas_ConservedRef    = Fluid_ConservedRef[7];
+   KeyInfo.Eint_Gas_ConservedRef    = Fluid_ConservedRef[8];
+   KeyInfo.Epot_Gas_ConservedRef    = Fluid_ConservedRef[9];
 #  ifdef MHD
-   KeyInfo.Emag_Gas_H5Ref    = Fluid_Ref[10];
+   KeyInfo.Emag_Gas_ConservedRef    = Fluid_ConservedRef[10];
 #  endif
-   KeyInfo.Etot_Gas_H5Ref    = Fluid_Ref[idx_etot];
+   KeyInfo.Etot_Gas_ConservedRef    = Fluid_ConservedRef[idx_etot];
 #  elif ( MODEL == ELBDM )
-   KeyInfo.Mass_Psi_H5Ref    = Fluid_Ref[0];
-   KeyInfo.CoMX_Psi_H5Ref    = CoM_Gas_Ref[0];
-   KeyInfo.CoMY_Psi_H5Ref    = CoM_Gas_Ref[1];
-   KeyInfo.CoMZ_Psi_H5Ref    = CoM_Gas_Ref[2];
-   KeyInfo.MomX_Psi_H5Ref    = Fluid_Ref[1];
-   KeyInfo.MomY_Psi_H5Ref    = Fluid_Ref[2];
-   KeyInfo.MomZ_Psi_H5Ref    = Fluid_Ref[3];
-   KeyInfo.AngMomX_Psi_H5Ref = Fluid_Ref[4];
-   KeyInfo.AngMomY_Psi_H5Ref = Fluid_Ref[5];
-   KeyInfo.AngMomZ_Psi_H5Ref = Fluid_Ref[6];
-   KeyInfo.Ekin_Psi_H5Ref    = Fluid_Ref[7];
-   KeyInfo.Epot_Psi_H5Ref    = Fluid_Ref[8];
-   KeyInfo.Esel_Psi_H5Ref    = Fluid_Ref[9];
-   KeyInfo.Etot_Psi_H5Ref    = Fluid_Ref[idx_etot];
+   KeyInfo.Mass_Psi_ConservedRef    = Fluid_ConservedRef[0];
+   KeyInfo.CoMX_Psi_ConservedRef    = CoM_Gas_ConservedRef[0];
+   KeyInfo.CoMY_Psi_ConservedRef    = CoM_Gas_ConservedRef[1];
+   KeyInfo.CoMZ_Psi_ConservedRef    = CoM_Gas_ConservedRef[2];
+   KeyInfo.MomX_Psi_ConservedRef    = Fluid_ConservedRef[1];
+   KeyInfo.MomY_Psi_ConservedRef    = Fluid_ConservedRef[2];
+   KeyInfo.MomZ_Psi_ConservedRef    = Fluid_ConservedRef[3];
+   KeyInfo.AngMomX_Psi_ConservedRef = Fluid_ConservedRef[4];
+   KeyInfo.AngMomY_Psi_ConservedRef = Fluid_ConservedRef[5];
+   KeyInfo.AngMomZ_Psi_ConservedRef = Fluid_ConservedRef[6];
+   KeyInfo.Ekin_Psi_ConservedRef    = Fluid_ConservedRef[7];
+   KeyInfo.Epot_Psi_ConservedRef    = Fluid_ConservedRef[8];
+   KeyInfo.Esel_Psi_ConservedRef    = Fluid_ConservedRef[9];
+   KeyInfo.Etot_Psi_ConservedRef    = Fluid_ConservedRef[idx_etot];
 #  endif
 
 #  if ( NCOMP_PASSIVE > 0 )
    for (int v=0; v<NCOMP_PASSIVE; v++)
-   KeyInfo.Passive_H5Ref[v]  = Fluid_Ref[NVar_NoPassive+v];
+   KeyInfo.Passive_ConservedRef[v]  = Fluid_ConservedRef[NVar_NoPassive+v];
    if ( PassiveNorm_NVar > 0 )
-   KeyInfo.Passive_Sum_H5Ref = Fluid_Ref[NVar-1];
+   KeyInfo.Passive_Sum_ConservedRef = Fluid_ConservedRef[NVar-1];
    else
-   KeyInfo.Passive_Sum_H5Ref = 0.0;
+   KeyInfo.Passive_Sum_ConservedRef = 0.0;
 #  endif
 
 #  ifdef MASSIVE_PARTICLES
-   KeyInfo.Mass_Par_H5Ref    =    Mass_Par_Ref;
-   KeyInfo.CoMX_Par_H5Ref    =    CoMX_Par_Ref;
-   KeyInfo.CoMY_Par_H5Ref    =    CoMY_Par_Ref;
-   KeyInfo.CoMZ_Par_H5Ref    =    CoMZ_Par_Ref;
-   KeyInfo.MomX_Par_H5Ref    =    MomX_Par_Ref;
-   KeyInfo.MomY_Par_H5Ref    =    MomY_Par_Ref;
-   KeyInfo.MomZ_Par_H5Ref    =    MomZ_Par_Ref;
-   KeyInfo.AngMomX_Par_H5Ref = AngMomX_Par_Ref;
-   KeyInfo.AngMomY_Par_H5Ref = AngMomY_Par_Ref;
-   KeyInfo.AngMomZ_Par_H5Ref = AngMomZ_Par_Ref;
-   KeyInfo.Ekin_Par_H5Ref    =    Ekin_Par_Ref;
-   KeyInfo.Epot_Par_H5Ref    =    Epot_Par_Ref;
-   KeyInfo.Etot_Par_H5Ref    =    Etot_Par_Ref;
+   KeyInfo.Mass_Par_ConservedRef    =    Mass_Par_ConservedRef;
+   KeyInfo.CoMX_Par_ConservedRef    =    CoMX_Par_ConservedRef;
+   KeyInfo.CoMY_Par_ConservedRef    =    CoMY_Par_ConservedRef;
+   KeyInfo.CoMZ_Par_ConservedRef    =    CoMZ_Par_ConservedRef;
+   KeyInfo.MomX_Par_ConservedRef    =    MomX_Par_ConservedRef;
+   KeyInfo.MomY_Par_ConservedRef    =    MomY_Par_ConservedRef;
+   KeyInfo.MomZ_Par_ConservedRef    =    MomZ_Par_ConservedRef;
+   KeyInfo.AngMomX_Par_ConservedRef = AngMomX_Par_ConservedRef;
+   KeyInfo.AngMomY_Par_ConservedRef = AngMomY_Par_ConservedRef;
+   KeyInfo.AngMomZ_Par_ConservedRef = AngMomZ_Par_ConservedRef;
+   KeyInfo.Ekin_Par_ConservedRef    =    Ekin_Par_ConservedRef;
+   KeyInfo.Epot_Par_ConservedRef    =    Epot_Par_ConservedRef;
+   KeyInfo.Etot_Par_ConservedRef    =    Etot_Par_ConservedRef;
 #  if ( MODEL != PAR_ONLY )
-   KeyInfo.Mass_All_H5Ref    =    Mass_All_Ref;
-   KeyInfo.CoMX_All_H5Ref    =    CoMX_All_Ref;
-   KeyInfo.CoMY_All_H5Ref    =    CoMY_All_Ref;
-   KeyInfo.CoMZ_All_H5Ref    =    CoMZ_All_Ref;
-   KeyInfo.MomX_All_H5Ref    =    MomX_All_Ref;
-   KeyInfo.MomY_All_H5Ref    =    MomY_All_Ref;
-   KeyInfo.MomZ_All_H5Ref    =    MomZ_All_Ref;
-   KeyInfo.AngMomX_All_H5Ref = AngMomX_All_Ref;
-   KeyInfo.AngMomY_All_H5Ref = AngMomY_All_Ref;
-   KeyInfo.AngMomZ_All_H5Ref = AngMomZ_All_Ref;
-   KeyInfo.Etot_All_H5Ref    =    Etot_All_Ref;
+   KeyInfo.Mass_All_ConservedRef    =    Mass_All_ConservedRef;
+   KeyInfo.CoMX_All_ConservedRef    =    CoMX_All_ConservedRef;
+   KeyInfo.CoMY_All_ConservedRef    =    CoMY_All_ConservedRef;
+   KeyInfo.CoMZ_All_ConservedRef    =    CoMZ_All_ConservedRef;
+   KeyInfo.MomX_All_ConservedRef    =    MomX_All_ConservedRef;
+   KeyInfo.MomY_All_ConservedRef    =    MomY_All_ConservedRef;
+   KeyInfo.MomZ_All_ConservedRef    =    MomZ_All_ConservedRef;
+   KeyInfo.AngMomX_All_ConservedRef = AngMomX_All_ConservedRef;
+   KeyInfo.AngMomY_All_ConservedRef = AngMomY_All_ConservedRef;
+   KeyInfo.AngMomZ_All_ConservedRef = AngMomZ_All_ConservedRef;
+   KeyInfo.Etot_All_ConservedRef    =    Etot_All_ConservedRef;
 #  endif // #if ( MODEL != PAR_ONLY )
 #  endif // #ifdef MASSIVE_PARTICLES
 
@@ -2829,117 +2829,117 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
 // get the compound type
    H5_TypeID = H5Tcreate( H5T_COMPOUND, sizeof(KeyInfo_t) );
 
-   H5Tinsert( H5_TypeID, "FormatVersion",        HOFFSET(KeyInfo_t,FormatVersion       ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "Model",                HOFFSET(KeyInfo_t,Model               ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "Float8",               HOFFSET(KeyInfo_t,Float8              ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "Gravity",              HOFFSET(KeyInfo_t,Gravity             ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "Particle",             HOFFSET(KeyInfo_t,Particle            ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "NLevel",               HOFFSET(KeyInfo_t,NLevel              ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "NCompFluid",           HOFFSET(KeyInfo_t,NCompFluid          ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "NCompPassive",         HOFFSET(KeyInfo_t,NCompPassive        ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "PatchSize",            HOFFSET(KeyInfo_t,PatchSize           ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "DumpID",               HOFFSET(KeyInfo_t,DumpID              ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "NX0",                  HOFFSET(KeyInfo_t,NX0                 ), H5_TypeID_Arr_3Int      );
-   H5Tinsert( H5_TypeID, "BoxScale",             HOFFSET(KeyInfo_t,BoxScale            ), H5_TypeID_Arr_3Int      );
-   H5Tinsert( H5_TypeID, "NPatch",               HOFFSET(KeyInfo_t,NPatch              ), H5_TypeID_Arr_NLvInt    );
-   H5Tinsert( H5_TypeID, "CellScale",            HOFFSET(KeyInfo_t,CellScale           ), H5_TypeID_Arr_NLvInt    );
+   H5Tinsert( H5_TypeID, "FormatVersion",            HOFFSET(KeyInfo_t,FormatVersion           ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Model",                    HOFFSET(KeyInfo_t,Model                   ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Float8",                   HOFFSET(KeyInfo_t,Float8                  ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Gravity",                  HOFFSET(KeyInfo_t,Gravity                 ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Particle",                 HOFFSET(KeyInfo_t,Particle                ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "NLevel",                   HOFFSET(KeyInfo_t,NLevel                  ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "NCompFluid",               HOFFSET(KeyInfo_t,NCompFluid              ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "NCompPassive",             HOFFSET(KeyInfo_t,NCompPassive            ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "PatchSize",                HOFFSET(KeyInfo_t,PatchSize               ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "DumpID",                   HOFFSET(KeyInfo_t,DumpID                  ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "NX0",                      HOFFSET(KeyInfo_t,NX0                     ), H5_TypeID_Arr_3Int      );
+   H5Tinsert( H5_TypeID, "BoxScale",                 HOFFSET(KeyInfo_t,BoxScale                ), H5_TypeID_Arr_3Int      );
+   H5Tinsert( H5_TypeID, "NPatch",                   HOFFSET(KeyInfo_t,NPatch                  ), H5_TypeID_Arr_NLvInt    );
+   H5Tinsert( H5_TypeID, "CellScale",                HOFFSET(KeyInfo_t,CellScale               ), H5_TypeID_Arr_NLvInt    );
 #  if ( MODEL == HYDRO )
-   H5Tinsert( H5_TypeID, "Magnetohydrodynamics", HOFFSET(KeyInfo_t,Magnetohydrodynamics), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "SRHydrodynamics",      HOFFSET(KeyInfo_t,SRHydrodynamics     ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "CosmicRay",            HOFFSET(KeyInfo_t,CosmicRay           ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Magnetohydrodynamics",     HOFFSET(KeyInfo_t,Magnetohydrodynamics    ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "SRHydrodynamics",          HOFFSET(KeyInfo_t,SRHydrodynamics         ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "CosmicRay",                HOFFSET(KeyInfo_t,CosmicRay               ), H5T_NATIVE_INT          );
 #  endif
 
-   H5Tinsert( H5_TypeID, "Step",                 HOFFSET(KeyInfo_t,Step                ), H5T_NATIVE_LONG         );
-   H5Tinsert( H5_TypeID, "AdvanceCounter",       HOFFSET(KeyInfo_t,AdvanceCounter      ), H5_TypeID_Arr_NLvLong   );
-   H5Tinsert( H5_TypeID, "NFieldStored",         HOFFSET(KeyInfo_t,NFieldStored        ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "NMagStored",           HOFFSET(KeyInfo_t,NMagStored          ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Step",                     HOFFSET(KeyInfo_t,Step                    ), H5T_NATIVE_LONG         );
+   H5Tinsert( H5_TypeID, "AdvanceCounter",           HOFFSET(KeyInfo_t,AdvanceCounter          ), H5_TypeID_Arr_NLvLong   );
+   H5Tinsert( H5_TypeID, "NFieldStored",             HOFFSET(KeyInfo_t,NFieldStored            ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "NMagStored",               HOFFSET(KeyInfo_t,NMagStored              ), H5T_NATIVE_INT          );
 #  ifdef PARTICLE
-   H5Tinsert( H5_TypeID, "Par_NPar",             HOFFSET(KeyInfo_t,Par_NPar            ), H5T_NATIVE_LONG         );
-   H5Tinsert( H5_TypeID, "Par_NAttStored",       HOFFSET(KeyInfo_t,Par_NAttStored      ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "Float8_Par",           HOFFSET(KeyInfo_t,Float8_Par          ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Par_NPar",                 HOFFSET(KeyInfo_t,Par_NPar                ), H5T_NATIVE_LONG         );
+   H5Tinsert( H5_TypeID, "Par_NAttStored",           HOFFSET(KeyInfo_t,Par_NAttStored          ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Float8_Par",               HOFFSET(KeyInfo_t,Float8_Par              ), H5T_NATIVE_INT          );
 #  endif
 
 #  ifdef COSMIC_RAY
-   H5Tinsert( H5_TypeID, "CR_Diffusion",         HOFFSET(KeyInfo_t,CR_Diffusion        ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "CR_Diffusion",             HOFFSET(KeyInfo_t,CR_Diffusion            ), H5T_NATIVE_INT          );
 #  endif
 
-   H5Tinsert( H5_TypeID, "BoxSize",              HOFFSET(KeyInfo_t,BoxSize             ), H5_TypeID_Arr_3Double   );
-   H5Tinsert( H5_TypeID, "Time",                 HOFFSET(KeyInfo_t,Time                ), H5_TypeID_Arr_NLvDouble );
-   H5Tinsert( H5_TypeID, "CellSize",             HOFFSET(KeyInfo_t,CellSize            ), H5_TypeID_Arr_NLvDouble );
-   H5Tinsert( H5_TypeID, "dTime_AllLv",          HOFFSET(KeyInfo_t,dTime_AllLv         ), H5_TypeID_Arr_NLvDouble );
+   H5Tinsert( H5_TypeID, "BoxSize",                  HOFFSET(KeyInfo_t,BoxSize                 ), H5_TypeID_Arr_3Double   );
+   H5Tinsert( H5_TypeID, "Time",                     HOFFSET(KeyInfo_t,Time                    ), H5_TypeID_Arr_NLvDouble );
+   H5Tinsert( H5_TypeID, "CellSize",                 HOFFSET(KeyInfo_t,CellSize                ), H5_TypeID_Arr_NLvDouble );
+   H5Tinsert( H5_TypeID, "dTime_AllLv",              HOFFSET(KeyInfo_t,dTime_AllLv             ), H5_TypeID_Arr_NLvDouble );
 #  ifdef GRAVITY
-   H5Tinsert( H5_TypeID, "AveDens_Init",         HOFFSET(KeyInfo_t,AveDens_Init        ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "AveDens_Init",             HOFFSET(KeyInfo_t,AveDens_Init            ), H5T_NATIVE_DOUBLE       );
 #  endif
 
-   H5Tinsert( H5_TypeID, "CodeVersion",          HOFFSET(KeyInfo_t,CodeVersion         ), H5_TypeID_VarStr        );
-   H5Tinsert( H5_TypeID, "DumpWallTime",         HOFFSET(KeyInfo_t,DumpWallTime        ), H5_TypeID_VarStr        );
-   H5Tinsert( H5_TypeID, "GitBranch",            HOFFSET(KeyInfo_t,GitBranch           ), H5_TypeID_VarStr        );
-   H5Tinsert( H5_TypeID, "GitCommit",            HOFFSET(KeyInfo_t,GitCommit           ), H5_TypeID_VarStr        );
-   H5Tinsert( H5_TypeID, "UniqueDataID",         HOFFSET(KeyInfo_t,UniqueDataID        ), H5T_NATIVE_LONG         );
+   H5Tinsert( H5_TypeID, "CodeVersion",              HOFFSET(KeyInfo_t,CodeVersion             ), H5_TypeID_VarStr        );
+   H5Tinsert( H5_TypeID, "DumpWallTime",             HOFFSET(KeyInfo_t,DumpWallTime            ), H5_TypeID_VarStr        );
+   H5Tinsert( H5_TypeID, "GitBranch",                HOFFSET(KeyInfo_t,GitBranch               ), H5_TypeID_VarStr        );
+   H5Tinsert( H5_TypeID, "GitCommit",                HOFFSET(KeyInfo_t,GitCommit               ), H5_TypeID_VarStr        );
+   H5Tinsert( H5_TypeID, "UniqueDataID",             HOFFSET(KeyInfo_t,UniqueDataID            ), H5T_NATIVE_LONG         );
 
-   H5Tinsert( H5_TypeID, "Time_H5Ref",           HOFFSET(KeyInfo_t,Time_H5Ref          ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "Time_ConservedRef",        HOFFSET(KeyInfo_t,Time_ConservedRef       ), H5T_NATIVE_DOUBLE       );
 #  if   ( MODEL == HYDRO )
-   H5Tinsert( H5_TypeID, "Mass_Gas_H5Ref",       HOFFSET(KeyInfo_t,Mass_Gas_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMX_Gas_H5Ref",       HOFFSET(KeyInfo_t,CoMX_Gas_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMY_Gas_H5Ref",       HOFFSET(KeyInfo_t,CoMY_Gas_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMZ_Gas_H5Ref",       HOFFSET(KeyInfo_t,CoMZ_Gas_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "MomX_Gas_H5Ref",       HOFFSET(KeyInfo_t,MomX_Gas_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "MomY_Gas_H5Ref",       HOFFSET(KeyInfo_t,MomY_Gas_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "MomZ_Gas_H5Ref",       HOFFSET(KeyInfo_t,MomZ_Gas_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "AngMomX_Gas_H5Ref",    HOFFSET(KeyInfo_t,AngMomX_Gas_H5Ref   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "AngMomY_Gas_H5Ref",    HOFFSET(KeyInfo_t,AngMomY_Gas_H5Ref   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "AngMomZ_Gas_H5Ref",    HOFFSET(KeyInfo_t,AngMomZ_Gas_H5Ref   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "Ekin_Gas_H5Ref",       HOFFSET(KeyInfo_t,Ekin_Gas_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "Eint_Gas_H5Ref",       HOFFSET(KeyInfo_t,Eint_Gas_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "Epot_Gas_H5Ref",       HOFFSET(KeyInfo_t,Epot_Gas_H5Ref      ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "Mass_Gas_ConservedRef",    HOFFSET(KeyInfo_t,Mass_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "CoMX_Gas_ConservedRef",    HOFFSET(KeyInfo_t,CoMX_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "CoMY_Gas_ConservedRef",    HOFFSET(KeyInfo_t,CoMY_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "CoMZ_Gas_ConservedRef",    HOFFSET(KeyInfo_t,CoMZ_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "MomX_Gas_ConservedRef",    HOFFSET(KeyInfo_t,MomX_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "MomY_Gas_ConservedRef",    HOFFSET(KeyInfo_t,MomY_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "MomZ_Gas_ConservedRef",    HOFFSET(KeyInfo_t,MomZ_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "AngMomX_Gas_ConservedRef", HOFFSET(KeyInfo_t,AngMomX_Gas_ConservedRef), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "AngMomY_Gas_ConservedRef", HOFFSET(KeyInfo_t,AngMomY_Gas_ConservedRef), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "AngMomZ_Gas_ConservedRef", HOFFSET(KeyInfo_t,AngMomZ_Gas_ConservedRef), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "Ekin_Gas_ConservedRef",    HOFFSET(KeyInfo_t,Ekin_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "Eint_Gas_ConservedRef",    HOFFSET(KeyInfo_t,Eint_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "Epot_Gas_ConservedRef",    HOFFSET(KeyInfo_t,Epot_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
 #  ifdef MHD
-   H5Tinsert( H5_TypeID, "Emag_Gas_H5Ref",       HOFFSET(KeyInfo_t,Emag_Gas_H5Ref      ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "Emag_Gas_ConservedRef",    HOFFSET(KeyInfo_t,Emag_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
 #  endif
-   H5Tinsert( H5_TypeID, "Etot_Gas_H5Ref",       HOFFSET(KeyInfo_t,Etot_Gas_H5Ref      ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "Etot_Gas_ConservedRef",    HOFFSET(KeyInfo_t,Etot_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
 #  elif ( MODEL == ELBDM )
-   H5Tinsert( H5_TypeID, "Mass_Psi_H5Ref",       HOFFSET(KeyInfo_t,Mass_Psi_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMX_Psi_H5Ref",       HOFFSET(KeyInfo_t,CoMX_Psi_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMY_Psi_H5Ref",       HOFFSET(KeyInfo_t,CoMY_Psi_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMZ_Psi_H5Ref",       HOFFSET(KeyInfo_t,CoMZ_Psi_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "Ekin_Psi_H5Ref",       HOFFSET(KeyInfo_t,Ekin_Psi_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "Epot_Psi_H5Ref",       HOFFSET(KeyInfo_t,Epot_Psi_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "Esel_Psi_H5Ref",       HOFFSET(KeyInfo_t,Esel_Psi_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "Etot_Psi_H5Ref",       HOFFSET(KeyInfo_t,Etot_Psi_H5Ref      ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "Mass_Psi_ConservedRef",    HOFFSET(KeyInfo_t,Mass_Psi_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "CoMX_Psi_ConservedRef",    HOFFSET(KeyInfo_t,CoMX_Psi_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "CoMY_Psi_ConservedRef",    HOFFSET(KeyInfo_t,CoMY_Psi_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "CoMZ_Psi_ConservedRef",    HOFFSET(KeyInfo_t,CoMZ_Psi_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "Ekin_Psi_ConservedRef",    HOFFSET(KeyInfo_t,Ekin_Psi_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "Epot_Psi_ConservedRef",    HOFFSET(KeyInfo_t,Epot_Psi_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "Esel_Psi_ConservedRef",    HOFFSET(KeyInfo_t,Esel_Psi_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "Etot_Psi_ConservedRef",    HOFFSET(KeyInfo_t,Etot_Psi_ConservedRef   ), H5T_NATIVE_DOUBLE       );
 #  endif
 
 #  if ( NCOMP_PASSIVE > 0 )
-   H5Tinsert( H5_TypeID, "Passive_H5Ref",        HOFFSET(KeyInfo_t,Passive_H5Ref       ), H5_TypeID_Arr_NPassiveDouble );
-   H5Tinsert( H5_TypeID, "Passive_Sum_H5Ref",    HOFFSET(KeyInfo_t,Passive_Sum_H5Ref   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "Passive_ConservedRef",     HOFFSET(KeyInfo_t,Passive_ConservedRef    ), H5_TypeID_Arr_NPassiveDouble );
+   H5Tinsert( H5_TypeID, "Passive_Sum_ConservedRef", HOFFSET(KeyInfo_t,Passive_Sum_ConservedRef), H5T_NATIVE_DOUBLE       );
 #  endif
 
 #  ifdef MASSIVE_PARTICLES
-   H5Tinsert( H5_TypeID, "Mass_Par_H5Ref",       HOFFSET(KeyInfo_t,Mass_Par_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMX_Par_H5Ref",       HOFFSET(KeyInfo_t,CoMX_Par_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMY_Par_H5Ref",       HOFFSET(KeyInfo_t,CoMY_Par_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMZ_Par_H5Ref",       HOFFSET(KeyInfo_t,CoMZ_Par_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "MomX_Par_H5Ref",       HOFFSET(KeyInfo_t,MomX_Par_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "MomY_Par_H5Ref",       HOFFSET(KeyInfo_t,MomY_Par_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "MomZ_Par_H5Ref",       HOFFSET(KeyInfo_t,MomZ_Par_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "AngMomX_Par_H5Ref",    HOFFSET(KeyInfo_t,AngMomX_Par_H5Ref   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "AngMomY_Par_H5Ref",    HOFFSET(KeyInfo_t,AngMomY_Par_H5Ref   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "AngMomZ_Par_H5Ref",    HOFFSET(KeyInfo_t,AngMomZ_Par_H5Ref   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "Ekin_Par_H5Ref",       HOFFSET(KeyInfo_t,Ekin_Par_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "Epot_Par_H5Ref",       HOFFSET(KeyInfo_t,Epot_Par_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "Etot_Par_H5Ref",       HOFFSET(KeyInfo_t,Etot_Par_H5Ref      ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "Mass_Par_ConservedRef",    HOFFSET(KeyInfo_t,Mass_Par_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "CoMX_Par_ConservedRef",    HOFFSET(KeyInfo_t,CoMX_Par_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "CoMY_Par_ConservedRef",    HOFFSET(KeyInfo_t,CoMY_Par_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "CoMZ_Par_ConservedRef",    HOFFSET(KeyInfo_t,CoMZ_Par_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "MomX_Par_ConservedRef",    HOFFSET(KeyInfo_t,MomX_Par_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "MomY_Par_ConservedRef",    HOFFSET(KeyInfo_t,MomY_Par_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "MomZ_Par_ConservedRef",    HOFFSET(KeyInfo_t,MomZ_Par_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "AngMomX_Par_ConservedRef", HOFFSET(KeyInfo_t,AngMomX_Par_ConservedRef), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "AngMomY_Par_ConservedRef", HOFFSET(KeyInfo_t,AngMomY_Par_ConservedRef), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "AngMomZ_Par_ConservedRef", HOFFSET(KeyInfo_t,AngMomZ_Par_ConservedRef), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "Ekin_Par_ConservedRef",    HOFFSET(KeyInfo_t,Ekin_Par_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "Epot_Par_ConservedRef",    HOFFSET(KeyInfo_t,Epot_Par_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "Etot_Par_ConservedRef",    HOFFSET(KeyInfo_t,Etot_Par_ConservedRef   ), H5T_NATIVE_DOUBLE       );
 #  if ( MODEL != PAR_ONLY )
-   H5Tinsert( H5_TypeID, "Mass_All_H5Ref",       HOFFSET(KeyInfo_t,Mass_All_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMX_All_H5Ref",       HOFFSET(KeyInfo_t,CoMX_All_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMY_All_H5Ref",       HOFFSET(KeyInfo_t,CoMY_All_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMZ_All_H5Ref",       HOFFSET(KeyInfo_t,CoMZ_All_H5Ref      ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "Mass_All_ConservedRef",    HOFFSET(KeyInfo_t,Mass_All_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "CoMX_All_ConservedRef",    HOFFSET(KeyInfo_t,CoMX_All_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "CoMY_All_ConservedRef",    HOFFSET(KeyInfo_t,CoMY_All_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "CoMZ_All_ConservedRef",    HOFFSET(KeyInfo_t,CoMZ_All_ConservedRef   ), H5T_NATIVE_DOUBLE       );
 #  if ( MODEL == HYDRO )
-   H5Tinsert( H5_TypeID, "MomX_All_H5Ref",       HOFFSET(KeyInfo_t,MomX_All_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "MomY_All_H5Ref",       HOFFSET(KeyInfo_t,MomY_All_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "MomZ_All_H5Ref",       HOFFSET(KeyInfo_t,MomZ_All_H5Ref      ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "AngMomX_All_H5Ref",    HOFFSET(KeyInfo_t,AngMomX_All_H5Ref   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "AngMomY_All_H5Ref",    HOFFSET(KeyInfo_t,AngMomY_All_H5Ref   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "AngMomZ_All_H5Ref",    HOFFSET(KeyInfo_t,AngMomZ_All_H5Ref   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "MomX_All_ConservedRef",    HOFFSET(KeyInfo_t,MomX_All_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "MomY_All_ConservedRef",    HOFFSET(KeyInfo_t,MomY_All_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "MomZ_All_ConservedRef",    HOFFSET(KeyInfo_t,MomZ_All_ConservedRef   ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "AngMomX_All_ConservedRef", HOFFSET(KeyInfo_t,AngMomX_All_ConservedRef), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "AngMomY_All_ConservedRef", HOFFSET(KeyInfo_t,AngMomY_All_ConservedRef), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "AngMomZ_All_ConservedRef", HOFFSET(KeyInfo_t,AngMomZ_All_ConservedRef), H5T_NATIVE_DOUBLE       );
 #  endif
-   H5Tinsert( H5_TypeID, "Etot_All_H5Ref",       HOFFSET(KeyInfo_t,Etot_All_H5Ref      ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "Etot_All_ConservedRef",    HOFFSET(KeyInfo_t,Etot_All_ConservedRef   ), H5T_NATIVE_DOUBLE       );
 #  endif // #if ( MODEL != PAR_ONLY )
 #  endif // #ifdef MASSIVE_PARTICLES
 

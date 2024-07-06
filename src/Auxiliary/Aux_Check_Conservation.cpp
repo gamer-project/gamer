@@ -445,83 +445,94 @@ void Aux_Check_Conservation( const char *comment )
    Etot_Par = Ekin_Par + Epot_Par;
 #  endif
 
+// calculate conservedd quantities for fluid + particle
+#  if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
+   double Mass_All, MomX_All, MomY_All, MomZ_All, AngMomX_All, AngMomY_All, AngMomZ_All,
+          Etot_All, CoMX_All, CoMY_All, CoMZ_All;
+#  endif // if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
 
-// output
+
+// record conserved variables reference value
    if ( MPI_Rank == 0 )
    {
 //    calculate the sum of conserved quantities in different models
 #     if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
-      const double Mass_All    = Fluid_AllRank[       0] + Mass_Par;
-      const double MomX_All    = Fluid_AllRank[       1] + MomX_Par;
-      const double MomY_All    = Fluid_AllRank[       2] + MomY_Par;
-      const double MomZ_All    = Fluid_AllRank[       3] + MomZ_Par;
-      const double AngMomX_All = Fluid_AllRank[       4] + AngMomX_Par;
-      const double AngMomY_All = Fluid_AllRank[       5] + AngMomY_Par;
-      const double AngMomZ_All = Fluid_AllRank[       6] + AngMomZ_Par;
-      const double Etot_All    = Fluid_AllRank[idx_etot] + Etot_Par;    // for HYDRO/ELBDM, total energy is stored in the last element
+      Mass_All    = Fluid_AllRank[       0] + Mass_Par;
+      MomX_All    = Fluid_AllRank[       1] + MomX_Par;
+      MomY_All    = Fluid_AllRank[       2] + MomY_Par;
+      MomZ_All    = Fluid_AllRank[       3] + MomZ_Par;
+      AngMomX_All = Fluid_AllRank[       4] + AngMomX_Par;
+      AngMomY_All = Fluid_AllRank[       5] + AngMomY_Par;
+      AngMomZ_All = Fluid_AllRank[       6] + AngMomZ_Par;
+      Etot_All    = Fluid_AllRank[idx_etot] + Etot_Par;    // for HYDRO/ELBDM, total energy is stored in the last element
 
-      const double CoMX_All    = ( Fluid_AllRank[0]*CoM_Gas[0] + Mass_Par*CoMX_Par )/Mass_All;
-      const double CoMY_All    = ( Fluid_AllRank[0]*CoM_Gas[1] + Mass_Par*CoMY_Par )/Mass_All;
-      const double CoMZ_All    = ( Fluid_AllRank[0]*CoM_Gas[2] + Mass_Par*CoMZ_Par )/Mass_All;
+      CoMX_All    = ( Fluid_AllRank[0]*CoM_Gas[0] + Mass_Par*CoMX_Par )/Mass_All;
+      CoMY_All    = ( Fluid_AllRank[0]*CoM_Gas[1] + Mass_Par*CoMY_Par )/Mass_All;
+      CoMZ_All    = ( Fluid_AllRank[0]*CoM_Gas[2] + Mass_Par*CoMZ_Par )/Mass_All;
 #     endif // if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
 
-//    note that a variable length array cannot have static storage duration
-      double AbsErr[NVar], RelErr[NVar];
-
 //    record the reference values if not loaded, e.g. first time, not from restart, or HDF5 version < 2479
-      if ( !ConservedRefLoaded )
+      if ( ! ConservedRefLoaded )
       {
-         Time_Ref = Time[0];
+         Time_ConservedRef = Time[0];
 
-         for (int v=0; v<NVar; v++)    Fluid_Ref[v]   = Fluid_AllRank[v];
-         for (int d=0; d<3; d++)       CoM_Gas_Ref[d] = CoM_Gas[d];
+         for (int v=0; v<NVar; v++)    Fluid_ConservedRef[v]   = Fluid_AllRank[v];
+         for (int d=0; d<3; d++)       CoM_Gas_ConservedRef[d] = CoM_Gas[d];
 
 #        ifdef MASSIVE_PARTICLES
-         Mass_Par_Ref    =    Mass_Par;
-         CoMX_Par_Ref    =    CoMX_Par;
-         CoMY_Par_Ref    =    CoMY_Par;
-         CoMZ_Par_Ref    =    CoMZ_Par;
-         MomX_Par_Ref    =    MomX_Par;
-         MomY_Par_Ref    =    MomY_Par;
-         MomZ_Par_Ref    =    MomZ_Par;
-         AngMomX_Par_Ref = AngMomX_Par;
-         AngMomY_Par_Ref = AngMomY_Par;
-         AngMomZ_Par_Ref = AngMomZ_Par;
-         Ekin_Par_Ref    =    Ekin_Par;
-         Epot_Par_Ref    =    Epot_Par;
-         Etot_Par_Ref    =    Etot_Par;
+         Mass_Par_ConservedRef    =    Mass_Par;
+         CoMX_Par_ConservedRef    =    CoMX_Par;
+         CoMY_Par_ConservedRef    =    CoMY_Par;
+         CoMZ_Par_ConservedRef    =    CoMZ_Par;
+         MomX_Par_ConservedRef    =    MomX_Par;
+         MomY_Par_ConservedRef    =    MomY_Par;
+         MomZ_Par_ConservedRef    =    MomZ_Par;
+         AngMomX_Par_ConservedRef = AngMomX_Par;
+         AngMomY_Par_ConservedRef = AngMomY_Par;
+         AngMomZ_Par_ConservedRef = AngMomZ_Par;
+         Ekin_Par_ConservedRef    =    Ekin_Par;
+         Epot_Par_ConservedRef    =    Epot_Par;
+         Etot_Par_ConservedRef    =    Etot_Par;
 #        if ( MODEL != PAR_ONLY )
-         Mass_All_Ref    =    Mass_All;
-         CoMX_All_Ref    =    CoMX_All;
-         CoMY_All_Ref    =    CoMY_All;
-         CoMZ_All_Ref    =    CoMZ_All;
-         MomX_All_Ref    =    MomX_All;
-         MomY_All_Ref    =    MomY_All;
-         MomZ_All_Ref    =    MomZ_All;
-         AngMomX_All_Ref = AngMomX_All;
-         AngMomY_All_Ref = AngMomY_All;
-         AngMomZ_All_Ref = AngMomZ_All;
-         Etot_All_Ref    =    Etot_All;
+         Mass_All_ConservedRef    =    Mass_All;
+         CoMX_All_ConservedRef    =    CoMX_All;
+         CoMY_All_ConservedRef    =    CoMY_All;
+         CoMZ_All_ConservedRef    =    CoMZ_All;
+         MomX_All_ConservedRef    =    MomX_All;
+         MomY_All_ConservedRef    =    MomY_All;
+         MomZ_All_ConservedRef    =    MomZ_All;
+         AngMomX_All_ConservedRef = AngMomX_All;
+         AngMomY_All_ConservedRef = AngMomY_All;
+         AngMomZ_All_ConservedRef = AngMomZ_All;
+         Etot_All_ConservedRef    =    Etot_All;
 #        endif // #if ( MODEL != PAR_ONLY )
 #        endif // #ifdef MASSIVE_PARTICLES
-         ConservedRefLoaded = true;
-      } // if ( !ConservedRefLoaded )
+      } // if ( ! ConservedRefLoaded )
+   } // if ( MPI_Rank == 0 )
 
-//    only record the reference if not check conservation
-      if ( ! OPT__CK_CONSERVATION )
-      {
-#        if ( MODEL == ELBDM )
-         delete [] Flu_ELBDM;
-#        endif
-         return;
-      }
+   if ( ! ConservedRefLoaded ) ConservedRefLoaded = true;
+
+// only record the reference if not check conservation
+   if ( ! OPT__CK_CONSERVATION )
+   {
+#     if ( MODEL == ELBDM )
+      delete [] Flu_ELBDM;
+#     endif
+      return;
+   }
+
+// output
+   if ( MPI_Rank == 0 )
+   {
+//    note that a variable length array cannot have static storage duration
+      double AbsErr[NVar], RelErr[NVar];
 
       if ( FirstTime )
       {
 //       output header
          FILE *File = fopen( FileName, "a" );
 
-         Aux_Message( File, "# Ref time        : %13.7e\n", Time_Ref );
+         Aux_Message( File, "# Ref time        : %13.7e\n", Time_ConservedRef );
          Aux_Message( File, "\n" );
 
 #        if   ( MODEL == HYDRO )
@@ -675,8 +686,8 @@ void Aux_Check_Conservation( const char *comment )
 //    calculate errors
       for (int v=0; v<NVar; v++)
       {
-         AbsErr[v] = Fluid_AllRank[v] - Fluid_Ref[v];
-         RelErr[v] = AbsErr[v] / fabs(Fluid_Ref[v]);
+         AbsErr[v] = Fluid_AllRank[v] - Fluid_ConservedRef[v];
+         RelErr[v] = AbsErr[v] / fabs(Fluid_ConservedRef[v]);
       }
 
 
@@ -694,40 +705,40 @@ void Aux_Check_Conservation( const char *comment )
 
       if ( v == index_before_column_CoM )
       {
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[0],   CoM_Gas[0]-CoM_Gas_Ref[0],      (CoM_Gas[0]-CoM_Gas_Ref[0])/(Time[0]-Time_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[1],   CoM_Gas[1]-CoM_Gas_Ref[1],      (CoM_Gas[1]-CoM_Gas_Ref[1])/(Time[0]-Time_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[2],   CoM_Gas[2]-CoM_Gas_Ref[2],      (CoM_Gas[2]-CoM_Gas_Ref[2])/(Time[0]-Time_Ref) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[0],   CoM_Gas[0]-CoM_Gas_ConservedRef[0],      (CoM_Gas[0]-CoM_Gas_ConservedRef[0])/(Time[0]-Time_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[1],   CoM_Gas[1]-CoM_Gas_ConservedRef[1],      (CoM_Gas[1]-CoM_Gas_ConservedRef[1])/(Time[0]-Time_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",  CoM_Gas[2],   CoM_Gas[2]-CoM_Gas_ConservedRef[2],      (CoM_Gas[2]-CoM_Gas_ConservedRef[2])/(Time[0]-Time_ConservedRef) );
       }
 
       }
 
 #     ifdef MASSIVE_PARTICLES
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    Mass_Par,       Mass_Par-Mass_Par_Ref,          (Mass_Par-Mass_Par_Ref)/fabs(Mass_Par_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMX_Par,       CoMX_Par-CoMX_Par_Ref,          (CoMX_Par-CoMX_Par_Ref)/(Time[0]-Time_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMY_Par,       CoMY_Par-CoMY_Par_Ref,          (CoMY_Par-CoMY_Par_Ref)/(Time[0]-Time_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMZ_Par,       CoMZ_Par-CoMZ_Par_Ref,          (CoMZ_Par-CoMZ_Par_Ref)/(Time[0]-Time_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomX_Par,       MomX_Par-MomX_Par_Ref,          (MomX_Par-MomX_Par_Ref)/fabs(MomX_Par_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomY_Par,       MomY_Par-MomY_Par_Ref,          (MomY_Par-MomY_Par_Ref)/fabs(MomY_Par_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomZ_Par,       MomZ_Par-MomZ_Par_Ref,          (MomZ_Par-MomZ_Par_Ref)/fabs(MomZ_Par_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e", AngMomX_Par, AngMomX_Par-AngMomX_Par_Ref, (AngMomX_Par-AngMomX_Par_Ref)/fabs(AngMomX_Par_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e", AngMomY_Par, AngMomY_Par-AngMomY_Par_Ref, (AngMomY_Par-AngMomY_Par_Ref)/fabs(AngMomY_Par_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e", AngMomZ_Par, AngMomZ_Par-AngMomZ_Par_Ref, (AngMomZ_Par-AngMomZ_Par_Ref)/fabs(AngMomZ_Par_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    Ekin_Par,       Ekin_Par-Ekin_Par_Ref,          (Ekin_Par-Ekin_Par_Ref)/fabs(Ekin_Par_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    Epot_Par,       Epot_Par-Epot_Par_Ref,          (Epot_Par-Epot_Par_Ref)/fabs(Epot_Par_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    Etot_Par,       Etot_Par-Etot_Par_Ref,          (Etot_Par-Etot_Par_Ref)/fabs(Etot_Par_Ref) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    Mass_Par,       Mass_Par-Mass_Par_ConservedRef,          (Mass_Par-Mass_Par_ConservedRef)/fabs(Mass_Par_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMX_Par,       CoMX_Par-CoMX_Par_ConservedRef,          (CoMX_Par-CoMX_Par_ConservedRef)/(Time[0]-Time_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMY_Par,       CoMY_Par-CoMY_Par_ConservedRef,          (CoMY_Par-CoMY_Par_ConservedRef)/(Time[0]-Time_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMZ_Par,       CoMZ_Par-CoMZ_Par_ConservedRef,          (CoMZ_Par-CoMZ_Par_ConservedRef)/(Time[0]-Time_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomX_Par,       MomX_Par-MomX_Par_ConservedRef,          (MomX_Par-MomX_Par_ConservedRef)/fabs(MomX_Par_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomY_Par,       MomY_Par-MomY_Par_ConservedRef,          (MomY_Par-MomY_Par_ConservedRef)/fabs(MomY_Par_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomZ_Par,       MomZ_Par-MomZ_Par_ConservedRef,          (MomZ_Par-MomZ_Par_ConservedRef)/fabs(MomZ_Par_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e", AngMomX_Par, AngMomX_Par-AngMomX_Par_ConservedRef, (AngMomX_Par-AngMomX_Par_ConservedRef)/fabs(AngMomX_Par_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e", AngMomY_Par, AngMomY_Par-AngMomY_Par_ConservedRef, (AngMomY_Par-AngMomY_Par_ConservedRef)/fabs(AngMomY_Par_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e", AngMomZ_Par, AngMomZ_Par-AngMomZ_Par_ConservedRef, (AngMomZ_Par-AngMomZ_Par_ConservedRef)/fabs(AngMomZ_Par_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    Ekin_Par,       Ekin_Par-Ekin_Par_ConservedRef,          (Ekin_Par-Ekin_Par_ConservedRef)/fabs(Ekin_Par_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    Epot_Par,       Epot_Par-Epot_Par_ConservedRef,          (Epot_Par-Epot_Par_ConservedRef)/fabs(Epot_Par_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    Etot_Par,       Etot_Par-Etot_Par_ConservedRef,          (Etot_Par-Etot_Par_ConservedRef)/fabs(Etot_Par_ConservedRef) );
 
 #     if ( MODEL != PAR_ONLY )
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    Mass_All,       Mass_All-Mass_All_Ref,          (Mass_All-Mass_All_Ref)/fabs(Mass_All_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMX_All,       CoMX_All-CoMX_All_Ref,          (CoMX_All-CoMX_All_Ref)/(Time[0]-Time_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMY_All,       CoMY_All-CoMY_All_Ref,          (CoMY_All-CoMY_All_Ref)/(Time[0]-Time_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMZ_All,       CoMZ_All-CoMZ_All_Ref,          (CoMZ_All-CoMZ_All_Ref)/(Time[0]-Time_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomX_All,       MomX_All-MomX_All_Ref,          (MomX_All-MomX_All_Ref)/fabs(MomX_All_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomY_All,       MomY_All-MomY_All_Ref,          (MomY_All-MomY_All_Ref)/fabs(MomY_All_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomZ_All,       MomZ_All-MomZ_All_Ref,          (MomZ_All-MomZ_All_Ref)/fabs(MomZ_All_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e", AngMomX_All, AngMomX_All-AngMomX_All_Ref, (AngMomX_All-AngMomX_All_Ref)/fabs(AngMomX_All_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e", AngMomY_All, AngMomY_All-AngMomY_All_Ref, (AngMomY_All-AngMomY_All_Ref)/fabs(AngMomY_All_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e", AngMomZ_All, AngMomZ_All-AngMomZ_All_Ref, (AngMomZ_All-AngMomZ_All_Ref)/fabs(AngMomZ_All_Ref) );
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    Etot_All,       Etot_All-Etot_All_Ref,          (Etot_All-Etot_All_Ref)/fabs(Etot_All_Ref) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    Mass_All,       Mass_All-Mass_All_ConservedRef,          (Mass_All-Mass_All_ConservedRef)/fabs(Mass_All_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMX_All,       CoMX_All-CoMX_All_ConservedRef,          (CoMX_All-CoMX_All_ConservedRef)/(Time[0]-Time_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMY_All,       CoMY_All-CoMY_All_ConservedRef,          (CoMY_All-CoMY_All_ConservedRef)/(Time[0]-Time_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    CoMZ_All,       CoMZ_All-CoMZ_All_ConservedRef,          (CoMZ_All-CoMZ_All_ConservedRef)/(Time[0]-Time_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomX_All,       MomX_All-MomX_All_ConservedRef,          (MomX_All-MomX_All_ConservedRef)/fabs(MomX_All_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomY_All,       MomY_All-MomY_All_ConservedRef,          (MomY_All-MomY_All_ConservedRef)/fabs(MomY_All_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    MomZ_All,       MomZ_All-MomZ_All_ConservedRef,          (MomZ_All-MomZ_All_ConservedRef)/fabs(MomZ_All_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e", AngMomX_All, AngMomX_All-AngMomX_All_ConservedRef, (AngMomX_All-AngMomX_All_ConservedRef)/fabs(AngMomX_All_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e", AngMomY_All, AngMomY_All-AngMomY_All_ConservedRef, (AngMomY_All-AngMomY_All_ConservedRef)/fabs(AngMomY_All_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e", AngMomZ_All, AngMomZ_All-AngMomZ_All_ConservedRef, (AngMomZ_All-AngMomZ_All_ConservedRef)/fabs(AngMomZ_All_ConservedRef) );
+      Aux_Message( File, "  %17.7e  %17.7e  %17.7e",    Etot_All,       Etot_All-Etot_All_ConservedRef,          (Etot_All-Etot_All_ConservedRef)/fabs(Etot_All_ConservedRef) );
 #     endif // if ( MODEL != PAR_ONLY )
 #     endif // #ifdef MASSIVE_PARTICLES
 

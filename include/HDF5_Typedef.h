@@ -96,73 +96,73 @@ struct KeyInfo_t
    long   UniqueDataID;
 
 // conserved variables
-   double        Time_H5Ref;
+   double        Time_ConservedRef;
 #  if   ( MODEL == HYDRO )
-   double    Mass_Gas_H5Ref;
-   double    CoMX_Gas_H5Ref;
-   double    CoMY_Gas_H5Ref;
-   double    CoMZ_Gas_H5Ref;
-   double    MomX_Gas_H5Ref;
-   double    MomY_Gas_H5Ref;
-   double    MomZ_Gas_H5Ref;
-   double AngMomX_Gas_H5Ref;
-   double AngMomY_Gas_H5Ref;
-   double AngMomZ_Gas_H5Ref;
-   double    Ekin_Gas_H5Ref;
-   double    Eint_Gas_H5Ref;
-   double    Epot_Gas_H5Ref;
+   double    Mass_Gas_ConservedRef;
+   double    CoMX_Gas_ConservedRef;
+   double    CoMY_Gas_ConservedRef;
+   double    CoMZ_Gas_ConservedRef;
+   double    MomX_Gas_ConservedRef;
+   double    MomY_Gas_ConservedRef;
+   double    MomZ_Gas_ConservedRef;
+   double AngMomX_Gas_ConservedRef;
+   double AngMomY_Gas_ConservedRef;
+   double AngMomZ_Gas_ConservedRef;
+   double    Ekin_Gas_ConservedRef;
+   double    Eint_Gas_ConservedRef;
+   double    Epot_Gas_ConservedRef;
 #  ifdef MHD
-   double    Emag_Gas_H5Ref;
+   double    Emag_Gas_ConservedRef;
 #  endif
-   double    Etot_Gas_H5Ref;
+   double    Etot_Gas_ConservedRef;
 #  elif ( MODEL == ELBDM )
-   double    Mass_Psi_H5Ref;
-   double    CoMX_Psi_H5Ref;
-   double    CoMY_Psi_H5Ref;
-   double    CoMZ_Psi_H5Ref;
-   double    MomX_Psi_H5Ref;
-   double    MomY_Psi_H5Ref;
-   double    MomZ_Psi_H5Ref;
-   double AngMomX_Psi_H5Ref;
-   double AngMomY_Psi_H5Ref;
-   double AngMomZ_Psi_H5Ref;
-   double    Ekin_Psi_H5Ref;
-   double    Epot_Psi_H5Ref;
-   double    Esel_Psi_H5Ref;
-   double    Etot_Psi_H5Ref;
+   double    Mass_Psi_ConservedRef;
+   double    CoMX_Psi_ConservedRef;
+   double    CoMY_Psi_ConservedRef;
+   double    CoMZ_Psi_ConservedRef;
+   double    MomX_Psi_ConservedRef;
+   double    MomY_Psi_ConservedRef;
+   double    MomZ_Psi_ConservedRef;
+   double AngMomX_Psi_ConservedRef;
+   double AngMomY_Psi_ConservedRef;
+   double AngMomZ_Psi_ConservedRef;
+   double    Ekin_Psi_ConservedRef;
+   double    Epot_Psi_ConservedRef;
+   double    Esel_Psi_ConservedRef;
+   double    Etot_Psi_ConservedRef;
 #  endif
 
 #  if ( NCOMP_PASSIVE > 0 )
-   double     Passive_H5Ref[NCOMP_PASSIVE];
-   double Passive_Sum_H5Ref;
+   double     Passive_ConservedRef[NCOMP_PASSIVE];
+   double Passive_Sum_ConservedRef;
 #  endif
 
 #  ifdef MASSIVE_PARTICLES
-   double    Mass_Par_H5Ref;
-   double    CoMX_Par_H5Ref;
-   double    CoMY_Par_H5Ref;
-   double    CoMZ_Par_H5Ref;
-   double    MomX_Par_H5Ref;
-   double    MomY_Par_H5Ref;
-   double    MomZ_Par_H5Ref;
-   double AngMomX_Par_H5Ref;
-   double AngMomY_Par_H5Ref;
-   double AngMomZ_Par_H5Ref;
-   double    Ekin_Par_H5Ref;
-   double    Epot_Par_H5Ref;
-   double    Etot_Par_H5Ref;
+   double    Mass_Par_ConservedRef;
+   double    CoMX_Par_ConservedRef;
+   double    CoMY_Par_ConservedRef;
+   double    CoMZ_Par_ConservedRef;
+   double    MomX_Par_ConservedRef;
+   double    MomY_Par_ConservedRef;
+   double    MomZ_Par_ConservedRef;
+   double AngMomX_Par_ConservedRef;
+   double AngMomY_Par_ConservedRef;
+   double AngMomZ_Par_ConservedRef;
+   double    Ekin_Par_ConservedRef;
+   double    Epot_Par_ConservedRef;
+   double    Etot_Par_ConservedRef;
 #  if ( MODEL != PAR_ONLY )
-   double    Mass_All_H5Ref;
-   double    CoMX_All_H5Ref;
-   double    CoMY_All_H5Ref;
-   double    CoMZ_All_H5Ref;
-   double    MomX_All_H5Ref;
-   double    MomY_All_H5Ref;
-   double    MomZ_All_H5Ref;
-   double AngMomX_All_H5Ref;
-   double AngMomY_All_H5Ref;
-   double AngMomZ_All_H5Ref;
-   double    Etot_All_H5Ref;
+   double    Mass_All_ConservedRef;
+   double    CoMX_All_ConservedRef;
+   double    CoMY_All_ConservedRef;
+   double    CoMZ_All_ConservedRef;
+   double    MomX_All_ConservedRef;
+   double    MomY_All_ConservedRef;
+   double    MomZ_All_ConservedRef;
+   double AngMomX_All_ConservedRef;
+   double AngMomY_All_ConservedRef;
+   double AngMomZ_All_ConservedRef;
+   double    Etot_All_ConservedRef;
 #  endif // #if ( MODEL != PAR_ONLY )
 #  endif // #ifdef MASSIVE_PARTICLES
 
