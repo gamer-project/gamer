@@ -30,8 +30,8 @@
 //                const double CoM_MaxR      = __FLT_MAX__; // entire domain
 //                const double CoM_MinRho    = 0.0;
 //                const long   CoM_Field     = _TOTAL_DENS;
-//                const double CoM_TolErrR   = amr->dh[MAX_LEVEL];
-//                const int    CoM_MaxIter   = 10;
+//                const double CoM_TolErrR   = __FLT_MAX__; // disable it since CoM_MaxR includes the entire domain
+//                const int    CoM_MaxIter   = 1;           // no iteration is required since CoM_MaxR includes the entire domain
 //
 //                Aux_FindWeightedAverageCenter( CoM_Coord, CoM_ref, CoM_MaxR, CoM_MinRho,
 //                                               CoM_Field, CoM_TolErrR, CoM_MaxIter, &CoM_FinaldR, &CoM_FinalNIter );
@@ -209,7 +209,8 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
                                   MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
             }
 
-#           pragma omp parallel for reduction ( +:W_ThisRank, WX_ThisRank, WY_ThisRank, WZ_ThisRank ) schedule( runtime )
+//          use the "static" schedule for reproducibility
+#           pragma omp parallel for reduction ( +:W_ThisRank, WX_ThisRank, WY_ThisRank, WZ_ThisRank ) schedule( static )
             for (int t=0; t<8*NPG; t++)
             {
                const int PID = 8*Disp + t;
