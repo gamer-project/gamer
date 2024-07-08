@@ -35,6 +35,7 @@ extern void (*Init_ByFile_User_Ptr)( real fluid_out[], const real fluid_in[], co
                                      const int lv, double AuxArray[] );
 extern void (*Init_Field_User_Ptr)();
 extern void (*Init_User_Ptr)();
+extern void (*Init_User_AfterPoisson_Ptr)();
 extern void (*Output_User_Ptr)();
 #ifdef SUPPORT_HDF5
 extern void (*HDF5_Output_User_Ptr)( HDF5_OutUser_t *HDF5_OutUser );
