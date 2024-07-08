@@ -3,7 +3,6 @@
 
 
 
-#include "GAMER.h"
 #include "CUFLU.h"
 
 
@@ -32,10 +31,13 @@
 //               N_Flux   : Size of flux
 //               NSkip_N  : Empty size of flux on normal     direction
 //               NSkip_T  : Empty size of flux on transverse direction
+//               NSkip_MHM_Half : skip for MHM scheme half-step
 //               dh       : Cell size
+//               initialize : initialize g_Flux to zero or not
 //
 // Return      : g_Flux[]
 //-----------------------------------------------------------------------------------------
+GPU_DEVICE
 void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
                             const real g_PriVar[][ CUBE(FLU_NXT) ],
                                   real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
@@ -45,7 +47,9 @@ void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
                             const int N_Flux,
                             const int NSkip_N,
                             const int NSkip_T,
-                            const real dh )
+                            const int NSkip_MHM_Half,
+                            const real dh,
+                            const bool initialize )
 {
 #  ifdef GAMER_DEBUG
    if ( g_ConVar == NULL  &&  g_PriVar == NULL )   Aux_Error( ERROR_INFO, "Both g_ConVar and g_PriVar are NULL!\n");
@@ -74,20 +78,20 @@ void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
       switch ( d )
       {
-         case 0 : flux_size_i   = N_Var-2*N_Ghost-NSkip_N-1;                 flux_size_j   = N_Var-2*N_Ghost-2*NSkip_T-2*skip_update_T; flux_size_k   = N_Var-2*N_Ghost-2*NSkip_T-2*skip_update_T;
-                  flux_offset_i = 0;                                         flux_offset_j = skip_update_T;                             flux_offset_k = skip_update_T;
-                  var_offset_i  = N_Ghost+NSkip_N;                           var_offset_j  = N_Ghost+NSkip_T;                           var_offset_k  = N_Ghost+NSkip_T;
+         case 0 : flux_size_i   = N_Var-2*N_Ghost+2*NSkip_MHM_Half-NSkip_N-1;                 flux_size_j   = N_Var-2*N_Ghost+2*NSkip_MHM_Half-2*NSkip_T-2*skip_update_T; flux_size_k   = N_Var-2*N_Ghost+2*NSkip_MHM_Half-2*NSkip_T-2*skip_update_T;
+                  flux_offset_i = 0;                                                          flux_offset_j = skip_update_T;                                              flux_offset_k = skip_update_T;
+                  var_offset_i  = N_Ghost-NSkip_MHM_Half+NSkip_N;                             var_offset_j  = N_Ghost-NSkip_MHM_Half+NSkip_T;                             var_offset_k  = N_Ghost+NSkip_T-NSkip_MHM_Half+NSkip_T;
                   // not sure if var_offset_i works for CTU
                   break;
 
-         case 1 : flux_size_i   = N_Var-2*N_Ghost-2*NSkip_T-2*skip_update_T; flux_size_j   = N_Var-2*N_Ghost-NSkip_N-1;                 flux_size_k   = N_Var-2*N_Ghost-2*NSkip_T-2*skip_update_T;
-                  flux_offset_i = skip_update_T;                             flux_offset_j = 0;                                         flux_offset_k = skip_update_T;
-                  var_offset_i  = N_Ghost+NSkip_T;                           var_offset_j  = N_Ghost+NSkip_N;                           var_offset_k  = N_Ghost+NSkip_T;
+         case 1 : flux_size_i   = N_Var-2*N_Ghost+2*NSkip_MHM_Half-2*NSkip_T-2*skip_update_T; flux_size_j   = N_Var-2*N_Ghost+2*NSkip_MHM_Half-NSkip_N-1;                 flux_size_k   = N_Var-2*N_Ghost+2*NSkip_MHM_Half-2*NSkip_T-2*skip_update_T;
+                  flux_offset_i = skip_update_T;                                              flux_offset_j = 0;                                                          flux_offset_k = skip_update_T;
+                  var_offset_i  = N_Ghost-NSkip_MHM_Half+NSkip_T;                             var_offset_j  = N_Ghost-NSkip_MHM_Half+NSkip_N;                             var_offset_k  = N_Ghost-NSkip_MHM_Half+NSkip_T;
                   break;
 
-         case 2 : flux_size_i   = N_Var-2*N_Ghost-2*NSkip_T-2*skip_update_T; flux_size_j   = N_Var-2*N_Ghost-2*NSkip_T-2*skip_update_T; flux_size_k   = N_Var-2*N_Ghost-NSkip_N-1;
-                  flux_offset_i = skip_update_T;                             flux_offset_j = skip_update_T;                             flux_offset_k = 0;
-                  var_offset_i  = N_Ghost+NSkip_T;                           var_offset_j  = N_Ghost+NSkip_T;                           var_offset_k  = N_Ghost+NSkip_N;
+         case 2 : flux_size_i   = N_Var-2*N_Ghost+2*NSkip_MHM_Half-2*NSkip_T-2*skip_update_T; flux_size_j   = N_Var-2*N_Ghost+2*NSkip_MHM_Half-2*NSkip_T-2*skip_update_T; flux_size_k   = N_Var-2*N_Ghost+2*NSkip_MHM_Half-NSkip_N-1;
+                  flux_offset_i = skip_update_T;                                              flux_offset_j = skip_update_T;                                              flux_offset_k = 0;
+                  var_offset_i  = N_Ghost-NSkip_MHM_Half+NSkip_T;                             var_offset_j  = N_Ghost-NSkip_MHM_Half+NSkip_T;                             var_offset_k  = N_Ghost-NSkip_MHM_Half+NSkip_N;
                   break;
       } // switch ( d )
 
@@ -96,14 +100,14 @@ void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
       int mag_offset_i, mag_offset_j, mag_offset_k;
       switch ( d )
       {
-         case 0 : sizeB_i      = N_Var+1;   sizeB_j      = N_Var;     sizeB_k      = N_Var;
-                  mag_offset_i = N_Ghost+1; mag_offset_j = N_Ghost;   mag_offset_k = N_Ghost;
+         case 0 : sizeB_i      = N_Var+1;                  sizeB_j      = N_Var;                    sizeB_k      = N_Var;
+                  mag_offset_i = N_Ghost-NSkip_MHM_Half+1; mag_offset_j = N_Ghost-NSkip_MHM_Half;   mag_offset_k = N_Ghost-NSkip_MHM_Half;
                   break;
-         case 1 : sizeB_i      = N_Var;     sizeB_j      = N_Var+1;   sizeB_k      = N_Var;
-                  mag_offset_i = N_Ghost;   mag_offset_j = N_Ghost+1; mag_offset_k = N_Ghost;
+         case 1 : sizeB_i      = N_Var;                    sizeB_j      = N_Var+1;                  sizeB_k      = N_Var;
+                  mag_offset_i = N_Ghost-NSkip_MHM_Half;   mag_offset_j = N_Ghost-NSkip_MHM_Half+1; mag_offset_k = N_Ghost-NSkip_MHM_Half;
                   break;
-         case 2 : sizeB_i      = N_Var;     sizeB_j      = N_Var;     sizeB_k      = N_Var+1;
-                  mag_offset_i = N_Ghost;   mag_offset_j = N_Ghost;   mag_offset_k = N_Ghost+1;
+         case 2 : sizeB_i      = N_Var;                    sizeB_j      = N_Var;                    sizeB_k      = N_Var+1;
+                  mag_offset_i = N_Ghost-NSkip_MHM_Half;   mag_offset_j = N_Ghost-NSkip_MHM_Half;   mag_offset_k = N_Ghost-NSkip_MHM_Half+1;
                   break;
       } // switch ( d )
 
@@ -166,6 +170,8 @@ void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
 #        endif
 
 /*
+// debug message
+// TODO: delete this after dev
 #ifdef MHD
          printf("d=%d, flux: (%02d, %02d, %02d, %05d), cvar: (%02d, %02d, %02d, %05d), fc: (%02d, %02d, %02d) => (%04d, %04d, %04d), N_Flux=%02d, N_Var=%02d, sizeB=(%02d %02d %02d)\n",
                  d,
@@ -188,9 +194,10 @@ void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
          real B_N_mean, B_T1_mean, B_T2_mean;
          if ( g_FC_B == NULL )
          {
-            B_N_mean  = g_PriVar[NCOMP_TOTAL+d    ][idx_cvar];
-            B_T1_mean = g_PriVar[NCOMP_TOTAL+TDir1][idx_cvar];
-            B_T2_mean = g_PriVar[NCOMP_TOTAL+TDir2][idx_cvar];
+//          MHM full-step only
+            B_N_mean  = (real)0.5 * ( g_PriVar[NCOMP_TOTAL+d    ][idx_cvar] + g_PriVar[NCOMP_TOTAL+d    ][idx_cvar + didx_cvar[d]] );
+            B_T1_mean = (real)0.5 * ( g_PriVar[NCOMP_TOTAL+TDir1][idx_cvar] + g_PriVar[NCOMP_TOTAL+TDir1][idx_cvar + didx_cvar[d]] );
+            B_T2_mean = (real)0.5 * ( g_PriVar[NCOMP_TOTAL+TDir2][idx_cvar] + g_PriVar[NCOMP_TOTAL+TDir2][idx_cvar + didx_cvar[d]] );
          }
          else
          {
@@ -216,38 +223,65 @@ void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //       ----al--------ar-----
 //       |         |         |
 //       ---------------------
-         real N_slope, T1_slope, T2_slope;
-         real al, bl, ar, br;
+         real N_slope, T1_slope, T2_slope; // normal, transverse 1, and transverse 2 direction
+         real al, bl, ar, br; // temp slope variables, see the graph above
 
-//       normal direction
-         N_slope = ( g_ConVar[DENS][ idx_cvar + didx_cvar[d] ] - g_ConVar[DENS][ idx_cvar ] ) * _dh;
+         if ( g_ConVar == NULL )
+         {
+            N_slope = ( g_ConVar[DENS][ idx_cvar + didx_cvar[d] ] - g_ConVar[DENS][ idx_cvar ] ) * _dh;
 
-//       transverse direction 1
-         al = g_ConVar[DENS][ idx_cvar                                   ] -
-              g_ConVar[DENS][ idx_cvar                - didx_cvar[TDir1] ];
-         bl = g_ConVar[DENS][ idx_cvar                + didx_cvar[TDir1] ] -
-              g_ConVar[DENS][ idx_cvar                                   ];
-         ar = g_ConVar[DENS][ idx_cvar + didx_cvar[d]                    ] -
-              g_ConVar[DENS][ idx_cvar + didx_cvar[d] - didx_cvar[TDir1] ];
-         br = g_ConVar[DENS][ idx_cvar + didx_cvar[d] + didx_cvar[TDir1] ] -
-              g_ConVar[DENS][ idx_cvar + didx_cvar[d]                    ];
-         T1_slope = 0.25 * (al + bl + ar + br) * _dh;
+            al = g_ConVar[DENS][ idx_cvar                                   ] -
+                 g_ConVar[DENS][ idx_cvar                - didx_cvar[TDir1] ];
+            bl = g_ConVar[DENS][ idx_cvar                + didx_cvar[TDir1] ] -
+                 g_ConVar[DENS][ idx_cvar                                   ];
+            ar = g_ConVar[DENS][ idx_cvar + didx_cvar[d]                    ] -
+                 g_ConVar[DENS][ idx_cvar + didx_cvar[d] - didx_cvar[TDir1] ];
+            br = g_ConVar[DENS][ idx_cvar + didx_cvar[d] + didx_cvar[TDir1] ] -
+                 g_ConVar[DENS][ idx_cvar + didx_cvar[d]                    ];
+            T1_slope = 0.25 * (al + bl + ar + br) * _dh;
 
-//       transverse direction 2
-         al = g_ConVar[DENS][ idx_cvar                                   ] -
-              g_ConVar[DENS][ idx_cvar                - didx_cvar[TDir2] ];
-         bl = g_ConVar[DENS][ idx_cvar                + didx_cvar[TDir2] ] -
-              g_ConVar[DENS][ idx_cvar                                   ];
-         ar = g_ConVar[DENS][ idx_cvar + didx_cvar[d]                    ] -
-              g_ConVar[DENS][ idx_cvar + didx_cvar[d] - didx_cvar[TDir2] ];
-         br = g_ConVar[DENS][ idx_cvar + didx_cvar[d] + didx_cvar[TDir2] ] -
-              g_ConVar[DENS][ idx_cvar + didx_cvar[d]                    ];
-         T2_slope = 0.25 * (al + bl + ar + br) * _dh;
+            al = g_ConVar[DENS][ idx_cvar                                   ] -
+                 g_ConVar[DENS][ idx_cvar                - didx_cvar[TDir2] ];
+            bl = g_ConVar[DENS][ idx_cvar                + didx_cvar[TDir2] ] -
+                 g_ConVar[DENS][ idx_cvar                                   ];
+            ar = g_ConVar[DENS][ idx_cvar + didx_cvar[d]                    ] -
+                 g_ConVar[DENS][ idx_cvar + didx_cvar[d] - didx_cvar[TDir2] ];
+            br = g_ConVar[DENS][ idx_cvar + didx_cvar[d] + didx_cvar[TDir2] ] -
+                 g_ConVar[DENS][ idx_cvar + didx_cvar[d]                    ];
+            T2_slope = 0.25 * (al + bl + ar + br) * _dh;
+         }
+         else
+         {
+            N_slope = ( g_PriVar[DENS][ idx_cvar + didx_cvar[d] ] - g_PriVar[DENS][ idx_cvar ] ) * _dh;
+
+            al = g_PriVar[DENS][ idx_cvar                                   ] -
+                 g_PriVar[DENS][ idx_cvar                - didx_cvar[TDir1] ];
+            bl = g_PriVar[DENS][ idx_cvar                + didx_cvar[TDir1] ] -
+                 g_PriVar[DENS][ idx_cvar                                   ];
+            ar = g_PriVar[DENS][ idx_cvar + didx_cvar[d]                    ] -
+                 g_PriVar[DENS][ idx_cvar + didx_cvar[d] - didx_cvar[TDir1] ];
+            br = g_PriVar[DENS][ idx_cvar + didx_cvar[d] + didx_cvar[TDir1] ] -
+                 g_PriVar[DENS][ idx_cvar + didx_cvar[d]                    ];
+            T1_slope = 0.25 * (al + bl + ar + br) * _dh;
+
+            al = g_PriVar[DENS][ idx_cvar                                   ] -
+                 g_PriVar[DENS][ idx_cvar                - didx_cvar[TDir2] ];
+            bl = g_PriVar[DENS][ idx_cvar                + didx_cvar[TDir2] ] -
+                 g_PriVar[DENS][ idx_cvar                                   ];
+            ar = g_PriVar[DENS][ idx_cvar + didx_cvar[d]                    ] -
+                 g_PriVar[DENS][ idx_cvar + didx_cvar[d] - didx_cvar[TDir2] ];
+            br = g_PriVar[DENS][ idx_cvar + didx_cvar[d] + didx_cvar[TDir2] ] -
+                 g_PriVar[DENS][ idx_cvar + didx_cvar[d]                    ];
+            T2_slope = 0.25 * (al + bl + ar + br) * _dh;
+         } // if ( g_ConVar == NULL ) ... else ...
 
 //       4. do your calculation of the extra flux here
          real Extra_Flux = (real)0.0;
 
-//       5. flux add-up
+//       5. initialize flux if need
+         if ( initialize )   for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_Flux[d][v][idx_flux] = (real)0.0;
+
+//       6. flux add-up
          g_Flux[d][DENS][idx_flux] += Extra_Flux;
       } // CGPU_LOOP( idx, size_i*size_j*size_k )
    } // for (int d=0; d<3; d++)
@@ -257,143 +291,6 @@ void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
 #  endif
 
 } // FUNCTION : AddExtraFlux_Template
-
-
-
-//-----------------------------------------------------------------------------------------
-// Function    : AddExtraFlux_AddExtraFlux_HancockPredict_TemplateTemplate
-//
-// Description : Add extra flux only in Hancock predict
-//
-// Note        : 1. Only for MHM half-step
-//
-// Usage       : MHM half-step : AddExtraFlux_HancockPredict_Template( Flux, g_cc_array, g_FC_B, cc_idx, cc_i, cc_j, cc_k, NGhost, dh );
-//
-// Parameter   : Flux         : Array with hydrodynamic fluxes for adding the extra fluxes
-//               g_g_cc_array : Array storing the input cell-centered conserved fluid variables
-//               g_FC_B       : Array storing the input face-centered B field
-//               cc_idx/i/j/k : Index of g_cc_array
-//               NGhost       : Ghost zone size of data-reconstruction
-//               dh           : Cell size
-//
-// Return      : Flux[]
-//-----------------------------------------------------------------------------------------
-GPU_DEVICE
-void AddExtraFlux_HancockPredict_Template(       real Flux[][NCOMP_TOTAL_PLUS_MAG],
-                                           const real g_cc_array[][ CUBE(FLU_NXT) ],
-                                           const real g_FC_B[][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                                           const int cc_idx, const int cc_i, const int cc_j, const int cc_k,
-                                           const int NGhost, const real dh )
-{
-   const int didx_cvar[3] = { 1, FLU_NXT, SQR(FLU_NXT) };
-   const real _dh          = (real)1.0 / dh;
-
-   for (int f=0; f<6; f++)
-   {
-//    -------------
-//    |     ^     |
-//    ------3------
-//    |     |     |
-//  --0-> i j k --1->
-//    |     ^     |
-//    ------2------
-//    |     |     |
-//    -------------
-      const int d     = f / 2;
-      const int TDir1 = (d+1)%3;    // transverse direction 1
-      const int TDir2 = (d+2)%3;    // transverse direction 2
-      const int LorR  = f % 2; // 0: Left, 1: Right
-
-#     ifdef MHD
-      int sizeB_i, sizeB_j, sizeB_k;
-      switch ( d )
-      {
-         case 0 : sizeB_i = FLU_NXT_P1; sizeB_j = FLU_NXT;    sizeB_k = FLU_NXT;    break;
-         case 1 : sizeB_i = FLU_NXT;    sizeB_j = FLU_NXT_P1; sizeB_k = FLU_NXT;    break;
-         case 2 : sizeB_i = FLU_NXT;    sizeB_j = FLU_NXT;    sizeB_k = FLU_NXT_P1; break;
-      } // switch ( d )
-      const int stride_fc_BT1[3] = { 1, sizeB_k, sizeB_k*sizeB_i };
-      const int stride_fc_BT2[3] = { 1, sizeB_j, sizeB_j*sizeB_k };
-
-      const int idx_fc_BN  = IDX321( cc_i+LorR, cc_j, cc_j, sizeB_i, sizeB_j );
-      const int idx_fc_BT1 = IDX321( cc_i+LorR, cc_j, cc_j, sizeB_k, sizeB_i );
-      const int idx_fc_BT2 = IDX321( cc_i+LorR, cc_j, cc_j, sizeB_j, sizeB_k );
-#     endif
-
-/*
-#ifdef MHD
-      printf("f: %d, d: %d, LR: %d, cc: (%02d, %02d, %02d, %05d), fc: (%02d, %02d, %02d) => (%05d, %05d, %05d)\n",
-              f, d, LorR,
-              cc_i, cc_j, cc_k, cc_idx,
-              cc_i+LorR, cc_j, cc_k,
-              idx_fc_BN, idx_fc_BT1, idx_fc_BT2);
-#else
-      printf("f: %d, d: %d, LR: %d, cc: (%02d, %02d, %02d, %05d)\n",
-              f, d, LorR,
-              cc_i, cc_j, cc_k, cc_idx
-              );
-#endif
-*/
-
-//    1. compute the mean magnetic field at the face-centered flux location
-#     ifdef MHD
-      real B_N_mean, B_T1_mean, B_T2_mean;
-      B_N_mean  =              g_FC_B[    d][ idx_fc_BN                                            ];
-      B_T1_mean = (real)0.25*( g_FC_B[TDir1][ idx_fc_BT1                                           ] +
-                               g_FC_B[TDir1][ idx_fc_BT1                    + stride_fc_BT1[TDir1] ] +
-                               g_FC_B[TDir1][ idx_fc_BT1 - stride_fc_BT1[d]                        ] +
-                               g_FC_B[TDir1][ idx_fc_BT1 - stride_fc_BT1[d] + stride_fc_BT1[TDir1] ]   );
-      B_T2_mean = (real)0.25*( g_FC_B[TDir2][ idx_fc_BT2                                           ] +
-                               g_FC_B[TDir2][ idx_fc_BT2                    + stride_fc_BT2[TDir2] ] +
-                               g_FC_B[TDir2][ idx_fc_BT2 - stride_fc_BT2[d]                        ] +
-                               g_FC_B[TDir2][ idx_fc_BT2 - stride_fc_BT2[d] + stride_fc_BT2[TDir2] ]   );
-#     endif
-
-//    2. calculate the mean density slope at flux location
-//    ---------------------
-//    |         |         |
-//    ----bl--------br-----
-//    |         |         |
-//    |      N_slope      |
-//    |         |         |
-//    ----al--------ar-----
-//    |         |         |
-//    ---------------------
-      real N_slope, T1_slope, T2_slope;
-      real al, bl, ar, br;
-
-//    normal direction
-      N_slope = ( g_cc_array[DENS][ cc_idx + LorR*didx_cvar[d] ] - g_cc_array[DENS][ cc_idx + LorR*didx_cvar[d] - didx_cvar[d] ] ) * _dh;
-
-//    transverse direction 1
-      al = g_cc_array[DENS][ cc_idx + LorR*didx_cvar[d] - didx_cvar[d]                    ] -
-           g_cc_array[DENS][ cc_idx + LorR*didx_cvar[d] - didx_cvar[d] - didx_cvar[TDir1] ];
-      bl = g_cc_array[DENS][ cc_idx + LorR*didx_cvar[d] - didx_cvar[d] + didx_cvar[TDir1] ] -
-           g_cc_array[DENS][ cc_idx + LorR*didx_cvar[d] - didx_cvar[d]                    ];
-      ar = g_cc_array[DENS][ cc_idx + LorR*didx_cvar[d]                                   ] -
-           g_cc_array[DENS][ cc_idx + LorR*didx_cvar[d]                - didx_cvar[TDir1] ];
-      br = g_cc_array[DENS][ cc_idx + LorR*didx_cvar[d]                + didx_cvar[TDir1] ] -
-           g_cc_array[DENS][ cc_idx + LorR*didx_cvar[d]                                   ];
-      T1_slope = 0.25 * (al + bl + ar + br) * _dh;
-
-//    transverse direction 2
-      al = g_cc_array[DENS][ cc_idx + LorR*didx_cvar[d] - didx_cvar[d]                    ] -
-           g_cc_array[DENS][ cc_idx + LorR*didx_cvar[d] - didx_cvar[d] - didx_cvar[TDir2] ];
-      bl = g_cc_array[DENS][ cc_idx + LorR*didx_cvar[d] - didx_cvar[d] + didx_cvar[TDir2] ] -
-           g_cc_array[DENS][ cc_idx + LorR*didx_cvar[d] - didx_cvar[d]                    ];
-      ar = g_cc_array[DENS][ cc_idx + LorR*didx_cvar[d]                                   ] -
-           g_cc_array[DENS][ cc_idx + LorR*didx_cvar[d]                - didx_cvar[TDir2] ];
-      br = g_cc_array[DENS][ cc_idx + LorR*didx_cvar[d]                + didx_cvar[TDir2] ] -
-           g_cc_array[DENS][ cc_idx + LorR*didx_cvar[d]                                   ];
-      T2_slope = 0.25 * (al + bl + ar + br) * _dh;
-
-//    3. do your calculation of the extra flux here
-      real Extra_Flux = (real)0.0;
-
-//    4. flux add-up
-      Flux[f][DENS] += Extra_Flux;
-   } // for (int f=0; f<6; f++)
-} // FUNCTION : AddExtraFlux_HancockPredict_Template
 
 
 

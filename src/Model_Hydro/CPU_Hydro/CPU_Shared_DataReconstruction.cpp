@@ -18,6 +18,8 @@
 #include "CUFLU_Shared_ConstrainedTransport.cu"
 #endif
 
+#include "../../Microphysics/GPU_Hydro_AddExtraFlux.cu"
+
 #else
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
@@ -76,17 +78,26 @@ GPU_DEVICE
 static void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR], const real dt,
                                   const real dh, const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                                   const int cc_i, const int cc_j, const int cc_k,
+                                  const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                   const real g_FC_B[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                   const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                                   const int NGhost, const int NEle,
                                   const real MinDens, const real MinPres, const real MinEint,
                                   const EoS_t *EoS );
+
 GPU_DEVICE
-void AddExtraFlux_HancockPredict_Template(       real Flux[][NCOMP_TOTAL_PLUS_MAG],
-                                           const real g_cc_array[][ CUBE(FLU_NXT) ],
-                                           const real g_FC_B[][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                                           const int cc_idx, const int cc_i, const int cc_j, const int cc_k,
-                                           const int NGhost, const real dh );
+void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
+                            const real g_PriVar[][ CUBE(FLU_NXT) ],
+                                  real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                            const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
+                            const int N_Var,
+                            const int N_Ghost,
+                            const int N_Flux,
+                            const int NSkip_N,
+                            const int NSkip_T,
+                            const int NSkip_MHM_Half,
+                            const real dh,
+                            const bool initialize );
 #ifdef MHD
 GPU_DEVICE
 void Hydro_ConFC2PriCC_MHM(       real g_PriVar[][ CUBE(FLU_NXT) ],
@@ -163,6 +174,7 @@ static void Hydro_Char2Pri( real InOut[], const real Dens, const real Pres, cons
 //                                         Hydro_HancockPredict() requires the original g_ConVar[]
 //                g_FC_Var           : Array to store the output face-centered conserved variables
 //                                     --> Should contain NCOMP_TOTAL_PLUS_MAG variables
+//                g_Flux             : Array to store the extra fluxes for the Hancock predict
 //                g_Slope_PPM        : Array to store the x/y/z slopes for the PPM reconstruction
 //                                     --> Should contain NCOMP_LR variables
 //                                         --> Store internal energy as the last variable when LR_EINT is on
@@ -195,6 +207,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const real g_FC_B     [][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                                      real g_PriVar   [][ CUBE(FLU_NXT) ],
                                      real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+                                     real g_Flux     [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                      real g_Slope_PPM[][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ],
                                      real g_EC_Ele   [][ CUBE(N_EC_ELE) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
@@ -343,9 +356,20 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
    } // if ( Con2Pri )
 
 
+#  if ( FLU_SCHEME == MHM )
+#           ifdef MHD
+            const int NSkip_N = 0;
+            const int NSkip_T = 0;
+#           else
+            const int NSkip_N = 0;
+            const int NSkip_T = 1;
+#           endif
+// compute extra flux for MHM. The last parameter is true only for the first extra flux which the flux array is not initalized yet.
+   AddExtraFlux_Template( g_ConVar, NULL, g_Flux, g_FC_B, FLU_NXT, NGhost, N_HF_FLUX, NSkip_N, NSkip_T, 1, dh, true );
+#  ifdef MHD
 // compute electric field for MHM
-#  if ( FLU_SCHEME == MHM  &&  defined MHD )
    MHD_ComputeElectric_Half( g_EC_Ele, g_ConVar, g_FC_B, N_HF_ELE, NIn, NGhost );
+#  endif
 #  endif
 
 
@@ -660,8 +684,11 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 
 #     if ( FLU_SCHEME == MHM )
+      real Extra_Flux[6][NCOMP_TOTAL_PLUS_MAG] = {0.0};
+      for (int f=0; f<6; f++)
+
 //    7. advance the face-centered variables by half time-step for the MHM integrator
-      Hydro_HancockPredict( fcCon, fcPri, dt, dh, g_ConVar, idx_cc, i_cc, j_cc, k_cc, g_FC_B, g_EC_Ele, NGhost, N_HF_ELE,
+      Hydro_HancockPredict( fcCon, fcPri, dt, dh, g_ConVar, idx_cc, i_cc, j_cc, k_cc, g_Flux, g_FC_B, g_EC_Ele, NGhost, N_HF_ELE,
                             MinDens, MinPres, MinEint, EoS );
 #     endif // # if ( FLU_SCHEME == MHM )
 
@@ -707,6 +734,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const real g_FC_B     [][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                                      real g_PriVar   [][ CUBE(FLU_NXT) ],
                                      real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+                                     real g_Flux     [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                      real g_Slope_PPM[][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ],
                                      real g_EC_Ele   [][ CUBE(N_EC_ELE) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
@@ -916,10 +944,20 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
    } // if ( LR_Limiter != LR_LIMITER_ATHENA )
 
 
-
+#  if ( FLU_SCHEME == MHM )
+#           ifdef MHD
+            const int NSkip_N = 0;
+            const int NSkip_T = 0;
+#           else
+            const int NSkip_N = 0;
+            const int NSkip_T = 1;
+#           endif
+// compute extra flux for MHM. The last parameter is true only for the first extra flux which the flux array is not initalized yet.
+   AddExtraFlux_Template( g_ConVar, NULL, g_Flux, g_FC_B, FLU_NXT, NGhost, N_HF_FLUX, NSkip_N, NSkip_T, 1, dh, true );
+#  ifdef MHD
 // compute electric field for MHM
-#  if ( FLU_SCHEME == MHM  &&  defined MHD )
    MHD_ComputeElectric_Half( g_EC_Ele, g_ConVar, g_FC_B, N_HF_ELE, NIn, NGhost );
+#  endif
 #  endif
 
 
@@ -1366,7 +1404,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 #     if ( FLU_SCHEME == MHM )
 //    7. advance the face-centered variables by half time-step for the MHM integrator
-      Hydro_HancockPredict( fcCon, fcPri, dt, dh, g_ConVar, idx_cc, i_cc, j_cc, k_cc, g_FC_B, g_EC_Ele, NGhost, N_HF_ELE,
+      Hydro_HancockPredict( fcCon, fcPri, dt, dh, g_ConVar, idx_cc, i_cc, j_cc, k_cc, g_Flux, g_FC_B, g_EC_Ele, NGhost, N_HF_ELE,
                             MinDens, MinPres, MinEint, EoS );
 #     endif // # if ( FLU_SCHEME == MHM )
 
@@ -2078,6 +2116,7 @@ GPU_DEVICE
 void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR], const real dt,
                            const real dh, const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                            const int cc_i, const int cc_j, const int cc_k,
+                           const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real g_FC_B[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                            const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                            const int NGhost, const int NEle,
@@ -2099,7 +2138,27 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
                       EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 #     endif
 
-   AddExtraFlux_HancockPredict_Template( Flux, g_cc_array, g_FC_B, cc_idx, cc_i, cc_j, cc_k, NGhost, dh );
+// add extra flux
+   if ( g_Flux != NULL )
+   {
+     for (int f=0; f<6; f++)
+     {
+        const int d     = f / 2;
+        const int LorR  = f % 2;
+        const int TDir1 = (d+1) % 3;
+        const int TDir2 = (d+2) % 3;
+
+        int flux_ijk[3] = { cc_i-NGhost, cc_j-NGhost, cc_k-NGhost };
+        flux_ijk[d] += LorR;
+#       ifdef MHD
+        flux_ijk[TDir1] += 1;
+        flux_ijk[TDir2] += 1;
+#       endif
+        const int idx_flux = IDX321( flux_ijk[0], flux_ijk[1], flux_ijk[2], N_HF_FLUX, N_HF_FLUX );
+
+        for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++) Flux[f][v] += g_Flux[f][v][idx_flux];
+     } // for (int f=0; f<6; f++)
+   } // if ( g_Flux != NULL )
 
 // update the face-centered variables
    for (int v=0; v<NCOMP_TOTAL; v++)

@@ -40,12 +40,15 @@
 #endif
 #endif // #ifdef COSMIC_RAY
 
+#include "../../Microphysics/GPU_Hydro_AddExtraFlux.cu"
+
 #else // #ifdef __CUDACC__
 
 void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const real g_FC_B     [][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                                      real g_PriVar   [][ CUBE(FLU_NXT) ],
                                      real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+                                     real g_Flux     [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                      real g_Slope_PPM[][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ],
                                      real g_EC_Ele   [][ CUBE(N_EC_ELE) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
@@ -153,9 +156,6 @@ void CR_AddDiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 #endif // #ifdef CR_DIFFUSION
 #endif // #ifdef COSMIC_RAY
 
-#endif // #ifdef __CUDACC__ ... else ...
-
-
 void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
                             const real g_PriVar[][ CUBE(FLU_NXT) ],
                                   real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
@@ -165,7 +165,11 @@ void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
                             const int N_Flux,
                             const int NSkip_N,
                             const int NSkip_T,
-                            const real dh );
+                            const int NSkip_MHM_Half,
+                            const real dh,
+                            const bool initialize );
+
+#endif // #ifdef __CUDACC__ ... else ...
 
 
 // internal functions
@@ -398,6 +402,7 @@ void CPU_FluidSolver_MHM(
 //       --> we use the same array size as the half-step variables of MHM_RP to avoid
 //           changing the MHM_RP full-step MHD_ComputeElectric()
          real (*const g_PriVar_Half_1PG )[ CUBE(FLU_NXT)  ] = g_PriVar_1PG;
+         real (*const g_Flux_Half_1PG)[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ] = g_FC_Flux_1PG;
          real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = NULL;
 #        ifdef MHD
          real (*const g_EC_Ele_1PG      )[ CUBE(N_EC_ELE) ] = g_EC_Ele[P];
@@ -413,6 +418,12 @@ void CPU_FluidSolver_MHM(
             const int NSkip_N = 0;
             const int NSkip_T = 1;
 #           endif
+#           if ( FLU_SCHEME == MHM )
+            const int OffsetPri = 0;
+#           else
+            const int OffsetPri = LR_GHOST_SIZE;
+#           endif
+
 
 
 //       1. half-step prediction
@@ -463,7 +474,7 @@ void CPU_FluidSolver_MHM(
          CR_AddDiffuseFlux_HalfStep( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P], g_PriVar_1PG+MAG_OFFSET, dh, &MicroPhy );
 #        endif
 
-         AddExtraFlux_Template( g_Flu_Array_In[P], NULL, g_Flux_Half_1PG, g_Mag_Array_In[P], FLU_NXT, 0, N_HF_FLUX, NSkip_N, NSkip_T, dh );
+         AddExtraFlux_Template( g_Flu_Array_In[P], NULL, g_Flux_Half_1PG, g_Mag_Array_In[P], FLU_NXT, 0, N_HF_FLUX, NSkip_N, NSkip_T, 0, dh, false );
 
 
 //       1-a-3. evaluate electric field and update B field at the half time-step
@@ -504,7 +515,7 @@ void CPU_FluidSolver_MHM(
 
 //          1-a-5. evaluate the face-centered values by data reconstruction
 //                 --> note that g_PriVar_Half_1PG[] returned by Hydro_RiemannPredict() stores the primitive variables
-            Hydro_DataReconstruction( NULL, g_FC_Mag_Half_1PG, g_PriVar_Half_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
+            Hydro_DataReconstruction( NULL, g_FC_Mag_Half_1PG, g_PriVar_Half_1PG, g_FC_Var_1PG, NULL, g_Slope_PPM_1PG,
                                       NULL, Con2Pri_No, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
                                       MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
                                       JeansMinPres, JeansMinPres_Coeff, &EoS );
@@ -532,7 +543,7 @@ void CPU_FluidSolver_MHM(
 
 
 //          evaluate the face-centered values by data reconstruction
-            Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_Half_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
+            Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_Half_1PG, g_FC_Var_1PG, g_Flux_Half_1PG, g_Slope_PPM_1PG,
                                       g_EC_Ele_1PG, Con2Pri_Yes, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
                                       MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
                                       JeansMinPres, JeansMinPres_Coeff, &EoS );
@@ -553,7 +564,7 @@ void CPU_FluidSolver_MHM(
             CR_AddDiffuseFlux_FullStep( g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_FL_FLUX, dh, &MicroPhy );
 #           endif
 
-            AddExtraFlux_Template( NULL, g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_HF_VAR, LR_GHOST_SIZE, N_FL_FLUX, NSkip_N, NSkip_T, dh );
+            AddExtraFlux_Template( NULL, g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_HF_VAR, OffsetPri, N_FL_FLUX, NSkip_N, NSkip_T, 0, dh, false );
 
             if ( StoreFlux )
                Hydro_StoreIntFlux( g_FC_Flux_1PG, g_Flux_Array[P], N_FL_FLUX );
@@ -563,12 +574,6 @@ void CPU_FluidSolver_MHM(
 //             --> must update B field before Hydro_FullStepUpdate() since the latter requires
 //                 the updated magnetic energy when adopting the dual-energy formalism
 #           ifdef MHD
-#           if ( FLU_SCHEME == MHM )
-            const int OffsetPri = 0;
-#           else
-            const int OffsetPri = LR_GHOST_SIZE;
-#           endif
-
             MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_Half_1PG, N_FL_ELE, N_FL_FLUX,
                                  N_HF_VAR, OffsetPri, dt, dh, StoreElectric, g_Ele_Array[P],
                                  CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P], Time,
