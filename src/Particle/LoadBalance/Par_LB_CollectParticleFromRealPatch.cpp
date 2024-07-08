@@ -322,7 +322,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long FltAttBitIdx,
 
 // note that we don't exchange NPatchEachRank (which is already known) and LBIdxEachRank (which is useless here)
    Par_LB_SendParticleData(
-      NAttFlt, NAttInt
+      NAttFlt, NAttInt,
       SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachRank, SendBuf_ParFltDataEachPatch, SendBuf_ParIntDataEachPatch, NSendParTotal,
       RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch, RecvBuf_LBIdxEachRank, RecvBuf_ParFltDataEachPatch, RecvBuf_ParIntDataEachPatch,
       NRecvPatchTotal, NRecvParTotal, Exchange_NPatchEachRank_No, Exchange_LBIdxEachRank_No, Exchange_ParDataEachRank_Yes,

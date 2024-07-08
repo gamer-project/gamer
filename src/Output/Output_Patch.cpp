@@ -306,7 +306,11 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 
       fprintf( File, "%5d  %10ld", p, ParID );
       for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   fprintf( File, BlankPlusFormat_Flt, amr->Par->AttributeFlt[v][ParID] );
+#     ifdef INT8_PAR
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   fprintf( File, " %*ld",  StrLen_Flt, amr->Par->AttributeInt[v][ParID] );
+#     else
       for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   fprintf( File, " %*d",  StrLen_Flt, amr->Par->AttributeInt[v][ParID] );
+#     endif
 
       fprintf( File, "\n" );
    }

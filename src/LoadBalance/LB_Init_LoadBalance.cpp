@@ -128,7 +128,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, cons
    if ( Redistribute )
    {
       if ( TLv < 0 )
-         LB_RedistributeParticle_Init( ParAttFlt_Old, ParArrInt_Old );
+         LB_RedistributeParticle_Init( ParAttFlt_Old, ParAttInt_Old );
 
       else
       {
@@ -329,7 +329,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, cons
 //                SendGridData      : Transfer grid data
 //                                    --> Particle data will always be transferred
 //-------------------------------------------------------------------------------------------------------
-void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long **ParAttFlt_Old, const bool RemoveParFromRepo, const bool SendGridData )
+void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long **ParAttInt_Old, const bool RemoveParFromRepo, const bool SendGridData )
 {
 
 // 1. count the number of real patches (and particles) to be sent and received

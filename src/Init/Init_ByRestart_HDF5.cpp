@@ -659,7 +659,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    char (*ParAttFltName)[MAX_STRING] = new char [PAR_NATT_FLT_STORED][MAX_STRING];
    char (*ParAttIntName)[MAX_STRING] = new char [PAR_NATT_INT_STORED][MAX_STRING];
    hsize_t H5_SetDims_ParData[1];
-   hid_t   H5_SetID_ParFltData[PAR_NATT_FLT_STORED], H5SetID_ParIntData[PAR_NATT_INT_STORED], H5_SpaceID_ParData, H5_GroupID_Particle;
+   hid_t   H5_SetID_ParFltData[PAR_NATT_FLT_STORED], H5_SetID_ParIntData[PAR_NATT_INT_STORED], H5_SpaceID_ParData, H5_GroupID_Particle;
 #  else
 // define useless variables when PARTICLE is off
    int       *NParList_AllLv      = NULL;

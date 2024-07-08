@@ -434,9 +434,9 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, c
 
 // note that Par_LB_SendParticleData will also return the total number of patches and particles received (using call by reference)
    Par_LB_SendParticleData( NAttFlt, NAttInt, SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachPatch,
-                            SendBuf_ParFltDataEachPatch, SendBuf_ParIntDataEatchPatch, NSendParTotal,
+                            SendBuf_ParFltDataEachPatch, SendBuf_ParIntDataEachPatch, NSendParTotal,
                             RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch, RecvBuf_LBIdxEachPatch,
-                            RecvBuf_ParFltDataEachPatch, RecvBuf_ParDataEachPatch, NRecvPatchTotal, NRecvParTotal,
+                            RecvBuf_ParFltDataEachPatch, RecvBuf_ParIntDataEachPatch, NRecvPatchTotal, NRecvParTotal,
                             Exchange_NPatchEachRank_Yes, Exchange_LBIdxEachRank_Yes, Exchange_ParDataEachRank,
                             Timer[0], Timer_Comment );
 

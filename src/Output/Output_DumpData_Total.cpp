@@ -947,9 +947,10 @@ void Output_DumpData_Total( const char *FileName )
 
 // allocate I/O buffer (just for better I/O performance)
    const long ParFltBufSize = 10000000;   // number of particles dumped at a time
+   const long ParIntBufSize = 10000000;
 
    real     *ParFltBuf = new real     [ParFltBufSize];
-   long_par *ParIntBuf = new long_par [ParFltBufSize];
+   long_par *ParIntBuf = new long_par [ParIntBufSize];
 
 
 // set the file offset of particle data for each rank
