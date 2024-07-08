@@ -16,24 +16,25 @@
 //
 // Description : Add extra flux
 //
-// Note        : 1. Only for MHM_RP half-step, MHM_RP full-step, and MHM full-step
-//               2. Does not upadate the additional flux along transverse direction for computing the CT electric field
+// Note        : 1. Does not upadate the additional flux along transverse direction for computing the CT electric field
 //
-// Usage       :     MHM_RP half-step: AddExtraFlux_Template( g_Flu_Array_In[P],              NULL, g_Flux_Half_1PG, g_Mag_Array_In[P],  FLU_NXT,             0, N_HF_FLUX, NSkip_N, NSkip_T, dh );
-//               MHM/MHM_RP full-step: AddExtraFlux_Template(              NULL, g_PriVar_Half_1PG,   g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_HF_VAR, LR_GHOST_SIZE, N_FL_FLUX, NSkip_N, NSkip_T, dh );
+//  Usage       : MHM        half-step : AddExtraFlux_Template(          g_ConVar,              NULL,          g_Flux,            g_FC_B,  FLU_NXT,    NGhost, N_HF_FLUX, NSkip_N, NSkip_T, 1, dh,  true );
+//                                       --> last parameter is true only for the first flux
+//                    MHM_RP half-step : AddExtraFlux_Template( g_Flu_Array_In[P],              NULL, g_Flux_Half_1PG, g_Mag_Array_In[P],  FLU_NXT, OffsetPri, N_HF_FLUX, NSkip_N, NSkip_T, 0, dh, false );
+//                MHM/MHM_RP full-step : AddExtraFlux_Template(              NULL, g_PriVar_Half_1PG,   g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_HF_VAR, OffsetPri, N_FL_FLUX, NSkip_N, NSkip_T, 0, dh, false );
 //
-// Parameter   : g_ConVar : Array storing the input cell-centered conserved fluid variables (NCOMP_TOTAL)
-//               g_PriVar : Array storing the input cell-centered primitive fluid variables (NCOMP_TOTAL_PLUS_MAG)
-//               g_Flux   : Array with hydrodynamic fluxes for adding the extra fluxes
-//               g_FC_B   : Array storing the input face-centered B field
-//               N_Var    : Size of g_ConVar/g_PriVar
-//               N_Ghost  : Ghost zone size of data-reconstruction
-//               N_Flux   : Size of flux
-//               NSkip_N  : Empty size of flux on normal     direction
-//               NSkip_T  : Empty size of flux on transverse direction
-//               NSkip_MHM_Half : skip for MHM scheme half-step
-//               dh       : Cell size
-//               initialize : initialize g_Flux to zero or not
+// Parameter   : g_ConVar       : Array storing the input cell-centered conserved fluid variables (NCOMP_TOTAL)
+//               g_PriVar       : Array storing the input cell-centered primitive fluid variables (NCOMP_TOTAL_PLUS_MAG)
+//               g_Flux         : Array with hydrodynamic fluxes for adding the extra fluxes
+//               g_FC_B         : Array storing the input face-centered B field
+//               N_Var          : Size of g_ConVar/g_PriVar
+//               N_Ghost        : Ghost zone size of data-reconstruction
+//               N_Flux         : Size of flux
+//               NSkip_N        : Empty size of flux on normal     direction
+//               NSkip_T        : Empty size of flux on transverse direction
+//               NSkip_MHM_Half : Skip size of g_ConVar for MHM scheme half-step only (TODO: need a better name)
+//               dh             : Cell size
+//               initialize     : initialize g_Flux to zero or not
 //
 // Return      : g_Flux[]
 //-----------------------------------------------------------------------------------------
