@@ -16,7 +16,8 @@ static void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, co
                           const int *SonList, const int (*CrList)[3],
                           const hid_t *H5_SetID_Field, const hid_t H5_SpaceID_Field, const hid_t H5_MemID_Field,
                           const hid_t *H5_SetID_FCMag, const hid_t *H5_SpaceID_FCMag, const hid_t *H5_MemID_FCMag,
-                          const int *NParList, real_par **ParFltBuf, long *NewParList, const hid_t *H5_SetID_ParFltData,
+                          const int *NParList, real_par **ParFltBuf, long_par **ParIntBuf, long *NewParList,
+                          const hid_t *H5_SetID_ParFltData, const hid_t *H5_SetID_ParIntData,
                           const hid_t H5_SpaceID_ParData, const long *GParID_Offset, const long NParThisRank );
 static void Check_Makefile ( const char *FileName, const int FormatVersion );
 static void Check_SymConst ( const char *FileName, const int FormatVersion );
@@ -76,6 +77,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  ifdef PARTICLE
    const int  Particle             = 1;
    const int  Par_NAttFltStored    = PAR_NATT_FLT_STORED;
+   const int  Par_NAttIntStored    = PAR_NATT_INT_STORED;
 #  else
    const int  Particle             = 0;
 #  endif
@@ -217,6 +219,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    if ( ReenablePar ) {
       KeyInfo.Par_NPar          = 0;
       KeyInfo.Par_NAttFltStored = 0;
+      KeyInfo.Par_NAttIntStored = 0;
    }
 
    else {
@@ -225,6 +228,10 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "Par_NAttFltStored",    &KeyInfo.Par_NAttFltStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttFltStored,     1,    Fatal );
    else
    LoadField( "Par_NAttFltStored",    &KeyInfo.Par_NAttFltStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttFltStored,     1, NonFatal );
+   if ( KeyInfo.FormatVersion >= 2481 )
+   LoadField( "Par_NAttIntStored",    &KeyInfo.Par_NAttIntStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttIntStored,     1,    Fatal );
+   else
+   LoadField( "Par_NAttIntStored",    &KeyInfo.Par_NAttIntStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttIntStored,     1, NonFatal );
    } // if ( ReenablePar ) ... else ...
 #  endif
 
@@ -608,14 +615,16 @@ void Init_ByRestart_HDF5( const char *FileName )
    long MaxNParInOnePatch = 0;
    long *NewParList       = NULL;
    real_par **ParFltBuf   = NULL;
+   long_par **ParIntBuf   = NULL;
 
    for (int t=0; t<NPatchAllLv; t++)   MaxNParInOnePatch = MAX( MaxNParInOnePatch, NParList_AllLv[t] );
 
    NewParList = new long [MaxNParInOnePatch];
 
-// be careful about using ParFltBuf returned from Aux_AllocateArray2D, which is set to NULL if MaxNParInOnePatch == 0
-// --> for example, accessing ParFltBuf[0...PAR_NATT_FLT_STORED-1] will be illegal when MaxNParInOnePatch == 0
+// be careful about using ParFlt/IntBuf returned from Aux_AllocateArray2D, which is set to NULL if MaxNParInOnePatch == 0
+// --> for example, accessing ParFlt/IntBuf[0...PAR_NATT_FLT/INT_STORED-1] will be illegal when MaxNParInOnePatch == 0
    Aux_AllocateArray2D( ParFltBuf, PAR_NATT_FLT_STORED, MaxNParInOnePatch );
+   Aux_AllocateArray2D( ParIntBuf, PAR_NATT_INT_STORED, MaxNParInOnePatch );
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Initializing particle repository ... done\n" );
 #  endif // #ifdef PARTICLE
@@ -648,15 +657,18 @@ void Init_ByRestart_HDF5( const char *FileName )
 
 #  ifdef PARTICLE
    char (*ParAttFltName)[MAX_STRING] = new char [PAR_NATT_FLT_STORED][MAX_STRING];
+   char (*ParAttIntName)[MAX_STRING] = new char [PAR_NATT_INT_STORED][MAX_STRING];
    hsize_t H5_SetDims_ParData[1];
-   hid_t   H5_SetID_ParFltData[PAR_NATT_FLT_STORED], H5_SpaceID_ParData, H5_GroupID_Particle;
+   hid_t   H5_SetID_ParFltData[PAR_NATT_FLT_STORED], H5SetID_ParIntData[PAR_NATT_INT_STORED], H5_SpaceID_ParData, H5_GroupID_Particle;
 #  else
 // define useless variables when PARTICLE is off
    int       *NParList_AllLv      = NULL;
    real_par **ParFltBuf           = NULL;
+   long_par **ParIntBuf           = NULL;
    long      *NewParList          = NULL;
    long      *GParID_Offset       = NULL;
    hid_t     *H5_SetID_ParFltData = NULL;
+   hid_t     *H5_SetID_ParIntData = NULL;
    hid_t      H5_SpaceID_ParData  = NULL_INT;
    long       NParThisRank        = NULL_INT;
 #  endif // #ifdef PARTICLE ... else ...
@@ -670,8 +682,9 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  endif
 
 #  ifdef PARTICLE
-// skip the last PAR_NATT_FLT_UNSTORED attributes since we do not store them on disk
+// skip the last PAR_NATT_FLT/INT_UNSTORED attributes since we do not store them on disk
    for (int v=0; v<PAR_NATT_FLT_STORED; v++)  sprintf( ParAttFltName[v], "%s", ParAttFltLabel[v] );
+   for (int v=0; v<PAR_NATT_INT_STORED; v++)  sprintf( ParAttIntName[v], "%s", ParAttIntLabel[v] );
 #  endif
 
 
@@ -759,6 +772,11 @@ void Init_ByRestart_HDF5( const char *FileName )
                H5_SetID_ParFltData[v] = H5Dopen( H5_GroupID_Particle, ParAttFltName[v], H5P_DEFAULT );
                if ( H5_SetID_ParFltData[v] < 0 )   Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", ParAttFltName[v] );
             }
+            for (int v=0; v<PAR_NATT_INT_STORED; v++)
+            {
+               H5_SetID_ParIntData[v] = H5Dopen( H5_GroupID_Particle, ParAttIntName[v], H5P_DEFAULT );
+               if ( H5_SetID_ParIntData[v] < 0 )   Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", ParAttIntName[v] );
+            }
          } // if ( ! ReenablePar )
 #        endif
 
@@ -789,7 +807,8 @@ void Init_ByRestart_HDF5( const char *FileName )
                   LoadOnePatch( H5_FileID, lv, GID, Recursive_No, NULL, CrList_AllLv,
                                 H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field,
                                 H5_SetID_FCMag, H5_SpaceID_FCMag, H5_MemID_FCMag,
-                                NParList_AllLv, ParFltBuf, NewParList, H5_SetID_ParFltData, H5_SpaceID_ParData,
+                                NParList_AllLv, ParFltBuf, ParIntBuf, NewParList,
+                                H5_SetID_ParFltData, H5_SetID_ParIntData, H5_SpaceID_ParData,
                                 GParID_Offset, NParThisRank );
             }
 
@@ -844,7 +863,8 @@ void Init_ByRestart_HDF5( const char *FileName )
                LoadOnePatch( H5_FileID, 0, GID, Recursive_Yes, SonList_AllLv, CrList_AllLv,
                              H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field,
                              H5_SetID_FCMag, H5_SpaceID_FCMag, H5_MemID_FCMag,
-                             NParList_AllLv, ParFltBuf, NewParList, H5_SetID_ParFltData, H5_SpaceID_ParData,
+                             NParList_AllLv, ParFltBuf, ParIntBuf, NewParList,
+                             H5_SetID_ParFltData, H5_SetID_ParIntData, H5_SpaceID_ParData,
                              GParID_Offset, NParThisRank );
          } // for (int GID=0; GID<NPatchTotal[0]; GID++)
 
@@ -860,6 +880,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 #        ifdef PARTICLE
          if ( ! ReenablePar ) {
             for (int v=0; v<PAR_NATT_FLT_STORED; v++)  H5_Status = H5Dclose( H5_SetID_ParFltData[v] );
+            for (int v=0; v<PAR_NATT_INT_STORED; v++)  H5_Status = H5Dclose( H5_SetID_ParIntData[v] );
             H5_Status = H5Gclose( H5_GroupID_Particle );
          }
 #        endif
@@ -951,10 +972,12 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  endif
 #  ifdef PARTICLE
    delete [] ParAttFltName;
+   delete [] ParAttIntName;
    delete [] NParList_AllLv;
    delete [] GParID_Offset;
    delete [] NewParList;
    Aux_DeallocateArray2D( ParFltBuf );
+   Aux_DeallocateArray2D( ParIntBuf );
 #  endif
 
 
@@ -1232,18 +1255,19 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
 //                H5_SpaceID_FCMag    : HDF5 dataset dataspace ID for face-centered magnetic field
 //                H5_MemID_FCMag      : HDF5 memory dataspace ID for face-centered magnetic field
 //                NParList            : List of particle counts
-//                ParFltBuf           : I/O buffer for loading particle data from the disk
+//                ParFlt/IntBuf       : I/O buffer for loading particle data from the disk
 //                                      --> It must be preallocated with a size equal to the maximum number of
 //                                          particles in one patch times the number of particles attributes
 //                                          stored on disk
-//                                      --> Be careful about using ParFltBuf, which is set to NULL if it has no elements
+//                                      --> Be careful about using ParFlt/IntBuf, which is set to NULL if it has no elements
 //                                          (because of the current implementation of Aux_AllocateArray2D)
-//                                          --> For example, accessing ParFltBuf[0...PAR_NATT_FLT_STORED-1] will be illegal when there
+//                                          --> For example, accessing ParFlt/IntBuf[0...PAR_NATT_FLT/INT_STORED-1] will be illegal when there
 //                                              are no particles
 //                NewParList          : Array to store the new particle indices
 //                                      --> It must be preallocated with a size equal to the maximum number of
 //                                          particles in one patch
-//                H5_SetID_ParFltData : HDF5 dataset ID for particle data
+//                H5_SetID_ParFltData : HDF5 dataset ID for particle float   data
+//                H5_SetID_ParIntData : HDF5 dataset ID for particle integer data
 //                H5_SpaceID_ParData  : HDF5 dataset dataspace ID for particle data
 //                GParID_Offset       : Starting global particle indices for all patches
 //                NParThisRank        : Total number of particles in this rank (for check only)
@@ -1252,7 +1276,8 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
                    const int *SonList, const int (*CrList)[3],
                    const hid_t *H5_SetID_Field, const hid_t H5_SpaceID_Field, const hid_t H5_MemID_Field,
                    const hid_t *H5_SetID_FCMag, const hid_t *H5_SpaceID_FCMag, const hid_t *H5_MemID_FCMag,
-                   const int *NParList, real_par **ParFltBuf, long *NewParList, const hid_t *H5_SetID_ParFltData,
+                   const int *NParList, real_par **ParFltBuf, long_par **ParIntBuf, long *NewParList,
+                   const hid_t *H5_SetID_ParFltData, const hid_t *H5_SetID_ParIntData,
                    const hid_t H5_SpaceID_ParData, const long *GParID_Offset, const long NParThisRank )
 {
 
@@ -1359,7 +1384,15 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
          H5_Status = H5Dread( H5_SetID_ParFltData[v], H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
                               ParFltBuf[v] );
          if ( H5_Status < 0 )
-            Aux_Error( ERROR_INFO, "failed to load a particle attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
+            Aux_Error( ERROR_INFO, "failed to load a particle float attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
+      }
+      for (int v=0; v<PAR_NATT_INT_STORED; v++)
+      {
+//       using ParIntBuf[v] here is safe since it's NOT called when NParThisPatch == 0
+         H5_Status = H5Dread( H5_SetID_ParIntData[v], H5T_GAMER_LONG_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
+                              ParIntBuf[v] );
+         if ( H5_Status < 0 )
+            Aux_Error( ERROR_INFO, "failed to load a particle integer attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
       }
 
 //    store particles to the particle repository (one particle at a time)
@@ -1367,8 +1400,9 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
 
       for (int p=0; p<NParThisPatch; p++)
       {
-//       skip the last PAR_NATT_FLT_UNSTORED attributes since we do not store them on disk
+//       skip the last PAR_NATT_FLT/INT_UNSTORED attributes since we do not store them on disk
          for (int v=0; v<PAR_NATT_FLT_STORED; v++)  NewParAttFlt[v] = ParFltBuf[v][p];
+         for (int v=0; v<PAR_NATT_INT_STORED; v++)  NewParAttInt[v] = ParIntBuf[v][p];
 
          NewParList[p] = amr->Par->AddOneParticle( NewParAttFlt, NewParAttInt );
 
@@ -1411,7 +1445,8 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
             LoadOnePatch( H5_FileID, lv+1, SonGID, Recursive, SonList, CrList,
                           H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field,
                           H5_SetID_FCMag, H5_SpaceID_FCMag, H5_MemID_FCMag,
-                          NParList, ParFltBuf, NewParList, H5_SetID_ParFltData, H5_SpaceID_ParData,
+                          NParList, ParFltBuf, ParIntBuf, NewParList,
+                          H5_SetID_ParFltData, H5_SetID_ParIntData, H5_SpaceID_ParData,
                           GParID_Offset, NParThisRank );
       }
    }

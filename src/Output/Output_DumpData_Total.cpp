@@ -38,6 +38,7 @@ Procedure for outputting new variables:
 //                2203 : 2018/12/27 --> replace GRA_BLOCK_SIZE_Z by GRA_BLOCK_SIZE
 //                2210 : 2019/06/07 --> support MHD
 //                2220 : 2020/08/25 --> output EOS
+//                2230 : 2024/08/25 --> output particle integer attributes
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total( const char *FileName )
 {
@@ -185,12 +186,13 @@ void Output_DumpData_Total( const char *FileName )
       FileOffset_Particle = ExpectFileSize;  // file offset at the beginning of particle data
 
       ExpectFileSize += (long)PAR_NATT_FLT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real);
+      ExpectFileSize += (long)PAR_NATT_FLT_STORED*amr->Par->NPar_Active_AllRank*sizeof(long_par);
 #     endif
 
 
 //    a. output the information of data format
 //    =================================================================================================
-      const long FormatVersion = 2220;
+      const long FormatVersion = 2230;
       const long CheckCode     = 123456789;
 
       fseek( File, HeaderOffset_Format, SEEK_SET );
@@ -506,9 +508,13 @@ void Output_DumpData_Total( const char *FileName )
 #     ifdef PARTICLE
       const int    par_natt_flt_stored   = PAR_NATT_FLT_STORED;
       const int    par_natt_flt_user     = PAR_NATT_FLT_USER;
+      const int    par_natt_int_stored   = PAR_NATT_INT_STORED;
+      const int    par_natt_int_user     = PAR_NATT_INT_USER;
 #     else
       const int    par_natt_flt_stored   = NULL_INT;
       const int    par_natt_flt_user     = NULL_INT;
+      const int    par_natt_int_stored   = NULL_INT;
+      const int    par_natt_int_user     = NULL_INT;
 #     endif
 
       fwrite( &ncomp_fluid,               sizeof(int),                     1,             File );
@@ -532,6 +538,8 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &gra_block_size,            sizeof(int),                     1,             File );
       fwrite( &par_natt_flt_stored,       sizeof(int),                     1,             File );
       fwrite( &par_natt_flt_user,         sizeof(int),                     1,             File );
+      fwrite( &par_natt_int_stored,       sizeof(int),                     1,             File );
+      fwrite( &par_natt_int_user,         sizeof(int),                     1,             File );
 
 
 //    d. output the simulation parameters recorded in the file "Input__Parameter"
@@ -940,7 +948,8 @@ void Output_DumpData_Total( const char *FileName )
 // allocate I/O buffer (just for better I/O performance)
    const long ParFltBufSize = 10000000;   // number of particles dumped at a time
 
-   real *ParFltBuf = new real [ParFltBufSize];
+   real     *ParFltBuf = new real     [ParFltBufSize];
+   long_par *ParIntBuf = new long_par [ParFltBufSize];
 
 
 // set the file offset of particle data for each rank
@@ -949,6 +958,7 @@ void Output_DumpData_Total( const char *FileName )
 
 // output particle data (one attribute at a time to avoid creating holes in the file)
    const long ParFltDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(real);
+   const long ParIntDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(long_par);
 
    long NParInBuf, ParID, FileOffset_ThisVar;
    int  NParThisPatch;
@@ -1007,7 +1017,62 @@ void Output_DumpData_Total( const char *FileName )
       MPI_Barrier( MPI_COMM_WORLD );
    } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++), for (int v=0; v<PAR_NATT_FLT_STORED; v++)
 
+   for (int v=0; v<PAR_NATT_INT_STORED; v++)
+   for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
+   {
+      if ( MPI_Rank == TargetMPIRank )
+      {
+         File = fopen( FileName, "ab" );
+
+//       set file position indicator to the end of the current file and check whether it's consistent with expectation
+         FileOffset_ThisVar = FileOffset_Particle + ParFltDataSize1v*PAR_NATT_FLT_STORED + ParIntDataSize1v*v + GParID_Offset*sizeof(long_par);
+         NParInBuf          = 0;
+
+         fseek( File, 0, SEEK_END );
+
+         if ( ftell(File) != FileOffset_ThisVar )
+            Aux_Error( ERROR_INFO, "size of the file <%s> = %ld != expect = %ld !!\n",
+                       FileName, ftell(File), FileOffset_ThisVar );
+
+         for (int lv=0; lv<NLEVEL; lv++)
+         for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+         {
+            NParThisPatch = amr->patch[0][lv][PID]->NPar;
+
+//          check if the particle I/O buffer is exceeded (possible only if the number of particles in this patch > ParIntBufSize)
+            if ( NParInBuf + NParThisPatch > ParIntBufSize )
+            {
+               Aux_Message( stderr, "ERROR : NParInBuf (%ld) + NParThisPatch (%d) = %ld > ParIntBufSize (%ld) ...\n",
+                            NParInBuf, NParThisPatch, NParInBuf+NParThisPatch, ParIntBufSize );
+               Aux_Message( stderr, "        ==> Please increase ParIntBufSize in the file \"%s\" !!\n", __FILE__ );
+               MPI_Exit();
+            }
+
+//          store particle data into the I/O buffer
+            for (int p=0; p<NParThisPatch; p++)
+            {
+               ParID = amr->patch[0][lv][PID]->ParList[p];
+
+               ParIntBuf[ NParInBuf ++ ] = amr->Par->AttributeInt[v][ParID];
+            }
+
+//          store particle data from I/O buffer to disk
+            if ( PID+1 == amr->NPatchComma[lv][1]  ||  NParInBuf + amr->patch[0][lv][PID+1]->NPar > ParIntBufSize )
+            {
+               fwrite( ParIntBuf, sizeof(long_par), NParInBuf, File );
+
+               NParInBuf = 0;
+            }
+         } // for PID, lv
+
+         fclose( File );
+      } // if ( MPI_Rank == TargetMPIRank )
+
+      MPI_Barrier( MPI_COMM_WORLD );
+   } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++), for (int v=0; v<PAR_NATT_INT_STORED; v++)
+
    delete [] ParFltBuf;
+   delete [] ParIntBuf;
 #  endif // #ifdef PARTICLE
 
 

@@ -333,6 +333,7 @@ void Init_ByRestart()
    }
 
    ExpectSize += (long)PAR_NATT_FLT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real_par);
+   ExpectSize += (long)PAR_NATT_INT_STORED*amr->Par->NPar_Active_AllRank*sizeof(long_par);
 #  endif
 
    fseek( File, 0, SEEK_END );
@@ -578,18 +579,21 @@ void Init_ByRestart()
 // =================================================================================================
 #  ifdef PARTICLE
    const long ParFltDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(real_par);
+   const long ParIntDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(long_par);
 
    long  *NewParList     = new long [MaxNParInOnePatch];
    real_par **ParFltBuf  = NULL;
+   long_par **ParIntBuf  = NULL;
 
    real_par NewParAttFlt[PAR_NATT_FLT_TOTAL];
    long_par NewParAttInt[PAR_NATT_INT_TOTAL];
    long GParID;
    int  NParThisPatch;
 
-// be careful about using ParFltBuf returned from Aux_AllocateArray2D, which is set to NULL if MaxNParInOnePatch == 0
-// --> for example, accessing ParFltBuf[0...PAR_NATT_FLT_STORED-1] will be illegal when MaxNParInOnePatch == 0
+// be careful about using ParFlt/IntBuf returned from Aux_AllocateArray2D, which is set to NULL if MaxNParInOnePatch == 0
+// --> for example, accessing ParFlt/IntBuf[0...PAR_NATT_FLT/INT_STORED-1] will be illegal when MaxNParInOnePatch == 0
    Aux_AllocateArray2D( ParFltBuf, PAR_NATT_FLT_STORED, MaxNParInOnePatch );
+   Aux_AllocateArray2D( ParIntBuf, PAR_NATT_INT_STORED, MaxNParInOnePatch );
 
 
 // all particles are assumed to be synchronized with the base level
@@ -642,11 +646,20 @@ void Init_ByRestart()
                   fread( ParFltBuf[v], sizeof(real_par), NParThisPatch, File );
                }
 
+               for (int v=0; v<PAR_NATT_INT_STORED; v++)
+               {
+                  fseek( File, FileOffset_Particle + PAR_NATT_FLT_STORED*ParFltDataSize1v + v*ParIntDataSize1v + GParID*sizeof(long_par), SEEK_SET );
+
+//                using ParIntBuf[v] here is safe since it's NOT called when NParThisPatch == 0
+                  fread( ParIntBuf[v], sizeof(long_par), NParThisPatch, File );
+               }
+
 //             store particles to the particle repository (one particle at a time)
                for (int p=0; p<NParThisPatch; p++ )
                {
-//                skip the last PAR_NATT_FLT_UNSTORED attributes since we do not store them on disk
+//                skip the last PAR_NATT_FLT/INT_UNSTORED attributes since we do not store them on disk
                   for (int v=0; v<PAR_NATT_FLT_STORED; v++)  NewParAttFlt[v] = ParFltBuf[v][p];
+                  for (int v=0; v<PAR_NATT_INT_STORED; v++)  NewParAttInt[v] = ParIntBuf[v][p];
 
                   NewParList[p] = amr->Par->AddOneParticle( NewParAttFlt, NewParAttInt );
 
@@ -687,6 +700,7 @@ void Init_ByRestart()
 // free memory
    delete [] NewParList;
    Aux_DeallocateArray2D( ParFltBuf );
+   Aux_DeallocateArray2D( ParIntBuf );
 #  endif // #ifdef PARTICLE
 
 
@@ -871,6 +885,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    int    ncomp_fluid, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
    int    flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size;
    int    par_natt_flt_stored, par_natt_flt_user;
+   int    par_natt_int_stored, par_natt_int_user;
    double min_pres, max_error;
 
    fseek( File, HeaderOffset_Constant, SEEK_SET );
@@ -896,6 +911,8 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &gra_block_size,             sizeof(int),                     1,             File );
    fread( &par_natt_flt_stored,        sizeof(int),                     1,             File );
    fread( &par_natt_flt_user,          sizeof(int),                     1,             File );
+   fread( &par_natt_int_stored,        sizeof(int),                     1,             File );
+   fread( &par_natt_int_user,          sizeof(int),                     1,             File );
 
 
 // c. load the simulation parameters recorded in the file "Input__Parameter"
@@ -1360,6 +1377,16 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "PAR_NATT_FLT_USER",       par_natt_flt_user,            PAR_NATT_FLT_USER,            Fatal );
       else
       CompareVar( "PAR_NATT_FLT_USER",       par_natt_flt_user,            PAR_NATT_FLT_USER,         NonFatal );
+
+      if ( FormatVersion >= 2230 )
+      CompareVar( "PAR_NATT_INT_STORED",     par_natt_int_stored,          PAR_NATT_INT_STORED,          Fatal );
+      else
+      CompareVar( "PAR_NATT_INT_STORED",     par_natt_int_stored,          PAR_NATT_INT_STORED,       NonFatal );
+
+      if ( FormatVersion >= 2230 )
+      CompareVar( "PAR_NATT_INT_USER",       par_natt_int_user,            PAR_NATT_INT_USER,            Fatal );
+      else
+      CompareVar( "PAR_NATT_INT_USER",       par_natt_int_user,            PAR_NATT_INT_USER,         NonFatal );
 
       if ( par_natt_flt_user > 0  &&  FormatVersion < 2200  &&  MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : loading user-defined particle attributes (PAR_NATT_FLT_USER = %d) "
