@@ -555,7 +555,7 @@ def load_arguments():
                        )
 
     parser.add_argument( "--long_par", type=str2bool, metavar="BOOLEAN", gamer_name="INT8_PAR",
-                         default=Ture,
+                         default=True,
                          depend={"particle":True},
                          help="Enable double precision for particle integer attributes.\n"
                        )
