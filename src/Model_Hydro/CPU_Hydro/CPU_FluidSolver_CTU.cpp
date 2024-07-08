@@ -230,35 +230,6 @@ void CPU_FluidSolver_CTU(
 #  pragma omp parallel
 #  endif
    {
-//    point to the arrays associated with different OpenMP threads (for CPU) or CUDA thread blocks (for GPU)
-#     ifdef __CUDACC__
-      const int array_idx = blockIdx.x;
-#     else
-#     ifdef OPENMP
-      const int array_idx = omp_get_thread_num();
-#     else
-      const int array_idx = 0;
-#     endif
-#     endif // #ifdef __CUDACC__ ... else ...
-
-      real (*const g_FC_Var_1PG   )[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ] = g_FC_Var   [array_idx];
-      real (*const g_FC_Flux_1PG  )[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ] = g_FC_Flux  [array_idx];
-      real (*const g_PriVar_1PG   )                      [ CUBE(FLU_NXT)     ] = g_PriVar   [array_idx];
-      real (*const g_Slope_PPM_1PG)[NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ] = g_Slope_PPM[array_idx];
-
-#     ifdef MHD
-      real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = g_FC_Mag_Half[array_idx];
-      real (*const g_EC_Ele_1PG     )[ CUBE(N_EC_ELE)          ] = g_EC_Ele     [array_idx];
-#     else
-      real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = NULL;
-      real (*const g_EC_Ele_1PG     )[ CUBE(N_EC_ELE)          ] = NULL;
-#     endif
-
-#     ifdef MHD
-      real (*const g_PriVar_Half_1PG)[ CUBE(FLU_NXT) ] = g_PriVar_1PG;
-#     endif
-
-
 //    loop over all patch groups
 //    --> CPU/GPU solver: use different (OpenMP threads) / (CUDA thread blocks)
 //        to work on different patch groups
@@ -269,6 +240,23 @@ void CPU_FluidSolver_CTU(
       for (int P=0; P<NPatchGroup; P++)
 #     endif
       {
+//       0. point to the arrays associated with different patch groups
+//          --> necessary because different patch groups are computed by different OpenMP threads or CUDA blocks in parallel
+         real (*const g_FC_Var_1PG   )[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ] = g_FC_Var   [P];
+         real (*const g_FC_Flux_1PG  )[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ] = g_FC_Flux  [P];
+         real (*const g_PriVar_1PG   )                      [ CUBE(FLU_NXT)     ] = g_PriVar   [P];
+         real (*const g_Slope_PPM_1PG)[NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ] = g_Slope_PPM[P];
+
+#        ifdef MHD
+         real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = g_FC_Mag_Half[P];
+         real (*const g_EC_Ele_1PG     )[ CUBE(N_EC_ELE)          ] = g_EC_Ele     [P];
+         real (*const g_PriVar_Half_1PG)[ CUBE(FLU_NXT) ]           = g_PriVar_1PG;
+#        else
+         real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = NULL;
+         real (*const g_EC_Ele_1PG     )[ CUBE(N_EC_ELE)          ] = NULL;
+#        endif
+
+
 //       1. evaluate the face-centered values at the half time-step
          Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
                                    NULL, Con2Pri_Yes, LR_Limiter, MinMod_Coeff, dt, dh,
