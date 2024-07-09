@@ -535,7 +535,7 @@ void Init_NewDiskRestart()
             for (int d = 0; d < 3; d++) Pos_AllRank[d][p] = RanVec[d] + Cen[d];
 
          } // for ( long p = 0; p < NPar_AllRank; p++ )
-
+         delete RNG;
       } // if ( MPI_Rank == 0 )
    } // if ( !AddParWhenRestartByFile )
 
@@ -633,6 +633,7 @@ void Init_NewDiskVelocity()
          ParVel[2][p] =   RanV[2];
       }
    }
+   gsl_rng_free(random_generator);
 
 #  endif // #ifdef SUPPORT_GSL
 
