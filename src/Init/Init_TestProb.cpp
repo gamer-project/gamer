@@ -85,7 +85,7 @@ void Init_TestProb()
       case TESTPROB_HYDRO_CR_SHOCKTUBE :                 Init_TestProb_Hydro_CR_ShockTube();                break;
       case TESTPROB_HYDRO_CR_DIFFUSION :                 Init_TestProb_Hydro_CR_Diffusion();                break;
       case TESTPROB_HYDRO_CONDUCTION_STEP_FUNCTION :     Init_TestProb_Hydro_ConductionStepFunction();      break;
-	
+
       case TESTPROB_ELBDM_EXTPOT :                       Init_TestProb_ELBDM_ExtPot();                      break;
 
       default: Aux_Error( ERROR_INFO, "unsupported TESTPROB_ID (%d) !!\n", TESTPROB_ID );

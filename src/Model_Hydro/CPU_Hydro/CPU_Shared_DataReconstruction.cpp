@@ -18,6 +18,14 @@
 #include "CUFLU_Shared_ConstrainedTransport.cu"
 #endif
 
+#ifdef CONDUCTION
+# include "../../Microphysics/Conduction/CUFLU_AddThermalFlux.cu"
+#endif
+
+#ifdef VISCOSITY
+# include "../../Microphysics/Viscosity/CUFLU_AddViscousFlux.cu"
+#endif
+
 #else
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
@@ -76,11 +84,34 @@ GPU_DEVICE
 static void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR], const real dt,
                                   const real dh, const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                                   const int cc_i, const int cc_j, const int cc_k,
+                                  const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                   const real g_FC_B[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                   const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                                   const int NGhost, const int NEle,
                                   const real MinDens, const real MinPres, const real MinEint,
                                   const EoS_t *EoS );
+#ifdef CONDUCTION
+GPU_DEVICE
+void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
+                              const real g_PriVar[][ CUBE(FLU_NXT) ],
+                              const real Temp[ CUBE(FLU_NXT) ],
+                                    real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                              const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
+                              const int N_Var, const int N_Ghost, const int N_Flux, const int NSkip_N,
+                              const int NSkip_T, const int NSkip_MHM_Half, const real dh,
+                              bool &initialize, const MicroPhy_t *MicroPhy );
+#endif
+#ifdef VISCOSITY
+GPU_DEVICE
+void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
+                           const real g_PriVar[][ CUBE(FLU_NXT) ],
+                           const real Temp[],
+                                 real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                           const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
+                           const int N_Var, const int N_Ghost, const int N_Flux, const int NSkip_N,
+                           const int NSkip_T, const int NSkip_MHM_Half, const real dh,
+                           bool &initialize, const MicroPhy_t *MicroPhy );
+#endif
 #ifdef MHD
 GPU_DEVICE
 void Hydro_ConFC2PriCC_MHM(       real g_PriVar[][ CUBE(FLU_NXT) ],
@@ -145,58 +176,61 @@ static void Hydro_Char2Pri( real InOut[], const real Dens, const real Pres, cons
 //                   d. A high-order finite-volume method for conservation laws on locally refined grids
 //                      Peter McCorquodale. Phillip Colella. Commun. Appl. Math. Comput. Sci. 6 (1) 1 - 25, 2011.
 //
-// Parameter   :  g_ConVar           : Array storing the input cell-centered conserved variables
-//                                     --> Should contain NCOMP_TOTAL variables
-//                g_FC_B             : Array storing the input face-centered magnetic field (for MHD only)
-//                                     --> Should contain NCOMP_MAG variables
-//                g_PriVar           : Array storing/to store the cell-centered primitive variables
-//                                     --> Should contain NCOMP_LR variables
-//                                         --> Store internal energy as the last variable when LR_EINT is on
-//                                     --> For MHD, this array currently stores the normal B field as well
-//                                     --> For MHM, g_ConVar[] and g_PriVar[] must point to different arrays since
-//                                         Hydro_HancockPredict() requires the original g_ConVar[]
-//                g_FC_Var           : Array to store the output face-centered conserved variables
-//                                     --> Should contain NCOMP_TOTAL_PLUS_MAG variables
-//                g_Slope_PPM        : Array to store the x/y/z slopes for the PPM reconstruction
-//                                     --> Should contain NCOMP_LR variables
-//                                         --> Store internal energy as the last variable when LR_EINT is on
-//                                     --> Useless for PLM
-//                g_EC_Ele           : Array to store the edge-centered electric field at the half step
-//                Con2Pri            : Convert conserved variables in g_ConVar[] to primitive variables and
-//                                     store the results in g_PriVar[]
-//                NIn                : Size of g_PriVar[] along each direction
-//                                     --> Can be smaller than FLU_NXT
-//                NGhost             : Number of ghost zones
-//                                      --> "NIn-2*NGhost" cells will be computed along each direction
-//                                      --> Size of g_FC_Var[] is assumed to be "(NIn-2*NGhost)^3"
-//                                      --> The reconstructed data at cell (i,j,k) will be stored in g_FC_Var[]
-//                                          with the index "(i-NGhost,j-NGhost,k-NGhost)"
-//                LR_Limiter         : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
-//                                     (0/1/2/3) = (vanLeer/generalized MinMod/vanAlbada/vanLeer+generalized MinMod) limiter
-//                MinMod_Coeff       : Coefficient of the generalized MinMod limiter
-//                dt                 : Time interval to advance solution (for the CTU scheme)
-//                dh                 : Cell size
-//                MinDens/Pres/Eint  : Density, pressure, and internal energy floors
-//                FracPassive        : true --> convert passive scalars to mass fraction during data reconstruction
-//                NFrac              : Number of passive scalars for the option "FracPassive"
-//                FracIdx            : Target variable indices for the option "FracPassive"
-//                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
-//                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
-//                EoS                : EoS object
+// Parameter   :  g_ConVar               : Array storing the input cell-centered conserved variables
+//                                         --> Should contain NCOMP_TOTAL variables
+//                g_FC_B                 : Array storing the input face-centered magnetic field (for MHD only)
+//                                         --> Should contain NCOMP_MAG variables
+//                g_PriVar               : Array storing/to store the cell-centered primitive variables
+//                                         --> Should contain NCOMP_LR variables
+//                                             --> Store internal energy as the last variable when LR_EINT is on
+//                                         --> For MHD, this array currently stores the normal B field as well
+//                                         --> For MHM, g_ConVar[] and g_PriVar[] must point to different arrays since
+//                                             Hydro_HancockPredict() requires the original g_ConVar[]
+//                g_FC_Var               : Array to store the output face-centered conserved variables
+//                                         --> Should contain NCOMP_TOTAL_PLUS_MAG variables
+//                g_Flux                 : Array to store the extra fluxes for the Hancock predict
+//                g_Slope_PPM            : Array to store the x/y/z slopes for the PPM reconstruction
+//                                         --> Should contain NCOMP_LR variables
+//                                             --> Store internal energy as the last variable when LR_EINT is on
+//                                         --> Useless for PLM
+//                g_EC_Ele               : Array to store the edge-centered electric field at the half step
+//                Con2Pri                : Convert conserved variables in g_ConVar[] to primitive variables and
+//                                         store the results in g_PriVar[]
+//                NIn                    : Size of g_PriVar[] along each direction
+//                                         --> Can be smaller than FLU_NXT
+//                NGhost                 : Number of ghost zones
+//                                          --> "NIn-2*NGhost" cells will be computed along each direction
+//                                          --> Size of g_FC_Var[] is assumed to be "(NIn-2*NGhost)^3"
+//                                          --> The reconstructed data at cell (i,j,k) will be stored in g_FC_Var[]
+//                                              with the index "(i-NGhost,j-NGhost,k-NGhost)"
+//                LR_Limiter             : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
+//                                         (0/1/2/3) = (vanLeer/generalized MinMod/vanAlbada/vanLeer+generalized MinMod) limiter
+//                MinMod_Coeff           : Coefficient of the generalized MinMod limiter
+//                dt                     : Time interval to advance solution (for the CTU scheme)
+//                dh                     : Cell size
+//                MinDens/Pres/Eint/Temp : Density, pressure, internal energy, temperature floors
+//                FracPassive            : true --> convert passive scalars to mass fraction during data reconstruction
+//                NFrac                  : Number of passive scalars for the option "FracPassive"
+//                FracIdx                : Target variable indices for the option "FracPassive"
+//                JeansMinPres           : Apply minimum pressure estimated from the Jeans length
+//                JeansMinPres_Coeff     : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
+//                EoS                    : EoS object
+//                MicroPhy               : Microphysics object
 //------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const real g_FC_B     [][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                                      real g_PriVar   [][ CUBE(FLU_NXT) ],
                                      real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+                                     real g_Flux     [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                      real g_Slope_PPM[][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ],
                                      real g_EC_Ele   [][ CUBE(N_EC_ELE) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
-                               const real MinDens, const real MinPres, const real MinEint,
+                               const real MinDens, const real MinPres, const real MinEint, const real MinTemp,
                                const bool FracPassive, const int NFrac, const int FracIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff,
-                               const EoS_t *EoS )
+                               const EoS_t *EoS, const MicroPhy_t *MicroPhy )
 {
 
 //### NOTE: temporary solution to the bug in cuda 10.1 and 10.2 that incorrectly overwrites didx_cc[]
@@ -337,10 +371,67 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
    } // if ( Con2Pri )
 
 
+#  if ( FLU_SCHEME == MHM )
+// skip the additional fluxes along the transverse directions for computing the CT electric field
+#  ifdef MHD
+   const int NSkip_N = 0;
+   const int NSkip_T = 0;
+#  else
+   const int NSkip_N = 0;
+   const int NSkip_T = 1;
+#  endif
+   bool need_initialize = true; // flux array need initialize or not
+
+// calculate temperature
+#  if ( defined VISCOSITY ) || ( defined CONDUCTION )
+   const bool CheckMinTemp_Yes = true;
+   real Temp[ CUBE(FLU_NXT) ];
+   CGPU_LOOP( idx, CUBE(FLU_NXT) )
+   {
+       const int size_ij = SQR( FLU_NXT );
+       const int i       = idx % FLU_NXT;
+       const int j       = idx % size_ij / FLU_NXT;
+       const int k       = idx / size_ij;
+
+#      ifdef MHD
+       real CC_B[NCOMP_MAG];
+//     magnetic field
+       MHD_GetCellCenteredBField( CC_B, g_FC_B[0], g_FC_B[1], g_FC_B[2],
+                                  FLU_NXT, FLU_NXT, FLU_NXT, i, j, k );
+
+       const real Emag = 0.5*( SQR(CC_B[0]) + SQR(CC_B[1]) + SQR(CC_B[2]) );
+#      else
+       const real Emag = NULL_REAL;
+#      endif // #ifdef MHD
+
+       real fluid[NCOMP_TOTAL];
+       for (int v=0; v<NCOMP_TOTAL; v++)  fluid[v] = g_ConVar[v][idx];
+       Temp[idx] = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ],
+                                   fluid[ENGY], fluid+NCOMP_FLUID, CheckMinTemp_Yes,
+                                   MinTemp, Emag, EoS->DensEint2Temp_FuncPtr,
+                                   EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
+                                   EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+   }
+#  endif
+
+// compute extra flux for MHM.
+// add conductive fluxes
+#  ifdef CONDUCTION
+   Hydro_AddConductiveFlux( g_ConVar, NULL, Temp, g_Flux, g_FC_B, FLU_NXT, NGhost,
+                            N_HF_FLUX, NSkip_N, NSkip_T, 1, dh, need_initialize, MicroPhy );
+#  endif
+
+// add viscous fluxes
+#  ifdef VISCOSITY
+   Hydro_AddViscousFlux( g_ConVar, NULL, Temp, g_Flux, g_FC_B, FLU_NXT, NGhost,
+                         N_HF_FLUX, NSkip_N, NSkip_T, 1, dh, need_initialize, MicroPhy );
+#  endif
+
+#  ifdef MHD
 // compute electric field for MHM
-#  if ( FLU_SCHEME == MHM  &&  defined MHD )
    MHD_ComputeElectric_Half( g_EC_Ele, g_ConVar, g_FC_B, N_HF_ELE, NIn, NGhost );
 #  endif
+#  endif // #if ( FLU_SCHEME == MHM )
 
 
 // data reconstruction
@@ -654,8 +745,11 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 
 #     if ( FLU_SCHEME == MHM )
+      real Extra_Flux[6][NCOMP_TOTAL_PLUS_MAG] = {0.0};
+      for (int f=0; f<6; f++)
+
 //    7. advance the face-centered variables by half time-step for the MHM integrator
-      Hydro_HancockPredict( fcCon, fcPri, dt, dh, g_ConVar, idx_cc, i_cc, j_cc, k_cc, g_FC_B, g_EC_Ele, NGhost, N_HF_ELE,
+      Hydro_HancockPredict( fcCon, fcPri, dt, dh, g_ConVar, idx_cc, i_cc, j_cc, k_cc, g_Flux, g_FC_B, g_EC_Ele, NGhost, N_HF_ELE,
                             MinDens, MinPres, MinEint, EoS );
 #     endif // # if ( FLU_SCHEME == MHM )
 
@@ -701,14 +795,15 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const real g_FC_B     [][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                                      real g_PriVar   [][ CUBE(FLU_NXT) ],
                                      real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+                                     real g_Flux     [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                      real g_Slope_PPM[][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ],
                                      real g_EC_Ele   [][ CUBE(N_EC_ELE) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
-                               const real MinDens, const real MinPres, const real MinEint,
+                               const real MinDens, const real MinPres, const real MinEint, const real MinTemp,
                                const bool FracPassive, const int NFrac, const int FracIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff,
-                               const EoS_t *EoS )
+                               const EoS_t *EoS, const MicroPhy_t *MicroPhy )
 {
 
 //### NOTE: temporary solution to the bug in cuda 10.1 and 10.2 that incorrectly overwrites didx_cc[]
@@ -910,11 +1005,67 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
    } // if ( LR_Limiter != LR_LIMITER_ATHENA )
 
 
+#  if ( FLU_SCHEME == MHM )
+// skip the additional fluxes along the transverse directions for computing the CT electric field
+#  ifdef MHD
+   const int NSkip_N = 0;
+   const int NSkip_T = 0;
+#  else
+   const int NSkip_N = 0;
+   const int NSkip_T = 1;
+#  endif
+   bool need_initialize = true; // flux array need initialize or not
 
+// calculate temperature
+#  if ( defined VISCOSITY ) || ( defined CONDUCTION )
+   const bool CheckMinTemp_Yes = true;
+   real Temp[ CUBE(FLU_NXT) ];
+   CGPU_LOOP( idx, CUBE(FLU_NXT) )
+   {
+       const int size_ij = SQR( FLU_NXT );
+       const int i       = idx % FLU_NXT;
+       const int j       = idx % size_ij / FLU_NXT;
+       const int k       = idx / size_ij;
+
+#      ifdef MHD
+       real CC_B[NCOMP_MAG];
+//     magnetic field
+       MHD_GetCellCenteredBField( CC_B, g_FC_B[0], g_FC_B[1], g_FC_B[2],
+                                  FLU_NXT, FLU_NXT, FLU_NXT, i, j, k );
+
+       const real Emag = 0.5*( SQR(CC_B[0]) + SQR(CC_B[1]) + SQR(CC_B[2]) );
+#      else
+       const real Emag = NULL_REAL;
+#      endif // #ifdef MHD
+
+       real fluid[NCOMP_TOTAL];
+       for (int v=0; v<NCOMP_TOTAL; v++)  fluid[v] = g_ConVar[v][idx];
+       Temp[idx] = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ],
+                                   fluid[ENGY], fluid+NCOMP_FLUID, CheckMinTemp_Yes,
+                                   MinTemp, Emag, EoS->DensEint2Temp_FuncPtr,
+                                   EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
+                                   EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+   }
+#  endif
+
+// compute extra flux for MHM.
+// add conductive fluxes
+#  ifdef CONDUCTION
+   Hydro_AddConductiveFlux( g_ConVar, NULL, Temp, g_Flux, g_FC_B, FLU_NXT, NGhost,
+                            N_HF_FLUX, NSkip_N, NSkip_T, 1, dh, need_initialize, MicroPhy );
+#  endif
+
+// add viscous fluxes
+#  ifdef VISCOSITY
+   Hydro_AddViscousFlux( NULL, g_PriVar, Temp, g_Flux, g_FC_B, FLU_NXT, NGhost,
+                         N_HF_FLUX, NSkip_N, NSkip_T, 1, dh, need_initialize, MicroPhy );
+#  endif
+
+#  ifdef MHD
 // compute electric field for MHM
-#  if ( FLU_SCHEME == MHM  &&  defined MHD )
    MHD_ComputeElectric_Half( g_EC_Ele, g_ConVar, g_FC_B, N_HF_ELE, NIn, NGhost );
 #  endif
+#  endif // #if ( FLU_SCHEME == MHM )
 
 
 // data reconstruction
@@ -1360,7 +1511,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 #     if ( FLU_SCHEME == MHM )
 //    7. advance the face-centered variables by half time-step for the MHM integrator
-      Hydro_HancockPredict( fcCon, fcPri, dt, dh, g_ConVar, idx_cc, i_cc, j_cc, k_cc, g_FC_B, g_EC_Ele, NGhost, N_HF_ELE,
+      Hydro_HancockPredict( fcCon, fcPri, dt, dh, g_ConVar, idx_cc, i_cc, j_cc, k_cc, g_Flux, g_FC_B, g_EC_Ele, NGhost, N_HF_ELE,
                             MinDens, MinPres, MinEint, EoS );
 #     endif // # if ( FLU_SCHEME == MHM )
 
@@ -2061,6 +2212,7 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
 //                                    --> It is just the input array Flu_Array_In[]
 //                cc_idx            : Index for accessing g_cc_array[]
 //                cc_{i,j,k}        : Index for accessing g_cc_array[] for MHD_UpdateMagnetic_Half()
+//                g_Flux            : Array storing the extra fluxes
 //                g_FC_B            : Array storing the face-centered magnetic field
 //                g_EC_Ele          : Array storing the input edge-centered electric field
 //                NGhost            : Ghost zone size of data reconstruction
@@ -2072,6 +2224,7 @@ GPU_DEVICE
 void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR], const real dt,
                            const real dh, const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                            const int cc_i, const int cc_j, const int cc_k,
+                           const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real g_FC_B[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                            const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                            const int NGhost, const int NEle,
@@ -2092,6 +2245,27 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
       Hydro_Con2Flux( f/2, Flux[f], fcCon[f], MinPres, EoS->DensEint2Pres_FuncPtr,
                       EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 #     endif
+
+// add extra flux
+#  if ( defined CONDUCTION  ||  defined VISCOSITY )
+   for (int f=0; f<6; f++)
+   {
+      const int d      = f / 2;
+      const int LorR   = f % 2;
+      const int TDir1  = (d+1) % 3;
+      const int TDir2  = (d+2) % 3;
+
+      int flux_ijk[3]  = { cc_i-NGhost, cc_j-NGhost, cc_k-NGhost };
+      flux_ijk[d]     += LorR;
+#     ifdef MHD
+      flux_ijk[TDir1] += 1;
+      flux_ijk[TDir2] += 1;
+#     endif
+      const int idx_flux = IDX321( flux_ijk[0], flux_ijk[1], flux_ijk[2], N_HF_FLUX, N_HF_FLUX );
+
+      for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   Flux[f][v] += g_Flux[f][v][idx_flux];
+   } // for (int f=0; f<6; f++)
+#  endif // #if ( defined CONDUCTION  ||  defined VISCOSITY )
 
 // update the face-centered variables
    for (int v=0; v<NCOMP_TOTAL; v++)

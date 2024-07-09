@@ -583,7 +583,7 @@ struct InputPara_t
    int    Opt__ResetFluid;
    int    Opt__ResetFluidInit;
    int    Opt__FreezeFluid;
-   int    Opt__FreezeHydro;  
+   int    Opt__FreezeHydro;
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    double MinDens;
 #  endif

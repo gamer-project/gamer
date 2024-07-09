@@ -899,7 +899,6 @@ def validation( paths, depends, constraints, **kwargs ):
             LOGGER.error("Number of particle attributes should not be negative. Current: %d"%kwargs["par_attribute"])
             success = False
 
-            
     # B. Miscellaneous options
     if kwargs["nlevel"] < 1:
         LOGGER.error("<--nlevel> should be greater than zero. Current: %d"%kwargs["nlevel"])

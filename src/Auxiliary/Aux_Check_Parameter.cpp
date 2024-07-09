@@ -654,7 +654,7 @@ void Aux_Check_Parameter()
 
    if ( OPT__FREEZE_HYDRO )
       Aux_Message( stderr, "REMINDER : \"%s\" will prevent hydro fluxes from being updated\n", "OPT__FREEZE_HYDRO" );
-   
+
    } // if ( MPI_Rank == 0 )
 
 
@@ -1699,7 +1699,7 @@ void Aux_Check_Parameter()
 
 #  if ( EOS != EOS_GAMMA && EOS != EOS_COSMIC_RAY )
 #     error : ERROR : CONDUCTION must work with EOS_GAMMA/EOS_COSMIC_RAY !!
-#  endif 
+#  endif
 
 #  ifndef MHD
    if ( CONDUCTION_FLUX_TYPE == ANISOTROPIC_CONDUCTION )
@@ -1708,10 +1708,10 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "CONDUCTION_SAT_WHISTLER requires MHD !!\n" );
 #  endif
 
-   if ( CONDUCTION_TYPE == CONSTANT_CONDUCTION && CONDUCTION_CONSTANT_COEFF <= 0.0 ) 
+   if ( CONDUCTION_TYPE == CONSTANT_CONDUCTION && CONDUCTION_CONSTANT_COEFF <= 0.0 )
       Aux_Error( ERROR_INFO, "CONDUCTION_CONSTANT_COEFF <= 0 !!\n" );
- 
-   if ( CONDUCTION_TYPE == SPITZER_CONDUCTION && CONDUCTION_COULOMB_LOG <= 0.0 ) 
+
+   if ( CONDUCTION_TYPE == SPITZER_CONDUCTION && CONDUCTION_COULOMB_LOG <= 0.0 )
       Aux_Error( ERROR_INFO, "CONDUCTION_COULOMB_LOG <= 0 !!\n" );
 
    if ( CONDUCTION_TYPE == SPITZER_CONDUCTION && CONDUCTION_SPITZER_FRAC <= 0.0 )
@@ -1722,7 +1722,7 @@ void Aux_Check_Parameter()
 
    if ( CONDUCTION_TYPE == SPITZER_CONDUCTION && !OPT__UNIT )
       Aux_Error( ERROR_INFO, "SPITZER_CONDUCTION only works with OPT__UNIT !!\n" );
- 
+
    if ( CONDUCTION_TYPE == CONSTANT_CONDUCTION && CONDUCTION_SATURATION )
       Aux_Error( ERROR_INFO, "CONDUCTION_SATURATION only works with SPITZER_CONDUCTION !!\n" );
 
@@ -1759,12 +1759,12 @@ void Aux_Check_Parameter()
 #  ifdef BAROTROPIC_EOS
    if ( VISCOSITY_TYPE == SPITZER_VISCOSITY )
       Aux_Error( ERROR_INFO, "SPITZER_VISCOSITY does not work with BAROTROPIC_EOS !!\n" );
-#  endif 
+#  endif
 
-   if ( VISCOSITY_TYPE == CONSTANT_VISCOSITY && VISCOSITY_CONST_COEFF <= 0.0 ) 
+   if ( VISCOSITY_TYPE == CONSTANT_VISCOSITY && VISCOSITY_CONST_COEFF <= 0.0 )
       Aux_Error( ERROR_INFO, "VISCOSITY_CONST_COEFF <= 0 !!\n" );
- 
-   if ( VISCOSITY_TYPE == SPITZER_VISCOSITY && VISCOSITY_COULOMB_LOG <= 0.0 ) 
+
+   if ( VISCOSITY_TYPE == SPITZER_VISCOSITY && VISCOSITY_COULOMB_LOG <= 0.0 )
       Aux_Error( ERROR_INFO, "VISCOSITY_COULOMB_LOG <= 0 !!\n" );
 
    if ( VISCOSITY_TYPE == SPITZER_VISCOSITY && VISCOSITY_SPITZER_FRAC <= 0.0)
@@ -1777,9 +1777,9 @@ void Aux_Check_Parameter()
 // ------------------------------
    if ( MPI_Rank == 0 ) {
 
-      if ( VISCOSITY_TYPE == CONSTANT_VISCOSITY && 
-         VISCOSITY_COEFF_TYPE == VISCOSITY_KINETIC_COEFF &&  
-         VISCOSITY_COEFF > VISCOSITY_COEFF_MAX ) 
+      if ( VISCOSITY_TYPE == CONSTANT_VISCOSITY &&
+         VISCOSITY_COEFF_TYPE == VISCOSITY_KINETIC_COEFF &&
+         VISCOSITY_COEFF > VISCOSITY_COEFF_MAX )
          Aux_Message( stderr, "WARNING : VISCOSITY_CONST_COEFF is greater than VISCOSITY_COEFF_MAX !!\n" );
 
       if ( DT__VISCOSITY < 0.0  ||  DT__VISCOSITY > 1.0 )
