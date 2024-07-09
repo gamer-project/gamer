@@ -430,6 +430,23 @@
 #  define _FLUX_TOTAL         (  ( 1L << NFLUX_TOTAL ) - 1L                )
 
 
+// microphysics
+
+#ifdef VISCOSITY
+#  define CONSTANT_VISCOSITY 1
+#  define SPITZER_VISCOSITY 2
+#  define VISCOSITY_KINETIC_COEFF 1
+#  define VISCOSITY_DYNAMIC_COEFF 2
+#  define ISOTROPIC_VISCOSITY 1
+#  define ANISOTROPIC_VISCOSITY 2
+#endif
+
+#ifdef CONDUCTION
+#  define CONSTANT_CONDUCTION 1
+#  define SPITZER_CONDUCTION 2
+#  define ISOTROPIC_CONDUCTION 1
+#  define ANISOTROPIC_CONDUCTION 2
+#endif 
 
 // symbolic constants for particles
 #ifdef PARTICLE

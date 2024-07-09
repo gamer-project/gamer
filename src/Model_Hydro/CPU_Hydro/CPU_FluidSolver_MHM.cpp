@@ -39,6 +39,12 @@
 # include "../../Microphysics/CosmicRayDiffusion/CUFLU_CR_AddDiffuseFlux.cu"
 #endif
 #endif // #ifdef COSMIC_RAY
+#ifdef VISCOSITY
+# include "../../Microphysics/Viscosity/CUFLU_AddViscousFlux.cu"
+#endif
+#ifdef CONDUCTION
+# include "../../Microphysics/Conduction/CUFLU_AddThermalFlux.cu"
+#endif
 
 #include "../../Microphysics/GPU_Hydro_AddExtraFlux.cu"
 
@@ -169,6 +175,28 @@ void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
                             const real dh,
                             const bool initialize );
 
+#ifdef CONDUCTION
+void Hydro_AddConductiveFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ], const real Temp[ CUBE(FLU_NXT) ],
+                                       real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                       const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
+                                       const real g_CC_B[][ CUBE(FLU_NXT) ],
+                                       const real dh, const MicroPhy_t *MicroPhy );
+void Hydro_AddConductiveFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ], const real Temp[ CUBE(FLU_NXT) ],
+                                       real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                       const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                       const int NFlux, const real dh, const MicroPhy_t *MicroPhy );
+#endif
+#ifdef VISCOSITY
+void Hydro_AddViscousFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ], const real Temp[ CUBE(FLU_NXT) ],
+                                    real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                    const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
+                                    const real g_CC_B[][ CUBE(FLU_NXT) ],
+                                    const real dh, const MicroPhy_t *MicroPhy );
+void Hydro_AddViscousFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ], const real Temp[ CUBE(FLU_NXT) ],
+                                    real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                    const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                    const int NFlux, const real dh, const MicroPhy_t *MicroPhy );
+#endif
 #endif // #ifdef __CUDACC__ ... else ...
 
 
@@ -298,7 +326,7 @@ void CUFLU_FluidSolver_MHM(
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter, const double Time,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real MinEint,
-   const real DualEnergySwitch,
+   const real MinTemp, const real DualEnergySwitch,
    const bool NormPassive, const int NNorm,
    const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -327,7 +355,7 @@ void CPU_FluidSolver_MHM(
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const double c_ExtAcc_AuxArray[],
    const real MinDens, const real MinPres, const real MinEint,
-   const real DualEnergySwitch,
+   const real MinTemp, const real DualEnergySwitch,
    const bool NormPassive, const int NNorm, const int c_NormIdx[],
    const bool FracPassive, const int NFrac, const int c_FracIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -366,6 +394,7 @@ void CPU_FluidSolver_MHM(
 #  pragma omp parallel
 #  endif
    {
+
 //    loop over all patch groups
 //    --> CPU/GPU solver: use different (OpenMP threads) / (CUDA thread blocks)
 //        to work on different patch groups
@@ -384,6 +413,11 @@ void CPU_FluidSolver_MHM(
          real (*const g_FC_Flux_1PG  )[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ] = g_FC_Flux  [P];
          real (*const g_PriVar_1PG   )                      [ CUBE(FLU_NXT)     ] = g_PriVar   [P];
          real (*const g_Slope_PPM_1PG)[NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ] = g_Slope_PPM[P];
+
+#        if ( defined VISCOSITY ) || ( defined CONDUCTION )
+         const bool CheckMinTemp_Yes = true;
+         real Temp[ CUBE(FLU_NXT) ];
+#        endif
 
 #        if ( FLU_SCHEME == MHM_RP )
          real (*const g_Flux_Half_1PG)[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ] = g_FC_Flux_1PG;
@@ -430,11 +464,12 @@ void CPU_FluidSolver_MHM(
 //       1-a. MHM_RP: use Riemann solver to calculate the half-step fluxes
 #        if ( FLU_SCHEME == MHM_RP )
 
-#        ifdef MHD
+#        if ( defined MHD ) || ( defined VISCOSITY ) || ( defined CONDUCTION )
 //       1-a-1. evaluate the cell-centered B field and store in g_PriVar[]
 //              --> also copy density and compute velocity for MHD_ComputeElectric()
+#        ifdef MHD
          real CC_B[NCOMP_MAG];
-
+#        endif
          CGPU_LOOP( idx, CUBE(FLU_NXT) )
          {
             const int size_ij = SQR( FLU_NXT );
@@ -451,23 +486,40 @@ void CPU_FluidSolver_MHM(
             g_PriVar_1PG[2][idx] = g_Flu_Array_In[P][2][idx]*_Dens;
             g_PriVar_1PG[3][idx] = g_Flu_Array_In[P][3][idx]*_Dens;
 
+#           ifdef MHD
 //          magnetic field
             MHD_GetCellCenteredBField( CC_B, g_Mag_Array_In[P][0], g_Mag_Array_In[P][1], g_Mag_Array_In[P][2],
                                        FLU_NXT, FLU_NXT, FLU_NXT, i, j, k );
 
             for (int v=0; v<NCOMP_MAG; v++)  g_PriVar_1PG[ MAG_OFFSET + v ][idx] = CC_B[v];
+            const real Emag = 0.5*( SQR(CC_B[0]) + SQR(CC_B[1]) + SQR(CC_B[2]) );
+#           else
+            const real Emag = NULL_REAL;
+#           endif // #ifdef MHD
+
+#           if ( defined VISCOSITY ) || ( defined CONDUCTION )
+//          temperature
+            real fluid[NCOMP_TOTAL];
+            for (int v=0; v<NCOMP_TOTAL; v++)  fluid[v] = g_Flu_Array_In[P][v][idx];
+            Temp[idx] = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], 
+                                        fluid[ENGY], fluid+NCOMP_FLUID, CheckMinTemp_Yes, 
+                                        MinTemp, Emag, EoS.DensEint2Temp_FuncPtr, 
+                                        EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );
+#           endif
+
          }
 
 #        ifdef __CUDACC__
          __syncthreads();
 #        endif
-#        endif // #ifdef MHD
+#        endif // #if ( defined MHD ) || ( defined VISCOSITY ) || ( defined CONDUCTION )
 
 
 //       1-a-2. evaluate the half-step first-order fluxes by Riemann solver
 //       hydrodynamic fluxes
-         Hydro_RiemannPredict_Flux( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P], g_PriVar_1PG+MAG_OFFSET,
-                                    MinDens, MinPres, &EoS );
+         if ( ! OPT__FREEZE_HYDRO ) 
+            Hydro_RiemannPredict_Flux( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P], g_PriVar_1PG+MAG_OFFSET,
+                                       MinDens, MinPres, &EoS );
 
 //       add cosmic-ray fluxes
 #        ifdef CR_DIFFUSION
@@ -476,6 +528,17 @@ void CPU_FluidSolver_MHM(
 
          AddExtraFlux_Template( g_Flu_Array_In[P], NULL, g_Flux_Half_1PG, g_Mag_Array_In[P], FLU_NXT, 0, N_HF_FLUX, NSkip_N, NSkip_T, 0, dh, false );
 
+//       add conductive fluxes
+#        ifdef CONDUCTION
+         Hydro_AddConductiveFlux_HalfStep( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P], 
+                                           g_PriVar_1PG+MAG_OFFSET, dh, &MicroPhy );
+#        endif
+
+//       add viscous fluxes
+#        ifdef VISCOSITY
+         Hydro_AddViscousFlux_HalfStep( g_PriVar_1PG, g_Flux_Half_1PG, g_Mag_Array_In[P], 
+                                        g_PriVar_1PG+MAG_OFFSET, dh, &MicroPhy );
+#        endif
 
 //       1-a-3. evaluate electric field and update B field at the half time-step
 #        ifdef MHD
@@ -554,10 +617,29 @@ void CPU_FluidSolver_MHM(
 //          2. evaluate the full-step fluxes
 
 //          hydrodynamic fluxes
-            Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T,
-                               CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P],
-                               dt, dh, Time, UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
-                               MinDens, MinPres, &EoS );
+            if ( ! OPT__FREEZE_HYDRO )
+               Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T,
+                                  CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P],
+                                  dt, dh, Time, UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
+                                  MinDens, MinPres, &EoS );
+
+#           if ( defined VISCOSITY ) || ( defined CONDUCTION )
+            // Need to compute temperature for thermal conduction and viscosity
+            CGPU_LOOP( idx, CUBE(FLU_NXT) )
+            {
+               real fluid[NCOMP_TOTAL], Eint;
+               for (int v=0; v<NCOMP_TOTAL; v++)  fluid[v] = g_PriVar_Half_1PG[v][idx];
+               Eint = EoS.DensPres2Eint_FuncPtr( fluid[DENS], fluid[ENGY], fluid+NCOMP_FLUID, EoS.AuxArrayDevPtr_Flt, 
+                                                 EoS.AuxArrayDevPtr_Int, EoS.Table );
+               Temp[idx] = EoS.DensEint2Temp_FuncPtr( fluid[DENS], Eint, fluid+NCOMP_FLUID, EoS.AuxArrayDevPtr_Flt, 
+                                                      EoS.AuxArrayDevPtr_Int, EoS.Table );
+               Temp[idx] = Hydro_CheckMinTemp( Temp[idx], MinTemp );
+            }
+
+#           ifdef __CUDACC__
+             __syncthreads();
+#           endif
+#           endif // #if ( defined VISCOSITY ) || ( defined CONDUCTION )
 
 //          add cosmic-ray fluxes
 #           ifdef CR_DIFFUSION
@@ -565,6 +647,17 @@ void CPU_FluidSolver_MHM(
 #           endif
 
             AddExtraFlux_Template( NULL, g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_HF_VAR, OffsetPri, N_FL_FLUX, NSkip_N, NSkip_T, 0, dh, false );
+//          add conductive fluxes
+#           ifdef CONDUCTION
+            Hydro_AddConductiveFlux_FullStep( g_PriVar_Half_1PG, Temp, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, 
+                                              N_FL_FLUX, dh, &MicroPhy );
+#           endif
+
+//          add viscous fluxes
+#           ifdef VISCOSITY
+            Hydro_AddViscousFlux_FullStep( g_PriVar_Half_1PG, Temp, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, 
+                                           N_FL_FLUX, dh, &MicroPhy );
+#           endif
 
             if ( StoreFlux )
                Hydro_StoreIntFlux( g_FC_Flux_1PG, g_Flux_Array[P], N_FL_FLUX );

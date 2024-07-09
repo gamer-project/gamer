@@ -561,6 +561,18 @@ def load_arguments():
                          help="Enable cosmic-ray diffusion. Must enable <--mhd> and <--cosmic_ray>.\n"
                        )
 
+    parser.add_argument( "--viscosity", type=str2bool, metavar="BOOLEAN", gamer_name="VISCOSITY",
+                         default=False,
+                         constraint={ True:{"comoving":False} },
+                         help="Enable viscosity. Must enable <--hydro\n"
+	               )
+
+    parser.add_argument( "--conduction", type=str2bool, metavar="BOOLEAN", gamer_name="CONDUCTION",
+                         default=False,
+                         constraint={ True:{"comoving":False} },
+		                 help="Enable conduction. Must enable <--hydro.\n"
+                       )
+
     # B. miscellaneous options
     parser.add_argument( "--nlevel", type=int, metavar="INTEGER", gamer_name="NLEVEL",
                          default=10,
@@ -884,6 +896,7 @@ def validation( paths, depends, constraints, **kwargs ):
             LOGGER.error("Number of particle attributes should not be negative. Current: %d"%kwargs["par_attribute"])
             success = False
 
+            
     # B. Miscellaneous options
     if kwargs["nlevel"] < 1:
         LOGGER.error("<--nlevel> should be greater than zero. Current: %d"%kwargs["nlevel"])
