@@ -17,8 +17,7 @@
 
 void Hydro_ComputeViscosity( real &visc_mu, real &visc_nu, const MicroPhy_t *MicroPhy,
                              const real Dens, const real Temp );
-static real MC_limiter( const real a, const real b );
-static real minmod( const real a, const real b );
+real MC_limiter( const real a, const real b );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -487,7 +486,7 @@ void Hydro_AddViscousFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 //-----------------------------------------------------------------------------------------
 // Function    : Hydro_AddViscousFlux
 //
-// Description : Compute the conductive fluxes
+// Description : Compute the viscousity fluxes
 //
 // Note        : 1. Must enable VISCOSITY
 //               2. Must enable MHD for anisotropic (Braginskii) viscosity
@@ -509,7 +508,7 @@ void Hydro_AddViscousFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 //               initialize     : initialize g_Flux to zero or not
 //               MicroPhy       : Microphysics object
 //
-// Return      : g_Flux_Half[]
+// Return      : g_Flux, initialize
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
@@ -519,7 +518,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                            const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                            const int N_Var, const int N_Ghost, const int N_Flux, const int NSkip_N,
                            const int NSkip_T, const int NSkip_MHM_Half, const real dh,
-                           const bool initialize, const MicroPhy_t *MicroPhy )
+                           bool &initialize, const MicroPhy_t *MicroPhy )
 {
 #  ifdef GAMER_DEBUG
    if ( g_ConVar == NULL  &&  g_PriVar == NULL )   Aux_Error( ERROR_INFO, "Both g_ConVar and g_PriVar are NULL!\n");
@@ -795,7 +794,11 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          }
 
 //       5. initialize flux if need
-         if ( initialize )   for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_Flux[d][v][idx_flux] = (real)0.0;
+         if ( initialize )
+         {
+            for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_Flux[d][v][idx_flux] = (real)0.0;
+            initialize = false;
+         }
 
 //       6. flux add-up
          g_Flux_Half[d][    d+1][idx_flux] += stress_N;

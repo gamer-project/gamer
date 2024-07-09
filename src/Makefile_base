@@ -353,9 +353,9 @@ endif # COSMIC_RAY
 
 # microphysics source files
 # ------------------------------------------------------------------------------------
-CPU_FILE    += Microphysics_Init.cpp  Microphysics_End.cpp  CPU_Microphysics_SharedUtility.cpp  CPU_Microphysics_AddExtraFlux.cpp
+CPU_FILE    += Microphysics_Init.cpp  Microphysics_End.cpp  CPU_Microphysics_SharedUtility.cpp
 
-GPU_FILE    += CUFLU_Microphysics_SharedUtility.cu  CUFLU_Microphysics_AddExtraFlux.cu
+GPU_FILE    += CUFLU_Microphysics_SharedUtility.cu
 
 vpath %.cpp    Microphysics
 vpath %.cu     Microphysics

@@ -15,7 +15,7 @@ static real minmod( const real a, const real b );
 // Return      : Limited slope
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
-static real MC_limiter( const real a, const real b )
+real MC_limiter( const real a, const real b )
 {
 
    return minmod( (real)2.0*minmod(a,b), (real)0.5*(a+b) );

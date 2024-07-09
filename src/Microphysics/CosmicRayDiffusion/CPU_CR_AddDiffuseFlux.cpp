@@ -18,8 +18,7 @@
 #else // #ifdef __CUDACC__
 
 void CR_ComputeDiffusivity( real &diff_cr_para, real &diff_cr_perp, const MicroPhy_t *MicroPhy );
-static real MC_limiter( const real a, const real b );
-static real minmod( const real a, const real b );
+real MC_limiter( const real a, const real b );
 
 #endif // #ifdef __CUDACC__ ... else ...
 

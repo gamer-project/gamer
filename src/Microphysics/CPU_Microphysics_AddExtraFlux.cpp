@@ -36,7 +36,7 @@
 //               dh             : Cell size
 //               initialize     : initialize g_Flux to zero or not
 //
-// Return      : g_Flux[]
+// Return      : g_Flux[], initialize
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
 void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
@@ -50,7 +50,7 @@ void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
                             const int NSkip_T,
                             const int NSkip_MHM_Half,
                             const real dh,
-                            const bool initialize )
+                                  bool &initialize )
 {
 #  ifdef GAMER_DEBUG
    if ( g_ConVar == NULL  &&  g_PriVar == NULL )   Aux_Error( ERROR_INFO, "Both g_ConVar and g_PriVar are NULL!\n");
@@ -280,7 +280,11 @@ void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
          real Extra_Flux = (real)0.0;
 
 //       5. initialize flux if need
-         if ( initialize )   for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_Flux[d][v][idx_flux] = (real)0.0;
+         if ( initialize )
+         {
+            for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_Flux[d][v][idx_flux] = (real)0.0;
+            initialize = false;
+         }
 
 //       6. flux add-up
          g_Flux[d][DENS][idx_flux] += Extra_Flux;
